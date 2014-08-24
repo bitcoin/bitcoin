@@ -1,0 +1,13 @@
+#!/bin/bash
+
+set -e
+set -x
+
+cd $(dirname $0)
+./build_base
+./make "$@"
+cd ..
+bundle install
+containers/build_seed
+containers/build_net
+./cucumber

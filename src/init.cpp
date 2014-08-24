@@ -1076,6 +1076,11 @@ bool AppInit2(boost::thread_group& threadGroup)
     printf("mapWallet.size() = %"PRIszu"\n",       pwalletMain->mapWallet.size());
     printf("mapAddressBook.size() = %"PRIszu"\n",  pwalletMain->mapAddressBook.size());
 
+#ifdef TESTING
+    if (mapArgs.count("-timetravel"))
+        nTimeShift = GetArg("-timetravel", 0);
+#endif
+
     StartNode(threadGroup);
 
     if (fServer)
@@ -1085,6 +1090,9 @@ bool AppInit2(boost::thread_group& threadGroup)
     GenerateBitcoins(GetBoolArg("-gen", false), pwalletMain);
 
     // ppcoin: mint proof-of-stake blocks in the background
+#ifdef TESTING
+    if (GetBoolArg("-stakegen", true))
+#endif
     MintStake(threadGroup, pwalletMain);
 
     // ********************************************************* Step 12: finished

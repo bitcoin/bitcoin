@@ -281,6 +281,187 @@ Value stop(const Array& params, bool fHelp)
 
 
 
+#ifdef TESTING
+
+Value generatestake(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() > 1)
+        throw runtime_error(
+            "generatestake [<parent block hash>]\n"
+            "generate a single proof of stake block on top of <parent block hash> (default: highest block hash)"
+            );
+
+    if (GetBoolArg("-stakegen", true))
+        throw JSONRPCError(-3, "Stake generation enabled. Won't start another generation.");
+
+    CBlockIndex *parent;
+    if (params.size() > 1)
+    {
+        uint256 parentHash;
+        parentHash.SetHex(params[1].get_str());
+        if (!mapBlockIndex.count(parentHash))
+            throw JSONRPCError(-3, "Parent hash not in main chain");
+        parent = mapBlockIndex[parentHash];
+    }
+    else
+    {
+        parent = pindexBest;
+    }
+
+    BitcoinMiner(pwalletMain, true, true, parent);
+    return hashSingleStakeBlock.ToString();
+}
+
+
+extern bool fRequestShutdown;
+Value shutdown(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 0)
+        throw runtime_error(
+            "shutdown\n"
+            "close the program"
+            );
+
+    fRequestShutdown = true;
+
+    return "";
+}
+
+
+Value timetravel(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 1)
+        throw runtime_error(
+            "timetravel <seconds>\n"
+            "change relative time"
+            );
+
+    nTimeShift += params[0].get_int();
+
+    return "";
+}
+
+
+unsigned int GetNextTargetRequired(const CBlockIndex* pindexLast, bool fProofOfStake);
+
+Value duplicateblock(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() < 1 || params.size() > 2)
+        throw runtime_error(
+            "duplicateblock <original hash> [<parent hash>]\n"
+            "propagate a new block with the same stake as block <original hash> on top of <parent hash> (default: same parent)"
+            );
+
+    uint256 originalHash;
+    originalHash.SetHex(params[0].get_str());
+    if (!mapBlockIndex.count(originalHash))
+        throw JSONRPCError(-3, "Original hash not in main chain");
+    CBlockIndex *original = mapBlockIndex[originalHash];
+
+    CBlockIndex *parent;
+    if (params.size() > 1)
+    {
+        uint256 parentHash;
+        parentHash.SetHex(params[1].get_str());
+        if (!mapBlockIndex.count(parentHash))
+            throw JSONRPCError(-3, "Parent hash not in main chain");
+        parent = mapBlockIndex[parentHash];
+    }
+    else
+    {
+        parent = original->pprev;
+    }
+
+    CWallet *pwallet = pwalletMain;
+    CReserveKey reservekey(pwalletMain);
+    bool fProofOfStake = true;
+    unsigned int nExtraNonce = 0;
+
+    auto_ptr<CBlock> pblock(new CBlock());
+    if (!pblock.get())
+        throw JSONRPCError(-3, "Unable to allocate block");
+
+    // Create coinbase tx
+    CTransaction txNew;
+    txNew.vin.resize(1);
+    txNew.vin[0].prevout.SetNull();
+    txNew.vout.resize(1);
+    CPubKey reservepubkey;
+    if (!reservekey.GetReservedKey(reservepubkey))
+        throw JSONRPCError(-3, "Unable to get reserve pub key");
+    txNew.vout[0].scriptPubKey << reservepubkey << OP_CHECKSIG;
+
+    // Add our coinbase tx as first transaction
+    pblock->vtx.push_back(txNew);
+
+    // ppcoin: if coinstake available add coinstake tx
+    CBlockIndex* pindexPrev = parent;
+    IncrementExtraNonce(pblock.get(), pindexPrev, nExtraNonce);
+
+    CBlock originalBlock;
+    originalBlock.ReadFromDisk(original);
+    CTransaction txCoinStake(originalBlock.vtx[1]);
+
+    pblock->vtx[0].vout[0].SetEmpty();
+    pblock->vtx[0].nTime = txCoinStake.nTime;
+    pblock->vtx.push_back(txCoinStake);
+
+    pblock->nBits = GetNextTargetRequired(pindexPrev, pblock->IsProofOfStake());
+
+    // Fill in header
+    pblock->hashPrevBlock  = pindexPrev->GetBlockHash();
+    pblock->hashMerkleRoot = pblock->BuildMerkleTree();
+    if (pblock->IsProofOfStake())
+        pblock->nTime      = pblock->vtx[1].nTime; //same as coinstake timestamp
+    pblock->nTime          = max(pindexPrev->GetMedianTimePast()+1, pblock->GetMaxTransactionTime());
+    pblock->nTime          = max(pblock->GetBlockTime(), pindexPrev->GetBlockTime() - nMaxClockDrift);
+    if (pblock->IsProofOfWork())
+        pblock->UpdateTime(pindexPrev);
+    pblock->nNonce         = 0;
+
+    if (fProofOfStake)
+    {
+        // ppcoin: if proof-of-stake block found then process block
+        if (pblock->IsProofOfStake())
+        {
+            if (!pblock->SignBlock(*pwallet))
+            {
+                // We ignore errors to be able to test duplicate blocks with invalid signature
+            }
+
+            // Found a solution
+            {
+                LOCK(cs_main);
+
+                // Remove key from key pool
+                reservekey.KeepKey();
+
+                // Track how many getdata requests this block gets
+                {
+                    LOCK(pwallet->cs_wallet);
+                    pwallet->mapRequestCount[pblock->GetHash()] = 0;
+                }
+
+                // Process this block the same as if we had received it from another node
+                // But do not check for errors as this is expected to fail
+                CValidationState state;
+                ProcessBlock(state, NULL, pblock.get());
+            }
+        }
+        else
+            throw JSONRPCError(-3, "generated block is not a Proof of Stake");
+    }
+
+    string result(pblock->GetHash().ToString());
+
+    pblock.release();
+
+    return result;
+}
+
+#endif
+
+
 //
 // Call Table
 //
@@ -361,6 +542,12 @@ static const CRPCCommand vRPCCommands[] =
     { "gettxout",               &gettxout,               true,      false },
     { "lockunspent",            &lockunspent,            false,     false },
     { "listlockunspent",        &listlockunspent,        false,     false },
+#ifdef TESTING
+    { "generatestake",          &generatestake,          true,      false },
+    { "duplicateblock",         &duplicateblock,         true,      false },
+    { "shutdown",               &shutdown,               true,      false },
+    { "timetravel",             &timetravel,             true,      false },
+#endif
 };
 
 CRPCTable::CRPCTable()
@@ -1295,6 +1482,9 @@ Array RPCConvertValues(const std::string &strMethod, const std::vector<std::stri
     if (strMethod == "lockunspent"            && n > 1) ConvertTo<Array>(params[1]);
     if (strMethod == "importprivkey"          && n > 2) ConvertTo<bool>(params[2]);
 
+#ifdef TESTING
+    if (strMethod == "timetravel"             && n > 0) ConvertTo<boost::int64_t>(params[0]);
+#endif
     return params;
 }
 

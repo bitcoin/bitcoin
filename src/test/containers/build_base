@@ -1,0 +1,9 @@
+#!/bin/bash
+
+set -e
+
+cd $(dirname $0)/base
+docker build -t peercoin/base .
+
+cd ../base_devel
+docker build -t peercoin/devel .

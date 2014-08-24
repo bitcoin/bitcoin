@@ -1,0 +1,18 @@
+#!/bin/bash
+
+name="$1"
+
+if [ -z "$name" ]; then
+  echo "usage: $0 <image name>"
+  echo "Will display the log of the last container that used image <image name>"
+  echo "Example: $0 peercoinnet/a"
+  exit 1
+fi
+
+ID=$(docker ps -a | tail -n +1 | grep "$name" | head -n 1 | awk '{print $1}')
+if [ -z "$ID" ]; then
+  echo "No container found"
+  exit 1
+fi
+
+docker logs $ID |less

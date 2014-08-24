@@ -1,0 +1,7 @@
+source 'https://rubygems.org'
+
+gem 'docker-api', require: 'docker'
+gem 'httparty'
+
+gem 'cucumber'
+gem 'rspec-expectations'
