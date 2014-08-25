@@ -71,9 +71,9 @@ qint64 BitcoinUnits::maxAmount(int unit)
 {
     switch(unit)
     {
-    case CRW:  return Q_INT64_C(21000000);
-    case mCRW: return Q_INT64_C(21000000000);
-    case uCRW: return Q_INT64_C(21000000000000);
+    case CRW:  return Q_INT64_C(42000000);
+    case mCRW: return Q_INT64_C(42000000000);
+    case uCRW: return Q_INT64_C(42000000000000);
     default:   return 0;
     }
 }
@@ -82,9 +82,9 @@ int BitcoinUnits::amountDigits(int unit)
 {
     switch(unit)
     {
-    case CRW: return 8; // 21,000,000 (# digits, without commas)
-    case mCRW: return 11; // 21,000,000,000
-    case uCRW: return 14; // 21,000,000,000,000
+    case CRW: return 8; // 42,000,000 (# digits, without commas)
+    case mCRW: return 11; // 42,000,000,000
+    case uCRW: return 14; // 42,000,000,000,000
     default: return 0;
     }
 }
