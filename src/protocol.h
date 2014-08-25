@@ -139,7 +139,7 @@ class CInv
         const char* GetCommand() const;
         std::string ToString() const;
         int GetType() const { return type; }
-        uint256 GetHash() const { return hash; }
+        const uint256& GetHash() const { return hash; }
 
     protected:
         int type;
