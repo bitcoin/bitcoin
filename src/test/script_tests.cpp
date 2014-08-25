@@ -394,4 +394,15 @@ BOOST_AUTO_TEST_CASE(script_standard_push)
     }
 }
 
+BOOST_AUTO_TEST_CASE(script_IsPushOnly_on_invalid_scripts)
+{
+    // IsPushOnly returns false when given a script containing only pushes that
+    // are invalid due to truncation. IsPushOnly() is consensus critical
+    // because P2SH evaluation uses it, although this specific behavior should
+    // not be consensus critical as the P2SH evaluation would fail first due to
+    // the invalid push. Still, it doesn't hurt to test it explicitly.
+    static const unsigned char direct[] = { 1 };
+    BOOST_CHECK(!CScript(direct, direct+sizeof(direct)).IsPushOnly());
+}
+
 BOOST_AUTO_TEST_SUITE_END()
