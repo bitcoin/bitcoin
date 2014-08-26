@@ -455,8 +455,11 @@ void BitcoinGUI::setClientModel(ClientModel *clientModel)
     } else {
         // Disable possibility to show main window via action
         toggleHideAction->setEnabled(false);
-        // Disable context menu on tray icon
-        trayIconMenu->clear();
+        if(trayIconMenu)
+        {
+            // Disable context menu on tray icon
+            trayIconMenu->clear();
+        }
     }
 }
 
