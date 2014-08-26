@@ -5,6 +5,7 @@
 
 #include "core.h"
 #include "txmempool.h"
+#include "util.h"
 
 #include <boost/circular_buffer.hpp>
 

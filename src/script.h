@@ -7,7 +7,8 @@
 #define H_BITCOIN_SCRIPT
 
 #include "key.h"
-#include "util.h"
+#include "utilstrencodings.h"
+#include "tinyformat.h"
 
 #include <stdexcept>
 #include <stdint.h>

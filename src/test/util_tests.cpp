@@ -4,8 +4,11 @@
 
 #include "util.h"
 
+#include "core.h"
 #include "random.h"
 #include "sync.h"
+#include "utilstrencodings.h"
+#include "utilmoneystr.h"
 
 #include <stdint.h>
 #include <vector>
@@ -34,31 +37,6 @@ BOOST_AUTO_TEST_CASE(util_criticalsection)
 
         BOOST_ERROR("break was swallowed!");
     } while(0);
-}
-
-BOOST_AUTO_TEST_CASE(util_MedianFilter)
-{
-    CMedianFilter<int> filter(5, 15);
-
-    BOOST_CHECK_EQUAL(filter.median(), 15);
-
-    filter.input(20); // [15 20]
-    BOOST_CHECK_EQUAL(filter.median(), 17);
-
-    filter.input(30); // [15 20 30]
-    BOOST_CHECK_EQUAL(filter.median(), 20);
-
-    filter.input(3); // [3 15 20 30]
-    BOOST_CHECK_EQUAL(filter.median(), 17);
-
-    filter.input(7); // [3 7 15 20 30]
-    BOOST_CHECK_EQUAL(filter.median(), 15);
-
-    filter.input(18); // [3 7 18 20 30]
-    BOOST_CHECK_EQUAL(filter.median(), 18);
-
-    filter.input(0); // [0 3 7 18 30]
-    BOOST_CHECK_EQUAL(filter.median(), 7);
 }
 
 static const unsigned char ParseHex_expected[65] = {
