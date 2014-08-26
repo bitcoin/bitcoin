@@ -288,6 +288,7 @@ public:
     mruset<CInv> setInventoryKnown;
     std::vector<CInv> vInventoryToSend;
     CCriticalSection cs_inventory;
+    std::set<uint256> setAskFor;
     std::multimap<int64_t, CInv> mapAskFor;
 
     // Ping time measurement:
@@ -454,6 +455,10 @@ public:
 
     void AskFor(const CInv& inv)
     {
+        // a peer may not occupy multiple positions in an inv's request queue
+        if (!setAskFor.insert(inv.hash).second)
+            return;
+
         // We're using mapAskFor as a priority queue,
         // the key is the earliest time the request can be sent
         int64_t nRequestTime;
