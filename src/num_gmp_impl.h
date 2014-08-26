@@ -298,7 +298,7 @@ void static secp256k1_num_set_hex(secp256k1_num_t *r, const char *a, int alen) {
         0, 0, 0, 0, 0, 0, 0,0,0,0,0,0,0,0,0,0,
         0, 0, 0, 0, 0, 0, 0,0,0,0,0,0,0,0,0,0
     };
-    char num[257] = {};
+    unsigned char num[257] = {};
     for (int i=0; i<alen; i++) {
         num[i] = cvt[a[i]];
     }
