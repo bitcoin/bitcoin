@@ -24,6 +24,7 @@
 #endif
 
 #include "init.h"
+#include "util.h"
 #include "ui_interface.h"
 
 #include <iostream>

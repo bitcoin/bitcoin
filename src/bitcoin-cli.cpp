@@ -8,6 +8,8 @@
 #include "rpcclient.h"
 #include "rpcprotocol.h"
 #include "chainparamsbase.h"
+#include "utilstrencodings.h"
+#include "version.h"
 
 #include <boost/filesystem/operations.hpp>
 

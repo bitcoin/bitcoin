@@ -11,6 +11,7 @@
 
 #include "serialize.h"
 #include "util.h"
+#include "utilstrencodings.h"
 #include "version.h"
 
 #include <fstream>
