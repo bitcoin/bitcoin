@@ -1975,15 +1975,19 @@ static int64_t nTimeFlush = 0;
 static int64_t nTimeChainState = 0;
 static int64_t nTimePostConnect = 0;
 
-// Connect a new block to chainActive.
-bool static ConnectTip(CValidationState &state, CBlockIndex *pindexNew) {
+// Connect a new block to chainActive. pblock is either NULL or a pointer to a CBlock
+// corresponding to pindexNew, to bypass loading it again from disk.
+bool static ConnectTip(CValidationState &state, CBlockIndex *pindexNew, CBlock *pblock) {
     assert(pindexNew->pprev == chainActive.Tip());
     mempool.check(pcoinsTip);
     // Read block from disk.
     int64_t nTime1 = GetTimeMicros();
     CBlock block;
-    if (!ReadBlockFromDisk(block, pindexNew))
-        return state.Abort(_("Failed to read block"));
+    if (!pblock) {
+        if (!ReadBlockFromDisk(block, pindexNew))
+            return state.Abort(_("Failed to read block"));
+        pblock = &block;
+    }
     // Apply the block atomically to the chain state.
     int64_t nTime2 = GetTimeMicros(); nTimeReadFromDisk += nTime2 - nTime1;
     int64_t nTime3;
@@ -1991,7 +1995,7 @@ bool static ConnectTip(CValidationState &state, CBlockIndex *pindexNew) {
     {
         CCoinsViewCache view(*pcoinsTip, true);
         CInv inv(MSG_BLOCK, pindexNew->GetBlockHash());
-        if (!ConnectBlock(block, state, pindexNew, view)) {
+        if (!ConnectBlock(*pblock, state, pindexNew, view)) {
             if (state.IsInvalid())
                 InvalidBlockFound(pindexNew, state);
             return error("ConnectTip() : ConnectBlock %s failed", pindexNew->GetBlockHash().ToString());
@@ -2010,7 +2014,7 @@ bool static ConnectTip(CValidationState &state, CBlockIndex *pindexNew) {
     LogPrint("bench", "  - Writing chainstate: %.2fms [%.2fs]\n", (nTime5 - nTime4) * 0.001, nTimeChainState * 0.000001);
     // Remove conflicting transactions from the mempool.
     list<CTransaction> txConflicted;
-    mempool.removeForBlock(block.vtx, pindexNew->nHeight, txConflicted);
+    mempool.removeForBlock(pblock->vtx, pindexNew->nHeight, txConflicted);
     mempool.check(pcoinsTip);
     // Update chainActive & related variables.
     UpdateTip(pindexNew);
@@ -2020,8 +2024,8 @@ bool static ConnectTip(CValidationState &state, CBlockIndex *pindexNew) {
         SyncWithWallets(tx, NULL);
     }
     // ... and about transactions that got confirmed:
-    BOOST_FOREACH(const CTransaction &tx, block.vtx) {
-        SyncWithWallets(tx, &block);
+    BOOST_FOREACH(const CTransaction &tx, pblock->vtx) {
+        SyncWithWallets(tx, pblock);
     }
     int64_t nTime6 = GetTimeMicros(); nTimePostConnect += nTime6 - nTime5; nTimeTotal += nTime6 - nTime1;
     LogPrint("bench", "  - Connect postprocess: %.2fms [%.2fs]\n", (nTime6 - nTime5) * 0.001, nTimePostConnect * 0.000001);
@@ -2070,7 +2074,8 @@ static CBlockIndex* FindMostWorkChain() {
 }
 
 // Try to make some progress towards making pindexMostWork the active block.
-static bool ActivateBestChainStep(CValidationState &state, CBlockIndex *pindexMostWork) {
+// pblock is either NULL or a pointer to a CBlock corresponding to pindexMostWork.
+static bool ActivateBestChainStep(CValidationState &state, CBlockIndex *pindexMostWork, CBlock *pblock) {
     AssertLockHeld(cs_main);
     bool fInvalidFound = false;
     const CBlockIndex *pindexOldTip = chainActive.Tip();
@@ -2085,14 +2090,15 @@ static bool ActivateBestChainStep(CValidationState &state, CBlockIndex *pindexMo
     // Build list of new blocks to connect.
     std::vector<CBlockIndex*> vpindexToConnect;
     vpindexToConnect.reserve(pindexMostWork->nHeight - (pindexFork ? pindexFork->nHeight : -1));
-    while (pindexMostWork && pindexMostWork != pindexFork) {
-        vpindexToConnect.push_back(pindexMostWork);
-        pindexMostWork = pindexMostWork->pprev;
+    CBlockIndex *pindexIter = pindexMostWork;
+    while (pindexIter && pindexIter != pindexFork) {
+        vpindexToConnect.push_back(pindexIter);
+        pindexIter = pindexIter->pprev;
     }
 
     // Connect new blocks.
     BOOST_REVERSE_FOREACH(CBlockIndex *pindexConnect, vpindexToConnect) {
-        if (!ConnectTip(state, pindexConnect)) {
+        if (!ConnectTip(state, pindexConnect, pindexConnect == pindexMostWork ? pblock : NULL)) {
             if (state.IsInvalid()) {
                 // The block violates a consensus rule.
                 if (!state.CorruptionPossible())
@@ -2133,7 +2139,10 @@ static bool ActivateBestChainStep(CValidationState &state, CBlockIndex *pindexMo
     return true;
 }
 
-bool ActivateBestChain(CValidationState &state) {
+// Make the best chain active, in multiple steps. The result is either failure
+// or an activated best chain. pblock is either NULL or a pointer to a block
+// that is already loaded (to avoid loading it again from disk).
+bool ActivateBestChain(CValidationState &state, CBlock *pblock) {
     CBlockIndex *pindexNewTip = NULL;
     CBlockIndex *pindexMostWork = NULL;
     do {
@@ -2148,7 +2157,7 @@ bool ActivateBestChain(CValidationState &state) {
             if (pindexMostWork == NULL || pindexMostWork == chainActive.Tip())
                 return true;
 
-            if (!ActivateBestChainStep(state, pindexMostWork))
+            if (!ActivateBestChainStep(state, pindexMostWork, pblock && pblock->GetHash() == pindexMostWork->GetBlockHash() ? pblock : NULL))
                 return false;
 
             pindexNewTip = chainActive.Tip();
@@ -2696,7 +2705,7 @@ bool ProcessBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDiskBl
 
     }
 
-    if (!ActivateBestChain(state))
+    if (!ActivateBestChain(state, pblock))
         return error("ProcessBlock() : ActivateBestChain failed");
 
     return true;
@@ -3136,7 +3145,7 @@ bool InitBlockIndex() {
             CBlockIndex *pindex = AddToBlockIndex(block);
             if (!ReceivedBlockTransactions(block, state, pindex, blockPos))
                 return error("LoadBlockIndex() : genesis block not accepted");
-            if (!ActivateBestChain(state))
+            if (!ActivateBestChain(state, &block))
                 return error("LoadBlockIndex() : genesis block cannot be activated");
         } catch(std::runtime_error &e) {
             return error("LoadBlockIndex() : failed to initialize block database: %s", e.what());
