@@ -193,13 +193,13 @@ public:
         nMinerThreads = 1;
         nTargetTimespan = 14 * 24 * 60 * 60; // two weeks
         nTargetSpacing = 10 * 60;
-        bnProofOfWorkLimit = ~uint256(0) >> 1;
+        bnProofOfWorkLimit = ~uint256(0); // No difficulty at all
         genesis.nTime = 1296688602;
-        genesis.nBits = 0x207fffff;
+        genesis.nBits = 0x2100FFFF; // use 1/-2^32 difficulty. Before 0x207fffff: This was 1-bit difficulty
         genesis.nNonce = 2;
         hashGenesisBlock = genesis.GetHash();
         nDefaultPort = 18444;
-        assert(hashGenesisBlock == uint256("0x0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206"));
+        assert(hashGenesisBlock == uint256("0x6aef2f4ed33f670b67505a79aa9bbff284c7bafb92f566736d095cf0acff1965"));
 
         vSeeds.clear();  // Regtest mode doesn't have any DNS seeds.
 
