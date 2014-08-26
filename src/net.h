@@ -300,6 +300,10 @@ public:
     // Whether a ping is requested.
     bool fPingQueued;
 
+    // We will drop a randomly chosen outbound connection at this time
+    static int64_t nTimeRotateOutbound;
+
+
     CNode(SOCKET hSocketIn, CAddress addrIn, std::string addrNameIn = "", bool fInboundIn=false) : ssSend(SER_NETWORK, INIT_PROTO_VERSION), setAddrKnown(5000)
     {
         nServices = 0;

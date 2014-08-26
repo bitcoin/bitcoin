@@ -550,6 +550,7 @@ void CNode::PushVersion()
 
 std::map<CNetAddr, int64_t> CNode::setBanned;
 CCriticalSection CNode::cs_setBanned;
+int64_t CNode::nTimeRotateOutbound = GetTime() + 2*60; // Try to rotate after 2 mins after startup
 
 void CNode::ClearBanned()
 {
@@ -986,6 +987,13 @@ void ThreadSocketHandler()
             BOOST_FOREACH(CNode* pnode, vNodesCopy)
                 pnode->AddRef();
         }
+        // The following four variables are used to pick a random element among outbound connections
+        // choosing each element with a probability proportional to its (uint64_t) time
+        // since connected. If all elements have 0 connect time, choose an index at random.
+        uint64_t nTotal = 0;
+        uint64_t nTotalSoFar = 0;
+        vector<CNode*> vNodesOutbound;
+        CNode* pnodeToDisconnect = NULL;
         BOOST_FOREACH(CNode* pnode, vNodesCopy)
         {
             boost::this_thread::interruption_point();
@@ -1073,7 +1081,42 @@ void ThreadSocketHandler()
                     pnode->fDisconnect = true;
                 }
             }
+	    // This is the first step of picking a random outbound connection
+	    if (!pnode->fInbound && setservAddNodeAddresses.count(pnode->addr) == 0 && !pnode->fDisconnect) {
+	        nTotal += std::max(GetTime()-pnode->nTimeConnected,(int64_t)0); // Exclude case when the time jumped to the future and we have a negative value
+		vNodesOutbound.push_back(pnode);
+	    }
         }
+
+        // This is the second step of picking a random outbound connection
+        int nOutbound = vNodesOutbound.size();
+        int64_t nTimeRotateOutbound = CNode::nTimeRotateOutbound;
+        uint64_t nRandVal = GetRandInt(nTotal);
+        if(nOutbound >= 2 && !mapArgs.count("-connect") && GetTime()-nTimeRotateOutbound > 0) { // do not disconnect anybody if '-connect' was used, or
+                                                                                                // the number of outbound connected peers is less than 4
+            if (nTotal == 0) // If all connections are 0 seconds old, choose by index only
+                pnodeToDisconnect = vNodesOutbound[GetRandInt(nOutbound-1)];
+            else
+                BOOST_FOREACH(CNode* pnode, vNodesOutbound)
+                {
+                    nTotalSoFar += std::max(GetTime()-pnode->nTimeConnected,(int64_t)0); 
+                    if (nTotalSoFar >= nRandVal) {
+                        pnodeToDisconnect = pnode;
+                        break;
+                    }
+                }
+        }
+        if (pnodeToDisconnect) {
+            pnodeToDisconnect->fDisconnect = true;
+            CNode::nTimeRotateOutbound = GetTime() + 2*60 + GetRand(3*60);
+            LogPrint("net","regular entry rotation: peer '%s' will be diconnected;"
+	                " next-time=%lld; fInbound=%s; nTotal=%lld;"
+			" nTotalSoFar=%lld; nRandVal=%lld; nTimeConnectedDelta=%lld\n",
+	                   pnodeToDisconnect->addr.ToString(),
+			   CNode::nTimeRotateOutbound, pnodeToDisconnect->fInbound ? "yes" : "no", nTotal,
+			   nTotalSoFar, nRandVal, GetTime() - pnodeToDisconnect->nTimeConnected);
+        }
+
         {
             LOCK(cs_vNodes);
             BOOST_FOREACH(CNode* pnode, vNodesCopy)
