@@ -11,7 +11,6 @@
 #include "keystore.h"
 #include "main.h"
 #include "ui_interface.h"
-#include "util.h"
 #include "walletdb.h"
 
 #include <algorithm>
@@ -61,16 +60,8 @@ public:
     int64_t nTime;
     CPubKey vchPubKey;
 
-    CKeyPool()
-    {
-        nTime = GetTime();
-    }
-
-    CKeyPool(const CPubKey& vchPubKeyIn)
-    {
-        nTime = GetTime();
-        vchPubKey = vchPubKeyIn;
-    }
+    CKeyPool();
+    CKeyPool(const CPubKey& vchPubKeyIn);
 
     IMPLEMENT_SERIALIZE
     (
@@ -820,10 +811,7 @@ public:
         tx = txIn; i = iIn; nDepth = nDepthIn; fSpendable = fSpendableIn;
     }
 
-    std::string ToString() const
-    {
-        return strprintf("COutput(%s, %d, %d) [%s]", tx->GetHash().ToString(), i, nDepth, FormatMoney(tx->vout[i].nValue).c_str());
-    }
+    std::string ToString() const;
 };
 
 
@@ -840,11 +828,7 @@ public:
     //// todo: add something to note what created it (user, getnewaddress, change)
     ////   maybe should have a map<string, string> property map
 
-    CWalletKey(int64_t nExpires=0)
-    {
-        nTimeCreated = (nExpires ? GetTime() : 0);
-        nTimeExpires = nExpires;
-    }
+    CWalletKey(int64_t nExpires=0);
 
     IMPLEMENT_SERIALIZE
     (

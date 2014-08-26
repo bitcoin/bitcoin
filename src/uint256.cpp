@@ -4,7 +4,8 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "uint256.h"
-#include "util.h"
+
+#include "utilstrencodings.h"
 
 #include <stdio.h>
 #include <string.h>

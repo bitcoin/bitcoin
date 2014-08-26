@@ -8,12 +8,14 @@
 #ifdef WIN32
 #include "compat.h" // for Windows API
 #endif
+#include "serialize.h" // for begin_ptr(vec)
 #include "util.h" // for LogPrint()
+#include "utilstrencodings.h" // for GetTime()
 
 #ifndef WIN32
 #include <sys/time.h>
 #endif
-
+#include <limits>
 #include <openssl/crypto.h>
 #include <openssl/err.h>
 #include <openssl/rand.h>

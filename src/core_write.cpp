@@ -8,6 +8,7 @@
 #include "core.h"
 #include "serialize.h"
 #include "util.h"
+#include "utilmoneystr.h"
 #include "base58.h"
 
 using namespace std;
