@@ -31,6 +31,7 @@ private:
     CTransaction tx;
     int64_t nFee; // Cached to avoid expensive parent-transaction lookups
     size_t nTxSize; // ... and avoid recomputing tx size
+    size_t nModSize; // ... and modified size for priority
     int64_t nTime; // Local time when entering the mempool
     double dPriority; // Priority when entering the mempool
     unsigned int nHeight; // Chain height when entering the mempool
