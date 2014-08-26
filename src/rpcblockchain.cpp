@@ -7,6 +7,7 @@
 #include "main.h"
 #include "rpcserver.h"
 #include "sync.h"
+#include "poolman.h"
 
 #include <stdint.h>
 
@@ -404,6 +405,24 @@ Value gettxout(const Array& params, bool fHelp)
     ret.push_back(Pair("coinbase", coins.fCoinBase));
 
     return ret;
+}
+
+Value sweepmempool(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 0)
+        throw runtime_error(
+            "sweepmempool\n"
+            "\nRemoves old, unconfirmed transactions from mempool\n"
+            "\nResult:\n"
+            "n    (bool) true\n"
+            "\nExamples:\n"
+            + HelpExampleCli("sweepmempool", "")
+            + HelpExampleRpc("sweepmempool", "")
+        );
+
+    TxMempoolJanitor();
+
+    return true;
 }
 
 Value verifychain(const Array& params, bool fHelp)

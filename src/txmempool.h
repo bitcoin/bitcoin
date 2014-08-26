@@ -70,6 +70,8 @@ private:
     CFeeRate minRelayFee; // Passed to constructor to avoid dependency on main
     uint64_t totalTxSize; // sum of all mempool tx' byte sizes
 
+    void removeUnlocked(const CTransaction &tx, std::list<CTransaction>& removed, bool fRecursive = false);
+
 public:
     mutable CCriticalSection cs;
     std::map<uint256, CTxMemPoolEntry> mapTx;
@@ -93,8 +95,10 @@ public:
     void removeConflicts(const CTransaction &tx, std::list<CTransaction>& removed);
     void removeForBlock(const std::vector<CTransaction>& vtx, unsigned int nBlockHeight,
                         std::list<CTransaction>& conflicts);
+    void removeBatch(std::vector<CTransaction>& vtx, std::list<CTransaction>& removed, bool fRecursive = false);
     void clear();
     void queryHashes(std::vector<uint256>& vtxid);
+    void queryOld(std::vector<CTransaction>& vtx, int64_t matchTime);
     void pruneSpent(const uint256& hash, CCoins &coins);
     unsigned int GetTransactionsUpdated() const;
     void AddTransactionsUpdated(unsigned int n);
