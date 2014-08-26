@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <assert.h>
 #include <string.h>
+#include "util.h"
 #include "num.h"
 #include "field.h"
 
@@ -35,7 +36,7 @@ void static secp256k1_fe_normalize(secp256k1_fe_t *r) {
     t9 += (t8 >> 26); t8 &= 0x3FFFFFFUL; m &= t8;
 
     // ... except for a possible carry at bit 22 of t9 (i.e. bit 256 of the field element)
-    assert(t9 >> 23 == 0);
+    VERIFY_CHECK(t9 >> 23 == 0);
 
     // At most a single final reduction is needed; check if the value is >= the field characteristic
     x = (t9 >> 22) | ((t9 == 0x03FFFFFULL) & (m == 0x3FFFFFFULL)
@@ -54,7 +55,7 @@ void static secp256k1_fe_normalize(secp256k1_fe_t *r) {
     t9 += (t8 >> 26); t8 &= 0x3FFFFFFUL;
 
     // If t9 didn't carry to bit 22 already, then it should have after any final reduction
-    assert(t9 >> 22 == x);
+    VERIFY_CHECK(t9 >> 22 == x);
 
     // Mask off the possible multiple of 2^256 from the final reduction
     t9 &= 0x03FFFFFUL;
@@ -80,14 +81,14 @@ void static inline secp256k1_fe_set_int(secp256k1_fe_t *r, int a) {
 // TODO: not constant time!
 int static inline secp256k1_fe_is_zero(const secp256k1_fe_t *a) {
 #ifdef VERIFY
-    assert(a->normalized);
+    VERIFY_CHECK(a->normalized);
 #endif
     return (a->n[0] == 0 && a->n[1] == 0 && a->n[2] == 0 && a->n[3] == 0 && a->n[4] == 0 && a->n[5] == 0 && a->n[6] == 0 && a->n[7] == 0 && a->n[8] == 0 && a->n[9] == 0);
 }
 
 int static inline secp256k1_fe_is_odd(const secp256k1_fe_t *a) {
 #ifdef VERIFY
-    assert(a->normalized);
+    VERIFY_CHECK(a->normalized);
 #endif
     return a->n[0] & 1;
 }
@@ -105,8 +106,8 @@ void static inline secp256k1_fe_clear(secp256k1_fe_t *a) {
 // TODO: not constant time!
 int static inline secp256k1_fe_equal(const secp256k1_fe_t *a, const secp256k1_fe_t *b) {
 #ifdef VERIFY
-    assert(a->normalized);
-    assert(b->normalized);
+    VERIFY_CHECK(a->normalized);
+    VERIFY_CHECK(b->normalized);
 #endif
     return (a->n[0] == b->n[0] && a->n[1] == b->n[1] && a->n[2] == b->n[2] && a->n[3] == b->n[3] && a->n[4] == b->n[4] &&
             a->n[5] == b->n[5] && a->n[6] == b->n[6] && a->n[7] == b->n[7] && a->n[8] == b->n[8] && a->n[9] == b->n[9]);
@@ -131,7 +132,7 @@ void static secp256k1_fe_set_b32(secp256k1_fe_t *r, const unsigned char *a) {
 /** Convert a field element to a 32-byte big endian value. Requires the input to be normalized */
 void static secp256k1_fe_get_b32(unsigned char *r, const secp256k1_fe_t *a) {
 #ifdef VERIFY
-    assert(a->normalized);
+    VERIFY_CHECK(a->normalized);
 #endif
     for (int i=0; i<32; i++) {
         int c = 0;
@@ -146,7 +147,7 @@ void static secp256k1_fe_get_b32(unsigned char *r, const secp256k1_fe_t *a) {
 
 void static inline secp256k1_fe_negate(secp256k1_fe_t *r, const secp256k1_fe_t *a, int m) {
 #ifdef VERIFY
-    assert(a->magnitude <= m);
+    VERIFY_CHECK(a->magnitude <= m);
     r->magnitude = m + 1;
     r->normalized = 0;
 #endif
@@ -452,8 +453,8 @@ void static inline secp256k1_fe_sqr_inner(const uint32_t *a, uint32_t *r) {
 
 void static secp256k1_fe_mul(secp256k1_fe_t *r, const secp256k1_fe_t *a, const secp256k1_fe_t *b) {
 #ifdef VERIFY
-    assert(a->magnitude <= 8);
-    assert(b->magnitude <= 8);
+    VERIFY_CHECK(a->magnitude <= 8);
+    VERIFY_CHECK(b->magnitude <= 8);
     r->magnitude = 1;
     r->normalized = 0;
 #endif
@@ -462,7 +463,7 @@ void static secp256k1_fe_mul(secp256k1_fe_t *r, const secp256k1_fe_t *a, const s
 
 void static secp256k1_fe_sqr(secp256k1_fe_t *r, const secp256k1_fe_t *a) {
 #ifdef VERIFY
-    assert(a->magnitude <= 8);
+    VERIFY_CHECK(a->magnitude <= 8);
     r->magnitude = 1;
     r->normalized = 0;
 #endif

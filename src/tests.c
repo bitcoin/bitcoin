@@ -19,13 +19,6 @@
 #include "openssl/obj_mac.h"
 #endif
 
-#define TEST_FAILURE(msg) do { \
-    fprintf(stderr, "%s:%d: %s\n", __FILE__, __LINE__, msg); \
-    abort(); \
-} while(0)
-
-#define CHECK(cond) do { if (!(cond)) { TEST_FAILURE("test condition failed: " #cond); } } while(0)
-
 static int count = 100;
 
 /***** NUM TESTS *****/

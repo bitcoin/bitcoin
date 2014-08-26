@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <assert.h>
+#include "util.h"
 #include "num_impl.h"
 #include "field_impl.h"
 #include "group_impl.h"
@@ -22,6 +23,11 @@ void secp256k1_stop(void) {
 }
 
 int secp256k1_ecdsa_verify(const unsigned char *msg, int msglen, const unsigned char *sig, int siglen, const unsigned char *pubkey, int pubkeylen) {
+    DEBUG_CHECK(msg != NULL);
+    DEBUG_CHECK(msglen <= 32);
+    DEBUG_CHECK(sig != NULL);
+    DEBUG_CHECK(pubkey != NULL);
+
     int ret = -3;
     secp256k1_num_t m; 
     secp256k1_num_init(&m);
@@ -50,6 +56,13 @@ end:
 }
 
 int secp256k1_ecdsa_sign(const unsigned char *message, int messagelen, unsigned char *signature, int *signaturelen, const unsigned char *seckey, const unsigned char *nonce) {
+    DEBUG_CHECK(message != NULL);
+    DEBUG_CHECK(messagelen <= 32);
+    DEBUG_CHECK(signature != NULL);
+    DEBUG_CHECK(signaturelen != NULL);
+    DEBUG_CHECK(seckey != NULL);
+    DEBUG_CHECK(nonce != NULL);
+
     secp256k1_num_t sec, non, msg;
     secp256k1_num_init(&sec);
     secp256k1_num_init(&non);
@@ -78,6 +91,12 @@ int secp256k1_ecdsa_sign(const unsigned char *message, int messagelen, unsigned 
 }
 
 int secp256k1_ecdsa_sign_compact(const unsigned char *message, int messagelen, unsigned char *sig64, const unsigned char *seckey, const unsigned char *nonce, int *recid) {
+    DEBUG_CHECK(message != NULL);
+    DEBUG_CHECK(messagelen <= 32);
+    DEBUG_CHECK(sig64 != NULL);
+    DEBUG_CHECK(seckey != NULL);
+    DEBUG_CHECK(nonce != NULL);
+
     secp256k1_num_t sec, non, msg;
     secp256k1_num_init(&sec);
     secp256k1_num_init(&non);
@@ -107,6 +126,13 @@ int secp256k1_ecdsa_sign_compact(const unsigned char *message, int messagelen, u
 }
 
 int secp256k1_ecdsa_recover_compact(const unsigned char *msg, int msglen, const unsigned char *sig64, unsigned char *pubkey, int *pubkeylen, int compressed, int recid) {
+    DEBUG_CHECK(msg != NULL);
+    DEBUG_CHECK(msglen <= 32);
+    DEBUG_CHECK(sig64 != NULL);
+    DEBUG_CHECK(pubkey != NULL);
+    DEBUG_CHECK(pubkeylen != NULL);
+    DEBUG_CHECK(recid >= 0 && recid <= 3);
+
     int ret = 0;
     secp256k1_num_t m; 
     secp256k1_num_init(&m);
@@ -127,6 +153,8 @@ int secp256k1_ecdsa_recover_compact(const unsigned char *msg, int msglen, const 
 }
 
 int secp256k1_ecdsa_seckey_verify(const unsigned char *seckey) {
+    DEBUG_CHECK(seckey != NULL);
+
     secp256k1_num_t sec;
     secp256k1_num_init(&sec);
     secp256k1_num_set_bin(&sec, seckey, 32);
@@ -138,11 +166,17 @@ int secp256k1_ecdsa_seckey_verify(const unsigned char *seckey) {
 }
 
 int secp256k1_ecdsa_pubkey_verify(const unsigned char *pubkey, int pubkeylen) {
+    DEBUG_CHECK(pubkey != NULL);
+
     secp256k1_ge_t q;
     return secp256k1_ecdsa_pubkey_parse(&q, pubkey, pubkeylen);
 }
 
 int secp256k1_ecdsa_pubkey_create(unsigned char *pubkey, int *pubkeylen, const unsigned char *seckey, int compressed) {
+    DEBUG_CHECK(pubkey != NULL);
+    DEBUG_CHECK(pubkeylen != NULL);
+    DEBUG_CHECK(seckey != NULL);
+
     secp256k1_num_t sec;
     secp256k1_num_init(&sec);
     secp256k1_num_set_bin(&sec, seckey, 32);
@@ -157,6 +191,9 @@ int secp256k1_ecdsa_pubkey_create(unsigned char *pubkey, int *pubkeylen, const u
 }
 
 int secp256k1_ecdsa_pubkey_decompress(unsigned char *pubkey, int *pubkeylen) {
+    DEBUG_CHECK(pubkey != NULL);
+    DEBUG_CHECK(pubkeylen != NULL);
+
     secp256k1_ge_t p;
     if (!secp256k1_ecdsa_pubkey_parse(&p, pubkey, *pubkeylen))
         return 0;
@@ -165,6 +202,9 @@ int secp256k1_ecdsa_pubkey_decompress(unsigned char *pubkey, int *pubkeylen) {
 }
 
 int secp256k1_ecdsa_privkey_tweak_add(unsigned char *seckey, const unsigned char *tweak) {
+    DEBUG_CHECK(seckey != NULL);
+    DEBUG_CHECK(tweak != NULL);
+
     int ret = 1;
     secp256k1_num_t term;
     secp256k1_num_init(&term);
@@ -190,6 +230,9 @@ int secp256k1_ecdsa_privkey_tweak_add(unsigned char *seckey, const unsigned char
 }
 
 int secp256k1_ecdsa_pubkey_tweak_add(unsigned char *pubkey, int pubkeylen, const unsigned char *tweak) {
+    DEBUG_CHECK(pubkey != NULL);
+    DEBUG_CHECK(tweak != NULL);
+
     int ret = 1;
     secp256k1_num_t term;
     secp256k1_num_init(&term);
@@ -210,13 +253,16 @@ int secp256k1_ecdsa_pubkey_tweak_add(unsigned char *pubkey, int pubkeylen, const
         secp256k1_ge_set_gej(&p, &pt);
         int oldlen = pubkeylen;
         secp256k1_ecdsa_pubkey_serialize(&p, pubkey, &pubkeylen, oldlen <= 33);
-        assert(pubkeylen == oldlen);
+        VERIFY_CHECK(pubkeylen == oldlen);
     }
     secp256k1_num_free(&term);
     return ret;
 }
 
 int secp256k1_ecdsa_privkey_tweak_mul(unsigned char *seckey, const unsigned char *tweak) {
+    DEBUG_CHECK(seckey != NULL);
+    DEBUG_CHECK(tweak != NULL);
+
     int ret = 1;
     secp256k1_num_t factor;
     secp256k1_num_init(&factor);
@@ -239,6 +285,9 @@ int secp256k1_ecdsa_privkey_tweak_mul(unsigned char *seckey, const unsigned char
 }
 
 int secp256k1_ecdsa_pubkey_tweak_mul(unsigned char *pubkey, int pubkeylen, const unsigned char *tweak) {
+    DEBUG_CHECK(pubkey != NULL);
+    DEBUG_CHECK(tweak != NULL);
+
     int ret = 1;
     secp256k1_num_t factor;
     secp256k1_num_init(&factor);
@@ -263,13 +312,17 @@ int secp256k1_ecdsa_pubkey_tweak_mul(unsigned char *pubkey, int pubkeylen, const
         secp256k1_ge_set_gej(&p, &pt);
         int oldlen = pubkeylen;
         secp256k1_ecdsa_pubkey_serialize(&p, pubkey, &pubkeylen, oldlen <= 33);
-        assert(pubkeylen == oldlen);
+        VERIFY_CHECK(pubkeylen == oldlen);
     }
     secp256k1_num_free(&factor);
     return ret;
 }
 
 int secp256k1_ecdsa_privkey_export(const unsigned char *seckey, unsigned char *privkey, int *privkeylen, int compressed) {
+    DEBUG_CHECK(seckey != NULL);
+    DEBUG_CHECK(privkey != NULL);
+    DEBUG_CHECK(privkeylen != NULL);
+
     secp256k1_num_t key;
     secp256k1_num_init(&key);
     secp256k1_num_set_bin(&key, seckey, 32);
@@ -279,6 +332,9 @@ int secp256k1_ecdsa_privkey_export(const unsigned char *seckey, unsigned char *p
 }
 
 int secp256k1_ecdsa_privkey_import(unsigned char *seckey, const unsigned char *privkey, int privkeylen) {
+    DEBUG_CHECK(seckey != NULL);
+    DEBUG_CHECK(privkey != NULL);
+
     secp256k1_num_t key;
     secp256k1_num_init(&key);
     int ret = secp256k1_ecdsa_privkey_parse(&key, privkey, privkeylen);

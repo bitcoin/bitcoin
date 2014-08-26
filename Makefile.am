@@ -46,7 +46,6 @@ noinst_PROGRAMS =
 if USE_BENCHMARK
 noinst_PROGRAMS += bench
 bench_SOURCES = src/bench.c
-bench_CPPFLAGS = -DNDEBUG
 bench_LDADD = libsecp256k1_common.la $(SECP_LIBS)
 bench_LDFLAGS = -static
 endif

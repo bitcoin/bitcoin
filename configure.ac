@@ -144,6 +144,8 @@ if test x"$set_bignum" = x"openssl"; then
 fi
 ])
 
+AC_CHECK_DECL(__builtin_expect,AC_DEFINE(HAVE_BUILTIN_EXPECT,1,[Define this symbol if __builtin_expect is available]),,)
+
 AC_DEFUN([SECP_GMP_CHECK],[
 if test x"$has_gmp" != x"yes"; then
   AC_CHECK_HEADER(gmp.h,[AC_CHECK_LIB(gmp, __gmpz_init,[has_gmp=yes; GMP_LIBS=-lgmp; AC_DEFINE(HAVE_LIBGMP,1,[Define this symbol if libgmp is installed])])])
