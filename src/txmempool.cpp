@@ -484,7 +484,7 @@ void CTxMemPool::clear()
     ++nTransactionsUpdated;
 }
 
-void CTxMemPool::check(CCoinsViewCache *pcoins) const
+void CTxMemPool::check(const CCoinsViewCache *pcoins) const
 {
     if (!fSanityCheck)
         return;
@@ -505,7 +505,7 @@ void CTxMemPool::check(CCoinsViewCache *pcoins) const
                 const CTransaction& tx2 = it2->second.GetTx();
                 assert(tx2.vout.size() > txin.prevout.n && !tx2.vout[txin.prevout.n].IsNull());
             } else {
-                CCoins &coins = pcoins->GetCoins(txin.prevout.hash);
+                const CCoins &coins = pcoins->GetCoins(txin.prevout.hash);
                 assert(coins.IsAvailable(txin.prevout.n));
             }
             // Check whether its inputs are marked in mapNextTx.
@@ -625,7 +625,7 @@ void CTxMemPool::ClearPrioritisation(const uint256 hash)
 
 CCoinsViewMemPool::CCoinsViewMemPool(CCoinsView &baseIn, CTxMemPool &mempoolIn) : CCoinsViewBacked(baseIn), mempool(mempoolIn) { }
 
-bool CCoinsViewMemPool::GetCoins(const uint256 &txid, CCoins &coins) {
+bool CCoinsViewMemPool::GetCoins(const uint256 &txid, CCoins &coins) const {
     // If an entry in the mempool exists, always return that one, as it's guaranteed to never
     // conflict with the underlying cache, and it cannot have pruned entries (as it contains full)
     // transactions. First checking the underlying cache risks returning a pruned entry instead.
@@ -637,7 +637,7 @@ bool CCoinsViewMemPool::GetCoins(const uint256 &txid, CCoins &coins) {
     return (base->GetCoins(txid, coins) && !coins.IsPruned());
 }
 
-bool CCoinsViewMemPool::HaveCoins(const uint256 &txid) {
+bool CCoinsViewMemPool::HaveCoins(const uint256 &txid) const {
     return mempool.exists(txid) || base->HaveCoins(txid);
 }
 

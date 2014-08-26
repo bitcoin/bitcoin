@@ -32,13 +32,13 @@ protected:
 public:
     CCoinsViewDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
 
-    bool GetCoins(const uint256 &txid, CCoins &coins);
+    bool GetCoins(const uint256 &txid, CCoins &coins) const;
     bool SetCoins(const uint256 &txid, const CCoins &coins);
-    bool HaveCoins(const uint256 &txid);
-    uint256 GetBestBlock();
+    bool HaveCoins(const uint256 &txid) const;
+    uint256 GetBestBlock() const;
     bool SetBestBlock(const uint256 &hashBlock);
     bool BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock);
-    bool GetStats(CCoinsStats &stats);
+    bool GetStats(CCoinsStats &stats) const;
 };
 
 /** Access to the block database (blocks/index/) */
