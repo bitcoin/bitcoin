@@ -1420,25 +1420,6 @@ void static InvalidBlockFound(CBlockIndex *pindex, const CValidationState &state
     }
 }
 
-void UpdateTime(CBlockHeader& block, const CBlockIndex* pindexPrev)
-{
-    block.nTime = max(pindexPrev->GetMedianTimePast()+1, GetAdjustedTime());
-
-    // Updating time can change work required on testnet:
-    if (Params().AllowMinDifficultyBlocks())
-        block.nBits = GetNextWorkRequired(pindexPrev, &block);
-}
-
-
-
-
-
-
-
-
-
-
-
 void UpdateCoins(const CTransaction& tx, CValidationState &state, CCoinsViewCache &inputs, CTxUndo &txundo, int nHeight)
 {
     bool ret;
@@ -2435,12 +2416,7 @@ bool AcceptBlockHeader(CBlockHeader& block, CValidationState& state, CBlockIndex
             return state.DoS(100, error("CheckBlockHeader() : block with timestamp before last checkpoint"),
                              REJECT_CHECKPOINT, "time-too-old");
         }
-        bool fOverflow = false;
-        uint256 bnNewBlock;
-        bnNewBlock.SetCompact(block.nBits, NULL, &fOverflow);
-        uint256 bnRequired;
-        bnRequired.SetCompact(ComputeMinWork(pcheckpoint->nBits, deltaTime));
-        if (fOverflow || bnNewBlock > bnRequired)
+        if (!CheckMinWork(block.nBits, pcheckpoint->nBits, deltaTime))
         {
             return state.DoS(100, error("CheckBlockHeader() : block with too little proof-of-work"),
                              REJECT_INVALID, "bad-diffbits");
@@ -3296,15 +3272,6 @@ bool LoadExternalBlockFile(FILE* fileIn, CDiskBlockPos *dbp)
         LogPrintf("Loaded %i blocks from external file in %dms\n", nLoaded, GetTimeMillis() - nStart);
     return nLoaded > 0;
 }
-
-
-
-
-
-
-
-
-
 
 //////////////////////////////////////////////////////////////////////////////
 //
