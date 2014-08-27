@@ -3519,6 +3519,7 @@ void static ProcessGetData(CNode* pfrom)
     }
 }
 
+// 8 bytes + sizeof(CTxOut)
 struct CCoin {
     uint32_t nTxVer;   // Don't call this nVersion, that name has a special meaning inside IMPLEMENT_SERIALIZE
     uint32_t nHeight;
@@ -3529,6 +3530,10 @@ struct CCoin {
         READWRITE(nHeight);
         READWRITE(out);
     )
+
+    size_t GetSizeOf() {
+        return 8 /* two uint32_t */ + 8 /* out.nValue */ + out.scriptPubKey.size();
+    }
 };
 
 bool ProcessGetUTXOs(const vector<COutPoint> &vOutPoints, bool fCheckMemPool, vector<unsigned char> *result, vector<CCoin> *resultCoins)
@@ -3555,6 +3560,9 @@ bool ProcessGetUTXOs(const vector<COutPoint> &vOutPoints, bool fCheckMemPool, ve
 
     LogPrint("net", "getutxos for %d queries %s mempool\n", vOutPoints.size(), fCheckMemPool ? "with" : "without");
 
+    // Due to the above check max space the bitmap can use is 50,000 / 8 == 6250 bytes.
+    size_t bytes_used = vOutPoints.size() / 8;
+    size_t max_bytes = SendBufferSize();
     boost::dynamic_bitset<unsigned char> hits(vOutPoints.size());
     {
         LOCK2(cs_main, mempool.cs);
@@ -3577,6 +3585,9 @@ bool ProcessGetUTXOs(const vector<COutPoint> &vOutPoints, bool fCheckMemPool, ve
                     coin.nHeight = coins.nHeight;
                     coin.out = coins.vout.at(vOutPoints[i].n);
                     assert(!coin.out.IsNull());
+                    bytes_used += coin.GetSizeOf();
+                    if (bytes_used > max_bytes)
+                        return false;
                     resultCoins->push_back(coin);
                 }
             }
