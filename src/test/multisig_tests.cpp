@@ -164,9 +164,9 @@ BOOST_AUTO_TEST_CASE(multisig_Solver1)
     // Tests Solver() that returns lists of keys that are
     // required to satisfy a ScriptPubKey
     //
-    // Also tests IsMine() and ExtractAddress()
+    // Also tests IsMine() and ExtractDestination()
     //
-    // Note: ExtractAddress for the multisignature transactions
+    // Note: ExtractDestination for the multisignature transactions
     // always returns false for this release, even if you have
     // one key that would satisfy an (a|b) or 2-of-3 keys needed
     // to spend an escrow transaction.
