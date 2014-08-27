@@ -23,11 +23,11 @@ $(package)_clang_file_name=clang-llvm-3.2-x86-linux-ubuntu-12.04.tar.gz
 $(package)_clang_sha256_hash=b9d57a88f9514fa1f327a1a703756d0c1c960f4c58494a5bd80313245d13ffff
 
 define $(package)_fetch_cmds
-$(call fetch_file,$(package),$($(package)_download_path)/$($(package)_download_file),$($(package)_file_name),$($(package)_sha256_hash)) && \
-$(call fetch_file,$(package),$($(package)_ld64_download_path)/$($(package)_ld64_download_file),$($(package)_ld64_file_name),$($(package)_ld64_sha256_hash)) && \
-$(call fetch_file,$(package),$($(package)_dyld_download_path)/$($(package)_dyld_download_file),$($(package)_dyld_file_name),$($(package)_dyld_sha256_hash)) && \
-$(call fetch_file,$(package),$($(package)_clang_download_path)/$($(package)_clang_download_file),$($(package)_clang_file_name),$($(package)_clang_sha256_hash)) && \
-$(call fetch_file,$(package),$($(package)_toolchain4_download_path)/$($(package)_toolchain4_download_file),$($(package)_toolchain4_file_name),$($(package)_toolchain4_sha256_hash))
+$(call fetch_file,$(package),$($(package)_download_path),$($(package)_download_file),$($(package)_file_name),$($(package)_sha256_hash)) && \
+$(call fetch_file,$(package),$($(package)_ld64_download_path),$($(package)_ld64_download_file),$($(package)_ld64_file_name),$($(package)_ld64_sha256_hash)) && \
+$(call fetch_file,$(package),$($(package)_dyld_download_path),$($(package)_dyld_download_file),$($(package)_dyld_file_name),$($(package)_dyld_sha256_hash)) && \
+$(call fetch_file,$(package),$($(package)_clang_download_path),$($(package)_clang_download_file),$($(package)_clang_file_name),$($(package)_clang_sha256_hash)) && \
+$(call fetch_file,$(package),$($(package)_toolchain4_download_path),$($(package)_toolchain4_download_file),$($(package)_toolchain4_file_name),$($(package)_toolchain4_sha256_hash))
 endef
 
 define $(package)_set_vars
