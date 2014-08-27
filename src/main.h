@@ -942,7 +942,7 @@ class CVerifyDB {
 public:
     CVerifyDB();
     ~CVerifyDB();
-    bool VerifyDB(int nCheckLevel, int nCheckDepth);
+    bool VerifyDB(CCoinsView *coinsview, int nCheckLevel, int nCheckDepth);
 };
 
 /** An in-memory indexed chain of blocks. */

@@ -3018,7 +3018,7 @@ CVerifyDB::~CVerifyDB()
     uiInterface.ShowProgress("", 100);
 }
 
-bool CVerifyDB::VerifyDB(int nCheckLevel, int nCheckDepth)
+bool CVerifyDB::VerifyDB(CCoinsView *coinsview, int nCheckLevel, int nCheckDepth)
 {
     LOCK(cs_main);
     if (chainActive.Tip() == NULL || chainActive.Tip()->pprev == NULL)
@@ -3031,7 +3031,7 @@ bool CVerifyDB::VerifyDB(int nCheckLevel, int nCheckDepth)
         nCheckDepth = chainActive.Height();
     nCheckLevel = std::max(0, std::min(4, nCheckLevel));
     LogPrintf("Verifying last %i blocks at level %i\n", nCheckDepth, nCheckLevel);
-    CCoinsViewCache coins(*pcoinsTip, true);
+    CCoinsViewCache coins(*coinsview, true);
     CBlockIndex* pindexState = chainActive.Tip();
     CBlockIndex* pindexFailure = NULL;
     int nGoodTransactions = 0;
