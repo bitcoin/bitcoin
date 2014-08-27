@@ -9,7 +9,7 @@
 #include "keystore.h"
 #include "main.h"
 #include "script/script.h"
-#include "scriptutils.h"
+#include "script/sign.h"
 #include "core_io.h"
 
 #include <fstream>
