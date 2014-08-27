@@ -904,6 +904,7 @@ class CDataStream
 protected:
     typedef CSerializeData vector_type;
     vector_type vch;
+    size_t maxSz;
     unsigned int nReadPos;
 public:
     int nType;
@@ -953,6 +954,7 @@ public:
 
     void Init(int nTypeIn, int nVersionIn)
     {
+        maxSz = 0;
         nReadPos = 0;
         nType = nTypeIn;
         nVersion = nVersionIn;
@@ -1082,6 +1084,7 @@ public:
     CDataStream* rdbuf()         { return this; }
     int in_avail()               { return size(); }
 
+    void SetMaxSize(size_t sz)   { maxSz = sz; }
     void SetType(int n)          { nType = n; }
     int GetType()                { return nType; }
     void SetVersion(int n)       { nVersion = n; }
@@ -1128,6 +1131,15 @@ public:
 
     CDataStream& write(const char* pch, size_t nSize)
     {
+        // If a maximum size has been set, ensure that pushing this data would not
+        // cause the total buffer size to exceed the maximum allowed byte length.
+        if (maxSz != 0) {
+            size_t sz = vch.size() + nSize;
+            if (sz > maxSz || sz < nSize) {
+                throw std::ios_base::failure("CDataStream: max buffer length exceeded");
+            }
+        }
+
         // Write to the end of the buffer
         vch.insert(vch.end(), pch, pch + nSize);
         return (*this);

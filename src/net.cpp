@@ -2046,6 +2046,7 @@ CNode::CNode(SOCKET hSocketIn, CAddress addrIn, std::string addrNameIn, bool fIn
 {
     nServices = 0;
     hSocket = hSocketIn;
+    ssSend.SetMaxSize(24 + 32*1024*1024); // Message header + 32MB payload
     nRecvVersion = INIT_PROTO_VERSION;
     nLastSend = 0;
     nLastRecv = 0;
