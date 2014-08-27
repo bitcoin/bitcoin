@@ -15,12 +15,12 @@ $(package)_slf4j-jdk14_file_name=slf4j-jdk14-1.6.4.jar
 $(package)_slf4j-jdk14_sha256_hash=064bd81796710f713f9f4a2309c0e032309934c2d2b4f7d3b6958325e584e13f
 
 define $(package)_fetch_cmds
-$(call fetch_file,$(package),$($(package)_download_path)/$($(package)_file_name),$($(package)_file_name),$($(package)_sha256_hash)) && \
-$(call fetch_file,$(package),$($(package)_download_path)/$($(package)_guava_file_name),$($(package)_guava_file_name),$($(package)_guava_sha256_hash)) && \
-$(call fetch_file,$(package),$($(package)_download_path)/$($(package)_h2_file_name),$($(package)_h2_file_name),$($(package)_h2_sha256_hash)) && \
-$(call fetch_file,$(package),$($(package)_download_path)/$($(package)_sc-light-jdk15on_file_name),$($(package)_sc-light-jdk15on_file_name),$($(package)_sc-light-jdk15on_sha256_hash)) && \
-$(call fetch_file,$(package),$($(package)_download_path)/$($(package)_slf4j-api_file_name),$($(package)_slf4j-api_file_name),$($(package)_slf4j-api_sha256_hash)) && \
-$(call fetch_file,$(package),$($(package)_download_path)/$($(package)_slf4j-jdk14_file_name),$($(package)_slf4j-jdk14_file_name),$($(package)_slf4j-jdk14_sha256_hash))
+$(call fetch_file,$(package),$($(package)_download_path),$($(package)_file_name),$($(package)_file_name),$($(package)_sha256_hash)) && \
+$(call fetch_file,$(package),$($(package)_download_path),$($(package)_guava_file_name),$($(package)_guava_file_name),$($(package)_guava_sha256_hash)) && \
+$(call fetch_file,$(package),$($(package)_download_path),$($(package)_h2_file_name),$($(package)_h2_file_name),$($(package)_h2_sha256_hash)) && \
+$(call fetch_file,$(package),$($(package)_download_path),$($(package)_sc-light-jdk15on_file_name),$($(package)_sc-light-jdk15on_file_name),$($(package)_sc-light-jdk15on_sha256_hash)) && \
+$(call fetch_file,$(package),$($(package)_download_path),$($(package)_slf4j-api_file_name),$($(package)_slf4j-api_file_name),$($(package)_slf4j-api_sha256_hash)) && \
+$(call fetch_file,$(package),$($(package)_download_path),$($(package)_slf4j-jdk14_file_name),$($(package)_slf4j-jdk14_file_name),$($(package)_slf4j-jdk14_sha256_hash))
 endef
 
 define $(package)_extract_cmds
