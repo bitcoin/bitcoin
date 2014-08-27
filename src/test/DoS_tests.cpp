@@ -12,7 +12,7 @@
 #include "main.h"
 #include "net.h"
 #include "pow.h"
-#include "scriptutils.h"
+#include "script/sign.h"
 #include "serialize.h"
 #include "util.h"
 
