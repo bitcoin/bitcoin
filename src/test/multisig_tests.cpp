@@ -6,6 +6,7 @@
 #include "keystore.h"
 #include "main.h"
 #include "script/script.h"
+#include "script/interpreter.h"
 #include "scriptutils.h"
 #include "uint256.h"
 
