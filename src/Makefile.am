@@ -101,6 +101,7 @@ BITCOIN_CORE_H = \
   script/interpreter.h \
   script/compressor.h \
   script/script.h \
+  script/sign.h \
   script/standard.h \
   scriptutils.h \
   serialize.h \
@@ -213,6 +214,7 @@ libbitcoin_common_a_SOURCES = \
   script/interpreter.cpp \
   script/compressor.cpp \
   script/script.cpp \
+  script/sign.cpp \
   script/standard.cpp \
   scriptutils.cpp \
   $(BITCOIN_CORE_H)

@@ -13,6 +13,7 @@
 #include "rpcserver.h"
 #include "script/script.h"
 #include "script/standard.h"
+#include "script/sign.h"
 #include "uint256.h"
 #ifdef ENABLE_WALLET
 #include "wallet.h"

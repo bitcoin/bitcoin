@@ -6,6 +6,7 @@
 #include "keystore.h"
 #include "main.h"
 #include "script/script.h"
+#include "script/sign.h"
 #include "scriptutils.h"
 
 #include <vector>
