@@ -350,6 +350,7 @@ void IncrementExtraNonce(CBlock* pblock, CBlockIndex* pindexPrev, unsigned int& 
 //
 double dHashesPerSec = 0.0;
 int64_t nHPSTimerStart = 0;
+uint32_t nOldNonce = 0;
 
 //
 // ScanHash scans nonces looking for a hash with at least some zero bits.
@@ -368,6 +369,7 @@ bool static ScanHash(CBlockHeader *pblock)
     assert(ss.size() == 80);
     hasher.Write((unsigned char*)&ss[0], 76);
 
+    bool toReturn = false;
     while (true) {
         pblock->proof.nNonce++;
 
@@ -382,16 +384,46 @@ bool static ScanHash(CBlockHeader *pblock)
             if (hash <= hashTarget) {
                 assert(hash == pblock->GetHash());
                 LogPrintf("hash: %s  \ntarget: %s\n", hash.GetHex(), hashTarget.GetHex());
-                return true;
+                toReturn = true;
+                break;
             }
         }
 
         // If nothing found after trying for a while, return -1
         if ((pblock->proof.nNonce & 0xffff) == 0)
-            return false;
+            break;
         if ((pblock->proof.nNonce & 0xfff) == 0)
             boost::this_thread::interruption_point();
     }
+
+    uint32_t nHashesDone = pblock->proof.nNonce - nOldNonce;
+    nOldNonce = pblock->proof.nNonce;
+
+    // Meter hashes/sec
+    static int64_t nHashCounter;
+    if (nHPSTimerStart == 0) {
+        nHPSTimerStart = GetTimeMillis();
+        nHashCounter = 0;
+    }
+    else
+        nHashCounter += nHashesDone;
+    if (GetTimeMillis() - nHPSTimerStart > 4000) {
+        static CCriticalSection cs;
+        {
+            LOCK(cs);
+            if (GetTimeMillis() - nHPSTimerStart > 4000) {
+                dHashesPerSec = 1000.0 * nHashCounter / (GetTimeMillis() - nHPSTimerStart);
+                nHPSTimerStart = GetTimeMillis();
+                nHashCounter = 0;
+                static int64_t nLogTime;
+                if (GetTime() - nLogTime > 30 * 60) {
+                    nLogTime = GetTime();
+                    LogPrintf("hashmeter %6.0f khash/s\n", dHashesPerSec/1000.0);
+                }
+            }
+        }
+    }
+    return toReturn;
 }
 
 CBlockTemplate* CreateNewBlockWithKey(CReserveKey& reservekey)
@@ -475,14 +507,9 @@ void static BitcoinMiner(CWallet *pwallet)
             //
             int64_t nStart = GetTime();
             pblock->proof.nNonce = 0;
-            uint32_t nOldNonce = 0;
             while (true) {
-                bool fFound = ScanHash(pblock);
-                uint32_t nHashesDone = pblock->proof.nNonce - nOldNonce;
-                nOldNonce = pblock->proof.nNonce;
-
                 // Check if something found
-                if (fFound)
+                if (ScanHash(pblock))
                 {
                     SetThreadPriority(THREAD_PRIORITY_NORMAL);
                     LogPrintf("BitcoinMiner:\n proof-of-work found\n");
@@ -494,35 +521,6 @@ void static BitcoinMiner(CWallet *pwallet)
                         throw boost::thread_interrupted();
 
                     break;
-                }
-
-                // Meter hashes/sec
-                static int64_t nHashCounter;
-                if (nHPSTimerStart == 0)
-                {
-                    nHPSTimerStart = GetTimeMillis();
-                    nHashCounter = 0;
-                }
-                else
-                    nHashCounter += nHashesDone;
-                if (GetTimeMillis() - nHPSTimerStart > 4000)
-                {
-                    static CCriticalSection cs;
-                    {
-                        LOCK(cs);
-                        if (GetTimeMillis() - nHPSTimerStart > 4000)
-                        {
-                            dHashesPerSec = 1000.0 * nHashCounter / (GetTimeMillis() - nHPSTimerStart);
-                            nHPSTimerStart = GetTimeMillis();
-                            nHashCounter = 0;
-                            static int64_t nLogTime;
-                            if (GetTime() - nLogTime > 30 * 60)
-                            {
-                                nLogTime = GetTime();
-                                LogPrintf("hashmeter %6.0f khash/s\n", dHashesPerSec/1000.0);
-                            }
-                        }
-                    }
                 }
 
                 // Check for stop or if block needs to be rebuilt
