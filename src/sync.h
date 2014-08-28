@@ -260,5 +260,5 @@ public:
         return fHaveGrant;
     }
 };
-#endif
 
+#endif // BITCOIN_SYNC_H

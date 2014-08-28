@@ -30,4 +30,4 @@ namespace Checkpoints {
 
 } //namespace Checkpoints
 
-#endif
+#endif // BITCOIN_CHECKPOINT_H

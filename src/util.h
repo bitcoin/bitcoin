@@ -222,4 +222,4 @@ template <typename Callable> void TraceThread(const char* name,  Callable func)
     }
 }
 
-#endif
+#endif // BITCOIN_UTIL_H

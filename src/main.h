@@ -1056,4 +1056,4 @@ protected:
     friend void ::UnregisterAllWallets();
 };
 
-#endif
+#endif // BITCOIN_MAIN_H
