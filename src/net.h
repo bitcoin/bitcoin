@@ -615,4 +615,4 @@ public:
     bool Read(CAddrMan& addr);
 };
 
-#endif
+#endif // BITCOIN_NET_H
