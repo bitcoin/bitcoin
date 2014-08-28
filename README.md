@@ -36,7 +36,7 @@ Implementation details
 * Point multiplication for signing
   * Use a precomputed table of multiples of powers of 16 multiplied with the generator, so general multiplication becomes a series of additions.
   * Slice the precomputed table in memory per byte, so memory access to the table becomes uniform.
-  * Not fully constant-time.
+  * Not fully constant-time, but the precomputed tables add and eventually subtract points for which no known scalar (private key) is known, blinding non-constant time effects even from an attacker with control over the private key used.
 
 Build steps
 -----------

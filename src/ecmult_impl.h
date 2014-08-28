@@ -73,14 +73,16 @@ typedef struct {
     // For accelerating the computation of a*G:
     // To harden against timing attacks, use the following mechanism:
     // * Break up the multiplicand into groups of 4 bits, called n_0, n_1, n_2, ..., n_63.
-    // * Compute sum((n_i + 1) * 16^i * G, i=0..63).
-    // * Subtract sum(1 * 16^i * G, i=0..63).
-    // For each i, and each of the 16 possible values of n_i, ((n_i + 1) * 16^i * G) is
-    // precomputed (call it prec(i,n_i), as well as -sum(1 * 16^i * G) (called fin).
-    // The formula now becomes sum(prec(i, n_i), i=0..63) + fin.
-    // To make memory access uniform, the bytes of prec(i,n_i) are sliced per value of n_i.
-    unsigned char prec[64][sizeof(secp256k1_ge_t)][16]; // prec[j][k][i] = k'th byte of (16^j * (i+1) * G)
-    secp256k1_ge_t fin; // -(sum(prec[j][0], j=0..63))
+    // * Compute sum(n_i * 16^i * G + U_i, i=0..63), where:
+    //   * U_i = U * 2^i (for i=0..62)
+    //   * U_i = U * (1-2^63) (for i=63)
+    //   where U is a point with no known corresponding scalar. Note that sum(U_i, i=0..63) = 0.
+    // For each i, and each of the 16 possible values of n_i, (n_i * 16^i * G + U_i) is
+    // precomputed (call it prec(i, n_i)). The formula now becomes sum(prec(i, n_i), i=0..63).
+    // None of the resulting prec group elements have a known scalar, and neither do any of
+    // the intermediate sums while computing a*G.
+    // To make memory access uniform, the bytes of prec(i, n_i) are sliced per value of n_i.
+    unsigned char prec[64][sizeof(secp256k1_ge_t)][16]; // prec[j][k][i] = k'th byte of (16^j * i * G + U_i)
 } secp256k1_ecmult_consts_t;
 
 static const secp256k1_ecmult_consts_t *secp256k1_ecmult_consts = NULL;
@@ -105,34 +107,53 @@ static void secp256k1_ecmult_start(void) {
     secp256k1_ecmult_table_precomp_ge(ret->pre_g, &gj, WINDOW_G);
     secp256k1_ecmult_table_precomp_ge(ret->pre_g_128, &g_128j, WINDOW_G);
 
-    // compute prec and fin
-    secp256k1_gej_t tj[961];
-    int pos = 0;
-    secp256k1_gej_t fn; secp256k1_gej_set_infinity(&fn);
-    for (int j=0; j<64; j++) {
-        secp256k1_gej_add(&fn, &fn, &gj);
-        secp256k1_gej_t adj = gj;
-        for (int i=1; i<16; i++) {
-            secp256k1_gej_add(&gj, &gj, &adj);
-            tj[pos++] = gj;
-        }
+    // Construct a group element with no known corresponding scalar (nothing up my sleeve).
+    secp256k1_gej_t nums_gej;
+    {
+        static const unsigned char nums_b32[32] = "The scalar for this x is unknown";
+        secp256k1_fe_t nums_x;
+        secp256k1_fe_set_b32(&nums_x, nums_b32);
+        secp256k1_ge_t nums_ge;
+        VERIFY_CHECK(secp256k1_ge_set_xo(&nums_ge, &nums_x, 0));
+        secp256k1_gej_set_ge(&nums_gej, &nums_ge);
+        // Add G to make the bits in x uniformly distributed.
+        secp256k1_gej_add_ge(&nums_gej, &nums_gej, g);
     }
-    VERIFY_CHECK(pos == 960);
-    tj[pos] = fn;
-    secp256k1_ge_t t[961]; secp256k1_ge_set_all_gej(961, t, tj);
-    pos = 0;
-    const unsigned char *raw = (const unsigned char*)g;
+
+    // compute prec.
+    secp256k1_ge_t prec[1024];
+    {
+        secp256k1_gej_t precj[1024]; // Jacobian versions of prec.
+        int j = 0;
+        secp256k1_gej_t gbase; gbase = gj; // 16^j * G
+        secp256k1_gej_t numsbase; numsbase = nums_gej; // 2^j * nums.
+        for (int j=0; j<64; j++) {
+            // Set precj[j*16 .. j*16+15] to (numsbase, numsbase + gbase, ..., numsbase + 15*gbase).
+            precj[j*16] = numsbase;
+            for (int i=1; i<16; i++) {
+                secp256k1_gej_add(&precj[j*16 + i], &precj[j*16 + i - 1], &gbase);
+            }
+            // Multiply gbase by 16.
+            for (int i=0; i<4; i++) {
+                secp256k1_gej_double(&gbase, &gbase);
+            }
+            // Multiply numbase by 2.
+            secp256k1_gej_double(&numsbase, &numsbase);
+            if (j == 62) {
+                // In the last iteration, numsbase is (1 - 2^j) * nums instead.
+                secp256k1_gej_neg(&numsbase, &numsbase);
+                secp256k1_gej_add(&numsbase, &numsbase, &nums_gej);
+            }
+        }
+        secp256k1_ge_set_all_gej(1024, prec, precj);
+    }
     for (int j=0; j<64; j++) {
-        for (int k=0; k<sizeof(secp256k1_ge_t); k++)
-            ret->prec[j][k][0] = raw[k];
-        for (int i=1; i<16; i++) {
-            raw = (const unsigned char*)(&t[pos++]);
+        for (int i=0; i<16; i++) {
+            const unsigned char* raw = (const unsigned char*)(&prec[j*16 + i]);
             for (int k=0; k<sizeof(secp256k1_ge_t); k++)
                 ret->prec[j][k][i] = raw[k];
         }
     }
-    VERIFY_CHECK(pos == 960);
-    secp256k1_ge_neg(&ret->fin, &t[pos]);
 }
 
 static void secp256k1_ecmult_stop(void) {
@@ -202,7 +223,6 @@ void static secp256k1_ecmult_gen(secp256k1_gej_t *r, const secp256k1_num_t *gn) 
     secp256k1_ge_clear(&add);
     secp256k1_num_clear(&n);
     secp256k1_num_free(&n);
-    secp256k1_gej_add_ge(r, r, &c->fin);
 }
 
 void static secp256k1_ecmult(secp256k1_gej_t *r, const secp256k1_gej_t *a, const secp256k1_num_t *na, const secp256k1_num_t *ng) {
