@@ -11,7 +11,8 @@
 
 using namespace std;
 
-CTxMemPoolEntry::CTxMemPoolEntry()
+CTxMemPoolEntry::CTxMemPoolEntry():
+    nFee(0), nTxSize(0), nTime(0), dPriority(0.0)
 {
     nHeight = MEMPOOL_HEIGHT;
 }
@@ -345,7 +346,9 @@ public:
 };
 
 
-CTxMemPool::CTxMemPool(const CFeeRate& _minRelayFee) : minRelayFee(_minRelayFee)
+CTxMemPool::CTxMemPool(const CFeeRate& _minRelayFee) :
+    nTransactionsUpdated(0),
+    minRelayFee(_minRelayFee)
 {
     // Sanity checks off by default for performance, because otherwise
     // accepting transactions becomes O(N^2) where N is the number

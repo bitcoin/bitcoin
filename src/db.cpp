@@ -227,10 +227,10 @@ CDB::CDB(const char *pszFile, const char* pszMode) :
     pdb(NULL), activeTxn(NULL)
 {
     int ret;
+    fReadOnly = (!strchr(pszMode, '+') && !strchr(pszMode, 'w'));
     if (pszFile == NULL)
         return;
 
-    fReadOnly = (!strchr(pszMode, '+') && !strchr(pszMode, 'w'));
     bool fCreate = strchr(pszMode, 'c');
     unsigned int nFlags = DB_THREAD;
     if (fCreate)
