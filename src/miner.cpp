@@ -365,15 +365,10 @@ void IncrementExtraNonce(CBlock* pblock, CBlockIndex* pindexPrev, unsigned int& 
 // Internal miner
 //
 
-//
-// ScanHash scans nonces looking for a hash with at least some zero bits.
-// The nonce is usually preserved between calls, but periodically or if the
-// nonce is 0xffff0000 or above, the block is rebuilt and nNonce starts over at
-// zero.
-//
-bool static ScanHash(const CBlockHeader *pblock, uint32_t& nNonce, uint256 *phash)
+bool GenerateProof(CBlockHeader* pblock, const Consensus::Params& chainparams)
 {
     // Write the first 76 bytes of the block header to a double-SHA256 state.
+    uint256 hash;
     CHash256 hasher;
     CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
     ss << *pblock;
@@ -381,19 +376,17 @@ bool static ScanHash(const CBlockHeader *pblock, uint32_t& nNonce, uint256 *phas
     hasher.Write((unsigned char*)&ss[0], 76);
 
     while (true) {
-        nNonce++;
+        pblock->nNonce++;
 
         // Write the last 4 bytes of the block header (the nonce) to a copy of
         // the double-SHA256 state, and compute the result.
-        CHash256(hasher).Write((unsigned char*)&nNonce, 4).Finalize((unsigned char*)phash);
+        CHash256(hasher).Write((unsigned char*)&pblock->nNonce, 4).Finalize((unsigned char*)&hash);
 
-        // Return the nonce if the hash has at least some zero bits,
-        // caller will check if it has enough to reach the target
-        if (((uint16_t*)phash)[15] == 0)
+        if (CheckProofOfWork(hash, pblock->nBits, chainparams))
             return true;
 
         // If nothing found after trying for a while, return -1
-        if ((nNonce & 0xfff) == 0)
+        if ((pblock->nNonce & 0xfff) == 0)
             return false;
     }
 }
@@ -475,32 +468,21 @@ void static BitcoinMiner(const CChainParams& chainparams)
             // Search
             //
             int64_t nStart = GetTime();
-            arith_uint256 hashTarget = arith_uint256().SetCompact(pblock->nBits);
-            uint256 hash;
-            uint32_t nNonce = 0;
-            while (true) {
+            pblock->nNonce = 0;
+            for (int i=0; i < 1000; i++) {
                 // Check if something found
-                if (ScanHash(pblock, nNonce, &hash))
+                if (GenerateProof(pblock, chainparams.GetConsensus()))
                 {
-                    if (UintToArith256(hash) <= hashTarget)
-                    {
-                        // Found a solution
-                        pblock->nNonce = nNonce;
-                        assert(hash == pblock->GetHash());
-
                         SetThreadPriority(THREAD_PRIORITY_NORMAL);
-                        LogPrintf("BitcoinMiner:\n");
-                        LogPrintf("proof-of-work found  \n  hash: %s  \ntarget: %s\n", hash.GetHex(), hashTarget.GetHex());
+                        LogPrintf("BitcoinMiner:\n proof-of-work found\n");
                         ProcessBlockFound(pblock, chainparams);
                         SetThreadPriority(THREAD_PRIORITY_LOWEST);
                         coinbaseScript->KeepScript();
 
                         // In regression test mode, stop mining after a block is found.
                         if (chainparams.MineBlocksOnDemand())
-                            throw boost::thread_interrupted();
-
+                            return;
                         break;
-                    }
                 }
 
                 // Check for stop or if block needs to be rebuilt
@@ -508,8 +490,7 @@ void static BitcoinMiner(const CChainParams& chainparams)
                 // Regtest mode doesn't require peers
                 if (vNodes.empty() && chainparams.MiningRequiresPeers())
                     break;
-                if (nNonce >= 0xffff0000)
-                    break;
+                // periodically or after 1000 iterations, the block is rebuilt and nNonce starts over at zero.
                 if (mempool.GetTransactionsUpdated() != nTransactionsUpdatedLast && GetTime() - nStart > 60)
                     break;
                 if (pindexPrev != chainActive.Tip())
@@ -517,18 +498,8 @@ void static BitcoinMiner(const CChainParams& chainparams)
 
                 // Update nTime every few seconds
                 UpdateTime(pblock, chainparams.GetConsensus(), pindexPrev);
-                if (chainparams.GetConsensus().fPowAllowMinDifficultyBlocks)
-                {
-                    // Changing pblock->nTime can change work required on testnet:
-                    hashTarget.SetCompact(pblock->nBits);
-                }
             }
         }
-    }
-    catch (const boost::thread_interrupted&)
-    {
-        LogPrintf("BitcoinMiner terminated\n");
-        throw;
     }
     catch (const std::runtime_error &e)
     {
@@ -549,17 +520,21 @@ void GenerateBitcoins(bool fGenerate, int nThreads, const CChainParams& chainpar
             nThreads = GetNumCores();
     }
 
-    if (minerThreads != NULL)
-    {
-        minerThreads->interrupt_all();
-        delete minerThreads;
-        minerThreads = NULL;
-    }
-
     if (nThreads == 0 || !fGenerate)
         return;
 
-    minerThreads = new boost::thread_group();
-    for (int i = 0; i < nThreads; i++)
-        minerThreads->create_thread(boost::bind(&BitcoinMiner, boost::cref(chainparams)));
+    if (chainparams.MineBlocksOnDemand()) {
+        for (int i = 0; i < nThreads; i++)
+            BitcoinMiner(chainparams);
+    } else {
+        if (minerThreads != NULL) {
+            minerThreads->interrupt_all();
+            delete minerThreads;
+            minerThreads = NULL;
+        }
+
+        minerThreads = new boost::thread_group();
+        for (int i = 0; i < nThreads; i++)
+            minerThreads->create_thread(boost::bind(&BitcoinMiner, boost::cref(chainparams)));
+    }
 }

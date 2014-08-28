@@ -6,6 +6,7 @@
 #ifndef BITCOIN_MINER_H
 #define BITCOIN_MINER_H
 
+#include "consensus/params.h"
 #include "primitives/block.h"
 
 #include <stdint.h>
@@ -24,6 +25,12 @@ struct CBlockTemplate
     std::vector<int64_t> vTxSigOps;
 };
 
+/**
+ * Scans nonces looking for a hash with at least some zero bits.
+ * If it finds and the block passes CheckProofOfWork, returns
+ * true. Otherwise it returns false after some tries.
+ */
+bool GenerateProof(CBlockHeader* pblock, const Consensus::Params& params);
 /** Run the miner threads */
 void GenerateBitcoins(bool fGenerate, int nThreads, const CChainParams& chainparams);
 /** Generate a new block, without valid proof-of-work */
