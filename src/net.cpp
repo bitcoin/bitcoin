@@ -1263,13 +1263,17 @@ void ThreadDNSAddressSeed()
 
 void DumpAddresses()
 {
+    // Prevent overwriting peers.dat in case addrman is empty
+    if (addrman.size() <= 0)
+        return;
+
     int64_t nStart = GetTimeMillis();
 
     CAddrDB adb;
     adb.Write(addrman);
 
-    LogPrint("net", "Flushed %d addresses to peers.dat  %dms\n",
-           addrman.size(), GetTimeMillis() - nStart);
+    LogPrint("net", "Flushed %d addresses to peers.dat %dms\n",
+        addrman.size(), GetTimeMillis() - nStart);
 }
 
 void static ProcessOneShot()
