@@ -5,8 +5,9 @@
 
 #include "chainparamsbase.h"
 
-#include "assert.h"
 #include "util.h"
+
+#include <assert.h>
 
 #include <boost/assign/list_of.hpp>
 
