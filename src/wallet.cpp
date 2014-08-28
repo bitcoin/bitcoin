@@ -1625,8 +1625,64 @@ void CWallet::GetStakeWeightFromValue(const int64& nTime, const int64& nValue, u
 // NovaCoin: get current stake weight
 bool CWallet::GetStakeWeight(const CKeyStore& keystore, uint64& nMinWeight, uint64& nMaxWeight, uint64& nWeight)
 {
-    if (mapMeta.size() == 0 || !fCoinsDataActual)
+    // Choose coins to use
+    int64 nBalance = GetBalance();
+    int64 nReserveBalance = 0;
+
+    if (mapArgs.count("-reservebalance") && !ParseMoney(mapArgs["-reservebalance"], nReserveBalance))
+        return error("CreateCoinStake : invalid reserve balance amount");
+
+    if (nBalance <= nReserveBalance)
         return false;
+
+    CTxDB txdb("r");
+    {
+        LOCK2(cs_main, cs_wallet);
+        // Cache outputs unless best block or wallet transaction set changed
+        if (!fCoinsDataActual)
+        {
+            mapMeta.clear();
+            int64 nValueIn = 0;
+            CoinsSet setCoins;
+            if (!SelectCoinsSimple(nBalance - nReserveBalance, MIN_TX_FEE, MAX_MONEY, GetAdjustedTime(), nCoinbaseMaturity * 10, setCoins, nValueIn))
+                return false;
+
+            if (setCoins.empty())
+                return false;
+
+            {
+                CTxIndex txindex;
+                CBlock block;
+                for(CoinsSet::iterator pcoin = setCoins.begin(); pcoin != setCoins.end(); pcoin++)
+                {
+                    // Load transaction index item
+                    if (!txdb.ReadTxIndex(pcoin->first->GetHash(), txindex))
+                        continue;
+
+                    // Read block header
+                    if (!block.ReadFromDisk(txindex.pos.nFile, txindex.pos.nBlockPos, false))
+                        continue;
+
+                    uint64 nStakeModifier = 0;
+                    if (!GetKernelStakeModifier(block.GetHash(), nStakeModifier))
+                        continue;
+
+                    // Add meta record
+                    // txid => ((txindex, (tx, vout.n)), (block, modifier))
+                    mapMeta[pcoin->first->GetHash()] = make_pair(make_pair(txindex, *pcoin), make_pair(block, nStakeModifier));
+
+                    if (fDebug)
+                        printf("Load coin: %s\n", pcoin->first->GetHash().GetHex().c_str());
+                }
+            }
+
+            if (fDebug)
+                printf("Get stake weight: %zu meta items loaded for %zu coins\n", mapMeta.size(), setCoins.size());
+
+            fCoinsDataActual = true;
+        }
+    }
+
 
     // txid => ((txindex, (tx, vout.n)), (block, modifier))
     for(MetaMap::const_iterator meta_item = mapMeta.begin(); meta_item != mapMeta.end(); meta_item++)
