@@ -28,6 +28,7 @@ public:
     bool CheckChallenge(const CBlockIndex* pindexPrev) const;
     bool CheckMinChallenge(const CProof& checkpoint) const; 
     void UpdateTime(const CBlockIndex* pindexPrev);
+    bool GenerateSolution(CBlockHeader* pblock);
     uint256 GetProofIncrement() const;
     int64_t GetBlockTime() const;
     bool IsNull() const;

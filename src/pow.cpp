@@ -12,6 +12,8 @@
 #include "uint256.h"
 #include "util.h"
 
+#include <boost/thread.hpp>
+
 CProof::CProof()
 {
     SetNull();
@@ -191,4 +193,79 @@ uint256 CProof::GetProofIncrement() const
     // as bnTarget+1, it is equal to ((2**256 - bnTarget - 1) / (bnTarget+1)) + 1,
     // or ~bnTarget / (nTarget+1) + 1.
     return (~bnTarget / (bnTarget + 1)) + 1;
+}
+
+// Global variables for the hashmeter
+double dHashesPerSec = 0.0;
+int64_t nHPSTimerStart = 0;
+uint32_t nOldNonce = 0;
+
+// GenerateSolution scans nonces looking for a hash with at least some zero bits.
+// The nonce is usually preserved between calls
+bool CProof::GenerateSolution(CBlockHeader* pblock)
+{
+    uint256 hash;
+
+    // Write the first 76 bytes of the block header to a double-SHA256 state.
+    CHash256 hasher;
+    CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
+    ss << *pblock;
+    assert(ss.size() == 80);
+    hasher.Write((unsigned char*)&ss[0], 76);
+
+    bool toReturn = false;
+    while (true) {
+        nNonce++;
+
+        // Write the last 4 bytes of the block header (the nonce) to a copy of
+        // the double-SHA256 state, and compute the result.
+        CHash256(hasher).Write((unsigned char*)&nNonce, 4).Finalize((unsigned char*)&hash);
+
+        // Check if the hash has at least some zero bits,
+        if (((uint16_t*)&hash)[15] == 0) {
+            // then check if it has enough to reach the target
+            uint256 hashTarget = uint256().SetCompact(nBits);
+            if (hash <= hashTarget) {
+                assert(hash == pblock->GetHash());
+                LogPrintf("hash: %s  \ntarget: %s\n", hash.GetHex(), hashTarget.GetHex());
+                toReturn = true;
+                break;
+            }
+        }
+
+        // If nothing found after trying for a while, return false
+        if ((nNonce & 0xffff) == 0)
+            break;
+        if ((nNonce & 0xfff) == 0)
+            boost::this_thread::interruption_point();
+    }
+
+    uint32_t nHashesDone = nNonce - nOldNonce;
+    nOldNonce = nNonce;
+
+    // Meter hashes/sec
+    static int64_t nHashCounter;
+    if (nHPSTimerStart == 0) {
+        nHPSTimerStart = GetTimeMillis();
+        nHashCounter = 0;
+    }
+    else
+        nHashCounter += nHashesDone;
+    if (GetTimeMillis() - nHPSTimerStart > 4000) {
+        static CCriticalSection cs;
+        {
+            LOCK(cs);
+            if (GetTimeMillis() - nHPSTimerStart > 4000) {
+                dHashesPerSec = 1000.0 * nHashCounter / (GetTimeMillis() - nHPSTimerStart);
+                nHPSTimerStart = GetTimeMillis();
+                nHashCounter = 0;
+                static int64_t nLogTime;
+                if (GetTime() - nLogTime > 30 * 60) {
+                    nLogTime = GetTime();
+                    LogPrintf("hashmeter %6.0f khash/s\n", dHashesPerSec/1000.0);
+                }
+            }
+        }
+    }
+    return toReturn;
 }
