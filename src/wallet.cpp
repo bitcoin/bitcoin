@@ -1153,7 +1153,7 @@ void CWallet::AvailableCoins(vector<COutput>& vCoins, bool fOnlyConfirmed, const
     }
 }
 
-void CWallet::AvailableCoinsMinConf(vector<COutput>& vCoins, int nConf) const
+void CWallet::AvailableCoinsMinConf(vector<COutput>& vCoins, int nConf, int64 nMinValue, int64 nMaxValue) const
 {
     vCoins.clear();
 
@@ -1172,7 +1172,12 @@ void CWallet::AvailableCoinsMinConf(vector<COutput>& vCoins, int nConf) const
             for (unsigned int i = 0; i < pcoin->vout.size(); i++) {
                 isminetype mine = IsMine(pcoin->vout[i]);
 
-                if (!(pcoin->IsSpent(i)) && mine != MINE_NO && pcoin->vout[i].nValue >= nMinimumInputValue)
+                // ignore coin if it was already spent or we don't own it
+                if (pcoin->IsSpent(i) || mine == MINE_NO)
+                    continue;
+
+                // if coin value is between required limits then add new item to vector
+                if (pcoin->vout[i].nValue >= nMinValue && pcoin->vout[i].nValue < nMaxValue)
                     vCoins.push_back(COutput(pcoin, i, pcoin->GetDepthInMainChain(), mine == MINE_SPENDABLE));
             }
         }
@@ -1402,10 +1407,10 @@ bool CWallet::SelectCoins(int64 nTargetValue, unsigned int nSpendTime, set<pair<
 }
 
 // Select some coins without random shuffle or best subset approximation
-bool CWallet::SelectCoinsSimple(int64 nTargetValue, unsigned int nSpendTime, int nMinConf, set<pair<const CWalletTx*,unsigned int> >& setCoinsRet, int64& nValueRet) const
+bool CWallet::SelectCoinsSimple(int64 nTargetValue, int64 nMinValue, int64 nMaxValue, unsigned int nSpendTime, int nMinConf, set<pair<const CWalletTx*,unsigned int> >& setCoinsRet, int64& nValueRet) const
 {
     vector<COutput> vCoins;
-    AvailableCoinsMinConf(vCoins, nMinConf);
+    AvailableCoinsMinConf(vCoins, nMinConf, nMinValue, nMaxValue);
 
     setCoinsRet.clear();
     nValueRet = 0;
@@ -1654,7 +1659,7 @@ bool CWallet::GetStakeWeight(const CKeyStore& keystore, uint64& nMinWeight, uint
     return true;
 }
 
-bool CWallet::MergeCoins(const int64& nAmount, const int64& nMaxValue, const int64& nOutputValue, list<uint256>& listMerged)
+bool CWallet::MergeCoins(const int64& nAmount, const int64& nMinValue, const int64& nOutputValue, list<uint256>& listMerged)
 {
     int64 nBalance = GetBalance();
 
@@ -1666,7 +1671,7 @@ bool CWallet::MergeCoins(const int64& nAmount, const int64& nMaxValue, const int
     set<pair<const CWalletTx*,unsigned int> > setCoins;
 
     // Simple coins selection - no randomization
-    if (!SelectCoinsSimple(nAmount, GetTime(), 1, setCoins, nValueIn))
+    if (!SelectCoinsSimple(nAmount, nMinValue, nOutputValue, GetTime(), 1, setCoins, nValueIn))
         return false;
 
     if (setCoins.empty())
@@ -1690,10 +1695,6 @@ bool CWallet::MergeCoins(const int64& nAmount, const int64& nMaxValue, const int
     BOOST_FOREACH(PAIRTYPE(const CWalletTx*, unsigned int) pcoin, setCoins)
     {
         int64 nCredit = pcoin.first->vout[pcoin.second].nValue;
-
-        // Ignore coin if credit is too high
-        if (nCredit >= nMaxValue)
-            continue;
 
         // Add current coin to inputs list and add its credit to transaction output
         wtxNew.vin.push_back(CTxIn(pcoin.first->GetHash(), pcoin.second));
@@ -1820,7 +1821,7 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
             mapMeta.clear();
             int64 nValueIn = 0;
             CoinsSet setCoins;
-            if (!SelectCoinsSimple(nBalance - nReserveBalance, txNew.nTime, nCoinbaseMaturity * 10, setCoins, nValueIn))
+            if (!SelectCoinsSimple(nBalance - nReserveBalance, MIN_TX_FEE, MAX_MONEY, txNew.nTime, nCoinbaseMaturity * 10, setCoins, nValueIn))
                 return false;
 
             if (setCoins.empty())
