@@ -357,7 +357,7 @@ int64_t nHPSTimerStart = 0;
 // nonce is 0xffff0000 or above, the block is rebuilt and nNonce starts over at
 // zero.
 //
-bool static ScanHash(const CBlockHeader *pblock, uint32_t& nNonce, uint256 *phash)
+bool static ScanHash(CBlockHeader *pblock, uint256 *phash)
 {
     // Write the first 76 bytes of the block header to a double-SHA256 state.
     CHash256 hasher;
@@ -367,11 +367,11 @@ bool static ScanHash(const CBlockHeader *pblock, uint32_t& nNonce, uint256 *phas
     hasher.Write((unsigned char*)&ss[0], 76);
 
     while (true) {
-        nNonce++;
+        pblock->proof.nNonce++;
 
         // Write the last 4 bytes of the block header (the nonce) to a copy of
         // the double-SHA256 state, and compute the result.
-        CHash256(hasher).Write((unsigned char*)&nNonce, 4).Finalize((unsigned char*)phash);
+        CHash256(hasher).Write((unsigned char*)&pblock->proof.nNonce, 4).Finalize((unsigned char*)phash);
 
         // Return the nonce if the hash has at least some zero bits,
         // caller will check if it has enough to reach the target
@@ -379,9 +379,9 @@ bool static ScanHash(const CBlockHeader *pblock, uint32_t& nNonce, uint256 *phas
             return true;
 
         // If nothing found after trying for a while, return -1
-        if ((nNonce & 0xffff) == 0)
+        if ((pblock->proof.nNonce & 0xffff) == 0)
             return false;
-        if ((nNonce & 0xfff) == 0)
+        if ((pblock->proof.nNonce & 0xfff) == 0)
             boost::this_thread::interruption_point();
     }
 }
@@ -468,12 +468,12 @@ void static BitcoinMiner(CWallet *pwallet)
             int64_t nStart = GetTime();
             uint256 hashTarget = uint256().SetCompact(pblock->proof.nBits);
             uint256 hash;
-            uint32_t nNonce = 0;
+            pblock->proof.nNonce = 0;
             uint32_t nOldNonce = 0;
             while (true) {
-                bool fFound = ScanHash(pblock, nNonce, &hash);
-                uint32_t nHashesDone = nNonce - nOldNonce;
-                nOldNonce = nNonce;
+                bool fFound = ScanHash(pblock, &hash);
+                uint32_t nHashesDone = pblock->proof.nNonce - nOldNonce;
+                nOldNonce = pblock->proof.nNonce;
 
                 // Check if something found
                 if (fFound)
@@ -481,7 +481,6 @@ void static BitcoinMiner(CWallet *pwallet)
                     if (hash <= hashTarget)
                     {
                         // Found a solution
-                        pblock->proof.nNonce = nNonce;
                         assert(hash == pblock->GetHash());
 
                         SetThreadPriority(THREAD_PRIORITY_NORMAL);
@@ -532,7 +531,7 @@ void static BitcoinMiner(CWallet *pwallet)
                 // Regtest mode doesn't require peers
                 if (vNodes.empty() && Params().MiningRequiresPeers())
                     break;
-                if (nNonce >= 0xffff0000)
+                if (pblock->proof.nNonce >= 0xffff0000)
                     break;
                 if (mempool.GetTransactionsUpdated() != nTransactionsUpdatedLast && GetTime() - nStart > 60)
                     break;
