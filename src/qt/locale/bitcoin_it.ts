@@ -1,46 +1,9 @@
-<?xml version="1.0" ?><!DOCTYPE TS><TS language="it" version="2.1">
-<context>
-    <name>AboutDialog</name>
-    <message>
-        <source>About Bitcoin Core</source>
-        <translation>Info su Bitcoin Core</translation>
-    </message>
-    <message>
-        <source>&lt;b&gt;Bitcoin Core&lt;/b&gt; version</source>
-        <translation>Versione &lt;b&gt;Bitcoin Core&lt;/b&gt;</translation>
-    </message>
-    <message>
-        <source>
-This is experimental software.
-
-Distributed under the MIT/X11 software license, see the accompanying file COPYING or http://www.opensource.org/licenses/mit-license.php.
-
-This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit (http://www.openssl.org/) and cryptographic software written by Eric Young (eay@cryptsoft.com) and UPnP software written by Thomas Bernard.</source>
-        <translation>
-Questo è un software sperimentale.
-
-Distribuito sotto la licenza software MIT/X11, vedi il file COPYING incluso oppure su http://www.opensource.org/licenses/mit-license.php.
-
-Questo prodotto include software sviluppato dal progetto OpenSSL per l&apos;uso del Toolkit OpenSSL (http://www.openssl.org/), software crittografico scritto da Eric Young (eay@cryptsoft.com) e software UPnP scritto da Thomas Bernard.</translation>
-    </message>
-    <message>
-        <source>Copyright</source>
-        <translation>Copyright</translation>
-    </message>
-    <message>
-        <source>The Bitcoin Core developers</source>
-        <translation>Gli sviluppatori del Bitcoin Core</translation>
-    </message>
-    <message>
-        <source>(%1-bit)</source>
-        <translation>(%1-bit)</translation>
-    </message>
-</context>
+<TS language="it" version="2.1">
 <context>
     <name>AddressBookPage</name>
     <message>
         <source>Double-click to edit address or label</source>
-        <translation>Doppio click per modificare l&apos;indirizzo o l&apos;etichetta</translation>
+        <translation>Doppio click per modificare l'indirizzo o l'etichetta</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -52,7 +15,7 @@ Questo prodotto include software sviluppato dal progetto OpenSSL per l&apos;uso 
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation>Copia l&apos;indirizzo attualmente selezionato negli appunti</translation>
+        <translation>Copia l'indirizzo attualmente selezionato negli appunti</translation>
     </message>
     <message>
         <source>&amp;Copy</source>
@@ -64,11 +27,11 @@ Questo prodotto include software sviluppato dal progetto OpenSSL per l&apos;uso 
     </message>
     <message>
         <source>&amp;Copy Address</source>
-        <translation>&amp;Copia l&apos;indirizzo</translation>
+        <translation>&amp;Copia l'indirizzo</translation>
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
-        <translation>Cancella l&apos;indirizzo attualmente selezionato dalla lista</translation>
+        <translation>Cancella l'indirizzo attualmente selezionato dalla lista</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
@@ -84,11 +47,11 @@ Questo prodotto include software sviluppato dal progetto OpenSSL per l&apos;uso 
     </message>
     <message>
         <source>Choose the address to send coins to</source>
-        <translation>Scegli l&apos;indirizzo a cui inviare bitcoin</translation>
+        <translation>Scegli l'indirizzo a cui inviare bitcoin</translation>
     </message>
     <message>
         <source>Choose the address to receive coins with</source>
-        <translation>Scegli l&apos;indirizzo con cui ricevere bitcoin</translation>
+        <translation>Scegli l'indirizzo con cui ricevere bitcoin</translation>
     </message>
     <message>
         <source>C&amp;hoose</source>
@@ -96,7 +59,7 @@ Questo prodotto include software sviluppato dal progetto OpenSSL per l&apos;uso 
     </message>
     <message>
         <source>Sending addresses</source>
-        <translation>Indirizzi d&apos;invio</translation>
+        <translation>Indirizzi d'invio</translation>
     </message>
     <message>
         <source>Receiving addresses</source>
@@ -104,7 +67,7 @@ Questo prodotto include software sviluppato dal progetto OpenSSL per l&apos;uso 
     </message>
     <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>Questo è un elenco di indirizzi bitcoin a cui puoi inviare pagamenti. Controlla sempre l&apos;importo e l&apos;indirizzo del beneficiario prima di inviare bitcoin.</translation>
+        <translation>Questo è un elenco di indirizzi bitcoin a cui puoi inviare pagamenti. Controlla sempre l'importo e l'indirizzo del beneficiario prima di inviare bitcoin.</translation>
     </message>
     <message>
         <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
@@ -112,7 +75,7 @@ Questo prodotto include software sviluppato dal progetto OpenSSL per l&apos;uso 
     </message>
     <message>
         <source>Copy &amp;Label</source>
-        <translation>Copia &amp;l&apos;etichetta</translation>
+        <translation>Copia &amp;l'etichetta</translation>
     </message>
     <message>
         <source>&amp;Edit</source>
@@ -130,11 +93,7 @@ Questo prodotto include software sviluppato dal progetto OpenSSL per l&apos;uso 
         <source>Exporting Failed</source>
         <translation>Esportazione Fallita.</translation>
     </message>
-    <message>
-        <source>There was an error trying to save the address list to %1.</source>
-        <translation>Si è verificato un errore tentando di salvare la lista degli indirizzi in %1.</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>AddressTableModel</name>
     <message>
@@ -169,16 +128,12 @@ Questo prodotto include software sviluppato dal progetto OpenSSL per l&apos;uso 
         <translation>Ripeti la nuova passphrase</translation>
     </message>
     <message>
-        <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;10 or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
-        <translation>Inserisci la nuova passphrase per il portamonete.&lt;br/&gt;Si prega di usare una passphrase di &lt;b&gt;10 o più caratteri casuali&lt;/b&gt;, o di &lt;b&gt;otto o più parole&lt;/b&gt;.</translation>
-    </message>
-    <message>
         <source>Encrypt wallet</source>
         <translation>Cifra il portamonete</translation>
     </message>
     <message>
         <source>This operation needs your wallet passphrase to unlock the wallet.</source>
-        <translation>Quest&apos;operazione necessita della passphrase per sbloccare il portamonete.</translation>
+        <translation>Quest'operazione necessita della passphrase per sbloccare il portamonete.</translation>
     </message>
     <message>
         <source>Unlock wallet</source>
@@ -186,7 +141,7 @@ Questo prodotto include software sviluppato dal progetto OpenSSL per l&apos;uso 
     </message>
     <message>
         <source>This operation needs your wallet passphrase to decrypt the wallet.</source>
-        <translation>Quest&apos;operazione necessita della passphrase per decifrare il portamonete,</translation>
+        <translation>Quest'operazione necessita della passphrase per decifrare il portamonete,</translation>
     </message>
     <message>
         <source>Decrypt wallet</source>
@@ -296,10 +251,6 @@ Questo prodotto include software sviluppato dal progetto OpenSSL per l&apos;uso 
         <translation>Chiudi applicazione</translation>
     </message>
     <message>
-        <source>Show information about Bitcoin</source>
-        <translation>Mostra informazioni su Bitcoin</translation>
-    </message>
-    <message>
         <source>About &amp;Qt</source>
         <translation>Informazioni su &amp;Qt</translation>
     </message>
@@ -325,7 +276,7 @@ Questo prodotto include software sviluppato dal progetto OpenSSL per l&apos;uso 
     </message>
     <message>
         <source>&amp;Sending addresses...</source>
-        <translation>&amp;Indirizzi d&apos;invio...</translation>
+        <translation>&amp;Indirizzi d'invio...</translation>
     </message>
     <message>
         <source>&amp;Receiving addresses...</source>
@@ -421,7 +372,7 @@ Questo prodotto include software sviluppato dal progetto OpenSSL per l&apos;uso 
     </message>
     <message>
         <source>Tabs toolbar</source>
-        <translation>Barra degli strumenti &quot;Tabs&quot;</translation>
+        <translation>Barra degli strumenti "Tabs"</translation>
     </message>
     <message>
         <source>[testnet]</source>
@@ -459,10 +410,6 @@ Questo prodotto include software sviluppato dal progetto OpenSSL per l&apos;uso 
         <source>Show the Bitcoin Core help message to get a list with possible Bitcoin command-line options</source>
         <translation>Mostra il messaggio di aiuto di Bitcoin Core per avere la lista di tutte le opzioni della riga di comando di Bitcoin.</translation>
     </message>
-    <message>
-        <source>Bitcoin client</source>
-        <translation>Bitcoin client</translation>
-    </message>
     <message numerus="yes">
         <source>%n active connection(s) to Bitcoin network</source>
         <translation><numerusform>%n connessione attiva alla rete Bitcoin</numerusform><numerusform>%n connessioni attive alla rete Bitcoin</numerusform></translation>
@@ -470,10 +417,6 @@ Questo prodotto include software sviluppato dal progetto OpenSSL per l&apos;uso 
     <message>
         <source>No block source available...</source>
         <translation>Nessuna fonte di blocchi disponibile</translation>
-    </message>
-    <message>
-        <source>Processed %1 of %2 (estimated) blocks of transaction history.</source>
-        <translation>Processati %1 di %2 blocchi totali (stimati) della cronologia transazioni.</translation>
     </message>
     <message>
         <source>Processed %1 blocks of transaction history.</source>
@@ -505,7 +448,7 @@ Questo prodotto include software sviluppato dal progetto OpenSSL per l&apos;uso 
     </message>
     <message>
         <source>Last received block was generated %1 ago.</source>
-        <translation>L&apos;ultimo blocco ricevuto è stato generato %1 fa.</translation>
+        <translation>L'ultimo blocco ricevuto è stato generato %1 fa.</translation>
     </message>
     <message>
         <source>Transactions after this will not yet be visible.</source>
@@ -560,10 +503,6 @@ Indirizzo: %4
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>Il portamonete è &lt;b&gt;cifrato&lt;/b&gt; ed attualmente &lt;b&gt;bloccato&lt;/b&gt;</translation>
     </message>
-    <message>
-        <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
-        <translation>Riscontrato un errore irreversibile. Bitcoin non può più continuare in sicurezza e sarà terminato.</translation>
-    </message>
 </context>
 <context>
     <name>ClientModel</name>
@@ -597,10 +536,6 @@ Indirizzo: %4
     <message>
         <source>Fee:</source>
         <translation>Commissione:</translation>
-    </message>
-    <message>
-        <source>Low Output:</source>
-        <translation>Low Output:</translation>
     </message>
     <message>
         <source>After Fee:</source>
@@ -648,19 +583,19 @@ Indirizzo: %4
     </message>
     <message>
         <source>Copy address</source>
-        <translation>Copia l&apos;indirizzo</translation>
+        <translation>Copia l'indirizzo</translation>
     </message>
     <message>
         <source>Copy label</source>
-        <translation>Copia l&apos;etichetta</translation>
+        <translation>Copia l'etichetta</translation>
     </message>
     <message>
         <source>Copy amount</source>
-        <translation>Copia l&apos;importo</translation>
+        <translation>Copia l'importo</translation>
     </message>
     <message>
         <source>Copy transaction ID</source>
-        <translation>Copia l&apos;ID transazione</translation>
+        <translation>Copia l'ID transazione</translation>
     </message>
     <message>
         <source>Lock unspent</source>
@@ -689,10 +624,6 @@ Indirizzo: %4
     <message>
         <source>Copy priority</source>
         <translation>Copia priorità</translation>
-    </message>
-    <message>
-        <source>Copy low output</source>
-        <translation>Copia low output</translation>
     </message>
     <message>
         <source>Copy change</source>
@@ -743,10 +674,6 @@ Indirizzo: %4
         <translation>nessuno</translation>
     </message>
     <message>
-        <source>Dust</source>
-        <translation>Trascurabile</translation>
-    </message>
-    <message>
         <source>yes</source>
         <translation>sì</translation>
     </message>
@@ -771,24 +698,12 @@ Indirizzo: %4
         <translation>Le transazioni con priorità più alta hanno più probabilità di essere incluse in un blocco.</translation>
     </message>
     <message>
-        <source>This label turns red, if the priority is smaller than &quot;medium&quot;.</source>
-        <translation>Questa etichetta diventa rossa se la priorità è inferiore a &quot;media&quot;.</translation>
+        <source>This label turns red, if the priority is smaller than "medium".</source>
+        <translation>Questa etichetta diventa rossa se la priorità è inferiore a "media".</translation>
     </message>
     <message>
         <source>This label turns red, if any recipient receives an amount smaller than %1.</source>
         <translation>Questa etichetta diventa rossa se uno qualsiasi dei destinatari riceve un ammontare inferiore di %1.</translation>
-    </message>
-    <message>
-        <source>This means a fee of at least %1 is required.</source>
-        <translation>Questo significa che è richiesta una commissione di almeno %1</translation>
-    </message>
-    <message>
-        <source>Amounts below 0.546 times the minimum relay fee are shown as dust.</source>
-        <translation>Importi inferiori a 0,546 volte la commissione minima di trasferimento sono mostrati come trascurabili.</translation>
-    </message>
-    <message>
-        <source>This label turns red, if the change is smaller than %1.</source>
-        <translation>Questa etichetta diventa rossa se il resto è minore di %1.</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -807,7 +722,7 @@ Indirizzo: %4
     <name>EditAddressDialog</name>
     <message>
         <source>Edit Address</source>
-        <translation>Modifica l&apos;indirizzo</translation>
+        <translation>Modifica l'indirizzo</translation>
     </message>
     <message>
         <source>&amp;Label</source>
@@ -815,11 +730,11 @@ Indirizzo: %4
     </message>
     <message>
         <source>The label associated with this address list entry</source>
-        <translation>L&apos;etichetta associata con questa voce della lista degli indirizzi</translation>
+        <translation>L'etichetta associata con questa voce della lista degli indirizzi</translation>
     </message>
     <message>
         <source>The address associated with this address list entry. This can only be modified for sending addresses.</source>
-        <translation>L&apos;indirizzo associato a questa voce della rubrica. Può essere modificato solo per gli indirizzi d&apos;invio.</translation>
+        <translation>L'indirizzo associato a questa voce della rubrica. Può essere modificato solo per gli indirizzi d'invio.</translation>
     </message>
     <message>
         <source>&amp;Address</source>
@@ -831,7 +746,7 @@ Indirizzo: %4
     </message>
     <message>
         <source>New sending address</source>
-        <translation>Nuovo indirizzo d&apos;invio</translation>
+        <translation>Nuovo indirizzo d'invio</translation>
     </message>
     <message>
         <source>Edit receiving address</source>
@@ -839,15 +754,15 @@ Indirizzo: %4
     </message>
     <message>
         <source>Edit sending address</source>
-        <translation>Modifica indirizzo d&apos;invio</translation>
+        <translation>Modifica indirizzo d'invio</translation>
     </message>
     <message>
-        <source>The entered address &quot;%1&quot; is already in the address book.</source>
-        <translation>L&apos;indirizzo inserito &quot;%1&quot; è già in rubrica.</translation>
+        <source>The entered address "%1" is already in the address book.</source>
+        <translation>L'indirizzo inserito "%1" è già in rubrica.</translation>
     </message>
     <message>
-        <source>The entered address &quot;%1&quot; is not a valid Bitcoin address.</source>
-        <translation>L&apos;indirizzo inserito &quot;%1&quot; non è un indirizzo bitcoin valido.</translation>
+        <source>The entered address "%1" is not a valid Bitcoin address.</source>
+        <translation>L'indirizzo inserito "%1" non è un indirizzo bitcoin valido.</translation>
     </message>
     <message>
         <source>Could not unlock wallet.</source>
@@ -884,16 +799,24 @@ Indirizzo: %4
 <context>
     <name>HelpMessageDialog</name>
     <message>
-        <source>Bitcoin Core - Command-line options</source>
-        <translation>Bitcoin Core - Opzioni riga di comando</translation>
-    </message>
-    <message>
         <source>Bitcoin Core</source>
         <translation>Bitcoin Core</translation>
     </message>
     <message>
         <source>version</source>
         <translation>versione</translation>
+    </message>
+    <message>
+        <source>(%1-bit)</source>
+        <translation>(%1-bit)</translation>
+    </message>
+    <message>
+        <source>About Bitcoin Core</source>
+        <translation>Info su Bitcoin Core</translation>
+    </message>
+    <message>
+        <source>Command-line options</source>
+        <translation>opzioni riga di comando</translation>
     </message>
     <message>
         <source>Usage:</source>
@@ -908,8 +831,8 @@ Indirizzo: %4
         <translation>UI opzioni</translation>
     </message>
     <message>
-        <source>Set language, for example &quot;de_DE&quot; (default: system locale)</source>
-        <translation>Imposta lingua, ad esempio &quot;it_IT&quot; (predefinita: lingua di sistema)</translation>
+        <source>Set language, for example "de_DE" (default: system locale)</source>
+        <translation>Imposta lingua, ad esempio "it_IT" (predefinita: lingua di sistema)</translation>
     </message>
     <message>
         <source>Start minimized</source>
@@ -921,11 +844,11 @@ Indirizzo: %4
     </message>
     <message>
         <source>Show splash screen on startup (default: 1)</source>
-        <translation>Mostra finestra di presentazione all&apos;avvio (predefinito: 1)</translation>
+        <translation>Mostra finestra di presentazione all'avvio (predefinito: 1)</translation>
     </message>
     <message>
         <source>Choose data directory on startup (default: 0)</source>
-        <translation>Scegli una cartella dati all&apos;avvio (predefinito: 0)</translation>
+        <translation>Scegli una cartella dati all'avvio (predefinito: 0)</translation>
     </message>
 </context>
 <context>
@@ -955,12 +878,8 @@ Indirizzo: %4
         <translation>Usa una cartella dati personalizzata:</translation>
     </message>
     <message>
-        <source>Bitcoin</source>
-        <translation>Bitcoin</translation>
-    </message>
-    <message>
-        <source>Error: Specified data directory &quot;%1&quot; can not be created.</source>
-        <translation>Errore: La cartella dati &quot;%1&quot; specificata non può essere creata.</translation>
+        <source>Bitcoin Core</source>
+        <translation>Bitcoin Core</translation>
     </message>
     <message>
         <source>Error</source>
@@ -1018,11 +937,11 @@ Indirizzo: %4
     </message>
     <message>
         <source>Automatically start Bitcoin after logging in to the system.</source>
-        <translation>Avvia automaticamente Bitcoin una volta effettuato l&apos;accesso al sistema.</translation>
+        <translation>Avvia automaticamente Bitcoin una volta effettuato l'accesso al sistema.</translation>
     </message>
     <message>
         <source>&amp;Start Bitcoin on system login</source>
-        <translation>&amp;Avvia Bitcoin all&apos;accesso al sistema</translation>
+        <translation>&amp;Avvia Bitcoin all'accesso al sistema</translation>
     </message>
     <message>
         <source>Size of &amp;database cache</source>
@@ -1050,7 +969,7 @@ Indirizzo: %4
     </message>
     <message>
         <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
-        <translation>URL di terze parti (es: un block explorer) che appaiono nella tabella delle transazioni come voci nel menu contestuale. %s nell&apos;URL è sostituito dall&apos;hash della transazione.
+        <translation>URL di terze parti (es: un block explorer) che appaiono nella tabella delle transazioni come voci nel menu contestuale. %s nell'URL è sostituito dall'hash della transazione.
 Più URL vengono separati da una barra verticale |.</translation>
     </message>
     <message>
@@ -1091,11 +1010,11 @@ Più URL vengono separati da una barra verticale |.</translation>
     </message>
     <message>
         <source>If you disable the spending of unconfirmed change, the change from a transaction cannot be used until that transaction has at least one confirmation. This also affects how your balance is computed.</source>
-        <translation>Disabilitando l&apos;uso di resti non confermati, il resto di una transazione non potrà essere speso fino a quando la transazione non avrà ottenuto almeno una conferma. Questa impostazione influisce inoltre sul calcolo saldo.</translation>
+        <translation>Disabilitando l'uso di resti non confermati, il resto di una transazione non potrà essere speso fino a quando la transazione non avrà ottenuto almeno una conferma. Questa impostazione influisce inoltre sul calcolo saldo.</translation>
     </message>
     <message>
         <source>&amp;Spend unconfirmed change</source>
-        <translation>%Spendere resti non confermati</translation>
+        <translation>&amp;Spendere resti non confermati</translation>
     </message>
     <message>
         <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
@@ -1118,14 +1037,6 @@ Più URL vengono separati da una barra verticale |.</translation>
         <translation>Porta del proxy (es. 9050)</translation>
     </message>
     <message>
-        <source>SOCKS &amp;Version:</source>
-        <translation>SOCKS &amp;Version:</translation>
-    </message>
-    <message>
-        <source>SOCKS version of the proxy (e.g. 5)</source>
-        <translation>Versione SOCKS del proxy (es. 5)</translation>
-    </message>
-    <message>
         <source>&amp;Window</source>
         <translation>&amp;Finestra</translation>
     </message>
@@ -1139,7 +1050,7 @@ Più URL vengono separati da una barra verticale |.</translation>
     </message>
     <message>
         <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Quit in the menu.</source>
-        <translation>Riduci ad icona invece di uscire dall&apos;applicazione quando la finestra viene chiusa. Se l&apos;opzione è attiva, l&apos;applicazione terminerà solo dopo aver selezionato Esci dal menu File.</translation>
+        <translation>Riduci ad icona invece di uscire dall'applicazione quando la finestra viene chiusa. Se l'opzione è attiva, l'applicazione terminerà solo dopo aver selezionato Esci dal menu File.</translation>
     </message>
     <message>
         <source>M&amp;inimize on close</source>
@@ -1155,7 +1066,7 @@ Più URL vengono separati da una barra verticale |.</translation>
     </message>
     <message>
         <source>The user interface language can be set here. This setting will take effect after restarting Bitcoin.</source>
-        <translation>La lingua dell&apos;interfaccia utente può essere impostata qui. L&apos;impostazione avrà effetto dopo il riavvio di Bitcoin.</translation>
+        <translation>La lingua dell'interfaccia utente può essere impostata qui. L'impostazione avrà effetto dopo il riavvio di Bitcoin.</translation>
     </message>
     <message>
         <source>&amp;Unit to show amounts in:</source>
@@ -1163,15 +1074,7 @@ Più URL vengono separati da una barra verticale |.</translation>
     </message>
     <message>
         <source>Choose the default subdivision unit to show in the interface and when sending coins.</source>
-        <translation>Scegli l&apos;unità di suddivisione predefinita da utilizzare per l&apos;interfaccia e per l&apos;invio di monete.</translation>
-    </message>
-    <message>
-        <source>Whether to show Bitcoin addresses in the transaction list or not.</source>
-        <translation>Specifica se gli indirizzi saranno visualizzati nella lista delle transazioni.</translation>
-    </message>
-    <message>
-        <source>&amp;Display addresses in transaction list</source>
-        <translation>&amp;Mostra gli indirizzi nella lista delle transazioni</translation>
+        <translation>Scegli l'unità di suddivisione predefinita da utilizzare per l'interfaccia e per l'invio di monete.</translation>
     </message>
     <message>
         <source>Whether to show coin control features or not.</source>
@@ -1211,7 +1114,7 @@ Più URL vengono separati da una barra verticale |.</translation>
     </message>
     <message>
         <source>The supplied proxy address is invalid.</source>
-        <translation>L&apos;indirizzo proxy che hai fornito è invalido.</translation>
+        <translation>L'indirizzo proxy che hai fornito è invalido.</translation>
     </message>
 </context>
 <context>
@@ -1276,12 +1179,12 @@ Più URL vengono separati da una barra verticale |.</translation>
         <translation>Gestione URI</translation>
     </message>
     <message>
-        <source>URI can not be parsed! This can be caused by an invalid Bitcoin address or malformed URI parameters.</source>
-        <translation>Impossibile interpretare l&apos;URI! Ciò può essere provocato da un indirizzo Bitcoin non valido o da parametri URI non corretti.</translation>
+        <source>Invalid payment address %1</source>
+        <translation>Indirizzo di pagamento non valido %1</translation>
     </message>
     <message>
         <source>Requested payment amount of %1 is too small (considered dust).</source>
-        <translation>L&apos;importo di pagamento richiesto di %1 è troppo basso (considerato come trascurabile).</translation>
+        <translation>L'importo di pagamento richiesto di %1 è troppo basso (considerato come trascurabile).</translation>
     </message>
     <message>
         <source>Payment request error</source>
@@ -1292,24 +1195,12 @@ Più URL vengono separati da una barra verticale |.</translation>
         <translation>Impossibile avviare bitcoin: gestore click-to-pay</translation>
     </message>
     <message>
-        <source>Net manager warning</source>
-        <translation>Avviso Net manager</translation>
-    </message>
-    <message>
-        <source>Your active proxy doesn&apos;t support SOCKS5, which is required for payment requests via proxy.</source>
-        <translation>Il proxy attualmente attivo non supporta SOCKS5, il quale è necessario per richieste di pagamento via proxy.</translation>
-    </message>
-    <message>
         <source>Payment request fetch URL is invalid: %1</source>
         <translation>URL di recupero della Richiesta di pagamento non valido: %1</translation>
     </message>
     <message>
         <source>Payment request file handling</source>
         <translation>Gestione del file di richiesta del pagamento</translation>
-    </message>
-    <message>
-        <source>Payment request file can not be read or processed! This can be caused by an invalid payment request file.</source>
-        <translation>Il file di richiesta del pagamento non può essere letto o elaborato! Il file in questione potrebbe essere danneggiato.</translation>
     </message>
     <message>
         <source>Unverified payment requests to custom payment scripts are unsupported.</source>
@@ -1322,10 +1213,6 @@ Più URL vengono separati da una barra verticale |.</translation>
     <message>
         <source>Error communicating with %1: %2</source>
         <translation>Errore di comunicazione con %1: %2</translation>
-    </message>
-    <message>
-        <source>Payment request can not be parsed or processed!</source>
-        <translation>La richiesta di pagamento non può essere analizzata o processata!</translation>
     </message>
     <message>
         <source>Bad response from server %1</source>
@@ -1341,32 +1228,35 @@ Più URL vengono separati da una barra verticale |.</translation>
     </message>
 </context>
 <context>
+    <name>PeerTableModel</name>
+    </context>
+<context>
     <name>QObject</name>
     <message>
-        <source>Bitcoin</source>
-        <translation>Bitcoin</translation>
+        <source>Amount</source>
+        <translation>Importo</translation>
     </message>
     <message>
-        <source>Error: Specified data directory &quot;%1&quot; does not exist.</source>
-        <translation>Errore: La cartella dati &quot;%1&quot; specificata non esiste.</translation>
+        <source>%1 d</source>
+        <translation>%1 d</translation>
     </message>
     <message>
-        <source>Error: Cannot parse configuration file: %1. Only use key=value syntax.</source>
-        <translation>Errore: impossibile interpretare il file di configurazione: %1. Usare esclusivamente la sintassi chiave=valore.</translation>
+        <source>%1 h</source>
+        <translation>%1 h</translation>
     </message>
     <message>
-        <source>Error: Invalid combination of -regtest and -testnet.</source>
-        <translation>Errore: combinazione di -regtest e -testnet non valida.</translation>
+        <source>%1 m</source>
+        <translation>%1 m</translation>
     </message>
     <message>
-        <source>Bitcoin Core didn&apos;t yet exit safely...</source>
-        <translation>Bitcoin Core non si è ancora chiuso con sicurezza...</translation>
+        <source>%1 s</source>
+        <translation>%1 s</translation>
     </message>
     <message>
-        <source>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
-        <translation>Inserisci un indirizzo Bitcoin (ad esempio 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
+        <source>N/A</source>
+        <translation>N/D</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>QRImageWidget</name>
     <message>
@@ -1439,10 +1329,6 @@ Più URL vengono separati da una barra verticale |.</translation>
     <message>
         <source>Current number of blocks</source>
         <translation>Numero attuale di blocchi</translation>
-    </message>
-    <message>
-        <source>Estimated total blocks</source>
-        <translation>Numero totale stimato di blocchi</translation>
     </message>
     <message>
         <source>Last block time</source>
@@ -1521,18 +1407,18 @@ Più URL vengono separati da una barra verticale |.</translation>
         <translation>%1 GB</translation>
     </message>
     <message>
-        <source>%1 m</source>
-        <translation>%1 m</translation>
+        <source>never</source>
+        <translation>mai</translation>
     </message>
     <message>
-        <source>%1 h</source>
-        <translation>%1 h</translation>
+        <source>Yes</source>
+        <translation>Si</translation>
     </message>
     <message>
-        <source>%1 h %2 m</source>
-        <translation>%1 h %2 m</translation>
+        <source>No</source>
+        <translation>No</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>ReceiveCoinsDialog</name>
     <message>
@@ -1557,11 +1443,11 @@ Più URL vengono separati da una barra verticale |.</translation>
     </message>
     <message>
         <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Bitcoin network.</source>
-        <translation>Un messaggio opzionale da allegare alla richiesta di pagamento, il quale sarà mostrato all&apos;apertura della richiesta. Nota: Il messaggio non sarà inviato con il pagamento sulla rete Bitcoin.</translation>
+        <translation>Un messaggio opzionale da allegare alla richiesta di pagamento, il quale sarà mostrato all'apertura della richiesta. Nota: Il messaggio non sarà inviato con il pagamento sulla rete Bitcoin.</translation>
     </message>
     <message>
         <source>An optional label to associate with the new receiving address.</source>
-        <translation>Un&apos;etichetta facoltativa da associare al nuovo indirizzo di ricezione</translation>
+        <translation>Un'etichetta facoltativa da associare al nuovo indirizzo di ricezione</translation>
     </message>
     <message>
         <source>Use this form to request payments. All fields are &lt;b&gt;optional&lt;/b&gt;.</source>
@@ -1605,7 +1491,7 @@ Più URL vengono separati da una barra verticale |.</translation>
     </message>
     <message>
         <source>Copy label</source>
-        <translation>Copia l&apos;etichetta</translation>
+        <translation>Copia l'etichetta</translation>
     </message>
     <message>
         <source>Copy message</source>
@@ -1613,7 +1499,7 @@ Più URL vengono separati da una barra verticale |.</translation>
     </message>
     <message>
         <source>Copy amount</source>
-        <translation>Copia l&apos;importo</translation>
+        <translation>Copia l'importo</translation>
     </message>
 </context>
 <context>
@@ -1664,11 +1550,11 @@ Più URL vengono separati da una barra verticale |.</translation>
     </message>
     <message>
         <source>Resulting URI too long, try to reduce the text for label / message.</source>
-        <translation>L&apos;URI risultante è troppo lungo, prova a ridurre il testo nell&apos;etichetta / messaggio.</translation>
+        <translation>L'URI risultante è troppo lungo, prova a ridurre il testo nell'etichetta / messaggio.</translation>
     </message>
     <message>
         <source>Error encoding URI into QR Code.</source>
-        <translation>Errore nella codifica dell&apos;URI nel codice QR</translation>
+        <translation>Errore nella codifica dell'URI nel codice QR</translation>
     </message>
 </context>
 <context>
@@ -1745,10 +1631,6 @@ Più URL vengono separati da una barra verticale |.</translation>
         <translation>Commissione:</translation>
     </message>
     <message>
-        <source>Low Output:</source>
-        <translation>Low Output:</translation>
-    </message>
-    <message>
         <source>After Fee:</source>
         <translation>Dopo Commissione:</translation>
     </message>
@@ -1758,7 +1640,7 @@ Più URL vengono separati da una barra verticale |.</translation>
     </message>
     <message>
         <source>If this is activated, but the change address is empty or invalid, change will be sent to a newly generated address.</source>
-        <translation>Se questo è abilitato e l&apos;indirizzo per il resto è vuoto o invalido, il resto sarà inviato ad un nuovo indirizzo bitcoin generato appositamente.</translation>
+        <translation>Se questo è abilitato e l'indirizzo per il resto è vuoto o invalido, il resto sarà inviato ad un nuovo indirizzo bitcoin generato appositamente.</translation>
     </message>
     <message>
         <source>Custom change address</source>
@@ -1786,7 +1668,7 @@ Più URL vengono separati da una barra verticale |.</translation>
     </message>
     <message>
         <source>Confirm the send action</source>
-        <translation>Conferma l&apos;azione di invio</translation>
+        <translation>Conferma l'azione di invio</translation>
     </message>
     <message>
         <source>S&amp;end</source>
@@ -1794,7 +1676,7 @@ Più URL vengono separati da una barra verticale |.</translation>
     </message>
     <message>
         <source>Confirm send coins</source>
-        <translation>Conferma l&apos;invio di bitcoin</translation>
+        <translation>Conferma l'invio di bitcoin</translation>
     </message>
     <message>
         <source>%1 to %2</source>
@@ -1806,7 +1688,7 @@ Più URL vengono separati da una barra verticale |.</translation>
     </message>
     <message>
         <source>Copy amount</source>
-        <translation>Copia l&apos;importo</translation>
+        <translation>Copia l'importo</translation>
     </message>
     <message>
         <source>Copy fee</source>
@@ -1825,10 +1707,6 @@ Più URL vengono separati da una barra verticale |.</translation>
         <translation>Copia priorità</translation>
     </message>
     <message>
-        <source>Copy low output</source>
-        <translation>Copia low output</translation>
-    </message>
-    <message>
         <source>Copy change</source>
         <translation>Copia resto</translation>
     </message>
@@ -1842,15 +1720,15 @@ Più URL vengono separati da una barra verticale |.</translation>
     </message>
     <message>
         <source>The recipient address is not valid, please recheck.</source>
-        <translation>L&apos;indirizzo del beneficiario non è valido, si prega di ricontrollare.</translation>
+        <translation>L'indirizzo del beneficiario non è valido, si prega di ricontrollare.</translation>
     </message>
     <message>
         <source>The amount to pay must be larger than 0.</source>
-        <translation>L&apos;importo da pagare dev&apos;essere maggiore di 0.</translation>
+        <translation>L'importo da pagare dev'essere maggiore di 0.</translation>
     </message>
     <message>
         <source>The amount exceeds your balance.</source>
-        <translation>L&apos;importo è superiore al tuo saldo attuale</translation>
+        <translation>L'importo è superiore al tuo saldo attuale</translation>
     </message>
     <message>
         <source>The total exceeds your balance when the %1 transaction fee is included.</source>
@@ -1858,7 +1736,7 @@ Più URL vengono separati da una barra verticale |.</translation>
     </message>
     <message>
         <source>Duplicate address found, can only send to each address once per send operation.</source>
-        <translation>Rilevato un indirizzo duplicato, è possibile inviare bitcoin una sola volta agli indirizzi durante un&apos;operazione di invio.</translation>
+        <translation>Rilevato un indirizzo duplicato, è possibile inviare bitcoin una sola volta agli indirizzi durante un'operazione di invio.</translation>
     </message>
     <message>
         <source>Transaction creation failed!</source>
@@ -1888,14 +1766,6 @@ Più URL vengono separati da una barra verticale |.</translation>
         <source>added as transaction fee</source>
         <translation>aggiunto come tassa di transazione</translation>
     </message>
-    <message>
-        <source>Payment request expired</source>
-        <translation>Richiesta di pagamento scaduta</translation>
-    </message>
-    <message>
-        <source>Invalid payment address %1</source>
-        <translation>Indirizzo di pagamento non valido %1</translation>
-    </message>
 </context>
 <context>
     <name>SendCoinsEntry</name>
@@ -1908,12 +1778,8 @@ Più URL vengono separati da una barra verticale |.</translation>
         <translation>Paga &amp;a:</translation>
     </message>
     <message>
-        <source>The address to send the payment to (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
-        <translation>L&apos;indirizzo del beneficiario a cui inviare il pagamento (ad esempio 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
-    </message>
-    <message>
         <source>Enter a label for this address to add it to your address book</source>
-        <translation>Inserisci un&apos;etichetta per questo indirizzo, per aggiungerlo nella rubrica</translation>
+        <translation>Inserisci un'etichetta per questo indirizzo, per aggiungerlo nella rubrica</translation>
     </message>
     <message>
         <source>&amp;Label:</source>
@@ -1933,7 +1799,7 @@ Più URL vengono separati da una barra verticale |.</translation>
     </message>
     <message>
         <source>Paste address from clipboard</source>
-        <translation>Incollare l&apos;indirizzo dagli appunti</translation>
+        <translation>Incollare l'indirizzo dagli appunti</translation>
     </message>
     <message>
         <source>Alt+P</source>
@@ -1953,7 +1819,7 @@ Più URL vengono separati da una barra verticale |.</translation>
     </message>
     <message>
         <source>Enter a label for this address to add it to the list of used addresses</source>
-        <translation>Inserisci un&apos;etichetta per questo indirizzo per aggiungerlo alla lista degli indirizzi utilizzati</translation>
+        <translation>Inserisci un'etichetta per questo indirizzo per aggiungerlo alla lista degli indirizzi utilizzati</translation>
     </message>
     <message>
         <source>A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
@@ -1998,10 +1864,6 @@ Più URL vengono separati da una barra verticale |.</translation>
         <translation>Puoi firmare messaggi con i tuoi indirizzi in modo da dimostrarne il possesso. Presta attenzione a non firmare dichiarazioni vaghe, attacchi di phishing potrebbero cercare di spingerti ad apporre la tua firma su di esse. Firma solo dichiarazioni completamente dettagliate e delle quali condividi in pieno il contenuto.</translation>
     </message>
     <message>
-        <source>The address to sign the message with (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
-        <translation>L&apos;indirizzo con cui firmare il messaggio (ad esempio 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
-    </message>
-    <message>
         <source>Choose previously used address</source>
         <translation>Scegli un indirizzo usato precedentemente</translation>
     </message>
@@ -2011,7 +1873,7 @@ Più URL vengono separati da una barra verticale |.</translation>
     </message>
     <message>
         <source>Paste address from clipboard</source>
-        <translation>Incolla l&apos;indirizzo dagli appunti</translation>
+        <translation>Incolla l'indirizzo dagli appunti</translation>
     </message>
     <message>
         <source>Alt+P</source>
@@ -2051,15 +1913,11 @@ Più URL vengono separati da una barra verticale |.</translation>
     </message>
     <message>
         <source>Enter the signing address, message (ensure you copy line breaks, spaces, tabs, etc. exactly) and signature below to verify the message. Be careful not to read more into the signature than what is in the signed message itself, to avoid being tricked by a man-in-the-middle attack.</source>
-        <translation>Inserisci l&apos;indirizzo del firmatario, il messaggio (assicurati di copiare esattamente anche i ritorni a capo, gli spazi, le tabulazioni, etc..) e la firma qui sotto, per verificare il messaggio. Presta attenzione a non vedere nella firma più di quanto non sia riportato nel messaggio stesso, per evitare di cadere vittima di attacchi di tipo man-in-the-middle.</translation>
-    </message>
-    <message>
-        <source>The address the message was signed with (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
-        <translation>L&apos;indirizzo con cui è stato firmato il messaggio (ad esempio 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
+        <translation>Inserisci l'indirizzo del firmatario, il messaggio (assicurati di copiare esattamente anche i ritorni a capo, gli spazi, le tabulazioni, etc..) e la firma qui sotto, per verificare il messaggio. Presta attenzione a non vedere nella firma più di quanto non sia riportato nel messaggio stesso, per evitare di cadere vittima di attacchi di tipo man-in-the-middle.</translation>
     </message>
     <message>
         <source>Verify the message to ensure it was signed with the specified Bitcoin address</source>
-        <translation>Verifica il messaggio per accertare che sia stato firmato con l&apos;indirizzo specificato</translation>
+        <translation>Verifica il messaggio per accertare che sia stato firmato con l'indirizzo specificato</translation>
     </message>
     <message>
         <source>Verify &amp;Message</source>
@@ -2070,24 +1928,20 @@ Più URL vengono separati da una barra verticale |.</translation>
         <translation>Reimposta tutti i campi della verifica messaggio</translation>
     </message>
     <message>
-        <source>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
-        <translation>Inserisci un indirizzo Bitcoin (ad esempio 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
-    </message>
-    <message>
-        <source>Click &quot;Sign Message&quot; to generate signature</source>
-        <translation>Clicca &quot;Firma il messaggio&quot; per ottenere la firma</translation>
+        <source>Click "Sign Message" to generate signature</source>
+        <translation>Clicca "Firma il messaggio" per ottenere la firma</translation>
     </message>
     <message>
         <source>The entered address is invalid.</source>
-        <translation>L&apos;indirizzo inserito non è valido.</translation>
+        <translation>L'indirizzo inserito non è valido.</translation>
     </message>
     <message>
         <source>Please check the address and try again.</source>
-        <translation>Per favore controlla l&apos;indirizzo e prova ancora</translation>
+        <translation>Per favore controlla l'indirizzo e prova ancora</translation>
     </message>
     <message>
         <source>The entered address does not refer to a key.</source>
-        <translation>L&apos;indirizzo bitcoin inserito non è associato a nessuna chiave.</translation>
+        <translation>L'indirizzo bitcoin inserito non è associato a nessuna chiave.</translation>
     </message>
     <message>
         <source>Wallet unlock was cancelled.</source>
@@ -2095,7 +1949,7 @@ Più URL vengono separati da una barra verticale |.</translation>
     </message>
     <message>
         <source>Private key for the entered address is not available.</source>
-        <translation>La chiave privata per l&apos;indirizzo inserito non è disponibile.</translation>
+        <translation>La chiave privata per l'indirizzo inserito non è disponibile.</translation>
     </message>
     <message>
         <source>Message signing failed.</source>
@@ -2247,8 +2101,8 @@ Più URL vengono separati da una barra verticale |.</translation>
         <translation>Mercante</translation>
     </message>
     <message>
-        <source>Generated coins must mature %1 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to &quot;not accepted&quot; and it won&apos;t be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.</source>
-        <translation>È necessario attendere %1 blocchi prima che i bitcoin generati possano essere spesi. Quando è stato generato questo blocco, è stato trasmesso alla rete in modo da poter essere aggiunto alla block chain. Se l&apos;inserimento avrà esito negativo il suo stato sarà modificato in &quot;non accettato&quot; e risulterà non spendibile. Questo può occasionalmente accadere se un altro nodo genera un blocco entro pochi secondi dal tuo.</translation>
+        <source>Generated coins must mature %1 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to "not accepted" and it won't be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.</source>
+        <translation>È necessario attendere %1 blocchi prima che i bitcoin generati possano essere spesi. Quando è stato generato questo blocco, è stato trasmesso alla rete in modo da poter essere aggiunto alla block chain. Se l'inserimento avrà esito negativo il suo stato sarà modificato in "non accettato" e risulterà non spendibile. Questo può occasionalmente accadere se un altro nodo genera un blocco entro pochi secondi dal tuo.</translation>
     </message>
     <message>
         <source>Debug information</source>
@@ -2311,10 +2165,6 @@ Più URL vengono separati da una barra verticale |.</translation>
     <message>
         <source>Address</source>
         <translation>Indirizzo</translation>
-    </message>
-    <message>
-        <source>Amount</source>
-        <translation>Importo</translation>
     </message>
     <message>
         <source>Immature (%1 confirmations, will be available after %2)</source>
@@ -2425,7 +2275,7 @@ Più URL vengono separati da una barra verticale |.</translation>
     </message>
     <message>
         <source>This year</source>
-        <translation>Quest&apos;anno</translation>
+        <translation>Quest'anno</translation>
     </message>
     <message>
         <source>Range...</source>
@@ -2453,7 +2303,7 @@ Più URL vengono separati da una barra verticale |.</translation>
     </message>
     <message>
         <source>Enter address or label to search</source>
-        <translation>Inserisci un indirizzo o un&apos;etichetta da cercare</translation>
+        <translation>Inserisci un indirizzo o un'etichetta da cercare</translation>
     </message>
     <message>
         <source>Min amount</source>
@@ -2461,23 +2311,23 @@ Più URL vengono separati da una barra verticale |.</translation>
     </message>
     <message>
         <source>Copy address</source>
-        <translation>Copia l&apos;indirizzo</translation>
+        <translation>Copia l'indirizzo</translation>
     </message>
     <message>
         <source>Copy label</source>
-        <translation>Copia l&apos;etichetta</translation>
+        <translation>Copia l'etichetta</translation>
     </message>
     <message>
         <source>Copy amount</source>
-        <translation>Copia l&apos;importo</translation>
+        <translation>Copia l'importo</translation>
     </message>
     <message>
         <source>Copy transaction ID</source>
-        <translation>Copia l&apos;ID transazione</translation>
+        <translation>Copia l'ID transazione</translation>
     </message>
     <message>
         <source>Edit label</source>
-        <translation>Modifica l&apos;etichetta</translation>
+        <translation>Modifica l'etichetta</translation>
     </message>
     <message>
         <source>Show transaction details</source>
@@ -2501,7 +2351,7 @@ Più URL vengono separati da una barra verticale |.</translation>
     </message>
     <message>
         <source>The transaction history was successfully saved to %1.</source>
-        <translation>Lo storico delle transazioni e&apos; stato salvato con successo in %1.</translation>
+        <translation>Lo storico delle transazioni e' stato salvato con successo in %1.</translation>
     </message>
     <message>
         <source>Comma separated file (*.csv)</source>
@@ -2528,10 +2378,6 @@ Più URL vengono separati da una barra verticale |.</translation>
         <translation>Indirizzo</translation>
     </message>
     <message>
-        <source>Amount</source>
-        <translation>Importo</translation>
-    </message>
-    <message>
         <source>ID</source>
         <translation>ID</translation>
     </message>
@@ -2544,6 +2390,9 @@ Più URL vengono separati da una barra verticale |.</translation>
         <translation>a</translation>
     </message>
 </context>
+<context>
+    <name>UnitDisplayStatusBarControl</name>
+    </context>
 <context>
     <name>WalletFrame</name>
     <message>
@@ -2596,18 +2445,6 @@ Più URL vengono separati da una barra verticale |.</translation>
 <context>
     <name>bitcoin-core</name>
     <message>
-        <source>Usage:</source>
-        <translation>Utilizzo:</translation>
-    </message>
-    <message>
-        <source>List commands</source>
-        <translation>Elenca comandi</translation>
-    </message>
-    <message>
-        <source>Get help for a command</source>
-        <translation>Aiuto su un comando</translation>
-    </message>
-    <message>
         <source>Options:</source>
         <translation>Opzioni:</translation>
     </message>
@@ -2648,20 +2485,12 @@ Più URL vengono separati da una barra verticale |.</translation>
         <translation>Numero di secondi di sospensione che i peer di cattiva qualità devono attendere prima di potersi riconnettere (predefiniti: 86400)</translation>
     </message>
     <message>
-        <source>An error occurred while setting up the RPC port %u for listening on IPv4: %s</source>
-        <translation>Errore riscontrato durante l&apos;impostazione della porta RPC %u per l&apos;ascolto su IPv4: %s</translation>
-    </message>
-    <message>
         <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 8332 or testnet: 18332)</source>
         <translation>Attendi le connessioni JSON-RPC su &lt;porta&gt; (predefinita: 8332 or testnet: 18332)</translation>
     </message>
     <message>
         <source>Accept command line and JSON-RPC commands</source>
         <translation>Accetta comandi da riga di comando e JSON-RPC</translation>
-    </message>
-    <message>
-        <source>Bitcoin Core RPC client version</source>
-        <translation>Versione client RPC di Bitcoin Core</translation>
     </message>
     <message>
         <source>Run in the background as a daemon and accept commands</source>
@@ -2673,7 +2502,7 @@ Più URL vengono separati da una barra verticale |.</translation>
     </message>
     <message>
         <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
-        <translation>Accetta connessioni dall&apos;esterno (predefinito: 1 se no -proxy o -connect)</translation>
+        <translation>Accetta connessioni dall'esterno (predefinito: 1 se no -proxy o -connect)</translation>
     </message>
     <message>
         <source>%s, you must set a rpcpassword in the configuration file:
@@ -2685,18 +2514,18 @@ rpcpassword=%s
 The username and password MUST NOT be the same.
 If the file does not exist, create it with owner-readable-only file permissions.
 It is also recommended to set alertnotify so you are notified of problems;
-for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
+for example: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
 </source>
         <translation>%s, devi impostare una rpcpassword nel file di configurazione:
 %s
-Si raccomanda l&apos;uso della seguente password generata casualmente:
+Si raccomanda l'uso della seguente password generata casualmente:
 rpcuser=bitcoinrpc
 rpcpassword=%s
 (non serve ricordare questa password)
 Il nome utente e la password NON DEVONO essere uguali.
 Se il file non esiste, crealo concedendo permessi di lettura al solo proprietario del file.
 Si raccomanda anche di impostare alertnotify così sarai avvisato di eventuali problemi;
-ad esempio: alertnotify=echo %%s | mail -s &quot;Allarme Bitcoin&quot; admin@foo.com
+ad esempio: alertnotify=echo %%s | mail -s "Allarme Bitcoin" admin@foo.com
 </translation>
     </message>
     <message>
@@ -2704,28 +2533,16 @@ ad esempio: alertnotify=echo %%s | mail -s &quot;Allarme Bitcoin&quot; admin@foo
         <translation>Cifrature accettabili (predefinito: TLSv1.2+HIGH:TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!3DES:@STRENGTH)</translation>
     </message>
     <message>
-        <source>An error occurred while setting up the RPC port %u for listening on IPv6, falling back to IPv4: %s</source>
-        <translation>Errore riscontrato durante l&apos;impostazione della porta RPC %u per l&apos;ascolto su IPv6, tornando su IPv4: %s</translation>
-    </message>
-    <message>
         <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
-        <translation>Associa all&apos;indirizzo indicato e resta permanentemente in ascolto su questo. Usa la notazione [host]:porta per l&apos;IPv6</translation>
+        <translation>Associa all'indirizzo indicato e resta permanentemente in ascolto su questo. Usa la notazione [host]:porta per l'IPv6</translation>
     </message>
     <message>
         <source>Continuously rate-limit free transactions to &lt;n&gt;*1000 bytes per minute (default:15)</source>
         <translation>Limita la quantità di transazioni gratuite ad &lt;n&gt;*1000 byte al minuto (predefinito: 15)</translation>
     </message>
     <message>
-        <source>Enter regression test mode, which uses a special chain in which blocks can be solved instantly. This is intended for regression testing tools and app development.</source>
-        <translation>Entra in modalità di test di regressione, la quale usa una speciale catena in cui i blocchi sono risolti istantaneamente. Questo è fatto per lo sviluppo di strumenti e applicazioni per test di regressione.</translation>
-    </message>
-    <message>
         <source>Enter regression test mode, which uses a special chain in which blocks can be solved instantly.</source>
         <translation>Entra in modalità di test di regressione, la quale usa una speciale catena in cui i blocchi possono essere risolti istantaneamente.</translation>
-    </message>
-    <message>
-        <source>Error: Listening for incoming connections failed (listen returned error %d)</source>
-        <translation>Errore: l&apos;ascolto per le connessioni in ingresso non è riuscito (errore riportato %d) </translation>
     </message>
     <message>
         <source>Error: The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
@@ -2733,19 +2550,15 @@ ad esempio: alertnotify=echo %%s | mail -s &quot;Allarme Bitcoin&quot; admin@foo
     </message>
     <message>
         <source>Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds!</source>
-        <translation>Errore: questa transazione necessita di una commissione di almeno %s a causa del suo ammontare, della sua complessità, o dell&apos;uso di fondi recentemente ricevuti!</translation>
+        <translation>Errore: questa transazione necessita di una commissione di almeno %s a causa del suo ammontare, della sua complessità, o dell'uso di fondi recentemente ricevuti!</translation>
     </message>
     <message>
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
         <translation>Esegui comando quando una transazione del portamonete cambia (%s in cmd è sostituito da TxID)</translation>
     </message>
     <message>
-        <source>Fees smaller than this are considered zero fee (for transaction creation) (default:</source>
-        <translation>Le commissioni inferiori a questo valore saranno considerate nulle (per la creazione della transazione) (prefedinito:</translation>
-    </message>
-    <message>
         <source>Flush database activity from memory pool to disk log every &lt;n&gt; megabytes (default: 100)</source>
-        <translation>Scarica l&apos;attività del database dalla memoria al log su disco ogni &lt;n&gt; megabytes (predefinito: 100)</translation>
+        <translation>Scarica l'attività del database dalla memoria al log su disco ogni &lt;n&gt; megabytes (predefinito: 100)</translation>
     </message>
     <message>
         <source>How thorough the block verification of -checkblocks is (0-4, default: 3)</source>
@@ -2780,12 +2593,8 @@ ad esempio: alertnotify=echo %%s | mail -s &quot;Allarme Bitcoin&quot; admin@foo
         <translation>Attenzione: -paytxfee è molto alta. Questa è la commissione che si paga quando si invia una transazione.</translation>
     </message>
     <message>
-        <source>Warning: Please check that your computer&apos;s date and time are correct! If your clock is wrong Bitcoin will not work properly.</source>
-        <translation>Attenzione: si prega di controllare che la data e l&apos;ora del computer siano corrette. Se l&apos;ora di sistema è errata Bitcoin non funzionerà correttamente.</translation>
-    </message>
-    <message>
         <source>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</source>
-        <translation>Attenzione: La rete non sembra essere d&apos;accordo pienamente! Alcuni minatori sembrano riscontrare problemi.</translation>
+        <translation>Attenzione: La rete non sembra essere d'accordo pienamente! Alcuni minatori sembrano riscontrare problemi.</translation>
     </message>
     <message>
         <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
@@ -2816,28 +2625,12 @@ ad esempio: alertnotify=echo %%s | mail -s &quot;Allarme Bitcoin&quot; admin@foo
         <translation>Tenta di recuperare le chiavi private da un wallet.dat corrotto</translation>
     </message>
     <message>
-        <source>Bitcoin Core Daemon</source>
-        <translation>Bitcoin Core Daemon</translation>
-    </message>
-    <message>
         <source>Block creation options:</source>
         <translation>Opzioni creazione blocco:</translation>
     </message>
     <message>
-        <source>Clear list of wallet transactions (diagnostic tool; implies -rescan)</source>
-        <translation>Cancella elenco delle transazioni sul portamonete (strumento di diagnostica; implica -rescan)</translation>
-    </message>
-    <message>
         <source>Connect only to the specified node(s)</source>
         <translation>Connetti solo al nodo specificato</translation>
-    </message>
-    <message>
-        <source>Connect through SOCKS proxy</source>
-        <translation>Connetti attraverso SOCKS proxy</translation>
-    </message>
-    <message>
-        <source>Connect to JSON-RPC on &lt;port&gt; (default: 8332 or testnet: 18332)</source>
-        <translation>Connetti al JSON-RPC su &lt;port&gt; (predefinita: 8332 o testnet: 18332)</translation>
     </message>
     <message>
         <source>Connection options:</source>
@@ -2869,11 +2662,11 @@ ad esempio: alertnotify=echo %%s | mail -s &quot;Allarme Bitcoin&quot; admin@foo
     </message>
     <message>
         <source>Error initializing block database</source>
-        <translation>Errore durante l&apos;inizializzazione del database dei blocchi</translation>
+        <translation>Errore durante l'inizializzazione del database dei blocchi</translation>
     </message>
     <message>
         <source>Error initializing wallet database environment %s!</source>
-        <translation>Errore durante l&apos;inizializzazione dell&apos;ambiente %s del database del portamonete!</translation>
+        <translation>Errore durante l'inizializzazione dell'ambiente %s del database del portamonete!</translation>
     </message>
     <message>
         <source>Error loading block database</source>
@@ -2897,7 +2690,7 @@ ad esempio: alertnotify=echo %%s | mail -s &quot;Allarme Bitcoin&quot; admin@foo
     </message>
     <message>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
-        <translation>Nessuna porta disponibile per l&apos;ascolto. Usa -listen=0 se vuoi procedere comunque.</translation>
+        <translation>Nessuna porta disponibile per l'ascolto. Usa -listen=0 se vuoi procedere comunque.</translation>
     </message>
     <message>
         <source>Failed to read block info</source>
@@ -2909,11 +2702,11 @@ ad esempio: alertnotify=echo %%s | mail -s &quot;Allarme Bitcoin&quot; admin@foo
     </message>
     <message>
         <source>Failed to sync block index</source>
-        <translation>Sincronizzazione dell&apos;indice del blocco fallita</translation>
+        <translation>Sincronizzazione dell'indice del blocco fallita</translation>
     </message>
     <message>
         <source>Failed to write block index</source>
-        <translation>Scrittura dell&apos;indice del blocco fallita</translation>
+        <translation>Scrittura dell'indice del blocco fallita</translation>
     </message>
     <message>
         <source>Failed to write block info</source>
@@ -2933,23 +2726,11 @@ ad esempio: alertnotify=echo %%s | mail -s &quot;Allarme Bitcoin&quot; admin@foo
     </message>
     <message>
         <source>Failed to write transaction index</source>
-        <translation>Scrittura dell&apos;indice di transazione fallita</translation>
+        <translation>Scrittura dell'indice di transazione fallita</translation>
     </message>
     <message>
         <source>Failed to write undo data</source>
         <translation>Scrittura dei dati di ripristino fallita</translation>
-    </message>
-    <message>
-        <source>Fee per kB to add to transactions you send</source>
-        <translation>Commissione per kB da aggiungere alle transazioni in uscita</translation>
-    </message>
-    <message>
-        <source>Fees smaller than this are considered zero fee (for relaying) (default:</source>
-        <translation>Le commissioni inferiori a questo valore saranno considerate nulle (per la trasmissione) (prefedinito:</translation>
-    </message>
-    <message>
-        <source>Find peers using DNS lookup (default: 1 unless -connect)</source>
-        <translation>Trova peer utilizzando la ricerca DNS (predefinito: 1 a meno che non si usi -connect)</translation>
     </message>
     <message>
         <source>Force safe mode (default: 0)</source>
@@ -2961,7 +2742,7 @@ ad esempio: alertnotify=echo %%s | mail -s &quot;Allarme Bitcoin&quot; admin@foo
     </message>
     <message>
         <source>How many blocks to check at startup (default: 288, 0 = all)</source>
-        <translation>Numero di blocchi da controllare all&apos;avvio (predefinito: 288, 0 = tutti)</translation>
+        <translation>Numero di blocchi da controllare all'avvio (predefinito: 288, 0 = tutti)</translation>
     </message>
     <message>
         <source>If &lt;category&gt; is not supplied, output all debugging information.</source>
@@ -2976,8 +2757,8 @@ ad esempio: alertnotify=echo %%s | mail -s &quot;Allarme Bitcoin&quot; admin@foo
         <translation>Blocco genesis non corretto o non trovato. Cartella dati errata?</translation>
     </message>
     <message>
-        <source>Invalid -onion address: &apos;%s&apos;</source>
-        <translation>Indirizzo -onion non valido: &apos;%s&apos;</translation>
+        <source>Invalid -onion address: '%s'</source>
+        <translation>Indirizzo -onion non valido: '%s'</translation>
     </message>
     <message>
         <source>Not enough file descriptors available.</source>
@@ -2985,19 +2766,11 @@ ad esempio: alertnotify=echo %%s | mail -s &quot;Allarme Bitcoin&quot; admin@foo
     </message>
     <message>
         <source>Prepend debug output with timestamp (default: 1)</source>
-        <translation>Preponi timestamp all&apos;output di debug (predefinito: 1)</translation>
-    </message>
-    <message>
-        <source>RPC client options:</source>
-        <translation>Opzioni client RPC:</translation>
+        <translation>Preponi timestamp all'output di debug (predefinito: 1)</translation>
     </message>
     <message>
         <source>Rebuild block chain index from current blk000??.dat files</source>
-        <translation>Ricreare l&apos;indice della catena di blocchi dai file blk000??.dat correnti</translation>
-    </message>
-    <message>
-        <source>Select SOCKS version for -proxy (4 or 5, default: 5)</source>
-        <translation>Selezionare la versione SOCKS per -proxy (4 o 5, predefinito: 5)</translation>
+        <translation>Ricreare l'indice della catena di blocchi dai file blk000??.dat correnti</translation>
     </message>
     <message>
         <source>Set database cache size in megabytes (%d to %d, default: %d)</source>
@@ -3013,7 +2786,7 @@ ad esempio: alertnotify=echo %%s | mail -s &quot;Allarme Bitcoin&quot; admin@foo
     </message>
     <message>
         <source>Specify wallet file (within data directory)</source>
-        <translation>Specifica il file portamonete (all&apos;interno della cartella dati)</translation>
+        <translation>Specifica il file portamonete (all'interno della cartella dati)</translation>
     </message>
     <message>
         <source>Spend unconfirmed change when sending transactions (default: 1)</source>
@@ -3021,11 +2794,7 @@ ad esempio: alertnotify=echo %%s | mail -s &quot;Allarme Bitcoin&quot; admin@foo
     </message>
     <message>
         <source>This is intended for regression testing tools and app development.</source>
-        <translation>Questo è previsto per l&apos;uso con test di regressione e per lo sviluppo di applicazioni.</translation>
-    </message>
-    <message>
-        <source>Usage (deprecated, use bitcoin-cli):</source>
-        <translation>Usage (deprecato, usare bitcoin-cli):</translation>
+        <translation>Questo è previsto per l'uso con test di regressione e per lo sviluppo di applicazioni.</translation>
     </message>
     <message>
         <source>Verifying blocks...</source>
@@ -3036,20 +2805,12 @@ ad esempio: alertnotify=echo %%s | mail -s &quot;Allarme Bitcoin&quot; admin@foo
         <translation>Verifica portamonete...</translation>
     </message>
     <message>
-        <source>Wait for RPC server to start</source>
-        <translation>Attendere l&apos;avvio dell&apos;RPC server</translation>
-    </message>
-    <message>
         <source>Wallet %s resides outside data directory %s</source>
         <translation>Il portamonete %s si trova al di fuori dalla cartella dati %s</translation>
     </message>
     <message>
         <source>Wallet options:</source>
         <translation>Opzioni portamonete:</translation>
-    </message>
-    <message>
-        <source>Warning: Deprecated argument -debugnet ignored, use -debug=net</source>
-        <translation>Attenzione: Argomento deprecato -debugnet ignorato, usare -debug=net</translation>
     </message>
     <message>
         <source>You need to rebuild the database using -reindex to change -txindex</source>
@@ -3080,12 +2841,12 @@ ad esempio: alertnotify=echo %%s | mail -s &quot;Allarme Bitcoin&quot; admin@foo
         <translation>Informazioni</translation>
     </message>
     <message>
-        <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: &apos;%s&apos;</source>
-        <translation>Importo non valido per -minrelaytxfee=&lt;amount&gt;: &apos;%s&apos;</translation>
+        <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: '%s'</source>
+        <translation>Importo non valido per -minrelaytxfee=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
-        <source>Invalid amount for -mintxfee=&lt;amount&gt;: &apos;%s&apos;</source>
-        <translation>Importo non valido per -mintxfee=&lt;amount&gt;: &apos;%s&apos;</translation>
+        <source>Invalid amount for -mintxfee=&lt;amount&gt;: '%s'</source>
+        <translation>Importo non valido per -mintxfee=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
         <source>Limit size of signature cache to &lt;n&gt; entries (default: 50000)</source>
@@ -3117,11 +2878,11 @@ ad esempio: alertnotify=echo %%s | mail -s &quot;Allarme Bitcoin&quot; admin@foo
     </message>
     <message>
         <source>Print block on startup, if found in block index</source>
-        <translation>Stampa il blocco all&apos;avvio, se presente nell&apos;indice dei blocchi</translation>
+        <translation>Stampa il blocco all'avvio, se presente nell'indice dei blocchi</translation>
     </message>
     <message>
         <source>Print block tree on startup (default: 0)</source>
-        <translation>Stampa l&apos;albero dei blocchi all&apos;avvio (default: 0)</translation>
+        <translation>Stampa l'albero dei blocchi all'avvio (default: 0)</translation>
     </message>
     <message>
         <source>RPC SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
@@ -3144,14 +2905,6 @@ ad esempio: alertnotify=echo %%s | mail -s &quot;Allarme Bitcoin&quot; admin@foo
         <translation>Mantieni in esecuzione un thread per scaricare periodicamente il portafoglio (predefinito: 1)</translation>
     </message>
     <message>
-        <source>SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
-        <translation>Opzioni SSL: (vedi il wiki di Bitcoin per le istruzioni di configurazione SSL)</translation>
-    </message>
-    <message>
-        <source>Send command to Bitcoin Core</source>
-        <translation>Invia comando a Bitcoin Core</translation>
-    </message>
-    <message>
         <source>Send trace/debug info to console instead of debug.log file</source>
         <translation>Invia le informazioni di trace/debug alla console invece che al file debug.log</translation>
     </message>
@@ -3161,19 +2914,15 @@ ad esempio: alertnotify=echo %%s | mail -s &quot;Allarme Bitcoin&quot; admin@foo
     </message>
     <message>
         <source>Sets the DB_PRIVATE flag in the wallet db environment (default: 1)</source>
-        <translation>Imposta il flag DB_PRIVATE nell&apos;ambiente di database del portamonete (predefinito: 1)</translation>
+        <translation>Imposta il flag DB_PRIVATE nell'ambiente di database del portamonete (predefinito: 1)</translation>
     </message>
     <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>
         <translation>Mostra tutte le opzioni di debug (utilizzo: --help -help-debug)</translation>
     </message>
     <message>
-        <source>Show benchmark information (default: 0)</source>
-        <translation>Visualizza le informazioni relative al benchmark (predefinito: 0)</translation>
-    </message>
-    <message>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
-        <translation>Riduci il file debug.log all&apos;avvio del client (predefinito: 1 se non impostato -debug)</translation>
+        <translation>Riduci il file debug.log all'avvio del client (predefinito: 1 se non impostato -debug)</translation>
     </message>
     <message>
         <source>Signing transaction failed</source>
@@ -3184,12 +2933,12 @@ ad esempio: alertnotify=echo %%s | mail -s &quot;Allarme Bitcoin&quot; admin@foo
         <translation>Specifica il timeout di connessione in millisecondi (predefinito: 5000)</translation>
     </message>
     <message>
-        <source>Start Bitcoin Core Daemon</source>
-        <translation>Avvia Bitcoin Core Daemon</translation>
-    </message>
-    <message>
         <source>System error: </source>
         <translation>Errore di sistema:</translation>
+    </message>
+    <message>
+        <source>This is experimental software.</source>
+        <translation>Questo è un software sperimentale.</translation>
     </message>
     <message>
         <source>Transaction amount too small</source>
@@ -3197,7 +2946,7 @@ ad esempio: alertnotify=echo %%s | mail -s &quot;Allarme Bitcoin&quot; admin@foo
     </message>
     <message>
         <source>Transaction amounts must be positive</source>
-        <translation>L&apos;importo della transazione deve essere positivo</translation>
+        <translation>L'importo della transazione deve essere positivo</translation>
     </message>
     <message>
         <source>Transaction too large</source>
@@ -3230,11 +2979,7 @@ ad esempio: alertnotify=echo %%s | mail -s &quot;Allarme Bitcoin&quot; admin@foo
     </message>
     <message>
         <source>on startup</source>
-        <translation>all&apos;avvio</translation>
-    </message>
-    <message>
-        <source>version</source>
-        <translation>versione</translation>
+        <translation>all'avvio</translation>
     </message>
     <message>
         <source>wallet.dat corrupt, salvage failed</source>
@@ -3246,21 +2991,12 @@ ad esempio: alertnotify=echo %%s | mail -s &quot;Allarme Bitcoin&quot; admin@foo
 </translation>
     </message>
     <message>
-        <source>Allow JSON-RPC connections from specified IP address</source>
-        <translation>Consenti connessioni JSON-RPC dall&apos;indirizzo IP specificato
-</translation>
-    </message>
-    <message>
-        <source>Send commands to node running on &lt;ip&gt; (default: 127.0.0.1)</source>
-        <translation>Inviare comandi al nodo in esecuzione su &lt;ip&gt; (predefinito: 127.0.0.1)</translation>
-    </message>
-    <message>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
-        <translation>Esegui il comando quando il migliore blocco cambia(%s nel cmd è sostituito dall&apos;hash del blocco)</translation>
+        <translation>Esegui il comando quando il migliore blocco cambia(%s nel cmd è sostituito dall'hash del blocco)</translation>
     </message>
     <message>
         <source>Upgrade wallet to latest format</source>
-        <translation>Aggiorna il wallet all&apos;ultimo formato</translation>
+        <translation>Aggiorna il wallet all'ultimo formato</translation>
     </message>
     <message>
         <source>Set key pool size to &lt;n&gt; (default: 100)</source>
@@ -3290,10 +3026,6 @@ ad esempio: alertnotify=echo %%s | mail -s &quot;Allarme Bitcoin&quot; admin@foo
 </translation>
     </message>
     <message>
-        <source>Unable to bind to %s on this computer (bind returned error %d, %s)</source>
-        <translation>Impossibile associarsi alla %s su questo computer (bind returned error %d, %s)</translation>
-    </message>
-    <message>
         <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
         <translation>Consenti ricerche DNS per -addnode, -seednode e -connect</translation>
     </message>
@@ -3306,40 +3038,28 @@ ad esempio: alertnotify=echo %%s | mail -s &quot;Allarme Bitcoin&quot; admin@foo
         <translation>Errore caricamento wallet.dat: Portamonete corrotto</translation>
     </message>
     <message>
-        <source>Error loading wallet.dat: Wallet requires newer version of Bitcoin</source>
-        <translation>Errore caricamento wallet.dat: il portamonete richiede una versione di Bitcoin più recente</translation>
-    </message>
-    <message>
-        <source>Wallet needed to be rewritten: restart Bitcoin to complete</source>
-        <translation>Il portamonete necessitava di essere riscritto: riavviare Bitcoin per completare</translation>
-    </message>
-    <message>
         <source>Error loading wallet.dat</source>
         <translation>Errore caricamento wallet.dat</translation>
     </message>
     <message>
-        <source>Invalid -proxy address: &apos;%s&apos;</source>
-        <translation>Indirizzo -proxy non valido: &apos;%s&apos;</translation>
+        <source>Invalid -proxy address: '%s'</source>
+        <translation>Indirizzo -proxy non valido: '%s'</translation>
     </message>
     <message>
-        <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
-        <translation>Rete sconosciuta specificata in -onlynet: &apos;%s&apos;</translation>
+        <source>Unknown network specified in -onlynet: '%s'</source>
+        <translation>Rete sconosciuta specificata in -onlynet: '%s'</translation>
     </message>
     <message>
-        <source>Unknown -socks proxy version requested: %i</source>
-        <translation>Versione -socks proxy sconosciuta richiesta: %i</translation>
+        <source>Cannot resolve -bind address: '%s'</source>
+        <translation>Impossibile risolvere -bind address: '%s'</translation>
     </message>
     <message>
-        <source>Cannot resolve -bind address: &apos;%s&apos;</source>
-        <translation>Impossibile risolvere -bind address: &apos;%s&apos;</translation>
+        <source>Cannot resolve -externalip address: '%s'</source>
+        <translation>Impossibile risolvere indirizzo -externalip: '%s'</translation>
     </message>
     <message>
-        <source>Cannot resolve -externalip address: &apos;%s&apos;</source>
-        <translation>Impossibile risolvere indirizzo -externalip: &apos;%s&apos;</translation>
-    </message>
-    <message>
-        <source>Invalid amount for -paytxfee=&lt;amount&gt;: &apos;%s&apos;</source>
-        <translation>Importo non valido per -paytxfee=&lt;amount&gt;: &apos;%s&apos;</translation>
+        <source>Invalid amount for -paytxfee=&lt;amount&gt;: '%s'</source>
+        <translation>Importo non valido per -paytxfee=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
         <source>Invalid amount</source>
@@ -3351,7 +3071,7 @@ ad esempio: alertnotify=echo %%s | mail -s &quot;Allarme Bitcoin&quot; admin@foo
     </message>
     <message>
         <source>Loading block index...</source>
-        <translation>Caricamento dell&apos;indice del blocco...</translation>
+        <translation>Caricamento dell'indice del blocco...</translation>
     </message>
     <message>
         <source>Add a node to connect to and attempt to keep the connection open</source>
@@ -3367,7 +3087,7 @@ ad esempio: alertnotify=echo %%s | mail -s &quot;Allarme Bitcoin&quot; admin@foo
     </message>
     <message>
         <source>Cannot write default address</source>
-        <translation>Non è possibile scrivere l&apos;indirizzo predefinito</translation>
+        <translation>Non è possibile scrivere l'indirizzo predefinito</translation>
     </message>
     <message>
         <source>Rescanning...</source>
@@ -3379,19 +3099,11 @@ ad esempio: alertnotify=echo %%s | mail -s &quot;Allarme Bitcoin&quot; admin@foo
     </message>
     <message>
         <source>To use the %s option</source>
-        <translation>Per usare l&apos;opzione %s</translation>
+        <translation>Per usare l'opzione %s</translation>
     </message>
     <message>
         <source>Error</source>
         <translation>Errore</translation>
-    </message>
-    <message>
-        <source>You must set rpcpassword=&lt;password&gt; in the configuration file:
-%s
-If the file does not exist, create it with owner-readable-only file permissions.</source>
-        <translation>Devi settare rpcpassword=&lt;password&gt; nel file di configurazione:
-%s
-Se il file non esiste, crealo assegnando i permessi di lettura solamente al proprietario.</translation>
     </message>
 </context>
 </TS>
