@@ -357,8 +357,10 @@ int64_t nHPSTimerStart = 0;
 // nonce is 0xffff0000 or above, the block is rebuilt and nNonce starts over at
 // zero.
 //
-bool static ScanHash(CBlockHeader *pblock, uint256 *phash)
+bool static ScanHash(CBlockHeader *pblock)
 {
+    uint256 hash;
+
     // Write the first 76 bytes of the block header to a double-SHA256 state.
     CHash256 hasher;
     CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
@@ -371,15 +373,15 @@ bool static ScanHash(CBlockHeader *pblock, uint256 *phash)
 
         // Write the last 4 bytes of the block header (the nonce) to a copy of
         // the double-SHA256 state, and compute the result.
-        CHash256(hasher).Write((unsigned char*)&pblock->proof.nNonce, 4).Finalize((unsigned char*)phash);
+        CHash256(hasher).Write((unsigned char*)&pblock->proof.nNonce, 4).Finalize((unsigned char*)&hash);
 
         // Check if the hash has at least some zero bits,
-        if (((uint16_t*)phash)[15] == 0) {
+        if (((uint16_t*)&hash)[15] == 0) {
             // then check if it has enough to reach the target
             uint256 hashTarget = uint256().SetCompact(pblock->proof.nBits);
-            if (*phash <= hashTarget) {
-                assert(*phash == pblock->GetHash());
-                LogPrintf("hash: %s  \ntarget: %s\n", phash->GetHex(), hashTarget.GetHex());
+            if (hash <= hashTarget) {
+                assert(hash == pblock->GetHash());
+                LogPrintf("hash: %s  \ntarget: %s\n", hash.GetHex(), hashTarget.GetHex());
                 return true;
             }
         }
@@ -472,11 +474,10 @@ void static BitcoinMiner(CWallet *pwallet)
             // Search
             //
             int64_t nStart = GetTime();
-            uint256 hash;
             pblock->proof.nNonce = 0;
             uint32_t nOldNonce = 0;
             while (true) {
-                bool fFound = ScanHash(pblock, &hash);
+                bool fFound = ScanHash(pblock);
                 uint32_t nHashesDone = pblock->proof.nNonce - nOldNonce;
                 nOldNonce = pblock->proof.nNonce;
 
