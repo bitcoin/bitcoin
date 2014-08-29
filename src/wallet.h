@@ -69,7 +69,7 @@ public:
 class CWallet : public CCryptoKeyStore
 {
 private:
-    bool SelectCoinsSimple(int64 nTargetValue, unsigned int nSpendTime, int nMinConf, std::set<std::pair<const CWalletTx*,unsigned int> >& setCoinsRet, int64& nValueRet) const;
+    bool SelectCoinsSimple(int64 nTargetValue, int64 nMinValue, int64 nMaxValue, unsigned int nSpendTime, int nMinConf, std::set<std::pair<const CWalletTx*,unsigned int> >& setCoinsRet, int64& nValueRet) const;
     bool SelectCoins(int64 nTargetValue, unsigned int nSpendTime, std::set<std::pair<const CWalletTx*,unsigned int> >& setCoinsRet, int64& nValueRet, const CCoinControl *coinControl=NULL) const;
 
     CWalletDB *pwalletdbEncryption;
@@ -79,6 +79,9 @@ private:
 
     // the maximum wallet format version: memory-only variable that specifies to what version this wallet may be upgraded
     int nWalletMaxVersion;
+
+    // selected coins metadata
+    map<uint256, pair<pair<CTxIndex, pair<const CWalletTx*,unsigned int> >, pair<CBlock, uint64> > > mapMeta;
 
 public:
     mutable CCriticalSection cs_wallet;
@@ -126,7 +129,7 @@ public:
     // check whether we are allowed to upgrade (or already support) to the named feature
     bool CanSupportFeature(enum WalletFeature wf) { return nWalletMaxVersion >= wf; }
 
-    void AvailableCoinsMinConf(std::vector<COutput>& vCoins, int nConf) const;
+    void AvailableCoinsMinConf(std::vector<COutput>& vCoins, int nConf, int64 nMinValue, int64 nMaxValue) const;
     void AvailableCoins(std::vector<COutput>& vCoins, bool fOnlyConfirmed=true, const CCoinControl *coinControl=NULL) const;
     bool SelectCoinsMinConf(int64 nTargetValue, unsigned int nSpendTime, int nConfMine, int nConfTheirs, std::vector<COutput> vCoins, std::set<std::pair<const CWalletTx*,unsigned int> >& setCoinsRet, int64& nValueRet) const;
     // keystore implementation
@@ -200,7 +203,7 @@ public:
     bool GetStakeWeight(const CKeyStore& keystore, uint64& nMinWeight, uint64& nMaxWeight, uint64& nWeight);
     void GetStakeWeightFromValue(const int64& nTime, const int64& nValue, uint64& nWeight);
     bool CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int64 nSearchInterval, CTransaction& txNew, CKey& key);
-    bool MergeCoins(const int64& nAmount, const int64& nMaxValue, const int64& nOutputValue, list<uint256>& listMerged);
+    bool MergeCoins(const int64& nAmount, const int64& nMinValue, const int64& nMaxValue, list<uint256>& listMerged);
 
     std::string SendMoney(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew, bool fAskFee=false);
     std::string SendMoneyToDestination(const CTxDestination &address, int64 nValue, CWalletTx& wtxNew, bool fAskFee=false);
