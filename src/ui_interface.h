@@ -78,9 +78,6 @@ public:
     /** Translate a message to the native language of the user. */
     boost::signals2::signal<std::string (const char* psz)> Translate;
 
-    /** Block chain changed. */
-    boost::signals2::signal<void ()> NotifyBlocksChanged;
-
     /** Number of network connections changed. */
     boost::signals2::signal<void (int newNumConnections)> NotifyNumConnectionsChanged;
 
@@ -95,6 +92,9 @@ public:
 
     /** Show progress e.g. for verifychain */
     boost::signals2::signal<void (const std::string &title, int nProgress)> ShowProgress;
+
+    /** New block has been accepted */
+    boost::signals2::signal<void (const uint256& hash)> NotifyBlockTip;
 };
 
 extern CClientUIInterface uiInterface;
