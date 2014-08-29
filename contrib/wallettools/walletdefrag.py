@@ -2,7 +2,7 @@ from jsonrpc import JSONRPCException, ServiceProxy
 
 MaxProcessSum = 200000   # Maximum amount of coins to merge
 MaxOutputSum = 500       # Maximum transaction value
-MaxInputSum = 50         # Maximum input value, inputs with greater size will be ignored
+MinInputSum = 50         # Minimum input value, inputs with lower size will be ignored
 
 access = ServiceProxy("http://alexd:123456789@127.0.0.1:8344")   # http://username:password@host:port/
 
@@ -15,8 +15,6 @@ try:
         balance = MaxProcessSum
 
         if balance > MaxOutputSum:
-            access.mergecoins(balance, MaxOutputSum, MaxInputSum)
+            access.mergecoins(balance, MinInputSum, MaxOutputSum)
 except JSONRPCException,e:
     print 'Error: %s' % e.error
-
-
