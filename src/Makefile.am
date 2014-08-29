@@ -173,6 +173,7 @@ libbitcoin_wallet_a_SOURCES = \
   crypter.cpp \
   rpcdump.cpp \
   rpcwallet.cpp \
+  scriptutils.cpp \
   wallet.cpp \
   walletdb.cpp \
   $(BITCOIN_CORE_H)
@@ -216,7 +217,6 @@ libbitcoin_common_a_SOURCES = \
   script/script.cpp \
   script/sign.cpp \
   script/standard.cpp \
-  scriptutils.cpp \
   $(BITCOIN_CORE_H)
 
 # util: shared between all executables.
