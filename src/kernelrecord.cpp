@@ -26,9 +26,9 @@ bool KernelRecord::showTransaction(const CWalletTx &wtx)
 /*
  * Decompose CWallet transaction to model kernel records.
  */
-QList<KernelRecord> KernelRecord::decomposeOutput(const CWallet *wallet, const CWalletTx &wtx)
+vector<KernelRecord> KernelRecord::decomposeOutput(const CWallet *wallet, const CWalletTx &wtx)
 {
-    QList<KernelRecord> parts;
+    vector<KernelRecord> parts;
     int64 nTime = wtx.GetTxTime();
     uint256 hash = wtx.GetHash();
     std::map<std::string, std::string> mapValue = wtx.mapValue;
@@ -56,7 +56,7 @@ QList<KernelRecord> KernelRecord::decomposeOutput(const CWallet *wallet, const C
                     addrStr = mapValue["to"];
                 }
 
-                parts.append(KernelRecord(hash, nTime, addrStr, txOut.nValue, wtx.IsSpent(nOut), coinAge));
+                parts.push_back(KernelRecord(hash, nTime, addrStr, txOut.nValue, wtx.IsSpent(nOut), coinAge));
             }
         }
     }

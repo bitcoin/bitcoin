@@ -814,16 +814,14 @@ Value listminting(const Array& params, bool fHelp)
     for (map<uint256, CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it)
     {
 
-        QList<KernelRecord> txList = KernelRecord::decomposeOutput(pwalletMain, it->second);
+        std::vector<KernelRecord> txList = KernelRecord::decomposeOutput(pwalletMain, it->second);
         int minAge = nStakeMinAge / 60 / 60 / 24;
-        for(QList<KernelRecord>::iterator i = txList.begin(); i != txList.end(); ++i) {
-            if(!(*i).spent) {
+        BOOST_FOREACH(KernelRecord& kr, txList) {
+            if(!kr.spent) {
 
                 if(count > 0 && ret.size() >= count) {
                     break;
                 }
-
-                KernelRecord kr = *i;
 
                 string strTime = boost::lexical_cast<std::string>(kr.nTime);
                 string strAmount = boost::lexical_cast<std::string>(kr.nValue);

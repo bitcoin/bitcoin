@@ -2,7 +2,6 @@
 #define KERNELRECORD_H
 
 #include "uint256.h"
-#include <QList>
 
 class CWallet;
 class CWalletTx;
@@ -29,7 +28,7 @@ public:
     }
 
     static bool showTransaction(const CWalletTx &wtx);
-    static QList<KernelRecord> decomposeOutput(const CWallet *wallet, const CWalletTx &wtx);
+    static std::vector<KernelRecord> decomposeOutput(const CWallet *wallet, const CWalletTx &wtx);
 
 
     uint256 hash;
