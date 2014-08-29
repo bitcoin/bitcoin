@@ -686,6 +686,7 @@ bool AppInit2(boost::thread_group& threadGroup)
     fIsBareMultisigStd = GetArg("-permitbaremultisig", true);
 
     // ********************************************************* Step 4: application initialization: dir lock, daemonize, pidfile, debug log
+
     // Sanity check
     if (!InitSanityCheck())
         return InitError(_("Initialization sanity check failed. Bitcoin Core is shutting down."));
@@ -1210,8 +1211,8 @@ bool AppInit2(boost::thread_group& threadGroup)
             LogPrintf("Invalid or missing peers.dat; recreating\n");
     }
 
-    LogPrintf("Loaded %i addresses from peers.dat  %dms\n",
-           addrman.size(), GetTimeMillis() - nStart);
+    LogPrintf("Loaded %u addresses from peers.dat %dms\n",
+        addrman.size(), GetTimeMillis() - nStart);
 
     // ********************************************************* Step 11: start node
 
