@@ -500,7 +500,7 @@ public:
     )
 
 
-    int SetMerkleBranch(const CBlock* pblock=NULL);
+    int SetMerkleBranch(const CBlock& block);
 
     // Return depth of transaction in blockchain:
     // -1  : not in blockchain, and not in memory pool (conflicted transaction)
