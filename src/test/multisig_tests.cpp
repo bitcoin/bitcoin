@@ -8,7 +8,7 @@
 #include "script/script.h"
 #include "script/interpreter.h"
 #include "script/sign.h"
-#include "scriptutils.h"
+#include "wallet_ismine.h"
 #include "uint256.h"
 
 #include <boost/assign/std/vector.hpp>
