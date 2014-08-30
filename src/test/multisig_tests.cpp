@@ -11,7 +11,7 @@
 #include "uint256.h"
 
 #ifdef ENABLE_WALLET
-#include "scriptutils.h"
+#include "wallet_ismine.h"
 #endif
 
 #include <boost/assign/std/vector.hpp>

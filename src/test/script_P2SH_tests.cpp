@@ -7,7 +7,7 @@
 #include "main.h"
 #include "script/script.h"
 #include "script/sign.h"
-#include "scriptutils.h"
+#include "wallet_ismine.h"
 
 #include <vector>
 
