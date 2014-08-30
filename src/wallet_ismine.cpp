@@ -3,7 +3,7 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "scriptutils.h"
+#include "wallet_ismine.h"
 
 #include "key.h"
 #include "keystore.h"
