@@ -5,9 +5,10 @@
 
 #include "chainparams.h"
 
-#include "assert.h"
 #include "random.h"
 #include "util.h"
+
+#include <assert.h>
 
 #include <boost/assign/list_of.hpp>
 
