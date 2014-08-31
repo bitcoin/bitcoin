@@ -72,6 +72,8 @@ public:
     /* Make miner stop after a block is found. In RPC, don't return
      * until nGenProcLimit blocks are generated */
     bool MineBlocksOnDemand() const { return fMineBlocksOnDemand; }
+    /* In the future use NetworkIDString() for RPC fields */
+    bool TestnetToBeDeprecatedFieldRPC() const { return fTestnetToBeDeprecatedFieldRPC; }
     CBaseChainParams::Network NetworkID() const { return networkID; }
     /* Return the BIP70 network string (main, test or regtest) */
     std::string NetworkIDString() const { return strNetworkID; }
@@ -108,6 +110,7 @@ protected:
     bool fRequireStandard;
     bool fMineBlocksOnDemand;
     bool fSkipProofOfWorkCheck;
+    bool fTestnetToBeDeprecatedFieldRPC;
 };
 
 /** Modifiable parameters interface is used by test cases to adapt the parameters in order
