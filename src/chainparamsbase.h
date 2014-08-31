@@ -25,8 +25,12 @@ public:
 
     const std::string& DataDir() const { return strDataDir; }
     int RPCPort() const { return nRPCPort; }
-    Network NetworkID() const { return networkID; }
 
+    /**
+     * Looks for -regtest or -testnet and returns the appropriate Network ID.
+     * Returns MAX_NETWORK_TYPES if an invalid combination is given.
+     */
+    static Network NetworkIdFromCommandLine();
 protected:
     CBaseChainParams() {}
 
@@ -45,7 +49,7 @@ const CBaseChainParams& BaseParams();
 void SelectBaseParams(CBaseChainParams::Network network);
 
 /**
- * Looks for -regtest or -testnet and then calls SelectParams as appropriate.
+ * Calls CBaseChainParams::NetworkIdFromCommandLine() and then calls SelectParams as appropriate.
  * Returns false if an invalid combination is given.
  */
 bool SelectBaseParamsFromCommandLine();
