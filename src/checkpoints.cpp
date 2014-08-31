@@ -4,6 +4,7 @@
 
 #include "checkpoints.h"
 
+#include "chainparams.h"
 #include "checkpoint_data.h"
 #include "main.h"
 #include "uint256.h"
@@ -23,21 +24,12 @@ namespace Checkpoints {
 
     bool fEnabled = true;
 
-    const CCheckpointData &Checkpoints() {
-        if (Params().NetworkID() == CBaseChainParams::TESTNET)
-            return dataTestnet;
-        else if (Params().NetworkID() == CBaseChainParams::MAIN)
-            return data;
-        else
-            return dataRegtest;
-    }
-
     bool CheckBlock(int nHeight, const uint256& hash)
     {
         if (!fEnabled)
             return true;
 
-        const MapCheckpoints& checkpoints = *Checkpoints().mapCheckpoints;
+        const MapCheckpoints& checkpoints = *Params().Checkpoints().mapCheckpoints;
 
         MapCheckpoints::const_iterator i = checkpoints.find(nHeight);
         if (i == checkpoints.end()) return true;
@@ -57,7 +49,7 @@ namespace Checkpoints {
         // Work is defined as: 1.0 per transaction before the last checkpoint, and
         // fSigcheckVerificationFactor per transaction after.
 
-        const CCheckpointData &data = Checkpoints();
+        const CCheckpointData &data = Params().Checkpoints();
 
         if (pindex->nChainTx <= data.nTransactionsLastCheckpoint) {
             double nCheapBefore = pindex->nChainTx;
@@ -81,7 +73,7 @@ namespace Checkpoints {
         if (!fEnabled)
             return 0;
 
-        const MapCheckpoints& checkpoints = *Checkpoints().mapCheckpoints;
+        const MapCheckpoints& checkpoints = *Params().Checkpoints().mapCheckpoints;
 
         return checkpoints.rbegin()->first;
     }
@@ -91,7 +83,7 @@ namespace Checkpoints {
         if (!fEnabled)
             return NULL;
 
-        const MapCheckpoints& checkpoints = *Checkpoints().mapCheckpoints;
+        const MapCheckpoints& checkpoints = *Params().Checkpoints().mapCheckpoints;
 
         BOOST_REVERSE_FOREACH(const MapCheckpoints::value_type& i, checkpoints)
         {

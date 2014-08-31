@@ -5,6 +5,7 @@
 
 #include "chainparams.h"
 
+#include "checkpoint_data.h"
 #include "random.h"
 #include "util.h"
 
@@ -117,6 +118,11 @@ public:
         fRequireStandard = true;
         fMineBlocksOnDemand = false;
     }
+
+    const CCheckpointData& Checkpoints() const 
+    {
+        return data;
+    }
 };
 static CMainParams mainParams;
 
@@ -172,6 +178,10 @@ public:
         fRequireStandard = false;
         fMineBlocksOnDemand = false;
     }
+    const CCheckpointData& Checkpoints() const 
+    {
+        return dataTestnet;
+    }
 };
 static CTestNetParams testNetParams;
 
@@ -210,6 +220,10 @@ public:
         fAllowMinDifficultyBlocks = true;
         fRequireStandard = false;
         fMineBlocksOnDemand = true;
+    }
+    const CCheckpointData& Checkpoints() const 
+    {
+        return dataRegtest;
     }
 };
 static CRegTestParams regTestParams;

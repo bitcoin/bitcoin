@@ -13,6 +13,8 @@
 
 #include <vector>
 
+class CCheckpointData;
+
 typedef unsigned char MessageStartChars[MESSAGE_START_SIZE];
 
 struct CDNSSeedData {
@@ -75,6 +77,7 @@ public:
     const std::vector<CDNSSeedData>& DNSSeeds() const { return vSeeds; }
     const std::vector<unsigned char>& Base58Prefix(Base58Type type) const { return base58Prefixes[type]; }
     const std::vector<CAddress>& FixedSeeds() const { return vFixedSeeds; }
+    virtual const CCheckpointData& Checkpoints() const = 0;
 protected:
     CChainParams() {}
 
