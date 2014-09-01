@@ -59,8 +59,12 @@ public:
     static const int CURRENT_VERSION = 1;
     int nVersion;
 
-    IMPLEMENT_SERIALIZE
-    (
+    IMPLEMENT_SERIALIZE;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+        bool fRead = ser_action.ForRead();
+
         SendCoinsRecipient* pthis = const_cast<SendCoinsRecipient*>(this);
 
         std::string sAddress = pthis->address.toStdString();
@@ -89,7 +93,7 @@ public:
                 pthis->paymentRequest.parse(QByteArray::fromRawData(sPaymentRequest.data(), sPaymentRequest.size()));
             pthis->authenticatedMerchant = QString::fromStdString(sAuthenticatedMerchant);
         }
-    )
+    }
 };
 
 /** Interface to Bitcoin wallet from Qt view code. */
