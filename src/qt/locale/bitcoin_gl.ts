@@ -1,4 +1,4 @@
-<?xml version="1.0" ?><!DOCTYPE TS><TS language="gl" version="2.1">
+<TS language="gl" version="2.1">
 <context>
     <name>AboutDialog</name>
     <message>
@@ -31,11 +31,7 @@ Este produto inclúe software desenvolvido polo OpenSSL Project para o uso no Op
         <source>The Bitcoin Core developers</source>
         <translation>Os desarrolladores de Bitcoin Core</translation>
     </message>
-    <message>
-        <source>(%1-bit)</source>
-        <translation type="unfinished"/>
-    </message>
-</context>
+    </context>
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -130,11 +126,7 @@ Este produto inclúe software desenvolvido polo OpenSSL Project para o uso no Op
         <source>Exporting Failed</source>
         <translation>Exportación falida</translation>
     </message>
-    <message>
-        <source>There was an error trying to save the address list to %1.</source>
-        <translation type="unfinished"/>
-    </message>
-</context>
+    </context>
 <context>
     <name>AddressTableModel</name>
     <message>
@@ -272,10 +264,6 @@ Este produto inclúe software desenvolvido polo OpenSSL Project para o uso no Op
         <translation>&amp;Vista xeral</translation>
     </message>
     <message>
-        <source>Node</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
         <source>Show general overview of wallet</source>
         <translation>Amosar vista xeral do moedeiro</translation>
     </message>
@@ -322,18 +310,6 @@ Este produto inclúe software desenvolvido polo OpenSSL Project para o uso no Op
     <message>
         <source>&amp;Change Passphrase...</source>
         <translation>&amp;Cambiar contrasinal...</translation>
-    </message>
-    <message>
-        <source>&amp;Sending addresses...</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>&amp;Receiving addresses...</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Open &amp;URI...</source>
-        <translation type="unfinished"/>
     </message>
     <message>
         <source>Importing blocks from disk...</source>
@@ -452,14 +428,6 @@ Este produto inclúe software desenvolvido polo OpenSSL Project para o uso no Op
         <translation>Abrir un bitcoin: URI ou solicitude de pago</translation>
     </message>
     <message>
-        <source>&amp;Command-line options</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Show the Bitcoin Core help message to get a list with possible Bitcoin command-line options</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
         <source>Bitcoin client</source>
         <translation>Cliente Bitcoin</translation>
     </message>
@@ -490,14 +458,6 @@ Este produto inclúe software desenvolvido polo OpenSSL Project para o uso no Op
     <message numerus="yes">
         <source>%n week(s)</source>
         <translation><numerusform>%n semana</numerusform><numerusform>%n semanas</numerusform></translation>
-    </message>
-    <message>
-        <source>%1 and %2</source>
-        <translation type="unfinished"/>
-    </message>
-    <message numerus="yes">
-        <source>%n year(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
     </message>
     <message>
         <source>%1 behind</source>
@@ -574,10 +534,6 @@ Dirección: %4
 <context>
     <name>CoinControlDialog</name>
     <message>
-        <source>Coin Control Address Selection</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
         <source>Quantity:</source>
         <translation>Cantidade:</translation>
     </message>
@@ -596,14 +552,6 @@ Dirección: %4
     <message>
         <source>Fee:</source>
         <translation>Pago:</translation>
-    </message>
-    <message>
-        <source>Low Output:</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>After Fee:</source>
-        <translation type="unfinished"/>
     </message>
     <message>
         <source>Change:</source>
@@ -690,10 +638,6 @@ Dirección: %4
         <translation>Copiar prioridade</translation>
     </message>
     <message>
-        <source>Copy low output</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
         <source>Copy change</source>
         <translation>Copiar cambio</translation>
     </message>
@@ -712,10 +656,6 @@ Dirección: %4
     <message>
         <source>medium-high</source>
         <translation>medio-alto</translation>
-    </message>
-    <message>
-        <source>medium</source>
-        <translation type="unfinished"/>
     </message>
     <message>
         <source>low-medium</source>
@@ -738,10 +678,6 @@ Dirección: %4
         <translation>(%1 bloqueado)</translation>
     </message>
     <message>
-        <source>none</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
         <source>Dust</source>
         <translation>Limpar</translation>
     </message>
@@ -754,48 +690,12 @@ Dirección: %4
         <translation>non</translation>
     </message>
     <message>
-        <source>This label turns red, if the transaction size is greater than 1000 bytes.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>This means a fee of at least %1 per kB is required.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Can vary +/- 1 byte per input.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
         <source>Transactions with higher priority are more likely to get included into a block.</source>
         <translation>As transacción con maior prioridade teñen máis posibilidades de ser incluidas nun bloque</translation>
     </message>
     <message>
-        <source>This label turns red, if the priority is smaller than &quot;medium&quot;.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>This label turns red, if any recipient receives an amount smaller than %1.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>This means a fee of at least %1 is required.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Amounts below 0.546 times the minimum relay fee are shown as dust.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>This label turns red, if the change is smaller than %1.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
         <source>(no label)</source>
         <translation>(sen etiqueta)</translation>
-    </message>
-    <message>
-        <source>change from %1 (%2)</source>
-        <translation type="unfinished"/>
     </message>
     <message>
         <source>(change)</source>
@@ -841,12 +741,12 @@ Dirección: %4
         <translation>Modificar dirección para enviar</translation>
     </message>
     <message>
-        <source>The entered address &quot;%1&quot; is already in the address book.</source>
-        <translation>A dirección introducida &quot;%1&quot; xa está no libro de direccións.</translation>
+        <source>The entered address "%1" is already in the address book.</source>
+        <translation>A dirección introducida "%1" xa está no libro de direccións.</translation>
     </message>
     <message>
-        <source>The entered address &quot;%1&quot; is not a valid Bitcoin address.</source>
-        <translation>A dirección introducida &apos;%1&apos; non é unha dirección Bitcoin válida.</translation>
+        <source>The entered address "%1" is not a valid Bitcoin address.</source>
+        <translation>A dirección introducida '%1' non é unha dirección Bitcoin válida.</translation>
     </message>
     <message>
         <source>Could not unlock wallet.</source>
@@ -883,10 +783,6 @@ Dirección: %4
 <context>
     <name>HelpMessageDialog</name>
     <message>
-        <source>Bitcoin Core - Command-line options</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
         <source>Bitcoin Core</source>
         <translation>Core de Bitcoin</translation>
     </message>
@@ -907,16 +803,12 @@ Dirección: %4
         <translation>opcións de UI</translation>
     </message>
     <message>
-        <source>Set language, for example &quot;de_DE&quot; (default: system locale)</source>
-        <translation>Fixar idioma, por exemplo &quot;de_DE&quot; (por defecto: locale del sistema)</translation>
+        <source>Set language, for example "de_DE" (default: system locale)</source>
+        <translation>Fixar idioma, por exemplo "de_DE" (por defecto: locale del sistema)</translation>
     </message>
     <message>
         <source>Start minimized</source>
         <translation>Comezar minimizado</translation>
-    </message>
-    <message>
-        <source>Set SSL root certificates for payment request (default: -system-)</source>
-        <translation type="unfinished"/>
     </message>
     <message>
         <source>Show splash screen on startup (default: 1)</source>
@@ -934,18 +826,6 @@ Dirección: %4
         <translation>Benvido</translation>
     </message>
     <message>
-        <source>Welcome to Bitcoin Core.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>As this is the first time the program is launched, you can choose where Bitcoin Core will store its data.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Bitcoin Core will download and store a copy of the Bitcoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
         <source>Use the default data directory</source>
         <translation>Empregar o directorio de datos por defecto</translation>
     </message>
@@ -958,8 +838,8 @@ Dirección: %4
         <translation>Bitcoin</translation>
     </message>
     <message>
-        <source>Error: Specified data directory &quot;%1&quot; can not be created.</source>
-        <translation>Erro: O directorio de datos especificado &quot;%1&quot; non pode ser creado.</translation>
+        <source>Error: Specified data directory "%1" can not be created.</source>
+        <translation>Erro: O directorio de datos especificado "%1" non pode ser creado.</translation>
     </message>
     <message>
         <source>Error</source>
@@ -1024,42 +904,6 @@ Dirección: %4
         <translation>&amp;Comezar Bitcoin ao facer login no sistema</translation>
     </message>
     <message>
-        <source>Size of &amp;database cache</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>MB</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Number of script &amp;verification threads</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Connect to the Bitcoin network through a SOCKS proxy.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>&amp;Connect through SOCKS proxy (default proxy):</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Third party transaction URLs</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Active command-line options that override above options:</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
         <source>Reset all client options to default.</source>
         <translation>Restaurar todas as opcións de cliente ás por defecto</translation>
     </message>
@@ -1070,30 +914,6 @@ Dirección: %4
     <message>
         <source>&amp;Network</source>
         <translation>&amp;Rede</translation>
-    </message>
-    <message>
-        <source>(0 = auto, &lt;0 = leave that many cores free)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>W&amp;allet</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Expert</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Enable coin &amp;control features</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>If you disable the spending of unconfirmed change, the change from a transaction cannot be used until that transaction has at least one confirmation. This also affects how your balance is computed.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>&amp;Spend unconfirmed change</source>
-        <translation type="unfinished"/>
     </message>
     <message>
         <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
@@ -1172,10 +992,6 @@ Dirección: %4
         <translation>&amp;Visualizar direccións na listaxe de transaccións</translation>
     </message>
     <message>
-        <source>Whether to show coin control features or not.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
         <source>&amp;OK</source>
         <translation>&amp;OK</translation>
     </message>
@@ -1188,24 +1004,8 @@ Dirección: %4
         <translation>por defecto</translation>
     </message>
     <message>
-        <source>none</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
         <source>Confirm options reset</source>
         <translation>Confirmar opcións de restaurar</translation>
-    </message>
-    <message>
-        <source>Client restart required to activate changes.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Client will be shutdown, do you want to proceed?</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>This change would require a client restart.</source>
-        <translation type="unfinished"/>
     </message>
     <message>
         <source>The supplied proxy address is invalid.</source>
@@ -1227,16 +1027,8 @@ Dirección: %4
         <translation>Moedeiro</translation>
     </message>
     <message>
-        <source>Available:</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
         <source>Your current spendable balance</source>
         <translation>O teu balance actualmente dispoñible</translation>
-    </message>
-    <message>
-        <source>Pending:</source>
-        <translation type="unfinished"/>
     </message>
     <message>
         <source>Total of transactions that have yet to be confirmed, and do not yet count toward the spendable balance</source>
@@ -1286,44 +1078,12 @@ Dirección: %4
         <translation>Erro na petición de pago</translation>
     </message>
     <message>
-        <source>Cannot start bitcoin: click-to-pay handler</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Net manager warning</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Your active proxy doesn&apos;t support SOCKS5, which is required for payment requests via proxy.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Payment request fetch URL is invalid: %1</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Payment request file handling</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Payment request file can not be read or processed! This can be caused by an invalid payment request file.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Unverified payment requests to custom payment scripts are unsupported.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
         <source>Refund from %1</source>
         <translation>Devolución dende %1</translation>
     </message>
     <message>
         <source>Error communicating with %1: %2</source>
         <translation>Erro comunicando con %1: %2</translation>
-    </message>
-    <message>
-        <source>Payment request can not be parsed or processed!</source>
-        <translation type="unfinished"/>
     </message>
     <message>
         <source>Bad response from server %1</source>
@@ -1345,20 +1105,12 @@ Dirección: %4
         <translation>Bitcoin</translation>
     </message>
     <message>
-        <source>Error: Specified data directory &quot;%1&quot; does not exist.</source>
-        <translation>Erro: O directorio de datos especificado &quot;%1&quot; non existe.</translation>
-    </message>
-    <message>
-        <source>Error: Cannot parse configuration file: %1. Only use key=value syntax.</source>
-        <translation type="unfinished"/>
+        <source>Error: Specified data directory "%1" does not exist.</source>
+        <translation>Erro: O directorio de datos especificado "%1" non existe.</translation>
     </message>
     <message>
         <source>Error: Invalid combination of -regtest and -testnet.</source>
         <translation>Erro: combinación inválida de -regtest e -testnet.</translation>
-    </message>
-    <message>
-        <source>Bitcoin Core didn&apos;t yet exit safely...</source>
-        <translation type="unfinished"/>
     </message>
     <message>
         <source>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
@@ -1379,11 +1131,7 @@ Dirección: %4
         <source>Save QR Code</source>
         <translation>Gardar Código QR</translation>
     </message>
-    <message>
-        <source>PNG Image (*.png)</source>
-        <translation type="unfinished"/>
-    </message>
-</context>
+    </context>
 <context>
     <name>RPCConsole</name>
     <message>
@@ -1403,14 +1151,6 @@ Dirección: %4
         <translation>&amp;Información</translation>
     </message>
     <message>
-        <source>Debug window</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>General</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
         <source>Using OpenSSL version</source>
         <translation>Usar versión OpenSSL</translation>
     </message>
@@ -1421,10 +1161,6 @@ Dirección: %4
     <message>
         <source>Network</source>
         <translation>Rede</translation>
-    </message>
-    <message>
-        <source>Name</source>
-        <translation type="unfinished"/>
     </message>
     <message>
         <source>Number of connections</source>
@@ -1554,22 +1290,6 @@ Dirección: %4
         <translation>R&amp;eutilizar unha dirección para recibir existente (non recomendado)</translation>
     </message>
     <message>
-        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Bitcoin network.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>An optional label to associate with the new receiving address.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Use this form to request payments. All fields are &lt;b&gt;optional&lt;/b&gt;.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>An optional amount to request. Leave this empty or zero to not request a specific amount.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
         <source>Clear all fields of the form.</source>
         <translation>Limpar todos os campos do formulario</translation>
     </message>
@@ -1578,36 +1298,12 @@ Dirección: %4
         <translation>Limpar</translation>
     </message>
     <message>
-        <source>Requested payments history</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
         <source>&amp;Request payment</source>
         <translation>&amp;Solicitar pago</translation>
     </message>
     <message>
-        <source>Show the selected request (does the same as double clicking an entry)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Show</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Remove the selected entries from the list</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Remove</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
         <source>Copy label</source>
         <translation>Copiar etiqueta</translation>
-    </message>
-    <message>
-        <source>Copy message</source>
-        <translation type="unfinished"/>
     </message>
     <message>
         <source>Copy amount</source>
@@ -1691,36 +1387,12 @@ Dirección: %4
         <source>(no label)</source>
         <translation>(sen etiqueta)</translation>
     </message>
-    <message>
-        <source>(no message)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>(no amount)</source>
-        <translation type="unfinished"/>
-    </message>
-</context>
+    </context>
 <context>
     <name>SendCoinsDialog</name>
     <message>
         <source>Send Coins</source>
         <translation>Moedas Enviadas</translation>
-    </message>
-    <message>
-        <source>Coin Control Features</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Inputs...</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>automatically selected</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Insufficient funds!</source>
-        <translation type="unfinished"/>
     </message>
     <message>
         <source>Quantity:</source>
@@ -1743,24 +1415,8 @@ Dirección: %4
         <translation>Pago:</translation>
     </message>
     <message>
-        <source>Low Output:</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>After Fee:</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
         <source>Change:</source>
         <translation>Cambiar:</translation>
-    </message>
-    <message>
-        <source>If this is activated, but the change address is empty or invalid, change will be sent to a newly generated address.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Custom change address</source>
-        <translation type="unfinished"/>
     </message>
     <message>
         <source>Send to multiple recipients at once</source>
@@ -1823,20 +1479,8 @@ Dirección: %4
         <translation>Copiar prioridade</translation>
     </message>
     <message>
-        <source>Copy low output</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
         <source>Copy change</source>
         <translation>Copiar cambio</translation>
-    </message>
-    <message>
-        <source>Total Amount %1 (= %2)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>or</source>
-        <translation type="unfinished"/>
     </message>
     <message>
         <source>The recipient address is not valid, please recheck.</source>
@@ -1857,14 +1501,6 @@ Dirección: %4
     <message>
         <source>Duplicate address found, can only send to each address once per send operation.</source>
         <translation>Atopouse dirección duplicada, so se pode enviar a cada dirección unha vez por operación.</translation>
-    </message>
-    <message>
-        <source>Transaction creation failed!</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
-        <translation type="unfinished"/>
     </message>
     <message>
         <source>Warning: Invalid Bitcoin address</source>
@@ -1942,20 +1578,12 @@ Dirección: %4
         <translation>Eliminar esta entrada</translation>
     </message>
     <message>
-        <source>Message:</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
         <source>This is a verified payment request.</source>
         <translation>Esta é unha solicitude de pago verificada</translation>
     </message>
     <message>
         <source>Enter a label for this address to add it to the list of used addresses</source>
         <translation>Introduce unha etiqueta para esta dirección para engadila á listaxe de direccións empregadas</translation>
-    </message>
-    <message>
-        <source>A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
-        <translation type="unfinished"/>
     </message>
     <message>
         <source>This is an unverified payment request.</source>
@@ -1972,15 +1600,7 @@ Dirección: %4
 </context>
 <context>
     <name>ShutdownWindow</name>
-    <message>
-        <source>Bitcoin Core is shutting down...</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Do not shut down the computer until this window disappears.</source>
-        <translation type="unfinished"/>
-    </message>
-</context>
+    </context>
 <context>
     <name>SignVerifyMessageDialog</name>
     <message>
@@ -2072,8 +1692,8 @@ Dirección: %4
         <translation>Introduza unha dirección Bitcoin (exemplo: 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
     <message>
-        <source>Click &quot;Sign Message&quot; to generate signature</source>
-        <translation>Click en &quot;Asinar Mensaxe&quot; para xerar sinatura</translation>
+        <source>Click "Sign Message" to generate signature</source>
+        <translation>Click en "Asinar Mensaxe" para xerar sinatura</translation>
     </message>
     <message>
         <source>The entered address is invalid.</source>
@@ -2153,10 +1773,6 @@ Dirección: %4
         <translation>Aberto ata %1</translation>
     </message>
     <message>
-        <source>conflicted</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
         <source>%1/offline</source>
         <translation>%1/fóra de liña</translation>
     </message>
@@ -2171,10 +1787,6 @@ Dirección: %4
     <message>
         <source>Status</source>
         <translation>Estado</translation>
-    </message>
-    <message numerus="yes">
-        <source>, broadcast through %n node(s)</source>
-        <translation><numerusform>, propagado a % nodo</numerusform><numerusform>, propagado a % nodos</numerusform></translation>
     </message>
     <message>
         <source>Date</source>
@@ -2207,10 +1819,6 @@ Dirección: %4
     <message>
         <source>Credit</source>
         <translation>Crédito</translation>
-    </message>
-    <message numerus="yes">
-        <source>matures in %n more block(s)</source>
-        <translation><numerusform>madura nun bloque máis</numerusform><numerusform>madura en %n bloques máis</numerusform></translation>
     </message>
     <message>
         <source>not accepted</source>
@@ -2245,8 +1853,8 @@ Dirección: %4
         <translation>Comerciante</translation>
     </message>
     <message>
-        <source>Generated coins must mature %1 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to &quot;not accepted&quot; and it won&apos;t be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.</source>
-        <translation>As moedas xeradas deben madurar %1 bloques antes de que poidan ser gastadas. Cando xeraste este bloque, foi propagado á rede para ser engadido á cadeas de bloques. Se falla ao tentar meterse na cadea, o seu estado cambiará a &quot;non aceptado&quot; e non poderá ser gastado. Esto pode ocorrir ocasionalmente se outro nodo xera un bloque en poucos segundos de diferencia co teu.</translation>
+        <source>Generated coins must mature %1 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to "not accepted" and it won't be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.</source>
+        <translation>As moedas xeradas deben madurar %1 bloques antes de que poidan ser gastadas. Cando xeraste este bloque, foi propagado á rede para ser engadido á cadeas de bloques. Se falla ao tentar meterse na cadea, o seu estado cambiará a "non aceptado" e non poderá ser gastado. Esto pode ocorrir ocasionalmente se outro nodo xera un bloque en poucos segundos de diferencia co teu.</translation>
     </message>
     <message>
         <source>Debug information</source>
@@ -2275,10 +1883,6 @@ Dirección: %4
     <message>
         <source>, has not been successfully broadcast yet</source>
         <translation>, non foi propagado con éxito todavía</translation>
-    </message>
-    <message numerus="yes">
-        <source>Open for %n more block(s)</source>
-        <translation><numerusform>Abrir para %s bloque máis</numerusform><numerusform>Abrir para %n bloques máis</numerusform></translation>
     </message>
     <message>
         <source>unknown</source>
@@ -2314,10 +1918,6 @@ Dirección: %4
         <source>Amount</source>
         <translation>Cantidade</translation>
     </message>
-    <message>
-        <source>Immature (%1 confirmations, will be available after %2)</source>
-        <translation type="unfinished"/>
-    </message>
     <message numerus="yes">
         <source>Open for %n more block(s)</source>
         <translation><numerusform>Abrir para %n bloque máis</numerusform><numerusform>Abrir para %n bloques máis</numerusform></translation>
@@ -2337,22 +1937,6 @@ Dirección: %4
     <message>
         <source>Generated but not accepted</source>
         <translation>Xerado pero non aceptado</translation>
-    </message>
-    <message>
-        <source>Offline</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Unconfirmed</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Confirming (%1 of %2 recommended confirmations)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Conflicted</source>
-        <translation type="unfinished"/>
     </message>
     <message>
         <source>Received with</source>
@@ -2658,10 +2242,6 @@ Dirección: %4
         <translation>Aceptar liña de comandos e comandos JSON-RPC</translation>
     </message>
     <message>
-        <source>Bitcoin Core RPC client version</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
         <source>Run in the background as a daemon and accept commands</source>
         <translation>Executar no fondo como un demo e aceptar comandos</translation>
     </message>
@@ -2683,7 +2263,7 @@ rpcpassword=%s
 The username and password MUST NOT be the same.
 If the file does not exist, create it with owner-readable-only file permissions.
 It is also recommended to set alertnotify so you are notified of problems;
-for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
+for example: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
 </source>
         <translation>%s, debes fixar unha rpcpassword no arquivo de configuración:
 %s
@@ -2694,7 +2274,7 @@ rpcpassword=%s
 O nome do usuario e o contrasinal DEBEN NON ser o mesmo.
 Se o arquivo non existe, debes crealo con permisos de so lectura para o propietario.
 Tamén é recomendable fixar alertnotify de modo que recibas notificación dos problemas;
-por exemplo: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
+por exemplo: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
 </translation>
     </message>
     <message>
@@ -2710,20 +2290,8 @@ por exemplo: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Enlazar a unha dirección dada e escoitar sempre nela. Emprega a notación [host]:post para IPv6</translation>
     </message>
     <message>
-        <source>Continuously rate-limit free transactions to &lt;n&gt;*1000 bytes per minute (default:15)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
         <source>Enter regression test mode, which uses a special chain in which blocks can be solved instantly. This is intended for regression testing tools and app development.</source>
         <translation>Entra en modo de test de regresión, que emprega unha cadea especial na que os bloques poden ser resoltos instantáneamente. Esto está pensado para ferramentes de testing de regresión e desenvolvemento de aplicacións.</translation>
-    </message>
-    <message>
-        <source>Enter regression test mode, which uses a special chain in which blocks can be solved instantly.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Error: Listening for incoming connections failed (listen returned error %d)</source>
-        <translation type="unfinished"/>
     </message>
     <message>
         <source>Error: The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
@@ -2738,47 +2306,15 @@ por exemplo: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Executar comando cando unha transacción do moedeiro cambia (%s no comando é substituído por TxID)</translation>
     </message>
     <message>
-        <source>Fees smaller than this are considered zero fee (for transaction creation) (default:</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Flush database activity from memory pool to disk log every &lt;n&gt; megabytes (default: 100)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>How thorough the block verification of -checkblocks is (0-4, default: 3)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>In this mode -genproclimit controls how many blocks are generated immediately.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Set the number of script verification threads (%u to %d, 0 = auto, &lt;0 = leave that many cores free, default: %d)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Set the processor limit for when generation is on (-1 = unlimited, default: -1)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
         <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
         <translation>Esta é unha build de test pre-lanzamento - emprégaa baixo o teu propio risco - non empregar para minado ou aplicacións de comerciantes</translation>
-    </message>
-    <message>
-        <source>Unable to bind to %s on this computer. Bitcoin Core is probably already running.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: -proxy)</source>
-        <translation type="unfinished"/>
     </message>
     <message>
         <source>Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
         <translation>Precaución: -paytxfee está posto moi algo! Esta é a tarifa de transacción que ti pagarás se envías unha transacción.</translation>
     </message>
     <message>
-        <source>Warning: Please check that your computer&apos;s date and time are correct! If your clock is wrong Bitcoin will not work properly.</source>
+        <source>Warning: Please check that your computer's date and time are correct! If your clock is wrong Bitcoin will not work properly.</source>
         <translation>Precaución; Por favor revisa que a data e hora do teu ordenador son correctas! Se o teu reloxo está equivocato Bitcoin non funcionará adecuadamente.</translation>
     </message>
     <message>
@@ -2798,14 +2334,6 @@ por exemplo: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Precaución: wallet.dat corrupto, datos salvagardados! O wallet.dat orixinal foi gardado como wallet.{timestamp}.bak en %s; se o teu balance ou transaccións son incorrectas deberías restauralas dende unha copia de seguridade.</translation>
     </message>
     <message>
-        <source>(default: 1)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>(default: wallet.dat)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
         <source>&lt;category&gt; can be:</source>
         <translation>&lt;categoría&gt; pode ser:</translation>
     </message>
@@ -2814,52 +2342,24 @@ por exemplo: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Tentar recuperar claves privadas dende un wallet.dat corrupto</translation>
     </message>
     <message>
-        <source>Bitcoin Core Daemon</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
         <source>Block creation options:</source>
         <translation>Opcións de creación de bloque:</translation>
-    </message>
-    <message>
-        <source>Clear list of wallet transactions (diagnostic tool; implies -rescan)</source>
-        <translation type="unfinished"/>
     </message>
     <message>
         <source>Connect only to the specified node(s)</source>
         <translation>Conectar so ao(s) nodo(s) especificado(s)</translation>
     </message>
     <message>
-        <source>Connect through SOCKS proxy</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
         <source>Connect to JSON-RPC on &lt;port&gt; (default: 8332 or testnet: 18332)</source>
         <translation>Conectar a JSON-RPC no &lt;porto&gt; (por defecto: 8332 ou testnet: 18332)</translation>
-    </message>
-    <message>
-        <source>Connection options:</source>
-        <translation type="unfinished"/>
     </message>
     <message>
         <source>Corrupted block database detected</source>
         <translation>Detectada base de datos de bloques corrupta.</translation>
     </message>
     <message>
-        <source>Debugging/Testing options:</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Disable safemode, override a real safe mode event (default: 0)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
         <source>Discover own IP address (default: 1 when listening and no -externalip)</source>
         <translation>Descobrir dirección IP propia (por defecto: 1 se á escoita e non -externalip)</translation>
-    </message>
-    <message>
-        <source>Do not load the wallet and disable wallet RPC calls</source>
-        <translation type="unfinished"/>
     </message>
     <message>
         <source>Do you want to rebuild the block database now?</source>
@@ -2938,20 +2438,8 @@ por exemplo: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Fallou a escritura dos datos para desfacer</translation>
     </message>
     <message>
-        <source>Fee per kB to add to transactions you send</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Fees smaller than this are considered zero fee (for relaying) (default:</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
         <source>Find peers using DNS lookup (default: 1 unless -connect)</source>
         <translation>Atopar pares usando lookup DNS (por defecto: 1 agás -connect)</translation>
-    </message>
-    <message>
-        <source>Force safe mode (default: 0)</source>
-        <translation type="unfinished"/>
     </message>
     <message>
         <source>Generate coins (default: 0)</source>
@@ -2962,48 +2450,20 @@ por exemplo: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Cantos bloques para chequear ao arrancar (por defecto: 288, 0 = todos)</translation>
     </message>
     <message>
-        <source>If &lt;category&gt; is not supplied, output all debugging information.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Importing...</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
         <source>Incorrect or no genesis block found. Wrong datadir for network?</source>
         <translation>Bloque genesis incorrecto o no existente. Datadir erróneo para a rede?</translation>
     </message>
     <message>
-        <source>Invalid -onion address: &apos;%s&apos;</source>
-        <translation>Dirección -onion inválida: &apos;%s&apos;</translation>
+        <source>Invalid -onion address: '%s'</source>
+        <translation>Dirección -onion inválida: '%s'</translation>
     </message>
     <message>
         <source>Not enough file descriptors available.</source>
         <translation>Non hai suficientes descritores de arquivo dispoñibles.</translation>
     </message>
     <message>
-        <source>Prepend debug output with timestamp (default: 1)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>RPC client options:</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
         <source>Rebuild block chain index from current blk000??.dat files</source>
         <translation>Reconstruír índice de cadea de bloque dende os ficheiros actuais blk000??.dat</translation>
-    </message>
-    <message>
-        <source>Select SOCKS version for -proxy (4 or 5, default: 5)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Set database cache size in megabytes (%d to %d, default: %d)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Set maximum block size in bytes (default: %d)</source>
-        <translation type="unfinished"/>
     </message>
     <message>
         <source>Set the number of threads to service RPC calls (default: 4)</source>
@@ -3012,14 +2472,6 @@ por exemplo: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     <message>
         <source>Specify wallet file (within data directory)</source>
         <translation>Especificar arquivo do moedeiro (dentro do directorio de datos)</translation>
-    </message>
-    <message>
-        <source>Spend unconfirmed change when sending transactions (default: 1)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>This is intended for regression testing tools and app development.</source>
-        <translation type="unfinished"/>
     </message>
     <message>
         <source>Usage (deprecated, use bitcoin-cli):</source>
@@ -3034,20 +2486,8 @@ por exemplo: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Verificando moedeiro...</translation>
     </message>
     <message>
-        <source>Wait for RPC server to start</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
         <source>Wallet %s resides outside data directory %s</source>
         <translation>O moedeiro %s reside fóra do directorio de datos %s</translation>
-    </message>
-    <message>
-        <source>Wallet options:</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Warning: Deprecated argument -debugnet ignored, use -debug=net</source>
-        <translation type="unfinished"/>
     </message>
     <message>
         <source>You need to rebuild the database using -reindex to change -txindex</source>
@@ -3058,40 +2498,20 @@ por exemplo: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Importa bloques dende arquivos blk000??.dat externos</translation>
     </message>
     <message>
-        <source>Cannot obtain a lock on data directory %s. Bitcoin Core is probably already running.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
         <source>Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)</source>
         <translation>Executar comando cando se recibe unha alerta relevante ou vemos un fork realmente longo (%s no cmd é substituído pola mensaxe)</translation>
-    </message>
-    <message>
-        <source>Output debugging information (default: 0, supplying &lt;category&gt; is optional)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Set maximum size of high-priority/low-fee transactions in bytes (default: %d)</source>
-        <translation type="unfinished"/>
     </message>
     <message>
         <source>Information</source>
         <translation>Información</translation>
     </message>
     <message>
-        <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: &apos;%s&apos;</source>
-        <translation>Cantidade inválida para -minrelaytxfee=&lt;cantidade&gt;: &apos;%s&apos;</translation>
+        <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: '%s'</source>
+        <translation>Cantidade inválida para -minrelaytxfee=&lt;cantidade&gt;: '%s'</translation>
     </message>
     <message>
-        <source>Invalid amount for -mintxfee=&lt;amount&gt;: &apos;%s&apos;</source>
-        <translation>Cantidade inválida para -mintxfee=&lt;cantidade&gt;: &apos;%s&apos;</translation>
-    </message>
-    <message>
-        <source>Limit size of signature cache to &lt;n&gt; entries (default: 50000)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Log transaction priority and fee per kB when mining blocks (default: 0)</source>
-        <translation type="unfinished"/>
+        <source>Invalid amount for -mintxfee=&lt;amount&gt;: '%s'</source>
+        <translation>Cantidade inválida para -mintxfee=&lt;cantidade&gt;: '%s'</translation>
     </message>
     <message>
         <source>Maintain a full transaction index (default: 0)</source>
@@ -3114,40 +2534,8 @@ por exemplo: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Conectar so a nodos na rede &lt;net&gt; (IPv4, IPv6 ou Tor)</translation>
     </message>
     <message>
-        <source>Print block on startup, if found in block index</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Print block tree on startup (default: 0)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>RPC SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>RPC server options:</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Randomly drop 1 of every &lt;n&gt; network messages</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Randomly fuzz 1 of every &lt;n&gt; network messages</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Run a thread to flush wallet periodically (default: 1)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
         <source>SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
         <translation>Opcións SSL: (ver ńa Wiki Bitcoin as instrucción de configuración de SSL)</translation>
-    </message>
-    <message>
-        <source>Send command to Bitcoin Core</source>
-        <translation type="unfinished"/>
     </message>
     <message>
         <source>Send trace/debug info to console instead of debug.log file</source>
@@ -3156,18 +2544,6 @@ por exemplo: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     <message>
         <source>Set minimum block size in bytes (default: 0)</source>
         <translation>Fixar tamaño mínimo de bloque en bytes (por defecto: 0)</translation>
-    </message>
-    <message>
-        <source>Sets the DB_PRIVATE flag in the wallet db environment (default: 1)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Show all debugging options (usage: --help -help-debug)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Show benchmark information (default: 0)</source>
-        <translation type="unfinished"/>
     </message>
     <message>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
@@ -3180,10 +2556,6 @@ por exemplo: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     <message>
         <source>Specify connection timeout in milliseconds (default: 5000)</source>
         <translation>Especificar tempo límite da conexión en milisegundos (por defecto: 5000)</translation>
-    </message>
-    <message>
-        <source>Start Bitcoin Core Daemon</source>
-        <translation type="unfinished"/>
     </message>
     <message>
         <source>System error: </source>
@@ -3220,14 +2592,6 @@ por exemplo: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     <message>
         <source>Warning: This version is obsolete, upgrade required!</source>
         <translation>Precaución: Esta versión é obsoleta, precísase unha actualización!</translation>
-    </message>
-    <message>
-        <source>Zapping all transactions from wallet...</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>on startup</source>
-        <translation type="unfinished"/>
     </message>
     <message>
         <source>version</source>
@@ -3310,28 +2674,28 @@ por exemplo: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Erro cargando wallet.dat</translation>
     </message>
     <message>
-        <source>Invalid -proxy address: &apos;%s&apos;</source>
-        <translation>Dirección -proxy inválida: &apos;%s&apos;</translation>
+        <source>Invalid -proxy address: '%s'</source>
+        <translation>Dirección -proxy inválida: '%s'</translation>
     </message>
     <message>
-        <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
-        <translation>Rede descoñecida especificada en -onlynet: &apos;%s&apos;</translation>
+        <source>Unknown network specified in -onlynet: '%s'</source>
+        <translation>Rede descoñecida especificada en -onlynet: '%s'</translation>
     </message>
     <message>
         <source>Unknown -socks proxy version requested: %i</source>
         <translation>Versión solicitada de proxy -socks descoñecida: %i</translation>
     </message>
     <message>
-        <source>Cannot resolve -bind address: &apos;%s&apos;</source>
-        <translation>Non se pode resolver a dirección -bind: &apos;%s&apos;</translation>
+        <source>Cannot resolve -bind address: '%s'</source>
+        <translation>Non se pode resolver a dirección -bind: '%s'</translation>
     </message>
     <message>
-        <source>Cannot resolve -externalip address: &apos;%s&apos;</source>
-        <translation>Non se pode resolver dirección -externalip: &apos;%s&apos;</translation>
+        <source>Cannot resolve -externalip address: '%s'</source>
+        <translation>Non se pode resolver dirección -externalip: '%s'</translation>
     </message>
     <message>
-        <source>Invalid amount for -paytxfee=&lt;amount&gt;: &apos;%s&apos;</source>
-        <translation>Cantidade inválida para -paytxfee=&lt;cantidade&gt;: &apos;%s&apos;</translation>
+        <source>Invalid amount for -paytxfee=&lt;amount&gt;: '%s'</source>
+        <translation>Cantidade inválida para -paytxfee=&lt;cantidade&gt;: '%s'</translation>
     </message>
     <message>
         <source>Invalid amount</source>

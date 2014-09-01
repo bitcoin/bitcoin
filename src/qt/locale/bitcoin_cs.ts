@@ -1,4 +1,4 @@
-<?xml version="1.0" ?><!DOCTYPE TS><TS language="cs" version="2.1">
+<TS language="cs" version="2.1">
 <context>
     <name>AboutDialog</name>
     <message>
@@ -479,25 +479,9 @@ Tento produkt zahrnuje programy vyvinuté OpenSSL Projektem pro použití v Open
         <source>Processed %1 blocks of transaction history.</source>
         <translation>Zpracováno %1 bloků transakční historie.</translation>
     </message>
-    <message numerus="yes">
-        <source>%n hour(s)</source>
-        <translation><numerusform>hodinu</numerusform><numerusform>%n hodiny</numerusform><numerusform>%n hodin</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <source>%n day(s)</source>
-        <translation><numerusform>den</numerusform><numerusform>%n dny</numerusform><numerusform>%n dnů</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <source>%n week(s)</source>
-        <translation><numerusform>týden</numerusform><numerusform>%n týdny</numerusform><numerusform>%n týdnů</numerusform></translation>
-    </message>
     <message>
         <source>%1 and %2</source>
         <translation>%1 a %2</translation>
-    </message>
-    <message numerus="yes">
-        <source>%n year(s)</source>
-        <translation><numerusform>rok</numerusform><numerusform>%n roky</numerusform><numerusform>%n roků</numerusform></translation>
     </message>
     <message>
         <source>%1 behind</source>
@@ -770,7 +754,7 @@ Adresa: %4
         <translation>Transakce s vyšší prioritou mají větší šanci na zařazení do bloku.</translation>
     </message>
     <message>
-        <source>This label turns red, if the priority is smaller than &quot;medium&quot;.</source>
+        <source>This label turns red, if the priority is smaller than "medium".</source>
         <translation>Popisek zčervená, pokud je priorita menší než „střední“.</translation>
     </message>
     <message>
@@ -841,12 +825,12 @@ Adresa: %4
         <translation>Uprav odesílací adresu</translation>
     </message>
     <message>
-        <source>The entered address &quot;%1&quot; is already in the address book.</source>
-        <translation>Zadaná adresa &quot;%1&quot; už v adresáři je.</translation>
+        <source>The entered address "%1" is already in the address book.</source>
+        <translation>Zadaná adresa "%1" už v adresáři je.</translation>
     </message>
     <message>
-        <source>The entered address &quot;%1&quot; is not a valid Bitcoin address.</source>
-        <translation>Zadaná adresa &quot;%1&quot; není platná Bitcoinová adresa.</translation>
+        <source>The entered address "%1" is not a valid Bitcoin address.</source>
+        <translation>Zadaná adresa "%1" není platná Bitcoinová adresa.</translation>
     </message>
     <message>
         <source>Could not unlock wallet.</source>
@@ -907,8 +891,8 @@ Adresa: %4
         <translation>Možnosti UI</translation>
     </message>
     <message>
-        <source>Set language, for example &quot;de_DE&quot; (default: system locale)</source>
-        <translation>Nastavit jazyk, například &quot;de_DE&quot; (výchozí: systémové nastavení)</translation>
+        <source>Set language, for example "de_DE" (default: system locale)</source>
+        <translation>Nastavit jazyk, například "de_DE" (výchozí: systémové nastavení)</translation>
     </message>
     <message>
         <source>Start minimized</source>
@@ -958,7 +942,7 @@ Adresa: %4
         <translation>Bitcoin</translation>
     </message>
     <message>
-        <source>Error: Specified data directory &quot;%1&quot; can not be created.</source>
+        <source>Error: Specified data directory "%1" can not be created.</source>
         <translation>Chyba: Nejde vytvořit požadovaný adresář pro data „%1“.</translation>
     </message>
     <message>
@@ -1294,7 +1278,7 @@ Adresa: %4
         <translation>Upozornění správce sítě</translation>
     </message>
     <message>
-        <source>Your active proxy doesn&apos;t support SOCKS5, which is required for payment requests via proxy.</source>
+        <source>Your active proxy doesn't support SOCKS5, which is required for payment requests via proxy.</source>
         <translation>Tvá aktivní proxy nepodporuje SOCKS5, které je vyžadováno pro platební požadavky skrz proxy.</translation>
     </message>
     <message>
@@ -1345,7 +1329,7 @@ Adresa: %4
         <translation>Bitcoin</translation>
     </message>
     <message>
-        <source>Error: Specified data directory &quot;%1&quot; does not exist.</source>
+        <source>Error: Specified data directory "%1" does not exist.</source>
         <translation>Chyba: Zadaný adresář pro data „%1“ neexistuje.</translation>
     </message>
     <message>
@@ -1357,7 +1341,7 @@ Adresa: %4
         <translation>Chyba: Neplatná kombinace -regtest a -testnet.</translation>
     </message>
     <message>
-        <source>Bitcoin Core didn&apos;t yet exit safely...</source>
+        <source>Bitcoin Core didn't yet exit safely...</source>
         <translation>Bitcoin Core ještě bezpečně neskončil...</translation>
     </message>
     <message>
@@ -2072,8 +2056,8 @@ Adresa: %4
         <translation>Zadej Bitcoinovou adresu (např. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
     <message>
-        <source>Click &quot;Sign Message&quot; to generate signature</source>
-        <translation>Kliknutím na &quot;Podepiš zprávu&quot; vygeneruješ podpis</translation>
+        <source>Click "Sign Message" to generate signature</source>
+        <translation>Kliknutím na "Podepiš zprávu" vygeneruješ podpis</translation>
     </message>
     <message>
         <source>The entered address is invalid.</source>
@@ -2172,10 +2156,6 @@ Adresa: %4
         <source>Status</source>
         <translation>Stav</translation>
     </message>
-    <message numerus="yes">
-        <source>, broadcast through %n node(s)</source>
-        <translation><numerusform>, rozesláno přes 1 uzel</numerusform><numerusform>, rozesláno přes %n uzly</numerusform><numerusform>, rozesláno přes %n uzlů</numerusform></translation>
-    </message>
     <message>
         <source>Date</source>
         <translation>Datum</translation>
@@ -2207,10 +2187,6 @@ Adresa: %4
     <message>
         <source>Credit</source>
         <translation>Příjem</translation>
-    </message>
-    <message numerus="yes">
-        <source>matures in %n more block(s)</source>
-        <translation><numerusform>dozraje po jednom bloku</numerusform><numerusform>dozraje po %n blocích</numerusform><numerusform>dozraje po %n blocích</numerusform></translation>
     </message>
     <message>
         <source>not accepted</source>
@@ -2245,8 +2221,8 @@ Adresa: %4
         <translation>Obchodník</translation>
     </message>
     <message>
-        <source>Generated coins must mature %1 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to &quot;not accepted&quot; and it won&apos;t be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.</source>
-        <translation>Vygenerované mince musí čekat %1 bloků, než mohou být utraceny. Když jsi vygeneroval tenhle blok, tak byl rozposlán do sítě, aby byl přidán do řetězce bloků. Pokud se mu nepodaří dostat se do řetězce, změní se na &quot;neakceptovaný&quot; a nepůjde utratit. To se občas může stát, pokud jiný uzel vygeneruje blok zhruba ve stejném okamžiku jako ty.</translation>
+        <source>Generated coins must mature %1 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to "not accepted" and it won't be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.</source>
+        <translation>Vygenerované mince musí čekat %1 bloků, než mohou být utraceny. Když jsi vygeneroval tenhle blok, tak byl rozposlán do sítě, aby byl přidán do řetězce bloků. Pokud se mu nepodaří dostat se do řetězce, změní se na "neakceptovaný" a nepůjde utratit. To se občas může stát, pokud jiný uzel vygeneruje blok zhruba ve stejném okamžiku jako ty.</translation>
     </message>
     <message>
         <source>Debug information</source>
@@ -2275,10 +2251,6 @@ Adresa: %4
     <message>
         <source>, has not been successfully broadcast yet</source>
         <translation>, ještě nebylo rozesláno</translation>
-    </message>
-    <message numerus="yes">
-        <source>Open for %n more block(s)</source>
-        <translation><numerusform>Otevřeno pro 1 další blok</numerusform><numerusform>Otevřeno pro %n další bloky</numerusform><numerusform>Otevřeno pro %n dalších bloků</numerusform></translation>
     </message>
     <message>
         <source>unknown</source>
@@ -2317,10 +2289,6 @@ Adresa: %4
     <message>
         <source>Immature (%1 confirmations, will be available after %2)</source>
         <translation>Nedozráno (%1 potvrzení, bude k dispozici za %2)</translation>
-    </message>
-    <message numerus="yes">
-        <source>Open for %n more block(s)</source>
-        <translation><numerusform>Otevřeno pro 1 další blok</numerusform><numerusform>Otevřeno pro %n další bloky</numerusform><numerusform>Otevřeno pro %n dalších bloků</numerusform></translation>
     </message>
     <message>
         <source>Open until %1</source>
@@ -2646,10 +2614,6 @@ Adresa: %4
         <translation>Doba ve vteřinách, po kterou se nebudou moci zlobivé uzly znovu připojit (výchozí: 86400)</translation>
     </message>
     <message>
-        <source>An error occurred while setting up the RPC port %u for listening on IPv4: %s</source>
-        <translation>Při nastavování naslouchacího RPC portu %i pro IPv4 nastala chyba: %s</translation>
-    </message>
-    <message>
         <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 8332 or testnet: 18332)</source>
         <translation>Čekat na JSON RPC spojení na &lt;portu&gt; (výchozí: 8332 nebo testnet: 18332)</translation>
     </message>
@@ -2683,7 +2647,7 @@ rpcpassword=%s
 The username and password MUST NOT be the same.
 If the file does not exist, create it with owner-readable-only file permissions.
 It is also recommended to set alertnotify so you are notified of problems;
-for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
+for example: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
 </source>
         <translation>%s, musíš nastavit rpcpassword v konfiguračním souboru:
 %s
@@ -2694,7 +2658,7 @@ rpcpassword=%s
 rpcuser a rpcpassword NESMÍ být stejné.
 Pokud konfigurační soubor ještě neexistuje, vytvoř ho tak, aby ho mohl číst pouze vlastník.
 Je také doporučeno si nastavit alertnotify, abys byl upozorněn na případné problémy;
-například: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
+například: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
 </translation>
     </message>
     <message>
@@ -2754,10 +2718,6 @@ například: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>V tomto módu -genproclimit určuje, kolik bloků je vygenerováno okamžitě.</translation>
     </message>
     <message>
-        <source>Set the number of script verification threads (%u to %d, 0 = auto, &lt;0 = leave that many cores free, default: %d)</source>
-        <translation>Nastavení počtu vláken pro verifikaci skriptů (%u až %d, 0 = automaticky, &lt;0 = nechat daný počet jader volný, výchozí: 0)</translation>
-    </message>
-    <message>
         <source>Set the processor limit for when generation is on (-1 = unlimited, default: -1)</source>
         <translation>Nastavit omezení procesoru pro zapnuté generování (-1 = bez omezení, výchozí: -1)</translation>
     </message>
@@ -2778,7 +2738,7 @@ například: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Upozornění: -paytxfee je nastaveno velmi vysoko! Toto je transakční poplatek, který zaplatíš za každou poslanou transakci.</translation>
     </message>
     <message>
-        <source>Warning: Please check that your computer&apos;s date and time are correct! If your clock is wrong Bitcoin will not work properly.</source>
+        <source>Warning: Please check that your computer's date and time are correct! If your clock is wrong Bitcoin will not work properly.</source>
         <translation>Upozornění: Zkontroluj, že máš v počítači správně nastavený datum a čas! Pokud jsou nastaveny špatně, Bitcoin nebude fungovat správně.</translation>
     </message>
     <message>
@@ -2974,8 +2934,8 @@ například: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Nemám žádný nebo jen špatný genesis blok. Není špatně nastavený datadir?</translation>
     </message>
     <message>
-        <source>Invalid -onion address: &apos;%s&apos;</source>
-        <translation>Neplatná -onion adresa: &apos;%s&apos;</translation>
+        <source>Invalid -onion address: '%s'</source>
+        <translation>Neplatná -onion adresa: '%s'</translation>
     </message>
     <message>
         <source>Not enough file descriptors available.</source>
@@ -3078,12 +3038,12 @@ například: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Informace</translation>
     </message>
     <message>
-        <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: &apos;%s&apos;</source>
-        <translation>Neplatná částka pro -minrelaytxfee=&lt;částka&gt;: &apos;%s&apos;</translation>
+        <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: '%s'</source>
+        <translation>Neplatná částka pro -minrelaytxfee=&lt;částka&gt;: '%s'</translation>
     </message>
     <message>
-        <source>Invalid amount for -mintxfee=&lt;amount&gt;: &apos;%s&apos;</source>
-        <translation>Neplatná částka pro -mintxfee=&lt;částka&gt;: &apos;%s&apos;</translation>
+        <source>Invalid amount for -mintxfee=&lt;amount&gt;: '%s'</source>
+        <translation>Neplatná částka pro -mintxfee=&lt;částka&gt;: '%s'</translation>
     </message>
     <message>
         <source>Limit size of signature cache to &lt;n&gt; entries (default: 50000)</source>
@@ -3310,28 +3270,28 @@ například: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Chyba při načítání wallet.dat</translation>
     </message>
     <message>
-        <source>Invalid -proxy address: &apos;%s&apos;</source>
-        <translation>Neplatná -proxy adresa: &apos;%s&apos;</translation>
+        <source>Invalid -proxy address: '%s'</source>
+        <translation>Neplatná -proxy adresa: '%s'</translation>
     </message>
     <message>
-        <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
-        <translation>V -onlynet byla uvedena neznámá síť: &apos;%s&apos;</translation>
+        <source>Unknown network specified in -onlynet: '%s'</source>
+        <translation>V -onlynet byla uvedena neznámá síť: '%s'</translation>
     </message>
     <message>
         <source>Unknown -socks proxy version requested: %i</source>
         <translation>V -socks byla požadována neznámá verze proxy: %i</translation>
     </message>
     <message>
-        <source>Cannot resolve -bind address: &apos;%s&apos;</source>
-        <translation>Nemohu přeložit -bind adresu: &apos;%s&apos;</translation>
+        <source>Cannot resolve -bind address: '%s'</source>
+        <translation>Nemohu přeložit -bind adresu: '%s'</translation>
     </message>
     <message>
-        <source>Cannot resolve -externalip address: &apos;%s&apos;</source>
-        <translation>Nemohu přeložit -externalip adresu: &apos;%s&apos;</translation>
+        <source>Cannot resolve -externalip address: '%s'</source>
+        <translation>Nemohu přeložit -externalip adresu: '%s'</translation>
     </message>
     <message>
-        <source>Invalid amount for -paytxfee=&lt;amount&gt;: &apos;%s&apos;</source>
-        <translation>Neplatná částka pro -paytxfee=&lt;částka&gt;: &apos;%s&apos;</translation>
+        <source>Invalid amount for -paytxfee=&lt;amount&gt;: '%s'</source>
+        <translation>Neplatná částka pro -paytxfee=&lt;částka&gt;: '%s'</translation>
     </message>
     <message>
         <source>Invalid amount</source>

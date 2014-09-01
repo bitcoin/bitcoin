@@ -1,4 +1,4 @@
-<?xml version="1.0" ?><!DOCTYPE TS><TS language="pt_BR" version="2.1">
+<TS language="pt_BR" version="2.1">
 <context>
     <name>AboutDialog</name>
     <message>
@@ -769,8 +769,8 @@ Endereço: %4</translation>
         <translation>Transações de alta prioridade são mais propensas a serem incluídas em um bloco.</translation>
     </message>
     <message>
-        <source>This label turns red, if the priority is smaller than &quot;medium&quot;.</source>
-        <translation>Esse marcador fica vermelho se a prioridade for menor que &quot;média&quot;.</translation>
+        <source>This label turns red, if the priority is smaller than "medium".</source>
+        <translation>Esse marcador fica vermelho se a prioridade for menor que "média".</translation>
     </message>
     <message>
         <source>This label turns red, if any recipient receives an amount smaller than %1.</source>
@@ -840,12 +840,12 @@ Endereço: %4</translation>
         <translation>Editar endereço de envio</translation>
     </message>
     <message>
-        <source>The entered address &quot;%1&quot; is already in the address book.</source>
-        <translation>O endereço digitado &quot;%1&quot; já se encontra no catálogo de endereços.</translation>
+        <source>The entered address "%1" is already in the address book.</source>
+        <translation>O endereço digitado "%1" já se encontra no catálogo de endereços.</translation>
     </message>
     <message>
-        <source>The entered address &quot;%1&quot; is not a valid Bitcoin address.</source>
-        <translation>O endereço digitado &quot;%1&quot; não é um endereço Bitcoin válido.</translation>
+        <source>The entered address "%1" is not a valid Bitcoin address.</source>
+        <translation>O endereço digitado "%1" não é um endereço Bitcoin válido.</translation>
     </message>
     <message>
         <source>Could not unlock wallet.</source>
@@ -906,8 +906,8 @@ Endereço: %4</translation>
         <translation>opções da UI</translation>
     </message>
     <message>
-        <source>Set language, for example &quot;de_DE&quot; (default: system locale)</source>
-        <translation>Escolher língua, por exemplo &quot;de_DE&quot; (padrão: localização do sistema)</translation>
+        <source>Set language, for example "de_DE" (default: system locale)</source>
+        <translation>Escolher língua, por exemplo "de_DE" (padrão: localização do sistema)</translation>
     </message>
     <message>
         <source>Start minimized</source>
@@ -957,10 +957,6 @@ Endereço: %4</translation>
         <translation>Bitcoin</translation>
     </message>
     <message>
-        <source>Error: Specified data directory &quot;%1&quot; can not be created.</source>
-        <translation>Erro: dados especificados diretório &quot;% 1&quot; não pode ser criado.</translation>
-    </message>
-    <message>
         <source>Error</source>
         <translation>Erro</translation>
     </message>
@@ -968,11 +964,7 @@ Endereço: %4</translation>
         <source>GB of free space available</source>
         <translation>GB de espaço disponível</translation>
     </message>
-    <message>
-        <source>(of %1GB needed)</source>
-        <translation>(Mais de 1GB necessário)</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>OpenURIDialog</name>
     <message>
@@ -1277,10 +1269,6 @@ Endereço: %4</translation>
         <translation>URI não pode ser decodificado! Isso pode ter sido causado por um endereço Bitcoin inválido ou por parâmetros URI malformados.</translation>
     </message>
     <message>
-        <source>Requested payment amount of %1 is too small (considered dust).</source>
-        <translation>Valor do pagamento solicitado de 1% é muito pequeno (Considerado poeira).</translation>
-    </message>
-    <message>
         <source>Payment request error</source>
         <translation>Erro no pedido de pagamento</translation>
     </message>
@@ -1293,7 +1281,7 @@ Endereço: %4</translation>
         <translation>Gerenciador de rede problemático</translation>
     </message>
     <message>
-        <source>Your active proxy doesn&apos;t support SOCKS5, which is required for payment requests via proxy.</source>
+        <source>Your active proxy doesn't support SOCKS5, which is required for payment requests via proxy.</source>
         <translation>Seu proxy ativo não suporta SOCKS5, que é obrigatório para cobranças via proxy.</translation>
     </message>
     <message>
@@ -1313,20 +1301,8 @@ Endereço: %4</translation>
         <translation>Cobrança não verificada para scripts de pagamento personalizados não é suportado.</translation>
     </message>
     <message>
-        <source>Refund from %1</source>
-        <translation>Reembolso de 1%</translation>
-    </message>
-    <message>
-        <source>Error communicating with %1: %2</source>
-        <translation>Erro na comunicação com% 1:% 2</translation>
-    </message>
-    <message>
         <source>Payment request can not be parsed or processed!</source>
         <translation>Cobrança não pôde ser processada!</translation>
-    </message>
-    <message>
-        <source>Bad response from server %1</source>
-        <translation>Resposta ruim do servidor% 1</translation>
     </message>
     <message>
         <source>Payment acknowledged</source>
@@ -1344,20 +1320,12 @@ Endereço: %4</translation>
         <translation>Bitcoin</translation>
     </message>
     <message>
-        <source>Error: Specified data directory &quot;%1&quot; does not exist.</source>
-        <translation>Erro: diretório de dados especificado &quot;% 1&quot; não existe.</translation>
-    </message>
-    <message>
         <source>Error: Cannot parse configuration file: %1. Only use key=value syntax.</source>
         <translation>Erro: Não foi possível interpretar arquivo de configuração: %1. Utilize apenas a sintaxe chave=valor.</translation>
     </message>
     <message>
         <source>Error: Invalid combination of -regtest and -testnet.</source>
         <translation>Erro: Combinação inválida de-regtest e testnet.</translation>
-    </message>
-    <message>
-        <source>Bitcoin Core didn&apos;t yet exit safely...</source>
-        <translation type="unfinished"/>
     </message>
     <message>
         <source>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
@@ -1475,7 +1443,7 @@ Endereço: %4</translation>
     </message>
     <message>
         <source>Build date</source>
-        <translation>Data do &apos;build&apos;</translation>
+        <translation>Data do 'build'</translation>
     </message>
     <message>
         <source>Debug log file</source>
@@ -2048,7 +2016,7 @@ Endereço: %4</translation>
     </message>
     <message>
         <source>Enter the signing address, message (ensure you copy line breaks, spaces, tabs, etc. exactly) and signature below to verify the message. Be careful not to read more into the signature than what is in the signed message itself, to avoid being tricked by a man-in-the-middle attack.</source>
-        <translation>Forneça o endereço da assinatura, a mensagem (se assegure que você copiou quebras de linha, espaços, tabs, etc. exatamente) e a assinatura abaixo para verificar a mensagem. Cuidado para não ler mais na assinatura do que está escrito na mensagem propriamente, para evitar ser vítima de uma ataque do tipo &quot;man-in-the-middle&quot;.</translation>
+        <translation>Forneça o endereço da assinatura, a mensagem (se assegure que você copiou quebras de linha, espaços, tabs, etc. exatamente) e a assinatura abaixo para verificar a mensagem. Cuidado para não ler mais na assinatura do que está escrito na mensagem propriamente, para evitar ser vítima de uma ataque do tipo "man-in-the-middle".</translation>
     </message>
     <message>
         <source>The address the message was signed with (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
@@ -2059,10 +2027,6 @@ Endereço: %4</translation>
         <translation>Verificar mensagem para se assegurar que ela foi assinada pelo dono de um endereço Bitcoin específico.</translation>
     </message>
     <message>
-        <source>Verify &amp;Message</source>
-        <translation>Verificar %Mensagem</translation>
-    </message>
-    <message>
         <source>Reset all verify message fields</source>
         <translation>Limpar todos os campos de assinatura da mensagem</translation>
     </message>
@@ -2071,8 +2035,8 @@ Endereço: %4</translation>
         <translation>Digite um endereço Bitcoin (exemplo: 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
     <message>
-        <source>Click &quot;Sign Message&quot; to generate signature</source>
-        <translation>Clique em &quot;Assinar Mensagem&quot; para gerar a assinatura</translation>
+        <source>Click "Sign Message" to generate signature</source>
+        <translation>Clique em "Assinar Mensagem" para gerar a assinatura</translation>
     </message>
     <message>
         <source>The entered address is invalid.</source>
@@ -2112,7 +2076,7 @@ Endereço: %4</translation>
     </message>
     <message>
         <source>The signature did not match the message digest.</source>
-        <translation>A assinatura não corresponde ao &quot;resumo da mensagem&quot;.</translation>
+        <translation>A assinatura não corresponde ao "resumo da mensagem".</translation>
     </message>
     <message>
         <source>Message verification failed.</source>
@@ -2244,8 +2208,8 @@ Endereço: %4</translation>
         <translation>Mercador</translation>
     </message>
     <message>
-        <source>Generated coins must mature %1 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to &quot;not accepted&quot; and it won&apos;t be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.</source>
-        <translation>Bitcoins recém minerados precisam aguardar %1 blocos antes de serem gastos. Quando o bloco foi gerado, ele foi disseminado pela rede para ser adicionado à cadeia de blocos: blockchain. Se ele falhar em ser inserido na cadeia, seu estado será modificado para &quot;não aceito&quot; e ele não poderá ser gasto. Isso pode acontecer eventualmente quando blocos são gerados quase que simultaneamente.</translation>
+        <source>Generated coins must mature %1 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to "not accepted" and it won't be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.</source>
+        <translation>Bitcoins recém minerados precisam aguardar %1 blocos antes de serem gastos. Quando o bloco foi gerado, ele foi disseminado pela rede para ser adicionado à cadeia de blocos: blockchain. Se ele falhar em ser inserido na cadeia, seu estado será modificado para "não aceito" e ele não poderá ser gasto. Isso pode acontecer eventualmente quando blocos são gerados quase que simultaneamente.</translation>
     </message>
     <message>
         <source>Debug information</source>
@@ -2682,7 +2646,7 @@ rpcpassword=%s
 The username and password MUST NOT be the same.
 If the file does not exist, create it with owner-readable-only file permissions.
 It is also recommended to set alertnotify so you are notified of problems;
-for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
+for example: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
 </source>
         <translation>%s, você deve especificar uma senha rpcpassword no arquivo de configuração:⏎
 %s⏎
@@ -2693,7 +2657,7 @@ rpcpassword=%s⏎
 O nome de usuário e a senha NÃO PODEM ser os mesmos.⏎
 Se o arquivo não existir, crie um com permissão de leitura apenas para o dono.⏎
 É recomendado também definir um alertnotify para que você seja notificado de problemas;⏎
-por exemplo: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com⏎
+por exemplo: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com⏎
 </translation>
     </message>
     <message>
@@ -2777,7 +2741,7 @@ por exemplo: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Atenção: valor de -paytxfee escolhido é muito alto! Este é o valor da taxa de transação que você irá pagar se enviar a transação.</translation>
     </message>
     <message>
-        <source>Warning: Please check that your computer&apos;s date and time are correct! If your clock is wrong Bitcoin will not work properly.</source>
+        <source>Warning: Please check that your computer's date and time are correct! If your clock is wrong Bitcoin will not work properly.</source>
         <translation>Atenção: Por favor, verifique que a data e hora do seu computador estão corretas! Se o seu relógio estiver errado, o Bitcoin não irá funcionar corretamente.</translation>
     </message>
     <message>
@@ -2973,8 +2937,8 @@ por exemplo: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Bloco gênese incorreto ou não encontrado. Datadir errado para a rede?</translation>
     </message>
     <message>
-        <source>Invalid -onion address: &apos;%s&apos;</source>
-        <translation>Endereço -onion inválido: &apos;%s&apos;</translation>
+        <source>Invalid -onion address: '%s'</source>
+        <translation>Endereço -onion inválido: '%s'</translation>
     </message>
     <message>
         <source>Not enough file descriptors available.</source>
@@ -3037,10 +3001,6 @@ por exemplo: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Aguarde um servidor RPC para iniciar</translation>
     </message>
     <message>
-        <source>Wallet %s resides outside data directory %s</source>
-        <translation>Carteira de% s reside fora de dados do diretório% s</translation>
-    </message>
-    <message>
         <source>Wallet options:</source>
         <translation>Opções da Carteira:</translation>
     </message>
@@ -3061,10 +3021,6 @@ por exemplo: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Não foi possível obter proteção exclusiva ao diretório de dados %s. Bitcoin Core já está sendo executado provavelmente.</translation>
     </message>
     <message>
-        <source>Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)</source>
-        <translation>Executa o comando quando um alerta relevante é recebido ou vemos um longo garfo (% s em cmd é substituída pela mensagem)</translation>
-    </message>
-    <message>
         <source>Output debugging information (default: 0, supplying &lt;category&gt; is optional)</source>
         <translation>Informação de saída de debug (padrão: 0, definir &lt;category&gt; é opcional)</translation>
     </message>
@@ -3077,12 +3033,8 @@ por exemplo: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Informação</translation>
     </message>
     <message>
-        <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: &apos;%s&apos;</source>
-        <translation>Quantidade inválida para -minrelaytxfee=&lt;amount&gt;: &apos;%s&apos;</translation>
-    </message>
-    <message>
-        <source>Invalid amount for -mintxfee=&lt;amount&gt;: &apos;%s&apos;</source>
-        <translation>Inválido montante for-mintxfee = &lt;amount&gt;: &apos;% s&apos;</translation>
+        <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: '%s'</source>
+        <translation>Quantidade inválida para -minrelaytxfee=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
         <source>Limit size of signature cache to &lt;n&gt; entries (default: 50000)</source>
@@ -3309,28 +3261,28 @@ por exemplo: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Erro ao carregar wallet.dat</translation>
     </message>
     <message>
-        <source>Invalid -proxy address: &apos;%s&apos;</source>
-        <translation>Endereço -proxy inválido: &apos;%s&apos;</translation>
+        <source>Invalid -proxy address: '%s'</source>
+        <translation>Endereço -proxy inválido: '%s'</translation>
     </message>
     <message>
-        <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
-        <translation>Rede desconhecida especificada em -onlynet: &apos;%s&apos;</translation>
+        <source>Unknown network specified in -onlynet: '%s'</source>
+        <translation>Rede desconhecida especificada em -onlynet: '%s'</translation>
     </message>
     <message>
         <source>Unknown -socks proxy version requested: %i</source>
         <translation>Versão desconhecida do proxy -socks requisitada: %i</translation>
     </message>
     <message>
-        <source>Cannot resolve -bind address: &apos;%s&apos;</source>
-        <translation>Impossível encontrar o endereço -bind: &apos;%s&apos;</translation>
+        <source>Cannot resolve -bind address: '%s'</source>
+        <translation>Impossível encontrar o endereço -bind: '%s'</translation>
     </message>
     <message>
-        <source>Cannot resolve -externalip address: &apos;%s&apos;</source>
-        <translation>Impossível encontrar endereço -externalip: &apos;%s&apos;</translation>
+        <source>Cannot resolve -externalip address: '%s'</source>
+        <translation>Impossível encontrar endereço -externalip: '%s'</translation>
     </message>
     <message>
-        <source>Invalid amount for -paytxfee=&lt;amount&gt;: &apos;%s&apos;</source>
-        <translation>Quantidade inválida para -paytxfee=&lt;quantidade&gt;: &apos;%s&apos;</translation>
+        <source>Invalid amount for -paytxfee=&lt;amount&gt;: '%s'</source>
+        <translation>Quantidade inválida para -paytxfee=&lt;quantidade&gt;: '%s'</translation>
     </message>
     <message>
         <source>Invalid amount</source>

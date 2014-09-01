@@ -1,4 +1,4 @@
-<?xml version="1.0" ?><!DOCTYPE TS><TS language="nb" version="2.1">
+<TS language="nb" version="2.1">
 <context>
     <name>AboutDialog</name>
     <message>
@@ -770,8 +770,8 @@ Adresse: %4
         <translation>Transaksjoner med høyere prioritet har mer sannsynlighet for å bli inkludert i en blokk.</translation>
     </message>
     <message>
-        <source>This label turns red, if the priority is smaller than &quot;medium&quot;.</source>
-        <translation>Denne merkelappen blir rød, hvis prioriteten er mindre enn &quot;medium&quot;.</translation>
+        <source>This label turns red, if the priority is smaller than "medium".</source>
+        <translation>Denne merkelappen blir rød, hvis prioriteten er mindre enn "medium".</translation>
     </message>
     <message>
         <source>This label turns red, if any recipient receives an amount smaller than %1.</source>
@@ -841,12 +841,12 @@ Adresse: %4
         <translation>Rediger utsendingsadresse</translation>
     </message>
     <message>
-        <source>The entered address &quot;%1&quot; is already in the address book.</source>
-        <translation>Den oppgitte adressen &quot;%1&quot; er allerede i adresseboken.</translation>
+        <source>The entered address "%1" is already in the address book.</source>
+        <translation>Den oppgitte adressen "%1" er allerede i adresseboken.</translation>
     </message>
     <message>
-        <source>The entered address &quot;%1&quot; is not a valid Bitcoin address.</source>
-        <translation>Den angitte adressed &quot;%1&quot; er ikke en gyldig Bitcoin-adresse.</translation>
+        <source>The entered address "%1" is not a valid Bitcoin address.</source>
+        <translation>Den angitte adressed "%1" er ikke en gyldig Bitcoin-adresse.</translation>
     </message>
     <message>
         <source>Could not unlock wallet.</source>
@@ -907,8 +907,8 @@ Adresse: %4
         <translation>valg i brukergrensesnitt</translation>
     </message>
     <message>
-        <source>Set language, for example &quot;de_DE&quot; (default: system locale)</source>
-        <translation>Sett språk, for eksempel &quot;nb_NO&quot; (standardverdi: fra operativsystem)</translation>
+        <source>Set language, for example "de_DE" (default: system locale)</source>
+        <translation>Sett språk, for eksempel "nb_NO" (standardverdi: fra operativsystem)</translation>
     </message>
     <message>
         <source>Start minimized</source>
@@ -958,8 +958,8 @@ Adresse: %4
         <translation>Bitcoin</translation>
     </message>
     <message>
-        <source>Error: Specified data directory &quot;%1&quot; can not be created.</source>
-        <translation>Feil: Spesifisert datamappe &quot;%1&quot; kan ikke opprettes.</translation>
+        <source>Error: Specified data directory "%1" can not be created.</source>
+        <translation>Feil: Spesifisert datamappe "%1" kan ikke opprettes.</translation>
     </message>
     <message>
         <source>Error</source>
@@ -1294,7 +1294,7 @@ Adresse: %4
         <translation>Nettleder advarsel</translation>
     </message>
     <message>
-        <source>Your active proxy doesn&apos;t support SOCKS5, which is required for payment requests via proxy.</source>
+        <source>Your active proxy doesn't support SOCKS5, which is required for payment requests via proxy.</source>
         <translation>Din aktive proxy har ikke støtte for SOCKS5, som er påkrevd for betalingsforespørsler via proxy.</translation>
     </message>
     <message>
@@ -1345,8 +1345,8 @@ Adresse: %4
         <translation>Bitcoin</translation>
     </message>
     <message>
-        <source>Error: Specified data directory &quot;%1&quot; does not exist.</source>
-        <translation>Feil: Spesifisert datamappe &quot;%1&quot; finnes ikke.</translation>
+        <source>Error: Specified data directory "%1" does not exist.</source>
+        <translation>Feil: Spesifisert datamappe "%1" finnes ikke.</translation>
     </message>
     <message>
         <source>Error: Cannot parse configuration file: %1. Only use key=value syntax.</source>
@@ -1357,7 +1357,7 @@ Adresse: %4
         <translation>Feil: Ugyldig kombinasjon av -regtest og -testnet.</translation>
     </message>
     <message>
-        <source>Bitcoin Core didn&apos;t yet exit safely...</source>
+        <source>Bitcoin Core didn't yet exit safely...</source>
         <translation>Bitcoin Core har ennå ikke avsluttet på en sikker måte...</translation>
     </message>
     <message>
@@ -2049,7 +2049,7 @@ Adresse: %4
     </message>
     <message>
         <source>Enter the signing address, message (ensure you copy line breaks, spaces, tabs, etc. exactly) and signature below to verify the message. Be careful not to read more into the signature than what is in the signed message itself, to avoid being tricked by a man-in-the-middle attack.</source>
-        <translation>Angi adresse for signering, melding (vær sikker på at du kopierer linjeskift, mellomrom, tab, etc. helt nøyaktig) og signatur under for å verifisere meldingen. Vær forsiktig med at du ikke gir signaturen mer betydning enn det som faktisk står i meldingen, for å unngå å bli lurt av såkalte &quot;man-in-the-middle&quot; angrep.</translation>
+        <translation>Angi adresse for signering, melding (vær sikker på at du kopierer linjeskift, mellomrom, tab, etc. helt nøyaktig) og signatur under for å verifisere meldingen. Vær forsiktig med at du ikke gir signaturen mer betydning enn det som faktisk står i meldingen, for å unngå å bli lurt av såkalte "man-in-the-middle" angrep.</translation>
     </message>
     <message>
         <source>The address the message was signed with (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
@@ -2072,8 +2072,8 @@ Adresse: %4
         <translation>Skriv inn en Bitcoin-adresse (f.eks. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
     <message>
-        <source>Click &quot;Sign Message&quot; to generate signature</source>
-        <translation>Klikk &quot;Signer Melding&quot; for å generere signatur</translation>
+        <source>Click "Sign Message" to generate signature</source>
+        <translation>Klikk "Signer Melding" for å generere signatur</translation>
     </message>
     <message>
         <source>The entered address is invalid.</source>
@@ -2245,8 +2245,8 @@ Adresse: %4
         <translation>Forhandler</translation>
     </message>
     <message>
-        <source>Generated coins must mature %1 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to &quot;not accepted&quot; and it won&apos;t be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.</source>
-        <translation>Genererte bitcoins må modnes %1 blokker før de kan brukes. Da du genererte denne blokken ble den kringkastet på nettverket for å bli lagt til i kjeden av blokker. Hvis den ikke kommer med i kjeden vil den endre seg til &quot;ikke akseptert&quot; og pengene vil ikke kunne brukes. Dette vil noen ganger skje hvis en annen node genererer en blokk noen sekunder i tid fra din egen.</translation>
+        <source>Generated coins must mature %1 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to "not accepted" and it won't be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.</source>
+        <translation>Genererte bitcoins må modnes %1 blokker før de kan brukes. Da du genererte denne blokken ble den kringkastet på nettverket for å bli lagt til i kjeden av blokker. Hvis den ikke kommer med i kjeden vil den endre seg til "ikke akseptert" og pengene vil ikke kunne brukes. Dette vil noen ganger skje hvis en annen node genererer en blokk noen sekunder i tid fra din egen.</translation>
     </message>
     <message>
         <source>Debug information</source>
@@ -2683,7 +2683,7 @@ rpcpassword=%s
 The username and password MUST NOT be the same.
 If the file does not exist, create it with owner-readable-only file permissions.
 It is also recommended to set alertnotify so you are notified of problems;
-for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
+for example: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
 </source>
         <translation>%s, du må angi rpcpassord i konfigurasjonsfilen.
 %s
@@ -2694,7 +2694,7 @@ rpcpassord=%s
 Brukernavnet og passordet MÅ IKKE være like.
 Om filen ikke eksisterer, opprett den nå med eier-kun-les filrettigheter.
 Det er også anbefalt at å sette varselsmelding slik du får melding om problemer.
-For eksempel: varselmelding=echo %%s | mail -s &quot;Bitcoin Varsel&quot; admin@foo.com</translation>
+For eksempel: varselmelding=echo %%s | mail -s "Bitcoin Varsel" admin@foo.com</translation>
     </message>
     <message>
         <source>Acceptable ciphers (default: TLSv1.2+HIGH:TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!3DES:@STRENGTH)</source>
@@ -2777,7 +2777,7 @@ For eksempel: varselmelding=echo %%s | mail -s &quot;Bitcoin Varsel&quot; admin@
         <translation>Advarsel: -paytxfee er satt veldig høyt! Dette er transaksjonsgebyret du betaler når du sender transaksjoner.</translation>
     </message>
     <message>
-        <source>Warning: Please check that your computer&apos;s date and time are correct! If your clock is wrong Bitcoin will not work properly.</source>
+        <source>Warning: Please check that your computer's date and time are correct! If your clock is wrong Bitcoin will not work properly.</source>
         <translation>Advarsel: Vennligst undersøk at din datamaskin har riktig dato og klokkeslett! Hvis klokken er stilt feil vil ikke Bitcoin fungere riktig.</translation>
     </message>
     <message>
@@ -2973,8 +2973,8 @@ For eksempel: varselmelding=echo %%s | mail -s &quot;Bitcoin Varsel&quot; admin@
         <translation>Ugyldig eller ingen skaperblokk funnet. Feil datamappe for nettverk?</translation>
     </message>
     <message>
-        <source>Invalid -onion address: &apos;%s&apos;</source>
-        <translation>Ugyldig -onion adresse: &apos;%s&apos;</translation>
+        <source>Invalid -onion address: '%s'</source>
+        <translation>Ugyldig -onion adresse: '%s'</translation>
     </message>
     <message>
         <source>Not enough file descriptors available.</source>
@@ -3077,12 +3077,12 @@ For eksempel: varselmelding=echo %%s | mail -s &quot;Bitcoin Varsel&quot; admin@
         <translation>Informasjon</translation>
     </message>
     <message>
-        <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: &apos;%s&apos;</source>
-        <translation>Ugyldig mengde for -minrelaytxfee=&lt;beløp&gt;: &apos;%s&apos;</translation>
+        <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: '%s'</source>
+        <translation>Ugyldig mengde for -minrelaytxfee=&lt;beløp&gt;: '%s'</translation>
     </message>
     <message>
-        <source>Invalid amount for -mintxfee=&lt;amount&gt;: &apos;%s&apos;</source>
-        <translation>Ugyldig mengde for -mintxfee=&lt;beløp&gt;: &apos;%s&apos;</translation>
+        <source>Invalid amount for -mintxfee=&lt;amount&gt;: '%s'</source>
+        <translation>Ugyldig mengde for -mintxfee=&lt;beløp&gt;: '%s'</translation>
     </message>
     <message>
         <source>Limit size of signature cache to &lt;n&gt; entries (default: 50000)</source>
@@ -3309,28 +3309,28 @@ For eksempel: varselmelding=echo %%s | mail -s &quot;Bitcoin Varsel&quot; admin@
         <translation>Feil ved lasting av wallet.dat</translation>
     </message>
     <message>
-        <source>Invalid -proxy address: &apos;%s&apos;</source>
-        <translation>Ugyldig -proxy adresse: &apos;%s&apos;</translation>
+        <source>Invalid -proxy address: '%s'</source>
+        <translation>Ugyldig -proxy adresse: '%s'</translation>
     </message>
     <message>
-        <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
-        <translation>Ukjent nettverk angitt i -onlynet &apos;%s&apos;</translation>
+        <source>Unknown network specified in -onlynet: '%s'</source>
+        <translation>Ukjent nettverk angitt i -onlynet '%s'</translation>
     </message>
     <message>
         <source>Unknown -socks proxy version requested: %i</source>
         <translation>Ukjent -socks proxyversjon angitt: %i</translation>
     </message>
     <message>
-        <source>Cannot resolve -bind address: &apos;%s&apos;</source>
-        <translation>Kunne ikke slå opp -bind adresse: &apos;%s&apos;</translation>
+        <source>Cannot resolve -bind address: '%s'</source>
+        <translation>Kunne ikke slå opp -bind adresse: '%s'</translation>
     </message>
     <message>
-        <source>Cannot resolve -externalip address: &apos;%s&apos;</source>
-        <translation>Kunne ikke slå opp -externalip adresse: &apos;%s&apos;</translation>
+        <source>Cannot resolve -externalip address: '%s'</source>
+        <translation>Kunne ikke slå opp -externalip adresse: '%s'</translation>
     </message>
     <message>
-        <source>Invalid amount for -paytxfee=&lt;amount&gt;: &apos;%s&apos;</source>
-        <translation>Ugyldig beløp for -paytxfee=&lt;beløp&gt;: &apos;%s&apos;</translation>
+        <source>Invalid amount for -paytxfee=&lt;amount&gt;: '%s'</source>
+        <translation>Ugyldig beløp for -paytxfee=&lt;beløp&gt;: '%s'</translation>
     </message>
     <message>
         <source>Invalid amount</source>

@@ -1,4 +1,4 @@
-<?xml version="1.0" ?><!DOCTYPE TS><TS language="sv" version="2.1">
+<TS language="sv" version="2.1">
 <context>
     <name>AboutDialog</name>
     <message>
@@ -771,8 +771,8 @@ Adress: %4
         <translation>Transaktioner med högre prioritet har större sannolikhet att inkluderas i ett block.</translation>
     </message>
     <message>
-        <source>This label turns red, if the priority is smaller than &quot;medium&quot;.</source>
-        <translation>Denna etikett blir röd om prioriteten är mindre än &quot;medium&quot;.</translation>
+        <source>This label turns red, if the priority is smaller than "medium".</source>
+        <translation>Denna etikett blir röd om prioriteten är mindre än "medium".</translation>
     </message>
     <message>
         <source>This label turns red, if any recipient receives an amount smaller than %1.</source>
@@ -842,12 +842,12 @@ Adress: %4
         <translation>Redigera avsändaradress</translation>
     </message>
     <message>
-        <source>The entered address &quot;%1&quot; is already in the address book.</source>
-        <translation>Den angivna adressen &quot;%1&quot; finns redan i adressboken.</translation>
+        <source>The entered address "%1" is already in the address book.</source>
+        <translation>Den angivna adressen "%1" finns redan i adressboken.</translation>
     </message>
     <message>
-        <source>The entered address &quot;%1&quot; is not a valid Bitcoin address.</source>
-        <translation>Den angivna adressen &quot;%1&quot; är inte en giltig Bitcoin-adress.</translation>
+        <source>The entered address "%1" is not a valid Bitcoin address.</source>
+        <translation>Den angivna adressen "%1" är inte en giltig Bitcoin-adress.</translation>
     </message>
     <message>
         <source>Could not unlock wallet.</source>
@@ -908,8 +908,8 @@ Adress: %4
         <translation>UI alternativ</translation>
     </message>
     <message>
-        <source>Set language, for example &quot;de_DE&quot; (default: system locale)</source>
-        <translation>Ändra språk, till exempel &quot;de_DE&quot; (förvalt: systemets språk)</translation>
+        <source>Set language, for example "de_DE" (default: system locale)</source>
+        <translation>Ändra språk, till exempel "de_DE" (förvalt: systemets språk)</translation>
     </message>
     <message>
         <source>Start minimized</source>
@@ -959,8 +959,8 @@ Adress: %4
         <translation>Bitcoin</translation>
     </message>
     <message>
-        <source>Error: Specified data directory &quot;%1&quot; can not be created.</source>
-        <translation>Fel: Den angivna datakatalogen &quot;%1&quot; kan inte skapas.</translation>
+        <source>Error: Specified data directory "%1" can not be created.</source>
+        <translation>Fel: Den angivna datakatalogen "%1" kan inte skapas.</translation>
     </message>
     <message>
         <source>Error</source>
@@ -1295,7 +1295,7 @@ Adress: %4
         <translation>Varningar från näthanteraren</translation>
     </message>
     <message>
-        <source>Your active proxy doesn&apos;t support SOCKS5, which is required for payment requests via proxy.</source>
+        <source>Your active proxy doesn't support SOCKS5, which is required for payment requests via proxy.</source>
         <translation>Din aktiva proxy stödjer inte SOCKS5, vilket är nödvändigt för att använda betalningsbegäran via proxy.</translation>
     </message>
     <message>
@@ -1346,8 +1346,8 @@ Adress: %4
         <translation>Bitcoin</translation>
     </message>
     <message>
-        <source>Error: Specified data directory &quot;%1&quot; does not exist.</source>
-        <translation>Fel: Den angivna datakatalogen &quot;%1&quot; finns inte.</translation>
+        <source>Error: Specified data directory "%1" does not exist.</source>
+        <translation>Fel: Den angivna datakatalogen "%1" finns inte.</translation>
     </message>
     <message>
         <source>Error: Cannot parse configuration file: %1. Only use key=value syntax.</source>
@@ -1358,7 +1358,7 @@ Adress: %4
         <translation>Fel: Felaktig kombination av -regtest och -testnet.</translation>
     </message>
     <message>
-        <source>Bitcoin Core didn&apos;t yet exit safely...</source>
+        <source>Bitcoin Core didn't yet exit safely...</source>
         <translation>Bitcoin Core avslutades inte ännu säkert...</translation>
     </message>
     <message>
@@ -1534,10 +1534,6 @@ Adress: %4
 </context>
 <context>
     <name>ReceiveCoinsDialog</name>
-    <message>
-        <source>&amp;Amount:</source>
-        <translation>%Belopp:</translation>
-    </message>
     <message>
         <source>&amp;Label:</source>
         <translation>&amp;Etikett:</translation>
@@ -2073,8 +2069,8 @@ Adress: %4
         <translation>Ange en Bitcoin-adress (t.ex. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
     <message>
-        <source>Click &quot;Sign Message&quot; to generate signature</source>
-        <translation>Klicka &quot;Signera Meddelande&quot; för att få en signatur</translation>
+        <source>Click "Sign Message" to generate signature</source>
+        <translation>Klicka "Signera Meddelande" för att få en signatur</translation>
     </message>
     <message>
         <source>The entered address is invalid.</source>
@@ -2246,8 +2242,8 @@ Adress: %4
         <translation>Handlare</translation>
     </message>
     <message>
-        <source>Generated coins must mature %1 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to &quot;not accepted&quot; and it won&apos;t be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.</source>
-        <translation>Genererade mynt måste vänta %1 block innan de kan användas. När du skapade detta block sändes det till nätverket för att läggas till i blockkedjan. Om blocket inte kommer in i kedjan kommer dess status att ändras till &quot;accepteras inte&quot; och kommer ej att gå att spendera. Detta kan ibland hända om en annan nod genererar ett block nästan samtidigt som dig.</translation>
+        <source>Generated coins must mature %1 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to "not accepted" and it won't be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.</source>
+        <translation>Genererade mynt måste vänta %1 block innan de kan användas. När du skapade detta block sändes det till nätverket för att läggas till i blockkedjan. Om blocket inte kommer in i kedjan kommer dess status att ändras till "accepteras inte" och kommer ej att gå att spendera. Detta kan ibland hända om en annan nod genererar ett block nästan samtidigt som dig.</translation>
     </message>
     <message>
         <source>Debug information</source>
@@ -2684,7 +2680,7 @@ rpcpassword=%s
 The username and password MUST NOT be the same.
 If the file does not exist, create it with owner-readable-only file permissions.
 It is also recommended to set alertnotify so you are notified of problems;
-for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
+for example: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
 </source>
         <translation>%s, du behöver sätta ett rpclösensord i konfigurationsfilen:
 %s
@@ -2695,7 +2691,7 @@ rpcpassword=%s
 Användarnamnet och lösenordet FÅR INTE bara detsamma.
 Om filen inte existerar, skapa den med enbart ägarläsbara filrättigheter.
 Det är också rekommenderat att sätta alertnotify så du meddelas om problem;
-till exempel: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
+till exempel: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
 </translation>
     </message>
     <message>
@@ -2779,7 +2775,7 @@ till exempel: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo
         <translation>Varning: -paytxfee är satt väldigt hög! Detta är avgiften du kommer betala för varje transaktion.</translation>
     </message>
     <message>
-        <source>Warning: Please check that your computer&apos;s date and time are correct! If your clock is wrong Bitcoin will not work properly.</source>
+        <source>Warning: Please check that your computer's date and time are correct! If your clock is wrong Bitcoin will not work properly.</source>
         <translation>Varning: Vänligen kolla så att din dators datum och tid är korrekt! Om din klocka går fel kommer Bitcoin inte fungera korrekt.</translation>
     </message>
     <message>
@@ -2975,8 +2971,8 @@ till exempel: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo
         <translation>Felaktig eller inget genesisblock hittades. Fel datadir för nätverket?</translation>
     </message>
     <message>
-        <source>Invalid -onion address: &apos;%s&apos;</source>
-        <translation>Ogiltig -onion adress:&apos;%s&apos;</translation>
+        <source>Invalid -onion address: '%s'</source>
+        <translation>Ogiltig -onion adress:'%s'</translation>
     </message>
     <message>
         <source>Not enough file descriptors available.</source>
@@ -3079,12 +3075,12 @@ till exempel: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo
         <translation>Information</translation>
     </message>
     <message>
-        <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: &apos;%s&apos;</source>
-        <translation>Ogiltigt belopp för -minrelaytxfee=&lt;belopp&gt;: &apos;%s&apos;</translation>
+        <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: '%s'</source>
+        <translation>Ogiltigt belopp för -minrelaytxfee=&lt;belopp&gt;: '%s'</translation>
     </message>
     <message>
-        <source>Invalid amount for -mintxfee=&lt;amount&gt;: &apos;%s&apos;</source>
-        <translation>Ogiltigt belopp för -mintxfee=&lt;belopp&gt;: &apos;%s&apos;</translation>
+        <source>Invalid amount for -mintxfee=&lt;amount&gt;: '%s'</source>
+        <translation>Ogiltigt belopp för -mintxfee=&lt;belopp&gt;: '%s'</translation>
     </message>
     <message>
         <source>Limit size of signature cache to &lt;n&gt; entries (default: 50000)</source>
@@ -3311,28 +3307,28 @@ till exempel: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo
         <translation>Fel vid inläsning av plånboksfilen wallet.dat</translation>
     </message>
     <message>
-        <source>Invalid -proxy address: &apos;%s&apos;</source>
-        <translation>Ogiltig -proxy adress: &apos;%s&apos;</translation>
+        <source>Invalid -proxy address: '%s'</source>
+        <translation>Ogiltig -proxy adress: '%s'</translation>
     </message>
     <message>
-        <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
-        <translation>Okänt nätverk som anges i -onlynet: &apos;%s&apos;</translation>
+        <source>Unknown network specified in -onlynet: '%s'</source>
+        <translation>Okänt nätverk som anges i -onlynet: '%s'</translation>
     </message>
     <message>
         <source>Unknown -socks proxy version requested: %i</source>
         <translation>Okänd -socks proxy version begärd: %i</translation>
     </message>
     <message>
-        <source>Cannot resolve -bind address: &apos;%s&apos;</source>
-        <translation>Kan inte matcha -bind adress: &apos;%s&apos;</translation>
+        <source>Cannot resolve -bind address: '%s'</source>
+        <translation>Kan inte matcha -bind adress: '%s'</translation>
     </message>
     <message>
-        <source>Cannot resolve -externalip address: &apos;%s&apos;</source>
-        <translation>Kan inte matcha -externalip adress: &apos;%s&apos;</translation>
+        <source>Cannot resolve -externalip address: '%s'</source>
+        <translation>Kan inte matcha -externalip adress: '%s'</translation>
     </message>
     <message>
-        <source>Invalid amount for -paytxfee=&lt;amount&gt;: &apos;%s&apos;</source>
-        <translation>Ogiltigt belopp för -paytxfee=&lt;belopp&gt;:&apos;%s&apos;</translation>
+        <source>Invalid amount for -paytxfee=&lt;amount&gt;: '%s'</source>
+        <translation>Ogiltigt belopp för -paytxfee=&lt;belopp&gt;:'%s'</translation>
     </message>
     <message>
         <source>Invalid amount</source>

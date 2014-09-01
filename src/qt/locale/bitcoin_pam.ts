@@ -1,14 +1,6 @@
-<?xml version="1.0" ?><!DOCTYPE TS><TS language="pam" version="2.1">
+<TS language="pam" version="2.1">
 <context>
     <name>AboutDialog</name>
-    <message>
-        <source>About Bitcoin Core</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>&lt;b&gt;Bitcoin Core&lt;/b&gt; version</source>
-        <translation type="unfinished"/>
-    </message>
     <message>
         <source>
 This is experimental software.
@@ -25,15 +17,7 @@ Ing produktung ini atin yang makayabeng software a gewa dareng OpenSSL Project p
         <source>Copyright</source>
         <translation>Karapatan ning Pamangopya</translation>
     </message>
-    <message>
-        <source>The Bitcoin Core developers</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>(%1-bit)</source>
-        <translation type="unfinished"/>
-    </message>
-</context>
+    </context>
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -45,20 +29,8 @@ Ing produktung ini atin yang makayabeng software a gewa dareng OpenSSL Project p
         <translation>Maglalang kang bayung address</translation>
     </message>
     <message>
-        <source>&amp;New</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
         <source>Copy the currently selected address to the system clipboard</source>
         <translation>Kopyan me ing salukuyan at makipiling address keng system clipboard</translation>
-    </message>
-    <message>
-        <source>&amp;Copy</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>C&amp;lose</source>
-        <translation type="unfinished"/>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -69,44 +41,12 @@ Ing produktung ini atin yang makayabeng software a gewa dareng OpenSSL Project p
         <translation>Ilako ya ing kasalungsungan makapiling address keng listahan</translation>
     </message>
     <message>
-        <source>Export the data in the current tab to a file</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>&amp;Export</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
         <source>&amp;Delete</source>
         <translation>&amp;Ilako</translation>
     </message>
     <message>
-        <source>Choose the address to send coins to</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Choose the address to receive coins with</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>C&amp;hoose</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Sending addresses</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Receiving addresses</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
         <translation>Reni reng kekang Bitcoin address king pamagpadalang kabayaran. Lawan mulang masalese reng alaga ampo ing address na ning tumanggap bayu ka magpadalang barya.</translation>
-    </message>
-    <message>
-        <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation type="unfinished"/>
     </message>
     <message>
         <source>Copy &amp;Label</source>
@@ -117,22 +57,10 @@ Ing produktung ini atin yang makayabeng software a gewa dareng OpenSSL Project p
         <translation>&amp;Alilan</translation>
     </message>
     <message>
-        <source>Export Address List</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
         <source>Comma separated file (*.csv)</source>
         <translation>Comma separated file (*.csv)</translation>
     </message>
-    <message>
-        <source>Exporting Failed</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>There was an error trying to save the address list to %1.</source>
-        <translation type="unfinished"/>
-    </message>
-</context>
+    </context>
 <context>
     <name>AddressTableModel</name>
     <message>
@@ -270,10 +198,6 @@ Ing produktung ini atin yang makayabeng software a gewa dareng OpenSSL Project p
         <translation>&amp;Overview</translation>
     </message>
     <message>
-        <source>Node</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
         <source>Show general overview of wallet</source>
         <translation>Ipakit ing kabuuang lawe ning wallet</translation>
     </message>
@@ -322,26 +246,6 @@ Ing produktung ini atin yang makayabeng software a gewa dareng OpenSSL Project p
         <translation>&amp;Alilan ing Passphrase...</translation>
     </message>
     <message>
-        <source>&amp;Sending addresses...</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>&amp;Receiving addresses...</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Open &amp;URI...</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Importing blocks from disk...</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Reindexing blocks on disk...</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
         <source>Send coins to a Bitcoin address</source>
         <translation>Magpadalang barya king Bitcoin address</translation>
     </message>
@@ -378,32 +282,12 @@ Ing produktung ini atin yang makayabeng software a gewa dareng OpenSSL Project p
         <translation>Wallet</translation>
     </message>
     <message>
-        <source>&amp;Send</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>&amp;Receive</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
         <source>&amp;Show / Hide</source>
         <translation>&amp;Ipalto / Isalikut</translation>
     </message>
     <message>
         <source>Show or hide the main Window</source>
         <translation>Ipalto o isalikut ing pun a awang</translation>
-    </message>
-    <message>
-        <source>Encrypt the private keys that belong to your wallet</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Sign messages with your Bitcoin addresses to prove you own them</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
-        <translation type="unfinished"/>
     </message>
     <message>
         <source>&amp;File</source>
@@ -430,34 +314,6 @@ Ing produktung ini atin yang makayabeng software a gewa dareng OpenSSL Project p
         <translation>Kapilubluban ning Bitcoin</translation>
     </message>
     <message>
-        <source>Request payments (generates QR codes and bitcoin: URIs)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>&amp;About Bitcoin Core</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Show the list of used sending addresses and labels</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Show the list of used receiving addresses and labels</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Open a bitcoin: URI or payment request</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>&amp;Command-line options</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Show the Bitcoin Core help message to get a list with possible Bitcoin command-line options</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
         <source>Bitcoin client</source>
         <translation>Bitcoin client</translation>
     </message>
@@ -466,16 +322,8 @@ Ing produktung ini atin yang makayabeng software a gewa dareng OpenSSL Project p
         <translation><numerusform>%n ya ing aktibong koneksion keng Bitcoin network</numerusform><numerusform>%n lareng aktibong koneksion keng Bitcoin network</numerusform></translation>
     </message>
     <message>
-        <source>No block source available...</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
         <source>Processed %1 of %2 (estimated) blocks of transaction history.</source>
         <translation>Me-prosesu %1 kareng %2 (me-estima) blocks ning kasalesayan ning transaksion.</translation>
-    </message>
-    <message>
-        <source>Processed %1 blocks of transaction history.</source>
-        <translation type="unfinished"/>
     </message>
     <message numerus="yes">
         <source>%n hour(s)</source>
@@ -488,18 +336,6 @@ Ing produktung ini atin yang makayabeng software a gewa dareng OpenSSL Project p
     <message numerus="yes">
         <source>%n week(s)</source>
         <translation><numerusform>%n dominggu</numerusform><numerusform>%n dominggu</numerusform></translation>
-    </message>
-    <message>
-        <source>%1 and %2</source>
-        <translation type="unfinished"/>
-    </message>
-    <message numerus="yes">
-        <source>%n year(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
-    </message>
-    <message>
-        <source>%1 behind</source>
-        <translation type="unfinished"/>
     </message>
     <message>
         <source>Last received block was generated %1 ago.</source>
@@ -572,54 +408,6 @@ Address: %4
 <context>
     <name>CoinControlDialog</name>
     <message>
-        <source>Coin Control Address Selection</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Quantity:</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Bytes:</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Amount:</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Priority:</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Fee:</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Low Output:</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>After Fee:</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Change:</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>(un)select all</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Tree mode</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>List mode</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
         <source>Amount</source>
         <translation>Alaga</translation>
     </message>
@@ -632,16 +420,8 @@ Address: %4
         <translation>Kaaldauan</translation>
     </message>
     <message>
-        <source>Confirmations</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
         <source>Confirmed</source>
         <translation>Me-kumpirma</translation>
-    </message>
-    <message>
-        <source>Priority</source>
-        <translation type="unfinished"/>
     </message>
     <message>
         <source>Copy address</source>
@@ -656,150 +436,10 @@ Address: %4
         <translation>Kopyan ing alaga</translation>
     </message>
     <message>
-        <source>Copy transaction ID</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Lock unspent</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Unlock unspent</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Copy quantity</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Copy fee</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Copy after fee</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Copy bytes</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Copy priority</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Copy low output</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Copy change</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>highest</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>higher</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>high</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>medium-high</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>medium</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>low-medium</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>low</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>lower</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>lowest</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>(%1 locked)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>none</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Dust</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>yes</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>no</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>This label turns red, if the transaction size is greater than 1000 bytes.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>This means a fee of at least %1 per kB is required.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Can vary +/- 1 byte per input.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Transactions with higher priority are more likely to get included into a block.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>This label turns red, if the priority is smaller than &quot;medium&quot;.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>This label turns red, if any recipient receives an amount smaller than %1.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>This means a fee of at least %1 is required.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Amounts below 0.546 times the minimum relay fee are shown as dust.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>This label turns red, if the change is smaller than %1.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
         <source>(no label)</source>
         <translation>(alang label)</translation>
     </message>
-    <message>
-        <source>change from %1 (%2)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>(change)</source>
-        <translation type="unfinished"/>
-    </message>
-</context>
+    </context>
 <context>
     <name>EditAddressDialog</name>
     <message>
@@ -809,14 +449,6 @@ Address: %4
     <message>
         <source>&amp;Label</source>
         <translation>&amp;Label</translation>
-    </message>
-    <message>
-        <source>The label associated with this address list entry</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>The address associated with this address list entry. This can only be modified for sending addresses.</source>
-        <translation type="unfinished"/>
     </message>
     <message>
         <source>&amp;Address</source>
@@ -839,12 +471,12 @@ Address: %4
         <translation>Alilan ya ing address king pamagpadala</translation>
     </message>
     <message>
-        <source>The entered address &quot;%1&quot; is already in the address book.</source>
-        <translation>Ing pepalub yung address &quot;%1&quot; ati na yu king aklat dareng address</translation>
+        <source>The entered address "%1" is already in the address book.</source>
+        <translation>Ing pepalub yung address "%1" ati na yu king aklat dareng address</translation>
     </message>
     <message>
-        <source>The entered address &quot;%1&quot; is not a valid Bitcoin address.</source>
-        <translation>Ing pepalub yung address &quot;%1&quot; ali ya katanggap-tanggap a Bitcoin address.</translation>
+        <source>The entered address "%1" is not a valid Bitcoin address.</source>
+        <translation>Ing pepalub yung address "%1" ali ya katanggap-tanggap a Bitcoin address.</translation>
     </message>
     <message>
         <source>Could not unlock wallet.</source>
@@ -857,33 +489,9 @@ Address: %4
 </context>
 <context>
     <name>FreespaceChecker</name>
-    <message>
-        <source>A new data directory will be created.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>name</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Directory already exists. Add %1 if you intend to create a new directory here.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Path already exists, and is not a directory.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Cannot create data directory here.</source>
-        <translation type="unfinished"/>
-    </message>
-</context>
+    </context>
 <context>
     <name>HelpMessageDialog</name>
-    <message>
-        <source>Bitcoin Core - Command-line options</source>
-        <translation type="unfinished"/>
-    </message>
     <message>
         <source>Bitcoin Core</source>
         <translation>Kapilubluban ning Bitcoin</translation>
@@ -905,26 +513,18 @@ Address: %4
         <translation>Pipamilian ning UI</translation>
     </message>
     <message>
-        <source>Set language, for example &quot;de_DE&quot; (default: system locale)</source>
-        <translation>Mamiling Amanu, alimbawa &quot;de_DE&quot;(default: system locale)</translation>
+        <source>Set language, for example "de_DE" (default: system locale)</source>
+        <translation>Mamiling Amanu, alimbawa "de_DE"(default: system locale)</translation>
     </message>
     <message>
         <source>Start minimized</source>
         <translation>Umpisan ing pamaglati</translation>
     </message>
     <message>
-        <source>Set SSL root certificates for payment request (default: -system-)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
         <source>Show splash screen on startup (default: 1)</source>
         <translation>Ipalto ing splash screen keng umpisa (default: 1)</translation>
     </message>
-    <message>
-        <source>Choose data directory on startup (default: 0)</source>
-        <translation type="unfinished"/>
-    </message>
-</context>
+    </context>
 <context>
     <name>Intro</name>
     <message>
@@ -932,69 +532,17 @@ Address: %4
         <translation>Malaus ka</translation>
     </message>
     <message>
-        <source>Welcome to Bitcoin Core.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>As this is the first time the program is launched, you can choose where Bitcoin Core will store its data.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Bitcoin Core will download and store a copy of the Bitcoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Use the default data directory</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Use a custom data directory:</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
         <source>Bitcoin</source>
         <translation>Bitcoin</translation>
-    </message>
-    <message>
-        <source>Error: Specified data directory &quot;%1&quot; can not be created.</source>
-        <translation type="unfinished"/>
     </message>
     <message>
         <source>Error</source>
         <translation>Mali</translation>
     </message>
-    <message>
-        <source>GB of free space available</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>(of %1GB needed)</source>
-        <translation type="unfinished"/>
-    </message>
-</context>
+    </context>
 <context>
     <name>OpenURIDialog</name>
-    <message>
-        <source>Open URI</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Open payment request from URI or file</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>URI:</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Select payment request file</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Select payment request file to open</source>
-        <translation type="unfinished"/>
-    </message>
-</context>
+    </context>
 <context>
     <name>OptionsDialog</name>
     <message>
@@ -1004,10 +552,6 @@ Address: %4
     <message>
         <source>&amp;Main</source>
         <translation>&amp;Pun</translation>
-    </message>
-    <message>
-        <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly. Most transactions are 1 kB.</source>
-        <translation type="unfinished"/>
     </message>
     <message>
         <source>Pay transaction &amp;fee</source>
@@ -1022,76 +566,8 @@ Address: %4
         <translation>&amp;Umpisan ya ing Bitcoin king pamag-log-in na ning sistema.</translation>
     </message>
     <message>
-        <source>Size of &amp;database cache</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>MB</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Number of script &amp;verification threads</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Connect to the Bitcoin network through a SOCKS proxy.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>&amp;Connect through SOCKS proxy (default proxy):</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Third party transaction URLs</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Active command-line options that override above options:</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Reset all client options to default.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>&amp;Reset Options</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
         <source>&amp;Network</source>
         <translation>&amp;Network</translation>
-    </message>
-    <message>
-        <source>(0 = auto, &lt;0 = leave that many cores free)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>W&amp;allet</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Expert</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Enable coin &amp;control features</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>If you disable the spending of unconfirmed change, the change from a transaction cannot be used until that transaction has at least one confirmation. This also affects how your balance is computed.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>&amp;Spend unconfirmed change</source>
-        <translation type="unfinished"/>
     </message>
     <message>
         <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
@@ -1135,7 +611,7 @@ Address: %4
     </message>
     <message>
         <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Quit in the menu.</source>
-        <translation>Palatian namu kesa king iluwal ya ing aplikasion istung makasara ya ing awang. Istung ing pipamilian a ini atiu king &quot;magsilbi&quot;, ing aplikasion misara yamu kaibat meng pinili ing &quot;Tuknangan&quot; king menu.</translation>
+        <translation>Palatian namu kesa king iluwal ya ing aplikasion istung makasara ya ing awang. Istung ing pipamilian a ini atiu king "magsilbi", ing aplikasion misara yamu kaibat meng pinili ing "Tuknangan" king menu.</translation>
     </message>
     <message>
         <source>M&amp;inimize on close</source>
@@ -1170,10 +646,6 @@ Address: %4
         <translation>&amp;Ipakit ing address king listahan naning transaksion</translation>
     </message>
     <message>
-        <source>Whether to show coin control features or not.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
         <source>&amp;OK</source>
         <translation>&amp;OK</translation>
     </message>
@@ -1184,26 +656,6 @@ Address: %4
     <message>
         <source>default</source>
         <translation>default</translation>
-    </message>
-    <message>
-        <source>none</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Confirm options reset</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Client restart required to activate changes.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Client will be shutdown, do you want to proceed?</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>This change would require a client restart.</source>
-        <translation type="unfinished"/>
     </message>
     <message>
         <source>The supplied proxy address is invalid.</source>
@@ -1225,16 +677,8 @@ Address: %4
         <translation>Wallet</translation>
     </message>
     <message>
-        <source>Available:</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
         <source>Your current spendable balance</source>
         <translation>Ing kekang kasalungsungan balanse a malyari mung gastusan</translation>
-    </message>
-    <message>
-        <source>Pending:</source>
-        <translation type="unfinished"/>
     </message>
     <message>
         <source>Total of transactions that have yet to be confirmed, and do not yet count toward the spendable balance</source>
@@ -1267,96 +711,12 @@ Address: %4
 </context>
 <context>
     <name>PaymentServer</name>
-    <message>
-        <source>URI handling</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>URI can not be parsed! This can be caused by an invalid Bitcoin address or malformed URI parameters.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Requested payment amount of %1 is too small (considered dust).</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Payment request error</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Cannot start bitcoin: click-to-pay handler</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Net manager warning</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Your active proxy doesn&apos;t support SOCKS5, which is required for payment requests via proxy.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Payment request fetch URL is invalid: %1</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Payment request file handling</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Payment request file can not be read or processed! This can be caused by an invalid payment request file.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Unverified payment requests to custom payment scripts are unsupported.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Refund from %1</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Error communicating with %1: %2</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Payment request can not be parsed or processed!</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Bad response from server %1</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Payment acknowledged</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Network request error</source>
-        <translation type="unfinished"/>
-    </message>
-</context>
+    </context>
 <context>
     <name>QObject</name>
     <message>
         <source>Bitcoin</source>
         <translation>Bitcoin</translation>
-    </message>
-    <message>
-        <source>Error: Specified data directory &quot;%1&quot; does not exist.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Error: Cannot parse configuration file: %1. Only use key=value syntax.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Error: Invalid combination of -regtest and -testnet.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Bitcoin Core didn&apos;t yet exit safely...</source>
-        <translation type="unfinished"/>
     </message>
     <message>
         <source>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
@@ -1365,23 +725,7 @@ Address: %4
 </context>
 <context>
     <name>QRImageWidget</name>
-    <message>
-        <source>&amp;Save Image...</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>&amp;Copy Image</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Save QR Code</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>PNG Image (*.png)</source>
-        <translation type="unfinished"/>
-    </message>
-</context>
+    </context>
 <context>
     <name>RPCConsole</name>
     <message>
@@ -1401,14 +745,6 @@ Address: %4
         <translation>&amp;Impormasion</translation>
     </message>
     <message>
-        <source>Debug window</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>General</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
         <source>Using OpenSSL version</source>
         <translation>Gagamit bersion na ning OpenSSL</translation>
     </message>
@@ -1419,10 +755,6 @@ Address: %4
     <message>
         <source>Network</source>
         <translation>Network</translation>
-    </message>
-    <message>
-        <source>Name</source>
-        <translation type="unfinished"/>
     </message>
     <message>
         <source>Number of connections</source>
@@ -1453,24 +785,8 @@ Address: %4
         <translation>&amp;Console</translation>
     </message>
     <message>
-        <source>&amp;Network Traffic</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>&amp;Clear</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
         <source>Totals</source>
         <translation>Kabuuan:</translation>
-    </message>
-    <message>
-        <source>In:</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Out:</source>
-        <translation type="unfinished"/>
     </message>
     <message>
         <source>Build date</source>
@@ -1500,112 +816,16 @@ Address: %4
         <source>Type &lt;b&gt;help&lt;/b&gt; for an overview of available commands.</source>
         <translation>I-type ing &lt;b&gt;help&lt;/b&gt; ban akit la reng ati at magsilbing commands.</translation>
     </message>
-    <message>
-        <source>%1 B</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>%1 KB</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>%1 MB</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>%1 GB</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>%1 m</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>%1 h</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>%1 h %2 m</source>
-        <translation type="unfinished"/>
-    </message>
-</context>
+    </context>
 <context>
     <name>ReceiveCoinsDialog</name>
-    <message>
-        <source>&amp;Amount:</source>
-        <translation type="unfinished"/>
-    </message>
     <message>
         <source>&amp;Label:</source>
         <translation>&amp;Label:</translation>
     </message>
     <message>
-        <source>&amp;Message:</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Reuse one of the previously used receiving addresses. Reusing addresses has security and privacy issues. Do not use this unless re-generating a payment request made before.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>R&amp;euse an existing receiving address (not recommended)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Bitcoin network.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>An optional label to associate with the new receiving address.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Use this form to request payments. All fields are &lt;b&gt;optional&lt;/b&gt;.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>An optional amount to request. Leave this empty or zero to not request a specific amount.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Clear all fields of the form.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Clear</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Requested payments history</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>&amp;Request payment</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Show the selected request (does the same as double clicking an entry)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Show</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Remove the selected entries from the list</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Remove</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
         <source>Copy label</source>
         <translation>Kopyan ing label</translation>
-    </message>
-    <message>
-        <source>Copy message</source>
-        <translation type="unfinished"/>
     </message>
     <message>
         <source>Copy amount</source>
@@ -1614,34 +834,6 @@ Address: %4
 </context>
 <context>
     <name>ReceiveRequestDialog</name>
-    <message>
-        <source>QR Code</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Copy &amp;URI</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Copy &amp;Address</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>&amp;Save Image...</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Request payment to %1</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Payment information</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>URI</source>
-        <translation type="unfinished"/>
-    </message>
     <message>
         <source>Address</source>
         <translation>Address</translation>
@@ -1658,15 +850,7 @@ Address: %4
         <source>Message</source>
         <translation>Mensayi</translation>
     </message>
-    <message>
-        <source>Resulting URI too long, try to reduce the text for label / message.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Error encoding URI into QR Code.</source>
-        <translation type="unfinished"/>
-    </message>
-</context>
+    </context>
 <context>
     <name>RecentRequestsTableModel</name>
     <message>
@@ -1689,76 +873,12 @@ Address: %4
         <source>(no label)</source>
         <translation>(alang label)</translation>
     </message>
-    <message>
-        <source>(no message)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>(no amount)</source>
-        <translation type="unfinished"/>
-    </message>
-</context>
+    </context>
 <context>
     <name>SendCoinsDialog</name>
     <message>
         <source>Send Coins</source>
         <translation>Magpadalang Barya</translation>
-    </message>
-    <message>
-        <source>Coin Control Features</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Inputs...</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>automatically selected</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Insufficient funds!</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Quantity:</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Bytes:</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Amount:</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Priority:</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Fee:</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Low Output:</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>After Fee:</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Change:</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>If this is activated, but the change address is empty or invalid, change will be sent to a newly generated address.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Custom change address</source>
-        <translation type="unfinished"/>
     </message>
     <message>
         <source>Send to multiple recipients at once</source>
@@ -1767,10 +887,6 @@ Address: %4
     <message>
         <source>Add &amp;Recipient</source>
         <translation>Maglage &amp;Tumanggap</translation>
-    </message>
-    <message>
-        <source>Clear all fields of the form.</source>
-        <translation type="unfinished"/>
     </message>
     <message>
         <source>Clear &amp;All</source>
@@ -1793,48 +909,8 @@ Address: %4
         <translation>Kumpirman ing pamagpadalang barya</translation>
     </message>
     <message>
-        <source>%1 to %2</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Copy quantity</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
         <source>Copy amount</source>
         <translation>Kopyan ing alaga</translation>
-    </message>
-    <message>
-        <source>Copy fee</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Copy after fee</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Copy bytes</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Copy priority</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Copy low output</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Copy change</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Total Amount %1 (= %2)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>or</source>
-        <translation type="unfinished"/>
     </message>
     <message>
         <source>The recipient address is not valid, please recheck.</source>
@@ -1857,42 +933,10 @@ Address: %4
         <translation>Atin meakit a milupang address, maliari kamung magpadalang misan king metung a address king misan a pamagpadalang transaksion.</translation>
     </message>
     <message>
-        <source>Transaction creation failed!</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Warning: Invalid Bitcoin address</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
         <source>(no label)</source>
         <translation>(alang label)</translation>
     </message>
-    <message>
-        <source>Warning: Unknown change address</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Are you sure you want to send?</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>added as transaction fee</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Payment request expired</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Invalid payment address %1</source>
-        <translation type="unfinished"/>
-    </message>
-</context>
+    </context>
 <context>
     <name>SendCoinsEntry</name>
     <message>
@@ -1916,14 +960,6 @@ Address: %4
         <translation>&amp;Label:</translation>
     </message>
     <message>
-        <source>Choose previously used address</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>This is a normal payment.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
         <source>Alt+A</source>
         <translation>Alt+A</translation>
     </message>
@@ -1935,50 +971,10 @@ Address: %4
         <source>Alt+P</source>
         <translation>Alt+P</translation>
     </message>
-    <message>
-        <source>Remove this entry</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Message:</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>This is a verified payment request.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Enter a label for this address to add it to the list of used addresses</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>This is an unverified payment request.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Pay To:</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Memo:</source>
-        <translation type="unfinished"/>
-    </message>
-</context>
+    </context>
 <context>
     <name>ShutdownWindow</name>
-    <message>
-        <source>Bitcoin Core is shutting down...</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Do not shut down the computer until this window disappears.</source>
-        <translation type="unfinished"/>
-    </message>
-</context>
+    </context>
 <context>
     <name>SignVerifyMessageDialog</name>
     <message>
@@ -1996,10 +992,6 @@ Address: %4
     <message>
         <source>The address to sign the message with (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
         <translation>Ing address ban a -pirman ya ing mensayi kayabe ning (e.g.1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
-    </message>
-    <message>
-        <source>Choose previously used address</source>
-        <translation type="unfinished"/>
     </message>
     <message>
         <source>Alt+A</source>
@@ -2046,10 +1038,6 @@ Address: %4
         <translation>&amp;Beripikan ing Mensayi</translation>
     </message>
     <message>
-        <source>Enter the signing address, message (ensure you copy line breaks, spaces, tabs, etc. exactly) and signature below to verify the message. Be careful not to read more into the signature than what is in the signed message itself, to avoid being tricked by a man-in-the-middle attack.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
         <source>The address the message was signed with (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
         <translation>Ing address na ning mensayi nung nokarin me pirma ya ini (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
@@ -2070,8 +1058,8 @@ Address: %4
         <translation>Magpalub kang Bitcoin address(e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</translation>
     </message>
     <message>
-        <source>Click &quot;Sign Message&quot; to generate signature</source>
-        <translation>I-click ing &quot;Pirman ing Mensayi&quot; ban agawa ya ing metung a pirma</translation>
+        <source>Click "Sign Message" to generate signature</source>
+        <translation>I-click ing "Pirman ing Mensayi" ban agawa ya ing metung a pirma</translation>
     </message>
     <message>
         <source>The entered address is invalid.</source>
@@ -2129,30 +1117,18 @@ Address: %4
         <translation>Kapilubluban ning Bitcoin</translation>
     </message>
     <message>
-        <source>The Bitcoin Core developers</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
         <source>[testnet]</source>
         <translation>[testnet]</translation>
     </message>
 </context>
 <context>
     <name>TrafficGraphWidget</name>
-    <message>
-        <source>KB/s</source>
-        <translation type="unfinished"/>
-    </message>
-</context>
+    </context>
 <context>
     <name>TransactionDesc</name>
     <message>
         <source>Open until %1</source>
         <translation>Makabuklat anggang %1</translation>
-    </message>
-    <message>
-        <source>conflicted</source>
-        <translation type="unfinished"/>
     </message>
     <message>
         <source>%1/offline</source>
@@ -2169,10 +1145,6 @@ Address: %4
     <message>
         <source>Status</source>
         <translation>Kabilian</translation>
-    </message>
-    <message numerus="yes">
-        <source>, broadcast through %n node(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
     </message>
     <message>
         <source>Date</source>
@@ -2206,10 +1178,6 @@ Address: %4
         <source>Credit</source>
         <translation>Credit</translation>
     </message>
-    <message numerus="yes">
-        <source>matures in %n more block(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
-    </message>
     <message>
         <source>not accepted</source>
         <translation>ali metanggap</translation>
@@ -2239,24 +1207,12 @@ Address: %4
         <translation>ID ning Transaksion</translation>
     </message>
     <message>
-        <source>Merchant</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Generated coins must mature %1 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to &quot;not accepted&quot; and it won&apos;t be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
         <source>Debug information</source>
         <translation>Impormasion ning Debug</translation>
     </message>
     <message>
         <source>Transaction</source>
         <translation>Transaksion</translation>
-    </message>
-    <message>
-        <source>Inputs</source>
-        <translation type="unfinished"/>
     </message>
     <message>
         <source>Amount</source>
@@ -2273,10 +1229,6 @@ Address: %4
     <message>
         <source>, has not been successfully broadcast yet</source>
         <translation>, eya matagumpeng mibalita</translation>
-    </message>
-    <message numerus="yes">
-        <source>Open for %n more block(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
     </message>
     <message>
         <source>unknown</source>
@@ -2313,14 +1265,6 @@ Address: %4
         <translation>Alaga</translation>
     </message>
     <message>
-        <source>Immature (%1 confirmations, will be available after %2)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message numerus="yes">
-        <source>Open for %n more block(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
-    </message>
-    <message>
         <source>Open until %1</source>
         <translation>Makabuklat anggang %1</translation>
     </message>
@@ -2335,22 +1279,6 @@ Address: %4
     <message>
         <source>Generated but not accepted</source>
         <translation>Me-generate ya oneng ali ya metanggap</translation>
-    </message>
-    <message>
-        <source>Offline</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Unconfirmed</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Confirming (%1 of %2 recommended confirmations)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Conflicted</source>
-        <translation type="unfinished"/>
     </message>
     <message>
         <source>Received with</source>
@@ -2468,36 +1396,12 @@ Address: %4
         <translation>Kopyan ing alaga</translation>
     </message>
     <message>
-        <source>Copy transaction ID</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
         <source>Edit label</source>
         <translation>Alilan ing label</translation>
     </message>
     <message>
         <source>Show transaction details</source>
         <translation>Ipakit ing detalye ning transaksion</translation>
-    </message>
-    <message>
-        <source>Export Transaction History</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Exporting Failed</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>There was an error trying to save the transaction history to %1.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Exporting Successful</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>The transaction history was successfully saved to %1.</source>
-        <translation type="unfinished"/>
     </message>
     <message>
         <source>Comma separated file (*.csv)</source>
@@ -2542,11 +1446,7 @@ Address: %4
 </context>
 <context>
     <name>WalletFrame</name>
-    <message>
-        <source>No wallet has been loaded.</source>
-        <translation type="unfinished"/>
-    </message>
-</context>
+    </context>
 <context>
     <name>WalletModel</name>
     <message>
@@ -2556,39 +1456,7 @@ Address: %4
 </context>
 <context>
     <name>WalletView</name>
-    <message>
-        <source>&amp;Export</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Export the data in the current tab to a file</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Backup Wallet</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Wallet Data (*.dat)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Backup Failed</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>There was an error trying to save the wallet data to %1.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>The wallet data was successfully saved to %1.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Backup Successful</source>
-        <translation type="unfinished"/>
-    </message>
-</context>
+    </context>
 <context>
     <name>bitcoin-core</name>
     <message>
@@ -2648,16 +1516,8 @@ Address: %4
         <translation>Atin kamalian a milyari kabang ayusan ya ing RPC port %u para keng pamakiramdam king IPv4: %s</translation>
     </message>
     <message>
-        <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 8332 or testnet: 18332)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
         <source>Accept command line and JSON-RPC commands</source>
         <translation>Tumanggap command line at JSON-RPC commands</translation>
-    </message>
-    <message>
-        <source>Bitcoin Core RPC client version</source>
-        <translation type="unfinished"/>
     </message>
     <message>
         <source>Run in the background as a daemon and accept commands</source>
@@ -2672,182 +1532,28 @@ Address: %4
         <translation>Tumanggap koneksion menibat king kilwal (default: 1 if no -proxy or -connect)</translation>
     </message>
     <message>
-        <source>%s, you must set a rpcpassword in the configuration file:
-%s
-It is recommended you use the following random password:
-rpcuser=bitcoinrpc
-rpcpassword=%s
-(you do not need to remember this password)
-The username and password MUST NOT be the same.
-If the file does not exist, create it with owner-readable-only file permissions.
-It is also recommended to set alertnotify so you are notified of problems;
-for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.com
-</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Acceptable ciphers (default: TLSv1.2+HIGH:TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!3DES:@STRENGTH)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>An error occurred while setting up the RPC port %u for listening on IPv6, falling back to IPv4: %s</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Continuously rate-limit free transactions to &lt;n&gt;*1000 bytes per minute (default:15)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Enter regression test mode, which uses a special chain in which blocks can be solved instantly. This is intended for regression testing tools and app development.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Enter regression test mode, which uses a special chain in which blocks can be solved instantly.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Error: Listening for incoming connections failed (listen returned error %d)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Error: The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds!</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Fees smaller than this are considered zero fee (for transaction creation) (default:</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Flush database activity from memory pool to disk log every &lt;n&gt; megabytes (default: 100)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>How thorough the block verification of -checkblocks is (0-4, default: 3)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>In this mode -genproclimit controls how many blocks are generated immediately.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Set the number of script verification threads (%u to %d, 0 = auto, &lt;0 = leave that many cores free, default: %d)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Set the processor limit for when generation is on (-1 = unlimited, default: -1)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Unable to bind to %s on this computer. Bitcoin Core is probably already running.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: -proxy)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
         <source>Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
         <translation>Kapabaluan: Sobra ya katas ing makalage king -paytxfee. Ini ing maging bayad mu para king bayad na ning transaksion istung pepadala me ing transaksion a ini.</translation>
     </message>
     <message>
-        <source>Warning: Please check that your computer&apos;s date and time are correct! If your clock is wrong Bitcoin will not work properly.</source>
+        <source>Warning: Please check that your computer's date and time are correct! If your clock is wrong Bitcoin will not work properly.</source>
         <translation>Kapabaluan: Maliaring pakilawe ing oras at aldo a makalage king kekayung kompyuter nung istu la! Istung ing oras yu mali ya ali ya gumanang masalese ing Bitcoin.</translation>
-    </message>
-    <message>
-        <source>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Warning: error reading wallet.dat! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Warning: wallet.dat corrupt, data salvaged! Original wallet.dat saved as wallet.{timestamp}.bak in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>(default: 1)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>(default: wallet.dat)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>&lt;category&gt; can be:</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Attempt to recover private keys from a corrupt wallet.dat</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Bitcoin Core Daemon</source>
-        <translation type="unfinished"/>
     </message>
     <message>
         <source>Block creation options:</source>
         <translation>Pipamilian king pamag-gawang block:</translation>
     </message>
     <message>
-        <source>Clear list of wallet transactions (diagnostic tool; implies -rescan)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
         <source>Connect only to the specified node(s)</source>
         <translation>Kumunekta mu king mepiling node(s)</translation>
-    </message>
-    <message>
-        <source>Connect through SOCKS proxy</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Connect to JSON-RPC on &lt;port&gt; (default: 8332 or testnet: 18332)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Connection options:</source>
-        <translation type="unfinished"/>
     </message>
     <message>
         <source>Corrupted block database detected</source>
         <translation>Mekapansin lang me-corrupt a block database</translation>
     </message>
     <message>
-        <source>Debugging/Testing options:</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Disable safemode, override a real safe mode event (default: 0)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
         <source>Discover own IP address (default: 1 when listening and no -externalip)</source>
         <translation>I-discover ing sariling IP address (default: 1 istung makiramdam at -externalip)</translation>
-    </message>
-    <message>
-        <source>Do not load the wallet and disable wallet RPC calls</source>
-        <translation type="unfinished"/>
     </message>
     <message>
         <source>Do you want to rebuild the block database now?</source>
@@ -2858,24 +1564,12 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Kamalian king pamag-initialize king block na ning database</translation>
     </message>
     <message>
-        <source>Error initializing wallet database environment %s!</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Error loading block database</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
         <source>Error opening block database</source>
         <translation>Kamalian king pamag buklat king block database</translation>
     </message>
     <message>
         <source>Error: Disk space is low!</source>
         <translation>Kamalian: Mababa ne ing espasyu king disk!</translation>
-    </message>
-    <message>
-        <source>Error: Wallet locked, unable to create transaction!</source>
-        <translation type="unfinished"/>
     </message>
     <message>
         <source>Error: system error: </source>
@@ -2926,216 +1620,20 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Me-mali king pamanyulat king undo data</translation>
     </message>
     <message>
-        <source>Fee per kB to add to transactions you send</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Fees smaller than this are considered zero fee (for relaying) (default:</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
         <source>Find peers using DNS lookup (default: 1 unless -connect)</source>
         <translation>Mantun peers gamit ing pamamantun DNS (default: 1 unless -connect)</translation>
-    </message>
-    <message>
-        <source>Force safe mode (default: 0)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Generate coins (default: 0)</source>
-        <translation type="unfinished"/>
     </message>
     <message>
         <source>How many blocks to check at startup (default: 288, 0 = all)</source>
         <translation>Pilan la reng block a lawan keng umpisa (default: 288, 0 = all)</translation>
     </message>
     <message>
-        <source>If &lt;category&gt; is not supplied, output all debugging information.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Importing...</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Incorrect or no genesis block found. Wrong datadir for network?</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Invalid -onion address: &apos;%s&apos;</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Not enough file descriptors available.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Prepend debug output with timestamp (default: 1)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>RPC client options:</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Rebuild block chain index from current blk000??.dat files</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Select SOCKS version for -proxy (4 or 5, default: 5)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Set database cache size in megabytes (%d to %d, default: %d)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Set maximum block size in bytes (default: %d)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Set the number of threads to service RPC calls (default: 4)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Specify wallet file (within data directory)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Spend unconfirmed change when sending transactions (default: 1)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>This is intended for regression testing tools and app development.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Usage (deprecated, use bitcoin-cli):</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Verifying blocks...</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Verifying wallet...</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Wait for RPC server to start</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Wallet %s resides outside data directory %s</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Wallet options:</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Warning: Deprecated argument -debugnet ignored, use -debug=net</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>You need to rebuild the database using -reindex to change -txindex</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Imports blocks from external blk000??.dat file</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Cannot obtain a lock on data directory %s. Bitcoin Core is probably already running.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Output debugging information (default: 0, supplying &lt;category&gt; is optional)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Set maximum size of high-priority/low-fee transactions in bytes (default: %d)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
         <source>Information</source>
         <translation>&amp;Impormasion</translation>
     </message>
     <message>
-        <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: &apos;%s&apos;</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Invalid amount for -mintxfee=&lt;amount&gt;: &apos;%s&apos;</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Limit size of signature cache to &lt;n&gt; entries (default: 50000)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Log transaction priority and fee per kB when mining blocks (default: 0)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Maintain a full transaction index (default: 0)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Maximum per-connection receive buffer, &lt;n&gt;*1000 bytes (default: 5000)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Maximum per-connection send buffer, &lt;n&gt;*1000 bytes (default: 1000)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Only accept block chain matching built-in checkpoints (default: 1)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Only connect to nodes in network &lt;net&gt; (IPv4, IPv6 or Tor)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Print block on startup, if found in block index</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Print block tree on startup (default: 0)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>RPC SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>RPC server options:</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Randomly drop 1 of every &lt;n&gt; network messages</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Randomly fuzz 1 of every &lt;n&gt; network messages</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Run a thread to flush wallet periodically (default: 1)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
         <source>SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
         <translation>Pipamilian ning SSL: (lawen ye ing Bitcoin Wiki para king SSL setup instructions)</translation>
-    </message>
-    <message>
-        <source>Send command to Bitcoin Core</source>
-        <translation type="unfinished"/>
     </message>
     <message>
         <source>Send trace/debug info to console instead of debug.log file</source>
@@ -3146,56 +1644,12 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Ilage ing pekaditak a dagul na ning block king bytes (default: 0)</translation>
     </message>
     <message>
-        <source>Sets the DB_PRIVATE flag in the wallet db environment (default: 1)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Show all debugging options (usage: --help -help-debug)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Show benchmark information (default: 0)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Signing transaction failed</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Specify connection timeout in milliseconds (default: 5000)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Start Bitcoin Core Daemon</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
         <source>System error: </source>
         <translation>Kamalian ning sistema:</translation>
     </message>
     <message>
-        <source>Transaction amount too small</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Transaction amounts must be positive</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
         <source>Transaction too large</source>
         <translation>Maragul yang masiadu ing transaksion</translation>
-    </message>
-    <message>
-        <source>Use UPnP to map the listening port (default: 0)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>Use UPnP to map the listening port (default: 1 when listening)</source>
-        <translation type="unfinished"/>
     </message>
     <message>
         <source>Username for JSON-RPC connections</source>
@@ -3210,20 +1664,8 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Kapabaluan: Ing bersioin a ini laus ne, kailangan nang mag-upgrade!</translation>
     </message>
     <message>
-        <source>Zapping all transactions from wallet...</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <source>on startup</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
         <source>version</source>
         <translation>bersion</translation>
-    </message>
-    <message>
-        <source>wallet.dat corrupt, salvage failed</source>
-        <translation type="unfinished"/>
     </message>
     <message>
         <source>Password for JSON-RPC connections</source>
@@ -3298,28 +1740,28 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
         <translation>Me-mali ya ing pamag-load king wallet.dat</translation>
     </message>
     <message>
-        <source>Invalid -proxy address: &apos;%s&apos;</source>
-        <translation>Ali katanggap-tanggap a -proxy addresss: &apos;%s&apos;</translation>
+        <source>Invalid -proxy address: '%s'</source>
+        <translation>Ali katanggap-tanggap a -proxy addresss: '%s'</translation>
     </message>
     <message>
-        <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
-        <translation>E kilalang network ing mepili king -onlynet: &apos;%s&apos;</translation>
+        <source>Unknown network specified in -onlynet: '%s'</source>
+        <translation>E kilalang network ing mepili king -onlynet: '%s'</translation>
     </message>
     <message>
         <source>Unknown -socks proxy version requested: %i</source>
         <translation>E kilalang -socks proxy version requested: %i</translation>
     </message>
     <message>
-        <source>Cannot resolve -bind address: &apos;%s&apos;</source>
-        <translation>Eya me-resolve ing -bind address: &apos;%s&apos;</translation>
+        <source>Cannot resolve -bind address: '%s'</source>
+        <translation>Eya me-resolve ing -bind address: '%s'</translation>
     </message>
     <message>
-        <source>Cannot resolve -externalip address: &apos;%s&apos;</source>
-        <translation>Eya me-resolve ing -externalip address: &apos;%s&apos;</translation>
+        <source>Cannot resolve -externalip address: '%s'</source>
+        <translation>Eya me-resolve ing -externalip address: '%s'</translation>
     </message>
     <message>
-        <source>Invalid amount for -paytxfee=&lt;amount&gt;: &apos;%s&apos;</source>
-        <translation>Eya maliari ing alaga keng -paytxfee=&lt;amount&gt;: &apos;%s&apos;</translation>
+        <source>Invalid amount for -paytxfee=&lt;amount&gt;: '%s'</source>
+        <translation>Eya maliari ing alaga keng -paytxfee=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
         <source>Invalid amount</source>
