@@ -104,6 +104,7 @@ BITCOIN_CORE_H = \
   script/script.h \
   script/sign.h \
   script/standard.h \
+  script/transaction_serializer.h \
   wallet_ismine.h \
   serialize.h \
   sync.h \
