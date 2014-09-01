@@ -12,10 +12,10 @@
 /** Wrapper that serializes like CTransaction, but with the modifications
  *  required for the signature hash done in-place
  */
-template<typename T>
+template<typename CTransaction, typename CTxOut>
 class CTransactionSignatureSerializer {
 private:
-    const T &txTo;  // reference to the spending transaction (the one being serialized)
+    const CTransaction &txTo;  // reference to the spending transaction (the one being serialized)
     const CScript &scriptCode; // output script being consumed
     const unsigned int nIn;    // input index of txTo being signed
     const bool fAnyoneCanPay;  // whether the hashtype has the SIGHASH_ANYONECANPAY flag set
@@ -23,7 +23,7 @@ private:
     const bool fHashNone;      // whether the hashtype is SIGHASH_NONE
 
 public:
-    CTransactionSignatureSerializer(const T &txToIn, const CScript &scriptCodeIn, unsigned int nInIn, int nHashTypeIn) :
+    CTransactionSignatureSerializer(const CTransaction &txToIn, const CScript &scriptCodeIn, unsigned int nInIn, int nHashTypeIn) :
         txTo(txToIn), scriptCode(scriptCodeIn), nIn(nInIn),
         fAnyoneCanPay(!!(nHashTypeIn & SIGHASH_ANYONECANPAY)),
         fHashSingle((nHashTypeIn & 0x1f) == SIGHASH_SINGLE),
