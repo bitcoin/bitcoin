@@ -1405,4 +1405,4 @@ public:
     }
 };
 
-#endif
+#endif // BITCOIN_SERIALIZE_H

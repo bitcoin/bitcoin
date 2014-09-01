@@ -2,6 +2,7 @@
 // Copyright (c) 2009-2013 The Bitcoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
 #ifndef BITCOIN_COINS_H
 #define BITCOIN_COINS_H
 
@@ -379,4 +380,4 @@ private:
     CCoinsMap::const_iterator FetchCoins(const uint256 &txid) const;
 };
 
-#endif
+#endif // BITCOIN_COINS_H

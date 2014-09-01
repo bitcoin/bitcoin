@@ -1,4 +1,3 @@
-
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2014 The Bitcoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
@@ -24,4 +23,4 @@ void UpdateTime(CBlockHeader* block, const CBlockIndex* pindexPrev);
 
 uint256 GetProofIncrement(unsigned int nBits);
 
-#endif
+#endif // BITCOIN_POW_H

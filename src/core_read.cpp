@@ -126,4 +126,3 @@ vector<unsigned char> ParseHexUV(const UniValue& v, const string& strName)
         throw runtime_error(strName+" must be hexadecimal string (not '"+strHex+"')");
     return ParseHex(strHex);
 }
-
