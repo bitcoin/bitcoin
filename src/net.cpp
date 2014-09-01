@@ -2043,9 +2043,9 @@ unsigned int ReceiveFloodSize() { return 1000*GetArg("-maxreceivebuffer", 5*1000
 unsigned int SendBufferSize() { return 1000*GetArg("-maxsendbuffer", 1*1000); }
 
 // SEND_BUFFER_MAX_SIZE is the size in bytes that a P2P message is expected to
-// never exceed, and is used as the maximum allowed value a CDataStream buffer
-// may expand to.  This is currently calculated as the sum of the message header
-// size (24 bytes) plus the payload for a maximum sized inv:
+// never exceed, and is used as the maximum allowed value a CDataStream send
+// buffer may expand to.  This is currently calculated as the sum of the message
+// header size (24 bytes) plus the payload for a maximum sized inv:
 //
 //  50000 as varint (3 bytes)
 //  50000 inv vector entries (1800000 bytes):
