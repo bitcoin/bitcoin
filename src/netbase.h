@@ -154,11 +154,10 @@ class CService : public CNetAddr
 
         template <typename Stream, typename Operation>
         inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
-            bool fRead = ser_action.ForRead();
             READWRITE(FLATDATA(ip));
             unsigned short portN = htons(port);
             READWRITE(portN);
-            if (fRead)
+            if (ser_action.ForRead())
                  port = ntohs(portN);
         }
 };
