@@ -2054,7 +2054,7 @@ unsigned int SendBufferSize() { return 1000*GetArg("-maxsendbuffer", 1*1000); }
 //
 // NOTE: This value is currently less than the largest enforced receivable
 // message, which at the time of writing is no more than a 32MB payload.
-static const size_t SEND_BUFFER_MAX_SIZE = 24 + 3 + (50000 * (4+32))
+static const size_t SEND_BUFFER_MAX_SIZE = 24 + 3 + (50000 * (4+32));
 
 CNode::CNode(SOCKET hSocketIn, CAddress addrIn, std::string addrNameIn, bool fInboundIn) : ssSend(SER_NETWORK, INIT_PROTO_VERSION), setAddrKnown(5000)
 {
