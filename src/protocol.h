@@ -89,16 +89,13 @@ class CAddress : public CService
 
         template <typename Stream, typename Operation>
         inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
-            bool fRead = ser_action.ForRead();
-
-            CAddress* pthis = const_cast<CAddress*>(this);
-            if (fRead)
-                pthis->Init();
+            if (ser_action.ForRead())
+                Init();
             if (nType & SER_DISK)
                 READWRITE(nVersion);
             if ((nType & SER_DISK) ||
                 (nVersion >= CADDR_TIME_VERSION && !(nType & SER_GETHASH)))
-            READWRITE(nTime);
+                READWRITE(nTime);
             READWRITE(nServices);
             READWRITE(*(CService*)this);
         }
