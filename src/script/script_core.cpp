@@ -7,7 +7,7 @@
 
 #include "core.h"
 #include "script/script.h"
-#include "script/transaction_serializer.h"
+#include "script/transaction_serializer.hpp"
 #include "uint256.h"
 #include "util.h"
 
@@ -27,7 +27,7 @@ uint256 CTxSignatureSerializer::SignatureHash(const CScript& scriptCode, int nHa
     }
 
     // Wrapper to serialize only the necessary parts of the transaction being signed
-    CTransactionSignatureSerializer txTmp(txTo, scriptCode, nIn, nHashType);
+    CTransactionSignatureSerializer<CTransaction> txTmp(txTo, scriptCode, nIn, nHashType);
 
     // Serialize and hash
     CHashWriter ss(SER_GETHASH, 0);
