@@ -91,4 +91,4 @@ public:
     void UpdateEmptyFull();
 };
 
-#endif /* BITCOIN_BLOOM_H */
+#endif // BITCOIN_BLOOM_H

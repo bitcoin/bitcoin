@@ -89,4 +89,3 @@ void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry)
     if (hashBlock != 0)
         entry.pushKV("blockhash", hashBlock.GetHex());
 }
-
