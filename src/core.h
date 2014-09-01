@@ -533,4 +533,4 @@ struct CBlockLocator
     }
 };
 
-#endif
+#endif // BITCOIN_CORE_H

@@ -55,4 +55,4 @@ bool SelectBaseParamsFromCommandLine();
  */
 bool AreBaseParamsConfigured();
 
-#endif
+#endif // BITCOIN_CHAIN_PARAMS_BASE_H
