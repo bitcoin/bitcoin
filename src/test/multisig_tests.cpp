@@ -7,6 +7,7 @@
 #include "main.h"
 #include "script/script.h"
 #include "script/interpreter.h"
+#include "script/interpreter_core.h"
 #include "script/sign.h"
 #include "wallet_ismine.h"
 #include "uint256.h"

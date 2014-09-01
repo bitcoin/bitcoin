@@ -7,12 +7,9 @@
 #define H_BITCOIN_SCRIPT_INTERPRETER
 
 #include <vector>
-#include <stdint.h>
-#include <string>
 
 class uint256;
 class CScript;
-class CTransaction;
 
 /** Signature hash types/flags */
 enum
@@ -34,12 +31,17 @@ enum
     SCRIPT_VERIFY_NULLDUMMY = (1U << 4), // verify dummy stack item consumed by CHECKMULTISIG is of zero-length
 };
 
+class CSignatureSerializer
+{
+public:
+    virtual uint256 SignatureHash(const CScript &scriptCode, int nHashType) const = 0;
+};
+
 bool IsCanonicalPubKey(const std::vector<unsigned char> &vchPubKey, unsigned int flags);
 bool IsCanonicalSignature(const std::vector<unsigned char> &vchSig, unsigned int flags);
 
-uint256 SignatureHash(const CScript &scriptCode, const CTransaction& txTo, unsigned int nIn, int nHashType);
-bool CheckSig(std::vector<unsigned char> vchSig, const std::vector<unsigned char> &vchPubKey, const CScript &scriptCode, const CTransaction& txTo, unsigned int nIn, int flags);
-bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& script, const CTransaction& txTo, unsigned int nIn, unsigned int flags);
-bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const CTransaction& txTo, unsigned int nIn, unsigned int flags);
+bool CheckSig(std::vector<unsigned char> vchSig, const std::vector<unsigned char> &vchPubKey, const CScript &scriptCode, const CSignatureSerializer& tx, int flags);
+bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& script, const CSignatureSerializer& tx, unsigned int flags);
+bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const CSignatureSerializer& tx, unsigned int flags);
 
 #endif

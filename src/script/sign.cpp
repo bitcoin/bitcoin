@@ -8,6 +8,7 @@
 #include "core.h"
 #include "key.h"
 #include "keystore.h"
+#include "script/interpreter_core.h"
 #include "script/standard.h"
 #include "uint256.h"
 

@@ -11,9 +11,10 @@
 #include "main.h"
 #include "net.h"
 #include "rpcserver.h"
+#include "script/interpreter_core.h"
 #include "script/script.h"
-#include "script/standard.h"
 #include "script/sign.h"
+#include "script/standard.h"
 #include "uint256.h"
 #ifdef ENABLE_WALLET
 #include "wallet.h"

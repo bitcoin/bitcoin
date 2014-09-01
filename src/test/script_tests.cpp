@@ -8,6 +8,8 @@
 #include "key.h"
 #include "keystore.h"
 #include "main.h"
+#include "script/interpreter.h"
+#include "script/interpreter_core.h"
 #include "script/script.h"
 #include "script/sign.h"
 #include "core_io.h"

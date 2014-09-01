@@ -13,6 +13,8 @@
 #include "init.h"
 #include "net.h"
 #include "pow.h"
+#include "script/interpreter.h"
+#include "script/interpreter_core.h"
 #include "txdb.h"
 #include "txmempool.h"
 #include "ui_interface.h"

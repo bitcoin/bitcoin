@@ -8,6 +8,8 @@
 #include "core.h"
 #include "main.h"         // for MAX_BLOCK_SIZE
 #include "keystore.h"
+#include "script/interpreter.h"
+#include "script/interpreter_core.h"
 #include "script/script.h"
 #include "script/sign.h"
 #include "ui_interface.h" // for _(...)
