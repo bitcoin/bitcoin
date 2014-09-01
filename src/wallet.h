@@ -64,13 +64,15 @@ public:
     CKeyPool();
     CKeyPool(const CPubKey& vchPubKeyIn);
 
-    IMPLEMENT_SERIALIZE
-    (
+    IMPLEMENT_SERIALIZE;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
         if (!(nType & SER_GETHASH))
             READWRITE(nVersion);
         READWRITE(nTime);
         READWRITE(vchPubKey);
-    )
+    }
 };
 
 /** Address book data */
@@ -490,16 +492,16 @@ public:
         fMerkleVerified = false;
     }
 
+    IMPLEMENT_SERIALIZE;
 
-    IMPLEMENT_SERIALIZE
-    (
-        nSerSize += SerReadWrite(s, *(CTransaction*)this, nType, nVersion, ser_action);
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+        READWRITE(*(CTransaction*)this);
         nVersion = this->nVersion;
         READWRITE(hashBlock);
         READWRITE(vMerkleBranch);
         READWRITE(nIndex);
-    )
-
+    }
 
     int SetMerkleBranch(const CBlock* pblock=NULL);
 
@@ -513,7 +515,6 @@ public:
     int GetBlocksToMaturity() const;
     bool AcceptToMemoryPool(bool fLimitFree=true, bool fRejectInsaneFee=true);
 };
-
 
 /** A transaction with a bunch of additional info that only the owner cares about.
  * It includes any unrecorded transactions needed to link it back to the block chain.
@@ -604,8 +605,12 @@ public:
         nOrderPos = -1;
     }
 
-    IMPLEMENT_SERIALIZE
-    (
+    IMPLEMENT_SERIALIZE;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+        bool fRead = ser_action.ForRead();
+
         CWalletTx* pthis = const_cast<CWalletTx*>(this);
         if (fRead)
             pthis->Init(NULL);
@@ -621,7 +626,7 @@ public:
                 pthis->mapValue["timesmart"] = strprintf("%u", nTimeSmart);
         }
 
-        nSerSize += SerReadWrite(s, *(CMerkleTx*)this, nType, nVersion,ser_action);
+        READWRITE(*(CMerkleTx*)this);
         std::vector<CMerkleTx> vUnused; // Used to be vtxPrev
         READWRITE(vUnused);
         READWRITE(mapValue);
@@ -640,12 +645,12 @@ public:
             pthis->nTimeSmart = mapValue.count("timesmart") ? (unsigned int)atoi64(pthis->mapValue["timesmart"]) : 0;
         }
 
-        pthis->mapValue.erase("fromaccount");
-        pthis->mapValue.erase("version");
-        pthis->mapValue.erase("spent");
-        pthis->mapValue.erase("n");
-        pthis->mapValue.erase("timesmart");
-    )
+        mapValue.erase("fromaccount");
+        mapValue.erase("version");
+        mapValue.erase("spent");
+        mapValue.erase("n");
+        mapValue.erase("timesmart");
+    }
 
     // make sure balances are recalculated
     void MarkDirty()
@@ -891,15 +896,17 @@ public:
 
     CWalletKey(int64_t nExpires=0);
 
-    IMPLEMENT_SERIALIZE
-    (
+    IMPLEMENT_SERIALIZE;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
         if (!(nType & SER_GETHASH))
             READWRITE(nVersion);
         READWRITE(vchPrivKey);
         READWRITE(nTimeCreated);
         READWRITE(nTimeExpires);
         READWRITE(LIMITED_STRING(strComment, 65536));
-    )
+    }
 };
 
 
@@ -925,12 +932,14 @@ public:
         vchPubKey = CPubKey();
     }
 
-    IMPLEMENT_SERIALIZE
-    (
+    IMPLEMENT_SERIALIZE;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
         if (!(nType & SER_GETHASH))
             READWRITE(nVersion);
         READWRITE(vchPubKey);
-    )
+    }
 };
 
 
@@ -966,8 +975,12 @@ public:
         nEntryNo = 0;
     }
 
-    IMPLEMENT_SERIALIZE
-    (
+    IMPLEMENT_SERIALIZE;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+        bool fRead = ser_action.ForRead();
+
         CAccountingEntry& me = *const_cast<CAccountingEntry*>(this);
         if (!(nType & SER_GETHASH))
             READWRITE(nVersion);
@@ -1007,8 +1020,8 @@ public:
         if (std::string::npos != nSepPos)
             me.strComment.erase(nSepPos);
 
-        me.mapValue.erase("n");
-    )
+        mapValue.erase("n");
+    }
 
 private:
     std::vector<char> _ssExtra;

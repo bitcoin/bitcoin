@@ -24,8 +24,12 @@ public:
     QDateTime date;
     SendCoinsRecipient recipient;
 
-    IMPLEMENT_SERIALIZE
-    (
+    IMPLEMENT_SERIALIZE;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+        bool fRead = ser_action.ForRead();
+
         RecentRequestEntry* pthis = const_cast<RecentRequestEntry*>(this);
 
         unsigned int nDate = date.toTime_t();
@@ -37,8 +41,8 @@ public:
         READWRITE(recipient);
 
         if (fRead)
-            pthis->date = QDateTime::fromTime_t(nDate);
-    )
+            date = QDateTime::fromTime_t(nDate);
+    }
 };
 
 class RecentRequestEntryLessThan

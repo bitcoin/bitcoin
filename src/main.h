@@ -197,10 +197,13 @@ struct CDiskBlockPos
     int nFile;
     unsigned int nPos;
 
-    IMPLEMENT_SERIALIZE(
+    IMPLEMENT_SERIALIZE;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
         READWRITE(VARINT(nFile));
         READWRITE(VARINT(nPos));
-    )
+    }
 
     CDiskBlockPos() {
         SetNull();
@@ -227,10 +230,13 @@ struct CDiskTxPos : public CDiskBlockPos
 {
     unsigned int nTxOffset; // after header
 
-    IMPLEMENT_SERIALIZE(
+    IMPLEMENT_SERIALIZE;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
         READWRITE(*(CDiskBlockPos*)this);
         READWRITE(VARINT(nTxOffset));
-    )
+    }
 
     CDiskTxPos(const CDiskBlockPos &blockIn, unsigned int nTxOffsetIn) : CDiskBlockPos(blockIn.nFile, blockIn.nPos), nTxOffset(nTxOffsetIn) {
     }
@@ -307,9 +313,12 @@ class CBlockUndo
 public:
     std::vector<CTxUndo> vtxundo; // for all but the coinbase
 
-    IMPLEMENT_SERIALIZE(
+    IMPLEMENT_SERIALIZE;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
         READWRITE(vtxundo);
-    )
+    }
 
     bool WriteToDisk(CDiskBlockPos &pos, const uint256 &hashBlock);
     bool ReadFromDisk(const CDiskBlockPos &pos, const uint256 &hashBlock);
@@ -411,7 +420,12 @@ protected:
 public:
 
     // serialization implementation
-    IMPLEMENT_SERIALIZE(
+    IMPLEMENT_SERIALIZE;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+        bool fRead = ser_action.ForRead();
+
         READWRITE(nTransactions);
         READWRITE(vHash);
         std::vector<unsigned char> vBytes;
@@ -428,7 +442,7 @@ public:
                 vBytes[p / 8] |= vBits[p] << (p % 8);
             READWRITE(vBytes);
         }
-    )
+    }
 
     // Construct a partial merkle tree from a list of transaction id's, and a mask that selects a subset of them
     CPartialMerkleTree(const std::vector<uint256> &vTxid, const std::vector<bool> &vMatch);
@@ -484,7 +498,10 @@ public:
     uint64_t nTimeFirst;         // earliest time of block in file
     uint64_t nTimeLast;          // latest time of block in file
 
-    IMPLEMENT_SERIALIZE(
+    IMPLEMENT_SERIALIZE;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
         READWRITE(VARINT(nBlocks));
         READWRITE(VARINT(nSize));
         READWRITE(VARINT(nUndoSize));
@@ -492,7 +509,7 @@ public:
         READWRITE(VARINT(nHeightLast));
         READWRITE(VARINT(nTimeFirst));
         READWRITE(VARINT(nTimeLast));
-     )
+    }
 
      void SetNull() {
          nBlocks = 0;
@@ -755,8 +772,10 @@ public:
         hashPrev = (pprev ? pprev->GetBlockHash() : 0);
     }
 
-    IMPLEMENT_SERIALIZE
-    (
+    IMPLEMENT_SERIALIZE;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
         if (!(nType & SER_GETHASH))
             READWRITE(VARINT(nVersion));
 
@@ -777,7 +796,7 @@ public:
         READWRITE(nTime);
         READWRITE(nBits);
         READWRITE(nNonce);
-    )
+    }
 
     uint256 GetBlockHash() const
     {
@@ -975,11 +994,13 @@ public:
     // thus the filter will likely be modified.
     CMerkleBlock(const CBlock& block, CBloomFilter& filter);
 
-    IMPLEMENT_SERIALIZE
-    (
+    IMPLEMENT_SERIALIZE;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
         READWRITE(header);
         READWRITE(txn);
-    )
+    }
 };
 
 
