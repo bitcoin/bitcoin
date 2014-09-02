@@ -2131,7 +2131,7 @@ void CNode::AskFor(const CInv& inv)
         mapAlreadyAskedFor.update(it, nRequestTime);
     else
         mapAlreadyAskedFor.insert(std::make_pair(inv, nRequestTime));
-    LogPrint("net", "askfor %s  (%s) peer=%d\n", inv.ToString(), DateTimeStrFormat("%H:%M:%S", nRequestTime/1000000).c_str(), id);
+    LogPrint("tx", "askfor %s  (%s) peer=%d\n", inv.ToString(), DateTimeStrFormat("%H:%M:%S", nRequestTime/1000000).c_str(), id);
     mapAskFor.insert(std::make_pair(nRequestTime, inv));
 }
 
