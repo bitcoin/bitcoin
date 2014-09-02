@@ -12,7 +12,59 @@
 #include "uint256.h"
 #include "util.h"
 
-unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock)
+#include <boost/thread.hpp>
+
+CProof::CProof()
+{
+    SetNull();
+}
+
+CProof::CProof(unsigned int nTime, unsigned int nBits, unsigned int nNonce)
+{
+    this->nTime = nTime;
+    this->nBits = nBits;
+    this->nNonce = nNonce;
+}
+
+void CProof::SetNull()
+{
+    nTime = 0;
+    nBits = 0;
+    nNonce = 0;
+}
+
+bool CProof::IsNull() const
+{
+    return (nBits == 0);
+}
+
+int64_t CProof::GetBlockTime() const
+{
+    return (int64_t)nTime;
+}
+
+void CProof::SetBlockTime(int64_t nTime)
+{
+    this->nTime = nTime;
+}
+
+std::string CProof::ToString() const
+{
+    return strprintf("CProof(nTime=%u, nBits=%08x, nNonce=%u)",
+                     nTime, nBits, nNonce);
+}
+
+std::string CProof::GetChallenge() const
+{
+    return strprintf("%08x", nBits);
+}
+
+std::string CProof::GetSolution() const
+{
+    return strprintf("%08x", nNonce);
+}
+
+unsigned int CProof::GetNextChallenge(const CBlockIndex* pindexLast) const
 {
     unsigned int nProofOfWorkLimit = Params().ProofOfWorkLimit().GetCompact();
 
@@ -28,18 +80,18 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
             // Special difficulty rule for testnet:
             // If the new block's timestamp is more than 2* 10 minutes
             // then allow mining of a min-difficulty block.
-            if (pblock->GetBlockTime() > pindexLast->GetBlockTime() + Params().TargetSpacing()*2)
+            if (GetBlockTime() > pindexLast->proof.GetBlockTime() + Params().TargetSpacing()*2)
                 return nProofOfWorkLimit;
             else
             {
                 // Return the last non-special-min-difficulty-rules-block
                 const CBlockIndex* pindex = pindexLast;
-                while (pindex->pprev && pindex->nHeight % Params().Interval() != 0 && pindex->nBits == nProofOfWorkLimit)
+                while (pindex->pprev && pindex->nHeight % Params().Interval() != 0 && pindex->proof.nBits == nProofOfWorkLimit)
                     pindex = pindex->pprev;
-                return pindex->nBits;
+                return pindex->proof.nBits;
             }
         }
-        return pindexLast->nBits;
+        return pindexLast->proof.nBits;
     }
 
     // Go back by what we want to be 14 days worth of blocks
@@ -59,7 +111,7 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
     // Retarget
     uint256 bnNew;
     uint256 bnOld;
-    bnNew.SetCompact(pindexLast->nBits);
+    bnNew.SetCompact(pindexLast->proof.nBits);
     bnOld = bnNew;
     bnNew *= nActualTimespan;
     bnNew /= Params().TargetTimespan();
@@ -70,13 +122,14 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
     /// debug print
     LogPrintf("GetNextWorkRequired RETARGET\n");
     LogPrintf("Params().TargetTimespan() = %d    nActualTimespan = %d\n", Params().TargetTimespan(), nActualTimespan);
-    LogPrintf("Before: %08x  %s\n", pindexLast->nBits, bnOld.ToString());
+    LogPrintf("Before: %08x  %s\n", pindexLast->proof.nBits, bnOld.ToString());
     LogPrintf("After:  %08x  %s\n", bnNew.GetCompact(), bnNew.ToString());
 
     return bnNew.GetCompact();
 }
 
-bool CheckProofOfWork(uint256 hash, unsigned int nBits)
+/** Check whether a block hash satisfies the proof-of-work requirement specified by nBits */
+bool CProof::CheckSolution(const uint256 hash) const
 {
     bool fNegative;
     bool fOverflow;
@@ -85,21 +138,23 @@ bool CheckProofOfWork(uint256 hash, unsigned int nBits)
 
     // Check range
     if (fNegative || bnTarget == 0 || fOverflow || bnTarget > Params().ProofOfWorkLimit())
-        return error("CheckProofOfWork() : nBits below minimum work");
+        return error("CProof::CheckSolution() : nBits below minimum work");
 
     // Check proof of work matches claimed amount
     if (hash > bnTarget)
-        return error("CheckProofOfWork() : hash doesn't match nBits");
+        return error("CProof::CheckSolution() : hash doesn't match nBits");
 
     return true;
 }
 
+// Check the work is more than the minimum a received block needs, without knowing its direct parent */
 //
 // true if nBits is greater than the minimum amount of work that could
-// possibly be required deltaTime after minimum work required was nBase
+// possibly be required deltaTime after minimum work required was checkpoint.nBits
 //
-bool CheckMinWork(unsigned int nBits, unsigned int nBase, int64_t deltaTime)
+bool CProof::CheckMinChallenge(const CProof& checkpoint) const
 {
+    int64_t deltaTime = GetBlockTime() - checkpoint.GetBlockTime();
     bool fOverflow = false;
     uint256 bnNewBlock;
     bnNewBlock.SetCompact(nBits, NULL, &fOverflow);
@@ -113,7 +168,7 @@ bool CheckMinWork(unsigned int nBits, unsigned int nBase, int64_t deltaTime)
         return bnNewBlock <= bnLimit;
 
     uint256 bnResult;
-    bnResult.SetCompact(nBase);
+    bnResult.SetCompact(checkpoint.nBits);
     while (deltaTime > 0 && bnResult < bnLimit)
     {
         // Maximum 400% adjustment...
@@ -127,16 +182,31 @@ bool CheckMinWork(unsigned int nBits, unsigned int nBase, int64_t deltaTime)
     return bnNewBlock <= bnResult;
 }
 
-void UpdateTime(CBlockHeader* pblock, const CBlockIndex* pindexPrev)
+void CProof::UpdateTime(const CBlockIndex* pindexPrev)
 {
-    pblock->nTime = std::max(pindexPrev->GetMedianTimePast()+1, GetAdjustedTime());
+    nTime = std::max(pindexPrev->GetMedianTimePast()+1, GetAdjustedTime());
 
     // Updating time can change work required on testnet:
     if (Params().AllowMinDifficultyBlocks())
-        pblock->nBits = GetNextWorkRequired(pindexPrev, pblock);
+        nBits = GetNextChallenge(pindexPrev);
 }
 
-uint256 GetProofIncrement(unsigned int nBits)
+void CProof::ResetChallenge(const CBlockIndex* pindexPrev)
+{
+    nBits = GetNextChallenge(pindexPrev);
+}
+
+bool CProof::CheckChallenge(const CBlockIndex* pindexPrev) const
+{
+    return nBits == GetNextChallenge(pindexPrev);
+}
+
+void CProof::ResetSolution()
+{
+    nNonce = 0;
+}
+
+uint256 CProof::GetProofIncrement() const
 {
     uint256 bnTarget;
     bool fNegative;
@@ -149,4 +219,115 @@ uint256 GetProofIncrement(unsigned int nBits)
     // as bnTarget+1, it is equal to ((2**256 - bnTarget - 1) / (bnTarget+1)) + 1,
     // or ~bnTarget / (nTarget+1) + 1.
     return (~bnTarget / (bnTarget + 1)) + 1;
+}
+
+// Global variables for the hashmeter
+double dHashesPerSec = 0.0;
+int64_t nHPSTimerStart = 0;
+uint32_t nOldNonce = 0;
+
+// GenerateSolution scans nonces looking for a hash with at least some zero bits.
+// The nonce is usually preserved between calls
+bool CProof::GenerateSolution(CBlockHeader* pblock)
+{
+    uint256 hash;
+
+    // Write the first 76 bytes of the block header to a double-SHA256 state.
+    CHash256 hasher;
+    CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
+    ss << *pblock;
+    assert(ss.size() == 80);
+    hasher.Write((unsigned char*)&ss[0], 76);
+
+    bool toReturn = false;
+    while (true) {
+        nNonce++;
+
+        // Write the last 4 bytes of the block header (the nonce) to a copy of
+        // the double-SHA256 state, and compute the result.
+        CHash256(hasher).Write((unsigned char*)&nNonce, 4).Finalize((unsigned char*)&hash);
+
+        // Check if the hash has at least some zero bits,
+        if (((uint16_t*)&hash)[15] == 0) {
+            // then check if it has enough to reach the target
+            uint256 hashTarget = uint256().SetCompact(nBits);
+            if (hash <= hashTarget) {
+                assert(hash == pblock->GetHash());
+                LogPrintf("hash: %s  \ntarget: %s\n", hash.GetHex(), hashTarget.GetHex());
+                toReturn = true;
+                break;
+            }
+        }
+
+        // If nothing found after trying for a while, return false
+        if ((nNonce & 0xffff) == 0)
+            break;
+        if ((nNonce & 0xfff) == 0)
+            boost::this_thread::interruption_point();
+    }
+
+    uint32_t nHashesDone = nNonce - nOldNonce;
+    nOldNonce = nNonce;
+
+    // Meter hashes/sec
+    static int64_t nHashCounter;
+    if (nHPSTimerStart == 0) {
+        nHPSTimerStart = GetTimeMillis();
+        nHashCounter = 0;
+    }
+    else
+        nHashCounter += nHashesDone;
+    if (GetTimeMillis() - nHPSTimerStart > 4000) {
+        static CCriticalSection cs;
+        {
+            LOCK(cs);
+            if (GetTimeMillis() - nHPSTimerStart > 4000) {
+                dHashesPerSec = 1000.0 * nHashCounter / (GetTimeMillis() - nHPSTimerStart);
+                nHPSTimerStart = GetTimeMillis();
+                nHashCounter = 0;
+                static int64_t nLogTime;
+                if (GetTime() - nLogTime > 30 * 60) {
+                    nLogTime = GetTime();
+                    LogPrintf("hashmeter %6.0f khash/s\n", dHashesPerSec/1000.0);
+                }
+            }
+        }
+    }
+    return toReturn;
+}
+
+unsigned int CProof::GetChallengeUint() const
+{
+    return nBits;
+}
+
+std::string CProof::GetChallengeHex() const
+{
+    return uint256().SetCompact(nBits).GetHex();
+}
+
+uint64_t CProof::GetSolutionInt64() const
+{
+    return (uint64_t)nNonce;
+}
+
+double CProof::GetChallengeDouble() const
+{
+    double dDiff = (double)0x0000ffff / (double)(nBits & 0x00ffffff);
+    int nShift = (nBits >> 24) & 0xff;
+
+    while (nShift < 29) {
+        dDiff *= 256.0;
+        nShift++;
+    }
+    while (nShift > 29) {
+        dDiff /= 256.0;
+        nShift--;
+    }
+    return dDiff;
+}
+
+void CProof::SetSolutionUint(unsigned int solution)
+{
+    nNonce = solution;
 }

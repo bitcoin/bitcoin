@@ -9,7 +9,6 @@
 #include "net.h"
 #include "main.h"
 #include "miner.h"
-#include "pow.h"
 #include "core_io.h"
 #include "util.h"
 #ifdef ENABLE_WALLET
@@ -458,8 +457,8 @@ Value getblocktemplate(const Array& params, bool fHelp)
     CBlock* pblock = &pblocktemplate->block; // pointer for convenience
 
     // Update nTime
-    UpdateTime(pblock, pindexPrev);
-    pblock->nNonce = 0;
+    pblock->proof.UpdateTime(pindexPrev);
+    pblock->proof.ResetSolution();
 
     Array transactions;
     map<uint256, int64_t> setTxIndex;
@@ -496,8 +495,6 @@ Value getblocktemplate(const Array& params, bool fHelp)
     Object aux;
     aux.push_back(Pair("flags", HexStr(COINBASE_FLAGS.begin(), COINBASE_FLAGS.end())));
 
-    uint256 hashTarget = uint256().SetCompact(pblock->nBits);
-
     static Array aMutable;
     if (aMutable.empty())
     {
@@ -513,14 +510,14 @@ Value getblocktemplate(const Array& params, bool fHelp)
     result.push_back(Pair("coinbaseaux", aux));
     result.push_back(Pair("coinbasevalue", (int64_t)pblock->vtx[0].vout[0].nValue));
     result.push_back(Pair("longpollid", chainActive.Tip()->GetBlockHash().GetHex() + i64tostr(nTransactionsUpdatedLast)));
-    result.push_back(Pair("target", hashTarget.GetHex()));
+    result.push_back(Pair("target", pblock->proof.GetChallengeHex()));
     result.push_back(Pair("mintime", (int64_t)pindexPrev->GetMedianTimePast()+1));
     result.push_back(Pair("mutable", aMutable));
     result.push_back(Pair("noncerange", "00000000ffffffff"));
     result.push_back(Pair("sigoplimit", (int64_t)MAX_BLOCK_SIGOPS));
     result.push_back(Pair("sizelimit", (int64_t)MAX_BLOCK_SIZE));
     result.push_back(Pair("curtime", pblock->GetBlockTime()));
-    result.push_back(Pair("bits", strprintf("%08x", pblock->nBits)));
+    result.push_back(Pair("bits", pblock->proof.GetChallenge()));
     result.push_back(Pair("height", (int64_t)(pindexPrev->nHeight+1)));
 
     return result;

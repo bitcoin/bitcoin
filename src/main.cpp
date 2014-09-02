@@ -12,7 +12,6 @@
 #include "checkqueue.h"
 #include "init.h"
 #include "net.h"
-#include "pow.h"
 #include "txdb.h"
 #include "txmempool.h"
 #include "ui_interface.h"
@@ -1096,7 +1095,7 @@ bool ReadBlockFromDisk(CBlock& block, const CDiskBlockPos& pos)
     }
 
     // Check the header
-    if (!CheckProofOfWork(block.GetHash(), block.nBits))
+    if (!block.CheckProof())
         return error("ReadBlockFromDisk : Errors in block header");
 
     return true;
@@ -2223,7 +2222,7 @@ bool FindUndoPos(CValidationState &state, int nFile, CDiskBlockPos &pos, unsigne
 bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state, bool fCheckPOW)
 {
     // Check proof of work matches claimed amount
-    if (fCheckPOW && !CheckProofOfWork(block.GetHash(), block.nBits))
+    if (fCheckPOW && !block.CheckProof())
         return state.DoS(50, error("CheckBlockHeader() : proof of work failed"),
                          REJECT_INVALID, "high-hash");
 
@@ -2312,7 +2311,7 @@ bool AcceptBlockHeader(CBlockHeader& block, CValidationState& state, CBlockIndex
             return state.DoS(100, error("CheckBlockHeader() : block with timestamp before last checkpoint"),
                              REJECT_CHECKPOINT, "time-too-old");
         }
-        if (!CheckMinWork(block.nBits, pcheckpoint->nBits, deltaTime))
+        if (!block.proof.CheckMinChallenge(pcheckpoint->proof))
         {
             return state.DoS(100, error("CheckBlockHeader() : block with too little proof-of-work"),
                              REJECT_INVALID, "bad-diffbits");
@@ -2330,7 +2329,7 @@ bool AcceptBlockHeader(CBlockHeader& block, CValidationState& state, CBlockIndex
         nHeight = pindexPrev->nHeight+1;
 
         // Check proof of work
-        if (block.nBits != GetNextWorkRequired(pindexPrev, &block))
+        if (!block.proof.CheckChallenge(pindexPrev))
             return state.DoS(100, error("AcceptBlock() : incorrect proof of work"),
                              REJECT_INVALID, "bad-diffbits");
 

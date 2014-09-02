@@ -147,14 +147,12 @@ libbitcoin_server_a_SOURCES = \
   miner.cpp \
   net.cpp \
   noui.cpp \
-  pow.cpp \
   rpcblockchain.cpp \
   rpcmining.cpp \
   rpcmisc.cpp \
   rpcnet.cpp \
   rpcrawtransaction.cpp \
   rpcserver.cpp \
-  timedata.cpp \
   txdb.cpp \
   txmempool.cpp \
   $(JSON_H) \
@@ -205,8 +203,10 @@ libbitcoin_common_a_SOURCES = \
   key.cpp \
   keystore.cpp \
   netbase.cpp \
+  pow.cpp \
   protocol.cpp \
   script.cpp \
+  timedata.cpp \
   $(BITCOIN_CORE_H)
 
 # util: shared between all executables.

@@ -67,7 +67,8 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     {
         CBlock *pblock = &pblocktemplate->block; // pointer for convenience
         pblock->nVersion = 1;
-        pblock->nTime = chainActive.Tip()->GetMedianTimePast()+1;
+        pblock->proof.SetBlockTime(chainActive.Tip()->GetMedianTimePast()+1);
+        pblock->proof.SetSolutionUint(blockinfo[i].nonce);
         CMutableTransaction txCoinbase(pblock->vtx[0]);
         txCoinbase.vin[0].scriptSig = CScript();
         txCoinbase.vin[0].scriptSig.push_back(blockinfo[i].extranonce);
@@ -77,7 +78,6 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
         if (txFirst.size() < 2)
             txFirst.push_back(new CTransaction(pblock->vtx[0]));
         pblock->hashMerkleRoot = pblock->BuildMerkleTree();
-        pblock->nNonce = blockinfo[i].nonce;
         CValidationState state;
         BOOST_CHECK(ProcessBlock(state, NULL, pblock));
         BOOST_CHECK(state.IsValid());

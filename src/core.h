@@ -6,6 +6,7 @@
 #ifndef BITCOIN_CORE_H
 #define BITCOIN_CORE_H
 
+#include "pow.h"
 #include "script.h"
 #include "serialize.h"
 #include "uint256.h"
@@ -434,9 +435,7 @@ public:
     int32_t nVersion;
     uint256 hashPrevBlock;
     uint256 hashMerkleRoot;
-    uint32_t nTime;
-    uint32_t nBits;
-    uint32_t nNonce;
+    CProof proof;
 
     CBlockHeader()
     {
@@ -451,9 +450,7 @@ public:
         nVersion = this->nVersion;
         READWRITE(hashPrevBlock);
         READWRITE(hashMerkleRoot);
-        READWRITE(nTime);
-        READWRITE(nBits);
-        READWRITE(nNonce);
+        READWRITE(proof);
     }
 
     void SetNull()
@@ -461,21 +458,24 @@ public:
         nVersion = CBlockHeader::CURRENT_VERSION;
         hashPrevBlock = 0;
         hashMerkleRoot = 0;
-        nTime = 0;
-        nBits = 0;
-        nNonce = 0;
+        proof.SetNull();
     }
 
     bool IsNull() const
     {
-        return (nBits == 0);
+        return proof.IsNull();
     }
 
     uint256 GetHash() const;
 
     int64_t GetBlockTime() const
     {
-        return (int64_t)nTime;
+        return proof.GetBlockTime();
+    }
+
+    bool CheckProof() const
+    {
+        return proof.CheckSolution(GetHash());
     }
 };
 
@@ -521,9 +521,7 @@ public:
         block.nVersion       = nVersion;
         block.hashPrevBlock  = hashPrevBlock;
         block.hashMerkleRoot = hashMerkleRoot;
-        block.nTime          = nTime;
-        block.nBits          = nBits;
-        block.nNonce         = nNonce;
+        block.proof          = proof;
         return block;
     }
 

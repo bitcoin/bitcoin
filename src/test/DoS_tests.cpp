@@ -11,7 +11,6 @@
 #include "keystore.h"
 #include "main.h"
 #include "net.h"
-#include "pow.h"
 #include "script.h"
 #include "serialize.h"
 #include "util.h"
@@ -105,9 +104,10 @@ static bool CheckNBits(unsigned int nbits1, int64_t time1, unsigned int nbits2, 
 {
     if (time1 > time2)
         return CheckNBits(nbits2, time2, nbits1, time1);
-    int64_t deltaTime = time2-time1;
 
-    return CheckMinWork(nbits2, nbits1, deltaTime);
+    CProof proof1 = CProof(time1, nbits1, 0);
+    CProof proof2 = CProof(time2, nbits2, 0);
+    return proof2.CheckMinChallenge(proof1);
 }
 
 BOOST_AUTO_TEST_CASE(DoS_checknbits)

@@ -307,9 +307,9 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
 
         // Fill in header
         pblock->hashPrevBlock  = pindexPrev->GetBlockHash();
-        UpdateTime(pblock, pindexPrev);
-        pblock->nBits          = GetNextWorkRequired(pindexPrev, pblock);
-        pblock->nNonce         = 0;
+        pblock->proof.UpdateTime(pindexPrev);
+        pblock->proof.ResetChallenge(pindexPrev);
+        pblock->proof.ResetSolution();
         pblocktemplate->vTxSigOps[0] = GetLegacySigOpCount(pblock->vtx[0]);
 
         CBlockIndex indexDummy(*pblock);
@@ -348,43 +348,6 @@ void IncrementExtraNonce(CBlock* pblock, CBlockIndex* pindexPrev, unsigned int& 
 //
 // Internal miner
 //
-double dHashesPerSec = 0.0;
-int64_t nHPSTimerStart = 0;
-
-//
-// ScanHash scans nonces looking for a hash with at least some zero bits.
-// The nonce is usually preserved between calls, but periodically or if the
-// nonce is 0xffff0000 or above, the block is rebuilt and nNonce starts over at
-// zero.
-//
-bool static ScanHash(const CBlockHeader *pblock, uint32_t& nNonce, uint256 *phash)
-{
-    // Write the first 76 bytes of the block header to a double-SHA256 state.
-    CHash256 hasher;
-    CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
-    ss << *pblock;
-    assert(ss.size() == 80);
-    hasher.Write((unsigned char*)&ss[0], 76);
-
-    while (true) {
-        nNonce++;
-
-        // Write the last 4 bytes of the block header (the nonce) to a copy of
-        // the double-SHA256 state, and compute the result.
-        CHash256(hasher).Write((unsigned char*)&nNonce, 4).Finalize((unsigned char*)phash);
-
-        // Return the nonce if the hash has at least some zero bits,
-        // caller will check if it has enough to reach the target
-        if (((uint16_t*)phash)[15] == 0)
-            return true;
-
-        // If nothing found after trying for a while, return -1
-        if ((nNonce & 0xffff) == 0)
-            return false;
-        if ((nNonce & 0xfff) == 0)
-            boost::this_thread::interruption_point();
-    }
-}
 
 CBlockTemplate* CreateNewBlockWithKey(CReserveKey& reservekey)
 {
@@ -466,65 +429,21 @@ void static BitcoinMiner(CWallet *pwallet)
             // Search
             //
             int64_t nStart = GetTime();
-            uint256 hashTarget = uint256().SetCompact(pblock->nBits);
-            uint256 hash;
-            uint32_t nNonce = 0;
-            uint32_t nOldNonce = 0;
-            while (true) {
-                bool fFound = ScanHash(pblock, nNonce, &hash);
-                uint32_t nHashesDone = nNonce - nOldNonce;
-                nOldNonce = nNonce;
-
+            pblock->proof.ResetSolution();
+            for (int i=0; i < 1000; i++) {
                 // Check if something found
-                if (fFound)
+                if (pblock->proof.GenerateSolution(pblock))
                 {
-                    if (hash <= hashTarget)
-                    {
-                        // Found a solution
-                        pblock->nNonce = nNonce;
-                        assert(hash == pblock->GetHash());
+                    SetThreadPriority(THREAD_PRIORITY_NORMAL);
+                    LogPrintf("BitcoinMiner:\n proof-of-work found\n");
+                    ProcessBlockFound(pblock, *pwallet, reservekey);
+                    SetThreadPriority(THREAD_PRIORITY_LOWEST);
 
-                        SetThreadPriority(THREAD_PRIORITY_NORMAL);
-                        LogPrintf("BitcoinMiner:\n");
-                        LogPrintf("proof-of-work found  \n  hash: %s  \ntarget: %s\n", hash.GetHex(), hashTarget.GetHex());
-                        ProcessBlockFound(pblock, *pwallet, reservekey);
-                        SetThreadPriority(THREAD_PRIORITY_LOWEST);
+                    // In regression test mode, stop mining after a block is found.
+                    if (Params().MineBlocksOnDemand())
+                        throw boost::thread_interrupted();
 
-                        // In regression test mode, stop mining after a block is found.
-                        if (Params().MineBlocksOnDemand())
-                            throw boost::thread_interrupted();
-
-                        break;
-                    }
-                }
-
-                // Meter hashes/sec
-                static int64_t nHashCounter;
-                if (nHPSTimerStart == 0)
-                {
-                    nHPSTimerStart = GetTimeMillis();
-                    nHashCounter = 0;
-                }
-                else
-                    nHashCounter += nHashesDone;
-                if (GetTimeMillis() - nHPSTimerStart > 4000)
-                {
-                    static CCriticalSection cs;
-                    {
-                        LOCK(cs);
-                        if (GetTimeMillis() - nHPSTimerStart > 4000)
-                        {
-                            dHashesPerSec = 1000.0 * nHashCounter / (GetTimeMillis() - nHPSTimerStart);
-                            nHPSTimerStart = GetTimeMillis();
-                            nHashCounter = 0;
-                            static int64_t nLogTime;
-                            if (GetTime() - nLogTime > 30 * 60)
-                            {
-                                nLogTime = GetTime();
-                                LogPrintf("hashmeter %6.0f khash/s\n", dHashesPerSec/1000.0);
-                            }
-                        }
-                    }
+                    break;
                 }
 
                 // Check for stop or if block needs to be rebuilt
@@ -532,20 +451,15 @@ void static BitcoinMiner(CWallet *pwallet)
                 // Regtest mode doesn't require peers
                 if (vNodes.empty() && Params().MiningRequiresPeers())
                     break;
-                if (nNonce >= 0xffff0000)
-                    break;
+                // periodically or after 1000 iterations, 
+                // the block is rebuilt and nNonce starts over at zero.
                 if (mempool.GetTransactionsUpdated() != nTransactionsUpdatedLast && GetTime() - nStart > 60)
                     break;
                 if (pindexPrev != chainActive.Tip())
                     break;
 
                 // Update nTime every few seconds
-                UpdateTime(pblock, pindexPrev);
-                if (Params().AllowMinDifficultyBlocks())
-                {
-                    // Changing pblock->nTime can change work required on testnet:
-                    hashTarget.SetCompact(pblock->nBits);
-                }
+                pblock->proof.UpdateTime(pindexPrev);
             }
         }
     }
