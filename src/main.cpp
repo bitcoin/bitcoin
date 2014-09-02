@@ -4180,6 +4180,29 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         }
     }
 
+
+    else if (strCommand == "notfound")
+    {
+        vector<CInv> vInv;
+        vRecv >> vInv;
+        if (vInv.size() > MAX_INV_SZ)
+        {
+            Misbehaving(pfrom->GetId(), 20);
+            return error("message notfound size() = %u", vInv.size());
+        }
+
+        LOCK(cs_main);
+
+        for (unsigned int nInv = 0; nInv < vInv.size(); nInv++)
+        {
+            const CInv &inv = vInv[nInv];
+
+            boost::this_thread::interruption_point();
+            LogPrint("tx", "notfound: %s from peer=%d\n", inv.ToString(), pfrom->id);
+        }
+    }
+
+
     else
     {
         // Ignore unknown commands for extensibility
