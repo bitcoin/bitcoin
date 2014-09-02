@@ -11,6 +11,8 @@
 #include "utilmoneystr.h"
 #include "base58.h"
 
+#include <boost/foreach.hpp>
+
 using namespace std;
 
 string EncodeHexTx(const CTransaction& tx)
