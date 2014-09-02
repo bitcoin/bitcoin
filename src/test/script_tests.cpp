@@ -2,15 +2,16 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "script.h"
-
 #include "data/script_invalid.json.h"
 #include "data/script_valid.json.h"
 
 #include "key.h"
 #include "keystore.h"
 #include "main.h"
-#include "script.h"
+#include "script/interpreter.h"
+#include "script/interpreter_core.h"
+#include "script/script.h"
+#include "script/sign.h"
 #include "core_io.h"
 
 #include <fstream>
@@ -75,7 +76,7 @@ BOOST_AUTO_TEST_CASE(script_valid)
         CScript scriptPubKey = ParseScript(scriptPubKeyString);
 
         CTransaction tx;
-        BOOST_CHECK_MESSAGE(VerifyScript(scriptSig, scriptPubKey, tx, 0, flags, SIGHASH_NONE), strTest);
+        BOOST_CHECK_MESSAGE(VerifyScript(scriptSig, scriptPubKey, tx, 0, flags), strTest);
     }
 }
 
@@ -99,7 +100,7 @@ BOOST_AUTO_TEST_CASE(script_invalid)
         CScript scriptPubKey = ParseScript(scriptPubKeyString);
 
         CTransaction tx;
-        BOOST_CHECK_MESSAGE(!VerifyScript(scriptSig, scriptPubKey, tx, 0, flags, SIGHASH_NONE), strTest);
+        BOOST_CHECK_MESSAGE(!VerifyScript(scriptSig, scriptPubKey, tx, 0, flags), strTest);
     }
 }
 
@@ -113,18 +114,18 @@ BOOST_AUTO_TEST_CASE(script_PushData)
     static const unsigned char pushdata4[] = { OP_PUSHDATA4, 1, 0, 0, 0, 0x5a };
 
     vector<vector<unsigned char> > directStack;
-    BOOST_CHECK(EvalScript(directStack, CScript(&direct[0], &direct[sizeof(direct)]), CTransaction(), 0, true, 0));
+    BOOST_CHECK(EvalScript(directStack, CScript(&direct[0], &direct[sizeof(direct)]), CTransaction(), 0, true));
 
     vector<vector<unsigned char> > pushdata1Stack;
-    BOOST_CHECK(EvalScript(pushdata1Stack, CScript(&pushdata1[0], &pushdata1[sizeof(pushdata1)]), CTransaction(), 0, true, 0));
+    BOOST_CHECK(EvalScript(pushdata1Stack, CScript(&pushdata1[0], &pushdata1[sizeof(pushdata1)]), CTransaction(), 0, true));
     BOOST_CHECK(pushdata1Stack == directStack);
 
     vector<vector<unsigned char> > pushdata2Stack;
-    BOOST_CHECK(EvalScript(pushdata2Stack, CScript(&pushdata2[0], &pushdata2[sizeof(pushdata2)]), CTransaction(), 0, true, 0));
+    BOOST_CHECK(EvalScript(pushdata2Stack, CScript(&pushdata2[0], &pushdata2[sizeof(pushdata2)]), CTransaction(), 0, true));
     BOOST_CHECK(pushdata2Stack == directStack);
 
     vector<vector<unsigned char> > pushdata4Stack;
-    BOOST_CHECK(EvalScript(pushdata4Stack, CScript(&pushdata4[0], &pushdata4[sizeof(pushdata4)]), CTransaction(), 0, true, 0));
+    BOOST_CHECK(EvalScript(pushdata4Stack, CScript(&pushdata4[0], &pushdata4[sizeof(pushdata4)]), CTransaction(), 0, true));
     BOOST_CHECK(pushdata4Stack == directStack);
 }
 
@@ -182,15 +183,15 @@ BOOST_AUTO_TEST_CASE(script_CHECKMULTISIG12)
     txTo12.vout[0].nValue = 1;
 
     CScript goodsig1 = sign_multisig(scriptPubKey12, key1, txTo12);
-    BOOST_CHECK(VerifyScript(goodsig1, scriptPubKey12, txTo12, 0, flags, 0));
+    BOOST_CHECK(VerifyScript(goodsig1, scriptPubKey12, txTo12, 0, flags));
     txTo12.vout[0].nValue = 2;
-    BOOST_CHECK(!VerifyScript(goodsig1, scriptPubKey12, txTo12, 0, flags, 0));
+    BOOST_CHECK(!VerifyScript(goodsig1, scriptPubKey12, txTo12, 0, flags));
 
     CScript goodsig2 = sign_multisig(scriptPubKey12, key2, txTo12);
-    BOOST_CHECK(VerifyScript(goodsig2, scriptPubKey12, txTo12, 0, flags, 0));
+    BOOST_CHECK(VerifyScript(goodsig2, scriptPubKey12, txTo12, 0, flags));
 
     CScript badsig1 = sign_multisig(scriptPubKey12, key3, txTo12);
-    BOOST_CHECK(!VerifyScript(badsig1, scriptPubKey12, txTo12, 0, flags, 0));
+    BOOST_CHECK(!VerifyScript(badsig1, scriptPubKey12, txTo12, 0, flags));
 }
 
 BOOST_AUTO_TEST_CASE(script_CHECKMULTISIG23)
@@ -218,46 +219,46 @@ BOOST_AUTO_TEST_CASE(script_CHECKMULTISIG23)
     std::vector<CKey> keys;
     keys.push_back(key1); keys.push_back(key2);
     CScript goodsig1 = sign_multisig(scriptPubKey23, keys, txTo23);
-    BOOST_CHECK(VerifyScript(goodsig1, scriptPubKey23, txTo23, 0, flags, 0));
+    BOOST_CHECK(VerifyScript(goodsig1, scriptPubKey23, txTo23, 0, flags));
 
     keys.clear();
     keys.push_back(key1); keys.push_back(key3);
     CScript goodsig2 = sign_multisig(scriptPubKey23, keys, txTo23);
-    BOOST_CHECK(VerifyScript(goodsig2, scriptPubKey23, txTo23, 0, flags, 0));
+    BOOST_CHECK(VerifyScript(goodsig2, scriptPubKey23, txTo23, 0, flags));
 
     keys.clear();
     keys.push_back(key2); keys.push_back(key3);
     CScript goodsig3 = sign_multisig(scriptPubKey23, keys, txTo23);
-    BOOST_CHECK(VerifyScript(goodsig3, scriptPubKey23, txTo23, 0, flags, 0));
+    BOOST_CHECK(VerifyScript(goodsig3, scriptPubKey23, txTo23, 0, flags));
 
     keys.clear();
     keys.push_back(key2); keys.push_back(key2); // Can't re-use sig
     CScript badsig1 = sign_multisig(scriptPubKey23, keys, txTo23);
-    BOOST_CHECK(!VerifyScript(badsig1, scriptPubKey23, txTo23, 0, flags, 0));
+    BOOST_CHECK(!VerifyScript(badsig1, scriptPubKey23, txTo23, 0, flags));
 
     keys.clear();
     keys.push_back(key2); keys.push_back(key1); // sigs must be in correct order
     CScript badsig2 = sign_multisig(scriptPubKey23, keys, txTo23);
-    BOOST_CHECK(!VerifyScript(badsig2, scriptPubKey23, txTo23, 0, flags, 0));
+    BOOST_CHECK(!VerifyScript(badsig2, scriptPubKey23, txTo23, 0, flags));
 
     keys.clear();
     keys.push_back(key3); keys.push_back(key2); // sigs must be in correct order
     CScript badsig3 = sign_multisig(scriptPubKey23, keys, txTo23);
-    BOOST_CHECK(!VerifyScript(badsig3, scriptPubKey23, txTo23, 0, flags, 0));
+    BOOST_CHECK(!VerifyScript(badsig3, scriptPubKey23, txTo23, 0, flags));
 
     keys.clear();
     keys.push_back(key4); keys.push_back(key2); // sigs must match pubkeys
     CScript badsig4 = sign_multisig(scriptPubKey23, keys, txTo23);
-    BOOST_CHECK(!VerifyScript(badsig4, scriptPubKey23, txTo23, 0, flags, 0));
+    BOOST_CHECK(!VerifyScript(badsig4, scriptPubKey23, txTo23, 0, flags));
 
     keys.clear();
     keys.push_back(key1); keys.push_back(key4); // sigs must match pubkeys
     CScript badsig5 = sign_multisig(scriptPubKey23, keys, txTo23);
-    BOOST_CHECK(!VerifyScript(badsig5, scriptPubKey23, txTo23, 0, flags, 0));
+    BOOST_CHECK(!VerifyScript(badsig5, scriptPubKey23, txTo23, 0, flags));
 
     keys.clear(); // Must have signatures
     CScript badsig6 = sign_multisig(scriptPubKey23, keys, txTo23);
-    BOOST_CHECK(!VerifyScript(badsig6, scriptPubKey23, txTo23, 0, flags, 0));
+    BOOST_CHECK(!VerifyScript(badsig6, scriptPubKey23, txTo23, 0, flags));
 }    
 
 BOOST_AUTO_TEST_CASE(script_combineSigs)

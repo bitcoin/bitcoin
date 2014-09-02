@@ -8,7 +8,9 @@
 #include "key.h"
 #include "keystore.h"
 #include "main.h"
-#include "script.h"
+#include "script/interpreter.h"
+#include "script/interpreter_core.h"
+#include "script/script.h"
 #include "core_io.h"
 
 #include <map>
@@ -121,7 +123,7 @@ BOOST_AUTO_TEST_CASE(tx_valid)
 
                 unsigned int verify_flags = ParseFlags(test[2].get_str());
                 BOOST_CHECK_MESSAGE(VerifyScript(tx.vin[i].scriptSig, mapprevOutScriptPubKeys[tx.vin[i].prevout],
-                                                 tx, i, verify_flags, 0),
+                                                 tx, i, verify_flags),
                                     strTest);
             }
         }
@@ -194,7 +196,7 @@ BOOST_AUTO_TEST_CASE(tx_invalid)
 
                 unsigned int verify_flags = ParseFlags(test[2].get_str());
                 fValid = VerifyScript(tx.vin[i].scriptSig, mapprevOutScriptPubKeys[tx.vin[i].prevout],
-                                      tx, i, verify_flags, 0);
+                                      tx, i, verify_flags);
             }
 
             BOOST_CHECK_MESSAGE(!fValid, strTest);

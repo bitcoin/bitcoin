@@ -4,12 +4,15 @@
 
 #include "core_io.h"
 #include "univalue/univalue.h"
-#include "script.h"
+#include "script/script.h"
+#include "script/standard.h"
 #include "core.h"
 #include "serialize.h"
 #include "util.h"
 #include "utilmoneystr.h"
 #include "base58.h"
+
+#include <boost/foreach.hpp>
 
 using namespace std;
 

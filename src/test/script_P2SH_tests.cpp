@@ -2,12 +2,14 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "script.h"
-
 #include "key.h"
 #include "keystore.h"
 #include "main.h"
-#include "script.h"
+#include "script/interpreter.h"
+#include "script/interpreter_core.h"
+#include "script/script.h"
+#include "script/sign.h"
+#include "wallet_ismine.h"
 
 #include <vector>
 
@@ -39,7 +41,7 @@ Verify(const CScript& scriptSig, const CScript& scriptPubKey, bool fStrict)
     txTo.vin[0].scriptSig = scriptSig;
     txTo.vout[0].nValue = 1;
 
-    return VerifyScript(scriptSig, scriptPubKey, txTo, 0, fStrict ? SCRIPT_VERIFY_P2SH : SCRIPT_VERIFY_NONE, 0);
+    return VerifyScript(scriptSig, scriptPubKey, txTo, 0, fStrict ? SCRIPT_VERIFY_P2SH : SCRIPT_VERIFY_NONE);
 }
 
 
@@ -95,7 +97,9 @@ BOOST_AUTO_TEST_CASE(sign)
         txTo[i].vin[0].prevout.n = i;
         txTo[i].vin[0].prevout.hash = txFrom.GetHash();
         txTo[i].vout[0].nValue = 1;
+#ifdef ENABLE_WALLET
         BOOST_CHECK_MESSAGE(IsMine(keystore, txFrom.vout[i].scriptPubKey), strprintf("IsMine %d", i));
+#endif
     }
     for (int i = 0; i < 8; i++)
     {
@@ -108,7 +112,7 @@ BOOST_AUTO_TEST_CASE(sign)
         {
             CScript sigSave = txTo[i].vin[0].scriptSig;
             txTo[i].vin[0].scriptSig = txTo[j].vin[0].scriptSig;
-            bool sigOK = VerifySignature(CCoins(txFrom, 0), txTo[i], 0, SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_STRICTENC, 0);
+            bool sigOK = CScriptCheck(CCoins(txFrom, 0), txTo[i], 0, SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_STRICTENC)();
             if (i == j)
                 BOOST_CHECK_MESSAGE(sigOK, strprintf("VerifySignature %d %d", i, j));
             else
@@ -189,7 +193,9 @@ BOOST_AUTO_TEST_CASE(set)
         txTo[i].vin[0].prevout.hash = txFrom.GetHash();
         txTo[i].vout[0].nValue = 1*CENT;
         txTo[i].vout[0].scriptPubKey = inner[i];
+#ifdef ENABLE_WALLET
         BOOST_CHECK_MESSAGE(IsMine(keystore, txFrom.vout[i].scriptPubKey), strprintf("IsMine %d", i));
+#endif
     }
     for (int i = 0; i < 4; i++)
     {

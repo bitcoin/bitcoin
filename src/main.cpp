@@ -13,6 +13,8 @@
 #include "init.h"
 #include "net.h"
 #include "pow.h"
+#include "script/interpreter.h"
+#include "script/interpreter_core.h"
 #include "txdb.h"
 #include "txmempool.h"
 #include "ui_interface.h"
@@ -670,7 +672,7 @@ bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
         // IsStandard() will have already returned false
         // and this method isn't called.
         vector<vector<unsigned char> > stack;
-        if (!EvalScript(stack, tx.vin[i].scriptSig, tx, i, false, 0))
+        if (!EvalScript(stack, tx.vin[i].scriptSig, tx, i, false))
             return false;
 
         if (whichType == TX_SCRIPTHASH)
@@ -1340,14 +1342,9 @@ void UpdateCoins(const CTransaction& tx, CValidationState &state, CCoinsViewCach
 
 bool CScriptCheck::operator()() const {
     const CScript &scriptSig = ptxTo->vin[nIn].scriptSig;
-    if (!VerifyScript(scriptSig, scriptPubKey, *ptxTo, nIn, nFlags, nHashType))
+    if (!VerifyScript(scriptSig, scriptPubKey, *ptxTo, nIn, nFlags))
         return error("CScriptCheck() : %s VerifySignature failed", ptxTo->GetHash().ToString());
     return true;
-}
-
-bool VerifySignature(const CCoins& txFrom, const CTransaction& txTo, unsigned int nIn, unsigned int flags, int nHashType)
-{
-    return CScriptCheck(txFrom, txTo, nIn, flags, nHashType)();
 }
 
 bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsViewCache &inputs, bool fScriptChecks, unsigned int flags, std::vector<CScriptCheck> *pvChecks)
@@ -1416,7 +1413,7 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
                 const CCoins &coins = inputs.GetCoins(prevout.hash);
 
                 // Verify signature
-                CScriptCheck check(coins, tx, i, flags, 0);
+                CScriptCheck check(coins, tx, i, flags);
                 if (pvChecks) {
                     pvChecks->push_back(CScriptCheck());
                     check.swap(pvChecks->back());
@@ -1429,7 +1426,7 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
                         // avoid splitting the network between upgraded and
                         // non-upgraded nodes.
                         CScriptCheck check(coins, tx, i,
-                                flags & ~STANDARD_NOT_MANDATORY_VERIFY_FLAGS, 0);
+                                flags & ~STANDARD_NOT_MANDATORY_VERIFY_FLAGS);
                         if (check())
                             return state.Invalid(false, REJECT_NONSTANDARD, "non-mandatory-script-verify-flag");
                     }
