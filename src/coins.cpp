@@ -110,9 +110,13 @@ CCoins &CCoinsViewCache::GetCoins(const uint256 &txid) {
     return it->second;
 }
 
-const CCoins &CCoinsViewCache::GetCoins(const uint256 &txid) const {
-    /* Avoid redundant implementation with the const-cast.  */
-    return const_cast<CCoinsViewCache*>(this)->GetCoins(txid);
+const CCoins* CCoinsViewCache::AccessCoins(const uint256 &txid) const {
+    CCoinsMap::const_iterator it = FetchCoins(txid);
+    if (it == cacheCoins.end()) {
+        return NULL;
+    } else {
+        return &it->second;
+    }
 }
 
 bool CCoinsViewCache::SetCoins(const uint256 &txid, const CCoins &coins) {
@@ -162,9 +166,9 @@ unsigned int CCoinsViewCache::GetCacheSize() const {
 
 const CTxOut &CCoinsViewCache::GetOutputFor(const CTxIn& input) const
 {
-    const CCoins &coins = GetCoins(input.prevout.hash);
-    assert(coins.IsAvailable(input.prevout.n));
-    return coins.vout[input.prevout.n];
+    const CCoins* coins = AccessCoins(input.prevout.hash);
+    assert(coins && coins->IsAvailable(input.prevout.n));
+    return coins->vout[input.prevout.n];
 }
 
 int64_t CCoinsViewCache::GetValueIn(const CTransaction& tx) const
@@ -182,19 +186,12 @@ int64_t CCoinsViewCache::GetValueIn(const CTransaction& tx) const
 bool CCoinsViewCache::HaveInputs(const CTransaction& tx) const
 {
     if (!tx.IsCoinBase()) {
-        // first check whether information about the prevout hash is available
         for (unsigned int i = 0; i < tx.vin.size(); i++) {
             const COutPoint &prevout = tx.vin[i].prevout;
-            if (!HaveCoins(prevout.hash))
+            const CCoins* coins = AccessCoins(prevout.hash);
+            if (!coins || !coins->IsAvailable(prevout.n)) {
                 return false;
-        }
-
-        // then check whether the actual outputs are available
-        for (unsigned int i = 0; i < tx.vin.size(); i++) {
-            const COutPoint &prevout = tx.vin[i].prevout;
-            const CCoins &coins = GetCoins(prevout.hash);
-            if (!coins.IsAvailable(prevout.n))
-                return false;
+            }
         }
     }
     return true;
@@ -207,10 +204,11 @@ double CCoinsViewCache::GetPriority(const CTransaction &tx, int nHeight) const
     double dResult = 0.0;
     BOOST_FOREACH(const CTxIn& txin, tx.vin)
     {
-        const CCoins &coins = GetCoins(txin.prevout.hash);
-        if (!coins.IsAvailable(txin.prevout.n)) continue;
-        if (coins.nHeight < nHeight) {
-            dResult += coins.vout[txin.prevout.n].nValue * (nHeight-coins.nHeight);
+        const CCoins* coins = AccessCoins(txin.prevout.hash);
+        assert(coins);
+        if (!coins->IsAvailable(txin.prevout.n)) continue;
+        if (coins->nHeight < nHeight) {
+            dResult += coins->vout[txin.prevout.n].nValue * (nHeight-coins->nHeight);
         }
     }
     return tx.ComputePriority(dResult);
