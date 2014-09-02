@@ -382,7 +382,6 @@ bool static ScanHash(CBlockHeader *pblock, uint256 *phash)
                 LogPrintf("hash: %s  \ntarget: %s\n", phash->GetHex(), hashTarget.GetHex());
                 return true;
             }
-            return false;
         }
 
         // If nothing found after trying for a while, return -1
