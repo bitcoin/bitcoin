@@ -618,7 +618,7 @@ void ShrinkDebugFile()
     {
         // Restart the file with some of the end
         std::vector <char> vch(200000,0);
-        fseek(file, -vch.size(), SEEK_END);
+        fseek(file, -((long)vch.size()), SEEK_END);
         int nBytes = fread(begin_ptr(vch), 1, vch.size(), file);
         fclose(file);
 
