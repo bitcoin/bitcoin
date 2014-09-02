@@ -2109,17 +2109,16 @@ CNode::~CNode()
 
 void CNode::AskFor(const CInv& inv)
 {
-    // We're using mapAskFor as a priority queue,
-    // the key is the earliest time the request can be sent
+    if (toAskFor.size() > ASKFOR_MAX_SZ)
+        return;
     int64_t nRequestTime;
     limitedmap<CInv, int64_t>::const_iterator it = mapAlreadyAskedFor.find(inv);
     if (it != mapAlreadyAskedFor.end())
         nRequestTime = it->second;
     else
         nRequestTime = 0;
-    LogPrint("net", "askfor %s  %d (%s) peer=%d\n", inv.ToString(), nRequestTime, DateTimeStrFormat("%H:%M:%S", nRequestTime/1000000).c_str(), id);
 
-    // Make sure not to reuse time indexes to keep things in the same order
+    // Make sure that request timestamps are in monotonically increasing order
     int64_t nNow = GetTimeMicros() - 1000000;
     static int64_t nLastTime;
     ++nLastTime;
@@ -2128,11 +2127,15 @@ void CNode::AskFor(const CInv& inv)
 
     // Each retry is 2 minutes after the last
     nRequestTime = std::max(nRequestTime + 2 * 60 * 1000000, nNow);
+    LogPrint("net", "askfor %s  %d (%s) peer=%d\n", inv.ToString(), nRequestTime, DateTimeStrFormat("%H:%M:%S", nRequestTime/1000000).c_str(), id);
     if (it != mapAlreadyAskedFor.end())
         mapAlreadyAskedFor.update(it, nRequestTime);
     else
         mapAlreadyAskedFor.insert(std::make_pair(inv, nRequestTime));
-    mapAskFor.insert(std::make_pair(nRequestTime, inv));
+    // We're using toAskFor as an event queue,
+    // .first is the earliest time the request can be sent
+    // .second is the inventory item to request
+    toAskFor.push_back(std::make_pair(nRequestTime, inv));
 }
 
 void CNode::BeginMessage(const char* pszCommand) EXCLUSIVE_LOCK_FUNCTION(cs_vSend)
