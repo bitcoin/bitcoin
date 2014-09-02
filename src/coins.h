@@ -344,11 +344,13 @@ public:
     bool SetBestBlock(const uint256 &hashBlock);
     bool BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock);
 
+    // Return a pointer to CCoins in the cache, or NULL if not found. This is
+    // more efficient than GetCoins. Modifications to other cache entries are
+    // allowed while accessing the returned pointer.
+    const CCoins* AccessCoins(const uint256 &txid) const;
+
     // Return a modifiable reference to a CCoins. Check HaveCoins first.
-    // Many methods explicitly require a CCoinsViewCache because of this method, to reduce
-    // copying.
     CCoins &GetCoins(const uint256 &txid);
-    const CCoins &GetCoins(const uint256 &txid) const;
 
     // Push the modifications applied to this cache to its base.
     // Failure to call this method before destruction will cause the changes to be forgotten.
