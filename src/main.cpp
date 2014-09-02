@@ -4418,9 +4418,9 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
         //
         // Message: getdata (non-blocks)
         //
-        while (!pto->fDisconnect && !pto->mapAskFor.empty() && (*pto->mapAskFor.begin()).first <= nNow)
+        while (!pto->fDisconnect && !pto->toAskFor.empty() && (*pto->toAskFor.begin()).first <= nNow)
         {
-            const CInv& inv = (*pto->mapAskFor.begin()).second;
+            const CInv& inv = (*pto->toAskFor.begin()).second;
             if (!AlreadyHave(inv))
             {
                 if (fDebug)
@@ -4432,7 +4432,7 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
                     vGetData.clear();
                 }
             }
-            pto->mapAskFor.erase(pto->mapAskFor.begin());
+            pto->toAskFor.erase(pto->toAskFor.begin());
         }
         if (!vGetData.empty())
             pto->PushMessage("getdata", vGetData);
