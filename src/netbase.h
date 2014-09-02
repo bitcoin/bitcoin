@@ -88,7 +88,7 @@ class CNetAddr
         friend bool operator!=(const CNetAddr& a, const CNetAddr& b);
         friend bool operator<(const CNetAddr& a, const CNetAddr& b);
 
-        IMPLEMENT_SERIALIZE;
+        ADD_SERIALIZE_METHODS;
 
         template <typename Stream, typename Operation>
         inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
@@ -150,7 +150,7 @@ class CService : public CNetAddr
         CService(const struct in6_addr& ipv6Addr, unsigned short port);
         CService(const struct sockaddr_in6& addr);
 
-        IMPLEMENT_SERIALIZE;
+        ADD_SERIALIZE_METHODS;
 
         template <typename Stream, typename Operation>
         inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {

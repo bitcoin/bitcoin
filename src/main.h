@@ -197,7 +197,7 @@ struct CDiskBlockPos
     int nFile;
     unsigned int nPos;
 
-    IMPLEMENT_SERIALIZE;
+    ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
@@ -230,7 +230,7 @@ struct CDiskTxPos : public CDiskBlockPos
 {
     unsigned int nTxOffset; // after header
 
-    IMPLEMENT_SERIALIZE;
+    ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
@@ -313,7 +313,7 @@ class CBlockUndo
 public:
     std::vector<CTxUndo> vtxundo; // for all but the coinbase
 
-    IMPLEMENT_SERIALIZE;
+    ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
@@ -420,7 +420,7 @@ protected:
 public:
 
     // serialization implementation
-    IMPLEMENT_SERIALIZE;
+    ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
@@ -496,7 +496,7 @@ public:
     uint64_t nTimeFirst;         // earliest time of block in file
     uint64_t nTimeLast;          // latest time of block in file
 
-    IMPLEMENT_SERIALIZE;
+    ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
@@ -770,7 +770,7 @@ public:
         hashPrev = (pprev ? pprev->GetBlockHash() : 0);
     }
 
-    IMPLEMENT_SERIALIZE;
+    ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
@@ -992,7 +992,7 @@ public:
     // thus the filter will likely be modified.
     CMerkleBlock(const CBlock& block, CBloomFilter& filter);
 
-    IMPLEMENT_SERIALIZE;
+    ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
