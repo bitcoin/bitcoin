@@ -3,6 +3,9 @@ Expectations for DNS Seed operators
 
 Bitcoin Core attempts to minimize the level of trust in DNS seeds,
 but DNS seeds still pose a small amount of risk for the network.
+As such, DNS seeds must be run by entities which have some minimum
+level of trust within the Bitcoin community.
+
 Other implementations of Bitcoin software may also use the same
 seeds and may be more exposed. In light of this exposure this
 document establishes some basic expectations for the expectations
