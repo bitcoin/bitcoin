@@ -31,7 +31,7 @@ public:
     COutPoint() { SetNull(); }
     COutPoint(uint256 hashIn, uint32_t nIn) { hash = hashIn; n = nIn; }
 
-    IMPLEMENT_SERIALIZE;
+    ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
@@ -91,7 +91,7 @@ public:
     explicit CTxIn(COutPoint prevoutIn, CScript scriptSigIn=CScript(), uint32_t nSequenceIn=std::numeric_limits<unsigned int>::max());
     CTxIn(uint256 hashPrevTx, uint32_t nOut, CScript scriptSigIn=CScript(), uint32_t nSequenceIn=std::numeric_limits<uint32_t>::max());
 
-    IMPLEMENT_SERIALIZE;
+    ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
@@ -145,7 +145,7 @@ public:
     friend bool operator>=(const CFeeRate& a, const CFeeRate& b) { return a.nSatoshisPerK >= b.nSatoshisPerK; }
     std::string ToString() const;
 
-    IMPLEMENT_SERIALIZE;
+    ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
@@ -170,7 +170,7 @@ public:
 
     CTxOut(int64_t nValueIn, CScript scriptPubKeyIn);
 
-    IMPLEMENT_SERIALIZE;
+    ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
@@ -253,18 +253,16 @@ public:
 
     CTransaction& operator=(const CTransaction& tx);
 
-    IMPLEMENT_SERIALIZE;
+    ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
-        bool fRead = ser_action.ForRead();
-
         READWRITE(*const_cast<int32_t*>(&this->nVersion));
         nVersion = this->nVersion;
         READWRITE(*const_cast<std::vector<CTxIn>*>(&vin));
         READWRITE(*const_cast<std::vector<CTxOut>*>(&vout));
         READWRITE(*const_cast<uint32_t*>(&nLockTime));
-        if (fRead)
+        if (ser_action.ForRead())
             UpdateHash();
     }
 
@@ -313,7 +311,7 @@ struct CMutableTransaction
     CMutableTransaction();
     CMutableTransaction(const CTransaction& tx);
 
-    IMPLEMENT_SERIALIZE;
+    ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
@@ -342,12 +340,11 @@ public:
 
     CTxOutCompressor(CTxOut &txoutIn) : txout(txoutIn) { }
 
-    IMPLEMENT_SERIALIZE;
+    ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
-        bool fRead = ser_action.ForRead();
-        if (!fRead) {
+        if (!ser_action.ForRead()) {
             uint64_t nVal = CompressAmount(txout.nValue);
             READWRITE(VARINT(nVal));
         } else {
@@ -410,7 +407,7 @@ public:
     // undo information for all txins
     std::vector<CTxInUndo> vprevout;
 
-    IMPLEMENT_SERIALIZE;
+    ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
@@ -443,7 +440,7 @@ public:
         SetNull();
     }
 
-    IMPLEMENT_SERIALIZE;
+    ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
@@ -500,7 +497,7 @@ public:
         *((CBlockHeader*)this) = header;
     }
 
-    IMPLEMENT_SERIALIZE;
+    ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
@@ -550,7 +547,7 @@ struct CBlockLocator
         vHave = vHaveIn;
     }
 
-    IMPLEMENT_SERIALIZE;
+    ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
