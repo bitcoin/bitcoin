@@ -1151,7 +1151,7 @@ bool AppInit2(boost::thread_group& threadGroup)
             CWalletDB walletdb(strWalletFile);
             CBlockLocator locator;
             if (walletdb.ReadBestBlock(locator))
-                pindexRescan = chainActive.FindFork(locator);
+                pindexRescan = FindForkInGlobalIndex(chainActive, locator);
             else
                 pindexRescan = chainActive.Genesis();
         }
