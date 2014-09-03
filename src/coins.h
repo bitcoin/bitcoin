@@ -271,7 +271,20 @@ public:
     }
 };
 
-typedef boost::unordered_map<uint256, CCoins, CCoinsKeyHasher> CCoinsMap;
+struct CCoinsCacheEntry
+{
+    CCoins coins; // The actual cached data.
+    unsigned char flags;
+
+    enum Flags {
+        DIRTY = (1 << 0), // This cache entry is potentially different from the version in the parent view.
+        FRESH = (1 << 1), // The parent view does not have this entry (or it is pruned).
+    };
+
+    CCoinsCacheEntry() : coins(), flags(0) {}
+};
+
+typedef boost::unordered_map<uint256, CCoinsCacheEntry, CCoinsKeyHasher> CCoinsMap;
 
 struct CCoinsStats
 {
@@ -343,8 +356,8 @@ private:
     CCoinsModifier(CCoinsViewCache& cache_, CCoinsMap::iterator it_);
 
 public:
-    CCoins* operator->() { return &it->second; }
-    CCoins& operator*() { return it->second; }
+    CCoins* operator->() { return &it->second.coins; }
+    CCoins& operator*() { return it->second.coins; }
     ~CCoinsModifier();
     friend class CCoinsViewCache;
 };
