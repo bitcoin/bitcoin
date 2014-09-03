@@ -33,12 +33,6 @@ bool CCoinsViewDB::GetCoins(const uint256 &txid, CCoins &coins) const {
     return db.Read(make_pair('c', txid), coins);
 }
 
-bool CCoinsViewDB::SetCoins(const uint256 &txid, const CCoins &coins) {
-    CLevelDBBatch batch;
-    BatchWriteCoins(batch, txid, coins);
-    return db.WriteBatch(batch);
-}
-
 bool CCoinsViewDB::HaveCoins(const uint256 &txid) const {
     return db.Exists(make_pair('c', txid));
 }
@@ -48,12 +42,6 @@ uint256 CCoinsViewDB::GetBestBlock() const {
     if (!db.Read('B', hashBestChain))
         return uint256(0);
     return hashBestChain;
-}
-
-bool CCoinsViewDB::SetBestBlock(const uint256 &hashBlock) {
-    CLevelDBBatch batch;
-    BatchWriteHashBestChain(batch, hashBlock);
-    return db.WriteBatch(batch);
 }
 
 bool CCoinsViewDB::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock) {

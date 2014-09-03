@@ -1753,9 +1753,7 @@ bool ConnectBlock(CBlock& block, CValidationState& state, CBlockIndex* pindex, C
             return state.Abort(_("Failed to write transaction index"));
 
     // add this block to the view's block chain
-    bool ret;
-    ret = view.SetBestBlock(pindex->GetBlockHash());
-    assert(ret);
+    view.SetBestBlock(pindex->GetBlockHash());
 
     int64_t nTime3 = GetTimeMicros(); nTimeIndex += nTime3 - nTime2;
     LogPrint("bench", "    - Index writing: %.2fms [%.2fs]\n", 0.001 * (nTime3 - nTime2), nTimeIndex * 0.000001);
