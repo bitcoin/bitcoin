@@ -953,12 +953,12 @@ public:
     /** Return a CBlockLocator that refers to a block in this chain (by default the tip). */
     CBlockLocator GetLocator(const CBlockIndex *pindex = NULL) const;
 
-    /** Find the last common block between this chain and a locator. */
-    CBlockIndex *FindFork(const CBlockLocator &locator) const;
-
     /** Find the last common block between this chain and a block index entry. */
     const CBlockIndex *FindFork(const CBlockIndex *pindex) const;
 };
+
+/** Find the last common block between the parameter chain and a locator. */
+CBlockIndex* FindForkInGlobalIndex(const CChain& chain, const CBlockLocator& locator);
 
 /** The currently-connected chain of blocks. */
 extern CChain chainActive;
