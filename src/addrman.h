@@ -46,7 +46,7 @@ private:
 
 public:
 
-    IMPLEMENT_SERIALIZE;
+    ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
@@ -268,7 +268,7 @@ public:
     // This format is more complex, but significantly smaller (at most 1.5 MiB), and supports
     // changes to the ADDRMAN_ parameters without breaking the on-disk structure.
     //
-    // We don't use IMPLEMENT_SERIALIZE since the serialization and deserialization code has
+    // We don't use ADD_SERIALIZE_METHODS since the serialization and deserialization code has
     // very little in common.
     template<typename Stream>
     void Serialize(Stream &s, int nType, int nVersionDummy) const

@@ -24,23 +24,19 @@ public:
     QDateTime date;
     SendCoinsRecipient recipient;
 
-    IMPLEMENT_SERIALIZE;
+    ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
-        bool fRead = ser_action.ForRead();
-
-        RecentRequestEntry* pthis = const_cast<RecentRequestEntry*>(this);
-
         unsigned int nDate = date.toTime_t();
 
-        READWRITE(pthis->nVersion);
-        nVersion = pthis->nVersion;
+        READWRITE(this->nVersion);
+        nVersion = this->nVersion;
         READWRITE(id);
         READWRITE(nDate);
         READWRITE(recipient);
 
-        if (fRead)
+        if (ser_action.ForRead())
             date = QDateTime::fromTime_t(nDate);
     }
 };
