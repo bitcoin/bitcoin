@@ -3976,7 +3976,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <location line="+6"/>
-        <source>Distributed under the MIT/X11 software license, see the accompanying file COPYING or &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</source>
+        <source>Distributed under the Expat software license, see the accompanying file COPYING or &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

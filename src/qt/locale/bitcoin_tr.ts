@@ -3107,8 +3107,8 @@ mesela: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
         <translation>Yeni dosyaları umask 077 yerine varsayılan izinlerle oluştur (sadece devre dışı cüzdan işlevselliği ile etkilidir)</translation>
     </message>
     <message>
-        <source>Distributed under the MIT/X11 software license, see the accompanying file COPYING or &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</source>
-        <translation>MIT/X11 yazılım lisansı kapsamında yayınlanmıştır, ekteki COPYING dosyasına ya da &lt;http://www.opensource.org/licenses/mit-license.php&gt; adresine bakınız.</translation>
+        <source>Distributed under the Expat software license, see the accompanying file COPYING or &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</source>
+        <translation>Expat yazılım lisansı kapsamında yayınlanmıştır, ekteki COPYING dosyasına ya da &lt;http://www.opensource.org/licenses/mit-license.php&gt; adresine bakınız.</translation>
     </message>
     <message>
         <source>Error: Listening for incoming connections failed (listen returned error %s)</source>

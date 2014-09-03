@@ -3108,8 +3108,8 @@ alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com</translation>
         <translation>用系統預設權限來造出新的檔案，而不是用使用者權限罩遮(umask)值 077 (只有在關掉錢包功能時才有作用)。</translation>
     </message>
     <message>
-        <source>Distributed under the MIT/X11 software license, see the accompanying file COPYING or &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</source>
-        <translation>這套軟體是依據 MIT/X11 軟體授權條款散布，詳情請見附帶的 COPYING 檔案，或是以下網站:  &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</translation>
+        <source>Distributed under the Expat software license, see the accompanying file COPYING or &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</source>
+        <translation>這套軟體是依據 Expat 軟體授權條款散布，詳情請見附帶的 COPYING 檔案，或是以下網站:  &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</translation>
     </message>
     <message>
         <source>Error: Listening for incoming connections failed (listen returned error %s)</source>

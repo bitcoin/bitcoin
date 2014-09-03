@@ -3107,8 +3107,8 @@ fx: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
         <translation>Opret nye filer med systemstandard for rettigheder i stedet for umask 077 (kun virksomt med tegnebogsfunktionalitet slået fra)</translation>
     </message>
     <message>
-        <source>Distributed under the MIT/X11 software license, see the accompanying file COPYING or &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</source>
-        <translation>Distribueret under MIT/X11-softwarelicensen. Se medfølgende fil COPYING eller &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</translation>
+        <source>Distributed under the Expat software license, see the accompanying file COPYING or &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</source>
+        <translation>Distribueret under Expat-softwarelicensen. Se medfølgende fil COPYING eller &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</translation>
     </message>
     <message>
         <source>Error: Listening for incoming connections failed (listen returned error %s)</source>

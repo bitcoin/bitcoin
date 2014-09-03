@@ -1,6 +1,6 @@
 #!/bin/sh
 # Copyright (c) 2013 The Bitcoin Core developers
-# Distributed under the MIT/X11 software license, see the accompanying
+# Distributed under the Expat software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #
 # Helper script for pull-tester.

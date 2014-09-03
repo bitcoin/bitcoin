@@ -3106,8 +3106,8 @@ For eksempel: varselmelding=echo %%s | mail -s "Bitcoin Varsel" admin@foo.com</t
         <translation>Opprett nye filer med standardtillatelser i systemet, i stedet for umask 077 (kun virksom med lommebokfunksjonalitet slått av)</translation>
     </message>
     <message>
-        <source>Distributed under the MIT/X11 software license, see the accompanying file COPYING or &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</source>
-        <translation>Distribuert under MIT/X11 programvarelisensen, se medfølgende fil COPYING eller &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</translation>
+        <source>Distributed under the Expat software license, see the accompanying file COPYING or &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</source>
+        <translation>Distribuert under Expat programvarelisensen, se medfølgende fil COPYING eller &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</translation>
     </message>
     <message>
         <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
