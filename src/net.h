@@ -129,7 +129,6 @@ extern CCriticalSection cs_vNodes;
 extern std::map<CInv, CDataStream> mapRelay;
 extern std::deque<std::pair<int64_t, CInv> > vRelayExpiration;
 extern CCriticalSection cs_mapRelay;
-extern limitedmap<CInv, int64_t> mapAlreadyAskedFor;
 
 extern std::vector<std::string> vAddedNodes;
 extern CCriticalSection cs_vAddedNodes;
@@ -293,7 +292,6 @@ public:
     mruset<CInv> setInventoryKnown;
     std::vector<CInv> vInventoryToSend;
     CCriticalSection cs_inventory;
-    std::multimap<int64_t, CInv> mapAskFor;
 
     // Ping time measurement:
     // The pong reply we're expecting, or 0 if no pong expected.
@@ -394,8 +392,6 @@ public:
                 vInventoryToSend.push_back(inv);
         }
     }
-
-    void AskFor(const CInv& inv);
 
     // TODO: Document the postcondition of this function.  Is cs_vSend locked?
     void BeginMessage(const char* pszCommand) EXCLUSIVE_LOCK_FUNCTION(cs_vSend);

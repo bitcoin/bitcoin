@@ -91,6 +91,7 @@ BITCOIN_CORE_H = \
   mruset.h \
   netbase.h \
   net.h \
+  netaskfor.h \
   noui.h \
   pow.h \
   protocol.h \
@@ -151,6 +152,7 @@ libbitcoin_server_a_SOURCES = \
   main.cpp \
   miner.cpp \
   net.cpp \
+  netaskfor.cpp \
   noui.cpp \
   pow.cpp \
   rpcblockchain.cpp \
