@@ -2052,8 +2052,9 @@ bool ActivateBestChain(CValidationState &state, CBlock *pblock) {
             int nBlockEstimate = Checkpoints::GetTotalBlocksEstimate();
             {
             LOCK(cs_vNodes);
-            BOOST_FOREACH(CNode* pnode, vNodes)
-                if (chainActive.Height() > (pnode->nStartingHeight != -1 ? pnode->nStartingHeight - 2000 : nBlockEstimate))
+            BOOST_FOREACH(CNode* pnode, vNodes) {
+                CNodeState *state = State(pnode->id);
+                if (chainActive.Height() > (state->pindexBestKnownBlock ? state->pindexBestKnownBlock->nHeight : nBlockEstimate))
                     pnode->PushInventory(CInv(MSG_BLOCK, hashNewTip));
             }
 
