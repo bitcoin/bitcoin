@@ -1348,22 +1348,18 @@ void static InvalidBlockFound(CBlockIndex *pindex, const CValidationState &state
 
 void UpdateCoins(const CTransaction& tx, CValidationState &state, CCoinsViewCache &inputs, CTxUndo &txundo, int nHeight)
 {
-    bool ret;
     // mark inputs spent
     if (!tx.IsCoinBase()) {
         txundo.vprevout.reserve(tx.vin.size());
-        for (unsigned int i = 0; i < tx.vin.size(); i++) {
-            const CTxIn &txin = tx.vin[i];
-            CCoins &coins = inputs.GetCoins(txin.prevout.hash);
+        BOOST_FOREACH(const CTxIn &txin, tx.vin) {
             txundo.vprevout.push_back(CTxInUndo());
-            ret = coins.Spend(txin.prevout, txundo.vprevout.back());
+            bool ret = inputs.ModifyCoins(txin.prevout.hash)->Spend(txin.prevout, txundo.vprevout.back());
             assert(ret);
         }
     }
 
     // add outputs
-    ret = inputs.SetCoins(tx.GetHash(), CCoins(tx, nHeight));
-    assert(ret);
+    inputs.ModifyCoins(tx.GetHash())->FromTx(tx, nHeight);
 }
 
 bool CScriptCheck::operator()() const {
@@ -1504,21 +1500,23 @@ bool DisconnectBlock(CBlock& block, CValidationState& state, CBlockIndex* pindex
         // exactly. Note that transactions with only provably unspendable outputs won't
         // have outputs available even in the block itself, so we handle that case
         // specially with outsEmpty.
+        {
         CCoins outsEmpty;
-        CCoins &outs = view.HaveCoins(hash) ? view.GetCoins(hash) : outsEmpty;
-        outs.ClearUnspendable();
+        CCoinsModifier outs = view.ModifyCoins(hash);
+        outs->ClearUnspendable();
 
-        CCoins outsBlock = CCoins(tx, pindex->nHeight);
+        CCoins outsBlock(tx, pindex->nHeight);
         // The CCoins serialization does not serialize negative numbers.
         // No network rules currently depend on the version here, so an inconsistency is harmless
         // but it must be corrected before txout nversion ever influences a network rule.
         if (outsBlock.nVersion < 0)
-            outs.nVersion = outsBlock.nVersion;
-        if (outs != outsBlock)
+            outs->nVersion = outsBlock.nVersion;
+        if (*outs != outsBlock)
             fClean = fClean && error("DisconnectBlock() : added transaction mismatch? database corrupted");
 
         // remove outputs
-        outs = CCoins();
+        outs->Clear();
+        }
 
         // restore inputs
         if (i > 0) { // not coinbases
@@ -1528,27 +1526,24 @@ bool DisconnectBlock(CBlock& block, CValidationState& state, CBlockIndex* pindex
             for (unsigned int j = tx.vin.size(); j-- > 0;) {
                 const COutPoint &out = tx.vin[j].prevout;
                 const CTxInUndo &undo = txundo.vprevout[j];
-                CCoins coins;
-                view.GetCoins(out.hash, coins); // this can fail if the prevout was already entirely spent
+                CCoinsModifier coins = view.ModifyCoins(out.hash);
                 if (undo.nHeight != 0) {
                     // undo data contains height: this is the last output of the prevout tx being spent
-                    if (!coins.IsPruned())
+                    if (!coins->IsPruned())
                         fClean = fClean && error("DisconnectBlock() : undo data overwriting existing transaction");
-                    coins = CCoins();
-                    coins.fCoinBase = undo.fCoinBase;
-                    coins.nHeight = undo.nHeight;
-                    coins.nVersion = undo.nVersion;
+                    coins->Clear();
+                    coins->fCoinBase = undo.fCoinBase;
+                    coins->nHeight = undo.nHeight;
+                    coins->nVersion = undo.nVersion;
                 } else {
-                    if (coins.IsPruned())
+                    if (coins->IsPruned())
                         fClean = fClean && error("DisconnectBlock() : undo data adding output to missing transaction");
                 }
-                if (coins.IsAvailable(out.n))
+                if (coins->IsAvailable(out.n))
                     fClean = fClean && error("DisconnectBlock() : undo data overwriting existing output");
-                if (coins.vout.size() < out.n+1)
-                    coins.vout.resize(out.n+1);
-                coins.vout[out.n] = undo.txout;
-                if (!view.SetCoins(out.hash, coins))
-                    return error("DisconnectBlock() : cannot restore coin inputs");
+                if (coins->vout.size() < out.n+1)
+                    coins->vout.resize(out.n+1);
+                coins->vout[out.n] = undo.txout;
             }
         }
     }

@@ -73,7 +73,7 @@ bool CCoinsViewBacked::GetStats(CCoinsStats &stats) const { return base->GetStat
 
 CCoinsKeyHasher::CCoinsKeyHasher() : salt(GetRandHash()) {}
 
-CCoinsViewCache::CCoinsViewCache(CCoinsView &baseIn, bool fDummy) : CCoinsViewBacked(baseIn), hashBlock(0) { }
+CCoinsViewCache::CCoinsViewCache(CCoinsView &baseIn, bool fDummy) : CCoinsViewBacked(baseIn), hasModifier(false), hashBlock(0) { }
 
 bool CCoinsViewCache::GetCoins(const uint256 &txid, CCoins &coins) const {
     if (cacheCoins.count(txid)) {
@@ -87,7 +87,12 @@ bool CCoinsViewCache::GetCoins(const uint256 &txid, CCoins &coins) const {
     return false;
 }
 
-CCoinsMap::iterator CCoinsViewCache::FetchCoins(const uint256 &txid) {
+CCoinsViewCache::~CCoinsViewCache()
+{
+    assert(!hasModifier);
+}
+
+CCoinsMap::const_iterator CCoinsViewCache::FetchCoins(const uint256 &txid) const {
     CCoinsMap::iterator it = cacheCoins.find(txid);
     if (it != cacheCoins.end())
         return it;
@@ -99,15 +104,15 @@ CCoinsMap::iterator CCoinsViewCache::FetchCoins(const uint256 &txid) {
     return ret;
 }
 
-CCoinsMap::const_iterator CCoinsViewCache::FetchCoins(const uint256 &txid) const {
-    /* Avoid redundant implementation with the const-cast.  */
-    return const_cast<CCoinsViewCache*>(this)->FetchCoins(txid);
-}
-
-CCoins &CCoinsViewCache::GetCoins(const uint256 &txid) {
-    CCoinsMap::iterator it = FetchCoins(txid);
-    assert(it != cacheCoins.end());
-    return it->second;
+CCoinsModifier CCoinsViewCache::ModifyCoins(const uint256 &txid) {
+    assert(!hasModifier);
+    hasModifier = true;
+    std::pair<CCoinsMap::iterator, bool> ret = cacheCoins.insert(std::make_pair(txid, CCoins()));
+    if (ret.second) {
+        if (!base->GetCoins(txid, ret.first->second))
+            ret.first->second.Clear();
+    }
+    return CCoinsModifier(*this, ret.first);
 }
 
 const CCoins* CCoinsViewCache::AccessCoins(const uint256 &txid) const {
@@ -145,6 +150,7 @@ bool CCoinsViewCache::SetBestBlock(const uint256 &hashBlockIn) {
 }
 
 bool CCoinsViewCache::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlockIn) {
+    assert(!hasModifier);
     for (CCoinsMap::iterator it = mapCoins.begin(); it != mapCoins.end();) {
         cacheCoins[it->first].swap(it->second);
         CCoinsMap::iterator itOld = it++;
@@ -212,4 +218,12 @@ double CCoinsViewCache::GetPriority(const CTransaction &tx, int nHeight) const
         }
     }
     return tx.ComputePriority(dResult);
+}
+
+CCoinsModifier::CCoinsModifier(CCoinsViewCache& cache_, CCoinsMap::iterator it_) : cache(cache_), it(it_) {}
+
+CCoinsModifier::~CCoinsModifier() {
+    assert(cache.hasModifier);
+    cache.hasModifier = false;
+    it->second.Cleanup();
 }
