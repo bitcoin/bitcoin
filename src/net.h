@@ -83,6 +83,8 @@ struct CNodeSignals
     boost::signals2::signal<bool (CNode*, bool)> SendMessages;
     boost::signals2::signal<void (NodeId, const CNode*)> InitializeNode;
     boost::signals2::signal<void (NodeId)> FinalizeNode;
+    boost::signals2::signal<void (boost::thread_group& threadGroup)> StartThreads;
+    boost::signals2::signal<void ()> StopThreads;
 };
 
 

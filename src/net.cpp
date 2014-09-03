@@ -1776,11 +1776,18 @@ void StartNode(boost::thread_group& threadGroup)
 
     // Dump network addresses
     threadGroup.create_thread(boost::bind(&LoopForever<void (*)()>, "dumpaddr", &DumpAddresses, DUMP_ADDRESSES_INTERVAL * 1000));
+
+    // Start miscellaneous threads
+    g_signals.StartThreads(threadGroup);
 }
 
 bool StopNode()
 {
     LogPrintf("StopNode()\n");
+
+    // Stop miscellaneous threads
+    g_signals.StopThreads();
+
     MapPort(false);
     if (semOutbound)
         for (int i=0; i<MAX_OUTBOUND_CONNECTIONS; i++)
