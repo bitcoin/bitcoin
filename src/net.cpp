@@ -1509,7 +1509,7 @@ void static StartSync(const vector<CNode*> &vNodes) {
         // check preconditions for allowing a sync
         if (!pnode->fClient && !pnode->fOneShot &&
             !pnode->fDisconnect && pnode->fSuccessfullyConnected &&
-            (pnode->nStartingHeight > (nBestHeight - 144)) &&
+            (pnode->nStartingHeight > nBestHeight) &&
             (pnode->nVersion < NOBLKS_VERSION_START || pnode->nVersion >= NOBLKS_VERSION_END)) {
             // if ok, compare node's score with the best so far
             int64_t nScore = NodeSyncScore(pnode);
@@ -1521,8 +1521,9 @@ void static StartSync(const vector<CNode*> &vNodes) {
     }
     // if a new sync candidate was found, start sync!
     if (pnodeNewSync) {
-        pnodeNewSync->fStartSync = true;
         pnodeSync = pnodeNewSync;
+        pnodeSync->fStartSync = true;
+        LogPrint("net", "Setting peer=%d as syncnode.\n", pnodeSync->id);
     }
 }
 
@@ -1539,7 +1540,7 @@ void ThreadMessageHandler()
             vNodesCopy = vNodes;
             BOOST_FOREACH(CNode* pnode, vNodesCopy) {
                 pnode->AddRef();
-                if (pnode == pnodeSync)
+                if (pnode == pnodeSync && (pnode->fStartSync || pnode->tGetblocks))
                     fHaveSyncNode = true;
             }
         }
@@ -2052,6 +2053,12 @@ CNode::CNode(SOCKET hSocketIn, CAddress addrIn, std::string addrNameIn, bool fIn
     nSendBytes = 0;
     nRecvBytes = 0;
     nTimeConnected = GetTime();
+    tGetblocks = 0;
+    tBlockInvs = 0;
+    tGetdataBlock = 0;
+    tBlockRecvStart = 0;
+    tBlockRecving = 0;
+    tBlockRecved = 0;
     addr = addrIn;
     addrName = addrNameIn == "" ? addr.ToStringIPPort() : addrNameIn;
     nVersion = 0;
