@@ -10,11 +10,13 @@
 import json
 import struct
 import re
+import os
 import base64
 import httplib
 import sys
 import hashlib
 import datetime
+import time
 
 settings = {}
 
@@ -58,10 +60,12 @@ def calc_hash_str(blk_hdr):
 	hash_str = hash.encode('hex')
 	return hash_str
 
-def get_blk_year(blk_hdr):
+def get_blk_dt(blk_hdr):
 	members = struct.unpack("<I", blk_hdr[68:68+4])
-	dt = datetime.datetime.fromtimestamp(members[0])
-	return dt.year
+	nTime = members[0]
+	dt = datetime.datetime.fromtimestamp(nTime)
+	dt_ym = datetime.datetime(dt.year, dt.month, 1)
+	return (dt_ym, nTime)
 
 def get_block_hashes(settings):
 	blkindex = []
@@ -86,16 +90,21 @@ def copydata(settings, blkindex, blkset):
 	outFn = 0
 	outsz = 0
 	outF = None
+	outFname = None
 	blkCount = 0
 
-	lastYear = 0
-	splitYear = False
+	lastDate = datetime.datetime(2000, 1, 1)
+	highTS = 1408893517 - 315360000
+	timestampSplit = False
 	fileOutput = True
+	setFileTime = False
 	maxOutSz = settings['max_out_sz']
 	if 'output' in settings:
 		fileOutput = False
-	if settings['split_year'] != 0:
-		splitYear = True
+	if settings['file_timestamp'] != 0:
+		setFileTime = True
+	if settings['split_timestamp'] != 0:
+		timestampSplit = True
 
 	while True:
 		if not inF:
@@ -125,36 +134,49 @@ def copydata(settings, blkindex, blkset):
 			print("Skipping unknown block " + hash_str)
 			continue
 
+		if blkindex[blkCount] != hash_str:
+			print("Out of order block.")
+			print("Expected " + blkindex[blkCount])
+			print("Got " + hash_str)
+			sys.exit(1)
+
 		if not fileOutput and ((outsz + inLen) > maxOutSz):
 			outF.close()
+			if setFileTime:
+				os.utime(outFname, (int(time.time()), highTS))
 			outF = None
+			outFname = None
 			outFn = outFn + 1
 			outsz = 0
 
-		if splitYear:
-			blkYear = get_blk_year(blk_hdr)
-			if blkYear > lastYear:
-				print("New year " + str(blkYear) + " @ " + hash_str)
-				lastYear = blkYear
-				if outF:
-					outF.close()
-					outF = None
-					outFn = outFn + 1
-					outsz = 0
+		(blkDate, blkTS) = get_blk_dt(blk_hdr)
+		if timestampSplit and (blkDate > lastDate):
+			print("New month " + blkDate.strftime("%Y-%m") + " @ " + hash_str)
+			lastDate = blkDate
+			if outF:
+				outF.close()
+				if setFileTime:
+					os.utime(outFname, (int(time.time()), highTS))
+				outF = None
+				outFname = None
+				outFn = outFn + 1
+				outsz = 0
 
 		if not outF:
 			if fileOutput:
-				fname = settings['output_file']
+				outFname = settings['output_file']
 			else:
-				fname = "%s/blk%05d.dat" % (settings['output'], outFn)
-			print("Output file" + fname)
-			outF = open(fname, "wb")
+				outFname = "%s/blk%05d.dat" % (settings['output'], outFn)
+			print("Output file" + outFname)
+			outF = open(outFname, "wb")
 
 		outF.write(inhdr)
 		outF.write(rawblock)
 		outsz = outsz + inLen + 8
 
 		blkCount = blkCount + 1
+		if blkTS > highTS:
+			highTS = blkTS
 
 		if (blkCount % 1000) == 0:
 			print("Wrote " + str(blkCount) + " blocks")
@@ -184,13 +206,16 @@ if __name__ == '__main__':
 		settings['input'] = 'input'
 	if 'hashlist' not in settings:
 		settings['hashlist'] = 'hashlist.txt'
-	if 'split_year' not in settings:
-		settings['split_year'] = 0
+	if 'file_timestamp' not in settings:
+		settings['file_timestamp'] = 0
+	if 'split_timestamp' not in settings:
+		settings['split_timestamp'] = 0
 	if 'max_out_sz' not in settings:
 		settings['max_out_sz'] = 1000L * 1000 * 1000
 
 	settings['max_out_sz'] = long(settings['max_out_sz'])
-	settings['split_year'] = int(settings['split_year'])
+	settings['split_timestamp'] = int(settings['split_timestamp'])
+	settings['file_timestamp'] = int(settings['file_timestamp'])
 	settings['netmagic'] = settings['netmagic'].decode('hex')
 
 	if 'output_file' not in settings and 'output' not in settings:
