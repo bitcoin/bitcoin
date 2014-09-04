@@ -2302,7 +2302,7 @@ bool AcceptBlockHeader(CBlockHeader& block, CValidationState& state, CBlockIndex
             return state.Invalid(error("AcceptBlock() : block is marked invalid"), 0, "duplicate");
     }
 
-    CBlockIndex* pcheckpoint = Checkpoints::GetLastCheckpoint(mapBlockIndex);
+    CBlockIndex* pcheckpoint = Checkpoints::GetLastCheckpoint();
     if (pcheckpoint && block.hashPrevBlock != (chainActive.Tip() ? chainActive.Tip()->GetBlockHash() : uint256(0)))
     {
         // Extra checks to prevent "fill up memory by spamming with bogus blocks"
@@ -2345,7 +2345,7 @@ bool AcceptBlockHeader(CBlockHeader& block, CValidationState& state, CBlockIndex
                              REJECT_CHECKPOINT, "checkpoint mismatch");
 
         // Don't accept any forks from the main chain prior to last checkpoint
-        CBlockIndex* pcheckpoint = Checkpoints::GetLastCheckpoint(mapBlockIndex);
+        CBlockIndex* pcheckpoint = Checkpoints::GetLastCheckpoint();
         if (pcheckpoint && nHeight < pcheckpoint->nHeight)
             return state.DoS(100, error("AcceptBlock() : forked chain older than last checkpoint (height %d)", nHeight));
 
@@ -3286,7 +3286,7 @@ void static ProcessGetData(CNode* pfrom)
                     // If the requested block is at a height below our last
                     // checkpoint, only serve it if it's in the checkpointed chain
                     int nHeight = mi->second->nHeight;
-                    CBlockIndex* pcheckpoint = Checkpoints::GetLastCheckpoint(mapBlockIndex);
+                    CBlockIndex* pcheckpoint = Checkpoints::GetLastCheckpoint();
                     if (pcheckpoint && nHeight < pcheckpoint->nHeight) {
                         if (!chainActive.Contains(mi->second))
                         {
