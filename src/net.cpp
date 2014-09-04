@@ -148,8 +148,8 @@ CAddress GetLocalAddress(const CNetAddr *paddrPeer)
     if (GetLocal(addr, paddrPeer))
     {
         ret = CAddress(addr);
-        ret.nServices = nLocalServices;
-        ret.nTime = GetAdjustedTime();
+        ret.SetServices(nLocalServices);
+        ret.SetTime(GetAdjustedTime());
     }
     return ret;
 }
@@ -480,7 +480,7 @@ CNode* ConnectNode(CAddress addrConnect, const char *pszDest)
     /// debug print
     LogPrint("net", "trying connection %s lastseen=%.1fhrs\n",
         pszDest ? pszDest : addrConnect.ToString(),
-        pszDest ? 0.0 : (double)(GetAdjustedTime() - addrConnect.nTime)/3600.0);
+        pszDest ? 0.0 : (double)(GetAdjustedTime() - addrConnect.GetTime())/3600.0);
 
     // Connect
     SOCKET hSocket;
@@ -694,7 +694,7 @@ int CNetMessage::readHeader(const char *pch, unsigned int nBytes)
     }
 
     // reject messages larger than MAX_SIZE
-    if (hdr.nMessageSize > MAX_SIZE)
+    if (hdr.GetSize() > MAX_SIZE)
             return -1;
 
     // switch state to reading message data
@@ -705,12 +705,12 @@ int CNetMessage::readHeader(const char *pch, unsigned int nBytes)
 
 int CNetMessage::readData(const char *pch, unsigned int nBytes)
 {
-    unsigned int nRemaining = hdr.nMessageSize - nDataPos;
+    unsigned int nRemaining = hdr.GetSize() - nDataPos;
     unsigned int nCopy = std::min(nRemaining, nBytes);
 
     if (vRecv.size() < nDataPos + nCopy) {
         // Allocate up to 256 KiB ahead, but never more than the total message size.
-        vRecv.resize(std::min(hdr.nMessageSize, nDataPos + nCopy + 256 * 1024));
+        vRecv.resize(std::min(hdr.GetSize(), nDataPos + nCopy + 256 * 1024));
     }
 
     memcpy(&vRecv[nDataPos], pch, nCopy);
@@ -1236,7 +1236,7 @@ void ThreadDNSAddressSeed()
                 {
                     int nOneDay = 24*3600;
                     CAddress addr = CAddress(CService(ip, Params().GetDefaultPort()));
-                    addr.nTime = GetTime() - 3*nOneDay - GetRand(4*nOneDay); // use a random age between 3 and 7 days old
+                    addr.SetTime(GetTime() - 3*nOneDay - GetRand(4*nOneDay)); // use a random age between 3 and 7 days old
                     vAdd.push_back(addr);
                     found++;
                 }
@@ -1372,7 +1372,7 @@ void ThreadOpenConnections()
                 continue;
 
             // only consider very recently tried nodes after 30 failed attempts
-            if (nANow - addr.nLastTry < 600 && nTries < 30)
+            if (nANow - addr.GetLastTry() < 600 && nTries < 30)
                 continue;
 
             // do not allow non-default ports, unless after 50 invalid addresses selected already

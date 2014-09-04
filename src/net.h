@@ -191,7 +191,7 @@ public:
     {
         if (!in_data)
             return false;
-        return (hdr.nMessageSize == nDataPos);
+        return (hdr.GetSize() == nDataPos);
     }
 
     void SetVersion(int nVersionIn)

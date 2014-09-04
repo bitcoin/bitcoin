@@ -45,7 +45,7 @@ class CMessageHeader
             READWRITE(nChecksum);
         }
 
-    // TODO: make private (improves encapsulation)
+    // TODO: make protected (improves encapsulation)
     public:
         enum {
             COMMAND_SIZE=12,
@@ -60,6 +60,9 @@ class CMessageHeader
         char pchCommand[COMMAND_SIZE];
         unsigned int nMessageSize;
         unsigned int nChecksum;
+
+        unsigned int GetSize() const { return nMessageSize; }
+        unsigned int GetChecksum() const { return nChecksum; }
 };
 
 /** nServices flags */
@@ -100,8 +103,14 @@ class CAddress : public CService
             READWRITE(*(CService*)this);
         }
 
-    // TODO: make private (improves encapsulation)
-    public:
+        uint64_t GetServices() const { return nServices; }
+        void SetServices(uint64_t mask) { nServices = mask; }
+        void AddServices(uint64_t mask) { nServices |= mask; }
+        unsigned int GetTime() const { return nTime; }
+        void SetTime(unsigned int nTime_) { nTime = nTime_; }
+        int64_t GetLastTry() const { return nLastTry; }
+
+    protected:
         uint64_t nServices;
 
         // disk and network only
@@ -132,9 +141,10 @@ class CInv
         bool IsKnownType() const;
         const char* GetCommand() const;
         std::string ToString() const;
+        int GetType() const { return type; }
+        const uint256& GetHash() const { return hash; }
 
-    // TODO: make private (improves encapsulation)
-    public:
+    protected:
         int type;
         uint256 hash;
 };
