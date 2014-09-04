@@ -214,7 +214,49 @@ public:
 };
 static CRegTestParams regTestParams;
 
+//
+// Regression test
+//
+class CUnitTestParams : public CMainParams, public CModifiableParams {
+public:
+    CUnitTestParams() {
+        networkID = CBaseChainParams::UNITTEST;
+        strNetworkID = "unittest";
+        nDefaultPort = 18445;
+        vFixedSeeds.clear();
+        vSeeds.clear();  // Regtest mode doesn't have any DNS seeds.
+
+        fRequireRPCPassword = false;
+        fMiningRequiresPeers = false;
+        fDefaultCheckMemPool = true;
+        fAllowMinDifficultyBlocks = false;
+        fMineBlocksOnDemand = true;
+        fSkipProofOfWorkCheck = false;
+    }
+    virtual bool SkipProofOfWorkCheck() const { return fSkipProofOfWorkCheck; }
+protected:
+    bool fSkipProofOfWorkCheck;
+public:
+    // Published setters to allow changing values in unit test cases
+    virtual void setSubsidyHalvingInterval(int anSubsidyHalvingInterval)  { nSubsidyHalvingInterval=anSubsidyHalvingInterval; }
+    virtual void setEnforceBlockUpgradeMajority(int anEnforceBlockUpgradeMajority)  { nEnforceBlockUpgradeMajority=anEnforceBlockUpgradeMajority; }
+    virtual void setRejectBlockOutdatedMajority(int anRejectBlockOutdatedMajority)  { nRejectBlockOutdatedMajority=anRejectBlockOutdatedMajority; }
+    virtual void setToCheckBlockUpgradeMajority(int anToCheckBlockUpgradeMajority)  { nToCheckBlockUpgradeMajority=anToCheckBlockUpgradeMajority; }
+    virtual void setDefaultCheckMemPool(bool aDefaultCheckMemPool)  { fDefaultCheckMemPool=aDefaultCheckMemPool; }
+    virtual void setAllowMinDifficultyBlocks(bool aAllowMinDifficultyBlocks) {  fAllowMinDifficultyBlocks=aAllowMinDifficultyBlocks; }
+    virtual void setSkipProofOfWorkCheck(bool aSkipProofOfWorkCheck) { fSkipProofOfWorkCheck = aSkipProofOfWorkCheck; }
+};
+static CUnitTestParams unitTestParams;
+
+
 static CChainParams *pCurrentParams = 0;
+
+CModifiableParams *ModifiableParams()
+{
+   assert(pCurrentParams);
+   assert(pCurrentParams==&unitTestParams);
+   return (CModifiableParams*)&unitTestParams;
+}
 
 const CChainParams &Params() {
     assert(pCurrentParams);
@@ -229,6 +271,8 @@ CChainParams &Params(CBaseChainParams::Network network) {
             return testNetParams;
         case CBaseChainParams::REGTEST:
             return regTestParams;
+        case CBaseChainParams::UNITTEST:
+            return unitTestParams;
         default:
             assert(false && "Unimplemented network");
             return mainParams;
