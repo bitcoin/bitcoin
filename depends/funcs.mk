@@ -22,8 +22,8 @@ endef
 define fetch_file
 (test -f $(SOURCES_PATH)/$(4) || \
   ( mkdir -p $$($(1)_extract_dir) && \
-  ( $(build_DOWNLOAD) "$$($(1)_extract_dir)/$(3).temp" "$(2)/$(3)" || \
-    $(build_DOWNLOAD) "$$($(1)_extract_dir)/$(3).temp" "$(FALLBACK_DOWNLOAD_PATH)/$(3)" ) && \
+  ( $(build_DOWNLOAD) "$$($(1)_extract_dir)/$(4).temp" "$(2)/$(3)" || \
+    $(build_DOWNLOAD) "$$($(1)_extract_dir)/$(4).temp" "$(FALLBACK_DOWNLOAD_PATH)/$(3)" ) && \
     echo "$(5)  $$($(1)_extract_dir)/$(4).temp" > $$($(1)_extract_dir)/.$(4).hash && \
     $(build_SHA256SUM) -c $$($(1)_extract_dir)/.$(4).hash && \
     mv $$($(1)_extract_dir)/$(4).temp $(SOURCES_PATH)/$(4) ))
