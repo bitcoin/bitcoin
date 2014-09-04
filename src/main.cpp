@@ -4249,13 +4249,39 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
             }
         }
 
-        TRY_LOCK(cs_main, lockMain); // Acquire cs_main for IsInitialBlockDownload() and CNodeState()
-        if (!lockMain)
-            return true;
+        bool isIBD;
+        CNodeState state;
+        {
+            TRY_LOCK(cs_main, lockMain); // Acquire cs_main for IsInitialBlockDownload() and CNodeState()
+            if (!lockMain)
+                return true;
+
+            isIBD = IsInitialBlockDownload();
+
+            CNodeState &state_ = *State(pto->GetId());
+            if (state_.fShouldBan) {
+                if (pto->fWhitelisted)
+                    LogPrintf("Warning: not punishing whitelisted peer %s!\n", pto->addr.ToString());
+                else {
+                    pto->fDisconnect = true;
+                    if (pto->addr.IsLocal())
+                        LogPrintf("Warning: not banning local peer %s!\n", pto->addr.ToString());
+                    else
+                        CNode::Ban(pto->addr);
+                }
+                state_.fShouldBan = false;
+            }
+
+            BOOST_FOREACH(const CBlockReject& reject, state_.rejects)
+                pto->PushMessage("reject", (string)"block", reject.chRejectCode, reject.strRejectReason, reject.hashBlock);
+            state_.rejects.clear();
+
+            state = state_;
+        }
 
         // Address refresh broadcast
         static int64_t nLastRebroadcast;
-        if (!IsInitialBlockDownload() && (GetTime() - nLastRebroadcast > 24 * 60 * 60))
+        if (!isIBD && (GetTime() - nLastRebroadcast > 24 * 60 * 60))
         {
             {
                 LOCK(cs_vNodes);
@@ -4303,24 +4329,6 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
                 pto->PushMessage("addr", vAddr);
         }
 
-        CNodeState &state = *State(pto->GetId());
-        if (state.fShouldBan) {
-            if (pto->fWhitelisted)
-                LogPrintf("Warning: not punishing whitelisted peer %s!\n", pto->addr.ToString());
-            else {
-                pto->fDisconnect = true;
-                if (pto->addr.IsLocal())
-                    LogPrintf("Warning: not banning local peer %s!\n", pto->addr.ToString());
-                else
-                    CNode::Ban(pto->addr);
-            }
-            state.fShouldBan = false;
-        }
-
-        BOOST_FOREACH(const CBlockReject& reject, state.rejects)
-            pto->PushMessage("reject", (string)"block", reject.chRejectCode, reject.strRejectReason, reject.hashBlock);
-        state.rejects.clear();
-
         // Start block sync
         if (pto->fStartSync && !fImporting && !fReindex) {
             pto->fStartSync = false;
@@ -4330,7 +4338,7 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
         // Resend wallet transactions that haven't gotten in a block yet
         // Except during reindex, importing and IBD, when old wallet
         // transactions become unconfirmed and spams other nodes.
-        if (!fReindex && !fImporting && !IsInitialBlockDownload())
+        if (!fReindex && !fImporting && !isIBD)
         {
             g_signals.Broadcast();
         }
