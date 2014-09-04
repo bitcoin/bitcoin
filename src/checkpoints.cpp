@@ -146,7 +146,7 @@ namespace Checkpoints {
         return checkpoints.rbegin()->first;
     }
 
-    CBlockIndex* GetLastCheckpoint(const std::map<uint256, CBlockIndex*>& mapBlockIndex)
+    CBlockIndex* GetLastCheckpoint()
     {
         if (!fEnabled)
             return NULL;
