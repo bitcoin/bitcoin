@@ -16,10 +16,12 @@
 #include "util.h"
 
 #include "json/json_spirit_value.h"
+
+#include <openssl/crypto.h>
+
 #ifdef ENABLE_WALLET
 #include <db_cxx.h>
 #endif
-#include <openssl/crypto.h>
 
 #include <QKeyEvent>
 #include <QScrollBar>
