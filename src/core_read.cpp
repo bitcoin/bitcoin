@@ -5,7 +5,7 @@
 #include "core_io.h"
 #include "core.h"
 #include "serialize.h"
-#include "script.h"
+#include "script/script.h"
 #include "util.h"
 
 #include <boost/assign/list_of.hpp>

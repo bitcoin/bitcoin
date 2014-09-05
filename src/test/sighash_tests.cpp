@@ -6,7 +6,8 @@
 #include "main.h"
 #include "random.h"
 #include "serialize.h"
-#include "script.h"
+#include "script/script.h"
+#include "script/interpreter.h"
 #include "util.h"
 #include "version.h"
 
