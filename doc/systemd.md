@@ -21,7 +21,7 @@ to packager's needs.
 Daemon's config file is assumed to be located at /etc/bitcoind.conf (you can
 use contrib/debian/examples/bitcoin.conf as an example). Once installed, users
 must edit the file in order to update at least these two 
-values: rpcuser and rpcpassword . Failing to do so will make the daemon fail 
+values: rpcuser and rpcpassword. Failing to do so will make the daemon fail 
 to boot. However, the message written to /var/lib/bitcoind/debug.log file is
 very helpful and no default values should be set:
 
