@@ -19,10 +19,8 @@
 
 #include <boost/foreach.hpp>
 #include <boost/thread.hpp>
-#include <boost/tuple/tuple_comparison.hpp>
 #include <boost/tuple/tuple.hpp>
-
-#include <boost/foreach.hpp>
+#include <boost/tuple/tuple_comparison.hpp>
 
 using namespace std;
 using namespace boost;
