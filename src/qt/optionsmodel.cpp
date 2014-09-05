@@ -15,6 +15,7 @@
 #include "main.h"
 #include "net.h"
 #include "txdb.h" // for -dbcache defaults
+
 #ifdef ENABLE_WALLET
 #include "wallet.h"
 #include "walletdb.h"

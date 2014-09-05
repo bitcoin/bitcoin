@@ -14,6 +14,7 @@
 #include "optionsmodel.h"
 #include "rpcconsole.h"
 #include "utilitydialog.h"
+
 #ifdef ENABLE_WALLET
 #include "walletframe.h"
 #include "walletmodel.h"
@@ -24,8 +25,8 @@
 #endif
 
 #include "init.h"
-#include "util.h"
 #include "ui_interface.h"
+#include "util.h"
 
 #include <iostream>
 
@@ -50,8 +51,8 @@
 #include <QVBoxLayout>
 
 #if QT_VERSION < 0x050000
-#include <QUrl>
 #include <QTextDocument>
+#include <QUrl>
 #else
 #include <QUrlQuery>
 #endif
