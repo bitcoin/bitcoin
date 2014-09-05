@@ -97,7 +97,7 @@ bool DecodeHexTx(CTransaction& tx, const std::string& strHexTx)
     try {
         ssData >> tx;
     }
-    catch (std::exception &e) {
+    catch (const std::exception &) {
         return false;
     }
 

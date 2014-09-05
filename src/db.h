@@ -129,7 +129,7 @@ protected:
             CDataStream ssValue((char*)datValue.get_data(), (char*)datValue.get_data() + datValue.get_size(), SER_DISK, CLIENT_VERSION);
             ssValue >> value;
         }
-        catch (std::exception &e) {
+        catch (const std::exception &) {
             return false;
         }
 
