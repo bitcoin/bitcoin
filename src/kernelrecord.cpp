@@ -74,10 +74,12 @@ int64 KernelRecord::getAge() const
     return (GetAdjustedTime() - nTime) / 86400;
 }
 
-double KernelRecord::getProbToMintStake(double difficulty) const
+double KernelRecord::getProbToMintStake(double difficulty, int timeOffset) const
 {
     double maxTarget = pow(2, 224);
     double target = maxTarget / difficulty;
+    int dayWeight = (min((GetAdjustedTime() - nTime) + timeOffset, (int64)STAKE_MAX_AGE) - nStakeMinAge) / 86400;
+    uint64 coinAge = max(nValue * dayWeight / COIN, (int64)0);
     return target * coinAge / pow(2, 256);
 }
 
@@ -86,13 +88,24 @@ double KernelRecord::getProbToMintWithinNMinutes(double difficulty, int minutes)
     if(difficulty != prevDifficulty || minutes != prevMinutes)
     {
         double prob = 1;
-        int n = minutes / 10;
-        double p = getProbToMintStake(difficulty);
-        p = 1 - pow(1 - p, 60 * 10);
-        for(int i=0; i<n; i++)
+        double p;
+        int d = minutes / (60 * 24); // Number of full days
+        int m = minutes % (60 * 24); // Number of minutes in the last day
+        int i, timeOffset;
+
+        // Probabilities for the first d days
+        for(i = 0; i < d; i++)
         {
-             prob = prob * (1-p);
+            timeOffset = i * 86400;
+            p = pow(1 - getProbToMintStake(difficulty, timeOffset), 86400);
+            prob *= p;
         }
+
+        // Probability for the m minutes of the last day
+        timeOffset = d * 86400;
+        p = pow(1 - getProbToMintStake(difficulty, timeOffset), 60 * m);
+        prob *= p;
+
         prob = 1 - prob;
         prevProbability = prob;
         prevDifficulty = difficulty;

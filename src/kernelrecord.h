@@ -41,7 +41,7 @@ public:
 
     std::string getTxID();
     int64 getAge() const;
-    double getProbToMintStake(double difficulty) const;
+    double getProbToMintStake(double difficulty, int timeOffset = 0) const;
     double getProbToMintWithinNMinutes(double difficulty, int minutes);
 protected:
     int prevMinutes;
