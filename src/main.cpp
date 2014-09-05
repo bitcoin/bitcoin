@@ -3134,7 +3134,7 @@ bool LoadExternalBlockFile(FILE* fileIn, CDiskBlockPos *dbp)
                 blkdat >> nSize;
                 if (nSize < 80 || nSize > MAX_BLOCK_SIZE)
                     continue;
-            } catch (std::exception &e) {
+            } catch (std::exception const &) {
                 // no valid block header found; don't complain
                 break;
             }
