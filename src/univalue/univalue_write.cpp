@@ -70,15 +70,9 @@ string UniValue::write(unsigned int prettyIndent,
     return s;
 }
 
-static string spaceStr;
-
-static string indentStr(unsigned int prettyIndent, unsigned int indentLevel)
+static void indentStr(unsigned int prettyIndent, unsigned int indentLevel, string& s)
 {
-    unsigned int spaces = prettyIndent * indentLevel;
-    while (spaceStr.size() < spaces)
-        spaceStr += "                ";
-
-    return spaceStr.substr(0, spaces);
+    s.append(prettyIndent * indentLevel, ' ');
 }
 
 void UniValue::writeArray(unsigned int prettyIndent, unsigned int indentLevel, string& s) const
@@ -89,7 +83,7 @@ void UniValue::writeArray(unsigned int prettyIndent, unsigned int indentLevel, s
 
     for (unsigned int i = 0; i < values.size(); i++) {
         if (prettyIndent)
-            s += indentStr(prettyIndent, indentLevel);
+            indentStr(prettyIndent, indentLevel, s);
         s += values[i].write(prettyIndent, indentLevel + 1);
         if (i != (values.size() - 1)) {
             s += ",";
@@ -101,7 +95,7 @@ void UniValue::writeArray(unsigned int prettyIndent, unsigned int indentLevel, s
     }
 
     if (prettyIndent)
-        s += indentStr(prettyIndent, indentLevel - 1);
+        indentStr(prettyIndent, indentLevel - 1, s);
     s += "]";
 }
 
@@ -113,7 +107,7 @@ void UniValue::writeObject(unsigned int prettyIndent, unsigned int indentLevel, 
 
     for (unsigned int i = 0; i < keys.size(); i++) {
         if (prettyIndent)
-            s += indentStr(prettyIndent, indentLevel);
+            indentStr(prettyIndent, indentLevel, s);
         s += "\"" + json_escape(keys[i]) + "\":";
         if (prettyIndent)
             s += " ";
@@ -125,7 +119,7 @@ void UniValue::writeObject(unsigned int prettyIndent, unsigned int indentLevel, 
     }
 
     if (prettyIndent)
-        s += indentStr(prettyIndent, indentLevel - 1);
+        indentStr(prettyIndent, indentLevel - 1, s);
     s += "}";
 }
 
