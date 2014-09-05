@@ -4,11 +4,12 @@
 
 #include "splashscreen.h"
 
-#include "version.h"
 #include "clientversion.h"
 #include "init.h"
 #include "ui_interface.h"
 #include "util.h"
+#include "version.h"
+
 #ifdef ENABLE_WALLET
 #include "wallet.h"
 #endif
