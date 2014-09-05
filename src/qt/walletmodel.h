@@ -256,7 +256,7 @@ public slots:
     void updateTransaction(const QString &hash, int status);
     /* New, updated or removed address book entry */
     void updateAddressBook(const QString &address, const QString &label, bool isMine, const QString &purpose, int status);
-    /* Watchonly added */
+    /* Watch-only added */
     void updateWatchOnlyFlag(bool fHaveWatchonly);
     /* Current, immature or unconfirmed balance might have changed - emit 'balanceChanged' if so */
     void pollBalanceChanged();

@@ -1447,7 +1447,7 @@ Value listsinceblock(const Array& params, bool fHelp)
         uint256 blockId = 0;
 
         blockId.SetHex(params[0].get_str());
-        std::map<uint256, CBlockIndex*>::iterator it = mapBlockIndex.find(blockId);
+        BlockMap::iterator it = mapBlockIndex.find(blockId);
         if (it != mapBlockIndex.end())
             pindex = it->second;
     }
