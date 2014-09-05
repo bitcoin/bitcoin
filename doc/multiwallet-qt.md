@@ -38,11 +38,15 @@ singleton BitcoinGUI instance called window. Formerly, BitcoinGUI kept a pointer
 The initial change required is very simple: rather than calling `window.setWalletModel(&walletModel);` we perform the
 following two steps:
 
-	window.addWallet("~Default", &walletModel);
-	window.setCurrentWallet("~Default");
+```cpp
+window.addWallet("~Default", &walletModel);
+window.setCurrentWallet("~Default");
+```
 
 The string parameter is just an arbitrary name given to the default wallet. It's been prepended with a tilde to avoid name collisions in the future with additional wallets.
 
 The shutdown call `window.setWalletModel(0)` has also been removed. In its place is now:
 
+```cpp
 window.removeAllWallets();
+```
