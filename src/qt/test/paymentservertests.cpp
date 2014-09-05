@@ -1,3 +1,7 @@
+// Copyright (c) 2009-2014 The Bitcoin developers
+// Distributed under the MIT software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
 #include "paymentservertests.h"
 
 #include "optionsmodel.h"
@@ -21,7 +25,6 @@ X509 *parse_b64der_cert(const char* cert_data)
     return cert;
 }
 
-
 //
 // Test payment request handling
 //
@@ -30,7 +33,7 @@ static SendCoinsRecipient handleRequest(PaymentServer* server, std::vector<unsig
 {
     RecipientCatcher sigCatcher;
     QObject::connect(server, SIGNAL(receivedPaymentRequest(SendCoinsRecipient)),
-                     &sigCatcher, SLOT(getRecipient(SendCoinsRecipient)));
+        &sigCatcher, SLOT(getRecipient(SendCoinsRecipient)));
 
     // Write data to a temp file:
     QTemporaryFile f;
@@ -48,7 +51,7 @@ static SendCoinsRecipient handleRequest(PaymentServer* server, std::vector<unsig
     QCoreApplication::sendEvent(&object, &event);
 
     QObject::disconnect(server, SIGNAL(receivedPaymentRequest(SendCoinsRecipient)),
-                        &sigCatcher, SLOT(getRecipient(SendCoinsRecipient)));
+        &sigCatcher, SLOT(getRecipient(SendCoinsRecipient)));
 
     // Return results from sigCatcher
     return sigCatcher.recipient;
