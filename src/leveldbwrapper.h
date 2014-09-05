@@ -99,7 +99,7 @@ public:
         try {
             CDataStream ssValue(strValue.data(), strValue.data() + strValue.size(), SER_DISK, CLIENT_VERSION);
             ssValue >> value;
-        } catch(std::exception &e) {
+        } catch(const std::exception &) {
             return false;
         }
         return true;
