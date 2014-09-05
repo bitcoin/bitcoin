@@ -10,7 +10,7 @@ import os
 import sys
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "python-bitcoinrpc"))
 
-from decimal import Decimal
+from decimal import Decimal, ROUND_DOWN
 import json
 import random
 import shutil
@@ -230,10 +230,12 @@ def make_change(from_node, amount_in, amount_out, fee):
     change = amount_in - amount
     if change > amount*2:
         # Create an extra change output to break up big inputs
-        outputs[from_node.getnewaddress()] = float(change/2)
-        change = change/2
+        change_address = from_node.getnewaddress()
+        # Split change in two, being careful of rounding:
+        outputs[change_address] = Decimal(change/2).quantize(Decimal('0.00000001'), rounding=ROUND_DOWN)
+        change = amount_in - amount - outputs[change_address]
     if change > 0:
-        outputs[from_node.getnewaddress()] = float(change)
+        outputs[from_node.getnewaddress()] = change
     return outputs
 
 def send_zeropri_transaction(from_node, to_node, amount, fee):
