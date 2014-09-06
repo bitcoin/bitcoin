@@ -2329,23 +2329,6 @@ bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state, CBloc
         return true;
     }
 
-    CBlockIndex* pcheckpoint = Checkpoints::GetLastCheckpoint();
-    if (pcheckpoint && block.hashPrevBlock != (chainActive.Tip() ? chainActive.Tip()->GetBlockHash() : uint256(0)))
-    {
-        // Extra checks to prevent "fill up memory by spamming with bogus blocks"
-        int64_t deltaTime = block.GetBlockTime() - pcheckpoint->GetBlockTime();
-        if (deltaTime < 0)
-        {
-            return state.DoS(100, error("%s : block with timestamp before last checkpoint", __func__),
-                             REJECT_CHECKPOINT, "time-too-old");
-        }
-        if (!CheckMinWork(block.nBits, pcheckpoint->nBits, deltaTime))
-        {
-            return state.DoS(100, error("%s : block with too little proof-of-work", __func__),
-                             REJECT_INVALID, "bad-diffbits");
-        }
-    }
-
     // Get prev block index
     CBlockIndex* pindexPrev = NULL;
     int nHeight = 0;
