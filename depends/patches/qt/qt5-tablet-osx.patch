@@ -1,0 +1,20 @@
+--- old/qtbase/src/widgets/kernel/qwidgetwindow.cpp	2014-09-05 20:45:18.717570370 -0400
++++ new/qtbase/src/widgets/kernel/qwidgetwindow.cpp	2014-09-05 20:52:38.653576561 -0400
+@@ -57,7 +57,7 @@
+ Q_WIDGETS_EXPORT extern bool qt_tab_all_widgets();
+ 
+ QWidget *qt_button_down = 0; // widget got last button-down
+-static QWidget *qt_tablet_target = 0;
++static QPointer<QWidget> qt_tablet_target = 0;
+ 
+ // popup control
+ QWidget *qt_popup_down = 0; // popup that contains the pressed widget
+@@ -96,8 +96,6 @@
+ 
+ QWidgetWindow::~QWidgetWindow()
+ {
+-    if (m_widget == qt_tablet_target)
+-        qt_tablet_target = 0;
+ }
+ 
+ #ifndef QT_NO_ACCESSIBILITY
