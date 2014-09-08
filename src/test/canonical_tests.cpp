@@ -8,9 +8,11 @@
 
 #include "data/sig_noncanonical.json.h"
 #include "data/sig_canonical.json.h"
+#include "key.h"
 #include "random.h"
-#include "script.h"
+#include "script/interpreter.h"
 #include "util.h"
+#include "utilstrencodings.h"
 
 #include <boost/foreach.hpp>
 #include <boost/test/unit_test.hpp>

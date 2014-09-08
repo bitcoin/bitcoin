@@ -11,6 +11,7 @@
 #include "key.h"
 #include "keystore.h"
 #include "main.h"
+#include "scriptutils.h"
 #include "ui_interface.h"
 #include "walletdb.h"
 
