@@ -34,7 +34,8 @@ static const CScriptNum bnOne(1);
 static const CScriptNum bnFalse(0);
 static const CScriptNum bnTrue(1);
 
-bool CheckSig(vector<unsigned char> vchSig, const vector<unsigned char> &vchPubKey, const CScript &scriptCode, const CTransaction& txTo, unsigned int nIn, int nHashType, int flags);
+struct SigHashCache;
+bool CheckSig(vector<unsigned char> vchSig, const vector<unsigned char> &vchPubKey, const CScript &scriptCode, const CTransaction& txTo, unsigned int nIn, int nHashType, int flags, SigHashCache& cache);
 
 bool CastToBool(const valtype& vch)
 {
@@ -301,6 +302,24 @@ bool IsCanonicalSignature(const valtype &vchSig, unsigned int flags) {
     return true;
 }
 
+struct SigHashCache
+{
+    bool set[6];
+    uint256 value[6];
+
+    void Clear()
+    {
+        for (int i=0; i<6; i++) {
+            set[i] = false;
+        }
+    }
+
+    SigHashCache()
+    {
+        Clear();
+    }
+};
+
 bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, const CTransaction& txTo, unsigned int nIn, unsigned int flags, int nHashType)
 {
     CScript::const_iterator pc = script.begin();
@@ -313,6 +332,7 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
     if (script.size() > 10000)
         return false;
     int nOpCount = 0;
+    SigHashCache cache;
 
     try
     {
@@ -824,6 +844,7 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
                 {
                     // Hash starts after the code separator
                     pbegincodehash = pc;
+                    cache.Clear();
                 }
                 break;
 
@@ -844,7 +865,7 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
                     scriptCode.FindAndDelete(CScript(vchSig));
 
                     bool fSuccess = IsCanonicalSignature(vchSig, flags) && IsCanonicalPubKey(vchPubKey, flags) &&
-                        CheckSig(vchSig, vchPubKey, scriptCode, txTo, nIn, nHashType, flags);
+                        CheckSig(vchSig, vchPubKey, scriptCode, txTo, nIn, nHashType, flags, cache);
 
                     popstack(stack);
                     popstack(stack);
@@ -905,7 +926,7 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
 
                         // Check signature
                         bool fOk = IsCanonicalSignature(vchSig, flags) && IsCanonicalPubKey(vchPubKey, flags) &&
-                            CheckSig(vchSig, vchPubKey, scriptCode, txTo, nIn, nHashType, flags);
+                            CheckSig(vchSig, vchPubKey, scriptCode, txTo, nIn, nHashType, flags, cache);
 
                         if (fOk) {
                             isig++;
@@ -1152,7 +1173,7 @@ public:
 };
 
 bool CheckSig(vector<unsigned char> vchSig, const vector<unsigned char> &vchPubKey, const CScript &scriptCode,
-              const CTransaction& txTo, unsigned int nIn, int nHashType, int flags)
+              const CTransaction& txTo, unsigned int nIn, int nHashType, int flags, SigHashCache& cache)
 {
     static CSignatureCache signatureCache;
 
@@ -1169,7 +1190,12 @@ bool CheckSig(vector<unsigned char> vchSig, const vector<unsigned char> &vchPubK
         return false;
     vchSig.pop_back();
 
-    uint256 sighash = SignatureHash(scriptCode, txTo, nIn, nHashType);
+    int entry = ((nHashType & 0x1F) == SIGHASH_SINGLE ? 0 : ((nHashType & 0x1F) == SIGHASH_NONE ? 1 : 2)) + ((nHashType & 0x80) ? 3 : 0);
+    uint256& sighash = cache.value[entry];
+    if (!cache.set[entry]) {
+        sighash = SignatureHash(scriptCode, txTo, nIn, nHashType);
+        cache.set[entry] = true;
+    }
 
     if (signatureCache.Get(sighash, vchSig, pubkey))
         return true;
@@ -1720,6 +1746,7 @@ static CScript CombineMultisig(CScript scriptPubKey, const CMutableTransaction& 
     unsigned int nSigsRequired = vSolutions.front()[0];
     unsigned int nPubKeys = vSolutions.size()-2;
     map<valtype, valtype> sigs;
+    SigHashCache cache;
     BOOST_FOREACH(const valtype& sig, allsigs)
     {
         for (unsigned int i = 0; i < nPubKeys; i++)
@@ -1728,7 +1755,7 @@ static CScript CombineMultisig(CScript scriptPubKey, const CMutableTransaction& 
             if (sigs.count(pubkey))
                 continue; // Already got a sig for this pubkey
 
-            if (CheckSig(sig, pubkey, scriptPubKey, txTo, nIn, 0, 0))
+            if (CheckSig(sig, pubkey, scriptPubKey, txTo, nIn, 0, 0, cache))
             {
                 sigs[pubkey] = sig;
                 break;
