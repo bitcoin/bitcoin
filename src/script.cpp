@@ -1638,9 +1638,15 @@ bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const C
             return false;
         if (stackCopy.empty())
             return false;
+        if ((flags & SCRIPT_VERIFY_CLEANSTACK) && stackCopy.size() != 1)
+            return false;
         return CastToBool(stackCopy.back());
     }
-
+    else
+    {
+        if ((flags & SCRIPT_VERIFY_CLEANSTACK) && stack.size() != 1)
+            return false;
+    }
     return true;
 }
 
