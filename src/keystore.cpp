@@ -7,7 +7,7 @@
 
 #include "crypter.h"
 #include "key.h"
-#include "script.h"
+#include "script/script.h"
 #include "util.h"
 
 #include <boost/foreach.hpp>
