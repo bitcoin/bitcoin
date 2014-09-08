@@ -2,6 +2,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include "include/secp256k1.h"
+
 #include <assert.h>
 #include "util.h"
 #include "num_impl.h"
@@ -10,19 +12,26 @@
 #include "ecmult_impl.h"
 #include "ecdsa_impl.h"
 
-void secp256k1_start(void) {
+void secp256k1_start(unsigned int flags) {
     secp256k1_fe_start();
     secp256k1_ge_start();
-    secp256k1_ecmult_start();
+    if (flags & SECP256K1_START_SIGN) {
+        secp256k1_ecmult_gen_start();
+    }
+    if (flags & SECP256K1_START_VERIFY) {
+        secp256k1_ecmult_start();
+    }
 }
 
 void secp256k1_stop(void) {
     secp256k1_ecmult_stop();
+    secp256k1_ecmult_gen_stop();
     secp256k1_ge_stop();
     secp256k1_fe_stop();
 }
 
 int secp256k1_ecdsa_verify(const unsigned char *msg, int msglen, const unsigned char *sig, int siglen, const unsigned char *pubkey, int pubkeylen) {
+    DEBUG_CHECK(secp256k1_ecmult_consts != NULL);
     DEBUG_CHECK(msg != NULL);
     DEBUG_CHECK(msglen <= 32);
     DEBUG_CHECK(sig != NULL);
@@ -56,6 +65,7 @@ end:
 }
 
 int secp256k1_ecdsa_sign(const unsigned char *message, int messagelen, unsigned char *signature, int *signaturelen, const unsigned char *seckey, const unsigned char *nonce) {
+    DEBUG_CHECK(secp256k1_ecmult_gen_consts != NULL);
     DEBUG_CHECK(message != NULL);
     DEBUG_CHECK(messagelen <= 32);
     DEBUG_CHECK(signature != NULL);
@@ -91,6 +101,7 @@ int secp256k1_ecdsa_sign(const unsigned char *message, int messagelen, unsigned 
 }
 
 int secp256k1_ecdsa_sign_compact(const unsigned char *message, int messagelen, unsigned char *sig64, const unsigned char *seckey, const unsigned char *nonce, int *recid) {
+    DEBUG_CHECK(secp256k1_ecmult_gen_consts != NULL);
     DEBUG_CHECK(message != NULL);
     DEBUG_CHECK(messagelen <= 32);
     DEBUG_CHECK(sig64 != NULL);
@@ -126,6 +137,7 @@ int secp256k1_ecdsa_sign_compact(const unsigned char *message, int messagelen, u
 }
 
 int secp256k1_ecdsa_recover_compact(const unsigned char *msg, int msglen, const unsigned char *sig64, unsigned char *pubkey, int *pubkeylen, int compressed, int recid) {
+    DEBUG_CHECK(secp256k1_ecmult_consts != NULL);
     DEBUG_CHECK(msg != NULL);
     DEBUG_CHECK(msglen <= 32);
     DEBUG_CHECK(sig64 != NULL);
@@ -173,6 +185,7 @@ int secp256k1_ecdsa_pubkey_verify(const unsigned char *pubkey, int pubkeylen) {
 }
 
 int secp256k1_ecdsa_pubkey_create(unsigned char *pubkey, int *pubkeylen, const unsigned char *seckey, int compressed) {
+    DEBUG_CHECK(secp256k1_ecmult_gen_consts != NULL);
     DEBUG_CHECK(pubkey != NULL);
     DEBUG_CHECK(pubkeylen != NULL);
     DEBUG_CHECK(seckey != NULL);
@@ -230,6 +243,7 @@ int secp256k1_ecdsa_privkey_tweak_add(unsigned char *seckey, const unsigned char
 }
 
 int secp256k1_ecdsa_pubkey_tweak_add(unsigned char *pubkey, int pubkeylen, const unsigned char *tweak) {
+    DEBUG_CHECK(secp256k1_ecmult_consts != NULL);
     DEBUG_CHECK(pubkey != NULL);
     DEBUG_CHECK(tweak != NULL);
 
@@ -246,8 +260,12 @@ int secp256k1_ecdsa_pubkey_tweak_add(unsigned char *pubkey, int pubkeylen, const
     }
     if (ret) {
         secp256k1_gej_t pt;
-        secp256k1_ecmult_gen(&pt, &term);
-        secp256k1_gej_add_ge(&pt, &pt, &p);
+        secp256k1_gej_set_ge(&pt, &p);
+        secp256k1_num_t one;
+        secp256k1_num_init(&one);
+        secp256k1_num_set_int(&one, 1);
+        secp256k1_ecmult(&pt, &pt, &one, &term);
+        secp256k1_num_free(&one);
         if (secp256k1_gej_is_infinity(&pt))
             ret = 0;
         secp256k1_ge_set_gej(&p, &pt);
@@ -285,6 +303,7 @@ int secp256k1_ecdsa_privkey_tweak_mul(unsigned char *seckey, const unsigned char
 }
 
 int secp256k1_ecdsa_pubkey_tweak_mul(unsigned char *pubkey, int pubkeylen, const unsigned char *tweak) {
+    DEBUG_CHECK(secp256k1_ecmult_consts != NULL);
     DEBUG_CHECK(pubkey != NULL);
     DEBUG_CHECK(tweak != NULL);
 

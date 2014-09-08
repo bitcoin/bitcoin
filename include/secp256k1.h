@@ -5,12 +5,16 @@
 extern "C" {
 #endif
 
+/** Flags to pass to secp256k1_start. */
+#define SECP256K1_START_VERIFY (1 << 0)
+#define SECP256K1_START_SIGN   (1 << 1)
+
 /** Initialize the library. This may take some time (10-100 ms).
  *  You need to call this before calling any other function.
  *  It cannot run in parallel with any other functions, but once
  *  secp256k1_start() returns, all other functions are thread-safe.
  */
-void secp256k1_start(void);
+void secp256k1_start(unsigned int flags);
 
 /** Free all memory associated with this library. After this, no
  *  functions can be called anymore, except secp256k1_start()
@@ -22,6 +26,7 @@ void secp256k1_stop(void);
  *           0: incorrect signature
  *          -1: invalid public key
  *          -2: invalid signature
+ * Requires starting using SECP256K1_START_VERIFY.
  */
 int secp256k1_ecdsa_verify(const unsigned char *msg, int msglen,
                            const unsigned char *sig, int siglen,
@@ -36,6 +41,7 @@ int secp256k1_ecdsa_verify(const unsigned char *msg, int msglen,
  *           nonce:  pointer to a 32-byte nonce (generated with a cryptographic PRNG)
  *  Out:     sig:    pointer to a 72-byte array where the signature will be placed.
  *           siglen: pointer to an int, which will be updated to the signature length (<=72).
+ * Requires starting using SECP256K1_START_SIGN.
  */
 int secp256k1_ecdsa_sign(const unsigned char *msg, int msglen,
                          unsigned char *sig, int *siglen,
@@ -51,6 +57,7 @@ int secp256k1_ecdsa_sign(const unsigned char *msg, int msglen,
  *           nonce:  pointer to a 32-byte nonce (generated with a cryptographic PRNG)
  *  Out:     sig:    pointer to a 64-byte array where the signature will be placed.
  *           recid:  pointer to an int, which will be updated to contain the recovery id.
+ * Requires starting using SECP256K1_START_SIGN.
  */
 int secp256k1_ecdsa_sign_compact(const unsigned char *msg, int msglen,
                                  unsigned char *sig64,
@@ -68,8 +75,8 @@ int secp256k1_ecdsa_sign_compact(const unsigned char *msg, int msglen,
  *           recid:      the recovery id (as returned by ecdsa_sign_compact)
  *  Out:     pubkey:     pointer to a 33 or 65 byte array to put the pubkey.
  *           pubkeylen:  pointer to an int that will contain the pubkey length.
+ * Requires starting using SECP256K1_START_VERIFY.
  */
-
 int secp256k1_ecdsa_recover_compact(const unsigned char *msg, int msglen,
                                     const unsigned char *sig64,
                                     unsigned char *pubkey, int *pubkeylen,
@@ -97,6 +104,7 @@ int secp256k1_ecdsa_pubkey_verify(const unsigned char *pubkey, int pubkeylen);
  *                      length.
  *  Returns: 1: secret was valid, public key stores
  *           0: secret was invalid, try again.
+ * Requires starting using SECP256K1_START_SIGN.
  */
 int secp256k1_ecdsa_pubkey_create(unsigned char *pubkey, int *pubkeylen, const unsigned char *seckey, int compressed);
 
