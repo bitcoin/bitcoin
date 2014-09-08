@@ -9,6 +9,8 @@
 #include "checkpoints.h"
 #include "coincontrol.h"
 #include "net.h"
+#include "script/script.h"
+#include "script/sign.h"
 #include "timedata.h"
 #include "util.h"
 #include "utilmoneystr.h"
