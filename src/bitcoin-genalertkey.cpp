@@ -1,8 +1,13 @@
-#include "main.h"
-#include "net.h"
+// Copyright (c) 2014 The Bitcoin developers
+// Distributed under the MIT software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
 #include "alert.h"
 #include "util.h"
+#include "utilstrencodings.h"
 #include "key.h"
+
+#include <boost/foreach.hpp>
 
 //
 // alertTests contains 7 alerts, generated with this code:
