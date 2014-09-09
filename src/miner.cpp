@@ -167,12 +167,13 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
                     nTotalIn += mempool.mapTx[txin.prevout.hash].GetTx().vout[txin.prevout.n].nValue;
                     continue;
                 }
-                const CCoins &coins = view.GetCoins(txin.prevout.hash);
+                const CCoins* coins = view.AccessCoins(txin.prevout.hash);
+                assert(coins);
 
-                int64_t nValueIn = coins.vout[txin.prevout.n].nValue;
+                int64_t nValueIn = coins->vout[txin.prevout.n].nValue;
                 nTotalIn += nValueIn;
 
-                int nConf = pindexPrev->nHeight - coins.nHeight + 1;
+                int nConf = pindexPrev->nHeight - coins->nHeight + 1;
 
                 dPriority += (double)nValueIn * nConf;
             }
