@@ -215,7 +215,7 @@ public:
 static CRegTestParams regTestParams;
 
 //
-// Regression test
+// Unit test
 //
 class CUnitTestParams : public CMainParams, public CModifiableParams {
 public:
@@ -242,9 +242,9 @@ public:
     virtual void setEnforceBlockUpgradeMajority(int anEnforceBlockUpgradeMajority)  { nEnforceBlockUpgradeMajority=anEnforceBlockUpgradeMajority; }
     virtual void setRejectBlockOutdatedMajority(int anRejectBlockOutdatedMajority)  { nRejectBlockOutdatedMajority=anRejectBlockOutdatedMajority; }
     virtual void setToCheckBlockUpgradeMajority(int anToCheckBlockUpgradeMajority)  { nToCheckBlockUpgradeMajority=anToCheckBlockUpgradeMajority; }
-    virtual void setDefaultCheckMemPool(bool aDefaultCheckMemPool)  { fDefaultCheckMemPool=aDefaultCheckMemPool; }
-    virtual void setAllowMinDifficultyBlocks(bool aAllowMinDifficultyBlocks) {  fAllowMinDifficultyBlocks=aAllowMinDifficultyBlocks; }
-    virtual void setSkipProofOfWorkCheck(bool aSkipProofOfWorkCheck) { fSkipProofOfWorkCheck = aSkipProofOfWorkCheck; }
+    virtual void setDefaultCheckMemPool(bool afDefaultCheckMemPool)  { fDefaultCheckMemPool=afDefaultCheckMemPool; }
+    virtual void setAllowMinDifficultyBlocks(bool afAllowMinDifficultyBlocks) {  fAllowMinDifficultyBlocks=afAllowMinDifficultyBlocks; }
+    virtual void setSkipProofOfWorkCheck(bool afSkipProofOfWorkCheck) { fSkipProofOfWorkCheck = afSkipProofOfWorkCheck; }
 };
 static CUnitTestParams unitTestParams;
 
