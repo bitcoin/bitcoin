@@ -1,6 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2013 The Bitcoin developers
-// Distributed under the MIT/X11 software license, see the accompanying
+// Copyright (c) 2009-2014 The Bitcoin developers
+// Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef H_BITCOIN_WALLET_ISMINE
@@ -25,4 +25,4 @@ typedef uint8_t isminefilter;
 isminetype IsMine(const CKeyStore& keystore, const CScript& scriptPubKey);
 isminetype IsMine(const CKeyStore& keystore, const CTxDestination& dest);
 
-#endif // H_BITCOIN_SCRIPT
+#endif // H_BITCOIN_WALLET_ISMINE
