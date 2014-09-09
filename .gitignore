@@ -5,6 +5,7 @@ src/bitcoin
 src/bitcoind
 src/bitcoin-cli
 src/bitcoin-tx
+src/bitcoin-genalertkey
 src/test/test_bitcoin
 src/qt/test/test_bitcoin-qt
 
