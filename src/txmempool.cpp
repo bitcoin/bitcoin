@@ -606,7 +606,7 @@ void CTxMemPool::PrioritiseTransaction(const uint256 hash, const string strHash,
         deltas.first += dPriorityDelta;
         deltas.second += nFeeDelta;
     }
-    LogPrintf("PrioritiseTransaction: %s priority += %f, fee += %d\n", strHash.c_str(), dPriorityDelta, nFeeDelta);
+    LogPrintf("PrioritiseTransaction: %s priority += %f, fee += %d\n", strHash, dPriorityDelta, nFeeDelta);
 }
 
 void CTxMemPool::ApplyDeltas(const uint256 hash, double &dPriorityDelta, int64_t &nFeeDelta)
