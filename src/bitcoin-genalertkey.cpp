@@ -104,10 +104,15 @@ std::vector<CAlert> GenKey(std::string &outPriv, const std::string &networkName)
     return alerts;
 }
 
-void WriteTests(const std::string &testsFileName, const std::vector<CAlert> &alerts)
+void WriteTests(const boost::filesystem::path &testsFileName, const std::vector<CAlert> &alerts)
 {
-    CAutoFile est_fileout(fopen(testsFileName.c_str(), "wb"), SER_DISK, CLIENT_VERSION);
-    est_fileout << alerts;
+    CAutoFile fileout(fopen(testsFileName.string().c_str(), "wb"), SER_DISK, CLIENT_VERSION);
+    if (!fileout)
+    {
+        fprintf(stderr, "Could not write test data to %s, provide valid -testoutdir\n", testsFileName.string().c_str());
+        exit(1);
+    }
+    fileout << alerts;
 }
 
 int GenAlertKey(int argc, char *argv[])
@@ -122,11 +127,12 @@ int GenAlertKey(int argc, char *argv[])
     outPriv += "\n";
     std::vector<CAlert> testsTestNet = GenKey(outPriv, "TestNet");
 
+    boost::filesystem::path testoutdir = GetArg("-testoutdir", "test/data");
+
+    WriteTests(testoutdir / "alertTestsMainNet.raw", testsMainNet);
+    WriteTests(testoutdir / "alertTestsTestNet.raw", testsTestNet);
+
     printf("%s\n", outPriv.c_str());
-
-    WriteTests("test/data/alertTestsMainNet.raw", testsMainNet);
-    WriteTests("test/data/alertTestsTestNet.raw", testsTestNet);
-
     return 0;
 }
 
@@ -138,9 +144,9 @@ int main(int argc, char* argv[])
         ret = GenAlertKey(argc, argv);
     }
     catch (std::exception& e) {
-        PrintExceptionContinue(&e, "CommandLineRPC()");
+        PrintExceptionContinue(&e, "GenAlertKey()");
     } catch (...) {
-        PrintExceptionContinue(NULL, "CommandLineRPC()");
+        PrintExceptionContinue(NULL, "GenAlertKey()");
     }
     return ret;
 }
