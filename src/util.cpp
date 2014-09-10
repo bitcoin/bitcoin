@@ -211,6 +211,7 @@ int LogPrintStr(const std::string &str)
     {
         // print to console
         ret = fwrite(str.data(), 1, str.size(), stdout);
+        fflush(stdout);
     }
     else if (fPrintToDebugLog && AreBaseParamsConfigured())
     {
