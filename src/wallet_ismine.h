@@ -3,8 +3,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef H_BITCOIN_SCRIPTUTILS
-#define H_BITCOIN_SCRIPTUTILS
+#ifndef H_BITCOIN_WALLET_ISMINE
+#define H_BITCOIN_WALLET_ISMINE
 
 #include "key.h"
 #include "script/script.h"
@@ -24,6 +24,5 @@ typedef uint8_t isminefilter;
 
 isminetype IsMine(const CKeyStore& keystore, const CScript& scriptPubKey);
 isminetype IsMine(const CKeyStore& keystore, const CTxDestination& dest);
-void ExtractAffectedKeys(const CKeyStore &keystore, const CScript& scriptPubKey, std::vector<CKeyID> &vKeys);
 
 #endif // H_BITCOIN_SCRIPT
