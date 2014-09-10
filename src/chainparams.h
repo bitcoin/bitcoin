@@ -15,9 +15,12 @@
 
 typedef unsigned char MessageStartChars[MESSAGE_START_SIZE];
 
-struct CDNSSeedData {
+struct CDNSSeedData
+{
     std::string name, host;
-    CDNSSeedData(const std::string &strName, const std::string &strHost) : name(strName), host(strHost) {}
+    CDNSSeedData(const std::string &strName, const std::string &strHost) : name(strName), host(strHost)
+    {
+    }
 };
 
 /**
@@ -30,7 +33,8 @@ struct CDNSSeedData {
 class CChainParams
 {
 public:
-    enum Base58Type {
+    enum Base58Type
+    {
         PUBKEY_ADDRESS,
         SCRIPT_ADDRESS,
         SECRET_KEY,
@@ -40,43 +44,144 @@ public:
         MAX_BASE58_TYPES
     };
 
-    const uint256& HashGenesisBlock() const { return hashGenesisBlock; }
-    const MessageStartChars& MessageStart() const { return pchMessageStart; }
-    const std::vector<unsigned char>& AlertKey() const { return vAlertPubKey; }
-    int GetDefaultPort() const { return nDefaultPort; }
-    const uint256& ProofOfWorkLimit() const { return bnProofOfWorkLimit; }
-    int SubsidyHalvingInterval() const { return nSubsidyHalvingInterval; }
+    const uint256& HashGenesisBlock() const
+    {
+        return hashGenesisBlock;
+    }
+
+    const MessageStartChars& MessageStart() const
+    {
+        return pchMessageStart;
+    }
+
+    const std::vector<unsigned char>& AlertKey() const
+    {
+        return vAlertPubKey;
+    }
+
+    int GetDefaultPort() const
+    {
+        return nDefaultPort;
+    }
+
+    const uint256& ProofOfWorkLimit() const
+    {
+        return bnProofOfWorkLimit;
+    }
+
+    int SubsidyHalvingInterval() const
+    {
+        return nSubsidyHalvingInterval;
+    }
+
     /* Used to check majorities for block version upgrade */
-    int EnforceBlockUpgradeMajority() const { return nEnforceBlockUpgradeMajority; }
-    int RejectBlockOutdatedMajority() const { return nRejectBlockOutdatedMajority; }
-    int ToCheckBlockUpgradeMajority() const { return nToCheckBlockUpgradeMajority; }
+    int EnforceBlockUpgradeMajority() const
+    {
+        return nEnforceBlockUpgradeMajority;
+    }
+
+    int RejectBlockOutdatedMajority() const
+    {
+        return nRejectBlockOutdatedMajority;
+    }
+
+    int ToCheckBlockUpgradeMajority() const
+    {
+        return nToCheckBlockUpgradeMajority;
+    }
 
     /* Used if GenerateBitcoins is called with a negative number of threads */
-    int DefaultMinerThreads() const { return nMinerThreads; }
-    const CBlock& GenesisBlock() const { return genesis; }
-    bool RequireRPCPassword() const { return fRequireRPCPassword; }
+    int DefaultMinerThreads() const
+    {
+        return nMinerThreads;
+    }
+
+    const CBlock& GenesisBlock() const
+    {
+        return genesis;
+    }
+
+    bool RequireRPCPassword() const
+    {
+        return fRequireRPCPassword;
+    }
+
     /* Make miner wait to have peers to avoid wasting work */
-    bool MiningRequiresPeers() const { return fMiningRequiresPeers; }
+    bool MiningRequiresPeers() const
+    {
+        return fMiningRequiresPeers;
+    }
+
     /* Default value for -checkmempool argument */
-    bool DefaultCheckMemPool() const { return fDefaultCheckMemPool; }
+    bool DefaultCheckMemPool() const
+    {
+        return fDefaultCheckMemPool;
+    }
+
     /* Allow mining of a min-difficulty block */
-    bool AllowMinDifficultyBlocks() const { return fAllowMinDifficultyBlocks; }
+    bool AllowMinDifficultyBlocks() const
+    {
+        return fAllowMinDifficultyBlocks;
+    }
+
     /* Make standard checks */
-    bool RequireStandard() const { return fRequireStandard; }
-    int64_t TargetTimespan() const { return nTargetTimespan; }
-    int64_t TargetSpacing() const { return nTargetSpacing; }
-    int64_t Interval() const { return nTargetTimespan / nTargetSpacing; }
+    bool RequireStandard() const
+    {
+        return fRequireStandard;
+    }
+
+    int64_t TargetTimespan() const
+    {
+        return nTargetTimespan;
+    }
+
+    int64_t TargetSpacing() const
+    {
+        return nTargetSpacing;
+    }
+
+    int64_t Interval() const
+    {
+        return nTargetTimespan / nTargetSpacing;
+    }
+
     /* Make miner stop after a block is found. In RPC, don't return
      * until nGenProcLimit blocks are generated */
-    bool MineBlocksOnDemand() const { return fMineBlocksOnDemand; }
-    CBaseChainParams::Network NetworkID() const { return networkID; }
+    bool MineBlocksOnDemand() const
+    {
+        return fMineBlocksOnDemand;
+    }
+
+    CBaseChainParams::Network NetworkID() const
+    {
+        return networkID;
+    }
+
     /* Return the BIP70 network string (main, test or regtest) */
-    std::string NetworkIDString() const { return strNetworkID; }
-    const std::vector<CDNSSeedData>& DNSSeeds() const { return vSeeds; }
-    const std::vector<unsigned char>& Base58Prefix(Base58Type type) const { return base58Prefixes[type]; }
-    const std::vector<CAddress>& FixedSeeds() const { return vFixedSeeds; }
+    std::string NetworkIDString() const
+    {
+        return strNetworkID;
+    }
+
+    const std::vector<CDNSSeedData>& DNSSeeds() const
+    {
+        return vSeeds;
+    }
+
+    const std::vector<unsigned char>& Base58Prefix(Base58Type type) const
+    {
+        return base58Prefixes[type];
+    }
+
+    const std::vector<CAddress>& FixedSeeds() const
+    {
+        return vFixedSeeds;
+    }
+
 protected:
-    CChainParams() {}
+    CChainParams()
+    {
+    }
 
     uint256 hashGenesisBlock;
     MessageStartChars pchMessageStart;
@@ -121,3 +226,4 @@ void SelectParams(CBaseChainParams::Network network);
 bool SelectParamsFromCommandLine();
 
 #endif // BITCOIN_CHAIN_PARAMS_H
+

@@ -15,14 +15,15 @@ class CNetAddr;
 /** Median filter over a stream of values.
  * Returns the median of the last N numbers
  */
-template <typename T> class CMedianFilter
+template <typename T>
+class CMedianFilter
 {
 private:
     std::vector<T> vValues;
     std::vector<T> vSorted;
     unsigned int nSize;
 public:
-    CMedianFilter(unsigned int size, T initial_value):
+    CMedianFilter(unsigned int size, T initial_value) :
         nSize(size)
     {
         vValues.reserve(size);
@@ -32,10 +33,11 @@ public:
 
     void input(T value)
     {
-        if(vValues.size() == nSize)
+        if (vValues.size() == nSize)
         {
             vValues.erase(vValues.begin());
         }
+
         vValues.push_back(value);
 
         vSorted.resize(vValues.size());
@@ -46,14 +48,16 @@ public:
     T median() const
     {
         int size = vSorted.size();
-        assert(size>0);
-        if(size & 1) // Odd number of elements
+
+        assert(size > 0);
+
+        if (size & 1) // Odd number of elements
         {
-            return vSorted[size/2];
+            return vSorted[size / 2];
         }
         else // Even number of elements
         {
-            return (vSorted[size/2-1] + vSorted[size/2]) / 2;
+            return (vSorted[size / 2 - 1] + vSorted[size / 2]) / 2;
         }
     }
 
@@ -74,3 +78,4 @@ int64_t GetAdjustedTime();
 void AddTimeData(const CNetAddr& ip, int64_t nTime);
 
 #endif // BITCOIN_TIMEDATA_H
+

@@ -58,7 +58,7 @@ public:
          * This needs to be updated, when buttons are changed there!
          */
         BTN_MASK = (BTN_OK | BTN_YES | BTN_NO | BTN_ABORT | BTN_RETRY | BTN_IGNORE |
-                    BTN_CLOSE | BTN_CANCEL | BTN_DISCARD | BTN_HELP | BTN_APPLY | BTN_RESET),
+            BTN_CLOSE | BTN_CANCEL | BTN_DISCARD | BTN_HELP | BTN_APPLY | BTN_RESET),
 
         /** Force blocking, modal message box dialog (not just OS notification) */
         MODAL               = 0x10000000U,
@@ -70,7 +70,8 @@ public:
     };
 
     /** Show message box. */
-    boost::signals2::signal<bool (const std::string& message, const std::string& caption, unsigned int style), boost::signals2::last_value<bool> > ThreadSafeMessageBox;
+    boost::signals2::signal<bool (const std::string& message, const std::string& caption,
+            unsigned int style), boost::signals2::last_value<bool> > ThreadSafeMessageBox;
 
     /** Progress message during initialization. */
     boost::signals2::signal<void (const std::string &message)> InitMessage;
@@ -110,3 +111,4 @@ inline std::string _(const char* psz)
 }
 
 #endif // BITCOIN_UI_INTERFACE_H
+

@@ -97,7 +97,8 @@ private:
 public:
     CRPCConvertTable();
 
-    bool convert(const std::string& method, int idx) {
+    bool convert(const std::string& method, int idx)
+    {
         return (members.count(std::make_pair(method, idx)) > 0);
     }
 };
@@ -107,9 +108,10 @@ CRPCConvertTable::CRPCConvertTable()
     const unsigned int n_elem =
         (sizeof(vRPCConvertParams) / sizeof(vRPCConvertParams[0]));
 
-    for (unsigned int i = 0; i < n_elem; i++) {
+    for (unsigned int i = 0; i < n_elem; i++)
+    {
         members.insert(std::make_pair(vRPCConvertParams[i].methodName,
-                                      vRPCConvertParams[i].paramIdx));
+                vRPCConvertParams[i].paramIdx));
     }
 }
 
@@ -120,19 +122,26 @@ Array RPCConvertValues(const std::string &strMethod, const std::vector<std::stri
 {
     Array params;
 
-    for (unsigned int idx = 0; idx < strParams.size(); idx++) {
+    for (unsigned int idx = 0; idx < strParams.size(); idx++)
+    {
         const std::string& strVal = strParams[idx];
 
         // insert string value directly
-        if (!rpcCvtTable.convert(strMethod, idx)) {
+        if (!rpcCvtTable.convert(strMethod, idx))
+        {
             params.push_back(strVal);
         }
 
         // parse string as JSON, insert bool/number/object/etc. value
-        else {
+        else
+        {
             Value jVal;
+
             if (!read_string(strVal, jVal))
-                throw runtime_error(string("Error parsing JSON:")+strVal);
+            {
+                throw runtime_error(string("Error parsing JSON:") + strVal);
+            }
+
             params.push_back(jVal);
         }
     }

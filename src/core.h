@@ -20,7 +20,10 @@ static const int64_t CENT = 1000000;
 
 /** No amount larger than this (in satoshi) is valid */
 static const int64_t MAX_MONEY = 21000000 * COIN;
-inline bool MoneyRange(int64_t nValue) { return (nValue >= 0 && nValue <= MAX_MONEY); }
+inline bool MoneyRange(int64_t nValue)
+{
+    return (nValue >= 0 && nValue <= MAX_MONEY);
+}
 
 /** An outpoint - a combination of a transaction hash and an index n into its vout */
 class COutPoint
@@ -29,18 +32,35 @@ public:
     uint256 hash;
     uint32_t n;
 
-    COutPoint() { SetNull(); }
-    COutPoint(uint256 hashIn, uint32_t nIn) { hash = hashIn; n = nIn; }
+    COutPoint()
+    {
+        SetNull();
+    }
+
+    COutPoint(uint256 hashIn, uint32_t nIn)
+    {
+        hash = hashIn;
+        n = nIn;
+    }
 
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion)
+    {
         READWRITE(FLATDATA(*this));
     }
 
-    void SetNull() { hash = 0; n = (uint32_t) -1; }
-    bool IsNull() const { return (hash == 0 && n == (uint32_t) -1); }
+    void SetNull()
+    {
+        hash = 0;
+        n = (uint32_t) -1;
+    }
+
+    bool IsNull() const
+    {
+        return (hash == 0 && n == (uint32_t) -1);
+    }
 
     friend bool operator<(const COutPoint& a, const COutPoint& b)
     {
@@ -67,10 +87,27 @@ public:
     const CTransaction* ptx;
     uint32_t n;
 
-    CInPoint() { SetNull(); }
-    CInPoint(const CTransaction* ptxIn, uint32_t nIn) { ptx = ptxIn; n = nIn; }
-    void SetNull() { ptx = NULL; n = (uint32_t) -1; }
-    bool IsNull() const { return (ptx == NULL && n == (uint32_t) -1); }
+    CInPoint()
+    {
+        SetNull();
+    }
+
+    CInPoint(const CTransaction* ptxIn, uint32_t nIn)
+    {
+        ptx = ptxIn;
+        n = nIn;
+    }
+
+    void SetNull()
+    {
+        ptx = NULL;
+        n = (uint32_t) -1;
+    }
+
+    bool IsNull() const
+    {
+        return (ptx == NULL && n == (uint32_t) -1);
+    }
 };
 
 /** An input of a transaction.  It contains the location of the previous
@@ -89,13 +126,16 @@ public:
         nSequence = std::numeric_limits<unsigned int>::max();
     }
 
-    explicit CTxIn(COutPoint prevoutIn, CScript scriptSigIn=CScript(), uint32_t nSequenceIn=std::numeric_limits<unsigned int>::max());
-    CTxIn(uint256 hashPrevTx, uint32_t nOut, CScript scriptSigIn=CScript(), uint32_t nSequenceIn=std::numeric_limits<uint32_t>::max());
+    explicit CTxIn(COutPoint prevoutIn, CScript scriptSigIn = CScript(), uint32_t nSequenceIn =
+            std::numeric_limits<unsigned int>::max());
+    CTxIn(uint256 hashPrevTx, uint32_t nOut,
+        CScript scriptSigIn = CScript(), uint32_t nSequenceIn = std::numeric_limits<uint32_t>::max());
 
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion)
+    {
         READWRITE(prevout);
         READWRITE(scriptSig);
         READWRITE(nSequence);
@@ -109,8 +149,8 @@ public:
     friend bool operator==(const CTxIn& a, const CTxIn& b)
     {
         return (a.prevout   == b.prevout &&
-                a.scriptSig == b.scriptSig &&
-                a.nSequence == b.nSequence);
+            a.scriptSig == b.scriptSig &&
+            a.nSequence == b.nSequence);
     }
 
     friend bool operator!=(const CTxIn& a, const CTxIn& b)
@@ -121,8 +161,6 @@ public:
     std::string ToString() const;
 };
 
-
-
 /** Type-safe wrapper class to for fee rates
  * (how much to pay based on transaction size)
  */
@@ -131,29 +169,61 @@ class CFeeRate
 private:
     int64_t nSatoshisPerK; // unit is satoshis-per-1,000-bytes
 public:
-    CFeeRate() : nSatoshisPerK(0) { }
-    explicit CFeeRate(int64_t _nSatoshisPerK): nSatoshisPerK(_nSatoshisPerK) { }
+    CFeeRate() : nSatoshisPerK(0)
+    {
+    }
+
+    explicit CFeeRate(int64_t _nSatoshisPerK) : nSatoshisPerK(_nSatoshisPerK)
+    {
+    }
+
     CFeeRate(int64_t nFeePaid, size_t nSize);
-    CFeeRate(const CFeeRate& other) { nSatoshisPerK = other.nSatoshisPerK; }
+    CFeeRate(const CFeeRate& other)
+    {
+        nSatoshisPerK = other.nSatoshisPerK;
+    }
 
     int64_t GetFee(size_t size) const; // unit returned is satoshis
-    int64_t GetFeePerK() const { return GetFee(1000); } // satoshis-per-1000-bytes
+    int64_t GetFeePerK() const
+    {
+        return GetFee(1000);
+    }                                                   // satoshis-per-1000-bytes
 
-    friend bool operator<(const CFeeRate& a, const CFeeRate& b) { return a.nSatoshisPerK < b.nSatoshisPerK; }
-    friend bool operator>(const CFeeRate& a, const CFeeRate& b) { return a.nSatoshisPerK > b.nSatoshisPerK; }
-    friend bool operator==(const CFeeRate& a, const CFeeRate& b) { return a.nSatoshisPerK == b.nSatoshisPerK; }
-    friend bool operator<=(const CFeeRate& a, const CFeeRate& b) { return a.nSatoshisPerK <= b.nSatoshisPerK; }
-    friend bool operator>=(const CFeeRate& a, const CFeeRate& b) { return a.nSatoshisPerK >= b.nSatoshisPerK; }
+    friend bool operator<(const CFeeRate& a, const CFeeRate& b)
+    {
+        return a.nSatoshisPerK < b.nSatoshisPerK;
+    }
+
+    friend bool operator>(const CFeeRate& a, const CFeeRate& b)
+    {
+        return a.nSatoshisPerK > b.nSatoshisPerK;
+    }
+
+    friend bool operator==(const CFeeRate& a, const CFeeRate& b)
+    {
+        return a.nSatoshisPerK == b.nSatoshisPerK;
+    }
+
+    friend bool operator<=(const CFeeRate& a, const CFeeRate& b)
+    {
+        return a.nSatoshisPerK <= b.nSatoshisPerK;
+    }
+
+    friend bool operator>=(const CFeeRate& a, const CFeeRate& b)
+    {
+        return a.nSatoshisPerK >= b.nSatoshisPerK;
+    }
+
     std::string ToString() const;
 
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion)
+    {
         READWRITE(nSatoshisPerK);
     }
 };
-
 
 /** An output of a transaction.  It contains the public key that the next input
  * must be able to sign with to claim it.
@@ -174,7 +244,8 @@ public:
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion)
+    {
         READWRITE(nValue);
         READWRITE(scriptPubKey);
     }
@@ -200,16 +271,17 @@ public:
         // to spend something, then we consider it dust.
         // A typical txout is 34 bytes big, and will
         // need a CTxIn of at least 148 bytes to spend:
-        // so dust is a txout less than 546 satoshis 
+        // so dust is a txout less than 546 satoshis
         // with default minRelayTxFee.
-        size_t nSize = GetSerializeSize(SER_DISK,0)+148u;
-        return (nValue < 3*minRelayTxFee.GetFee(nSize));
+        size_t nSize = GetSerializeSize(SER_DISK, 0) + 148u;
+
+        return (nValue < 3 * minRelayTxFee.GetFee(nSize));
     }
 
     friend bool operator==(const CTxOut& a, const CTxOut& b)
     {
         return (a.nValue       == b.nValue &&
-                a.scriptPubKey == b.scriptPubKey);
+            a.scriptPubKey == b.scriptPubKey);
     }
 
     friend bool operator!=(const CTxOut& a, const CTxOut& b)
@@ -219,7 +291,6 @@ public:
 
     std::string ToString() const;
 };
-
 
 struct CMutableTransaction;
 
@@ -234,7 +305,7 @@ private:
     void UpdateHash() const;
 
 public:
-    static const int32_t CURRENT_VERSION=1;
+    static const int32_t CURRENT_VERSION = 1;
 
     // The local variables are made const to prevent unintended modification
     // without updating the cached hash value. However, CTransaction is not
@@ -257,21 +328,27 @@ public:
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion)
+    {
         READWRITE(*const_cast<int32_t*>(&this->nVersion));
         nVersion = this->nVersion;
         READWRITE(*const_cast<std::vector<CTxIn>*>(&vin));
         READWRITE(*const_cast<std::vector<CTxOut>*>(&vout));
         READWRITE(*const_cast<uint32_t*>(&nLockTime));
+
         if (ser_action.ForRead())
+        {
             UpdateHash();
+        }
     }
 
-    bool IsNull() const {
+    bool IsNull() const
+    {
         return vin.empty() && vout.empty();
     }
 
-    const uint256& GetHash() const {
+    const uint256& GetHash() const
+    {
         return hash;
     }
 
@@ -281,7 +358,7 @@ public:
     // inputs must be known to compute value in.
 
     // Compute priority, given priority of inputs and (optionally) tx size
-    double ComputePriority(double dPriorityInputs, unsigned int nTxSize=0) const;
+    double ComputePriority(double dPriorityInputs, unsigned int nTxSize = 0) const;
 
     bool IsCoinBase() const
     {
@@ -315,7 +392,8 @@ struct CMutableTransaction
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion)
+    {
         READWRITE(this->nVersion);
         nVersion = this->nVersion;
         READWRITE(vin);
@@ -339,20 +417,27 @@ public:
     static uint64_t CompressAmount(uint64_t nAmount);
     static uint64_t DecompressAmount(uint64_t nAmount);
 
-    CTxOutCompressor(CTxOut &txoutIn) : txout(txoutIn) { }
+    CTxOutCompressor(CTxOut &txoutIn) : txout(txoutIn)
+    {
+    }
 
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
-        if (!ser_action.ForRead()) {
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion)
+    {
+        if (!ser_action.ForRead())
+        {
             uint64_t nVal = CompressAmount(txout.nValue);
             READWRITE(VARINT(nVal));
-        } else {
+        }
+        else
+        {
             uint64_t nVal = 0;
             READWRITE(VARINT(nVal));
             txout.nValue = DecompressAmount(nVal);
         }
+
         CScriptCompressor cscript(REF(txout.scriptPubKey));
         READWRITE(cscript);
     }
@@ -372,31 +457,49 @@ public:
     unsigned int nHeight; // if the outpoint was the last unspent: its height
     int nVersion;         // if the outpoint was the last unspent: its version
 
-    CTxInUndo() : txout(), fCoinBase(false), nHeight(0), nVersion(0) {}
-    CTxInUndo(const CTxOut &txoutIn, bool fCoinBaseIn = false, unsigned int nHeightIn = 0, int nVersionIn = 0) : txout(txoutIn), fCoinBase(fCoinBaseIn), nHeight(nHeightIn), nVersion(nVersionIn) { }
+    CTxInUndo() : txout(), fCoinBase(false), nHeight(0), nVersion(0)
+    {
+    }
 
-    unsigned int GetSerializeSize(int nType, int nVersion) const {
-        return ::GetSerializeSize(VARINT(nHeight*2+(fCoinBase ? 1 : 0)), nType, nVersion) +
+    CTxInUndo(const CTxOut &txoutIn, bool fCoinBaseIn = false, unsigned int nHeightIn = 0, int nVersionIn =
+            0) : txout(txoutIn), fCoinBase(fCoinBaseIn), nHeight(nHeightIn), nVersion(nVersionIn)
+    {
+    }
+
+    unsigned int GetSerializeSize(int nType, int nVersion) const
+    {
+        return ::GetSerializeSize(VARINT(nHeight * 2 + (fCoinBase ? 1 : 0)), nType, nVersion) +
                (nHeight > 0 ? ::GetSerializeSize(VARINT(this->nVersion), nType, nVersion) : 0) +
                ::GetSerializeSize(CTxOutCompressor(REF(txout)), nType, nVersion);
     }
 
     template<typename Stream>
-    void Serialize(Stream &s, int nType, int nVersion) const {
-        ::Serialize(s, VARINT(nHeight*2+(fCoinBase ? 1 : 0)), nType, nVersion);
+    void Serialize(Stream &s, int nType, int nVersion) const
+    {
+        ::Serialize(s, VARINT(nHeight * 2 + (fCoinBase ? 1 : 0)), nType, nVersion);
+
         if (nHeight > 0)
+        {
             ::Serialize(s, VARINT(this->nVersion), nType, nVersion);
+        }
+
         ::Serialize(s, CTxOutCompressor(REF(txout)), nType, nVersion);
     }
 
     template<typename Stream>
-    void Unserialize(Stream &s, int nType, int nVersion) {
+    void Unserialize(Stream &s, int nType, int nVersion)
+    {
         unsigned int nCode = 0;
+
         ::Unserialize(s, VARINT(nCode), nType, nVersion);
         nHeight = nCode / 2;
         fCoinBase = nCode & 1;
+
         if (nHeight > 0)
+        {
             ::Unserialize(s, VARINT(this->nVersion), nType, nVersion);
+        }
+
         ::Unserialize(s, REF(CTxOutCompressor(REF(txout))), nType, nVersion);
     }
 };
@@ -411,11 +514,11 @@ public:
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion)
+    {
         READWRITE(vprevout);
     }
 };
-
 
 /** Nodes collect new transactions into a block, hash them into a hash tree,
  * and scan through nonce values to make the block's hash satisfy proof-of-work
@@ -428,7 +531,7 @@ class CBlockHeader
 {
 public:
     // header
-    static const int32_t CURRENT_VERSION=2;
+    static const int32_t CURRENT_VERSION = 2;
     int32_t nVersion;
     uint256 hashPrevBlock;
     uint256 hashMerkleRoot;
@@ -444,7 +547,8 @@ public:
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion)
+    {
         READWRITE(this->nVersion);
         nVersion = this->nVersion;
         READWRITE(hashPrevBlock);
@@ -477,7 +581,6 @@ public:
     }
 };
 
-
 class CBlock : public CBlockHeader
 {
 public:
@@ -501,7 +604,8 @@ public:
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion)
+    {
         READWRITE(*(CBlockHeader*)this);
         READWRITE(vtx);
     }
@@ -516,6 +620,7 @@ public:
     CBlockHeader GetBlockHeader() const
     {
         CBlockHeader block;
+
         block.nVersion       = nVersion;
         block.hashPrevBlock  = hashPrevBlock;
         block.hashMerkleRoot = hashMerkleRoot;
@@ -532,7 +637,6 @@ public:
     std::string ToString() const;
 };
 
-
 /** Describes a place in the block chain to another node such that if the
  * other node doesn't have the same branch, it can find a recent common trunk.
  * The further back it is, the further before the fork it may be.
@@ -541,7 +645,9 @@ struct CBlockLocator
 {
     std::vector<uint256> vHave;
 
-    CBlockLocator() {}
+    CBlockLocator()
+    {
+    }
 
     CBlockLocator(const std::vector<uint256>& vHaveIn)
     {
@@ -551,9 +657,13 @@ struct CBlockLocator
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion)
+    {
         if (!(nType & SER_GETHASH))
+        {
             READWRITE(nVersion);
+        }
+
         READWRITE(vHave);
     }
 
@@ -569,3 +679,4 @@ struct CBlockLocator
 };
 
 #endif // BITCOIN_CORE_H
+

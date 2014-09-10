@@ -19,7 +19,7 @@ void RandAddSeedPerfmon();
 /**
  * Functions to gather random data via the OpenSSL PRNG
  */
-bool GetRandBytes(unsigned char *buf, int num);
+bool GetRandBytes(unsigned char* buf, int num);
 uint64_t GetRand(uint64_t nMax);
 int GetRandInt(int nMax);
 uint256 GetRandHash();
@@ -47,3 +47,4 @@ static inline uint32_t insecure_rand(void)
 }
 
 #endif // BITCOIN_RANDOM_H
+

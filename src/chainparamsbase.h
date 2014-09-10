@@ -15,7 +15,8 @@
 class CBaseChainParams
 {
 public:
-    enum Network {
+    enum Network
+    {
         MAIN,
         TESTNET,
         REGTEST,
@@ -23,11 +24,25 @@ public:
         MAX_NETWORK_TYPES
     };
 
-    const std::string& DataDir() const { return strDataDir; }
-    int RPCPort() const { return nRPCPort; }
-    Network NetworkID() const { return networkID; }
+    const std::string& DataDir() const
+    {
+        return strDataDir;
+    }
+
+    int RPCPort() const
+    {
+        return nRPCPort;
+    }
+
+    Network NetworkID() const
+    {
+        return networkID;
+    }
+
 protected:
-    CBaseChainParams() {}
+    CBaseChainParams()
+    {
+    }
 
     int nRPCPort;
     std::string strDataDir;
@@ -56,3 +71,4 @@ bool SelectBaseParamsFromCommandLine();
 bool AreBaseParamsConfigured();
 
 #endif // BITCOIN_CHAIN_PARAMS_BASE_H
+

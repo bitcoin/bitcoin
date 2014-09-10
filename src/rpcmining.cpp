@@ -30,27 +30,38 @@ using namespace std;
 // Return average network hashes per second based on the last 'lookup' blocks,
 // or from the last difficulty change if 'lookup' is nonpositive.
 // If 'height' is nonnegative, compute the estimate at the time when a given block was found.
-Value GetNetworkHashPS(int lookup, int height) {
-    CBlockIndex *pb = chainActive.Tip();
+Value GetNetworkHashPS(int lookup, int height)
+{
+    CBlockIndex* pb = chainActive.Tip();
 
     if (height >= 0 && height < chainActive.Height())
+    {
         pb = chainActive[height];
+    }
 
     if (pb == NULL || !pb->nHeight)
+    {
         return 0;
+    }
 
     // If lookup is -1, then use blocks since last difficulty change.
     if (lookup <= 0)
+    {
         lookup = pb->nHeight % 2016 + 1;
+    }
 
     // If lookup is larger than chain, then set it to chain length.
     if (lookup > pb->nHeight)
+    {
         lookup = pb->nHeight;
+    }
 
-    CBlockIndex *pb0 = pb;
+    CBlockIndex* pb0 = pb;
     int64_t minTime = pb0->GetBlockTime();
     int64_t maxTime = minTime;
-    for (int i = 0; i < lookup; i++) {
+
+    for (int i = 0; i < lookup; i++)
+    {
         pb0 = pb0->pprev;
         int64_t time = pb0->GetBlockTime();
         minTime = std::min(time, minTime);
@@ -59,7 +70,9 @@ Value GetNetworkHashPS(int lookup, int height) {
 
     // In case there's a situation where minTime == maxTime, we don't want a divide by zero exception.
     if (minTime == maxTime)
+    {
         return 0;
+    }
 
     uint256 workDiff = pb->nChainWork - pb0->nChainWork;
     int64_t timeDiff = maxTime - minTime;
@@ -70,6 +83,7 @@ Value GetNetworkHashPS(int lookup, int height) {
 Value getnetworkhashps(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() > 2)
+    {
         throw runtime_error(
             "getnetworkhashps ( blocks height )\n"
             "\nReturns the estimated network hashes per second based on the last n blocks.\n"
@@ -83,7 +97,8 @@ Value getnetworkhashps(const Array& params, bool fHelp)
             "\nExamples:\n"
             + HelpExampleCli("getnetworkhashps", "")
             + HelpExampleRpc("getnetworkhashps", "")
-       );
+            );
+    }
 
     return GetNetworkHashPS(params.size() > 0 ? params[0].get_int() : 120, params.size() > 1 ? params[1].get_int() : -1);
 }
@@ -92,6 +107,7 @@ Value getnetworkhashps(const Array& params, bool fHelp)
 Value getgenerate(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 0)
+    {
         throw runtime_error(
             "getgenerate\n"
             "\nReturn if the server is set to generate coins or not. The default is false.\n"
@@ -102,15 +118,16 @@ Value getgenerate(const Array& params, bool fHelp)
             "\nExamples:\n"
             + HelpExampleCli("getgenerate", "")
             + HelpExampleRpc("getgenerate", "")
-        );
+            );
+    }
 
     return GetBoolArg("-gen", false);
 }
 
-
 Value setgenerate(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 1 || params.size() > 2)
+    {
         throw runtime_error(
             "setgenerate generate ( genproclimit )\n"
             "\nSet 'generate' true or false to turn generation on or off.\n"
@@ -129,21 +146,31 @@ Value setgenerate(const Array& params, bool fHelp)
             + HelpExampleCli("setgenerate", "false") +
             "\nUsing json rpc\n"
             + HelpExampleRpc("setgenerate", "true, 1")
-        );
+            );
+    }
 
     if (pwalletMain == NULL)
+    {
         throw JSONRPCError(RPC_METHOD_NOT_FOUND, "Method not found (disabled)");
+    }
 
     bool fGenerate = true;
+
     if (params.size() > 0)
+    {
         fGenerate = params[0].get_bool();
+    }
 
     int nGenProcLimit = -1;
+
     if (params.size() > 1)
     {
         nGenProcLimit = params[1].get_int();
+
         if (nGenProcLimit == 0)
+        {
             fGenerate = false;
+        }
     }
 
     // -regtest mode: don't return until nGenProcLimit blocks are generated
@@ -153,13 +180,15 @@ Value setgenerate(const Array& params, bool fHelp)
         int nHeightEnd = 0;
         int nHeight = 0;
         int nGenerate = (nGenProcLimit > 0 ? nGenProcLimit : 1);
-        {   // Don't keep cs_main locked
+        {
+            // Don't keep cs_main locked
             LOCK(cs_main);
             nHeightStart = chainActive.Height();
             nHeight = nHeightStart;
-            nHeightEnd = nHeightStart+nGenerate;
+            nHeightEnd = nHeightStart + nGenerate;
         }
         int nHeightLast = -1;
+
         while (nHeight < nHeightEnd)
         {
             if (nHeightLast != nHeight)
@@ -167,8 +196,10 @@ Value setgenerate(const Array& params, bool fHelp)
                 nHeightLast = nHeight;
                 GenerateBitcoins(fGenerate, pwalletMain, 1);
             }
+
             MilliSleep(1);
-            {   // Don't keep cs_main locked
+            {
+                // Don't keep cs_main locked
                 LOCK(cs_main);
                 nHeight = chainActive.Height();
             }
@@ -187,6 +218,7 @@ Value setgenerate(const Array& params, bool fHelp)
 Value gethashespersec(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 0)
+    {
         throw runtime_error(
             "gethashespersec\n"
             "\nReturns a recent hashes per second performance measurement while generating.\n"
@@ -196,18 +228,23 @@ Value gethashespersec(const Array& params, bool fHelp)
             "\nExamples:\n"
             + HelpExampleCli("gethashespersec", "")
             + HelpExampleRpc("gethashespersec", "")
-        );
+            );
+    }
 
     if (GetTimeMillis() - nHPSTimerStart > 8000)
+    {
         return (int64_t)0;
+    }
+
     return (int64_t)dHashesPerSec;
 }
-#endif
 
+#endif
 
 Value getmininginfo(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 0)
+    {
         throw runtime_error(
             "getmininginfo\n"
             "\nReturns a json object containing mining-related information."
@@ -228,30 +265,31 @@ Value getmininginfo(const Array& params, bool fHelp)
             "\nExamples:\n"
             + HelpExampleCli("getmininginfo", "")
             + HelpExampleRpc("getmininginfo", "")
-        );
+            );
+    }
 
     Object obj;
-    obj.push_back(Pair("blocks",           (int)chainActive.Height()));
+    obj.push_back(Pair("blocks", (int)chainActive.Height()));
     obj.push_back(Pair("currentblocksize", (uint64_t)nLastBlockSize));
-    obj.push_back(Pair("currentblocktx",   (uint64_t)nLastBlockTx));
-    obj.push_back(Pair("difficulty",       (double)GetDifficulty()));
-    obj.push_back(Pair("errors",           GetWarnings("statusbar")));
-    obj.push_back(Pair("genproclimit",     (int)GetArg("-genproclimit", -1)));
-    obj.push_back(Pair("networkhashps",    getnetworkhashps(params, false)));
-    obj.push_back(Pair("pooledtx",         (uint64_t)mempool.size()));
-    obj.push_back(Pair("testnet",          Params().NetworkID() == CBaseChainParams::TESTNET));
-    obj.push_back(Pair("chain",            Params().NetworkIDString()));
+    obj.push_back(Pair("currentblocktx", (uint64_t)nLastBlockTx));
+    obj.push_back(Pair("difficulty", (double)GetDifficulty()));
+    obj.push_back(Pair("errors", GetWarnings("statusbar")));
+    obj.push_back(Pair("genproclimit", (int)GetArg("-genproclimit", -1)));
+    obj.push_back(Pair("networkhashps", getnetworkhashps(params, false)));
+    obj.push_back(Pair("pooledtx", (uint64_t)mempool.size()));
+    obj.push_back(Pair("testnet", Params().NetworkID() == CBaseChainParams::TESTNET));
+    obj.push_back(Pair("chain", Params().NetworkIDString()));
 #ifdef ENABLE_WALLET
-    obj.push_back(Pair("generate",         getgenerate(params, false)));
-    obj.push_back(Pair("hashespersec",     gethashespersec(params, false)));
+    obj.push_back(Pair("generate", getgenerate(params, false)));
+    obj.push_back(Pair("hashespersec", gethashespersec(params, false)));
 #endif
     return obj;
 }
 
-
 Value prioritisetransaction(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 3)
+    {
         throw runtime_error(
             "prioritisetransaction <txid> <priority delta> <fee delta>\n"
             "Accepts the transaction into mined blocks at a higher (or lower) priority\n"
@@ -268,23 +306,27 @@ Value prioritisetransaction(const Array& params, bool fHelp)
             "\nExamples:\n"
             + HelpExampleCli("prioritisetransaction", "\"txid\" 0.0 0.00010000")
             + HelpExampleRpc("prioritisetransaction", "\"txid\", 0.0, 0.00010000")
-        );
+            );
+    }
 
     uint256 hash;
     hash.SetHex(params[0].get_str());
 
     int64_t nAmount = 0;
+
     if (params[2].get_real() != 0.0)
+    {
         nAmount = AmountFromValue(params[2]);
+    }
 
     mempool.PrioritiseTransaction(hash, params[0].get_str(), params[1].get_real(), nAmount);
     return true;
 }
 
-
 Value getblocktemplate(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() > 1)
+    {
         throw runtime_error(
             "getblocktemplate ( \"jsonrequestobject\" )\n"
             "\nIf the request parameters include a 'mode' key, that is used to explicitly select between the default 'template' request or a 'proposal'.\n"
@@ -342,33 +384,47 @@ Value getblocktemplate(const Array& params, bool fHelp)
             "\nExamples:\n"
             + HelpExampleCli("getblocktemplate", "")
             + HelpExampleRpc("getblocktemplate", "")
-         );
+            );
+    }
 
     std::string strMode = "template";
     Value lpval = Value::null;
+
     if (params.size() > 0)
     {
         const Object& oparam = params[0].get_obj();
         const Value& modeval = find_value(oparam, "mode");
+
         if (modeval.type() == str_type)
+        {
             strMode = modeval.get_str();
+        }
         else if (modeval.type() == null_type)
         {
             /* Do nothing */
         }
         else
+        {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid mode");
+        }
+
         lpval = find_value(oparam, "longpollid");
     }
 
     if (strMode != "template")
+    {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid mode");
+    }
 
     if (vNodes.empty())
+    {
         throw JSONRPCError(RPC_CLIENT_NOT_CONNECTED, "Bitcoin is not connected!");
+    }
 
     if (IsInitialBlockDownload())
+    {
         throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Bitcoin is downloading blocks...");
+    }
 
     static unsigned int nTransactionsUpdatedLast;
 
@@ -396,33 +452,48 @@ Value getblocktemplate(const Array& params, bool fHelp)
 
         // Release the wallet and main lock while waiting
 #ifdef ENABLE_WALLET
-        if(pwalletMain)
+
+        if (pwalletMain)
+        {
             LEAVE_CRITICAL_SECTION(pwalletMain->cs_wallet);
+        }
+
 #endif
         LEAVE_CRITICAL_SECTION(cs_main);
         {
             checktxtime = boost::get_system_time() + boost::posix_time::minutes(1);
 
             boost::unique_lock<boost::mutex> lock(csBestBlock);
+
             while (chainActive.Tip()->GetBlockHash() == hashWatchedChain && IsRPCRunning())
             {
                 if (!cvBlockChange.timed_wait(lock, checktxtime))
                 {
                     // Timeout: Check transactions for update
                     if (mempool.GetTransactionsUpdated() != nTransactionsUpdatedLastLP)
+                    {
                         break;
+                    }
+
                     checktxtime += boost::posix_time::seconds(10);
                 }
             }
         }
         ENTER_CRITICAL_SECTION(cs_main);
 #ifdef ENABLE_WALLET
-        if(pwalletMain)
+
+        if (pwalletMain)
+        {
             ENTER_CRITICAL_SECTION(pwalletMain->cs_wallet);
+        }
+
 #endif
 
         if (!IsRPCRunning())
+        {
             throw JSONRPCError(RPC_CLIENT_NOT_CONNECTED, "Shutting down");
+        }
+
         // TODO: Maybe recheck connections/IBD and (if something wrong) send an expires-immediately template to stop miners?
     }
 
@@ -430,6 +501,7 @@ Value getblocktemplate(const Array& params, bool fHelp)
     static CBlockIndex* pindexPrev;
     static int64_t nStart;
     static CBlockTemplate* pblocktemplate;
+
     if (pindexPrev != chainActive.Tip() ||
         (mempool.GetTransactionsUpdated() != nTransactionsUpdatedLast && GetTime() - nStart > 5))
     {
@@ -442,19 +514,24 @@ Value getblocktemplate(const Array& params, bool fHelp)
         nStart = GetTime();
 
         // Create new block
-        if(pblocktemplate)
+        if (pblocktemplate)
         {
             delete pblocktemplate;
             pblocktemplate = NULL;
         }
+
         CScript scriptDummy = CScript() << OP_TRUE;
         pblocktemplate = CreateNewBlock(scriptDummy);
+
         if (!pblocktemplate)
+        {
             throw JSONRPCError(RPC_OUT_OF_MEMORY, "Out of memory");
+        }
 
         // Need to update only after we know CreateNewBlock succeeded
         pindexPrev = pindexPrevNew;
     }
+
     CBlock* pblock = &pblocktemplate->block; // pointer for convenience
 
     // Update nTime
@@ -464,13 +541,16 @@ Value getblocktemplate(const Array& params, bool fHelp)
     Array transactions;
     map<uint256, int64_t> setTxIndex;
     int i = 0;
+
     BOOST_FOREACH (CTransaction& tx, pblock->vtx)
     {
         uint256 txHash = tx.GetHash();
         setTxIndex[txHash] = i++;
 
         if (tx.IsCoinBase())
+        {
             continue;
+        }
 
         Object entry;
 
@@ -479,11 +559,15 @@ Value getblocktemplate(const Array& params, bool fHelp)
         entry.push_back(Pair("hash", txHash.GetHex()));
 
         Array deps;
+
         BOOST_FOREACH (const CTxIn &in, tx.vin)
         {
             if (setTxIndex.count(in.prevout.hash))
+            {
                 deps.push_back(setTxIndex[in.prevout.hash]);
+            }
         }
+
         entry.push_back(Pair("depends", deps));
 
         int index_in_template = i - 1;
@@ -499,6 +583,7 @@ Value getblocktemplate(const Array& params, bool fHelp)
     uint256 hashTarget = uint256().SetCompact(pblock->nBits);
 
     static Array aMutable;
+
     if (aMutable.empty())
     {
         aMutable.push_back("time");
@@ -514,14 +599,14 @@ Value getblocktemplate(const Array& params, bool fHelp)
     result.push_back(Pair("coinbasevalue", (int64_t)pblock->vtx[0].vout[0].nValue));
     result.push_back(Pair("longpollid", chainActive.Tip()->GetBlockHash().GetHex() + i64tostr(nTransactionsUpdatedLast)));
     result.push_back(Pair("target", hashTarget.GetHex()));
-    result.push_back(Pair("mintime", (int64_t)pindexPrev->GetMedianTimePast()+1));
+    result.push_back(Pair("mintime", (int64_t)pindexPrev->GetMedianTimePast() + 1));
     result.push_back(Pair("mutable", aMutable));
     result.push_back(Pair("noncerange", "00000000ffffffff"));
     result.push_back(Pair("sigoplimit", (int64_t)MAX_BLOCK_SIGOPS));
     result.push_back(Pair("sizelimit", (int64_t)MAX_BLOCK_SIZE));
     result.push_back(Pair("curtime", pblock->GetBlockTime()));
     result.push_back(Pair("bits", strprintf("%08x", pblock->nBits)));
-    result.push_back(Pair("height", (int64_t)(pindexPrev->nHeight+1)));
+    result.push_back(Pair("height", (int64_t)(pindexPrev->nHeight + 1)));
 
     return result;
 }
@@ -529,6 +614,7 @@ Value getblocktemplate(const Array& params, bool fHelp)
 Value submitblock(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 1 || params.size() > 2)
+    {
         throw runtime_error(
             "submitblock \"hexdata\" ( \"jsonparametersobject\" )\n"
             "\nAttempts to submit new block to network.\n"
@@ -545,22 +631,28 @@ Value submitblock(const Array& params, bool fHelp)
             "\nExamples:\n"
             + HelpExampleCli("submitblock", "\"mydata\"")
             + HelpExampleRpc("submitblock", "\"mydata\"")
-        );
+            );
+    }
 
     vector<unsigned char> blockData(ParseHex(params[0].get_str()));
     CDataStream ssBlock(blockData, SER_NETWORK, PROTOCOL_VERSION);
     CBlock pblock;
-    try {
+    try
+    {
         ssBlock >> pblock;
     }
-    catch (std::exception &e) {
+    catch (std::exception &e)
+    {
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Block decode failed");
     }
 
     CValidationState state;
     bool fAccepted = ProcessBlock(state, NULL, &pblock);
+
     if (!fAccepted)
+    {
         return "rejected"; // TODO: report validation state
+    }
 
     return Value::null;
 }
@@ -568,6 +660,7 @@ Value submitblock(const Array& params, bool fHelp)
 Value estimatefee(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
+    {
         throw runtime_error(
             "estimatefee nblocks\n"
             "\nEstimates the approximate fee per kilobyte\n"
@@ -583,16 +676,23 @@ Value estimatefee(const Array& params, bool fHelp)
             "\nExample:\n"
             + HelpExampleCli("estimatefee", "6")
             );
+    }
 
     RPCTypeCheck(params, boost::assign::list_of(int_type));
 
     int nBlocks = params[0].get_int();
+
     if (nBlocks < 1)
+    {
         nBlocks = 1;
+    }
 
     CFeeRate feeRate = mempool.estimateFee(nBlocks);
+
     if (feeRate == CFeeRate(0))
+    {
         return -1.0;
+    }
 
     return ValueFromAmount(feeRate.GetFeePerK());
 }
@@ -600,6 +700,7 @@ Value estimatefee(const Array& params, bool fHelp)
 Value estimatepriority(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
+    {
         throw runtime_error(
             "estimatepriority nblocks\n"
             "\nEstimates the approximate priority\n"
@@ -615,12 +716,17 @@ Value estimatepriority(const Array& params, bool fHelp)
             "\nExample:\n"
             + HelpExampleCli("estimatepriority", "6")
             );
+    }
 
     RPCTypeCheck(params, boost::assign::list_of(int_type));
 
     int nBlocks = params[0].get_int();
+
     if (nBlocks < 1)
+    {
         nBlocks = 1;
+    }
 
     return mempool.estimatePriority(nBlocks);
 }
+

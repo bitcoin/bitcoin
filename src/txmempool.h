@@ -36,17 +36,35 @@ private:
     unsigned int nHeight; // Chain height when entering the mempool
 
 public:
-    CTxMemPoolEntry(const CTransaction& _tx, int64_t _nFee,
-                    int64_t _nTime, double _dPriority, unsigned int _nHeight);
+    CTxMemPoolEntry(const CTransaction& _tx, int64_t _nFee, int64_t _nTime, double _dPriority, unsigned int _nHeight);
     CTxMemPoolEntry();
     CTxMemPoolEntry(const CTxMemPoolEntry& other);
 
-    const CTransaction& GetTx() const { return this->tx; }
+    const CTransaction& GetTx() const
+    {
+        return this->tx;
+    }
+
     double GetPriority(unsigned int currentHeight) const;
-    int64_t GetFee() const { return nFee; }
-    size_t GetTxSize() const { return nTxSize; }
-    int64_t GetTime() const { return nTime; }
-    unsigned int GetHeight() const { return nHeight; }
+    int64_t GetFee() const
+    {
+        return nFee;
+    }
+
+    size_t GetTxSize() const
+    {
+        return nTxSize;
+    }
+
+    int64_t GetTime() const
+    {
+        return nTime;
+    }
+
+    unsigned int GetHeight() const
+    {
+        return nHeight;
+    }
 };
 
 class CMinerPolicyEstimator;
@@ -86,14 +104,17 @@ public:
      * all inputs are in the mapNextTx array). If sanity-checking is turned off,
      * check does nothing.
      */
-    void check(const CCoinsViewCache *pcoins) const;
-    void setSanityCheck(bool _fSanityCheck) { fSanityCheck = _fSanityCheck; }
+    void check(const CCoinsViewCache* pcoins) const;
+    void setSanityCheck(bool _fSanityCheck)
+    {
+        fSanityCheck = _fSanityCheck;
+    }
 
     bool addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry);
     void remove(const CTransaction &tx, std::list<CTransaction>& removed, bool fRecursive = false);
     void removeConflicts(const CTransaction &tx, std::list<CTransaction>& removed);
     void removeForBlock(const std::vector<CTransaction>& vtx, unsigned int nBlockHeight,
-                        std::list<CTransaction>& conflicts);
+        std::list<CTransaction>& conflicts);
     void clear();
     void queryHashes(std::vector<uint256>& vtxid);
     void pruneSpent(const uint256& hash, CCoins &coins);
@@ -110,6 +131,7 @@ public:
         LOCK(cs);
         return mapTx.size();
     }
+
     uint64_t GetTotalTxSize()
     {
         LOCK(cs);
@@ -149,3 +171,4 @@ public:
 };
 
 #endif // BITCOIN_TXMEMPOOL_H
+

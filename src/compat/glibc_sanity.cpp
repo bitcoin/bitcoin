@@ -14,10 +14,11 @@
 extern "C" void* memcpy(void* a, const void* b, size_t c);
 void* memcpy_int(void* a, const void* b, size_t c)
 {
-    return memcpy(a,b,c);
+    return memcpy(a, b, c);
 }
 
-namespace {
+namespace
+{
 // trigger: Use the memcpy_int wrapper which calls our internal memcpy.
 //   A direct call to memcpy may be optimized away by the compiler.
 // test: Fill an array with a sequence of integers. memcpy to a new empty array.
@@ -28,16 +29,22 @@ bool sanity_test_memcpy()
 {
     unsigned int memcpy_test[T];
     unsigned int memcpy_verify[T] = {};
-    for (unsigned int i = 0; i != T; ++i)
-        memcpy_test[i] = i;
-
-    memcpy_int(memcpy_verify,memcpy_test,sizeof(memcpy_test));
 
     for (unsigned int i = 0; i != T; ++i)
     {
-        if(memcpy_verify[i] != i)
-            return false;
+        memcpy_test[i] = i;
     }
+
+    memcpy_int(memcpy_verify, memcpy_test, sizeof(memcpy_test));
+
+    for (unsigned int i = 0; i != T; ++i)
+    {
+        if (memcpy_verify[i] != i)
+        {
+            return false;
+        }
+    }
+
     return true;
 }
 
@@ -49,19 +56,25 @@ bool sanity_test_memcpy()
 bool sanity_test_fdelt()
 {
     fd_set fds;
+
     FD_ZERO(&fds);
     FD_SET(0, &fds);
-    return FD_ISSET(0,&fds);
+    return FD_ISSET(0, &fds);
 }
-#endif
 
+#endif
 } // anon namespace
 
 bool glibc_sanity_test()
 {
 #if defined(HAVE_SYS_SELECT_H)
+
     if (!sanity_test_fdelt())
+    {
         return false;
+    }
+
 #endif
     return sanity_test_memcpy<1025>();
 }
+

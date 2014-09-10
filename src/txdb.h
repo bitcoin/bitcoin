@@ -65,3 +65,4 @@ public:
 };
 
 #endif // BITCOIN_TXDB_LEVELDB_H
+

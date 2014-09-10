@@ -33,8 +33,9 @@ class CAddrMan;
 class CBlockIndex;
 class CNode;
 
-namespace boost {
-    class thread_group;
+namespace boost
+{
+class thread_group;
 } // namespace boost
 
 /** Time between pings automatically sent out for latency probing and keepalive (in seconds). */
@@ -62,14 +63,16 @@ void AddressCurrentlyConnected(const CService& addr);
 CNode* FindNode(const CNetAddr& ip);
 CNode* FindNode(const std::string& addrName);
 CNode* FindNode(const CService& ip);
-CNode* ConnectNode(CAddress addrConnect, const char *pszDest = NULL);
-bool OpenNetworkConnection(const CAddress& addrConnect, CSemaphoreGrant *grantOutbound = NULL, const char *strDest = NULL, bool fOneShot = false);
+CNode* ConnectNode(CAddress addrConnect, const char* pszDest = NULL);
+bool OpenNetworkConnection(const CAddress& addrConnect, CSemaphoreGrant* grantOutbound = NULL, const char* strDest =
+        NULL,
+    bool fOneShot = false);
 void MapPort(bool fUseUPnP);
 unsigned short GetListenPort();
 bool BindListenPort(const CService &bindAddr, std::string& strError, bool fWhitelisted = false);
 void StartNode(boost::thread_group& threadGroup);
 bool StopNode();
-void SocketSendData(CNode *pnode);
+void SocketSendData(CNode* pnode);
 
 typedef int NodeId;
 
@@ -83,9 +86,7 @@ struct CNodeSignals
     boost::signals2::signal<void (NodeId)> FinalizeNode;
 };
 
-
 CNodeSignals& GetNodeSignals();
-
 
 enum
 {
@@ -106,12 +107,11 @@ bool AddLocal(const CService& addr, int nScore = LOCAL_NONE);
 bool AddLocal(const CNetAddr& addr, int nScore = LOCAL_NONE);
 bool SeenLocal(const CService& addr);
 bool IsLocal(const CService& addr);
-bool GetLocal(CService &addr, const CNetAddr *paddrPeer = NULL);
+bool GetLocal(CService &addr, const CNetAddr* paddrPeer = NULL);
 bool IsReachable(enum Network net);
 bool IsReachable(const CNetAddr &addr);
 void SetReachable(enum Network net, bool fFlag = true);
-CAddress GetLocalAddress(const CNetAddr *paddrPeer = NULL);
-
+CAddress GetLocalAddress(const CNetAddr* paddrPeer = NULL);
 
 extern bool fDiscover;
 extern bool fListen;
@@ -133,7 +133,8 @@ extern CCriticalSection cs_vAddedNodes;
 extern NodeId nLastNodeId;
 extern CCriticalSection cs_nLastNodeId;
 
-struct LocalServiceInfo {
+struct LocalServiceInfo
+{
     int nScore;
     int nPort;
 };
@@ -163,10 +164,8 @@ public:
     std::string addrLocal;
 };
 
-
-
-
-class CNetMessage {
+class CNetMessage
+{
 public:
     bool in_data;                   // parsing header (false) or data (true)
 
@@ -179,7 +178,8 @@ public:
 
     int64_t nTime;                  // time (in microseconds) of message receipt.
 
-    CNetMessage(int nTypeIn, int nVersionIn) : hdrbuf(nTypeIn, nVersionIn), vRecv(nTypeIn, nVersionIn) {
+    CNetMessage(int nTypeIn, int nVersionIn) : hdrbuf(nTypeIn, nVersionIn), vRecv(nTypeIn, nVersionIn)
+    {
         hdrbuf.resize(24);
         in_data = false;
         nHdrPos = 0;
@@ -190,7 +190,10 @@ public:
     bool complete() const
     {
         if (!in_data)
+        {
             return false;
+        }
+
         return (hdr.nMessageSize == nDataPos);
     }
 
@@ -200,13 +203,9 @@ public:
         vRecv.SetVersion(nVersionIn);
     }
 
-    int readHeader(const char *pch, unsigned int nBytes);
-    int readData(const char *pch, unsigned int nBytes);
+    int readHeader(const char* pch, unsigned int nBytes);
+    int readData(const char* pch, unsigned int nBytes);
 };
-
-
-
-
 
 /** Information about a peer */
 class CNode
@@ -301,7 +300,7 @@ public:
     // Whether a ping is requested.
     bool fPingQueued;
 
-    CNode(SOCKET hSocketIn, CAddress addrIn, std::string addrNameIn = "", bool fInboundIn=false);
+    CNode(SOCKET hSocketIn, CAddress addrIn, std::string addrNameIn = "", bool fInboundIn = false);
     ~CNode();
 
 private:
@@ -316,8 +315,9 @@ private:
 
 public:
 
-    NodeId GetId() const {
-      return id;
+    NodeId GetId() const
+    {
+        return id;
     }
 
     int GetRefCount()
@@ -330,20 +330,27 @@ public:
     unsigned int GetTotalRecvSize()
     {
         unsigned int total = 0;
-        BOOST_FOREACH(const CNetMessage &msg, vRecvMsg)
+
+        BOOST_FOREACH (const CNetMessage &msg, vRecvMsg)
+        {
             total += msg.vRecv.size() + 24;
+        }
+
         return total;
     }
 
     // requires LOCK(cs_vRecvMsg)
-    bool ReceiveMsgBytes(const char *pch, unsigned int nBytes);
+    bool ReceiveMsgBytes(const char* pch, unsigned int nBytes);
 
     // requires LOCK(cs_vRecvMsg)
     void SetRecvVersion(int nVersionIn)
     {
         nRecvVersion = nVersionIn;
-        BOOST_FOREACH(CNetMessage &msg, vRecvMsg)
+
+        BOOST_FOREACH (CNetMessage &msg, vRecvMsg)
+        {
             msg.SetVersion(nVersionIn);
+        }
     }
 
     CNode* AddRef()
@@ -357,8 +364,6 @@ public:
         nRefCount--;
     }
 
-
-
     void AddAddressKnown(const CAddress& addr)
     {
         setAddrKnown.insert(addr);
@@ -370,9 +375,10 @@ public:
         // SendMessages will filter it again for knowns that were added
         // after addresses were pushed.
         if (addr.IsValid() && !setAddrKnown.count(addr))
+        {
             vAddrToSend.push_back(addr);
+        }
     }
-
 
     void AddInventoryKnown(const CInv& inv)
     {
@@ -386,8 +392,11 @@ public:
     {
         {
             LOCK(cs_inventory);
+
             if (!setInventoryKnown.count(inv))
+            {
                 vInventoryToSend.push_back(inv);
+            }
         }
     }
 
@@ -403,7 +412,6 @@ public:
     void EndMessage() UNLOCK_FUNCTION(cs_vSend);
 
     void PushVersion();
-
 
     void PushMessage(const char* pszCommand)
     {
@@ -500,7 +508,8 @@ public:
     }
 
     template<typename T1, typename T2, typename T3, typename T4, typename T5, typename T6>
-    void PushMessage(const char* pszCommand, const T1& a1, const T2& a2, const T3& a3, const T4& a4, const T5& a5, const T6& a6)
+    void PushMessage(const char* pszCommand, const T1& a1, const T2& a2, const T3& a3, const T4& a4, const T5& a5,
+        const T6& a6)
     {
         try
         {
@@ -516,7 +525,9 @@ public:
     }
 
     template<typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7>
-    void PushMessage(const char* pszCommand, const T1& a1, const T2& a2, const T3& a3, const T4& a4, const T5& a5, const T6& a6, const T7& a7)
+    void PushMessage(const char* pszCommand, const T1& a1, const T2& a2, const T3& a3, const T4& a4, const T5& a5,
+        const T6& a6,
+        const T7& a7)
     {
         try
         {
@@ -532,7 +543,9 @@ public:
     }
 
     template<typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8>
-    void PushMessage(const char* pszCommand, const T1& a1, const T2& a2, const T3& a3, const T4& a4, const T5& a5, const T6& a6, const T7& a7, const T8& a8)
+    void PushMessage(const char* pszCommand, const T1& a1, const T2& a2, const T3& a3, const T4& a4, const T5& a5,
+        const T6& a6, const T7& a7,
+        const T8& a8)
     {
         try
         {
@@ -547,8 +560,11 @@ public:
         }
     }
 
-    template<typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9>
-    void PushMessage(const char* pszCommand, const T1& a1, const T2& a2, const T3& a3, const T4& a4, const T5& a5, const T6& a6, const T7& a7, const T8& a8, const T9& a9)
+    template<typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8,
+        typename T9>
+    void PushMessage(const char* pszCommand, const T1& a1, const T2& a2, const T3& a3, const T4& a4, const T5& a5,
+        const T6& a6, const T7& a7, const T8& a8,
+        const T9& a9)
     {
         try
         {
@@ -564,7 +580,7 @@ public:
     }
 
     bool IsSubscribed(unsigned int nChannel);
-    void Subscribe(unsigned int nChannel, unsigned int nHops=0);
+    void Subscribe(unsigned int nChannel, unsigned int nHops = 0);
     void CancelSubscribe(unsigned int nChannel);
     void CloseSocketDisconnect();
 
@@ -598,8 +614,6 @@ public:
     static uint64_t GetTotalBytesSent();
 };
 
-
-
 class CTransaction;
 void RelayTransaction(const CTransaction& tx);
 void RelayTransaction(const CTransaction& tx, const CDataStream& ss);
@@ -616,3 +630,4 @@ public:
 };
 
 #endif // BITCOIN_NET_H
+

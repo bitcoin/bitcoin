@@ -39,17 +39,23 @@ CMessageHeader::CMessageHeader(const char* pszCommand, unsigned int nMessageSize
 
 std::string CMessageHeader::GetCommand() const
 {
-    if (pchCommand[COMMAND_SIZE-1] == 0)
+    if (pchCommand[COMMAND_SIZE - 1] == 0)
+    {
         return std::string(pchCommand, pchCommand + strlen(pchCommand));
+    }
     else
+    {
         return std::string(pchCommand, pchCommand + COMMAND_SIZE);
+    }
 }
 
 bool CMessageHeader::IsValid() const
 {
     // Check start string
     if (memcmp(pchMessageStart, Params().MessageStart(), MESSAGE_START_SIZE) != 0)
+    {
         return false;
+    }
 
     // Check the command string for errors
     for (const char* p1 = pchCommand; p1 < pchCommand + COMMAND_SIZE; p1++)
@@ -58,11 +64,17 @@ bool CMessageHeader::IsValid() const
         {
             // Must be all zeros after the first zero
             for (; p1 < pchCommand + COMMAND_SIZE; p1++)
+            {
                 if (*p1 != 0)
+                {
                     return false;
+                }
+            }
         }
         else if (*p1 < ' ' || *p1 > 0x7E)
+        {
             return false;
+        }
     }
 
     // Message size
@@ -74,8 +86,6 @@ bool CMessageHeader::IsValid() const
 
     return true;
 }
-
-
 
 CAddress::CAddress() : CService()
 {
@@ -110,6 +120,7 @@ CInv::CInv(int typeIn, const uint256& hashIn)
 CInv::CInv(const std::string& strType, const uint256& hashIn)
 {
     unsigned int i;
+
     for (i = 1; i < ARRAYLEN(ppszTypeName); i++)
     {
         if (strType == ppszTypeName[i])
@@ -118,8 +129,12 @@ CInv::CInv(const std::string& strType, const uint256& hashIn)
             break;
         }
     }
+
     if (i == ARRAYLEN(ppszTypeName))
+    {
         throw std::out_of_range(strprintf("CInv::CInv(string, uint256) : unknown type '%s'", strType));
+    }
+
     hash = hashIn;
 }
 
@@ -136,7 +151,10 @@ bool CInv::IsKnownType() const
 const char* CInv::GetCommand() const
 {
     if (!IsKnownType())
+    {
         throw std::out_of_range(strprintf("CInv::GetCommand() : type=%d unknown type", type));
+    }
+
     return ppszTypeName[type];
 }
 
@@ -144,3 +162,4 @@ std::string CInv::ToString() const
 {
     return strprintf("%s %s", GetCommand(), hash.ToString());
 }
+

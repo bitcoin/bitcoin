@@ -43,38 +43,54 @@ protected:
     unsigned int GetSpecialSize(unsigned int nSize) const;
     bool Decompress(unsigned int nSize, const std::vector<unsigned char> &out);
 public:
-    CScriptCompressor(CScript &scriptIn) : script(scriptIn) { }
+    CScriptCompressor(CScript &scriptIn) : script(scriptIn)
+    {
+    }
 
-    unsigned int GetSerializeSize(int nType, int nVersion) const {
+    unsigned int GetSerializeSize(int nType, int nVersion) const
+    {
         std::vector<unsigned char> compr;
+
         if (Compress(compr))
+        {
             return compr.size();
+        }
+
         unsigned int nSize = script.size() + nSpecialScripts;
         return script.size() + VARINT(nSize).GetSerializeSize(nType, nVersion);
     }
 
     template<typename Stream>
-    void Serialize(Stream &s, int nType, int nVersion) const {
+    void Serialize(Stream &s, int nType, int nVersion) const
+    {
         std::vector<unsigned char> compr;
-        if (Compress(compr)) {
+
+        if (Compress(compr))
+        {
             s << CFlatData(compr);
             return;
         }
+
         unsigned int nSize = script.size() + nSpecialScripts;
         s << VARINT(nSize);
         s << CFlatData(script);
     }
 
     template<typename Stream>
-    void Unserialize(Stream &s, int nType, int nVersion) {
+    void Unserialize(Stream &s, int nType, int nVersion)
+    {
         unsigned int nSize = 0;
+
         s >> VARINT(nSize);
-        if (nSize < nSpecialScripts) {
+
+        if (nSize < nSpecialScripts)
+        {
             std::vector<unsigned char> vch(GetSpecialSize(nSize), 0x00);
             s >> REF(CFlatData(vch));
             Decompress(nSize, vch);
             return;
         }
+
         nSize -= nSpecialScripts;
         script.resize(nSize);
         s >> REF(CFlatData(script));
@@ -82,3 +98,4 @@ public:
 };
 
 #endif
+

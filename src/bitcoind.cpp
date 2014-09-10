@@ -35,12 +35,14 @@ static bool fDaemon;
 void DetectShutdownThread(boost::thread_group* threadGroup)
 {
     bool fShutdown = ShutdownRequested();
+
     // Tell the main threads to shutdown.
     while (!fShutdown)
     {
         MilliSleep(200);
         fShutdown = ShutdownRequested();
     }
+
     if (threadGroup)
     {
         threadGroup->interrupt_all();
@@ -58,6 +60,7 @@ bool AppInit(int argc, char* argv[])
     boost::thread* detectShutdownThread = NULL;
 
     bool fRet = false;
+
     try
     {
         //
@@ -65,20 +68,26 @@ bool AppInit(int argc, char* argv[])
         //
         // If Qt is used, parameters/bitcoin.conf are parsed in qt/bitcoin.cpp's main()
         ParseParameters(argc, argv);
+
         if (!boost::filesystem::is_directory(GetDataDir(false)))
         {
             fprintf(stderr, "Error: Specified data directory \"%s\" does not exist.\n", mapArgs["-datadir"].c_str());
             return false;
         }
+
         try
         {
             ReadConfigFile(mapArgs, mapMultiArgs);
-        } catch(std::exception &e) {
-            fprintf(stderr,"Error reading configuration file: %s\n", e.what());
+        }
+        catch (std::exception &e)
+        {
+            fprintf(stderr, "Error reading configuration file: %s\n", e.what());
             return false;
         }
+
         // Check for -testnet or -regtest parameter (Params() calls are only valid after this clause)
-        if (!SelectParamsFromCommandLine()) {
+        if (!SelectParamsFromCommandLine())
+        {
             fprintf(stderr, "Error: Invalid combination of -regtest and -testnet.\n");
             return false;
         }
@@ -94,7 +103,7 @@ bool AppInit(int argc, char* argv[])
             else
             {
                 strUsage += "\n" + _("Usage:") + "\n" +
-                      "  bitcoind [options]                     " + _("Start Bitcoin Core Daemon") + "\n";
+                    "  bitcoind [options]                     " + _("Start Bitcoin Core Daemon") + "\n";
 
                 strUsage += "\n" + HelpMessage(HMM_BITCOIND);
             }
@@ -105,55 +114,76 @@ bool AppInit(int argc, char* argv[])
 
         // Command-line RPC
         bool fCommandLine = false;
+
         for (int i = 1; i < argc; i++)
+        {
             if (!IsSwitchChar(argv[i][0]) && !boost::algorithm::istarts_with(argv[i], "bitcoin:"))
+            {
                 fCommandLine = true;
+            }
+        }
 
         if (fCommandLine)
         {
-            fprintf(stderr, "Error: There is no RPC client functionality in bitcoind anymore. Use the bitcoin-cli utility instead.\n");
+            fprintf(
+                stderr,
+                "Error: There is no RPC client functionality in bitcoind anymore. Use the bitcoin-cli utility instead.\n");
             exit(1);
         }
+
 #ifndef WIN32
         fDaemon = GetBoolArg("-daemon", false);
+
         if (fDaemon)
         {
             fprintf(stdout, "Bitcoin server starting\n");
 
             // Daemonize
             pid_t pid = fork();
+
             if (pid < 0)
             {
                 fprintf(stderr, "Error: fork() returned %d errno %d\n", pid, errno);
                 return false;
             }
+
             if (pid > 0) // Parent process, pid is child process id
             {
                 CreatePidFile(GetPidFile(), pid);
                 return true;
             }
+
             // Child process falls through to rest of initialization
 
             pid_t sid = setsid();
+
             if (sid < 0)
+            {
                 fprintf(stderr, "Error: setsid() returned %d errno %d\n", sid, errno);
+            }
         }
+
 #endif
         SoftSetBoolArg("-server", true);
 
         detectShutdownThread = new boost::thread(boost::bind(&DetectShutdownThread, &threadGroup));
         fRet = AppInit2(threadGroup);
     }
-    catch (std::exception& e) {
+    catch (std::exception& e)
+    {
         PrintExceptionContinue(&e, "AppInit()");
-    } catch (...) {
+    }
+    catch (...)
+    {
         PrintExceptionContinue(NULL, "AppInit()");
     }
 
     if (!fRet)
     {
         if (detectShutdownThread)
+        {
             detectShutdownThread->interrupt();
+        }
 
         threadGroup.interrupt_all();
         // threadGroup.join_all(); was left out intentionally here, because we didn't re-test all of
@@ -167,6 +197,7 @@ bool AppInit(int argc, char* argv[])
         delete detectShutdownThread;
         detectShutdownThread = NULL;
     }
+
     Shutdown();
 
     return fRet;
@@ -181,3 +212,4 @@ int main(int argc, char* argv[])
 
     return (AppInit(argc, argv) ? 0 : 1);
 }
+

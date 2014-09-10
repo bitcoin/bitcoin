@@ -31,6 +31,7 @@ boost::once_flag LockedPageManager::init_flag = BOOST_ONCE_INIT;
 static inline size_t GetSystemPageSize()
 {
     size_t page_size;
+
 #if defined(WIN32)
     SYSTEM_INFO sSysInfo;
     GetSystemInfo(&sSysInfo);
@@ -43,21 +44,25 @@ static inline size_t GetSystemPageSize()
     return page_size;
 }
 
-bool MemoryPageLocker::Lock(const void *addr, size_t len)
+bool MemoryPageLocker::Lock(const void* addr, size_t len)
 {
 #ifdef WIN32
     return VirtualLock(const_cast<void*>(addr), len);
+
 #else
     return mlock(addr, len) == 0;
+
 #endif
 }
 
-bool MemoryPageLocker::Unlock(const void *addr, size_t len)
+bool MemoryPageLocker::Unlock(const void* addr, size_t len)
 {
 #ifdef WIN32
     return VirtualUnlock(const_cast<void*>(addr), len);
+
 #else
     return munlock(addr, len) == 0;
+
 #endif
 }
 

@@ -32,6 +32,7 @@ public:
     bool IsSelected(const uint256& hash, unsigned int n) const
     {
         COutPoint outpt(hash, n);
+
         return (setSelected.count(outpt) > 0);
     }
 
@@ -57,7 +58,7 @@ public:
 
 private:
     std::set<COutPoint> setSelected;
-
 };
 
 #endif // COINCONTROL_H
+

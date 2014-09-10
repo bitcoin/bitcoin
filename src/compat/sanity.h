@@ -9,3 +9,4 @@ bool glibc_sanity_test();
 bool glibcxx_sanity_test();
 
 #endif // BITCON_COMPAT_SANITY_H
+

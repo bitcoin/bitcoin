@@ -31,11 +31,17 @@ CScript ParseScript(std::string s)
         {
             // Allow OP_RESERVED to get into mapOpNames
             if (op < OP_NOP && op != OP_RESERVED)
+            {
                 continue;
+            }
 
             const char* name = GetOpName((opcodetype)op);
+
             if (strcmp(name, "OP_UNKNOWN") == 0)
+            {
                 continue;
+            }
+
             string strName(name);
             mapOpNames[strName] = (opcodetype)op;
             // Convenience: OP_ADD and just ADD are both recognized:
@@ -54,23 +60,23 @@ CScript ParseScript(std::string s)
             // Empty string, ignore. (boost::split given '' will return one word)
         }
         else if (all(*w, is_digit()) ||
-            (starts_with(*w, "-") && all(string(w->begin()+1, w->end()), is_digit())))
+            (starts_with(*w, "-") && all(string(w->begin() + 1, w->end()), is_digit())))
         {
             // Number
             int64_t n = atoi64(*w);
             result << n;
         }
-        else if (starts_with(*w, "0x") && (w->begin()+2 != w->end()) && IsHex(string(w->begin()+2, w->end())))
+        else if (starts_with(*w, "0x") && (w->begin() + 2 != w->end()) && IsHex(string(w->begin() + 2, w->end())))
         {
             // Raw hex data, inserted NOT pushed onto stack:
-            std::vector<unsigned char> raw = ParseHex(string(w->begin()+2, w->end()));
+            std::vector<unsigned char> raw = ParseHex(string(w->begin() + 2, w->end()));
             result.insert(result.end(), raw.begin(), raw.end());
         }
         else if (w->size() >= 2 && starts_with(*w, "'") && ends_with(*w, "'"))
         {
             // Single-quoted string, pushed as data. NOTE: this is poor-man's
             // parsing, spaces/tabs/newlines in single-quoted strings won't work.
-            std::vector<unsigned char> value(w->begin()+1, w->end()-1);
+            std::vector<unsigned char> value(w->begin() + 1, w->end() - 1);
             result << value;
         }
         else if (mapOpNames.count(*w))
@@ -90,14 +96,18 @@ CScript ParseScript(std::string s)
 bool DecodeHexTx(CTransaction& tx, const std::string& strHexTx)
 {
     if (!IsHex(strHexTx))
+    {
         return false;
+    }
 
     vector<unsigned char> txData(ParseHex(strHexTx));
     CDataStream ssData(txData, SER_NETWORK, PROTOCOL_VERSION);
-    try {
+    try
+    {
         ssData >> tx;
     }
-    catch (std::exception &e) {
+    catch (std::exception &e)
+    {
         return false;
     }
 
@@ -107,10 +117,16 @@ bool DecodeHexTx(CTransaction& tx, const std::string& strHexTx)
 uint256 ParseHashUV(const UniValue& v, const string& strName)
 {
     string strHex;
+
     if (v.isStr())
+    {
         strHex = v.getValStr();
+    }
+
     if (!IsHex(strHex)) // Note: IsHex("") is false
-        throw runtime_error(strName+" must be hexadecimal string (not '"+strHex+"')");
+    {
+        throw runtime_error(strName + " must be hexadecimal string (not '" + strHex + "')");
+    }
 
     uint256 result;
     result.SetHex(strHex);
@@ -120,9 +136,17 @@ uint256 ParseHashUV(const UniValue& v, const string& strName)
 vector<unsigned char> ParseHexUV(const UniValue& v, const string& strName)
 {
     string strHex;
+
     if (v.isStr())
+    {
         strHex = v.getValStr();
+    }
+
     if (!IsHex(strHex))
-        throw runtime_error(strName+" must be hexadecimal string (not '"+strHex+"')");
+    {
+        throw runtime_error(strName + " must be hexadecimal string (not '" + strHex + "')");
+    }
+
     return ParseHex(strHex);
 }
+

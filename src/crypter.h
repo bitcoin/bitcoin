@@ -15,19 +15,19 @@ const unsigned int WALLET_CRYPTO_KEY_SIZE = 32;
 const unsigned int WALLET_CRYPTO_SALT_SIZE = 8;
 
 /*
-Private key encryption is done based on a CMasterKey,
-which holds a salt and random encryption key.
+   Private key encryption is done based on a CMasterKey,
+   which holds a salt and random encryption key.
 
-CMasterKeys are encrypted using AES-256-CBC using a key
-derived using derivation method nDerivationMethod
-(0 == EVP_sha512()) and derivation iterations nDeriveIterations.
-vchOtherDerivationParameters is provided for alternative algorithms
-which may require more parameters (such as scrypt).
+   CMasterKeys are encrypted using AES-256-CBC using a key
+   derived using derivation method nDerivationMethod
+   (0 == EVP_sha512()) and derivation iterations nDeriveIterations.
+   vchOtherDerivationParameters is provided for alternative algorithms
+   which may require more parameters (such as scrypt).
 
-Wallet Private Keys are then encrypted using AES-256-CBC
-with the double-sha256 of the public key as the IV, and the
-master key's key as the encryption key (see keystore.[ch]).
-*/
+   Wallet Private Keys are then encrypted using AES-256-CBC
+   with the double-sha256 of the public key as the IV, and the
+   master key's key as the encryption key (see keystore.[ch]).
+ */
 
 /** Master key for wallet encryption */
 class CMasterKey
@@ -46,7 +46,8 @@ public:
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion)
+    {
         READWRITE(vchCryptedKey);
         READWRITE(vchSalt);
         READWRITE(nDerivationMethod);
@@ -75,7 +76,9 @@ private:
     bool fKeySet;
 
 public:
-    bool SetKeyFromPassphrase(const SecureString &strKeyData, const std::vector<unsigned char>& chSalt, const unsigned int nRounds, const unsigned int nDerivationMethod);
+    bool SetKeyFromPassphrase(const SecureString &strKeyData, const std::vector<unsigned char>& chSalt,
+        const unsigned int nRounds,
+        const unsigned int nDerivationMethod);
     bool Encrypt(const CKeyingMaterial& vchPlaintext, std::vector<unsigned char> &vchCiphertext);
     bool Decrypt(const std::vector<unsigned char>& vchCiphertext, CKeyingMaterial& vchPlaintext);
     bool SetKey(const CKeyingMaterial& chNewKey, const std::vector<unsigned char>& chNewIV);
@@ -107,8 +110,11 @@ public:
     }
 };
 
-bool EncryptSecret(const CKeyingMaterial& vMasterKey, const CKeyingMaterial &vchPlaintext, const uint256& nIV, std::vector<unsigned char> &vchCiphertext);
-bool DecryptSecret(const CKeyingMaterial& vMasterKey, const std::vector<unsigned char>& vchCiphertext, const uint256& nIV, CKeyingMaterial& vchPlaintext);
+bool EncryptSecret(const CKeyingMaterial& vMasterKey, const CKeyingMaterial &vchPlaintext, const uint256& nIV,
+    std::vector<unsigned char> &vchCiphertext);
+bool DecryptSecret(const CKeyingMaterial& vMasterKey, const std::vector<unsigned char>& vchCiphertext,
+    const uint256& nIV,
+    CKeyingMaterial& vchPlaintext);
 
 /** Keystore which keeps the private keys encrypted.
  * It derives from the basic key store, which is used if no encryption is active.
@@ -148,7 +154,10 @@ public:
     bool IsLocked() const
     {
         if (!IsCrypted())
+        {
             return false;
+        }
+
         bool result;
         {
             LOCK(cs_KeyStore);
@@ -165,12 +174,17 @@ public:
     {
         {
             LOCK(cs_KeyStore);
+
             if (!IsCrypted())
+            {
                 return CBasicKeyStore::HaveKey(address);
+            }
+
             return mapCryptedKeys.count(address) > 0;
         }
         return false;
     }
+
     bool GetKey(const CKeyID &address, CKey& keyOut) const;
     bool GetPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) const;
     void GetKeys(std::set<CKeyID> &setAddress) const
@@ -180,8 +194,10 @@ public:
             CBasicKeyStore::GetKeys(setAddress);
             return;
         }
+
         setAddress.clear();
         CryptedKeyMap::const_iterator mi = mapCryptedKeys.begin();
+
         while (mi != mapCryptedKeys.end())
         {
             setAddress.insert((*mi).first);
@@ -196,3 +212,4 @@ public:
 };
 
 #endif // __CRYPTER_H__
+

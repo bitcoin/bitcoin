@@ -16,7 +16,7 @@
 using namespace std;
 
 static bool initEscapes;
-static const char *escapes[256];
+static const char* escapes[256];
 
 static void initJsonEscape()
 {
@@ -34,45 +34,53 @@ static void initJsonEscape()
 
 static void outputEscape()
 {
-	printf(	"// Automatically generated file. Do not modify.\n"
-		"#ifndef __UNIVALUE_ESCAPES_H__\n"
-		"#define __UNIVALUE_ESCAPES_H__\n"
-		"static const char *escapes[256] = {\n");
+    printf( "// Automatically generated file. Do not modify.\n"
+            "#ifndef __UNIVALUE_ESCAPES_H__\n"
+            "#define __UNIVALUE_ESCAPES_H__\n"
+            "static const char *escapes[256] = {\n");
 
-	for (unsigned int i = 0; i < 256; i++) {
-		if (!escapes[i]) {
-			printf("\tNULL,\n");
-		} else {
-			printf("\t\"");
+    for (unsigned int i = 0; i < 256; i++)
+    {
+        if (!escapes[i])
+        {
+            printf("\tNULL,\n");
+        }
+        else
+        {
+            printf("\t\"");
 
-			unsigned int si;
-			for (si = 0; si < strlen(escapes[i]); si++) {
-				char ch = escapes[i][si];
-				switch (ch) {
-				case '"':
-					printf("\\\"");
-					break;
-				case '\\':
-					printf("\\\\");
-					break;
-				default:
-					printf("%c", escapes[i][si]);
-					break;
-				}
-			}
+            unsigned int si;
 
-			printf("\",\n");
-		}
-	}
+            for (si = 0; si < strlen(escapes[i]); si++)
+            {
+                char ch = escapes[i][si];
 
-	printf(	"};\n"
-		"#endif // __UNIVALUE_ESCAPES_H__\n");
+                switch (ch)
+                {
+                case '"':
+                    printf("\\\"");
+                    break;
+                case '\\':
+                    printf("\\\\");
+                    break;
+                default:
+                    printf("%c", escapes[i][si]);
+                    break;
+                }
+            }
+
+            printf("\",\n");
+        }
+    }
+
+    printf( "};\n"
+            "#endif // __UNIVALUE_ESCAPES_H__\n");
 }
 
-int main (int argc, char *argv[])
+int main (int argc, char* argv[])
 {
-	initJsonEscape();
-	outputEscape();
-	return 0;
+    initJsonEscape();
+    outputEscape();
+    return 0;
 }
 

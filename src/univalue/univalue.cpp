@@ -29,8 +29,12 @@ bool UniValue::setBool(bool val_)
 {
     clear();
     typ = VBOOL;
+
     if (val_)
+    {
         val = "1";
+    }
+
     return true;
 }
 
@@ -39,13 +43,16 @@ static bool validNumStr(const string& s)
     string tokenVal;
     unsigned int consumed;
     enum jtokentype tt = getJsonToken(tokenVal, consumed, s.c_str());
+
     return (tt == JTOK_NUMBER);
 }
 
 bool UniValue::setNumStr(const string& val_)
 {
     if (!validNumStr(val_))
+    {
         return false;
+    }
 
     clear();
     typ = VNUM;
@@ -108,7 +115,9 @@ bool UniValue::setObject()
 bool UniValue::push_back(const UniValue& val)
 {
     if (typ != VARR)
+    {
         return false;
+    }
 
     values.push_back(val);
     return true;
@@ -117,7 +126,9 @@ bool UniValue::push_back(const UniValue& val)
 bool UniValue::push_backV(const std::vector<UniValue>& vec)
 {
     if (typ != VARR)
+    {
         return false;
+    }
 
     values.insert(values.end(), vec.begin(), vec.end());
 
@@ -127,7 +138,9 @@ bool UniValue::push_backV(const std::vector<UniValue>& vec)
 bool UniValue::pushKV(const std::string& key, const UniValue& val)
 {
     if (typ != VOBJ)
+    {
         return false;
+    }
 
     keys.push_back(key);
     values.push_back(val);
@@ -137,9 +150,12 @@ bool UniValue::pushKV(const std::string& key, const UniValue& val)
 bool UniValue::pushKVs(const UniValue& obj)
 {
     if (typ != VOBJ || obj.typ != VOBJ)
+    {
         return false;
+    }
 
-    for (unsigned int i = 0; i < obj.keys.size(); i++) {
+    for (unsigned int i = 0; i < obj.keys.size(); i++)
+    {
         keys.push_back(obj.keys[i]);
         values.push_back(obj.values[i]);
     }
@@ -149,24 +165,33 @@ bool UniValue::pushKVs(const UniValue& obj)
 
 int UniValue::findKey(const std::string& key) const
 {
-    for (unsigned int i = 0; i < keys.size(); i++) {
+    for (unsigned int i = 0; i < keys.size(); i++)
+    {
         if (keys[i] == key)
+        {
             return (int) i;
+        }
     }
 
     return -1;
 }
 
-bool UniValue::checkObject(const std::map<std::string,UniValue::VType>& t)
+bool UniValue::checkObject(const std::map<std::string, UniValue::VType>& t)
 {
-    for (std::map<std::string,UniValue::VType>::const_iterator it = t.begin();
-         it != t.end(); it++) {
+    for (std::map<std::string, UniValue::VType>::const_iterator it = t.begin();
+        it != t.end(); it++)
+    {
         int idx = findKey(it->first);
+
         if (idx < 0)
+        {
             return false;
+        }
 
         if (values[idx].getType() != it->second)
+        {
             return false;
+        }
     }
 
     return true;
@@ -175,11 +200,16 @@ bool UniValue::checkObject(const std::map<std::string,UniValue::VType>& t)
 const UniValue& UniValue::operator[](const std::string& key) const
 {
     if (typ != VOBJ)
+    {
         return nullValue;
+    }
 
     int index = findKey(key);
+
     if (index < 0)
+    {
         return nullValue;
+    }
 
     return values[index];
 }
@@ -187,22 +217,39 @@ const UniValue& UniValue::operator[](const std::string& key) const
 const UniValue& UniValue::operator[](unsigned int index) const
 {
     if (typ != VOBJ && typ != VARR)
+    {
         return nullValue;
+    }
+
     if (index >= values.size())
+    {
         return nullValue;
+    }
 
     return values[index];
 }
 
-const char *uvTypeName(UniValue::VType t)
+const char* uvTypeName(UniValue::VType t)
 {
-    switch (t) {
-    case UniValue::VNULL: return "null";
-    case UniValue::VBOOL: return "bool";
-    case UniValue::VOBJ: return "object";
-    case UniValue::VARR: return "array";
-    case UniValue::VSTR: return "string";
-    case UniValue::VNUM: return "number";
+    switch (t)
+    {
+    case UniValue::VNULL:
+        return "null";
+
+    case UniValue::VBOOL:
+        return "bool";
+
+    case UniValue::VOBJ:
+        return "object";
+
+    case UniValue::VARR:
+        return "array";
+
+    case UniValue::VSTR:
+        return "string";
+
+    case UniValue::VNUM:
+        return "number";
     }
 
     // not reached

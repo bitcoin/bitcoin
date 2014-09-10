@@ -55,7 +55,7 @@ int LogPrintStr(const std::string &str);
     template<TINYFORMAT_ARGTYPES(n)>                                          \
     static inline int LogPrint(const char* category, const char* format, TINYFORMAT_VARARGS(n))  \
     {                                                                         \
-        if(!LogAcceptCategory(category)) return 0;                            \
+        if (!LogAcceptCategory(category)) {return 0; }                            \
         return LogPrintStr(tfm::format(format, TINYFORMAT_PASSARGS(n))); \
     }                                                                         \
     /*   Log error and return false */                                        \
@@ -73,9 +73,14 @@ TINYFORMAT_FOREACH_ARGNUM(MAKE_ERROR_AND_LOG_FUNC)
  */
 static inline int LogPrint(const char* category, const char* format)
 {
-    if(!LogAcceptCategory(category)) return 0;
+    if (!LogAcceptCategory(category))
+    {
+        return 0;
+    }
+
     return LogPrintStr(format);
 }
+
 static inline bool error(const char* format)
 {
     LogPrintStr(std::string("ERROR: ") + format + "\n");
@@ -83,11 +88,11 @@ static inline bool error(const char* format)
 }
 
 void PrintExceptionContinue(std::exception* pex, const char* pszThread);
-void ParseParameters(int argc, const char*const argv[]);
-void FileCommit(FILE *fileout);
-bool TruncateFile(FILE *file, unsigned int length);
+void ParseParameters(int argc, const char* const argv[]);
+void FileCommit(FILE* fileout);
+bool TruncateFile(FILE* file, unsigned int length);
 int RaiseFileDescriptorLimit(int nMinFD);
-void AllocateFileRange(FILE *file, unsigned int offset, unsigned int length);
+void AllocateFileRange(FILE* file, unsigned int offset, unsigned int length);
 bool RenameOver(boost::filesystem::path src, boost::filesystem::path dest);
 bool TryCreateDirectory(const boost::filesystem::path& p);
 boost::filesystem::path GetDefaultDataDir();
@@ -97,7 +102,8 @@ boost::filesystem::path GetPidFile();
 #ifndef WIN32
 void CreatePidFile(const boost::filesystem::path &path, pid_t pid);
 #endif
-void ReadConfigFile(std::map<std::string, std::string>& mapSettingsRet, std::map<std::string, std::vector<std::string> >& mapMultiSettingsRet);
+void ReadConfigFile(std::map<std::string, std::string>& mapSettingsRet, std::map<std::string,
+        std::vector<std::string> >& mapMultiSettingsRet);
 #ifdef WIN32
 boost::filesystem::path GetSpecialFolderPath(int nFolder, bool fCreate = true);
 #endif
@@ -109,8 +115,10 @@ inline bool IsSwitchChar(char c)
 {
 #ifdef WIN32
     return c == '-' || c == '/';
+
 #else
     return c == '-';
+
 #endif
 }
 
@@ -169,9 +177,11 @@ void RenameThread(const char* name);
 // or maybe:
 //    boost::function<void()> f = boost::bind(&FunctionWithArg, argument);
 //    threadGroup.create_thread(boost::bind(&LoopForever<boost::function<void()> >, "nothing", f, milliseconds));
-template <typename Callable> void LoopForever(const char* name,  Callable func, int64_t msecs)
+template <typename Callable>
+void LoopForever(const char* name, Callable func, int64_t msecs)
 {
     std::string s = strprintf("bitcoin-%s", name);
+
     RenameThread(s.c_str());
     LogPrintf("%s thread start\n", name);
     try
@@ -187,19 +197,24 @@ template <typename Callable> void LoopForever(const char* name,  Callable func, 
         LogPrintf("%s thread stop\n", name);
         throw;
     }
-    catch (std::exception& e) {
+    catch (std::exception& e)
+    {
         PrintExceptionContinue(&e, name);
         throw;
     }
-    catch (...) {
+    catch (...)
+    {
         PrintExceptionContinue(NULL, name);
         throw;
     }
 }
+
 // .. and a wrapper that just calls func once
-template <typename Callable> void TraceThread(const char* name,  Callable func)
+template <typename Callable>
+void TraceThread(const char* name, Callable func)
 {
     std::string s = strprintf("bitcoin-%s", name);
+
     RenameThread(s.c_str());
     try
     {
@@ -212,14 +227,17 @@ template <typename Callable> void TraceThread(const char* name,  Callable func)
         LogPrintf("%s thread interrupt\n", name);
         throw;
     }
-    catch (std::exception& e) {
+    catch (std::exception& e)
+    {
         PrintExceptionContinue(&e, name);
         throw;
     }
-    catch (...) {
+    catch (...)
+    {
         PrintExceptionContinue(NULL, name);
         throw;
     }
 }
 
 #endif // BITCOIN_UTIL_H
+

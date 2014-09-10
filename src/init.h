@@ -10,8 +10,9 @@
 
 class CWallet;
 
-namespace boost {
-    class thread_group;
+namespace boost
+{
+class thread_group;
 } // namespace boost
 
 extern CWallet* pwalletMain;
@@ -34,3 +35,4 @@ std::string HelpMessage(HelpMessageMode mode);
 std::string LicenseInfo();
 
 #endif // BITCOIN_INIT_H
+

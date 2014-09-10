@@ -85,3 +85,4 @@ typedef u_int SOCKET;
 #endif
 
 #endif // _BITCOIN_COMPAT_H
+

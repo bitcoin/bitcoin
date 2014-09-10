@@ -13,3 +13,4 @@
 json_spirit::Array RPCConvertValues(const std::string &strMethod, const std::vector<std::string> &strParams);
 
 #endif // _BITCOINRPC_CLIENT_H_
+

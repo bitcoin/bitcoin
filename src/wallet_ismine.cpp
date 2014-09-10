@@ -18,18 +18,24 @@ typedef vector<unsigned char> valtype;
 unsigned int HaveKeys(const vector<valtype>& pubkeys, const CKeyStore& keystore)
 {
     unsigned int nResult = 0;
-    BOOST_FOREACH(const valtype& pubkey, pubkeys)
+
+    BOOST_FOREACH (const valtype& pubkey, pubkeys)
     {
         CKeyID keyID = CPubKey(pubkey).GetID();
+
         if (keystore.HaveKey(keyID))
+        {
             ++nResult;
+        }
     }
+
     return nResult;
 }
 
 isminetype IsMine(const CKeyStore &keystore, const CTxDestination& dest)
 {
     CScript script;
+
     script.SetDestination(dest);
     return IsMine(keystore, script);
 }
@@ -38,13 +44,19 @@ isminetype IsMine(const CKeyStore &keystore, const CScript& scriptPubKey)
 {
     vector<valtype> vSolutions;
     txnouttype whichType;
-    if (!Solver(scriptPubKey, whichType, vSolutions)) {
+
+    if (!Solver(scriptPubKey, whichType, vSolutions))
+    {
         if (keystore.HaveWatchOnly(scriptPubKey))
+        {
             return ISMINE_WATCH_ONLY;
+        }
+
         return ISMINE_NO;
     }
 
     CKeyID keyID;
+
     switch (whichType)
     {
     case TX_NONSTANDARD:
@@ -52,23 +64,37 @@ isminetype IsMine(const CKeyStore &keystore, const CScript& scriptPubKey)
         break;
     case TX_PUBKEY:
         keyID = CPubKey(vSolutions[0]).GetID();
+
         if (keystore.HaveKey(keyID))
+        {
             return ISMINE_SPENDABLE;
+        }
+
         break;
     case TX_PUBKEYHASH:
         keyID = CKeyID(uint160(vSolutions[0]));
+
         if (keystore.HaveKey(keyID))
+        {
             return ISMINE_SPENDABLE;
+        }
+
         break;
     case TX_SCRIPTHASH:
     {
         CScriptID scriptID = CScriptID(uint160(vSolutions[0]));
         CScript subscript;
-        if (keystore.GetCScript(scriptID, subscript)) {
+
+        if (keystore.GetCScript(scriptID, subscript))
+        {
             isminetype ret = IsMine(keystore, subscript);
+
             if (ret == ISMINE_SPENDABLE)
+            {
                 return ret;
+            }
         }
+
         break;
     }
     case TX_MULTISIG:
@@ -78,14 +104,22 @@ isminetype IsMine(const CKeyStore &keystore, const CScript& scriptPubKey)
         // partially owned (somebody else has a key that can spend
         // them) enable spend-out-from-under-you attacks, especially
         // in shared-wallet situations.
-        vector<valtype> keys(vSolutions.begin()+1, vSolutions.begin()+vSolutions.size()-1);
+        vector<valtype> keys(vSolutions.begin() + 1, vSolutions.begin() + vSolutions.size() - 1);
+
         if (HaveKeys(keys, keystore) == keys.size())
+        {
             return ISMINE_SPENDABLE;
+        }
+
         break;
     }
     }
 
     if (keystore.HaveWatchOnly(scriptPubKey))
+    {
         return ISMINE_WATCH_ONLY;
+    }
+
     return ISMINE_NO;
 }
+

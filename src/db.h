@@ -25,7 +25,6 @@ extern unsigned int nWalletDBUpdated;
 
 void ThreadFlushWalletDB(const std::string& strWalletFile);
 
-
 class CDBEnv
 {
 private:
@@ -44,7 +43,10 @@ public:
     CDBEnv();
     ~CDBEnv();
     void MakeMock();
-    bool IsMock() { return fMockDb; }
+    bool IsMock()
+    {
+        return fMockDb;
+    }
 
     /*
      * Verify that database file strFile is OK. If it is not,
@@ -52,8 +54,11 @@ public:
      * This must be called BEFORE strFile is opened.
      * Returns true if strFile is OK.
      */
-    enum VerifyResult { VERIFY_OK, RECOVER_OK, RECOVER_FAIL };
-    VerifyResult Verify(std::string strFile, bool (*recoverFunc)(CDBEnv& dbenv, std::string strFile));
+    enum VerifyResult
+    {
+        VERIFY_OK, RECOVER_OK, RECOVER_FAIL
+    };
+    VerifyResult Verify(std::string strFile, bool (* recoverFunc)(CDBEnv& dbenv, std::string strFile));
     /*
      * Salvage data from a file that Verify says is bad.
      * fAggressive sets the DB_AGGRESSIVE flag (see berkeley DB->verify() method documentation).
@@ -72,18 +77,21 @@ public:
     void CloseDb(const std::string& strFile);
     bool RemoveDb(const std::string& strFile);
 
-    DbTxn *TxnBegin(int flags=DB_TXN_WRITE_NOSYNC)
+    DbTxn* TxnBegin(int flags = DB_TXN_WRITE_NOSYNC)
     {
         DbTxn* ptxn = NULL;
         int ret = dbenv.txn_begin(NULL, &ptxn, flags);
+
         if (!ptxn || ret != 0)
+        {
             return NULL;
+        }
+
         return ptxn;
     }
 };
 
 extern CDBEnv bitdb;
-
 
 /** RAII class that provides access to a Berkeley database */
 class CDB
@@ -91,11 +99,15 @@ class CDB
 protected:
     Db* pdb;
     std::string strFile;
-    DbTxn *activeTxn;
+    DbTxn* activeTxn;
     bool fReadOnly;
 
-    explicit CDB(const char* pszFile, const char* pszMode="r+");
-    ~CDB() { Close(); }
+    explicit CDB(const char* pszFile, const char* pszMode = "r+");
+    ~CDB()
+    {
+        Close();
+    }
+
 public:
     void Flush();
     void Close();
@@ -108,7 +120,9 @@ protected:
     bool Read(const K& key, T& value)
     {
         if (!pdb)
+        {
             return false;
+        }
 
         // Key
         CDataStream ssKey(SER_DISK, CLIENT_VERSION);
@@ -121,15 +135,21 @@ protected:
         datValue.set_flags(DB_DBT_MALLOC);
         int ret = pdb->get(activeTxn, &datKey, &datValue, 0);
         memset(datKey.get_data(), 0, datKey.get_size());
+
         if (datValue.get_data() == NULL)
+        {
             return false;
+        }
 
         // Unserialize value
-        try {
-            CDataStream ssValue((char*)datValue.get_data(), (char*)datValue.get_data() + datValue.get_size(), SER_DISK, CLIENT_VERSION);
+        try
+        {
+            CDataStream ssValue((char*)datValue.get_data(),
+                (char*)datValue.get_data() + datValue.get_size(), SER_DISK, CLIENT_VERSION);
             ssValue >> value;
         }
-        catch (std::exception &e) {
+        catch (std::exception &e)
+        {
             return false;
         }
 
@@ -140,12 +160,17 @@ protected:
     }
 
     template<typename K, typename T>
-    bool Write(const K& key, const T& value, bool fOverwrite=true)
+    bool Write(const K& key, const T& value, bool fOverwrite = true)
     {
         if (!pdb)
+        {
             return false;
+        }
+
         if (fReadOnly)
+        {
             assert(!"Write called on database in read-only mode");
+        }
 
         // Key
         CDataStream ssKey(SER_DISK, CLIENT_VERSION);
@@ -172,9 +197,14 @@ protected:
     bool Erase(const K& key)
     {
         if (!pdb)
+        {
             return false;
+        }
+
         if (fReadOnly)
+        {
             assert(!"Erase called on database in read-only mode");
+        }
 
         // Key
         CDataStream ssKey(SER_DISK, CLIENT_VERSION);
@@ -194,7 +224,9 @@ protected:
     bool Exists(const K& key)
     {
         if (!pdb)
+        {
             return false;
+        }
 
         // Key
         CDataStream ssKey(SER_DISK, CLIENT_VERSION);
@@ -213,36 +245,52 @@ protected:
     Dbc* GetCursor()
     {
         if (!pdb)
+        {
             return NULL;
+        }
+
         Dbc* pcursor = NULL;
         int ret = pdb->cursor(NULL, &pcursor, 0);
+
         if (ret != 0)
+        {
             return NULL;
+        }
+
         return pcursor;
     }
 
-    int ReadAtCursor(Dbc* pcursor, CDataStream& ssKey, CDataStream& ssValue, unsigned int fFlags=DB_NEXT)
+    int ReadAtCursor(Dbc* pcursor, CDataStream& ssKey, CDataStream& ssValue, unsigned int fFlags = DB_NEXT)
     {
         // Read at cursor
         Dbt datKey;
+
         if (fFlags == DB_SET || fFlags == DB_SET_RANGE || fFlags == DB_GET_BOTH || fFlags == DB_GET_BOTH_RANGE)
         {
             datKey.set_data(&ssKey[0]);
             datKey.set_size(ssKey.size());
         }
+
         Dbt datValue;
+
         if (fFlags == DB_GET_BOTH || fFlags == DB_GET_BOTH_RANGE)
         {
             datValue.set_data(&ssValue[0]);
             datValue.set_size(ssValue.size());
         }
+
         datKey.set_flags(DB_DBT_MALLOC);
         datValue.set_flags(DB_DBT_MALLOC);
         int ret = pcursor->get(&datKey, &datValue, fFlags);
+
         if (ret != 0)
+        {
             return ret;
+        }
         else if (datKey.get_data() == NULL || datValue.get_data() == NULL)
+        {
             return 99999;
+        }
 
         // Convert to streams
         ssKey.SetType(SER_DISK);
@@ -264,10 +312,17 @@ public:
     bool TxnBegin()
     {
         if (!pdb || activeTxn)
+        {
             return false;
+        }
+
         DbTxn* ptxn = bitdb.TxnBegin();
+
         if (!ptxn)
+        {
             return false;
+        }
+
         activeTxn = ptxn;
         return true;
     }
@@ -275,7 +330,10 @@ public:
     bool TxnCommit()
     {
         if (!pdb || !activeTxn)
+        {
             return false;
+        }
+
         int ret = activeTxn->commit(0);
         activeTxn = NULL;
         return (ret == 0);
@@ -284,7 +342,10 @@ public:
     bool TxnAbort()
     {
         if (!pdb || !activeTxn)
+        {
             return false;
+        }
+
         int ret = activeTxn->abort();
         activeTxn = NULL;
         return (ret == 0);
@@ -305,3 +366,4 @@ public:
 };
 
 #endif // BITCOIN_DB_H
+

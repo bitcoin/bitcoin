@@ -17,6 +17,7 @@ void PrintLockContention(const char* pszName, const char* pszFile, int nLine)
     LogPrintf("LOCKCONTENTION: %s\n", pszName);
     LogPrintf("Locker: %s:%d\n", pszFile, nLine);
 }
+
 #endif /* DEBUG_LOCKCONTENTION */
 
 #ifdef DEBUG_LOCKORDER
@@ -42,10 +43,13 @@ struct CLockLocation
 
     std::string ToString() const
     {
-        return mutexName+"  "+sourceFile+":"+itostr(sourceLine);
+        return mutexName + "  " + sourceFile + ":" + itostr(sourceLine);
     }
 
-    std::string MutexName() const { return mutexName; }
+    std::string MutexName() const
+    {
+        return mutexName;
+    }
 
 private:
     std::string mutexName;
@@ -59,22 +63,41 @@ static boost::mutex dd_mutex;
 static std::map<std::pair<void*, void*>, LockStack> lockorders;
 static boost::thread_specific_ptr<LockStack> lockstack;
 
-
-static void potential_deadlock_detected(const std::pair<void*, void*>& mismatch, const LockStack& s1, const LockStack& s2)
+static void potential_deadlock_detected(const std::pair<void*, void*>& mismatch, const LockStack& s1,
+    const LockStack& s2)
 {
     LogPrintf("POTENTIAL DEADLOCK DETECTED\n");
     LogPrintf("Previous lock order was:\n");
-    BOOST_FOREACH(const PAIRTYPE(void*, CLockLocation)& i, s2)
+
+    BOOST_FOREACH (const PAIRTYPE(void*, CLockLocation) & i, s2)
     {
-        if (i.first == mismatch.first) LogPrintf(" (1)");
-        if (i.first == mismatch.second) LogPrintf(" (2)");
+        if (i.first == mismatch.first)
+        {
+            LogPrintf(" (1)");
+        }
+
+        if (i.first == mismatch.second)
+        {
+            LogPrintf(" (2)");
+        }
+
         LogPrintf(" %s\n", i.second.ToString());
     }
+
     LogPrintf("Current lock order is:\n");
-    BOOST_FOREACH(const PAIRTYPE(void*, CLockLocation)& i, s1)
+
+    BOOST_FOREACH (const PAIRTYPE(void*, CLockLocation) & i, s1)
     {
-        if (i.first == mismatch.first) LogPrintf(" (1)");
-        if (i.first == mismatch.second) LogPrintf(" (2)");
+        if (i.first == mismatch.first)
+        {
+            LogPrintf(" (1)");
+        }
+
+        if (i.first == mismatch.second)
+        {
+            LogPrintf(" (2)");
+        }
+
         LogPrintf(" %s\n", i.second.ToString());
     }
 }
@@ -82,23 +105,35 @@ static void potential_deadlock_detected(const std::pair<void*, void*>& mismatch,
 static void push_lock(void* c, const CLockLocation& locklocation, bool fTry)
 {
     if (lockstack.get() == NULL)
+    {
         lockstack.reset(new LockStack);
+    }
 
     LogPrint("lock", "Locking: %s\n", locklocation.ToString());
     dd_mutex.lock();
 
     (*lockstack).push_back(std::make_pair(c, locklocation));
 
-    if (!fTry) {
-        BOOST_FOREACH(const PAIRTYPE(void*, CLockLocation)& i, (*lockstack)) {
-            if (i.first == c) break;
+    if (!fTry)
+    {
+        BOOST_FOREACH (const PAIRTYPE(void*, CLockLocation) & i, (*lockstack))
+        {
+            if (i.first == c)
+            {
+                break;
+            }
 
             std::pair<void*, void*> p1 = std::make_pair(i.first, c);
+
             if (lockorders.count(p1))
+            {
                 continue;
+            }
+
             lockorders[p1] = (*lockstack);
 
             std::pair<void*, void*> p2 = std::make_pair(c, i.first);
+
             if (lockorders.count(p2))
             {
                 potential_deadlock_detected(p1, lockorders[p2], lockorders[p1]);
@@ -106,6 +141,7 @@ static void push_lock(void* c, const CLockLocation& locklocation, bool fTry)
             }
         }
     }
+
     dd_mutex.unlock();
 }
 
@@ -116,6 +152,7 @@ static void pop_lock()
         const CLockLocation& locklocation = (*lockstack).rbegin()->second;
         LogPrint("lock", "Unlocked: %s\n", locklocation.ToString());
     }
+
     dd_mutex.lock();
     (*lockstack).pop_back();
     dd_mutex.unlock();
@@ -134,18 +171,29 @@ void LeaveCritical()
 std::string LocksHeld()
 {
     std::string result;
-    BOOST_FOREACH(const PAIRTYPE(void*, CLockLocation)&i, *lockstack)
+
+    BOOST_FOREACH (const PAIRTYPE(void*, CLockLocation) & i, *lockstack)
+    {
         result += i.second.ToString() + std::string("\n");
+    }
+
     return result;
 }
 
-void AssertLockHeldInternal(const char *pszName, const char* pszFile, int nLine, void *cs)
+void AssertLockHeldInternal(const char* pszName, const char* pszFile, int nLine, void* cs)
 {
-    BOOST_FOREACH(const PAIRTYPE(void*, CLockLocation)&i, *lockstack)
-        if (i.first == cs) return;
+    BOOST_FOREACH (const PAIRTYPE(void*, CLockLocation) & i, *lockstack)
+    {
+        if (i.first == cs)
+        {
+            return;
+        }
+    }
+
     fprintf(stderr, "Assertion failed: lock %s not held in %s:%i; locks held:\n%s",
-            pszName, pszFile, nLine, LocksHeld().c_str());
+        pszName, pszFile, nLine, LocksHeld().c_str());
     abort();
 }
 
 #endif /* DEBUG_LOCKORDER */
+

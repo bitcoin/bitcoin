@@ -18,3 +18,4 @@ void MilliSleep(int64_t n);
 std::string DateTimeStrFormat(const char* pszFormat, int64_t nTime);
 
 #endif // BITCOIN_UTILTIME_H
+
