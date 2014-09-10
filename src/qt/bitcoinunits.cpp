@@ -115,11 +115,6 @@ QString BitcoinUnits::format(int unit, qint64 n, bool fPlus, SeparatorStyle sepa
         for (int i = 3; i < q_size; i += 3)
             quotient_str.insert(q_size - i, thin_sp);
 
-    int r_size = remainder_str.size();
-    if (separators == separatorAlways || (separators == separatorStandard && r_size > 4))
-        for (int i = 3, adj = 0; i < r_size ; i += 3, adj++)
-            remainder_str.insert(i + adj, thin_sp);
-
     if (n < 0)
         quotient_str.insert(0, '-');
     else if (fPlus && n > 0)
