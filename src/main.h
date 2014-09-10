@@ -17,6 +17,7 @@
 #include "net.h"
 #include "pow.h"
 #include "script/script.h"
+#include "script/sigcache.h"
 #include "script/standard.h"
 #include "sync.h"
 #include "txmempool.h"
