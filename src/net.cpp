@@ -2106,6 +2106,8 @@ CNode::~CNode()
 
 void CNode::AskFor(const CInv& inv)
 {
+    if (mapAskFor.size() > MAPASKFOR_MAX_SZ)
+        return;
     // We're using mapAskFor as a priority queue,
     // the key is the earliest time the request can be sent
     int64_t nRequestTime;
