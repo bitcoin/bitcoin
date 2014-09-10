@@ -38,8 +38,30 @@ bool IsCanonicalPubKey(const std::vector<unsigned char> &vchPubKey, unsigned int
 bool IsCanonicalSignature(const std::vector<unsigned char> &vchSig, unsigned int flags);
 
 uint256 SignatureHash(const CScript &scriptCode, const CTransaction& txTo, unsigned int nIn, int nHashType);
-bool CheckSig(std::vector<unsigned char> vchSig, const std::vector<unsigned char> &vchPubKey, const CScript &scriptCode, const CTransaction& txTo, unsigned int nIn, int flags);
-bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& script, const CTransaction& txTo, unsigned int nIn, unsigned int flags);
-bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const CTransaction& txTo, unsigned int nIn, unsigned int flags);
+
+class SignatureChecker
+{
+private:
+    const CTransaction& txTo;
+    unsigned int nIn;
+
+public:
+    SignatureChecker(const CTransaction& txToIn, unsigned int nInIn) : txTo(txToIn), nIn(nInIn) {}
+    bool CheckSig(const std::vector<unsigned char>& scriptSig, const std::vector<unsigned char>& vchPubKey, const CScript& scriptCode, int nFlags) const;
+};
+
+bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& script, unsigned int flags, const SignatureChecker& checker);
+bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, unsigned int flags, const SignatureChecker& checker);
+
+// Wrappers using a default SignatureChecker.
+bool inline EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& script, const CTransaction& txTo, unsigned int nIn, unsigned int flags)
+{
+    return EvalScript(stack, script, flags, SignatureChecker(txTo, nIn));
+}
+
+bool inline VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const CTransaction& txTo, unsigned int nIn, unsigned int flags)
+{
+    return VerifyScript(scriptSig, scriptPubKey, flags, SignatureChecker(txTo, nIn));
+}
 
 #endif // H_BITCOIN_SCRIPT_INTERPRETER

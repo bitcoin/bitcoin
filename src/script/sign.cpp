@@ -174,7 +174,7 @@ static CScript CombineMultisig(CScript scriptPubKey, const CMutableTransaction& 
             if (sigs.count(pubkey))
                 continue; // Already got a sig for this pubkey
 
-            if (CheckSig(sig, pubkey, scriptPubKey, txTo, nIn, 0))
+            if (SignatureChecker(txTo, nIn).CheckSig(sig, pubkey, scriptPubKey, 0))
             {
                 sigs[pubkey] = sig;
                 break;
