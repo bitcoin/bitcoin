@@ -132,7 +132,7 @@ bool IsCanonicalSignature(const valtype &vchSig, unsigned int flags) {
     return true;
 }
 
-bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, const CTransaction& txTo, unsigned int nIn, unsigned int flags)
+bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, unsigned int flags, const SignatureChecker& checker)
 {
     CScript::const_iterator pc = script.begin();
     CScript::const_iterator pend = script.end();
@@ -675,7 +675,7 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
                     scriptCode.FindAndDelete(CScript(vchSig));
 
                     bool fSuccess = IsCanonicalSignature(vchSig, flags) && IsCanonicalPubKey(vchPubKey, flags) &&
-                        CheckSig(vchSig, vchPubKey, scriptCode, txTo, nIn, flags);
+                        checker.CheckSig(vchSig, vchPubKey, scriptCode, flags);
 
                     popstack(stack);
                     popstack(stack);
@@ -736,7 +736,7 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
 
                         // Check signature
                         bool fOk = IsCanonicalSignature(vchSig, flags) && IsCanonicalPubKey(vchPubKey, flags) &&
-                            CheckSig(vchSig, vchPubKey, scriptCode, txTo, nIn, flags);
+                            checker.CheckSig(vchSig, vchPubKey, scriptCode, flags);
 
                         if (fOk) {
                             isig++;
@@ -897,7 +897,7 @@ public:
 
 } // anon namespace
 
-uint256 SignatureHash(const CScript &scriptCode, const CTransaction& txTo, unsigned int nIn, int nHashType)
+uint256 SignatureHash(const CScript& scriptCode, const CTransaction& txTo, unsigned int nIn, int nHashType)
 {
     if (nIn >= txTo.vin.size()) {
         LogPrintf("ERROR: SignatureHash() : nIn=%d out of range\n", nIn);
@@ -976,7 +976,7 @@ public:
     }
 };
 
-bool CheckSig(vector<unsigned char> vchSig, const vector<unsigned char>& vchPubKey, const CScript& scriptCode, const CTransaction& txTo, unsigned int nIn, int flags)
+bool SignatureChecker::CheckSig(const vector<unsigned char>& vchSigIn, const vector<unsigned char>& vchPubKey, const CScript& scriptCode, int flags) const
 {
     static CSignatureCache signatureCache;
 
@@ -985,6 +985,7 @@ bool CheckSig(vector<unsigned char> vchSig, const vector<unsigned char>& vchPubK
         return false;
 
     // Hash type is one byte tacked on to the end of the signature
+    vector<unsigned char> vchSig(vchSigIn);
     if (vchSig.empty())
         return false;
     int nHashType = vchSig.back();
@@ -1004,14 +1005,14 @@ bool CheckSig(vector<unsigned char> vchSig, const vector<unsigned char>& vchPubK
     return true;
 }
 
-bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const CTransaction& txTo, unsigned int nIn, unsigned int flags)
+bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, unsigned int flags, const SignatureChecker& checker)
 {
     vector<vector<unsigned char> > stack, stackCopy;
-    if (!EvalScript(stack, scriptSig, txTo, nIn, flags))
+    if (!EvalScript(stack, scriptSig, flags, checker))
         return false;
     if (flags & SCRIPT_VERIFY_P2SH)
         stackCopy = stack;
-    if (!EvalScript(stack, scriptPubKey, txTo, nIn, flags))
+    if (!EvalScript(stack, scriptPubKey, flags, checker))
         return false;
     if (stack.empty())
         return false;
@@ -1034,7 +1035,7 @@ bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const C
         CScript pubKey2(pubKeySerialized.begin(), pubKeySerialized.end());
         popstack(stackCopy);
 
-        if (!EvalScript(stackCopy, pubKey2, txTo, nIn, flags))
+        if (!EvalScript(stackCopy, pubKey2, flags, checker))
             return false;
         if (stackCopy.empty())
             return false;

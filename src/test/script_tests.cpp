@@ -89,7 +89,7 @@ CMutableTransaction BuildSpendingTransaction(const CScript& scriptSig, const CTr
 
 void DoTest(const CScript& scriptPubKey, const CScript& scriptSig, int flags, bool expect, const std::string& message)
 {
-    BOOST_CHECK_MESSAGE(VerifyScript(scriptSig, scriptPubKey, BuildSpendingTransaction(scriptSig, BuildCreditingTransaction(scriptPubKey)), 0, flags) == expect, message);
+    BOOST_CHECK_MESSAGE(VerifyScript(scriptSig, scriptPubKey, flags, SignatureChecker(BuildSpendingTransaction(scriptSig, BuildCreditingTransaction(scriptPubKey)), 0)) == expect, message);
 }
 
 namespace
