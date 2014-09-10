@@ -1,3 +1,7 @@
+0.8.7.3 changes
+=============
+- Upgrade OpenSSL to 1.0.1i (see https://www.openssl.org/news/secadv_20140806.txt - just to be sure, no critical issues for Bitcoin Core)
+
 0.8.7.2 changes
 =============
 - Mac and Windows Official Gitian Builds: upgrade to openssl-1.0.1h for CVE-2014-0224
