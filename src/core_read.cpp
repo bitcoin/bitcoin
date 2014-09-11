@@ -8,7 +8,6 @@
 #include "script/script.h"
 #include "util.h"
 
-#include <boost/assign/list_of.hpp>
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/algorithm/string/split.hpp>

@@ -161,6 +161,10 @@ if test "x$enable_debug" = xyes; then
     fi
 fi 
 
+dnl Enable C++0x
+AX_CXX_COMPILE_STDCXX_0X
+m4_ifndef([HAVE_STDCXX_0X], [AX_CXX_COMPILE_STDCXX_11(noext,mandatory)])
+
 ## TODO: Remove these hard-coded paths and flags. They are here for the sake of
 ##       compatibility with the legacy buildsystem.
 ##
@@ -216,7 +220,7 @@ case $host in
        AC_MSG_ERROR("windres not found")
      fi
 
-     CPPFLAGS="$CPPFLAGS -D_MT -DWIN32 -D_WINDOWS -DBOOST_THREAD_USE_LIB"
+     CPPFLAGS="$CPPFLAGS -std=c++0x -D_MT -DWIN32 -D_WINDOWS -DBOOST_THREAD_USE_LIB"
      LEVELDB_TARGET_FLAGS="TARGET_OS=OS_WINDOWS_CROSSCOMPILE"
      if test "x$CXXFLAGS_overridden" = "xno"; then
        CXXFLAGS="$CXXFLAGS -w"

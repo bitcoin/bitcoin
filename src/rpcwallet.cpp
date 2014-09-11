@@ -16,13 +16,11 @@
 
 #include <stdint.h>
 
-#include <boost/assign/list_of.hpp>
 #include "json/json_spirit_utils.h"
 #include "json/json_spirit_value.h"
 
 using namespace std;
 using namespace boost;
-using namespace boost::assign;
 using namespace json_spirit;
 
 int64_t nWalletUnlockTime;
@@ -1839,9 +1837,9 @@ Value lockunspent(const Array& params, bool fHelp)
         );
 
     if (params.size() == 1)
-        RPCTypeCheck(params, list_of(bool_type));
+        RPCTypeCheck(params, {bool_type});
     else
-        RPCTypeCheck(params, list_of(bool_type)(array_type));
+        RPCTypeCheck(params, {bool_type, array_type});
 
     bool fUnlock = params[0].get_bool();
 
@@ -1858,7 +1856,7 @@ Value lockunspent(const Array& params, bool fHelp)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, expected object");
         const Object& o = output.get_obj();
 
-        RPCTypeCheck(o, map_list_of("txid", str_type)("vout", int_type));
+        RPCTypeCheck(o, {{"txid", str_type}, {"vout", int_type}});
 
         string txid = find_value(o, "txid").get_str();
         if (!IsHex(txid))

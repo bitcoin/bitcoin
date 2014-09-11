@@ -3,6 +3,14 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+// prevents undefined reference to boost::filesystem::detail::copy_file with C++11
+#include <boost/version.hpp>
+#if BOOST_VERSION >= 105100
+  #define BOOST_NO_CXX11_SCOPED_ENUMS
+#else
+  #define BOOST_NO_SCOPED_ENUMS // deprecated as of BOOST 1.51
+#endif
+
 #include "walletdb.h"
 
 #include "base58.h"
@@ -13,6 +21,7 @@
 #include "util.h"
 #include "wallet.h"
 
+#include <memory>
 #include <boost/filesystem.hpp>
 #include <boost/foreach.hpp>
 #include <boost/thread.hpp>
@@ -928,7 +937,7 @@ bool CWalletDB::Recover(CDBEnv& dbenv, std::string filename, bool fOnlyKeys)
     LogPrintf("Salvage(aggressive) found %u records\n", salvagedData.size());
 
     bool fSuccess = allOK;
-    Db* pdbCopy = new Db(&dbenv.dbenv, 0);
+    std::unique_ptr<Db> pdbCopy(new Db(&dbenv.dbenv, 0));
     int ret = pdbCopy->open(NULL,               // Txn pointer
                             filename.c_str(),   // Filename
                             "main",             // Logical db name
@@ -969,7 +978,6 @@ bool CWalletDB::Recover(CDBEnv& dbenv, std::string filename, bool fOnlyKeys)
     }
     ptxn->commit(0);
     pdbCopy->close(0);
-    delete pdbCopy;
 
     return fSuccess;
 }

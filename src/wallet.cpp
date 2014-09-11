@@ -15,6 +15,7 @@
 #include "util.h"
 #include "utilmoneystr.h"
 
+#include <memory>
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/thread.hpp>
 

@@ -19,8 +19,6 @@
 
 #include <stdint.h>
 
-#include <boost/assign/list_of.hpp>
-
 #include "json/json_spirit_utils.h"
 #include "json/json_spirit_value.h"
 
@@ -584,7 +582,7 @@ Value estimatefee(const Array& params, bool fHelp)
             + HelpExampleCli("estimatefee", "6")
             );
 
-    RPCTypeCheck(params, boost::assign::list_of(int_type));
+    RPCTypeCheck(params, {int_type});
 
     int nBlocks = params[0].get_int();
     if (nBlocks < 1)
@@ -616,7 +614,7 @@ Value estimatepriority(const Array& params, bool fHelp)
             + HelpExampleCli("estimatepriority", "6")
             );
 
-    RPCTypeCheck(params, boost::assign::list_of(int_type));
+    RPCTypeCheck(params, {int_type});
 
     int nBlocks = params[0].get_int();
     if (nBlocks < 1)
