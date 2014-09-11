@@ -15,11 +15,9 @@
 #include "core_io.h"
 
 #include <stdio.h>
-#include <boost/assign/list_of.hpp>
 #include <boost/algorithm/string.hpp>
 
 using namespace std;
-using namespace boost::assign;
 
 static bool fCreateBlank;
 static map<string,UniValue> registers;
@@ -372,7 +370,11 @@ static void MutateTxSign(CMutableTransaction& tx, const string& flagStr)
             if (!prevOut.isObject())
                 throw runtime_error("expected prevtxs internal object");
 
-            map<string,UniValue::VType> types = map_list_of("txid", UniValue::VSTR)("vout",UniValue::VNUM)("scriptPubKey",UniValue::VSTR);
+            map<string,UniValue::VType> types = {
+                {"txid", UniValue::VSTR},
+                {"vout",UniValue::VNUM},
+                {"scriptPubKey", UniValue::VSTR}
+            };
             if (!prevOut.checkObject(types))
                 throw runtime_error("prevtxs internal object typecheck fail");
 

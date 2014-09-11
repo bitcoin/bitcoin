@@ -16,8 +16,6 @@
 #include "main.h"
 #include "wallet.h"
 
-#include <boost/assign/list_of.hpp> // for 'map_list_of()'
-
 #include <QApplication>
 #include <QCheckBox>
 #include <QCursor>
@@ -406,11 +404,12 @@ QString CoinControlDialog::getPriorityLabel(const CTxMemPool& pool, double dPrio
 {
     // confirmations -> textual description
     typedef std::map<unsigned int, QString> PriorityDescription;
-    const static PriorityDescription priorityDescriptions = boost::assign::map_list_of
-        (1, tr("highest"))(2, tr("higher"))(3, tr("high"))
-        (5, tr("medium-high"))(6, tr("medium"))
-        (10, tr("low-medium"))(15, tr("low"))
-        (20, tr("lower"));
+    const static PriorityDescription priorityDescriptions = {
+        {1, tr("highest")}, {2, tr("higher")}, {3, tr("high")},
+        {5, tr("medium-high")}, {6, tr("medium")},
+        {10, tr("low-medium")}, {15, tr("low")},
+        {20, tr("lower")},
+    };
 
     BOOST_FOREACH(const PriorityDescription::value_type& i, priorityDescriptions)
     {
