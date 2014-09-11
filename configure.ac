@@ -308,6 +308,9 @@ fi
 dnl Require little endian
 AC_C_BIGENDIAN([AC_MSG_ERROR("Big Endian not supported")])
 
+dnl Enable C++0x
+AX_CXX_COMPILE_STDCXX_0X
+
 dnl Check for pthread compile/link requirements
 AX_PTHREAD
 
