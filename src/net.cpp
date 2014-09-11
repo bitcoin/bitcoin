@@ -95,7 +95,7 @@ CCriticalSection cs_setservAddNodeAddresses;
 vector<std::string> vAddedNodes;
 CCriticalSection cs_vAddedNodes;
 
-NodeId nLastNodeId = 0;
+NodeId nLastNodeId = 100;
 CCriticalSection cs_nLastNodeId;
 
 static CSemaphore *semOutbound = NULL;
