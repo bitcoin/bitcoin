@@ -161,6 +161,10 @@ if test "x$enable_debug" = xyes; then
     fi
 fi 
 
+dnl Enable C++0x
+AX_CXX_COMPILE_STDCXX_0X
+m4_ifndef([HAVE_STDCXX_0X], [AX_CXX_COMPILE_STDCXX_11(noext,mandatory)])
+
 ## TODO: Remove these hard-coded paths and flags. They are here for the sake of
 ##       compatibility with the legacy buildsystem.
 ##
@@ -307,10 +311,6 @@ fi
 
 dnl Require little endian
 AC_C_BIGENDIAN([AC_MSG_ERROR("Big Endian not supported")])
-
-dnl Enable C++0x
-AX_CXX_COMPILE_STDCXX_0X
-m4_ifndef([HAVE_STDCXX_0X], [AX_CXX_COMPILE_STDCXX_11(noext,mandatory)])
 
 dnl Check for pthread compile/link requirements
 AX_PTHREAD
