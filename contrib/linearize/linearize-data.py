@@ -110,7 +110,11 @@ def copydata(settings, blkindex, blkset):
 		if not inF:
 			fname = "%s/blk%05d.dat" % (settings['input'], inFn)
 			print("Input file" + fname)
-			inF = open(fname, "rb")
+			try:
+				inF = open(fname, "rb")
+			except IOError:
+				print "Done"
+				return
 
 		inhdr = inF.read(8)
 		if (not inhdr or (inhdr[0] == "\0")):
