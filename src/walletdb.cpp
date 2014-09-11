@@ -13,6 +13,7 @@
 #include "util.h"
 #include "wallet.h"
 
+#include <memory>
 #include <boost/filesystem.hpp>
 #include <boost/foreach.hpp>
 #include <boost/thread.hpp>
@@ -928,7 +929,7 @@ bool CWalletDB::Recover(CDBEnv& dbenv, std::string filename, bool fOnlyKeys)
     LogPrintf("Salvage(aggressive) found %u records\n", salvagedData.size());
 
     bool fSuccess = allOK;
-    Db* pdbCopy = new Db(&dbenv.dbenv, 0);
+    std::unique_ptr<Db> pdbCopy(new Db(&dbenv.dbenv, 0));
     int ret = pdbCopy->open(NULL,               // Txn pointer
                             filename.c_str(),   // Filename
                             "main",             // Logical db name
@@ -969,7 +970,6 @@ bool CWalletDB::Recover(CDBEnv& dbenv, std::string filename, bool fOnlyKeys)
     }
     ptxn->commit(0);
     pdbCopy->close(0);
-    delete pdbCopy;
 
     return fSuccess;
 }

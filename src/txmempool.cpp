@@ -360,12 +360,11 @@ CTxMemPool::CTxMemPool(const CFeeRate& _minRelayFee) :
     // to wait a day or two to save a fraction of a penny in fees.
     // Confirmation times for very-low-fee transactions that take more
     // than an hour or three to confirm are highly variable.
-    minerPolicyEstimator = new CMinerPolicyEstimator(25);
+    minerPolicyEstimator.reset(new CMinerPolicyEstimator(25));
 }
 
 CTxMemPool::~CTxMemPool()
 {
-    delete minerPolicyEstimator;
 }
 
 void CTxMemPool::pruneSpent(const uint256 &hashTx, CCoins &coins)

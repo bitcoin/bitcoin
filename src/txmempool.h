@@ -7,6 +7,7 @@
 #define BITCOIN_TXMEMPOOL_H
 
 #include <list>
+#include <memory>
 
 #include "coins.h"
 #include "core.h"
@@ -66,7 +67,7 @@ class CTxMemPool
 private:
     bool fSanityCheck; // Normally false, true if -checkmempool or -regtest
     unsigned int nTransactionsUpdated;
-    CMinerPolicyEstimator* minerPolicyEstimator;
+    std::unique_ptr<CMinerPolicyEstimator> minerPolicyEstimator;
 
     CFeeRate minRelayFee; // Passed to constructor to avoid dependency on main
     uint64_t totalTxSize; // sum of all mempool tx' byte sizes
