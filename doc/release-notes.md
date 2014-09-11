@@ -53,6 +53,10 @@ Protocol and network code:
 - Add a new checkpoint at block 295,000
 - Increase IsStandard() scriptSig length
 - Avoid querying DNS seeds, if we have open connections
+- Remove a useless millisleep in socket handler
+- Stricter memory limits on CNode
+- Better orphan transaction handling
+- Add `-maxorphantx=<n>` and `-maxorphanblocks=<n>` options for control over the maximum orphan transactions and blocks
 
 Wallet:
 - Check redeemScript size does not exceed 520 byte limit
@@ -77,15 +81,18 @@ Thanks to everyone who contributed to this release:
 
 - Andrew Poelstra
 - Cory Fields
+- Gavin Andresen
 - Jeff Garzik
 - Johnathan Corgan
 - Julian Haight
 - Michael Ford
 - Pavel Vasin
 - Peter Todd
+- phantomcircuit
 - Pieter Wuille
 - Rose Toomey
 - Ruben Dario Ponticelli
+- shshshsh
 - Trevin Hofmann
 - Wladimir J. van der Laan
 - Zak Wilcox
