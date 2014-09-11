@@ -280,7 +280,7 @@ BOOST_AUTO_TEST_CASE(script_combineSigs)
 
     CMutableTransaction txFrom;
     txFrom.vout.resize(1);
-    txFrom.vout[0].scriptPubKey.SetDestination(keys[0].GetPubKey().GetID());
+    txFrom.vout[0].scriptPubKey = GetScriptForDestination(keys[0].GetPubKey().GetID());
     CScript& scriptPubKey = txFrom.vout[0].scriptPubKey;
     CMutableTransaction txTo;
     txTo.vin.resize(1);
@@ -309,7 +309,7 @@ BOOST_AUTO_TEST_CASE(script_combineSigs)
     // P2SH, single-signature case:
     CScript pkSingle; pkSingle << keys[0].GetPubKey() << OP_CHECKSIG;
     keystore.AddCScript(pkSingle);
-    scriptPubKey.SetDestination(pkSingle.GetID());
+    scriptPubKey = GetScriptForDestination(pkSingle.GetID());
     SignSignature(keystore, txFrom, txTo, 0);
     combined = CombineSignatures(scriptPubKey, txTo, 0, scriptSig, empty);
     BOOST_CHECK(combined == scriptSig);
@@ -327,7 +327,7 @@ BOOST_AUTO_TEST_CASE(script_combineSigs)
     BOOST_CHECK(combined == scriptSig);
 
     // Hardest case:  Multisig 2-of-3
-    scriptPubKey.SetMultisig(2, pubkeys);
+    scriptPubKey = GetScriptForMultisig(2, pubkeys);
     keystore.AddCScript(scriptPubKey);
     SignSignature(keystore, txFrom, txTo, 0);
     combined = CombineSignatures(scriptPubKey, txTo, 0, scriptSig, empty);
