@@ -107,7 +107,5 @@ AC_DEFUN([AX_CXX_COMPILE_STDCXX_0X], [
   elif test "$ax_cv_cxx_compile_cxx0x_gxx" = yes; then
     AC_DEFINE(HAVE_STDCXX_0X,,[Define if g++ supports C++0x features. ])
     CXXFLAGS="$CXXFLAGS -std=gnu++0x"
-  else
-    AC_MSG_ERROR([*** A compiler with support for C++0x language features is required.])
   fi
 ])

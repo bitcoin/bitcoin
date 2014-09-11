@@ -125,7 +125,6 @@ AC_PROG_CXX
 AC_PROG_CC
 AC_PROG_CPP
 AC_PROG_CXXCPP
-AX_CXX_COMPILE_STDCXX_11(noext,mandatory)
 AC_PROG_INSTALL
 AC_PROG_OBJC
 AC_PROG_LN_S
@@ -311,6 +310,7 @@ AC_C_BIGENDIAN([AC_MSG_ERROR("Big Endian not supported")])
 
 dnl Enable C++0x
 AX_CXX_COMPILE_STDCXX_0X
+m4_ifndef([HAVE_STDCXX_0X], [AX_CXX_COMPILE_STDCXX_11(noext,mandatory)])
 
 dnl Check for pthread compile/link requirements
 AX_PTHREAD
