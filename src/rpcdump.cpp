@@ -6,6 +6,8 @@
 #include "rpcserver.h"
 #include "init.h"
 #include "main.h"
+#include "script/script.h"
+#include "script/standard.h"
 #include "sync.h"
 #include "util.h"
 #include "utiltime.h"
@@ -161,7 +163,7 @@ Value importaddress(const Array& params, bool fHelp)
 
     CBitcoinAddress address(params[0].get_str());
     if (address.IsValid()) {
-        script.SetDestination(address.Get());
+        script = GetScriptForDestination(address.Get());
     } else if (IsHex(params[0].get_str())) {
         std::vector<unsigned char> data(ParseHex(params[0].get_str()));
         script = CScript(data.begin(), data.end());
