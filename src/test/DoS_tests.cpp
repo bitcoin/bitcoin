@@ -24,7 +24,8 @@
 #include <boost/test/unit_test.hpp>
 
 // Tests this internal-to-main.cpp method:
-extern bool AddOrphanTx(const CTransaction& tx);
+extern bool AddOrphanTx(const CTransaction& tx, NodeId peer);
+extern void EraseOrphansFor(NodeId peer);
 extern unsigned int LimitOrphanTxSize(unsigned int nMaxOrphans);
 extern std::map<uint256, CTransaction> mapOrphanTransactions;
 extern std::map<uint256, std::set<uint256> > mapOrphanTransactionsByPrev;
@@ -174,7 +175,7 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
         tx.vout[0].nValue = 1*CENT;
         tx.vout[0].scriptPubKey.SetDestination(key.GetPubKey().GetID());
 
-        AddOrphanTx(tx);
+        AddOrphanTx(tx, i);
     }
 
     // ... and 50 that depend on other orphans:
@@ -191,7 +192,7 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
         tx.vout[0].scriptPubKey.SetDestination(key.GetPubKey().GetID());
         SignSignature(keystore, txPrev, tx, 0);
 
-        AddOrphanTx(tx);
+        AddOrphanTx(tx, i);
     }
 
     // This really-big orphan should be ignored:
@@ -215,7 +216,15 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
         for (unsigned int j = 1; j < tx.vin.size(); j++)
             tx.vin[j].scriptSig = tx.vin[0].scriptSig;
 
-        BOOST_CHECK(!AddOrphanTx(tx));
+        BOOST_CHECK(!AddOrphanTx(tx, i));
+    }
+
+    // Test EraseOrphansFor:
+    for (NodeId i = 0; i < 3; i++)
+    {
+        size_t sizeBefore = mapOrphanTransactions.size();
+        EraseOrphansFor(i);
+        BOOST_CHECK(mapOrphanTransactions.size() < sizeBefore);
     }
 
     // Test LimitOrphanTxSize() function:
