@@ -94,6 +94,7 @@ Thanks to everyone who contributed to this release:
 - Ruben Dario Ponticelli
 - shshshsh
 - Trevin Hofmann
+- Warren Togami
 - Wladimir J. van der Laan
 - Zak Wilcox
 
