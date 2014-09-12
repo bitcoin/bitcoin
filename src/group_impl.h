@@ -55,13 +55,16 @@ void static secp256k1_ge_get_hex(char *r, int *rlen, const secp256k1_ge_t *a) {
 }
 
 void static secp256k1_ge_set_gej(secp256k1_ge_t *r, secp256k1_gej_t *a) {
+    r->infinity = a->infinity;
+    if (a->infinity) {
+        return;
+    }
     secp256k1_fe_inv_var(&a->z, &a->z);
     secp256k1_fe_t z2; secp256k1_fe_sqr(&z2, &a->z);
     secp256k1_fe_t z3; secp256k1_fe_mul(&z3, &a->z, &z2);
     secp256k1_fe_mul(&a->x, &a->x, &z2);
     secp256k1_fe_mul(&a->y, &a->y, &z3);
     secp256k1_fe_set_int(&a->z, 1);
-    r->infinity = a->infinity;
     r->x = a->x;
     r->y = a->y;
 }
