@@ -1640,7 +1640,7 @@ Address: %4
     </message>
     <message>
         <source>Listen for connections on &lt;port&gt; (default: 8333 or testnet: 18333)</source>
-        <translation>پذیرش اتصالات روی پورت &lt;port&gt; (پیش‌فرض: 8833 یا شبکهٔ آزمایشی: 18333)</translation>
+        <translation>پذیرش اتصالات روی پورت &lt;port&gt; (پیش‌فرض: 8333 یا شبکهٔ آزمایشی: 18333)</translation>
     </message>
     <message>
         <source>Maintain at most &lt;n&gt; connections to peers (default: 125)</source>
