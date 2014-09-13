@@ -94,8 +94,8 @@ static void secp256k1_ecmult_start(void) {
     if (secp256k1_ecmult_consts != NULL)
         return;
 
+    // Allocate the precomputation table.
     secp256k1_ecmult_consts_t *ret = (secp256k1_ecmult_consts_t*)malloc(sizeof(secp256k1_ecmult_consts_t));
-    secp256k1_ecmult_consts = ret;
 
     // get the generator
     const secp256k1_ge_t *g = &secp256k1_ge_consts->g;
@@ -109,14 +109,17 @@ static void secp256k1_ecmult_start(void) {
     // precompute the tables with odd multiples
     secp256k1_ecmult_table_precomp_ge(ret->pre_g, &gj, WINDOW_G);
     secp256k1_ecmult_table_precomp_ge(ret->pre_g_128, &g_128j, WINDOW_G);
+
+    // Set the global pointer to the precomputation table.
+    secp256k1_ecmult_consts = ret;
 }
 
 static void secp256k1_ecmult_gen_start(void) {
     if (secp256k1_ecmult_gen_consts != NULL)
         return;
 
+    // Allocate the precomputation table.
     secp256k1_ecmult_gen_consts_t *ret = (secp256k1_ecmult_gen_consts_t*)malloc(sizeof(secp256k1_ecmult_gen_consts_t));
-    secp256k1_ecmult_gen_consts = ret;
 
     // get the generator
     const secp256k1_ge_t *g = &secp256k1_ge_consts->g;
@@ -169,6 +172,9 @@ static void secp256k1_ecmult_gen_start(void) {
                 ret->prec[j][k][i] = raw[k];
         }
     }
+
+    // Set the global pointer to the precomputation table.
+    secp256k1_ecmult_gen_consts = ret;
 }
 
 static void secp256k1_ecmult_stop(void) {
@@ -176,8 +182,8 @@ static void secp256k1_ecmult_stop(void) {
         return;
 
     secp256k1_ecmult_consts_t *c = (secp256k1_ecmult_consts_t*)secp256k1_ecmult_consts;
-    free(c);
     secp256k1_ecmult_consts = NULL;
+    free(c);
 }
 
 static void secp256k1_ecmult_gen_stop(void) {
@@ -185,8 +191,8 @@ static void secp256k1_ecmult_gen_stop(void) {
         return;
 
     secp256k1_ecmult_gen_consts_t *c = (secp256k1_ecmult_gen_consts_t*)secp256k1_ecmult_gen_consts;
-    free(c);
     secp256k1_ecmult_gen_consts = NULL;
+    free(c);
 }
 
 /** Convert a number to WNAF notation. The number becomes represented by sum(2^i * wnaf[i], i=0..bits),
