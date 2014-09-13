@@ -1620,6 +1620,19 @@ static void ApproximateBestSubset(vector<pair<CAmount, pair<const CWalletTx*,uns
                     if (nTotal >= nTargetValue)
                     {
                         fReachedTarget = true;
+
+                        for (unsigned int i = 0; i < vValue.size(); i++)
+                        {                        
+                            //The target has been reached, but the candidate set may contain extraneous inputs.
+                            //This iterates over all inputs and deducts any that are included, but smaller 
+                            //than the amount nTargetValue is still exceeded by.
+                            if (vfIncluded[i] && (nTotal - vValue[i].first) >= nTargetValue )
+                            {
+                                vfIncluded[i] = false;
+                                nTotal -= vValue[i].first;
+                            }
+                        }
+                        
                         if (nTotal < nBest)
                         {
                             nBest = nTotal;
