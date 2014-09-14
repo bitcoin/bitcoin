@@ -11,6 +11,7 @@
 
 #include "addrman.h"
 #include "checkpoints.h"
+#include "compat/sanity.h"
 #include "key.h"
 #include "main.h"
 #include "miner.h"
@@ -32,7 +33,6 @@
 #ifndef WIN32
 #include <signal.h>
 #endif
-#include "compat/sanity.h"
 
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/algorithm/string/replace.hpp>

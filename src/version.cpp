@@ -7,6 +7,7 @@
 #include "tinyformat.h"
 
 #include <string>
+
 #include <boost/algorithm/string/join.hpp>
 
 // Name of client reported in the 'version' message. Report the same name
