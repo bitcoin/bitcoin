@@ -237,8 +237,7 @@ static void MutateTxAddOutScript(CMutableTransaction& tx, const string& strInput
     // separate VALUE:SCRIPT in string
     size_t pos = strInput.find(':');
     if ((pos == string::npos) ||
-        (pos == 0) ||
-        (pos == (strInput.size() - 1)))
+        (pos == 0))
         throw runtime_error("TX output missing separator");
 
     // extract and validate VALUE
