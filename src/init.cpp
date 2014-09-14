@@ -45,7 +45,7 @@ using namespace boost;
 using namespace std;
 
 #ifdef ENABLE_WALLET
-CWallet* pwalletMain;
+CWallet* pwalletMain = NULL;
 #endif
 
 #ifdef WIN32
@@ -109,11 +109,12 @@ bool ShutdownRequested()
     return fRequestShutdown;
 }
 
-static CCoinsViewDB *pcoinsdbview;
+static CCoinsViewDB *pcoinsdbview = NULL;
 
 void Shutdown()
 {
     LogPrintf("%s: In progress...\n", __func__);
+
     static CCriticalSection cs_Shutdown;
     TRY_LOCK(cs_Shutdown, lockShutdown);
     if (!lockShutdown)
@@ -145,16 +146,22 @@ void Shutdown()
         if (pwalletMain)
             pwalletMain->SetBestChain(chainActive.GetLocator());
 #endif
-        if (pblocktree)
+        if (pblocktree) {
             pblocktree->Flush();
-        if (pcoinsTip)
+            delete pblocktree;
+            pblocktree = NULL;
+        }
+
+        if (pcoinsTip) {
             pcoinsTip->Flush();
-        delete pcoinsTip;
-        pcoinsTip = NULL;
-        delete pcoinsdbview;
-        pcoinsdbview = NULL;
-        delete pblocktree;
-        pblocktree = NULL;
+            delete pcoinsTip;
+            pcoinsTip = NULL;
+        }
+
+        if (pcoinsdbview) {
+            delete pcoinsdbview;
+            pcoinsdbview = NULL;
+        }
     }
 #ifdef ENABLE_WALLET
     if (pwalletMain)
@@ -163,9 +170,12 @@ void Shutdown()
     boost::filesystem::remove(GetPidFile());
     UnregisterAllWallets();
 #ifdef ENABLE_WALLET
-    if (pwalletMain)
+    if (pwalletMain) {
         delete pwalletMain;
+        pwalletMain = NULL;
+    }
 #endif
+
     LogPrintf("%s: done\n", __func__);
 }
 
@@ -695,6 +705,7 @@ bool AppInit2(boost::thread_group& threadGroup)
     fIsBareMultisigStd = GetArg("-permitbaremultisig", true);
 
     // ********************************************************* Step 4: application initialization: dir lock, daemonize, pidfile, debug log
+
     // Sanity check
     if (!InitSanityCheck())
         return InitError(_("Initialization sanity check failed. Bitcoin Core is shutting down."));
@@ -730,8 +741,8 @@ bool AppInit2(boost::thread_group& threadGroup)
     std::ostringstream strErrors;
 
     if (nScriptCheckThreads) {
-        LogPrintf("Using %u threads for script verification\n", nScriptCheckThreads);
-        for (int i=0; i<nScriptCheckThreads-1; i++)
+        LogPrintf("Using %d threads for script verification\n", nScriptCheckThreads);
+        for (int i = 0; i < nScriptCheckThreads - 1; i++)
             threadGroup.create_thread(&ThreadScriptCheck);
     }
 
@@ -944,9 +955,12 @@ bool AppInit2(boost::thread_group& threadGroup)
         do {
             try {
                 UnloadBlockIndex();
-                delete pcoinsTip;
-                delete pcoinsdbview;
-                delete pblocktree;
+                if (pcoinsTip)
+                    delete pcoinsTip;
+                if (pcoinsdbview)
+                    delete pcoinsdbview;
+                if (pblocktree)
+                    delete pblocktree;
 
                 pblocktree = new CBlockTreeDB(nBlockTreeDBCache, false, fReindex);
                 pcoinsdbview = new CCoinsViewDB(nCoinDBCache, false, fReindex);
@@ -1075,8 +1089,10 @@ bool AppInit2(boost::thread_group& threadGroup)
                 return false;
             }
 
-            delete pwalletMain;
-            pwalletMain = NULL;
+            if (pwalletMain) {
+                delete pwalletMain;
+                pwalletMain = NULL;
+            }
         }
 
         uiInterface.InitMessage(_("Loading wallet..."));
