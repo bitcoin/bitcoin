@@ -5,6 +5,7 @@
 #include "crypto/sha2.h"
 
 #include "crypto/common.h"
+
 #include <string.h>
 
 // Internal implementation code.

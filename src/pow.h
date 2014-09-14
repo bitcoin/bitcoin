@@ -8,8 +8,8 @@
 
 #include <stdint.h>
 
-class CBlockIndex;
 class CBlockHeader;
+class CBlockIndex;
 class uint256;
 
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock);

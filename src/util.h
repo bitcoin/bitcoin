@@ -15,8 +15,8 @@
 #endif
 
 #include "compat.h"
-#include "utiltime.h"
 #include "tinyformat.h"
+#include "utiltime.h"
 
 #include <exception>
 #include <map>

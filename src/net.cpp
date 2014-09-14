@@ -48,8 +48,8 @@
 #endif
 #endif
 
-using namespace std;
 using namespace boost;
+using namespace std;
 
 namespace {
     const int MAX_OUTBOUND_CONNECTIONS = 8;
