@@ -5,8 +5,8 @@
 
 #include "rpcprotocol.h"
 
-#include "util.h"
 #include "tinyformat.h"
+#include "util.h"
 #include "utilstrencodings.h"
 #include "utiltime.h"
 #include "version.h"

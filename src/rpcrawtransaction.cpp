@@ -12,8 +12,8 @@
 #include "net.h"
 #include "rpcserver.h"
 #include "script/script.h"
-#include "script/standard.h"
 #include "script/sign.h"
+#include "script/standard.h"
 #include "uint256.h"
 #ifdef ENABLE_WALLET
 #include "wallet.h"
@@ -25,10 +25,10 @@
 #include "json/json_spirit_utils.h"
 #include "json/json_spirit_value.h"
 
-using namespace std;
 using namespace boost;
 using namespace boost::assign;
 using namespace json_spirit;
+using namespace std;
 
 void ScriptPubKeyToJSON(const CScript& scriptPubKey, Object& out, bool fIncludeHex)
 {

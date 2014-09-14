@@ -9,8 +9,9 @@
 #include "pow.h"
 #include "uint256.h"
 
-#include <boost/thread.hpp>
 #include <stdint.h>
+
+#include <boost/thread.hpp>
 
 using namespace std;
 

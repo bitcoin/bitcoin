@@ -3,14 +3,14 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "rpcserver.h"
 #include "chainparams.h"
+#include "core_io.h"
 #include "init.h"
 #include "net.h"
 #include "main.h"
 #include "miner.h"
 #include "pow.h"
-#include "core_io.h"
+#include "rpcserver.h"
 #include "util.h"
 #ifdef ENABLE_WALLET
 #include "db.h"
