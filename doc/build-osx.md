@@ -91,7 +91,7 @@ These rest of these commands are run inside brew interactive mode:
 
 After exiting, you'll get a warning that the install is keg-only, which means it wasn't symlinked to `/usr/local`.  You don't need it to link it to build bitcoin, but if you want to, here's how:
 
-    $ brew --force link berkeley-db4
+    $ brew link --force berkeley-db4
 
 
 ### Building `bitcoind`
