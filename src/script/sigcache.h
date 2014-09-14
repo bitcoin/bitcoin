@@ -14,21 +14,13 @@ class CPubKey;
 
 class CachingSignatureChecker : public SignatureChecker
 {
+private:
+    bool store;
+
 public:
-    CachingSignatureChecker(const CTransaction& txToIn, unsigned int nInIn) : SignatureChecker(txToIn, nInIn) {}
+    CachingSignatureChecker(const CTransaction& txToIn, unsigned int nInIn, bool storeIn=true) : SignatureChecker(txToIn, nInIn), store(storeIn) {}
 
-    bool VerifySignature(const std::vector<unsigned char>& vchSig, const CPubKey& vchPubKey, const uint256& sighash, int flags) const;
+    bool VerifySignature(const std::vector<unsigned char>& vchSig, const CPubKey& vchPubKey, const uint256& sighash) const;
 };
-
-// Wrappers using a default SignatureChecker.
-bool inline EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& script, const CTransaction& txTo, unsigned int nIn, unsigned int flags)
-{
-    return EvalScript(stack, script, flags, CachingSignatureChecker(txTo, nIn));
-}
-
-bool inline VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const CTransaction& txTo, unsigned int nIn, unsigned int flags)
-{
-    return VerifyScript(scriptSig, scriptPubKey, flags, CachingSignatureChecker(txTo, nIn));
-}
 
 #endif
