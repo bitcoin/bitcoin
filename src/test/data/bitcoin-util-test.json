@@ -34,5 +34,8 @@
      "outaddr=0.18:13tuJJDR2RgArmgfv6JScSdreahzgc4T6o",
      "outaddr=4:1P8yWvZW8jVihP1bzHeqfE4aoXNX8AVa46"],
     "output_cmp": "txcreate1.hex"
+  },
+  { "exec": ["./bitcoin-tx", "-create", "outscript=0:"],
+    "output_cmp": "txcreate2.hex"
   }
 ]
