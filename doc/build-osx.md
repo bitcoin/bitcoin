@@ -80,7 +80,7 @@ Running this command takes you into brew's interactive mode, which allows you to
 $ brew install https://raw.github.com/mxcl/homebrew/master/Library/Formula/berkeley-db4.rb -–without-java 
 ```
 
-These rest of these commands are run inside brew interactive mode:
+The rest of these commands is run inside brew interactive mode:
 ```
 /private/tmp/berkeley-db4-UGpd0O/db-4.8.30 $ cd ..
 /private/tmp/berkeley-db4-UGpd0O $ db-4.8.30/dist/configure --prefix=/usr/local/Cellar/berkeley-db4/4.8.30 --mandir=/usr/local/Cellar/berkeley-db4/4.8.30/share/man --enable-cxx
