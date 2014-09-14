@@ -671,7 +671,7 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, un
                     scriptCode.FindAndDelete(CScript(vchSig));
 
                     bool fSuccess = IsCanonicalSignature(vchSig, flags) && IsCanonicalPubKey(vchPubKey, flags) &&
-                        checker.CheckSig(vchSig, vchPubKey, scriptCode, flags);
+                        checker.CheckSig(vchSig, vchPubKey, scriptCode);
 
                     popstack(stack);
                     popstack(stack);
@@ -732,7 +732,7 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, un
 
                         // Check signature
                         bool fOk = IsCanonicalSignature(vchSig, flags) && IsCanonicalPubKey(vchPubKey, flags) &&
-                            checker.CheckSig(vchSig, vchPubKey, scriptCode, flags);
+                            checker.CheckSig(vchSig, vchPubKey, scriptCode);
 
                         if (fOk) {
                             isig++;
@@ -917,12 +917,12 @@ uint256 SignatureHash(const CScript& scriptCode, const CTransaction& txTo, unsig
     return ss.GetHash();
 }
 
-bool SignatureChecker::VerifySignature(const std::vector<unsigned char>& vchSig, const CPubKey& pubkey, const uint256& sighash, int flags) const
+bool SignatureChecker::VerifySignature(const std::vector<unsigned char>& vchSig, const CPubKey& pubkey, const uint256& sighash) const
 {
     return pubkey.Verify(sighash, vchSig);
 }
 
-bool SignatureChecker::CheckSig(const vector<unsigned char>& vchSigIn, const vector<unsigned char>& vchPubKey, const CScript& scriptCode, int flags) const
+bool SignatureChecker::CheckSig(const vector<unsigned char>& vchSigIn, const vector<unsigned char>& vchPubKey, const CScript& scriptCode) const
 {
     CPubKey pubkey(vchPubKey);
     if (!pubkey.IsValid())
@@ -937,7 +937,7 @@ bool SignatureChecker::CheckSig(const vector<unsigned char>& vchSigIn, const vec
 
     uint256 sighash = SignatureHash(scriptCode, txTo, nIn, nHashType);
 
-    if (!VerifySignature(vchSig, pubkey, sighash, flags))
+    if (!VerifySignature(vchSig, pubkey, sighash))
         return false;
 
     return true;
