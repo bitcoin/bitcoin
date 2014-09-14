@@ -4,6 +4,8 @@
 
 #include "coins.h"
 
+#include "random.h"
+
 #include <assert.h>
 
 // calculate number of bytes for the bitmask, and its number of non-zero bytes
@@ -50,28 +52,30 @@ bool CCoins::Spend(int nPos) {
 }
 
 
-bool CCoinsView::GetCoins(const uint256 &txid, CCoins &coins) { return false; }
+bool CCoinsView::GetCoins(const uint256 &txid, CCoins &coins) const { return false; }
 bool CCoinsView::SetCoins(const uint256 &txid, const CCoins &coins) { return false; }
-bool CCoinsView::HaveCoins(const uint256 &txid) { return false; }
-uint256 CCoinsView::GetBestBlock() { return uint256(0); }
+bool CCoinsView::HaveCoins(const uint256 &txid) const { return false; }
+uint256 CCoinsView::GetBestBlock() const { return uint256(0); }
 bool CCoinsView::SetBestBlock(const uint256 &hashBlock) { return false; }
-bool CCoinsView::BatchWrite(const std::map<uint256, CCoins> &mapCoins, const uint256 &hashBlock) { return false; }
-bool CCoinsView::GetStats(CCoinsStats &stats) { return false; }
+bool CCoinsView::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock) { return false; }
+bool CCoinsView::GetStats(CCoinsStats &stats) const { return false; }
 
 
 CCoinsViewBacked::CCoinsViewBacked(CCoinsView &viewIn) : base(&viewIn) { }
-bool CCoinsViewBacked::GetCoins(const uint256 &txid, CCoins &coins) { return base->GetCoins(txid, coins); }
+bool CCoinsViewBacked::GetCoins(const uint256 &txid, CCoins &coins) const { return base->GetCoins(txid, coins); }
 bool CCoinsViewBacked::SetCoins(const uint256 &txid, const CCoins &coins) { return base->SetCoins(txid, coins); }
-bool CCoinsViewBacked::HaveCoins(const uint256 &txid) { return base->HaveCoins(txid); }
-uint256 CCoinsViewBacked::GetBestBlock() { return base->GetBestBlock(); }
+bool CCoinsViewBacked::HaveCoins(const uint256 &txid) const { return base->HaveCoins(txid); }
+uint256 CCoinsViewBacked::GetBestBlock() const { return base->GetBestBlock(); }
 bool CCoinsViewBacked::SetBestBlock(const uint256 &hashBlock) { return base->SetBestBlock(hashBlock); }
 void CCoinsViewBacked::SetBackend(CCoinsView &viewIn) { base = &viewIn; }
-bool CCoinsViewBacked::BatchWrite(const std::map<uint256, CCoins> &mapCoins, const uint256 &hashBlock) { return base->BatchWrite(mapCoins, hashBlock); }
-bool CCoinsViewBacked::GetStats(CCoinsStats &stats) { return base->GetStats(stats); }
+bool CCoinsViewBacked::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock) { return base->BatchWrite(mapCoins, hashBlock); }
+bool CCoinsViewBacked::GetStats(CCoinsStats &stats) const { return base->GetStats(stats); }
+
+CCoinsKeyHasher::CCoinsKeyHasher() : salt(GetRandHash()) {}
 
 CCoinsViewCache::CCoinsViewCache(CCoinsView &baseIn, bool fDummy) : CCoinsViewBacked(baseIn), hashBlock(0) { }
 
-bool CCoinsViewCache::GetCoins(const uint256 &txid, CCoins &coins) {
+bool CCoinsViewCache::GetCoins(const uint256 &txid, CCoins &coins) const {
     if (cacheCoins.count(txid)) {
         coins = cacheCoins[txid];
         return true;
@@ -83,22 +87,36 @@ bool CCoinsViewCache::GetCoins(const uint256 &txid, CCoins &coins) {
     return false;
 }
 
-std::map<uint256,CCoins>::iterator CCoinsViewCache::FetchCoins(const uint256 &txid) {
-    std::map<uint256,CCoins>::iterator it = cacheCoins.lower_bound(txid);
-    if (it != cacheCoins.end() && it->first == txid)
+CCoinsMap::iterator CCoinsViewCache::FetchCoins(const uint256 &txid) {
+    CCoinsMap::iterator it = cacheCoins.find(txid);
+    if (it != cacheCoins.end())
         return it;
     CCoins tmp;
     if (!base->GetCoins(txid,tmp))
         return cacheCoins.end();
-    std::map<uint256,CCoins>::iterator ret = cacheCoins.insert(it, std::make_pair(txid, CCoins()));
+    CCoinsMap::iterator ret = cacheCoins.insert(it, std::make_pair(txid, CCoins()));
     tmp.swap(ret->second);
     return ret;
 }
 
+CCoinsMap::const_iterator CCoinsViewCache::FetchCoins(const uint256 &txid) const {
+    /* Avoid redundant implementation with the const-cast.  */
+    return const_cast<CCoinsViewCache*>(this)->FetchCoins(txid);
+}
+
 CCoins &CCoinsViewCache::GetCoins(const uint256 &txid) {
-    std::map<uint256,CCoins>::iterator it = FetchCoins(txid);
+    CCoinsMap::iterator it = FetchCoins(txid);
     assert(it != cacheCoins.end());
     return it->second;
+}
+
+const CCoins* CCoinsViewCache::AccessCoins(const uint256 &txid) const {
+    CCoinsMap::const_iterator it = FetchCoins(txid);
+    if (it == cacheCoins.end()) {
+        return NULL;
+    } else {
+        return &it->second;
+    }
 }
 
 bool CCoinsViewCache::SetCoins(const uint256 &txid, const CCoins &coins) {
@@ -106,11 +124,16 @@ bool CCoinsViewCache::SetCoins(const uint256 &txid, const CCoins &coins) {
     return true;
 }
 
-bool CCoinsViewCache::HaveCoins(const uint256 &txid) {
-    return FetchCoins(txid) != cacheCoins.end();
+bool CCoinsViewCache::HaveCoins(const uint256 &txid) const {
+    CCoinsMap::const_iterator it = FetchCoins(txid);
+    // We're using vtx.empty() instead of IsPruned here for performance reasons,
+    // as we only care about the case where an transaction was replaced entirely
+    // in a reorganization (which wipes vout entirely, as opposed to spending
+    // which just cleans individual outputs).
+    return (it != cacheCoins.end() && !it->second.vout.empty());
 }
 
-uint256 CCoinsViewCache::GetBestBlock() {
+uint256 CCoinsViewCache::GetBestBlock() const {
     if (hashBlock == uint256(0))
         hashBlock = base->GetBestBlock();
     return hashBlock;
@@ -121,32 +144,34 @@ bool CCoinsViewCache::SetBestBlock(const uint256 &hashBlockIn) {
     return true;
 }
 
-bool CCoinsViewCache::BatchWrite(const std::map<uint256, CCoins> &mapCoins, const uint256 &hashBlockIn) {
-    for (std::map<uint256, CCoins>::const_iterator it = mapCoins.begin(); it != mapCoins.end(); it++)
-        cacheCoins[it->first] = it->second;
+bool CCoinsViewCache::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlockIn) {
+    for (CCoinsMap::iterator it = mapCoins.begin(); it != mapCoins.end();) {
+        cacheCoins[it->first].swap(it->second);
+        CCoinsMap::iterator itOld = it++;
+        mapCoins.erase(itOld);
+    }
     hashBlock = hashBlockIn;
     return true;
 }
 
 bool CCoinsViewCache::Flush() {
     bool fOk = base->BatchWrite(cacheCoins, hashBlock);
-    if (fOk)
-        cacheCoins.clear();
+    cacheCoins.clear();
     return fOk;
 }
 
-unsigned int CCoinsViewCache::GetCacheSize() {
+unsigned int CCoinsViewCache::GetCacheSize() const {
     return cacheCoins.size();
 }
 
-const CTxOut &CCoinsViewCache::GetOutputFor(const CTxIn& input)
+const CTxOut &CCoinsViewCache::GetOutputFor(const CTxIn& input) const
 {
-    const CCoins &coins = GetCoins(input.prevout.hash);
-    assert(coins.IsAvailable(input.prevout.n));
-    return coins.vout[input.prevout.n];
+    const CCoins* coins = AccessCoins(input.prevout.hash);
+    assert(coins && coins->IsAvailable(input.prevout.n));
+    return coins->vout[input.prevout.n];
 }
 
-int64_t CCoinsViewCache::GetValueIn(const CTransaction& tx)
+int64_t CCoinsViewCache::GetValueIn(const CTransaction& tx) const
 {
     if (tx.IsCoinBase())
         return 0;
@@ -158,38 +183,32 @@ int64_t CCoinsViewCache::GetValueIn(const CTransaction& tx)
     return nResult;
 }
 
-bool CCoinsViewCache::HaveInputs(const CTransaction& tx)
+bool CCoinsViewCache::HaveInputs(const CTransaction& tx) const
 {
     if (!tx.IsCoinBase()) {
-        // first check whether information about the prevout hash is available
         for (unsigned int i = 0; i < tx.vin.size(); i++) {
             const COutPoint &prevout = tx.vin[i].prevout;
-            if (!HaveCoins(prevout.hash))
+            const CCoins* coins = AccessCoins(prevout.hash);
+            if (!coins || !coins->IsAvailable(prevout.n)) {
                 return false;
-        }
-
-        // then check whether the actual outputs are available
-        for (unsigned int i = 0; i < tx.vin.size(); i++) {
-            const COutPoint &prevout = tx.vin[i].prevout;
-            const CCoins &coins = GetCoins(prevout.hash);
-            if (!coins.IsAvailable(prevout.n))
-                return false;
+            }
         }
     }
     return true;
 }
 
-double CCoinsViewCache::GetPriority(const CTransaction &tx, int nHeight)
+double CCoinsViewCache::GetPriority(const CTransaction &tx, int nHeight) const
 {
     if (tx.IsCoinBase())
         return 0.0;
     double dResult = 0.0;
     BOOST_FOREACH(const CTxIn& txin, tx.vin)
     {
-        const CCoins &coins = GetCoins(txin.prevout.hash);
-        if (!coins.IsAvailable(txin.prevout.n)) continue;
-        if (coins.nHeight < nHeight) {
-            dResult += coins.vout[txin.prevout.n].nValue * (nHeight-coins.nHeight);
+        const CCoins* coins = AccessCoins(txin.prevout.hash);
+        assert(coins);
+        if (!coins->IsAvailable(txin.prevout.n)) continue;
+        if (coins->nHeight < nHeight) {
+            dResult += coins->vout[txin.prevout.n].nValue * (nHeight-coins->nHeight);
         }
     }
     return tx.ComputePriority(dResult);

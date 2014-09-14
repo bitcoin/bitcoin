@@ -2,11 +2,13 @@
 // Copyright (c) 2009-2013 The Bitcoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
 #ifndef BITCOIN_WALLETDB_H
 #define BITCOIN_WALLETDB_H
 
 #include "db.h"
 #include "key.h"
+#include "keystore.h"
 
 #include <list>
 #include <stdint.h>
@@ -53,12 +55,14 @@ public:
         nCreateTime = nCreateTime_;
     }
 
-    IMPLEMENT_SERIALIZE
-    (
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
         READWRITE(this->nVersion);
         nVersion = this->nVersion;
         READWRITE(nCreateTime);
-    )
+    }
 
     void SetNull()
     {
@@ -93,6 +97,8 @@ public:
 
     bool WriteCScript(const uint160& hash, const CScript& redeemScript);
 
+    bool WriteWatchOnly(const CScript &script);
+
     bool WriteBestBlock(const CBlockLocator& locator);
     bool ReadBestBlock(CBlockLocator& locator);
 
@@ -122,8 +128,8 @@ public:
 
     DBErrors ReorderTransactions(CWallet*);
     DBErrors LoadWallet(CWallet* pwallet);
-    DBErrors FindWalletTx(CWallet* pwallet, std::vector<uint256>& vTxHash);
-    DBErrors ZapWalletTx(CWallet* pwallet);
+    DBErrors FindWalletTx(CWallet* pwallet, std::vector<uint256>& vTxHash, std::vector<CWalletTx>& vWtx);
+    DBErrors ZapWalletTx(CWallet* pwallet, std::vector<CWalletTx>& vWtx);
     static bool Recover(CDBEnv& dbenv, std::string filename, bool fOnlyKeys);
     static bool Recover(CDBEnv& dbenv, std::string filename);
 };

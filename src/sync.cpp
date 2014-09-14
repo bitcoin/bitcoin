@@ -5,8 +5,11 @@
 #include "sync.h"
 
 #include "util.h"
+#include "utilstrencodings.h"
 
 #include <boost/foreach.hpp>
+#include <boost/thread.hpp>
+#include <stdio.h>
 
 #ifdef DEBUG_LOCKCONTENTION
 void PrintLockContention(const char* pszName, const char* pszFile, int nLine)

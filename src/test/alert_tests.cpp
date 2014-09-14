@@ -11,6 +11,7 @@
 
 #include "serialize.h"
 #include "util.h"
+#include "utilstrencodings.h"
 #include "version.h"
 
 #include <fstream>
@@ -83,7 +84,7 @@ struct ReadAlerts
         std::vector<unsigned char> vch(alert_tests::alertTests, alert_tests::alertTests + sizeof(alert_tests::alertTests));
         CDataStream stream(vch, SER_DISK, CLIENT_VERSION);
         try {
-            while (stream.good())
+            while (!stream.eof())
             {
                 CAlert alert;
                 stream >> alert;

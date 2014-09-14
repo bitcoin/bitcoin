@@ -10,6 +10,7 @@
 #include "sync.h"
 
 #include <boost/signals2/signal.hpp>
+#include <boost/variant.hpp>
 
 class CScript;
 
@@ -36,10 +37,16 @@ public:
     virtual bool AddCScript(const CScript& redeemScript) =0;
     virtual bool HaveCScript(const CScriptID &hash) const =0;
     virtual bool GetCScript(const CScriptID &hash, CScript& redeemScriptOut) const =0;
+
+    // Support for Watch-only addresses
+    virtual bool AddWatchOnly(const CScript &dest) =0;
+    virtual bool HaveWatchOnly(const CScript &dest) const =0;
+    virtual bool HaveWatchOnly() const =0;
 };
 
 typedef std::map<CKeyID, CKey> KeyMap;
 typedef std::map<CScriptID, CScript > ScriptMap;
+typedef std::set<CScript> WatchOnlySet;
 
 /** Basic key store, that keeps keys in an address->secret map */
 class CBasicKeyStore : public CKeyStore
@@ -47,6 +54,7 @@ class CBasicKeyStore : public CKeyStore
 protected:
     KeyMap mapKeys;
     ScriptMap mapScripts;
+    WatchOnlySet setWatchOnly;
 
 public:
     bool AddKeyPubKey(const CKey& key, const CPubKey &pubkey);
@@ -88,9 +96,13 @@ public:
     virtual bool AddCScript(const CScript& redeemScript);
     virtual bool HaveCScript(const CScriptID &hash) const;
     virtual bool GetCScript(const CScriptID &hash, CScript& redeemScriptOut) const;
+
+    virtual bool AddWatchOnly(const CScript &dest);
+    virtual bool HaveWatchOnly(const CScript &dest) const;
+    virtual bool HaveWatchOnly() const;
 };
 
 typedef std::vector<unsigned char, secure_allocator<unsigned char> > CKeyingMaterial;
 typedef std::map<CKeyID, std::pair<CPubKey, std::vector<unsigned char> > > CryptedKeyMap;
 
-#endif
+#endif // BITCOIN_KEYSTORE_H

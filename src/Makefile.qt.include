@@ -145,6 +145,7 @@ BITCOIN_MM = \
 
 QT_MOC = \
   qt/bitcoin.moc \
+  qt/bitcoinamountfield.moc \
   qt/intro.moc \
   qt/overviewpage.moc \
   qt/rpcconsole.moc
@@ -232,6 +233,9 @@ RES_ICONS = \
   qt/res/icons/editcopy.png \
   qt/res/icons/editpaste.png \
   qt/res/icons/export.png \
+  qt/res/icons/eye.png \
+  qt/res/icons/eye_minus.png \
+  qt/res/icons/eye_plus.png \
   qt/res/icons/filesave.png \
   qt/res/icons/history.png \
   qt/res/icons/key.png \
@@ -244,15 +248,16 @@ RES_ICONS = \
   qt/res/icons/remove.png \
   qt/res/icons/send.png \
   qt/res/icons/synced.png \
-  qt/res/icons/toolbar.png \
-  qt/res/icons/toolbar_testnet.png \
   qt/res/icons/transaction0.png \
   qt/res/icons/transaction2.png \
   qt/res/icons/transaction_conflicted.png \
   qt/res/icons/tx_inout.png \
   qt/res/icons/tx_input.png \
   qt/res/icons/tx_output.png \
-  qt/res/icons/tx_mined.png
+  qt/res/icons/tx_mined.png \
+  qt/res/icons/unit_btc.png \
+  qt/res/icons/unit_mbtc.png \
+  qt/res/icons/unit_ubtc.png
 
 BITCOIN_QT_CPP = \
   qt/bitcoinaddressvalidator.cpp \
@@ -355,18 +360,21 @@ qt_bitcoin_qt_LDADD = qt/libbitcoinqt.a $(LIBBITCOIN_SERVER)
 if ENABLE_WALLET
 qt_bitcoin_qt_LDADD += $(LIBBITCOIN_WALLET)
 endif
-qt_bitcoin_qt_LDADD += $(LIBBITCOIN_CLI) $(LIBBITCOIN_COMMON) $(LIBLEVELDB) $(LIBMEMENV) \
-  $(BOOST_LIBS) $(QT_LIBS) $(QT_DBUS_LIBS) $(QR_LIBS) $(PROTOBUF_LIBS) $(BDB_LIBS)
-qt_bitcoin_qt_LDFLAGS = $(QT_LDFLAGS)
+qt_bitcoin_qt_LDADD += $(LIBBITCOIN_CLI) $(LIBBITCOIN_COMMON) $(LIBBITCOIN_UTIL) $(LIBBITCOIN_CRYPTO) $(LIBBITCOIN_UNIVALUE) $(LIBLEVELDB) $(LIBMEMENV) \
+  $(BOOST_LIBS) $(QT_LIBS) $(QT_DBUS_LIBS) $(QR_LIBS) $(PROTOBUF_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS)
+if USE_LIBSECP256K1
+  qt_bitcoin_qt_LDADD += secp256k1/libsecp256k1.la
+endif
+qt_bitcoin_qt_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(QT_LDFLAGS)
 
 #locale/foo.ts -> locale/foo.qm
 QT_QM=$(QT_TS:.ts=.qm)
 
 .SECONDARY: $(QT_QM)
 
-qt/bitcoinstrings.cpp: $(libbitcoin_server_a_SOURCES) $(libbitcoin_common_a_SOURCES) $(libbitcoin_cli_a_SOURCES)
+qt/bitcoinstrings.cpp: $(libbitcoin_server_a_SOURCES) $(libbitcoin_wallet_a_SOURCES)
 	@test -n $(XGETTEXT) || echo "xgettext is required for updating translations"
-	$(AM_V_GEN) cd $(top_srcdir); XGETTEXT=$(XGETTEXT) share/qt/extract_strings_qt.py
+	$(AM_V_GEN) cd $(srcdir); XGETTEXT=$(XGETTEXT) ../share/qt/extract_strings_qt.py $^
 
 translate: qt/bitcoinstrings.cpp $(QT_FORMS_UI) $(QT_FORMS_UI) $(BITCOIN_QT_CPP) $(BITCOIN_QT_H) $(BITCOIN_MM)
 	@test -n $(LUPDATE) || echo "lupdate is required for updating translations"

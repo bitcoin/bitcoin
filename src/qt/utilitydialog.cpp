@@ -10,9 +10,10 @@
 #include "clientmodel.h"
 #include "guiutil.h"
 
-#include "clientversion.h"
 #include "init.h"
-#include "util.h"
+#include "version.h"
+
+#include <stdio.h>
 
 #include <QLabel>
 #include <QRegExp>
@@ -117,6 +118,7 @@ void ShutdownWindow::showShutdownWindow(BitcoinGUI *window)
         tr("Bitcoin Core is shutting down...") + "<br /><br />" +
         tr("Do not shut down the computer until this window disappears.")));
     shutdownWindow->setLayout(layout);
+    shutdownWindow->setWindowTitle(window->windowTitle());
 
     // Center shutdown window at where main window was
     const QPoint global = window->mapToGlobal(window->rect().center());

@@ -5,8 +5,14 @@
 #include "key.h"
 #include "keystore.h"
 #include "main.h"
-#include "script.h"
+#include "script/script.h"
+#include "script/interpreter.h"
+#include "script/sign.h"
 #include "uint256.h"
+
+#ifdef ENABLE_WALLET
+#include "wallet_ismine.h"
+#endif
 
 #include <boost/assign/std/vector.hpp>
 #include <boost/foreach.hpp>
@@ -16,8 +22,6 @@ using namespace std;
 using namespace boost::assign;
 
 typedef vector<unsigned char> valtype;
-
-extern uint256 SignatureHash(const CScript &scriptCode, const CTransaction& txTo, unsigned int nIn, int nHashType);
 
 BOOST_AUTO_TEST_SUITE(multisig_tests)
 
@@ -55,13 +59,13 @@ BOOST_AUTO_TEST_CASE(multisig_verify)
     CScript escrow;
     escrow << OP_2 << key[0].GetPubKey() << key[1].GetPubKey() << key[2].GetPubKey() << OP_3 << OP_CHECKMULTISIG;
 
-    CTransaction txFrom;  // Funding transaction
+    CMutableTransaction txFrom;  // Funding transaction
     txFrom.vout.resize(3);
     txFrom.vout[0].scriptPubKey = a_and_b;
     txFrom.vout[1].scriptPubKey = a_or_b;
     txFrom.vout[2].scriptPubKey = escrow;
 
-    CTransaction txTo[3]; // Spending transaction
+    CMutableTransaction txTo[3]; // Spending transaction
     for (int i = 0; i < 3; i++)
     {
         txTo[i].vin.resize(1);
@@ -166,9 +170,9 @@ BOOST_AUTO_TEST_CASE(multisig_Solver1)
     // Tests Solver() that returns lists of keys that are
     // required to satisfy a ScriptPubKey
     //
-    // Also tests IsMine() and ExtractAddress()
+    // Also tests IsMine() and ExtractDestination()
     //
-    // Note: ExtractAddress for the multisignature transactions
+    // Note: ExtractDestination for the multisignature transactions
     // always returns false for this release, even if you have
     // one key that would satisfy an (a|b) or 2-of-3 keys needed
     // to spend an escrow transaction.
@@ -194,8 +198,10 @@ BOOST_AUTO_TEST_CASE(multisig_Solver1)
         CTxDestination addr;
         BOOST_CHECK(ExtractDestination(s, addr));
         BOOST_CHECK(addr == keyaddr[0]);
+#ifdef ENABLE_WALLET
         BOOST_CHECK(IsMine(keystore, s));
         BOOST_CHECK(!IsMine(emptykeystore, s));
+#endif
     }
     {
         vector<valtype> solutions;
@@ -207,8 +213,10 @@ BOOST_AUTO_TEST_CASE(multisig_Solver1)
         CTxDestination addr;
         BOOST_CHECK(ExtractDestination(s, addr));
         BOOST_CHECK(addr == keyaddr[0]);
+#ifdef ENABLE_WALLET
         BOOST_CHECK(IsMine(keystore, s));
         BOOST_CHECK(!IsMine(emptykeystore, s));
+#endif
     }
     {
         vector<valtype> solutions;
@@ -219,9 +227,11 @@ BOOST_AUTO_TEST_CASE(multisig_Solver1)
         BOOST_CHECK_EQUAL(solutions.size(), 4U);
         CTxDestination addr;
         BOOST_CHECK(!ExtractDestination(s, addr));
+#ifdef ENABLE_WALLET
         BOOST_CHECK(IsMine(keystore, s));
         BOOST_CHECK(!IsMine(emptykeystore, s));
         BOOST_CHECK(!IsMine(partialkeystore, s));
+#endif
     }
     {
         vector<valtype> solutions;
@@ -236,9 +246,11 @@ BOOST_AUTO_TEST_CASE(multisig_Solver1)
         BOOST_CHECK(addrs[0] == keyaddr[0]);
         BOOST_CHECK(addrs[1] == keyaddr[1]);
         BOOST_CHECK(nRequired == 1);
+#ifdef ENABLE_WALLET
         BOOST_CHECK(IsMine(keystore, s));
         BOOST_CHECK(!IsMine(emptykeystore, s));
         BOOST_CHECK(!IsMine(partialkeystore, s));
+#endif
     }
     {
         vector<valtype> solutions;
@@ -270,13 +282,13 @@ BOOST_AUTO_TEST_CASE(multisig_Sign)
     CScript escrow;
     escrow << OP_2 << key[0].GetPubKey() << key[1].GetPubKey() << key[2].GetPubKey() << OP_3 << OP_CHECKMULTISIG;
 
-    CTransaction txFrom;  // Funding transaction
+    CMutableTransaction txFrom;  // Funding transaction
     txFrom.vout.resize(3);
     txFrom.vout[0].scriptPubKey = a_and_b;
     txFrom.vout[1].scriptPubKey = a_or_b;
     txFrom.vout[2].scriptPubKey = escrow;
 
-    CTransaction txTo[3]; // Spending transaction
+    CMutableTransaction txTo[3]; // Spending transaction
     for (int i = 0; i < 3; i++)
     {
         txTo[i].vin.resize(1);

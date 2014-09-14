@@ -7,18 +7,17 @@
 #define BITCOIN_CHAIN_PARAMS_H
 
 #include "core.h"
+#include "chainparamsbase.h"
 #include "protocol.h"
 #include "uint256.h"
 
 #include <vector>
 
-using namespace std;
-
 typedef unsigned char MessageStartChars[MESSAGE_START_SIZE];
 
 struct CDNSSeedData {
-    string name, host;
-    CDNSSeedData(const string &strName, const string &strHost) : name(strName), host(strHost) {}
+    std::string name, host;
+    CDNSSeedData(const std::string &strName, const std::string &strHost) : name(strName), host(strHost) {}
 };
 
 /**
@@ -31,14 +30,6 @@ struct CDNSSeedData {
 class CChainParams
 {
 public:
-    enum Network {
-        MAIN,
-        TESTNET,
-        REGTEST,
-
-        MAX_NETWORK_TYPES
-    };
-
     enum Base58Type {
         PUBKEY_ADDRESS,
         SCRIPT_ADDRESS,
@@ -51,7 +42,7 @@ public:
 
     const uint256& HashGenesisBlock() const { return hashGenesisBlock; }
     const MessageStartChars& MessageStart() const { return pchMessageStart; }
-    const vector<unsigned char>& AlertKey() const { return vAlertPubKey; }
+    const std::vector<unsigned char>& AlertKey() const { return vAlertPubKey; }
     int GetDefaultPort() const { return nDefaultPort; }
     const uint256& ProofOfWorkLimit() const { return bnProofOfWorkLimit; }
     int SubsidyHalvingInterval() const { return nSubsidyHalvingInterval; }
@@ -72,44 +63,45 @@ public:
     bool AllowMinDifficultyBlocks() const { return fAllowMinDifficultyBlocks; }
     /* Make standard checks */
     bool RequireStandard() const { return fRequireStandard; }
-    /* Make standard checks */
-    bool RPCisTestNet() const { return fRPCisTestNet; }
-    const string& DataDir() const { return strDataDir; }
+    int64_t TargetTimespan() const { return nTargetTimespan; }
+    int64_t TargetSpacing() const { return nTargetSpacing; }
+    int64_t Interval() const { return nTargetTimespan / nTargetSpacing; }
     /* Make miner stop after a block is found. In RPC, don't return
      * until nGenProcLimit blocks are generated */
     bool MineBlocksOnDemand() const { return fMineBlocksOnDemand; }
-    Network NetworkID() const { return networkID; }
-    const vector<CDNSSeedData>& DNSSeeds() const { return vSeeds; }
+    CBaseChainParams::Network NetworkID() const { return networkID; }
+    /* Return the BIP70 network string (main, test or regtest) */
+    std::string NetworkIDString() const { return strNetworkID; }
+    const std::vector<CDNSSeedData>& DNSSeeds() const { return vSeeds; }
     const std::vector<unsigned char>& Base58Prefix(Base58Type type) const { return base58Prefixes[type]; }
-    const vector<CAddress>& FixedSeeds() const { return vFixedSeeds; }
-    int RPCPort() const { return nRPCPort; }
+    const std::vector<CAddress>& FixedSeeds() const { return vFixedSeeds; }
 protected:
     CChainParams() {}
 
     uint256 hashGenesisBlock;
     MessageStartChars pchMessageStart;
     // Raw pub key bytes for the broadcast alert signing key.
-    vector<unsigned char> vAlertPubKey;
+    std::vector<unsigned char> vAlertPubKey;
     int nDefaultPort;
-    int nRPCPort;
     uint256 bnProofOfWorkLimit;
     int nSubsidyHalvingInterval;
     int nEnforceBlockUpgradeMajority;
     int nRejectBlockOutdatedMajority;
     int nToCheckBlockUpgradeMajority;
-    string strDataDir;
+    int64_t nTargetTimespan;
+    int64_t nTargetSpacing;
     int nMinerThreads;
-    vector<CDNSSeedData> vSeeds;
+    std::vector<CDNSSeedData> vSeeds;
     std::vector<unsigned char> base58Prefixes[MAX_BASE58_TYPES];
-    Network networkID;
+    CBaseChainParams::Network networkID;
+    std::string strNetworkID;
     CBlock genesis;
-    vector<CAddress> vFixedSeeds;
+    std::vector<CAddress> vFixedSeeds;
     bool fRequireRPCPassword;
     bool fMiningRequiresPeers;
     bool fDefaultCheckMemPool;
     bool fAllowMinDifficultyBlocks;
     bool fRequireStandard;
-    bool fRPCisTestNet;
     bool fMineBlocksOnDemand;
 };
 
@@ -119,8 +111,11 @@ protected:
  */
 const CChainParams &Params();
 
+/** Return parameters for the given network. */
+CChainParams &Params(CBaseChainParams::Network network);
+
 /** Sets the params returned by Params() to those for the given network. */
-void SelectParams(CChainParams::Network network);
+void SelectParams(CBaseChainParams::Network network);
 
 /**
  * Looks for -regtest or -testnet and then calls SelectParams as appropriate.
@@ -128,4 +123,4 @@ void SelectParams(CChainParams::Network network);
  */
 bool SelectParamsFromCommandLine();
 
-#endif
+#endif // BITCOIN_CHAIN_PARAMS_H

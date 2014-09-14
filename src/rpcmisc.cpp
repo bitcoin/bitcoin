@@ -9,6 +9,7 @@
 #include "net.h"
 #include "netbase.h"
 #include "rpcserver.h"
+#include "timedata.h"
 #include "util.h"
 #ifdef ENABLE_WALLET
 #include "wallet.h"
@@ -21,11 +22,24 @@
 #include "json/json_spirit_utils.h"
 #include "json/json_spirit_value.h"
 
-using namespace std;
 using namespace boost;
 using namespace boost::assign;
 using namespace json_spirit;
+using namespace std;
 
+/**
+ * @note Do not add or change anything in the information returned by this
+ * method. `getinfo` exists for backwards-compatibilty only. It combines
+ * information from wildly different sources in the program, which is a mess,
+ * and is thus planned to be deprecated eventually.
+ *
+ * Based on the source of the information, new information should be added to:
+ * - `getblockchaininfo`,
+ * - `getnetworkinfo` or
+ * - `getwalletinfo`
+ *
+ * Or alternatively, create a specific query method for the information.
+ **/
 Value getinfo(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 0)
@@ -60,8 +74,8 @@ Value getinfo(const Array& params, bool fHelp)
     GetProxy(NET_IPV4, proxy);
 
     Object obj;
-    obj.push_back(Pair("version",       (int)CLIENT_VERSION));
-    obj.push_back(Pair("protocolversion",(int)PROTOCOL_VERSION));
+    obj.push_back(Pair("version", CLIENT_VERSION));
+    obj.push_back(Pair("protocolversion", PROTOCOL_VERSION));
 #ifdef ENABLE_WALLET
     if (pwalletMain) {
         obj.push_back(Pair("walletversion", pwalletMain->GetVersion()));
@@ -71,9 +85,9 @@ Value getinfo(const Array& params, bool fHelp)
     obj.push_back(Pair("blocks",        (int)chainActive.Height()));
     obj.push_back(Pair("timeoffset",    GetTimeOffset()));
     obj.push_back(Pair("connections",   (int)vNodes.size()));
-    obj.push_back(Pair("proxy",         (proxy.first.IsValid() ? proxy.first.ToStringIPPort() : string())));
+    obj.push_back(Pair("proxy",         (proxy.IsValid() ? proxy.ToStringIPPort() : string())));
     obj.push_back(Pair("difficulty",    (double)GetDifficulty()));
-    obj.push_back(Pair("testnet",       Params().RPCisTestNet()));
+    obj.push_back(Pair("testnet",       Params().NetworkID() == CBaseChainParams::TESTNET));
 #ifdef ENABLE_WALLET
     if (pwalletMain) {
         obj.push_back(Pair("keypoololdest", pwalletMain->GetOldestKeyPoolTime()));
@@ -83,7 +97,7 @@ Value getinfo(const Array& params, bool fHelp)
         obj.push_back(Pair("unlocked_until", nWalletUnlockTime));
     obj.push_back(Pair("paytxfee",      ValueFromAmount(payTxFee.GetFeePerK())));
 #endif
-    obj.push_back(Pair("relayfee",      ValueFromAmount(CTransaction::minRelayTxFee.GetFeePerK())));
+    obj.push_back(Pair("relayfee",      ValueFromAmount(::minRelayTxFee.GetFeePerK())));
     obj.push_back(Pair("errors",        GetWarnings("statusbar")));
     return obj;
 }
@@ -91,36 +105,45 @@ Value getinfo(const Array& params, bool fHelp)
 #ifdef ENABLE_WALLET
 class DescribeAddressVisitor : public boost::static_visitor<Object>
 {
+private:
+    isminetype mine;
+
 public:
+    DescribeAddressVisitor(isminetype mineIn) : mine(mineIn) {}
+
     Object operator()(const CNoDestination &dest) const { return Object(); }
 
     Object operator()(const CKeyID &keyID) const {
         Object obj;
         CPubKey vchPubKey;
-        pwalletMain->GetPubKey(keyID, vchPubKey);
         obj.push_back(Pair("isscript", false));
-        obj.push_back(Pair("pubkey", HexStr(vchPubKey)));
-        obj.push_back(Pair("iscompressed", vchPubKey.IsCompressed()));
+        if (mine == ISMINE_SPENDABLE) {
+            pwalletMain->GetPubKey(keyID, vchPubKey);
+            obj.push_back(Pair("pubkey", HexStr(vchPubKey)));
+            obj.push_back(Pair("iscompressed", vchPubKey.IsCompressed()));
+        }
         return obj;
     }
 
     Object operator()(const CScriptID &scriptID) const {
         Object obj;
         obj.push_back(Pair("isscript", true));
-        CScript subscript;
-        pwalletMain->GetCScript(scriptID, subscript);
-        std::vector<CTxDestination> addresses;
-        txnouttype whichType;
-        int nRequired;
-        ExtractDestinations(subscript, whichType, addresses, nRequired);
-        obj.push_back(Pair("script", GetTxnOutputType(whichType)));
-        obj.push_back(Pair("hex", HexStr(subscript.begin(), subscript.end())));
-        Array a;
-        BOOST_FOREACH(const CTxDestination& addr, addresses)
-            a.push_back(CBitcoinAddress(addr).ToString());
-        obj.push_back(Pair("addresses", a));
-        if (whichType == TX_MULTISIG)
-            obj.push_back(Pair("sigsrequired", nRequired));
+        if (mine != ISMINE_NO) {
+            CScript subscript;
+            pwalletMain->GetCScript(scriptID, subscript);
+            std::vector<CTxDestination> addresses;
+            txnouttype whichType;
+            int nRequired;
+            ExtractDestinations(subscript, whichType, addresses, nRequired);
+            obj.push_back(Pair("script", GetTxnOutputType(whichType)));
+            obj.push_back(Pair("hex", HexStr(subscript.begin(), subscript.end())));
+            Array a;
+            BOOST_FOREACH(const CTxDestination& addr, addresses)
+                a.push_back(CBitcoinAddress(addr).ToString());
+            obj.push_back(Pair("addresses", a));
+            if (whichType == TX_MULTISIG)
+                obj.push_back(Pair("sigsrequired", nRequired));
+        }
         return obj;
     }
 };
@@ -160,10 +183,11 @@ Value validateaddress(const Array& params, bool fHelp)
         string currentAddress = address.ToString();
         ret.push_back(Pair("address", currentAddress));
 #ifdef ENABLE_WALLET
-        bool fMine = pwalletMain ? IsMine(*pwalletMain, dest) : false;
-        ret.push_back(Pair("ismine", fMine));
-        if (fMine) {
-            Object detail = boost::apply_visitor(DescribeAddressVisitor(), dest);
+        isminetype mine = pwalletMain ? IsMine(*pwalletMain, dest) : ISMINE_NO;
+        ret.push_back(Pair("ismine", (mine & ISMINE_SPENDABLE) ? true : false));
+        if (mine != ISMINE_NO) {
+            ret.push_back(Pair("iswatchonly", (mine & ISMINE_WATCH_ONLY) ? true: false));
+            Object detail = boost::apply_visitor(DescribeAddressVisitor(mine), dest);
             ret.insert(ret.end(), detail.begin(), detail.end());
         }
         if (pwalletMain && pwalletMain->mapAddressBook.count(dest))

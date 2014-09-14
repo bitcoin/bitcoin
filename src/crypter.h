@@ -43,14 +43,17 @@ public:
     // such as the various parameters to scrypt
     std::vector<unsigned char> vchOtherDerivationParameters;
 
-    IMPLEMENT_SERIALIZE
-    (
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
         READWRITE(vchCryptedKey);
         READWRITE(vchSalt);
         READWRITE(nDerivationMethod);
         READWRITE(nDeriveIterations);
         READWRITE(vchOtherDerivationParameters);
-    )
+    }
+
     CMasterKey()
     {
         // 25000 rounds is just under 0.1 seconds on a 1.86 GHz Pentium M
@@ -121,6 +124,9 @@ private:
     // if fUseCrypto is false, vMasterKey must be empty
     bool fUseCrypto;
 
+    // keeps track of whether Unlock has run a thourough check before
+    bool fDecryptionThoroughlyChecked;
+
 protected:
     bool SetCrypted();
 
@@ -130,7 +136,7 @@ protected:
     bool Unlock(const CKeyingMaterial& vMasterKeyIn);
 
 public:
-    CCryptoKeyStore() : fUseCrypto(false)
+    CCryptoKeyStore() : fUseCrypto(false), fDecryptionThoroughlyChecked(false)
     {
     }
 
@@ -189,4 +195,4 @@ public:
     boost::signals2::signal<void (CCryptoKeyStore* wallet)> NotifyStatusChanged;
 };
 
-#endif
+#endif // __CRYPTER_H__

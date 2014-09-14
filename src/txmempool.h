@@ -2,6 +2,7 @@
 // Copyright (c) 2009-2013 The Bitcoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
 #ifndef BITCOIN_TXMEMPOOL_H
 #define BITCOIN_TXMEMPOOL_H
 
@@ -67,12 +68,16 @@ private:
     unsigned int nTransactionsUpdated;
     CMinerPolicyEstimator* minerPolicyEstimator;
 
+    CFeeRate minRelayFee; // Passed to constructor to avoid dependency on main
+    uint64_t totalTxSize; // sum of all mempool tx' byte sizes
+
 public:
     mutable CCriticalSection cs;
     std::map<uint256, CTxMemPoolEntry> mapTx;
     std::map<COutPoint, CInPoint> mapNextTx;
+    std::map<uint256, std::pair<double, int64_t> > mapDeltas;
 
-    CTxMemPool();
+    CTxMemPool(const CFeeRate& _minRelayFee);
     ~CTxMemPool();
 
     /*
@@ -81,7 +86,7 @@ public:
      * all inputs are in the mapNextTx array). If sanity-checking is turned off,
      * check does nothing.
      */
-    void check(CCoinsViewCache *pcoins) const;
+    void check(const CCoinsViewCache *pcoins) const;
     void setSanityCheck(bool _fSanityCheck) { fSanityCheck = _fSanityCheck; }
 
     bool addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry);
@@ -95,10 +100,20 @@ public:
     unsigned int GetTransactionsUpdated() const;
     void AddTransactionsUpdated(unsigned int n);
 
+    /** Affect CreateNewBlock prioritisation of transactions */
+    void PrioritiseTransaction(const uint256 hash, const std::string strHash, double dPriorityDelta, int64_t nFeeDelta);
+    void ApplyDeltas(const uint256 hash, double &dPriorityDelta, int64_t &nFeeDelta);
+    void ClearPrioritisation(const uint256 hash);
+
     unsigned long size()
     {
         LOCK(cs);
         return mapTx.size();
+    }
+    uint64_t GetTotalTxSize()
+    {
+        LOCK(cs);
+        return totalTxSize;
     }
 
     bool exists(uint256 hash)
@@ -129,8 +144,8 @@ protected:
 
 public:
     CCoinsViewMemPool(CCoinsView &baseIn, CTxMemPool &mempoolIn);
-    bool GetCoins(const uint256 &txid, CCoins &coins);
-    bool HaveCoins(const uint256 &txid);
+    bool GetCoins(const uint256 &txid, CCoins &coins) const;
+    bool HaveCoins(const uint256 &txid) const;
 };
 
-#endif /* BITCOIN_TXMEMPOOL_H */
+#endif // BITCOIN_TXMEMPOOL_H

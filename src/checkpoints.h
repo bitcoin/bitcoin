@@ -13,8 +13,8 @@ class uint256;
 /** Block-chain checkpoints are compiled-in sanity checks.
  * They are updated every release or three.
  */
-namespace Checkpoints
-{
+namespace Checkpoints {
+
     // Returns true if block passes checkpoint checks
     bool CheckBlock(int nHeight, const uint256& hash);
 
@@ -22,11 +22,12 @@ namespace Checkpoints
     int GetTotalBlocksEstimate();
 
     // Returns last CBlockIndex* in mapBlockIndex that is a checkpoint
-    CBlockIndex* GetLastCheckpoint(const std::map<uint256, CBlockIndex*>& mapBlockIndex);
+    CBlockIndex* GetLastCheckpoint();
 
     double GuessVerificationProgress(CBlockIndex *pindex, bool fSigchecks = true);
 
     extern bool fEnabled;
-}
 
-#endif
+} //namespace Checkpoints
+
+#endif // BITCOIN_CHECKPOINT_H

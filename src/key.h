@@ -189,7 +189,7 @@ private:
 public:
 
     // Construct an invalid private key.
-    CKey() : fValid(false) {
+    CKey() : fValid(false), fCompressed(false) {
         LockObject(vch);
     }
 
@@ -309,4 +309,4 @@ struct CExtKey {
 /** Check that required EC support is available at runtime */
 bool ECC_InitSanityCheck(void);
 
-#endif
+#endif // BITCOIN_KEY_H

@@ -37,10 +37,46 @@ inline T& REF(const T& val)
     return const_cast<T&>(val);
 }
 
+// Used to acquire a non-const pointer "this" to generate bodies
+// of const serialization operations from a template
+template<typename T>
+inline T* NCONST_PTR(const T* val)
+{
+    return const_cast<T*>(val);
+}
+
+/** Get begin pointer of vector (non-const version).
+ * @note These functions avoid the undefined case of indexing into an empty
+ * vector, as well as that of indexing after the end of the vector.
+ */
+template <class T, class TAl>
+inline T* begin_ptr(std::vector<T,TAl>& v)
+{
+    return v.empty() ? NULL : &v[0];
+}
+/** Get begin pointer of vector (const version) */
+template <class T, class TAl>
+inline const T* begin_ptr(const std::vector<T,TAl>& v)
+{
+    return v.empty() ? NULL : &v[0];
+}
+/** Get end pointer of vector (non-const version) */
+template <class T, class TAl>
+inline T* end_ptr(std::vector<T,TAl>& v)
+{
+    return v.empty() ? NULL : (&v[0] + v.size());
+}
+/** Get end pointer of vector (const version) */
+template <class T, class TAl>
+inline const T* end_ptr(const std::vector<T,TAl>& v)
+{
+    return v.empty() ? NULL : (&v[0] + v.size());
+}
+
 /////////////////////////////////////////////////////////////////
 //
 // Templates for serializing to anything that looks like a stream,
-// i.e. anything that supports .read(char*, int) and .write(char*, int)
+// i.e. anything that supports .read(char*, size_t) and .write(char*, size_t)
 //
 
 enum
@@ -51,48 +87,26 @@ enum
     SER_GETHASH         = (1 << 2),
 };
 
-#define IMPLEMENT_SERIALIZE(statements)    \
-    unsigned int GetSerializeSize(int nType, int nVersion) const  \
-    {                                           \
-        CSerActionGetSerializeSize ser_action;  \
-        const bool fGetSize = true;             \
-        const bool fWrite = false;              \
-        const bool fRead = false;               \
-        unsigned int nSerSize = 0;              \
-        ser_streamplaceholder s;                \
-        assert(fGetSize||fWrite||fRead); /* suppress warning */ \
-        s.nType = nType;                        \
-        s.nVersion = nVersion;                  \
-        {statements}                            \
-        return nSerSize;                        \
-    }                                           \
-    template<typename Stream>                   \
-    void Serialize(Stream& s, int nType, int nVersion) const  \
-    {                                           \
-        CSerActionSerialize ser_action;         \
-        const bool fGetSize = false;            \
-        const bool fWrite = true;               \
-        const bool fRead = false;               \
-        unsigned int nSerSize = 0;              \
-        assert(fGetSize||fWrite||fRead); /* suppress warning */ \
-        {statements}                            \
-    }                                           \
-    template<typename Stream>                   \
-    void Unserialize(Stream& s, int nType, int nVersion)  \
-    {                                           \
-        CSerActionUnserialize ser_action;       \
-        const bool fGetSize = false;            \
-        const bool fWrite = false;              \
-        const bool fRead = true;                \
-        unsigned int nSerSize = 0;              \
-        assert(fGetSize||fWrite||fRead); /* suppress warning */ \
-        {statements}                            \
+#define READWRITE(obj)      (::SerReadWrite(s, (obj), nType, nVersion, ser_action))
+
+/* Implement three methods for serializable objects. These are actually wrappers over
+ * "SerializationOp" template, which implements the body of each class' serialization
+ * code. Adding "ADD_SERIALIZE_METHODS" in the body of the class causes these wrappers to be
+ * added as members. */
+#define ADD_SERIALIZE_METHODS                                                          \
+    size_t GetSerializeSize(int nType, int nVersion) const {                         \
+        CSizeComputer s(nType, nVersion);                                            \
+        NCONST_PTR(this)->SerializationOp(s, CSerActionSerialize(), nType, nVersion);\
+        return s.size();                                                             \
+    }                                                                                \
+    template<typename Stream>                                                        \
+    void Serialize(Stream& s, int nType, int nVersion) const {                       \
+        NCONST_PTR(this)->SerializationOp(s, CSerActionSerialize(), nType, nVersion);\
+    }                                                                                \
+    template<typename Stream>                                                        \
+    void Unserialize(Stream& s, int nType, int nVersion) {                           \
+        SerializationOp(s, CSerActionUnserialize(), nType, nVersion);                \
     }
-
-#define READWRITE(obj)      (nSerSize += ::SerReadWrite(s, (obj), nType, nVersion, ser_action))
-
-
-
 
 
 
@@ -306,8 +320,9 @@ I ReadVarInt(Stream& is)
     }
 }
 
-#define FLATDATA(obj)  REF(CFlatData((char*)&(obj), (char*)&(obj) + sizeof(obj)))
-#define VARINT(obj)    REF(WrapVarInt(REF(obj)))
+#define FLATDATA(obj) REF(CFlatData((char*)&(obj), (char*)&(obj) + sizeof(obj)))
+#define VARINT(obj) REF(WrapVarInt(REF(obj)))
+#define LIMITED_STRING(obj,n) REF(LimitedString< n >(REF(obj)))
 
 /** Wrapper for serializing arrays and POD.
  */
@@ -318,6 +333,12 @@ protected:
     char* pend;
 public:
     CFlatData(void* pbeginIn, void* pendIn) : pbegin((char*)pbeginIn), pend((char*)pendIn) { }
+    template <class T, class TAl>
+    explicit CFlatData(std::vector<T,TAl> &v)
+    {
+        pbegin = (char*)begin_ptr(v);
+        pend = (char*)end_ptr(v);
+    }
     char* begin() { return pbegin; }
     const char* begin() const { return pbegin; }
     char* end() { return pend; }
@@ -361,6 +382,40 @@ public:
     template<typename Stream>
     void Unserialize(Stream& s, int, int) {
         n = ReadVarInt<Stream,I>(s);
+    }
+};
+
+template<size_t Limit>
+class LimitedString
+{
+protected:
+    std::string& string;
+public:
+    LimitedString(std::string& string) : string(string) {}
+
+    template<typename Stream>
+    void Unserialize(Stream& s, int, int=0)
+    {
+        size_t size = ReadCompactSize(s);
+        if (size > Limit) {
+            throw std::ios_base::failure("String length limit exceeded");
+        }
+        string.resize(size);
+        if (size != 0)
+            s.read((char*)&string[0], size);
+    }
+
+    template<typename Stream>
+    void Serialize(Stream& s, int, int=0) const
+    {
+        WriteCompactSize(s, string.size());
+        if (!string.empty())
+            s.write((char*)&string[0], string.size());
+    }
+
+    unsigned int GetSerializeSize(int, int=0) const
+    {
+        return GetSizeOfCompactSize(string.size()) + string.size();
     }
 };
 
@@ -752,39 +807,28 @@ void Unserialize(Stream& is, std::set<K, Pred, A>& m, int nType, int nVersion)
 
 
 //
-// Support for IMPLEMENT_SERIALIZE and READWRITE macro
+// Support for ADD_SERIALIZE_METHODS and READWRITE macro
 //
-class CSerActionGetSerializeSize { };
-class CSerActionSerialize { };
-class CSerActionUnserialize { };
-
-template<typename Stream, typename T>
-inline unsigned int SerReadWrite(Stream& s, const T& obj, int nType, int nVersion, CSerActionGetSerializeSize ser_action)
+struct CSerActionSerialize
 {
-    return ::GetSerializeSize(obj, nType, nVersion);
-}
-
-template<typename Stream, typename T>
-inline unsigned int SerReadWrite(Stream& s, const T& obj, int nType, int nVersion, CSerActionSerialize ser_action)
+    bool ForRead() const { return false; }
+};
+struct CSerActionUnserialize
 {
-    ::Serialize(s, obj, nType, nVersion);
-    return 0;
-}
-
-template<typename Stream, typename T>
-inline unsigned int SerReadWrite(Stream& s, T& obj, int nType, int nVersion, CSerActionUnserialize ser_action)
-{
-    ::Unserialize(s, obj, nType, nVersion);
-    return 0;
-}
-
-struct ser_streamplaceholder
-{
-    int nType;
-    int nVersion;
+    bool ForRead() const { return true; }
 };
 
+template<typename Stream, typename T>
+inline void SerReadWrite(Stream& s, const T& obj, int nType, int nVersion, CSerActionSerialize ser_action)
+{
+    ::Serialize(s, obj, nType, nVersion);
+}
 
+template<typename Stream, typename T>
+inline void SerReadWrite(Stream& s, T& obj, int nType, int nVersion, CSerActionUnserialize ser_action)
+{
+    ::Unserialize(s, obj, nType, nVersion);
+}
 
 
 
@@ -795,6 +839,35 @@ struct ser_streamplaceholder
 
 
 typedef std::vector<char, zero_after_free_allocator<char> > CSerializeData;
+
+class CSizeComputer
+{
+protected:
+    size_t nSize;
+
+public:
+    int nType;
+    int nVersion;
+
+    CSizeComputer(int nTypeIn, int nVersionIn) : nSize(0), nType(nTypeIn), nVersion(nVersionIn) {}
+
+    CSizeComputer& write(const char *psz, size_t nSize)
+    {
+        this->nSize += nSize;
+        return *this;
+    }
+
+    template<typename T>
+    CSizeComputer& operator<<(const T& obj)
+    {
+        ::Serialize(*this, obj, nType, nVersion);
+        return (*this);
+    }
+
+    size_t size() const {
+        return nSize;
+    }
+};
 
 /** Double ended buffer combining vector and stream-like interfaces.
  *
@@ -807,8 +880,6 @@ protected:
     typedef CSerializeData vector_type;
     vector_type vch;
     unsigned int nReadPos;
-    short state;
-    short exceptmask;
 public:
     int nType;
     int nVersion;
@@ -860,8 +931,6 @@ public:
         nReadPos = 0;
         nType = nTypeIn;
         nVersion = nVersionIn;
-        state = 0;
-        exceptmask = std::ios::badbit | std::ios::failbit;
     }
 
     CDataStream& operator+=(const CDataStream& b)
@@ -984,19 +1053,7 @@ public:
     //
     // Stream subset
     //
-    void setstate(short bits, const char* psz)
-    {
-        state |= bits;
-        if (state & exceptmask)
-            throw std::ios_base::failure(psz);
-    }
-
     bool eof() const             { return size() == 0; }
-    bool fail() const            { return state & (std::ios::badbit | std::ios::failbit); }
-    bool good() const            { return !eof() && (state == 0); }
-    void clear(short n)          { state = n; }  // name conflict with vector clear()
-    short exceptions()           { return exceptmask; }
-    short exceptions(short mask) { short prev = exceptmask; exceptmask = mask; setstate(0, "CDataStream"); return prev; }
     CDataStream* rdbuf()         { return this; }
     int in_avail()               { return size(); }
 
@@ -1007,18 +1064,15 @@ public:
     void ReadVersion()           { *this >> nVersion; }
     void WriteVersion()          { *this << nVersion; }
 
-    CDataStream& read(char* pch, int nSize)
+    CDataStream& read(char* pch, size_t nSize)
     {
         // Read from the beginning of the buffer
-        assert(nSize >= 0);
         unsigned int nReadPosNext = nReadPos + nSize;
         if (nReadPosNext >= vch.size())
         {
             if (nReadPosNext > vch.size())
             {
-                setstate(std::ios::failbit, "CDataStream::read() : end of data");
-                memset(pch, 0, nSize);
-                nSize = vch.size() - nReadPos;
+                throw std::ios_base::failure("CDataStream::read() : end of data");
             }
             memcpy(pch, &vch[nReadPos], nSize);
             nReadPos = 0;
@@ -1038,7 +1092,7 @@ public:
         if (nReadPosNext >= vch.size())
         {
             if (nReadPosNext > vch.size())
-                setstate(std::ios::failbit, "CDataStream::ignore() : end of data");
+                throw std::ios_base::failure("CDataStream::ignore() : end of data");
             nReadPos = 0;
             vch.clear();
             return (*this);
@@ -1047,10 +1101,9 @@ public:
         return (*this);
     }
 
-    CDataStream& write(const char* pch, int nSize)
+    CDataStream& write(const char* pch, size_t nSize)
     {
         // Write to the end of the buffer
-        assert(nSize >= 0);
         vch.insert(vch.end(), pch, pch + nSize);
         return (*this);
     }
@@ -1111,8 +1164,6 @@ class CAutoFile
 {
 protected:
     FILE* file;
-    short state;
-    short exceptmask;
 public:
     int nType;
     int nVersion;
@@ -1122,8 +1173,6 @@ public:
         file = filenew;
         nType = nTypeIn;
         nVersion = nVersionIn;
-        state = 0;
-        exceptmask = std::ios::badbit | std::ios::failbit;
     }
 
     ~CAutoFile()
@@ -1150,19 +1199,6 @@ public:
     //
     // Stream subset
     //
-    void setstate(short bits, const char* psz)
-    {
-        state |= bits;
-        if (state & exceptmask)
-            throw std::ios_base::failure(psz);
-    }
-
-    bool fail() const            { return state & (std::ios::badbit | std::ios::failbit); }
-    bool good() const            { return state == 0; }
-    void clear(short n = 0)      { state = n; }
-    short exceptions()           { return exceptmask; }
-    short exceptions(short mask) { short prev = exceptmask; exceptmask = mask; setstate(0, "CAutoFile"); return prev; }
-
     void SetType(int n)          { nType = n; }
     int GetType()                { return nType; }
     void SetVersion(int n)       { nVersion = n; }
@@ -1175,7 +1211,7 @@ public:
         if (!file)
             throw std::ios_base::failure("CAutoFile::read : file handle is NULL");
         if (fread(pch, 1, nSize, file) != nSize)
-            setstate(std::ios::failbit, feof(file) ? "CAutoFile::read : end of file" : "CAutoFile::read : fread failed");
+            throw std::ios_base::failure(feof(file) ? "CAutoFile::read : end of file" : "CAutoFile::read : fread failed");
         return (*this);
     }
 
@@ -1184,7 +1220,7 @@ public:
         if (!file)
             throw std::ios_base::failure("CAutoFile::write : file handle is NULL");
         if (fwrite(pch, 1, nSize, file) != nSize)
-            setstate(std::ios::failbit, "CAutoFile::write : write failed");
+            throw std::ios_base::failure("CAutoFile::write : write failed");
         return (*this);
     }
 
@@ -1229,16 +1265,7 @@ private:
     uint64_t nRewind;     // how many bytes we guarantee to rewind
     std::vector<char> vchBuf; // the buffer
 
-    short state;
-    short exceptmask;
-
 protected:
-    void setstate(short bits, const char *psz) {
-        state |= bits;
-        if (state & exceptmask)
-            throw std::ios_base::failure(psz);
-    }
-
     // read data from the source to fill the buffer
     bool Fill() {
         unsigned int pos = nSrcPos % vchBuf.size();
@@ -1250,8 +1277,7 @@ protected:
             return false;
         size_t read = fread((void*)&vchBuf[pos], 1, readNow, src);
         if (read == 0) {
-            setstate(std::ios_base::failbit, feof(src) ? "CBufferedFile::Fill : end of file" : "CBufferedFile::Fill : fread failed");
-            return false;
+            throw std::ios_base::failure(feof(src) ? "CBufferedFile::Fill : end of file" : "CBufferedFile::Fill : fread failed");
         } else {
             nSrcPos += read;
             return true;
@@ -1264,12 +1290,7 @@ public:
 
     CBufferedFile(FILE *fileIn, uint64_t nBufSize, uint64_t nRewindIn, int nTypeIn, int nVersionIn) :
         src(fileIn), nSrcPos(0), nReadPos(0), nReadLimit((uint64_t)(-1)), nRewind(nRewindIn), vchBuf(nBufSize, 0),
-        state(0), exceptmask(std::ios_base::badbit | std::ios_base::failbit), nType(nTypeIn), nVersion(nVersionIn) {
-    }
-
-    // check whether no error occurred
-    bool good() const {
-        return state == 0;
+        nType(nTypeIn), nVersion(nVersionIn) {
     }
 
     // check whether we're at the end of the source file
@@ -1328,7 +1349,6 @@ public:
         nLongPos = ftell(src);
         nSrcPos = nLongPos;
         nReadPos = nLongPos;
-        state = 0;
         return true;
     }
 
@@ -1360,4 +1380,4 @@ public:
     }
 };
 
-#endif
+#endif // BITCOIN_SERIALIZE_H

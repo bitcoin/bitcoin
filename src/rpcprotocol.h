@@ -4,7 +4,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef _BITCOINRPC_PROTOCOL_H_
-#define _BITCOINRPC_PROTOCOL_H_ 1
+#define _BITCOINRPC_PROTOCOL_H_
 
 #include <list>
 #include <map>
@@ -141,16 +141,22 @@ private:
 };
 
 std::string HTTPPost(const std::string& strMsg, const std::map<std::string,std::string>& mapRequestHeaders);
-std::string HTTPReply(int nStatus, const std::string& strMsg, bool keepalive);
+std::string HTTPError(int nStatus, bool keepalive,
+                      bool headerOnly = false);
+std::string HTTPReplyHeader(int nStatus, bool keepalive, size_t contentLength,
+                      const char *contentType = "application/json");
+std::string HTTPReply(int nStatus, const std::string& strMsg, bool keepalive,
+                      bool headerOnly = false,
+                      const char *contentType = "application/json");
 bool ReadHTTPRequestLine(std::basic_istream<char>& stream, int &proto,
                          std::string& http_method, std::string& http_uri);
 int ReadHTTPStatus(std::basic_istream<char>& stream, int &proto);
 int ReadHTTPHeaders(std::basic_istream<char>& stream, std::map<std::string, std::string>& mapHeadersRet);
 int ReadHTTPMessage(std::basic_istream<char>& stream, std::map<std::string, std::string>& mapHeadersRet,
-                    std::string& strMessageRet, int nProto);
+                    std::string& strMessageRet, int nProto, size_t max_size);
 std::string JSONRPCRequest(const std::string& strMethod, const json_spirit::Array& params, const json_spirit::Value& id);
 json_spirit::Object JSONRPCReplyObj(const json_spirit::Value& result, const json_spirit::Value& error, const json_spirit::Value& id);
 std::string JSONRPCReply(const json_spirit::Value& result, const json_spirit::Value& error, const json_spirit::Value& id);
 json_spirit::Object JSONRPCError(int code, const std::string& message);
 
-#endif
+#endif // _BITCOINRPC_PROTOCOL_H_

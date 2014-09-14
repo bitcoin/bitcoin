@@ -131,7 +131,7 @@ public:
  * Due to the unpredictable order of static initializers, we have to make sure the
  * LockedPageManager instance exists before any other STL-based objects that use
  * secure_allocator are created. So instead of having LockedPageManager also be
- * static-intialized, it is created on demand.
+ * static-initialized, it is created on demand.
  */
 class LockedPageManager: public LockedPageManagerBase<MemoryPageLocker>
 {
@@ -252,4 +252,4 @@ struct zero_after_free_allocator : public std::allocator<T>
 // This is exactly like std::string, but with a custom allocator.
 typedef std::basic_string<char, std::char_traits<char>, secure_allocator<char> > SecureString;
 
-#endif
+#endif // BITCOIN_ALLOCATORS_H

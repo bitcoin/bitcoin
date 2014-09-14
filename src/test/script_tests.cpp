@@ -2,14 +2,15 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "script.h"
-
 #include "data/script_invalid.json.h"
 #include "data/script_valid.json.h"
 
 #include "key.h"
 #include "keystore.h"
 #include "main.h"
+#include "script/script.h"
+#include "script/sign.h"
+#include "core_io.h"
 
 #include <fstream>
 #include <stdint.h>
@@ -32,79 +33,9 @@ using namespace std;
 using namespace json_spirit;
 using namespace boost::algorithm;
 
-extern uint256 SignatureHash(const CScript &scriptCode, const CTransaction& txTo, unsigned int nIn, int nHashType);
-
 static const unsigned int flags = SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_STRICTENC;
 
-CScript
-ParseScript(string s)
-{
-    CScript result;
-
-    static map<string, opcodetype> mapOpNames;
-
-    if (mapOpNames.size() == 0)
-    {
-        for (int op = 0; op <= OP_NOP10; op++)
-        {
-            // Allow OP_RESERVED to get into mapOpNames
-            if (op < OP_NOP && op != OP_RESERVED)
-                continue;
-
-            const char* name = GetOpName((opcodetype)op);
-            if (strcmp(name, "OP_UNKNOWN") == 0)
-                continue;
-            string strName(name);
-            mapOpNames[strName] = (opcodetype)op;
-            // Convenience: OP_ADD and just ADD are both recognized:
-            replace_first(strName, "OP_", "");
-            mapOpNames[strName] = (opcodetype)op;
-        }
-    }
-
-    vector<string> words;
-    split(words, s, is_any_of(" \t\n"), token_compress_on);
-
-    BOOST_FOREACH(string w, words)
-    {
-        if (w.size() == 0)
-        {
-            // Empty string, ignore. (boost::split given '' will return one word)
-        }
-        else if (all(w, is_digit()) ||
-            (starts_with(w, "-") && all(string(w.begin()+1, w.end()), is_digit())))
-        {
-            // Number
-            int64_t n = atoi64(w);
-            result << n;
-        }
-        else if (starts_with(w, "0x") && IsHex(string(w.begin()+2, w.end())))
-        {
-            // Raw hex data, inserted NOT pushed onto stack:
-            std::vector<unsigned char> raw = ParseHex(string(w.begin()+2, w.end()));
-            result.insert(result.end(), raw.begin(), raw.end());
-        }
-        else if (w.size() >= 2 && starts_with(w, "'") && ends_with(w, "'"))
-        {
-            // Single-quoted string, pushed as data. NOTE: this is poor-man's
-            // parsing, spaces/tabs/newlines in single-quoted strings won't work.
-            std::vector<unsigned char> value(w.begin()+1, w.end()-1);
-            result << value;
-        }
-        else if (mapOpNames.count(w))
-        {
-            // opcode, e.g. OP_ADD or ADD:
-            result << mapOpNames[w];
-        }
-        else
-        {
-            BOOST_ERROR("Parse error: " << s);
-            return CScript();
-        }
-    }
-
-    return result;
-}
+unsigned int ParseScriptFlags(string strFlags);
 
 Array
 read_json(const std::string& jsondata)
@@ -125,7 +56,7 @@ BOOST_AUTO_TEST_CASE(script_valid)
 {
     // Read tests from test/data/script_valid.json
     // Format is an array of arrays
-    // Inner arrays are [ "scriptSig", "scriptPubKey" ]
+    // Inner arrays are [ "scriptSig", "scriptPubKey", "flags" ]
     // ... where scriptSig and scriptPubKey are stringified
     // scripts.
     Array tests = read_json(std::string(json_tests::script_valid, json_tests::script_valid + sizeof(json_tests::script_valid)));
@@ -134,7 +65,7 @@ BOOST_AUTO_TEST_CASE(script_valid)
     {
         Array test = tv.get_array();
         string strTest = write_string(tv, false);
-        if (test.size() < 2) // Allow size > 2; extra stuff ignored (useful for comments)
+        if (test.size() < 3) // Allow size > 3; extra stuff ignored (useful for comments)
         {
             BOOST_ERROR("Bad test: " << strTest);
             continue;
@@ -143,9 +74,10 @@ BOOST_AUTO_TEST_CASE(script_valid)
         CScript scriptSig = ParseScript(scriptSigString);
         string scriptPubKeyString = test[1].get_str();
         CScript scriptPubKey = ParseScript(scriptPubKeyString);
+        unsigned int scriptflags = ParseScriptFlags(test[2].get_str());
 
         CTransaction tx;
-        BOOST_CHECK_MESSAGE(VerifyScript(scriptSig, scriptPubKey, tx, 0, flags, SIGHASH_NONE), strTest);
+        BOOST_CHECK_MESSAGE(VerifyScript(scriptSig, scriptPubKey, tx, 0, scriptflags, SIGHASH_NONE), strTest);
     }
 }
 
@@ -167,9 +99,10 @@ BOOST_AUTO_TEST_CASE(script_invalid)
         CScript scriptSig = ParseScript(scriptSigString);
         string scriptPubKeyString = test[1].get_str();
         CScript scriptPubKey = ParseScript(scriptPubKeyString);
+        unsigned int scriptflags = ParseScriptFlags(test[2].get_str());
 
         CTransaction tx;
-        BOOST_CHECK_MESSAGE(!VerifyScript(scriptSig, scriptPubKey, tx, 0, flags, SIGHASH_NONE), strTest);
+        BOOST_CHECK_MESSAGE(!VerifyScript(scriptSig, scriptPubKey, tx, 0, scriptflags, SIGHASH_NONE), strTest);
     }
 }
 
@@ -240,11 +173,11 @@ BOOST_AUTO_TEST_CASE(script_CHECKMULTISIG12)
     CScript scriptPubKey12;
     scriptPubKey12 << OP_1 << key1.GetPubKey() << key2.GetPubKey() << OP_2 << OP_CHECKMULTISIG;
 
-    CTransaction txFrom12;
+    CMutableTransaction txFrom12;
     txFrom12.vout.resize(1);
     txFrom12.vout[0].scriptPubKey = scriptPubKey12;
 
-    CTransaction txTo12;
+    CMutableTransaction txTo12;
     txTo12.vin.resize(1);
     txTo12.vout.resize(1);
     txTo12.vin[0].prevout.n = 0;
@@ -274,11 +207,11 @@ BOOST_AUTO_TEST_CASE(script_CHECKMULTISIG23)
     CScript scriptPubKey23;
     scriptPubKey23 << OP_2 << key1.GetPubKey() << key2.GetPubKey() << key3.GetPubKey() << OP_3 << OP_CHECKMULTISIG;
 
-    CTransaction txFrom23;
+    CMutableTransaction txFrom23;
     txFrom23.vout.resize(1);
     txFrom23.vout[0].scriptPubKey = scriptPubKey23;
 
-    CTransaction txTo23;
+    CMutableTransaction txTo23;
     txTo23.vin.resize(1);
     txTo23.vout.resize(1);
     txTo23.vin[0].prevout.n = 0;
@@ -345,11 +278,11 @@ BOOST_AUTO_TEST_CASE(script_combineSigs)
         keystore.AddKey(key);
     }
 
-    CTransaction txFrom;
+    CMutableTransaction txFrom;
     txFrom.vout.resize(1);
     txFrom.vout[0].scriptPubKey.SetDestination(keys[0].GetPubKey().GetID());
     CScript& scriptPubKey = txFrom.vout[0].scriptPubKey;
-    CTransaction txTo;
+    CMutableTransaction txTo;
     txTo.vin.resize(1);
     txTo.vout.resize(1);
     txTo.vin[0].prevout.n = 0;
@@ -462,6 +395,17 @@ BOOST_AUTO_TEST_CASE(script_standard_push)
         BOOST_CHECK_MESSAGE(script.IsPushOnly(), "Length " << i << " is not pure push.");
         BOOST_CHECK_MESSAGE(script.HasCanonicalPushes(), "Length " << i << " push is not canonical.");
     }
+}
+
+BOOST_AUTO_TEST_CASE(script_IsPushOnly_on_invalid_scripts)
+{
+    // IsPushOnly returns false when given a script containing only pushes that
+    // are invalid due to truncation. IsPushOnly() is consensus critical
+    // because P2SH evaluation uses it, although this specific behavior should
+    // not be consensus critical as the P2SH evaluation would fail first due to
+    // the invalid push. Still, it doesn't hurt to test it explicitly.
+    static const unsigned char direct[] = { 1 };
+    BOOST_CHECK(!CScript(direct, direct+sizeof(direct)).IsPushOnly());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

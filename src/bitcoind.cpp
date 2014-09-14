@@ -4,7 +4,6 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "rpcserver.h"
-#include "rpcclient.h"
 #include "init.h"
 #include "main.h"
 #include "noui.h"
@@ -13,6 +12,7 @@
 
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/thread.hpp>
 
 /* Introduction text for doxygen: */
 
@@ -94,14 +94,9 @@ bool AppInit(int argc, char* argv[])
             else
             {
                 strUsage += "\n" + _("Usage:") + "\n" +
-                      "  bitcoind [options]                     " + _("Start Bitcoin Core Daemon") + "\n" +
-                    _("Usage (deprecated, use bitcoin-cli):") + "\n" +
-                      "  bitcoind [options] <command> [params]  " + _("Send command to Bitcoin Core") + "\n" +
-                      "  bitcoind [options] help                " + _("List commands") + "\n" +
-                      "  bitcoind [options] help <command>      " + _("Get help for a command") + "\n";
+                      "  bitcoind [options]                     " + _("Start Bitcoin Core Daemon") + "\n";
 
                 strUsage += "\n" + HelpMessage(HMM_BITCOIND);
-                strUsage += "\n" + HelpMessageCli(false);
             }
 
             fprintf(stdout, "%s", strUsage.c_str());
@@ -116,8 +111,8 @@ bool AppInit(int argc, char* argv[])
 
         if (fCommandLine)
         {
-            int ret = CommandLineRPC(argc, argv);
-            exit(ret);
+            fprintf(stderr, "Error: There is no RPC client functionality in bitcoind anymore. Use the bitcoin-cli utility instead.\n");
+            exit(1);
         }
 #ifndef WIN32
         fDaemon = GetBoolArg("-daemon", false);

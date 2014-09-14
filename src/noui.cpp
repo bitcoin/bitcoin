@@ -8,6 +8,7 @@
 #include "ui_interface.h"
 #include "util.h"
 
+#include <cstdio>
 #include <stdint.h>
 #include <string>
 

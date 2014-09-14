@@ -12,8 +12,8 @@
 #include <boost/assign/list_of.hpp> // for 'map_list_of()'
 #include <boost/foreach.hpp>
 
-namespace Checkpoints
-{
+namespace Checkpoints {
+
     typedef std::map<int, uint256> MapCheckpoints;
 
     // How many times we expect transactions after the last checkpoint to
@@ -51,11 +51,12 @@ namespace Checkpoints
         (225430, uint256("0x00000000000001c108384350f74090433e7fcf79a606b8e797f065b130575932"))
         (250000, uint256("0x000000000000003887df1f29024b06fc2200b55f8af8f35453d7be294df2d214"))
         (279000, uint256("0x0000000000000001ae8c72a0b0c301f67e3afca10e819efa9041e458e9bd7e40"))
+        (295000, uint256("0x00000000000000004d9b4ef50f0f9d686fd69db2e03af35a100370c64632a983"))
         ;
     static const CCheckpointData data = {
         &mapCheckpoints,
-        1389047471, // * UNIX timestamp of last checkpoint block
-        30549816,   // * total number of transactions between genesis and last checkpoint
+        1397080064, // * UNIX timestamp of last checkpoint block
+        36544669,   // * total number of transactions between genesis and last checkpoint
                     //   (the tx=... number in the SetBestChain debug.log lines)
         60000.0     // * estimated number of transactions per day after checkpoint
     };
@@ -83,9 +84,9 @@ namespace Checkpoints
     };
 
     const CCheckpointData &Checkpoints() {
-        if (Params().NetworkID() == CChainParams::TESTNET)
+        if (Params().NetworkID() == CBaseChainParams::TESTNET)
             return dataTestnet;
-        else if (Params().NetworkID() == CChainParams::MAIN)
+        else if (Params().NetworkID() == CBaseChainParams::MAIN)
             return data;
         else
             return dataRegtest;
@@ -127,7 +128,7 @@ namespace Checkpoints
         } else {
             double nCheapBefore = data.nTransactionsLastCheckpoint;
             double nExpensiveBefore = pindex->nChainTx - data.nTransactionsLastCheckpoint;
-            double nExpensiveAfter = (nNow - pindex->nTime)/86400.0*data.fTransactionsPerDay;
+            double nExpensiveAfter = (nNow - pindex->GetBlockTime())/86400.0*data.fTransactionsPerDay;
             fWorkBefore = nCheapBefore + nExpensiveBefore*fSigcheckVerificationFactor;
             fWorkAfter = nExpensiveAfter*fSigcheckVerificationFactor;
         }
@@ -145,7 +146,7 @@ namespace Checkpoints
         return checkpoints.rbegin()->first;
     }
 
-    CBlockIndex* GetLastCheckpoint(const std::map<uint256, CBlockIndex*>& mapBlockIndex)
+    CBlockIndex* GetLastCheckpoint()
     {
         if (!fEnabled)
             return NULL;
@@ -155,10 +156,11 @@ namespace Checkpoints
         BOOST_REVERSE_FOREACH(const MapCheckpoints::value_type& i, checkpoints)
         {
             const uint256& hash = i.second;
-            std::map<uint256, CBlockIndex*>::const_iterator t = mapBlockIndex.find(hash);
+            BlockMap::const_iterator t = mapBlockIndex.find(hash);
             if (t != mapBlockIndex.end())
                 return t->second;
         }
         return NULL;
     }
-}
+
+} // namespace Checkpoints

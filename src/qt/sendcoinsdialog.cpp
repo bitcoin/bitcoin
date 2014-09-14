@@ -90,8 +90,9 @@ void SendCoinsDialog::setModel(WalletModel *model)
             }
         }
 
-        setBalance(model->getBalance(), model->getUnconfirmedBalance(), model->getImmatureBalance());
-        connect(model, SIGNAL(balanceChanged(qint64, qint64, qint64)), this, SLOT(setBalance(qint64, qint64, qint64)));
+        setBalance(model->getBalance(), model->getUnconfirmedBalance(), model->getImmatureBalance(),
+                   model->getWatchBalance(), model->getWatchUnconfirmedBalance(), model->getWatchImmatureBalance());
+        connect(model, SIGNAL(balanceChanged(qint64, qint64, qint64, qint64, qint64, qint64)), this, SLOT(setBalance(qint64, qint64, qint64, qint64, qint64, qint64)));
         connect(model->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(updateDisplayUnit()));
 
         // Coin Control
@@ -142,7 +143,7 @@ void SendCoinsDialog::on_sendButton_clicked()
     foreach(const SendCoinsRecipient &rcp, recipients)
     {
         // generate bold amount string
-        QString amount = "<b>" + BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), rcp.amount);
+        QString amount = "<b>" + BitcoinUnits::formatHtmlWithUnit(model->getOptionsModel()->getDisplayUnit(), rcp.amount);
         amount.append("</b>");
         // generate monospace address string
         QString address = "<span style='font-family: monospace;'>" + rcp.address;
@@ -210,7 +211,7 @@ void SendCoinsDialog::on_sendButton_clicked()
     {
         // append fee string if a fee is required
         questionString.append("<hr /><span style='color:#aa0000;'>");
-        questionString.append(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), txFee));
+        questionString.append(BitcoinUnits::formatHtmlWithUnit(model->getOptionsModel()->getDisplayUnit(), txFee));
         questionString.append("</span> ");
         questionString.append(tr("added as transaction fee"));
     }
@@ -222,10 +223,10 @@ void SendCoinsDialog::on_sendButton_clicked()
     foreach(BitcoinUnits::Unit u, BitcoinUnits::availableUnits())
     {
         if(u != model->getOptionsModel()->getDisplayUnit())
-            alternativeUnits.append(BitcoinUnits::formatWithUnit(u, totalAmount));
+            alternativeUnits.append(BitcoinUnits::formatHtmlWithUnit(u, totalAmount));
     }
     questionString.append(tr("Total Amount %1 (= %2)")
-        .arg(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), totalAmount))
+        .arg(BitcoinUnits::formatHtmlWithUnit(model->getOptionsModel()->getDisplayUnit(), totalAmount))
         .arg(alternativeUnits.join(" " + tr("or") + " ")));
 
     QMessageBox::StandardButton retval = QMessageBox::question(this, tr("Confirm send coins"),
@@ -383,10 +384,14 @@ bool SendCoinsDialog::handlePaymentRequest(const SendCoinsRecipient &rv)
     return true;
 }
 
-void SendCoinsDialog::setBalance(qint64 balance, qint64 unconfirmedBalance, qint64 immatureBalance)
+void SendCoinsDialog::setBalance(qint64 balance, qint64 unconfirmedBalance, qint64 immatureBalance, 
+                                 qint64 watchBalance, qint64 watchUnconfirmedBalance, qint64 watchImmatureBalance)
 {
     Q_UNUSED(unconfirmedBalance);
     Q_UNUSED(immatureBalance);
+    Q_UNUSED(watchBalance);
+    Q_UNUSED(watchUnconfirmedBalance);
+    Q_UNUSED(watchImmatureBalance);
 
     if(model && model->getOptionsModel())
     {
@@ -396,7 +401,7 @@ void SendCoinsDialog::setBalance(qint64 balance, qint64 unconfirmedBalance, qint
 
 void SendCoinsDialog::updateDisplayUnit()
 {
-    setBalance(model->getBalance(), 0, 0);
+    setBalance(model->getBalance(), 0, 0, 0, 0, 0);
 }
 
 void SendCoinsDialog::processSendCoinsReturn(const WalletModel::SendCoinsReturn &sendCoinsReturn, const QString &msgArg)

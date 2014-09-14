@@ -11,6 +11,7 @@
 
 #include "core.h"
 #include "init.h"
+#include "main.h"
 #include "protocol.h"
 #include "util.h"
 
@@ -62,6 +63,13 @@
 static boost::filesystem::detail::utf8_codecvt_facet utf8;
 #endif
 
+#if defined(Q_OS_MAC)
+extern double NSAppKitVersionNumber;
+#if !defined(NSAppKitVersionNumber10_9)
+#define NSAppKitVersionNumber10_9 1265
+#endif
+#endif
+
 namespace GUIUtil {
 
 QString dateTimeStr(const QDateTime &date)
@@ -91,7 +99,9 @@ void setupAddressWidget(QValidatedLineEdit *widget, QWidget *parent)
 
     widget->setFont(bitcoinAddressFont());
 #if QT_VERSION >= 0x040700
-    widget->setPlaceholderText(QObject::tr("Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)"));
+    // We don't want translators to use own addresses in translations
+    // and this is the only place, where this address is supplied.
+    widget->setPlaceholderText(QObject::tr("Enter a Bitcoin address (e.g. %1)").arg("1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L"));
 #endif
     widget->setValidator(new BitcoinAddressEntryValidator(parent));
     widget->setCheckValidator(new BitcoinAddressCheckValidator(parent));
@@ -114,6 +124,10 @@ bool parseBitcoinURI(const QUrl &uri, SendCoinsRecipient *out)
 
     SendCoinsRecipient rv;
     rv.address = uri.path();
+    // Trim any following forward slash which may have been added by the OS
+    if (rv.address.endsWith("/")) {
+        rv.address.truncate(rv.address.length() - 1);
+    }
     rv.amount = 0;
 
 #if QT_VERSION < 0x050000
@@ -184,7 +198,7 @@ QString formatBitcoinURI(const SendCoinsRecipient &info)
 
     if (info.amount)
     {
-        ret += QString("?amount=%1").arg(BitcoinUnits::format(BitcoinUnits::BTC, info.amount));
+        ret += QString("?amount=%1").arg(BitcoinUnits::format(BitcoinUnits::BTC, info.amount, false, BitcoinUnits::separatorNever));
         paramCount++;
     }
 
@@ -210,7 +224,7 @@ bool isDust(const QString& address, qint64 amount)
     CTxDestination dest = CBitcoinAddress(address.toStdString()).Get();
     CScript script; script.SetDestination(dest);
     CTxOut txOut(amount, script);
-    return txOut.IsDust(CTransaction::minRelayTxFee);
+    return txOut.IsDust(::minRelayTxFee);
 }
 
 QString HtmlEscape(const QString& str, bool fMultiLine)
@@ -367,8 +381,29 @@ void openDebugLogfile()
         QDesktopServices::openUrl(QUrl::fromLocalFile(boostPathToQString(pathDebug)));
 }
 
+void SubstituteFonts()
+{
+#if defined(Q_OS_MAC)
+// Background:
+// OSX's default font changed in 10.9 and QT is unable to find it with its
+// usual fallback methods when building against the 10.7 sdk or lower.
+// The 10.8 SDK added a function to let it find the correct fallback font.
+// If this fallback is not properly loaded, some characters may fail to
+// render correctly.
+//
+// Solution: If building with the 10.7 SDK or lower and the user's platform
+// is 10.9 or higher at runtime, substitute the correct font. This needs to
+// happen before the QApplication is created.
+#if defined(MAC_OS_X_VERSION_MAX_ALLOWED) && MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_8
+    if (floor(NSAppKitVersionNumber) >= NSAppKitVersionNumber10_9)
+        QFont::insertSubstitution(".Lucida Grande UI", "Lucida Grande");
+#endif
+#endif
+}
+
 ToolTipToRichTextFilter::ToolTipToRichTextFilter(int size_threshold, QObject *parent) :
-    QObject(parent), size_threshold(size_threshold)
+    QObject(parent),
+    size_threshold(size_threshold)
 {
 
 }
@@ -775,7 +810,7 @@ QString formatDurationStr(int secs)
     return strList.join(" ");
 }
 
-QString formatServicesStr(uint64_t mask)
+QString formatServicesStr(quint64 mask)
 {
     QStringList strList;
 
@@ -799,6 +834,11 @@ QString formatServicesStr(uint64_t mask)
         return strList.join(" & ");
     else
         return QObject::tr("None");
+}
+
+QString formatPingTime(double dPingTime)
+{
+    return dPingTime == 0 ? QObject::tr("N/A") : QString(QObject::tr("%1 ms")).arg(QString::number((int)(dPingTime * 1000), 10));
 }
 
 } // namespace GUIUtil

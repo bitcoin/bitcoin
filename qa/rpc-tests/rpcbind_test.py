@@ -39,7 +39,7 @@ def run_bind_test(tmpdir, allow_ips, connect_to, addresses, expected):
         stop_nodes(nodes)
         wait_bitcoinds()
 
-def run_allowip_test(tmpdir, allow_ips, rpchost):
+def run_allowip_test(tmpdir, allow_ips, rpchost, rpcport):
     '''
     Start a node with rpcwallow IP, and request getinfo
     at a non-localhost IP.
@@ -48,7 +48,7 @@ def run_allowip_test(tmpdir, allow_ips, rpchost):
     nodes = start_nodes(1, tmpdir, [base_args])
     try:
         # connect to node through non-loopback interface
-        url = "http://rt:rt@%s:%d" % (rpchost, START_RPC_PORT,)
+        url = "http://rt:rt@%s:%d" % (rpchost, rpcport,)
         node = AuthServiceProxy(url)
         node.getinfo()
     finally:
@@ -69,15 +69,17 @@ def run_test(tmpdir):
         assert(not 'This test requires at least one non-loopback IPv4 interface')
     print("Using interface %s for testing" % non_loopback_ip)
 
+    defaultport = rpc_port(0)
+
     # check default without rpcallowip (IPv4 and IPv6 localhost)
     run_bind_test(tmpdir, None, '127.0.0.1', [],
-        [('127.0.0.1', 11100), ('::1', 11100)])
+        [('127.0.0.1', defaultport), ('::1', defaultport)])
     # check default with rpcallowip (IPv6 any)
     run_bind_test(tmpdir, ['127.0.0.1'], '127.0.0.1', [],
-        [('::0', 11100)])
+        [('::0', defaultport)])
     # check only IPv4 localhost (explicit)
     run_bind_test(tmpdir, ['127.0.0.1'], '127.0.0.1', ['127.0.0.1'],
-        [('127.0.0.1', START_RPC_PORT)])
+        [('127.0.0.1', defaultport)])
     # check only IPv4 localhost (explicit) with alternative port
     run_bind_test(tmpdir, ['127.0.0.1'], '127.0.0.1:32171', ['127.0.0.1:32171'],
         [('127.0.0.1', 32171)])
@@ -86,18 +88,18 @@ def run_test(tmpdir):
         [('127.0.0.1', 32171), ('127.0.0.1', 32172)])
     # check only IPv6 localhost (explicit)
     run_bind_test(tmpdir, ['[::1]'], '[::1]', ['[::1]'],
-        [('::1', 11100)])
+        [('::1', defaultport)])
     # check both IPv4 and IPv6 localhost (explicit)
     run_bind_test(tmpdir, ['127.0.0.1'], '127.0.0.1', ['127.0.0.1', '[::1]'],
-        [('127.0.0.1', START_RPC_PORT), ('::1', START_RPC_PORT)])
+        [('127.0.0.1', defaultport), ('::1', defaultport)])
     # check only non-loopback interface
     run_bind_test(tmpdir, [non_loopback_ip], non_loopback_ip, [non_loopback_ip],
-        [(non_loopback_ip, START_RPC_PORT)])
+        [(non_loopback_ip, defaultport)])
 
     # Check that with invalid rpcallowip, we are denied
-    run_allowip_test(tmpdir, [non_loopback_ip], non_loopback_ip)
+    run_allowip_test(tmpdir, [non_loopback_ip], non_loopback_ip, defaultport)
     try:
-        run_allowip_test(tmpdir, ['1.1.1.1'], non_loopback_ip)
+        run_allowip_test(tmpdir, ['1.1.1.1'], non_loopback_ip, defaultport)
         assert(not 'Connection not denied by rpcallowip as expected')
     except ValueError:
         pass

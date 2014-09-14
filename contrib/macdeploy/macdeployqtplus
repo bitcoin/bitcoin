@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-import subprocess, sys, re, os, shutil, stat, os.path
+import subprocess, sys, re, os, shutil, stat, os.path, time
 from string import Template
 from argparse import ArgumentParser
 
@@ -37,7 +37,10 @@ class FrameworkInfo(object):
         self.sourceFilePath = ""
         self.destinationDirectory = ""
         self.sourceResourcesDirectory = ""
+        self.sourceVersionContentsDirectory = ""
+        self.sourceContentsDirectory = ""
         self.destinationResourcesDirectory = ""
+        self.destinationVersionContentsDirectory = ""
     
     def __eq__(self, other):
         if self.__class__ == other.__class__:
@@ -141,7 +144,11 @@ class FrameworkInfo(object):
             info.destinationDirectory = os.path.join(cls.bundleFrameworkDirectory, info.frameworkName, info.binaryDirectory)
             
             info.sourceResourcesDirectory = os.path.join(info.frameworkPath, "Resources")
+            info.sourceContentsDirectory = os.path.join(info.frameworkPath, "Contents")
+            info.sourceVersionContentsDirectory = os.path.join(info.frameworkPath, "Versions", info.version, "Contents")
             info.destinationResourcesDirectory = os.path.join(cls.bundleFrameworkDirectory, info.frameworkName, "Resources")
+            info.destinationContentsDirectory = os.path.join(cls.bundleFrameworkDirectory, info.frameworkName, "Contents")
+            info.destinationVersionContentsDirectory = os.path.join(cls.bundleFrameworkDirectory, info.frameworkName, "Versions", info.version, "Contents")
         
         return info
 
@@ -211,6 +218,7 @@ def getFrameworks(binaryPath, verbose):
     
     libraries = []
     for line in otoolLines:
+        line = line.replace("@loader_path", os.path.dirname(binaryPath))
         info = FrameworkInfo.fromOtoolLibraryLine(line.strip())
         if info is not None:
             if verbose >= 3:
@@ -274,6 +282,13 @@ def copyFramework(framework, path, verbose):
       os.chmod(toPath, permissions.st_mode | stat.S_IWRITE)
 
     if not framework.isDylib(): # Copy resources for real frameworks
+
+        linkfrom = os.path.join(path, "Contents/Frameworks/", framework.frameworkName, framework.binaryName)
+        linkto = os.path.join(framework.binaryPath)
+        if not os.path.exists(linkfrom):
+            os.symlink(linkto, linkfrom)
+            if verbose >= 2:
+                print "Linked:", linkfrom, "->", linkto
         fromResourcesDir = framework.sourceResourcesDirectory
         if os.path.exists(fromResourcesDir):
             toResourcesDir = os.path.join(path, framework.destinationResourcesDirectory)
@@ -281,6 +296,21 @@ def copyFramework(framework, path, verbose):
             if verbose >= 3:
                 print "Copied resources:", fromResourcesDir
                 print " to:", toResourcesDir
+        fromContentsDir = framework.sourceVersionContentsDirectory
+        if not os.path.exists(fromContentsDir):
+            fromContentsDir = framework.sourceContentsDirectory
+        if os.path.exists(fromContentsDir):
+            toContentsDir = os.path.join(path, framework.destinationVersionContentsDirectory)
+            shutil.copytree(fromContentsDir, toContentsDir)
+            contentslinkfrom = os.path.join(path, framework.destinationContentsDirectory)
+            if not os.path.exists(contentslinkfrom):
+                contentslinkto = os.path.join("Versions/", framework.version, "Contents")
+                os.symlink(contentslinkto, contentslinkfrom)
+                if verbose >= 3:
+                    print "Linked:", contentslinkfrom, "->", contentslinkto
+            if verbose >= 3:
+                print "Copied Contents:", fromContentsDir
+                print " to:", toContentsDir
     elif framework.frameworkName.startswith("libQtGui"): # Copy qt_menu.nib (applies to non-framework layout)
         qtMenuNibSourcePath = os.path.join(framework.frameworkDirectory, "Resources", "qt_menu.nib")
         qtMenuNibDestinationPath = os.path.join(path, "Contents", "Resources", "qt_menu.nib")
@@ -307,7 +337,7 @@ def deployFrameworks(frameworks, bundlePath, binaryPath, strip, verbose, deploym
         if deploymentInfo.qtPath is None and framework.isQtFramework():
             deploymentInfo.detectQtPath(framework.frameworkDirectory)
         
-        if framework.installName.startswith("@executable_path"):
+        if framework.installName.startswith("@executable_path") or framework.installName.startswith(bundlePath):
             if verbose >= 2:
                 print framework.frameworkName, "already deployed, skipping."
             continue
@@ -448,6 +478,7 @@ ap.add_argument("-sign", dest="sign", action="store_true", default=False, help="
 ap.add_argument("-dmg", nargs="?", const="", metavar="basename", help="create a .dmg disk image; if basename is not specified, a camel-cased version of the app name is used")
 ap.add_argument("-fancy", nargs=1, metavar="plist", default=[], help="make a fancy looking disk image using the given plist file with instructions; requires -dmg to work")
 ap.add_argument("-add-qt-tr", nargs=1, metavar="languages", default=[], help="add Qt translation files to the bundle's ressources; the language list must be separated with commas, not with whitespace")
+ap.add_argument("-translations-dir", nargs=1, metavar="path", default=None, help="Path to Qt's translation files")
 ap.add_argument("-add-resources", nargs="+", metavar="path", default=[], help="list of additional files or folders to be copied into the bundle's resources; must be the last argument")
 
 config = ap.parse_args()
@@ -465,6 +496,15 @@ if not os.path.exists(app_bundle):
 
 app_bundle_name = os.path.splitext(os.path.basename(app_bundle))[0]
 
+# ------------------------------------------------
+translations_dir = None
+if config.translations_dir and config.translations_dir[0]:
+    if os.path.exists(config.translations_dir[0]):
+        translations_dir = config.translations_dir[0]
+    else:
+        if verbose >= 1:
+            sys.stderr.write("Error: Could not find translation dir \"%s\"\n" % (translations_dir))
+        sys.exit(1)
 # ------------------------------------------------
 
 for p in config.add_resources:
@@ -589,7 +629,14 @@ if config.plugins:
 if len(config.add_qt_tr) == 0:
     add_qt_tr = []
 else:
-    qt_tr_dir = os.path.join(deploymentInfo.qtPath, "translations")
+    if translations_dir is not None:
+        qt_tr_dir = translations_dir
+    else:
+        if deploymentInfo.qtPath is not None:
+            qt_tr_dir = os.path.join(deploymentInfo.qtPath, "translations")
+        else:
+            sys.stderr.write("Error: Could not find Qt translation path\n")
+            sys.exit(1)
     add_qt_tr = ["qt_%s.qm" % lng for lng in config.add_qt_tr[0].split(",")]
     for lng_file in add_qt_tr:
         p = os.path.join(qt_tr_dir, lng_file)
@@ -803,6 +850,7 @@ if config.dmg is not None:
 
         if verbose >= 2:
             print "+ Finalizing .dmg disk image +"
+            time.sleep(5)
         
         try:
             runHDIUtil("convert", dmg_name + ".temp", format="UDBZ", o=dmg_name + ".dmg", ov=True)

@@ -44,7 +44,7 @@ AC_DEFUN([BITCOIN_FIND_BDB48],[
     AC_ARG_WITH([incompatible-bdb],[AS_HELP_STRING([--with-incompatible-bdb], [allow using a bdb version other than 4.8])],[
       AC_MSG_WARN([Found Berkeley DB other than 4.8; wallets opened by this build will not be portable!])
     ],[
-      AC_MSG_ERROR([Found Berkeley DB other than 4.8, required for portable wallets (--with-incompatible-bdb to ignore)])
+      AC_MSG_ERROR([Found Berkeley DB other than 4.8, required for portable wallets (--with-incompatible-bdb to ignore or --disable-wallet to disable wallet functionality)])
     ])
   else
     BITCOIN_SUBDIR_TO_INCLUDE(BDB_CPPFLAGS,[${bdb48path}],db_cxx)
@@ -60,7 +60,7 @@ AC_DEFUN([BITCOIN_FIND_BDB48],[
     ])
   done
   if test "x$BDB_LIBS" = "x"; then
-      AC_MSG_ERROR(libdb_cxx missing)
+      AC_MSG_ERROR([libdb_cxx missing, Bitcoin Core requires this library for wallet functionality (--disable-wallet to disable wallet functionality)])
   fi
   AC_SUBST(BDB_LIBS)
 ])

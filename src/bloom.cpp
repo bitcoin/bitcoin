@@ -5,10 +5,13 @@
 #include "bloom.h"
 
 #include "core.h"
-#include "script.h"
+#include "script/script.h"
+#include "script/standard.h"
 
 #include <math.h>
 #include <stdlib.h>
+
+#include <boost/foreach.hpp>
 
 #define LN2SQUARED 0.4804530139182014246671025263266649717305529515945455
 #define LN2 0.6931471805599453094172321214581765680755001343602552
@@ -94,12 +97,19 @@ bool CBloomFilter::contains(const uint256& hash) const
     return contains(data);
 }
 
+void CBloomFilter::clear()
+{
+    vData.assign(vData.size(),0);
+    isFull = false;
+    isEmpty = true;
+}
+
 bool CBloomFilter::IsWithinSizeConstraints() const
 {
     return vData.size() <= MAX_BLOOM_FILTER_SIZE && nHashFuncs <= MAX_HASH_FUNCS;
 }
 
-bool CBloomFilter::IsRelevantAndUpdate(const CTransaction& tx, const uint256& hash)
+bool CBloomFilter::IsRelevantAndUpdate(const CTransaction& tx)
 {
     bool fFound = false;
     // Match if the filter contains the hash of tx
@@ -108,6 +118,7 @@ bool CBloomFilter::IsRelevantAndUpdate(const CTransaction& tx, const uint256& ha
         return true;
     if (isEmpty)
         return false;
+    const uint256& hash = tx.GetHash();
     if (contains(hash))
         fFound = true;
 

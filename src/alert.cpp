@@ -8,6 +8,7 @@
 #include "chainparams.h"
 #include "key.h"
 #include "net.h"
+#include "timedata.h"
 #include "ui_interface.h"
 #include "util.h"
 
@@ -18,6 +19,7 @@
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/foreach.hpp>
+#include <boost/thread.hpp>
 
 using namespace std;
 
@@ -77,11 +79,6 @@ std::string CUnsignedAlert::ToString() const
         nPriority,
         strComment,
         strStatusBar);
-}
-
-void CUnsignedAlert::print() const
-{
-    LogPrintf("%s", ToString());
 }
 
 void CAlert::SetNull()

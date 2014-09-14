@@ -5,26 +5,23 @@
 
 #include "core.h"
 
-#include "util.h"
+#include "tinyformat.h"
+
+#include <boost/foreach.hpp>
 
 std::string COutPoint::ToString() const
 {
     return strprintf("COutPoint(%s, %u)", hash.ToString().substr(0,10), n);
 }
 
-void COutPoint::print() const
-{
-    LogPrintf("%s\n", ToString());
-}
-
-CTxIn::CTxIn(COutPoint prevoutIn, CScript scriptSigIn, unsigned int nSequenceIn)
+CTxIn::CTxIn(COutPoint prevoutIn, CScript scriptSigIn, uint32_t nSequenceIn)
 {
     prevout = prevoutIn;
     scriptSig = scriptSigIn;
     nSequence = nSequenceIn;
 }
 
-CTxIn::CTxIn(uint256 hashPrevTx, unsigned int nOut, CScript scriptSigIn, unsigned int nSequenceIn)
+CTxIn::CTxIn(uint256 hashPrevTx, uint32_t nOut, CScript scriptSigIn, uint32_t nSequenceIn)
 {
     prevout = COutPoint(hashPrevTx, nOut);
     scriptSig = scriptSigIn;
@@ -46,11 +43,6 @@ std::string CTxIn::ToString() const
     return str;
 }
 
-void CTxIn::print() const
-{
-    LogPrintf("%s\n", ToString());
-}
-
 CTxOut::CTxOut(int64_t nValueIn, CScript scriptPubKeyIn)
 {
     nValue = nValueIn;
@@ -67,11 +59,6 @@ std::string CTxOut::ToString() const
     return strprintf("CTxOut(nValue=%d.%08d, scriptPubKey=%s)", nValue / COIN, nValue % COIN, scriptPubKey.ToString().substr(0,30));
 }
 
-void CTxOut::print() const
-{
-    LogPrintf("%s\n", ToString());
-}
-
 CFeeRate::CFeeRate(int64_t nFeePaid, size_t nSize)
 {
     if (nSize > 0)
@@ -80,20 +67,47 @@ CFeeRate::CFeeRate(int64_t nFeePaid, size_t nSize)
         nSatoshisPerK = 0;
 }
 
-int64_t CFeeRate::GetFee(size_t nSize)
+int64_t CFeeRate::GetFee(size_t nSize) const
 {
-    return nSatoshisPerK*nSize / 1000;
+    int64_t nFee = nSatoshisPerK*nSize / 1000;
+
+    if (nFee == 0 && nSatoshisPerK > 0)
+        nFee = nSatoshisPerK;
+
+    return nFee;
 }
 
 std::string CFeeRate::ToString() const
 {
-    std::string result = FormatMoney(nSatoshisPerK) + " BTC/kB";
-    return result;
+    return strprintf("%d.%08d BTC/kB", nSatoshisPerK / COIN, nSatoshisPerK % COIN);
 }
 
-uint256 CTransaction::GetHash() const
+CMutableTransaction::CMutableTransaction() : nVersion(CTransaction::CURRENT_VERSION), nLockTime(0) {}
+CMutableTransaction::CMutableTransaction(const CTransaction& tx) : nVersion(tx.nVersion), vin(tx.vin), vout(tx.vout), nLockTime(tx.nLockTime) {}
+
+uint256 CMutableTransaction::GetHash() const
 {
     return SerializeHash(*this);
+}
+
+void CTransaction::UpdateHash() const
+{
+    *const_cast<uint256*>(&hash) = SerializeHash(*this);
+}
+
+CTransaction::CTransaction() : hash(0), nVersion(CTransaction::CURRENT_VERSION), vin(), vout(), nLockTime(0) { }
+
+CTransaction::CTransaction(const CMutableTransaction &tx) : nVersion(tx.nVersion), vin(tx.vin), vout(tx.vout), nLockTime(tx.nLockTime) {
+    UpdateHash();
+}
+
+CTransaction& CTransaction::operator=(const CTransaction &tx) {
+    *const_cast<int*>(&nVersion) = tx.nVersion;
+    *const_cast<std::vector<CTxIn>*>(&vin) = tx.vin;
+    *const_cast<std::vector<CTxOut>*>(&vout) = tx.vout;
+    *const_cast<unsigned int*>(&nLockTime) = tx.nLockTime;
+    *const_cast<uint256*>(&hash) = tx.hash;
+    return *this;
 }
 
 int64_t CTransaction::GetValueOut() const
@@ -141,11 +155,6 @@ std::string CTransaction::ToString() const
     for (unsigned int i = 0; i < vout.size(); i++)
         str += "    " + vout[i].ToString() + "\n";
     return str;
-}
-
-void CTransaction::print() const
-{
-    LogPrintf("%s", ToString());
 }
 
 // Amount compression:
@@ -257,9 +266,10 @@ uint256 CBlock::CheckMerkleBranch(uint256 hash, const std::vector<uint256>& vMer
     return hash;
 }
 
-void CBlock::print() const
+std::string CBlock::ToString() const
 {
-    LogPrintf("CBlock(hash=%s, ver=%d, hashPrevBlock=%s, hashMerkleRoot=%s, nTime=%u, nBits=%08x, nNonce=%u, vtx=%u)\n",
+    std::stringstream s;
+    s << strprintf("CBlock(hash=%s, ver=%d, hashPrevBlock=%s, hashMerkleRoot=%s, nTime=%u, nBits=%08x, nNonce=%u, vtx=%u)\n",
         GetHash().ToString(),
         nVersion,
         hashPrevBlock.ToString(),
@@ -268,11 +278,11 @@ void CBlock::print() const
         vtx.size());
     for (unsigned int i = 0; i < vtx.size(); i++)
     {
-        LogPrintf("  ");
-        vtx[i].print();
+        s << "  " << vtx[i].ToString() << "\n";
     }
-    LogPrintf("  vMerkleTree: ");
+    s << "  vMerkleTree: ";
     for (unsigned int i = 0; i < vMerkleTree.size(); i++)
-        LogPrintf("%s ", vMerkleTree[i].ToString());
-    LogPrintf("\n");
+        s << " " << vMerkleTree[i].ToString();
+    s << "\n";
+    return s.str();
 }
