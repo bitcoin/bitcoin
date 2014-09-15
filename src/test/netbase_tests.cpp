@@ -117,6 +117,9 @@ BOOST_AUTO_TEST_CASE(subnet_test)
     BOOST_CHECK(!CSubNet("1:2:3:4:5:6:7:8").Match(CNetAddr("1:2:3:4:5:6:7:9")));
     BOOST_CHECK(CSubNet("1:2:3:4:5:6:7:0/112").Match(CNetAddr("1:2:3:4:5:6:7:1234")));
     // Check wildcards
+    BOOST_CHECK(CSubNet("*") == CSubNet("::/0"));
+    BOOST_CHECK(CSubNet("2001:*") == CSubNet("2001::/16"));
+    BOOST_CHECK(CSubNet("192.*") == CSubNet("192.0.0.0/8"));
     BOOST_CHECK(CSubNet("*").Match(CNetAddr("1:2:3:4:5:6:7:8")));
     BOOST_CHECK(CSubNet("*").Match(CNetAddr("1.2.3.4")));
     BOOST_CHECK(CSubNet("192.*").Match(CNetAddr("192.168.1.1")));
