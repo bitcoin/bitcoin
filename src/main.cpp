@@ -2795,8 +2795,7 @@ FILE* OpenUndoFile(const CDiskBlockPos &pos, bool fReadOnly) {
 
 boost::filesystem::path GetBlockPosFilename(const CDiskBlockPos &pos, const char *prefix)
 {
-    boost::filesystem::path path = GetDataDir() / "blocks" / strprintf("%s%05u.dat", prefix, pos.nFile);
-    return path;  
+    return GetDataDir() / "blocks" / strprintf("%s%05u.dat", prefix, pos.nFile);
 }
 
 CBlockIndex * InsertBlockIndex(uint256 hash)
