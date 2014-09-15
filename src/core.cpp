@@ -234,51 +234,18 @@ uint256 CBlock::BuildMerkleTree() const
     // use something different; don't just copy-and-paste this code without
     // understanding the problem first.
     vMerkleTree.clear();
-    BOOST_FOREACH(const CTransaction& tx, vtx)
+    vMerkleTree.reserve(vtx.size());
+    BOOST_FOREACH(const CTransaction& tx, vtx) {
         vMerkleTree.push_back(tx.GetHash());
-    int j = 0;
-    for (int nSize = vtx.size(); nSize > 1; nSize = (nSize + 1) / 2)
-    {
-        for (int i = 0; i < nSize; i += 2)
-        {
-            int i2 = std::min(i+1, nSize-1);
-            vMerkleTree.push_back(Hash(BEGIN(vMerkleTree[j+i]),  END(vMerkleTree[j+i]),
-                                       BEGIN(vMerkleTree[j+i2]), END(vMerkleTree[j+i2])));
+    }
+    for (int nSize = vtx.size(); nSize > 1; nSize = (nSize + 1) / 2) {
+        for (int i = 0; i < nSize; i += 2) {
+            int i2 = std::min(i + 1, nSize - 1);
+            vMerkleTree[i / 2] = Hash(BEGIN(vMerkleTree[i]),  END(vMerkleTree[i]),
+                                      BEGIN(vMerkleTree[i2]), END(vMerkleTree[i2]));
         }
-        j += nSize;
     }
-    return (vMerkleTree.empty() ? 0 : vMerkleTree.back());
-}
-
-std::vector<uint256> CBlock::GetMerkleBranch(int nIndex) const
-{
-    if (vMerkleTree.empty())
-        BuildMerkleTree();
-    std::vector<uint256> vMerkleBranch;
-    int j = 0;
-    for (int nSize = vtx.size(); nSize > 1; nSize = (nSize + 1) / 2)
-    {
-        int i = std::min(nIndex^1, nSize-1);
-        vMerkleBranch.push_back(vMerkleTree[j+i]);
-        nIndex >>= 1;
-        j += nSize;
-    }
-    return vMerkleBranch;
-}
-
-uint256 CBlock::CheckMerkleBranch(uint256 hash, const std::vector<uint256>& vMerkleBranch, int nIndex)
-{
-    if (nIndex == -1)
-        return 0;
-    BOOST_FOREACH(const uint256& otherside, vMerkleBranch)
-    {
-        if (nIndex & 1)
-            hash = Hash(BEGIN(otherside), END(otherside), BEGIN(hash), END(hash));
-        else
-            hash = Hash(BEGIN(hash), END(hash), BEGIN(otherside), END(otherside));
-        nIndex >>= 1;
-    }
-    return hash;
+    return (vMerkleTree.empty() ? 0 : vMerkleTree.front());
 }
 
 std::string CBlock::ToString() const
@@ -295,9 +262,6 @@ std::string CBlock::ToString() const
     {
         s << "  " << vtx[i].ToString() << "\n";
     }
-    s << "  vMerkleTree: ";
-    for (unsigned int i = 0; i < vMerkleTree.size(); i++)
-        s << " " << vMerkleTree[i].ToString();
     s << "\n";
     return s.str();
 }
