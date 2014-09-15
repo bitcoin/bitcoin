@@ -628,7 +628,7 @@ void StartRPCThreads()
             try {
                 vEndpoints.push_back(ParseEndpoint(addr, defaultPort));
             }
-            catch(boost::system::system_error &e)
+            catch(boost::system::system_error const &)
             {
                 uiInterface.ThreadSafeMessageBox(
                     strprintf(_("Could not parse -rpcbind value %s as network address"), addr),
