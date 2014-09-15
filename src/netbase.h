@@ -105,6 +105,8 @@ class CSubNet
         uint8_t netmask[16];
         /// Is this value valid? (only used to signal parse errors)
         bool valid;
+        /// If not, why?
+        std::string invalidReason;
 
     public:
         CSubNet();
@@ -114,6 +116,7 @@ class CSubNet
 
         std::string ToString() const;
         bool IsValid() const;
+        std::string GetInvalidReason() const;
 
         friend bool operator==(const CSubNet& a, const CSubNet& b);
         friend bool operator!=(const CSubNet& a, const CSubNet& b);

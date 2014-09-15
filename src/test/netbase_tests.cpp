@@ -116,6 +116,13 @@ BOOST_AUTO_TEST_CASE(subnet_test)
     BOOST_CHECK(CSubNet("1:2:3:4:5:6:7:8").Match(CNetAddr("1:2:3:4:5:6:7:8")));
     BOOST_CHECK(!CSubNet("1:2:3:4:5:6:7:8").Match(CNetAddr("1:2:3:4:5:6:7:9")));
     BOOST_CHECK(CSubNet("1:2:3:4:5:6:7:0/112").Match(CNetAddr("1:2:3:4:5:6:7:1234")));
+    // Check wildcards
+    BOOST_CHECK(CSubNet("*").Match(CNetAddr("1:2:3:4:5:6:7:8")));
+    BOOST_CHECK(CSubNet("*").Match(CNetAddr("1.2.3.4")));
+    BOOST_CHECK(CSubNet("192.*").Match(CNetAddr("192.168.1.1")));
+    BOOST_CHECK(!CSubNet("192.*").Match(CNetAddr("193.168.1.1")));
+    BOOST_CHECK(!CSubNet("192.*").Match(CNetAddr("192:2:3:4:5:6:7:8")));
+    BOOST_CHECK(!CSubNet("2001:*").Match(CNetAddr("2002:2:3:4:5:6:7:8")));
     // All-Matching IPv6 Matches arbitrary IPv4 and IPv6
     BOOST_CHECK(CSubNet("::/0").Match(CNetAddr("1:2:3:4:5:6:7:1234")));
     BOOST_CHECK(CSubNet("::/0").Match(CNetAddr("1.2.3.4")));

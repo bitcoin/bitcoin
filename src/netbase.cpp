@@ -1117,58 +1117,186 @@ CSubNet::CSubNet():
 
 CSubNet::CSubNet(const std::string &strSubnet, bool fAllowLookup)
 {
-    size_t slash = strSubnet.find_last_of('/');
     std::vector<CNetAddr> vIP;
-
     valid = true;
+
     // Default to /32 (IPv4) or /128 (IPv6), i.e. match single address
     memset(netmask, 255, sizeof(netmask));
 
-    std::string strAddress = strSubnet.substr(0, slash);
-    if (LookupHost(strAddress.c_str(), vIP, 1, fAllowLookup))
+    int32_t slash_count = std::count(strSubnet.begin(), strSubnet.end(), '/');
+    int32_t star_count = std::count(strSubnet.begin(), strSubnet.end(), '*');
+
+    if (slash_count > 1)
     {
-        network = vIP[0];
-        if (slash != strSubnet.npos)
+        invalidReason = std::string("Cannot have more than one / in subnet");
+        valid = false;
+        return;
+    }
+    if (star_count > 1)
+    {
+        invalidReason = std::string("Cannot have more than one wildcard");
+        valid = false;
+        return;
+    }
+    if (slash_count + star_count > 1)
+    {
+        invalidReason = std::string("Cannot use both wildcard and CIDR notation");
+        valid = false;
+        return;
+    }
+    if (slash_count > 0)
+    {
+        // CIDR notation / netmask notation
+        size_t slash = strSubnet.find_last_of('/');
+
+        std::string strAddress = strSubnet.substr(0, slash);
+        if (!LookupHost(strAddress.c_str(), vIP, 1, fAllowLookup))
         {
-            std::string strNetmask = strSubnet.substr(slash + 1);
-            int32_t n;
-            // IPv4 addresses start at offset 12, and first 12 bytes must match, so just offset n
-            int noffset = network.IsIPv4() ? (12 * 8) : 0;
-            if (ParseInt32(strNetmask, &n)) // If valid number, assume /24 symtex
+            invalidReason = std::string("Invalid IP address");
+            valid = false;
+            return;
+        }
+        network = vIP[0];
+        std::string strNetmask = strSubnet.substr(slash + 1);
+        int32_t n;
+        // IPv4 addresses start at offset 12, and first 12 bytes must match, so just offset n
+        int noffset = network.IsIPv4() ? (12 * 8) : 0;
+        if (ParseInt32(strNetmask, &n)) // If valid number, assume /24 symtex
+        {
+            if(n >= 0 && n <= (128 - noffset)) // Only valid if in range of bits of address
             {
-                if(n >= 0 && n <= (128 - noffset)) // Only valid if in range of bits of address
-                {
-                    n += noffset;
-                    // Clear bits [n..127]
-                    for (; n < 128; ++n)
-                        netmask[n>>3] &= ~(1<<(n&7));
-                }
-                else
-                {
-                    valid = false;
-                }
+                n += noffset;
+                // Clear bits [n..127]
+                for (; n < 128; ++n)
+                    netmask[n>>3] &= ~(1<<(n&7));
             }
-            else // If not a valid number, try full netmask syntax
+            else
             {
-                if (LookupHost(strNetmask.c_str(), vIP, 1, false)) // Never allow lookup for netmask
-                {
-                    // Remember: GetByte returns bytes in reversed order
-                    // Copy only the *last* four bytes in case of IPv4, the rest of the mask should stay 1's as
-                    // we don't want pchIPv4 to be part of the mask.
-                    int asize = network.IsIPv4() ? 4 : 16;
-                    for(int x=0; x<asize; ++x)
-                        netmask[15-x] = vIP[0].GetByte(x);
-                }
-                else
-                {
-                    valid = false;
-                }
+                invalidReason = std::string("Prefix too large or too small. Valid are 0 to 32 for IPv4, and 0 to 128 for IPv6");
+                valid = false;
+                return;
+            }
+        }
+        else // If not a valid number, it might be in format 255.255.255.0
+        {
+            if (LookupHost(strNetmask.c_str(), vIP, 1, false)) // Never allow lookup for netmask
+            {
+                // Remember: GetByte returns bytes in reversed order
+                // Copy only the *last* four bytes in case of IPv4, the rest of the mask should stay 1's as
+                // we don't want pchIPv4 to be part of the mask.
+                int asize = network.IsIPv4() ? 4 : 16;
+                for(int x=0; x<asize; ++x)
+                    netmask[15-x] = vIP[0].GetByte(x);
+            }
+            else
+            {
+                invalidReason = std::string("Invalid subnet mask, valid values are e.g. /8 or /255.0.0.0");
+                valid = false;
+                return;
             }
         }
     }
+    else if (star_count > 0)
+    {
+        // Wildcard notation
+        if (strSubnet.compare("*") == 0)
+        {
+            // Allow all IPv4 and IPv6 addresses
+            memset(netmask, 0, sizeof(netmask));
+            LookupHost("::", vIP, 1, false);
+            network = vIP[0];
+            return;
+        }
+        
+        if (strSubnet.at(strSubnet.length() - 1) != '*')
+        {
+            invalidReason = std::string("Wildcard must be at the end");
+            valid = false;
+            return;
+        }
+
+        // Assume IPv4 unless you see a :
+        bool isIPv4 = !(std::count(strSubnet.begin(), strSubnet.end(), ':') > 0);
+        if (isIPv4)
+        {
+            if (strSubnet.at(strSubnet.length() - 2) != '.')
+            {
+                invalidReason = std::string("Cannot match on incomplete octet. '192.168.*' would be valid");
+                valid = false;
+                return;
+            }
+        }
+        else
+        {
+            if (strSubnet.at(strSubnet.length() - 2) != ':')
+            {
+                invalidReason = std::string("Cannot match on incomplete hextet. 'fe80:*' would be valid");
+                valid = false;
+                return;
+            }
+        }
+        std::string strCompleteAddress;
+        int32_t octets;
+        if (isIPv4)
+        {
+            octets = std::count(strSubnet.begin(), strSubnet.end(), '.');
+            if (octets >= 4)
+            {
+                invalidReason = std::string("Too many octets");
+                valid = false;
+                return;
+            }
+            strCompleteAddress = strSubnet.substr(0, strSubnet.length() - 1);
+            for(int32_t octetsToAdd = 3 - octets; octetsToAdd > 0; octetsToAdd--)
+            {
+                strCompleteAddress += std::string("0.");
+            }
+            strCompleteAddress += std::string("0");
+        }
+        else
+        {
+            int32_t hextets = std::count(strSubnet.begin(), strSubnet.end(), ':');
+            if (hextets >= 8)
+            {
+                invalidReason = std::string("Too many hextets");
+                valid = false;
+                return;
+            }
+            strCompleteAddress = strSubnet.substr(0, strSubnet.length() - 1);
+            for(int32_t hextetsToAdd = 7 - hextets; hextetsToAdd > 0; hextetsToAdd--)
+            {
+                strCompleteAddress += std::string("0:");
+            }
+            strCompleteAddress += std::string("0");
+            octets = hextets * 2; // Each section of an IPv6 addr is two bytes
+        }
+        if (!LookupHost(strCompleteAddress.c_str(), vIP, 1, fAllowLookup))
+        {
+            invalidReason = std::string("Invalid IP address");
+            valid = false;
+            return;
+        }
+        network = vIP[0];
+        int32_t noffset = network.IsIPv4() ? (12 * 8) : 0;
+        int32_t n = noffset + octets * 8;
+        // Clear bits [n..127]
+        for (; n < 128; ++n)
+            netmask[n>>3] &= ~(1<<(n&7));
+    }
     else
     {
-        valid = false;
+        // No wildcard or CIDR notation
+        if (LookupHost(strSubnet.c_str(), vIP, 1, fAllowLookup))
+        {
+            network = vIP[0];
+            // No netmask adjusting needed
+        }
+        else
+        {
+            invalidReason = std::string("Invalid IP address");
+            valid = false;
+            return;
+        }
     }
 }
 
@@ -1199,6 +1327,11 @@ std::string CSubNet::ToString() const
 bool CSubNet::IsValid() const
 {
     return valid;
+}
+
+std::string CSubNet::GetInvalidReason() const
+{
+    return invalidReason;
 }
 
 bool operator==(const CSubNet& a, const CSubNet& b)
