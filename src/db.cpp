@@ -232,7 +232,7 @@ CDB::CDB(const char *pszFile, const char* pszMode) :
     if (pszFile == NULL)
         return;
 
-    bool fCreate = strchr(pszMode, 'c');
+    bool fCreate = strchr(pszMode, 'c') != NULL;
     unsigned int nFlags = DB_THREAD;
     if (fCreate)
         nFlags |= DB_CREATE;

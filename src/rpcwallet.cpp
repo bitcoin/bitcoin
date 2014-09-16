@@ -1536,7 +1536,7 @@ Value gettransaction(const Array& params, bool fHelp)
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid or non-wallet transaction id");
     const CWalletTx& wtx = pwalletMain->mapWallet[hash];
 
-    int64_t nCredit = wtx.GetCredit(filter);
+    int64_t nCredit = wtx.GetCredit(filter != 0);
     int64_t nDebit = wtx.GetDebit(filter);
     int64_t nNet = nCredit - nDebit;
     int64_t nFee = (wtx.IsFromMe(filter) ? wtx.GetValueOut() - nDebit : 0);
