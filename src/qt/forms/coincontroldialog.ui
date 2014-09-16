@@ -363,6 +363,9 @@
           <property name="text">
            <string>(un)select all</string>
           </property>
+          <property name="autoDefault">
+           <bool>false</bool>
+          </property>
          </widget>
         </item>
         <item>
