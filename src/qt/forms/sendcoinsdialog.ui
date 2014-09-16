@@ -109,6 +109,9 @@
             <property name="text">
              <string>Inputs...</string>
             </property>
+            <property name="autoDefault">
+             <bool>false</bool>
+            </property>
            </widget>
           </item>
           <item>
@@ -674,6 +677,9 @@
         <iconset resource="../bitcoin.qrc">
          <normaloff>:/icons/send</normaloff>:/icons/send</iconset>
        </property>
+       <property name="autoDefault">
+        <bool>false</bool>
+       </property>
        <property name="default">
         <bool>true</bool>
        </property>
@@ -696,9 +702,6 @@
        <property name="icon">
         <iconset resource="../bitcoin.qrc">
          <normaloff>:/icons/remove</normaloff>:/icons/remove</iconset>
-       </property>
-       <property name="autoRepeatDelay">
-        <number>300</number>
        </property>
        <property name="autoDefault">
         <bool>false</bool>
