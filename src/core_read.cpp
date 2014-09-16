@@ -3,21 +3,22 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "core_io.h"
+
 #include "core.h"
-#include "serialize.h"
 #include "script/script.h"
+#include "serialize.h"
+#include "univalue/univalue.h"
 #include "util.h"
 
-#include <boost/assign/list_of.hpp>
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/predicate.hpp>
-#include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/replace.hpp>
-#include "univalue/univalue.h"
+#include <boost/algorithm/string/split.hpp>
+#include <boost/assign/list_of.hpp>
 
-using namespace std;
 using namespace boost;
 using namespace boost::algorithm;
+using namespace std;
 
 CScript ParseScript(std::string s)
 {
