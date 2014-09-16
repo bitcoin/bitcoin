@@ -44,6 +44,7 @@ BITCOIN_TESTS =\
   test/checkblock_tests.cpp \
   test/Checkpoints_tests.cpp \
   test/compress_tests.cpp \
+  test/coins_tests.cpp \
   test/crypto_tests.cpp \
   test/DoS_tests.cpp \
   test/getarg_tests.cpp \
