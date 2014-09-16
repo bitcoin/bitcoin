@@ -120,6 +120,7 @@ BITCOIN_CORE_H = \
   version.h \
   walletdb.h \
   wallet.h \
+  zmqports.h \
   compat/sanity.h
 
 JSON_H = \
@@ -162,6 +163,7 @@ libbitcoin_server_a_SOURCES = \
   timedata.cpp \
   txdb.cpp \
   txmempool.cpp \
+  zmqports.cpp \
   $(JSON_H) \
   $(BITCOIN_CORE_H)
 
@@ -271,6 +273,10 @@ bitcoind_LDADD += libbitcoin_wallet.a
 endif
 bitcoind_SOURCES = bitcoind.cpp
 #
+
+if ENABLE_ZMQ
+bitcoind_LDADD += $(ZMQ_LIBS)
+endif
 
 if TARGET_WINDOWS
 bitcoind_SOURCES += bitcoind-res.rc

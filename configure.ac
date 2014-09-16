@@ -114,6 +114,12 @@ AC_ARG_ENABLE([glibc-back-compat],
   [use_glibc_compat=$enableval],
   [use_glibc_compat=no])
 
+AC_ARG_ENABLE([zmq],
+  [AC_HELP_STRING([--disable-zmq],
+  [Disable ZMQ notifications])],
+  [use_zmq=no],
+  [use_zmq=yes])
+
 AC_ARG_WITH([protoc-bindir],[AS_HELP_STRING([--with-protoc-bindir=BIN_DIR],[specify protoc bin path])], [protoc_bin_path=$withval], [])
 
 
@@ -144,7 +150,7 @@ AC_PATH_PROG(XGETTEXT,xgettext)
 AC_PATH_PROG(HEXDUMP,hexdump)
 PKG_PROG_PKG_CONFIG
 
-# Enable debug 
+# Enable debug
 AC_ARG_ENABLE([debug],
     [AS_HELP_STRING([--enable-debug],
                     [use debug compiler flags and macros (default is no)])],
@@ -155,11 +161,11 @@ if test "x$enable_debug" = xyes; then
     if test "x$GCC" = xyes; then
         CFLAGS="-g3 -O0 -DDEBUG"
     fi
-    
+
     if test "x$GXX" = xyes; then
         CXXFLAGS="-g3 -O0 -DDEBUG"
     fi
-fi 
+fi
 
 ## TODO: Remove these hard-coded paths and flags. They are here for the sake of
 ##       compatibility with the legacy buildsystem.
@@ -736,6 +742,22 @@ if test x$bitcoin_enable_qt != xno; then
     AC_MSG_RESULT([no])
   fi
 fi
+
+# conditional search for and use libzmq
+AC_MSG_CHECKING([whether to build ZMQ support])
+if test "x$use_zmq" == "xyes"; then
+  AC_MSG_RESULT([yes])
+  PKG_CHECK_MODULES([ZMQ],[libzmq >= 2.1],
+    [AC_DEFINE([ENABLE_ZMQ],[1],[Define to 1 to enable ZMQ functions])],
+    [AC_DEFINE([ENABLE_ZMQ],[0],[Define to 1 to enable ZMQ functions])
+     AC_MSG_WARN([libzmq >= 2.1 not found, disabling])
+     use_zmq=no])
+else
+  AC_MSG_RESULT([no, --disable-zmq used])
+  AC_DEFINE_UNQUOTED([ENABLE_ZMQ],[0],[Define to 1 to enable ZMQ functions])
+fi
+
+AM_CONDITIONAL([ENABLE_ZMQ], [test "x$use_zmq" = "xyes"])
 
 AC_MSG_CHECKING([whether to build test_bitcoin])
 if test x$use_tests = xyes; then
