@@ -7,9 +7,10 @@
 
 #include "tinyformat.h"
 
-#include <boost/foreach.hpp>
 #include <errno.h>
 #include <limits>
+
+#include <boost/foreach.hpp>
 
 using namespace std;
 
