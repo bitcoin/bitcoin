@@ -5,7 +5,7 @@ SetCompressor /SOLID lzma
 
 # General Symbol Definitions
 !define REGKEY "SOFTWARE\$(^Name)"
-!define VERSION 0.8.7.3
+!define VERSION 0.8.7.4
 !define COMPANY "Litecoin project"
 !define URL http://www.litecoin.org/
 
