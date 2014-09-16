@@ -3,23 +3,24 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "base58.h"
-#include "util.h"
-#include "utilmoneystr.h"
 #include "core.h"
-#include "main.h"         // for MAX_BLOCK_SIZE
+#include "core_io.h"
 #include "keystore.h"
+#include "main.h" // for MAX_BLOCK_SIZE
 #include "script/script.h"
 #include "script/sign.h"
 #include "ui_interface.h" // for _(...)
 #include "univalue/univalue.h"
-#include "core_io.h"
+#include "util.h"
+#include "utilmoneystr.h"
 
 #include <stdio.h>
-#include <boost/assign/list_of.hpp>
-#include <boost/algorithm/string.hpp>
 
-using namespace std;
+#include <boost/algorithm/string.hpp>
+#include <boost/assign/list_of.hpp>
+
 using namespace boost::assign;
+using namespace std;
 
 static bool fCreateBlank;
 static map<string,UniValue> registers;

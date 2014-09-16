@@ -7,10 +7,10 @@
 #define BITCOIN_UINT256_H
 
 #include <assert.h>
+#include <cstring>
 #include <stdexcept>
 #include <stdint.h>
 #include <string>
-#include <cstring>
 #include <vector>
 
 class uint_error : public std::runtime_error {

@@ -8,9 +8,9 @@
 #include <string>
 #include <vector>
 
-class uint256;
 class CScript;
 class CTransaction;
+class uint256;
 class UniValue;
 
 // core_read.cpp

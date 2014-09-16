@@ -13,6 +13,7 @@
 #include "util.h"
 
 #include <boost/foreach.hpp>
+
 #include "json/json_spirit_value.h"
 
 using namespace json_spirit;
