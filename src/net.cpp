@@ -533,10 +533,7 @@ void CNode::PushVersion()
     CAddress addrYou = (addr.IsRoutable() && !IsProxy(addr) ? addr : CAddress(CService("0.0.0.0",0)));
     CAddress addrMe = GetLocalAddress(&addr);
     GetRandBytes((unsigned char*)&nLocalHostNonce, sizeof(nLocalHostNonce));
-    if (fLogIPs)
-        LogPrint("net", "send version message: version %d, blocks=%d, us=%s, them=%s, peer=%d\n", PROTOCOL_VERSION, nBestHeight, addrMe.ToString(), addrYou.ToString(), id);
-    else
-        LogPrint("net", "send version message: version %d, blocks=%d, us=%s, peer=%d\n", PROTOCOL_VERSION, nBestHeight, addrMe.ToString(), id);
+    LogPrint("net", "send version message: blocks=%d, %speer=%d\n", nBestHeight, fLogIPs ? "them=" + addrYou.ToString() + ", " : "", id);
     PushMessage("version", PROTOCOL_VERSION, nLocalServices, nTime, addrYou, addrMe,
                 nLocalHostNonce, FormatSubVersion(CLIENT_NAME, CLIENT_VERSION, std::vector<string>()), nBestHeight, true);
 }
@@ -1749,6 +1746,8 @@ void StartNode(boost::thread_group& threadGroup)
         pnodeLocalHost = new CNode(INVALID_SOCKET, CAddress(CService("127.0.0.1", 0), nLocalServices));
 
     Discover(threadGroup);
+
+    LogPrint("net", "Our version message: %s version %d\n", FormatSubVersion(CLIENT_NAME, CLIENT_VERSION, std::vector<string>()), PROTOCOL_VERSION);
 
     //
     // Start threads
