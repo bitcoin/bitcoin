@@ -27,7 +27,7 @@ matrix:
     - compiler: "true 1"
       env: HOST=arm-linux-gnueabihf PACKAGES="g++-arm-linux-gnueabihf" DEP_OPTS="NO_QT=1" GOAL="install" BITCOIN_CONFIG="--enable-glibc-back-compat"
     - compiler: "true 2"
-      env: HOST=x86_64-unknown-linux-gnu DEP_OPTS="NO_QT=1 NO_WALLET=1 NO_UPNP=1" RUN_TESTS=true GOAL="install" BITCOIN_CONFIG="--enable-glibc-back-compat"
+      env: HOST=x86_64-unknown-linux-gnu DEP_OPTS="NO_QT=1 NO_WALLET=1 NO_UPNP=1" RUN_TESTS=true GOAL="install" BITCOIN_CONFIG="--enable-glibc-back-compat CPPFLAGS=-DDEBUG_LOCKORDER"
     - compiler: "true 3"
       env: HOST=x86_64-unknown-linux-gnu RUN_TESTS=true GOAL="install" BITCOIN_CONFIG="--enable-glibc-back-compat"
     - compiler: "true 4"
@@ -58,6 +58,6 @@ script:
     - cd bitcoin-$HOST
     - ./configure --cache-file=../config.cache $BITCOIN_CONFIG_ALL $BITCOIN_CONFIG || ( cat config.log && false)
     - make $MAKEJOBS $GOAL || ( echo "Build failure. Verbose build follows." && make $GOAL V=1 ; false )
-    - if [ "$RUN_TESTS" = "true" ]; then make check; fi
+    - if [ "$RUN_TESTS" = "true" ]; then travis_retry make check; fi
 after_script:
     - if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then (echo "Upload goes here. Something like: scp -r $BASE_OUTDIR server" || echo "upload failed"); fi
