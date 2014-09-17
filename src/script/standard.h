@@ -6,7 +6,7 @@
 #ifndef H_BITCOIN_SCRIPT_STANDARD
 #define H_BITCOIN_SCRIPT_STANDARD
 
-#include "script/script.h"
+#include "script/destination.h"
 #include "script/interpreter.h"
 
 #include <stdint.h>

@@ -4,6 +4,7 @@
 
 #include "key.h"
 #include "script/script.h"
+#include "script/destination.h"
 #include "uint256.h"
 
 #include <vector>
@@ -38,7 +39,7 @@ BOOST_AUTO_TEST_CASE(GetSigOpCount)
     BOOST_CHECK_EQUAL(s1.GetSigOpCount(false), 21U);
 
     CScript p2sh;
-    p2sh.SetDestination(s1.GetID());
+    SetScriptDestination(p2sh,s1.GetID());
     CScript scriptSig;
     scriptSig << OP_0 << Serialize(s1);
     BOOST_CHECK_EQUAL(p2sh.GetSigOpCount(scriptSig), 3U);
@@ -55,7 +56,7 @@ BOOST_AUTO_TEST_CASE(GetSigOpCount)
     BOOST_CHECK_EQUAL(s2.GetSigOpCount(true), 3U);
     BOOST_CHECK_EQUAL(s2.GetSigOpCount(false), 20U);
 
-    p2sh.SetDestination(s2.GetID());
+    SetScriptDestination(p2sh,s2.GetID());
     BOOST_CHECK_EQUAL(p2sh.GetSigOpCount(true), 0U);
     BOOST_CHECK_EQUAL(p2sh.GetSigOpCount(false), 0U);
     CScript scriptSig2;

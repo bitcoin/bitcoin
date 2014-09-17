@@ -125,7 +125,7 @@ CBitcoinAddress GetAccountAddress(string strAccount, bool bForceNew=false)
     if (account.vchPubKey.IsValid())
     {
         CScript scriptPubKey;
-        scriptPubKey.SetDestination(account.vchPubKey.GetID());
+        SetScriptDestination(scriptPubKey, account.vchPubKey.GetID());
         for (map<uint256, CWalletTx>::iterator it = pwalletMain->mapWallet.begin();
              it != pwalletMain->mapWallet.end() && account.vchPubKey.IsValid();
              ++it)
@@ -475,7 +475,7 @@ Value getreceivedbyaddress(const Array& params, bool fHelp)
     CScript scriptPubKey;
     if (!address.IsValid())
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin address");
-    scriptPubKey.SetDestination(address.Get());
+    SetScriptDestination(scriptPubKey, address.Get());
     if (!IsMine(*pwalletMain,scriptPubKey))
         return (double)0.0;
 
@@ -850,7 +850,7 @@ Value sendmany(const Array& params, bool fHelp)
         setAddress.insert(address);
 
         CScript scriptPubKey;
-        scriptPubKey.SetDestination(address.Get());
+        SetScriptDestination(scriptPubKey, address.Get());
         int64_t nAmount = AmountFromValue(s.value_);
         totalAmount += nAmount;
 

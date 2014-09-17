@@ -7,6 +7,7 @@
 
 #include "key.h"
 #include "keystore.h"
+#include "script/script.h"
 #include "script/standard.h"
 
 #include <boost/foreach.hpp>
@@ -30,7 +31,7 @@ unsigned int HaveKeys(const vector<valtype>& pubkeys, const CKeyStore& keystore)
 isminetype IsMine(const CKeyStore &keystore, const CTxDestination& dest)
 {
     CScript script;
-    script.SetDestination(dest);
+    SetScriptDestination(script, dest);
     return IsMine(keystore, script);
 }
 

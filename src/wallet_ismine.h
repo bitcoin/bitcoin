@@ -7,7 +7,7 @@
 #define H_BITCOIN_WALLET_ISMINE
 
 #include "key.h"
-#include "script/script.h"
+#include "script/destination.h"
 
 class CKeyStore;
 
