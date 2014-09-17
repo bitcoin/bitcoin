@@ -259,16 +259,22 @@ void CScript::SetDestinationNone()
     clear();
 }
 
-void CScript::SetDestinationKeyID(const CKeyID& keyID)
+void CScript::SetDestinationKeyID(const std::vector<unsigned char>& keyID)
 {
     clear();
-    *this << OP_DUP << OP_HASH160 << keyID << OP_EQUALVERIFY << OP_CHECKSIG;
+    *this << OP_DUP << OP_HASH160;
+    insert(end(), keyID.size());
+    insert(end(), keyID.begin(), keyID.end());
+    *this << OP_EQUALVERIFY << OP_CHECKSIG;
 }
 
-void CScript::SetDestinationScriptID(const CScriptID& scriptID)
+void CScript::SetDestinationScriptID(const std::vector<unsigned char>& scriptID)
 {
     clear();
-    *this << OP_HASH160 << scriptID << OP_EQUAL;
+    *this << OP_HASH160;
+    insert(end(), scriptID.size());
+    insert(end(), scriptID.begin(), scriptID.end());
+    *this << OP_EQUAL;
 }
 
 void CScript::SetMultisig(int nRequired, const std::vector<CPubKey>& keys)

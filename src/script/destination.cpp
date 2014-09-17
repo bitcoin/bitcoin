@@ -33,12 +33,14 @@ void SetScriptDestination(CScript& script, const CNoDestination& dest)
 
 void SetScriptDestination(CScript& script, const CKeyID& keyID)
 {
-    script.SetDestinationKeyID(keyID);
+    std::vector<unsigned char> vch(keyID.begin(), keyID.end());
+    script.SetDestinationKeyID(vch);
 }
 
 void SetScriptDestination(CScript& script, const CScriptID& scriptID)
 {
-    script.SetDestinationScriptID(scriptID);
+    std::vector<unsigned char> vch(scriptID.begin(), scriptID.end());
+    script.SetDestinationScriptID(vch);
 }
 
 bool SetScriptDestination(CScript& script, const CTxDestination& dest)

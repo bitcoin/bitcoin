@@ -597,8 +597,8 @@ public:
     }
 
     void SetDestinationNone();
-    void SetDestinationKeyID(const CKeyID& keyID);
-    void SetDestinationScriptID(const CScriptID& scriptID);
+    void SetDestinationKeyID(const std::vector<unsigned char>& keyID);
+    void SetDestinationScriptID(const std::vector<unsigned char>& ScriptID);
 
     void SetMultisig(int nRequired, const std::vector<CPubKey>& keys);
 
