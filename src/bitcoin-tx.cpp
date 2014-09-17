@@ -224,9 +224,8 @@ static void MutateTxAddOutAddr(CMutableTransaction& tx, const string& strInput)
     if (!addr.IsValid())
         throw runtime_error("invalid TX output address");
 
-    // build standard output script via SetDestination()
-    CScript scriptPubKey;
-    scriptPubKey.SetDestination(addr.Get());
+    // build standard output script via GetScriptForDestination()
+    CScript scriptPubKey = GetScriptForDestination(addr.Get());
 
     // construct TxOut, append to transaction output list
     CTxOut txout(value, scriptPubKey);
