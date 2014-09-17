@@ -68,14 +68,14 @@ BOOST_AUTO_TEST_CASE(sign)
     // different keys, straight/P2SH, pubkey/pubkeyhash
     CScript standardScripts[4];
     standardScripts[0] << key[0].GetPubKey() << OP_CHECKSIG;
-    standardScripts[1].SetDestination(key[1].GetPubKey().GetID());
+    SetScriptDestination(standardScripts[1], key[1].GetPubKey().GetID());
     standardScripts[2] << key[1].GetPubKey() << OP_CHECKSIG;
-    standardScripts[3].SetDestination(key[2].GetPubKey().GetID());
+    SetScriptDestination(standardScripts[3], key[2].GetPubKey().GetID());
     CScript evalScripts[4];
     for (int i = 0; i < 4; i++)
     {
         keystore.AddCScript(standardScripts[i]);
-        evalScripts[i].SetDestination(standardScripts[i].GetID());
+        SetScriptDestination(evalScripts[i], standardScripts[i].GetID());
     }
 
     CMutableTransaction txFrom;  // Funding transaction:
@@ -130,7 +130,7 @@ BOOST_AUTO_TEST_CASE(norecurse)
     invalidAsScript << OP_INVALIDOPCODE << OP_INVALIDOPCODE;
 
     CScript p2sh;
-    p2sh.SetDestination(invalidAsScript.GetID());
+    SetScriptDestination(p2sh, invalidAsScript.GetID());
 
     CScript scriptSig;
     scriptSig << Serialize(invalidAsScript);
@@ -141,7 +141,7 @@ BOOST_AUTO_TEST_CASE(norecurse)
     // Try to recur, and verification should succeed because
     // the inner HASH160 <> EQUAL should only check the hash:
     CScript p2sh2;
-    p2sh2.SetDestination(p2sh.GetID());
+    SetScriptDestination(p2sh2, p2sh.GetID());
     CScript scriptSig2;
     scriptSig2 << Serialize(invalidAsScript) << Serialize(p2sh);
 
@@ -163,7 +163,7 @@ BOOST_AUTO_TEST_CASE(set)
     }
 
     CScript inner[4];
-    inner[0].SetDestination(key[0].GetPubKey().GetID());
+    SetScriptDestination(inner[0], key[0].GetPubKey().GetID());
     inner[1].SetMultisig(2, std::vector<CPubKey>(keys.begin(), keys.begin()+2));
     inner[2].SetMultisig(1, std::vector<CPubKey>(keys.begin(), keys.begin()+2));
     inner[3].SetMultisig(2, std::vector<CPubKey>(keys.begin(), keys.begin()+3));
@@ -171,7 +171,7 @@ BOOST_AUTO_TEST_CASE(set)
     CScript outer[4];
     for (int i = 0; i < 4; i++)
     {
-        outer[i].SetDestination(inner[i].GetID());
+        SetScriptDestination(outer[i], inner[i].GetID());
         keystore.AddCScript(inner[i]);
     }
 
@@ -245,7 +245,7 @@ BOOST_AUTO_TEST_CASE(switchover)
     scriptSig << Serialize(notValid);
 
     CScript fund;
-    fund.SetDestination(notValid.GetID());
+    SetScriptDestination(fund, notValid.GetID());
 
 
     // Validation should succeed under old rules (hash is correct):
@@ -274,11 +274,11 @@ BOOST_AUTO_TEST_CASE(AreInputsStandard)
     txFrom.vout.resize(7);
 
     // First three are standard:
-    CScript pay1; pay1.SetDestination(key[0].GetPubKey().GetID());
+    CScript pay1; SetScriptDestination(pay1, key[0].GetPubKey().GetID());
     keystore.AddCScript(pay1);
     CScript pay1of3; pay1of3.SetMultisig(1, keys);
 
-    txFrom.vout[0].scriptPubKey.SetDestination(pay1.GetID()); // P2SH (OP_CHECKSIG)
+    SetScriptDestination(txFrom.vout[0].scriptPubKey, pay1.GetID()); // P2SH (OP_CHECKSIG)
     txFrom.vout[0].nValue = 1000;
     txFrom.vout[1].scriptPubKey = pay1; // ordinary OP_CHECKSIG
     txFrom.vout[1].nValue = 2000;
@@ -293,7 +293,7 @@ BOOST_AUTO_TEST_CASE(AreInputsStandard)
     oneAndTwo << OP_2 << key[3].GetPubKey() << key[4].GetPubKey() << key[5].GetPubKey();
     oneAndTwo << OP_3 << OP_CHECKMULTISIG;
     keystore.AddCScript(oneAndTwo);
-    txFrom.vout[3].scriptPubKey.SetDestination(oneAndTwo.GetID());
+    SetScriptDestination(txFrom.vout[3].scriptPubKey, oneAndTwo.GetID());
     txFrom.vout[3].nValue = 4000;
 
     // vout[4] is max sigops:
@@ -302,17 +302,17 @@ BOOST_AUTO_TEST_CASE(AreInputsStandard)
         fifteenSigops << key[i%3].GetPubKey();
     fifteenSigops << OP_15 << OP_CHECKMULTISIG;
     keystore.AddCScript(fifteenSigops);
-    txFrom.vout[4].scriptPubKey.SetDestination(fifteenSigops.GetID());
+    SetScriptDestination(txFrom.vout[4].scriptPubKey, fifteenSigops.GetID());
     txFrom.vout[4].nValue = 5000;
 
     // vout[5/6] are non-standard because they exceed MAX_P2SH_SIGOPS
     CScript sixteenSigops; sixteenSigops << OP_16 << OP_CHECKMULTISIG;
     keystore.AddCScript(sixteenSigops);
-    txFrom.vout[5].scriptPubKey.SetDestination(fifteenSigops.GetID());
+    SetScriptDestination(txFrom.vout[5].scriptPubKey, fifteenSigops.GetID());
     txFrom.vout[5].nValue = 5000;
     CScript twentySigops; twentySigops << OP_CHECKMULTISIG;
     keystore.AddCScript(twentySigops);
-    txFrom.vout[6].scriptPubKey.SetDestination(twentySigops.GetID());
+    SetScriptDestination(txFrom.vout[6].scriptPubKey, twentySigops.GetID());
     txFrom.vout[6].nValue = 6000;
 
 
@@ -320,7 +320,7 @@ BOOST_AUTO_TEST_CASE(AreInputsStandard)
 
     CMutableTransaction txTo;
     txTo.vout.resize(1);
-    txTo.vout[0].scriptPubKey.SetDestination(key[1].GetPubKey().GetID());
+    SetScriptDestination(txTo.vout[0].scriptPubKey, key[1].GetPubKey().GetID());
 
     txTo.vin.resize(5);
     for (int i = 0; i < 5; i++)
@@ -352,7 +352,7 @@ BOOST_AUTO_TEST_CASE(AreInputsStandard)
 
     CMutableTransaction txToNonStd1;
     txToNonStd1.vout.resize(1);
-    txToNonStd1.vout[0].scriptPubKey.SetDestination(key[1].GetPubKey().GetID());
+    SetScriptDestination(txToNonStd1.vout[0].scriptPubKey, key[1].GetPubKey().GetID());
     txToNonStd1.vout[0].nValue = 1000;
     txToNonStd1.vin.resize(1);
     txToNonStd1.vin[0].prevout.n = 5;
@@ -364,7 +364,7 @@ BOOST_AUTO_TEST_CASE(AreInputsStandard)
 
     CMutableTransaction txToNonStd2;
     txToNonStd2.vout.resize(1);
-    txToNonStd2.vout[0].scriptPubKey.SetDestination(key[1].GetPubKey().GetID());
+    SetScriptDestination(txToNonStd2.vout[0].scriptPubKey, key[1].GetPubKey().GetID());
     txToNonStd2.vout[0].nValue = 1000;
     txToNonStd2.vin.resize(1);
     txToNonStd2.vin[0].prevout.n = 6;

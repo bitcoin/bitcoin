@@ -254,34 +254,27 @@ bool CScript::HasCanonicalPushes() const
     return true;
 }
 
-class CScriptVisitor : public boost::static_visitor<bool>
+void CScript::SetDestinationNone()
 {
-private:
-    CScript *script;
-public:
-    CScriptVisitor(CScript *scriptin) { script = scriptin; }
+    clear();
+}
 
-    bool operator()(const CNoDestination &dest) const {
-        script->clear();
-        return false;
-    }
-
-    bool operator()(const CKeyID &keyID) const {
-        script->clear();
-        *script << OP_DUP << OP_HASH160 << keyID << OP_EQUALVERIFY << OP_CHECKSIG;
-        return true;
-    }
-
-    bool operator()(const CScriptID &scriptID) const {
-        script->clear();
-        *script << OP_HASH160 << scriptID << OP_EQUAL;
-        return true;
-    }
-};
-
-void CScript::SetDestination(const CTxDestination& dest)
+void CScript::SetDestinationKeyID(const std::vector<unsigned char>& keyID)
 {
-    boost::apply_visitor(CScriptVisitor(this), dest);
+    clear();
+    *this << OP_DUP << OP_HASH160;
+    insert(end(), keyID.size());
+    insert(end(), keyID.begin(), keyID.end());
+    *this << OP_EQUALVERIFY << OP_CHECKSIG;
+}
+
+void CScript::SetDestinationScriptID(const std::vector<unsigned char>& scriptID)
+{
+    clear();
+    *this << OP_HASH160;
+    insert(end(), scriptID.size());
+    insert(end(), scriptID.begin(), scriptID.end());
+    *this << OP_EQUAL;
 }
 
 void CScript::SetMultisig(int nRequired, const std::vector<CPubKey>& keys)

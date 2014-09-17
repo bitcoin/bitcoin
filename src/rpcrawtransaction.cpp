@@ -367,7 +367,7 @@ Value createrawtransaction(const Array& params, bool fHelp)
         setAddress.insert(address);
 
         CScript scriptPubKey;
-        scriptPubKey.SetDestination(address.Get());
+        SetScriptDestination(scriptPubKey, address.Get());
         int64_t nAmount = AmountFromValue(s.value_);
 
         CTxOut out(nAmount, scriptPubKey);
