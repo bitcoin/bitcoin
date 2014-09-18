@@ -36,34 +36,6 @@ is now used for building release versions.
 The installation of the actual dependencies is covered in the Instructions
 sections below.
 
-Instructions: MacPorts
-----------------------
-
-### Install dependencies
-
-    sudo port install boost db48@+no_java openssl miniupnpc autoconf pkgconfig automake libtool
-
-Optional: install Qt4
-
-    sudo port install qt4-mac qrencode protobuf-cpp
-
-### Building `bitcoind`
-
-1. Clone the github tree to get the source code and go into the directory.
-
-        git clone git@github.com:bitcoin/bitcoin.git bitcoin
-        cd bitcoin
-
-2.  Build bitcoind (and Bitcoin-Qt, if configured):
-
-        ./autogen.sh
-        ./configure
-        make
-
-3.  It is a good idea to build and run the unit tests, too:
-
-        make check
-
 Instructions: Homebrew
 ----------------------
 
@@ -108,6 +80,34 @@ After exiting, you'll get a warning that the install is keg-only, which means it
         make
 
 3.  It is also a good idea to build and run the unit tests:
+
+        make check
+
+Instructions: MacPorts
+----------------------
+
+### Install dependencies
+
+    sudo port install boost db48@+no_java openssl miniupnpc autoconf pkgconfig automake libtool
+
+Optional: install Qt4
+
+    sudo port install qt4-mac qrencode protobuf-cpp
+
+### Building `bitcoind`
+
+1. Clone the github tree to get the source code and go into the directory.
+
+        git clone git@github.com:bitcoin/bitcoin.git bitcoin
+        cd bitcoin
+
+2.  Build bitcoind (and Bitcoin-Qt, if configured):
+
+        ./autogen.sh
+        ./configure
+        make
+
+3.  It is a good idea to build and run the unit tests, too:
 
         make check
 
