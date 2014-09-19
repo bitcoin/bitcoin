@@ -13,20 +13,20 @@ class uint256;
 /** Block-chain checkpoints are compiled-in sanity checks.
  * They are updated every release or three.
  */
-namespace Checkpoints {
+namespace Checkpoints
+{
+// Returns true if block passes checkpoint checks
+bool CheckBlock(int nHeight, const uint256& hash);
 
-    // Returns true if block passes checkpoint checks
-    bool CheckBlock(int nHeight, const uint256& hash);
+// Return conservative estimate of total number of blocks, 0 if unknown
+int GetTotalBlocksEstimate();
 
-    // Return conservative estimate of total number of blocks, 0 if unknown
-    int GetTotalBlocksEstimate();
+// Returns last CBlockIndex* in mapBlockIndex that is a checkpoint
+CBlockIndex* GetLastCheckpoint();
 
-    // Returns last CBlockIndex* in mapBlockIndex that is a checkpoint
-    CBlockIndex* GetLastCheckpoint();
+double GuessVerificationProgress(CBlockIndex* pindex, bool fSigchecks = true);
 
-    double GuessVerificationProgress(CBlockIndex *pindex, bool fSigchecks = true);
-
-    extern bool fEnabled;
+extern bool fEnabled;
 
 } //namespace Checkpoints
 
