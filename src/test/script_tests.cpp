@@ -52,6 +52,41 @@ read_json(const std::string& jsondata)
 
 BOOST_AUTO_TEST_SUITE(script_tests)
 
+CMutableTransaction BuildCreditingTransaction(const CScript& scriptPubKey)
+{
+    CMutableTransaction txCredit;
+    txCredit.nVersion = 1;
+    txCredit.nLockTime = 0;
+    txCredit.vin.resize(1);
+    txCredit.vout.resize(1);
+    txCredit.vin[0].prevout.SetNull();
+    txCredit.vin[0].scriptSig = CScript() << CScriptNum(0) << CScriptNum(0);
+    txCredit.vin[0].nSequence = std::numeric_limits<unsigned int>::max();
+    txCredit.vout[0].scriptPubKey = scriptPubKey;
+    txCredit.vout[0].nValue = 0;
+
+    return txCredit;
+}
+
+CMutableTransaction BuildSpendingTransaction(const CScript& scriptSig, const CScript& scriptPubKey)
+{
+    CMutableTransaction txCredit = BuildCreditingTransaction(scriptPubKey);
+
+    CMutableTransaction txSpend;
+    txSpend.nVersion = 1;
+    txSpend.nLockTime = 0;
+    txSpend.vin.resize(1);
+    txSpend.vout.resize(1);
+    txSpend.vin[0].prevout.hash = txCredit.GetHash();
+    txSpend.vin[0].prevout.n = 0;
+    txSpend.vin[0].scriptSig = scriptSig;
+    txSpend.vin[0].nSequence = std::numeric_limits<unsigned int>::max();
+    txSpend.vout[0].scriptPubKey = CScript();
+    txSpend.vout[0].nValue = 0;
+
+    return txSpend;
+}
+
 BOOST_AUTO_TEST_CASE(script_valid)
 {
     // Read tests from test/data/script_valid.json
@@ -67,7 +102,9 @@ BOOST_AUTO_TEST_CASE(script_valid)
         string strTest = write_string(tv, false);
         if (test.size() < 3) // Allow size > 3; extra stuff ignored (useful for comments)
         {
-            BOOST_ERROR("Bad test: " << strTest);
+            if (test.size() != 1) {
+                BOOST_ERROR("Bad test: " << strTest);
+            }
             continue;
         }
         string scriptSigString = test[0].get_str();
@@ -77,7 +114,7 @@ BOOST_AUTO_TEST_CASE(script_valid)
         unsigned int scriptflags = ParseScriptFlags(test[2].get_str());
 
         CTransaction tx;
-        BOOST_CHECK_MESSAGE(VerifyScript(scriptSig, scriptPubKey, tx, 0, scriptflags), strTest);
+        BOOST_CHECK_MESSAGE(VerifyScript(scriptSig, scriptPubKey, BuildSpendingTransaction(scriptSig, scriptPubKey), 0, scriptflags), strTest);
     }
 }
 
@@ -90,9 +127,11 @@ BOOST_AUTO_TEST_CASE(script_invalid)
     {
         Array test = tv.get_array();
         string strTest = write_string(tv, false);
-        if (test.size() < 2) // Allow size > 2; extra stuff ignored (useful for comments)
+        if (test.size() < 3) // Allow size > 3; extra stuff ignored (useful for comments)
         {
-            BOOST_ERROR("Bad test: " << strTest);
+            if (test.size() != 1) {
+                BOOST_ERROR("Bad test: " << strTest);
+            }
             continue;
         }
         string scriptSigString = test[0].get_str();
@@ -102,7 +141,7 @@ BOOST_AUTO_TEST_CASE(script_invalid)
         unsigned int scriptflags = ParseScriptFlags(test[2].get_str());
 
         CTransaction tx;
-        BOOST_CHECK_MESSAGE(!VerifyScript(scriptSig, scriptPubKey, tx, 0, scriptflags), strTest);
+        BOOST_CHECK_MESSAGE(!VerifyScript(scriptSig, scriptPubKey, BuildSpendingTransaction(scriptSig, scriptPubKey), 0, scriptflags), strTest);
     }
 }
 

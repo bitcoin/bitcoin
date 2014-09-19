@@ -1,4 +1,13 @@
 [
+["
+Format is: [scriptPubKey, scriptSig, flags, ... comments]
+It is evaluated as if there was a crediting coinbase transaction with two 0
+pushes as scriptSig, and one output of 0 satoshi and given scriptPubKey,
+followed by a spending transaction which spends this output as only input (and
+correct prevout hash), using the given scriptSig. All nLockTimes are 0, all
+nSequences are max.
+"],
+
 ["", "DEPTH 0 EQUAL", "P2SH,STRICTENC", "Test the test: we should have an empty stack after scriptSig evaluation"],
 ["  ", "DEPTH 0 EQUAL", "P2SH,STRICTENC", "and multiple spaces should not change that."],
 ["   ", "DEPTH 0 EQUAL", "P2SH,STRICTENC"],
