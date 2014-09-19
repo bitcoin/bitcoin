@@ -1,6 +1,6 @@
 #include "hash.h"
 
-inline uint32_t ROTL32 ( uint32_t x, int8_t r )
+inline uint32_t ROTL32(uint32_t x, int8_t r)
 {
     return (x << r) | (x >> (32 - r));
 }
@@ -16,33 +16,37 @@ unsigned int MurmurHash3(unsigned int nHashSeed, const std::vector<unsigned char
 
     //----------
     // body
-    const uint32_t * blocks = (const uint32_t *)(&vDataToHash[0] + nblocks*4);
+    const uint32_t* blocks = (const uint32_t*)(&vDataToHash[0] + nblocks * 4);
 
-    for(int i = -nblocks; i; i++)
-    {
+    for (int i = -nblocks; i; i++) {
         uint32_t k1 = blocks[i];
 
         k1 *= c1;
-        k1 = ROTL32(k1,15);
+        k1 = ROTL32(k1, 15);
         k1 *= c2;
 
         h1 ^= k1;
-        h1 = ROTL32(h1,13); 
-        h1 = h1*5+0xe6546b64;
+        h1 = ROTL32(h1, 13);
+        h1 = h1 * 5 + 0xe6546b64;
     }
 
     //----------
     // tail
-    const uint8_t * tail = (const uint8_t*)(&vDataToHash[0] + nblocks*4);
+    const uint8_t* tail = (const uint8_t*)(&vDataToHash[0] + nblocks * 4);
 
     uint32_t k1 = 0;
 
-    switch(vDataToHash.size() & 3)
-    {
-    case 3: k1 ^= tail[2] << 16;
-    case 2: k1 ^= tail[1] << 8;
-    case 1: k1 ^= tail[0];
-            k1 *= c1; k1 = ROTL32(k1,15); k1 *= c2; h1 ^= k1;
+    switch (vDataToHash.size() & 3) {
+    case 3:
+        k1 ^= tail[2] << 16;
+    case 2:
+        k1 ^= tail[1] << 8;
+    case 1:
+        k1 ^= tail[0];
+        k1 *= c1;
+        k1 = ROTL32(k1, 15);
+        k1 *= c2;
+        h1 ^= k1;
     };
 
     //----------
