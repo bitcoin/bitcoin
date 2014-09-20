@@ -12,6 +12,7 @@
 #include "timedata.h"
 #include "util.h"
 
+#include <boost/assign/list_of.hpp>
 #include <boost/foreach.hpp>
 #include "json/json_spirit_value.h"
 
@@ -412,4 +413,32 @@ Value getnetworkinfo(const Array& params, bool fHelp)
     }
     obj.push_back(Pair("localaddresses", localAddresses));
     return obj;
+}
+
+Value disconnectpeer(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 1)
+        throw runtime_error(
+            "disconnectpeer id\n"
+            "Disconnect peer with given id\n"
+            "(id as reported by getpeerinfo).\n"
+            "\nExamples:\n"
+            + HelpExampleCli("disconnectpeer", "11")
+            + HelpExampleRpc("disconnectpeer", "11")
+        );
+
+    RPCTypeCheck(params, boost::assign::list_of(int_type));
+
+    int node_id = params[0].get_int();
+
+    LOCK(cs_vNodes);
+    BOOST_FOREACH(CNode* node, vNodes)
+    {
+        if (node->GetId() == node_id)
+        {
+            node->CloseSocketDisconnect();
+            return Value::null;
+        }
+    }
+    throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid peer id");
 }
