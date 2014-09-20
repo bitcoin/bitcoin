@@ -26,6 +26,7 @@ public:
     const std::string& DataDir() const { return strDataDir; }
     int RPCPort() const { return nRPCPort; }
     Network NetworkID() const { return networkID; }
+
 protected:
     CBaseChainParams() {}
 
@@ -38,7 +39,7 @@ protected:
  * Return the currently selected parameters. This won't change after app startup
  * outside of the unit tests.
  */
-const CBaseChainParams &BaseParams();
+const CBaseChainParams& BaseParams();
 
 /** Sets the params returned by Params() to those for the given network. */
 void SelectBaseParams(CBaseChainParams::Network network);
