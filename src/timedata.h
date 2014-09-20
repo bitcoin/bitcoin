@@ -15,15 +15,16 @@ class CNetAddr;
 /** Median filter over a stream of values.
  * Returns the median of the last N numbers
  */
-template <typename T> class CMedianFilter
+template <typename T>
+class CMedianFilter
 {
 private:
     std::vector<T> vValues;
     std::vector<T> vSorted;
     unsigned int nSize;
+
 public:
-    CMedianFilter(unsigned int size, T initial_value):
-        nSize(size)
+    CMedianFilter(unsigned int size, T initial_value) : nSize(size)
     {
         vValues.reserve(size);
         vValues.push_back(initial_value);
@@ -32,8 +33,7 @@ public:
 
     void input(T value)
     {
-        if(vValues.size() == nSize)
-        {
+        if (vValues.size() == nSize) {
             vValues.erase(vValues.begin());
         }
         vValues.push_back(value);
@@ -46,14 +46,13 @@ public:
     T median() const
     {
         int size = vSorted.size();
-        assert(size>0);
-        if(size & 1) // Odd number of elements
+        assert(size > 0);
+        if (size & 1) // Odd number of elements
         {
-            return vSorted[size/2];
-        }
-        else // Even number of elements
+            return vSorted[size / 2];
+        } else // Even number of elements
         {
-            return (vSorted[size/2-1] + vSorted[size/2]) / 2;
+            return (vSorted[size / 2 - 1] + vSorted[size / 2]) / 2;
         }
     }
 
@@ -62,7 +61,7 @@ public:
         return vValues.size();
     }
 
-    std::vector<T> sorted () const
+    std::vector<T> sorted() const
     {
         return vSorted;
     }

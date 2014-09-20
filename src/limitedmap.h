@@ -9,7 +9,8 @@
 #include <map>
 
 /** STL-like map container that only keeps the N elements with the highest value. */
-template <typename K, typename V> class limitedmap
+template <typename K, typename V>
+class limitedmap
 {
 public:
     typedef K key_type;
@@ -36,10 +37,8 @@ public:
     void insert(const value_type& x)
     {
         std::pair<iterator, bool> ret = map.insert(x);
-        if (ret.second)
-        {
-            if (nMaxSize && map.size() == nMaxSize)
-            {
+        if (ret.second) {
+            if (nMaxSize && map.size() == nMaxSize) {
                 map.erase(rmap.begin()->second);
                 rmap.erase(rmap.begin());
             }
@@ -54,8 +53,7 @@ public:
             return;
         std::pair<rmap_iterator, rmap_iterator> itPair = rmap.equal_range(itTarget->second);
         for (rmap_iterator it = itPair.first; it != itPair.second; ++it)
-            if (it->second == itTarget)
-            {
+            if (it->second == itTarget) {
                 rmap.erase(it);
                 map.erase(itTarget);
                 return;
@@ -72,8 +70,7 @@ public:
             return;
         std::pair<rmap_iterator, rmap_iterator> itPair = rmap.equal_range(itTarget->second);
         for (rmap_iterator it = itPair.first; it != itPair.second; ++it)
-            if (it->second == itTarget)
-            {
+            if (it->second == itTarget) {
                 rmap.erase(it);
                 itTarget->second = v;
                 rmap.insert(make_pair(v, itTarget));
@@ -88,8 +85,7 @@ public:
     size_type max_size(size_type s)
     {
         if (s)
-            while (map.size() > s)
-            {
+            while (map.size() > s) {
                 map.erase(rmap.begin()->second);
                 rmap.erase(rmap.begin());
             }
