@@ -17,6 +17,41 @@
 
 using namespace std;
 
+string FormatScript(const CScript& script)
+{
+    string ret;
+    CScript::const_iterator it = script.begin();
+    opcodetype op;
+    while (it != script.end()) {
+        CScript::const_iterator it2 = it;
+        vector<unsigned char> vch;
+        if (script.GetOp2(it, op, &vch)) {
+            if (op == OP_0) {
+                ret += "0 ";
+                continue;
+            } else if ((op >= OP_1 && op <= OP_16) || op == OP_1NEGATE) {
+                ret += strprintf("%i ", op - OP_1NEGATE - 1);
+                continue;
+            } else if (op >= OP_NOP && op <= OP_CHECKMULTISIGVERIFY) {
+                string str(GetOpName(op));
+                if (str.substr(0, 3) == string("OP_")) {
+                    ret += str.substr(3, string::npos) + " ";
+                    continue;
+                }
+            }
+            if (vch.size() > 0) {
+                ret += strprintf("0x%x 0x%x ", HexStr(it2, it - vch.size()), HexStr(it - vch.size(), it));
+            } else {
+                ret += strprintf("0x%x", HexStr(it2, it));
+            }
+            continue;
+        }
+        ret += strprintf("0x%x ", HexStr(it2, script.end()));
+        break;
+    }
+    return ret.substr(0, ret.size() - 1);
+}
+
 string EncodeHexTx(const CTransaction& tx)
 {
     CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
