@@ -17,10 +17,10 @@
 class leveldb_error : public std::runtime_error
 {
 public:
-    leveldb_error(const std::string &msg) : std::runtime_error(msg) {}
+    leveldb_error(const std::string& msg) : std::runtime_error(msg) {}
 };
 
-void HandleError(const leveldb::Status &status) throw(leveldb_error);
+void HandleError(const leveldb::Status& status) throw(leveldb_error);
 
 // Batch of changes queued to be written to a CLevelDBWrapper
 class CLevelDBBatch
@@ -31,7 +31,9 @@ private:
     leveldb::WriteBatch batch;
 
 public:
-    template<typename K, typename V> void Write(const K& key, const V& value) {
+    template <typename K, typename V>
+    void Write(const K& key, const V& value)
+    {
         CDataStream ssKey(SER_DISK, CLIENT_VERSION);
         ssKey.reserve(ssKey.GetSerializeSize(key));
         ssKey << key;
@@ -45,7 +47,9 @@ public:
         batch.Put(slKey, slValue);
     }
 
-    template<typename K> void Erase(const K& key) {
+    template <typename K>
+    void Erase(const K& key)
+    {
         CDataStream ssKey(SER_DISK, CLIENT_VERSION);
         ssKey.reserve(ssKey.GetSerializeSize(key));
         ssKey << key;
@@ -59,7 +63,7 @@ class CLevelDBWrapper
 {
 private:
     // custom environment this database is using (may be NULL in case of default environment)
-    leveldb::Env *penv;
+    leveldb::Env* penv;
 
     // database options used
     leveldb::Options options;
@@ -77,13 +81,15 @@ private:
     leveldb::WriteOptions syncoptions;
 
     // the database itself
-    leveldb::DB *pdb;
+    leveldb::DB* pdb;
 
 public:
-    CLevelDBWrapper(const boost::filesystem::path &path, size_t nCacheSize, bool fMemory = false, bool fWipe = false);
+    CLevelDBWrapper(const boost::filesystem::path& path, size_t nCacheSize, bool fMemory = false, bool fWipe = false);
     ~CLevelDBWrapper();
 
-    template<typename K, typename V> bool Read(const K& key, V& value) const throw(leveldb_error) {
+    template <typename K, typename V>
+    bool Read(const K& key, V& value) const throw(leveldb_error)
+    {
         CDataStream ssKey(SER_DISK, CLIENT_VERSION);
         ssKey.reserve(ssKey.GetSerializeSize(key));
         ssKey << key;
@@ -100,19 +106,23 @@ public:
         try {
             CDataStream ssValue(strValue.data(), strValue.data() + strValue.size(), SER_DISK, CLIENT_VERSION);
             ssValue >> value;
-        } catch(const std::exception &) {
+        } catch (const std::exception&) {
             return false;
         }
         return true;
     }
 
-    template<typename K, typename V> bool Write(const K& key, const V& value, bool fSync = false) throw(leveldb_error) {
+    template <typename K, typename V>
+    bool Write(const K& key, const V& value, bool fSync = false) throw(leveldb_error)
+    {
         CLevelDBBatch batch;
         batch.Write(key, value);
         return WriteBatch(batch, fSync);
     }
 
-    template<typename K> bool Exists(const K& key) const throw(leveldb_error) {
+    template <typename K>
+    bool Exists(const K& key) const throw(leveldb_error)
+    {
         CDataStream ssKey(SER_DISK, CLIENT_VERSION);
         ssKey.reserve(ssKey.GetSerializeSize(key));
         ssKey << key;
@@ -129,26 +139,31 @@ public:
         return true;
     }
 
-    template<typename K> bool Erase(const K& key, bool fSync = false) throw(leveldb_error) {
+    template <typename K>
+    bool Erase(const K& key, bool fSync = false) throw(leveldb_error)
+    {
         CLevelDBBatch batch;
         batch.Erase(key);
         return WriteBatch(batch, fSync);
     }
 
-    bool WriteBatch(CLevelDBBatch &batch, bool fSync = false) throw(leveldb_error);
+    bool WriteBatch(CLevelDBBatch& batch, bool fSync = false) throw(leveldb_error);
 
     // not available for LevelDB; provide for compatibility with BDB
-    bool Flush() {
+    bool Flush()
+    {
         return true;
     }
 
-    bool Sync() throw(leveldb_error) {
+    bool Sync() throw(leveldb_error)
+    {
         CLevelDBBatch batch;
         return WriteBatch(batch, true);
     }
 
     // not exactly clean encapsulation, but it's easiest for now
-    leveldb::Iterator *NewIterator() {
+    leveldb::Iterator* NewIterator()
+    {
         return pdb->NewIterator(iteroptions);
     }
 };
