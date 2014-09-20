@@ -49,6 +49,7 @@ bool fReindex = false;
 bool fTxIndex = false;
 bool fIsBareMultisigStd = true;
 unsigned int nCoinCacheSize = 5000;
+bool supressCheckBlockWork = false; // To allow fast dynamic block-checking test cases
 
 /** Fees smaller than this (in satoshi) are considered zero fee (for relaying and mining) */
 CFeeRate minRelayTxFee = CFeeRate(1000);
@@ -2357,6 +2358,7 @@ bool AcceptBlockHeader(CBlockHeader& block, CValidationState& state, CBlockIndex
         nHeight = pindexPrev->nHeight+1;
 
         // Check proof of work
+		if (!supressCheckBlockWork)
         if (block.nBits != GetNextWorkRequired(pindexPrev, &block))
             return state.DoS(100, error("AcceptBlock() : incorrect proof of work"),
                              REJECT_INVALID, "bad-diffbits");
@@ -3022,6 +3024,12 @@ bool LoadBlockIndex()
     return true;
 }
 
+void ResetBlockIndex()
+{
+	 nLastBlockFile = 0;
+	 infoLastBlockFile.SetNull();
+	 nBlockSequenceId = 1;
+}
 
 bool InitBlockIndex() {
     LOCK(cs_main);
