@@ -469,12 +469,7 @@ private:
 
 public:
     uint256 hashBlock;
-    std::vector<uint256> vMerkleBranch;
     int nIndex;
-
-    // memory only
-    mutable bool fMerkleVerified;
-
 
     CMerkleTx()
     {
@@ -490,7 +485,6 @@ public:
     {
         hashBlock = 0;
         nIndex = -1;
-        fMerkleVerified = false;
     }
 
     ADD_SERIALIZE_METHODS;
@@ -500,11 +494,15 @@ public:
         READWRITE(*(CTransaction*)this);
         nVersion = this->nVersion;
         READWRITE(hashBlock);
-        READWRITE(vMerkleBranch);
+        {
+            // Ignore merkle branch.
+            std::vector<uint256> vMerkleBranch;
+            READWRITE(vMerkleBranch);
+        }
         READWRITE(nIndex);
     }
 
-    int SetMerkleBranch(const CBlock* pblock=NULL);
+    void SetHashBlock(const CBlock* pblock);
 
     // Return depth of transaction in blockchain:
     // -1  : not in blockchain, and not in memory pool (conflicted transaction)
