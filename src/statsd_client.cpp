@@ -9,6 +9,7 @@
 #include <sys/types.h>
 #include <netinet/in.h>
 #include "statsd_client.h"
+#include "util.h"
 #include <fcntl.h>
 
 using namespace std;
@@ -37,6 +38,7 @@ struct _StatsdClientData {
 
     string  ns;
     string  host;
+    string  nodename;
     short   port;
     bool    init;
 
@@ -49,6 +51,9 @@ StatsdClient::StatsdClient(const string& host, int port, const string& ns)
     d->sock = -1;
     config(host, port, ns);
     srandom(time(NULL));
+    string name = GetArg("stats_host_name", "");
+    if (!name.empty())
+        d->nodename = name;
 }
 
 StatsdClient::~StatsdClient()
@@ -153,6 +158,10 @@ int StatsdClient::send(string key, size_t value, const string &type, float sampl
     if (!should_send(sample_rate)) {
         return 0;
     }
+
+    // partition stats by node name if set
+    if (!d->nodename.empty())
+        key = key + "." + d->nodename;
 
     cleanup(key);
 
