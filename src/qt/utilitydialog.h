@@ -37,12 +37,16 @@ private slots:
 
 
 /** "Shutdown" window */
-class ShutdownWindow : public QObject
+class ShutdownWindow : public QWidget
 {
     Q_OBJECT
 
 public:
+    ShutdownWindow(QWidget *parent=0, Qt::WindowFlags f=0);
     static void showShutdownWindow(BitcoinGUI *window);
+
+protected:
+    void closeEvent(QCloseEvent *event);
 };
 
 #endif // UTILITYDIALOG_H

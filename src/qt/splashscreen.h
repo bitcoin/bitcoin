@@ -7,7 +7,11 @@
 
 #include <QSplashScreen>
 
-/** class for the splashscreen with information of the running client
+/** Class for the splashscreen with information of the running client.
+ *
+ * @note this is intentionally not a QSplashScreen. Bitcoin Core initialization
+ * can take a long time, and in that case a progress window that cannot be
+ * moved around and minimized has turned out to be frustrating to the user.
  */
 class SplashScreen : public QWidget
 {
@@ -18,7 +22,8 @@ public:
     ~SplashScreen();
 
 protected:
-     void paintEvent(QPaintEvent *event);
+    void paintEvent(QPaintEvent *event);
+    void closeEvent(QCloseEvent *event);
 
 public slots:
     /** Slot to call finish() method as it's not defined as slot */
