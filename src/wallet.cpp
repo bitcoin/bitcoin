@@ -646,7 +646,7 @@ bool CWallet::AddToWalletIfInvolvingMe(const CTransaction& tx, const CBlock* pbl
             CWalletTx wtx(this,tx);
             // Get merkle branch if transaction was found in a block
             if (pblock)
-                wtx.SetMerkleBranch(pblock);
+                wtx.SetMerkleBranch(*pblock);
             return AddToWallet(wtx);
         }
     }
@@ -2229,48 +2229,34 @@ CWalletKey::CWalletKey(int64_t nExpires)
     nTimeExpires = nExpires;
 }
 
-int CMerkleTx::SetMerkleBranch(const CBlock* pblock)
+int CMerkleTx::SetMerkleBranch(const CBlock& block)
 {
     AssertLockHeld(cs_main);
     CBlock blockTmp;
 
-    if (pblock == NULL) {
-        CCoins coins;
-        if (pcoinsTip->GetCoins(GetHash(), coins)) {
-            CBlockIndex *pindex = chainActive[coins.nHeight];
-            if (pindex) {
-                if (!ReadBlockFromDisk(blockTmp, pindex))
-                    return 0;
-                pblock = &blockTmp;
-            }
-        }
+    // Update the tx's hashBlock
+    hashBlock = block.GetHash();
+
+    // Locate the transaction
+    for (nIndex = 0; nIndex < (int)block.vtx.size(); nIndex++)
+        if (block.vtx[nIndex] == *(CTransaction*)this)
+            break;
+    if (nIndex == (int)block.vtx.size())
+    {
+        vMerkleBranch.clear();
+        nIndex = -1;
+        LogPrintf("ERROR: SetMerkleBranch() : couldn't find tx in block\n");
+        return 0;
     }
 
-    if (pblock) {
-        // Update the tx's hashBlock
-        hashBlock = pblock->GetHash();
-
-        // Locate the transaction
-        for (nIndex = 0; nIndex < (int)pblock->vtx.size(); nIndex++)
-            if (pblock->vtx[nIndex] == *(CTransaction*)this)
-                break;
-        if (nIndex == (int)pblock->vtx.size())
-        {
-            vMerkleBranch.clear();
-            nIndex = -1;
-            LogPrintf("ERROR: SetMerkleBranch() : couldn't find tx in block\n");
-            return 0;
-        }
-
-        // Fill in merkle branch
-        vMerkleBranch = pblock->GetMerkleBranch(nIndex);
-    }
+    // Fill in merkle branch
+    vMerkleBranch = block.GetMerkleBranch(nIndex);
 
     // Is the tx in a block that's in the main chain
     BlockMap::iterator mi = mapBlockIndex.find(hashBlock);
     if (mi == mapBlockIndex.end())
         return 0;
-    CBlockIndex* pindex = (*mi).second;
+    const CBlockIndex* pindex = (*mi).second;
     if (!pindex || !chainActive.Contains(pindex))
         return 0;
 
