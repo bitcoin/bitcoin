@@ -6,13 +6,13 @@
 
 #include "bitcoinunits.h"
 #include "guiutil.h"
+#include "paymentserver.h"
+#include "transactionrecord.h"
 
 #include "base58.h"
 #include "db.h"
 #include "main.h"
-#include "paymentserver.h"
 #include "script/script.h"
-#include "transactionrecord.h"
 #include "timedata.h"
 #include "ui_interface.h"
 #include "util.h"

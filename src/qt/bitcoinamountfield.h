@@ -7,11 +7,11 @@
 
 #include <QWidget>
 
+class AmountSpinBox;
+
 QT_BEGIN_NAMESPACE
 class QValueComboBox;
 QT_END_NAMESPACE
-
-class AmountSpinBox;
 
 /** Widget for entering bitcoin amounts.
   */
