@@ -59,7 +59,7 @@ Release Process
 	wget 'http://www.opensource.apple.com/tarballs/cctools/cctools-809.tar.gz'
 	wget 'http://www.opensource.apple.com/tarballs/dyld/dyld-195.5.tar.gz'
 	wget 'http://www.opensource.apple.com/tarballs/ld64/ld64-127.2.tar.gz'
-	wget 'http://cdrkit.org/releases/cdrkit-1.1.11.tar.gz'
+	wget 'http://pkgs.fedoraproject.org/repo/pkgs/cdrkit/cdrkit-1.1.11.tar.gz/efe08e2f3ca478486037b053acd512e9/cdrkit-1.1.11.tar.gz'
 	wget 'https://github.com/theuni/libdmg-hfsplus/archive/libdmg-hfsplus-v0.1.tar.gz'
 	wget 'http://llvm.org/releases/3.2/clang+llvm-3.2-x86-linux-ubuntu-12.04.tar.gz' -O \
 	     clang-llvm-3.2-x86-linux-ubuntu-12.04.tar.gz
