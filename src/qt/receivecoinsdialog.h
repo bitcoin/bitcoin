@@ -5,6 +5,8 @@
 #ifndef RECEIVECOINSDIALOG_H
 #define RECEIVECOINSDIALOG_H
 
+#include "guiutil.h"
+
 #include <QDialog>
 #include <QHeaderView>
 #include <QItemSelection>
@@ -13,13 +15,12 @@
 #include <QPoint>
 #include <QVariant>
 
-#include "guiutil.h"
+class OptionsModel;
+class WalletModel;
 
 namespace Ui {
     class ReceiveCoinsDialog;
 }
-class OptionsModel;
-class WalletModel;
 
 QT_BEGIN_NAMESPACE
 class QModelIndex;

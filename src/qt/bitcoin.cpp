@@ -16,6 +16,7 @@
 #include "splashscreen.h"
 #include "utilitydialog.h"
 #include "winshutdownmonitor.h"
+
 #ifdef ENABLE_WALLET
 #include "paymentserver.h"
 #include "walletmodel.h"
@@ -26,6 +27,7 @@
 #include "rpcserver.h"
 #include "ui_interface.h"
 #include "util.h"
+
 #ifdef ENABLE_WALLET
 #include "wallet.h"
 #endif
@@ -34,15 +36,16 @@
 
 #include <boost/filesystem/operations.hpp>
 #include <boost/thread.hpp>
+
 #include <QApplication>
 #include <QDebug>
 #include <QLibraryInfo>
 #include <QLocale>
 #include <QMessageBox>
 #include <QSettings>
+#include <QThread>
 #include <QTimer>
 #include <QTranslator>
-#include <QThread>
 
 #if defined(QT_STATICPLUGIN)
 #include <QtPlugin>
