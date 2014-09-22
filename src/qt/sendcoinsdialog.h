@@ -14,13 +14,13 @@ class OptionsModel;
 class SendCoinsEntry;
 class SendCoinsRecipient;
 
-QT_BEGIN_NAMESPACE
-class QUrl;
-QT_END_NAMESPACE
-
 namespace Ui {
     class SendCoinsDialog;
 }
+
+QT_BEGIN_NAMESPACE
+class QUrl;
+QT_END_NAMESPACE
 
 /** Dialog for sending bitcoins */
 class SendCoinsDialog : public QDialog
