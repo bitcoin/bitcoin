@@ -9,7 +9,7 @@ $(package)_config_env=AR="$($(package)_ar)" RANLIB="$($(package)_ranlib)" CC="$(
 $(package)_config_opts=--prefix=$(host_prefix) --openssldir=$(host_prefix)/etc/openssl no-zlib no-shared no-dso
 $(package)_config_opts+=no-krb5 no-camellia no-capieng no-cast no-cms no-dtls1 no-gost no-gmp no-heartbeats no-idea no-jpake no-md2
 $(package)_config_opts+=no-mdc2 no-rc5 no-rdrand no-rfc3779 no-rsax no-sctp no-seed no-sha0 no-static_engine no-whirlpool no-rc2 no-rc4 no-ssl3
-$(package)_config_opts+=$($(package)_cflags)
+$(package)_config_opts+=$($(package)_cflags) $($(package)_cppflags)
 $(package)_config_opts_x86_64_linux=-fPIC linux-x86_64
 $(package)_config_opts_arm_linux=-fPIC linux-generic32
 $(package)_config_opts_x86_64_darwin=darwin64-x86_64-cc
