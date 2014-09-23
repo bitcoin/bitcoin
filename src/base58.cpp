@@ -288,7 +288,7 @@ void CBitcoinSecret::SetKey(const CKey& vchSecret)
 CKey CBitcoinSecret::GetKey()
 {
     CKey ret;
-    ret.Set(&vchData[0], &vchData[32], vchData.size() > 32 && vchData[32] == 1);
+    ret.Set(vchData.begin(), vchData.begin() + 32, vchData.size() > 32 && vchData[32] == 1);
     return ret;
 }
 
