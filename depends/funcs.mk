@@ -8,10 +8,10 @@ $(1)_ar=$($($(1)_type)_AR)
 $(1)_ranlib=$($($(1)_type)_RANLIB)
 $(1)_libtool=$($($(1)_type)_LIBTOOL)
 $(1)_nm=$($($(1)_type)_NM)
-$(1)_cflags=$($($(1)_type)_CFLAGS)
-$(1)_cxxflags=$($($(1)_type)_CXXFLAGS)
-$(1)_ldflags=$($($(1)_type)_LDFLAGS) -L$($($(1)_type)_prefix)/lib
-$(1)_cppflags:=-I$($($(1)_type)_prefix)/include
+$(1)_cflags=$($($(1)_type)_CFLAGS) $($($(1)_type)_$(release_type)_CFLAGS)
+$(1)_cxxflags=$($($(1)_type)_CXXFLAGS) $($($(1)_type)_$(release_type)_CXXFLAGS)
+$(1)_ldflags=$($($(1)_type)_LDFLAGS) $($($(1)_type)_$(release_type)_LDFLAGS) -L$($($(1)_type)_prefix)/lib
+$(1)_cppflags=$($($(1)_type)_CPPFLAGS) $($($(1)_type)_$(release_type)_CPPFLAGS) -I$($($(1)_type)_prefix)/include
 $(1)_recipe_hash:=
 endef
 
@@ -38,7 +38,7 @@ define int_get_build_id
 $(eval $(1)_dependencies += $($(1)_$(host_arch)_$(host_os)_dependencies) $($(1)_$(host_os)_dependencies))
 $(eval $(1)_all_dependencies:=$(call int_get_all_dependencies,$(1),$($($(1)_type)_native_toolchain) $($(1)_dependencies)))
 $(foreach dep,$($(1)_all_dependencies),$(eval $(1)_build_id_deps+=$(dep)-$($(dep)_version)-$($(dep)_recipe_hash)))
-$(eval $(1)_build_id_long:=$(1)-$($(1)_version)-$($(1)_recipe_hash) $($(1)_build_id_deps))
+$(eval $(1)_build_id_long:=$(1)-$($(1)_version)-$($(1)_recipe_hash)-$(release_type) $($(1)_build_id_deps))
 $(eval $(1)_build_id:=$(shell echo -n "$($(1)_build_id_long)" | $(build_SHA256SUM) | cut -c-$(HASH_LENGTH)))
 final_build_id_long+=$($(package)_build_id_long)
 
@@ -83,33 +83,40 @@ endef
 
 define int_config_attach_build_config
 $(eval $(call $(1)_set_vars,$(1)))
-$(1)_cflags+=$($(1)_cflags_$(host_arch))
-$(1)_cflags+=$($(1)_cflags_$(host_os))
-$(1)_cflags+=$($(1)_cflags_$(host_arch)_$(host_os))
+$(1)_cflags+=$($(1)_cflags_$(release_type))
+$(1)_cflags+=$($(1)_cflags_$(host_arch)) $($(1)_cflags_$(host_arch)_$(release_type))
+$(1)_cflags+=$($(1)_cflags_$(host_os)) $($(1)_cflags_$(host_os)_$(release_type))
+$(1)_cflags+=$($(1)_cflags_$(host_arch)_$(host_os)) $($(1)_cflags_$(host_arch)_$(host_os)_$(release_type))
 
-$(1)_cxxflags+=$($(1)_cxxflags_$(host_arch))
-$(1)_cxxflags+=$($(1)_cxxflags_$(host_os))
-$(1)_cxxflags+=$($(1)_cxxflags_$(host_arch)_$(host_os))
+$(1)_cxxflags+=$($(1)_cxxflags_$(release_type))
+$(1)_cxxflags+=$($(1)_cxxflags_$(host_arch)) $($(1)_cxxflags_$(host_arch)_$(release_type))
+$(1)_cxxflags+=$($(1)_cxxflags_$(host_os)) $($(1)_cxxflags_$(host_os)_$(release_type))
+$(1)_cxxflags+=$($(1)_cxxflags_$(host_arch)_$(host_os)) $($(1)_cxxflags_$(host_arch)_$(host_os)_$(release_type))
 
-$(1)_cppflags+=$($(1)_cppflags_$(host_arch))
-$(1)_cppflags+=$($(1)_cppflags_$(host_os))
-$(1)_cppflags+=$($(1)_cppflags_$(host_arch)_$(host_os))
+$(1)_cppflags+=$($(1)_cppflags_$(release_type))
+$(1)_cppflags+=$($(1)_cppflags_$(host_arch)) $($(1)_cppflags_$(host_arch)_$(release_type))
+$(1)_cppflags+=$($(1)_cppflags_$(host_os)) $($(1)_cppflags_$(host_os)_$(release_type))
+$(1)_cppflags+=$($(1)_cppflags_$(host_arch)_$(host_os)) $($(1)_cppflags_$(host_arch)_$(host_os)_$(release_type))
 
-$(1)_ldflags+=$($(1)_ldflags_$(host_arch))
-$(1)_ldflags+=$($(1)_ldflags_$(host_os))
-$(1)_ldflags+=$($(1)_ldflags_$(host_arch)_$(host_os))
+$(1)_ldflags+=$($(1)_ldflags_$(release_type))
+$(1)_ldflags+=$($(1)_ldflags_$(host_arch)) $($(1)_ldflags_$(host_arch)_$(release_type))
+$(1)_ldflags+=$($(1)_ldflags_$(host_os)) $($(1)_ldflags_$(host_os)_$(release_type))
+$(1)_ldflags+=$($(1)_ldflags_$(host_arch)_$(host_os)) $($(1)_ldflags_$(host_arch)_$(host_os)_$(release_type))
 
-$(1)_build_opts+=$$($(1)_build_opts_$(host_arch))
-$(1)_build_opts+=$$($(1)_build_opts_$(host_os))
-$(1)_build_opts+=$$($(1)_build_opts_$(host_arch)_$(host_os))
+$(1)_build_opts+=$$($(1)_build_opts_$(release_type))
+$(1)_build_opts+=$$($(1)_build_opts_$(host_arch)) $$($(1)_build_opts_$(host_arch)_$(release_type))
+$(1)_build_opts+=$$($(1)_build_opts_$(host_os)) $$($(1)_build_opts_$(host_os)_$(release_type))
+$(1)_build_opts+=$$($(1)_build_opts_$(host_arch)_$(host_os)) $$($(1)_build_opts_$(host_arch)_$(host_os)_$(release_type))
 
-$(1)_config_opts+=$$($(1)_config_opts_$(host_arch))
-$(1)_config_opts+=$$($(1)_config_opts_$(host_os))
-$(1)_config_opts+=$$($(1)_config_opts_$(host_arch)_$(host_os))
+$(1)_config_opts+=$$($(1)_config_opts_$(release_type))
+$(1)_config_opts+=$$($(1)_config_opts_$(host_arch)) $$($(1)_config_opts_$(host_arch)_$(release_type))
+$(1)_config_opts+=$$($(1)_config_opts_$(host_os)) $$($(1)_config_opts_$(host_os)_$(release_type))
+$(1)_config_opts+=$$($(1)_config_opts_$(host_arch)_$(host_os)) $$($(1)_config_opts_$(host_arch)_$(host_os)_$(release_type))
 
-$(1)_config_env+=$($(1)_config_env_$(host_arch))
-$(1)_config_env+=$($(1)_config_env_$(host_os))
-$(1)_config_env+=$($(1)_config_env_$(host_arch)_$(host_os))
+$(1)_config_env+=$$($(1)_config_env_$(release_type))
+$(1)_config_env+=$($(1)_config_env_$(host_arch)) $($(1)_config_env_$(host_arch)_$(release_type))
+$(1)_config_env+=$($(1)_config_env_$(host_os)) $($(1)_config_env_$(host_os)_$(release_type))
+$(1)_config_env+=$($(1)_config_env_$(host_arch)_$(host_os)) $($(1)_config_env_$(host_arch)_$(host_os)_$(release_type))
 
 $(1)_config_env+=PKG_CONFIG_LIBDIR=$($($(1)_type)_prefix)/lib/pkgconfig
 $(1)_config_env+=PKG_CONFIG_PATH=$($($(1)_type)_prefix)/share/pkgconfig
