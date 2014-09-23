@@ -77,6 +77,10 @@ if test -n "@NM@"; then
   ac_cv_path_ac_pt_NM=${NM}
 fi
 
+if test -n "@debug@"; then
+  enable_reduce_exports=no
+fi
+
 if test -n "@CFLAGS@"; then
   export CFLAGS="@CFLAGS@ $CFLAGS"
 fi
