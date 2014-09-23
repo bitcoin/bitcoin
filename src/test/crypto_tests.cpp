@@ -32,7 +32,7 @@ void TestVector(const Hasher &h, const In &in, const Out &out) {
             size_t len = insecure_rand() % ((in.size() - pos + 1) / 2 + 1);
             hasher.Write((unsigned char*)&in[pos], len);
             pos += len;
-            if (pos > 0 && pos + 2 * out.size() > in.size()) {
+            if (pos > 0 && pos + 2 * out.size() > in.size() && pos < in.size()) {
                 // Test that writing the rest at once to a copy of a hasher works.
                 Hasher(hasher).Write((unsigned char*)&in[pos], in.size() - pos).Finalize(&hash[0]);
                 BOOST_CHECK(hash == out);
