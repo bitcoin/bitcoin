@@ -10,8 +10,9 @@ $(package)_qt_libs=corelib network widgets gui plugins testlib
 $(package)_patches=mac-qmake.conf fix-xcb-include-order.patch qt5-tablet-osx.patch
 
 define $(package)_set_vars
-$(package)_config_opts  = -release -opensource -confirm-license
-$(package)_config_opts += -no-audio-backend -no-sql-tds -no-glib -no-icu
+$(package)_config_opts_release = -release
+$(package)_config_opts_debug   = -debug
+$(package)_config_opts += -opensource -confirm-license -no-audio-backend -no-sql-tds -no-glib -no-icu
 $(package)_config_opts += -no-cups -no-iconv -no-gif -no-audio-backend -no-freetype
 $(package)_config_opts += -no-sql-sqlite -no-nis -no-cups -no-iconv -no-pch
 $(package)_config_opts += -no-gif -no-feature-style-plastique
@@ -53,7 +54,13 @@ define $(package)_preprocess_cmds
   cp -f qtbase/mkspecs/macx-clang/qplatformdefs.h qtbase/mkspecs/macx-clang-linux/ &&\
   cp -f $($(package)_patch_dir)/mac-qmake.conf qtbase/mkspecs/macx-clang-linux/qmake.conf && \
   patch -p1 < $($(package)_patch_dir)/fix-xcb-include-order.patch && \
-  patch -p1 < $($(package)_patch_dir)/qt5-tablet-osx.patch
+  patch -p1 < $($(package)_patch_dir)/qt5-tablet-osx.patch && \
+  echo "QMAKE_CFLAGS     += $($(package)_cflags) $($(package)_cppflags)" >> qtbase/mkspecs/common/gcc-base.conf && \
+  echo "QMAKE_CXXFLAGS   += $($(package)_cxxflags) $($(package)_cppflags)" >> qtbase/mkspecs/common/gcc-base.conf && \
+  echo "QMAKE_LFLAGS     += $($(package)_ldflags)" >> qtbase/mkspecs/common/gcc-base.conf && \
+  sed -i.old "s|QMAKE_CFLAGS            = |QMAKE_CFLAGS            = $($(package)_cflags) $($(package)_cppflags) |" qtbase/mkspecs/win32-g++/qmake.conf && \
+  sed -i.old "s|QMAKE_LFLAGS            = |QMAKE_LFLAGS            = $($(package)_ldflags) |" qtbase/mkspecs/win32-g++/qmake.conf && \
+  sed -i.old "s|QMAKE_CXXFLAGS          = |QMAKE_CXXFLAGS            = $($(package)_cxxflags) $($(package)_cppflags) |" qtbase/mkspecs/win32-g++/qmake.conf
 endef
 
 define $(package)_config_cmds
