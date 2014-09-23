@@ -17,13 +17,6 @@ AH_TOP([#ifndef BITCOIN_CONFIG_H])
 AH_TOP([#define BITCOIN_CONFIG_H])
 AH_BOTTOM([#endif //BITCOIN_CONFIG_H])
 
-# This m4 will only be used if a system copy cannot be found. This is helpful
-# on systems where autotools are installed but the pkg-config macros are not in
-# a default location. It is currently used for building on OSX where autotools
-# are preinstalled but pkg-config comes from macports or homebrew. It should
-# probably be removed when building on <= 10.6 is no longer supported.
-m4_include([pkg.m4])
-
 dnl faketime breaks configure and is only needed for make. Disable it here.
 unset FAKETIME
 
