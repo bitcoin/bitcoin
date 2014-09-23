@@ -637,19 +637,19 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
                     valtype& vch = stacktop(-1);
                     valtype vchHash((opcode == OP_RIPEMD160 || opcode == OP_SHA1 || opcode == OP_HASH160) ? 20 : 32);
                     if (opcode == OP_RIPEMD160)
-                        CRIPEMD160().Write(&vch[0], vch.size()).Finalize(&vchHash[0]);
+                        CRIPEMD160().Write(begin_ptr(vch), vch.size()).Finalize(begin_ptr(vchHash));
                     else if (opcode == OP_SHA1)
-                        CSHA1().Write(&vch[0], vch.size()).Finalize(&vchHash[0]);
+                        CSHA1().Write(begin_ptr(vch), vch.size()).Finalize(begin_ptr(vchHash));
                     else if (opcode == OP_SHA256)
-                        CSHA256().Write(&vch[0], vch.size()).Finalize(&vchHash[0]);
+                        CSHA256().Write(begin_ptr(vch), vch.size()).Finalize(begin_ptr(vchHash));
                     else if (opcode == OP_HASH160)
-                        CHash160().Write(&vch[0], vch.size()).Finalize(&vchHash[0]);
+                        CHash160().Write(begin_ptr(vch), vch.size()).Finalize(begin_ptr(vchHash));
                     else if (opcode == OP_HASH256)
-                        CHash256().Write(&vch[0], vch.size()).Finalize(&vchHash[0]);
+                        CHash256().Write(begin_ptr(vch), vch.size()).Finalize(begin_ptr(vchHash));
                     popstack(stack);
                     stack.push_back(vchHash);
                 }
-                break;
+                break;                                   
 
                 case OP_CODESEPARATOR:
                 {
