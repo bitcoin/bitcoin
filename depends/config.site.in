@@ -81,4 +81,7 @@ fi
 if test -n "@CXXFLAGS@"; then
   export CXXFLAGS="@CXXFLAGS@ $CXXFLAGS"
 fi
+if test -n "@CPPFLAGS@"; then
+  export CPPFLAGS="@CPPFLAGS@ $CPPFLAGS"
+fi
 export LDFLAGS="-L$prefix/lib @LDFLAGS@ $LDFLAGS"
