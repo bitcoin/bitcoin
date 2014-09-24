@@ -2169,6 +2169,7 @@ void CNode::BeginMessage(const char* pszCommand) EXCLUSIVE_LOCK_FUNCTION(cs_vSen
     assert(ssSend.size() == 0);
     ssSend << CMessageHeader(pszCommand, 0);
     LogPrint("net", "sending: %s ", pszCommand);
+    statsClient.inc("message.sent." + std::string(pszCommand), 1.0f);
 }
 
 void CNode::AbortMessage() UNLOCK_FUNCTION(cs_vSend)
