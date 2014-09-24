@@ -90,7 +90,7 @@ BOOST_AUTO_TEST_CASE(coins_cache_simulation_test)
     // The cache stack.
     CCoinsViewTest base; // A CCoinsViewTest at the bottom.
     std::vector<CCoinsViewCache*> stack; // A stack of CCoinsViewCaches on top.
-    stack.push_back(new CCoinsViewCache(base, false)); // Start with one cache.
+    stack.push_back(new CCoinsViewCache(&base)); // Start with one cache.
 
     // Use a limited set of random transaction ids, so we do test overwriting entries.
     std::vector<uint256> txids;
@@ -151,7 +151,7 @@ BOOST_AUTO_TEST_CASE(coins_cache_simulation_test)
                 } else {
                     removed_all_caches = true;
                 }
-                stack.push_back(new CCoinsViewCache(*tip, false));
+                stack.push_back(new CCoinsViewCache(tip));
                 if (stack.size() == 4) {
                     reached_4_caches = true;
                 }
