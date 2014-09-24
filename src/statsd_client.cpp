@@ -51,9 +51,6 @@ StatsdClient::StatsdClient(const string& host, int port, const string& ns)
     d->sock = -1;
     config(host, port, ns);
     srandom(time(NULL));
-    string name = GetArg("stats_host_name", "");
-    if (!name.empty())
-        d->nodename = name;
 }
 
 StatsdClient::~StatsdClient()
@@ -112,6 +109,10 @@ int StatsdClient::init()
         memcpy(&d->server.sin_addr, &host_addr->sin_addr, sizeof(struct in_addr));
         freeaddrinfo(result);
     }
+
+    string name = GetArg("-statshostname", "");
+    if (!name.empty())
+        d->nodename = name;
 
     d->init = true;
     return 0;
