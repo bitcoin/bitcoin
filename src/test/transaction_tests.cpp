@@ -260,7 +260,7 @@ BOOST_AUTO_TEST_CASE(test_Get)
 {
     CBasicKeyStore keystore;
     CCoinsView coinsDummy;
-    CCoinsViewCache coins(coinsDummy);
+    CCoinsViewCache coins(&coinsDummy);
     std::vector<CMutableTransaction> dummyTransactions = SetupDummyInputs(keystore, coins);
 
     CMutableTransaction t1;
@@ -295,7 +295,7 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     LOCK(cs_main);
     CBasicKeyStore keystore;
     CCoinsView coinsDummy;
-    CCoinsViewCache coins(coinsDummy);
+    CCoinsViewCache coins(&coinsDummy);
     std::vector<CMutableTransaction> dummyTransactions = SetupDummyInputs(keystore, coins);
 
     CMutableTransaction t;
