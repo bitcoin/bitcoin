@@ -37,8 +37,7 @@ static const unsigned int flags = SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_STRICTENC;
 
 unsigned int ParseScriptFlags(string strFlags);
 
-Array
-read_json(const std::string& jsondata)
+Array read_json(const std::string& jsondata)
 {
     Value v;
 
