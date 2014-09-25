@@ -8,6 +8,7 @@
 #include "core.h"
 #include "util.h"
 #include "utilmoneystr.h"
+#include "version.h"
 
 #include <boost/circular_buffer.hpp>
 
