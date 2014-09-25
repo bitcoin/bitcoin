@@ -544,7 +544,7 @@ public:
         {
             while (end() - pc >= (long)b.size() && memcmp(&pc[0], &b[0], b.size()) == 0)
             {
-                erase(pc, pc + b.size());
+                pc = erase(pc, pc + b.size());
                 ++nFound;
             }
         }
