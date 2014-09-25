@@ -6,8 +6,11 @@
 #ifndef H_BITCOIN_SCRIPT_STANDARD
 #define H_BITCOIN_SCRIPT_STANDARD
 
+#include "key.h"
 #include "script/script.h"
 #include "script/interpreter.h"
+
+#include <boost/variant.hpp>
 
 #include <stdint.h>
 
