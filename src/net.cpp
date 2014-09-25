@@ -1957,7 +1957,7 @@ bool CAddrDB::Write(const CAddrMan& addr)
     // open temp output file, and associate with CAutoFile
     boost::filesystem::path pathTmp = GetDataDir() / tmpfn;
     FILE *file = fopen(pathTmp.string().c_str(), "wb");
-    CAutoFile fileout = CAutoFile(file, SER_DISK, CLIENT_VERSION);
+    CAutoFile fileout(file, SER_DISK, CLIENT_VERSION);
     if (!fileout)
         return error("%s : Failed to open file %s", __func__, pathTmp.string());
 
@@ -1982,7 +1982,7 @@ bool CAddrDB::Read(CAddrMan& addr)
 {
     // open input file, and associate with CAutoFile
     FILE *file = fopen(pathAddr.string().c_str(), "rb");
-    CAutoFile filein = CAutoFile(file, SER_DISK, CLIENT_VERSION);
+    CAutoFile filein(file, SER_DISK, CLIENT_VERSION);
     if (!filein)
         return error("%s : Failed to open file %s", __func__, pathAddr.string());
 
