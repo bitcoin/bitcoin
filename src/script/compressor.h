@@ -8,6 +8,8 @@
 
 #include "script/script.h"
 
+class CScriptID;
+
 /** Compact serializer for scripts.
  *
  *  It detects common cases and encodes them much more efficiently.
