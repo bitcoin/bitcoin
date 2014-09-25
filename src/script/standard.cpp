@@ -282,13 +282,13 @@ public:
 
     bool operator()(const CKeyID &keyID) const {
         script->clear();
-        *script << OP_DUP << OP_HASH160 << keyID << OP_EQUALVERIFY << OP_CHECKSIG;
+        *script << OP_DUP << OP_HASH160 << ToByteVector(keyID) << OP_EQUALVERIFY << OP_CHECKSIG;
         return true;
     }
 
     bool operator()(const CScriptID &scriptID) const {
         script->clear();
-        *script << OP_HASH160 << scriptID << OP_EQUAL;
+        *script << OP_HASH160 << ToByteVector(scriptID) << OP_EQUAL;
         return true;
     }
 };
@@ -308,7 +308,7 @@ CScript GetScriptForMultisig(int nRequired, const std::vector<CPubKey>& keys)
 
     script << CScript::EncodeOP_N(nRequired);
     BOOST_FOREACH(const CPubKey& key, keys)
-        script << key;
+        script << ToByteVector(key);
     script << CScript::EncodeOP_N(keys.size()) << OP_CHECKMULTISIG;
     return script;
 }

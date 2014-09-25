@@ -31,8 +31,8 @@ BOOST_AUTO_TEST_CASE(GetSigOpCount)
     BOOST_CHECK_EQUAL(s1.GetSigOpCount(false), 0U);
     BOOST_CHECK_EQUAL(s1.GetSigOpCount(true), 0U);
 
-    uint160 dummy;
-    s1 << OP_1 << dummy << dummy << OP_2 << OP_CHECKMULTISIG;
+    uint160 dummy(0);
+    s1 << OP_1 << ToByteVector(dummy) << ToByteVector(dummy) << OP_2 << OP_CHECKMULTISIG;
     BOOST_CHECK_EQUAL(s1.GetSigOpCount(true), 2U);
     s1 << OP_IF << OP_CHECKSIG << OP_ENDIF;
     BOOST_CHECK_EQUAL(s1.GetSigOpCount(true), 3U);
@@ -58,7 +58,7 @@ BOOST_AUTO_TEST_CASE(GetSigOpCount)
     BOOST_CHECK_EQUAL(p2sh.GetSigOpCount(true), 0U);
     BOOST_CHECK_EQUAL(p2sh.GetSigOpCount(false), 0U);
     CScript scriptSig2;
-    scriptSig2 << OP_1 << dummy << dummy << Serialize(s2);
+    scriptSig2 << OP_1 << ToByteVector(dummy) << ToByteVector(dummy) << Serialize(s2);
     BOOST_CHECK_EQUAL(p2sh.GetSigOpCount(scriptSig2), 3U);
 }
 
