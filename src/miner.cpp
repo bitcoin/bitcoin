@@ -398,7 +398,7 @@ CBlockTemplate* CreateNewBlockWithKey(CReserveKey& reservekey)
     if (!reservekey.GetReservedKey(pubkey))
         return NULL;
 
-    CScript scriptPubKey = CScript() << pubkey << OP_CHECKSIG;
+    CScript scriptPubKey = CScript() << ToByteVector(pubkey) << OP_CHECKSIG;
     return CreateNewBlock(scriptPubKey);
 }
 
