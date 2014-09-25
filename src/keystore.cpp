@@ -8,6 +8,7 @@
 #include "crypter.h"
 #include "key.h"
 #include "script/script.h"
+#include "script/standard.h"
 #include "util.h"
 
 #include <boost/foreach.hpp>
@@ -38,7 +39,7 @@ bool CBasicKeyStore::AddCScript(const CScript& redeemScript)
         return error("CBasicKeyStore::AddCScript() : redeemScripts > %i bytes are invalid", MAX_SCRIPT_ELEMENT_SIZE);
 
     LOCK(cs_KeyStore);
-    mapScripts[redeemScript.GetID()] = redeemScript;
+    mapScripts[CScriptID(redeemScript)] = redeemScript;
     return true;
 }
 

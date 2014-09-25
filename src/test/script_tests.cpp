@@ -162,7 +162,7 @@ public:
     TestBuilder(const CScript& redeemScript, const std::string& comment_, int flags_, bool P2SH = false) : scriptPubKey(redeemScript), havePush(false), comment(comment_), flags(flags_)
     {
         if (P2SH) {
-            creditTx = BuildCreditingTransaction(CScript() << OP_HASH160 << redeemScript.GetID() << OP_EQUAL);
+            creditTx = BuildCreditingTransaction(CScript() << OP_HASH160 << CScriptID(redeemScript) << OP_EQUAL);
         } else {
             creditTx = BuildCreditingTransaction(redeemScript);
         }
@@ -697,7 +697,7 @@ BOOST_AUTO_TEST_CASE(script_combineSigs)
     // P2SH, single-signature case:
     CScript pkSingle; pkSingle << keys[0].GetPubKey() << OP_CHECKSIG;
     keystore.AddCScript(pkSingle);
-    scriptPubKey = GetScriptForDestination(pkSingle.GetID());
+    scriptPubKey = GetScriptForDestination(CScriptID(pkSingle));
     SignSignature(keystore, txFrom, txTo, 0);
     combined = CombineSignatures(scriptPubKey, txTo, 0, scriptSig, empty);
     BOOST_CHECK(combined == scriptSig);
