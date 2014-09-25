@@ -239,7 +239,7 @@ Value setaccount(const Array& params, bool fHelp)
     }
 
     // Only add the account if the address if yours.
-    if (IsMine(*pwalletMain, address.Get())
+    if (IsMine(*pwalletMain, address.Get()))
         pwalletMain->SetAddressBook(address.Get(), strAccount, "receive");
     
     return Value::null;
