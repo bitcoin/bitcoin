@@ -610,12 +610,6 @@ public:
         }
         return str;
     }
-
-    CScriptID GetID() const
-    {
-        return CScriptID(Hash160(*this));
-    }
-
     void clear()
     {
         // The default std::vector::clear() does not release memory.

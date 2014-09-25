@@ -4,6 +4,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "compressor.h"
+#include "script/standard.h"
 
 bool CScriptCompressor::IsToKeyID(CKeyID &hash) const
 {
