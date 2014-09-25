@@ -6,13 +6,13 @@
 #ifndef H_BITCOIN_SCRIPT
 #define H_BITCOIN_SCRIPT
 
-#include "key.h"
-#include "tinyformat.h"
-#include "utilstrencodings.h"
-
+#include <assert.h>
+#include <climits>
+#include <limits>
 #include <stdexcept>
-
-#include <boost/variant.hpp>
+#include <stdint.h>
+#include <string.h>
+#include <vector>
 
 static const unsigned int MAX_SCRIPT_ELEMENT_SIZE = 520; // bytes
 

@@ -5,7 +5,8 @@
 
 #include "script.h"
 
-#include <boost/foreach.hpp>
+#include "tinyformat.h"
+#include "utilstrencodings.h"
 
 namespace {
 inline std::string ValueString(const std::vector<unsigned char>& vch)

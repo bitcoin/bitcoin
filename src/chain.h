@@ -8,6 +8,7 @@
 
 #include "core.h"
 #include "pow.h"
+#include "tinyformat.h"
 #include "uint256.h"
 
 #include <vector>
