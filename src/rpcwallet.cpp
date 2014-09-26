@@ -230,7 +230,7 @@ Value setaccount(const Array& params, bool fHelp)
     if (params.size() > 1)
         strAccount = AccountFromValue(params[1]);
 
-    // Only add the account if the address if yours.
+    // Only add the account if the address is yours.
     if (IsMine(*pwalletMain, address.Get()))
     {
         // Detect when changing the account of an address that is the 'unused current key' of another account:
