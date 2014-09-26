@@ -84,7 +84,7 @@ BOOST_AUTO_TEST_CASE(rpc_wallet)
 	/*********************************
 	 * 			setaccount
 	 *********************************/
-	BOOST_CHECK_NO_THROW(CallRPC("setaccount 1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ nullaccount"));
+	BOOST_CHECK_THROW(CallRPC("setaccount 1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ nullaccount"), runtime_error);
 	BOOST_CHECK_THROW(CallRPC("setaccount"), runtime_error);
 	/* 1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4X (33 chars) is an illegal address (should be 34 chars) */
 	BOOST_CHECK_THROW(CallRPC("setaccount 1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4X nullaccount"), runtime_error);
