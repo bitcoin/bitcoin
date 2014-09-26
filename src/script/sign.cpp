@@ -124,7 +124,7 @@ bool SignSignature(const CKeyStore &keystore, const CScript& fromPubKey, CMutabl
     }
 
     // Test solution
-    return VerifyScript(txin.scriptSig, fromPubKey, STANDARD_SCRIPT_VERIFY_FLAGS, SignatureChecker(txTo, nIn));
+    return VerifyScript(txin.scriptSig, fromPubKey, STANDARD_SCRIPT_VERIFY_FLAGS, SignatureChecker(hasher));
 }
 
 bool SignSignature(const CKeyStore &keystore, const CTransaction& txFrom, CMutableTransaction& txTo, unsigned int nIn, int nHashType)
@@ -167,6 +167,7 @@ static CScript CombineMultisig(CScript scriptPubKey, const CMutableTransaction& 
     unsigned int nSigsRequired = vSolutions.front()[0];
     unsigned int nPubKeys = vSolutions.size()-2;
     map<valtype, valtype> sigs;
+    TxSignatureHasher hasher(txTo, nIn);
     BOOST_FOREACH(const valtype& sig, allsigs)
     {
         for (unsigned int i = 0; i < nPubKeys; i++)
@@ -175,7 +176,7 @@ static CScript CombineMultisig(CScript scriptPubKey, const CMutableTransaction& 
             if (sigs.count(pubkey))
                 continue; // Already got a sig for this pubkey
 
-            if (SignatureChecker(txTo, nIn).CheckSig(sig, pubkey, scriptPubKey))
+            if (SignatureChecker(hasher).CheckSig(sig, pubkey, scriptPubKey))
             {
                 sigs[pubkey] = sig;
                 break;

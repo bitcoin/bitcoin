@@ -25,10 +25,9 @@ typedef vector<unsigned char> valtype;
 
 BOOST_AUTO_TEST_SUITE(multisig_tests)
 
-CScript
-sign_multisig(CScript scriptPubKey, vector<CKey> keys, CTransaction transaction, int whichIn)
+CScript sign_multisig(CScript scriptPubKey, vector<CKey> keys, const TxSignatureHasher& hasher)
 {
-    uint256 hash = TxSignatureHasher(transaction, whichIn).SignatureHash(scriptPubKey, SIGHASH_ALL);
+    uint256 hash = hasher.SignatureHash(scriptPubKey, SIGHASH_ALL);
 
     CScript result;
     result << OP_0; // CHECKMULTISIG bug workaround
@@ -79,53 +78,58 @@ BOOST_AUTO_TEST_CASE(multisig_verify)
     CScript s;
 
     // Test a AND b:
+    TxSignatureHasher hasherAnd(txTo[0], 0);
+    SignatureChecker checkerAnd(hasherAnd);
     keys.clear();
     keys += key[0],key[1]; // magic operator+= from boost.assign
-    s = sign_multisig(a_and_b, keys, txTo[0], 0);
-    BOOST_CHECK(VerifyScript(s, a_and_b, flags, SignatureChecker(txTo[0], 0)));
+    s = sign_multisig(a_and_b, keys, hasherAnd);
+    BOOST_CHECK(VerifyScript(s, a_and_b, flags, checkerAnd));
 
     for (int i = 0; i < 4; i++)
     {
         keys.clear();
         keys += key[i];
-        s = sign_multisig(a_and_b, keys, txTo[0], 0);
-        BOOST_CHECK_MESSAGE(!VerifyScript(s, a_and_b, flags, SignatureChecker(txTo[0], 0)), strprintf("a&b 1: %d", i));
+        s = sign_multisig(a_and_b, keys, hasherAnd);
+        BOOST_CHECK_MESSAGE(!VerifyScript(s, a_and_b, flags, checkerAnd), strprintf("a&b 1: %d", i));
 
         keys.clear();
         keys += key[1],key[i];
-        s = sign_multisig(a_and_b, keys, txTo[0], 0);
-        BOOST_CHECK_MESSAGE(!VerifyScript(s, a_and_b, flags, SignatureChecker(txTo[0], 0)), strprintf("a&b 2: %d", i));
+        s = sign_multisig(a_and_b, keys, hasherAnd);
+        BOOST_CHECK_MESSAGE(!VerifyScript(s, a_and_b, flags, checkerAnd), strprintf("a&b 2: %d", i));
     }
 
     // Test a OR b:
+    TxSignatureHasher hasherOr(txTo[1], 0);
+    SignatureChecker checkerOr(hasherOr);
     for (int i = 0; i < 4; i++)
     {
         keys.clear();
         keys += key[i];
-        s = sign_multisig(a_or_b, keys, txTo[1], 0);
+        s = sign_multisig(a_or_b, keys, hasherOr);
         if (i == 0 || i == 1)
-            BOOST_CHECK_MESSAGE(VerifyScript(s, a_or_b, flags, SignatureChecker(txTo[1], 0)), strprintf("a|b: %d", i));
+            BOOST_CHECK_MESSAGE(VerifyScript(s, a_or_b, flags, checkerOr), strprintf("a|b: %d", i));
         else
-            BOOST_CHECK_MESSAGE(!VerifyScript(s, a_or_b, flags, SignatureChecker(txTo[1], 0)), strprintf("a|b: %d", i));
+            BOOST_CHECK_MESSAGE(!VerifyScript(s, a_or_b, flags, checkerOr), strprintf("a|b: %d", i));
     }
     s.clear();
     s << OP_0 << OP_0;
-    BOOST_CHECK(!VerifyScript(s, a_or_b, flags, SignatureChecker(txTo[1], 0)));
+    BOOST_CHECK(!VerifyScript(s, a_or_b, flags, checkerOr));
     s.clear();
     s << OP_0 << OP_1;
-    BOOST_CHECK(!VerifyScript(s, a_or_b, flags, SignatureChecker(txTo[1], 0)));
+    BOOST_CHECK(!VerifyScript(s, a_or_b, flags, checkerOr));
 
-
+    TxSignatureHasher hasherEscrow(txTo[2], 0);
+    SignatureChecker checkerEscrow(hasherEscrow);
     for (int i = 0; i < 4; i++)
         for (int j = 0; j < 4; j++)
         {
             keys.clear();
             keys += key[i],key[j];
-            s = sign_multisig(escrow, keys, txTo[2], 0);
+            s = sign_multisig(escrow, keys, hasherEscrow);
             if (i < j && i < 3 && j < 3)
-                BOOST_CHECK_MESSAGE(VerifyScript(s, escrow, flags, SignatureChecker(txTo[2], 0)), strprintf("escrow 1: %d %d", i, j));
+                BOOST_CHECK_MESSAGE(VerifyScript(s, escrow, flags, checkerEscrow), strprintf("escrow 1: %d %d", i, j));
             else
-                BOOST_CHECK_MESSAGE(!VerifyScript(s, escrow, flags, SignatureChecker(txTo[2], 0)), strprintf("escrow 2: %d %d", i, j));
+                BOOST_CHECK_MESSAGE(!VerifyScript(s, escrow, flags, checkerEscrow), strprintf("escrow 2: %d %d", i, j));
         }
 }
 
