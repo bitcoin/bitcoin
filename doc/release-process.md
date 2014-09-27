@@ -147,6 +147,10 @@ repackage gitian builds for release as stand-alone zip/tar/installer exe
 	zip -r bitcoin-${VERSION}-win.zip bitcoin-${VERSION}-win
 	rm -rf bitcoin-${VERSION}-win
 
+**Mac OS X .dmg:**
+
+	mv Bitcoin-Qt.dmg bitcoin-${VERSION}-osx.dmg
+
 ###Next steps:
 
 Commit your signature to gitian.sigs:
