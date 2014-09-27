@@ -39,7 +39,6 @@ Description: peer-to-peer network based digital currency - daemon
  Full transaction history is stored locally at each client.  This
  requires 20+ GB of space, slowly growing.
  .
-
  This package provides the daemon, bitcoind, and the CLI tool
  bitcoin-cli to interact with the daemon.
 
