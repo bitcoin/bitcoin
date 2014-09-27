@@ -178,15 +178,11 @@ Commit your signature to gitian.sigs:
 
   Note: only Gavin has the code-signing keys currently.
 
-- Create `SHA256SUMS.asc` for builds, and PGP-sign it. This is done manually.
-  Include all the files to be uploaded. The file has `sha256sum` format with a
-  simple header at the top:
-
-```
-Hash: SHA256
-
-0060f7d38b98113ab912d4c184000291d7f026eaf77ca5830deec15059678f54  bitcoin-x.y.z-linux.tar.gz
-...
+- Create `SHA256SUMS.asc` for the builds, and GPG-sign it:
+```bash
+sha256sum * > SHA256SUMS
+gpg --clearsign SHA256SUMS # outputs SHA256SUMS.asc
+rm SHA256SUMS
 ```
 
 - Upload zips and installers, as well as `SHA256SUMS.asc` from last step, to the bitcoin.org server
