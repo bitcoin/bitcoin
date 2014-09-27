@@ -1,5 +1,5 @@
 // Copyright (c) 2014 The Bitcoin developers
-// Distributed under the MIT/X11 software license, see the accompanying
+// Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef BITCOIN_SHA1_H
@@ -25,4 +25,4 @@ public:
     CSHA1& Reset();
 };
 
-#endif
+#endif // BITCOIN_SHA1_H
