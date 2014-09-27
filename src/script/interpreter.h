@@ -6,6 +6,8 @@
 #ifndef H_BITCOIN_SCRIPT_INTERPRETER
 #define H_BITCOIN_SCRIPT_INTERPRETER
 
+#include "core.h"
+
 #include <vector>
 #include <stdint.h>
 #include <string>
@@ -48,7 +50,15 @@ enum
     SCRIPT_VERIFY_NULLDUMMY = (1U << 4),
 };
 
-uint256 SignatureHash(const CScript &scriptCode, const CTransaction& txTo, unsigned int nIn, int nHashType);
+class TxSignatureHasher
+{
+private:
+    const CTransaction txTo;
+    unsigned int nIn;
+public:
+    TxSignatureHasher(const CTransaction& txToIn, unsigned int nInIn) : txTo(txToIn), nIn(nInIn) {}
+    uint256 SignatureHash(const CScript& scriptCode, int nHashType) const;
+};
 
 class BaseSignatureChecker
 {
@@ -64,14 +74,12 @@ public:
 class SignatureChecker : public BaseSignatureChecker
 {
 private:
-    const CTransaction& txTo;
-    unsigned int nIn;
-
+    const TxSignatureHasher hasher;
 protected:
     virtual bool VerifySignature(const std::vector<unsigned char>& vchSig, const CPubKey& vchPubKey, const uint256& sighash) const;
 
 public:
-    SignatureChecker(const CTransaction& txToIn, unsigned int nInIn) : txTo(txToIn), nIn(nInIn) {}
+    SignatureChecker(const CTransaction& txToIn, unsigned int nIn) : hasher(TxSignatureHasher(txToIn, nIn)) { }
     bool CheckSig(const std::vector<unsigned char>& scriptSig, const std::vector<unsigned char>& vchPubKey, const CScript& scriptCode) const;
 };
 

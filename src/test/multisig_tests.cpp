@@ -28,7 +28,7 @@ BOOST_AUTO_TEST_SUITE(multisig_tests)
 CScript
 sign_multisig(CScript scriptPubKey, vector<CKey> keys, CTransaction transaction, int whichIn)
 {
-    uint256 hash = SignatureHash(scriptPubKey, transaction, whichIn, SIGHASH_ALL);
+    uint256 hash = TxSignatureHasher(transaction, whichIn).SignatureHash(scriptPubKey, SIGHASH_ALL);
 
     CScript result;
     result << OP_0; // CHECKMULTISIG bug workaround
