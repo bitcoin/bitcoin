@@ -40,7 +40,7 @@ static void add_coin(const CAmount& nValue, int nAge = 6*24, bool fIsFromMe = fa
         // so stop vin being empty, and cache a non-zero Debit to fake out IsFromMe()
         tx.vin.resize(1);
     }
-    CWalletTx* wtx = new CWalletTx(&wallet, tx);
+    CWalletTx* wtx = new CWalletTx(&wallet, CTransaction(tx));
     if (fIsFromMe)
     {
         wtx->fDebitCached = true;

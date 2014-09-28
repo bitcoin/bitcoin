@@ -327,13 +327,14 @@ vector<unsigned char> ParseHexUO(map<string,UniValue>& o, string strKey)
 static void MutateTxSign(CMutableTransaction& tx, const string& flagStr)
 {
     int nHashType = SIGHASH_ALL;
+    const CTransaction txConst(tx);
 
     if (flagStr.size() > 0)
         if (!findSighashFlags(nHashType, flagStr))
             throw runtime_error("unknown sighash flag/sign option");
 
     vector<CTransaction> txVariants;
-    txVariants.push_back(tx);
+    txVariants.push_back(txConst);
 
     // mergedTx will end up with all the signatures; it
     // starts as a clone of the raw tx:
@@ -433,9 +434,9 @@ static void MutateTxSign(CMutableTransaction& tx, const string& flagStr)
 
         // ... and merge in other signatures:
         BOOST_FOREACH(const CTransaction& txv, txVariants) {
-            txin.scriptSig = CombineSignatures(prevPubKey, mergedTx, i, txin.scriptSig, txv.vin[i].scriptSig);
+            txin.scriptSig = CombineSignatures(prevPubKey, txConst, i, txin.scriptSig, txv.vin[i].scriptSig);
         }
-        if (!VerifyScript(txin.scriptSig, prevPubKey, STANDARD_SCRIPT_VERIFY_FLAGS, SignatureChecker(mergedTx, i)))
+        if (!VerifyScript(txin.scriptSig, prevPubKey, STANDARD_SCRIPT_VERIFY_FLAGS, SignatureChecker(txConst, i)))
             fComplete = false;
     }
 
@@ -572,7 +573,8 @@ static int CommandLineRawTx(int argc, char* argv[])
             MutateTx(tx, key, value);
         }
 
-        OutputTx(tx);
+        const CTransaction txConst(tx);
+        OutputTx(txConst);
     }
 
     catch (boost::thread_interrupted) {

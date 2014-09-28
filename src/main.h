@@ -275,6 +275,11 @@ bool IsStandardTx(const CTransaction& tx, std::string& reason);
 
 bool IsFinalTx(const CTransaction &tx, int nBlockHeight = 0, int64_t nBlockTime = 0);
 
+inline bool IsFinalTx(CMutableTransaction& tx, int nBlockHeight = 0, int64_t nBlockTime = 0)
+{
+    return IsFinalTx(CTransaction(tx), nBlockHeight, nBlockTime);
+}
+
 /** Undo information for a CBlock */
 class CBlockUndo
 {

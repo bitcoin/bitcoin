@@ -34,6 +34,12 @@ struct COrphanTx {
 extern std::map<uint256, COrphanTx> mapOrphanTransactions;
 extern std::map<uint256, std::set<uint256> > mapOrphanTransactionsByPrev;
 
+bool AddOrphanTx(const CMutableTransaction& txIn, NodeId peer)
+{
+    const CTransaction tx(txIn);
+    return AddOrphanTx(tx, peer);
+}
+
 CService ip(uint32_t i)
 {
     struct in_addr s;

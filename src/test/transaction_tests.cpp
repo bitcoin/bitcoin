@@ -34,6 +34,18 @@ static std::map<string, unsigned int> mapFlagNames = boost::assign::map_list_of
     (string("LOW_S"), (unsigned int)SCRIPT_VERIFY_LOW_S)
     (string("NULLDUMMY"), (unsigned int)SCRIPT_VERIFY_NULLDUMMY);
 
+inline bool AreInputsStandard(const CMutableTransaction& tx, const CCoinsViewCache& mapInputs)
+{
+    const CTransaction txConst(tx);
+    return AreInputsStandard(txConst, mapInputs);
+}
+
+inline bool IsStandardTx(const CMutableTransaction& tx, string& reason)
+{
+    const CTransaction txConst(tx);
+    return IsStandardTx(txConst, reason);
+}
+
 unsigned int ParseScriptFlags(string strFlags)
 {
     if (strFlags.empty()) {
@@ -228,11 +240,11 @@ BOOST_AUTO_TEST_CASE(basic_transaction_tests)
     CMutableTransaction tx;
     stream >> tx;
     CValidationState state;
-    BOOST_CHECK_MESSAGE(CheckTransaction(tx, state) && state.IsValid(), "Simple deserialized transaction should be valid.");
+    BOOST_CHECK_MESSAGE(CheckTransaction(CTransaction(tx), state) && state.IsValid(), "Simple deserialized transaction should be valid.");
 
     // Check that duplicate txins fail
     tx.vin.push_back(tx.vin[0]);
-    BOOST_CHECK_MESSAGE(!CheckTransaction(tx, state) || !state.IsValid(), "Transaction with duplicate txins should be invalid.");
+    BOOST_CHECK_MESSAGE(!CheckTransaction(CTransaction(tx), state) || !state.IsValid(), "Transaction with duplicate txins should be invalid.");
 }
 
 //
@@ -261,14 +273,14 @@ SetupDummyInputs(CBasicKeyStore& keystoreRet, CCoinsView & coinsRet)
     dummyTransactions[0].vout[0].scriptPubKey << key[0].GetPubKey() << OP_CHECKSIG;
     dummyTransactions[0].vout[1].nValue = 50*CENT;
     dummyTransactions[0].vout[1].scriptPubKey << key[1].GetPubKey() << OP_CHECKSIG;
-    coinsRet.SetCoins(dummyTransactions[0].GetHash(), CCoins(dummyTransactions[0], 0));
+    coinsRet.SetCoins(dummyTransactions[0].GetHash(), CCoins(CTransaction(dummyTransactions[0]), 0));
 
     dummyTransactions[1].vout.resize(2);
     dummyTransactions[1].vout[0].nValue = 21*CENT;
     dummyTransactions[1].vout[0].scriptPubKey = GetScriptForDestination(key[2].GetPubKey().GetID());
     dummyTransactions[1].vout[1].nValue = 22*CENT;
     dummyTransactions[1].vout[1].scriptPubKey = GetScriptForDestination(key[3].GetPubKey().GetID());
-    coinsRet.SetCoins(dummyTransactions[1].GetHash(), CCoins(dummyTransactions[1], 0));
+    coinsRet.SetCoins(dummyTransactions[1].GetHash(), CCoins(CTransaction(dummyTransactions[1]), 0));
 
     return dummyTransactions;
 }
@@ -296,7 +308,7 @@ BOOST_AUTO_TEST_CASE(test_Get)
     t1.vout[0].scriptPubKey << OP_1;
 
     BOOST_CHECK(AreInputsStandard(t1, coins));
-    BOOST_CHECK_EQUAL(coins.GetValueIn(t1), (50+21+22)*CENT);
+    BOOST_CHECK_EQUAL(coins.GetValueIn(CTransaction(t1)), (50+21+22)*CENT);
 
     // Adding extra junk to the scriptSig should make it non-standard:
     t1.vin[0].scriptSig << OP_11;
