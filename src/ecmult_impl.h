@@ -69,7 +69,9 @@ typedef struct {
     // For accelerating the computation of a*P + b*G:
     secp256k1_ge_t pre_g[ECMULT_TABLE_SIZE(WINDOW_G)];    // odd multiples of the generator
     secp256k1_ge_t pre_g_128[ECMULT_TABLE_SIZE(WINDOW_G)]; // odd multiples of 2^128*generator
+} secp256k1_ecmult_consts_t;
 
+typedef struct {
     // For accelerating the computation of a*G:
     // To harden against timing attacks, use the following mechanism:
     // * Break up the multiplicand into groups of 4 bits, called n_0, n_1, n_2, ..., n_63.
@@ -83,16 +85,17 @@ typedef struct {
     // the intermediate sums while computing a*G.
     // To make memory access uniform, the bytes of prec(i, n_i) are sliced per value of n_i.
     unsigned char prec[64][sizeof(secp256k1_ge_t)][16]; // prec[j][k][i] = k'th byte of (16^j * i * G + U_i)
-} secp256k1_ecmult_consts_t;
+} secp256k1_ecmult_gen_consts_t;
 
 static const secp256k1_ecmult_consts_t *secp256k1_ecmult_consts = NULL;
+static const secp256k1_ecmult_gen_consts_t *secp256k1_ecmult_gen_consts = NULL;
 
 static void secp256k1_ecmult_start(void) {
     if (secp256k1_ecmult_consts != NULL)
         return;
 
+    // Allocate the precomputation table.
     secp256k1_ecmult_consts_t *ret = (secp256k1_ecmult_consts_t*)malloc(sizeof(secp256k1_ecmult_consts_t));
-    secp256k1_ecmult_consts = ret;
 
     // get the generator
     const secp256k1_ge_t *g = &secp256k1_ge_consts->g;
@@ -106,6 +109,21 @@ static void secp256k1_ecmult_start(void) {
     // precompute the tables with odd multiples
     secp256k1_ecmult_table_precomp_ge(ret->pre_g, &gj, WINDOW_G);
     secp256k1_ecmult_table_precomp_ge(ret->pre_g_128, &g_128j, WINDOW_G);
+
+    // Set the global pointer to the precomputation table.
+    secp256k1_ecmult_consts = ret;
+}
+
+static void secp256k1_ecmult_gen_start(void) {
+    if (secp256k1_ecmult_gen_consts != NULL)
+        return;
+
+    // Allocate the precomputation table.
+    secp256k1_ecmult_gen_consts_t *ret = (secp256k1_ecmult_gen_consts_t*)malloc(sizeof(secp256k1_ecmult_gen_consts_t));
+
+    // get the generator
+    const secp256k1_ge_t *g = &secp256k1_ge_consts->g;
+    secp256k1_gej_t gj; secp256k1_gej_set_ge(&gj, g);
 
     // Construct a group element with no known corresponding scalar (nothing up my sleeve).
     secp256k1_gej_t nums_gej;
@@ -154,6 +172,9 @@ static void secp256k1_ecmult_start(void) {
                 ret->prec[j][k][i] = raw[k];
         }
     }
+
+    // Set the global pointer to the precomputation table.
+    secp256k1_ecmult_gen_consts = ret;
 }
 
 static void secp256k1_ecmult_stop(void) {
@@ -161,8 +182,17 @@ static void secp256k1_ecmult_stop(void) {
         return;
 
     secp256k1_ecmult_consts_t *c = (secp256k1_ecmult_consts_t*)secp256k1_ecmult_consts;
-    free(c);
     secp256k1_ecmult_consts = NULL;
+    free(c);
+}
+
+static void secp256k1_ecmult_gen_stop(void) {
+    if (secp256k1_ecmult_gen_consts == NULL)
+        return;
+
+    secp256k1_ecmult_gen_consts_t *c = (secp256k1_ecmult_gen_consts_t*)secp256k1_ecmult_gen_consts;
+    secp256k1_ecmult_gen_consts = NULL;
+    free(c);
 }
 
 /** Convert a number to WNAF notation. The number becomes represented by sum(2^i * wnaf[i], i=0..bits),
@@ -209,7 +239,7 @@ void static secp256k1_ecmult_gen(secp256k1_gej_t *r, const secp256k1_num_t *gn) 
     secp256k1_num_t n;
     secp256k1_num_init(&n);
     secp256k1_num_copy(&n, gn);
-    const secp256k1_ecmult_consts_t *c = secp256k1_ecmult_consts;
+    const secp256k1_ecmult_gen_consts_t *c = secp256k1_ecmult_gen_consts;
     secp256k1_gej_set_infinity(r);
     secp256k1_ge_t add;
     int bits;

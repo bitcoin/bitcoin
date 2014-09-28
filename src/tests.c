@@ -704,7 +704,7 @@ int main(int argc, char **argv) {
     printf("test count = %i\n", count);
 
     // initialize
-    secp256k1_start();
+    secp256k1_start(SECP256K1_START_SIGN | SECP256K1_START_VERIFY);
 
     // num tests
     run_num_smalltests();
