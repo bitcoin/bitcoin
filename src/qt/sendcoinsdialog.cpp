@@ -472,7 +472,7 @@ void SendCoinsDialog::on_addressBookButton_clicked()
 {
     if(!model)
         return;
-    AddressBookPage dlg(AddressBookPage::ForSending, AddressBookPage::SendingTab, this);
+    AddressBookPage dlg(AddressBookPage::ForSending, AddressBookPage::ReceivingTab, this);
     dlg.setModel(model->getAddressTableModel());
     if(dlg.exec())
     {
