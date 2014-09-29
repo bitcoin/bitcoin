@@ -450,9 +450,9 @@ void static BitcoinMiner(CWallet *pwallet)
             //
             unsigned int nTransactionsUpdatedLast = mempool.GetTransactionsUpdated();
             CBlockIndex* pindexPrev = chainActive.Tip();
-            if (NULL == pindexPrev) {
+            if (!pindexPrev) {
                 MilliSleep(1000);
-                continue ;
+                continue;
             }
 
             auto_ptr<CBlockTemplate> pblocktemplate(CreateNewBlockWithKey(reservekey));
