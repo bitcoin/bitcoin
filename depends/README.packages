@@ -65,9 +65,21 @@ These variables may be set to override or append their default values.
   $(package)_config_env
   $(package)_build_env
   $(package)_stage_env
+  $(package)_build_opts
+  $(package)_config_opts
 
 The *_env variables are used to add environment variables to the respective
 commands.
+
+Many variables respect a debug/release suffix as well, in order to use them for
+only the appropriate build config. For example:
+  $(package)_cflags_release = -O3
+  $(package)_cflags_i686_debug = -g
+  $(package)_config_opts_release = --disable-debug
+
+These will be used in addition to the options that do not specify
+debug/release. All builds are considered to be release unless DEBUG=1 is set by
+the user.
 
 Other variables may be defined as needed.
 
