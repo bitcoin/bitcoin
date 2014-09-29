@@ -22,6 +22,7 @@ FALLBACK_DOWNLOAD_PATH: If a source file can't be fetched, try here before givin
 NO_QT: Don't download/build/cache qt and its dependencies
 NO_WALLET: Don't download/build/cache libs needed to enable the wallet
 NO_UPNP: Don't download/build/cache packages needed for enabling upnp
+DEBUG: disable some optimizations and enable more runtime checking
 
 If some packages are not built, for example 'make NO_WALLET=1', the appropriate
 options will be passed to bitcoin's configure. In this case, --disable-wallet.
