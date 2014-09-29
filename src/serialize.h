@@ -1154,7 +1154,7 @@ public:
 
 
 
-/** Non-refcounted RAII wrapper for FILE*.
+/** Non-refcounted RAII wrapper for FILE*
  *
  * Will automatically close the file when it goes out of scope if not null.
  * If you're returning the file pointer, return file.release().
@@ -1186,9 +1186,10 @@ public:
 
     void fclose()
     {
-        if (file != NULL && file != stdin && file != stdout && file != stderr)
+        if (file) {
             ::fclose(file);
-        file = NULL;
+            file = NULL;
+        }
     }
 
     FILE* release()             { FILE* ret = file; file = NULL; return ret; }
@@ -1257,7 +1258,11 @@ public:
 };
 
 /** Non-refcounted RAII wrapper around a FILE* that implements a ring buffer to
- *  deserialize from. It guarantees the ability to rewind a given number of bytes. */
+ *  deserialize from. It guarantees the ability to rewind a given number of bytes.
+ *
+ *  Will automatically close the file when it goes out of scope if not null.
+ *  If you need to close the file early, use file.fclose() instead of fclose(file).
+ */
 class CBufferedFile
 {
 private:
@@ -1305,8 +1310,15 @@ public:
 
     ~CBufferedFile()
     {
-        if (src)
-            fclose(src);
+        fclose();
+    }
+
+    void fclose()
+    {
+        if (src) {
+            ::fclose(src);
+            src = NULL;
+        }
     }
 
     // check whether we're at the end of the source file
