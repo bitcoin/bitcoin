@@ -62,7 +62,7 @@ public:
     /* Allow mining of a min-difficulty block */
     bool AllowMinDifficultyBlocks() const { return fAllowMinDifficultyBlocks; }
     /* Skip proof-of-work check: allow mining of any difficulty block */
-    virtual bool SkipProofOfWorkCheck() const { return false; }
+    bool SkipProofOfWorkCheck() const { return fSkipProofOfWorkCheck; }
     /* Make standard checks */
     bool RequireStandard() const { return fRequireStandard; }
     int64_t TargetTimespan() const { return nTargetTimespan; }
@@ -105,6 +105,7 @@ protected:
     bool fAllowMinDifficultyBlocks;
     bool fRequireStandard;
     bool fMineBlocksOnDemand;
+    bool fSkipProofOfWorkCheck;
 };
 
 /** Modifiable parameters interface is used by test cases to adapt the parameters in order
