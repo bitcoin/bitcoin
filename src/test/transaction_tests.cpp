@@ -17,6 +17,7 @@
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
 #include <boost/test/unit_test.hpp>
+#include <boost/assign/list_of.hpp>
 #include "json/json_spirit_writer_template.h"
 
 using namespace std;
@@ -26,21 +27,22 @@ using namespace boost::algorithm;
 // In script_tests.cpp
 extern Array read_json(const std::string& jsondata);
 
-unsigned int ParseScriptFlags(string strFlags){
+// Note how NOCACHE is not included as it is a runtime-only flag.
+static std::map<string, unsigned int> mapFlagNames = boost::assign::map_list_of
+    (string("NONE"), (unsigned int)SCRIPT_VERIFY_NONE)
+    (string("P2SH"), (unsigned int)SCRIPT_VERIFY_P2SH)
+    (string("STRICTENC"), (unsigned int)SCRIPT_VERIFY_STRICTENC)
+    (string("LOW_S"), (unsigned int)SCRIPT_VERIFY_LOW_S)
+    (string("NULLDUMMY"), (unsigned int)SCRIPT_VERIFY_NULLDUMMY);
+
+unsigned int ParseScriptFlags(string strFlags)
+{
+    if (strFlags.empty()) {
+        return 0;
+    }
     unsigned int flags = 0;
     vector<string> words;
     split(words, strFlags, is_any_of(","));
-
-    // Note how NOCACHE is not included as it is a runtime-only flag.
-    static map<string, unsigned int> mapFlagNames;
-    if (mapFlagNames.size() == 0)
-    {
-        mapFlagNames["NONE"] = SCRIPT_VERIFY_NONE;
-        mapFlagNames["P2SH"] = SCRIPT_VERIFY_P2SH;
-        mapFlagNames["STRICTENC"] = SCRIPT_VERIFY_STRICTENC;
-        mapFlagNames["LOW_S"] = SCRIPT_VERIFY_LOW_S;
-        mapFlagNames["NULLDUMMY"] = SCRIPT_VERIFY_NULLDUMMY;
-    }
 
     BOOST_FOREACH(string word, words)
     {
@@ -50,6 +52,22 @@ unsigned int ParseScriptFlags(string strFlags){
     }
 
     return flags;
+}
+
+string FormatScriptFlags(unsigned int flags)
+{
+    if (flags == 0) {
+        return "";
+    }
+    string ret;
+    std::map<string, unsigned int>::const_iterator it = mapFlagNames.begin();
+    while (it != mapFlagNames.end()) {
+        if (flags & it->second) {
+            ret += it->first + ",";
+        }
+        it++;
+    }
+    return ret.substr(0, ret.size() - 1);
 }
 
 BOOST_AUTO_TEST_SUITE(transaction_tests)
