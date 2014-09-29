@@ -22,6 +22,12 @@ host:=$(HOST)
 host_toolchain:=$(HOST)-
 endif
 
+ifneq ($(DEBUG),)
+release_type=debug
+else
+release_type=release
+endif
+
 base_build_dir=$(BASEDIR)/work/build
 base_staging_dir=$(BASEDIR)/work/staging
 canonical_host:=$(shell ./config.sub $(HOST))
@@ -103,12 +109,14 @@ $(host_prefix)/share/config.site : config.site.in $(host_prefix)/.stamp_$(final_
             -e 's|@STRIP@|$(toolchain_path)$(host_STRIP)|' \
             -e 's|@build_os@|$(build_os)|' \
             -e 's|@host_os@|$(host_os)|' \
-            -e 's|@CFLAGS@|$(host_CFLAGS)|' \
-            -e 's|@CXXFLAGS@|$(host_CXXFLAGS)|' \
-            -e 's|@LDFLAGS@|$(host_LDFLAGS)|' \
+            -e 's|@CFLAGS@|$(strip $(host_CFLAGS) $(host_$(release_type)_CFLAGS))|' \
+            -e 's|@CXXFLAGS@|$(strip $(host_CXXFLAGS) $(host_$(release_type)_CXXFLAGS))|' \
+            -e 's|@CPPFLAGS@|$(strip $(host_CPPFLAGS) $(host_$(release_type)_CPPFLAGS))|' \
+            -e 's|@LDFLAGS@|$(strip $(host_LDFLAGS) $(host_$(release_type)_LDFLAGS))|' \
             -e 's|@no_qt@|$(NO_QT)|' \
             -e 's|@no_wallet@|$(NO_WALLET)|' \
             -e 's|@no_upnp@|$(NO_UPNP)|' \
+            -e 's|@debug@|$(DEBUG)|' \
             $< > $@
 	$(AT)touch $@
 
