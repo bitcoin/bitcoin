@@ -292,7 +292,7 @@ def copyFramework(framework, path, verbose):
         fromResourcesDir = framework.sourceResourcesDirectory
         if os.path.exists(fromResourcesDir):
             toResourcesDir = os.path.join(path, framework.destinationResourcesDirectory)
-            shutil.copytree(fromResourcesDir, toResourcesDir)
+            shutil.copytree(fromResourcesDir, toResourcesDir, symlinks=True)
             if verbose >= 3:
                 print "Copied resources:", fromResourcesDir
                 print " to:", toResourcesDir
@@ -301,7 +301,7 @@ def copyFramework(framework, path, verbose):
             fromContentsDir = framework.sourceContentsDirectory
         if os.path.exists(fromContentsDir):
             toContentsDir = os.path.join(path, framework.destinationVersionContentsDirectory)
-            shutil.copytree(fromContentsDir, toContentsDir)
+            shutil.copytree(fromContentsDir, toContentsDir, symlinks=True)
             contentslinkfrom = os.path.join(path, framework.destinationContentsDirectory)
             if verbose >= 3:
                 print "Copied Contents:", fromContentsDir
@@ -310,7 +310,7 @@ def copyFramework(framework, path, verbose):
         qtMenuNibSourcePath = os.path.join(framework.frameworkDirectory, "Resources", "qt_menu.nib")
         qtMenuNibDestinationPath = os.path.join(path, "Contents", "Resources", "qt_menu.nib")
         if os.path.exists(qtMenuNibSourcePath) and not os.path.exists(qtMenuNibDestinationPath):
-            shutil.copytree(qtMenuNibSourcePath, qtMenuNibDestinationPath)
+            shutil.copytree(qtMenuNibSourcePath, qtMenuNibDestinationPath, symlinks=True)
             if verbose >= 3:
                 print "Copied for libQtGui:", qtMenuNibSourcePath
                 print " to:", qtMenuNibDestinationPath
@@ -584,7 +584,7 @@ if verbose >= 3:
     print app_bundle, "->", target
 
 os.mkdir("dist")
-shutil.copytree(app_bundle, target)
+shutil.copytree(app_bundle, target, symlinks=True)
 
 applicationBundle = ApplicationBundleInfo(target)
 
@@ -664,7 +664,7 @@ for p in config.add_resources:
     if verbose >= 3:
         print p, "->", t
     if os.path.isdir(p):
-        shutil.copytree(p, t)
+        shutil.copytree(p, t, symlinks=True)
     else:
         shutil.copy2(p, t)
 
