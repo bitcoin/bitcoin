@@ -15,9 +15,12 @@ the usage of the absolute path.
 To Build
 ---------------------
 
-	./autogen.sh
-	./configure
-	make
+```bash
+./autogen.sh
+./configure
+make
+make install # optional
+```
 
 This will build bitcoin-qt as well if the dependencies are met.
 
