@@ -1335,7 +1335,7 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
         // While checking, GetBestBlock() refers to the parent block.
         // This is also true for mempool checks.
         CBlockIndex *pindexPrev = mapBlockIndex.find(inputs.GetBestBlock())->second;
-        int nSpendHeight = pindexPrev->nHeight + 1;
+        int nSpendHeight = pindexPrev->nHeight;
         int64_t nValueIn = 0;
         int64_t nFees = 0;
         for (unsigned int i = 0; i < tx.vin.size(); i++)
