@@ -283,8 +283,8 @@ def copyFramework(framework, path, verbose):
 
     if not framework.isDylib(): # Copy resources for real frameworks
 
-        linkfrom = os.path.join(path, "Contents/Frameworks/", framework.frameworkName, framework.binaryName)
-        linkto = os.path.join(framework.binaryPath)
+        linkfrom = os.path.join(path, "Contents","Frameworks", framework.frameworkName, "Versions", "Current")
+        linkto = framework.version
         if not os.path.exists(linkfrom):
             os.symlink(linkto, linkfrom)
             if verbose >= 2:
@@ -303,11 +303,6 @@ def copyFramework(framework, path, verbose):
             toContentsDir = os.path.join(path, framework.destinationVersionContentsDirectory)
             shutil.copytree(fromContentsDir, toContentsDir)
             contentslinkfrom = os.path.join(path, framework.destinationContentsDirectory)
-            if not os.path.exists(contentslinkfrom):
-                contentslinkto = os.path.join("Versions/", framework.version, "Contents")
-                os.symlink(contentslinkto, contentslinkfrom)
-                if verbose >= 3:
-                    print "Linked:", contentslinkfrom, "->", contentslinkto
             if verbose >= 3:
                 print "Copied Contents:", fromContentsDir
                 print " to:", toContentsDir
