@@ -393,7 +393,7 @@ def deployPlugins(appBundleInfo, deploymentInfo, strip, verbose):
             # Deploy the script plugins only if QtScript is in use
             if not deploymentInfo.usesFramework("QtScript"):
                 continue
-        elif pluginDirectory == "qmltooling":
+        elif pluginDirectory == "qmltooling" or pluginDirectory == "qml1tooling":
             # Deploy the qml plugins only if QtDeclarative is in use
             if not deploymentInfo.usesFramework("QtDeclarative"):
                 continue
@@ -401,7 +401,23 @@ def deployPlugins(appBundleInfo, deploymentInfo, strip, verbose):
             # Deploy the bearer plugins only if QtNetwork is in use
             if not deploymentInfo.usesFramework("QtNetwork"):
                 continue
-        
+        elif pluginDirectory == "position":
+            # Deploy the position plugins only if QtPositioning is in use
+            if not deploymentInfo.usesFramework("QtPositioning"):
+                continue
+        elif pluginDirectory == "sensors" or pluginDirectory == "sensorgestures":
+            # Deploy the sensor plugins only if QtSensors is in use
+            if not deploymentInfo.usesFramework("QtSensors"):
+                continue
+        elif pluginDirectory == "audio" or pluginDirectory == "playlistformats":
+            # Deploy the audio plugins only if QtMultimedia is in use
+            if not deploymentInfo.usesFramework("QtMultimedia"):
+                continue
+        elif pluginDirectory == "mediaservice":
+            # Deploy the mediaservice plugins only if QtMultimediaWidgets is in use
+            if not deploymentInfo.usesFramework("QtMultimediaWidgets"):
+                continue
+
         for pluginName in filenames:
             pluginPath = os.path.join(pluginDirectory, pluginName)
             if pluginName.endswith("_debug.dylib"):
@@ -419,7 +435,11 @@ def deployPlugins(appBundleInfo, deploymentInfo, strip, verbose):
                 # Deploy the opengl graphicssystem plugin only if QtOpenGL is in use
                 if not deploymentInfo.usesFramework("QtOpenGL"):
                     continue
-            
+            elif pluginPath == "accessible/libqtaccessiblequick.dylib":
+                # Deploy the accessible qtquick plugin only if QtQuick is in use
+                if not deploymentInfo.usesFramework("QtQuick"):
+                    continue
+
             plugins.append((pluginDirectory, pluginName))
     
     for pluginDirectory, pluginName in plugins:
