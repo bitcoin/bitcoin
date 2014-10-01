@@ -35,9 +35,9 @@ matrix:
     - compiler: "true 5"
       env: HOST=x86_64-apple-darwin11 PACKAGES="gcc-multilib g++-multilib cmake libcap-dev libz-dev libbz2-dev" OSX_SDK=10.7 GOAL="deploy"
     - compiler: "true 6"
-      env: HOST=x86_64-w64-mingw32 PACKAGES="nsis gcc-mingw-w64-x86-64 g++-mingw-w64-x86-64 binutils-mingw-w64-x86-64 mingw-w64-dev" GOAL="deploy"
+      env: HOST=x86_64-w64-mingw32 PACKAGES="nsis gcc-mingw-w64-x86-64 g++-mingw-w64-x86-64 binutils-mingw-w64-x86-64 mingw-w64-dev wine" RUN_TESTS=true GOAL="deploy"
     - compiler: "true 7"
-      env: HOST=i686-w64-mingw32 PACKAGES="nsis gcc-mingw-w64-i686 g++-mingw-w64-i686 binutils-mingw-w64-i686 mingw-w64-dev" GOAL="deploy"
+      env: HOST=i686-w64-mingw32 PACKAGES="nsis gcc-mingw-w64-i686 g++-mingw-w64-i686 binutils-mingw-w64-i686 mingw-w64-dev wine" RUN_TESTS=true GOAL="deploy"
 install:
     - if [ -n "$PACKAGES" ]; then travis_retry sudo apt-get update; fi
     - if [ -n "$PACKAGES" ]; then travis_retry sudo apt-get install --no-upgrade -qq $PACKAGES; fi
