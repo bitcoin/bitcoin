@@ -7,6 +7,7 @@
 
 #include "core.h"
 #include "util.h"
+#include "utilmoneystr.h"
 
 #include <boost/circular_buffer.hpp>
 
@@ -18,7 +19,7 @@ CTxMemPoolEntry::CTxMemPoolEntry():
     nHeight = MEMPOOL_HEIGHT;
 }
 
-CTxMemPoolEntry::CTxMemPoolEntry(const CTransaction& _tx, int64_t _nFee,
+CTxMemPoolEntry::CTxMemPoolEntry(const CTransaction& _tx, const CAmount& _nFee,
                                  int64_t _nTime, double _dPriority,
                                  unsigned int _nHeight):
     tx(_tx), nFee(_nFee), nTime(_nTime), dPriority(_dPriority), nHeight(_nHeight)
@@ -36,7 +37,7 @@ CTxMemPoolEntry::CTxMemPoolEntry(const CTxMemPoolEntry& other)
 double
 CTxMemPoolEntry::GetPriority(unsigned int currentHeight) const
 {
-    int64_t nValueIn = tx.GetValueOut()+nFee;
+    CAmount nValueIn = tx.GetValueOut()+nFee;
     double deltaPriority = ((double)(currentHeight-nHeight)*nValueIn)/nModSize;
     double dResult = dPriority + deltaPriority;
     return dResult;
@@ -601,24 +602,24 @@ CTxMemPool::ReadFeeEstimates(CAutoFile& filein)
     return true;
 }
 
-void CTxMemPool::PrioritiseTransaction(const uint256 hash, const string strHash, double dPriorityDelta, int64_t nFeeDelta)
+void CTxMemPool::PrioritiseTransaction(const uint256 hash, const string strHash, double dPriorityDelta, const CAmount& nFeeDelta)
 {
     {
         LOCK(cs);
-        std::pair<double, int64_t> &deltas = mapDeltas[hash];
+        std::pair<double, CAmount> &deltas = mapDeltas[hash];
         deltas.first += dPriorityDelta;
         deltas.second += nFeeDelta;
     }
-    LogPrintf("PrioritiseTransaction: %s priority += %f, fee += %d\n", strHash, dPriorityDelta, nFeeDelta);
+    LogPrintf("PrioritiseTransaction: %s priority += %f, fee += %d\n", strHash, dPriorityDelta, FormatMoney(nFeeDelta));
 }
 
-void CTxMemPool::ApplyDeltas(const uint256 hash, double &dPriorityDelta, int64_t &nFeeDelta)
+void CTxMemPool::ApplyDeltas(const uint256 hash, double &dPriorityDelta, CAmount &nFeeDelta)
 {
     LOCK(cs);
-    std::map<uint256, std::pair<double, int64_t> >::iterator pos = mapDeltas.find(hash);
+    std::map<uint256, std::pair<double, CAmount> >::iterator pos = mapDeltas.find(hash);
     if (pos == mapDeltas.end())
         return;
-    const std::pair<double, int64_t> &deltas = pos->second;
+    const std::pair<double, CAmount> &deltas = pos->second;
     dPriorityDelta += deltas.first;
     nFeeDelta += deltas.second;
 }
