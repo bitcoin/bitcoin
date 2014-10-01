@@ -273,7 +273,7 @@ Value prioritisetransaction(const Array& params, bool fHelp)
     uint256 hash;
     hash.SetHex(params[0].get_str());
 
-    int64_t nAmount = 0;
+    CAmount nAmount = 0;
     if (params[2].get_real() != 0.0)
         nAmount = AmountFromValue(params[2]);
 

@@ -5,6 +5,8 @@
 #ifndef GUIUTIL_H
 #define GUIUTIL_H
 
+#include "amount.h"
+
 #include <QHeaderView>
 #include <QMessageBox>
 #include <QObject>
@@ -46,7 +48,7 @@ namespace GUIUtil
     QString formatBitcoinURI(const SendCoinsRecipient &info);
 
     // Returns true if given address+amount meets "dust" definition
-    bool isDust(const QString& address, qint64 amount);
+    bool isDust(const QString& address, const CAmount& amount);
 
     // HTML escaping for rich text controls
     QString HtmlEscape(const QString& str, bool fMultiLine=false);

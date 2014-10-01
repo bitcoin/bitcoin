@@ -44,7 +44,7 @@ public:
     void fixup(QString &input) const
     {
         bool valid = false;
-        qint64 val = parse(input, &valid);
+        CAmount val = parse(input, &valid);
         if(valid)
         {
             input = BitcoinUnits::format(currentUnit, val, false, BitcoinUnits::separatorAlways);
@@ -52,12 +52,12 @@ public:
         }
     }
 
-    qint64 value(bool *valid_out=0) const
+    CAmount value(bool *valid_out=0) const
     {
         return parse(text(), valid_out);
     }
 
-    void setValue(qint64 value)
+    void setValue(const CAmount& value)
     {
         lineEdit()->setText(BitcoinUnits::format(currentUnit, value, false, BitcoinUnits::separatorAlways));
         emit valueChanged();
@@ -66,9 +66,9 @@ public:
     void stepBy(int steps)
     {
         bool valid = false;
-        qint64 val = value(&valid);
+        CAmount val = value(&valid);
         val = val + steps * singleStep;
-        val = qMin(qMax(val, Q_INT64_C(0)), BitcoinUnits::maxMoney());
+        val = qMin(qMax(val, CAmount(0)), BitcoinUnits::maxMoney());
         setValue(val);
     }
 
@@ -78,7 +78,7 @@ public:
         if(text().isEmpty()) // Allow step-up with empty field
             return StepUpEnabled;
         bool valid = false;
-        qint64 val = value(&valid);
+        CAmount val = value(&valid);
         if(valid)
         {
             if(val > 0)
@@ -92,7 +92,7 @@ public:
     void setDisplayUnit(int unit)
     {
         bool valid = false;
-        qint64 val = value(&valid);
+        CAmount val = value(&valid);
 
         currentUnit = unit;
 
@@ -102,7 +102,7 @@ public:
             clear();
     }
 
-    void setSingleStep(qint64 step)
+    void setSingleStep(const CAmount& step)
     {
         singleStep = step;
     }
@@ -140,7 +140,7 @@ public:
     }
 private:
     int currentUnit;
-    qint64 singleStep;
+    CAmount singleStep;
     mutable QSize cachedMinimumSizeHint;
 
     /**
@@ -148,9 +148,9 @@ private:
      * return validity.
      * @note Must return 0 if !valid.
      */
-    qint64 parse(const QString &text, bool *valid_out=0) const
+    CAmount parse(const QString &text, bool *valid_out=0) const
     {
-        qint64 val = 0;
+        CAmount val = 0;
         bool valid = BitcoinUnits::parse(currentUnit, text, &val);
         if(valid)
         {
@@ -253,12 +253,12 @@ QWidget *BitcoinAmountField::setupTabChain(QWidget *prev)
     return unit;
 }
 
-qint64 BitcoinAmountField::value(bool *valid_out) const
+CAmount BitcoinAmountField::value(bool *valid_out) const
 {
     return amount->value(valid_out);
 }
 
-void BitcoinAmountField::setValue(qint64 value)
+void BitcoinAmountField::setValue(const CAmount& value)
 {
     amount->setValue(value);
 }
@@ -285,7 +285,7 @@ void BitcoinAmountField::setDisplayUnit(int newUnit)
     unit->setValue(newUnit);
 }
 
-void BitcoinAmountField::setSingleStep(qint64 step)
+void BitcoinAmountField::setSingleStep(const CAmount& step)
 {
     amount->setSingleStep(step);
 }

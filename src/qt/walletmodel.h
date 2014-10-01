@@ -37,7 +37,7 @@ class SendCoinsRecipient
 {
 public:
     explicit SendCoinsRecipient() : amount(0), nVersion(SendCoinsRecipient::CURRENT_VERSION) { }
-    explicit SendCoinsRecipient(const QString &addr, const QString &label, quint64 amount, const QString &message):
+    explicit SendCoinsRecipient(const QString &addr, const QString &label, const CAmount& amount, const QString &message):
         address(addr), label(label), amount(amount), message(message), nVersion(SendCoinsRecipient::CURRENT_VERSION) {}
 
     // If from an insecure payment request, this is used for storing
@@ -47,7 +47,7 @@ public:
     // Todo: This is a hack, should be replaced with a cleaner solution!
     QString address;
     QString label;
-    qint64 amount;
+    CAmount amount;
     // If from a payment request, this is used for storing the memo
     QString message;
 
@@ -125,13 +125,13 @@ public:
     TransactionTableModel *getTransactionTableModel();
     RecentRequestsTableModel *getRecentRequestsTableModel();
 
-    qint64 getBalance(const CCoinControl *coinControl = NULL) const;
-    qint64 getUnconfirmedBalance() const;
-    qint64 getImmatureBalance() const;
+    CAmount getBalance(const CCoinControl *coinControl = NULL) const;
+    CAmount getUnconfirmedBalance() const;
+    CAmount getImmatureBalance() const;
     bool haveWatchOnly() const;
-    qint64 getWatchBalance() const;
-    qint64 getWatchUnconfirmedBalance() const;
-    qint64 getWatchImmatureBalance() const;
+    CAmount getWatchBalance() const;
+    CAmount getWatchUnconfirmedBalance() const;
+    CAmount getWatchImmatureBalance() const;
     EncryptionStatus getEncryptionStatus() const;
     bool processingQueuedTransactions() { return fProcessingQueuedTransactions; }
 
@@ -210,12 +210,12 @@ private:
     RecentRequestsTableModel *recentRequestsTableModel;
 
     // Cache some values to be able to detect changes
-    qint64 cachedBalance;
-    qint64 cachedUnconfirmedBalance;
-    qint64 cachedImmatureBalance;
-    qint64 cachedWatchOnlyBalance;
-    qint64 cachedWatchUnconfBalance;
-    qint64 cachedWatchImmatureBalance;
+    CAmount cachedBalance;
+    CAmount cachedUnconfirmedBalance;
+    CAmount cachedImmatureBalance;
+    CAmount cachedWatchOnlyBalance;
+    CAmount cachedWatchUnconfBalance;
+    CAmount cachedWatchImmatureBalance;
     EncryptionStatus cachedEncryptionStatus;
     int cachedNumBlocks;
 
@@ -227,8 +227,8 @@ private:
 
 signals:
     // Signal that balance in wallet changed
-    void balanceChanged(qint64 balance, qint64 unconfirmedBalance, qint64 immatureBalance,
-                        qint64 watchOnlyBalance, qint64 watchUnconfBalance, qint64 watchImmatureBalance);
+    void balanceChanged(const CAmount& balance, const CAmount& unconfirmedBalance, const CAmount& immatureBalance,
+                        const CAmount& watchOnlyBalance, const CAmount& watchUnconfBalance, const CAmount& watchImmatureBalance);
 
     // Encryption status of wallet changed
     void encryptionStatusChanged(int status);
