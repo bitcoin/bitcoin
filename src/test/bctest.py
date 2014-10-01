@@ -7,9 +7,11 @@ import os
 import json
 import sys
 
-def bctest(testDir, testObj):
-	execargs = testObj['exec']
+def bctest(testDir, testObj, exeext):
 
+	execprog = testObj['exec'] + exeext
+	execargs = testObj['args']
+	execrun = [execprog] + execargs
 	stdinCfg = None
 	inputData = None
 	if "input" in testObj:
@@ -22,12 +24,11 @@ def bctest(testDir, testObj):
 	if "output_cmp" in testObj:
 		outputFn = testObj['output_cmp']
 		outputData = open(testDir + "/" + outputFn).read()
-
-	proc = subprocess.Popen(execargs, stdin=stdinCfg, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+	proc = subprocess.Popen(execrun, stdin=stdinCfg, stdout=subprocess.PIPE, stderr=subprocess.PIPE,universal_newlines=True)
 	try:
 		outs = proc.communicate(input=inputData)
 	except OSError:
-		print("OSError, Failed to execute " + execargs[0])
+		print("OSError, Failed to execute " + execprog)
 		sys.exit(1)
 
 	if outputData and (outs[0] != outputData):
@@ -41,13 +42,13 @@ def bctest(testDir, testObj):
 		print("Return code mismatch for " + outputFn)
 		sys.exit(1)
 
-def bctester(testDir, input_basename):
+def bctester(testDir, input_basename, buildenv):
 	input_filename = testDir + "/" + input_basename
 	raw_data = open(input_filename).read()
 	input_data = json.loads(raw_data)
 
 	for testObj in input_data:
-		bctest(testDir, testObj)
+		bctest(testDir, testObj, buildenv.exeext)
 
 	sys.exit(0)
 
