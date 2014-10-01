@@ -18,6 +18,7 @@ To Build
 	./autogen.sh
 	./configure
 	make
+        make install
 
 This will build bitcoin-qt as well if the dependencies are met.
 
