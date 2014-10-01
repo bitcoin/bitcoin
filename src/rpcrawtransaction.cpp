@@ -269,7 +269,7 @@ Value listunspent(const Array& params, bool fHelp)
                 continue;
         }
 
-        int64_t nValue = out.tx->vout[out.i].nValue;
+        CAmount nValue = out.tx->vout[out.i].nValue;
         const CScript& pk = out.tx->vout[out.i].scriptPubKey;
         Object entry;
         entry.push_back(Pair("txid", out.tx->GetHash().GetHex()));
@@ -367,7 +367,7 @@ Value createrawtransaction(const Array& params, bool fHelp)
         setAddress.insert(address);
 
         CScript scriptPubKey = GetScriptForDestination(address.Get());
-        int64_t nAmount = AmountFromValue(s.value_);
+        CAmount nAmount = AmountFromValue(s.value_);
 
         CTxOut out(nAmount, scriptPubKey);
         rawTx.vout.push_back(out);

@@ -221,7 +221,7 @@ QString formatBitcoinURI(const SendCoinsRecipient &info)
     return ret;
 }
 
-bool isDust(const QString& address, qint64 amount)
+bool isDust(const QString& address, const CAmount& amount)
 {
     CTxDestination dest = CBitcoinAddress(address.toStdString()).Get();
     CScript script = GetScriptForDestination(dest);

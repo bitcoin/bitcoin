@@ -728,7 +728,7 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state)
                          REJECT_INVALID, "bad-txns-oversize");
 
     // Check for negative or overflow output values
-    int64_t nValueOut = 0;
+    CAmount nValueOut = 0;
     BOOST_FOREACH(const CTxOut& txout, tx.vout)
     {
         if (txout.nValue < 0)
@@ -770,19 +770,19 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state)
     return true;
 }
 
-int64_t GetMinRelayFee(const CTransaction& tx, unsigned int nBytes, bool fAllowFree)
+CAmount GetMinRelayFee(const CTransaction& tx, unsigned int nBytes, bool fAllowFree)
 {
     {
         LOCK(mempool.cs);
         uint256 hash = tx.GetHash();
         double dPriorityDelta = 0;
-        int64_t nFeeDelta = 0;
+        CAmount nFeeDelta = 0;
         mempool.ApplyDeltas(hash, dPriorityDelta, nFeeDelta);
         if (dPriorityDelta > 0 || nFeeDelta > 0)
             return 0;
     }
 
-    int64_t nMinFee = ::minRelayTxFee.GetFee(nBytes);
+    CAmount nMinFee = ::minRelayTxFee.GetFee(nBytes);
 
     if (fAllowFree)
     {
@@ -845,7 +845,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
         CCoinsView dummy;
         CCoinsViewCache view(dummy);
 
-        int64_t nValueIn = 0;
+        CAmount nValueIn = 0;
         {
         LOCK(pool.cs);
         CCoinsViewMemPool viewMemPool(*pcoinsTip, pool);
@@ -897,15 +897,15 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
                                    hash.ToString(), nSigOps, MAX_TX_SIGOPS),
                              REJECT_NONSTANDARD, "bad-txns-too-many-sigops");
 
-        int64_t nValueOut = tx.GetValueOut();
-        int64_t nFees = nValueIn-nValueOut;
+        CAmount nValueOut = tx.GetValueOut();
+        CAmount nFees = nValueIn-nValueOut;
         double dPriority = view.GetPriority(tx, chainActive.Height());
 
         CTxMemPoolEntry entry(tx, nFees, GetTime(), dPriority, chainActive.Height());
         unsigned int nSize = entry.GetTxSize();
 
         // Don't accept it if it can't get into a block
-        int64_t txMinFee = GetMinRelayFee(tx, nSize, true);
+        CAmount txMinFee = GetMinRelayFee(tx, nSize, true);
         if (fLimitFree && nFees < txMinFee)
             return state.DoS(0, error("AcceptToMemoryPool : not enough fees %s, %d < %d",
                                       hash.ToString(), nFees, txMinFee),
@@ -1125,7 +1125,7 @@ void static PruneOrphanBlocks()
     mapOrphanBlocks.erase(hash);
 }
 
-int64_t GetBlockValue(int nHeight, int64_t nFees)
+CAmount GetBlockValue(int nHeight, const CAmount& nFees)
 {
     int64_t nSubsidy = 50 * COIN;
     int halvings = nHeight / Params().SubsidyHalvingInterval();
@@ -1336,8 +1336,8 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
         // This is also true for mempool checks.
         CBlockIndex *pindexPrev = mapBlockIndex.find(inputs.GetBestBlock())->second;
         int nSpendHeight = pindexPrev->nHeight + 1;
-        int64_t nValueIn = 0;
-        int64_t nFees = 0;
+        CAmount nValueIn = 0;
+        CAmount nFees = 0;
         for (unsigned int i = 0; i < tx.vin.size(); i++)
         {
             const COutPoint &prevout = tx.vin[i].prevout;
@@ -1365,7 +1365,7 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
                              REJECT_INVALID, "bad-txns-in-belowout");
 
         // Tally transaction fees
-        int64_t nTxFee = nValueIn - tx.GetValueOut();
+        CAmount nTxFee = nValueIn - tx.GetValueOut();
         if (nTxFee < 0)
             return state.DoS(100, error("CheckInputs() : %s nTxFee < 0", tx.GetHash().ToString()),
                              REJECT_INVALID, "bad-txns-fee-negative");
@@ -1605,7 +1605,7 @@ bool ConnectBlock(CBlock& block, CValidationState& state, CBlockIndex* pindex, C
     CCheckQueueControl<CScriptCheck> control(fScriptChecks && nScriptCheckThreads ? &scriptcheckqueue : NULL);
 
     int64_t nTimeStart = GetTimeMicros();
-    int64_t nFees = 0;
+    CAmount nFees = 0;
     int nInputs = 0;
     unsigned int nSigOps = 0;
     CDiskTxPos pos(pindex->GetBlockPos(), GetSizeOfCompactSize(block.vtx.size()));

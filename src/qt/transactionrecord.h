@@ -5,6 +5,7 @@
 #ifndef TRANSACTIONRECORD_H
 #define TRANSACTIONRECORD_H
 
+#include "amount.h"
 #include "uint256.h"
 
 #include <QList>
@@ -94,7 +95,7 @@ public:
 
     TransactionRecord(uint256 hash, qint64 time,
                 Type type, const std::string &address,
-                qint64 debit, qint64 credit):
+                const CAmount& debit, const CAmount& credit):
             hash(hash), time(time), type(type), address(address), debit(debit), credit(credit),
             idx(0)
     {
@@ -111,8 +112,8 @@ public:
     qint64 time;
     Type type;
     std::string address;
-    qint64 debit;
-    qint64 credit;
+    CAmount debit;
+    CAmount credit;
     /**@}*/
 
     /** Subtransaction index, for sort key */
