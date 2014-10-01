@@ -243,7 +243,7 @@ Value setaccount(const Array& params, bool fHelp)
         pwalletMain->SetAddressBook(address.Get(), strAccount, "receive");
     }
     else
-        throw JSONRPCError(RPC_MISC_ERROR, "Foreign Bitcoin address");
+        throw JSONRPCError(RPC_MISC_ERROR, "setaccount can only be used with own address");
 
     return Value::null;
 }
