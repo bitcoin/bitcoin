@@ -88,8 +88,6 @@ namespace Checkpoints {
             return dataTestnet;
         else if (Params().NetworkID() == CBaseChainParams::MAIN)
             return data;
-        else if (Params().NetworkID() == CBaseChainParams::UNITTEST) // UnitTest share the same checkpoints as MAIN
-            return data;
         else
             return dataRegtest;
     }
