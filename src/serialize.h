@@ -1166,12 +1166,13 @@ private:
     // Disallow copies
     CAutoFile(const CAutoFile&);
     CAutoFile& operator=(const CAutoFile&);
-protected:
-    FILE* file;
-public:
+
     int nType;
     int nVersion;
+	
+    FILE* file;	
 
+public:
     CAutoFile(FILE* filenew, int nTypeIn, int nVersionIn)
     {
         file = filenew;
