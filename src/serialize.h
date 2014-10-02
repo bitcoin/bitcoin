@@ -1154,7 +1154,7 @@ public:
 
 
 
-/** Non-refcounted RAII wrapper for FILE*.
+/** Non-refcounted RAII wrapper for FILE*
  *
  * Will automatically close the file when it goes out of scope if not null.
  * If you're returning the file pointer, return file.release().
@@ -1166,12 +1166,13 @@ private:
     // Disallow copies
     CAutoFile(const CAutoFile&);
     CAutoFile& operator=(const CAutoFile&);
-protected:
-    FILE* file;
-public:
+
     int nType;
     int nVersion;
+	
+    FILE* file;	
 
+public:
     CAutoFile(FILE* filenew, int nTypeIn, int nVersionIn)
     {
         file = filenew;
@@ -1186,9 +1187,10 @@ public:
 
     void fclose()
     {
-        if (file != NULL && file != stdin && file != stdout && file != stderr)
+        if (file) {
             ::fclose(file);
-        file = NULL;
+            file = NULL;
+        }
     }
 
     FILE* release()             { FILE* ret = file; file = NULL; return ret; }
@@ -1256,13 +1258,23 @@ public:
     }
 };
 
-/** Wrapper around a FILE* that implements a ring buffer to
- *  deserialize from. It guarantees the ability to rewind
- *  a given number of bytes. */
+/** Non-refcounted RAII wrapper around a FILE* that implements a ring buffer to
+ *  deserialize from. It guarantees the ability to rewind a given number of bytes.
+ *
+ *  Will automatically close the file when it goes out of scope if not null.
+ *  If you need to close the file early, use file.fclose() instead of fclose(file).
+ */
 class CBufferedFile
 {
 private:
-    FILE *src;          // source file
+    // Disallow copies
+    CBufferedFile(const CBufferedFile&);
+    CBufferedFile& operator=(const CBufferedFile&);
+
+    int nType;
+    int nVersion;
+
+    FILE *src;            // source file
     uint64_t nSrcPos;     // how many bytes have been read from source
     uint64_t nReadPos;    // how many bytes have been read from this
     uint64_t nReadLimit;  // up to which position we're allowed to read
@@ -1289,12 +1301,25 @@ protected:
     }
 
 public:
-    int nType;
-    int nVersion;
-
     CBufferedFile(FILE *fileIn, uint64_t nBufSize, uint64_t nRewindIn, int nTypeIn, int nVersionIn) :
-        src(fileIn), nSrcPos(0), nReadPos(0), nReadLimit((uint64_t)(-1)), nRewind(nRewindIn), vchBuf(nBufSize, 0),
-        nType(nTypeIn), nVersion(nVersionIn) {
+        nSrcPos(0), nReadPos(0), nReadLimit((uint64_t)(-1)), nRewind(nRewindIn), vchBuf(nBufSize, 0)
+    {
+        src = fileIn;
+        nType = nTypeIn;
+        nVersion = nVersionIn;
+    }
+
+    ~CBufferedFile()
+    {
+        fclose();
+    }
+
+    void fclose()
+    {
+        if (src) {
+            ::fclose(src);
+            src = NULL;
+        }
     }
 
     // check whether we're at the end of the source file
