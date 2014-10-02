@@ -358,8 +358,10 @@ void FinalizeNode(NodeId nodeid) {
     EraseOrphansFor(nodeid);
     nPreferredDownload -= state->fPreferredDownload;
 
-    if (state->nBlocksInFlight)
+    if (state->nBlocksInFlight) {
         nConcurrentDownloads--;
+        LogPrint("concurrent", "Concurrent=%d Syncing=%d peer=%d removed\n", nConcurrentDownloads, nSyncStarted, state->id);
+    }
 
     mapNodeState.erase(nodeid);
 }
@@ -2621,8 +2623,10 @@ bool ProcessNewBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDis
         // Store to disk
         CBlockIndex *pindex = NULL;
         bool ret = AcceptBlock(*pblock, state, &pindex, dbp);
-        if (pindex && pfrom)
+        if (pindex && pfrom) {
+            LogPrint("net", "received(%d,%d) block %s (height:%d) peer=%d (%d)\n", nConcurrentDownloads, nBlocksInFlight, pindex->GetBlockHash().ToString(), pindex->nHeight, pfrom->id, State(pfrom->id)->nBlocksInFlight);
             mapBlockSource[pindex->GetBlockHash()] = pfrom->GetId();
+        }
         if (!ret)
             return error("%s : AcceptBlock FAILED", __func__);
     }
@@ -3733,7 +3737,6 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             pfrom->AddInventoryKnown(inv);
 
             bool fAlreadyHave = AlreadyHave(inv);
-            LogPrint("net", "got inv: %s  %s peer=%d\n", inv.ToString(), fAlreadyHave ? "have" : "new", pfrom->id);
 
             if (!fAlreadyHave && !fImporting && !fReindex && inv.type != MSG_BLOCK)
                 pfrom->AskFor(inv);
@@ -3752,17 +3755,18 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                     // not a direct successor.
                     pfrom->PushMessage("getheaders", chainActive.GetLocator(pindexBestHeader), inv.hash);
                     state->fHeadersInFlight = true;
+                    LogPrint("net", "getheaders (%d) %s to peer=%d\n", pindexBestHeader->nHeight, inv.hash.ToString(), pfrom->id);
                     if (chainActive.Tip()->GetBlockTime() > GetAdjustedTime() - Params().TargetSpacing() * 20) {
                         vToFetch.push_back(inv);
                         // Mark block as in flight already, even though the actual "getdata" message only goes out
                         // later (within the same cs_main lock, though).
                         MarkBlockAsInFlight(pfrom->GetId(), inv.hash);
+                        LogPrint("net", "Requesting(%d,%d) %s peer=%d (%d)\n", nConcurrentDownloads, nBlocksInFlight, inv.ToString(), pfrom->id, state->nBlocksInFlight);
                         if (!state->tGetdataBlock && !state->nBlocksInFlight) {
                             state->tGetdataBlock = GetTimeMicros();
                             state->nStallClicks = 0;
                         }
                     }
-                    LogPrint("net", "getheaders (%d) %s to peer=%d\n", pindexBestHeader->nHeight, inv.hash.ToString(), pfrom->id);
                 }
             }
 
@@ -4047,7 +4051,6 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         vRecv >> block;
 
         CInv inv(MSG_BLOCK, block.GetHash());
-        LogPrint("net", "received block %s peer=%d\n", inv.hash.ToString(), pfrom->id);
 
         pfrom->AddInventoryKnown(inv);
 
@@ -4332,7 +4335,8 @@ bool ProcessMessages(CNode* pfrom)
         if (nThisClick < std::max(nClickBiggest, nClickBiggestNext) * 10) {
             nClickTotMinute += nThisClick;
             nClickSamples++;
-        }
+        } else
+            LogPrintf("Abnormal time jump detected (%d > %d * 10).\n", nThisClick, std::max(nClickBiggest, nClickBiggestNext));
     }
     if (state.nBlocksInFlight || state.fHeadersInFlight)
         state.nClicks++;
@@ -4368,6 +4372,7 @@ bool ProcessMessages(CNode* pfrom)
             nClickBiggestNext = 0;
             nStallBiggest = nStallBiggestNext;
             nStallBiggestNext = 0;
+            LogPrint("stall", "System: AvgStall=%d BigStall=%d B/s=%d AvgBlkSize=%d Click: Avg=%dms Big=%dms\n", nAvgStallMinute, nStallBiggest, nBytesPerMinute / 60, nAvgBlockSize, nAvgClick * .001, nClickBiggest * .001);
         }
         if (state.nStallSamples > 5) {
             state.nAvgStallMinute = state.nStallTotMinute / state.nStallSamples;
@@ -4381,6 +4386,7 @@ bool ProcessMessages(CNode* pfrom)
         state.nBytesTotMinute = 0;
         state.nStallBiggest = state.nStallBiggestNext;
         state.nStallBiggestNext = 0;
+        LogPrint("stall", "peer=%d Stall:Avg=%d Big=%d SysAvg=%d SysBig=%d AvgB/s=%d (%d%% of System=%d)\n", pfrom->id, state.nAvgStallMinute, state.nStallBiggest, nAvgStallMinute, nStallBiggest, state.nBytesPerMinute / 60, nBytesPerMinute ? state.nBytesPerMinute * 100 / nBytesPerMinute : 0, nBytesPerMinute / 60);
     } // If we've reached a minute (based on average click).
 
     std::deque<CNetMessage>::iterator it = pfrom->vRecvMsg.begin();
@@ -4715,8 +4721,13 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
         // Message: getdata (blocks)
         //
         vector<CInv> vGetData;
-        if (state.nBytesPerMinute && nBytesPerMinute && nAvgBlockSize && nAvgClick)
+        int64_t nOldMaxInFlight = state.nMaxInFlight;
+        if (state.nBytesPerMinute && nBytesPerMinute && nAvgBlockSize && nAvgClick) {
             state.nMaxInFlight = std::min<int64_t>(nConcurrentDownloads * 2000000 / nAvgBlockSize, BLOCK_DOWNLOAD_WINDOW / 2) * state.nBytesPerMinute / nBytesPerMinute;
+            if (state.nMaxInFlight != nOldMaxInFlight)
+                LogPrint("stall2", "peer=%d Changing MaxInFlight from %d to %d (%d * %d / %d).\n", pto->id, nOldMaxInFlight, state.nMaxInFlight,
+                    std::min<int>(nConcurrentDownloads * 2000000 / nAvgBlockSize, BLOCK_DOWNLOAD_WINDOW / 2), state.nBytesPerMinute / 60, nBytesPerMinute / 60);
+        }
         if (!pto->fDisconnect && !pto->fClient && fFetch && state.fHeadersReceived && state.nBlocksInFlight < state.nMaxInFlight) {
             vector<CBlockIndex*> vToDownload;
             NodeId staller = -1;
