@@ -488,9 +488,6 @@ public:
     // network and disk
     std::vector<CTransaction> vtx;
 
-    // memory only
-    mutable std::vector<uint256> vMerkleTree;
-
     CBlock()
     {
         SetNull();
@@ -514,7 +511,6 @@ public:
     {
         CBlockHeader::SetNull();
         vtx.clear();
-        vMerkleTree.clear();
     }
 
     CBlockHeader GetBlockHeader() const
@@ -531,8 +527,6 @@ public:
 
     uint256 BuildMerkleTree() const;
 
-    std::vector<uint256> GetMerkleBranch(int nIndex) const;
-    static uint256 CheckMerkleBranch(uint256 hash, const std::vector<uint256>& vMerkleBranch, int nIndex);
     std::string ToString() const;
 };
 
