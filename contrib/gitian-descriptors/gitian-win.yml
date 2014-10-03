@@ -50,7 +50,7 @@ script: |
     STAGING=$HOME/staging${BITS}
     BUILDDIR=$HOME/build${BITS}
     BINDIR=$OUTDIR/$BITS
-    if [ "$BITS" == "32" ]; then
+    if [ "x$BITS" = "x32" ]; then
       HOST=i686-w64-mingw32
     else
       HOST=x86_64-w64-mingw32
@@ -63,7 +63,7 @@ script: |
     unzip $INDIR/boost-win${BITS}-1.55.0-gitian-r6.zip
     unzip $INDIR/bitcoin-deps-win${BITS}-gitian-r13.zip
     unzip $INDIR/protobuf-win${BITS}-2.5.0-gitian-r4.zip
-    if [ "$NEEDDIST" == "1" ]; then
+    if [ "x$NEEDDIST" = "x1" ]; then
       # Make source code archive which is architecture independent so it only needs to be done once
       cd $HOME/build/bitcoin
       ./autogen.sh
