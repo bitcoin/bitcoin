@@ -95,7 +95,7 @@ public:
 struct CRecipient
 {
     CScript scriptPubKey;
-    int64_t nAmount;
+    CAmount nAmount;
     bool fSubtractFeeFromAmount;
 };
 

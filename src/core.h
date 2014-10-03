@@ -193,7 +193,7 @@ public:
 
     uint256 GetHash() const;
 
-    int64_t GetDustThreshold(CFeeRate& minRelayTxFee) const
+    CAmount GetDustThreshold(CFeeRate& minRelayTxFee) const
     {
         // "Dust" is defined in terms of CTransaction::minRelayTxFee,
         // which has units satoshis-per-kilobyte.

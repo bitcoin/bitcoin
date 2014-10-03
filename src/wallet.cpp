@@ -1440,7 +1440,7 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend,
                     // So instead we raise the change and deduct from the recipient.
                     if (nSubtractFeeFromAmount > 0 && newTxOut.IsDust(::minRelayTxFee))
                     {
-                        int64_t nDust = newTxOut.GetDustThreshold(::minRelayTxFee) - newTxOut.nValue;
+                        CAmount nDust = newTxOut.GetDustThreshold(::minRelayTxFee) - newTxOut.nValue;
                         newTxOut.nValue += nDust; // raise change until no more dust
                         for (unsigned int i = 0; i < vecSend.size(); i++) // subtract from first recipient
                         {

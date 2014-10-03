@@ -50,7 +50,7 @@ void WalletModelTransaction::reassignAmounts(int nChangePosRet)
 
         if (rcp.paymentRequest.IsInitialized())
         {
-            int64_t subtotal = 0;
+            CAmount subtotal = 0;
             const payments::PaymentDetails& details = rcp.paymentRequest.getDetails();
             for (int j = 0; j < details.outputs_size(); j++)
             {
