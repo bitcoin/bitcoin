@@ -34,12 +34,12 @@ if test -z $with_gui && test -n "@no_qt@"; then
   with_gui=no
 fi
 
-if test @host_os@ == darwin; then
+if test x@host_os@ = xdarwin; then
   BREW=no
   PORT=no
 fi
 
-if test @host_os@ == mingw32; then
+if test x@host_os@ = xmingw32; then
   if test -z $with_qt_incdir; then
     with_qt_incdir=$prefix/include
   fi

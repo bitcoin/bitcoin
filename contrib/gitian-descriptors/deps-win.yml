@@ -39,7 +39,7 @@ script: |
     #
     INSTALLPREFIX=$HOME/staging${BITS}
     BUILDDIR=$HOME/build${BITS}
-    if [ "$BITS" == "32" ]; then
+    if [ "x$BITS" = "x32" ]; then
       HOST=i686-w64-mingw32
     else
       HOST=x86_64-w64-mingw32
@@ -50,7 +50,7 @@ script: |
     #
     tar xzf $INDIR/openssl-1.0.1h.tar.gz
     cd openssl-1.0.1h
-    if [ "$BITS" == "32" ]; then
+    if [ "x$BITS" = "x32" ]; then
       OPENSSL_TGT=mingw
     else
       OPENSSL_TGT=mingw64
