@@ -149,7 +149,7 @@ echo "Creating transactions..."
 
 function S {
   TXID=$( $CLI -datadir=${D}/node${1} sendtoaddress ${2} "${3}" 0 )
-  if [[ $TXID == "" ]] ; then
+  if [ x$TXID = x ] ; then
       echoerr "node${1}: error sending ${3} btc"
       echo -n "node${1} balance: "
       $CLI -datadir=${D}/node${1} getbalance "*" 0
