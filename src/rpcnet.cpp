@@ -111,14 +111,19 @@ Value getpeerinfo(const Array& params, bool fHelp)
 
     Array ret;
 
-    BOOST_FOREACH(const CNodeStats& stats, vstats) {
+    BOOST_FOREACH(const CNodeStats& stats, vstats)
+    {
         Object obj;
         CNodeStateStats statestats;
         bool fStateStats = GetNodeStateStats(stats.nodeid, statestats);
         obj.push_back(Pair("id", stats.nodeid));
         obj.push_back(Pair("addr", stats.addrName));
+        
         if (!(stats.addrLocal.empty()))
+        {
             obj.push_back(Pair("addrlocal", stats.addrLocal));
+        }
+        
         obj.push_back(Pair("services", strprintf("%016x", stats.nServices)));
         obj.push_back(Pair("lastsend", stats.nLastSend));
         obj.push_back(Pair("lastrecv", stats.nLastRecv));
@@ -126,8 +131,12 @@ Value getpeerinfo(const Array& params, bool fHelp)
         obj.push_back(Pair("bytesrecv", stats.nRecvBytes));
         obj.push_back(Pair("conntime", stats.nTimeConnected));
         obj.push_back(Pair("pingtime", stats.dPingTime));
+        
         if (stats.dPingWait > 0.0)
+        {
             obj.push_back(Pair("pingwait", stats.dPingWait));
+        }
+        
         obj.push_back(Pair("version", stats.nVersion));
         // Use the sanitized form of subver here, to avoid tricksy remote peers from
         // corrupting or modifiying the JSON output by putting special characters in
@@ -135,10 +144,13 @@ Value getpeerinfo(const Array& params, bool fHelp)
         obj.push_back(Pair("subver", stats.cleanSubVer));
         obj.push_back(Pair("inbound", stats.fInbound));
         obj.push_back(Pair("startingheight", stats.nStartingHeight));
-        if (fStateStats) {
+        
+        if (fStateStats)
+        {
             obj.push_back(Pair("banscore", statestats.nMisbehavior));
             obj.push_back(Pair("syncheight", statestats.nSyncHeight));
         }
+        
         obj.push_back(Pair("syncnode", stats.fSyncNode));
         obj.push_back(Pair("whitelisted", stats.fWhitelisted));
 
@@ -178,9 +190,14 @@ Value addnode(const Array& params, bool fHelp)
 
     LOCK(cs_vAddedNodes);
     vector<string>::iterator it = vAddedNodes.begin();
-    for(; it != vAddedNodes.end(); it++)
+    
+    for (; it != vAddedNodes.end(); it++)
+    {
         if (strNode == *it)
+        {
             break;
+        }
+    }
 
     if (strCommand == "add")
     {
@@ -337,13 +354,15 @@ Value getnettotals(const Array& params, bool fHelp)
     obj.push_back(Pair("totalbytesrecv", CNode::GetTotalBytesRecv()));
     obj.push_back(Pair("totalbytessent", CNode::GetTotalBytesSent()));
     obj.push_back(Pair("timemillis", GetTimeMillis()));
+    
     return obj;
 }
 
 static Array GetNetworksInfo()
 {
     Array networks;
-    for(int n=0; n<NET_MAX; ++n)
+    
+    for (int n=0; n<NET_MAX; ++n)
     {
         enum Network network = static_cast<enum Network>(n);
         if(network == NET_UNROUTABLE)
@@ -357,6 +376,7 @@ static Array GetNetworksInfo()
         obj.push_back(Pair("proxy", proxy.IsValid() ? proxy.ToStringIPPort() : string()));
         networks.push_back(obj);
     }
+    
     return networks;
 }
 
@@ -399,15 +419,15 @@ Value getnetworkinfo(const Array& params, bool fHelp)
         );
 
     Object obj;
-    obj.push_back(Pair("version",       CLIENT_VERSION));
-    obj.push_back(Pair("subversion",
-        FormatSubVersion(CLIENT_NAME, CLIENT_VERSION, std::vector<string>())));
-    obj.push_back(Pair("protocolversion",PROTOCOL_VERSION));
-    obj.push_back(Pair("localservices",       strprintf("%016x", nLocalServices)));
-    obj.push_back(Pair("timeoffset",    GetTimeOffset()));
-    obj.push_back(Pair("connections",   (int)vNodes.size()));
-    obj.push_back(Pair("networks",      GetNetworksInfo()));
-    obj.push_back(Pair("relayfee",      ValueFromAmount(::minRelayTxFee.GetFeePerK())));
+    obj.push_back(Pair("version", CLIENT_VERSION));
+    obj.push_back(Pair("subversion", FormatSubVersion(CLIENT_NAME, CLIENT_VERSION, std::vector<string>())));
+    obj.push_back(Pair("protocolversion", PROTOCOL_VERSION));
+    obj.push_back(Pair("localservices", strprintf("%016x", nLocalServices)));
+    obj.push_back(Pair("timeoffset", GetTimeOffset()));
+    obj.push_back(Pair("connections", (int)vNodes.size()));
+    obj.push_back(Pair("networks", GetNetworksInfo()));
+    obj.push_back(Pair("relayfee", ValueFromAmount(::minRelayTxFee.GetFeePerK())));
+    
     Array localAddresses;
     {
         LOCK(cs_mapLocalHost);
@@ -420,6 +440,7 @@ Value getnetworkinfo(const Array& params, bool fHelp)
             localAddresses.push_back(rec);
         }
     }
+    
     obj.push_back(Pair("localaddresses", localAddresses));
     return obj;
 }
