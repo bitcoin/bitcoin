@@ -36,6 +36,11 @@ AC_DEFUN([BITCOIN_FIND_BDB48],[
       break
     ])
   done
+  # Pick local installation, if it exists
+  bdblocalpath="src/bdb/build_unix/build/include"
+  if test -d ${bdblocalpath}; then
+    bdb48path=${bdblocalpath}
+  fi
   if test "x$bdbpath" = "xX"; then
     AC_MSG_RESULT([no])
     AC_MSG_ERROR(libdb_cxx headers missing)
