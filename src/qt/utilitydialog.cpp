@@ -112,14 +112,14 @@ void PaperWalletDialog::on_getNewAddress_clicked()
         ui->addressQRCode->setText(tr("Error encoding Address into QR Code."));
         return;
     }
-    QImage myImage = QImage(code->width, code->width, QImage::Format_ARGB32);
-    myImage.fill(QColor(0,0,0,0));
+    QImage publicKeyImage = QImage(code->width, code->width, QImage::Format_ARGB32);
+    publicKeyImage.fill(0x000000);
     unsigned char *p = code->data;
     for (int y = 0; y < code->width; y++)
     {
         for (int x = 0; x < code->width; x++)
         {
-            myImage.setPixel(x, y, ((*p & 1) ? 0xff000000 : 0x0));
+            publicKeyImage.setPixel(x, y, ((*p & 1) ? 0xff000000 : 0x0));
             p++;
         }
     }
@@ -133,22 +133,22 @@ void PaperWalletDialog::on_getNewAddress_clicked()
         ui->privateKeyQRCode->setText(tr("Error encoding private key into QR Code."));
         return;
     }
-    QImage myImagePriv = QImage(code->width, code->width, QImage::Format_ARGB32);
-    myImagePriv.fill(QColor(0,0,0,0));
+    QImage privateKeyImage = QImage(code->width, code->width, QImage::Format_ARGB32);
+    privateKeyImage.fill(0x000000);
     p = code->data;
     for (int y = 0; y < code->width; y++)
     {
         for (int x = 0; x < code->width; x++)
         {
-            myImagePriv.setPixel(x, y, ((*p & 1) ? 0xff000000 : 0x0));
+            privateKeyImage.setPixel(x, y, ((*p & 1) ? 0xff000000 : 0x0));
             p++;
         }
     }
     QRcode_free(code);
 
     // Populate the QR Codes
-    ui->addressQRCode->setPixmap(QPixmap::fromImage(myImage).scaled(ui->addressQRCode->width(), ui->addressQRCode->height()));
-    ui->privateKeyQRCode->setPixmap(QPixmap::fromImage(myImagePriv).scaled(ui->privateKeyQRCode->width(), ui->privateKeyQRCode->height()));
+    ui->addressQRCode->setPixmap(QPixmap::fromImage(publicKeyImage).scaled(ui->addressQRCode->width(), ui->addressQRCode->height()));
+    ui->privateKeyQRCode->setPixmap(QPixmap::fromImage(privateKeyImage).scaled(ui->privateKeyQRCode->width(), ui->privateKeyQRCode->height()));
 #endif
 
     // Populate the Texts
