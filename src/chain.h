@@ -48,7 +48,7 @@ struct CDiskBlockPos
     bool IsNull() const { return (nFile == -1); }
 };
 
-enum BlockStatus {
+enum BlockStatus : unsigned char {
     BLOCK_VALID_UNKNOWN      =    0,
     BLOCK_VALID_HEADER       =    1, // parsed, version ok, hash satisfies claimed PoW, 1 <= vtx count <= max, timestamp not in future
     BLOCK_VALID_TREE         =    2, // parent found, difficulty matches, timestamp >= median previous, checkpoint
