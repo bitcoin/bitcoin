@@ -16,6 +16,7 @@
 #include "amount.h"
 #include "coins.h"
 #include "indirectmap.h"
+#include "coinsbyscript.h"
 #include "primitives/transaction.h"
 #include "sync.h"
 #include "random.h"
@@ -422,6 +423,8 @@ private:
     CBlockPolicyEstimator* minerPolicyEstimator;
 
     uint64_t totalTxSize;      //!< sum of all mempool tx' byte sizes
+    const bool& fTxOutsByAddressIndex;
+    CCoinsMapByScript mapCoinsByScript; // only used if -txoutsbyaddressindex
     uint64_t cachedInnerUsage; //!< sum of dynamic memory usage of all the map elements (NOT the maps themselves)
 
     CFeeRate minReasonableRelayFee;
@@ -508,7 +511,7 @@ public:
      *  around what it "costs" to relay a transaction around the network and
      *  below which we would reasonably say a transaction has 0-effective-fee.
      */
-    CTxMemPool(const CFeeRate& _minReasonableRelayFee);
+    CTxMemPool(const CFeeRate& _minReasonableRelayFee, const bool& _fTxOutsByAddressIndex);
     ~CTxMemPool();
 
     /**
@@ -539,6 +542,7 @@ public:
     void pruneSpent(const uint256& hash, CCoins &coins);
     unsigned int GetTransactionsUpdated() const;
     void AddTransactionsUpdated(unsigned int n);
+    void GetCoinsByScript(const CScript& script, CCoinsByScript& coinsByScript) const;
     /**
      * Check that none of this transactions inputs are in the mempool, and thus
      * the tx is not dependent on other mempool transactions to be included in a block.
