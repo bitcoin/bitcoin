@@ -96,7 +96,7 @@ static void MempoolEviction(benchmark::State& state)
     tx7.vout[1].scriptPubKey = CScript() << OP_7 << OP_EQUAL;
     tx7.vout[1].nValue = 10 * COIN;
 
-    CTxMemPool pool;
+    CTxMemPool pool(false);
 
     while (state.KeepRunning()) {
         AddTx(tx1, 10000LL, pool);

@@ -11,6 +11,7 @@
 
 #include "addrman.h"
 #include "amount.h"
+#include "coinstats.h"
 #include "chain.h"
 #include "chainparams.h"
 #include "checkpoints.h"
@@ -162,7 +163,6 @@ public:
     // Writes do not need similar protection, as failure to write is handled by the caller.
 };
 
-static CCoinsViewDB *pcoinsdbview = NULL;
 static CCoinsViewErrorCatcher *pcoinscatcher = NULL;
 static std::unique_ptr<ECCVerifyHandle> globalVerifyHandle;
 
@@ -233,6 +233,8 @@ void Shutdown()
         pcoinscatcher = NULL;
         delete pcoinsdbview;
         pcoinsdbview = NULL;
+        delete pcoinsByScript;
+        pcoinsByScript = NULL;
         delete pblocktree;
         pblocktree = NULL;
     }
@@ -369,6 +371,7 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += HelpMessageOpt("-sysperms", _("Create new files with system default permissions, instead of umask 077 (only effective with disabled wallet functionality)"));
 #endif
     strUsage += HelpMessageOpt("-txindex", strprintf(_("Maintain a full transaction index, used by the getrawtransaction rpc call (default: %u)"), DEFAULT_TXINDEX));
+    strUsage += HelpMessageOpt("-txoutsbyaddressindex", strprintf(_("Maintain an address to unspent outputs index (rpc: gettxoutsbyaddress). The index is built on first use. (default: %u)"), 0));
 
     strUsage += HelpMessageGroup(_("Connection options:"));
     strUsage += HelpMessageOpt("-addnode=<ip>", _("Add a node to connect to and attempt to keep the connection open"));
@@ -1483,6 +1486,61 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
                         strLoadError = _("Unable to rewind the database to a pre-fork state. You will need to redownload the blockchain");
                         break;
                     }
+                }
+
+                // Check -txoutsbyaddressindex
+                pcoinsdbview->ReadFlag("txoutsbyaddressindex", fTxOutsByAddressIndex);
+                if (IsArgSet("-txoutsbyaddressindex"))
+                {
+                    if (GetBoolArg("-txoutsbyaddressindex", false))
+                    {
+                        // build index
+                        if (!fTxOutsByAddressIndex)
+                        {
+                            if (!pcoinsdbview->DeleteAllCoinsByScript())
+                            {
+                                strLoadError = _("Error deleting txoutsbyaddressindex");
+                                break;
+                            }
+                            if (!pcoinsdbview->GenerateAllCoinsByScript())
+                            {
+                                strLoadError = _("Error building txoutsbyaddressindex");
+                                break;
+                            }
+                            CCoinsStats stats;
+                            if (!GetUTXOStats(pcoinsTip, pcoinsdbview, stats))
+                            {
+                                strLoadError = _("Error GetUTXOStats for txoutsbyaddressindex");
+                                break;
+                            }
+                            if (stats.nTransactionOutputs != stats.nAddressesOutputs)
+                            {
+                                strLoadError = _("Error compare stats for txoutsbyaddressindex");
+                                break;
+                            }
+                            pcoinsdbview->WriteFlag("txoutsbyaddressindex", true);
+                            fTxOutsByAddressIndex = true;
+                        }
+                    }
+                    else
+                    {
+                        if (fTxOutsByAddressIndex)
+                        {
+                            // remove index
+                            pcoinsdbview->DeleteAllCoinsByScript();
+                            pcoinsdbview->WriteFlag("txoutsbyaddressindex", false);
+                            fTxOutsByAddressIndex = false;
+                        }
+                    }
+                }
+                else if (fTxOutsByAddressIndex)
+                    return InitError(_("You need to provide -txoutsbyaddressindex. Do -txoutsbyaddressindex=0 to delete the index."));
+
+                // Init -txoutsbyaddressindex
+                if (fTxOutsByAddressIndex)
+                {
+                    pcoinsByScript = new CCoinsViewByScript(pcoinsdbview);
+                    pcoinsdbview->SetCoinsViewByScript(pcoinsByScript);
                 }
 
                 uiInterface.InitMessage(_("Verifying blocks..."));

@@ -331,7 +331,7 @@ void CTxMemPoolEntry::UpdateAncestorState(int64_t modifySize, CAmount modifyFee,
     assert(int(nSigOpCostWithAncestors) >= 0);
 }
 
-CTxMemPool::CTxMemPool(CBlockPolicyEstimator* estimator) :
+CTxMemPool::CTxMemPool(const bool& _fTxOutsByAddressIndex, CBlockPolicyEstimator* estimator) :
     nTransactionsUpdated(0), minerPolicyEstimator(estimator)
 {
     _clear(); //lock free clear
@@ -359,6 +359,17 @@ unsigned int CTxMemPool::GetTransactionsUpdated() const
 {
     LOCK(cs);
     return nTransactionsUpdated;
+}
+
+void CTxMemPool::GetCoinsByScript(const CScript& script, CCoinsByScript& coinsByScript) const
+{
+    LOCK(cs);
+    CCoinsMapByScript::const_iterator it = mapCoinsByScript.find(CCoinsViewByScript::getKey(script));
+    if (it != mapCoinsByScript.end())
+    {
+        BOOST_FOREACH(const COutPoint &outpoint, it->second.setCoins)
+            coinsByScript.setCoins.insert(outpoint);
+    }
 }
 
 void CTxMemPool::AddTransactionsUpdated(unsigned int n)
@@ -423,6 +434,11 @@ bool CTxMemPool::addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry,
     vTxHashes.emplace_back(tx.GetWitnessHash(), newit);
     newit->vTxHashesIdx = vTxHashes.size() - 1;
 
+    if (fTxOutsByAddressIndex)
+        for (unsigned int i = 0; i < tx.vout.size(); i++)
+            if (!tx.vout[i].IsNull() && !tx.vout[i].scriptPubKey.IsUnspendable())
+                mapCoinsByScript[CCoinsViewByScript::getKey(tx.vout[i].scriptPubKey)].setCoins.insert(COutPoint(hash, (uint32_t)i));
+
     return true;
 }
 
@@ -485,6 +501,24 @@ void CTxMemPool::removeRecursive(const CTransaction &origTx, MemPoolRemovalReaso
     // Remove transaction from memory pool
     {
         LOCK(cs);
+
+        if (fTxOutsByAddressIndex)
+        {
+            for (unsigned int i = 0; i < origTx.vout.size(); i++)
+            {
+                if (origTx.vout[i].IsNull() || origTx.vout[i].scriptPubKey.IsUnspendable())
+                    continue;
+
+                CCoinsMapByScript::iterator it = mapCoinsByScript.find(CCoinsViewByScript::getKey(origTx.vout[i].scriptPubKey));
+                if (it != mapCoinsByScript.end())
+                {
+                    it->second.setCoins.erase(COutPoint(origTx.GetHash(), (uint32_t)i));
+                    if (it->second.setCoins.empty())
+                        mapCoinsByScript.erase(it);
+                }
+            }
+        }
+
         setEntries txToRemove;
         txiter origit = mapTx.find(origTx.GetHash());
         if (origit != mapTx.end()) {

@@ -16,6 +16,7 @@
 #include "amount.h"
 #include "coins.h"
 #include "indirectmap.h"
+#include "coinsbyscript.h"
 #include "primitives/transaction.h"
 #include "sync.h"
 #include "random.h"
@@ -415,6 +416,8 @@ private:
     CBlockPolicyEstimator* minerPolicyEstimator;
 
     uint64_t totalTxSize;      //!< sum of all mempool tx's virtual sizes. Differs from serialized tx size since witness data is discounted. Defined in BIP 141.
+    const bool& fTxOutsByAddressIndex;
+    CCoinsMapByScript mapCoinsByScript; // only used if -txoutsbyaddressindex
     uint64_t cachedInnerUsage; //!< sum of dynamic memory usage of all the map elements (NOT the maps themselves)
 
     mutable int64_t lastRollingFeeUpdate;
@@ -496,7 +499,7 @@ public:
 
     /** Create a new CTxMemPool.
      */
-    CTxMemPool(CBlockPolicyEstimator* estimator = nullptr);
+    CTxMemPool(const bool& _fTxOutsByAddressIndex, CBlockPolicyEstimator* estimator = nullptr);
 
     /**
      * If sanity-checking is turned on, check makes sure the pool is
@@ -526,6 +529,7 @@ public:
     void pruneSpent(const uint256& hash, CCoins &coins);
     unsigned int GetTransactionsUpdated() const;
     void AddTransactionsUpdated(unsigned int n);
+    void GetCoinsByScript(const CScript& script, CCoinsByScript& coinsByScript) const;
     /**
      * Check that none of this transactions inputs are in the mempool, and thus
      * the tx is not dependent on other mempool transactions to be included in a block.
