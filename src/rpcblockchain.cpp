@@ -3,6 +3,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include "base58.h"
 #include "checkpoints.h"
 #include "main.h"
 #include "rpcserver.h"
@@ -11,6 +12,7 @@
 
 #include <stdint.h>
 
+#include <boost/assign/list_of.hpp>
 #include "json/json_spirit_value.h"
 
 using namespace json_spirit;
@@ -329,6 +331,8 @@ Value gettxoutsetinfo(const Array& params, bool fHelp)
             "  \"bestblock\": \"hex\",   (string) the best block hash hex\n"
             "  \"transactions\": n,      (numeric) The number of transactions\n"
             "  \"txouts\": n,            (numeric) The number of output transactions\n"
+            "  \"addresses\": n,         (numeric) The number of addresses and scripts. Only if -txoutsbyaddressindex=1\n"
+            "  \"txoutsbyaddress\": n,   (numeric) The number of output transactions. Only if -txoutsbyaddressindex=1\n"
             "  \"bytes_serialized\": n,  (numeric) The serialized size\n"
             "  \"hash_serialized\": \"hash\",   (string) The serialized hash\n"
             "  \"total_amount\": x.xxx          (numeric) The total amount\n"
@@ -349,6 +353,8 @@ Value gettxoutsetinfo(const Array& params, bool fHelp)
         ret.push_back(Pair("bestblock", stats.hashBlock.GetHex()));
         ret.push_back(Pair("transactions", (int64_t)stats.nTransactions));
         ret.push_back(Pair("txouts", (int64_t)stats.nTransactionOutputs));
+        ret.push_back(Pair("addresses", (int64_t)stats.nAddresses));
+        ret.push_back(Pair("txoutsbyaddress", (int64_t)stats.nAddressesOutputs));
         ret.push_back(Pair("bytes_serialized", (int64_t)stats.nSerializedSize));
         ret.push_back(Pair("hash_serialized", stats.hashSerialized.GetHex()));
         ret.push_back(Pair("total_amount", ValueFromAmount(stats.nTotalAmount)));
@@ -434,6 +440,168 @@ Value gettxout(const Array& params, bool fHelp)
     ret.push_back(Pair("coinbase", coins.fCoinBase));
 
     return ret;
+}
+
+Value gettxoutsbyaddress(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() < 2 || params.size() > 4)
+        throw runtime_error(
+            "gettxoutsbyaddress ( minconf [\"address\",...] count from )\n"
+            "\nReturns a list of unspent transaction outputs by address (or script).\n"
+            "The list is ordered by confirmations in descending order.\n"
+            "Note that passing minconf=0 will include the mempool.\n"
+            "\nTo use this function, you must start bitcoin with the -txoutsbyaddressindex parameter.\n"
+            "\nArguments:\n"
+            "1. minconf          (numeric) Minimum confirmations\n"
+            "2. \"addresses\"    (string) A json array of bitcoin addresses (or scripts)\n"
+            "    [\n"
+            "      \"address\"   (string) bitcoin address (or script)\n"
+            "      ,...\n"
+            "    ]\n"
+            "3. count            (numeric, optional, default=999999999) The number of outputs to return\n"
+            "4. from             (numeric, optional, default=0) The number of outputs to skip\n"
+            "\nResult\n"
+            "[                   (array of json object)\n"
+            "  {\n"
+            "    \"confirmations\" : n,        (numeric) The number of confirmations\n"
+            "    \"txid\" : \"txid\",          (string)  The transaction id \n"
+            "    \"vout\" : n,                 (numeric) The vout value\n"
+            "    \"value\" : x.xxx,            (numeric) The transaction value in btc\n"
+            "    \"scriptPubKey\" : {          (json object)\n"
+            "       \"asm\" : \"code\",        (string) \n"
+            "       \"hex\" : \"hex\",         (string) \n"
+            "       \"reqSigs\" : n,           (numeric) Number of required signatures\n"
+            "       \"type\" : \"pubkeyhash\", (string) The type, eg pubkeyhash\n"
+            "       \"addresses\" : [          (array of string) array of bitcoin addresses\n"
+            "          \"bitcoinaddress\"      (string) bitcoin address\n"
+            "          ,...\n"
+            "       ]\n"
+            "    },\n"
+            "    \"version\" : n,              (numeric) The transaction version\n"
+            "    \"coinbase\" : true|false     (boolean) Coinbase or not\n"
+            "    \"bestblockhash\" : \"hash\", (string)  The block hash of the best block\n"
+            "    \"bestblockheight\" : n,      (numeric) The block height of the best block\n"
+            "    \"bestblocktime\" : n,        (numeric) The block time of the best block\n"
+            "    \"blockhash\" : \"hash\",     (string)  The block hash of the block the tx is in (only if confirmations > 0)\n"
+            "    \"blockheight\" : n,          (numeric) The block height of the block the tx is in (only if confirmations > 0)\n"
+            "    \"blocktime\" : ttt,          (numeric) The block time in seconds since 1.1.1970 GMT (only if confirmations > 0)\n"
+            "  }\n"
+            "  ,...\n"
+            "]\n"
+            "\nExamples:\n"
+            + HelpExampleCli("gettxoutsbyaddress", "6 \"[\\\"1PGFqEzfmQch1gKD3ra4k18PNj3tTUUSqg\\\",\\\"1LtvqCaApEdUGFkpKMM4MstjcaL4dKg8SP\\\"]\"")
+            + "\nAs a json rpc call\n"
+            + HelpExampleRpc("gettxoutsbyaddress", "6, \"[\\\"1PGFqEzfmQch1gKD3ra4k18PNj3tTUUSqg\\\",\\\"1LtvqCaApEdUGFkpKMM4MstjcaL4dKg8SP\\\"]\"")
+        );
+
+    if (!fTxOutsByAddressIndex)
+        throw JSONRPCError(RPC_METHOD_NOT_FOUND, "To use this function, you must start bitcoin with the -txoutsbyaddressindex parameter.");
+
+    RPCTypeCheck(params, boost::assign::list_of(int_type)(array_type)(int_type)(int_type));
+
+    vector<Object> vObjects;
+    vector<pair<int, unsigned int> > vSort;
+    int nMinDepth = params[0].get_int();
+    Array inputs = params[1].get_array();
+
+    int nCount = 999999999;
+    if (params.size() > 2)
+        nCount = params[2].get_int();
+    int nFrom = 0;
+    if (params.size() > 3)
+        nFrom = params[3].get_int();
+
+    if (nMinDepth < 0)
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Negative minconf");
+    if (nCount < 0)
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Negative count");
+    if (nFrom < 0)
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Negative from");
+
+    BOOST_FOREACH(Value& input, inputs) {
+        CScript script;
+        CBitcoinAddress address(input.get_str());
+        if (address.IsValid()) {
+            script = GetScriptForDestination(address.Get());
+        } else if (IsHex(input.get_str())) {
+            std::vector<unsigned char> data(ParseHex(input.get_str()));
+            script = CScript(data.begin(), data.end());
+        } else {
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin address or script: " + input.get_str());
+        }
+
+        CCoinsByScript coinsByScript;
+        pcoinsByScript->GetCoinsByScript(script, coinsByScript);
+
+        if (nMinDepth == 0)
+            mempool.GetCoinsByScript(script, coinsByScript);
+
+        BOOST_FOREACH(const COutPoint &outpoint, coinsByScript.setCoins)
+        {
+            CCoins coins;
+            if (nMinDepth == 0)
+            {
+                LOCK(mempool.cs);
+                CCoinsViewMemPool view(pcoinsTip, mempool);
+                if (!view.GetCoins(outpoint.hash, coins))
+                    continue;
+                mempool.pruneSpent(outpoint.hash, coins); // TODO: this should be done by the CCoinsViewMemPool
+            }
+            else if (!pcoinsTip->GetCoins(outpoint.hash, coins))
+                continue;
+
+            if (outpoint.n < coins.vout.size() && !coins.vout[outpoint.n].IsNull() && !coins.vout[outpoint.n].scriptPubKey.IsUnspendable())
+            {
+                // should not happen
+                if ((unsigned int)coins.nHeight != MEMPOOL_HEIGHT && (!chainActive[coins.nHeight] || !chainActive[coins.nHeight]->phashBlock))
+                    throw JSONRPCError(RPC_INTERNAL_ERROR, "Internal Error: !chainActive[coins.nHeight]");
+
+                BlockMap::iterator it = mapBlockIndex.find(pcoinsTip->GetBestBlock());
+                CBlockIndex *pindex = it->second;
+
+                int nConfirmations = 0;
+                if ((unsigned int)coins.nHeight != MEMPOOL_HEIGHT)
+                    nConfirmations = pindex->nHeight - coins.nHeight + 1;
+                if (nConfirmations < nMinDepth)
+                    continue;
+
+                Object oScriptPubKey;
+                ScriptPubKeyToJSON(coins.vout[outpoint.n].scriptPubKey, oScriptPubKey, true);
+
+                Object o;
+                o.push_back(Pair("confirmations", nConfirmations));
+                o.push_back(Pair("txid", outpoint.hash.GetHex()));
+                o.push_back(Pair("vout", (int)outpoint.n));
+                o.push_back(Pair("value", ValueFromAmount(coins.vout[outpoint.n].nValue)));
+                o.push_back(Pair("scriptPubKey", oScriptPubKey));
+                o.push_back(Pair("version", coins.nVersion));
+                o.push_back(Pair("coinbase", coins.fCoinBase));
+                o.push_back(Pair("bestblockhash", pindex->GetBlockHash().GetHex()));
+                o.push_back(Pair("bestblockheight", pindex->nHeight));
+                o.push_back(Pair("bestblocktime", pindex->GetBlockTime()));
+                if ((unsigned int)coins.nHeight != MEMPOOL_HEIGHT)
+                {
+                    o.push_back(Pair("blockhash", chainActive[coins.nHeight]->GetBlockHash().GetHex()));
+                    o.push_back(Pair("blockheight", coins.nHeight));
+                    o.push_back(Pair("blocktime", chainActive[coins.nHeight]->GetBlockTime()));
+                }
+                vObjects.push_back(o);
+                vSort.push_back(make_pair(coins.nHeight, (unsigned int)vObjects.size() - 1));
+            }
+        }
+    }
+
+    Array results;
+    sort(vSort.begin(), vSort.end());
+    for (unsigned int i = (unsigned int)nFrom; i < vSort.size(); i++)
+    {
+        if (i == (unsigned int)nCount + (unsigned int)nFrom)
+            break;
+
+        results.push_back(vObjects[vSort[i].second]);
+    }
+
+    return results;
 }
 
 Value verifychain(const Array& params, bool fHelp)

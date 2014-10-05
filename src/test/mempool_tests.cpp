@@ -51,8 +51,8 @@ BOOST_AUTO_TEST_CASE(MempoolRemoveTest)
         txGrandChild[i].vout[0].nValue = 11000LL;
     }
 
-
-    CTxMemPool testPool(CFeeRate(0));
+    bool fTxOutsByAddressIndex = false;
+    CTxMemPool testPool(CFeeRate(0), fTxOutsByAddressIndex);
     std::list<CTransaction> removed;
 
     // Nothing in pool, remove should do nothing:
