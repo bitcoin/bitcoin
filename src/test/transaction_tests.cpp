@@ -27,7 +27,6 @@ using namespace boost::algorithm;
 // In script_tests.cpp
 extern Array read_json(const std::string& jsondata);
 
-// Note how NOCACHE is not included as it is a runtime-only flag.
 static std::map<string, unsigned int> mapFlagNames = boost::assign::map_list_of
     (string("NONE"), (unsigned int)SCRIPT_VERIFY_NONE)
     (string("P2SH"), (unsigned int)SCRIPT_VERIFY_P2SH)
@@ -139,7 +138,7 @@ BOOST_AUTO_TEST_CASE(tx_valid)
 
                 unsigned int verify_flags = ParseScriptFlags(test[2].get_str());
                 BOOST_CHECK_MESSAGE(VerifyScript(tx.vin[i].scriptSig, mapprevOutScriptPubKeys[tx.vin[i].prevout],
-                                                 tx, i, verify_flags),
+                                                 verify_flags, SignatureChecker(tx, i)),
                                     strTest);
             }
         }
@@ -212,7 +211,7 @@ BOOST_AUTO_TEST_CASE(tx_invalid)
 
                 unsigned int verify_flags = ParseScriptFlags(test[2].get_str());
                 fValid = VerifyScript(tx.vin[i].scriptSig, mapprevOutScriptPubKeys[tx.vin[i].prevout],
-                                      tx, i, verify_flags);
+                                      verify_flags, SignatureChecker(tx, i));
             }
 
             BOOST_CHECK_MESSAGE(!fValid, strTest);
