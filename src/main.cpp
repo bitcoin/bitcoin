@@ -26,8 +26,8 @@
 #include <boost/filesystem/fstream.hpp>
 #include <boost/thread.hpp>
 
-using namespace std;
 using namespace boost;
+using namespace std;
 
 #if defined(NDEBUG)
 # error "Bitcoin cannot be compiled without assertions."
@@ -2026,10 +2026,10 @@ bool ActivateBestChain(CValidationState &state, CBlock *pblock) {
             // Relay inventory, but don't relay old inventory during initial block download.
             int nBlockEstimate = Checkpoints::GetTotalBlocksEstimate();
             {
-            LOCK(cs_vNodes);
-            BOOST_FOREACH(CNode* pnode, vNodes)
-                if (chainActive.Height() > (pnode->nStartingHeight != -1 ? pnode->nStartingHeight - 2000 : nBlockEstimate))
-                    pnode->PushInventory(CInv(MSG_BLOCK, hashNewTip));
+                LOCK(cs_vNodes);
+                BOOST_FOREACH(CNode* pnode, vNodes)
+                    if (chainActive.Height() > (pnode->nStartingHeight != -1 ? pnode->nStartingHeight - 2000 : nBlockEstimate))
+                        pnode->PushInventory(CInv(MSG_BLOCK, hashNewTip));
             }
 
             uiInterface.NotifyBlockTip(hashNewTip);
