@@ -178,7 +178,7 @@ CAmount GetBlockValue(int nHeight, const CAmount& nFees);
 /** Create a new block index entry for a given block hash */
 CBlockIndex * InsertBlockIndex(uint256 hash);
 /** Abort with a message */
-bool AbortNode(const std::string &msg);
+bool AbortNode(const std::string &msg, const std::string &userMessage="");
 /** Get statistics from node state */
 bool GetNodeStateStats(NodeId nodeid, CNodeStateStats &stats);
 /** Increase a node's misbehavior score. */
