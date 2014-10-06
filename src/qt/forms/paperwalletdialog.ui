@@ -1,0 +1,339 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>PaperWalletDialog</class>
+ <widget class="QDialog" name="PaperWalletDialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>716</width>
+    <height>450</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Print Your Paper Wallets</string>
+  </property>
+  <widget class="QLabel" name="privateKeyQRCode">
+   <property name="geometry">
+    <rect>
+     <x>524</x>
+     <y>159</y>
+     <width>149</width>
+     <height>149</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+   <property name="scaledContents">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="QLabel" name="addressQRCode">
+   <property name="geometry">
+    <rect>
+     <x>47</x>
+     <y>86</y>
+     <width>120</width>
+     <height>120</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+   <property name="scaledContents">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="getNewAddress">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>415</y>
+     <width>151</width>
+     <height>26</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Very New Address</string>
+   </property>
+   <property name="icon">
+    <iconset resource="../dogecoin.qrc">
+     <normaloff>:/icons/add</normaloff>:/icons/add</iconset>
+   </property>
+  </widget>
+  <widget class="QLabel" name="paperTemplate">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>10</y>
+     <width>675</width>
+     <height>362</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string notr="true"/>
+   </property>
+   <property name="pixmap">
+    <pixmap resource="../dogecoin.qrc">:/images/paper_wallet</pixmap>
+   </property>
+  </widget>
+  <widget class="VerticalLabel" name="addressText">
+   <property name="geometry">
+    <rect>
+     <x>212</x>
+     <y>20</y>
+     <width>31</width>
+     <height>341</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>Monospace</family>
+     <pointsize>12</pointsize>
+     <weight>75</weight>
+     <italic>false</italic>
+     <bold>true</bold>
+    </font>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
+   </property>
+   <property name="textInteractionFlags">
+    <set>Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
+   </property>
+  </widget>
+  <widget class="VerticalLabel" name="privateKeyText">
+   <property name="geometry">
+    <rect>
+     <x>500</x>
+     <y>10</y>
+     <width>31</width>
+     <height>361</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>Monospace</family>
+     <pointsize>8</pointsize>
+     <weight>50</weight>
+     <italic>false</italic>
+     <bold>false</bold>
+    </font>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+   <property name="scaledContents">
+    <bool>true</bool>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
+   </property>
+   <property name="textInteractionFlags">
+    <set>Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="printButton">
+   <property name="geometry">
+    <rect>
+     <x>420</x>
+     <y>415</y>
+     <width>111</width>
+     <height>26</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>So Print</string>
+   </property>
+   <property name="icon">
+    <iconset resource="../dogecoin.qrc">
+     <normaloff>:/icons/receiving_addresses</normaloff>:/icons/receiving_addresses</iconset>
+   </property>
+  </widget>
+  <widget class="QDialogButtonBox" name="buttonBox">
+   <property name="geometry">
+    <rect>
+     <x>610</x>
+     <y>415</y>
+     <width>81</width>
+     <height>26</height>
+    </rect>
+   </property>
+   <property name="standardButtons">
+    <set>QDialogButtonBox::NoButton</set>
+   </property>
+   <property name="centerButtons">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label">
+   <property name="geometry">
+    <rect>
+     <x>190</x>
+     <y>415</y>
+     <width>91</width>
+     <height>26</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Many Wallets?</string>
+   </property>
+  </widget>
+  <widget class="QComboBox" name="walletCount">
+   <property name="geometry">
+    <rect>
+     <x>290</x>
+     <y>415</y>
+     <width>74</width>
+     <height>26</height>
+    </rect>
+   </property>
+   <property name="editable">
+    <bool>false</bool>
+   </property>
+   <item>
+    <property name="text">
+     <string>1</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>2</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>3</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>4</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>5</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>6</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>7</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>8</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>9</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>10</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>11</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>12</string>
+    </property>
+   </item>
+  </widget>
+  <widget class="QTextEdit" name="publicKey">
+   <property name="geometry">
+    <rect>
+     <x>100</x>
+     <y>378</y>
+     <width>600</width>
+     <height>30</height>
+    </rect>
+   </property>
+   <property name="undoRedoEnabled">
+    <bool>false</bool>
+   </property>
+   <property name="readOnly">
+    <bool>true</bool>
+   </property>
+   <property name="html">
+    <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Sans Serif'; font-size:9pt; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+   </property>
+   <property name="acceptRichText">
+    <bool>false</bool>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_2">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>380</y>
+     <width>91</width>
+     <height>26</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Public Key:</string>
+   </property>
+  </widget>
+  <zorder>getNewAddress</zorder>
+  <zorder>paperTemplate</zorder>
+  <zorder>addressQRCode</zorder>
+  <zorder>privateKeyQRCode</zorder>
+  <zorder>addressText</zorder>
+  <zorder>privateKeyText</zorder>
+  <zorder>printButton</zorder>
+  <zorder>buttonBox</zorder>
+  <zorder>label</zorder>
+  <zorder>walletCount</zorder>
+  <zorder>publicKey</zorder>
+  <zorder>label_2</zorder>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>VerticalLabel</class>
+   <extends>QLabel</extends>
+   <header>verticallabel.h</header>
+  </customwidget>
+ </customwidgets>
+ <resources>
+  <include location="../dogecoin.qrc"/>
+ </resources>
+ <connections>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>rejected()</signal>
+   <receiver>PaperWalletDialog</receiver>
+   <slot>close()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>650</x>
+     <y>408</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>357</x>
+     <y>214</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>

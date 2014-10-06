@@ -8,6 +8,7 @@
 #include "walletview.h"
 
 #include <cstdio>
+#include <iostream>
 
 #include <QHBoxLayout>
 #include <QLabel>
@@ -173,6 +174,13 @@ void WalletFrame::unlockWallet()
     WalletView *walletView = currentWalletView();
     if (walletView)
         walletView->unlockWallet();
+}
+
+void WalletFrame::printPaperWallets()
+{
+    WalletView *walletView = currentWalletView();
+    if (walletView)
+        walletView->printPaperWallets();
 }
 
 void WalletFrame::usedSendingAddresses()

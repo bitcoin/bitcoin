@@ -71,6 +71,8 @@ public slots:
     /** Ask for passphrase to unlock wallet temporarily */
     void unlockWallet();
 
+    void printPaperWallets();
+
     /** Show used sending addresses */
     void usedSendingAddresses();
     /** Show used receiving addresses */
