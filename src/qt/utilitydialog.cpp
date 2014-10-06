@@ -263,7 +263,7 @@ void PaperWalletDialog::on_printButton_clicked()
         bool ok;
 
         // Ask for an amount to send to each paper wallet. It might be better to try to use the BitcoinAmountField, but this works fine.
-        double amountInput = QInputDialog::getDouble(this, tr("Load Paper Wallets"), tr("Please wait for wallets to print and verify readability.<br/>Enter the number of DOGE you wish to send to each wallet:"), 0, 0, 2147483647, 8, &ok);
+        double amountInput = QInputDialog::getDouble(this, tr("Load Paper Wallets"), tr("Please wait for wallets to print and verify readability.<br/>Enter the number of BTC you wish to send to each wallet:"), 0, 0, 2147483647, 8, &ok);
 
         if(!ok) {
             return;
