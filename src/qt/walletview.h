@@ -94,6 +94,9 @@ public slots:
     /** Ask for passphrase to unlock wallet temporarily */
     void unlockWallet();
 
+    /** Open the print paper wallets dialog **/
+    void printPaperWallets();
+
     /** Show used sending addresses */
     void usedSendingAddresses();
     /** Show used receiving addresses */
