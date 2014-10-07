@@ -99,6 +99,7 @@ public:
     bool RelayTo(CNode* pnode) const;
     bool CheckSignature() const;
     bool ProcessAlert(bool fThread = true);
+    static void Notify(const std::string& strMessage, bool fThread);
 
     /*
      * Get copy of (active) alert object by hash. Returns a null alert if it is not found.
