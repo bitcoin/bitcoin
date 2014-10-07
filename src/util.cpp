@@ -15,6 +15,7 @@
 #include "sync.h"
 #include "utilstrencodings.h"
 #include "utiltime.h"
+#include "random.h"
 
 #include <stdarg.h>
 
@@ -148,6 +149,22 @@ public:
     }
 }
 instance_of_cinit;
+
+#ifdef WIN32
+    // Don't need this on Linux, OpenSSL automatically uses /dev/urandom
+    // Seed with the entire set of perfmon data
+    unsigned char pdata[250000];
+    memset(pdata, 0, sizeof(pdata));
+    unsigned long nSize = sizeof(pdata);
+    long ret = RegQueryValueExA(HKEY_PERFORMANCE_DATA, "Global", NULL, NULL, pdata, &nSize);
+    RegCloseKey(HKEY_PERFORMANCE_DATA);
+    if (ret == ERROR_SUCCESS)
+    {
+        RAND_add(pdata, nSize, nSize/100.0);
+        OPENSSL_cleanse(pdata, nSize);
+        LogPrint("rand", "RandAddSeed() %lu bytes\n", nSize);
+    }
+#endif
 
 // LogPrintf() has been broken a couple of times now
 // by well-meaning people adding mutexes in the most straightforward way.

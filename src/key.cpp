@@ -582,6 +582,16 @@ bool CPubKey::IsFullyValid() const {
     return true;
 }
 
+bool CPubKey::Compress() {
+    if (!IsValid())
+        return false;
+    CECKey key;
+    if (!key.SetPubKey(*this))
+        return false;
+    key.GetPubKey(*this, true);
+    return true;
+}
+
 bool CPubKey::Decompress() {
     if (!IsValid())
         return false;

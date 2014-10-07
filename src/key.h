@@ -178,6 +178,9 @@ public:
     // Recover a public key from a compact signature.
     bool RecoverCompact(const uint256& hash, const std::vector<unsigned char>& vchSig);
 
+    // Turn this public key into a compressed public key.
+    bool Compress();
+
     // Turn this public key into an uncompressed public key.
     bool Decompress();
 
