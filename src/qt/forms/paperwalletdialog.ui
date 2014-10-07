@@ -55,10 +55,10 @@
     </rect>
    </property>
    <property name="text">
-    <string>Very New Address</string>
+    <string>New Address</string>
    </property>
    <property name="icon">
-    <iconset resource="../dogecoin.qrc">
+    <iconset resource="../bitcoin.qrc">
      <normaloff>:/icons/add</normaloff>:/icons/add</iconset>
    </property>
   </widget>
@@ -75,7 +75,7 @@
     <string notr="true"/>
    </property>
    <property name="pixmap">
-    <pixmap resource="../dogecoin.qrc">:/images/paper_wallet</pixmap>
+    <pixmap resource="../bitcoin.qrc">:/images/paper_wallet</pixmap>
    </property>
   </widget>
   <widget class="VerticalLabel" name="addressText">
@@ -147,10 +147,10 @@
     </rect>
    </property>
    <property name="text">
-    <string>So Print</string>
+    <string>Print</string>
    </property>
    <property name="icon">
-    <iconset resource="../dogecoin.qrc">
+    <iconset resource="../bitcoin.qrc">
      <normaloff>:/icons/receiving_addresses</normaloff>:/icons/receiving_addresses</iconset>
    </property>
   </widget>
@@ -180,7 +180,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>Many Wallets?</string>
+    <string>How Many?</string>
    </property>
   </widget>
   <widget class="QComboBox" name="walletCount">
@@ -316,7 +316,7 @@ p, li { white-space: pre-wrap; }
   </customwidget>
  </customwidgets>
  <resources>
-  <include location="../dogecoin.qrc"/>
+  <include location="../bitcoin.qrc"/>
  </resources>
  <connections>
   <connection>
