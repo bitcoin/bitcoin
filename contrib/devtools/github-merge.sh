@@ -13,7 +13,7 @@
 # name $BRANCH is overwritten with the merged result, and optionally pushed.
 
 REPO="$(git config --get githubmerge.repository)"
-if [ "d$REPO" = "d" ]; then
+if [[ "d$REPO" == "d" ]]; then
   echo "ERROR: No repository configured. Use this command to set:" >&2
   echo "git config githubmerge.repository <owner>/<repo>" >&2
   echo "In addition, you can set the following variables:" >&2
@@ -24,12 +24,12 @@ if [ "d$REPO" = "d" ]; then
 fi
 
 HOST="$(git config --get githubmerge.host)"
-if [ "d$HOST" = "d" ]; then
+if [[ "d$HOST" == "d" ]]; then
   HOST="git@github.com"
 fi
 
 BRANCH="$(git config --get githubmerge.branch)"
-if [ "d$BRANCH" = "d" ]; then
+if [[ "d$BRANCH" == "d" ]]; then
   BRANCH="master"
 fi
 
@@ -37,12 +37,12 @@ TESTCMD="$(git config --get githubmerge.testcmd)"
 
 PULL="$1"
 
-if [ "d$PULL" = "d" ]; then
+if [[ "d$PULL" == "d" ]]; then
   echo "Usage: $0 pullnumber [branch]" >&2
   exit 2
 fi
 
-if [ "d$2" != "d" ]; then
+if [[ "d$2" != "d" ]]; then
   BRANCH="$2"
 fi
 
@@ -101,7 +101,7 @@ else
 fi
 
 # Run test command if configured.
-if [ "d$TESTCMD" != "d" ]; then
+if [[ "d$TESTCMD" != "d" ]]; then
   # Go up to the repository's root.
   while [ ! -d .git ]; do cd ..; done
   if ! $TESTCMD; then
@@ -112,10 +112,10 @@ if [ "d$TESTCMD" != "d" ]; then
   # Show the created merge.
   git diff pull/"$PULL"/merge..pull/"$PULL"/local-merge >"$TMPDIR"/diff
   git diff pull/"$PULL"/base..pull/"$PULL"/local-merge
-  if [ "$(<"$TMPDIR"/diff)" != "" ]; then
+  if [[ "$(<"$TMPDIR"/diff)" != "" ]]; then
     echo "WARNING: merge differs from github!" >&2
     read -p "Type 'ignore' to continue. " -r >&2
-    if [ "d$REPLY" =~ ^d[iI][gG][nN][oO][rR][eE]$ ]; then
+    if [[ "d$REPLY" =~ ^d[iI][gG][nN][oO][rR][eE]$ ]]; then
       echo "Difference with github ignored." >&2
     else
       cleanup
@@ -124,7 +124,7 @@ if [ "d$TESTCMD" != "d" ]; then
   fi
   read -p "Press 'd' to accept the diff. " -n 1 -r >&2
   echo
-  if [ "d$REPLY" =~ ^d[dD]$ ]; then
+  if [[ "d$REPLY" =~ ^d[dD]$ ]]; then
     echo "Diff accepted." >&2
   else
     echo "ERROR: Diff rejected." >&2
@@ -139,7 +139,7 @@ else
   bash -i
   read -p "Press 'm' to accept the merge. " -n 1 -r >&2
   echo
-  if [ "d$REPLY" =~ ^d[Mm]$ ]; then
+  if [[ "d$REPLY" =~ ^d[Mm]$ ]]; then
     echo "Merge accepted." >&2
   else
     echo "ERROR: Merge rejected." >&2
@@ -151,8 +151,8 @@ fi
 # Sign the merge commit.
 read -p "Press 's' to sign off on the merge. " -n 1 -r >&2
 echo
-if [ "d$REPLY" =~ ^d[Ss]$ ]; then
-  if [ "$(git config --get user.signingkey)" = "" ]; then
+if [[ "d$REPLY" =~ ^d[Ss]$ ]]; then
+  if [[ "$(git config --get user.signingkey)" == "" ]]; then
     echo "WARNING: No GPG signing key set, not signing. Set one using:" >&2
     echo "git config --global user.signingkey <key>" >&2
     git commit -q --signoff --amend --no-edit
@@ -168,6 +168,6 @@ cleanup
 
 # Push the result.
 read -p "Type 'push' to push the result to $HOST:$REPO, branch $BRANCH. " -r >&2
-if [ "d$REPLY" =~ ^d[Pp][Uu][Ss][Hh]$ ]; then
+if [[ "d$REPLY" =~ ^d[Pp][Uu][Ss][Hh]$ ]]; then
   git push "$HOST":"$REPO" refs/heads/"$BRANCH"
 fi
