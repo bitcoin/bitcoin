@@ -3078,15 +3078,6 @@ bool LoadExternalBlockFile(FILE* fileIn, CDiskBlockPos *dbp)
     try {
         // This takes over fileIn and calls fclose() on it in the CBufferedFile destructor
         CBufferedFile blkdat(fileIn, 2*MAX_BLOCK_SIZE, MAX_BLOCK_SIZE+8, SER_DISK, CLIENT_VERSION);
-        uint64_t nStartByte = 0;
-        if (dbp) {
-            // (try to) skip already indexed part
-            CBlockFileInfo info;
-            if (pblocktree->ReadBlockFileInfo(dbp->nFile, info)) {
-                nStartByte = info.nSize;
-                blkdat.Seek(info.nSize);
-            }
-        }
         uint64_t nRewind = blkdat.GetPos();
         while (!blkdat.eof()) {
             boost::this_thread::interruption_point();
@@ -3114,40 +3105,32 @@ bool LoadExternalBlockFile(FILE* fileIn, CDiskBlockPos *dbp)
             try {
                 // read block
                 uint64_t nBlockPos = blkdat.GetPos();
-                if (nBlockPos < nStartByte) // skip already indexed part
-                    continue;
                 if (dbp)
                     dbp->nPos = nBlockPos;
                 blkdat.SetLimit(nBlockPos + nSize);
-
-                // read block header
-                CBlockHeader blockhdr;
-                blkdat >> blockhdr;
-                nRewind = blkdat.GetPos();
-
-                // process block header
-                uint256 hash = blockhdr.GetHash();
-                if (hash != Params().HashGenesisBlock() && mapBlockIndex.find(blockhdr.hashPrevBlock) == mapBlockIndex.end()) {
-                    LogPrint("reindex", "%s: Out of order block %s, parent %s not known\n", __func__, hash.ToString(),
-                            blockhdr.hashPrevBlock.ToString());
-                    if (dbp)
-                        mapBlocksUnknownParent.insert(std::make_pair(blockhdr.hashPrevBlock, *dbp));
-                    // TODO a slight optimization would be: blkdat.Skip(nSize - 80)
-                    continue;
-                }
-
-                // read block
                 blkdat.SetPos(nBlockPos);
                 CBlock block;
                 blkdat >> block;
                 nRewind = blkdat.GetPos();
 
-                // process block
-                CValidationState state;
-                if (ProcessBlock(state, NULL, &block, dbp))
-                    nLoaded++;
-                if (state.IsError())
-                    break;
+                // detect out of order blocks, and store them for later
+                uint256 hash = block.GetHash();
+                if (hash != Params().HashGenesisBlock() && mapBlockIndex.find(block.hashPrevBlock) == mapBlockIndex.end()) {
+                    LogPrint("reindex", "%s: Out of order block %s, parent %s not known\n", __func__, hash.ToString(),
+                            block.hashPrevBlock.ToString());
+                    if (dbp)
+                        mapBlocksUnknownParent.insert(std::make_pair(block.hashPrevBlock, *dbp));
+                    continue;
+                }
+
+                // process in case the block isn't known yet
+                if (mapBlockIndex.count(hash) == 0) {
+                    CValidationState state;
+                    if (ProcessBlock(state, NULL, &block, dbp))
+                        nLoaded++;
+                    if (state.IsError())
+                        break;
+                }
 
                 // Recursively process earlier encountered successors of this block
                 deque<uint256> queue;
