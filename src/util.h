@@ -38,6 +38,8 @@ extern bool fLogTimestamps;
 extern bool fLogIPs;
 extern volatile bool fReopenDebugLog;
 
+void RandAddSeed();
+void RandAddSeedPerfmon();
 void SetupEnvironment();
 
 /* Return true if log accepts specified category */
