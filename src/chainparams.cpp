@@ -65,7 +65,7 @@ public:
         hashGenesisBlock = genesis.GetHash();
 
         assert(hashGenesisBlock == uint256("0x000000003663525298101408cb1dd793647c29d70a75f6fd4515868088118750"));
-        assert(genesis.hashMerkleRoot == uint256("0x4f70ef9a8dd8685d9d083482e6cff17bb543eb24c39caf637a0274988847cef2"));
+        assert(genesis.hashMerkleRoot == uint256("0xf2ce47889874027a63af9cc324eb43b57bf1cfe68234089d5d68d88d9aef704f"));
 
         vSeeds.push_back(CDNSSeedData("crowncoin.org", "nodelist.crowncoin.org"));
 
@@ -162,7 +162,6 @@ public:
         hashGenesisBlock = genesis.GetHash();
         nDefaultPort = 19444;
         strDataDir = "regtest";
-        assert(hashGenesisBlock == uint256("0xda44d82ead2a55f68c3725599112c3c9aaa27ed69ea4e8016dedfdcf34d4f4c4"));
 
         vSeeds.clear();  // Regtest mode doesn't have any DNS seeds.
     }
