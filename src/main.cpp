@@ -3070,6 +3070,8 @@ void PrintBlockTree()
 
 bool LoadExternalBlockFile(FILE* fileIn, CDiskBlockPos *dbp)
 {
+    // Map of disk positions for blocks with unknown parent (only used for reindex)
+    static std::multimap<uint256, CDiskBlockPos> mapBlocksUnknownParent;
     int64_t nStart = GetTimeMillis();
 
     int nLoaded = 0;
@@ -3112,20 +3114,64 @@ bool LoadExternalBlockFile(FILE* fileIn, CDiskBlockPos *dbp)
             try {
                 // read block
                 uint64_t nBlockPos = blkdat.GetPos();
+                if (nBlockPos < nStartByte) // skip already indexed part
+                    continue;
+                if (dbp)
+                    dbp->nPos = nBlockPos;
                 blkdat.SetLimit(nBlockPos + nSize);
+
+                // read block header
+                CBlockHeader blockhdr;
+                blkdat >> blockhdr;
+                nRewind = blkdat.GetPos();
+
+                // process block header
+                uint256 hash = blockhdr.GetHash();
+                if (hash != Params().HashGenesisBlock() && mapBlockIndex.find(blockhdr.hashPrevBlock) == mapBlockIndex.end()) {
+                    LogPrint("reindex", "%s: Out of order block %s, parent %s not known\n", __func__, hash.ToString(),
+                            blockhdr.hashPrevBlock.ToString());
+                    if (dbp)
+                        mapBlocksUnknownParent.insert(std::make_pair(blockhdr.hashPrevBlock, *dbp));
+                    // TODO a slight optimization would be: blkdat.Skip(nSize - 80)
+                    continue;
+                }
+
+                // read block
+                blkdat.SetPos(nBlockPos);
                 CBlock block;
                 blkdat >> block;
                 nRewind = blkdat.GetPos();
 
                 // process block
-                if (nBlockPos >= nStartByte) {
-                    if (dbp)
-                        dbp->nPos = nBlockPos;
-                    CValidationState state;
-                    if (ProcessBlock(state, NULL, &block, dbp))
-                        nLoaded++;
-                    if (state.IsError())
-                        break;
+                CValidationState state;
+                if (ProcessBlock(state, NULL, &block, dbp))
+                    nLoaded++;
+                if (state.IsError())
+                    break;
+
+                // Recursively process earlier encountered successors of this block
+                deque<uint256> queue;
+                queue.push_back(hash);
+                while (!queue.empty()) {
+                    uint256 head = queue.front();
+                    queue.pop_front();
+                    std::pair<std::multimap<uint256, CDiskBlockPos>::iterator, std::multimap<uint256, CDiskBlockPos>::iterator> range = mapBlocksUnknownParent.equal_range(head);
+                    while (range.first != range.second) {
+                        std::multimap<uint256, CDiskBlockPos>::iterator it = range.first;
+                        if (ReadBlockFromDisk(block, it->second))
+                        {
+                            LogPrintf("%s: Processing out of order child %s of %s\n", __func__, block.GetHash().ToString(),
+                                    head.ToString());
+                            CValidationState dummy;
+                            if (ProcessBlock(dummy, NULL, &block, &it->second))
+                            {
+                                nLoaded++;
+                                queue.push_back(block.GetHash());
+                            }
+                        }
+                        range.first++;
+                        mapBlocksUnknownParent.erase(it);
+                    }
                 }
             } catch (std::exception &e) {
                 LogPrintf("%s : Deserialize or I/O error - %s", __func__, e.what());
