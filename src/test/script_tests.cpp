@@ -34,6 +34,9 @@ using namespace std;
 using namespace json_spirit;
 using namespace boost::algorithm;
 
+// Uncomment if you want to output updated JSON tests.
+// #define UPDATE_JSON_TESTS
+
 static const unsigned int flags = SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_STRICTENC;
 
 unsigned int ParseScriptFlags(string strFlags);
@@ -239,14 +242,14 @@ public:
         return *this;
     }
 
-    operator std::string()
+    Array GetJSON() const
     {
-        DoPush();
-        return "[\"" +
-               FormatScript(spendTx.vin[0].scriptSig) + "\", \"" +
-               FormatScript(creditTx.vout[0].scriptPubKey) + "\", \"" +
-               FormatScriptFlags(flags) + "\", \"" +
-               comment + "\"],\n";
+        Array array;
+        array.push_back(FormatScript(spendTx.vin[0].scriptSig));
+        array.push_back(FormatScript(creditTx.vout[0].scriptPubKey));
+        array.push_back(FormatScriptFlags(flags));
+        array.push_back(comment);
+        return array;
     }
 
     std::string GetComment()
@@ -377,18 +380,30 @@ BOOST_AUTO_TEST_CASE(script_build)
 
     BOOST_FOREACH(TestBuilder& test, good) {
         test.Test(true);
-        BOOST_CHECK_MESSAGE(tests_good.count(test.GetComment()) > 0, "Missing auto script_valid test: " + test.GetComment());
-        BOOST_CHECK_MESSAGE(ParseScript(tests_good[test.GetComment()][1].get_str()) == test.GetScriptPubKey(), "ScriptPubKey mismatch in auto script_valid test: " + test.GetComment());
-        strGood += test;
+        if (tests_good.count(test.GetComment()) == 0) {
+#ifndef UPDATE_JSON_TESTS
+            BOOST_CHECK_MESSAGE(false, "Missing auto script_valid test: " + test.GetComment());
+#endif
+            strGood += write_string(Value(test.GetJSON()), true) + ",\n";
+        } else {
+            BOOST_CHECK_MESSAGE(ParseScript(tests_good[test.GetComment()][1].get_str()) == test.GetScriptPubKey(), "ScriptPubKey mismatch in auto script_valid test: " + test.GetComment());
+            strGood += write_string(Value(tests_good[test.GetComment()]), true) + ",\n";
+        }
     }
     BOOST_FOREACH(TestBuilder& test, bad) {
         test.Test(false);
-        BOOST_CHECK_MESSAGE(tests_bad.count(test.GetComment()) > 0, "Missing auto script_invalid test: " + test.GetComment());
-        BOOST_CHECK_MESSAGE(ParseScript(tests_bad[test.GetComment()][1].get_str()) == test.GetScriptPubKey(), "ScriptPubKey mismatch in auto script_invalid test: " + test.GetComment());
-        strBad += test;
+        if (tests_bad.count(test.GetComment()) == 0) {
+#ifndef UPDATE_JSON_TESTS
+            BOOST_CHECK_MESSAGE(false, "Missing auto script_invalid test: " + test.GetComment());
+#endif
+            strBad += write_string(Value(test.GetJSON()), true) + ",\n";
+        } else {
+            BOOST_CHECK_MESSAGE(ParseScript(tests_bad[test.GetComment()][1].get_str()) == test.GetScriptPubKey(), "ScriptPubKey mismatch in auto script_invalid test: " + test.GetComment());
+            strBad += write_string(Value(tests_bad[test.GetComment()]), true) + ",\n";
+        }
     }
 
-#if 0
+#ifdef UPDATE_JSON_TESTS
     FILE* valid = fopen("script_valid.json.gen", "w");
     fputs(strGood.c_str(), valid);
     fclose(valid);
