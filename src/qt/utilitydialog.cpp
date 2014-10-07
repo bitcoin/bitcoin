@@ -23,6 +23,7 @@
 
 #include "init.h"
 #include "version.h"
+#include "random.h"
 
 #include <stdio.h>
 

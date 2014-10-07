@@ -15,7 +15,7 @@
 #include "sync.h"
 #include "utilstrencodings.h"
 #include "utiltime.h"
-#include "random.cpp"
+#include "random.h"
 
 #include <stdarg.h>
 
@@ -150,25 +150,6 @@ public:
 }
 instance_of_cinit;
 
-
-void RandAddSeed()
-{
-    // Seed with CPU performance counter
-    int64_t nCounter = GetPerformanceCounter();
-    RAND_add(&nCounter, sizeof(nCounter), 1.5);
-    memset(&nCounter, 0, sizeof(nCounter));
-}
-
-void RandAddSeedPerfmon()
-{
-    RandAddSeed();
-
-    // This can take up to 2 seconds, so only do it every 10 minutes
-    static int64_t nLastPerfmon;
-    if (GetTime() < nLastPerfmon + 10 * 60)
-        return;
-    nLastPerfmon = GetTime();
-
 #ifdef WIN32
     // Don't need this on Linux, OpenSSL automatically uses /dev/urandom
     // Seed with the entire set of perfmon data
@@ -184,35 +165,6 @@ void RandAddSeedPerfmon()
         LogPrint("rand", "RandAddSeed() %lu bytes\n", nSize);
     }
 #endif
-}
-
-uint64_t GetRand(uint64_t nMax)
-{
-    if (nMax == 0)
-        return 0;
-
-    // The range of the random source must be a multiple of the modulus
-    // to give every possible output value an equal possibility
-    uint64_t nRange = (std::numeric_limits<uint64_t>::max() / nMax) * nMax;
-    uint64_t nRand = 0;
-    do
-        RAND_bytes((unsigned char*)&nRand, sizeof(nRand));
-    while (nRand >= nRange);
-    return (nRand % nMax);
-}
-
-int GetRandInt(int nMax)
-{
-    return GetRand(nMax);
-}
-
-uint256 GetRandHash()
-{
-    uint256 hash;
-    RAND_bytes((unsigned char*)&hash, sizeof(hash));
-    return hash;
-}
-
 
 // LogPrintf() has been broken a couple of times now
 // by well-meaning people adding mutexes in the most straightforward way.
