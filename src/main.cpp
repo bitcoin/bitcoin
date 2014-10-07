@@ -3165,14 +3165,16 @@ bool LoadExternalBlockFile(FILE* fileIn, CDiskBlockPos *dbp)
                     std::pair<std::multimap<uint256, CDiskBlockPos>::iterator, std::multimap<uint256, CDiskBlockPos>::iterator> range = mapBlocksUnknownParent.equal_range(head);
                     while (range.first != range.second) {
                         std::multimap<uint256, CDiskBlockPos>::iterator it = range.first;
-                        ReadBlockFromDisk(block, it->second);
-                        LogPrintf("%s: Processing out of order child %s of %s\n", __func__, block.GetHash().ToString(),
-                                head.ToString());
-                        CValidationState dummy;
-                        if (ProcessBlock(dummy, NULL, &block, &it->second))
+                        if (ReadBlockFromDisk(block, it->second))
                         {
-                            nLoaded++;
-                            queue.push_back(block.GetHash());
+                            LogPrintf("%s: Processing out of order child %s of %s\n", __func__, block.GetHash().ToString(),
+                                    head.ToString());
+                            CValidationState dummy;
+                            if (ProcessBlock(dummy, NULL, &block, &it->second))
+                            {
+                                nLoaded++;
+                                queue.push_back(block.GetHash());
+                            }
                         }
                         range.first++;
                         mapBlocksUnknownParent.erase(it);
