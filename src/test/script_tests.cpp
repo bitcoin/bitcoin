@@ -242,8 +242,9 @@ public:
         return *this;
     }
 
-    Array GetJSON() const
+    Array GetJSON()
     {
+        DoPush();
         Array array;
         array.push_back(FormatScript(spendTx.vin[0].scriptSig));
         array.push_back(FormatScript(creditTx.vout[0].scriptPubKey));
@@ -319,33 +320,74 @@ BOOST_AUTO_TEST_CASE(script_build)
                              ).Num(0).PushSig(keys.key1).Num(0).PushRedeem());
 
     good.push_back(TestBuilder(CScript() << keys.pubkey1C << OP_CHECKSIG,
-                               "P2PK with too much R padding but no STRICTENC", 0
+                               "P2PK with too much R padding but no DERSIG", 0
                               ).PushSig(keys.key1, SIGHASH_ALL, 31, 32).EditPush(1, "43021F", "44022000"));
     bad.push_back(TestBuilder(CScript() << keys.pubkey1C << OP_CHECKSIG,
-                              "P2PK with too much R padding", SCRIPT_VERIFY_STRICTENC
+                              "P2PK with too much R padding", SCRIPT_VERIFY_DERSIG
                              ).PushSig(keys.key1, SIGHASH_ALL, 31, 32).EditPush(1, "43021F", "44022000"));
     good.push_back(TestBuilder(CScript() << keys.pubkey1C << OP_CHECKSIG,
-                               "P2PK with too much S padding but no STRICTENC", 0
+                               "P2PK with too much S padding but no DERSIG", 0
                               ).PushSig(keys.key1, SIGHASH_ALL).EditPush(1, "44", "45").EditPush(37, "20", "2100"));
     bad.push_back(TestBuilder(CScript() << keys.pubkey1C << OP_CHECKSIG,
-                              "P2PK with too much S padding", SCRIPT_VERIFY_STRICTENC
+                              "P2PK with too much S padding", SCRIPT_VERIFY_DERSIG
                              ).PushSig(keys.key1, SIGHASH_ALL).EditPush(1, "44", "45").EditPush(37, "20", "2100"));
     good.push_back(TestBuilder(CScript() << keys.pubkey1C << OP_CHECKSIG,
-                               "P2PK with too little R padding but no STRICTENC", 0
+                               "P2PK with too little R padding but no DERSIG", 0
                               ).PushSig(keys.key1, SIGHASH_ALL, 33, 32).EditPush(1, "45022100", "440220"));
     bad.push_back(TestBuilder(CScript() << keys.pubkey1C << OP_CHECKSIG,
-                              "P2PK with too little R padding", SCRIPT_VERIFY_STRICTENC
+                              "P2PK with too little R padding", SCRIPT_VERIFY_DERSIG
                              ).PushSig(keys.key1, SIGHASH_ALL, 33, 32).EditPush(1, "45022100", "440220"));
+    good.push_back(TestBuilder(CScript() << keys.pubkey2C << OP_CHECKSIG << OP_NOT,
+                               "P2PK NOT with bad sig with too much R padding but no DERSIG", 0
+                              ).PushSig(keys.key2, SIGHASH_ALL, 31, 32).EditPush(1, "43021F", "44022000").DamagePush(10));
+    bad.push_back(TestBuilder(CScript() << keys.pubkey2C << OP_CHECKSIG << OP_NOT,
+                              "P2PK NOT with bad sig with too much R padding", SCRIPT_VERIFY_DERSIG
+                             ).PushSig(keys.key2, SIGHASH_ALL, 31, 32).EditPush(1, "43021F", "44022000").DamagePush(10));
+    bad.push_back(TestBuilder(CScript() << keys.pubkey2C << OP_CHECKSIG << OP_NOT,
+                              "P2PK NOT with too much R padding but no DERSIG", 0
+                             ).PushSig(keys.key2, SIGHASH_ALL, 31, 32).EditPush(1, "43021F", "44022000"));
+    bad.push_back(TestBuilder(CScript() << keys.pubkey2C << OP_CHECKSIG << OP_NOT,
+                              "P2PK NOT with too much R padding", SCRIPT_VERIFY_DERSIG
+                             ).PushSig(keys.key2, SIGHASH_ALL, 31, 32).EditPush(1, "43021F", "44022000"));
 
     good.push_back(TestBuilder(CScript() << keys.pubkey2C << OP_CHECKSIG,
-                               "P2PK with high S but no LOW_S", SCRIPT_VERIFY_STRICTENC
-                              ).PushSig(keys.key2, SIGHASH_ALL, 32, 33));
-    good.push_back(TestBuilder(CScript() << keys.pubkey2C << OP_CHECKSIG,
-                               "P2PK with high S but no STRICTENC", SCRIPT_VERIFY_LOW_S
+                               "P2PK with high S but no LOW_S", 0
                               ).PushSig(keys.key2, SIGHASH_ALL, 32, 33));
     bad.push_back(TestBuilder(CScript() << keys.pubkey2C << OP_CHECKSIG,
-                              "P2PK with high S", SCRIPT_VERIFY_LOW_S | SCRIPT_VERIFY_STRICTENC
+                              "P2PK with high S", SCRIPT_VERIFY_LOW_S
                              ).PushSig(keys.key2, SIGHASH_ALL, 32, 33));
+
+    good.push_back(TestBuilder(CScript() << keys.pubkey0H << OP_CHECKSIG,
+                               "P2PK with hybrid pubkey but no STRICTENC", 0
+                              ).PushSig(keys.key0, SIGHASH_ALL));
+    bad.push_back(TestBuilder(CScript() << keys.pubkey0H << OP_CHECKSIG,
+                              "P2PK with hybrid pubkey", SCRIPT_VERIFY_STRICTENC
+                             ).PushSig(keys.key0, SIGHASH_ALL));
+    bad.push_back(TestBuilder(CScript() << keys.pubkey0H << OP_CHECKSIG << OP_NOT,
+                              "P2PK NOT with hybrid pubkey but no STRICTENC", 0
+                             ).PushSig(keys.key0, SIGHASH_ALL));
+    good.push_back(TestBuilder(CScript() << keys.pubkey0H << OP_CHECKSIG << OP_NOT,
+                               "P2PK NOT with hybrid pubkey", SCRIPT_VERIFY_STRICTENC
+                              ).PushSig(keys.key0, SIGHASH_ALL));
+    good.push_back(TestBuilder(CScript() << keys.pubkey0H << OP_CHECKSIG << OP_NOT,
+                               "P2PK NOT with invalid hybrid pubkey but no STRICTENC", 0
+                              ).PushSig(keys.key0, SIGHASH_ALL).DamagePush(10));
+    good.push_back(TestBuilder(CScript() << keys.pubkey0H << OP_CHECKSIG << OP_NOT,
+                               "P2PK NOT with invalid hybrid pubkey", SCRIPT_VERIFY_STRICTENC
+                              ).PushSig(keys.key0, SIGHASH_ALL).DamagePush(10));
+
+    good.push_back(TestBuilder(CScript() << keys.pubkey1 << OP_CHECKSIG,
+                               "P2PK with undefined hashtype but no STRICTENC", 0
+                              ).PushSig(keys.key1, 5));
+    bad.push_back(TestBuilder(CScript() << keys.pubkey1 << OP_CHECKSIG,
+                              "P2PK with undefined hashtype", SCRIPT_VERIFY_STRICTENC
+                             ).PushSig(keys.key1, 5));
+    good.push_back(TestBuilder(CScript() << keys.pubkey1 << OP_CHECKSIG << OP_NOT,
+                               "P2PK NOT with invalid sig and undefined hashtype but no STRICTENC", 0
+                              ).PushSig(keys.key1, 5).DamagePush(10));
+    bad.push_back(TestBuilder(CScript() << keys.pubkey1 << OP_CHECKSIG << OP_NOT,
+                              "P2PK NOT with invalid sig and undefined hashtype", SCRIPT_VERIFY_STRICTENC
+                             ).PushSig(keys.key1, 5).DamagePush(10));
 
     good.push_back(TestBuilder(CScript() << OP_3 << keys.pubkey0C << keys.pubkey1C << keys.pubkey2C << OP_3 << OP_CHECKMULTISIG,
                                "3-of-3 with nonzero dummy but no NULLDUMMY", 0
@@ -353,6 +395,12 @@ BOOST_AUTO_TEST_CASE(script_build)
     bad.push_back(TestBuilder(CScript() << OP_3 << keys.pubkey0C << keys.pubkey1C << keys.pubkey2C << OP_3 << OP_CHECKMULTISIG,
                               "3-of-3 with nonzero dummy", SCRIPT_VERIFY_NULLDUMMY
                              ).Num(1).PushSig(keys.key0).PushSig(keys.key1).PushSig(keys.key2));
+    good.push_back(TestBuilder(CScript() << OP_3 << keys.pubkey0C << keys.pubkey1C << keys.pubkey2C << OP_3 << OP_CHECKMULTISIG << OP_NOT,
+                               "3-of-3 NOT with invalid sig and nonzero dummy but no NULLDUMMY", 0
+                              ).Num(1).PushSig(keys.key0).PushSig(keys.key1).PushSig(keys.key2).DamagePush(10));
+    bad.push_back(TestBuilder(CScript() << OP_3 << keys.pubkey0C << keys.pubkey1C << keys.pubkey2C << OP_3 << OP_CHECKMULTISIG << OP_NOT,
+                              "3-of-3 NOT with invalid sig with nonzero dummy", SCRIPT_VERIFY_NULLDUMMY
+                             ).Num(1).PushSig(keys.key0).PushSig(keys.key1).PushSig(keys.key2).DamagePush(10));
 
     std::map<std::string, Array> tests_good;
     std::map<std::string, Array> tests_bad;
