@@ -47,7 +47,7 @@ public:
         //     CTxIn(COutPoint(000000, -1), coinbase 04ffff001d01042654686520696e63657074696f6e206f662043726f776e636f696e2032302f4175672f32303134)
         //     CTxOut(nValue=50.00000000, scriptPubKey=0x5F1DF16B2B704C8A578D0B)
         //   vMerkleTree: 4a5e1e
-        const char* pszTimestamp = "The inception of Crowncoin 20/Aug/2014";
+        const char* pszTimestamp = "Crowncoin - Tradition merged with technology 10/Oct/2014";
         CTransaction txNew;
         txNew.vin.resize(1);
         txNew.vout.resize(1);
@@ -58,14 +58,14 @@ public:
         genesis.hashPrevBlock = 0;
         genesis.hashMerkleRoot = genesis.BuildMerkleTree();
         genesis.nVersion = 1;
-        genesis.nTime    = 1408905730;
+        genesis.nTime    = 1412669753;
         genesis.nBits    = 0x1d00ffff;
-        genesis.nNonce   = 915586608;
+        genesis.nNonce   = 22475117015;
 
         hashGenesisBlock = genesis.GetHash();
 
-        assert(hashGenesisBlock == uint256("0x000000000b16489260f249f148e2e2630dddb76def1d39b8261a495decb287e0"));
-        assert(genesis.hashMerkleRoot == uint256("0x5722856487077b9cc2a258c4aa7d0c25ea8a1bfa3228a47a1f450c68a6fc0c87"));
+        assert(hashGenesisBlock == uint256("0x000000003663525298101408cb1dd793647c29d70a75f6fd4515868088118750"));
+        assert(genesis.hashMerkleRoot == uint256("0x4f70ef9a8dd8685d9d083482e6cff17bb543eb24c39caf637a0274988847cef2"));
 
         vSeeds.push_back(CDNSSeedData("crowncoin.org", "nodelist.crowncoin.org"));
 
