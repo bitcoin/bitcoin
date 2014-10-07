@@ -31,6 +31,7 @@ static std::map<string, unsigned int> mapFlagNames = boost::assign::map_list_of
     (string("NONE"), (unsigned int)SCRIPT_VERIFY_NONE)
     (string("P2SH"), (unsigned int)SCRIPT_VERIFY_P2SH)
     (string("STRICTENC"), (unsigned int)SCRIPT_VERIFY_STRICTENC)
+    (string("DERSIG"), (unsigned int)SCRIPT_VERIFY_DERSIG)
     (string("LOW_S"), (unsigned int)SCRIPT_VERIFY_LOW_S)
     (string("NULLDUMMY"), (unsigned int)SCRIPT_VERIFY_NULLDUMMY);
 
