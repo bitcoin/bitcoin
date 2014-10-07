@@ -18,7 +18,7 @@ files:
 script: |
   export FAKETIME=$REFERENCE_DATETIME
   export TZ=UTC
-  if [ "$GBUILD_BITS" == "32" ]; then
+  if [ "x$GBUILD_BITS" = "x32" ]; then
     ARCH='i386-linux-gnu'
   else
     ARCH='x86_64-linux-gnu'
@@ -74,7 +74,7 @@ script: |
   #endif
   ' > $QCONFIG
 
-  if [ "$GBUILD_BITS" == "32" ]; then
+  if [ "x$GBUILD_BITS" = "x32" ]; then
     echo '
   /* Machine byte-order */
   #define Q_BIG_ENDIAN 4321

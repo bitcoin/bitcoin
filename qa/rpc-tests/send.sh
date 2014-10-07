@@ -14,7 +14,7 @@ if [ $# -eq 0 ]; then
   exit 0
 fi
 
-if [ $1 == "-STOP" ]; then
+if [ $1 = "-STOP" ]; then
   if [ -s ${PIDFILE} ]; then
       kill -s ${SIGNAL} $(<${PIDFILE})
   fi
