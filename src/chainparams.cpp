@@ -64,8 +64,8 @@ public:
 
         hashGenesisBlock = genesis.GetHash();
 
-        assert(hashGenesisBlock == uint256("0x000000003663525298101408cb1dd793647c29d70a75f6fd4515868088118750"));
-        assert(genesis.hashMerkleRoot == uint256("0x4f70ef9a8dd8685d9d083482e6cff17bb543eb24c39caf637a0274988847cef2"));
+        // assert(hashGenesisBlock == uint256("0x000000003663525298101408cb1dd793647c29d70a75f6fd4515868088118750"));
+        // assert(genesis.hashMerkleRoot == uint256("0x4f70ef9a8dd8685d9d083482e6cff17bb543eb24c39caf637a0274988847cef2"));
 
         vSeeds.push_back(CDNSSeedData("crowncoin.org", "nodelist.crowncoin.org"));
 
