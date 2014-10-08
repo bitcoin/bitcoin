@@ -15,11 +15,11 @@
 
 #include <boost/filesystem.hpp>
 #include <boost/foreach.hpp>
+#include <boost/scoped_ptr.hpp>
 #include <boost/thread.hpp>
 
-using namespace std;
 using namespace boost;
-
+using namespace std;
 
 static uint64_t nAccountingEntryNumber = 0;
 
@@ -918,7 +918,7 @@ bool CWalletDB::Recover(CDBEnv& dbenv, std::string filename, bool fOnlyKeys)
     LogPrintf("Salvage(aggressive) found %u records\n", salvagedData.size());
 
     bool fSuccess = allOK;
-    Db* pdbCopy = new Db(&dbenv.dbenv, 0);
+    boost::scoped_ptr<Db> pdbCopy(new Db(&dbenv.dbenv, 0));
     int ret = pdbCopy->open(NULL,               // Txn pointer
                             filename.c_str(),   // Filename
                             "main",             // Logical db name
@@ -959,7 +959,6 @@ bool CWalletDB::Recover(CDBEnv& dbenv, std::string filename, bool fOnlyKeys)
     }
     ptxn->commit(0);
     pdbCopy->close(0);
-    delete pdbCopy;
 
     return fSuccess;
 }
