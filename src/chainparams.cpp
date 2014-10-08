@@ -29,10 +29,10 @@ public:
         // The message start string is designed to be unlikely to occur in normal data.
         // The characters are rarely used upper ASCII, not valid as UTF-8, and produce
         // a large 4-byte int at any alignment.
-        pchMessageStart[0] = 0xb9;
-        pchMessageStart[1] = 0xee;
-        pchMessageStart[2] = 0xb7;
-        pchMessageStart[3] = 0xda;
+        pchMessageStart[0] = 0xb8;
+        pchMessageStart[1] = 0xeb;
+        pchMessageStart[2] = 0xb3;
+        pchMessageStart[3] = 0xdf;
         vAlertPubKey = ParseHex("04fc9702847840aaf195de8442ebecedf5b095cdbb9bc716bda9110971b28a49e0ead8564ff0db22209e0374782c093bb899692d524e9d6a6956e7c5ecbcd68284");
         nDefaultPort = 9340;
         nRPCPort = 9341;
@@ -58,14 +58,14 @@ public:
         genesis.hashPrevBlock = 0;
         genesis.hashMerkleRoot = genesis.BuildMerkleTree();
         genesis.nVersion = 1;
-        genesis.nTime    = 1412669753;
+        genesis.nTime    = 1412760826;
         genesis.nBits    = 0x1d00ffff;
-        genesis.nNonce   = 2247597361;
+        genesis.nNonce   = 1612467894;
 
         hashGenesisBlock = genesis.GetHash();
 
-        assert(hashGenesisBlock == uint256("0x000000003663525298101408cb1dd793647c29d70a75f6fd4515868088118750"));
-        assert(genesis.hashMerkleRoot == uint256("0xf2ce47889874027a63af9cc324eb43b57bf1cfe68234089d5d68d88d9aef704f"));
+        assert(hashGenesisBlock == uint256("0x0000000085370d5e122f64f4ab19c68614ff3df78c8d13cb814fd7e69a1dc6da"));
+        //assert(genesis.hashMerkleRoot == uint256("0xf2ce47889874027a63af9cc324eb43b57bf1cfe68234089d5d68d88d9aef704f"));
 
         vSeeds.push_back(CDNSSeedData("crowncoin.org", "nodelist.crowncoin.org"));
 
