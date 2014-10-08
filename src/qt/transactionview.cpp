@@ -24,7 +24,6 @@
 #include <QMessageBox>
 #include <QPoint>
 #include <QMenu>
-#include <QApplication>
 #include <QClipboard>
 #include <QLabel>
 #include <QDateTimeEdit>
