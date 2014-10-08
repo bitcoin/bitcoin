@@ -2,11 +2,12 @@
 #
 # linearize-hashes.py:  List blocks in a linear, no-fork version of the chain.
 #
-# Copyright (c) 2013 The Bitcoin developers
+# Copyright (c) 2013-2014 The Bitcoin developers
 # Distributed under the MIT/X11 software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #
 
+from __future__ import print_function
 import json
 import struct
 import re
@@ -17,59 +18,65 @@ import sys
 settings = {}
 
 class BitcoinRPC:
-	OBJID = 1
-
 	def __init__(self, host, port, username, password):
 		authpair = "%s:%s" % (username, password)
 		self.authhdr = "Basic %s" % (base64.b64encode(authpair))
 		self.conn = httplib.HTTPConnection(host, port, False, 30)
-	def rpc(self, method, params=None):
-		self.OBJID += 1
-		obj = { 'version' : '1.1',
-			'method' : method,
-			'id' : self.OBJID }
-		if params is None:
-			obj['params'] = []
-		else:
-			obj['params'] = params
+
+	def execute(self, obj):
 		self.conn.request('POST', '/', json.dumps(obj),
 			{ 'Authorization' : self.authhdr,
 			  'Content-type' : 'application/json' })
 
 		resp = self.conn.getresponse()
 		if resp is None:
-			print "JSON-RPC: no response"
+			print("JSON-RPC: no response", file=sys.stderr)
 			return None
 
 		body = resp.read()
 		resp_obj = json.loads(body)
-		if resp_obj is None:
-			print "JSON-RPC: cannot JSON-decode body"
-			return None
-		if 'error' in resp_obj and resp_obj['error'] != None:
-			return resp_obj['error']
-		if 'result' not in resp_obj:
-			print "JSON-RPC: no result in object"
-			return None
+		return resp_obj
 
-		return resp_obj['result']
-	def getblock(self, hash, verbose=True):
-		return self.rpc('getblock', [hash, verbose])
-	def getblockhash(self, index):
-		return self.rpc('getblockhash', [index])
+	@staticmethod
+	def build_request(idx, method, params):
+		obj = { 'version' : '1.1',
+			'method' : method,
+			'id' : idx }
+		if params is None:
+			obj['params'] = []
+		else:
+			obj['params'] = params
+		return obj
 
-def get_block_hashes(settings):
+	@staticmethod
+	def response_is_error(resp_obj):
+		return 'error' in resp_obj and resp_obj['error'] is not None
+
+def get_block_hashes(settings, max_blocks_per_call=10000):
 	rpc = BitcoinRPC(settings['host'], settings['port'],
 			 settings['rpcuser'], settings['rpcpassword'])
 
-	for height in xrange(settings['min_height'], settings['max_height']+1):
-		hash = rpc.getblockhash(height)
+	height = settings['min_height']
+	while height < settings['max_height']+1:
+		num_blocks = min(settings['max_height']+1-height, max_blocks_per_call)
+		batch = []
+		for x in range(num_blocks):
+			batch.append(rpc.build_request(x, 'getblockhash', [height + x]))
 
-		print(hash)
+		reply = rpc.execute(batch)
+
+		for x,resp_obj in enumerate(reply):
+			if rpc.response_is_error(resp_obj):
+				print('JSON-RPC: error at height', height+x, ': ', resp_obj['error'], file=sys.stderr)
+				exit(1)
+			assert(resp_obj['id'] == x) # assume replies are in-sequence
+			print(resp_obj['result'])
+
+		height += num_blocks
 
 if __name__ == '__main__':
 	if len(sys.argv) != 2:
-		print "Usage: linearize-hashes.py CONFIG-FILE"
+		print("Usage: linearize-hashes.py CONFIG-FILE")
 		sys.exit(1)
 
 	f = open(sys.argv[1])
@@ -95,7 +102,7 @@ if __name__ == '__main__':
 	if 'max_height' not in settings:
 		settings['max_height'] = 313000
 	if 'rpcuser' not in settings or 'rpcpassword' not in settings:
-		print "Missing username and/or password in cfg file"
+		print("Missing username and/or password in cfg file", file=stderr)
 		sys.exit(1)
 
 	settings['port'] = int(settings['port'])
