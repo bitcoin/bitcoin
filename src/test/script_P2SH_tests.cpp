@@ -255,7 +255,7 @@ BOOST_AUTO_TEST_CASE(AreInputsStandard)
 {
     LOCK(cs_main);
     CCoinsView coinsDummy;
-    CCoinsViewCache coins(coinsDummy);
+    CCoinsViewCache coins(&coinsDummy);
     CBasicKeyStore keystore;
     CKey key[6];
     vector<CPubKey> keys;
@@ -312,8 +312,7 @@ BOOST_AUTO_TEST_CASE(AreInputsStandard)
     txFrom.vout[6].scriptPubKey = GetScriptForDestination(twentySigops.GetID());
     txFrom.vout[6].nValue = 6000;
 
-
-    coins.SetCoins(txFrom.GetHash(), CCoins(txFrom, 0));
+    coins.ModifyCoins(txFrom.GetHash())->FromTx(txFrom, 0);
 
     CMutableTransaction txTo;
     txTo.vout.resize(1);
