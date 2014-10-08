@@ -47,7 +47,7 @@ public:
         //     CTxIn(COutPoint(000000, -1), coinbase 04ffff001d01042654686520696e63657074696f6e206f662043726f776e636f696e2032302f4175672f32303134)
         //     CTxOut(nValue=50.00000000, scriptPubKey=0x5F1DF16B2B704C8A578D0B)
         //   vMerkleTree: 4a5e1e
-        const char* pszTimestamp = "Crowncoin - Tradition merged with technology 10/Oct/2014";
+        const char* pszTimestamp = "The inception of Crowncoin 10/Oct/2014";
         CTransaction txNew;
         txNew.vin.resize(1);
         txNew.vout.resize(1);
