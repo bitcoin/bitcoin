@@ -106,51 +106,6 @@ BOOST_AUTO_TEST_CASE(DoS_bantime)
     BOOST_CHECK(!CNode::IsBanned(addr));
 }
 
-static bool CheckNBits(unsigned int nbits1, int64_t time1, unsigned int nbits2, int64_t time2)\
-{
-    if (time1 > time2)
-        return CheckNBits(nbits2, time2, nbits1, time1);
-    int64_t deltaTime = time2-time1;
-
-    return CheckMinWork(nbits2, nbits1, deltaTime);
-}
-
-BOOST_AUTO_TEST_CASE(DoS_checknbits)
-{
-    using namespace boost::assign; // for 'map_list_of()'
-
-    // Timestamps,nBits from the bitcoin block chain.
-    // These are the block-chain checkpoint blocks
-    typedef std::map<int64_t, unsigned int> BlockData;
-    BlockData chainData =
-        map_list_of(1239852051,486604799)(1262749024,486594666)
-        (1279305360,469854461)(1280200847,469830746)(1281678674,469809688)
-        (1296207707,453179945)(1302624061,453036989)(1309640330,437004818)
-        (1313172719,436789733);
-
-    // Make sure CheckNBits considers every combination of block-chain-lock-in-points
-    // "sane":
-    BOOST_FOREACH(const BlockData::value_type& i, chainData)
-    {
-        BOOST_FOREACH(const BlockData::value_type& j, chainData)
-        {
-            BOOST_CHECK(CheckNBits(i.second, i.first, j.second, j.first));
-        }
-    }
-
-    // Test a couple of insane combinations:
-    BlockData::value_type firstcheck = *(chainData.begin());
-    BlockData::value_type lastcheck = *(chainData.rbegin());
-
-    // First checkpoint difficulty at or a while after the last checkpoint time should fail when
-    // compared to last checkpoint
-    BOOST_CHECK(!CheckNBits(firstcheck.second, lastcheck.first+60*10, lastcheck.second, lastcheck.first));
-    BOOST_CHECK(!CheckNBits(firstcheck.second, lastcheck.first+60*60*24*14, lastcheck.second, lastcheck.first));
-
-    // ... but OK if enough time passed for difficulty to adjust downward:
-    BOOST_CHECK(CheckNBits(firstcheck.second, lastcheck.first+60*60*24*365*4, lastcheck.second, lastcheck.first));
-}
-
 CTransaction RandomOrphan()
 {
     std::map<uint256, COrphanTx>::iterator it;

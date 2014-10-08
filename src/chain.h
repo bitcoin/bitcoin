@@ -49,12 +49,29 @@ struct CDiskBlockPos
 };
 
 enum BlockStatus {
+    // Unused.
     BLOCK_VALID_UNKNOWN      =    0,
-    BLOCK_VALID_HEADER       =    1, // parsed, version ok, hash satisfies claimed PoW, 1 <= vtx count <= max, timestamp not in future
-    BLOCK_VALID_TREE         =    2, // parent found, difficulty matches, timestamp >= median previous, checkpoint
-    BLOCK_VALID_TRANSACTIONS =    3, // only first tx is coinbase, 2 <= coinbase input script length <= 100, transactions valid, no duplicate txids, sigops, size, merkle root
-    BLOCK_VALID_CHAIN        =    4, // outputs do not overspend inputs, no double spends, coinbase output ok, immature coinbase spends, BIP30
-    BLOCK_VALID_SCRIPTS      =    5, // scripts/signatures ok
+
+    // Parsed, version ok, hash satisfies claimed PoW, 1 <= vtx count <= max, timestamp not in future
+    BLOCK_VALID_HEADER       =    1,
+
+    // All parent headers found, difficulty matches, timestamp >= median previous, checkpoint. Implies all parents
+    // are also at least TREE.
+    BLOCK_VALID_TREE         =    2,
+
+    // Only first tx is coinbase, 2 <= coinbase input script length <= 100, transactions valid, no duplicate txids,
+    // sigops, size, merkle root. Implies all parents are at least TREE but not necessarily TRANSACTIONS. When all
+    // parent blocks also have TRANSACTIONS, CBlockIndex::nChainTx will be set.
+    BLOCK_VALID_TRANSACTIONS =    3,
+
+    // Outputs do not overspend inputs, no double spends, coinbase output ok, immature coinbase spends, BIP30.
+    // Implies all parents are also at least CHAIN.
+    BLOCK_VALID_CHAIN        =    4,
+
+    // Scripts & signatures ok. Implies all parents are also at least SCRIPTS.
+    BLOCK_VALID_SCRIPTS      =    5,
+
+    // All validity bits.
     BLOCK_VALID_MASK         =   BLOCK_VALID_HEADER | BLOCK_VALID_TREE | BLOCK_VALID_TRANSACTIONS |
                                  BLOCK_VALID_CHAIN | BLOCK_VALID_SCRIPTS,
 
@@ -103,7 +120,8 @@ public:
     // Note: in a potential headers-first mode, this number cannot be relied upon
     unsigned int nTx;
 
-    // (memory only) Number of transactions in the chain up to and including this block
+    // (memory only) Number of transactions in the chain up to and including this block.
+    // This value will be non-zero only if and only if transactions for this block and all its parents are available.
     unsigned int nChainTx; // change to 64-bit type when necessary; won't happen before 2030
 
     // Verification status of this block. See enum BlockStatus
@@ -146,7 +164,7 @@ public:
         SetNull();
     }
 
-    CBlockIndex(CBlockHeader& block)
+    CBlockIndex(const CBlockHeader& block)
     {
         SetNull();
 
