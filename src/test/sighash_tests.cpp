@@ -22,14 +22,13 @@ using namespace json_spirit;
 extern Array read_json(const std::string& jsondata);
 
 // Old script.cpp SignatureHash function
-uint256 static SignatureHashOld(CScript scriptCode, const CTransaction& txTo, unsigned int nIn, int nHashType)
+uint256 static SignatureHashOld(CScript scriptCode, CMutableTransaction txTmp, unsigned int nIn, int nHashType)
 {
-    if (nIn >= txTo.vin.size())
+    if (nIn >= txTmp.vin.size())
     {
         printf("ERROR: SignatureHash() : nIn=%d out of range\n", nIn);
         return 1;
     }
-    CMutableTransaction txTmp(txTo);
 
     // In case concatenating two scripts ends up with two codeseparators,
     // or an extra one at the end, this prevents all those possible incompatibilities.
@@ -139,7 +138,7 @@ BOOST_AUTO_TEST_CASE(sighash_test)
 
         uint256 sh, sho;
         sho = SignatureHashOld(scriptCode, txTo, nIn, nHashType);
-        sh = SignatureHash(scriptCode, txTo, nIn, nHashType);
+        sh = SignatureHash(scriptCode, CTransaction(txTo), nIn, nHashType);
         #if defined(PRINT_SIGHASH_JSON)
         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
         ss << txTo;

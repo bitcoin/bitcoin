@@ -376,7 +376,8 @@ Value createrawtransaction(const Array& params, bool fHelp)
         rawTx.vout.push_back(out);
     }
 
-    return EncodeHexTx(rawTx);
+    CTransaction tx(rawTx);
+    return EncodeHexTx(tx);
 }
 
 Value decoderawtransaction(const Array& params, bool fHelp)
@@ -671,6 +672,7 @@ Value signrawtransaction(const Array& params, bool fHelp)
 
     bool fHashSingle = ((nHashType & ~SIGHASH_ANYONECANPAY) == SIGHASH_SINGLE);
 
+    CTransaction tx(mergedTx);
     // Sign what we can:
     for (unsigned int i = 0; i < mergedTx.vin.size(); i++) {
         CTxIn& txin = mergedTx.vin[i];
@@ -688,14 +690,14 @@ Value signrawtransaction(const Array& params, bool fHelp)
 
         // ... and merge in other signatures:
         BOOST_FOREACH(const CMutableTransaction& txv, txVariants) {
-            txin.scriptSig = CombineSignatures(prevPubKey, mergedTx, i, txin.scriptSig, txv.vin[i].scriptSig);
+            txin.scriptSig = CombineSignatures(prevPubKey, tx, i, txin.scriptSig, txv.vin[i].scriptSig);
         }
-        if (!VerifyScript(txin.scriptSig, prevPubKey, STANDARD_SCRIPT_VERIFY_FLAGS, SignatureChecker(mergedTx, i)))
+        if (!VerifyScript(txin.scriptSig, prevPubKey, STANDARD_SCRIPT_VERIFY_FLAGS, SignatureChecker(tx, i)))
             fComplete = false;
     }
 
     Object result;
-    result.push_back(Pair("hex", EncodeHexTx(mergedTx)));
+    result.push_back(Pair("hex", EncodeHexTx(tx)));
     result.push_back(Pair("complete", fComplete));
 
     return result;

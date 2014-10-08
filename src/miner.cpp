@@ -303,7 +303,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
         // Compute final coinbase transaction.
         txNew.vout[0].nValue = GetBlockValue(pindexPrev->nHeight+1, nFees);
         txNew.vin[0].scriptSig = CScript() << OP_0 << OP_0;
-        pblock->vtx[0] = txNew;
+        pblock->vtx[0] = CTransaction(txNew);
         pblocktemplate->vTxFees[0] = -nFees;
 
         // Fill in header
@@ -340,7 +340,7 @@ void IncrementExtraNonce(CBlock* pblock, CBlockIndex* pindexPrev, unsigned int& 
     txCoinbase.vin[0].scriptSig = (CScript() << nHeight << CScriptNum(nExtraNonce)) + COINBASE_FLAGS;
     assert(txCoinbase.vin[0].scriptSig.size() <= 100);
 
-    pblock->vtx[0] = txCoinbase;
+    pblock->vtx[0] = CTransaction(txCoinbase);
     pblock->hashMerkleRoot = pblock->BuildMerkleTree();
 }
 

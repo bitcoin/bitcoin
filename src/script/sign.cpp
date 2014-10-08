@@ -91,10 +91,11 @@ bool Solver(const CKeyStore& keystore, const CScript& scriptPubKey, uint256 hash
     return false;
 }
 
-bool SignSignature(const CKeyStore &keystore, const CScript& fromPubKey, CMutableTransaction& txTo, unsigned int nIn, int nHashType)
+bool SignSignature(const CKeyStore &keystore, const CScript& fromPubKey, CMutableTransaction& _txTo, unsigned int nIn, int nHashType)
 {
-    assert(nIn < txTo.vin.size());
-    CTxIn& txin = txTo.vin[nIn];
+    assert(nIn < _txTo.vin.size());
+    CTxIn& txin = _txTo.vin[nIn];
+    CTransaction txTo(_txTo);
 
     // Leave out the signature from the hash, since a signature can't sign itself.
     // The checksig op will also drop the signatures from its hash.
@@ -166,6 +167,7 @@ static CScript CombineMultisig(CScript scriptPubKey, const CMutableTransaction& 
     unsigned int nSigsRequired = vSolutions.front()[0];
     unsigned int nPubKeys = vSolutions.size()-2;
     map<valtype, valtype> sigs;
+    CTransaction tx(txTo);
     BOOST_FOREACH(const valtype& sig, allsigs)
     {
         for (unsigned int i = 0; i < nPubKeys; i++)
@@ -174,7 +176,7 @@ static CScript CombineMultisig(CScript scriptPubKey, const CMutableTransaction& 
             if (sigs.count(pubkey))
                 continue; // Already got a sig for this pubkey
 
-            if (SignatureChecker(txTo, nIn).CheckSig(sig, pubkey, scriptPubKey))
+            if (SignatureChecker(tx, nIn).CheckSig(sig, pubkey, scriptPubKey))
             {
                 sigs[pubkey] = sig;
                 break;

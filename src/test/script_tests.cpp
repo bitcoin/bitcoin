@@ -73,7 +73,7 @@ CMutableTransaction BuildCreditingTransaction(const CScript& scriptPubKey)
     return txCredit;
 }
 
-CMutableTransaction BuildSpendingTransaction(const CScript& scriptSig, const CMutableTransaction& txCredit)
+CTransaction BuildSpendingTransaction(const CScript& scriptSig, const CMutableTransaction& txCredit)
 {
     CMutableTransaction txSpend;
     txSpend.nVersion = 1;
@@ -87,7 +87,7 @@ CMutableTransaction BuildSpendingTransaction(const CScript& scriptSig, const CMu
     txSpend.vout[0].scriptPubKey = CScript();
     txSpend.vout[0].nValue = 0;
 
-    return txSpend;
+    return CTransaction(txSpend);
 }
 
 void DoTest(const CScript& scriptPubKey, const CScript& scriptSig, int flags, bool expect, const std::string& message)
@@ -162,9 +162,9 @@ public:
     TestBuilder(const CScript& redeemScript, const std::string& comment_, int flags_, bool P2SH = false) : scriptPubKey(redeemScript), havePush(false), comment(comment_), flags(flags_)
     {
         if (P2SH) {
-            creditTx = BuildCreditingTransaction(CScript() << OP_HASH160 << redeemScript.GetID() << OP_EQUAL);
+            creditTx = CTransaction(BuildCreditingTransaction(CScript() << OP_HASH160 << redeemScript.GetID() << OP_EQUAL));
         } else {
-            creditTx = BuildCreditingTransaction(redeemScript);
+            creditTx = CTransaction(BuildCreditingTransaction(redeemScript));
         }
         spendTx = BuildSpendingTransaction(CScript(), creditTx);
     }
@@ -189,7 +189,7 @@ public:
 
     TestBuilder& PushSig(const CKey& key, int nHashType = SIGHASH_ALL, unsigned int lenR = 32, unsigned int lenS = 32)
     {
-        uint256 hash = SignatureHash(scriptPubKey, spendTx, 0, nHashType);
+        uint256 hash = SignatureHash(scriptPubKey, CTransaction(spendTx), 0, nHashType);
         std::vector<unsigned char> vchSig, r, s;
         do {
             key.Sign(hash, vchSig, lenS <= 32);
@@ -537,11 +537,13 @@ BOOST_AUTO_TEST_CASE(script_CHECKMULTISIG12)
     scriptPubKey12 << OP_1 << key1.GetPubKey() << key2.GetPubKey() << OP_2 << OP_CHECKMULTISIG;
 
     CMutableTransaction txFrom12 = BuildCreditingTransaction(scriptPubKey12);
-    CMutableTransaction txTo12 = BuildSpendingTransaction(CScript(), txFrom12);
+    CMutableTransaction txTo12Mutable = BuildSpendingTransaction(CScript(), txFrom12);
+    CTransaction txTo12 = CTransaction(txTo12Mutable);
 
     CScript goodsig1 = sign_multisig(scriptPubKey12, key1, txTo12);
     BOOST_CHECK(VerifyScript(goodsig1, scriptPubKey12, flags, SignatureChecker(txTo12, 0)));
-    txTo12.vout[0].nValue = 2;
+    txTo12Mutable.vout[0].nValue = 2;
+    txTo12 = CTransaction(txTo12Mutable);
     BOOST_CHECK(!VerifyScript(goodsig1, scriptPubKey12, flags, SignatureChecker(txTo12, 0)));
 
     CScript goodsig2 = sign_multisig(scriptPubKey12, key2, txTo12);
@@ -563,7 +565,7 @@ BOOST_AUTO_TEST_CASE(script_CHECKMULTISIG23)
     scriptPubKey23 << OP_2 << key1.GetPubKey() << key2.GetPubKey() << key3.GetPubKey() << OP_3 << OP_CHECKMULTISIG;
 
     CMutableTransaction txFrom23 = BuildCreditingTransaction(scriptPubKey23);
-    CMutableTransaction txTo23 = BuildSpendingTransaction(CScript(), txFrom23);
+    CTransaction txTo23 = CTransaction(BuildSpendingTransaction(CScript(), txFrom23));
 
     std::vector<CKey> keys;
     keys.push_back(key1); keys.push_back(key2);
@@ -625,24 +627,26 @@ BOOST_AUTO_TEST_CASE(script_combineSigs)
         keystore.AddKey(key);
     }
 
-    CMutableTransaction txFrom = BuildCreditingTransaction(GetScriptForDestination(keys[0].GetPubKey().GetID()));
-    CMutableTransaction txTo = BuildSpendingTransaction(CScript(), txFrom);
-    CScript& scriptPubKey = txFrom.vout[0].scriptPubKey;
-    CScript& scriptSig = txTo.vin[0].scriptSig;
+    CMutableTransaction txFromMutable = BuildCreditingTransaction(GetScriptForDestination(keys[0].GetPubKey().GetID()));
+    CTransaction txFrom = CTransaction(txFromMutable);
+    CMutableTransaction txToMutable = BuildSpendingTransaction(CScript(), txFromMutable);
+    CTransaction txTo = CTransaction(txToMutable);
+    CScript& scriptPubKey = txFromMutable.vout[0].scriptPubKey;
+    CScript& scriptSig = txToMutable.vin[0].scriptSig;
 
     CScript empty;
     CScript combined = CombineSignatures(scriptPubKey, txTo, 0, empty, empty);
     BOOST_CHECK(combined.empty());
 
     // Single signature case:
-    SignSignature(keystore, txFrom, txTo, 0); // changes scriptSig
+    SignSignature(keystore, txFrom, txToMutable, 0); // changes scriptSig
     combined = CombineSignatures(scriptPubKey, txTo, 0, scriptSig, empty);
     BOOST_CHECK(combined == scriptSig);
     combined = CombineSignatures(scriptPubKey, txTo, 0, empty, scriptSig);
     BOOST_CHECK(combined == scriptSig);
     CScript scriptSigCopy = scriptSig;
     // Signing again will give a different, valid signature:
-    SignSignature(keystore, txFrom, txTo, 0);
+    SignSignature(keystore, txFrom, txToMutable, 0);
     combined = CombineSignatures(scriptPubKey, txTo, 0, scriptSigCopy, scriptSig);
     BOOST_CHECK(combined == scriptSigCopy || combined == scriptSig);
 
@@ -650,13 +654,14 @@ BOOST_AUTO_TEST_CASE(script_combineSigs)
     CScript pkSingle; pkSingle << keys[0].GetPubKey() << OP_CHECKSIG;
     keystore.AddCScript(pkSingle);
     scriptPubKey = GetScriptForDestination(pkSingle.GetID());
-    SignSignature(keystore, txFrom, txTo, 0);
+    txFrom = CTransaction(txFromMutable);
+    SignSignature(keystore, txFrom, txToMutable, 0);
     combined = CombineSignatures(scriptPubKey, txTo, 0, scriptSig, empty);
     BOOST_CHECK(combined == scriptSig);
     combined = CombineSignatures(scriptPubKey, txTo, 0, empty, scriptSig);
     BOOST_CHECK(combined == scriptSig);
     scriptSigCopy = scriptSig;
-    SignSignature(keystore, txFrom, txTo, 0);
+    SignSignature(keystore, txFrom, txToMutable, 0);
     combined = CombineSignatures(scriptPubKey, txTo, 0, scriptSigCopy, scriptSig);
     BOOST_CHECK(combined == scriptSigCopy || combined == scriptSig);
     // dummy scriptSigCopy with placeholder, should always choose non-placeholder:
@@ -668,8 +673,9 @@ BOOST_AUTO_TEST_CASE(script_combineSigs)
 
     // Hardest case:  Multisig 2-of-3
     scriptPubKey = GetScriptForMultisig(2, pubkeys);
+    txFrom = CTransaction(txFromMutable);
     keystore.AddCScript(scriptPubKey);
-    SignSignature(keystore, txFrom, txTo, 0);
+    SignSignature(keystore, txFrom, txToMutable, 0);
     combined = CombineSignatures(scriptPubKey, txTo, 0, scriptSig, empty);
     BOOST_CHECK(combined == scriptSig);
     combined = CombineSignatures(scriptPubKey, txTo, 0, empty, scriptSig);
