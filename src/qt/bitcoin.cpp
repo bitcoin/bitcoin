@@ -12,6 +12,7 @@
 #include "guiconstants.h"
 #include "guiutil.h"
 #include "intro.h"
+#include "networkstyle.h"
 #include "optionsmodel.h"
 #include "splashscreen.h"
 #include "utilitydialog.h"
@@ -190,9 +191,9 @@ public:
     /// Create options model
     void createOptionsModel();
     /// Create main window
-    void createWindow(bool isaTestNet);
+    void createWindow(const NetworkStyle *networkStyle);
     /// Create splash screen
-    void createSplashScreen(bool isaTestNet);
+    void createSplashScreen(const NetworkStyle *networkStyle);
 
     /// Request core initialization
     void requestInitialize();
@@ -331,18 +332,18 @@ void BitcoinApplication::createOptionsModel()
     optionsModel = new OptionsModel();
 }
 
-void BitcoinApplication::createWindow(bool isaTestNet)
+void BitcoinApplication::createWindow(const NetworkStyle *networkStyle)
 {
-    window = new BitcoinGUI(isaTestNet, 0);
+    window = new BitcoinGUI(networkStyle, 0);
 
     pollShutdownTimer = new QTimer(window);
     connect(pollShutdownTimer, SIGNAL(timeout()), window, SLOT(detectShutdown()));
     pollShutdownTimer->start(200);
 }
 
-void BitcoinApplication::createSplashScreen(bool isaTestNet)
+void BitcoinApplication::createSplashScreen(const NetworkStyle *networkStyle)
 {
-    SplashScreen *splash = new SplashScreen(0, isaTestNet);
+    SplashScreen *splash = new SplashScreen(0, networkStyle);
     // We don't hold a direct pointer to the splash screen after creation, so use
     // Qt::WA_DeleteOnClose to make sure that the window will be deleted eventually.
     splash->setAttribute(Qt::WA_DeleteOnClose);
@@ -572,12 +573,10 @@ int main(int argc, char *argv[])
     if (!PaymentServer::ipcParseCommandLine(argc, argv))
         exit(0);
 #endif
-    bool isaTestNet = Params().NetworkID() != CBaseChainParams::MAIN;
+    QScopedPointer<const NetworkStyle> networkStyle(NetworkStyle::instantiate(QString::fromStdString(Params().NetworkIDString())));
+    assert(!networkStyle.isNull());
     // Allow for separate UI settings for testnets
-    if (isaTestNet)
-        QApplication::setApplicationName(QAPP_APP_NAME_TESTNET);
-    else
-        QApplication::setApplicationName(QAPP_APP_NAME_DEFAULT);
+    QApplication::setApplicationName(networkStyle->getAppName());
     // Re-initialize translations after changing application name (language in network-specific settings can be different)
     initTranslations(qtTranslatorBase, qtTranslator, translatorBase, translator);
 
@@ -617,11 +616,11 @@ int main(int argc, char *argv[])
     uiInterface.InitMessage.connect(InitMessage);
 
     if (GetBoolArg("-splash", true) && !GetBoolArg("-min", false))
-        app.createSplashScreen(isaTestNet);
+        app.createSplashScreen(networkStyle.data());
 
     try
     {
-        app.createWindow(isaTestNet);
+        app.createWindow(networkStyle.data());
         app.requestInitialize();
 #if defined(Q_OS_WIN) && QT_VERSION >= 0x050000
         WinShutdownMonitor::registerShutdownBlockReason(QObject::tr("Bitcoin Core didn't yet exit safely..."), (HWND)app.getMainWinId());
