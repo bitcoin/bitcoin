@@ -178,6 +178,7 @@ BITCOIN_QT_H = \
   qt/macdockiconhandler.h \
   qt/macnotificationhandler.h \
   qt/monitoreddatamapper.h \
+  qt/networkstyle.h \
   qt/notificator.h \
   qt/openuridialog.h \
   qt/optionsdialog.h \
@@ -269,6 +270,7 @@ BITCOIN_QT_CPP = \
   qt/guiutil.cpp \
   qt/intro.cpp \
   qt/monitoreddatamapper.cpp \
+  qt/networkstyle.cpp \
   qt/notificator.cpp \
   qt/optionsdialog.cpp \
   qt/optionsmodel.cpp \
