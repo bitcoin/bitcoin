@@ -384,6 +384,10 @@ nSequences are max.
 
 ["0x00", "'00' EQUAL", "P2SH,STRICTENC", "Basic OP_0 execution"],
 
+["1 IF 0x01 0x81 ENDIF 1", "", "MINIMALDATA", "evaluated non-minimal data"],
+["1 IF 0x01 0x05 ENDIF 1", "", "MINIMALDATA", "evaluated non-minimal data"],
+["1 IF 0x4c 0x03 0x222222 ENDIF 1", "", "MINIMALDATA", "evaluated non-minimal data"],
+
 [
     "0x47 0x30440220304eff7556bba9560df47873275e64db45f3cd735998ce3f00d2e57b1bb5f31302205c0c9d14b8b80d43e2ac9b87532f1af6d8a3271262bc694ec4e14068392bb0a001",
     "0x41 0x0479be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8 CHECKSIG",

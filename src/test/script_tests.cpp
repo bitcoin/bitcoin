@@ -179,7 +179,7 @@ public:
     TestBuilder& Num(int num)
     {
         DoPush();
-        spendTx.vin[0].scriptSig << CScriptNum(num);
+        spendTx.vin[0].scriptSig << num;
         return *this;
     }
 
@@ -788,19 +788,19 @@ BOOST_AUTO_TEST_CASE(script_combineSigs)
 
 BOOST_AUTO_TEST_CASE(script_standard_push)
 {
-    for (int i=0; i<1000; i++) {
+    for (int i=0; i<67000; i++) {
         CScript script;
         script << i;
         BOOST_CHECK_MESSAGE(script.IsPushOnly(), "Number " << i << " is not pure push.");
-        BOOST_CHECK_MESSAGE(script.HasCanonicalPushes(), "Number " << i << " push is not canonical.");
+        BOOST_CHECK_MESSAGE(VerifyScript(script, CScript() << OP_1, SCRIPT_VERIFY_MINIMALDATA, BaseSignatureChecker()), "Number " << i << " push is not minimal data.");
     }
 
-    for (int i=0; i<1000; i++) {
+    for (unsigned int i=0; i<=MAX_SCRIPT_ELEMENT_SIZE; i++) {
         std::vector<unsigned char> data(i, '\111');
         CScript script;
         script << data;
         BOOST_CHECK_MESSAGE(script.IsPushOnly(), "Length " << i << " is not pure push.");
-        BOOST_CHECK_MESSAGE(script.HasCanonicalPushes(), "Length " << i << " push is not canonical.");
+        BOOST_CHECK_MESSAGE(VerifyScript(script, CScript() << OP_1, SCRIPT_VERIFY_MINIMALDATA, BaseSignatureChecker()), "Length " << i << " push is not minimal data.");
     }
 }
 
