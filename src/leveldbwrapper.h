@@ -29,10 +29,9 @@ class CLevelDBBatch
 {
     friend class CLevelDBWrapper;
 
-private:
+public:
     leveldb::WriteBatch batch;
 
-public:
     template <typename K, typename V>
     void Write(const K& key, const V& value)
     {
@@ -63,7 +62,7 @@ public:
 
 class CLevelDBWrapper
 {
-private:
+public:
     //! custom environment this database is using (may be NULL in case of default environment)
     leveldb::Env* penv;
 
@@ -85,7 +84,6 @@ private:
     //! the database itself
     leveldb::DB* pdb;
 
-public:
     CLevelDBWrapper(const boost::filesystem::path& path, size_t nCacheSize, bool fMemory = false, bool fWipe = false);
     ~CLevelDBWrapper();
 
