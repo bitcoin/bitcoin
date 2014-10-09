@@ -35,8 +35,16 @@
 #include <boost/unordered_map.hpp>
 
 class CBlockIndex;
+class CBlockTreeDB;
 class CBloomFilter;
 class CInv;
+class CScriptCheck;
+class CTxUndo;
+class CValidationState;
+class CWalletInterface;
+
+struct CBlockTemplate;
+struct CNodeStateStats;
 
 /** The maximum allowed size for a serialized block, in bytes (network rule) */
 static const unsigned int MAX_BLOCK_SIZE = 1000000;
@@ -112,16 +120,6 @@ extern CFeeRate minRelayTxFee;
 
 // Minimum disk space required - used in CheckDiskSpace()
 static const uint64_t nMinDiskSpace = 52428800;
-
-
-class CBlockTreeDB;
-class CTxUndo;
-class CScriptCheck;
-class CValidationState;
-class CWalletInterface;
-struct CNodeStateStats;
-
-struct CBlockTemplate;
 
 /** Register a wallet to receive updates from core */
 void RegisterWallet(CWalletInterface* pwalletIn);
