@@ -42,8 +42,8 @@ BITCOIN_TESTS =\
   test/bloom_tests.cpp \
   test/checkblock_tests.cpp \
   test/Checkpoints_tests.cpp \
-  test/compress_tests.cpp \
   test/coins_tests.cpp \
+  test/compress_tests.cpp \
   test/crypto_tests.cpp \
   test/DoS_tests.cpp \
   test/getarg_tests.cpp \
@@ -58,7 +58,9 @@ BITCOIN_TESTS =\
   test/rpc_tests.cpp \
   test/script_P2SH_tests.cpp \
   test/script_tests.cpp \
+  test/scriptnum_tests.cpp \
   test/serialize_tests.cpp \
+  test/sighash_tests.cpp \
   test/sigopcount_tests.cpp \
   test/skiplist_tests.cpp \
   test/test_bitcoin.cpp \
@@ -66,9 +68,7 @@ BITCOIN_TESTS =\
   test/transaction_tests.cpp \
   test/uint256_tests.cpp \
   test/univalue_tests.cpp \
-  test/util_tests.cpp \
-  test/scriptnum_tests.cpp \
-  test/sighash_tests.cpp
+  test/util_tests.cpp
 
 if ENABLE_WALLET
 BITCOIN_TESTS += \
