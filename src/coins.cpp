@@ -214,6 +214,11 @@ CAmount CCoinsViewCache::GetValueIn(const CTransaction& tx) const
     return nResult;
 }
 
+CAmount CCoinsViewCache::GetTxFees(const CTransaction& tx) const
+{
+    return GetValueIn(tx) - tx.GetValueOut();
+}
+
 bool CCoinsViewCache::HaveInputs(const CTransaction& tx) const
 {
     if (!tx.IsCoinBase()) {

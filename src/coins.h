@@ -411,6 +411,7 @@ public:
         @return	Sum of value of all inputs (scriptSigs)
      */
     CAmount GetValueIn(const CTransaction& tx) const;
+    CAmount GetTxFees(const CTransaction& tx) const;
 
     // Check whether all prevouts of the transaction are present in the UTXO set represented by this view
     bool HaveInputs(const CTransaction& tx) const;
