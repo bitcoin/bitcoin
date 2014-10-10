@@ -573,8 +573,8 @@ int main(int argc, char *argv[])
     if (!PaymentServer::ipcParseCommandLine(argc, argv))
         exit(0);
 #endif
-    const NetworkStyle *networkStyle = NetworkStyle::instantiate(QString::fromStdString(Params().NetworkIDString()));
-    assert(networkStyle);
+    QScopedPointer<const NetworkStyle> networkStyle(NetworkStyle::instantiate(QString::fromStdString(Params().NetworkIDString())));
+    assert(!networkStyle.isNull());
     // Allow for separate UI settings for testnets
     QApplication::setApplicationName(networkStyle->getAppName());
     // Re-initialize translations after changing application name (language in network-specific settings can be different)
@@ -616,11 +616,11 @@ int main(int argc, char *argv[])
     uiInterface.InitMessage.connect(InitMessage);
 
     if (GetBoolArg("-splash", true) && !GetBoolArg("-min", false))
-        app.createSplashScreen(networkStyle);
+        app.createSplashScreen(networkStyle.data());
 
     try
     {
-        app.createWindow(networkStyle);
+        app.createWindow(networkStyle.data());
         app.requestInitialize();
 #if defined(Q_OS_WIN) && QT_VERSION >= 0x050000
         WinShutdownMonitor::registerShutdownBlockReason(QObject::tr("Bitcoin Core didn't yet exit safely..."), (HWND)app.getMainWinId());
@@ -635,8 +635,6 @@ int main(int argc, char *argv[])
         PrintExceptionContinue(NULL, "Runaway exception");
         app.handleRunawayException(QString::fromStdString(strMiscWarning));
     }
-    delete networkStyle;
-    networkStyle = 0;
     return app.getReturnValue();
 }
 #endif // BITCOIN_QT_TEST
