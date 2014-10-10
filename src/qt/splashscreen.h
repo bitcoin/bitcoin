@@ -7,6 +7,8 @@
 
 #include <QSplashScreen>
 
+class NetworkStyle;
+
 /** Class for the splashscreen with information of the running client.
  *
  * @note this is intentionally not a QSplashScreen. Bitcoin Core initialization
@@ -18,7 +20,7 @@ class SplashScreen : public QWidget
     Q_OBJECT
 
 public:
-    explicit SplashScreen(Qt::WindowFlags f, bool isTestNet);
+    explicit SplashScreen(Qt::WindowFlags f, const NetworkStyle *networkStyle);
     ~SplashScreen();
 
 protected:
