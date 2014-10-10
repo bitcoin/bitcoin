@@ -9,8 +9,8 @@
 
 #include <errno.h>
 #include <limits>
-
-#include <boost/foreach.hpp>
+#include <cstdlib>
+#include <cstring>
 
 using namespace std;
 
@@ -53,9 +53,9 @@ signed char HexDigit(char c)
 
 bool IsHex(const string& str)
 {
-    BOOST_FOREACH(char c, str)
+    for(std::string::const_iterator it(str.begin()); it != str.end(); ++it)
     {
-        if (HexDigit(c) < 0)
+        if (HexDigit(*it) < 0)
             return false;
     }
     return (str.size() > 0) && (str.size()%2 == 0);
