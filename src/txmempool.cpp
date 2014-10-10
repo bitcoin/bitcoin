@@ -556,6 +556,25 @@ bool CTxMemPool::lookup(uint256 hash, CTransaction& result) const
     return true;
 }
 
+bool CTxMemPool::lookupConflicts(const CTransaction& tx, std::vector<const CTransaction *> *vtxConflicts) const
+{
+    bool rv = false;
+    LOCK(cs);
+    BOOST_FOREACH(const CTxIn& txin, tx.vin)
+    {
+        const COutPoint& outpoint = txin.prevout;
+        std::map<COutPoint, CInPoint>::const_iterator elem = mapNextTx.find(outpoint);
+        if (mapNextTx.end() != elem)
+        {
+            if (!vtxConflicts)
+                return true;
+            vtxConflicts->push_back(elem->second.ptx);
+            rv = true;
+        }
+    }
+    return rv;
+}
+
 CFeeRate CTxMemPool::estimateFee(int nBlocks) const
 {
     LOCK(cs);

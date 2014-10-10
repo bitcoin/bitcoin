@@ -137,6 +137,7 @@ public:
     }
 
     bool lookup(uint256 hash, CTransaction& result) const;
+    bool lookupConflicts(const CTransaction&, std::vector<const CTransaction *> *vtxConflicts) const;
 
     // Estimate fee rate needed to get into the next
     // nBlocks
