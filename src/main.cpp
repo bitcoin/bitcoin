@@ -1968,12 +1968,20 @@ static bool ActivateBestChainStep(CValidationState &state, CBlockIndex *pindexMo
 
     // Build list of new blocks to connect.
     std::vector<CBlockIndex*> vpindexToConnect;
-    vpindexToConnect.reserve(pindexMostWork->nHeight - (pindexFork ? pindexFork->nHeight : -1));
-    CBlockIndex *pindexIter = pindexMostWork;
-    while (pindexIter && pindexIter != pindexFork) {
+    bool fContinue = true;
+    int nHeight = pindexFork ? pindexFork->nHeight : -1;
+    while (fContinue && nHeight != pindexMostWork->nHeight) {
+    // Don't iterate the entire list of potential improvements toward the best tip, as we likely only need
+    // a few blocks along the way.
+    int nTargetHeight = std::min(nHeight + 32, pindexMostWork->nHeight);
+    vpindexToConnect.clear();
+    vpindexToConnect.reserve(nTargetHeight - nHeight);
+    CBlockIndex *pindexIter = pindexMostWork->GetAncestor(nTargetHeight);
+    while (pindexIter && pindexIter->nHeight != nHeight) {
         vpindexToConnect.push_back(pindexIter);
         pindexIter = pindexIter->pprev;
     }
+    nHeight = nTargetHeight;
 
     // Connect new blocks.
     BOOST_REVERSE_FOREACH(CBlockIndex *pindexConnect, vpindexToConnect) {
@@ -1984,6 +1992,7 @@ static bool ActivateBestChainStep(CValidationState &state, CBlockIndex *pindexMo
                     InvalidChainFound(vpindexToConnect.back());
                 state = CValidationState();
                 fInvalidFound = true;
+                fContinue = false;
                 break;
             } else {
                 // A system error occurred (disk space, database error, ...).
@@ -2001,9 +2010,11 @@ static bool ActivateBestChainStep(CValidationState &state, CBlockIndex *pindexMo
             assert(!setBlockIndexCandidates.empty());
             if (!pindexOldTip || chainActive.Tip()->nChainWork > pindexOldTip->nChainWork) {
                 // We're in a better position than we were. Return temporarily to release the lock.
+                fContinue = false;
                 break;
             }
         }
+    }
     }
 
     // Callbacks/notifications for a new best chain.
