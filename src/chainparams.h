@@ -8,6 +8,7 @@
 
 #include "core.h"
 #include "chainparamsbase.h"
+#include "checkpoints.h"
 #include "protocol.h"
 #include "uint256.h"
 
@@ -71,12 +72,14 @@ public:
     /* Make miner stop after a block is found. In RPC, don't return
      * until nGenProcLimit blocks are generated */
     bool MineBlocksOnDemand() const { return fMineBlocksOnDemand; }
-    CBaseChainParams::Network NetworkID() const { return networkID; }
+    /* In the future use NetworkIDString() for RPC fields */
+    bool TestnetToBeDeprecatedFieldRPC() const { return fTestnetToBeDeprecatedFieldRPC; }
     /* Return the BIP70 network string (main, test or regtest) */
     std::string NetworkIDString() const { return strNetworkID; }
     const std::vector<CDNSSeedData>& DNSSeeds() const { return vSeeds; }
     const std::vector<unsigned char>& Base58Prefix(Base58Type type) const { return base58Prefixes[type]; }
     const std::vector<CAddress>& FixedSeeds() const { return vFixedSeeds; }
+    virtual const Checkpoints::CCheckpointData& Checkpoints() const = 0;
 protected:
     CChainParams() {}
 
@@ -106,6 +109,7 @@ protected:
     bool fRequireStandard;
     bool fMineBlocksOnDemand;
     bool fSkipProofOfWorkCheck;
+    bool fTestnetToBeDeprecatedFieldRPC;
 };
 
 /** Modifiable parameters interface is used by test cases to adapt the parameters in order
