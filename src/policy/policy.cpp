@@ -23,6 +23,7 @@ class CStandardPolicy : public CPolicy
 public:
     virtual std::vector<std::pair<std::string, std::string> > GetOptionsHelp() const;
     virtual void InitFromArgs(const std::map<std::string, std::string>&);
+    virtual bool ApproveScript(const CScript&, txnouttype&) const;
 };
 
 /** Global variables and their interfaces */
@@ -79,4 +80,24 @@ std::vector<std::pair<std::string, std::string> > CStandardPolicy::GetOptionsHel
 
 void CStandardPolicy::InitFromArgs(const std::map<std::string, std::string>& mapArgs)
 {
+}
+
+bool CStandardPolicy::ApproveScript(const CScript& scriptPubKey, txnouttype& whichType) const
+{
+    std::vector<std::vector<unsigned char> > vSolutions;
+    if (!Solver(scriptPubKey, whichType, vSolutions))
+        return false;
+
+    if (whichType == TX_MULTISIG)
+    {
+        unsigned char m = vSolutions.front()[0];
+        unsigned char n = vSolutions.back()[0];
+        // Support up to x-of-3 multisig txns as standard
+        if (n < 1 || n > 3)
+            return false;
+        if (m < 1 || m > n)
+            return false;
+    }
+
+    return whichType != TX_NONSTANDARD;
 }
