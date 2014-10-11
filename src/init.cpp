@@ -370,10 +370,6 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += "\n" + _("Policy options:") + "\n";
     strUsage += GetPolicyUsageStr();
 
-    strUsage += "\n" + _("Node relay options:") + "\n";
-    strUsage += "  -datacarrier           " + strprintf(_("Relay and mine data carrier transactions (default: %u)"), 1) + "\n";
-    strUsage += "  -datacarriersize       " + strprintf(_("Maximum size of data in data carrier transactions we relay and mine (default: %u)"), MAX_OP_RETURN_RELAY) + "\n";
-
     strUsage += "\n" + _("Block creation options:") + "\n";
     strUsage += "  -blockminsize=<n>      " + strprintf(_("Set minimum block size in bytes (default: %u)"), 0) + "\n";
     strUsage += "  -blockmaxsize=<n>      " + strprintf(_("Set maximum block size in bytes (default: %d)"), DEFAULT_BLOCK_MAX_SIZE) + "\n";
@@ -763,7 +759,6 @@ bool AppInit2(boost::thread_group& threadGroup)
 #endif // ENABLE_WALLET
 
     fIsBareMultisigStd = GetArg("-permitbaremultisig", true) != 0;
-    nMaxDatacarrierBytes = GetArg("-datacarriersize", nMaxDatacarrierBytes);
 
     // ********************************************************* Step 4: application initialization: dir lock, daemonize, pidfile, debug log
 

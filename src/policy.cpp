@@ -11,10 +11,16 @@
 #include "ui_interface.h"
 #include "utilstrencodings.h"
 
+static const unsigned int MAX_OP_RETURN_RELAY = 40; //! bytes
+
 /** Declaration of Standard Policy implementing CPolicy */
 class CStandardPolicy : public CPolicy
 {
+protected:
+    unsigned nMaxDatacarrierBytes;
 public:
+    CStandardPolicy() : nMaxDatacarrierBytes(MAX_OP_RETURN_RELAY) {};
+
     virtual void InitFromArgs(const std::map<std::string, std::string>&);
     virtual bool ValidateScript(const CScript&, txnouttype&) const;
 };
@@ -46,6 +52,8 @@ const CPolicy& Policy()
 std::string GetPolicyUsageStr()
 {
     std::string strUsage = "";
+    strUsage += "  -datacarrier           " + strprintf(_("Relay and mine data carrier transactions (default: %u)"), 1) + "\n";
+    strUsage += "  -datacarriersize       " + strprintf(_("Maximum size of data in data carrier transactions we relay and mine (default: %u)"), MAX_OP_RETURN_RELAY) + "\n";
     strUsage += "  -policy                " + strprintf(_("Select a specific type of policy (default: %s)"), "standard") + "\n";
     return strUsage;
 }
@@ -60,6 +68,10 @@ void InitPolicyFromArgs(const std::map<std::string, std::string>& mapArgs)
 
 void CStandardPolicy::InitFromArgs(const std::map<std::string, std::string>& mapArgs)
 {
+    if (GetArg("-datacarrier", true, mapArgs))
+        nMaxDatacarrierBytes = GetArg("-datacarriersize", nMaxDatacarrierBytes, mapArgs);
+    else
+        nMaxDatacarrierBytes = 0;
 }
 
 bool CStandardPolicy::ValidateScript(const CScript& scriptPubKey, txnouttype& whichType) const
@@ -68,15 +80,37 @@ bool CStandardPolicy::ValidateScript(const CScript& scriptPubKey, txnouttype& wh
     if (!Solver(scriptPubKey, whichType, vSolutions))
         return false;
 
-    if (whichType == TX_MULTISIG)
+    switch (whichType)
     {
-        unsigned char m = vSolutions.front()[0];
-        unsigned char n = vSolutions.back()[0];
-        // Support up to x-of-3 multisig txns as standard
-        if (n < 1 || n > 3)
-            return false;
-        if (m < 1 || m > n)
-            return false;
+        case TX_MULTISIG:
+        {
+            unsigned char m = vSolutions.front()[0];
+            unsigned char n = vSolutions.back()[0];
+            // Support up to x-of-3 multisig txns as standard
+            if (n < 1 || n > 3)
+                return false;
+            if (m < 1 || m > n)
+                return false;
+            break;
+        }
+
+        case TX_NULL_DATA:
+            // TX_NULL_DATA without any vSolutions is a lone OP_RETURN, which traditionally is accepted regardless of the -datacarrier option, so we skip the check.
+            // If you want to filter lone OP_RETURNs, be sure to handle vSolutions being empty below where vSolutions.front() is accessed!
+            if (vSolutions.size())
+            {
+                if (!nMaxDatacarrierBytes)
+                    return false;
+
+                if (vSolutions.front().size() > nMaxDatacarrierBytes)
+                    return false;
+            }
+
+            break;
+
+        default:
+            // no other restrictions on standard scripts
+            break;
     }
 
     return whichType != TX_NONSTANDARD;
