@@ -20,11 +20,17 @@
 bool fIsBareMultisigStd = true;
 /** Fees smaller than this (in satoshi) are considered zero fee (for relaying and mining) */
 CFeeRate minRelayTxFee = CFeeRate(1000);
+/** The maximum number of bytes in OP_RETURN outputs that we're willing to relay/mine */
+static const unsigned int MAX_OP_RETURN_RELAY = 80;
 
 /** Declaration of Standard Policy implementing CPolicy */
 class CStandardPolicy : public CPolicy
 {
+protected:
+    unsigned nMaxDatacarrierBytes;
 public:
+    CStandardPolicy() : nMaxDatacarrierBytes(MAX_OP_RETURN_RELAY) {};
+
     virtual std::vector<std::pair<std::string, std::string> > GetOptionsHelp() const;
     virtual void InitFromArgs(const std::map<std::string, std::string>&);
     virtual bool ApproveScript(const CScript&, txnouttype&) const;
@@ -103,11 +109,17 @@ void InitPolicyFromArgs(const std::map<std::string, std::string>& mapArgs)
 std::vector<std::pair<std::string, std::string> > CStandardPolicy::GetOptionsHelp() const
 {
     std::vector<std::pair<std::string, std::string> > optionsHelp;
+    optionsHelp.push_back(std::make_pair("-datacarrier", strprintf(_("Relay and mine data carrier transactions (default: %u)"), 1)));
+    optionsHelp.push_back(std::make_pair("-datacarriersize", strprintf(_("Maximum size of data in data carrier transactions we relay and mine (default: %u)"), MAX_OP_RETURN_RELAY)));
     return optionsHelp;
 }
 
 void CStandardPolicy::InitFromArgs(const std::map<std::string, std::string>& mapArgs)
 {
+    if (GetArg("-datacarrier", true, mapArgs))
+        nMaxDatacarrierBytes = GetArg("-datacarriersize", nMaxDatacarrierBytes, mapArgs);
+    else
+        nMaxDatacarrierBytes = 0;
 }
 
 bool CStandardPolicy::ApproveScript(const CScript& scriptPubKey, txnouttype& whichType) const
@@ -116,15 +128,37 @@ bool CStandardPolicy::ApproveScript(const CScript& scriptPubKey, txnouttype& whi
     if (!Solver(scriptPubKey, whichType, vSolutions))
         return false;
 
-    if (whichType == TX_MULTISIG)
+    switch (whichType)
     {
-        unsigned char m = vSolutions.front()[0];
-        unsigned char n = vSolutions.back()[0];
-        // Support up to x-of-3 multisig txns as standard
-        if (n < 1 || n > 3)
-            return false;
-        if (m < 1 || m > n)
-            return false;
+        case TX_MULTISIG:
+        {
+            unsigned char m = vSolutions.front()[0];
+            unsigned char n = vSolutions.back()[0];
+            // Support up to x-of-3 multisig txns as standard
+            if (n < 1 || n > 3)
+                return false;
+            if (m < 1 || m > n)
+                return false;
+            break;
+        }
+
+        case TX_NULL_DATA:
+            // TX_NULL_DATA without any vSolutions is a lone OP_RETURN, which traditionally is accepted regardless of the -datacarrier option, so we skip the check.
+            // If you want to filter lone OP_RETURNs, be sure to handle vSolutions being empty below where vSolutions.front() is accessed!
+            if (vSolutions.size())
+            {
+                if (!nMaxDatacarrierBytes)
+                    return false;
+
+                if (vSolutions.front().size() > nMaxDatacarrierBytes)
+                    return false;
+            }
+
+            break;
+
+        default:
+            // no other restrictions on standard scripts
+            break;
     }
 
     return whichType != TX_NONSTANDARD;

@@ -16,8 +16,6 @@ using namespace std;
 
 typedef vector<unsigned char> valtype;
 
-unsigned nMaxDatacarrierBytes = MAX_OP_RETURN_RELAY;
-
 CScriptID::CScriptID(const CScript& in) : uint160(Hash160(in.begin(), in.end())) {}
 
 const char* GetTxnOutputType(txnouttype t)
@@ -53,8 +51,7 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, vector<vector<unsi
         mTemplates.insert(make_pair(TX_MULTISIG, CScript() << OP_SMALLINTEGER << OP_PUBKEYS << OP_SMALLINTEGER << OP_CHECKMULTISIG));
 
         // Empty, provably prunable, data-carrying output
-        if (GetBoolArg("-datacarrier", true))
-            mTemplates.insert(make_pair(TX_NULL_DATA, CScript() << OP_RETURN << OP_SMALLDATA));
+        mTemplates.insert(make_pair(TX_NULL_DATA, CScript() << OP_RETURN << OP_DATA));
         mTemplates.insert(make_pair(TX_NULL_DATA, CScript() << OP_RETURN));
     }
 
@@ -140,11 +137,12 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, vector<vector<unsi
                 else
                     break;
             }
-            else if (opcode2 == OP_SMALLDATA)
+            else if (opcode2 == OP_DATA)
             {
-                // small pushdata, <= nMaxDatacarrierBytes
-                if (vch1.size() > nMaxDatacarrierBytes)
+                // any pushdata
+                if (opcode1 > OP_PUSHDATA4)
                     break;
+                vSolutionsRet.push_back(vch1);
             }
             else if (opcode1 != opcode2 || vch1 != vch2)
             {
