@@ -13,7 +13,7 @@ TEST_QT_H = \
   qt/test/paymentservertests.h
 
 qt_test_test_bitcoin_qt_CPPFLAGS = $(BITCOIN_INCLUDES) $(BITCOIN_QT_INCLUDES) \
-  $(QT_INCLUDES) $(QT_TEST_INCLUDES)
+  $(QT_INCLUDES) $(QT_TEST_INCLUDES) $(PROTOBUF_CFLAGS)
 
 qt_test_test_bitcoin_qt_SOURCES = \
   qt/test/test_main.cpp \
