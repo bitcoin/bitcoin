@@ -10,6 +10,10 @@
 #include "script/interpreter.h"
 #include "script/standard.h"
 
+#include <string>
+
+class CCoinsViewCache;
+
 /** Default for -blockmaxsize and -blockminsize, which control the range of sizes the mining code will create **/
 static const unsigned int DEFAULT_BLOCK_MAX_SIZE = 750000;
 static const unsigned int DEFAULT_BLOCK_MIN_SIZE = 0;
@@ -37,5 +41,18 @@ static const unsigned int STANDARD_SCRIPT_VERIFY_FLAGS = MANDATORY_SCRIPT_VERIFY
 
 /** For convenience, standard but not mandatory verify flags. */
 static const unsigned int STANDARD_NOT_MANDATORY_VERIFY_FLAGS = STANDARD_SCRIPT_VERIFY_FLAGS & ~MANDATORY_SCRIPT_VERIFY_FLAGS;
+
+bool IsStandard(const CScript& scriptPubKey, txnouttype& whichType);
+    /**
+     * Check for standard transaction types
+     * @return True if all outputs (scriptPubKeys) use only standard transaction forms
+     */
+bool IsStandardTx(const CTransaction& tx, std::string& reason);
+    /**
+     * Check for standard transaction types
+     * @param[in] mapInputs    Map of previous transactions that have outputs we're spending
+     * @return True if all inputs (scriptSigs) use only standard transaction forms
+     */
+bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs);
 
 #endif // BITCOIN_POLICY_H
