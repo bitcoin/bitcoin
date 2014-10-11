@@ -6,6 +6,8 @@
 #ifndef BITCOIN_POLICY_H
 #define BITCOIN_POLICY_H
 
+#include "script/standard.h"
+
 #include <map>
 #include <string>
 
@@ -14,6 +16,7 @@ class CPolicy
 {
 public:
     virtual void InitFromArgs(const std::map<std::string, std::string>&) = 0;
+    virtual bool ValidateScript(const CScript&, txnouttype&) const = 0;
 };
 
 /** Return a CPolicy of the type described in the parameter string */

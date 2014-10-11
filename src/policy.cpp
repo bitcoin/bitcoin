@@ -16,6 +16,7 @@ class CStandardPolicy : public CPolicy
 {
 public:
     virtual void InitFromArgs(const std::map<std::string, std::string>&);
+    virtual bool ValidateScript(const CScript&, txnouttype&) const;
 };
 
 /** Global variables and their interfaces */
@@ -59,4 +60,24 @@ void InitPolicyFromArgs(const std::map<std::string, std::string>& mapArgs)
 
 void CStandardPolicy::InitFromArgs(const std::map<std::string, std::string>& mapArgs)
 {
+}
+
+bool CStandardPolicy::ValidateScript(const CScript& scriptPubKey, txnouttype& whichType) const
+{
+    std::vector<std::vector<unsigned char> > vSolutions;
+    if (!Solver(scriptPubKey, whichType, vSolutions))
+        return false;
+
+    if (whichType == TX_MULTISIG)
+    {
+        unsigned char m = vSolutions.front()[0];
+        unsigned char n = vSolutions.back()[0];
+        // Support up to x-of-3 multisig txns as standard
+        if (n < 1 || n > 3)
+            return false;
+        if (m < 1 || m > n)
+            return false;
+    }
+
+    return whichType != TX_NONSTANDARD;
 }

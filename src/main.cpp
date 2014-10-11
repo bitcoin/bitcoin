@@ -15,6 +15,7 @@
 #include "consensus/validation.h"
 #include "init.h"
 #include "merkleblock.h"
+#include "policy.h"
 #include "pow.h"
 #include "primitives/transaction.h"
 #include "script/script.h"
@@ -615,7 +616,7 @@ bool IsStandardTx(const CTransaction& tx, string& reason)
     unsigned int nDataOut = 0;
     txnouttype whichType;
     BOOST_FOREACH(const CTxOut& txout, tx.vout) {
-        if (!::IsStandard(txout.scriptPubKey, whichType)) {
+        if (!Policy().ValidateScript(txout.scriptPubKey, whichType)) {
             reason = "scriptpubkey";
             return false;
         }
@@ -690,7 +691,7 @@ bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
         // non-standard. Note that this EvalScript() call will
         // be quick, because if there are any operations
         // beside "push data" in the scriptSig
-        // IsStandard() will have already returned false
+        // Policy().ValidateScript() will have already returned false
         // and this method isn't called.
         vector<vector<unsigned char> > stack;
         if (!EvalScript(stack, tx.vin[i].scriptSig, SCRIPT_VERIFY_NONE, BaseSignatureChecker()))
