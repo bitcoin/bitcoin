@@ -9,17 +9,17 @@
 #include "protocol.h"
 #include "serialize.h"
 #include "sync.h"
-#include "utiltime.h"
 #include "util.h"
+#include "utiltime.h"
 #include "wallet.h"
 
 #include <boost/filesystem.hpp>
 #include <boost/foreach.hpp>
+#include <boost/scoped_ptr.hpp>
 #include <boost/thread.hpp>
 
-using namespace std;
 using namespace boost;
-
+using namespace std;
 
 static uint64_t nAccountingEntryNumber = 0;
 
@@ -187,12 +187,12 @@ bool CWalletDB::WriteAccountingEntry(const CAccountingEntry& acentry)
     return WriteAccountingEntry(++nAccountingEntryNumber, acentry);
 }
 
-int64_t CWalletDB::GetAccountCreditDebit(const string& strAccount)
+CAmount CWalletDB::GetAccountCreditDebit(const string& strAccount)
 {
     list<CAccountingEntry> entries;
     ListAccountCreditDebit(strAccount, entries);
 
-    int64_t nCreditDebit = 0;
+    CAmount nCreditDebit = 0;
     BOOST_FOREACH (const CAccountingEntry& entry, entries)
         nCreditDebit += entry.nCreditDebit;
 
@@ -242,9 +242,7 @@ void CWalletDB::ListAccountCreditDebit(const string& strAccount, list<CAccountin
     pcursor->close();
 }
 
-
-DBErrors
-CWalletDB::ReorderTransactions(CWallet* pwallet)
+DBErrors CWalletDB::ReorderTransactions(CWallet* pwallet)
 {
     LOCK(pwallet->cs_wallet);
     // Old wallets didn't have any defined order for transactions
@@ -393,13 +391,6 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
                 wss.fAnyUnordered = true;
 
             pwallet->AddToWallet(wtx, true);
-            //// debug print
-            //LogPrintf("LoadWallet  %s\n", wtx.GetHash().ToString());
-            //LogPrintf(" %12d  %s  %s  %s\n",
-            //    wtx.vout[0].nValue,
-            //    DateTimeStrFormat("%Y-%m-%d %H:%M:%S", wtx.GetBlockTime()),
-            //    wtx.hashBlock.ToString(),
-            //    wtx.mapValue["message"]);
         }
         else if (strType == "acentry")
         {
@@ -710,7 +701,6 @@ DBErrors CWalletDB::LoadWallet(CWallet* pwallet)
 DBErrors CWalletDB::FindWalletTx(CWallet* pwallet, vector<uint256>& vTxHash, vector<CWalletTx>& vWtx)
 {
     pwallet->vchDefaultKey = CPubKey();
-    CWalletScanState wss;
     bool fNoncriticalErrors = false;
     DBErrors result = DB_LOAD_OK;
 
@@ -928,7 +918,7 @@ bool CWalletDB::Recover(CDBEnv& dbenv, std::string filename, bool fOnlyKeys)
     LogPrintf("Salvage(aggressive) found %u records\n", salvagedData.size());
 
     bool fSuccess = allOK;
-    Db* pdbCopy = new Db(&dbenv.dbenv, 0);
+    boost::scoped_ptr<Db> pdbCopy(new Db(&dbenv.dbenv, 0));
     int ret = pdbCopy->open(NULL,               // Txn pointer
                             filename.c_str(),   // Filename
                             "main",             // Logical db name
@@ -969,7 +959,6 @@ bool CWalletDB::Recover(CDBEnv& dbenv, std::string filename, bool fOnlyKeys)
     }
     ptxn->commit(0);
     pdbCopy->close(0);
-    delete pdbCopy;
 
     return fSuccess;
 }

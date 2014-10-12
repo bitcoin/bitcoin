@@ -15,6 +15,7 @@
 #include "main.h"
 #include "net.h"
 #include "txdb.h" // for -dbcache defaults
+
 #ifdef ENABLE_WALLET
 #include "wallet.h"
 #include "walletdb.h"
@@ -117,6 +118,8 @@ void OptionsModel::Init()
         settings.setValue("addrProxy", "127.0.0.1:9050");
     // Only try to set -proxy, if user has enabled fUseProxy
     if (settings.value("fUseProxy").toBool() && !SoftSetArg("-proxy", settings.value("addrProxy").toString().toStdString()))
+        addOverriddenOption("-proxy");
+    else if(!settings.value("fUseProxy").toBool() && !GetArg("-proxy", "").empty())
         addOverriddenOption("-proxy");
 
     // Display
@@ -274,9 +277,9 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
 #ifdef ENABLE_WALLET
         case Fee: { // core option - can be changed on-the-fly
             // Todo: Add is valid check  and warn via message, if not
-            qint64 nTransactionFee = value.toLongLong();
+            CAmount nTransactionFee(value.toLongLong());
             payTxFee = CFeeRate(nTransactionFee, 1000);
-            settings.setValue("nTransactionFee", nTransactionFee);
+            settings.setValue("nTransactionFee", qint64(nTransactionFee));
             emit transactionFeeChanged(nTransactionFee);
             break;
         }

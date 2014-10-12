@@ -532,10 +532,10 @@ bool PaymentServer::processPaymentRequest(PaymentRequestPlus& request, SendCoins
 
     request.getMerchant(PaymentServer::certStore, recipient.authenticatedMerchant);
 
-    QList<std::pair<CScript, qint64> > sendingTos = request.getPayTo();
+    QList<std::pair<CScript, CAmount> > sendingTos = request.getPayTo();
     QStringList addresses;
 
-    foreach(const PAIRTYPE(CScript, qint64)& sendingTo, sendingTos) {
+    foreach(const PAIRTYPE(CScript, CAmount)& sendingTo, sendingTos) {
         // Extract and check destination addresses
         CTxDestination dest;
         if (ExtractDestination(sendingTo.first, dest)) {
@@ -609,7 +609,7 @@ void PaymentServer::fetchPaymentACK(CWallet* wallet, SendCoinsRecipient recipien
     std::string strAccount = account.toStdString();
     set<CTxDestination> refundAddresses = wallet->GetAccountAddresses(strAccount);
     if (!refundAddresses.empty()) {
-        CScript s; s.SetDestination(*refundAddresses.begin());
+        CScript s = GetScriptForDestination(*refundAddresses.begin());
         payments::Output* refund_to = payment.add_refund_to();
         refund_to->set_script(&s[0], s.size());
     }
@@ -620,7 +620,7 @@ void PaymentServer::fetchPaymentACK(CWallet* wallet, SendCoinsRecipient recipien
             CKeyID keyID = newKey.GetID();
             wallet->SetAddressBook(keyID, strAccount, "refund");
 
-            CScript s; s.SetDestination(keyID);
+            CScript s = GetScriptForDestination(keyID);
             payments::Output* refund_to = payment.add_refund_to();
             refund_to->set_script(&s[0], s.size());
         }

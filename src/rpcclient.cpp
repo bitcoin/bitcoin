@@ -3,14 +3,13 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <set>
 #include "rpcclient.h"
 
 #include "rpcprotocol.h"
 #include "util.h"
 #include "ui_interface.h"
-#include "chainparams.h" // for Params().RPCPort()
 
+#include <set>
 #include <stdint.h>
 
 using namespace std;
@@ -67,6 +66,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "listunspent", 1 },
     { "listunspent", 2 },
     { "getblock", 1 },
+    { "gettransaction", 1 },
     { "getrawtransaction", 1 },
     { "createrawtransaction", 0 },
     { "createrawtransaction", 1 },

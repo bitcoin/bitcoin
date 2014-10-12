@@ -34,12 +34,12 @@ if test -z $with_gui && test -n "@no_qt@"; then
   with_gui=no
 fi
 
-if test @host_os@ == darwin; then
+if test x@host_os@ = xdarwin; then
   BREW=no
   PORT=no
 fi
 
-if test @host_os@ == mingw32; then
+if test x@host_os@ = xmingw32; then
   if test -z $with_qt_incdir; then
     with_qt_incdir=$prefix/include
   fi
@@ -52,7 +52,9 @@ export PATH=$prefix/native/bin:$PATH
 export PKG_CONFIG="`which pkg-config` --static"
 export PKG_CONFIG_LIBDIR=$prefix/lib/pkgconfig
 export PKG_CONFIG_PATH=$prefix/share/pkgconfig
-export CPPFLAGS=-I$prefix/include/
+
+export CPPFLAGS="-I$prefix/include/ $CPPFLAGS"
+export LDFLAGS="-L$prefix/lib $LDFLAGS"
 
 export CC="@CC@"
 export CXX="@CXX@"
@@ -75,10 +77,19 @@ if test -n "@NM@"; then
   ac_cv_path_ac_pt_NM=${NM}
 fi
 
+if test -n "@debug@"; then
+  enable_reduce_exports=no
+fi
+
 if test -n "@CFLAGS@"; then
   export CFLAGS="@CFLAGS@ $CFLAGS"
 fi
 if test -n "@CXXFLAGS@"; then
   export CXXFLAGS="@CXXFLAGS@ $CXXFLAGS"
 fi
-export LDFLAGS="-L$prefix/lib @LDFLAGS@ $LDFLAGS"
+if test -n "@CPPFLAGS@"; then
+  export CPPFLAGS="@CPPFLAGS@ $CPPFLAGS"
+fi
+if test -n "@LDFLAGS@"; then
+  export LDFLAGS="@LDFLAGS@ $LDFLAGS"
+fi

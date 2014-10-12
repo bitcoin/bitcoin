@@ -8,6 +8,7 @@
 
 #include "core.h"
 #include "chainparamsbase.h"
+#include "checkpoints.h"
 #include "protocol.h"
 #include "uint256.h"
 
@@ -61,6 +62,8 @@ public:
     bool DefaultCheckMemPool() const { return fDefaultCheckMemPool; }
     /* Allow mining of a min-difficulty block */
     bool AllowMinDifficultyBlocks() const { return fAllowMinDifficultyBlocks; }
+    /* Skip proof-of-work check: allow mining of any difficulty block */
+    bool SkipProofOfWorkCheck() const { return fSkipProofOfWorkCheck; }
     /* Make standard checks */
     bool RequireStandard() const { return fRequireStandard; }
     int64_t TargetTimespan() const { return nTargetTimespan; }
@@ -69,12 +72,14 @@ public:
     /* Make miner stop after a block is found. In RPC, don't return
      * until nGenProcLimit blocks are generated */
     bool MineBlocksOnDemand() const { return fMineBlocksOnDemand; }
-    CBaseChainParams::Network NetworkID() const { return networkID; }
+    /* In the future use NetworkIDString() for RPC fields */
+    bool TestnetToBeDeprecatedFieldRPC() const { return fTestnetToBeDeprecatedFieldRPC; }
     /* Return the BIP70 network string (main, test or regtest) */
     std::string NetworkIDString() const { return strNetworkID; }
     const std::vector<CDNSSeedData>& DNSSeeds() const { return vSeeds; }
     const std::vector<unsigned char>& Base58Prefix(Base58Type type) const { return base58Prefixes[type]; }
     const std::vector<CAddress>& FixedSeeds() const { return vFixedSeeds; }
+    virtual const Checkpoints::CCheckpointData& Checkpoints() const = 0;
 protected:
     CChainParams() {}
 
@@ -103,7 +108,27 @@ protected:
     bool fAllowMinDifficultyBlocks;
     bool fRequireStandard;
     bool fMineBlocksOnDemand;
+    bool fSkipProofOfWorkCheck;
+    bool fTestnetToBeDeprecatedFieldRPC;
 };
+
+/** Modifiable parameters interface is used by test cases to adapt the parameters in order
+*** to test specific features more easily. Test cases should always restore the previous
+*** values after finalization.
+**/
+
+class CModifiableParams {
+public:
+    // Published setters to allow changing values in unit test cases
+    virtual void setSubsidyHalvingInterval(int anSubsidyHalvingInterval) =0;
+    virtual void setEnforceBlockUpgradeMajority(int anEnforceBlockUpgradeMajority)=0;
+    virtual void setRejectBlockOutdatedMajority(int anRejectBlockOutdatedMajority)=0;
+    virtual void setToCheckBlockUpgradeMajority(int anToCheckBlockUpgradeMajority)=0;
+    virtual void setDefaultCheckMemPool(bool aDefaultCheckMemPool)=0;
+    virtual void setAllowMinDifficultyBlocks(bool aAllowMinDifficultyBlocks)=0;
+    virtual void setSkipProofOfWorkCheck(bool aSkipProofOfWorkCheck)=0;
+};
+
 
 /**
  * Return the currently selected parameters. This won't change after app startup
@@ -113,6 +138,9 @@ const CChainParams &Params();
 
 /** Return parameters for the given network. */
 CChainParams &Params(CBaseChainParams::Network network);
+
+/** Get modifyable network parameters (UNITTEST only) */
+CModifiableParams *ModifiableParams();
 
 /** Sets the params returned by Params() to those for the given network. */
 void SelectParams(CBaseChainParams::Network network);

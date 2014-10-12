@@ -13,6 +13,7 @@
 
 #include <openssl/x509.h>
 #include <openssl/x509_vfy.h>
+
 #include <QDateTime>
 #include <QDebug>
 #include <QSslCertificate>
@@ -195,9 +196,9 @@ bool PaymentRequestPlus::getMerchant(X509_STORE* certStore, QString& merchant) c
     return fResult;
 }
 
-QList<std::pair<CScript,qint64> > PaymentRequestPlus::getPayTo() const
+QList<std::pair<CScript,CAmount> > PaymentRequestPlus::getPayTo() const
 {
-    QList<std::pair<CScript,qint64> > result;
+    QList<std::pair<CScript,CAmount> > result;
     for (int i = 0; i < details.outputs_size(); i++)
     {
         const unsigned char* scriptStr = (const unsigned char*)details.outputs(i).script().data();

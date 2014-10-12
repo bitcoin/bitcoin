@@ -3,6 +3,7 @@ set -e
 srcdir="$(dirname $0)"
 cd "$srcdir"
 if [ -z ${LIBTOOLIZE} ] && GLIBTOOLIZE="`which glibtoolize 2>/dev/null`"; then
-  export LIBTOOLIZE="${GLIBTOOLIZE}"
+  LIBTOOLIZE="${GLIBTOOLIZE}"
+  export LIBTOOLIZE
 fi
-autoreconf --install --force
+autoreconf --install --force --warnings=all

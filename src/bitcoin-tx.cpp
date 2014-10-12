@@ -3,23 +3,24 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "base58.h"
-#include "util.h"
-#include "utilmoneystr.h"
 #include "core.h"
-#include "main.h"         // for MAX_BLOCK_SIZE
+#include "core_io.h"
 #include "keystore.h"
+#include "main.h" // for MAX_BLOCK_SIZE
 #include "script/script.h"
 #include "script/sign.h"
 #include "ui_interface.h" // for _(...)
 #include "univalue/univalue.h"
-#include "core_io.h"
+#include "util.h"
+#include "utilmoneystr.h"
 
 #include <stdio.h>
-#include <boost/assign/list_of.hpp>
-#include <boost/algorithm/string.hpp>
 
-using namespace std;
+#include <boost/algorithm/string.hpp>
+#include <boost/assign/list_of.hpp>
+
 using namespace boost::assign;
+using namespace std;
 
 static bool fCreateBlank;
 static map<string,UniValue> registers;
@@ -213,7 +214,7 @@ static void MutateTxAddOutAddr(CMutableTransaction& tx, const string& strInput)
 
     // extract and validate VALUE
     string strValue = strInput.substr(0, pos);
-    int64_t value;
+    CAmount value;
     if (!ParseMoney(strValue, value))
         throw runtime_error("invalid TX output value");
 
@@ -223,9 +224,8 @@ static void MutateTxAddOutAddr(CMutableTransaction& tx, const string& strInput)
     if (!addr.IsValid())
         throw runtime_error("invalid TX output address");
 
-    // build standard output script via SetDestination()
-    CScript scriptPubKey;
-    scriptPubKey.SetDestination(addr.Get());
+    // build standard output script via GetScriptForDestination()
+    CScript scriptPubKey = GetScriptForDestination(addr.Get());
 
     // construct TxOut, append to transaction output list
     CTxOut txout(value, scriptPubKey);
@@ -237,13 +237,12 @@ static void MutateTxAddOutScript(CMutableTransaction& tx, const string& strInput
     // separate VALUE:SCRIPT in string
     size_t pos = strInput.find(':');
     if ((pos == string::npos) ||
-        (pos == 0) ||
-        (pos == (strInput.size() - 1)))
+        (pos == 0))
         throw runtime_error("TX output missing separator");
 
     // extract and validate VALUE
     string strValue = strInput.substr(0, pos);
-    int64_t value;
+    CAmount value;
     if (!ParseMoney(strValue, value))
         throw runtime_error("invalid TX output value");
 
@@ -341,7 +340,7 @@ static void MutateTxSign(CMutableTransaction& tx, const string& flagStr)
     CMutableTransaction mergedTx(txVariants[0]);
     bool fComplete = true;
     CCoinsView viewDummy;
-    CCoinsViewCache view(viewDummy);
+    CCoinsViewCache view(&viewDummy);
 
     if (!registers.count("privatekeys"))
         throw runtime_error("privatekeys register variable must be set.");
@@ -385,21 +384,19 @@ static void MutateTxSign(CMutableTransaction& tx, const string& flagStr)
             vector<unsigned char> pkData(ParseHexUV(prevOut, "scriptPubKey"));
             CScript scriptPubKey(pkData.begin(), pkData.end());
 
-            CCoins coins;
-            if (view.GetCoins(txid, coins)) {
-                if (coins.IsAvailable(nOut) && coins.vout[nOut].scriptPubKey != scriptPubKey) {
+            {
+                CCoinsModifier coins = view.ModifyCoins(txid);
+                if (coins->IsAvailable(nOut) && coins->vout[nOut].scriptPubKey != scriptPubKey) {
                     string err("Previous output scriptPubKey mismatch:\n");
-                    err = err + coins.vout[nOut].scriptPubKey.ToString() + "\nvs:\n"+
+                    err = err + coins->vout[nOut].scriptPubKey.ToString() + "\nvs:\n"+
                         scriptPubKey.ToString();
                     throw runtime_error(err);
                 }
-                // what todo if txid is known, but the actual output isn't?
+                if ((unsigned int)nOut >= coins->vout.size())
+                    coins->vout.resize(nOut+1);
+                coins->vout[nOut].scriptPubKey = scriptPubKey;
+                coins->vout[nOut].nValue = 0; // we don't know the actual output value
             }
-            if ((unsigned int)nOut >= coins.vout.size())
-                coins.vout.resize(nOut+1);
-            coins.vout[nOut].scriptPubKey = scriptPubKey;
-            coins.vout[nOut].nValue = 0; // we don't know the actual output value
-            view.SetCoins(txid, coins);
 
             // if redeemScript given and private keys given,
             // add redeemScript to the tempKeystore so it can be signed:
@@ -436,7 +433,7 @@ static void MutateTxSign(CMutableTransaction& tx, const string& flagStr)
         BOOST_FOREACH(const CTransaction& txv, txVariants) {
             txin.scriptSig = CombineSignatures(prevPubKey, mergedTx, i, txin.scriptSig, txv.vin[i].scriptSig);
         }
-        if (!VerifyScript(txin.scriptSig, prevPubKey, mergedTx, i, STANDARD_SCRIPT_VERIFY_FLAGS, 0))
+        if (!VerifyScript(txin.scriptSig, prevPubKey, STANDARD_SCRIPT_VERIFY_FLAGS, SignatureChecker(mergedTx, i)))
             fComplete = false;
     }
 

@@ -13,6 +13,8 @@
 #include "init.h"
 #include "main.h"
 #include "protocol.h"
+#include "script/script.h"
+#include "script/standard.h"
 #include "util.h"
 
 #ifdef WIN32
@@ -219,10 +221,10 @@ QString formatBitcoinURI(const SendCoinsRecipient &info)
     return ret;
 }
 
-bool isDust(const QString& address, qint64 amount)
+bool isDust(const QString& address, const CAmount& amount)
 {
     CTxDestination dest = CBitcoinAddress(address.toStdString()).Get();
-    CScript script; script.SetDestination(dest);
+    CScript script = GetScriptForDestination(dest);
     CTxOut txOut(amount, script);
     return txOut.IsDust(::minRelayTxFee);
 }

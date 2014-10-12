@@ -283,8 +283,8 @@ def copyFramework(framework, path, verbose):
 
     if not framework.isDylib(): # Copy resources for real frameworks
 
-        linkfrom = os.path.join(path, "Contents/Frameworks/", framework.frameworkName, framework.binaryName)
-        linkto = os.path.join(framework.binaryPath)
+        linkfrom = os.path.join(path, "Contents","Frameworks", framework.frameworkName, "Versions", "Current")
+        linkto = framework.version
         if not os.path.exists(linkfrom):
             os.symlink(linkto, linkfrom)
             if verbose >= 2:
@@ -292,7 +292,7 @@ def copyFramework(framework, path, verbose):
         fromResourcesDir = framework.sourceResourcesDirectory
         if os.path.exists(fromResourcesDir):
             toResourcesDir = os.path.join(path, framework.destinationResourcesDirectory)
-            shutil.copytree(fromResourcesDir, toResourcesDir)
+            shutil.copytree(fromResourcesDir, toResourcesDir, symlinks=True)
             if verbose >= 3:
                 print "Copied resources:", fromResourcesDir
                 print " to:", toResourcesDir
@@ -301,13 +301,8 @@ def copyFramework(framework, path, verbose):
             fromContentsDir = framework.sourceContentsDirectory
         if os.path.exists(fromContentsDir):
             toContentsDir = os.path.join(path, framework.destinationVersionContentsDirectory)
-            shutil.copytree(fromContentsDir, toContentsDir)
+            shutil.copytree(fromContentsDir, toContentsDir, symlinks=True)
             contentslinkfrom = os.path.join(path, framework.destinationContentsDirectory)
-            if not os.path.exists(contentslinkfrom):
-                contentslinkto = os.path.join("Versions/", framework.version, "Contents")
-                os.symlink(contentslinkto, contentslinkfrom)
-                if verbose >= 3:
-                    print "Linked:", contentslinkfrom, "->", contentslinkto
             if verbose >= 3:
                 print "Copied Contents:", fromContentsDir
                 print " to:", toContentsDir
@@ -315,7 +310,7 @@ def copyFramework(framework, path, verbose):
         qtMenuNibSourcePath = os.path.join(framework.frameworkDirectory, "Resources", "qt_menu.nib")
         qtMenuNibDestinationPath = os.path.join(path, "Contents", "Resources", "qt_menu.nib")
         if os.path.exists(qtMenuNibSourcePath) and not os.path.exists(qtMenuNibDestinationPath):
-            shutil.copytree(qtMenuNibSourcePath, qtMenuNibDestinationPath)
+            shutil.copytree(qtMenuNibSourcePath, qtMenuNibDestinationPath, symlinks=True)
             if verbose >= 3:
                 print "Copied for libQtGui:", qtMenuNibSourcePath
                 print " to:", qtMenuNibDestinationPath
@@ -398,7 +393,7 @@ def deployPlugins(appBundleInfo, deploymentInfo, strip, verbose):
             # Deploy the script plugins only if QtScript is in use
             if not deploymentInfo.usesFramework("QtScript"):
                 continue
-        elif pluginDirectory == "qmltooling":
+        elif pluginDirectory == "qmltooling" or pluginDirectory == "qml1tooling":
             # Deploy the qml plugins only if QtDeclarative is in use
             if not deploymentInfo.usesFramework("QtDeclarative"):
                 continue
@@ -406,7 +401,23 @@ def deployPlugins(appBundleInfo, deploymentInfo, strip, verbose):
             # Deploy the bearer plugins only if QtNetwork is in use
             if not deploymentInfo.usesFramework("QtNetwork"):
                 continue
-        
+        elif pluginDirectory == "position":
+            # Deploy the position plugins only if QtPositioning is in use
+            if not deploymentInfo.usesFramework("QtPositioning"):
+                continue
+        elif pluginDirectory == "sensors" or pluginDirectory == "sensorgestures":
+            # Deploy the sensor plugins only if QtSensors is in use
+            if not deploymentInfo.usesFramework("QtSensors"):
+                continue
+        elif pluginDirectory == "audio" or pluginDirectory == "playlistformats":
+            # Deploy the audio plugins only if QtMultimedia is in use
+            if not deploymentInfo.usesFramework("QtMultimedia"):
+                continue
+        elif pluginDirectory == "mediaservice":
+            # Deploy the mediaservice plugins only if QtMultimediaWidgets is in use
+            if not deploymentInfo.usesFramework("QtMultimediaWidgets"):
+                continue
+
         for pluginName in filenames:
             pluginPath = os.path.join(pluginDirectory, pluginName)
             if pluginName.endswith("_debug.dylib"):
@@ -424,7 +435,11 @@ def deployPlugins(appBundleInfo, deploymentInfo, strip, verbose):
                 # Deploy the opengl graphicssystem plugin only if QtOpenGL is in use
                 if not deploymentInfo.usesFramework("QtOpenGL"):
                     continue
-            
+            elif pluginPath == "accessible/libqtaccessiblequick.dylib":
+                # Deploy the accessible qtquick plugin only if QtQuick is in use
+                if not deploymentInfo.usesFramework("QtQuick"):
+                    continue
+
             plugins.append((pluginDirectory, pluginName))
     
     for pluginDirectory, pluginName in plugins:
@@ -589,7 +604,7 @@ if verbose >= 3:
     print app_bundle, "->", target
 
 os.mkdir("dist")
-shutil.copytree(app_bundle, target)
+shutil.copytree(app_bundle, target, symlinks=True)
 
 applicationBundle = ApplicationBundleInfo(target)
 
@@ -676,7 +691,7 @@ for p in config.add_resources:
     if verbose >= 3:
         print p, "->", t
     if os.path.isdir(p):
-        shutil.copytree(p, t)
+        shutil.copytree(p, t, symlinks=True)
     else:
         shutil.copy2(p, t)
 

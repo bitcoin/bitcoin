@@ -10,6 +10,6 @@
 #include "json/json_spirit_utils.h"
 #include "json/json_spirit_writer_template.h"
 
-json_spirit::Array RPCConvertValues(const std::string &strMethod, const std::vector<std::string> &strParams);
+json_spirit::Array RPCConvertValues(const std::string& strMethod, const std::vector<std::string>& strParams);
 
 #endif // _BITCOINRPC_CLIENT_H_

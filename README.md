@@ -97,7 +97,7 @@ CXXFLAGS="-g -ggdb -O0" or whatever debug flags you need.
 **debug.log**
 
 If the code is behaving strangely, take a look in the debug.log file in the data directory;
-error and debugging message are written there.
+error and debugging messages are written there.
 
 The -debug=... command-line option controls debugging; running with just -debug will turn
 on all categories (and give you a very large debug.log file).
@@ -111,12 +111,12 @@ Run with the -testnet option to run with "play bitcoins" on the test network, if
 are testing multi-machine code that needs to operate across the internet.
 
 If you are testing something that can run on one machine, run with the -regtest option.
-In regression test mode blocks can be created on-demand; see qa/rpc-tests/ for tests
-that run in -regest mode.
+In regression test mode, blocks can be created on-demand; see qa/rpc-tests/ for tests
+that run in -regtest mode.
 
 **DEBUG_LOCKORDER**
 
 Bitcoin Core is a multithreaded application, and deadlocks or other multithreading bugs
 can be very difficult to track down. Compiling with -DDEBUG_LOCKORDER (configure
-CXXFLAGS="-DDEBUG_LOCKORDER -g") inserts run-time checks to keep track of what locks
-are held, and adds warning to the debug.log file if inconsistencies are detected.
+CXXFLAGS="-DDEBUG_LOCKORDER -g") inserts run-time checks to keep track of which locks
+are held, and adds warnings to the debug.log file if inconsistencies are detected.

@@ -1,6 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2013 The Bitcoin developers
-// Distributed under the MIT/X11 software license, see the accompanying
+// Copyright (c) 2009-2014 The Bitcoin developers
+// Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "interpreter.h"
@@ -9,13 +9,9 @@
 #include "crypto/ripemd160.h"
 #include "crypto/sha1.h"
 #include "crypto/sha2.h"
-#include "random.h"
 #include "script/script.h"
 #include "uint256.h"
 #include "util.h"
-
-#include <boost/thread.hpp>
-#include <boost/tuple/tuple_comparison.hpp>
 
 using namespace std;
 
@@ -56,10 +52,7 @@ static inline void popstack(vector<valtype>& stack)
     stack.pop_back();
 }
 
-bool IsCanonicalPubKey(const valtype &vchPubKey, unsigned int flags) {
-    if (!(flags & SCRIPT_VERIFY_STRICTENC))
-        return true;
-
+bool static IsCompressedOrUncompressedPubKey(const valtype &vchPubKey) {
     if (vchPubKey.size() < 33)
         return error("Non-canonical public key: too short");
     if (vchPubKey[0] == 0x04) {
@@ -74,10 +67,7 @@ bool IsCanonicalPubKey(const valtype &vchPubKey, unsigned int flags) {
     return true;
 }
 
-bool IsCanonicalSignature(const valtype &vchSig, unsigned int flags) {
-    if (!(flags & SCRIPT_VERIFY_STRICTENC))
-        return true;
-
+bool static IsDERSignature(const valtype &vchSig) {
     // See https://bitcointalk.org/index.php?topic=8392.msg127623#msg127623
     // A canonical signature exists of: <30> <total len> <02> <len R> <R> <02> <len S> <S> <hashtype>
     // Where R and S are not negative (their first byte has its highest bit not set), and not
@@ -87,9 +77,6 @@ bool IsCanonicalSignature(const valtype &vchSig, unsigned int flags) {
         return error("Non-canonical signature: too short");
     if (vchSig.size() > 73)
         return error("Non-canonical signature: too long");
-    unsigned char nHashType = vchSig[vchSig.size() - 1] & (~(SIGHASH_ANYONECANPAY));
-    if (nHashType < SIGHASH_ALL || nHashType > SIGHASH_SINGLE)
-        return error("Non-canonical signature: unknown hashtype byte");
     if (vchSig[0] != 0x30)
         return error("Non-canonical signature: wrong type");
     if (vchSig[1] != vchSig.size()-3)
@@ -121,18 +108,55 @@ bool IsCanonicalSignature(const valtype &vchSig, unsigned int flags) {
     if (nLenS > 1 && (S[0] == 0x00) && !(S[1] & 0x80))
         return error("Non-canonical signature: S value excessively padded");
 
-    if (flags & SCRIPT_VERIFY_LOW_S) {
-        // If the S value is above the order of the curve divided by two, its
-        // complement modulo the order could have been used instead, which is
-        // one byte shorter when encoded correctly.
-        if (!CKey::CheckSignatureElement(S, nLenS, true))
-            return error("Non-canonical signature: S value is unnecessarily high");
+    return true;
+}
+
+bool static IsLowDERSignature(const valtype &vchSig) {
+    if (!IsDERSignature(vchSig)) {
+        return false;
     }
+    unsigned int nLenR = vchSig[3];
+    unsigned int nLenS = vchSig[5+nLenR];
+    const unsigned char *S = &vchSig[6+nLenR];
+    // If the S value is above the order of the curve divided by two, its
+    // complement modulo the order could have been used instead, which is
+    // one byte shorter when encoded correctly.
+    if (!CKey::CheckSignatureElement(S, nLenS, true))
+        return error("Non-canonical signature: S value is unnecessarily high");
 
     return true;
 }
 
-bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, const CTransaction& txTo, unsigned int nIn, unsigned int flags, int nHashType)
+bool static IsDefinedHashtypeSignature(const valtype &vchSig) {
+    if (vchSig.size() == 0) {
+        return false;
+    }
+    unsigned char nHashType = vchSig[vchSig.size() - 1] & (~(SIGHASH_ANYONECANPAY));
+    if (nHashType < SIGHASH_ALL || nHashType > SIGHASH_SINGLE)
+        return error("Non-canonical signature: unknown hashtype byte");
+
+    return true;
+}
+
+bool static CheckSignatureEncoding(const valtype &vchSig, unsigned int flags) {
+    if ((flags & (SCRIPT_VERIFY_DERSIG | SCRIPT_VERIFY_LOW_S | SCRIPT_VERIFY_STRICTENC)) != 0 && !IsDERSignature(vchSig)) {
+        return false;
+    } else if ((flags & SCRIPT_VERIFY_LOW_S) != 0 && !IsLowDERSignature(vchSig)) {
+        return false;
+    } else if ((flags & SCRIPT_VERIFY_STRICTENC) != 0 && !IsDefinedHashtypeSignature(vchSig)) {
+        return false;
+    }
+    return true;
+}
+
+bool static CheckPubKeyEncoding(const valtype &vchSig, unsigned int flags) {
+    if ((flags & SCRIPT_VERIFY_STRICTENC) != 0 && !IsCompressedOrUncompressedPubKey(vchSig)) {
+        return false;
+    }
+    return true;
+}
+
+bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, unsigned int flags, const BaseSignatureChecker& checker)
 {
     CScript::const_iterator pc = script.begin();
     CScript::const_iterator pend = script.end();
@@ -637,19 +661,19 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
                     valtype& vch = stacktop(-1);
                     valtype vchHash((opcode == OP_RIPEMD160 || opcode == OP_SHA1 || opcode == OP_HASH160) ? 20 : 32);
                     if (opcode == OP_RIPEMD160)
-                        CRIPEMD160().Write(&vch[0], vch.size()).Finalize(&vchHash[0]);
+                        CRIPEMD160().Write(begin_ptr(vch), vch.size()).Finalize(begin_ptr(vchHash));
                     else if (opcode == OP_SHA1)
-                        CSHA1().Write(&vch[0], vch.size()).Finalize(&vchHash[0]);
+                        CSHA1().Write(begin_ptr(vch), vch.size()).Finalize(begin_ptr(vchHash));
                     else if (opcode == OP_SHA256)
-                        CSHA256().Write(&vch[0], vch.size()).Finalize(&vchHash[0]);
+                        CSHA256().Write(begin_ptr(vch), vch.size()).Finalize(begin_ptr(vchHash));
                     else if (opcode == OP_HASH160)
-                        CHash160().Write(&vch[0], vch.size()).Finalize(&vchHash[0]);
+                        CHash160().Write(begin_ptr(vch), vch.size()).Finalize(begin_ptr(vchHash));
                     else if (opcode == OP_HASH256)
-                        CHash256().Write(&vch[0], vch.size()).Finalize(&vchHash[0]);
+                        CHash256().Write(begin_ptr(vch), vch.size()).Finalize(begin_ptr(vchHash));
                     popstack(stack);
                     stack.push_back(vchHash);
                 }
-                break;
+                break;                                   
 
                 case OP_CODESEPARATOR:
                 {
@@ -674,8 +698,11 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
                     // Drop the signature, since there's no way for a signature to sign itself
                     scriptCode.FindAndDelete(CScript(vchSig));
 
-                    bool fSuccess = IsCanonicalSignature(vchSig, flags) && IsCanonicalPubKey(vchPubKey, flags) &&
-                        CheckSig(vchSig, vchPubKey, scriptCode, txTo, nIn, nHashType, flags);
+                    if (!CheckSignatureEncoding(vchSig, flags)) {
+                        return false;
+                    }
+
+                    bool fSuccess = CheckPubKeyEncoding(vchPubKey, flags) && checker.CheckSig(vchSig, vchPubKey, scriptCode);
 
                     popstack(stack);
                     popstack(stack);
@@ -734,9 +761,12 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
                         valtype& vchSig    = stacktop(-isig);
                         valtype& vchPubKey = stacktop(-ikey);
 
+                        if (!CheckSignatureEncoding(vchSig, flags)) {
+                            return false;
+                        }
+
                         // Check signature
-                        bool fOk = IsCanonicalSignature(vchSig, flags) && IsCanonicalPubKey(vchPubKey, flags) &&
-                            CheckSig(vchSig, vchPubKey, scriptCode, txTo, nIn, nHashType, flags);
+                        bool fOk = CheckPubKeyEncoding(vchPubKey, flags) && checker.CheckSig(vchSig, vchPubKey, scriptCode);
 
                         if (fOk) {
                             isig++;
@@ -839,7 +869,8 @@ public:
                 itBegin = it;
             }
         }
-        s.write((char*)&itBegin[0], it-itBegin);
+        if (itBegin != scriptCode.end())
+            s.write((char*)&itBegin[0], it-itBegin);
     }
 
     /** Serialize an input of txTo */
@@ -896,7 +927,7 @@ public:
 
 } // anon namespace
 
-uint256 SignatureHash(const CScript &scriptCode, const CTransaction& txTo, unsigned int nIn, int nHashType)
+uint256 SignatureHash(const CScript& scriptCode, const CTransaction& txTo, unsigned int nIn, int nHashType)
 {
     if (nIn >= txTo.vin.size()) {
         LogPrintf("ERROR: SignatureHash() : nIn=%d out of range\n", nIn);
@@ -920,101 +951,40 @@ uint256 SignatureHash(const CScript &scriptCode, const CTransaction& txTo, unsig
     return ss.GetHash();
 }
 
-// Valid signature cache, to avoid doing expensive ECDSA signature checking
-// twice for every transaction (once when accepted into memory pool, and
-// again when accepted into the block chain)
-class CSignatureCache
+bool SignatureChecker::VerifySignature(const std::vector<unsigned char>& vchSig, const CPubKey& pubkey, const uint256& sighash) const
 {
-private:
-     // sigdata_type is (signature hash, signature, public key):
-    typedef boost::tuple<uint256, std::vector<unsigned char>, CPubKey> sigdata_type;
-    std::set< sigdata_type> setValid;
-    boost::shared_mutex cs_sigcache;
+    return pubkey.Verify(sighash, vchSig);
+}
 
-public:
-    bool
-    Get(const uint256 &hash, const std::vector<unsigned char>& vchSig, const CPubKey& pubKey)
-    {
-        boost::shared_lock<boost::shared_mutex> lock(cs_sigcache);
-
-        sigdata_type k(hash, vchSig, pubKey);
-        std::set<sigdata_type>::iterator mi = setValid.find(k);
-        if (mi != setValid.end())
-            return true;
-        return false;
-    }
-
-    void Set(const uint256 &hash, const std::vector<unsigned char>& vchSig, const CPubKey& pubKey)
-    {
-        // DoS prevention: limit cache size to less than 10MB
-        // (~200 bytes per cache entry times 50,000 entries)
-        // Since there are a maximum of 20,000 signature operations per block
-        // 50,000 is a reasonable default.
-        int64_t nMaxCacheSize = GetArg("-maxsigcachesize", 50000);
-        if (nMaxCacheSize <= 0) return;
-
-        boost::unique_lock<boost::shared_mutex> lock(cs_sigcache);
-
-        while (static_cast<int64_t>(setValid.size()) > nMaxCacheSize)
-        {
-            // Evict a random entry. Random because that helps
-            // foil would-be DoS attackers who might try to pre-generate
-            // and re-use a set of valid signatures just-slightly-greater
-            // than our cache size.
-            uint256 randomHash = GetRandHash();
-            std::vector<unsigned char> unused;
-            std::set<sigdata_type>::iterator it =
-                setValid.lower_bound(sigdata_type(randomHash, unused, unused));
-            if (it == setValid.end())
-                it = setValid.begin();
-            setValid.erase(*it);
-        }
-
-        sigdata_type k(hash, vchSig, pubKey);
-        setValid.insert(k);
-    }
-};
-
-bool CheckSig(vector<unsigned char> vchSig, const vector<unsigned char> &vchPubKey, const CScript &scriptCode, const CTransaction& txTo, unsigned int nIn, int nHashType, int flags)
+bool SignatureChecker::CheckSig(const vector<unsigned char>& vchSigIn, const vector<unsigned char>& vchPubKey, const CScript& scriptCode) const
 {
-    static CSignatureCache signatureCache;
-
     CPubKey pubkey(vchPubKey);
     if (!pubkey.IsValid())
         return false;
 
     // Hash type is one byte tacked on to the end of the signature
+    vector<unsigned char> vchSig(vchSigIn);
     if (vchSig.empty())
         return false;
-    if (nHashType == 0)
-        nHashType = vchSig.back();
-    else if (nHashType != vchSig.back())
-        return false;
+    int nHashType = vchSig.back();
     vchSig.pop_back();
 
     uint256 sighash = SignatureHash(scriptCode, txTo, nIn, nHashType);
 
-    if (signatureCache.Get(sighash, vchSig, pubkey))
-        return true;
-
-    if (!pubkey.Verify(sighash, vchSig))
+    if (!VerifySignature(vchSig, pubkey, sighash))
         return false;
-
-    if (!(flags & SCRIPT_VERIFY_NOCACHE))
-        signatureCache.Set(sighash, vchSig, pubkey);
 
     return true;
 }
 
-bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const CTransaction& txTo, unsigned int nIn,
-                  unsigned int flags, int nHashType)
+bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, unsigned int flags, const BaseSignatureChecker& checker)
 {
     vector<vector<unsigned char> > stack, stackCopy;
-    if (!EvalScript(stack, scriptSig, txTo, nIn, flags, nHashType))
+    if (!EvalScript(stack, scriptSig, flags, checker))
         return false;
     if (flags & SCRIPT_VERIFY_P2SH)
         stackCopy = stack;
-    if (!EvalScript(stack, scriptPubKey, txTo, nIn, flags, nHashType))
+    if (!EvalScript(stack, scriptPubKey, flags, checker))
         return false;
     if (stack.empty())
         return false;
@@ -1037,7 +1007,7 @@ bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const C
         CScript pubKey2(pubKeySerialized.begin(), pubKeySerialized.end());
         popstack(stackCopy);
 
-        if (!EvalScript(stackCopy, pubKey2, txTo, nIn, flags, nHashType))
+        if (!EvalScript(stackCopy, pubKey2, flags, checker))
             return false;
         if (stackCopy.empty())
             return false;

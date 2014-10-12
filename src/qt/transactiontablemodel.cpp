@@ -209,10 +209,7 @@ public:
             }
             return rec;
         }
-        else
-        {
-            return 0;
-        }
+        return 0;
     }
 
     QString describe(TransactionRecord *rec, int unit)
@@ -225,7 +222,7 @@ public:
                 return TransactionDesc::toHTML(wallet, mi->second, rec, unit);
             }
         }
-        return QString("");
+        return QString();
     }
 };
 
@@ -330,10 +327,7 @@ QString TransactionTableModel::formatTxDate(const TransactionRecord *wtx) const
     {
         return GUIUtil::dateTimeStr(wtx->time);
     }
-    else
-    {
-        return QString();
-    }
+    return QString();
 }
 
 /* Look up address in address book, if found return label (address)
@@ -345,11 +339,11 @@ QString TransactionTableModel::lookupAddress(const std::string &address, bool to
     QString description;
     if(!label.isEmpty())
     {
-        description += label + QString(" ");
+        description += label;
     }
     if(label.isEmpty() || tooltip)
     {
-        description += QString("(") + QString::fromStdString(address) + QString(")");
+        description += QString(" (") + QString::fromStdString(address) + QString(")");
     }
     return description;
 }
@@ -389,7 +383,6 @@ QVariant TransactionTableModel::txAddressDecoration(const TransactionRecord *wtx
     default:
         return QIcon(":/icons/tx_inout");
     }
-    return QVariant();
 }
 
 QString TransactionTableModel::formatTxToAddress(const TransactionRecord *wtx, bool tooltip) const
@@ -456,9 +449,9 @@ QVariant TransactionTableModel::txStatusDecoration(const TransactionRecord *wtx)
     {
     case TransactionStatus::OpenUntilBlock:
     case TransactionStatus::OpenUntilDate:
-        return QColor(64,64,255);
+        return COLOR_TX_STATUS_OPENUNTILDATE;
     case TransactionStatus::Offline:
-        return QColor(192,192,192);
+        return COLOR_TX_STATUS_OFFLINE;
     case TransactionStatus::Unconfirmed:
         return QIcon(":/icons/transaction_0");
     case TransactionStatus::Confirming:
@@ -482,8 +475,9 @@ QVariant TransactionTableModel::txStatusDecoration(const TransactionRecord *wtx)
     case TransactionStatus::MaturesWarning:
     case TransactionStatus::NotAccepted:
         return QIcon(":/icons/transaction_0");
+    default:
+        return COLOR_BLACK;
     }
-    return QColor(0,0,0);
 }
 
 QVariant TransactionTableModel::txWatchonlyDecoration(const TransactionRecord *wtx) const
@@ -552,7 +546,7 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
         case ToAddress:
             return formatTxToAddress(rec, true);
         case Amount:
-            return rec->credit + rec->debit;
+            return qint64(rec->credit + rec->debit);
         }
         break;
     case Qt::ToolTipRole:
@@ -589,7 +583,7 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
     case LabelRole:
         return walletModel->getAddressTableModel()->labelForAddress(QString::fromStdString(rec->address));
     case AmountRole:
-        return rec->credit + rec->debit;
+        return qint64(rec->credit + rec->debit);
     case TxIDRole:
         return rec->getTxID();
     case TxHashRole:
@@ -646,10 +640,7 @@ QModelIndex TransactionTableModel::index(int row, int column, const QModelIndex 
     {
         return createIndex(row, column, priv->index(row));
     }
-    else
-    {
-        return QModelIndex();
-    }
+    return QModelIndex();
 }
 
 void TransactionTableModel::updateDisplayUnit()

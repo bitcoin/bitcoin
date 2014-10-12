@@ -9,8 +9,9 @@
 #include "pow.h"
 #include "uint256.h"
 
-#include <boost/thread.hpp>
 #include <stdint.h>
+
+#include <boost/thread.hpp>
 
 using namespace std;
 
@@ -32,12 +33,6 @@ bool CCoinsViewDB::GetCoins(const uint256 &txid, CCoins &coins) const {
     return db.Read(make_pair('c', txid), coins);
 }
 
-bool CCoinsViewDB::SetCoins(const uint256 &txid, const CCoins &coins) {
-    CLevelDBBatch batch;
-    BatchWriteCoins(batch, txid, coins);
-    return db.WriteBatch(batch);
-}
-
 bool CCoinsViewDB::HaveCoins(const uint256 &txid) const {
     return db.Exists(make_pair('c', txid));
 }
@@ -49,24 +44,23 @@ uint256 CCoinsViewDB::GetBestBlock() const {
     return hashBestChain;
 }
 
-bool CCoinsViewDB::SetBestBlock(const uint256 &hashBlock) {
-    CLevelDBBatch batch;
-    BatchWriteHashBestChain(batch, hashBlock);
-    return db.WriteBatch(batch);
-}
-
 bool CCoinsViewDB::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock) {
-    LogPrint("coindb", "Committing %u changed transactions to coin database...\n", (unsigned int)mapCoins.size());
-
     CLevelDBBatch batch;
+    size_t count = 0;
+    size_t changed = 0;
     for (CCoinsMap::iterator it = mapCoins.begin(); it != mapCoins.end();) {
-        BatchWriteCoins(batch, it->first, it->second);
+        if (it->second.flags & CCoinsCacheEntry::DIRTY) {
+            BatchWriteCoins(batch, it->first, it->second.coins);
+            changed++;
+        }
+        count++;
         CCoinsMap::iterator itOld = it++;
         mapCoins.erase(itOld);
     }
     if (hashBlock != uint256(0))
         BatchWriteHashBestChain(batch, hashBlock);
 
+    LogPrint("coindb", "Committing %u changed transactions (out of %u) to coin database...\n", (unsigned int)changed, (unsigned int)count);
     return db.WriteBatch(batch);
 }
 
@@ -116,7 +110,7 @@ bool CCoinsViewDB::GetStats(CCoinsStats &stats) const {
     CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
     stats.hashBlock = GetBestBlock();
     ss << stats.hashBlock;
-    int64_t nTotalAmount = 0;
+    CAmount nTotalAmount = 0;
     while (pcursor->Valid()) {
         boost::this_thread::interruption_point();
         try {

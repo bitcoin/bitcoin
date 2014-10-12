@@ -9,6 +9,8 @@
 #include "config/bitcoin-config.h"
 #endif
 
+#include "amount.h"
+
 #include <QLabel>
 #include <QMainWindow>
 #include <QMap>
@@ -17,6 +19,7 @@
 #include <QSystemTrayIcon>
 
 class ClientModel;
+class NetworkStyle;
 class Notificator;
 class OptionsModel;
 class RPCConsole;
@@ -44,7 +47,7 @@ class BitcoinGUI : public QMainWindow
 public:
     static const QString DEFAULT_WALLET;
 
-    explicit BitcoinGUI(bool fIsTestnet = false, QWidget *parent = 0);
+    explicit BitcoinGUI(const NetworkStyle *networkStyle, QWidget *parent = 0);
     ~BitcoinGUI();
 
     /** Set the client model.
@@ -112,13 +115,13 @@ private:
     int spinnerFrame;
 
     /** Create the main UI actions. */
-    void createActions(bool fIsTestnet);
+    void createActions(const NetworkStyle *networkStyle);
     /** Create the menu bar and sub-menus. */
     void createMenuBar();
     /** Create the toolbars */
     void createToolBars();
     /** Create system tray icon and notification */
-    void createTrayIcon(bool fIsTestnet);
+    void createTrayIcon(const NetworkStyle *networkStyle);
     /** Create system tray menu (or setup the dock menu) */
     void createTrayIconMenu();
 
@@ -159,7 +162,7 @@ public slots:
     bool handlePaymentRequest(const SendCoinsRecipient& recipient);
 
     /** Show incoming transaction notification for new transactions. */
-    void incomingTransaction(const QString& date, int unit, qint64 amount, const QString& type, const QString& address);
+    void incomingTransaction(const QString& date, int unit, const CAmount& amount, const QString& type, const QString& address);
 #endif
 
 private slots:

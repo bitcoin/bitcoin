@@ -8,12 +8,14 @@
 #include "clientmodel.h"
 #include "guiconstants.h"
 #include "guiutil.h"
+#include "networkstyle.h"
 #include "notificator.h"
 #include "openuridialog.h"
 #include "optionsdialog.h"
 #include "optionsmodel.h"
 #include "rpcconsole.h"
 #include "utilitydialog.h"
+
 #ifdef ENABLE_WALLET
 #include "walletframe.h"
 #include "walletmodel.h"
@@ -24,8 +26,8 @@
 #endif
 
 #include "init.h"
-#include "util.h"
 #include "ui_interface.h"
+#include "util.h"
 
 #include <iostream>
 
@@ -50,15 +52,15 @@
 #include <QVBoxLayout>
 
 #if QT_VERSION < 0x050000
-#include <QUrl>
 #include <QTextDocument>
+#include <QUrl>
 #else
 #include <QUrlQuery>
 #endif
 
 const QString BitcoinGUI::DEFAULT_WALLET = "~Default";
 
-BitcoinGUI::BitcoinGUI(bool fIsTestnet, QWidget *parent) :
+BitcoinGUI::BitcoinGUI(const NetworkStyle *networkStyle, QWidget *parent) :
     QMainWindow(parent),
     clientModel(0),
     walletFrame(0),
@@ -111,26 +113,13 @@ BitcoinGUI::BitcoinGUI(bool fIsTestnet, QWidget *parent) :
     } else {
         windowTitle += tr("Node");
     }
-
-    if (!fIsTestnet)
-    {
+    windowTitle += " " + networkStyle->getTitleAddText();
 #ifndef Q_OS_MAC
-        QApplication::setWindowIcon(QIcon(":icons/bitcoin"));
-        setWindowIcon(QIcon(":icons/bitcoin"));
+    QApplication::setWindowIcon(networkStyle->getAppIcon());
+    setWindowIcon(networkStyle->getAppIcon());
 #else
-        MacDockIconHandler::instance()->setIcon(QIcon(":icons/bitcoin"));
+    MacDockIconHandler::instance()->setIcon(networkStyle->getAppIcon());
 #endif
-    }
-    else
-    {
-        windowTitle += " " + tr("[testnet]");
-#ifndef Q_OS_MAC
-        QApplication::setWindowIcon(QIcon(":icons/bitcoin_testnet"));
-        setWindowIcon(QIcon(":icons/bitcoin_testnet"));
-#else
-        MacDockIconHandler::instance()->setIcon(QIcon(":icons/bitcoin_testnet"));
-#endif
-    }
     setWindowTitle(windowTitle);
 
 #if defined(Q_OS_MAC) && QT_VERSION < 0x050000
@@ -160,7 +149,7 @@ BitcoinGUI::BitcoinGUI(bool fIsTestnet, QWidget *parent) :
 
     // Create actions for the toolbar, menu bar and tray/dock icon
     // Needs walletFrame to be initialized
-    createActions(fIsTestnet);
+    createActions(networkStyle);
 
     // Create application menu bar
     createMenuBar();
@@ -169,7 +158,7 @@ BitcoinGUI::BitcoinGUI(bool fIsTestnet, QWidget *parent) :
     createToolBars();
 
     // Create system tray icon and notification
-    createTrayIcon(fIsTestnet);
+    createTrayIcon(networkStyle);
 
     // Create status bar
     statusBar();
@@ -247,7 +236,7 @@ BitcoinGUI::~BitcoinGUI()
 #endif
 }
 
-void BitcoinGUI::createActions(bool fIsTestnet)
+void BitcoinGUI::createActions(const NetworkStyle *networkStyle)
 {
     QActionGroup *tabGroup = new QActionGroup(this);
 
@@ -294,10 +283,7 @@ void BitcoinGUI::createActions(bool fIsTestnet)
     quitAction->setStatusTip(tr("Quit application"));
     quitAction->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_Q));
     quitAction->setMenuRole(QAction::QuitRole);
-    if (!fIsTestnet)
-        aboutAction = new QAction(QIcon(":/icons/bitcoin"), tr("&About Bitcoin Core"), this);
-    else
-        aboutAction = new QAction(QIcon(":/icons/bitcoin_testnet"), tr("&About Bitcoin Core"), this);
+    aboutAction = new QAction(networkStyle->getAppIcon(), tr("&About Bitcoin Core"), this);
     aboutAction->setStatusTip(tr("Show information about Bitcoin Core"));
     aboutAction->setMenuRole(QAction::AboutRole);
 #if QT_VERSION < 0x050000
@@ -310,10 +296,7 @@ void BitcoinGUI::createActions(bool fIsTestnet)
     optionsAction = new QAction(QIcon(":/icons/options"), tr("&Options..."), this);
     optionsAction->setStatusTip(tr("Modify configuration options for Bitcoin"));
     optionsAction->setMenuRole(QAction::PreferencesRole);
-    if (!fIsTestnet)
-        toggleHideAction = new QAction(QIcon(":/icons/bitcoin"), tr("&Show / Hide"), this);
-    else
-        toggleHideAction = new QAction(QIcon(":/icons/bitcoin_testnet"), tr("&Show / Hide"), this);
+    toggleHideAction = new QAction(networkStyle->getAppIcon(), tr("&Show / Hide"), this);
     toggleHideAction->setStatusTip(tr("Show or hide the main Window"));
 
     encryptWalletAction = new QAction(QIcon(":/icons/lock_closed"), tr("&Encrypt Wallet..."), this);
@@ -504,22 +487,13 @@ void BitcoinGUI::setWalletActionsEnabled(bool enabled)
     openAction->setEnabled(enabled);
 }
 
-void BitcoinGUI::createTrayIcon(bool fIsTestnet)
+void BitcoinGUI::createTrayIcon(const NetworkStyle *networkStyle)
 {
 #ifndef Q_OS_MAC
     trayIcon = new QSystemTrayIcon(this);
-
-    if (!fIsTestnet)
-    {
-        trayIcon->setToolTip(tr("Bitcoin Core client"));
-        trayIcon->setIcon(QIcon(":/icons/bitcoin"));
-    }
-    else
-    {
-        trayIcon->setToolTip(tr("Bitcoin Core client") + " " + tr("[testnet]"));
-        trayIcon->setIcon(QIcon(":/icons/bitcoin_testnet"));
-    }
-
+    QString toolTip = tr("Bitcoin Core client") + " " + networkStyle->getTitleAddText();
+    trayIcon->setToolTip(toolTip);
+    trayIcon->setIcon(networkStyle->getAppIcon());
     trayIcon->show();
 #endif
 
@@ -661,6 +635,9 @@ void BitcoinGUI::setNumConnections(int count)
 
 void BitcoinGUI::setNumBlocks(int count)
 {
+    if(!clientModel)
+        return;
+
     // Prevent orphan statusbar messages (e.g. hover Quit in main menu, wait until chain-sync starts -> garbelled text)
     statusBar()->clearMessage();
 
@@ -831,7 +808,7 @@ void BitcoinGUI::changeEvent(QEvent *e)
 #ifndef Q_OS_MAC // Ignored on Mac
     if(e->type() == QEvent::WindowStateChange)
     {
-        if(clientModel && clientModel->getOptionsModel()->getMinimizeToTray())
+        if(clientModel && clientModel->getOptionsModel() && clientModel->getOptionsModel()->getMinimizeToTray())
         {
             QWindowStateChangeEvent *wsevt = static_cast<QWindowStateChangeEvent*>(e);
             if(!(wsevt->oldState() & Qt::WindowMinimized) && isMinimized())
@@ -846,21 +823,21 @@ void BitcoinGUI::changeEvent(QEvent *e)
 
 void BitcoinGUI::closeEvent(QCloseEvent *event)
 {
-    if(clientModel)
-    {
 #ifndef Q_OS_MAC // Ignored on Mac
+    if(clientModel && clientModel->getOptionsModel())
+    {
         if(!clientModel->getOptionsModel()->getMinimizeToTray() &&
            !clientModel->getOptionsModel()->getMinimizeOnClose())
         {
             QApplication::quit();
         }
-#endif
     }
+#endif
     QMainWindow::closeEvent(event);
 }
 
 #ifdef ENABLE_WALLET
-void BitcoinGUI::incomingTransaction(const QString& date, int unit, qint64 amount, const QString& type, const QString& address)
+void BitcoinGUI::incomingTransaction(const QString& date, int unit, const CAmount& amount, const QString& type, const QString& address)
 {
     // On new transaction, make an info balloon
     message((amount)<0 ? tr("Sent transaction") : tr("Incoming transaction"),
@@ -916,8 +893,7 @@ bool BitcoinGUI::handlePaymentRequest(const SendCoinsRecipient& recipient)
         gotoSendCoinsPage();
         return true;
     }
-    else
-        return false;
+    return false;
 }
 
 void BitcoinGUI::setEncryptionStatus(int status)

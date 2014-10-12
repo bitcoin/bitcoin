@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2014 The Bitcoin developers
-// Distributed under the MIT/X11 software license, see the accompanying
+// Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <cstddef>
@@ -11,8 +11,8 @@
 #define _GLIBCXX_USE_NOEXCEPT throw()
 #endif
 
-namespace std {
-
+namespace std
+{
 const char* bad_exception::what() const throw()
 {
     return "std::bad_exception";
@@ -30,9 +30,8 @@ const char* bad_alloc::what() const throw()
 
 namespace __detail
 {
-struct _List_node_base
-{
-    void _M_hook(std::__detail::_List_node_base* const __position) throw () __attribute__((used))
+struct _List_node_base {
+    void _M_hook(std::__detail::_List_node_base* const __position) throw() __attribute__((used))
     {
         _M_next = __position;
         _M_prev = __position->_M_prev;
@@ -62,9 +61,9 @@ template ostream& __ostream_insert(ostream&, const char*, streamsize);
 template istream& istream::_M_extract(long&);
 template istream& istream::_M_extract(unsigned short&);
 
-out_of_range::~out_of_range() _GLIBCXX_USE_NOEXCEPT { }
+out_of_range::~out_of_range() _GLIBCXX_USE_NOEXCEPT {}
 
-length_error::~length_error() _GLIBCXX_USE_NOEXCEPT { }
+length_error::~length_error() _GLIBCXX_USE_NOEXCEPT {}
 
 // Used with permission.
 // See: https://github.com/madlib/madlib/commit/c3db418c0d34d6813608f2137fef1012ce03043d
@@ -85,11 +84,11 @@ void ctype<char>::_M_widen_init() const
         }
 }
 
-void  __throw_out_of_range_fmt(const char*, ...) __attribute__((__noreturn__));
-void  __throw_out_of_range_fmt(const char* err, ...)
+void __throw_out_of_range_fmt(const char*, ...) __attribute__((__noreturn__));
+void __throw_out_of_range_fmt(const char* err, ...)
 {
     // Safe and over-simplified version. Ignore the format and print it as-is.
     __throw_out_of_range(err);
 }
 
-}// namespace std
+} // namespace std

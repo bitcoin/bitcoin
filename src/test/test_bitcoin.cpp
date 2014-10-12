@@ -31,7 +31,7 @@ struct TestingSetup {
 
     TestingSetup() {
         fPrintToDebugLog = false; // don't want to write to debug.log file
-        SelectParams(CBaseChainParams::MAIN);
+        SelectParams(CBaseChainParams::UNITTEST);
         noui_connect();
 #ifdef ENABLE_WALLET
         bitdb.MakeMock();
@@ -41,7 +41,7 @@ struct TestingSetup {
         mapArgs["-datadir"] = pathTemp.string();
         pblocktree = new CBlockTreeDB(1 << 20, true);
         pcoinsdbview = new CCoinsViewDB(1 << 23, true);
-        pcoinsTip = new CCoinsViewCache(*pcoinsdbview);
+        pcoinsTip = new CCoinsViewCache(pcoinsdbview);
         InitBlockIndex();
 #ifdef ENABLE_WALLET
         bool fFirstRun;

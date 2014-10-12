@@ -12,7 +12,7 @@
 class FreespaceChecker;
 
 namespace Ui {
-class Intro;
+    class Intro;
 }
 
 /** Introduction screen (pre-GUI startup).

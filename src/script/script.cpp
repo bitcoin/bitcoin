@@ -1,6 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2013 The Bitcoin developers
-// Distributed under the MIT/X11 software license, see the accompanying
+// Copyright (c) 2009-2014 The Bitcoin developers
+// Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "script.h"
@@ -252,44 +252,4 @@ bool CScript::HasCanonicalPushes() const
             return false;
     }
     return true;
-}
-
-class CScriptVisitor : public boost::static_visitor<bool>
-{
-private:
-    CScript *script;
-public:
-    CScriptVisitor(CScript *scriptin) { script = scriptin; }
-
-    bool operator()(const CNoDestination &dest) const {
-        script->clear();
-        return false;
-    }
-
-    bool operator()(const CKeyID &keyID) const {
-        script->clear();
-        *script << OP_DUP << OP_HASH160 << keyID << OP_EQUALVERIFY << OP_CHECKSIG;
-        return true;
-    }
-
-    bool operator()(const CScriptID &scriptID) const {
-        script->clear();
-        *script << OP_HASH160 << scriptID << OP_EQUAL;
-        return true;
-    }
-};
-
-void CScript::SetDestination(const CTxDestination& dest)
-{
-    boost::apply_visitor(CScriptVisitor(this), dest);
-}
-
-void CScript::SetMultisig(int nRequired, const std::vector<CPubKey>& keys)
-{
-    this->clear();
-
-    *this << EncodeOP_N(nRequired);
-    BOOST_FOREACH(const CPubKey& key, keys)
-        *this << key;
-    *this << EncodeOP_N(keys.size()) << OP_CHECKMULTISIG;
 }

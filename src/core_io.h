@@ -8,9 +8,9 @@
 #include <string>
 #include <vector>
 
-class uint256;
 class CScript;
 class CTransaction;
+class uint256;
 class UniValue;
 
 // core_read.cpp
@@ -20,6 +20,7 @@ extern uint256 ParseHashUV(const UniValue& v, const std::string& strName);
 extern std::vector<unsigned char> ParseHexUV(const UniValue& v, const std::string& strName);
 
 // core_write.cpp
+extern std::string FormatScript(const CScript& script);
 extern std::string EncodeHexTx(const CTransaction& tx);
 extern void ScriptPubKeyToUniv(const CScript& scriptPubKey,
                         UniValue& out, bool fIncludeHex);

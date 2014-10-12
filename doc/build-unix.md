@@ -15,9 +15,12 @@ the usage of the absolute path.
 To Build
 ---------------------
 
-	./autogen.sh
-	./configure
-	make
+```bash
+./autogen.sh
+./configure
+make
+make install # optional
+```
 
 This will build bitcoin-qt as well if the dependencies are met.
 
@@ -63,7 +66,7 @@ Build requirements:
 
 	sudo apt-get install build-essential libtool autotools-dev autoconf pkg-config libssl-dev
 	
-for Ubuntu 12.04 and later:
+for Ubuntu 12.04 and later or Debian 7 and later libboost-all-dev has to be installed:
 
 	sudo apt-get install libboost-all-dev
 

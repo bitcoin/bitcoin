@@ -48,8 +48,8 @@
 #endif
 #endif
 
-using namespace std;
 using namespace boost;
+using namespace std;
 
 namespace {
     const int MAX_OUTBOUND_CONNECTIONS = 8;
@@ -488,10 +488,6 @@ CNode* ConnectNode(CAddress addrConnect, const char *pszDest)
     {
         addrman.Attempt(addrConnect);
 
-        // Set to non-blocking
-        if (!SetSocketNonBlocking(hSocket, true))
-            LogPrintf("ConnectNode: Setting socket to non-blocking failed, error %s\n", NetworkErrorString(WSAGetLastError()));
-
         // Add node
         CNode* pnode = new CNode(hSocket, addrConnect, pszDest ? pszDest : "", false);
         pnode->AddRef();
@@ -691,7 +687,7 @@ int CNetMessage::readHeader(const char *pch, unsigned int nBytes)
     try {
         hdrbuf >> hdr;
     }
-    catch (std::exception &e) {
+    catch (const std::exception &) {
         return -1;
     }
 
@@ -1990,7 +1986,7 @@ bool CAddrDB::Write(const CAddrMan& addr)
     // open temp output file, and associate with CAutoFile
     boost::filesystem::path pathTmp = GetDataDir() / tmpfn;
     FILE *file = fopen(pathTmp.string().c_str(), "wb");
-    CAutoFile fileout = CAutoFile(file, SER_DISK, CLIENT_VERSION);
+    CAutoFile fileout(file, SER_DISK, CLIENT_VERSION);
     if (!fileout)
         return error("%s : Failed to open file %s", __func__, pathTmp.string());
 
@@ -2015,7 +2011,7 @@ bool CAddrDB::Read(CAddrMan& addr)
 {
     // open input file, and associate with CAutoFile
     FILE *file = fopen(pathAddr.string().c_str(), "rb");
-    CAutoFile filein = CAutoFile(file, SER_DISK, CLIENT_VERSION);
+    CAutoFile filein(file, SER_DISK, CLIENT_VERSION);
     if (!filein)
         return error("%s : Failed to open file %s", __func__, pathAddr.string());
 

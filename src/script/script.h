@@ -1,6 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2013 The Bitcoin developers
-// Distributed under the MIT/X11 software license, see the accompanying
+// Copyright (c) 2009-2014 The Bitcoin developers
+// Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef H_BITCOIN_SCRIPT
@@ -304,7 +304,7 @@ private:
       // If the input vector's most significant byte is 0x80, remove it from
       // the result's msb and return a negative.
       if (vch.back() & 0x80)
-          return -(result & ~(0x80ULL << (8 * (vch.size() - 1))));
+          return -((int64_t)(result & ~(0x80ULL << (8 * (vch.size() - 1)))));
 
       return result;
     }
@@ -319,20 +319,6 @@ inline std::string ValueString(const std::vector<unsigned char>& vch)
     else
         return HexStr(vch);
 }
-
-class CNoDestination {
-public:
-    friend bool operator==(const CNoDestination &a, const CNoDestination &b) { return true; }
-    friend bool operator<(const CNoDestination &a, const CNoDestination &b) { return true; }
-};
-
-/** A txout script template with a specific destination. It is either:
- *  * CNoDestination: no destination set
- *  * CKeyID: TX_PUBKEYHASH destination
- *  * CScriptID: TX_SCRIPTHASH destination
- *  A CTxDestination is the internal data type encoded in a CBitcoinAddress
- */
-typedef boost::variant<CNoDestination, CKeyID, CScriptID> CTxDestination;
 
 /** Serialized script, used inside transaction inputs and outputs */
 class CScript : public std::vector<unsigned char>
@@ -354,9 +340,7 @@ public:
     CScript() { }
     CScript(const CScript& b) : std::vector<unsigned char>(b.begin(), b.end()) { }
     CScript(const_iterator pbegin, const_iterator pend) : std::vector<unsigned char>(pbegin, pend) { }
-#ifndef _MSC_VER
     CScript(const unsigned char* pbegin, const unsigned char* pend) : std::vector<unsigned char>(pbegin, pend) { }
-#endif
 
     CScript& operator+=(const CScript& b)
     {
@@ -560,7 +544,7 @@ public:
         {
             while (end() - pc >= (long)b.size() && memcmp(&pc[0], &b[0], b.size()) == 0)
             {
-                erase(pc, pc + b.size());
+                pc = erase(pc, pc + b.size());
                 ++nFound;
             }
         }
@@ -604,9 +588,6 @@ public:
         return (size() > 0 && *begin() == OP_RETURN);
     }
 
-    void SetDestination(const CTxDestination& address);
-    void SetMultisig(int nRequired, const std::vector<CPubKey>& keys);
-
     std::string ToString() const
     {
         std::string str;
@@ -642,4 +623,4 @@ public:
     }
 };
 
-#endif
+#endif // H_BITCOIN_SCRIPT

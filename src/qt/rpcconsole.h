@@ -14,13 +14,13 @@
 
 class ClientModel;
 
-QT_BEGIN_NAMESPACE
-class QItemSelection;
-QT_END_NAMESPACE
-
 namespace Ui {
     class RPCConsole;
 }
+
+QT_BEGIN_NAMESPACE
+class QItemSelection;
+QT_END_NAMESPACE
 
 /** Local Bitcoin RPC console. */
 class RPCConsole: public QDialog

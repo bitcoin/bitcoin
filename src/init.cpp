@@ -11,6 +11,7 @@
 
 #include "addrman.h"
 #include "checkpoints.h"
+#include "compat/sanity.h"
 #include "key.h"
 #include "main.h"
 #include "miner.h"
@@ -32,7 +33,6 @@
 #ifndef WIN32
 #include <signal.h>
 #endif
-#include "compat/sanity.h"
 
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/algorithm/string/replace.hpp>
@@ -45,7 +45,7 @@ using namespace boost;
 using namespace std;
 
 #ifdef ENABLE_WALLET
-CWallet* pwalletMain;
+CWallet* pwalletMain = NULL;
 #endif
 
 #ifdef WIN32
@@ -109,7 +109,7 @@ bool ShutdownRequested()
     return fRequestShutdown;
 }
 
-static CCoinsViewDB *pcoinsdbview;
+static CCoinsViewDB *pcoinsdbview = NULL;
 
 void Shutdown()
 {
@@ -160,11 +160,13 @@ void Shutdown()
     if (pwalletMain)
         bitdb.Flush(true);
 #endif
+#ifndef WIN32
     boost::filesystem::remove(GetPidFile());
+#endif
     UnregisterAllWallets();
 #ifdef ENABLE_WALLET
-    if (pwalletMain)
-        delete pwalletMain;
+    delete pwalletMain;
+    pwalletMain = NULL;
 #endif
     LogPrintf("%s: done\n", __func__);
 }
@@ -198,7 +200,7 @@ bool static Bind(const CService &addr, unsigned int flags) {
     if (!(flags & BF_EXPLICIT) && IsLimited(addr))
         return false;
     std::string strError;
-    if (!BindListenPort(addr, strError, flags & BF_WHITELIST)) {
+    if (!BindListenPort(addr, strError, (flags & BF_WHITELIST) != 0)) {
         if (flags & BF_REPORT_ERROR)
             return InitError(strError);
         return false;
@@ -228,12 +230,14 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += "  -maxorphanblocks=<n>   " + strprintf(_("Keep at most <n> unconnectable blocks in memory (default: %u)"), DEFAULT_MAX_ORPHAN_BLOCKS) + "\n";
     strUsage += "  -maxorphantx=<n>       " + strprintf(_("Keep at most <n> unconnectable transactions in memory (default: %u)"), DEFAULT_MAX_ORPHAN_TRANSACTIONS) + "\n";
     strUsage += "  -par=<n>               " + strprintf(_("Set the number of script verification threads (%u to %d, 0 = auto, <0 = leave that many cores free, default: %d)"), -(int)boost::thread::hardware_concurrency(), MAX_SCRIPTCHECK_THREADS, DEFAULT_SCRIPTCHECK_THREADS) + "\n";
+#ifndef WIN32
     strUsage += "  -pid=<file>            " + _("Specify pid file (default: bitcoind.pid)") + "\n";
+#endif
     strUsage += "  -reindex               " + _("Rebuild block chain index from current blk000??.dat files") + " " + _("on startup") + "\n";
 #if !defined(WIN32)
     strUsage += "  -sysperms              " + _("Create new files with system default permissions, instead of umask 077 (only effective with disabled wallet functionality)") + "\n";
 #endif
-    strUsage += "  -txindex               " + _("Maintain a full transaction index (default: 0)") + "\n";
+    strUsage += "  -txindex               " + _("Maintain a full transaction index, used by the getrawtransaction rpc call (default: 0)") + "\n";
 
     strUsage += "\n" + _("Connection options:") + "\n";
     strUsage += "  -addnode=<ip>          " + _("Add a node to connect to and attempt to keep the connection open") + "\n";
@@ -256,7 +260,7 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += "  -port=<port>           " + _("Listen for connections on <port> (default: 8333 or testnet: 18333)") + "\n";
     strUsage += "  -proxy=<ip:port>       " + _("Connect through SOCKS5 proxy") + "\n";
     strUsage += "  -seednode=<ip>         " + _("Connect to a node to retrieve peer addresses, and disconnect") + "\n";
-    strUsage += "  -timeout=<n>           " + _("Specify connection timeout in milliseconds (default: 5000)") + "\n";
+    strUsage += "  -timeout=<n>           " + strprintf(_("Specify connection timeout in milliseconds (minimum: 1, default: %d)"), DEFAULT_CONNECT_TIMEOUT) + "\n";
 #ifdef USE_UPNP
 #if USE_UPNP
     strUsage += "  -upnp                  " + _("Use UPnP to map the listening port (default: 1 when listening)") + "\n";
@@ -276,7 +280,6 @@ std::string HelpMessage(HelpMessageMode mode)
         strUsage += "  -mintxfee=<amt>        " + strprintf(_("Fees (in BTC/Kb) smaller than this are considered zero fee for transaction creation (default: %s)"), FormatMoney(CWallet::minTxFee.GetFeePerK())) + "\n";
     strUsage += "  -paytxfee=<amt>        " + strprintf(_("Fee (in BTC/kB) to add to transactions you send (default: %s)"), FormatMoney(payTxFee.GetFeePerK())) + "\n";
     strUsage += "  -rescan                " + _("Rescan the block chain for missing wallet transactions") + " " + _("on startup") + "\n";
-    strUsage += "  -respendnotify=<cmd>   " + _("Execute command when a network tx respends wallet tx input (%s=respend TxID, %t=wallet TxID)") + "\n";
     strUsage += "  -salvagewallet         " + _("Attempt to recover private keys from a corrupt wallet.dat") + " " + _("on startup") + "\n";
     strUsage += "  -spendzeroconfchange   " + _("Spend unconfirmed change when sending transactions (default: 1)") + "\n";
     strUsage += "  -txconfirmtarget=<n>   " + _("If paytxfee is not set, include enough fee so transactions are confirmed on average within n blocks (default: 1)") + "\n";
@@ -402,9 +405,11 @@ void ThreadImport(std::vector<boost::filesystem::path> vImportFiles)
         int nFile = 0;
         while (true) {
             CDiskBlockPos pos(nFile, 0);
+            if (!boost::filesystem::exists(GetBlockPosFilename(pos, "blk")))
+                break; // No block files left to reindex
             FILE *file = OpenBlockFile(pos, true);
             if (!file)
-                break;
+                break; // This error is logged in OpenBlockFile
             LogPrintf("Reindexing block file blk%05u.dat...\n", (unsigned int)nFile);
             LoadExternalBlockFile(file, &pos);
             nFile++;
@@ -635,12 +640,9 @@ bool AppInit2(boost::thread_group& threadGroup)
     bool fDisableWallet = GetBoolArg("-disablewallet", false);
 #endif
 
-    if (mapArgs.count("-timeout"))
-    {
-        int nNewTimeout = GetArg("-timeout", 5000);
-        if (nNewTimeout > 0 && nNewTimeout < 600000)
-            nConnectTimeout = nNewTimeout;
-    }
+    nConnectTimeout = GetArg("-timeout", DEFAULT_CONNECT_TIMEOUT);
+    if (nConnectTimeout <= 0)
+        nConnectTimeout = DEFAULT_CONNECT_TIMEOUT;
 
     // Continue to put "/P2SH/" in the coinbase to monitor
     // BIP16 support.
@@ -656,7 +658,7 @@ bool AppInit2(boost::thread_group& threadGroup)
     // cost to you of processing a transaction.
     if (mapArgs.count("-minrelaytxfee"))
     {
-        int64_t n = 0;
+        CAmount n = 0;
         if (ParseMoney(mapArgs["-minrelaytxfee"], n) && n > 0)
             ::minRelayTxFee = CFeeRate(n);
         else
@@ -666,7 +668,7 @@ bool AppInit2(boost::thread_group& threadGroup)
 #ifdef ENABLE_WALLET
     if (mapArgs.count("-mintxfee"))
     {
-        int64_t n = 0;
+        CAmount n = 0;
         if (ParseMoney(mapArgs["-mintxfee"], n) && n > 0)
             CWallet::minTxFee = CFeeRate(n);
         else
@@ -674,7 +676,7 @@ bool AppInit2(boost::thread_group& threadGroup)
     }
     if (mapArgs.count("-paytxfee"))
     {
-        int64_t nFeePerK = 0;
+        CAmount nFeePerK = 0;
         if (!ParseMoney(mapArgs["-paytxfee"], nFeePerK))
             return InitError(strprintf(_("Invalid amount for -paytxfee=<amount>: '%s'"), mapArgs["-paytxfee"]));
         if (nFeePerK > nHighTransactionFeeWarning)
@@ -692,9 +694,10 @@ bool AppInit2(boost::thread_group& threadGroup)
     std::string strWalletFile = GetArg("-wallet", "wallet.dat");
 #endif // ENABLE_WALLET
 
-    fIsBareMultisigStd = GetArg("-permitbaremultisig", true);
+    fIsBareMultisigStd = GetArg("-permitbaremultisig", true) != 0;
 
     // ********************************************************* Step 4: application initialization: dir lock, daemonize, pidfile, debug log
+
     // Sanity check
     if (!InitSanityCheck())
         return InitError(_("Initialization sanity check failed. Bitcoin Core is shutting down."));
@@ -712,7 +715,9 @@ bool AppInit2(boost::thread_group& threadGroup)
     static boost::interprocess::file_lock lock(pathLockFile.string().c_str());
     if (!lock.try_lock())
         return InitError(strprintf(_("Cannot obtain a lock on data directory %s. Bitcoin Core is probably already running."), strDataDir));
-
+#ifndef WIN32
+    CreatePidFile(GetPidFile(), getpid());
+#endif
     if (GetBoolArg("-shrinkdebugfile", !fDebug))
         ShrinkDebugFile();
     LogPrintf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
@@ -950,7 +955,7 @@ bool AppInit2(boost::thread_group& threadGroup)
 
                 pblocktree = new CBlockTreeDB(nBlockTreeDBCache, false, fReindex);
                 pcoinsdbview = new CCoinsViewDB(nCoinDBCache, false, fReindex);
-                pcoinsTip = new CCoinsViewCache(*pcoinsdbview);
+                pcoinsTip = new CCoinsViewCache(pcoinsdbview);
 
                 if (fReindex)
                     pblocktree->WriteReindexing(true);
@@ -1050,7 +1055,7 @@ bool AppInit2(boost::thread_group& threadGroup)
     }
 
     boost::filesystem::path est_path = GetDataDir() / FEE_ESTIMATES_FILENAME;
-    CAutoFile est_filein = CAutoFile(fopen(est_path.string().c_str(), "rb"), SER_DISK, CLIENT_VERSION);
+    CAutoFile est_filein(fopen(est_path.string().c_str(), "rb"), SER_DISK, CLIENT_VERSION);
     // Allowed to fail as this file IS missing on first startup.
     if (est_filein)
         mempool.ReadFeeEstimates(est_filein);
@@ -1151,7 +1156,7 @@ bool AppInit2(boost::thread_group& threadGroup)
             CWalletDB walletdb(strWalletFile);
             CBlockLocator locator;
             if (walletdb.ReadBestBlock(locator))
-                pindexRescan = chainActive.FindFork(locator);
+                pindexRescan = FindForkInGlobalIndex(chainActive, locator);
             else
                 pindexRescan = chainActive.Genesis();
         }

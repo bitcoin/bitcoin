@@ -27,7 +27,11 @@
 extern bool AddOrphanTx(const CTransaction& tx, NodeId peer);
 extern void EraseOrphansFor(NodeId peer);
 extern unsigned int LimitOrphanTxSize(unsigned int nMaxOrphans);
-extern std::map<uint256, CTransaction> mapOrphanTransactions;
+struct COrphanTx {
+    CTransaction tx;
+    NodeId fromPeer;
+};
+extern std::map<uint256, COrphanTx> mapOrphanTransactions;
 extern std::map<uint256, std::set<uint256> > mapOrphanTransactionsByPrev;
 
 CService ip(uint32_t i)
@@ -149,11 +153,11 @@ BOOST_AUTO_TEST_CASE(DoS_checknbits)
 
 CTransaction RandomOrphan()
 {
-    std::map<uint256, CTransaction>::iterator it;
+    std::map<uint256, COrphanTx>::iterator it;
     it = mapOrphanTransactions.lower_bound(GetRandHash());
     if (it == mapOrphanTransactions.end())
         it = mapOrphanTransactions.begin();
-    return it->second;
+    return it->second.tx;
 }
 
 BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
@@ -173,7 +177,7 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
         tx.vin[0].scriptSig << OP_1;
         tx.vout.resize(1);
         tx.vout[0].nValue = 1*CENT;
-        tx.vout[0].scriptPubKey.SetDestination(key.GetPubKey().GetID());
+        tx.vout[0].scriptPubKey = GetScriptForDestination(key.GetPubKey().GetID());
 
         AddOrphanTx(tx, i);
     }
@@ -189,7 +193,7 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
         tx.vin[0].prevout.hash = txPrev.GetHash();
         tx.vout.resize(1);
         tx.vout[0].nValue = 1*CENT;
-        tx.vout[0].scriptPubKey.SetDestination(key.GetPubKey().GetID());
+        tx.vout[0].scriptPubKey = GetScriptForDestination(key.GetPubKey().GetID());
         SignSignature(keystore, txPrev, tx, 0);
 
         AddOrphanTx(tx, i);
@@ -203,7 +207,7 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
         CMutableTransaction tx;
         tx.vout.resize(1);
         tx.vout[0].nValue = 1*CENT;
-        tx.vout[0].scriptPubKey.SetDestination(key.GetPubKey().GetID());
+        tx.vout[0].scriptPubKey = GetScriptForDestination(key.GetPubKey().GetID());
         tx.vin.resize(500);
         for (unsigned int j = 0; j < tx.vin.size(); j++)
         {

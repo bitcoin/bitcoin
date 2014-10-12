@@ -63,11 +63,11 @@ public:
 
     int getint() const
     {
-        unsigned long n = BN_get_word(this);
+        BN_ULONG n = BN_get_word(this);
         if (!BN_is_negative(this))
-            return (n > (unsigned long)std::numeric_limits<int>::max() ? std::numeric_limits<int>::max() : n);
+            return (n > (BN_ULONG)std::numeric_limits<int>::max() ? std::numeric_limits<int>::max() : n);
         else
-            return (n > (unsigned long)std::numeric_limits<int>::max() ? std::numeric_limits<int>::min() : -(int)n);
+            return (n > (BN_ULONG)std::numeric_limits<int>::max() ? std::numeric_limits<int>::min() : -(int)n);
     }
 
     void setint64(int64_t sn)
