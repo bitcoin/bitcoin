@@ -38,7 +38,8 @@ static std::map<string, unsigned int> mapFlagNames = boost::assign::map_list_of
     (string("SIGPUSHONLY"), (unsigned int)SCRIPT_VERIFY_SIGPUSHONLY)
     (string("MINIMALDATA"), (unsigned int)SCRIPT_VERIFY_MINIMALDATA)
     (string("NULLDUMMY"), (unsigned int)SCRIPT_VERIFY_NULLDUMMY)
-    (string("DISCOURAGE_UPGRADABLE_NOPS"), (unsigned int)SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_NOPS);
+    (string("DISCOURAGE_UPGRADABLE_NOPS"), (unsigned int)SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_NOPS)
+    (string("CLEANSTACK"), (unsigned int)SCRIPT_VERIFY_CLEANSTACK);
 
 unsigned int ParseScriptFlags(string strFlags)
 {

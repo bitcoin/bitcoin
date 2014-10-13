@@ -1096,7 +1096,6 @@ bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, unsigne
         return false;
     if (stack.empty())
         return set_error(serror, SCRIPT_ERR_EVAL_FALSE);
-
     if (CastToBool(stack.back()) == false)
         return set_error(serror, SCRIPT_ERR_EVAL_FALSE);
 
@@ -1126,8 +1125,18 @@ bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, unsigne
             return set_error(serror, SCRIPT_ERR_EVAL_FALSE);
         if (!CastToBool(stack.back()))
             return set_error(serror, SCRIPT_ERR_EVAL_FALSE);
-        else
-            return set_success(serror);
+    }
+
+    // The CLEANSTACK check is only performed after potential P2SH evaluation,
+    // as the non-P2SH evaluation of a P2SH script will obviously not result in
+    // a clean stack (the P2SH inputs remain).
+    if ((flags & SCRIPT_VERIFY_CLEANSTACK) != 0) {
+        // Disallow CLEANSTACK without P2SH, as otherwise a switch CLEANSTACK->P2SH+CLEANSTACK
+        // would be possible, which is not a softfork (and P2SH should be one).
+        assert((flags & SCRIPT_VERIFY_P2SH) != 0);
+        if (stack.size() != 1) {
+            return set_error(serror, SCRIPT_ERR_CLEANSTACK);
+        }
     }
 
     return set_success(serror);
