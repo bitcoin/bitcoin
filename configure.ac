@@ -177,7 +177,6 @@ case $host in
      use_pkgconfig=no
 
      TARGET_OS=windows
-     AC_CHECK_LIB([mingwthrd],      [main],, AC_MSG_ERROR(lib missing))
      AC_CHECK_LIB([kernel32],      [main],, AC_MSG_ERROR(lib missing))
      AC_CHECK_LIB([user32],      [main],, AC_MSG_ERROR(lib missing))
      AC_CHECK_LIB([gdi32],      [main],, AC_MSG_ERROR(lib missing))
@@ -188,7 +187,6 @@ case $host in
      AC_CHECK_LIB([comctl32],      [main],, AC_MSG_ERROR(lib missing))
      AC_CHECK_LIB([ole32],      [main],, AC_MSG_ERROR(lib missing))
      AC_CHECK_LIB([oleaut32],      [main],, AC_MSG_ERROR(lib missing))
-     AC_CHECK_LIB([uuid],      [main],, AC_MSG_ERROR(lib missing))
      AC_CHECK_LIB([rpcrt4],      [main],, AC_MSG_ERROR(lib missing))
      AC_CHECK_LIB([advapi32],      [main],, AC_MSG_ERROR(lib missing))
      AC_CHECK_LIB([ws2_32],      [main],, AC_MSG_ERROR(lib missing))
@@ -384,6 +382,12 @@ if test x$use_hardening != xno; then
     AX_CHECK_COMPILE_FLAG([-fPIE],[HARDENED_CXXFLAGS="$HARDENED_CXXFLAGS -fPIE"])
     AX_CHECK_LINK_FLAG([[-pie]], [HARDENED_LDFLAGS="$HARDENED_LDFLAGS -pie"])
   fi
+
+  case $host in
+    *mingw*)
+      AC_CHECK_LIB([ssp],[main],HARDENED_LDFLAGS="$HARDENED_LDFLAGS -lssp", AC_MSG_ERROR(lib missing))
+    ;;
+  esac
 
   CXXFLAGS="$CXXFLAGS $HARDENED_CXXFLAGS"
   CPPFLAGS="$CPPFLAGS $HARDENED_CPPFLAGS"
