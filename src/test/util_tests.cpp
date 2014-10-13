@@ -9,6 +9,7 @@
 #include "sync.h"
 #include "utilstrencodings.h"
 #include "utilmoneystr.h"
+#include "version.h"
 
 #include <stdint.h>
 #include <vector>
@@ -341,4 +342,15 @@ BOOST_AUTO_TEST_CASE(test_FormatParagraph)
     BOOST_CHECK_EQUAL(FormatParagraph("test test", 4, 4), "test\n    test");
 }
 
+BOOST_AUTO_TEST_CASE(test_FormatSubVersion)
+{
+    std::vector<std::string> comments;
+    comments.push_back(std::string("comment1"));
+    std::vector<std::string> comments2;
+    comments2.push_back(std::string("comment1"));
+    comments2.push_back(std::string("comment2"));
+    BOOST_CHECK_EQUAL(FormatSubVersion("Test", 99900, std::vector<std::string>()),std::string("/Test:0.9.99/"));
+    BOOST_CHECK_EQUAL(FormatSubVersion("Test", 99900, comments),std::string("/Test:0.9.99(comment1)/"));
+    BOOST_CHECK_EQUAL(FormatSubVersion("Test", 99900, comments2),std::string("/Test:0.9.99(comment1; comment2)/"));
+}
 BOOST_AUTO_TEST_SUITE_END()
