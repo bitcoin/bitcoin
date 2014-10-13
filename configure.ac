@@ -177,7 +177,6 @@ case $host in
      use_pkgconfig=no
 
      TARGET_OS=windows
-     AC_CHECK_LIB([mingwthrd],      [main],, AC_MSG_ERROR(lib missing))
      AC_CHECK_LIB([kernel32],      [main],, AC_MSG_ERROR(lib missing))
      AC_CHECK_LIB([user32],      [main],, AC_MSG_ERROR(lib missing))
      AC_CHECK_LIB([gdi32],      [main],, AC_MSG_ERROR(lib missing))
@@ -188,7 +187,6 @@ case $host in
      AC_CHECK_LIB([comctl32],      [main],, AC_MSG_ERROR(lib missing))
      AC_CHECK_LIB([ole32],      [main],, AC_MSG_ERROR(lib missing))
      AC_CHECK_LIB([oleaut32],      [main],, AC_MSG_ERROR(lib missing))
-     AC_CHECK_LIB([uuid],      [main],, AC_MSG_ERROR(lib missing))
      AC_CHECK_LIB([rpcrt4],      [main],, AC_MSG_ERROR(lib missing))
      AC_CHECK_LIB([advapi32],      [main],, AC_MSG_ERROR(lib missing))
      AC_CHECK_LIB([ws2_32],      [main],, AC_MSG_ERROR(lib missing))
@@ -385,6 +383,12 @@ if test x$use_hardening != xno; then
     AX_CHECK_LINK_FLAG([[-pie]], [HARDENED_LDFLAGS="$HARDENED_LDFLAGS -pie"])
   fi
 
+  case $host in
+    *mingw*)
+      AC_CHECK_LIB([ssp],[main],HARDENED_LDFLAGS="$HARDENED_LDFLAGS -lssp", AC_MSG_ERROR(lib missing))
+    ;;
+  esac
+
   CXXFLAGS="$CXXFLAGS $HARDENED_CXXFLAGS"
   CPPFLAGS="$CPPFLAGS $HARDENED_CPPFLAGS"
   LDFLAGS="$LDFLAGS $HARDENED_LDFLAGS"
@@ -462,7 +466,7 @@ dnl Check for libminiupnpc (optional)
 if test x$use_upnp != xno; then
   AC_CHECK_HEADERS(
     [miniupnpc/miniwget.h miniupnpc/miniupnpc.h miniupnpc/upnpcommands.h miniupnpc/upnperrors.h],
-    [AC_CHECK_LIB([miniupnpc], [main],, [have_miniupnpc=no])],
+    [AC_CHECK_LIB([miniupnpc], [main],[MINIUPNPC_LIBS=-lminiupnpc], [have_miniupnpc=no])],
     [have_miniupnpc=no]
   )
 fi
@@ -632,9 +636,9 @@ else
   AC_CHECK_HEADER([openssl/ssl.h],, AC_MSG_ERROR(libssl headers missing),)
   AC_CHECK_LIB([ssl],         [main],SSL_LIBS=-lssl, AC_MSG_ERROR(libssl missing))
 
-  BITCOIN_QT_CHECK(AC_CHECK_LIB([protobuf] ,[main],,BITCOIN_QT_FAIL(libprotobuf not found)))
+  BITCOIN_QT_CHECK(AC_CHECK_LIB([protobuf] ,[main],[PROTOBUF_LIBS=-lprotobuf], BITCOIN_QT_FAIL(libprotobuf not found)))
   if test x$use_qr != xno; then
-    BITCOIN_QT_CHECK([AC_CHECK_LIB([qrencode], [main],, [have_qrencode=no])])
+    BITCOIN_QT_CHECK([AC_CHECK_LIB([qrencode], [main],[QR_LIBS=-lqrencode], [have_qrencode=no])])
     BITCOIN_QT_CHECK([AC_CHECK_HEADER([qrencode.h],, have_qrencode=no)])
   fi
 fi
@@ -808,6 +812,7 @@ AC_SUBST(BUILD_TEST)
 AC_SUBST(BUILD_QT)
 AC_SUBST(BUILD_TEST_QT)
 AC_SUBST(MINIUPNPC_CPPFLAGS)
+AC_SUBST(MINIUPNPC_LIBS)
 AC_CONFIG_FILES([Makefile src/Makefile share/setup.nsi share/qt/Info.plist src/test/buildenv.py])
 AC_CONFIG_FILES([qa/pull-tester/run-bitcoind-for-test.sh],[chmod +x qa/pull-tester/run-bitcoind-for-test.sh])
 AC_CONFIG_FILES([qa/pull-tester/build-tests.sh],[chmod +x qa/pull-tester/build-tests.sh])

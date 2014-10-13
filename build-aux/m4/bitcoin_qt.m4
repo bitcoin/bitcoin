@@ -375,6 +375,7 @@ AC_DEFUN([_BITCOIN_QT_FIND_LIBS_WITHOUT_PKGCONFIG],[
 
     if test x$TARGET_OS = xwindows; then
       AC_CHECK_LIB([imm32],      [main],, BITCOIN_QT_FAIL(libimm32 not found))
+      AC_CHECK_LIB([uuid],       [main],, BITCOIN_QT_FAIL(libuuid not found))
     fi
   ])
 
