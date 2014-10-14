@@ -577,7 +577,13 @@ CAmount GetAccountBalance(CWalletDB& walletdb, const string& strAccount, int nMi
     }
 
     // Tally internal accounting entries
-    nBalance += walletdb.GetAccountCreditDebit(strAccount);
+    if (pwalletMain->mapAccountingEntries.count(strAccount))
+    {
+        std::pair <std::multimap<std::string, CAccountingEntry>::const_iterator, std::multimap<std::string, CAccountingEntry>::const_iterator> range;
+        range = pwalletMain->mapAccountingEntries.equal_range(strAccount);
+        for (std::multimap<std::string, CAccountingEntry>::const_iterator it = range.first; it != range.second; ++it)
+            nBalance += it->second.nCreditDebit;
+    }
 
     return nBalance;
 }
@@ -733,6 +739,9 @@ Value movecmd(const Array& params, bool fHelp)
 
     if (!walletdb.TxnCommit())
         throw JSONRPCError(RPC_DATABASE_ERROR, "database error");
+
+    pwalletMain->AddAccountingEntry(debit);
+    pwalletMain->AddAccountingEntry(credit);
 
     return true;
 }
@@ -1293,11 +1302,8 @@ Value listtransactions(const Array& params, bool fHelp)
 
     Array ret;
 
-    std::list<CAccountingEntry> acentries;
-    CWallet::TxItems txOrdered = pwalletMain->OrderedTxItems(acentries, strAccount);
-
     // iterate backwards until we have nCount items to return:
-    for (CWallet::TxItems::reverse_iterator it = txOrdered.rbegin(); it != txOrdered.rend(); ++it)
+    for (CWallet::TxItems::reverse_iterator it = pwalletMain->mapOrderedTxItems.rbegin(); it != pwalletMain->mapOrderedTxItems.rend(); ++it)
     {
         CWalletTx *const pwtx = (*it).second.first;
         if (pwtx != 0)
@@ -1390,10 +1396,8 @@ Value listaccounts(const Array& params, bool fHelp)
         }
     }
 
-    list<CAccountingEntry> acentries;
-    CWalletDB(pwalletMain->strWalletFile).ListAccountCreditDebit("*", acentries);
-    BOOST_FOREACH(const CAccountingEntry& entry, acentries)
-        mapAccountBalances[entry.strAccount] += entry.nCreditDebit;
+    for (std::multimap<std::string, CAccountingEntry>::iterator it = pwalletMain->mapAccountingEntries.begin(); it != pwalletMain->mapAccountingEntries.end(); ++it)
+        mapAccountBalances[it->second.strAccount] += it->second.nCreditDebit;
 
     Object ret;
     BOOST_FOREACH(const PAIRTYPE(string, CAmount)& accountBalance, mapAccountBalances) {
