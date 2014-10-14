@@ -126,10 +126,9 @@ Value importprivkey(const Array& params, bool fHelp)
         if (!pwalletMain->AddKeyPubKey(key, pubkey))
             throw JSONRPCError(RPC_WALLET_ERROR, "Error adding key to wallet");
 
-        // whenever a key is imported, we need to scan the whole chain
-        pwalletMain->nTimeFirstKey = 1; // 0 would be considered 'no value'
-
         if (fRescan) {
+            // whenever a key is imported, we need to scan the whole chain
+            pwalletMain->nTimeFirstKey = 1; // 0 would be considered 'no value'
             pwalletMain->ScanForWalletTransactions(chainActive.Genesis(), true);
         }
     }
