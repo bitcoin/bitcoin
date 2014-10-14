@@ -14,6 +14,10 @@
 #include "script/sign.h"
 #include "util.h"
 
+#if defined(HAVE_CONSENSUS_LIB)
+#include "script/bitcoinconsensus.h"
+#endif
+
 #include <fstream>
 #include <stdint.h>
 #include <string>
@@ -94,8 +98,15 @@ CMutableTransaction BuildSpendingTransaction(const CScript& scriptSig, const CMu
 void DoTest(const CScript& scriptPubKey, const CScript& scriptSig, int flags, bool expect, const std::string& message)
 {
     ScriptError err;
-    BOOST_CHECK_MESSAGE(VerifyScript(scriptSig, scriptPubKey, flags, SignatureChecker(BuildSpendingTransaction(scriptSig, BuildCreditingTransaction(scriptPubKey)), 0), &err) == expect, message);
+    CMutableTransaction tx = BuildSpendingTransaction(scriptSig, BuildCreditingTransaction(scriptPubKey));
+    CMutableTransaction tx2 = tx;
+    BOOST_CHECK_MESSAGE(VerifyScript(scriptSig, scriptPubKey, flags, SignatureChecker(tx, 0), &err) == expect, message);
     BOOST_CHECK_MESSAGE(expect == (err == SCRIPT_ERR_OK), std::string(ScriptErrorString(err)) + ": " + message);
+#if defined(HAVE_CONSENSUS_LIB)
+    CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
+    stream << tx2;
+    BOOST_CHECK_MESSAGE(bitcoinconsensus_verify_script(begin_ptr(scriptPubKey), scriptPubKey.size(), (const unsigned char*)&stream[0], stream.size(), 0, flags, NULL) == expect,message);
+#endif
 }
 
 void static NegateSignatureS(std::vector<unsigned char>& vchSig) {
