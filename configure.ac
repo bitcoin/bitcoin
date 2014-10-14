@@ -386,6 +386,12 @@ if test x$use_hardening != xno; then
     AX_CHECK_LINK_FLAG([[-pie]], [HARDENED_LDFLAGS="$HARDENED_LDFLAGS -pie"])
   fi
 
+  case $host in
+    *mingw*)
+       AC_CHECK_LIB([ssp],      [main],, AC_MSG_ERROR(lib missing))
+    ;;
+  esac
+
   CXXFLAGS="$CXXFLAGS $HARDENED_CXXFLAGS"
   CPPFLAGS="$CPPFLAGS $HARDENED_CPPFLAGS"
   LDFLAGS="$LDFLAGS $HARDENED_LDFLAGS"
