@@ -47,6 +47,7 @@ using namespace std;
 #ifdef ENABLE_WALLET
 CWallet* pwalletMain = NULL;
 #endif
+bool fFeeEstimatesInitialized = false;
 
 #ifdef WIN32
 // Win32 LevelDB doesn't use filedescriptors, and the ones used for
@@ -119,6 +120,10 @@ void Shutdown()
     if (!lockShutdown)
         return;
 
+    /// Note: Shutdown() must be able to handle cases in which AppInit2() failed part of the way,
+    /// for example if the data directory was found to be locked.
+    /// Be sure that anything that writes files or flushes caches only does this if the respective
+    /// module was initialized.
     RenameThread("bitcoin-shutoff");
     mempool.AddTransactionsUpdated(1);
     StopRPCThreads();
@@ -130,6 +135,7 @@ void Shutdown()
     StopNode();
     UnregisterNodeSignals(GetNodeSignals());
 
+    if (fFeeEstimatesInitialized)
     {
         boost::filesystem::path est_path = GetDataDir() / FEE_ESTIMATES_FILENAME;
         CAutoFile est_fileout(fopen(est_path.string().c_str(), "wb"), SER_DISK, CLIENT_VERSION);
@@ -137,6 +143,7 @@ void Shutdown()
             mempool.WriteFeeEstimates(est_fileout);
         else
             LogPrintf("%s: Failed to write fee estimates to %s\n", __func__, est_path.string());
+        fFeeEstimatesInitialized = false;
     }
 
     {
@@ -1059,6 +1066,7 @@ bool AppInit2(boost::thread_group& threadGroup)
     // Allowed to fail as this file IS missing on first startup.
     if (est_filein)
         mempool.ReadFeeEstimates(est_filein);
+    fFeeEstimatesInitialized = true;
 
     // ********************************************************* Step 8: load wallet
 #ifdef ENABLE_WALLET
@@ -1215,22 +1223,7 @@ bool AppInit2(boost::thread_group& threadGroup)
     }
     threadGroup.create_thread(boost::bind(&ThreadImport, vImportFiles));
 
-    // ********************************************************* Step 10: load peers
-
-    uiInterface.InitMessage(_("Loading addresses..."));
-
-    nStart = GetTimeMillis();
-
-    {
-        CAddrDB adb;
-        if (!adb.Read(addrman))
-            LogPrintf("Invalid or missing peers.dat; recreating\n");
-    }
-
-    LogPrintf("Loaded %i addresses from peers.dat  %dms\n",
-           addrman.size(), GetTimeMillis() - nStart);
-
-    // ********************************************************* Step 11: start node
+    // ********************************************************* Step 10: start node
 
     if (!CheckDiskSpace())
         return false;
@@ -1259,7 +1252,7 @@ bool AppInit2(boost::thread_group& threadGroup)
         GenerateBitcoins(GetBoolArg("-gen", false), pwalletMain, GetArg("-genproclimit", -1));
 #endif
 
-    // ********************************************************* Step 12: finished
+    // ********************************************************* Step 11: finished
 
     uiInterface.InitMessage(_("Done loading"));
 
