@@ -212,9 +212,13 @@ uint64_t CTxOutCompressor::DecompressAmount(uint64_t x)
     return n;
 }
 
+extern "C" void yescrypt_hash(const char *input, char *output);
+
 uint256 CBlockHeader::GetHash() const
 {
-    return Hash(BEGIN(nVersion), END(nNonce));
+    uint256 hash;
+    yescrypt_hash(BEGIN(nVersion), (char*)&hash);
+    return hash;
 }
 
 uint256 CBlock::BuildMerkleTree() const

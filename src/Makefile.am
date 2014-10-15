@@ -126,6 +126,9 @@ libbitcoin_common_a_SOURCES = \
   chainparams.cpp \
   core.cpp \
   hash.cpp \
+  hash/yescrypt-bsty/sha256_Y.c \
+  hash/yescrypt-bsty/yescrypt-common.c \
+  hash/yescrypt-bsty/yescrypt-opt.c \
   key.cpp \
   netbase.cpp \
   protocol.cpp \
@@ -201,3 +204,7 @@ EXTRA_DIST = leveldb Makefile.include
 clean-local:
 	-$(MAKE) -C leveldb clean
 	rm -f leveldb/*/*.gcno leveldb/helpers/memenv/*.gcno
+
+hash/yescrypt-bsty/sha256_Y.o: CFLAGS += -fPIC
+hash/yescrypt-bsty/yescrypt-common.o: CFLAGS += -fPIC
+hash/yescrypt-bsty/yescrypt-opt.o: CFLAGS += -fPIC
