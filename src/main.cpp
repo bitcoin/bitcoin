@@ -1957,7 +1957,12 @@ static CBlockIndex* FindMostWorkChain() {
 
 // Try to make some progress towards making pindexMostWork the active block.
 // pblock is either NULL or a pointer to a CBlock corresponding to pindexMostWork.
-static bool ActivateBestChainStep(CValidationState &state, CBlockIndex *pindexMostWork, CBlock *pblock) {
+// If phashSpecific is specified, pstateSpecific will be updated if the block
+// with that hash is checked. It may also be updated if an ancestor block
+// connection fails (but this is not guaranteed, and will not happen if the
+// ancestor fails when trying to connect some other block). If the ancestor
+// block is invalid, the rejection reason will be prepended by "prevblk-".
+static bool ActivateBestChainStep(CValidationState &state, CBlockIndex *pindexMostWork, CBlock *pblock, const uint256 *phashSpecific, CValidationState *pstateSpecific) {
     AssertLockHeld(cs_main);
     bool fInvalidFound = false;
     const CBlockIndex *pindexOldTip = chainActive.Tip();
@@ -1980,7 +1985,10 @@ static bool ActivateBestChainStep(CValidationState &state, CBlockIndex *pindexMo
     vpindexToConnect.clear();
     vpindexToConnect.reserve(nTargetHeight - nHeight);
     CBlockIndex *pindexIter = pindexMostWork->GetAncestor(nTargetHeight);
+    CBlockIndex *pindexSpecific = NULL;
     while (pindexIter && pindexIter->nHeight != nHeight) {
+        if (phashSpecific && pindexIter->GetBlockHash() == *phashSpecific)
+            pindexSpecific = pindexIter;
         vpindexToConnect.push_back(pindexIter);
         pindexIter = pindexIter->pprev;
     }
@@ -1988,12 +1996,14 @@ static bool ActivateBestChainStep(CValidationState &state, CBlockIndex *pindexMo
 
     // Connect new blocks.
     BOOST_REVERSE_FOREACH(CBlockIndex *pindexConnect, vpindexToConnect) {
+        state = CValidationState();
         if (!ConnectTip(state, pindexConnect, pindexConnect == pindexMostWork ? pblock : NULL)) {
+            if (pindexSpecific)
+                pstateSpecific->MergeState(state, (pindexConnect != pindexSpecific) ? "prevblk-" : "");
             if (state.IsInvalid()) {
                 // The block violates a consensus rule.
                 if (!state.CorruptionPossible())
                     InvalidChainFound(vpindexToConnect.back());
-                state = CValidationState();
                 fInvalidFound = true;
                 fContinue = false;
                 break;
@@ -2002,6 +2012,12 @@ static bool ActivateBestChainStep(CValidationState &state, CBlockIndex *pindexMo
                 return false;
             }
         } else {
+            if (pindexConnect == pindexSpecific)
+            {
+                pstateSpecific->MergeState(state);
+                pindexSpecific = NULL;
+            }
+
             // Delete all entries in setBlockIndexCandidates that are worse than our new current block.
             // Note that we can't delete the current block itself, as we may need to return to it later in case a
             // reorganization to a better block fails.
@@ -2035,7 +2051,11 @@ static bool ActivateBestChainStep(CValidationState &state, CBlockIndex *pindexMo
 // Make the best chain active, in multiple steps. The result is either failure
 // or an activated best chain. pblock is either NULL or a pointer to a block
 // that is already loaded (to avoid loading it again from disk).
-bool ActivateBestChain(CValidationState &state, CBlock *pblock) {
+// If phashSpecific is specified, pstateSpecific will be updated according to
+// the usual CValidationState biases based only on ActivateBestChainStep's
+// logic. Previous state of pstateSpecific is taken into consideration, but if
+// the block is not checked, it will be set to Inconclusive.
+bool ActivateBestChain(CValidationState &state, CBlock *pblock, const uint256 *phashSpecific, CValidationState *pstateSpecific) {
     CBlockIndex *pindexNewTip = NULL;
     CBlockIndex *pindexMostWork = NULL;
     do {
@@ -2050,7 +2070,7 @@ bool ActivateBestChain(CValidationState &state, CBlock *pblock) {
             if (pindexMostWork == NULL || pindexMostWork == chainActive.Tip())
                 return true;
 
-            if (!ActivateBestChainStep(state, pindexMostWork, pblock && pblock->GetHash() == pindexMostWork->GetBlockHash() ? pblock : NULL))
+            if (!ActivateBestChainStep(state, pindexMostWork, pblock && pblock->GetHash() == pindexMostWork->GetBlockHash() ? pblock : NULL, phashSpecific, pstateSpecific))
                 return false;
 
             pindexNewTip = chainActive.Tip();
@@ -2556,10 +2576,12 @@ bool ProcessBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDiskBl
             return error("ProcessBlock() : AcceptBlock FAILED");
     }
 
-    if (!ActivateBestChain(state, pblock))
+    const uint256& hash = pblock->GetHash();
+    CValidationState stateActivation;
+    if (!ActivateBestChain(stateActivation, pblock, &hash, &state))
         return error("ProcessBlock() : ActivateBestChain failed");
 
-    return true;
+    return state.IsValid();
 }
 
 

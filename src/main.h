@@ -181,7 +181,7 @@ std::string GetWarnings(std::string strFor);
 /** Retrieve a transaction (from memory pool, or from disk, if possible) */
 bool GetTransaction(const uint256 &hash, CTransaction &tx, uint256 &hashBlock, bool fAllowSlow = false);
 /** Find the best known block, and make it the tip of the block chain */
-bool ActivateBestChain(CValidationState &state, CBlock *pblock = NULL);
+bool ActivateBestChain(CValidationState &state, CBlock *pblock = NULL, const uint256 *phashSpecific = NULL, CValidationState *pstateSpecific = NULL);
 CAmount GetBlockValue(int nHeight, const CAmount& nFees);
 
 /** Create a new block index entry for a given block hash */
@@ -564,6 +564,19 @@ public:
     bool Abort(const std::string &msg) {
         AbortNode(msg);
         return Error(msg);
+    }
+    void MergeState(const CValidationState& stateOther, const std::string& strPrependInvalidReason = "") {
+        int nDoS;
+        if (stateOther.IsInvalid(nDoS))
+        {
+            DoS(nDoS, false, stateOther.GetRejectCode(), strPrependInvalidReason + stateOther.GetRejectReason(), stateOther.CorruptionPossible());
+        }
+        else
+        if (stateOther.IsError())
+            Error(stateOther.GetRejectReason());
+        else
+        if (stateOther.IsConclusive())
+            Conclude();
     }
     bool IsConclusive() const {
         return mode != MODE_INCONCLUSIVE;
