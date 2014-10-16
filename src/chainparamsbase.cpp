@@ -97,7 +97,7 @@ CBaseChainParams::Network NetworkIdFromCommandLine()
     return CBaseChainParams::MAIN;
 }
 
-bool SelectBaseParamsFromCommandLine() 
+bool SelectBaseParamsFromCommandLine()
 {
     CBaseChainParams::Network network = NetworkIdFromCommandLine();
     if (network == CBaseChainParams::MAX_NETWORK_TYPES)
