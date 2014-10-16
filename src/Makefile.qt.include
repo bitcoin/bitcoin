@@ -368,6 +368,7 @@ if USE_LIBSECP256K1
   qt_bitcoin_qt_LDADD += secp256k1/libsecp256k1.la
 endif
 qt_bitcoin_qt_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(QT_LDFLAGS)
+qt_bitcoin_qt_LIBTOOLFLAGS = --tag CXX
 
 #locale/foo.ts -> locale/foo.qm
 QT_QM=$(QT_TS:.ts=.qm)
