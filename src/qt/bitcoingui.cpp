@@ -992,6 +992,9 @@ void BitcoinGUI::showProgress(const QString &title, int nProgress)
 static bool ThreadSafeMessageBox(BitcoinGUI *gui, const std::string& message, const std::string& caption, unsigned int style)
 {
     bool modal = (style & CClientUIInterface::MODAL);
+    // The SECURE flag has no effect in the Qt GUI.
+    // bool secure = (style & CClientUIInterface::SECURE);
+    style &= ~CClientUIInterface::SECURE;
     bool ret = false;
     // In case of modal message, use blocking connection to wait for user to click a button
     QMetaObject::invokeMethod(gui, "message",
