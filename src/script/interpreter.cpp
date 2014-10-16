@@ -727,7 +727,7 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, un
                     CScript scriptCode(pbegincodehash, pend);
 
                     // Drop the signature, since there's no way for a signature to sign itself
-                    scriptCode.FindAndDelete(CScript(vchSig));
+                    scriptCode.FindAndDelete(CScript() << vchSig);
 
                     if (!CheckSignatureEncoding(vchSig, flags)) {
                         return false;
@@ -783,7 +783,7 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, un
                     for (int k = 0; k < nSigsCount; k++)
                     {
                         valtype& vchSig = stacktop(-isig-k);
-                        scriptCode.FindAndDelete(CScript(vchSig));
+                        scriptCode.FindAndDelete(CScript() << vchSig);
                     }
 
                     bool fSuccess = true;

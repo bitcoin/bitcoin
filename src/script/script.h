@@ -341,23 +341,6 @@ private:
 /** Serialized script, used inside transaction inputs and outputs */
 class CScript : public std::vector<unsigned char>
 {
-protected:
-    CScript& push_int64(int64_t n)
-    {
-        if (n == -1 || (n >= 1 && n <= 16))
-        {
-            push_back(n + (OP_1 - 1));
-        }
-        else if (n == 0)
-        {
-            push_back(OP_0);
-        }
-        else
-        {
-            *this << CScriptNum::serialize(n);
-        }
-        return *this;
-    }
 public:
     CScript() { }
     CScript(const CScript& b) : std::vector<unsigned char>(b.begin(), b.end()) { }
@@ -377,15 +360,7 @@ public:
         return ret;
     }
 
-    CScript(int64_t b)        { operator<<(b); }
-
-    explicit CScript(opcodetype b)     { operator<<(b); }
-    explicit CScript(const CScriptNum& b) { operator<<(b); }
-    explicit CScript(const std::vector<unsigned char>& b) { operator<<(b); }
-
-
-    CScript& operator<<(int64_t b) { return push_int64(b); }
-
+    // Append a single non-push opcode.
     CScript& operator<<(opcodetype opcode)
     {
         if (opcode < 0 || opcode > 0xff)
@@ -394,14 +369,33 @@ public:
         return *this;
     }
 
+    // Append a push operation for the passed number.
     CScript& operator<<(const CScriptNum& b)
     {
         *this << b.getvch();
         return *this;
     }
 
+    // Append a push operation for the specified vector, using the shortest possible encoding.
     CScript& operator<<(const std::vector<unsigned char>& b)
     {
+        // Special cases (OP_0, OP_1NEGATE, OP_1..OP_16).
+        if (b.size() == 0)
+        {
+            insert(end(), OP_0);
+            return *this;
+        }
+        if (b.size() == 1 && b[0] == 0x81)
+        {
+            insert(end(), OP_1NEGATE);
+            return *this;
+        }
+        if (b.size() == 1 && b[0] >= 1 && b[0] <= 16)
+        {
+            insert(end(), b[0] + (OP_1 - 1));
+            return *this;
+        }
+        // Normal pushes.
         if (b.size() < OP_PUSHDATA1)
         {
             insert(end(), (unsigned char)b.size());
@@ -434,7 +428,6 @@ public:
         assert(!"Warning: Pushing a CScript onto a CScript with << is probably not intended, use + to concatenate!");
         return *this;
     }
-
 
     bool GetOp(iterator& pc, opcodetype& opcodeRet, std::vector<unsigned char>& vchRet)
     {
@@ -516,20 +509,13 @@ public:
         return true;
     }
 
-    // Encode/decode small integers:
+    // Decode small integers:
     static int DecodeOP_N(opcodetype opcode)
     {
         if (opcode == OP_0)
             return 0;
         assert(opcode >= OP_1 && opcode <= OP_16);
         return (int)opcode - (int)(OP_1 - 1);
-    }
-    static opcodetype EncodeOP_N(int n)
-    {
-        assert(n >= 0 && n <= 16);
-        if (n == 0)
-            return OP_0;
-        return (opcodetype)(OP_1+n-1);
     }
 
     int FindAndDelete(const CScript& b)
@@ -548,15 +534,6 @@ public:
             }
         }
         while (GetOp(pc, opcode));
-        return nFound;
-    }
-    int Find(opcodetype op) const
-    {
-        int nFound = 0;
-        opcodetype opcode;
-        for (const_iterator pc = begin(); pc != end() && GetOp(pc, opcode);)
-            if (opcode == op)
-                ++nFound;
         return nFound;
     }
 

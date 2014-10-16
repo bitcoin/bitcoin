@@ -179,7 +179,7 @@ public:
     TestBuilder& Num(int num)
     {
         DoPush();
-        spendTx.vin[0].scriptSig << num;
+        spendTx.vin[0].scriptSig << CScriptNum(num);
         return *this;
     }
 
@@ -790,7 +790,7 @@ BOOST_AUTO_TEST_CASE(script_standard_push)
 {
     for (int i=0; i<67000; i++) {
         CScript script;
-        script << i;
+        script << CScriptNum(i);
         BOOST_CHECK_MESSAGE(script.IsPushOnly(), "Number " << i << " is not pure push.");
         BOOST_CHECK_MESSAGE(VerifyScript(script, CScript() << OP_1, SCRIPT_VERIFY_MINIMALDATA, BaseSignatureChecker()), "Number " << i << " push is not minimal data.");
     }

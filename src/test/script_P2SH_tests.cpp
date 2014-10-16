@@ -341,7 +341,7 @@ BOOST_AUTO_TEST_CASE(AreInputsStandard)
     for (int i = 0; i < 3; i++)
     {
         CScript t = txTo.vin[i].scriptSig;
-        txTo.vin[i].scriptSig = (CScript() << 11) + t;
+        txTo.vin[i].scriptSig = (CScript() << CScriptNum(11)) + t;
         BOOST_CHECK(!::AreInputsStandard(txTo, coins));
         txTo.vin[i].scriptSig = t;
     }
