@@ -323,8 +323,18 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
         indexDummy.nHeight = pindexPrev->nHeight + 1;
         CCoinsViewCache viewNew(pcoinsTip);
         CValidationState state;
+        // NOTE: CheckBlockHeader is called by CheckBlock
+        // NOTE: CtxCheckBlockHeader only assigns ppindex, which we don't need/want
+        if (!CtxCheckBlockHeader(*pblock, state, NULL))
+            throw std::runtime_error("CreateNewBlock() : CtxCheckBlockHeader failed");
+        if (!CheckBlock(*pblock, state, false, false))
+            throw std::runtime_error("CreateNewBlock() : CheckBlock failed");
+        if (!CtxCheckBlock(*pblock, state, pindexPrev))
+            throw std::runtime_error("CreateNewBlock() : CtxCheckBlock failed");
         if (!ConnectBlock(*pblock, state, &indexDummy, viewNew, true))
             throw std::runtime_error("CreateNewBlock() : ConnectBlock failed");
+        if (!(state.IsValid() && state.IsConclusive()))
+            throw std::runtime_error("CreateNewBlock() : State is not conclusively valid");
     }
 
     return pblocktemplate.release();
