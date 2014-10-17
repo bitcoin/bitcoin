@@ -12,6 +12,7 @@
 #include "checkqueue.h"
 #include "init.h"
 #include "net.h"
+#include "netaskfor.h"
 #include "pow.h"
 #include "txdb.h"
 #include "txmempool.h"
@@ -3602,7 +3603,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                     if (inv.type == MSG_BLOCK)
                         AddBlockToQueue(pfrom->GetId(), inv.hash);
                     else
-                        pfrom->AskFor(inv);
+                        NetAskFor::AskFor(pfrom, inv);
                 }
             } else if (inv.type == MSG_BLOCK && mapOrphanBlocks.count(inv.hash)) {
                 PushGetBlocks(pfrom, chainActive.Tip(), GetOrphanRoot(inv.hash));
@@ -3727,13 +3728,12 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 
         CInv inv(MSG_TX, tx.GetHash());
         pfrom->AddInventoryKnown(inv);
+        NetAskFor::Completed(pfrom, inv);
 
         LOCK(cs_main);
 
         bool fMissingInputs = false;
         CValidationState state;
-
-        mapAlreadyAskedFor.erase(inv);
 
         if (AcceptToMemoryPool(mempool, state, tx, true, &fMissingInputs))
         {
@@ -4389,7 +4389,6 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
         // received a (requested) block in one minute, and that all blocks are
         // in flight for over two minutes, since we first had a chance to
         // process an incoming block.
-        int64_t nNow = GetTimeMicros();
         if (!pto->fDisconnect && state.nBlocksInFlight &&
             state.nLastBlockReceive < state.nLastBlockProcess - BLOCK_DOWNLOAD_TIMEOUT*1000000 &&
             state.vBlocksInFlight.front().nTime < state.nLastBlockProcess - 2*BLOCK_DOWNLOAD_TIMEOUT*1000000) {
@@ -4414,26 +4413,6 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
                 pto->PushMessage("getdata", vGetData);
                 vGetData.clear();
             }
-        }
-
-        //
-        // Message: getdata (non-blocks)
-        //
-        while (!pto->fDisconnect && !pto->mapAskFor.empty() && (*pto->mapAskFor.begin()).first <= nNow)
-        {
-            const CInv& inv = (*pto->mapAskFor.begin()).second;
-            if (!AlreadyHave(inv))
-            {
-                if (fDebug)
-                    LogPrint("net", "Requesting %s peer=%d\n", inv.ToString(), pto->id);
-                vGetData.push_back(inv);
-                if (vGetData.size() >= 1000)
-                {
-                    pto->PushMessage("getdata", vGetData);
-                    vGetData.clear();
-                }
-            }
-            pto->mapAskFor.erase(pto->mapAskFor.begin());
         }
         if (!vGetData.empty())
             pto->PushMessage("getdata", vGetData);

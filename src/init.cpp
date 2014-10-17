@@ -16,6 +16,7 @@
 #include "main.h"
 #include "miner.h"
 #include "net.h"
+#include "netaskfor.h"
 #include "rpcserver.h"
 #include "txdb.h"
 #include "ui_interface.h"
@@ -134,6 +135,7 @@ void Shutdown()
 #endif
     StopNode();
     UnregisterNodeSignals(GetNodeSignals());
+    NetAskFor::UnregisterNodeSignals(GetNodeSignals());
 
     if (fFeeEstimatesInitialized)
     {
@@ -801,6 +803,7 @@ bool AppInit2(boost::thread_group& threadGroup)
     // ********************************************************* Step 6: network initialization
 
     RegisterNodeSignals(GetNodeSignals());
+    NetAskFor::RegisterNodeSignals(GetNodeSignals());
 
     if (mapArgs.count("-onlynet")) {
         std::set<enum Network> nets;
