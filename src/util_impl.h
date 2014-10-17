@@ -10,11 +10,24 @@
 
 #include "util.h"
 
+static uint32_t secp256k1_Rz = 11, secp256k1_Rw = 11;
+
+static inline void secp256k1_rand_seed(uint64_t v) {
+    secp256k1_Rz = v >> 32;
+    secp256k1_Rw = v;
+
+    if (secp256k1_Rz == 0 || secp256k1_Rz == 0x9068ffffU) {
+        secp256k1_Rz = 111;
+    }
+    if (secp256k1_Rw == 0 || secp256k1_Rw == 0x464fffffU) {
+        secp256k1_Rw = 111;
+    }
+}
+
 static inline uint32_t secp256k1_rand32(void) {
-    static uint32_t Rz = 11, Rw = 11;
-    Rz = 36969 * (Rz & 0xFFFF) + (Rz >> 16);
-    Rw = 18000 * (Rw & 0xFFFF) + (Rw >> 16);
-    return (Rw << 16) + (Rw >> 16) + Rz;
+    secp256k1_Rz = 36969 * (secp256k1_Rz & 0xFFFF) + (secp256k1_Rz >> 16);
+    secp256k1_Rw = 18000 * (secp256k1_Rw & 0xFFFF) + (secp256k1_Rw >> 16);
+    return (secp256k1_Rw << 16) + (secp256k1_Rw >> 16) + secp256k1_Rz;
 }
 
 static void secp256k1_rand256(unsigned char *b32) {

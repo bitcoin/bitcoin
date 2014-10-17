@@ -19,7 +19,7 @@
 #include "openssl/obj_mac.h"
 #endif
 
-static int count = 100;
+static int count = 750;
 
 /***** NUM TESTS *****/
 
@@ -632,6 +632,7 @@ void test_ecdsa_end_to_end() {
     CHECK(secp256k1_ecdsa_recover_compact(message, 32, csignature, recpubkey, &recpubkeylen, pubkeylen == 33, recid) != 1 ||
           memcmp(pubkey, recpubkey, pubkeylen) != 0);
     CHECK(recpubkeylen == pubkeylen);
+
 }
 
 void run_ecdsa_end_to_end() {
@@ -698,10 +699,26 @@ void run_ecdsa_openssl() {
 #endif
 
 int main(int argc, char **argv) {
-    if (argc > 1)
-        count = strtol(argv[1], NULL, 0)*47;
+    // find iteration count
+    if (argc > 1) {
+        count = strtol(argv[1], NULL, 0);
+    }
+
+    // find random seed
+    uint64_t seed;
+    if (argc > 2) {
+        seed = strtoull(argv[2], NULL, 0);
+    } else {
+        FILE *frand = fopen("/dev/urandom", "r");
+        if (!frand || !fread(&seed, sizeof(seed), 1, frand)) {
+            seed = time(NULL) * 1337;
+        }
+        fclose(frand);
+    }
+    secp256k1_rand_seed(seed);
 
     printf("test count = %i\n", count);
+    printf("random seed = %llu\n", (unsigned long long)seed);
 
     // initialize
     secp256k1_start(SECP256K1_START_SIGN | SECP256K1_START_VERIFY);
