@@ -354,10 +354,13 @@ void SelectParams(CBaseChainParams::Network network) {
     pCurrentParams = &Params(network);
 }
 
-bool SelectParamsFromCommandLine() {
-    if (!SelectBaseParamsFromCommandLine())
+bool SelectParamsFromCommandLine()
+{
+    CBaseChainParams::Network network = NetworkIdFromCommandLine();
+    if (network == CBaseChainParams::MAX_NETWORK_TYPES)
         return false;
 
-    SelectParams(BaseParams().NetworkID());
+    SelectBaseParams(network);
+    SelectParams(network);
     return true;
 }
