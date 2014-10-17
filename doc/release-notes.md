@@ -1,6 +1,27 @@
 (note: this is a temporary file, to be added-to by anybody, and moved to
 release-notes at release time)
 
+Block file backwards-compatibility warning
+===========================================
+
+Because release 0.10.0 makes use of headers-first synchronization and parallel
+block download, the block files and databases are not backwards-compatible
+with older versions of Bitcoin Core:
+
+* Blocks will be stored on disk out of order (in the order they are
+received, really), which makes it incompatible with some tools or
+other programs. Reindexing using earlier versions will also not work
+anymore as a result of this.
+
+* The block index database will now hold headers for which no block is
+stored on disk, which earlier versions won't support.
+
+If you want to be able to downgrade smoothly, make a backup of your entire data
+directory. Without this your node will need start syncing (or importing from
+bootstrap.dat) anew afterwards.
+
+This does not affect wallet forward or backward compatibility.
+
 Transaction fee changes
 =======================
 
