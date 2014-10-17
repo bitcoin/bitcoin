@@ -282,58 +282,12 @@ public:
         return serialize(m_value);
     }
 
-    static std::vector<unsigned char> serialize(const int64_t& value)
-    {
-        if(value == 0)
-            return std::vector<unsigned char>();
-
-        std::vector<unsigned char> result;
-        const bool neg = value < 0;
-        uint64_t absvalue = neg ? -value : value;
-
-        while(absvalue)
-        {
-            result.push_back(absvalue & 0xff);
-            absvalue >>= 8;
-        }
-
-//    - If the most significant byte is >= 0x80 and the value is positive, push a
-//    new zero-byte to make the significant byte < 0x80 again.
-
-//    - If the most significant byte is >= 0x80 and the value is negative, push a
-//    new 0x80 byte that will be popped off when converting to an integral.
-
-//    - If the most significant byte is < 0x80 and the value is negative, add
-//    0x80 to it, since it will be subtracted and interpreted as a negative when
-//    converting to an integral.
-
-        if (result.back() & 0x80)
-            result.push_back(neg ? 0x80 : 0);
-        else if (neg)
-            result.back() |= 0x80;
-
-        return result;
-    }
+    static std::vector<unsigned char> serialize(const int64_t& value);
 
     static const size_t nMaxNumSize = 4;
 
 private:
-    static int64_t set_vch(const std::vector<unsigned char>& vch)
-    {
-      if (vch.empty())
-          return 0;
-
-      int64_t result = 0;
-      for (size_t i = 0; i != vch.size(); ++i)
-          result |= static_cast<int64_t>(vch[i]) << 8*i;
-
-      // If the input vector's most significant byte is 0x80, remove it from
-      // the result's msb and return a negative.
-      if (vch.back() & 0x80)
-          return -((int64_t)(result & ~(0x80ULL << (8 * (vch.size() - 1)))));
-
-      return result;
-    }
+    static int64_t set_vch(const std::vector<unsigned char>& vch);
 
     int64_t m_value;
 };
@@ -347,11 +301,7 @@ public:
     CScript(const_iterator pbegin, const_iterator pend) : std::vector<unsigned char>(pbegin, pend) { }
     CScript(const unsigned char* pbegin, const unsigned char* pend) : std::vector<unsigned char>(pbegin, pend) { }
 
-    CScript& operator+=(const CScript& b)
-    {
-        insert(end(), b.begin(), b.end());
-        return *this;
-    }
+    CScript& operator+=(const CScript& b);
 
     friend CScript operator+(const CScript& a, const CScript& b)
     {
@@ -361,73 +311,15 @@ public:
     }
 
     // Append a single non-push opcode.
-    CScript& operator<<(opcodetype opcode)
-    {
-        if (opcode < 0 || opcode > 0xff)
-            throw std::runtime_error("CScript::operator<<() : invalid opcode");
-        insert(end(), (unsigned char)opcode);
-        return *this;
-    }
+    CScript& operator<<(opcodetype opcode);
 
     // Append a push operation for the passed number.
-    CScript& operator<<(const CScriptNum& b)
-    {
-        *this << b.getvch();
-        return *this;
-    }
+    CScript& operator<<(const CScriptNum& b);
 
     // Append a push operation for the specified vector, using the shortest possible encoding.
-    CScript& operator<<(const std::vector<unsigned char>& b)
-    {
-        // Special cases (OP_0, OP_1NEGATE, OP_1..OP_16).
-        if (b.size() == 0)
-        {
-            insert(end(), OP_0);
-            return *this;
-        }
-        if (b.size() == 1 && b[0] == 0x81)
-        {
-            insert(end(), OP_1NEGATE);
-            return *this;
-        }
-        if (b.size() == 1 && b[0] >= 1 && b[0] <= 16)
-        {
-            insert(end(), b[0] + (OP_1 - 1));
-            return *this;
-        }
-        // Normal pushes.
-        if (b.size() < OP_PUSHDATA1)
-        {
-            insert(end(), (unsigned char)b.size());
-        }
-        else if (b.size() <= 0xff)
-        {
-            insert(end(), OP_PUSHDATA1);
-            insert(end(), (unsigned char)b.size());
-        }
-        else if (b.size() <= 0xffff)
-        {
-            insert(end(), OP_PUSHDATA2);
-            unsigned short nSize = b.size();
-            insert(end(), (unsigned char*)&nSize, (unsigned char*)&nSize + sizeof(nSize));
-        }
-        else
-        {
-            insert(end(), OP_PUSHDATA4);
-            unsigned int nSize = b.size();
-            insert(end(), (unsigned char*)&nSize, (unsigned char*)&nSize + sizeof(nSize));
-        }
-        insert(end(), b.begin(), b.end());
-        return *this;
-    }
+    CScript& operator<<(const std::vector<unsigned char>& b);
 
-    CScript& operator<<(const CScript& b)
-    {
-        // I'm not sure if this should push the script or concatenate scripts.
-        // If there's ever a use for pushing a script onto a script, delete this member fn
-        assert(!"Warning: Pushing a CScript onto a CScript with << is probably not intended, use + to concatenate!");
-        return *this;
-    }
+    CScript& operator<<(const CScript& b);
 
     bool GetOp(iterator& pc, opcodetype& opcodeRet, std::vector<unsigned char>& vchRet)
     {
@@ -456,58 +348,7 @@ public:
         return GetOp2(pc, opcodeRet, NULL);
     }
 
-    bool GetOp2(const_iterator& pc, opcodetype& opcodeRet, std::vector<unsigned char>* pvchRet) const
-    {
-        opcodeRet = OP_INVALIDOPCODE;
-        if (pvchRet)
-            pvchRet->clear();
-        if (pc >= end())
-            return false;
-
-        // Read instruction
-        if (end() - pc < 1)
-            return false;
-        unsigned int opcode = *pc++;
-
-        // Immediate operand
-        if (opcode <= OP_PUSHDATA4)
-        {
-            unsigned int nSize = 0;
-            if (opcode < OP_PUSHDATA1)
-            {
-                nSize = opcode;
-            }
-            else if (opcode == OP_PUSHDATA1)
-            {
-                if (end() - pc < 1)
-                    return false;
-                nSize = *pc++;
-            }
-            else if (opcode == OP_PUSHDATA2)
-            {
-                if (end() - pc < 2)
-                    return false;
-                nSize = 0;
-                memcpy(&nSize, &pc[0], 2);
-                pc += 2;
-            }
-            else if (opcode == OP_PUSHDATA4)
-            {
-                if (end() - pc < 4)
-                    return false;
-                memcpy(&nSize, &pc[0], 4);
-                pc += 4;
-            }
-            if (end() - pc < 0 || (unsigned int)(end() - pc) < nSize)
-                return false;
-            if (pvchRet)
-                pvchRet->assign(pc, pc + nSize);
-            pc += nSize;
-        }
-
-        opcodeRet = (opcodetype)opcode;
-        return true;
-    }
+    bool GetOp2(const_iterator& pc, opcodetype& opcodeRet, std::vector<unsigned char>* pvchRet) const;
 
     // Decode small integers:
     static int DecodeOP_N(opcodetype opcode)
@@ -518,24 +359,7 @@ public:
         return (int)opcode - (int)(OP_1 - 1);
     }
 
-    int FindAndDelete(const CScript& b)
-    {
-        int nFound = 0;
-        if (b.empty())
-            return nFound;
-        iterator pc = begin();
-        opcodetype opcode;
-        do
-        {
-            while (end() - pc >= (long)b.size() && memcmp(&pc[0], &b[0], b.size()) == 0)
-            {
-                pc = erase(pc, pc + b.size());
-                ++nFound;
-            }
-        }
-        while (GetOp(pc, opcode));
-        return nFound;
-    }
+    int FindAndDelete(const CScript& b);
 
     // Pre-version-0.6, Bitcoin always counted CHECKMULTISIGs
     // as 20 sigops. With pay-to-script-hash, that changed:
