@@ -100,6 +100,7 @@ NodeId nLastNodeId = 0;
 CCriticalSection cs_nLastNodeId;
 
 static CSemaphore *semOutbound = NULL;
+CTimeoutCondition condMessageHandler;
 
 // Signals for message handling
 static CNodeSignals g_signals;
@@ -662,8 +663,11 @@ bool CNode::ReceiveMsgBytes(const char *pch, unsigned int nBytes)
         pch += handled;
         nBytes -= handled;
 
-        if (msg.complete())
+        if (msg.complete()) {
             msg.nTime = GetTimeMicros();
+            // signal to Message Handler that there is a new complete message
+            WakeMessageHandler();
+        }
     }
 
     return true;
@@ -742,6 +746,9 @@ void SocketSendData(CNode *pnode)
                 pnode->nSendOffset = 0;
                 pnode->nSendSize -= data.size();
                 it++;
+                // send buffer has decreased, so possibly we can send new
+                // messages now
+                WakeMessageHandler();
             } else {
                 // could not send full message; stop sending more
                 break;
@@ -1065,10 +1072,13 @@ void ThreadSocketHandler()
                     LogPrintf("socket receive timeout: %is\n", nTime - pnode->nLastRecv);
                     pnode->fDisconnect = true;
                 }
-                else if (pnode->nPingNonceSent && pnode->nPingUsecStart + TIMEOUT_INTERVAL * 1000000 < GetTimeMicros())
-                {
-                    LogPrintf("ping timeout: %fs\n", 0.000001 * (GetTimeMicros() - pnode->nPingUsecStart));
-                    pnode->fDisconnect = true;
+                else {
+                    LOCK(pnode->cs_ping);
+                    if (pnode->nPingNonceSent && pnode->nPingUsecStart + TIMEOUT_INTERVAL * 1000000 < GetTimeMicros())
+                    {
+                        LogPrintf("ping timeout: %fs\n", 0.000001 * (GetTimeMicros() - pnode->nPingUsecStart));
+                        pnode->fDisconnect = true;
+                    }
                 }
             }
         }
@@ -1518,6 +1528,7 @@ void static StartSync(const vector<CNode*> &vNodes) {
     if (pnodeNewSync) {
         pnodeNewSync->fStartSync = true;
         pnodeSync = pnodeNewSync;
+        WakeMessageHandler();
     }
 }
 
@@ -1543,10 +1554,6 @@ void ThreadMessageHandler()
             StartSync(vNodesCopy);
 
         // Poll the connected nodes for messages
-        CNode* pnodeTrickle = NULL;
-        if (!vNodesCopy.empty())
-            pnodeTrickle = vNodesCopy[GetRand(vNodesCopy.size())];
-
         bool fSleep = true;
 
         BOOST_FOREACH(CNode* pnode, vNodesCopy)
@@ -1556,29 +1563,23 @@ void ThreadMessageHandler()
 
             // Receive messages
             {
-                TRY_LOCK(pnode->cs_vRecvMsg, lockRecv);
-                if (lockRecv)
-                {
-                    if (!g_signals.ProcessMessages(pnode))
-                        pnode->CloseSocketDisconnect();
+                LOCK(pnode->cs_vRecvMsg);
+                if (!g_signals.ProcessMessages(pnode))
+                    pnode->CloseSocketDisconnect();
 
-                    if (pnode->nSendSize < SendBufferSize())
+                if (pnode->nSendSize < SendBufferSize())
+                {
+                    if (!pnode->vRecvGetData.empty() || (!pnode->vRecvMsg.empty() && pnode->vRecvMsg[0].complete()))
                     {
-                        if (!pnode->vRecvGetData.empty() || (!pnode->vRecvMsg.empty() && pnode->vRecvMsg[0].complete()))
-                        {
-                            fSleep = false;
-                        }
+                        fSleep = false;
                     }
                 }
             }
             boost::this_thread::interruption_point();
 
             // Send messages
-            {
-                TRY_LOCK(pnode->cs_vSend, lockSend);
-                if (lockSend)
-                    g_signals.SendMessages(pnode, pnode == pnodeTrickle);
-            }
+            g_signals.SendMessages(pnode, false);
+
             boost::this_thread::interruption_point();
         }
 
@@ -1589,14 +1590,139 @@ void ThreadMessageHandler()
         }
 
         if (fSleep)
-            MilliSleep(100);
+            condMessageHandler.timed_wait(1000);
     }
 }
 
+void ThreadTrickle ()
+{
+    SetThreadPriority(THREAD_PRIORITY_BELOW_NORMAL);
 
+    while (true)
+    {
+        CNode* pnodeTrickle = NULL;
 
+        boost::this_thread::interruption_point();
 
+        {
+            LOCK(cs_vNodes);
+            if (!vNodes.empty()) {
+                pnodeTrickle = vNodes[GetRand(vNodes.size())];
+                pnodeTrickle->AddRef();
+            }
+        }
 
+        boost::this_thread::interruption_point();
+
+        if (pnodeTrickle)
+        {
+            // Send messages
+            g_signals.SendMessages(pnodeTrickle, true);
+
+            LOCK(cs_vNodes);
+            pnodeTrickle->Release();
+        }
+
+        MilliSleep(100);
+    }
+}
+
+// Sends ping and inv messages
+bool SendMessagesNet(CNode* pto, bool fSendTrickle)
+{
+    // Don't send anything until we get their version message
+    if (pto->nVersion == 0)
+        return true;
+
+    LOCK(pto->cs_vSend);
+
+    //
+    // Message: ping
+    //
+    {
+        LOCK(pto->cs_ping);
+        bool pingSend = false;
+        if (pto->fPingQueued) {
+            // RPC ping request by user
+            pingSend = true;
+        }
+        if (pto->nPingNonceSent == 0 && pto->nPingUsecStart + PING_INTERVAL * 1000000 < GetTimeMicros()) {
+            // Ping automatically sent as a latency probe & keepalive.
+            pingSend = true;
+        }
+        if (pingSend) {
+            uint64_t nonce = 0;
+            while (nonce == 0) {
+                GetRandBytes((unsigned char*)&nonce, sizeof(nonce));
+            }
+            pto->fPingQueued = false;
+            pto->nPingUsecStart = GetTimeMicros();
+            if (pto->nVersion > BIP0031_VERSION) {
+                pto->nPingNonceSent = nonce;
+                pto->PushMessage("ping", nonce);
+            } else {
+                // Peer is too old to support ping command with nonce, pong will never arrive.
+                pto->nPingNonceSent = 0;
+                pto->PushMessage("ping");
+            }
+        }
+    }
+
+    //
+    // Message: inventory
+    //
+    vector<CInv> vInv;
+    vector<CInv> vInvWait;
+    {
+        LOCK(pto->cs_inventory);
+        vInv.reserve(pto->vInventoryToSend.size());
+        vInvWait.reserve(pto->vInventoryToSend.size());
+        BOOST_FOREACH(const CInv& inv, pto->vInventoryToSend)
+        {
+            if (pto->setInventoryKnown.count(inv))
+                continue;
+
+            // trickle out tx inv to protect privacy
+            if (inv.type == MSG_TX && !fSendTrickle)
+            {
+                // 1/4 of tx invs blast to all immediately
+                static uint256 hashSalt;
+                if (hashSalt == 0)
+                    hashSalt = GetRandHash();
+                uint256 hashRand = inv.hash ^ hashSalt;
+                hashRand = Hash(BEGIN(hashRand), END(hashRand));
+                bool fTrickleWait = ((hashRand & 3) != 0);
+
+                if (fTrickleWait)
+                {
+                    vInvWait.push_back(inv);
+                    continue;
+                }
+            }
+
+            // returns true if wasn't already contained in the set
+            if (pto->setInventoryKnown.insert(inv).second)
+            {
+                vInv.push_back(inv);
+                if (vInv.size() >= 1000)
+                {
+                    pto->PushMessage("inv", vInv);
+                    vInv.clear();
+                }
+            }
+        }
+        pto->vInventoryToSend = vInvWait;
+    }
+    if (!vInv.empty())
+        pto->PushMessage("inv", vInv);
+
+    return true;
+}
+
+void WakeMessageHandler()
+{
+    condMessageHandler.notify_one();
+}
 
 bool BindListenPort(const CService &addrBind, string& strError, bool fWhitelisted)
 {
@@ -1763,6 +1889,9 @@ void StartNode(boost::thread_group& threadGroup)
 
     Discover(threadGroup);
 
+    // Register SendMessages handler
+    g_signals.SendMessages.connect(&SendMessagesNet);
+
     //
     // Start threads
     //
@@ -1786,6 +1915,9 @@ void StartNode(boost::thread_group& threadGroup)
 
     // Process messages
     threadGroup.create_thread(boost::bind(&TraceThread<void (*)()>, "msghand", &ThreadMessageHandler));
+
+    // Trickle messages
+    threadGroup.create_thread(boost::bind(&TraceThread<void (*)()>, "trickle", &ThreadTrickle));
 
     // Dump network addresses
     threadGroup.create_thread(boost::bind(&LoopForever<void (*)()>, "dumpaddr", &DumpAddresses, DUMP_ADDRESSES_INTERVAL * 1000));
@@ -2146,6 +2278,7 @@ void CNode::AskFor(const CInv& inv)
     else
         mapAlreadyAskedFor.insert(std::make_pair(inv, nRequestTime));
     mapAskFor.insert(std::make_pair(nRequestTime, inv));
+    WakeMessageHandler();
 }
 
 void CNode::BeginMessage(const char* pszCommand) EXCLUSIVE_LOCK_FUNCTION(cs_vSend)
@@ -2204,4 +2337,7 @@ void CNode::EndMessage() UNLOCK_FUNCTION(cs_vSend)
         SocketSendData(this);
 
     LEAVE_CRITICAL_SECTION(cs_vSend);
+
+    // wake up ThreadMessageHandler
+    WakeMessageHandler();
 }

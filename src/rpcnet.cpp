@@ -55,6 +55,7 @@ Value ping(const Array& params, bool fHelp)
     BOOST_FOREACH(CNode* pNode, vNodes) {
         pNode->fPingQueued = true;
     }
+    WakeMessageHandler();
 
     return Value::null;
 }

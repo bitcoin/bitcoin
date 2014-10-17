@@ -104,6 +104,41 @@ void static inline AssertLockHeldInternal(const char* pszName, const char* pszFi
 void PrintLockContention(const char* pszName, const char* pszFile, int nLine);
 #endif
 
+class CTimeoutCondition
+{
+private:
+    boost::condition_variable condition;
+    boost::mutex mutex;
+    bool fHasWork;
+    boost::posix_time::ptime alarm;
+
+public:
+    void wait() {
+        boost::unique_lock<boost::mutex> lock(mutex);
+        while (!fHasWork) {
+            condition.wait(lock);
+        }
+        fHasWork = false;
+    }
+
+    void timed_wait(int milliseconds) {
+        boost::unique_lock<boost::mutex> lock(mutex);
+        boost::posix_time::ptime now = boost::posix_time::microsec_clock::universal_time();
+        alarm = now + boost::posix_time::milliseconds(milliseconds);
+        while (!fHasWork && now < alarm) {
+            condition.timed_wait(lock, alarm);
+            now = boost::posix_time::microsec_clock::universal_time();
+        }
+        fHasWork = false;
+    }
+
+    void notify_one() {
+        boost::unique_lock<boost::mutex> lock(mutex);
+        fHasWork = true;
+        condition.notify_one();
+    }
+};
+
 /** Wrapper around boost::unique_lock<Mutex> */
 template <typename Mutex>
 class CMutexLock

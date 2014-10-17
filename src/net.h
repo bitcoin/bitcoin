@@ -54,6 +54,9 @@ static const bool DEFAULT_UPNP = false;
 /** The maximum number of entries in mapAskFor */
 static const size_t MAPASKFOR_MAX_SZ = MAX_INV_SZ;
 
+/* notify when new protocol messages can be sent/received */
+void WakeMessageHandler();
+
 unsigned int ReceiveFloodSize();
 unsigned int SendBufferSize();
 
@@ -302,6 +305,8 @@ public:
     int64_t nPingUsecTime;
     // Whether a ping is requested.
     bool fPingQueued;
+    // Lock to protect ping state.
+    CCriticalSection cs_ping;
 
     CNode(SOCKET hSocketIn, CAddress addrIn, std::string addrNameIn = "", bool fInboundIn=false);
     ~CNode();
@@ -371,8 +376,10 @@ public:
         // Known checking here is only to save space from duplicates.
         // SendMessages will filter it again for knowns that were added
         // after addresses were pushed.
-        if (addr.IsValid() && !setAddrKnown.count(addr))
+        if (addr.IsValid() && !setAddrKnown.count(addr)) {
             vAddrToSend.push_back(addr);
+            WakeMessageHandler();
+        }
     }
 
 
@@ -388,8 +395,10 @@ public:
     {
         {
             LOCK(cs_inventory);
-            if (!setInventoryKnown.count(inv))
+            if (!setInventoryKnown.count(inv)) {
                 vInventoryToSend.push_back(inv);
+                WakeMessageHandler();
+            }
         }
     }
 
