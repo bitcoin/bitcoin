@@ -1,0 +1,68 @@
+This yescrypt distribution is a work-in-progress.  Its interfaces other
+than crypto_scrypt(), as well as their semantics, are subject to
+(incompatible) changes in future revisions.
+
+
+	How to test yescrypt for proper operation.
+
+On a Unix-like system, invoke "make check".  This will build and run a
+program called "tests", and check its output against the supplied file
+TESTS-OK.  It will also build a program called "phc-test", and if a file
+called PHC-TEST-OK is present will run that program and check its output
+against that file's contents.  If everything matches, each of these two
+sets of tests prints one word "PASSED", so there will be two such lines
+among "make check" output, one of them being the final line of output.
+
+We do most of our testing on Linux systems with gcc.  The supplied
+Makefile assumes that you use gcc.
+
+As supplied, the "tests" program will allocate 3 GB of memory (for the
+ROM), so it should be used on a system with enough RAM (it may cause
+excessive swapping and other nasties if run on a system that is too
+small, such as on an older laptop).  On Linux systems with "huge pages"
+enabled, the program may end up requiring over 6 GB of RAM because it
+tests ROM initialization in two different ways, where the first test
+would end up using huge pages and the second test would not, so it might
+not be able to reuse the same 3 GB of memory for both tests despite of
+this memory being released back to the OS between the two tests.
+
+
+	ROM in SysV shared memory demo and benchmark.
+
+Also included with this version of yescrypt are "initrom" and "userom"
+demo programs.  They're built by simply typing "make".  Please refer to
+PERFORMANCE-* text files for examples of system configuration and
+running of these programs.
+
+
+	ROM on SSD demo and benchmark.
+
+The "initrom" and "userom" programs accept up to three optional
+parameters, specifying ROM and RAM sizes and a filename for the ROM.
+With the latter, it is possible to put the ROM on an SSD, and to access
+it from there.  See PERFORMANCE-SSD for examples of such usage.
+
+
+	Alternate code versions and make targets.
+
+Three implementations of yescrypt are included: reference, partially
+optimized (without use of SIMD), and fully optimized for x86/x86-64
+(with use of SIMD intrinsics).  By default, one of the two optimized
+implementations is built as appropriate for the given machine.
+
+The reference implementation is unoptimized and is very slow, but it has
+simpler and shorter source code.  Its purpose is to provide a simple
+human- and machine-readable specification that implementations intended
+for actual use should be tested against.  It is deliberately mostly not
+optimized, and it is not meant to be used in production.
+
+There are two additional make targets similar to "make check": they are
+"make check-ref" and "make check-opt".  These build and test the two
+included alternate code versions.
+
+Similarly, there are two make targets to build all of the programs along
+with either of the two alternate implementations.  These are simply
+"make ref" and "make opt".  After having used one of these, the
+"initrom" and "userom" programs will use that build's implementation.
+
+"make clean" may need to be run between making different builds.
