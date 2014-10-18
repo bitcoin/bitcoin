@@ -15,6 +15,7 @@
 #include "chainparams.h"
 #include "coins.h"
 #include "core.h"
+#include "core/transaction.h"
 #include "net.h"
 #include "pow.h"
 #include "script/script.h"
