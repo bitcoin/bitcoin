@@ -7,6 +7,7 @@
 
 #include "amount.h"
 #include "core.h"
+#include "core/transaction.h"
 #include "hash.h"
 #include "main.h"
 #include "net.h"

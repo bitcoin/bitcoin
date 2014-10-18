@@ -8,6 +8,7 @@
 
 #include "amount.h"
 #include "core.h"
+#include "core/transaction.h"
 #include "crypter.h"
 #include "key.h"
 #include "keystore.h"

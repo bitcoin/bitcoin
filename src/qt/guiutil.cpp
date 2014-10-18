@@ -9,7 +9,7 @@
 #include "qvalidatedlineedit.h"
 #include "walletmodel.h"
 
-#include "core.h"
+#include "core/transaction.h"
 #include "init.h"
 #include "main.h"
 #include "protocol.h"
