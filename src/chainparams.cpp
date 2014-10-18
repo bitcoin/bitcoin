@@ -59,7 +59,7 @@ public:
         genesis.nVersion = 1;
         genesis.nTime    = 1231006505;
         genesis.nBits    = 0x1f03ffff;
-        genesis.nNonce   = 9139;
+        genesis.nNonce   = 51481;
 
         hashGenesisBlock = genesis.GetHash();
 #if 0
@@ -78,7 +78,7 @@ public:
             printf("genesis.nNonce %d\n", genesis.nNonce);
         }
 #endif
-        assert(hashGenesisBlock == uint256("0x0003e0de9e5c668cd892bb15325cc99a3fce174ee154dc07e6d7cfc195f2fcc2"));
+        assert(hashGenesisBlock == uint256("0x0001ec690b3c6971e51e40ec24d4c62ba4d8383f7f74645e256d57e1d533ccb7"));
         assert(genesis.hashMerkleRoot == uint256("0x1d2f70d467851c55b9f547f813f703daf6d2501e586332d4606fbdc77ce1449f"));
 
         //vSeeds.push_back(CDNSSeedData("bitcoin.sipa.be", "seed.bitcoin.sipa.be"));
@@ -138,7 +138,7 @@ public:
 
         // Modify the testnet genesis block so the timestamp is valid for a later start.
         genesis.nTime = 1296688602;
-        genesis.nNonce = 9284;
+        genesis.nNonce = 21468;
         hashGenesisBlock = genesis.GetHash();
 #if 0
         {
@@ -157,7 +157,7 @@ public:
 
         }
 #endif
-        assert(hashGenesisBlock == uint256("0x0001013c4199fed4d6f249c50705698d878a47f7d6551daddf3d6c0787c07523"));
+        assert(hashGenesisBlock == uint256("0x0002e0f786a970cd158ed0032832ce8fdc85856ada18b505c383460578a018ac"));
 
         vFixedSeeds.clear();
         vSeeds.clear();
@@ -194,7 +194,7 @@ public:
         nDefaultPort = 18444;
         strDataDir = "regtest";
         //printf("hashGenesisBlock %s\n", hashGenesisBlock.ToString().c_str());
-        assert(hashGenesisBlock == uint256("0x248f039e9daf94dd84ac10acb15bcaa4f3a772c1e69e02fc06463783d8e7a069"));
+        assert(hashGenesisBlock == uint256("0x4fe31d85144eb99b8e09d1018c940d68ca292d2fb6097d7c4109c972f436ae42"));
 
         vSeeds.clear();  // Regtest mode doesn't have any DNS seeds.
     }
