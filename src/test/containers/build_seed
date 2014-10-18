@@ -1,0 +1,57 @@
+#!/usr/bin/env ruby
+
+require File.expand_path('../boot', __FILE__)
+
+# Move to genesis time
+shift = (Time.at(1345090000) - Time.now).to_i + 24 * 3600
+
+puts "Creating seed"
+seed = CoinContainer.new(
+  image: 'peercoin/base',
+  delete_at_exit: false,
+  args: {
+    "timetravel" => shift,
+  },
+)
+
+puts "Creating node"
+node = CoinContainer.new(
+  image: 'peercoin/base',
+  links: [seed],
+  remove_wallet_after_shutdown: true,
+  delete_at_exit: true,
+  args: {
+    "timetravel" => shift,
+  },
+)
+
+puts "Waiting for node to boot"
+node.wait_for_boot
+
+nodes = [seed, node]
+
+seed.rpc "setgenerate", true
+
+max = 500
+puts "Waiting for #{max} blocks"
+loop do
+  count = node.rpc("getblockcount")
+  if count.to_i > 0
+    print "\r%3d/%3d (seed balance: %s)" % [count, max, seed.rpc("getbalance")]
+    STDOUT.flush
+  end
+  if count.to_i >= max
+    puts
+    break
+  end
+  nodes.each { |n| n.rpc("timetravel", 60 * 60) }
+  sleep 1
+end
+
+puts "Building images peercoin/seed and peercoin/node"
+seed.shutdown
+node.shutdown
+seed.wait_for_shutdown
+node.wait_for_shutdown
+seed.commit('peercoin/seed')
+node.commit('peercoin/node')

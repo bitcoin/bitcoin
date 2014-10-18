@@ -1,0 +1,15 @@
+#!/usr/bin/env ruby
+
+require File.expand_path('../boot', __FILE__)
+require 'json'
+
+if ARGV.size != 2
+  puts "usage: #$0 <container name> <rpc command...>"
+  exit 1
+end
+
+id = ARGV[0]
+command = ARGV[1..-1]
+
+container = CoinContainer.new(id: id)
+p container.rpc(*command)

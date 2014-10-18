@@ -1,0 +1,24 @@
+#!/usr/bin/env ruby
+
+require File.expand_path('../boot', __FILE__)
+
+node_names = %w( a b c d e )
+nodes = []
+node_names.each do |name|
+  puts "Starting node #{name}"
+  nodes << CoinContainer.new(image: "peercoinnet/#{name}", links: nodes.map(&:name), args: {stakegen: true})
+end
+
+puts "Waiting for all nodes to boot"
+nodes.each(&:wait_for_boot)
+
+puts "Moving 30 days forward"
+nodes.each do |node|
+    node.rpc "timetravel", 30*24*3600
+end
+
+loop do
+    puts "Node block heights: #{nodes.map(&:block_count).inspect}"
+    sleep 1
+end
+

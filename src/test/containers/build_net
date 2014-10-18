@@ -1,0 +1,99 @@
+#!/usr/bin/env ruby
+
+require File.expand_path('../boot', __FILE__)
+
+puts "Starting seed"
+seed = CoinContainer.new(
+  image: 'peercoin/seed',
+  args: {
+    "timetravel" => -60*24*3600,
+  }
+)
+seed.wait_for_boot
+
+node_names = %w( a b c d e )
+puts "Starting #{node_names.size} nodes: #{node_names.inspect}"
+nodes = node_names.map do |name|
+  CoinContainer.new(
+    image: 'peercoin/node',
+    links: [seed.name],
+    delete_at_exit: true,
+    args: {
+      "timetravel" => -60*24*3600,
+    }
+  )
+end
+
+all = [seed] + nodes
+
+amount = 100_000
+amount_string = amount.to_s.reverse.gsub(/(\d{3})(?=\d)/, '\\1,').reverse
+outputs = 100
+
+nodes.each_with_index do |node, i|
+    node.wait_for_boot
+
+    address = node.rpc("getaccountaddress", "")
+
+    amount_per_output = (amount / outputs).to_i
+    puts "Sending #{amount_string} to node #{node_names[i]} in #{outputs} transactions of #{amount_per_output}"
+    outputs.times do
+      seed.rpc("sendtoaddress", address, amount_per_output)
+    end
+    seed.generate_stake
+end
+
+puts "Waiting for confirmations"
+loop do
+  all.each { |n| n.rpc("timetravel", 60) }
+  seed.generate_stake
+  balances = nodes.map { |n| n.rpc("getbalance") }
+  puts "Balances: #{balances.inspect}"
+  if balances.all? { |b| b == amount }
+    break
+  end
+end
+
+
+nModifierInterval=60*20
+count = 64
+puts "Building next #{count} blocks at nModifierInterval intervals (#{nModifierInterval} seconds)"
+count.times do |i|
+  all.each { |n| n.rpc("timetravel", nModifierInterval) }
+  seed.generate_stake
+  print "\r%2d/%2d" % [i+1, count]
+  STDOUT.flush
+end
+puts
+
+puts "Building 10 more blocks at 1 minute intervals"
+10.times do |i|
+  all.each { |n| n.rpc("timetravel", 60) }
+  seed.generate_stake
+  print "\r%2d/%2d" % [i+1, 10]
+  STDOUT.flush
+end
+puts
+
+seed_height = seed.block_count
+
+puts "Waiting for all nodes to sync at seed height (#{seed_height})"
+loop do
+  heights = nodes.map(&:block_count)
+  p heights
+  break if heights.all? { |h| h == seed_height }
+  sleep 1
+end
+
+puts "Shutting down seed"
+seed.shutdown
+
+nodes.each_with_index do |node, i|
+    name = node_names[i]
+    image_name = "peercoinnet/#{name}"
+    puts "Creating image #{image_name}"
+    node.shutdown
+    node.wait_for_shutdown
+    node.commit(image_name)
+end
+
