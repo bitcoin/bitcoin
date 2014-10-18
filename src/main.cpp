@@ -1,5 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2014 The Bitcoin developers
+// Copyright (c) 2013-2014 DarkCoin Developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -1224,10 +1225,6 @@ int64_t GetBlockValue(int nHeight, int64_t nFees)
     return nSubsidy + nFees;
 }
 
-static const int64_t nTargetTimespan = 14 * 24 * 60 * 60; // two weeks
-static const int64_t nTargetSpacing = 10 * 60;
-static const int64_t nInterval = nTargetTimespan / nTargetSpacing;
-
 //
 // minimum amount of work that could possibly be required nTime after
 // minimum work required was nBase
@@ -1235,83 +1232,52 @@ static const int64_t nInterval = nTargetTimespan / nTargetSpacing;
 unsigned int ComputeMinWork(unsigned int nBase, int64_t nTime)
 {
     const CBigNum &bnLimit = Params().ProofOfWorkLimit();
-    // Testnet has min-difficulty blocks
-    // after nTargetSpacing*2 time between blocks:
-    if (TestNet() && nTime > nTargetSpacing*2)
-        return bnLimit.GetCompact();
-
-    CBigNum bnResult;
-    bnResult.SetCompact(nBase);
-    while (nTime > 0 && bnResult < bnLimit)
-    {
-        // Maximum 400% adjustment...
-        bnResult *= 4;
-        // ... in best-case exactly 4-times-normal target time
-        nTime -= nTargetTimespan*4;
-    }
-    if (bnResult > bnLimit)
-        bnResult = bnLimit;
-    return bnResult.GetCompact();
+    return bnLimit.GetCompact();
 }
 
+// DarkGravityWave3
+// - every block retarget
+// - 24 blocks average
+// - 300% up and 300% down
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock)
 {
-    unsigned int nProofOfWorkLimit = Params().ProofOfWorkLimit().GetCompact();
+    const int64_t nAverageBlocks = 24;
+    const int64_t nTargetSpacing = 90;
+    const int64_t nTargetTimespan = nAverageBlocks * nTargetSpacing;
 
-    // Genesis block
-    if (pindexLast == NULL)
-        return nProofOfWorkLimit;
+    if (pindexLast == NULL || pindexLast->nHeight <= nAverageBlocks)
+        return Params().ProofOfWorkLimit().GetCompact();
 
-    // Only change once per interval
-    if ((pindexLast->nHeight+1) % nInterval != 0)
-    {
-        if (TestNet())
-        {
-            // Special difficulty rule for testnet:
-            // If the new block's timestamp is more than 2* 10 minutes
-            // then allow mining of a min-difficulty block.
-            if (pblock->nTime > pindexLast->nTime + nTargetSpacing*2)
-                return nProofOfWorkLimit;
-            else
-            {
-                // Return the last non-special-min-difficulty-rules-block
-                const CBlockIndex* pindex = pindexLast;
-                while (pindex->pprev && pindex->nHeight % nInterval != 0 && pindex->nBits == nProofOfWorkLimit)
-                    pindex = pindex->pprev;
-                return pindex->nBits;
-            }
-        }
-        return pindexLast->nBits;
-    }
-
-    // Go back by what we want to be 14 days worth of blocks
     const CBlockIndex* pindexFirst = pindexLast;
-    for (int i = 0; pindexFirst && i < nInterval-1; i++)
+    CBigNum bnOldAvg = 0;
+    for (int i = 0; i < nAverageBlocks; i++) {
+        CBigNum bnTmp;
+        bnTmp.SetCompact(pindexFirst->nBits);
+        bnOldAvg += bnTmp;
+
         pindexFirst = pindexFirst->pprev;
-    assert(pindexFirst);
+        assert(pindexFirst);
+    }
+    bnOldAvg /= nAverageBlocks;
 
     // Limit adjustment step
     int64_t nActualTimespan = pindexLast->GetBlockTime() - pindexFirst->GetBlockTime();
-    LogPrintf("  nActualTimespan = %d  before bounds\n", nActualTimespan);
-    if (nActualTimespan < nTargetTimespan/4)
-        nActualTimespan = nTargetTimespan/4;
-    if (nActualTimespan > nTargetTimespan*4)
-        nActualTimespan = nTargetTimespan*4;
+    if (nActualTimespan < nTargetTimespan/3)
+        nActualTimespan = nTargetTimespan/3;
+    if (nActualTimespan > nTargetTimespan*3)
+        nActualTimespan = nTargetTimespan*3;
 
     // Retarget
-    CBigNum bnNew;
-    bnNew.SetCompact(pindexLast->nBits);
+    CBigNum bnNew(bnOldAvg);
     bnNew *= nActualTimespan;
     bnNew /= nTargetTimespan;
 
     if (bnNew > Params().ProofOfWorkLimit())
         bnNew = Params().ProofOfWorkLimit();
 
-    /// debug print
-    LogPrintf("GetNextWorkRequired RETARGET\n");
-    LogPrintf("nTargetTimespan = %d    nActualTimespan = %d\n", nTargetTimespan, nActualTimespan);
-    LogPrintf("Before: %08x  %s\n", pindexLast->nBits, CBigNum().SetCompact(pindexLast->nBits).getuint256().ToString());
-    LogPrintf("After:  %08x  %s\n", bnNew.GetCompact(), bnNew.getuint256().ToString());
+    LogPrintf("GetNextWorkRequired Last %d First %d Actual %d Limit %d Target %d Before %08x After %08x\n",
+              pindexLast->nHeight, pindexFirst->nHeight, pindexLast->GetBlockTime() - pindexFirst->GetBlockTime(),
+              nActualTimespan, nTargetTimespan, bnOldAvg.GetCompact(), bnNew.GetCompact());
 
     return bnNew.GetCompact();
 }
