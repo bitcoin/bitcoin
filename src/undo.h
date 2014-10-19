@@ -6,7 +6,7 @@
 #ifndef H_BITCOIN_TXUNDO
 #define H_BITCOIN_TXUNDO
 
-#include "core.h" // Only for CTxOutCompressor
+#include "compressor.h" 
 #include "core/transaction.h"
 #include "serialize.h"
 

@@ -3,9 +3,10 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef H_BITCOIN_SCRIPT_COMPRESSOR
-#define H_BITCOIN_SCRIPT_COMPRESSOR
+#ifndef H_BITCOIN_COMPRESSOR
+#define H_BITCOIN_COMPRESSOR
 
+#include "core/transaction.h"
 #include "script/script.h"
 #include "serialize.h"
 
@@ -86,4 +87,33 @@ public:
     }
 };
 
-#endif // H_BITCOIN_SCRIPT_COMPRESSOR
+/** wrapper for CTxOut that provides a more compact serialization */
+class CTxOutCompressor
+{
+private:
+    CTxOut &txout;
+
+public:
+    static uint64_t CompressAmount(uint64_t nAmount);
+    static uint64_t DecompressAmount(uint64_t nAmount);
+
+    CTxOutCompressor(CTxOut &txoutIn) : txout(txoutIn) { }
+
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+        if (!ser_action.ForRead()) {
+            uint64_t nVal = CompressAmount(txout.nValue);
+            READWRITE(VARINT(nVal));
+        } else {
+            uint64_t nVal = 0;
+            READWRITE(VARINT(nVal));
+            txout.nValue = DecompressAmount(nVal);
+        }
+        CScriptCompressor cscript(REF(txout.scriptPubKey));
+        READWRITE(cscript);
+    }
+};
+
+#endif // H_BITCOIN_COMPRESSOR
