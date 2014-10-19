@@ -179,19 +179,17 @@ public:
         BN_clear_free(&bn);
     }
 
-    void GetPrivKey(CPrivKey &privkey, bool fCompressed) {
+    int GetPrivKeySize(bool fCompressed) {
         EC_KEY_set_conv_form(pkey, fCompressed ? POINT_CONVERSION_COMPRESSED : POINT_CONVERSION_UNCOMPRESSED);
-        int nSize = i2d_ECPrivateKey(pkey, NULL);
-        assert(nSize);
-        privkey.resize(nSize);
-        unsigned char* pbegin = &privkey[0];
-        int nSize2 = i2d_ECPrivateKey(pkey, &pbegin);
-        assert(nSize == nSize2);
+        return i2d_ECPrivateKey(pkey, NULL);
+    }
+    int GetPrivKey(unsigned char* privkey, bool fCompressed) {
+        EC_KEY_set_conv_form(pkey, fCompressed ? POINT_CONVERSION_COMPRESSED : POINT_CONVERSION_UNCOMPRESSED);
+        return i2d_ECPrivateKey(pkey, &privkey);
     }
 
-    bool SetPrivKey(const CPrivKey &privkey, bool fSkipCheck=false) {
-        const unsigned char* pbegin = &privkey[0];
-        if (d2i_ECPrivateKey(&pkey, &pbegin, privkey.size())) {
+    bool SetPrivKey(const unsigned char* privkey, size_t size, bool fSkipCheck=false) {
+        if (d2i_ECPrivateKey(&pkey, &privkey, size)) {
             if(fSkipCheck)
                 return true;
 
@@ -424,7 +422,7 @@ bool CKey::SetPrivKey(const CPrivKey &privkey, bool fCompressedIn) {
         return false;
 #else
     CECKey key;
-    if (!key.SetPrivKey(privkey))
+    if (!key.SetPrivKey(&privkey[0], privkey.size()))
         return false;
     key.GetSecretBytes(vch);
 #endif
@@ -436,16 +434,21 @@ bool CKey::SetPrivKey(const CPrivKey &privkey, bool fCompressedIn) {
 CPrivKey CKey::GetPrivKey() const {
     assert(fValid);
     CPrivKey privkey;
+    int privkeylen, ret;
 #ifdef USE_SECP256K1
     privkey.resize(279);
-    int privkeylen = 279;
-    int ret = secp256k1_ecdsa_privkey_export(begin(), (unsigned char*)&privkey[0], &privkeylen, fCompressed);
+    privkeylen = 279;
+    ret = secp256k1_ecdsa_privkey_export(begin(), (unsigned char*)&privkey[0], &privkeylen, fCompressed);
     assert(ret);
     privkey.resize(privkeylen);
 #else
     CECKey key;
     key.SetSecretBytes(vch);
-    key.GetPrivKey(privkey, fCompressed);
+    privkeylen = key.GetPrivKeySize(fCompressed);
+    assert(privkeylen);
+    privkey.resize(privkeylen);
+    ret = key.GetPrivKey(&privkey[0], fCompressed);
+    assert(ret == (int)privkey.size());
 #endif
     return privkey;
 }
@@ -517,7 +520,7 @@ bool CKey::Load(CPrivKey &privkey, CPubKey &vchPubKey, bool fSkipCheck=false) {
         return false;
 #else
     CECKey key;
-    if (!key.SetPrivKey(privkey, fSkipCheck))
+    if (!key.SetPrivKey(&privkey[0], privkey.size(), fSkipCheck))
         return false;
     key.GetSecretBytes(vch);
 #endif

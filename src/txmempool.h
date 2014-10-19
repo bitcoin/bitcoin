@@ -52,6 +52,19 @@ public:
 
 class CMinerPolicyEstimator;
 
+/** An inpoint - a combination of a transaction and an index n into its vin */
+class CInPoint
+{
+public:
+    const CTransaction* ptx;
+    uint32_t n;
+
+    CInPoint() { SetNull(); }
+    CInPoint(const CTransaction* ptxIn, uint32_t nIn) { ptx = ptxIn; n = nIn; }
+    void SetNull() { ptx = NULL; n = (uint32_t) -1; }
+    bool IsNull() const { return (ptx == NULL && n == (uint32_t) -1); }
+};
+
 /*
  * CTxMemPool stores valid-according-to-the-current-best-chain
  * transactions that may be included in the next block.

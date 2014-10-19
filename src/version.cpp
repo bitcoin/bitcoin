@@ -8,8 +8,6 @@
 
 #include <string>
 
-#include <boost/algorithm/string/join.hpp>
-
 // Name of client reported in the 'version' message. Report the same name
 // for both bitcoind and bitcoin-qt, to make it harder for attackers to
 // target servers or GUI users specifically.
@@ -94,7 +92,13 @@ std::string FormatSubVersion(const std::string& name, int nClientVersion, const 
     ss << "/";
     ss << name << ":" << FormatVersion(nClientVersion);
     if (!comments.empty())
-        ss << "(" << boost::algorithm::join(comments, "; ") << ")";
+    {
+        std::vector<std::string>::const_iterator it(comments.begin());
+        ss << "(" << *it;
+        for(++it; it != comments.end(); ++it)
+            ss << "; " << *it;
+        ss << ")";
+    }
     ss << "/";
     return ss.str();
 }
