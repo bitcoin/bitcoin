@@ -70,6 +70,11 @@ Value getinfo(const Array& params, bool fHelp)
             + HelpExampleRpc("getinfo", "")
         );
 
+    ENTER_CRITICAL_SECTION(cs_main);
+#ifdef ENABLE_WALLET
+    if (pwalletMain) ENTER_CRITICAL_SECTION(pwalletMain->cs_wallet);
+#endif
+
     proxyType proxy;
     GetProxy(NET_IPV4, proxy);
 
@@ -99,6 +104,12 @@ Value getinfo(const Array& params, bool fHelp)
 #endif
     obj.push_back(Pair("relayfee",      ValueFromAmount(::minRelayTxFee.GetFeePerK())));
     obj.push_back(Pair("errors",        GetWarnings("statusbar")));
+
+#ifdef ENABLE_WALLET
+    if (pwalletMain) LEAVE_CRITICAL_SECTION(pwalletMain->cs_wallet);
+#endif
+    LEAVE_CRITICAL_SECTION(cs_main);
+
     return obj;
 }
 
@@ -171,6 +182,8 @@ Value validateaddress(const Array& params, bool fHelp)
             + HelpExampleCli("validateaddress", "\"1PSSGeFHDnKNxiEyFrD1wcEaHr9hrQDDWc\"")
             + HelpExampleRpc("validateaddress", "\"1PSSGeFHDnKNxiEyFrD1wcEaHr9hrQDDWc\"")
         );
+
+    LOCK(cs_main);
 
     CBitcoinAddress address(params[0].get_str());
     bool isValid = address.IsValid();
@@ -324,6 +337,8 @@ Value verifymessage(const Array& params, bool fHelp)
             "\nAs json rpc\n"
             + HelpExampleRpc("verifymessage", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\", \"signature\", \"my message\"")
         );
+
+    LOCK(cs_main);
 
     string strAddress  = params[0].get_str();
     string strSign     = params[1].get_str();

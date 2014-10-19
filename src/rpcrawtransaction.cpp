@@ -171,6 +171,8 @@ Value getrawtransaction(const Array& params, bool fHelp)
             + HelpExampleRpc("getrawtransaction", "\"mytxid\", 1")
         );
 
+    LOCK(cs_main);
+
     uint256 hash = ParseHashV(params[0], "parameter 1");
 
     bool fVerbose = false;
@@ -336,6 +338,8 @@ Value createrawtransaction(const Array& params, bool fHelp)
             + HelpExampleRpc("createrawtransaction", "\"[{\\\"txid\\\":\\\"myid\\\",\\\"vout\\\":0}]\", \"{\\\"address\\\":0.01}\"")
         );
 
+    LOCK(cs_main);
+
     RPCTypeCheck(params, list_of(array_type)(obj_type));
 
     Array inputs = params[0].get_array();
@@ -430,6 +434,8 @@ Value decoderawtransaction(const Array& params, bool fHelp)
             + HelpExampleRpc("decoderawtransaction", "\"hexstring\"")
         );
 
+    LOCK(cs_main);
+
     RPCTypeCheck(params, list_of(str_type));
 
     CTransaction tx;
@@ -467,6 +473,8 @@ Value decodescript(const Array& params, bool fHelp)
             + HelpExampleCli("decodescript", "\"hexstring\"")
             + HelpExampleRpc("decodescript", "\"hexstring\"")
         );
+
+    LOCK(cs_main);
 
     RPCTypeCheck(params, list_of(str_type));
 
@@ -533,6 +541,8 @@ Value signrawtransaction(const Array& params, bool fHelp)
             + HelpExampleCli("signrawtransaction", "\"myhex\"")
             + HelpExampleRpc("signrawtransaction", "\"myhex\"")
         );
+
+    LOCK(cs_main);
 
     RPCTypeCheck(params, list_of(str_type)(array_type)(array_type)(str_type), true);
 
@@ -721,6 +731,8 @@ Value sendrawtransaction(const Array& params, bool fHelp)
             "\nAs a json rpc call\n"
             + HelpExampleRpc("sendrawtransaction", "\"signedhex\"")
         );
+
+    LOCK(cs_main);
 
     RPCTypeCheck(params, list_of(str_type)(bool_type));
 

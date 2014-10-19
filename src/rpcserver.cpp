@@ -7,9 +7,9 @@
 
 #include "base58.h"
 #include "init.h"
-#include "main.h"
 #include "ui_interface.h"
 #include "util.h"
+#include "random.h"
 #ifdef ENABLE_WALLET
 #include "wallet.h"
 #endif
@@ -732,7 +732,7 @@ void StopRPCThreads()
     deadlineTimers.clear();
 
     rpc_io_service->stop();
-    cvBlockChange.notify_all();
+    //cvBlockChange.notify_all();
     if (rpc_worker_group != NULL)
         rpc_worker_group->join_all();
     delete rpc_dummy_work; rpc_dummy_work = NULL;
@@ -946,7 +946,7 @@ json_spirit::Value CRPCTable::execute(const std::string &strMethod, const json_s
 #endif
 
     // Observe safe mode
-    string strWarning = GetWarnings("rpc");
+    string strWarning = ""; //GetWarnings("rpc");
     if (strWarning != "" && !GetBoolArg("-disablesafemode", false) &&
         !pcmd->okSafeMode)
         throw JSONRPCError(RPC_FORBIDDEN_BY_SAFE_MODE, string("Safe mode: ") + strWarning);
@@ -954,26 +954,7 @@ json_spirit::Value CRPCTable::execute(const std::string &strMethod, const json_s
     try
     {
         // Execute
-        Value result;
-        {
-            if (pcmd->threadSafe)
-                result = pcmd->actor(params, false);
-#ifdef ENABLE_WALLET
-            else if (!pwalletMain) {
-                LOCK(cs_main);
-                result = pcmd->actor(params, false);
-            } else {
-                LOCK2(cs_main, pwalletMain->cs_wallet);
-                result = pcmd->actor(params, false);
-            }
-#else // ENABLE_WALLET
-            else {
-                LOCK(cs_main);
-                result = pcmd->actor(params, false);
-            }
-#endif // !ENABLE_WALLET
-        }
-        return result;
+        return pcmd->actor(params, false);
     }
     catch (std::exception& e)
     {

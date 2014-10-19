@@ -85,6 +85,7 @@ Value getnetworkhashps(const Array& params, bool fHelp)
             + HelpExampleRpc("getnetworkhashps", "")
        );
 
+    LOCK(cs_main);
     return GetNetworkHashPS(params.size() > 0 ? params[0].get_int() : 120, params.size() > 1 ? params[1].get_int() : -1);
 }
 
@@ -104,6 +105,7 @@ Value getgenerate(const Array& params, bool fHelp)
             + HelpExampleRpc("getgenerate", "")
         );
 
+    LOCK(cs_main);
     return GetBoolArg("-gen", false);
 }
 
@@ -198,6 +200,8 @@ Value gethashespersec(const Array& params, bool fHelp)
             + HelpExampleRpc("gethashespersec", "")
         );
 
+    LOCK(cs_main);
+
     if (GetTimeMillis() - nHPSTimerStart > 8000)
         return (int64_t)0;
     return (int64_t)dHashesPerSec;
@@ -230,17 +234,26 @@ Value getmininginfo(const Array& params, bool fHelp)
             + HelpExampleRpc("getmininginfo", "")
         );
 
+
     Object obj;
-    obj.push_back(Pair("blocks",           (int)chainActive.Height()));
-    obj.push_back(Pair("currentblocksize", (uint64_t)nLastBlockSize));
-    obj.push_back(Pair("currentblocktx",   (uint64_t)nLastBlockTx));
-    obj.push_back(Pair("difficulty",       (double)GetDifficulty()));
-    obj.push_back(Pair("errors",           GetWarnings("statusbar")));
-    obj.push_back(Pair("genproclimit",     (int)GetArg("-genproclimit", -1)));
+    {
+        LOCK(cs_main);
+        obj.push_back(Pair("blocks",           (int)chainActive.Height()));
+        obj.push_back(Pair("currentblocksize", (uint64_t)nLastBlockSize));
+        obj.push_back(Pair("currentblocktx",   (uint64_t)nLastBlockTx));
+        obj.push_back(Pair("difficulty",       (double)GetDifficulty()));
+        obj.push_back(Pair("errors",           GetWarnings("statusbar")));
+        obj.push_back(Pair("genproclimit",     (int)GetArg("-genproclimit", -1)));
+    }
+
     obj.push_back(Pair("networkhashps",    getnetworkhashps(params, false)));
-    obj.push_back(Pair("pooledtx",         (uint64_t)mempool.size()));
-    obj.push_back(Pair("testnet",          Params().TestnetToBeDeprecatedFieldRPC()));
-    obj.push_back(Pair("chain",            Params().NetworkIDString()));
+
+    {
+        LOCK(cs_main);
+        obj.push_back(Pair("pooledtx",         (uint64_t)mempool.size()));
+        obj.push_back(Pair("testnet",          Params().TestnetToBeDeprecatedFieldRPC()));
+        obj.push_back(Pair("chain",            Params().NetworkIDString()));
+    }
 #ifdef ENABLE_WALLET
     obj.push_back(Pair("generate",         getgenerate(params, false)));
     obj.push_back(Pair("hashespersec",     gethashespersec(params, false)));
@@ -269,6 +282,8 @@ Value prioritisetransaction(const Array& params, bool fHelp)
             + HelpExampleCli("prioritisetransaction", "\"txid\" 0.0 0.00010000")
             + HelpExampleRpc("prioritisetransaction", "\"txid\", 0.0, 0.00010000")
         );
+
+    LOCK(cs_main);
 
     uint256 hash;
     hash.SetHex(params[0].get_str());
@@ -343,6 +358,8 @@ Value getblocktemplate(const Array& params, bool fHelp)
             + HelpExampleCli("getblocktemplate", "")
             + HelpExampleRpc("getblocktemplate", "")
          );
+
+    LOCK(cs_main);
 
     std::string strMode = "template";
     Value lpval = Value::null;
