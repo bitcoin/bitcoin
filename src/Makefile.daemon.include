@@ -1,151 +1,30 @@
 all: $(LIBBITCOIND)
 
-leveldb_objects = \
-  leveldb/db/builder.o \
-  leveldb/db/c.o \
-  leveldb/db/dbformat.o \
-  leveldb/db/db_impl.o \
-  leveldb/db/db_iter.o \
-  leveldb/db/filename.o \
-  leveldb/db/log_reader.o \
-  leveldb/db/log_writer.o \
-  leveldb/db/memtable.o \
-  leveldb/db/repair.o \
-  leveldb/db/table_cache.o \
-  leveldb/db/version_edit.o \
-  leveldb/db/version_set.o \
-  leveldb/db/write_batch.o \
-  leveldb/table/block_builder.o \
-  leveldb/table/block.o \
-  leveldb/table/filter_block.o \
-  leveldb/table/format.o \
-  leveldb/table/iterator.o \
-  leveldb/table/merger.o \
-  leveldb/table/table_builder.o \
-  leveldb/table/table.o \
-  leveldb/table/two_level_iterator.o \
-  leveldb/util/arena.o \
-  leveldb/util/bloom.o \
-  leveldb/util/cache.o \
-  leveldb/util/coding.o \
-  leveldb/util/comparator.o \
-  leveldb/util/crc32c.o \
-  leveldb/util/env.o \
-  leveldb/util/env_posix.o \
-  leveldb/util/env_win.o \
-  leveldb/util/filter_policy.o \
-  leveldb/util/hash.o \
-  leveldb/util/histogram.o \
-  leveldb/util/logging.o \
-  leveldb/util/options.o \
-  leveldb/util/status.o \
-  leveldb/port/port_posix.o \
-  leveldb/helpers/memenv/memenv.o
-
-libbitcoind_json_objects = \
-  json/json_spirit_reader.o \
-  json/json_spirit_value.o \
-  json/json_spirit_writer.o
-
-libbitcoind_server_objects = \
-  addrman.o \
-  alert.o \
-  bloom.o \
-  chain.o \
-  bitcoind.o \
-  checkpoints.o \
-  init.o \
-  leveldbwrapper.o \
-  main.o \
-  miner.o \
-  net.o \
-  noui.o \
-  pow.o \
-  rpcblockchain.o \
-  rpcmining.o \
-  rpcmisc.o \
-  rpcnet.o \
-  rpcrawtransaction.o \
-  rpcserver.o \
-  timedata.o \
-  txdb.o \
-  txmempool.o
-
-libbitcoind_wallet_objects = \
-  db.o \
-  crypter.o \
-  rpcdump.o \
-  rpcwallet.o \
-  wallet.o \
-  wallet_ismine.o \
-  walletdb.o
-
-libbitcoind_crypto_objects = \
-  crypto/sha1.o \
-  crypto/sha2.o \
-  crypto/ripemd160.o
-
-libbitcoind_univalue_objects = \
-  univalue/gen.o \
-  univalue/univalue.o \
-  univalue/univalue_read.o \
-  univalue/univalue_write.o
-
-libbitcoind_common_objects = \
-  allocators.o \
-  base58.o \
-  chainparams.o \
-  coins.o \
-  core.o \
-  core_read.o \
-  core_write.o \
-  hash.o \
-  key.o \
-  keystore.o \
-  netbase.o \
-  protocol.o \
-  script/compressor.o \
-  script/interpreter.o \
-  script/script.o \
-  script/sigcache.o \
-  script/sign.o \
-  script/standard.o
-
-libbitcoind_util_objects = \
-  compat/glibc_sanity.o \
-  compat/glibcxx_sanity.o \
-  chainparamsbase.o \
-  random.o \
-  rpcprotocol.o \
-  sync.o \
-  uint256.o \
-  util.o \
-  utilstrencodings.o \
-  utilmoneystr.o \
-  utiltime.o \
-  version.o
+libbitcoind_obj = \
+	$(subst bitcoind_main.o,, \
+		$(subst bitcoin-cli.o,, \
+		$(subst bitcoin-tx.o,, \
+		$(subst .cpp,.o,$(wildcard *.cpp))))) \
+	$(subst compat/glibcxx_compat.o,, \
+		$(subst compat/glibc_compat.o,, \
+		$(subst .cpp,.o,$(wildcard compat/*.cpp)))) \
+	$(subst .cpp,.o,$(wildcard crypto/*.cpp)) \
+	$(subst .cpp,.o,$(wildcard script/*.cpp)) \
+	$(subst .cpp,.o,$(wildcard secp256k1/*.cpp)) \
+	$(subst univalue/gen.o,, \
+		$(subst .cpp,.o,$(wildcard univalue/*.cpp)))
 
 if GLIBC_BACK_COMPAT
-libbitcoind_util_objects += compat/glibc_compat.o
-libbitcoind_util_objects += compat/glibcxx_compat.o
+libbitcoind_obj += compat/glibc_compat.o
+libbitcoind_obj += compat/glibcxx_compat.o
 endif
-
-libbitcoind_cli_objects = \
-  rpcclient.o
-
-libbitcoind_all_objects = \
-  $(libbitcoind_server_objects) \
-  $(libbitcoind_wallet_objects) \
-  $(libbitcoind_crypto_objects) \
-  $(libbitcoind_univalue_objects) \
-  $(libbitcoind_common_objects) \
-  $(libbitcoind_util_objects) \
-  $(libbitcoind_cli_objects)
 
 version.o: version.cpp obj/build.h
 	$(AM_V_CXX) $(OBJCXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
 	  $(BITCOIN_INCLUDES) $(BITCOIN_CONFIG_INCLUDES) $(AM_CPPFLAGS) \
 	  $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c $< -o $@
 
-$(LIBBITCOIND): $(LIBLEVELDB) $(LIBMEMENV) $(libbitcoind_all_objects)
-	$(CC) -shared $(CXXFLAGS) $(CPPFLAGS) $(DEFS) $(BITCOIN_INCLUDES) $(BITCOIN_CONFIG_INCLUDES) -o $@ $(BOOST_LIBS) $(BDB_LIBS) $(PROTOBUF_LIBS) $(SSL_LIBS) $(LIBS) $(leveldb_objects) $(libbitcoind_all_objects)
+$(LIBBITCOIND): $(LIBLEVELDB) $(LIBMEMENV) $(libbitcoind_obj)
+	$(CC) -shared -fPIC $(DEFS) $(CPPFLAGS) $(BITCOIN_CONFIG_INCLUDES) \
+	$(BITCOIN_INCLUDES) -o $@ $(BOOST_LIBS) $(BDB_LIBS) \
+	$(PROTOBUF_LIBS) $(SSL_LIBS) $(LIBS) $^
