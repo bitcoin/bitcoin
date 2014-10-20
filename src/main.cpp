@@ -1696,6 +1696,8 @@ bool ConnectBlock(CBlock& block, CValidationState& state, CBlockIndex* pindex, C
     int64_t nTime2 = GetTimeMicros(); nTimeVerify += nTime2 - nTimeStart;
     LogPrint("bench", "    - Verify %u txins: %.2fms (%.3fms/txin) [%.2fs]\n", nInputs - 1, 0.001 * (nTime2 - nTimeStart), nInputs <= 1 ? 0 : 0.001 * (nTime2 - nTimeStart) / (nInputs-1), nTimeVerify * 0.000001);
 
+    // The block has been fully checked for validity at this point
+    state.Conclude();
     if (fJustCheck)
         return true;
 
@@ -1955,7 +1957,12 @@ static CBlockIndex* FindMostWorkChain() {
 
 // Try to make some progress towards making pindexMostWork the active block.
 // pblock is either NULL or a pointer to a CBlock corresponding to pindexMostWork.
-static bool ActivateBestChainStep(CValidationState &state, CBlockIndex *pindexMostWork, CBlock *pblock) {
+// If phashSpecific is specified, pstateSpecific will be updated if the block
+// with that hash is checked. It may also be updated if an ancestor block
+// connection fails (but this is not guaranteed, and will not happen if the
+// ancestor fails when trying to connect some other block). If the ancestor
+// block is invalid, the rejection reason will be prepended by "prevblk-".
+static bool ActivateBestChainStep(CValidationState &state, CBlockIndex *pindexMostWork, CBlock *pblock, const uint256 *phashSpecific, CValidationState *pstateSpecific) {
     AssertLockHeld(cs_main);
     bool fInvalidFound = false;
     const CBlockIndex *pindexOldTip = chainActive.Tip();
@@ -1978,7 +1985,10 @@ static bool ActivateBestChainStep(CValidationState &state, CBlockIndex *pindexMo
     vpindexToConnect.clear();
     vpindexToConnect.reserve(nTargetHeight - nHeight);
     CBlockIndex *pindexIter = pindexMostWork->GetAncestor(nTargetHeight);
+    CBlockIndex *pindexSpecific = NULL;
     while (pindexIter && pindexIter->nHeight != nHeight) {
+        if (phashSpecific && pindexIter->GetBlockHash() == *phashSpecific)
+            pindexSpecific = pindexIter;
         vpindexToConnect.push_back(pindexIter);
         pindexIter = pindexIter->pprev;
     }
@@ -1986,12 +1996,14 @@ static bool ActivateBestChainStep(CValidationState &state, CBlockIndex *pindexMo
 
     // Connect new blocks.
     BOOST_REVERSE_FOREACH(CBlockIndex *pindexConnect, vpindexToConnect) {
+        state = CValidationState();
         if (!ConnectTip(state, pindexConnect, pindexConnect == pindexMostWork ? pblock : NULL)) {
+            if (pindexSpecific)
+                pstateSpecific->MergeState(state, (pindexConnect != pindexSpecific) ? "prevblk-" : "");
             if (state.IsInvalid()) {
                 // The block violates a consensus rule.
                 if (!state.CorruptionPossible())
                     InvalidChainFound(vpindexToConnect.back());
-                state = CValidationState();
                 fInvalidFound = true;
                 fContinue = false;
                 break;
@@ -2000,6 +2012,12 @@ static bool ActivateBestChainStep(CValidationState &state, CBlockIndex *pindexMo
                 return false;
             }
         } else {
+            if (pindexConnect == pindexSpecific)
+            {
+                pstateSpecific->MergeState(state);
+                pindexSpecific = NULL;
+            }
+
             // Delete all entries in setBlockIndexCandidates that are worse than our new current block.
             // Note that we can't delete the current block itself, as we may need to return to it later in case a
             // reorganization to a better block fails.
@@ -2033,7 +2051,11 @@ static bool ActivateBestChainStep(CValidationState &state, CBlockIndex *pindexMo
 // Make the best chain active, in multiple steps. The result is either failure
 // or an activated best chain. pblock is either NULL or a pointer to a block
 // that is already loaded (to avoid loading it again from disk).
-bool ActivateBestChain(CValidationState &state, CBlock *pblock) {
+// If phashSpecific is specified, pstateSpecific will be updated according to
+// the usual CValidationState biases based only on ActivateBestChainStep's
+// logic. Previous state of pstateSpecific is taken into consideration, but if
+// the block is not checked, it will be set to Inconclusive.
+bool ActivateBestChain(CValidationState &state, CBlock *pblock, const uint256 *phashSpecific, CValidationState *pstateSpecific) {
     CBlockIndex *pindexNewTip = NULL;
     CBlockIndex *pindexMostWork = NULL;
     do {
@@ -2048,7 +2070,7 @@ bool ActivateBestChain(CValidationState &state, CBlock *pblock) {
             if (pindexMostWork == NULL || pindexMostWork == chainActive.Tip())
                 return true;
 
-            if (!ActivateBestChainStep(state, pindexMostWork, pblock && pblock->GetHash() == pindexMostWork->GetBlockHash() ? pblock : NULL))
+            if (!ActivateBestChainStep(state, pindexMostWork, pblock && pblock->GetHash() == pindexMostWork->GetBlockHash() ? pblock : NULL, phashSpecific, pstateSpecific))
                 return false;
 
             pindexNewTip = chainActive.Tip();
@@ -2324,7 +2346,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
     return true;
 }
 
-bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state, CBlockIndex** ppindex)
+bool CtxCheckBlockHeader(const CBlockHeader& block, CValidationState& state, CBlockIndex** ppindex)
 {
     AssertLockHeld(cs_main);
     // Check for duplicate
@@ -2390,6 +2412,42 @@ bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state, CBloc
     return true;
 }
 
+bool CtxCheckBlock(const CBlock& block, CValidationState& state, CBlockIndex*& pindexPrev)
+{
+    const int nHeight = pindexPrev->nHeight + 1;
+
+    // Check that all transactions are finalized
+    BOOST_FOREACH(const CTransaction& tx, block.vtx)
+        if (!IsFinalTx(tx, nHeight, block.GetBlockTime())) {
+            return state.DoS(10, error("AcceptBlock() : contains a non-final transaction"),
+                             REJECT_INVALID, "bad-txns-nonfinal");
+        }
+
+    // Enforce block.nVersion=2 rule that the coinbase starts with serialized block height
+    // if 750 of the last 1,000 blocks are version 2 or greater (51/100 if testnet):
+    if (block.nVersion >= 2 && 
+        CBlockIndex::IsSuperMajority(2, pindexPrev, Params().EnforceBlockUpgradeMajority()))
+    {
+        CScript expect = CScript() << nHeight;
+        if (block.vtx[0].vin[0].scriptSig.size() < expect.size() ||
+            !std::equal(expect.begin(), expect.end(), block.vtx[0].vin[0].scriptSig.begin())) {
+            return state.DoS(100, error("AcceptBlock() : block height mismatch in coinbase"), REJECT_INVALID, "bad-cb-height");
+        }
+    }
+
+    return true;
+}
+
+bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state, CBlockIndex** ppindex)
+{
+    if (!CtxCheckBlockHeader(block, state, ppindex))
+        return false;
+
+    if (!*ppindex)
+        *ppindex = AddToBlockIndex(block);
+    return true;
+}
+
 bool AcceptBlock(CBlock& block, CValidationState& state, CBlockIndex** ppindex, CDiskBlockPos* dbp)
 {
     AssertLockHeld(cs_main);
@@ -2405,7 +2463,7 @@ bool AcceptBlock(CBlock& block, CValidationState& state, CBlockIndex** ppindex, 
         return true;
     }
 
-    if (!CheckBlock(block, state)) {
+    if ((!CheckBlock(block, state)) || !CtxCheckBlock(block, state, pindex->pprev)) {
         if (state.IsInvalid() && !state.CorruptionPossible()) {
             pindex->nStatus |= BLOCK_FAILED_VALID;
         }
@@ -2413,27 +2471,6 @@ bool AcceptBlock(CBlock& block, CValidationState& state, CBlockIndex** ppindex, 
     }
 
     int nHeight = pindex->nHeight;
-
-    // Check that all transactions are finalized
-    BOOST_FOREACH(const CTransaction& tx, block.vtx)
-        if (!IsFinalTx(tx, nHeight, block.GetBlockTime())) {
-            pindex->nStatus |= BLOCK_FAILED_VALID;
-            return state.DoS(10, error("AcceptBlock() : contains a non-final transaction"),
-                             REJECT_INVALID, "bad-txns-nonfinal");
-        }
-
-    // Enforce block.nVersion=2 rule that the coinbase starts with serialized block height
-    // if 750 of the last 1,000 blocks are version 2 or greater (51/100 if testnet):
-    if (block.nVersion >= 2 && 
-        CBlockIndex::IsSuperMajority(2, pindex->pprev, Params().EnforceBlockUpgradeMajority()))
-    {
-        CScript expect = CScript() << nHeight;
-        if (block.vtx[0].vin[0].scriptSig.size() < expect.size() ||
-            !std::equal(expect.begin(), expect.end(), block.vtx[0].vin[0].scriptSig.begin())) {
-            pindex->nStatus |= BLOCK_FAILED_VALID;
-            return state.DoS(100, error("AcceptBlock() : block height mismatch in coinbase"), REJECT_INVALID, "bad-cb-height");
-        }
-    }
 
     // Write block to history file
     try {
@@ -2539,10 +2576,12 @@ bool ProcessBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDiskBl
             return error("ProcessBlock() : AcceptBlock FAILED");
     }
 
-    if (!ActivateBestChain(state, pblock))
+    const uint256& hash = pblock->GetHash();
+    CValidationState stateActivation;
+    if (!ActivateBestChain(stateActivation, pblock, &hash, &state))
         return error("ProcessBlock() : ActivateBestChain failed");
 
-    return true;
+    return state.IsValid();
 }
 
 

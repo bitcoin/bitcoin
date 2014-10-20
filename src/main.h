@@ -181,7 +181,7 @@ std::string GetWarnings(std::string strFor);
 /** Retrieve a transaction (from memory pool, or from disk, if possible) */
 bool GetTransaction(const uint256 &hash, CTransaction &tx, uint256 &hashBlock, bool fAllowSlow = false);
 /** Find the best known block, and make it the tip of the block chain */
-bool ActivateBestChain(CValidationState &state, CBlock *pblock = NULL);
+bool ActivateBestChain(CValidationState &state, CBlock *pblock = NULL, const uint256 *phashSpecific = NULL, CValidationState *pstateSpecific = NULL);
 CAmount GetBlockValue(int nHeight, const CAmount& nFees);
 
 /** Create a new block index entry for a given block hash */
@@ -454,6 +454,10 @@ bool ConnectBlock(CBlock& block, CValidationState& state, CBlockIndex* pindex, C
 bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state, bool fCheckPOW = true);
 bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW = true, bool fCheckMerkleRoot = true);
 
+// Context-dependent validity checks
+bool CtxCheckBlockHeader(const CBlockHeader& block, CValidationState& state, CBlockIndex **ppindex= NULL);
+bool CtxCheckBlock(const CBlock& block, CValidationState& state, CBlockIndex*& pindexPrev);
+
 // Store block on disk
 // if dbp is provided, the file is known to already reside on disk
 bool AcceptBlock(CBlock& block, CValidationState& state, CBlockIndex **pindex, CDiskBlockPos* dbp = NULL);
@@ -519,6 +523,7 @@ public:
 class CValidationState {
 private:
     enum mode_state {
+        MODE_INCONCLUSIVE,  // everything ok, so far...
         MODE_VALID,   // everything ok
         MODE_INVALID, // network rule violation (DoS value may be set)
         MODE_ERROR,   // run-time error
@@ -528,7 +533,7 @@ private:
     unsigned char chRejectCode;
     bool corruptionPossible;
 public:
-    CValidationState() : mode(MODE_VALID), nDoS(0), chRejectCode(0), corruptionPossible(false) {}
+    CValidationState() : mode(MODE_INCONCLUSIVE), nDoS(0), chRejectCode(0), corruptionPossible(false) {}
     bool DoS(int level, bool ret = false,
              unsigned char chRejectCodeIn=0, std::string strRejectReasonIn="",
              bool corruptionIn=false) {
@@ -541,12 +546,17 @@ public:
         mode = MODE_INVALID;
         return ret;
     }
+    bool Conclude() {
+        if (!IsConclusive())
+            mode = MODE_VALID;
+        return true;
+    }
     bool Invalid(bool ret = false,
                  unsigned char _chRejectCode=0, std::string _strRejectReason="") {
         return DoS(0, ret, _chRejectCode, _strRejectReason);
     }
     bool Error(std::string strRejectReasonIn="") {
-        if (mode == MODE_VALID)
+        if (mode == MODE_INCONCLUSIVE || mode == MODE_VALID)
             strRejectReason = strRejectReasonIn;
         mode = MODE_ERROR;
         return false;
@@ -555,8 +565,24 @@ public:
         AbortNode(msg);
         return Error(msg);
     }
+    void MergeState(const CValidationState& stateOther, const std::string& strPrependInvalidReason = "") {
+        int nDoS;
+        if (stateOther.IsInvalid(nDoS))
+        {
+            DoS(nDoS, false, stateOther.GetRejectCode(), strPrependInvalidReason + stateOther.GetRejectReason(), stateOther.CorruptionPossible());
+        }
+        else
+        if (stateOther.IsError())
+            Error(stateOther.GetRejectReason());
+        else
+        if (stateOther.IsConclusive())
+            Conclude();
+    }
+    bool IsConclusive() const {
+        return mode != MODE_INCONCLUSIVE;
+    }
     bool IsValid() const {
-        return mode == MODE_VALID;
+        return mode == MODE_VALID || mode == MODE_INCONCLUSIVE;
     }
     bool IsInvalid() const {
         return mode == MODE_INVALID;
