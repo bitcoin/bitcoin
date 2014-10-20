@@ -1593,7 +1593,7 @@ static int64_t nTimeIndex = 0;
 static int64_t nTimeCallbacks = 0;
 static int64_t nTimeTotal = 0;
 
-bool ConnectBlock(CBlock& block, CValidationState& state, CBlockIndex* pindex, CCoinsViewCache& view, bool fJustCheck)
+bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pindex, CCoinsViewCache& view, bool fJustCheck)
 {
     AssertLockHeld(cs_main);
     // Check it again in case a previous version let a bad block in
@@ -2569,6 +2569,30 @@ bool ProcessNewBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDis
 
     if (!ActivateBestChain(state, pblock))
         return error("%s : ActivateBestChain failed", __func__);
+
+    return true;
+}
+
+bool TestBlockValidity(CValidationState &state, const CBlock& block, CBlockIndex * const pindexPrev, bool fCheckPOW, bool fCheckMerkleRoot)
+{
+    AssertLockHeld(cs_main);
+    assert(pindexPrev == chainActive.Tip());
+
+    CCoinsViewCache viewNew(pcoinsTip);
+    CBlockIndex indexDummy(block);
+    indexDummy.pprev = pindexPrev;
+    indexDummy.nHeight = pindexPrev->nHeight + 1;
+
+    // NOTE: CheckBlockHeader is called by CheckBlock
+    if (!ContextualCheckBlockHeader(block, state, pindexPrev))
+        return false;
+    if (!CheckBlock(block, state, fCheckPOW, fCheckMerkleRoot))
+        return false;
+    if (!ContextualCheckBlock(block, state, pindexPrev))
+        return false;
+    if (!ConnectBlock(block, state, &indexDummy, viewNew, true))
+        return false;
+    assert(state.IsValid());
 
     return true;
 }

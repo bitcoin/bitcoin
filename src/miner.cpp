@@ -321,22 +321,9 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
         pblock->nNonce         = 0;
         pblocktemplate->vTxSigOps[0] = GetLegacySigOpCount(pblock->vtx[0]);
 
-        CBlockIndex indexDummy(*pblock);
-        indexDummy.pprev = pindexPrev;
-        indexDummy.nHeight = pindexPrev->nHeight + 1;
-        CCoinsViewCache viewNew(pcoinsTip);
         CValidationState state;
-        // NOTE: CheckBlockHeader is called by CheckBlock
-        if (!ContextualCheckBlockHeader(*pblock, state, pindexPrev))
-            throw std::runtime_error("CreateNewBlock() : ContextualCheckBlockHeader failed");
-        if (!CheckBlock(*pblock, state, false, false))
-            throw std::runtime_error("CreateNewBlock() : CheckBlock failed");
-        if (!ContextualCheckBlock(*pblock, state, pindexPrev))
-            throw std::runtime_error("CreateNewBlock() : ContextualCheckBlock failed");
-        if (!ConnectBlock(*pblock, state, &indexDummy, viewNew, true))
-            throw std::runtime_error("CreateNewBlock() : ConnectBlock failed");
-        if (!state.IsValid())
-            throw std::runtime_error("CreateNewBlock() : State is not valid");
+        if (!TestBlockValidity(state, *pblock, pindexPrev, false, false))
+            throw std::runtime_error("CreateNewBlock() : TestBlockValidity failed");
     }
 
     return pblocktemplate.release();
