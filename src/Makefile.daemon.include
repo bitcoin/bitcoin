@@ -1,7 +1,7 @@
 all: $(LIBBITCOIND)
 
 libbitcoind_obj = \
-	$(subst bitcoind_main.o,, \
+	$(subst bitcoin-main.o,, \
 		$(subst bitcoin-cli.o,, \
 		$(subst bitcoin-tx.o,, \
 		$(subst .cpp,.o,$(wildcard *.cpp))))) \
