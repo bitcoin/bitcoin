@@ -1939,7 +1939,7 @@ bool CAddrDB::Write(const CAddrMan& addr)
     catch (std::exception &e) {
         return error("%s : Serialize or I/O error - %s", __func__, e.what());
     }
-    FileCommit(fileout);
+    FileCommit(fileout.Get());
     fileout.fclose();
 
     // replace existing peers.dat, if any, with new peers.dat.XXXX
