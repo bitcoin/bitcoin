@@ -6,7 +6,7 @@
 #include "pow.h"
 
 #include "chainparams.h"
-#include "core.h"
+#include "core/block.h"
 #include "main.h"
 #include "timedata.h"
 #include "uint256.h"
