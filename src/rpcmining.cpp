@@ -526,6 +526,24 @@ Value getblocktemplate(const Array& params, bool fHelp)
     return result;
 }
 
+class submitblock_StateCatcher : public CValidationInterface
+{
+public:
+    uint256 hash;
+    bool found;
+    CValidationState state;
+
+    submitblock_StateCatcher(const uint256 &hashIn) : hash(hashIn), found(false), state() {};
+
+protected:
+    virtual void BlockChecked(const CBlock& block, const CValidationState& stateIn) {
+        if (block.GetHash() != hash)
+            return;
+        found = true;
+        state = stateIn;
+    };
+};
+
 Value submitblock(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 1 || params.size() > 2)
@@ -558,8 +576,22 @@ Value submitblock(const Array& params, bool fHelp)
     }
 
     CValidationState state;
+    submitblock_StateCatcher sc(pblock.GetHash());
+    RegisterValidationInterface(&sc);
     bool fAccepted = ProcessBlock(state, NULL, &pblock);
-    if (!fAccepted)
+    UnregisterValidationInterface(&sc);
+    if (fAccepted)
+    {
+        if (!sc.found)
+            return "inconclusive";
+        state = sc.state;
+    }
+    if (state.IsError())
+    {
+        std::string strRejectReason = state.GetRejectReason();
+        throw JSONRPCError(RPC_MISC_ERROR, strRejectReason);
+    }
+    if (state.IsInvalid())
         return "rejected"; // TODO: report validation state
 
     return Value::null;
