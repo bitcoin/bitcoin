@@ -7,7 +7,7 @@
 #define BITCOIN_WALLET_H
 
 #include "amount.h"
-#include "core.h"
+#include "core/block.h"
 #include "core/transaction.h"
 #include "crypter.h"
 #include "key.h"
