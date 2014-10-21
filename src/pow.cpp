@@ -12,7 +12,7 @@
 #include "uint256.h"
 #include "util.h"
 
-unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock)
+unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, int64_t nTime)
 {
     unsigned int nProofOfWorkLimit = Params().ProofOfWorkLimit().GetCompact();
 
@@ -28,7 +28,7 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
             // Special difficulty rule for testnet:
             // If the new block's timestamp is more than 2* 10 minutes
             // then allow mining of a min-difficulty block.
-            if (pblock->GetBlockTime() > pindexLast->GetBlockTime() + Params().TargetSpacing()*2)
+            if (nTime > pindexLast->GetBlockTime() + Params().TargetSpacing()*2)
                 return nProofOfWorkLimit;
             else
             {
@@ -76,6 +76,16 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
     return bnNew.GetCompact();
 }
 
+bool CheckChallenge(const CProof& proof, const CBlockIndex* pindexLast, int64_t nTime)
+{
+    return proof.nBits == GetNextWorkRequired(pindexLast, nTime);
+}
+
+void ResetChallenge(CProof& proof, const CBlockIndex* pindexLast, int64_t nTime)
+{
+    proof.nBits = GetNextWorkRequired(pindexLast, nTime);    
+}
+
 bool CheckProof(uint256 hash, const CProof& proof)
 {
     bool fNegative;
@@ -104,7 +114,7 @@ void UpdateTime(CBlockHeader* pblock, const CBlockIndex* pindexPrev)
 
     // Updating time can change work required on testnet:
     if (Params().AllowMinDifficultyBlocks())
-        pblock->proof.nBits = GetNextWorkRequired(pindexPrev, pblock);
+        ResetChallenge(pblock->proof, pindexPrev, pblock->GetBlockTime());
 }
 
 uint256 GetProofIncrement(unsigned int nBits)

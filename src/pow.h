@@ -13,10 +13,10 @@ class CBlockIndex;
 class CProof;
 class uint256;
 
-unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock);
-
 /** Check whether a block hash satisfies the proof-of-work requirement specified by nBits */
 bool CheckProof(uint256 hash, const CProof& proof);
+bool CheckChallenge(const CProof& proof, const CBlockIndex* pindexLast, int64_t nTime);
+void ResetChallenge(CProof& proof, const CBlockIndex* pindexLast, int64_t nTime);
 
 void UpdateTime(CBlockHeader* block, const CBlockIndex* pindexPrev);
 
