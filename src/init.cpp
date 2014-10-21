@@ -222,9 +222,9 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += "  -?                     " + _("This help message") + "\n";
     strUsage += "  -alertnotify=<cmd>     " + _("Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)") + "\n";
     strUsage += "  -blocknotify=<cmd>     " + _("Execute command when the best block changes (%s in cmd is replaced by block hash)") + "\n";
-    strUsage += "  -checkblocks=<n>       " + _("How many blocks to check at startup (default: 288, 0 = all)") + "\n";
-    strUsage += "  -checklevel=<n>        " + _("How thorough the block verification of -checkblocks is (0-4, default: 3)") + "\n";
-    strUsage += "  -conf=<file>           " + _("Specify configuration file (default: bitcoin.conf)") + "\n";
+    strUsage += "  -checkblocks=<n>       " + strprintf(_("How many blocks to check at startup (default: %u, 0 = all)"), 288) + "\n";
+    strUsage += "  -checklevel=<n>        " + strprintf(_("How thorough the block verification of -checkblocks is (0-4, default: %u)"), 3) + "\n";
+    strUsage += "  -conf=<file>           " + strprintf(_("Specify configuration file (default: %s)"), "bitcoin.conf") + "\n";
     if (mode == HMM_BITCOIND)
     {
 #if !defined(WIN32)
@@ -238,33 +238,33 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += "  -maxorphantx=<n>       " + strprintf(_("Keep at most <n> unconnectable transactions in memory (default: %u)"), DEFAULT_MAX_ORPHAN_TRANSACTIONS) + "\n";
     strUsage += "  -par=<n>               " + strprintf(_("Set the number of script verification threads (%u to %d, 0 = auto, <0 = leave that many cores free, default: %d)"), -(int)boost::thread::hardware_concurrency(), MAX_SCRIPTCHECK_THREADS, DEFAULT_SCRIPTCHECK_THREADS) + "\n";
 #ifndef WIN32
-    strUsage += "  -pid=<file>            " + _("Specify pid file (default: bitcoind.pid)") + "\n";
+    strUsage += "  -pid=<file>            " + strprintf(_("Specify pid file (default: %s)"), "bitcoind.pid") + "\n";
 #endif
     strUsage += "  -reindex               " + _("Rebuild block chain index from current blk000??.dat files") + " " + _("on startup") + "\n";
 #if !defined(WIN32)
     strUsage += "  -sysperms              " + _("Create new files with system default permissions, instead of umask 077 (only effective with disabled wallet functionality)") + "\n";
 #endif
-    strUsage += "  -txindex               " + _("Maintain a full transaction index, used by the getrawtransaction rpc call (default: 0)") + "\n";
+    strUsage += "  -txindex               " + strprintf(_("Maintain a full transaction index, used by the getrawtransaction rpc call (default: %u)"), 0) + "\n";
 
     strUsage += "\n" + _("Connection options:") + "\n";
     strUsage += "  -addnode=<ip>          " + _("Add a node to connect to and attempt to keep the connection open") + "\n";
-    strUsage += "  -banscore=<n>          " + _("Threshold for disconnecting misbehaving peers (default: 100)") + "\n";
-    strUsage += "  -bantime=<n>           " + _("Number of seconds to keep misbehaving peers from reconnecting (default: 86400)") + "\n";
+    strUsage += "  -banscore=<n>          " + strprintf(_("Threshold for disconnecting misbehaving peers (default: %u)"), 100) + "\n";
+    strUsage += "  -bantime=<n>           " + strprintf(_("Number of seconds to keep misbehaving peers from reconnecting (default: %u)"), 86400) + "\n";
     strUsage += "  -bind=<addr>           " + _("Bind to given address and always listen on it. Use [host]:port notation for IPv6") + "\n";
     strUsage += "  -connect=<ip>          " + _("Connect only to the specified node(s)") + "\n";
     strUsage += "  -discover              " + _("Discover own IP address (default: 1 when listening and no -externalip)") + "\n";
     strUsage += "  -dns                   " + _("Allow DNS lookups for -addnode, -seednode and -connect") + " " + _("(default: 1)") + "\n";
     strUsage += "  -dnsseed               " + _("Query for peer addresses via DNS lookup, if low on addresses (default: 1 unless -connect)") + "\n";
     strUsage += "  -externalip=<ip>       " + _("Specify your own public address") + "\n";
-    strUsage += "  -forcednsseed          " + _("Always query for peer addresses via DNS lookup (default: 0)") + "\n";
+    strUsage += "  -forcednsseed          " + strprintf(_("Always query for peer addresses via DNS lookup (default: %u)"), 0) + "\n";
     strUsage += "  -listen                " + _("Accept connections from outside (default: 1 if no -proxy or -connect)") + "\n";
-    strUsage += "  -maxconnections=<n>    " + _("Maintain at most <n> connections to peers (default: 125)") + "\n";
-    strUsage += "  -maxreceivebuffer=<n>  " + _("Maximum per-connection receive buffer, <n>*1000 bytes (default: 5000)") + "\n";
-    strUsage += "  -maxsendbuffer=<n>     " + _("Maximum per-connection send buffer, <n>*1000 bytes (default: 1000)") + "\n";
-    strUsage += "  -onion=<ip:port>       " + _("Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: -proxy)") + "\n";
+    strUsage += "  -maxconnections=<n>    " + strprintf(_("Maintain at most <n> connections to peers (default: %u)"), 125) + "\n";
+    strUsage += "  -maxreceivebuffer=<n>  " + strprintf(_("Maximum per-connection receive buffer, <n>*1000 bytes (default: %u)"), 5000) + "\n";
+    strUsage += "  -maxsendbuffer=<n>     " + strprintf(_("Maximum per-connection send buffer, <n>*1000 bytes (default: %u)"), 1000) + "\n";
+    strUsage += "  -onion=<ip:port>       " + strprintf(_("Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: %s)"), "-proxy") + "\n";
     strUsage += "  -onlynet=<net>         " + _("Only connect to nodes in network <net> (ipv4, ipv6 or onion)") + "\n";
-    strUsage += "  -permitbaremultisig    " + _("Relay non-P2SH multisig (default: 1)") + "\n";
-    strUsage += "  -port=<port>           " + _("Listen for connections on <port> (default: 8333 or testnet: 18333)") + "\n";
+    strUsage += "  -permitbaremultisig    " + strprintf(_("Relay non-P2SH multisig (default: %u)"), 1) + "\n";
+    strUsage += "  -port=<port>           " + strprintf(_("Listen for connections on <port> (default: %u or testnet: %u)"), 8333, 18333) + "\n";
     strUsage += "  -proxy=<ip:port>       " + _("Connect through SOCKS5 proxy") + "\n";
     strUsage += "  -seednode=<ip>         " + _("Connect to a node to retrieve peer addresses, and disconnect") + "\n";
     strUsage += "  -timeout=<n>           " + strprintf(_("Specify connection timeout in milliseconds (minimum: 1, default: %d)"), DEFAULT_CONNECT_TIMEOUT) + "\n";
@@ -272,7 +272,7 @@ std::string HelpMessage(HelpMessageMode mode)
 #if USE_UPNP
     strUsage += "  -upnp                  " + _("Use UPnP to map the listening port (default: 1 when listening)") + "\n";
 #else
-    strUsage += "  -upnp                  " + _("Use UPnP to map the listening port (default: 0)") + "\n";
+    strUsage += "  -upnp                  " + strprintf(_("Use UPnP to map the listening port (default: %u)"), 0) + "\n";
 #endif
 #endif
     strUsage += "  -whitebind=<addr>      " + _("Bind to given address and whitelist peers connecting to it. Use [host]:port notation for IPv6") + "\n";
@@ -282,34 +282,34 @@ std::string HelpMessage(HelpMessageMode mode)
 #ifdef ENABLE_WALLET
     strUsage += "\n" + _("Wallet options:") + "\n";
     strUsage += "  -disablewallet         " + _("Do not load the wallet and disable wallet RPC calls") + "\n";
-    strUsage += "  -keypool=<n>           " + _("Set key pool size to <n> (default: 100)") + "\n";
+    strUsage += "  -keypool=<n>           " + strprintf(_("Set key pool size to <n> (default: %u)"), 100) + "\n";
     if (GetBoolArg("-help-debug", false))
         strUsage += "  -mintxfee=<amt>        " + strprintf(_("Fees (in BTC/Kb) smaller than this are considered zero fee for transaction creation (default: %s)"), FormatMoney(CWallet::minTxFee.GetFeePerK())) + "\n";
     strUsage += "  -paytxfee=<amt>        " + strprintf(_("Fee (in BTC/kB) to add to transactions you send (default: %s)"), FormatMoney(payTxFee.GetFeePerK())) + "\n";
     strUsage += "  -rescan                " + _("Rescan the block chain for missing wallet transactions") + " " + _("on startup") + "\n";
     strUsage += "  -salvagewallet         " + _("Attempt to recover private keys from a corrupt wallet.dat") + " " + _("on startup") + "\n";
-    strUsage += "  -spendzeroconfchange   " + _("Spend unconfirmed change when sending transactions (default: 1)") + "\n";
-    strUsage += "  -txconfirmtarget=<n>   " + _("If paytxfee is not set, include enough fee so transactions are confirmed on average within n blocks (default: 1)") + "\n";
+    strUsage += "  -spendzeroconfchange   " + strprintf(_("Spend unconfirmed change when sending transactions (default: %u)"), 1) + "\n";
+    strUsage += "  -txconfirmtarget=<n>   " + strprintf(_("If paytxfee is not set, include enough fee so transactions are confirmed on average within n blocks (default: %u)"), 1) + "\n";
     strUsage += "  -upgradewallet         " + _("Upgrade wallet to latest format") + " " + _("on startup") + "\n";
-    strUsage += "  -wallet=<file>         " + _("Specify wallet file (within data directory)") + " " + _("(default: wallet.dat)") + "\n";
+    strUsage += "  -wallet=<file>         " + _("Specify wallet file (within data directory)") + " " + strprintf(_("(default: %s)"), "wallet.dat") + "\n";
     strUsage += "  -walletnotify=<cmd>    " + _("Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)") + "\n";
     strUsage += "  -zapwallettxes=<mode>  " + _("Delete all wallet transactions and only recover those parts of the blockchain through -rescan on startup") + "\n";
-    strUsage += "                         " + _("(default: 1, 1 = keep tx meta data e.g. account owner and payment request information, 2 = drop tx meta data)") + "\n";
+    strUsage += "                         " + _("(1 = keep tx meta data e.g. account owner and payment request information, 2 = drop tx meta data)") + "\n";
 #endif
 
     strUsage += "\n" + _("Debugging/Testing options:") + "\n";
     if (GetBoolArg("-help-debug", false))
     {
-        strUsage += "  -checkpoints           " + _("Only accept block chain matching built-in checkpoints (default: 1)") + "\n";
-        strUsage += "  -dblogsize=<n>         " + _("Flush database activity from memory pool to disk log every <n> megabytes (default: 100)") + "\n";
-        strUsage += "  -disablesafemode       " + _("Disable safemode, override a real safe mode event (default: 0)") + "\n";
-        strUsage += "  -testsafemode          " + _("Force safe mode (default: 0)") + "\n";
+        strUsage += "  -checkpoints           " + strprintf(_("Only accept block chain matching built-in checkpoints (default: %u)"), 1) + "\n";
+        strUsage += "  -dblogsize=<n>         " + strprintf(_("Flush database activity from memory pool to disk log every <n> megabytes (default: %u)"), 100) + "\n";
+        strUsage += "  -disablesafemode       " + strprintf(_("Disable safemode, override a real safe mode event (default: %u)"), 0) + "\n";
+        strUsage += "  -testsafemode          " + strprintf(_("Force safe mode (default: %u)"), 0) + "\n";
         strUsage += "  -dropmessagestest=<n>  " + _("Randomly drop 1 of every <n> network messages") + "\n";
         strUsage += "  -fuzzmessagestest=<n>  " + _("Randomly fuzz 1 of every <n> network messages") + "\n";
-        strUsage += "  -flushwallet           " + _("Run a thread to flush wallet periodically (default: 1)") + "\n";
-        strUsage += "  -stopafterblockimport  " + _("Stop running after importing blocks from disk (default: 0)") + "\n";
+        strUsage += "  -flushwallet           " + strprintf(_("Run a thread to flush wallet periodically (default: %u)"), 1) + "\n";
+        strUsage += "  -stopafterblockimport  " + strprintf(_("Stop running after importing blocks from disk (default: %u)"), 0) + "\n";
     }
-    strUsage += "  -debug=<category>      " + _("Output debugging information (default: 0, supplying <category> is optional)") + "\n";
+    strUsage += "  -debug=<category>      " + strprintf(_("Output debugging information (default: %u, supplying <category> is optional)"), 0) + "\n";
     strUsage += "                         " + _("If <category> is not supplied, output all debugging information.") + "\n";
     strUsage += "                         " + _("<category> can be:");
     strUsage +=                                 " addrman, alert, bench, coindb, db, lock, rand, rpc, selectcoins, mempool, net"; // Don't translate these and qt below
@@ -317,25 +317,25 @@ std::string HelpMessage(HelpMessageMode mode)
         strUsage += ", qt";
     strUsage += ".\n";
 #ifdef ENABLE_WALLET
-    strUsage += "  -gen                   " + _("Generate coins (default: 0)") + "\n";
-    strUsage += "  -genproclimit=<n>      " + _("Set the processor limit for when generation is on (-1 = unlimited, default: -1)") + "\n";
+    strUsage += "  -gen                   " + strprintf(_("Generate coins (default: %u)"), 0) + "\n";
+    strUsage += "  -genproclimit=<n>      " + strprintf(_("Set the processor limit for when generation is on (-1 = unlimited, default: %d)"), -1) + "\n";
 #endif
     strUsage += "  -help-debug            " + _("Show all debugging options (usage: --help -help-debug)") + "\n";
-    strUsage += "  -logips                " + _("Include IP addresses in debug output (default: 0)") + "\n";
-    strUsage += "  -logtimestamps         " + _("Prepend debug output with timestamp (default: 1)") + "\n";
+    strUsage += "  -logips                " + strprintf(_("Include IP addresses in debug output (default: %u)"), 0) + "\n";
+    strUsage += "  -logtimestamps         " + strprintf(_("Prepend debug output with timestamp (default: %u)"), 1) + "\n";
     if (GetBoolArg("-help-debug", false))
     {
-        strUsage += "  -limitfreerelay=<n>    " + _("Continuously rate-limit free transactions to <n>*1000 bytes per minute (default:15)") + "\n";
-        strUsage += "  -maxsigcachesize=<n>   " + _("Limit size of signature cache to <n> entries (default: 50000)") + "\n";
+        strUsage += "  -limitfreerelay=<n>    " + strprintf(_("Continuously rate-limit free transactions to <n>*1000 bytes per minute (default:%u)"), 15) + "\n";
+        strUsage += "  -maxsigcachesize=<n>   " + strprintf(_("Limit size of signature cache to <n> entries (default: %u)"), 50000) + "\n";
     }
     strUsage += "  -minrelaytxfee=<amt>   " + strprintf(_("Fees (in BTC/Kb) smaller than this are considered zero fee for relaying (default: %s)"), FormatMoney(::minRelayTxFee.GetFeePerK())) + "\n";
     strUsage += "  -printtoconsole        " + _("Send trace/debug info to console instead of debug.log file") + "\n";
     if (GetBoolArg("-help-debug", false))
     {
         strUsage += "  -printblock=<hash>     " + _("Print block on startup, if found in block index") + "\n";
-        strUsage += "  -printblocktree        " + _("Print block tree on startup (default: 0)") + "\n";
-        strUsage += "  -printpriority         " + _("Log transaction priority and fee per kB when mining blocks (default: 0)") + "\n";
-        strUsage += "  -privdb                " + _("Sets the DB_PRIVATE flag in the wallet db environment (default: 1)") + "\n";
+        strUsage += "  -printblocktree        " + strprintf(_("Print block tree on startup (default: %u)"), 0) + "\n";
+        strUsage += "  -printpriority         " + strprintf(_("Log transaction priority and fee per kB when mining blocks (default: %u)"), 0) + "\n";
+        strUsage += "  -privdb                " + strprintf(_("Sets the DB_PRIVATE flag in the wallet db environment (default: %u)"), 1) + "\n";
         strUsage += "  -regtest               " + _("Enter regression test mode, which uses a special chain in which blocks can be solved instantly.") + "\n";
         strUsage += "                         " + _("This is intended for regression testing tools and app development.") + "\n";
         strUsage += "                         " + _("In this mode -genproclimit controls how many blocks are generated immediately.") + "\n";
@@ -344,10 +344,10 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += "  -testnet               " + _("Use the test network") + "\n";
 
     strUsage += "\n" + _("Node relay options:") + "\n";
-    strUsage += "  -datacarrier           " + _("Relay and mine data carrier transactions (default: 1)") + "\n";
+    strUsage += "  -datacarrier           " + strprintf(_("Relay and mine data carrier transactions (default: %u)"), 1) + "\n";
 
     strUsage += "\n" + _("Block creation options:") + "\n";
-    strUsage += "  -blockminsize=<n>      " + _("Set minimum block size in bytes (default: 0)") + "\n";
+    strUsage += "  -blockminsize=<n>      " + strprintf(_("Set minimum block size in bytes (default: %u)"), 0) + "\n";
     strUsage += "  -blockmaxsize=<n>      " + strprintf(_("Set maximum block size in bytes (default: %d)"), DEFAULT_BLOCK_MAX_SIZE) + "\n";
     strUsage += "  -blockprioritysize=<n> " + strprintf(_("Set maximum size of high-priority/low-fee transactions in bytes (default: %d)"), DEFAULT_BLOCK_PRIORITY_SIZE) + "\n";
 
@@ -356,15 +356,15 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += "  -rpcbind=<addr>        " + _("Bind to given address to listen for JSON-RPC connections. Use [host]:port notation for IPv6. This option can be specified multiple times (default: bind to all interfaces)") + "\n";
     strUsage += "  -rpcuser=<user>        " + _("Username for JSON-RPC connections") + "\n";
     strUsage += "  -rpcpassword=<pw>      " + _("Password for JSON-RPC connections") + "\n";
-    strUsage += "  -rpcport=<port>        " + _("Listen for JSON-RPC connections on <port> (default: 8332 or testnet: 18332)") + "\n";
+    strUsage += "  -rpcport=<port>        " + strprintf(_("Listen for JSON-RPC connections on <port> (default: %u or testnet: %u)"), 8332, 18332) + "\n";
     strUsage += "  -rpcallowip=<ip>       " + _("Allow JSON-RPC connections from specified source. Valid for <ip> are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24). This option can be specified multiple times") + "\n";
-    strUsage += "  -rpcthreads=<n>        " + _("Set the number of threads to service RPC calls (default: 4)") + "\n";
+    strUsage += "  -rpcthreads=<n>        " + strprintf(_("Set the number of threads to service RPC calls (default: %d)"), 4) + "\n";
 
     strUsage += "\n" + _("RPC SSL options: (see the Bitcoin Wiki for SSL setup instructions)") + "\n";
     strUsage += "  -rpcssl                                  " + _("Use OpenSSL (https) for JSON-RPC connections") + "\n";
-    strUsage += "  -rpcsslcertificatechainfile=<file.cert>  " + _("Server certificate file (default: server.cert)") + "\n";
-    strUsage += "  -rpcsslprivatekeyfile=<file.pem>         " + _("Server private key (default: server.pem)") + "\n";
-    strUsage += "  -rpcsslciphers=<ciphers>                 " + _("Acceptable ciphers (default: TLSv1.2+HIGH:TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!3DES:@STRENGTH)") + "\n";
+    strUsage += "  -rpcsslcertificatechainfile=<file.cert>  " + strprintf(_("Server certificate file (default: %s)"), "server.cert") + "\n";
+    strUsage += "  -rpcsslprivatekeyfile=<file.pem>         " + strprintf(_("Server private key (default: %s)"), "server.pem") + "\n";
+    strUsage += "  -rpcsslciphers=<ciphers>                 " + strprintf(_("Acceptable ciphers (default: %s)"), "TLSv1.2+HIGH:TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!3DES:@STRENGTH") + "\n";
 
     return strUsage;
 }
