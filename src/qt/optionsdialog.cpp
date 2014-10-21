@@ -5,7 +5,6 @@
 #include "monitoreddatamapper.h"
 #include "netbase.h"
 #include "optionsmodel.h"
-#include "guiconstants.h"
 #include "dialogwindowflags.h"
 
 #include <QDir>
