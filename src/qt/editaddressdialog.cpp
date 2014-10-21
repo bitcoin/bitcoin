@@ -2,7 +2,6 @@
 #include "ui_editaddressdialog.h"
 #include "addresstablemodel.h"
 #include "dialogwindowflags.h"
-#include "guiconstants.h"
 #include "guiutil.h"
 
 #include <QDataWidgetMapper>
