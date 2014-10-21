@@ -22,4 +22,6 @@ void UpdateTime(CBlockHeader* block, const CBlockIndex* pindexPrev);
 
 uint256 GetProofIncrement(unsigned int nBits);
 
+double GetChallengeDouble(const CProof& proof);
+
 #endif // BITCOIN_POW_H

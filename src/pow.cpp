@@ -121,3 +121,23 @@ uint256 GetProofIncrement(unsigned int nBits)
     // or ~bnTarget / (nTarget+1) + 1.
     return (~bnTarget / (bnTarget + 1)) + 1;
 }
+
+double GetChallengeDouble(const CProof& proof)
+{
+    int nShift = (proof.nBits >> 24) & 0xff;
+
+    double dDiff =
+        (double)0x0000ffff / (double)(proof.nBits & 0x00ffffff);
+
+    while (nShift < 29)
+    {
+        dDiff *= 256.0;
+        nShift++;
+    }
+    while (nShift > 29)
+    {
+        dDiff /= 256.0;
+        nShift--;
+    }
+    return dDiff;
+}
