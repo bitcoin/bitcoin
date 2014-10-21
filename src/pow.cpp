@@ -11,7 +11,7 @@
 #include "uint256.h"
 #include "util.h"
 
-unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock)
+unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, int64_t nTime)
 {
     unsigned int nProofOfWorkLimit = Params().ProofOfWorkLimit().GetCompact();
 
@@ -27,7 +27,7 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
             // Special difficulty rule for testnet:
             // If the new block's timestamp is more than 2* 10 minutes
             // then allow mining of a min-difficulty block.
-            if (pblock->GetBlockTime() > pindexLast->GetBlockTime() + Params().TargetSpacing()*2)
+            if (nTime > pindexLast->GetBlockTime() + Params().TargetSpacing()*2)
                 return nProofOfWorkLimit;
             else
             {
@@ -73,6 +73,16 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
     LogPrintf("After:  %08x  %s\n", bnNew.GetCompact(), bnNew.ToString());
 
     return bnNew.GetCompact();
+}
+
+bool CheckChallenge(const CBlockHeader& block, const CBlockIndex& indexLast)
+{
+    return block.nBits == GetNextWorkRequired(&indexLast, block.GetBlockTime());
+}
+
+void ResetChallenge(CBlockHeader& block, const CBlockIndex& indexLast)
+{
+    block.nBits = GetNextWorkRequired(&indexLast, block.GetBlockTime());
 }
 
 bool CheckProofOfWork(uint256 hash, unsigned int nBits)
