@@ -2818,11 +2818,11 @@ bool static LoadBlockIndexDB()
     // Load block file info
     pblocktree->ReadLastBlockFile(nLastBlockFile);
     vinfoBlockFile.resize(nLastBlockFile + 1);
-    LogPrintf("LoadBlockIndexDB(): last block file = %i\n", nLastBlockFile);
+    LogPrintf("%s: last block file = %i\n", __func__, nLastBlockFile);
     for (int nFile = 0; nFile <= nLastBlockFile; nFile++) {
         pblocktree->ReadBlockFileInfo(nFile, vinfoBlockFile[nFile]);
     }
-    LogPrintf("LoadBlockIndexDB(): last block file info: %s\n", vinfoBlockFile[nLastBlockFile].ToString());
+    LogPrintf("%s: last block file info: %s\n", __func__, vinfoBlockFile[nLastBlockFile].ToString());
     for (int nFile = nLastBlockFile + 1; true; nFile++) {
         CBlockFileInfo info;
         if (pblocktree->ReadBlockFileInfo(nFile, info)) {
