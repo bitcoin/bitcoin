@@ -150,8 +150,8 @@ QT_TRANSLATE_NOOP("bitcoin-core", ""
 "wallet.{timestamp}.bak in %s; if your balance or transactions are incorrect "
 "you should restore from a backup."),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
-"Whitelist peers connecting from the given netmask or ip. Can be specified "
-"multiple times."),
+"Whitelist peers connecting from the given netmask or IP address. Can be "
+"specified multiple times."),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Whitelisted peers cannot be DoS banned and their transactions are always "
 "relayed, even if they are already in the mempool, useful e.g. for a gateway"),
