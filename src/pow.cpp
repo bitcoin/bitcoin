@@ -5,10 +5,9 @@
 
 #include "pow.h"
 
+#include "chain.h"
 #include "chainparams.h"
 #include "core/block.h"
-#include "main.h"
-#include "timedata.h"
 #include "uint256.h"
 #include "util.h"
 
@@ -96,15 +95,6 @@ bool CheckProofOfWork(uint256 hash, unsigned int nBits)
         return error("CheckProofOfWork() : hash doesn't match nBits");
 
     return true;
-}
-
-void UpdateTime(CBlockHeader* pblock, const CBlockIndex* pindexPrev)
-{
-    pblock->nTime = std::max(pindexPrev->GetMedianTimePast()+1, GetAdjustedTime());
-
-    // Updating time can change work required on testnet:
-    if (Params().AllowMinDifficultyBlocks())
-        pblock->nBits = GetNextWorkRequired(pindexPrev, pblock);
 }
 
 uint256 GetProofIncrement(unsigned int nBits)
