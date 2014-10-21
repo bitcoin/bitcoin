@@ -4,7 +4,6 @@
 #include "addressbookpage.h"
 #include "base58.h"
 #include "guiutil.h"
-#include "guiconstants.h"
 #include "dialogwindowflags.h"
 #include "init.h"
 #include "main.h"
