@@ -2,6 +2,7 @@
 #define EDITADDRESSDIALOG_H
 
 #include <QDialog>
+#include "dialogwindowflags.h"
 
 QT_BEGIN_NAMESPACE
 class QDataWidgetMapper;

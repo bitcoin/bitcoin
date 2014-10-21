@@ -4,6 +4,8 @@
 #include "addressbookpage.h"
 #include "base58.h"
 #include "guiutil.h"
+#include "guiconstants.h"
+#include "dialogwindowflags.h"
 #include "init.h"
 #include "main.h"
 #include "optionsmodel.h"
@@ -16,7 +18,7 @@
 #include <QClipboard>
 
 SignVerifyMessageDialog::SignVerifyMessageDialog(QWidget *parent) :
-    QDialog(parent),
+    QDialog(parent, DIALOGWINDOWHINTS),
     ui(new Ui::SignVerifyMessageDialog),
     model(0)
 {

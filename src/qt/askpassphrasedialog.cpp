@@ -2,6 +2,7 @@
 #include "ui_askpassphrasedialog.h"
 
 #include "guiconstants.h"
+#include "dialogwindowflags.h"
 #include "walletmodel.h"
 
 #include <QMessageBox>
@@ -11,7 +12,7 @@
 extern bool fWalletUnlockMintOnly;
 
 AskPassphraseDialog::AskPassphraseDialog(Mode mode, QWidget *parent) :
-    QDialog(parent),
+    QDialog(parent, DIALOGWINDOWHINTS),
     ui(new Ui::AskPassphraseDialog),
     mode(mode),
     model(0),

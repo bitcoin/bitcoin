@@ -5,6 +5,8 @@
 #include "monitoreddatamapper.h"
 #include "netbase.h"
 #include "optionsmodel.h"
+#include "guiconstants.h"
+#include "dialogwindowflags.h"
 
 #include <QDir>
 #include <QIntValidator>
@@ -14,7 +16,7 @@
 #include <QRegExpValidator>
 
 OptionsDialog::OptionsDialog(QWidget *parent) :
-    QDialog(parent),
+    QDialog(parent, DIALOGWINDOWHINTS),
     ui(new Ui::OptionsDialog),
     model(0),
     mapper(0),

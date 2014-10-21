@@ -1,13 +1,15 @@
 #include "editaddressdialog.h"
 #include "ui_editaddressdialog.h"
 #include "addresstablemodel.h"
+#include "dialogwindowflags.h"
+#include "guiconstants.h"
 #include "guiutil.h"
 
 #include <QDataWidgetMapper>
 #include <QMessageBox>
 
 EditAddressDialog::EditAddressDialog(Mode mode, QWidget *parent) :
-    QDialog(parent),
+    QDialog(parent, DIALOGWINDOWHINTS),
     ui(new Ui::EditAddressDialog), mapper(0), mode(mode), model(0)
 {
     ui->setupUi(this);

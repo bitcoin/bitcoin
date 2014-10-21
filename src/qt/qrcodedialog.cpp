@@ -2,6 +2,7 @@
 #include "ui_qrcodedialog.h"
 
 #include "bitcoinunits.h"
+#include "dialogwindowflags.h"
 #include "guiconstants.h"
 #include "guiutil.h"
 #include "optionsmodel.h"
@@ -12,7 +13,7 @@
 #include <qrencode.h>
 
 QRCodeDialog::QRCodeDialog(const QString &addr, const QString &label, bool enableReq, QWidget *parent) :
-    QDialog(parent),
+    QDialog(parent, DIALOGWINDOWHINTS),
     ui(new Ui::QRCodeDialog),
     model(0),
     address(addr)
