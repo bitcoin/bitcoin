@@ -129,17 +129,17 @@ class CBlockTreeDB;
 class CTxUndo;
 class CScriptCheck;
 class CValidationState;
-class CWalletInterface;
+class CValidationInterface;
 struct CNodeStateStats;
 
 struct CBlockTemplate;
 
 /** Register a wallet to receive updates from core */
-void RegisterWallet(CWalletInterface* pwalletIn);
+void RegisterValidationInterface(CValidationInterface* pwalletIn);
 /** Unregister a wallet from core */
-void UnregisterWallet(CWalletInterface* pwalletIn);
+void UnregisterValidationInterface(CValidationInterface* pwalletIn);
 /** Unregister all wallets from core */
-void UnregisterAllWallets();
+void UnregisterAllValidationInterfaces();
 /** Push an updated transaction to all registered wallets */
 void SyncWithWallets(const CTransaction& tx, const CBlock* pblock = NULL);
 
@@ -640,17 +640,17 @@ public:
 };
 
 
-class CWalletInterface {
+class CValidationInterface {
 protected:
-    virtual void SyncTransaction(const CTransaction &tx, const CBlock *pblock) =0;
-    virtual void EraseFromWallet(const uint256 &hash) =0;
-    virtual void SetBestChain(const CBlockLocator &locator) =0;
-    virtual void UpdatedTransaction(const uint256 &hash) =0;
-    virtual void Inventory(const uint256 &hash) =0;
-    virtual void ResendWalletTransactions() =0;
-    friend void ::RegisterWallet(CWalletInterface*);
-    friend void ::UnregisterWallet(CWalletInterface*);
-    friend void ::UnregisterAllWallets();
+    virtual void SyncTransaction(const CTransaction &tx, const CBlock *pblock) {};
+    virtual void EraseFromWallet(const uint256 &hash) {};
+    virtual void SetBestChain(const CBlockLocator &locator) {};
+    virtual void UpdatedTransaction(const uint256 &hash) {};
+    virtual void Inventory(const uint256 &hash) {};
+    virtual void ResendWalletTransactions() {};
+    friend void ::RegisterValidationInterface(CValidationInterface*);
+    friend void ::UnregisterValidationInterface(CValidationInterface*);
+    friend void ::UnregisterAllValidationInterfaces();
 };
 
 #endif // BITCOIN_MAIN_H

@@ -170,7 +170,7 @@ void Shutdown()
 #ifndef WIN32
     boost::filesystem::remove(GetPidFile());
 #endif
-    UnregisterAllWallets();
+    UnregisterAllValidationInterfaces();
 #ifdef ENABLE_WALLET
     delete pwalletMain;
     pwalletMain = NULL;
@@ -1154,7 +1154,7 @@ bool AppInit2(boost::thread_group& threadGroup)
         LogPrintf("%s", strErrors.str());
         LogPrintf(" wallet      %15dms\n", GetTimeMillis() - nStart);
 
-        RegisterWallet(pwalletMain);
+        RegisterValidationInterface(pwalletMain);
 
         CBlockIndex *pindexRescan = chainActive.Tip();
         if (GetBoolArg("-rescan", false))
