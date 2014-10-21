@@ -8,7 +8,6 @@
 #include "chain.h"
 #include "chainparams.h"
 #include "core/block.h"
-#include "timedata.h"
 #include "uint256.h"
 #include "util.h"
 
@@ -106,15 +105,6 @@ bool CheckProof(uint256 hash, const CProof& proof)
         return error("%s : hash doesn't match nBits", __func__);
 
     return true;
-}
-
-void UpdateTime(CBlockHeader* pblock, const CBlockIndex* pindexPrev)
-{
-    pblock->nTime = std::max(pindexPrev->GetMedianTimePast()+1, GetAdjustedTime());
-
-    // Updating time can change work required on testnet:
-    if (Params().AllowMinDifficultyBlocks())
-        ResetChallenge(pblock->proof, pindexPrev, pblock->GetBlockTime());
 }
 
 uint256 GetProofIncrement(const CProof& proof)

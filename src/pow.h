@@ -8,7 +8,6 @@
 
 #include <stdint.h>
 
-class CBlockHeader;
 class CBlockIndex;
 class CProof;
 class uint256;
@@ -17,8 +16,6 @@ class uint256;
 bool CheckProof(uint256 hash, const CProof& proof);
 bool CheckChallenge(const CProof& proof, const CBlockIndex* pindexLast, int64_t nTime);
 void ResetChallenge(CProof& proof, const CBlockIndex* pindexLast, int64_t nTime);
-
-void UpdateTime(CBlockHeader* block, const CBlockIndex* pindexPrev);
 
 uint256 GetProofIncrement(const CProof& proof);
 
