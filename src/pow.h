@@ -10,6 +10,7 @@
 
 class CBlockHeader;
 class CBlockIndex;
+class CProof;
 class uint256;
 
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock);

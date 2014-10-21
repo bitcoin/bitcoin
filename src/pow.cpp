@@ -34,12 +34,12 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
             {
                 // Return the last non-special-min-difficulty-rules-block
                 const CBlockIndex* pindex = pindexLast;
-                while (pindex->pprev && pindex->nHeight % Params().Interval() != 0 && pindex->nBits == nProofOfWorkLimit)
+                while (pindex->pprev && pindex->nHeight % Params().Interval() != 0 && pindex->proof.nBits == nProofOfWorkLimit)
                     pindex = pindex->pprev;
-                return pindex->nBits;
+                return pindex->proof.nBits;
             }
         }
-        return pindexLast->nBits;
+        return pindexLast->proof.nBits;
     }
 
     // Go back by what we want to be 14 days worth of blocks
@@ -59,7 +59,7 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
     // Retarget
     uint256 bnNew;
     uint256 bnOld;
-    bnNew.SetCompact(pindexLast->nBits);
+    bnNew.SetCompact(pindexLast->proof.nBits);
     bnOld = bnNew;
     bnNew *= nActualTimespan;
     bnNew /= Params().TargetTimespan();
@@ -70,7 +70,7 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
     /// debug print
     LogPrintf("GetNextWorkRequired RETARGET\n");
     LogPrintf("Params().TargetTimespan() = %d    nActualTimespan = %d\n", Params().TargetTimespan(), nActualTimespan);
-    LogPrintf("Before: %08x  %s\n", pindexLast->nBits, bnOld.ToString());
+    LogPrintf("Before: %08x  %s\n", pindexLast->proof.nBits, bnOld.ToString());
     LogPrintf("After:  %08x  %s\n", bnNew.GetCompact(), bnNew.ToString());
 
     return bnNew.GetCompact();
@@ -104,7 +104,7 @@ void UpdateTime(CBlockHeader* pblock, const CBlockIndex* pindexPrev)
 
     // Updating time can change work required on testnet:
     if (Params().AllowMinDifficultyBlocks())
-        pblock->nBits = GetNextWorkRequired(pindexPrev, pblock);
+        pblock->proof.nBits = GetNextWorkRequired(pindexPrev, pblock);
 }
 
 uint256 GetProofIncrement(unsigned int nBits)

@@ -1142,7 +1142,7 @@ bool ReadBlockFromDisk(CBlock& block, const CDiskBlockPos& pos)
     }
 
     // Check the header
-    if (!CheckProofOfWork(block.GetHash(), block.nBits))
+    if (!CheckProofOfWork(block.GetHash(), block.proof.nBits))
         return error("ReadBlockFromDisk : Errors in block header");
 
     return true;
@@ -2241,7 +2241,7 @@ bool FindUndoPos(CValidationState &state, int nFile, CDiskBlockPos &pos, unsigne
 bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state, bool fCheckPOW)
 {
     // Check proof of work matches claimed amount
-    if (fCheckPOW && !CheckProofOfWork(block.GetHash(), block.nBits))
+    if (fCheckPOW && !CheckProofOfWork(block.GetHash(), block.proof.nBits))
         return state.DoS(50, error("CheckBlockHeader() : proof of work failed"),
                          REJECT_INVALID, "high-hash");
 
@@ -2340,7 +2340,7 @@ bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state, CBloc
 
         // Check proof of work
         if ((!Params().SkipProofOfWorkCheck()) &&
-           (block.nBits != GetNextWorkRequired(pindexPrev, &block)))
+           (block.proof.nBits != GetNextWorkRequired(pindexPrev, &block)))
             return state.DoS(100, error("%s : incorrect proof of work", __func__),
                              REJECT_INVALID, "bad-diffbits");
 
