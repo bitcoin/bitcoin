@@ -76,7 +76,7 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
     return bnNew.GetCompact();
 }
 
-bool CheckProofOfWork(uint256 hash, unsigned int nBits)
+bool CheckProof(uint256 hash, const CProof& proof)
 {
     bool fNegative;
     bool fOverflow;
@@ -85,7 +85,7 @@ bool CheckProofOfWork(uint256 hash, unsigned int nBits)
     if (Params().SkipProofOfWorkCheck())
        return true;
 
-    bnTarget.SetCompact(nBits, &fNegative, &fOverflow);
+    bnTarget.SetCompact(proof.nBits, &fNegative, &fOverflow);
 
     // Check range
     if (fNegative || bnTarget == 0 || fOverflow || bnTarget > Params().ProofOfWorkLimit())
