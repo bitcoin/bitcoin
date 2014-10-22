@@ -7,6 +7,7 @@
 #define BITCOIN_DB_H
 
 #include "serialize.h"
+#include "streams.h"
 #include "sync.h"
 #include "version.h"
 

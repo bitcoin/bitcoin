@@ -7,6 +7,7 @@
 #include "bitcoinunits.h"
 #include "guiutil.h"
 #include "optionsmodel.h"
+#include "streams.h"
 
 #include <boost/foreach.hpp>
 
