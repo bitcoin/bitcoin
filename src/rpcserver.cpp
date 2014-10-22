@@ -7,9 +7,9 @@
 
 #include "base58.h"
 #include "init.h"
+#include "random.h"
 #include "ui_interface.h"
 #include "util.h"
-#include "random.h"
 #ifdef ENABLE_WALLET
 #include "wallet.h"
 #endif
@@ -23,15 +23,15 @@
 #include <boost/iostreams/concepts.hpp>
 #include <boost/iostreams/stream.hpp>
 #include <boost/shared_ptr.hpp>
-#include <boost/thread.hpp>
 #include <boost/signals2/signal.hpp>
+#include <boost/thread.hpp>
 #include "json/json_spirit_writer_template.h"
 
 using namespace boost;
 using namespace boost::asio;
 using namespace json_spirit;
-using namespace std;
 using namespace RPCServer;
+using namespace std;
 
 static std::string strRPCUserColonPass;
 
