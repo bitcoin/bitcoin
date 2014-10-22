@@ -78,7 +78,7 @@ bool Solver(const CKeyStore& keystore, const CScript& scriptPubKey, uint256 hash
         {
             CPubKey vch;
             keystore.GetPubKey(keyID, vch);
-            scriptSigRet << vch;
+            scriptSigRet << ToByteVector(vch);
         }
         return true;
     case TX_SCRIPTHASH:
