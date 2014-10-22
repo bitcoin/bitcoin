@@ -6,15 +6,21 @@
 #ifndef H_BITCOIN_SCRIPT
 #define H_BITCOIN_SCRIPT
 
-#include "key.h"
-#include "tinyformat.h"
-#include "utilstrencodings.h"
-
+#include <assert.h>
+#include <climits>
+#include <limits>
 #include <stdexcept>
-
-#include <boost/variant.hpp>
+#include <stdint.h>
+#include <string.h>
+#include <vector>
 
 static const unsigned int MAX_SCRIPT_ELEMENT_SIZE = 520; // bytes
+
+template <typename T>
+std::vector<unsigned char> ToByteVector(const T& in)
+{
+    return std::vector<unsigned char>(in.begin(), in.end());
+}
 
 /** Script opcodes */
 enum opcodetype
@@ -312,13 +318,6 @@ private:
     int64_t m_value;
 };
 
-inline std::string ValueString(const std::vector<unsigned char>& vch)
-{
-    if (vch.size() <= 4)
-        return strprintf("%d", CScriptNum(vch).getint());
-    else
-        return HexStr(vch);
-}
 
 /** Serialized script, used inside transaction inputs and outputs */
 class CScript : public std::vector<unsigned char>
@@ -358,7 +357,6 @@ public:
     CScript(int64_t b)        { operator<<(b); }
 
     explicit CScript(opcodetype b)     { operator<<(b); }
-    explicit CScript(const uint256& b) { operator<<(b); }
     explicit CScript(const CScriptNum& b) { operator<<(b); }
     explicit CScript(const std::vector<unsigned char>& b) { operator<<(b); }
 
@@ -370,28 +368,6 @@ public:
         if (opcode < 0 || opcode > 0xff)
             throw std::runtime_error("CScript::operator<<() : invalid opcode");
         insert(end(), (unsigned char)opcode);
-        return *this;
-    }
-
-    CScript& operator<<(const uint160& b)
-    {
-        insert(end(), sizeof(b));
-        insert(end(), (unsigned char*)&b, (unsigned char*)&b + sizeof(b));
-        return *this;
-    }
-
-    CScript& operator<<(const uint256& b)
-    {
-        insert(end(), sizeof(b));
-        insert(end(), (unsigned char*)&b, (unsigned char*)&b + sizeof(b));
-        return *this;
-    }
-
-    CScript& operator<<(const CPubKey& key)
-    {
-        assert(key.size() < OP_PUSHDATA1);
-        insert(end(), (unsigned char)key.size());
-        insert(end(), key.begin(), key.end());
         return *this;
     }
 
@@ -588,34 +564,7 @@ public:
         return (size() > 0 && *begin() == OP_RETURN);
     }
 
-    std::string ToString() const
-    {
-        std::string str;
-        opcodetype opcode;
-        std::vector<unsigned char> vch;
-        const_iterator pc = begin();
-        while (pc < end())
-        {
-            if (!str.empty())
-                str += " ";
-            if (!GetOp(pc, opcode, vch))
-            {
-                str += "[error]";
-                return str;
-            }
-            if (0 <= opcode && opcode <= OP_PUSHDATA4)
-                str += ValueString(vch);
-            else
-                str += GetOpName(opcode);
-        }
-        return str;
-    }
-
-    CScriptID GetID() const
-    {
-        return CScriptID(Hash160(*this));
-    }
-
+    std::string ToString() const;
     void clear()
     {
         // The default std::vector::clear() does not release memory.

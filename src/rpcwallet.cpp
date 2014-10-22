@@ -918,7 +918,7 @@ Value addmultisigaddress(const Array& params, bool fHelp)
 
     // Construct using pay-to-script-hash:
     CScript inner = _createmultisig_redeemScript(params);
-    CScriptID innerID = inner.GetID();
+    CScriptID innerID(inner);
     pwalletMain->AddCScript(inner);
 
     pwalletMain->SetAddressBook(innerID, strAccount, "send");

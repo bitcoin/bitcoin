@@ -9,6 +9,7 @@
 #include "crypto/ripemd160.h"
 #include "crypto/sha1.h"
 #include "crypto/sha2.h"
+#include "key.h"
 #include "script/script.h"
 #include "uint256.h"
 #include "util.h"
