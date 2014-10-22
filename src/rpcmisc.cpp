@@ -70,9 +70,10 @@ Value getinfo(const Array& params, bool fHelp)
             + HelpExampleRpc("getinfo", "")
         );
 
-    ENTER_CRITICAL_SECTION(cs_main);
 #ifdef ENABLE_WALLET
-    if (pwalletMain) ENTER_CRITICAL_SECTION(pwalletMain->cs_wallet);
+    LOCK2(cs_main, pwalletMain ? &pwalletMain->cs_wallet : NULL);
+#else
+    LOCK(cs_main);
 #endif
 
     proxyType proxy;
@@ -104,12 +105,6 @@ Value getinfo(const Array& params, bool fHelp)
 #endif
     obj.push_back(Pair("relayfee",      ValueFromAmount(::minRelayTxFee.GetFeePerK())));
     obj.push_back(Pair("errors",        GetWarnings("statusbar")));
-
-#ifdef ENABLE_WALLET
-    if (pwalletMain) LEAVE_CRITICAL_SECTION(pwalletMain->cs_wallet);
-#endif
-    LEAVE_CRITICAL_SECTION(cs_main);
-
     return obj;
 }
 
@@ -183,7 +178,11 @@ Value validateaddress(const Array& params, bool fHelp)
             + HelpExampleRpc("validateaddress", "\"1PSSGeFHDnKNxiEyFrD1wcEaHr9hrQDDWc\"")
         );
 
+#ifdef ENABLE_WALLET
+    LOCK2(cs_main, pwalletMain ? &pwalletMain->cs_wallet : NULL);
+#else
     LOCK(cs_main);
+#endif
 
     CBitcoinAddress address(params[0].get_str());
     bool isValid = address.IsValid();
