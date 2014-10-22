@@ -117,12 +117,12 @@ void UpdateTime(CBlockHeader* pblock, const CBlockIndex* pindexPrev)
         ResetChallenge(pblock->proof, pindexPrev, pblock->GetBlockTime());
 }
 
-uint256 GetProofIncrement(unsigned int nBits)
+uint256 GetProofIncrement(const CProof& proof)
 {
     uint256 bnTarget;
     bool fNegative;
     bool fOverflow;
-    bnTarget.SetCompact(nBits, &fNegative, &fOverflow);
+    bnTarget.SetCompact(proof.nBits, &fNegative, &fOverflow);
     if (fNegative || fOverflow || bnTarget == 0)
         return 0;
     // We need to compute 2**256 / (bnTarget+1), but we can't represent 2**256

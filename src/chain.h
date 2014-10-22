@@ -215,7 +215,7 @@ public:
 
     uint256 GetBlockWork() const
     {
-        return GetProofIncrement(proof.nBits);
+        return GetProofIncrement(proof);
     }
 
     enum { nMedianTimeSpan=11 };

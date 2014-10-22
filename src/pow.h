@@ -20,7 +20,7 @@ void ResetChallenge(CProof& proof, const CBlockIndex* pindexLast, int64_t nTime)
 
 void UpdateTime(CBlockHeader* block, const CBlockIndex* pindexPrev);
 
-uint256 GetProofIncrement(unsigned int nBits);
+uint256 GetProofIncrement(const CProof& proof);
 
 double GetChallengeDouble(const CProof& proof);
 
