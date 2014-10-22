@@ -7,6 +7,11 @@
 #define H_BITCOIN_SCRIPT_COMPRESSOR
 
 #include "script/script.h"
+#include "serialize.h"
+
+class CKeyID;
+class CPubKey;
+class CScriptID;
 
 /** Compact serializer for scripts.
  *

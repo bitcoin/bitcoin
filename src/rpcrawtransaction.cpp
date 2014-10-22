@@ -480,7 +480,7 @@ Value decodescript(const Array& params, bool fHelp)
     }
     ScriptPubKeyToJSON(script, r, false);
 
-    r.push_back(Pair("p2sh", CBitcoinAddress(script.GetID()).ToString()));
+    r.push_back(Pair("p2sh", CBitcoinAddress(CScriptID(script)).ToString()));
     return r;
 }
 
