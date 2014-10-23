@@ -1,3 +1,8 @@
+#!/usr/bin/env python
+# Copyright (c) 2014 The Bitcoin Core developers
+# Distributed under the MIT software license, see the accompanying
+# file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
 # Linux network utilities
 import sys
 import socket
