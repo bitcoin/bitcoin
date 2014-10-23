@@ -12,6 +12,7 @@
 #include <stdexcept>
 #include <stdint.h>
 #include <string.h>
+#include <string>
 #include <vector>
 
 static const unsigned int MAX_SCRIPT_ELEMENT_SIZE = 520; // bytes
