@@ -8,6 +8,7 @@
 
 #include <list>
 
+#include "amount.h"
 #include "coins.h"
 #include "core.h"
 #include "sync.h"
