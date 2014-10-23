@@ -110,7 +110,6 @@ QT_MOC_CPP = \
   qt/moc_intro.cpp \
   qt/moc_macdockiconhandler.cpp \
   qt/moc_macnotificationhandler.cpp \
-  qt/moc_monitoreddatamapper.cpp \
   qt/moc_notificator.cpp \
   qt/moc_openuridialog.cpp \
   qt/moc_optionsdialog.cpp \
@@ -177,7 +176,6 @@ BITCOIN_QT_H = \
   qt/intro.h \
   qt/macdockiconhandler.h \
   qt/macnotificationhandler.h \
-  qt/monitoreddatamapper.h \
   qt/networkstyle.h \
   qt/notificator.h \
   qt/openuridialog.h \
@@ -269,7 +267,6 @@ BITCOIN_QT_CPP = \
   qt/csvmodelwriter.cpp \
   qt/guiutil.cpp \
   qt/intro.cpp \
-  qt/monitoreddatamapper.cpp \
   qt/networkstyle.cpp \
   qt/notificator.cpp \
   qt/optionsdialog.cpp \
