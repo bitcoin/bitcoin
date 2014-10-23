@@ -630,7 +630,11 @@
     <message numerus="yes">
         <location line="-5"/>
         <source>Processed %n blocks of transaction history.</source>
-        <translation>Обработано %n блоков истории транзакций.</translation>
+        <translation>
+            <numerusform>Обработан %n блок истории транзакций.</numerusform>
+            <numerusform>Обработано %n блока истории транзакций</numerusform>
+            <numerusform>Обработано %n блоков истории транзакций</numerusform>
+        </translation>
     </message>
     <message>
         <location line="+49"/>
@@ -1173,12 +1177,12 @@ Address: %4
         <source>Error</source>
         <translation>Ошибка</translation>
     </message>
-    <message numerus="yes">
+    <message>
         <location line="+9"/>
         <source>%n GB of free space available</source>
         <translation>%nГБ свободного места доступно</translation>
     </message>
-    <message numerus="yes">
+    <message>
         <location line="+3"/>
         <source>(of %n GB needed)</source>
         <translation>(из необходимых %nГБ)</translation>
