@@ -2976,7 +2976,7 @@ bool CheckBlockFiles()
     int nKeepBlksFromHeight = fPruned ? (max((int)(chainActive.Height() - MIN_BLOCKS_TO_KEEP), 0)) : 0;
     LogPrintf("Checking all required data for active chain is available (mandatory from height %i to %i)\n", nKeepBlksFromHeight, max(chainActive.Height(), 0));
     map<int, bool> mapBlockFileIsOpenable, mapUndoFileIsOpenable;
-    set<int> setRequiredDataFilesAreOpenable;
+    set<int> setRequiredDataFilesAreOpenable, setDataPruned, setUndoPruned;
     for (CBlockIndex* pindex = chainActive.Tip(); pindex && pindex->pprev; pindex = pindex->pprev) {
         if (pindex->nHeight > nKeepBlksFromHeight) {
             if (!(pindex->nStatus & BLOCK_HAVE_DATA) || !(pindex->nStatus & BLOCK_HAVE_UNDO)) { // Fail immediately if required data is missing
@@ -3014,7 +3014,15 @@ bool CheckBlockFiles()
             if (!pblocktree->WriteBlockIndex(blockindex))
                 return false;
         }
+        if (~pindex->nStatus & BLOCK_HAVE_DATA && pindex->nStatus & BLOCK_VALID_CHAIN)
+            setDataPruned.insert(pindex->nHeight);
+        if (~pindex->nStatus & BLOCK_HAVE_UNDO && pindex->nStatus & BLOCK_VALID_CHAIN)
+            setUndoPruned.insert(pindex->nHeight);
     }
+    if (!setDataPruned.empty())
+        LogPrintf("Data for blocks from %i to %i has been pruned\n", *setDataPruned.begin(), *setDataPruned.rbegin());
+    if (!setUndoPruned.empty())
+        LogPrintf("Undo data for blocks from %i to %i has been pruned\n", *setUndoPruned.begin(), *setUndoPruned.rbegin());
     return true;
 }
 
