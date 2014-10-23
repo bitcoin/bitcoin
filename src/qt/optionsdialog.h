@@ -7,7 +7,7 @@
 
 #include <QDialog>
 
-class MonitoredDataMapper;
+class QDataWidgetMapper;
 class OptionsModel;
 class QValidatedLineEdit;
 
@@ -52,7 +52,7 @@ signals:
 private:
     Ui::OptionsDialog *ui;
     OptionsModel *model;
-    MonitoredDataMapper *mapper;
+    QDataWidgetMapper *mapper;
     bool fProxyIpValid;
 };
 
