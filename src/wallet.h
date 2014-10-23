@@ -6,6 +6,7 @@
 #ifndef BITCOIN_WALLET_H
 #define BITCOIN_WALLET_H
 
+#include "amount.h"
 #include "core.h"
 #include "crypter.h"
 #include "key.h"

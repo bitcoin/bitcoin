@@ -5,6 +5,7 @@
 
 #include "miner.h"
 
+#include "amount.h"
 #include "core.h"
 #include "hash.h"
 #include "main.h"
