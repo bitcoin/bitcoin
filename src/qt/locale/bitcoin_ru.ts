@@ -344,7 +344,7 @@
     <message>
         <location line="+2"/>
         <source>&amp;Options...</source>
-        <translation>Опции</translation>
+        <translation>&amp;Параметры...</translation>
     </message>
     <message>
         <location line="+6"/>
@@ -529,7 +529,7 @@
     <message>
         <location line="+2"/>
         <source>&amp;Command-line options</source>
-        <translation>&amp;Опции командной строки</translation>
+        <translation>&amp;Параметры командной строки</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -673,7 +673,7 @@ Address: %4
     <message>
         <location filename="../bitcoin.cpp" line="+468"/>
         <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
-        <translation type="unfinished"></translation>
+        <translation>Произошла ошибка. Bitcoin больше не может продолжать работать нормально и он завершит работу.</translation>
     </message>
 </context>
 <context>
@@ -1093,12 +1093,12 @@ Address: %4
     <message>
         <location line="+1"/>
         <source>command-line options</source>
-        <translation>опции командной строки</translation>
+        <translation>параметры командной строки</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>UI options</source>
-        <translation>Опции интерфейса</translation>
+        <translation>Параметры интерфейса</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -1217,7 +1217,7 @@ Address: %4
     <message>
         <location filename="../forms/optionsdialog.ui" line="+14"/>
         <source>Options</source>
-        <translation>Опции</translation>
+        <translation>Параметры</translation>
     </message>
     <message>
         <location line="+13"/>
@@ -1308,7 +1308,7 @@ Address: %4
     <message>
         <location line="+3"/>
         <source>&amp;Reset Options</source>
-        <translation>&amp;Сбросить опции</translation>
+        <translation>&amp;Сбросить параметры</translation>
     </message>
     <message>
         <location line="-317"/>
@@ -1353,7 +1353,7 @@ Address: %4
     <message>
         <location line="+3"/>
         <source>Map port using &amp;UPnP</source>
-        <translation>Пробросить порт через &amp;UPnP</translation>
+        <translation>Использовать &amp;UPnP чтобы пробросить порт</translation>
     </message>
     <message>
         <location line="+29"/>
@@ -1523,7 +1523,7 @@ Address: %4
     <message>
         <location line="-163"/>
         <source>Balances</source>
-        <translation type="unfinished"></translation>
+        <translation>Балансы</translation>
     </message>
     <message>
         <location line="+147"/>
@@ -1543,7 +1543,7 @@ Address: %4
     <message>
         <location line="+23"/>
         <source>Spendable:</source>
-        <translation type="unfinished"></translation>
+        <translation>Расходуемые:</translation>
     </message>
     <message>
         <location line="+49"/>
@@ -1769,22 +1769,22 @@ Address: %4
     <message>
         <location line="-19"/>
         <source>Error: Specified data directory &quot;%1&quot; does not exist.</source>
-        <translation type="unfinished"></translation>
+        <translation>Ошибка: указанный каталог данных &quot;%1&quot; не существует.</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>Error: Cannot parse configuration file: %1. Only use key=value syntax.</source>
-        <translation type="unfinished"></translation>
+        <translation>Ошибка: Невозможно разобрать файл конфигурации: %1. Используйте только ключ=значение.</translation>
     </message>
     <message>
         <location line="+12"/>
         <source>Error: Invalid combination of -regtest and -testnet.</source>
-        <translation type="unfinished"></translation>
+        <translation>Ошибка: Неправильное сочетание -regtest и -testnet.</translation>
     </message>
     <message>
         <location line="+58"/>
         <source>Bitcoin Core didn&apos;t yet exit safely...</source>
-        <translation type="unfinished"></translation>
+        <translation>Bitcoin Core закрывается...</translation>
     </message>
 </context>
 <context>
@@ -3179,7 +3179,7 @@ Address: %4
     <message>
         <location line="+3"/>
         <source>Confirming (%1 of %2 recommended confirmations)</source>
-        <translation type="unfinished"></translation>
+        <translation>Подтверждений (%1 из %2 рекомендуемыех подтверждений)</translation>
     </message>
     <message>
         <location line="+6"/>
@@ -3239,7 +3239,7 @@ Address: %4
     <message>
         <location line="+2"/>
         <source>Whether or not a watch-only address is involved in this transaction.</source>
-        <translation type="unfinished"></translation>
+        <translation>Является или нет только смотрящий адрес участником этой транзакции</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -3503,7 +3503,7 @@ Address: %4
     <message>
         <location filename="../bitcoinstrings.cpp" line="+236"/>
         <source>Options:</source>
-        <translation>Опции:</translation>
+        <translation>Параметры:</translation>
     </message>
     <message>
         <location line="+30"/>
@@ -3803,7 +3803,7 @@ rpcpassword=%s
     <message>
         <location line="+2"/>
         <source>Wallet options:</source>
-        <translation>Опции бумажника:</translation>
+        <translation>Параметры бумажника:</translation>
     </message>
     <message>
         <location line="+5"/>
@@ -4233,7 +4233,7 @@ rpcpassword=%s
     <message>
         <location line="+5"/>
         <source>Error: A fatal internal error occured, see debug.log for details</source>
-        <translation type="unfinished"></translation>
+        <translation>Ошибка: Произошла внутренняя ошибка, см. в debug.log, чтобы узнать подробности</translation>
     </message>
     <message>
         <location line="+6"/>
