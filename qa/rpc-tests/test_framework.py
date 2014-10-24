@@ -43,12 +43,12 @@ class BitcoinTestFramework(object):
         # If we joined network halves, connect the nodes from the joint
         # on outward.  This ensures that chains are properly reorganised.
         if not split:
-            connect_nodes(self.nodes[2], 1)
+            connect_nodes_bi(self.nodes, 1, 2)
             sync_blocks(self.nodes[1:2])
             sync_mempools(self.nodes[1:2])
 
-        connect_nodes(self.nodes[1], 0)
-        connect_nodes(self.nodes[3], 2)
+        connect_nodes_bi(self.nodes, 0, 1)
+        connect_nodes_bi(self.nodes, 2, 3)
         self.is_network_split = split
         self.sync_all()
 
