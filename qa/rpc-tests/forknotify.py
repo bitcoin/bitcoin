@@ -17,31 +17,30 @@ class ForkNotifyTest(BitcoinTestFramework):
 
     alert_filename = None  # Set by setup_network
 
-    def setup_network(self, test_dir):
-        nodes = []
-        self.alert_filename = os.path.join(test_dir, "alert.txt")
+    def setup_network(self):
+        self.nodes = []
+        self.alert_filename = os.path.join(self.options.tmpdir, "alert.txt")
         with open(self.alert_filename, 'w') as f:
             pass  # Just open then close to create zero-length file
-        nodes.append(start_node(0, test_dir,
+        self.nodes.append(start_node(0, self.options.tmpdir,
                             ["-blockversion=2", "-alertnotify=echo %s >> '" + self.alert_filename + "'"]))
         # Node1 mines block.version=211 blocks
-        nodes.append(start_node(1, test_dir,
+        self.nodes.append(start_node(1, self.options.tmpdir,
                                 ["-blockversion=211"]))
-        connect_nodes(nodes[1], 0)
+        connect_nodes(self.nodes[1], 0)
 
-        sync_blocks(nodes)
-        return nodes
-        
+        self.is_network_split = False
+        self.sync_all()
 
-    def run_test(self, nodes):
+    def run_test(self):
         # Mine 51 up-version blocks
-        nodes[1].setgenerate(True, 51)
-        sync_blocks(nodes)
+        self.nodes[1].setgenerate(True, 51)
+        self.sync_all()
         # -alertnotify should trigger on the 51'st,
         # but mine and sync another to give
         # -alertnotify time to write
-        nodes[1].setgenerate(True, 1)
-        sync_blocks(nodes)
+        self.nodes[1].setgenerate(True, 1)
+        self.sync_all()
 
         with open(self.alert_filename, 'r') as f:
             alert_text = f.read()
@@ -50,10 +49,10 @@ class ForkNotifyTest(BitcoinTestFramework):
             raise AssertionError("-alertnotify did not warn of up-version blocks")
 
         # Mine more up-version blocks, should not get more alerts:
-        nodes[1].setgenerate(True, 1)
-        sync_blocks(nodes)
-        nodes[1].setgenerate(True, 1)
-        sync_blocks(nodes)
+        self.nodes[1].setgenerate(True, 1)
+        self.sync_all()
+        self.nodes[1].setgenerate(True, 1)
+        self.sync_all()
 
         with open(self.alert_filename, 'r') as f:
             alert_text2 = f.read()
