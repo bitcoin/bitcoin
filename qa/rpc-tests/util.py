@@ -194,6 +194,10 @@ def connect_nodes(from_connection, node_num):
     while any(peer['version'] == 0 for peer in from_connection.getpeerinfo()):
         time.sleep(0.1)
 
+def connect_nodes_bi(nodes, a, b):
+    connect_nodes(nodes[a], b)
+    connect_nodes(nodes[b], a)
+
 def find_output(node, txid, amount):
     """
     Return index to output of txid with value amount
