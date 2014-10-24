@@ -1,11 +1,14 @@
 #include "aboutdialog.h"
 #include "ui_aboutdialog.h"
+
+#include "dialogwindowflags.h"
+
 #include "clientmodel.h"
 
 #include "version.h"
 
 AboutDialog::AboutDialog(QWidget *parent) :
-    QDialog(parent),
+    QDialog(parent, DIALOGWINDOWHINTS),
     ui(new Ui::AboutDialog)
 {
     ui->setupUi(this);
