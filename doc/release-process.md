@@ -33,7 +33,7 @@ Release Process
 	git checkout v${VERSION}
 	popd
 	pushd ./gitian-builder
-        mkdir -p inputs; cd inputs/
+	mkdir -p inputs; cd inputs/
 
  Register and download the Apple SDK (see OSX Readme for details)
 	visit https://developer.apple.com/downloads/download.action?path=Developer_Tools/xcode_4.6.3/xcode4630916281a.dmg
@@ -63,7 +63,7 @@ Release Process
 	wget 'https://github.com/theuni/libdmg-hfsplus/archive/libdmg-hfsplus-v0.1.tar.gz'
 	wget 'http://llvm.org/releases/3.2/clang+llvm-3.2-x86-linux-ubuntu-12.04.tar.gz' -O \
 	     clang-llvm-3.2-x86-linux-ubuntu-12.04.tar.gz
-        wget 'https://raw.githubusercontent.com/theuni/osx-cross-depends/master/patches/cdrtools/genisoimage.diff' -O \
+	wget 'https://raw.githubusercontent.com/theuni/osx-cross-depends/master/patches/cdrtools/genisoimage.diff' -O \
 	     cdrkit-deterministic.patch
 	cd ..
 	./bin/gbuild ../bitcoin/contrib/gitian-descriptors/boost-linux.yml
@@ -106,22 +106,22 @@ Release Process
 
  Build bitcoind and bitcoin-qt on Linux32, Linux64, and Win32:
   
-	./bin/gbuild --commit bitcoin=v${VERSION} ../bitcoin/contrib/gitian-descriptors/gitian-linux.yml
-	./bin/gsign --signer $SIGNER --release ${VERSION} --destination ../gitian.sigs/ ../bitcoin/contrib/gitian-descriptors/gitian-linux.yml
+	./bin/gbuild --commit bitzeny=z${VERSION} ../bitzeny/contrib/gitian-descriptors/gitian-linux.yml
+	#./bin/gsign --signer $SIGNER --release ${VERSION} --destination ../gitian.sigs/ ../bitzeny/contrib/gitian-descriptors/gitian-linux.yml
 	pushd build/out
-	zip -r bitcoin-${VERSION}-linux-gitian.zip *
-	mv bitcoin-${VERSION}-linux-gitian.zip ../../../
+	zip -r bitzeny-${VERSION}-linux-gitian.zip *
+	mv bitzeny-${VERSION}-linux-gitian.zip ../../../
 	popd
-	./bin/gbuild --commit bitcoin=v${VERSION} ../bitcoin/contrib/gitian-descriptors/gitian-win.yml
-	./bin/gsign --signer $SIGNER --release ${VERSION}-win --destination ../gitian.sigs/ ../bitcoin/contrib/gitian-descriptors/gitian-win.yml
+	./bin/gbuild --commit bitzeny=z${VERSION} ../bitzeny/contrib/gitian-descriptors/gitian-win.yml
+	#./bin/gsign --signer $SIGNER --release ${VERSION}-win --destination ../gitian.sigs/ ../bitzeny/contrib/gitian-descriptors/gitian-win.yml
 	pushd build/out
-	zip -r bitcoin-${VERSION}-win-gitian.zip *
-	mv bitcoin-${VERSION}-win-gitian.zip ../../../
+	zip -r bitzeny-${VERSION}-win-gitian.zip *
+	mv bitzeny-${VERSION}-win-gitian.zip ../../../
 	popd
-        ./bin/gbuild --commit bitcoin=v${VERSION} ../bitcoin/contrib/gitian-descriptors/gitian-osx-bitcoin.yml
-        ./bin/gsign --signer $SIGNER --release ${VERSION}-osx --destination ../gitian.sigs/ ../bitcoin/contrib/gitian-descriptors/gitian-osx-bitcoin.yml
+	./bin/gbuild --commit bitzeny=z${VERSION} ../bitzeny/contrib/gitian-descriptors/gitian-osx-bitcoin.yml
+	#./bin/gsign --signer $SIGNER --release ${VERSION}-osx --destination ../gitian.sigs/ ../bitzeny/contrib/gitian-descriptors/gitian-osx-bitcoin.yml
 	pushd build/out
-	mv Bitcoin-Qt.dmg ../../../
+	mv BitZeny-Qt.dmg ../../../
 	popd
 	popd
 
