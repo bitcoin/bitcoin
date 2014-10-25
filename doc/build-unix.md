@@ -235,3 +235,42 @@ In this case there is no dependency on Berkeley DB 4.8.
 Mining is also possible in disable-wallet mode, but only using the `getblocktemplate` RPC
 call not `getwork`.
 
+Compiling bitcoind as a shared object (`libbitcoind.so`)
+--------------------------------------------------------
+
+### Compiling as a library
+
+``` bash
+# ensure clean up
+$ make clean
+
+# create configure file
+$ ./autogen.sh
+
+# configure as a library with -fPIC on all object files
+# use --with-incompatible-bdb if necessary
+# use --prefix=/usr if necessary
+$ ./configure --enable-daemonlib
+
+# build libbitcoind.so
+$ time make
+...
+real    31m33.128s
+user    16m23.930s
+sys     2m52.310s
+```
+
+`--enable-daemonlib` will compile all object files with `-fPIC` (Position
+Independent Code - needed to create a shared object).
+
+`make` will then compile `./src/libbitcoind.so` (with `-shared -fPIC`), linking
+to all the freshly compiled PIC object files. This will completely ignore
+compiling tests and the QT object files.
+
+Without `--enable-daemonlib`, the Makefile with compile bitcoind with -fPIE
+(Position Independent for Executable), this allows compiling of bitcoind.
+
+#### Todo
+
+- Find a way to compile bitcoind and libbitcoind.so at the same time without
+  recompiling object files each time? Possibly use libtool's .lo/.la.

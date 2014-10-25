@@ -1,0 +1,30 @@
+all: $(LIBBITCOIND)
+
+libbitcoind_obj = \
+	$(subst bitcoin-main.o,, \
+		$(subst bitcoin-cli.o,, \
+		$(subst bitcoin-tx.o,, \
+		$(subst .cpp,.o,$(wildcard *.cpp))))) \
+	$(subst compat/glibcxx_compat.o,, \
+		$(subst compat/glibc_compat.o,, \
+		$(subst .cpp,.o,$(wildcard compat/*.cpp)))) \
+	$(subst .cpp,.o,$(wildcard crypto/*.cpp)) \
+	$(subst .cpp,.o,$(wildcard script/*.cpp)) \
+	$(subst .cpp,.o,$(wildcard secp256k1/*.cpp)) \
+	$(subst univalue/gen.o,, \
+		$(subst .cpp,.o,$(wildcard univalue/*.cpp)))
+
+if GLIBC_BACK_COMPAT
+libbitcoind_obj += compat/glibc_compat.o
+libbitcoind_obj += compat/glibcxx_compat.o
+endif
+
+version.o: version.cpp obj/build.h
+	$(AM_V_CXX) $(OBJCXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
+	  $(BITCOIN_INCLUDES) $(BITCOIN_CONFIG_INCLUDES) $(AM_CPPFLAGS) \
+	  $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c $< -o $@
+
+$(LIBBITCOIND): $(LIBLEVELDB) $(LIBMEMENV) $(libbitcoind_obj)
+	$(CC) -shared -fPIC $(DEFS) $(CPPFLAGS) $(BITCOIN_CONFIG_INCLUDES) \
+	$(BITCOIN_INCLUDES) -o $@ $(BOOST_LIBS) $(BDB_LIBS) \
+	$(PROTOBUF_LIBS) $(SSL_LIBS) $(LIBS) $^

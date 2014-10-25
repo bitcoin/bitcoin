@@ -35,7 +35,9 @@ LIBBITCOIN_UTIL=libbitcoin_util.a
 LIBBITCOIN_CRYPTO=crypto/libbitcoin_crypto.a
 LIBBITCOIN_UNIVALUE=univalue/libbitcoin_univalue.a
 LIBBITCOINQT=qt/libbitcoinqt.a
+LIBBITCOIND=libbitcoind.so
 
+if !ENABLE_DAEMONLIB
 noinst_LIBRARIES = \
   libbitcoin_server.a \
   libbitcoin_common.a \
@@ -68,6 +70,7 @@ BITCOIN_CORE_H = \
   amount.h \
   base58.h \
   bloom.h \
+  bitcoind.h \
   chain.h \
   chainparams.h \
   chainparamsbase.h \
@@ -100,6 +103,7 @@ BITCOIN_CORE_H = \
   rpcclient.h \
   rpcprotocol.h \
   rpcserver.h \
+  rpcwallet.h \
   script/compressor.h \
   script/interpreter.h \
   script/script.h \
@@ -136,10 +140,17 @@ JSON_H = \
   json/json_spirit_writer.h \
   json/json_spirit_writer_template.h
 
+else
+.PHONY: FORCE
+BITCOIN_INCLUDES += $(BDB_CPPFLAGS)
+endif
+
 obj/build.h: FORCE
 	@$(MKDIR_P) $(builddir)/obj
 	@$(top_srcdir)/share/genbuild.sh $(abs_top_builddir)/src/obj/build.h \
 	  $(abs_top_srcdir)
+
+if !ENABLE_DAEMONLIB
 libbitcoin_util_a-version.$(OBJEXT): obj/build.h
 
 # server: shared between bitcoind and bitcoin-qt
@@ -149,6 +160,7 @@ libbitcoin_server_a_SOURCES = \
   alert.cpp \
   bloom.cpp \
   chain.cpp \
+  bitcoind.cpp \
   checkpoints.cpp \
   init.cpp \
   leveldbwrapper.cpp \
@@ -274,7 +286,7 @@ endif
 if ENABLE_WALLET
 bitcoind_LDADD += libbitcoin_wallet.a
 endif
-bitcoind_SOURCES = bitcoind.cpp
+bitcoind_SOURCES = bitcoin-main.cpp
 #
 
 if TARGET_WINDOWS
@@ -327,6 +339,7 @@ if TARGET_WINDOWS
 bitcoin_cli_SOURCES += bitcoin-cli-res.rc
 endif
 bitcoin_cli_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS)
+endif
 
 CLEANFILES = leveldb/libleveldb.a leveldb/libmemenv.a *.gcda *.gcno
 
@@ -352,6 +365,9 @@ clean-local:
 	@test -f $(PROTOC)
 	$(AM_V_GEN) $(PROTOC) --cpp_out=$(@D) --proto_path=$(abspath $(<D) $<)
 
+if ENABLE_DAEMONLIB
+include Makefile.daemon.include
+else
 if ENABLE_TESTS
 include Makefile.test.include
 endif
@@ -362,4 +378,5 @@ endif
 
 if ENABLE_QT_TESTS
 include Makefile.qttest.include
+endif
 endif

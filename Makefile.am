@@ -33,6 +33,11 @@ COVERAGE_INFO = baseline_filtered_combined.info baseline.info block_test.info \
   baseline_filtered.info block_test_filtered.info \
   leveldb_baseline_filtered.info test_bitcoin_coverage.info test_bitcoin.info
 
+if ENABLE_DAEMONLIB
+all:
+	$(MAKE) -C src
+endif
+
 dist-hook:
 	-$(MAKE) -C $(top_distdir)/src/leveldb clean
 	-$(MAKE) -C $(top_distdir)/src/secp256k1 distclean

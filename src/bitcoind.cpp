@@ -3,16 +3,7 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "rpcserver.h"
-#include "init.h"
-#include "main.h"
-#include "noui.h"
-#include "ui_interface.h"
-#include "util.h"
-
-#include <boost/algorithm/string/predicate.hpp>
-#include <boost/filesystem.hpp>
-#include <boost/thread.hpp>
+#include "bitcoind.h"
 
 /* Introduction text for doxygen: */
 
@@ -169,14 +160,4 @@ bool AppInit(int argc, char* argv[])
     Shutdown();
 
     return fRet;
-}
-
-int main(int argc, char* argv[])
-{
-    SetupEnvironment();
-
-    // Connect bitcoind signal handlers
-    noui_connect();
-
-    return (AppInit(argc, argv) ? 0 : 1);
 }
