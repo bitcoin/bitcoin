@@ -7,8 +7,9 @@
 
 using namespace std;
 
-// CChain implementation
-
+/**
+ * CChain implementation
+ */
 void CChain::SetTip(CBlockIndex *pindex) {
     if (pindex == NULL) {
         vChain.clear();
