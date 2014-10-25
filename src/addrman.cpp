@@ -1,5 +1,5 @@
 // Copyright (c) 2012 Pieter Wuille
-// Distributed under the MIT/X11 software license, see the accompanying
+// Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "addrman.h"
@@ -39,7 +39,7 @@ int CAddrInfo::GetNewBucket(const std::vector<unsigned char>& nKey, const CNetAd
 
 bool CAddrInfo::IsTerrible(int64_t nNow) const
 {
-    if (nLastTry && nLastTry >= nNow - 60) // never remove things tried the last minute
+    if (nLastTry && nLastTry >= nNow - 60) // never remove things tried in the last minute
         return false;
 
     if (nTime > nNow + 10 * 60) // came in a flying DeLorean
@@ -131,7 +131,7 @@ int CAddrMan::SelectTried(int nKBucket)
 {
     std::vector<int>& vTried = vvTried[nKBucket];
 
-    // random shuffle the first few elements (using the entire list)
+    // randomly shuffle the first few elements (using the entire list)
     // find the least recently tried among them
     int64_t nOldest = -1;
     int nOldestPos = -1;
@@ -211,7 +211,7 @@ void CAddrMan::MakeTried(CAddrInfo& info, int nId, int nOrigin)
 
     assert(info.nRefCount == 0);
 
-    // what tried bucket to move the entry to
+    // which tried bucket to move the entry to
     int nKBucket = info.GetTriedBucket(nKey);
     std::vector<int>& vTried = vvTried[nKBucket];
 
