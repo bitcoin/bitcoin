@@ -216,6 +216,8 @@ struct CNodeState {
     int nMisbehavior;
     // Whether this peer should be disconnected and banned (unless whitelisted).
     bool fShouldBan;
+    // NodeId of this peer (debugging/logging purposes).
+    NodeId id;
     // String name of this peer (debugging/logging purposes).
     std::string name;
     // List of asynchronously-determined block rejections to notify this peer about.
@@ -279,6 +281,7 @@ void InitializeNode(NodeId nodeid, const CNode *pnode) {
     LOCK(cs_main);
     CNodeState &state = mapNodeState.insert(std::make_pair(nodeid, CNodeState())).first->second;
     state.name = pnode->addrName;
+    state.id = pnode->id;
 }
 
 void FinalizeNode(NodeId nodeid) {
