@@ -20,6 +20,7 @@ using namespace boost::assign;
 
 unsigned int pnSeed[] =
 {
+    0xAB057899,
 };
 
 class CMainParams : public CChainParams {
@@ -81,7 +82,7 @@ public:
         assert(hashGenesisBlock == uint256("0x0001ec690b3c6971e51e40ec24d4c62ba4d8383f7f74645e256d57e1d533ccb7"));
         assert(genesis.hashMerkleRoot == uint256("0x1d2f70d467851c55b9f547f813f703daf6d2501e586332d4606fbdc77ce1449f"));
 
-        //vSeeds.push_back(CDNSSeedData("bitcoin.sipa.be", "seed.bitcoin.sipa.be"));
+        vSeeds.push_back(CDNSSeedData("bitzeny.org", "seed.bitzeny.org"));
 
         base58Prefixes[PUBKEY_ADDRESS] = list_of(81);
         base58Prefixes[SCRIPT_ADDRESS] = list_of(5);
