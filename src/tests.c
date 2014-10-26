@@ -746,6 +746,8 @@ int main(int argc, char **argv) {
     run_ecdsa_openssl();
 #endif
 
+    printf("random run = %llu\n", (unsigned long long)secp256k1_rand32() + (unsigned long long)secp256k1_rand32() << 32);
+
     // shutdown
     secp256k1_stop();
     return 0;

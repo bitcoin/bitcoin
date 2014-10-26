@@ -9,6 +9,9 @@
 
 typedef struct {
     BIGNUM bn;
+#ifdef VERIFY
+    void* init;
+#endif
 } secp256k1_num_t;
 
 #endif
