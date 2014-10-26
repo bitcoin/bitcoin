@@ -52,7 +52,7 @@
 
 #include "yescrypt.h"
 
-#include "yescrypt-platform.c"
+#include "yescrypt-platform_c.h"
 
 #if __STDC_VERSION__ >= 199901L
 /* have restrict */

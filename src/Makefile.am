@@ -126,7 +126,15 @@ libbitcoin_common_a_SOURCES = \
   chainparams.cpp \
   core.cpp \
   hash.cpp \
+  hash/yescrypt-0.5/yescrypt.h \
   hash/yescrypt-0.5/yescrypt.c \
+  hash/yescrypt-0.5/sha256.h \
+  hash/yescrypt-0.5/sha256_c.h \
+  hash/yescrypt-0.5/yescrypt-best_c.h \
+  hash/yescrypt-0.5/sysendian.h \
+  hash/yescrypt-0.5/yescrypt-platform_c.h \
+  hash/yescrypt-0.5/yescrypt-opt_c.h \
+  hash/yescrypt-0.5/yescrypt-simd_c.h \
   key.cpp \
   netbase.cpp \
   protocol.cpp \

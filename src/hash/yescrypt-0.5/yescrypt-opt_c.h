@@ -43,7 +43,7 @@
 
 #include "yescrypt.h"
 
-#include "yescrypt-platform.c"
+#include "yescrypt-platform_c.h"
 
 static inline void
 blkcpy(uint64_t * dest, const uint64_t * src, size_t count)

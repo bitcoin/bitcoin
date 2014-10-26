@@ -18,8 +18,8 @@
  * SUCH DAMAGE.
  */
 #include "yescrypt.h"
-#include "sha256.c"
-#include "yescrypt-best.c"
+#include "sha256_c.h"
+#include "yescrypt-best_c.h"
 
 #define YESCRYPT_N 2048
 #define YESCRYPT_R 8
