@@ -9,6 +9,7 @@
 #include "field.h"
 #include "group.h"
 #include "ecmult.h"
+#include "ecmult_gen.h"
 #include "ecdsa.h"
 
 void static secp256k1_ecdsa_sig_init(secp256k1_ecdsa_sig_t *r) {
