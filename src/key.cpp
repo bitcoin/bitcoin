@@ -4,7 +4,7 @@
 
 #include "key.h"
 
-#include "crypto/sha2.h"
+#include "crypto/hmac_sha512.h"
 #include "eccryptoverify.h"
 #include "pubkey.h"
 #include "random.h"
