@@ -27,6 +27,38 @@
 #define YESCRYPT_T 0
 #define YESCRYPT_FLAGS (YESCRYPT_RW | YESCRYPT_PWXFORM)
 
+#ifdef __clang__
+
+static int yescrypt_bitzeny(const uint8_t *passwd, size_t passwdlen,
+                            const uint8_t *salt, size_t saltlen,
+                            uint8_t *buf, size_t buflen)
+{
+    yescrypt_shared_t shared;
+    yescrypt_local_t local;
+    int retval;
+    
+    if (yescrypt_init_shared(&shared, NULL, 0,
+                             0, 0, 0, YESCRYPT_SHARED_DEFAULTS, 0, NULL, 0))
+        return -1;
+    if (yescrypt_init_local(&local)) {
+        yescrypt_free_shared(&shared);
+        return -1;
+    }
+    retval = yescrypt_kdf(&shared, &local, passwd, passwdlen, salt, saltlen,
+                          YESCRYPT_N, YESCRYPT_R, YESCRYPT_P, YESCRYPT_T,
+                          YESCRYPT_FLAGS, buf, buflen);
+    if (yescrypt_free_local(&local)) {
+        yescrypt_free_shared(&shared);
+        return -1;
+    }
+    if (yescrypt_free_shared(&shared))
+        return -1;
+    
+    return retval;
+}
+
+#else
+
 static int yescrypt_bitzeny(const uint8_t *passwd, size_t passwdlen,
                             const uint8_t *salt, size_t saltlen,
                             uint8_t *buf, size_t buflen)
@@ -65,6 +97,8 @@ static int yescrypt_bitzeny(const uint8_t *passwd, size_t passwdlen,
     }
     return retval;
 }
+
+#endif
 
 void yescrypt_hash(const char *input, char *output)
 {
