@@ -1,6 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2013 The Bitcoin developers
-// Distributed under the MIT/X11 software license, see the accompanying
+// Copyright (c) 2009-2014 The Bitcoin developers
+// Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef BITCOIN_KEY_H
@@ -14,13 +14,15 @@
 #include <stdexcept>
 #include <vector>
 
-// secp256k1:
-// const unsigned int PRIVATE_KEY_SIZE = 279;
-// const unsigned int PUBLIC_KEY_SIZE  = 65;
-// const unsigned int SIGNATURE_SIZE   = 72;
-//
-// see www.keylength.com
-// script supports up to 75 for single byte push
+/** 
+ * secp256k1:
+ * const unsigned int PRIVATE_KEY_SIZE = 279;
+ * const unsigned int PUBLIC_KEY_SIZE  = 65;
+ * const unsigned int SIGNATURE_SIZE   = 72;
+ *
+ * see www.keylength.com
+ * script supports up to 75 for single byte push
+ */
 
 /** A reference to a CKey: the Hash160 of its serialized public key */
 class CKeyID : public uint160
@@ -34,11 +36,14 @@ public:
 class CPubKey
 {
 private:
-    // Just store the serialized data.
-    // Its length can very cheaply be computed from the first byte.
+
+    /**
+     * Just store the serialized data.
+     * Its length can very cheaply be computed from the first byte.
+     */
     unsigned char vch[65];
 
-    // Compute the length of a pubkey with a given first byte.
+    //! Compute the length of a pubkey with a given first byte.
     unsigned int static GetLen(unsigned char chHeader)
     {
         if (chHeader == 2 || chHeader == 3)
@@ -48,20 +53,20 @@ private:
         return 0;
     }
 
-    // Set this key data to be invalid
+    //! Set this key data to be invalid
     void Invalidate()
     {
         vch[0] = 0xFF;
     }
 
 public:
-    // Construct an invalid public key.
+    //! Construct an invalid public key.
     CPubKey()
     {
         Invalidate();
     }
 
-    // Initialize a public key using begin/end iterators to byte data.
+    //! Initialize a public key using begin/end iterators to byte data.
     template <typename T>
     void Set(const T pbegin, const T pend)
     {
@@ -72,26 +77,26 @@ public:
             Invalidate();
     }
 
-    // Construct a public key using begin/end iterators to byte data.
+    //! Construct a public key using begin/end iterators to byte data.
     template <typename T>
     CPubKey(const T pbegin, const T pend)
     {
         Set(pbegin, pend);
     }
 
-    // Construct a public key from a byte vector.
+    //! Construct a public key from a byte vector.
     CPubKey(const std::vector<unsigned char>& vch)
     {
         Set(vch.begin(), vch.end());
     }
 
-    // Simple read-only vector-like interface to the pubkey data.
+    //! Simple read-only vector-like interface to the pubkey data.
     unsigned int size() const { return GetLen(vch[0]); }
     const unsigned char* begin() const { return vch; }
     const unsigned char* end() const { return vch + size(); }
     const unsigned char& operator[](unsigned int pos) const { return vch[pos]; }
 
-    // Comparator implementation.
+    //! Comparator implementation.
     friend bool operator==(const CPubKey& a, const CPubKey& b)
     {
         return a.vch[0] == b.vch[0] &&
@@ -107,7 +112,7 @@ public:
                (a.vch[0] == b.vch[0] && memcmp(a.vch, b.vch, a.size()) < 0);
     }
 
-    // Implement serialization, as if this was a byte vector.
+    //! Implement serialization, as if this was a byte vector.
     unsigned int GetSerializeSize(int nType, int nVersion) const
     {
         return size() + 1;
@@ -134,86 +139,92 @@ public:
         }
     }
 
-    // Get the KeyID of this public key (hash of its serialization)
+    //! Get the KeyID of this public key (hash of its serialization)
     CKeyID GetID() const
     {
         return CKeyID(Hash160(vch, vch + size()));
     }
 
-    // Get the 256-bit hash of this public key.
+    //! Get the 256-bit hash of this public key.
     uint256 GetHash() const
     {
         return Hash(vch, vch + size());
     }
 
-    // Check syntactic correctness.
-    //
-    // Note that this is consensus critical as CheckSig() calls it!
+    /*
+     * Check syntactic correctness.
+     * 
+     * Note that this is consensus critical as CheckSig() calls it!
+     */
     bool IsValid() const
     {
         return size() > 0;
     }
 
-    // fully validate whether this is a valid public key (more expensive than IsValid())
+    //! fully validate whether this is a valid public key (more expensive than IsValid())
     bool IsFullyValid() const;
 
-    // Check whether this is a compressed public key.
+    //! Check whether this is a compressed public key.
     bool IsCompressed() const
     {
         return size() == 33;
     }
 
-    // Verify a DER signature (~72 bytes).
-    // If this public key is not fully valid, the return value will be false.
+    /**
+     * Verify a DER signature (~72 bytes).
+     * If this public key is not fully valid, the return value will be false.
+     */
     bool Verify(const uint256& hash, const std::vector<unsigned char>& vchSig) const;
 
-    // Recover a public key from a compact signature.
+    //! Recover a public key from a compact signature.
     bool RecoverCompact(const uint256& hash, const std::vector<unsigned char>& vchSig);
 
-    // Turn this public key into an uncompressed public key.
+    //! Turn this public key into an uncompressed public key.
     bool Decompress();
 
-    // Derive BIP32 child pubkey.
+    //! Derive BIP32 child pubkey.
     bool Derive(CPubKey& pubkeyChild, unsigned char ccChild[32], unsigned int nChild, const unsigned char cc[32]) const;
 };
 
 
-// secure_allocator is defined in allocators.h
-// CPrivKey is a serialized private key, with all parameters included (279 bytes)
+/**
+ * secure_allocator is defined in allocators.h
+ * CPrivKey is a serialized private key, with all parameters included (279 bytes)
+ */
 typedef std::vector<unsigned char, secure_allocator<unsigned char> > CPrivKey;
 
 /** An encapsulated private key. */
 class CKey
 {
 private:
-    // Whether this private key is valid. We check for correctness when modifying the key
-    // data, so fValid should always correspond to the actual state.
+    //! Whether this private key is valid. We check for correctness when modifying the key
+    //! data, so fValid should always correspond to the actual state.
     bool fValid;
 
-    // Whether the public key corresponding to this private key is (to be) compressed.
+    //! Whether the public key corresponding to this private key is (to be) compressed.
     bool fCompressed;
 
-    // The actual byte data
+    //! The actual byte data
     unsigned char vch[32];
 
-    // Check whether the 32-byte array pointed to be vch is valid keydata.
+    //! Check whether the 32-byte array pointed to be vch is valid keydata.
     bool static Check(const unsigned char* vch);
 
 public:
-    // Construct an invalid private key.
+    //! Construct an invalid private key.
     CKey() : fValid(false), fCompressed(false)
     {
         LockObject(vch);
     }
 
-    // Copy constructor. This is necessary because of memlocking.
+    //! Copy constructor. This is necessary because of memlocking.
     CKey(const CKey& secret) : fValid(secret.fValid), fCompressed(secret.fCompressed)
     {
         LockObject(vch);
         memcpy(vch, secret.vch, sizeof(vch));
     }
 
-    // Destructor (again necessary because of memlocking).
+    //! Destructor (again necessary because of memlocking).
     ~CKey()
     {
         UnlockObject(vch);
@@ -225,7 +236,7 @@ public:
                memcmp(&a.vch[0], &b.vch[0], a.size()) == 0;
     }
 
-    // Initialize using begin and end iterators to byte data.
+    //! Initialize using begin and end iterators to byte data.
     template <typename T>
     void Set(const T pbegin, const T pend, bool fCompressedIn)
     {
@@ -242,48 +253,54 @@ public:
         }
     }
 
-    // Simple read-only vector-like interface.
+    //! Simple read-only vector-like interface.
     unsigned int size() const { return (fValid ? 32 : 0); }
     const unsigned char* begin() const { return vch; }
     const unsigned char* end() const { return vch + size(); }
 
-    // Check whether this private key is valid.
+    //! Check whether this private key is valid.
     bool IsValid() const { return fValid; }
 
-    // Check whether the public key corresponding to this private key is (to be) compressed.
+    //! Check whether the public key corresponding to this private key is (to be) compressed.
     bool IsCompressed() const { return fCompressed; }
 
-    // Initialize from a CPrivKey (serialized OpenSSL private key data).
+    //! Initialize from a CPrivKey (serialized OpenSSL private key data).
     bool SetPrivKey(const CPrivKey& vchPrivKey, bool fCompressed);
 
-    // Generate a new private key using a cryptographic PRNG.
+    //! Generate a new private key using a cryptographic PRNG.
     void MakeNewKey(bool fCompressed);
 
-    // Convert the private key to a CPrivKey (serialized OpenSSL private key data).
-    // This is expensive.
+    /**
+     * Convert the private key to a CPrivKey (serialized OpenSSL private key data).
+     * This is expensive. 
+     */
     CPrivKey GetPrivKey() const;
 
-    // Compute the public key from a private key.
-    // This is expensive.
+    /**
+     * Compute the public key from a private key.
+     * This is expensive.
+     */
     CPubKey GetPubKey() const;
 
-    // Create a DER-serialized signature.
+    //! Create a DER-serialized signature.
     bool Sign(const uint256& hash, std::vector<unsigned char>& vchSig, bool lowS = true) const;
 
-    // Create a compact signature (65 bytes), which allows reconstructing the used public key.
-    // The format is one header byte, followed by two times 32 bytes for the serialized r and s values.
-    // The header byte: 0x1B = first key with even y, 0x1C = first key with odd y,
-    //                  0x1D = second key with even y, 0x1E = second key with odd y,
-    //                  add 0x04 for compressed keys.
+    /**
+     * Create a compact signature (65 bytes), which allows reconstructing the used public key.
+     * The format is one header byte, followed by two times 32 bytes for the serialized r and s values.
+     * The header byte: 0x1B = first key with even y, 0x1C = first key with odd y,
+     *                  0x1D = second key with even y, 0x1E = second key with odd y,
+     *                  add 0x04 for compressed keys.
+     */
     bool SignCompact(const uint256& hash, std::vector<unsigned char>& vchSig) const;
 
-    // Derive BIP32 child key.
+    //! Derive BIP32 child key.
     bool Derive(CKey& keyChild, unsigned char ccChild[32], unsigned int nChild, const unsigned char cc[32]) const;
 
-    // Load private key and check that public key matches.
+    //! Load private key and check that public key matches.
     bool Load(CPrivKey& privkey, CPubKey& vchPubKey, bool fSkipCheck);
 
-    // Check whether an element of a signature (r or s) is valid.
+    //! Check whether an element of a signature (r or s) is valid.
     static bool CheckSignatureElement(const unsigned char* vch, int len, bool half);
 };
 

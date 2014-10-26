@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2014 The Bitcoin developers
-// Distributed under the MIT/X11 software license, see the accompanying
+// Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "key.h"
@@ -13,7 +13,7 @@
 #include "ecwrapper.h"
 #endif
 
-// anonymous namespace
+//! anonymous namespace with local implementation code (OpenSSL interaction)
 namespace {
 
 #ifdef USE_SECP256K1
@@ -56,7 +56,7 @@ int CompareBigEndian(const unsigned char *c1, size_t c1len, const unsigned char 
     return 0;
 }
 
-// Order of secp256k1's generator minus 1.
+/** Order of secp256k1's generator minus 1. */
 const unsigned char vchMaxModOrder[32] = {
     0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
     0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFE,
@@ -64,7 +64,7 @@ const unsigned char vchMaxModOrder[32] = {
     0xBF,0xD2,0x5E,0x8C,0xD0,0x36,0x41,0x40
 };
 
-// Half of the order of secp256k1's generator minus 1.
+/** Half of the order of secp256k1's generator minus 1. */
 const unsigned char vchMaxModHalfOrder[32] = {
     0x7F,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
     0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
