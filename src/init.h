@@ -34,3 +34,7 @@ std::string HelpMessage(HelpMessageMode mode);
 std::string LicenseInfo();
 
 #endif // BITCOIN_INIT_H
+
+#ifndef ENABLE_WALLET
+#define ENABLE_WALLET
+#endif

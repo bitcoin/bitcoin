@@ -4243,6 +4243,8 @@ bool ProcessMessages(CNode* pfrom)
         }
         string strCommand = hdr.GetCommand();
 
+		LogPrintf("*******Got Message: %s %s\n", strCommand, DateTimeStrFormat("%Y-%m-%d %H:%M:%S", GetTime()).c_str());
+
         // Message size
         unsigned int nMessageSize = hdr.nMessageSize;
 
@@ -4419,7 +4421,15 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
         // Start block sync
         if (pindexBestHeader == NULL)
             pindexBestHeader = chainActive.Tip();
-        bool fFetch = !pto->fInbound || (pindexBestHeader && (state.pindexLastCommonBlock ? state.pindexLastCommonBlock->nHeight : 0) + 144 > pindexBestHeader->nHeight);
+        //bool fFetch = !pto->fInbound || (pindexBestHeader && (state.pindexLastCommonBlock ? state.pindexLastCommonBlock->nHeight : 0) + 144 > pindexBestHeader->nHeight);
+		bool fFetch = !pto->fInbound;
+		if (!fFetch && pindexBestHeader)
+		{
+			if (state.pindexLastCommonBlock)
+				fFetch = (state.pindexLastCommonBlock->nHeight + 144 > pindexBestHeader->nHeight);
+			else
+				fFetch = true;
+		}
         if (!state.fSyncStarted && !pto->fClient && fFetch && !fImporting && !fReindex) {
             // Only actively request headers from a single peer, unless we're close to today.
             if (nSyncStarted == 0 || pindexBestHeader->GetBlockTime() > GetAdjustedTime() - 24 * 60 * 60) {
