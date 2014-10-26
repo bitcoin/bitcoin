@@ -10,6 +10,7 @@
 #include "field_impl.h"
 #include "group_impl.h"
 #include "ecmult_impl.h"
+#include "ecmult_gen_impl.h"
 #include "ecdsa_impl.h"
 
 void secp256k1_start(unsigned int flags) {
