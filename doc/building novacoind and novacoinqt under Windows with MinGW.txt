@@ -197,7 +197,7 @@ obj/txdb-leveldb.o: leveldb/libleveldb.lib
 на
 obj/txdb-leveldb.o: leveldb/libleveldb.a
 
-Если вы хотите использовать LevelDB как базу блоков, то просто удалите строчку USE_LEVELDB:=1
+Если вы хотите использовать BerkeleyDB как базу блоков, то просто удалите строчку USE_LEVELDB:=1
 
 -Сохраните измененный файл makefile.mingw
 
