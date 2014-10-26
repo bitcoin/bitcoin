@@ -13,7 +13,7 @@
 #include "ecwrapper.h"
 #endif
 
-//! anonymous namespace with local implementation code (OpenSSL interaction)
+//! anonymous namespace
 namespace {
 
 #ifdef USE_SECP256K1
