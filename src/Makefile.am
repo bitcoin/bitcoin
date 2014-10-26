@@ -203,10 +203,14 @@ libbitcoin_wallet_a_SOURCES = \
 crypto_libbitcoin_crypto_a_CPPFLAGS = $(BITCOIN_CONFIG_INCLUDES)
 crypto_libbitcoin_crypto_a_SOURCES = \
   crypto/sha1.cpp \
-  crypto/sha2.cpp \
+  crypto/sha256.cpp \
+  crypto/sha512.cpp \
+  crypto/hmac_sha512.cpp \
   crypto/ripemd160.cpp \
   crypto/common.h \
-  crypto/sha2.h \
+  crypto/sha256.h \
+  crypto/sha512.h \
+  crypto/hmac_sha512.h \
   crypto/sha1.h \
   crypto/ripemd160.h
 
@@ -342,8 +346,10 @@ if BUILD_BITCOIN_LIBS
 include_HEADERS = script/bitcoinconsensus.h
 libbitcoinconsensus_la_SOURCES = \
   core/transaction.cpp \
+  crypto/hmac_sha512.cpp \
   crypto/sha1.cpp \
-  crypto/sha2.cpp \
+  crypto/sha256.cpp \
+  crypto/sha512.cpp \
   crypto/ripemd160.cpp \
   eccryptoverify.cpp \
   ecwrapper.cpp \
