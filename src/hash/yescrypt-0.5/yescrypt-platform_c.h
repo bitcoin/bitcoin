@@ -18,7 +18,7 @@
  * SUCH DAMAGE.
  */
 
-#include <sys/mman.h>
+//#include <sys/mman.h>
 
 #define HUGEPAGE_THRESHOLD		(12 * 1024 * 1024)
 
