@@ -190,9 +190,14 @@ int static secp256k1_ge_is_valid(const secp256k1_ge_t *a) {
 }
 
 void static secp256k1_gej_double(secp256k1_gej_t *r, const secp256k1_gej_t *a) {
+    if (a->infinity) {
+        r->infinity = 1;
+        return;
+    }
+
     secp256k1_fe_t t5 = a->y;
     secp256k1_fe_normalize(&t5);
-    if (a->infinity || secp256k1_fe_is_zero(&t5)) {
+    if (secp256k1_fe_is_zero(&t5)) {
         r->infinity = 1;
         return;
     }
