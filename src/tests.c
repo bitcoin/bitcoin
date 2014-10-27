@@ -19,7 +19,7 @@
 #include "openssl/obj_mac.h"
 #endif
 
-static int count = 750;
+static int count = 64;
 
 /***** NUM TESTS *****/
 
