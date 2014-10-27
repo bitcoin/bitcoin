@@ -16,7 +16,6 @@
 
 void static secp256k1_num_init(secp256k1_num_t *r) {
 #ifdef VERIFY
-    VERIFY_CHECK(r->init != r);
     r->init = r;
 #endif
     BN_init(&r->bn);
