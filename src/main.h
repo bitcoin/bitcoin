@@ -314,9 +314,6 @@ public:
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
         READWRITE(vtxundo);
     }
-
-    bool WriteToDisk(CDiskBlockPos &pos, const uint256 &hashBlock);
-    bool ReadFromDisk(const CDiskBlockPos &pos, const uint256 &hashBlock);
 };
 
 
