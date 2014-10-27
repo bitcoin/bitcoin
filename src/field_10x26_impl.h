@@ -246,256 +246,262 @@ SECP256K1_INLINE static void secp256k1_fe_add(secp256k1_fe_t *r, const secp256k1
 }
 
 SECP256K1_INLINE static void secp256k1_fe_mul_inner(const uint32_t *a, const uint32_t *b, uint32_t *r) {
-    uint64_t c = (uint64_t)a[0] * b[0];
-    uint32_t t0 = c & 0x3FFFFFFUL; c = c >> 26;
-    c = c + (uint64_t)a[0] * b[1] +
-            (uint64_t)a[1] * b[0];
-    uint32_t t1 = c & 0x3FFFFFFUL; c = c >> 26;
-    c = c + (uint64_t)a[0] * b[2] +
-            (uint64_t)a[1] * b[1] +
-            (uint64_t)a[2] * b[0];
-    uint32_t t2 = c & 0x3FFFFFFUL; c = c >> 26;
-    c = c + (uint64_t)a[0] * b[3] +
-            (uint64_t)a[1] * b[2] +
-            (uint64_t)a[2] * b[1] +
-            (uint64_t)a[3] * b[0];
-    uint32_t t3 = c & 0x3FFFFFFUL; c = c >> 26;
-    c = c + (uint64_t)a[0] * b[4] +
-            (uint64_t)a[1] * b[3] +
-            (uint64_t)a[2] * b[2] +
-            (uint64_t)a[3] * b[1] +
-            (uint64_t)a[4] * b[0];
-    uint32_t t4 = c & 0x3FFFFFFUL; c = c >> 26;
-    c = c + (uint64_t)a[0] * b[5] +
-            (uint64_t)a[1] * b[4] +
-            (uint64_t)a[2] * b[3] +
-            (uint64_t)a[3] * b[2] +
-            (uint64_t)a[4] * b[1] +
-            (uint64_t)a[5] * b[0];
-    uint32_t t5 = c & 0x3FFFFFFUL; c = c >> 26;
-    c = c + (uint64_t)a[0] * b[6] +
-            (uint64_t)a[1] * b[5] +
-            (uint64_t)a[2] * b[4] +
-            (uint64_t)a[3] * b[3] +
-            (uint64_t)a[4] * b[2] +
-            (uint64_t)a[5] * b[1] +
-            (uint64_t)a[6] * b[0];
-    uint32_t t6 = c & 0x3FFFFFFUL; c = c >> 26;
-    c = c + (uint64_t)a[0] * b[7] +
-            (uint64_t)a[1] * b[6] +
-            (uint64_t)a[2] * b[5] +
-            (uint64_t)a[3] * b[4] +
-            (uint64_t)a[4] * b[3] +
-            (uint64_t)a[5] * b[2] +
-            (uint64_t)a[6] * b[1] +
-            (uint64_t)a[7] * b[0];
-    uint32_t t7 = c & 0x3FFFFFFUL; c = c >> 26;
-    c = c + (uint64_t)a[0] * b[8] +
-            (uint64_t)a[1] * b[7] +
-            (uint64_t)a[2] * b[6] +
-            (uint64_t)a[3] * b[5] +
-            (uint64_t)a[4] * b[4] +
-            (uint64_t)a[5] * b[3] +
-            (uint64_t)a[6] * b[2] +
-            (uint64_t)a[7] * b[1] +
-            (uint64_t)a[8] * b[0];
-    uint32_t t8 = c & 0x3FFFFFFUL; c = c >> 26;
-    c = c + (uint64_t)a[0] * b[9] +
-            (uint64_t)a[1] * b[8] +
-            (uint64_t)a[2] * b[7] +
-            (uint64_t)a[3] * b[6] +
-            (uint64_t)a[4] * b[5] +
-            (uint64_t)a[5] * b[4] +
-            (uint64_t)a[6] * b[3] +
-            (uint64_t)a[7] * b[2] +
-            (uint64_t)a[8] * b[1] +
-            (uint64_t)a[9] * b[0];
-    uint32_t t9 = c & 0x3FFFFFFUL; c = c >> 26;
-    c = c + (uint64_t)a[1] * b[9] +
-            (uint64_t)a[2] * b[8] +
-            (uint64_t)a[3] * b[7] +
-            (uint64_t)a[4] * b[6] +
-            (uint64_t)a[5] * b[5] +
-            (uint64_t)a[6] * b[4] +
-            (uint64_t)a[7] * b[3] +
-            (uint64_t)a[8] * b[2] +
-            (uint64_t)a[9] * b[1];
-    uint32_t t10 = c & 0x3FFFFFFUL; c = c >> 26;
-    c = c + (uint64_t)a[2] * b[9] +
-            (uint64_t)a[3] * b[8] +
-            (uint64_t)a[4] * b[7] +
-            (uint64_t)a[5] * b[6] +
-            (uint64_t)a[6] * b[5] +
-            (uint64_t)a[7] * b[4] +
-            (uint64_t)a[8] * b[3] +
-            (uint64_t)a[9] * b[2];
-    uint32_t t11 = c & 0x3FFFFFFUL; c = c >> 26;
-    c = c + (uint64_t)a[3] * b[9] +
-            (uint64_t)a[4] * b[8] +
-            (uint64_t)a[5] * b[7] +
-            (uint64_t)a[6] * b[6] +
-            (uint64_t)a[7] * b[5] +
-            (uint64_t)a[8] * b[4] +
-            (uint64_t)a[9] * b[3];
-    uint32_t t12 = c & 0x3FFFFFFUL; c = c >> 26;
-    c = c + (uint64_t)a[4] * b[9] +
-            (uint64_t)a[5] * b[8] +
-            (uint64_t)a[6] * b[7] +
-            (uint64_t)a[7] * b[6] +
-            (uint64_t)a[8] * b[5] +
-            (uint64_t)a[9] * b[4];
-    uint32_t t13 = c & 0x3FFFFFFUL; c = c >> 26;
-    c = c + (uint64_t)a[5] * b[9] +
-            (uint64_t)a[6] * b[8] +
-            (uint64_t)a[7] * b[7] +
-            (uint64_t)a[8] * b[6] +
-            (uint64_t)a[9] * b[5];
-    uint32_t t14 = c & 0x3FFFFFFUL; c = c >> 26;
-    c = c + (uint64_t)a[6] * b[9] +
-            (uint64_t)a[7] * b[8] +
-            (uint64_t)a[8] * b[7] +
-            (uint64_t)a[9] * b[6];
-    uint32_t t15 = c & 0x3FFFFFFUL; c = c >> 26;
-    c = c + (uint64_t)a[7] * b[9] +
-            (uint64_t)a[8] * b[8] +
-            (uint64_t)a[9] * b[7];
-    uint32_t t16 = c & 0x3FFFFFFUL; c = c >> 26;
-    c = c + (uint64_t)a[8] * b[9] +
-            (uint64_t)a[9] * b[8];
-    uint32_t t17 = c & 0x3FFFFFFUL; c = c >> 26;
-    c = c + (uint64_t)a[9] * b[9];
-    uint32_t t18 = c & 0x3FFFFFFUL; c = c >> 26;
-    uint32_t t19 = c;
 
-    c = t0 + (uint64_t)t10 * 0x3D10UL;
-    t0 = c & 0x3FFFFFFUL; c = c >> 26;
-    c = c + t1 + (uint64_t)t10*0x400UL + (uint64_t)t11 * 0x3D10UL;
-    t1 = c & 0x3FFFFFFUL; c = c >> 26;
-    c = c + t2 + (uint64_t)t11*0x400UL + (uint64_t)t12 * 0x3D10UL;
-    t2 = c & 0x3FFFFFFUL; c = c >> 26;
-    c = c + t3 + (uint64_t)t12*0x400UL + (uint64_t)t13 * 0x3D10UL;
-    r[3] = c & 0x3FFFFFFUL; c = c >> 26;
-    c = c + t4 + (uint64_t)t13*0x400UL + (uint64_t)t14 * 0x3D10UL;
-    r[4] = c & 0x3FFFFFFUL; c = c >> 26;
-    c = c + t5 + (uint64_t)t14*0x400UL + (uint64_t)t15 * 0x3D10UL;
-    r[5] = c & 0x3FFFFFFUL; c = c >> 26;
-    c = c + t6 + (uint64_t)t15*0x400UL + (uint64_t)t16 * 0x3D10UL;
-    r[6] = c & 0x3FFFFFFUL; c = c >> 26;
-    c = c + t7 + (uint64_t)t16*0x400UL + (uint64_t)t17 * 0x3D10UL;
-    r[7] = c & 0x3FFFFFFUL; c = c >> 26;
-    c = c + t8 + (uint64_t)t17*0x400UL + (uint64_t)t18 * 0x3D10UL;
-    r[8] = c & 0x3FFFFFFUL; c = c >> 26;
-    c = c + t9 + (uint64_t)t18*0x400UL + (uint64_t)t19 * 0x1000003D10ULL;
-    r[9] = c & 0x03FFFFFUL; c = c >> 22;
-    uint64_t d = t0 + c * 0x3D1UL;
-    r[0] = d & 0x3FFFFFFUL; d = d >> 26;
-    d = d + t1 + c*0x40;
-    r[1] = d & 0x3FFFFFFUL; d = d >> 26;
-    r[2] = t2 + d;
+    const uint32_t M = 0x3FFFFFFUL, R0 = 0x3D10UL, R1 = 0x400UL;
+
+    uint64_t c, d;
+
+    d  = (uint64_t)a[0] * b[9]
+       + (uint64_t)a[1] * b[8]
+       + (uint64_t)a[2] * b[7]
+       + (uint64_t)a[3] * b[6]
+       + (uint64_t)a[4] * b[5]
+       + (uint64_t)a[5] * b[4]
+       + (uint64_t)a[6] * b[3]
+       + (uint64_t)a[7] * b[2]
+       + (uint64_t)a[8] * b[1]
+       + (uint64_t)a[9] * b[0];
+    uint32_t t9 = d & M; d >>= 26;
+
+    c  = (uint64_t)a[0] * b[0];
+    d += (uint64_t)a[1] * b[9]
+       + (uint64_t)a[2] * b[8]
+       + (uint64_t)a[3] * b[7]
+       + (uint64_t)a[4] * b[6]
+       + (uint64_t)a[5] * b[5]
+       + (uint64_t)a[6] * b[4]
+       + (uint64_t)a[7] * b[3]
+       + (uint64_t)a[8] * b[2]
+       + (uint64_t)a[9] * b[1];
+    uint64_t u0 = d & M; d >>= 26; c += u0 * R0;
+    uint32_t t0 = c & M; c >>= 26; c += u0 * R1;
+
+    c += (uint64_t)a[0] * b[1]
+       + (uint64_t)a[1] * b[0];
+    d += (uint64_t)a[2] * b[9]
+       + (uint64_t)a[3] * b[8]
+       + (uint64_t)a[4] * b[7]
+       + (uint64_t)a[5] * b[6]
+       + (uint64_t)a[6] * b[5]
+       + (uint64_t)a[7] * b[4]
+       + (uint64_t)a[8] * b[3]
+       + (uint64_t)a[9] * b[2];
+    uint64_t u1 = d & M; d >>= 26; c += u1 * R0;
+    uint32_t t1 = c & M; c >>= 26; c += u1 * R1;
+
+    c += (uint64_t)a[0] * b[2]
+       + (uint64_t)a[1] * b[1]
+       + (uint64_t)a[2] * b[0];
+    d += (uint64_t)a[3] * b[9]
+       + (uint64_t)a[4] * b[8]
+       + (uint64_t)a[5] * b[7]
+       + (uint64_t)a[6] * b[6]
+       + (uint64_t)a[7] * b[5]
+       + (uint64_t)a[8] * b[4]
+       + (uint64_t)a[9] * b[3];
+    uint64_t u2 = d & M; d >>= 26; c += u2 * R0;
+    uint32_t t2 = c & M; c >>= 26; c += u2 * R1;
+
+    c += (uint64_t)a[0] * b[3]
+       + (uint64_t)a[1] * b[2]
+       + (uint64_t)a[2] * b[1]
+       + (uint64_t)a[3] * b[0];
+    d += (uint64_t)a[4] * b[9]
+       + (uint64_t)a[5] * b[8]
+       + (uint64_t)a[6] * b[7]
+       + (uint64_t)a[7] * b[6]
+       + (uint64_t)a[8] * b[5]
+       + (uint64_t)a[9] * b[4];
+    uint64_t u3 = d & M; d >>= 26; c += u3 * R0;
+    uint32_t t3 = c & M; c >>= 26; c += u3 * R1;
+
+    c += (uint64_t)a[0] * b[4]
+       + (uint64_t)a[1] * b[3]
+       + (uint64_t)a[2] * b[2]
+       + (uint64_t)a[3] * b[1]
+       + (uint64_t)a[4] * b[0];
+    d += (uint64_t)a[5] * b[9]
+       + (uint64_t)a[6] * b[8]
+       + (uint64_t)a[7] * b[7]
+       + (uint64_t)a[8] * b[6]
+       + (uint64_t)a[9] * b[5];
+    uint64_t u4 = d & M; d >>= 26; c += u4 * R0;
+    uint32_t t4 = c & M; c >>= 26; c += u4 * R1;
+
+    c += (uint64_t)a[0] * b[5]
+       + (uint64_t)a[1] * b[4]
+       + (uint64_t)a[2] * b[3]
+       + (uint64_t)a[3] * b[2]
+       + (uint64_t)a[4] * b[1]
+       + (uint64_t)a[5] * b[0];
+    d += (uint64_t)a[6] * b[9]
+       + (uint64_t)a[7] * b[8]
+       + (uint64_t)a[8] * b[7]
+       + (uint64_t)a[9] * b[6];
+    uint64_t u5 = d & M; d >>= 26; c += u5 * R0;
+    uint32_t t5 = c & M; c >>= 26; c += u5 * R1;
+
+    c += (uint64_t)a[0] * b[6]
+       + (uint64_t)a[1] * b[5]
+       + (uint64_t)a[2] * b[4]
+       + (uint64_t)a[3] * b[3]
+       + (uint64_t)a[4] * b[2]
+       + (uint64_t)a[5] * b[1]
+       + (uint64_t)a[6] * b[0];
+    d += (uint64_t)a[7] * b[9]
+       + (uint64_t)a[8] * b[8]
+       + (uint64_t)a[9] * b[7];
+    uint64_t u6 = d & M; d >>= 26; c += u6 * R0;
+    uint32_t t6 = c & M; c >>= 26; c += u6 * R1;
+
+    c += (uint64_t)a[0] * b[7]
+       + (uint64_t)a[1] * b[6]
+       + (uint64_t)a[2] * b[5]
+       + (uint64_t)a[3] * b[4]
+       + (uint64_t)a[4] * b[3]
+       + (uint64_t)a[5] * b[2]
+       + (uint64_t)a[6] * b[1]
+       + (uint64_t)a[7] * b[0];
+    d += (uint64_t)a[8] * b[9]
+       + (uint64_t)a[9] * b[8];
+    uint64_t u7 = d & M; d >>= 26; c += u7 * R0;
+    uint32_t t7 = c & M; c >>= 26; c += u7 * R1;
+
+    c += (uint64_t)a[0] * b[8]
+       + (uint64_t)a[1] * b[7]
+       + (uint64_t)a[2] * b[6]
+       + (uint64_t)a[3] * b[5]
+       + (uint64_t)a[4] * b[4]
+       + (uint64_t)a[5] * b[3]
+       + (uint64_t)a[6] * b[2]
+       + (uint64_t)a[7] * b[1]
+       + (uint64_t)a[8] * b[0];
+    d += (uint64_t)a[9] * b[9];
+    uint64_t u8 = d & M; d >>= 26; c += u8 * R0;
+
+    r[3] = t3;
+    r[4] = t4;
+    r[5] = t5;
+    r[6] = t6;
+    r[7] = t7;
+
+    r[8] = c & M; c >>= 26; c += u8 * R1;
+    c   += d * R0 + t9;
+    r[9] = c & (M >> 4); c >>= 22; c += d * (R1 << 4);
+
+    d    = c * (R0 >> 4) + t0;
+    r[0] = d & M; d >>= 26;
+    d   += c * (R1 >> 4) + t1;
+    r[1] = d & M; d >>= 26;
+    d   += t2;
+    r[2] = d;
 }
 
 SECP256K1_INLINE static void secp256k1_fe_sqr_inner(const uint32_t *a, uint32_t *r) {
-    uint64_t c = (uint64_t)a[0] * a[0];
-    uint32_t t0 = c & 0x3FFFFFFUL; c = c >> 26;
-    c = c + (uint64_t)(a[0]*2) * a[1];
-    uint32_t t1 = c & 0x3FFFFFFUL; c = c >> 26;
-    c = c + (uint64_t)(a[0]*2) * a[2] +
-            (uint64_t)a[1] * a[1];
-    uint32_t t2 = c & 0x3FFFFFFUL; c = c >> 26;
-    c = c + (uint64_t)(a[0]*2) * a[3] +
-            (uint64_t)(a[1]*2) * a[2];
-    uint32_t t3 = c & 0x3FFFFFFUL; c = c >> 26;
-    c = c + (uint64_t)(a[0]*2) * a[4] +
-            (uint64_t)(a[1]*2) * a[3] +
-            (uint64_t)a[2] * a[2];
-    uint32_t t4 = c & 0x3FFFFFFUL; c = c >> 26;
-    c = c + (uint64_t)(a[0]*2) * a[5] +
-            (uint64_t)(a[1]*2) * a[4] +
-            (uint64_t)(a[2]*2) * a[3];
-    uint32_t t5 = c & 0x3FFFFFFUL; c = c >> 26;
-    c = c + (uint64_t)(a[0]*2) * a[6] +
-            (uint64_t)(a[1]*2) * a[5] +
-            (uint64_t)(a[2]*2) * a[4] +
-            (uint64_t)a[3] * a[3];
-    uint32_t t6 = c & 0x3FFFFFFUL; c = c >> 26;
-    c = c + (uint64_t)(a[0]*2) * a[7] +
-            (uint64_t)(a[1]*2) * a[6] +
-            (uint64_t)(a[2]*2) * a[5] +
-            (uint64_t)(a[3]*2) * a[4];
-    uint32_t t7 = c & 0x3FFFFFFUL; c = c >> 26;
-    c = c + (uint64_t)(a[0]*2) * a[8] +
-            (uint64_t)(a[1]*2) * a[7] +
-            (uint64_t)(a[2]*2) * a[6] +
-            (uint64_t)(a[3]*2) * a[5] +
-            (uint64_t)a[4] * a[4];
-    uint32_t t8 = c & 0x3FFFFFFUL; c = c >> 26;
-    c = c + (uint64_t)(a[0]*2) * a[9] +
-            (uint64_t)(a[1]*2) * a[8] +
-            (uint64_t)(a[2]*2) * a[7] +
-            (uint64_t)(a[3]*2) * a[6] +
-            (uint64_t)(a[4]*2) * a[5];
-    uint32_t t9 = c & 0x3FFFFFFUL; c = c >> 26;
-    c = c + (uint64_t)(a[1]*2) * a[9] +
-            (uint64_t)(a[2]*2) * a[8] +
-            (uint64_t)(a[3]*2) * a[7] +
-            (uint64_t)(a[4]*2) * a[6] +
-            (uint64_t)a[5] * a[5];
-    uint32_t t10 = c & 0x3FFFFFFUL; c = c >> 26;
-    c = c + (uint64_t)(a[2]*2) * a[9] +
-            (uint64_t)(a[3]*2) * a[8] +
-            (uint64_t)(a[4]*2) * a[7] +
-            (uint64_t)(a[5]*2) * a[6];
-    uint32_t t11 = c & 0x3FFFFFFUL; c = c >> 26;
-    c = c + (uint64_t)(a[3]*2) * a[9] +
-            (uint64_t)(a[4]*2) * a[8] +
-            (uint64_t)(a[5]*2) * a[7] +
-            (uint64_t)a[6] * a[6];
-    uint32_t t12 = c & 0x3FFFFFFUL; c = c >> 26;
-    c = c + (uint64_t)(a[4]*2) * a[9] +
-            (uint64_t)(a[5]*2) * a[8] +
-            (uint64_t)(a[6]*2) * a[7];
-    uint32_t t13 = c & 0x3FFFFFFUL; c = c >> 26;
-    c = c + (uint64_t)(a[5]*2) * a[9] +
-            (uint64_t)(a[6]*2) * a[8] +
-            (uint64_t)a[7] * a[7];
-    uint32_t t14 = c & 0x3FFFFFFUL; c = c >> 26;
-    c = c + (uint64_t)(a[6]*2) * a[9] +
-            (uint64_t)(a[7]*2) * a[8];
-    uint32_t t15 = c & 0x3FFFFFFUL; c = c >> 26;
-    c = c + (uint64_t)(a[7]*2) * a[9] +
-            (uint64_t)a[8] * a[8];
-    uint32_t t16 = c & 0x3FFFFFFUL; c = c >> 26;
-    c = c + (uint64_t)(a[8]*2) * a[9];
-    uint32_t t17 = c & 0x3FFFFFFUL; c = c >> 26;
-    c = c + (uint64_t)a[9] * a[9];
-    uint32_t t18 = c & 0x3FFFFFFUL; c = c >> 26;
-    uint32_t t19 = c;
 
-    c = t0 + (uint64_t)t10 * 0x3D10UL;
-    t0 = c & 0x3FFFFFFUL; c = c >> 26;
-    c = c + t1 + (uint64_t)t10*0x400UL + (uint64_t)t11 * 0x3D10UL;
-    t1 = c & 0x3FFFFFFUL; c = c >> 26;
-    c = c + t2 + (uint64_t)t11*0x400UL + (uint64_t)t12 * 0x3D10UL;
-    t2 = c & 0x3FFFFFFUL; c = c >> 26;
-    c = c + t3 + (uint64_t)t12*0x400UL + (uint64_t)t13 * 0x3D10UL;
-    r[3] = c & 0x3FFFFFFUL; c = c >> 26;
-    c = c + t4 + (uint64_t)t13*0x400UL + (uint64_t)t14 * 0x3D10UL;
-    r[4] = c & 0x3FFFFFFUL; c = c >> 26;
-    c = c + t5 + (uint64_t)t14*0x400UL + (uint64_t)t15 * 0x3D10UL;
-    r[5] = c & 0x3FFFFFFUL; c = c >> 26;
-    c = c + t6 + (uint64_t)t15*0x400UL + (uint64_t)t16 * 0x3D10UL;
-    r[6] = c & 0x3FFFFFFUL; c = c >> 26;
-    c = c + t7 + (uint64_t)t16*0x400UL + (uint64_t)t17 * 0x3D10UL;
-    r[7] = c & 0x3FFFFFFUL; c = c >> 26;
-    c = c + t8 + (uint64_t)t17*0x400UL + (uint64_t)t18 * 0x3D10UL;
-    r[8] = c & 0x3FFFFFFUL; c = c >> 26;
-    c = c + t9 + (uint64_t)t18*0x400UL + (uint64_t)t19 * 0x1000003D10ULL;
-    r[9] = c & 0x03FFFFFUL; c = c >> 22;
-    uint64_t d = t0 + c * 0x3D1UL;
-    r[0] = d & 0x3FFFFFFUL; d = d >> 26;
-    d = d + t1 + c*0x40;
-    r[1] = d & 0x3FFFFFFUL; d = d >> 26;
-    r[2] = t2 + d;
+    const uint32_t M = 0x3FFFFFFUL, R0 = 0x3D10UL, R1 = 0x400UL;
+
+    uint64_t c, d;
+
+    d  = (uint64_t)(a[0]*2) * a[9]
+       + (uint64_t)(a[1]*2) * a[8]
+       + (uint64_t)(a[2]*2) * a[7]
+       + (uint64_t)(a[3]*2) * a[6]
+       + (uint64_t)(a[4]*2) * a[5];
+    uint32_t t9 = d & M; d >>= 26;
+
+    c  = (uint64_t)a[0] * a[0];
+    d += (uint64_t)(a[1]*2) * a[9]
+       + (uint64_t)(a[2]*2) * a[8]
+       + (uint64_t)(a[3]*2) * a[7]
+       + (uint64_t)(a[4]*2) * a[6]
+       + (uint64_t)a[5] * a[5];
+    uint64_t u0 = d & M; d >>= 26; c += u0 * R0;
+    uint32_t t0 = c & M; c >>= 26; c += u0 * R1;
+
+    c += (uint64_t)(a[0]*2) * a[1];
+    d += (uint64_t)(a[2]*2) * a[9]
+       + (uint64_t)(a[3]*2) * a[8]
+       + (uint64_t)(a[4]*2) * a[7]
+       + (uint64_t)(a[5]*2) * a[6];
+    uint64_t u1 = d & M; d >>= 26; c += u1 * R0;
+    uint32_t t1 = c & M; c >>= 26; c += u1 * R1;
+
+    c += (uint64_t)(a[0]*2) * a[2]
+       + (uint64_t)a[1] * a[1];
+    d += (uint64_t)(a[3]*2) * a[9]
+       + (uint64_t)(a[4]*2) * a[8]
+       + (uint64_t)(a[5]*2) * a[7]
+       + (uint64_t)a[6] * a[6];
+    uint64_t u2 = d & M; d >>= 26; c += u2 * R0;
+    uint32_t t2 = c & M; c >>= 26; c += u2 * R1;
+
+    c += (uint64_t)(a[0]*2) * a[3]
+       + (uint64_t)(a[1]*2) * a[2];
+    d += (uint64_t)(a[4]*2) * a[9]
+       + (uint64_t)(a[5]*2) * a[8]
+       + (uint64_t)(a[6]*2) * a[7];
+    uint64_t u3 = d & M; d >>= 26; c += u3 * R0;
+    uint32_t t3 = c & M; c >>= 26; c += u3 * R1;
+
+    c += (uint64_t)(a[0]*2) * a[4]
+       + (uint64_t)(a[1]*2) * a[3]
+       + (uint64_t)a[2] * a[2];
+    d += (uint64_t)(a[5]*2) * a[9]
+       + (uint64_t)(a[6]*2) * a[8]
+       + (uint64_t)a[7] * a[7];
+    uint64_t u4 = d & M; d >>= 26; c += u4 * R0;
+    uint32_t t4 = c & M; c >>= 26; c += u4 * R1;
+
+    c += (uint64_t)(a[0]*2) * a[5]
+       + (uint64_t)(a[1]*2) * a[4]
+       + (uint64_t)(a[2]*2) * a[3];
+    d += (uint64_t)(a[6]*2) * a[9]
+       + (uint64_t)(a[7]*2) * a[8];
+    uint64_t u5 = d & M; d >>= 26; c += u5 * R0;
+    uint32_t t5 = c & M; c >>= 26; c += u5 * R1;
+
+    c += (uint64_t)(a[0]*2) * a[6]
+       + (uint64_t)(a[1]*2) * a[5]
+       + (uint64_t)(a[2]*2) * a[4]
+       + (uint64_t)a[3] * a[3];
+    d += (uint64_t)(a[7]*2) * a[9]
+       + (uint64_t)a[8] * a[8];
+    uint64_t u6 = d & M; d >>= 26; c += u6 * R0;
+    uint32_t t6 = c & M; c >>= 26; c += u6 * R1;
+
+    c += (uint64_t)(a[0]*2) * a[7]
+       + (uint64_t)(a[1]*2) * a[6]
+       + (uint64_t)(a[2]*2) * a[5]
+       + (uint64_t)(a[3]*2) * a[4];
+    d += (uint64_t)(a[8]*2) * a[9];
+    uint64_t u7 = d & M; d >>= 26; c += u7 * R0;
+    uint32_t t7 = c & M; c >>= 26; c += u7 * R1;
+
+    c += (uint64_t)(a[0]*2) * a[8]
+       + (uint64_t)(a[1]*2) * a[7]
+       + (uint64_t)(a[2]*2) * a[6]
+       + (uint64_t)(a[3]*2) * a[5]
+       + (uint64_t)a[4] * a[4];
+    d += (uint64_t)a[9] * a[9];
+    uint64_t u8 = d & M; d >>= 26; c += u8 * R0;
+
+    r[3] = t3;
+    r[4] = t4;
+    r[5] = t5;
+    r[6] = t6;
+    r[7] = t7;
+
+    r[8] = c & M; c >>= 26; c += u8 * R1;
+    c   += d * R0 + t9;
+    r[9] = c & (M >> 4); c >>= 22; c += d * (R1 << 4);
+
+    d    = c * (R0 >> 4) + t0;
+    r[0] = d & M; d >>= 26;
+    d   += c * (R1 >> 4) + t1;
+    r[1] = d & M; d >>= 26;
+    d   += t2;
+    r[2] = d;
 }
 
 

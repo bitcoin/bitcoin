@@ -8,98 +8,109 @@
 #include <stdint.h>
 
 SECP256K1_INLINE static void secp256k1_fe_mul_inner(const uint64_t *a, const uint64_t *b, uint64_t *r) {
-    __int128 c = (__int128)a[0] * b[0];
-    uint64_t t0 = c & 0xFFFFFFFFFFFFFULL; c = c >> 52; // c max 0FFFFFFFFFFFFFE0
-    c = c + (__int128)a[0] * b[1] +
-            (__int128)a[1] * b[0];
-    uint64_t t1 = c & 0xFFFFFFFFFFFFFULL; c = c >> 52; // c max 20000000000000BF
-    c = c + (__int128)a[0] * b[2] +
-            (__int128)a[1] * b[1] +
-            (__int128)a[2] * b[0];
-    uint64_t t2 = c & 0xFFFFFFFFFFFFFULL; c = c >> 52; // c max 30000000000001A0
-    c = c + (__int128)a[0] * b[3] +
-            (__int128)a[1] * b[2] +
-            (__int128)a[2] * b[1] +
-            (__int128)a[3] * b[0];
-    uint64_t t3 = c & 0xFFFFFFFFFFFFFULL; c = c >> 52; // c max 4000000000000280
-    c = c + (__int128)a[0] * b[4] +
-            (__int128)a[1] * b[3] +
-            (__int128)a[2] * b[2] +
-            (__int128)a[3] * b[1] +
-            (__int128)a[4] * b[0];
-    uint64_t t4 = c & 0xFFFFFFFFFFFFFULL; c = c >> 52; // c max 320000000000037E
-    c = c + (__int128)a[1] * b[4] +
-            (__int128)a[2] * b[3] +
-            (__int128)a[3] * b[2] +
-            (__int128)a[4] * b[1];
-    uint64_t t5 = c & 0xFFFFFFFFFFFFFULL; c = c >> 52; // c max 22000000000002BE
-    c = c + (__int128)a[2] * b[4] +
-            (__int128)a[3] * b[3] +
-            (__int128)a[4] * b[2];
-    uint64_t t6 = c & 0xFFFFFFFFFFFFFULL; c = c >> 52; // c max 12000000000001DE
-    c = c + (__int128)a[3] * b[4] +
-            (__int128)a[4] * b[3];
-    uint64_t t7 = c & 0xFFFFFFFFFFFFFULL; c = c >> 52; // c max 02000000000000FE
-    c = c + (__int128)a[4] * b[4];
-    uint64_t t8 = c & 0xFFFFFFFFFFFFFULL; c = c >> 52; // c max 001000000000001E
-    uint64_t t9 = c;
 
-    c = t0 + (__int128)t5 * 0x1000003D10ULL;
-    t0 = c & 0xFFFFFFFFFFFFFULL; c = c >> 52; // c max 0000001000003D10
-    c = c + t1 + (__int128)t6 * 0x1000003D10ULL;
-    t1 = c & 0xFFFFFFFFFFFFFULL; c = c >> 52; // c max 0000001000003D10
-    c = c + t2 + (__int128)t7 * 0x1000003D10ULL;
-    r[2] = c & 0xFFFFFFFFFFFFFULL; c = c >> 52; // c max 0000001000003D10
-    c = c + t3 + (__int128)t8 * 0x1000003D10ULL;
-    r[3] = c & 0xFFFFFFFFFFFFFULL; c = c >> 52; // c max 0000001000003D10
-    c = c + t4 + (__int128)t9 * 0x1000003D10ULL;
-    r[4] = c & 0x0FFFFFFFFFFFFULL; c = c >> 48; // c max 000001000003D110
-    c = t0 + (__int128)c * 0x1000003D1ULL;
-    r[0] = c & 0xFFFFFFFFFFFFFULL; c = c >> 52; // c max 1000008
-    r[1] = t1 + c;
+    const uint64_t M = 0xFFFFFFFFFFFFFULL, R = 0x1000003D10ULL;
 
+    __int128 c, d;
+
+    d  = (__int128)a[0] * b[3]
+       + (__int128)a[1] * b[2]
+       + (__int128)a[2] * b[1]
+       + (__int128)a[3] * b[0];
+    c  = (__int128)a[4] * b[4];
+    d += (c & M) * R; c >>= 52;
+    uint64_t t3 = d & M; d >>= 52;
+
+    d += (__int128)a[0] * b[4]
+       + (__int128)a[1] * b[3]
+       + (__int128)a[2] * b[2]
+       + (__int128)a[3] * b[1]
+       + (__int128)a[4] * b[0];
+    d += c * R;
+    uint64_t t4 = d & M; d >>= 52;
+    uint64_t tx = (t4 >> 48); t4 &= (M >> 4);
+
+    c  = (__int128)a[0] * b[0];
+    d += (__int128)a[1] * b[4]
+       + (__int128)a[2] * b[3]
+       + (__int128)a[3] * b[2]
+       + (__int128)a[4] * b[1];
+    uint64_t u0 = d & M; d >>= 52;
+    u0 = (u0 << 4) | tx;
+    c += (__int128)u0 * (R >> 4);
+    uint64_t t0 = c & M; c >>= 52;
+
+    c += (__int128)a[0] * b[1]
+       + (__int128)a[1] * b[0];
+    d += (__int128)a[2] * b[4]
+       + (__int128)a[3] * b[3]
+       + (__int128)a[4] * b[2];
+    c += (d & M) * R; d >>= 52;
+    uint64_t t1 = c & M; c >>= 52;
+
+    c += (__int128)a[0] * b[2]
+       + (__int128)a[1] * b[1]
+       + (__int128)a[2] * b[0];
+    d += (__int128)a[3] * b[4]
+       + (__int128)a[4] * b[3];
+    c += (d & M) * R; d >>= 52;
+
+    r[0] = t0;
+    r[1] = t1;
+    r[2] = c & M; c >>= 52;
+    c   += d * R + t3;;
+    r[3] = c & M; c >>= 52;
+    c   += t4;
+    r[4] = c; 
 }
 
 SECP256K1_INLINE static void secp256k1_fe_sqr_inner(const uint64_t *a, uint64_t *r) {
-    __int128 c = (__int128)a[0] * a[0];
-    uint64_t t0 = c & 0xFFFFFFFFFFFFFULL; c = c >> 52; // c max 0FFFFFFFFFFFFFE0
-    c = c + (__int128)(a[0]*2) * a[1];
-    uint64_t t1 = c & 0xFFFFFFFFFFFFFULL; c = c >> 52; // c max 20000000000000BF
-    c = c + (__int128)(a[0]*2) * a[2] +
-            (__int128)a[1] * a[1];
-    uint64_t t2 = c & 0xFFFFFFFFFFFFFULL; c = c >> 52; // c max 30000000000001A0
-    c = c + (__int128)(a[0]*2) * a[3] +
-            (__int128)(a[1]*2) * a[2];
-    uint64_t t3 = c & 0xFFFFFFFFFFFFFULL; c = c >> 52; // c max 4000000000000280
-    c = c + (__int128)(a[0]*2) * a[4] +
-            (__int128)(a[1]*2) * a[3] +
-            (__int128)a[2] * a[2];
-    uint64_t t4 = c & 0xFFFFFFFFFFFFFULL; c = c >> 52; // c max 320000000000037E
-    c = c + (__int128)(a[1]*2) * a[4] +
-            (__int128)(a[2]*2) * a[3];
-    uint64_t t5 = c & 0xFFFFFFFFFFFFFULL; c = c >> 52; // c max 22000000000002BE
-    c = c + (__int128)(a[2]*2) * a[4] +
-            (__int128)a[3] * a[3];
-    uint64_t t6 = c & 0xFFFFFFFFFFFFFULL; c = c >> 52; // c max 12000000000001DE
-    c = c + (__int128)(a[3]*2) * a[4];
-    uint64_t t7 = c & 0xFFFFFFFFFFFFFULL; c = c >> 52; // c max 02000000000000FE
-    c = c + (__int128)a[4] * a[4];
-    uint64_t t8 = c & 0xFFFFFFFFFFFFFULL; c = c >> 52; // c max 001000000000001E
-    uint64_t t9 = c;
-    c = t0 + (__int128)t5 * 0x1000003D10ULL;
-    t0 = c & 0xFFFFFFFFFFFFFULL; c = c >> 52; // c max 0000001000003D10
-    c = c + t1 + (__int128)t6 * 0x1000003D10ULL;
-    t1 = c & 0xFFFFFFFFFFFFFULL; c = c >> 52; // c max 0000001000003D10
-    c = c + t2 + (__int128)t7 * 0x1000003D10ULL;
-    r[2] = c & 0xFFFFFFFFFFFFFULL; c = c >> 52; // c max 0000001000003D10
-    c = c + t3 + (__int128)t8 * 0x1000003D10ULL;
-    r[3] = c & 0xFFFFFFFFFFFFFULL; c = c >> 52; // c max 0000001000003D10
-    c = c + t4 + (__int128)t9 * 0x1000003D10ULL;
-    r[4] = c & 0x0FFFFFFFFFFFFULL; c = c >> 48; // c max 000001000003D110
-    c = t0 + (__int128)c * 0x1000003D1ULL;
-    r[0] = c & 0xFFFFFFFFFFFFFULL; c = c >> 52; // c max 1000008
-    r[1] = t1 + c;
 
+    const uint64_t M = 0xFFFFFFFFFFFFFULL, R = 0x1000003D10ULL;
+
+    __int128 c, d;
+
+    uint64_t a0 = a[0], a1 = a[1], a2 = a[2], a3 = a[3], a4 = a[4];
+
+    d  = (__int128)(a0*2) * a3
+       + (__int128)(a1*2) * a2;
+    c  = (__int128)a4 * a4;
+    d += (c & M) * R; c >>= 52;
+    uint64_t t3 = d & M; d >>= 52;
+
+    a4 *= 2;
+    d += (__int128)a0 * a4
+       + (__int128)(a1*2) * a3
+       + (__int128)a2 * a2;
+    d += c * R;
+    uint64_t t4 = d & M; d >>= 52;
+    uint64_t tx = (t4 >> 48); t4 &= (M >> 4);
+
+    c  = (__int128)a0 * a0;
+    d += (__int128)a1 * a4
+       + (__int128)(a2*2) * a3;
+    uint64_t u0 = d & M; d >>= 52;
+    u0 = (u0 << 4) | tx;
+    c += (__int128)u0 * (R >> 4);
+    r[0] = c & M; c >>= 52;
+
+    a0 *= 2;
+    c += (__int128)a0 * a1;
+    d += (__int128)a2 * a4
+       + (__int128)a3 * a3;
+    c += (d & M) * R; d >>= 52;
+    r[1] = c & M; c >>= 52;
+
+    c += (__int128)a0 * a2
+       + (__int128)a1 * a1;
+    d += (__int128)a3 * a4;
+    c += (d & M) * R; d >>= 52;
+    r[2] = c & M; c >>= 52;
+
+    c   += d * R + t3;;
+    r[3] = c & M; c >>= 52;
+    c   += t4;
+    r[4] = c; 
 }
 
 #endif
