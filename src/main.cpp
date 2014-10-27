@@ -4731,6 +4731,10 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
             if (state.nMaxInFlight != nOldMaxInFlight)
                 LogPrint("stall2", "peer=%d Changing MaxInFlight from %d to %d (%d * %d / %d).\n", pto->id, nOldMaxInFlight, state.nMaxInFlight,
                     std::min<int>(nConcurrentDownloads * 2000000 / nAvgBlockSize, BLOCK_DOWNLOAD_WINDOW / 2), state.nBytesPerMinute / 60, nBytesPerMinute / 60);
+            if (!state.nBlocksInFlight && !state.nMaxInFlight) {
+                LogPrint("stall", "peer=%d No further use. Disconnecting.\n", pto->id);
+                pto->fDisconnect = true;
+            }
         }
         if (!pto->fDisconnect && !pto->fClient && fFetch && state.fHeadersReceived && state.nBlocksInFlight < state.nMaxInFlight) {
             vector<CBlockIndex*> vToDownload;
