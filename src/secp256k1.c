@@ -12,6 +12,7 @@
 #include "ecmult_impl.h"
 #include "ecmult_gen_impl.h"
 #include "ecdsa_impl.h"
+#include "eckey_impl.h"
 
 void secp256k1_start(unsigned int flags) {
     secp256k1_fe_start();
