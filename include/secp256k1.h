@@ -87,13 +87,13 @@ int secp256k1_ecdsa_recover_compact(const unsigned char *msg, int msglen,
  *           0: secret key is invalid
  *  In:      seckey: pointer to a 32-byte secret key
  */
-int secp256k1_ecdsa_seckey_verify(const unsigned char *seckey);
+int secp256k1_ec_seckey_verify(const unsigned char *seckey);
 
 /** Just validate a public key.
  *  Returns: 1: valid public key
  *           0: invalid public key
  */
-int secp256k1_ecdsa_pubkey_verify(const unsigned char *pubkey, int pubkeylen);
+int secp256k1_ec_pubkey_verify(const unsigned char *pubkey, int pubkeylen);
 
 /** Compute the public key for a secret key.
  *  In:     compressed: whether the computed public key should be compressed
@@ -106,21 +106,42 @@ int secp256k1_ecdsa_pubkey_verify(const unsigned char *pubkey, int pubkeylen);
  *           0: secret was invalid, try again.
  * Requires starting using SECP256K1_START_SIGN.
  */
-int secp256k1_ecdsa_pubkey_create(unsigned char *pubkey, int *pubkeylen, const unsigned char *seckey, int compressed);
+int secp256k1_ec_pubkey_create(unsigned char *pubkey, int *pubkeylen, const unsigned char *seckey, int compressed);
 
-int secp256k1_ecdsa_pubkey_decompress(unsigned char *pubkey, int *pubkeylen);
+/** Decompress a public key.
+ * In/Out: pubkey:    pointer to a 65-byte array to put the decompressed public key.
+                      It must contain a 33-byte or 65-byte public key already.
+ *         pubkeylen: pointer to the size of the public key pointed to be pubkey.
+                      It will be updated to reflect the new size.
+ * Returns: 0 if the passed public key was invalid, 1 otherwise. If 1 is returned, the
+            pubkey is replaced with its decompressed version.
+ */
+int secp256k1_ec_pubkey_decompress(unsigned char *pubkey, int *pubkeylen);
 
-int secp256k1_ecdsa_privkey_export(const unsigned char *seckey,
-                                   unsigned char *privkey, int *privkeylen,
-                                   int compressed);
+/** Export a private key in DER format. */
+int secp256k1_ec_privkey_export(const unsigned char *seckey,
+                                unsigned char *privkey, int *privkeylen,
+                                int compressed);
 
-int secp256k1_ecdsa_privkey_import(unsigned char *seckey,
-                                   const unsigned char *privkey, int privkeylen);
+/** Import a private key in DER format. */
+int secp256k1_ec_privkey_import(unsigned char *seckey,
+                                const unsigned char *privkey, int privkeylen);
 
-int secp256k1_ecdsa_privkey_tweak_add(unsigned char *seckey, const unsigned char *tweak);
-int secp256k1_ecdsa_pubkey_tweak_add(unsigned char *pubkey, int pubkeylen, const unsigned char *tweak);
-int secp256k1_ecdsa_privkey_tweak_mul(unsigned char *seckey, const unsigned char *tweak);
-int secp256k1_ecdsa_pubkey_tweak_mul(unsigned char *pubkey, int pubkeylen, const unsigned char *tweak);
+/** Tweak a private key by adding tweak to it. */
+int secp256k1_ec_privkey_tweak_add(unsigned char *seckey, const unsigned char *tweak);
+
+/** Tweak a public key by adding tweak times the generator to it.
+ * Requires starting with SECP256K1_START_VERIFY.
+ */
+int secp256k1_ec_pubkey_tweak_add(unsigned char *pubkey, int pubkeylen, const unsigned char *tweak);
+
+/** Tweak a private key by multiplying it with tweak. */
+int secp256k1_ec_privkey_tweak_mul(unsigned char *seckey, const unsigned char *tweak);
+
+/** Tweak a public key by multiplying it with tweak.
+ * Requires starting with SECP256K1_START_VERIFY.
+ */
+int secp256k1_ec_pubkey_tweak_mul(unsigned char *pubkey, int pubkeylen, const unsigned char *tweak);
 
 #ifdef __cplusplus
 }
