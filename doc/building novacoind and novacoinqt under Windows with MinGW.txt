@@ -1,4 +1,5 @@
-﻿1. Подготовка системы.
+﻿32 bit:
+1. Подготовка системы.
 
 1.1 Установка архиватора 7z: http://www.7-zip.org/ 
 (при написании инструкции использовался 7-Zip 9.20 64 bit X64, но скорее всего подойдёт любая версия)
@@ -100,7 +101,10 @@ make
 
 2.6 Qt 5 и Qt 4
 Библиотеки Qt будем хранить в папке C:\Qt
-
+Для ускорения компиляции  вместо 
+mingw32-make 
+используйте
+mingw32-make -j n , где вместо n количество ядер вашего процессора
 Qt 5:
 -Скачайте http://download.qt-project.org/official_releases/qt/5.3/5.3.2/submodules/qtbase-opensource-src-5.3.2.7z
 http://download.qt-project.org/official_releases/qt/5.3/5.3.2/submodules/qttools-opensource-src-5.3.2.7z
@@ -261,7 +265,7 @@ win32:QMAKE_LFLAGS *= -Wl,--large-address-aware -static
 -Сохраните измененный файл novacoin-qt.pro
 -Откройте командную строку Windows и выполните следующий код:
 
-Qt5 + база блоков BDB 
+Qt5 + транзакционный индекс BDB 
 
 set PATH=%PATH%;C:\Qt\5.3.2\bin
 cd C:\MyProjects\novacoin-master
@@ -269,21 +273,21 @@ qmake "USE_QRCODE=1" "USE_UPNP=1" "USE_IPV6=1" novacoin-qt.pro
 mingw32-make -f Makefile.Release
 
 
-Qt5 + база блоков LevelDB
+Qt5 + транзакционный индекс LevelDB
 
 set PATH=%PATH%;C:\Qt\5.3.2\bin
 cd C:\MyProjects\novacoin-master
 qmake "USE_QRCODE=1" "USE_UPNP=1" "USE_IPV6=1" "USE_LEVELDB=1" novacoin-qt.pro
 mingw32-make -f Makefile.Release
 
-Qt4 + база блоков BDB
+Qt4 + транзакционный индекс BDB
 
 set PATH=%PATH%;C:\Qt\4.8.6\bin
 cd C:\MyProjects\novacoin-master
 qmake "USE_QRCODE=1" "USE_UPNP=1" "USE_IPV6=1" novacoin-qt.pro
 mingw32-make -f Makefile.Release
 
-Qt4 + база блоков LevelDB
+Qt4 + транзакционный индекс LevelDB
 
 set PATH=%PATH%;C:\Qt\4.8.6\bin
 cd C:\MyProjects\novacoin-master
@@ -291,5 +295,187 @@ qmake "USE_QRCODE=1" "USE_UPNP=1" "USE_IPV6=1" "USE_LEVELDB=1" novacoin-qt.pro
 mingw32-make -f Makefile.Release
 
 
+
+Если всё сделано правильно, то файл novacoin-qt.exe будет находится в папке C:\MyProjects\novacoin-master\release
+
+
+
+64 bit:
+1.1 Так же как 32 bit
+
+1.2 Так же как 32 bit
+
+1.3 Установка MinGW-builds project toolchain:
+Скачайте http://sourceforge.net/projects/mingw-w64/files/Toolchains%20targetting%20Win64/Personal%20Builds/mingw-builds/4.9.1/threads-posix/seh/x86_64-4.9.1-release-posix-seh-rt_v3-rev1.7z/download
+и распакуйте на C:\
+
+1.4 Удалите из переменной PATH путь C:\mingw32\bin; и добавте в PATH путь C:\mingw64\bin;
+
+Проверка что вы всё сделали правильно:
+1)C:\MinGW\bin должен содержать только файл mingw-get.exe
+2)Откройте Командную строку (Нажмите кнопку Windows + R одновременно. Откроется окно "Выполнить", в поле открыть наберите cmd. Нажмите Ok). Наберите gcc -v. В командной строке выведется текст. В конце текста должно быть написано:
+Thread model: posix
+gcc version 4.9.1 (x86_64-posix-seh-rev1, Built by MinGW-W64 project)
+
+2. Построение зависимостей.
+В инструкции все зависимости сохраняются в папку c:\deps\x64
+
+2.1  OpenSSL: http://www.openssl.org/source/openssl-1.0.1j.tar.gz
+-Перейдите в папку C:\MinGW\msys\1.0 и запустите msys.bat
+Из MinGw shell выполните следующий код:
+
+cd /c/deps/x64/
+tar xvfz openssl-1.0.1j.tar.gz
+cd openssl-1.0.1j
+Configure no-shared no-dso mingw64
+make
+
+2.2 Так же как 32 bit, только cd /c/deps/ меняется на cd /c/deps/x64/
+
+2.3 Так же как 32 bit, только распаковка в C:\deps\x64 и команда cd C:\deps\boost_1_55_0\ меняется на cd C:\deps\x64\boost_1_55_0\ 
+
+2.4 Так же как 32 bit, только распаковка в C:\deps\x64 и заменить cd C:\deps\miniupnpc на cd C:\deps\x64\miniupnpc
+
+2.5 Часть с libpng так же как 32 bit, только распаковка в C:\deps\x64 
+Затем
+-Скачайте http://fukuchi.org/works/qrencode/qrencode-3.4.4.tar.gz
+-Распакуйте в C:\deps\x64
+-Выполните следующий код в MinGW shell:
+
+cd /c/deps/x64/qrencode-3.4.4
+
+LIBS="../libpng-1.6.12/.libs/libpng.a ../../../mingw64/x86_64-w64-mingw32/lib/libz.a" \
+png_CFLAGS="-I../libpng-1.6.12" \
+png_LIBS="-L../libpng-1.6.12/.libs" \
+configure --enable-static --disable-shared --without-tools
+
+make
+
+
+2.6 Qt 5 и Qt 4
+Библиотеки Qt будем хранить в папке C:\Qt
+Для ускорения компиляции  вместо 
+mingw32-make 
+используйте
+mingw32-make -j n , где вместо n количество ядер вашего процессора
+Qt 5:
+-Скачайте http://download.qt-project.org/official_releases/qt/5.3/5.3.2/submodules/qtbase-opensource-src-5.3.2.7z
+http://download.qt-project.org/official_releases/qt/5.3/5.3.2/submodules/qttools-opensource-src-5.3.2.7z
+-Распакуйте в C:\Qt
+-Переименуйте папку qtbase-opensource-src-5.3.2 в 5.3.2-x64
+-Откройте командную строку Windows и выполните следующий код:
+
+set INCLUDE=C:\deps\x64\libpng-1.6.12;C:\deps\x64\openssl-1.0.1j\include
+set LIB=C:\deps\x64\libpng-1.6.12\.libs;C:\deps\x64\openssl-1.0.1j
+
+cd C:\Qt\5.3.2-x64
+
+configure.bat -release -opensource -confirm-license -static -make libs -no-sql-sqlite -no-opengl -system-zlib -qt-pcre -no-icu -no-gif -system-libpng -no-libjpeg -no-freetype -no-angle -no-vcproj -openssl -no-dbus -no-audio-backend -no-wmf-backend -no-qml-debug
+
+mingw32-make
+
+set PATH=%PATH%;C:\Qt\5.3.2-x64\bin
+
+cd C:\Qt\qttools-opensource-src-5.3.2-x64
+qmake qttools.pro
+mingw32-make
+
+Qt4:
+-Скачайте http://download.qt-project.org/official_releases/qt/4.8/4.8.6/qt-everywhere-opensource-src-4.8.6.zip
+-Распакуйте в C:\Qt
+-Переименуйте папку qt-everywhere-opensource-src-4.8.6 в 4.8.6-x64
+-Откройте командную строку Windows и выполните следующий код:
+
+configure -release -opensource -confirm-license -static -no-sql-sqlite -no-qt3support -no-opengl -qt-zlib -no-gif -qt-libpng -qt-libmng -no-libtiff -qt-libjpeg -no-dsp -no-vcproj -no-openssl -no-dbus -no-phonon -no-phonon-backend -no-multimedia -no-audio-backend -no-webkit -no-script -no-scripttools -no-declarative -no-declarative-debug -qt-style-windows -qt-style-windowsxp -qt-style-windowsvista -no-style-plastique -no-style-cleanlooks -no-style-motif -no-style-cde -nomake demos -nomake examples
+
+mingw32-make
+
+3. Компиляция
+Будем хранить исходники в папке C:\MyProjects
+
+3.1 Так же как 32 bit
+
+3.2 Собираем novacoind 
+-Измените makefile.mingw так же как в 32 bit
+-Откройте файл makefile.mingw в текстовом редакторе и сохраните его как makefile.ming64
+-Измените в INCLUDEPATHS и LIBPATHS /c/deps/ на /c/deps/x64/
+-Измените 
+LDFLAGS=-Wl,--dynamicbase -Wl,--nxcompat -Wl,--large-address-aware -static 
+на 
+LDFLAGS=-Wl,--dynamicbase -Wl,--nxcompat -Wl,-static, -static-libgcc
+-Удалите (если они есть)obj(.o) файлы из C:\MyProjects\novacoin-master\src\obj и C:\MyProjects\novacoin-master\src\obj\zerocoin , если остались после 32 bit
+-Удалите (если они есть)libleveldb.a и libmemenv.a в папке C:\MyProjects\novacoin-master\src\leveldb
+-Удалите (если они есть)obj(.o) файлы из 
+C:\MyProjects\novacoin-master\src\leveldb\db 
+C:\MyProjects\novacoin-master\src\leveldb\helpers\memenv
+C:\MyProjects\novacoin-master\src\leveldb\port
+C:\MyProjects\novacoin-master\src\leveldb\table
+C:\MyProjects\novacoin-master\src\leveldb\util
+-Откройте MinGW shell (C:\MinGW\msys\1.0\msys.bat) и выполните следующий код:
+
+cd /c/MyProjects/novacoin-master/src
+make -f makefile.mingw64
+strip novacoind.exe
+
+(Возможная ошибка:
+Fatal error: can't create obj/zerocoin/Accumulator.o: No such file or directory
+make: *** [obj/zerocoin/Accumulator.o] Error 1
+Она происходит если нет папки C:\MyProjects\novacoin-master\src\obj\zerocoin . Так что при удалении obj файлов следите, чтобы папка C:\MyProjects\novacoin-master\src\obj\zerocoin не удалилась вместе с obj файлами.)
+
+Если всё сделано правильно, то файл novacoind.exe будет находится в папке C:\MyProjects\novacoin-master\src 
+
+
+3.3 Собираем Novacoin QT
+Внимание: Если вы хотите собирать Novacoin Qt с LevelDB, но пропустили шаг со сборкой novacoind.exe, то 
+-Удалите (если они есть)libleveldb.a и libmemenv.a в папке C:\MyProjects\novacoin-master\src\leveldb
+-Удалите (если они есть)obj(.o) файлы из 
+C:\MyProjects\novacoin-master\src\leveldb\db 
+C:\MyProjects\novacoin-master\src\leveldb\helpers\memenv
+C:\MyProjects\novacoin-master\src\leveldb\port
+C:\MyProjects\novacoin-master\src\leveldb\table
+C:\MyProjects\novacoin-master\src\leveldb\util
+-Откройте MinGW shell (C:\MinGW\msys\1.0\msys.bat) и выполните следующий код:
+
+cd /c/myprojects/novacoin-master/src/leveldb
+TARGET_OS=NATIVE_WINDOWS make libleveldb.a libmemenv.a
+
+-Измените файл novacoin-qt.pro так же как в 32 bit
+-Откройте файл novacoin-qt.pro в текстовом редакторе и сохраните его как novacoin-qt64.pro
+-Замените в INCLUDE и LIB путях текст C:/deps на текст C:/deps/x64 (то есть вместо C:/deps/boost_1_55_0 нужно C:/deps/x64/boost_1_55_0 и т.д.)
+-Замените 
+win32:QMAKE_LFLAGS *= -Wl,--large-address-aware -static 
+на
+win32:QMAKE_LFLAGS *= -Wl,-static
+
+-Откройте командную строку Windows и выполните следующий код:
+
+Qt5 + транзакционный индекс BDB 
+
+set PATH=%PATH%;C:\Qt\5.3.2-x64\bin
+cd C:\MyProjects\novacoin-master
+qmake "USE_QRCODE=1" "USE_UPNP=1" "USE_IPV6=1" novacoin-qt64.pro
+mingw32-make -f Makefile.Release
+
+
+Qt5 + транзакционный индекс LevelDB
+
+set PATH=%PATH%;C:\Qt\5.3.2-x64\bin
+cd C:\MyProjects\novacoin-master
+qmake "USE_QRCODE=1" "USE_UPNP=1" "USE_IPV6=1" "USE_LEVELDB=1" novacoin-qt64.pro
+mingw32-make -f Makefile.Release
+
+Qt4 + транзакционный индекс BDB
+
+set PATH=%PATH%;C:\Qt\4.8.6-x64\bin
+cd C:\MyProjects\novacoin-master
+qmake "USE_QRCODE=1" "USE_UPNP=1" "USE_IPV6=1" novacoin-qt64.pro
+mingw32-make -f Makefile.Release
+
+Qt4 + транзакционный индекс LevelDB
+
+set PATH=%PATH%;C:\Qt\4.8.6-x64\bin
+cd C:\MyProjects\novacoin-master
+qmake "USE_QRCODE=1" "USE_UPNP=1" "USE_IPV6=1" "USE_LEVELDB=1" novacoin-qt64.pro
+mingw32-make -f Makefile.Release
 
 Если всё сделано правильно, то файл novacoin-qt.exe будет находится в папке C:\MyProjects\novacoin-master\release
