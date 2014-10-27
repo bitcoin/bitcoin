@@ -131,4 +131,59 @@ int static secp256k1_eckey_privkey_serialize(unsigned char *privkey, int *privke
     return 1;
 }
 
+int static secp256k1_eckey_privkey_tweak_add(secp256k1_num_t *key, const secp256k1_num_t *tweak) {
+    if (secp256k1_num_cmp(tweak, &secp256k1_ge_consts->order) >= 0)
+        return 0;
+    secp256k1_num_add(key, key, tweak);
+    secp256k1_num_mod(key, &secp256k1_ge_consts->order);
+    if (secp256k1_num_is_zero(key))
+        return 0;
+    return 1;
+}
+
+int static secp256k1_eckey_pubkey_tweak_add(secp256k1_ge_t *key, const secp256k1_num_t *tweak) {
+    if (secp256k1_num_cmp(tweak, &secp256k1_ge_consts->order) >= 0)
+        return 0;
+
+    secp256k1_gej_t pt;
+    secp256k1_gej_set_ge(&pt, key);
+    secp256k1_num_t one;
+    secp256k1_num_init(&one);
+    secp256k1_num_set_int(&one, 1);
+    secp256k1_ecmult(&pt, &pt, &one, tweak);
+    secp256k1_num_free(&one);
+
+    if (secp256k1_gej_is_infinity(&pt))
+        return 0;
+    secp256k1_ge_set_gej(key, &pt);
+    return 1;
+}
+
+int static secp256k1_eckey_privkey_tweak_mul(secp256k1_num_t *key, const secp256k1_num_t *tweak) {
+    if (secp256k1_num_is_zero(tweak))
+        return 0;
+    if (secp256k1_num_cmp(tweak, &secp256k1_ge_consts->order) >= 0)
+        return 0;
+
+    secp256k1_num_mod_mul(key, key, tweak, &secp256k1_ge_consts->order);
+    return 1;
+}
+
+int static secp256k1_eckey_pubkey_tweak_mul(secp256k1_ge_t *key, const secp256k1_num_t *tweak) {
+    if (secp256k1_num_is_zero(tweak))
+        return 0;
+    if (secp256k1_num_cmp(tweak, &secp256k1_ge_consts->order) >= 0)
+        return 0;
+
+    secp256k1_num_t zero;
+    secp256k1_num_init(&zero);
+    secp256k1_num_set_int(&zero, 0);
+    secp256k1_gej_t pt;
+    secp256k1_gej_set_ge(&pt, key);
+    secp256k1_ecmult(&pt, &pt, tweak, &zero);
+    secp256k1_num_free(&zero);
+    secp256k1_ge_set_gej(key, &pt);
+    return 1;
+}
+
 #endif

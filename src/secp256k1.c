@@ -220,23 +220,18 @@ int secp256k1_ec_privkey_tweak_add(unsigned char *seckey, const unsigned char *t
     DEBUG_CHECK(seckey != NULL);
     DEBUG_CHECK(tweak != NULL);
 
-    int ret = 1;
     secp256k1_num_t term;
     secp256k1_num_init(&term);
     secp256k1_num_set_bin(&term, tweak, 32);
-    if (secp256k1_num_cmp(&term, &secp256k1_ge_consts->order) >= 0)
-        ret = 0;
     secp256k1_num_t sec;
     secp256k1_num_init(&sec);
+    secp256k1_num_set_bin(&sec, seckey, 32);
+
+    int ret = secp256k1_eckey_privkey_tweak_add(&sec, &term);
     if (ret) {
-        secp256k1_num_set_bin(&sec, seckey, 32);
-        secp256k1_num_add(&sec, &sec, &term);
-        secp256k1_num_mod(&sec, &secp256k1_ge_consts->order);
-        if (secp256k1_num_is_zero(&sec))
-            ret = 0;
-    }
-    if (ret)
         secp256k1_num_get_bin(seckey, 32, &sec);
+    }
+
     secp256k1_num_clear(&sec);
     secp256k1_num_clear(&term);
     secp256k1_num_free(&sec);
@@ -249,32 +244,20 @@ int secp256k1_ec_pubkey_tweak_add(unsigned char *pubkey, int pubkeylen, const un
     DEBUG_CHECK(pubkey != NULL);
     DEBUG_CHECK(tweak != NULL);
 
-    int ret = 1;
     secp256k1_num_t term;
     secp256k1_num_init(&term);
     secp256k1_num_set_bin(&term, tweak, 32);
-    if (secp256k1_num_cmp(&term, &secp256k1_ge_consts->order) >= 0)
-        ret = 0;
     secp256k1_ge_t p;
+    int ret = secp256k1_eckey_pubkey_parse(&p, pubkey, pubkeylen);
     if (ret) {
-        if (!secp256k1_eckey_pubkey_parse(&p, pubkey, pubkeylen))
-            ret = 0;
+        ret = secp256k1_eckey_pubkey_tweak_add(&p, &term);
     }
     if (ret) {
-        secp256k1_gej_t pt;
-        secp256k1_gej_set_ge(&pt, &p);
-        secp256k1_num_t one;
-        secp256k1_num_init(&one);
-        secp256k1_num_set_int(&one, 1);
-        secp256k1_ecmult(&pt, &pt, &one, &term);
-        secp256k1_num_free(&one);
-        if (secp256k1_gej_is_infinity(&pt))
-            ret = 0;
-        secp256k1_ge_set_gej(&p, &pt);
         int oldlen = pubkeylen;
         secp256k1_eckey_pubkey_serialize(&p, pubkey, &pubkeylen, oldlen <= 33);
         VERIFY_CHECK(pubkeylen == oldlen);
     }
+
     secp256k1_num_free(&term);
     return ret;
 }
@@ -283,22 +266,19 @@ int secp256k1_ec_privkey_tweak_mul(unsigned char *seckey, const unsigned char *t
     DEBUG_CHECK(seckey != NULL);
     DEBUG_CHECK(tweak != NULL);
 
-    int ret = 1;
     secp256k1_num_t factor;
     secp256k1_num_init(&factor);
     secp256k1_num_set_bin(&factor, tweak, 32);
-    if (secp256k1_num_is_zero(&factor))
-        ret = 0;
-    if (secp256k1_num_cmp(&factor, &secp256k1_ge_consts->order) >= 0)
-        ret = 0;
     secp256k1_num_t sec;
     secp256k1_num_init(&sec);
+    secp256k1_num_set_bin(&sec, seckey, 32);
+    int ret = secp256k1_eckey_privkey_tweak_mul(&sec, &factor);
     if (ret) {
-        secp256k1_num_set_bin(&sec, seckey, 32);
-        secp256k1_num_mod_mul(&sec, &sec, &factor, &secp256k1_ge_consts->order);
-    }
-    if (ret)
         secp256k1_num_get_bin(seckey, 32, &sec);
+    }
+
+    secp256k1_num_clear(&sec);
+    secp256k1_num_clear(&factor);
     secp256k1_num_free(&sec);
     secp256k1_num_free(&factor);
     return ret;
@@ -309,32 +289,20 @@ int secp256k1_ec_pubkey_tweak_mul(unsigned char *pubkey, int pubkeylen, const un
     DEBUG_CHECK(pubkey != NULL);
     DEBUG_CHECK(tweak != NULL);
 
-    int ret = 1;
     secp256k1_num_t factor;
     secp256k1_num_init(&factor);
     secp256k1_num_set_bin(&factor, tweak, 32);
-    if (secp256k1_num_is_zero(&factor))
-        ret = 0;
-    if (secp256k1_num_cmp(&factor, &secp256k1_ge_consts->order) >= 0)
-        ret = 0;
     secp256k1_ge_t p;
+    int ret = secp256k1_eckey_pubkey_parse(&p, pubkey, pubkeylen);
     if (ret) {
-        if (!secp256k1_eckey_pubkey_parse(&p, pubkey, pubkeylen))
-            ret = 0;
+        ret = secp256k1_eckey_pubkey_tweak_mul(&p, &factor);
     }
     if (ret) {
-        secp256k1_num_t zero;
-        secp256k1_num_init(&zero);
-        secp256k1_num_set_int(&zero, 0);
-        secp256k1_gej_t pt;
-        secp256k1_gej_set_ge(&pt, &p);
-        secp256k1_ecmult(&pt, &pt, &factor, &zero);
-        secp256k1_num_free(&zero);
-        secp256k1_ge_set_gej(&p, &pt);
         int oldlen = pubkeylen;
         secp256k1_eckey_pubkey_serialize(&p, pubkey, &pubkeylen, oldlen <= 33);
         VERIFY_CHECK(pubkeylen == oldlen);
     }
+
     secp256k1_num_free(&factor);
     return ret;
 }
