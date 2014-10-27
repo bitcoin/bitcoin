@@ -279,8 +279,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
             if (!CheckInputs(tx, state, view, true, MANDATORY_SCRIPT_VERIFY_FLAGS, true))
                 continue;
 
-            CTxUndo txundo;
-            UpdateCoins(tx, state, view, txundo, nHeight);
+            UpdateCoins(tx, state, view, nHeight);
 
             // Added
             pblock->vtx.push_back(tx);
