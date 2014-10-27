@@ -560,28 +560,28 @@ void test_ecdsa_end_to_end() {
     }
 
     // Construct and verify corresponding public key.
-    CHECK(secp256k1_ecdsa_seckey_verify(privkey) == 1);
+    CHECK(secp256k1_ec_seckey_verify(privkey) == 1);
     char pubkey[65]; int pubkeylen = 65;
-    CHECK(secp256k1_ecdsa_pubkey_create(pubkey, &pubkeylen, privkey, secp256k1_rand32() % 2) == 1);
-    CHECK(secp256k1_ecdsa_pubkey_verify(pubkey, pubkeylen));
+    CHECK(secp256k1_ec_pubkey_create(pubkey, &pubkeylen, privkey, secp256k1_rand32() % 2) == 1);
+    CHECK(secp256k1_ec_pubkey_verify(pubkey, pubkeylen));
 
     // Verify private key import and export.
     unsigned char seckey[300]; int seckeylen = 300;
-    CHECK(secp256k1_ecdsa_privkey_export(privkey, seckey, &seckeylen, secp256k1_rand32() % 2) == 1);
+    CHECK(secp256k1_ec_privkey_export(privkey, seckey, &seckeylen, secp256k1_rand32() % 2) == 1);
     unsigned char privkey2[32];
-    CHECK(secp256k1_ecdsa_privkey_import(privkey2, seckey, seckeylen) == 1);
+    CHECK(secp256k1_ec_privkey_import(privkey2, seckey, seckeylen) == 1);
     CHECK(memcmp(privkey, privkey2, 32) == 0);
 
     // Optionally tweak the keys using addition.
     if (secp256k1_rand32() % 3 == 0) {
         unsigned char rnd[32];
         secp256k1_rand256_test(rnd);
-        int ret1 = secp256k1_ecdsa_privkey_tweak_add(privkey, rnd);
-        int ret2 = secp256k1_ecdsa_pubkey_tweak_add(pubkey, pubkeylen, rnd);
+        int ret1 = secp256k1_ec_privkey_tweak_add(privkey, rnd);
+        int ret2 = secp256k1_ec_pubkey_tweak_add(pubkey, pubkeylen, rnd);
         CHECK(ret1 == ret2);
         if (ret1 == 0) return;
         char pubkey2[65]; int pubkeylen2 = 65;
-        CHECK(secp256k1_ecdsa_pubkey_create(pubkey2, &pubkeylen2, privkey, pubkeylen == 33) == 1);
+        CHECK(secp256k1_ec_pubkey_create(pubkey2, &pubkeylen2, privkey, pubkeylen == 33) == 1);
         CHECK(memcmp(pubkey, pubkey2, pubkeylen) == 0);
     }
 
@@ -589,12 +589,12 @@ void test_ecdsa_end_to_end() {
     if (secp256k1_rand32() % 3 == 0) {
         unsigned char rnd[32];
         secp256k1_rand256_test(rnd);
-        int ret1 = secp256k1_ecdsa_privkey_tweak_mul(privkey, rnd);
-        int ret2 = secp256k1_ecdsa_pubkey_tweak_mul(pubkey, pubkeylen, rnd);
+        int ret1 = secp256k1_ec_privkey_tweak_mul(privkey, rnd);
+        int ret2 = secp256k1_ec_pubkey_tweak_mul(pubkey, pubkeylen, rnd);
         CHECK(ret1 == ret2);
         if (ret1 == 0) return;
         char pubkey2[65]; int pubkeylen2 = 65;
-        CHECK(secp256k1_ecdsa_pubkey_create(pubkey2, &pubkeylen2, privkey, pubkeylen == 33) == 1);
+        CHECK(secp256k1_ec_pubkey_create(pubkey2, &pubkeylen2, privkey, pubkeylen == 33) == 1);
         CHECK(memcmp(pubkey, pubkey2, pubkeylen) == 0);
     }
 

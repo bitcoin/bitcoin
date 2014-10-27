@@ -165,7 +165,7 @@ int secp256k1_ecdsa_recover_compact(const unsigned char *msg, int msglen, const 
     return ret;
 }
 
-int secp256k1_ecdsa_seckey_verify(const unsigned char *seckey) {
+int secp256k1_ec_seckey_verify(const unsigned char *seckey) {
     DEBUG_CHECK(seckey != NULL);
 
     secp256k1_num_t sec;
@@ -178,14 +178,14 @@ int secp256k1_ecdsa_seckey_verify(const unsigned char *seckey) {
     return ret;
 }
 
-int secp256k1_ecdsa_pubkey_verify(const unsigned char *pubkey, int pubkeylen) {
+int secp256k1_ec_pubkey_verify(const unsigned char *pubkey, int pubkeylen) {
     DEBUG_CHECK(pubkey != NULL);
 
     secp256k1_ge_t q;
     return secp256k1_ecdsa_pubkey_parse(&q, pubkey, pubkeylen);
 }
 
-int secp256k1_ecdsa_pubkey_create(unsigned char *pubkey, int *pubkeylen, const unsigned char *seckey, int compressed) {
+int secp256k1_ec_pubkey_create(unsigned char *pubkey, int *pubkeylen, const unsigned char *seckey, int compressed) {
     DEBUG_CHECK(secp256k1_ecmult_gen_consts != NULL);
     DEBUG_CHECK(pubkey != NULL);
     DEBUG_CHECK(pubkeylen != NULL);
@@ -204,7 +204,7 @@ int secp256k1_ecdsa_pubkey_create(unsigned char *pubkey, int *pubkeylen, const u
     return 1;
 }
 
-int secp256k1_ecdsa_pubkey_decompress(unsigned char *pubkey, int *pubkeylen) {
+int secp256k1_ec_pubkey_decompress(unsigned char *pubkey, int *pubkeylen) {
     DEBUG_CHECK(pubkey != NULL);
     DEBUG_CHECK(pubkeylen != NULL);
 
@@ -215,7 +215,7 @@ int secp256k1_ecdsa_pubkey_decompress(unsigned char *pubkey, int *pubkeylen) {
     return 1;
 }
 
-int secp256k1_ecdsa_privkey_tweak_add(unsigned char *seckey, const unsigned char *tweak) {
+int secp256k1_ec_privkey_tweak_add(unsigned char *seckey, const unsigned char *tweak) {
     DEBUG_CHECK(seckey != NULL);
     DEBUG_CHECK(tweak != NULL);
 
@@ -243,7 +243,7 @@ int secp256k1_ecdsa_privkey_tweak_add(unsigned char *seckey, const unsigned char
     return ret;
 }
 
-int secp256k1_ecdsa_pubkey_tweak_add(unsigned char *pubkey, int pubkeylen, const unsigned char *tweak) {
+int secp256k1_ec_pubkey_tweak_add(unsigned char *pubkey, int pubkeylen, const unsigned char *tweak) {
     DEBUG_CHECK(secp256k1_ecmult_consts != NULL);
     DEBUG_CHECK(pubkey != NULL);
     DEBUG_CHECK(tweak != NULL);
@@ -278,7 +278,7 @@ int secp256k1_ecdsa_pubkey_tweak_add(unsigned char *pubkey, int pubkeylen, const
     return ret;
 }
 
-int secp256k1_ecdsa_privkey_tweak_mul(unsigned char *seckey, const unsigned char *tweak) {
+int secp256k1_ec_privkey_tweak_mul(unsigned char *seckey, const unsigned char *tweak) {
     DEBUG_CHECK(seckey != NULL);
     DEBUG_CHECK(tweak != NULL);
 
@@ -303,7 +303,7 @@ int secp256k1_ecdsa_privkey_tweak_mul(unsigned char *seckey, const unsigned char
     return ret;
 }
 
-int secp256k1_ecdsa_pubkey_tweak_mul(unsigned char *pubkey, int pubkeylen, const unsigned char *tweak) {
+int secp256k1_ec_pubkey_tweak_mul(unsigned char *pubkey, int pubkeylen, const unsigned char *tweak) {
     DEBUG_CHECK(secp256k1_ecmult_consts != NULL);
     DEBUG_CHECK(pubkey != NULL);
     DEBUG_CHECK(tweak != NULL);
@@ -338,7 +338,7 @@ int secp256k1_ecdsa_pubkey_tweak_mul(unsigned char *pubkey, int pubkeylen, const
     return ret;
 }
 
-int secp256k1_ecdsa_privkey_export(const unsigned char *seckey, unsigned char *privkey, int *privkeylen, int compressed) {
+int secp256k1_ec_privkey_export(const unsigned char *seckey, unsigned char *privkey, int *privkeylen, int compressed) {
     DEBUG_CHECK(seckey != NULL);
     DEBUG_CHECK(privkey != NULL);
     DEBUG_CHECK(privkeylen != NULL);
@@ -351,7 +351,7 @@ int secp256k1_ecdsa_privkey_export(const unsigned char *seckey, unsigned char *p
     return ret;
 }
 
-int secp256k1_ecdsa_privkey_import(unsigned char *seckey, const unsigned char *privkey, int privkeylen) {
+int secp256k1_ec_privkey_import(unsigned char *seckey, const unsigned char *privkey, int privkeylen) {
     DEBUG_CHECK(seckey != NULL);
     DEBUG_CHECK(privkey != NULL);
 
