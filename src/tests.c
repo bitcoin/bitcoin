@@ -649,7 +649,7 @@ EC_KEY *get_openssl_key(const secp256k1_num_t *key) {
     int compr = secp256k1_rand32() & 1;
     const unsigned char* pbegin = privkey;
     EC_KEY *ec_key = EC_KEY_new_by_curve_name(NID_secp256k1);
-    CHECK(secp256k1_ecdsa_privkey_serialize(privkey, &privkeylen, key, compr));
+    CHECK(secp256k1_eckey_privkey_serialize(privkey, &privkeylen, key, compr));
     CHECK(d2i_ECPrivateKey(&ec_key, &pbegin, privkeylen));
     CHECK(EC_KEY_check_key(ec_key));
     return ec_key;

@@ -8,9 +8,9 @@
 #include "group.h"
 #include "num.h"
 
-int static secp256k1_ecdsa_pubkey_parse(secp256k1_ge_t *elem, const unsigned char *pub, int size);
-void static secp256k1_ecdsa_pubkey_serialize(secp256k1_ge_t *elem, unsigned char *pub, int *size, int compressed);
-int static secp256k1_ecdsa_privkey_parse(secp256k1_num_t *key, const unsigned char *privkey, int privkeylen);
-int static secp256k1_ecdsa_privkey_serialize(unsigned char *privkey, int *privkeylen, const secp256k1_num_t *key, int compressed);
+int static secp256k1_eckey_pubkey_parse(secp256k1_ge_t *elem, const unsigned char *pub, int size);
+void static secp256k1_eckey_pubkey_serialize(secp256k1_ge_t *elem, unsigned char *pub, int *size, int compressed);
+int static secp256k1_eckey_privkey_parse(secp256k1_num_t *key, const unsigned char *privkey, int privkeylen);
+int static secp256k1_eckey_privkey_serialize(unsigned char *privkey, int *privkeylen, const secp256k1_num_t *key, int compressed);
 
 #endif

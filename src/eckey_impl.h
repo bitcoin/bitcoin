@@ -12,7 +12,7 @@
 #include "group.h"
 #include "ecmult_gen.h"
 
-int static secp256k1_ecdsa_pubkey_parse(secp256k1_ge_t *elem, const unsigned char *pub, int size) {
+int static secp256k1_eckey_pubkey_parse(secp256k1_ge_t *elem, const unsigned char *pub, int size) {
     if (size == 33 && (pub[0] == 0x02 || pub[0] == 0x03)) {
         secp256k1_fe_t x;
         secp256k1_fe_set_b32(&x, pub+1);
@@ -30,7 +30,7 @@ int static secp256k1_ecdsa_pubkey_parse(secp256k1_ge_t *elem, const unsigned cha
     }
 }
 
-void static secp256k1_ecdsa_pubkey_serialize(secp256k1_ge_t *elem, unsigned char *pub, int *size, int compressed) {
+void static secp256k1_eckey_pubkey_serialize(secp256k1_ge_t *elem, unsigned char *pub, int *size, int compressed) {
     secp256k1_fe_normalize(&elem->x);
     secp256k1_fe_normalize(&elem->y);
     secp256k1_fe_get_b32(&pub[1], &elem->x);
@@ -44,7 +44,7 @@ void static secp256k1_ecdsa_pubkey_serialize(secp256k1_ge_t *elem, unsigned char
     }
 }
 
-int static secp256k1_ecdsa_privkey_parse(secp256k1_num_t *key, const unsigned char *privkey, int privkeylen) {
+int static secp256k1_eckey_privkey_parse(secp256k1_num_t *key, const unsigned char *privkey, int privkeylen) {
     const unsigned char *end = privkey + privkeylen;
     // sequence header
     if (end < privkey+1 || *privkey != 0x30)
@@ -76,7 +76,7 @@ int static secp256k1_ecdsa_privkey_parse(secp256k1_num_t *key, const unsigned ch
     return 1;
 }
 
-int static secp256k1_ecdsa_privkey_serialize(unsigned char *privkey, int *privkeylen, const secp256k1_num_t *key, int compressed) {
+int static secp256k1_eckey_privkey_serialize(unsigned char *privkey, int *privkeylen, const secp256k1_num_t *key, int compressed) {
     secp256k1_gej_t rp;
     secp256k1_ecmult_gen(&rp, key);
     secp256k1_ge_t r;
@@ -101,7 +101,7 @@ int static secp256k1_ecdsa_privkey_serialize(unsigned char *privkey, int *privke
         secp256k1_num_get_bin(ptr, 32, key); ptr += 32;
         memcpy(ptr, middle, sizeof(middle)); ptr += sizeof(middle);
         int pubkeylen = 0;
-        secp256k1_ecdsa_pubkey_serialize(&r, ptr, &pubkeylen, 1); ptr += pubkeylen;
+        secp256k1_eckey_pubkey_serialize(&r, ptr, &pubkeylen, 1); ptr += pubkeylen;
         *privkeylen = ptr - privkey;
     } else {
         static const unsigned char begin[] = {
@@ -125,7 +125,7 @@ int static secp256k1_ecdsa_privkey_serialize(unsigned char *privkey, int *privke
         secp256k1_num_get_bin(ptr, 32, key); ptr += 32;
         memcpy(ptr, middle, sizeof(middle)); ptr += sizeof(middle);
         int pubkeylen = 0;
-        secp256k1_ecdsa_pubkey_serialize(&r, ptr, &pubkeylen, 0); ptr += pubkeylen;
+        secp256k1_eckey_pubkey_serialize(&r, ptr, &pubkeylen, 0); ptr += pubkeylen;
         *privkeylen = ptr - privkey;
     }
     return 1;
