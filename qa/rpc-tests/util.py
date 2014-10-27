@@ -110,11 +110,14 @@ def initialize_chain(test_dir):
             rpcs[i].setgenerate(True, 25)
             sync_blocks(rpcs)
 
-        # Shut them down, and remove debug.logs:
+        # Shut them down, and clean up cache directories:
         stop_nodes(rpcs)
         wait_bitcoinds()
         for i in range(4):
-            os.remove(debug_log("cache", i))
+            os.remove(log_filename("cache", i, "debug.log"))
+            os.remove(log_filename("cache", i, "db.log"))
+            os.remove(log_filename("cache", i, "peers.dat"))
+            os.remove(log_filename("cache", i, "fee_estimates.dat"))
 
     for i in range(4):
         from_dir = os.path.join("cache", "node"+str(i))
@@ -167,8 +170,8 @@ def start_nodes(num_nodes, dir, extra_args=None, rpchost=None):
     if extra_args is None: extra_args = [ None for i in range(num_nodes) ]
     return [ start_node(i, dir, extra_args[i], rpchost) for i in range(num_nodes) ]
 
-def debug_log(dir, n_node):
-    return os.path.join(dir, "node"+str(n_node), "regtest", "debug.log")
+def log_filename(dir, n_node, logname):
+    return os.path.join(dir, "node"+str(n_node), "regtest", logname)
 
 def stop_node(node, i):
     node.stop()
