@@ -102,6 +102,7 @@ BITCOIN_CORE_H = \
   noui.h \
   pow.h \
   protocol.h \
+  pubkey.h \
   random.h \
   rpcclient.h \
   rpcprotocol.h \
@@ -228,6 +229,7 @@ libbitcoin_common_a_SOURCES = \
   keystore.cpp \
   netbase.cpp \
   protocol.cpp \
+  pubkey.cpp \
   script/interpreter.cpp \
   script/script.cpp \
   script/sigcache.cpp \

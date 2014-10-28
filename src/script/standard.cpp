@@ -5,6 +5,7 @@
 
 #include "script/standard.h"
 
+#include "pubkey.h"
 #include "script/script.h"
 #include "util.h"
 #include "utilstrencodings.h"
