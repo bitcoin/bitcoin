@@ -34,6 +34,10 @@ dependencies.
 The installation of the actual dependencies is covered in the Instructions
 sections below.
 
+For simplicity you can use the Homebrew script in /doc/homebrew to install Bitcoin, which will install the necessary dependencies automatically. Please note that builds created by that script aren’t yet portable.
+
+You can install directly from this repository with `brew install   https://raw.githubusercontent.com/bitcoin/bitcoin/master/doc/homebrew/bitcoind.rb`.
+
 Instructions: Homebrew
 ----------------------
 
