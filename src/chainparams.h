@@ -14,8 +14,6 @@
 
 #include <vector>
 
-typedef unsigned char MessageStartChars[MESSAGE_START_SIZE];
-
 struct CDNSSeedData {
     std::string name, host;
     CDNSSeedData(const std::string &strName, const std::string &strHost) : name(strName), host(strHost) {}
@@ -42,7 +40,7 @@ public:
     };
 
     const uint256& HashGenesisBlock() const { return hashGenesisBlock; }
-    const MessageStartChars& MessageStart() const { return pchMessageStart; }
+    const CMessageHeader::MessageStartChars& MessageStart() const { return pchMessageStart; }
     const std::vector<unsigned char>& AlertKey() const { return vAlertPubKey; }
     int GetDefaultPort() const { return nDefaultPort; }
     const arith_uint256& ProofOfWorkLimit() const { return bnProofOfWorkLimit; }
@@ -83,7 +81,7 @@ protected:
     CChainParams() {}
 
     uint256 hashGenesisBlock;
-    MessageStartChars pchMessageStart;
+    CMessageHeader::MessageStartChars pchMessageStart;
     //! Raw pub key bytes for the broadcast alert signing key.
     std::vector<unsigned char> vAlertPubKey;
     int nDefaultPort;
