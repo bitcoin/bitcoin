@@ -260,6 +260,7 @@ Value listunspent(const Array& params, bool fHelp)
     Array results;
     vector<COutput> vecOutputs;
     assert(pwalletMain != NULL);
+    LOCK2(cs_main, pwalletMain->cs_wallet);
     pwalletMain->AvailableCoins(vecOutputs, false);
     BOOST_FOREACH(const COutput& out, vecOutputs) {
         if (out.nDepth < nMinDepth || out.nDepth > nMaxDepth)
