@@ -578,7 +578,7 @@ Value submitblock(const Array& params, bool fHelp)
     CValidationState state;
     submitblock_StateCatcher sc(pblock.GetHash());
     RegisterValidationInterface(&sc);
-    bool fAccepted = ProcessBlock(state, NULL, &pblock);
+    bool fAccepted = ProcessNewBlock(state, NULL, &pblock);
     UnregisterValidationInterface(&sc);
     if (fAccepted)
     {
