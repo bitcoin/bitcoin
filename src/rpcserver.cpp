@@ -10,6 +10,7 @@
 #include "random.h"
 #include "ui_interface.h"
 #include "util.h"
+#include "utilstrencodings.h"
 #ifdef ENABLE_WALLET
 #include "wallet.h"
 #endif
