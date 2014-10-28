@@ -180,6 +180,9 @@ bool static CheckMinimalPush(const valtype& data, opcodetype opcode) {
     return true;
 }
 
+bool OpCheckSig(vector<vector<unsigned char> >& stack, CScript::const_iterator& pbegincodehash, CScript::const_iterator& pend, unsigned int flags, const BaseSignatureChecker& checker, bool fRequireMinimal, bool fVerify);
+bool OpCheckMultiSig(vector<vector<unsigned char> >& stack, int& nOpCount, CScript::const_iterator& pbegincodehash, CScript::const_iterator& pend, unsigned int flags, const BaseSignatureChecker& checker, bool fRequireMinimal, bool fVerify);
+
 bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, unsigned int flags, const BaseSignatureChecker& checker)
 {
     CScript::const_iterator pc = script.begin();
@@ -714,6 +717,37 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, un
 
                 case OP_CHECKSIG:
                 case OP_CHECKSIGVERIFY:
+                    if (!OpCheckSig(stack, pbegincodehash, pend, flags, checker, fRequireMinimal, opcode == OP_CHECKSIGVERIFY))
+                        return false;
+                break;
+
+                case OP_CHECKMULTISIG:
+                case OP_CHECKMULTISIGVERIFY:
+                    if (!OpCheckMultiSig(stack, nOpCount, pbegincodehash, pend, flags, checker, fRequireMinimal, opcode == OP_CHECKMULTISIGVERIFY))
+                        return false;
+                break;
+
+                default:
+                    return false;
+            }
+
+            // Size limits
+            if (stack.size() + altstack.size() > 1000)
+                return false;
+        }
+    }
+    catch (...)
+    {
+        return false;
+    }
+
+    if (!vfExec.empty())
+        return false;
+
+    return true;
+}
+
+bool OpCheckSig(vector<vector<unsigned char> >& stack, CScript::const_iterator& pbegincodehash, CScript::const_iterator& pend, unsigned int flags, const BaseSignatureChecker& checker, bool fRequireMinimal, bool fVerify)
                 {
                     // (sig pubkey -- bool)
                     if (stack.size() < 2)
@@ -737,18 +771,17 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, un
                     popstack(stack);
                     popstack(stack);
                     stack.push_back(fSuccess ? vchTrue : vchFalse);
-                    if (opcode == OP_CHECKSIGVERIFY)
+                    if (fVerify)
                     {
                         if (fSuccess)
                             popstack(stack);
                         else
                             return false;
                     }
+                    return true;
                 }
-                break;
 
-                case OP_CHECKMULTISIG:
-                case OP_CHECKMULTISIGVERIFY:
+bool OpCheckMultiSig(vector<vector<unsigned char> >& stack, int& nOpCount, CScript::const_iterator& pbegincodehash, CScript::const_iterator& pend, unsigned int flags, const BaseSignatureChecker& checker, bool fRequireMinimal, bool fVerify)
                 {
                     // ([sig ...] num_of_signatures [pubkey ...] num_of_pubkeys -- bool)
 
@@ -829,35 +862,15 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, un
 
                     stack.push_back(fSuccess ? vchTrue : vchFalse);
 
-                    if (opcode == OP_CHECKMULTISIGVERIFY)
+                    if (fVerify)
                     {
                         if (fSuccess)
                             popstack(stack);
                         else
                             return false;
                     }
+                    return true;
                 }
-                break;
-
-                default:
-                    return false;
-            }
-
-            // Size limits
-            if (stack.size() + altstack.size() > 1000)
-                return false;
-        }
-    }
-    catch (...)
-    {
-        return false;
-    }
-
-    if (!vfExec.empty())
-        return false;
-
-    return true;
-}
 
 namespace {
 
