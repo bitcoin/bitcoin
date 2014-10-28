@@ -10,10 +10,12 @@
 #include "config/bitcoin-config.h"
 #endif
 
+#include "amount.h"
 #include "chain.h"
 #include "chainparams.h"
 #include "coins.h"
-#include "core.h"
+#include "core/block.h"
+#include "core/transaction.h"
 #include "net.h"
 #include "pow.h"
 #include "script/script.h"
@@ -23,6 +25,7 @@
 #include "tinyformat.h"
 #include "txmempool.h"
 #include "uint256.h"
+#include "undo.h"
 
 #include <algorithm>
 #include <exception>
@@ -127,7 +130,6 @@ static const uint64_t nMinDiskSpace = 52428800;
 
 
 class CBlockTreeDB;
-class CTxUndo;
 class CScriptCheck;
 class CValidationState;
 class CValidationInterface;
