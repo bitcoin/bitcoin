@@ -80,7 +80,9 @@ BITCOIN_CORE_H = \
   coincontrol.h \
   coins.h \
   compat.h \
-  core.h \
+  compressor.h \
+  core/block.h \
+  core/transaction.h \
   core_io.h \
   crypter.h \
   db.h \
@@ -103,7 +105,6 @@ BITCOIN_CORE_H = \
   rpcclient.h \
   rpcprotocol.h \
   rpcserver.h \
-  script/compressor.h \
   script/interpreter.h \
   script/script.h \
   script/sigcache.h \
@@ -119,6 +120,7 @@ BITCOIN_CORE_H = \
   txmempool.h \
   ui_interface.h \
   uint256.h \
+  undo.h \
   util.h \
   utilstrencodings.h \
   utilmoneystr.h \
@@ -209,10 +211,13 @@ univalue_libbitcoin_univalue_a_SOURCES = \
 libbitcoin_common_a_CPPFLAGS = $(BITCOIN_INCLUDES)
 libbitcoin_common_a_SOURCES = \
   allocators.cpp \
+  amount.cpp \
   base58.cpp \
   chainparams.cpp \
   coins.cpp \
-  core.cpp \
+  compressor.cpp \
+  core/block.cpp \
+  core/transaction.cpp \
   core_read.cpp \
   core_write.cpp \
   ecwrapper.cpp \
@@ -221,7 +226,6 @@ libbitcoin_common_a_SOURCES = \
   keystore.cpp \
   netbase.cpp \
   protocol.cpp \
-  script/compressor.cpp \
   script/interpreter.cpp \
   script/script.cpp \
   script/sigcache.cpp \

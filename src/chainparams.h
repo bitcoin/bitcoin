@@ -6,9 +6,9 @@
 #ifndef BITCOIN_CHAIN_PARAMS_H
 #define BITCOIN_CHAIN_PARAMS_H
 
-#include "core.h"
 #include "chainparamsbase.h"
 #include "checkpoints.h"
+#include "core/block.h"
 #include "protocol.h"
 #include "uint256.h"
 

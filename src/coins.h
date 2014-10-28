@@ -6,9 +6,10 @@
 #ifndef BITCOIN_COINS_H
 #define BITCOIN_COINS_H
 
-#include "core.h"
+#include "compressor.h"
 #include "serialize.h"
 #include "uint256.h"
+#include "undo.h"
 
 #include <assert.h>
 #include <stdint.h>

@@ -4,7 +4,7 @@
 
 #include "bitcoinunits.h"
 
-#include "core.h"
+#include "core/transaction.h"
 
 #include <QStringList>
 

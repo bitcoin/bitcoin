@@ -4,7 +4,7 @@
 
 #include "util.h"
 
-#include "core.h"
+#include "core/transaction.h"
 #include "random.h"
 #include "sync.h"
 #include "utilstrencodings.h"
