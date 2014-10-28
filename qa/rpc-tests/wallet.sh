@@ -105,6 +105,9 @@ CheckBalance "$B1ARGS" 0
 CheckBalance "$B3ARGS" 100
 CheckBalance "$B3ARGS" "100-21" "from1"
 
+# ========================== Subtract fee from amount ==========================
+
+function CleanUp {
 $CLI $B3ARGS stop > /dev/null 2>&1
 wait $B3PID
 $CLI $B2ARGS stop > /dev/null 2>&1
@@ -112,6 +115,47 @@ wait $B2PID
 $CLI $B1ARGS stop > /dev/null 2>&1
 wait $B1PID
 
-echo "Tests successful, cleaning up"
 rm -rf $D
+}
+
+# Send 10 XBT normal
+address=$($CLI $B1ARGS getnewaddress)
+fee=$($CLI $B3ARGS settxfee "0.001")
+txid=$($CLI $B3ARGS sendtoaddress $address 10)
+$CLI $B3ARGS setgenerate true 1
+WaitBlocks
+
+B=$( $CLI $B3ARGS getbalance )
+if [ $B != "89.99900000" ] ; then
+    echoerr "wrong balance: $B, expected 89.99900000"
+    CleanUp
+    exit 1
+fi
+B=$( $CLI $B1ARGS getbalance )
+if [ $B != "10.00000000" ] ; then
+    echoerr "wrong balance: $B, expected 10.00000000"
+    CleanUp
+    exit 1
+fi
+
+# Send 10 XBT with subtract fee from amount
+txid=$($CLI $B3ARGS sendtoaddress $address 10 "" "" true)
+$CLI $B3ARGS setgenerate true 1
+WaitBlocks
+
+B=$( $CLI $B3ARGS getbalance )
+if [ $B != "79.99900000" ] ; then
+    echoerr "wrong balance: $B, expected 79.99900000"
+    CleanUp
+    exit 1
+fi
+B=$( $CLI $B1ARGS getbalance )
+if [ $B != "19.99900000" ] ; then
+    echoerr "wrong balance: $B, expected 19.99900000"
+    CleanUp
+    exit 1
+fi
+
+echo "Tests successful, cleaning up"
+CleanUp
 exit 0
