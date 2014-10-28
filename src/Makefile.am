@@ -84,6 +84,7 @@ BITCOIN_CORE_H = \
   core_io.h \
   crypter.h \
   db.h \
+  ecwrapper.h \
   hash.h \
   init.h \
   key.h \
@@ -214,6 +215,7 @@ libbitcoin_common_a_SOURCES = \
   core.cpp \
   core_read.cpp \
   core_write.cpp \
+  ecwrapper.cpp \
   hash.cpp \
   key.cpp \
   keystore.cpp \
