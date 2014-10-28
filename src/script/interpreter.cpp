@@ -10,7 +10,7 @@
 #include "crypto/sha1.h"
 #include "crypto/sha2.h"
 #include "eccryptoverify.h"
-#include "key.h"
+#include "pubkey.h"
 #include "script/script.h"
 #include "uint256.h"
 #include "util.h"

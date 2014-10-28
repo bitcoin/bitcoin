@@ -6,8 +6,7 @@
 #ifndef H_BITCOIN_SCRIPT_STANDARD
 #define H_BITCOIN_SCRIPT_STANDARD
 
-#include "key.h"
-#include "script/script.h"
+#include "uint256.h"
 #include "script/interpreter.h"
 
 #include <boost/variant.hpp>
@@ -15,6 +14,7 @@
 #include <stdint.h>
 
 class CScript;
+class CKeyID;
 
 /** A reference to a CScript: the Hash160 of its serialization (see script.h) */
 class CScriptID : public uint160
