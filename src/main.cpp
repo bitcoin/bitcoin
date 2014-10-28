@@ -1177,15 +1177,8 @@ bool IsInitialBlockDownload()
     LOCK(cs_main);
     if (fImporting || fReindex || chainActive.Height() < Checkpoints::GetTotalBlocksEstimate())
         return true;
-    static int64_t nLastUpdate;
-    static CBlockIndex* pindexLastBest;
-    if (chainActive.Tip() != pindexLastBest)
-    {
-        pindexLastBest = chainActive.Tip();
-        nLastUpdate = GetTime();
-    }
-    return (GetTime() - nLastUpdate < 10 &&
-            chainActive.Tip()->GetBlockTime() < GetTime() - 24 * 60 * 60);
+    return (chainActive.Height() < pindexBestHeader->nHeight - 24 * 6 ||
+            pindexBestHeader->GetBlockTime() < GetTime() - 24 * 60 * 60);
 }
 
 bool fLargeWorkForkFound = false;
