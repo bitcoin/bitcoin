@@ -460,7 +460,7 @@ Value getblocktemplate(const Array& params, bool fHelp)
 
     // Update nTime
     UpdateTime(pblock, pindexPrev);
-    pblock->nNonce = 0;
+    pblock->proof.nNonce = 0;
 
     Array transactions;
     map<uint256, int64_t> setTxIndex;
@@ -497,7 +497,7 @@ Value getblocktemplate(const Array& params, bool fHelp)
     Object aux;
     aux.push_back(Pair("flags", HexStr(COINBASE_FLAGS.begin(), COINBASE_FLAGS.end())));
 
-    uint256 hashTarget = uint256().SetCompact(pblock->nBits);
+    uint256 hashTarget = uint256().SetCompact(pblock->proof.nBits);
 
     static Array aMutable;
     if (aMutable.empty())
@@ -521,7 +521,7 @@ Value getblocktemplate(const Array& params, bool fHelp)
     result.push_back(Pair("sigoplimit", (int64_t)MAX_BLOCK_SIGOPS));
     result.push_back(Pair("sizelimit", (int64_t)MAX_BLOCK_SIZE));
     result.push_back(Pair("curtime", pblock->GetBlockTime()));
-    result.push_back(Pair("bits", strprintf("%08x", pblock->nBits)));
+    result.push_back(Pair("bits", strprintf("%08x", pblock->proof.nBits)));
     result.push_back(Pair("height", (int64_t)(pindexPrev->nHeight+1)));
 
     return result;

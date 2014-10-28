@@ -12,6 +12,7 @@
 #include "main.h"
 #include "net.h"
 #include "pow.h"
+#include "timedata.h"
 #include "util.h"
 #include "utilmoneystr.h"
 #ifdef ENABLE_WALLET
@@ -77,6 +78,15 @@ public:
         }
     }
 };
+
+void UpdateTime(CBlockHeader* pblock, const CBlockIndex* pindexPrev)
+{
+    pblock->nTime = std::max(pindexPrev->GetMedianTimePast()+1, GetAdjustedTime());
+
+    // Updating time can change work required on testnet:
+    if (Params().AllowMinDifficultyBlocks())
+        ResetChallenge(pblock->proof, pindexPrev, pblock->GetBlockTime());
+}
 
 CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
 {
@@ -317,8 +327,8 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
         // Fill in header
         pblock->hashPrevBlock  = pindexPrev->GetBlockHash();
         UpdateTime(pblock, pindexPrev);
-        pblock->nBits          = GetNextWorkRequired(pindexPrev, pblock);
-        pblock->nNonce         = 0;
+        ResetChallenge(pblock->proof, pindexPrev, pblock->GetBlockTime());
+        pblock->proof.nNonce         = 0;
         pblocktemplate->vTxSigOps[0] = GetLegacySigOpCount(pblock->vtx[0]);
 
         CBlockIndex indexDummy(*pblock);
@@ -475,7 +485,7 @@ void static BitcoinMiner(CWallet *pwallet)
             // Search
             //
             int64_t nStart = GetTime();
-            uint256 hashTarget = uint256().SetCompact(pblock->nBits);
+            uint256 hashTarget = uint256().SetCompact(pblock->proof.nBits);
             uint256 hash;
             uint32_t nNonce = 0;
             uint32_t nOldNonce = 0;
@@ -490,7 +500,7 @@ void static BitcoinMiner(CWallet *pwallet)
                     if (hash <= hashTarget)
                     {
                         // Found a solution
-                        pblock->nNonce = nNonce;
+                        pblock->proof.nNonce = nNonce;
                         assert(hash == pblock->GetHash());
 
                         SetThreadPriority(THREAD_PRIORITY_NORMAL);
@@ -553,7 +563,7 @@ void static BitcoinMiner(CWallet *pwallet)
                 if (Params().AllowMinDifficultyBlocks())
                 {
                     // Changing pblock->nTime can change work required on testnet:
-                    hashTarget.SetCompact(pblock->nBits);
+                    hashTarget.SetCompact(pblock->proof.nBits);
                 }
             }
         }

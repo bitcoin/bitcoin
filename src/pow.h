@@ -8,17 +8,17 @@
 
 #include <stdint.h>
 
-class CBlockHeader;
 class CBlockIndex;
+class CProof;
 class uint256;
 
-unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock);
-
 /** Check whether a block hash satisfies the proof-of-work requirement specified by nBits */
-bool CheckProofOfWork(uint256 hash, unsigned int nBits);
+bool CheckProof(uint256 hash, const CProof& proof);
+bool CheckChallenge(const CProof& proof, const CBlockIndex* pindexLast, int64_t nTime);
+void ResetChallenge(CProof& proof, const CBlockIndex* pindexLast, int64_t nTime);
 
-void UpdateTime(CBlockHeader* block, const CBlockIndex* pindexPrev);
+uint256 GetProofIncrement(const CProof& proof);
 
-uint256 GetProofIncrement(unsigned int nBits);
+double GetChallengeDouble(const CProof& proof);
 
 #endif // BITCOIN_POW_H

@@ -77,7 +77,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
         if (txFirst.size() < 2)
             txFirst.push_back(new CTransaction(pblock->vtx[0]));
         pblock->hashMerkleRoot = pblock->BuildMerkleTree();
-        pblock->nNonce = blockinfo[i].nonce;
+        pblock->proof.nNonce = blockinfo[i].nonce;
         CValidationState state;
         BOOST_CHECK(ProcessBlock(state, NULL, pblock));
         BOOST_CHECK(state.IsValid());
