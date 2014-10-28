@@ -362,4 +362,12 @@ void static secp256k1_num_negate(secp256k1_num_t *r) {
     r->neg ^= 1;
 }
 
+int static secp256k1_num_get_bits(const secp256k1_num_t *a, int offset, int count) {
+    int ret = 0;
+    for (int i = 0; i < count; i++) {
+        ret |= ((a->data[(offset + i) / GMP_NUMB_BITS] >> ((offset + i) % GMP_NUMB_BITS)) & 1) << i;
+    }
+    return ret;
+}
+
 #endif

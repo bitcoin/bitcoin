@@ -252,4 +252,12 @@ void static secp256k1_num_negate(secp256k1_num_t *r) {
     BN_set_negative(&r->bn, !BN_is_negative(&r->bn));
 }
 
+int static secp256k1_num_get_bits(const secp256k1_num_t *a, int offset, int count) {
+    int ret = 0;
+    for (int i = 0; i < count; i++) {
+        ret |= BN_is_bit_set(&a->bn, offset + i) << i;
+    }
+    return ret;
+}
+
 #endif
