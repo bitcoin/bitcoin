@@ -5,7 +5,7 @@
 #include "core_io.h"
 
 #include "base58.h"
-#include "core.h"
+#include "core/transaction.h"
 #include "script/script.h"
 #include "script/standard.h"
 #include "serialize.h"

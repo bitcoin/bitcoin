@@ -11,7 +11,7 @@
 
 #include "addrman.h"
 #include "chainparams.h"
-#include "core.h"
+#include "core/transaction.h"
 #include "ui_interface.h"
 
 #ifdef WIN32

@@ -5,7 +5,7 @@
 
 #include "interpreter.h"
 
-#include "core.h"
+#include "core/transaction.h"
 #include "crypto/ripemd160.h"
 #include "crypto/sha1.h"
 #include "crypto/sha2.h"
