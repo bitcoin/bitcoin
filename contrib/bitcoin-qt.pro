@@ -19,3 +19,6 @@ FORMS += \
 
 RESOURCES += \
     ../src/qt/bitcoin.qrc
+
+QT += \
+    printsupport

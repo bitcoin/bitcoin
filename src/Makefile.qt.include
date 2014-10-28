@@ -85,6 +85,7 @@ QT_FORMS_UI = \
   qt/forms/openuridialog.ui \
   qt/forms/optionsdialog.ui \
   qt/forms/overviewpage.ui \
+  qt/forms/paperwalletdialog.ui \
   qt/forms/receivecoinsdialog.ui \
   qt/forms/receiverequestdialog.ui \
   qt/forms/rpcconsole.ui \
@@ -134,6 +135,7 @@ QT_MOC_CPP = \
   qt/moc_transactiontablemodel.cpp \
   qt/moc_transactionview.cpp \
   qt/moc_utilitydialog.cpp \
+  qt/moc_verticallabel.cpp \
   qt/moc_walletframe.cpp \
   qt/moc_walletmodel.cpp \
   qt/moc_walletview.cpp
@@ -203,6 +205,7 @@ BITCOIN_QT_H = \
   qt/transactiontablemodel.h \
   qt/transactionview.h \
   qt/utilitydialog.h \
+  qt/verticallabel.h \
   qt/walletframe.h \
   qt/walletmodel.h \
   qt/walletmodeltransaction.h \
@@ -241,6 +244,7 @@ RES_ICONS = \
   qt/res/icons/lock_closed.png \
   qt/res/icons/lock_open.png \
   qt/res/icons/overview.png \
+  qt/res/icons/print.png \
   qt/res/icons/qrcode.png \
   qt/res/icons/quit.png \
   qt/res/icons/receive.png \
@@ -278,6 +282,7 @@ BITCOIN_QT_CPP = \
   qt/splashscreen.cpp \
   qt/trafficgraphwidget.cpp \
   qt/utilitydialog.cpp \
+  qt/verticallabel.cpp \
   qt/winshutdownmonitor.cpp
 
 if ENABLE_WALLET
@@ -304,6 +309,7 @@ BITCOIN_QT_CPP += \
   qt/transactionrecord.cpp \
   qt/transactiontablemodel.cpp \
   qt/transactionview.cpp \
+  qt/verticallabel.cpp \
   qt/walletframe.cpp \
   qt/walletmodel.cpp \
   qt/walletmodeltransaction.cpp \
@@ -313,7 +319,8 @@ endif
 RES_IMAGES = \
   qt/res/images/about.png \
   qt/res/images/splash.png \
-  qt/res/images/splash_testnet.png
+  qt/res/images/splash_testnet.png \
+  qt/res/images/paper_wallet.png
 
 RES_MOVIES = $(wildcard qt/res/movies/spinner-*.png)
 
