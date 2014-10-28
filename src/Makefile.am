@@ -58,7 +58,7 @@ if BUILD_BITCOIND
 endif
 
 if BUILD_BITCOIN_UTILS
-  bin_PROGRAMS += bitcoin-cli bitcoin-tx
+  bin_PROGRAMS += bitcoin-cli bitcoin-tx bitcoin-genalertkey
 endif
 
 .PHONY: FORCE
@@ -313,6 +313,30 @@ if USE_LIBSECP256K1
 endif
 bitcoin_cli_CPPFLAGS = $(BITCOIN_INCLUDES)
 #
+#
+## bitcoin-genalertkey binary #
+bitcoin_genalertkey_LDADD = \
+  $(LIBBITCOIN_SERVER) \
+  $(LIBBITCOIN_COMMON) \
+  $(LIBBITCOIN_UNIVALUE) \
+  $(LIBBITCOIN_UTIL) \
+  $(LIBBITCOIN_CRYPTO) \
+  $(BOOST_LIBS) \
+  $(SSL_LIBS) \
+  $(CRYPTO_LIBS) \
+  $(LIBLEVELDB) \
+  $(LIBMEMENV)
+if ENABLE_WALLET
+bitcoin_genalertkey_LDADD += libbitcoin_wallet.a $(BDB_LIBS)
+endif
+
+bitcoin_genalertkey_SOURCES = \
+  bitcoin-genalertkey.cpp
+
+if USE_LIBSECP256K1
+  bitcoin_genalertkey_LDADD += secp256k1/libsecp256k1.la
+endif
+bitcoin_genalertkey_CPPFLAGS = $(BITCOIN_INCLUDES)
 
 # bitcoin-tx binary #
 bitcoin_tx_LDADD = \
