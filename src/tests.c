@@ -46,7 +46,7 @@ void random_scalar_order_test(secp256k1_scalar_t *num) {
         unsigned char b32[32];
         secp256k1_rand256_test(b32);
         int overflow = 0;
-        secp256k1_scalar_set_bin(num, b32, 32, &overflow);
+        secp256k1_scalar_set_b32(num, b32, &overflow);
         if (overflow || secp256k1_scalar_is_zero(num))
             continue;
         break;
@@ -677,7 +677,7 @@ void test_ecdsa_openssl() {
     secp256k1_scalar_init(&msg);
     unsigned char message[32];
     secp256k1_rand256_test(message);
-    secp256k1_scalar_set_bin(&msg, message, 32, NULL);
+    secp256k1_scalar_set_b32(&msg, message, NULL);
     secp256k1_scalar_init(&key);
     random_scalar_order_test(&key);
     secp256k1_gej_t qj;

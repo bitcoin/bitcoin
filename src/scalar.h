@@ -25,10 +25,10 @@ void static secp256k1_scalar_free(secp256k1_scalar_t *r);
 int static secp256k1_scalar_get_bits(const secp256k1_scalar_t *a, int offset, int count);
 
 /** Set a scalar from a big endian byte array. */
-void static secp256k1_scalar_set_bin(secp256k1_scalar_t *r, const unsigned char *bin, int len, int *overflow);
+void static secp256k1_scalar_set_b32(secp256k1_scalar_t *r, const unsigned char *bin, int *overflow);
 
 /** Convert a scalar to a byte array. */
-void static secp256k1_scalar_get_bin(unsigned char *bin, int len, const secp256k1_scalar_t* a);
+void static secp256k1_scalar_get_b32(unsigned char *bin, const secp256k1_scalar_t* a);
 
 /** Add two scalars together (modulo the group order). */
 void static secp256k1_scalar_add(secp256k1_scalar_t *r, const secp256k1_scalar_t *a, const secp256k1_scalar_t *b);
