@@ -52,7 +52,7 @@ Object blockToJSON(const CBlock& block, const CBlockIndex* blockindex)
         txs.push_back(tx.GetHash().GetHex());
     result.push_back(Pair("tx", txs));
     result.push_back(Pair("time", block.GetBlockTime()));
-    result.push_back(Pair("nonce", (uint64_t)block.nNonce));
+    result.push_back(Pair("nonce", (uint64_t)GetNonce(block)));
     result.push_back(Pair("bits", GetChallengeStr(block)));
     result.push_back(Pair("difficulty", GetDifficulty(blockindex)));
     result.push_back(Pair("chainwork", blockindex->nChainWork.GetHex()));

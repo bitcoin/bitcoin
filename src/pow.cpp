@@ -151,3 +151,8 @@ std::string GetChallengeStrHex(const CBlockIndex& block)
 {
     return uint256().SetCompact(block.nBits).GetHex();
 }
+
+uint32_t GetNonce(const CBlockHeader& block)
+{
+    return block.nNonce;
+}
