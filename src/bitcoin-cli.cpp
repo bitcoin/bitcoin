@@ -46,6 +46,21 @@ std::string HelpMessageCli()
 //
 // Start
 //
+
+//
+// Exception thrown on connection error.  This error is used to determine
+// when to wait if -rpcwait is given.
+//
+class CConnectionFailed : public std::runtime_error
+{
+public:
+
+    explicit inline CConnectionFailed(const std::string& msg) :
+        std::runtime_error(msg)
+    {}
+
+};
+
 static bool AppInitRPC(int argc, char* argv[])
 {
     //
@@ -101,15 +116,9 @@ Object CallRPC(const string& strMethod, const Array& params)
     SSLIOStreamDevice<asio::ip::tcp> d(sslStream, fUseSSL);
     iostreams::stream< SSLIOStreamDevice<asio::ip::tcp> > stream(d);
 
-    bool fWait = GetBoolArg("-rpcwait", false); // -rpcwait means try until server has started
-    do {
-        bool fConnected = d.connect(GetArg("-rpcconnect", "127.0.0.1"), GetArg("-rpcport", itostr(BaseParams().RPCPort())));
-        if (fConnected) break;
-        if (fWait)
-            MilliSleep(1000);
-        else
-            throw runtime_error("couldn't connect to server");
-    } while (fWait);
+    const bool fConnected = d.connect(GetArg("-rpcconnect", "127.0.0.1"), GetArg("-rpcport", itostr(BaseParams().RPCPort())));
+    if (!fConnected)
+        throw CConnectionFailed("couldn't connect to server");
 
     // HTTP basic authentication
     string strUserPass64 = EncodeBase64(mapArgs["-rpcuser"] + ":" + mapArgs["-rpcpassword"]);
@@ -168,27 +177,43 @@ int CommandLineRPC(int argc, char *argv[])
         std::vector<std::string> strParams(&argv[2], &argv[argc]);
         Array params = RPCConvertValues(strMethod, strParams);
 
-        // Execute
-        Object reply = CallRPC(strMethod, params);
+        // Execute and handle connection failures with -rpcwait
+        const bool fWait = GetBoolArg("-rpcwait", false);
+        do {
+            try {
+                const Object reply = CallRPC(strMethod, params);
 
-        // Parse reply
-        const Value& result = find_value(reply, "result");
-        const Value& error  = find_value(reply, "error");
+                // Parse reply
+                const Value& result = find_value(reply, "result");
+                const Value& error  = find_value(reply, "error");
 
-        if (error.type() != null_type) {
-            // Error
-            strPrint = "error: " + write_string(error, false);
-            int code = find_value(error.get_obj(), "code").get_int();
-            nRet = abs(code);
-        } else {
-            // Result
-            if (result.type() == null_type)
-                strPrint = "";
-            else if (result.type() == str_type)
-                strPrint = result.get_str();
-            else
-                strPrint = write_string(result, true);
-        }
+                if (error.type() != null_type) {
+                    // Error
+                    const int code = find_value(error.get_obj(), "code").get_int();
+                    if (fWait && code == RPC_IN_WARMUP)
+                        throw CConnectionFailed("server in warmup");
+                    strPrint = "error: " + write_string(error, false);
+                    nRet = abs(code);
+                } else {
+                    // Result
+                    if (result.type() == null_type)
+                        strPrint = "";
+                    else if (result.type() == str_type)
+                        strPrint = result.get_str();
+                    else
+                        strPrint = write_string(result, true);
+                }
+
+                // Connection succeeded, no need to retry.
+                break;
+            }
+            catch (const CConnectionFailed& e) {
+                if (fWait)
+                    MilliSleep(1000);
+                else
+                    throw;
+            }
+        } while (fWait);
     }
     catch (boost::thread_interrupted) {
         throw;
