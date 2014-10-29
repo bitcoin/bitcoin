@@ -156,3 +156,8 @@ uint32_t GetNonce(const CBlockHeader& block)
 {
     return block.nNonce;
 }
+
+void SetNonce(CBlockHeader& block, uint32_t nNonce)
+{
+    block.nNonce = nNonce;
+}
