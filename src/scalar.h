@@ -45,6 +45,9 @@ void static secp256k1_scalar_negate(secp256k1_scalar_t *r, const secp256k1_scala
 /** Check whether a scalar equals zero. */
 int static secp256k1_scalar_is_zero(const secp256k1_scalar_t *a);
 
+/** Check whether a scalar equals one. */
+int static secp256k1_scalar_is_one(const secp256k1_scalar_t *a);
+
 /** Check whether a scalar is higher than the group order divided by 2. */
 int static secp256k1_scalar_is_high(const secp256k1_scalar_t *a);
 

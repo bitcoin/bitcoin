@@ -54,10 +54,15 @@ void static secp256k1_scalar_inverse(secp256k1_scalar_t *r, const secp256k1_scal
 
 void static secp256k1_scalar_negate(secp256k1_scalar_t *r, const secp256k1_scalar_t *a) {
     secp256k1_num_sub(&r->n, &secp256k1_ge_consts->order, &a->n);
+    secp256k1_num_mod(&r->n, &secp256k1_ge_consts->order);
 }
 
 int static secp256k1_scalar_is_zero(const secp256k1_scalar_t *a) {
     return secp256k1_num_is_zero(&a->n);
+}
+
+int static secp256k1_scalar_is_one(const secp256k1_scalar_t *a) {
+    return secp256k1_num_bits(&a->n) == 1;
 }
 
 int static secp256k1_scalar_is_high(const secp256k1_scalar_t *a) {
