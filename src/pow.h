@@ -22,5 +22,6 @@ void ResetChallenge(CBlockHeader& block, const CBlockIndex& indexLast);
 /** Avoid using these functions when possible */
 double GetChallengeDifficulty(const CBlockIndex* blockindex);
 std::string GetChallengeStr(const CBlockIndex& block);
+std::string GetChallengeStrHex(const CBlockIndex& block);
 
 #endif // BITCOIN_POW_H

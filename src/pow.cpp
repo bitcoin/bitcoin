@@ -146,3 +146,8 @@ std::string GetChallengeStr(const CBlockIndex& block)
 {
     return strprintf("%08x", block.nBits);
 }
+
+std::string GetChallengeStrHex(const CBlockIndex& block)
+{
+    return uint256().SetCompact(block.nBits).GetHex();
+}
