@@ -84,3 +84,14 @@ Using wildcards will result in the rule being rejected with the following error 
 
     Error: Invalid -rpcallowip subnet specification: *. Valid are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24).
 
+RPC Server "Warm-Up" Mode
+=========================
+
+The RPC server is started earlier now, before most of the expensive
+intialisations like loading the block index.  It is available now almost
+immediately after starting the process.  However, until all initialisations
+are done, it always returns an immediate error with code -28 to all calls.
+
+This new behaviour can be useful for clients to know that a server is already
+started and will be available soon (for instance, so that they do not
+have to start it themselves).
