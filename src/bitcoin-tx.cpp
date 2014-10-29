@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "base58.h"
+#include "clientversion.h"
 #include "core/transaction.h"
 #include "core_io.h"
 #include "keystore.h"

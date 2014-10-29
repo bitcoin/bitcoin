@@ -4,12 +4,12 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "chainparamsbase.h"
+#include "clientversion.h"
 #include "init.h"
 #include "rpcclient.h"
 #include "rpcprotocol.h"
 #include "util.h"
 #include "utilstrencodings.h"
-#include "version.h"
 
 #include <boost/filesystem/operations.hpp>
 
