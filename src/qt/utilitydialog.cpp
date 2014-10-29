@@ -10,8 +10,8 @@
 #include "clientmodel.h"
 #include "guiutil.h"
 
+#include "clientversion.h"
 #include "init.h"
-#include "version.h"
 
 #include <stdio.h>
 
