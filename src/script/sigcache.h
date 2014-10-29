@@ -18,7 +18,7 @@ private:
     bool store;
 
 public:
-    CachingSignatureChecker(const CTransaction& txToIn, unsigned int nInIn, bool storeIn=true) : SignatureChecker(txToIn, nInIn), store(storeIn) {}
+    CachingSignatureChecker(const TxSignatureHasher& hasherIn, bool storeIn=true) : SignatureChecker(hasherIn), store(storeIn) { }
 
     bool VerifySignature(const std::vector<unsigned char>& vchSig, const CPubKey& vchPubKey, const uint256& sighash) const;
 };

@@ -95,10 +95,11 @@ bool SignSignature(const CKeyStore &keystore, const CScript& fromPubKey, CMutabl
 {
     assert(nIn < txTo.vin.size());
     CTxIn& txin = txTo.vin[nIn];
+    TxSignatureHasher hasher(txTo, nIn);
 
     // Leave out the signature from the hash, since a signature can't sign itself.
     // The checksig op will also drop the signatures from its hash.
-    uint256 hash = SignatureHash(fromPubKey, txTo, nIn, nHashType);
+    uint256 hash = hasher.SignatureHash(fromPubKey, nHashType);
 
     txnouttype whichType;
     if (!Solver(keystore, fromPubKey, hash, nHashType, txin.scriptSig, whichType))
@@ -112,7 +113,7 @@ bool SignSignature(const CKeyStore &keystore, const CScript& fromPubKey, CMutabl
         CScript subscript = txin.scriptSig;
 
         // Recompute txn hash using subscript in place of scriptPubKey:
-        uint256 hash2 = SignatureHash(subscript, txTo, nIn, nHashType);
+        uint256 hash2 = hasher.SignatureHash(subscript, nHashType);
 
         txnouttype subType;
         bool fSolved =
@@ -123,7 +124,7 @@ bool SignSignature(const CKeyStore &keystore, const CScript& fromPubKey, CMutabl
     }
 
     // Test solution
-    return VerifyScript(txin.scriptSig, fromPubKey, STANDARD_SCRIPT_VERIFY_FLAGS, SignatureChecker(txTo, nIn));
+    return VerifyScript(txin.scriptSig, fromPubKey, STANDARD_SCRIPT_VERIFY_FLAGS, SignatureChecker(hasher));
 }
 
 bool SignSignature(const CKeyStore &keystore, const CTransaction& txFrom, CMutableTransaction& txTo, unsigned int nIn, int nHashType)
@@ -166,6 +167,7 @@ static CScript CombineMultisig(CScript scriptPubKey, const CMutableTransaction& 
     unsigned int nSigsRequired = vSolutions.front()[0];
     unsigned int nPubKeys = vSolutions.size()-2;
     map<valtype, valtype> sigs;
+    TxSignatureHasher hasher(txTo, nIn);
     BOOST_FOREACH(const valtype& sig, allsigs)
     {
         for (unsigned int i = 0; i < nPubKeys; i++)
@@ -174,7 +176,7 @@ static CScript CombineMultisig(CScript scriptPubKey, const CMutableTransaction& 
             if (sigs.count(pubkey))
                 continue; // Already got a sig for this pubkey
 
-            if (SignatureChecker(txTo, nIn).CheckSig(sig, pubkey, scriptPubKey))
+            if (SignatureChecker(hasher).CheckSig(sig, pubkey, scriptPubKey))
             {
                 sigs[pubkey] = sig;
                 break;
