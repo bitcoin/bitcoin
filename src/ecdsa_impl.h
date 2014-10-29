@@ -147,9 +147,7 @@ int static secp256k1_ecdsa_sig_verify(const secp256k1_ecdsa_sig_t *sig, const se
     return ret;
 }
 
-int static secp256k1_ecdsa_sig_sign(secp256k1_ecdsa_sig_t *sig, const secp256k1_num_t *seckey, const secp256k1_num_t *message, const secp256k1_num_t *nonce, int *recid) {
-    const secp256k1_ge_consts_t *c = secp256k1_ge_consts;
-
+int static secp256k1_ecdsa_sig_sign(secp256k1_ecdsa_sig_t *sig, const secp256k1_scalar_t *seckey, const secp256k1_scalar_t *message, const secp256k1_scalar_t *nonce, int *recid) {
     secp256k1_gej_t rp;
     secp256k1_ecmult_gen(&rp, nonce);
     secp256k1_ge_t r;
@@ -158,28 +156,35 @@ int static secp256k1_ecdsa_sig_sign(secp256k1_ecdsa_sig_t *sig, const secp256k1_
     secp256k1_fe_normalize(&r.x);
     secp256k1_fe_normalize(&r.y);
     secp256k1_fe_get_b32(b, &r.x);
-    secp256k1_num_set_bin(&sig->r, b, 32);
+    int overflow = 0;
+    secp256k1_scalar_t sigr;
+    secp256k1_scalar_init(&sigr);
+    secp256k1_scalar_set_bin(&sigr, b, 32, &overflow);
     if (recid)
-        *recid = (secp256k1_num_cmp(&sig->r, &c->order) >= 0 ? 2 : 0) | (secp256k1_fe_is_odd(&r.y) ? 1 : 0);
-    secp256k1_num_mod(&sig->r, &c->order);
-    secp256k1_num_t n;
-    secp256k1_num_init(&n);
-    secp256k1_num_mod_mul(&n, &sig->r, seckey, &c->order);
-    secp256k1_num_add(&n, &n, message);
-    secp256k1_num_mod(&n, &c->order);
-    secp256k1_num_mod_inverse(&sig->s, nonce, &c->order);
-    secp256k1_num_mod_mul(&sig->s, &sig->s, &n, &c->order);
-    secp256k1_num_clear(&n);
-    secp256k1_num_free(&n);
+        *recid = (overflow ? 2 : 0) | (secp256k1_fe_is_odd(&r.y) ? 1 : 0);
+    secp256k1_scalar_t n;
+    secp256k1_scalar_init(&n);
+    secp256k1_scalar_mul(&n, &sigr, seckey);
+    secp256k1_scalar_add(&n, &n, message);
+    secp256k1_scalar_t sigs;
+    secp256k1_scalar_init(&sigs);
+    secp256k1_scalar_inverse(&sigs, nonce);
+    secp256k1_scalar_mul(&sigs, &sigs, &n);
+    secp256k1_scalar_clear(&n);
+    secp256k1_scalar_free(&n);
     secp256k1_gej_clear(&rp);
     secp256k1_ge_clear(&r);
-    if (secp256k1_num_is_zero(&sig->s))
+    if (secp256k1_scalar_is_zero(&sigs))
         return 0;
-    if (secp256k1_num_cmp(&sig->s, &c->half_order) > 0) {
-        secp256k1_num_sub(&sig->s, &c->order, &sig->s);
+    if (secp256k1_scalar_is_high(&sigs)) {
+        secp256k1_scalar_negate(&sigs, &sigs);
         if (recid)
             *recid ^= 1;
     }
+    secp256k1_scalar_get_num(&sig->s, &sigs);
+    secp256k1_scalar_get_num(&sig->r, &sigr);
+    secp256k1_scalar_free(&sigs);
+    secp256k1_scalar_free(&sigr);
     return 1;
 }
 

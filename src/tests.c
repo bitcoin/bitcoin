@@ -41,6 +41,18 @@ void random_num_order_test(secp256k1_num_t *num) {
     } while(1);
 }
 
+void random_scalar_order_test(secp256k1_scalar_t *num) {
+    do {
+        unsigned char b32[32];
+        secp256k1_rand256_test(b32);
+        int overflow = 0;
+        secp256k1_scalar_set_bin(num, b32, 32, &overflow);
+        if (overflow || secp256k1_scalar_is_zero(num))
+            continue;
+        break;
+    } while(1);
+}
+
 void random_num_order(secp256k1_num_t *num) {
     do {
         unsigned char b32[32];
@@ -507,33 +519,37 @@ void run_wnaf() {
     secp256k1_num_free(&n);
 }
 
-void random_sign(secp256k1_ecdsa_sig_t *sig, const secp256k1_num_t *key, const secp256k1_num_t *msg, int *recid) {
-    secp256k1_num_t nonce;
-    secp256k1_num_init(&nonce);
+void random_sign(secp256k1_ecdsa_sig_t *sig, const secp256k1_scalar_t *key, const secp256k1_scalar_t *msg, int *recid) {
+    secp256k1_scalar_t nonce;
+    secp256k1_scalar_init(&nonce);
     do {
-        random_num_order_test(&nonce);
+        random_scalar_order_test(&nonce);
     } while(!secp256k1_ecdsa_sig_sign(sig, key, msg, &nonce, recid));
-    secp256k1_num_free(&nonce);
+    secp256k1_scalar_free(&nonce);
 }
 
 void test_ecdsa_sign_verify() {
     const secp256k1_ge_consts_t *c = secp256k1_ge_consts;
-    secp256k1_num_t msg, key;
-    secp256k1_num_init(&msg);
-    random_num_order_test(&msg);
-    secp256k1_num_init(&key);
-    random_num_order_test(&key);
+    secp256k1_scalar_t msg, key;
+    secp256k1_scalar_init(&msg);
+    random_scalar_order_test(&msg);
+    secp256k1_scalar_init(&key);
+    random_scalar_order_test(&key);
     secp256k1_gej_t pubj; secp256k1_ecmult_gen(&pubj, &key);
     secp256k1_ge_t pub; secp256k1_ge_set_gej(&pub, &pubj);
     secp256k1_ecdsa_sig_t sig;
     secp256k1_ecdsa_sig_init(&sig);
     random_sign(&sig, &key, &msg, NULL);
-    CHECK(secp256k1_ecdsa_sig_verify(&sig, &pub, &msg));
-    secp256k1_num_inc(&msg);
-    CHECK(!secp256k1_ecdsa_sig_verify(&sig, &pub, &msg));
+    secp256k1_num_t msg_num;
+    secp256k1_num_init(&msg_num);
+    secp256k1_scalar_get_num(&msg_num, &msg);
+    CHECK(secp256k1_ecdsa_sig_verify(&sig, &pub, &msg_num));
+    secp256k1_num_inc(&msg_num);
+    CHECK(!secp256k1_ecdsa_sig_verify(&sig, &pub, &msg_num));
     secp256k1_ecdsa_sig_free(&sig);
-    secp256k1_num_free(&msg);
-    secp256k1_num_free(&key);
+    secp256k1_num_free(&msg_num);
+    secp256k1_scalar_free(&msg);
+    secp256k1_scalar_free(&key);
 }
 
 void run_ecdsa_sign_verify() {
@@ -643,7 +659,7 @@ void run_ecdsa_end_to_end() {
 
 
 #ifdef ENABLE_OPENSSL_TESTS
-EC_KEY *get_openssl_key(const secp256k1_num_t *key) {
+EC_KEY *get_openssl_key(const secp256k1_scalar_t *key) {
     unsigned char privkey[300];
     int privkeylen;
     int compr = secp256k1_rand32() & 1;
@@ -657,13 +673,13 @@ EC_KEY *get_openssl_key(const secp256k1_num_t *key) {
 
 void test_ecdsa_openssl() {
     const secp256k1_ge_consts_t *c = secp256k1_ge_consts;
-    secp256k1_num_t key, msg;
-    secp256k1_num_init(&msg);
+    secp256k1_scalar_t key, msg;
+    secp256k1_scalar_init(&msg);
     unsigned char message[32];
     secp256k1_rand256_test(message);
-    secp256k1_num_set_bin(&msg, message, 32);
-    secp256k1_num_init(&key);
-    random_num_order_test(&key);
+    secp256k1_scalar_set_bin(&msg, message, 32, NULL);
+    secp256k1_scalar_init(&key);
+    random_scalar_order_test(&key);
     secp256k1_gej_t qj;
     secp256k1_ecmult_gen(&qj, &key);
     secp256k1_ge_t q;
@@ -676,9 +692,13 @@ void test_ecdsa_openssl() {
     secp256k1_ecdsa_sig_t sig;
     secp256k1_ecdsa_sig_init(&sig);
     CHECK(secp256k1_ecdsa_sig_parse(&sig, signature, sigsize));
-    CHECK(secp256k1_ecdsa_sig_verify(&sig, &q, &msg));
+    secp256k1_num_t msg_num;
+    secp256k1_num_init(&msg_num);
+    secp256k1_scalar_get_num(&msg_num, &msg);
+    CHECK(secp256k1_ecdsa_sig_verify(&sig, &q, &msg_num));
     secp256k1_num_inc(&sig.r);
-    CHECK(!secp256k1_ecdsa_sig_verify(&sig, &q, &msg));
+    CHECK(!secp256k1_ecdsa_sig_verify(&sig, &q, &msg_num));
+    secp256k1_num_free(&msg_num);
 
     random_sign(&sig, &key, &msg, NULL);
     sigsize = 80;
@@ -687,8 +707,8 @@ void test_ecdsa_openssl() {
 
     secp256k1_ecdsa_sig_free(&sig);
     EC_KEY_free(ec_key);
-    secp256k1_num_free(&key);
-    secp256k1_num_free(&msg);
+    secp256k1_scalar_free(&key);
+    secp256k1_scalar_free(&msg);
 }
 
 void run_ecdsa_openssl() {

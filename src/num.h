@@ -100,4 +100,7 @@ void static secp256k1_num_split(secp256k1_num_t *rl, secp256k1_num_t *rh, const 
 /** Change a number's sign. */
 void static secp256k1_num_negate(secp256k1_num_t *r);
 
+/** Get a bunch of bits from a number. */
+int  static secp256k1_num_get_bits(const secp256k1_num_t *a, int offset, int count);
+
 #endif
