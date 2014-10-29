@@ -45,6 +45,13 @@ void StopRPCThreads();
 /* Query whether RPC is running */
 bool IsRPCRunning();
 
+/* Set the RPC warmup status.  When this is done, all RPC calls will error out
+ * immediately with RPC_IN_WARMUP.
+ */
+void SetRPCWarmupStatus(const std::string& newStatus);
+/* Mark warmup as done.  RPC calls will be processed from now on.  */
+void SetRPCWarmupFinished();
+
 /**
  * Type-check arguments; throws JSONRPCError if wrong type given. Does not check that
  * the right number of arguments are passed, just that any passed are the correct type.
