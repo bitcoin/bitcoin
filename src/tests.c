@@ -373,6 +373,14 @@ void scalar_test(void) {
         secp256k1_scalar_add(&r2, &r2, &t);
         CHECK(secp256k1_scalar_eq(&r1, &r2));
     }
+
+    {
+        // Test square.
+        secp256k1_scalar_t r1, r2;
+        secp256k1_scalar_sqr(&r1, &s1);
+        secp256k1_scalar_mul(&r2, &s1, &s1);
+        CHECK(secp256k1_scalar_eq(&r1, &r2));
+    }
 }
 
 void run_scalar_tests(void) {

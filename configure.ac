@@ -64,12 +64,18 @@ AC_ARG_WITH([field], [AS_HELP_STRING([--with-field=gmp|64bit|64bit_asm|32bit|aut
 AC_ARG_WITH([bignum], [AS_HELP_STRING([--with-bignum=gmp|auto],
 [Specify Bignum Implementation. Default is auto])],[req_bignum=$withval], [req_bignum=auto])
 
+AC_ARG_WITH([scalar], [AS_HELP_STRING([--with-scalar=64bit|32bit|auto],
+[Specify scalar implementation. Default is auto])],[req_scalar=$withval], [req_scalar=auto])
+
 AC_CHECK_TYPES([__int128])
 
 AC_DEFUN([SECP_INT128_CHECK],[
 has_int128=$ac_cv_type___int128
 if test x"$has_int128" != x"yes" && test x"$set_field" = x"64bit"; then
   AC_MSG_ERROR([$set_field field support explicitly requested but is not compatible with this host])
+fi
+if test x"$has_int128" != x"yes" && test x"$set_scalar" = x"64bit"; then
+  AC_MSG_ERROR([$set_scalar scalar support explicitly requested but is not compatible with this host])
 fi
 ])
 
@@ -194,6 +200,30 @@ else
   esac
 fi
 
+if test x"$req_scalar" = x"auto"; then
+  if test x"$set_scalar" = x; then
+    SECP_INT128_CHECK
+    if test x"$has_int128" = x"yes"; then
+      set_scalar=64bit
+    fi
+  fi
+  if test x"$set_scalar" = x; then
+    set_scalar=32bit
+  fi
+else
+  set_scalar=$req_scalar
+  case $set_scalar in
+  64bit)
+    SECP_INT128_CHECK
+    ;;
+  32bit)
+    ;;
+  *)
+    AC_MSG_ERROR([invalid scalar implementation selected])
+    ;;
+  esac
+fi
+
 if test x"$req_bignum" = x"auto"; then
   SECP_GMP_CHECK
   if test x"$has_gmp" = x"yes"; then
@@ -252,6 +282,19 @@ gmp)
   ;;
 esac
 
+#select scalar implementation
+case $set_scalar in
+64bit)
+  AC_DEFINE(USE_SCALAR_4X64, 1, [Define this symbol to use the 4x64 scalar implementation])
+  ;;
+32bit)
+  AC_DEFINE(USE_SCALAR_8X32, 1, [Define this symbol to use the 8x32 scalar implementation])
+  ;;
+*)
+  AC_MSG_ERROR([invalid scalar implementation])
+  ;;
+esac
+
 if test x"$use_tests" = x"yes"; then
   SECP_OPENSSL_CHECK
   if test x"$has_openssl_ec" == x"yes"; then
@@ -278,6 +321,7 @@ fi
 
 AC_MSG_NOTICE([Using field implementation: $set_field])
 AC_MSG_NOTICE([Using bignum implementation: $set_bignum])
+AC_MSG_NOTICE([Using scalar implementation: $set_scalar])
 
 AC_CONFIG_HEADERS([src/libsecp256k1-config.h])
 AC_CONFIG_FILES([Makefile libsecp256k1.pc])
