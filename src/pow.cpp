@@ -141,3 +141,8 @@ double GetChallengeDifficulty(const CBlockIndex* blockindex)
     }
     return dDiff;
 }
+
+std::string GetChallengeStr(const CBlockIndex& block)
+{
+    return strprintf("%08x", block.nBits);
+}
