@@ -831,6 +831,10 @@ void ThreadSocketHandler()
         if(vNodes.size() != nPrevNodeCount) {
             nPrevNodeCount = vNodes.size();
             uiInterface.NotifyNumConnectionsChanged(nPrevNodeCount);
+            if (!vNodes.size()) {
+                LogPrint("net", "NO PEERS CONNECTED. Resetting network state.\n");
+                fReset = true;
+            }
         }
 
         //

@@ -103,6 +103,7 @@ bool fServer = false;
 string strMiscWarning;
 bool fLogTimestamps = false;
 bool fLogIPs = false;
+bool fReset = false;
 volatile bool fReopenDebugLog = false;
 
 // Init OpenSSL library multithreading support

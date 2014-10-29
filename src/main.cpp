@@ -4334,6 +4334,21 @@ bool ProcessMessages(CNode* pfrom)
     CNodeState &state = *State(pfrom->id);
     int64_t nNow = GetTimeMicros();
     state.nStallClicks++;
+    if (fReset) {
+        fReset = false;
+        tMinuteStart = 0;
+        nStallSamples = 0;
+        nStallBiggest = 0;
+        nStallBiggestNext = 0;
+        nClickSamples = 0;
+        nAvgStallMinute = 0;
+        nStallTotMinute = 0;
+        nBytesTotMinute = 0;
+        nBytesPerMinute = 0;
+        nBlockTotMinute = 0;
+        nBlocksMinute = 0;
+        nByteTotMinute = 0;
+    }
     if (!tMinuteStart)
         tMinuteStart = nNow;
     if (state.tLastClick && state.nLastBestHeight == chainActive.Height()) {
