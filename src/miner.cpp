@@ -333,16 +333,26 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
     return pblocktemplate.release();
 }
 
-void IncrementExtraNonce(CBlock* pblock, CBlockIndex* pindexPrev, unsigned int& nExtraNonce)
+void IncrementExtraNonce(CBlock* pblock, CBlockIndex* pindexPrev, unsigned int& nExtraNonce, uint16_t& nNonce2)
 {
-    // Update nExtraNonce
+    // Update extra nonces: nNonce2 and nExtraNonce
     static uint256 hashPrevBlock;
     if (hashPrevBlock != pblock->hashPrevBlock)
     {
+        nNonce2 = 0;
         nExtraNonce = 0;
         hashPrevBlock = pblock->hashPrevBlock;
     }
-    ++nExtraNonce;
+    ++nNonce2;
+	
+    // Do not use bit 15 because old clients interpret this bit as the sign bit of nVersion
+    if (nNonce2 == 0x8000u)
+    { 
+        nNonce2 = 0;
+    	++nExtraNonce;
+    }
+
+    pblock->nNonce2 = nNonce2;
     unsigned int nHeight = pindexPrev->nHeight+1; // Height first in coinbase required for block.version=2
     CMutableTransaction txCoinbase(pblock->vtx[0]);
     txCoinbase.vin[0].scriptSig = (CScript() << nHeight << CScriptNum(nExtraNonce)) + COINBASE_FLAGS;
@@ -443,7 +453,7 @@ void static BitcoinMiner(CWallet *pwallet)
     // Each thread has its own key and counter
     CReserveKey reservekey(pwallet);
     unsigned int nExtraNonce = 0;
-
+    uint16_t nNonce2 = 0;
     try {
         while (true) {
             if (Params().MiningRequiresPeers()) {
@@ -466,7 +476,7 @@ void static BitcoinMiner(CWallet *pwallet)
                 return;
             }
             CBlock *pblock = &pblocktemplate->block;
-            IncrementExtraNonce(pblock, pindexPrev, nExtraNonce);
+            IncrementExtraNonce(pblock, pindexPrev, nExtraNonce, nNonce2);
 
             LogPrintf("Running BitcoinMiner with %u transactions in block (%u bytes)\n", pblock->vtx.size(),
                 ::GetSerializeSize(*pblock, SER_NETWORK, PROTOCOL_VERSION));

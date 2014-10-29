@@ -261,3 +261,115 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE(nonce2_tests)
+
+static CScript scriptPubKey = CScript() << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5f") << OP_CHECKSIG;
+
+void SetBlockDefaultAttributes(CBlock * pblock)
+{
+    pblock->nVersion = 2;
+    pblock->nTime = chainActive.Tip()->GetMedianTimePast()+1;
+    CMutableTransaction txCoinbase(pblock->vtx[0]);
+    txCoinbase.vin[0].scriptSig = (CScript() << chainActive.Height() << 0);
+    txCoinbase.vout[0].scriptPubKey = CScript();
+    pblock->vtx[0] = CTransaction(txCoinbase);
+    pblock->hashMerkleRoot = pblock->BuildMerkleTree();
+    pblock->nNonce = 0;
+    pblock->nNonce2 = 0;
+}
+
+void CheckSubsidyHalving(CBlockTemplate * &pblocktemplate, CBlock * &pblock)
+{
+    if ((chainActive.Height()+1) % Params().SubsidyHalvingInterval() == 0)
+    {
+        // The RegTest network has a low subsidy halving interval (150) so 
+        // we must recompute the coinbase subsidy if we reach the boundary.
+        // The unittest network allows modifying this interval. We check it so this
+        // test can work in any network.
+
+        // preserve parent hash
+        uint256 prevParent = pblock->hashPrevBlock;
+        delete pblocktemplate;
+        pblocktemplate = CreateNewBlock(scriptPubKey);   
+        pblock = &pblocktemplate->block; // pointer for convenience
+        pblock->hashPrevBlock = prevParent;
+    }
+}
+
+void CheckBlockAddedToBestChainSuccessfully(CBlock *pblock)
+{
+    int PreviousHeight;
+    CValidationState state;
+    
+    PreviousHeight = chainActive.Height();
+    BOOST_CHECK(ProcessBlock(state, NULL, pblock));
+    BOOST_CHECK(state.IsValid());
+    BOOST_CHECK((PreviousHeight+1) == chainActive.Height()); // to differentiate from orphan blocks, which also get accepted in ProcessBlock()
+    
+    // Previous checks do not assure the current best chain has pblock as tip. It could be the case that a because
+    // of a malfunction in the chain reorganization code, a reorganization causes an increase of the chain length, but with another tip.
+    // So we also check that.
+    BOOST_CHECK(chainActive.Tip()->GetBlockHash()==pblock->GetHash());
+}
+
+
+void nNonce2Test()
+{
+    ModifiableParams()->setSkipProofOfWorkCheck(true);
+    
+    CBlockTemplate *pblocktemplate;
+
+    LOCK(cs_main);
+    
+    // Simple block creation, nothing special yet:
+    pblocktemplate = CreateNewBlock(scriptPubKey);   
+   
+    CBlock *pblock = &pblocktemplate->block; // pointer for convenience
+
+    // Create 10 v2 blocks with different nonces, just to check it still works
+    for (int i=0;i<10;i++)
+    {
+        SetBlockDefaultAttributes(pblock);
+        pblock->nNonce = i;
+        CheckSubsidyHalving(pblocktemplate,pblock);
+        CheckBlockAddedToBestChainSuccessfully(pblock);
+        pblock->hashPrevBlock = pblock->GetHash(); // update parent
+    }
+    // Now we try to add a block v3, with a nNonce2 value of 0x1000
+    SetBlockDefaultAttributes(pblock);
+    pblock->nVersion = 3;
+    pblock->nNonce2 = 0x1000;
+    CheckSubsidyHalving(pblocktemplate,pblock);
+    CheckBlockAddedToBestChainSuccessfully(pblock);
+    pblock->hashPrevBlock = pblock->GetHash(); // update parent
+    
+    // Now we try to add a nNonce2 using the forbidden 15th bit, and it should be rejected
+    SetBlockDefaultAttributes(pblock);
+    pblock->nVersion = 3;
+    pblock->nNonce2 = 0x8123;
+    CValidationState state2;
+    CheckSubsidyHalving(pblocktemplate,pblock);
+    BOOST_CHECK(ProcessBlock(state2, NULL, pblock)==false);
+    BOOST_CHECK(!state2.IsValid());
+    BOOST_CHECK(state2.GetRejectReason()=="bad-nNonce2");
+    
+    // Last, the nVersion 15th bit should be usable, because nVersion has become unsigned (but uint16)
+    SetBlockDefaultAttributes(pblock);
+    pblock->nVersion = 0x8000;
+    pblock->nNonce2 = 0;
+    CValidationState state3;
+    CheckSubsidyHalving(pblocktemplate,pblock);
+    BOOST_CHECK(ProcessBlock(state3, NULL, pblock));
+    BOOST_CHECK(state3.IsValid());
+
+    delete pblocktemplate;
+    LogPrintf("nNonce2 testcase ends\n");   
+}
+
+BOOST_AUTO_TEST_CASE(nNonce2)
+{
+    nNonce2Test();
+}
+
+BOOST_AUTO_TEST_SUITE_END()

@@ -21,8 +21,9 @@ class CBlockHeader
 {
 public:
     // header
-    static const int32_t CURRENT_VERSION=2;
-    int32_t nVersion;
+    static const uint16_t CURRENT_VERSION=3;
+    uint16_t nVersion;
+    uint16_t nNonce2;
     uint256 hashPrevBlock;
     uint256 hashMerkleRoot;
     uint32_t nTime;
@@ -40,6 +41,7 @@ public:
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
         READWRITE(this->nVersion);
         nVersion = this->nVersion;
+        READWRITE(nNonce2);
         READWRITE(hashPrevBlock);
         READWRITE(hashMerkleRoot);
         READWRITE(nTime);
@@ -50,6 +52,7 @@ public:
     void SetNull()
     {
         nVersion = CBlockHeader::CURRENT_VERSION;
+        nNonce2 = 0;
         hashPrevBlock = 0;
         hashMerkleRoot = 0;
         nTime = 0;
@@ -110,6 +113,7 @@ public:
     {
         CBlockHeader block;
         block.nVersion       = nVersion;
+        block.nNonce2        = nNonce2;
         block.hashPrevBlock  = hashPrevBlock;
         block.hashMerkleRoot = hashMerkleRoot;
         block.nTime          = nTime;

@@ -1766,9 +1766,10 @@ void static UpdateTip(CBlockIndex *pindexNew) {
     nTimeBestReceived = GetTime();
     mempool.AddTransactionsUpdated(1);
 
-    LogPrintf("UpdateTip: new best=%s  height=%d  log2_work=%.8g  tx=%lu  date=%s progress=%f  cache=%u\n",
+    LogPrintf("UpdateTip: new best=%s  height=%d  log2_work=%.8g  tx=%lu  date=%s  block.nVersion=%u  block.nNonce2=%u  progress=%f  cache=%u\n",
       chainActive.Tip()->GetBlockHash().ToString(), chainActive.Height(), log(chainActive.Tip()->nChainWork.getdouble())/log(2.0), (unsigned long)chainActive.Tip()->nChainTx,
       DateTimeStrFormat("%Y-%m-%d %H:%M:%S", chainActive.Tip()->GetBlockTime()),
+      chainActive.Tip()->nVersion, chainActive.Tip()->nNonce2,
       Checkpoints::GuessVerificationProgress(chainActive.Tip()), (unsigned int)pcoinsTip->GetCacheSize());
 
     cvBlockChange.notify_all();
@@ -2359,8 +2360,13 @@ bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state, CBloc
         if (pcheckpoint && nHeight < pcheckpoint->nHeight)
             return state.DoS(100, error("%s : forked chain older than last checkpoint (height %d)", __func__, nHeight));
 
+        // Reject nNonce2 15th bit set until we decide to hardfork and re-enable the use of this bit.
+        if (block.nNonce2 & 0x8000u)
+            return state.Invalid(error("%s : rejected nNonce2 15th-bit set", __func__),
+                                 REJECT_INVALID, "bad-nNonce2");
+
         // Reject block.nVersion=1 blocks when 95% (75% on testnet) of the network has upgraded:
-        if (block.nVersion < 2 && 
+        if (block.nVersion < 2 &&
             CBlockIndex::IsSuperMajority(2, pindexPrev, Params().RejectBlockOutdatedMajority()))
         {
             return state.Invalid(error("%s : rejected nVersion=1 block", __func__),
@@ -2442,7 +2448,7 @@ bool AcceptBlock(CBlock& block, CValidationState& state, CBlockIndex** ppindex, 
     return true;
 }
 
-bool CBlockIndex::IsSuperMajority(int minVersion, const CBlockIndex* pstart, unsigned int nRequired)
+bool CBlockIndex::IsSuperMajority(uint16_t minVersion, const CBlockIndex* pstart, unsigned int nRequired)
 {
     unsigned int nToCheck = Params().ToCheckBlockUpgradeMajority();
     unsigned int nFound = 0;
