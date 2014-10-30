@@ -8,6 +8,7 @@
 #include "policy.h"
 
 #include "amount.h"
+#include "primitives/transaction.h"
 #include "tinyformat.h"
 #include "ui_interface.h"
 #include "utilmoneystr.h"
@@ -27,6 +28,15 @@ public:
 
     virtual void InitFromArgs(const std::map<std::string, std::string>&);
     virtual bool ValidateScript(const CScript&, txnouttype&) const;
+    // "Dust" is defined in terms of CTransaction::minRelayTxFee,
+    // which has units satoshis-per-kilobyte.
+    // If you'd pay more than 1/3 in fees
+    // to spend something, then we consider it dust.
+    // A typical txout is 34 bytes big, and will
+    // need a CTxIn of at least 148 bytes to spend:
+    // so dust is a txout less than 546 satoshis 
+    // with default minRelayTxFee.
+    virtual bool ValidateOutput(const CTxOut& txout) const;
 };
 
 /** Global variables and their interfaces */
@@ -131,4 +141,10 @@ bool CStandardPolicy::ValidateScript(const CScript& scriptPubKey, txnouttype& wh
     }
 
     return whichType != TX_NONSTANDARD;
+}
+
+bool CStandardPolicy::ValidateOutput(const CTxOut& txout) const
+{
+    size_t nSize = txout.GetSerializeSize(SER_DISK,0) + 148u;
+    return (txout.nValue < 3 * minRelayTxFee.GetFee(nSize));
 }
