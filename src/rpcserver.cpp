@@ -1,6 +1,6 @@
 // Copyright (c) 2010 Satoshi Nakamoto
 // Copyright (c) 2009-2014 The Bitcoin developers
-// Distributed under the MIT/X11 software license, see the accompanying
+// Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "rpcserver.h"
@@ -34,7 +34,7 @@ using namespace std;
 static std::string strRPCUserColonPass;
 
 static bool fRPCRunning = false;
-// These are created by StartRPCThreads, destroyed in StopRPCThreads
+//! These are created by StartRPCThreads, destroyed in StopRPCThreads
 static asio::io_service* rpc_io_service = NULL;
 static map<string, boost::shared_ptr<deadline_timer> > deadlineTimers;
 static ssl::context* rpc_ssl_context = NULL;
@@ -134,9 +134,9 @@ vector<unsigned char> ParseHexO(const Object& o, string strKey)
 }
 
 
-///
-/// Note: This interface may still be subject to change.
-///
+/**
+ * Note: This interface may still be subject to change.
+ */
 
 string CRPCTable::help(string strCommand) const
 {
@@ -232,11 +232,9 @@ Value stop(const Array& params, bool fHelp)
 
 
 
-//
-// Call Table
-//
-
-
+/**
+ * Call Table
+ */
 static const CRPCCommand vRPCCommands[] =
 { //  category              name                      actor (function)         okSafeMode threadSafe reqWallet
   //  --------------------- ------------------------  -----------------------  ---------- ---------- ---------
@@ -453,7 +451,7 @@ private:
 
 void ServiceConnection(AcceptedConnection *conn);
 
-// Forward declaration required for RPCListen
+//! Forward declaration required for RPCListen
 template <typename Protocol, typename SocketAcceptorService>
 static void RPCAcceptHandler(boost::shared_ptr< basic_socket_acceptor<Protocol, SocketAcceptorService> > acceptor,
                              ssl::context& context,
@@ -669,7 +667,7 @@ void StartRPCThreads()
 
             fListening = true;
             rpc_acceptors.push_back(acceptor);
-            // If dual IPv6/IPv4 bind succesful, skip binding to IPv4 separately
+            // If dual IPv6/IPv4 bind successful, skip binding to IPv4 separately
             if(bBindAny && bindAddress == asio::ip::address_v6::any() && !v6_only_error)
                 break;
         }
