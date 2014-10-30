@@ -283,6 +283,25 @@ Value prioritisetransaction(const Array& params, bool fHelp)
 }
 
 
+// NOTE: Assumes a conclusive result; if result is inconclusive, it must be handled by caller
+static Value BIP22ValidationResult(const CValidationState& state)
+{
+    if (state.IsValid())
+        return Value::null;
+
+    std::string strRejectReason = state.GetRejectReason();
+    if (state.IsError())
+        throw JSONRPCError(RPC_VERIFY_ERROR, strRejectReason);
+    if (state.IsInvalid())
+    {
+        if (strRejectReason.empty())
+            return "rejected";
+        return strRejectReason;
+    }
+    // Should be impossible
+    return "valid?";
+}
+
 Value getblocktemplate(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() > 1)
@@ -566,15 +585,9 @@ Value submitblock(const Array& params, bool fHelp)
             + HelpExampleRpc("submitblock", "\"mydata\"")
         );
 
-    vector<unsigned char> blockData(ParseHex(params[0].get_str()));
-    CDataStream ssBlock(blockData, SER_NETWORK, PROTOCOL_VERSION);
     CBlock pblock;
-    try {
-        ssBlock >> pblock;
-    }
-    catch (const std::exception &) {
+    if (!DecodeHexBlk(pblock, params[0].get_str()))
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Block decode failed");
-    }
 
     CValidationState state;
     submitblock_StateCatcher sc(pblock.GetHash());
@@ -587,20 +600,7 @@ Value submitblock(const Array& params, bool fHelp)
             return "inconclusive";
         state = sc.state;
     }
-    if (state.IsError())
-    {
-        std::string strRejectReason = state.GetRejectReason();
-        throw JSONRPCError(RPC_VERIFY_ERROR, strRejectReason);
-    }
-    if (state.IsInvalid())
-    {
-        std::string strRejectReason = state.GetRejectReason();
-        if (strRejectReason.empty())
-            return "rejected";
-        return strRejectReason;
-    }
-
-    return Value::null;
+    return BIP22ValidationResult(state);
 }
 
 Value estimatefee(const Array& params, bool fHelp)
