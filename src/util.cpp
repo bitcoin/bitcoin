@@ -435,6 +435,15 @@ void ClearDatadirCache()
     pathCachedNetSpecific = boost::filesystem::path();
 }
 
+boost::filesystem::path GetCustomFile(const std::string& strArg)
+{
+    boost::filesystem::path pathCustomFile(strArg);
+    if (!pathCustomFile.is_complete())
+        pathCustomFile = GetDataDir(false) / pathCustomFile;
+
+    return pathCustomFile;
+}
+
 boost::filesystem::path GetConfigFile()
 {
     boost::filesystem::path pathConfigFile(GetArg("-conf", "bitcoin.conf"));
