@@ -1739,9 +1739,9 @@ bool ConnectBlock(CBlock& block, CValidationState& state, CBlockIndex* pindex, C
 }
 
 // Update the on-disk chain state.
-bool static WriteChainState(CValidationState &state) {
+bool static WriteChainState(CValidationState &state, bool forceWrite=false) {
     static int64_t nLastWrite = 0;
-    if (pcoinsTip->GetCacheSize() > nCoinCacheSize || (!IsInitialBlockDownload() && GetTimeMicros() > nLastWrite + 600*1000000)) {
+    if (forceWrite || pcoinsTip->GetCacheSize() > nCoinCacheSize || (!IsInitialBlockDownload() && GetTimeMicros() > nLastWrite + 600*1000000)) {
         // Typical CCoins structures on disk are around 100 bytes in size.
         // Pushing a new one to the database can cause it to be written
         // twice (once in the log, and once in the tables). This is already
@@ -2999,6 +2999,8 @@ bool InitBlockIndex() {
                 return error("LoadBlockIndex() : genesis block not accepted");
             if (!ActivateBestChain(state, &block))
                 return error("LoadBlockIndex() : genesis block cannot be activated");
+            // Force a chainstate write so that when we VerifyDB in a moment, it doesnt check stale data
+            return WriteChainState(state, true);
         } catch(std::runtime_error &e) {
             return error("LoadBlockIndex() : failed to initialize block database: %s", e.what());
         }
