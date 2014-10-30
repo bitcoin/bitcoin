@@ -50,38 +50,40 @@ struct CDiskBlockPos
 };
 
 enum BlockStatus {
-    // Unused.
+    //! Unused.
     BLOCK_VALID_UNKNOWN      =    0,
 
-    // Parsed, version ok, hash satisfies claimed PoW, 1 <= vtx count <= max, timestamp not in future
+    //! Parsed, version ok, hash satisfies claimed PoW, 1 <= vtx count <= max, timestamp not in future
     BLOCK_VALID_HEADER       =    1,
 
-    // All parent headers found, difficulty matches, timestamp >= median previous, checkpoint. Implies all parents
-    // are also at least TREE.
+    //! All parent headers found, difficulty matches, timestamp >= median previous, checkpoint. Implies all parents
+    //! are also at least TREE.
     BLOCK_VALID_TREE         =    2,
 
-    // Only first tx is coinbase, 2 <= coinbase input script length <= 100, transactions valid, no duplicate txids,
-    // sigops, size, merkle root. Implies all parents are at least TREE but not necessarily TRANSACTIONS. When all
-    // parent blocks also have TRANSACTIONS, CBlockIndex::nChainTx will be set.
+    /**
+     * Only first tx is coinbase, 2 <= coinbase input script length <= 100, transactions valid, no duplicate txids,
+     * sigops, size, merkle root. Implies all parents are at least TREE but not necessarily TRANSACTIONS. When all
+     * parent blocks also have TRANSACTIONS, CBlockIndex::nChainTx will be set.
+     */
     BLOCK_VALID_TRANSACTIONS =    3,
 
-    // Outputs do not overspend inputs, no double spends, coinbase output ok, immature coinbase spends, BIP30.
-    // Implies all parents are also at least CHAIN.
+    //! Outputs do not overspend inputs, no double spends, coinbase output ok, immature coinbase spends, BIP30.
+    //! Implies all parents are also at least CHAIN.
     BLOCK_VALID_CHAIN        =    4,
 
-    // Scripts & signatures ok. Implies all parents are also at least SCRIPTS.
+    //! Scripts & signatures ok. Implies all parents are also at least SCRIPTS.
     BLOCK_VALID_SCRIPTS      =    5,
 
-    // All validity bits.
+    //! All validity bits.
     BLOCK_VALID_MASK         =   BLOCK_VALID_HEADER | BLOCK_VALID_TREE | BLOCK_VALID_TRANSACTIONS |
                                  BLOCK_VALID_CHAIN | BLOCK_VALID_SCRIPTS,
 
-    BLOCK_HAVE_DATA          =    8, // full block available in blk*.dat
-    BLOCK_HAVE_UNDO          =   16, // undo data available in rev*.dat
+    BLOCK_HAVE_DATA          =    8, //! full block available in blk*.dat
+    BLOCK_HAVE_UNDO          =   16, //! undo data available in rev*.dat
     BLOCK_HAVE_MASK          =   BLOCK_HAVE_DATA | BLOCK_HAVE_UNDO,
 
-    BLOCK_FAILED_VALID       =   32, // stage after last reached validness failed
-    BLOCK_FAILED_CHILD       =   64, // descends from failed block
+    BLOCK_FAILED_VALID       =   32, //! stage after last reached validness failed
+    BLOCK_FAILED_CHILD       =   64, //! descends from failed block
     BLOCK_FAILED_MASK        =   BLOCK_FAILED_VALID | BLOCK_FAILED_CHILD,
 };
 
@@ -93,49 +95,50 @@ enum BlockStatus {
 class CBlockIndex
 {
 public:
-    // pointer to the hash of the block, if any. memory is owned by this CBlockIndex
+    //! pointer to the hash of the block, if any. memory is owned by this CBlockIndex
     const uint256* phashBlock;
 
-    // pointer to the index of the predecessor of this block
+    //! pointer to the index of the predecessor of this block
     CBlockIndex* pprev;
 
-    // pointer to the index of some further predecessor of this block
+    //! pointer to the index of some further predecessor of this block
     CBlockIndex* pskip;
 
-    // height of the entry in the chain. The genesis block has height 0
+    //! height of the entry in the chain. The genesis block has height 0
     int nHeight;
 
-    // Which # file this block is stored in (blk?????.dat)
+    //! Which # file this block is stored in (blk?????.dat)
     int nFile;
 
-    // Byte offset within blk?????.dat where this block's data is stored
+    //! Byte offset within blk?????.dat where this block's data is stored
     unsigned int nDataPos;
 
-    // Byte offset within rev?????.dat where this block's undo data is stored
+    //! Byte offset within rev?????.dat where this block's undo data is stored
     unsigned int nUndoPos;
 
-    // (memory only) Total amount of work (expected number of hashes) in the chain up to and including this block
+    //! (memory only) Total amount of work (expected number of hashes) in the chain up to and including this block
     uint256 nChainWork;
 
-    // Number of transactions in this block.
-    // Note: in a potential headers-first mode, this number cannot be relied upon
+    //! Number of transactions in this block.
+    //! Note: in a potential headers-first mode, this number cannot be relied upon
     unsigned int nTx;
 
-    // (memory only) Number of transactions in the chain up to and including this block.
-    // This value will be non-zero only if and only if transactions for this block and all its parents are available.
-    unsigned int nChainTx; // change to 64-bit type when necessary; won't happen before 2030
+    //! (memory only) Number of transactions in the chain up to and including this block.
+    //! This value will be non-zero only if and only if transactions for this block and all its parents are available.
+    //! Change to 64-bit type when necessary; won't happen before 2030
+    unsigned int nChainTx;
 
-    // Verification status of this block. See enum BlockStatus
+    //! Verification status of this block. See enum BlockStatus
     unsigned int nStatus;
 
-    // block header
+    //! block header
     int nVersion;
     uint256 hashMerkleRoot;
     unsigned int nTime;
     unsigned int nBits;
     unsigned int nNonce;
 
-    // (memory only) Sequencial id assigned to distinguish order in which blocks are received.
+    //! (memory only) Sequential id assigned to distinguish order in which blocks are received.
     uint32_t nSequenceId;
 
     void SetNull()
@@ -254,7 +257,7 @@ public:
             GetBlockHash().ToString());
     }
 
-    // Check whether this block index entry is valid up to the passed validity level.
+    //! Check whether this block index entry is valid up to the passed validity level.
     bool IsValid(enum BlockStatus nUpTo = BLOCK_VALID_TRANSACTIONS) const
     {
         assert(!(nUpTo & ~BLOCK_VALID_MASK)); // Only validity flags allowed.
@@ -263,8 +266,8 @@ public:
         return ((nStatus & BLOCK_VALID_MASK) >= nUpTo);
     }
 
-    // Raise the validity level of this block index entry.
-    // Returns true if the validity was changed.
+    //! Raise the validity level of this block index entry.
+    //! Returns true if the validity was changed.
     bool RaiseValidity(enum BlockStatus nUpTo)
     {
         assert(!(nUpTo & ~BLOCK_VALID_MASK)); // Only validity flags allowed.
@@ -277,10 +280,10 @@ public:
         return false;
     }
 
-    // Build the skiplist pointer for this entry.
+    //! Build the skiplist pointer for this entry.
     void BuildSkip();
 
-    // Efficiently find an ancestor of this block.
+    //! Efficiently find an ancestor of this block.
     CBlockIndex* GetAncestor(int height);
     const CBlockIndex* GetAncestor(int height) const;
 };
