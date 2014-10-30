@@ -4069,25 +4069,26 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         uint256 alertHash = alert.GetHash();
         if (pfrom->setKnown.count(alertHash) == 0)
         {
-            if (alert.ProcessAlert())
+            // Verify the signature before processing the alert.  If the
+            // verification fails, silently ignore the message.
+            if (alert.CheckSignature())
             {
-                // Relay
-                pfrom->setKnown.insert(alertHash);
+                if (alert.ProcessAlert())
                 {
-                    LOCK(cs_vNodes);
-                    BOOST_FOREACH(CNode* pnode, vNodes)
-                        alert.RelayTo(pnode);
+                    // Relay
+                    pfrom->setKnown.insert(alertHash);
+                    {
+                        LOCK(cs_vNodes);
+                        BOOST_FOREACH(CNode* pnode, vNodes)
+                            alert.RelayTo(pnode);
+                    }
                 }
-            }
-            else {
-                // Small DoS penalty so peers that send us lots of
-                // duplicate/expired/invalid-signature/whatever alerts
-                // eventually get banned.
-                // This isn't a Misbehaving(100) (immediate ban) because the
-                // peer might be an older or different implementation with
-                // a different signature key, etc.
-                Misbehaving(pfrom->GetId(), 10);
-            }
+                else {
+                    // Small DoS penalty so peers that send us lots of
+                    // duplicate, expired, etc alerts eventually get banned.
+                    Misbehaving(pfrom->GetId(), 10);
+                }
+	    }
         }
     }
 
