@@ -1,6 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2013 The Bitcoin developers
-// Distributed under the MIT/X11 software license, see the accompanying
+// Copyright (c) 2009-2014 The Bitcoin developers
+// Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef BITCOIN_CHAIN_PARAMS_H
@@ -47,34 +47,33 @@ public:
     int GetDefaultPort() const { return nDefaultPort; }
     const uint256& ProofOfWorkLimit() const { return bnProofOfWorkLimit; }
     int SubsidyHalvingInterval() const { return nSubsidyHalvingInterval; }
-    /* Used to check majorities for block version upgrade */
+    /** Used to check majorities for block version upgrade */
     int EnforceBlockUpgradeMajority() const { return nEnforceBlockUpgradeMajority; }
     int RejectBlockOutdatedMajority() const { return nRejectBlockOutdatedMajority; }
     int ToCheckBlockUpgradeMajority() const { return nToCheckBlockUpgradeMajority; }
 
-    /* Used if GenerateBitcoins is called with a negative number of threads */
+    /** Used if GenerateBitcoins is called with a negative number of threads */
     int DefaultMinerThreads() const { return nMinerThreads; }
     const CBlock& GenesisBlock() const { return genesis; }
     bool RequireRPCPassword() const { return fRequireRPCPassword; }
-    /* Make miner wait to have peers to avoid wasting work */
+    /** Make miner wait to have peers to avoid wasting work */
     bool MiningRequiresPeers() const { return fMiningRequiresPeers; }
-    /* Default value for -checkmempool argument */
+    /** Default value for -checkmempool argument */
     bool DefaultCheckMemPool() const { return fDefaultCheckMemPool; }
-    /* Allow mining of a min-difficulty block */
+    /** Allow mining of a min-difficulty block */
     bool AllowMinDifficultyBlocks() const { return fAllowMinDifficultyBlocks; }
-    /* Skip proof-of-work check: allow mining of any difficulty block */
+    /** Skip proof-of-work check: allow mining of any difficulty block */
     bool SkipProofOfWorkCheck() const { return fSkipProofOfWorkCheck; }
-    /* Make standard checks */
+    /** Make standard checks */
     bool RequireStandard() const { return fRequireStandard; }
     int64_t TargetTimespan() const { return nTargetTimespan; }
     int64_t TargetSpacing() const { return nTargetSpacing; }
     int64_t Interval() const { return nTargetTimespan / nTargetSpacing; }
-    /* Make miner stop after a block is found. In RPC, don't return
-     * until nGenProcLimit blocks are generated */
+    /** Make miner stop after a block is found. In RPC, don't return until nGenProcLimit blocks are generated */
     bool MineBlocksOnDemand() const { return fMineBlocksOnDemand; }
-    /* In the future use NetworkIDString() for RPC fields */
+    /** In the future use NetworkIDString() for RPC fields */
     bool TestnetToBeDeprecatedFieldRPC() const { return fTestnetToBeDeprecatedFieldRPC; }
-    /* Return the BIP70 network string (main, test or regtest) */
+    /** Return the BIP70 network string (main, test or regtest) */
     std::string NetworkIDString() const { return strNetworkID; }
     const std::vector<CDNSSeedData>& DNSSeeds() const { return vSeeds; }
     const std::vector<unsigned char>& Base58Prefix(Base58Type type) const { return base58Prefixes[type]; }
@@ -85,7 +84,7 @@ protected:
 
     uint256 hashGenesisBlock;
     MessageStartChars pchMessageStart;
-    // Raw pub key bytes for the broadcast alert signing key.
+    //! Raw pub key bytes for the broadcast alert signing key.
     std::vector<unsigned char> vAlertPubKey;
     int nDefaultPort;
     uint256 bnProofOfWorkLimit;
@@ -112,14 +111,15 @@ protected:
     bool fTestnetToBeDeprecatedFieldRPC;
 };
 
-/** Modifiable parameters interface is used by test cases to adapt the parameters in order
-*** to test specific features more easily. Test cases should always restore the previous
-*** values after finalization.
-**/
+/** 
+ * Modifiable parameters interface is used by test cases to adapt the parameters in order
+ * to test specific features more easily. Test cases should always restore the previous
+ * values after finalization.
+ */
 
 class CModifiableParams {
 public:
-    // Published setters to allow changing values in unit test cases
+    //! Published setters to allow changing values in unit test cases
     virtual void setSubsidyHalvingInterval(int anSubsidyHalvingInterval) =0;
     virtual void setEnforceBlockUpgradeMajority(int anEnforceBlockUpgradeMajority)=0;
     virtual void setRejectBlockOutdatedMajority(int anRejectBlockOutdatedMajority)=0;
@@ -139,7 +139,7 @@ const CChainParams &Params();
 /** Return parameters for the given network. */
 CChainParams &Params(CBaseChainParams::Network network);
 
-/** Get modifyable network parameters (UNITTEST only) */
+/** Get modifiable network parameters (UNITTEST only) */
 CModifiableParams *ModifiableParams();
 
 /** Sets the params returned by Params() to those for the given network. */
