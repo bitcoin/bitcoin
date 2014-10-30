@@ -231,7 +231,7 @@ bool isDust(const QString& address, const CAmount& amount)
     CTxDestination dest = CBitcoinAddress(address.toStdString()).Get();
     CScript script = GetScriptForDestination(dest);
     CTxOut txOut(amount, script);
-    return txOut.IsDust(::minRelayTxFee);
+    return Policy().ApproveOutput(txOut);
 }
 
 QString HtmlEscape(const QString& str, bool fMultiLine)
