@@ -7,13 +7,13 @@
 //
 
 #include "alert.h"
+#include "clientversion.h"
 #include "data/alertTests.raw.h"
 
 #include "serialize.h"
 #include "streams.h"
 #include "util.h"
 #include "utilstrencodings.h"
-#include "version.h"
 
 #include <fstream>
 
