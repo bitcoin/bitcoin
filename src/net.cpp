@@ -11,6 +11,7 @@
 
 #include "addrman.h"
 #include "chainparams.h"
+#include "clientversion.h"
 #include "core/transaction.h"
 #include "ui_interface.h"
 
