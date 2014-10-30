@@ -4,12 +4,12 @@
 
 #include "util.h"
 
+#include "clientversion.h"
 #include "core/transaction.h"
 #include "random.h"
 #include "sync.h"
 #include "utilstrencodings.h"
 #include "utilmoneystr.h"
-#include "version.h"
 
 #include <stdint.h>
 #include <vector>
