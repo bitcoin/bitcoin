@@ -16,7 +16,7 @@
 namespace libzerocoin {
 
 //Commitment class
-Commitment::Commitment::Commitment(const IntegerGroupParams* p,
+Commitment::Commitment(const IntegerGroupParams* p,
                                    const Bignum& value): params(p), contents(value) {
 	this->randomness = Bignum::randBignum(params->groupOrder);
 	this->commitmentValue = (params->g.pow_mod(this->contents, params->modulus).mul_mod(

@@ -6,11 +6,10 @@
 
 #include "kernel.h"
 #include "txdb.h"
+#include "main.h"
 
 using namespace std;
 
-extern int nStakeMaxAge;
-extern int nStakeTargetSpacing;
 
 // Protocol switch time for fixed kernel modifier interval
 unsigned int nModifierSwitchTime  = 1413763200;    // Mon, 20 Oct 2014 00:00:00 GMT

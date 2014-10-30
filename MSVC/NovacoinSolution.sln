@@ -1,0 +1,62 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Express 2012 for Windows Desktop
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NovacoinD", "mynovacoin\mynovacoin.vcxproj", "{00225DF0-9DDB-41A2-972B-56DC24E2C995}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "leveldb", "leveldb\leveldb.vcxproj", "{002CC16A-B4EF-4737-B751-DAD3A8D14133}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NovacoinQT", "mynovacoinqt\mynovacoinqt.vcxproj", "{9191918D-7DE3-4BE1-8A32-2F2CF4EE6840}"
+	ProjectSection(ProjectDependencies) = postProject
+		{3703B138-B8DA-460E-9DD1-41BDC7588E80} = {3703B138-B8DA-460E-9DD1-41BDC7588E80}
+		{002CC16A-B4EF-4737-B751-DAD3A8D14133} = {002CC16A-B4EF-4737-B751-DAD3A8D14133}
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{FF475423-FFFE-FFD1-FF41-FF790D534E02}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libcommon", "libcommon\libcommon.vcxproj", "{3703B138-B8DA-460E-9DD1-41BDC7588E80}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Debug|x64 = Debug|x64
+		Release|Win32 = Release|Win32
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{00225DF0-9DDB-41A2-972B-56DC24E2C995}.Debug|Win32.ActiveCfg = Debug|Win32
+		{00225DF0-9DDB-41A2-972B-56DC24E2C995}.Debug|Win32.Build.0 = Debug|Win32
+		{00225DF0-9DDB-41A2-972B-56DC24E2C995}.Debug|x64.ActiveCfg = Debug|x64
+		{00225DF0-9DDB-41A2-972B-56DC24E2C995}.Debug|x64.Build.0 = Debug|x64
+		{00225DF0-9DDB-41A2-972B-56DC24E2C995}.Release|Win32.ActiveCfg = Release|Win32
+		{00225DF0-9DDB-41A2-972B-56DC24E2C995}.Release|Win32.Build.0 = Release|Win32
+		{00225DF0-9DDB-41A2-972B-56DC24E2C995}.Release|x64.ActiveCfg = Release|x64
+		{00225DF0-9DDB-41A2-972B-56DC24E2C995}.Release|x64.Build.0 = Release|x64
+		{002CC16A-B4EF-4737-B751-DAD3A8D14133}.Debug|Win32.ActiveCfg = Debug|Win32
+		{002CC16A-B4EF-4737-B751-DAD3A8D14133}.Debug|Win32.Build.0 = Debug|Win32
+		{002CC16A-B4EF-4737-B751-DAD3A8D14133}.Debug|x64.ActiveCfg = Debug|x64
+		{002CC16A-B4EF-4737-B751-DAD3A8D14133}.Debug|x64.Build.0 = Debug|x64
+		{002CC16A-B4EF-4737-B751-DAD3A8D14133}.Release|Win32.ActiveCfg = Release|Win32
+		{002CC16A-B4EF-4737-B751-DAD3A8D14133}.Release|Win32.Build.0 = Release|Win32
+		{002CC16A-B4EF-4737-B751-DAD3A8D14133}.Release|x64.ActiveCfg = Release|x64
+		{002CC16A-B4EF-4737-B751-DAD3A8D14133}.Release|x64.Build.0 = Release|x64
+		{9191918D-7DE3-4BE1-8A32-2F2CF4EE6840}.Debug|Win32.ActiveCfg = Debug|Win32
+		{9191918D-7DE3-4BE1-8A32-2F2CF4EE6840}.Debug|Win32.Build.0 = Debug|Win32
+		{9191918D-7DE3-4BE1-8A32-2F2CF4EE6840}.Debug|x64.ActiveCfg = Debug|x64
+		{9191918D-7DE3-4BE1-8A32-2F2CF4EE6840}.Release|Win32.ActiveCfg = Release|Win32
+		{9191918D-7DE3-4BE1-8A32-2F2CF4EE6840}.Release|Win32.Build.0 = Release|Win32
+		{9191918D-7DE3-4BE1-8A32-2F2CF4EE6840}.Release|x64.ActiveCfg = Release|x64
+		{3703B138-B8DA-460E-9DD1-41BDC7588E80}.Debug|Win32.ActiveCfg = Debug|Win32
+		{3703B138-B8DA-460E-9DD1-41BDC7588E80}.Debug|Win32.Build.0 = Debug|Win32
+		{3703B138-B8DA-460E-9DD1-41BDC7588E80}.Debug|x64.ActiveCfg = Debug|x64
+		{3703B138-B8DA-460E-9DD1-41BDC7588E80}.Debug|x64.Build.0 = Debug|x64
+		{3703B138-B8DA-460E-9DD1-41BDC7588E80}.Release|Win32.ActiveCfg = Release|Win32
+		{3703B138-B8DA-460E-9DD1-41BDC7588E80}.Release|Win32.Build.0 = Release|Win32
+		{3703B138-B8DA-460E-9DD1-41BDC7588E80}.Release|x64.ActiveCfg = Release|x64
+		{3703B138-B8DA-460E-9DD1-41BDC7588E80}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(DPCodeReviewSolutionGUID) = preSolution
+		DPCodeReviewSolutionGUID = {00000000-0000-0000-0000-000000000000}
+	EndGlobalSection
+EndGlobal

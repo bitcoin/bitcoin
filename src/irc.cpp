@@ -22,7 +22,7 @@ void ThreadIRCSeed2(void* parg);
 struct ircaddr
 {
     struct in_addr ip;
-    short port;
+    unsigned short port;
 };
 #pragma pack(pop)
 
