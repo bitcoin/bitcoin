@@ -27,16 +27,16 @@ int static secp256k1_scalar_get_bits(const secp256k1_scalar_t *a, int offset, in
     return secp256k1_num_get_bits(&a->n, offset, count);
 }
 
-void static secp256k1_scalar_set_bin(secp256k1_scalar_t *r, const unsigned char *bin, int len, int *overflow) {
-    secp256k1_num_set_bin(&r->n, bin, len);
+void static secp256k1_scalar_set_b32(secp256k1_scalar_t *r, const unsigned char *bin, int *overflow) {
+    secp256k1_num_set_bin(&r->n, bin, 32);
     if (overflow) {
         *overflow = secp256k1_num_cmp(&r->n, &secp256k1_ge_consts->order) >= 0;
     }
     secp256k1_num_mod(&r->n, &secp256k1_ge_consts->order);
 }
 
-void static secp256k1_scalar_get_bin(unsigned char *bin, int len, const secp256k1_scalar_t* a) {
-    secp256k1_num_get_bin(bin, len, &a->n);
+void static secp256k1_scalar_get_b32(unsigned char *bin, const secp256k1_scalar_t* a) {
+    secp256k1_num_get_bin(bin, 32, &a->n);
 }
 
 void static secp256k1_scalar_add(secp256k1_scalar_t *r, const secp256k1_scalar_t *a, const secp256k1_scalar_t *b) {
@@ -54,10 +54,15 @@ void static secp256k1_scalar_inverse(secp256k1_scalar_t *r, const secp256k1_scal
 
 void static secp256k1_scalar_negate(secp256k1_scalar_t *r, const secp256k1_scalar_t *a) {
     secp256k1_num_sub(&r->n, &secp256k1_ge_consts->order, &a->n);
+    secp256k1_num_mod(&r->n, &secp256k1_ge_consts->order);
 }
 
 int static secp256k1_scalar_is_zero(const secp256k1_scalar_t *a) {
     return secp256k1_num_is_zero(&a->n);
+}
+
+int static secp256k1_scalar_is_one(const secp256k1_scalar_t *a) {
+    return secp256k1_num_bits(&a->n) == 1;
 }
 
 int static secp256k1_scalar_is_high(const secp256k1_scalar_t *a) {

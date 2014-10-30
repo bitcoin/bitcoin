@@ -159,7 +159,7 @@ int static secp256k1_ecdsa_sig_sign(secp256k1_ecdsa_sig_t *sig, const secp256k1_
     int overflow = 0;
     secp256k1_scalar_t sigr;
     secp256k1_scalar_init(&sigr);
-    secp256k1_scalar_set_bin(&sigr, b, 32, &overflow);
+    secp256k1_scalar_set_b32(&sigr, b, &overflow);
     if (recid)
         *recid = (overflow ? 2 : 0) | (secp256k1_fe_is_odd(&r.y) ? 1 : 0);
     secp256k1_scalar_t n;
