@@ -332,7 +332,7 @@ public:
         size_t numEntries;
         filein >> numEntries;
         if (numEntries <= 0 || numEntries > 10000)
-            throw runtime_error("Corrupt estimates file.  Must have between 1 and 10k entires.");
+            throw runtime_error("Corrupt estimates file. Must have between 1 and 10k entires.");
 
         std::vector<CBlockAverage> fileHistory;
         
@@ -343,8 +343,8 @@ public:
             fileHistory.push_back(entry);
         }
 
-        //Now that we've processed the entire fee estimate data file and not
-        //thrown any errors, we can copy it to our history
+        // Now that we've processed the entire fee estimate data file and not
+        // thrown any errors, we can copy it to our history
         nBestSeenHeight = nFileBestSeenHeight;
         history = fileHistory;
         assert(history.size() > 0);
