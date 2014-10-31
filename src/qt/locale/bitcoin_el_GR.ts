@@ -352,10 +352,6 @@
         <translation>Εργαλειοθήκη καρτελών</translation>
     </message>
     <message>
-        <source>[testnet]</source>
-        <translation>[testnet]</translation>
-    </message>
-    <message>
         <source>Bitcoin Core</source>
         <translation>Bitcoin Core</translation>
     </message>
@@ -382,10 +378,6 @@
     <message>
         <source>No block source available...</source>
         <translation>Η πηγή του μπλοκ δεν ειναι διαθέσιμη... </translation>
-    </message>
-    <message>
-        <source>Processed %1 blocks of transaction history.</source>
-        <translation>Έγινε λήψη %1 μπλοκ ιστορικού συναλλαγών</translation>
     </message>
     <message numerus="yes">
         <source>%n hour(s)</source>
@@ -610,6 +602,10 @@ Address: %4
         <translation>όχι</translation>
     </message>
     <message>
+        <source>This label turns red, if the transaction size is greater than 1000 bytes.</source>
+        <translation>Η ετικετα γινετε κοκκινη , αν το μεγεθος της συναλαγης ειναι μεγαλητερο απο 1000 bytes.</translation>
+    </message>
+    <message>
         <source>(no label)</source>
         <translation>(χωρίς ετικέτα)</translation>
     </message>
@@ -766,15 +762,7 @@ Address: %4
         <source>Error</source>
         <translation>Σφάλμα</translation>
     </message>
-    <message>
-        <source>GB of free space available</source>
-        <translation>GB ελεύθερου χώρου διαθέσιμα</translation>
-    </message>
-    <message>
-        <source>(of %1GB needed)</source>
-        <translation>(από τα %1GB που χρειάζονται)</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>OpenURIDialog</name>
     </context>
@@ -924,10 +912,6 @@ Address: %4
         <translation>Οι πληροφορίες που εμφανίζονται μπορεί να είναι ξεπερασμένες. Το πορτοφόλι σας συγχρονίζεται αυτόματα με το δίκτυο Bitcoin μετά από μια σύνδεση, αλλά αυτή η διαδικασία δεν έχει ακόμη ολοκληρωθεί. </translation>
     </message>
     <message>
-        <source>Wallet</source>
-        <translation>Πορτοφόλι</translation>
-    </message>
-    <message>
         <source>Available:</source>
         <translation>Διαθέσιμο:</translation>
     </message>
@@ -954,10 +938,6 @@ Address: %4
     <message>
         <source>Your current total balance</source>
         <translation>Το τρέχον συνολικό υπόλοιπο</translation>
-    </message>
-    <message>
-        <source>&lt;b&gt;Recent transactions&lt;/b&gt;</source>
-        <translation>&lt;b&gt;Πρόσφατες συναλλαγές&lt;/b&gt;</translation>
     </message>
     <message>
         <source>out of sync</source>
@@ -2053,24 +2033,8 @@ Address: %4
         <translation>Επιλογές:</translation>
     </message>
     <message>
-        <source>Specify configuration file (default: bitcoin.conf)</source>
-        <translation>Ορίστε αρχείο ρυθμίσεων (προεπιλογή: bitcoin.conf)</translation>
-    </message>
-    <message>
-        <source>Specify pid file (default: bitcoind.pid)</source>
-        <translation>Ορίστε αρχείο pid (προεπιλογή: bitcoind.pid)</translation>
-    </message>
-    <message>
         <source>Specify data directory</source>
         <translation>Ορισμός φακέλου δεδομένων</translation>
-    </message>
-    <message>
-        <source>Listen for connections on &lt;port&gt; (default: 8333 or testnet: 18333)</source>
-        <translation>Εισερχόμενες συνδέσεις στη θύρα &lt;port&gt; (προεπιλογή: 8333 ή στο testnet: 18333)</translation>
-    </message>
-    <message>
-        <source>Maintain at most &lt;n&gt; connections to peers (default: 125)</source>
-        <translation>Μέγιστες αριθμός συνδέσεων με τους peers &lt;n&gt; (προεπιλογή: 125)</translation>
     </message>
     <message>
         <source>Connect to a node to retrieve peer addresses, and disconnect</source>
@@ -2079,18 +2043,6 @@ Address: %4
     <message>
         <source>Specify your own public address</source>
         <translation>Διευκρινίστε τη δικιά σας δημόσια διεύθυνση.</translation>
-    </message>
-    <message>
-        <source>Threshold for disconnecting misbehaving peers (default: 100)</source>
-        <translation>Όριο αποσύνδεσης προβληματικών peers (προεπιλογή: 100)</translation>
-    </message>
-    <message>
-        <source>Number of seconds to keep misbehaving peers from reconnecting (default: 86400)</source>
-        <translation>Δευτερόλεπτα πριν επιτραπεί ξανά η σύνδεση των προβληματικών peers (προεπιλογή: 86400)</translation>
-    </message>
-    <message>
-        <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 8332 or testnet: 18332)</source>
-        <translation>Εισερχόμενες συνδέσεις JSON-RPC στη θύρα &lt;port&gt; (προεπιλογή: 8332 or testnet: 18332)</translation>
     </message>
     <message>
         <source>Accept command line and JSON-RPC commands</source>
@@ -2170,10 +2122,6 @@ for example: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
         <translation>(προεπιλογή: 1)</translation>
     </message>
     <message>
-        <source>(default: wallet.dat)</source>
-        <translation>(προεπιλογή: wallet.dat)</translation>
-    </message>
-    <message>
         <source>Attempt to recover private keys from a corrupt wallet.dat</source>
         <translation>Προσπάθεια για ανακτησει ιδιωτικων κλειδιων από ενα διεφθαρμένο αρχειο wallet.dat </translation>
     </message>
@@ -2226,60 +2174,8 @@ for example: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
         <translation>Σφάλμα: το πορτοφόλι είναι κλειδωμένο, δεν μπορεί να δημιουργηθεί συναλλαγή</translation>
     </message>
     <message>
-        <source>Error: system error: </source>
-        <translation>Λάθος: λάθος συστήματος:</translation>
-    </message>
-    <message>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
         <translation>ταλαιπωρηθειτε για να ακούσετε σε οποιαδήποτε θύρα. Χρήση - ακούστε = 0 , αν θέλετε αυτό.</translation>
-    </message>
-    <message>
-        <source>Failed to read block info</source>
-        <translation>Αποτυχία αναγνωσης των block πληροφοριων</translation>
-    </message>
-    <message>
-        <source>Failed to read block</source>
-        <translation>Η αναγνωση του μπλοκ απετυχε</translation>
-    </message>
-    <message>
-        <source>Failed to sync block index</source>
-        <translation>Ο συγχρονισμος του μπλοκ ευρετηριου απετυχε</translation>
-    </message>
-    <message>
-        <source>Failed to write block index</source>
-        <translation>Η δημιουργια του μπλοκ ευρετηριου απετυχε</translation>
-    </message>
-    <message>
-        <source>Failed to write block info</source>
-        <translation>Η δημιουργια των μπλοκ πληροφοριων απετυχε</translation>
-    </message>
-    <message>
-        <source>Failed to write block</source>
-        <translation>Η δημιουργια του μπλοκ απετυχε</translation>
-    </message>
-    <message>
-        <source>Failed to write file info</source>
-        <translation>Αδυναμία εγγραφής πληροφοριων αρχειου</translation>
-    </message>
-    <message>
-        <source>Failed to write to coin database</source>
-        <translation>Αποτυχία εγγραφής στη βάση δεδομένων νομίσματος</translation>
-    </message>
-    <message>
-        <source>Failed to write transaction index</source>
-        <translation>Αποτυχία εγγραφής δείκτη συναλλαγών </translation>
-    </message>
-    <message>
-        <source>Failed to write undo data</source>
-        <translation>Αποτυχία εγγραφής αναίρεσης δεδομένων </translation>
-    </message>
-    <message>
-        <source>Generate coins (default: 0)</source>
-        <translation>Δημιουργία νομισμάτων (προκαθορισμος: 0)</translation>
-    </message>
-    <message>
-        <source>How many blocks to check at startup (default: 288, 0 = all)</source>
-        <translation>Πόσα μπλοκ να ελέγχθουν κατά την εκκίνηση (προεπιλογή:288,0=όλα)</translation>
     </message>
     <message>
         <source>Invalid -onion address: '%s'</source>
@@ -2292,10 +2188,6 @@ for example: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
     <message>
         <source>Rebuild block chain index from current blk000??.dat files</source>
         <translation>Εισαγωγή μπλοκ από εξωτερικό αρχείο blk000?.dat</translation>
-    </message>
-    <message>
-        <source>Set the number of threads to service RPC calls (default: 4)</source>
-        <translation>Ορίσμος του αριθμόυ θεματων στην υπηρεσία κλήσεων RPC (προεπιλογή: 4) </translation>
     </message>
     <message>
         <source>Verifying blocks...</source>
@@ -2326,32 +2218,8 @@ for example: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
         <translation>Μη έγκυρο ποσό για την παράμετρο -paytxfee=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
-        <source>Maintain a full transaction index (default: 0)</source>
-        <translation>Διατηρήση ένος πλήρες ευρετήριου συναλλαγών (προεπιλογή: 0) </translation>
-    </message>
-    <message>
-        <source>Maximum per-connection receive buffer, &lt;n&gt;*1000 bytes (default: 5000)</source>
-        <translation>Μέγιστος buffer λήψης ανά σύνδεση, &lt;n&gt;*1000 bytes (προεπιλογή: 5000)</translation>
-    </message>
-    <message>
-        <source>Maximum per-connection send buffer, &lt;n&gt;*1000 bytes (default: 1000)</source>
-        <translation>Μέγιστος buffer αποστολής ανά σύνδεση, &lt;n&gt;*1000 bytes (προεπιλογή: 1000)</translation>
-    </message>
-    <message>
-        <source>Only accept block chain matching built-in checkpoints (default: 1)</source>
-        <translation>Μονο αποδοχη αλυσίδας μπλοκ που ταιριάζει με τα ενσωματωμένα σημεία ελέγχου (προεπιλογή: 1) </translation>
-    </message>
-    <message>
-        <source>Only connect to nodes in network &lt;net&gt; (IPv4, IPv6 or Tor)</source>
-        <translation> Συνδέση μόνο σε κόμβους του δικτύου &lt;net&gt; (IPv4, IPv6 ή Tor) </translation>
-    </message>
-    <message>
         <source>Send trace/debug info to console instead of debug.log file</source>
         <translation>Αποστολή πληροφοριών εντοπισμού σφαλμάτων στην κονσόλα αντί του αρχείου debug.log</translation>
-    </message>
-    <message>
-        <source>Set minimum block size in bytes (default: 0)</source>
-        <translation>Ορίστε το μέγιστο μέγεθος μπλοκ σε bytes (προεπιλογή: 0)</translation>
     </message>
     <message>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
@@ -2360,14 +2228,6 @@ for example: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
     <message>
         <source>Signing transaction failed</source>
         <translation>Η υπογραφή συναλλαγής απέτυχε </translation>
-    </message>
-    <message>
-        <source>Specify connection timeout in milliseconds (default: 5000)</source>
-        <translation>Ορισμός λήξης χρονικού ορίου σε χιλιοστά του δευτερολέπτου(προεπιλογή:5000)</translation>
-    </message>
-    <message>
-        <source>System error: </source>
-        <translation>Λάθος Συστήματος:</translation>
     </message>
     <message>
         <source>Transaction amount too small</source>
@@ -2380,10 +2240,6 @@ for example: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
     <message>
         <source>Transaction too large</source>
         <translation>Η συναλλαγή ειναι πολύ μεγάλη </translation>
-    </message>
-    <message>
-        <source>Use UPnP to map the listening port (default: 0)</source>
-        <translation>Χρησιμοποίηση του  UPnP για την χρήση της πόρτας αναμονής (προεπιλογή:0)</translation>
     </message>
     <message>
         <source>Use UPnP to map the listening port (default: 1 when listening)</source>
@@ -2422,24 +2278,12 @@ for example: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
         <translation>Αναβάθμισε το πορτοφόλι στην τελευταία έκδοση</translation>
     </message>
     <message>
-        <source>Set key pool size to &lt;n&gt; (default: 100)</source>
-        <translation>Όριο πλήθους κλειδιών pool &lt;n&gt; (προεπιλογή: 100)</translation>
-    </message>
-    <message>
         <source>Rescan the block chain for missing wallet transactions</source>
         <translation>Επανέλεγχος της αλυσίδας μπλοκ για απούσες συναλλαγές</translation>
     </message>
     <message>
         <source>Use OpenSSL (https) for JSON-RPC connections</source>
         <translation>Χρήση του OpenSSL (https) για συνδέσεις JSON-RPC</translation>
-    </message>
-    <message>
-        <source>Server certificate file (default: server.cert)</source>
-        <translation>Αρχείο πιστοποιητικού του διακομιστή  (προεπιλογή: server.cert)</translation>
-    </message>
-    <message>
-        <source>Server private key (default: server.pem)</source>
-        <translation>Προσωπικό κλειδί του διακομιστή (προεπιλογή: server.pem)</translation>
     </message>
     <message>
         <source>This help message</source>

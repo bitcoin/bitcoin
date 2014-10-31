@@ -315,10 +315,6 @@
         <translation>Tabella instrumentorum "Tabs"</translation>
     </message>
     <message>
-        <source>[testnet]</source>
-        <translation>[testnet]</translation>
-    </message>
-    <message>
         <source>Bitcoin Core</source>
         <translation>Bitcoin Nucleus</translation>
     </message>
@@ -329,10 +325,6 @@
     <message>
         <source>No block source available...</source>
         <translation>Nulla fons frustorum absens...</translation>
-    </message>
-    <message>
-        <source>Processed %1 blocks of transaction history.</source>
-        <translation>Processae %1 frusta historiae transactionum.</translation>
     </message>
     <message numerus="yes">
         <source>%n hour(s)</source>
@@ -690,20 +682,12 @@ Inscriptio: %4
         <translation>Monstrata informatio fortasse non recentissima est.  Tuum cassidile per se synchronizat cum rete Bitcoin postquam conexio constabilita est, sed hoc actio nondum perfecta est.</translation>
     </message>
     <message>
-        <source>Wallet</source>
-        <translation>Cassidile</translation>
-    </message>
-    <message>
         <source>Immature:</source>
         <translation>Immatura:</translation>
     </message>
     <message>
         <source>Mined balance that has not yet matured</source>
         <translation>Fossum pendendum quod nondum maturum est</translation>
-    </message>
-    <message>
-        <source>&lt;b&gt;Recent transactions&lt;/b&gt;</source>
-        <translation>&lt;b&gt;Recentes transactiones&lt;/b&gt;</translation>
     </message>
     <message>
         <source>out of sync</source>
@@ -1515,24 +1499,8 @@ Inscriptio: %4
         <translation>Optiones:</translation>
     </message>
     <message>
-        <source>Specify configuration file (default: bitcoin.conf)</source>
-        <translation>Specifica configurationis plicam (praedefinitum: bitcoin.conf)</translation>
-    </message>
-    <message>
-        <source>Specify pid file (default: bitcoind.pid)</source>
-        <translation>Specifica pid plicam (praedefinitum: bitcoin.pid)</translation>
-    </message>
-    <message>
         <source>Specify data directory</source>
         <translation>Specifica indicem datorum</translation>
-    </message>
-    <message>
-        <source>Listen for connections on &lt;port&gt; (default: 8333 or testnet: 18333)</source>
-        <translation>Ausculta pro conexionibus in &lt;porta&gt; (praedefinitum: 8333 vel testnet: 18333)</translation>
-    </message>
-    <message>
-        <source>Maintain at most &lt;n&gt; connections to peers (default: 125)</source>
-        <translation>Manutene non plures quam &lt;n&gt; conexiones ad paria (praedefinitum: 125)</translation>
     </message>
     <message>
         <source>Connect to a node to retrieve peer addresses, and disconnect</source>
@@ -1541,18 +1509,6 @@ Inscriptio: %4
     <message>
         <source>Specify your own public address</source>
         <translation>Specifica tuam propriam publicam inscriptionem</translation>
-    </message>
-    <message>
-        <source>Threshold for disconnecting misbehaving peers (default: 100)</source>
-        <translation>Limen pro disconectendo paria improba (praedefinitum: 100)</translation>
-    </message>
-    <message>
-        <source>Number of seconds to keep misbehaving peers from reconnecting (default: 86400)</source>
-        <translation>Numerum secundorum prohibere ne paria improba reconectant (praedefinitum: 86400)</translation>
-    </message>
-    <message>
-        <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 8332 or testnet: 18332)</source>
-        <translation>Ausculta pro conexionibus JSON-RPC in &lt;porta&gt; (praedefinitum: 8332 vel testnet: 18332)</translation>
     </message>
     <message>
         <source>Accept command line and JSON-RPC commands</source>
@@ -1675,60 +1631,8 @@ exempli gratia: alertnotify=echo %%s | mail -s "Bitcoin Notificatio" admin@foo.c
         <translation>Error: Cassidile seratum, non posse transactionem creare!</translation>
     </message>
     <message>
-        <source>Error: system error: </source>
-        <translation>Error: systematis error:</translation>
-    </message>
-    <message>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
         <translation>Non potuisse auscultare in ulla porta.  Utere -listen=0 si hoc vis.</translation>
-    </message>
-    <message>
-        <source>Failed to read block info</source>
-        <translation>Non potuisse informationem frusti legere </translation>
-    </message>
-    <message>
-        <source>Failed to read block</source>
-        <translation>Non potuisse frustum legere</translation>
-    </message>
-    <message>
-        <source>Failed to sync block index</source>
-        <translation>Synchronizare indicem frustorum abortum est</translation>
-    </message>
-    <message>
-        <source>Failed to write block index</source>
-        <translation>Scribere indicem frustorum abortum est</translation>
-    </message>
-    <message>
-        <source>Failed to write block info</source>
-        <translation>Scribere informationem abortum est</translation>
-    </message>
-    <message>
-        <source>Failed to write block</source>
-        <translation>Scribere frustum abortum est</translation>
-    </message>
-    <message>
-        <source>Failed to write file info</source>
-        <translation>Scribere informationem plicae abortum est</translation>
-    </message>
-    <message>
-        <source>Failed to write to coin database</source>
-        <translation>Scribere databasem nummorum abortum est</translation>
-    </message>
-    <message>
-        <source>Failed to write transaction index</source>
-        <translation>Scribere indicem transactionum abortum est</translation>
-    </message>
-    <message>
-        <source>Failed to write undo data</source>
-        <translation>Scribere data pro cancellando mutationes abortum est</translation>
-    </message>
-    <message>
-        <source>Generate coins (default: 0)</source>
-        <translation>Genera nummos (praedefinitum: 0)</translation>
-    </message>
-    <message>
-        <source>How many blocks to check at startup (default: 288, 0 = all)</source>
-        <translation>Quot frusta proba ad initium (praedefinitum: 288, 0 = omnia)</translation>
     </message>
     <message>
         <source>Not enough file descriptors available.</source>
@@ -1737,10 +1641,6 @@ exempli gratia: alertnotify=echo %%s | mail -s "Bitcoin Notificatio" admin@foo.c
     <message>
         <source>Rebuild block chain index from current blk000??.dat files</source>
         <translation>Restituere indicem catenae frustorum ex activis plicis blk000??.dat</translation>
-    </message>
-    <message>
-        <source>Set the number of threads to service RPC calls (default: 4)</source>
-        <translation>Constitue numerum filorum ad tractandum RPC postulationes (praedefinitum: 4)</translation>
     </message>
     <message>
         <source>Verifying blocks...</source>
@@ -1767,32 +1667,8 @@ exempli gratia: alertnotify=echo %%s | mail -s "Bitcoin Notificatio" admin@foo.c
         <translation>Quantitas non valida pro -mintxfee=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
-        <source>Maintain a full transaction index (default: 0)</source>
-        <translation>Manutene completam indicem transactionum (praedefinitum: 0)</translation>
-    </message>
-    <message>
-        <source>Maximum per-connection receive buffer, &lt;n&gt;*1000 bytes (default: 5000)</source>
-        <translation>Maxima magnitudo memoriae pro datis accipendis singulis conexionibus, &lt;n&gt;*1000 octetis/bytes (praedefinitum: 5000)</translation>
-    </message>
-    <message>
-        <source>Maximum per-connection send buffer, &lt;n&gt;*1000 bytes (default: 1000)</source>
-        <translation>Maxima magnitudo memoriae pro datis mittendis singulis conexionibus, &lt;n&gt;*1000 octetis/bytes (praedefinitum: 1000)</translation>
-    </message>
-    <message>
-        <source>Only accept block chain matching built-in checkpoints (default: 1)</source>
-        <translation>Tantum accipe catenam frustorum convenientem internis lapidibus (praedefinitum: 1)</translation>
-    </message>
-    <message>
-        <source>Only connect to nodes in network &lt;net&gt; (IPv4, IPv6 or Tor)</source>
-        <translation>Tantum conecte ad nodos in rete &lt;net&gt; (IPv4, IPv6 aut Tor)</translation>
-    </message>
-    <message>
         <source>Send trace/debug info to console instead of debug.log file</source>
         <translation>Mitte informationem vestigii/debug ad terminale potius quam plicam debug.log</translation>
-    </message>
-    <message>
-        <source>Set minimum block size in bytes (default: 0)</source>
-        <translation>Constitue minimam magnitudinem frusti in octetis/bytes (praedefinitum: 0)</translation>
     </message>
     <message>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
@@ -1801,14 +1677,6 @@ exempli gratia: alertnotify=echo %%s | mail -s "Bitcoin Notificatio" admin@foo.c
     <message>
         <source>Signing transaction failed</source>
         <translation>Signandum transactionis abortum est</translation>
-    </message>
-    <message>
-        <source>Specify connection timeout in milliseconds (default: 5000)</source>
-        <translation>Specifica tempumfati conexionis in millisecundis (praedefinitum: 5000)</translation>
-    </message>
-    <message>
-        <source>System error: </source>
-        <translation>Systematis error:</translation>
     </message>
     <message>
         <source>Transaction amount too small</source>
@@ -1821,10 +1689,6 @@ exempli gratia: alertnotify=echo %%s | mail -s "Bitcoin Notificatio" admin@foo.c
     <message>
         <source>Transaction too large</source>
         <translation>Transactio nimis magna</translation>
-    </message>
-    <message>
-        <source>Use UPnP to map the listening port (default: 0)</source>
-        <translation>Utere UPnP designare portam auscultandi (praedefinitum: 0)</translation>
     </message>
     <message>
         <source>Use UPnP to map the listening port (default: 1 when listening)</source>
@@ -1859,24 +1723,12 @@ exempli gratia: alertnotify=echo %%s | mail -s "Bitcoin Notificatio" admin@foo.c
         <translation>Progredere cassidile ad formam recentissimam</translation>
     </message>
     <message>
-        <source>Set key pool size to &lt;n&gt; (default: 100)</source>
-        <translation>Constitue magnitudinem stagni clavium ad &lt;n&gt; (praedefinitum: 100)</translation>
-    </message>
-    <message>
         <source>Rescan the block chain for missing wallet transactions</source>
         <translation>Iterum perlege catenam frustorum propter absentes cassidilis transactiones</translation>
     </message>
     <message>
         <source>Use OpenSSL (https) for JSON-RPC connections</source>
         <translation>Utere OpenSSL (https) pro conexionibus JSON-RPC</translation>
-    </message>
-    <message>
-        <source>Server certificate file (default: server.cert)</source>
-        <translation>Plica certificationis daemonis moderantis (praedefinitum: server.cert)</translation>
-    </message>
-    <message>
-        <source>Server private key (default: server.pem)</source>
-        <translation>Clavis privata daemonis moderans (praedefinitum: server.pem)</translation>
     </message>
     <message>
         <source>This help message</source>

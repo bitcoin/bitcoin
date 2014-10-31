@@ -274,10 +274,6 @@
         <source>Tabs toolbar</source>
         <translation>Barra de pestañas</translation>
     </message>
-    <message>
-        <source>[testnet]</source>
-        <translation>[red-de-pruebas]</translation>
-    </message>
     <message numerus="yes">
         <source>%n active connection(s) to Bitcoin network</source>
         <translation><numerusform>%n conexión activa hacia la red Bitcoin</numerusform><numerusform>%n conexiones activas hacia la red Bitcoin</numerusform></translation>
@@ -574,16 +570,8 @@ Dirección: %4</translation>
         <translation>Formulario</translation>
     </message>
     <message>
-        <source>Wallet</source>
-        <translation>Cartera</translation>
-    </message>
-    <message>
         <source>Total:</source>
         <translation>Total:</translation>
-    </message>
-    <message>
-        <source>&lt;b&gt;Recent transactions&lt;/b&gt;</source>
-        <translation>&lt;b&gt;Transacciones recientes&lt;/b&gt;</translation>
     </message>
     <message>
         <source>out of sync</source>
@@ -1280,35 +1268,9 @@ Dirección: %4</translation>
 </translation>
     </message>
     <message>
-        <source>Specify configuration file (default: bitcoin.conf)</source>
-        <translation>Especifica archivo de configuración (predeterminado: bitcoin.conf)
-</translation>
-    </message>
-    <message>
-        <source>Specify pid file (default: bitcoind.pid)</source>
-        <translation>Especifica archivo pid (predeterminado: bitcoin.pid)
-</translation>
-    </message>
-    <message>
         <source>Specify data directory</source>
         <translation>Especifica directorio para los datos
 </translation>
-    </message>
-    <message>
-        <source>Listen for connections on &lt;port&gt; (default: 8333 or testnet: 18333)</source>
-        <translation>Escuchar por conecciones en &lt;puerto&gt; (Por defecto: 8333 o red de prueba: 18333)</translation>
-    </message>
-    <message>
-        <source>Maintain at most &lt;n&gt; connections to peers (default: 125)</source>
-        <translation>Mantener al menos &lt;n&gt; conecciones por cliente (por defecto: 125) </translation>
-    </message>
-    <message>
-        <source>Threshold for disconnecting misbehaving peers (default: 100)</source>
-        <translation>Umbral de desconección de clientes con mal comportamiento (por defecto: 100)</translation>
-    </message>
-    <message>
-        <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 8332 or testnet: 18332)</source>
-        <translation>Escucha conexiones JSON-RPC en el puerto &lt;port&gt; (predeterminado: 8332 or testnet: 18332)</translation>
     </message>
     <message>
         <source>Accept command line and JSON-RPC commands</source>
@@ -1343,34 +1305,6 @@ Dirección: %4</translation>
         <translation>Atención: Poco espacio en el disco duro</translation>
     </message>
     <message>
-        <source>Error: system error: </source>
-        <translation>Error: error de sistema:</translation>
-    </message>
-    <message>
-        <source>Failed to read block info</source>
-        <translation>Falló la lectura de la información del bloque</translation>
-    </message>
-    <message>
-        <source>Failed to read block</source>
-        <translation>Falló la lectura del bloque</translation>
-    </message>
-    <message>
-        <source>Failed to sync block index</source>
-        <translation>Falló sincronización del índice del bloque</translation>
-    </message>
-    <message>
-        <source>Failed to write block index</source>
-        <translation>Falló la escritura del bloque del índice</translation>
-    </message>
-    <message>
-        <source>Failed to write block info</source>
-        <translation>Falló la escritura de la información del bloque</translation>
-    </message>
-    <message>
-        <source>Failed to write block</source>
-        <translation>Falló la escritura del bloque</translation>
-    </message>
-    <message>
         <source>Imports blocks from external blk000??.dat file</source>
         <translation>Importar bloques desde el archivo externo blk000??.dat </translation>
     </message>
@@ -1381,22 +1315,6 @@ Dirección: %4</translation>
     <message>
         <source>Send trace/debug info to console instead of debug.log file</source>
         <translation>Enviar informacion de seguimiento a la consola en vez del archivo debug.log</translation>
-    </message>
-    <message>
-        <source>Set minimum block size in bytes (default: 0)</source>
-        <translation>Establezca el tamaño mínimo del bloque en bytes (por defecto: 0)</translation>
-    </message>
-    <message>
-        <source>Specify connection timeout in milliseconds (default: 5000)</source>
-        <translation>Especifica tiempo de espera para conexion en milisegundos (predeterminado: 5000)</translation>
-    </message>
-    <message>
-        <source>System error: </source>
-        <translation>Error de sistema:</translation>
-    </message>
-    <message>
-        <source>Use UPnP to map the listening port (default: 0)</source>
-        <translation>Intenta usar UPnP para mapear el puerto de escucha (default: 0)</translation>
     </message>
     <message>
         <source>Use UPnP to map the listening port (default: 1 when listening)</source>
@@ -1429,11 +1347,6 @@ Dirección: %4</translation>
         <translation>Actualizar billetera al formato actual</translation>
     </message>
     <message>
-        <source>Set key pool size to &lt;n&gt; (default: 100)</source>
-        <translation>Ajusta el numero de claves en reserva &lt;n&gt; (predeterminado: 100)
-</translation>
-    </message>
-    <message>
         <source>Rescan the block chain for missing wallet transactions</source>
         <translation>Rescanea la cadena de bloques para transacciones perdidas de la cartera
 </translation>
@@ -1441,16 +1354,6 @@ Dirección: %4</translation>
     <message>
         <source>Use OpenSSL (https) for JSON-RPC connections</source>
         <translation>Usa OpenSSL (https) para las conexiones JSON-RPC
-</translation>
-    </message>
-    <message>
-        <source>Server certificate file (default: server.cert)</source>
-        <translation>Certificado del servidor (Predeterminado: server.cert)
-</translation>
-    </message>
-    <message>
-        <source>Server private key (default: server.pem)</source>
-        <translation>Clave privada del servidor (Predeterminado: server.pem)
 </translation>
     </message>
     <message>
