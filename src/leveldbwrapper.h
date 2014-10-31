@@ -1,5 +1,5 @@
-// Copyright (c) 2012-2013 The Bitcoin developers
-// Distributed under the MIT/X11 software license, see the accompanying
+// Copyright (c) 2012-2014 The Bitcoin developers
+// Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef BITCOIN_LEVELDBWRAPPER_H
@@ -24,7 +24,7 @@ public:
 
 void HandleError(const leveldb::Status& status) throw(leveldb_error);
 
-// Batch of changes queued to be written to a CLevelDBWrapper
+/** Batch of changes queued to be written to a CLevelDBWrapper */
 class CLevelDBBatch
 {
     friend class CLevelDBWrapper;
@@ -64,25 +64,25 @@ public:
 class CLevelDBWrapper
 {
 private:
-    // custom environment this database is using (may be NULL in case of default environment)
+    //! custom environment this database is using (may be NULL in case of default environment)
     leveldb::Env* penv;
 
-    // database options used
+    //! database options used
     leveldb::Options options;
 
-    // options used when reading from the database
+    //! options used when reading from the database
     leveldb::ReadOptions readoptions;
 
-    // options used when iterating over values of the database
+    //! options used when iterating over values of the database
     leveldb::ReadOptions iteroptions;
 
-    // options used when writing to the database
+    //! options used when writing to the database
     leveldb::WriteOptions writeoptions;
 
-    // options used when sync writing to the database
+    //! options used when sync writing to the database
     leveldb::WriteOptions syncoptions;
 
-    // the database itself
+    //! the database itself
     leveldb::DB* pdb;
 
 public:
