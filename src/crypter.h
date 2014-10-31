@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2013 The Bitcoin developers
+// Copyright (c) 2009-2014 The Bitcoin developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -14,20 +14,20 @@ class uint256;
 const unsigned int WALLET_CRYPTO_KEY_SIZE = 32;
 const unsigned int WALLET_CRYPTO_SALT_SIZE = 8;
 
-/*
-Private key encryption is done based on a CMasterKey,
-which holds a salt and random encryption key.
-
-CMasterKeys are encrypted using AES-256-CBC using a key
-derived using derivation method nDerivationMethod
-(0 == EVP_sha512()) and derivation iterations nDeriveIterations.
-vchOtherDerivationParameters is provided for alternative algorithms
-which may require more parameters (such as scrypt).
-
-Wallet Private Keys are then encrypted using AES-256-CBC
-with the double-sha256 of the public key as the IV, and the
-master key's key as the encryption key (see keystore.[ch]).
-*/
+/**
+ * Private key encryption is done based on a CMasterKey,
+ * which holds a salt and random encryption key.
+ * 
+ * CMasterKeys are encrypted using AES-256-CBC using a key
+ * derived using derivation method nDerivationMethod
+ * (0 == EVP_sha512()) and derivation iterations nDeriveIterations.
+ * vchOtherDerivationParameters is provided for alternative algorithms
+ * which may require more parameters (such as scrypt).
+ * 
+ * Wallet Private Keys are then encrypted using AES-256-CBC
+ * with the double-sha256 of the public key as the IV, and the
+ * master key's key as the encryption key (see keystore.[ch]).
+ */
 
 /** Master key for wallet encryption */
 class CMasterKey
@@ -35,12 +35,12 @@ class CMasterKey
 public:
     std::vector<unsigned char> vchCryptedKey;
     std::vector<unsigned char> vchSalt;
-    // 0 = EVP_sha512()
-    // 1 = scrypt()
+    //! 0 = EVP_sha512()
+    //! 1 = scrypt()
     unsigned int nDerivationMethod;
     unsigned int nDeriveIterations;
-    // Use this for more parameters to key derivation,
-    // such as the various parameters to scrypt
+    //! Use this for more parameters to key derivation,
+    //! such as the various parameters to scrypt
     std::vector<unsigned char> vchOtherDerivationParameters;
 
     ADD_SERIALIZE_METHODS;
@@ -120,17 +120,17 @@ private:
 
     CKeyingMaterial vMasterKey;
 
-    // if fUseCrypto is true, mapKeys must be empty
-    // if fUseCrypto is false, vMasterKey must be empty
+    //! if fUseCrypto is true, mapKeys must be empty
+    //! if fUseCrypto is false, vMasterKey must be empty
     bool fUseCrypto;
 
-    // keeps track of whether Unlock has run a thourough check before
+    //! keeps track of whether Unlock has run a thorough check before
     bool fDecryptionThoroughlyChecked;
 
 protected:
     bool SetCrypted();
 
-    // will encrypt previously unencrypted keys
+    //! will encrypt previously unencrypted keys
     bool EncryptKeys(CKeyingMaterial& vMasterKeyIn);
 
     bool Unlock(const CKeyingMaterial& vMasterKeyIn);
@@ -189,7 +189,8 @@ public:
         }
     }
 
-    /* Wallet status (encrypted, locked) changed.
+    /**
+     * Wallet status (encrypted, locked) changed.
      * Note: Called without locks held.
      */
     boost::signals2::signal<void (CCryptoKeyStore* wallet)> NotifyStatusChanged;

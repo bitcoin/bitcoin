@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2014 The Bitcoin developers
-// Distributed under the MIT/X11 software license, see the accompanying
+// Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "checkpoints.h"
@@ -14,11 +14,13 @@
 
 namespace Checkpoints {
 
-    // How many times we expect transactions after the last checkpoint to
-    // be slower. This number is a compromise, as it can't be accurate for
-    // every system. When reindexing from a fast disk with a slow CPU, it
-    // can be up to 20, while when downloading from a slow network with a
-    // fast multicore CPU, it won't be much higher than 1.
+    /**
+     * How many times we expect transactions after the last checkpoint to
+     * be slower. This number is a compromise, as it can't be accurate for
+     * every system. When reindexing from a fast disk with a slow CPU, it
+     * can be up to 20, while when downloading from a slow network with a
+     * fast multicore CPU, it won't be much higher than 1.
+     */
     static const double SIGCHECK_VERIFICATION_FACTOR = 5.0;
 
     bool fEnabled = true;
@@ -35,7 +37,7 @@ namespace Checkpoints {
         return hash == i->second;
     }
 
-    // Guess how far we are in the verification process at the given block index
+    //! Guess how far we are in the verification process at the given block index
     double GuessVerificationProgress(CBlockIndex *pindex, bool fSigchecks) {
         if (pindex==NULL)
             return 0.0;

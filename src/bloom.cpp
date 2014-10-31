@@ -1,5 +1,5 @@
-// Copyright (c) 2012 The Bitcoin developers
-// Distributed under the MIT/X11 software license, see the accompanying
+// Copyright (c) 2012-2014 The Bitcoin developers
+// Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "bloom.h"
@@ -21,13 +21,17 @@
 using namespace std;
 
 CBloomFilter::CBloomFilter(unsigned int nElements, double nFPRate, unsigned int nTweakIn, unsigned char nFlagsIn) :
-// The ideal size for a bloom filter with a given number of elements and false positive rate is:
-// - nElements * log(fp rate) / ln(2)^2
-// We ignore filter parameters which will create a bloom filter larger than the protocol limits
+/**
+ * The ideal size for a bloom filter with a given number of elements and false positive rate is:
+ * - nElements * log(fp rate) / ln(2)^2
+ * We ignore filter parameters which will create a bloom filter larger than the protocol limits
+ */
 vData(min((unsigned int)(-1  / LN2SQUARED * nElements * log(nFPRate)), MAX_BLOOM_FILTER_SIZE * 8) / 8),
-// The ideal number of hash functions is filter size * ln(2) / number of elements
-// Again, we ignore filter parameters which will create a bloom filter with more hash functions than the protocol limits
-// See http://en.wikipedia.org/wiki/Bloom_filter for an explanation of these formulas
+/**
+ * The ideal number of hash functions is filter size * ln(2) / number of elements
+ * Again, we ignore filter parameters which will create a bloom filter with more hash functions than the protocol limits
+ * See https://en.wikipedia.org/wiki/Bloom_filter for an explanation of these formulas
+ */
 isFull(false),
 isEmpty(false),
 nHashFuncs(min((unsigned int)(vData.size() * 8 / nElements * LN2), MAX_HASH_FUNCS)),
