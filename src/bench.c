@@ -1,26 +1,40 @@
-// Copyright (c) 2013 Pieter Wuille
-// Distributed under the MIT/X11 software license, see the accompanying
+// Copyright (c) 2014 Pieter Wuille
+// Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <stdio.h>
 
 #include "include/secp256k1.h"
-#include "util_impl.h"
+#include "util.h"
 
 int main() {
     secp256k1_start(SECP256K1_START_VERIFY);
 
-    int good = 0;
-    unsigned char pubkey[33] = {0x02,0x1f,0x98,0xb7,0x3c,0xbd,0xd4,0x06,0xf3,0x49,0xa9,0x6c,0x2d,0xcb,0x7a,0xf7,0x01,0xe0,0xbd,0x07,0xdf,0xe9,0x17,0xae,0x0e,0x43,0x85,0x63,0xf0,0xff,0x7b,0xab,0x2f};
+    unsigned char msg[32];
+    unsigned char sig[64];
+
+    for (int i = 0; i < 32; i++) msg[i] = 1 + i;
+    for (int i = 0; i < 64; i++) sig[i] = 65 + i;
+
+    unsigned char pubkey[33];
     for (int i=0; i<1000000; i++) {
-        unsigned char msg[32];
-        secp256k1_rand256(msg);
-        unsigned char sig[72] = {0x30, 0x44, 0x02, 0x20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x02, 0x20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-        secp256k1_rand256(sig + 4);
-        secp256k1_rand256(sig + 38);
-        good += secp256k1_ecdsa_verify(msg, 32, sig, 72, pubkey, 33);
+        int pubkeylen = 33;
+        CHECK(secp256k1_ecdsa_recover_compact(msg, 32, sig, pubkey, &pubkeylen, 1, i % 2));
+        for (int j = 0; j < 32; j++) {
+            sig[j + 32] = msg[j];    // Move former message to S.
+            msg[j] = sig[j];         // Move former R to message.
+            sig[j] = pubkey[j + 1];  // Move recovered pubkey X coordinate to R (which must be a valid X coordinate).
+        }
     }
-    printf("%i\n", good);
+
+    static const unsigned char fini[33] = {
+        0x02,
+        0x52, 0x63, 0xae, 0x9a, 0x9d, 0x47, 0x1f, 0x1a,
+        0xb2, 0x36, 0x65, 0x89, 0x11, 0xe7, 0xcc, 0x86,
+        0xa3, 0xab, 0x97, 0xb6, 0xf1, 0xaf, 0xfd, 0x8f,
+        0x9b, 0x38, 0xb6, 0x18, 0x55, 0xe5, 0xc2, 0x43
+    };
+    CHECK(memcmp(fini, pubkey, 33) == 0);
 
     secp256k1_stop();
     return 0;
