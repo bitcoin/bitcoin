@@ -23,7 +23,7 @@ class ForkNotifyTest(BitcoinTestFramework):
         with open(self.alert_filename, 'w') as f:
             pass  # Just open then close to create zero-length file
         self.nodes.append(start_node(0, self.options.tmpdir,
-                            ["-blockversion=2", "-alertnotify=echo %s >> '" + self.alert_filename + "'"]))
+                            ["-blockversion=2", "-alertnotify=echo %s >> \"" + self.alert_filename + "\""]))
         # Node1 mines block.version=211 blocks
         self.nodes.append(start_node(1, self.options.tmpdir,
                                 ["-blockversion=211"]))
