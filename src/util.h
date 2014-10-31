@@ -9,6 +9,7 @@
 #include "libsecp256k1-config.h"
 #endif
 
+#include <stdlib.h>
 #include <stdint.h>
 #include <stdio.h>
 

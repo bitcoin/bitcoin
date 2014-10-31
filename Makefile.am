@@ -48,10 +48,10 @@ libsecp256k1_la_LIBADD = libsecp256k1_common.la $(SECP_LIBS)
 
 noinst_PROGRAMS =
 if USE_BENCHMARK
-noinst_PROGRAMS += bench bench_inv
-bench_SOURCES = src/bench.c
-bench_LDADD = libsecp256k1.la $(SECP_LIBS)
-bench_LDFLAGS = -static
+noinst_PROGRAMS += bench_verify bench_inv
+bench_verify_SOURCES = src/bench_verify.c
+bench_verify_LDADD = libsecp256k1.la $(SECP_LIBS)
+bench_verify_LDFLAGS = -static
 bench_inv_SOURCES = src/bench_inv.c
 bench_inv_LDADD = libsecp256k1_common.la $(SECP_LIBS)
 bench_inv_LDFLAGS = -static
