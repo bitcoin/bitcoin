@@ -1,6 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2013 The Bitcoin developers
-// Distributed under the MIT/X11 software license, see the accompanying
+// Copyright (c) 2009-2014 The Bitcoin developers
+// Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef BITCOIN_TXDB_H
@@ -17,11 +17,11 @@
 class CCoins;
 class uint256;
 
-// -dbcache default (MiB)
+//! -dbcache default (MiB)
 static const int64_t nDefaultDbCache = 100;
-// max. -dbcache in (MiB)
+//! max. -dbcache in (MiB)
 static const int64_t nMaxDbCache = sizeof(void*) > 4 ? 4096 : 1024;
-// min. -dbcache in (MiB)
+//! min. -dbcache in (MiB)
 static const int64_t nMinDbCache = 4;
 
 /** CCoinsView backed by the LevelDB coin database (chainstate/) */
