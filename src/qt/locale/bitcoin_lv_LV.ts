@@ -363,10 +363,6 @@
         <translation>Ciļņu rīkjosla</translation>
     </message>
     <message>
-        <source>[testnet]</source>
-        <translation>[testnet]</translation>
-    </message>
-    <message>
         <source>Bitcoin Core</source>
         <translation>Bitcoin Core</translation>
     </message>
@@ -393,10 +389,6 @@
     <message>
         <source>No block source available...</source>
         <translation>Nav pieejams neviens bloku avots...</translation>
-    </message>
-    <message>
-        <source>Processed %1 blocks of transaction history.</source>
-        <translation>Apstrādāti %1 bloki no transakciju vēstures.</translation>
     </message>
     <message numerus="yes">
         <source>%n hour(s)</source>
@@ -800,15 +792,7 @@ Adrese: %4
         <source>Error</source>
         <translation>Kļūda</translation>
     </message>
-    <message>
-        <source>GB of free space available</source>
-        <translation>GB ar brīvo vietu pieejams</translation>
-    </message>
-    <message>
-        <source>(of %1GB needed)</source>
-        <translation>(no %1GB nepieciešams)</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>OpenURIDialog</name>
     <message>
@@ -1018,10 +1002,6 @@ Adrese: %4
         <translation>Attēlotā informācija var būt novecojusi. Jūsu maciņš pēc savienojuma izveides automātiski sinhronizējas ar Bitcoin tīklu, taču šis process vēl nav beidzies.</translation>
     </message>
     <message>
-        <source>Wallet</source>
-        <translation>Maciņš</translation>
-    </message>
-    <message>
         <source>Available:</source>
         <translation>Pieejams:</translation>
     </message>
@@ -1048,10 +1028,6 @@ Adrese: %4
     <message>
         <source>Your current total balance</source>
         <translation>Jūsu kopējā tekošā bilance</translation>
-    </message>
-    <message>
-        <source>&lt;b&gt;Recent transactions&lt;/b&gt;</source>
-        <translation>&lt;b&gt;Pēdējās transakcijas&lt;/b&gt;</translation>
     </message>
     <message>
         <source>out of sync</source>
@@ -2211,24 +2187,8 @@ Adrese: %4
         <translation>Iespējas:</translation>
     </message>
     <message>
-        <source>Specify configuration file (default: bitcoin.conf)</source>
-        <translation>Norādiet konfigurācijas failu (pēc noklusēšanas: bitcoin.conf)</translation>
-    </message>
-    <message>
-        <source>Specify pid file (default: bitcoind.pid)</source>
-        <translation>Norādiet pid failu (pēc noklusēšanas: bitcoind.pid)</translation>
-    </message>
-    <message>
         <source>Specify data directory</source>
         <translation>Norādiet datu direktoriju</translation>
-    </message>
-    <message>
-        <source>Listen for connections on &lt;port&gt; (default: 8333 or testnet: 18333)</source>
-        <translation>Gaidīt savienojumus portā &lt;port&gt; (pēc noklusēšanas: 8333 vai testnet: 18333)</translation>
-    </message>
-    <message>
-        <source>Maintain at most &lt;n&gt; connections to peers (default: 125)</source>
-        <translation>Uzturēt līdz &lt;n&gt; savienojumiem ar citiem mezgliem(pēc noklusēšanas: 125)</translation>
     </message>
     <message>
         <source>Connect to a node to retrieve peer addresses, and disconnect</source>
@@ -2237,14 +2197,6 @@ Adrese: %4
     <message>
         <source>Specify your own public address</source>
         <translation>Norādiet savu publisko adresi</translation>
-    </message>
-    <message>
-        <source>Threshold for disconnecting misbehaving peers (default: 100)</source>
-        <translation>Slieksnis pārkāpējmezglu atvienošanai (pēc noklusēšanas: 100)</translation>
-    </message>
-    <message>
-        <source>Number of seconds to keep misbehaving peers from reconnecting (default: 86400)</source>
-        <translation>Sekundes, cik ilgi atturēt pārkāpējmezglus no atkārtotas pievienošanās (pēc noklusēšanas: 86400)</translation>
     </message>
     <message>
         <source>Accept command line and JSON-RPC commands</source>
@@ -2261,10 +2213,6 @@ Adrese: %4
     <message>
         <source>(default: 1)</source>
         <translation>(noklusējums: 1)</translation>
-    </message>
-    <message>
-        <source>(default: wallet.dat)</source>
-        <translation>(noklusējums: wallet.dat)</translation>
     </message>
     <message>
         <source>&lt;category&gt; can be:</source>
@@ -2303,24 +2251,12 @@ Adrese: %4
         <translation>Kļūda: Maciņš ir aizslēgts, nevar izveidot transakciju!</translation>
     </message>
     <message>
-        <source>Error: system error: </source>
-        <translation>Kļūda: sistēmas kļūda:</translation>
-    </message>
-    <message>
-        <source>Force safe mode (default: 0)</source>
-        <translation>Piespiest drošo režīmu (noklusējums: 0)</translation>
-    </message>
-    <message>
         <source>If &lt;category&gt; is not supplied, output all debugging information.</source>
         <translation>Ja &lt;category&gt; nav norādīta, izvadīt visu atkļūdošanas informāciju.</translation>
     </message>
     <message>
         <source>Importing...</source>
         <translation>Importē...</translation>
-    </message>
-    <message>
-        <source>Spend unconfirmed change when sending transactions (default: 1)</source>
-        <translation>Tērēt neapstiprinātu atlikumu kad sūta transakcijas (noklusējums: 1)</translation>
     </message>
     <message>
         <source>Verifying blocks...</source>
@@ -2353,10 +2289,6 @@ Adrese: %4
     <message>
         <source>Signing transaction failed</source>
         <translation>Transakcijas parakstīšana neizdevās</translation>
-    </message>
-    <message>
-        <source>System error: </source>
-        <translation>Sistēmas kļūda:</translation>
     </message>
     <message>
         <source>Transaction amount too small</source>
@@ -2403,24 +2335,12 @@ Adrese: %4
         <translation>Atjaunot maciņa formātu uz jaunāko</translation>
     </message>
     <message>
-        <source>Set key pool size to &lt;n&gt; (default: 100)</source>
-        <translation>Uzstādīt atslēgu bufera izmēru uz &lt;n&gt; (pēc noklusēšanas: 100)</translation>
-    </message>
-    <message>
         <source>Rescan the block chain for missing wallet transactions</source>
         <translation>Atkārtoti skanēt bloku virkni, meklējot trūkstošās maciņa transakcijas</translation>
     </message>
     <message>
         <source>Use OpenSSL (https) for JSON-RPC connections</source>
         <translation>JSON-RPC savienojumiem izmantot OpenSSL (https)</translation>
-    </message>
-    <message>
-        <source>Server certificate file (default: server.cert)</source>
-        <translation>Servera sertifikāta fails (pēc noklusēšanas: server.cert)</translation>
-    </message>
-    <message>
-        <source>Server private key (default: server.pem)</source>
-        <translation>Servera privātā atslēga (pēc noklusēšanas: server.pem)</translation>
     </message>
     <message>
         <source>This help message</source>

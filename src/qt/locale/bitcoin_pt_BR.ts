@@ -391,10 +391,6 @@
         <translation>Barra de ferramentas</translation>
     </message>
     <message>
-        <source>[testnet]</source>
-        <translation>[testnet]</translation>
-    </message>
-    <message>
         <source>Bitcoin Core</source>
         <translation>Núcleo Bitcoin</translation>
     </message>
@@ -433,10 +429,6 @@
     <message>
         <source>No block source available...</source>
         <translation>Nenhum servidor disponível...</translation>
-    </message>
-    <message>
-        <source>Processed %1 blocks of transaction history.</source>
-        <translation>Processado %1 blocos do histórico de transações.</translation>
     </message>
     <message numerus="yes">
         <source>%n hour(s)</source>
@@ -915,15 +907,7 @@ Endereço: %4</translation>
         <source>Error</source>
         <translation>Erro</translation>
     </message>
-    <message>
-        <source>GB of free space available</source>
-        <translation>GB de espaço disponível</translation>
-    </message>
-    <message>
-        <source>(of %1GB needed)</source>
-        <translation>(Mais de %1GB necessário)</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>OpenURIDialog</name>
     <message>
@@ -1165,10 +1149,6 @@ Endereço: %4</translation>
         <translation>A informação mostrada pode estar desatualizada. Sua carteira sincroniza automaticamente com a rede Bitcoin depois que a conexão é estabelecida, mas este processo pode não estar completo ainda.</translation>
     </message>
     <message>
-        <source>Wallet</source>
-        <translation>Carteira</translation>
-    </message>
-    <message>
         <source>Watch-only:</source>
         <translation>Apenas visualizar:</translation>
     </message>
@@ -1207,10 +1187,6 @@ Endereço: %4</translation>
     <message>
         <source>Your current balance in watch-only addresses</source>
         <translation>Sua balança atual em endereços apenas visualizados</translation>
-    </message>
-    <message>
-        <source>&lt;b&gt;Recent transactions&lt;/b&gt;</source>
-        <translation>&lt;b&gt;Transações recentes&lt;/b&gt;</translation>
     </message>
     <message>
         <source>out of sync</source>
@@ -1282,7 +1258,11 @@ Endereço: %4</translation>
 </context>
 <context>
     <name>PeerTableModel</name>
-    </context>
+    <message>
+        <source>Ping Time</source>
+        <translation>Tempo de Ping</translation>
+    </message>
+</context>
 <context>
     <name>QObject</name>
     <message>
@@ -1416,12 +1396,40 @@ Endereço: %4</translation>
         <translation>&amp;Pares</translation>
     </message>
     <message>
+        <source>Direction</source>
+        <translation>Direção</translation>
+    </message>
+    <message>
         <source>Version</source>
         <translation>Versão</translation>
     </message>
     <message>
         <source>Services</source>
         <translation>Serviços</translation>
+    </message>
+    <message>
+        <source>Ban Score</source>
+        <translation>Banir pontuação</translation>
+    </message>
+    <message>
+        <source>Last Send</source>
+        <translation>Ultimo Envio</translation>
+    </message>
+    <message>
+        <source>Last Receive</source>
+        <translation>Ultimo Recebido</translation>
+    </message>
+    <message>
+        <source>Bytes Sent</source>
+        <translation>Bytes Enviados</translation>
+    </message>
+    <message>
+        <source>Bytes Received</source>
+        <translation>bytes Recebidos</translation>
+    </message>
+    <message>
+        <source>Ping Time</source>
+        <translation>Tempo de Ping</translation>
     </message>
     <message>
         <source>Last block time</source>
@@ -1514,14 +1522,6 @@ Endereço: %4</translation>
     <message>
         <source>Outbound</source>
         <translation>Saída</translation>
-    </message>
-    <message>
-        <source>Yes</source>
-        <translation>Sim</translation>
-    </message>
-    <message>
-        <source>No</source>
-        <translation>Não</translation>
     </message>
     <message>
         <source>Unknown</source>
@@ -1911,6 +1911,10 @@ Endereço: %4</translation>
         <translation>Este é um pagamento normal.</translation>
     </message>
     <message>
+        <source>The Bitcoin address to send the payment to</source>
+        <translation>O enderesso Bitcoin que enviarár o pagamento</translation>
+    </message>
+    <message>
         <source>Alt+A</source>
         <translation>Alt+A</translation>
     </message>
@@ -1981,6 +1985,10 @@ Endereço: %4</translation>
         <translation>Você pode assinar mensagens com seus endereços para provar que você é o dono deles. Seja cuidadoso para não assinar algo vago, pois ataques de pishing podem tentar te enganar para dar sua assinatura de identidade para eles. Apenas assine afirmações completamente detalhadas com as quais você concorda.</translation>
     </message>
     <message>
+        <source>The Bitcoin address to sign the message with</source>
+        <translation>O enderesso Bitcoin que assinará a mensagem</translation>
+    </message>
+    <message>
         <source>Choose previously used address</source>
         <translation>Escolha um endereço usado anteriormente</translation>
     </message>
@@ -2031,6 +2039,10 @@ Endereço: %4</translation>
     <message>
         <source>Enter the signing address, message (ensure you copy line breaks, spaces, tabs, etc. exactly) and signature below to verify the message. Be careful not to read more into the signature than what is in the signed message itself, to avoid being tricked by a man-in-the-middle attack.</source>
         <translation>Forneça o endereço da assinatura, a mensagem (se assegure que você copiou quebras de linha, espaços, tabs, etc. exatamente) e a assinatura abaixo para verificar a mensagem. Cuidado para não ler mais na assinatura do que está escrito na mensagem propriamente, para evitar ser vítima de uma ataque do tipo "man-in-the-middle".</translation>
+    </message>
+    <message>
+        <source>The Bitcoin address the message was signed with</source>
+        <translation>O enderesso Bitcoin que assionou a mesnagem</translation>
     </message>
     <message>
         <source>Verify the message to ensure it was signed with the specified Bitcoin address</source>
@@ -2174,6 +2186,10 @@ Endereço: %4</translation>
         <translation>seu próprio endereço</translation>
     </message>
     <message>
+        <source>watch-only</source>
+        <translation>Vizualização apenas</translation>
+    </message>
+    <message>
         <source>label</source>
         <translation>rótulo</translation>
     </message>
@@ -2192,6 +2208,14 @@ Endereço: %4</translation>
     <message>
         <source>Debit</source>
         <translation>Débito</translation>
+    </message>
+    <message>
+        <source>Total debit</source>
+        <translation>Débito total</translation>
+    </message>
+    <message>
+        <source>Total credit</source>
+        <translation>Credito total</translation>
     </message>
     <message>
         <source>Transaction fee</source>
@@ -2344,6 +2368,10 @@ Endereço: %4</translation>
         <translation>Minerado</translation>
     </message>
     <message>
+        <source>watch-only</source>
+        <translation>Vizualização apenas</translation>
+    </message>
+    <message>
         <source>(n/a)</source>
         <translation>(n/a)</translation>
     </message>
@@ -2453,6 +2481,10 @@ Endereço: %4</translation>
     <message>
         <source>Export Transaction History</source>
         <translation>Exportar Histórico de Transação</translation>
+    </message>
+    <message>
+        <source>Watch-only</source>
+        <translation>Vizualização apenas</translation>
     </message>
     <message>
         <source>Exporting Failed</source>
@@ -2566,24 +2598,8 @@ Endereço: %4</translation>
         <translation>Opções:</translation>
     </message>
     <message>
-        <source>Specify configuration file (default: bitcoin.conf)</source>
-        <translation>Especifique um arquivo de configurações (padrão: bitcoin.conf)</translation>
-    </message>
-    <message>
-        <source>Specify pid file (default: bitcoind.pid)</source>
-        <translation>Especifique um arquivo de pid (padrão: bitcoind.pid)</translation>
-    </message>
-    <message>
         <source>Specify data directory</source>
         <translation>Especificar diretório de dados</translation>
-    </message>
-    <message>
-        <source>Listen for connections on &lt;port&gt; (default: 8333 or testnet: 18333)</source>
-        <translation>Procurar por conexões em &lt;port&gt; (padrão: 8333 ou testnet:18333)</translation>
-    </message>
-    <message>
-        <source>Maintain at most &lt;n&gt; connections to peers (default: 125)</source>
-        <translation>Manter no máximo &lt;n&gt; conexões aos peers (padrão: 125)</translation>
     </message>
     <message>
         <source>Connect to a node to retrieve peer addresses, and disconnect</source>
@@ -2592,18 +2608,6 @@ Endereço: %4</translation>
     <message>
         <source>Specify your own public address</source>
         <translation>Especificar seu próprio endereço público</translation>
-    </message>
-    <message>
-        <source>Threshold for disconnecting misbehaving peers (default: 100)</source>
-        <translation>Limite para desconectar peers mal comportados (padrão: 100)</translation>
-    </message>
-    <message>
-        <source>Number of seconds to keep misbehaving peers from reconnecting (default: 86400)</source>
-        <translation>Número de segundos para impedir que peers mal comportados reconectem (padrão: 86400)</translation>
-    </message>
-    <message>
-        <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 8332 or testnet: 18332)</source>
-        <translation>Escutar conexões JSON-RPC na porta &lt;porta&gt; (padrão: 8332 ou testnet: 18332)</translation>
     </message>
     <message>
         <source>Accept command line and JSON-RPC commands</source>
@@ -2646,16 +2650,8 @@ por exemplo: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com⏎
 </translation>
     </message>
     <message>
-        <source>Acceptable ciphers (default: TLSv1.2+HIGH:TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!3DES:@STRENGTH)</source>
-        <translation>Codificadores aceitos (padrão: TLSv1.2+HIGH:TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!3DES:@STRENGTH)</translation>
-    </message>
-    <message>
         <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
         <translation>Vincular ao endereço fornecido e sempre escutar nele. Use a notação [host]:port para IPv6</translation>
-    </message>
-    <message>
-        <source>Continuously rate-limit free transactions to &lt;n&gt;*1000 bytes per minute (default:15)</source>
-        <translation>Restringe a taxa de transações gratuitas para &lt;n&gt;*1000 bytes por minuto (padrão:15)</translation>
     </message>
     <message>
         <source>Enter regression test mode, which uses a special chain in which blocks can be solved instantly.</source>
@@ -2674,14 +2670,6 @@ por exemplo: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com⏎
         <translation>Executar comando quando uma transação da carteira mudar (%s no comando será substituído por TxID)</translation>
     </message>
     <message>
-        <source>Flush database activity from memory pool to disk log every &lt;n&gt; megabytes (default: 100)</source>
-        <translation>Descarrega a atividade do banco de dados da memória para log em disco a cada &lt;n&gt; megabytes (padrão: 100)</translation>
-    </message>
-    <message>
-        <source>How thorough the block verification of -checkblocks is (0-4, default: 3)</source>
-        <translation>Quão completa a verificação de blocos do -checkblocks é (0-4, padrão: 3)</translation>
-    </message>
-    <message>
         <source>In this mode -genproclimit controls how many blocks are generated immediately.</source>
         <translation>Neste modo -genproclimit controla quantos blocos são gerados imediatamente.</translation>
     </message>
@@ -2690,20 +2678,12 @@ por exemplo: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com⏎
         <translation>Define o número de threads de verificação de script (%u a %d, 0 = automático, &lt;0 = número de cores deixados livres, padrão: %d)</translation>
     </message>
     <message>
-        <source>Set the processor limit for when generation is on (-1 = unlimited, default: -1)</source>
-        <translation>Define o limite de processador para quando geração está ativa (-1 = ilimitada, padrão: -1)</translation>
-    </message>
-    <message>
         <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
         <translation>Este pode ser um build de teste pré-lançamento - use por sua conta e risco - não use para mineração ou aplicações de comércio.</translation>
     </message>
     <message>
         <source>Unable to bind to %s on this computer. Bitcoin Core is probably already running.</source>
         <translation>Impossível ouvir em %s neste computador. Bitcoin Core já está sendo executado provavelmente.</translation>
-    </message>
-    <message>
-        <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: -proxy)</source>
-        <translation>Use proxy SOCKS5 separado para alcançar nós via Tor hidden services (padrão: -proxy)</translation>
     </message>
     <message>
         <source>Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
@@ -2728,10 +2708,6 @@ por exemplo: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com⏎
     <message>
         <source>(default: 1)</source>
         <translation>(padrão: 1)</translation>
-    </message>
-    <message>
-        <source>(default: wallet.dat)</source>
-        <translation>(padrão: wallet.dat)</translation>
     </message>
     <message>
         <source>&lt;category&gt; can be:</source>
@@ -2762,10 +2738,6 @@ por exemplo: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com⏎
         <translation>Opções de Debug/Teste:</translation>
     </message>
     <message>
-        <source>Disable safemode, override a real safe mode event (default: 0)</source>
-        <translation>Desabilita modo seguro, sobrepõe um evento de modo seguro real (padrão: 0)</translation>
-    </message>
-    <message>
         <source>Discover own IP address (default: 1 when listening and no -externalip)</source>
         <translation>Descobrir os próprios endereços IP (padrão: 1 quando no modo listening e opção -externalip não estiver presente)</translation>
     </message>
@@ -2794,6 +2766,10 @@ por exemplo: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com⏎
         <translation>Erro ao abrir banco de dados de blocos</translation>
     </message>
     <message>
+        <source>Error: A fatal internal error occured, see debug.log for details</source>
+        <translation>Erro: Um erro interno fatal ocorreu, ver o debug.log para detalhes</translation>
+    </message>
+    <message>
         <source>Error: Disk space is low!</source>
         <translation>Erro: Espaço em disco insuficiente!</translation>
     </message>
@@ -2802,64 +2778,8 @@ por exemplo: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com⏎
         <translation>Erro: Carteira bloqueada, impossível criar transação!</translation>
     </message>
     <message>
-        <source>Error: system error: </source>
-        <translation>Erro: erro de sistema</translation>
-    </message>
-    <message>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
         <translation>Falha ao escutar em qualquer porta. Use -listen=0 se você quiser isso.</translation>
-    </message>
-    <message>
-        <source>Failed to read block info</source>
-        <translation>Falha ao ler informação de bloco</translation>
-    </message>
-    <message>
-        <source>Failed to read block</source>
-        <translation>Falha ao ler bloco</translation>
-    </message>
-    <message>
-        <source>Failed to sync block index</source>
-        <translation>Falha ao sincronizar índice de blocos</translation>
-    </message>
-    <message>
-        <source>Failed to write block index</source>
-        <translation>Falha ao escrever índice de blocos</translation>
-    </message>
-    <message>
-        <source>Failed to write block info</source>
-        <translation>Falha ao escrever informações de bloco</translation>
-    </message>
-    <message>
-        <source>Failed to write block</source>
-        <translation>Falha ao escrever bloco</translation>
-    </message>
-    <message>
-        <source>Failed to write file info</source>
-        <translation>Falha ao escrever informções de arquivo</translation>
-    </message>
-    <message>
-        <source>Failed to write to coin database</source>
-        <translation>Falha ao escrever banco de dados de moedas</translation>
-    </message>
-    <message>
-        <source>Failed to write transaction index</source>
-        <translation>Falha ao escrever índice de transações</translation>
-    </message>
-    <message>
-        <source>Failed to write undo data</source>
-        <translation>Falha ao escrever dados para desfazer ações</translation>
-    </message>
-    <message>
-        <source>Force safe mode (default: 0)</source>
-        <translation>Força modo seguro (padrão: 0)</translation>
-    </message>
-    <message>
-        <source>Generate coins (default: 0)</source>
-        <translation>Gerar moedas (padrão: 0)</translation>
-    </message>
-    <message>
-        <source>How many blocks to check at startup (default: 288, 0 = all)</source>
-        <translation>Quantos blocos checar ao inicializar (padrão: 288, 0 = todos)</translation>
     </message>
     <message>
         <source>If &lt;category&gt; is not supplied, output all debugging information.</source>
@@ -2882,10 +2802,6 @@ por exemplo: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com⏎
         <translation>Decriptadores de arquivos disponíveis insuficientes.</translation>
     </message>
     <message>
-        <source>Prepend debug output with timestamp (default: 1)</source>
-        <translation>Adiciona timestamp como prefixo no debug (padrão: 1)</translation>
-    </message>
-    <message>
         <source>Rebuild block chain index from current blk000??.dat files</source>
         <translation>Reconstruir índice de blockchain a partir dos arquivos atuais blk000??.dat</translation>
     </message>
@@ -2898,20 +2814,8 @@ por exemplo: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com⏎
         <translation>Define o tamanho máximo de cada bloco em bytes (padrão: %d)</translation>
     </message>
     <message>
-        <source>Set the number of threads to service RPC calls (default: 4)</source>
-        <translation>Defina o número de threads de chamadas RPC (padrão: 4)</translation>
-    </message>
-    <message>
         <source>Specify wallet file (within data directory)</source>
         <translation>Especifique o arquivo da carteira (dentro do diretório de dados)</translation>
-    </message>
-    <message>
-        <source>Spend unconfirmed change when sending transactions (default: 1)</source>
-        <translation>Permite gastar troco não confirmado ao criar transações (padrão: 1)</translation>
-    </message>
-    <message>
-        <source>Stop running after importing blocks from disk (default: 0)</source>
-        <translation>Parar de executar após importar blocos do disco (padrão: 0)</translation>
     </message>
     <message>
         <source>This is intended for regression testing tools and app development.</source>
@@ -2954,10 +2858,6 @@ por exemplo: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com⏎
         <translation>Erro: Escutar por conexões de entrada falhou (escutar retornou erro %s)</translation>
     </message>
     <message>
-        <source>Execute command when a network tx respends wallet tx input (%s=respend TxID, %t=wallet TxID)</source>
-        <translation>Executa comando quando uma transação da rede gasta novamente uma transação de entrada da carteira (%s=TxID do gasto duplo, %t=TxID da Carteira)</translation>
-    </message>
-    <message>
         <source>Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)</source>
         <translation>Executa o comando quando um alerta relevante é recebido ou vemos uma longa segregação (%s em cmd é substituído pela mensagem)</translation>
     </message>
@@ -2970,16 +2870,16 @@ por exemplo: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com⏎
         <translation>Taxas (em BTC/Kb) menores do que este valor são consideradas inexistentes para a criação da transação (padrão: %s)</translation>
     </message>
     <message>
-        <source>Output debugging information (default: 0, supplying &lt;category&gt; is optional)</source>
-        <translation>Informação de saída de debug (padrão: 0, definir &lt;category&gt; é opcional)</translation>
-    </message>
-    <message>
         <source>Set maximum size of high-priority/low-fee transactions in bytes (default: %d)</source>
         <translation>Define o tamanho máximo de alta-prioridade por taxa baixa nas transações em bytes (padrão: %d)</translation>
     </message>
     <message>
         <source>Cannot resolve -whitebind address: '%s'</source>
         <translation>Impossível resolver endereço -whitebind: '%s'</translation>
+    </message>
+    <message>
+        <source>Connect through SOCKS5 proxy</source>
+        <translation>Connecte-se através de um proxy SOCKS5</translation>
     </message>
     <message>
         <source>Copyright (C) 2009-%i The Bitcoin Core Developers</source>
@@ -2992,10 +2892,6 @@ por exemplo: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com⏎
     <message>
         <source>Fee (in BTC/kB) to add to transactions you send (default: %s)</source>
         <translation>Taxa (em BTC/kB) a adicionar nas transações que você envia (padrão: %s)</translation>
-    </message>
-    <message>
-        <source>Include IP addresses in debug output (default: 0)</source>
-        <translation>Incluir endereços IP na saída de depuração (padrão: 0)</translation>
     </message>
     <message>
         <source>Information</source>
@@ -3022,44 +2918,12 @@ por exemplo: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com⏎
         <translation>Manter no máximo &lt;n&gt; blocos pendentes em memória (padrão: %u)</translation>
     </message>
     <message>
-        <source>Limit size of signature cache to &lt;n&gt; entries (default: 50000)</source>
-        <translation>Limita tamanho do cache de assinaturas em &lt;n&gt; entradas (padrão: 50000)</translation>
-    </message>
-    <message>
-        <source>Log transaction priority and fee per kB when mining blocks (default: 0)</source>
-        <translation>Registra log da prioridade de transação e taxa por kB quando minerando blocos (padrão: 0)</translation>
-    </message>
-    <message>
-        <source>Maintain a full transaction index (default: 0)</source>
-        <translation>Manter índice completo de transações (padrão: 0)</translation>
-    </message>
-    <message>
-        <source>Maximum per-connection receive buffer, &lt;n&gt;*1000 bytes (default: 5000)</source>
-        <translation>Buffer máximo de recebimento por conexão, &lt;n&gt;*1000 bytes (padrão: 5000)</translation>
-    </message>
-    <message>
-        <source>Maximum per-connection send buffer, &lt;n&gt;*1000 bytes (default: 1000)</source>
-        <translation>Buffer máximo de envio por conexão, &lt;n&gt;*1000 bytes (padrão: 1000)</translation>
-    </message>
-    <message>
         <source>Need to specify a port with -whitebind: '%s'</source>
         <translation>Necessário informar uma porta com -whitebind: '%s'</translation>
     </message>
     <message>
-        <source>Only accept block chain matching built-in checkpoints (default: 1)</source>
-        <translation>Apenas aceitar cadeia de blocos correspondente a marcas de verificação internas (padrão: 1)</translation>
-    </message>
-    <message>
-        <source>Only connect to nodes in network &lt;net&gt; (IPv4, IPv6 or Tor)</source>
-        <translation>Apenas conectar em nós na rede &lt;net&gt; (IPv4, IPv6, ou Tor)</translation>
-    </message>
-    <message>
         <source>Print block on startup, if found in block index</source>
         <translation>Imprime bloco ao iniciar, se encontrado no índice de blocos</translation>
-    </message>
-    <message>
-        <source>Print block tree on startup (default: 0)</source>
-        <translation>Imprime árvore de blocos ao iniciar (padrão: 0)</translation>
     </message>
     <message>
         <source>RPC SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
@@ -3078,20 +2942,8 @@ por exemplo: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com⏎
         <translation>Aleatoriamente embaralha 1 em cada &lt;n&gt; mensagens da rede</translation>
     </message>
     <message>
-        <source>Run a thread to flush wallet periodically (default: 1)</source>
-        <translation>Executa uma thread para limpar a carteira periodicamente (padrão: 1)</translation>
-    </message>
-    <message>
         <source>Send trace/debug info to console instead of debug.log file</source>
         <translation>Mandar informação de trace/debug para o console em vez de para o arquivo debug.log</translation>
-    </message>
-    <message>
-        <source>Set minimum block size in bytes (default: 0)</source>
-        <translation>Determinar tamanho mínimo de bloco em bytes (padrão: 0)</translation>
-    </message>
-    <message>
-        <source>Sets the DB_PRIVATE flag in the wallet db environment (default: 1)</source>
-        <translation>Define a flag DB_PRIVATE no ambiente de banco de dados da carteira (padrão: 1)</translation>
     </message>
     <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>
@@ -3104,14 +2956,6 @@ por exemplo: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com⏎
     <message>
         <source>Signing transaction failed</source>
         <translation>Assinatura de transação falhou</translation>
-    </message>
-    <message>
-        <source>Specify connection timeout in milliseconds (default: 5000)</source>
-        <translation>Especifique o tempo limite (timeout) da conexão em milissegundos (padrão: 5000) </translation>
-    </message>
-    <message>
-        <source>System error: </source>
-        <translation>Erro de sistema:</translation>
     </message>
     <message>
         <source>This is experimental software.</source>
@@ -3134,16 +2978,16 @@ por exemplo: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com⏎
         <translation>Impossível se ligar a %s neste computador (bind retornou erro %s)</translation>
     </message>
     <message>
-        <source>Use UPnP to map the listening port (default: 0)</source>
-        <translation>Usar UPnP para mapear porta de escuta (padrão: 0)</translation>
-    </message>
-    <message>
         <source>Use UPnP to map the listening port (default: 1 when listening)</source>
         <translation>Usar UPnP para mapear porta de escuta (padrão: 1 quando estiver escutando)</translation>
     </message>
     <message>
         <source>Username for JSON-RPC connections</source>
         <translation>Nome de usuário para conexões JSON-RPC</translation>
+    </message>
+    <message>
+        <source>Wallet needed to be rewritten: restart Bitcoin Core to complete</source>
+        <translation>Sua carteira precisou ser reescrita: favor reiniciar o Bitcoin para completar</translation>
     </message>
     <message>
         <source>Warning</source>
@@ -3178,24 +3022,12 @@ por exemplo: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com⏎
         <translation>Atualizar carteira para o formato mais recente</translation>
     </message>
     <message>
-        <source>Set key pool size to &lt;n&gt; (default: 100)</source>
-        <translation>Determinar tamanho do pool de endereços para &lt;n&gt; (padrão: 100)</translation>
-    </message>
-    <message>
         <source>Rescan the block chain for missing wallet transactions</source>
         <translation>Re-escanear blocos procurando por transações perdidas da carteira</translation>
     </message>
     <message>
         <source>Use OpenSSL (https) for JSON-RPC connections</source>
         <translation>Usar OpenSSL (https) para conexões JSON-RPC</translation>
-    </message>
-    <message>
-        <source>Server certificate file (default: server.cert)</source>
-        <translation>Arquivo de certificado do servidor (padrão: server.cert)</translation>
-    </message>
-    <message>
-        <source>Server private key (default: server.pem)</source>
-        <translation>Chave privada do servidor (padrão: server.pem)</translation>
     </message>
     <message>
         <source>This help message</source>
@@ -3220,6 +3052,10 @@ por exemplo: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com⏎
     <message>
         <source>Invalid -proxy address: '%s'</source>
         <translation>Endereço -proxy inválido: '%s'</translation>
+    </message>
+    <message>
+        <source>Specify pid file (default: %s)</source>
+        <translation>Especificar aqrquivo pid (default: %s)</translation>
     </message>
     <message>
         <source>Unknown network specified in -onlynet: '%s'</source>

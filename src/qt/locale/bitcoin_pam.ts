@@ -10,8 +10,20 @@
         <translation>Maglalang kang bayung address</translation>
     </message>
     <message>
+        <source>&amp;New</source>
+        <translation>&amp;Bayu</translation>
+    </message>
+    <message>
         <source>Copy the currently selected address to the system clipboard</source>
         <translation>Kopyan me ing salukuyan at makipiling address keng system clipboard</translation>
+    </message>
+    <message>
+        <source>&amp;Copy</source>
+        <translation>&amp;Kopyan</translation>
+    </message>
+    <message>
+        <source>C&amp;lose</source>
+        <translation>I&amp;sara</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -26,8 +38,32 @@
         <translation>&amp;Ilako</translation>
     </message>
     <message>
+        <source>Choose the address to send coins to</source>
+        <translation>Pilinan ing address a magpadalang coins kang</translation>
+    </message>
+    <message>
+        <source>Choose the address to receive coins with</source>
+        <translation>Pilinan ing address a tumanggap coins a atin</translation>
+    </message>
+    <message>
+        <source>C&amp;hoose</source>
+        <translation>P&amp;ilinan</translation>
+    </message>
+    <message>
+        <source>Sending addresses</source>
+        <translation>Address king pamag-Padala</translation>
+    </message>
+    <message>
+        <source>Receiving addresses</source>
+        <translation>Address king pamag-Tanggap</translation>
+    </message>
+    <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
         <translation>Reni reng kekang Bitcoin address king pamagpadalang kabayaran. Lawan mulang masalese reng alaga ampo ing address na ning tumanggap bayu ka magpadalang barya.</translation>
+    </message>
+    <message>
+        <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
+        <translation>Reni reng kekang Bitcoin addresses keng pamananggap bayad. Rerekomenda mi na gumamit kang bayung address keng balang transaksiyon.</translation>
     </message>
     <message>
         <source>Copy &amp;Label</source>
@@ -277,10 +313,6 @@
     <message>
         <source>Tabs toolbar</source>
         <translation>Gamit para king Tabs</translation>
-    </message>
-    <message>
-        <source>[testnet]</source>
-        <translation>[testnet]</translation>
     </message>
     <message>
         <source>Bitcoin Core</source>
@@ -606,10 +638,6 @@ Address: %4
         <translation>Ing makaltong impormasion mapalyaring luma ne. Ing kekang wallet otomatiku yang mag-synchronize keng Bitcoin network istung mekakonekta ne king network, oneng ing prosesung ini ali ya pa kumpletu.</translation>
     </message>
     <message>
-        <source>Wallet</source>
-        <translation>Wallet</translation>
-    </message>
-    <message>
         <source>Your current spendable balance</source>
         <translation>Ing kekang kasalungsungan balanse a malyari mung gastusan</translation>
     </message>
@@ -632,10 +660,6 @@ Address: %4
     <message>
         <source>Your current total balance</source>
         <translation>Ing kekang kasalungsungan kabuuang balanse</translation>
-    </message>
-    <message>
-        <source>&lt;b&gt;Recent transactions&lt;/b&gt;</source>
-        <translation>&lt;b&gt;Reng kapilan pamung transaksion&lt;/b&gt;</translation>
     </message>
     <message>
         <source>out of sync</source>
@@ -1375,24 +1399,8 @@ Address: %4
         <translation>Pipamilian:</translation>
     </message>
     <message>
-        <source>Specify configuration file (default: bitcoin.conf)</source>
-        <translation>Pilinan ing configuration file(default: bitcoin.conf)</translation>
-    </message>
-    <message>
-        <source>Specify pid file (default: bitcoind.pid)</source>
-        <translation>Pilinan ing pid file(default: bitcoind.pid)</translation>
-    </message>
-    <message>
         <source>Specify data directory</source>
         <translation>Pilinan ing data directory</translation>
-    </message>
-    <message>
-        <source>Listen for connections on &lt;port&gt; (default: 8333 or testnet: 18333)</source>
-        <translation>Makiramdam king koneksion king &lt;port&gt;(default: 8333 o testnet: 18333)</translation>
-    </message>
-    <message>
-        <source>Maintain at most &lt;n&gt; connections to peers (default: 125)</source>
-        <translation>Mag-maintain peka &lt;n&gt; koneksion keng peers (default: 125)</translation>
     </message>
     <message>
         <source>Connect to a node to retrieve peer addresses, and disconnect</source>
@@ -1401,14 +1409,6 @@ Address: %4
     <message>
         <source>Specify your own public address</source>
         <translation>Sabyan me ing kekang pampublikong address</translation>
-    </message>
-    <message>
-        <source>Threshold for disconnecting misbehaving peers (default: 100)</source>
-        <translation>Threshold for disconnecting misbehaving peers (default: 100)</translation>
-    </message>
-    <message>
-        <source>Number of seconds to keep misbehaving peers from reconnecting (default: 86400)</source>
-        <translation>Number of seconds to keep misbehaving peers from reconnecting (default: 86400)</translation>
     </message>
     <message>
         <source>Accept command line and JSON-RPC commands</source>
@@ -1463,56 +1463,8 @@ Address: %4
         <translation>Kamalian: Mababa ne ing espasyu king disk!</translation>
     </message>
     <message>
-        <source>Error: system error: </source>
-        <translation>Kamalian: kamalian na ning sistema:</translation>
-    </message>
-    <message>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
         <translation>Memali ya ing pamakiramdam kareng gang nanung port. Gamita me ini -listen=0 nung buri me ini.</translation>
-    </message>
-    <message>
-        <source>Failed to read block info</source>
-        <translation>Me-mali king pamagbasa king impormasion ning block</translation>
-    </message>
-    <message>
-        <source>Failed to read block</source>
-        <translation>Me-mali king pamagbasa keng block</translation>
-    </message>
-    <message>
-        <source>Failed to sync block index</source>
-        <translation>Me-mali para i-sync ing block index</translation>
-    </message>
-    <message>
-        <source>Failed to write block index</source>
-        <translation>Me-mali king pamanyulat king block index</translation>
-    </message>
-    <message>
-        <source>Failed to write block info</source>
-        <translation>Me-mali king pamanyulat king block info</translation>
-    </message>
-    <message>
-        <source>Failed to write block</source>
-        <translation>Me-mali king pamanyulat block</translation>
-    </message>
-    <message>
-        <source>Failed to write file info</source>
-        <translation>Me-mali king pamanyulat king file info</translation>
-    </message>
-    <message>
-        <source>Failed to write to coin database</source>
-        <translation>Me-mali king pamanyulat king coin database</translation>
-    </message>
-    <message>
-        <source>Failed to write transaction index</source>
-        <translation>Me-mali king pamanyulat king index ning transaksion</translation>
-    </message>
-    <message>
-        <source>Failed to write undo data</source>
-        <translation>Me-mali king pamanyulat king undo data</translation>
-    </message>
-    <message>
-        <source>How many blocks to check at startup (default: 288, 0 = all)</source>
-        <translation>Pilan la reng block a lawan keng umpisa (default: 288, 0 = all)</translation>
     </message>
     <message>
         <source>Information</source>
@@ -1521,14 +1473,6 @@ Address: %4
     <message>
         <source>Send trace/debug info to console instead of debug.log file</source>
         <translation>Magpadalang trace/debug info okeng console kesa keng debug.log file</translation>
-    </message>
-    <message>
-        <source>Set minimum block size in bytes (default: 0)</source>
-        <translation>Ilage ing pekaditak a dagul na ning block king bytes (default: 0)</translation>
-    </message>
-    <message>
-        <source>System error: </source>
-        <translation>Kamalian ning sistema:</translation>
     </message>
     <message>
         <source>Transaction too large</source>
@@ -1559,24 +1503,12 @@ Address: %4
         <translation>I-upgrade ing wallet king pekabayung porma</translation>
     </message>
     <message>
-        <source>Set key pool size to &lt;n&gt; (default: 100)</source>
-        <translation>I-set ing key pool size king &lt;n&gt;(default: 100)</translation>
-    </message>
-    <message>
         <source>Rescan the block chain for missing wallet transactions</source>
         <translation>I-scan pasibayu ing block chain para kareng mauaualang transaksion</translation>
     </message>
     <message>
         <source>Use OpenSSL (https) for JSON-RPC connections</source>
         <translation>Gumamit OpenSSL(https) para king JSON-RPC koneksion</translation>
-    </message>
-    <message>
-        <source>Server certificate file (default: server.cert)</source>
-        <translation>Server certificate file (default: server.cert)</translation>
-    </message>
-    <message>
-        <source>Server private key (default: server.pem)</source>
-        <translation>Server private key (default: server.pem)</translation>
     </message>
     <message>
         <source>This help message</source>
