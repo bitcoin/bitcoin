@@ -391,10 +391,6 @@
         <translation>Välilehtipalkki</translation>
     </message>
     <message>
-        <source>[testnet]</source>
-        <translation>[testnet]</translation>
-    </message>
-    <message>
         <source>Bitcoin Core</source>
         <translation>Bitcoin-ydin</translation>
     </message>
@@ -433,10 +429,6 @@
     <message>
         <source>No block source available...</source>
         <translation>Lohkojen lähdettä ei saatavilla...</translation>
-    </message>
-    <message>
-        <source>Processed %1 blocks of transaction history.</source>
-        <translation>Käsitelty %1 lohkoa rahansiirtohistoriasta</translation>
     </message>
     <message numerus="yes">
         <source>%n hour(s)</source>
@@ -915,15 +907,7 @@ Osoite: %4</translation>
         <source>Error</source>
         <translation>Virhe</translation>
     </message>
-    <message>
-        <source>GB of free space available</source>
-        <translation>GB vapaata tilaa</translation>
-    </message>
-    <message>
-        <source>(of %1GB needed)</source>
-        <translation>(tarvitaan %1GB)</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>OpenURIDialog</name>
     <message>
@@ -1165,10 +1149,6 @@ Osoite: %4</translation>
         <translation>Näytetyt tiedot eivät välttämättä ole ajantasalla. Lompakkosi synkronoituu Bitcoin-verkon kanssa automaattisesti yhteyden muodostamisen jälkeen, mutta synkronointi on vielä meneillään.</translation>
     </message>
     <message>
-        <source>Wallet</source>
-        <translation>Lompakko</translation>
-    </message>
-    <message>
         <source>Watch-only:</source>
         <translation>Seuranta:</translation>
     </message>
@@ -1209,8 +1189,8 @@ Osoite: %4</translation>
         <translation>Nykyinen tase seurantaosoitetteissa</translation>
     </message>
     <message>
-        <source>&lt;b&gt;Recent transactions&lt;/b&gt;</source>
-        <translation>&lt;b&gt;Viimeisimmät rahansiirrot&lt;/b&gt;</translation>
+        <source>Current total balance in watch-only addresses</source>
+        <translation>Nykyinen tase seurantaosoitetteissa</translation>
     </message>
     <message>
         <source>out of sync</source>
@@ -1228,6 +1208,14 @@ Osoite: %4</translation>
         <translation>Virheellinen maksuosoite %1</translation>
     </message>
     <message>
+        <source>Payment request rejected</source>
+        <translation>Maksupyyntö hylätty</translation>
+    </message>
+    <message>
+        <source>Payment request has expired.</source>
+        <translation>Maksupyyntö on vanhentunut.</translation>
+    </message>
+    <message>
         <source>Requested payment amount of %1 is too small (considered dust).</source>
         <translation>Maksupyyntö %1 on liian pieni (huomioidaan tomuna).</translation>
     </message>
@@ -1242,6 +1230,10 @@ Osoite: %4</translation>
     <message>
         <source>Payment request fetch URL is invalid: %1</source>
         <translation>Maksupyynnön haku URL on virheellinen: %1</translation>
+    </message>
+    <message>
+        <source>URI cannot be parsed! This can be caused by an invalid Bitcoin address or malformed URI parameters.</source>
+        <translation>URIa ei voitu jäsentää! Tämä voi johtua kelvottomasta Bitcoin-osoitteesta tai virheellisistä URI parametreista.</translation>
     </message>
     <message>
         <source>Payment request file handling</source>
@@ -1274,12 +1266,20 @@ Osoite: %4</translation>
 </context>
 <context>
     <name>PeerTableModel</name>
+    <message>
+        <source>User Agent</source>
+        <translation>Käyttöliittymä</translation>
+    </message>
     </context>
 <context>
     <name>QObject</name>
     <message>
         <source>Amount</source>
         <translation>Määrä</translation>
+    </message>
+    <message>
+        <source>%1 d</source>
+        <translation>%1 d</translation>
     </message>
     <message>
         <source>%1 h</source>
@@ -1290,10 +1290,18 @@ Osoite: %4</translation>
         <translation>%1 m</translation>
     </message>
     <message>
+        <source>%1 s</source>
+        <translation>%1 s</translation>
+    </message>
+    <message>
         <source>N/A</source>
         <translation>Ei saatavilla</translation>
     </message>
-    </context>
+    <message>
+        <source>%1 ms</source>
+        <translation>%1 ms</translation>
+    </message>
+</context>
 <context>
     <name>QRImageWidget</name>
     <message>
@@ -1366,6 +1374,22 @@ Osoite: %4</translation>
     <message>
         <source>Current number of blocks</source>
         <translation>Nykyinen Lohkojen määrä</translation>
+    </message>
+    <message>
+        <source>Received</source>
+        <translation>Vastaanotetut</translation>
+    </message>
+    <message>
+        <source>Sent</source>
+        <translation>Lähetetyt</translation>
+    </message>
+    <message>
+        <source>Version</source>
+        <translation>Versio</translation>
+    </message>
+    <message>
+        <source>User Agent</source>
+        <translation>Käyttöliittymä</translation>
     </message>
     <message>
         <source>Last block time</source>
@@ -1442,6 +1466,10 @@ Osoite: %4</translation>
     <message>
         <source>%1 GB</source>
         <translation>%1 GB</translation>
+    </message>
+    <message>
+        <source>Unknown</source>
+        <translation>Tuntematon</translation>
     </message>
     </context>
 <context>
@@ -2482,24 +2510,8 @@ Osoite: %4</translation>
         <translation>Asetukset:</translation>
     </message>
     <message>
-        <source>Specify configuration file (default: bitcoin.conf)</source>
-        <translation>Määritä asetustiedosto (oletus: bitcoin.conf)</translation>
-    </message>
-    <message>
-        <source>Specify pid file (default: bitcoind.pid)</source>
-        <translation>Määritä pid-tiedosto (oletus: bitcoin.pid)</translation>
-    </message>
-    <message>
         <source>Specify data directory</source>
         <translation>Määritä data-hakemisto</translation>
-    </message>
-    <message>
-        <source>Listen for connections on &lt;port&gt; (default: 8333 or testnet: 18333)</source>
-        <translation>Kuuntele yhteyksiä portista &lt;port&gt; (oletus: 8333 tai testnet: 18333)</translation>
-    </message>
-    <message>
-        <source>Maintain at most &lt;n&gt; connections to peers (default: 125)</source>
-        <translation>Pidä enintään &lt;n&gt; yhteyttä verkkoihin (oletus: 125)</translation>
     </message>
     <message>
         <source>Connect to a node to retrieve peer addresses, and disconnect</source>
@@ -2508,18 +2520,6 @@ Osoite: %4</translation>
     <message>
         <source>Specify your own public address</source>
         <translation>Määritä julkinen osoitteesi</translation>
-    </message>
-    <message>
-        <source>Threshold for disconnecting misbehaving peers (default: 100)</source>
-        <translation>Kynnysarvo aikakatkaisulle heikosti toimiville verkoille (oletus: 100)</translation>
-    </message>
-    <message>
-        <source>Number of seconds to keep misbehaving peers from reconnecting (default: 86400)</source>
-        <translation>Sekuntien määrä, kuinka kauan uudelleenkytkeydytään verkkoihin (oletus: 86400)</translation>
-    </message>
-    <message>
-        <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 8332 or testnet: 18332)</source>
-        <translation>Kuuntele JSON-RPC -yhteyksiä portista &lt;port&gt; (oletus: 8332 or testnet: 18332)</translation>
     </message>
     <message>
         <source>Accept command line and JSON-RPC commands</source>
@@ -2562,16 +2562,8 @@ esimerkiksi: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
 </translation>
     </message>
     <message>
-        <source>Acceptable ciphers (default: TLSv1.2+HIGH:TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!3DES:@STRENGTH)</source>
-        <translation>Hyväksytyt koodit (oletus: TLSv1.2+HIGH:TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!3DES:@STRENGTH)</translation>
-    </message>
-    <message>
         <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
         <translation>Kytkeydy annettuun osoitteeseen ja pidä linja aina auki. Käytä [host]:portin merkintätapaa IPv6:lle.</translation>
-    </message>
-    <message>
-        <source>Continuously rate-limit free transactions to &lt;n&gt;*1000 bytes per minute (default:15)</source>
-        <translation>Yhtäaikaisesti rajaa vapaat rahansiirrot &lt;n&gt;*1000 tavua per minuutti (oletus: 15)</translation>
     </message>
     <message>
         <source>Enter regression test mode, which uses a special chain in which blocks can be solved instantly.</source>
@@ -2590,14 +2582,6 @@ esimerkiksi: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
         <translation>Suorita käsky kun lompakossa rahansiirto muuttuu (%s cmd on vaihdettu TxID kanssa)</translation>
     </message>
     <message>
-        <source>Flush database activity from memory pool to disk log every &lt;n&gt; megabytes (default: 100)</source>
-        <translation>Aja tietokannan toimet muistivarannosta kovalevylogiin joka &lt;n&gt; megatavu (oletus: 100)</translation>
-    </message>
-    <message>
-        <source>How thorough the block verification of -checkblocks is (0-4, default: 3)</source>
-        <translation>Kuinka vaativa lohkonvarmistus -checkblocks on (0-4, oletus:  3)</translation>
-    </message>
-    <message>
         <source>In this mode -genproclimit controls how many blocks are generated immediately.</source>
         <translation>Tässä moodissa -genproclimit ohjaa kuinka monta lohkoa luodaan välittömästi.</translation>
     </message>
@@ -2606,20 +2590,12 @@ esimerkiksi: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
         <translation>Aseta script varmistuksen threadien lukumäärä (%u - %d, 0= auto, &lt;0 = jätä näin monta ydintä vapaaksi, oletus: %d)</translation>
     </message>
     <message>
-        <source>Set the processor limit for when generation is on (-1 = unlimited, default: -1)</source>
-        <translation>Aseta prosessorin raja kun luonti on päällä (-1 = rajoittamaton, oletus: -1)</translation>
-    </message>
-    <message>
         <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
         <translation>Tämä on esi-julkaistu testiversio - Käytä omalla riskillä - Ei saa käytää louhimiseen tai kauppasovelluksiin.</translation>
     </message>
     <message>
         <source>Unable to bind to %s on this computer. Bitcoin Core is probably already running.</source>
         <translation>Ei voida yhdistää %s tässä tietokoneessa. Bitcoin Core on luultavasti jo käynnissä.</translation>
-    </message>
-    <message>
-        <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: -proxy)</source>
-        <translation>Käytä erillistä SOCKS5 proxya tavoittaaksesi vertaiset Tor palvelun kautta (oletus: -proxy)</translation>
     </message>
     <message>
         <source>Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
@@ -2644,10 +2620,6 @@ esimerkiksi: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
     <message>
         <source>(default: 1)</source>
         <translation>(oletus: 1)</translation>
-    </message>
-    <message>
-        <source>(default: wallet.dat)</source>
-        <translation>(oletus: wallet.dat)</translation>
     </message>
     <message>
         <source>&lt;category&gt; can be:</source>
@@ -2676,10 +2648,6 @@ esimerkiksi: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
     <message>
         <source>Debugging/Testing options:</source>
         <translation>Debuggaus/Testauksen valinnat:</translation>
-    </message>
-    <message>
-        <source>Disable safemode, override a real safe mode event (default: 0)</source>
-        <translation>Poista safemode, ohita oikea turvallinen mooditapahtuma (oletus: 0)</translation>
     </message>
     <message>
         <source>Discover own IP address (default: 1 when listening and no -externalip)</source>
@@ -2718,64 +2686,8 @@ esimerkiksi: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
         <translation>Virhe: Lompakko on lukittu, rahansiirtoa ei voida luoda</translation>
     </message>
     <message>
-        <source>Error: system error: </source>
-        <translation>Virhe: Järjestelmävirhe</translation>
-    </message>
-    <message>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
         <translation>Ei onnistuttu kuuntelemaan missään portissa. Käytä -listen=0 jos haluat tätä.</translation>
-    </message>
-    <message>
-        <source>Failed to read block info</source>
-        <translation>Lohkotietojen luku epäonnistui</translation>
-    </message>
-    <message>
-        <source>Failed to read block</source>
-        <translation>Lohkon luku epäonnistui</translation>
-    </message>
-    <message>
-        <source>Failed to sync block index</source>
-        <translation>Lohkoindeksin synkronointi epäonnistui</translation>
-    </message>
-    <message>
-        <source>Failed to write block index</source>
-        <translation>Lohkoindeksin kirjoitus epäonnistui</translation>
-    </message>
-    <message>
-        <source>Failed to write block info</source>
-        <translation>Lohkotiedon kirjoitus epäonnistui</translation>
-    </message>
-    <message>
-        <source>Failed to write block</source>
-        <translation>Lohkon kirjoitus epäonnistui</translation>
-    </message>
-    <message>
-        <source>Failed to write file info</source>
-        <translation>Tiedoston tietojen kirjoitus epäonnistui</translation>
-    </message>
-    <message>
-        <source>Failed to write to coin database</source>
-        <translation>Kolikkotietokannan kirjoitus epäonnistui</translation>
-    </message>
-    <message>
-        <source>Failed to write transaction index</source>
-        <translation>Rahasiirtojen indeksin kirjoitus epäonnistui</translation>
-    </message>
-    <message>
-        <source>Failed to write undo data</source>
-        <translation>Palautustiedon kirjoitus epäonnistui</translation>
-    </message>
-    <message>
-        <source>Force safe mode (default: 0)</source>
-        <translation>Pakota safe moodi (oletus: 0)</translation>
-    </message>
-    <message>
-        <source>Generate coins (default: 0)</source>
-        <translation>Generoi kolikoita (vakio: 0)</translation>
-    </message>
-    <message>
-        <source>How many blocks to check at startup (default: 288, 0 = all)</source>
-        <translation>Kuinka monta lohkoa tarkistetaan käynnistettäessä (oletus: 288, 0 = kaikki)</translation>
     </message>
     <message>
         <source>If &lt;category&gt; is not supplied, output all debugging information.</source>
@@ -2798,10 +2710,6 @@ esimerkiksi: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
         <translation>Ei tarpeeksi tiedostomerkintöjä vapaana.</translation>
     </message>
     <message>
-        <source>Prepend debug output with timestamp (default: 1)</source>
-        <translation>Lisää aikamerkki debug tulosteen eteen (oletus: 1)</translation>
-    </message>
-    <message>
         <source>Rebuild block chain index from current blk000??.dat files</source>
         <translation>Uudelleenrakenna lohkoketjuindeksi nykyisistä blk000??.dat tiedostoista</translation>
     </message>
@@ -2814,16 +2722,8 @@ esimerkiksi: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
         <translation>Aseta lohkon maksimikoko tavuissa (oletus: %d)</translation>
     </message>
     <message>
-        <source>Set the number of threads to service RPC calls (default: 4)</source>
-        <translation>Aseta threadien lukumäärä RPC kutsuille (oletus: 4)</translation>
-    </message>
-    <message>
         <source>Specify wallet file (within data directory)</source>
         <translation>Aseta lompakkotiedosto (data-hakemiston sisällä)</translation>
-    </message>
-    <message>
-        <source>Spend unconfirmed change when sending transactions (default: 1)</source>
-        <translation>Käytä varmistamattomia vaihtorahoja lähetettäessä rahansiirtoja (oletus: 1)</translation>
     </message>
     <message>
         <source>This is intended for regression testing tools and app development.</source>
@@ -2862,12 +2762,20 @@ esimerkiksi: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
         <translation>Aja komento kun olennainen hälytys vastaanotetaan tai nähdään todella pitkä haara (%s komennossa korvataan viestillä)</translation>
     </message>
     <message>
-        <source>Output debugging information (default: 0, supplying &lt;category&gt; is optional)</source>
-        <translation>Tulosta debuggaustieto (oletus: 0, annettu &lt;kategoria&gt; valinnainen)</translation>
-    </message>
-    <message>
         <source>Set maximum size of high-priority/low-fee transactions in bytes (default: %d)</source>
         <translation>Aseta maksimikoko korkea prioriteetti/pieni palkkio rahansiirtoihin tavuissa (oletus: %d)</translation>
+    </message>
+    <message>
+        <source>Connect through SOCKS5 proxy</source>
+        <translation>Yhdistä SOCKS5 proxin kautta</translation>
+    </message>
+    <message>
+        <source>Copyright (C) 2009-%i The Bitcoin Core Developers</source>
+        <translation>Copyright (C) 2009-%i  Bitcoin kehittäjät</translation>
+    </message>
+    <message>
+        <source>Error loading wallet.dat: Wallet requires newer version of Bitcoin Core</source>
+        <translation>Virhe ladattaessa wallet.dat-tiedostoa: Tarvitset uudemman version Bitcoinista</translation>
     </message>
     <message>
         <source>Information</source>
@@ -2882,40 +2790,8 @@ esimerkiksi: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
         <translation>Virheellinen määrä -mintxfee=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
-        <source>Limit size of signature cache to &lt;n&gt; entries (default: 50000)</source>
-        <translation>Rajaa allekirjoituksen välimuistin koko &lt;n&gt; alkioon (oletus: 50000)</translation>
-    </message>
-    <message>
-        <source>Log transaction priority and fee per kB when mining blocks (default: 0)</source>
-        <translation>Kirjaa rahansiirron prioriteetti ja palkkio per kB kun louhitaan lohkoja (oletus: 0)</translation>
-    </message>
-    <message>
-        <source>Maintain a full transaction index (default: 0)</source>
-        <translation>Ylläpidä täydellistä rahasiirtojen indeksiä (oletus: 0)</translation>
-    </message>
-    <message>
-        <source>Maximum per-connection receive buffer, &lt;n&gt;*1000 bytes (default: 5000)</source>
-        <translation>Suurin vastaanottopuskuri yksittäiselle yhteydelle, &lt;n&gt;*1000 tavua (vakioasetus: 5000)</translation>
-    </message>
-    <message>
-        <source>Maximum per-connection send buffer, &lt;n&gt;*1000 bytes (default: 1000)</source>
-        <translation>Suurin lähetyspuskuri yksittäiselle yhteydelle, &lt;n&gt;*1000 tavua (vakioasetus: 1000)</translation>
-    </message>
-    <message>
-        <source>Only accept block chain matching built-in checkpoints (default: 1)</source>
-        <translation>Hyväksy vain lohkoketjua vastaavat sisäänrakennetut varmistuspisteet (Oletus: 1)</translation>
-    </message>
-    <message>
-        <source>Only connect to nodes in network &lt;net&gt; (IPv4, IPv6 or Tor)</source>
-        <translation>Yhdistä vain noodeihin verkossa &lt;net&gt; (IPv4, IPv6 tai Tor)</translation>
-    </message>
-    <message>
         <source>Print block on startup, if found in block index</source>
         <translation>Tulosta lohko käynnistyksessä jos löydetään lohkoindeksistä</translation>
-    </message>
-    <message>
-        <source>Print block tree on startup (default: 0)</source>
-        <translation>Tulosta lohkopuu käynnistyksessä (oletus: 0)</translation>
     </message>
     <message>
         <source>RPC SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
@@ -2934,20 +2810,8 @@ esimerkiksi: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
         <translation>Satunnaisesti sekoita 1 joka &lt;n&gt; verkkoviestistä</translation>
     </message>
     <message>
-        <source>Run a thread to flush wallet periodically (default: 1)</source>
-        <translation>Aja threadi jossa tallennetaan lompakko ajoittain (oletus: 1)</translation>
-    </message>
-    <message>
         <source>Send trace/debug info to console instead of debug.log file</source>
         <translation>Lähetä jäljitys/debug-tieto konsoliin, debug.log-tiedoston sijaan</translation>
-    </message>
-    <message>
-        <source>Set minimum block size in bytes (default: 0)</source>
-        <translation>Asetan pienin lohkon koko tavuissa (vakioasetus: 0)</translation>
-    </message>
-    <message>
-        <source>Sets the DB_PRIVATE flag in the wallet db environment (default: 1)</source>
-        <translation>Asettaa DB_PRIVATE lipun lompakon tietokantaympäristössä (oletus: 1)</translation>
     </message>
     <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>
@@ -2962,14 +2826,6 @@ esimerkiksi: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
         <translation>Siirron vahvistus epäonnistui</translation>
     </message>
     <message>
-        <source>Specify connection timeout in milliseconds (default: 5000)</source>
-        <translation>Määritä yhteyden aikakataisu millisekunneissa (vakioasetus: 5000)</translation>
-    </message>
-    <message>
-        <source>System error: </source>
-        <translation>Järjestelmävirhe:</translation>
-    </message>
-    <message>
         <source>Transaction amount too small</source>
         <translation>Siirtosumma liian pieni</translation>
     </message>
@@ -2982,16 +2838,16 @@ esimerkiksi: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
         <translation>Siirtosumma liian iso</translation>
     </message>
     <message>
-        <source>Use UPnP to map the listening port (default: 0)</source>
-        <translation>Käytä UPnP:tä kuunneltavan portin avaamiseen (vakioasetus: 0)</translation>
-    </message>
-    <message>
         <source>Use UPnP to map the listening port (default: 1 when listening)</source>
         <translation>Käytä UPnP:tä kuunneltavan portin avaamiseen (vakioasetus: 1 kun kuuntelemassa)</translation>
     </message>
     <message>
         <source>Username for JSON-RPC connections</source>
         <translation>Käyttäjätunnus JSON-RPC-yhteyksille</translation>
+    </message>
+    <message>
+        <source>Wallet needed to be rewritten: restart Bitcoin Core to complete</source>
+        <translation>Lompakko tarvitsee uudelleenkirjoittaa: käynnistä Bitcoin uudelleen</translation>
     </message>
     <message>
         <source>Warning</source>
@@ -3026,24 +2882,12 @@ esimerkiksi: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
         <translation>Päivitä lompakko uusimpaan formaattiin</translation>
     </message>
     <message>
-        <source>Set key pool size to &lt;n&gt; (default: 100)</source>
-        <translation>Aseta avainpoolin koko arvoon &lt;n&gt; (oletus: 100)</translation>
-    </message>
-    <message>
         <source>Rescan the block chain for missing wallet transactions</source>
         <translation>Skannaa uudelleen lohkoketju lompakon puuttuvien rahasiirtojen vuoksi</translation>
     </message>
     <message>
         <source>Use OpenSSL (https) for JSON-RPC connections</source>
         <translation>Käytä OpenSSL:ää (https) JSON-RPC-yhteyksille</translation>
-    </message>
-    <message>
-        <source>Server certificate file (default: server.cert)</source>
-        <translation>Palvelimen sertifikaatti-tiedosto (oletus: server.cert)</translation>
-    </message>
-    <message>
-        <source>Server private key (default: server.pem)</source>
-        <translation>Palvelimen yksityisavain (oletus: server.pem)</translation>
     </message>
     <message>
         <source>This help message</source>

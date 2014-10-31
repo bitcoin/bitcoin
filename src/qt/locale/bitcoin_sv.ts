@@ -392,10 +392,6 @@ Var vänlig och försök igen.</translation>
         <translation>Verktygsfält för Tabbar</translation>
     </message>
     <message>
-        <source>[testnet]</source>
-        <translation>[testnet]</translation>
-    </message>
-    <message>
         <source>Bitcoin Core</source>
         <translation>Bitcoin Kärna</translation>
     </message>
@@ -434,10 +430,6 @@ Var vänlig och försök igen.</translation>
     <message>
         <source>No block source available...</source>
         <translation>Ingen block-källa tillgänglig...</translation>
-    </message>
-    <message>
-        <source>Processed %1 blocks of transaction history.</source>
-        <translation>Bearbetat %1 block i transaktionshistoriken.</translation>
     </message>
     <message numerus="yes">
         <source>%n hour(s)</source>
@@ -913,15 +905,7 @@ Adress: %4
         <source>Error</source>
         <translation>Fel</translation>
     </message>
-    <message>
-        <source>GB of free space available</source>
-        <translation>GB ledigt utrymme är tillgängligt</translation>
-    </message>
-    <message>
-        <source>(of %1GB needed)</source>
-        <translation>(av %1GB behövs)</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>OpenURIDialog</name>
     <message>
@@ -1163,10 +1147,6 @@ Adress: %4
         <translation>Den visade informationen kan vara inaktuell. Plånboken synkroniseras automatiskt med Bitcoin-nätverket efter att anslutningen är upprättad, men denna process har inte slutförts ännu.</translation>
     </message>
     <message>
-        <source>Wallet</source>
-        <translation>Plånbok</translation>
-    </message>
-    <message>
         <source>Watch-only:</source>
         <translation>Granska-bara:</translation>
     </message>
@@ -1217,10 +1197,6 @@ Adress: %4
     <message>
         <source>Current total balance in watch-only addresses</source>
         <translation>Nuvarande total balans i granska-bara adresser</translation>
-    </message>
-    <message>
-        <source>&lt;b&gt;Recent transactions&lt;/b&gt;</source>
-        <translation>&lt;b&gt;Nyligen genomförda transaktioner&lt;/b&gt;</translation>
     </message>
     <message>
         <source>out of sync</source>
@@ -1482,10 +1458,6 @@ Adress: %4
         <translation>Tjänster</translation>
     </message>
     <message>
-        <source>Sync Node</source>
-        <translation>Syncnod</translation>
-    </message>
-    <message>
         <source>Starting Height</source>
         <translation>Starthöjd</translation>
     </message>
@@ -1612,14 +1584,6 @@ Adress: %4
     <message>
         <source>Outbound</source>
         <translation>Utgående</translation>
-    </message>
-    <message>
-        <source>Yes</source>
-        <translation>Ja</translation>
-    </message>
-    <message>
-        <source>No</source>
-        <translation>Nej</translation>
     </message>
     <message>
         <source>Unknown</source>
@@ -2466,6 +2430,10 @@ Adress: %4
         <translation>Genererade</translation>
     </message>
     <message>
+        <source>watch-only</source>
+        <translation>granska-bara</translation>
+    </message>
+    <message>
         <source>(n/a)</source>
         <translation>(n/a)</translation>
     </message>
@@ -2692,24 +2660,8 @@ Adress: %4
         <translation>Inställningar:</translation>
     </message>
     <message>
-        <source>Specify configuration file (default: bitcoin.conf)</source>
-        <translation>Ange konfigurationsfil (förvalt: bitcoin.conf)</translation>
-    </message>
-    <message>
-        <source>Specify pid file (default: bitcoind.pid)</source>
-        <translation>Ange pid fil (förvalt: bitcoind.pid)</translation>
-    </message>
-    <message>
         <source>Specify data directory</source>
         <translation>Ange katalog för data</translation>
-    </message>
-    <message>
-        <source>Listen for connections on &lt;port&gt; (default: 8333 or testnet: 18333)</source>
-        <translation>Lyssna efter anslutningar på &lt;port&gt; (förvalt: 8333 eller testnet: 18333)</translation>
-    </message>
-    <message>
-        <source>Maintain at most &lt;n&gt; connections to peers (default: 125)</source>
-        <translation>Ha som mest &lt;n&gt; anslutningar till andra klienter (förvalt: 125)</translation>
     </message>
     <message>
         <source>Connect to a node to retrieve peer addresses, and disconnect</source>
@@ -2718,18 +2670,6 @@ Adress: %4
     <message>
         <source>Specify your own public address</source>
         <translation>Ange din egen publika adress</translation>
-    </message>
-    <message>
-        <source>Threshold for disconnecting misbehaving peers (default: 100)</source>
-        <translation>Tröskelvärde för att koppla ifrån klienter som missköter sig (förvalt: 100)</translation>
-    </message>
-    <message>
-        <source>Number of seconds to keep misbehaving peers from reconnecting (default: 86400)</source>
-        <translation>Antal sekunder att hindra klienter som missköter sig från att ansluta (förvalt: 86400)</translation>
-    </message>
-    <message>
-        <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 8332 or testnet: 18332)</source>
-        <translation>Lyssna på JSON-RPC-anslutningar på &lt;port&gt; (förvalt: 8332 eller testnet: 18332)</translation>
     </message>
     <message>
         <source>Accept command line and JSON-RPC commands</source>
@@ -2772,16 +2712,8 @@ till exempel: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
 </translation>
     </message>
     <message>
-        <source>Acceptable ciphers (default: TLSv1.2+HIGH:TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!3DES:@STRENGTH)</source>
-        <translation>Accepterade krypteringsalgoritmer  (förvalt: TLSv1.2+HIGH:TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!3DES:@STRENGTH)</translation>
-    </message>
-    <message>
         <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
         <translation>Bind till given adress och lyssna alltid på den. Använd [värd]:port notation för IPv6</translation>
-    </message>
-    <message>
-        <source>Continuously rate-limit free transactions to &lt;n&gt;*1000 bytes per minute (default:15)</source>
-        <translation>Antalsbegränsa kontinuerligt fria transaktioner till &lt;n&gt;*1000 bytes per minut (förvalt:15)</translation>
     </message>
     <message>
         <source>Delete all wallet transactions and only recover those parts of the blockchain through -rescan on startup</source>
@@ -2804,14 +2736,6 @@ till exempel: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
         <translation>Exekvera kommando när en plånbokstransaktion ändras (%s i cmd är ersatt av TxID)</translation>
     </message>
     <message>
-        <source>Flush database activity from memory pool to disk log every &lt;n&gt; megabytes (default: 100)</source>
-        <translation>Töm databasens minnespool till disk varje &lt;n&gt; megabytes (förvalt: 100)</translation>
-    </message>
-    <message>
-        <source>How thorough the block verification of -checkblocks is (0-4, default: 3)</source>
-        <translation>Hur grundlig blockverifikationen vid -checkblocks är (0-4, förvalt: 3)</translation>
-    </message>
-    <message>
         <source>In this mode -genproclimit controls how many blocks are generated immediately.</source>
         <translation>I denna mode kontrollerar -genproclimit hur många block som genereras på en gång.</translation>
     </message>
@@ -2820,20 +2744,12 @@ till exempel: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
         <translation>Ange antalet skriptkontrolltrådar (%u till %d, 0 = auto, &lt;0 = lämna så många kärnor lediga, förval: %d)</translation>
     </message>
     <message>
-        <source>Set the processor limit for when generation is on (-1 = unlimited, default: -1)</source>
-        <translation>Sätt processorbegränsning när blockgenereringen är på (-1 = obegränsad, förvalt: -1)</translation>
-    </message>
-    <message>
         <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
         <translation>Detta är ett förhands testbygge - använd på egen risk - använd inte för mining eller handels applikationer</translation>
     </message>
     <message>
         <source>Unable to bind to %s on this computer. Bitcoin Core is probably already running.</source>
         <translation>Det går inte att binda till %s på den här datorn. Bitcoin Core är förmodligen redan igång.</translation>
-    </message>
-    <message>
-        <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: -proxy)</source>
-        <translation>Använd separat SOCKS5 proxy för att nå kollegor via dolda tjänster i Tor (default: -proxy)</translation>
     </message>
     <message>
         <source>Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
@@ -2858,10 +2774,6 @@ till exempel: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
     <message>
         <source>(default: 1)</source>
         <translation>(förvalt: 1)</translation>
-    </message>
-    <message>
-        <source>(default: wallet.dat)</source>
-        <translation>(förvalt: wallet.dat)</translation>
     </message>
     <message>
         <source>&lt;category&gt; can be:</source>
@@ -2890,10 +2802,6 @@ till exempel: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
     <message>
         <source>Debugging/Testing options:</source>
         <translation>Avlusnings/Testnings optioner:</translation>
-    </message>
-    <message>
-        <source>Disable safemode, override a real safe mode event (default: 0)</source>
-        <translation>Avaktivera säkert läge. Åsidosätt en riktigt säkert läge händelse (förvalt: 0)</translation>
     </message>
     <message>
         <source>Discover own IP address (default: 1 when listening and no -externalip)</source>
@@ -2932,64 +2840,8 @@ till exempel: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
         <translation>Fel: Plånboken är låst, det går ej att skapa en transaktion!</translation>
     </message>
     <message>
-        <source>Error: system error: </source>
-        <translation>Fel: systemfel:</translation>
-    </message>
-    <message>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
         <translation>Misslyckades att lyssna på någon port. Använd -listen=0 om du vill detta.</translation>
-    </message>
-    <message>
-        <source>Failed to read block info</source>
-        <translation>Misslyckades att läsa blockinformation</translation>
-    </message>
-    <message>
-        <source>Failed to read block</source>
-        <translation>Misslyckades att läsa blocket</translation>
-    </message>
-    <message>
-        <source>Failed to sync block index</source>
-        <translation>Misslyckades att synkronisera blockindex</translation>
-    </message>
-    <message>
-        <source>Failed to write block index</source>
-        <translation>Misslyckades att skriva blockindex</translation>
-    </message>
-    <message>
-        <source>Failed to write block info</source>
-        <translation>Misslyckades att skriva blockinformation</translation>
-    </message>
-    <message>
-        <source>Failed to write block</source>
-        <translation>Misslyckades att skriva blocket</translation>
-    </message>
-    <message>
-        <source>Failed to write file info</source>
-        <translation>Misslyckades att skriva filinformation</translation>
-    </message>
-    <message>
-        <source>Failed to write to coin database</source>
-        <translation>Misslyckades att skriva till myntdatabas</translation>
-    </message>
-    <message>
-        <source>Failed to write transaction index</source>
-        <translation>Misslyckades att skriva transaktionsindex</translation>
-    </message>
-    <message>
-        <source>Failed to write undo data</source>
-        <translation>Misslyckades att skriva ångradata</translation>
-    </message>
-    <message>
-        <source>Force safe mode (default: 0)</source>
-        <translation>Tvångskör i säkert läge (förvalt: 0)</translation>
-    </message>
-    <message>
-        <source>Generate coins (default: 0)</source>
-        <translation>Generera mynt (förvalt: 0)</translation>
-    </message>
-    <message>
-        <source>How many blocks to check at startup (default: 288, 0 = all)</source>
-        <translation>Hur många block att kontrollera vid uppstart (standardvärde: 288, 0 = alla)</translation>
     </message>
     <message>
         <source>If &lt;category&gt; is not supplied, output all debugging information.</source>
@@ -3012,10 +2864,6 @@ till exempel: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
         <translation>Inte tillräckligt med filbeskrivningar tillgängliga.</translation>
     </message>
     <message>
-        <source>Prepend debug output with timestamp (default: 1)</source>
-        <translation>Skriv ut tidsstämpel i avlusningsinformationen (förvalt: 1)</translation>
-    </message>
-    <message>
         <source>Rebuild block chain index from current blk000??.dat files</source>
         <translation>Återskapa blockkedjans index från nuvarande blk000??.dat filer</translation>
     </message>
@@ -3028,20 +2876,8 @@ till exempel: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
         <translation>Sätt maximal blockstorlek i byte (förvalt: %d)</translation>
     </message>
     <message>
-        <source>Set the number of threads to service RPC calls (default: 4)</source>
-        <translation>Ange antalet trådar för att hantera RPC anrop (standard: 4)</translation>
-    </message>
-    <message>
         <source>Specify wallet file (within data directory)</source>
         <translation>Ange plånboksfil (inom datakatalogen)</translation>
-    </message>
-    <message>
-        <source>Spend unconfirmed change when sending transactions (default: 1)</source>
-        <translation>Spendera okonfirmerad växel när transaktioner sänds (förvalt: 1)</translation>
-    </message>
-    <message>
-        <source>Stop running after importing blocks from disk (default: 0)</source>
-        <translation>Sluta köra efter importen av block från disk är klar (förvalt: 0)</translation>
     </message>
     <message>
         <source>This is intended for regression testing tools and app development.</source>
@@ -3070,10 +2906,6 @@ till exempel: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
     <message>
         <source>Imports blocks from external blk000??.dat file</source>
         <translation>Importerar block från extern blk000??.dat fil</translation>
-    </message>
-    <message>
-        <source>(default: 1, 1 = keep tx meta data e.g. account owner and payment request information, 2 = drop tx meta data)</source>
-        <translation>(förvalt: 1, 1 = spara tx metadata t.ex. kontoägare och betalningsbegäransinformation, 2 = släng tx metadata)</translation>
     </message>
     <message>
         <source>Allow JSON-RPC connections from specified source. Valid for &lt;ip&gt; are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24). This option can be specified multiple times</source>
@@ -3112,10 +2944,6 @@ till exempel: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
         <translation>Fel: Argumentet -socks stöds inte. Att sätta SOCKS version är inte möjligt längre. Endast SOCKS5 proxy stöds.</translation>
     </message>
     <message>
-        <source>Execute command when a network tx respends wallet tx input (%s=respend TxID, %t=wallet TxID)</source>
-        <translation>Kör kommando när en nätverks tx återspenderar plånbokens tx input (%s=återspendera TxID, %t=plånbok TxID)</translation>
-    </message>
-    <message>
         <source>Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)</source>
         <translation>Exekvera kommando när ett relevant meddelande är mottagen eller när vi ser en väldigt lång förgrening (%s i cmd är utbytt med ett meddelande)</translation>
     </message>
@@ -3126,14 +2954,6 @@ till exempel: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
     <message>
         <source>Fees (in BTC/Kb) smaller than this are considered zero fee for transaction creation (default: %s)</source>
         <translation>Avgifter (i BTC/Kb) mindre än detta betraktas som nollavgift för transaktionsskapande (förvalt: %s)</translation>
-    </message>
-    <message>
-        <source>If paytxfee is not set, include enough fee so transactions are confirmed on average within n blocks (default: 1)</source>
-        <translation>Om paytxfee inte är satt, inkludera tillräcklig avgift så att transaktionen konfirmeras inom n blocks (förvalt: 1)</translation>
-    </message>
-    <message>
-        <source>Output debugging information (default: 0, supplying &lt;category&gt; is optional)</source>
-        <translation>Skriv ut avlusningsinformation (förvalt: 0, att ange &lt;category&gt; är frivilligt)</translation>
     </message>
     <message>
         <source>Query for peer addresses via DNS lookup, if low on addresses (default: 1 unless -connect)</source>
@@ -3152,16 +2972,8 @@ till exempel: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
         <translation>Varning: Vänligen kolla så att din dators datum och tid är korrekt! Om din klocka går fel kommer Bitcoin Core inte att fungera korrekt.</translation>
     </message>
     <message>
-        <source>Whitelist peers connecting from the given netmask or ip. Can be specified multiple times.</source>
-        <translation>Vitlista klienter som ansluter från angivna nätmasker eller ip adresser. Kan specificeras flera gånger.</translation>
-    </message>
-    <message>
         <source>Whitelisted peers cannot be DoS banned and their transactions are always relayed, even if they are already in the mempool, useful e.g. for a gateway</source>
         <translation>Vitlistade klienter kan inte bli DoS bannade och deras transaktioner reläas alltid, även om dom redan är i mempoolen, användbart för t.ex en gateway  </translation>
-    </message>
-    <message>
-        <source>Always query for peer addresses via DNS lookup (default: 0)</source>
-        <translation>Sök alltid efter klientadresser med DNS sökningen (förvalt: 0)</translation>
     </message>
     <message>
         <source>Cannot resolve -whitebind address: '%s'</source>
@@ -3192,10 +3004,6 @@ till exempel: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
         <translation>Avgift (i BTC/Kb) att lägga till på transaktioner du skickar (förvalt: %s)</translation>
     </message>
     <message>
-        <source>Include IP addresses in debug output (default: 0)</source>
-        <translation>Inkludera IP-adresser i debugutskrift (förvalt: 0)</translation>
-    </message>
-    <message>
         <source>Information</source>
         <translation>Information</translation>
     </message>
@@ -3224,26 +3032,6 @@ till exempel: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
         <translation>Håll som mest &lt;n&gt; oanslutningsbara block i minnet (förvalt: %u)</translation>
     </message>
     <message>
-        <source>Limit size of signature cache to &lt;n&gt; entries (default: 50000)</source>
-        <translation>Begränsa signaturcachestorleken till &lt;n&gt; poster (förvalt: 50000)</translation>
-    </message>
-    <message>
-        <source>Log transaction priority and fee per kB when mining blocks (default: 0)</source>
-        <translation>Logga transaktionsprioritet och avgift per kB vid blockbrytning (förvalt: 0)</translation>
-    </message>
-    <message>
-        <source>Maintain a full transaction index (default: 0)</source>
-        <translation>Upprätthåll ett fullständigt transaktionsindex (förval: 0)</translation>
-    </message>
-    <message>
-        <source>Maximum per-connection receive buffer, &lt;n&gt;*1000 bytes (default: 5000)</source>
-        <translation>Maximal buffert för mottagning per anslutning, &lt;n&gt;*1000 byte (förvalt: 5000)</translation>
-    </message>
-    <message>
-        <source>Maximum per-connection send buffer, &lt;n&gt;*1000 bytes (default: 1000)</source>
-        <translation>Maximal buffert för sändning per anslutning, &lt;n&gt;*1000 byte (förvalt: 5000)</translation>
-    </message>
-    <message>
         <source>Need to specify a port with -whitebind: '%s'</source>
         <translation>Port måste anges med -whitelist: '%s'</translation>
     </message>
@@ -3252,20 +3040,8 @@ till exempel: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
         <translation>Nodreläoptioner:</translation>
     </message>
     <message>
-        <source>Only accept block chain matching built-in checkpoints (default: 1)</source>
-        <translation>Acceptera bara blockkedjans matchande inbyggda kontrollpunkter (förvalt: 1)</translation>
-    </message>
-    <message>
-        <source>Only connect to nodes in network &lt;net&gt; (IPv4, IPv6 or Tor)</source>
-        <translation>Anslut enbart till noder i nätverket &lt;net&gt; (IPv4, IPv6 eller Tor)</translation>
-    </message>
-    <message>
         <source>Print block on startup, if found in block index</source>
         <translation>Skriv ut block vid uppstart, om det hittas i blockindexet</translation>
-    </message>
-    <message>
-        <source>Print block tree on startup (default: 0)</source>
-        <translation>Skriv ut blockträdet vid uppstart (förvalt: 0)</translation>
     </message>
     <message>
         <source>RPC SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
@@ -3284,28 +3060,8 @@ till exempel: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
         <translation>Slupmässigt brus 1 gång varje &lt;n&gt; nätverksmeddelande</translation>
     </message>
     <message>
-        <source>Relay and mine data carrier transactions (default: 1)</source>
-        <translation>Reläa och bearbeta databärartransaktioner (förvalt: 1) </translation>
-    </message>
-    <message>
-        <source>Relay non-P2SH multisig (default: 1)</source>
-        <translation>Reläa icke P2SH multisig (förvalt: 1)</translation>
-    </message>
-    <message>
-        <source>Run a thread to flush wallet periodically (default: 1)</source>
-        <translation>Kör en tråd för att tömma plånboken periodiskt (förvalt: 1)</translation>
-    </message>
-    <message>
         <source>Send trace/debug info to console instead of debug.log file</source>
         <translation>Skicka trace-/debuginformation till terminalen istället för till debug.log</translation>
-    </message>
-    <message>
-        <source>Set minimum block size in bytes (default: 0)</source>
-        <translation>Sätt minsta blockstorlek i byte (förvalt: 0)</translation>
-    </message>
-    <message>
-        <source>Sets the DB_PRIVATE flag in the wallet db environment (default: 1)</source>
-        <translation>Sätt DB_PRIVATE flaggan i plånbokens databasmiljö (förvalt: 1)</translation>
     </message>
     <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>
@@ -3318,14 +3074,6 @@ till exempel: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
     <message>
         <source>Signing transaction failed</source>
         <translation>Signering av transaktion misslyckades</translation>
-    </message>
-    <message>
-        <source>Specify connection timeout in milliseconds (default: 5000)</source>
-        <translation>Ange timeout för uppkoppling i millisekunder (förvalt: 5000)</translation>
-    </message>
-    <message>
-        <source>System error: </source>
-        <translation>Systemfel:</translation>
     </message>
     <message>
         <source>This is experimental software.</source>
@@ -3346,10 +3094,6 @@ till exempel: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
     <message>
         <source>Unable to bind to %s on this computer (bind returned error %s)</source>
         <translation>Det går inte att binda till %s på den här datorn (bind returnerade felmeddelande %s)</translation>
-    </message>
-    <message>
-        <source>Use UPnP to map the listening port (default: 0)</source>
-        <translation>Använd UPnP för att mappa den lyssnande porten (förvalt: 0)</translation>
     </message>
     <message>
         <source>Use UPnP to map the listening port (default: 1 when listening)</source>
@@ -3404,24 +3148,12 @@ till exempel: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
         <translation>Uppgradera plånboken till senaste formatet</translation>
     </message>
     <message>
-        <source>Set key pool size to &lt;n&gt; (default: 100)</source>
-        <translation>Sätt storleken på nyckelpoolen till &lt;n&gt; (förvalt: 100)</translation>
-    </message>
-    <message>
         <source>Rescan the block chain for missing wallet transactions</source>
         <translation>Sök i blockkedjan efter saknade plånboks transaktioner</translation>
     </message>
     <message>
         <source>Use OpenSSL (https) for JSON-RPC connections</source>
         <translation>Använd OpenSSL (https) för JSON-RPC-anslutningar</translation>
-    </message>
-    <message>
-        <source>Server certificate file (default: server.cert)</source>
-        <translation>Serverns certifikatfil (förvalt: server.cert)</translation>
-    </message>
-    <message>
-        <source>Server private key (default: server.pem)</source>
-        <translation>Serverns privata nyckel (förvalt: server.pem)</translation>
     </message>
     <message>
         <source>This help message</source>

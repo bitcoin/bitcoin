@@ -154,10 +154,6 @@
 <context>
     <name>OverviewPage</name>
     <message>
-        <source>Wallet</source>
-        <translation>Капчык</translation>
-    </message>
-    <message>
         <source>out of sync</source>
         <translation>синхрондоштурулган эмес</translation>
     </message>

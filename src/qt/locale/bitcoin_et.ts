@@ -311,20 +311,12 @@
         <translation>Vahelehe tööriistariba</translation>
     </message>
     <message>
-        <source>[testnet]</source>
-        <translation>[testnet]</translation>
-    </message>
-    <message>
         <source>Bitcoin Core</source>
         <translation>Bitcoini tuumik</translation>
     </message>
     <message numerus="yes">
         <source>%n active connection(s) to Bitcoin network</source>
         <translation><numerusform>%n aktiivne ühendus Bitcoini võrku</numerusform><numerusform>%n aktiivset ühendust Bitcoini võrku</numerusform></translation>
-    </message>
-    <message>
-        <source>Processed %1 blocks of transaction history.</source>
-        <translation>Protsessitud %1 tehingute ajaloo blokki.</translation>
     </message>
     <message numerus="yes">
         <source>%n hour(s)</source>
@@ -673,20 +665,12 @@ Aadress: %4⏎</translation>
         <translation>Kuvatav info ei pruugi olla ajakohane. Ühenduse loomisel süngitakse sinu rahakott automaatselt Bitconi võrgustikuga, kuid see toiming on hetkel lõpetamata.</translation>
     </message>
     <message>
-        <source>Wallet</source>
-        <translation>Rahakott</translation>
-    </message>
-    <message>
         <source>Immature:</source>
         <translation>Ebaküps:</translation>
     </message>
     <message>
         <source>Mined balance that has not yet matured</source>
         <translation>Mitte aegunud mine'itud jääk</translation>
-    </message>
-    <message>
-        <source>&lt;b&gt;Recent transactions&lt;/b&gt;</source>
-        <translation>&lt;b&gt;Uuesti saadetud tehingud&lt;/b&gt;</translation>
     </message>
     <message>
         <source>out of sync</source>
@@ -1494,24 +1478,8 @@ Aadress: %4⏎</translation>
         <translation>Valikud:</translation>
     </message>
     <message>
-        <source>Specify configuration file (default: bitcoin.conf)</source>
-        <translation>Täpsusta sätete fail (vaikimisi: bitcoin.conf)</translation>
-    </message>
-    <message>
-        <source>Specify pid file (default: bitcoind.pid)</source>
-        <translation>Täpsusta PID fail (vaikimisi: bitcoin.pid)</translation>
-    </message>
-    <message>
         <source>Specify data directory</source>
         <translation>Täpsusta andmekataloog</translation>
-    </message>
-    <message>
-        <source>Listen for connections on &lt;port&gt; (default: 8333 or testnet: 18333)</source>
-        <translation>Kuula ühendusi pordil &lt;port&gt; (vaikeväärtus: 8333 või testnet: 18333)</translation>
-    </message>
-    <message>
-        <source>Maintain at most &lt;n&gt; connections to peers (default: 125)</source>
-        <translation>Säilita vähemalt &lt;n&gt; ühendust peeridega (vaikeväärtus: 125)</translation>
     </message>
     <message>
         <source>Connect to a node to retrieve peer addresses, and disconnect</source>
@@ -1520,18 +1488,6 @@ Aadress: %4⏎</translation>
     <message>
         <source>Specify your own public address</source>
         <translation>Täpsusta enda avalik aadress</translation>
-    </message>
-    <message>
-        <source>Threshold for disconnecting misbehaving peers (default: 100)</source>
-        <translation>Ulakate peeride valulävi (vaikeväärtus: 100)</translation>
-    </message>
-    <message>
-        <source>Number of seconds to keep misbehaving peers from reconnecting (default: 86400)</source>
-        <translation>Mitme sekundi pärast ulakad peerid tagasi võivad tulla (vaikeväärtus: 86400)</translation>
-    </message>
-    <message>
-        <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 8332 or testnet: 18332)</source>
-        <translation>Kuula JSON-RPC ühendusel seda porti &lt;port&gt; (vaikeväärtus: 8332 või testnet: 18332)</translation>
     </message>
     <message>
         <source>Accept command line and JSON-RPC commands</source>
@@ -1654,64 +1610,12 @@ nt: alertnotify=echo %%s | email -s "Bitcoin Alert" admin@foo.com
         <translation>Tõrge: Rahakott on lukus, tehingu loomine ei ole võimalik!</translation>
     </message>
     <message>
-        <source>Error: system error: </source>
-        <translation>Tõrge: süsteemi tõrge:</translation>
-    </message>
-    <message>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
         <translation>Pordi kuulamine nurjus. Soovikorral kasuta -listen=0.</translation>
     </message>
     <message>
-        <source>Failed to read block info</source>
-        <translation>Tõrge bloki sisu lugemisel</translation>
-    </message>
-    <message>
-        <source>Failed to read block</source>
-        <translation>Bloki lugemine ebaõnnestus</translation>
-    </message>
-    <message>
-        <source>Failed to sync block index</source>
-        <translation>Bloki indeksi sünkimine ebaõnnestus</translation>
-    </message>
-    <message>
-        <source>Failed to write block index</source>
-        <translation>Bloki indeksi kirjutamine ebaõnnestus</translation>
-    </message>
-    <message>
-        <source>Failed to write block info</source>
-        <translation>Bloki sisu kirjutamine ebaõnnestus</translation>
-    </message>
-    <message>
-        <source>Failed to write block</source>
-        <translation>Tõrge bloki sisu kirjutamisel</translation>
-    </message>
-    <message>
-        <source>Failed to write file info</source>
-        <translation>Tõrge faili info kirjutamisel</translation>
-    </message>
-    <message>
-        <source>Failed to write to coin database</source>
-        <translation>Tõrge mündi andmebaasi kirjutamisel</translation>
-    </message>
-    <message>
-        <source>Failed to write transaction index</source>
-        <translation>Tehingu indeksi kirjutamine ebaõnnestus</translation>
-    </message>
-    <message>
-        <source>Failed to write undo data</source>
-        <translation>Tagasivõtmise andmete kirjutamine ebaõnnestus</translation>
-    </message>
-    <message>
-        <source>How many blocks to check at startup (default: 288, 0 = all)</source>
-        <translation>Käivitamisel kontrollitavate blokkide arv (vaikeväärtus: 288, 0=kõik)</translation>
-    </message>
-    <message>
         <source>Rebuild block chain index from current blk000??.dat files</source>
         <translation>Taasta bloki jada indeks blk000??.dat failist</translation>
-    </message>
-    <message>
-        <source>Set the number of threads to service RPC calls (default: 4)</source>
-        <translation>Määra RPC kõnede haldurite arv (vaikeväärtus: 4)</translation>
     </message>
     <message>
         <source>Verifying blocks...</source>
@@ -1730,48 +1634,12 @@ nt: alertnotify=echo %%s | email -s "Bitcoin Alert" admin@foo.com
         <translation>Informatsioon</translation>
     </message>
     <message>
-        <source>Maintain a full transaction index (default: 0)</source>
-        <translation>Säilita kogu tehingu indeks (vaikeväärtus: 0)</translation>
-    </message>
-    <message>
-        <source>Maximum per-connection receive buffer, &lt;n&gt;*1000 bytes (default: 5000)</source>
-        <translation>Maksimaalne saamise puhver -connection kohta , &lt;n&gt;*1000 baiti (vaikeväärtus: 5000)</translation>
-    </message>
-    <message>
-        <source>Maximum per-connection send buffer, &lt;n&gt;*1000 bytes (default: 1000)</source>
-        <translation>Maksimaalne saatmise puhver -connection kohta , &lt;n&gt;*1000 baiti (vaikeväärtus: 1000)</translation>
-    </message>
-    <message>
-        <source>Only accept block chain matching built-in checkpoints (default: 1)</source>
-        <translation>Tunnusta ainult sisseehitatud turvapunktidele vastavaid bloki jadu (vaikeväärtus: 1)</translation>
-    </message>
-    <message>
-        <source>Only connect to nodes in network &lt;net&gt; (IPv4, IPv6 or Tor)</source>
-        <translation>Ühenda ainult node'idega &lt;net&gt; võrgus (IPv4, IPv6 või Tor)</translation>
-    </message>
-    <message>
         <source>Send trace/debug info to console instead of debug.log file</source>
         <translation>Saada jälitus/debug, debug.log faili asemel, konsooli</translation>
     </message>
     <message>
-        <source>Set minimum block size in bytes (default: 0)</source>
-        <translation>Sea minimaalne bloki suurus baitides (vaikeväärtus: 0)</translation>
-    </message>
-    <message>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
         <translation>Kahanda programmi käivitamisel debug.log faili (vaikeväärtus: 1, kui ei ole -debug)</translation>
-    </message>
-    <message>
-        <source>Specify connection timeout in milliseconds (default: 5000)</source>
-        <translation>Sea ühenduse timeout millisekundites (vaikeväärtus: 5000)</translation>
-    </message>
-    <message>
-        <source>System error: </source>
-        <translation>Süsteemi tõrge:</translation>
-    </message>
-    <message>
-        <source>Use UPnP to map the listening port (default: 0)</source>
-        <translation>Kasuta kuulatava pordi määramiseks UPnP ühendust (vaikeväärtus: 0)</translation>
     </message>
     <message>
         <source>Use UPnP to map the listening port (default: 1 when listening)</source>
@@ -1806,24 +1674,12 @@ nt: alertnotify=echo %%s | email -s "Bitcoin Alert" admin@foo.com
         <translation>Uuenda rahakott uusimasse vormingusse</translation>
     </message>
     <message>
-        <source>Set key pool size to &lt;n&gt; (default: 100)</source>
-        <translation>Sea võtmete hulgaks &lt;n&gt; (vaikeväärtus: 100)</translation>
-    </message>
-    <message>
         <source>Rescan the block chain for missing wallet transactions</source>
         <translation>Otsi ploki jadast rahakoti kadunud tehinguid</translation>
     </message>
     <message>
         <source>Use OpenSSL (https) for JSON-RPC connections</source>
         <translation>Kasuta JSON-RPC ühenduste jaoks OpenSSL'i (https)</translation>
-    </message>
-    <message>
-        <source>Server certificate file (default: server.cert)</source>
-        <translation>Serveri sertifikaadifail (vaikeväärtus: server.cert)</translation>
-    </message>
-    <message>
-        <source>Server private key (default: server.pem)</source>
-        <translation>Serveri privaatvõti (vaikeväärtus: server.pem)</translation>
     </message>
     <message>
         <source>This help message</source>

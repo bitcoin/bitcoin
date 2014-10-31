@@ -278,10 +278,6 @@
         <source>Tabs toolbar</source>
         <translation>Раздели</translation>
     </message>
-    <message>
-        <source>[testnet]</source>
-        <translation>[testnet]</translation>
-    </message>
     <message numerus="yes">
         <source>%n active connection(s) to Bitcoin network</source>
         <translation><numerusform>%n връзка към Биткоин мрежата</numerusform><numerusform>%n връзки към Биткоин мрежата</numerusform></translation>
@@ -610,10 +606,6 @@
         <translation>Форма</translation>
     </message>
     <message>
-        <source>Wallet</source>
-        <translation>Портфейл</translation>
-    </message>
-    <message>
         <source>Available:</source>
         <translation>Налично:</translation>
     </message>
@@ -628,10 +620,6 @@
     <message>
         <source>Your current total balance</source>
         <translation>Текущият ви общ баланс</translation>
-    </message>
-    <message>
-        <source>&lt;b&gt;Recent transactions&lt;/b&gt;</source>
-        <translation>&lt;b&gt;Последни трансакции&lt;/b&gt;</translation>
     </message>
     <message>
         <source>out of sync</source>
@@ -1427,20 +1415,8 @@
         <translation>Опции:</translation>
     </message>
     <message>
-        <source>Specify configuration file (default: bitcoin.conf)</source>
-        <translation>Задаване на файл с настройки (по подразбиране bitcoin.conf)</translation>
-    </message>
-    <message>
         <source>Specify data directory</source>
         <translation>Определете директория за данните</translation>
-    </message>
-    <message>
-        <source>Threshold for disconnecting misbehaving peers (default: 100)</source>
-        <translation>Праг на прекъсване на връзката при непорядъчно държащи се пиъри (по подразбиране:100)</translation>
-    </message>
-    <message>
-        <source>Number of seconds to keep misbehaving peers from reconnecting (default: 86400)</source>
-        <translation>Брой секунди до възтановяване на връзката за зле държащите се пиъри (по подразбиране:86400)</translation>
     </message>
     <message>
         <source>Use the test network</source>
@@ -1455,10 +1431,6 @@
         <translation>(по подразбиране 1)</translation>
     </message>
     <message>
-        <source>(default: wallet.dat)</source>
-        <translation>(по подразбиране wallet.dat)</translation>
-    </message>
-    <message>
         <source>Connection options:</source>
         <translation>Настройки на връзката:</translation>
     </message>
@@ -1467,28 +1439,8 @@
         <translation>Грешка: мястото на диска е малко!</translation>
     </message>
     <message>
-        <source>Error: system error: </source>
-        <translation>Грешка: системна грешка:</translation>
-    </message>
-    <message>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
         <translation>Провалено "слушане" на всеки порт. Използвайте -listen=0 ако искате това.</translation>
-    </message>
-    <message>
-        <source>Failed to read block info</source>
-        <translation>Грешка при четене данни на блок</translation>
-    </message>
-    <message>
-        <source>Failed to read block</source>
-        <translation>Грешка при четене на блок</translation>
-    </message>
-    <message>
-        <source>Failed to write block info</source>
-        <translation>Грешка при запис данни на блок</translation>
-    </message>
-    <message>
-        <source>Failed to write block</source>
-        <translation>Грешка при запис на блок</translation>
     </message>
     <message>
         <source>Importing...</source>
@@ -1513,18 +1465,6 @@
     <message>
         <source>Send trace/debug info to console instead of debug.log file</source>
         <translation>Изпрати локализиращата или дебъг информацията към конзолата, вместо файлът debug.log</translation>
-    </message>
-    <message>
-        <source>Set minimum block size in bytes (default: 0)</source>
-        <translation>Задайте минимален размер на блок-а в байтове (подразбиране: 0)</translation>
-    </message>
-    <message>
-        <source>Specify connection timeout in milliseconds (default: 5000)</source>
-        <translation>Определете таймаут за свързване в милисекунди (подразбиране: 5000)</translation>
-    </message>
-    <message>
-        <source>System error: </source>
-        <translation>Системна грешка:</translation>
     </message>
     <message>
         <source>Transaction amount too small</source>
@@ -1565,14 +1505,6 @@
     <message>
         <source>Use OpenSSL (https) for JSON-RPC connections</source>
         <translation>Използвайте OpenSSL (https) за JSON-RPC връзките</translation>
-    </message>
-    <message>
-        <source>Server certificate file (default: server.cert)</source>
-        <translation>Сертификатен файл на сървъра (По подразбиране:server.cert)</translation>
-    </message>
-    <message>
-        <source>Server private key (default: server.pem)</source>
-        <translation>Поверителен ключ за сървъра (default: server.pem)</translation>
     </message>
     <message>
         <source>This help message</source>
