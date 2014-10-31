@@ -58,7 +58,7 @@ AC_ARG_ENABLE(endomorphism,
 AC_ARG_WITH([field], [AS_HELP_STRING([--with-field=gmp|64bit|64bit_asm|32bit|auto],
 [Specify Field Implementation. Default is auto])],[req_field=$withval], [req_field=auto])
 
-AC_ARG_WITH([bignum], [AS_HELP_STRING([--with-bignum=gmp|openssl|auto],
+AC_ARG_WITH([bignum], [AS_HELP_STRING([--with-bignum=gmp|auto],
 [Specify Bignum Implementation. Default is auto])],[req_bignum=$withval], [req_bignum=auto])
 
 AC_CHECK_TYPES([__int128])
@@ -132,11 +132,6 @@ if test x"$has_libcrypto" == x"yes" && test x"$has_openssl_ec" = x; then
   ],[has_openssl_ec=yes], [has_openssl_ec=no])
   AC_MSG_RESULT([$has_openssl_ec])
 fi
-if test x"$set_bignum" = x"openssl"; then
-  if test x"$has_libcrypto" != x"yes"; then
-    AC_MSG_ERROR([$set_bignum field support explicitly requested but libcrypto was not found])
-  fi
-fi
 ])
 
 AC_CHECK_DECL(__builtin_expect,AC_DEFINE(HAVE_BUILTIN_EXPECT,1,[Define this symbol if __builtin_expect is available]),,)
@@ -203,13 +198,6 @@ if test x"$req_bignum" = x"auto"; then
   fi
 
   if test x"$set_bignum" = x; then
-    SECP_OPENSSL_CHECK
-    if test x"$has_libcrypto" = x"yes"; then
-      set_bignum=openssl
-    fi
-  fi
-
-  if test x"$set_bignum" = x; then
     AC_MSG_ERROR([no working bignum implementation found])
   fi
 else
@@ -255,12 +243,6 @@ gmp)
   AC_DEFINE(HAVE_LIBGMP,1,[Define this symbol if libgmp is installed])
   AC_DEFINE(USE_NUM_GMP, 1, [Define this symbol to use the gmp implementation])
   AC_DEFINE(USE_FIELD_INV_NUM, 1, [Define this symbol to use the USE_FIELD_INV_NUM implementation])
-  ;;
-openssl)
-  AC_DEFINE(USE_NUM_OPENSSL, 1,[Define this symbol to use the openssl implementation])
-  AC_DEFINE(USE_FIELD_INV_BUILTIN, 1, [Define this symbol to use the FIELD_INV_BUILTIN implementation])
-  SECP_INCLUDES="$SSL_CFLAGS $CRYPTO_CFLAGS"
-  SECP_LIBS="$CRYPTO_LIBS"
   ;;
 *)
   AC_MSG_ERROR([invalid bignum implementation])
