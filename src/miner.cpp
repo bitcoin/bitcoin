@@ -522,7 +522,7 @@ void static BitcoinMiner(CWallet *pwallet)
             unsigned int nHashesDone = 0;
 
             pblock->nNonce = nBlockNonce;
-            for (; nHashesDone < 1000; nHashesDone++) {
+            for (; nHashesDone < 200; nHashesDone++) {
                 hash = pblock->GetHash();
                 if (hash <= hashTarget) break;
                 pblock->nNonce++;
