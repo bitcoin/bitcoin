@@ -1949,6 +1949,16 @@ static CBlockIndex* FindMostWorkChain() {
     } while(true);
 }
 
+// Delete all entries in setBlockIndexCandidates that are worse than the current tip.
+static void PruneBlockIndexCandidates() {
+    // Note that we can't delete the current block itself, as we may need to return to it later in case a
+    // reorganization to a better block fails.
+    std::set<CBlockIndex*, CBlockIndexWorkComparator>::iterator it = setBlockIndexCandidates.begin();
+    while (setBlockIndexCandidates.value_comp()(*it, chainActive.Tip())) {
+        setBlockIndexCandidates.erase(it++);
+    }
+}
+
 // Try to make some progress towards making pindexMostWork the active block.
 // pblock is either NULL or a pointer to a CBlock corresponding to pindexMostWork.
 static bool ActivateBestChainStep(CValidationState &state, CBlockIndex *pindexMostWork, CBlock *pblock) {
@@ -1996,13 +2006,7 @@ static bool ActivateBestChainStep(CValidationState &state, CBlockIndex *pindexMo
                 return false;
             }
         } else {
-            // Delete all entries in setBlockIndexCandidates that are worse than our new current block.
-            // Note that we can't delete the current block itself, as we may need to return to it later in case a
-            // reorganization to a better block fails.
-            std::set<CBlockIndex*, CBlockIndexWorkComparator>::iterator it = setBlockIndexCandidates.begin();
-            while (setBlockIndexCandidates.value_comp()(*it, chainActive.Tip())) {
-                setBlockIndexCandidates.erase(it++);
-            }
+            PruneBlockIndexCandidates();
             // Either the current tip or a successor of it we're working towards is left in setBlockIndexCandidates.
             assert(!setBlockIndexCandidates.empty());
             if (!pindexOldTip || chainActive.Tip()->nChainWork > pindexOldTip->nChainWork) {
@@ -2860,6 +2864,9 @@ bool static LoadBlockIndexDB()
     if (it == mapBlockIndex.end())
         return true;
     chainActive.SetTip(it->second);
+
+    PruneBlockIndexCandidates();
+
     LogPrintf("LoadBlockIndexDB(): hashBestChain=%s height=%d date=%s progress=%f\n",
         chainActive.Tip()->GetBlockHash().ToString(), chainActive.Height(),
         DateTimeStrFormat("%Y-%m-%d %H:%M:%S", chainActive.Tip()->GetBlockTime()),
