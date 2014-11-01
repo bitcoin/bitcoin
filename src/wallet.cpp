@@ -29,6 +29,7 @@ CFeeRate payTxFee(DEFAULT_TRANSACTION_FEE);
 unsigned int nTxConfirmTarget = 1;
 bool bSpendZeroConfChange = true;
 bool fSendFreeTransactions = true;
+bool fPayAtLeastCustomFee = true;
 
 /** 
  * Fees smaller than this (in satoshi) are considered zero fee (for transaction creation) 
@@ -1383,7 +1384,10 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, CAmount> >& vecSend,
     {
         LOCK2(cs_main, cs_wallet);
         {
-            nFeeRet = payTxFee.GetFeePerK();
+            if (fPayAtLeastCustomFee)
+                nFeeRet = payTxFee.GetFeePerK();
+            else
+                nFeeRet = 0;
             while (true)
             {
                 txNew.vin.clear();
