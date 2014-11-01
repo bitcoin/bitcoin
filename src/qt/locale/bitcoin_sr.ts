@@ -219,10 +219,6 @@
         <translation>Трака са картицама</translation>
     </message>
     <message>
-        <source>[testnet]</source>
-        <translation>[testnet]</translation>
-    </message>
-    <message>
         <source>Up to date</source>
         <translation>Ажурно</translation>
     </message>
@@ -330,6 +326,10 @@ Address: %4
         <translation>верзија</translation>
     </message>
     <message>
+        <source>About Bitcoin Core</source>
+        <translation>O Bitcoin Coru</translation>
+    </message>
+    <message>
         <source>Usage:</source>
         <translation>Korišćenje:</translation>
     </message>
@@ -360,14 +360,6 @@ Address: %4
     <message>
         <source>Form</source>
         <translation>Форма</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>новчаник</translation>
-    </message>
-    <message>
-        <source>&lt;b&gt;Recent transactions&lt;/b&gt;</source>
-        <translation>&lt;b&gt;Недавне трансакције&lt;/b&gt;</translation>
     </message>
     </context>
 <context>
@@ -763,25 +755,8 @@ Address: %4
         <translation>Opcije</translation>
     </message>
     <message>
-        <source>Specify configuration file (default: bitcoin.conf)</source>
-        <translation>Potvrdi željeni konfiguracioni fajl (podrazumevani:bitcoin.conf)</translation>
-    </message>
-    <message>
-        <source>Specify pid file (default: bitcoind.pid)</source>
-        <translation>Konkretizuj pid fajl (podrazumevani: bitcoind.pid)</translation>
-    </message>
-    <message>
         <source>Specify data directory</source>
         <translation>Gde je konkretni data direktorijum </translation>
-    </message>
-    <message>
-        <source>Listen for connections on &lt;port&gt; (default: 8333 or testnet: 18333)</source>
-        <translation>Slušaj konekcije na &lt;port&gt; (default: 8333 or testnet: 18333)</translation>
-    </message>
-    <message>
-        <source>Maintain at most &lt;n&gt; connections to peers (default: 125)</source>
-        <translation>Održavaj najviše &lt;n&gt; konekcija  po priključku (default: 125)
-</translation>
     </message>
     <message>
         <source>Accept command line and JSON-RPC commands</source>
@@ -804,20 +779,12 @@ Address: %4
         <translation>Lozinka za JSON-RPC konekcije</translation>
     </message>
     <message>
-        <source>Set key pool size to &lt;n&gt; (default: 100)</source>
-        <translation>Odredi veličinu zaštićenih ključeva na &lt;n&gt; (default: 100)</translation>
-    </message>
-    <message>
         <source>Rescan the block chain for missing wallet transactions</source>
         <translation>Ponovo skeniraj lanac blokova za nedostajuće transakcije iz novčanika</translation>
     </message>
     <message>
         <source>Use OpenSSL (https) for JSON-RPC connections</source>
         <translation>Koristi OpenSSL (https) za  JSON-RPC konekcije</translation>
-    </message>
-    <message>
-        <source>Server private key (default: server.pem)</source>
-        <translation>privatni ključ za Server (podrazumevan: server.pem)</translation>
     </message>
     <message>
         <source>This help message</source>

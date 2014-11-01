@@ -425,16 +425,8 @@ Address: %4
 <context>
     <name>OverviewPage</name>
     <message>
-        <source>Wallet</source>
-        <translation>Түрүйвч</translation>
-    </message>
-    <message>
         <source>Available:</source>
         <translation>Хэрэглэж болох хэмжээ:</translation>
-    </message>
-    <message>
-        <source>&lt;b&gt;Recent transactions&lt;/b&gt;</source>
-        <translation>&lt;b&gt;Сүүлд хийгдсэн гүйлгээнүүд&lt;/b&gt;</translation>
     </message>
     </context>
 <context>
@@ -1028,10 +1020,6 @@ Address: %4
     <message>
         <source>Options:</source>
         <translation>Сонголтууд:</translation>
-    </message>
-    <message>
-        <source>Listen for connections on &lt;port&gt; (default: 8333 or testnet: 18333)</source>
-        <translation>&lt;port&gt; дээрх холболтуудыг чагна (ѳгѳгдмѳл: 8333 эсвэл testnet: 18333)</translation>
     </message>
     <message>
         <source>Wallet options:</source>

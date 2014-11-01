@@ -387,10 +387,6 @@
         <translation>分页工具栏</translation>
     </message>
     <message>
-        <source>[testnet]</source>
-        <translation>[测试网络]</translation>
-    </message>
-    <message>
         <source>Bitcoin Core</source>
         <translation>比特币核心</translation>
     </message>
@@ -429,10 +425,6 @@
     <message>
         <source>No block source available...</source>
         <translation>沒有可用的区块来源...</translation>
-    </message>
-    <message>
-        <source>Processed %1 blocks of transaction history.</source>
-        <translation>已处理 %1 个交易历史数据块。</translation>
     </message>
     <message numerus="yes">
         <source>%n hour(s)</source>
@@ -905,15 +897,7 @@ Address: %4
         <source>Error</source>
         <translation>错误</translation>
     </message>
-    <message>
-        <source>GB of free space available</source>
-        <translation>可用空间（GB）</translation>
-    </message>
-    <message>
-        <source>(of %1GB needed)</source>
-        <translation>（需要 %1GB）</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>OpenURIDialog</name>
     <message>
@@ -1155,10 +1139,6 @@ Address: %4
         <translation>现在显示的消息可能是过期的. 在连接上比特币网络节点后，您的钱包将自动与网络同步，但是这个过程还没有完成。</translation>
     </message>
     <message>
-        <source>Wallet</source>
-        <translation>钱包</translation>
-    </message>
-    <message>
         <source>Watch-only:</source>
         <translation>查看-只有:</translation>
     </message>
@@ -1193,10 +1173,6 @@ Address: %4
     <message>
         <source>Your current total balance</source>
         <translation>您当前的总余额</translation>
-    </message>
-    <message>
-        <source>&lt;b&gt;Recent transactions&lt;/b&gt;</source>
-        <translation>&lt;b&gt;最近交易记录&lt;/b&gt;</translation>
     </message>
     <message>
         <source>out of sync</source>
@@ -1438,10 +1414,6 @@ Address: %4
         <translation>服务</translation>
     </message>
     <message>
-        <source>Sync Node</source>
-        <translation>同步节点</translation>
-    </message>
-    <message>
         <source>Starting Height</source>
         <translation>开始高度</translation>
     </message>
@@ -1568,14 +1540,6 @@ Address: %4
     <message>
         <source>Outbound</source>
         <translation>传出</translation>
-    </message>
-    <message>
-        <source>Yes</source>
-        <translation>是</translation>
-    </message>
-    <message>
-        <source>No</source>
-        <translation>否</translation>
     </message>
     <message>
         <source>Unknown</source>
@@ -2609,27 +2573,9 @@ Address: %4
 </translation>
     </message>
     <message>
-        <source>Specify configuration file (default: bitcoin.conf)</source>
-        <translation>指定配置文件 (默认为 bitcoin.conf)
-</translation>
-    </message>
-    <message>
-        <source>Specify pid file (default: bitcoind.pid)</source>
-        <translation>指定 pid 文件 (默认为 bitcoind.pid)
-</translation>
-    </message>
-    <message>
         <source>Specify data directory</source>
         <translation>指定数据目录
 </translation>
-    </message>
-    <message>
-        <source>Listen for connections on &lt;port&gt; (default: 8333 or testnet: 18333)</source>
-        <translation>监听端口连接 &lt;port&gt;（缺省: 8333 或测试网络: 18333）</translation>
-    </message>
-    <message>
-        <source>Maintain at most &lt;n&gt; connections to peers (default: 125)</source>
-        <translation>最大连接数 &lt;n&gt; （缺省: 125）</translation>
     </message>
     <message>
         <source>Connect to a node to retrieve peer addresses, and disconnect</source>
@@ -2638,18 +2584,6 @@ Address: %4
     <message>
         <source>Specify your own public address</source>
         <translation>指定您的公共地址</translation>
-    </message>
-    <message>
-        <source>Threshold for disconnecting misbehaving peers (default: 100)</source>
-        <translation>断开行为不端对端阀值（缺省: 100）</translation>
-    </message>
-    <message>
-        <source>Number of seconds to keep misbehaving peers from reconnecting (default: 86400)</source>
-        <translation>重新连接异常节点的秒数(缺省: 86400)</translation>
-    </message>
-    <message>
-        <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 8332 or testnet: 18332)</source>
-        <translation>JSON-RPC连接监听端口&lt;port&gt; (缺省：8332　testnet：18332)</translation>
     </message>
     <message>
         <source>Accept command line and JSON-RPC commands</source>
@@ -2696,16 +2630,8 @@ rpcpassword=%s
 </translation>
     </message>
     <message>
-        <source>Acceptable ciphers (default: TLSv1.2+HIGH:TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!3DES:@STRENGTH)</source>
-        <translation>可接受的密码（默认：TLSv1.2+HIGH:TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!3DES:@STRENGTH）</translation>
-    </message>
-    <message>
         <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
         <translation>绑定指定的IP地址开始监听。IPv6地址请使用[host]:port 格式</translation>
-    </message>
-    <message>
-        <source>Continuously rate-limit free transactions to &lt;n&gt;*1000 bytes per minute (default:15)</source>
-        <translation>自由交易不断的速率限制为&lt;n&gt;*1000 字节每分钟(默认值:15)</translation>
     </message>
     <message>
         <source>Enter regression test mode, which uses a special chain in which blocks can be solved instantly.</source>
@@ -2724,14 +2650,6 @@ rpcpassword=%s
         <translation>当最佳区块变化时执行命令 (命令行中的 %s 会被替换成区块哈希值)</translation>
     </message>
     <message>
-        <source>Flush database activity from memory pool to disk log every &lt;n&gt; megabytes (default: 100)</source>
-        <translation>从缓冲池清理磁盘数据库活动日志每&lt;n&gt;兆字节 (默认值: 100)</translation>
-    </message>
-    <message>
-        <source>How thorough the block verification of -checkblocks is (0-4, default: 3)</source>
-        <translation>如何有效的验证checkblocks区块(0-4, 默认值: 3)</translation>
-    </message>
-    <message>
         <source>In this mode -genproclimit controls how many blocks are generated immediately.</source>
         <translation>在-genproclimit这种模式下控制产出多少区块</translation>
     </message>
@@ -2740,20 +2658,12 @@ rpcpassword=%s
         <translation>设置脚本验证的程序 (%u 到 %d, 0 = 自动, &lt;0 = 保留自由的核心, 默认值: %d)</translation>
     </message>
     <message>
-        <source>Set the processor limit for when generation is on (-1 = unlimited, default: -1)</source>
-        <translation>设置处理器生成的限制 (-1 = 无限, 默认值: -1)</translation>
-    </message>
-    <message>
         <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
         <translation>这是测试用的预发布版本 - 请谨慎使用 - 不要用来挖矿，或者在正式商用环境下使用</translation>
     </message>
     <message>
         <source>Unable to bind to %s on this computer. Bitcoin Core is probably already running.</source>
         <translation>无法 %s的绑定到电脑上，比特币核心钱包可能已经在运行。</translation>
-    </message>
-    <message>
-        <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: -proxy)</source>
-        <translation>连接至 Tor隐藏服务器时 使用不同的SOCKS5代理 (缺省: -proxy) </translation>
     </message>
     <message>
         <source>Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
@@ -2778,10 +2688,6 @@ rpcpassword=%s
     <message>
         <source>(default: 1)</source>
         <translation>(默认值: 1)</translation>
-    </message>
-    <message>
-        <source>(default: wallet.dat)</source>
-        <translation>(默认: wallet.dat)</translation>
     </message>
     <message>
         <source>&lt;category&gt; can be:</source>
@@ -2810,10 +2716,6 @@ rpcpassword=%s
     <message>
         <source>Debugging/Testing options:</source>
         <translation>调试/测试选项：</translation>
-    </message>
-    <message>
-        <source>Disable safemode, override a real safe mode event (default: 0)</source>
-        <translation>禁止使用安全模式，重新写入一个真正的安全模式日志(默认值: 0)</translation>
     </message>
     <message>
         <source>Discover own IP address (default: 1 when listening and no -externalip)</source>
@@ -2852,64 +2754,8 @@ rpcpassword=%s
         <translation>错误：钱包被锁定，无法创建交易！</translation>
     </message>
     <message>
-        <source>Error: system error: </source>
-        <translation>错误：系统出错。</translation>
-    </message>
-    <message>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
         <translation>监听端口失败。请使用 -listen=0 参数。</translation>
-    </message>
-    <message>
-        <source>Failed to read block info</source>
-        <translation>无法读取数据块信息</translation>
-    </message>
-    <message>
-        <source>Failed to read block</source>
-        <translation>读取数据块失败</translation>
-    </message>
-    <message>
-        <source>Failed to sync block index</source>
-        <translation>无法同步数据块索引</translation>
-    </message>
-    <message>
-        <source>Failed to write block index</source>
-        <translation>无法写入数据块索引</translation>
-    </message>
-    <message>
-        <source>Failed to write block info</source>
-        <translation>无法写入数据块信息</translation>
-    </message>
-    <message>
-        <source>Failed to write block</source>
-        <translation>无法写数据块</translation>
-    </message>
-    <message>
-        <source>Failed to write file info</source>
-        <translation>无法写入文件信息</translation>
-    </message>
-    <message>
-        <source>Failed to write to coin database</source>
-        <translation>无法写入coin数据库</translation>
-    </message>
-    <message>
-        <source>Failed to write transaction index</source>
-        <translation>无法写入交易索引</translation>
-    </message>
-    <message>
-        <source>Failed to write undo data</source>
-        <translation>无法写入回滚信息</translation>
-    </message>
-    <message>
-        <source>Force safe mode (default: 0)</source>
-        <translation>强制安全模式(默认值: 0)</translation>
-    </message>
-    <message>
-        <source>Generate coins (default: 0)</source>
-        <translation>生成比特币（默认为 0）</translation>
-    </message>
-    <message>
-        <source>How many blocks to check at startup (default: 288, 0 = all)</source>
-        <translation>启动时检测多少个数据块(缺省：288，0=所有)</translation>
     </message>
     <message>
         <source>If &lt;category&gt; is not supplied, output all debugging information.</source>
@@ -2932,10 +2778,6 @@ rpcpassword=%s
         <translation>没有足够的文件描述符可用。</translation>
     </message>
     <message>
-        <source>Prepend debug output with timestamp (default: 1)</source>
-        <translation>调试信息输出时，前面加上时间戳 (缺省: 1)</translation>
-    </message>
-    <message>
         <source>Rebuild block chain index from current blk000??.dat files</source>
         <translation>重新为当前的blk000??.dat文件建立索引</translation>
     </message>
@@ -2948,16 +2790,8 @@ rpcpassword=%s
         <translation>设置最大区块大小 (默认: %d，单位字节)</translation>
     </message>
     <message>
-        <source>Set the number of threads to service RPC calls (default: 4)</source>
-        <translation>设置使用调用服务 RPC 的线程数量（默认：4）</translation>
-    </message>
-    <message>
         <source>Specify wallet file (within data directory)</source>
         <translation>指定钱包文件（数据目录内）</translation>
-    </message>
-    <message>
-        <source>Spend unconfirmed change when sending transactions (default: 1)</source>
-        <translation>付款时允许使用未确认的零钱 (缺省: 1)</translation>
     </message>
     <message>
         <source>This is intended for regression testing tools and app development.</source>
@@ -2996,20 +2830,12 @@ rpcpassword=%s
         <translation>当收到相关提醒或者我们看到一个长分叉时执行命令（%s 将替换为消息）</translation>
     </message>
     <message>
-        <source>Output debugging information (default: 0, supplying &lt;category&gt; is optional)</source>
-        <translation>输出调试信息（默认为0，提供  &lt;category&gt; 是可选的）</translation>
-    </message>
-    <message>
         <source>Query for peer addresses via DNS lookup, if low on addresses (default: 1 unless -connect)</source>
         <translation>通过DNS查询每个地址，如果短地址 (默认值: 1 除非 -连接)</translation>
     </message>
     <message>
         <source>Set maximum size of high-priority/low-fee transactions in bytes (default: %d)</source>
         <translation>设置 高优先级/低交易费 交易的最大字节  (缺省: %d)</translation>
-    </message>
-    <message>
-        <source>Always query for peer addresses via DNS lookup (default: 0)</source>
-        <translation>始终通过 DNS 查询对等端地址 (默认: 0)</translation>
     </message>
     <message>
         <source>Cannot resolve -whitebind address: '%s'</source>
@@ -3036,10 +2862,6 @@ rpcpassword=%s
         <translation>错误：发现了不支持的参数 -tor，请使用 -onion。</translation>
     </message>
     <message>
-        <source>Include IP addresses in debug output (default: 0)</source>
-        <translation>在调试输出中包含IP地址 (默认: 0)</translation>
-    </message>
-    <message>
         <source>Information</source>
         <translation>信息</translation>
     </message>
@@ -3064,26 +2886,6 @@ rpcpassword=%s
         <translation>-whitelist: '%s' 指定的网络掩码无效</translation>
     </message>
     <message>
-        <source>Limit size of signature cache to &lt;n&gt; entries (default: 50000)</source>
-        <translation>签名缓冲大小限制每&lt;n&gt; 条目 (默认值: 50000)</translation>
-    </message>
-    <message>
-        <source>Log transaction priority and fee per kB when mining blocks (default: 0)</source>
-        <translation>开采区块时，日志优先级和手续费每KB (默认值: 0)</translation>
-    </message>
-    <message>
-        <source>Maintain a full transaction index (default: 0)</source>
-        <translation>维护一份完整的交易索引(缺省：0)</translation>
-    </message>
-    <message>
-        <source>Maximum per-connection receive buffer, &lt;n&gt;*1000 bytes (default: 5000)</source>
-        <translation>每个连接的最大接收缓存，&lt;n&gt;*1000 字节(缺省：5000)</translation>
-    </message>
-    <message>
-        <source>Maximum per-connection send buffer, &lt;n&gt;*1000 bytes (default: 1000)</source>
-        <translation>每个连接的最大发送缓存，&lt;n&gt;*1000 字节(缺省：1000)</translation>
-    </message>
-    <message>
         <source>Need to specify a port with -whitebind: '%s'</source>
         <translation>-whitebind: '%s' 需要指定一个端口</translation>
     </message>
@@ -3092,20 +2894,8 @@ rpcpassword=%s
         <translation>节点中继选项:</translation>
     </message>
     <message>
-        <source>Only accept block chain matching built-in checkpoints (default: 1)</source>
-        <translation>仅接受符合客户端检查点设置的数据块文件</translation>
-    </message>
-    <message>
-        <source>Only connect to nodes in network &lt;net&gt; (IPv4, IPv6 or Tor)</source>
-        <translation>仅连接至指定网络的节点&lt;net&gt;(IPv4, IPv6 或者 Tor)</translation>
-    </message>
-    <message>
         <source>Print block on startup, if found in block index</source>
         <translation>如果在搜索区块中找到，请启动打印区块</translation>
-    </message>
-    <message>
-        <source>Print block tree on startup (default: 0)</source>
-        <translation>启动时打印区块树 (默认值: 0)</translation>
     </message>
     <message>
         <source>RPC SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
@@ -3124,24 +2914,8 @@ rpcpassword=%s
         <translation>随机每1个模拟测试&lt;n&gt;网络信息</translation>
     </message>
     <message>
-        <source>Relay non-P2SH multisig (default: 1)</source>
-        <translation>中转non-P2SH multisig (默认值: 1)</translation>
-    </message>
-    <message>
-        <source>Run a thread to flush wallet periodically (default: 1)</source>
-        <translation>运行一个程序，定时清理钱包 (默认值：1)</translation>
-    </message>
-    <message>
         <source>Send trace/debug info to console instead of debug.log file</source>
         <translation>跟踪/调试信息输出到控制台，不输出到 debug.log 文件</translation>
-    </message>
-    <message>
-        <source>Set minimum block size in bytes (default: 0)</source>
-        <translation>设置最小数据块大小(缺省:0)</translation>
-    </message>
-    <message>
-        <source>Sets the DB_PRIVATE flag in the wallet db environment (default: 1)</source>
-        <translation>设置DB_PRIVATE钱包标志DB环境 (默认值: 1)</translation>
     </message>
     <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>
@@ -3154,14 +2928,6 @@ rpcpassword=%s
     <message>
         <source>Signing transaction failed</source>
         <translation>签署交易失败</translation>
-    </message>
-    <message>
-        <source>Specify connection timeout in milliseconds (default: 5000)</source>
-        <translation>设置连接超时时间(缺省：5000毫秒)</translation>
-    </message>
-    <message>
-        <source>System error: </source>
-        <translation>系统错误：</translation>
     </message>
     <message>
         <source>This is experimental software.</source>
@@ -3182,10 +2948,6 @@ rpcpassword=%s
     <message>
         <source>Unable to bind to %s on this computer (bind returned error %s)</source>
         <translation>无法在此计算机上绑定 %s (绑定返回错误 %s)</translation>
-    </message>
-    <message>
-        <source>Use UPnP to map the listening port (default: 0)</source>
-        <translation>使用UPnP映射监听端口 (缺省: 0)</translation>
     </message>
     <message>
         <source>Use UPnP to map the listening port (default: 1 when listening)</source>
@@ -3241,27 +3003,12 @@ rpcpassword=%s
         <translation>将钱包升级到最新的格式</translation>
     </message>
     <message>
-        <source>Set key pool size to &lt;n&gt; (default: 100)</source>
-        <translation>设置密钥池大小为 &lt;n&gt; (缺省: 100)
-</translation>
-    </message>
-    <message>
         <source>Rescan the block chain for missing wallet transactions</source>
         <translation>重新扫描区块链以查找遗漏的钱包交易</translation>
     </message>
     <message>
         <source>Use OpenSSL (https) for JSON-RPC connections</source>
         <translation>为 JSON-RPC 连接使用 OpenSSL (https) 连接</translation>
-    </message>
-    <message>
-        <source>Server certificate file (default: server.cert)</source>
-        <translation>服务器证书 (默认为 server.cert)
-</translation>
-    </message>
-    <message>
-        <source>Server private key (default: server.pem)</source>
-        <translation>服务器私钥 (默认为 server.pem)
-</translation>
     </message>
     <message>
         <source>This help message</source>

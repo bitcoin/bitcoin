@@ -277,14 +277,6 @@
         <source>Form</source>
         <translation>Vorm</translation>
     </message>
-    <message>
-        <source>Wallet</source>
-        <translation>Beursie</translation>
-    </message>
-    <message>
-        <source>&lt;b&gt;Recent transactions&lt;/b&gt;</source>
-        <translation>&lt;b&gt;Onlangse transaksies&lt;/b&gt;</translation>
-    </message>
     </context>
 <context>
     <name>PaymentServer</name>
@@ -651,14 +643,6 @@
         <translation>Opsies:</translation>
     </message>
     <message>
-        <source>Listen for connections on &lt;port&gt; (default: 8333 or testnet: 18333)</source>
-        <translation>Luister vir konneksies op &lt;port&gt; (standaard: 8333 of testnet: 18333)</translation>
-    </message>
-    <message>
-        <source>Maintain at most &lt;n&gt; connections to peers (default: 125)</source>
-        <translation>Onderhou op die meeste &lt;n&gt; konneksies na eweknieë (standaard: 125)</translation>
-    </message>
-    <message>
         <source>Use the test network</source>
         <translation>Gebruik die toets netwerk</translation>
     </message>
@@ -669,10 +653,6 @@
     <message>
         <source>Information</source>
         <translation>Informasie</translation>
-    </message>
-    <message>
-        <source>System error: </source>
-        <translation>Sisteem fout:</translation>
     </message>
     <message>
         <source>This help message</source>
