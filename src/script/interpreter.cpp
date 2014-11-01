@@ -12,7 +12,6 @@
 #include "key.h"
 #include "script/script.h"
 #include "uint256.h"
-#include "util.h"
 
 using namespace std;
 
@@ -38,8 +37,6 @@ inline bool set_error(ScriptError* ret, const ScriptError serror = SCRIPT_UNKNOW
 {
     if (ret)
         *ret = serror;
-    if (serror != UNKNOWN_ERROR)
-        return error(ScriptErrorString(serror));
     return false;
 }
 
@@ -989,14 +986,12 @@ public:
 uint256 SignatureHash(const CScript& scriptCode, const CTransaction& txTo, unsigned int nIn, int nHashType)
 {
     if (nIn >= txTo.vin.size()) {
-        LogPrintf("ERROR: SignatureHash() : nIn=%d out of range\n", nIn);
         return 1;
     }
 
     // Check for invalid use of SIGHASH_SINGLE
     if ((nHashType & 0x1f) == SIGHASH_SINGLE) {
         if (nIn >= txTo.vout.size()) {
-            LogPrintf("ERROR: SignatureHash() : nOut=%d out of range\n", nIn);
             return 1;
         }
     }

@@ -716,8 +716,12 @@ bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
         // IsStandard() will have already returned false
         // and this method isn't called.
         vector<vector<unsigned char> > stack;
-        if (!EvalScript(stack, tx.vin[i].scriptSig, false, BaseSignatureChecker()))
+        ScriptError serror;
+        if (!EvalScript(stack, tx.vin[i].scriptSig, false, BaseSignatureChecker(), &serror)) {
+            if (serror != SCRIPT_UNKNOWN_ERROR)
+                return error(ScriptErrorString(serror));
             return false;
+        }
 
         if (whichType == TX_SCRIPTHASH)
         {
@@ -1338,8 +1342,9 @@ void UpdateCoins(const CTransaction& tx, CValidationState &state, CCoinsViewCach
 
 bool CScriptCheck::operator()() const {
     const CScript &scriptSig = ptxTo->vin[nIn].scriptSig;
-    if (!VerifyScript(scriptSig, scriptPubKey, nFlags, CachingSignatureChecker(*ptxTo, nIn, cacheStore)))
-        return error("CScriptCheck() : %s:%d VerifySignature failed", ptxTo->GetHash().ToString(), nIn);
+    ScriptError serror;
+    if (!VerifyScript(scriptSig, scriptPubKey, nFlags, CachingSignatureChecker(*ptxTo, nIn, cacheStore), &serror))
+        return error("CScriptCheck() : %s:%d VerifySignature failed. Error: %s", ptxTo->GetHash().ToString(), nIn, ScriptErrorString(serror));
     return true;
 }
 
