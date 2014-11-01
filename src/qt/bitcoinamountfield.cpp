@@ -221,6 +221,12 @@ void BitcoinAmountField::clear()
     unit->setCurrentIndex(0);
 }
 
+void BitcoinAmountField::setEnabled(bool fEnabled)
+{
+    amount->setEnabled(fEnabled);
+    unit->setEnabled(fEnabled);
+}
+
 bool BitcoinAmountField::validate()
 {
     bool valid = false;
