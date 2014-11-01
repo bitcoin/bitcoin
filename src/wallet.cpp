@@ -28,6 +28,7 @@ using namespace std;
 CFeeRate payTxFee(DEFAULT_TRANSACTION_FEE);
 unsigned int nTxConfirmTarget = 1;
 bool bSpendZeroConfChange = true;
+bool fSendFreeTransactions = true;
 
 /** 
  * Fees smaller than this (in satoshi) are considered zero fee (for transaction creation) 
@@ -1502,7 +1503,7 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, CAmount> >& vecSend,
                     break; // Done, enough fee included.
 
                 // Too big to send for free? Include more fee and try again:
-                if (nBytes > MAX_FREE_TRANSACTION_CREATE_SIZE)
+                if (!fSendFreeTransactions || nBytes > MAX_FREE_TRANSACTION_CREATE_SIZE)
                 {
                     nFeeRet = nFeeNeeded;
                     continue;
