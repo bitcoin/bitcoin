@@ -43,8 +43,9 @@ void static secp256k1_fe_verify(const secp256k1_fe_t *a) {
     r &= (d[2] <= 0xFFFFFFFFFFFFFULL * m);
     r &= (d[3] <= 0xFFFFFFFFFFFFFULL * m);
     r &= (d[4] <= 0x0FFFFFFFFFFFFULL * m);
+    r &= (a->magnitude >= 0);
     if (a->normalized) {
-        r &= (m == 1);
+        r &= (a->magnitude <= 1);
         if (r && (d[4] == 0x0FFFFFFFFFFFFULL) && ((d[3] & d[2] & d[1]) == 0xFFFFFFFFFFFFFULL)) {
             r &= (d[0] < 0xFFFFEFFFFFC2FULL);
         }
@@ -128,7 +129,7 @@ int static inline secp256k1_fe_is_odd(const secp256k1_fe_t *a) {
 void static inline secp256k1_fe_clear(secp256k1_fe_t *a) {
 #ifdef VERIFY
     a->magnitude = 0;
-    a->normalized = 0;
+    a->normalized = 1;
 #endif
     for (int i=0; i<5; i++) {
         a->n[i] = 0;
@@ -210,6 +211,9 @@ void static inline secp256k1_fe_mul_int(secp256k1_fe_t *r, int a) {
 }
 
 void static inline secp256k1_fe_add(secp256k1_fe_t *r, const secp256k1_fe_t *a) {
+#ifdef VERIFY
+    secp256k1_fe_verify(a);
+#endif
     r->n[0] += a->n[0];
     r->n[1] += a->n[1];
     r->n[2] += a->n[2];
@@ -219,7 +223,6 @@ void static inline secp256k1_fe_add(secp256k1_fe_t *r, const secp256k1_fe_t *a) 
     r->magnitude += a->magnitude;
     r->normalized = 0;
     secp256k1_fe_verify(r);
-    secp256k1_fe_verify(a);
 #endif
 }
 
@@ -241,11 +244,13 @@ void static secp256k1_fe_mul(secp256k1_fe_t *r, const secp256k1_fe_t *a, const s
 void static secp256k1_fe_sqr(secp256k1_fe_t *r, const secp256k1_fe_t *a) {
 #ifdef VERIFY
     VERIFY_CHECK(a->magnitude <= 8);
+    secp256k1_fe_verify(a);
 #endif
     secp256k1_fe_sqr_inner(a->n, r->n);
 #ifdef VERIFY
     r->magnitude = 1;
     r->normalized = 0;
+    secp256k1_fe_verify(r);
 #endif
 }
 
