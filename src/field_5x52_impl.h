@@ -185,11 +185,11 @@ void static inline secp256k1_fe_negate(secp256k1_fe_t *r, const secp256k1_fe_t *
     VERIFY_CHECK(a->magnitude <= m);
     secp256k1_fe_verify(a);
 #endif
-    r->n[0] = 0xFFFFEFFFFFC2FULL * (m + 1) - a->n[0];
-    r->n[1] = 0xFFFFFFFFFFFFFULL * (m + 1) - a->n[1];
-    r->n[2] = 0xFFFFFFFFFFFFFULL * (m + 1) - a->n[2];
-    r->n[3] = 0xFFFFFFFFFFFFFULL * (m + 1) - a->n[3];
-    r->n[4] = 0x0FFFFFFFFFFFFULL * (m + 1) - a->n[4];
+    r->n[0] = 0xFFFFEFFFFFC2FULL * 2 * (m + 1) - a->n[0];
+    r->n[1] = 0xFFFFFFFFFFFFFULL * 2 * (m + 1) - a->n[1];
+    r->n[2] = 0xFFFFFFFFFFFFFULL * 2 * (m + 1) - a->n[2];
+    r->n[3] = 0xFFFFFFFFFFFFFULL * 2 * (m + 1) - a->n[3];
+    r->n[4] = 0x0FFFFFFFFFFFFULL * 2 * (m + 1) - a->n[4];
 #ifdef VERIFY
     r->magnitude = m + 1;
     r->normalized = 0;
