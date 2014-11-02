@@ -1,7 +1,8 @@
-bench
-bench.exe
+bench_inv
+bench_sign
+bench_verify
 tests
-tests.exe
+*.exe
 *.so
 *.a
 !.gitignore
