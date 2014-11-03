@@ -2,8 +2,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef TRANSACTIONTABLEMODEL_H
-#define TRANSACTIONTABLEMODEL_H
+#ifndef BITCOIN_QT_TRANSACTIONTABLEMODEL_H
+#define BITCOIN_QT_TRANSACTIONTABLEMODEL_H
 
 #include "bitcoinunits.h"
 
@@ -109,4 +109,4 @@ public slots:
     friend class TransactionTablePriv;
 };
 
-#endif // TRANSACTIONTABLEMODEL_H
+#endif // BITCOIN_QT_TRANSACTIONTABLEMODEL_H

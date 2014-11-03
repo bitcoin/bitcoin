@@ -3,8 +3,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef H_BITCOIN_WALLET_ISMINE
-#define H_BITCOIN_WALLET_ISMINE
+#ifndef BITCOIN_WALLET_ISMINE_H
+#define BITCOIN_WALLET_ISMINE_H
 
 #include "key.h"
 #include "script/standard.h"
@@ -26,4 +26,4 @@ typedef uint8_t isminefilter;
 isminetype IsMine(const CKeyStore& keystore, const CScript& scriptPubKey);
 isminetype IsMine(const CKeyStore& keystore, const CTxDestination& dest);
 
-#endif // H_BITCOIN_WALLET_ISMINE
+#endif // BITCOIN_WALLET_ISMINE_H
