@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
 
-#ifndef STORAGE_LEVELDB_DB_FORMAT_H_
-#define STORAGE_LEVELDB_DB_FORMAT_H_
+#ifndef STORAGE_LEVELDB_DB_DBFORMAT_H_
+#define STORAGE_LEVELDB_DB_DBFORMAT_H_
 
 #include <stdio.h>
 #include "leveldb/comparator.h"
@@ -37,6 +37,9 @@ static const int kL0_StopWritesTrigger = 12;
 // the largest level since that can generate a lot of wasted disk
 // space if the same key space is being repeatedly overwritten.
 static const int kMaxMemCompactLevel = 2;
+
+// Approximate gap in bytes between samples of data read during iteration.
+static const int kReadBytesPeriod = 1048576;
 
 }  // namespace config
 
@@ -224,4 +227,4 @@ inline LookupKey::~LookupKey() {
 
 }  // namespace leveldb
 
-#endif  // STORAGE_LEVELDB_DB_FORMAT_H_
+#endif  // STORAGE_LEVELDB_DB_DBFORMAT_H_
