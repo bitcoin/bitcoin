@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_SHA2_H
-#define BITCOIN_SHA2_H
+#ifndef BITCOIN_CRYPTO_SHA2_H
+#define BITCOIN_CRYPTO_SHA2_H
 
 #include <stdint.h>
 #include <stdlib.h>
@@ -61,4 +61,4 @@ public:
     void Finalize(unsigned char hash[OUTPUT_SIZE]);
 };
 
-#endif // BITCOIN_SHA2_H
+#endif // BITCOIN_CRYPTO_SHA2_H
