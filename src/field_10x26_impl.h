@@ -188,16 +188,16 @@ void static inline secp256k1_fe_negate(secp256k1_fe_t *r, const secp256k1_fe_t *
     VERIFY_CHECK(a->magnitude <= m);
     secp256k1_fe_verify(a);
 #endif
-    r->n[0] = 0x3FFFC2FUL * (m + 1) - a->n[0];
-    r->n[1] = 0x3FFFFBFUL * (m + 1) - a->n[1];
-    r->n[2] = 0x3FFFFFFUL * (m + 1) - a->n[2];
-    r->n[3] = 0x3FFFFFFUL * (m + 1) - a->n[3];
-    r->n[4] = 0x3FFFFFFUL * (m + 1) - a->n[4];
-    r->n[5] = 0x3FFFFFFUL * (m + 1) - a->n[5];
-    r->n[6] = 0x3FFFFFFUL * (m + 1) - a->n[6];
-    r->n[7] = 0x3FFFFFFUL * (m + 1) - a->n[7];
-    r->n[8] = 0x3FFFFFFUL * (m + 1) - a->n[8];
-    r->n[9] = 0x03FFFFFUL * (m + 1) - a->n[9];
+    r->n[0] = 0x3FFFC2FUL * 2 * (m + 1) - a->n[0];
+    r->n[1] = 0x3FFFFBFUL * 2 * (m + 1) - a->n[1];
+    r->n[2] = 0x3FFFFFFUL * 2 * (m + 1) - a->n[2];
+    r->n[3] = 0x3FFFFFFUL * 2 * (m + 1) - a->n[3];
+    r->n[4] = 0x3FFFFFFUL * 2 * (m + 1) - a->n[4];
+    r->n[5] = 0x3FFFFFFUL * 2 * (m + 1) - a->n[5];
+    r->n[6] = 0x3FFFFFFUL * 2 * (m + 1) - a->n[6];
+    r->n[7] = 0x3FFFFFFUL * 2 * (m + 1) - a->n[7];
+    r->n[8] = 0x3FFFFFFUL * 2 * (m + 1) - a->n[8];
+    r->n[9] = 0x03FFFFFUL * 2 * (m + 1) - a->n[9];
 #ifdef VERIFY
     r->magnitude = m + 1;
     r->normalized = 0;
