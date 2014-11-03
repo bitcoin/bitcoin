@@ -25,8 +25,6 @@ int main() {
     };
     secp256k1_ge_start();
     secp256k1_scalar_t base, x;
-    secp256k1_scalar_init(&base);
-    secp256k1_scalar_init(&x);
     secp256k1_scalar_set_b32(&base, init, NULL);
     secp256k1_scalar_set_b32(&x, init, NULL);
     for (int i=0; i<1000000; i++) {
@@ -36,7 +34,5 @@ int main() {
     unsigned char res[32];
     secp256k1_scalar_get_b32(res, &x);
     CHECK(memcmp(res, fini, 32) == 0);
-    secp256k1_scalar_free(&base);
-    secp256k1_scalar_free(&x);
     return 0;
 }

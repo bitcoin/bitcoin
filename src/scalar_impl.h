@@ -11,16 +11,8 @@
 
 #include "group.h"
 
-void static secp256k1_scalar_init(secp256k1_scalar_t *r) {
-    secp256k1_num_init(&r->n);
-}
-
 void static secp256k1_scalar_clear(secp256k1_scalar_t *r) {
     secp256k1_num_clear(&r->n);
-}
-
-void static secp256k1_scalar_free(secp256k1_scalar_t *r) {
-    secp256k1_num_free(&r->n);
 }
 
 int static secp256k1_scalar_get_bits(const secp256k1_scalar_t *a, int offset, int count) {

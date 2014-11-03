@@ -12,14 +12,8 @@ typedef struct {
     secp256k1_num_t n;
 } secp256k1_scalar_t;
 
-/** Initialize a scalar. */
-void static secp256k1_scalar_init(secp256k1_scalar_t *r);
-
 /** Clear a scalar to prevent the leak of sensitive data. */
 void static secp256k1_scalar_clear(secp256k1_scalar_t *r);
-
-/** Free a scalar. */
-void static secp256k1_scalar_free(secp256k1_scalar_t *r);
 
 /** Access bits from a scalar. */
 int static secp256k1_scalar_get_bits(const secp256k1_scalar_t *a, int offset, int count);

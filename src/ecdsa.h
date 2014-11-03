@@ -11,9 +11,6 @@ typedef struct {
     secp256k1_num_t r, s;
 } secp256k1_ecdsa_sig_t;
 
-void static secp256k1_ecdsa_sig_init(secp256k1_ecdsa_sig_t *r);
-void static secp256k1_ecdsa_sig_free(secp256k1_ecdsa_sig_t *r);
-
 int static secp256k1_ecdsa_sig_parse(secp256k1_ecdsa_sig_t *r, const unsigned char *sig, int size);
 int static secp256k1_ecdsa_sig_serialize(unsigned char *sig, int *size, const secp256k1_ecdsa_sig_t *a);
 int static secp256k1_ecdsa_sig_verify(const secp256k1_ecdsa_sig_t *sig, const secp256k1_ge_t *pubkey, const secp256k1_num_t *message);
