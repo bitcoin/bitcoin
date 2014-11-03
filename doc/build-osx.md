@@ -47,7 +47,7 @@ The homebrew package for berkeley-db4 has been broken for some time.  It will in
 
 Running this command takes you into brew's interactive mode, which allows you to configure, make, and install by hand:
 ```
-$ brew install https://raw.github.com/mxcl/homebrew/master/Library/Formula/berkeley-db4.rb -–without-java 
+$ brew install https://raw.github.com/mxcl/homebrew/master/Library/Formula/berkeley-db4.rb -–without-java
 ```
 
 The rest of these commands are run inside brew interactive mode:
@@ -61,7 +61,7 @@ The rest of these commands are run inside brew interactive mode:
 
 After exiting, you'll get a warning that the install is keg-only, which means it wasn't symlinked to `/usr/local`.  You don't need it to link it to build bitcoin, but if you want to, here's how:
 
-    $ brew link --force berkeley-db4
+    $ brew link berkeley-db4 --force
 
 
 ### Building `bitcoind`
