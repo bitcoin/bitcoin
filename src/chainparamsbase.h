@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_CHAIN_PARAMS_BASE_H
-#define BITCOIN_CHAIN_PARAMS_BASE_H
+#ifndef BITCOIN_CHAINPARAMSBASE_H
+#define BITCOIN_CHAINPARAMSBASE_H
 
 #include <string>
 #include <vector>
@@ -62,4 +62,4 @@ bool SelectBaseParamsFromCommandLine();
  */
 bool AreBaseParamsConfigured();
 
-#endif // BITCOIN_CHAIN_PARAMS_BASE_H
+#endif // BITCOIN_CHAINPARAMSBASE_H

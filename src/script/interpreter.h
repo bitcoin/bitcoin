@@ -3,8 +3,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef H_BITCOIN_SCRIPT_INTERPRETER
-#define H_BITCOIN_SCRIPT_INTERPRETER
+#ifndef BITCOIN_SCRIPT_INTERPRETER_H
+#define BITCOIN_SCRIPT_INTERPRETER_H
 
 #include <vector>
 #include <stdint.h>
@@ -88,4 +88,4 @@ public:
 bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& script, unsigned int flags, const BaseSignatureChecker& checker);
 bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, unsigned int flags, const BaseSignatureChecker& checker);
 
-#endif // H_BITCOIN_SCRIPT_INTERPRETER
+#endif // BITCOIN_SCRIPT_INTERPRETER_H
