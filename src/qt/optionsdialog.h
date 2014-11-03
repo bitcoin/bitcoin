@@ -7,9 +7,12 @@
 
 #include <QDialog>
 
-class QDataWidgetMapper;
 class OptionsModel;
 class QValidatedLineEdit;
+
+QT_BEGIN_NAMESPACE
+class QDataWidgetMapper;
+QT_END_NAMESPACE
 
 namespace Ui {
 class OptionsDialog;

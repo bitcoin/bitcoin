@@ -7,8 +7,8 @@
 #define _BITCOINRPC_SERVER_H_
 
 #include "amount.h"
-#include "uint256.h"
 #include "rpcprotocol.h"
+#include "uint256.h"
 
 #include <list>
 #include <map>
