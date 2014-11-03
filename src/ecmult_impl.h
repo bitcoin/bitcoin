@@ -117,7 +117,6 @@ static int secp256k1_ecmult_wnaf(int *wnaf, const secp256k1_num_t *a, int w) {
     int ret = 0;
     int zeroes = 0;
     secp256k1_num_t x;
-    secp256k1_num_init(&x);
     secp256k1_num_copy(&x, a);
     int sign = 1;
     if (secp256k1_num_is_neg(&x)) {
@@ -142,7 +141,6 @@ static int secp256k1_ecmult_wnaf(int *wnaf, const secp256k1_num_t *a, int w) {
         }
         zeroes = w-1;
     }
-    secp256k1_num_free(&x);
     return ret;
 }
 
@@ -151,8 +149,6 @@ void static secp256k1_ecmult(secp256k1_gej_t *r, const secp256k1_gej_t *a, const
 
 #ifdef USE_ENDOMORPHISM
     secp256k1_num_t na_1, na_lam;
-    secp256k1_num_init(&na_1);
-    secp256k1_num_init(&na_lam);
     // split na into na_1 and na_lam (where na = na_1 + na_lam*lambda, and na_1 and na_lam are ~128 bit)
     secp256k1_gej_split_exp(&na_1, &na_lam, na);
 
@@ -179,8 +175,6 @@ void static secp256k1_ecmult(secp256k1_gej_t *r, const secp256k1_gej_t *a, const
 
     // Splitted G factors.
     secp256k1_num_t ng_1, ng_128;
-    secp256k1_num_init(&ng_1);
-    secp256k1_num_init(&ng_128);
 
     // split ng into ng_1 and ng_128 (where gn = gn_1 + gn_128*2^128, and gn_1 and gn_128 are ~128 bit)
     secp256k1_num_split(&ng_1, &ng_128, ng, 128);
@@ -222,13 +216,6 @@ void static secp256k1_ecmult(secp256k1_gej_t *r, const secp256k1_gej_t *a, const
             secp256k1_gej_add_ge(r, r, &tmpa);
         }
     }
-
-#ifdef USE_ENDOMORPHISM
-    secp256k1_num_free(&na_1);
-    secp256k1_num_free(&na_lam);
-#endif
-    secp256k1_num_free(&ng_1);
-    secp256k1_num_free(&ng_128);
 }
 
 #endif

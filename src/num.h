@@ -15,14 +15,8 @@
 #error "Please select num implementation"
 #endif
 
-/** Initialize a number. */
-void static secp256k1_num_init(secp256k1_num_t *r);
-
 /** Clear a number to prevent the leak of sensitive data. */
 void static secp256k1_num_clear(secp256k1_num_t *r);
-
-/** Free a number. */
-void static secp256k1_num_free(secp256k1_num_t *r);
 
 /** Copy a number. */
 void static secp256k1_num_copy(secp256k1_num_t *r, const secp256k1_num_t *a);

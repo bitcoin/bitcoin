@@ -205,11 +205,9 @@ void static secp256k1_fe_inv_var(secp256k1_fe_t *r, const secp256k1_fe_t *a) {
     secp256k1_fe_normalize(&c);
     secp256k1_fe_get_b32(b, &c);
     secp256k1_num_t n; 
-    secp256k1_num_init(&n);
     secp256k1_num_set_bin(&n, b, 32);
     secp256k1_num_mod_inverse(&n, &n, &secp256k1_fe_consts->p);
     secp256k1_num_get_bin(b, 32, &n);
-    secp256k1_num_free(&n);
     secp256k1_fe_set_b32(r, b);
 #else
 #error "Please select field inverse implementation"
@@ -274,7 +272,6 @@ void static secp256k1_fe_start(void) {
     if (secp256k1_fe_consts == NULL) {
         secp256k1_fe_inner_start();
         secp256k1_fe_consts_t *ret = (secp256k1_fe_consts_t*)malloc(sizeof(secp256k1_fe_consts_t));
-        secp256k1_num_init(&ret->p);
         secp256k1_num_set_bin(&ret->p, secp256k1_fe_consts_p, sizeof(secp256k1_fe_consts_p));
         secp256k1_fe_consts = ret;
     }
@@ -283,7 +280,6 @@ void static secp256k1_fe_start(void) {
 void static secp256k1_fe_stop(void) {
     if (secp256k1_fe_consts != NULL) {
         secp256k1_fe_consts_t *c = (secp256k1_fe_consts_t*)secp256k1_fe_consts;
-        secp256k1_num_free(&c->p);
         free((void*)c);
         secp256k1_fe_consts = NULL;
         secp256k1_fe_inner_stop();

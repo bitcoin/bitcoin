@@ -327,12 +327,6 @@ void static secp256k1_gej_split_exp(secp256k1_num_t *r1, secp256k1_num_t *r2, co
     const secp256k1_ge_consts_t *c = secp256k1_ge_consts;
     secp256k1_num_t bnc1, bnc2, bnt1, bnt2, bnn2;
 
-    secp256k1_num_init(&bnc1);
-    secp256k1_num_init(&bnc2);
-    secp256k1_num_init(&bnt1);
-    secp256k1_num_init(&bnt2);
-    secp256k1_num_init(&bnn2);
-
     secp256k1_num_copy(&bnn2, &c->order);
     secp256k1_num_shift(&bnn2, 1);
 
@@ -351,12 +345,6 @@ void static secp256k1_gej_split_exp(secp256k1_num_t *r1, secp256k1_num_t *r2, co
     secp256k1_num_mul(&bnt1, &bnc1, &c->b1);
     secp256k1_num_mul(&bnt2, &bnc2, &c->a1b2);
     secp256k1_num_sub(r2, &bnt1, &bnt2);
-
-    secp256k1_num_free(&bnc1);
-    secp256k1_num_free(&bnc2);
-    secp256k1_num_free(&bnt1);
-    secp256k1_num_free(&bnt2);
-    secp256k1_num_free(&bnn2);
 }
 #endif
 
@@ -410,16 +398,10 @@ void static secp256k1_ge_start(void) {
 #endif
     if (secp256k1_ge_consts == NULL) {
         secp256k1_ge_consts_t *ret = (secp256k1_ge_consts_t*)malloc(sizeof(secp256k1_ge_consts_t));
-        secp256k1_num_init(&ret->order);
-        secp256k1_num_init(&ret->half_order);
         secp256k1_num_set_bin(&ret->order,  secp256k1_ge_consts_order,  sizeof(secp256k1_ge_consts_order));
         secp256k1_num_copy(&ret->half_order, &ret->order);
         secp256k1_num_shift(&ret->half_order, 1);
 #ifdef USE_ENDOMORPHISM
-        secp256k1_num_init(&ret->lambda);
-        secp256k1_num_init(&ret->a1b2);
-        secp256k1_num_init(&ret->a2);
-        secp256k1_num_init(&ret->b1);
         secp256k1_num_set_bin(&ret->lambda, secp256k1_ge_consts_lambda, sizeof(secp256k1_ge_consts_lambda));
         secp256k1_num_set_bin(&ret->a1b2,   secp256k1_ge_consts_a1b2,   sizeof(secp256k1_ge_consts_a1b2));
         secp256k1_num_set_bin(&ret->a2,     secp256k1_ge_consts_a2,     sizeof(secp256k1_ge_consts_a2));
@@ -437,14 +419,6 @@ void static secp256k1_ge_start(void) {
 void static secp256k1_ge_stop(void) {
     if (secp256k1_ge_consts != NULL) {
         secp256k1_ge_consts_t *c = (secp256k1_ge_consts_t*)secp256k1_ge_consts;
-        secp256k1_num_free(&c->order);
-        secp256k1_num_free(&c->half_order);
-#ifdef USE_ENDOMORPHISM
-        secp256k1_num_free(&c->lambda);
-        secp256k1_num_free(&c->a1b2);
-        secp256k1_num_free(&c->a2);
-        secp256k1_num_free(&c->b1);
-#endif
         free((void*)c);
         secp256k1_ge_consts = NULL;
     }

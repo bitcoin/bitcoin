@@ -303,6 +303,7 @@ void static secp256k1_num_set_hex(secp256k1_num_t *r, const char *a, int alen) {
         num[i] = cvt[(unsigned char)a[i]];
     }
     r->limbs = mpn_set_str(r->data, num, alen, 16);
+    r->neg = 0;
     while (r->limbs > 1 && r->data[r->limbs-1] == 0) r->limbs--;
 }
 
