@@ -58,7 +58,38 @@ enum
     SCRIPT_VERIFY_MINIMALDATA = (1U << 6)
 };
 
+enum ScriptError
+{
+    SCRIPT_NO_ERROR = 0,
+    SCRIPT_UNKNOWN_ERROR,
+    PUBKEY_TOO_SHORT,
+    PUBKEY_BAD_UNCOMPRESSED_LENGTH,
+    PUBKEY_BAD_COMPRESSED_LENGTH,
+    PUBKEY_UNKNOWN_LENGTH,
+    SIG_TOO_SHORT,
+    SIG_TOO_LONG,
+    SIG_BAD_TYPE,
+    SIG_BAD_LENGTH_MARKER,
+    SIG_S_LENGTH_MISPLACED,
+    SIG_R_S_LENGTH_MISMATCH,
+    SIG_R_TYPE_MISMATCH,
+    SIG_R_ZERO_LENGTH,
+    SIG_R_NEGATIVE,
+    SIG_R_EXCESSIVE_PADDING,
+    SIG_S_TOO_HIGH,
+    SIG_S_TYPE_MISMATCH,
+    SIG_S_ZERO_LENGTH,
+    SIG_S_NEGATIVE,
+    SIG_S_EXCESSIVE_PADDING,
+    SIG_BAD_HASHTYPE,
+    SIG_CHECKMULTISIG_DUMMY_NONNULL,
+    SIG_BAD,
+    SCRIPT_ERROR_COUNT
+};
+
 uint256 SignatureHash(const CScript &scriptCode, const CTransaction& txTo, unsigned int nIn, int nHashType);
+
+const char* ScriptErrorString(ScriptError error);
 
 class BaseSignatureChecker
 {
@@ -85,7 +116,7 @@ public:
     bool CheckSig(const std::vector<unsigned char>& scriptSig, const std::vector<unsigned char>& vchPubKey, const CScript& scriptCode) const;
 };
 
-bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& script, unsigned int flags, const BaseSignatureChecker& checker);
-bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, unsigned int flags, const BaseSignatureChecker& checker);
+bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& script, unsigned int flags, const BaseSignatureChecker& checker, ScriptError* error = NULL);
+bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, unsigned int flags, const BaseSignatureChecker& checker, ScriptError* error = NULL);
 
 #endif // H_BITCOIN_SCRIPT_INTERPRETER
