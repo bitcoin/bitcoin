@@ -443,6 +443,185 @@ Value decoderawtransaction(const Array& params, bool fHelp)
     return result;
 }
 
+Value explainrawtransaction(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 1)
+        throw runtime_error(
+            "explainrawtransaction \"hexstring\"\n"
+            "\nReturn a JSON object representing the serialized, hex-encoded transaction,\n"
+            "as it applies to the current chainstate.\n"
+
+            "\nArguments:\n"
+            "1. \"hex\"      (string, required) The transaction hex string\n"
+
+            "\nResult:\n"
+            "{\n"
+            "  \"txid\" : \"id\",        (string) The transaction id\n"
+            "  \"version\" : n,          (numeric) The version\n"
+            "  \"locktime\" : ttt,       (numeric) The lock time\n"
+            "  \"vin\" : [               (array of json objects)\n"
+            "     {\n"
+            "       \"txid\": \"id\",    (string) The transaction id\n"
+            "       \"vout\": n,         (numeric) The output number\n"
+            "       \"scriptSig\": {     (json object) The script\n"
+            "         \"asm\": \"asm\",  (string) asm\n"
+            "         \"hex\": \"hex\"   (string) hex\n"
+            "       },\n"
+            "       \"txoInfo\": {     (json object) Information about the referenced output\n"
+            "         \"coinbase\" : true|false   (boolean) Coinbase or not\n"
+            "         \"scriptPubKey\" : {        (json object)\n"
+            "           \"asm\" : \"code\",       (string) \n"
+            "           \"hex\" : \"hex\",        (string) \n"
+            "           \"reqSigs\" : n,          (numeric) Number of required signatures\n"
+            "           \"type\" : \"pubkeyhash\",  (string) The type, eg pubkeyhash\n"
+            "           \"addresses\" : [         (array of string) array of bitcoin addresses\n"
+            "             \"bitcoinaddress\"      (string) bitcoin address\n"
+            "              ,...\n"
+            "           ]\n"
+            "         }\n"
+            "         \"value\" : x.xxx,          (numeric) The transaction value in btc\n"
+            "         \"version\" : n,            (numeric) The version\n"
+            "         \"bestblock\" : \"hash\",     (string) the block hash\n"
+            "         \"confirmations\" : n,      (numeric) The number of confirmations\n"
+            "       },\n"
+            "       \"sequence\": n     (numeric) The script sequence number\n"
+            "     }\n"
+            "     ,...\n"
+            "  ],\n"
+            "  \"vout\" : [             (array of json objects)\n"
+            "     {\n"
+            "       \"value\" : x.xxx,            (numeric) The value in btc\n"
+            "       \"n\" : n,                    (numeric) index\n"
+            "       \"scriptPubKey\" : {          (json object)\n"
+            "         \"asm\" : \"asm\",          (string) the asm\n"
+            "         \"hex\" : \"hex\",          (string) the hex\n"
+            "         \"reqSigs\" : n,            (numeric) The required sigs\n"
+            "         \"type\" : \"pubkeyhash\",  (string) The type, eg 'pubkeyhash'\n"
+            "         \"addresses\" : [           (json array of string)\n"
+            "           \"12tvKAXCxZjSmdNbao16dKXC8tRWfcF5oc\"   (string) bitcoin address\n"
+            "           ,...\n"
+            "         ]\n"
+            "       }\n"
+            "     }\n"
+            "     ,...\n"
+            "  ],\n"
+            "  \"total_input\" : x.xxx,            (numeric) The total input value in btc\n"
+            "  \"total_output\" : x.xxx,           (numeric) The total output value in btc\n"
+            "  \"fee\" : x.xxx,                    (numeric) total_output - total_input\n"
+            "  \"priority\" : x.xxx,               (numeric) The priority of the transaction\n"
+            "}\n"
+
+            "\nExamples:\n"
+            + HelpExampleCli("explainrawtransaction", "\"hexstring\"")
+            + HelpExampleRpc("explainrawtransaction", "\"hexstring\"")
+        );
+
+    vector<unsigned char> txData(ParseHexV(params[0], "argument"));
+    CDataStream ssData(txData, SER_NETWORK, PROTOCOL_VERSION);
+    CTransaction tx;
+    try {
+        ssData >> tx;
+    }
+    catch (std::exception &e) {
+        throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX decode failed");
+    }
+
+    // Do a pure decode of the transaction
+    Object result;
+    TxToJSON(tx, 0, result);
+
+    // Loop through pure decode, adding available information
+    int64_t total_in = 0;
+    int64_t total_out = 0;
+    // First, check that all inputs are available, attach information, and sum
+    // their values
+    Array vin = find_value(result, "vin").get_array();
+    BOOST_FOREACH(Value& json_input_v, vin)
+    {
+        Object& json_input = json_input_v.get_obj();
+        RPCTypeCheck(json_input, map_list_of("txid", str_type)("vout", int_type));
+        const Value& txid_v = find_value(json_input, "txid");
+        const Value& vout_v = find_value(json_input, "vout");
+
+        // Look up the input transaction and place it into `coins`
+        const unsigned vout = vout_v.get_int();
+        CCoins coins;
+        {
+            uint256 txid;
+            txid.SetHex(txid_v.get_str());
+            // Start by checking the wallet.
+            bool txout_known = pwalletMain->mapWallet.count(txid) > 0;
+            if (txout_known) {
+                const CWalletTx& wtx = pwalletMain->mapWallet[txid];
+                coins = CCoins(wtx, chainActive.Height());
+            }
+            // If not there, try the utxoset
+            if (!txout_known)
+                txout_known = !!pcoinsTip->GetCoins(txid, coins);
+            // If not there, try the mempool
+            if (!txout_known) {
+                // nb this block was lifted from gettxout in rpcblockchain.cpp
+                LOCK(mempool.cs);
+                CCoinsViewMemPool view(pcoinsTip, mempool);
+                txout_known = !!view.GetCoins(txid, coins);
+                // Should we prune spent outputs for explainrawtransaction?
+                // For now, do so to be consistent with gettxout.
+                if (txout_known)
+                    mempool.pruneSpent(txid, coins);
+            }
+            // Ok, we have the previous transaction -- do we have the right output?
+            if (txout_known &&
+                (vout >= coins.vout.size() || coins.vout[vout].IsNull()))
+                txout_known = false;
+            // If all that failed, give up :)
+            if (!txout_known)
+                throw JSONRPCError(RPC_VERIFY_INPUT_UNKNOWN, "Not all transaction inputs are known. Please use decoderawtransaction instead.");
+        }
+        // Add the coin's information to the JSON output
+        // nb this code was lifted from gettxout in rpcblockchain.cpp
+        Object vout_info;
+        vout_info.push_back(Pair("coinbase", coins.fCoinBase));
+        Object o;
+        ScriptPubKeyToJSON(coins.vout[vout].scriptPubKey, o, true);
+        vout_info.push_back(Pair("scriptPubKey", o));
+        vout_info.push_back(Pair("value", ValueFromAmount(coins.vout[vout].nValue)));
+        vout_info.push_back(Pair("version", coins.nVersion));
+
+        BlockMap::iterator it = mapBlockIndex.find(pcoinsTip->GetBestBlock());
+        CBlockIndex *pindex = it->second;
+        vout_info.push_back(Pair("bestblock", pindex->GetBlockHash().GetHex()));
+        if ((unsigned int)coins.nHeight == MEMPOOL_HEIGHT)
+            vout_info.push_back(Pair("confirmations", 0));
+        else
+            vout_info.push_back(Pair("confirmations", pindex->nHeight - coins.nHeight + 1));
+        json_input.push_back(Pair("txoInfo", vout_info));
+        total_in += coins.vout[vout].nValue;
+    }
+    // Loop through the outputs just to get the total
+    Array vout = find_value(result, "vout").get_array();
+    BOOST_FOREACH(const Value& json_output_v, vout)
+    {
+        const Object& json_output = json_output_v.get_obj();
+        const Value& value_v = find_value(json_output, "value");
+        total_out += AmountFromValue(value_v);
+    }
+
+    // Add total input/output data to the JSON
+    CCoinsViewCache &view = *pcoinsTip;
+    result.push_back(Pair("total_input", ValueFromAmount(total_in)));
+    result.push_back(Pair("total_output", ValueFromAmount(total_out)));
+    result.push_back(Pair("fee", ValueFromAmount(total_in - total_out)));
+    result.push_back(Pair("priority", view.GetPriority(tx, chainActive.Height())));
+
+    // TODO: we should take multiple raw transactions as input and explain them all,
+    // allowing them to be chained together (which means our input lookups above will
+    // need to also check the list of earlier-seen outputs).
+    Array ret;
+    ret.push_back(result);
+
+    return ret;
+}
+
 Value decodescript(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)

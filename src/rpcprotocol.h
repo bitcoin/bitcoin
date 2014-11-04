@@ -52,6 +52,7 @@ enum RPCErrorCode
     RPC_VERIFY_ERROR                = -25, // General error during transaction or block submission
     RPC_VERIFY_REJECTED             = -26, // Transaction or block was rejected by network rules
     RPC_VERIFY_ALREADY_IN_CHAIN     = -27, // Transaction already in chain
+    RPC_VERIFY_INPUT_UNKNOWN        = -28, // Unknown input for explainrawtransaction
 
     // Aliases for backward compatibility
     RPC_TRANSACTION_ERROR           = RPC_VERIFY_ERROR,
