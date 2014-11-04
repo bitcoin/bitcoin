@@ -1,7 +1,7 @@
 * update translations (ping tcatm on IRC for now)
 
 * update (commit) version in sources
-  bitcoin-qt.pro
+  novacoin-qt.pro
   src/version.h
   share/setup.nsi
   doc/README*
@@ -16,7 +16,7 @@
 
 * perform gitian builds
 
-  * From a directory containing the bitcoin source, gitian-builder and gitian.sigs
+  * From a directory containing the novacoin source, gitian-builder and gitian.sigs
    export SIGNER=(your gitian key, ie bluematt, sipa, etc)
    export VERSION=0.5.1
    cd ./gitian-builder
@@ -32,73 +32,73 @@
    wget 'http://downloads.sourceforge.net/project/boost/boost/1.47.0/boost_1_47_0.tar.bz2'
    wget 'http://download.qt.nokia.com/qt/source/qt-everywhere-opensource-src-4.7.4.tar.gz'
    cd ..
-   ./bin/gbuild ../bitcoin/contrib/gitian-descriptors/boost-win32.yml
+   ./bin/gbuild ../novacoin/contrib/gitian-descriptors/boost-win32.yml
    cp build/out/boost-win32-1.47.0-gitian.zip inputs/
-   ./bin/gbuild ../bitcoin/contrib/gitian-descriptors/qt-win32.yml
+   ./bin/gbuild ../novacoin/contrib/gitian-descriptors/qt-win32.yml
    cp build/out/qt-win32-4.7.4-gitian.zip inputs/
-   ./bin/gbuild ../bitcoin/contrib/gitian-descriptors/deps-win32.yml
-   cp build/out/bitcoin-deps-0.0.3.zip inputs/
+   ./bin/gbuild ../novacoin/contrib/gitian-descriptors/deps-win32.yml
+   cp build/out/novacoin-deps-0.0.3.zip inputs/
 
-  * Build bitcoind and bitcoin-qt on Linux32, Linux64, and Win32:
-   ./bin/gbuild --commit bitcoin=v${VERSION} ../bitcoin/contrib/gitian-descriptors/gitian.yml
-   ./bin/gsign --signer $SIGNER --release ${VERSION} --destination ../gitian.sigs/ ../bitcoin/contrib/gitian-descriptors/gitian.yml
+  * Build novacoind and novacoin-qt on Linux32, Linux64, and Win32:
+   ./bin/gbuild --commit novacoin=v${VERSION} ../novacoin/contrib/gitian-descriptors/gitian.yml
+   ./bin/gsign --signer $SIGNER --release ${VERSION} --destination ../gitian.sigs/ ../novacoin/contrib/gitian-descriptors/gitian.yml
    pushd build/out
-   zip -r bitcoin-${VERSION}-linux-gitian.zip *
-   mv bitcoin-${VERSION}-linux-gitian.zip ../../
+   zip -r novacoin-${VERSION}-linux-gitian.zip *
+   mv novacoin-${VERSION}-linux-gitian.zip ../../
    popd
-   ./bin/gbuild --commit bitcoin=v${VERSION} ../bitcoin/contrib/gitian-descriptors/gitian-win32.yml
-   ./bin/gsign --signer $SIGNER --release ${VERSION}-win32 --destination ../gitian.sigs/ ../bitcoin/contrib/gitian-descriptors/gitian-win32.yml
+   ./bin/gbuild --commit novacoin=v${VERSION} ../novacoin/contrib/gitian-descriptors/gitian-win32.yml
+   ./bin/gsign --signer $SIGNER --release ${VERSION}-win32 --destination ../gitian.sigs/ ../novacoin/contrib/gitian-descriptors/gitian-win32.yml
    pushd build/out
-   zip -r bitcoin-${VERSION}-win32-gitian.zip *
-   mv bitcoin-${VERSION}-win32-gitian.zip ../../
+   zip -r novacoin-${VERSION}-win32-gitian.zip *
+   mv novacoin-${VERSION}-win32-gitian.zip ../../
    popd
 
   Build output expected:
-  1. linux 32-bit and 64-bit binaries + source (bitcoin-${VERSION}-linux-gitian.zip)
-  2. windows 32-bit binary, installer + source (bitcoin-${VERSION}-win32-gitian.zip)
+  1. linux 32-bit and 64-bit binaries + source (novacoin-${VERSION}-linux-gitian.zip)
+  2. windows 32-bit binary, installer + source (novacoin-${VERSION}-win32-gitian.zip)
   3. Gitian signatures (in gitian.sigs/${VERSION}[-win32]/(your gitian key)/
 
 * repackage gitian builds for release as stand-alone zip/tar/installer exe
 
   * Linux .tar.gz:
-   unzip bitcoin-${VERSION}-linux-gitian.zip -d bitcoin-${VERSION}-linux
-   tar czvf bitcoin-${VERSION}-linux.tar.gz bitcoin-${VERSION}-linux
-   rm -rf bitcoin-${VERSION}-linux
+   unzip novacoin-${VERSION}-linux-gitian.zip -d novacoin-${VERSION}-linux
+   tar czvf novacoin-${VERSION}-linux.tar.gz novacoin-${VERSION}-linux
+   rm -rf novacoin-${VERSION}-linux
 
   * Windows .zip and setup.exe:
-   unzip bitcoin-${VERSION}-win32-gitian.zip -d bitcoin-${VERSION}-win32
-   mv bitcoin-${VERSION}-win32/bitcoin-*-setup.exe .
-   zip -r bitcoin-${VERSION}-win32.zip bitcoin-${VERSION}-win32
-   rm -rf bitcoin-${VERSION}-win32
+   unzip novacoin-${VERSION}-win32-gitian.zip -d novacoin-${VERSION}-win32
+   mv novacoin-${VERSION}-win32/novacoin-*-setup.exe .
+   zip -r novacoin-${VERSION}-win32.zip novacoin-${VERSION}-win32
+   rm -rf novacoin-${VERSION}-win32
 
 * perform Mac build
   See this blog post for how Gavin set up his build environment to build the OSX
   release; note that a patched version of macdeployqt is not needed anymore, as
   the required functionality and fixes are implemented directly in macdeployqtplus:
-    http://gavintech.blogspot.com/2011/11/deploying-bitcoin-qt-on-osx.html
+    http://gavintech.blogspot.com/2011/11/deploying-novacoin-qt-on-osx.html
   Gavin also had trouble with the macports py27-appscript package; he
   ended up installing a version that worked with: /usr/bin/easy_install-2.7 appscript
 
-  qmake RELEASE=1 USE_UPNP=1 USE_QRCODE=1 bitcoin-qt.pro
+  qmake RELEASE=1 USE_UPNP=1 USE_QRCODE=1 novacoin-qt.pro
   make
   export QTDIR=/opt/local/share/qt4  # needed to find translations/qt_*.qm files
   T=$(contrib/qt_translations.py $QTDIR/translations src/qt/locale)
-  python2.7 contrib/macdeploy/macdeployqtplus Bitcoin-Qt.app -add-qt-tr $T -dmg -fancy contrib/macdeploy/fancy.plist
+  python2.7 contrib/macdeploy/macdeployqtplus Novacoin-Qt.app -add-qt-tr $T -dmg -fancy contrib/macdeploy/fancy.plist
 
  Build output expected:
-  Bitcoin-Qt.dmg
+  Novacoin-Qt.dmg
 
 * upload builds to SourceForge
 
 * create SHA256SUMS for builds, and PGP-sign it
 
-* update bitcoin.org version
+* update novacoin.org version
 
 * update forum version
 
 * update wiki download links
 
-* update wiki changelog: https://en.bitcoin.it/wiki/Changelog
+* update wiki changelog: https://wiki.novaco.in/en/Changelog
 
 * Commit your signature to gitian.sigs:
   pushd gitian.sigs
@@ -112,31 +112,31 @@
 
 * After 3 or more people have gitian-built, repackage gitian-signed zips:
 
-  * From a directory containing bitcoin source, gitian.sigs and gitian zips
+  * From a directory containing novacoin source, gitian.sigs and gitian zips
    export VERSION=0.5.1
-   mkdir bitcoin-${VERSION}-linux-gitian
-   pushd bitcoin-${VERSION}-linux-gitian
-   unzip ../bitcoin-${VERSION}-linux-gitian.zip
+   mkdir novacoin-${VERSION}-linux-gitian
+   pushd novacoin-${VERSION}-linux-gitian
+   unzip ../novacoin-${VERSION}-linux-gitian.zip
    mkdir gitian
-   cp ../bitcoin/contrib/gitian-downloader/*.pgp ./gitian/
+   cp ../novacoin/contrib/gitian-downloader/*.pgp ./gitian/
    for signer in $(ls ../gitian.sigs/${VERSION}/); do
-     cp ../gitian.sigs/${VERSION}/${signer}/bitcoin-build.assert ./gitian/${signer}-build.assert
-     cp ../gitian.sigs/${VERSION}/${signer}/bitcoin-build.assert.sig ./gitian/${signer}-build.assert.sig
+     cp ../gitian.sigs/${VERSION}/${signer}/novacoin-build.assert ./gitian/${signer}-build.assert
+     cp ../gitian.sigs/${VERSION}/${signer}/novacoin-build.assert.sig ./gitian/${signer}-build.assert.sig
    done
-   zip -r bitcoin-${VERSION}-linux-gitian.zip *
-   cp bitcoin-${VERSION}-linux-gitian.zip ../
+   zip -r novacoin-${VERSION}-linux-gitian.zip *
+   cp novacoin-${VERSION}-linux-gitian.zip ../
    popd
-   mkdir bitcoin-${VERSION}-win32-gitian
-   pushd bitcoin-${VERSION}-win32-gitian
-   unzip ../bitcoin-${VERSION}-win32-gitian.zip
+   mkdir novacoin-${VERSION}-win32-gitian
+   pushd novacoin-${VERSION}-win32-gitian
+   unzip ../novacoin-${VERSION}-win32-gitian.zip
    mkdir gitian
-   cp ../bitcoin/contrib/gitian-downloader/*.pgp ./gitian/
+   cp ../novacoin/contrib/gitian-downloader/*.pgp ./gitian/
    for signer in $(ls ../gitian.sigs/${VERSION}-win32/); do
-     cp ../gitian.sigs/${VERSION}-win32/${signer}/bitcoin-build.assert ./gitian/${signer}-build.assert
-     cp ../gitian.sigs/${VERSION}-win32/${signer}/bitcoin-build.assert.sig ./gitian/${signer}-build.assert.sig
+     cp ../gitian.sigs/${VERSION}-win32/${signer}/novacoin-build.assert ./gitian/${signer}-build.assert
+     cp ../gitian.sigs/${VERSION}-win32/${signer}/novacoin-build.assert.sig ./gitian/${signer}-build.assert.sig
    done
-   zip -r bitcoin-${VERSION}-win32-gitian.zip *
-   cp bitcoin-${VERSION}-win32-gitian.zip ../
+   zip -r novacoin-${VERSION}-win32-gitian.zip *
+   cp novacoin-${VERSION}-win32-gitian.zip ../
    popd
 
   * Upload gitian zips to SourceForge
