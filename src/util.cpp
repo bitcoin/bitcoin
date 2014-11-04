@@ -159,8 +159,8 @@ instance_of_cinit;
 // the mutex).
 
 static boost::once_flag debugPrintInitFlag = BOOST_ONCE_INIT;
-// We use boost::call_once() to make sure these are initialized in
-// in a thread-safe manner the first time it is called:
+// We use boost::call_once() to make sure these are initialized
+// in a thread-safe manner the first time called:
 static FILE* fileout = NULL;
 static boost::mutex* mutexDebugLog = NULL;
 
