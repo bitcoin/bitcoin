@@ -211,4 +211,8 @@ clean-local:
 	-$(MAKE) -C leveldb clean
 	rm -f leveldb/*/*.gcno leveldb/helpers/memenv/*.gcno
 
+if TARGET_DARWIN
+hash/yescrypt-0.5/yescrypt.o: CFLAGS += -O3 -msse4.1 -funroll-loops -fomit-frame-pointer
+else
 hash/yescrypt-0.5/yescrypt.o: CFLAGS += -msse4.1 -fPIC
+endif
