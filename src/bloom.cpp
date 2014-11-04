@@ -5,6 +5,7 @@
 #include "bloom.h"
 
 #include "core/transaction.h"
+#include "hash.h"
 #include "script/script.h"
 #include "script/standard.h"
 #include "streams.h"
