@@ -43,4 +43,4 @@ public:
     static bool SanityCheck();
 };
 
-#endif // BITCOIN_EC_WRAPPER_H
+#endif // BITCOIN_ECWRAPPER_H
