@@ -2,8 +2,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_CHECKPOINT_H
-#define BITCOIN_CHECKPOINT_H
+#ifndef BITCOIN_CHECKPOINTS_H
+#define BITCOIN_CHECKPOINTS_H
 
 #include "uint256.h"
 
@@ -40,4 +40,4 @@ extern bool fEnabled;
 
 } //namespace Checkpoints
 
-#endif // BITCOIN_CHECKPOINT_H
+#endif // BITCOIN_CHECKPOINTS_H

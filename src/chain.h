@@ -3,8 +3,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef H_BITCOIN_CHAIN
-#define H_BITCOIN_CHAIN
+#ifndef BITCOIN_CHAIN_H
+#define BITCOIN_CHAIN_H
 
 #include "core/block.h"
 #include "pow.h"
@@ -409,4 +409,4 @@ public:
     const CBlockIndex *FindFork(const CBlockIndex *pindex) const;
 };
 
-#endif // H_BITCOIN_CHAIN
+#endif // BITCOIN_CHAIN_H
