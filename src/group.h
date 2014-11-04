@@ -69,7 +69,7 @@ void static secp256k1_ge_get_hex(char *r, int *rlen, const secp256k1_ge_t *a);
 void static secp256k1_ge_set_gej(secp256k1_ge_t *r, secp256k1_gej_t *a);
 
 /** Set a batch of group elements equal to the inputs given in jacobian coordinates */
-void static secp256k1_ge_set_all_gej(size_t len, secp256k1_ge_t r[len], const secp256k1_gej_t a[len]);
+void static secp256k1_ge_set_all_gej_var(size_t len, secp256k1_ge_t r[len], const secp256k1_gej_t a[len]);
 
 
 /** Set a group element (jacobian) equal to the point at infinity. */
@@ -82,7 +82,7 @@ void static secp256k1_gej_set_xy(secp256k1_gej_t *r, const secp256k1_fe_t *x, co
 void static secp256k1_gej_set_ge(secp256k1_gej_t *r, const secp256k1_ge_t *a);
 
 /** Get the X coordinate of a group element (jacobian). */
-void static secp256k1_gej_get_x(secp256k1_fe_t *r, const secp256k1_gej_t *a);
+void static secp256k1_gej_get_x_var(secp256k1_fe_t *r, const secp256k1_gej_t *a);
 
 /** Set r equal to the inverse of a (i.e., mirrored around the X axis) */
 void static secp256k1_gej_neg(secp256k1_gej_t *r, const secp256k1_gej_t *a);
@@ -91,14 +91,14 @@ void static secp256k1_gej_neg(secp256k1_gej_t *r, const secp256k1_gej_t *a);
 int  static secp256k1_gej_is_infinity(const secp256k1_gej_t *a);
 
 /** Set r equal to the double of a. */
-void static secp256k1_gej_double(secp256k1_gej_t *r, const secp256k1_gej_t *a);
+void static secp256k1_gej_double_var(secp256k1_gej_t *r, const secp256k1_gej_t *a);
 
 /** Set r equal to the sum of a and b. */
-void static secp256k1_gej_add(secp256k1_gej_t *r, const secp256k1_gej_t *a, const secp256k1_gej_t *b);
+void static secp256k1_gej_add_var(secp256k1_gej_t *r, const secp256k1_gej_t *a, const secp256k1_gej_t *b);
 
 /** Set r equal to the sum of a and b (with b given in affine coordinates). This is more efficient
     than secp256k1_gej_add. */
-void static secp256k1_gej_add_ge(secp256k1_gej_t *r, const secp256k1_gej_t *a, const secp256k1_ge_t *b);
+void static secp256k1_gej_add_ge_var(secp256k1_gej_t *r, const secp256k1_gej_t *a, const secp256k1_ge_t *b);
 
 /** Get a hex representation of a point. *rlen will be overwritten with the real length. */
 void static secp256k1_gej_get_hex(char *r, int *rlen, const secp256k1_gej_t *a);
@@ -109,7 +109,7 @@ void static secp256k1_gej_mul_lambda(secp256k1_gej_t *r, const secp256k1_gej_t *
 
 /** Find r1 and r2 such that r1+r2*lambda = a, and r1 and r2 are maximum 128 bits long (given that a is
     not more than 256 bits). */
-void static secp256k1_gej_split_exp(secp256k1_num_t *r1, secp256k1_num_t *r2, const secp256k1_num_t *a);
+void static secp256k1_gej_split_exp_var(secp256k1_num_t *r1, secp256k1_num_t *r2, const secp256k1_num_t *a);
 #endif
 
 /** Clear a secp256k1_gej_t to prevent leaking sensitive information. */

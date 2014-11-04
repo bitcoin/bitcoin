@@ -49,7 +49,7 @@ static void secp256k1_ecmult_gen_start(void) {
         VERIFY_CHECK(secp256k1_ge_set_xo(&nums_ge, &nums_x, 0));
         secp256k1_gej_set_ge(&nums_gej, &nums_ge);
         // Add G to make the bits in x uniformly distributed.
-        secp256k1_gej_add_ge(&nums_gej, &nums_gej, g);
+        secp256k1_gej_add_ge_var(&nums_gej, &nums_gej, g);
     }
 
     // compute prec.
@@ -63,21 +63,21 @@ static void secp256k1_ecmult_gen_start(void) {
             // Set precj[j*16 .. j*16+15] to (numsbase, numsbase + gbase, ..., numsbase + 15*gbase).
             precj[j*16] = numsbase;
             for (int i=1; i<16; i++) {
-                secp256k1_gej_add(&precj[j*16 + i], &precj[j*16 + i - 1], &gbase);
+                secp256k1_gej_add_var(&precj[j*16 + i], &precj[j*16 + i - 1], &gbase);
             }
             // Multiply gbase by 16.
             for (int i=0; i<4; i++) {
-                secp256k1_gej_double(&gbase, &gbase);
+                secp256k1_gej_double_var(&gbase, &gbase);
             }
             // Multiply numbase by 2.
-            secp256k1_gej_double(&numsbase, &numsbase);
+            secp256k1_gej_double_var(&numsbase, &numsbase);
             if (j == 62) {
                 // In the last iteration, numsbase is (1 - 2^j) * nums instead.
                 secp256k1_gej_neg(&numsbase, &numsbase);
-                secp256k1_gej_add(&numsbase, &numsbase, &nums_gej);
+                secp256k1_gej_add_var(&numsbase, &numsbase, &nums_gej);
             }
         }
-        secp256k1_ge_set_all_gej(1024, prec, precj);
+        secp256k1_ge_set_all_gej_var(1024, prec, precj);
     }
     for (int j=0; j<64; j++) {
         for (int i=0; i<16; i++) {
@@ -109,7 +109,10 @@ void static secp256k1_ecmult_gen(secp256k1_gej_t *r, const secp256k1_scalar_t *g
         bits = secp256k1_scalar_get_bits(gn, j * 4, 4);
         for (int k=0; k<sizeof(secp256k1_ge_t); k++)
             ((unsigned char*)(&add))[k] = c->prec[j][k][bits];
-        secp256k1_gej_add_ge(r, r, &add);
+        // Note that the next line uses a variable-time addition function, which
+        // is fine, as the inputs are blinded (they have no known corresponding
+        // private key).
+        secp256k1_gej_add_ge_var(r, r, &add);
     }
     bits = 0;
     secp256k1_ge_clear(&add);
