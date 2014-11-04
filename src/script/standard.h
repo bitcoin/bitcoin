@@ -6,15 +6,15 @@
 #ifndef BITCOIN_SCRIPT_STANDARD_H
 #define BITCOIN_SCRIPT_STANDARD_H
 
-#include "uint256.h"
 #include "script/interpreter.h"
+#include "uint256.h"
 
 #include <boost/variant.hpp>
 
 #include <stdint.h>
 
-class CScript;
 class CKeyID;
+class CScript;
 
 /** A reference to a CScript: the Hash160 of its serialization (see script.h) */
 class CScriptID : public uint160
