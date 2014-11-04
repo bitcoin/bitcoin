@@ -86,6 +86,7 @@ Value getnetworkhashps(const Array& params, bool fHelp)
             + HelpExampleRpc("getnetworkhashps", "")
        );
 
+    LOCK(cs_main);
     return GetNetworkHashPS(params.size() > 0 ? params[0].get_int() : 120, params.size() > 1 ? params[1].get_int() : -1);
 }
 
@@ -105,6 +106,7 @@ Value getgenerate(const Array& params, bool fHelp)
             + HelpExampleRpc("getgenerate", "")
         );
 
+    LOCK(cs_main);
     return GetBoolArg("-gen", false);
 }
 
@@ -199,6 +201,8 @@ Value gethashespersec(const Array& params, bool fHelp)
             + HelpExampleRpc("gethashespersec", "")
         );
 
+    LOCK(cs_main);
+
     if (GetTimeMillis() - nHPSTimerStart > 8000)
         return (int64_t)0;
     return (int64_t)dHashesPerSec;
@@ -230,6 +234,9 @@ Value getmininginfo(const Array& params, bool fHelp)
             + HelpExampleCli("getmininginfo", "")
             + HelpExampleRpc("getmininginfo", "")
         );
+
+
+    LOCK(cs_main);
 
     Object obj;
     obj.push_back(Pair("blocks",           (int)chainActive.Height()));
@@ -270,6 +277,8 @@ Value prioritisetransaction(const Array& params, bool fHelp)
             + HelpExampleCli("prioritisetransaction", "\"txid\" 0.0 0.00010000")
             + HelpExampleRpc("prioritisetransaction", "\"txid\", 0.0, 0.00010000")
         );
+
+    LOCK(cs_main);
 
     uint256 hash;
     hash.SetHex(params[0].get_str());
@@ -344,6 +353,8 @@ Value getblocktemplate(const Array& params, bool fHelp)
             + HelpExampleCli("getblocktemplate", "")
             + HelpExampleRpc("getblocktemplate", "")
          );
+
+    LOCK(cs_main);
 
     std::string strMode = "template";
     Value lpval = Value::null;
