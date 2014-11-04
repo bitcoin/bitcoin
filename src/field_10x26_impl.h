@@ -166,7 +166,7 @@ void static secp256k1_fe_set_b32(secp256k1_fe_t *r, const unsigned char *a) {
 #endif
 }
 
-/** Convert a field element to a 32-bote big endian value. Requires the input to be normalized */
+/** Convert a field element to a 32-byte big endian value. Requires the input to be normalized */
 void static secp256k1_fe_get_b32(unsigned char *r, const secp256k1_fe_t *a) {
 #ifdef VERIFY
     VERIFY_CHECK(a->normalized);
