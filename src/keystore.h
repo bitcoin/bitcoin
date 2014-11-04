@@ -7,6 +7,7 @@
 #define BITCOIN_KEYSTORE_H
 
 #include "key.h"
+#include "pubkey.h"
 #include "sync.h"
 
 #include <boost/signals2/signal.hpp>

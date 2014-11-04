@@ -86,6 +86,7 @@ BITCOIN_CORE_H = \
   core_io.h \
   crypter.h \
   db.h \
+  eccryptoverify.h \
   ecwrapper.h \
   hash.h \
   init.h \
@@ -101,6 +102,7 @@ BITCOIN_CORE_H = \
   noui.h \
   pow.h \
   protocol.h \
+  pubkey.h \
   random.h \
   rpcclient.h \
   rpcprotocol.h \
@@ -220,12 +222,14 @@ libbitcoin_common_a_SOURCES = \
   core/transaction.cpp \
   core_read.cpp \
   core_write.cpp \
+  eccryptoverify.cpp \
   ecwrapper.cpp \
   hash.cpp \
   key.cpp \
   keystore.cpp \
   netbase.cpp \
   protocol.cpp \
+  pubkey.cpp \
   script/interpreter.cpp \
   script/script.cpp \
   script/sigcache.cpp \

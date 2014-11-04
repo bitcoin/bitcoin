@@ -7,7 +7,7 @@
 
 #include "chainparams.h"
 #include "clientversion.h"
-#include "key.h"
+#include "pubkey.h"
 #include "net.h"
 #include "timedata.h"
 #include "ui_interface.h"
