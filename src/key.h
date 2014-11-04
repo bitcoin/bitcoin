@@ -13,8 +13,8 @@
 #include <stdexcept>
 #include <vector>
 
-class CPubKey;
 class CExtPubKey;
+class CPubKey;
 
 /** 
  * secp256k1:
