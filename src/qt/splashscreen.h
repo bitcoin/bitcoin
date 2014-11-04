@@ -2,8 +2,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef SPLASHSCREEN_H
-#define SPLASHSCREEN_H
+#ifndef BITCOIN_QT_SPLASHSCREEN_H
+#define BITCOIN_QT_SPLASHSCREEN_H
 
 #include <QSplashScreen>
 
@@ -46,4 +46,4 @@ private:
     int curAlignment;
 };
 
-#endif // SPLASHSCREEN_H
+#endif // BITCOIN_QT_SPLASHSCREEN_H

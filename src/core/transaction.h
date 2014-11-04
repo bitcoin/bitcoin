@@ -3,8 +3,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef H_BITCOIN_CORE_TRANSACTION
-#define H_BITCOIN_CORE_TRANSACTION
+#ifndef BITCOIN_CORE_TRANSACTION_H
+#define BITCOIN_CORE_TRANSACTION_H
 
 #include "amount.h"
 #include "script/script.h"
@@ -273,4 +273,4 @@ struct CMutableTransaction
     uint256 GetHash() const;
 };
 
-#endif // H_BITCOIN_CORE_TRANSACTION
+#endif // BITCOIN_CORE_TRANSACTION_H

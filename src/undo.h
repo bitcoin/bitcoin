@@ -3,8 +3,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef H_BITCOIN_TXUNDO
-#define H_BITCOIN_TXUNDO
+#ifndef BITCOIN_UNDO_H
+#define BITCOIN_UNDO_H
 
 #include "compressor.h" 
 #include "core/transaction.h"
@@ -68,4 +68,4 @@ public:
     }
 };
 
-#endif // H_BITCOIN_TXUNDO
+#endif // BITCOIN_UNDO_H
