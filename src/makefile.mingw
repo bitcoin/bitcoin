@@ -39,7 +39,7 @@ ifneq (${USE_UPNP}, -)
  INCLUDEPATHS += -I"C:\miniupnpc-1.6-mgw"
  LIBPATHS += -L"C:\miniupnpc-1.6-mgw"
  LIBS += -l miniupnpc -l iphlpapi
- DEFS += -DSTATICLIB -DUSE_UPNP=$(USE_UPNP)
+ DEFS += -DSTATICLIB -DUSE_UPNP=$(USE_UPNP) -DMINIUPNP_STATICLIB
 endif
 
 ifneq (${USE_IPV6}, -)
