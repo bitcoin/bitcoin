@@ -70,7 +70,7 @@ int static secp256k1_ecdsa_sig_recompute(secp256k1_num_t *r2, const secp256k1_ec
     secp256k1_gej_t pubkeyj; secp256k1_gej_set_ge(&pubkeyj, pubkey);
     secp256k1_gej_t pr; secp256k1_ecmult(&pr, &pubkeyj, &u2, &u1);
     if (!secp256k1_gej_is_infinity(&pr)) {
-        secp256k1_fe_t xr; secp256k1_gej_get_x(&xr, &pr);
+        secp256k1_fe_t xr; secp256k1_gej_get_x_var(&xr, &pr);
         secp256k1_fe_normalize(&xr);
         unsigned char xrb[32]; secp256k1_fe_get_b32(xrb, &xr);
         secp256k1_num_set_bin(r2, xrb, 32);
@@ -121,7 +121,7 @@ int static secp256k1_ecdsa_sig_recover(const secp256k1_ecdsa_sig_t *sig, secp256
     secp256k1_num_mod_mul(&u2, &rn, &sig->s, &c->order);
     secp256k1_gej_t qj;
     secp256k1_ecmult(&qj, &xj, &u2, &u1);
-    secp256k1_ge_set_gej(pubkey, &qj);
+    secp256k1_ge_set_gej_var(pubkey, &qj);
     secp256k1_num_free(&rn);
     secp256k1_num_free(&u1);
     secp256k1_num_free(&u2);
