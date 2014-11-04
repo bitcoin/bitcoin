@@ -701,7 +701,7 @@ void test_ecdsa_end_to_end() {
 
     // Construct and verify corresponding public key.
     CHECK(secp256k1_ec_seckey_verify(privkey) == 1);
-    char pubkey[65]; int pubkeylen = 65;
+    unsigned char pubkey[65]; int pubkeylen = 65;
     CHECK(secp256k1_ec_pubkey_create(pubkey, &pubkeylen, privkey, secp256k1_rand32() % 2) == 1);
     CHECK(secp256k1_ec_pubkey_verify(pubkey, pubkeylen));
 
@@ -720,7 +720,7 @@ void test_ecdsa_end_to_end() {
         int ret2 = secp256k1_ec_pubkey_tweak_add(pubkey, pubkeylen, rnd);
         CHECK(ret1 == ret2);
         if (ret1 == 0) return;
-        char pubkey2[65]; int pubkeylen2 = 65;
+        unsigned char pubkey2[65]; int pubkeylen2 = 65;
         CHECK(secp256k1_ec_pubkey_create(pubkey2, &pubkeylen2, privkey, pubkeylen == 33) == 1);
         CHECK(memcmp(pubkey, pubkey2, pubkeylen) == 0);
     }
@@ -733,13 +733,13 @@ void test_ecdsa_end_to_end() {
         int ret2 = secp256k1_ec_pubkey_tweak_mul(pubkey, pubkeylen, rnd);
         CHECK(ret1 == ret2);
         if (ret1 == 0) return;
-        char pubkey2[65]; int pubkeylen2 = 65;
+        unsigned char pubkey2[65]; int pubkeylen2 = 65;
         CHECK(secp256k1_ec_pubkey_create(pubkey2, &pubkeylen2, privkey, pubkeylen == 33) == 1);
         CHECK(memcmp(pubkey, pubkey2, pubkeylen) == 0);
     }
 
     // Sign.
-    unsigned char signature[72]; unsigned int signaturelen = 72;
+    unsigned char signature[72]; int signaturelen = 72;
     while(1) {
         unsigned char rnd[32];
         secp256k1_rand256_test(rnd);
@@ -754,7 +754,7 @@ void test_ecdsa_end_to_end() {
     CHECK(secp256k1_ecdsa_verify(message, 32, signature, signaturelen, pubkey, pubkeylen) != 1);
 
     // Compact sign.
-    unsigned char csignature[64]; unsigned int recid = 0;
+    unsigned char csignature[64]; int recid = 0;
     while(1) {
         unsigned char rnd[32];
         secp256k1_rand256_test(rnd);
@@ -763,7 +763,7 @@ void test_ecdsa_end_to_end() {
         }
     }
     // Recover.
-    unsigned char recpubkey[65]; unsigned recpubkeylen = 0;
+    unsigned char recpubkey[65]; int recpubkeylen = 0;
     CHECK(secp256k1_ecdsa_recover_compact(message, 32, csignature, recpubkey, &recpubkeylen, pubkeylen == 33, recid) == 1);
     CHECK(recpubkeylen == pubkeylen);
     CHECK(memcmp(pubkey, recpubkey, pubkeylen) == 0);
@@ -809,7 +809,7 @@ void test_ecdsa_openssl() {
     EC_KEY *ec_key = get_openssl_key(&key);
     CHECK(ec_key);
     unsigned char signature[80];
-    int sigsize = 80;
+    unsigned int sigsize = 80;
     CHECK(ECDSA_sign(0, message, sizeof(message), signature, &sigsize, ec_key));
     secp256k1_ecdsa_sig_t sig;
     CHECK(secp256k1_ecdsa_sig_parse(&sig, signature, sigsize));
@@ -820,9 +820,9 @@ void test_ecdsa_openssl() {
     CHECK(!secp256k1_ecdsa_sig_verify(&sig, &q, &msg_num));
 
     random_sign(&sig, &key, &msg, NULL);
-    sigsize = 80;
-    CHECK(secp256k1_ecdsa_sig_serialize(signature, &sigsize, &sig));
-    CHECK(ECDSA_verify(0, message, sizeof(message), signature, sigsize, ec_key) == 1);
+    int secp_sigsize = 80;
+    CHECK(secp256k1_ecdsa_sig_serialize(signature, &secp_sigsize, &sig));
+    CHECK(ECDSA_verify(0, message, sizeof(message), signature, secp_sigsize, ec_key) == 1);
 
     EC_KEY_free(ec_key);
 }
@@ -885,7 +885,7 @@ int main(int argc, char **argv) {
     run_ecdsa_openssl();
 #endif
 
-    printf("random run = %llu\n", (unsigned long long)secp256k1_rand32() + (unsigned long long)secp256k1_rand32() << 32);
+    printf("random run = %llu\n", (unsigned long long)secp256k1_rand32() + ((unsigned long long)secp256k1_rand32() << 32));
 
     // shutdown
     secp256k1_stop();
