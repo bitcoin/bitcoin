@@ -109,13 +109,13 @@ void static inline secp256k1_fe_set_int(secp256k1_fe_t *r, int a) {
 #endif
 }
 
-// TODO: not constant time!
 int static inline secp256k1_fe_is_zero(const secp256k1_fe_t *a) {
 #ifdef VERIFY
     VERIFY_CHECK(a->normalized);
     secp256k1_fe_verify(a);
 #endif
-    return (a->n[0] == 0 && a->n[1] == 0 && a->n[2] == 0 && a->n[3] == 0 && a->n[4] == 0);
+    const uint64_t *t = a->n;
+    return (t[0] | t[1] | t[2] | t[3] | t[4]) == 0;
 }
 
 int static inline secp256k1_fe_is_odd(const secp256k1_fe_t *a) {
@@ -136,7 +136,6 @@ void static inline secp256k1_fe_clear(secp256k1_fe_t *a) {
     }
 }
 
-// TODO: not constant time!
 int static inline secp256k1_fe_equal(const secp256k1_fe_t *a, const secp256k1_fe_t *b) {
 #ifdef VERIFY
     VERIFY_CHECK(a->normalized);
@@ -144,7 +143,8 @@ int static inline secp256k1_fe_equal(const secp256k1_fe_t *a, const secp256k1_fe
     secp256k1_fe_verify(a);
     secp256k1_fe_verify(b);
 #endif
-    return (a->n[0] == b->n[0] && a->n[1] == b->n[1] && a->n[2] == b->n[2] && a->n[3] == b->n[3] && a->n[4] == b->n[4]);
+    const uint64_t *t = a->n, *u = b->n;
+    return ((t[0]^u[0]) | (t[1]^u[1]) | (t[2]^u[2]) | (t[3]^u[3]) | (t[4]^u[4])) == 0;
 }
 
 void static secp256k1_fe_set_b32(secp256k1_fe_t *r, const unsigned char *a) {
