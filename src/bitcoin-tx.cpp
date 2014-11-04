@@ -57,6 +57,7 @@ static bool AppInitRawTx(int argc, char* argv[])
         strUsage += "  -?                      " + _("This help message") + "\n";
         strUsage += "  -create                 " + _("Create new, empty TX.") + "\n";
         strUsage += "  -json                   " + _("Select JSON output") + "\n";
+        strUsage += "  -txid                   " + _("Output only the hex-encoded transaction id of the resultant transaction.") + "\n";
         strUsage += "  -regtest                " + _("Enter regression test mode, which uses a special chain in which blocks can be solved instantly.") + "\n";
         strUsage += "  -testnet                " + _("Use the test network") + "\n";
         strUsage += "\n";
@@ -488,6 +489,13 @@ static void OutputTxJSON(const CTransaction& tx)
     fprintf(stdout, "%s\n", jsonOutput.c_str());
 }
 
+static void OutputTxHash(const CTransaction& tx)
+{
+    string strHexHash = tx.GetHash().GetHex(); // the hex-encoded transaction hash (aka the transaction id)
+
+    fprintf(stdout, "%s\n", strHexHash.c_str());
+}
+
 static void OutputTxHex(const CTransaction& tx)
 {
     string strHex = EncodeHexTx(tx);
@@ -499,6 +507,8 @@ static void OutputTx(const CTransaction& tx)
 {
     if (GetBoolArg("-json", false))
         OutputTxJSON(tx);
+    else if (GetBoolArg("-txid", false))
+        OutputTxHash(tx);
     else
         OutputTxHex(tx);
 }
