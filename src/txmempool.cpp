@@ -633,7 +633,10 @@ void CTxMemPool::ClearPrioritisation(const uint256 hash)
 }
 
 
-CCoinsViewMemPool::CCoinsViewMemPool(CCoinsView *baseIn, CTxMemPool &mempoolIn) : CCoinsViewBacked(baseIn), mempool(mempoolIn) { }
+CCoinsViewMemPool::CCoinsViewMemPool(CCoinsView *baseIn, CTxMemPool &mempoolIn)
+    : CCoinsViewBacked(baseIn),
+      criticalBlock(mempoolIn.cs, "CCoinsViewMemPool_lock", __FILE__, __LINE__),
+      mempool(mempoolIn) {}
 
 bool CCoinsViewMemPool::GetCoins(const uint256 &txid, CCoins &coins) const {
     // If an entry in the mempool exists, always return that one, as it's guaranteed to never
@@ -642,6 +645,7 @@ bool CCoinsViewMemPool::GetCoins(const uint256 &txid, CCoins &coins) const {
     CTransaction tx;
     if (mempool.lookup(txid, tx)) {
         coins = CCoins(tx, MEMPOOL_HEIGHT);
+        mempool.pruneSpent(txid, coins);
         return true;
     }
     return (base->GetCoins(txid, coins) && !coins.IsPruned());
