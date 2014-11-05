@@ -689,7 +689,7 @@
        <item row="0" column="0" rowspan="2">
         <widget class="QTableView" name="peerWidget">
          <property name="horizontalScrollBarPolicy">
-          <enum>Qt::ScrollBarAlwaysOff</enum>
+          <enum>Qt::ScrollBarAsNeeded</enum>
          </property>
          <property name="sortingEnabled">
           <bool>true</bool>
