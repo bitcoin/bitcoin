@@ -819,9 +819,8 @@ AC_CONFIG_FILES([qa/pull-tester/tests-config.sh],[chmod +x qa/pull-tester/tests-
 dnl boost's m4 checks do something really nasty: they export these vars. As a
 dnl result, they leak into secp256k1's configure and crazy things happen.
 dnl Until this is fixed upstream and we've synced, we'll just un-export them.
-export -n CPPFLAGS
-export -n LIBS
-export -n LDFLAGS
+unset CPPFLAGS
+unset LDFLAGS
 ac_configure_args="${ac_configure_args} --disable-shared --with-pic"
 AC_CONFIG_SUBDIRS([src/secp256k1])
 
