@@ -34,14 +34,14 @@
 #ifndef NDEBUG
 #define DEBUG_CHECK CHECK
 #else
-#define DEBUG_CHECK(cond) do { (cond); } while(0)
+#define DEBUG_CHECK(cond) do { (void)(cond); } while(0)
 #endif
 
 // Like DEBUG_CHECK(), but when VERIFY is defined instead of NDEBUG not defined.
 #ifdef VERIFY
 #define VERIFY_CHECK CHECK
 #else
-#define VERIFY_CHECK(cond) do { (cond); } while(0)
+#define VERIFY_CHECK(cond) do { (void)(cond); } while(0)
 #endif
 
 /** Seed the pseudorandom number generator. */
