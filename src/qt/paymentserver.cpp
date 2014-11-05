@@ -5,7 +5,6 @@
 #include "paymentserver.h"
 
 #include "bitcoinunits.h"
-#include "guiconstants.h"
 #include "guiutil.h"
 #include "optionsmodel.h"
 
@@ -19,6 +18,7 @@
 
 #include <openssl/x509.h>
 #include <openssl/x509_vfy.h>
+
 #include <QApplication>
 #include <QByteArray>
 #include <QDataStream>
@@ -51,9 +51,15 @@ using namespace boost;
 
 const int BITCOIN_IPC_CONNECT_TIMEOUT = 1000; // milliseconds
 const QString BITCOIN_IPC_PREFIX("bitcoin:");
-const char* BITCOIN_REQUEST_MIMETYPE = "application/bitcoin-paymentrequest";
-const char* BITCOIN_PAYMENTACK_MIMETYPE = "application/bitcoin-paymentack";
-const char* BITCOIN_PAYMENTACK_CONTENTTYPE = "application/bitcoin-payment";
+// BIP70 payment protocol messages
+const char* BIP70_MESSAGE_PAYMENTACK = "PaymentACK";
+const char* BIP70_MESSAGE_PAYMENTREQUEST = "PaymentRequest";
+// BIP71 payment protocol media types
+const char* BIP71_MIMETYPE_PAYMENT = "application/bitcoin-payment";
+const char* BIP71_MIMETYPE_PAYMENTACK = "application/bitcoin-paymentack";
+const char* BIP71_MIMETYPE_PAYMENTREQUEST = "application/bitcoin-paymentrequest";
+// BIP70 max payment request size in bytes (DoS protection)
+const qint64 BIP70_MAX_PAYMENTREQUEST_SIZE = 50000;
 
 X509_STORE* PaymentServer::certStore = NULL;
 void PaymentServer::freeCertStore()
@@ -486,7 +492,7 @@ bool PaymentServer::readPaymentRequest(const QString& filename, PaymentRequestPl
         return false;
     }
 
-    if (f.size() > MAX_PAYMENT_REQUEST_SIZE)
+    if (f.size() > BIP70_MAX_PAYMENTREQUEST_SIZE)
     {
         qWarning() << "PaymentServer::readPaymentRequest : " << filename << " too large";
         return false;
@@ -583,10 +589,10 @@ bool PaymentServer::processPaymentRequest(PaymentRequestPlus& request, SendCoins
 void PaymentServer::fetchRequest(const QUrl& url)
 {
     QNetworkRequest netRequest;
-    netRequest.setAttribute(QNetworkRequest::User, "PaymentRequest");
+    netRequest.setAttribute(QNetworkRequest::User, BIP70_MESSAGE_PAYMENTREQUEST);
     netRequest.setUrl(url);
     netRequest.setRawHeader("User-Agent", CLIENT_NAME.c_str());
-    netRequest.setRawHeader("Accept", BITCOIN_REQUEST_MIMETYPE);
+    netRequest.setRawHeader("Accept", BIP71_MIMETYPE_PAYMENTREQUEST);
     netManager->get(netRequest);
 }
 
@@ -597,11 +603,11 @@ void PaymentServer::fetchPaymentACK(CWallet* wallet, SendCoinsRecipient recipien
         return;
 
     QNetworkRequest netRequest;
-    netRequest.setAttribute(QNetworkRequest::User, "PaymentACK");
+    netRequest.setAttribute(QNetworkRequest::User, BIP70_MESSAGE_PAYMENTACK);
     netRequest.setUrl(QString::fromStdString(details.payment_url()));
-    netRequest.setHeader(QNetworkRequest::ContentTypeHeader, BITCOIN_PAYMENTACK_CONTENTTYPE);
+    netRequest.setHeader(QNetworkRequest::ContentTypeHeader, BIP71_MIMETYPE_PAYMENT);
     netRequest.setRawHeader("User-Agent", CLIENT_NAME.c_str());
-    netRequest.setRawHeader("Accept", BITCOIN_PAYMENTACK_MIMETYPE);
+    netRequest.setRawHeader("Accept", BIP71_MIMETYPE_PAYMENTACK);
 
     payments::Payment payment;
     payment.set_merchant_data(details.merchant_data());
@@ -663,7 +669,7 @@ void PaymentServer::netRequestFinished(QNetworkReply* reply)
     QByteArray data = reply->readAll();
 
     QString requestType = reply->request().attribute(QNetworkRequest::User).toString();
-    if (requestType == "PaymentRequest")
+    if (requestType == BIP70_MESSAGE_PAYMENTREQUEST)
     {
         PaymentRequestPlus request;
         SendCoinsRecipient recipient;
@@ -679,7 +685,7 @@ void PaymentServer::netRequestFinished(QNetworkReply* reply)
 
         return;
     }
-    else if (requestType == "PaymentACK")
+    else if (requestType == BIP70_MESSAGE_PAYMENTACK)
     {
         payments::PaymentACK paymentACK;
         if (!paymentACK.ParseFromArray(data.data(), data.size()))
