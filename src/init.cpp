@@ -344,10 +344,15 @@ std::string HelpMessage(HelpMessageMode mode)
     }
     strUsage += "  -shrinkdebugfile       " + _("Shrink debug.log file on client startup (default: 1 when no -debug)") + "\n";
     strUsage += "  -testnet               " + _("Use the test network") + "\n";
+    strUsage += "  -makebootstrap=<file>  " + _("Create a bootstrap file") + "\n";
 
     strUsage += "\n" + _("Node relay options:") + "\n";
     strUsage += "  -datacarrier           " + strprintf(_("Relay and mine data carrier transactions (default: %u)"), 1) + "\n";
     strUsage += "  -datacarriersize       " + strprintf(_("Maximum size of data in data carrier transactions we relay and mine (default: %u)"), MAX_OP_RETURN_RELAY) + "\n";
+
+    strUsage += "\n" + _("Bootstrap creation options:") + "\n";
+    strUsage += "  -bootstrapmin=<n>      " + strprintf(_("Set minimum height for bootstrap (default: %u)"), 1) + "\n";
+    strUsage += "  -bootstrapmax=<n>      " + _("Set maximum height for bootstrap (default: latest height)") + "\n";
 
     strUsage += "\n" + _("Block creation options:") + "\n";
     strUsage += "  -blockminsize=<n>      " + strprintf(_("Set minimum block size in bytes (default: %u)"), 0) + "\n";
@@ -1053,6 +1058,21 @@ bool AppInit2(boost::thread_group& threadGroup)
     {
         PrintBlockTree();
         return false;
+    }
+
+    if (mapArgs.count("-mkbootstrap"))
+    {
+        string strBootstrap = GetArg("-mkbootstrap", "bootstrap.new.dat");
+
+        int nMaxHeight = GetArg("-bootstrapmax", chainActive.Height());
+        if (nMaxHeight < 1 || nMaxHeight > chainActive.Height())
+            return InitError(_("Max block number out of range"));
+
+        int nMinHeight = GetArg("-bootstrapmin", 1);
+        if (nMinHeight < 1 || nMinHeight > chainActive.Height())
+            return InitError(_("Min block number out of range"));
+
+        return MakeBootstrap(strBootstrap, nMinHeight, nMaxHeight);
     }
 
     if (mapArgs.count("-printblock"))

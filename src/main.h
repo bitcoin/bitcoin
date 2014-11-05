@@ -175,6 +175,8 @@ bool InitBlockIndex();
 bool LoadBlockIndex();
 /** Unload database information */
 void UnloadBlockIndex();
+/** Make a bootstrap file */
+bool MakeBootstrap(std::string strBootstrap, int nMinHeight, int nMaxHeight);
 /** Print the loaded block tree */
 void PrintBlockTree();
 /** Process protocol messages received from a given node */
@@ -444,6 +446,7 @@ public:
 
 /** Functions for disk access for blocks */
 bool WriteBlockToDisk(CBlock& block, CDiskBlockPos& pos);
+bool WriteBlockToDisk(CBlock& block, CAutoFile& fileout, CDiskBlockPos& pos);
 bool ReadBlockFromDisk(CBlock& block, const CDiskBlockPos& pos);
 bool ReadBlockFromDisk(CBlock& block, const CBlockIndex* pindex);
 
