@@ -263,6 +263,7 @@ bool PaymentServer::ipcSendCommandLine()
         if (!socket->waitForConnected(BITCOIN_IPC_CONNECT_TIMEOUT))
         {
             delete socket;
+            socket = NULL;
             return false;
         }
 
@@ -271,12 +272,14 @@ bool PaymentServer::ipcSendCommandLine()
         out.setVersion(QDataStream::Qt_4_0);
         out << r;
         out.device()->seek(0);
+
         socket->write(block);
         socket->flush();
-
         socket->waitForBytesWritten(BITCOIN_IPC_CONNECT_TIMEOUT);
         socket->disconnectFromServer();
+
         delete socket;
+        socket = NULL;
         fResult = true;
     }
 
