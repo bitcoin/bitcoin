@@ -7,10 +7,17 @@
 
 #include "num.h"
 
-/** A scalar modulo the group order of the secp256k1 curve. */
-typedef struct {
-    secp256k1_num_t n;
-} secp256k1_scalar_t;
+#if defined HAVE_CONFIG_H
+#include "libsecp256k1-config.h"
+#endif
+
+#if defined(USE_SCALAR_4X64)
+#include "scalar_4x64.h"
+#elif defined(USE_SCALAR_8X32)
+#include "scalar_8x32.h"
+#else
+#error "Please select scalar implementation"
+#endif
 
 /** Clear a scalar to prevent the leak of sensitive data. */
 void static secp256k1_scalar_clear(secp256k1_scalar_t *r);
@@ -29,6 +36,9 @@ void static secp256k1_scalar_add(secp256k1_scalar_t *r, const secp256k1_scalar_t
 
 /** Multiply two scalars (modulo the group order). */
 void static secp256k1_scalar_mul(secp256k1_scalar_t *r, const secp256k1_scalar_t *a, const secp256k1_scalar_t *b);
+
+/** Compute the square of a scalar (modulo the group order). */
+void static secp256k1_scalar_sqr(secp256k1_scalar_t *r, const secp256k1_scalar_t *a);
 
 /** Compute the inverse of a scalar (modulo the group order). */
 void static secp256k1_scalar_inverse(secp256k1_scalar_t *r, const secp256k1_scalar_t *a);
