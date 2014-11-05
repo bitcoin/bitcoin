@@ -102,7 +102,7 @@ CPubKey CKey::GetPubKey() const {
     return result;
 }
 
-bool CKey::Sign(const uint256 &hash, std::vector<unsigned char>& vchSig, bool lowS) const {
+bool CKey::Sign(const uint256 &hash, std::vector<unsigned char>& vchSig) const {
     if (!fValid)
         return false;
 #ifdef USE_SECP256K1
@@ -119,7 +119,7 @@ bool CKey::Sign(const uint256 &hash, std::vector<unsigned char>& vchSig, bool lo
 #else
     CECKey key;
     key.SetSecretBytes(vch);
-    return key.Sign(hash, vchSig, lowS);
+    return key.Sign(hash, vchSig);
 #endif
 }
 
