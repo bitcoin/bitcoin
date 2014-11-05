@@ -21,6 +21,7 @@ $(package)_archiver_$(host_os)=$($(package)_ar)
 $(package)_toolset_darwin=darwin
 $(package)_archiver_darwin=$($(package)_libtool)
 $(package)_config_libraries=chrono,filesystem,program_options,system,thread,test
+$(package)_cxxflags=-fvisibility=hidden
 $(package)_cxxflags_x86_64_linux=-fPIC
 $(package)_cxxflags_arm_linux=-fPIC
 endef
