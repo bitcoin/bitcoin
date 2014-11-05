@@ -172,7 +172,6 @@ struct KeyData
     }
 };
 
-const KeyData keys;
 
 class TestBuilder
 {
@@ -314,6 +313,8 @@ public:
 
 BOOST_AUTO_TEST_CASE(script_build)
 {
+    const KeyData keys;
+
     std::vector<TestBuilder> good;
     std::vector<TestBuilder> bad;
 
