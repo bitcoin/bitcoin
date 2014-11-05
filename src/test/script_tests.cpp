@@ -95,6 +95,48 @@ void DoTest(const CScript& scriptPubKey, const CScript& scriptSig, int flags, bo
     BOOST_CHECK_MESSAGE(VerifyScript(scriptSig, scriptPubKey, flags, SignatureChecker(BuildSpendingTransaction(scriptSig, BuildCreditingTransaction(scriptPubKey)), 0)) == expect, message);
 }
 
+void static NegateSignatureS(std::vector<unsigned char>& vchSig) {
+    // Parse the signature.
+    std::vector<unsigned char> r, s;
+    r = std::vector<unsigned char>(vchSig.begin() + 4, vchSig.begin() + 4 + vchSig[3]);
+    s = std::vector<unsigned char>(vchSig.begin() + 6 + vchSig[3], vchSig.begin() + 6 + vchSig[3] + vchSig[5 + vchSig[3]]);
+    unsigned char hashtype = vchSig.back();
+
+    // Really ugly to implement mod-n negation here, but it would be feature creep to expose such functionality from libsecp256k1.
+    static const unsigned char order[33] = {
+        0x00,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFE,
+        0xBA, 0xAE, 0xDC, 0xE6, 0xAF, 0x48, 0xA0, 0x3B,
+        0xBF, 0xD2, 0x5E, 0x8C, 0xD0, 0x36, 0x41, 0x41
+    };
+    while (s.size() < 33) {
+        s.insert(s.begin(), 0x00);
+    }
+    int carry = 0;
+    for (int p = 32; p >= 1; p--) {
+        int n = (int)order[p] - s[p] - carry;
+        s[p] = (n + 256) & 0xFF;
+        carry = (n < 0);
+    }
+    assert(carry == 0);
+    if (s.size() > 1 && s[0] == 0 && s[1] < 0x80) {
+        s.erase(s.begin());
+    }
+
+    // Reconstruct the signature.
+    vchSig.clear();
+    vchSig.push_back(0x30);
+    vchSig.push_back(4 + r.size() + s.size());
+    vchSig.push_back(0x02);
+    vchSig.push_back(r.size());
+    vchSig.insert(vchSig.end(), r.begin(), r.end());
+    vchSig.push_back(0x02);
+    vchSig.push_back(s.size());
+    vchSig.insert(vchSig.end(), s.begin(), s.end());
+    vchSig.push_back(hashtype);
+}
+
 namespace
 {
 const unsigned char vchKey0[32] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1};
@@ -194,7 +236,10 @@ public:
         uint256 hash = SignatureHash(scriptPubKey, spendTx, 0, nHashType);
         std::vector<unsigned char> vchSig, r, s;
         do {
-            key.Sign(hash, vchSig, lenS <= 32);
+            key.Sign(hash, vchSig);
+            if ((lenS == 33) != (vchSig[5 + vchSig[3]] == 33)) {
+                NegateSignatureS(vchSig);
+            }
             r = std::vector<unsigned char>(vchSig.begin() + 4, vchSig.begin() + 4 + vchSig[3]);
             s = std::vector<unsigned char>(vchSig.begin() + 6 + vchSig[3], vchSig.begin() + 6 + vchSig[3] + vchSig[5 + vchSig[3]]);
         } while (lenR != r.size() || lenS != s.size());

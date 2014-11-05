@@ -28,7 +28,7 @@ public:
     bool SetPrivKey(const unsigned char* privkey, size_t size, bool fSkipCheck=false);
     void GetPubKey(std::vector<unsigned char>& pubkey, bool fCompressed);
     bool SetPubKey(const unsigned char* pubkey, size_t size);
-    bool Sign(const uint256 &hash, std::vector<unsigned char>& vchSig, bool lowS);
+    bool Sign(const uint256 &hash, std::vector<unsigned char>& vchSig);
     bool Verify(const uint256 &hash, const std::vector<unsigned char>& vchSig);
     bool SignCompact(const uint256 &hash, unsigned char *p64, int &rec);
 
