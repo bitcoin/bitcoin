@@ -255,7 +255,6 @@ case $host in
          qt5_prefix=`$BREW --prefix qt5 2>/dev/null`
          if test x$openssl_prefix != x; then
            PKG_CONFIG_PATH="$openssl_prefix/lib/pkgconfig:$PKG_CONFIG_PATH"
-           export PKG_CONFIG_PATH
          fi
          if test x$bdb_prefix != x; then
            CPPFLAGS="$CPPFLAGS -I$bdb_prefix/include"
@@ -263,7 +262,6 @@ case $host in
          fi
          if test x$qt5_prefix != x; then
            PKG_CONFIG_PATH="$qt5_prefix/lib/pkgconfig:$PKG_CONFIG_PATH"
-           export PKG_CONFIG_PATH
          fi
        fi
      else
@@ -819,8 +817,26 @@ AC_CONFIG_FILES([qa/pull-tester/tests-config.sh],[chmod +x qa/pull-tester/tests-
 dnl boost's m4 checks do something really nasty: they export these vars. As a
 dnl result, they leak into secp256k1's configure and crazy things happen.
 dnl Until this is fixed upstream and we've synced, we'll just un-export them.
+CPPFLAGS_TEMP="$CPPFLAGS"
 unset CPPFLAGS
+CPPFLAGS="$CPPFLAGS_TEMP"
+
+LDFLAGS_TEMP="$LDFLAGS"
 unset LDFLAGS
+LDFLAGS="$LDFLAGS_TEMP"
+
+LIBS_TEMP="$LIBS"
+unset LIBS
+LIBS="$LIBS_TEMP"
+
+PKGCONFIG_PATH_TEMP="$PKG_CONFIG_PATH"
+unset PKG_CONFIG_PATH
+PKG_CONFIG_PATH="$PKGCONFIG_PATH_TEMP"
+
+PKGCONFIG_LIBDIR_TEMP="$PKG_CONFIG_LIBDIR"
+unset PKG_CONFIG_LIBDIR
+PKG_CONFIG_LIBDIR="$PKGCONFIG_LIBDIR_TEMP"
+
 ac_configure_args="${ac_configure_args} --disable-shared --with-pic"
 AC_CONFIG_SUBDIRS([src/secp256k1])
 
