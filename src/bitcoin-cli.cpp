@@ -5,7 +5,6 @@
 
 #include "chainparamsbase.h"
 #include "clientversion.h"
-#include "init.h"
 #include "rpcclient.h"
 #include "rpcprotocol.h"
 #include "util.h"
