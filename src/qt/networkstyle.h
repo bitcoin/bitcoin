@@ -17,17 +17,17 @@ public:
     static const NetworkStyle *instantiate(const QString &networkId);
 
     const QString &getAppName() const { return appName; }
-    const QIcon &getAppIcon() const { return appIcon; }
     const QString &getTitleAddText() const { return titleAddText; }
-    const QPixmap &getSplashImage() const { return splashImage; }
 
+    QIcon getAppIcon() const;
+    QIcon getAppIcon(const QSize size) const;
 private:
-    NetworkStyle(const QString &appName, const QString &appIcon, const char *titleAddText, const QString &splashImage);
+    NetworkStyle(const QString &appName, const int iconColorHueShift, const int iconColorSaturationReduction, const char *titleAddText);
 
     QString appName;
-    QIcon appIcon;
+    int iconColorHueShift;
+    int iconColorSaturationReduction;
     QString titleAddText;
-    QPixmap splashImage;
 };
 
 #endif // BITCOIN_QT_NETWORKSTYLE_H
