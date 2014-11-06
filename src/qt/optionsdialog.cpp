@@ -66,6 +66,12 @@ OptionsDialog::OptionsDialog(QWidget *parent) :
     ui->tabWidget->removeTab(ui->tabWidget->indexOf(ui->tabWindow));
 #endif
 
+    /* remove Wallet tab in case of -disablewallet */
+    bool enableWallet = !GetBoolArg("-disablewallet", false);
+    if (!enableWallet) {
+		ui->tabWidget->removeTab(ui->tabWidget->indexOf(ui->tabWallet));
+    }
+
     /* Display elements init */
     QDir translations(":translations");
     ui->lang->addItem(QString("(") + tr("default") + QString(")"), QVariant(""));
