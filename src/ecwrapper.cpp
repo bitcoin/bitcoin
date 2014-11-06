@@ -193,13 +193,44 @@ bool CECKey::SetPubKey(const unsigned char* pubkey, size_t size) {
     return o2i_ECPublicKey(&pkey, &pubkey, size) != NULL;
 }
 
-bool CECKey::Sign(const uint256 &hash, std::vector<unsigned char>& vchSig) {
-    vchSig.clear();
-    ECDSA_SIG *sig = ECDSA_do_sign((unsigned char*)&hash, sizeof(hash), pkey);
-    if (sig == NULL)
+bool CECKey::SignSetup(const uint256& k, BIGNUM* kinv, BIGNUM* r, BN_CTX *ctx) {
+    const EC_GROUP *group = EC_KEY_get0_group(pkey);
+    BN_CTX_start(ctx);
+    BIGNUM *order = BN_CTX_get(ctx);
+    EC_GROUP_get_order(group, order, ctx);
+    BIGNUM *knum = BN_CTX_get(ctx);
+    int ret = (BN_bin2bn((unsigned char*)&k, 32, knum) != NULL);
+    assert(ret);
+    if (BN_cmp(knum, order) >= 0 || BN_is_zero(knum)) {
+        BN_CTX_end(ctx);
         return false;
+    }
+    ret = (BN_mod_inverse(kinv, knum, order, ctx) != NULL);
+    assert(ret);
+    EC_POINT* p = EC_POINT_new(group);
+    assert(p != NULL);
+    ret = EC_POINT_mul(group, p, knum, NULL, NULL, ctx);
+    assert(ret);
+    ret = EC_POINT_get_affine_coordinates_GFp(group, p, r, NULL, ctx);
+    assert(ret);
+    EC_POINT_free(p);
+    BN_CTX_end(ctx);
+    return true;
+}
+
+bool CECKey::Sign(const uint256 &hash, const uint256 &nonce, std::vector<unsigned char>& vchSig) {
     BN_CTX *ctx = BN_CTX_new();
     BN_CTX_start(ctx);
+    BIGNUM* kinv = BN_CTX_get(ctx);
+    BIGNUM* r = BN_CTX_get(ctx);
+    if (!SignSetup(nonce, kinv, r, ctx)) {
+        BN_CTX_end(ctx);
+        BN_CTX_free(ctx);
+        return false;
+    }
+    vchSig.clear();
+    ECDSA_SIG *sig = ECDSA_do_sign_ex((unsigned char*)&hash, sizeof(hash), kinv, r, pkey);
+    assert(sig != NULL);
     const EC_GROUP *group = EC_KEY_get0_group(pkey);
     BIGNUM *order = BN_CTX_get(ctx);
     BIGNUM *halforder = BN_CTX_get(ctx);
@@ -227,11 +258,21 @@ bool CECKey::Verify(const uint256 &hash, const std::vector<unsigned char>& vchSi
     return true;
 }
 
-bool CECKey::SignCompact(const uint256 &hash, unsigned char *p64, int &rec) {
+bool CECKey::SignCompact(const uint256 &hash, const uint256 &nonce, unsigned char *p64, int &rec) {
     bool fOk = false;
-    ECDSA_SIG *sig = ECDSA_do_sign((unsigned char*)&hash, sizeof(hash), pkey);
-    if (sig==NULL)
+    BN_CTX *ctx = BN_CTX_new();
+    BN_CTX_start(ctx);
+    BIGNUM* kinv = BN_CTX_get(ctx);
+    BIGNUM* r = BN_CTX_get(ctx);
+    if (!SignSetup(nonce, kinv, r, ctx)) {
+        BN_CTX_end(ctx);
+        BN_CTX_free(ctx);
         return false;
+    }
+    ECDSA_SIG *sig = ECDSA_do_sign_ex((unsigned char*)&hash, sizeof(hash), kinv, r, pkey);
+    assert(sig != NULL);
+    BN_CTX_end(ctx);
+    BN_CTX_free(ctx);
     memset(p64, 0, 64);
     int nBitsR = BN_num_bits(sig->r);
     int nBitsS = BN_num_bits(sig->s);

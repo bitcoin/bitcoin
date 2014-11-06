@@ -5,6 +5,7 @@
 #include "key.h"
 
 #include "crypto/hmac_sha512.h"
+#include "crypto/rfc6979_hmac_sha256.h"
 #include "eccryptoverify.h"
 #include "pubkey.h"
 #include "random.h"
@@ -71,18 +72,28 @@ CPubKey CKey::GetPubKey() const {
     return result;
 }
 
-bool CKey::Sign(const uint256 &hash, std::vector<unsigned char>& vchSig) const {
+bool CKey::Sign(const uint256 &hash, std::vector<unsigned char>& vchSig, uint32_t iter) const {
     if (!fValid)
         return false;
-    vchSig.resize(72);
-    int nSigLen = 72;
-    CKey nonce;
+    RFC6979_HMAC_SHA256 prng(begin(), 32, (unsigned char*)&hash, 32);
     do {
-        nonce.MakeNewKey(true);
-        if (secp256k1_ecdsa_sign((const unsigned char*)&hash, 32, (unsigned char*)&vchSig[0], &nSigLen, begin(), nonce.begin()))
+        uint256 nonce;
+        prng.Generate((unsigned char*)&nonce, 32);
+        nonce += iter;
+#ifdef USE_SECP256K1
+        vchSig.resize(72);
+        int nSigLen = 72;
+        int ret = secp256k1_ecdsa_sign((const unsigned char*)&hash, 32, (unsigned char*)&vchSig[0], &nSigLen, begin(), (unsigned char*)&nonce);
+        vchSig.resize(nSigLen);
+#else
+        CECKey key;
+        key.SetSecretBytes(vch);
+        int ret = key.Sign(hash, nonce, vchSig);
+#endif
+        nonce = 0;
+        if (ret)
             break;
     } while(true);
-    vchSig.resize(nSigLen);
     return true;
 }
 
@@ -91,10 +102,19 @@ bool CKey::SignCompact(const uint256 &hash, std::vector<unsigned char>& vchSig) 
         return false;
     vchSig.resize(65);
     int rec = -1;
-    CKey nonce;
+    RFC6979_HMAC_SHA256 prng(begin(), 32, (unsigned char*)&hash, 32);
     do {
-        nonce.MakeNewKey(true);
-        if (secp256k1_ecdsa_sign_compact((const unsigned char*)&hash, 32, &vchSig[1], begin(), nonce.begin(), &rec))
+        uint256 nonce;
+        prng.Generate((unsigned char*)&nonce, 32);
+#ifdef USE_SECP256K1
+        int ret = secp256k1_ecdsa_sign_compact((const unsigned char*)&hash, 32, &vchSig[1], begin(), (unsigned char*)&nonce, &rec);
+#else
+        CECKey key;
+        key.SetSecretBytes(vch);
+        int ret = key.SignCompact(hash, nonce, &vchSig[1], rec);
+#endif
+        nonce = 0;
+        if (ret)
             break;
     } while(true);
     assert(rec != -1);
