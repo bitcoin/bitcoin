@@ -1,0 +1,21 @@
+
+# HG changeset patch
+# User Torbjorn Granlund <tege@gmplib.org>
+# Date 1396602422 -7200
+# Node ID 676e2d0f0e4dd301a7066079d2c9326c25c34a40
+# Parent  0194a75b56b21a9196626430af86c5bd9110c42d
+Conditionalise ARM asm on !__thumb__.
+
+diff -r 0194a75b56b2 -r 676e2d0f0e4d mpn/generic/div_qr_1n_pi1.c
+--- a/mpn/generic/div_qr_1n_pi1.c	Thu Apr 03 23:58:51 2014 +0200
++++ b/mpn/generic/div_qr_1n_pi1.c	Fri Apr 04 11:07:02 2014 +0200
+@@ -130,7 +130,7 @@
+ 	     "%2" ((UDItype)(a0)), "r" ((UDItype)(b0)) __CLOBBER_CC)
+ #endif
+ 
+-#if defined (__arm__) && W_TYPE_SIZE == 32
++#if defined (__arm__) && !defined (__thumb__) && W_TYPE_SIZE == 32
+ #define add_mssaaaa(m, sh, sl, ah, al, bh, bl)				\
+   __asm__ (  "adds	%2, %5, %6\n\t"					\
+ 	     "adcs	%1, %3, %4\n\t"					\
+
