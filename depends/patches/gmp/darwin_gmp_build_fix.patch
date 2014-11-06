@@ -1,0 +1,29 @@
+
+# HG changeset patch
+# User Torbjorn Granlund <tege@gmplib.org>
+# Date 1396470504 -7200
+# Node ID 1fab0adc5ff7d9ecddcbda96f407da58347bb49c
+# Parent  db645603dcdb41afcf78b19b551ecd5a01c3841c
+Workaround for Darwin assembler quirk.
+
+diff -r db645603dcdb -r 1fab0adc5ff7 mpn/x86_64/k8/redc_1.asm
+--- a/mpn/x86_64/k8/redc_1.asm	Mon Mar 31 23:04:32 2014 +0200
++++ b/mpn/x86_64/k8/redc_1.asm	Wed Apr 02 22:28:24 2014 +0200
+@@ -114,7 +114,7 @@
+ 
+ 	JUMPTABSECT
+ 	ALIGN(8)
+-L(tab):	JMPENT(	L(0m4), L(tab))
++L(tab):	JMPENT(	L(0), L(tab))
+ 	JMPENT(	L(1), L(tab))
+ 	JMPENT(	L(2), L(tab))
+ 	JMPENT(	L(3), L(tab))
+@@ -397,6 +397,7 @@
+ 
+ 
+ 	ALIGN(16)
++L(0):
+ L(0m4):
+ L(lo0):	mov	(mp,nneg,8), %rax
+ 	mov	nneg, i
+
