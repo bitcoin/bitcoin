@@ -8,6 +8,7 @@
 #include "guiconstants.h"
 #include "guiutil.h"
 #include "optionsmodel.h"
+#include "scicon.h"
 #include "transactiondesc.h"
 #include "transactionrecord.h"
 #include "walletmodel.h"
@@ -504,7 +505,7 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
 
     switch(role)
     {
-    case Qt::DecorationRole:
+    case RawDecorationRole:
         switch(index.column())
         {
         case Status:
@@ -515,6 +516,11 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
             return txAddressDecoration(rec);
         }
         break;
+    case Qt::DecorationRole:
+    {
+        QIcon icon = qvariant_cast<QIcon>(index.data(RawDecorationRole));
+        return TextColorIcon(icon);
+    }
     case Qt::DisplayRole:
         switch(index.column())
         {
