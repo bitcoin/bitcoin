@@ -452,7 +452,7 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
 
         if (amount > 0)
         {
-            CTxOut txout(amount, (CScript)vector<unsigned char>(24, 0));
+            CTxOut txout(amount, CScript() << vector<unsigned char>(24, 0));
             txDummy.vout.push_back(txout);
             if (txout.IsDust(::minRelayTxFee))
                fDust = true;
@@ -548,7 +548,7 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
             // Never create dust outputs; if we would, just add the dust to the fee.
             if (nChange > 0 && nChange < CENT)
             {
-                CTxOut txout(nChange, (CScript)vector<unsigned char>(24, 0));
+                CTxOut txout(nChange, CScript() << vector<unsigned char>(24, 0));
                 if (txout.IsDust(::minRelayTxFee))
                 {
                     nPayFee += nChange;

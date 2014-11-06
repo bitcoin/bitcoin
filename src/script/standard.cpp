@@ -310,9 +310,9 @@ CScript GetScriptForMultisig(int nRequired, const std::vector<CPubKey>& keys)
 {
     CScript script;
 
-    script << CScript::EncodeOP_N(nRequired);
+    script << CScriptNum(nRequired);
     BOOST_FOREACH(const CPubKey& key, keys)
         script << ToByteVector(key);
-    script << CScript::EncodeOP_N(keys.size()) << OP_CHECKMULTISIG;
+    script << CScriptNum(keys.size()) << OP_CHECKMULTISIG;
     return script;
 }

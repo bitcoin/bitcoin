@@ -2437,7 +2437,7 @@ bool AcceptBlock(CBlock& block, CValidationState& state, CBlockIndex** ppindex, 
     if (block.nVersion >= 2 && 
         CBlockIndex::IsSuperMajority(2, pindex->pprev, Params().EnforceBlockUpgradeMajority()))
     {
-        CScript expect = CScript() << nHeight;
+        CScript expect = CScript() << CScriptNum(nHeight);
         if (block.vtx[0].vin[0].scriptSig.size() < expect.size() ||
             !std::equal(expect.begin(), expect.end(), block.vtx[0].vin[0].scriptSig.begin())) {
             pindex->nStatus |= BLOCK_FAILED_VALID;
