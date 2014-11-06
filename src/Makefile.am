@@ -301,13 +301,10 @@ bitcoind_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS)
 # bitcoin-cli binary #
 bitcoin_cli_LDADD = \
   $(LIBBITCOIN_CLI) \
-  $(LIBBITCOIN_COMMON) \
   $(LIBBITCOIN_UTIL) \
-  $(LIBBITCOIN_CRYPTO) \
   $(BOOST_LIBS) \
   $(SSL_LIBS) \
-  $(CRYPTO_LIBS) \
-  $(MINIUPNPC_LIBS)
+  $(CRYPTO_LIBS)
 
 bitcoin_cli_SOURCES = \
   bitcoin-cli.cpp
