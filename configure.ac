@@ -12,10 +12,6 @@ LT_INIT
 dnl make the compilation flags quiet unless V=1 is used
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
-AC_PROG_CC
-AC_PROG_CPP
-AC_PROG_INSTALL
-AC_PROG_SED
 PKG_PROG_PKG_CONFIG
 
 AC_PATH_TOOL(AR, ar)
@@ -130,15 +126,15 @@ else
 fi
 if test x"$has_libcrypto" == x"yes" && test x"$has_openssl_ec" = x; then
   AC_MSG_CHECKING(for EC functions in libcrypto)
-  AC_TRY_COMPILE([
+  AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
     #include <openssl/ec.h>
     #include <openssl/ecdsa.h>
-    #include <openssl/obj_mac.h>],[
+    #include <openssl/obj_mac.h>]],[[
     EC_KEY *eckey = EC_KEY_new_by_curve_name(NID_secp256k1);
     ECDSA_sign(0, NULL, 0, NULL, NULL, eckey);
     ECDSA_verify(0, NULL, 0, NULL, 0, eckey);
     EC_KEY_free(eckey);
-  ],[has_openssl_ec=yes], [has_openssl_ec=no])
+  ]])],[has_openssl_ec=yes],[has_openssl_ec=no])
   AC_MSG_RESULT([$has_openssl_ec])
 fi
 ])
