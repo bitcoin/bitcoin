@@ -35,7 +35,12 @@ static bool AppInitRawTx(int argc, char* argv[])
     ParseParameters(argc, argv);
 
     // Check for -network, -testnet or -regtest parameter (Params() calls are only valid after this clause)
-    SelectParamsFromCommandLine();
+    try {
+        SelectParamsFromCommandLine();
+    } catch(std::exception &e) {
+        fprintf(stderr, "Error: %s\n", e.what());
+        return false;
+    }
 
     fCreateBlank = GetBoolArg("-create", false);
 

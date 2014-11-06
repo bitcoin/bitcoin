@@ -52,7 +52,8 @@ void SelectBaseParams(CBaseChainParams::Network network);
 CBaseChainParams::Network NetworkIdFromCommandLine();
 
 /**
- * Calls NetworkIdFromCommandLine() and then calls SelectParams as appropriate.
+ * Calls NetworkIdFromCommandLine() and then calls SelectBaseParams() 
+ * to select the appropriate network.
  */
 void SelectBaseParamsFromCommandLine();
 

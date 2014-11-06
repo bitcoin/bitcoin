@@ -79,7 +79,12 @@ bool AppInit(int argc, char* argv[])
             return false;
         }
         // Check for -network, -testnet or -regtest parameter (Params() calls are only valid after this clause)
-        SelectParamsFromCommandLine();
+        try {
+            SelectParamsFromCommandLine();
+        } catch(std::exception &e) {
+            fprintf(stderr, "Error: %s\n", e.what());
+            return false;
+        }
 
         if (mapArgs.count("-?") || mapArgs.count("-help") || mapArgs.count("-version"))
         {

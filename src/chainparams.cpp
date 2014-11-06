@@ -349,7 +349,7 @@ CChainParams &Params(CBaseChainParams::Network network) {
         case CBaseChainParams::UNITTEST:
             return unitTestParams;
         default:
-            throw std::runtime_error("Unimplemented network\n");
+            throw std::runtime_error("Unknown network\n");
     }
 }
 
