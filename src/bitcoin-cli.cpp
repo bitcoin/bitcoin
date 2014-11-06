@@ -76,11 +76,9 @@ static bool AppInitRPC(int argc, char* argv[])
         fprintf(stderr,"Error reading configuration file: %s\n", e.what());
         return false;
     }
-    // Check for -testnet or -regtest parameter (BaseParams() calls are only valid after this clause)
-    if (!SelectBaseParamsFromCommandLine()) {
-        fprintf(stderr, "Error: Invalid combination of -regtest and -testnet.\n");
-        return false;
-    }
+    // Check for -network, -testnet or -regtest parameter (BaseParams() calls are only valid after this clause)
+    SelectBaseParamsFromCommandLine();
+
     if (argc<2 || mapArgs.count("-?") || mapArgs.count("-help") || mapArgs.count("-version")) {
         std::string strUsage = _("Bitcoin Core RPC client version") + " " + FormatFullVersion() + "\n";
         if (!mapArgs.count("-version")) {

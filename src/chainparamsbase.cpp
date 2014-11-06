@@ -90,33 +90,44 @@ void SelectBaseParams(CBaseChainParams::Network network)
         pCurrentBaseParams = &unitTestParams;
         break;
     default:
-        assert(false && "Unimplemented network");
-        return;
+        throw std::runtime_error("Unimplemented network\n");
     }
 }
 
 CBaseChainParams::Network NetworkIdFromCommandLine()
 {
+    std::string network = GetArg("-network", "");
+    if (network == "main")
+        return CBaseChainParams::MAIN;
+    if (network == "testnet")
+        return CBaseChainParams::TESTNET;
+    if (network == "testnet")
+        return CBaseChainParams::REGTEST;
+    if (network == "unittest")
+        return CBaseChainParams::UNITTEST;
+    if (network != "") {
+        throw std::runtime_error("Unimplemented network " + network + "\n");
+    }
     bool fRegTest = GetBoolArg("-regtest", false);
     bool fTestNet = GetBoolArg("-testnet", false);
 
     if (fTestNet && fRegTest)
-        return CBaseChainParams::MAX_NETWORK_TYPES;
-    if (fRegTest)
+        throw std::runtime_error("Invalid combination of -regtest and -testnet. Additionally -testnet and -regtest are deprecated, use -network=testnet instead.\n");
+    if (fRegTest) {
+        LogPrintStr("WARNING: -regtest is deprecated, use -network=regtest instead.");
         return CBaseChainParams::REGTEST;
-    if (fTestNet)
+    }
+    if (fTestNet) {
+        LogPrintStr("WARNING: -testnet is deprecated, use -network=testnet instead.");
         return CBaseChainParams::TESTNET;
+    }
     return CBaseChainParams::MAIN;
 }
 
-bool SelectBaseParamsFromCommandLine()
+void SelectBaseParamsFromCommandLine()
 {
     CBaseChainParams::Network network = NetworkIdFromCommandLine();
-    if (network == CBaseChainParams::MAX_NETWORK_TYPES)
-        return false;
-
     SelectBaseParams(network);
-    return true;
 }
 
 bool AreBaseParamsConfigured()

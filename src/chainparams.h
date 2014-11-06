@@ -145,9 +145,11 @@ CModifiableParams *ModifiableParams();
 void SelectParams(CBaseChainParams::Network network);
 
 /**
- * Looks for -regtest or -testnet and then calls SelectParams as appropriate.
- * Returns false if an invalid combination is given.
+ * Returns the appropriate Network ID from the string provided in -network. 
+ * If nothing is found, it also looks for -regtest or -testnet.
+ * Returns MAIN by default.
+ * Raises an error if an invalid combination is given or if the -network is not supported.
  */
-bool SelectParamsFromCommandLine();
+void SelectParamsFromCommandLine();
 
 #endif // BITCOIN_CHAINPARAMS_H

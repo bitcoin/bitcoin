@@ -44,16 +44,17 @@ const CBaseChainParams& BaseParams();
 void SelectBaseParams(CBaseChainParams::Network network);
 
 /**
- * Looks for -regtest or -testnet and returns the appropriate Network ID.
- * Returns MAX_NETWORK_TYPES if an invalid combination is given.
+ * Returns the appropriate Network ID from the string provided in -network. 
+ * If nothing is found, it also looks for -regtest or -testnet.
+ * Returns MAIN by default.
+ * Raises an error if an invalid combination is given or if the -network is not supported.
  */
 CBaseChainParams::Network NetworkIdFromCommandLine();
 
 /**
  * Calls NetworkIdFromCommandLine() and then calls SelectParams as appropriate.
- * Returns false if an invalid combination is given.
  */
-bool SelectBaseParamsFromCommandLine();
+void SelectBaseParamsFromCommandLine();
 
 /**
  * Return true if SelectBaseParamsFromCommandLine() has been called to select

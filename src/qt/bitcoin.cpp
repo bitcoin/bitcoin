@@ -563,10 +563,12 @@ int main(int argc, char *argv[])
     // - QSettings() will use the new application name after this, resulting in network-specific settings
     // - Needs to be done before createOptionsModel
 
-    // Check for -testnet or -regtest parameter (Params() calls are only valid after this clause)
-    if (!SelectParamsFromCommandLine()) {
-        QMessageBox::critical(0, QObject::tr("Bitcoin Core"), QObject::tr("Error: Invalid combination of -regtest and -testnet."));
-        return 1;
+    // Check for -network, -testnet or -regtest parameter (Params() calls are only valid after this clause)
+    try {
+        SelectParamsFromCommandLine();
+    } catch(std::exception &e) {
+        QMessageBox::critical(0, QObject::tr("Bitcoin Core"), QObject::tr("Error: %1.").arg(e.what()));
+        return false;
     }
 #ifdef ENABLE_WALLET
     // Parse URIs on command line -- this can affect Params()
