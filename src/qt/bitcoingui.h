@@ -63,6 +63,7 @@ public:
     bool addWallet(const QString& name, WalletModel *walletModel);
     bool setCurrentWallet(const QString& name);
     void removeAllWallets();
+    bool enableWallet;
 #endif // ENABLE_WALLET
 
 protected:
