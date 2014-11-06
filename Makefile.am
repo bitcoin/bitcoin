@@ -1,5 +1,5 @@
 ACLOCAL_AMFLAGS = -I m4
-INCLUDES = $(SECP_INCLUDES)
+
 lib_LTLIBRARIES = libsecp256k1.la
 if USE_ASM
 COMMON_LIB = libsecp256k1_common.la
