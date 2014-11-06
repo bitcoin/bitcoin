@@ -248,8 +248,9 @@ public:
     {
         uint256 hash = SignatureHash(scriptPubKey, spendTx, 0, nHashType);
         std::vector<unsigned char> vchSig, r, s;
+        uint32_t iter = 0;
         do {
-            key.Sign(hash, vchSig);
+            key.Sign(hash, vchSig, iter++);
             if ((lenS == 33) != (vchSig[5 + vchSig[3]] == 33)) {
                 NegateSignatureS(vchSig);
             }
