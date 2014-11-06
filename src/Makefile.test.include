@@ -104,6 +104,9 @@ bitcoin_test_check: $(TEST_BINARY) FORCE
 bitcoin_test_clean : FORCE
 	rm -f $(CLEAN_BITCOIN_TEST) $(test_test_bitcoin_OBJECTS) $(TEST_BINARY)
 
+check-local:
+	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C secp256k1 check
+
 %.json.h: %.json
 	@$(MKDIR_P) $(@D)
 	@echo "namespace json_tests{" > $@
