@@ -101,7 +101,6 @@ static const Checkpoints::CCheckpointData dataRegtest = {
 class CMainParams : public CChainParams {
 public:
     CMainParams() {
-        networkID = CBaseChainParams::MAIN;
         strNetworkID = "main";
         /** 
          * The message start string is designed to be unlikely to occur in normal data.
@@ -190,7 +189,6 @@ static CMainParams mainParams;
 class CTestNetParams : public CMainParams {
 public:
     CTestNetParams() {
-        networkID = CBaseChainParams::TESTNET;
         strNetworkID = "test";
         /** 
          * The message start string is designed to be unlikely to occur in normal data.
@@ -252,7 +250,6 @@ static CTestNetParams testNetParams;
 class CRegTestParams : public CTestNetParams {
 public:
     CRegTestParams() {
-        networkID = CBaseChainParams::REGTEST;
         strNetworkID = "regtest";
         pchMessageStart[0] = 0xfa;
         pchMessageStart[1] = 0xbf;
@@ -297,7 +294,6 @@ static CRegTestParams regTestParams;
 class CUnitTestParams : public CMainParams, public CModifiableParams {
 public:
     CUnitTestParams() {
-        networkID = CBaseChainParams::UNITTEST;
         strNetworkID = "unittest";
         nDefaultPort = 18445;
         vFixedSeeds.clear(); //! Unit test mode doesn't have any fixed seeds.
