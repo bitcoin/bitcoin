@@ -24,6 +24,13 @@ case $host in
   ;;
 esac
 
+if test "x${CXXFLAGS+set}" = "xset"; then
+  CXXFLAGS_overridden=yes
+else
+  CXXFLAGS_overridden=no
+fi
+
+AC_PROG_CXX
 LT_INIT([disable-shared])
 
 AH_TOP([#ifndef BITCOIN_CONFIG_H])
@@ -40,12 +47,6 @@ m4_include([pkg.m4])
 dnl faketime breaks configure and is only needed for make. Disable it here.
 unset FAKETIME
 
-if test "x${CXXFLAGS+set}" = "xset"; then
-  CXXFLAGS_overridden=yes
-else
-  CXXFLAGS_overridden=no
-fi
-
 dnl ==============================================================
 dnl Setup for automake
 dnl ==============================================================
@@ -60,7 +61,6 @@ dnl make the compilation flags quiet unless V=1 is used
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
 dnl Checks for programs.
-AC_PROG_CXX
 AC_PROG_CC
 AC_PROG_CPP
 AC_PROG_CXXCPP
