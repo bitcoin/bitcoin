@@ -99,7 +99,7 @@ CBaseChainParams::Network NetworkIdFromCommandLine()
     std::string network = GetArg("-network", "");
     if (network == "main")
         return CBaseChainParams::MAIN;
-    if (network == "testnet")
+    if (network == "test")
         return CBaseChainParams::TESTNET;
     if (network == "regtest")
         return CBaseChainParams::REGTEST;
@@ -112,13 +112,13 @@ CBaseChainParams::Network NetworkIdFromCommandLine()
     bool fTestNet = GetBoolArg("-testnet", false);
 
     if (fTestNet && fRegTest)
-        throw std::runtime_error("Invalid combination of -regtest and -testnet. Additionally -testnet and -regtest are deprecated, use -network=testnet instead.\n");
+        throw std::runtime_error("Invalid combination of -regtest and -testnet. Additionally -testnet and -regtest are deprecated, use -network=test or -network=regtest instead.\n");
     if (fRegTest) {
         LogPrintStr("WARNING: -regtest is deprecated, use -network=regtest instead.");
         return CBaseChainParams::REGTEST;
     }
     if (fTestNet) {
-        LogPrintStr("WARNING: -testnet is deprecated, use -network=testnet instead.");
+        LogPrintStr("WARNING: -testnet is deprecated, use -network=test instead.");
         return CBaseChainParams::TESTNET;
     }
     return CBaseChainParams::MAIN;
