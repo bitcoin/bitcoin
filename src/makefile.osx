@@ -94,8 +94,6 @@ OBJS= \
     obj/pbkdf2.o \
     obj/kernel.o \
     obj/scrypt.o \
-    obj/scrypt-x86.o \
-    obj/scrypt-x86_64.o \
     obj/zerocoin/Accumulator.o \
     obj/zerocoin/AccumulatorProofOfKnowledge.o \
     obj/zerocoin/Coin.o \
@@ -140,6 +138,25 @@ else
 OBJS += obj/txdb-bdb.o
 endif
 
+ifeq (${USE_ASM}, 1)
+OBJS += obj/scrypt-arm.o obj/scrypt-x86.o obj/scrypt-x86_64.o
+
+obj/scrypt-x86.o: scrypt-x86.S
+	$(CXX) -c $(xCXXFLAGS) -MMD -o $@ $<
+
+obj/scrypt-x86_64.o: scrypt-x86_64.S
+	$(CXX) -c $(xCXXFLAGS) -MMD -o $@ $<
+
+obj/scrypt-arm.o: scrypt-arm.S
+	$(CXX) -c $(xCXXFLAGS) -MMD -o $@ $<
+endif
+ifneq (${USE_ASM}, 1)
+OBJS += obj/scrypt-generic.o
+
+obj/scrypt-generic.o: scrypt-generic.c
+	$(CC) -c $(xCXXFLAGS) -MMD -o $@ $<
+endif
+
 # auto-generated dependencies:
 -include obj/*.P
 
@@ -161,12 +178,6 @@ obj/zerocoin/%.o: zerocoin/%.cpp
 	  sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
 	      -e '/^$$/ d' -e 's/$$/ :/' < $(@:%.o=%.d) >> $(@:%.o=%.P); \
 	  rm -f $(@:%.o=%.d)
-
-obj/scrypt-x86.o: scrypt-x86.S
-	$(CXX) -c $(xCXXFLAGS) -MMD -o $@ $<
-
-obj/scrypt-x86_64.o: scrypt-x86_64.S
-	$(CXX) -c $(xCXXFLAGS) -MMD -o $@ $<
 
 novacoind: $(OBJS:obj/%=obj/%)
 	$(CXX) $(CFLAGS) -o $@ $(LIBPATHS) $^ $(LIBS)

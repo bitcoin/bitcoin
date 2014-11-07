@@ -129,9 +129,6 @@ OBJS= \
     obj/kernel.o \
     obj/pbkdf2.o \
     obj/scrypt.o \
-    obj/scrypt-arm.o \
-    obj/scrypt-x86.o \
-    obj/scrypt-x86_64.o \
     obj/zerocoin/Accumulator.o \
     obj/zerocoin/AccumulatorProofOfKnowledge.o \
     obj/zerocoin/Coin.o \
@@ -161,13 +158,8 @@ ifneq (${USE_LEVELDB}, 1)
 OBJS += obj/txdb-bdb.o
 endif
 
-# auto-generated dependencies:
--include obj/*.P
-
-obj/build.h: FORCE
-	/bin/sh ../share/genbuild.sh obj/build.h
-version.cpp: obj/build.h
-DEFS += -DHAVE_BUILD_INFO
+ifeq (${USE_ASM}, 1)
+OBJS += obj/scrypt-arm.o obj/scrypt-x86.o obj/scrypt-x86_64.o
 
 obj/scrypt-x86.o: scrypt-x86.S
 	$(CXX) -c $(xCXXFLAGS) -MMD -o $@ $<
@@ -177,6 +169,21 @@ obj/scrypt-x86_64.o: scrypt-x86_64.S
 
 obj/scrypt-arm.o: scrypt-arm.S
 	$(CXX) -c $(xCXXFLAGS) -MMD -o $@ $<
+endif
+ifneq (${USE_ASM}, 1)
+OBJS += obj/scrypt-generic.o
+
+obj/scrypt-generic.o: scrypt-generic.c
+	$(CC) -c $(xCXXFLAGS) -MMD -o $@ $<
+endif
+
+# auto-generated dependencies:
+-include obj/*.P
+
+obj/build.h: FORCE
+	/bin/sh ../share/genbuild.sh obj/build.h
+version.cpp: obj/build.h
+DEFS += -DHAVE_BUILD_INFO
 
 obj/%.o: %.cpp
 	$(CXX) -c $(xCXXFLAGS) -MMD -MF $(@:%.o=%.d) -o $@ $<
