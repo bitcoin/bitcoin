@@ -186,7 +186,7 @@ class Repairer {
     reporter.env = env_;
     reporter.info_log = options_.info_log;
     reporter.lognum = log;
-    // We intentially make log::Reader do checksumming so that
+    // We intentionally make log::Reader do checksumming so that
     // corruptions cause entire commits to be skipped instead of
     // propagating bad information (like overly large sequence
     // numbers).
@@ -242,62 +242,134 @@ class Repairer {
   }
 
   void ExtractMetaData() {
-    std::vector<TableInfo> kept;
     for (size_t i = 0; i < table_numbers_.size(); i++) {
-      TableInfo t;
-      t.meta.number = table_numbers_[i];
-      Status status = ScanTable(&t);
-      if (!status.ok()) {
-        std::string fname = TableFileName(dbname_, table_numbers_[i]);
-        Log(options_.info_log, "Table #%llu: ignoring %s",
-            (unsigned long long) table_numbers_[i],
-            status.ToString().c_str());
-        ArchiveFile(fname);
-      } else {
-        tables_.push_back(t);
-      }
+      ScanTable(table_numbers_[i]);
     }
   }
 
-  Status ScanTable(TableInfo* t) {
-    std::string fname = TableFileName(dbname_, t->meta.number);
-    int counter = 0;
-    Status status = env_->GetFileSize(fname, &t->meta.file_size);
-    if (status.ok()) {
-      Iterator* iter = table_cache_->NewIterator(
-          ReadOptions(), t->meta.number, t->meta.file_size);
-      bool empty = true;
-      ParsedInternalKey parsed;
-      t->max_sequence = 0;
-      for (iter->SeekToFirst(); iter->Valid(); iter->Next()) {
-        Slice key = iter->key();
-        if (!ParseInternalKey(key, &parsed)) {
-          Log(options_.info_log, "Table #%llu: unparsable key %s",
-              (unsigned long long) t->meta.number,
-              EscapeString(key).c_str());
-          continue;
-        }
+  Iterator* NewTableIterator(const FileMetaData& meta) {
+    // Same as compaction iterators: if paranoid_checks are on, turn
+    // on checksum verification.
+    ReadOptions r;
+    r.verify_checksums = options_.paranoid_checks;
+    return table_cache_->NewIterator(r, meta.number, meta.file_size);
+  }
 
-        counter++;
-        if (empty) {
-          empty = false;
-          t->meta.smallest.DecodeFrom(key);
-        }
-        t->meta.largest.DecodeFrom(key);
-        if (parsed.sequence > t->max_sequence) {
-          t->max_sequence = parsed.sequence;
-        }
+  void ScanTable(uint64_t number) {
+    TableInfo t;
+    t.meta.number = number;
+    std::string fname = TableFileName(dbname_, number);
+    Status status = env_->GetFileSize(fname, &t.meta.file_size);
+    if (!status.ok()) {
+      // Try alternate file name.
+      fname = SSTTableFileName(dbname_, number);
+      Status s2 = env_->GetFileSize(fname, &t.meta.file_size);
+      if (s2.ok()) {
+        status = Status::OK();
       }
-      if (!iter->status().ok()) {
-        status = iter->status();
-      }
-      delete iter;
     }
+    if (!status.ok()) {
+      ArchiveFile(TableFileName(dbname_, number));
+      ArchiveFile(SSTTableFileName(dbname_, number));
+      Log(options_.info_log, "Table #%llu: dropped: %s",
+          (unsigned long long) t.meta.number,
+          status.ToString().c_str());
+      return;
+    }
+
+    // Extract metadata by scanning through table.
+    int counter = 0;
+    Iterator* iter = NewTableIterator(t.meta);
+    bool empty = true;
+    ParsedInternalKey parsed;
+    t.max_sequence = 0;
+    for (iter->SeekToFirst(); iter->Valid(); iter->Next()) {
+      Slice key = iter->key();
+      if (!ParseInternalKey(key, &parsed)) {
+        Log(options_.info_log, "Table #%llu: unparsable key %s",
+            (unsigned long long) t.meta.number,
+            EscapeString(key).c_str());
+        continue;
+      }
+
+      counter++;
+      if (empty) {
+        empty = false;
+        t.meta.smallest.DecodeFrom(key);
+      }
+      t.meta.largest.DecodeFrom(key);
+      if (parsed.sequence > t.max_sequence) {
+        t.max_sequence = parsed.sequence;
+      }
+    }
+    if (!iter->status().ok()) {
+      status = iter->status();
+    }
+    delete iter;
     Log(options_.info_log, "Table #%llu: %d entries %s",
-        (unsigned long long) t->meta.number,
+        (unsigned long long) t.meta.number,
         counter,
         status.ToString().c_str());
-    return status;
+
+    if (status.ok()) {
+      tables_.push_back(t);
+    } else {
+      RepairTable(fname, t);  // RepairTable archives input file.
+    }
+  }
+
+  void RepairTable(const std::string& src, TableInfo t) {
+    // We will copy src contents to a new table and then rename the
+    // new table over the source.
+
+    // Create builder.
+    std::string copy = TableFileName(dbname_, next_file_number_++);
+    WritableFile* file;
+    Status s = env_->NewWritableFile(copy, &file);
+    if (!s.ok()) {
+      return;
+    }
+    TableBuilder* builder = new TableBuilder(options_, file);
+
+    // Copy data.
+    Iterator* iter = NewTableIterator(t.meta);
+    int counter = 0;
+    for (iter->SeekToFirst(); iter->Valid(); iter->Next()) {
+      builder->Add(iter->key(), iter->value());
+      counter++;
+    }
+    delete iter;
+
+    ArchiveFile(src);
+    if (counter == 0) {
+      builder->Abandon();  // Nothing to save
+    } else {
+      s = builder->Finish();
+      if (s.ok()) {
+        t.meta.file_size = builder->FileSize();
+      }
+    }
+    delete builder;
+    builder = NULL;
+
+    if (s.ok()) {
+      s = file->Close();
+    }
+    delete file;
+    file = NULL;
+
+    if (counter > 0 && s.ok()) {
+      std::string orig = TableFileName(dbname_, t.meta.number);
+      s = env_->RenameFile(copy, orig);
+      if (s.ok()) {
+        Log(options_.info_log, "Table #%llu: %d entries repaired",
+            (unsigned long long) t.meta.number, counter);
+        tables_.push_back(t);
+      }
+    }
+    if (!s.ok()) {
+      env_->DeleteFile(copy);
+    }
   }
 
   Status WriteDescriptor() {
