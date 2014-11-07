@@ -486,7 +486,7 @@ struct COutputEntry
     int vout;
 };
 
-/** A transaction with a merkle branch linking it to the block chain. */
+/** A transaction with a merkle branch linking it to the blockchain. */
 class CMerkleTx : public CTransaction
 {
 private:
@@ -547,7 +547,7 @@ public:
 
 /** 
  * A transaction with a bunch of additional info that only the owner cares about.
- * It includes any unrecorded transactions needed to link it back to the block chain.
+ * It includes any unrecorded transactions needed to link it back to the blockchain.
  */
 class CWalletTx : public CMerkleTx
 {
