@@ -130,6 +130,12 @@ namespace {
 
     // Number of preferrable block download peers.
     int nPreferredDownload = 0;
+
+    // Dirty block index entries.
+    set<CBlockIndex*> setDirtyBlockIndex;
+
+    // Dirty block file entries.
+    set<int> setDirtyFileInfo;
 } // anon namespace
 
 //////////////////////////////////////////////////////////////////////////////
@@ -1137,11 +1143,6 @@ bool WriteBlockToDisk(CBlock& block, CDiskBlockPos& pos)
     pos.nPos = (unsigned int)fileOutPos;
     fileout << block;
 
-    // Flush stdio buffers and commit to disk before returning
-    fflush(fileout.Get());
-    if (!IsInitialBlockDownload())
-        FileCommit(fileout.Get());
-
     return true;
 }
 
@@ -1335,7 +1336,7 @@ void static InvalidBlockFound(CBlockIndex *pindex, const CValidationState &state
     }
     if (!state.CorruptionPossible()) {
         pindex->nStatus |= BLOCK_FAILED_VALID;
-        pblocktree->WriteBlockIndex(CDiskBlockIndex(pindex));
+        setDirtyBlockIndex.insert(pindex);
         setBlockIndexCandidates.erase(pindex);
         InvalidChainFound(pindex);
     }
@@ -1732,10 +1733,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
         }
 
         pindex->RaiseValidity(BLOCK_VALID_SCRIPTS);
-
-        CDiskBlockIndex blockindex(pindex);
-        if (!pblocktree->WriteBlockIndex(blockindex))
-            return state.Abort("Failed to write block index");
+        setDirtyBlockIndex.insert(pindex);
     }
 
     if (fTxIndex)
@@ -1759,10 +1757,16 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
     return true;
 }
 
-// Update the on-disk chain state.
-bool static WriteChainState(CValidationState &state, bool forceWrite=false) {
+/**
+ * Update the on-disk chain state.
+ * The caches and indexes are flushed if either they're too large, forceWrite is set, or
+ * fast is not set and it's been a while since the last write.
+ */
+bool static FlushStateToDisk(CValidationState &state, bool fast = false, bool forceWrite = false) {
+    LOCK(cs_main);
     static int64_t nLastWrite = 0;
-    if (forceWrite || pcoinsTip->GetCacheSize() > nCoinCacheSize || (!IsInitialBlockDownload() && GetTimeMicros() > nLastWrite + 600*1000000)) {
+    if (forceWrite || pcoinsTip->GetCacheSize() > nCoinCacheSize ||
+        (!fast && GetTimeMicros() > nLastWrite + DATABASE_WRITE_INTERVAL * 1000000)) {
         // Typical CCoins structures on disk are around 100 bytes in size.
         // Pushing a new one to the database can cause it to be written
         // twice (once in the log, and once in the tables). This is already
@@ -1770,13 +1774,42 @@ bool static WriteChainState(CValidationState &state, bool forceWrite=false) {
         // overwrite one. Still, use a conservative safety factor of 2.
         if (!CheckDiskSpace(100 * 2 * 2 * pcoinsTip->GetCacheSize()))
             return state.Error("out of disk space");
+        // First make sure all block and undo data is flushed to disk.
         FlushBlockFile();
+        // Then update all block file information (which may refer to block and undo files).
+        bool fileschanged = false;
+        for (set<int>::iterator it = setDirtyFileInfo.begin(); it != setDirtyFileInfo.end(); ) {
+            if (!pblocktree->WriteBlockFileInfo(*it, vinfoBlockFile[*it])) {
+                return state.Abort("Failed to write to block index");
+            }
+            fileschanged = true;
+            setDirtyFileInfo.erase(it++);
+        }
+        if (fileschanged && !pblocktree->WriteLastBlockFile(nLastBlockFile)) {
+            return state.Abort("Failed to write to block index");
+        }
+        for (set<CBlockIndex*>::iterator it = setDirtyBlockIndex.begin(); it != setDirtyBlockIndex.end(); ) {
+             if (!pblocktree->WriteBlockIndex(CDiskBlockIndex(*it))) {
+                 return state.Abort("Failed to write to block index");
+             }
+             setDirtyBlockIndex.erase(it++);
+        }
         pblocktree->Sync();
+        // Finally flush the chainstate (which may refer to block index entries).
         if (!pcoinsTip->Flush())
             return state.Abort("Failed to write to coin database");
+        // Update best block in wallet (so we can detect restored wallets).
+        if (forceWrite || !fast) {
+            g_signals.SetBestChain(chainActive.GetLocator());
+        }
         nLastWrite = GetTimeMicros();
     }
     return true;
+}
+
+void FlushStateToDisk() {
+    CValidationState state;
+    FlushStateToDisk(state, false, true);
 }
 
 // Update chainActive and related internal data structures.
@@ -1837,7 +1870,7 @@ bool static DisconnectTip(CValidationState &state) {
     }
     LogPrint("bench", "- Disconnect block: %.2fms\n", (GetTimeMicros() - nStart) * 0.001);
     // Write the chain state to disk, if necessary.
-    if (!WriteChainState(state))
+    if (!FlushStateToDisk(state, true))
         return false;
     // Resurrect mempool transactions from the disconnected block.
     BOOST_FOREACH(const CTransaction &tx, block.vtx) {
@@ -1900,7 +1933,7 @@ bool static ConnectTip(CValidationState &state, CBlockIndex *pindexNew, CBlock *
     int64_t nTime4 = GetTimeMicros(); nTimeFlush += nTime4 - nTime3;
     LogPrint("bench", "  - Flush: %.2fms [%.2fs]\n", (nTime4 - nTime3) * 0.001, nTimeFlush * 0.000001);
     // Write the chain state to disk, if necessary.
-    if (!WriteChainState(state))
+    if (!FlushStateToDisk(state, true))
         return false;
     int64_t nTime5 = GetTimeMicros(); nTimeChainState += nTime5 - nTime4;
     LogPrint("bench", "  - Writing chainstate: %.2fms [%.2fs]\n", (nTime5 - nTime4) * 0.001, nTimeChainState * 0.000001);
@@ -1919,10 +1952,6 @@ bool static ConnectTip(CValidationState &state, CBlockIndex *pindexNew, CBlock *
     BOOST_FOREACH(const CTransaction &tx, pblock->vtx) {
         SyncWithWallets(tx, pblock);
     }
-    // Update best block in wallet (so we can detect restored wallets)
-    // Emit this signal after the SyncWithWallets signals as the wallet relies on that everything up to this point has been synced
-    if ((chainActive.Height() % 20160) == 0 || ((chainActive.Height() % 144) == 0 && !IsInitialBlockDownload()))
-        g_signals.SetBestChain(chainActive.GetLocator());
 
     int64_t nTime6 = GetTimeMicros(); nTimePostConnect += nTime6 - nTime5; nTimeTotal += nTime6 - nTime1;
     LogPrint("bench", "  - Connect postprocess: %.2fms [%.2fs]\n", (nTime6 - nTime5) * 0.001, nTimePostConnect * 0.000001);
@@ -2043,9 +2072,6 @@ static bool ActivateBestChainStep(CValidationState &state, CBlockIndex *pindexMo
     else
         CheckForkWarningConditions();
 
-    if (!pblocktree->Flush())
-        return state.Abort("Failed to sync block index");
-
     return true;
 }
 
@@ -2086,10 +2112,15 @@ bool ActivateBestChain(CValidationState &state, CBlock *pblock) {
                     if (chainActive.Height() > (pnode->nStartingHeight != -1 ? pnode->nStartingHeight - 2000 : nBlockEstimate))
                         pnode->PushInventory(CInv(MSG_BLOCK, hashNewTip));
             }
-
+            // Notify external listeners about the new tip.
             uiInterface.NotifyBlockTip(hashNewTip);
         }
     } while(pindexMostWork != chainActive.Tip());
+
+    // Write changes periodically to disk, after relay.
+    if (!FlushStateToDisk(state)) {
+        return false;
+    }
 
     return true;
 }
@@ -2123,8 +2154,7 @@ CBlockIndex* AddToBlockIndex(const CBlockHeader& block)
     if (pindexBestHeader == NULL || pindexBestHeader->nChainWork < pindexNew->nChainWork)
         pindexBestHeader = pindexNew;
 
-    // Ok if it fails, we'll download the header again next time.
-    pblocktree->WriteBlockIndex(CDiskBlockIndex(pindexNew));
+    setDirtyBlockIndex.insert(pindexNew);
 
     return pindexNew;
 }
@@ -2143,6 +2173,7 @@ bool ReceivedBlockTransactions(const CBlock &block, CValidationState& state, CBl
          LOCK(cs_nBlockSequenceId);
          pindexNew->nSequenceId = nBlockSequenceId++;
     }
+    setDirtyBlockIndex.insert(pindexNew);
 
     if (pindexNew->pprev == NULL || pindexNew->pprev->nChainTx) {
         // If pindexNew is the genesis block or all parents are BLOCK_VALID_TRANSACTIONS.
@@ -2162,15 +2193,11 @@ bool ReceivedBlockTransactions(const CBlock &block, CValidationState& state, CBl
                 range.first++;
                 mapBlocksUnlinked.erase(it);
             }
-            if (!pblocktree->WriteBlockIndex(CDiskBlockIndex(pindex)))
-                return state.Abort("Failed to write block index");
         }
     } else {
         if (pindexNew->pprev && pindexNew->pprev->IsValid(BLOCK_VALID_TREE)) {
             mapBlocksUnlinked.insert(std::make_pair(pindexNew->pprev, pindexNew));
         }
-        if (!pblocktree->WriteBlockIndex(CDiskBlockIndex(pindexNew)))
-            return state.Abort("Failed to write block index");
     }
 
     return true;
@@ -2178,8 +2205,6 @@ bool ReceivedBlockTransactions(const CBlock &block, CValidationState& state, CBl
 
 bool FindBlockPos(CValidationState &state, CDiskBlockPos &pos, unsigned int nAddSize, unsigned int nHeight, uint64_t nTime, bool fKnown = false)
 {
-    bool fUpdatedLast = false;
-
     LOCK(cs_LastBlockFile);
 
     unsigned int nFile = fKnown ? pos.nFile : nLastBlockFile;
@@ -2195,7 +2220,6 @@ bool FindBlockPos(CValidationState &state, CDiskBlockPos &pos, unsigned int nAdd
             if (vinfoBlockFile.size() <= nFile) {
                 vinfoBlockFile.resize(nFile + 1);
             }
-            fUpdatedLast = true;
         }
         pos.nFile = nFile;
         pos.nPos = vinfoBlockFile[nFile].nSize;
@@ -2222,11 +2246,7 @@ bool FindBlockPos(CValidationState &state, CDiskBlockPos &pos, unsigned int nAdd
         }
     }
 
-    if (!pblocktree->WriteBlockFileInfo(nLastBlockFile, vinfoBlockFile[nFile]))
-        return state.Abort("Failed to write file info");
-    if (fUpdatedLast)
-        pblocktree->WriteLastBlockFile(nLastBlockFile);
-
+    setDirtyFileInfo.insert(nFile);
     return true;
 }
 
@@ -2239,9 +2259,7 @@ bool FindUndoPos(CValidationState &state, int nFile, CDiskBlockPos &pos, unsigne
     unsigned int nNewSize;
     pos.nPos = vinfoBlockFile[nFile].nUndoSize;
     nNewSize = vinfoBlockFile[nFile].nUndoSize += nAddSize;
-    if (!pblocktree->WriteBlockFileInfo(nLastBlockFile, vinfoBlockFile[nLastBlockFile])) {
-        return state.Abort("Failed to write block info");
-    }
+    setDirtyFileInfo.insert(nFile);
 
     unsigned int nOldChunks = (pos.nPos + UNDOFILE_CHUNK_SIZE - 1) / UNDOFILE_CHUNK_SIZE;
     unsigned int nNewChunks = (nNewSize + UNDOFILE_CHUNK_SIZE - 1) / UNDOFILE_CHUNK_SIZE;
@@ -2462,6 +2480,7 @@ bool AcceptBlock(CBlock& block, CValidationState& state, CBlockIndex** ppindex, 
     if ((!CheckBlock(block, state)) || !ContextualCheckBlock(block, state, pindex->pprev)) {
         if (state.IsInvalid() && !state.CorruptionPossible()) {
             pindex->nStatus |= BLOCK_FAILED_VALID;
+            setDirtyBlockIndex.insert(pindex);
         }
         return false;
     }
@@ -3070,7 +3089,7 @@ bool InitBlockIndex() {
             if (!ActivateBestChain(state, &block))
                 return error("LoadBlockIndex() : genesis block cannot be activated");
             // Force a chainstate write so that when we VerifyDB in a moment, it doesnt check stale data
-            return WriteChainState(state, true);
+            return FlushStateToDisk(state, false, true);
         } catch(std::runtime_error &e) {
             return error("LoadBlockIndex() : failed to initialize block database: %s", e.what());
         }
@@ -4640,11 +4659,6 @@ bool CBlockUndo::WriteToDisk(CDiskBlockPos &pos, const uint256 &hashBlock)
     hasher << hashBlock;
     hasher << *this;
     fileout << hasher.GetHash();
-
-    // Flush stdio buffers and commit to disk before returning
-    fflush(fileout.Get());
-    if (!IsInitialBlockDownload())
-        FileCommit(fileout.Get());
 
     return true;
 }
