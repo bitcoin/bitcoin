@@ -16,13 +16,12 @@
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
 
+#include "main.h"
 
 using namespace std;
 using namespace boost;
 
-//
-// Global state
-//
+
 
 CCriticalSection cs_setpwalletRegistered;
 set<CWallet*> setpwalletRegistered;
@@ -43,12 +42,7 @@ uint256 nPoWBase = uint256("0x00000000ffff00000000000000000000000000000000000000
 
 CBigNum bnProofOfWorkLimitTestNet(~uint256(0) >> 16);
 
-unsigned int nStakeMinAge = 60 * 60 * 24 * 30; // 30 days as zero time weight
-unsigned int nStakeMaxAge = 60 * 60 * 24 * 90; // 90 days as full weight
-unsigned int nStakeTargetSpacing = 10 * 60; // 10-minute stakes spacing
-unsigned int nModifierInterval = 6 * 60 * 60; // time to elapse before new modifier is computed
 
-int nCoinbaseMaturity = 500;
 CBlockIndex* pindexGenesisBlock = NULL;
 int nBestHeight = -1;
 
@@ -3045,7 +3039,7 @@ bool LoadExternalBlockFile(FILE* fileIn)
         }
         catch (std::exception &e) {
             printf("%s() : Deserialize or I/O error caught during load\n",
-                   __PRETTY_FUNCTION__);
+                   BOOST_CURRENT_FUNCTION);
         }
     }
     printf("Loaded %i blocks from external file in %"PRI64d"ms\n", nLoaded, GetTimeMillis() - nStart);

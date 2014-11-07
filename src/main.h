@@ -5,6 +5,8 @@
 #ifndef BITCOIN_MAIN_H
 #define BITCOIN_MAIN_H
 
+#include <algorithm>
+
 #include "timestamps.h"
 #include "bignum.h"
 #include "sync.h"
@@ -26,6 +28,17 @@ class CAddress;
 class CInv;
 class CRequestTracker;
 class CNode;
+
+//
+// Global state
+//
+static unsigned int nStakeMinAge = 60 * 60 * 24 * 30; // 30 days as zero time weight
+static unsigned int nStakeMaxAge = 60 * 60 * 24 * 90; // 90 days as full weight
+static unsigned int nStakeTargetSpacing = 10 * 60; // 10-minute stakes spacing
+static unsigned int nModifierInterval = 6 * 60 * 60; // time to elapse before new modifier is computed
+
+static int nCoinbaseMaturity = 500;
+
 
 static const unsigned int MAX_BLOCK_SIZE = 1000000;
 static const unsigned int MAX_BLOCK_SIZE_GEN = MAX_BLOCK_SIZE/2;
@@ -613,7 +626,7 @@ public:
             filein >> *this;
         }
         catch (std::exception &e) {
-            return error("%s() : deserialize or I/O error", __PRETTY_FUNCTION__);
+            return error("%s() : deserialize or I/O error", BOOST_CURRENT_FUNCTION);
         }
 
         // Return file pointer
@@ -957,7 +970,8 @@ public:
         if (nTime >= ENTROPY_SWITCH_TIME || fTestNet)
         {
             // Take last bit of block hash as entropy bit
-            unsigned int nEntropyBit = ((GetHash().Get64()) & 1llu);
+            unsigned int nEntropyBit = ((GetHash().Get64()) & 1ULL);
+			//unsigned int nEntropyBit = 1;
             if (fDebug && GetBoolArg("-printstakemodifier"))
                 printf("GetStakeEntropyBit: nTime=%u hashBlock=%s nEntropyBit=%u\n", nTime, GetHash().ToString().c_str(), nEntropyBit);
             return nEntropyBit;
@@ -1090,7 +1104,7 @@ public:
             filein >> *this;
         }
         catch (std::exception &e) {
-            return error("%s() : deserialize or I/O error", __PRETTY_FUNCTION__);
+            return error("%s() : deserialize or I/O error", BOOST_CURRENT_FUNCTION);
         }
 
         // Check the header

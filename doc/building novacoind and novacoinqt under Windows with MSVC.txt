@@ -1,0 +1,115 @@
+﻿1. Подготовка системы.
+
+1.1 Установка архиватора 7z: http://www.7-zip.org/ 
+(при написании инструкции использовался 7-Zip 9.20 64 bit X64, но скорее всего подойдёт любая версия)
+
+1.2 Установка Visual Studio 2012. (Подойдёт даже бесплатная версия)
+http://www.microsoft.com/ru-ru/download/details.aspx?id=34673
+
+1.3 Установка Perl(при написании инструкции использовался ActivePerl-5.16.3.1604-MSWin32-x86-298023.msi)
+http://www.activestate.com/activeperl/downloads
+Убедитесь что после установки Perl в PATH есть пути(у меня Perl был установлен на диск C:\) C:\Perl\site\bin;C:\Perl\bin;
+
+1.4 Установка Python(подойдёт и 2 версия и 3 версия)(при написании инструкции использовался Python 3.3.3)
+https://www.python.org/downloads/
+Убедитесь что после установки Python в PATH есть путь до python.exe
+
+1.5 Установка Nasm (при написании инструкции использовался nasm-2.07-installer.exe)
+http://sourceforge.net/projects/nasm/files/latest/download
+Убедитесь что после установки Nasm в PATH есть путь до Nasm.exe 
+
+2. Построение зависимостей.
+В инструкции все зависимости сохраняются в папку C:\MyProjects\Deps
+Скопируйте папку build-helpers(находится в архиве с исходниками в папке MSVC) и вставьте в папку C:\MyProjects\Deps
+
+2.1 OpenSSL 
+-Скачайте http://www.openssl.org/source/openssl-1.0.1j.tar.gz
+-Распакуйте архив в папку C:\MyProjects\Deps
+-Откройте командную строку Windows и выполните следующий код:
+
+cd C:\MyProjects\Deps\build-helpers
+buildopenssl.bat
+
+
+2.2 Berkeley DB
+-Скачайте http://download.oracle.com/berkeley-db/db-6.0.20.tar.gz
+-Распакуйте архив в папку C:\MyProjects\Deps
+-Запустите Visual Studio 2012
+-Откройте C:\MyProjects\Deps\db-6.0.20\build_windows\Berkeley_DB_vs2010.sln
+-Выберете проект db
+-Перейдите в Свойства -> C/C++ -> Создание кода
+-Измените в конфигурации Debug "Многопоточная отладка DLL" на "Многопоточную отладка"
+-Измените в конфигурации Release "Многопоточный DLL" на "Многопоточный"
+-Конфигурации измените и для 32 bit и для 64 bit (если вам нужно 64 bit)
+-Нажмите левой кнопкой мыши на  проект db, затем "Только проект" -> "Построить только db"
+-Постройте так все конфигурации(Debug 32 bit, Release 32 bit, Debug X64, Release X64)
+
+Проверка если вы всё сделали правильно то у вас будут файлы:
+C:\MyProjects\Deps\db-6.0.20\build_windows\Win32\Release\libdb60.lib
+C:\MyProjects\Deps\db-6.0.20\build_windows\Win32\Debug\libdb60d.lib
+C:\MyProjects\Deps\db-6.0.20\build_windows\x64\Release\libdb60.lib
+C:\MyProjects\Deps\db-6.0.20\build_windows\x64\Debug\libdb60d.lib
+
+2.3 Boost
+-Скачайте http://sourceforge.net/projects/boost/files/boost/1.55.0/boost_1_55_0.7z/download
+-Распакуйте boost_1_55_0.7z в папку C:\MyProjects\Deps
+-Откройте командную строку Windows и выполните следующий код:
+
+cd C:\MyProjects\Deps\build-helpers
+buildboost.bat
+
+2.4 Miniupnpc
+-Скачайте http://miniupnp.free.fr/files/download.php?file=miniupnpc-1.8.20131209.tar.gz
+-Распакуйте miniupnpc-1.8.20131209.tar.gz с помощью 7z. (Распаковать нужно 2 раза, нажмите на файле miniupnpc-1.8.20131209.tar.gz левой кнопкой мыши и выберите 7-Zip, затем Распаковать здесь. Появится файл miniupnpc-1.8.20131209.tar. С ним аналогично, левая кнопка мыши -> 7-Zip -> Распаковать здесь. Появится папка miniupnpc-1.8.20131209. 
+-Переименуйте папку в miniupnpc.
+-Откройте командную строку Windows и выполните следующий код:
+
+cd C:\MyProjects\Deps\build-helpers
+buildminiupnpc.bat
+
+2.5 qrencode
+-Скачайте http://qrencode-win32.googlecode.com/archive/681f2ea7a41f919486d9932b3352a2e6920e1cb9.zip
+-Распакуйте
+-Откройте командную строку Windows и выполните следующий код:
+
+cd C:\MyProjects\Deps\build-helpers
+buildqrcode.bat
+
+2.6 Qt 5
+-Скачайте http://download.qt-project.org/official_releases/qt/5.1/5.1.1/single/qt-everywhere-opensource-src-5.3.2.7z
+-Распакуйте в C:\MyProjects\Deps
+-Если вам нужна поддержка 64 bit, то переименуйте папку qt-everywhere-opensource-src-5.3.2 в qt-everywhere-opensource-src-5.3.2-64
+(если вам нужна возможность строить и 32 bit и 64 bit бинарники, то у вас должны быть обе папки и qt-everywhere-opensource-src-5.3.2-64 и qt-everywhere-opensource-src-5.3.2 )
+-Откройте командную строку Windows и выполните следующий код:
+
+cd C:\MyProjects\Deps\build-helpers
+buildqt32.bat 
+
+или для 64 bit
+
+cd C:\MyProjects\Deps\build-helpers
+buildqt64.bat
+
+
+3. Компиляция
+Будем хранить исходники в папке C:\MyProjects
+
+3.1 Скачиваем исходники
+-Зайдите на сайт https://github.com/novacoin-project/novacoin 
+-Нажмите Download ZIP
+-Распакуйте novacoin-master.zip в C:\MyProjects
+-переименуйте novacoin-master в Novacoin
+
+3.2 Компиляция
+-Откройте Microsoft Visual Studio 2012
+-Откройте файл C:\MyProjects\Novacoin\MSVC\NovacoinSolution.sln
+-Можете компилировать и NovacoinD и NovacoinQT 
+(по-умолчанию выставлена компиляция с LevelDB, если вы хотите компилировать с BerkleyDB, то
+-Выберете проект libcommon, перейдите в свойства -> С\С++ -> Препроцессор, удалите USE_LEVELDB
+-Удалите из проекта libcommon libcommon -> Source Files -> txdb-leveldb.cpp и добавьте в проект
+txdb-bdb.cpp
+-Удалите из проекта libcommon libcommon -> Header Files -> txdb-leveldb.h и добавьте в проект
+txdb-bdb.h
+-Выберете проект NovacoinD, перейдите в свойства -> С\С++ -> Препроцессор, удалите USE_LEVELDB
+-Выберете проект NovacoinQT, перейдите в свойства -> С\С++ -> Препроцессор, удалите USE_LEVELDB
+
