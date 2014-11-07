@@ -160,7 +160,6 @@ BOOST_SUFFIX?=-mgw49-mt-s-1_55
 
 INCLUDEPATHS= \
  -I"$(CURDIR)" \
- -I"$(CURDIR)/zerocoin" \
  -I"/c/deps/boost_1_55_0" \
  -I"/c/deps" \
  -I"/c/deps/db-6.0.20/build_unix" \
@@ -210,11 +209,6 @@ obj/txdb-leveldb.o: leveldb/libleveldb.a
 cd /c/MyProjects/novacoin-master/src
 make -f makefile.mingw
 strip novacoind.exe
-
-(Возможная ошибка:
-Fatal error: can't create obj/zerocoin/Accumulator.o: No such file or directory
-make: *** [obj/zerocoin/Accumulator.o] Error 1
-Она происходит если нет папки C:\MyProjects\novacoin-master\src\obj\zerocoin . Так что при удалении obj файлов следите, чтобы папка C:\MyProjects\novacoin-master\src\obj\zerocoin не удалилась вместе с obj файлами.)
 
 Если всё сделано правильно, то файл novacoind.exe будет находится в папке C:\MyProjects\novacoin-master\src 
 
@@ -403,7 +397,7 @@ mingw32-make
 LDFLAGS=-Wl,--dynamicbase -Wl,--nxcompat -Wl,--large-address-aware -static 
 на 
 LDFLAGS=-Wl,--dynamicbase -Wl,--nxcompat -Wl,-static, -static-libgcc
--Удалите (если они есть)obj(.o) файлы из C:\MyProjects\novacoin-master\src\obj и C:\MyProjects\novacoin-master\src\obj\zerocoin , если остались после 32 bit
+-Удалите (если они есть)obj(.o) файлы из C:\MyProjects\novacoin-master\src\obj , если остались после 32 bit
 -Удалите (если они есть)libleveldb.a и libmemenv.a в папке C:\MyProjects\novacoin-master\src\leveldb
 -Удалите (если они есть)obj(.o) файлы из 
 C:\MyProjects\novacoin-master\src\leveldb\db 
@@ -416,11 +410,6 @@ C:\MyProjects\novacoin-master\src\leveldb\util
 cd /c/MyProjects/novacoin-master/src
 make -f makefile.mingw64
 strip novacoind.exe
-
-(Возможная ошибка:
-Fatal error: can't create obj/zerocoin/Accumulator.o: No such file or directory
-make: *** [obj/zerocoin/Accumulator.o] Error 1
-Она происходит если нет папки C:\MyProjects\novacoin-master\src\obj\zerocoin . Так что при удалении obj файлов следите, чтобы папка C:\MyProjects\novacoin-master\src\obj\zerocoin не удалилась вместе с obj файлами.)
 
 Если всё сделано правильно, то файл novacoind.exe будет находится в папке C:\MyProjects\novacoin-master\src 
 
