@@ -13,7 +13,7 @@
 #include <stdexcept>
 #include <vector>
 
-class CExtPubKey;
+struct CExtPubKey;
 class CPubKey;
 
 /** 
