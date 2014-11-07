@@ -96,18 +96,6 @@ void SelectBaseParams(CBaseChainParams::Network network)
 
 CBaseChainParams::Network NetworkIdFromCommandLine()
 {
-    std::string network = GetArg("-network", "");
-    if (network == "main")
-        return CBaseChainParams::MAIN;
-    if (network == "test")
-        return CBaseChainParams::TESTNET;
-    if (network == "regtest")
-        return CBaseChainParams::REGTEST;
-    if (network == "unittest")
-        return CBaseChainParams::UNITTEST;
-    if (network != "") {
-        throw std::runtime_error("Unknown network " + network + "\n");
-    }
     bool fRegTest = GetBoolArg("-regtest", false);
     bool fTestNet = GetBoolArg("-testnet", false);
 
@@ -121,7 +109,16 @@ CBaseChainParams::Network NetworkIdFromCommandLine()
         LogPrintStr("WARNING: -testnet is deprecated, use -network=test instead.");
         return CBaseChainParams::TESTNET;
     }
-    return CBaseChainParams::MAIN;
+    std::string network = GetArg("-network", "main");
+    if (network == "main")
+        return CBaseChainParams::MAIN;
+    if (network == "test")
+        return CBaseChainParams::TESTNET;
+    if (network == "regtest")
+        return CBaseChainParams::REGTEST;
+    if (network == "unittest")
+        return CBaseChainParams::UNITTEST;
+    throw std::runtime_error("Unknown network " + network + "\n");
 }
 
 void SelectBaseParamsFromCommandLine()
