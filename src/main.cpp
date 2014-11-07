@@ -148,7 +148,7 @@ struct CMainSignals {
     boost::signals2::signal<void (const uint256 &)> EraseTransaction;
     // Notifies listeners of an updated transaction without new data (for now: a coinbase potentially becoming visible).
     boost::signals2::signal<void (const uint256 &)> UpdatedTransaction;
-    // Notifies listeners of a new active block chain.
+    // Notifies listeners of a new active blockchain.
     boost::signals2::signal<void (const CBlockLocator &)> SetBestChain;
     // Notifies listeners about an inventory item being seen on the network.
     boost::signals2::signal<void (const uint256 &)> Inventory;
@@ -1424,7 +1424,7 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
         // Helps prevent CPU exhaustion attacks.
 
         // Skip ECDSA signature verification when connecting blocks
-        // before the last block chain checkpoint. This is safe because block merkle hashes are
+        // before the last blockchain checkpoint. This is safe because block merkle hashes are
         // still computed and checked, and any change will be caught at the next checkpoint.
         if (fScriptChecks) {
             for (unsigned int i = 0; i < tx.vin.size(); i++) {
@@ -1742,7 +1742,7 @@ bool ConnectBlock(CBlock& block, CValidationState& state, CBlockIndex* pindex, C
         if (!pblocktree->WriteTxIndex(vPos))
             return state.Abort("Failed to write transaction index");
 
-    // add this block to the view's block chain
+    // add this block to the view's blockchain
     view.SetBestBlock(pindex->GetBlockHash());
 
     int64_t nTime3 = GetTimeMicros(); nTimeIndex += nTime3 - nTime2;
@@ -2372,7 +2372,7 @@ bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state, CBloc
             return state.Invalid(error("%s : block's timestamp is too early", __func__),
                                  REJECT_INVALID, "time-too-old");
 
-        // Check that the block chain matches the known block chain up to a checkpoint
+        // Check that the blockchain matches the known blockchain up to a checkpoint
         if (!Checkpoints::CheckBlock(nHeight, hash))
             return state.DoS(100, error("%s : rejected by checkpoint lock-in at %d", __func__, nHeight),
                              REJECT_CHECKPOINT, "checkpoint mismatch");
