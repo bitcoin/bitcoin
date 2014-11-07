@@ -130,7 +130,7 @@ public:
 };
 
 
-/** Describes a place in the block chain to another node such that if the
+/** Describes a place in the blockchain to another node such that if the
  * other node doesn't have the same branch, it can find a recent common trunk.
  * The further back it is, the further before the fork it may be.
  */
