@@ -517,11 +517,11 @@ void static BitcoinMiner(CWallet *pwallet)
         uint256 hashTarget = CBigNum().SetCompact(pblock->nBits).getuint256();
         uint256 hashbuf[2];
         uint256& hash = *alignup<16>(hashbuf);
+        pblock->nNonce = nBlockNonce;
         while (true)
         {
             unsigned int nHashesDone = 0;
 
-            pblock->nNonce = nBlockNonce;
             for (; nHashesDone < 200; nHashesDone++) {
                 hash = pblock->GetHash();
                 if (hash <= hashTarget) break;
