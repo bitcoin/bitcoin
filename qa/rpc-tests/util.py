@@ -225,7 +225,7 @@ def gather_inputs(from_node, amount_needed):
         total_in += t["amount"]
         inputs.append({ "txid" : t["txid"], "vout" : t["vout"], "address" : t["address"] } )
     if total_in < amount_needed:
-        raise RuntimeError("Insufficient funds: need %d, have %d"%(amount+fee*2, total_in))
+        raise RuntimeError("Insufficient funds: need %d, have %d"%(amount_needed, total_in))
     return (total_in, inputs)
 
 def make_change(from_node, amount_in, amount_out, fee):
