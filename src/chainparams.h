@@ -97,7 +97,6 @@ protected:
     int nMinerThreads;
     std::vector<CDNSSeedData> vSeeds;
     std::vector<unsigned char> base58Prefixes[MAX_BASE58_TYPES];
-    CBaseChainParams::Network networkID;
     std::string strNetworkID;
     CBlock genesis;
     std::vector<CAddress> vFixedSeeds;
@@ -146,9 +145,9 @@ CModifiableParams *ModifiableParams();
 void SelectParams(CBaseChainParams::Network network);
 
 /**
- * Looks for -regtest or -testnet and then calls SelectParams as appropriate.
- * Returns false if an invalid combination is given.
+ * Calls NetworkIdFromCommandLine() and then calls SelectBaseParams()
+ * and SelectParams() to select the appropriate network.
  */
-bool SelectParamsFromCommandLine();
+void SelectParamsFromCommandLine();
 
 #endif // BITCOIN_CHAINPARAMS_H
