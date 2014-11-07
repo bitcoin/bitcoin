@@ -3,7 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 //
-// Unit tests for block-chain checkpoints
+// Unit tests for blockchain checkpoints
 //
 
 #include "checkpoints.h"
