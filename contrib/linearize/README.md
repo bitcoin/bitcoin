@@ -10,7 +10,7 @@ Required configuration file settings for linearize-hashes:
 
 Optional config file setting for linearize-hashes:
 * RPC: host, port
-* Block chain: min_height, max_height
+* Blockchain: min_height, max_height
 
 ## Step 2: Copy local block data
 
