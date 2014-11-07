@@ -66,7 +66,7 @@ To reduce confusion between Bitcoin-the-network and Bitcoin-the-software we
 have renamed the reference client to Bitcoin Core.
 
 
-OP_RETURN and data in the block chain
+OP_RETURN and data in the blockchain
 -------------------------------------
 On OP_RETURN:  There was been some confusion and misunderstanding in
 the community, regarding the OP_RETURN feature in 0.9 and data in the
@@ -205,7 +205,7 @@ Command-line options:
 - Remove '-logtodebugger'
 - Allow `-noserver` with bitcoind
 
-Block-chain handling and storage:
+Blockchain handling and storage:
 
 - Update leveldb to 1.15
 - Check for correct genesis (prevent cases where a datadir from the wrong
