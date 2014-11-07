@@ -3,13 +3,10 @@ BitZeny Core integration/staging tree
 
 http://www.bitzeny.org
 
-Copyright (c) 2014      BitZeny Core Developers
-
-Copyright (c) 2009-2014 Bitcoin Core Developers
-
-Copyright (c) 2013-2014 DarkCoin Developers (DarkGravityWave3)
-
-Copyright (c) 2014      Alexander Peslyak   (Yescrypt)
+* Copyright (c) 2014      BitZeny Core Developers
+* Copyright (c) 2009-2014 Bitcoin Core Developers
+* Copyright (c) 2013-2014 DarkCoin Developers (DarkGravityWave3)
+* Copyright (c) 2014      Alexander Peslyak   (Yescrypt)
 
 License
 -------
