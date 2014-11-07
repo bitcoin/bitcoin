@@ -96,18 +96,11 @@ void SelectBaseParams(CBaseChainParams::Network network)
 
 CBaseChainParams::Network NetworkIdFromCommandLine()
 {
-    bool fRegTest = GetBoolArg("-regtest", false);
-    bool fTestNet = GetBoolArg("-testnet", false);
-
-    if (fTestNet && fRegTest)
-        throw std::runtime_error("Invalid combination of -regtest and -testnet. Additionally -testnet and -regtest are deprecated, use -network=test or -network=regtest instead.\n");
-    if (fRegTest) {
-        LogPrintStr("WARNING: -regtest is deprecated, use -network=regtest instead.");
-        return CBaseChainParams::REGTEST;
+    if (GetBoolArg("-regtest", false)) {
+        LogPrintStr("WARNING: -regtest is disabled, use -network=regtest instead.");
     }
-    if (fTestNet) {
-        LogPrintStr("WARNING: -testnet is deprecated, use -network=test instead.");
-        return CBaseChainParams::TESTNET;
+    if (GetBoolArg("-testnet", false)) {
+        LogPrintStr("WARNING: -testnet is disabled, use -network=test instead.");
     }
     std::string network = GetArg("-network", "main");
     if (network == "main")
