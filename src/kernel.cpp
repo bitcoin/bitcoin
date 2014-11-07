@@ -393,7 +393,7 @@ bool ScanForStakeKernelHash(MetaMap &mapMeta, KernelSearchSettings &settings, Co
 {
     uint256 hashProofOfStake = 0;
 
-    // txid => ((txindex, (tx, vout.n)), (block, modifier))
+    // (txid, vout.n) => ((txindex, (tx, vout.n)), (block, modifier))
     for(MetaMap::const_iterator meta_item = mapMeta.begin(); meta_item != mapMeta.end(); meta_item++)
     {
         if (!fCoinsDataActual)

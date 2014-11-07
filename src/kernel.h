@@ -46,7 +46,7 @@ typedef std::set<std::pair<const CWalletTx*,unsigned int> > CoinsSet;
 
 // Preloaded coins metadata
 // txid => ((txindex, (tx, vout.n)), (block, modifier))
-typedef std::map<uint256, std::pair<std::pair<CTxIndex, std::pair<const CWalletTx*,unsigned int> >, std::pair<CBlock, uint64> > > MetaMap;
+typedef std::map<std::pair<uint256, unsigned int>, std::pair<std::pair<CTxIndex, std::pair<const CWalletTx*,unsigned int> >, std::pair<CBlock, uint64> > > MetaMap;
 
 // Scan given coins set for kernel solution
 bool ScanForStakeKernelHash(MetaMap &mapMeta, KernelSearchSettings &settings, CoinsSet::value_type &kernelcoin, unsigned int &nTimeTx, unsigned int &nBlockTime);

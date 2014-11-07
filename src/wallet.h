@@ -81,7 +81,7 @@ private:
     int nWalletMaxVersion;
 
     // selected coins metadata
-    std::map<uint256, std::pair<std::pair<CTxIndex, std::pair<const CWalletTx*,unsigned int> >, std::pair<CBlock, uint64> > > mapMeta;
+    std::map<std::pair<uint256, unsigned int>, std::pair<std::pair<CTxIndex, std::pair<const CWalletTx*,unsigned int> >, std::pair<CBlock, uint64> > > mapMeta;
 
 public:
     mutable CCriticalSection cs_wallet;
