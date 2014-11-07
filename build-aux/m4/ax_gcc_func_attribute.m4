@@ -180,8 +180,6 @@ AC_DEFUN([AX_GCC_FUNC_ATTRIBUTE], [
                 [visibility], [
                     int foo_def( void ) __attribute__(($1("default")));
                     int foo_hid( void ) __attribute__(($1("hidden")));
-                    int foo_int( void ) __attribute__(($1("internal")));
-                    int foo_pro( void ) __attribute__(($1("protected")));
                 ],
                 [warning], [
                     int foo( void ) __attribute__(($1("")));
