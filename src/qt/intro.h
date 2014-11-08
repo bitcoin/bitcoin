@@ -17,7 +17,7 @@ namespace Ui {
 
 /** Introduction screen (pre-GUI startup).
   Allows the user to choose a data directory,
-  in which the wallet and block chain will be stored.
+  in which the wallet and blockchain will be stored.
  */
 class Intro : public QDialog
 {

@@ -491,7 +491,7 @@ Value signrawtransaction(const Array& params, bool fHelp)
             "signrawtransaction \"hexstring\" ( [{\"txid\":\"id\",\"vout\":n,\"scriptPubKey\":\"hex\",\"redeemScript\":\"hex\"},...] [\"privatekey1\",...] sighashtype )\n"
             "\nSign inputs for raw transaction (serialized, hex-encoded).\n"
             "The second optional argument (may be null) is an array of previous transaction outputs that\n"
-            "this transaction depends on but may not yet be in the block chain.\n"
+            "this transaction depends on but may not yet be in the blockchain.\n"
             "The third optional argument (may be null) is an array of base58-encoded private\n"
             "keys that, if given, will be the only keys used to sign the transaction.\n"
 #ifdef ENABLE_WALLET
@@ -748,7 +748,7 @@ Value sendrawtransaction(const Array& params, bool fHelp)
                 throw JSONRPCError(RPC_TRANSACTION_ERROR, state.GetRejectReason());
         }
     } else if (fHaveChain) {
-        throw JSONRPCError(RPC_TRANSACTION_ALREADY_IN_CHAIN, "transaction already in block chain");
+        throw JSONRPCError(RPC_TRANSACTION_ALREADY_IN_CHAIN, "transaction already in blockchain");
     }
     RelayTransaction(tx);
 
