@@ -64,6 +64,7 @@ public:
     bool setCurrentWallet(const QString& name);
     void removeAllWallets();
 #endif // ENABLE_WALLET
+    bool enableWallet;
 
 protected:
     void changeEvent(QEvent *e);
