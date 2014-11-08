@@ -201,5 +201,13 @@ void CExtKey::Decode(const unsigned char code[74]) {
 }
 
 bool ECC_InitSanityCheck() {
-    return CECKey::SanityCheck();
+#if !defined(USE_SECP256K1)
+    if (!CECKey::SanityCheck()) {
+        return false;
+    }
+#endif
+    CKey key;
+    key.MakeNewKey(true);
+    CPubKey pubkey = key.GetPubKey();
+    return key.VerifyPubKey(pubkey);
 }
