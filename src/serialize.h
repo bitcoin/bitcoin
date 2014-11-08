@@ -951,7 +951,7 @@ public:
     void insert(iterator it, size_type n, const char& x) { vch.insert(it, n, x); }
 
 #ifdef _MSC_VER
-	void insert(iterator it, const_iterator first, const_iterator last)
+    void insert(iterator it, const_iterator first, const_iterator last)
     {
         assert(last - first >= 0);
         if (it == vch.begin() + nReadPos && (unsigned int)(last - first) <= nReadPos)
