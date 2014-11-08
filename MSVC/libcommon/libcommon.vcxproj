@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\alert.cpp" />
+    <ClCompile Include="..\..\src\scrypt-generic.c" />
     <ClCompile Include="..\..\src\txdb-leveldb.cpp" />
     <ClCompile Include="..\..\src\version.cpp" />
     <ClCompile Include="..\..\src\checkpoints.cpp" />
@@ -128,8 +129,7 @@
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
-  <ImportGroup Label="ExtensionSettings">
-  </ImportGroup>
+  <ImportGroup Label="ExtensionSettings" />
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
@@ -156,7 +156,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level1</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>STATICLIB;USE_UPNP;_CRT_SECURE_NO_WARNINGS;UNICODE;WIN32;_SCL_SECURE_NO_WARNINGS;_WIN32_WINNT=0x0501;HAVE_WORKING_BOOST_SLEEP_FOR;_WINSOCKAPI_;NOMINMAX;USE_LEVELDB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>MINIUPNP_STATICLIB;STATICLIB;USE_UPNP;_CRT_SECURE_NO_WARNINGS;UNICODE;WIN32;_SCL_SECURE_NO_WARNINGS;_WIN32_WINNT=0x0501;HAVE_WORKING_BOOST_SLEEP_FOR;_WINSOCKAPI_;NOMINMAX;USE_LEVELDB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\..\..\Deps;..\..\..\deps\openssl-1.0.1j\inc32;..\..\..\src\leveldb\helpers\memenv;..\..\src\leveldb\helpers;..\..\src\leveldb\include;..\..\..\deps\db-6.0.20\build_windows;..\..\..\deps\boost_1_55_0;..\..\..\deps\boost_1_55_0\boost;.\GeneratedFiles;.\GeneratedFiles\$(ConfigurationName);.\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
@@ -177,7 +177,7 @@
       </PrecompiledHeader>
       <WarningLevel>Level1</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>STATICLIB;USE_UPNP;_CRT_SECURE_NO_WARNINGS;UNICODE;WIN32;_SCL_SECURE_NO_WARNINGS;_WIN32_WINNT=0x0501;HAVE_WORKING_BOOST_SLEEP_FOR;_WINSOCKAPI_;NOMINMAX;USE_LEVELDB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>MINIUPNP_STATICLIB;STATICLIB;USE_UPNP;_CRT_SECURE_NO_WARNINGS;UNICODE;WIN32;_SCL_SECURE_NO_WARNINGS;_WIN32_WINNT=0x0501;HAVE_WORKING_BOOST_SLEEP_FOR;_WINSOCKAPI_;NOMINMAX;USE_LEVELDB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\..\..\Deps;..\..\..\deps\openssl-1.0.1j\inc32;..\..\..\src\leveldb\helpers\memenv;..\..\src\leveldb\helpers;..\..\src\leveldb\include;..\..\..\deps\db-6.0.20\build_windows;..\..\..\deps\boost_1_55_0;..\..\..\deps\boost_1_55_0\boost;.\GeneratedFiles;.\GeneratedFiles\$(ConfigurationName);.\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
@@ -198,7 +198,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>STATICLIB;USE_UPNP;_CRT_SECURE_NO_WARNINGS;UNICODE;WIN32;_SCL_SECURE_NO_WARNINGS;_WIN32_WINNT=0x0501;HAVE_WORKING_BOOST_SLEEP_FOR;_WINSOCKAPI_;NOMINMAX;USE_LEVELDB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>MINIUPNP_STATICLIB;STATICLIB;USE_UPNP;_CRT_SECURE_NO_WARNINGS;UNICODE;WIN32;_SCL_SECURE_NO_WARNINGS;_WIN32_WINNT=0x0501;HAVE_WORKING_BOOST_SLEEP_FOR;_WINSOCKAPI_;NOMINMAX;USE_LEVELDB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\..\..\deps\;..\..\..\deps\openssl-1.0.1j\inc32;..\..\..\src\leveldb\helpers\memenv;..\..\src\leveldb\helpers;..\..\src\leveldb\include;..\..\..\deps\db-6.0.20\build_windows;..\..\..\deps\boost_1_55_0;..\..\..\deps\boost_1_55_0\boost;.\GeneratedFiles;.\GeneratedFiles\$(ConfigurationName);.\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <TreatWChar_tAsBuiltInType>false</TreatWChar_tAsBuiltInType>
@@ -221,7 +221,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>STATICLIB;USE_UPNP;_CRT_SECURE_NO_WARNINGS;UNICODE;WIN32;_SCL_SECURE_NO_WARNINGS;_WIN32_WINNT=0x0501;HAVE_WORKING_BOOST_SLEEP_FOR;_WINSOCKAPI_;NOMINMAX;USE_LEVELDB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>MINIUPNP_STATICLIB;STATICLIB;USE_UPNP;_CRT_SECURE_NO_WARNINGS;UNICODE;WIN32;_SCL_SECURE_NO_WARNINGS;_WIN32_WINNT=0x0501;HAVE_WORKING_BOOST_SLEEP_FOR;_WINSOCKAPI_;NOMINMAX;USE_LEVELDB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\..\..\Deps;..\..\..\deps\openssl-1.0.1j\inc32;..\..\..\src\leveldb\helpers\memenv;..\..\src\leveldb\helpers;..\..\src\leveldb\include;..\..\..\deps\db-6.0.20\build_windows;..\..\..\deps\boost_1_55_0;..\..\..\deps\boost_1_55_0\boost;.\GeneratedFiles;.\GeneratedFiles\$(ConfigurationName);.\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <TreatWChar_tAsBuiltInType>false</TreatWChar_tAsBuiltInType>
@@ -237,6 +237,5 @@
     </Link>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
-  <ImportGroup Label="ExtensionTargets">
-  </ImportGroup>
+  <ImportGroup Label="ExtensionTargets" />
 </Project>
