@@ -22,6 +22,10 @@
 #include "allocators.h"
 #include "version.h"
 
+#ifdef _MSC_VER
+#undef max
+#endif
+
 typedef long long  int64;
 typedef unsigned long long  uint64;
 
@@ -51,10 +55,55 @@ enum
     SER_DISK            = (1 << 1),
     SER_GETHASH         = (1 << 2),
 
-    // modifiers
-    SER_SKIPSIG         = (1 << 16),
-    SER_BLOCKHEADERONLY = (1 << 17),
+	 // modifiers
+	 SER_SKIPSIG = (1 << 16),
+	 SER_BLOCKHEADERONLY = (1 << 17),
+
 };
+
+#ifdef _MSC_VER
+#define IMPLEMENT_SERIALIZE(statements)    \
+    unsigned int GetSerializeSize(int nType, int nVersion) const  \
+    {                                           \
+        CSerActionGetSerializeSize ser_action;  \
+        const bool fGetSize = true;             \
+        const bool fWrite = false;              \
+        const bool fRead = false;               \
+        unsigned int nSerSize = 0;              \
+        ser_streamplaceholder s;                \
+        assert(fGetSize||fWrite||fRead); /* suppress warning */ \
+        s.nType = nType;                        \
+        s.nVersion = nVersion;                  \
+        std::map<int, int>  mapUnkIds;          \
+        {statements}                            \
+        return nSerSize;                        \
+    }                                           \
+    template<typename Stream>                   \
+    void Serialize(Stream& s, int nType, int nVersion) const  \
+    {                                           \
+        CSerActionSerialize ser_action;         \
+        const bool fGetSize = false;            \
+        const bool fWrite = true;               \
+        const bool fRead = false;               \
+        unsigned int nSerSize = 0;              \
+        assert(fGetSize||fWrite||fRead); /* suppress warning */ \
+    std::map<int, int>  mapUnkIds;  \
+        {statements}                            \
+    }                                           \
+    template<typename Stream>                   \
+    void Unserialize(Stream& s, int nType, int nVersion)  \
+    {                                           \
+        CSerActionUnserialize ser_action;       \
+        const bool fGetSize = false;            \
+        const bool fWrite = false;              \
+        const bool fRead = true;                \
+        unsigned int nSerSize = 0;              \
+    std::map<int, int>  mapUnkIds;  \
+        assert(fGetSize||fWrite||fRead); /* suppress warning */ \
+        {statements}                            \
+    }
+
+#else
 
 #define IMPLEMENT_SERIALIZE(statements)    \
     unsigned int GetSerializeSize(int nType, int nVersion) const  \
@@ -93,6 +142,8 @@ enum
         assert(fGetSize||fWrite||fRead); /* suppress warning */ \
         {statements}                            \
     }
+
+#endif
 
 #define READWRITE(obj)      (nSerSize += ::SerReadWrite(s, (obj), nType, nVersion, ser_action))
 
@@ -154,14 +205,9 @@ template<typename Stream> inline void Serialize(Stream& s, bool a, int, int=0)  
 template<typename Stream> inline void Unserialize(Stream& s, bool& a, int, int=0) { char f; READDATA(s, f); a=f; }
 
 
-#ifndef THROW_WITH_STACKTRACE
-#define THROW_WITH_STACKTRACE(exception)  \
-{                                         \
-    LogStackTrace();                      \
-    throw (exception);                    \
-}
-void LogStackTrace();
-#endif
+
+
+
 
 //
 // Compact size
@@ -239,13 +285,79 @@ uint64 ReadCompactSize(Stream& is)
         nSizeRet = xSize;
     }
     if (nSizeRet > (uint64)MAX_SIZE)
-        THROW_WITH_STACKTRACE(std::ios_base::failure("ReadCompactSize() : size too large"));
+        throw std::ios_base::failure("ReadCompactSize() : size too large");
     return nSizeRet;
 }
 
+// Variable-length integers: bytes are a MSB base-128 encoding of the number.
+// The high bit in each byte signifies whether another digit follows. To make
+// the encoding is one-to-one, one is subtracted from all but the last digit.
+// Thus, the byte sequence a[] with length len, where all but the last byte
+// has bit 128 set, encodes the number:
+//
+//   (a[len-1] & 0x7F) + sum(i=1..len-1, 128^i*((a[len-i-1] & 0x7F)+1))
+//
+// Properties:
+// * Very small (0-127: 1 byte, 128-16511: 2 bytes, 16512-2113663: 3 bytes)
+// * Every integer has exactly one encoding
+// * Encoding does not depend on size of original integer type
+// * No redundancy: every (infinite) byte sequence corresponds to a list
+//   of encoded integers.
+//
+// 0:         [0x00]  256:        [0x81 0x00]
+// 1:         [0x01]  16383:      [0xFE 0x7F]
+// 127:       [0x7F]  16384:      [0xFF 0x00]
+// 128:  [0x80 0x00]  16511: [0x80 0xFF 0x7F]
+// 255:  [0x80 0x7F]  65535: [0x82 0xFD 0x7F]
+// 2^32:           [0x8E 0xFE 0xFE 0xFF 0x00]
 
+template<typename I>
+inline unsigned int GetSizeOfVarInt(I n)
+{
+    int nRet = 0;
+    while(true) {
+        nRet++;
+        if (n <= 0x7F)
+            break;
+        n = (n >> 7) - 1;
+    }
+    return nRet;
+}
 
-#define FLATDATA(obj)   REF(CFlatData((char*)&(obj), (char*)&(obj) + sizeof(obj)))
+template<typename Stream, typename I>
+void WriteVarInt(Stream& os, I n)
+{
+    unsigned char tmp[(sizeof(n)*8+6)/7];
+    int len=0;
+    while(true) {
+        tmp[len] = (n & 0x7F) | (len ? 0x80 : 0x00);
+        if (n <= 0x7F)
+            break;
+        n = (n >> 7) - 1;
+        len++;
+    }
+    do {
+        WRITEDATA(os, tmp[len]);
+    } while(len--);
+}
+
+template<typename Stream, typename I>
+I ReadVarInt(Stream& is)
+{
+    I n = 0;
+    while(true) {
+        unsigned char chData;
+        READDATA(is, chData);
+        n = (n << 7) | (chData & 0x7F);
+        if (chData & 0x80)
+            n++;
+        else
+            return n;
+    }
+}
+
+#define FLATDATA(obj)  REF(CFlatData((char*)&(obj), (char*)&(obj) + sizeof(obj)))
+#define VARINT(obj)    REF(WrapVarInt(REF(obj)))
 
 /** Wrapper for serializing arrays and POD.
  */
@@ -278,6 +390,32 @@ public:
         s.read(pbegin, pend - pbegin);
     }
 };
+
+template<typename I>
+class CVarInt
+{
+protected:
+    I &n;
+public:
+    CVarInt(I& nIn) : n(nIn) { }
+
+    unsigned int GetSerializeSize(int, int) const {
+        return GetSizeOfVarInt<I>(n);
+    }
+
+    template<typename Stream>
+    void Serialize(Stream &s, int, int) const {
+        WriteVarInt<Stream,I>(s, n);
+    }
+
+    template<typename Stream>
+    void Unserialize(Stream& s, int, int) {
+        n = ReadVarInt<Stream,I>(s);
+    }
+};
+
+template<typename I>
+CVarInt<I> WrapVarInt(I& n) { return CVarInt<I>(n); }
 
 //
 // Forward declarations
@@ -706,6 +844,7 @@ struct ser_streamplaceholder
 
 
 
+typedef std::vector<char, zero_after_free_allocator<char> > CSerializeData;
 
 /** Double ended buffer combining vector and stream-like interfaces.
  *
@@ -715,7 +854,7 @@ struct ser_streamplaceholder
 class CDataStream
 {
 protected:
-    typedef std::vector<char, zero_after_free_allocator<char> > vector_type;
+    typedef CSerializeData vector_type;
     vector_type vch;
     unsigned int nReadPos;
     short state;
@@ -761,7 +900,7 @@ public:
         Init(nTypeIn, nVersionIn);
     }
 
-    CDataStream(const std::vector<unsigned char>& vchIn, int nTypeIn, int nVersionIn) : vch((char*)&vchIn.begin()[0], (char*)&vchIn.end()[0])
+    CDataStream(const std::vector<unsigned char>& vchIn, int nTypeIn, int nVersionIn) : vch(vchIn.begin(), vchIn.end())
     {
         Init(nTypeIn, nVersionIn);
     }
@@ -811,19 +950,7 @@ public:
     iterator insert(iterator it, const char& x=char()) { return vch.insert(it, x); }
     void insert(iterator it, size_type n, const char& x) { vch.insert(it, n, x); }
 
-    void insert(iterator it, const_iterator first, const_iterator last)
-    {
-        assert(last - first >= 0);
-        if (it == vch.begin() + nReadPos && (unsigned int)(last - first) <= nReadPos)
-        {
-            // special case for inserting at the front when there's room
-            nReadPos -= (last - first);
-            memcpy(&vch[nReadPos], &first[0], last - first);
-        }
-        else
-            vch.insert(it, first, last);
-    }
-
+#ifndef _MSC_VER
     void insert(iterator it, std::vector<char>::const_iterator first, std::vector<char>::const_iterator last)
     {
         assert(last - first >= 0);
@@ -836,6 +963,7 @@ public:
         else
             vch.insert(it, first, last);
     }
+#endif
 
 #if !defined(_MSC_VER) || _MSC_VER >= 1300
     void insert(iterator it, const char* first, const char* last)
@@ -912,7 +1040,7 @@ public:
     {
         state |= bits;
         if (state & exceptmask)
-            THROW_WITH_STACKTRACE(std::ios_base::failure(psz));
+            throw std::ios_base::failure(psz);
     }
 
     bool eof() const             { return size() == 0; }
@@ -1012,6 +1140,11 @@ public:
         ::Unserialize(*this, obj, nType, nVersion);
         return (*this);
     }
+
+    void GetAndClear(CSerializeData &data) {
+        vch.swap(data);
+        CSerializeData().swap(vch);
+    }
 };
 
 
@@ -1076,7 +1209,7 @@ public:
     {
         state |= bits;
         if (state & exceptmask)
-            THROW_WITH_STACKTRACE(std::ios_base::failure(psz));
+            throw std::ios_base::failure(psz);
     }
 
     bool fail() const            { return state & (std::ios::badbit | std::ios::failbit); }
@@ -1135,6 +1268,150 @@ public:
             throw std::ios_base::failure("CAutoFile::operator>> : file handle is NULL");
         ::Unserialize(*this, obj, nType, nVersion);
         return (*this);
+    }
+};
+
+/** Wrapper around a FILE* that implements a ring buffer to
+ *  deserialize from. It guarantees the ability to rewind
+ *  a given number of bytes. */
+class CBufferedFile
+{
+private:
+    FILE *src;          // source file
+    uint64 nSrcPos;     // how many bytes have been read from source
+    uint64 nReadPos;    // how many bytes have been read from this
+    uint64 nReadLimit;  // up to which position we're allowed to read
+    uint64 nRewind;     // how many bytes we guarantee to rewind
+    std::vector<char> vchBuf; // the buffer
+
+    short state;
+    short exceptmask;
+
+protected:
+    void setstate(short bits, const char *psz) {
+        state |= bits;
+        if (state & exceptmask)
+            throw std::ios_base::failure(psz);
+    }
+
+    // read data from the source to fill the buffer
+    bool Fill() {
+        unsigned int pos = nSrcPos % vchBuf.size();
+        unsigned int readNow = vchBuf.size() - pos;
+        unsigned int nAvail = vchBuf.size() - (nSrcPos - nReadPos) - nRewind;
+        if (nAvail < readNow)
+            readNow = nAvail;
+        if (readNow == 0)
+            return false;
+        size_t read = fread((void*)&vchBuf[pos], 1, readNow, src);
+        if (read == 0) {
+            setstate(std::ios_base::failbit, feof(src) ? "CBufferedFile::Fill : end of file" : "CBufferedFile::Fill : fread failed");
+            return false;
+        } else {
+            nSrcPos += read;
+            return true;
+        }
+    }
+
+public:
+    int nType;
+    int nVersion;
+
+    CBufferedFile(FILE *fileIn, uint64 nBufSize, uint64 nRewindIn, int nTypeIn, int nVersionIn) :
+        src(fileIn), nSrcPos(0), nReadPos(0), nReadLimit((uint64)(-1)), nRewind(nRewindIn), vchBuf(nBufSize, 0),
+        state(0), exceptmask(std::ios_base::badbit | std::ios_base::failbit), nType(nTypeIn), nVersion(nVersionIn) {
+    }
+
+    // check whether no error occurred
+    bool good() const {
+        return state == 0;
+    }
+
+    // check whether we're at the end of the source file
+    bool eof() const {
+        return nReadPos == nSrcPos && feof(src);
+    }
+
+    // read a number of bytes
+    CBufferedFile& read(char *pch, size_t nSize) {
+        if (nSize + nReadPos > nReadLimit)
+            throw std::ios_base::failure("Read attempted past buffer limit");
+        if (nSize + nRewind > vchBuf.size())
+            throw std::ios_base::failure("Read larger than buffer size");
+        while (nSize > 0) {
+            if (nReadPos == nSrcPos)
+                Fill();
+            unsigned int pos = nReadPos % vchBuf.size();
+            size_t nNow = nSize;
+            if (nNow + pos > vchBuf.size())
+                nNow = vchBuf.size() - pos;
+            if (nNow + nReadPos > nSrcPos)
+                nNow = nSrcPos - nReadPos;
+            memcpy(pch, &vchBuf[pos], nNow);
+            nReadPos += nNow;
+            pch += nNow;
+            nSize -= nNow;
+        }
+        return (*this);
+    }
+
+    // return the current reading position
+    uint64 GetPos() {
+        return nReadPos;
+    }
+
+    // rewind to a given reading position
+    bool SetPos(uint64 nPos) {
+        nReadPos = nPos;
+        if (nReadPos + nRewind < nSrcPos) {
+            nReadPos = nSrcPos - nRewind;
+            return false;
+        } else if (nReadPos > nSrcPos) {
+            nReadPos = nSrcPos;
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    bool Seek(uint64 nPos) {
+        long nLongPos = nPos;
+        if (nPos != (uint64)nLongPos)
+            return false;
+        if (fseek(src, nLongPos, SEEK_SET))
+            return false;
+        nLongPos = ftell(src);
+        nSrcPos = nLongPos;
+        nReadPos = nLongPos;
+        state = 0;
+        return true;
+    }
+
+    // prevent reading beyond a certain position
+    // no argument removes the limit
+    bool SetLimit(uint64 nPos = (uint64)(-1)) {
+        if (nPos < nReadPos)
+            return false;
+        nReadLimit = nPos;
+        return true;
+    }
+
+    template<typename T>
+    CBufferedFile& operator>>(T& obj) {
+        // Unserialize from this stream
+        ::Unserialize(*this, obj, nType, nVersion);
+        return (*this);
+    }
+
+    // search for a given byte in the stream, and remain positioned on it
+    void FindByte(char ch) {
+        while (true) {
+            if (nReadPos == nSrcPos)
+                Fill();
+            if (vchBuf[nReadPos % vchBuf.size()] == ch)
+                break;
+            nReadPos++;
+        }
     }
 };
 

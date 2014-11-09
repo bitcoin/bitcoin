@@ -425,7 +425,7 @@ bool CTxDB::LoadBlockIndexGuts()
         }
         }    // try
         catch (std::exception &e) {
-            return error("%s() : deserialize error", __PRETTY_FUNCTION__);
+            return error("%s() : deserialize error", BOOST_CURRENT_FUNCTION);
         }
     }
     pcursor->close();

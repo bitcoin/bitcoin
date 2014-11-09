@@ -11,7 +11,7 @@
 extern unsigned int nModifierUpgradeTime;
 
 // MODIFIER_INTERVAL: time to elapse before new modifier is computed
-extern unsigned int nModifierInterval;
+extern const unsigned int nModifierInterval;
 
 extern bool fCoinsDataActual;
 
@@ -42,11 +42,11 @@ typedef struct KernelSearchSettings {
     unsigned int nSearchInterval; // Number of seconds allowed to go into the past
 } KernelSearchSettings;
 
-typedef set<pair<const CWalletTx*,unsigned int> > CoinsSet;
+typedef std::set<std::pair<const CWalletTx*,unsigned int> > CoinsSet;
 
 // Preloaded coins metadata
 // txid => ((txindex, (tx, vout.n)), (block, modifier))
-typedef map<uint256, pair<pair<CTxIndex, pair<const CWalletTx*,unsigned int> >, pair<CBlock, uint64> > > MetaMap;
+typedef std::map<std::pair<uint256, unsigned int>, std::pair<std::pair<CTxIndex, std::pair<const CWalletTx*,unsigned int> >, std::pair<CBlock, uint64> > > MetaMap;
 
 // Scan given coins set for kernel solution
 bool ScanForStakeKernelHash(MetaMap &mapMeta, KernelSearchSettings &settings, CoinsSet::value_type &kernelcoin, unsigned int &nTimeTx, unsigned int &nBlockTime);

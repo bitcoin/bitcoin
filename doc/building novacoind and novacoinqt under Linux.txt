@@ -1,0 +1,22 @@
+﻿Сборка для Linux
+Если предпочитаете компилировать свои собственные бинарные файлы, тогда нужны пакеты разработчика:
+
+ sudo apt-get install qt4-qmake libqt4-dev build-essential libboost-dev libboost-system-dev
+   libboost-filesystem-dev libboost-program-options-dev libboost-thread-dev
+   libssl-dev libdb++-dev libminiupnpc-dev
+
+И git также, конечно:
+
+ sudo apt-get install git
+
+После того, как установка завершалась, можно клонировать Novacoin репозитарий
+
+ git clone https://github.com/novacoin-project/novacoin.git
+
+и наконец, скомпилировать свой клиент
+
+ cd novacoin
+ qmake RELEASE=1 USE_UPNP=1 USE_O3=1
+ make
+ cd src
+ make -f makefile.unix USE_UPNP=1 STATIC=1 USE_O3=1

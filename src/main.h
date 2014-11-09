@@ -5,15 +5,17 @@
 #ifndef BITCOIN_MAIN_H
 #define BITCOIN_MAIN_H
 
+#include <algorithm>
+
 #include "timestamps.h"
 #include "bignum.h"
 #include "sync.h"
 #include "net.h"
 #include "script.h"
 #include "scrypt.h"
-#include "zerocoin/Zerocoin.h"
 
 #include <list>
+#include <map>
 
 class CWallet;
 class CBlock;
@@ -26,6 +28,17 @@ class CAddress;
 class CInv;
 class CRequestTracker;
 class CNode;
+
+//
+// Global state
+//
+static const unsigned int nStakeMinAge = 60 * 60 * 24 * 30; // 30 days as zero time weight
+static const unsigned int nStakeMaxAge = 60 * 60 * 24 * 90; // 90 days as full weight
+static const unsigned int nStakeTargetSpacing = 10 * 60; // 10-minute stakes spacing
+static const unsigned int nModifierInterval = 6 * 60 * 60; // time to elapse before new modifier is computed
+
+static const int nCoinbaseMaturity = 500;
+
 
 static const unsigned int MAX_BLOCK_SIZE = 1000000;
 static const unsigned int MAX_BLOCK_SIZE_GEN = MAX_BLOCK_SIZE/2;
@@ -59,15 +72,12 @@ static const uint256 hashGenesisBlockTestNet("0x000c763e402f2436da9ed36c7286f62c
 inline int64 PastDrift(int64 nTime)   { return nTime - 2 * 60 * 60; } // up to 2 hours from the past
 inline int64 FutureDrift(int64 nTime) { return nTime + 2 * 60 * 60; } // up to 2 hours from the future
 
-extern libzerocoin::Params* ZCParams;
 extern CScript COINBASE_FLAGS;
 extern CCriticalSection cs_main;
 extern std::map<uint256, CBlockIndex*> mapBlockIndex;
 extern std::set<std::pair<COutPoint, unsigned int> > setStakeSeen;
 extern CBlockIndex* pindexGenesisBlock;
-extern unsigned int nStakeMinAge;
 extern unsigned int nNodeLifespan;
-extern int nCoinbaseMaturity;
 extern int nBestHeight;
 extern uint256 nBestChainTrust;
 extern uint256 nBestInvalidTrust;
@@ -614,7 +624,7 @@ public:
             filein >> *this;
         }
         catch (std::exception &e) {
-            return error("%s() : deserialize or I/O error", __PRETTY_FUNCTION__);
+            return error("%s() : deserialize or I/O error", BOOST_CURRENT_FUNCTION);
         }
 
         // Return file pointer
@@ -958,7 +968,8 @@ public:
         if (nTime >= ENTROPY_SWITCH_TIME || fTestNet)
         {
             // Take last bit of block hash as entropy bit
-            unsigned int nEntropyBit = ((GetHash().Get64()) & 1llu);
+            unsigned int nEntropyBit = ((GetHash().Get64()) & 1ULL);
+			//unsigned int nEntropyBit = 1;
             if (fDebug && GetBoolArg("-printstakemodifier"))
                 printf("GetStakeEntropyBit: nTime=%u hashBlock=%s nEntropyBit=%u\n", nTime, GetHash().ToString().c_str(), nEntropyBit);
             return nEntropyBit;
@@ -1091,7 +1102,7 @@ public:
             filein >> *this;
         }
         catch (std::exception &e) {
-            return error("%s() : deserialize or I/O error", __PRETTY_FUNCTION__);
+            return error("%s() : deserialize or I/O error", BOOST_CURRENT_FUNCTION);
         }
 
         // Check the header

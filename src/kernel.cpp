@@ -6,11 +6,10 @@
 
 #include "kernel.h"
 #include "txdb.h"
+#include "main.h"
 
 using namespace std;
 
-extern int nStakeMaxAge;
-extern int nStakeTargetSpacing;
 
 // Protocol switch time for fixed kernel modifier interval
 unsigned int nModifierSwitchTime  = 1413763200;    // Mon, 20 Oct 2014 00:00:00 GMT
@@ -394,7 +393,7 @@ bool ScanForStakeKernelHash(MetaMap &mapMeta, KernelSearchSettings &settings, Co
 {
     uint256 hashProofOfStake = 0;
 
-    // txid => ((txindex, (tx, vout.n)), (block, modifier))
+    // (txid, vout.n) => ((txindex, (tx, vout.n)), (block, modifier))
     for(MetaMap::const_iterator meta_item = mapMeta.begin(); meta_item != mapMeta.end(); meta_item++)
     {
         if (!fCoinsDataActual)

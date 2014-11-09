@@ -39,7 +39,7 @@ ifneq (${USE_UPNP}, -)
  INCLUDEPATHS += -I"C:\miniupnpc-1.6-mgw"
  LIBPATHS += -L"C:\miniupnpc-1.6-mgw"
  LIBS += -l miniupnpc -l iphlpapi
- DEFS += -DSTATICLIB -DUSE_UPNP=$(USE_UPNP)
+ DEFS += -DSTATICLIB -DUSE_UPNP=$(USE_UPNP) -DMINIUPNP_STATICLIB
 endif
 
 ifneq (${USE_IPV6}, -)
@@ -82,19 +82,7 @@ OBJS= \
     obj/noui.o \
     obj/kernel.o \
     obj/pbkdf2.o \
-    obj/scrypt.o \
-    obj/scrypt-x86.o \
-    obj/scrypt-x86_64.o \
-    obj/zerocoin/Accumulator.o \
-    obj/zerocoin/AccumulatorProofOfKnowledge.o \
-    obj/zerocoin/Coin.o \
-    obj/zerocoin/CoinSpend.o \
-    obj/zerocoin/Commitment.o \
-    obj/zerocoin/ParamGeneration.o \
-    obj/zerocoin/Params.o \
-    obj/zerocoin/SerialNumberSignatureOfKnowledge.o \
-    obj/zerocoin/SpendMetaData.o \
-    obj/zerocoin/ZeroTest.o
+    obj/scrypt.o
 
 all: novacoind.exe
 
@@ -113,17 +101,23 @@ else
 OBJS += obj/txdb-bdb.o
 endif
 
-obj/%.o: %.cpp $(HEADERS)
-	g++ -c $(CFLAGS) -o $@ $<
-
-obj/zerocoin/%.o: zerocoin/%.cpp
-	g++ -c $(CFLAGS) -o $@ $<
+ifdef USE_ASM
+OBJS += obj/scrypt-arm.o obj/scrypt-x86.o obj/scrypt-x86_64.o
 
 obj/scrypt-x86.o: scrypt-x86.S
 	$(CXX) -c $(xCXXFLAGS) -MMD -o $@ $<
 
 obj/scrypt-x86_64.o: scrypt-x86_64.S
 	$(CXX) -c $(xCXXFLAGS) -MMD -o $@ $<
+else
+OBJS += obj/scrypt-generic.o
+
+obj/scrypt-generic.o: scrypt-generic.c
+	$(CC) -c $(xCXXFLAGS) -MMD -o $@ $<
+endif
+
+obj/%.o: %.cpp $(HEADERS)
+	g++ -c $(CFLAGS) -o $@ $<
 
 novacoind.exe: $(OBJS:obj/%=obj/%)
 	g++ $(CFLAGS) $(LDFLAGS) -o $@ $(LIBPATHS) $^ $(LIBS)
@@ -131,6 +125,5 @@ novacoind.exe: $(OBJS:obj/%=obj/%)
 clean:
 	-del /Q novacoind
 	-del /Q obj\*
-	-del /Q obj\zerocoin\*
 
 FORCE:
