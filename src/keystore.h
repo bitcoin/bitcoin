@@ -8,7 +8,6 @@
 
 #include "key.h"
 #include "pubkey.h"
-#include "sync.h"
 
 class CScript;
 class CScriptID;
@@ -16,9 +15,6 @@ class CScriptID;
 /** A virtual base class for key stores */
 class CKeyStore
 {
-protected:
-    mutable CCriticalSection cs_KeyStore;
-
 public:
     virtual ~CKeyStore() {}
 

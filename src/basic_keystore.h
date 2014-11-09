@@ -11,9 +11,6 @@
 #include "pubkey.h"
 #include "sync.h"
 
-#include <boost/signals2/signal.hpp>
-#include <boost/variant.hpp>
-
 class CScript;
 class CScriptID;
 
@@ -25,6 +22,7 @@ typedef std::set<CScript> WatchOnlySet;
 class CBasicKeyStore : public CKeyStore
 {
 protected:
+    mutable CCriticalSection cs_KeyStore;
     KeyMap mapKeys;
     ScriptMap mapScripts;
     WatchOnlySet setWatchOnly;
