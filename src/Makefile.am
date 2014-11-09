@@ -75,6 +75,7 @@ BITCOIN_CORE_H = \
   allocators.h \
   amount.h \
   base58.h \
+  basic_keystore.h \
   bloom.h \
   chain.h \
   chainparams.h \
@@ -234,6 +235,7 @@ libbitcoin_common_a_SOURCES = \
   allocators.cpp \
   amount.cpp \
   base58.cpp \
+  basic_keystore.cpp \
   chainparams.cpp \
   coins.cpp \
   compressor.cpp \
@@ -245,7 +247,6 @@ libbitcoin_common_a_SOURCES = \
   ecwrapper.cpp \
   hash.cpp \
   key.cpp \
-  keystore.cpp \
   netbase.cpp \
   protocol.cpp \
   pubkey.cpp \

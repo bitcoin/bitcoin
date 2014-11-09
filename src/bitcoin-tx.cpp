@@ -3,12 +3,12 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "base58.h"
+#include "basic_keystore.h"
 #include "clientversion.h"
 #include "primitives/block.h" // for MAX_BLOCK_SIZE
 #include "primitives/transaction.h"
 #include "core_io.h"
 #include "coins.h"
-#include "keystore.h"
 #include "script/script.h"
 #include "script/sign.h"
 #include "ui_interface.h" // for _(...)
