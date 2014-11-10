@@ -15,13 +15,15 @@
 
 namespace {
 
-// Valid signature cache, to avoid doing expensive ECDSA signature checking
-// twice for every transaction (once when accepted into memory pool, and
-// again when accepted into the block chain)
+/**
+ * Valid signature cache, to avoid doing expensive ECDSA signature checking
+ * twice for every transaction (once when accepted into memory pool, and
+ * again when accepted into the block chain)
+ */
 class CSignatureCache
 {
 private:
-     // sigdata_type is (signature hash, signature, public key):
+     //! sigdata_type is (signature hash, signature, public key):
     typedef boost::tuple<uint256, std::vector<unsigned char>, CPubKey> sigdata_type;
     std::set< sigdata_type> setValid;
     boost::shared_mutex cs_sigcache;

@@ -25,27 +25,31 @@ public:
     CScriptID(const uint160& in) : uint160(in) {}
 };
 
-static const unsigned int MAX_OP_RETURN_RELAY = 40;      // bytes
+static const unsigned int MAX_OP_RETURN_RELAY = 40;      //! bytes
 extern unsigned nMaxDatacarrierBytes;
 
-// Mandatory script verification flags that all new blocks must comply with for
-// them to be valid. (but old blocks may not comply with) Currently just P2SH,
-// but in the future other flags may be added, such as a soft-fork to enforce
-// strict DER encoding.
-//
-// Failing one of these tests may trigger a DoS ban - see CheckInputs() for
-// details.
+/**
+ * Mandatory script verification flags that all new blocks must comply with for
+ * them to be valid. (but old blocks may not comply with) Currently just P2SH,
+ * but in the future other flags may be added, such as a soft-fork to enforce
+ * strict DER encoding.
+ * 
+ * Failing one of these tests may trigger a DoS ban - see CheckInputs() for
+ * details.
+ */
 static const unsigned int MANDATORY_SCRIPT_VERIFY_FLAGS = SCRIPT_VERIFY_P2SH;
 
-// Standard script verification flags that standard transactions will comply
-// with. However scripts violating these flags may still be present in valid
-// blocks and we must accept those blocks.
+/**
+ * Standard script verification flags that standard transactions will comply
+ * with. However scripts violating these flags may still be present in valid
+ * blocks and we must accept those blocks.
+ */
 static const unsigned int STANDARD_SCRIPT_VERIFY_FLAGS = MANDATORY_SCRIPT_VERIFY_FLAGS |
                                                          SCRIPT_VERIFY_STRICTENC |
                                                          SCRIPT_VERIFY_MINIMALDATA |
                                                          SCRIPT_VERIFY_NULLDUMMY;
 
-// For convenience, standard but not mandatory verify flags.
+/** For convenience, standard but not mandatory verify flags. */
 static const unsigned int STANDARD_NOT_MANDATORY_VERIFY_FLAGS = STANDARD_SCRIPT_VERIFY_FLAGS & ~MANDATORY_SCRIPT_VERIFY_FLAGS;
 
 enum txnouttype
@@ -65,7 +69,8 @@ public:
     friend bool operator<(const CNoDestination &a, const CNoDestination &b) { return true; }
 };
 
-/** A txout script template with a specific destination. It is either:
+/** 
+ * A txout script template with a specific destination. It is either:
  *  * CNoDestination: no destination set
  *  * CKeyID: TX_PUBKEYHASH destination
  *  * CScriptID: TX_SCRIPTHASH destination
