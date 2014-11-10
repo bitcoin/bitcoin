@@ -351,6 +351,12 @@ BOOST_AUTO_TEST_CASE(script_build)
     bad.push_back(TestBuilder(CScript() << ToByteVector(keys.pubkey2C) << OP_CHECKSIG << OP_NOT,
                               "P2PK NOT with too much R padding", SCRIPT_VERIFY_DERSIG
                              ).PushSig(keys.key2, SIGHASH_ALL, 31, 32).EditPush(1, "43021F", "44022000"));
+    good.push_back(TestBuilder(CScript() << OP_2 << ToByteVector(keys.pubkey0C) << ToByteVector(keys.pubkey1C) << OP_2 << OP_CHECKMULTISIG << OP_NOT,
+                               "2-of-2 NOT with one invalid signature and one valid non-DER signature, without DERSIG", 0
+                              ).Num(0).PushSig(keys.key2).PushSig(keys.key1).EditPush(1, "44", "45").EditPush(37, "20", "2100"));
+    bad.push_back(TestBuilder(CScript() << OP_2 << ToByteVector(keys.pubkey0C) << ToByteVector(keys.pubkey1C) << OP_2 << OP_CHECKMULTISIG << OP_NOT,
+                              "2-of-2 NOT with one invalid signature and one valid non-DER signature", SCRIPT_VERIFY_DERSIG
+                             ).Num(0).PushSig(keys.key2).PushSig(keys.key1).EditPush(1, "44", "45").EditPush(37, "20", "2100"));
 
     good.push_back(TestBuilder(CScript() << ToByteVector(keys.pubkey2C) << OP_CHECKSIG,
                                "P2PK with high S but no LOW_S", 0
@@ -358,6 +364,12 @@ BOOST_AUTO_TEST_CASE(script_build)
     bad.push_back(TestBuilder(CScript() << ToByteVector(keys.pubkey2C) << OP_CHECKSIG,
                               "P2PK with high S", SCRIPT_VERIFY_LOW_S
                              ).PushSig(keys.key2, SIGHASH_ALL, 32, 33));
+    good.push_back(TestBuilder(CScript() << OP_2 << ToByteVector(keys.pubkey0C) << ToByteVector(keys.pubkey1C) << OP_2 << OP_CHECKMULTISIG << OP_NOT,
+                               "2-of-2 NOT with one invalid signature and one valid high-S signature, without LOW_S", 0
+                              ).Num(0).PushSig(keys.key2).PushSig(keys.key1, SIGHASH_ALL, 32, 33));
+    bad.push_back(TestBuilder(CScript() << OP_2 << ToByteVector(keys.pubkey0C) << ToByteVector(keys.pubkey1C) << OP_2 << OP_CHECKMULTISIG << OP_NOT,
+                              "2-of-2 NOT with one invalid signature and one valid high-S signature", SCRIPT_VERIFY_LOW_S
+                             ).Num(0).PushSig(keys.key2).PushSig(keys.key1, SIGHASH_ALL, 32, 33));
 
     good.push_back(TestBuilder(CScript() << ToByteVector(keys.pubkey0H) << OP_CHECKSIG,
                                "P2PK with hybrid pubkey but no STRICTENC", 0

@@ -37,11 +37,12 @@ enum
     // skipped (not softfork safe: this flag can widen the validity of OP_CHECKSIG OP_NOT).
     SCRIPT_VERIFY_STRICTENC = (1U << 1),
 
-    // Passing a non-strict-DER signature to a checksig operation causes script failure (softfork safe, BIP62 rule 1)
+    // Passing any non-strict-DER signature to a checksig operation causes script failure, even if that signature would
+    // not normally be evaluated. (softfork safe, BIP62 rule 1)
     SCRIPT_VERIFY_DERSIG    = (1U << 2),
 
-    // Passing a non-strict-DER signature or one with S > order/2 to a checksig operation causes script failure
-    // (softfork safe, BIP62 rule 5).
+    // Passing any non-strict-DER signature or one with S > order/2 to a checksig operation causes script failure, even
+    // if that signature would not normally be evaluated. (softfork safe, BIP62 rule 5).
     SCRIPT_VERIFY_LOW_S     = (1U << 3),
 
     // verify dummy stack item consumed by CHECKMULTISIG is of zero-length (softfork safe, BIP62 rule 7).

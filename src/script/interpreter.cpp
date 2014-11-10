@@ -151,6 +151,15 @@ bool static CheckSignatureEncoding(const valtype &vchSig, unsigned int flags) {
     return true;
 }
 
+bool static CheckUnusedSignatureEncoding(const valtype &vchSig, unsigned int flags) {
+    if ((flags & (SCRIPT_VERIFY_DERSIG | SCRIPT_VERIFY_LOW_S)) != 0 && !IsDERSignature(vchSig)) {
+        return false;
+    } else if ((flags & SCRIPT_VERIFY_LOW_S) != 0 && !IsLowDERSignature(vchSig)) {
+        return false;
+    }
+    return true;
+}
+
 bool static CheckPubKeyEncoding(const valtype &vchSig, unsigned int flags) {
     if ((flags & SCRIPT_VERIFY_STRICTENC) != 0 && !IsCompressedOrUncompressedPubKey(vchSig)) {
         return false;
@@ -813,8 +822,12 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, un
                     }
 
                     // Clean up stack of actual arguments
-                    while (i-- > 1)
+                    while (i-- > 1) {
+                        if (!CheckUnusedSignatureEncoding(stacktop(-1), flags)) {
+                            return false;
+                        }
                         popstack(stack);
+                    }
 
                     // A bug causes CHECKMULTISIG to consume one extra argument
                     // whose contents were not checked in any way.
