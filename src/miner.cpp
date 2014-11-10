@@ -434,7 +434,7 @@ bool ProcessBlockFound(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey)
     return true;
 }
 
-void static BitcoinMiner(CWallet *pwallet)
+void static BitcoinMiner(CWallet *pwallet, uint32_t nBlockTime)
 {
     LogPrintf("BitcoinMiner started\n");
     SetThreadPriority(THREAD_PRIORITY_LOWEST);
@@ -466,6 +466,7 @@ void static BitcoinMiner(CWallet *pwallet)
                 return;
             }
             CBlock *pblock = &pblocktemplate->block;
+            if (nBlockTime > 0) pblock->nTime = nBlockTime;
             IncrementExtraNonce(pblock, pindexPrev, nExtraNonce);
 
             LogPrintf("Running BitcoinMiner with %u transactions in block (%u bytes)\n", pblock->vtx.size(),
@@ -549,7 +550,7 @@ void static BitcoinMiner(CWallet *pwallet)
                     break;
 
                 // Update nTime every few seconds
-                UpdateTime(pblock, pindexPrev);
+                if (nBlockTime == 0) UpdateTime(pblock, pindexPrev);
                 if (Params().AllowMinDifficultyBlocks())
                 {
                     // Changing pblock->nTime can change work required on testnet:
@@ -565,7 +566,7 @@ void static BitcoinMiner(CWallet *pwallet)
     }
 }
 
-void GenerateBitcoins(bool fGenerate, CWallet* pwallet, int nThreads)
+void GenerateBitcoins(bool fGenerate, CWallet* pwallet, int nThreads, uint32_t nBlockTime)
 {
     static boost::thread_group* minerThreads = NULL;
 
@@ -589,7 +590,7 @@ void GenerateBitcoins(bool fGenerate, CWallet* pwallet, int nThreads)
 
     minerThreads = new boost::thread_group();
     for (int i = 0; i < nThreads; i++)
-        minerThreads->create_thread(boost::bind(&BitcoinMiner, pwallet));
+        minerThreads->create_thread(boost::bind(&BitcoinMiner, pwallet, nBlockTime));
 }
 
 #endif // ENABLE_WALLET
