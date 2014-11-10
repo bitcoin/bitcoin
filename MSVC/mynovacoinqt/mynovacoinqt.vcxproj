@@ -136,6 +136,10 @@
       <PreprocessorDefinitions>
       </PreprocessorDefinitions>
     </ResourceCompile>
+    <PreBuildEvent>
+      <Command>C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2\qtbase\bin\lrelease C:\MyProjects\Novacoin\src\qt\locale\bitcoin_en.ts -qm C:\MyProjects\Novacoin\src\qt\locale\bitcoin_en.qm
+C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2\qtbase\bin\lrelease C:\MyProjects\Novacoin\src\qt\locale\bitcoin_ru.ts -qm C:\MyProjects\Novacoin\src\qt\locale\bitcoin_ru.qm</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -181,6 +185,10 @@
       <PreprocessorDefinitions>
       </PreprocessorDefinitions>
     </ResourceCompile>
+    <PreBuildEvent>
+      <Command>C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2-64\qtbase\bin\lrelease C:\MyProjects\Novacoin\src\qt\locale\bitcoin_en.ts -qm C:\MyProjects\Novacoin\src\qt\locale\bitcoin_en.qm
+C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2-64\qtbase\bin\lrelease C:\MyProjects\Novacoin\src\qt\locale\bitcoin_ru.ts -qm C:\MyProjects\Novacoin\src\qt\locale\bitcoin_ru.qm</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -224,6 +232,10 @@
     <ResourceCompile>
       <PreprocessorDefinitions>_WINDOWS;UNICODE;WIN32;QT_GUI;BOOST_THREAD_USE_LIB;BOOST_SPIRIT_THREADSAFE;QT_NO_DEBUG;QT_WIDGETS_LIB;QT_NETWORK_LIB;QT_GUI_LIB;QT_CORE_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ResourceCompile>
+    <PreBuildEvent>
+      <Command>C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2\qtbase\bin\lrelease C:\MyProjects\Novacoin\src\qt\locale\bitcoin_en.ts -qm C:\MyProjects\Novacoin\src\qt\locale\bitcoin_en.qm
+C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2\qtbase\bin\lrelease C:\MyProjects\Novacoin\src\qt\locale\bitcoin_ru.ts -qm C:\MyProjects\Novacoin\src\qt\locale\bitcoin_ru.qm</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -267,6 +279,11 @@
     <ResourceCompile>
       <PreprocessorDefinitions>_WINDOWS;UNICODE;WIN32;QT_GUI;BOOST_THREAD_USE_LIB;BOOST_SPIRIT_THREADSAFE;QT_NO_DEBUG;QT_WIDGETS_LIB;QT_NETWORK_LIB;QT_GUI_LIB;QT_CORE_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ResourceCompile>
+    <PreBuildEvent>
+      <Command>C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2-64\qtbase\bin\lrelease C:\MyProjects\Novacoin\src\qt\locale\bitcoin_en.ts -qm C:\MyProjects\Novacoin\src\qt\locale\bitcoin_en.qm
+C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2-64\qtbase\bin\lrelease C:\MyProjects\Novacoin\src\qt\locale\bitcoin_ru.ts -qm C:\MyProjects\Novacoin\src\qt\locale\bitcoin_ru.qm
+</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\qt\aboutdialog.cpp" />
@@ -1290,8 +1307,6 @@
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">release\qrc_bitcoin.cpp;%(Outputs)</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">release\qrc_bitcoin.cpp;%(Outputs)</Outputs>
     </CustomBuild>
-    <None Include="..\..\src\qt\locale\bitcoin_en.qm" />
-    <None Include="..\..\src\qt\locale\bitcoin_ru.qm" />
     <None Include="..\..\src\qt\res\icons\clock1.png" />
     <None Include="..\..\src\qt\res\icons\clock2.png" />
     <None Include="..\..\src\qt\res\icons\clock3.png" />

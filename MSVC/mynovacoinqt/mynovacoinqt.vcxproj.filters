@@ -637,12 +637,6 @@
     <CustomBuild Include="..\..\src\qt\bitcoin.qrc">
       <Filter>Resource Files</Filter>
     </CustomBuild>
-    <None Include="..\..\src\qt\locale\bitcoin_en.qm">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="..\..\src\qt\locale\bitcoin_ru.qm">
-      <Filter>Resource Files</Filter>
-    </None>
     <None Include="..\..\src\qt\res\icons\clock1.png">
       <Filter>Resource Files</Filter>
     </None>

@@ -31,9 +31,15 @@
 #include <stdint.h>
 #include <string.h>
 
+#ifdef _MSC_VER
+#define INLINE __inline
+#else
+#define INLINE inline
+#endif
+
 // Generic scrypt_core implementation
 
-static inline void xor_salsa8(unsigned int B[16], const unsigned int Bx[16])
+static INLINE void xor_salsa8(unsigned int B[16], const unsigned int Bx[16])
 {
     unsigned int x00,x01,x02,x03,x04,x05,x06,x07,x08,x09,x10,x11,x12,x13,x14,x15;
     int i;
