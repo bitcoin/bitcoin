@@ -47,7 +47,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location line="+22"/>
         <source>Double-click to edit address or label</source>
-        <translation>Для того, чтобы изменить адрес или метку давжды кликните по изменяемому объекту</translation>
+        <translation>Для того, чтобы изменить адрес или метку дважды кликните по изменяемому объекту</translation>
     </message>
     <message>
         <location line="+27"/>
@@ -1856,6 +1856,16 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
         <translation>адрес для сдачи</translation>
     </message>
     <message>
+        <location line="+50"/>
+        <source>Choose address from address book</source>
+        <translation>Выберите адрес из адресной книги</translation>
+    </message>
+    <message>
+        <location line="+50"/>
+        <source>Paste address from clipboard</source>
+        <translation>Вставить адрес из буфера обмена</translation>
+    </message>
+    <message>
         <location filename="../sendcoinsdialog.cpp" line="-173"/>
         <source>Enter a NovaCoin address (e.g. 4Zo1ga6xuKuQ7JV7M9rGDoxdbYwV5zgQJ5)</source>
         <translation>Введите NovaCoin-адрес (например 4Zo1ga6xuKuQ7JV7M9rGDoxdbYwV5zgQJ5)</translation>
@@ -1898,7 +1908,7 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     <message>
         <location line="+1"/>
         <source>Copy amount</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Копировать сумму</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -1923,7 +1933,7 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     <message>
         <location line="+1"/>
         <source>Copy low output</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Копировать мелкие входы</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2856,12 +2866,17 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     <message>
         <location line="+2"/>
         <source>An error occurred while setting up the RPC port %u for listening on IPv6, falling back to IPv4: %s</source>
-        <translation>Произошла ошибка при открытии на прослушивание IPv6 RCP-порта %u, возвращаемся к IPv4: %s</translation>
+        <translation>Произошла ошибка при открытии на прослушивание IPv6 RPС-порта %u, возвращаемся к IPv4: %s</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>Detach block and address databases. Increases shutdown time (default: 0)</source>
         <translation>Отключить базы данных блоков и адресов. Увеличивает время завершения работы (по умолчанию: 0)</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Use in-memory logging for block index database (default: 1)</source>
+      <translation>Использовать ведение журнала в памяти для индекса базы данных блоков (по умолчанию: 1)</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -2871,7 +2886,7 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     <message>
         <location line="+10"/>
         <source>Error: Wallet unlocked for block minting only, unable to create transaction.</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Ошибка: Кошелёк разблокирован только для POS майнинга, невозможно создать транзакцию</translation>
     </message>
     <message>
         <location line="+5"/>
@@ -2999,7 +3014,7 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     <message>
         <location line="+2"/>
         <source>Invalid amount for -reservebalance=&lt;amount&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Неверное количество для -reservebalance=&lt;amount&gt;</translation>
     </message>
     <message>
         <location line="+8"/>
@@ -3045,7 +3060,7 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     <message>
         <location line="+1"/>
         <source>Send command to -server or novacoind</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Отправить команду на -server или novacoind</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -3081,7 +3096,7 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
         <location line="+8"/>
         <source>Unable to sign checkpoint, wrong checkpointkey?
 </source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Невозможно подписать checkpoint, неправильный checkpointkey?</translation>
     </message>
     <message>
         <location line="+6"/>
@@ -3096,7 +3111,7 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     <message>
         <location line="+1"/>
         <source>Use proxy to reach tor hidden services (default: same as -proxy)</source>
-        <translation>Использовать прокси для скрытых сервисов (по умолчанию: тот же, что и в -proxy)</translation>
+        <translation>Использовать прокси для скрытых сервисов tor(по умолчанию: тот же, что и в -proxy)</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -3144,8 +3159,9 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
         <translation>Выполнить команду, когда появляется новый блок (%s в команде заменяется на хэш блока)</translation>
     </message>
     <message>
+        <location line="+118"/>
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
-        <translation type="obsolete">Выполнить команду, когда получена новая транзакция (%s в команде заменяется на ID транзакции)</translation>
+        <translation>Выполнить команду, когда получена новая транзакция (%s в команде заменяется на ID транзакции)</translation>
     </message>
     <message>
         <location line="+119"/>
@@ -3181,6 +3197,11 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
         <location line="+1"/>
         <source>How thorough the block verification is (0-6, default: 1)</source>
         <translation>Насколько тщательно проверять блоки (0-6, по умолчанию: 1)</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Set the number of script verification threads (1-16, 0=auto, default: 0)</source>
+        <translation>Установить число потоков проверки скрипта (1-16, 0= автоматически, по умолчанию: 0)</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -3219,7 +3240,7 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     <message>
         <location line="-129"/>
         <source>Cannot obtain a lock on data directory %s.  NovaCoin is probably already running.</source>
-        <translation>Невозможно установить блокировку на рабочую директорию %s.  Возможно, бумажник уже запущен.</translation>
+        <translation>Невозможно установить блокировку на рабочую директорию %s.  Возможно, NovaCoin уже запущен.</translation>
     </message>
     <message>
         <location line="+99"/>
