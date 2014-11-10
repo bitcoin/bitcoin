@@ -8,6 +8,7 @@
 #include <cstddef>
 #include <vector>
 
+#include <openssl/bn.h>
 #include <openssl/ec.h>
 
 class uint256;
@@ -16,6 +17,8 @@ class uint256;
 class CECKey {
 private:
     EC_KEY *pkey;
+
+    bool SignSetup(const uint256& k, BIGNUM* kinv, BIGNUM* r, BN_CTX *ctx);
 
 public:
     CECKey();
@@ -28,9 +31,9 @@ public:
     bool SetPrivKey(const unsigned char* privkey, size_t size, bool fSkipCheck=false);
     void GetPubKey(std::vector<unsigned char>& pubkey, bool fCompressed);
     bool SetPubKey(const unsigned char* pubkey, size_t size);
-    bool Sign(const uint256 &hash, std::vector<unsigned char>& vchSig, bool lowS);
+    bool Sign(const uint256 &hash, const uint256 &nonce, std::vector<unsigned char>& vchSig);
     bool Verify(const uint256 &hash, const std::vector<unsigned char>& vchSig);
-    bool SignCompact(const uint256 &hash, unsigned char *p64, int &rec);
+    bool SignCompact(const uint256 &hash, const uint256 &nonce, unsigned char *p64, int &rec);
 
     // reconstruct public key from a compact signature
     // This is only slightly more CPU intensive than just verifying it.

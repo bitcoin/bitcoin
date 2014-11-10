@@ -4,7 +4,6 @@
 
 #include "pubkey.h"
 
-#include "crypto/sha2.h"
 #include "eccryptoverify.h"
 
 #ifdef USE_SECP256K1
