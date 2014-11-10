@@ -103,9 +103,9 @@ BitcoinGUI::BitcoinGUI(const NetworkStyle *networkStyle, QWidget *parent) :
     QString windowTitle = tr("Bitcoin Core") + " - ";
 #ifdef ENABLE_WALLET
     /* if compiled with wallet support, -disablewallet can still disable the wallet */
-    bool enableWallet = !GetBoolArg("-disablewallet", false);
+    enableWallet = !GetBoolArg("-disablewallet", false);
 #else
-    bool enableWallet = false;
+    enableWallet = false;
 #endif // ENABLE_WALLET
     if(enableWallet)
     {
@@ -554,7 +554,7 @@ void BitcoinGUI::optionsClicked()
     if(!clientModel || !clientModel->getOptionsModel())
         return;
 
-    OptionsDialog dlg(this);
+    OptionsDialog dlg(this, enableWallet);
     dlg.setModel(clientModel->getOptionsModel());
     dlg.exec();
 }

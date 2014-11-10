@@ -30,7 +30,7 @@
 #include <QMessageBox>
 #include <QTimer>
 
-OptionsDialog::OptionsDialog(QWidget *parent) :
+OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
     QDialog(parent),
     ui(new Ui::OptionsDialog),
     model(0),
@@ -65,6 +65,11 @@ OptionsDialog::OptionsDialog(QWidget *parent) :
     /* remove Window tab on Mac */
     ui->tabWidget->removeTab(ui->tabWidget->indexOf(ui->tabWindow));
 #endif
+
+    /* remove Wallet tab in case of -disablewallet */
+    if (!enableWallet) {
+        ui->tabWidget->removeTab(ui->tabWidget->indexOf(ui->tabWallet));
+    }
 
     /* Display elements init */
     QDir translations(":translations");
