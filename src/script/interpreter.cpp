@@ -855,6 +855,9 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, un
                         valtype& vchSig    = stacktop(-isig);
                         valtype& vchPubKey = stacktop(-ikey);
 
+                        // Note how this makes the exact order of pubkey/signature evaluation
+                        // distinguishable by CHECKMULTISIG NOT if the STRICTENC flag is set.
+                        // See the script_(in)valid tests for details.
                         if (!CheckSignatureEncoding(vchSig, flags, serror) || !CheckPubKeyEncoding(vchPubKey, flags, serror)) {
                             // serror is set
                             return false;
@@ -871,7 +874,8 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, un
                         nKeysCount--;
 
                         // If there are more signatures left than keys left,
-                        // then too many signatures have failed
+                        // then too many signatures have failed. Exit early,
+                        // without checking any further signatures.
                         if (nSigsCount > nKeysCount)
                             fSuccess = false;
                     }

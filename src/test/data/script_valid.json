@@ -761,6 +761,31 @@ nSequences are max.
     "STRICTENC",
     "1-of-2 with the second 1 hybrid pubkey"
 ],
+
+["
+CHECKMULTISIG evaluation order tests. CHECKMULTISIG evaluates signatures and
+pubkeys in a specific order, and will exit early if the number of signatures
+left to check is greater than the number of keys left. As STRICTENC fails the
+script when it reaches an invalidly encoded signature or pubkey, we can use it
+to test the exact order in which signatures and pubkeys are evaluated by
+distinguishing CHECKMULTISIG returning false on the stack and the script as a
+whole failing.
+
+See also the corresponding inverted versions of these tests in script_invalid.json
+"],
+[
+    "0 0x47 0x3044022044dc17b0887c161bb67ba9635bf758735bdde503e4b0a0987f587f14a4e1143d022009a215772d49a85dae40d8ca03955af26ad3978a0ff965faa12915e9586249a501 0x47 0x3044022044dc17b0887c161bb67ba9635bf758735bdde503e4b0a0987f587f14a4e1143d022009a215772d49a85dae40d8ca03955af26ad3978a0ff965faa12915e9586249a501",
+    "2 0 0x21 0x02865c40293a680cb9c020e7b1e106d8c1916d3cef99aa431a56d253e69256dac0 2 CHECKMULTISIG NOT",
+    "STRICTENC",
+    "2-of-2 CHECKMULTISIG NOT with the second pubkey invalid, and both signatures validly encoded. Valid pubkey fails, and CHECKMULTISIG exits early, prior to evaluation of second invalid pubkey."
+],
+[
+    "0 0 0x47 0x3044022044dc17b0887c161bb67ba9635bf758735bdde503e4b0a0987f587f14a4e1143d022009a215772d49a85dae40d8ca03955af26ad3978a0ff965faa12915e9586249a501",
+    "2 0x21 0x02865c40293a680cb9c020e7b1e106d8c1916d3cef99aa431a56d253e69256dac0 0x21 0x02865c40293a680cb9c020e7b1e106d8c1916d3cef99aa431a56d253e69256dac0 2 CHECKMULTISIG NOT",
+    "STRICTENC",
+    "2-of-2 CHECKMULTISIG NOT with both pubkeys valid, but second signature invalid. Valid pubkey fails, and CHECKMULTISIG exits early, prior to evaluation of second invalid signature."
+],
+
 [
     "0x47 0x304402204649e9517ef0377a8f8270bd423053fd98ddff62d74ea553e9579558abbb75e4022044a2b2344469c12e35ed898987711272b634733dd0f5e051288eceb04bd4669e05",
     "0x41 0x048282263212c609d9ea2a6e3e172de238d8c39cabd5ac1ca10646e23fd5f5150811f8a8098557dfe45e8256e830b60ace62d613ac2f7b17bed31b6eaff6e26caf CHECKSIG",
