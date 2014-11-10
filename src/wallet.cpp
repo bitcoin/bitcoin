@@ -919,7 +919,7 @@ bool CWalletTx::WriteToDisk()
 }
 
 /**
- * Scan the block chain (starting in pindexStart) for transactions
+ * Scan the blockchain (starting in pindexStart) for transactions
  * from or to us. If fUpdate is true, found transactions that already
  * exist in the wallet will be updated.
  */
