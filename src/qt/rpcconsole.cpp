@@ -200,7 +200,7 @@ void RPCExecutor::request(const QString &command)
 }
 
 RPCConsole::RPCConsole(QWidget *parent) :
-    QDialog(parent),
+    QWidget(parent),
     ui(new Ui::RPCConsole),
     clientModel(0),
     historyPtr(0),
@@ -278,7 +278,7 @@ bool RPCConsole::eventFilter(QObject* obj, QEvent *event)
             }
         }
     }
-    return QDialog::eventFilter(obj, event);
+    return QWidget::eventFilter(obj, event);
 }
 
 void RPCConsole::setClientModel(ClientModel *model)
@@ -366,11 +366,12 @@ void RPCConsole::clear()
                         tr("Type <b>help</b> for an overview of available commands.")), true);
 }
 
-void RPCConsole::reject()
+void RPCConsole::keyPressEvent(QKeyEvent *event)
 {
-    // Ignore escape keypress if this is not a seperate window
-    if(windowType() != Qt::Widget)
-        QDialog::reject();
+    if(windowType() != Qt::Widget && event->key() == Qt::Key_Escape)
+    {
+        close();
+    }
 }
 
 void RPCConsole::message(int category, const QString &message, bool html)
