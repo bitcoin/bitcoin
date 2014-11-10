@@ -5,8 +5,7 @@ This guide will show you how to build bitcoind(headless client) for OSX.
 Notes
 -----
 
-* Tested on OS X 10.6 through 10.9 on 64-bit Intel processors only.
-Older OSX releases or 32-bit processors are no longer supported.
+* Tested on OS X 10.7 through 10.10 on 64-bit Intel processors only.
 
 * All of the commands should be executed in a Terminal application. The
 built-in one is located in `/Applications/Utilities`.
@@ -96,9 +95,9 @@ as follows for maximum compatibility:
 
 All dependencies should be compiled with these flags:
 
- -mmacosx-version-min=10.6
+ -mmacosx-version-min=10.7
  -arch x86_64
- -isysroot $(xcode-select --print-path)/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.6.sdk
+ -isysroot $(xcode-select --print-path)/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.7.sdk
 
 Once dependencies are compiled, see release-process.md for how the Bitcoin-Qt.app
 bundle is packaged and signed to create the .dmg disk image that is distributed.
