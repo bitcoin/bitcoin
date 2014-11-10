@@ -35,12 +35,12 @@ public:
         return (setSelected.count(outpt) > 0);
     }
 
-    void Select(COutPoint& output)
+    void Select(const COutPoint& output)
     {
         setSelected.insert(output);
     }
 
-    void UnSelect(COutPoint& output)
+    void UnSelect(const COutPoint& output)
     {
         setSelected.erase(output);
     }
