@@ -13,7 +13,8 @@
 #endif
 
 #ifdef _MSC_VER
-#define ssize_t size_t
+#include <BaseTsd.h>
+typedef SSIZE_T ssize_t;
 #endif
 
 #include "strlcpy.h"
