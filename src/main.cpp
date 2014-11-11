@@ -3086,8 +3086,7 @@ bool CheckBlockFiles()
     // Check presence of blk files
     int nKeepMinBlksFromHeight = nPrune ? (max((int)(chainActive.Height() - MIN_BLOCKS_TO_KEEP), 0)) : 0;
     LogPrintf("Checking all required data for active chain is available (mandatory from height %i to %i)\n", nKeepMinBlksFromHeight, max(chainActive.Height(), 0));
-    map<int, bool> mapBlockFileIsOpenable, mapUndoFileIsOpenable;
-    set<int> setRequiredDataFilesAreOpenable, setDataPruned, setUndoPruned;
+    set<int> setDataPruned, setUndoPruned;
     setDataFilePrunable.clear();
     setUndoFilePrunable.clear();
     for (CBlockIndex* pindex = chainActive.Tip(); pindex && pindex->pprev; pindex = pindex->pprev) {
@@ -3095,38 +3094,31 @@ bool CheckBlockFiles()
             if (!(pindex->nStatus & BLOCK_HAVE_DATA) || !(pindex->nStatus & BLOCK_HAVE_UNDO)) { // Fail immediately if required data is missing
                 LogPrintf("Error: Required data for block: %i is missing.\n", pindex->nHeight);
                 return false;
-            } else if (!setRequiredDataFilesAreOpenable.count(pindex->nFile)) {
-                if (!DataFilesAreOpenable(pindex->nFile)) { // Or if data is unreadable
-                    LogPrintf("Error: Required file for block: %i can't be opened.\n", pindex->nHeight);
-                    return false;
-                } else
-                    setRequiredDataFilesAreOpenable.insert(pindex->nFile);
+            } else if (!DataFilesAreOpenable(pindex->nFile)) { // Or if data is unreadable
+                LogPrintf("Error: Required file for block: %i can't be opened.\n", pindex->nHeight);
+                return false;
             }
         } else { // Check consistency and pruneability of unrequired data
             if (pindex->nStatus & BLOCK_HAVE_DATA) {
-                if (!mapBlockFileIsOpenable.count(pindex->nFile)) {
-                    mapBlockFileIsOpenable[pindex->nFile] = BlockFileIsOpenable(pindex->nFile);
-                    if (mapBlockFileIsOpenable[pindex->nFile] && chainActive.Height() > AUTOPRUNE_AFTER_HEIGHT && LastBlockInFile(pindex->nFile) < nKeepMinBlksFromHeight) { // Mark pruneable data
+                if (BlockFileIsOpenable(pindex->nFile)) {
+                    if (chainActive.Height() > AUTOPRUNE_AFTER_HEIGHT && LastBlockInFile(pindex->nFile) < nKeepMinBlksFromHeight) { // Mark pruneable data
                         setDataFilePrunable.insert(pindex->nFile);
                     }
+                } else {
+                    pindex->nStatus &= ~BLOCK_HAVE_DATA;
+                    setDirtyBlockIndex.insert(pindex);
                 }
             }
             if (pindex->nStatus & BLOCK_HAVE_UNDO) {
-                if (!mapUndoFileIsOpenable.count(pindex->nFile)) {
-                    mapUndoFileIsOpenable[pindex->nFile] = UndoFileIsOpenable(pindex->nFile);
-                    if (mapUndoFileIsOpenable[pindex->nFile] && chainActive.Height() > AUTOPRUNE_AFTER_HEIGHT && LastBlockInFile(pindex->nFile) < nKeepMinBlksFromHeight) { // Mark pruneable data
+                if (UndoFileIsOpenable(pindex->nFile)) {
+                    if (chainActive.Height() > AUTOPRUNE_AFTER_HEIGHT && LastBlockInFile(pindex->nFile) < nKeepMinBlksFromHeight) { // Mark pruneable data
                         setUndoFilePrunable.insert(pindex->nFile);
                     }
+                } else {
+                    pindex->nStatus &= ~BLOCK_HAVE_UNDO;
+                    setDirtyBlockIndex.insert(pindex);
                 }
             }
-        }
-        if (mapBlockFileIsOpenable.count(pindex->nFile) && !mapBlockFileIsOpenable[pindex->nFile]) {
-            pindex->nStatus &= ~BLOCK_HAVE_DATA;
-            setDirtyBlockIndex.insert(pindex);
-        }
-        if (mapUndoFileIsOpenable.count(pindex->nFile) && !mapUndoFileIsOpenable[pindex->nFile]) {
-            pindex->nStatus &= ~BLOCK_HAVE_UNDO;
-            setDirtyBlockIndex.insert(pindex);
         }
         if (~pindex->nStatus & BLOCK_HAVE_DATA && pindex->nStatus & BLOCK_VALID_CHAIN)
             setDataPruned.insert(pindex->nHeight);
