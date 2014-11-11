@@ -76,7 +76,7 @@ cd C:\MyProjects\Deps\build-helpers
 buildqrcode.bat
 
 2.6 Qt 5
--Скачайте http://download.qt-project.org/official_releases/qt/5.1/5.1.1/single/qt-everywhere-opensource-src-5.3.2.7z
+-Скачайте http://download.qt-project.org/official_releases/qt/5.3/5.3.2/single/qt-everywhere-opensource-src-5.3.2.7z
 -Распакуйте в C:\MyProjects\Deps
 -Если вам нужна поддержка 64 bit, то переименуйте папку qt-everywhere-opensource-src-5.3.2 в qt-everywhere-opensource-src-5.3.2-64
 (если вам нужна возможность строить и 32 bit и 64 bit бинарники, то у вас должны быть обе папки и qt-everywhere-opensource-src-5.3.2-64 и qt-everywhere-opensource-src-5.3.2 )
