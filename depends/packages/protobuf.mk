@@ -7,7 +7,7 @@ $(package)_dependencies=native_$(package)
 
 define $(package)_set_vars
   $(package)_config_opts=--disable-shared --with-protoc=$(build_prefix)/bin/protoc
-  $(package)_config_opts_x86_64_linux=--with-pic
+  $(package)_config_opts_linux=--with-pic
 endef
 
 define $(package)_config_cmds
