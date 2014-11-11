@@ -7,7 +7,7 @@ $(package)_dependencies=xproto
 
 define $(package)_set_vars
   $(package)_config_opts=--disable-shared
-  $(package)_config_opts_x86_64_linux=--with-pic
+  $(package)_config_opts_linux=--with-pic
 endef
 
 define $(package)_config_cmds
