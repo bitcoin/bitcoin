@@ -6,7 +6,7 @@ $(package)_sha256_hash=054d4ee3efd52508c753e9f7bc655ef185a29bd2850dd9e2fc2ccc335
 $(package)_dependencies=
 
 define $(package)_set_vars
-$(package)_config_opts_x86_64_linux=--with-pic --disable-static
+$(package)_config_opts_linux=--with-pic --disable-static
 endef
 
 define $(package)_config_cmds
