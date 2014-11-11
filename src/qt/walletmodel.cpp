@@ -428,13 +428,13 @@ bool WalletModel::backupWallet(const QString &filename)
 }
 
 // Handlers for core signals
-static void NotifyKeyStoreStatusChanged(WalletModel *walletmodel, CCryptoKeyStore *wallet)
+void WalletModel::NotifyKeyStoreStatusChanged(CCryptoKeyStore *wallet)
 {
     qDebug() << "NotifyKeyStoreStatusChanged";
-    QMetaObject::invokeMethod(walletmodel, "updateStatus", Qt::QueuedConnection);
+    QMetaObject::invokeMethod(this, "updateStatus", Qt::QueuedConnection);
 }
 
-static void NotifyAddressBookChanged(WalletModel *walletmodel, CWallet *wallet,
+void WalletModel::NotifyAddressBookChanged(CWallet *wallet,
         const CTxDestination &address, const std::string &label, bool isMine,
         const std::string &purpose, ChangeType status)
 {
@@ -443,7 +443,7 @@ static void NotifyAddressBookChanged(WalletModel *walletmodel, CWallet *wallet,
     QString strPurpose = QString::fromStdString(purpose);
 
     qDebug() << "NotifyAddressBookChanged : " + strAddress + " " + strLabel + " isMine=" + QString::number(isMine) + " purpose=" + strPurpose + " status=" + QString::number(status);
-    QMetaObject::invokeMethod(walletmodel, "updateAddressBook", Qt::QueuedConnection,
+    QMetaObject::invokeMethod(this, "updateAddressBook", Qt::QueuedConnection,
                               Q_ARG(QString, strAddress),
                               Q_ARG(QString, strLabel),
                               Q_ARG(bool, isMine),
@@ -451,46 +451,46 @@ static void NotifyAddressBookChanged(WalletModel *walletmodel, CWallet *wallet,
                               Q_ARG(int, status));
 }
 
-static void NotifyTransactionChanged(WalletModel *walletmodel, CWallet *wallet, const uint256 &hash, ChangeType status)
+void WalletModel::NotifyTransactionChanged(CWallet *wallet, const uint256 &hash, ChangeType status)
 {
     Q_UNUSED(wallet);
     Q_UNUSED(hash);
     Q_UNUSED(status);
-    QMetaObject::invokeMethod(walletmodel, "updateTransaction", Qt::QueuedConnection);
+    QMetaObject::invokeMethod(this, "updateTransaction", Qt::QueuedConnection);
 }
 
-static void ShowProgress(WalletModel *walletmodel, const std::string &title, int nProgress)
+void WalletModel::ShowProgress(const std::string &title, int nProgress)
 {
     // emits signal "showProgress"
-    QMetaObject::invokeMethod(walletmodel, "showProgress", Qt::QueuedConnection,
+    QMetaObject::invokeMethod(this, "showProgress", Qt::QueuedConnection,
                               Q_ARG(QString, QString::fromStdString(title)),
                               Q_ARG(int, nProgress));
 }
 
-static void NotifyWatchonlyChanged(WalletModel *walletmodel, bool fHaveWatchonly)
+void WalletModel::NotifyWatchonlyChanged(bool fHaveWatchonly)
 {
-    QMetaObject::invokeMethod(walletmodel, "updateWatchOnlyFlag", Qt::QueuedConnection,
+    QMetaObject::invokeMethod(this, "updateWatchOnlyFlag", Qt::QueuedConnection,
                               Q_ARG(bool, fHaveWatchonly));
 }
 
 void WalletModel::subscribeToCoreSignals()
 {
     // Connect signals to wallet
-    wallet->NotifyStatusChanged.connect(boost::bind(&NotifyKeyStoreStatusChanged, this, _1));
-    wallet->NotifyAddressBookChanged.connect(boost::bind(NotifyAddressBookChanged, this, _1, _2, _3, _4, _5, _6));
-    wallet->NotifyTransactionChanged.connect(boost::bind(NotifyTransactionChanged, this, _1, _2, _3));
-    wallet->ShowProgress.connect(boost::bind(ShowProgress, this, _1, _2));
-    wallet->NotifyWatchonlyChanged.connect(boost::bind(NotifyWatchonlyChanged, this, _1));
+    wallet->NotifyStatusChanged.Connect(this, &WalletModel::NotifyKeyStoreStatusChanged);
+    wallet->NotifyAddressBookChanged.Connect(this, &WalletModel::NotifyAddressBookChanged);
+    wallet->NotifyTransactionChanged.Connect(this, &WalletModel::NotifyTransactionChanged);
+    wallet->ShowProgress.Connect(this, &WalletModel::ShowProgress);
+    wallet->NotifyWatchonlyChanged.Connect(this, &WalletModel::NotifyWatchonlyChanged);
 }
 
 void WalletModel::unsubscribeFromCoreSignals()
 {
     // Disconnect signals from wallet
-    wallet->NotifyStatusChanged.disconnect(boost::bind(&NotifyKeyStoreStatusChanged, this, _1));
-    wallet->NotifyAddressBookChanged.disconnect(boost::bind(NotifyAddressBookChanged, this, _1, _2, _3, _4, _5, _6));
-    wallet->NotifyTransactionChanged.disconnect(boost::bind(NotifyTransactionChanged, this, _1, _2, _3));
-    wallet->ShowProgress.disconnect(boost::bind(ShowProgress, this, _1, _2));
-    wallet->NotifyWatchonlyChanged.disconnect(boost::bind(NotifyWatchonlyChanged, this, _1));
+    wallet->NotifyStatusChanged.Disconnect(this, &WalletModel::NotifyKeyStoreStatusChanged);
+    wallet->NotifyAddressBookChanged.Disconnect(this, &WalletModel::NotifyAddressBookChanged);
+    wallet->NotifyTransactionChanged.Disconnect(this, &WalletModel::NotifyTransactionChanged);
+    wallet->ShowProgress.Disconnect(this, &WalletModel::ShowProgress);
+    wallet->NotifyWatchonlyChanged.Disconnect(this, &WalletModel::NotifyWatchonlyChanged);
 }
 
 // WalletModel::UnlockContext implementation

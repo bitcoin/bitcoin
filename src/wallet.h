@@ -414,23 +414,22 @@ public:
      * Address book entry changed.
      * @note called with lock cs_wallet held.
      */
-    boost::signals2::signal<void (CWallet *wallet, const CTxDestination
-            &address, const std::string &label, bool isMine,
-            const std::string &purpose,
-            ChangeType status)> NotifyAddressBookChanged;
+	Gallant::Signal6<CWallet * /* wallet */, const CTxDestination & /* address */,
+			const std::string & /* label */, bool /* isMine */, const std::string & /* purpose */,
+			ChangeType /* status */> NotifyAddressBookChanged;
 
     /** 
      * Wallet transaction added, removed or updated.
      * @note called with lock cs_wallet held.
      */
-    boost::signals2::signal<void (CWallet *wallet, const uint256 &hashTx,
-            ChangeType status)> NotifyTransactionChanged;
+	Gallant::Signal3<CWallet * /* wallet */, const uint256 & /* hashTx */,
+			ChangeType /* status */> NotifyTransactionChanged;
 
     /** Show progress e.g. for rescan */
-    boost::signals2::signal<void (const std::string &title, int nProgress)> ShowProgress;
+    Gallant::Signal2<const std::string & /* title */, int /* nProgress */> ShowProgress;
 
     /** Watch-only address added */
-    boost::signals2::signal<void (bool fHaveWatchOnly)> NotifyWatchonlyChanged;
+	Gallant::Signal1<bool /* fHaveWatchOnly */> NotifyWatchonlyChanged;
 };
 
 /** A key allocated from the key pool. */

@@ -84,9 +84,9 @@ static void InitMessage(const std::string &message)
 /*
    Translate string to current locale using Qt.
  */
-static std::string Translate(const char* psz)
+static void Translate(const char* psz, std::string &result)
 {
-    return QCoreApplication::translate("bitcoin-core", psz).toStdString();
+	result = QCoreApplication::translate("bitcoin-core", psz).toStdString();
 }
 
 /** Set up translations */
@@ -526,7 +526,7 @@ int main(int argc, char *argv[])
     // Now that QSettings are accessible, initialize translations
     QTranslator qtTranslatorBase, qtTranslator, translatorBase, translator;
     initTranslations(qtTranslatorBase, qtTranslator, translatorBase, translator);
-    uiInterface.Translate.connect(Translate);
+    uiInterface.Translate.Connect(Translate);
 
     // Show help message immediately after parsing command-line options (for "-lang") and setting locale,
     // but before showing splash screen.
@@ -613,7 +613,7 @@ int main(int argc, char *argv[])
     app.createOptionsModel();
 
     // Subscribe to global signals from core
-    uiInterface.InitMessage.connect(InitMessage);
+    uiInterface.InitMessage.Connect(InitMessage);
 
     if (GetBoolArg("-splash", true) && !GetBoolArg("-min", false))
         app.createSplashScreen(networkStyle.data());

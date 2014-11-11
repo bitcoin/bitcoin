@@ -124,8 +124,10 @@ BITCOIN_CORE_H = \
   uint256.h \
   undo.h \
   util.h \
+  utildelegate.h \
   utilstrencodings.h \
   utilmoneystr.h \
+  utilsignal.h \
   utiltime.h \
   version.h \
   wallet.h \

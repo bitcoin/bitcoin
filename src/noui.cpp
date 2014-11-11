@@ -12,7 +12,7 @@
 #include <stdint.h>
 #include <string>
 
-static bool noui_ThreadSafeMessageBox(const std::string& message, const std::string& caption, unsigned int style)
+static void noui_ThreadSafeMessageBox(const std::string& message, const std::string& caption, unsigned int style, bool &result)
 {
     bool fSecure = style & CClientUIInterface::SECURE;
     style &= ~CClientUIInterface::SECURE;
@@ -36,7 +36,7 @@ static bool noui_ThreadSafeMessageBox(const std::string& message, const std::str
     if (!fSecure)
         LogPrintf("%s: %s\n", strCaption, message);
     fprintf(stderr, "%s: %s\n", strCaption.c_str(), message.c_str());
-    return false;
+	result = false;
 }
 
 static void noui_InitMessage(const std::string& message)
@@ -47,6 +47,6 @@ static void noui_InitMessage(const std::string& message)
 void noui_connect()
 {
     // Connect bitcoind signal handlers
-    uiInterface.ThreadSafeMessageBox.connect(noui_ThreadSafeMessageBox);
-    uiInterface.InitMessage.connect(noui_InitMessage);
+    uiInterface.ThreadSafeMessageBox.Connect(&noui_ThreadSafeMessageBox);
+    uiInterface.InitMessage.Connect(&noui_InitMessage);
 }

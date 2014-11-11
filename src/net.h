@@ -18,6 +18,7 @@
 #include "sync.h"
 #include "uint256.h"
 #include "utilstrencodings.h"
+#include "utilsignal.h"
 
 #include <deque>
 #include <stdint.h>
@@ -28,7 +29,6 @@
 
 #include <boost/filesystem/path.hpp>
 #include <boost/foreach.hpp>
-#include <boost/signals2/signal.hpp>
 
 class CAddrMan;
 class CBlockIndex;
@@ -79,11 +79,11 @@ typedef int NodeId;
 // Signals for message handling
 struct CNodeSignals
 {
-    boost::signals2::signal<int ()> GetHeight;
-    boost::signals2::signal<bool (CNode*)> ProcessMessages;
-    boost::signals2::signal<bool (CNode*, bool)> SendMessages;
-    boost::signals2::signal<void (NodeId, const CNode*)> InitializeNode;
-    boost::signals2::signal<void (NodeId)> FinalizeNode;
+	Gallant::Signal1<int& /* result */> GetHeight;
+	Gallant::Signal2<CNode*, bool& /* result */> ProcessMessages;
+	Gallant::Signal3<CNode*, bool, bool& /* result */> SendMessages;
+	Gallant::Signal2<NodeId, const CNode*> InitializeNode;
+	Gallant::Signal1<NodeId> FinalizeNode;
 };
 
 

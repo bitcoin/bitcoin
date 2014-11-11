@@ -6,6 +6,8 @@
 #define BITCOIN_QT_TRANSACTIONTABLEMODEL_H
 
 #include "bitcoinunits.h"
+#include "uint256.h"
+#include "ui_interface.h"
 
 #include <QAbstractTableModel>
 #include <QStringList>
@@ -73,6 +75,8 @@ public:
     QVariant headerData(int section, Qt::Orientation orientation, int role) const;
     QModelIndex index(int row, int column, const QModelIndex & parent = QModelIndex()) const;
     bool processingQueuedTransactions() { return fProcessingQueuedTransactions; }
+    void ShowProgress(const std::string &title, int nProgress);
+	void NotifyTransactionChanged(CWallet *wallet, const uint256 &hash, ChangeType status);
 
 private:
     CWallet* wallet;
