@@ -108,6 +108,8 @@ mingw32-make -j n , где вместо n количество ядер ваше
 Qt 5:
 -Скачайте http://download.qt-project.org/official_releases/qt/5.3/5.3.2/submodules/qtbase-opensource-src-5.3.2.7z
 http://download.qt-project.org/official_releases/qt/5.3/5.3.2/submodules/qttools-opensource-src-5.3.2.7z
+http://download.qt-project.org/official_releases/qt/5.3/5.3.2/submodules/qttranslations-opensource-src-5.3.2.7z
+
 -Распакуйте в C:\Qt
 -Переименуйте папку qtbase-opensource-src-5.3.2 в 5.3.2
 -Откройте командную строку Windows и выполните следующий код:
@@ -127,6 +129,9 @@ cd C:\Qt\qttools-opensource-src-5.3.2
 qmake qttools.pro
 mingw32-make
 
+cd C:\Qt\qttranslations-opensource-src-5.3.2
+qmake qttranslations.pro
+mingw32-make
 
 
 Qt4:
@@ -357,6 +362,8 @@ Qt 5:
 http://download.qt-project.org/official_releases/qt/5.3/5.3.2/submodules/qttools-opensource-src-5.3.2.7z
 -Распакуйте в C:\Qt
 -Переименуйте папку qtbase-opensource-src-5.3.2 в 5.3.2-x64
+-Переименуйте папку qttools-opensource-src-5.3.2 в qttools-opensource-src-5.3.2-x64
+-Переименуйте папку qttranslations-opensource-src-5.3.2 в qttranslations-opensource-src-5.3.2-x64
 -Откройте командную строку Windows и выполните следующий код:
 
 set INCLUDE=C:\deps\x64\libpng-1.6.12;C:\deps\x64\openssl-1.0.1j\include
@@ -372,6 +379,10 @@ set PATH=%PATH%;C:\Qt\5.3.2-x64\bin
 
 cd C:\Qt\qttools-opensource-src-5.3.2-x64
 qmake qttools.pro
+mingw32-make
+
+cd C:\Qt\qttranslations-opensource-src-5.3.2-x64
+qmake qttranslations.pro
 mingw32-make
 
 Qt4:
