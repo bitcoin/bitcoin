@@ -195,13 +195,15 @@ void HandleSIGHUP(int)
 
 bool static InitError(const std::string &str)
 {
-    uiInterface.ThreadSafeMessageBox(str, "", CClientUIInterface::MSG_ERROR);
+	bool ret;
+    uiInterface.ThreadSafeMessageBox(str, "", CClientUIInterface::MSG_ERROR, ret);
     return false;
 }
 
 bool static InitWarning(const std::string &str)
 {
-    uiInterface.ThreadSafeMessageBox(str, "", CClientUIInterface::MSG_WARNING);
+	bool ret;
+    uiInterface.ThreadSafeMessageBox(str, "", CClientUIInterface::MSG_WARNING, ret);
     return true;
 }
 
@@ -759,7 +761,7 @@ bool AppInit2(boost::thread_group& threadGroup)
      */
     if (fServer)
     {
-        uiInterface.InitMessage.connect(SetRPCWarmupStatus);
+        uiInterface.InitMessage.Connect(SetRPCWarmupStatus);
         StartRPCThreads();
     }
 
@@ -1023,9 +1025,10 @@ bool AppInit2(boost::thread_group& threadGroup)
         if (!fLoaded) {
             // first suggest a reindex
             if (!fReset) {
-                bool fRet = uiInterface.ThreadSafeMessageBox(
+				bool fRet;
+                uiInterface.ThreadSafeMessageBox(
                     strLoadError + ".\n\n" + _("Do you want to rebuild the block database now?"),
-                    "", CClientUIInterface::MSG_ERROR | CClientUIInterface::BTN_ABORT);
+                    "", CClientUIInterface::MSG_ERROR | CClientUIInterface::BTN_ABORT, fRet);
                 if (fRet) {
                     fReindex = true;
                     fRequestShutdown = false;
@@ -1224,7 +1227,7 @@ bool AppInit2(boost::thread_group& threadGroup)
     // ********************************************************* Step 9: import blocks
 
     if (mapArgs.count("-blocknotify"))
-        uiInterface.NotifyBlockTip.connect(BlockNotifyCallback);
+        uiInterface.NotifyBlockTip.Connect(BlockNotifyCallback);
 
     // scan for better chains in the block chain database, that are not yet connected in the active best chain
     CValidationState state;

@@ -202,25 +202,25 @@ QString ClientModel::formatClientStartupTime() const
 }
 
 // Handlers for core signals
-static void ShowProgress(ClientModel *clientmodel, const std::string &title, int nProgress)
+void ClientModel::ShowProgress(const std::string &title, int nProgress)
 {
     // emits signal "showProgress"
-    QMetaObject::invokeMethod(clientmodel, "showProgress", Qt::QueuedConnection,
+    QMetaObject::invokeMethod(this, "showProgress", Qt::QueuedConnection,
                               Q_ARG(QString, QString::fromStdString(title)),
                               Q_ARG(int, nProgress));
 }
 
-static void NotifyNumConnectionsChanged(ClientModel *clientmodel, int newNumConnections)
+void ClientModel::NotifyNumConnectionsChanged(int newNumConnections)
 {
     // Too noisy: qDebug() << "NotifyNumConnectionsChanged : " + QString::number(newNumConnections);
-    QMetaObject::invokeMethod(clientmodel, "updateNumConnections", Qt::QueuedConnection,
+    QMetaObject::invokeMethod(this, "updateNumConnections", Qt::QueuedConnection,
                               Q_ARG(int, newNumConnections));
 }
 
-static void NotifyAlertChanged(ClientModel *clientmodel, const uint256 &hash, ChangeType status)
+void ClientModel::NotifyAlertChanged(const uint256 &hash, ChangeType status)
 {
     qDebug() << "NotifyAlertChanged : " + QString::fromStdString(hash.GetHex()) + " status=" + QString::number(status);
-    QMetaObject::invokeMethod(clientmodel, "updateAlert", Qt::QueuedConnection,
+    QMetaObject::invokeMethod(this, "updateAlert", Qt::QueuedConnection,
                               Q_ARG(QString, QString::fromStdString(hash.GetHex())),
                               Q_ARG(int, status));
 }
@@ -228,15 +228,15 @@ static void NotifyAlertChanged(ClientModel *clientmodel, const uint256 &hash, Ch
 void ClientModel::subscribeToCoreSignals()
 {
     // Connect signals to client
-    uiInterface.ShowProgress.connect(boost::bind(ShowProgress, this, _1, _2));
-    uiInterface.NotifyNumConnectionsChanged.connect(boost::bind(NotifyNumConnectionsChanged, this, _1));
-    uiInterface.NotifyAlertChanged.connect(boost::bind(NotifyAlertChanged, this, _1, _2));
+    uiInterface.ShowProgress.Connect(this, &ClientModel::ShowProgress);
+    uiInterface.NotifyNumConnectionsChanged.Connect(this, &ClientModel::NotifyNumConnectionsChanged);
+    uiInterface.NotifyAlertChanged.Connect(this, &ClientModel::NotifyAlertChanged);
 }
 
 void ClientModel::unsubscribeFromCoreSignals()
 {
     // Disconnect signals from client
-    uiInterface.ShowProgress.disconnect(boost::bind(ShowProgress, this, _1, _2));
-    uiInterface.NotifyNumConnectionsChanged.disconnect(boost::bind(NotifyNumConnectionsChanged, this, _1));
-    uiInterface.NotifyAlertChanged.disconnect(boost::bind(NotifyAlertChanged, this, _1, _2));
+    uiInterface.ShowProgress.Disconnect(this, &ClientModel::ShowProgress);
+    uiInterface.NotifyNumConnectionsChanged.Disconnect(this, &ClientModel::NotifyNumConnectionsChanged);
+    uiInterface.NotifyAlertChanged.Disconnect(this, &ClientModel::NotifyAlertChanged);
 }

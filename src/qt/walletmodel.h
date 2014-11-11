@@ -9,6 +9,8 @@
 #include "walletmodeltransaction.h"
 
 #include "allocators.h" /* for SecureString */
+#include "crypter.h"
+#include "ui_interface.h"
 
 #include <map>
 #include <vector>
@@ -193,6 +195,14 @@ public:
 
     void loadReceiveRequests(std::vector<std::string>& vReceiveRequests);
     bool saveReceiveRequest(const std::string &sAddress, const int64_t nId, const std::string &sRequest);
+
+	void NotifyAddressBookChanged(CWallet *wallet,
+					const CTxDestination &address, const std::string &label, bool isMine,
+					const std::string &purpose, ChangeType status);
+    void NotifyKeyStoreStatusChanged(CCryptoKeyStore *wallet);
+    void ShowProgress(const std::string &title, int nProgress); // != showProgress
+	void NotifyTransactionChanged(CWallet *wallet, const uint256 &hash, ChangeType status);
+	void NotifyWatchonlyChanged(bool fHaveWatchonly);
 
 private:
     CWallet *wallet;

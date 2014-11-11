@@ -109,45 +109,46 @@ void SplashScreen::slotFinish(QWidget *mainWin)
     hide();
 }
 
-static void InitMessage(SplashScreen *splash, const std::string &message)
+void SplashScreen::InitMessage(const std::string &message)
 {
-    QMetaObject::invokeMethod(splash, "showMessage",
+    QMetaObject::invokeMethod(this, "showMessage",
         Qt::QueuedConnection,
         Q_ARG(QString, QString::fromStdString(message)),
         Q_ARG(int, Qt::AlignBottom|Qt::AlignHCenter),
         Q_ARG(QColor, QColor(55,55,55)));
 }
 
-static void ShowProgress(SplashScreen *splash, const std::string &title, int nProgress)
+void SplashScreen::ShowProgress(const std::string &title, int nProgress)
 {
-    InitMessage(splash, title + strprintf("%d", nProgress) + "%");
+    InitMessage(title + strprintf("%d", nProgress) + "%");
 }
 
 #ifdef ENABLE_WALLET
-static void ConnectWallet(SplashScreen *splash, CWallet* wallet)
+void SplashScreen::ConnectWallet(CWallet* wallet)
 {
-    wallet->ShowProgress.connect(boost::bind(ShowProgress, splash, _1, _2));
+    wallet->ShowProgress.Connect(this, & SplashScreen::ShowProgress);
 }
 #endif
 
 void SplashScreen::subscribeToCoreSignals()
 {
     // Connect signals to client
-    uiInterface.InitMessage.connect(boost::bind(InitMessage, this, _1));
-    uiInterface.ShowProgress.connect(boost::bind(ShowProgress, this, _1, _2));
+    uiInterface.InitMessage.Connect(this, &SplashScreen::InitMessage);
+    uiInterface.ShowProgress.Connect(this, &SplashScreen::ShowProgress);
 #ifdef ENABLE_WALLET
-    uiInterface.LoadWallet.connect(boost::bind(ConnectWallet, this, _1));
+    uiInterface.LoadWallet.Connect(this, &SplashScreen::ConnectWallet);
 #endif
 }
 
 void SplashScreen::unsubscribeFromCoreSignals()
 {
     // Disconnect signals from client
-    uiInterface.InitMessage.disconnect(boost::bind(InitMessage, this, _1));
-    uiInterface.ShowProgress.disconnect(boost::bind(ShowProgress, this, _1, _2));
+    uiInterface.InitMessage.Disconnect(this, &SplashScreen::InitMessage);
+    uiInterface.ShowProgress.Disconnect(this, &SplashScreen::ShowProgress);
 #ifdef ENABLE_WALLET
+	uiInterface.LoadWallet.Disconnect(this, &SplashScreen::ConnectWallet);
     if(pwalletMain)
-        pwalletMain->ShowProgress.disconnect(boost::bind(ShowProgress, this, _1, _2));
+		pwalletMain->ShowProgress.Disconnect(this, &SplashScreen::ShowProgress);
 #endif
 }
 

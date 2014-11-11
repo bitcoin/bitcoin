@@ -55,6 +55,8 @@ public:
     */
     void setClientModel(ClientModel *clientModel);
 
+	void ThreadSafeMessageBox(const std::string& message, const std::string& caption, unsigned int style, bool &result);
+
 #ifdef ENABLE_WALLET
     /** Set the wallet model.
         The wallet model represents a bitcoin wallet, and offers access to the list of transactions, address book and sending

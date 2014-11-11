@@ -5,6 +5,8 @@
 #ifndef BITCOIN_QT_SPLASHSCREEN_H
 #define BITCOIN_QT_SPLASHSCREEN_H
 
+#include "ui_interface.h"
+
 #include <QSplashScreen>
 
 class NetworkStyle;
@@ -22,6 +24,10 @@ class SplashScreen : public QWidget
 public:
     explicit SplashScreen(Qt::WindowFlags f, const NetworkStyle *networkStyle);
     ~SplashScreen();
+
+	void InitMessage(const std::string &message);
+    void ShowProgress(const std::string &title, int nProgress);
+	void ConnectWallet(CWallet *wallet);
 
 protected:
     void paintEvent(QPaintEvent *event);

@@ -5,6 +5,9 @@
 #ifndef BITCOIN_QT_CLIENTMODEL_H
 #define BITCOIN_QT_CLIENTMODEL_H
 
+#include "uint256.h"
+#include "ui_interface.h"
+
 #include <QObject>
 
 class AddressTableModel;
@@ -68,6 +71,10 @@ public:
     bool isReleaseVersion() const;
     QString clientName() const;
     QString formatClientStartupTime() const;
+
+    void ShowProgress(const std::string &title, int nProgress); // != showProgress
+	void NotifyNumConnectionsChanged(int newNumConnections);
+	void NotifyAlertChanged(const uint256 &hash, ChangeType status);
 
 private:
     OptionsModel *optionsModel;

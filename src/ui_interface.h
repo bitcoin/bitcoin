@@ -9,8 +9,7 @@
 #include <stdint.h>
 #include <string>
 
-#include <boost/signals2/last_value.hpp>
-#include <boost/signals2/signal.hpp>
+#include "utilsignal.h"
 
 class CBasicKeyStore;
 class CWallet;
@@ -73,31 +72,32 @@ public:
     };
 
     /** Show message box. */
-    boost::signals2::signal<bool (const std::string& message, const std::string& caption, unsigned int style), boost::signals2::last_value<bool> > ThreadSafeMessageBox;
+	Gallant::Signal4<const std::string& /* message */, const std::string& /* caption */,
+			unsigned int /* style */, bool & /* result */> ThreadSafeMessageBox;
 
     /** Progress message during initialization. */
-    boost::signals2::signal<void (const std::string &message)> InitMessage;
+    Gallant::Signal1<const std::string & /* message */> InitMessage;
 
-    /** Translate a message to the native language of the user. */
-    boost::signals2::signal<std::string (const char* psz)> Translate;
+	/** Translate a message to the native language of the user. */
+	Gallant::Signal2<const char* /* psz */, std::string & /* result */> Translate;
 
-    /** Number of network connections changed. */
-    boost::signals2::signal<void (int newNumConnections)> NotifyNumConnectionsChanged;
+	/** Number of network connections changed. */
+	Gallant::Signal1<int /* newNumConnections */> NotifyNumConnectionsChanged;
 
-    /**
-     * New, updated or cancelled alert.
-     * @note called with lock cs_mapAlerts held.
-     */
-    boost::signals2::signal<void (const uint256 &hash, ChangeType status)> NotifyAlertChanged;
+	/**
+	 * New, updated or cancelled alert.
+	 * @note called with lock cs_mapAlerts held.
+	 */
+	Gallant::Signal2<const uint256 & /* hash*/, ChangeType /* status */> NotifyAlertChanged;
 
-    /** A wallet has been loaded. */
-    boost::signals2::signal<void (CWallet* wallet)> LoadWallet;
+	/** A wallet has been loaded. */
+	Gallant::Signal1<CWallet * /* wallet */> LoadWallet;
 
-    /** Show progress e.g. for verifychain */
-    boost::signals2::signal<void (const std::string &title, int nProgress)> ShowProgress;
+	/** Show progress e.g. for verifychain */
+	Gallant::Signal2<const std::string & /* title */, int /* nProgress */> ShowProgress;
 
-    /** New block has been accepted */
-    boost::signals2::signal<void (const uint256& hash)> NotifyBlockTip;
+	/** New block has been accepted */
+	Gallant::Signal1<const uint256 & /* hash */> NotifyBlockTip;
 };
 
 extern CClientUIInterface uiInterface;
@@ -108,8 +108,9 @@ extern CClientUIInterface uiInterface;
  */
 inline std::string _(const char* psz)
 {
-    boost::optional<std::string> rv = uiInterface.Translate(psz);
-    return rv ? (*rv) : psz;
+	std::string rv(psz);
+	uiInterface.Translate(psz, rv);
+	return rv;
 }
 
 #endif // BITCOIN_UI_INTERFACE_H

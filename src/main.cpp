@@ -18,6 +18,7 @@
 #include "ui_interface.h"
 #include "util.h"
 #include "utilmoneystr.h"
+#include "utilsignal.h"
 
 #include <sstream>
 
@@ -143,51 +144,51 @@ namespace {
 
 struct CMainSignals {
     // Notifies listeners of updated transaction data (transaction, and optionally the block it is found in.
-    boost::signals2::signal<void (const CTransaction &, const CBlock *)> SyncTransaction;
+	Gallant::Signal2<const CTransaction &, const CBlock *> SyncTransaction;
     // Notifies listeners of an erased transaction (currently disabled, requires transaction replacement).
-    boost::signals2::signal<void (const uint256 &)> EraseTransaction;
+    Gallant::Signal1<const uint256 &> EraseTransaction;
     // Notifies listeners of an updated transaction without new data (for now: a coinbase potentially becoming visible).
-    boost::signals2::signal<void (const uint256 &)> UpdatedTransaction;
+    Gallant::Signal1<const uint256 &> UpdatedTransaction;
     // Notifies listeners of a new active block chain.
-    boost::signals2::signal<void (const CBlockLocator &)> SetBestChain;
+    Gallant::Signal1<const CBlockLocator &> SetBestChain;
     // Notifies listeners about an inventory item being seen on the network.
-    boost::signals2::signal<void (const uint256 &)> Inventory;
+    Gallant::Signal1<const uint256 &> Inventory;
     // Tells listeners to broadcast their data.
-    boost::signals2::signal<void ()> Broadcast;
+    Gallant::Signal0<void> Broadcast;
     // Notifies listeners of a block validation result
-    boost::signals2::signal<void (const CBlock&, const CValidationState&)> BlockChecked;
+	Gallant::Signal2<const CBlock &, const CValidationState &> BlockChecked;
 } g_signals;
 
 } // anon namespace
 
 void RegisterValidationInterface(CValidationInterface* pwalletIn) {
-    g_signals.SyncTransaction.connect(boost::bind(&CValidationInterface::SyncTransaction, pwalletIn, _1, _2));
-    g_signals.EraseTransaction.connect(boost::bind(&CValidationInterface::EraseFromWallet, pwalletIn, _1));
-    g_signals.UpdatedTransaction.connect(boost::bind(&CValidationInterface::UpdatedTransaction, pwalletIn, _1));
-    g_signals.SetBestChain.connect(boost::bind(&CValidationInterface::SetBestChain, pwalletIn, _1));
-    g_signals.Inventory.connect(boost::bind(&CValidationInterface::Inventory, pwalletIn, _1));
-    g_signals.Broadcast.connect(boost::bind(&CValidationInterface::ResendWalletTransactions, pwalletIn));
-    g_signals.BlockChecked.connect(boost::bind(&CValidationInterface::BlockChecked, pwalletIn, _1, _2));
+    g_signals.SyncTransaction.Connect(pwalletIn, &CValidationInterface::SyncTransaction);
+    g_signals.EraseTransaction.Connect(pwalletIn, &CValidationInterface::EraseFromWallet);
+    g_signals.UpdatedTransaction.Connect(pwalletIn, &CValidationInterface::UpdatedTransaction);
+    g_signals.SetBestChain.Connect(pwalletIn, &CValidationInterface::SetBestChain);
+    g_signals.Inventory.Connect(pwalletIn, &CValidationInterface::Inventory);
+    g_signals.Broadcast.Connect(pwalletIn, &CValidationInterface::ResendWalletTransactions);
+    g_signals.BlockChecked.Connect(pwalletIn, &CValidationInterface::BlockChecked);
 }
 
 void UnregisterValidationInterface(CValidationInterface* pwalletIn) {
-    g_signals.BlockChecked.disconnect(boost::bind(&CValidationInterface::BlockChecked, pwalletIn, _1, _2));
-    g_signals.Broadcast.disconnect(boost::bind(&CValidationInterface::ResendWalletTransactions, pwalletIn));
-    g_signals.Inventory.disconnect(boost::bind(&CValidationInterface::Inventory, pwalletIn, _1));
-    g_signals.SetBestChain.disconnect(boost::bind(&CValidationInterface::SetBestChain, pwalletIn, _1));
-    g_signals.UpdatedTransaction.disconnect(boost::bind(&CValidationInterface::UpdatedTransaction, pwalletIn, _1));
-    g_signals.EraseTransaction.disconnect(boost::bind(&CValidationInterface::EraseFromWallet, pwalletIn, _1));
-    g_signals.SyncTransaction.disconnect(boost::bind(&CValidationInterface::SyncTransaction, pwalletIn, _1, _2));
+    g_signals.BlockChecked.Disconnect(pwalletIn, &CValidationInterface::BlockChecked);
+    g_signals.Broadcast.Disconnect(pwalletIn, &CValidationInterface::ResendWalletTransactions);
+    g_signals.Inventory.Disconnect(pwalletIn, &CValidationInterface::Inventory);
+    g_signals.SetBestChain.Disconnect(pwalletIn, &CValidationInterface::SetBestChain);
+    g_signals.UpdatedTransaction.Disconnect(pwalletIn, &CValidationInterface::UpdatedTransaction);
+    g_signals.EraseTransaction.Disconnect(pwalletIn, &CValidationInterface::EraseFromWallet);
+    g_signals.SyncTransaction.Disconnect(pwalletIn, &CValidationInterface::SyncTransaction);
 }
 
 void UnregisterAllValidationInterfaces() {
-    g_signals.BlockChecked.disconnect_all_slots();
-    g_signals.Broadcast.disconnect_all_slots();
-    g_signals.Inventory.disconnect_all_slots();
-    g_signals.SetBestChain.disconnect_all_slots();
-    g_signals.UpdatedTransaction.disconnect_all_slots();
-    g_signals.EraseTransaction.disconnect_all_slots();
-    g_signals.SyncTransaction.disconnect_all_slots();
+    g_signals.BlockChecked.Clear();
+    g_signals.Broadcast.Clear();
+    g_signals.Inventory.Clear();
+    g_signals.SetBestChain.Clear();
+    g_signals.UpdatedTransaction.Clear();
+    g_signals.EraseTransaction.Clear();
+    g_signals.SyncTransaction.Clear();
 }
 
 void SyncWithWallets(const CTransaction &tx, const CBlock *pblock) {
@@ -259,10 +260,10 @@ CNodeState *State(NodeId pnode) {
     return &it->second;
 }
 
-int GetHeight()
+void GetHeight(int &height)
 {
     LOCK(cs_main);
-    return chainActive.Height();
+	height = chainActive.Height();
 }
 
 void UpdatePreferredDownload(CNode* node, CNodeState* state)
@@ -472,20 +473,20 @@ bool GetNodeStateStats(NodeId nodeid, CNodeStateStats &stats) {
 
 void RegisterNodeSignals(CNodeSignals& nodeSignals)
 {
-    nodeSignals.GetHeight.connect(&GetHeight);
-    nodeSignals.ProcessMessages.connect(&ProcessMessages);
-    nodeSignals.SendMessages.connect(&SendMessages);
-    nodeSignals.InitializeNode.connect(&InitializeNode);
-    nodeSignals.FinalizeNode.connect(&FinalizeNode);
+    nodeSignals.GetHeight.Connect(&GetHeight);
+    nodeSignals.ProcessMessages.Connect(&ProcessMessages);
+    nodeSignals.SendMessages.Connect(&SendMessages);
+    nodeSignals.InitializeNode.Connect(&InitializeNode);
+    nodeSignals.FinalizeNode.Connect(&FinalizeNode);
 }
 
 void UnregisterNodeSignals(CNodeSignals& nodeSignals)
 {
-    nodeSignals.GetHeight.disconnect(&GetHeight);
-    nodeSignals.ProcessMessages.disconnect(&ProcessMessages);
-    nodeSignals.SendMessages.disconnect(&SendMessages);
-    nodeSignals.InitializeNode.disconnect(&InitializeNode);
-    nodeSignals.FinalizeNode.disconnect(&FinalizeNode);
+    nodeSignals.GetHeight.Disconnect(&GetHeight);
+    nodeSignals.ProcessMessages.Disconnect(&ProcessMessages);
+    nodeSignals.SendMessages.Disconnect(&SendMessages);
+    nodeSignals.InitializeNode.Disconnect(&InitializeNode);
+    nodeSignals.FinalizeNode.Disconnect(&FinalizeNode);
 }
 
 CBlockIndex* FindForkInGlobalIndex(const CChain& chain, const CBlockLocator& locator)
@@ -2718,9 +2719,10 @@ uint256 CPartialMerkleTree::ExtractMatches(std::vector<uint256> &vMatch) {
 bool AbortNode(const std::string &strMessage, const std::string &userMessage) {
     strMiscWarning = strMessage;
     LogPrintf("*** %s\n", strMessage);
+	bool ret;
     uiInterface.ThreadSafeMessageBox(
         userMessage.empty() ? _("Error: A fatal internal error occured, see debug.log for details") : userMessage,
-        "", CClientUIInterface::MSG_ERROR);
+        "", CClientUIInterface::MSG_ERROR, ret);
     StartShutdown();
     return false;
 }
@@ -4210,7 +4212,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 }
 
 // requires LOCK(cs_vRecvMsg)
-bool ProcessMessages(CNode* pfrom)
+void ProcessMessages(CNode* pfrom, bool &result)
 {
     //if (fDebug)
     //    LogPrintf("ProcessMessages(%u messages)\n", pfrom->vRecvMsg.size());
@@ -4229,7 +4231,10 @@ bool ProcessMessages(CNode* pfrom)
         ProcessGetData(pfrom);
 
     // this maintains the order of responses
-    if (!pfrom->vRecvGetData.empty()) return fOk;
+    if (!pfrom->vRecvGetData.empty()) {
+			result = fOk;
+			return;
+	}
 
     std::deque<CNetMessage>::iterator it = pfrom->vRecvMsg.begin();
     while (!pfrom->fDisconnect && it != pfrom->vRecvMsg.end()) {
@@ -4327,16 +4332,18 @@ bool ProcessMessages(CNode* pfrom)
     if (!pfrom->fDisconnect)
         pfrom->vRecvMsg.erase(pfrom->vRecvMsg.begin(), it);
 
-    return fOk;
+    result = fOk;
 }
 
 
-bool SendMessages(CNode* pto, bool fSendTrickle)
+void SendMessages(CNode* pto, bool fSendTrickle, bool &result)
 {
     {
         // Don't send anything until we get their version message
-        if (pto->nVersion == 0)
-            return true;
+        if (pto->nVersion == 0) {
+			result = true;
+            return;
+		}
 
         //
         // Message: ping
@@ -4368,8 +4375,10 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
         }
 
         TRY_LOCK(cs_main, lockMain); // Acquire cs_main for IsInitialBlockDownload() and CNodeState()
-        if (!lockMain)
-            return true;
+        if (!lockMain) {
+			result = true;
+            return;
+		}
 
         // Address refresh broadcast
         static int64_t nLastRebroadcast;
@@ -4567,7 +4576,7 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
             pto->PushMessage("getdata", vGetData);
 
     }
-    return true;
+    result = true;
 }
 
 

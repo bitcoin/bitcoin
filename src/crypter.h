@@ -8,6 +8,7 @@
 #include "allocators.h"
 #include "keystore.h"
 #include "serialize.h"
+#include "utilsignal.h"
 
 class uint256;
 
@@ -192,7 +193,7 @@ public:
     /* Wallet status (encrypted, locked) changed.
      * Note: Called without locks held.
      */
-    boost::signals2::signal<void (CCryptoKeyStore* wallet)> NotifyStatusChanged;
+    Gallant::Signal1<CCryptoKeyStore*> NotifyStatusChanged;
 };
 
 #endif // BITCOIN_CRYPTER_H

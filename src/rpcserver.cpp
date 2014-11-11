@@ -544,9 +544,10 @@ void StartRPCThreads()
             CSubNet subnet(strAllow);
             if(!subnet.IsValid())
             {
+				bool ret;
                 uiInterface.ThreadSafeMessageBox(
                     strprintf("Invalid -rpcallowip subnet specification: %s. Valid are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24).", strAllow),
-                    "", CClientUIInterface::MSG_ERROR);
+                    "", CClientUIInterface::MSG_ERROR, ret);
                 StartShutdown();
                 return;
             }
@@ -563,6 +564,7 @@ void StartRPCThreads()
          (mapArgs["-rpcuser"] == mapArgs["-rpcpassword"])) && Params().RequireRPCPassword())
     {
         unsigned char rand_pwd[32];
+		bool ret;
         GetRandBytes(rand_pwd, 32);
         string strWhatAmI = "To use bitcoind";
         if (mapArgs.count("-server"))
@@ -583,7 +585,7 @@ void StartRPCThreads()
                 strWhatAmI,
                 GetConfigFile().string(),
                 EncodeBase58(&rand_pwd[0],&rand_pwd[0]+32)),
-                "", CClientUIInterface::MSG_ERROR | CClientUIInterface::SECURE);
+                "", CClientUIInterface::MSG_ERROR | CClientUIInterface::SECURE, ret);
         StartShutdown();
         return;
     }
@@ -632,9 +634,10 @@ void StartRPCThreads()
             }
             catch(const boost::system::system_error &)
             {
+				bool ret;
                 uiInterface.ThreadSafeMessageBox(
                     strprintf(_("Could not parse -rpcbind value %s as network address"), addr),
-                    "", CClientUIInterface::MSG_ERROR);
+                    "", CClientUIInterface::MSG_ERROR, ret);
                 StartShutdown();
                 return;
             }
@@ -683,7 +686,8 @@ void StartRPCThreads()
     }
 
     if (!fListening) {
-        uiInterface.ThreadSafeMessageBox(strerr, "", CClientUIInterface::MSG_ERROR);
+		bool ret;
+        uiInterface.ThreadSafeMessageBox(strerr, "", CClientUIInterface::MSG_ERROR, ret);
         StartShutdown();
         return;
     }
