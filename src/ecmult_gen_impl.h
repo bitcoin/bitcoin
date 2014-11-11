@@ -109,10 +109,7 @@ void static secp256k1_ecmult_gen(secp256k1_gej_t *r, const secp256k1_scalar_t *g
         bits = secp256k1_scalar_get_bits(gn, j * 4, 4);
         for (int k=0; k<sizeof(secp256k1_ge_t); k++)
             ((unsigned char*)(&add))[k] = c->prec[j][k][bits];
-        // Note that the next line uses a variable-time addition function, which
-        // is fine, as the inputs are blinded (they have no known corresponding
-        // private key).
-        secp256k1_gej_add_ge_var(r, r, &add);
+        secp256k1_gej_add_ge(r, r, &add);
     }
     bits = 0;
     secp256k1_ge_clear(&add);

@@ -28,6 +28,51 @@ void random_num_negate(secp256k1_num_t *num) {
         secp256k1_num_negate(num);
 }
 
+void random_field_element_test(secp256k1_fe_t *fe) {
+    do {
+        unsigned char b32[32];
+        secp256k1_rand256_test(b32);
+        secp256k1_num_t num;
+        secp256k1_num_set_bin(&num, b32, 32);
+        if (secp256k1_num_cmp(&num, &secp256k1_fe_consts->p) >= 0)
+            continue;
+        secp256k1_fe_set_b32(fe, b32);
+        break;
+    } while(1);
+}
+
+void random_field_element_magnitude(secp256k1_fe_t *fe) {
+    secp256k1_fe_normalize(fe);
+    int n = secp256k1_rand32() % 4;
+    for (int i = 0; i < n; i++) {
+        secp256k1_fe_negate(fe, fe, 1 + 2*i);
+        secp256k1_fe_negate(fe, fe, 2 + 2*i);
+    }
+}
+
+void random_group_element_test(secp256k1_ge_t *ge) {
+    secp256k1_fe_t fe;
+    do {
+        random_field_element_test(&fe);
+        if (secp256k1_ge_set_xo(ge, &fe, secp256k1_rand32() & 1))
+            break;
+    } while(1);
+}
+
+void random_group_element_jacobian_test(secp256k1_gej_t *gej, const secp256k1_ge_t *ge) {
+    do {
+        random_field_element_test(&gej->z);
+        if (!secp256k1_fe_is_zero(&gej->z)) {
+            break;
+        }
+    } while(1);
+    secp256k1_fe_t z2; secp256k1_fe_sqr(&z2, &gej->z);
+    secp256k1_fe_t z3; secp256k1_fe_mul(&z3, &z2, &gej->z);
+    secp256k1_fe_mul(&gej->x, &ge->x, &z2);
+    secp256k1_fe_mul(&gej->y, &ge->y, &z3);
+    gej->infinity = ge->infinity;
+}
+
 void random_num_order_test(secp256k1_num_t *num) {
     do {
         unsigned char b32[32];
@@ -546,6 +591,106 @@ void run_sqrt() {
     }
 }
 
+/***** GROUP TESTS *****/
+
+int ge_equals_ge(const secp256k1_ge_t *a, const secp256k1_ge_t *b) {
+    if (a->infinity && b->infinity)
+        return 1;
+    return check_fe_equal(&a->x, &b->x) && check_fe_equal(&a->y, &b->y);
+}
+
+void ge_equals_gej(const secp256k1_ge_t *a, const secp256k1_gej_t *b) {
+    secp256k1_ge_t bb;
+    secp256k1_gej_t bj = *b;
+    secp256k1_ge_set_gej_var(&bb, &bj);
+    CHECK(ge_equals_ge(a, &bb));
+}
+
+void gej_equals_gej(const secp256k1_gej_t *a, const secp256k1_gej_t *b) {
+    secp256k1_ge_t aa, bb;
+    secp256k1_gej_t aj = *a, bj = *b;
+    secp256k1_ge_set_gej_var(&aa, &aj);
+    secp256k1_ge_set_gej_var(&bb, &bj);
+    CHECK(ge_equals_ge(&aa, &bb));
+}
+
+void test_ge() {
+    secp256k1_ge_t a, b, i, n;
+    random_group_element_test(&a);
+    random_group_element_test(&b);
+    n = a;
+    secp256k1_fe_normalize(&a.y);
+    secp256k1_fe_negate(&n.y, &a.y, 1);
+    secp256k1_ge_set_infinity(&i);
+    random_field_element_magnitude(&a.x);
+    random_field_element_magnitude(&a.y);
+    random_field_element_magnitude(&b.x);
+    random_field_element_magnitude(&b.y);
+    random_field_element_magnitude(&n.x);
+    random_field_element_magnitude(&n.y);
+
+    secp256k1_gej_t aj, bj, ij, nj;
+    random_group_element_jacobian_test(&aj, &a);
+    random_group_element_jacobian_test(&bj, &b);
+    secp256k1_gej_set_infinity(&ij);
+    random_group_element_jacobian_test(&nj, &n);
+    random_field_element_magnitude(&aj.x);
+    random_field_element_magnitude(&aj.y);
+    random_field_element_magnitude(&aj.z);
+    random_field_element_magnitude(&bj.x);
+    random_field_element_magnitude(&bj.y);
+    random_field_element_magnitude(&bj.z);
+    random_field_element_magnitude(&nj.x);
+    random_field_element_magnitude(&nj.y);
+    random_field_element_magnitude(&nj.z);
+
+    // gej + gej adds
+    secp256k1_gej_t aaj; secp256k1_gej_add_var(&aaj, &aj, &aj);
+    secp256k1_gej_t abj; secp256k1_gej_add_var(&abj, &aj, &bj);
+    secp256k1_gej_t aij; secp256k1_gej_add_var(&aij, &aj, &ij);
+    secp256k1_gej_t anj; secp256k1_gej_add_var(&anj, &aj, &nj);
+    secp256k1_gej_t iaj; secp256k1_gej_add_var(&iaj, &ij, &aj);
+    secp256k1_gej_t iij; secp256k1_gej_add_var(&iij, &ij, &ij);
+
+    // gej + ge adds
+    secp256k1_gej_t aa; secp256k1_gej_add_ge_var(&aa, &aj, &a);
+    secp256k1_gej_t ab; secp256k1_gej_add_ge_var(&ab, &aj, &b);
+    secp256k1_gej_t ai; secp256k1_gej_add_ge_var(&ai, &aj, &i);
+    secp256k1_gej_t an; secp256k1_gej_add_ge_var(&an, &aj, &n);
+    secp256k1_gej_t ia; secp256k1_gej_add_ge_var(&ia, &ij, &a);
+    secp256k1_gej_t ii; secp256k1_gej_add_ge_var(&ii, &ij, &i);
+
+    // const gej + ge adds
+    secp256k1_gej_t aac; secp256k1_gej_add_ge(&aac, &aj, &a);
+    secp256k1_gej_t abc; secp256k1_gej_add_ge(&abc, &aj, &b);
+    secp256k1_gej_t anc; secp256k1_gej_add_ge(&anc, &aj, &n);
+    secp256k1_gej_t iac; secp256k1_gej_add_ge(&iac, &ij, &a);
+
+    CHECK(secp256k1_gej_is_infinity(&an));
+    CHECK(secp256k1_gej_is_infinity(&anj));
+    CHECK(secp256k1_gej_is_infinity(&anc));
+    gej_equals_gej(&aa, &aaj);
+    gej_equals_gej(&aa, &aac);
+    gej_equals_gej(&ab, &abj);
+    gej_equals_gej(&ab, &abc);
+    gej_equals_gej(&an, &anj);
+    gej_equals_gej(&an, &anc);
+    gej_equals_gej(&ia, &iaj);
+    gej_equals_gej(&ai, &aij);
+    gej_equals_gej(&ii, &iij);
+    ge_equals_gej(&a, &ai);
+    ge_equals_gej(&a, &ai);
+    ge_equals_gej(&a, &iaj);
+    ge_equals_gej(&a, &iaj);
+    ge_equals_gej(&a, &iac);
+}
+
+void run_ge() {
+    for (int i = 0; i < 2000*count; i++) {
+        test_ge();
+    }
+}
+
 /***** ECMULT TESTS *****/
 
 void run_ecmult_chain() {
@@ -878,6 +1023,9 @@ int main(int argc, char **argv) {
     run_field_inv_all_var();
     run_sqr();
     run_sqrt();
+
+    // group tests
+    run_ge();
 
     // ecmult tests
     run_wnaf();
