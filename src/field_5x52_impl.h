@@ -9,7 +9,6 @@
 #include "libsecp256k1-config.h"
 #endif
 
-#include <assert.h>
 #include <string.h>
 #include "util.h"
 #include "num.h"
