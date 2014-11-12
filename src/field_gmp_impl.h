@@ -97,6 +97,7 @@ static void secp256k1_fe_get_b32(unsigned char *r, const secp256k1_fe_t *a) {
 }
 
 SECP256K1_INLINE static void secp256k1_fe_negate(secp256k1_fe_t *r, const secp256k1_fe_t *a, int m) {
+    (void)m;
     *r = *a;
     secp256k1_fe_normalize(r);
     for (int i=0; i<FIELD_LIMBS; i++)
