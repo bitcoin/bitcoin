@@ -179,7 +179,7 @@ static int secp256k1_scalar_is_high(const secp256k1_scalar_t *a) {
 /** Add a to the number defined by (c0,c1,c2). c2 must never overflow. */
 #define sumadd(a) { \
     c0 += (a);                  /* overflow is handled on the next line */ \
-    int over = (c0 < (a)) ? 1 : 0; \
+    unsigned int over = (c0 < (a)) ? 1 : 0; \
     c1 += over;                 /* overflow is handled on the next line */ \
     c2 += (c1 < over) ? 1 : 0;  /* never overflows by contract */ \
 }
