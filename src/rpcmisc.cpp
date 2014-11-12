@@ -354,3 +354,23 @@ Value verifymessage(const Array& params, bool fHelp)
 
     return (pubkey.GetID() == keyID);
 }
+
+Value setmocktime(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 1)
+        throw runtime_error(
+            "setmocktime timestamp\n"
+            "\nSet the local time to given timestamp (-regtest only)\n"
+            "\nArguments:\n"
+            "1. timestamp  (integer, required) Unix seconds-since-epoch timestamp\n"
+            "   Pass 0 to go back to using the system time."
+        );
+
+    if (!Params().MineBlocksOnDemand())
+        throw runtime_error("setmocktime for regression testing (-regtest mode) only");
+
+    RPCTypeCheck(params, boost::assign::list_of(int_type));
+    SetMockTime(params[0].get_int64());
+
+    return Value::null;
+}
