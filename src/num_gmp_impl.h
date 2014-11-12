@@ -31,6 +31,7 @@ static void secp256k1_num_clear(secp256k1_num_t *r) {
 }
 
 static void secp256k1_num_free(secp256k1_num_t *r) {
+    (void)r;
 }
 
 static void secp256k1_num_copy(secp256k1_num_t *r, const secp256k1_num_t *a) {

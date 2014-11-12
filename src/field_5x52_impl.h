@@ -52,7 +52,9 @@ static void secp256k1_fe_verify(const secp256k1_fe_t *a) {
     VERIFY_CHECK(r == 1);
 }
 #else
-static void secp256k1_fe_verify(const secp256k1_fe_t *a) {}
+static void secp256k1_fe_verify(const secp256k1_fe_t *a) {
+    (void)a;
+}
 #endif
 
 static void secp256k1_fe_normalize(secp256k1_fe_t *r) {

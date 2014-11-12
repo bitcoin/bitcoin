@@ -111,7 +111,7 @@ void random_num_order(secp256k1_num_t *num) {
     } while(1);
 }
 
-void test_num_copy_inc_cmp() {
+void test_num_copy_inc_cmp(void) {
     secp256k1_num_t n1,n2;
     random_num_order(&n1);
     secp256k1_num_copy(&n2, &n1);
@@ -123,7 +123,7 @@ void test_num_copy_inc_cmp() {
 }
 
 
-void test_num_get_set_hex() {
+void test_num_get_set_hex(void) {
     secp256k1_num_t n1,n2;
     random_num_order_test(&n1);
     char c[64];
@@ -144,7 +144,7 @@ void test_num_get_set_hex() {
     }
 }
 
-void test_num_get_set_bin() {
+void test_num_get_set_bin(void) {
     secp256k1_num_t n1,n2;
     random_num_order_test(&n1);
     unsigned char c[32];
@@ -164,7 +164,7 @@ void test_num_get_set_bin() {
     }
 }
 
-void run_num_int() {
+void run_num_int(void) {
     secp256k1_num_t n1;
     for (int i=-255; i<256; i++) {
         unsigned char c1[3] = {};
@@ -176,7 +176,7 @@ void run_num_int() {
     }
 }
 
-void test_num_negate() {
+void test_num_negate(void) {
     secp256k1_num_t n1;
     secp256k1_num_t n2;
     random_num_order_test(&n1); // n1 = R
@@ -196,7 +196,7 @@ void test_num_negate() {
     CHECK(secp256k1_num_eq(&n1, &n2));
 }
 
-void test_num_add_sub() {
+void test_num_add_sub(void) {
     int r = secp256k1_rand32();
     secp256k1_num_t n1;
     secp256k1_num_t n2;
@@ -225,7 +225,7 @@ void test_num_add_sub() {
     CHECK(secp256k1_num_eq(&n2p1, &n1));
 }
 
-void run_num_smalltests() {
+void run_num_smalltests(void) {
     for (int i=0; i<100*count; i++) {
         test_num_copy_inc_cmp();
         test_num_get_set_hex();
@@ -474,7 +474,7 @@ int check_fe_inverse(const secp256k1_fe_t *a, const secp256k1_fe_t *ai) {
     return check_fe_equal(&x, &one);
 }
 
-void run_field_inv() {
+void run_field_inv(void) {
     secp256k1_fe_t x, xi, xii;
     for (int i=0; i<10*count; i++) {
         random_fe_non_zero(&x);
@@ -485,7 +485,7 @@ void run_field_inv() {
     }
 }
 
-void run_field_inv_var() {
+void run_field_inv_var(void) {
     secp256k1_fe_t x, xi, xii;
     for (int i=0; i<10*count; i++) {
         random_fe_non_zero(&x);
@@ -496,7 +496,7 @@ void run_field_inv_var() {
     }
 }
 
-void run_field_inv_all() {
+void run_field_inv_all(void) {
     secp256k1_fe_t x[16], xi[16], xii[16];
     // Check it's safe to call for 0 elements
     secp256k1_fe_inv_all(0, xi, x);
@@ -513,7 +513,7 @@ void run_field_inv_all() {
     }
 }
 
-void run_field_inv_all_var() {
+void run_field_inv_all_var(void) {
     secp256k1_fe_t x[16], xi[16], xii[16];
     // Check it's safe to call for 0 elements
     secp256k1_fe_inv_all_var(0, xi, x);
@@ -530,7 +530,7 @@ void run_field_inv_all_var() {
     }
 }
 
-void run_sqr() {
+void run_sqr(void) {
     secp256k1_fe_t x, s;
 
     {
@@ -559,7 +559,7 @@ void test_sqrt(const secp256k1_fe_t *a, const secp256k1_fe_t *k) {
     }
 }
 
-void run_sqrt() {
+void run_sqrt(void) {
     secp256k1_fe_t ns, x, s, t;
 
     // Check sqrt(0) is 0
@@ -614,7 +614,7 @@ void gej_equals_gej(const secp256k1_gej_t *a, const secp256k1_gej_t *b) {
     CHECK(ge_equals_ge(&aa, &bb));
 }
 
-void test_ge() {
+void test_ge(void) {
     secp256k1_ge_t a, b, i, n;
     random_group_element_test(&a);
     random_group_element_test(&b);
@@ -685,7 +685,7 @@ void test_ge() {
     ge_equals_gej(&a, &iac);
 }
 
-void run_ge() {
+void run_ge(void) {
     for (int i = 0; i < 2000*count; i++) {
         test_ge();
     }
@@ -693,7 +693,7 @@ void run_ge() {
 
 /***** ECMULT TESTS *****/
 
-void run_ecmult_chain() {
+void run_ecmult_chain(void) {
     // random starting point A (on the curve)
     secp256k1_fe_t ax; secp256k1_fe_set_hex(&ax, "8b30bbe9ae2a990696b22f670709dff3727fd8bc04d3362c6c7bf458e2846004", 64);
     secp256k1_fe_t ay; secp256k1_fe_set_hex(&ay, "a357ae915c4a65281309edf20504740f0eb3343990216b4f81063cb65f2f7e0f", 64);
@@ -756,7 +756,7 @@ void test_point_times_order(const secp256k1_gej_t *point) {
     CHECK(secp256k1_gej_is_infinity(&res));
 }
 
-void run_point_times_order() {
+void run_point_times_order(void) {
     secp256k1_fe_t x; secp256k1_fe_set_hex(&x, "02", 2);
     for (int i=0; i<500; i++) {
         secp256k1_ge_t p;
@@ -800,7 +800,7 @@ void test_wnaf(const secp256k1_num_t *number, int w) {
     CHECK(secp256k1_num_eq(&x, number)); // check that wnaf represents number
 }
 
-void run_wnaf() {
+void run_wnaf(void) {
     secp256k1_num_t n;
     for (int i=0; i<count; i++) {
         random_num_order(&n);
@@ -817,7 +817,7 @@ void random_sign(secp256k1_ecdsa_sig_t *sig, const secp256k1_scalar_t *key, cons
     } while(!secp256k1_ecdsa_sig_sign(sig, key, msg, &nonce, recid));
 }
 
-void test_ecdsa_sign_verify() {
+void test_ecdsa_sign_verify(void) {
     secp256k1_scalar_t msg, key;
     random_scalar_order_test(&msg);
     random_scalar_order_test(&key);
@@ -832,13 +832,13 @@ void test_ecdsa_sign_verify() {
     CHECK(!secp256k1_ecdsa_sig_verify(&sig, &pub, &msg_num));
 }
 
-void run_ecdsa_sign_verify() {
+void run_ecdsa_sign_verify(void) {
     for (int i=0; i<10*count; i++) {
         test_ecdsa_sign_verify();
     }
 }
 
-void test_ecdsa_end_to_end() {
+void test_ecdsa_end_to_end(void) {
     unsigned char privkey[32];
     unsigned char message[32];
 
@@ -927,7 +927,7 @@ void test_ecdsa_end_to_end() {
 
 }
 
-void run_ecdsa_end_to_end() {
+void run_ecdsa_end_to_end(void) {
     for (int i=0; i<64*count; i++) {
         test_ecdsa_end_to_end();
     }
@@ -947,7 +947,7 @@ EC_KEY *get_openssl_key(const secp256k1_scalar_t *key) {
     return ec_key;
 }
 
-void test_ecdsa_openssl() {
+void test_ecdsa_openssl(void) {
     secp256k1_scalar_t key, msg;
     unsigned char message[32];
     secp256k1_rand256_test(message);
@@ -978,7 +978,7 @@ void test_ecdsa_openssl() {
     EC_KEY_free(ec_key);
 }
 
-void run_ecdsa_openssl() {
+void run_ecdsa_openssl(void) {
     for (int i=0; i<10*count; i++) {
         test_ecdsa_openssl();
     }
