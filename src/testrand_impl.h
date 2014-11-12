@@ -2,13 +2,13 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef _SECP256K1_UTIL_IMPL_H_
-#define _SECP256K1_UTIL_IMPL_H_
+#ifndef _SECP256K1_TESTRAND_IMPL_H_
+#define _SECP256K1_TESTRAND_IMPL_H_
 
 #include <stdint.h>
 #include <string.h>
 
-#include "util.h"
+#include "testrand.h"
 
 static uint32_t secp256k1_Rz = 11, secp256k1_Rw = 11;
 

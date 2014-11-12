@@ -10,7 +10,7 @@
 #include <stdlib.h>
 
 #include "secp256k1.c"
-#include "util_impl.h"
+#include "testrand_impl.h"
 
 #ifdef ENABLE_OPENSSL_TESTS
 #include "openssl/bn.h"
@@ -134,7 +134,7 @@ void test_num_get_set_hex(void) {
         // check whether the lower 4 bits correspond to the last hex character
         int low1 = secp256k1_num_shift(&n1, 4);
         int lowh = c[63];
-        int low2 = (lowh>>6)*9+(lowh-'0')&15;
+        int low2 = ((lowh>>6)*9+(lowh-'0'))&15;
         CHECK(low1 == low2);
         // shift bits off the hex representation, and compare
         memmove(c+1, c, 63);
