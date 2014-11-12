@@ -57,7 +57,7 @@ static void secp256k1_num_get_bin(unsigned char *r, unsigned int rlen, const sec
     }
     int shift = 0;
     while (shift < len && tmp[shift] == 0) shift++;
-    VERIFY_CHECK(len-shift <= rlen);
+    VERIFY_CHECK(len-shift <= (int)rlen);
     memset(r, 0, rlen - len + shift);
     if (len > shift) {
         memcpy(r + rlen - len + shift, tmp + shift, len - shift);

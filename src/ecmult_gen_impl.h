@@ -80,7 +80,7 @@ static void secp256k1_ecmult_gen_start(void) {
     for (int j=0; j<64; j++) {
         for (int i=0; i<16; i++) {
             const unsigned char* raw = (const unsigned char*)(&prec[j*16 + i]);
-            for (int k=0; k<sizeof(secp256k1_ge_t); k++)
+            for (size_t k=0; k<sizeof(secp256k1_ge_t); k++)
                 ret->prec[j][k][i] = raw[k];
         }
     }
@@ -105,7 +105,7 @@ static void secp256k1_ecmult_gen(secp256k1_gej_t *r, const secp256k1_scalar_t *g
     int bits;
     for (int j=0; j<64; j++) {
         bits = secp256k1_scalar_get_bits(gn, j * 4, 4);
-        for (int k=0; k<sizeof(secp256k1_ge_t); k++)
+        for (size_t k=0; k<sizeof(secp256k1_ge_t); k++)
             ((unsigned char*)(&add))[k] = c->prec[j][k][bits];
         secp256k1_gej_add_ge(r, r, &add);
     }
