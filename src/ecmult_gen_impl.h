@@ -99,7 +99,7 @@ static void secp256k1_ecmult_gen_stop(void) {
     free(c);
 }
 
-void static secp256k1_ecmult_gen(secp256k1_gej_t *r, const secp256k1_scalar_t *gn) {
+static void secp256k1_ecmult_gen(secp256k1_gej_t *r, const secp256k1_scalar_t *gn) {
     const secp256k1_ecmult_gen_consts_t *c = secp256k1_ecmult_gen_consts;
     secp256k1_gej_set_infinity(r);
     secp256k1_ge_t add;

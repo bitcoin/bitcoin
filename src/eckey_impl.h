@@ -12,7 +12,7 @@
 #include "group.h"
 #include "ecmult_gen.h"
 
-int static secp256k1_eckey_pubkey_parse(secp256k1_ge_t *elem, const unsigned char *pub, int size) {
+static int secp256k1_eckey_pubkey_parse(secp256k1_ge_t *elem, const unsigned char *pub, int size) {
     if (size == 33 && (pub[0] == 0x02 || pub[0] == 0x03)) {
         secp256k1_fe_t x;
         secp256k1_fe_set_b32(&x, pub+1);
@@ -30,7 +30,7 @@ int static secp256k1_eckey_pubkey_parse(secp256k1_ge_t *elem, const unsigned cha
     }
 }
 
-void static secp256k1_eckey_pubkey_serialize(secp256k1_ge_t *elem, unsigned char *pub, int *size, int compressed) {
+static void secp256k1_eckey_pubkey_serialize(secp256k1_ge_t *elem, unsigned char *pub, int *size, int compressed) {
     secp256k1_fe_normalize(&elem->x);
     secp256k1_fe_normalize(&elem->y);
     secp256k1_fe_get_b32(&pub[1], &elem->x);
@@ -44,7 +44,7 @@ void static secp256k1_eckey_pubkey_serialize(secp256k1_ge_t *elem, unsigned char
     }
 }
 
-int static secp256k1_eckey_privkey_parse(secp256k1_scalar_t *key, const unsigned char *privkey, int privkeylen) {
+static int secp256k1_eckey_privkey_parse(secp256k1_scalar_t *key, const unsigned char *privkey, int privkeylen) {
     const unsigned char *end = privkey + privkeylen;
     // sequence header
     if (end < privkey+1 || *privkey != 0x30)
@@ -80,7 +80,7 @@ int static secp256k1_eckey_privkey_parse(secp256k1_scalar_t *key, const unsigned
     return !overflow;
 }
 
-int static secp256k1_eckey_privkey_serialize(unsigned char *privkey, int *privkeylen, const secp256k1_scalar_t *key, int compressed) {
+static int secp256k1_eckey_privkey_serialize(unsigned char *privkey, int *privkeylen, const secp256k1_scalar_t *key, int compressed) {
     secp256k1_gej_t rp;
     secp256k1_ecmult_gen(&rp, key);
     secp256k1_ge_t r;
@@ -135,14 +135,14 @@ int static secp256k1_eckey_privkey_serialize(unsigned char *privkey, int *privke
     return 1;
 }
 
-int static secp256k1_eckey_privkey_tweak_add(secp256k1_scalar_t *key, const secp256k1_scalar_t *tweak) {
+static int secp256k1_eckey_privkey_tweak_add(secp256k1_scalar_t *key, const secp256k1_scalar_t *tweak) {
     secp256k1_scalar_add(key, key, tweak);
     if (secp256k1_scalar_is_zero(key))
         return 0;
     return 1;
 }
 
-int static secp256k1_eckey_pubkey_tweak_add(secp256k1_ge_t *key, const secp256k1_num_t *tweak) {
+static int secp256k1_eckey_pubkey_tweak_add(secp256k1_ge_t *key, const secp256k1_num_t *tweak) {
     if (secp256k1_num_cmp(tweak, &secp256k1_ge_consts->order) >= 0)
         return 0;
 
@@ -160,7 +160,7 @@ int static secp256k1_eckey_pubkey_tweak_add(secp256k1_ge_t *key, const secp256k1
     return 1;
 }
 
-int static secp256k1_eckey_privkey_tweak_mul(secp256k1_scalar_t *key, const secp256k1_scalar_t *tweak) {
+static int secp256k1_eckey_privkey_tweak_mul(secp256k1_scalar_t *key, const secp256k1_scalar_t *tweak) {
     if (secp256k1_scalar_is_zero(tweak))
         return 0;
 
@@ -168,7 +168,7 @@ int static secp256k1_eckey_privkey_tweak_mul(secp256k1_scalar_t *key, const secp
     return 1;
 }
 
-int static secp256k1_eckey_pubkey_tweak_mul(secp256k1_ge_t *key, const secp256k1_num_t *tweak) {
+static int secp256k1_eckey_pubkey_tweak_mul(secp256k1_ge_t *key, const secp256k1_num_t *tweak) {
     if (secp256k1_num_is_zero(tweak))
         return 0;
     if (secp256k1_num_cmp(tweak, &secp256k1_ge_consts->order) >= 0)

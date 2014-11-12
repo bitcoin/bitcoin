@@ -45,7 +45,7 @@
 #endif
 
 /** Seed the pseudorandom number generator. */
-static inline void secp256k1_rand_seed(uint64_t v);
+SECP256K1_INLINE static void secp256k1_rand_seed(uint64_t v);
 
 /** Generate a pseudorandom 32-bit number. */
 static uint32_t secp256k1_rand32(void);

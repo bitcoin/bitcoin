@@ -9,8 +9,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "util_impl.h"
 #include "secp256k1.c"
+#include "util_impl.h"
 
 #ifdef ENABLE_OPENSSL_TESTS
 #include "openssl/bn.h"
