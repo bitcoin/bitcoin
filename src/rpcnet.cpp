@@ -137,3 +137,18 @@ Value sendalert(const Array& params, bool fHelp)
         result.push_back(Pair("nCancel", alert.nCancel));
     return result;
 }
+
+Value getnettotals(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() > 0)
+        throw runtime_error(
+            "getnettotals\n"
+            "Returns information about network traffic, including bytes in, bytes out,\n"
+            "and current time.");
+
+    Object obj;
+    obj.push_back(Pair("totalbytesrecv", static_cast< boost::uint64_t>(CNode::GetTotalBytesRecv())));
+    obj.push_back(Pair("totalbytessent", static_cast<boost::uint64_t>(CNode::GetTotalBytesSent())));
+    obj.push_back(Pair("timemillis", static_cast<boost::int64_t>(GetTimeMillis())));
+    return obj;
+}
