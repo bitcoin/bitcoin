@@ -319,7 +319,7 @@ string vstrprintf(const char *format, va_list ap)
         va_copy(arg_ptr, ap);
 #else
         va_list arg_ptr = ap;
-#endif;
+#endif
 #ifdef WIN32
         ret = _vsnprintf(p, limit, format, arg_ptr);
 #else
