@@ -292,6 +292,7 @@ C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2-64\qtbase\bin\lrelease C:\
     <ClCompile Include="..\..\src\qt\askpassphrasedialog.cpp" />
     <ClCompile Include="..\..\src\qt\bitcoin.cpp" />
     <ClCompile Include="..\..\src\qt\bitcoinaddressvalidator.cpp" />
+    <ClCompile Include="..\..\src\qt\trafficgraphwidget.cpp" />
     <ClCompile Include="..\..\src\qt\bitcoinamountfield.cpp" />
     <ClCompile Include="..\..\src\qt\bitcoingui.cpp" />
     <ClCompile Include="..\..\src\qt\bitcoinstrings.cpp" />
@@ -422,6 +423,24 @@ C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2-64\qtbase\bin\lrelease C:\
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">MOC ..\..\src\qt\bitcoinaddressvalidator.h</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">build\moc_bitcoinaddressvalidator.cpp;%(Outputs)</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">build\moc_bitcoinaddressvalidator.cpp;%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="..\..\src\qt\trafficgraphwidget.h">
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\..\src\qt\trafficgraphwidget.h;%(AdditionalInputs)</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\..\src\qt\trafficgraphwidget.h;%(AdditionalInputs)</AdditionalInputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2\qtbase\bin\moc.exe  -DUNICODE -DWIN32 -DQT_GUI -DBOOST_THREAD_USE_LIB -DBOOST_SPIRIT_THREADSAFE -DQT_WIDGETS_LIB -DQT_NETWORK_LIB -DQT_GUI_LIB -DQT_CORE_LIB -D_MSC_VER=1700 -D_WIN32 -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2/qtbase/mkspecs/win32-msvc2012 -IC:/MyProjects/Novacoin/MSVC/mynovacoinqt -IC:/MyProjects/Novacoin/src -IC:/MyProjects/Novacoin/src/json -IC:/MyProjects/Novacoin/src/qt -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2/qtbase/include -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2/qtbase/include/QtWidgets -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2/qtbase/include/QtNetwork -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2/qtbase/include/QtGui -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2/qtbase/include/QtCore ..\..\src\qt\trafficgraphwidget.h -o build\moc_trafficgraphwidget.cpp</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2-64\qtbase\bin\moc.exe  -DUNICODE -DWIN32 -DQT_GUI -DBOOST_THREAD_USE_LIB -DBOOST_SPIRIT_THREADSAFE -DQT_WIDGETS_LIB -DQT_NETWORK_LIB -DQT_GUI_LIB -DQT_CORE_LIB -D_MSC_VER=1700 -D_WIN32 -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2-64/qtbase/mkspecs/win32-msvc2012 -IC:/MyProjects/Novacoin/MSVC/mynovacoinqt -IC:/MyProjects/Novacoin/src -IC:/MyProjects/Novacoin/src/json -IC:/MyProjects/Novacoin/src/qt -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2-64/qtbase/include -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2-64/qtbase/include/QtWidgets -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2-64/qtbase/include/QtNetwork -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2-64/qtbase/include/QtGui -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2-64/qtbase/include/QtCore ..\..\src\qt\trafficgraphwidget.h -o build\moc_trafficgraphwidget.cpp</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">MOC ..\..\src\qt\trafficgraphwidget.h</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">MOC ..\..\src\qt\trafficgraphwidget.h</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">build\moc_trafficgraphwidget.cpp;%(Outputs)</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">build\moc_trafficgraphwidget.cpp;%(Outputs)</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\..\src\qt\trafficgraphwidget.h;%(AdditionalInputs)</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\..\src\qt\trafficgraphwidget.h;%(AdditionalInputs)</AdditionalInputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2\qtbase\bin\moc.exe  -DUNICODE -DWIN32 -DQT_GUI -DBOOST_THREAD_USE_LIB -DBOOST_SPIRIT_THREADSAFE -DQT_NO_DEBUG -DQT_WIDGETS_LIB -DQT_NETWORK_LIB -DQT_GUI_LIB -DQT_CORE_LIB -D_MSC_VER=1700 -D_WIN32 -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2/qtbase/mkspecs/win32-msvc2012 -IC:/MyProjects/Novacoin/MSVC/mynovacoinqt -IC:/MyProjects/Novacoin/src -IC:/MyProjects/Novacoin/src/json -IC:/MyProjects/Novacoin/src/qt -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2/qtbase/include -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2/qtbase/include/QtWidgets -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2/qtbase/include/QtNetwork -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2/qtbase/include/QtGui -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2/qtbase/include/QtCore ..\..\src\qt\trafficgraphwidget.h -o build\moc_trafficgraphwidget.cpp</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2-64\qtbase\bin\moc.exe  -DUNICODE -DWIN32 -DQT_GUI -DBOOST_THREAD_USE_LIB -DBOOST_SPIRIT_THREADSAFE -DQT_NO_DEBUG -DQT_WIDGETS_LIB -DQT_NETWORK_LIB -DQT_GUI_LIB -DQT_CORE_LIB -D_MSC_VER=1700 -D_WIN32 -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2-64/qtbase/mkspecs/win32-msvc2012 -IC:/MyProjects/Novacoin/MSVC/mynovacoinqt -IC:/MyProjects/Novacoin/src -IC:/MyProjects/Novacoin/src/json -IC:/MyProjects/Novacoin/src/qt -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2-64/qtbase/include -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2-64/qtbase/include/QtWidgets -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2-64/qtbase/include/QtNetwork -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2-64/qtbase/include/QtGui -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2-64/qtbase/include/QtCore ..\..\src\qt\trafficgraphwidget.h -o build\moc_trafficgraphwidget.cpp</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MOC ..\..\src\qt\trafficgraphwidget.h</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">MOC ..\..\src\qt\trafficgraphwidget.h</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">build\moc_trafficgraphwidget.cpp;%(Outputs)</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">build\moc_trafficgraphwidget.cpp;%(Outputs)</Outputs>
     </CustomBuild>
     <CustomBuild Include="..\..\src\qt\bitcoinamountfield.h">
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\..\src\qt\bitcoinamountfield.h;%(AdditionalInputs)</AdditionalInputs>
@@ -944,6 +963,7 @@ C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2-64\qtbase\bin\lrelease C:\
     <ClCompile Include="build\moc_addresstablemodel.cpp" />
     <ClCompile Include="build\moc_askpassphrasedialog.cpp" />
     <ClCompile Include="build\moc_bitcoinaddressvalidator.cpp" />
+    <ClCompile Include="build\moc_trafficgraphwidget.cpp" />
     <ClCompile Include="build\moc_bitcoinamountfield.cpp" />
     <ClCompile Include="build\moc_bitcoingui.cpp" />
     <ClCompile Include="build\moc_clientmodel.cpp" />
