@@ -315,7 +315,6 @@ static void secp256k1_num_get_hex(char *r, int rlen, const secp256k1_num_t *a) {
     for (int i=0; i<len; i++) {
         VERIFY_CHECK(rlen-len+i >= 0);
         VERIFY_CHECK(rlen-len+i < rlen);
-        VERIFY_CHECK(tmp[i] >= 0);
         VERIFY_CHECK(tmp[i] < 16);
         r[rlen-len+i] = cvt[tmp[i]];
     }
