@@ -122,7 +122,7 @@ public:
     CPubKey GetPubKey() const;
 
     //! Create a DER-serialized signature.
-    bool Sign(const uint256& hash, std::vector<unsigned char>& vchSig, bool lowS = true) const;
+    bool Sign(const uint256& hash, std::vector<unsigned char>& vchSig) const;
 
     /**
      * Create a compact signature (65 bytes), which allows reconstructing the used public key.
