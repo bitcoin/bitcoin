@@ -13,10 +13,14 @@
 #include "utiltime.h"
 #include "wallet.h"
 
+#include <fstream>
+
 #include <boost/filesystem.hpp>
 #include <boost/foreach.hpp>
 #include <boost/scoped_ptr.hpp>
 #include <boost/thread.hpp>
+#include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/predicate.hpp>
 
 using namespace std;
 
@@ -880,6 +884,157 @@ bool BackupWallet(const CWallet& wallet, const string& strDest)
                 } catch (const boost::filesystem::filesystem_error& e) {
                     LogPrintf("error copying wallet.dat to %s - %s\n", pathDest.string(), e.what());
                     return false;
+                }
+            }
+        }
+        MilliSleep(100);
+    }
+    return false;
+}
+
+std::map<std::time_t, filesystem::path> CWalletDB::GetAvailableBackups()
+{
+    filesystem::path backupDir;
+    std::string strBackupsDir   = GetArg("-backupspath", "");
+    if(strBackupsDir != "")
+        backupDir = boost::filesystem::path(strBackupsDir);
+    else
+    {
+        backupDir = GetDataDir() / DEFAULT_BACKUPS_DIR;
+    }
+    
+    std::map<std::time_t, filesystem::path> backupFiles;
+    
+    try {
+        if(!filesystem::is_directory(backupDir))
+            return backupFiles;
+        
+        filesystem::directory_iterator it(backupDir), eod;
+        BOOST_FOREACH(filesystem::path const &p, std::make_pair(it, eod))
+        {
+            if(is_regular_file(p) && (ends_with(p.string(), BACKUP_BDB_EXTENSION) || ends_with(p.string(), BACKUP_DUMP_EXTENSION)))
+                backupFiles.insert(std::pair<std::time_t, filesystem::path>(filesystem::last_write_time( p ), p));
+        }
+    }
+    catch(const filesystem::filesystem_error &e) {
+        LogPrintf("error retrieving available backups (%s)\n", e.what());
+        return backupFiles;
+    }
+    
+    return backupFiles;
+}
+
+bool CWalletDB::CreateNewBackup(CWallet& wallet)
+{
+    bool useDumpsInstedOfBDBFiles = GetBoolArg("-backupsdumps", DEFAULT_BACKUPS_DUMP);
+    
+    if(!GetBoolArg("-backups", DEFAULT_BACKUPS_ENABLED))
+        return false;
+    
+    if(!wallet.IsCrypted() && !GetBoolArg("-backupsallowunencrypted", DEFAULT_ALLOW_UNENCRYPTED_BACKUPS))
+        return false;
+    
+    if (!wallet.fFileBacked)
+        return false;
+    
+    if(!GetBoolArg("-backupsallowunencrypted", DEFAULT_ALLOW_UNENCRYPTED_BACKUPS) && useDumpsInstedOfBDBFiles)
+    {
+        LogPrintf("dumping wallet as backup is only allowed when enabling -backupsallowunencrypted\n");
+        return false;
+    }
+    
+    if(useDumpsInstedOfBDBFiles && wallet.IsLocked())
+    {
+        LogPrintf("cannot create backup: wallet is locked\n");
+        return false;
+    }
+    
+    while (true)
+    {
+        {
+            LOCK(bitdb.cs_db);
+            if (!bitdb.mapFileUseCount.count(wallet.strWalletFile) || bitdb.mapFileUseCount[wallet.strWalletFile] == 0) {
+                // Flush log data to the dat file
+                bitdb.CloseDb(wallet.strWalletFile);
+                bitdb.CheckpointLSN(wallet.strWalletFile);
+                bitdb.mapFileUseCount.erase(wallet.strWalletFile);
+                
+                filesystem::path pathSrc    = GetDataDir() / wallet.strWalletFile;
+                filesystem::path backupDir;
+                std::string strBackupsDir   = GetArg("-backupspath", "");
+                if(strBackupsDir != "")
+                    backupDir = boost::filesystem::path(strBackupsDir);
+                else
+                {
+                    backupDir = GetDataDir() / DEFAULT_BACKUPS_DIR;
+                }
+                
+                try {
+                    TryCreateDirectory(backupDir);
+                }
+                catch(const filesystem::filesystem_error &e) {
+                    LogPrintf("error creating backups directory %s - %s\n", backupDir.string(), e.what());
+                    return false;
+                }
+                
+                // delete backups over the set trashold
+                int keepMaxBackups = GetArg("-backupsmax", DEFAULT_BACKUPS_MAX);
+                std::map<std::time_t, filesystem::path> backupFiles = GetAvailableBackups();
+                int cnt  = 0;
+                
+                try {
+                    for (std::map<std::time_t, filesystem::path>::reverse_iterator i = backupFiles.rbegin(); i != backupFiles.rend(); ++i) {
+                        
+                        // now we might end up having less then keepMaxBackups in dir because it could be possible that a wallet file gets overwritten when making a backup during the same second (=same filename)
+                        if(cnt+1 >= keepMaxBackups)
+                            filesystem::remove(i->second);
+
+                        cnt++;
+                    }
+                }
+                catch(const filesystem::filesystem_error &e) {
+                    LogPrintf("error removing old backups (%s)\n", e.what());
+                    return false;
+                }
+                
+                // copy or dump wallet
+                
+                if(useDumpsInstedOfBDBFiles) {
+                    std::string newFilename = strprintf("%s.%s%s", wallet.strWalletFile, DateTimeStrFormat("%Y-%m-%d_%H-%M-%S", GetTime()), BACKUP_DUMP_EXTENSION);
+                    replace_last(newFilename, ".dat", "");
+                    filesystem::path pathDest = backupDir / newFilename;
+                    try {
+                        ofstream file;
+                        file.open(pathDest.string().c_str());
+                        if (!file.is_open()) {
+                            LogPrintf("error opening wallet backup file to write %s\n", pathDest.string());
+                            return false;
+                        }
+                        wallet.DumpToStream(file);
+                        file.close();
+                        
+                        LogPrintf("backing up wallet as dump to %s\n", pathDest.string());
+                        return true;
+                    } catch(ifstream::failure e) {
+                        LogPrintf("error dumping wallet to %s\n", pathDest.string());
+                        return false;
+                    }
+                }
+                else {
+                    std::string newFilename = strprintf("%s.%s%s", wallet.strWalletFile, DateTimeStrFormat("%Y-%m-%d_%H-%M-%S", GetTime()), BACKUP_BDB_EXTENSION);
+                    filesystem::path pathDest = backupDir / newFilename;
+                    try {
+#if BOOST_VERSION >= 104000
+                        filesystem::copy_file(pathSrc, pathDest, filesystem::copy_option::overwrite_if_exists);
+#else
+                        filesystem::copy_file(pathSrc, pathDest);
+#endif
+                        LogPrintf("copied wallet.dat to %s\n", pathDest.string());
+                        return true;
+                    } catch(const filesystem::filesystem_error &e) {
+                        LogPrintf("error copying wallet.dat to %s - %s\n", pathDest.string(), e.what());
+                        return false;
+                    }
                 }
             }
         }

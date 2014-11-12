@@ -17,6 +17,15 @@
 #include <utility>
 #include <vector>
 
+//
+static const std::string    DEFAULT_BACKUPS_DIR                 = "backups";
+static const std::string    BACKUP_BDB_EXTENSION                = ".bak";
+static const std::string    BACKUP_DUMP_EXTENSION               = ".dump";
+static const int            DEFAULT_BACKUPS_MAX                 = 10;
+static const bool           DEFAULT_BACKUPS_ENABLED             = false;
+static const bool           DEFAULT_ALLOW_UNENCRYPTED_BACKUPS   = false;
+static const bool           DEFAULT_BACKUPS_DUMP                = false;
+
 class CAccount;
 class CAccountingEntry;
 struct CBlockLocator;
@@ -129,6 +138,8 @@ public:
     DBErrors ZapWalletTx(CWallet* pwallet, std::vector<CWalletTx>& vWtx);
     static bool Recover(CDBEnv& dbenv, std::string filename, bool fOnlyKeys);
     static bool Recover(CDBEnv& dbenv, std::string filename);
+    static bool CreateNewBackup(CWallet& wallet);
+    static std::map<std::time_t, boost::filesystem::path> GetAvailableBackups();
 
 private:
     CWalletDB(const CWalletDB&);

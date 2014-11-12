@@ -412,6 +412,15 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += HelpMessageOpt("-rpcsslprivatekeyfile=<file.pem>", strprintf(_("Server private key (default: %s)"), "server.pem"));
     strUsage += HelpMessageOpt("-rpcsslciphers=<ciphers>", strprintf(_("Acceptable ciphers (default: %s)"), "TLSv1.2+HIGH:TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!3DES:@STRENGTH"));
 
+#ifdef ENABLE_WALLET
+    strUsage += HelpMessageGroup(_("Backup options:"));
+    strUsage += HelpMessageOpt("-backups", strprintf(_("Enable auto creation of UNENCRYPTED backups (dumps) (default: %u)"), DEFAULT_BACKUPS_ENABLED));
+    strUsage += HelpMessageOpt("-backupsallowunencrypted", strprintf(_("Allow backups of unencrypted wallets (default: %u)"), DEFAULT_ALLOW_UNENCRYPTED_BACKUPS));
+    strUsage += HelpMessageOpt("-backupspath=<dir> ", strprintf(_("Specify absolut path to backups directory (default: %s)"), strprintf("<datadir>/%s", DEFAULT_BACKUPS_DIR)));
+    strUsage += HelpMessageOpt("-backupsmax=<n>", strprintf(_("Set the number of maximal kept backups (default: %d)"), DEFAULT_BACKUPS_MAX));
+    strUsage += HelpMessageOpt("-backupsdumps=0|1", strprintf(_("If set, walletdumps are created instead of a wallet.dat copy (default: %u)"), DEFAULT_BACKUPS_DUMP));
+#endif
+    
     if (mode == HMM_BITCOIN_QT)
     {
         strUsage += HelpMessageGroup(_("UI Options:"));
@@ -424,7 +433,7 @@ std::string HelpMessage(HelpMessageMode mode)
         strUsage += HelpMessageOpt("-rootcertificates=<file>", _("Set SSL root certificates for payment request (default: -system-)"));
         strUsage += HelpMessageOpt("-splash", _("Show splash screen on startup (default: 1)"));
     }
-
+    
     return strUsage;
 }
 
@@ -1219,6 +1228,10 @@ bool AppInit2(boost::thread_group& threadGroup)
 
             pwalletMain->SetBestChain(chainActive.GetLocator());
         }
+        
+        // create a backup when no backup is yet created
+        if(CWalletDB::GetAvailableBackups().size() == 0)
+            CWalletDB::CreateNewBackup(*pwalletMain);
 
         LogPrintf("%s", strErrors.str());
         LogPrintf(" wallet      %15dms\n", GetTimeMillis() - nStart);

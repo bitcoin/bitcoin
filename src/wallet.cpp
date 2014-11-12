@@ -22,6 +22,22 @@
 
 using namespace std;
 
+std::string static EncodeDumpTime(int64_t nTime) {
+    return DateTimeStrFormat("%Y-%m-%dT%H:%M:%SZ", nTime);
+}
+
+std::string static EncodeDumpString(const std::string &str) {
+    std::stringstream ret;
+    BOOST_FOREACH(unsigned char c, str) {
+        if (c <= 32 || c >= 128 || c == '%') {
+            ret << '%' << HexStr(&c, &c + 1);
+        } else {
+            ret << c;
+        }
+    }
+    return ret.str();
+}
+
 /**
  * Settings
  */
@@ -421,6 +437,8 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
     if (IsCrypted())
         return false;
 
+    CWalletDB::CreateNewBackup(*this);
+    
     CKeyingMaterial vMasterKey;
     RandAddSeedPerfmon();
 
@@ -506,6 +524,8 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
     }
     NotifyStatusChanged(this);
 
+    CWalletDB::CreateNewBackup(*this);
+    
     return true;
 }
 
@@ -1979,6 +1999,7 @@ bool CWallet::NewKeyPool()
 
 bool CWallet::TopUpKeyPool(unsigned int kpSize)
 {
+    bool keysAdded = false;
     {
         LOCK(cs_wallet);
 
@@ -2003,8 +2024,13 @@ bool CWallet::TopUpKeyPool(unsigned int kpSize)
                 throw runtime_error("TopUpKeyPool(): writing generated key failed");
             setKeyPool.insert(nEnd);
             LogPrintf("keypool added key %d, size=%u\n", nEnd, setKeyPool.size());
+            keysAdded = true;
         }
     }
+    
+    if(keysAdded)
+        CWalletDB::CreateNewBackup(*this);
+    
     return true;
 }
 
@@ -2459,6 +2485,48 @@ bool CWallet::GetDestData(const CTxDestination &dest, const std::string &key, st
         }
     }
     return false;
+}
+
+bool CWallet::DumpToStream(std::ostream& stream)
+{
+    std::map<CKeyID, int64_t> mapKeyBirth;
+    std::set<CKeyID> setKeyPool;
+    this->GetKeyBirthTimes(mapKeyBirth);
+    this->GetAllReserveKeys(setKeyPool);
+
+    // sort time/key pairs
+    std::vector<std::pair<int64_t, CKeyID> > vKeyBirth;
+    for (std::map<CKeyID, int64_t>::const_iterator it = mapKeyBirth.begin(); it != mapKeyBirth.end(); it++) {
+        vKeyBirth.push_back(std::make_pair(it->second, it->first));
+    }
+    mapKeyBirth.clear();
+    std::sort(vKeyBirth.begin(), vKeyBirth.end());
+
+    // produce output
+    stream << strprintf("# Wallet dump created by Bitcoin %s (%s)\n", CLIENT_BUILD, CLIENT_DATE);
+    stream << strprintf("# * Created on %s\n", EncodeDumpTime(GetTime()));
+    stream << strprintf("# * Best block at time of backup was %i (%s),\n", chainActive.Height(), chainActive.Tip()->GetBlockHash().ToString());
+    stream << strprintf("#   mined on %s\n", EncodeDumpTime(chainActive.Tip()->GetBlockTime()));
+    stream << "\n";
+    for (std::vector<std::pair<int64_t, CKeyID> >::const_iterator it = vKeyBirth.begin(); it != vKeyBirth.end(); it++) {
+        const CKeyID &keyid = it->second;
+        std::string strTime = EncodeDumpTime(it->first);
+        std::string strAddr = CBitcoinAddress(keyid).ToString();
+        CKey key;
+        if (this->GetKey(keyid, key)) {
+            if (this->mapAddressBook.count(keyid)) {
+                stream << strprintf("%s %s label=%s # addr=%s\n", CBitcoinSecret(key).ToString(), strTime, EncodeDumpString(this->mapAddressBook[keyid].name), strAddr);
+            } else if (setKeyPool.count(keyid)) {
+                stream << strprintf("%s %s reserve=1 # addr=%s\n", CBitcoinSecret(key).ToString(), strTime, strAddr);
+            } else {
+                stream << strprintf("%s %s change=1 # addr=%s\n", CBitcoinSecret(key).ToString(), strTime, strAddr);
+            }
+        }
+    }
+    stream << "\n";
+    stream << "# End of dump\n";
+    
+    return true;
 }
 
 CKeyPool::CKeyPool()
