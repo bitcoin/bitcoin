@@ -75,6 +75,9 @@
     <ClCompile Include="..\..\src\qt\bitcoinaddressvalidator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\qt\trafficgraphwidget.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\qt\bitcoinamountfield.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -204,6 +207,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <CustomBuild Include="..\..\src\qt\bitcoinaddressvalidator.h">
+      <Filter>Header Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\src\qt\trafficgraphwidget.h">
       <Filter>Header Files</Filter>
     </CustomBuild>
     <CustomBuild Include="..\..\src\qt\bitcoinamountfield.h">
@@ -440,6 +446,9 @@
       <Filter>Generated Files</Filter>
     </ClCompile>
     <ClCompile Include="build\moc_bitcoinaddressvalidator.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="build\moc_trafficgraphwidget.cpp">
       <Filter>Generated Files</Filter>
     </ClCompile>
     <ClCompile Include="build\moc_bitcoinamountfield.cpp">
