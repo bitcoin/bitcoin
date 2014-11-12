@@ -93,5 +93,5 @@ endef
 
 define $(package)_postprocess_cmds
   rm -rf mkspecs/ lib/cmake/ && \
-  rm lib/libQt5Bootstrap.a lib/lib*.la lib/lib*.prl
+  rm lib/libQt5Bootstrap.a lib/lib*.la lib/*.prl plugins/*/*.prl
 endef
