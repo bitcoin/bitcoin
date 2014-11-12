@@ -55,7 +55,6 @@ static void secp256k1_ecmult_gen_start(void) {
     secp256k1_ge_t prec[1024];
     {
         secp256k1_gej_t precj[1024]; // Jacobian versions of prec.
-        int j = 0;
         secp256k1_gej_t gbase; gbase = gj; // 16^j * G
         secp256k1_gej_t numsbase; numsbase = nums_gej; // 2^j * nums.
         for (int j=0; j<64; j++) {
