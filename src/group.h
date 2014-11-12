@@ -96,8 +96,12 @@ void static secp256k1_gej_double_var(secp256k1_gej_t *r, const secp256k1_gej_t *
 /** Set r equal to the sum of a and b. */
 void static secp256k1_gej_add_var(secp256k1_gej_t *r, const secp256k1_gej_t *a, const secp256k1_gej_t *b);
 
+/** Set r equal to the sum of a and b (with b given in affine coordinates, and not infinity). */
+void static secp256k1_gej_add_ge(secp256k1_gej_t *r, const secp256k1_gej_t *a, const secp256k1_ge_t *b);
+
 /** Set r equal to the sum of a and b (with b given in affine coordinates). This is more efficient
-    than secp256k1_gej_add. */
+    than secp256k1_gej_add_var. It is identical to secp256k1_gej_add_ge but without constant-time
+    guarantee, and b is allowed to be infinity. */
 void static secp256k1_gej_add_ge_var(secp256k1_gej_t *r, const secp256k1_gej_t *a, const secp256k1_ge_t *b);
 
 /** Get a hex representation of a point. *rlen will be overwritten with the real length. */
