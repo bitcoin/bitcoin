@@ -6,7 +6,6 @@
 #define _SECP256K1_FIELD_REPR_IMPL_H_
 
 #include <stdio.h>
-#include <assert.h>
 #include <string.h>
 #include "util.h"
 #include "num.h"

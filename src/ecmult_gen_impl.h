@@ -5,7 +5,6 @@
 #ifndef _SECP256K1_ECMULT_GEN_IMPL_H_
 #define _SECP256K1_ECMULT_GEN_IMPL_H_
 
-#include <assert.h>
 #include "scalar.h"
 #include "group.h"
 #include "ecmult_gen.h"

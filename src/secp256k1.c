@@ -2,9 +2,10 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#define SECP256K1_BUILD (1)
+
 #include "include/secp256k1.h"
 
-#include <assert.h>
 #include "util.h"
 #include "num_impl.h"
 #include "field_impl.h"

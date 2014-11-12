@@ -5,7 +5,6 @@
 #ifndef _SECP256K1_NUM_REPR_IMPL_H_
 #define _SECP256K1_NUM_REPR_IMPL_H_
 
-#include <assert.h>
 #include <string.h>
 #include <stdlib.h>
 #include <gmp.h>
