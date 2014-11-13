@@ -41,10 +41,10 @@ bool CastToBool(const valtype& vch)
     return false;
 }
 
-//
-// Script is a stack machine (like Forth) that evaluates a predicate
-// returning a bool indicating valid or not.  There are no loops.
-//
+/**
+ * Script is a stack machine (like Forth) that evaluates a predicate
+ * returning a bool indicating valid or not.  There are no loops.
+ */
 #define stacktop(i)  (stack.at(stack.size()+(i)))
 #define altstacktop(i)  (altstack.at(altstack.size()+(i)))
 static inline void popstack(vector<valtype>& stack)
@@ -69,12 +69,16 @@ bool static IsCompressedOrUncompressedPubKey(const valtype &vchPubKey) {
     return true;
 }
 
+/**
+ * A canonical signature exists of: <30> <total len> <02> <len R> <R> <02> <len S> <S> <hashtype>
+ * Where R and S are not negative (their first byte has its highest bit not set), and not
+ * excessively padded (do not start with a 0 byte, unless an otherwise negative number follows,
+ * in which case a single 0 byte is necessary and even required).
+ * 
+ * See https://bitcointalk.org/index.php?topic=8392.msg127623#msg127623
+ */
 bool static IsDERSignature(const valtype &vchSig) {
-    // See https://bitcointalk.org/index.php?topic=8392.msg127623#msg127623
-    // A canonical signature exists of: <30> <total len> <02> <len R> <R> <02> <len S> <S> <hashtype>
-    // Where R and S are not negative (their first byte has its highest bit not set), and not
-    // excessively padded (do not start with a 0 byte, unless an otherwise negative number follows,
-    // in which case a single 0 byte is necessary and even required).
+
     if (vchSig.size() < 9)
         return error("Non-canonical signature: too short");
     if (vchSig.size() > 73)
@@ -862,17 +866,18 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, un
 
 namespace {
 
-/** Wrapper that serializes like CTransaction, but with the modifications
+/**
+ * Wrapper that serializes like CTransaction, but with the modifications
  *  required for the signature hash done in-place
  */
 class CTransactionSignatureSerializer {
 private:
-    const CTransaction &txTo;  // reference to the spending transaction (the one being serialized)
-    const CScript &scriptCode; // output script being consumed
-    const unsigned int nIn;    // input index of txTo being signed
-    const bool fAnyoneCanPay;  // whether the hashtype has the SIGHASH_ANYONECANPAY flag set
-    const bool fHashSingle;    // whether the hashtype is SIGHASH_SINGLE
-    const bool fHashNone;      // whether the hashtype is SIGHASH_NONE
+    const CTransaction &txTo;  //! reference to the spending transaction (the one being serialized)
+    const CScript &scriptCode; //! output script being consumed
+    const unsigned int nIn;    //! input index of txTo being signed
+    const bool fAnyoneCanPay;  //! whether the hashtype has the SIGHASH_ANYONECANPAY flag set
+    const bool fHashSingle;    //! whether the hashtype is SIGHASH_SINGLE
+    const bool fHashNone;      //! whether the hashtype is SIGHASH_NONE
 
 public:
     CTransactionSignatureSerializer(const CTransaction &txToIn, const CScript &scriptCodeIn, unsigned int nInIn, int nHashTypeIn) :
@@ -951,7 +956,7 @@ public:
         ::WriteCompactSize(s, nOutputs);
         for (unsigned int nOutput = 0; nOutput < nOutputs; nOutput++)
              SerializeOutput(s, nOutput, nType, nVersion);
-        // Serialie nLockTime
+        // Serialize nLockTime
         ::Serialize(s, txTo.nLockTime, nType, nVersion);
     }
 };

@@ -179,12 +179,14 @@ public:
 
 class CScriptNum
 {
-// Numeric opcodes (OP_1ADD, etc) are restricted to operating on 4-byte integers.
-// The semantics are subtle, though: operands must be in the range [-2^31 +1...2^31 -1],
-// but results may overflow (and are valid as long as they are not used in a subsequent
-// numeric operation). CScriptNum enforces those semantics by storing results as
-// an int64 and allowing out-of-range values to be returned as a vector of bytes but
-// throwing an exception if arithmetic is done or the result is interpreted as an integer.
+/**
+ * Numeric opcodes (OP_1ADD, etc) are restricted to operating on 4-byte integers.
+ * The semantics are subtle, though: operands must be in the range [-2^31 +1...2^31 -1],
+ * but results may overflow (and are valid as long as they are not used in a subsequent
+ * numeric operation). CScriptNum enforces those semantics by storing results as
+ * an int64 and allowing out-of-range values to be returned as a vector of bytes but
+ * throwing an exception if arithmetic is done or the result is interpreted as an integer.
+ */
 public:
 
     explicit CScriptNum(const int64_t& n)
@@ -516,7 +518,7 @@ public:
         return true;
     }
 
-    // Encode/decode small integers:
+    /** Encode/decode small integers: */
     static int DecodeOP_N(opcodetype opcode)
     {
         if (opcode == OP_0)
@@ -560,25 +562,31 @@ public:
         return nFound;
     }
 
-    // Pre-version-0.6, Bitcoin always counted CHECKMULTISIGs
-    // as 20 sigops. With pay-to-script-hash, that changed:
-    // CHECKMULTISIGs serialized in scriptSigs are
-    // counted more accurately, assuming they are of the form
-    //  ... OP_N CHECKMULTISIG ...
+    /**
+     * Pre-version-0.6, Bitcoin always counted CHECKMULTISIGs
+     * as 20 sigops. With pay-to-script-hash, that changed:
+     * CHECKMULTISIGs serialized in scriptSigs are
+     * counted more accurately, assuming they are of the form
+     *  ... OP_N CHECKMULTISIG ...
+     */
     unsigned int GetSigOpCount(bool fAccurate) const;
 
-    // Accurately count sigOps, including sigOps in
-    // pay-to-script-hash transactions:
+    /**
+     * Accurately count sigOps, including sigOps in
+     * pay-to-script-hash transactions:
+     */
     unsigned int GetSigOpCount(const CScript& scriptSig) const;
 
     bool IsPayToScriptHash() const;
 
-    // Called by IsStandardTx and P2SH/BIP62 VerifyScript (which makes it consensus-critical).
+    /** Called by IsStandardTx and P2SH/BIP62 VerifyScript (which makes it consensus-critical). */
     bool IsPushOnly() const;
 
-    // Returns whether the script is guaranteed to fail at execution,
-    // regardless of the initial stack. This allows outputs to be pruned
-    // instantly when entering the UTXO set.
+    /**
+     * Returns whether the script is guaranteed to fail at execution,
+     * regardless of the initial stack. This allows outputs to be pruned
+     * instantly when entering the UTXO set.
+     */
     bool IsUnspendable() const
     {
         return (size() > 0 && *begin() == OP_RETURN);
