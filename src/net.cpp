@@ -1567,7 +1567,8 @@ void static Discover(boost::thread_group& threadGroup)
         {
             BOOST_FOREACH (const CNetAddr &addr, vaddr)
             {
-                AddLocal(addr, LOCAL_IF);
+                if (AddLocal(addr, LOCAL_IF))
+                    LogPrintf("%s: %s - %s\n", __func__, pszHostName, addr.ToString());
             }
         }
     }
@@ -1587,20 +1588,19 @@ void static Discover(boost::thread_group& threadGroup)
                 struct sockaddr_in* s4 = (struct sockaddr_in*)(ifa->ifa_addr);
                 CNetAddr addr(s4->sin_addr);
                 if (AddLocal(addr, LOCAL_IF))
-                    LogPrintf("IPv4 %s: %s\n", ifa->ifa_name, addr.ToString());
+                    LogPrintf("%s: IPv4 %s: %s\n", __func__, ifa->ifa_name, addr.ToString());
             }
             else if (ifa->ifa_addr->sa_family == AF_INET6)
             {
                 struct sockaddr_in6* s6 = (struct sockaddr_in6*)(ifa->ifa_addr);
                 CNetAddr addr(s6->sin6_addr);
                 if (AddLocal(addr, LOCAL_IF))
-                    LogPrintf("IPv6 %s: %s\n", ifa->ifa_name, addr.ToString());
+                    LogPrintf("%s: IPv6 %s: %s\n", __func__, ifa->ifa_name, addr.ToString());
             }
         }
         freeifaddrs(myaddrs);
     }
 #endif
-
 }
 
 void StartNode(boost::thread_group& threadGroup)
