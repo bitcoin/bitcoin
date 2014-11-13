@@ -1,0 +1,2441 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXFileReference section */
+		58AA32041A155270007F199C /* addrman.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = addrman.cpp; sourceTree = "<group>"; };
+		58AA32051A155270007F199C /* addrman.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = addrman.h; sourceTree = "<group>"; };
+		58AA32061A155270007F199C /* alert.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = alert.cpp; sourceTree = "<group>"; };
+		58AA32071A155270007F199C /* alert.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = alert.h; sourceTree = "<group>"; };
+		58AA32081A155270007F199C /* allocators.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = allocators.cpp; sourceTree = "<group>"; };
+		58AA32091A155270007F199C /* allocators.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = allocators.h; sourceTree = "<group>"; };
+		58AA320A1A155270007F199C /* amount.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = amount.cpp; sourceTree = "<group>"; };
+		58AA320B1A155270007F199C /* amount.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = amount.h; sourceTree = "<group>"; };
+		58AA320C1A155270007F199C /* base58.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = base58.cpp; sourceTree = "<group>"; };
+		58AA320D1A155270007F199C /* base58.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = base58.h; sourceTree = "<group>"; };
+		58AA320F1A155270007F199C /* bitcoin-cli-res.rc */ = {isa = PBXFileReference; lastKnownFileType = text; path = "bitcoin-cli-res.rc"; sourceTree = "<group>"; };
+		58AA32101A155270007F199C /* bitcoin-cli.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "bitcoin-cli.cpp"; sourceTree = "<group>"; };
+		58AA32121A155270007F199C /* bitcoin-tx.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "bitcoin-tx.cpp"; sourceTree = "<group>"; };
+		58AA32171A155270007F199C /* bitcoind-res.rc */ = {isa = PBXFileReference; lastKnownFileType = text; path = "bitcoind-res.rc"; sourceTree = "<group>"; };
+		58AA32181A155270007F199C /* bitcoind.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = bitcoind.cpp; sourceTree = "<group>"; };
+		58AA32191A155270007F199C /* bloom.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = bloom.cpp; sourceTree = "<group>"; };
+		58AA321A1A155270007F199C /* bloom.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = bloom.h; sourceTree = "<group>"; };
+		58AA321B1A155270007F199C /* chain.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = chain.cpp; sourceTree = "<group>"; };
+		58AA321C1A155270007F199C /* chain.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = chain.h; sourceTree = "<group>"; };
+		58AA321D1A155270007F199C /* chainparams.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = chainparams.cpp; sourceTree = "<group>"; };
+		58AA321E1A155270007F199C /* chainparams.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = chainparams.h; sourceTree = "<group>"; };
+		58AA321F1A155270007F199C /* chainparamsbase.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = chainparamsbase.cpp; sourceTree = "<group>"; };
+		58AA32201A155270007F199C /* chainparamsbase.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = chainparamsbase.h; sourceTree = "<group>"; };
+		58AA32211A155270007F199C /* chainparamsseeds.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = chainparamsseeds.h; sourceTree = "<group>"; };
+		58AA32221A155270007F199C /* checkpoints.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = checkpoints.cpp; sourceTree = "<group>"; };
+		58AA32231A155270007F199C /* checkpoints.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = checkpoints.h; sourceTree = "<group>"; };
+		58AA32241A155270007F199C /* checkqueue.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = checkqueue.h; sourceTree = "<group>"; };
+		58AA32251A155270007F199C /* clientversion.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = clientversion.cpp; sourceTree = "<group>"; };
+		58AA32261A155270007F199C /* clientversion.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = clientversion.h; sourceTree = "<group>"; };
+		58AA32271A155270007F199C /* coincontrol.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = coincontrol.h; sourceTree = "<group>"; };
+		58AA32281A155270007F199C /* coins.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = coins.cpp; sourceTree = "<group>"; };
+		58AA32291A155270007F199C /* coins.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = coins.h; sourceTree = "<group>"; };
+		58AA32321A155270007F199C /* glibc_compat.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = glibc_compat.cpp; sourceTree = "<group>"; };
+		58AA32331A155270007F199C /* glibc_sanity.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = glibc_sanity.cpp; sourceTree = "<group>"; };
+		58AA32341A155270007F199C /* glibcxx_compat.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = glibcxx_compat.cpp; sourceTree = "<group>"; };
+		58AA32351A155270007F199C /* glibcxx_sanity.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = glibcxx_sanity.cpp; sourceTree = "<group>"; };
+		58AA32381A155270007F199C /* sanity.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = sanity.h; sourceTree = "<group>"; };
+		58AA32391A155270007F199C /* compat.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = compat.h; path = src/compat.h; sourceTree = SOURCE_ROOT; };
+		58AA323A1A155270007F199C /* compressor.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = compressor.cpp; sourceTree = "<group>"; };
+		58AA323B1A155270007F199C /* compressor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = compressor.h; sourceTree = "<group>"; };
+		58AA32471A155271007F199C /* block.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = block.cpp; sourceTree = "<group>"; };
+		58AA32481A155271007F199C /* block.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = block.h; sourceTree = "<group>"; };
+		58AA324B1A155271007F199C /* transaction.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = transaction.cpp; sourceTree = "<group>"; };
+		58AA324C1A155271007F199C /* transaction.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = transaction.h; sourceTree = "<group>"; };
+		58AA324D1A155271007F199C /* core_io.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = core_io.h; sourceTree = "<group>"; };
+		58AA324E1A155271007F199C /* core_read.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = core_read.cpp; sourceTree = "<group>"; };
+		58AA324F1A155271007F199C /* core_write.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = core_write.cpp; sourceTree = "<group>"; };
+		58AA32501A155271007F199C /* crypter.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = crypter.cpp; sourceTree = "<group>"; };
+		58AA32511A155271007F199C /* crypter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = crypter.h; sourceTree = "<group>"; };
+		58AA32591A155271007F199C /* common.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = common.h; sourceTree = "<group>"; };
+		58AA325E1A155271007F199C /* ripemd160.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ripemd160.cpp; sourceTree = "<group>"; };
+		58AA325F1A155271007F199C /* ripemd160.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ripemd160.h; sourceTree = "<group>"; };
+		58AA32601A155271007F199C /* sha1.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = sha1.cpp; sourceTree = "<group>"; };
+		58AA32611A155271007F199C /* sha1.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = sha1.h; sourceTree = "<group>"; };
+		58AA32621A155271007F199C /* sha2.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = sha2.cpp; sourceTree = "<group>"; };
+		58AA32631A155271007F199C /* sha2.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = sha2.h; sourceTree = "<group>"; };
+		58AA32641A155271007F199C /* db.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = db.cpp; sourceTree = "<group>"; };
+		58AA32651A155271007F199C /* db.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = db.h; sourceTree = "<group>"; };
+		58AA32661A155271007F199C /* eccryptoverify.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = eccryptoverify.cpp; sourceTree = "<group>"; };
+		58AA32671A155271007F199C /* eccryptoverify.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = eccryptoverify.h; sourceTree = "<group>"; };
+		58AA32681A155271007F199C /* ecwrapper.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ecwrapper.cpp; sourceTree = "<group>"; };
+		58AA32691A155271007F199C /* ecwrapper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ecwrapper.h; sourceTree = "<group>"; };
+		58AA326A1A155271007F199C /* hash.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = hash.cpp; sourceTree = "<group>"; };
+		58AA326B1A155271007F199C /* hash.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = hash.h; sourceTree = "<group>"; };
+		58AA326C1A155271007F199C /* init.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = init.cpp; sourceTree = "<group>"; };
+		58AA326D1A155271007F199C /* init.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = init.h; sourceTree = "<group>"; };
+		58AA326F1A155271007F199C /* json_spirit.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = json_spirit.h; sourceTree = "<group>"; };
+		58AA32701A155271007F199C /* json_spirit_error_position.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = json_spirit_error_position.h; sourceTree = "<group>"; };
+		58AA32711A155271007F199C /* json_spirit_reader.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = json_spirit_reader.cpp; sourceTree = "<group>"; };
+		58AA32721A155271007F199C /* json_spirit_reader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = json_spirit_reader.h; sourceTree = "<group>"; };
+		58AA32731A155271007F199C /* json_spirit_reader_template.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = json_spirit_reader_template.h; sourceTree = "<group>"; };
+		58AA32741A155271007F199C /* json_spirit_stream_reader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = json_spirit_stream_reader.h; sourceTree = "<group>"; };
+		58AA32751A155271007F199C /* json_spirit_utils.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = json_spirit_utils.h; sourceTree = "<group>"; };
+		58AA32761A155271007F199C /* json_spirit_value.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = json_spirit_value.cpp; sourceTree = "<group>"; };
+		58AA32771A155271007F199C /* json_spirit_value.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = json_spirit_value.h; sourceTree = "<group>"; };
+		58AA32781A155271007F199C /* json_spirit_writer.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = json_spirit_writer.cpp; sourceTree = "<group>"; };
+		58AA32791A155271007F199C /* json_spirit_writer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = json_spirit_writer.h; sourceTree = "<group>"; };
+		58AA327A1A155271007F199C /* json_spirit_writer_template.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = json_spirit_writer_template.h; sourceTree = "<group>"; };
+		58AA327C1A155271007F199C /* key.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = key.cpp; sourceTree = "<group>"; };
+		58AA327D1A155271007F199C /* key.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = key.h; sourceTree = "<group>"; };
+		58AA327E1A155271007F199C /* keystore.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = keystore.cpp; sourceTree = "<group>"; };
+		58AA327F1A155271007F199C /* keystore.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = keystore.h; sourceTree = "<group>"; };
+		58AA32D31A155271007F199C /* c.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = c.h; sourceTree = "<group>"; };
+		58AA32D41A155271007F199C /* cache.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cache.h; sourceTree = "<group>"; };
+		58AA32D51A155271007F199C /* comparator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = comparator.h; sourceTree = "<group>"; };
+		58AA32D61A155271007F199C /* db.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = db.h; sourceTree = "<group>"; };
+		58AA32D71A155271007F199C /* dumpfile.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = dumpfile.h; sourceTree = "<group>"; };
+		58AA32D81A155271007F199C /* env.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = env.h; sourceTree = "<group>"; };
+		58AA32D91A155271007F199C /* filter_policy.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = filter_policy.h; sourceTree = "<group>"; };
+		58AA32DA1A155271007F199C /* iterator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = iterator.h; sourceTree = "<group>"; };
+		58AA32DB1A155271007F199C /* options.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = options.h; sourceTree = "<group>"; };
+		58AA32DC1A155271007F199C /* slice.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = slice.h; sourceTree = "<group>"; };
+		58AA32DD1A155271007F199C /* status.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = status.h; sourceTree = "<group>"; };
+		58AA32DE1A155271007F199C /* table.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = table.h; sourceTree = "<group>"; };
+		58AA32DF1A155271007F199C /* table_builder.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = table_builder.h; sourceTree = "<group>"; };
+		58AA32E01A155271007F199C /* write_batch.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = write_batch.h; sourceTree = "<group>"; };
+		58AA33491A155271007F199C /* leveldbwrapper.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = leveldbwrapper.cpp; sourceTree = "<group>"; };
+		58AA334A1A155271007F199C /* leveldbwrapper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = leveldbwrapper.h; sourceTree = "<group>"; };
+		58AA33871A155271007F199C /* limitedmap.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = limitedmap.h; sourceTree = "<group>"; };
+		58AA33881A155271007F199C /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		58AA33891A155271007F199C /* main.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = main.h; sourceTree = "<group>"; };
+		58AA33901A155271007F199C /* miner.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = miner.cpp; sourceTree = "<group>"; };
+		58AA33911A155271007F199C /* miner.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = miner.h; sourceTree = "<group>"; };
+		58AA33921A155271007F199C /* mruset.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = mruset.h; sourceTree = "<group>"; };
+		58AA33931A155271007F199C /* net.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = net.cpp; sourceTree = "<group>"; };
+		58AA33941A155271007F199C /* net.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = net.h; sourceTree = "<group>"; };
+		58AA33951A155271007F199C /* netbase.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = netbase.cpp; sourceTree = "<group>"; };
+		58AA33961A155271007F199C /* netbase.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = netbase.h; sourceTree = "<group>"; };
+		58AA33971A155271007F199C /* noui.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = noui.cpp; sourceTree = "<group>"; };
+		58AA33981A155271007F199C /* noui.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = noui.h; sourceTree = "<group>"; };
+		58AA339E1A155271007F199C /* pow.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = pow.cpp; sourceTree = "<group>"; };
+		58AA339F1A155271007F199C /* pow.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = pow.h; sourceTree = "<group>"; };
+		58AA33A01A155271007F199C /* protocol.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = protocol.cpp; sourceTree = "<group>"; };
+		58AA33A11A155271007F199C /* protocol.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = protocol.h; sourceTree = "<group>"; };
+		58AA33A21A155271007F199C /* pubkey.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = pubkey.cpp; sourceTree = "<group>"; };
+		58AA33A31A155271007F199C /* pubkey.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = pubkey.h; sourceTree = "<group>"; };
+		58AA34091A155271007F199C /* addressbookpage.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = addressbookpage.cpp; sourceTree = "<group>"; };
+		58AA340A1A155271007F199C /* addressbookpage.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = addressbookpage.h; sourceTree = "<group>"; };
+		58AA340B1A155271007F199C /* addresstablemodel.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = addresstablemodel.cpp; sourceTree = "<group>"; };
+		58AA340C1A155271007F199C /* addresstablemodel.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = addresstablemodel.h; sourceTree = "<group>"; };
+		58AA340D1A155271007F199C /* askpassphrasedialog.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = askpassphrasedialog.cpp; sourceTree = "<group>"; };
+		58AA340E1A155271007F199C /* askpassphrasedialog.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = askpassphrasedialog.h; sourceTree = "<group>"; };
+		58AA34101A155271007F199C /* bitcoin.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = bitcoin.cpp; sourceTree = "<group>"; };
+		58AA34141A155271007F199C /* bitcoinaddressvalidator.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = bitcoinaddressvalidator.cpp; sourceTree = "<group>"; };
+		58AA34151A155271007F199C /* bitcoinaddressvalidator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = bitcoinaddressvalidator.h; sourceTree = "<group>"; };
+		58AA34161A155271007F199C /* bitcoinamountfield.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = bitcoinamountfield.cpp; sourceTree = "<group>"; };
+		58AA34171A155271007F199C /* bitcoinamountfield.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = bitcoinamountfield.h; sourceTree = "<group>"; };
+		58AA34191A155271007F199C /* bitcoingui.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = bitcoingui.cpp; sourceTree = "<group>"; };
+		58AA341A1A155271007F199C /* bitcoingui.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = bitcoingui.h; sourceTree = "<group>"; };
+		58AA341B1A155271007F199C /* bitcoinstrings.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = bitcoinstrings.cpp; sourceTree = "<group>"; };
+		58AA341C1A155271007F199C /* bitcoinunits.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = bitcoinunits.cpp; sourceTree = "<group>"; };
+		58AA341D1A155271007F199C /* bitcoinunits.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = bitcoinunits.h; sourceTree = "<group>"; };
+		58AA341E1A155271007F199C /* clientmodel.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = clientmodel.cpp; sourceTree = "<group>"; };
+		58AA341F1A155271007F199C /* clientmodel.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = clientmodel.h; sourceTree = "<group>"; };
+		58AA34201A155271007F199C /* coincontroldialog.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = coincontroldialog.cpp; sourceTree = "<group>"; };
+		58AA34211A155271007F199C /* coincontroldialog.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = coincontroldialog.h; sourceTree = "<group>"; };
+		58AA34221A155271007F199C /* coincontroltreewidget.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = coincontroltreewidget.cpp; sourceTree = "<group>"; };
+		58AA34231A155271007F199C /* coincontroltreewidget.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = coincontroltreewidget.h; sourceTree = "<group>"; };
+		58AA34241A155271007F199C /* csvmodelwriter.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = csvmodelwriter.cpp; sourceTree = "<group>"; };
+		58AA34251A155271007F199C /* csvmodelwriter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = csvmodelwriter.h; sourceTree = "<group>"; };
+		58AA34261A155271007F199C /* editaddressdialog.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = editaddressdialog.cpp; sourceTree = "<group>"; };
+		58AA34271A155271007F199C /* editaddressdialog.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = editaddressdialog.h; sourceTree = "<group>"; };
+		58AA34291A155271007F199C /* addressbookpage.ui */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = addressbookpage.ui; sourceTree = "<group>"; };
+		58AA342A1A155271007F199C /* askpassphrasedialog.ui */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = askpassphrasedialog.ui; sourceTree = "<group>"; };
+		58AA342B1A155271007F199C /* coincontroldialog.ui */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = coincontroldialog.ui; sourceTree = "<group>"; };
+		58AA342C1A155271007F199C /* editaddressdialog.ui */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = editaddressdialog.ui; sourceTree = "<group>"; };
+		58AA342D1A155271007F199C /* helpmessagedialog.ui */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = helpmessagedialog.ui; sourceTree = "<group>"; };
+		58AA342E1A155271007F199C /* intro.ui */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = intro.ui; sourceTree = "<group>"; };
+		58AA342F1A155271007F199C /* openuridialog.ui */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = openuridialog.ui; sourceTree = "<group>"; };
+		58AA34301A155271007F199C /* optionsdialog.ui */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = optionsdialog.ui; sourceTree = "<group>"; };
+		58AA34311A155271007F199C /* overviewpage.ui */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = overviewpage.ui; sourceTree = "<group>"; };
+		58AA34321A155271007F199C /* receivecoinsdialog.ui */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = receivecoinsdialog.ui; sourceTree = "<group>"; };
+		58AA34331A155271007F199C /* receiverequestdialog.ui */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = receiverequestdialog.ui; sourceTree = "<group>"; };
+		58AA34341A155271007F199C /* rpcconsole.ui */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = rpcconsole.ui; sourceTree = "<group>"; };
+		58AA34351A155271007F199C /* sendcoinsdialog.ui */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = sendcoinsdialog.ui; sourceTree = "<group>"; };
+		58AA34361A155271007F199C /* sendcoinsentry.ui */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = sendcoinsentry.ui; sourceTree = "<group>"; };
+		58AA34371A155271007F199C /* signverifymessagedialog.ui */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = signverifymessagedialog.ui; sourceTree = "<group>"; };
+		58AA34381A155271007F199C /* transactiondescdialog.ui */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = transactiondescdialog.ui; sourceTree = "<group>"; };
+		58AA34391A155271007F199C /* ui_addressbookpage.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ui_addressbookpage.h; sourceTree = "<group>"; };
+		58AA343A1A155271007F199C /* ui_askpassphrasedialog.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ui_askpassphrasedialog.h; sourceTree = "<group>"; };
+		58AA343B1A155271007F199C /* ui_coincontroldialog.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ui_coincontroldialog.h; sourceTree = "<group>"; };
+		58AA343C1A155271007F199C /* ui_editaddressdialog.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ui_editaddressdialog.h; sourceTree = "<group>"; };
+		58AA343D1A155271007F199C /* ui_helpmessagedialog.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ui_helpmessagedialog.h; sourceTree = "<group>"; };
+		58AA343E1A155271007F199C /* ui_intro.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ui_intro.h; sourceTree = "<group>"; };
+		58AA343F1A155271007F199C /* ui_openuridialog.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ui_openuridialog.h; sourceTree = "<group>"; };
+		58AA34401A155271007F199C /* ui_optionsdialog.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ui_optionsdialog.h; sourceTree = "<group>"; };
+		58AA34411A155271007F199C /* ui_overviewpage.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ui_overviewpage.h; sourceTree = "<group>"; };
+		58AA34421A155271007F199C /* ui_receivecoinsdialog.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ui_receivecoinsdialog.h; sourceTree = "<group>"; };
+		58AA34431A155271007F199C /* ui_receiverequestdialog.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ui_receiverequestdialog.h; sourceTree = "<group>"; };
+		58AA34441A155271007F199C /* ui_rpcconsole.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ui_rpcconsole.h; sourceTree = "<group>"; };
+		58AA34451A155271007F199C /* ui_sendcoinsdialog.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ui_sendcoinsdialog.h; sourceTree = "<group>"; };
+		58AA34461A155271007F199C /* ui_sendcoinsentry.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ui_sendcoinsentry.h; sourceTree = "<group>"; };
+		58AA34471A155271007F199C /* ui_signverifymessagedialog.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ui_signverifymessagedialog.h; sourceTree = "<group>"; };
+		58AA34481A155271007F199C /* ui_transactiondescdialog.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ui_transactiondescdialog.h; sourceTree = "<group>"; };
+		58AA34491A155271007F199C /* guiconstants.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = guiconstants.h; sourceTree = "<group>"; };
+		58AA344A1A155271007F199C /* guiutil.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = guiutil.cpp; sourceTree = "<group>"; };
+		58AA344B1A155271007F199C /* guiutil.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = guiutil.h; sourceTree = "<group>"; };
+		58AA344C1A155271007F199C /* intro.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = intro.cpp; sourceTree = "<group>"; };
+		58AA344D1A155271007F199C /* intro.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = intro.h; sourceTree = "<group>"; };
+		58AA34DF1A155272007F199C /* macdockiconhandler.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = macdockiconhandler.h; sourceTree = "<group>"; };
+		58AA34E01A155272007F199C /* macdockiconhandler.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = macdockiconhandler.mm; sourceTree = "<group>"; };
+		58AA34E11A155272007F199C /* macnotificationhandler.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = macnotificationhandler.h; sourceTree = "<group>"; };
+		58AA34E21A155272007F199C /* macnotificationhandler.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = macnotificationhandler.mm; sourceTree = "<group>"; };
+		58AA350F1A155272007F199C /* networkstyle.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = networkstyle.cpp; sourceTree = "<group>"; };
+		58AA35101A155272007F199C /* networkstyle.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = networkstyle.h; sourceTree = "<group>"; };
+		58AA35111A155272007F199C /* notificator.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = notificator.cpp; sourceTree = "<group>"; };
+		58AA35121A155272007F199C /* notificator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = notificator.h; sourceTree = "<group>"; };
+		58AA35131A155272007F199C /* openuridialog.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = openuridialog.cpp; sourceTree = "<group>"; };
+		58AA35141A155272007F199C /* openuridialog.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = openuridialog.h; sourceTree = "<group>"; };
+		58AA35151A155272007F199C /* optionsdialog.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = optionsdialog.cpp; sourceTree = "<group>"; };
+		58AA35161A155272007F199C /* optionsdialog.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = optionsdialog.h; sourceTree = "<group>"; };
+		58AA35171A155272007F199C /* optionsmodel.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = optionsmodel.cpp; sourceTree = "<group>"; };
+		58AA35181A155272007F199C /* optionsmodel.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = optionsmodel.h; sourceTree = "<group>"; };
+		58AA35191A155272007F199C /* overviewpage.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = overviewpage.cpp; sourceTree = "<group>"; };
+		58AA351A1A155272007F199C /* overviewpage.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = overviewpage.h; sourceTree = "<group>"; };
+		58AA351C1A155272007F199C /* paymentrequest.pb.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = paymentrequest.pb.cc; sourceTree = "<group>"; };
+		58AA351D1A155272007F199C /* paymentrequest.pb.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = paymentrequest.pb.h; sourceTree = "<group>"; };
+		58AA351E1A155272007F199C /* paymentrequest.proto */ = {isa = PBXFileReference; lastKnownFileType = text; path = paymentrequest.proto; sourceTree = "<group>"; };
+		58AA351F1A155272007F199C /* paymentrequestplus.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = paymentrequestplus.cpp; sourceTree = "<group>"; };
+		58AA35201A155272007F199C /* paymentrequestplus.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = paymentrequestplus.h; sourceTree = "<group>"; };
+		58AA35211A155272007F199C /* paymentserver.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = paymentserver.cpp; sourceTree = "<group>"; };
+		58AA35221A155272007F199C /* paymentserver.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = paymentserver.h; sourceTree = "<group>"; };
+		58AA35231A155272007F199C /* peertablemodel.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = peertablemodel.cpp; sourceTree = "<group>"; };
+		58AA35241A155272007F199C /* peertablemodel.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = peertablemodel.h; sourceTree = "<group>"; };
+		58AA35251A155272007F199C /* qrc_bitcoin.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = qrc_bitcoin.cpp; sourceTree = "<group>"; };
+		58AA35261A155272007F199C /* qrc_bitcoin_locale.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = qrc_bitcoin_locale.cpp; sourceTree = "<group>"; };
+		58AA35861A155272007F199C /* qvalidatedlineedit.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = qvalidatedlineedit.cpp; sourceTree = "<group>"; };
+		58AA35871A155272007F199C /* qvalidatedlineedit.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = qvalidatedlineedit.h; sourceTree = "<group>"; };
+		58AA35881A155272007F199C /* qvaluecombobox.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = qvaluecombobox.cpp; sourceTree = "<group>"; };
+		58AA35891A155272007F199C /* qvaluecombobox.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = qvaluecombobox.h; sourceTree = "<group>"; };
+		58AA358A1A155272007F199C /* receivecoinsdialog.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = receivecoinsdialog.cpp; sourceTree = "<group>"; };
+		58AA358B1A155272007F199C /* receivecoinsdialog.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = receivecoinsdialog.h; sourceTree = "<group>"; };
+		58AA358C1A155272007F199C /* receiverequestdialog.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = receiverequestdialog.cpp; sourceTree = "<group>"; };
+		58AA358D1A155272007F199C /* receiverequestdialog.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = receiverequestdialog.h; sourceTree = "<group>"; };
+		58AA358E1A155272007F199C /* recentrequeststablemodel.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = recentrequeststablemodel.cpp; sourceTree = "<group>"; };
+		58AA358F1A155272007F199C /* recentrequeststablemodel.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = recentrequeststablemodel.h; sourceTree = "<group>"; };
+		58AA35F51A155272007F199C /* rpcconsole.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = rpcconsole.cpp; sourceTree = "<group>"; };
+		58AA35F61A155272007F199C /* rpcconsole.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = rpcconsole.h; sourceTree = "<group>"; };
+		58AA35F81A155272007F199C /* sendcoinsdialog.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = sendcoinsdialog.cpp; sourceTree = "<group>"; };
+		58AA35F91A155272007F199C /* sendcoinsdialog.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = sendcoinsdialog.h; sourceTree = "<group>"; };
+		58AA35FA1A155272007F199C /* sendcoinsentry.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = sendcoinsentry.cpp; sourceTree = "<group>"; };
+		58AA35FB1A155272007F199C /* sendcoinsentry.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = sendcoinsentry.h; sourceTree = "<group>"; };
+		58AA35FC1A155272007F199C /* signverifymessagedialog.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = signverifymessagedialog.cpp; sourceTree = "<group>"; };
+		58AA35FD1A155273007F199C /* signverifymessagedialog.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = signverifymessagedialog.h; sourceTree = "<group>"; };
+		58AA35FE1A155273007F199C /* splashscreen.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = splashscreen.cpp; sourceTree = "<group>"; };
+		58AA35FF1A155273007F199C /* splashscreen.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = splashscreen.h; sourceTree = "<group>"; };
+		58AA361B1A155273007F199C /* trafficgraphwidget.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = trafficgraphwidget.cpp; sourceTree = "<group>"; };
+		58AA361C1A155273007F199C /* trafficgraphwidget.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = trafficgraphwidget.h; sourceTree = "<group>"; };
+		58AA361D1A155273007F199C /* transactiondesc.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = transactiondesc.cpp; sourceTree = "<group>"; };
+		58AA361E1A155273007F199C /* transactiondesc.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = transactiondesc.h; sourceTree = "<group>"; };
+		58AA361F1A155273007F199C /* transactiondescdialog.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = transactiondescdialog.cpp; sourceTree = "<group>"; };
+		58AA36201A155273007F199C /* transactiondescdialog.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = transactiondescdialog.h; sourceTree = "<group>"; };
+		58AA36211A155273007F199C /* transactionfilterproxy.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = transactionfilterproxy.cpp; sourceTree = "<group>"; };
+		58AA36221A155273007F199C /* transactionfilterproxy.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = transactionfilterproxy.h; sourceTree = "<group>"; };
+		58AA36231A155273007F199C /* transactionrecord.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = transactionrecord.cpp; sourceTree = "<group>"; };
+		58AA36241A155273007F199C /* transactionrecord.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = transactionrecord.h; sourceTree = "<group>"; };
+		58AA36251A155273007F199C /* transactiontablemodel.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = transactiontablemodel.cpp; sourceTree = "<group>"; };
+		58AA36261A155273007F199C /* transactiontablemodel.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = transactiontablemodel.h; sourceTree = "<group>"; };
+		58AA36271A155273007F199C /* transactionview.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = transactionview.cpp; sourceTree = "<group>"; };
+		58AA36281A155273007F199C /* transactionview.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = transactionview.h; sourceTree = "<group>"; };
+		58AA36291A155273007F199C /* utilitydialog.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = utilitydialog.cpp; sourceTree = "<group>"; };
+		58AA362A1A155273007F199C /* utilitydialog.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = utilitydialog.h; sourceTree = "<group>"; };
+		58AA362B1A155273007F199C /* walletframe.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = walletframe.cpp; sourceTree = "<group>"; };
+		58AA362C1A155273007F199C /* walletframe.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = walletframe.h; sourceTree = "<group>"; };
+		58AA362D1A155273007F199C /* walletmodel.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = walletmodel.cpp; sourceTree = "<group>"; };
+		58AA362E1A155273007F199C /* walletmodel.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = walletmodel.h; sourceTree = "<group>"; };
+		58AA362F1A155273007F199C /* walletmodeltransaction.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = walletmodeltransaction.cpp; sourceTree = "<group>"; };
+		58AA36301A155273007F199C /* walletmodeltransaction.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = walletmodeltransaction.h; sourceTree = "<group>"; };
+		58AA36311A155273007F199C /* walletview.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = walletview.cpp; sourceTree = "<group>"; };
+		58AA36321A155273007F199C /* walletview.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = walletview.h; sourceTree = "<group>"; };
+		58AA36331A155273007F199C /* winshutdownmonitor.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = winshutdownmonitor.cpp; sourceTree = "<group>"; };
+		58AA36341A155273007F199C /* winshutdownmonitor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = winshutdownmonitor.h; sourceTree = "<group>"; };
+		58AA36351A155273007F199C /* random.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = random.cpp; sourceTree = "<group>"; };
+		58AA36361A155273007F199C /* random.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = random.h; sourceTree = "<group>"; };
+		58AA36371A155273007F199C /* rpcblockchain.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = rpcblockchain.cpp; sourceTree = "<group>"; };
+		58AA36381A155273007F199C /* rpcclient.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = rpcclient.cpp; sourceTree = "<group>"; };
+		58AA36391A155273007F199C /* rpcclient.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = rpcclient.h; sourceTree = "<group>"; };
+		58AA363A1A155273007F199C /* rpcdump.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = rpcdump.cpp; sourceTree = "<group>"; };
+		58AA363B1A155273007F199C /* rpcmining.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = rpcmining.cpp; sourceTree = "<group>"; };
+		58AA363C1A155273007F199C /* rpcmisc.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = rpcmisc.cpp; sourceTree = "<group>"; };
+		58AA363D1A155273007F199C /* rpcnet.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = rpcnet.cpp; sourceTree = "<group>"; };
+		58AA363E1A155273007F199C /* rpcprotocol.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = rpcprotocol.cpp; sourceTree = "<group>"; };
+		58AA363F1A155273007F199C /* rpcprotocol.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = rpcprotocol.h; sourceTree = "<group>"; };
+		58AA36401A155273007F199C /* rpcrawtransaction.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = rpcrawtransaction.cpp; sourceTree = "<group>"; };
+		58AA36411A155273007F199C /* rpcserver.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = rpcserver.cpp; sourceTree = "<group>"; };
+		58AA36421A155273007F199C /* rpcserver.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = rpcserver.h; sourceTree = "<group>"; };
+		58AA36431A155273007F199C /* rpcwallet.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = rpcwallet.cpp; sourceTree = "<group>"; };
+		58AA364D1A155273007F199C /* interpreter.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = interpreter.cpp; sourceTree = "<group>"; };
+		58AA364E1A155273007F199C /* interpreter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = interpreter.h; sourceTree = "<group>"; };
+		58AA36541A155273007F199C /* script.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = script.cpp; sourceTree = "<group>"; };
+		58AA36551A155273007F199C /* script.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = script.h; sourceTree = "<group>"; };
+		58AA36561A155273007F199C /* sigcache.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = sigcache.cpp; sourceTree = "<group>"; };
+		58AA36571A155273007F199C /* sigcache.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = sigcache.h; sourceTree = "<group>"; };
+		58AA36581A155273007F199C /* sign.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = sign.cpp; sourceTree = "<group>"; };
+		58AA36591A155273007F199C /* sign.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = sign.h; sourceTree = "<group>"; };
+		58AA365A1A155273007F199C /* standard.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = standard.cpp; sourceTree = "<group>"; };
+		58AA365B1A155273007F199C /* standard.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = standard.h; sourceTree = "<group>"; };
+		58AA365E1A155273007F199C /* serialize.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = serialize.h; sourceTree = "<group>"; };
+		58AA365F1A155273007F199C /* streams.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = streams.h; sourceTree = "<group>"; };
+		58AA36601A155273007F199C /* sync.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = sync.cpp; sourceTree = "<group>"; };
+		58AA36611A155273007F199C /* sync.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = sync.h; sourceTree = "<group>"; };
+		58AA368D1A155273007F199C /* accounting_tests.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = accounting_tests.cpp; sourceTree = "<group>"; };
+		58AA368E1A155273007F199C /* alert_tests.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = alert_tests.cpp; sourceTree = "<group>"; };
+		58AA368F1A155273007F199C /* allocator_tests.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = allocator_tests.cpp; sourceTree = "<group>"; };
+		58AA36901A155273007F199C /* base32_tests.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = base32_tests.cpp; sourceTree = "<group>"; };
+		58AA36911A155273007F199C /* base58_tests.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = base58_tests.cpp; sourceTree = "<group>"; };
+		58AA36921A155273007F199C /* base64_tests.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = base64_tests.cpp; sourceTree = "<group>"; };
+		58AA36931A155273007F199C /* bctest.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = bctest.py; sourceTree = "<group>"; };
+		58AA36951A155273007F199C /* bignum.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = bignum.h; sourceTree = "<group>"; };
+		58AA36961A155273007F199C /* bip32_tests.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = bip32_tests.cpp; sourceTree = "<group>"; };
+		58AA36971A155273007F199C /* bitcoin-util-test.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = "bitcoin-util-test.py"; sourceTree = "<group>"; };
+		58AA369A1A155273007F199C /* bloom_tests.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = bloom_tests.cpp; sourceTree = "<group>"; };
+		58AA369B1A155273007F199C /* buildenv.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = buildenv.py; sourceTree = "<group>"; };
+		58AA369E1A155273007F199C /* checkblock_tests.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = checkblock_tests.cpp; sourceTree = "<group>"; };
+		58AA369F1A155273007F199C /* Checkpoints_tests.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Checkpoints_tests.cpp; sourceTree = "<group>"; };
+		58AA36A01A155273007F199C /* coins_tests.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = coins_tests.cpp; sourceTree = "<group>"; };
+		58AA36A11A155273007F199C /* compress_tests.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = compress_tests.cpp; sourceTree = "<group>"; };
+		58AA36A21A155273007F199C /* crypto_tests.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = crypto_tests.cpp; sourceTree = "<group>"; };
+		58AA36A41A155273007F199C /* alertTests.raw */ = {isa = PBXFileReference; lastKnownFileType = file; path = alertTests.raw; sourceTree = "<group>"; };
+		58AA36A51A155273007F199C /* alertTests.raw.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = alertTests.raw.h; sourceTree = "<group>"; };
+		58AA36A61A155273007F199C /* base58_encode_decode.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = base58_encode_decode.json; sourceTree = "<group>"; };
+		58AA36A71A155273007F199C /* base58_encode_decode.json.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = base58_encode_decode.json.h; sourceTree = "<group>"; };
+		58AA36A81A155273007F199C /* base58_keys_invalid.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = base58_keys_invalid.json; sourceTree = "<group>"; };
+		58AA36A91A155273007F199C /* base58_keys_invalid.json.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = base58_keys_invalid.json.h; sourceTree = "<group>"; };
+		58AA36AA1A155273007F199C /* base58_keys_valid.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = base58_keys_valid.json; sourceTree = "<group>"; };
+		58AA36AB1A155273007F199C /* base58_keys_valid.json.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = base58_keys_valid.json.h; sourceTree = "<group>"; };
+		58AA36AC1A155273007F199C /* bitcoin-util-test.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "bitcoin-util-test.json"; sourceTree = "<group>"; };
+		58AA36AD1A155273007F199C /* blanktx.hex */ = {isa = PBXFileReference; lastKnownFileType = text; path = blanktx.hex; sourceTree = "<group>"; };
+		58AA36AE1A155273007F199C /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		58AA36AF1A155273007F199C /* script_invalid.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = script_invalid.json; sourceTree = "<group>"; };
+		58AA36B01A155273007F199C /* script_invalid.json.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = script_invalid.json.h; sourceTree = "<group>"; };
+		58AA36B11A155273007F199C /* script_valid.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = script_valid.json; sourceTree = "<group>"; };
+		58AA36B21A155273007F199C /* script_valid.json.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = script_valid.json.h; sourceTree = "<group>"; };
+		58AA36B31A155273007F199C /* sig_canonical.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = sig_canonical.json; sourceTree = "<group>"; };
+		58AA36B41A155273007F199C /* sig_canonical.json.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = sig_canonical.json.h; sourceTree = "<group>"; };
+		58AA36B51A155273007F199C /* sig_noncanonical.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = sig_noncanonical.json; sourceTree = "<group>"; };
+		58AA36B61A155273007F199C /* sig_noncanonical.json.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = sig_noncanonical.json.h; sourceTree = "<group>"; };
+		58AA36B71A155273007F199C /* sighash.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = sighash.json; sourceTree = "<group>"; };
+		58AA36B81A155273007F199C /* sighash.json.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = sighash.json.h; sourceTree = "<group>"; };
+		58AA36B91A155273007F199C /* tt-delin1-out.hex */ = {isa = PBXFileReference; lastKnownFileType = text; path = "tt-delin1-out.hex"; sourceTree = "<group>"; };
+		58AA36BA1A155273007F199C /* tt-delout1-out.hex */ = {isa = PBXFileReference; lastKnownFileType = text; path = "tt-delout1-out.hex"; sourceTree = "<group>"; };
+		58AA36BB1A155273007F199C /* tt-locktime317000-out.hex */ = {isa = PBXFileReference; lastKnownFileType = text; path = "tt-locktime317000-out.hex"; sourceTree = "<group>"; };
+		58AA36BC1A155273007F199C /* tx394b54bb.hex */ = {isa = PBXFileReference; lastKnownFileType = text; path = tx394b54bb.hex; sourceTree = "<group>"; };
+		58AA36BD1A155273007F199C /* tx_invalid.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = tx_invalid.json; sourceTree = "<group>"; };
+		58AA36BE1A155273007F199C /* tx_invalid.json.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = tx_invalid.json.h; sourceTree = "<group>"; };
+		58AA36BF1A155273007F199C /* tx_valid.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = tx_valid.json; sourceTree = "<group>"; };
+		58AA36C01A155273007F199C /* tx_valid.json.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = tx_valid.json.h; sourceTree = "<group>"; };
+		58AA36C11A155273007F199C /* txcreate1.hex */ = {isa = PBXFileReference; lastKnownFileType = text; path = txcreate1.hex; sourceTree = "<group>"; };
+		58AA36C21A155273007F199C /* txcreate2.hex */ = {isa = PBXFileReference; lastKnownFileType = text; path = txcreate2.hex; sourceTree = "<group>"; };
+		58AA36C31A155273007F199C /* DoS_tests.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = DoS_tests.cpp; sourceTree = "<group>"; };
+		58AA36C41A155273007F199C /* getarg_tests.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = getarg_tests.cpp; sourceTree = "<group>"; };
+		58AA36C51A155273007F199C /* hash_tests.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = hash_tests.cpp; sourceTree = "<group>"; };
+		58AA36C61A155273007F199C /* key_tests.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = key_tests.cpp; sourceTree = "<group>"; };
+		58AA36C71A155273007F199C /* main_tests.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main_tests.cpp; sourceTree = "<group>"; };
+		58AA36C91A155273007F199C /* miner_tests.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = miner_tests.cpp; sourceTree = "<group>"; };
+		58AA36CA1A155273007F199C /* mruset_tests.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = mruset_tests.cpp; sourceTree = "<group>"; };
+		58AA36CB1A155273007F199C /* multisig_tests.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = multisig_tests.cpp; sourceTree = "<group>"; };
+		58AA36CC1A155273007F199C /* netbase_tests.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = netbase_tests.cpp; sourceTree = "<group>"; };
+		58AA36CD1A155273007F199C /* pmt_tests.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = pmt_tests.cpp; sourceTree = "<group>"; };
+		58AA36CF1A155273007F199C /* rpc_tests.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = rpc_tests.cpp; sourceTree = "<group>"; };
+		58AA36D01A155273007F199C /* rpc_wallet_tests.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = rpc_wallet_tests.cpp; sourceTree = "<group>"; };
+		58AA36D11A155273007F199C /* script_P2SH_tests.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = script_P2SH_tests.cpp; sourceTree = "<group>"; };
+		58AA36D21A155273007F199C /* script_tests.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = script_tests.cpp; sourceTree = "<group>"; };
+		58AA36D31A155273007F199C /* scriptnum_tests.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = scriptnum_tests.cpp; sourceTree = "<group>"; };
+		58AA36D41A155273007F199C /* serialize_tests.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = serialize_tests.cpp; sourceTree = "<group>"; };
+		58AA36D51A155273007F199C /* sighash_tests.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = sighash_tests.cpp; sourceTree = "<group>"; };
+		58AA36D61A155273007F199C /* sigopcount_tests.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = sigopcount_tests.cpp; sourceTree = "<group>"; };
+		58AA36D71A155273007F199C /* skiplist_tests.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = skiplist_tests.cpp; sourceTree = "<group>"; };
+		58AA36D91A155273007F199C /* test_bitcoin.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = test_bitcoin.cpp; sourceTree = "<group>"; };
+		58AA37021A155273007F199C /* timedata_tests.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = timedata_tests.cpp; sourceTree = "<group>"; };
+		58AA37031A155273007F199C /* transaction_tests.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = transaction_tests.cpp; sourceTree = "<group>"; };
+		58AA37041A155273007F199C /* uint256_tests.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = uint256_tests.cpp; sourceTree = "<group>"; };
+		58AA37051A155273007F199C /* univalue_tests.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = univalue_tests.cpp; sourceTree = "<group>"; };
+		58AA37061A155273007F199C /* util_tests.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = util_tests.cpp; sourceTree = "<group>"; };
+		58AA37071A155273007F199C /* wallet_tests.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = wallet_tests.cpp; sourceTree = "<group>"; };
+		58AA37091A155273007F199C /* threadsafety.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = threadsafety.h; sourceTree = "<group>"; };
+		58AA370A1A155273007F199C /* timedata.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = timedata.cpp; sourceTree = "<group>"; };
+		58AA370B1A155273007F199C /* timedata.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = timedata.h; sourceTree = "<group>"; };
+		58AA370C1A155273007F199C /* tinyformat.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = tinyformat.h; sourceTree = "<group>"; };
+		58AA370D1A155273007F199C /* txdb.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = txdb.cpp; sourceTree = "<group>"; };
+		58AA370E1A155273007F199C /* txdb.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = txdb.h; sourceTree = "<group>"; };
+		58AA370F1A155273007F199C /* txmempool.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = txmempool.cpp; sourceTree = "<group>"; };
+		58AA37101A155273007F199C /* txmempool.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = txmempool.h; sourceTree = "<group>"; };
+		58AA37111A155273007F199C /* ui_interface.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ui_interface.h; sourceTree = "<group>"; };
+		58AA37121A155273007F199C /* uint256.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = uint256.cpp; sourceTree = "<group>"; };
+		58AA37131A155273007F199C /* uint256.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = uint256.h; sourceTree = "<group>"; };
+		58AA37141A155273007F199C /* undo.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = undo.h; sourceTree = "<group>"; };
+		58AA371C1A155273007F199C /* gen.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = gen.cpp; sourceTree = "<group>"; };
+		58AA371E1A155273007F199C /* univalue.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = univalue.cpp; sourceTree = "<group>"; };
+		58AA371F1A155273007F199C /* univalue.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = univalue.h; sourceTree = "<group>"; };
+		58AA37211A155273007F199C /* univalue_escapes.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = univalue_escapes.h; sourceTree = "<group>"; };
+		58AA37221A155273007F199C /* univalue_read.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = univalue_read.cpp; sourceTree = "<group>"; };
+		58AA37241A155273007F199C /* univalue_write.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = univalue_write.cpp; sourceTree = "<group>"; };
+		58AA37261A155273007F199C /* util.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = util.cpp; sourceTree = "<group>"; };
+		58AA37271A155273007F199C /* util.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = util.h; sourceTree = "<group>"; };
+		58AA37281A155273007F199C /* utilmoneystr.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = utilmoneystr.cpp; sourceTree = "<group>"; };
+		58AA37291A155273007F199C /* utilmoneystr.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = utilmoneystr.h; sourceTree = "<group>"; };
+		58AA372A1A155273007F199C /* utilstrencodings.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = utilstrencodings.cpp; sourceTree = "<group>"; };
+		58AA372B1A155273007F199C /* utilstrencodings.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = utilstrencodings.h; sourceTree = "<group>"; };
+		58AA372C1A155273007F199C /* utiltime.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = utiltime.cpp; sourceTree = "<group>"; };
+		58AA372D1A155273007F199C /* utiltime.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = utiltime.h; sourceTree = "<group>"; };
+		58AA372E1A155273007F199C /* version.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = version.h; sourceTree = "<group>"; };
+		58AA372F1A155273007F199C /* wallet.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = wallet.cpp; sourceTree = "<group>"; };
+		58AA37301A155273007F199C /* wallet.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = wallet.h; sourceTree = "<group>"; };
+		58AA37311A155274007F199C /* wallet_ismine.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = wallet_ismine.cpp; sourceTree = "<group>"; };
+		58AA37321A155274007F199C /* wallet_ismine.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = wallet_ismine.h; sourceTree = "<group>"; };
+		58AA37331A155274007F199C /* walletdb.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = walletdb.cpp; sourceTree = "<group>"; };
+		58AA37341A155274007F199C /* walletdb.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = walletdb.h; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		58AA31BA1A154FEB007F199C = {
+			isa = PBXGroup;
+			children = (
+				58AA31C61A155270007F199C /* bitcoin */,
+				58AA36621A155273007F199C /* test */,
+				58AA376D1A1556C6007F199C /* Frameworks */,
+			);
+			sourceTree = "<group>";
+		};
+		58AA31C61A155270007F199C /* bitcoin */ = {
+			isa = PBXGroup;
+			children = (
+				58AA37DA1A155D38007F199C /* A - B */,
+				58AA37D91A155D34007F199C /* C */,
+				58AA37D81A155D30007F199C /* D - L */,
+				58AA37D71A155D29007F199C /* M - Q */,
+				58AA37D61A155D21007F199C /* R - S */,
+				58AA37D51A155D16007F199C /* T - U */,
+				58AA37DB1A155DBA007F199C /* V - Z */,
+			);
+			name = bitcoin;
+			path = src;
+			sourceTree = "<group>";
+		};
+		58AA322A1A155270007F199C /* compat */ = {
+			isa = PBXGroup;
+			children = (
+				58AA32321A155270007F199C /* glibc_compat.cpp */,
+				58AA32331A155270007F199C /* glibc_sanity.cpp */,
+				58AA32341A155270007F199C /* glibcxx_compat.cpp */,
+				58AA32351A155270007F199C /* glibcxx_sanity.cpp */,
+				58AA32381A155270007F199C /* sanity.h */,
+				58AA32391A155270007F199C /* compat.h */,
+			);
+			path = compat;
+			sourceTree = "<group>";
+		};
+		58AA32411A155271007F199C /* core */ = {
+			isa = PBXGroup;
+			children = (
+				58AA37481A155593007F199C /* block */,
+				58AA37491A1555A3007F199C /* transaction */,
+			);
+			path = core;
+			sourceTree = "<group>";
+		};
+		58AA32521A155271007F199C /* crypto */ = {
+			isa = PBXGroup;
+			children = (
+				58AA37511A1555D3007F199C /* common */,
+				58AA37501A1555CF007F199C /* ripemd160 */,
+				58AA374F1A1555CB007F199C /* sha1 */,
+				58AA374E1A1555C7007F199C /* sha2 */,
+			);
+			path = crypto;
+			sourceTree = "<group>";
+		};
+		58AA326E1A155271007F199C /* json */ = {
+			isa = PBXGroup;
+			children = (
+				58AA37571A1555FC007F199C /* json_spirit */,
+				58AA37581A155607007F199C /* json_spirit_error_position */,
+				58AA37591A15560A007F199C /* json_spirit_reader */,
+				58AA375A1A15560D007F199C /* json_spirit_reader_template */,
+				58AA375B1A155610007F199C /* json_spirit_stream_reader */,
+				58AA375C1A155615007F199C /* json_spirit_utils */,
+				58AA375D1A15561B007F199C /* json_spirit_value */,
+				58AA375E1A15561F007F199C /* json_spirit_writer */,
+				58AA375F1A155623007F199C /* json_spirit_writer_template */,
+			);
+			name = json;
+			path = src/json;
+			sourceTree = "<group>";
+		};
+		58AA32801A155271007F199C /* leveldb */ = {
+			isa = PBXGroup;
+			children = (
+				58AA32D11A155271007F199C /* include */,
+			);
+			name = leveldb;
+			path = src/leveldb;
+			sourceTree = "<group>";
+		};
+		58AA32D11A155271007F199C /* include */ = {
+			isa = PBXGroup;
+			children = (
+				58AA32D21A155271007F199C /* leveldb */,
+			);
+			path = include;
+			sourceTree = "<group>";
+		};
+		58AA32D21A155271007F199C /* leveldb */ = {
+			isa = PBXGroup;
+			children = (
+				58AA32D31A155271007F199C /* c.h */,
+				58AA32D41A155271007F199C /* cache.h */,
+				58AA32D51A155271007F199C /* comparator.h */,
+				58AA32D61A155271007F199C /* db.h */,
+				58AA32D71A155271007F199C /* dumpfile.h */,
+				58AA32D81A155271007F199C /* env.h */,
+				58AA32D91A155271007F199C /* filter_policy.h */,
+				58AA32DA1A155271007F199C /* iterator.h */,
+				58AA32DB1A155271007F199C /* options.h */,
+				58AA32DC1A155271007F199C /* slice.h */,
+				58AA32DD1A155271007F199C /* status.h */,
+				58AA32DE1A155271007F199C /* table.h */,
+				58AA32DF1A155271007F199C /* table_builder.h */,
+				58AA32E01A155271007F199C /* write_batch.h */,
+			);
+			path = leveldb;
+			sourceTree = "<group>";
+		};
+		58AA33A41A155271007F199C /* qt */ = {
+			isa = PBXGroup;
+			children = (
+				58AA37721A155949007F199C /* addressbookpage */,
+				58AA37731A155954007F199C /* addresstablemodel */,
+				58AA37741A155957007F199C /* askpassphrasedialog */,
+				58AA37751A15596D007F199C /* bitcoin */,
+				58AA37761A155970007F199C /* bitcoinaddressvalidator */,
+				58AA37771A155974007F199C /* bitcoinamountfield */,
+				58AA37781A15597D007F199C /* bitcoingui */,
+				58AA37791A155980007F199C /* bitcoinstrings */,
+				58AA377A1A155983007F199C /* bitcoinunits */,
+				58AA377B1A155988007F199C /* clientmodel */,
+				58AA377C1A15598C007F199C /* coincontroldialog */,
+				58AA377D1A155990007F199C /* coincontroltreewidget */,
+				58AA377E1A155993007F199C /* csvmodelwriter */,
+				58AA377F1A155997007F199C /* editaddressdialog */,
+				58AA34281A155271007F199C /* forms */,
+				58AA37801A1559A7007F199C /* guiconstants */,
+				58AA37811A1559AB007F199C /* guiutil */,
+				58AA37821A1559AE007F199C /* intro */,
+				58AA37831A1559B1007F199C /* macdockiconhandler */,
+				58AA37841A1559B6007F199C /* macnotificationhandler */,
+				58AA37861A1559D6007F199C /* networkstyle */,
+				58AA37871A1559D9007F199C /* notificator */,
+				58AA37881A1559DC007F199C /* openuridialog */,
+				58AA37891A1559DE007F199C /* optionsdialog */,
+				58AA378A1A1559E4007F199C /* optionsmodel */,
+				58AA378B1A1559E7007F199C /* overviewpage */,
+				58AA378C1A1559FF007F199C /* paymentrequest */,
+				58AA378D1A155A03007F199C /* paymentrequestplus */,
+				58AA378E1A155A06007F199C /* paymentserver */,
+				58AA378F1A155A0C007F199C /* peertablemodel */,
+				58AA37901A155A0F007F199C /* qrc_bitcoin */,
+				58AA37911A155A24007F199C /* qrc_bitcoin_locale */,
+				58AA37921A155A39007F199C /* qvalidatedlineedit */,
+				58AA37931A155A3E007F199C /* qvaluecombobox */,
+				58AA37941A155A42007F199C /* receivecoinsdialog */,
+				58AA37951A155A46007F199C /* receiverequestdialog */,
+				58AA37961A155A49007F199C /* recentrequeststablemodel */,
+				58AA37971A155A4C007F199C /* rpcconsole */,
+				58AA37981A155A52007F199C /* sendcoinsdialog */,
+				58AA37991A155A55007F199C /* sendcoinsentry */,
+				58AA379A1A155A59007F199C /* signverifymessagedialog */,
+				58AA379B1A155A5C007F199C /* splashscreen */,
+				58AA379C1A155A60007F199C /* trafficgraphwidget */,
+				58AA379D1A155A64007F199C /* transactiondesc */,
+				58AA379E1A155A67007F199C /* transactiondescdialog */,
+				58AA379F1A155A6A007F199C /* transactionfilterproxy */,
+				58AA37A01A155A6D007F199C /* transactionrecord */,
+				58AA37A11A155A71007F199C /* transactiontablemodel */,
+				58AA37A21A155A76007F199C /* transactionview */,
+				58AA37A31A155A7B007F199C /* utilitydialog */,
+				58AA37A41A155A7F007F199C /* walletframe */,
+				58AA37A51A155A82007F199C /* walletmodel */,
+				58AA37A61A155A84007F199C /* walletmodeltransaction */,
+				58AA37A71A155A88007F199C /* walletview */,
+				58AA37A81A155A8A007F199C /* winshutdownmonitor */,
+			);
+			path = qt;
+			sourceTree = "<group>";
+		};
+		58AA34281A155271007F199C /* forms */ = {
+			isa = PBXGroup;
+			children = (
+				58AA34291A155271007F199C /* addressbookpage.ui */,
+				58AA342A1A155271007F199C /* askpassphrasedialog.ui */,
+				58AA342B1A155271007F199C /* coincontroldialog.ui */,
+				58AA342C1A155271007F199C /* editaddressdialog.ui */,
+				58AA342D1A155271007F199C /* helpmessagedialog.ui */,
+				58AA342E1A155271007F199C /* intro.ui */,
+				58AA342F1A155271007F199C /* openuridialog.ui */,
+				58AA34301A155271007F199C /* optionsdialog.ui */,
+				58AA34311A155271007F199C /* overviewpage.ui */,
+				58AA34321A155271007F199C /* receivecoinsdialog.ui */,
+				58AA34331A155271007F199C /* receiverequestdialog.ui */,
+				58AA34341A155271007F199C /* rpcconsole.ui */,
+				58AA34351A155271007F199C /* sendcoinsdialog.ui */,
+				58AA34361A155271007F199C /* sendcoinsentry.ui */,
+				58AA34371A155271007F199C /* signverifymessagedialog.ui */,
+				58AA34381A155271007F199C /* transactiondescdialog.ui */,
+				58AA34391A155271007F199C /* ui_addressbookpage.h */,
+				58AA343A1A155271007F199C /* ui_askpassphrasedialog.h */,
+				58AA343B1A155271007F199C /* ui_coincontroldialog.h */,
+				58AA343C1A155271007F199C /* ui_editaddressdialog.h */,
+				58AA343D1A155271007F199C /* ui_helpmessagedialog.h */,
+				58AA343E1A155271007F199C /* ui_intro.h */,
+				58AA343F1A155271007F199C /* ui_openuridialog.h */,
+				58AA34401A155271007F199C /* ui_optionsdialog.h */,
+				58AA34411A155271007F199C /* ui_overviewpage.h */,
+				58AA34421A155271007F199C /* ui_receivecoinsdialog.h */,
+				58AA34431A155271007F199C /* ui_receiverequestdialog.h */,
+				58AA34441A155271007F199C /* ui_rpcconsole.h */,
+				58AA34451A155271007F199C /* ui_sendcoinsdialog.h */,
+				58AA34461A155271007F199C /* ui_sendcoinsentry.h */,
+				58AA34471A155271007F199C /* ui_signverifymessagedialog.h */,
+				58AA34481A155271007F199C /* ui_transactiondescdialog.h */,
+			);
+			path = forms;
+			sourceTree = "<group>";
+		};
+		58AA36441A155273007F199C /* script */ = {
+			isa = PBXGroup;
+			children = (
+				58AA37B51A155AD0007F199C /* interpreter */,
+				58AA37B41A155ACD007F199C /* script */,
+				58AA37B61A155AD4007F199C /* sigcache */,
+				58AA37B71A155AD7007F199C /* sign */,
+				58AA37B81A155ADA007F199C /* standard */,
+			);
+			path = script;
+			sourceTree = "<group>";
+		};
+		58AA36621A155273007F199C /* test */ = {
+			isa = PBXGroup;
+			children = (
+				58AA368D1A155273007F199C /* accounting_tests.cpp */,
+				58AA368E1A155273007F199C /* alert_tests.cpp */,
+				58AA368F1A155273007F199C /* allocator_tests.cpp */,
+				58AA36901A155273007F199C /* base32_tests.cpp */,
+				58AA36911A155273007F199C /* base58_tests.cpp */,
+				58AA36921A155273007F199C /* base64_tests.cpp */,
+				58AA36931A155273007F199C /* bctest.py */,
+				58AA36951A155273007F199C /* bignum.h */,
+				58AA36961A155273007F199C /* bip32_tests.cpp */,
+				58AA36971A155273007F199C /* bitcoin-util-test.py */,
+				58AA369A1A155273007F199C /* bloom_tests.cpp */,
+				58AA369B1A155273007F199C /* buildenv.py */,
+				58AA369E1A155273007F199C /* checkblock_tests.cpp */,
+				58AA369F1A155273007F199C /* Checkpoints_tests.cpp */,
+				58AA36A01A155273007F199C /* coins_tests.cpp */,
+				58AA36A11A155273007F199C /* compress_tests.cpp */,
+				58AA36A21A155273007F199C /* crypto_tests.cpp */,
+				58AA36A31A155273007F199C /* data */,
+				58AA36C31A155273007F199C /* DoS_tests.cpp */,
+				58AA36C41A155273007F199C /* getarg_tests.cpp */,
+				58AA36C51A155273007F199C /* hash_tests.cpp */,
+				58AA36C61A155273007F199C /* key_tests.cpp */,
+				58AA36C71A155273007F199C /* main_tests.cpp */,
+				58AA36C91A155273007F199C /* miner_tests.cpp */,
+				58AA36CA1A155273007F199C /* mruset_tests.cpp */,
+				58AA36CB1A155273007F199C /* multisig_tests.cpp */,
+				58AA36CC1A155273007F199C /* netbase_tests.cpp */,
+				58AA36CD1A155273007F199C /* pmt_tests.cpp */,
+				58AA36CF1A155273007F199C /* rpc_tests.cpp */,
+				58AA36D01A155273007F199C /* rpc_wallet_tests.cpp */,
+				58AA36D11A155273007F199C /* script_P2SH_tests.cpp */,
+				58AA36D21A155273007F199C /* script_tests.cpp */,
+				58AA36D31A155273007F199C /* scriptnum_tests.cpp */,
+				58AA36D41A155273007F199C /* serialize_tests.cpp */,
+				58AA36D51A155273007F199C /* sighash_tests.cpp */,
+				58AA36D61A155273007F199C /* sigopcount_tests.cpp */,
+				58AA36D71A155273007F199C /* skiplist_tests.cpp */,
+				58AA36D91A155273007F199C /* test_bitcoin.cpp */,
+				58AA37021A155273007F199C /* timedata_tests.cpp */,
+				58AA37031A155273007F199C /* transaction_tests.cpp */,
+				58AA37041A155273007F199C /* uint256_tests.cpp */,
+				58AA37051A155273007F199C /* univalue_tests.cpp */,
+				58AA37061A155273007F199C /* util_tests.cpp */,
+				58AA37071A155273007F199C /* wallet_tests.cpp */,
+			);
+			name = test;
+			path = src/test;
+			sourceTree = "<group>";
+		};
+		58AA36A31A155273007F199C /* data */ = {
+			isa = PBXGroup;
+			children = (
+				58AA36A41A155273007F199C /* alertTests.raw */,
+				58AA36A51A155273007F199C /* alertTests.raw.h */,
+				58AA36A61A155273007F199C /* base58_encode_decode.json */,
+				58AA36A71A155273007F199C /* base58_encode_decode.json.h */,
+				58AA36A81A155273007F199C /* base58_keys_invalid.json */,
+				58AA36A91A155273007F199C /* base58_keys_invalid.json.h */,
+				58AA36AA1A155273007F199C /* base58_keys_valid.json */,
+				58AA36AB1A155273007F199C /* base58_keys_valid.json.h */,
+				58AA36AC1A155273007F199C /* bitcoin-util-test.json */,
+				58AA36AD1A155273007F199C /* blanktx.hex */,
+				58AA36AE1A155273007F199C /* README.md */,
+				58AA36AF1A155273007F199C /* script_invalid.json */,
+				58AA36B01A155273007F199C /* script_invalid.json.h */,
+				58AA36B11A155273007F199C /* script_valid.json */,
+				58AA36B21A155273007F199C /* script_valid.json.h */,
+				58AA36B31A155273007F199C /* sig_canonical.json */,
+				58AA36B41A155273007F199C /* sig_canonical.json.h */,
+				58AA36B51A155273007F199C /* sig_noncanonical.json */,
+				58AA36B61A155273007F199C /* sig_noncanonical.json.h */,
+				58AA36B71A155273007F199C /* sighash.json */,
+				58AA36B81A155273007F199C /* sighash.json.h */,
+				58AA36B91A155273007F199C /* tt-delin1-out.hex */,
+				58AA36BA1A155273007F199C /* tt-delout1-out.hex */,
+				58AA36BB1A155273007F199C /* tt-locktime317000-out.hex */,
+				58AA36BC1A155273007F199C /* tx394b54bb.hex */,
+				58AA36BD1A155273007F199C /* tx_invalid.json */,
+				58AA36BE1A155273007F199C /* tx_invalid.json.h */,
+				58AA36BF1A155273007F199C /* tx_valid.json */,
+				58AA36C01A155273007F199C /* tx_valid.json.h */,
+				58AA36C11A155273007F199C /* txcreate1.hex */,
+				58AA36C21A155273007F199C /* txcreate2.hex */,
+			);
+			path = data;
+			sourceTree = "<group>";
+		};
+		58AA37151A155273007F199C /* univalue */ = {
+			isa = PBXGroup;
+			children = (
+				58AA37C81A155C9E007F199C /* gen */,
+				58AA37C91A155CA1007F199C /* univalue */,
+				58AA37CA1A155CA5007F199C /* univalue_escapes */,
+				58AA37CB1A155CA9007F199C /* univalue_read */,
+				58AA37CC1A155CAC007F199C /* univalue_write */,
+			);
+			path = univalue;
+			sourceTree = "<group>";
+		};
+		58AA37351A1552A1007F199C /* addrman */ = {
+			isa = PBXGroup;
+			children = (
+				58AA32041A155270007F199C /* addrman.cpp */,
+				58AA32051A155270007F199C /* addrman.h */,
+			);
+			name = addrman;
+			sourceTree = "<group>";
+		};
+		58AA37361A1552A8007F199C /* alert */ = {
+			isa = PBXGroup;
+			children = (
+				58AA32061A155270007F199C /* alert.cpp */,
+				58AA32071A155270007F199C /* alert.h */,
+			);
+			name = alert;
+			sourceTree = "<group>";
+		};
+		58AA37371A1552AC007F199C /* allocators */ = {
+			isa = PBXGroup;
+			children = (
+				58AA32081A155270007F199C /* allocators.cpp */,
+				58AA32091A155270007F199C /* allocators.h */,
+			);
+			name = allocators;
+			sourceTree = "<group>";
+		};
+		58AA37381A1552B7007F199C /* amount */ = {
+			isa = PBXGroup;
+			children = (
+				58AA320A1A155270007F199C /* amount.cpp */,
+				58AA320B1A155270007F199C /* amount.h */,
+			);
+			name = amount;
+			sourceTree = "<group>";
+		};
+		58AA37391A1552C3007F199C /* base58 */ = {
+			isa = PBXGroup;
+			children = (
+				58AA320C1A155270007F199C /* base58.cpp */,
+				58AA320D1A155270007F199C /* base58.h */,
+			);
+			name = base58;
+			sourceTree = "<group>";
+		};
+		58AA373A1A1552E1007F199C /* bitcoin-cli */ = {
+			isa = PBXGroup;
+			children = (
+				58AA320F1A155270007F199C /* bitcoin-cli-res.rc */,
+				58AA32101A155270007F199C /* bitcoin-cli.cpp */,
+			);
+			name = "bitcoin-cli";
+			sourceTree = "<group>";
+		};
+		58AA373B1A1552EA007F199C /* bitcoin-tx */ = {
+			isa = PBXGroup;
+			children = (
+				58AA32121A155270007F199C /* bitcoin-tx.cpp */,
+			);
+			name = "bitcoin-tx";
+			sourceTree = "<group>";
+		};
+		58AA373C1A155309007F199C /* bitcoind */ = {
+			isa = PBXGroup;
+			children = (
+				58AA32171A155270007F199C /* bitcoind-res.rc */,
+				58AA32181A155270007F199C /* bitcoind.cpp */,
+			);
+			name = bitcoind;
+			sourceTree = "<group>";
+		};
+		58AA373D1A155311007F199C /* bloom */ = {
+			isa = PBXGroup;
+			children = (
+				58AA32191A155270007F199C /* bloom.cpp */,
+				58AA321A1A155270007F199C /* bloom.h */,
+			);
+			name = bloom;
+			sourceTree = "<group>";
+		};
+		58AA373E1A155317007F199C /* chain */ = {
+			isa = PBXGroup;
+			children = (
+				58AA321B1A155270007F199C /* chain.cpp */,
+				58AA321C1A155270007F199C /* chain.h */,
+			);
+			name = chain;
+			sourceTree = "<group>";
+		};
+		58AA373F1A15531D007F199C /* chainparams */ = {
+			isa = PBXGroup;
+			children = (
+				58AA321D1A155270007F199C /* chainparams.cpp */,
+				58AA321E1A155270007F199C /* chainparams.h */,
+			);
+			name = chainparams;
+			sourceTree = "<group>";
+		};
+		58AA37401A155323007F199C /* chainparamsbase */ = {
+			isa = PBXGroup;
+			children = (
+				58AA321F1A155270007F199C /* chainparamsbase.cpp */,
+				58AA32201A155270007F199C /* chainparamsbase.h */,
+			);
+			name = chainparamsbase;
+			sourceTree = "<group>";
+		};
+		58AA37411A15532F007F199C /* chainparamsseeds */ = {
+			isa = PBXGroup;
+			children = (
+				58AA32211A155270007F199C /* chainparamsseeds.h */,
+			);
+			name = chainparamsseeds;
+			sourceTree = "<group>";
+		};
+		58AA37421A1554EA007F199C /* checkpoints */ = {
+			isa = PBXGroup;
+			children = (
+				58AA32221A155270007F199C /* checkpoints.cpp */,
+				58AA32231A155270007F199C /* checkpoints.h */,
+			);
+			name = checkpoints;
+			sourceTree = "<group>";
+		};
+		58AA37431A1554F0007F199C /* checkqueue */ = {
+			isa = PBXGroup;
+			children = (
+				58AA32241A155270007F199C /* checkqueue.h */,
+			);
+			name = checkqueue;
+			sourceTree = "<group>";
+		};
+		58AA37441A1554F5007F199C /* clientversion */ = {
+			isa = PBXGroup;
+			children = (
+				58AA32251A155270007F199C /* clientversion.cpp */,
+				58AA32261A155270007F199C /* clientversion.h */,
+			);
+			name = clientversion;
+			sourceTree = "<group>";
+		};
+		58AA37451A1554F9007F199C /* coincontrol */ = {
+			isa = PBXGroup;
+			children = (
+				58AA32271A155270007F199C /* coincontrol.h */,
+			);
+			name = coincontrol;
+			sourceTree = "<group>";
+		};
+		58AA37461A1554FE007F199C /* coins */ = {
+			isa = PBXGroup;
+			children = (
+				58AA32281A155270007F199C /* coins.cpp */,
+				58AA32291A155270007F199C /* coins.h */,
+			);
+			name = coins;
+			sourceTree = "<group>";
+		};
+		58AA37471A155544007F199C /* compressor */ = {
+			isa = PBXGroup;
+			children = (
+				58AA323A1A155270007F199C /* compressor.cpp */,
+				58AA323B1A155270007F199C /* compressor.h */,
+			);
+			name = compressor;
+			sourceTree = "<group>";
+		};
+		58AA37481A155593007F199C /* block */ = {
+			isa = PBXGroup;
+			children = (
+				58AA32471A155271007F199C /* block.cpp */,
+				58AA32481A155271007F199C /* block.h */,
+			);
+			name = block;
+			sourceTree = "<group>";
+		};
+		58AA37491A1555A3007F199C /* transaction */ = {
+			isa = PBXGroup;
+			children = (
+				58AA324B1A155271007F199C /* transaction.cpp */,
+				58AA324C1A155271007F199C /* transaction.h */,
+			);
+			name = transaction;
+			sourceTree = "<group>";
+		};
+		58AA374A1A1555A8007F199C /* core_io */ = {
+			isa = PBXGroup;
+			children = (
+				58AA324D1A155271007F199C /* core_io.h */,
+			);
+			name = core_io;
+			sourceTree = "<group>";
+		};
+		58AA374B1A1555AC007F199C /* core_read */ = {
+			isa = PBXGroup;
+			children = (
+				58AA324E1A155271007F199C /* core_read.cpp */,
+			);
+			name = core_read;
+			sourceTree = "<group>";
+		};
+		58AA374C1A1555AF007F199C /* core_write */ = {
+			isa = PBXGroup;
+			children = (
+				58AA324F1A155271007F199C /* core_write.cpp */,
+			);
+			name = core_write;
+			sourceTree = "<group>";
+		};
+		58AA374D1A1555B4007F199C /* crypter */ = {
+			isa = PBXGroup;
+			children = (
+				58AA32501A155271007F199C /* crypter.cpp */,
+				58AA32511A155271007F199C /* crypter.h */,
+			);
+			name = crypter;
+			sourceTree = "<group>";
+		};
+		58AA374E1A1555C7007F199C /* sha2 */ = {
+			isa = PBXGroup;
+			children = (
+				58AA32621A155271007F199C /* sha2.cpp */,
+				58AA32631A155271007F199C /* sha2.h */,
+			);
+			name = sha2;
+			sourceTree = "<group>";
+		};
+		58AA374F1A1555CB007F199C /* sha1 */ = {
+			isa = PBXGroup;
+			children = (
+				58AA32601A155271007F199C /* sha1.cpp */,
+				58AA32611A155271007F199C /* sha1.h */,
+			);
+			name = sha1;
+			sourceTree = "<group>";
+		};
+		58AA37501A1555CF007F199C /* ripemd160 */ = {
+			isa = PBXGroup;
+			children = (
+				58AA325E1A155271007F199C /* ripemd160.cpp */,
+				58AA325F1A155271007F199C /* ripemd160.h */,
+			);
+			name = ripemd160;
+			sourceTree = "<group>";
+		};
+		58AA37511A1555D3007F199C /* common */ = {
+			isa = PBXGroup;
+			children = (
+				58AA32591A155271007F199C /* common.h */,
+			);
+			name = common;
+			sourceTree = "<group>";
+		};
+		58AA37521A1555D9007F199C /* db */ = {
+			isa = PBXGroup;
+			children = (
+				58AA32641A155271007F199C /* db.cpp */,
+				58AA32651A155271007F199C /* db.h */,
+			);
+			name = db;
+			sourceTree = "<group>";
+		};
+		58AA37531A1555DC007F199C /* eccryptoverify */ = {
+			isa = PBXGroup;
+			children = (
+				58AA32661A155271007F199C /* eccryptoverify.cpp */,
+				58AA32671A155271007F199C /* eccryptoverify.h */,
+			);
+			name = eccryptoverify;
+			sourceTree = "<group>";
+		};
+		58AA37541A1555E0007F199C /* ecwrapper */ = {
+			isa = PBXGroup;
+			children = (
+				58AA32681A155271007F199C /* ecwrapper.cpp */,
+				58AA32691A155271007F199C /* ecwrapper.h */,
+			);
+			name = ecwrapper;
+			sourceTree = "<group>";
+		};
+		58AA37551A1555E4007F199C /* hash */ = {
+			isa = PBXGroup;
+			children = (
+				58AA326A1A155271007F199C /* hash.cpp */,
+				58AA326B1A155271007F199C /* hash.h */,
+			);
+			name = hash;
+			sourceTree = "<group>";
+		};
+		58AA37561A1555E8007F199C /* init */ = {
+			isa = PBXGroup;
+			children = (
+				58AA326C1A155271007F199C /* init.cpp */,
+				58AA326D1A155271007F199C /* init.h */,
+			);
+			name = init;
+			sourceTree = "<group>";
+		};
+		58AA37571A1555FC007F199C /* json_spirit */ = {
+			isa = PBXGroup;
+			children = (
+				58AA326F1A155271007F199C /* json_spirit.h */,
+			);
+			name = json_spirit;
+			sourceTree = "<group>";
+		};
+		58AA37581A155607007F199C /* json_spirit_error_position */ = {
+			isa = PBXGroup;
+			children = (
+				58AA32701A155271007F199C /* json_spirit_error_position.h */,
+			);
+			name = json_spirit_error_position;
+			sourceTree = "<group>";
+		};
+		58AA37591A15560A007F199C /* json_spirit_reader */ = {
+			isa = PBXGroup;
+			children = (
+				58AA32711A155271007F199C /* json_spirit_reader.cpp */,
+				58AA32721A155271007F199C /* json_spirit_reader.h */,
+			);
+			name = json_spirit_reader;
+			sourceTree = "<group>";
+		};
+		58AA375A1A15560D007F199C /* json_spirit_reader_template */ = {
+			isa = PBXGroup;
+			children = (
+				58AA32731A155271007F199C /* json_spirit_reader_template.h */,
+			);
+			name = json_spirit_reader_template;
+			sourceTree = "<group>";
+		};
+		58AA375B1A155610007F199C /* json_spirit_stream_reader */ = {
+			isa = PBXGroup;
+			children = (
+				58AA32741A155271007F199C /* json_spirit_stream_reader.h */,
+			);
+			name = json_spirit_stream_reader;
+			sourceTree = "<group>";
+		};
+		58AA375C1A155615007F199C /* json_spirit_utils */ = {
+			isa = PBXGroup;
+			children = (
+				58AA32751A155271007F199C /* json_spirit_utils.h */,
+			);
+			name = json_spirit_utils;
+			sourceTree = "<group>";
+		};
+		58AA375D1A15561B007F199C /* json_spirit_value */ = {
+			isa = PBXGroup;
+			children = (
+				58AA32761A155271007F199C /* json_spirit_value.cpp */,
+				58AA32771A155271007F199C /* json_spirit_value.h */,
+			);
+			name = json_spirit_value;
+			sourceTree = "<group>";
+		};
+		58AA375E1A15561F007F199C /* json_spirit_writer */ = {
+			isa = PBXGroup;
+			children = (
+				58AA32781A155271007F199C /* json_spirit_writer.cpp */,
+				58AA32791A155271007F199C /* json_spirit_writer.h */,
+			);
+			name = json_spirit_writer;
+			sourceTree = "<group>";
+		};
+		58AA375F1A155623007F199C /* json_spirit_writer_template */ = {
+			isa = PBXGroup;
+			children = (
+				58AA327A1A155271007F199C /* json_spirit_writer_template.h */,
+			);
+			name = json_spirit_writer_template;
+			sourceTree = "<group>";
+		};
+		58AA37601A15562B007F199C /* key */ = {
+			isa = PBXGroup;
+			children = (
+				58AA327C1A155271007F199C /* key.cpp */,
+				58AA327D1A155271007F199C /* key.h */,
+			);
+			name = key;
+			sourceTree = "<group>";
+		};
+		58AA37611A155633007F199C /* keystore */ = {
+			isa = PBXGroup;
+			children = (
+				58AA327E1A155271007F199C /* keystore.cpp */,
+				58AA327F1A155271007F199C /* keystore.h */,
+			);
+			name = keystore;
+			sourceTree = "<group>";
+		};
+		58AA37621A15566C007F199C /* leveldbwrapper */ = {
+			isa = PBXGroup;
+			children = (
+				58AA33491A155271007F199C /* leveldbwrapper.cpp */,
+				58AA334A1A155271007F199C /* leveldbwrapper.h */,
+			);
+			name = leveldbwrapper;
+			sourceTree = "<group>";
+		};
+		58AA37631A15566E007F199C /* limitedmap */ = {
+			isa = PBXGroup;
+			children = (
+				58AA33871A155271007F199C /* limitedmap.h */,
+			);
+			name = limitedmap;
+			sourceTree = "<group>";
+		};
+		58AA37641A155671007F199C /* main */ = {
+			isa = PBXGroup;
+			children = (
+				58AA33881A155271007F199C /* main.cpp */,
+				58AA33891A155271007F199C /* main.h */,
+			);
+			name = main;
+			sourceTree = "<group>";
+		};
+		58AA37651A155677007F199C /* miner */ = {
+			isa = PBXGroup;
+			children = (
+				58AA33901A155271007F199C /* miner.cpp */,
+				58AA33911A155271007F199C /* miner.h */,
+			);
+			name = miner;
+			sourceTree = "<group>";
+		};
+		58AA37661A15567A007F199C /* mruset */ = {
+			isa = PBXGroup;
+			children = (
+				58AA33921A155271007F199C /* mruset.h */,
+			);
+			name = mruset;
+			sourceTree = "<group>";
+		};
+		58AA37671A155681007F199C /* net */ = {
+			isa = PBXGroup;
+			children = (
+				58AA33931A155271007F199C /* net.cpp */,
+				58AA33941A155271007F199C /* net.h */,
+			);
+			name = net;
+			sourceTree = "<group>";
+		};
+		58AA37681A15568C007F199C /* netbase */ = {
+			isa = PBXGroup;
+			children = (
+				58AA33951A155271007F199C /* netbase.cpp */,
+				58AA33961A155271007F199C /* netbase.h */,
+			);
+			name = netbase;
+			sourceTree = "<group>";
+		};
+		58AA37691A155690007F199C /* noui */ = {
+			isa = PBXGroup;
+			children = (
+				58AA33971A155271007F199C /* noui.cpp */,
+				58AA33981A155271007F199C /* noui.h */,
+			);
+			name = noui;
+			sourceTree = "<group>";
+		};
+		58AA376A1A1556AD007F199C /* pow */ = {
+			isa = PBXGroup;
+			children = (
+				58AA339E1A155271007F199C /* pow.cpp */,
+				58AA339F1A155271007F199C /* pow.h */,
+			);
+			name = pow;
+			sourceTree = "<group>";
+		};
+		58AA376B1A1556B0007F199C /* protocol */ = {
+			isa = PBXGroup;
+			children = (
+				58AA33A01A155271007F199C /* protocol.cpp */,
+				58AA33A11A155271007F199C /* protocol.h */,
+			);
+			name = protocol;
+			sourceTree = "<group>";
+		};
+		58AA376C1A1556B4007F199C /* pubkey */ = {
+			isa = PBXGroup;
+			children = (
+				58AA33A21A155271007F199C /* pubkey.cpp */,
+				58AA33A31A155271007F199C /* pubkey.h */,
+			);
+			name = pubkey;
+			sourceTree = "<group>";
+		};
+		58AA376D1A1556C6007F199C /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				58AA326E1A155271007F199C /* json */,
+				58AA32801A155271007F199C /* leveldb */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		58AA37721A155949007F199C /* addressbookpage */ = {
+			isa = PBXGroup;
+			children = (
+				58AA34091A155271007F199C /* addressbookpage.cpp */,
+				58AA340A1A155271007F199C /* addressbookpage.h */,
+			);
+			name = addressbookpage;
+			sourceTree = "<group>";
+		};
+		58AA37731A155954007F199C /* addresstablemodel */ = {
+			isa = PBXGroup;
+			children = (
+				58AA340B1A155271007F199C /* addresstablemodel.cpp */,
+				58AA340C1A155271007F199C /* addresstablemodel.h */,
+			);
+			name = addresstablemodel;
+			sourceTree = "<group>";
+		};
+		58AA37741A155957007F199C /* askpassphrasedialog */ = {
+			isa = PBXGroup;
+			children = (
+				58AA340D1A155271007F199C /* askpassphrasedialog.cpp */,
+				58AA340E1A155271007F199C /* askpassphrasedialog.h */,
+			);
+			name = askpassphrasedialog;
+			sourceTree = "<group>";
+		};
+		58AA37751A15596D007F199C /* bitcoin */ = {
+			isa = PBXGroup;
+			children = (
+				58AA34101A155271007F199C /* bitcoin.cpp */,
+			);
+			name = bitcoin;
+			sourceTree = "<group>";
+		};
+		58AA37761A155970007F199C /* bitcoinaddressvalidator */ = {
+			isa = PBXGroup;
+			children = (
+				58AA34141A155271007F199C /* bitcoinaddressvalidator.cpp */,
+				58AA34151A155271007F199C /* bitcoinaddressvalidator.h */,
+			);
+			name = bitcoinaddressvalidator;
+			sourceTree = "<group>";
+		};
+		58AA37771A155974007F199C /* bitcoinamountfield */ = {
+			isa = PBXGroup;
+			children = (
+				58AA34161A155271007F199C /* bitcoinamountfield.cpp */,
+				58AA34171A155271007F199C /* bitcoinamountfield.h */,
+			);
+			name = bitcoinamountfield;
+			sourceTree = "<group>";
+		};
+		58AA37781A15597D007F199C /* bitcoingui */ = {
+			isa = PBXGroup;
+			children = (
+				58AA34191A155271007F199C /* bitcoingui.cpp */,
+				58AA341A1A155271007F199C /* bitcoingui.h */,
+			);
+			name = bitcoingui;
+			sourceTree = "<group>";
+		};
+		58AA37791A155980007F199C /* bitcoinstrings */ = {
+			isa = PBXGroup;
+			children = (
+				58AA341B1A155271007F199C /* bitcoinstrings.cpp */,
+				58AA341C1A155271007F199C /* bitcoinunits.cpp */,
+			);
+			name = bitcoinstrings;
+			sourceTree = "<group>";
+		};
+		58AA377A1A155983007F199C /* bitcoinunits */ = {
+			isa = PBXGroup;
+			children = (
+				58AA341D1A155271007F199C /* bitcoinunits.h */,
+			);
+			name = bitcoinunits;
+			sourceTree = "<group>";
+		};
+		58AA377B1A155988007F199C /* clientmodel */ = {
+			isa = PBXGroup;
+			children = (
+				58AA341E1A155271007F199C /* clientmodel.cpp */,
+				58AA341F1A155271007F199C /* clientmodel.h */,
+			);
+			name = clientmodel;
+			sourceTree = "<group>";
+		};
+		58AA377C1A15598C007F199C /* coincontroldialog */ = {
+			isa = PBXGroup;
+			children = (
+				58AA34201A155271007F199C /* coincontroldialog.cpp */,
+				58AA34211A155271007F199C /* coincontroldialog.h */,
+			);
+			name = coincontroldialog;
+			sourceTree = "<group>";
+		};
+		58AA377D1A155990007F199C /* coincontroltreewidget */ = {
+			isa = PBXGroup;
+			children = (
+				58AA34221A155271007F199C /* coincontroltreewidget.cpp */,
+				58AA34231A155271007F199C /* coincontroltreewidget.h */,
+			);
+			name = coincontroltreewidget;
+			sourceTree = "<group>";
+		};
+		58AA377E1A155993007F199C /* csvmodelwriter */ = {
+			isa = PBXGroup;
+			children = (
+				58AA34241A155271007F199C /* csvmodelwriter.cpp */,
+				58AA34251A155271007F199C /* csvmodelwriter.h */,
+			);
+			name = csvmodelwriter;
+			sourceTree = "<group>";
+		};
+		58AA377F1A155997007F199C /* editaddressdialog */ = {
+			isa = PBXGroup;
+			children = (
+				58AA34261A155271007F199C /* editaddressdialog.cpp */,
+				58AA34271A155271007F199C /* editaddressdialog.h */,
+			);
+			name = editaddressdialog;
+			sourceTree = "<group>";
+		};
+		58AA37801A1559A7007F199C /* guiconstants */ = {
+			isa = PBXGroup;
+			children = (
+				58AA34491A155271007F199C /* guiconstants.h */,
+			);
+			name = guiconstants;
+			sourceTree = "<group>";
+		};
+		58AA37811A1559AB007F199C /* guiutil */ = {
+			isa = PBXGroup;
+			children = (
+				58AA344A1A155271007F199C /* guiutil.cpp */,
+				58AA344B1A155271007F199C /* guiutil.h */,
+			);
+			name = guiutil;
+			sourceTree = "<group>";
+		};
+		58AA37821A1559AE007F199C /* intro */ = {
+			isa = PBXGroup;
+			children = (
+				58AA344C1A155271007F199C /* intro.cpp */,
+				58AA344D1A155271007F199C /* intro.h */,
+			);
+			name = intro;
+			sourceTree = "<group>";
+		};
+		58AA37831A1559B1007F199C /* macdockiconhandler */ = {
+			isa = PBXGroup;
+			children = (
+				58AA34DF1A155272007F199C /* macdockiconhandler.h */,
+				58AA34E01A155272007F199C /* macdockiconhandler.mm */,
+			);
+			name = macdockiconhandler;
+			sourceTree = "<group>";
+		};
+		58AA37841A1559B6007F199C /* macnotificationhandler */ = {
+			isa = PBXGroup;
+			children = (
+				58AA34E11A155272007F199C /* macnotificationhandler.h */,
+				58AA34E21A155272007F199C /* macnotificationhandler.mm */,
+			);
+			name = macnotificationhandler;
+			sourceTree = "<group>";
+		};
+		58AA37861A1559D6007F199C /* networkstyle */ = {
+			isa = PBXGroup;
+			children = (
+				58AA350F1A155272007F199C /* networkstyle.cpp */,
+				58AA35101A155272007F199C /* networkstyle.h */,
+			);
+			name = networkstyle;
+			sourceTree = "<group>";
+		};
+		58AA37871A1559D9007F199C /* notificator */ = {
+			isa = PBXGroup;
+			children = (
+				58AA35111A155272007F199C /* notificator.cpp */,
+				58AA35121A155272007F199C /* notificator.h */,
+			);
+			name = notificator;
+			sourceTree = "<group>";
+		};
+		58AA37881A1559DC007F199C /* openuridialog */ = {
+			isa = PBXGroup;
+			children = (
+				58AA35131A155272007F199C /* openuridialog.cpp */,
+				58AA35141A155272007F199C /* openuridialog.h */,
+			);
+			name = openuridialog;
+			sourceTree = "<group>";
+		};
+		58AA37891A1559DE007F199C /* optionsdialog */ = {
+			isa = PBXGroup;
+			children = (
+				58AA35151A155272007F199C /* optionsdialog.cpp */,
+				58AA35161A155272007F199C /* optionsdialog.h */,
+			);
+			name = optionsdialog;
+			sourceTree = "<group>";
+		};
+		58AA378A1A1559E4007F199C /* optionsmodel */ = {
+			isa = PBXGroup;
+			children = (
+				58AA35171A155272007F199C /* optionsmodel.cpp */,
+				58AA35181A155272007F199C /* optionsmodel.h */,
+			);
+			name = optionsmodel;
+			sourceTree = "<group>";
+		};
+		58AA378B1A1559E7007F199C /* overviewpage */ = {
+			isa = PBXGroup;
+			children = (
+				58AA35191A155272007F199C /* overviewpage.cpp */,
+				58AA351A1A155272007F199C /* overviewpage.h */,
+			);
+			name = overviewpage;
+			sourceTree = "<group>";
+		};
+		58AA378C1A1559FF007F199C /* paymentrequest */ = {
+			isa = PBXGroup;
+			children = (
+				58AA351C1A155272007F199C /* paymentrequest.pb.cc */,
+				58AA351D1A155272007F199C /* paymentrequest.pb.h */,
+				58AA351E1A155272007F199C /* paymentrequest.proto */,
+			);
+			name = paymentrequest;
+			sourceTree = "<group>";
+		};
+		58AA378D1A155A03007F199C /* paymentrequestplus */ = {
+			isa = PBXGroup;
+			children = (
+				58AA351F1A155272007F199C /* paymentrequestplus.cpp */,
+				58AA35201A155272007F199C /* paymentrequestplus.h */,
+			);
+			name = paymentrequestplus;
+			sourceTree = "<group>";
+		};
+		58AA378E1A155A06007F199C /* paymentserver */ = {
+			isa = PBXGroup;
+			children = (
+				58AA35211A155272007F199C /* paymentserver.cpp */,
+				58AA35221A155272007F199C /* paymentserver.h */,
+			);
+			name = paymentserver;
+			sourceTree = "<group>";
+		};
+		58AA378F1A155A0C007F199C /* peertablemodel */ = {
+			isa = PBXGroup;
+			children = (
+				58AA35231A155272007F199C /* peertablemodel.cpp */,
+				58AA35241A155272007F199C /* peertablemodel.h */,
+			);
+			name = peertablemodel;
+			sourceTree = "<group>";
+		};
+		58AA37901A155A0F007F199C /* qrc_bitcoin */ = {
+			isa = PBXGroup;
+			children = (
+				58AA35251A155272007F199C /* qrc_bitcoin.cpp */,
+			);
+			name = qrc_bitcoin;
+			sourceTree = "<group>";
+		};
+		58AA37911A155A24007F199C /* qrc_bitcoin_locale */ = {
+			isa = PBXGroup;
+			children = (
+				58AA35261A155272007F199C /* qrc_bitcoin_locale.cpp */,
+			);
+			name = qrc_bitcoin_locale;
+			sourceTree = "<group>";
+		};
+		58AA37921A155A39007F199C /* qvalidatedlineedit */ = {
+			isa = PBXGroup;
+			children = (
+				58AA35861A155272007F199C /* qvalidatedlineedit.cpp */,
+				58AA35871A155272007F199C /* qvalidatedlineedit.h */,
+			);
+			name = qvalidatedlineedit;
+			sourceTree = "<group>";
+		};
+		58AA37931A155A3E007F199C /* qvaluecombobox */ = {
+			isa = PBXGroup;
+			children = (
+				58AA35881A155272007F199C /* qvaluecombobox.cpp */,
+				58AA35891A155272007F199C /* qvaluecombobox.h */,
+			);
+			name = qvaluecombobox;
+			sourceTree = "<group>";
+		};
+		58AA37941A155A42007F199C /* receivecoinsdialog */ = {
+			isa = PBXGroup;
+			children = (
+				58AA358A1A155272007F199C /* receivecoinsdialog.cpp */,
+				58AA358B1A155272007F199C /* receivecoinsdialog.h */,
+			);
+			name = receivecoinsdialog;
+			sourceTree = "<group>";
+		};
+		58AA37951A155A46007F199C /* receiverequestdialog */ = {
+			isa = PBXGroup;
+			children = (
+				58AA358C1A155272007F199C /* receiverequestdialog.cpp */,
+				58AA358D1A155272007F199C /* receiverequestdialog.h */,
+			);
+			name = receiverequestdialog;
+			sourceTree = "<group>";
+		};
+		58AA37961A155A49007F199C /* recentrequeststablemodel */ = {
+			isa = PBXGroup;
+			children = (
+				58AA358E1A155272007F199C /* recentrequeststablemodel.cpp */,
+				58AA358F1A155272007F199C /* recentrequeststablemodel.h */,
+			);
+			name = recentrequeststablemodel;
+			sourceTree = "<group>";
+		};
+		58AA37971A155A4C007F199C /* rpcconsole */ = {
+			isa = PBXGroup;
+			children = (
+				58AA35F51A155272007F199C /* rpcconsole.cpp */,
+				58AA35F61A155272007F199C /* rpcconsole.h */,
+			);
+			name = rpcconsole;
+			sourceTree = "<group>";
+		};
+		58AA37981A155A52007F199C /* sendcoinsdialog */ = {
+			isa = PBXGroup;
+			children = (
+				58AA35F81A155272007F199C /* sendcoinsdialog.cpp */,
+				58AA35F91A155272007F199C /* sendcoinsdialog.h */,
+			);
+			name = sendcoinsdialog;
+			sourceTree = "<group>";
+		};
+		58AA37991A155A55007F199C /* sendcoinsentry */ = {
+			isa = PBXGroup;
+			children = (
+				58AA35FA1A155272007F199C /* sendcoinsentry.cpp */,
+				58AA35FB1A155272007F199C /* sendcoinsentry.h */,
+			);
+			name = sendcoinsentry;
+			sourceTree = "<group>";
+		};
+		58AA379A1A155A59007F199C /* signverifymessagedialog */ = {
+			isa = PBXGroup;
+			children = (
+				58AA35FC1A155272007F199C /* signverifymessagedialog.cpp */,
+				58AA35FD1A155273007F199C /* signverifymessagedialog.h */,
+			);
+			name = signverifymessagedialog;
+			sourceTree = "<group>";
+		};
+		58AA379B1A155A5C007F199C /* splashscreen */ = {
+			isa = PBXGroup;
+			children = (
+				58AA35FE1A155273007F199C /* splashscreen.cpp */,
+				58AA35FF1A155273007F199C /* splashscreen.h */,
+			);
+			name = splashscreen;
+			sourceTree = "<group>";
+		};
+		58AA379C1A155A60007F199C /* trafficgraphwidget */ = {
+			isa = PBXGroup;
+			children = (
+				58AA361B1A155273007F199C /* trafficgraphwidget.cpp */,
+				58AA361C1A155273007F199C /* trafficgraphwidget.h */,
+			);
+			name = trafficgraphwidget;
+			sourceTree = "<group>";
+		};
+		58AA379D1A155A64007F199C /* transactiondesc */ = {
+			isa = PBXGroup;
+			children = (
+				58AA361D1A155273007F199C /* transactiondesc.cpp */,
+				58AA361E1A155273007F199C /* transactiondesc.h */,
+			);
+			name = transactiondesc;
+			sourceTree = "<group>";
+		};
+		58AA379E1A155A67007F199C /* transactiondescdialog */ = {
+			isa = PBXGroup;
+			children = (
+				58AA361F1A155273007F199C /* transactiondescdialog.cpp */,
+				58AA36201A155273007F199C /* transactiondescdialog.h */,
+			);
+			name = transactiondescdialog;
+			sourceTree = "<group>";
+		};
+		58AA379F1A155A6A007F199C /* transactionfilterproxy */ = {
+			isa = PBXGroup;
+			children = (
+				58AA36211A155273007F199C /* transactionfilterproxy.cpp */,
+				58AA36221A155273007F199C /* transactionfilterproxy.h */,
+			);
+			name = transactionfilterproxy;
+			sourceTree = "<group>";
+		};
+		58AA37A01A155A6D007F199C /* transactionrecord */ = {
+			isa = PBXGroup;
+			children = (
+				58AA36231A155273007F199C /* transactionrecord.cpp */,
+				58AA36241A155273007F199C /* transactionrecord.h */,
+			);
+			name = transactionrecord;
+			sourceTree = "<group>";
+		};
+		58AA37A11A155A71007F199C /* transactiontablemodel */ = {
+			isa = PBXGroup;
+			children = (
+				58AA36251A155273007F199C /* transactiontablemodel.cpp */,
+				58AA36261A155273007F199C /* transactiontablemodel.h */,
+			);
+			name = transactiontablemodel;
+			sourceTree = "<group>";
+		};
+		58AA37A21A155A76007F199C /* transactionview */ = {
+			isa = PBXGroup;
+			children = (
+				58AA36271A155273007F199C /* transactionview.cpp */,
+				58AA36281A155273007F199C /* transactionview.h */,
+			);
+			name = transactionview;
+			sourceTree = "<group>";
+		};
+		58AA37A31A155A7B007F199C /* utilitydialog */ = {
+			isa = PBXGroup;
+			children = (
+				58AA36291A155273007F199C /* utilitydialog.cpp */,
+				58AA362A1A155273007F199C /* utilitydialog.h */,
+			);
+			name = utilitydialog;
+			sourceTree = "<group>";
+		};
+		58AA37A41A155A7F007F199C /* walletframe */ = {
+			isa = PBXGroup;
+			children = (
+				58AA362B1A155273007F199C /* walletframe.cpp */,
+				58AA362C1A155273007F199C /* walletframe.h */,
+			);
+			name = walletframe;
+			sourceTree = "<group>";
+		};
+		58AA37A51A155A82007F199C /* walletmodel */ = {
+			isa = PBXGroup;
+			children = (
+				58AA362D1A155273007F199C /* walletmodel.cpp */,
+				58AA362E1A155273007F199C /* walletmodel.h */,
+			);
+			name = walletmodel;
+			sourceTree = "<group>";
+		};
+		58AA37A61A155A84007F199C /* walletmodeltransaction */ = {
+			isa = PBXGroup;
+			children = (
+				58AA362F1A155273007F199C /* walletmodeltransaction.cpp */,
+				58AA36301A155273007F199C /* walletmodeltransaction.h */,
+			);
+			name = walletmodeltransaction;
+			sourceTree = "<group>";
+		};
+		58AA37A71A155A88007F199C /* walletview */ = {
+			isa = PBXGroup;
+			children = (
+				58AA36311A155273007F199C /* walletview.cpp */,
+				58AA36321A155273007F199C /* walletview.h */,
+			);
+			name = walletview;
+			sourceTree = "<group>";
+		};
+		58AA37A81A155A8A007F199C /* winshutdownmonitor */ = {
+			isa = PBXGroup;
+			children = (
+				58AA36331A155273007F199C /* winshutdownmonitor.cpp */,
+				58AA36341A155273007F199C /* winshutdownmonitor.h */,
+			);
+			name = winshutdownmonitor;
+			sourceTree = "<group>";
+		};
+		58AA37A91A155A90007F199C /* random */ = {
+			isa = PBXGroup;
+			children = (
+				58AA36351A155273007F199C /* random.cpp */,
+				58AA36361A155273007F199C /* random.h */,
+			);
+			name = random;
+			sourceTree = "<group>";
+		};
+		58AA37AA1A155A96007F199C /* rpcblockchain */ = {
+			isa = PBXGroup;
+			children = (
+				58AA36371A155273007F199C /* rpcblockchain.cpp */,
+			);
+			name = rpcblockchain;
+			sourceTree = "<group>";
+		};
+		58AA37AB1A155A9A007F199C /* rpcclient */ = {
+			isa = PBXGroup;
+			children = (
+				58AA36381A155273007F199C /* rpcclient.cpp */,
+				58AA36391A155273007F199C /* rpcclient.h */,
+			);
+			name = rpcclient;
+			sourceTree = "<group>";
+		};
+		58AA37AC1A155A9C007F199C /* rpcdump */ = {
+			isa = PBXGroup;
+			children = (
+				58AA363A1A155273007F199C /* rpcdump.cpp */,
+			);
+			name = rpcdump;
+			sourceTree = "<group>";
+		};
+		58AA37AD1A155A9F007F199C /* rpcmining */ = {
+			isa = PBXGroup;
+			children = (
+				58AA363B1A155273007F199C /* rpcmining.cpp */,
+			);
+			name = rpcmining;
+			sourceTree = "<group>";
+		};
+		58AA37AE1A155AA2007F199C /* rpcmisc */ = {
+			isa = PBXGroup;
+			children = (
+				58AA363C1A155273007F199C /* rpcmisc.cpp */,
+			);
+			name = rpcmisc;
+			sourceTree = "<group>";
+		};
+		58AA37AF1A155AA5007F199C /* rpcnet */ = {
+			isa = PBXGroup;
+			children = (
+				58AA363D1A155273007F199C /* rpcnet.cpp */,
+			);
+			name = rpcnet;
+			sourceTree = "<group>";
+		};
+		58AA37B01A155AA9007F199C /* rpcprotocol */ = {
+			isa = PBXGroup;
+			children = (
+				58AA363E1A155273007F199C /* rpcprotocol.cpp */,
+				58AA363F1A155273007F199C /* rpcprotocol.h */,
+			);
+			name = rpcprotocol;
+			sourceTree = "<group>";
+		};
+		58AA37B11A155AAE007F199C /* rpcrawtransaction */ = {
+			isa = PBXGroup;
+			children = (
+				58AA36401A155273007F199C /* rpcrawtransaction.cpp */,
+			);
+			name = rpcrawtransaction;
+			sourceTree = "<group>";
+		};
+		58AA37B21A155AB2007F199C /* rpcserver */ = {
+			isa = PBXGroup;
+			children = (
+				58AA36411A155273007F199C /* rpcserver.cpp */,
+				58AA36421A155273007F199C /* rpcserver.h */,
+			);
+			name = rpcserver;
+			sourceTree = "<group>";
+		};
+		58AA37B31A155AB7007F199C /* rpcwallet */ = {
+			isa = PBXGroup;
+			children = (
+				58AA36431A155273007F199C /* rpcwallet.cpp */,
+			);
+			name = rpcwallet;
+			sourceTree = "<group>";
+		};
+		58AA37B41A155ACD007F199C /* script */ = {
+			isa = PBXGroup;
+			children = (
+				58AA36541A155273007F199C /* script.cpp */,
+				58AA36551A155273007F199C /* script.h */,
+			);
+			name = script;
+			sourceTree = "<group>";
+		};
+		58AA37B51A155AD0007F199C /* interpreter */ = {
+			isa = PBXGroup;
+			children = (
+				58AA364D1A155273007F199C /* interpreter.cpp */,
+				58AA364E1A155273007F199C /* interpreter.h */,
+			);
+			name = interpreter;
+			sourceTree = "<group>";
+		};
+		58AA37B61A155AD4007F199C /* sigcache */ = {
+			isa = PBXGroup;
+			children = (
+				58AA36561A155273007F199C /* sigcache.cpp */,
+				58AA36571A155273007F199C /* sigcache.h */,
+			);
+			name = sigcache;
+			sourceTree = "<group>";
+		};
+		58AA37B71A155AD7007F199C /* sign */ = {
+			isa = PBXGroup;
+			children = (
+				58AA36581A155273007F199C /* sign.cpp */,
+				58AA36591A155273007F199C /* sign.h */,
+			);
+			name = sign;
+			sourceTree = "<group>";
+		};
+		58AA37B81A155ADA007F199C /* standard */ = {
+			isa = PBXGroup;
+			children = (
+				58AA365A1A155273007F199C /* standard.cpp */,
+				58AA365B1A155273007F199C /* standard.h */,
+			);
+			name = standard;
+			sourceTree = "<group>";
+		};
+		58AA37B91A155AEA007F199C /* serialize */ = {
+			isa = PBXGroup;
+			children = (
+				58AA365E1A155273007F199C /* serialize.h */,
+			);
+			name = serialize;
+			sourceTree = "<group>";
+		};
+		58AA37BA1A155AEE007F199C /* streams */ = {
+			isa = PBXGroup;
+			children = (
+				58AA365F1A155273007F199C /* streams.h */,
+			);
+			name = streams;
+			sourceTree = "<group>";
+		};
+		58AA37BB1A155AF3007F199C /* sync */ = {
+			isa = PBXGroup;
+			children = (
+				58AA36601A155273007F199C /* sync.cpp */,
+				58AA36611A155273007F199C /* sync.h */,
+			);
+			name = sync;
+			sourceTree = "<group>";
+		};
+		58AA37C01A155C5A007F199C /* threadsafety */ = {
+			isa = PBXGroup;
+			children = (
+				58AA37091A155273007F199C /* threadsafety.h */,
+				58AA370A1A155273007F199C /* timedata.cpp */,
+			);
+			name = threadsafety;
+			sourceTree = "<group>";
+		};
+		58AA37C11A155C5D007F199C /* timedata */ = {
+			isa = PBXGroup;
+			children = (
+				58AA370B1A155273007F199C /* timedata.h */,
+			);
+			name = timedata;
+			sourceTree = "<group>";
+		};
+		58AA37C21A155C76007F199C /* tinyformat */ = {
+			isa = PBXGroup;
+			children = (
+				58AA370C1A155273007F199C /* tinyformat.h */,
+			);
+			name = tinyformat;
+			sourceTree = "<group>";
+		};
+		58AA37C31A155C7B007F199C /* txdb */ = {
+			isa = PBXGroup;
+			children = (
+				58AA370D1A155273007F199C /* txdb.cpp */,
+				58AA370E1A155273007F199C /* txdb.h */,
+			);
+			name = txdb;
+			sourceTree = "<group>";
+		};
+		58AA37C41A155C7F007F199C /* txmempool */ = {
+			isa = PBXGroup;
+			children = (
+				58AA370F1A155273007F199C /* txmempool.cpp */,
+				58AA37101A155273007F199C /* txmempool.h */,
+			);
+			name = txmempool;
+			sourceTree = "<group>";
+		};
+		58AA37C51A155C82007F199C /* ui_interface */ = {
+			isa = PBXGroup;
+			children = (
+				58AA37111A155273007F199C /* ui_interface.h */,
+			);
+			name = ui_interface;
+			sourceTree = "<group>";
+		};
+		58AA37C61A155C85007F199C /* uint256 */ = {
+			isa = PBXGroup;
+			children = (
+				58AA37121A155273007F199C /* uint256.cpp */,
+				58AA37131A155273007F199C /* uint256.h */,
+			);
+			name = uint256;
+			sourceTree = "<group>";
+		};
+		58AA37C71A155C8A007F199C /* undo */ = {
+			isa = PBXGroup;
+			children = (
+				58AA37141A155273007F199C /* undo.h */,
+			);
+			name = undo;
+			sourceTree = "<group>";
+		};
+		58AA37C81A155C9E007F199C /* gen */ = {
+			isa = PBXGroup;
+			children = (
+				58AA371C1A155273007F199C /* gen.cpp */,
+			);
+			name = gen;
+			sourceTree = "<group>";
+		};
+		58AA37C91A155CA1007F199C /* univalue */ = {
+			isa = PBXGroup;
+			children = (
+				58AA371E1A155273007F199C /* univalue.cpp */,
+				58AA371F1A155273007F199C /* univalue.h */,
+			);
+			name = univalue;
+			sourceTree = "<group>";
+		};
+		58AA37CA1A155CA5007F199C /* univalue_escapes */ = {
+			isa = PBXGroup;
+			children = (
+				58AA37211A155273007F199C /* univalue_escapes.h */,
+			);
+			name = univalue_escapes;
+			sourceTree = "<group>";
+		};
+		58AA37CB1A155CA9007F199C /* univalue_read */ = {
+			isa = PBXGroup;
+			children = (
+				58AA37221A155273007F199C /* univalue_read.cpp */,
+			);
+			name = univalue_read;
+			sourceTree = "<group>";
+		};
+		58AA37CC1A155CAC007F199C /* univalue_write */ = {
+			isa = PBXGroup;
+			children = (
+				58AA37241A155273007F199C /* univalue_write.cpp */,
+			);
+			name = univalue_write;
+			sourceTree = "<group>";
+		};
+		58AA37CD1A155CB4007F199C /* util */ = {
+			isa = PBXGroup;
+			children = (
+				58AA37261A155273007F199C /* util.cpp */,
+				58AA37271A155273007F199C /* util.h */,
+			);
+			name = util;
+			sourceTree = "<group>";
+		};
+		58AA37CE1A155CB9007F199C /* utilmoneystr */ = {
+			isa = PBXGroup;
+			children = (
+				58AA37281A155273007F199C /* utilmoneystr.cpp */,
+				58AA37291A155273007F199C /* utilmoneystr.h */,
+			);
+			name = utilmoneystr;
+			sourceTree = "<group>";
+		};
+		58AA37CF1A155CBD007F199C /* utilstrencodings */ = {
+			isa = PBXGroup;
+			children = (
+				58AA372A1A155273007F199C /* utilstrencodings.cpp */,
+				58AA372B1A155273007F199C /* utilstrencodings.h */,
+			);
+			name = utilstrencodings;
+			sourceTree = "<group>";
+		};
+		58AA37D01A155CC1007F199C /* utiltime */ = {
+			isa = PBXGroup;
+			children = (
+				58AA372C1A155273007F199C /* utiltime.cpp */,
+				58AA372D1A155273007F199C /* utiltime.h */,
+			);
+			name = utiltime;
+			sourceTree = "<group>";
+		};
+		58AA37D11A155CC6007F199C /* version */ = {
+			isa = PBXGroup;
+			children = (
+				58AA372E1A155273007F199C /* version.h */,
+			);
+			name = version;
+			sourceTree = "<group>";
+		};
+		58AA37D21A155D01007F199C /* wallet */ = {
+			isa = PBXGroup;
+			children = (
+				58AA372F1A155273007F199C /* wallet.cpp */,
+				58AA37301A155273007F199C /* wallet.h */,
+			);
+			name = wallet;
+			sourceTree = "<group>";
+		};
+		58AA37D31A155D04007F199C /* wallet_ismine */ = {
+			isa = PBXGroup;
+			children = (
+				58AA37311A155274007F199C /* wallet_ismine.cpp */,
+				58AA37321A155274007F199C /* wallet_ismine.h */,
+			);
+			name = wallet_ismine;
+			sourceTree = "<group>";
+		};
+		58AA37D41A155D08007F199C /* walletdb */ = {
+			isa = PBXGroup;
+			children = (
+				58AA37331A155274007F199C /* walletdb.cpp */,
+				58AA37341A155274007F199C /* walletdb.h */,
+			);
+			name = walletdb;
+			sourceTree = "<group>";
+		};
+		58AA37D51A155D16007F199C /* T - U */ = {
+			isa = PBXGroup;
+			children = (
+				58AA37C01A155C5A007F199C /* threadsafety */,
+				58AA37C11A155C5D007F199C /* timedata */,
+				58AA37C21A155C76007F199C /* tinyformat */,
+				58AA37C31A155C7B007F199C /* txdb */,
+				58AA37C41A155C7F007F199C /* txmempool */,
+				58AA37C51A155C82007F199C /* ui_interface */,
+				58AA37C61A155C85007F199C /* uint256 */,
+				58AA37C71A155C8A007F199C /* undo */,
+				58AA37151A155273007F199C /* univalue */,
+				58AA37CD1A155CB4007F199C /* util */,
+				58AA37CE1A155CB9007F199C /* utilmoneystr */,
+				58AA37CF1A155CBD007F199C /* utilstrencodings */,
+				58AA37D01A155CC1007F199C /* utiltime */,
+			);
+			name = "T - U";
+			sourceTree = "<group>";
+		};
+		58AA37D61A155D21007F199C /* R - S */ = {
+			isa = PBXGroup;
+			children = (
+				58AA37A91A155A90007F199C /* random */,
+				58AA37AA1A155A96007F199C /* rpcblockchain */,
+				58AA37AB1A155A9A007F199C /* rpcclient */,
+				58AA37AC1A155A9C007F199C /* rpcdump */,
+				58AA37AD1A155A9F007F199C /* rpcmining */,
+				58AA37AE1A155AA2007F199C /* rpcmisc */,
+				58AA37AF1A155AA5007F199C /* rpcnet */,
+				58AA37B01A155AA9007F199C /* rpcprotocol */,
+				58AA37B11A155AAE007F199C /* rpcrawtransaction */,
+				58AA37B21A155AB2007F199C /* rpcserver */,
+				58AA37B31A155AB7007F199C /* rpcwallet */,
+				58AA36441A155273007F199C /* script */,
+				58AA37B91A155AEA007F199C /* serialize */,
+				58AA37BA1A155AEE007F199C /* streams */,
+				58AA37BB1A155AF3007F199C /* sync */,
+			);
+			name = "R - S";
+			sourceTree = "<group>";
+		};
+		58AA37D71A155D29007F199C /* M - Q */ = {
+			isa = PBXGroup;
+			children = (
+				58AA37641A155671007F199C /* main */,
+				58AA37651A155677007F199C /* miner */,
+				58AA37661A15567A007F199C /* mruset */,
+				58AA37671A155681007F199C /* net */,
+				58AA37681A15568C007F199C /* netbase */,
+				58AA37691A155690007F199C /* noui */,
+				58AA376A1A1556AD007F199C /* pow */,
+				58AA376B1A1556B0007F199C /* protocol */,
+				58AA376C1A1556B4007F199C /* pubkey */,
+				58AA33A41A155271007F199C /* qt */,
+			);
+			name = "M - Q";
+			sourceTree = "<group>";
+		};
+		58AA37D81A155D30007F199C /* D - L */ = {
+			isa = PBXGroup;
+			children = (
+				58AA37521A1555D9007F199C /* db */,
+				58AA37531A1555DC007F199C /* eccryptoverify */,
+				58AA37541A1555E0007F199C /* ecwrapper */,
+				58AA37551A1555E4007F199C /* hash */,
+				58AA37561A1555E8007F199C /* init */,
+				58AA37601A15562B007F199C /* key */,
+				58AA37611A155633007F199C /* keystore */,
+				58AA37621A15566C007F199C /* leveldbwrapper */,
+				58AA37631A15566E007F199C /* limitedmap */,
+			);
+			name = "D - L";
+			sourceTree = "<group>";
+		};
+		58AA37D91A155D34007F199C /* C */ = {
+			isa = PBXGroup;
+			children = (
+				58AA373E1A155317007F199C /* chain */,
+				58AA373F1A15531D007F199C /* chainparams */,
+				58AA37401A155323007F199C /* chainparamsbase */,
+				58AA37411A15532F007F199C /* chainparamsseeds */,
+				58AA37421A1554EA007F199C /* checkpoints */,
+				58AA37431A1554F0007F199C /* checkqueue */,
+				58AA37441A1554F5007F199C /* clientversion */,
+				58AA37451A1554F9007F199C /* coincontrol */,
+				58AA37461A1554FE007F199C /* coins */,
+				58AA322A1A155270007F199C /* compat */,
+				58AA37471A155544007F199C /* compressor */,
+				58AA32411A155271007F199C /* core */,
+				58AA374A1A1555A8007F199C /* core_io */,
+				58AA374B1A1555AC007F199C /* core_read */,
+				58AA374C1A1555AF007F199C /* core_write */,
+				58AA374D1A1555B4007F199C /* crypter */,
+				58AA32521A155271007F199C /* crypto */,
+			);
+			name = C;
+			sourceTree = "<group>";
+		};
+		58AA37DA1A155D38007F199C /* A - B */ = {
+			isa = PBXGroup;
+			children = (
+				58AA37351A1552A1007F199C /* addrman */,
+				58AA37361A1552A8007F199C /* alert */,
+				58AA37371A1552AC007F199C /* allocators */,
+				58AA37381A1552B7007F199C /* amount */,
+				58AA37391A1552C3007F199C /* base58 */,
+				58AA373A1A1552E1007F199C /* bitcoin-cli */,
+				58AA373B1A1552EA007F199C /* bitcoin-tx */,
+				58AA373C1A155309007F199C /* bitcoind */,
+				58AA373D1A155311007F199C /* bloom */,
+			);
+			name = "A - B";
+			sourceTree = "<group>";
+		};
+		58AA37DB1A155DBA007F199C /* V - Z */ = {
+			isa = PBXGroup;
+			children = (
+				58AA37D11A155CC6007F199C /* version */,
+				58AA37D21A155D01007F199C /* wallet */,
+				58AA37D31A155D04007F199C /* wallet_ismine */,
+				58AA37D41A155D08007F199C /* walletdb */,
+			);
+			name = "V - Z";
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXLegacyTarget section */
+		58AA31BF1A154FEB007F199C /* bitcoind */ = {
+			isa = PBXLegacyTarget;
+			buildArgumentsString = "$(ACTION)";
+			buildConfigurationList = 58AA31C21A154FEB007F199C /* Build configuration list for PBXLegacyTarget "bitcoind" */;
+			buildPhases = (
+			);
+			buildToolPath = /usr/bin/make;
+			dependencies = (
+			);
+			name = bitcoind;
+			passBuildSettingsInEnvironment = 1;
+			productName = bitcoind;
+		};
+		58AA376E1A15579E007F199C /* bitcoin-qt */ = {
+			isa = PBXLegacyTarget;
+			buildArgumentsString = "$(ACTION)";
+			buildConfigurationList = 58AA376F1A15579E007F199C /* Build configuration list for PBXLegacyTarget "bitcoin-qt" */;
+			buildPhases = (
+			);
+			buildToolPath = /usr/bin/make;
+			dependencies = (
+			);
+			name = "bitcoin-qt";
+			passBuildSettingsInEnvironment = 1;
+			productName = "bitcoin-qt";
+		};
+		58AA37BC1A155B50007F199C /* bitcoin-test */ = {
+			isa = PBXLegacyTarget;
+			buildArgumentsString = "$(ACTION)";
+			buildConfigurationList = 58AA37BD1A155B50007F199C /* Build configuration list for PBXLegacyTarget "bitcoin-test" */;
+			buildPhases = (
+			);
+			buildToolPath = /usr/bin/make;
+			dependencies = (
+			);
+			name = "bitcoin-test";
+			passBuildSettingsInEnvironment = 1;
+			productName = "bitcoin-test";
+		};
+/* End PBXLegacyTarget section */
+
+/* Begin PBXProject section */
+		58AA31BB1A154FEB007F199C /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0610;
+				ORGANIZATIONNAME = bitcoin;
+				TargetAttributes = {
+					58AA31BF1A154FEB007F199C = {
+						CreatedOnToolsVersion = 6.1;
+					};
+					58AA376E1A15579E007F199C = {
+						CreatedOnToolsVersion = 6.1;
+					};
+					58AA37BC1A155B50007F199C = {
+						CreatedOnToolsVersion = 6.1;
+					};
+				};
+			};
+			buildConfigurationList = 58AA31BE1A154FEB007F199C /* Build configuration list for PBXProject "bitcoin" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = 58AA31BA1A154FEB007F199C;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				58AA376E1A15579E007F199C /* bitcoin-qt */,
+				58AA31BF1A154FEB007F199C /* bitcoind */,
+				58AA37BC1A155B50007F199C /* bitcoin-test */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin XCBuildConfiguration section */
+		58AA31C01A154FEB007F199C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				MTL_ENABLE_DEBUG_INFO = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		58AA31C11A154FEB007F199C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		58AA31C31A154FEB007F199C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				DEBUGGING_SYMBOLS = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = "";
+				PRODUCT_NAME = bitcoin;
+			};
+			name = Debug;
+		};
+		58AA31C41A154FEB007F199C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = "";
+				PRODUCT_NAME = bitcoin;
+			};
+			name = Release;
+		};
+		58AA37701A15579E007F199C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				DEBUGGING_SYMBOLS = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = "";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		58AA37711A15579E007F199C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = "";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+		58AA37BE1A155B50007F199C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				DEBUGGING_SYMBOLS = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = "";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		58AA37BF1A155B50007F199C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = "";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		58AA31BE1A154FEB007F199C /* Build configuration list for PBXProject "bitcoin" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				58AA31C01A154FEB007F199C /* Debug */,
+				58AA31C11A154FEB007F199C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		58AA31C21A154FEB007F199C /* Build configuration list for PBXLegacyTarget "bitcoind" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				58AA31C31A154FEB007F199C /* Debug */,
+				58AA31C41A154FEB007F199C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		58AA376F1A15579E007F199C /* Build configuration list for PBXLegacyTarget "bitcoin-qt" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				58AA37701A15579E007F199C /* Debug */,
+				58AA37711A15579E007F199C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+		};
+		58AA37BD1A155B50007F199C /* Build configuration list for PBXLegacyTarget "bitcoin-test" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				58AA37BE1A155B50007F199C /* Debug */,
+				58AA37BF1A155B50007F199C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 58AA31BB1A154FEB007F199C /* Project object */;
+}
