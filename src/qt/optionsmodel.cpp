@@ -43,6 +43,9 @@ void OptionsModel::Init()
     // These are Qt-only settings:
     nDisplayUnit = settings.value("nDisplayUnit", BitcoinUnits::BTC).toInt();
     bDisplayAddresses = settings.value("bDisplayAddresses", false).toBool();
+	if (!settings.contains("strThirdPartyTxUrls"))
+        settings.setValue("strThirdPartyTxUrls", "");
+    strThirdPartyTxUrls = settings.value("strThirdPartyTxUrls", "https://bitinfocharts.com/novacoin/tx/%s|https://coinplorer.com/NVC/Transactions/%s|https://explorer.novaco.in/tx/%s").toString();
     fMinimizeToTray = settings.value("fMinimizeToTray", false).toBool();
     fMinimizeOnClose = settings.value("fMinimizeOnClose", false).toBool();
     fCoinControlFeatures = settings.value("fCoinControlFeatures", false).toBool();
@@ -167,6 +170,8 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
             return QVariant(nDisplayUnit);
         case DisplayAddresses:
             return QVariant(bDisplayAddresses);
+	    case ThirdPartyTxUrls:
+            return QVariant(strThirdPartyTxUrls);
         case DetachDatabases:
             return QVariant(bitdb.GetDetach());
         case Language:
@@ -257,6 +262,12 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
             bool fDetachDB = value.toBool();
             bitdb.SetDetach(fDetachDB);
             settings.setValue("detachDB", fDetachDB);
+            }
+            break;
+        case ThirdPartyTxUrls:
+            if (strThirdPartyTxUrls != value.toString()) {
+                strThirdPartyTxUrls = value.toString();
+                settings.setValue("strThirdPartyTxUrls", strThirdPartyTxUrls);
             }
             break;
         case Language:
