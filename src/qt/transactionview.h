@@ -51,7 +51,7 @@ private:
     QLineEdit *amountWidget;
 
     QMenu *contextMenu;
-	QSignalMapper *mapperThirdPartyTxUrls;
+    QSignalMapper *mapperThirdPartyTxUrls;
 
     QFrame *dateRangeWidget;
     QDateTimeEdit *dateFrom;
@@ -68,7 +68,7 @@ private slots:
     void copyLabel();
     void copyAmount();
     void copyTxID();
-	void openThirdPartyTxUrl(QString url);
+    void openThirdPartyTxUrl(QString url);
 
 signals:
     void doubleClicked(const QModelIndex&);

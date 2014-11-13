@@ -141,10 +141,10 @@ TransactionView::TransactionView(QWidget *parent) :
     contextMenu->addAction(editLabelAction);
     contextMenu->addAction(showDetailsAction);
 
-	mapperThirdPartyTxUrls = new QSignalMapper(this);
+    mapperThirdPartyTxUrls = new QSignalMapper(this);
 
     // Connect actions
-	connect(mapperThirdPartyTxUrls, SIGNAL(mapped(QString)), this, SLOT(openThirdPartyTxUrl(QString)));
+    connect(mapperThirdPartyTxUrls, SIGNAL(mapped(QString)), this, SLOT(openThirdPartyTxUrl(QString)));
 
     connect(dateWidget, SIGNAL(activated(int)), this, SLOT(chooseDate(int)));
     connect(typeWidget, SIGNAL(activated(int)), this, SLOT(chooseType(int)));
@@ -199,7 +199,7 @@ void TransactionView::setModel(WalletModel *model)
         transactionView->horizontalHeader()->resizeSection(
                 TransactionTableModel::Amount, 100);
 
-		if (model->getOptionsModel())
+        if (model->getOptionsModel())
         {
             // Add third party transaction URLs to context menu
             QStringList listUrls = model->getOptionsModel()->getThirdPartyTxUrls().split("|", QString::SkipEmptyParts);
