@@ -6,6 +6,174 @@
 	objectVersion = 46;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		58AA37E81A156238007F199C /* addrman.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA32041A155270007F199C /* addrman.cpp */; };
+		58AA37E91A156238007F199C /* alert.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA32061A155270007F199C /* alert.cpp */; };
+		58AA37EA1A156238007F199C /* allocators.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA32081A155270007F199C /* allocators.cpp */; };
+		58AA37EB1A156238007F199C /* amount.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA320A1A155270007F199C /* amount.cpp */; };
+		58AA37EC1A156238007F199C /* base58.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA320C1A155270007F199C /* base58.cpp */; };
+		58AA37ED1A156238007F199C /* bitcoin-cli.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA32101A155270007F199C /* bitcoin-cli.cpp */; };
+		58AA37EE1A156238007F199C /* bitcoin-tx.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA32121A155270007F199C /* bitcoin-tx.cpp */; };
+		58AA37EF1A156238007F199C /* bitcoind.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA32181A155270007F199C /* bitcoind.cpp */; };
+		58AA37F01A156238007F199C /* bloom.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA32191A155270007F199C /* bloom.cpp */; };
+		58AA37F11A156238007F199C /* chain.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA321B1A155270007F199C /* chain.cpp */; };
+		58AA37F21A156238007F199C /* chainparams.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA321D1A155270007F199C /* chainparams.cpp */; };
+		58AA37F31A156238007F199C /* chainparamsbase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA321F1A155270007F199C /* chainparamsbase.cpp */; };
+		58AA37F41A156238007F199C /* checkpoints.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA32221A155270007F199C /* checkpoints.cpp */; };
+		58AA37F51A156238007F199C /* clientversion.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA32251A155270007F199C /* clientversion.cpp */; };
+		58AA37F61A156238007F199C /* coins.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA32281A155270007F199C /* coins.cpp */; };
+		58AA37F71A156238007F199C /* glibc_compat.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA32321A155270007F199C /* glibc_compat.cpp */; };
+		58AA37F81A156238007F199C /* glibc_sanity.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA32331A155270007F199C /* glibc_sanity.cpp */; };
+		58AA37F91A156238007F199C /* glibcxx_compat.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA32341A155270007F199C /* glibcxx_compat.cpp */; };
+		58AA37FA1A156238007F199C /* glibcxx_sanity.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA32351A155270007F199C /* glibcxx_sanity.cpp */; };
+		58AA37FB1A156238007F199C /* compressor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA323A1A155270007F199C /* compressor.cpp */; };
+		58AA37FC1A156238007F199C /* block.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA32471A155271007F199C /* block.cpp */; };
+		58AA37FD1A156238007F199C /* transaction.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA324B1A155271007F199C /* transaction.cpp */; };
+		58AA37FE1A156238007F199C /* core_read.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA324E1A155271007F199C /* core_read.cpp */; };
+		58AA37FF1A156238007F199C /* core_write.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA324F1A155271007F199C /* core_write.cpp */; };
+		58AA38001A156238007F199C /* crypter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA32501A155271007F199C /* crypter.cpp */; };
+		58AA38011A156238007F199C /* ripemd160.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA325E1A155271007F199C /* ripemd160.cpp */; };
+		58AA38021A156238007F199C /* sha1.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA32601A155271007F199C /* sha1.cpp */; };
+		58AA38031A156238007F199C /* sha2.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA32621A155271007F199C /* sha2.cpp */; };
+		58AA38041A156238007F199C /* db.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA32641A155271007F199C /* db.cpp */; };
+		58AA38051A156238007F199C /* eccryptoverify.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA32661A155271007F199C /* eccryptoverify.cpp */; };
+		58AA38061A156238007F199C /* ecwrapper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA32681A155271007F199C /* ecwrapper.cpp */; };
+		58AA38071A156238007F199C /* hash.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA326A1A155271007F199C /* hash.cpp */; };
+		58AA38081A156238007F199C /* init.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA326C1A155271007F199C /* init.cpp */; };
+		58AA38091A156238007F199C /* key.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA327C1A155271007F199C /* key.cpp */; };
+		58AA380A1A156238007F199C /* keystore.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA327E1A155271007F199C /* keystore.cpp */; };
+		58AA380B1A156238007F199C /* leveldbwrapper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA33491A155271007F199C /* leveldbwrapper.cpp */; };
+		58AA380C1A156238007F199C /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA33881A155271007F199C /* main.cpp */; };
+		58AA380D1A156238007F199C /* miner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA33901A155271007F199C /* miner.cpp */; };
+		58AA380E1A156238007F199C /* net.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA33931A155271007F199C /* net.cpp */; };
+		58AA380F1A156238007F199C /* netbase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA33951A155271007F199C /* netbase.cpp */; };
+		58AA38101A156238007F199C /* noui.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA33971A155271007F199C /* noui.cpp */; };
+		58AA38111A156238007F199C /* pow.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA339E1A155271007F199C /* pow.cpp */; };
+		58AA38121A156238007F199C /* protocol.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA33A01A155271007F199C /* protocol.cpp */; };
+		58AA38131A156238007F199C /* pubkey.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA33A21A155271007F199C /* pubkey.cpp */; };
+		58AA38141A156238007F199C /* addressbookpage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA34091A155271007F199C /* addressbookpage.cpp */; };
+		58AA38151A156238007F199C /* addresstablemodel.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA340B1A155271007F199C /* addresstablemodel.cpp */; };
+		58AA38161A156238007F199C /* askpassphrasedialog.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA340D1A155271007F199C /* askpassphrasedialog.cpp */; };
+		58AA38171A156238007F199C /* bitcoin.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA34101A155271007F199C /* bitcoin.cpp */; };
+		58AA38181A156238007F199C /* bitcoinaddressvalidator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA34141A155271007F199C /* bitcoinaddressvalidator.cpp */; };
+		58AA38191A156238007F199C /* bitcoinamountfield.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA34161A155271007F199C /* bitcoinamountfield.cpp */; };
+		58AA381A1A156238007F199C /* bitcoingui.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA34191A155271007F199C /* bitcoingui.cpp */; };
+		58AA381B1A156238007F199C /* bitcoinstrings.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA341B1A155271007F199C /* bitcoinstrings.cpp */; };
+		58AA381C1A156238007F199C /* bitcoinunits.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA341C1A155271007F199C /* bitcoinunits.cpp */; };
+		58AA381D1A156238007F199C /* clientmodel.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA341E1A155271007F199C /* clientmodel.cpp */; };
+		58AA381E1A156238007F199C /* coincontroldialog.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA34201A155271007F199C /* coincontroldialog.cpp */; };
+		58AA381F1A156238007F199C /* coincontroltreewidget.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA34221A155271007F199C /* coincontroltreewidget.cpp */; };
+		58AA38201A156238007F199C /* csvmodelwriter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA34241A155271007F199C /* csvmodelwriter.cpp */; };
+		58AA38211A156238007F199C /* editaddressdialog.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA34261A155271007F199C /* editaddressdialog.cpp */; };
+		58AA38221A156238007F199C /* guiutil.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA344A1A155271007F199C /* guiutil.cpp */; };
+		58AA38231A156238007F199C /* intro.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA344C1A155271007F199C /* intro.cpp */; };
+		58AA38241A156238007F199C /* networkstyle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA350F1A155272007F199C /* networkstyle.cpp */; };
+		58AA38251A156238007F199C /* notificator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA35111A155272007F199C /* notificator.cpp */; };
+		58AA38261A156238007F199C /* openuridialog.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA35131A155272007F199C /* openuridialog.cpp */; };
+		58AA38271A156238007F199C /* optionsdialog.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA35151A155272007F199C /* optionsdialog.cpp */; };
+		58AA38281A156238007F199C /* optionsmodel.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA35171A155272007F199C /* optionsmodel.cpp */; };
+		58AA38291A156238007F199C /* overviewpage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA35191A155272007F199C /* overviewpage.cpp */; };
+		58AA382A1A156238007F199C /* paymentrequestplus.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA351F1A155272007F199C /* paymentrequestplus.cpp */; };
+		58AA382B1A156238007F199C /* paymentserver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA35211A155272007F199C /* paymentserver.cpp */; };
+		58AA382C1A156238007F199C /* peertablemodel.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA35231A155272007F199C /* peertablemodel.cpp */; };
+		58AA382D1A156238007F199C /* qrc_bitcoin.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA35251A155272007F199C /* qrc_bitcoin.cpp */; };
+		58AA382E1A156238007F199C /* qrc_bitcoin_locale.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA35261A155272007F199C /* qrc_bitcoin_locale.cpp */; };
+		58AA382F1A156238007F199C /* qvalidatedlineedit.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA35861A155272007F199C /* qvalidatedlineedit.cpp */; };
+		58AA38301A156238007F199C /* qvaluecombobox.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA35881A155272007F199C /* qvaluecombobox.cpp */; };
+		58AA38311A156238007F199C /* receivecoinsdialog.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA358A1A155272007F199C /* receivecoinsdialog.cpp */; };
+		58AA38321A156238007F199C /* receiverequestdialog.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA358C1A155272007F199C /* receiverequestdialog.cpp */; };
+		58AA38331A156238007F199C /* recentrequeststablemodel.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA358E1A155272007F199C /* recentrequeststablemodel.cpp */; };
+		58AA38341A156238007F199C /* rpcconsole.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA35F51A155272007F199C /* rpcconsole.cpp */; };
+		58AA38351A156238007F199C /* sendcoinsdialog.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA35F81A155272007F199C /* sendcoinsdialog.cpp */; };
+		58AA38361A156238007F199C /* sendcoinsentry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA35FA1A155272007F199C /* sendcoinsentry.cpp */; };
+		58AA38371A156238007F199C /* signverifymessagedialog.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA35FC1A155272007F199C /* signverifymessagedialog.cpp */; };
+		58AA38381A156238007F199C /* splashscreen.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA35FE1A155273007F199C /* splashscreen.cpp */; };
+		58AA38391A156238007F199C /* trafficgraphwidget.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA361B1A155273007F199C /* trafficgraphwidget.cpp */; };
+		58AA383A1A156238007F199C /* transactiondesc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA361D1A155273007F199C /* transactiondesc.cpp */; };
+		58AA383B1A156238007F199C /* transactiondescdialog.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA361F1A155273007F199C /* transactiondescdialog.cpp */; };
+		58AA383C1A156238007F199C /* transactionfilterproxy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA36211A155273007F199C /* transactionfilterproxy.cpp */; };
+		58AA383D1A156238007F199C /* transactionrecord.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA36231A155273007F199C /* transactionrecord.cpp */; };
+		58AA383E1A156238007F199C /* transactionview.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA36271A155273007F199C /* transactionview.cpp */; };
+		58AA383F1A156238007F199C /* utilitydialog.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA36291A155273007F199C /* utilitydialog.cpp */; };
+		58AA38401A156238007F199C /* walletframe.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA362B1A155273007F199C /* walletframe.cpp */; };
+		58AA38411A156238007F199C /* walletmodel.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA362D1A155273007F199C /* walletmodel.cpp */; };
+		58AA38421A156238007F199C /* walletmodeltransaction.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA362F1A155273007F199C /* walletmodeltransaction.cpp */; };
+		58AA38431A156238007F199C /* walletview.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA36311A155273007F199C /* walletview.cpp */; };
+		58AA38441A156238007F199C /* winshutdownmonitor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA36331A155273007F199C /* winshutdownmonitor.cpp */; };
+		58AA38451A156238007F199C /* random.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA36351A155273007F199C /* random.cpp */; };
+		58AA38461A156238007F199C /* rpcblockchain.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA36371A155273007F199C /* rpcblockchain.cpp */; };
+		58AA38471A156238007F199C /* rpcclient.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA36381A155273007F199C /* rpcclient.cpp */; };
+		58AA38481A156238007F199C /* rpcdump.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA363A1A155273007F199C /* rpcdump.cpp */; };
+		58AA38491A156238007F199C /* rpcmining.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA363B1A155273007F199C /* rpcmining.cpp */; };
+		58AA384A1A156238007F199C /* rpcmisc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA363C1A155273007F199C /* rpcmisc.cpp */; };
+		58AA384B1A156238007F199C /* rpcnet.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA363D1A155273007F199C /* rpcnet.cpp */; };
+		58AA384C1A156238007F199C /* rpcprotocol.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA363E1A155273007F199C /* rpcprotocol.cpp */; };
+		58AA384D1A156238007F199C /* rpcrawtransaction.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA36401A155273007F199C /* rpcrawtransaction.cpp */; };
+		58AA384E1A156238007F199C /* rpcserver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA36411A155273007F199C /* rpcserver.cpp */; };
+		58AA384F1A156238007F199C /* rpcwallet.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA36431A155273007F199C /* rpcwallet.cpp */; };
+		58AA38501A156238007F199C /* interpreter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA364D1A155273007F199C /* interpreter.cpp */; };
+		58AA38511A156238007F199C /* script.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA36541A155273007F199C /* script.cpp */; };
+		58AA38521A156238007F199C /* sigcache.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA36561A155273007F199C /* sigcache.cpp */; };
+		58AA38531A156238007F199C /* sign.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA36581A155273007F199C /* sign.cpp */; };
+		58AA38541A156238007F199C /* sync.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA36601A155273007F199C /* sync.cpp */; };
+		58AA38551A156238007F199C /* timedata.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA370A1A155273007F199C /* timedata.cpp */; };
+		58AA38561A156238007F199C /* txdb.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA370D1A155273007F199C /* txdb.cpp */; };
+		58AA38571A156238007F199C /* txmempool.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA370F1A155273007F199C /* txmempool.cpp */; };
+		58AA38581A156238007F199C /* uint256.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA37121A155273007F199C /* uint256.cpp */; };
+		58AA38591A156238007F199C /* gen.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA371C1A155273007F199C /* gen.cpp */; };
+		58AA385A1A156238007F199C /* univalue.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA371E1A155273007F199C /* univalue.cpp */; };
+		58AA385B1A156238007F199C /* univalue_read.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA37221A155273007F199C /* univalue_read.cpp */; };
+		58AA385C1A156238007F199C /* univalue_write.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA37241A155273007F199C /* univalue_write.cpp */; };
+		58AA385D1A156238007F199C /* util.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA37261A155273007F199C /* util.cpp */; };
+		58AA385E1A156238007F199C /* utilmoneystr.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA37281A155273007F199C /* utilmoneystr.cpp */; };
+		58AA385F1A156238007F199C /* utilstrencodings.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA372A1A155273007F199C /* utilstrencodings.cpp */; };
+		58AA38601A156238007F199C /* wallet.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA372F1A155273007F199C /* wallet.cpp */; };
+		58AA38611A156238007F199C /* wallet_ismine.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA37311A155274007F199C /* wallet_ismine.cpp */; };
+		58AA38621A156238007F199C /* walletdb.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA37331A155274007F199C /* walletdb.cpp */; };
+		58AA38631A156238007F199C /* accounting_tests.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA368D1A155273007F199C /* accounting_tests.cpp */; };
+		58AA38641A156238007F199C /* alert_tests.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA368E1A155273007F199C /* alert_tests.cpp */; };
+		58AA38651A156238007F199C /* allocator_tests.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA368F1A155273007F199C /* allocator_tests.cpp */; };
+		58AA38661A156238007F199C /* base32_tests.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA36901A155273007F199C /* base32_tests.cpp */; };
+		58AA38671A156238007F199C /* base58_tests.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA36911A155273007F199C /* base58_tests.cpp */; };
+		58AA38681A156238007F199C /* base64_tests.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA36921A155273007F199C /* base64_tests.cpp */; };
+		58AA38691A156238007F199C /* bip32_tests.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA36961A155273007F199C /* bip32_tests.cpp */; };
+		58AA386A1A156238007F199C /* bloom_tests.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA369A1A155273007F199C /* bloom_tests.cpp */; };
+		58AA386B1A156238007F199C /* checkblock_tests.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA369E1A155273007F199C /* checkblock_tests.cpp */; };
+		58AA386C1A156238007F199C /* Checkpoints_tests.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA369F1A155273007F199C /* Checkpoints_tests.cpp */; };
+		58AA386D1A156238007F199C /* coins_tests.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA36A01A155273007F199C /* coins_tests.cpp */; };
+		58AA386E1A156238007F199C /* compress_tests.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA36A11A155273007F199C /* compress_tests.cpp */; };
+		58AA386F1A156238007F199C /* crypto_tests.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA36A21A155273007F199C /* crypto_tests.cpp */; };
+		58AA38701A156238007F199C /* DoS_tests.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA36C31A155273007F199C /* DoS_tests.cpp */; };
+		58AA38711A156239007F199C /* getarg_tests.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA36C41A155273007F199C /* getarg_tests.cpp */; };
+		58AA38721A156239007F199C /* hash_tests.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA36C51A155273007F199C /* hash_tests.cpp */; };
+		58AA38731A156239007F199C /* key_tests.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA36C61A155273007F199C /* key_tests.cpp */; };
+		58AA38741A156239007F199C /* main_tests.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA36C71A155273007F199C /* main_tests.cpp */; };
+		58AA38751A156239007F199C /* miner_tests.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA36C91A155273007F199C /* miner_tests.cpp */; };
+		58AA38761A156239007F199C /* mruset_tests.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA36CA1A155273007F199C /* mruset_tests.cpp */; };
+		58AA38771A156239007F199C /* multisig_tests.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA36CB1A155273007F199C /* multisig_tests.cpp */; };
+		58AA38781A156239007F199C /* netbase_tests.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA36CC1A155273007F199C /* netbase_tests.cpp */; };
+		58AA38791A156239007F199C /* pmt_tests.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA36CD1A155273007F199C /* pmt_tests.cpp */; };
+		58AA387A1A156239007F199C /* rpc_tests.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA36CF1A155273007F199C /* rpc_tests.cpp */; };
+		58AA387B1A156239007F199C /* rpc_wallet_tests.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA36D01A155273007F199C /* rpc_wallet_tests.cpp */; };
+		58AA387C1A156239007F199C /* script_P2SH_tests.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA36D11A155273007F199C /* script_P2SH_tests.cpp */; };
+		58AA387D1A156239007F199C /* script_tests.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA36D21A155273007F199C /* script_tests.cpp */; };
+		58AA387E1A156239007F199C /* scriptnum_tests.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA36D31A155273007F199C /* scriptnum_tests.cpp */; };
+		58AA387F1A156239007F199C /* serialize_tests.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA36D41A155273007F199C /* serialize_tests.cpp */; };
+		58AA38801A156239007F199C /* sighash_tests.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA36D51A155273007F199C /* sighash_tests.cpp */; };
+		58AA38811A156239007F199C /* sigopcount_tests.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA36D61A155273007F199C /* sigopcount_tests.cpp */; };
+		58AA38821A156239007F199C /* skiplist_tests.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA36D71A155273007F199C /* skiplist_tests.cpp */; };
+		58AA38831A156239007F199C /* test_bitcoin.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA36D91A155273007F199C /* test_bitcoin.cpp */; };
+		58AA38841A156239007F199C /* timedata_tests.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA37021A155273007F199C /* timedata_tests.cpp */; };
+		58AA38851A156239007F199C /* transaction_tests.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA37031A155273007F199C /* transaction_tests.cpp */; };
+		58AA38861A156239007F199C /* uint256_tests.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA37041A155273007F199C /* uint256_tests.cpp */; };
+		58AA38871A156239007F199C /* univalue_tests.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA37051A155273007F199C /* univalue_tests.cpp */; };
+		58AA38881A156239007F199C /* util_tests.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA37061A155273007F199C /* util_tests.cpp */; };
+		58AA38891A156239007F199C /* wallet_tests.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA37071A155273007F199C /* wallet_tests.cpp */; };
+		58AA388A1A156239007F199C /* json_spirit_reader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA32711A155271007F199C /* json_spirit_reader.cpp */; };
+		58AA388B1A156239007F199C /* json_spirit_value.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 58AA32761A155271007F199C /* json_spirit_value.cpp */; };
+		58AA388C1A156245007F199C /* paymentrequest.pb.cc in Sources */ = {isa = PBXBuildFile; fileRef = 58AA351C1A155272007F199C /* paymentrequest.pb.cc */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		58AA32041A155270007F199C /* addrman.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = addrman.cpp; sourceTree = "<group>"; };
 		58AA32051A155270007F199C /* addrman.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = addrman.h; sourceTree = "<group>"; };
@@ -395,6 +563,7 @@
 		58AA37321A155274007F199C /* wallet_ismine.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = wallet_ismine.h; sourceTree = "<group>"; };
 		58AA37331A155274007F199C /* walletdb.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = walletdb.cpp; sourceTree = "<group>"; };
 		58AA37341A155274007F199C /* walletdb.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = walletdb.h; sourceTree = "<group>"; };
+		58AA37E01A1561C8007F199C /* bitcoin-code-index */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "bitcoin-code-index"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -404,6 +573,7 @@
 				58AA31C61A155270007F199C /* bitcoin */,
 				58AA36621A155273007F199C /* test */,
 				58AA376D1A1556C6007F199C /* Frameworks */,
+				58AA37E11A1561C8007F199C /* Products */,
 			);
 			sourceTree = "<group>";
 		};
@@ -2172,6 +2342,14 @@
 			name = "V - Z";
 			sourceTree = "<group>";
 		};
+		58AA37E11A1561C8007F199C /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				58AA37E01A1561C8007F199C /* bitcoin-code-index */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXLegacyTarget section */
@@ -2216,6 +2394,24 @@
 		};
 /* End PBXLegacyTarget section */
 
+/* Begin PBXNativeTarget section */
+		58AA37DF1A1561C8007F199C /* bitcoin-code-index */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 58AA37E51A1561C8007F199C /* Build configuration list for PBXNativeTarget "bitcoin-code-index" */;
+			buildPhases = (
+				58AA37DC1A1561C8007F199C /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "bitcoin-code-index";
+			productName = "bitcoin-code-index";
+			productReference = 58AA37E01A1561C8007F199C /* bitcoin-code-index */;
+			productType = "com.apple.product-type.tool";
+		};
+/* End PBXNativeTarget section */
+
 /* Begin PBXProject section */
 		58AA31BB1A154FEB007F199C /* Project object */ = {
 			isa = PBXProject;
@@ -2232,6 +2428,9 @@
 					58AA37BC1A155B50007F199C = {
 						CreatedOnToolsVersion = 6.1;
 					};
+					58AA37DF1A1561C8007F199C = {
+						CreatedOnToolsVersion = 6.1;
+					};
 				};
 			};
 			buildConfigurationList = 58AA31BE1A154FEB007F199C /* Build configuration list for PBXProject "bitcoin" */;
@@ -2242,15 +2441,192 @@
 				en,
 			);
 			mainGroup = 58AA31BA1A154FEB007F199C;
+			productRefGroup = 58AA37E11A1561C8007F199C /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
 				58AA376E1A15579E007F199C /* bitcoin-qt */,
 				58AA31BF1A154FEB007F199C /* bitcoind */,
 				58AA37BC1A155B50007F199C /* bitcoin-test */,
+				58AA37DF1A1561C8007F199C /* bitcoin-code-index */,
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		58AA37DC1A1561C8007F199C /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				58AA388C1A156245007F199C /* paymentrequest.pb.cc in Sources */,
+				58AA37E81A156238007F199C /* addrman.cpp in Sources */,
+				58AA37E91A156238007F199C /* alert.cpp in Sources */,
+				58AA37EA1A156238007F199C /* allocators.cpp in Sources */,
+				58AA37EB1A156238007F199C /* amount.cpp in Sources */,
+				58AA37EC1A156238007F199C /* base58.cpp in Sources */,
+				58AA37ED1A156238007F199C /* bitcoin-cli.cpp in Sources */,
+				58AA37EE1A156238007F199C /* bitcoin-tx.cpp in Sources */,
+				58AA37EF1A156238007F199C /* bitcoind.cpp in Sources */,
+				58AA37F01A156238007F199C /* bloom.cpp in Sources */,
+				58AA37F11A156238007F199C /* chain.cpp in Sources */,
+				58AA37F21A156238007F199C /* chainparams.cpp in Sources */,
+				58AA37F31A156238007F199C /* chainparamsbase.cpp in Sources */,
+				58AA37F41A156238007F199C /* checkpoints.cpp in Sources */,
+				58AA37F51A156238007F199C /* clientversion.cpp in Sources */,
+				58AA37F61A156238007F199C /* coins.cpp in Sources */,
+				58AA37F71A156238007F199C /* glibc_compat.cpp in Sources */,
+				58AA37F81A156238007F199C /* glibc_sanity.cpp in Sources */,
+				58AA37F91A156238007F199C /* glibcxx_compat.cpp in Sources */,
+				58AA37FA1A156238007F199C /* glibcxx_sanity.cpp in Sources */,
+				58AA37FB1A156238007F199C /* compressor.cpp in Sources */,
+				58AA37FC1A156238007F199C /* block.cpp in Sources */,
+				58AA37FD1A156238007F199C /* transaction.cpp in Sources */,
+				58AA37FE1A156238007F199C /* core_read.cpp in Sources */,
+				58AA37FF1A156238007F199C /* core_write.cpp in Sources */,
+				58AA38001A156238007F199C /* crypter.cpp in Sources */,
+				58AA38011A156238007F199C /* ripemd160.cpp in Sources */,
+				58AA38021A156238007F199C /* sha1.cpp in Sources */,
+				58AA38031A156238007F199C /* sha2.cpp in Sources */,
+				58AA38041A156238007F199C /* db.cpp in Sources */,
+				58AA38051A156238007F199C /* eccryptoverify.cpp in Sources */,
+				58AA38061A156238007F199C /* ecwrapper.cpp in Sources */,
+				58AA38071A156238007F199C /* hash.cpp in Sources */,
+				58AA38081A156238007F199C /* init.cpp in Sources */,
+				58AA38091A156238007F199C /* key.cpp in Sources */,
+				58AA380A1A156238007F199C /* keystore.cpp in Sources */,
+				58AA380B1A156238007F199C /* leveldbwrapper.cpp in Sources */,
+				58AA380C1A156238007F199C /* main.cpp in Sources */,
+				58AA380D1A156238007F199C /* miner.cpp in Sources */,
+				58AA380E1A156238007F199C /* net.cpp in Sources */,
+				58AA380F1A156238007F199C /* netbase.cpp in Sources */,
+				58AA38101A156238007F199C /* noui.cpp in Sources */,
+				58AA38111A156238007F199C /* pow.cpp in Sources */,
+				58AA38121A156238007F199C /* protocol.cpp in Sources */,
+				58AA38131A156238007F199C /* pubkey.cpp in Sources */,
+				58AA38141A156238007F199C /* addressbookpage.cpp in Sources */,
+				58AA38151A156238007F199C /* addresstablemodel.cpp in Sources */,
+				58AA38161A156238007F199C /* askpassphrasedialog.cpp in Sources */,
+				58AA38171A156238007F199C /* bitcoin.cpp in Sources */,
+				58AA38181A156238007F199C /* bitcoinaddressvalidator.cpp in Sources */,
+				58AA38191A156238007F199C /* bitcoinamountfield.cpp in Sources */,
+				58AA381A1A156238007F199C /* bitcoingui.cpp in Sources */,
+				58AA381B1A156238007F199C /* bitcoinstrings.cpp in Sources */,
+				58AA381C1A156238007F199C /* bitcoinunits.cpp in Sources */,
+				58AA381D1A156238007F199C /* clientmodel.cpp in Sources */,
+				58AA381E1A156238007F199C /* coincontroldialog.cpp in Sources */,
+				58AA381F1A156238007F199C /* coincontroltreewidget.cpp in Sources */,
+				58AA38201A156238007F199C /* csvmodelwriter.cpp in Sources */,
+				58AA38211A156238007F199C /* editaddressdialog.cpp in Sources */,
+				58AA38221A156238007F199C /* guiutil.cpp in Sources */,
+				58AA38231A156238007F199C /* intro.cpp in Sources */,
+				58AA38241A156238007F199C /* networkstyle.cpp in Sources */,
+				58AA38251A156238007F199C /* notificator.cpp in Sources */,
+				58AA38261A156238007F199C /* openuridialog.cpp in Sources */,
+				58AA38271A156238007F199C /* optionsdialog.cpp in Sources */,
+				58AA38281A156238007F199C /* optionsmodel.cpp in Sources */,
+				58AA38291A156238007F199C /* overviewpage.cpp in Sources */,
+				58AA382A1A156238007F199C /* paymentrequestplus.cpp in Sources */,
+				58AA382B1A156238007F199C /* paymentserver.cpp in Sources */,
+				58AA382C1A156238007F199C /* peertablemodel.cpp in Sources */,
+				58AA382D1A156238007F199C /* qrc_bitcoin.cpp in Sources */,
+				58AA382E1A156238007F199C /* qrc_bitcoin_locale.cpp in Sources */,
+				58AA382F1A156238007F199C /* qvalidatedlineedit.cpp in Sources */,
+				58AA38301A156238007F199C /* qvaluecombobox.cpp in Sources */,
+				58AA38311A156238007F199C /* receivecoinsdialog.cpp in Sources */,
+				58AA38321A156238007F199C /* receiverequestdialog.cpp in Sources */,
+				58AA38331A156238007F199C /* recentrequeststablemodel.cpp in Sources */,
+				58AA38341A156238007F199C /* rpcconsole.cpp in Sources */,
+				58AA38351A156238007F199C /* sendcoinsdialog.cpp in Sources */,
+				58AA38361A156238007F199C /* sendcoinsentry.cpp in Sources */,
+				58AA38371A156238007F199C /* signverifymessagedialog.cpp in Sources */,
+				58AA38381A156238007F199C /* splashscreen.cpp in Sources */,
+				58AA38391A156238007F199C /* trafficgraphwidget.cpp in Sources */,
+				58AA383A1A156238007F199C /* transactiondesc.cpp in Sources */,
+				58AA383B1A156238007F199C /* transactiondescdialog.cpp in Sources */,
+				58AA383C1A156238007F199C /* transactionfilterproxy.cpp in Sources */,
+				58AA383D1A156238007F199C /* transactionrecord.cpp in Sources */,
+				58AA383E1A156238007F199C /* transactionview.cpp in Sources */,
+				58AA383F1A156238007F199C /* utilitydialog.cpp in Sources */,
+				58AA38401A156238007F199C /* walletframe.cpp in Sources */,
+				58AA38411A156238007F199C /* walletmodel.cpp in Sources */,
+				58AA38421A156238007F199C /* walletmodeltransaction.cpp in Sources */,
+				58AA38431A156238007F199C /* walletview.cpp in Sources */,
+				58AA38441A156238007F199C /* winshutdownmonitor.cpp in Sources */,
+				58AA38451A156238007F199C /* random.cpp in Sources */,
+				58AA38461A156238007F199C /* rpcblockchain.cpp in Sources */,
+				58AA38471A156238007F199C /* rpcclient.cpp in Sources */,
+				58AA38481A156238007F199C /* rpcdump.cpp in Sources */,
+				58AA38491A156238007F199C /* rpcmining.cpp in Sources */,
+				58AA384A1A156238007F199C /* rpcmisc.cpp in Sources */,
+				58AA384B1A156238007F199C /* rpcnet.cpp in Sources */,
+				58AA384C1A156238007F199C /* rpcprotocol.cpp in Sources */,
+				58AA384D1A156238007F199C /* rpcrawtransaction.cpp in Sources */,
+				58AA384E1A156238007F199C /* rpcserver.cpp in Sources */,
+				58AA384F1A156238007F199C /* rpcwallet.cpp in Sources */,
+				58AA38501A156238007F199C /* interpreter.cpp in Sources */,
+				58AA38511A156238007F199C /* script.cpp in Sources */,
+				58AA38521A156238007F199C /* sigcache.cpp in Sources */,
+				58AA38531A156238007F199C /* sign.cpp in Sources */,
+				58AA38541A156238007F199C /* sync.cpp in Sources */,
+				58AA38551A156238007F199C /* timedata.cpp in Sources */,
+				58AA38561A156238007F199C /* txdb.cpp in Sources */,
+				58AA38571A156238007F199C /* txmempool.cpp in Sources */,
+				58AA38581A156238007F199C /* uint256.cpp in Sources */,
+				58AA38591A156238007F199C /* gen.cpp in Sources */,
+				58AA385A1A156238007F199C /* univalue.cpp in Sources */,
+				58AA385B1A156238007F199C /* univalue_read.cpp in Sources */,
+				58AA385C1A156238007F199C /* univalue_write.cpp in Sources */,
+				58AA385D1A156238007F199C /* util.cpp in Sources */,
+				58AA385E1A156238007F199C /* utilmoneystr.cpp in Sources */,
+				58AA385F1A156238007F199C /* utilstrencodings.cpp in Sources */,
+				58AA38601A156238007F199C /* wallet.cpp in Sources */,
+				58AA38611A156238007F199C /* wallet_ismine.cpp in Sources */,
+				58AA38621A156238007F199C /* walletdb.cpp in Sources */,
+				58AA38631A156238007F199C /* accounting_tests.cpp in Sources */,
+				58AA38641A156238007F199C /* alert_tests.cpp in Sources */,
+				58AA38651A156238007F199C /* allocator_tests.cpp in Sources */,
+				58AA38661A156238007F199C /* base32_tests.cpp in Sources */,
+				58AA38671A156238007F199C /* base58_tests.cpp in Sources */,
+				58AA38681A156238007F199C /* base64_tests.cpp in Sources */,
+				58AA38691A156238007F199C /* bip32_tests.cpp in Sources */,
+				58AA386A1A156238007F199C /* bloom_tests.cpp in Sources */,
+				58AA386B1A156238007F199C /* checkblock_tests.cpp in Sources */,
+				58AA386C1A156238007F199C /* Checkpoints_tests.cpp in Sources */,
+				58AA386D1A156238007F199C /* coins_tests.cpp in Sources */,
+				58AA386E1A156238007F199C /* compress_tests.cpp in Sources */,
+				58AA386F1A156238007F199C /* crypto_tests.cpp in Sources */,
+				58AA38701A156238007F199C /* DoS_tests.cpp in Sources */,
+				58AA38711A156239007F199C /* getarg_tests.cpp in Sources */,
+				58AA38721A156239007F199C /* hash_tests.cpp in Sources */,
+				58AA38731A156239007F199C /* key_tests.cpp in Sources */,
+				58AA38741A156239007F199C /* main_tests.cpp in Sources */,
+				58AA38751A156239007F199C /* miner_tests.cpp in Sources */,
+				58AA38761A156239007F199C /* mruset_tests.cpp in Sources */,
+				58AA38771A156239007F199C /* multisig_tests.cpp in Sources */,
+				58AA38781A156239007F199C /* netbase_tests.cpp in Sources */,
+				58AA38791A156239007F199C /* pmt_tests.cpp in Sources */,
+				58AA387A1A156239007F199C /* rpc_tests.cpp in Sources */,
+				58AA387B1A156239007F199C /* rpc_wallet_tests.cpp in Sources */,
+				58AA387C1A156239007F199C /* script_P2SH_tests.cpp in Sources */,
+				58AA387D1A156239007F199C /* script_tests.cpp in Sources */,
+				58AA387E1A156239007F199C /* scriptnum_tests.cpp in Sources */,
+				58AA387F1A156239007F199C /* serialize_tests.cpp in Sources */,
+				58AA38801A156239007F199C /* sighash_tests.cpp in Sources */,
+				58AA38811A156239007F199C /* sigopcount_tests.cpp in Sources */,
+				58AA38821A156239007F199C /* skiplist_tests.cpp in Sources */,
+				58AA38831A156239007F199C /* test_bitcoin.cpp in Sources */,
+				58AA38841A156239007F199C /* timedata_tests.cpp in Sources */,
+				58AA38851A156239007F199C /* transaction_tests.cpp in Sources */,
+				58AA38861A156239007F199C /* uint256_tests.cpp in Sources */,
+				58AA38871A156239007F199C /* univalue_tests.cpp in Sources */,
+				58AA38881A156239007F199C /* util_tests.cpp in Sources */,
+				58AA38891A156239007F199C /* wallet_tests.cpp in Sources */,
+				58AA388A1A156239007F199C /* json_spirit_reader.cpp in Sources */,
+				58AA388B1A156239007F199C /* json_spirit_value.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
 		58AA31C01A154FEB007F199C /* Debug */ = {
@@ -2398,6 +2774,24 @@
 			};
 			name = Release;
 		};
+		58AA37E61A1561C8007F199C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		58AA37E71A1561C8007F199C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -2432,6 +2826,14 @@
 			buildConfigurations = (
 				58AA37BE1A155B50007F199C /* Debug */,
 				58AA37BF1A155B50007F199C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+		};
+		58AA37E51A1561C8007F199C /* Build configuration list for PBXNativeTarget "bitcoin-code-index" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				58AA37E61A1561C8007F199C /* Debug */,
+				58AA37E71A1561C8007F199C /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 		};
