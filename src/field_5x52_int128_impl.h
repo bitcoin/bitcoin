@@ -7,7 +7,7 @@
 
 #include <stdint.h>
 
-void static inline secp256k1_fe_mul_inner(const uint64_t *a, const uint64_t *b, uint64_t *r) {
+SECP256K1_INLINE static void secp256k1_fe_mul_inner(const uint64_t *a, const uint64_t *b, uint64_t *r) {
     __int128 c = (__int128)a[0] * b[0];
     uint64_t t0 = c & 0xFFFFFFFFFFFFFULL; c = c >> 52; // c max 0FFFFFFFFFFFFFE0
     c = c + (__int128)a[0] * b[1] +
@@ -60,7 +60,7 @@ void static inline secp256k1_fe_mul_inner(const uint64_t *a, const uint64_t *b, 
 
 }
 
-void static inline secp256k1_fe_sqr_inner(const uint64_t *a, uint64_t *r) {
+SECP256K1_INLINE static void secp256k1_fe_sqr_inner(const uint64_t *a, uint64_t *r) {
     __int128 c = (__int128)a[0] * a[0];
     uint64_t t0 = c & 0xFFFFFFFFFFFFFULL; c = c >> 52; // c max 0FFFFFFFFFFFFFE0
     c = c + (__int128)(a[0]*2) * a[1];

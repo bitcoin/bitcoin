@@ -28,14 +28,14 @@
  *  To compute a*P + b*G, we use the jacobian version for P, and the affine version for G, as
  *  G is constant, so it only needs to be done once in advance.
  */
-void static secp256k1_ecmult_table_precomp_gej_var(secp256k1_gej_t *pre, const secp256k1_gej_t *a, int w) {
+static void secp256k1_ecmult_table_precomp_gej_var(secp256k1_gej_t *pre, const secp256k1_gej_t *a, int w) {
     pre[0] = *a;
     secp256k1_gej_t d; secp256k1_gej_double_var(&d, &pre[0]);
     for (int i=1; i<(1 << (w-2)); i++)
         secp256k1_gej_add_var(&pre[i], &d, &pre[i-1]);
 }
 
-void static secp256k1_ecmult_table_precomp_ge_var(secp256k1_ge_t *pre, const secp256k1_gej_t *a, int w) {
+static void secp256k1_ecmult_table_precomp_ge_var(secp256k1_ge_t *pre, const secp256k1_gej_t *a, int w) {
     const int table_size = 1 << (w-2);
     secp256k1_gej_t prej[table_size];
     prej[0] = *a;
@@ -143,7 +143,7 @@ static int secp256k1_ecmult_wnaf(int *wnaf, const secp256k1_num_t *a, int w) {
     return ret;
 }
 
-void static secp256k1_ecmult(secp256k1_gej_t *r, const secp256k1_gej_t *a, const secp256k1_num_t *na, const secp256k1_num_t *ng) {
+static void secp256k1_ecmult(secp256k1_gej_t *r, const secp256k1_gej_t *a, const secp256k1_num_t *na, const secp256k1_num_t *ng) {
     const secp256k1_ecmult_consts_t *c = secp256k1_ecmult_consts;
 
 #ifdef USE_ENDOMORPHISM

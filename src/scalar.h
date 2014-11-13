@@ -20,42 +20,42 @@
 #endif
 
 /** Clear a scalar to prevent the leak of sensitive data. */
-void static secp256k1_scalar_clear(secp256k1_scalar_t *r);
+static void secp256k1_scalar_clear(secp256k1_scalar_t *r);
 
 /** Access bits from a scalar. */
-int static secp256k1_scalar_get_bits(const secp256k1_scalar_t *a, int offset, int count);
+static int secp256k1_scalar_get_bits(const secp256k1_scalar_t *a, int offset, int count);
 
 /** Set a scalar from a big endian byte array. */
-void static secp256k1_scalar_set_b32(secp256k1_scalar_t *r, const unsigned char *bin, int *overflow);
+static void secp256k1_scalar_set_b32(secp256k1_scalar_t *r, const unsigned char *bin, int *overflow);
 
 /** Convert a scalar to a byte array. */
-void static secp256k1_scalar_get_b32(unsigned char *bin, const secp256k1_scalar_t* a);
+static void secp256k1_scalar_get_b32(unsigned char *bin, const secp256k1_scalar_t* a);
 
 /** Add two scalars together (modulo the group order). */
-void static secp256k1_scalar_add(secp256k1_scalar_t *r, const secp256k1_scalar_t *a, const secp256k1_scalar_t *b);
+static void secp256k1_scalar_add(secp256k1_scalar_t *r, const secp256k1_scalar_t *a, const secp256k1_scalar_t *b);
 
 /** Multiply two scalars (modulo the group order). */
-void static secp256k1_scalar_mul(secp256k1_scalar_t *r, const secp256k1_scalar_t *a, const secp256k1_scalar_t *b);
+static void secp256k1_scalar_mul(secp256k1_scalar_t *r, const secp256k1_scalar_t *a, const secp256k1_scalar_t *b);
 
 /** Compute the square of a scalar (modulo the group order). */
-void static secp256k1_scalar_sqr(secp256k1_scalar_t *r, const secp256k1_scalar_t *a);
+static void secp256k1_scalar_sqr(secp256k1_scalar_t *r, const secp256k1_scalar_t *a);
 
 /** Compute the inverse of a scalar (modulo the group order). */
-void static secp256k1_scalar_inverse(secp256k1_scalar_t *r, const secp256k1_scalar_t *a);
+static void secp256k1_scalar_inverse(secp256k1_scalar_t *r, const secp256k1_scalar_t *a);
 
 /** Compute the complement of a scalar (modulo the group order). */
-void static secp256k1_scalar_negate(secp256k1_scalar_t *r, const secp256k1_scalar_t *a);
+static void secp256k1_scalar_negate(secp256k1_scalar_t *r, const secp256k1_scalar_t *a);
 
 /** Check whether a scalar equals zero. */
-int static secp256k1_scalar_is_zero(const secp256k1_scalar_t *a);
+static int secp256k1_scalar_is_zero(const secp256k1_scalar_t *a);
 
 /** Check whether a scalar equals one. */
-int static secp256k1_scalar_is_one(const secp256k1_scalar_t *a);
+static int secp256k1_scalar_is_one(const secp256k1_scalar_t *a);
 
 /** Check whether a scalar is higher than the group order divided by 2. */
-int static secp256k1_scalar_is_high(const secp256k1_scalar_t *a);
+static int secp256k1_scalar_is_high(const secp256k1_scalar_t *a);
 
 /** Convert a scalar to a number. */
-void static secp256k1_scalar_get_num(secp256k1_num_t *r, const secp256k1_scalar_t *a);
+static void secp256k1_scalar_get_num(secp256k1_num_t *r, const secp256k1_scalar_t *a);
 
 #endif

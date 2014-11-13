@@ -44,16 +44,4 @@
 #define VERIFY_CHECK(cond) do { (void)(cond); } while(0)
 #endif
 
-/** Seed the pseudorandom number generator. */
-static inline void secp256k1_rand_seed(uint64_t v);
-
-/** Generate a pseudorandom 32-bit number. */
-static uint32_t secp256k1_rand32(void);
-
-/** Generate a pseudorandom 32-byte array. */
-static void secp256k1_rand256(unsigned char *b32);
-
-/** Generate a pseudorandom 32-byte array with long sequences of zero and one bits. */
-static void secp256k1_rand256_test(unsigned char *b32);
-
 #endif

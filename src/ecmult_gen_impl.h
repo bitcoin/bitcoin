@@ -55,7 +55,6 @@ static void secp256k1_ecmult_gen_start(void) {
     secp256k1_ge_t prec[1024];
     {
         secp256k1_gej_t precj[1024]; // Jacobian versions of prec.
-        int j = 0;
         secp256k1_gej_t gbase; gbase = gj; // 16^j * G
         secp256k1_gej_t numsbase; numsbase = nums_gej; // 2^j * nums.
         for (int j=0; j<64; j++) {
@@ -81,7 +80,7 @@ static void secp256k1_ecmult_gen_start(void) {
     for (int j=0; j<64; j++) {
         for (int i=0; i<16; i++) {
             const unsigned char* raw = (const unsigned char*)(&prec[j*16 + i]);
-            for (int k=0; k<sizeof(secp256k1_ge_t); k++)
+            for (size_t k=0; k<sizeof(secp256k1_ge_t); k++)
                 ret->prec[j][k][i] = raw[k];
         }
     }
@@ -99,14 +98,14 @@ static void secp256k1_ecmult_gen_stop(void) {
     free(c);
 }
 
-void static secp256k1_ecmult_gen(secp256k1_gej_t *r, const secp256k1_scalar_t *gn) {
+static void secp256k1_ecmult_gen(secp256k1_gej_t *r, const secp256k1_scalar_t *gn) {
     const secp256k1_ecmult_gen_consts_t *c = secp256k1_ecmult_gen_consts;
     secp256k1_gej_set_infinity(r);
     secp256k1_ge_t add;
     int bits;
     for (int j=0; j<64; j++) {
         bits = secp256k1_scalar_get_bits(gn, j * 4, 4);
-        for (int k=0; k<sizeof(secp256k1_ge_t); k++)
+        for (size_t k=0; k<sizeof(secp256k1_ge_t); k++)
             ((unsigned char*)(&add))[k] = c->prec[j][k][bits];
         secp256k1_gej_add_ge(r, r, &add);
     }

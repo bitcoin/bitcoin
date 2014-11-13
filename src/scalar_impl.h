@@ -21,14 +21,14 @@
 #error "Please select scalar implementation"
 #endif
 
-void static secp256k1_scalar_get_num(secp256k1_num_t *r, const secp256k1_scalar_t *a) {
+static void secp256k1_scalar_get_num(secp256k1_num_t *r, const secp256k1_scalar_t *a) {
     unsigned char c[32];
     secp256k1_scalar_get_b32(c, a);
     secp256k1_num_set_bin(r, c, 32);
 }
 
 
-void static secp256k1_scalar_inverse(secp256k1_scalar_t *r, const secp256k1_scalar_t *x) {
+static void secp256k1_scalar_inverse(secp256k1_scalar_t *r, const secp256k1_scalar_t *x) {
     // First compute x ^ (2^N - 1) for some values of N.
     secp256k1_scalar_t x2, x3, x4, x6, x7, x8, x15, x30, x60, x120, x127;
 

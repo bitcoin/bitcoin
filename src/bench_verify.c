@@ -8,7 +8,7 @@
 #include "include/secp256k1.h"
 #include "util.h"
 
-int main() {
+int main(void) {
     secp256k1_start(SECP256K1_START_VERIFY);
 
     unsigned char msg[32];

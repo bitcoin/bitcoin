@@ -13,31 +13,32 @@
 #include "num.h"
 
 #ifdef VERIFY
-void static secp256k1_num_sanity(const secp256k1_num_t *a) {
+static void secp256k1_num_sanity(const secp256k1_num_t *a) {
     VERIFY_CHECK(a->limbs == 1 || (a->limbs > 1 && a->data[a->limbs-1] != 0));
 }
 #else
 #define secp256k1_num_sanity(a) do { } while(0)
 #endif
 
-void static secp256k1_num_init(secp256k1_num_t *r) {
+static void secp256k1_num_init(secp256k1_num_t *r) {
     r->neg = 0;
     r->limbs = 1;
     r->data[0] = 0;
 }
 
-void static secp256k1_num_clear(secp256k1_num_t *r) {
+static void secp256k1_num_clear(secp256k1_num_t *r) {
     memset(r, 0, sizeof(*r));
 }
 
-void static secp256k1_num_free(secp256k1_num_t *r) {
+static void secp256k1_num_free(secp256k1_num_t *r) {
+    (void)r;
 }
 
-void static secp256k1_num_copy(secp256k1_num_t *r, const secp256k1_num_t *a) {
+static void secp256k1_num_copy(secp256k1_num_t *r, const secp256k1_num_t *a) {
     *r = *a;
 }
 
-int static secp256k1_num_bits(const secp256k1_num_t *a) {
+static int secp256k1_num_bits(const secp256k1_num_t *a) {
     int ret=(a->limbs-1)*GMP_NUMB_BITS;
     mp_limb_t x=a->data[a->limbs-1];
     while (x) {
@@ -48,7 +49,7 @@ int static secp256k1_num_bits(const secp256k1_num_t *a) {
 }
 
 
-void static secp256k1_num_get_bin(unsigned char *r, unsigned int rlen, const secp256k1_num_t *a) {
+static void secp256k1_num_get_bin(unsigned char *r, unsigned int rlen, const secp256k1_num_t *a) {
     unsigned char tmp[65];
     int len = 0;
     if (a->limbs>1 || a->data[0] != 0) {
@@ -56,7 +57,7 @@ void static secp256k1_num_get_bin(unsigned char *r, unsigned int rlen, const sec
     }
     int shift = 0;
     while (shift < len && tmp[shift] == 0) shift++;
-    VERIFY_CHECK(len-shift <= rlen);
+    VERIFY_CHECK(len-shift <= (int)rlen);
     memset(r, 0, rlen - len + shift);
     if (len > shift) {
         memcpy(r + rlen - len + shift, tmp + shift, len - shift);
@@ -64,7 +65,7 @@ void static secp256k1_num_get_bin(unsigned char *r, unsigned int rlen, const sec
     memset(tmp, 0, sizeof(tmp));
 }
 
-void static secp256k1_num_set_bin(secp256k1_num_t *r, const unsigned char *a, unsigned int alen) {
+static void secp256k1_num_set_bin(secp256k1_num_t *r, const unsigned char *a, unsigned int alen) {
     VERIFY_CHECK(alen > 0);
     VERIFY_CHECK(alen <= 64);
     int len = mpn_set_str(r->data, a, alen, 256);
@@ -74,13 +75,13 @@ void static secp256k1_num_set_bin(secp256k1_num_t *r, const unsigned char *a, un
     while (r->limbs > 1 && r->data[r->limbs-1]==0) r->limbs--;
 }
 
-void static secp256k1_num_set_int(secp256k1_num_t *r, int a) {
+static void secp256k1_num_set_int(secp256k1_num_t *r, int a) {
     r->limbs = 1;
     r->neg = (a < 0);
     r->data[0] = (a < 0) ? -a : a;
 }
 
-void static secp256k1_num_add_abs(secp256k1_num_t *r, const secp256k1_num_t *a, const secp256k1_num_t *b) {
+static void secp256k1_num_add_abs(secp256k1_num_t *r, const secp256k1_num_t *a, const secp256k1_num_t *b) {
     mp_limb_t c = mpn_add(r->data, a->data, a->limbs, b->data, b->limbs);
     r->limbs = a->limbs;
     if (c != 0) {
@@ -89,14 +90,14 @@ void static secp256k1_num_add_abs(secp256k1_num_t *r, const secp256k1_num_t *a, 
     }
 }
 
-void static secp256k1_num_sub_abs(secp256k1_num_t *r, const secp256k1_num_t *a, const secp256k1_num_t *b) {
+static void secp256k1_num_sub_abs(secp256k1_num_t *r, const secp256k1_num_t *a, const secp256k1_num_t *b) {
     mp_limb_t c = mpn_sub(r->data, a->data, a->limbs, b->data, b->limbs);
     VERIFY_CHECK(c == 0);
     r->limbs = a->limbs;
     while (r->limbs > 1 && r->data[r->limbs-1]==0) r->limbs--;
 }
 
-void static secp256k1_num_mod(secp256k1_num_t *r, const secp256k1_num_t *m) {
+static void secp256k1_num_mod(secp256k1_num_t *r, const secp256k1_num_t *m) {
     secp256k1_num_sanity(r);
     secp256k1_num_sanity(m);
 
@@ -114,7 +115,7 @@ void static secp256k1_num_mod(secp256k1_num_t *r, const secp256k1_num_t *m) {
     }
 }
 
-void static secp256k1_num_mod_inverse(secp256k1_num_t *r, const secp256k1_num_t *a, const secp256k1_num_t *m) {
+static void secp256k1_num_mod_inverse(secp256k1_num_t *r, const secp256k1_num_t *a, const secp256k1_num_t *m) {
     secp256k1_num_sanity(a);
     secp256k1_num_sanity(m);
 
@@ -153,32 +154,32 @@ void static secp256k1_num_mod_inverse(secp256k1_num_t *r, const secp256k1_num_t 
     memset(v, 0, sizeof(v));
 }
 
-int static secp256k1_num_is_zero(const secp256k1_num_t *a) {
+static int secp256k1_num_is_zero(const secp256k1_num_t *a) {
     return (a->limbs == 1 && a->data[0] == 0);
 }
 
-int static secp256k1_num_is_odd(const secp256k1_num_t *a) {
+static int secp256k1_num_is_odd(const secp256k1_num_t *a) {
     return a->data[0] & 1;
 }
 
-int static secp256k1_num_is_neg(const secp256k1_num_t *a) {
+static int secp256k1_num_is_neg(const secp256k1_num_t *a) {
     return (a->limbs > 1 || a->data[0] != 0) && a->neg;
 }
 
-int static secp256k1_num_cmp(const secp256k1_num_t *a, const secp256k1_num_t *b) {
+static int secp256k1_num_cmp(const secp256k1_num_t *a, const secp256k1_num_t *b) {
     if (a->limbs > b->limbs) return 1;
     if (a->limbs < b->limbs) return -1;
     return mpn_cmp(a->data, b->data, a->limbs);
 }
 
-int static secp256k1_num_eq(const secp256k1_num_t *a, const secp256k1_num_t *b) {
+static int secp256k1_num_eq(const secp256k1_num_t *a, const secp256k1_num_t *b) {
     if (a->limbs > b->limbs) return 0;
     if (a->limbs < b->limbs) return 0;
     if ((a->neg && !secp256k1_num_is_zero(a)) != (b->neg && !secp256k1_num_is_zero(b))) return 0;
     return mpn_cmp(a->data, b->data, a->limbs) == 0;
 }
 
-void static secp256k1_num_subadd(secp256k1_num_t *r, const secp256k1_num_t *a, const secp256k1_num_t *b, int bneg) {
+static void secp256k1_num_subadd(secp256k1_num_t *r, const secp256k1_num_t *a, const secp256k1_num_t *b, int bneg) {
     if (!(b->neg ^ bneg ^ a->neg)) { // a and b have the same sign
         r->neg = a->neg;
         if (a->limbs >= b->limbs) {
@@ -197,19 +198,19 @@ void static secp256k1_num_subadd(secp256k1_num_t *r, const secp256k1_num_t *a, c
     }
 }
 
-void static secp256k1_num_add(secp256k1_num_t *r, const secp256k1_num_t *a, const secp256k1_num_t *b) {
+static void secp256k1_num_add(secp256k1_num_t *r, const secp256k1_num_t *a, const secp256k1_num_t *b) {
     secp256k1_num_sanity(a);
     secp256k1_num_sanity(b);
     secp256k1_num_subadd(r, a, b, 0);
 }
 
-void static secp256k1_num_sub(secp256k1_num_t *r, const secp256k1_num_t *a, const secp256k1_num_t *b) {
+static void secp256k1_num_sub(secp256k1_num_t *r, const secp256k1_num_t *a, const secp256k1_num_t *b) {
     secp256k1_num_sanity(a);
     secp256k1_num_sanity(b);
     secp256k1_num_subadd(r, a, b, 1);
 }
 
-void static secp256k1_num_mul(secp256k1_num_t *r, const secp256k1_num_t *a, const secp256k1_num_t *b) {
+static void secp256k1_num_mul(secp256k1_num_t *r, const secp256k1_num_t *a, const secp256k1_num_t *b) {
     secp256k1_num_sanity(a);
     secp256k1_num_sanity(b);
 
@@ -233,7 +234,7 @@ void static secp256k1_num_mul(secp256k1_num_t *r, const secp256k1_num_t *a, cons
     memset(tmp, 0, sizeof(tmp));
 }
 
-void static secp256k1_num_div(secp256k1_num_t *r, const secp256k1_num_t *a, const secp256k1_num_t *b) {
+static void secp256k1_num_div(secp256k1_num_t *r, const secp256k1_num_t *a, const secp256k1_num_t *b) {
     secp256k1_num_sanity(a);
     secp256k1_num_sanity(b);
     if (b->limbs > a->limbs) {
@@ -252,13 +253,13 @@ void static secp256k1_num_div(secp256k1_num_t *r, const secp256k1_num_t *a, cons
     r->neg = a->neg ^ b->neg;
 }
 
-void static secp256k1_num_mod_mul(secp256k1_num_t *r, const secp256k1_num_t *a, const secp256k1_num_t *b, const secp256k1_num_t *m) {
+static void secp256k1_num_mod_mul(secp256k1_num_t *r, const secp256k1_num_t *a, const secp256k1_num_t *b, const secp256k1_num_t *m) {
     secp256k1_num_mul(r, a, b);
     secp256k1_num_mod(r, m);
 }
 
 
-int static secp256k1_num_shift(secp256k1_num_t *r, int bits) {
+static int secp256k1_num_shift(secp256k1_num_t *r, int bits) {
     VERIFY_CHECK(bits <= GMP_NUMB_BITS);
     mp_limb_t ret = mpn_rshift(r->data, r->data, r->limbs, bits);
     if (r->limbs>1 && r->data[r->limbs-1]==0) r->limbs--;
@@ -266,11 +267,11 @@ int static secp256k1_num_shift(secp256k1_num_t *r, int bits) {
     return ret;
 }
 
-int static secp256k1_num_get_bit(const secp256k1_num_t *a, int pos) {
+static int secp256k1_num_get_bit(const secp256k1_num_t *a, int pos) {
     return (a->limbs*GMP_NUMB_BITS > pos) && ((a->data[pos/GMP_NUMB_BITS] >> (pos % GMP_NUMB_BITS)) & 1);
 }
 
-void static secp256k1_num_inc(secp256k1_num_t *r) {
+static void secp256k1_num_inc(secp256k1_num_t *r) {
     mp_limb_t ret = mpn_add_1(r->data, r->data, r->limbs, (mp_limb_t)1);
     if (ret) {
         VERIFY_CHECK(r->limbs < 2*NUM_LIMBS);
@@ -278,7 +279,7 @@ void static secp256k1_num_inc(secp256k1_num_t *r) {
     }
 }
 
-void static secp256k1_num_set_hex(secp256k1_num_t *r, const char *a, int alen) {
+static void secp256k1_num_set_hex(secp256k1_num_t *r, const char *a, int alen) {
     static const unsigned char cvt[256] = {
         0, 0, 0, 0, 0, 0, 0,0,0,0,0,0,0,0,0,0,
         0, 0, 0, 0, 0, 0, 0,0,0,0,0,0,0,0,0,0,
@@ -306,7 +307,7 @@ void static secp256k1_num_set_hex(secp256k1_num_t *r, const char *a, int alen) {
     while (r->limbs > 1 && r->data[r->limbs-1] == 0) r->limbs--;
 }
 
-void static secp256k1_num_get_hex(char *r, int rlen, const secp256k1_num_t *a) {
+static void secp256k1_num_get_hex(char *r, int rlen, const secp256k1_num_t *a) {
     static const unsigned char cvt[16] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
     unsigned char *tmp = malloc(257);
     mp_size_t len = mpn_get_str(tmp, 16, (mp_limb_t*)a->data, a->limbs);
@@ -314,7 +315,6 @@ void static secp256k1_num_get_hex(char *r, int rlen, const secp256k1_num_t *a) {
     for (int i=0; i<len; i++) {
         VERIFY_CHECK(rlen-len+i >= 0);
         VERIFY_CHECK(rlen-len+i < rlen);
-        VERIFY_CHECK(tmp[i] >= 0);
         VERIFY_CHECK(tmp[i] < 16);
         r[rlen-len+i] = cvt[tmp[i]];
     }
@@ -326,7 +326,7 @@ void static secp256k1_num_get_hex(char *r, int rlen, const secp256k1_num_t *a) {
     free(tmp);
 }
 
-void static secp256k1_num_split(secp256k1_num_t *rl, secp256k1_num_t *rh, const secp256k1_num_t *a, int bits) {
+static void secp256k1_num_split(secp256k1_num_t *rl, secp256k1_num_t *rh, const secp256k1_num_t *a, int bits) {
     VERIFY_CHECK(bits > 0);
     rh->neg = a->neg;
     if (bits >= a->limbs * GMP_NUMB_BITS) {
@@ -358,11 +358,11 @@ void static secp256k1_num_split(secp256k1_num_t *rl, secp256k1_num_t *rh, const 
     while (rl->limbs>1 && rl->data[rl->limbs-1]==0) rl->limbs--;
 }
 
-void static secp256k1_num_negate(secp256k1_num_t *r) {
+static void secp256k1_num_negate(secp256k1_num_t *r) {
     r->neg ^= 1;
 }
 
-int static secp256k1_num_get_bits(const secp256k1_num_t *a, int offset, int count) {
+static int secp256k1_num_get_bits(const secp256k1_num_t *a, int offset, int count) {
     int ret = 0;
     for (int i = 0; i < count; i++) {
         ret |= ((a->data[(offset + i) / GMP_NUMB_BITS] >> ((offset + i) % GMP_NUMB_BITS)) & 1) << i;

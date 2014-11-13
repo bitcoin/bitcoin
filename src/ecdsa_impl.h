@@ -12,7 +12,7 @@
 #include "ecmult_gen.h"
 #include "ecdsa.h"
 
-int static secp256k1_ecdsa_sig_parse(secp256k1_ecdsa_sig_t *r, const unsigned char *sig, int size) {
+static int secp256k1_ecdsa_sig_parse(secp256k1_ecdsa_sig_t *r, const unsigned char *sig, int size) {
     if (sig[0] != 0x30) return 0;
     int lenr = sig[3];
     if (5+lenr >= size) return 0;
@@ -28,7 +28,7 @@ int static secp256k1_ecdsa_sig_parse(secp256k1_ecdsa_sig_t *r, const unsigned ch
     return 1;
 }
 
-int static secp256k1_ecdsa_sig_serialize(unsigned char *sig, int *size, const secp256k1_ecdsa_sig_t *a) {
+static int secp256k1_ecdsa_sig_serialize(unsigned char *sig, int *size, const secp256k1_ecdsa_sig_t *a) {
     int lenR = (secp256k1_num_bits(&a->r) + 7)/8;
     if (lenR == 0 || secp256k1_num_get_bit(&a->r, lenR*8-1))
         lenR++;
@@ -49,7 +49,7 @@ int static secp256k1_ecdsa_sig_serialize(unsigned char *sig, int *size, const se
     return 1;
 }
 
-int static secp256k1_ecdsa_sig_recompute(secp256k1_num_t *r2, const secp256k1_ecdsa_sig_t *sig, const secp256k1_ge_t *pubkey, const secp256k1_num_t *message) {
+static int secp256k1_ecdsa_sig_recompute(secp256k1_num_t *r2, const secp256k1_ecdsa_sig_t *sig, const secp256k1_ge_t *pubkey, const secp256k1_num_t *message) {
     const secp256k1_ge_consts_t *c = secp256k1_ge_consts;
 
     if (secp256k1_num_is_neg(&sig->r) || secp256k1_num_is_neg(&sig->s))
@@ -83,7 +83,7 @@ int static secp256k1_ecdsa_sig_recompute(secp256k1_num_t *r2, const secp256k1_ec
     return ret;
 }
 
-int static secp256k1_ecdsa_sig_recover(const secp256k1_ecdsa_sig_t *sig, secp256k1_ge_t *pubkey, const secp256k1_num_t *message, int recid) {
+static int secp256k1_ecdsa_sig_recover(const secp256k1_ecdsa_sig_t *sig, secp256k1_ge_t *pubkey, const secp256k1_num_t *message, int recid) {
     const secp256k1_ge_consts_t *c = secp256k1_ge_consts;
 
     if (secp256k1_num_is_neg(&sig->r) || secp256k1_num_is_neg(&sig->s))
@@ -128,7 +128,7 @@ int static secp256k1_ecdsa_sig_recover(const secp256k1_ecdsa_sig_t *sig, secp256
     return 1;
 }
 
-int static secp256k1_ecdsa_sig_verify(const secp256k1_ecdsa_sig_t *sig, const secp256k1_ge_t *pubkey, const secp256k1_num_t *message) {
+static int secp256k1_ecdsa_sig_verify(const secp256k1_ecdsa_sig_t *sig, const secp256k1_ge_t *pubkey, const secp256k1_num_t *message) {
     secp256k1_num_t r2;
     secp256k1_num_init(&r2);
     int ret = 0;
@@ -137,7 +137,7 @@ int static secp256k1_ecdsa_sig_verify(const secp256k1_ecdsa_sig_t *sig, const se
     return ret;
 }
 
-int static secp256k1_ecdsa_sig_sign(secp256k1_ecdsa_sig_t *sig, const secp256k1_scalar_t *seckey, const secp256k1_scalar_t *message, const secp256k1_scalar_t *nonce, int *recid) {
+static int secp256k1_ecdsa_sig_sign(secp256k1_ecdsa_sig_t *sig, const secp256k1_scalar_t *seckey, const secp256k1_scalar_t *message, const secp256k1_scalar_t *nonce, int *recid) {
     secp256k1_gej_t rp;
     secp256k1_ecmult_gen(&rp, nonce);
     secp256k1_ge_t r;
@@ -172,7 +172,7 @@ int static secp256k1_ecdsa_sig_sign(secp256k1_ecdsa_sig_t *sig, const secp256k1_
     return 1;
 }
 
-void static secp256k1_ecdsa_sig_set_rs(secp256k1_ecdsa_sig_t *sig, const secp256k1_num_t *r, const secp256k1_num_t *s) {
+static void secp256k1_ecdsa_sig_set_rs(secp256k1_ecdsa_sig_t *sig, const secp256k1_num_t *r, const secp256k1_num_t *s) {
     secp256k1_num_copy(&sig->r, r);
     secp256k1_num_copy(&sig->s, s);
 }

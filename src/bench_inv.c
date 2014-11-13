@@ -4,13 +4,15 @@
 
 #include <stdio.h>
 
+#include "include/secp256k1.h"
+
 #include "util.h"
 #include "num_impl.h"
 #include "field_impl.h"
 #include "group_impl.h"
 #include "scalar_impl.h"
 
-int main() {
+int main(void) {
     static const unsigned char init[32] = {
         0x02, 0x03, 0x05, 0x07, 0x0b, 0x0d, 0x11, 0x13,
         0x17, 0x1d, 0x1f, 0x25, 0x29, 0x2b, 0x2f, 0x35,
