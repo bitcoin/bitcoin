@@ -2363,7 +2363,8 @@ bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state, CBloc
 
         // Check proof of work
         if ((!Params().SkipProofOfWorkCheck()) &&
-           (block.nBits != GetNextWorkRequired(pindexPrev, &block)))
+           (block.nBits != GetNextWorkRequired(pindexPrev, &block)
+            || !CheckProofOfWork(block.GetHash(), block.nBits)))
             return state.DoS(100, error("%s : incorrect proof of work", __func__),
                              REJECT_INVALID, "bad-diffbits");
 
