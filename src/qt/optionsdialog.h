@@ -42,7 +42,7 @@ private slots:
 
     void showRestartWarning_Proxy();
     void showRestartWarning_Lang();
-	void showRestartWarning_URL();
+    void showRestartWarning_URL();
     void updateDisplayUnit();
     void handleProxyIpValid(QValidatedLineEdit *object, bool fState);
 
@@ -55,7 +55,7 @@ private:
     MonitoredDataMapper *mapper;
     bool fRestartWarningDisplayed_Proxy;
     bool fRestartWarningDisplayed_Lang;
-	bool fRestartWarningDisplayed_URL;
+    bool fRestartWarningDisplayed_URL;
     bool fProxyIpValid;
 };
 

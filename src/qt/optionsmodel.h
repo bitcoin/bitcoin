@@ -51,7 +51,7 @@ public:
     int getDisplayUnit();
     bool getDisplayAddresses();
     bool getCoinControlFeatures();
-	QString getThirdPartyTxUrls() { return strThirdPartyTxUrls; }
+    QString getThirdPartyTxUrls() { return strThirdPartyTxUrls; }
     QString getLanguage() { return language; }
 
 private:
@@ -61,7 +61,7 @@ private:
     bool fMinimizeOnClose;
     bool fCoinControlFeatures;
     QString language;
-	QString strThirdPartyTxUrls;
+    QString strThirdPartyTxUrls;
 
 signals:
     void displayUnitChanged(int unit);
