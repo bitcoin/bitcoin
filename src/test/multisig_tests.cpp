@@ -6,6 +6,7 @@
 #include "keystore.h"
 #include "main.h"
 #include "script/script.h"
+#include "script/script_error.h"
 #include "script/interpreter.h"
 #include "script/sign.h"
 #include "uint256.h"
@@ -46,6 +47,7 @@ BOOST_AUTO_TEST_CASE(multisig_verify)
 {
     unsigned int flags = SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_STRICTENC;
 
+    ScriptError err;
     CKey key[4];
     for (int i = 0; i < 4; i++)
         key[i].MakeNewKey(true);
@@ -82,19 +84,22 @@ BOOST_AUTO_TEST_CASE(multisig_verify)
     keys.clear();
     keys += key[0],key[1]; // magic operator+= from boost.assign
     s = sign_multisig(a_and_b, keys, txTo[0], 0);
-    BOOST_CHECK(VerifyScript(s, a_and_b, flags, SignatureChecker(txTo[0], 0)));
+    BOOST_CHECK(VerifyScript(s, a_and_b, flags, SignatureChecker(txTo[0], 0), &err));
+    BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_OK, ScriptErrorString(err));
 
     for (int i = 0; i < 4; i++)
     {
         keys.clear();
         keys += key[i];
         s = sign_multisig(a_and_b, keys, txTo[0], 0);
-        BOOST_CHECK_MESSAGE(!VerifyScript(s, a_and_b, flags, SignatureChecker(txTo[0], 0)), strprintf("a&b 1: %d", i));
+        BOOST_CHECK_MESSAGE(!VerifyScript(s, a_and_b, flags, SignatureChecker(txTo[0], 0), &err), strprintf("a&b 1: %d", i));
+        BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_INVALID_STACK_OPERATION, ScriptErrorString(err));
 
         keys.clear();
         keys += key[1],key[i];
         s = sign_multisig(a_and_b, keys, txTo[0], 0);
-        BOOST_CHECK_MESSAGE(!VerifyScript(s, a_and_b, flags, SignatureChecker(txTo[0], 0)), strprintf("a&b 2: %d", i));
+        BOOST_CHECK_MESSAGE(!VerifyScript(s, a_and_b, flags, SignatureChecker(txTo[0], 0), &err), strprintf("a&b 2: %d", i));
+        BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_EVAL_FALSE, ScriptErrorString(err));
     }
 
     // Test a OR b:
@@ -104,16 +109,24 @@ BOOST_AUTO_TEST_CASE(multisig_verify)
         keys += key[i];
         s = sign_multisig(a_or_b, keys, txTo[1], 0);
         if (i == 0 || i == 1)
-            BOOST_CHECK_MESSAGE(VerifyScript(s, a_or_b, flags, SignatureChecker(txTo[1], 0)), strprintf("a|b: %d", i));
+        {
+            BOOST_CHECK_MESSAGE(VerifyScript(s, a_or_b, flags, SignatureChecker(txTo[1], 0), &err), strprintf("a|b: %d", i));
+            BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_OK, ScriptErrorString(err));
+        }
         else
-            BOOST_CHECK_MESSAGE(!VerifyScript(s, a_or_b, flags, SignatureChecker(txTo[1], 0)), strprintf("a|b: %d", i));
+        {
+            BOOST_CHECK_MESSAGE(!VerifyScript(s, a_or_b, flags, SignatureChecker(txTo[1], 0), &err), strprintf("a|b: %d", i));
+            BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_EVAL_FALSE, ScriptErrorString(err));
+        }
     }
     s.clear();
     s << OP_0 << OP_0;
-    BOOST_CHECK(!VerifyScript(s, a_or_b, flags, SignatureChecker(txTo[1], 0)));
+    BOOST_CHECK(!VerifyScript(s, a_or_b, flags, SignatureChecker(txTo[1], 0), &err));
+    BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_SIG_DER, ScriptErrorString(err));
     s.clear();
     s << OP_0 << OP_1;
-    BOOST_CHECK(!VerifyScript(s, a_or_b, flags, SignatureChecker(txTo[1], 0)));
+    BOOST_CHECK(!VerifyScript(s, a_or_b, flags, SignatureChecker(txTo[1], 0), &err));
+    BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_SIG_DER, ScriptErrorString(err));
 
 
     for (int i = 0; i < 4; i++)
@@ -123,9 +136,15 @@ BOOST_AUTO_TEST_CASE(multisig_verify)
             keys += key[i],key[j];
             s = sign_multisig(escrow, keys, txTo[2], 0);
             if (i < j && i < 3 && j < 3)
-                BOOST_CHECK_MESSAGE(VerifyScript(s, escrow, flags, SignatureChecker(txTo[2], 0)), strprintf("escrow 1: %d %d", i, j));
+            {
+                BOOST_CHECK_MESSAGE(VerifyScript(s, escrow, flags, SignatureChecker(txTo[2], 0), &err), strprintf("escrow 1: %d %d", i, j));
+                BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_OK, ScriptErrorString(err));
+            }
             else
-                BOOST_CHECK_MESSAGE(!VerifyScript(s, escrow, flags, SignatureChecker(txTo[2], 0)), strprintf("escrow 2: %d %d", i, j));
+            {
+                BOOST_CHECK_MESSAGE(!VerifyScript(s, escrow, flags, SignatureChecker(txTo[2], 0), &err), strprintf("escrow 2: %d %d", i, j));
+                BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_EVAL_FALSE, ScriptErrorString(err));
+            }
         }
 }
 
