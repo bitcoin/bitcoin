@@ -39,6 +39,19 @@ case $host_os in
      ;;
 esac
 
+CFLAGS="$CFLAGS -W"
+
+warn_CFLAGS="-Wall -Wextra -Wcast-align -Wnested-externs -Wshadow -Wstrict-prototypes -Wno-unused-function"
+saved_CFLAGS="$CFLAGS"
+CFLAGS="$CFLAGS $warn_CFLAGS"
+AC_MSG_CHECKING([if ${CC} supports ${warn_CFLAGS}])
+AC_COMPILE_IFELSE([AC_LANG_SOURCE([[char foo;]])],
+    [ AC_MSG_RESULT([yes]) ],
+    [ AC_MSG_RESULT([no])
+      CFLAGS="$saved_CFLAGS"
+    ])
+
+
 AC_ARG_ENABLE(benchmark,
     AS_HELP_STRING([--enable-benchmark],[compile benchmark (default is yes)]),
     [use_benchmark=$enableval],
