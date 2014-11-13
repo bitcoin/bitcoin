@@ -1559,7 +1559,7 @@ void static Discover(boost::thread_group& threadGroup)
 
 #ifdef WIN32
     // Get local host IP
-    char pszHostName[1000] = "";
+    char pszHostName[256] = "";
     if (gethostname(pszHostName, sizeof(pszHostName)) != SOCKET_ERROR)
     {
         vector<CNetAddr> vaddr;
