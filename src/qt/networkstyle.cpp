@@ -71,7 +71,8 @@ NetworkStyle::NetworkStyle(const QString &appName, const int iconColorHueShift, 
         pixmap.convertFromImage(img);
     }
 
-    appIcon = QIcon(pixmap);
+    appIcon             = QIcon(pixmap);
+    trayAndWindowIcon   = QIcon(pixmap.scaled(QSize(256,256)));
 }
 
 const NetworkStyle *NetworkStyle::instantiate(const QString &networkId)
