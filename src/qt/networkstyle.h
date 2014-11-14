@@ -17,16 +17,14 @@ public:
     static const NetworkStyle *instantiate(const QString &networkId);
 
     const QString &getAppName() const { return appName; }
+    const QIcon &getAppIcon() const { return appIcon; }
     const QString &getTitleAddText() const { return titleAddText; }
 
-    QIcon getAppIcon() const;
-    QIcon getAppIcon(const QSize size) const;
 private:
     NetworkStyle(const QString &appName, const int iconColorHueShift, const int iconColorSaturationReduction, const char *titleAddText);
 
     QString appName;
-    int iconColorHueShift;
-    int iconColorSaturationReduction;
+    QIcon appIcon;
     QString titleAddText;
 };
 
