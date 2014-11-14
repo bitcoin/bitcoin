@@ -1757,16 +1757,23 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
     return true;
 }
 
+enum FlushStateMode {
+    FLUSH_STATE_IF_NEEDED,
+    FLUSH_STATE_PERIODIC,
+    FLUSH_STATE_ALWAYS
+};
+
 /**
  * Update the on-disk chain state.
  * The caches and indexes are flushed if either they're too large, forceWrite is set, or
  * fast is not set and it's been a while since the last write.
  */
-bool static FlushStateToDisk(CValidationState &state, bool fast = false, bool forceWrite = false) {
+bool static FlushStateToDisk(CValidationState &state, FlushStateMode mode) {
     LOCK(cs_main);
     static int64_t nLastWrite = 0;
-    if (forceWrite || pcoinsTip->GetCacheSize() > nCoinCacheSize ||
-        (!fast && GetTimeMicros() > nLastWrite + DATABASE_WRITE_INTERVAL * 1000000)) {
+    if ((mode == FLUSH_STATE_ALWAYS) ||
+        ((mode == FLUSH_STATE_PERIODIC || mode == FLUSH_STATE_IF_NEEDED) && pcoinsTip->GetCacheSize() > nCoinCacheSize) ||
+        (mode == FLUSH_STATE_PERIODIC && GetTimeMicros() > nLastWrite + DATABASE_WRITE_INTERVAL * 1000000)) {
         // Typical CCoins structures on disk are around 100 bytes in size.
         // Pushing a new one to the database can cause it to be written
         // twice (once in the log, and once in the tables). This is already
@@ -1799,7 +1806,7 @@ bool static FlushStateToDisk(CValidationState &state, bool fast = false, bool fo
         if (!pcoinsTip->Flush())
             return state.Abort("Failed to write to coin database");
         // Update best block in wallet (so we can detect restored wallets).
-        if (forceWrite || !fast) {
+        if (mode != FLUSH_STATE_IF_NEEDED) {
             g_signals.SetBestChain(chainActive.GetLocator());
         }
         nLastWrite = GetTimeMicros();
@@ -1809,7 +1816,7 @@ bool static FlushStateToDisk(CValidationState &state, bool fast = false, bool fo
 
 void FlushStateToDisk() {
     CValidationState state;
-    FlushStateToDisk(state, false, true);
+    FlushStateToDisk(state, FLUSH_STATE_ALWAYS);
 }
 
 // Update chainActive and related internal data structures.
@@ -1870,7 +1877,7 @@ bool static DisconnectTip(CValidationState &state) {
     }
     LogPrint("bench", "- Disconnect block: %.2fms\n", (GetTimeMicros() - nStart) * 0.001);
     // Write the chain state to disk, if necessary.
-    if (!FlushStateToDisk(state, true))
+    if (!FlushStateToDisk(state, FLUSH_STATE_IF_NEEDED))
         return false;
     // Resurrect mempool transactions from the disconnected block.
     BOOST_FOREACH(const CTransaction &tx, block.vtx) {
@@ -1933,7 +1940,7 @@ bool static ConnectTip(CValidationState &state, CBlockIndex *pindexNew, CBlock *
     int64_t nTime4 = GetTimeMicros(); nTimeFlush += nTime4 - nTime3;
     LogPrint("bench", "  - Flush: %.2fms [%.2fs]\n", (nTime4 - nTime3) * 0.001, nTimeFlush * 0.000001);
     // Write the chain state to disk, if necessary.
-    if (!FlushStateToDisk(state, true))
+    if (!FlushStateToDisk(state, FLUSH_STATE_IF_NEEDED))
         return false;
     int64_t nTime5 = GetTimeMicros(); nTimeChainState += nTime5 - nTime4;
     LogPrint("bench", "  - Writing chainstate: %.2fms [%.2fs]\n", (nTime5 - nTime4) * 0.001, nTimeChainState * 0.000001);
@@ -2118,7 +2125,7 @@ bool ActivateBestChain(CValidationState &state, CBlock *pblock) {
     } while(pindexMostWork != chainActive.Tip());
 
     // Write changes periodically to disk, after relay.
-    if (!FlushStateToDisk(state)) {
+    if (!FlushStateToDisk(state, FLUSH_STATE_PERIODIC)) {
         return false;
     }
 
@@ -3089,7 +3096,7 @@ bool InitBlockIndex() {
             if (!ActivateBestChain(state, &block))
                 return error("LoadBlockIndex() : genesis block cannot be activated");
             // Force a chainstate write so that when we VerifyDB in a moment, it doesnt check stale data
-            return FlushStateToDisk(state, false, true);
+            return FlushStateToDisk(state, FLUSH_STATE_ALWAYS);
         } catch(std::runtime_error &e) {
             return error("LoadBlockIndex() : failed to initialize block database: %s", e.what());
         }
