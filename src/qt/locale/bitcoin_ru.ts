@@ -3,6 +3,25 @@
 <TS version="2.0" language="ru">
 <defaultcodec>UTF-8</defaultcodec>
 <context>
+  <name>QObject</name>
+  <message>
+    <source>%1 d</source>
+    <translation>%1 д</translation>
+  </message>
+  <message>
+    <source>%1 h</source>
+    <translation>%1 ч</translation>
+  </message>
+  <message>
+    <source>%1 m</source>
+    <translation>%1 мин</translation>
+  </message>
+  <message>
+    <source>%1 s</source>
+    <translation>%1 сек</translation>
+  </message>
+</context>
+<context>
     <name>AboutDialog</name>
     <message>
         <location filename="../forms/aboutdialog.ui" line="+14"/>
@@ -1597,6 +1616,31 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
 </context>
 <context>
     <name>RPCConsole</name>
+    <message>
+        <location filename="../forms/rpcconsole.ui" line="+582"/>
+        <source>Received:</source>
+        <translation>Получено:</translation>
+    </message>
+    <message>
+        <location filename="../forms/rpcconsole.ui" line="+662"/>
+        <source>Sent:</source>
+        <translation>Отправлено:</translation>
+    </message>
+    <message>
+        <location filename="../forms/rpcconsole.ui" line="+518"/>
+        <source>Totals</source>
+        <translation>Всего</translation>
+    </message>
+    <message>
+        <location filename="../forms/rpcconsole.ui" line="+450"/>
+        <source>&amp;Network Traffic</source>
+        <translation>&amp;Сетевой трафик</translation>
+    </message>
+    <message>
+        <location filename="../forms/rpcconsole.ui" line="+502"/>
+        <source>&amp;Clear</source>
+        <translation>&amp;Очистить</translation>
+    </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="+46"/>
         <source>Client name</source>
