@@ -57,7 +57,7 @@ def sync_mempools(rpc_connections):
         if num_match == len(rpc_connections):
             break
         time.sleep(1)
-        
+
 
 bitcoind_processes = {}
 

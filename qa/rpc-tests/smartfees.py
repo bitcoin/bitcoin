@@ -35,7 +35,7 @@ class EstimateFeeTest(BitcoinTestFramework):
 
         self.is_network_split = False
         self.sync_all()
-        
+
 
     def run_test(self):
         # Prime the memory pool with pairs of transactions
