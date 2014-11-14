@@ -17,7 +17,7 @@
 #include <utility>
 #include <vector>
 
-//
+// define default values for backups
 static const std::string    DEFAULT_BACKUPS_DIR                 = "backups";
 static const std::string    BACKUP_BDB_EXTENSION                = ".bak";
 static const std::string    BACKUP_DUMP_EXTENSION               = ".dump";
@@ -138,7 +138,11 @@ public:
     DBErrors ZapWalletTx(CWallet* pwallet, std::vector<CWalletTx>& vWtx);
     static bool Recover(CDBEnv& dbenv, std::string filename, bool fOnlyKeys);
     static bool Recover(CDBEnv& dbenv, std::string filename);
+    
+    //! create a new backup or dump (configurable through args)
     static bool CreateNewBackup(CWallet& wallet);
+    
+    //! resturn a list of available backups
     static std::map<std::time_t, boost::filesystem::path> GetAvailableBackups();
 
 private:

@@ -2503,7 +2503,7 @@ bool CWallet::DumpToStream(std::ostream& stream)
     std::sort(vKeyBirth.begin(), vKeyBirth.end());
 
     // produce output
-    stream << strprintf("# Wallet dump created by Bitcoin %s (%s)\n", CLIENT_BUILD, CLIENT_DATE);
+    stream << strprintf("# Wallet dump created by Bitcoin Core %s (%s)\n", CLIENT_BUILD, CLIENT_DATE);
     stream << strprintf("# * Created on %s\n", EncodeDumpTime(GetTime()));
     stream << strprintf("# * Best block at time of backup was %i (%s),\n", chainActive.Height(), chainActive.Tip()->GetBlockHash().ToString());
     stream << strprintf("#   mined on %s\n", EncodeDumpTime(chainActive.Tip()->GetBlockTime()));
