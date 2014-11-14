@@ -24,52 +24,13 @@ static const unsigned network_styles_count = sizeof(network_styles)/sizeof(*netw
 // titleAddText needs to be const char* for tr()
 NetworkStyle::NetworkStyle(const QString &appName, const int iconColorHueShift, const int iconColorSaturationReduction, const char *titleAddText):
     appName(appName),
-    iconColorHueShift(iconColorHueShift),
-    iconColorSaturationReduction(iconColorSaturationReduction),
     titleAddText(qApp->translate("SplashScreen", titleAddText))
-{
-}
-
-const NetworkStyle *NetworkStyle::instantiate(const QString &networkId)
-{
-    for (unsigned x=0; x<network_styles_count; ++x)
-    {
-        if (networkId == network_styles[x].networkId)
-        {
-            return new NetworkStyle(
-                    network_styles[x].appName,
-                    network_styles[x].iconColorHueShift,
-                    network_styles[x].iconColorSaturationReduction,
-                    network_styles[x].titleAddText);
-        }
-    }
-    return 0;
-}
-
-QIcon NetworkStyle::getAppIcon() const
-{
-    return getAppIcon(QSize(256,256));
-}
-
-QIcon NetworkStyle::getAppIcon(const QSize size) const
 {
     // load pixmap
     QPixmap pixmap(":/icons/bitcoin");
 
-    if(pixmap.size().width() != size.width() && pixmap.size().height() != size.height())
-    {
-        QPixmap scaledPixmap = pixmap.scaled(size, Qt::KeepAspectRatio);
-        if(!scaledPixmap.isNull())
-        {
-            pixmap = scaledPixmap;
-        }
-    }
-
     if(iconColorHueShift != 0 && iconColorSaturationReduction != 0)
     {
-        // copy the pixmap because on linux the original pixmap will be affected
-        pixmap = pixmap.copy();
-
         // generate QImage from QPixmap
         QImage img = pixmap.toImage();
 
@@ -110,6 +71,21 @@ QIcon NetworkStyle::getAppIcon(const QSize size) const
         pixmap.convertFromImage(img);
     }
 
-    QIcon icon(pixmap);
-    return icon;
+    appIcon = QIcon(pixmap);
+}
+
+const NetworkStyle *NetworkStyle::instantiate(const QString &networkId)
+{
+    for (unsigned x=0; x<network_styles_count; ++x)
+    {
+        if (networkId == network_styles[x].networkId)
+        {
+            return new NetworkStyle(
+                    network_styles[x].appName,
+                    network_styles[x].iconColorHueShift,
+                    network_styles[x].iconColorSaturationReduction,
+                    network_styles[x].titleAddText);
+        }
+    }
+    return 0;
 }
