@@ -1429,6 +1429,14 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
         <translation>Управление &amp;входами (только для продвинутых пользователей!)</translation>
     </message>
     <message>
+        <source>Third party transaction URLs</source>
+        <translation>Сторонние URL транзакций</translation>
+    </message>
+    <message>
+        <source>Third party URLs (e.g. explorer.novaco.in) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
+        <translation>Сторонние URL (например explorer.novaco.in), которые отображаются на вкладке транзакций как пункты контекстного меню. %s в URL заменяется хешем транзакции. URL отделяются друг от друга вертикальной чертой |.</translation>
+    </message>
+    <message>
         <location line="+71"/>
         <source>&amp;OK</source>
         <translation>О&amp;К</translation>
