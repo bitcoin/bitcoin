@@ -1281,7 +1281,10 @@ void ThreadOpenConnections()
             if (nANow - addr.nLastTry < 600 && nTries < 30)
                 continue;
 
-            // do not allow non-default ports, unless after 50 invalid addresses selected already
+            // do not allow non-default ports, unless after 50 invalid addresses selected already.
+            // this is to prevent malicious peers from advertising themselves as a service on
+            // another host and port, causing a destributed denial of service attack as nodes 
+            // around the network attempt to connect to it fruitlessly.
             if (addr.GetPort() != Params().GetDefaultPort() && nTries < 50)
                 continue;
 
