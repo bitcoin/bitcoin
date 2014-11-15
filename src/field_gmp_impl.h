@@ -1,6 +1,8 @@
-// Copyright (c) 2013 Pieter Wuille
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+/**********************************************************************
+ * Copyright (c) 2013, 2014 Pieter Wuille                             *
+ * Distributed under the MIT software license, see the accompanying   *
+ * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
+ **********************************************************************/
 
 #ifndef _SECP256K1_FIELD_REPR_IMPL_H_
 #define _SECP256K1_FIELD_REPR_IMPL_H_
@@ -33,7 +35,7 @@ static void secp256k1_fe_normalize(secp256k1_fe_t *r) {
         mp_limb_t carry = mpn_add_1(r->n, r->n, FIELD_LIMBS, 0x1000003D1ULL * r->n[FIELD_LIMBS]);
         mpn_add_1(r->n, r->n, FIELD_LIMBS, 0x1000003D1ULL * carry);
 #else
-        mp_limb_t carry = mpn_add_1(r->n, r->n, FIELD_LIMBS, 0x3D1UL * r->n[FIELD_LIMBS]) + 
+        mp_limb_t carry = mpn_add_1(r->n, r->n, FIELD_LIMBS, 0x3D1UL * r->n[FIELD_LIMBS]) +
                           mpn_add_1(r->n+(32/GMP_NUMB_BITS), r->n+(32/GMP_NUMB_BITS), FIELD_LIMBS-(32/GMP_NUMB_BITS), r->n[FIELD_LIMBS] << (32 % GMP_NUMB_BITS));
         mpn_add_1(r->n, r->n, FIELD_LIMBS, 0x3D1UL * carry);
         mpn_add_1(r->n+(32/GMP_NUMB_BITS), r->n+(32/GMP_NUMB_BITS), FIELD_LIMBS-(32/GMP_NUMB_BITS), carry << (32%GMP_NUMB_BITS));
@@ -119,10 +121,11 @@ SECP256K1_INLINE static void secp256k1_fe_add(secp256k1_fe_t *r, const secp256k1
 }
 
 static void secp256k1_fe_reduce(secp256k1_fe_t *r, mp_limb_t *tmp) {
-    // <A1 A2 A3 A4> <B1 B2 B3 B4>
-    //       B1 B2 B3 B4
-    // + C * A1 A2 A3 A4
-    // +  A1 A2 A3 A4
+    /** <A1 A2 A3 A4> <B1 B2 B3 B4>
+     *        B1 B2 B3 B4
+     *  + C * A1 A2 A3 A4
+     *  +  A1 A2 A3 A4
+     */
 
 #if (GMP_NUMB_BITS >= 33)
     mp_limb_t o = mpn_addmul_1(tmp, tmp+FIELD_LIMBS, FIELD_LIMBS, 0x1000003D1ULL);

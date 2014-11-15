@@ -1,24 +1,26 @@
-// Copyright (c) 2014 Pieter Wuille
-// Distributed under the MIT software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+/**********************************************************************
+ * Copyright (c) 2013, 2014 Pieter Wuille                             *
+ * Distributed under the MIT software license, see the accompanying   *
+ * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
+ **********************************************************************/
 
 #ifndef _SECP256K1_SCALAR_REPR_IMPL_H_
 #define _SECP256K1_SCALAR_REPR_IMPL_H_
 
 typedef unsigned __int128 uint128_t;
 
-// Limbs of the secp256k1 order.
+/* Limbs of the secp256k1 order. */
 #define SECP256K1_N_0 ((uint64_t)0xBFD25E8CD0364141ULL)
 #define SECP256K1_N_1 ((uint64_t)0xBAAEDCE6AF48A03BULL)
 #define SECP256K1_N_2 ((uint64_t)0xFFFFFFFFFFFFFFFEULL)
 #define SECP256K1_N_3 ((uint64_t)0xFFFFFFFFFFFFFFFFULL)
 
-// Limbs of 2^256 minus the secp256k1 order.
+/* Limbs of 2^256 minus the secp256k1 order. */
 #define SECP256K1_N_C_0 (~SECP256K1_N_0 + 1)
 #define SECP256K1_N_C_1 (~SECP256K1_N_1)
 #define SECP256K1_N_C_2 (1)
 
-// Limbs of half the secp256k1 order.
+/* Limbs of half the secp256k1 order. */
 #define SECP256K1_N_H_0 ((uint64_t)0xDFE92F46681B20A0ULL)
 #define SECP256K1_N_H_1 ((uint64_t)0x5D576E7357A4501DULL)
 #define SECP256K1_N_H_2 ((uint64_t)0xFFFFFFFFFFFFFFFFULL)
@@ -39,7 +41,7 @@ SECP256K1_INLINE static int secp256k1_scalar_get_bits(const secp256k1_scalar_t *
 SECP256K1_INLINE static int secp256k1_scalar_check_overflow(const secp256k1_scalar_t *a) {
     int yes = 0;
     int no = 0;
-    no |= (a->d[3] < SECP256K1_N_3); // No need for a > check.
+    no |= (a->d[3] < SECP256K1_N_3); /* No need for a > check. */
     no |= (a->d[2] < SECP256K1_N_2);
     yes |= (a->d[2] > SECP256K1_N_2) & ~no;
     no |= (a->d[1] < SECP256K1_N_1);
@@ -116,14 +118,14 @@ static int secp256k1_scalar_is_high(const secp256k1_scalar_t *a) {
     int no = 0;
     no |= (a->d[3] < SECP256K1_N_H_3);
     yes |= (a->d[3] > SECP256K1_N_H_3) & ~no;
-    no |= (a->d[2] < SECP256K1_N_H_2) & ~yes; // No need for a > check.
+    no |= (a->d[2] < SECP256K1_N_H_2) & ~yes; /* No need for a > check. */
     no |= (a->d[1] < SECP256K1_N_H_1) & ~yes;
     yes |= (a->d[1] > SECP256K1_N_H_1) & ~no;
     yes |= (a->d[0] > SECP256K1_N_H_0) & ~no;
     return yes;
 }
 
-// Inspired by the macros in OpenSSL's crypto/bn/asm/x86_64-gcc.c.
+/* Inspired by the macros in OpenSSL's crypto/bn/asm/x86_64-gcc.c. */
 
 /** Add a*b to the number defined by (c0,c1,c2). c2 must never overflow. */
 #define muladd(a,b) { \
@@ -211,12 +213,12 @@ static int secp256k1_scalar_is_high(const secp256k1_scalar_t *a) {
 static void secp256k1_scalar_reduce_512(secp256k1_scalar_t *r, const uint64_t *l) {
     uint64_t n0 = l[4], n1 = l[5], n2 = l[6], n3 = l[7];
 
-    // 160 bit accumulator.
+    /* 160 bit accumulator. */
     uint64_t c0, c1;
     uint32_t c2;
 
-    // Reduce 512 bits into 385.
-    // m[0..6] = l[0..3] + n[0..3] * SECP256K1_N_C.
+    /* Reduce 512 bits into 385. */
+    /* m[0..6] = l[0..3] + n[0..3] * SECP256K1_N_C. */
     c0 = l[0]; c1 = 0; c2 = 0;
     muladd_fast(n0, SECP256K1_N_C_0);
     uint64_t m0; extract_fast(m0);
@@ -242,8 +244,8 @@ static void secp256k1_scalar_reduce_512(secp256k1_scalar_t *r, const uint64_t *l
     VERIFY_CHECK(c0 <= 1);
     uint32_t m6 = c0;
 
-    // Reduce 385 bits into 258.
-    // p[0..4] = m[0..3] + m[4..6] * SECP256K1_N_C.
+    /* Reduce 385 bits into 258. */
+    /* p[0..4] = m[0..3] + m[4..6] * SECP256K1_N_C. */
     c0 = m0; c1 = 0; c2 = 0;
     muladd_fast(m4, SECP256K1_N_C_0);
     uint64_t p0; extract_fast(p0);
@@ -263,8 +265,8 @@ static void secp256k1_scalar_reduce_512(secp256k1_scalar_t *r, const uint64_t *l
     uint32_t p4 = c0 + m6;
     VERIFY_CHECK(p4 <= 2);
 
-    // Reduce 258 bits into 256.
-    // r[0..3] = p[0..3] + p[4] * SECP256K1_N_C.
+    /* Reduce 258 bits into 256. */
+    /* r[0..3] = p[0..3] + p[4] * SECP256K1_N_C. */
     uint128_t c = p0 + (uint128_t)SECP256K1_N_C_0 * p4;
     r->d[0] = c & 0xFFFFFFFFFFFFFFFFULL; c >>= 64;
     c += p1 + (uint128_t)SECP256K1_N_C_1 * p4;
@@ -274,18 +276,18 @@ static void secp256k1_scalar_reduce_512(secp256k1_scalar_t *r, const uint64_t *l
     c += p3;
     r->d[3] = c & 0xFFFFFFFFFFFFFFFFULL; c >>= 64;
 
-    // Final reduction of r.
+    /* Final reduction of r. */
     secp256k1_scalar_reduce(r, c + secp256k1_scalar_check_overflow(r));
 }
 
 static void secp256k1_scalar_mul(secp256k1_scalar_t *r, const secp256k1_scalar_t *a, const secp256k1_scalar_t *b) {
-    // 160 bit accumulator.
+    /* 160 bit accumulator. */
     uint64_t c0 = 0, c1 = 0;
     uint32_t c2 = 0;
 
     uint64_t l[8];
 
-    // l[0..7] = a[0..3] * b[0..3].
+    /* l[0..7] = a[0..3] * b[0..3]. */
     muladd_fast(a->d[0], b->d[0]);
     extract_fast(l[0]);
     muladd(a->d[0], b->d[1]);
@@ -316,13 +318,13 @@ static void secp256k1_scalar_mul(secp256k1_scalar_t *r, const secp256k1_scalar_t
 }
 
 static void secp256k1_scalar_sqr(secp256k1_scalar_t *r, const secp256k1_scalar_t *a) {
-    // 160 bit accumulator.
+    /* 160 bit accumulator. */
     uint64_t c0 = 0, c1 = 0;
     uint32_t c2 = 0;
 
     uint64_t l[8];
 
-    // l[0..7] = a[0..3] * b[0..3].
+    /* l[0..7] = a[0..3] * b[0..3]. */
     muladd_fast(a->d[0], a->d[0]);
     extract_fast(l[0]);
     muladd2(a->d[0], a->d[1]);

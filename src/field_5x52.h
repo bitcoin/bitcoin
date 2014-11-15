@@ -1,6 +1,8 @@
-// Copyright (c) 2013 Pieter Wuille
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+/**********************************************************************
+ * Copyright (c) 2013, 2014 Pieter Wuille                             *
+ * Distributed under the MIT software license, see the accompanying   *
+ * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
+ **********************************************************************/
 
 #ifndef _SECP256K1_FIELD_REPR_
 #define _SECP256K1_FIELD_REPR_
@@ -8,7 +10,7 @@
 #include <stdint.h>
 
 typedef struct {
-    // X = sum(i=0..4, elem[i]*2^52) mod n
+    /* X = sum(i=0..4, elem[i]*2^52) mod n */
     uint64_t n[5];
 #ifdef VERIFY
     int magnitude;

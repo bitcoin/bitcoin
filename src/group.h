@@ -1,6 +1,8 @@
-// Copyright (c) 2013 Pieter Wuille
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+/**********************************************************************
+ * Copyright (c) 2013, 2014 Pieter Wuille                             *
+ * Distributed under the MIT software license, see the accompanying   *
+ * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
+ **********************************************************************/
 
 #ifndef _SECP256K1_GROUP_
 #define _SECP256K1_GROUP_
@@ -12,25 +14,25 @@
 typedef struct {
     secp256k1_fe_t x;
     secp256k1_fe_t y;
-    int infinity; // whether this represents the point at infinity
+    int infinity; /* whether this represents the point at infinity */
 } secp256k1_ge_t;
 
 /** A group element of the secp256k1 curve, in jacobian coordinates. */
 typedef struct {
-    secp256k1_fe_t x; // actual X: x/z^2
-    secp256k1_fe_t y; // actual Y: y/z^3
+    secp256k1_fe_t x; /* actual X: x/z^2 */
+    secp256k1_fe_t y; /* actual Y: y/z^3 */
     secp256k1_fe_t z;
-    int infinity; // whether this represents the point at infinity
+    int infinity; /* whether this represents the point at infinity */
 } secp256k1_gej_t;
 
 /** Global constants related to the group */
 typedef struct {
-    secp256k1_num_t order; // the order of the curve (= order of its generator)
-    secp256k1_num_t half_order; // half the order of the curve (= order of its generator)
-    secp256k1_ge_t g; // the generator point
+    secp256k1_num_t order; /* the order of the curve (= order of its generator) */
+    secp256k1_num_t half_order; /* half the order of the curve (= order of its generator) */
+    secp256k1_ge_t g; /* the generator point */
 
 #ifdef USE_ENDOMORPHISM
-    // constants related to secp256k1's efficiently computable endomorphism
+    /* constants related to secp256k1's efficiently computable endomorphism */
     secp256k1_fe_t beta;
     secp256k1_num_t lambda, a1b2, b1, a2;
 #endif

@@ -1,7 +1,8 @@
-// Copyright (c) 2014 Pieter Wuille
-// Distributed under the MIT software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
-
+/**********************************************************************
+ * Copyright (c) 2014 Pieter Wuille                                   *
+ * Distributed under the MIT software license, see the accompanying   *
+ * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
+ **********************************************************************/
 #include <stdio.h>
 #include <string.h>
 
@@ -25,9 +26,9 @@ int main(void) {
         int recid = 0;
         CHECK(secp256k1_ecdsa_sign_compact(msg, 32, sig, key, nonce, &recid));
         for (int j = 0; j < 32; j++) {
-            nonce[j] = key[j];     // Move former key to nonce
-            msg[j] = sig[j];       // Move former R to message.
-            key[j] = sig[j + 32];  // Move former S to key.
+            nonce[j] = key[j];     /* Move former key to nonce  */
+            msg[j] = sig[j];       /* Move former R to message. */
+            key[j] = sig[j + 32];  /* Move former S to key.     */
         }
     }
 

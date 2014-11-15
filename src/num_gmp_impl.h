@@ -1,6 +1,8 @@
-// Copyright (c) 2013 Pieter Wuille
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+/**********************************************************************
+ * Copyright (c) 2013, 2014 Pieter Wuille                             *
+ * Distributed under the MIT software license, see the accompanying   *
+ * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
+ **********************************************************************/
 
 #ifndef _SECP256K1_NUM_REPR_IMPL_H_
 #define _SECP256K1_NUM_REPR_IMPL_H_
@@ -119,15 +121,16 @@ static void secp256k1_num_mod_inverse(secp256k1_num_t *r, const secp256k1_num_t 
     secp256k1_num_sanity(a);
     secp256k1_num_sanity(m);
 
-    // mpn_gcdext computes: (G,S) = gcdext(U,V), where
-    // * G = gcd(U,V)
-    // * G = U*S + V*T
-    // * U has equal or more limbs than V, and V has no padding
-    // If we set U to be (a padded version of) a, and V = m:
-    //   G = a*S + m*T
-    //   G = a*S mod m
-    // Assuming G=1:
-    //   S = 1/a mod m
+    /** mpn_gcdext computes: (G,S) = gcdext(U,V), where
+     *  * G = gcd(U,V)
+     *  * G = U*S + V*T
+     *  * U has equal or more limbs than V, and V has no padding
+     *  If we set U to be (a padded version of) a, and V = m:
+     *    G = a*S + m*T
+     *    G = a*S mod m
+     *  Assuming G=1:
+     *    S = 1/a mod m
+     */
     VERIFY_CHECK(m->limbs <= NUM_LIMBS);
     VERIFY_CHECK(m->data[m->limbs-1] != 0);
     mp_limb_t g[NUM_LIMBS+1];
@@ -180,7 +183,7 @@ static int secp256k1_num_eq(const secp256k1_num_t *a, const secp256k1_num_t *b) 
 }
 
 static void secp256k1_num_subadd(secp256k1_num_t *r, const secp256k1_num_t *a, const secp256k1_num_t *b, int bneg) {
-    if (!(b->neg ^ bneg ^ a->neg)) { // a and b have the same sign
+    if (!(b->neg ^ bneg ^ a->neg)) { /* a and b have the same sign */
         r->neg = a->neg;
         if (a->limbs >= b->limbs) {
             secp256k1_num_add_abs(r, a, b);

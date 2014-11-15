@@ -1,6 +1,8 @@
-// Copyright (c) 2013 Pieter Wuille
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+/**********************************************************************
+ * Copyright (c) 2013, 2014 Pieter Wuille                             *
+ * Distributed under the MIT software license, see the accompanying   *
+ * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
+ **********************************************************************/
 
 #define SECP256K1_BUILD (1)
 
@@ -42,7 +44,7 @@ int secp256k1_ecdsa_verify(const unsigned char *msg, int msglen, const unsigned 
     DEBUG_CHECK(pubkey != NULL);
 
     int ret = -3;
-    secp256k1_num_t m; 
+    secp256k1_num_t m;
     secp256k1_ecdsa_sig_t s;
     secp256k1_ge_t q;
     secp256k1_num_set_bin(&m, msg, msglen);
@@ -140,7 +142,7 @@ int secp256k1_ecdsa_recover_compact(const unsigned char *msg, int msglen, const 
     DEBUG_CHECK(recid >= 0 && recid <= 3);
 
     int ret = 0;
-    secp256k1_num_t m; 
+    secp256k1_num_t m;
     secp256k1_ecdsa_sig_t sig;
     secp256k1_num_set_bin(&sig.r, sig64, 32);
     secp256k1_num_set_bin(&sig.s, sig64 + 32, 32);

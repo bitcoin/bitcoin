@@ -1,6 +1,8 @@
-// Copyright (c) 2013 Pieter Wuille
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+/**********************************************************************
+ * Copyright (c) 2013, 2014 Pieter Wuille                             *
+ * Distributed under the MIT software license, see the accompanying   *
+ * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
+ **********************************************************************/
 
 #ifndef _SECP256K1_FIELD_IMPL_H_
 #define _SECP256K1_FIELD_IMPL_H_
@@ -66,9 +68,10 @@ static void secp256k1_fe_set_hex(secp256k1_fe_t *r, const char *a, int alen) {
 
 static int secp256k1_fe_sqrt(secp256k1_fe_t *r, const secp256k1_fe_t *a) {
 
-    // The binary representation of (p + 1)/4 has 3 blocks of 1s, with lengths in
-    // { 2, 22, 223 }. Use an addition chain to calculate 2^n - 1 for each block:
-    // 1, [2], 3, 6, 9, 11, [22], 44, 88, 176, 220, [223]
+    /** The binary representation of (p + 1)/4 has 3 blocks of 1s, with lengths in
+     *  { 2, 22, 223 }. Use an addition chain to calculate 2^n - 1 for each block:
+     *  1, [2], 3, 6, 9, 11, [22], 44, 88, 176, 220, [223]
+     */
 
     secp256k1_fe_t x2;
     secp256k1_fe_sqr(&x2, a);
@@ -114,7 +117,7 @@ static int secp256k1_fe_sqrt(secp256k1_fe_t *r, const secp256k1_fe_t *a) {
     for (int j=0; j<3; j++) secp256k1_fe_sqr(&x223, &x223);
     secp256k1_fe_mul(&x223, &x223, &x3);
 
-    // The final result is then assembled using a sliding window over the blocks.
+    /* The final result is then assembled using a sliding window over the blocks. */
 
     secp256k1_fe_t t1 = x223;
     for (int j=0; j<23; j++) secp256k1_fe_sqr(&t1, &t1);
@@ -124,7 +127,7 @@ static int secp256k1_fe_sqrt(secp256k1_fe_t *r, const secp256k1_fe_t *a) {
     secp256k1_fe_sqr(&t1, &t1);
     secp256k1_fe_sqr(r, &t1);
 
-    // Check that a square root was actually calculated
+    /* Check that a square root was actually calculated */
 
     secp256k1_fe_sqr(&t1, r);
     secp256k1_fe_negate(&t1, &t1, 1);
@@ -135,9 +138,10 @@ static int secp256k1_fe_sqrt(secp256k1_fe_t *r, const secp256k1_fe_t *a) {
 
 static void secp256k1_fe_inv(secp256k1_fe_t *r, const secp256k1_fe_t *a) {
 
-    // The binary representation of (p - 2) has 5 blocks of 1s, with lengths in
-    // { 1, 2, 22, 223 }. Use an addition chain to calculate 2^n - 1 for each block:
-    // [1], [2], 3, 6, 9, 11, [22], 44, 88, 176, 220, [223]
+    /** The binary representation of (p - 2) has 5 blocks of 1s, with lengths in
+     *  { 1, 2, 22, 223 }. Use an addition chain to calculate 2^n - 1 for each block:
+     *  [1], [2], 3, 6, 9, 11, [22], 44, 88, 176, 220, [223]
+     */
 
     secp256k1_fe_t x2;
     secp256k1_fe_sqr(&x2, a);
@@ -183,7 +187,7 @@ static void secp256k1_fe_inv(secp256k1_fe_t *r, const secp256k1_fe_t *a) {
     for (int j=0; j<3; j++) secp256k1_fe_sqr(&x223, &x223);
     secp256k1_fe_mul(&x223, &x223, &x3);
 
-    // The final result is then assembled using a sliding window over the blocks.
+    /* The final result is then assembled using a sliding window over the blocks. */
 
     secp256k1_fe_t t1 = x223;
     for (int j=0; j<23; j++) secp256k1_fe_sqr(&t1, &t1);
@@ -204,7 +208,7 @@ static void secp256k1_fe_inv_var(secp256k1_fe_t *r, const secp256k1_fe_t *a) {
     secp256k1_fe_t c = *a;
     secp256k1_fe_normalize(&c);
     secp256k1_fe_get_b32(b, &c);
-    secp256k1_num_t n; 
+    secp256k1_num_t n;
     secp256k1_num_set_bin(&n, b, 32);
     secp256k1_num_mod_inverse(&n, &n, &secp256k1_fe_consts->p);
     secp256k1_num_get_bin(b, 32, &n);

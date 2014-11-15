@@ -1,6 +1,8 @@
-// Copyright (c) 2013 Pieter Wuille
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+/**********************************************************************
+ * Copyright (c) 2013, 2014 Pieter Wuille                             *
+ * Distributed under the MIT software license, see the accompanying   *
+ * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
+ **********************************************************************/
 
 #ifndef _SECP256K1_UTIL_H_
 #define _SECP256K1_UTIL_H_
@@ -30,14 +32,14 @@
     } \
 } while(0)
 
-// Like assert(), but safe to use on expressions with side effects.
+/* Like assert(), but safe to use on expressions with side effects. */
 #ifndef NDEBUG
 #define DEBUG_CHECK CHECK
 #else
 #define DEBUG_CHECK(cond) do { (void)(cond); } while(0)
 #endif
 
-// Like DEBUG_CHECK(), but when VERIFY is defined instead of NDEBUG not defined.
+/* Like DEBUG_CHECK(), but when VERIFY is defined instead of NDEBUG not defined. */
 #ifdef VERIFY
 #define VERIFY_CHECK CHECK
 #else
