@@ -206,25 +206,6 @@ static void secp256k1_num_mul(secp256k1_num_t *r, const secp256k1_num_t *a, cons
     memset(tmp, 0, sizeof(tmp));
 }
 
-static void secp256k1_num_div(secp256k1_num_t *r, const secp256k1_num_t *a, const secp256k1_num_t *b) {
-    secp256k1_num_sanity(a);
-    secp256k1_num_sanity(b);
-    if (b->limbs > a->limbs) {
-        r->limbs = 1;
-        r->data[0] = 0;
-        r->neg = 0;
-        return;
-    }
-
-    mp_limb_t quo[2*NUM_LIMBS+1];
-    mp_limb_t rem[2*NUM_LIMBS+1];
-    mpn_tdiv_qr(quo, rem, 0, a->data, a->limbs, b->data, b->limbs);
-    mpn_copyi(r->data, quo, a->limbs - b->limbs + 1);
-    r->limbs = a->limbs - b->limbs + 1;
-    while (r->limbs > 1 && r->data[r->limbs - 1]==0) r->limbs--;
-    r->neg = a->neg ^ b->neg;
-}
-
 static void secp256k1_num_shift(secp256k1_num_t *r, int bits) {
     if (bits % GMP_NUMB_BITS) {
         // Shift within limbs.

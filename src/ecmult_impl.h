@@ -170,6 +170,8 @@ static void secp256k1_ecmult(secp256k1_gej_t *r, const secp256k1_gej_t *a, const
     /* build wnaf representation for na_1 and na_lam. */
     int wnaf_na_1[129];   int bits_na_1   = secp256k1_ecmult_wnaf(wnaf_na_1,   &na_1,   WINDOW_A);
     int wnaf_na_lam[129]; int bits_na_lam = secp256k1_ecmult_wnaf(wnaf_na_lam, &na_lam, WINDOW_A);
+    VERIFY_CHECK(bits_na_1 <= 129);
+    VERIFY_CHECK(bits_na_lam <= 129);
     int bits = bits_na_1;
     if (bits_na_lam > bits) bits = bits_na_lam;
 #else
