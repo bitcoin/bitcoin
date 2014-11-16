@@ -130,6 +130,7 @@ public:
             extra += hint - style()->subControlRect(QStyle::CC_SpinBox, &opt,
                                                     QStyle::SC_SpinBoxEditField, this).size();
             hint += extra;
+            hint.setHeight(h);
 
             opt.rect = rect();
 
