@@ -1,6 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2013 The Bitcoin developers
-// Distributed under the MIT/X11 software license, see the accompanying
+// Copyright (c) 2009-2014 The Bitcoin developers
+// Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef BITCOIN_TXMEMPOOL_H
@@ -25,19 +25,19 @@ inline bool AllowFree(double dPriority)
 /** Fake height value used in CCoins to signify they are only in the memory pool (since 0.8) */
 static const unsigned int MEMPOOL_HEIGHT = 0x7FFFFFFF;
 
-/*
+/**
  * CTxMemPool stores these:
  */
 class CTxMemPoolEntry
 {
 private:
     CTransaction tx;
-    CAmount nFee; // Cached to avoid expensive parent-transaction lookups
-    size_t nTxSize; // ... and avoid recomputing tx size
-    size_t nModSize; // ... and modified size for priority
-    int64_t nTime; // Local time when entering the mempool
-    double dPriority; // Priority when entering the mempool
-    unsigned int nHeight; // Chain height when entering the mempool
+    CAmount nFee; //! Cached to avoid expensive parent-transaction lookups
+    size_t nTxSize; //! ... and avoid recomputing tx size
+    size_t nModSize; //! ... and modified size for priority
+    int64_t nTime; //! Local time when entering the mempool
+    double dPriority; //! Priority when entering the mempool
+    unsigned int nHeight; //! Chain height when entering the mempool
 
 public:
     CTxMemPoolEntry(const CTransaction& _tx, const CAmount& _nFee,
@@ -68,7 +68,7 @@ public:
     bool IsNull() const { return (ptx == NULL && n == (uint32_t) -1); }
 };
 
-/*
+/**
  * CTxMemPool stores valid-according-to-the-current-best-chain
  * transactions that may be included in the next block.
  *
@@ -81,12 +81,12 @@ public:
 class CTxMemPool
 {
 private:
-    bool fSanityCheck; // Normally false, true if -checkmempool or -regtest
+    bool fSanityCheck; //! Normally false, true if -checkmempool or -regtest
     unsigned int nTransactionsUpdated;
     CMinerPolicyEstimator* minerPolicyEstimator;
 
-    CFeeRate minRelayFee; // Passed to constructor to avoid dependency on main
-    uint64_t totalTxSize; // sum of all mempool tx' byte sizes
+    CFeeRate minRelayFee; //! Passed to constructor to avoid dependency on main
+    uint64_t totalTxSize; //! sum of all mempool tx' byte sizes
 
 public:
     mutable CCriticalSection cs;
@@ -97,7 +97,7 @@ public:
     CTxMemPool(const CFeeRate& _minRelayFee);
     ~CTxMemPool();
 
-    /*
+    /**
      * If sanity-checking is turned on, check makes sure the pool is
      * consistent (does not contain two transactions that spend the same inputs,
      * all inputs are in the mapNextTx array). If sanity-checking is turned off,
@@ -141,19 +141,21 @@ public:
 
     bool lookup(uint256 hash, CTransaction& result) const;
 
-    // Estimate fee rate needed to get into the next
-    // nBlocks
+    /** Estimate fee rate needed to get into the next nBlocks */
     CFeeRate estimateFee(int nBlocks) const;
-    // Estimate priority needed to get into the next
-    // nBlocks
+
+    /** Estimate priority needed to get into the next nBlocks */
     double estimatePriority(int nBlocks) const;
-    // Write/Read estimates to disk
+    
+    /** Write/Read estimates to disk */
     bool WriteFeeEstimates(CAutoFile& fileout) const;
     bool ReadFeeEstimates(CAutoFile& filein);
 };
 
-/** CCoinsView that brings transactions from a memorypool into view.
-    It does not check for spendings by memory pool transactions. */
+/** 
+ * CCoinsView that brings transactions from a memorypool into view.
+ * It does not check for spendings by memory pool transactions.
+ */
 class CCoinsViewMemPool : public CCoinsViewBacked
 {
 protected:
