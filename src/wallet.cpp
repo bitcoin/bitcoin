@@ -2722,6 +2722,7 @@ void CWallet::UpdatedTransaction(const uint256 &hashTx)
         map<uint256, CWalletTx>::const_iterator mi = mapWallet.find(hashTx);
         if (mi != mapWallet.end())
             NotifyTransactionChanged(this, hashTx, CT_UPDATED);
+        vMintingWalletUpdated.push_back(hashTx);
     }
 }
 

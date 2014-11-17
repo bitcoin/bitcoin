@@ -177,6 +177,24 @@
     <ClCompile Include="..\..\src\qt\walletmodel.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\qt\mintingfilterproxy.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\qt\mintingtablemodel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\qt\mintingview.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="build\moc_mintingview.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="build\moc_mintingtablemodel.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="build\moc_mintingfilterproxy.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="..\..\src\qt\aboutdialog.h">
@@ -431,6 +449,15 @@
     <ClInclude Include="..\..\src\qt\dialogwindowflags.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <CustomBuild Include="..\..\src\qt\mintingfilterproxy.h">
+      <Filter>Header Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\src\qt\mintingtablemodel.h">
+      <Filter>Header Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\src\qt\mintingview.h">
+      <Filter>Header Files</Filter>
+    </CustomBuild>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="build\moc_aboutdialog.cpp">
@@ -801,5 +828,10 @@
     <Image Include="..\..\src\qt\res\icons\novacoin-80.png">
       <Filter>Resource Files</Filter>
     </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\src\kernelrecord.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
