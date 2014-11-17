@@ -2,6 +2,136 @@
 <!DOCTYPE TS>
 <TS version="2.0" language="ru">
 <defaultcodec>UTF-8</defaultcodec>
+  <context>
+    <name>MintingView</name>
+    <message>
+      <location filename="../mintingview.cpp" line="33"/>
+      <source>transaction is too young</source>
+      <translation>транзакция молода для PoS</translation>
+    </message>
+    <message>
+      <location filename="../mintingview.cpp" line="40"/>
+      <source>transaction is mature</source>
+      <translation>зрелая транзакция</translation>
+    </message>
+    <message>
+      <location filename="../mintingview.cpp" line="47"/>
+      <source>transaction has reached maximum probability</source>
+      <translation>транзакция достигла максимальной вероятности</translation>
+    </message>
+    <message>
+      <location filename="../mintingview.cpp" line="60"/>
+      <source>Display minting probability within : </source>
+      <translation>Показывать вероятность найти блок в течение : </translation>
+    </message>
+    <message>
+      <location filename="../mintingview.cpp" line="62"/>
+      <source>10 min</source>
+      <translation>10 минут</translation>
+    </message>
+    <message>
+      <location filename="../mintingview.cpp" line="63"/>
+      <source>24 hours</source>
+      <translation>24 часов</translation>
+    </message>
+    <message>
+      <location filename="../mintingview.cpp" line="64"/>
+      <source>30 days</source>
+      <translation>30 дней</translation>
+    </message>
+    <message>
+      <location filename="../mintingview.cpp" line="65"/>
+      <source>90 days</source>
+      <translation>90 дней</translation>
+    </message>
+    <message>
+      <location filename="../mintingview.cpp" line="167"/>
+      <source>Export Minting Data</source>
+      <translation>Экспортировать данные таблицы</translation>
+    </message>
+    <message>
+      <location filename="../mintingview.cpp" line="168"/>
+      <source>Comma separated file (*.csv)</source>
+      <translation>Текст, разделённый запятыми (*.csv)</translation>
+    </message>
+    <message>
+      <location filename="../mintingview.cpp" line="185"/>
+      <source>Error exporting</source>
+      <translation>Ошибка экспорта</translation>
+    </message>
+    <message>
+      <location filename="../mintingview.cpp" line="185"/>
+      <source>Could not write to file %1.</source>
+      <translation>Невозможно записать в файл %1.</translation>
+    </message>
+  </context>
+  <context>
+    <name>MintingTableModel</name>
+    <message>
+      <source>Address</source>
+      <translation>Адрес</translation>
+    </message>
+    <message>
+      <source>Transaction</source>
+      <translation>Транзакция</translation>
+    </message>
+    <message>
+      <source>Age</source>
+      <translation>Возраст</translation>
+    </message>
+    <message>
+      <source>CoinDay</source>
+      <translation>Вес</translation>
+    </message>
+    <message>
+      <source>Balance</source>
+      <translation>Баланс</translation>
+    </message>
+    <message>
+      <source>MintProbability</source>
+      <translation>Вероятность PoS</translation>
+    </message>
+    <message>
+      <source>minutes</source>
+      <translation>минут</translation>
+    </message>
+    <message>
+      <source>hours</source>
+      <translation>часа</translation>
+    </message>
+    <message>
+      <source>days</source>
+      <translation>дней</translation>
+    </message>
+    <message>
+      <source>You have %1 chance to find a POS block if you mint %2 %3 at current difficulty.</source>
+      <translation>У вас есть %1 шанс найти PoS блок, если вы будете майнить %2 %3 при текущей сложности.</translation>
+    </message>
+    <message>
+      <source>Destination address of the output.</source>
+      <translation>Адрес который получил эту транзакцию.</translation>
+    </message>
+    <message>
+      <source>Original transaction id.</source>
+      <translation>Исходный ID транзакции.</translation>
+    </message>
+    <message>
+      <source>Age of the transaction in days.</source>
+      <translation>Возраст транзакции в днях.</translation>
+    </message>
+    <message>
+      <source>Balance of the output.</source>
+      <translation>Баланс выхода.</translation>
+    </message>
+    <message>
+      <source>Coin age in the output.</source>
+      <translation>CoinDayWeight выхода.</translation>
+    </message>
+    <message>
+      <source>Chance to mint a block within given time interval.</source>
+      <translation>Шанс найти блок в течение выбранного временного интервала.</translation>
+    </message>
+  </context>
 <context>
   <name>QObject</name>
   <message>
@@ -339,6 +469,16 @@ Copyright © 2012-2014 The NovaCoin developers</source>
         <location line="+1"/>
         <source>Browse transaction history</source>
         <translation>Показать историю транзакций</translation>
+    </message>
+    <message>
+        <location line="+17"/>
+        <source>&amp;Minting</source>
+        <translation>&amp;PoS</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Show your minting capacity</source>
+        <translation>Показать ваш PoS потенциал</translation>
     </message>
     <message>
         <location line="+5"/>
