@@ -1,6 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2014 The Bitcoin developers
-// Distributed under the MIT/X11 software license, see the accompanying
+// Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 /**
@@ -40,25 +40,26 @@ extern volatile bool fReopenDebugLog;
 
 void SetupEnvironment();
 
-/* Return true if log accepts specified category */
+/** Return true if log accepts specified category */
 bool LogAcceptCategory(const char* category);
-/* Send a string to the log output */
+/** Send a string to the log output */
 int LogPrintStr(const std::string &str);
 
 #define LogPrintf(...) LogPrint(NULL, __VA_ARGS__)
 
-/* When we switch to C++11, this can be switched to variadic templates instead
+/**
+ * When we switch to C++11, this can be switched to variadic templates instead
  * of this macro-based construction (see tinyformat.h).
  */
 #define MAKE_ERROR_AND_LOG_FUNC(n)                                        \
-    /*   Print to debug.log if -debug=category switch is given OR category is NULL. */ \
+    /**   Print to debug.log if -debug=category switch is given OR category is NULL. */ \
     template<TINYFORMAT_ARGTYPES(n)>                                          \
     static inline int LogPrint(const char* category, const char* format, TINYFORMAT_VARARGS(n))  \
     {                                                                         \
         if(!LogAcceptCategory(category)) return 0;                            \
         return LogPrintStr(tfm::format(format, TINYFORMAT_PASSARGS(n))); \
     }                                                                         \
-    /*   Log error and return false */                                        \
+    /**   Log error and return false */                                        \
     template<TINYFORMAT_ARGTYPES(n)>                                          \
     static inline bool error(const char* format, TINYFORMAT_VARARGS(n))                     \
     {                                                                         \
@@ -68,7 +69,8 @@ int LogPrintStr(const std::string &str);
 
 TINYFORMAT_FOREACH_ARGNUM(MAKE_ERROR_AND_LOG_FUNC)
 
-/* Zero-arg versions of logging and error, these are not covered by
+/**
+ * Zero-arg versions of logging and error, these are not covered by
  * TINYFORMAT_FOREACH_ARGNUM
  */
 static inline int LogPrint(const char* category, const char* format)
@@ -162,13 +164,15 @@ bool SoftSetBoolArg(const std::string& strArg, bool fValue);
 void SetThreadPriority(int nPriority);
 void RenameThread(const char* name);
 
-// Standard wrapper for do-something-forever thread functions.
-// "Forever" really means until the thread is interrupted.
-// Use it like:
-//   new boost::thread(boost::bind(&LoopForever<void (*)()>, "dumpaddr", &DumpAddresses, 900000));
-// or maybe:
-//    boost::function<void()> f = boost::bind(&FunctionWithArg, argument);
-//    threadGroup.create_thread(boost::bind(&LoopForever<boost::function<void()> >, "nothing", f, milliseconds));
+/**
+ * Standard wrapper for do-something-forever thread functions.
+ * "Forever" really means until the thread is interrupted.
+ * Use it like:
+ *   new boost::thread(boost::bind(&LoopForever<void (*)()>, "dumpaddr", &DumpAddresses, 900000));
+ * or maybe:
+ *    boost::function<void()> f = boost::bind(&FunctionWithArg, argument);
+ *    threadGroup.create_thread(boost::bind(&LoopForever<boost::function<void()> >, "nothing", f, milliseconds));
+ */
 template <typename Callable> void LoopForever(const char* name,  Callable func, int64_t msecs)
 {
     std::string s = strprintf("bitcoin-%s", name);
@@ -196,7 +200,10 @@ template <typename Callable> void LoopForever(const char* name,  Callable func, 
         throw;
     }
 }
-// .. and a wrapper that just calls func once
+
+/**
+ * .. and a wrapper that just calls func once
+ */
 template <typename Callable> void TraceThread(const char* name,  Callable func)
 {
     std::string s = strprintf("bitcoin-%s", name);
