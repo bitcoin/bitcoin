@@ -1,6 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2014 The Bitcoin developers
-// Distributed under the MIT/X11 software license, see the accompanying
+// Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #if defined(HAVE_CONFIG_H)
@@ -105,7 +105,7 @@ bool fLogTimestamps = false;
 bool fLogIPs = false;
 volatile bool fReopenDebugLog = false;
 
-// Init OpenSSL library multithreading support
+/** Init OpenSSL library multithreading support */
 static CCriticalSection** ppmutexOpenSSL;
 void locking_callback(int mode, int i, const char* file, int line)
 {
@@ -149,18 +149,22 @@ public:
 }
 instance_of_cinit;
 
-// LogPrintf() has been broken a couple of times now
-// by well-meaning people adding mutexes in the most straightforward way.
-// It breaks because it may be called by global destructors during shutdown.
-// Since the order of destruction of static/global objects is undefined,
-// defining a mutex as a global object doesn't work (the mutex gets
-// destroyed, and then some later destructor calls OutputDebugStringF,
-// maybe indirectly, and you get a core dump at shutdown trying to lock
-// the mutex).
+/**
+ * LogPrintf() has been broken a couple of times now
+ * by well-meaning people adding mutexes in the most straightforward way.
+ * It breaks because it may be called by global destructors during shutdown.
+ * Since the order of destruction of static/global objects is undefined,
+ * defining a mutex as a global object doesn't work (the mutex gets
+ * destroyed, and then some later destructor calls OutputDebugStringF,
+ * maybe indirectly, and you get a core dump at shutdown trying to lock
+ * the mutex).
+ */
 
 static boost::once_flag debugPrintInitFlag = BOOST_ONCE_INIT;
-// We use boost::call_once() to make sure these are initialized
-// in a thread-safe manner the first time called:
+/**
+ * We use boost::call_once() to make sure these are initialized
+ * in a thread-safe manner the first time called:
+ */
 static FILE* fileout = NULL;
 static boost::mutex* mutexDebugLog = NULL;
 
@@ -500,9 +504,11 @@ bool RenameOver(boost::filesystem::path src, boost::filesystem::path dest)
 #endif /* WIN32 */
 }
 
-// Ignores exceptions thrown by Boost's create_directory if the requested directory exists.
-// Specifically handles case where path p exists, but it wasn't possible for the user to
-// write to the parent directory.
+/**
+ * Ignores exceptions thrown by Boost's create_directory if the requested directory exists.
+ * Specifically handles case where path p exists, but it wasn't possible for the user to
+ * write to the parent directory.
+ */
 bool TryCreateDirectory(const boost::filesystem::path& p)
 {
     try
@@ -542,8 +548,10 @@ bool TruncateFile(FILE *file, unsigned int length) {
 #endif
 }
 
-// this function tries to raise the file descriptor limit to the requested number.
-// It returns the actual file descriptor limit (which may be more or less than nMinFD)
+/**
+ * this function tries to raise the file descriptor limit to the requested number.
+ * It returns the actual file descriptor limit (which may be more or less than nMinFD)
+ */
 int RaiseFileDescriptorLimit(int nMinFD) {
 #if defined(WIN32)
     return 2048;
@@ -563,8 +571,10 @@ int RaiseFileDescriptorLimit(int nMinFD) {
 #endif
 }
 
-// this function tries to make a particular range of a file allocated (corresponding to disk space)
-// it is advisory, and the range specified in the arguments will never contain live data
+/**
+ * this function tries to make a particular range of a file allocated (corresponding to disk space)
+ * it is advisory, and the range specified in the arguments will never contain live data
+ */
 void AllocateFileRange(FILE *file, unsigned int offset, unsigned int length) {
 #if defined(WIN32)
     // Windows-specific version
