@@ -10,6 +10,7 @@
 #include "keystore.h"
 #include "main.h"
 #include "script/script.h"
+#include "script/script_error.h"
 #include "core_io.h"
 
 #include <map>
@@ -86,6 +87,7 @@ BOOST_AUTO_TEST_CASE(tx_valid)
     // verifyFlags is a comma separated list of script verification flags to apply, or "NONE"
     Array tests = read_json(std::string(json_tests::tx_valid, json_tests::tx_valid + sizeof(json_tests::tx_valid)));
 
+    ScriptError err;
     BOOST_FOREACH(Value& tv, tests)
     {
         Array test = tv.get_array();
@@ -142,8 +144,9 @@ BOOST_AUTO_TEST_CASE(tx_valid)
 
                 unsigned int verify_flags = ParseScriptFlags(test[2].get_str());
                 BOOST_CHECK_MESSAGE(VerifyScript(tx.vin[i].scriptSig, mapprevOutScriptPubKeys[tx.vin[i].prevout],
-                                                 verify_flags, SignatureChecker(tx, i)),
+                                                 verify_flags, SignatureChecker(tx, i), &err),
                                     strTest);
+                BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_OK, ScriptErrorString(err));
             }
         }
     }
@@ -160,6 +163,7 @@ BOOST_AUTO_TEST_CASE(tx_invalid)
     // verifyFlags is a comma separated list of script verification flags to apply, or "NONE"
     Array tests = read_json(std::string(json_tests::tx_invalid, json_tests::tx_invalid + sizeof(json_tests::tx_invalid)));
 
+    ScriptError err;
     BOOST_FOREACH(Value& tv, tests)
     {
         Array test = tv.get_array();
@@ -215,10 +219,10 @@ BOOST_AUTO_TEST_CASE(tx_invalid)
 
                 unsigned int verify_flags = ParseScriptFlags(test[2].get_str());
                 fValid = VerifyScript(tx.vin[i].scriptSig, mapprevOutScriptPubKeys[tx.vin[i].prevout],
-                                      verify_flags, SignatureChecker(tx, i));
+                                      verify_flags, SignatureChecker(tx, i), &err);
             }
-
             BOOST_CHECK_MESSAGE(!fValid, strTest);
+            BOOST_CHECK_MESSAGE(err != SCRIPT_ERR_OK, ScriptErrorString(err));
         }
     }
 }
