@@ -1,6 +1,8 @@
-// Copyright (c) 2013-2014 Pieter Wuille
-// Distributed under the MIT software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+/**********************************************************************
+ * Copyright (c) 2013, 2014 Pieter Wuille                             *
+ * Distributed under the MIT software license, see the accompanying   *
+ * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
+ **********************************************************************/
 
 #ifndef _SECP256K1_ECKEY_IMPL_H_
 #define _SECP256K1_ECKEY_IMPL_H_
@@ -46,11 +48,11 @@ static void secp256k1_eckey_pubkey_serialize(secp256k1_ge_t *elem, unsigned char
 
 static int secp256k1_eckey_privkey_parse(secp256k1_scalar_t *key, const unsigned char *privkey, int privkeylen) {
     const unsigned char *end = privkey + privkeylen;
-    // sequence header
+    /* sequence header */
     if (end < privkey+1 || *privkey != 0x30)
         return 0;
     privkey++;
-    // sequence length constructor
+    /* sequence length constructor */
     int lenb = 0;
     if (end < privkey+1 || !(*privkey & 0x80))
         return 0;
@@ -59,17 +61,17 @@ static int secp256k1_eckey_privkey_parse(secp256k1_scalar_t *key, const unsigned
         return 0;
     if (end < privkey+lenb)
         return 0;
-    // sequence length
+    /* sequence length */
     int len = 0;
     len = privkey[lenb-1] | (lenb > 1 ? privkey[lenb-2] << 8 : 0);
     privkey += lenb;
     if (end < privkey+len)
         return 0;
-    // sequence element 0: version number (=1)
+    /* sequence element 0: version number (=1) */
     if (end < privkey+3 || privkey[0] != 0x02 || privkey[1] != 0x01 || privkey[2] != 0x01)
         return 0;
     privkey += 3;
-    // sequence element 1: octet string, up to 32 bytes
+    /* sequence element 1: octet string, up to 32 bytes */
     if (end < privkey+2 || privkey[0] != 0x04 || privkey[1] > 0x20 || end < privkey+2+privkey[1])
         return 0;
     int overflow = 0;

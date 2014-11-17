@@ -1,6 +1,8 @@
-// Copyright (c) 2013 Pieter Wuille
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+/**********************************************************************
+ * Copyright (c) 2013, 2014 Pieter Wuille                             *
+ * Distributed under the MIT software license, see the accompanying   *
+ * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
+ **********************************************************************/
 
 #if defined HAVE_CONFIG_H
 #include "libsecp256k1-config.h"
@@ -131,12 +133,12 @@ void test_num_get_set_hex(void) {
     secp256k1_num_set_hex(&n2, c, 64);
     CHECK(secp256k1_num_eq(&n1, &n2));
     for (int i=0; i<64; i++) {
-        // check whether the lower 4 bits correspond to the last hex character
+        /* check whether the lower 4 bits correspond to the last hex character */
         int low1 = secp256k1_num_shift(&n1, 4);
         int lowh = c[63];
         int low2 = ((lowh>>6)*9+(lowh-'0'))&15;
         CHECK(low1 == low2);
-        // shift bits off the hex representation, and compare
+        /* shift bits off the hex representation, and compare */
         memmove(c+1, c, 63);
         c[0] = '0';
         secp256k1_num_set_hex(&n2, c, 64);
@@ -152,11 +154,11 @@ void test_num_get_set_bin(void) {
     secp256k1_num_set_bin(&n2, c, 32);
     CHECK(secp256k1_num_eq(&n1, &n2));
     for (int i=0; i<32; i++) {
-        // check whether the lower 8 bits correspond to the last byte
+        /* check whether the lower 8 bits correspond to the last byte */
         int low1 = secp256k1_num_shift(&n1, 8);
         int low2 = c[31];
         CHECK(low1 == low2);
-        // shift bits off the byte representation, and compare
+        /* shift bits off the byte representation, and compare */
         memmove(c+1, c, 31);
         c[0] = 0;
         secp256k1_num_set_bin(&n2, c, 32);
@@ -179,20 +181,20 @@ void run_num_int(void) {
 void test_num_negate(void) {
     secp256k1_num_t n1;
     secp256k1_num_t n2;
-    random_num_order_test(&n1); // n1 = R
+    random_num_order_test(&n1); /* n1 = R */
     random_num_negate(&n1);
-    secp256k1_num_copy(&n2, &n1); // n2 = R
-    secp256k1_num_sub(&n1, &n2, &n1); // n1 = n2-n1 = 0
+    secp256k1_num_copy(&n2, &n1); /* n2 = R */
+    secp256k1_num_sub(&n1, &n2, &n1); /* n1 = n2-n1 = 0 */
     CHECK(secp256k1_num_is_zero(&n1));
-    secp256k1_num_copy(&n1, &n2); // n1 = R
-    secp256k1_num_negate(&n1); // n1 = -R
+    secp256k1_num_copy(&n1, &n2); /* n1 = R */
+    secp256k1_num_negate(&n1); /* n1 = -R */
     CHECK(!secp256k1_num_is_zero(&n1));
-    secp256k1_num_add(&n1, &n2, &n1); // n1 = n2+n1 = 0
+    secp256k1_num_add(&n1, &n2, &n1); /* n1 = n2+n1 = 0 */
     CHECK(secp256k1_num_is_zero(&n1));
-    secp256k1_num_copy(&n1, &n2); // n1 = R
-    secp256k1_num_negate(&n1); // n1 = -R
+    secp256k1_num_copy(&n1, &n2); /* n1 = R */
+    secp256k1_num_negate(&n1); /* n1 = -R */
     CHECK(secp256k1_num_is_neg(&n1) != secp256k1_num_is_neg(&n2));
-    secp256k1_num_negate(&n1); // n1 = R
+    secp256k1_num_negate(&n1); /* n1 = R */
     CHECK(secp256k1_num_eq(&n1, &n2));
 }
 
@@ -200,28 +202,28 @@ void test_num_add_sub(void) {
     int r = secp256k1_rand32();
     secp256k1_num_t n1;
     secp256k1_num_t n2;
-    random_num_order_test(&n1); // n1 = R1
+    random_num_order_test(&n1); /* n1 = R1 */
     if (r & 1) {
         random_num_negate(&n1);
     }
-    random_num_order_test(&n2); // n2 = R2
+    random_num_order_test(&n2); /* n2 = R2 */
     if (r & 2) {
         random_num_negate(&n2);
     }
     secp256k1_num_t n1p2, n2p1, n1m2, n2m1;
-    secp256k1_num_add(&n1p2, &n1, &n2); // n1p2 = R1 + R2
-    secp256k1_num_add(&n2p1, &n2, &n1); // n2p1 = R2 + R1
-    secp256k1_num_sub(&n1m2, &n1, &n2); // n1m2 = R1 - R2
-    secp256k1_num_sub(&n2m1, &n2, &n1); // n2m1 = R2 - R1
+    secp256k1_num_add(&n1p2, &n1, &n2); /* n1p2 = R1 + R2 */
+    secp256k1_num_add(&n2p1, &n2, &n1); /* n2p1 = R2 + R1 */
+    secp256k1_num_sub(&n1m2, &n1, &n2); /* n1m2 = R1 - R2 */
+    secp256k1_num_sub(&n2m1, &n2, &n1); /* n2m1 = R2 - R1 */
     CHECK(secp256k1_num_eq(&n1p2, &n2p1));
     CHECK(!secp256k1_num_eq(&n1p2, &n1m2));
-    secp256k1_num_negate(&n2m1); // n2m1 = -R2 + R1
+    secp256k1_num_negate(&n2m1); /* n2m1 = -R2 + R1 */
     CHECK(secp256k1_num_eq(&n2m1, &n1m2));
     CHECK(!secp256k1_num_eq(&n2m1, &n1));
-    secp256k1_num_add(&n2m1, &n2m1, &n2); // n2m1 = -R2 + R1 + R2 = R1
+    secp256k1_num_add(&n2m1, &n2m1, &n2); /* n2m1 = -R2 + R1 + R2 = R1 */
     CHECK(secp256k1_num_eq(&n2m1, &n1));
     CHECK(!secp256k1_num_eq(&n2p1, &n1));
-    secp256k1_num_sub(&n2p1, &n2p1, &n2); // n2p1 = R2 + R1 - R2 = R1
+    secp256k1_num_sub(&n2p1, &n2p1, &n2); /* n2p1 = R2 + R1 - R2 = R1 */
     CHECK(secp256k1_num_eq(&n2p1, &n1));
 }
 
@@ -249,7 +251,7 @@ int secp256k1_scalar_eq(const secp256k1_scalar_t *s1, const secp256k1_scalar_t *
 void scalar_test(void) {
     unsigned char c[32];
 
-    // Set 's' to a random scalar, with value 'snum'.
+    /* Set 's' to a random scalar, with value 'snum'. */
     secp256k1_rand256_test(c);
     secp256k1_scalar_t s;
     secp256k1_scalar_set_b32(&s, c, NULL);
@@ -257,7 +259,7 @@ void scalar_test(void) {
     secp256k1_num_set_bin(&snum, c, 32);
     secp256k1_num_mod(&snum, &secp256k1_ge_consts->order);
 
-    // Set 's1' to a random scalar, with value 's1num'.
+    /* Set 's1' to a random scalar, with value 's1num'. */
     secp256k1_rand256_test(c);
     secp256k1_scalar_t s1;
     secp256k1_scalar_set_b32(&s1, c, NULL);
@@ -265,7 +267,7 @@ void scalar_test(void) {
     secp256k1_num_set_bin(&s1num, c, 32);
     secp256k1_num_mod(&s1num, &secp256k1_ge_consts->order);
 
-    // Set 's2' to a random scalar, with value 'snum2', and byte array representation 'c'.
+    /* Set 's2' to a random scalar, with value 'snum2', and byte array representation 'c'. */
     secp256k1_rand256_test(c);
     secp256k1_scalar_t s2;
     int overflow = 0;
@@ -275,7 +277,7 @@ void scalar_test(void) {
     secp256k1_num_mod(&s2num, &secp256k1_ge_consts->order);
 
     {
-        // Test that fetching groups of 4 bits from a scalar and recursing n(i)=16*n(i-1)+p(i) reconstructs it.
+        /* Test that fetching groups of 4 bits from a scalar and recursing n(i)=16*n(i-1)+p(i) reconstructs it. */
         secp256k1_num_t n, t, m;
         secp256k1_num_set_int(&n, 0);
         secp256k1_num_set_int(&m, 16);
@@ -288,18 +290,18 @@ void scalar_test(void) {
     }
 
     {
-        // Test that get_b32 returns the same as get_bin on the number.
+        /* Test that get_b32 returns the same as get_bin on the number. */
         unsigned char r1[32];
         secp256k1_scalar_get_b32(r1, &s2);
         unsigned char r2[32];
         secp256k1_num_get_bin(r2, 32, &s2num);
         CHECK(memcmp(r1, r2, 32) == 0);
-        // If no overflow occurred when assigning, it should also be equal to the original byte array.
+        /* If no overflow occurred when assigning, it should also be equal to the original byte array. */
         CHECK((memcmp(r1, c, 32) == 0) == (overflow == 0));
     }
 
     {
-        // Test that adding the scalars together is equal to adding their numbers together modulo the order.
+        /* Test that adding the scalars together is equal to adding their numbers together modulo the order. */
         secp256k1_num_t rnum;
         secp256k1_num_add(&rnum, &snum, &s2num);
         secp256k1_num_mod(&rnum, &secp256k1_ge_consts->order);
@@ -311,7 +313,7 @@ void scalar_test(void) {
     }
 
     {
-        // Test that multipying the scalars is equal to multiplying their numbers modulo the order.
+        /* Test that multipying the scalars is equal to multiplying their numbers modulo the order. */
         secp256k1_num_t rnum;
         secp256k1_num_mul(&rnum, &snum, &s2num);
         secp256k1_num_mod(&rnum, &secp256k1_ge_consts->order);
@@ -320,41 +322,41 @@ void scalar_test(void) {
         secp256k1_num_t r2num;
         secp256k1_scalar_get_num(&r2num, &r);
         CHECK(secp256k1_num_eq(&rnum, &r2num));
-        // The result can only be zero if at least one of the factors was zero.
+        /* The result can only be zero if at least one of the factors was zero. */
         CHECK(secp256k1_scalar_is_zero(&r) == (secp256k1_scalar_is_zero(&s) || secp256k1_scalar_is_zero(&s2)));
-        // The results can only be equal to one of the factors if that factor was zero, or the other factor was one.
+        /* The results can only be equal to one of the factors if that factor was zero, or the other factor was one. */
         CHECK(secp256k1_num_eq(&rnum, &snum) == (secp256k1_scalar_is_zero(&s) || secp256k1_scalar_is_one(&s2)));
         CHECK(secp256k1_num_eq(&rnum, &s2num) == (secp256k1_scalar_is_zero(&s2) || secp256k1_scalar_is_one(&s)));
     }
 
     {
-        // Check that comparison with zero matches comparison with zero on the number.
+        /* Check that comparison with zero matches comparison with zero on the number. */
         CHECK(secp256k1_num_is_zero(&snum) == secp256k1_scalar_is_zero(&s));
-        // Check that comparison with the half order is equal to testing for high scalar.
+        /* Check that comparison with the half order is equal to testing for high scalar. */
         CHECK(secp256k1_scalar_is_high(&s) == (secp256k1_num_cmp(&snum, &secp256k1_ge_consts->half_order) > 0));
         secp256k1_scalar_t neg;
         secp256k1_scalar_negate(&neg, &s);
         secp256k1_num_t negnum;
         secp256k1_num_sub(&negnum, &secp256k1_ge_consts->order, &snum);
         secp256k1_num_mod(&negnum, &secp256k1_ge_consts->order);
-        // Check that comparison with the half order is equal to testing for high scalar after negation.
+        /* Check that comparison with the half order is equal to testing for high scalar after negation. */
         CHECK(secp256k1_scalar_is_high(&neg) == (secp256k1_num_cmp(&negnum, &secp256k1_ge_consts->half_order) > 0));
-        // Negating should change the high property, unless the value was already zero.
+        /* Negating should change the high property, unless the value was already zero. */
         CHECK((secp256k1_scalar_is_high(&s) == secp256k1_scalar_is_high(&neg)) == secp256k1_scalar_is_zero(&s));
         secp256k1_num_t negnum2;
         secp256k1_scalar_get_num(&negnum2, &neg);
-        // Negating a scalar should be equal to (order - n) mod order on the number.
+        /* Negating a scalar should be equal to (order - n) mod order on the number. */
         CHECK(secp256k1_num_eq(&negnum, &negnum2));
         secp256k1_scalar_add(&neg, &neg, &s);
-        // Adding a number to its negation should result in zero.
+        /* Adding a number to its negation should result in zero. */
         CHECK(secp256k1_scalar_is_zero(&neg));
         secp256k1_scalar_negate(&neg, &neg);
-        // Negating zero should still result in zero.
+        /* Negating zero should still result in zero. */
         CHECK(secp256k1_scalar_is_zero(&neg));
     }
 
     {
-        // Test that scalar inverses are equal to the inverse of their number modulo the order.
+        /* Test that scalar inverses are equal to the inverse of their number modulo the order. */
         if (!secp256k1_scalar_is_zero(&s)) {
             secp256k1_scalar_t inv;
             secp256k1_scalar_inverse(&inv, &s);
@@ -364,16 +366,16 @@ void scalar_test(void) {
             secp256k1_scalar_get_num(&invnum2, &inv);
             CHECK(secp256k1_num_eq(&invnum, &invnum2));
             secp256k1_scalar_mul(&inv, &inv, &s);
-            // Multiplying a scalar with its inverse must result in one.
+            /* Multiplying a scalar with its inverse must result in one. */
             CHECK(secp256k1_scalar_is_one(&inv));
             secp256k1_scalar_inverse(&inv, &inv);
-            // Inverting one must result in one.
+            /* Inverting one must result in one. */
             CHECK(secp256k1_scalar_is_one(&inv));
         }
     }
 
     {
-        // Test commutativity of add.
+        /* Test commutativity of add. */
         secp256k1_scalar_t r1, r2;
         secp256k1_scalar_add(&r1, &s1, &s2);
         secp256k1_scalar_add(&r2, &s2, &s1);
@@ -381,7 +383,7 @@ void scalar_test(void) {
     }
 
     {
-        // Test commutativity of mul.
+        /* Test commutativity of mul. */
         secp256k1_scalar_t r1, r2;
         secp256k1_scalar_mul(&r1, &s1, &s2);
         secp256k1_scalar_mul(&r2, &s2, &s1);
@@ -389,7 +391,7 @@ void scalar_test(void) {
     }
 
     {
-        // Test associativity of add.
+        /* Test associativity of add. */
         secp256k1_scalar_t r1, r2;
         secp256k1_scalar_add(&r1, &s1, &s2);
         secp256k1_scalar_add(&r1, &r1, &s);
@@ -399,7 +401,7 @@ void scalar_test(void) {
     }
 
     {
-        // Test associativity of mul.
+        /* Test associativity of mul. */
         secp256k1_scalar_t r1, r2;
         secp256k1_scalar_mul(&r1, &s1, &s2);
         secp256k1_scalar_mul(&r1, &r1, &s);
@@ -409,7 +411,7 @@ void scalar_test(void) {
     }
 
     {
-        // Test distributitivity of mul over add.
+        /* Test distributitivity of mul over add. */
         secp256k1_scalar_t r1, r2, t;
         secp256k1_scalar_add(&r1, &s1, &s2);
         secp256k1_scalar_mul(&r1, &r1, &s);
@@ -420,7 +422,7 @@ void scalar_test(void) {
     }
 
     {
-        // Test square.
+        /* Test square. */
         secp256k1_scalar_t r1, r2;
         secp256k1_scalar_sqr(&r1, &s1);
         secp256k1_scalar_mul(&r2, &s1, &s1);
@@ -450,7 +452,7 @@ void random_fe_non_zero(secp256k1_fe_t *nz) {
         if (!secp256k1_fe_is_zero(nz))
             break;
     }
-    // Infinitesimal probability of spurious failure here
+    /* Infinitesimal probability of spurious failure here */
     CHECK(tries >= 0);
 }
 
@@ -498,7 +500,7 @@ void run_field_inv_var(void) {
 
 void run_field_inv_all(void) {
     secp256k1_fe_t x[16], xi[16], xii[16];
-    // Check it's safe to call for 0 elements
+    /* Check it's safe to call for 0 elements */
     secp256k1_fe_inv_all(0, xi, x);
     for (int i=0; i<count; i++) {
         size_t len = (secp256k1_rand32() & 15) + 1;
@@ -515,7 +517,7 @@ void run_field_inv_all(void) {
 
 void run_field_inv_all_var(void) {
     secp256k1_fe_t x[16], xi[16], xii[16];
-    // Check it's safe to call for 0 elements
+    /* Check it's safe to call for 0 elements */
     secp256k1_fe_inv_all_var(0, xi, x);
     for (int i=0; i<count; i++) {
         size_t len = (secp256k1_rand32() & 15) + 1;
@@ -551,7 +553,7 @@ void test_sqrt(const secp256k1_fe_t *a, const secp256k1_fe_t *k) {
     CHECK((v == 0) == (k == NULL));
 
     if (k != NULL) {
-        // Check that the returned root is +/- the given known answer
+        /* Check that the returned root is +/- the given known answer */
         secp256k1_fe_negate(&r2, &r1, 1);
         secp256k1_fe_add(&r1, k); secp256k1_fe_add(&r2, k);
         secp256k1_fe_normalize(&r1); secp256k1_fe_normalize(&r2);
@@ -562,12 +564,12 @@ void test_sqrt(const secp256k1_fe_t *a, const secp256k1_fe_t *k) {
 void run_sqrt(void) {
     secp256k1_fe_t ns, x, s, t;
 
-    // Check sqrt(0) is 0
+    /* Check sqrt(0) is 0 */
     secp256k1_fe_set_int(&x, 0);
     secp256k1_fe_sqr(&s, &x);
     test_sqrt(&s, &x);
 
-    // Check sqrt of small squares (and their negatives)
+    /* Check sqrt of small squares (and their negatives) */
     for (int i=1; i<=100; i++) {
         secp256k1_fe_set_int(&x, i);
         secp256k1_fe_sqr(&s, &x);
@@ -576,7 +578,7 @@ void run_sqrt(void) {
         test_sqrt(&t, NULL);
     }
 
-    // Consistency checks for large random values
+    /* Consistency checks for large random values */
     for (int i=0; i<10; i++) {
         random_fe_non_square(&ns);
         for (int j=0; j<count; j++) {
@@ -644,7 +646,7 @@ void test_ge(void) {
     random_field_element_magnitude(&nj.y);
     random_field_element_magnitude(&nj.z);
 
-    // gej + gej adds
+    /* gej + gej adds */
     secp256k1_gej_t aaj; secp256k1_gej_add_var(&aaj, &aj, &aj);
     secp256k1_gej_t abj; secp256k1_gej_add_var(&abj, &aj, &bj);
     secp256k1_gej_t aij; secp256k1_gej_add_var(&aij, &aj, &ij);
@@ -652,7 +654,7 @@ void test_ge(void) {
     secp256k1_gej_t iaj; secp256k1_gej_add_var(&iaj, &ij, &aj);
     secp256k1_gej_t iij; secp256k1_gej_add_var(&iij, &ij, &ij);
 
-    // gej + ge adds
+    /* gej + ge adds */
     secp256k1_gej_t aa; secp256k1_gej_add_ge_var(&aa, &aj, &a);
     secp256k1_gej_t ab; secp256k1_gej_add_ge_var(&ab, &aj, &b);
     secp256k1_gej_t ai; secp256k1_gej_add_ge_var(&ai, &aj, &i);
@@ -660,7 +662,7 @@ void test_ge(void) {
     secp256k1_gej_t ia; secp256k1_gej_add_ge_var(&ia, &ij, &a);
     secp256k1_gej_t ii; secp256k1_gej_add_ge_var(&ii, &ij, &i);
 
-    // const gej + ge adds
+    /* const gej + ge adds */
     secp256k1_gej_t aac; secp256k1_gej_add_ge(&aac, &aj, &a);
     secp256k1_gej_t abc; secp256k1_gej_add_ge(&abc, &aj, &b);
     secp256k1_gej_t anc; secp256k1_gej_add_ge(&anc, &aj, &n);
@@ -694,49 +696,49 @@ void run_ge(void) {
 /***** ECMULT TESTS *****/
 
 void run_ecmult_chain(void) {
-    // random starting point A (on the curve)
+    /* random starting point A (on the curve) */
     secp256k1_fe_t ax; secp256k1_fe_set_hex(&ax, "8b30bbe9ae2a990696b22f670709dff3727fd8bc04d3362c6c7bf458e2846004", 64);
     secp256k1_fe_t ay; secp256k1_fe_set_hex(&ay, "a357ae915c4a65281309edf20504740f0eb3343990216b4f81063cb65f2f7e0f", 64);
     secp256k1_gej_t a; secp256k1_gej_set_xy(&a, &ax, &ay);
-    // two random initial factors xn and gn
+    /* two random initial factors xn and gn */
     secp256k1_num_t xn;
     secp256k1_num_set_hex(&xn, "84cc5452f7fde1edb4d38a8ce9b1b84ccef31f146e569be9705d357a42985407", 64);
     secp256k1_num_t gn;
     secp256k1_num_set_hex(&gn, "a1e58d22553dcd42b23980625d4c57a96e9323d42b3152e5ca2c3990edc7c9de", 64);
-    // two small multipliers to be applied to xn and gn in every iteration:
+    /* two small multipliers to be applied to xn and gn in every iteration: */
     secp256k1_num_t xf;
     secp256k1_num_set_hex(&xf, "1337", 4);
     secp256k1_num_t gf;
     secp256k1_num_set_hex(&gf, "7113", 4);
-    // accumulators with the resulting coefficients to A and G
+    /* accumulators with the resulting coefficients to A and G */
     secp256k1_num_t ae;
     secp256k1_num_set_int(&ae, 1);
     secp256k1_num_t ge;
     secp256k1_num_set_int(&ge, 0);
-    // the point being computed
+    /* the point being computed */
     secp256k1_gej_t x = a;
     const secp256k1_num_t *order = &secp256k1_ge_consts->order;
     for (int i=0; i<200*count; i++) {
-        // in each iteration, compute X = xn*X + gn*G;
+        /* in each iteration, compute X = xn*X + gn*G; */
         secp256k1_ecmult(&x, &x, &xn, &gn);
-        // also compute ae and ge: the actual accumulated factors for A and G
-        // if X was (ae*A+ge*G), xn*X + gn*G results in (xn*ae*A + (xn*ge+gn)*G)
+        /* also compute ae and ge: the actual accumulated factors for A and G */
+        /* if X was (ae*A+ge*G), xn*X + gn*G results in (xn*ae*A + (xn*ge+gn)*G) */
         secp256k1_num_mod_mul(&ae, &ae, &xn, order);
         secp256k1_num_mod_mul(&ge, &ge, &xn, order);
         secp256k1_num_add(&ge, &ge, &gn);
         secp256k1_num_mod(&ge, order);
-        // modify xn and gn
+        /* modify xn and gn */
         secp256k1_num_mod_mul(&xn, &xn, &xf, order);
         secp256k1_num_mod_mul(&gn, &gn, &gf, order);
 
-        // verify
+        /* verify */
         if (i == 19999) {
             char res[132]; int resl = 132;
             secp256k1_gej_get_hex(res, &resl, &x);
             CHECK(strcmp(res, "(D6E96687F9B10D092A6F35439D86CEBEA4535D0D409F53586440BD74B933E830,B95CBCA2C77DA786539BE8FD53354D2D3B4F566AE658045407ED6015EE1B2A88)") == 0);
         }
     }
-    // redo the computation, but directly with the resulting ae and ge coefficients:
+    /* redo the computation, but directly with the resulting ae and ge coefficients: */
     secp256k1_gej_t x2; secp256k1_ecmult(&x2, &a, &ae, &ge);
     char res[132]; int resl = 132;
     char res2[132]; int resl2 = 132;
@@ -747,12 +749,12 @@ void run_ecmult_chain(void) {
 }
 
 void test_point_times_order(const secp256k1_gej_t *point) {
-    // multiplying a point by the order results in O
+    /* multiplying a point by the order results in O */
     const secp256k1_num_t *order = &secp256k1_ge_consts->order;
     secp256k1_num_t zero;
     secp256k1_num_set_int(&zero, 0);
     secp256k1_gej_t res;
-    secp256k1_ecmult(&res, point, order, order); // calc res = order * point + order * G;
+    secp256k1_ecmult(&res, point, order, order); /* calc res = order * point + order * G; */
     CHECK(secp256k1_gej_is_infinity(&res));
 }
 
@@ -785,19 +787,19 @@ void test_wnaf(const secp256k1_num_t *number, int w) {
         secp256k1_num_mul(&x, &x, &two);
         int v = wnaf[i];
         if (v) {
-            CHECK(zeroes == -1 || zeroes >= w-1); // check that distance between non-zero elements is at least w-1
+            CHECK(zeroes == -1 || zeroes >= w-1); /* check that distance between non-zero elements is at least w-1 */
             zeroes=0;
-            CHECK((v & 1) == 1); // check non-zero elements are odd
-            CHECK(v <= (1 << (w-1)) - 1); // check range below
-            CHECK(v >= -(1 << (w-1)) - 1); // check range above
+            CHECK((v & 1) == 1); /* check non-zero elements are odd */
+            CHECK(v <= (1 << (w-1)) - 1); /* check range below */
+            CHECK(v >= -(1 << (w-1)) - 1); /* check range above */
         } else {
-            CHECK(zeroes != -1); // check that no unnecessary zero padding exists
+            CHECK(zeroes != -1); /* check that no unnecessary zero padding exists */
             zeroes++;
         }
         secp256k1_num_set_int(&t, v);
         secp256k1_num_add(&x, &x, &t);
     }
-    CHECK(secp256k1_num_eq(&x, number)); // check that wnaf represents number
+    CHECK(secp256k1_num_eq(&x, number)); /* check that wnaf represents number */
 }
 
 void run_wnaf(void) {
@@ -842,7 +844,7 @@ void test_ecdsa_end_to_end(void) {
     unsigned char privkey[32];
     unsigned char message[32];
 
-    // Generate a random key and message.
+    /* Generate a random key and message. */
     {
         secp256k1_num_t msg, key;
         random_num_order_test(&msg);
@@ -851,20 +853,20 @@ void test_ecdsa_end_to_end(void) {
         secp256k1_num_get_bin(message, 32, &msg);
     }
 
-    // Construct and verify corresponding public key.
+    /* Construct and verify corresponding public key. */
     CHECK(secp256k1_ec_seckey_verify(privkey) == 1);
     unsigned char pubkey[65]; int pubkeylen = 65;
     CHECK(secp256k1_ec_pubkey_create(pubkey, &pubkeylen, privkey, secp256k1_rand32() % 2) == 1);
     CHECK(secp256k1_ec_pubkey_verify(pubkey, pubkeylen));
 
-    // Verify private key import and export.
+    /* Verify private key import and export. */
     unsigned char seckey[300]; int seckeylen = 300;
     CHECK(secp256k1_ec_privkey_export(privkey, seckey, &seckeylen, secp256k1_rand32() % 2) == 1);
     unsigned char privkey2[32];
     CHECK(secp256k1_ec_privkey_import(privkey2, seckey, seckeylen) == 1);
     CHECK(memcmp(privkey, privkey2, 32) == 0);
 
-    // Optionally tweak the keys using addition.
+    /* Optionally tweak the keys using addition. */
     if (secp256k1_rand32() % 3 == 0) {
         unsigned char rnd[32];
         secp256k1_rand256_test(rnd);
@@ -877,7 +879,7 @@ void test_ecdsa_end_to_end(void) {
         CHECK(memcmp(pubkey, pubkey2, pubkeylen) == 0);
     }
 
-    // Optionally tweak the keys using multiplication.
+    /* Optionally tweak the keys using multiplication. */
     if (secp256k1_rand32() % 3 == 0) {
         unsigned char rnd[32];
         secp256k1_rand256_test(rnd);
@@ -890,7 +892,7 @@ void test_ecdsa_end_to_end(void) {
         CHECK(memcmp(pubkey, pubkey2, pubkeylen) == 0);
     }
 
-    // Sign.
+    /* Sign. */
     unsigned char signature[72]; int signaturelen = 72;
     while(1) {
         unsigned char rnd[32];
@@ -899,13 +901,13 @@ void test_ecdsa_end_to_end(void) {
             break;
         }
     }
-    // Verify.
+    /* Verify. */
     CHECK(secp256k1_ecdsa_verify(message, 32, signature, signaturelen, pubkey, pubkeylen) == 1);
-    // Destroy signature and verify again.
+    /* Destroy signature and verify again. */
     signature[signaturelen - 1 - secp256k1_rand32() % 20] += 1 + (secp256k1_rand32() % 255);
     CHECK(secp256k1_ecdsa_verify(message, 32, signature, signaturelen, pubkey, pubkeylen) != 1);
 
-    // Compact sign.
+    /* Compact sign. */
     unsigned char csignature[64]; int recid = 0;
     while(1) {
         unsigned char rnd[32];
@@ -914,12 +916,12 @@ void test_ecdsa_end_to_end(void) {
             break;
         }
     }
-    // Recover.
+    /* Recover. */
     unsigned char recpubkey[65]; int recpubkeylen = 0;
     CHECK(secp256k1_ecdsa_recover_compact(message, 32, csignature, recpubkey, &recpubkeylen, pubkeylen == 33, recid) == 1);
     CHECK(recpubkeylen == pubkeylen);
     CHECK(memcmp(pubkey, recpubkey, pubkeylen) == 0);
-    // Destroy signature and verify again.
+    /* Destroy signature and verify again. */
     csignature[secp256k1_rand32() % 64] += 1 + (secp256k1_rand32() % 255);
     CHECK(secp256k1_ecdsa_recover_compact(message, 32, csignature, recpubkey, &recpubkeylen, pubkeylen == 33, recid) != 1 ||
           memcmp(pubkey, recpubkey, pubkeylen) != 0);
@@ -986,12 +988,12 @@ void run_ecdsa_openssl(void) {
 #endif
 
 int main(int argc, char **argv) {
-    // find iteration count
+    /* find iteration count */
     if (argc > 1) {
         count = strtol(argv[1], NULL, 0);
     }
 
-    // find random seed
+    /* find random seed */
     uint64_t seed;
     if (argc > 2) {
         seed = strtoull(argv[2], NULL, 0);
@@ -1007,16 +1009,16 @@ int main(int argc, char **argv) {
     printf("test count = %i\n", count);
     printf("random seed = %llu\n", (unsigned long long)seed);
 
-    // initialize
+    /* initialize */
     secp256k1_start(SECP256K1_START_SIGN | SECP256K1_START_VERIFY);
 
-    // num tests
+    /* num tests */
     run_num_smalltests();
 
-    // scalar tests
+    /* scalar tests */
     run_scalar_tests();
 
-    // field tests
+    /* field tests */
     run_field_inv();
     run_field_inv_var();
     run_field_inv_all();
@@ -1024,15 +1026,15 @@ int main(int argc, char **argv) {
     run_sqr();
     run_sqrt();
 
-    // group tests
+    /* group tests */
     run_ge();
 
-    // ecmult tests
+    /* ecmult tests */
     run_wnaf();
     run_point_times_order();
     run_ecmult_chain();
 
-    // ecdsa tests
+    /* ecdsa tests */
     run_ecdsa_sign_verify();
     run_ecdsa_end_to_end();
 #ifdef ENABLE_OPENSSL_TESTS
@@ -1041,7 +1043,7 @@ int main(int argc, char **argv) {
 
     printf("random run = %llu\n", (unsigned long long)secp256k1_rand32() + ((unsigned long long)secp256k1_rand32() << 32));
 
-    // shutdown
+    /* shutdown */
     secp256k1_stop();
     return 0;
 }

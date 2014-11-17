@@ -1,6 +1,8 @@
-// Copyright (c) 2014 Pieter Wuille
-// Distributed under the MIT software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+/**********************************************************************
+ * Copyright (c) 2014 Pieter Wuille                                   *
+ * Distributed under the MIT software license, see the accompanying   *
+ * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
+ **********************************************************************/
 
 #include <stdio.h>
 #include <string.h>
@@ -22,9 +24,9 @@ int main(void) {
         int pubkeylen = 33;
         CHECK(secp256k1_ecdsa_recover_compact(msg, 32, sig, pubkey, &pubkeylen, 1, i % 2));
         for (int j = 0; j < 32; j++) {
-            sig[j + 32] = msg[j];    // Move former message to S.
-            msg[j] = sig[j];         // Move former R to message.
-            sig[j] = pubkey[j + 1];  // Move recovered pubkey X coordinate to R (which must be a valid X coordinate).
+            sig[j + 32] = msg[j];    /* Move former message to S. */
+            msg[j] = sig[j];         /* Move former R to message. */
+            sig[j] = pubkey[j + 1];  /* Move recovered pubkey X coordinate to R (which must be a valid X coordinate). */
         }
     }
 
