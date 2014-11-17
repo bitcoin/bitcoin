@@ -6,6 +6,7 @@
 #include "keystore.h"
 #include "main.h"
 #include "script/script.h"
+#include "script/script_error.h"
 #include "script/sign.h"
 
 #ifdef ENABLE_WALLET
@@ -27,7 +28,7 @@ Serialize(const CScript& s)
 }
 
 static bool
-Verify(const CScript& scriptSig, const CScript& scriptPubKey, bool fStrict)
+Verify(const CScript& scriptSig, const CScript& scriptPubKey, bool fStrict, ScriptError& err)
 {
     // Create dummy to/from transactions:
     CMutableTransaction txFrom;
@@ -42,7 +43,7 @@ Verify(const CScript& scriptSig, const CScript& scriptPubKey, bool fStrict)
     txTo.vin[0].scriptSig = scriptSig;
     txTo.vout[0].nValue = 1;
 
-    return VerifyScript(scriptSig, scriptPubKey, fStrict ? SCRIPT_VERIFY_P2SH : SCRIPT_VERIFY_NONE, SignatureChecker(txTo, 0));
+    return VerifyScript(scriptSig, scriptPubKey, fStrict ? SCRIPT_VERIFY_P2SH : SCRIPT_VERIFY_NONE, SignatureChecker(txTo, 0), &err);
 }
 
 
@@ -124,6 +125,7 @@ BOOST_AUTO_TEST_CASE(sign)
 
 BOOST_AUTO_TEST_CASE(norecurse)
 {
+    ScriptError err;
     // Make sure only the outer pay-to-script-hash does the
     // extra-validation thing:
     CScript invalidAsScript;
@@ -135,7 +137,8 @@ BOOST_AUTO_TEST_CASE(norecurse)
     scriptSig << Serialize(invalidAsScript);
 
     // Should not verify, because it will try to execute OP_INVALIDOPCODE
-    BOOST_CHECK(!Verify(scriptSig, p2sh, true));
+    BOOST_CHECK(!Verify(scriptSig, p2sh, true, err));
+    BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_BAD_OPCODE, ScriptErrorString(err));
 
     // Try to recur, and verification should succeed because
     // the inner HASH160 <> EQUAL should only check the hash:
@@ -143,7 +146,8 @@ BOOST_AUTO_TEST_CASE(norecurse)
     CScript scriptSig2;
     scriptSig2 << Serialize(invalidAsScript) << Serialize(p2sh);
 
-    BOOST_CHECK(Verify(scriptSig2, p2sh2, true));
+    BOOST_CHECK(Verify(scriptSig2, p2sh2, true, err));
+    BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_OK, ScriptErrorString(err));
 }
 
 BOOST_AUTO_TEST_CASE(set)
@@ -238,6 +242,7 @@ BOOST_AUTO_TEST_CASE(switchover)
 {
     // Test switch over code
     CScript notValid;
+    ScriptError err;
     notValid << OP_11 << OP_12 << OP_EQUALVERIFY;
     CScript scriptSig;
     scriptSig << Serialize(notValid);
@@ -246,9 +251,11 @@ BOOST_AUTO_TEST_CASE(switchover)
 
 
     // Validation should succeed under old rules (hash is correct):
-    BOOST_CHECK(Verify(scriptSig, fund, false));
+    BOOST_CHECK(Verify(scriptSig, fund, false, err));
+    BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_OK, ScriptErrorString(err));
     // Fail under new:
-    BOOST_CHECK(!Verify(scriptSig, fund, true));
+    BOOST_CHECK(!Verify(scriptSig, fund, true, err));
+    BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_EQUALVERIFY, ScriptErrorString(err));
 }
 
 BOOST_AUTO_TEST_CASE(AreInputsStandard)
