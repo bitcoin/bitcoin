@@ -121,6 +121,8 @@ Value setgenerate(const Array& params, bool fHelp)
             "1. generate         (boolean, required) Set to true to turn on generation, off to turn off.\n"
             "2. genproclimit     (numeric, optional) Set the processor limit for when generation is on. Can be -1 for unlimited.\n"
             "                    Note: in -regtest mode, genproclimit controls how many blocks are generated immediately.\n"
+            "\nResult\n"
+            "[ blockhashes ]     (array, -regtest only) hashes of blocks generated\n"
             "\nExamples:\n"
             "\nSet the generation on with a limit of one processor\n"
             + HelpExampleCli("setgenerate", "true 1") +
@@ -154,26 +156,38 @@ Value setgenerate(const Array& params, bool fHelp)
         int nHeightEnd = 0;
         int nHeight = 0;
         int nGenerate = (nGenProcLimit > 0 ? nGenProcLimit : 1);
+        CReserveKey reservekey(pwalletMain);
+
         {   // Don't keep cs_main locked
             LOCK(cs_main);
             nHeightStart = chainActive.Height();
             nHeight = nHeightStart;
             nHeightEnd = nHeightStart+nGenerate;
         }
-        int nHeightLast = -1;
+        unsigned int nExtraNonce = 0;
+        Array blockHashes;
         while (nHeight < nHeightEnd)
         {
-            if (nHeightLast != nHeight)
+            auto_ptr<CBlockTemplate> pblocktemplate(CreateNewBlockWithKey(reservekey));
+            if (!pblocktemplate.get())
+                throw JSONRPCError(RPC_INTERNAL_ERROR, "Wallet keypool empty");
+            CBlock *pblock = &pblocktemplate->block;
             {
-                nHeightLast = nHeight;
-                GenerateBitcoins(fGenerate, pwalletMain, 1);
-            }
-            MilliSleep(1);
-            {   // Don't keep cs_main locked
                 LOCK(cs_main);
-                nHeight = chainActive.Height();
+                IncrementExtraNonce(pblock, chainActive.Tip(), nExtraNonce);
             }
+            while (!CheckProofOfWork(pblock->GetHash(), pblock->nBits)) {
+                // Yes, there is a chance every nonce could fail to satisfy the -regtest
+                // target -- 1 in 2^(2^32). That ain't gonna happen.
+                ++pblock->nNonce;
+            }
+            CValidationState state;
+            if (!ProcessNewBlock(state, NULL, pblock))
+                throw JSONRPCError(RPC_INTERNAL_ERROR, "ProcessNewBlock, block not accepted");
+            ++nHeight;
+            blockHashes.push_back(pblock->GetHash().GetHex());
         }
+        return blockHashes;
     }
     else // Not -regtest: start generate thread, return immediately
     {
