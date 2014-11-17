@@ -15,10 +15,17 @@
 #include <stdint.h>
 #include <stdio.h>
 
+#ifdef DETERMINISTIC
+#define TEST_FAILURE(msg) do { \
+    fprintf(stderr, "%s\n", msg); \
+    abort(); \
+} while(0);
+#else
 #define TEST_FAILURE(msg) do { \
     fprintf(stderr, "%s:%d: %s\n", __FILE__, __LINE__, msg); \
     abort(); \
 } while(0)
+#endif
 
 #ifndef HAVE_BUILTIN_EXPECT
 #define EXPECT(x,c) __builtin_expect((x),(c))
@@ -26,11 +33,19 @@
 #define EXPECT(x,c) (x)
 #endif
 
+#ifdef DETERMINISTIC
+#define CHECK(cond) do { \
+    if (EXPECT(!(cond), 0)) { \
+        TEST_FAILURE("test condition failed"); \
+    } \
+} while(0)
+#else
 #define CHECK(cond) do { \
     if (EXPECT(!(cond), 0)) { \
         TEST_FAILURE("test condition failed: " #cond); \
     } \
 } while(0)
+#endif
 
 /* Like assert(), but safe to use on expressions with side effects. */
 #ifndef NDEBUG
