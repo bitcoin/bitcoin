@@ -1,6 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2013 The Bitcoin developers
-// Distributed under the MIT/X11 software license, see the accompanying
+// Copyright (c) 2009-2014 The Bitcoin developers
+// Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "txmempool.h"
@@ -45,9 +45,9 @@ CTxMemPoolEntry::GetPriority(unsigned int currentHeight) const
     return dResult;
 }
 
-//
-// Keep track of fee/priority for transactions confirmed within N blocks
-//
+/**
+ * Keep track of fee/priority for transactions confirmed within N blocks
+ */
 class CBlockAverage
 {
 private:
@@ -86,8 +86,10 @@ public:
         return prioritySamples.size();
     }
 
-    // Used as belt-and-suspenders check when reading to detect
-    // file corruption
+    /**
+     * Used as belt-and-suspenders check when reading to detect
+     * file corruption
+     */
     bool AreSane(const std::vector<CFeeRate>& vecFee, const CFeeRate& minRelayFee)
     {
         BOOST_FOREACH(CFeeRate fee, vecFee)
@@ -139,16 +141,20 @@ public:
 class CMinerPolicyEstimator
 {
 private:
-    // Records observed averages transactions that confirmed within one block, two blocks,
-    // three blocks etc.
+    /**
+     * Records observed averages transactions that confirmed within one block, two blocks,
+     * three blocks etc.
+     */
     std::vector<CBlockAverage> history;
     std::vector<CFeeRate> sortedFeeSamples;
     std::vector<double> sortedPrioritySamples;
 
     int nBestSeenHeight;
 
-    // nBlocksAgo is 0 based, i.e. transactions that confirmed in the highest seen block are
-    // nBlocksAgo == 0, transactions in the block before that are nBlocksAgo == 1 etc.
+    /**
+     * nBlocksAgo is 0 based, i.e. transactions that confirmed in the highest seen block are
+     * nBlocksAgo == 0, transactions in the block before that are nBlocksAgo == 1 etc.
+     */
     void seenTxConfirm(const CFeeRate& feeRate, const CFeeRate& minRelayFee, double dPriority, int nBlocksAgo)
     {
         // Last entry records "everything else".
@@ -248,7 +254,9 @@ public:
         }
     }
 
-    // Can return CFeeRate(0) if we don't have any data for that many blocks back. nBlocksToConfirm is 1 based.
+    /**
+     * Can return CFeeRate(0) if we don't have any data for that many blocks back. nBlocksToConfirm is 1 based.
+     */
     CFeeRate estimateFee(int nBlocksToConfirm)
     {
         nBlocksToConfirm--;
@@ -332,7 +340,7 @@ public:
         size_t numEntries;
         filein >> numEntries;
         if (numEntries <= 0 || numEntries > 10000)
-            throw runtime_error("Corrupt estimates file. Must have between 1 and 10k entires.");
+            throw runtime_error("Corrupt estimates file. Must have between 1 and 10k entries.");
 
         std::vector<CBlockAverage> fileHistory;
         
@@ -462,7 +470,9 @@ void CTxMemPool::removeConflicts(const CTransaction &tx, std::list<CTransaction>
     }
 }
 
-// Called when a block is connected. Removes from mempool and updates the miner fee estimator.
+/**
+ * Called when a block is connected. Removes from mempool and updates the miner fee estimator.
+ */
 void CTxMemPool::removeForBlock(const std::vector<CTransaction>& vtx, unsigned int nBlockHeight,
                                 std::list<CTransaction>& conflicts)
 {
