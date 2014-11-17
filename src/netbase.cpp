@@ -42,6 +42,7 @@ static CService nameProxy;
 static CCriticalSection cs_proxyInfos;
 int nConnectTimeout = DEFAULT_CONNECT_TIMEOUT;
 bool fNameLookup = false;
+bool fTorNoProxy = false;
 
 static const unsigned char pchIPv4[12] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff };
 
@@ -85,13 +86,13 @@ void SplitHostPort(std::string in, int &portOut, std::string &hostOut) {
         hostOut = in;
 }
 
-bool static LookupIntern(const char *pszName, std::vector<CNetAddr>& vIP, unsigned int nMaxSolutions, bool fAllowLookup)
+bool static LookupIntern(const char *pszName, std::vector<CNetAddr>& vIP, unsigned int nMaxSolutions, bool fAllowLookup, bool fTorLookup)
 {
     vIP.clear();
 
     {
         CNetAddr addr;
-        if (addr.SetSpecial(std::string(pszName))) {
+        if (!fTorLookup && addr.SetSpecial(std::string(pszName))) {
             vIP.push_back(addr);
             return true;
         }
@@ -182,7 +183,7 @@ bool static LookupIntern(const char *pszName, std::vector<CNetAddr>& vIP, unsign
     return (vIP.size() > 0);
 }
 
-bool LookupHost(const char *pszName, std::vector<CNetAddr>& vIP, unsigned int nMaxSolutions, bool fAllowLookup)
+bool LookupHost(const char *pszName, std::vector<CNetAddr>& vIP, unsigned int nMaxSolutions, bool fAllowLookup, bool fTorLookup)
 {
     std::string strHost(pszName);
     if (strHost.empty())
@@ -192,7 +193,7 @@ bool LookupHost(const char *pszName, std::vector<CNetAddr>& vIP, unsigned int nM
         strHost = strHost.substr(1, strHost.size() - 2);
     }
 
-    return LookupIntern(strHost.c_str(), vIP, nMaxSolutions, fAllowLookup);
+    return LookupIntern(strHost.c_str(), vIP, nMaxSolutions, fAllowLookup, fTorLookup);
 }
 
 bool Lookup(const char *pszName, std::vector<CService>& vAddr, int portDefault, bool fAllowLookup, unsigned int nMaxSolutions)
@@ -204,7 +205,7 @@ bool Lookup(const char *pszName, std::vector<CService>& vAddr, int portDefault, 
     SplitHostPort(std::string(pszName), port, hostname);
 
     std::vector<CNetAddr> vIP;
-    bool fRet = LookupIntern(hostname.c_str(), vIP, nMaxSolutions, fAllowLookup);
+    bool fRet = LookupIntern(hostname.c_str(), vIP, nMaxSolutions, fAllowLookup, false);
     if (!fRet)
         return false;
     vAddr.resize(vIP.size());
@@ -550,10 +551,14 @@ bool ConnectSocketByName(CService &addr, SOCKET& hSocketRet, const char *pszDest
     CService nameProxy;
     GetNameProxy(nameProxy);
 
-    CService addrResolved(CNetAddr(strDest, fNameLookup && !HaveNameProxy()), port);
+    CService addrResolved(CNetAddr(strDest, fNameLookup && !HaveNameProxy(), fTorNoProxy), port);
     if (addrResolved.IsValid()) {
-        addr = addrResolved;
-        return ConnectSocket(addr, hSocketRet, nTimeout);
+        CNetAddr torAddr;
+        if (!torAddr.SetSpecial(strDest) || !fTorNoProxy)
+            addr = addrResolved;
+        else
+            addr = CService(torAddr, port);
+        return ConnectSocket(addrResolved, hSocketRet, nTimeout);
     }
 
     addr = CService("0.0.0.0:0");
@@ -628,19 +633,19 @@ CNetAddr::CNetAddr(const struct in6_addr& ipv6Addr)
     SetRaw(NET_IPV6, (const uint8_t*)&ipv6Addr);
 }
 
-CNetAddr::CNetAddr(const char *pszIp, bool fAllowLookup)
+CNetAddr::CNetAddr(const char *pszIp, bool fAllowLookup, bool fTorLookup)
 {
     Init();
     std::vector<CNetAddr> vIP;
-    if (LookupHost(pszIp, vIP, 1, fAllowLookup))
+    if (LookupHost(pszIp, vIP, 1, fAllowLookup, fTorLookup))
         *this = vIP[0];
 }
 
-CNetAddr::CNetAddr(const std::string &strIp, bool fAllowLookup)
+CNetAddr::CNetAddr(const std::string &strIp, bool fAllowLookup, bool fTorLookup)
 {
     Init();
     std::vector<CNetAddr> vIP;
-    if (LookupHost(strIp.c_str(), vIP, 1, fAllowLookup))
+    if (LookupHost(strIp.c_str(), vIP, 1, fAllowLookup, fTorLookup))
         *this = vIP[0];
 }
 

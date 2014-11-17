@@ -18,6 +18,7 @@
 
 extern int nConnectTimeout;
 extern bool fNameLookup;
+extern bool fTorNoProxy;
 
 /** -timeout default */
 static const int DEFAULT_CONNECT_TIMEOUT = 5000;
@@ -46,8 +47,8 @@ class CNetAddr
     public:
         CNetAddr();
         CNetAddr(const struct in_addr& ipv4Addr);
-        explicit CNetAddr(const char *pszIp, bool fAllowLookup = false);
-        explicit CNetAddr(const std::string &strIp, bool fAllowLookup = false);
+        explicit CNetAddr(const char *pszIp, bool fAllowLookup = false, bool fTorLookup = false);
+        explicit CNetAddr(const std::string &strIp, bool fAllowLookup = false, bool fTorLookup = false);
         void Init();
         void SetIP(const CNetAddr& ip);
 
@@ -178,7 +179,7 @@ bool GetProxy(enum Network net, proxyType &proxyInfoOut);
 bool IsProxy(const CNetAddr &addr);
 bool SetNameProxy(CService addrProxy);
 bool HaveNameProxy();
-bool LookupHost(const char *pszName, std::vector<CNetAddr>& vIP, unsigned int nMaxSolutions = 0, bool fAllowLookup = true);
+bool LookupHost(const char *pszName, std::vector<CNetAddr>& vIP, unsigned int nMaxSolutions = 0, bool fAllowLookup = true, bool fTorLookup = false);
 bool Lookup(const char *pszName, CService& addr, int portDefault = 0, bool fAllowLookup = true);
 bool Lookup(const char *pszName, std::vector<CService>& vAddr, int portDefault = 0, bool fAllowLookup = true, unsigned int nMaxSolutions = 0);
 bool LookupNumeric(const char *pszName, CService& addr, int portDefault = 0);
