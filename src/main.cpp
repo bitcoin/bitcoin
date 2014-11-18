@@ -2191,14 +2191,16 @@ static bool ActivateBestChainStep(CValidationState &state, CBlockIndex *pindexMo
  * that is already loaded (to avoid loading it again from disk).
  */
 bool ActivateBestChain(CValidationState &state, CBlock *pblock) {
-    CBlockIndex *pindexNewTip = NULL;
     CBlockIndex *pindexMostWork = NULL;
     do {
         boost::this_thread::interruption_point();
 
+        CBlockIndex *pindexNewTip = NULL;
+        const CBlockIndex *pindexFork;
         bool fInitialDownload;
         {
             LOCK(cs_main);
+            CBlockIndex *pindexOldTip = chainActive.Tip();
             pindexMostWork = FindMostWorkChain();
 
             // Whether we have anything to do at all.
@@ -2209,23 +2211,39 @@ bool ActivateBestChain(CValidationState &state, CBlock *pblock) {
                 return false;
 
             pindexNewTip = chainActive.Tip();
+            pindexFork = chainActive.FindFork(pindexOldTip);
             fInitialDownload = IsInitialBlockDownload();
         }
         // When we reach this point, we switched to a new tip (stored in pindexNewTip).
 
         // Notifications/callbacks that can run without cs_main
         if (!fInitialDownload) {
-            uint256 hashNewTip = pindexNewTip->GetBlockHash();
+            // Find the hashes of all blocks that weren't previously in the best chain.
+            std::vector<uint256> vHashes;
+            while (pindexNewTip != pindexFork) {
+                 vHashes.push_back(pindexNewTip->GetBlockHash());
+                 pindexNewTip = pindexNewTip->pprev;
+                 if (vHashes.size() == 16) {
+                     // Do not send more than 16 hashes in case of a huge reorganization.
+                     // Rely on the peer's synchronization mechanism in that case.
+                     break;
+                 }
+            }
             // Relay inventory, but don't relay old inventory during initial block download.
             int nBlockEstimate = Checkpoints::GetTotalBlocksEstimate();
             {
                 LOCK(cs_vNodes);
                 BOOST_FOREACH(CNode* pnode, vNodes)
-                    if (chainActive.Height() > (pnode->nStartingHeight != -1 ? pnode->nStartingHeight - 2000 : nBlockEstimate))
-                        pnode->PushInventory(CInv(MSG_BLOCK, hashNewTip));
+                    if (chainActive.Height() > (pnode->nStartingHeight != -1 ? pnode->nStartingHeight - 2000 : nBlockEstimate)) {
+                        BOOST_REVERSE_FOREACH(const uint256& hash, vHashes) {
+                            pnode->PushInventory(CInv(MSG_BLOCK, hash));
+                        }
+                    }
             }
             // Notify external listeners about the new tip.
-            uiInterface.NotifyBlockTip(hashNewTip);
+            if (!vHashes.empty()) {
+                uiInterface.NotifyBlockTip(vHashes.front());
+            }
         }
     } while(pindexMostWork != chainActive.Tip());
     CheckBlockIndex();
