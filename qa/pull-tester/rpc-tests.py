@@ -90,6 +90,7 @@ testScripts = [
     'p2p-fullblocktest.py',
     'blockchain.py',
     'disablewallet.py',
+    'sendheaders.py',
 ]
 testScriptsExt = [
     'bip65-cltv.py',
