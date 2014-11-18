@@ -56,7 +56,7 @@ static enum RetFormat ParseDataFormat(const string& format)
     return rf_names[0].rf;
 }
 
-static bool ParseHashStr(string& strReq, uint256& v)
+static bool ParseHashStr(const string& strReq, uint256& v)
 {
     if (!IsHex(strReq) || (strReq.size() != 64))
         return false;
@@ -195,7 +195,7 @@ bool HTTPReq_REST(AcceptedConnection *conn,
         return false;
     }
 
-    conn->stream() << HTTPReply(HTTP_NOT_FOUND, "", false) << std::flush;
+    conn->stream() << HTTPError(HTTP_NOT_FOUND, false) << std::flush;
     return false;
 }
 
