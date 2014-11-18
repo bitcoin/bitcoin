@@ -195,6 +195,9 @@
     <ClCompile Include="build\moc_mintingfilterproxy.cpp">
       <Filter>Generated Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\kernelrecord.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="..\..\src\qt\aboutdialog.h">

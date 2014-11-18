@@ -235,7 +235,6 @@ void MintingTableModel::update()
     if(!updated.empty())
     {
         priv->updateWallet(updated);
-        priv->refreshWallet();
     }
 }
 
