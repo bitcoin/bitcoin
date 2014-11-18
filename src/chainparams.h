@@ -8,7 +8,7 @@
 
 #include "chainparamsbase.h"
 #include "checkpoints.h"
-#include "core/block.h"
+#include "primitives/block.h"
 #include "protocol.h"
 #include "uint256.h"
 

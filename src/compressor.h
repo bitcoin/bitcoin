@@ -6,7 +6,7 @@
 #ifndef BITCOIN_COMPRESSOR_H
 #define BITCOIN_COMPRESSOR_H
 
-#include "core/transaction.h"
+#include "primitives/transaction.h"
 #include "script/script.h"
 #include "serialize.h"
 
