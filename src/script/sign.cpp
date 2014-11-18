@@ -5,7 +5,7 @@
 
 #include "script/sign.h"
 
-#include "core/transaction.h"
+#include "primitives/transaction.h"
 #include "key.h"
 #include "keystore.h"
 #include "script/standard.h"
