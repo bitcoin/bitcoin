@@ -6,7 +6,7 @@ install:
   - if [ "$FIELD" = "64bit_asm" ]; then sudo apt-get install -qq yasm; fi
 env:
   global:
-    - FIELD=auto  BIGNUM=auto  SCALAR=auto  ENDOMORPHISM=no  BUILD=check
+    - FIELD=auto  BIGNUM=auto  SCALAR=auto  ENDOMORPHISM=no  BUILD=check  EXTRAFLAGS=
   matrix:
     - SCALAR=32bit
     - SCALAR=64bit
@@ -19,6 +19,7 @@ env:
     - FIELD=32bit
     - FIELD=32bit     ENDOMORPHISM=yes
     - BUILD=distcheck
+    - EXTRAFLAGS=CFLAGS=-DDETERMINISTIC
 before_script: ./autogen.sh
-script: ./configure --enable-endomorphism=$ENDOMORPHISM --with-field=$FIELD --with-bignum=$BIGNUM --with-scalar=$SCALAR && make -j2 $BUILD
+script: ./configure --enable-endomorphism=$ENDOMORPHISM --with-field=$FIELD --with-bignum=$BIGNUM --with-scalar=$SCALAR $EXTRAFLAGS && make -j2 $BUILD
 os: linux
