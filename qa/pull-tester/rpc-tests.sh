@@ -8,6 +8,11 @@ CURDIR=$(cd $(dirname "$0"); pwd)
 export BITCOINCLI=${BUILDDIR}/qa/pull-tester/run-bitcoin-cli
 export BITCOIND=${REAL_BITCOIND}
 
+if [ "x${EXEEXT}" = "x.exe" ]; then
+  echo "Win tests currently disabled"
+  exit 0
+fi
+
 #Run the tests
 
 if [ "x${ENABLE_BITCOIND}${ENABLE_UTILS}${ENABLE_WALLET}" = "x111" ]; then
