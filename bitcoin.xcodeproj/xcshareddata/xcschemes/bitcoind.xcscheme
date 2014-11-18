@@ -34,13 +34,14 @@
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       launchStyle = "0"
+      askForAppToLaunch = "Yes"
       useCustomWorkingDirectory = "NO"
       buildConfiguration = "Debug"
       ignoresPersistentStateOnLaunch = "NO"
       debugDocumentVersioning = "YES"
       allowLocationSimulation = "YES">
       <PathRunnable
-         FilePath = "src/bitcoind">
+         FilePath = "/Users/ddustin/Library/Developer/Xcode/DerivedData/bitcoin-hgcxjaiitthtfmbhlaaruaclhrgx/Build/Products/bitcoind">
       </PathRunnable>
       <MacroExpansion>
          <BuildableReference
