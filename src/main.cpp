@@ -2334,32 +2334,11 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
     return true;
 }
 
-bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& state, CBlockIndex** ppindex)
+bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& state, CBlockIndex * const pindexPrev)
 {
-    AssertLockHeld(cs_main);
-    // Check for duplicate
-    uint256 hash = block.GetHash();
-    BlockMap::iterator miSelf = mapBlockIndex.find(hash);
-    CBlockIndex *pindex = NULL;
-    if (miSelf != mapBlockIndex.end()) {
-        // Block header is already known.
-        pindex = miSelf->second;
-        if (ppindex)
-            *ppindex = pindex;
-        if (pindex->nStatus & BLOCK_FAILED_MASK)
-            return state.Invalid(error("%s : block is marked invalid", __func__), 0, "duplicate");
-        return true;
-    }
-
-    // Get prev block index
-    CBlockIndex* pindexPrev = NULL;
-    int nHeight = 0;
-    if (hash != Params().HashGenesisBlock()) {
-        BlockMap::iterator mi = mapBlockIndex.find(block.hashPrevBlock);
-        if (mi == mapBlockIndex.end())
-            return state.DoS(10, error("%s : prev block not found", __func__), 0, "bad-prevblk");
-        pindexPrev = (*mi).second;
-        nHeight = pindexPrev->nHeight+1;
+    if (pindexPrev != NULL) {
+        int nHeight = pindexPrev->nHeight+1;
+        uint256 hash = block.GetHash();
 
         // Check proof of work
         if ((!Params().SkipProofOfWorkCheck()) &&
@@ -2391,15 +2370,12 @@ bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& sta
         }
     }
 
-    if (ppindex)
-        *ppindex = pindex;
-
     return true;
 }
 
-bool ContextualCheckBlock(const CBlock& block, CValidationState& state, const CBlockIndex * const pindexPrev)
+bool ContextualCheckBlock(const CBlock& block, CValidationState& state, CBlockIndex * const pindexPrev)
 {
-    const int nHeight = pindexPrev->nHeight + 1;
+    const int nHeight = pindexPrev == NULL ? 0 : pindexPrev->nHeight + 1;
 
     // Check that all transactions are finalized
     BOOST_FOREACH(const CTransaction& tx, block.vtx)
@@ -2424,16 +2400,39 @@ bool ContextualCheckBlock(const CBlock& block, CValidationState& state, const CB
 
 bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state, CBlockIndex** ppindex)
 {
-    // We need pindex to know whether to add it to the block index or not - if not provided by the caller, we use a dummy one on the stack
-    CBlockIndex *_dummy_pindex;
-    if (!ppindex)
-        ppindex = &_dummy_pindex;
+    AssertLockHeld(cs_main);
+    // Check for duplicate
+    uint256 hash = block.GetHash();
+    BlockMap::iterator miSelf = mapBlockIndex.find(hash);
+    CBlockIndex *pindex = NULL;
+    if (miSelf != mapBlockIndex.end()) {
+        // Block header is already known.
+        pindex = miSelf->second;
+        if (ppindex)
+            *ppindex = pindex;
+        if (pindex->nStatus & BLOCK_FAILED_MASK)
+            return state.Invalid(error("%s : block is marked invalid", __func__), 0, "duplicate");
+        return true;
+    }
 
-    if (!ContextualCheckBlockHeader(block, state, ppindex))
+    // Get prev block index
+    CBlockIndex* pindexPrev = NULL;
+    if (hash != Params().HashGenesisBlock()) {
+        BlockMap::iterator mi = mapBlockIndex.find(block.hashPrevBlock);
+        if (mi == mapBlockIndex.end())
+            return state.DoS(10, error("%s : prev block not found", __func__), 0, "bad-prevblk");
+        pindexPrev = (*mi).second;
+    }
+
+    if (!ContextualCheckBlockHeader(block, state, pindexPrev))
         return false;
 
-    if (!*ppindex)
-        *ppindex = AddToBlockIndex(block);
+    if (pindex == NULL)
+        pindex = AddToBlockIndex(block);
+
+    if (ppindex)
+        *ppindex = pindex;
+
     return true;
 }
 
@@ -2582,8 +2581,7 @@ bool TestBlockValidity(CValidationState &state, const CBlock& block, CBlockIndex
     indexDummy.nHeight = pindexPrev->nHeight + 1;
 
     // NOTE: CheckBlockHeader is called by CheckBlock
-    // NOTE: ContextualCheckBlockHeader only assigns ppindex, which we don't need/want
-    if (!ContextualCheckBlockHeader(block, state, NULL))
+    if (!ContextualCheckBlockHeader(block, state, pindexPrev))
         return false;
     if (!CheckBlock(block, state, fCheckPOW, fCheckMerkleRoot))
         return false;
