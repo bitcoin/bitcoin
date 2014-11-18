@@ -1753,6 +1753,8 @@ void RelayTransaction(const CTransaction& tx, const CDataStream& ss)
         } else
             pnode->PushInventory(inv);
     }
+
+    uiInterface.NotifyRelayTx(tx);
 }
 
 void CNode::RecordBytesRecv(uint64_t bytes)

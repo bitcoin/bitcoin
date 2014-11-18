@@ -85,6 +85,10 @@ if ENABLE_WALLET
 test_test_bitcoin_LDADD += $(LIBBITCOIN_WALLET)
 endif
 
+if ENABLE_ZMQ
+test_test_bitcoin_LDADD += $(ZMQ_LIBS)
+endif
+
 if USE_LIBSECP256K1
   test_test_bitcoin_LDADD += secp256k1/libsecp256k1.la
 endif
