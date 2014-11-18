@@ -28,6 +28,7 @@
 #include "wallet.h"
 #include "walletdb.h"
 #endif
+#include "zmqports.h"
 
 #include <stdint.h>
 #include <stdio.h>
@@ -169,6 +170,9 @@ void Shutdown()
     if (pwalletMain)
         bitdb.Flush(true);
 #endif
+
+    ZMQShutdown();
+
 #ifndef WIN32
     boost::filesystem::remove(GetPidFile());
 #endif
@@ -298,7 +302,7 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += "  -zapwallettxes=<mode>  " + _("Delete all wallet transactions and only recover those parts of the blockchain through -rescan on startup") + "\n";
     strUsage += "                         " + _("(1 = keep tx meta data e.g. account owner and payment request information, 2 = drop tx meta data)") + "\n";
 #endif
-
+    strUsage += "  -zmqpub=<endpoint>     " + _("Publish blocks and transactions on ZMQ port 'endpoint'") + "\n";
     strUsage += "\n" + _("Debugging/Testing options:") + "\n";
     if (GetBoolArg("-help-debug", false))
     {
@@ -918,6 +922,10 @@ bool AppInit2(boost::thread_group& threadGroup)
 
     BOOST_FOREACH(string strDest, mapMultiArgs["-seednode"])
         AddOneShot(strDest);
+
+    if (mapArgs.count("-zmqpub"))
+      ZMQInitialize(mapArgs["-zmqpub"]);
+
 
     // ********************************************************* Step 7: load block chain
 
