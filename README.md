@@ -25,9 +25,14 @@ Implementation details
     * Using 10 26-bit limbs.
     * Using GMP.
   * Field inverses and square roots using a sliding window over blocks of 1s (by Peter Dettman).
+* Scalar operations
+  * Optimized implementation without data-dependent branches of arithmetic modulo the curve's order.
+    * Using 4 64-bit limbs (relying on __int128 support in the compiler).
+    * Using 8 32-bit limbs.
 * Group operations
   * Point addition formula specifically simplified for the curve equation (y^2 = x^3 + 7).
   * Use addition between points in Jacobian and affine coordinates where possible.
+  * Use a unified addition/doubling formula where necessary to avoid data-dependent branches.
 * Point multiplication for verification (a*P + b*G).
   * Use wNAF notation for point multiplicands.
   * Use a much larger window for multiples of G, using precomputed multiples.
@@ -36,7 +41,8 @@ Implementation details
 * Point multiplication for signing
   * Use a precomputed table of multiples of powers of 16 multiplied with the generator, so general multiplication becomes a series of additions.
   * Slice the precomputed table in memory per byte, so memory access to the table becomes uniform.
-  * Not fully constant-time, but the precomputed tables add and eventually subtract points for which no known scalar (private key) is known, blinding non-constant time effects even from an attacker with control over the private key used.
+  * No data-dependent branches
+  * The precomputed tables add and eventually subtract points for which no known scalar (private key) is known, preventing even an attacker with control over the private key used to control the data internally.
 
 Build steps
 -----------
