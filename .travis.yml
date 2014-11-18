@@ -40,7 +40,7 @@ matrix:
       env: HOST=i686-w64-mingw32 PACKAGES="nsis gcc-mingw-w64-i686 g++-mingw-w64-i686 binutils-mingw-w64-i686 mingw-w64-dev wine bc" RUN_TESTS=true GOAL="deploy" BITCOIN_CONFIG="--enable-gui" MAKEJOBS="-j2"
 install:
     - if [ -n "$PACKAGES" ]; then travis_retry sudo apt-get update; fi
-    - if [ -n "$PACKAGES" ]; then travis_retry sudo apt-get install --no-upgrade -qq $PACKAGES; fi
+    - if [ -n "$PACKAGES" ]; then travis_retry sudo apt-get install --no-install-recommends --no-upgrade -qq $PACKAGES; fi
 before_script:
     - unset CC; unset CXX
     - mkdir -p depends/SDKs depends/sdk-sources
