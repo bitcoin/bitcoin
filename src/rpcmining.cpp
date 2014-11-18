@@ -618,15 +618,32 @@ Value submitblock(const Array& params, bool fHelp)
             + HelpExampleRpc("submitblock", "\"mydata\"")
         );
 
-    CBlock pblock;
-    if (!DecodeHexBlk(pblock, params[0].get_str()))
+    CBlock block;
+    if (!DecodeHexBlk(block, params[0].get_str()))
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Block decode failed");
 
+    uint256 hash = block.GetHash();
+    BlockMap::iterator mi = mapBlockIndex.find(hash);
+    if (mi != mapBlockIndex.end()) {
+        CBlockIndex *pindex = mi->second;
+        if (pindex->IsValid(BLOCK_VALID_SCRIPTS))
+            return "duplicate";
+        if (pindex->nStatus & BLOCK_FAILED_MASK)
+            return "duplicate-invalid";
+        // Otherwise, we might only have the header - process the block before returning
+    }
+
     CValidationState state;
-    submitblock_StateCatcher sc(pblock.GetHash());
+    submitblock_StateCatcher sc(block.GetHash());
     RegisterValidationInterface(&sc);
-    bool fAccepted = ProcessNewBlock(state, NULL, &pblock);
+    bool fAccepted = ProcessNewBlock(state, NULL, &block);
     UnregisterValidationInterface(&sc);
+    if (mi != mapBlockIndex.end())
+    {
+        if (fAccepted && !sc.found)
+            return "duplicate-inconclusive";
+        return "duplicate";
+    }
     if (fAccepted)
     {
         if (!sc.found)
