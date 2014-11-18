@@ -628,7 +628,6 @@ void PaymentServer::fetchPaymentACK(CWallet* wallet, SendCoinsRecipient recipien
     else {
         CPubKey newKey;
         if (wallet->GetKeyFromPool(newKey)) {
-            LOCK(wallet->cs_wallet); // SetAddressBook
             CKeyID keyID = newKey.GetID();
             wallet->SetAddressBook(keyID, strAccount, "refund");
 
