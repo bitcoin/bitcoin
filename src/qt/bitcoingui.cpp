@@ -58,20 +58,6 @@
 #include <QUrlQuery>
 #endif
 
-#ifdef Q_OS_MAC
-#include <QEvent>
-
-// workaround for Qt OSX Bug:
-// https://bugreports.qt-project.org/browse/QTBUG-15631
-// QProgressBar uses around 10% CPU even when app is in background
-class QProgressBarMac : public QProgressBar
-{
-    bool event(QEvent *e) {
-        return (e->type() != QEvent::StyleAnimationUpdate) ? QProgressBar::event(e) : false;
-    }
-};
-#endif
-
 const QString BitcoinGUI::DEFAULT_WALLET = "~Default";
 
 BitcoinGUI::BitcoinGUI(const NetworkStyle *networkStyle, QWidget *parent) :
@@ -204,11 +190,7 @@ BitcoinGUI::BitcoinGUI(const NetworkStyle *networkStyle, QWidget *parent) :
     // Progress bar and label for blocks download
     progressBarLabel = new QLabel();
     progressBarLabel->setVisible(false);
-#ifdef Q_OS_MAC
-    progressBar = new QProgressBarMac();
-#else
-    progressBar = new QProgressBar();
-#endif
+    progressBar = new GUIUtil::ProgressBar();
     progressBar->setAlignment(Qt::AlignCenter);
     progressBar->setVisible(false);
 
