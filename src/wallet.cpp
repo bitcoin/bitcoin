@@ -393,6 +393,7 @@ void CWallet::WalletUpdateSpent(const CTransaction &tx, bool fBlock)
                     wtx.MarkSpent(txin.prevout.n);
                     wtx.WriteToDisk();
                     NotifyTransactionChanged(this, txin.prevout.hash, CT_UPDATED);
+                    vMintingWalletUpdated.push_back(txin.prevout.hash);
                 }
             }
         }
@@ -410,6 +411,7 @@ void CWallet::WalletUpdateSpent(const CTransaction &tx, bool fBlock)
                     wtx.MarkUnspent(&txout - &tx.vout[0]);
                     wtx.WriteToDisk();
                     NotifyTransactionChanged(this, hash, CT_UPDATED);
+                    vMintingWalletUpdated.push_back(hash);
                 }
             }
         }
@@ -540,7 +542,7 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn)
 
         // Notify UI of new or updated transaction
         NotifyTransactionChanged(this, hash, fInsertedNew ? CT_NEW : CT_UPDATED);
-
+        vMintingWalletUpdated.push_back(hash);
         // notify an external script when a wallet transaction comes in or is updated
         std::string strCmd = GetArg("-walletnotify", "");
 
@@ -2116,6 +2118,7 @@ bool CWallet::CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey)
                 coin.MarkSpent(txin.prevout.n);
                 coin.WriteToDisk();
                 NotifyTransactionChanged(this, coin.GetHash(), CT_UPDATED);
+                vMintingWalletUpdated.push_back(coin.GetHash());
             }
 
             if (fFileBacked)
@@ -2721,8 +2724,10 @@ void CWallet::UpdatedTransaction(const uint256 &hashTx)
         // Only notify UI if this transaction is in this wallet
         map<uint256, CWalletTx>::const_iterator mi = mapWallet.find(hashTx);
         if (mi != mapWallet.end())
+        {
             NotifyTransactionChanged(this, hashTx, CT_UPDATED);
-        vMintingWalletUpdated.push_back(hashTx);
+            vMintingWalletUpdated.push_back(hashTx);
+        }
     }
 }
 
