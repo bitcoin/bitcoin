@@ -12,7 +12,7 @@
 #include "num.h"
 
 static int secp256k1_eckey_pubkey_parse(secp256k1_ge_t *elem, const unsigned char *pub, int size);
-static void secp256k1_eckey_pubkey_serialize(secp256k1_ge_t *elem, unsigned char *pub, int *size, int compressed);
+static int secp256k1_eckey_pubkey_serialize(secp256k1_ge_t *elem, unsigned char *pub, int *size, int compressed);
 
 static int secp256k1_eckey_privkey_parse(secp256k1_scalar_t *key, const unsigned char *privkey, int privkeylen);
 static int secp256k1_eckey_privkey_serialize(unsigned char *privkey, int *privkeylen, const secp256k1_scalar_t *key, int compressed);

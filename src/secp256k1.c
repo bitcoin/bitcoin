@@ -150,8 +150,7 @@ int secp256k1_ecdsa_recover_compact(const unsigned char *msg, int msglen, const 
 
     secp256k1_ge_t q;
     if (secp256k1_ecdsa_sig_recover(&sig, &q, &m, recid)) {
-        secp256k1_eckey_pubkey_serialize(&q, pubkey, pubkeylen, compressed);
-        ret = 1;
+        ret = secp256k1_eckey_pubkey_serialize(&q, pubkey, pubkeylen, compressed);
     }
     return ret;
 }
@@ -187,8 +186,7 @@ int secp256k1_ec_pubkey_create(unsigned char *pubkey, int *pubkeylen, const unsi
     secp256k1_scalar_clear(&sec);
     secp256k1_ge_t p;
     secp256k1_ge_set_gej(&p, &pj);
-    secp256k1_eckey_pubkey_serialize(&p, pubkey, pubkeylen, compressed);
-    return 1;
+    return secp256k1_eckey_pubkey_serialize(&p, pubkey, pubkeylen, compressed);
 }
 
 int secp256k1_ec_pubkey_decompress(unsigned char *pubkey, int *pubkeylen) {
@@ -198,8 +196,7 @@ int secp256k1_ec_pubkey_decompress(unsigned char *pubkey, int *pubkeylen) {
     secp256k1_ge_t p;
     if (!secp256k1_eckey_pubkey_parse(&p, pubkey, *pubkeylen))
         return 0;
-    secp256k1_eckey_pubkey_serialize(&p, pubkey, pubkeylen, 0);
-    return 1;
+    return secp256k1_eckey_pubkey_serialize(&p, pubkey, pubkeylen, 0);
 }
 
 int secp256k1_ec_privkey_tweak_add(unsigned char *seckey, const unsigned char *tweak) {
@@ -236,7 +233,7 @@ int secp256k1_ec_pubkey_tweak_add(unsigned char *pubkey, int pubkeylen, const un
     }
     if (ret) {
         int oldlen = pubkeylen;
-        secp256k1_eckey_pubkey_serialize(&p, pubkey, &pubkeylen, oldlen <= 33);
+        ret = secp256k1_eckey_pubkey_serialize(&p, pubkey, &pubkeylen, oldlen <= 33);
         VERIFY_CHECK(pubkeylen == oldlen);
     }
 
@@ -276,7 +273,7 @@ int secp256k1_ec_pubkey_tweak_mul(unsigned char *pubkey, int pubkeylen, const un
     }
     if (ret) {
         int oldlen = pubkeylen;
-        secp256k1_eckey_pubkey_serialize(&p, pubkey, &pubkeylen, oldlen <= 33);
+        ret = secp256k1_eckey_pubkey_serialize(&p, pubkey, &pubkeylen, oldlen <= 33);
         VERIFY_CHECK(pubkeylen == oldlen);
     }
 
