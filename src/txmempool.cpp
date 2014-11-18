@@ -426,30 +426,41 @@ bool CTxMemPool::addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry)
 }
 
 
-void CTxMemPool::remove(const CTransaction &tx, std::list<CTransaction>& removed, bool fRecursive)
+void CTxMemPool::remove(const CTransaction &origTx, std::list<CTransaction>& removed, bool fRecursive)
 {
     // Remove transaction from memory pool
+    LOCK(cs);
+    std::deque<uint256> txToRemove;
+    txToRemove.push_back(origTx.GetHash());
+    if (fRecursive) {
+        uint256 hash = origTx.GetHash();
+        for (unsigned int i = 0; i < origTx.vout.size(); i++) {
+            std::map<COutPoint, CInPoint>::iterator it = mapNextTx.find(COutPoint(hash, i));
+            if (it != mapNextTx.end())
+                txToRemove.push_back(it->second.ptx->GetHash());
+        }
+    }
+    while (txToRemove.size())
     {
-        LOCK(cs);
-        uint256 hash = tx.GetHash();
+        uint256 hash = txToRemove.front();
+        txToRemove.pop_front();
+        if (!mapTx.count(hash))
+            continue;
+        const CTransaction& tx = mapTx[hash].GetTx();
+        removed.push_front(tx);
         if (fRecursive) {
             for (unsigned int i = 0; i < tx.vout.size(); i++) {
                 std::map<COutPoint, CInPoint>::iterator it = mapNextTx.find(COutPoint(hash, i));
-                if (it == mapNextTx.end())
-                    continue;
-                remove(*it->second.ptx, removed, true);
+                if (it != mapNextTx.end())
+                    txToRemove.push_back(it->second.ptx->GetHash());
             }
         }
-        if (mapTx.count(hash))
-        {
-            removed.push_front(tx);
-            BOOST_FOREACH(const CTxIn& txin, tx.vin)
-                mapNextTx.erase(txin.prevout);
+        BOOST_FOREACH(const CTxIn& txin, tx.vin)
+            mapNextTx.erase(txin.prevout);
 
-            totalTxSize -= mapTx[hash].GetTxSize();
-            mapTx.erase(hash);
-            nTransactionsUpdated++;
-        }
+        totalTxSize -= mapTx[hash].GetTxSize();
+        mapTx.erase(hash);
+        nTransactionsUpdated++;
     }
 }
 
