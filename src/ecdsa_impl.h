@@ -128,7 +128,7 @@ static int secp256k1_ecdsa_sig_recover(const secp256k1_ecdsa_sig_t *sig, secp256
     secp256k1_num_free(&rn);
     secp256k1_num_free(&u1);
     secp256k1_num_free(&u2);
-    return 1;
+    return !secp256k1_gej_is_infinity(&qj);
 }
 
 static int secp256k1_ecdsa_sig_verify(const secp256k1_ecdsa_sig_t *sig, const secp256k1_ge_t *pubkey, const secp256k1_num_t *message) {
