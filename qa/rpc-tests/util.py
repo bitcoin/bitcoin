@@ -57,7 +57,6 @@ def sync_mempools(rpc_connections):
         if num_match == len(rpc_connections):
             break
         time.sleep(1)
-        
 
 bitcoind_processes = {}
 
@@ -129,6 +128,15 @@ def initialize_chain(test_dir):
         to_dir = os.path.join(test_dir,  "node"+str(i))
         shutil.copytree(from_dir, to_dir)
         initialize_datadir(test_dir, i) # Overwrite port/rpcport in bitcoin.conf
+
+def initialize_chain_clean(test_dir, num_nodes):
+    """
+    Create an empty blockchain and num_nodes wallets.
+    Useful if a test case wants complete control over initialization.
+    """
+    for i in range(num_nodes):
+        datadir=initialize_datadir(test_dir, i)
+
 
 def _rpchost_to_args(rpchost):
     '''Convert optional IP:port spec to rpcconnect/rpcport args'''
@@ -221,11 +229,13 @@ def find_output(node, txid, amount):
             return i
     raise RuntimeError("find_output txid %s : %s not found"%(txid,str(amount)))
 
-def gather_inputs(from_node, amount_needed):
+
+def gather_inputs(from_node, amount_needed, confirmations_required=1):
     """
     Return a random set of unspent txouts that are enough to pay amount_needed
     """
-    utxo = from_node.listunspent(1)
+    assert(confirmations_required >=0)
+    utxo = from_node.listunspent(confirmations_required)
     random.shuffle(utxo)
     inputs = []
     total_in = Decimal("0.00000000")
