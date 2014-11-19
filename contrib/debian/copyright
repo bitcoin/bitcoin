@@ -34,6 +34,7 @@ Files: src/qt/res/icons/add.png
        src/qt/res/icons/info.png
        src/qt/res/icons/key.png
        src/qt/res/icons/lock_*.png
+       src/qt/res/icons/network_disabled.png
        src/qt/res/icons/open.png
        src/qt/res/icons/overview.png
        src/qt/res/icons/quit.png
