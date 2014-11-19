@@ -226,7 +226,7 @@ void PaymentServer::ipcParseCommandLine(int argc, char* argv[])
             savedPaymentRequests.append(arg);
 
             PaymentRequestPlus request;
-            if (readPaymentRequest(arg, request))
+            if (readPaymentRequestFromFile(arg, request))
             {
                 if (request.getDetails().network() == "main")
                 {
@@ -452,7 +452,7 @@ void PaymentServer::handleURIOrFile(const QString& s)
     {
         PaymentRequestPlus request;
         SendCoinsRecipient recipient;
-        if (!readPaymentRequest(s, request))
+        if (!readPaymentRequestFromFile(s, request))
         {
             emit message(tr("Payment request file handling"),
                 tr("Payment request file cannot be read! This can be caused by an invalid payment request file."),
@@ -486,18 +486,25 @@ void PaymentServer::handleURIConnection()
     handleURIOrFile(msg);
 }
 
-bool PaymentServer::readPaymentRequest(const QString& filename, PaymentRequestPlus& request)
+//
+// Warning: readPaymentRequestFromFile() is used in ipcSendCommandLine()
+// so don't use "emit message()", but "QMessageBox::"!
+//
+bool PaymentServer::readPaymentRequestFromFile(const QString& filename, PaymentRequestPlus& request)
 {
     QFile f(filename);
-    if (!f.open(QIODevice::ReadOnly))
-    {
-        qWarning() << "PaymentServer::readPaymentRequest : Failed to open " << filename;
+    if (!f.open(QIODevice::ReadOnly)) {
+        qWarning() << QString("PaymentServer::%1: Failed to open %2").arg(__func__).arg(filename);
         return false;
     }
 
-    if (f.size() > BIP70_MAX_PAYMENTREQUEST_SIZE)
-    {
-        qWarning() << "PaymentServer::readPaymentRequest : " << filename << " too large";
+    // BIP70 DoS protection
+    if (f.size() > BIP70_MAX_PAYMENTREQUEST_SIZE) {
+        qWarning() << QString("PaymentServer::%1: Payment request %2 is too large (%3 bytes, allowed %4 bytes).")
+            .arg(__func__)
+            .arg(filename)
+            .arg(f.size())
+            .arg(BIP70_MAX_PAYMENTREQUEST_SIZE);
         return false;
     }
 
@@ -657,13 +664,26 @@ void PaymentServer::fetchPaymentACK(CWallet* wallet, SendCoinsRecipient recipien
 void PaymentServer::netRequestFinished(QNetworkReply* reply)
 {
     reply->deleteLater();
-    if (reply->error() != QNetworkReply::NoError)
-    {
+
+    // BIP70 DoS protection
+    if (reply->size() > BIP70_MAX_PAYMENTREQUEST_SIZE) {
+        QString msg = tr("Payment request %2 is too large (%3 bytes, allowed %4 bytes).")
+            .arg(__func__)
+            .arg(reply->request().url().toString())
+            .arg(reply->size())
+            .arg(BIP70_MAX_PAYMENTREQUEST_SIZE);
+
+        qWarning() << QString("PaymentServer::%1:").arg(__func__) << msg;
+        emit message(tr("Payment request DoS protection"), msg, CClientUIInterface::MSG_ERROR);
+        return;
+    }
+
+    if (reply->error() != QNetworkReply::NoError) {
         QString msg = tr("Error communicating with %1: %2")
             .arg(reply->request().url().toString())
             .arg(reply->errorString());
 
-        qWarning() << "PaymentServer::netRequestFinished : " << msg;
+        qWarning() << "PaymentServer::netRequestFinished: " << msg;
         emit message(tr("Payment request error"), msg, CClientUIInterface::MSG_ERROR);
         return;
     }
