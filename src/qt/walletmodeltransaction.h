@@ -25,6 +25,7 @@ public:
     QList<SendCoinsRecipient> getRecipients();
 
     CWalletTx *getTransaction();
+    unsigned int getTransactionSize();
 
     void setTransactionFee(const CAmount& newFee);
     CAmount getTransactionFee();
