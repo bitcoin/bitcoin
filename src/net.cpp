@@ -864,7 +864,7 @@ void ThreadSocketHandler()
                 else if (!fNetworkActive)
                 {
                     printf("connection from %s dropped (not accepting new connections)\n", addr.ToString().c_str());
-                    closesocket(hSocket);
+                    CloseSocket(hSocket);
                 }
                 else if (nInbound >= nMaxConnections - MAX_OUTBOUND_CONNECTIONS)
                 {
