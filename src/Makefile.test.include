@@ -80,13 +80,9 @@ endif
 test_test_bitcoin_SOURCES = $(BITCOIN_TESTS) $(JSON_TEST_FILES) $(RAW_TEST_FILES)
 test_test_bitcoin_CPPFLAGS = $(BITCOIN_INCLUDES) -I$(builddir)/test/ $(TESTDEFS)
 test_test_bitcoin_LDADD = $(LIBBITCOIN_SERVER) $(LIBBITCOIN_CLI) $(LIBBITCOIN_COMMON) $(LIBBITCOIN_UTIL) $(LIBBITCOIN_CRYPTO) $(LIBBITCOIN_UNIVALUE) $(LIBLEVELDB) $(LIBMEMENV) \
-  $(BOOST_LIBS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB)
+  $(BOOST_LIBS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB) $(LIBSECP256K1)
 if ENABLE_WALLET
 test_test_bitcoin_LDADD += $(LIBBITCOIN_WALLET)
-endif
-
-if USE_LIBSECP256K1
-  test_test_bitcoin_LDADD += secp256k1/libsecp256k1.la
 endif
 
 test_test_bitcoin_LDADD += $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS)
@@ -107,6 +103,9 @@ bitcoin_test_check: $(TEST_BINARY) FORCE
 
 bitcoin_test_clean : FORCE
 	rm -f $(CLEAN_BITCOIN_TEST) $(test_test_bitcoin_OBJECTS) $(TEST_BINARY)
+
+check-local:
+	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C secp256k1 check
 
 %.json.h: %.json
 	@$(MKDIR_P) $(@D)

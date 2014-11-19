@@ -1,9 +1,6 @@
+DIST_SUBDIRS = secp256k1
 AM_LDFLAGS = $(PTHREAD_CFLAGS) $(LIBTOOL_LDFLAGS)
 
-if USE_LIBSECP256K1
-secp256k1/libsecp256k1.la: $(wildcard secp256k1/src/*) $(wildcard secp256k1/include/*)
-	@$(MAKE) $(AM_MAKEFLAGS) -C $(@D) $(@F)
-endif
 
 if EMBEDDED_LEVELDB
 LEVELDB_CPPFLAGS += -I$(srcdir)/leveldb/include
@@ -23,9 +20,7 @@ endif
 BITCOIN_CONFIG_INCLUDES=-I$(builddir)/config
 BITCOIN_INCLUDES=-I$(builddir) -I$(builddir)/obj $(BOOST_CPPFLAGS) $(LEVELDB_CPPFLAGS) $(CRYPTO_CFLAGS) $(SSL_CFLAGS)
 
-if USE_LIBSECP256K1
 BITCOIN_INCLUDES += -I$(srcdir)/secp256k1/include
-endif
 
 LIBBITCOIN_SERVER=libbitcoin_server.a
 LIBBITCOIN_WALLET=libbitcoin_wallet.a
@@ -35,6 +30,10 @@ LIBBITCOIN_UTIL=libbitcoin_util.a
 LIBBITCOIN_CRYPTO=crypto/libbitcoin_crypto.a
 LIBBITCOIN_UNIVALUE=univalue/libbitcoin_univalue.a
 LIBBITCOINQT=qt/libbitcoinqt.a
+LIBSECP256K1=secp256k1/libsecp256k1.la
+
+$(LIBSECP256K1): $(wildcard secp256k1/src/*) $(wildcard secp256k1/include/*)
+	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C $(@D) $(@F)
 
 # Make is not made aware of per-object dependencies to avoid limiting building parallelization
 # But to build the less dependent modules first, we manually select their order here:
@@ -281,11 +280,8 @@ bitcoind_LDADD = \
   $(LIBBITCOIN_UTIL) \
   $(LIBBITCOIN_CRYPTO) \
   $(LIBLEVELDB) \
-  $(LIBMEMENV)
-
-if USE_LIBSECP256K1
-  bitcoind_LDADD += secp256k1/libsecp256k1.la
-endif
+  $(LIBMEMENV) \
+  $(LIBSECP256K1)
 
 if ENABLE_WALLET
 bitcoind_LDADD += libbitcoin_wallet.a
@@ -312,9 +308,6 @@ bitcoin_cli_LDADD = \
 bitcoin_cli_SOURCES = \
   bitcoin-cli.cpp
 
-if USE_LIBSECP256K1
-  bitcoin_cli_LDADD += secp256k1/libsecp256k1.la
-endif
 bitcoin_cli_CPPFLAGS = $(BITCOIN_INCLUDES)
 #
 
@@ -323,13 +316,9 @@ bitcoin_tx_LDADD = \
   $(LIBBITCOIN_UNIVALUE) \
   $(LIBBITCOIN_COMMON) \
   $(LIBBITCOIN_UTIL) \
-  $(LIBBITCOIN_CRYPTO)
-
-if USE_LIBSECP256K1
-  bitcoin_tx_LDADD += secp256k1/libsecp256k1.la
-endif
-
-  bitcoin_tx_LDADD += $(BOOST_LIBS) \
+  $(LIBBITCOIN_CRYPTO) \
+  $(LIBSECP256K1) \
+  $(BOOST_LIBS) \
   $(CRYPTO_LIBS)
 
 bitcoin_tx_SOURCES = bitcoin-tx.cpp
@@ -346,11 +335,11 @@ CLEANFILES = leveldb/libleveldb.a leveldb/libmemenv.a *.gcda *.gcno
 
 DISTCLEANFILES = obj/build.h
 
-EXTRA_DIST = leveldb secp256k1
+EXTRA_DIST = leveldb
 
 clean-local:
 	-$(MAKE) -C leveldb clean
-	-$(MAKE) -C secp256k1 clean 2>/dev/null
+	-$(MAKE) -C secp256k1 clean
 	rm -f leveldb/*/*.gcno leveldb/helpers/memenv/*.gcno
 	-rm -f config.h
 
