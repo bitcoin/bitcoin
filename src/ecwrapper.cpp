@@ -13,43 +13,6 @@
 
 namespace {
 
-// Generate a private key from just the secret parameter
-int EC_KEY_regenerate_key(EC_KEY *eckey, BIGNUM *priv_key)
-{
-    int ok = 0;
-    BN_CTX *ctx = NULL;
-    EC_POINT *pub_key = NULL;
-
-    if (!eckey) return 0;
-
-    const EC_GROUP *group = EC_KEY_get0_group(eckey);
-
-    if ((ctx = BN_CTX_new()) == NULL)
-        goto err;
-
-    pub_key = EC_POINT_new(group);
-
-    if (pub_key == NULL)
-        goto err;
-
-    if (!EC_POINT_mul(group, pub_key, priv_key, NULL, NULL, ctx))
-        goto err;
-
-    EC_KEY_set_private_key(eckey,priv_key);
-    EC_KEY_set_public_key(eckey,pub_key);
-
-    ok = 1;
-
-err:
-
-    if (pub_key)
-        EC_POINT_free(pub_key);
-    if (ctx != NULL)
-        BN_CTX_free(ctx);
-
-    return(ok);
-}
-
 // Perform ECDSA key recovery (see SEC1 4.1.6) for curves over (mod p)-fields
 // recid selects which key is recovered
 // if check is non-zero, additional checks are performed
@@ -135,48 +98,6 @@ CECKey::~CECKey() {
     EC_KEY_free(pkey);
 }
 
-void CECKey::GetSecretBytes(unsigned char vch[32]) const {
-    const BIGNUM *bn = EC_KEY_get0_private_key(pkey);
-    assert(bn);
-    int nBytes = BN_num_bytes(bn);
-    int n=BN_bn2bin(bn,&vch[32 - nBytes]);
-    assert(n == nBytes);
-    memset(vch, 0, 32 - nBytes);
-}
-
-void CECKey::SetSecretBytes(const unsigned char vch[32]) {
-    bool ret;
-    BIGNUM bn;
-    BN_init(&bn);
-    ret = BN_bin2bn(vch, 32, &bn) != NULL;
-    assert(ret);
-    ret = EC_KEY_regenerate_key(pkey, &bn) != 0;
-    assert(ret);
-    BN_clear_free(&bn);
-}
-
-int CECKey::GetPrivKeySize(bool fCompressed) {
-    EC_KEY_set_conv_form(pkey, fCompressed ? POINT_CONVERSION_COMPRESSED : POINT_CONVERSION_UNCOMPRESSED);
-    return i2d_ECPrivateKey(pkey, NULL);
-}
-int CECKey::GetPrivKey(unsigned char* privkey, bool fCompressed) {
-    EC_KEY_set_conv_form(pkey, fCompressed ? POINT_CONVERSION_COMPRESSED : POINT_CONVERSION_UNCOMPRESSED);
-    return i2d_ECPrivateKey(pkey, &privkey);
-}
-
-bool CECKey::SetPrivKey(const unsigned char* privkey, size_t size, bool fSkipCheck) {
-    if (d2i_ECPrivateKey(&pkey, &privkey, size)) {
-        if(fSkipCheck)
-            return true;
-
-        // d2i_ECPrivateKey returns true if parsing succeeds.
-        // This doesn't necessarily mean the key is valid.
-        if (EC_KEY_check_key(pkey))
-            return true;
-    }
-    return false;
-}
-
 void CECKey::GetPubKey(std::vector<unsigned char> &pubkey, bool fCompressed) {
     EC_KEY_set_conv_form(pkey, fCompressed ? POINT_CONVERSION_COMPRESSED : POINT_CONVERSION_UNCOMPRESSED);
     int nSize = i2o_ECPublicKey(pkey, NULL);
@@ -193,69 +114,11 @@ bool CECKey::SetPubKey(const unsigned char* pubkey, size_t size) {
     return o2i_ECPublicKey(&pkey, &pubkey, size) != NULL;
 }
 
-bool CECKey::Sign(const uint256 &hash, std::vector<unsigned char>& vchSig) {
-    vchSig.clear();
-    ECDSA_SIG *sig = ECDSA_do_sign((unsigned char*)&hash, sizeof(hash), pkey);
-    if (sig == NULL)
-        return false;
-    BN_CTX *ctx = BN_CTX_new();
-    BN_CTX_start(ctx);
-    const EC_GROUP *group = EC_KEY_get0_group(pkey);
-    BIGNUM *order = BN_CTX_get(ctx);
-    BIGNUM *halforder = BN_CTX_get(ctx);
-    EC_GROUP_get_order(group, order, ctx);
-    BN_rshift1(halforder, order);
-    if (BN_cmp(sig->s, halforder) > 0) {
-        // enforce low S values, by negating the value (modulo the order) if above order/2.
-        BN_sub(sig->s, order, sig->s);
-    }
-    BN_CTX_end(ctx);
-    BN_CTX_free(ctx);
-    unsigned int nSize = ECDSA_size(pkey);
-    vchSig.resize(nSize); // Make sure it is big enough
-    unsigned char *pos = &vchSig[0];
-    nSize = i2d_ECDSA_SIG(sig, &pos);
-    ECDSA_SIG_free(sig);
-    vchSig.resize(nSize); // Shrink to fit actual size
-    return true;
-}
-
 bool CECKey::Verify(const uint256 &hash, const std::vector<unsigned char>& vchSig) {
     // -1 = error, 0 = bad sig, 1 = good
     if (ECDSA_verify(0, (unsigned char*)&hash, sizeof(hash), &vchSig[0], vchSig.size(), pkey) != 1)
         return false;
     return true;
-}
-
-bool CECKey::SignCompact(const uint256 &hash, unsigned char *p64, int &rec) {
-    bool fOk = false;
-    ECDSA_SIG *sig = ECDSA_do_sign((unsigned char*)&hash, sizeof(hash), pkey);
-    if (sig==NULL)
-        return false;
-    memset(p64, 0, 64);
-    int nBitsR = BN_num_bits(sig->r);
-    int nBitsS = BN_num_bits(sig->s);
-    if (nBitsR <= 256 && nBitsS <= 256) {
-        std::vector<unsigned char> pubkey;
-        GetPubKey(pubkey, true);
-        for (int i=0; i<4; i++) {
-            CECKey keyRec;
-            if (ECDSA_SIG_recover_key_GFp(keyRec.pkey, sig, (unsigned char*)&hash, sizeof(hash), i, 1) == 1) {
-                std::vector<unsigned char> pubkeyRec;
-                keyRec.GetPubKey(pubkeyRec, true);
-                if (pubkeyRec == pubkey) {
-                    rec = i;
-                    fOk = true;
-                    break;
-                }
-            }
-        }
-        assert(fOk);
-        BN_bn2bin(sig->r,&p64[32-(nBitsR+7)/8]);
-        BN_bn2bin(sig->s,&p64[64-(nBitsS+7)/8]);
-    }
-    ECDSA_SIG_free(sig);
-    return fOk;
 }
 
 bool CECKey::Recover(const uint256 &hash, const unsigned char *p64, int rec)
@@ -267,33 +130,6 @@ bool CECKey::Recover(const uint256 &hash, const unsigned char *p64, int rec)
     BN_bin2bn(&p64[32], 32, sig->s);
     bool ret = ECDSA_SIG_recover_key_GFp(pkey, sig, (unsigned char*)&hash, sizeof(hash), rec, 0) == 1;
     ECDSA_SIG_free(sig);
-    return ret;
-}
-
-bool CECKey::TweakSecret(unsigned char vchSecretOut[32], const unsigned char vchSecretIn[32], const unsigned char vchTweak[32])
-{
-    bool ret = true;
-    BN_CTX *ctx = BN_CTX_new();
-    BN_CTX_start(ctx);
-    BIGNUM *bnSecret = BN_CTX_get(ctx);
-    BIGNUM *bnTweak = BN_CTX_get(ctx);
-    BIGNUM *bnOrder = BN_CTX_get(ctx);
-    EC_GROUP *group = EC_GROUP_new_by_curve_name(NID_secp256k1);
-    EC_GROUP_get_order(group, bnOrder, ctx); // what a grossly inefficient way to get the (constant) group order...
-    BN_bin2bn(vchTweak, 32, bnTweak);
-    if (BN_cmp(bnTweak, bnOrder) >= 0)
-        ret = false; // extremely unlikely
-    BN_bin2bn(vchSecretIn, 32, bnSecret);
-    BN_add(bnSecret, bnSecret, bnTweak);
-    BN_nnmod(bnSecret, bnSecret, bnOrder, ctx);
-    if (BN_is_zero(bnSecret))
-        ret = false; // ridiculously unlikely
-    int nBits = BN_num_bits(bnSecret);
-    memset(vchSecretOut, 0, 32);
-    BN_bn2bin(bnSecret, &vchSecretOut[32-(nBits+7)/8]);
-    EC_GROUP_free(group);
-    BN_CTX_end(ctx);
-    BN_CTX_free(ctx);
     return ret;
 }
 
