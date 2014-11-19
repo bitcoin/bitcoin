@@ -39,6 +39,10 @@ _bitcoind() {
 
     if ((cword > 4)); then
         case ${words[cword-4]} in
+            listtransactions)
+                COMPREPLY=( $( compgen -W "true false" -- "$cur" ) )
+                return 0
+                ;;
             signrawtransaction)
                 COMPREPLY=( $( compgen -W "ALL NONE SINGLE ALL|ANYONECANPAY NONE|ANYONECANPAY SINGLE|ANYONECANPAY" -- "$cur" ) )
                 return 0
@@ -52,7 +56,7 @@ _bitcoind() {
                 _bitcoin_accounts
                 return 0
                 ;;
-            gettxout|importprivkey)
+            getbalance|gettxout|importaddress|importprivkey|listreceivedbyaccount|listreceivedbyaddress|listsinceblock)
                 COMPREPLY=( $( compgen -W "true false" -- "$cur" ) )
                 return 0
                 ;;
@@ -65,7 +69,7 @@ _bitcoind() {
                 COMPREPLY=( $( compgen -W "add remove onetry" -- "$cur" ) )
                 return 0
                 ;;
-            getblock|getrawtransaction|listreceivedbyaccount|listreceivedbyaddress|sendrawtransaction)
+            getblock|getrawtransaction|gettransaction|listaccounts|listreceivedbyaccount|listreceivedbyaddress|sendrawtransaction)
                 COMPREPLY=( $( compgen -W "true false" -- "$cur" ) )
                 return 0
                 ;;
@@ -115,7 +119,7 @@ _bitcoind() {
 
             # only parse help if senseful
             if [[ -z "$cur" || "$cur" =~ ^[a-z] ]]; then
-                commands=$(_bitcoin_rpc help 2>/dev/null | awk '{ print $1; }')
+                commands=$(_bitcoin_rpc help 2>/dev/null | awk '$1 ~ /^[a-z]/ { print $1; }')
             fi
 
             COMPREPLY=( $( compgen -W "$helpopts $commands" -- "$cur" ) )
