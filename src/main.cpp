@@ -2132,6 +2132,79 @@ bool ActivateBestChain(CValidationState &state, CBlock *pblock) {
     return true;
 }
 
+bool InvalidateBlock(CValidationState& state, CBlockIndex *pindex) {
+    AssertLockHeld(cs_main);
+
+    // Mark the block itself as invalid.
+    pindex->nStatus |= BLOCK_FAILED_VALID;
+    if (!pblocktree->WriteBlockIndex(CDiskBlockIndex(pindex))) {
+        return state.Abort("Failed to update block index");
+    }
+    setBlockIndexCandidates.erase(pindex);
+
+    while (chainActive.Contains(pindex)) {
+        CBlockIndex *pindexWalk = chainActive.Tip();
+        pindexWalk->nStatus |= BLOCK_FAILED_CHILD;
+        if (!pblocktree->WriteBlockIndex(CDiskBlockIndex(pindexWalk))) {
+            return state.Abort("Failed to update block index");
+        }
+        setBlockIndexCandidates.erase(pindexWalk);
+        // ActivateBestChain considers blocks already in chainActive
+        // unconditionally valid already, so force disconnect away from it.
+        if (!DisconnectTip(state)) {
+            return false;
+        }
+    }
+
+    // The resulting new best tip may not be in setBlockIndexCandidates anymore, so
+    // add them again.
+    BlockMap::iterator it = mapBlockIndex.begin();
+    while (it != mapBlockIndex.end()) {
+        if (it->second->IsValid(BLOCK_VALID_TRANSACTIONS) && it->second->nChainTx && setBlockIndexCandidates.value_comp()(chainActive.Tip(), it->second)) {
+            setBlockIndexCandidates.insert(pindex);
+        }
+        it++;
+    }
+
+    InvalidChainFound(pindex);
+    return true;
+}
+
+bool ReconsiderBlock(CValidationState& state, CBlockIndex *pindex) {
+    AssertLockHeld(cs_main);
+
+    int nHeight = pindex->nHeight;
+
+    // Remove the invalidity flag from this block and all its descendants.
+    BlockMap::iterator it = mapBlockIndex.begin();
+    while (it != mapBlockIndex.end()) {
+        if (!it->second->IsValid() && it->second->GetAncestor(nHeight) == pindex) {
+            it->second->nStatus &= ~BLOCK_FAILED_MASK;
+            if (!pblocktree->WriteBlockIndex(CDiskBlockIndex(pindex))) {
+                return state.Abort("Failed to update block index");
+            }
+            if (it->second->IsValid(BLOCK_VALID_TRANSACTIONS) && it->second->nChainTx && setBlockIndexCandidates.value_comp()(chainActive.Tip(), it->second)) {
+                setBlockIndexCandidates.insert(it->second);
+            }
+            if (it->second == pindexBestInvalid) {
+                // Reset invalid block marker if it was pointing to one of those.
+                pindexBestInvalid = NULL;
+            }
+        }
+        it++;
+    }
+
+    // Remove the invalidity flag from all ancestors too.
+    while (pindex != NULL) {
+        pindex->nStatus &= ~BLOCK_FAILED_MASK;
+        if (!pblocktree->WriteBlockIndex(CDiskBlockIndex(pindex))) {
+            return state.Abort("Failed to update block index");
+        }
+        pindex = pindex->pprev;
+    }
+    return true;
+}
+
 CBlockIndex* AddToBlockIndex(const CBlockHeader& block)
 {
     // Check for duplicate
