@@ -27,31 +27,25 @@ This will build bitcoin-qt as well if the dependencies are met.
 Dependencies
 ---------------------
 
+These dependencies are required:
+
  Library     | Purpose          | Description
  ------------|------------------|----------------------
  libssl      | SSL Support      | Secure communications
- libdb4.8    | Berkeley DB      | Wallet storage
  libboost    | Boost            | C++ Library
- miniupnpc   | UPnP Support     | Optional firewall-jumping support
- qt          | GUI              | GUI toolkit
- protobuf    | Payments in GUI  | Data interchange format used for payment protocol
- libqrencode | QR codes in GUI  | Optional for generating QR codes
+ libgmp      | secp256k1        | Arbitrary-precision arithmetic (version >= 3.1)
 
-[miniupnpc](http://miniupnp.free.fr/) may be used for UPnP port mapping.  It can be downloaded from [here](
-http://miniupnp.tuxfamily.org/files/).  UPnP support is compiled in and
-turned off by default.  See the configure options for upnp behavior desired:
+Optional dependencies:
 
-	--without-miniupnpc      No UPnP support miniupnp not required
-	--disable-upnp-default   (the default) UPnP support turned off by default at runtime
-	--enable-upnp-default    UPnP support turned on by default at runtime
+ Library     | Purpose          | Description
+ ------------|------------------|----------------------
+ miniupnpc   | UPnP Support     | Firewall-jumping support
+ libdb4.8    | Berkeley DB      | Wallet storage (only needed when wallet enabled)
+ qt          | GUI              | GUI toolkit (only needed when GUI enabled)
+ protobuf    | Payments in GUI  | Data interchange format used for payment protocol (only needed when GUI enabled)
+ libqrencode | QR codes in GUI  | Optional for generating QR codes (only needed when GUI enabled)
 
-Licenses of statically linked libraries:
- Berkeley DB   New BSD license with additional requirement that linked
-               software must be free open source
- Boost         MIT-like license
- miniupnpc     New (3-clause) BSD license
-
-- For the versions used in the release, see doc/release-process.md under *Fetch and build inputs*.
+For the versions used in the release, see [release-process.md](release-process.md) under *Fetch and build inputs*.
 
 System requirements
 --------------------
@@ -64,7 +58,7 @@ Dependency Build Instructions: Ubuntu & Debian
 ----------------------------------------------
 Build requirements:
 
-	sudo apt-get install build-essential libtool autotools-dev autoconf pkg-config libssl-dev
+	sudo apt-get install build-essential libtool autotools-dev autoconf pkg-config libssl-dev libgmp-dev
 	
 for Ubuntu 12.04 and later or Debian 7 and later libboost-all-dev has to be installed:
 
@@ -129,6 +123,17 @@ symbols, which reduces the executable size by about 90%.
 
 miniupnpc
 ---------
+
+[miniupnpc](http://miniupnp.free.fr/) may be used for UPnP port mapping.  It can be downloaded from [here](
+http://miniupnp.tuxfamily.org/files/).  UPnP support is compiled in and
+turned off by default.  See the configure options for upnp behavior desired:
+
+	--without-miniupnpc      No UPnP support miniupnp not required
+	--disable-upnp-default   (the default) UPnP support turned off by default at runtime
+	--enable-upnp-default    UPnP support turned on by default at runtime
+
+To build:
+
 	tar -xzvf miniupnpc-1.6.tar.gz
 	cd miniupnpc-1.6
 	make
