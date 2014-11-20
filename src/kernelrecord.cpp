@@ -4,6 +4,8 @@
 #include "base58.h"
 #include "main.h"
 
+#include <math.h>
+
 using namespace std;
 
 bool KernelRecord::showTransaction(const CWalletTx &wtx)
@@ -73,6 +75,19 @@ std::string KernelRecord::getTxID()
 int64 KernelRecord::getAge() const
 {
     return (GetAdjustedTime() - nTime) / 86400;
+}
+
+double KernelRecord::getPoSReward(double difficulty, int minutes)
+{
+    double PoSReward;
+    int nWeight = GetAdjustedTime() - nTime + minutes * 60;
+    if( nWeight <  nStakeMinAge)
+        return 0;
+    uint64 coinAge = (nValue * nWeight ) / (COIN * 86400);
+    double nRewardCoinYear = floor(pow((0.03125 / difficulty), 1.0/3) *100)/100;
+    PoSReward = (coinAge * nRewardCoinYear )/365;
+    PoSReward = min(PoSReward,10.0);
+    return PoSReward;
 }
 
 double KernelRecord::getProbToMintStake(double difficulty, int timeOffset) const

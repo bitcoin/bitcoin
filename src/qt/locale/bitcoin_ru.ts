@@ -92,6 +92,10 @@
       <translation>Вероятность PoS</translation>
     </message>
     <message>
+      <source>MintReward</source>
+      <translation>Награда PoS</translation>
+    </message>
+    <message>
       <source>minutes</source>
       <translation>минут</translation>
     </message>
@@ -131,9 +135,17 @@
       <source>Chance to mint a block within given time interval.</source>
       <translation>Шанс найти блок в течение выбранного временного интервала.</translation>
     </message>
+    <message>
+      <source>The size of the potential rewards if the block is found at the beginning and the end given time interval.</source>
+      <translation>Размер потенциальной награды если блок найден в начале и конце выбранного временного интервала.</translation>
+    </message>
   </context>
 <context>
   <name>QObject</name>
+  <message>
+    <source>Potential PoS reward = from  %1 to %2 </source>
+    <translation>Потенциальная PoS награда = от %1 до %2 </translation>
+  </message>
   <message>
     <source>%1 d</source>
     <translation>%1 д</translation>

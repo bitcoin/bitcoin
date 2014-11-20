@@ -118,7 +118,7 @@ void MintingView::setModel(WalletModel *model)
         mintingView->verticalHeader()->hide();
 
         mintingView->horizontalHeader()->resizeSection(
-                MintingTableModel::Address, 420);
+                MintingTableModel::Address, 300);
 #if QT_VERSION < 0x050000
         mintingView->horizontalHeader()->setResizeMode(
                 MintingTableModel::TxHash, QHeaderView::Stretch);
@@ -133,7 +133,9 @@ void MintingView::setModel(WalletModel *model)
         mintingView->horizontalHeader()->resizeSection(
                 MintingTableModel::CoinDay,120);
         mintingView->horizontalHeader()->resizeSection(
-                MintingTableModel::MintProbability, 160);
+                MintingTableModel::MintProbability, 120);
+        mintingView->horizontalHeader()->resizeSection(
+            MintingTableModel::MintReward, 300);
     }
 }
 
@@ -179,6 +181,7 @@ void MintingView::exportClicked()
     writer.addColumn(tr("CoinDay"), 0, MintingTableModel::CoinDay);
     writer.addColumn(tr("Balance"), 0, MintingTableModel::Balance);
     writer.addColumn(tr("MintingProbability"), 0, MintingTableModel::MintProbability);
+    writer.addColumn(tr("MintingReward"), 0, MintingTableModel::MintReward);
 
     if(!writer.write())
     {

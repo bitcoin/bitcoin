@@ -43,6 +43,7 @@ public:
     int64 getAge() const;
     double getProbToMintStake(double difficulty, int timeOffset = 0) const;
     double getProbToMintWithinNMinutes(double difficulty, int minutes);
+    double getPoSReward(double difficulty, int timeOffset);
 protected:
     int prevMinutes;
     double prevDifficulty;

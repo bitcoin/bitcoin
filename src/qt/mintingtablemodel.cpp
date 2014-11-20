@@ -24,12 +24,13 @@
 extern double GetDifficulty(const CBlockIndex* blockindex);
 
 static int column_alignments[] = {
-    Qt::AlignLeft|Qt::AlignVCenter,
-    Qt::AlignLeft|Qt::AlignVCenter,
-    Qt::AlignRight|Qt::AlignVCenter,
-    Qt::AlignRight|Qt::AlignVCenter,
-    Qt::AlignRight|Qt::AlignVCenter,
-    Qt::AlignRight|Qt::AlignVCenter
+    Qt::AlignCenter|Qt::AlignVCenter,
+    Qt::AlignCenter|Qt::AlignVCenter,
+    Qt::AlignCenter|Qt::AlignVCenter,
+    Qt::AlignCenter|Qt::AlignVCenter,
+    Qt::AlignCenter|Qt::AlignVCenter,
+    Qt::AlignCenter|Qt::AlignVCenter,
+    Qt::AlignCenter|Qt::AlignVCenter
 };
 
 struct TxLessThan
@@ -202,7 +203,7 @@ MintingTableModel::MintingTableModel(CWallet *wallet, WalletModel *parent):
         mintingInterval(10),
         priv(new MintingTablePriv(wallet, this))
 {
-    columns << tr("Transaction") <<  tr("Address") << tr("Age") << tr("Balance") << tr("CoinDay") << tr("MintProbability");
+    columns << tr("Transaction") <<  tr("Address") << tr("Age") << tr("Balance") << tr("CoinDay") << tr("MintProbability") << tr("MintReward");
     priv->refreshWallet();
 
     QTimer *timer = new QTimer(this);
@@ -273,6 +274,8 @@ QVariant MintingTableModel::data(const QModelIndex &index, int role) const
             return formatTxCoinDay(rec);
         case MintProbability:
             return formatDayToMint(rec);
+        case MintReward:
+            return formatTxPoSReward(rec);
         }
         break;
       case Qt::TextAlignmentRole:
@@ -316,6 +319,8 @@ QVariant MintingTableModel::data(const QModelIndex &index, int role) const
             return rec->nValue;
         case MintProbability:
             return getDayToMint(rec);
+        case MintReward:
+            return formatTxPoSReward(rec);
         }
         break;
       case Qt::BackgroundColorRole:
@@ -357,6 +362,16 @@ QString MintingTableModel::lookupAddress(const std::string &address, bool toolti
         description += QString("(") + QString::fromStdString(address) + QString(")");
     }
     return description;
+}
+
+QString MintingTableModel::formatTxPoSReward(KernelRecord *wtx) const
+{
+    QString posReward;
+    const CBlockIndex *p = GetLastBlockIndex(pindexBest, true);
+    double difficulty = GetDifficulty(p);
+    posReward += QString(QObject::tr("Potential PoS reward = from  %1 to %2 ")).arg(QString::number(wtx->getPoSReward(difficulty, 0),'f', 6), 
+                 QString::number(wtx->getPoSReward(difficulty, mintingInterval),'f', 6)); 
+    return posReward;
 }
 
 double MintingTableModel::getDayToMint(KernelRecord *wtx) const
@@ -428,6 +443,8 @@ QVariant MintingTableModel::headerData(int section, Qt::Orientation orientation,
                 return tr("Coin age in the output.");
             case MintProbability:
                 return tr("Chance to mint a block within given time interval.");
+            case MintReward:
+                return tr("The size of the potential rewards if the block is found at the beginning and the end given time interval.");
             }
         }
     }
