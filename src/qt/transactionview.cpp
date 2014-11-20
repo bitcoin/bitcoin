@@ -167,7 +167,7 @@ TransactionView::TransactionView(QWidget *parent) :
     connect(clearOrphansAction, SIGNAL(triggered()), this, SLOT(clearOrphans()));
 }
 
-void TransactionView::setModel(WalletModel *model)
+void TransactionView::setModel(WalletModel *model, bool fShoudAddThirdPartyURL)
 {
     this->model = model;
     if(model)
@@ -204,8 +204,9 @@ void TransactionView::setModel(WalletModel *model)
         transactionView->horizontalHeader()->resizeSection(
                 TransactionTableModel::Amount, 100);
 
-        if (model->getOptionsModel())
+        if (model->getOptionsModel() && fShoudAddThirdPartyURL)
         {
+
             // Add third party transaction URLs to context menu
             QStringList listUrls = model->getOptionsModel()->getThirdPartyTxUrls().split("|", QString::SkipEmptyParts);
             for (int i = 0; i < listUrls.size(); ++i)
@@ -427,7 +428,7 @@ void TransactionView::clearOrphans()
     model->clearOrphans();
     model->getTransactionTableModel()->refresh();
     delete transactionProxyModel;
-    setModel(model);
+    setModel(model, false);
     transactionView->sortByColumn(TransactionTableModel::Status, Qt::DescendingOrder);
     transactionView->sortByColumn(TransactionTableModel::Date, Qt::DescendingOrder);
 }
