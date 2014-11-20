@@ -85,6 +85,13 @@ script: |
   make dist
   DISTNAME=`echo bitcoin-*.tar.gz`
 
+  # Correct tar file order
+  mkdir -p temp
+  pushd temp
+  tar xf ../$DISTNAME
+  find bitcoin-* | sort | tar --no-recursion -c -T - | gzip -9n > ../$DISTNAME
+  popd
+
   ORIGPATH="$PATH"
   # Extract the release tarball into a dir for each host and build
   for i in ${HOSTS}; do
@@ -102,3 +109,6 @@ script: |
   done
   mkdir -p $OUTDIR/src
   mv $DISTNAME $OUTDIR/src
+
+  # Delete unwanted stuff
+  find ${OUTDIR} -name "lib*.la" -delete
