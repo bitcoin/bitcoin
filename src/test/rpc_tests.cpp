@@ -1,17 +1,20 @@
-#include <boost/algorithm/string.hpp>
-#include <boost/foreach.hpp>
-#include <boost/test/unit_test.hpp>
+// Copyright (c) 2012-2013 The Bitcoin Core developers
+// Distributed under the MIT/X11 software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
+#include "rpcserver.h"
+#include "rpcclient.h"
 
 #include "base58.h"
-#include "util.h"
-#include "bitcoinrpc.h"
+#include "netbase.h"
+
+#include <boost/algorithm/string.hpp>
+#include <boost/test/unit_test.hpp>
 
 using namespace std;
 using namespace json_spirit;
 
-BOOST_AUTO_TEST_SUITE(rpc_tests)
-
-static Array
+Array
 createArgs(int nRequired, const char* address1=NULL, const char* address2=NULL)
 {
     Array result;
@@ -23,44 +26,7 @@ createArgs(int nRequired, const char* address1=NULL, const char* address2=NULL)
     return result;
 }
 
-BOOST_AUTO_TEST_CASE(rpc_addmultisig)
-{
-    rpcfn_type addmultisig = tableRPC["addmultisigaddress"]->actor;
-
-    // old, 65-byte-long:
-    const char address1Hex[] = "0434e3e09f49ea168c5bbf53f877ff4206923858aab7c7e1df25bc263978107c95e35065a27ef6f1b27222db0ec97e0e895eaca603d3ee0d4c060ce3d8a00286c8";
-    // new, compressed:
-    const char address2Hex[] = "0388c2037017c62240b6b72ac1a2a5f94da790596ebd06177c8572752922165cb4";
-
-    Value v;
-    CBitcoinAddress address;
-    BOOST_CHECK_NO_THROW(v = addmultisig(createArgs(1, address1Hex), false));
-    address.SetString(v.get_str());
-    BOOST_CHECK(address.IsValid() && address.IsScript());
-
-    BOOST_CHECK_NO_THROW(v = addmultisig(createArgs(1, address1Hex, address2Hex), false));
-    address.SetString(v.get_str());
-    BOOST_CHECK(address.IsValid() && address.IsScript());
-
-    BOOST_CHECK_NO_THROW(v = addmultisig(createArgs(2, address1Hex, address2Hex), false));
-    address.SetString(v.get_str());
-    BOOST_CHECK(address.IsValid() && address.IsScript());
-
-    BOOST_CHECK_THROW(addmultisig(createArgs(0), false), runtime_error);
-    BOOST_CHECK_THROW(addmultisig(createArgs(1), false), runtime_error);
-    BOOST_CHECK_THROW(addmultisig(createArgs(2, address1Hex), false), runtime_error);
-
-    BOOST_CHECK_THROW(addmultisig(createArgs(1, ""), false), runtime_error);
-    BOOST_CHECK_THROW(addmultisig(createArgs(1, "NotAValidPubkey"), false), runtime_error);
-
-    string short1(address1Hex, address1Hex+sizeof(address1Hex)-2); // last byte missing
-    BOOST_CHECK_THROW(addmultisig(createArgs(2, short1.c_str()), false), runtime_error);
-
-    string short2(address1Hex+1, address1Hex+sizeof(address1Hex)); // first byte missing
-    BOOST_CHECK_THROW(addmultisig(createArgs(2, short2.c_str()), false), runtime_error);
-}
-
-static Value CallRPC(string args)
+Value CallRPC(string args)
 {
     vector<string> vArgs;
     boost::split(vArgs, args, boost::is_any_of(" \t"));
@@ -79,34 +45,8 @@ static Value CallRPC(string args)
     }
 }
 
-BOOST_AUTO_TEST_CASE(rpc_wallet)
-{
-    // Test RPC calls for various wallet statistics
-    Value r;
 
-    BOOST_CHECK_NO_THROW(CallRPC("listunspent"));
-    BOOST_CHECK_THROW(CallRPC("listunspent string"), runtime_error);
-    BOOST_CHECK_THROW(CallRPC("listunspent 0 string"), runtime_error);
-    BOOST_CHECK_THROW(CallRPC("listunspent 0 1 not_array"), runtime_error);
-    BOOST_CHECK_THROW(CallRPC("listunspent 0 1 [] extra"), runtime_error);
-    BOOST_CHECK_NO_THROW(r=CallRPC("listunspent 0 1 []"));
-    BOOST_CHECK(r.get_array().empty());
-
-    BOOST_CHECK_NO_THROW(CallRPC("listreceivedbyaddress"));
-    BOOST_CHECK_NO_THROW(CallRPC("listreceivedbyaddress 0"));
-    BOOST_CHECK_THROW(CallRPC("listreceivedbyaddress not_int"), runtime_error);
-    BOOST_CHECK_THROW(CallRPC("listreceivedbyaddress 0 not_bool"), runtime_error);
-    BOOST_CHECK_NO_THROW(CallRPC("listreceivedbyaddress 0 true"));
-    BOOST_CHECK_THROW(CallRPC("listreceivedbyaddress 0 true extra"), runtime_error);
-
-    BOOST_CHECK_NO_THROW(CallRPC("listreceivedbyaccount"));
-    BOOST_CHECK_NO_THROW(CallRPC("listreceivedbyaccount 0"));
-    BOOST_CHECK_THROW(CallRPC("listreceivedbyaccount not_int"), runtime_error);
-    BOOST_CHECK_THROW(CallRPC("listreceivedbyaccount 0 not_bool"), runtime_error);
-    BOOST_CHECK_NO_THROW(CallRPC("listreceivedbyaccount 0 true"));
-    BOOST_CHECK_THROW(CallRPC("listreceivedbyaccount 0 true extra"), runtime_error);
-}
-
+BOOST_AUTO_TEST_SUITE(rpc_tests)
 
 BOOST_AUTO_TEST_CASE(rpc_rawparams)
 {
@@ -166,6 +106,52 @@ BOOST_AUTO_TEST_CASE(rpc_rawsign)
     BOOST_CHECK(find_value(r.get_obj(), "complete").get_bool() == false);
     r = CallRPC(string("signrawtransaction ")+notsigned+" "+prevout+" "+"["+privkey1+","+privkey2+"]");
     BOOST_CHECK(find_value(r.get_obj(), "complete").get_bool() == true);
+}
+
+BOOST_AUTO_TEST_CASE(rpc_format_monetary_values)
+{
+    BOOST_CHECK_EQUAL(write_string(ValueFromAmount(0LL), false), "0.00000000");
+    BOOST_CHECK_EQUAL(write_string(ValueFromAmount(1LL), false), "0.00000001");
+    BOOST_CHECK_EQUAL(write_string(ValueFromAmount(17622195LL), false), "0.17622195");
+    BOOST_CHECK_EQUAL(write_string(ValueFromAmount(50000000LL), false), "0.50000000");
+    BOOST_CHECK_EQUAL(write_string(ValueFromAmount(89898989LL), false), "0.89898989");
+    BOOST_CHECK_EQUAL(write_string(ValueFromAmount(100000000LL), false), "1.00000000");
+    BOOST_CHECK_EQUAL(write_string(ValueFromAmount(2099999999999990LL), false), "20999999.99999990");
+    BOOST_CHECK_EQUAL(write_string(ValueFromAmount(2099999999999999LL), false), "20999999.99999999");
+}
+
+static Value ValueFromString(const std::string &str)
+{
+    Value value;
+    BOOST_CHECK(read_string(str, value));
+    return value;
+}
+
+BOOST_AUTO_TEST_CASE(rpc_parse_monetary_values)
+{
+    BOOST_CHECK_EQUAL(AmountFromValue(ValueFromString("0.00000001")), 1LL);
+    BOOST_CHECK_EQUAL(AmountFromValue(ValueFromString("0.17622195")), 17622195LL);
+    BOOST_CHECK_EQUAL(AmountFromValue(ValueFromString("0.5")), 50000000LL);
+    BOOST_CHECK_EQUAL(AmountFromValue(ValueFromString("0.50000000")), 50000000LL);
+    BOOST_CHECK_EQUAL(AmountFromValue(ValueFromString("0.89898989")), 89898989LL);
+    BOOST_CHECK_EQUAL(AmountFromValue(ValueFromString("1.00000000")), 100000000LL);
+    BOOST_CHECK_EQUAL(AmountFromValue(ValueFromString("20999999.9999999")), 2099999999999990LL);
+    BOOST_CHECK_EQUAL(AmountFromValue(ValueFromString("20999999.99999999")), 2099999999999999LL);
+}
+
+BOOST_AUTO_TEST_CASE(rpc_boostasiotocnetaddr)
+{
+    // Check IPv4 addresses
+    BOOST_CHECK_EQUAL(BoostAsioToCNetAddr(boost::asio::ip::address::from_string("1.2.3.4")).ToString(), "1.2.3.4");
+    BOOST_CHECK_EQUAL(BoostAsioToCNetAddr(boost::asio::ip::address::from_string("127.0.0.1")).ToString(), "127.0.0.1");
+    // Check IPv6 addresses
+    BOOST_CHECK_EQUAL(BoostAsioToCNetAddr(boost::asio::ip::address::from_string("::1")).ToString(), "::1");
+    BOOST_CHECK_EQUAL(BoostAsioToCNetAddr(boost::asio::ip::address::from_string("123:4567:89ab:cdef:123:4567:89ab:cdef")).ToString(),
+                                         "123:4567:89ab:cdef:123:4567:89ab:cdef");
+    // v4 compatible must be interpreted as IPv4
+    BOOST_CHECK_EQUAL(BoostAsioToCNetAddr(boost::asio::ip::address::from_string("::0:127.0.0.1")).ToString(), "127.0.0.1");
+    // v4 mapped must be interpreted as IPv4
+    BOOST_CHECK_EQUAL(BoostAsioToCNetAddr(boost::asio::ip::address::from_string("::ffff:127.0.0.1")).ToString(), "127.0.0.1");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

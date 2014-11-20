@@ -1,10 +1,11 @@
-Bitcoin 0.8.2 BETA
+Bitcoin 0.9.99 BETA
 
-Copyright (c) 2009-2013 Bitcoin Developers
+Copyright (c) 2009-2014 Bitcoin Core Developers
+
 Distributed under the MIT/X11 software license, see the accompanying
 file COPYING or http://www.opensource.org/licenses/mit-license.php.
 This product includes software developed by the OpenSSL Project for use in
-the OpenSSL Toolkit (http://www.openssl.org/).  This product includes
+the OpenSSL Toolkit (https://www.openssl.org/).  This product includes
 cryptographic software written by Eric Young (eay@cryptsoft.com).
 
 
@@ -20,7 +21,7 @@ Setup
 -----
 Unpack the files into a directory and run bitcoin-qt.exe.
 
-Bitcoin-Qt is the original Bitcoin client and it builds the backbone of the network.
+Bitcoin Core is the original Bitcoin client and it builds the backbone of the network.
 However, it downloads and stores the entire history of Bitcoin transactions;
 depending on the speed of your computer and network connection, the synchronization
 process can take anywhere from a few hours to a day or more.

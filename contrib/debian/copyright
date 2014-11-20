@@ -6,9 +6,9 @@ Source: http://sourceforge.net/projects/bitcoin/files/
  https://github.com/bitcoin/bitcoin
 
 Files: *
-Copyright: 2009-2012, Bitcoin Developers
+Copyright: 2009-2012, Bitcoin Core Developers
 License: Expat
-Comment: The Bitcoin Developers encompasses the current developers listed on bitcoin.org,
+Comment: The Bitcoin Core Developers encompasses the current developers listed on bitcoin.org,
          as well as the numerous contributors to the project.
 
 Files: src/json/*
@@ -71,7 +71,7 @@ Copyright: Bitboy (optimized for 16x16 by Wladimir van der Laan)
 License: PUB-DOM
 Comment: Site: https://bitcointalk.org/?topic=1756.0
 
-Files:  scripts/img/reload.xcf, src/qt/res/movies/update_spinner.mng
+Files:  scripts/img/reload.xcf, src/qt/res/movies/*.png
 Copyright: Everaldo (Everaldo Coelho)
 License: GPL-3+
 Comment: Icon Pack: Kids

@@ -1,7 +1,14 @@
-#include <boost/test/unit_test.hpp>
+// Copyright (c) 2012-2013 The Bitcoin Core developers
+// Distributed under the MIT/X11 software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "uint256.h"
 #include "main.h"
+#include "serialize.h"
+#include "uint256.h"
+
+#include <vector>
+
+#include <boost/test/unit_test.hpp>
 
 using namespace std;
 
@@ -29,9 +36,9 @@ BOOST_AUTO_TEST_CASE(pmt_test1)
         // build a block with some dummy transactions
         CBlock block;
         for (unsigned int j=0; j<nTx; j++) {
-            CTransaction tx;
+            CMutableTransaction tx;
             tx.nLockTime = rand(); // actual transaction data doesn't matter; just make the nLockTime's unique
-            block.vtx.push_back(tx);
+            block.vtx.push_back(CTransaction(tx));
         }
 
         // calculate actual merkle root and height

@@ -109,16 +109,16 @@ TEST(Coding, Varint64) {
     values.push_back(power);
     values.push_back(power-1);
     values.push_back(power+1);
-  };
+  }
 
   std::string s;
-  for (int i = 0; i < values.size(); i++) {
+  for (size_t i = 0; i < values.size(); i++) {
     PutVarint64(&s, values[i]);
   }
 
   const char* p = s.data();
   const char* limit = p + s.size();
-  for (int i = 0; i < values.size(); i++) {
+  for (size_t i = 0; i < values.size(); i++) {
     ASSERT_TRUE(p < limit);
     uint64_t actual;
     const char* start = p;
@@ -143,7 +143,7 @@ TEST(Coding, Varint32Truncation) {
   std::string s;
   PutVarint32(&s, large_value);
   uint32_t result;
-  for (int len = 0; len < s.size() - 1; len++) {
+  for (size_t len = 0; len < s.size() - 1; len++) {
     ASSERT_TRUE(GetVarint32Ptr(s.data(), s.data() + len, &result) == NULL);
   }
   ASSERT_TRUE(GetVarint32Ptr(s.data(), s.data() + s.size(), &result) != NULL);
@@ -162,7 +162,7 @@ TEST(Coding, Varint64Truncation) {
   std::string s;
   PutVarint64(&s, large_value);
   uint64_t result;
-  for (int len = 0; len < s.size() - 1; len++) {
+  for (size_t len = 0; len < s.size() - 1; len++) {
     ASSERT_TRUE(GetVarint64Ptr(s.data(), s.data() + len, &result) == NULL);
   }
   ASSERT_TRUE(GetVarint64Ptr(s.data(), s.data() + s.size(), &result) != NULL);

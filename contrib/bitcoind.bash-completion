@@ -1,5 +1,5 @@
-# bash programmable completion for bitcoind(1)
-# Copyright (c) 2012 Christian von Roques <roques@mti.ag>
+# bash programmable completion for bitcoind(1) and bitcoin-cli(1)
+# Copyright (c) 2012,2014 Christian von Roques <roques@mti.ag>
 # Distributed under the MIT/X11 software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -37,9 +37,39 @@ _bitcoind() {
     COMPREPLY=()
     _get_comp_words_by_ref -n = cur prev words cword
 
+    if ((cword > 4)); then
+        case ${words[cword-4]} in
+            listtransactions)
+                COMPREPLY=( $( compgen -W "true false" -- "$cur" ) )
+                return 0
+                ;;
+            signrawtransaction)
+                COMPREPLY=( $( compgen -W "ALL NONE SINGLE ALL|ANYONECANPAY NONE|ANYONECANPAY SINGLE|ANYONECANPAY" -- "$cur" ) )
+                return 0
+                ;;
+        esac
+    fi
+
+    if ((cword > 3)); then
+        case ${words[cword-3]} in
+            addmultisigaddress)
+                _bitcoin_accounts
+                return 0
+                ;;
+            getbalance|gettxout|importaddress|importprivkey|listreceivedbyaccount|listreceivedbyaddress|listsinceblock)
+                COMPREPLY=( $( compgen -W "true false" -- "$cur" ) )
+                return 0
+                ;;
+        esac
+    fi
+
     if ((cword > 2)); then
         case ${words[cword-2]} in
-            listreceivedbyaccount|listreceivedbyaddress)
+            addnode)
+                COMPREPLY=( $( compgen -W "add remove onetry" -- "$cur" ) )
+                return 0
+                ;;
+            getblock|getrawtransaction|gettransaction|listaccounts|listreceivedbyaccount|listreceivedbyaddress|sendrawtransaction)
                 COMPREPLY=( $( compgen -W "true false" -- "$cur" ) )
                 return 0
                 ;;
@@ -51,11 +81,11 @@ _bitcoind() {
     fi
 
     case "$prev" in
-        backupwallet)
+        backupwallet|dumpwallet|importwallet)
             _filedir
             return 0
             ;;
-        setgenerate)
+        getmempool|lockunspent|setgenerate)
             COMPREPLY=( $( compgen -W "true false" -- "$cur" ) )
             return 0
             ;;
@@ -66,7 +96,7 @@ _bitcoind() {
     esac
 
     case "$cur" in
-        -conf=*|-pid=*|-rpcsslcertificatechainfile=*|-rpcsslprivatekeyfile=*)
+        -conf=*|-pid=*|-loadblock=*|-wallet=*|-rpcsslcertificatechainfile=*|-rpcsslprivatekeyfile=*)
             cur="${cur#*=}"
             _filedir
             return 0
@@ -89,7 +119,7 @@ _bitcoind() {
 
             # only parse help if senseful
             if [[ -z "$cur" || "$cur" =~ ^[a-z] ]]; then
-                commands=$(_bitcoin_rpc help 2>/dev/null | awk '{ print $1; }')
+                commands=$(_bitcoin_rpc help 2>/dev/null | awk '$1 ~ /^[a-z]/ { print $1; }')
             fi
 
             COMPREPLY=( $( compgen -W "$helpopts $commands" -- "$cur" ) )
@@ -103,7 +133,7 @@ _bitcoind() {
     esac
 }
 
-complete -F _bitcoind bitcoind
+complete -F _bitcoind bitcoind bitcoin-cli
 }
 
 # Local variables:

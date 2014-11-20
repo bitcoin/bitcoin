@@ -1,12 +1,15 @@
-// Copyright (c) 2009-2012 The Bitcoin Developers
-// Distributed under the MIT/X11 software license, see the accompanying
+// Copyright (c) 2009-2013 The Bitcoin developers
+// Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-#ifndef __CRYPTER_H__
-#define __CRYPTER_H__
 
-#include "allocators.h" /* for SecureString */
-#include "key.h"
+#ifndef BITCOIN_CRYPTER_H
+#define BITCOIN_CRYPTER_H
+
+#include "allocators.h"
+#include "keystore.h"
 #include "serialize.h"
+
+class uint256;
 
 const unsigned int WALLET_CRYPTO_KEY_SIZE = 32;
 const unsigned int WALLET_CRYPTO_SALT_SIZE = 8;
@@ -40,14 +43,17 @@ public:
     // such as the various parameters to scrypt
     std::vector<unsigned char> vchOtherDerivationParameters;
 
-    IMPLEMENT_SERIALIZE
-    (
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
         READWRITE(vchCryptedKey);
         READWRITE(vchSalt);
         READWRITE(nDerivationMethod);
         READWRITE(nDeriveIterations);
         READWRITE(vchOtherDerivationParameters);
-    )
+    }
+
     CMasterKey()
     {
         // 25000 rounds is just under 0.1 seconds on a 1.86 GHz Pentium M
@@ -88,20 +94,105 @@ public:
         // Try to keep the key data out of swap (and be a bit over-careful to keep the IV that we don't even use out of swap)
         // Note that this does nothing about suspend-to-disk (which will put all our key data on disk)
         // Note as well that at no point in this program is any attempt made to prevent stealing of keys by reading the memory of the running process.
-        LockedPageManager::instance.LockRange(&chKey[0], sizeof chKey);
-        LockedPageManager::instance.LockRange(&chIV[0], sizeof chIV);
+        LockedPageManager::Instance().LockRange(&chKey[0], sizeof chKey);
+        LockedPageManager::Instance().LockRange(&chIV[0], sizeof chIV);
     }
 
     ~CCrypter()
     {
         CleanKey();
 
-        LockedPageManager::instance.UnlockRange(&chKey[0], sizeof chKey);
-        LockedPageManager::instance.UnlockRange(&chIV[0], sizeof chIV);
+        LockedPageManager::Instance().UnlockRange(&chKey[0], sizeof chKey);
+        LockedPageManager::Instance().UnlockRange(&chIV[0], sizeof chIV);
     }
 };
 
 bool EncryptSecret(const CKeyingMaterial& vMasterKey, const CKeyingMaterial &vchPlaintext, const uint256& nIV, std::vector<unsigned char> &vchCiphertext);
 bool DecryptSecret(const CKeyingMaterial& vMasterKey, const std::vector<unsigned char>& vchCiphertext, const uint256& nIV, CKeyingMaterial& vchPlaintext);
 
-#endif
+/** Keystore which keeps the private keys encrypted.
+ * It derives from the basic key store, which is used if no encryption is active.
+ */
+class CCryptoKeyStore : public CBasicKeyStore
+{
+private:
+    CryptedKeyMap mapCryptedKeys;
+
+    CKeyingMaterial vMasterKey;
+
+    // if fUseCrypto is true, mapKeys must be empty
+    // if fUseCrypto is false, vMasterKey must be empty
+    bool fUseCrypto;
+
+    // keeps track of whether Unlock has run a thourough check before
+    bool fDecryptionThoroughlyChecked;
+
+protected:
+    bool SetCrypted();
+
+    // will encrypt previously unencrypted keys
+    bool EncryptKeys(CKeyingMaterial& vMasterKeyIn);
+
+    bool Unlock(const CKeyingMaterial& vMasterKeyIn);
+
+public:
+    CCryptoKeyStore() : fUseCrypto(false), fDecryptionThoroughlyChecked(false)
+    {
+    }
+
+    bool IsCrypted() const
+    {
+        return fUseCrypto;
+    }
+
+    bool IsLocked() const
+    {
+        if (!IsCrypted())
+            return false;
+        bool result;
+        {
+            LOCK(cs_KeyStore);
+            result = vMasterKey.empty();
+        }
+        return result;
+    }
+
+    bool Lock();
+
+    virtual bool AddCryptedKey(const CPubKey &vchPubKey, const std::vector<unsigned char> &vchCryptedSecret);
+    bool AddKeyPubKey(const CKey& key, const CPubKey &pubkey);
+    bool HaveKey(const CKeyID &address) const
+    {
+        {
+            LOCK(cs_KeyStore);
+            if (!IsCrypted())
+                return CBasicKeyStore::HaveKey(address);
+            return mapCryptedKeys.count(address) > 0;
+        }
+        return false;
+    }
+    bool GetKey(const CKeyID &address, CKey& keyOut) const;
+    bool GetPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) const;
+    void GetKeys(std::set<CKeyID> &setAddress) const
+    {
+        if (!IsCrypted())
+        {
+            CBasicKeyStore::GetKeys(setAddress);
+            return;
+        }
+        setAddress.clear();
+        CryptedKeyMap::const_iterator mi = mapCryptedKeys.begin();
+        while (mi != mapCryptedKeys.end())
+        {
+            setAddress.insert((*mi).first);
+            mi++;
+        }
+    }
+
+    /* Wallet status (encrypted, locked) changed.
+     * Note: Called without locks held.
+     */
+    boost::signals2::signal<void (CCryptoKeyStore* wallet)> NotifyStatusChanged;
+};
+
+#endif // BITCOIN_CRYPTER_H

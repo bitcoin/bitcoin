@@ -1,18 +1,25 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2009-2012 The Bitcoin developers
+// Copyright (c) 2009-2013 The Bitcoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef _BITCOINALERT_H_
-#define _BITCOINALERT_H_ 1
+#ifndef BITCOIN_ALERT_H
+#define BITCOIN_ALERT_H
 
+#include "serialize.h"
+#include "sync.h"
+
+#include <map>
 #include <set>
+#include <stdint.h>
 #include <string>
 
-#include "uint256.h"
-#include "util.h"
-
+class CAlert;
 class CNode;
+class uint256;
+
+extern std::map<uint256, CAlert> mapAlerts;
+extern CCriticalSection cs_mapAlerts;
 
 /** Alerts are for notifying old versions if they become too obsolete and
  * need to upgrade.  The message is displayed in the status bar.
@@ -24,8 +31,8 @@ class CUnsignedAlert
 {
 public:
     int nVersion;
-    int64 nRelayUntil;      // when newer nodes stop relaying to newer nodes
-    int64 nExpiration;
+    int64_t nRelayUntil;      // when newer nodes stop relaying to newer nodes
+    int64_t nExpiration;
     int nID;
     int nCancel;
     std::set<int> setCancel;
@@ -39,8 +46,10 @@ public:
     std::string strStatusBar;
     std::string strReserved;
 
-    IMPLEMENT_SERIALIZE
-    (
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
         READWRITE(this->nVersion);
         nVersion = this->nVersion;
         READWRITE(nRelayUntil);
@@ -53,15 +62,14 @@ public:
         READWRITE(setSubVer);
         READWRITE(nPriority);
 
-        READWRITE(strComment);
-        READWRITE(strStatusBar);
-        READWRITE(strReserved);
-    )
+        READWRITE(LIMITED_STRING(strComment, 65536));
+        READWRITE(LIMITED_STRING(strStatusBar, 256));
+        READWRITE(LIMITED_STRING(strReserved, 256));
+    }
 
     void SetNull();
 
     std::string ToString() const;
-    void print() const;
 };
 
 /** An alert is a combination of a serialized CUnsignedAlert and a signature. */
@@ -76,11 +84,13 @@ public:
         SetNull();
     }
 
-    IMPLEMENT_SERIALIZE
-    (
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
         READWRITE(vchMsg);
         READWRITE(vchSig);
-    )
+    }
 
     void SetNull();
     bool IsNull() const;
@@ -91,7 +101,8 @@ public:
     bool AppliesToMe() const;
     bool RelayTo(CNode* pnode) const;
     bool CheckSignature() const;
-    bool ProcessAlert(bool fThread = true);
+    bool ProcessAlert(bool fThread = true); // fThread means run -alertnotify in a free-running thread
+    static void Notify(const std::string& strMessage, bool fThread);
 
     /*
      * Get copy of (active) alert object by hash. Returns a null alert if it is not found.
@@ -99,4 +110,4 @@ public:
     static CAlert getAlertByHash(const uint256 &hash);
 };
 
-#endif
+#endif // BITCOIN_ALERT_H

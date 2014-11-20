@@ -13,9 +13,9 @@
 #ifndef STORAGE_LEVELDB_INCLUDE_ENV_H_
 #define STORAGE_LEVELDB_INCLUDE_ENV_H_
 
-#include <cstdarg>
 #include <string>
 #include <vector>
+#include <stdarg.h>
 #include <stdint.h>
 #include "leveldb/status.h"
 
@@ -142,7 +142,7 @@ class Env {
   // useful for computing deltas of time.
   virtual uint64_t NowMicros() = 0;
 
-  // Sleep/delay the thread for the perscribed number of micro-seconds.
+  // Sleep/delay the thread for the prescribed number of micro-seconds.
   virtual void SleepForMicroseconds(int micros) = 0;
 
  private:

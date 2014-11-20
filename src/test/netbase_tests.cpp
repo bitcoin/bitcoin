@@ -1,9 +1,12 @@
-#include <boost/test/unit_test.hpp>
-
-#include <string>
-#include <vector>
+// Copyright (c) 2012-2013 The Bitcoin Core developers
+// Distributed under the MIT/X11 software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "netbase.h"
+
+#include <string>
+
+#include <boost/test/unit_test.hpp>
 
 using namespace std;
 
@@ -90,13 +93,50 @@ BOOST_AUTO_TEST_CASE(netbase_lookupnumeric)
 
 BOOST_AUTO_TEST_CASE(onioncat_test)
 {
-    // values from http://www.cypherpunk.at/onioncat/wiki/OnionCat
+    // values from https://web.archive.org/web/20121122003543/http://www.cypherpunk.at/onioncat/wiki/OnionCat
     CNetAddr addr1("5wyqrzbvrdsumnok.onion");
     CNetAddr addr2("FD87:D87E:EB43:edb1:8e4:3588:e546:35ca");
     BOOST_CHECK(addr1 == addr2);
     BOOST_CHECK(addr1.IsTor());
     BOOST_CHECK(addr1.ToStringIP() == "5wyqrzbvrdsumnok.onion");
     BOOST_CHECK(addr1.IsRoutable());
+}
+
+BOOST_AUTO_TEST_CASE(subnet_test)
+{
+    BOOST_CHECK(CSubNet("1.2.3.0/24") == CSubNet("1.2.3.0/255.255.255.0"));
+    BOOST_CHECK(CSubNet("1.2.3.0/24") != CSubNet("1.2.4.0/255.255.255.0"));
+    BOOST_CHECK(CSubNet("1.2.3.0/24").Match(CNetAddr("1.2.3.4")));
+    BOOST_CHECK(!CSubNet("1.2.2.0/24").Match(CNetAddr("1.2.3.4")));
+    BOOST_CHECK(CSubNet("1.2.3.4").Match(CNetAddr("1.2.3.4")));
+    BOOST_CHECK(CSubNet("1.2.3.4/32").Match(CNetAddr("1.2.3.4")));
+    BOOST_CHECK(!CSubNet("1.2.3.4").Match(CNetAddr("5.6.7.8")));
+    BOOST_CHECK(!CSubNet("1.2.3.4/32").Match(CNetAddr("5.6.7.8")));
+    BOOST_CHECK(CSubNet("::ffff:127.0.0.1").Match(CNetAddr("127.0.0.1")));
+    BOOST_CHECK(CSubNet("1:2:3:4:5:6:7:8").Match(CNetAddr("1:2:3:4:5:6:7:8")));
+    BOOST_CHECK(!CSubNet("1:2:3:4:5:6:7:8").Match(CNetAddr("1:2:3:4:5:6:7:9")));
+    BOOST_CHECK(CSubNet("1:2:3:4:5:6:7:0/112").Match(CNetAddr("1:2:3:4:5:6:7:1234")));
+    // All-Matching IPv6 Matches arbitrary IPv4 and IPv6
+    BOOST_CHECK(CSubNet("::/0").Match(CNetAddr("1:2:3:4:5:6:7:1234")));
+    BOOST_CHECK(CSubNet("::/0").Match(CNetAddr("1.2.3.4")));
+    // All-Matching IPv4 does not Match IPv6
+    BOOST_CHECK(!CSubNet("0.0.0.0/0").Match(CNetAddr("1:2:3:4:5:6:7:1234")));
+    // Invalid subnets Match nothing (not even invalid addresses)
+    BOOST_CHECK(!CSubNet().Match(CNetAddr("1.2.3.4")));
+    BOOST_CHECK(!CSubNet("").Match(CNetAddr("4.5.6.7")));
+    BOOST_CHECK(!CSubNet("bloop").Match(CNetAddr("0.0.0.0")));
+    BOOST_CHECK(!CSubNet("bloop").Match(CNetAddr("hab")));
+    // Check valid/invalid
+    BOOST_CHECK(CSubNet("1.2.3.0/0").IsValid());
+    BOOST_CHECK(!CSubNet("1.2.3.0/-1").IsValid());
+    BOOST_CHECK(CSubNet("1.2.3.0/32").IsValid());
+    BOOST_CHECK(!CSubNet("1.2.3.0/33").IsValid());
+    BOOST_CHECK(CSubNet("1:2:3:4:5:6:7:8/0").IsValid());
+    BOOST_CHECK(CSubNet("1:2:3:4:5:6:7:8/33").IsValid());
+    BOOST_CHECK(!CSubNet("1:2:3:4:5:6:7:8/-1").IsValid());
+    BOOST_CHECK(CSubNet("1:2:3:4:5:6:7:8/128").IsValid());
+    BOOST_CHECK(!CSubNet("1:2:3:4:5:6:7:8/129").IsValid());
+    BOOST_CHECK(!CSubNet("fuzzy").IsValid());
 }
 
 BOOST_AUTO_TEST_SUITE_END()
