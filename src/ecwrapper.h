@@ -12,7 +12,7 @@
 
 class uint256;
 
-// RAII Wrapper around OpenSSL's EC_KEY
+/** RAII Wrapper around OpenSSL's EC_KEY */
 class CECKey {
 private:
     EC_KEY *pkey;
@@ -25,10 +25,12 @@ public:
     bool SetPubKey(const unsigned char* pubkey, size_t size);
     bool Verify(const uint256 &hash, const std::vector<unsigned char>& vchSig);
 
-    // reconstruct public key from a compact signature
-    // This is only slightly more CPU intensive than just verifying it.
-    // If this function succeeds, the recovered public key is guaranteed to be valid
-    // (the signature is a valid signature of the given data for that key)
+    /**
+     * reconstruct public key from a compact signature
+     * This is only slightly more CPU intensive than just verifying it.
+     * If this function succeeds, the recovered public key is guaranteed to be valid
+     * (the signature is a valid signature of the given data for that key)
+     */
     bool Recover(const uint256 &hash, const unsigned char *p64, int rec);
 
     bool TweakPublic(const unsigned char vchTweak[32]);
