@@ -2334,6 +2334,82 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
     return true;
 }
 
+void ExtractCommitmentOutPoints(const CTransaction& tx, map<vector<unsigned char>, COutPoint>& mapCommitmentOutPoints)
+{
+    uint256 txid = tx.GetHash();
+    uint32_t n = 0;
+    BOOST_FOREACH(const CTxOut& txout, tx.vout)
+    {
+        const CScript& script = txout.scriptPubKey;
+        CScript::const_iterator pc = script.begin();
+        opcodetype opcode; vector<unsigned char> pushdata;
+        if (script.GetOp2(pc, opcode, &pushdata) && 0<=opcode && opcode<=OP_PUSHDATA4 &&
+            script.GetOp2(pc, opcode, NULL) && opcode==OP_EQUAL && pc==script.end())
+        {
+            mapCommitmentOutPoints.insert(make_pair(pushdata, COutPoint(txid, n)));
+        }
+        ++n;
+    }
+}
+
+bool FetchMaturedCoinbase(const CBlockIndex* pindex, CTransaction& tx, int nMaturityPeriod)
+{
+    // Rewind to the block whose coinbase outputs are first spendable
+    // in this block.
+    const CBlockIndex* pindexMature = pindex;
+    for (int i = 0; pindexMature && i < nMaturityPeriod; ++i)
+        pindexMature = pindexMature->pprev;
+
+    // For the initial blocks it is not possible to rewind
+    // COINBASE_MATURITY blocks back. This is indicated by clearing
+    // the transaction of inputs and outputs, which causes tx.IsNull()
+    // to return true.
+    if (!pindexMature)
+        tx = CTransaction();
+
+    else {
+        // Fetch the block containing the coinbase which just matured
+        CBlock blockMature;
+        if (!ReadBlockFromDisk(blockMature, pindexMature)) {
+            LogPrintf("FetchMaturedCoinbase() : maturing coinbase block not found: %s", pindexMature->GetBlockHash().ToString());
+            return false;
+        }
+
+        tx = blockMature.vtx[0];
+    }
+
+    return true;
+}
+
+void FilterRequiredCommitments(const CTransaction& txMature, set<vector<unsigned char> >& setRequiredCommitments, map<vector<unsigned char>, COutPoint>& mapCommitmentOutPoints)
+{
+    // Special case for the initial blocks, for which it is
+    // not possible to rewind COINBASE_MATURITY blocks
+    // back. By consequence, neither is it possible to spend a
+    // maturing coinbase output, nor is there a requirement to
+    // do so, so we clear the list of required commitments.
+    if (txMature.IsNull())
+        setRequiredCommitments.clear();
+
+    else {
+        ExtractCommitmentOutPoints(txMature, mapCommitmentOutPoints);
+
+        // If there does not exist an appropriate commitment
+        // output from the prior coinbase, then remove from the
+        // list of required outputs since the spend-prior-coinbase
+        // construction is obviously not possible.
+        set<vector<unsigned char> >::iterator itr, nxt;
+        for (itr  = setRequiredCommitments.begin();
+             itr != setRequiredCommitments.end();
+             itr  = nxt)
+        {
+            nxt = next(itr);
+            if (!mapCommitmentOutPoints.count(*itr))
+                setRequiredCommitments.erase(itr);
+        }
+    }
+}
+
 bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state, CBlockIndex** ppindex)
 {
     AssertLockHeld(cs_main);
@@ -2382,12 +2458,15 @@ bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state, CBloc
         if (pcheckpoint && nHeight < pcheckpoint->nHeight)
             return state.DoS(100, error("%s : forked chain older than last checkpoint (height %d)", __func__, nHeight));
 
-        // Reject block.nVersion=1 blocks when 95% (75% on testnet) of the network has upgraded:
-        if (block.nVersion < 2 && 
-            CBlockIndex::IsSuperMajority(2, pindexPrev, Params().RejectBlockOutdatedMajority()))
-        {
-            return state.Invalid(error("%s : rejected nVersion=1 block", __func__),
-                                 REJECT_OBSOLETE, "bad-version");
+        // Reject block.nVersion=N blocks when 95% (75% on testnet) of
+        // the network has upgraded:
+        for (int i = 2; i <= 3; ++i) {
+            if (block.nVersion < i &&
+                CBlockIndex::IsSuperMajority(i, pindexPrev, Params().RejectBlockOutdatedMajority()))
+            {
+                return state.Invalid(error("%s : rejected nVersion=%d block", __func__, i),
+                                     REJECT_OBSOLETE, "bad-version");
+            }
         }
     }
 
@@ -2424,13 +2503,75 @@ bool AcceptBlock(CBlock& block, CValidationState& state, CBlockIndex** ppindex, 
 
     int nHeight = pindex->nHeight;
 
-    // Check that all transactions are finalized
+    // Determine if commitment enforcement is required, and prepare
+    // the list of required commitments
+    set<vector<unsigned char> > setRequiredCommitments;
+    bool fEnforceUniqueCommitments = false;
+    if (block.nVersion >= 3 &&
+        CBlockIndex::IsSuperMajority(3, pindex->pprev, Params().EnforceBlockUpgradeMajority()))
+    {
+        fEnforceUniqueCommitments = true;
+        setRequiredCommitments.insert(vector<unsigned char>());
+    }
+
+    if (fEnforceUniqueCommitments)
+    {
+        // Check that coinbase outputs are present for each required
+        // commitment.
+        map<vector<unsigned char>, COutPoint> mapCommitmentOutPoints;
+        ExtractCommitmentOutPoints(block.vtx[0], mapCommitmentOutPoints);
+        BOOST_FOREACH(const vector<unsigned char>& pushdata, setRequiredCommitments)
+        {
+            if (!mapCommitmentOutPoints.count(pushdata))
+                return state.DoS(10, error("AcceptBlock() : missing required coinbase output for data commitment \"%s\"",
+                                           HexStr(pushdata)),
+                                 REJECT_INVALID, "missing-coinbase-output-for-commitment");
+        }
+        mapCommitmentOutPoints.clear(); // for reuse
+
+        CTransaction txMature;
+        if (!FetchMaturedCoinbase(pindex, txMature))
+            return state.Abort("AcceptBlock() : maturing coinbase block not found");
+
+        FilterRequiredCommitments(txMature, setRequiredCommitments, mapCommitmentOutPoints);
+    }
+
+    // Check that all transactions are finalized, and that commitments
+    // are not duplicated.
+    map<vector<unsigned char>, const CTransaction&> mapCommitments;
     BOOST_FOREACH(const CTransaction& tx, block.vtx)
+    {
         if (!IsFinalTx(tx, nHeight, block.GetBlockTime())) {
             pindex->nStatus |= BLOCK_FAILED_VALID;
             return state.DoS(10, error("AcceptBlock() : contains a non-final transaction"),
                              REJECT_INVALID, "bad-txns-nonfinal");
         }
+
+        if (fEnforceUniqueCommitments && !tx.IsCoinBase() && tx.vin.size()==1)
+        {
+            const CScript& script = tx.vin[0].scriptSig;
+            CScript::const_iterator pc = script.begin();
+            opcodetype opcode; vector<unsigned char> pushdata;
+            if (script.GetOp2(pc, opcode, &pushdata) && 0 <= opcode && opcode <= OP_PUSHDATA4 && pc==script.end())
+            {
+                std::pair<map<vector<unsigned char>, const CTransaction&>::iterator, bool> res =
+                    mapCommitments.insert(make_pair(pushdata, tx));
+                if (!res.second)
+                    return state.DoS(10, error("AcceptBlock() : multiple commitments to the push string \"%s\": %s, %s",
+                                                HexStr(pushdata),
+                                                res.first->second.GetHash().ToString(),
+                                                tx.GetHash().ToString()),
+                                     REJECT_INVALID, "repeat-data-commitment");
+            }
+        }
+    }
+
+    // Check that the necessary coinbase commitments are present
+    BOOST_FOREACH(const vector<unsigned char>& pushdata, setRequiredCommitments)
+        if (!mapCommitments.count(pushdata))
+            return state.DoS(10, error("AcceptBlock() : missing commitment to the push string \"%s\"",
+                                       HexStr(pushdata)),
+                             REJECT_INVALID, "missing-commitment");
 
     // Enforce block.nVersion=2 rule that the coinbase starts with serialized block height
     // if 750 of the last 1,000 blocks are version 2 or greater (51/100 if testnet):
