@@ -1,6 +1,6 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2009-2013 The Bitcoin developers
-// Distributed under the MIT/X11 software license, see the accompanying
+// Copyright (c) 2009-2014 The Bitcoin developers
+// Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "checkpoints.h"
@@ -468,7 +468,7 @@ Value getblockchaininfo(const Array& params, bool fHelp)
     return obj;
 }
 
-/* Comparison function for sorting the getchaintips heads.  */
+/** Comparison function for sorting the getchaintips heads.  */
 struct CompareBlocksByHeight
 {
     bool operator()(const CBlockIndex* a, const CBlockIndex* b) const
