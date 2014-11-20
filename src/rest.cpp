@@ -100,7 +100,7 @@ static bool rest_block(AcceptedConnection *conn,
     switch (rf) {
     case RF_BINARY: {
         string binaryBlock = ssBlock.str();
-        conn->stream() << HTTPReply(HTTP_OK, binaryBlock, fRun, true, "application/octet-stream") << binaryBlock << std::flush;
+        conn->stream() << HTTPReplyHeader(HTTP_OK, fRun, binaryBlock.size(), "application/octet-stream") << binaryBlock << std::flush;
         return true;
     }
 
@@ -148,7 +148,7 @@ static bool rest_tx(AcceptedConnection *conn,
     switch (rf) {
     case RF_BINARY: {
         string binaryTx = ssTx.str();
-        conn->stream() << HTTPReply(HTTP_OK, binaryTx, fRun, true, "application/octet-stream") << binaryTx << std::flush;
+        conn->stream() << HTTPReplyHeader(HTTP_OK, fRun, binaryTx.size(), "application/octet-stream") << binaryTx << std::flush;
         return true;
     }
 
