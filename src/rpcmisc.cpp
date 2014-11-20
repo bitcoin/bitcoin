@@ -1,6 +1,6 @@
 // Copyright (c) 2010 Satoshi Nakamoto
 // Copyright (c) 2009-2014 The Bitcoin developers
-// Distributed under the MIT/X11 software license, see the accompanying
+// Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "base58.h"
@@ -30,7 +30,7 @@ using namespace std;
 
 /**
  * @note Do not add or change anything in the information returned by this
- * method. `getinfo` exists for backwards-compatibilty only. It combines
+ * method. `getinfo` exists for backwards-compatibility only. It combines
  * information from wildly different sources in the program, which is a mess,
  * and is thus planned to be deprecated eventually.
  *
@@ -198,9 +198,9 @@ Value validateaddress(const Array& params, bool fHelp)
     return ret;
 }
 
-//
-// Used by addmultisigaddress / createmultisig:
-//
+/**
+ * Used by addmultisigaddress / createmultisig:
+ */
 CScript _createmultisig_redeemScript(const Array& params)
 {
     int nRequired = params[0].get_int();

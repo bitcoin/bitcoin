@@ -40,12 +40,13 @@ void StartRPCThreads();
  * If real RPC threads have already been started this is a no-op.
  */
 void StartDummyRPCThread();
-/* Stop RPC threads */
+/** Stop RPC threads */
 void StopRPCThreads();
-/* Query whether RPC is running */
+/** Query whether RPC is running */
 bool IsRPCRunning();
 
-/* Set the RPC warmup status.  When this is done, all RPC calls will error out
+/** 
+ * Set the RPC warmup status.  When this is done, all RPC calls will error out
  * immediately with RPC_IN_WARMUP.
  */
 void SetRPCWarmupStatus(const std::string& newStatus);
