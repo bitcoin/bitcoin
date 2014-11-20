@@ -12,12 +12,12 @@
 #include "guiutil.h"
 #include "optionsmodel.h"
 #include "sendcoinsentry.h"
-#include "wallet.h"
 #include "walletmodel.h"
 
 #include "base58.h"
 #include "coincontrol.h"
 #include "ui_interface.h"
+#include "wallet.h"
 
 #include <QMessageBox>
 #include <QScrollBar>
@@ -27,7 +27,10 @@
 SendCoinsDialog::SendCoinsDialog(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::SendCoinsDialog),
-    model(0)
+    clientModel(0),
+    model(0),
+    fNewRecipientAllowed(true),
+    fFeeMinimized(true)
 {
     ui->setupUi(this);
 
@@ -106,13 +109,15 @@ SendCoinsDialog::SendCoinsDialog(QWidget *parent) :
     ui->checkBoxMinimumFee->setChecked(settings.value("fPayOnlyMinFee").toBool());
     ui->checkBoxFreeTx->setChecked(settings.value("fSendFreeTransactions").toBool());
     minimizeFeeSection(settings.value("fFeeSectionMinimized").toBool());
-
-    fNewRecipientAllowed = true;
 }
 
 void SendCoinsDialog::setClientModel(ClientModel *clientModel)
 {
     this->clientModel = clientModel;
+
+    if (clientModel) {
+        connect(clientModel, SIGNAL(numBlocksChanged(int)), this, SLOT(updateSmartFeeLabel()));
+    }
 }
 
 void SendCoinsDialog::setModel(WalletModel *model)
@@ -143,7 +148,6 @@ void SendCoinsDialog::setModel(WalletModel *model)
         coinControlUpdateLabels();
 
         // fee section
-        connect(clientModel, SIGNAL(numBlocksChanged(int)), this, SLOT(updateSmartFeeLabel()));
         connect(ui->sliderSmartFee, SIGNAL(valueChanged(int)), this, SLOT(updateSmartFeeLabel()));
         connect(ui->sliderSmartFee, SIGNAL(valueChanged(int)), this, SLOT(updateGlobalFeeVariables()));
         connect(ui->sliderSmartFee, SIGNAL(valueChanged(int)), this, SLOT(coinControlUpdateLabels()));
@@ -460,7 +464,7 @@ bool SendCoinsDialog::handlePaymentRequest(const SendCoinsRecipient &rv)
     return true;
 }
 
-void SendCoinsDialog::setBalance(const CAmount& balance, const CAmount& unconfirmedBalance, const CAmount& immatureBalance, 
+void SendCoinsDialog::setBalance(const CAmount& balance, const CAmount& unconfirmedBalance, const CAmount& immatureBalance,
                                  const CAmount& watchBalance, const CAmount& watchUnconfirmedBalance, const CAmount& watchImmatureBalance)
 {
     Q_UNUSED(unconfirmedBalance);
