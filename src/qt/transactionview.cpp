@@ -206,7 +206,6 @@ void TransactionView::setModel(WalletModel *model, bool fShoudAddThirdPartyURL)
 
         if (model->getOptionsModel() && fShoudAddThirdPartyURL)
         {
-
             // Add third party transaction URLs to context menu
             QStringList listUrls = model->getOptionsModel()->getThirdPartyTxUrls().split("|", QString::SkipEmptyParts);
             for (int i = 0; i < listUrls.size(); ++i)
