@@ -11,6 +11,7 @@
 #include "editaddressdialog.h"
 #include "optionsmodel.h"
 #include "guiutil.h"
+#include "wallet.h"
 
 #include <QScrollBar>
 #include <QComboBox>
@@ -132,6 +133,7 @@ TransactionView::TransactionView(QWidget *parent) :
     QAction *copyTxIDAction = new QAction(tr("Copy transaction ID"), this);
     QAction *editLabelAction = new QAction(tr("Edit label"), this);
     QAction *showDetailsAction = new QAction(tr("Show transaction details"), this);
+    QAction *clearOrphansAction = new QAction(tr("Clear orphans"), this);
 
     contextMenu = new QMenu();
     contextMenu->addAction(copyAddressAction);
@@ -140,6 +142,8 @@ TransactionView::TransactionView(QWidget *parent) :
     contextMenu->addAction(copyTxIDAction);
     contextMenu->addAction(editLabelAction);
     contextMenu->addAction(showDetailsAction);
+    contextMenu->addSeparator();
+    contextMenu->addAction(clearOrphansAction);
 
     mapperThirdPartyTxUrls = new QSignalMapper(this);
 
@@ -160,9 +164,10 @@ TransactionView::TransactionView(QWidget *parent) :
     connect(copyTxIDAction, SIGNAL(triggered()), this, SLOT(copyTxID()));
     connect(editLabelAction, SIGNAL(triggered()), this, SLOT(editLabel()));
     connect(showDetailsAction, SIGNAL(triggered()), this, SLOT(showDetails()));
+    connect(clearOrphansAction, SIGNAL(triggered()), this, SLOT(clearOrphans()));
 }
 
-void TransactionView::setModel(WalletModel *model)
+void TransactionView::setModel(WalletModel *model, bool fShoudAddThirdPartyURL)
 {
     this->model = model;
     if(model)
@@ -199,7 +204,7 @@ void TransactionView::setModel(WalletModel *model)
         transactionView->horizontalHeader()->resizeSection(
                 TransactionTableModel::Amount, 100);
 
-        if (model->getOptionsModel())
+        if (model->getOptionsModel() && fShoudAddThirdPartyURL)
         {
             // Add third party transaction URLs to context menu
             QStringList listUrls = model->getOptionsModel()->getThirdPartyTxUrls().split("|", QString::SkipEmptyParts);
@@ -412,6 +417,19 @@ void TransactionView::showDetails()
         TransactionDescDialog dlg(selection.at(0));
         dlg.exec();
     }
+}
+
+void TransactionView::clearOrphans()
+{
+    if(!model)
+        return;
+
+    model->clearOrphans();
+    model->getTransactionTableModel()->refresh();
+    delete transactionProxyModel;
+    setModel(model, false);
+    transactionView->sortByColumn(TransactionTableModel::Status, Qt::DescendingOrder);
+    transactionView->sortByColumn(TransactionTableModel::Date, Qt::DescendingOrder);
 }
 
 void TransactionView::openThirdPartyTxUrl(QString url)
