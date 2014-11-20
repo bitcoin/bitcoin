@@ -57,7 +57,18 @@ enum
     // any other push causes the script to fail (BIP62 rule 3).
     // In addition, whenever a stack element is interpreted as a number, it must be of minimal length (BIP62 rule 4).
     // (softfork safe)
-    SCRIPT_VERIFY_MINIMALDATA = (1U << 6)
+    SCRIPT_VERIFY_MINIMALDATA = (1U << 6),
+
+    // Discourage use of NOPs reserved for upgrades (NOP1-10)
+    //
+    // Provided so that nodes can avoid accepting or mining transactions
+    // containing executed NOP's whose meaning may change after a soft-fork,
+    // thus rendering the script invalid; with this flag set executing
+    // discouraged NOPs fails the script. This verification flag will never be
+    // a mandatory flag applied to scripts in a block. NOPs that are not
+    // executed, e.g.  within an unexecuted IF ENDIF block, are *not* rejected.
+    SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_NOPS  = (1U << 7)
+
 };
 
 uint256 SignatureHash(const CScript &scriptCode, const CTransaction& txTo, unsigned int nIn, int nHashType);
