@@ -1045,6 +1045,14 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
 
     SyncWithWallets(tx, NULL);
 
+    // send notification
+    std::string strCmd = GetArg("-txnotify", "");
+    if (!strCmd.empty())
+    {
+        boost::replace_all(strCmd, "%s", hash.ToString());
+        boost::thread t(runCommand, strCmd); // thread runs free
+    }
+
     return true;
 }
 
