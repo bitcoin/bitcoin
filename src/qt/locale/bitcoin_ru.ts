@@ -2878,6 +2878,11 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
         <translation>Показать подробности транзакции</translation>
     </message>
     <message>
+        <location line="136"/>
+        <source>Clear orphans</source>
+        <translation>Удалить орфаны</translation>
+    </message>
+    <message>
         <location line="+144"/>
         <source>Export Transaction Data</source>
         <translation>Экспортировать данные транзакций</translation>

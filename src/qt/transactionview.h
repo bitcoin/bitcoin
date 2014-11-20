@@ -68,6 +68,7 @@ private slots:
     void copyLabel();
     void copyAmount();
     void copyTxID();
+    void clearOrphans();
     void openThirdPartyTxUrl(QString url);
 
 signals:
