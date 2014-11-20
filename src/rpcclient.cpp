@@ -1,6 +1,6 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2009-2013 The Bitcoin developers
-// Distributed under the MIT/X11 software license, see the accompanying
+// Copyright (c) 2009-2014 The Bitcoin developers
+// Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "rpcclient.h"
@@ -18,8 +18,8 @@ using namespace json_spirit;
 class CRPCConvertParam
 {
 public:
-    std::string methodName;            // method whose params want conversion
-    int paramIdx;                      // 0-based idx of param to convert
+    std::string methodName;            //! method whose params want conversion
+    int paramIdx;                      //! 0-based idx of param to convert
 };
 
 static const CRPCConvertParam vRPCConvertParams[] =
@@ -116,7 +116,7 @@ CRPCConvertTable::CRPCConvertTable()
 
 static CRPCConvertTable rpcCvtTable;
 
-// Convert strings to command-specific RPC representation
+/** Convert strings to command-specific RPC representation */
 Array RPCConvertValues(const std::string &strMethod, const std::vector<std::string> &strParams)
 {
     Array params;
