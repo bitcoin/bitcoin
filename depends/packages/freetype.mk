@@ -6,7 +6,7 @@ $(package)_sha256_hash=c0848b29d52ef3ca27ad92e08351f023c5e24ce8cea7d8fe69fc96358
 
 define $(package)_set_vars
   $(package)_config_opts=--without-zlib --without-png --disable-static
-  $(package)_config_opts_x86_64_linux=--with-pic
+  $(package)_config_opts_linux=--with-pic
 endef
 
 define $(package)_config_cmds

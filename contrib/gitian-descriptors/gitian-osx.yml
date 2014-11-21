@@ -1,12 +1,12 @@
 ---
-name: "bitcoin-win-0.10"
+name: "bitcoin-osx-0.10"
 enable_cache: true
 suites:
 - "precise"
 architectures:
 - "amd64"
 packages: 
-- "g++"
+- "g++-multilib"
 - "git-core"
 - "pkg-config"
 - "autoconf2.13"
@@ -14,20 +14,22 @@ packages:
 - "automake"
 - "faketime"
 - "bsdmainutils"
-- "mingw-w64"
-- "g++-mingw-w64"
-- "nsis"
+- "cmake"
+- "libcap-dev"
+- "libz-dev"
+- "libbz2-dev"
 reference_datetime: "2013-06-01 00:00:00"
 remotes:
 - "url": "https://github.com/bitcoin/bitcoin.git"
   "dir": "bitcoin"
-files: []
+files:
+- "MacOSX10.7.sdk.tar.gz"
 script: |
   WRAP_DIR=$HOME/wrapped
-  HOSTS="x86_64-w64-mingw32 i686-w64-mingw32"
-  CONFIGFLAGS="--enable-upnp-default"
-  FAKETIME_HOST_PROGS="g++ ar ranlib nm windres strip"
-  FAKETIME_PROGS="date makensis"
+  HOSTS="x86_64-apple-darwin11"
+  CONFIGFLAGS="--enable-upnp-default GENISOIMAGE=$WRAP_DIR/genisoimage"
+  FAKETIME_HOST_PROGS=""
+  FAKETIME_PROGS="ar ranlib date dmg genisoimage"
 
   export QT_RCC_TEST=1
   export GZIP="-9n"
@@ -40,6 +42,8 @@ script: |
     export BASE_CACHE=${GBUILD_PACKAGE_CACHE}
     mkdir -p ${BASE_CACHE} ${SOURCES_PATH}
   fi
+
+  export ZERO_AR_DATE=1
 
   # Create global faketime wrappers
   for prog in ${FAKETIME_PROGS}; do
@@ -66,6 +70,10 @@ script: |
 
   cd bitcoin
   BASEPREFIX=`pwd`/depends
+
+  mkdir -p ${BASEPREFIX}/SDKs
+  tar -C ${BASEPREFIX}/SDKs -xf ${BUILD_DIR}/MacOSX10.7.sdk.tar.gz
+
   # Build dependencies for each host
   for i in $HOSTS; do
     make ${MAKEOPTS} -C ${BASEPREFIX} HOST="${i}"
@@ -94,15 +102,13 @@ script: |
 
     ./configure --prefix=${BASEPREFIX}/${i} --bindir=${OUTDIR}/${i}/bin --includedir=${OUTDIR}/${i}/include --libdir=${OUTDIR}/${i}/lib --disable-ccache --disable-maintainer-mode --disable-dependency-tracking ${CONFIGFLAGS}
     make ${MAKEOPTS}
-    make deploy
     make install-strip
-    cp -f bitcoin-*setup*.exe $OUTDIR/
+    make deploy
+    ${WRAP_DIR}/dmg dmg Bitcoin-Qt.dmg ${OUTDIR}/Bitcoin-Qt.dmg
     cd ..
   done
   mkdir -p $OUTDIR/src
   mv $DISTNAME $OUTDIR/src
-  mv ${OUTDIR}/x86_64-* ${OUTDIR}/64
-  mv ${OUTDIR}/i686-* ${OUTDIR}/32
 
   # Delete unwanted stuff
   find ${OUTDIR} -name "lib*.la" -delete
