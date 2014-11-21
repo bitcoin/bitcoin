@@ -12,6 +12,7 @@
 #include "main.h"
 #include "net.h"
 #include "pow.h"
+#include "timedata.h"
 #include "util.h"
 #include "utilmoneystr.h"
 #ifdef ENABLE_WALLET
@@ -77,6 +78,15 @@ public:
         }
     }
 };
+
+void UpdateTime(CBlockHeader* pblock, const CBlockIndex* pindexPrev)
+{
+    pblock->nTime = std::max(pindexPrev->GetMedianTimePast()+1, GetAdjustedTime());
+
+    // Updating time can change work required on testnet:
+    if (Params().AllowMinDifficultyBlocks())
+        pblock->nBits = GetNextWorkRequired(pindexPrev, pblock);
+}
 
 CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
 {
