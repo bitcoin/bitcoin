@@ -690,7 +690,7 @@ void StartRPCThreads()
     }
 
     rpc_worker_group = new boost::thread_group();
-    for (int i = 0; i < GetArg("-rpcthreads", 4); i++)
+    for (int i = 0; i < GetArg("-rpcthreads", 8); i++)
         rpc_worker_group->create_thread(boost::bind(&asio::io_service::run, rpc_io_service));
     fRPCRunning = true;
 }
