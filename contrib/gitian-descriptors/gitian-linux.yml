@@ -1,86 +1,104 @@
 ---
-name: "bitcoin"
+name: "bitcoin-linux-0.10"
+enable_cache: true
 suites:
 - "precise"
 architectures:
-- "i386"
 - "amd64"
 packages: 
-- "g++"
+- "g++-multilib"
 - "git-core"
-- "unzip"
 - "pkg-config"
 - "autoconf2.13"
 - "libtool"
 - "automake"
 - "faketime"
 - "bsdmainutils"
-- "libqt4-core"
-- "libqt4-gui"
-- "libqt4-dbus"
-- "libqt4-network"
-- "libqt4-test"
+- "binutils-gold"
 reference_datetime: "2013-06-01 00:00:00"
 remotes:
 - "url": "https://github.com/bitcoin/bitcoin.git"
   "dir": "bitcoin"
-files:
-- "bitcoin-deps-linux32-gitian-r6.zip"
-- "bitcoin-deps-linux64-gitian-r6.zip"
-- "boost-linux32-1.55.0-gitian-r1.zip"
-- "boost-linux64-1.55.0-gitian-r1.zip"
-- "qt-linux32-4.6.4-gitian-r1.tar.gz"
-- "qt-linux64-4.6.4-gitian-r1.tar.gz"
+files: []
 script: |
-  STAGING="$HOME/install"
-  OPTFLAGS='-O2'
-  BINDIR="${OUTDIR}/bin/${GBUILD_BITS}" # 32/64 bit build specific output directory
-  TEMPDIR="$HOME/tempdir"
-  export TZ=UTC
-  export LIBRARY_PATH="$STAGING/lib"
-  export PATH="$STAGING/bin:$PATH"
-  mkdir -p ${BINDIR}
-  #
-  mkdir -p $STAGING
-  cd $STAGING
-  unzip ../build/bitcoin-deps-linux${GBUILD_BITS}-gitian-r6.zip
-  unzip ../build/boost-linux${GBUILD_BITS}-1.55.0-gitian-r1.zip
-  tar -zxf ../build/qt-linux${GBUILD_BITS}-4.6.4-gitian-r1.tar.gz
-  cd ../build
+  WRAP_DIR=$HOME/wrapped
+  HOSTS="i686-pc-linux-gnu x86_64-unknown-linux-gnu"
+  CONFIGFLAGS="--enable-upnp-default --enable-glibc-back-compat"
+  FAKETIME_HOST_PROGS=""
+  FAKETIME_PROGS="date ar ranlib nm strip"
 
-  # Avoid exporting *any* symbols from the executable
-  # This avoids conflicts between the libraries statically linked into bitcoin and any
-  # libraries we may link dynamically (such as Qt and OpenSSL, see issue #4094).
-  # It also avoids start-up overhead to not export any unnecessary symbols.
-  # To do this, build a linker script that marks all symbols as local.
-  LINKER_SCRIPT=$HOME/build/linker_version_script
-  echo '
-  {
-    local: *;
-  };' > $LINKER_SCRIPT
-  function do_configure {
-      ./configure "$@" --enable-upnp-default --prefix=$STAGING --with-protoc-bindir=$STAGING/host/bin --with-qt-bindir=$STAGING/bin --with-boost=$STAGING --disable-maintainer-mode --disable-dependency-tracking PKG_CONFIG_PATH="$STAGING/lib/pkgconfig" CPPFLAGS="-I$STAGING/include ${OPTFLAGS}" LDFLAGS="-L$STAGING/lib -Wl,--version-script=$LINKER_SCRIPT ${OPTFLAGS}" CXXFLAGS="-frandom-seed=bitcoin ${OPTFLAGS}" --enable-glibc-back-compat
-  }
-  #
+  export QT_RCC_TEST=1
+  export GZIP="-9n"
+  export TAR_OPTIONS="--mtime="$REFERENCE_DATE\\\ $REFERENCE_TIME""
+  export TZ="UTC"
+  export BUILD_DIR=`pwd`
+  mkdir -p ${WRAP_DIR}
+  if test -n "$GBUILD_CACHE_ENABLED"; then
+    export SOURCES_PATH=${GBUILD_COMMON_CACHE}
+    export BASE_CACHE=${GBUILD_PACKAGE_CACHE}
+    mkdir -p ${BASE_CACHE} ${SOURCES_PATH}
+  fi
+
+  # Create global faketime wrappers
+  for prog in ${FAKETIME_PROGS}; do
+    echo '#!/bin/bash' > ${WRAP_DIR}/${prog}
+    echo "REAL=\`which -a ${prog} | grep -v ${WRAP_DIR}/${prog} | head -1\`" >> ${WRAP_DIR}/${prog}
+    echo 'export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1' >> ${WRAP_DIR}/${prog}
+    echo "export FAKETIME=\"${REFERENCE_DATETIME}\"" >> ${WRAP_DIR}/${prog}
+    echo "\$REAL \$@" >> $WRAP_DIR/${prog}
+    chmod +x ${WRAP_DIR}/${prog}
+  done
+
+  # Create per-host faketime wrappers
+  for i in $HOSTS; do
+    for prog in ${FAKETIME_HOST_PROGS}; do
+        echo '#!/bin/bash' > ${WRAP_DIR}/${i}-${prog}
+        echo "REAL=\`which -a ${i}-${prog} | grep -v ${WRAP_DIR}/${i}-${prog} | head -1\`" >> ${WRAP_DIR}/${i}-${prog}
+        echo 'export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1' >> ${WRAP_DIR}/${i}-${prog}
+        echo "export FAKETIME=\"${REFERENCE_DATETIME}\"" >> ${WRAP_DIR}/${i}-${prog}
+        echo "\$REAL \$@" >> $WRAP_DIR/${i}-${prog}
+        chmod +x ${WRAP_DIR}/${i}-${prog}
+    done
+  done
+  export PATH=${WRAP_DIR}:${PATH}
+
   cd bitcoin
+  BASEPREFIX=`pwd`/depends
+  # Build dependencies for each host
+  for i in $HOSTS; do
+    make ${MAKEOPTS} -C ${BASEPREFIX} HOST="${i}"
+  done
+
+  # Create the release tarball using (arbitrarily) the first host
   ./autogen.sh
-  do_configure
+  ./configure --prefix=${BASEPREFIX}/`echo "${HOSTS}" | awk '{print $1;}'`
   make dist
   DISTNAME=`echo bitcoin-*.tar.gz`
 
-  # Build dynamic versions of everything
-  # (with static linking to boost and openssl as well a some non-OS deps)
-  mkdir -p distsrc
-  cd distsrc
-  tar --strip-components=1 -xf ../$DISTNAME
-  do_configure --bindir=$BINDIR 
-  make $MAKEOPTS
-  make $MAKEOPTS install-strip
-  make $MAKEOPTS clean
+  # Correct tar file order
+  mkdir -p temp
+  pushd temp
+  tar xf ../$DISTNAME
+  find bitcoin-* | sort | tar --no-recursion -c -T - | gzip -9n > ../$DISTNAME
+  popd
 
-  # sort distribution tar file and normalize user/group/mtime information for deterministic output
+  ORIGPATH="$PATH"
+  # Extract the release tarball into a dir for each host and build
+  for i in ${HOSTS}; do
+    export PATH=${BASEPREFIX}/${i}/native/bin:${ORIGPATH}
+    mkdir -p distsrc-${i}
+    cd distsrc-${i}
+    tar --strip-components=1 -xf ../$DISTNAME
+
+    ./configure --prefix=${BASEPREFIX}/${i} --bindir=${OUTDIR}/${i}/bin --includedir=${OUTDIR}/${i}/include --libdir=${OUTDIR}/${i}/lib --disable-ccache --disable-maintainer-mode --disable-dependency-tracking ${CONFIGFLAGS}
+    make ${MAKEOPTS}
+    make install-strip
+    cd ..
+  done
   mkdir -p $OUTDIR/src
-  rm -rf $TEMPDIR
-  mkdir -p $TEMPDIR
-  cd $TEMPDIR
-  tar -xvf $HOME/build/bitcoin/$DISTNAME | sort | tar --no-recursion -cT /dev/stdin --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 --mtime="$REFERENCE_DATETIME" | gzip -n > $OUTDIR/src/$DISTNAME
+  mv $DISTNAME $OUTDIR/src
+  mv ${OUTDIR}/x86_64-* ${OUTDIR}/64
+  mv ${OUTDIR}/i686-* ${OUTDIR}/32
+
+  # Delete unwanted stuff
+  find ${OUTDIR} -name "lib*.la" -delete
