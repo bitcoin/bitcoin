@@ -207,9 +207,9 @@ bool static CheckSignatureEncoding(const valtype &vchSig, unsigned int flags, Sc
     return true;
 }
 
-bool static CheckPubKeyEncoding(const valtype &vchSig, unsigned int flags) {
+bool static CheckPubKeyEncoding(const valtype &vchSig, unsigned int flags, ScriptError* serror) {
     if ((flags & SCRIPT_VERIFY_STRICTENC) != 0 && !IsCompressedOrUncompressedPubKey(vchSig)) {
-        return false;
+        return set_error(serror, SCRIPT_ERR_PUBKEYTYPE);
     }
     return true;
 }
@@ -792,11 +792,11 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, un
                     // Drop the signature, since there's no way for a signature to sign itself
                     scriptCode.FindAndDelete(CScript(vchSig));
 
-                    if (!CheckSignatureEncoding(vchSig, flags, serror)) {
+                    if (!CheckSignatureEncoding(vchSig, flags, serror) || !CheckPubKeyEncoding(vchPubKey, flags, serror)) {
                         //serror is set
                         return false;
                     }
-                    bool fSuccess = CheckPubKeyEncoding(vchPubKey, flags) && checker.CheckSig(vchSig, vchPubKey, scriptCode);
+                    bool fSuccess = checker.CheckSig(vchSig, vchPubKey, scriptCode);
 
                     popstack(stack);
                     popstack(stack);
@@ -855,13 +855,16 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, un
                         valtype& vchSig    = stacktop(-isig);
                         valtype& vchPubKey = stacktop(-ikey);
 
-                        if (!CheckSignatureEncoding(vchSig, flags, serror)) {
+                        // Note how this makes the exact order of pubkey/signature evaluation
+                        // distinguishable by CHECKMULTISIG NOT if the STRICTENC flag is set.
+                        // See the script_(in)valid tests for details.
+                        if (!CheckSignatureEncoding(vchSig, flags, serror) || !CheckPubKeyEncoding(vchPubKey, flags, serror)) {
                             // serror is set
                             return false;
                         }
 
                         // Check signature
-                        bool fOk = CheckPubKeyEncoding(vchPubKey, flags) && checker.CheckSig(vchSig, vchPubKey, scriptCode);
+                        bool fOk = checker.CheckSig(vchSig, vchPubKey, scriptCode);
 
                         if (fOk) {
                             isig++;
@@ -871,7 +874,8 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, un
                         nKeysCount--;
 
                         // If there are more signatures left than keys left,
-                        // then too many signatures have failed
+                        // then too many signatures have failed. Exit early,
+                        // without checking any further signatures.
                         if (nSigsCount > nKeysCount)
                             fSuccess = false;
                     }

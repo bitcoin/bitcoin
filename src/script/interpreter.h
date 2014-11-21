@@ -35,8 +35,8 @@ enum
     SCRIPT_VERIFY_P2SH      = (1U << 0),
 
     // Passing a non-strict-DER signature or one with undefined hashtype to a checksig operation causes script failure.
-    // Passing a pubkey that is not (0x04 + 64 bytes) or (0x02 or 0x03 + 32 bytes) to checksig causes that pubkey to be
-    // skipped (not softfork safe: this flag can widen the validity of OP_CHECKSIG OP_NOT).
+    // Evaluating a pubkey that is not (0x04 + 64 bytes) or (0x02 or 0x03 + 32 bytes) by checksig causes script failure.
+    // (softfork safe, but not used or intended as a consensus rule).
     SCRIPT_VERIFY_STRICTENC = (1U << 1),
 
     // Passing a non-strict-DER signature to a checksig operation causes script failure (softfork safe, BIP62 rule 1)
