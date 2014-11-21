@@ -220,11 +220,6 @@ public:
         return (int64_t)nTime;
     }
 
-    uint256 GetBlockWork() const
-    {
-        return GetProofIncrement(nBits);
-    }
-
     enum { nMedianTimeSpan=11 };
 
     int64_t GetMedianTimePast() const
