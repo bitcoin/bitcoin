@@ -579,7 +579,7 @@
               <item>
                <widget class="QLabel" name="label_16">
                 <property name="text">
-                 <string>Received</string>
+                 <string>Received:</string>
                 </property>
                </widget>
               </item>
@@ -659,7 +659,7 @@
               <item>
                <widget class="QLabel" name="label_17">
                 <property name="text">
-                 <string>Sent</string>
+                 <string>Sent:</string>
                 </property>
                </widget>
               </item>

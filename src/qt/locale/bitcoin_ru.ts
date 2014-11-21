@@ -2,6 +2,155 @@
 <!DOCTYPE TS>
 <TS version="2.0" language="ru">
 <defaultcodec>UTF-8</defaultcodec>
+  <context>
+    <name>MintingView</name>
+    <message>
+      <location filename="../mintingview.cpp" line="33"/>
+      <source>transaction is too young</source>
+      <translation>транзакция молода для PoS</translation>
+    </message>
+    <message>
+      <location filename="../mintingview.cpp" line="40"/>
+      <source>transaction is mature</source>
+      <translation>зрелая транзакция</translation>
+    </message>
+    <message>
+      <location filename="../mintingview.cpp" line="47"/>
+      <source>transaction has reached maximum probability</source>
+      <translation>транзакция достигла максимальной вероятности</translation>
+    </message>
+    <message>
+      <location filename="../mintingview.cpp" line="60"/>
+      <source>Display minting probability within : </source>
+      <translation>Показывать вероятность найти блок в течение : </translation>
+    </message>
+    <message>
+      <location filename="../mintingview.cpp" line="62"/>
+      <source>10 min</source>
+      <translation>10 минут</translation>
+    </message>
+    <message>
+      <location filename="../mintingview.cpp" line="63"/>
+      <source>24 hours</source>
+      <translation>24 часов</translation>
+    </message>
+    <message>
+      <location filename="../mintingview.cpp" line="64"/>
+      <source>30 days</source>
+      <translation>30 дней</translation>
+    </message>
+    <message>
+      <location filename="../mintingview.cpp" line="65"/>
+      <source>90 days</source>
+      <translation>90 дней</translation>
+    </message>
+    <message>
+      <location filename="../mintingview.cpp" line="167"/>
+      <source>Export Minting Data</source>
+      <translation>Экспортировать данные таблицы</translation>
+    </message>
+    <message>
+      <location filename="../mintingview.cpp" line="168"/>
+      <source>Comma separated file (*.csv)</source>
+      <translation>Текст, разделённый запятыми (*.csv)</translation>
+    </message>
+    <message>
+      <location filename="../mintingview.cpp" line="185"/>
+      <source>Error exporting</source>
+      <translation>Ошибка экспорта</translation>
+    </message>
+    <message>
+      <location filename="../mintingview.cpp" line="185"/>
+      <source>Could not write to file %1.</source>
+      <translation>Невозможно записать в файл %1.</translation>
+    </message>
+  </context>
+  <context>
+    <name>MintingTableModel</name>
+    <message>
+      <source>Address</source>
+      <translation>Адрес</translation>
+    </message>
+    <message>
+      <source>Transaction</source>
+      <translation>Транзакция</translation>
+    </message>
+    <message>
+      <source>Age</source>
+      <translation>Возраст</translation>
+    </message>
+    <message>
+      <source>CoinDay</source>
+      <translation>Вес</translation>
+    </message>
+    <message>
+      <source>Balance</source>
+      <translation>Баланс</translation>
+    </message>
+    <message>
+      <source>MintProbability</source>
+      <translation>Вероятность PoS</translation>
+    </message>
+    <message>
+      <source>minutes</source>
+      <translation>минут</translation>
+    </message>
+    <message>
+      <source>hours</source>
+      <translation>часа</translation>
+    </message>
+    <message>
+      <source>days</source>
+      <translation>дней</translation>
+    </message>
+    <message>
+      <source>You have %1 chance to find a POS block if you mint %2 %3 at current difficulty.</source>
+      <translation>У вас есть %1 шанс найти PoS блок, если вы будете майнить %2 %3 при текущей сложности.</translation>
+    </message>
+    <message>
+      <source>Destination address of the output.</source>
+      <translation>Адрес который получил эту транзакцию.</translation>
+    </message>
+    <message>
+      <source>Original transaction id.</source>
+      <translation>Исходный ID транзакции.</translation>
+    </message>
+    <message>
+      <source>Age of the transaction in days.</source>
+      <translation>Возраст транзакции в днях.</translation>
+    </message>
+    <message>
+      <source>Balance of the output.</source>
+      <translation>Баланс выхода.</translation>
+    </message>
+    <message>
+      <source>Coin age in the output.</source>
+      <translation>CoinDayWeight выхода.</translation>
+    </message>
+    <message>
+      <source>Chance to mint a block within given time interval.</source>
+      <translation>Шанс найти блок в течение выбранного временного интервала.</translation>
+    </message>
+  </context>
+<context>
+  <name>QObject</name>
+  <message>
+    <source>%1 d</source>
+    <translation>%1 д</translation>
+  </message>
+  <message>
+    <source>%1 h</source>
+    <translation>%1 ч</translation>
+  </message>
+  <message>
+    <source>%1 m</source>
+    <translation>%1 мин</translation>
+  </message>
+  <message>
+    <source>%1 s</source>
+    <translation>%1 сек</translation>
+  </message>
+</context>
 <context>
     <name>AboutDialog</name>
     <message>
@@ -23,18 +172,8 @@ Copyright © 2012-2014 The NovaCoin developers</source>
     </message>
     <message>
         <location line="+13"/>
-        <source>
-This is experimental software.
-
-Distributed under the MIT/X11 software license, see the accompanying file COPYING or http://www.opensource.org/licenses/mit-license.php.
-
-This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit (http://www.openssl.org/) and cryptographic software written by Eric Young (eay@cryptsoft.com) and UPnP software written by Thomas Bernard.</source>
-        <translation>
-Это экспериментальная программа.
-
-Распространяется на правах лицензии MIT/X11, см. файл license.txt или http://www.opensource.org/licenses/mit-license.php.
-
-Этот продукт включает ПО, разработанное OpenSSL Project для использования в OpenSSL Toolkit (http://www.openssl.org/) и криптографическое ПО, написанное Eric Young (eay@cryptsoft.com) и ПО для работы с UPnP, написанное Thomas Bernard.</translation>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;br/&gt;This is experimental software.&lt;/p&gt;&lt;p&gt;Distributed under the MIT/X11 software license, see the accompanying file COPYING or &lt;a href=&quot;http://www.opensource.org/licenses/mit-license.php&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;http://www.opensource.org/licenses/mit-license.php&lt;/span&gt;&lt;/a&gt;.&lt;/p&gt;&lt;p&gt;This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit (&lt;a href=&quot;http://www.openssl.org/&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;http://www.openssl.org/&lt;/span&gt;&lt;/a&gt;) and cryptographic software written by Eric Young (&lt;a href=&quot;mailto:eay@cryptsoft.com&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;eay@cryptsoft.com&lt;/span&gt;&lt;/a&gt;) and UPnP software written by Thomas Bernard(&lt;a href=&quot;mailto:miniupnp@free.fr&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;miniupnp@free.fr&lt;/span&gt;&lt;/a&gt;).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;br/&gt;Это экспериментальная программа.&lt;/p&gt;&lt;p&gt;Распространяется на правах лицензии MIT/X11, см. файл license.txt или &lt;a href=&quot;http://www.opensource.org/licenses/mit-license.php&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;http://www.opensource.org/licenses/mit-license.php&lt;/span&gt;&lt;/a&gt;.&lt;/p&gt;&lt;p&gt;Этот продукт включает ПО, разработанное OpenSSL Project для использования в OpenSSL Toolkit (&lt;a href=&quot;http://www.openssl.org/&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;http://www.openssl.org/&lt;/span&gt;&lt;/a&gt;) и криптографическое ПО, написанное Eric Young (&lt;a href=&quot;mailto:eay@cryptsoft.com&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;eay@cryptsoft.com&lt;/span&gt;&lt;/a&gt;) и ПО для работы с UPnP, написанное Thomas Bernard (&lt;a href=&quot;mailto:miniupnp@free.fr&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;miniupnp@free.fr&lt;/span&gt;&lt;/a&gt;).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
 </context>
 <context>
@@ -330,6 +469,16 @@ This product includes software developed by the OpenSSL Project for use in the O
         <location line="+1"/>
         <source>Browse transaction history</source>
         <translation>Показать историю транзакций</translation>
+    </message>
+    <message>
+        <location line="+17"/>
+        <source>&amp;Minting</source>
+        <translation>&amp;PoS</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Show your minting capacity</source>
+        <translation>Показать ваш PoS потенциал</translation>
     </message>
     <message>
         <location line="+5"/>
@@ -1410,6 +1559,14 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
         <translation>Управление &amp;входами (только для продвинутых пользователей!)</translation>
     </message>
     <message>
+        <source>Third party transaction URLs</source>
+        <translation>Сторонние URL транзакций</translation>
+    </message>
+    <message>
+        <source>Third party URLs (e.g. explorer.novaco.in) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
+        <translation>Сторонние URL (например explorer.novaco.in), которые отображаются на вкладке транзакций как пункты контекстного меню. %s в URL заменяется хешем транзакции. URL отделяются друг от друга вертикальной чертой |.</translation>
+    </message>
+    <message>
         <location line="+71"/>
         <source>&amp;OK</source>
         <translation>О&amp;К</translation>
@@ -1597,6 +1754,31 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
 </context>
 <context>
     <name>RPCConsole</name>
+    <message>
+        <location filename="../forms/rpcconsole.ui" line="+582"/>
+        <source>Received:</source>
+        <translation>Получено:</translation>
+    </message>
+    <message>
+        <location filename="../forms/rpcconsole.ui" line="+662"/>
+        <source>Sent:</source>
+        <translation>Отправлено:</translation>
+    </message>
+    <message>
+        <location filename="../forms/rpcconsole.ui" line="+518"/>
+        <source>Totals</source>
+        <translation>Всего</translation>
+    </message>
+    <message>
+        <location filename="../forms/rpcconsole.ui" line="+450"/>
+        <source>&amp;Network Traffic</source>
+        <translation>&amp;Сетевой трафик</translation>
+    </message>
+    <message>
+        <location filename="../forms/rpcconsole.ui" line="+502"/>
+        <source>&amp;Clear</source>
+        <translation>&amp;Очистить</translation>
+    </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="+46"/>
         <source>Client name</source>
@@ -2694,6 +2876,11 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
         <location line="+1"/>
         <source>Show transaction details</source>
         <translation>Показать подробности транзакции</translation>
+    </message>
+    <message>
+        <location line="136"/>
+        <source>Clear orphans</source>
+        <translation>Удалить орфаны</translation>
     </message>
     <message>
         <location line="+144"/>

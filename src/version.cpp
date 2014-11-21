@@ -54,6 +54,10 @@ const std::string CLIENT_NAME("Satoshi");
 #    endif
 #endif
 
+#ifdef _MSC_VER
+#undef GIT_COMMIT_DATE
+#endif
+
 #ifndef BUILD_DATE
 #    ifdef GIT_COMMIT_DATE
 #        define BUILD_DATE GIT_COMMIT_DATE

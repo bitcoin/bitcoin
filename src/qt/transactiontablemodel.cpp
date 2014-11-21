@@ -261,6 +261,12 @@ void TransactionTableModel::updateConfirmations()
     }
 }
 
+void TransactionTableModel::refresh()
+{
+    priv->refreshWallet();
+    emit dataChanged(index(0, 0), index(priv->size() - 1, Amount));
+}
+
 int TransactionTableModel::rowCount(const QModelIndex &parent) const
 {
     Q_UNUSED(parent);
@@ -572,6 +578,8 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
         return rec->credit + rec->debit;
     case TxIDRole:
         return QString::fromStdString(rec->getTxID());
+    case TxHashRole:
+        return QString::fromStdString(rec->hash.ToString());
     case ConfirmedRole:
         // Return True if transaction counts for balance
         return rec->status.confirmed && !(rec->type == TransactionRecord::Generated && rec->status.maturity != TransactionStatus::Mature);

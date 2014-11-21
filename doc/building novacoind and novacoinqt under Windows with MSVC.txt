@@ -37,18 +37,16 @@ buildopenssl.bat
 -Запустите Visual Studio 2012
 -Откройте C:\MyProjects\Deps\db-6.0.20\build_windows\Berkeley_DB_vs2010.sln
 -Выберете проект db
--Перейдите в Свойства -> C/C++ -> Создание кода
--Измените в конфигурации Debug "Многопоточная отладка DLL" на "Многопоточную отладка"
--Измените в конфигурации Release "Многопоточный DLL" на "Многопоточный"
--Конфигурации измените и для 32 bit и для 64 bit (если вам нужно 64 bit)
+-Измените конфигурацию с Debug на Static Debug
 -Нажмите левой кнопкой мыши на  проект db, затем "Только проект" -> "Построить только db"
--Постройте так все конфигурации(Debug 32 bit, Release 32 bit, Debug X64, Release X64)
+-Постройте так все Static конфигурации(Static Debug 32 bit, Static Release 32 bit, Static Debug X64, Static Release X64)
 
-Проверка если вы всё сделали правильно то у вас будут файлы:
-C:\MyProjects\Deps\db-6.0.20\build_windows\Win32\Release\libdb60.lib
-C:\MyProjects\Deps\db-6.0.20\build_windows\Win32\Debug\libdb60d.lib
-C:\MyProjects\Deps\db-6.0.20\build_windows\x64\Release\libdb60.lib
-C:\MyProjects\Deps\db-6.0.20\build_windows\x64\Debug\libdb60d.lib
+Проверка:
+Если вы всё сделали правильно то у вас будут файлы:
+C:\MyProjects\Deps\db-6.0.20\build_windows\Win32\Static Release\libdb60s.lib
+C:\MyProjects\Deps\db-6.0.20\build_windows\Win32\Static Debug\libdb60sd.lib
+C:\MyProjects\Deps\db-6.0.20\build_windows\x64\Static Release\libdb60s.lib
+C:\MyProjects\Deps\db-6.0.20\build_windows\x64\Static Debug\libdb60sd.lib
 
 2.3 Boost
 -Скачайте http://sourceforge.net/projects/boost/files/boost/1.55.0/boost_1_55_0.7z/download
@@ -93,6 +91,11 @@ buildqt64.bat
 
 3. Компиляция
 Будем хранить исходники в папке C:\MyProjects
+
+3.0 Подготовка Microsoft Visual Studio 2012 к работе
+-Откройте Microsoft Visual Studio 2012
+-Нажмите СЕРВИС -> Параметры.. -> Текстовый редактор -> Все языки -> Табуляция и поставьте флажок "Вставлять пробелы"
+(Если у вас английская версия, то это выглядит так: Tools->Options->Text Editor->All Languages->Tabs и поставьте флажок "Insert Spaces" вместо "Keep Tabs".)
 
 3.1 Скачиваем исходники
 -Зайдите на сайт https://github.com/novacoin-project/novacoin 

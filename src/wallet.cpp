@@ -393,6 +393,7 @@ void CWallet::WalletUpdateSpent(const CTransaction &tx, bool fBlock)
                     wtx.MarkSpent(txin.prevout.n);
                     wtx.WriteToDisk();
                     NotifyTransactionChanged(this, txin.prevout.hash, CT_UPDATED);
+                    vMintingWalletUpdated.push_back(txin.prevout.hash);
                 }
             }
         }
@@ -410,6 +411,7 @@ void CWallet::WalletUpdateSpent(const CTransaction &tx, bool fBlock)
                     wtx.MarkUnspent(&txout - &tx.vout[0]);
                     wtx.WriteToDisk();
                     NotifyTransactionChanged(this, hash, CT_UPDATED);
+                    vMintingWalletUpdated.push_back(hash);
                 }
             }
         }
@@ -540,7 +542,7 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn)
 
         // Notify UI of new or updated transaction
         NotifyTransactionChanged(this, hash, fInsertedNew ? CT_NEW : CT_UPDATED);
-
+        vMintingWalletUpdated.push_back(hash);
         // notify an external script when a wallet transaction comes in or is updated
         std::string strCmd = GetArg("-walletnotify", "");
 
@@ -1679,7 +1681,7 @@ bool CWallet::GetStakeWeight(const CKeyStore& keystore, uint64& nMinWeight, uint
             }
 
             if (fDebug)
-                printf("Get stake weight: %zu meta items loaded for %zu coins\n", mapMeta.size(), setCoins.size());
+                printf("Get stake weight: %d meta items loaded for %d coins\n", mapMeta.size(), setCoins.size());
 
             fCoinsDataActual = true;
         }
@@ -1912,7 +1914,7 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
             }
 
             if (fDebug)
-                printf("Stake miner: %zu meta items loaded for %zu coins\n", mapMeta.size(), setCoins.size());
+                printf("Stake miner: %d meta items loaded for %d coins\n", mapMeta.size(), setCoins.size());
 
             fCoinsDataActual = true;
         }
@@ -2116,6 +2118,7 @@ bool CWallet::CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey)
                 coin.MarkSpent(txin.prevout.n);
                 coin.WriteToDisk();
                 NotifyTransactionChanged(this, coin.GetHash(), CT_UPDATED);
+                vMintingWalletUpdated.push_back(coin.GetHash());
             }
 
             if (fFileBacked)
@@ -2721,7 +2724,10 @@ void CWallet::UpdatedTransaction(const uint256 &hashTx)
         // Only notify UI if this transaction is in this wallet
         map<uint256, CWalletTx>::const_iterator mi = mapWallet.find(hashTx);
         if (mi != mapWallet.end())
+        {
             NotifyTransactionChanged(this, hashTx, CT_UPDATED);
+            vMintingWalletUpdated.push_back(hashTx);
+        }
     }
 }
 
@@ -2774,4 +2780,22 @@ void CWallet::GetKeyBirthTimes(std::map<CKeyID, int64> &mapKeyBirth) const {
     // Extract block timestamps for those keys
     for (std::map<CKeyID, CBlockIndex*>::const_iterator it = mapKeyFirstBlock.begin(); it != mapKeyFirstBlock.end(); it++)
         mapKeyBirth[it->first] = it->second->nTime - 7200; // block times can be 2h off
+}
+
+void CWallet::ClearOrphans()
+{
+    list<uint256> orphans;
+
+    LOCK(cs_wallet);
+    for(map<uint256, CWalletTx>::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
+    {
+        const CWalletTx *wtx = &(*it).second;
+        if((wtx->IsCoinBase() || wtx->IsCoinStake()) && !wtx->IsInMainChain())
+        {
+            orphans.push_back(wtx->GetHash());
+        }
+    }
+
+    for(list<uint256>::const_iterator it = orphans.begin(); it != orphans.end(); ++it)
+        EraseFromWallet(*it);
 }

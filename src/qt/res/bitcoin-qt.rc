@@ -22,7 +22,7 @@ BEGIN
             VALUE "FileDescription",    "NovaCoin-Qt (OSS GUI client for NovaCoin)"
             VALUE "FileVersion",        VER_FILEVERSION_STR
             VALUE "InternalName",       "novacoin-qt"
-            VALUE "LegalCopyright",     "2009-2012 The Bitcoin developers, 2012-2013 The NovaCoin & PPCoin developers"
+            VALUE "LegalCopyright",     "2009-2012 The Bitcoin developers, 2012-2014 The NovaCoin & PPCoin developers"
             VALUE "LegalTrademarks1",   "Distributed under the MIT/X11 software license, see the accompanying file COPYING or http://www.opensource.org/licenses/mit-license.php."
             VALUE "OriginalFilename",   "novacoin-qt.exe"
             VALUE "ProductName",        "NovaCoin-Qt"

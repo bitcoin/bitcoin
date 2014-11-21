@@ -3,37 +3,41 @@
 # else
 #  include <winver.h>
 # endif
+#include "../../src/clientversion.h" // holds the needed client version information
+
 mynovacoinqt_resource.rc += icon.rc
+
+#define VER_PRODUCTVERSION     CLIENT_VERSION_MAJOR,CLIENT_VERSION_MINOR,CLIENT_VERSION_REVISION,CLIENT_VERSION_BUILD
+#define VER_PRODUCTVERSION_STR STRINGIZE(CLIENT_VERSION_MAJOR) "." STRINGIZE(CLIENT_VERSION_MINOR) "." STRINGIZE(CLIENT_VERSION_REVISION) "." STRINGIZE(CLIENT_VERSION_BUILD)
+#define VER_FILEVERSION        VER_PRODUCTVERSION
+#define VER_FILEVERSION_STR    VER_PRODUCTVERSION_STR
+
 VS_VERSION_INFO VERSIONINFO
-	FILEVERSION 0,7,5,0
-	PRODUCTVERSION 0,7,5,0
-	FILEFLAGSMASK 0x3fL
-#ifdef _DEBUG
-	FILEFLAGS VS_FF_DEBUG
-#else
-	FILEFLAGS 0x0L
-#endif
-	FILEOS VOS__WINDOWS32
-	FILETYPE VFT_APP
-	FILESUBTYPE 0x0L
-	BEGIN
-		BLOCK "StringFileInfo"
-		BEGIN
-			BLOCK "040904b0"
-			BEGIN
-				VALUE "CompanyName", "\0"
-				VALUE "FileDescription", "\0"
-				VALUE "FileVersion", "0.7.5.0\0"
-				VALUE "LegalCopyright", "\0"
-				VALUE "OriginalFilename", "mynovacoinqt.exe\0"
-				VALUE "ProductName", "mynovacoinqt\0"
-				VALUE "ProductVersion", "0.7.5.0\0"
-			END
-		END
-		BLOCK "VarFileInfo"
-		BEGIN
-			VALUE "Translation", 0x0409, 1200
-		END
-	END
+FILEVERSION     VER_FILEVERSION
+PRODUCTVERSION  VER_PRODUCTVERSION
+FILEOS          VOS_NT_WINDOWS32
+FILETYPE        VFT_APP
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904E4" // U.S. English - multilingual (hex)
+        BEGIN
+            VALUE "CompanyName",        "NovaCoin"
+            VALUE "FileDescription",    "NovaCoin-Qt (OSS GUI client for NovaCoin)"
+            VALUE "FileVersion",        VER_FILEVERSION_STR
+            VALUE "InternalName",       "novacoin-qt"
+            VALUE "LegalCopyright",     "2009-2012 The Bitcoin developers, 2012-2014 The NovaCoin & PPCoin developers"
+            VALUE "LegalTrademarks1",   "Distributed under the MIT/X11 software license, see the accompanying file COPYING or http://www.opensource.org/licenses/mit-license.php."
+            VALUE "OriginalFilename",   "novacoin-qt.exe"
+            VALUE "ProductName",        "NovaCoin-Qt"
+            VALUE "ProductVersion",     VER_PRODUCTVERSION_STR
+        END
+    END
+
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x0, 1252 // language neutral - multilingual (decimal)
+    END
+END
 /* End of Version info */
 

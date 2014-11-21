@@ -10,6 +10,7 @@
 class OptionsModel;
 class AddressTableModel;
 class TransactionTableModel;
+class MintingTableModel;
 class CWallet;
 class CKeyID;
 class CPubKey;
@@ -61,6 +62,7 @@ public:
 
     OptionsModel *getOptionsModel();
     AddressTableModel *getAddressTableModel();
+    MintingTableModel *getMintingTableModel();
     TransactionTableModel *getTransactionTableModel();
 
     qint64 getBalance() const;
@@ -132,6 +134,7 @@ public:
     void lockCoin(COutPoint& output);
     void unlockCoin(COutPoint& output);
     void listLockedCoins(std::vector<COutPoint>& vOutpts);
+    void clearOrphans();
 
 private:
     CWallet *wallet;
@@ -141,6 +144,7 @@ private:
     OptionsModel *optionsModel;
 
     AddressTableModel *addressTableModel;
+    MintingTableModel *mintingTableModel;
     TransactionTableModel *transactionTableModel;
 
     // Cache some values to be able to detect changes
