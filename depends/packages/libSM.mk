@@ -1,13 +1,13 @@
-package=libX11
-$(package)_version=1.6.2
+package=libSM
+$(package)_version=1.2.2
 $(package)_download_path=http://xorg.freedesktop.org/releases/individual/lib/
 $(package)_file_name=$(package)-$($(package)_version).tar.bz2
-$(package)_sha256_hash=2aa027e837231d2eeea90f3a4afe19948a6eb4c8b2bec0241eba7dbc8106bd16
-$(package)_dependencies=libxcb xtrans xextproto xproto
+$(package)_sha256_hash=0baca8c9f5d934450a70896c4ad38d06475521255ca63b717a6510fdb6e287bd
+$(package)_dependencies=xtrans xproto libICE
 
 define $(package)_set_vars
-$(package)_config_opts=--disable-xkb --disable-static
-$(package)_config_opts_linux=--with-pic
+  $(package)_config_opts=--without-libuuid  --without-xsltproc  --disable-docs --disable-static
+  $(package)_config_opts_linux=--with-pic
 endef
 
 define $(package)_config_cmds
