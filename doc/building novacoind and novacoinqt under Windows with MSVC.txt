@@ -60,6 +60,7 @@ buildboost.bat
 -Скачайте http://miniupnp.free.fr/files/download.php?file=miniupnpc-1.8.20131209.tar.gz
 -Распакуйте miniupnpc-1.8.20131209.tar.gz с помощью 7z. (Распаковать нужно 2 раза, нажмите на файле miniupnpc-1.8.20131209.tar.gz левой кнопкой мыши и выберите 7-Zip, затем Распаковать здесь. Появится файл miniupnpc-1.8.20131209.tar. С ним аналогично, левая кнопка мыши -> 7-Zip -> Распаковать здесь. Появится папка miniupnpc-1.8.20131209. 
 -Переименуйте папку в miniupnpc.
+-Если вам нужна поддержка Windows XP, то откройте файл miniupnpc.c и добавьте после всех инклудов #undef IF_NAMESIZE 
 -Откройте командную строку Windows и выполните следующий код:
 
 cd C:\MyProjects\Deps\build-helpers
