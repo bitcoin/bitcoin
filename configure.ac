@@ -281,6 +281,12 @@ case $host in
            AC_PATH_TOOL([INSTALLNAMETOOL], [install_name_tool], install_name_tool)
            AC_PATH_TOOL([OTOOL], [otool], otool)
            AC_PATH_PROGS([GENISOIMAGE], [genisoimage mkisofs],genisoimage)
+
+           dnl libtool will try to strip the static lib, which is a problem for
+           dnl cross-builds because strip attempts to call a hard-coded ld,
+           dnl which may not exist in the path. Stripping the .a is not
+           dnl necessary, so just disable it.
+           old_striplib=
            ;;
        esac
      fi
