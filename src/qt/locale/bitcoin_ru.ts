@@ -153,8 +153,8 @@
 <context>
   <name>QObject</name>
   <message>
-    <source>from  %1 NVC to %2 NVC</source>
-    <translation>от %1 NVC до %2 NVC</translation>
+    <source>from  %1 to %2</source>
+    <translation>от %1 до %2</translation>
   </message>
   <message>
     <source>%1 d</source>

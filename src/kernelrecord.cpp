@@ -77,17 +77,14 @@ int64 KernelRecord::getAge() const
     return (GetAdjustedTime() - nTime) / 86400;
 }
 
-double KernelRecord::getPoSReward(double difficulty, int minutes)
+int64 KernelRecord::getPoSReward(int nBits, int minutes)
 {
     double PoSReward;
-    int nWeight = GetAdjustedTime() - nTime + minutes * 60;
+    int64 nWeight = GetAdjustedTime() - nTime + minutes * 60;
     if( nWeight <  nStakeMinAge)
         return 0;
     uint64 coinAge = (nValue * nWeight ) / (COIN * 86400);
-    double nRewardCoinYear = floor(pow((0.03125 / difficulty), 1.0/3) *100)/100;
-    nRewardCoinYear = min(nRewardCoinYear,1.0);
-    PoSReward = (coinAge * nRewardCoinYear )/365;
-    PoSReward = min(PoSReward,10.0);
+    PoSReward = GetProofOfStakeReward(coinAge, nBits, GetAdjustedTime() + minutes * 60);
     return PoSReward;
 }
 

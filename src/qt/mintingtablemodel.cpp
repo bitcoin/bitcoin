@@ -367,10 +367,9 @@ QString MintingTableModel::lookupAddress(const std::string &address, bool toolti
 QString MintingTableModel::formatTxPoSReward(KernelRecord *wtx) const
 {
     QString posReward;
-    const CBlockIndex *p = GetLastBlockIndex(pindexBest, true);
-    double difficulty = GetDifficulty(p);
-    posReward += QString(QObject::tr("from  %1 NVC to %2 NVC")).arg(QString::number(wtx->getPoSReward(difficulty, 0),'f', 6), 
-                 QString::number(wtx->getPoSReward(difficulty, mintingInterval),'f', 6)); 
+    int nBits = GetLastBlockIndex(pindexBest, true)->nBits;
+    posReward += QString(QObject::tr("from  %1 to %2")).arg(BitcoinUnits::formatWithUnit(BitcoinUnits::BTC, wtx->getPoSReward(nBits, 0)), 
+        BitcoinUnits::formatWithUnit(BitcoinUnits::BTC, wtx->getPoSReward(nBits, mintingInterval))); 
     return posReward;
 }
 
@@ -464,4 +463,3 @@ QModelIndex MintingTableModel::index(int row, int column, const QModelIndex &par
         return QModelIndex();
     }
 }
-
