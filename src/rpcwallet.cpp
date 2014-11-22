@@ -735,6 +735,8 @@ Value movecmd(const Array& params, bool fHelp)
     if (!walletdb.TxnCommit())
         throw JSONRPCError(RPC_DATABASE_ERROR, "database error");
 
+    pwalletMain->fUsingAccounts = true;
+
     return true;
 }
 
@@ -795,6 +797,8 @@ Value sendfrom(const Array& params, bool fHelp)
     string strError = pwalletMain->SendMoney(address.Get(), nAmount, wtx);
     if (strError != "")
         throw JSONRPCError(RPC_WALLET_ERROR, strError);
+
+    pwalletMain->fUsingAccounts = true;
 
     return wtx.GetHash().GetHex();
 }
@@ -1580,6 +1584,37 @@ Value backupwallet(const Array& params, bool fHelp)
         throw JSONRPCError(RPC_WALLET_ERROR, "Error: Wallet backup failed!");
 
     return Value::null;
+}
+
+Value prunewallet(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() > 1)
+        throw runtime_error(
+            "prunewallet ( n )\n"
+            "\nErase transactions older than <n> days and without unspent outputs from the wallet. Useful to shrink and speed up large wallets.\n"
+            "Only transactions which are safe to prune are erased regarding the wallet balance and block reorganizations.\n"
+            "\nNote: A rescan would add the pruned transactions again. To prevent this add prunewallet=<n> to your bitcoin.conf\n"
+            "\nArguments:\n"
+            "1. n   (numeric, optional, default=1) Transactions older than this in days will be erased. So a value of 7 keeps all txs from last week.\n"
+            "\nResult:\n"
+            "txspruned    (numeric) Number of pruned transactions.\n"
+            "\nExamples:\n"
+            + HelpExampleCli("prunewallet", "1")
+            + HelpExampleRpc("prunewallet", "1")
+        );
+
+    int days = 1;
+    if (params.size() > 0)
+        days = params[0].get_int();
+    if (days < 1)
+        throw JSONRPCError(RPC_WALLET_ERROR, "Error: Parameter n must be >= 1");
+
+    int64_t nPruned = pwalletMain->PruneWallet(days);
+
+    if (nPruned == -1)
+        throw JSONRPCError(RPC_WALLET_ERROR, "Error: Sorry, but wallet pruning is not supported if you are using the account-feature.");
+
+    return nPruned;
 }
 
 

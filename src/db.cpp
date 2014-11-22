@@ -306,6 +306,11 @@ void CDB::Close()
     }
 }
 
+void CDB::Compact()
+{
+    pdb->compact(NULL, NULL, NULL, NULL, DB_FREE_SPACE, NULL);
+}
+
 void CDBEnv::CloseDb(const string& strFile)
 {
     {

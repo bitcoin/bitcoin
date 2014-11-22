@@ -11,6 +11,7 @@
 #include "net.h"
 #include "script/script.h"
 #include "script/sign.h"
+#include "stxo.h"
 #include "timedata.h"
 #include "util.h"
 #include "utilmoneystr.h"
@@ -30,6 +31,7 @@ unsigned int nTxConfirmTarget = 1;
 bool bSpendZeroConfChange = true;
 bool fSendFreeTransactions = false;
 bool fPayAtLeastCustomFee = true;
+int nPruneWallet = 0; // 0 = pruning disabled
 
 /** 
  * Fees smaller than this (in satoshi) are considered zero fee (for transaction creation) 
@@ -379,7 +381,7 @@ void CWallet::SyncMetaData(pair<TxSpends::iterator, TxSpends::iterator> range)
  * Outpoint is spent if any non-conflicted transaction
  * spends it:
  */
-bool CWallet::IsSpent(const uint256& hash, unsigned int n) const
+bool CWallet::IsSpent(const uint256& hash, unsigned int n, int nMinConf) const
 {
     const COutPoint outpoint(hash, n);
     pair<TxSpends::const_iterator, TxSpends::const_iterator> range;
@@ -389,7 +391,7 @@ bool CWallet::IsSpent(const uint256& hash, unsigned int n) const
     {
         const uint256& wtxid = it->second;
         std::map<uint256, CWalletTx>::const_iterator mit = mapWallet.find(wtxid);
-        if (mit != mapWallet.end() && mit->second.GetDepthInMainChain() >= 0)
+        if (mit != mapWallet.end() && mit->second.GetDepthInMainChain() >= nMinConf)
             return true; // Spent
     }
     return false;
@@ -403,7 +405,6 @@ void CWallet::AddToSpends(const COutPoint& outpoint, const uint256& wtxid)
     range = mapTxSpends.equal_range(outpoint);
     SyncMetaData(range);
 }
-
 
 void CWallet::AddToSpends(const uint256& wtxid)
 {
@@ -680,7 +681,7 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn, bool fFromLoadWallet)
  * pblock is optional, but should be provided if the transaction is known to be in a block.
  * If fUpdate is true, existing transactions will be updated.
  */
-bool CWallet::AddToWalletIfInvolvingMe(const CTransaction& tx, const CBlock* pblock, bool fUpdate)
+bool CWallet::AddToWalletIfInvolvingMe(const CTransaction& tx, const CBlock* pblock, bool fUpdate, CSTXO* pstxo)
 {
     {
         AssertLockHeld(cs_wallet);
@@ -692,6 +693,11 @@ bool CWallet::AddToWalletIfInvolvingMe(const CTransaction& tx, const CBlock* pbl
             // Get merkle branch if transaction was found in a block
             if (pblock)
                 wtx.SetMerkleBranch(*pblock);
+            if (!fExisted && pstxo && wtx.IsPrunable(nPruneWallet, pstxo)) // called from rescan
+            {
+                LogPrint("wallet", "Skip prunable wtx %s\n", wtx.GetHash().ToString());
+                return false;
+            }
             return AddToWallet(wtx);
         }
     }
@@ -714,18 +720,136 @@ void CWallet::SyncTransaction(const CTransaction& tx, const CBlock* pblock)
     }
 }
 
-void CWallet::EraseFromWallet(const uint256 &hash)
+void CWallet::EraseFromWallet(std::map<uint256, CWalletTx>::iterator it, CWalletDB& walletdb)
 {
-    if (!fFileBacked)
+    AssertLockHeld(cs_wallet);
+    if (it == mapWallet.end())
         return;
+    const CWalletTx& wtx = it->second;
+    const uint256 hash = wtx.GetHash();
+
+    // Remove from mapTxSpends
+    if (!wtx.IsCoinBase())
     {
-        LOCK(cs_wallet);
-        if (mapWallet.erase(hash))
-            CWalletDB(strWalletFile).EraseTx(hash);
+        BOOST_FOREACH(const CTxIn& txin, wtx.vin)
+        {
+            pair<TxSpends::iterator, TxSpends::iterator> range = mapTxSpends.equal_range(txin.prevout);
+            for (TxSpends::iterator it2 = range.first; it2 != range.second; ++it2) {
+                if (hash == it2->second) {
+                    mapTxSpends.erase(it2);
+                    break;
+                }
+            }
+        }
     }
+
+    mapWallet.erase(it);
+
+    if (fFileBacked)
+        walletdb.EraseTx(hash);
+
+    NotifyTransactionChanged(this, hash, CT_DELETED);
+    LogPrintf("EraseFromWallet %s\n", hash.ToString());
+
     return;
 }
 
+void CWallet::EraseFromWallet(const uint256 &hash)
+{
+    LOCK(cs_wallet);
+    CWalletDB walletdb(strWalletFile);
+    EraseFromWallet(mapWallet.find(hash), walletdb);
+}
+
+bool CWalletTx::IsPrunable(int nDays, CSTXO* pstxo, std::set<const CWalletTx*> *pIsPrunableCache) const
+{
+    const CBlockIndex* pindexRet;
+
+    if (pIsPrunableCache && pIsPrunableCache->count(this))
+        return true;
+
+    // check if tx is old enough
+    if (GetDepthInMainChain(pindexRet) < 100) // at least 100 confirmations
+        return false;
+    if (!pindexRet || GetTime() - (int64_t)pindexRet->nTime < (int64_t)nDays * (int64_t)86400)
+        return false;
+
+    // check if our outputs are completely spent and also the spenders deep enough in the chain (>= 100 confirmations)
+    for (unsigned int i = 0; i < vout.size(); i++)
+    {
+        if (pwallet->IsMine(vout[i]) != ISMINE_NO)
+        {
+            if (pstxo) // called from rescan
+            {
+                CCoins coins;
+                if (pcoinsTip->GetCoins(GetHash(), coins))
+                    if (i < coins.vout.size() && !coins.vout[i].IsNull())
+                        return false; // we have an unspent output => do not prune
+
+                COutPoint outpoint(GetHash(), i);
+                if (pstxo->IsRecentlySpent(outpoint))
+                    return false; // spent, but not deep enough in the chain => do not prune
+            }
+            else // called from PruneWallet(..)
+            {
+                if (!pwallet->IsSpent(GetHash(), i, 100))
+                    return false; // unspent or spender not deep enough => do not prune
+            }
+        }
+    }
+
+    // check if the inputs we spent, are also pruned/prunable, so that they wouldnt require us as a spent-flag anymore anyway
+    BOOST_FOREACH(const CTxIn& txin, vin)
+    {
+        std::map<uint256, CWalletTx>::const_iterator it = pwallet->mapWallet.find(txin.prevout.hash);
+        if (it != pwallet->mapWallet.end() && !it->second.IsPrunable(nDays, pstxo, pIsPrunableCache))
+            return false;
+    }
+
+    if (pIsPrunableCache)
+        pIsPrunableCache->insert(this);
+
+    return true;
+}
+
+int64_t CWallet::PruneWallet(int nDays)
+{
+    if (nDays < 1)
+        return 0;
+
+    if (fUsingAccounts) // wallet pruning is not supported if someone uses the account-feature as this would destroy account-balances
+        return -1;
+
+    LOCK2(cs_main, cs_wallet);
+
+    ShowProgress(_("Pruning wallet..."), 0);
+    unsigned int i = 0;
+    std::set<const CWalletTx*> *pIsPrunableCache = new std::set<const CWalletTx*>();
+    vector<map<uint256, CWalletTx>::iterator> vDeletes;
+    for (map<uint256, CWalletTx>::iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
+    {
+        if (i++ % 100 == 0)
+            ShowProgress(_("Pruning wallet..."), std::max(1, std::min(99, (int)((double)(i) / (double)(mapWallet.size()) * 20))));
+
+        if (it->second.IsPrunable(nDays, NULL, pIsPrunableCache))
+            vDeletes.push_back(it);
+    }
+    delete pIsPrunableCache;
+
+    if (!vDeletes.empty())
+    {
+        CWalletDB walletdb(strWalletFile);
+        for (unsigned int i = 0; i < vDeletes.size(); ++i)
+        {
+            ShowProgress(_("Pruning wallet..."), std::max(1, std::min(99, (int)20 + (int)((double)(i) / (double)(vDeletes.size()) * 80))));
+            EraseFromWallet(vDeletes[i], walletdb);
+        }
+        walletdb.Flush();
+        walletdb.Compact();
+    }
+    ShowProgress(_("Pruning wallet..."), 100);
+    return vDeletes.size();
+}
 
 isminetype CWallet::IsMine(const CTxIn &txin) const
 {
@@ -940,6 +1064,10 @@ int CWallet::ScanForWalletTransactions(CBlockIndex* pindexStart, bool fUpdate)
         while (pindex && nTimeFirstKey && (pindex->GetBlockTime() < (nTimeFirstKey - 7200)))
             pindex = chainActive.Next(pindex);
 
+        CSTXO* pstxo = NULL;
+        if (nPruneWallet > 0)
+            pstxo = new CSTXO(chainActive.Tip(), 100);
+
         ShowProgress(_("Rescanning..."), 0); // show rescan progress in GUI as dialog or on splashscreen, if -rescan on startup
         double dProgressStart = Checkpoints::GuessVerificationProgress(pindex, false);
         double dProgressTip = Checkpoints::GuessVerificationProgress(chainActive.Tip(), false);
@@ -952,7 +1080,7 @@ int CWallet::ScanForWalletTransactions(CBlockIndex* pindexStart, bool fUpdate)
             ReadBlockFromDisk(block, pindex);
             BOOST_FOREACH(CTransaction& tx, block.vtx)
             {
-                if (AddToWalletIfInvolvingMe(tx, &block, fUpdate))
+                if (AddToWalletIfInvolvingMe(tx, &block, fUpdate, pstxo))
                     ret++;
             }
             pindex = chainActive.Next(pindex);
@@ -961,6 +1089,8 @@ int CWallet::ScanForWalletTransactions(CBlockIndex* pindexStart, bool fUpdate)
                 LogPrintf("Still rescanning. At block %d. Progress=%f\n", pindex->nHeight, Checkpoints::GuessVerificationProgress(pindex));
             }
         }
+
+        delete pstxo;
         ShowProgress(_("Rescanning..."), 100); // hide progress dialog in GUI
     }
     return ret;
