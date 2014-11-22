@@ -106,8 +106,21 @@ script: |
     ./configure --prefix=${BASEPREFIX}/${i} --bindir=${INSTALLPATH}/bin --includedir=${INSTALLPATH}/include --libdir=${INSTALLPATH}/lib --disable-ccache --disable-maintainer-mode --disable-dependency-tracking ${CONFIGFLAGS}
     make ${MAKEOPTS}
     make install-strip
+
+    make deploydir
+    mkdir -p unsigned-app-${i}
+    cp contrib/macdeploy/detached-sig-apply.sh unsigned-app-${i}
+    cp contrib/macdeploy/detached-sig-create.sh unsigned-app-${i}
+    cp ${BASEPREFIX}/${i}/native/bin/dmg ${BASEPREFIX}/${i}/native/bin/genisoimage unsigned-app-${i}
+    cp ${BASEPREFIX}/${i}/native/bin/${i}-codesign_allocate unsigned-app-${i}/codesign_allocate
+    cp ${BASEPREFIX}/${i}/native/bin/${i}-pagestuff unsigned-app-${i}/pagestuff
+    mv dist unsigned-app-${i}
+    pushd unsigned-app-${i}
+    find . | sort | tar --no-recursion -czf ${OUTDIR}/${DISTNAME}-osx-unsigned.tar.gz -T -
+    popd
+
     make deploy
-    ${WRAP_DIR}/dmg dmg Bitcoin-Qt.dmg ${OUTDIR}/${DISTNAME}-osx.dmg
+    ${WRAP_DIR}/dmg dmg Bitcoin-Qt.dmg ${OUTDIR}/${DISTNAME}-osx-unsigned.dmg
 
     cd installed
     find . -name "lib*.la" -delete
