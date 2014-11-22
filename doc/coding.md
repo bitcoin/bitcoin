@@ -115,8 +115,6 @@ Threads
 
 - StartNode : Starts other threads.
 
-- ThreadGetMyExternalIP : Determines outside-the-firewall IP address, sends addr message to connected peers when it determines it.
-
 - ThreadDNSAddressSeed : Loads addresses of peers from the DNS.
 
 - ThreadMapPort : Universal plug-and-play startup/shutdown
