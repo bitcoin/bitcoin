@@ -369,7 +369,7 @@ QString MintingTableModel::formatTxPoSReward(KernelRecord *wtx) const
     QString posReward;
     const CBlockIndex *p = GetLastBlockIndex(pindexBest, true);
     double difficulty = GetDifficulty(p);
-    posReward += QString(QObject::tr("Potential PoS reward = from  %1 to %2 ")).arg(QString::number(wtx->getPoSReward(difficulty, 0),'f', 6), 
+    posReward += QString(QObject::tr("from  %1 NVC to %2 NVC")).arg(QString::number(wtx->getPoSReward(difficulty, 0),'f', 6), 
                  QString::number(wtx->getPoSReward(difficulty, mintingInterval),'f', 6)); 
     return posReward;
 }

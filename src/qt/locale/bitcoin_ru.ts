@@ -45,6 +45,16 @@
       <translation>90 дней</translation>
     </message>
     <message>
+      <location filename="../mintingview.cpp" line="101"/>
+      <source>Copy transaction ID of input</source>
+      <translation>Скопировать ID транзакции входа</translation>
+    </message>
+    <message>
+      <location filename="../mintingview.cpp" line="102"/>
+      <source>Copy address of input</source>
+      <translation>Скопировать адрес входа</translation>
+    </message>
+    <message>
       <location filename="../mintingview.cpp" line="167"/>
       <source>Export Minting Data</source>
       <translation>Экспортировать данные таблицы</translation>
@@ -143,8 +153,8 @@
 <context>
   <name>QObject</name>
   <message>
-    <source>Potential PoS reward = from  %1 to %2 </source>
-    <translation>Потенциальная PoS награда = от %1 до %2 </translation>
+    <source>from  %1 NVC to %2 NVC</source>
+    <translation>от %1 NVC до %2 NVC</translation>
   </message>
   <message>
     <source>%1 d</source>
