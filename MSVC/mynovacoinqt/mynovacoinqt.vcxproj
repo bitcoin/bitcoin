@@ -42,7 +42,7 @@
     <PrimaryOutput>mynovacoinqt</PrimaryOutput>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
-    <PlatformToolSet>v110</PlatformToolSet>
+    <PlatformToolSet>v110_xp</PlatformToolSet>
     <OutputDirectory>release\</OutputDirectory>
     <ATLMinimizesCRunTimeLibraryUsage>false</ATLMinimizesCRunTimeLibraryUsage>
     <ConfigurationType>Application</ConfigurationType>
@@ -152,7 +152,7 @@ C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2\qtbase\bin\lrelease C:\MyP
       <ExceptionHandling>Sync</ExceptionHandling>
       <ObjectFileName>$(IntDir)</ObjectFileName>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>USE_UPNP;USE_QRCODE;UNICODE;WIN32;QT_CORE_LIB;QT_GUI_LIB;QT_WIDGETS_LIB;QT_GUI;_SCL_SECURE_NO_WARNINGS;USE_LEVELDB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>USE_UPNP;USE_QRCODE;UNICODE;WIN32;_WIN32;QT_CORE_LIB;QT_GUI_LIB;QT_WIDGETS_LIB;QT_GUI;_SCL_SECURE_NO_WARNINGS;USE_LEVELDB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessToFile>false</PreprocessToFile>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <SuppressStartupBanner>true</SuppressStartupBanner>
