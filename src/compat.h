@@ -70,5 +70,4 @@ inline int myclosesocket(SOCKET& hSocket)
 }
 #define closesocket(s)      myclosesocket(s)
 
-
 #endif
