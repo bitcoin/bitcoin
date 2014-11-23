@@ -368,8 +368,8 @@ QString MintingTableModel::formatTxPoSReward(KernelRecord *wtx) const
 {
     QString posReward;
     int nBits = GetLastBlockIndex(pindexBest, true)->nBits;
-    posReward += QString(QObject::tr("from  %1 to %2")).arg(BitcoinUnits::formatWithUnit(BitcoinUnits::BTC, wtx->getPoSReward(nBits, 0)), 
-        BitcoinUnits::formatWithUnit(BitcoinUnits::BTC, wtx->getPoSReward(nBits, mintingInterval))); 
+    posReward += QString(QObject::tr("from  %1 to %2")).arg(BitcoinUnits::formatWithUnit(walletModel->getOptionsModel()->getDisplayUnit(), wtx->getPoSReward(nBits, 0)), 
+        BitcoinUnits::formatWithUnit(walletModel->getOptionsModel()->getDisplayUnit(), wtx->getPoSReward(nBits, mintingInterval))); 
     return posReward;
 }
 
@@ -412,7 +412,7 @@ QString MintingTableModel::formatTxAge(const KernelRecord *wtx) const
 
 QString MintingTableModel::formatTxBalance(const KernelRecord *wtx) const
 {
-    return BitcoinUnits::format(walletModel->getOptionsModel()->getDisplayUnit(), wtx->nValue);
+    return BitcoinUnits::formatWithUnit(walletModel->getOptionsModel()->getDisplayUnit(), wtx->nValue);
 }
 
 QVariant MintingTableModel::headerData(int section, Qt::Orientation orientation, int role) const
