@@ -728,11 +728,9 @@ bool AppInit2(boost::thread_group& threadGroup)
         if (!addrProxy.IsValid())
             return InitError(strprintf(_("Invalid -proxy address: '%s'"), mapArgs["-proxy"]));
 
-        if (!IsLimited(NET_IPV4))
-            SetProxy(NET_IPV4, addrProxy, nSocksVersion);
+        SetProxy(NET_IPV4, addrProxy, nSocksVersion);
         if (nSocksVersion > 4) {
-            if (!IsLimited(NET_IPV6))
-                SetProxy(NET_IPV6, addrProxy, nSocksVersion);
+            SetProxy(NET_IPV6, addrProxy, nSocksVersion);
             SetNameProxy(addrProxy, nSocksVersion);
         }
         fProxy = true;
