@@ -4,9 +4,9 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "irc.h"
-#include "net.h"
 #include "strlcpy.h"
 #include "base58.h"
+#include "net.h"
 
 using namespace std;
 using namespace boost;

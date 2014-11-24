@@ -12,6 +12,9 @@
 #define NOMINMAX
 #endif
 #ifndef _MSC_VER
+#ifdef FD_SETSIZE
+#undef FD_SETSIZE
+#endif
 #define FD_SETSIZE 1024 // max number of fds in fd_set
 #endif
 #include <winsock2.h>
