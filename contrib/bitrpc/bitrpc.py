@@ -21,8 +21,8 @@ if cmd == "backupwallet":
         path = raw_input("Enter destination path/filename: ")
         print access.backupwallet(path)
     except:
-        print "\n---An error occurred---\n"
-        
+        raise
+
 elif cmd == "encryptwallet":
     try:
         pwd = getpass.getpass(prompt="Enter passphrase: ")
@@ -33,28 +33,28 @@ elif cmd == "encryptwallet":
         else:
             print "\n---Passphrases do not match---\n"
     except:
-        print "\n---An error occurred---\n"
+        raise
 
 elif cmd == "getaccount":
     try:
         addr = raw_input("Enter a Bitcoin address: ")
         print access.getaccount(addr)
     except:
-        print "\n---An error occurred---\n"
+        raise
 
 elif cmd == "getaccountaddress":
     try:
         acct = raw_input("Enter an account name: ")
         print access.getaccountaddress(acct)
     except:
-        print "\n---An error occurred---\n"
+        raise
 
 elif cmd == "getaddressesbyaccount":
     try:
         acct = raw_input("Enter an account name: ")
         print access.getaddressesbyaccount(acct)
     except:
-        print "\n---An error occurred---\n"
+        raise
 
 elif cmd == "getbalance":
     try:
@@ -65,56 +65,56 @@ elif cmd == "getbalance":
         except:
             print access.getbalance()
     except:
-        print "\n---An error occurred---\n"
+        raise
 
 elif cmd == "getblockbycount":
     try:
         height = raw_input("Height: ")
         print access.getblockbycount(height)
     except:
-        print "\n---An error occurred---\n"
+        raise
 
 elif cmd == "getblockcount":
     try:
         print access.getblockcount()
     except:
-        print "\n---An error occurred---\n"
+        raise
 
 elif cmd == "getblocknumber":
     try:
         print access.getblocknumber()
     except:
-        print "\n---An error occurred---\n"
+        raise
 
 elif cmd == "getconnectioncount":
     try:
         print access.getconnectioncount()
     except:
-        print "\n---An error occurred---\n"
+        raise
 
 elif cmd == "getdifficulty":
     try:
         print access.getdifficulty()
     except:
-        print "\n---An error occurred---\n"
+        raise
 
 elif cmd == "getgenerate":
     try:
         print access.getgenerate()
     except:
-        print "\n---An error occurred---\n"
+        raise
 
 elif cmd == "gethashespersec":
     try:
         print access.gethashespersec()
     except:
-        print "\n---An error occurred---\n"
+        raise
 
 elif cmd == "getinfo":
     try:
         print access.getinfo()
     except:
-        print "\n---An error occurred---\n"
+        raise
 
 elif cmd == "getnewaddress":
     try:
@@ -124,7 +124,7 @@ elif cmd == "getnewaddress":
         except:
             print access.getnewaddress()
     except:
-        print "\n---An error occurred---\n"
+        raise
 
 elif cmd == "getreceivedbyaccount":
     try:
@@ -135,7 +135,7 @@ elif cmd == "getreceivedbyaccount":
         except:
             print access.getreceivedbyaccount()
     except:
-        print "\n---An error occurred---\n"
+        raise
 
 elif cmd == "getreceivedbyaddress":
     try:
@@ -146,14 +146,14 @@ elif cmd == "getreceivedbyaddress":
         except:
             print access.getreceivedbyaddress()
     except:
-        print "\n---An error occurred---\n"
+        raise
 
 elif cmd == "gettransaction":
     try:
         txid = raw_input("Enter a transaction ID: ")
         print access.gettransaction(txid)
     except:
-        print "\n---An error occurred---\n"
+        raise
 
 elif cmd == "getwork":
     try:
@@ -163,7 +163,7 @@ elif cmd == "getwork":
         except:
             print access.gettransaction()
     except:
-        print "\n---An error occurred---\n"
+        raise
 
 elif cmd == "help":
     try:
@@ -173,7 +173,7 @@ elif cmd == "help":
         except:
             print access.help()
     except:
-        print "\n---An error occurred---\n"
+        raise
 
 elif cmd == "listaccounts":
     try:
@@ -183,7 +183,7 @@ elif cmd == "listaccounts":
         except:
             print access.listaccounts()
     except:
-        print "\n---An error occurred---\n"
+        raise
 
 elif cmd == "listreceivedbyaccount":
     try:
@@ -194,7 +194,7 @@ elif cmd == "listreceivedbyaccount":
         except:
             print access.listreceivedbyaccount()
     except:
-        print "\n---An error occurred---\n"
+        raise
 
 elif cmd == "listreceivedbyaddress":
     try:
@@ -205,7 +205,7 @@ elif cmd == "listreceivedbyaddress":
         except:
             print access.listreceivedbyaddress()
     except:
-        print "\n---An error occurred---\n"
+        raise
 
 elif cmd == "listtransactions":
     try:
@@ -217,7 +217,7 @@ elif cmd == "listtransactions":
         except:
             print access.listtransactions()
     except:
-        print "\n---An error occurred---\n"
+        raise
 
 elif cmd == "move":
     try:
@@ -231,7 +231,7 @@ elif cmd == "move":
         except:
             print access.move(frm, to, amt)
     except:
-        print "\n---An error occurred---\n"
+        raise
 
 elif cmd == "sendfrom":
     try:
@@ -246,7 +246,7 @@ elif cmd == "sendfrom":
         except:
             print access.sendfrom(frm, to, amt)
     except:
-        print "\n---An error occurred---\n"
+        raise
 
 elif cmd == "sendmany":
     try:
@@ -259,7 +259,7 @@ elif cmd == "sendmany":
         except:
             print access.sendmany(frm,to)
     except:
-        print "\n---An error occurred---\n"
+        raise
 
 elif cmd == "sendtoaddress":
     try:
@@ -272,7 +272,7 @@ elif cmd == "sendtoaddress":
         except:
             print access.sendtoaddress(to,amt)
     except:
-        print "\n---An error occurred---\n"
+        raise
 
 elif cmd == "setaccount":
     try:
@@ -280,7 +280,7 @@ elif cmd == "setaccount":
         acct = raw_input("Account:")
         print access.setaccount(addr,acct)
     except:
-        print "\n---An error occurred---\n"
+        raise
 
 elif cmd == "setgenerate":
     try:
@@ -291,27 +291,27 @@ elif cmd == "setgenerate":
         except:
             print access.setgenerate(gen)
     except:
-        print "\n---An error occurred---\n"
+        raise
 
 elif cmd == "settxfee":
     try:
         amt = raw_input("Amount:")
         print access.settxfee(amt)
     except:
-        print "\n---An error occurred---\n"
+        raise
 
 elif cmd == "stop":
     try:
         print access.stop()
     except:
-        print "\n---An error occurred---\n"
+        raise
 
 elif cmd == "validateaddress":
     try:
         addr = raw_input("Address: ")
         print access.validateaddress(addr)
     except:
-        print "\n---An error occurred---\n"
+        raise
 
 elif cmd == "walletpassphrase":
     try:
@@ -319,7 +319,7 @@ elif cmd == "walletpassphrase":
         access.walletpassphrase(pwd, 60)
         print "\n---Wallet unlocked---\n"
     except:
-        print "\n---An error occurred---\n"
+        raise
 
 elif cmd == "walletpassphrasechange":
     try:
@@ -329,9 +329,6 @@ elif cmd == "walletpassphrasechange":
         print
         print "\n---Passphrase changed---\n"
     except:
-        print
-        print "\n---An error occurred---\n"
-        print
+        raise
 
 else:
-    print "Command not found or not supported"
