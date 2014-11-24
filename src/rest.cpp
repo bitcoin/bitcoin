@@ -1,17 +1,18 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2012 The Bitcoin developers
-// Distributed under the MIT/X11 software license, see the accompanying
+// Copyright (c) 2009-2014 The Bitcoin developers
+// Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <boost/algorithm/string.hpp>
-#include "rpcserver.h"
-#include "streams.h"
-#include "utilstrencodings.h"
 #include "core/block.h"
 #include "core/transaction.h"
-#include "version.h"
 #include "main.h"
+#include "rpcserver.h"
+#include "streams.h"
 #include "sync.h"
+#include "utilstrencodings.h"
+#include "version.h"
+
+#include <boost/algorithm/string.hpp>
 
 using namespace std;
 using namespace json_spirit;
@@ -163,7 +164,7 @@ static bool rest_tx(AcceptedConnection *conn,
         string strJSON = write_string(Value(objTx), false) + "\n";
         conn->stream() << HTTPReply(HTTP_OK, strJSON, fRun) << std::flush;
         return true;
-     }
+    }
     }
 
     // not reached
@@ -203,4 +204,3 @@ bool HTTPReq_REST(AcceptedConnection *conn,
     conn->stream() << HTTPError(HTTP_NOT_FOUND, false) << std::flush;
     return false;
 }
-

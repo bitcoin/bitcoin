@@ -13,8 +13,9 @@
 #include <stdexcept>
 #include <vector>
 
-struct CExtPubKey;
 class CPubKey;
+
+struct CExtPubKey;
 
 /** 
  * secp256k1:
