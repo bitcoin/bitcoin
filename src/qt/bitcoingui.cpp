@@ -490,9 +490,12 @@ void BitcoinGUI::createTrayIcon()
     trayIconMenu->addSeparator();
     trayIconMenu->addAction(optionsAction);
     trayIconMenu->addAction(openRPCConsoleAction);
-#ifndef Q_OS_MAC // This is built-in on Mac
+#ifndef Q_OS_MAC
+    // This is built-in on Mac
     trayIconMenu->addSeparator();
     trayIconMenu->addAction(quitAction);
+
+    notificator = new Notificator(qApp->applicationName(), trayIcon, 0);
 #endif
 }
 
