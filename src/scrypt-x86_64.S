@@ -64,128 +64,129 @@
 	movl	%r11d, do+56(dest); \
 
 
-#define gen_salsa8_core_doubleround() \
+
+#define salsa8_core_gen_doubleround() \
 	movq	72(%rsp), %r15; \
 	leaq	(%r14, %rdx), %rbp; \
 	roll	$7, %ebp; \
-	xorq	%rbp, %r9; \
+	xorl	%ebp, %r9d; \
 	leaq	(%rdi, %r15), %rbp; \
 	roll	$7, %ebp; \
-	xorq	%rbp, %r10; \
+	xorl	%ebp, %r10d; \
 	leaq	(%rdx, %r9), %rbp; \
 	roll	$9, %ebp; \
-	xorq	%rbp, %r11; \
+	xorl	%ebp, %r11d; \
 	leaq	(%r15, %r10), %rbp; \
 	roll	$9, %ebp; \
-	xorq	%rbp, %r13; \
+	xorl	%ebp, %r13d; \
 	leaq	(%r9, %r11), %rbp; \
 	roll	$13, %ebp; \
-	xorq	%rbp, %r14; \
+	xorl	%ebp, %r14d; \
 	leaq	(%r10, %r13), %rbp; \
 	roll	$13, %ebp; \
-	xorq	%rbp, %rdi; \
+	xorl	%ebp, %edi; \
 	leaq	(%r11, %r14), %rbp; \
 	roll	$18, %ebp; \
-	xorq	%rbp, %rdx; \
+	xorl	%ebp, %edx; \
 	leaq	(%r13, %rdi), %rbp; \
 	roll	$18, %ebp; \
-	xorq	%rbp, %r15; \
+	xorl	%ebp, %r15d; \
 	movq	48(%rsp), %rbp; \
 	movq	%r15, 72(%rsp); \
 	leaq	(%rax, %rbp), %r15; \
 	roll	$7, %r15d; \
-	xorq	%r15, %rbx; \
+	xorl	%r15d, %ebx; \
 	leaq	(%rbp, %rbx), %r15; \
 	roll	$9, %r15d; \
-	xorq	%r15, %rcx; \
+	xorl	%r15d, %ecx; \
 	leaq	(%rbx, %rcx), %r15; \
 	roll	$13, %r15d; \
-	xorq	%r15, %rax; \
+	xorl	%r15d, %eax; \
 	leaq	(%rcx, %rax), %r15; \
 	roll	$18, %r15d; \
-	xorq	%r15, %rbp; \
+	xorl	%r15d, %ebp; \
 	movq	88(%rsp), %r15; \
 	movq	%rbp, 48(%rsp); \
 	leaq	(%r12, %r15), %rbp; \
 	roll	$7, %ebp; \
-	xorq	%rbp, %rsi; \
+	xorl	%ebp, %esi; \
 	leaq	(%r15, %rsi), %rbp; \
 	roll	$9, %ebp; \
-	xorq	%rbp, %r8; \
+	xorl	%ebp, %r8d; \
 	leaq	(%rsi, %r8), %rbp; \
 	roll	$13, %ebp; \
-	xorq	%rbp, %r12; \
+	xorl	%ebp, %r12d; \
 	leaq	(%r8, %r12), %rbp; \
 	roll	$18, %ebp; \
-	xorq	%rbp, %r15; \
+	xorl	%ebp, %r15d; \
 	movq	%r15, 88(%rsp); \
 	movq	72(%rsp), %r15; \
 	leaq	(%rsi, %rdx), %rbp; \
 	roll	$7, %ebp; \
-	xorq	%rbp, %rdi; \
+	xorl	%ebp, %edi; \
 	leaq	(%r9, %r15), %rbp; \
 	roll	$7, %ebp; \
-	xorq	%rbp, %rax; \
+	xorl	%ebp, %eax; \
 	leaq	(%rdx, %rdi), %rbp; \
 	roll	$9, %ebp; \
-	xorq	%rbp, %rcx; \
+	xorl	%ebp, %ecx; \
 	leaq	(%r15, %rax), %rbp; \
 	roll	$9, %ebp; \
-	xorq	%rbp, %r8; \
+	xorl	%ebp, %r8d; \
 	leaq	(%rdi, %rcx), %rbp; \
 	roll	$13, %ebp; \
-	xorq	%rbp, %rsi; \
+	xorl	%ebp, %esi; \
 	leaq	(%rax, %r8), %rbp; \
 	roll	$13, %ebp; \
-	xorq	%rbp, %r9; \
+	xorl	%ebp, %r9d; \
 	leaq	(%rcx, %rsi), %rbp; \
 	roll	$18, %ebp; \
-	xorq	%rbp, %rdx; \
+	xorl	%ebp, %edx; \
 	leaq	(%r8, %r9), %rbp; \
 	roll	$18, %ebp; \
-	xorq	%rbp, %r15; \
+	xorl	%ebp, %r15d; \
 	movq	48(%rsp), %rbp; \
 	movq	%r15, 72(%rsp); \
 	leaq	(%r10, %rbp), %r15; \
 	roll	$7, %r15d; \
-	xorq	%r15, %r12; \
+	xorl	%r15d, %r12d; \
 	leaq	(%rbp, %r12), %r15; \
 	roll	$9, %r15d; \
-	xorq	%r15, %r11; \
+	xorl	%r15d, %r11d; \
 	leaq	(%r12, %r11), %r15; \
 	roll	$13, %r15d; \
-	xorq	%r15, %r10; \
+	xorl	%r15d, %r10d; \
 	leaq	(%r11, %r10), %r15; \
 	roll	$18, %r15d; \
-	xorq	%r15, %rbp; \
+	xorl	%r15d, %ebp; \
 	movq	88(%rsp), %r15; \
 	movq	%rbp, 48(%rsp); \
 	leaq	(%rbx, %r15), %rbp; \
 	roll	$7, %ebp; \
-	xorq	%rbp, %r14; \
+	xorl	%ebp, %r14d; \
 	leaq	(%r15, %r14), %rbp; \
 	roll	$9, %ebp; \
-	xorq	%rbp, %r13; \
+	xorl	%ebp, %r13d; \
 	leaq	(%r14, %r13), %rbp; \
 	roll	$13, %ebp; \
-	xorq	%rbp, %rbx; \
+	xorl	%ebp, %ebx; \
 	leaq	(%r13, %rbx), %rbp; \
 	roll	$18, %ebp; \
-	xorq	%rbp, %r15; \
+	xorl	%ebp, %r15d; \
 	movq	%r15, 88(%rsp); \
 
 
 	.text
-	.align 32
-gen_salsa8_core:
-	# 0: %rdx, %rdi, %rcx, %rsi
+	.p2align 6
+salsa8_core_gen:
+	/* 0: %rdx, %rdi, %rcx, %rsi */
 	movq	8(%rsp), %rdi
 	movq	%rdi, %rdx
 	shrq	$32, %rdi
 	movq	16(%rsp), %rsi
 	movq	%rsi, %rcx
 	shrq	$32, %rsi
-	# 1: %r9, 72(%rsp), %rax, %r8
+	/* 1: %r9, 72(%rsp), %rax, %r8 */
 	movq	24(%rsp), %r8
 	movq	%r8, %r9
 	shrq	$32, %r8
@@ -193,15 +194,15 @@ gen_salsa8_core:
 	movq	32(%rsp), %r8
 	movq	%r8, %rax
 	shrq	$32, %r8
-	# 2: %r11, %r10, 48(%rsp), %r12
+	/* 2: %r11, %r10, 48(%rsp), %r12 */
 	movq	40(%rsp), %r10
 	movq	%r10, %r11
 	shrq	$32, %r10
 	movq	48(%rsp), %r12
-	#movq	%r12, %r13
-	#movq	%r13, 48(%rsp)
+	/* movq	%r12, %r13 */
+	/* movq	%r13, 48(%rsp) */
 	shrq	$32, %r12
-	# 3: %r14, %r13, %rbx, 88(%rsp)
+	/* 3: %r14, %r13, %rbx, 88(%rsp) */
 	movq	56(%rsp), %r13
 	movq	%r13, %r14
 	shrq	$32, %r13
@@ -209,73 +210,57 @@ gen_salsa8_core:
 	movq	%r15, %rbx
 	shrq	$32, %r15
 	movq	%r15, 88(%rsp)
-
-	gen_salsa8_core_doubleround()
-	gen_salsa8_core_doubleround()
-	gen_salsa8_core_doubleround()
-	gen_salsa8_core_doubleround()
-
-	movl	%edx, %edx
+	
+	salsa8_core_gen_doubleround()
+	salsa8_core_gen_doubleround()
+	salsa8_core_gen_doubleround()
+	salsa8_core_gen_doubleround()
+	
 	shlq	$32, %rdi
-	addq	%rdi, %rdx
-	movd	%rdx, %xmm0
-
-	movl	%ecx, %ecx
+	xorq	%rdi, %rdx
+	movq	%rdx, 24(%rsp)
+	
 	shlq	$32, %rsi
-	addq	%rsi, %rcx
-	movd	%rcx, %xmm4
-
-	movq	72(%rsp), %rdi
-	movl	%r9d, %r9d
+	xorq	%rsi, %rcx
+	movq	%rcx, 32(%rsp)
+	
+	movl	72(%rsp), %edi
 	shlq	$32, %rdi
-	addq	%rdi, %r9
-	movd	%r9, %xmm1
-
-	movl	%eax, %eax
+	xorq	%rdi, %r9
+	movq	%r9, 40(%rsp)
+	
+	movl	48(%rsp), %ebp
 	shlq	$32, %r8
-	addq	%r8, %rax
-	movd	%rax, %xmm5
-
-	movl	%r11d, %r11d
+	xorq	%r8, %rax
+	movq	%rax, 48(%rsp)
+	
 	shlq	$32, %r10
-	addq	%r10, %r11
-	movd	%r11, %xmm2
-
-	movl	48(%rsp), %r8d
+	xorq	%r10, %r11
+	movq	%r11, 56(%rsp)
+	
 	shlq	$32, %r12
-	addq	%r12, %r8
-	movd	%r8, %xmm6
-
-	movl	%r14d, %r14d
+	xorq	%r12, %rbp
+	movq	%rbp, 64(%rsp)
+	
 	shlq	$32, %r13
-	addq	%r13, %r14
-	movd	%r14, %xmm3
-
-	movq	88(%rsp), %rdi
-	movl	%ebx, %ebx
-	shlq	$32, %rdi
-	addq	%rdi, %rbx
-	movd	%rbx, %xmm7
-
-	punpcklqdq	%xmm4, %xmm0
-	punpcklqdq	%xmm5, %xmm1
-	punpcklqdq	%xmm6, %xmm2
-	punpcklqdq	%xmm7, %xmm3
-
-	#movq	%rdx, 8(%rsp)
-	#movq	%rcx, 16(%rsp)
-	#movq	%r9, 24(%rsp)
-	#movq	%rax, 32(%rsp)
-	#movq	%r11, 40(%rsp)
-	#movq	%r8, 48(%rsp)
-	#movq	%r14, 56(%rsp)
-	#movq	%rbx, 64(%rsp)
-
+	xorq	%r13, %r14
+	movq	%r14, 72(%rsp)
+	
+	movdqa	24(%rsp), %xmm0
+	
+	shlq	$32, %r15
+	xorq	%r15, %rbx
+	movq	%rbx, 80(%rsp)
+	
+	movdqa	40(%rsp), %xmm1
+	movdqa	56(%rsp), %xmm2
+	movdqa	72(%rsp), %xmm3
+	
 	ret
-
-
+	
+	
 	.text
-	.align 32
+	.p2align 6
 	.globl scrypt_core
 	.globl _scrypt_core
 scrypt_core:
@@ -304,6 +289,29 @@ _scrypt_core:
 	movq	%rdx, %rsi
 #endif
 
+#if defined(WIN64)
+#define scrypt_core_cleanup() \
+	popq	%rsi; \
+	popq	%rdi; \
+	movdqa	8(%rsp), %xmm6; \
+	movdqa	24(%rsp), %xmm7; \
+	movdqa	40(%rsp), %xmm8; \
+	movdqa	56(%rsp), %xmm9; \
+	movdqa	72(%rsp), %xmm10; \
+	movdqa	88(%rsp), %xmm11; \
+	movdqa	104(%rsp), %xmm12; \
+	movdqa	120(%rsp), %xmm13; \
+	movdqa	136(%rsp), %xmm14; \
+	movdqa	152(%rsp), %xmm15; \
+	addq	$176, %rsp; \
+	popq	%r15; \
+	popq	%r14; \
+	popq	%r13; \
+	popq	%r12; \
+	popq	%rbp; \
+	popq	%rbx; \
+	
+#else
 #define scrypt_core_cleanup() \
 	popq	%r15; \
 	popq	%r14; \
@@ -311,19 +319,21 @@ _scrypt_core:
 	popq	%r12; \
 	popq	%rbp; \
 	popq	%rbx; \
+	
+#endif
 
-
-	# GenuineIntel processors have fast SIMD
+	/* GenuineIntel processors have fast SIMD */
 	xorl	%eax, %eax
 	cpuid
 	cmpl	$0x6c65746e, %ecx
-	jne gen_scrypt_core
+	jne scrypt_core_gen
 	cmpl	$0x49656e69, %edx
-	jne gen_scrypt_core
+	jne scrypt_core_gen
 	cmpl	$0x756e6547, %ebx
-	je xmm_scrypt_core
-
-gen_scrypt_core:
+	je scrypt_core_xmm
+	
+	.p2align 6
+scrypt_core_gen:
 	subq	$136, %rsp
 	movdqa	0(%rdi), %xmm8
 	movdqa	16(%rdi), %xmm9
@@ -333,12 +343,12 @@ gen_scrypt_core:
 	movdqa	80(%rdi), %xmm13
 	movdqa	96(%rdi), %xmm14
 	movdqa	112(%rdi), %xmm15
-
+	
 	leaq	131072(%rsi), %rcx
 	movq	%rdi, 104(%rsp)
 	movq	%rsi, 112(%rsp)
 	movq	%rcx, 120(%rsp)
-gen_scrypt_core_loop1:
+scrypt_core_gen_loop1:
 	movdqa	%xmm8, 0(%rsi)
 	movdqa	%xmm9, 16(%rsi)
 	movdqa	%xmm10, 32(%rsi)
@@ -347,7 +357,7 @@ gen_scrypt_core_loop1:
 	movdqa	%xmm13, 80(%rsi)
 	movdqa	%xmm14, 96(%rsi)
 	movdqa	%xmm15, 112(%rsi)
-
+	
 	pxor	%xmm12, %xmm8
 	pxor	%xmm13, %xmm9
 	pxor	%xmm14, %xmm10
@@ -357,12 +367,12 @@ gen_scrypt_core_loop1:
 	movdqa	%xmm10, 32(%rsp)
 	movdqa	%xmm11, 48(%rsp)
 	movq	%rsi, 128(%rsp)
-	call gen_salsa8_core
+	call salsa8_core_gen
 	paddd	%xmm0, %xmm8
 	paddd	%xmm1, %xmm9
 	paddd	%xmm2, %xmm10
 	paddd	%xmm3, %xmm11
-
+	
 	pxor	%xmm8, %xmm12
 	pxor	%xmm9, %xmm13
 	pxor	%xmm10, %xmm14
@@ -371,32 +381,33 @@ gen_scrypt_core_loop1:
 	movdqa	%xmm13, 16(%rsp)
 	movdqa	%xmm14, 32(%rsp)
 	movdqa	%xmm15, 48(%rsp)
-	call gen_salsa8_core
+	call salsa8_core_gen
 	movq	128(%rsp), %rsi
 	paddd	%xmm0, %xmm12
 	paddd	%xmm1, %xmm13
 	paddd	%xmm2, %xmm14
 	paddd	%xmm3, %xmm15
-
+	
 	addq	$128, %rsi
 	movq	120(%rsp), %rcx
 	cmpq	%rcx, %rsi
-	jne gen_scrypt_core_loop1
-
+	jne scrypt_core_gen_loop1
+	
 	movq	$1024, %rcx
-gen_scrypt_core_loop2:
-	movq	112(%rsp), %rsi
 	movd	%xmm12, %edx
+scrypt_core_gen_loop2:
+	movq	112(%rsp), %rsi
 	andl	$1023, %edx
 	shll	$7, %edx
-	movdqa	0(%rsi, %rdx), %xmm0
-	movdqa	16(%rsi, %rdx), %xmm1
-	movdqa	32(%rsi, %rdx), %xmm2
-	movdqa	48(%rsi, %rdx), %xmm3
-	movdqa	64(%rsi, %rdx), %xmm4
-	movdqa	80(%rsi, %rdx), %xmm5
-	movdqa	96(%rsi, %rdx), %xmm6
-	movdqa	112(%rsi, %rdx), %xmm7
+	addq	%rsi, %rdx
+	movdqa	0(%rdx), %xmm0
+	movdqa	16(%rdx), %xmm1
+	movdqa	32(%rdx), %xmm2
+	movdqa	48(%rdx), %xmm3
+	movdqa	64(%rdx), %xmm4
+	movdqa	80(%rdx), %xmm5
+	movdqa	96(%rdx), %xmm6
+	movdqa	112(%rdx), %xmm7
 	pxor	%xmm0, %xmm8
 	pxor	%xmm1, %xmm9
 	pxor	%xmm2, %xmm10
@@ -405,7 +416,7 @@ gen_scrypt_core_loop2:
 	pxor	%xmm5, %xmm13
 	pxor	%xmm6, %xmm14
 	pxor	%xmm7, %xmm15
-
+	
 	pxor	%xmm12, %xmm8
 	pxor	%xmm13, %xmm9
 	pxor	%xmm14, %xmm10
@@ -415,12 +426,12 @@ gen_scrypt_core_loop2:
 	movdqa	%xmm10, 32(%rsp)
 	movdqa	%xmm11, 48(%rsp)
 	movq	%rcx, 128(%rsp)
-	call gen_salsa8_core
+	call salsa8_core_gen
 	paddd	%xmm0, %xmm8
 	paddd	%xmm1, %xmm9
 	paddd	%xmm2, %xmm10
 	paddd	%xmm3, %xmm11
-
+	
 	pxor	%xmm8, %xmm12
 	pxor	%xmm9, %xmm13
 	pxor	%xmm10, %xmm14
@@ -429,16 +440,17 @@ gen_scrypt_core_loop2:
 	movdqa	%xmm13, 16(%rsp)
 	movdqa	%xmm14, 32(%rsp)
 	movdqa	%xmm15, 48(%rsp)
-	call gen_salsa8_core
+	call salsa8_core_gen
 	movq	128(%rsp), %rcx
+	addl	0(%rsp), %edx
 	paddd	%xmm0, %xmm12
 	paddd	%xmm1, %xmm13
 	paddd	%xmm2, %xmm14
 	paddd	%xmm3, %xmm15
-
+	
 	subq	$1, %rcx
-	ja gen_scrypt_core_loop2
-
+	ja scrypt_core_gen_loop2
+	
 	movq	104(%rsp), %rdi
 	movdqa	%xmm8, 0(%rdi)
 	movdqa	%xmm9, 16(%rdi)
@@ -448,68 +460,68 @@ gen_scrypt_core_loop2:
 	movdqa	%xmm13, 80(%rdi)
 	movdqa	%xmm14, 96(%rdi)
 	movdqa	%xmm15, 112(%rdi)
-
+	
 	addq	$136, %rsp
 	scrypt_core_cleanup()
 	ret
 
 
-#define xmm_salsa8_core_doubleround() \
+#define salsa8_core_xmm_doubleround() \
 	movdqa	%xmm1, %xmm4; \
 	paddd	%xmm0, %xmm4; \
 	movdqa	%xmm4, %xmm5; \
 	pslld	$7, %xmm4; \
 	psrld	$25, %xmm5; \
 	pxor	%xmm4, %xmm3; \
-	pxor	%xmm5, %xmm3; \
 	movdqa	%xmm0, %xmm4; \
+	pxor	%xmm5, %xmm3; \
 	paddd	%xmm3, %xmm4; \
 	movdqa	%xmm4, %xmm5; \
 	pslld	$9, %xmm4; \
 	psrld	$23, %xmm5; \
 	pxor	%xmm4, %xmm2; \
 	movdqa	%xmm3, %xmm4; \
-	pshufd	$0x93, %xmm3, %xmm3; \
 	pxor	%xmm5, %xmm2; \
+	pshufd	$0x93, %xmm3, %xmm3; \
 	paddd	%xmm2, %xmm4; \
 	movdqa	%xmm4, %xmm5; \
 	pslld	$13, %xmm4; \
 	psrld	$19, %xmm5; \
 	pxor	%xmm4, %xmm1; \
 	movdqa	%xmm2, %xmm4; \
-	pshufd	$0x4e, %xmm2, %xmm2; \
 	pxor	%xmm5, %xmm1; \
+	pshufd	$0x4e, %xmm2, %xmm2; \
 	paddd	%xmm1, %xmm4; \
 	movdqa	%xmm4, %xmm5; \
 	pslld	$18, %xmm4; \
 	psrld	$14, %xmm5; \
 	pxor	%xmm4, %xmm0; \
-	pshufd	$0x39, %xmm1, %xmm1; \
-	pxor	%xmm5, %xmm0; \
 	movdqa	%xmm3, %xmm4; \
+	pxor	%xmm5, %xmm0; \
+	pshufd	$0x39, %xmm1, %xmm1; \
 	paddd	%xmm0, %xmm4; \
 	movdqa	%xmm4, %xmm5; \
 	pslld	$7, %xmm4; \
 	psrld	$25, %xmm5; \
 	pxor	%xmm4, %xmm1; \
-	pxor	%xmm5, %xmm1; \
 	movdqa	%xmm0, %xmm4; \
+	pxor	%xmm5, %xmm1; \
 	paddd	%xmm1, %xmm4; \
 	movdqa	%xmm4, %xmm5; \
 	pslld	$9, %xmm4; \
 	psrld	$23, %xmm5; \
 	pxor	%xmm4, %xmm2; \
 	movdqa	%xmm1, %xmm4; \
-	pshufd	$0x93, %xmm1, %xmm1; \
 	pxor	%xmm5, %xmm2; \
+	pshufd	$0x93, %xmm1, %xmm1; \
 	paddd	%xmm2, %xmm4; \
 	movdqa	%xmm4, %xmm5; \
 	pslld	$13, %xmm4; \
 	psrld	$19, %xmm5; \
 	pxor	%xmm4, %xmm3; \
 	movdqa	%xmm2, %xmm4; \
-	pshufd	$0x4e, %xmm2, %xmm2; \
 	pxor	%xmm5, %xmm3; \
+	pshufd	$0x4e, %xmm2, %xmm2; \
 	paddd	%xmm3, %xmm4; \
 	movdqa	%xmm4, %xmm5; \
 	pslld	$18, %xmm4; \
@@ -519,134 +531,77 @@ gen_scrypt_core_loop2:
 	pxor	%xmm5, %xmm0; \
 
 
-#define xmm_salsa8_core() \
-	xmm_salsa8_core_doubleround(); \
-	xmm_salsa8_core_doubleround(); \
-	xmm_salsa8_core_doubleround(); \
-	xmm_salsa8_core_doubleround(); \
+#define salsa8_core_xmm() \
+	salsa8_core_xmm_doubleround(); \
+	salsa8_core_xmm_doubleround(); \
+	salsa8_core_xmm_doubleround(); \
+	salsa8_core_xmm_doubleround(); \
 
-
-	.align 32
-xmm_scrypt_core:
-	# shuffle 1st block into %xmm8-%xmm11
-	movl	60(%rdi), %edx
-	movl	44(%rdi), %ecx
-	movl	28(%rdi), %ebx
-	movl	12(%rdi), %eax
-	movd	%edx, %xmm0
-	movd	%ecx, %xmm1
-	movd	%ebx, %xmm2
-	movd	%eax, %xmm3
-	movl	40(%rdi), %ecx
-	movl	24(%rdi), %ebx
-	movl	8(%rdi), %eax
-	movl	56(%rdi), %edx
-	pshufd	$0x93, %xmm0, %xmm0
-	pshufd	$0x93, %xmm1, %xmm1
-	pshufd	$0x93, %xmm2, %xmm2
-	pshufd	$0x93, %xmm3, %xmm3
-	movd	%ecx, %xmm4
-	movd	%ebx, %xmm5
-	movd	%eax, %xmm6
-	movd	%edx, %xmm7
-	paddd	%xmm4, %xmm0
-	paddd	%xmm5, %xmm1
-	paddd	%xmm6, %xmm2
-	paddd	%xmm7, %xmm3
-	movl	20(%rdi), %ebx
-	movl	4(%rdi), %eax
-	movl	52(%rdi), %edx
-	movl	36(%rdi), %ecx
-	pshufd	$0x93, %xmm0, %xmm0
-	pshufd	$0x93, %xmm1, %xmm1
-	pshufd	$0x93, %xmm2, %xmm2
-	pshufd	$0x93, %xmm3, %xmm3
-	movd	%ebx, %xmm4
-	movd	%eax, %xmm5
-	movd	%edx, %xmm6
-	movd	%ecx, %xmm7
-	paddd	%xmm4, %xmm0
-	paddd	%xmm5, %xmm1
-	paddd	%xmm6, %xmm2
-	paddd	%xmm7, %xmm3
-	movl	0(%rdi), %eax
-	movl	48(%rdi), %edx
-	movl	32(%rdi), %ecx
-	movl	16(%rdi), %ebx
-	pshufd	$0x93, %xmm0, %xmm0
-	pshufd	$0x93, %xmm1, %xmm1
-	pshufd	$0x93, %xmm2, %xmm2
-	pshufd	$0x93, %xmm3, %xmm3
-	movd	%eax, %xmm8
-	movd	%edx, %xmm9
-	movd	%ecx, %xmm10
-	movd	%ebx, %xmm11
-	paddd	%xmm0, %xmm8
-	paddd	%xmm1, %xmm9
-	paddd	%xmm2, %xmm10
-	paddd	%xmm3, %xmm11
-
-	# shuffle 2nd block into %xmm12-%xmm15
-	movl	124(%rdi), %edx
-	movl	108(%rdi), %ecx
-	movl	92(%rdi), %ebx
-	movl	76(%rdi), %eax
-	movd	%edx, %xmm0
-	movd	%ecx, %xmm1
-	movd	%ebx, %xmm2
-	movd	%eax, %xmm3
-	movl	104(%rdi), %ecx
-	movl	88(%rdi), %ebx
-	movl	72(%rdi), %eax
-	movl	120(%rdi), %edx
-	pshufd	$0x93, %xmm0, %xmm0
-	pshufd	$0x93, %xmm1, %xmm1
-	pshufd	$0x93, %xmm2, %xmm2
-	pshufd	$0x93, %xmm3, %xmm3
-	movd	%ecx, %xmm4
-	movd	%ebx, %xmm5
-	movd	%eax, %xmm6
-	movd	%edx, %xmm7
-	paddd	%xmm4, %xmm0
-	paddd	%xmm5, %xmm1
-	paddd	%xmm6, %xmm2
-	paddd	%xmm7, %xmm3
-	movl	84(%rdi), %ebx
-	movl	68(%rdi), %eax
-	movl	116(%rdi), %edx
-	movl	100(%rdi), %ecx
-	pshufd	$0x93, %xmm0, %xmm0
-	pshufd	$0x93, %xmm1, %xmm1
-	pshufd	$0x93, %xmm2, %xmm2
-	pshufd	$0x93, %xmm3, %xmm3
-	movd	%ebx, %xmm4
-	movd	%eax, %xmm5
-	movd	%edx, %xmm6
-	movd	%ecx, %xmm7
-	paddd	%xmm4, %xmm0
-	paddd	%xmm5, %xmm1
-	paddd	%xmm6, %xmm2
-	paddd	%xmm7, %xmm3
-	movl	64(%rdi), %eax
-	movl	112(%rdi), %edx
-	movl	96(%rdi), %ecx
-	movl	80(%rdi), %ebx
-	pshufd	$0x93, %xmm0, %xmm0
-	pshufd	$0x93, %xmm1, %xmm1
-	pshufd	$0x93, %xmm2, %xmm2
-	pshufd	$0x93, %xmm3, %xmm3
-	movd	%eax, %xmm12
-	movd	%edx, %xmm13
-	movd	%ecx, %xmm14
-	movd	%ebx, %xmm15
-	paddd	%xmm0, %xmm12
-	paddd	%xmm1, %xmm13
-	paddd	%xmm2, %xmm14
-	paddd	%xmm3, %xmm15
-
+	
+	.p2align 6
+scrypt_core_xmm:
+	pcmpeqw	%xmm1, %xmm1
+	psrlq	$32, %xmm1
+	
+	movdqa	0(%rdi), %xmm8
+	movdqa	16(%rdi), %xmm11
+	movdqa	32(%rdi), %xmm10
+	movdqa	48(%rdi), %xmm9
+	movdqa	%xmm8, %xmm0
+	pxor	%xmm11, %xmm8
+	pand	%xmm1, %xmm8
+	pxor	%xmm11, %xmm8
+	pxor	%xmm10, %xmm11
+	pand	%xmm1, %xmm11
+	pxor	%xmm10, %xmm11
+	pxor	%xmm9, %xmm10
+	pand	%xmm1, %xmm10
+	pxor	%xmm9, %xmm10
+	pxor	%xmm0, %xmm9
+	pand	%xmm1, %xmm9
+	pxor	%xmm0, %xmm9
+	movdqa	%xmm8, %xmm0
+	pshufd	$0x4e, %xmm10, %xmm10
+	punpcklqdq	%xmm10, %xmm8
+	punpckhqdq	%xmm0, %xmm10
+	movdqa	%xmm11, %xmm0
+	pshufd	$0x4e, %xmm9, %xmm9
+	punpcklqdq	%xmm9, %xmm11
+	punpckhqdq	%xmm0, %xmm9
+	
+	movdqa	64(%rdi), %xmm12
+	movdqa	80(%rdi), %xmm15
+	movdqa	96(%rdi), %xmm14
+	movdqa	112(%rdi), %xmm13
+	movdqa	%xmm12, %xmm0
+	pxor	%xmm15, %xmm12
+	pand	%xmm1, %xmm12
+	pxor	%xmm15, %xmm12
+	pxor	%xmm14, %xmm15
+	pand	%xmm1, %xmm15
+	pxor	%xmm14, %xmm15
+	pxor	%xmm13, %xmm14
+	pand	%xmm1, %xmm14
+	pxor	%xmm13, %xmm14
+	pxor	%xmm0, %xmm13
+	pand	%xmm1, %xmm13
+	pxor	%xmm0, %xmm13
+	movdqa	%xmm12, %xmm0
+	pshufd	$0x4e, %xmm14, %xmm14
+	punpcklqdq	%xmm14, %xmm12
+	punpckhqdq	%xmm0, %xmm14
+	movdqa	%xmm15, %xmm0
+	pshufd	$0x4e, %xmm13, %xmm13
+	punpcklqdq	%xmm13, %xmm15
+	punpckhqdq	%xmm0, %xmm13
+	
 	movq	%rsi, %rdx
 	leaq	131072(%rsi), %rcx
-xmm_scrypt_core_loop1:
+scrypt_core_xmm_loop1:
+	pxor	%xmm12, %xmm8
+	pxor	%xmm13, %xmm9
+	pxor	%xmm14, %xmm10
+	pxor	%xmm15, %xmm11
 	movdqa	%xmm8, 0(%rdx)
 	movdqa	%xmm9, 16(%rdx)
 	movdqa	%xmm10, 32(%rdx)
@@ -655,21 +610,17 @@ xmm_scrypt_core_loop1:
 	movdqa	%xmm13, 80(%rdx)
 	movdqa	%xmm14, 96(%rdx)
 	movdqa	%xmm15, 112(%rdx)
-
-	pxor	%xmm12, %xmm8
-	pxor	%xmm13, %xmm9
-	pxor	%xmm14, %xmm10
-	pxor	%xmm15, %xmm11
+	
 	movdqa	%xmm8, %xmm0
 	movdqa	%xmm9, %xmm1
 	movdqa	%xmm10, %xmm2
 	movdqa	%xmm11, %xmm3
-	xmm_salsa8_core()
+	salsa8_core_xmm()
 	paddd	%xmm0, %xmm8
 	paddd	%xmm1, %xmm9
 	paddd	%xmm2, %xmm10
 	paddd	%xmm3, %xmm11
-
+	
 	pxor	%xmm8, %xmm12
 	pxor	%xmm9, %xmm13
 	pxor	%xmm10, %xmm14
@@ -678,38 +629,26 @@ xmm_scrypt_core_loop1:
 	movdqa	%xmm13, %xmm1
 	movdqa	%xmm14, %xmm2
 	movdqa	%xmm15, %xmm3
-	xmm_salsa8_core()
+	salsa8_core_xmm()
 	paddd	%xmm0, %xmm12
 	paddd	%xmm1, %xmm13
 	paddd	%xmm2, %xmm14
 	paddd	%xmm3, %xmm15
-
+	
 	addq	$128, %rdx
 	cmpq	%rcx, %rdx
-	jne xmm_scrypt_core_loop1
-
+	jne scrypt_core_xmm_loop1
+	
 	movq	$1024, %rcx
-xmm_scrypt_core_loop2:
+scrypt_core_xmm_loop2:
 	movd	%xmm12, %edx
 	andl	$1023, %edx
 	shll	$7, %edx
-	movdqa	0(%rsi, %rdx), %xmm0
-	movdqa	16(%rsi, %rdx), %xmm1
-	movdqa	32(%rsi, %rdx), %xmm2
-	movdqa	48(%rsi, %rdx), %xmm3
-	movdqa	64(%rsi, %rdx), %xmm4
-	movdqa	80(%rsi, %rdx), %xmm5
-	movdqa	96(%rsi, %rdx), %xmm6
-	movdqa	112(%rsi, %rdx), %xmm7
-	pxor	%xmm0, %xmm8
-	pxor	%xmm1, %xmm9
-	pxor	%xmm2, %xmm10
-	pxor	%xmm3, %xmm11
-	pxor	%xmm4, %xmm12
-	pxor	%xmm5, %xmm13
-	pxor	%xmm6, %xmm14
-	pxor	%xmm7, %xmm15
-
+	pxor	0(%rsi, %rdx), %xmm8
+	pxor	16(%rsi, %rdx), %xmm9
+	pxor	32(%rsi, %rdx), %xmm10
+	pxor	48(%rsi, %rdx), %xmm11
+	
 	pxor	%xmm12, %xmm8
 	pxor	%xmm13, %xmm9
 	pxor	%xmm14, %xmm10
@@ -718,12 +657,16 @@ xmm_scrypt_core_loop2:
 	movdqa	%xmm9, %xmm1
 	movdqa	%xmm10, %xmm2
 	movdqa	%xmm11, %xmm3
-	xmm_salsa8_core()
+	salsa8_core_xmm()
 	paddd	%xmm0, %xmm8
 	paddd	%xmm1, %xmm9
 	paddd	%xmm2, %xmm10
 	paddd	%xmm3, %xmm11
-
+	
+	pxor	64(%rsi, %rdx), %xmm12
+	pxor	80(%rsi, %rdx), %xmm13
+	pxor	96(%rsi, %rdx), %xmm14
+	pxor	112(%rsi, %rdx), %xmm15
 	pxor	%xmm8, %xmm12
 	pxor	%xmm9, %xmm13
 	pxor	%xmm10, %xmm14
@@ -732,128 +675,71 @@ xmm_scrypt_core_loop2:
 	movdqa	%xmm13, %xmm1
 	movdqa	%xmm14, %xmm2
 	movdqa	%xmm15, %xmm3
-	xmm_salsa8_core()
+	salsa8_core_xmm()
 	paddd	%xmm0, %xmm12
 	paddd	%xmm1, %xmm13
 	paddd	%xmm2, %xmm14
 	paddd	%xmm3, %xmm15
-
+	
 	subq	$1, %rcx
-	ja xmm_scrypt_core_loop2
-
-	# re-shuffle 1st block back
-	movd	%xmm8, %eax
-	movd	%xmm9, %edx
-	movd	%xmm10, %ecx
-	movd	%xmm11, %ebx
-	pshufd	$0x39, %xmm8, %xmm8
-	pshufd	$0x39, %xmm9, %xmm9
-	pshufd	$0x39, %xmm10, %xmm10
-	pshufd	$0x39, %xmm11, %xmm11
-	movl	%eax, 0(%rdi)
-	movl	%edx, 48(%rdi)
-	movl	%ecx, 32(%rdi)
-	movl	%ebx, 16(%rdi)
-	movd	%xmm8, %ebx
-	movd	%xmm9, %eax
-	movd	%xmm10, %edx
-	movd	%xmm11, %ecx
-	pshufd	$0x39, %xmm8, %xmm8
-	pshufd	$0x39, %xmm9, %xmm9
-	pshufd	$0x39, %xmm10, %xmm10
-	pshufd	$0x39, %xmm11, %xmm11
-	movl	%ebx, 20(%rdi)
-	movl	%eax, 4(%rdi)
-	movl	%edx, 52(%rdi)
-	movl	%ecx, 36(%rdi)
-	movd	%xmm8, %ecx
-	movd	%xmm9, %ebx
-	movd	%xmm10, %eax
-	movd	%xmm11, %edx
-	pshufd	$0x39, %xmm8, %xmm8
-	pshufd	$0x39, %xmm9, %xmm9
-	pshufd	$0x39, %xmm10, %xmm10
-	pshufd	$0x39, %xmm11, %xmm11
-	movl	%ecx, 40(%rdi)
-	movl	%ebx, 24(%rdi)
-	movl	%eax, 8(%rdi)
-	movl	%edx, 56(%rdi)
-	movd	%xmm8, %edx
-	movd	%xmm9, %ecx
-	movd	%xmm10, %ebx
-	movd	%xmm11, %eax
-	movl	%edx, 60(%rdi)
-	movl	%ecx, 44(%rdi)
-	movl	%ebx, 28(%rdi)
-	movl	%eax, 12(%rdi)
-
-	# re-shuffle 2nd block back
-	movd	%xmm12, %eax
-	movd	%xmm13, %edx
-	movd	%xmm14, %ecx
-	movd	%xmm15, %ebx
-	pshufd	$0x39, %xmm12, %xmm12
-	pshufd	$0x39, %xmm13, %xmm13
-	pshufd	$0x39, %xmm14, %xmm14
-	pshufd	$0x39, %xmm15, %xmm15
-	movl	%eax, 64(%rdi)
-	movl	%edx, 112(%rdi)
-	movl	%ecx, 96(%rdi)
-	movl	%ebx, 80(%rdi)
-	movd	%xmm12, %ebx
-	movd	%xmm13, %eax
-	movd	%xmm14, %edx
-	movd	%xmm15, %ecx
-	pshufd	$0x39, %xmm12, %xmm12
-	pshufd	$0x39, %xmm13, %xmm13
-	pshufd	$0x39, %xmm14, %xmm14
-	pshufd	$0x39, %xmm15, %xmm15
-	movl	%ebx, 84(%rdi)
-	movl	%eax, 68(%rdi)
-	movl	%edx, 116(%rdi)
-	movl	%ecx, 100(%rdi)
-	movd	%xmm12, %ecx
-	movd	%xmm13, %ebx
-	movd	%xmm14, %eax
-	movd	%xmm15, %edx
-	pshufd	$0x39, %xmm12, %xmm12
-	pshufd	$0x39, %xmm13, %xmm13
-	pshufd	$0x39, %xmm14, %xmm14
-	pshufd	$0x39, %xmm15, %xmm15
-	movl	%ecx, 104(%rdi)
-	movl	%ebx, 88(%rdi)
-	movl	%eax, 72(%rdi)
-	movl	%edx, 120(%rdi)
-	movd	%xmm12, %edx
-	movd	%xmm13, %ecx
-	movd	%xmm14, %ebx
-	movd	%xmm15, %eax
-	movl	%edx, 124(%rdi)
-	movl	%ecx, 108(%rdi)
-	movl	%ebx, 92(%rdi)
-	movl	%eax, 76(%rdi)
-
+	ja scrypt_core_xmm_loop2
+	
+	pcmpeqw	%xmm1, %xmm1
+	psrlq	$32, %xmm1
+	
+	movdqa	%xmm8, %xmm0
+	pxor	%xmm9, %xmm8
+	pand	%xmm1, %xmm8
+	pxor	%xmm9, %xmm8
+	pxor	%xmm10, %xmm9
+	pand	%xmm1, %xmm9
+	pxor	%xmm10, %xmm9
+	pxor	%xmm11, %xmm10
+	pand	%xmm1, %xmm10
+	pxor	%xmm11, %xmm10
+	pxor	%xmm0, %xmm11
+	pand	%xmm1, %xmm11
+	pxor	%xmm0, %xmm11
+	movdqa	%xmm8, %xmm0
+	pshufd	$0x4e, %xmm10, %xmm10
+	punpcklqdq	%xmm10, %xmm8
+	punpckhqdq	%xmm0, %xmm10
+	movdqa	%xmm9, %xmm0
+	pshufd	$0x4e, %xmm11, %xmm11
+	punpcklqdq	%xmm11, %xmm9
+	punpckhqdq	%xmm0, %xmm11
+	movdqa	%xmm8, 0(%rdi)
+	movdqa	%xmm11, 16(%rdi)
+	movdqa	%xmm10, 32(%rdi)
+	movdqa	%xmm9, 48(%rdi)
+	
+	movdqa	%xmm12, %xmm0
+	pxor	%xmm13, %xmm12
+	pand	%xmm1, %xmm12
+	pxor	%xmm13, %xmm12
+	pxor	%xmm14, %xmm13
+	pand	%xmm1, %xmm13
+	pxor	%xmm14, %xmm13
+	pxor	%xmm15, %xmm14
+	pand	%xmm1, %xmm14
+	pxor	%xmm15, %xmm14
+	pxor	%xmm0, %xmm15
+	pand	%xmm1, %xmm15
+	pxor	%xmm0, %xmm15
+	movdqa	%xmm12, %xmm0
+	pshufd	$0x4e, %xmm14, %xmm14
+	punpcklqdq	%xmm14, %xmm12
+	punpckhqdq	%xmm0, %xmm14
+	movdqa	%xmm13, %xmm0
+	pshufd	$0x4e, %xmm15, %xmm15
+	punpcklqdq	%xmm15, %xmm13
+	punpckhqdq	%xmm0, %xmm15
+	movdqa	%xmm12, 64(%rdi)
+	movdqa	%xmm15, 80(%rdi)
+	movdqa	%xmm14, 96(%rdi)
+	movdqa	%xmm13, 112(%rdi)
+	
 	scrypt_core_cleanup()
 	ret
-
-	addq	$392, %rsp
-#if defined(WIN64)
-	popq	%rsi
-	popq	%rdi
-	movdqa	8(%rsp), %xmm6
-	movdqa	24(%rsp), %xmm7
-	movdqa	40(%rsp), %xmm8
-	movdqa	56(%rsp), %xmm9
-	movdqa	72(%rsp), %xmm10
-	movdqa	88(%rsp), %xmm11
-	movdqa	104(%rsp), %xmm12
-	movdqa	120(%rsp), %xmm13
-	movdqa	136(%rsp), %xmm14
-	movdqa	152(%rsp), %xmm15
-	addq	$176, %rsp
-#endif
-	popq	%rbp
-	popq	%rbx
-	ret
-
+	
 #endif
