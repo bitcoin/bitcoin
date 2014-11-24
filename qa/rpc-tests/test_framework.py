@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # Copyright (c) 2014 The Bitcoin Core developers
-# Distributed under the MIT/X11 software license, see the accompanying
+# Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 # Base class for RPC testing
@@ -21,22 +21,64 @@ from util import *
 class BitcoinTestFramework(object):
 
     # These may be over-ridden by subclasses:
-    def run_test(self, nodes):
+    def run_test(self):
+        for node in self.nodes:
             assert_equal(node.getblockcount(), 200)
             assert_equal(node.getbalance(), 25*50)
 
     def add_options(self, parser):
         pass
 
-    def setup_chain(self, tmp_directory):
-        print("Initializing test directory "+tmp_directory)
-        initialize_chain(tmp_directory)
+    def setup_chain(self):
+        print("Initializing test directory "+self.options.tmpdir)
+        initialize_chain(self.options.tmpdir)
 
-    def setup_network(self, tmp_directory):
-        nodes = start_nodes(2, tmp_directory)
-        connect_nodes(nodes[1], 0)
-        sync_blocks(nodes)
-        return nodes
+    def setup_network(self, split = False):
+        self.nodes = start_nodes(4, self.options.tmpdir)
+
+        # Connect the nodes as a "chain".  This allows us
+        # to split the network between nodes 1 and 2 to get
+        # two halves that can work on competing chains.
+
+        # If we joined network halves, connect the nodes from the joint
+        # on outward.  This ensures that chains are properly reorganised.
+        if not split:
+            connect_nodes_bi(self.nodes, 1, 2)
+            sync_blocks(self.nodes[1:3])
+            sync_mempools(self.nodes[1:3])
+
+        connect_nodes_bi(self.nodes, 0, 1)
+        connect_nodes_bi(self.nodes, 2, 3)
+        self.is_network_split = split
+        self.sync_all()
+
+    def split_network(self):
+        """
+        Split the network of four nodes into nodes 0/1 and 2/3.
+        """
+        assert not self.is_network_split
+        stop_nodes(self.nodes)
+        wait_bitcoinds()
+        self.setup_network(True)
+
+    def sync_all(self):
+        if self.is_network_split:
+            sync_blocks(self.nodes[:2])
+            sync_blocks(self.nodes[2:])
+            sync_mempools(self.nodes[:2])
+            sync_mempools(self.nodes[2:])
+        else:
+            sync_blocks(self.nodes)
+            sync_mempools(self.nodes)
+
+    def join_network(self):
+        """
+        Join the (previously split) network halves together.
+        """
+        assert self.is_network_split
+        stop_nodes(self.nodes)
+        wait_bitcoinds()
+        self.setup_network(False)
 
     def main(self):
         import optparse
@@ -48,23 +90,28 @@ class BitcoinTestFramework(object):
                           help="Source directory containing bitcoind/bitcoin-cli (default: %default%)")
         parser.add_option("--tmpdir", dest="tmpdir", default=tempfile.mkdtemp(prefix="test"),
                           help="Root directory for datadirs")
+        parser.add_option("--tracerpc", dest="trace_rpc", default=False, action="store_true",
+                          help="Print out all RPC calls as they are made")
         self.add_options(parser)
         (self.options, self.args) = parser.parse_args()
+
+        if self.options.trace_rpc:
+            import logging
+            logging.basicConfig(level=logging.DEBUG)
 
         os.environ['PATH'] = self.options.srcdir+":"+os.environ['PATH']
 
         check_json_precision()
 
         success = False
-        nodes = []
         try:
             if not os.path.isdir(self.options.tmpdir):
                 os.makedirs(self.options.tmpdir)
-            self.setup_chain(self.options.tmpdir)
+            self.setup_chain()
 
-            nodes = self.setup_network(self.options.tmpdir)
+            self.setup_network()
 
-            self.run_test(nodes)
+            self.run_test()
 
             success = True
 
@@ -80,7 +127,7 @@ class BitcoinTestFramework(object):
 
         if not self.options.nocleanup:
             print("Cleaning up")
-            stop_nodes(nodes)
+            stop_nodes(self.nodes)
             wait_bitcoinds()
             shutil.rmtree(self.options.tmpdir)
 

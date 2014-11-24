@@ -5,8 +5,7 @@ This guide will show you how to build bitcoind(headless client) for OSX.
 Notes
 -----
 
-* Tested on OS X 10.6 through 10.9 on 64-bit Intel processors only.
-Older OSX releases or 32-bit processors are no longer supported.
+* Tested on OS X 10.7 through 10.10 on 64-bit Intel processors only.
 
 * All of the commands should be executed in a Terminal application. The
 built-in one is located in `/Applications/Utilities`.
@@ -39,7 +38,7 @@ Instructions: Homebrew
 
 #### Install dependencies using Homebrew
 
-        brew install autoconf automake libtool boost miniupnpc openssl pkg-config protobuf qt
+        brew install autoconf automake libtool boost miniupnpc openssl pkg-config protobuf qt gmp
 
 #### Installing berkeley-db4 using Homebrew
 
@@ -85,6 +84,22 @@ After exiting, you'll get a warning that the install is keg-only, which means it
 
         make install
 
+Use Qt Creator as IDE
+------------------------
+You can use Qt Creator as IDE, for debugging and for manipulating forms, etc.
+Download Qt Creator from http://www.qt.io/download/. Download the "community edition" and only install Qt Creator (uncheck the rest during the installation process).
+
+1. Make sure you installed everything through homebrew mentioned above 
+2. Do a proper ./configure --with-gui=qt5 --enable-debug
+3. In Qt Creator do "New Project" -> Import Project -> Import Existing Project
+4. Enter "bitcoin-qt" as project name, enter src/qt as location
+5. Leave the file selection as it is
+6. Confirm the "summary page"
+7. In the "Projects" tab select "Manage Kits..."
+8. Select the default "Desktop" kit and select "Clang (x86 64bit in /usr/bin)" as compiler
+9. Select LLDB as debugger (you might need to set the path to your installtion)
+10. Start debugging with Qt Creator
+
 Creating a release build
 ------------------------
 You can ignore this section if you are building `bitcoind` for your own use.
@@ -96,9 +111,9 @@ as follows for maximum compatibility:
 
 All dependencies should be compiled with these flags:
 
- -mmacosx-version-min=10.6
+ -mmacosx-version-min=10.7
  -arch x86_64
- -isysroot $(xcode-select --print-path)/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.6.sdk
+ -isysroot $(xcode-select --print-path)/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.7.sdk
 
 Once dependencies are compiled, see release-process.md for how the Bitcoin-Qt.app
 bundle is packaged and signed to create the .dmg disk image that is distributed.

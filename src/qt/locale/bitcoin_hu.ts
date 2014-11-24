@@ -391,10 +391,6 @@
         <translation>Fül eszköztár</translation>
     </message>
     <message>
-        <source>[testnet]</source>
-        <translation>[teszthálózat]</translation>
-    </message>
-    <message>
         <source>Bitcoin Core</source>
         <translation>Bitcoin Core</translation>
     </message>
@@ -433,10 +429,6 @@
     <message>
         <source>No block source available...</source>
         <translation>Blokk forrása ismeretlen...</translation>
-    </message>
-    <message>
-        <source>Processed %1 blocks of transaction history.</source>
-        <translation>A tranzakció-történet %1 blokkja feldolgozva.</translation>
     </message>
     <message numerus="yes">
         <source>%n hour(s)</source>
@@ -893,15 +885,7 @@ Cím: %4
         <source>Error</source>
         <translation>Hiba</translation>
     </message>
-    <message>
-        <source>GB of free space available</source>
-        <translation>GB hely érhető el</translation>
-    </message>
-    <message>
-        <source>(of %1GB needed)</source>
-        <translation>( ebből %1GB szükséges)</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>OpenURIDialog</name>
     <message>
@@ -1063,10 +1047,6 @@ Cím: %4
         <translation>A kijelzett információ lehet, hogy elavult. A pénztárcája automatikusan szinkronizálja magát a Bitcoin hálózattal miután a kapcsolat létrejön, de ez e folyamat még nem fejeződött be.</translation>
     </message>
     <message>
-        <source>Wallet</source>
-        <translation>Tárca</translation>
-    </message>
-    <message>
         <source>Available:</source>
         <translation>Elérhető:</translation>
     </message>
@@ -1097,10 +1077,6 @@ Cím: %4
     <message>
         <source>Your current total balance</source>
         <translation>Aktuális egyenleged</translation>
-    </message>
-    <message>
-        <source>&lt;b&gt;Recent transactions&lt;/b&gt;</source>
-        <translation>&lt;b&gt;Legutóbbi tranzakciók&lt;/b&gt;</translation>
     </message>
     <message>
         <source>out of sync</source>
@@ -1288,14 +1264,6 @@ Cím: %4
     <message>
         <source>never</source>
         <translation>soha</translation>
-    </message>
-    <message>
-        <source>Yes</source>
-        <translation>Igen</translation>
-    </message>
-    <message>
-        <source>No</source>
-        <translation>Nem</translation>
     </message>
     </context>
 <context>
@@ -2078,27 +2046,9 @@ Cím: %4
 </translation>
     </message>
     <message>
-        <source>Specify configuration file (default: bitcoin.conf)</source>
-        <translation>Konfigurációs fájl (alapértelmezett: bitcoin.conf)
-</translation>
-    </message>
-    <message>
-        <source>Specify pid file (default: bitcoind.pid)</source>
-        <translation>pid-fájl (alapértelmezett: bitcoind.pid)
-</translation>
-    </message>
-    <message>
         <source>Specify data directory</source>
         <translation>Adatkönyvtár
 </translation>
-    </message>
-    <message>
-        <source>Listen for connections on &lt;port&gt; (default: 8333 or testnet: 18333)</source>
-        <translation>Csatlakozásokhoz figyelendő &lt;port&gt; (alapértelmezett: 8333 or testnet: 18333)</translation>
-    </message>
-    <message>
-        <source>Maintain at most &lt;n&gt; connections to peers (default: 125)</source>
-        <translation>Maximálisan &lt;n&gt; számú kapcsolat fenntartása a peerekkel (alapértelmezés: 125)</translation>
     </message>
     <message>
         <source>Connect to a node to retrieve peer addresses, and disconnect</source>
@@ -2107,18 +2057,6 @@ Cím: %4
     <message>
         <source>Specify your own public address</source>
         <translation>Adja meg az Ön saját nyilvános címét</translation>
-    </message>
-    <message>
-        <source>Threshold for disconnecting misbehaving peers (default: 100)</source>
-        <translation>Helytelenül viselkedő peerek leválasztási határértéke (alapértelmezés: 100)</translation>
-    </message>
-    <message>
-        <source>Number of seconds to keep misbehaving peers from reconnecting (default: 86400)</source>
-        <translation>Helytelenül viselkedő peerek kizárási ideje másodpercben (alapértelmezés: 86400)</translation>
-    </message>
-    <message>
-        <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 8332 or testnet: 18332)</source>
-        <translation>JSON-RPC csatlakozásokhoz figyelendő &lt;port&gt; (alapértelmezett: 8332 or testnet: 18332)</translation>
     </message>
     <message>
         <source>Accept command line and JSON-RPC commands</source>
@@ -2188,60 +2126,8 @@ Cím: %4
         <translation>Hiba: kevés a hely a lemezen!</translation>
     </message>
     <message>
-        <source>Error: system error: </source>
-        <translation>Hiba: rendszerhiba:</translation>
-    </message>
-    <message>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
         <translation>Egyik hálózati porton sem sikerül hallgatni. Használja a -listen=0 kapcsolót, ha ezt szeretné.</translation>
-    </message>
-    <message>
-        <source>Failed to read block info</source>
-        <translation>A blokkinformáció olvasása nem sikerült</translation>
-    </message>
-    <message>
-        <source>Failed to read block</source>
-        <translation>A blokk olvasása nem sikerült</translation>
-    </message>
-    <message>
-        <source>Failed to sync block index</source>
-        <translation>A blokkindex szinkronizálása nem sikerült</translation>
-    </message>
-    <message>
-        <source>Failed to write block index</source>
-        <translation>A blokkindex írása nem sikerült</translation>
-    </message>
-    <message>
-        <source>Failed to write block info</source>
-        <translation>A blokkinformáció írása nem sikerült</translation>
-    </message>
-    <message>
-        <source>Failed to write block</source>
-        <translation>A blokk írása nem sikerült</translation>
-    </message>
-    <message>
-        <source>Failed to write file info</source>
-        <translation>A fájlinformáció írása nem sikerült</translation>
-    </message>
-    <message>
-        <source>Failed to write to coin database</source>
-        <translation>Az érme-adatbázis írása nem sikerült</translation>
-    </message>
-    <message>
-        <source>Failed to write transaction index</source>
-        <translation>A tranzakcióindex írása nem sikerült</translation>
-    </message>
-    <message>
-        <source>Failed to write undo data</source>
-        <translation>A stornóadatok írása nem sikerült</translation>
-    </message>
-    <message>
-        <source>Generate coins (default: 0)</source>
-        <translation>Érmék generálása (alapértelmezett: 0)</translation>
-    </message>
-    <message>
-        <source>How many blocks to check at startup (default: 288, 0 = all)</source>
-        <translation>Hány blokkot ellenőrizzen induláskor (alapértelmezett: 288, 0 = mindet)</translation>
     </message>
     <message>
         <source>Importing...</source>
@@ -2284,32 +2170,12 @@ Cím: %4
         <translation>Érvénytelen -mintxfee=&lt;amount&gt;: '%s' összeg</translation>
     </message>
     <message>
-        <source>Maintain a full transaction index (default: 0)</source>
-        <translation>Teljes tranzakcióindex megőrzése (alapértelmezett: 0)</translation>
-    </message>
-    <message>
-        <source>Only accept block chain matching built-in checkpoints (default: 1)</source>
-        <translation>Csak blokklánccal egyező beépített ellenőrző pontok elfogadása (alapértelmezés: 1)</translation>
-    </message>
-    <message>
-        <source>Only connect to nodes in network &lt;net&gt; (IPv4, IPv6 or Tor)</source>
-        <translation>Csak a &lt;net&gt; hálózat csomópontjaihoz kapcsolódjon (IPv4, IPv6 vagy Tor)</translation>
-    </message>
-    <message>
         <source>Send trace/debug info to console instead of debug.log file</source>
         <translation>trace/debug információ küldése a konzolra a debog.log fájl helyett</translation>
     </message>
     <message>
         <source>Signing transaction failed</source>
         <translation>Tranzakció aláírása sikertelen</translation>
-    </message>
-    <message>
-        <source>Specify connection timeout in milliseconds (default: 5000)</source>
-        <translation>Csatlakozás időkerete milliszekundumban (alapértelmezett: 5000)</translation>
-    </message>
-    <message>
-        <source>System error: </source>
-        <translation>Rendszerhiba:</translation>
     </message>
     <message>
         <source>This is experimental software.</source>
@@ -2326,10 +2192,6 @@ Cím: %4
     <message>
         <source>Transaction too large</source>
         <translation>Túl nagy tranzakció</translation>
-    </message>
-    <message>
-        <source>Use UPnP to map the listening port (default: 0)</source>
-        <translation>UPnP-használat engedélyezése a figyelő port feltérképezésénél (default: 0)</translation>
     </message>
     <message>
         <source>Use UPnP to map the listening port (default: 1 when listening)</source>
@@ -2358,11 +2220,6 @@ Cím: %4
         <translation>A Tárca frissítése a legfrissebb formátumra</translation>
     </message>
     <message>
-        <source>Set key pool size to &lt;n&gt; (default: 100)</source>
-        <translation>Kulcskarika mérete &lt;n&gt; (alapértelmezett: 100)
-</translation>
-    </message>
-    <message>
         <source>Rescan the block chain for missing wallet transactions</source>
         <translation>Blokklánc újraszkennelése hiányzó tárca-tranzakciók után
 </translation>
@@ -2370,16 +2227,6 @@ Cím: %4
     <message>
         <source>Use OpenSSL (https) for JSON-RPC connections</source>
         <translation>OpenSSL (https) használata JSON-RPC csatalkozásokhoz
-</translation>
-    </message>
-    <message>
-        <source>Server certificate file (default: server.cert)</source>
-        <translation>Szervertanúsítvány-fájl (alapértelmezett: server.cert)
-</translation>
-    </message>
-    <message>
-        <source>Server private key (default: server.pem)</source>
-        <translation>Szerver titkos kulcsa (alapértelmezett: server.pem)
 </translation>
     </message>
     <message>

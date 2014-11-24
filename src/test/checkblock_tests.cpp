@@ -8,6 +8,7 @@
 
 
 
+#include "clientversion.h"
 #include "main.h"
 #include "utiltime.h"
 
@@ -36,7 +37,7 @@ bool read_block(const std::string& filename, CBlock& block)
     fseek(fp, 8, SEEK_SET); // skip msgheader/size
 
     CAutoFile filein(fp, SER_DISK, CLIENT_VERSION);
-    if (!filein) return false;
+    if (filein.IsNull()) return false;
 
     filein >> block;
 

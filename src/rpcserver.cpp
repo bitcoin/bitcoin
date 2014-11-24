@@ -1,6 +1,6 @@
 // Copyright (c) 2010 Satoshi Nakamoto
 // Copyright (c) 2009-2014 The Bitcoin developers
-// Distributed under the MIT/X11 software license, see the accompanying
+// Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "rpcserver.h"
@@ -34,7 +34,11 @@ using namespace std;
 static std::string strRPCUserColonPass;
 
 static bool fRPCRunning = false;
-// These are created by StartRPCThreads, destroyed in StopRPCThreads
+static bool fRPCInWarmup = true;
+static std::string rpcWarmupStatus("RPC server started");
+static CCriticalSection cs_rpcWarmup;
+
+//! These are created by StartRPCThreads, destroyed in StopRPCThreads
 static asio::io_service* rpc_io_service = NULL;
 static map<string, boost::shared_ptr<deadline_timer> > deadlineTimers;
 static ssl::context* rpc_ssl_context = NULL;
@@ -134,9 +138,9 @@ vector<unsigned char> ParseHexO(const Object& o, string strKey)
 }
 
 
-///
-/// Note: This interface may still be subject to change.
-///
+/**
+ * Note: This interface may still be subject to change.
+ */
 
 string CRPCTable::help(string strCommand) const
 {
@@ -232,11 +236,9 @@ Value stop(const Array& params, bool fHelp)
 
 
 
-//
-// Call Table
-//
-
-
+/**
+ * Call Table
+ */
 static const CRPCCommand vRPCCommands[] =
 { //  category              name                      actor (function)         okSafeMode threadSafe reqWallet
   //  --------------------- ------------------------  -----------------------  ---------- ---------- ---------
@@ -244,6 +246,7 @@ static const CRPCCommand vRPCCommands[] =
     { "control",            "getinfo",                &getinfo,                true,      false,      false }, /* uses wallet if enabled */
     { "control",            "help",                   &help,                   true,      true,       false },
     { "control",            "stop",                   &stop,                   true,      true,       false },
+    { "control",            "setmocktime",            &setmocktime,            true,      false,      false },
 
     /* P2P networking */
     { "network",            "getnetworkinfo",         &getnetworkinfo,         true,      false,      false },
@@ -454,7 +457,7 @@ private:
 
 void ServiceConnection(AcceptedConnection *conn);
 
-// Forward declaration required for RPCListen
+//! Forward declaration required for RPCListen
 template <typename Protocol, typename SocketAcceptorService>
 static void RPCAcceptHandler(boost::shared_ptr< basic_socket_acceptor<Protocol, SocketAcceptorService> > acceptor,
                              ssl::context& context,
@@ -563,13 +566,8 @@ void StartRPCThreads()
     {
         unsigned char rand_pwd[32];
         GetRandBytes(rand_pwd, 32);
-        string strWhatAmI = "To use bitcoind";
-        if (mapArgs.count("-server"))
-            strWhatAmI = strprintf(_("To use the %s option"), "\"-server\"");
-        else if (mapArgs.count("-daemon"))
-            strWhatAmI = strprintf(_("To use the %s option"), "\"-daemon\"");
         uiInterface.ThreadSafeMessageBox(strprintf(
-            _("%s, you must set a rpcpassword in the configuration file:\n"
+            _("To use bitcoind, or the -server option to bitcoin-qt, you must set an rpcpassword in the configuration file:\n"
               "%s\n"
               "It is recommended you use the following random password:\n"
               "rpcuser=bitcoinrpc\n"
@@ -579,10 +577,9 @@ void StartRPCThreads()
               "If the file does not exist, create it with owner-readable-only file permissions.\n"
               "It is also recommended to set alertnotify so you are notified of problems;\n"
               "for example: alertnotify=echo %%s | mail -s \"Bitcoin Alert\" admin@foo.com\n"),
-                strWhatAmI,
                 GetConfigFile().string(),
                 EncodeBase58(&rand_pwd[0],&rand_pwd[0]+32)),
-                "", CClientUIInterface::MSG_ERROR);
+                "", CClientUIInterface::MSG_ERROR | CClientUIInterface::SECURE);
         StartShutdown();
         return;
     }
@@ -670,7 +667,7 @@ void StartRPCThreads()
 
             fListening = true;
             rpc_acceptors.push_back(acceptor);
-            // If dual IPv6/IPv4 bind succesful, skip binding to IPv4 separately
+            // If dual IPv6/IPv4 bind successful, skip binding to IPv4 separately
             if(bBindAny && bindAddress == asio::ip::address_v6::any() && !v6_only_error)
                 break;
         }
@@ -745,6 +742,19 @@ void StopRPCThreads()
 bool IsRPCRunning()
 {
     return fRPCRunning;
+}
+
+void SetRPCWarmupStatus(const std::string& newStatus)
+{
+    LOCK(cs_rpcWarmup);
+    rpcWarmupStatus = newStatus;
+}
+
+void SetRPCWarmupFinished()
+{
+    LOCK(cs_rpcWarmup);
+    assert(fRPCInWarmup);
+    fRPCInWarmup = false;
 }
 
 void RPCRunHandler(const boost::system::error_code& err, boost::function<void(void)> func)
@@ -873,6 +883,13 @@ static bool HTTPReq_JSONRPC(AcceptedConnection *conn,
         if (!read_string(strRequest, valRequest))
             throw JSONRPCError(RPC_PARSE_ERROR, "Parse error");
 
+        // Return immediately if in warmup
+        {
+            LOCK(cs_rpcWarmup);
+            if (fRPCInWarmup)
+                throw JSONRPCError(RPC_IN_WARMUP, rpcWarmupStatus);
+        }
+
         string strReply;
 
         // singleton request
@@ -925,9 +942,16 @@ void ServiceConnection(AcceptedConnection *conn)
         if (mapHeaders["connection"] == "close")
             fRun = false;
 
+        // Process via JSON-RPC API
         if (strURI == "/") {
             if (!HTTPReq_JSONRPC(conn, strRequest, mapHeaders, fRun))
                 break;
+
+        // Process via HTTP REST API
+        } else if (strURI.substr(0, 6) == "/rest/") {
+            if (!HTTPReq_REST(conn, strURI, mapHeaders, fRun))
+                break;
+
         } else {
             conn->stream() << HTTPError(HTTP_NOT_FOUND, false) << std::flush;
             break;

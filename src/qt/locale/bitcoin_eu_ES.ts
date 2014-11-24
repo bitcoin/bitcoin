@@ -175,10 +175,6 @@
         <translation>Fitxen tresna-barra</translation>
     </message>
     <message>
-        <source>[testnet]</source>
-        <translation>[testnet]</translation>
-    </message>
-    <message>
         <source>Up to date</source>
         <translation>Egunean</translation>
     </message>
@@ -304,10 +300,6 @@
     <message>
         <source>Form</source>
         <translation>Inprimakia</translation>
-    </message>
-    <message>
-        <source>&lt;b&gt;Recent transactions&lt;/b&gt;</source>
-        <translation>&lt;b&gt;Azken transakzioak&lt;/b&gt;</translation>
     </message>
     </context>
 <context>
@@ -693,14 +685,6 @@
     <message>
         <source>Options:</source>
         <translation>Aukerak</translation>
-    </message>
-    <message>
-        <source>Specify configuration file (default: bitcoin.conf)</source>
-        <translation>Ezarpen fitxategia aukeratu (berezkoa: bitcoin.conf)</translation>
-    </message>
-    <message>
-        <source>Specify pid file (default: bitcoind.pid)</source>
-        <translation>pid fitxategia aukeratu (berezkoa: bitcoind.pid)</translation>
     </message>
     <message>
         <source>This help message</source>

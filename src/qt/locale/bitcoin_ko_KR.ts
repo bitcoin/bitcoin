@@ -287,6 +287,10 @@
         <translation>URI&amp;열기...</translation>
     </message>
     <message>
+        <source>Bitcoin Core client</source>
+        <translation>비트코인 코어 클라이언트</translation>
+    </message>
+    <message>
         <source>Importing blocks from disk...</source>
         <translation>디스크에서 블록 가져오는 중...</translation>
     </message>
@@ -339,6 +343,10 @@
         <translation>받기(&amp;R)</translation>
     </message>
     <message>
+        <source>Show information about Bitcoin Core</source>
+        <translation>비트코인 코어에 관한 정보입니다.</translation>
+    </message>
+    <message>
         <source>&amp;Show / Hide</source>
         <translation>보이기/숨기기(&amp;S)</translation>
     </message>
@@ -375,10 +383,6 @@
         <translation>툴바 색인표</translation>
     </message>
     <message>
-        <source>[testnet]</source>
-        <translation>[테스트넷]</translation>
-    </message>
-    <message>
         <source>Bitcoin Core</source>
         <translation>비트코인 코어</translation>
     </message>
@@ -413,10 +417,6 @@
     <message>
         <source>No block source available...</source>
         <translation>사용 가능한 블록이 없습니다...</translation>
-    </message>
-    <message>
-        <source>Processed %1 blocks of transaction history.</source>
-        <translation>%1 블록의 거래 기록들이 처리됨.</translation>
     </message>
     <message numerus="yes">
         <source>%n hour(s)</source>
@@ -529,8 +529,16 @@ Address: %4
         <translation>수수료:</translation>
     </message>
     <message>
+        <source>Dust:</source>
+        <translation>더스트:</translation>
+    </message>
+    <message>
         <source>After Fee:</source>
         <translation>수수료 이후:</translation>
+    </message>
+    <message>
+        <source>Change:</source>
+        <translation>체인지:</translation>
     </message>
     <message>
         <source>(un)select all</source>
@@ -852,15 +860,7 @@ Address: %4
         <source>Error</source>
         <translation>오류</translation>
     </message>
-    <message>
-        <source>GB of free space available</source>
-        <translation>GB가 사용가능</translation>
-    </message>
-    <message>
-        <source>(of %1GB needed)</source>
-        <translation>(%1GB가 필요)</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>OpenURIDialog</name>
     <message>
@@ -921,6 +921,14 @@ Address: %4
     <message>
         <source>Number of script &amp;verification threads</source>
         <translation>스크립트 인증 쓰레드의 개수</translation>
+    </message>
+    <message>
+        <source>Accept connections from outside</source>
+        <translation>외부로부터의 연결을 승인합니다.</translation>
+    </message>
+    <message>
+        <source>Allow incoming connections</source>
+        <translation>연결 요청을 허용합니다.</translation>
     </message>
     <message>
         <source>Connect to the Bitcoin network through a SOCKS proxy.</source>
@@ -1082,8 +1090,8 @@ Address: %4
         <translation>표시한 정보가 오래된 것 같습니다. 비트코인 네트워크에 연결하고 난 다음에 지갑을 자동으로 동기화 하지만, 아직 과정이 끝나지는 않았습니다.</translation>
     </message>
     <message>
-        <source>Wallet</source>
-        <translation>지갑</translation>
+        <source>Watch-only:</source>
+        <translation>모니터링 지갑:</translation>
     </message>
     <message>
         <source>Available:</source>
@@ -1118,8 +1126,8 @@ Address: %4
         <translation>당신의 현재 총액</translation>
     </message>
     <message>
-        <source>&lt;b&gt;Recent transactions&lt;/b&gt;</source>
-        <translation>&lt;b&gt;최근 거래내역&lt;/b&gt;</translation>
+        <source>Your current balance in watch-only addresses</source>
+        <translation>모니터링 지갑의 현재 잔액</translation>
     </message>
     <message>
         <source>out of sync</source>
@@ -1537,6 +1545,10 @@ Address: %4
         <translation>수수료 이후:</translation>
     </message>
     <message>
+        <source>Change:</source>
+        <translation>체인지:</translation>
+    </message>
+    <message>
         <source>Custom change address</source>
         <translation>주소변경</translation>
     </message>
@@ -1551,6 +1563,10 @@ Address: %4
     <message>
         <source>Clear all fields of the form.</source>
         <translation>양식의 모든 필드를 지웁니다</translation>
+    </message>
+    <message>
+        <source>Dust:</source>
+        <translation>더스트:</translation>
     </message>
     <message>
         <source>Clear &amp;All</source>
@@ -2319,24 +2335,8 @@ Address: %4
         <translation>옵션:</translation>
     </message>
     <message>
-        <source>Specify configuration file (default: bitcoin.conf)</source>
-        <translation>설정파일 지정 (기본값: bitcoin.conf)</translation>
-    </message>
-    <message>
-        <source>Specify pid file (default: bitcoind.pid)</source>
-        <translation>pid 파일 지정 (기본값: bitcoind.pid)</translation>
-    </message>
-    <message>
         <source>Specify data directory</source>
         <translation>데이터 폴더 지정</translation>
-    </message>
-    <message>
-        <source>Listen for connections on &lt;port&gt; (default: 8333 or testnet: 18333)</source>
-        <translation>&lt;port&gt;로 연결을 허용한다 (기본값: 8333 또는 테스트넷: 18333)</translation>
-    </message>
-    <message>
-        <source>Maintain at most &lt;n&gt; connections to peers (default: 125)</source>
-        <translation>가장 잘 연결되는 사용자를 유지합니다(기본값: 125)</translation>
     </message>
     <message>
         <source>Connect to a node to retrieve peer addresses, and disconnect</source>
@@ -2345,18 +2345,6 @@ Address: %4
     <message>
         <source>Specify your own public address</source>
         <translation>공인 주소를 지정하십시오</translation>
-    </message>
-    <message>
-        <source>Threshold for disconnecting misbehaving peers (default: 100)</source>
-        <translation>이상행동 네트워크 참여자의 연결을 차단시키기 위한 한계치 (기본값: 100)</translation>
-    </message>
-    <message>
-        <source>Number of seconds to keep misbehaving peers from reconnecting (default: 86400)</source>
-        <translation>이상행동을 하는 네트워크 참여자들을 다시 연결시키는데 걸리는 시간 (기본값: 86400초)</translation>
-    </message>
-    <message>
-        <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 8332 or testnet: 18332)</source>
-        <translation>포트 &lt;port&gt;을 통해 JSON-RPC 연결 (기본값: 8332 또는 testnet: 18332)</translation>
     </message>
     <message>
         <source>Accept command line and JSON-RPC commands</source>
@@ -2373,10 +2361,6 @@ Address: %4
     <message>
         <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
         <translation>외부 접속을 승인합니다</translation>
-    </message>
-    <message>
-        <source>Acceptable ciphers (default: TLSv1.2+HIGH:TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!3DES:@STRENGTH)</source>
-        <translation>암호 허용(기본값: TLSv1.2+HIGH:TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!3DES:@STRENGTH)</translation>
     </message>
     <message>
         <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
@@ -2399,10 +2383,6 @@ Address: %4
     <message>
         <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
         <translation>이 빌드 버전은 정식 출시 전 테스트의 목적이며, 예기치 않은 위험과 오류가 발생할 수 있습니다. 채굴과 상점용 소프트웨어로 사용하는 것을 권하지 않습니다.</translation>
-    </message>
-    <message>
-        <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: -proxy)</source>
-        <translation>Tor 서비스를 이용하여 네트워크에 참여하기 위해서 SOCKS5 프록시를 따로 사용함 (기본값: -proxy)</translation>
     </message>
     <message>
         <source>Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
@@ -2429,10 +2409,6 @@ Address: %4
         <translation>(기본값: 1)</translation>
     </message>
     <message>
-        <source>(default: wallet.dat)</source>
-        <translation>(기본값: wallet.dat)</translation>
-    </message>
-    <message>
         <source>Attempt to recover private keys from a corrupt wallet.dat</source>
         <translation>손상된 wallet.dat에서 개인키 복원을 시도합니다</translation>
     </message>
@@ -2455,10 +2431,6 @@ Address: %4
     <message>
         <source>Debugging/Testing options:</source>
         <translation>디버그 및 테스트 설정</translation>
-    </message>
-    <message>
-        <source>Disable safemode, override a real safe mode event (default: 0)</source>
-        <translation>안전 모드를 비활성화하고 안전 모드의 이벤트가 발생하더라도 무시합니다. (기본값: 0, 비활성화)</translation>
     </message>
     <message>
         <source>Discover own IP address (default: 1 when listening and no -externalip)</source>
@@ -2493,64 +2465,8 @@ Address: %4
         <translation>오류: 지갑이 잠금상태여서 거래를 생성할 수 없습니다!</translation>
     </message>
     <message>
-        <source>Error: system error: </source>
-        <translation>오류: 시스템 오류:</translation>
-    </message>
-    <message>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
         <translation>어떤 포트도 반응하지 않습니다. 사용자 반응=0 만약 원한다면</translation>
-    </message>
-    <message>
-        <source>Failed to read block info</source>
-        <translation>블록 정보를 읽는데 실패했습니다</translation>
-    </message>
-    <message>
-        <source>Failed to read block</source>
-        <translation>블록을 읽는데 실패했습니다</translation>
-    </message>
-    <message>
-        <source>Failed to sync block index</source>
-        <translation>블록 인덱스를 동기화하는데 실패했습니다</translation>
-    </message>
-    <message>
-        <source>Failed to write block index</source>
-        <translation>블록 인덱스를 기록하는데 실패했습니다</translation>
-    </message>
-    <message>
-        <source>Failed to write block info</source>
-        <translation>블록 정보를 기록하는데 실패했습니다</translation>
-    </message>
-    <message>
-        <source>Failed to write block</source>
-        <translation>블록을 기록하는데 실패했습니다</translation>
-    </message>
-    <message>
-        <source>Failed to write file info</source>
-        <translation>파일 정보를 기록하는데 실패했습니다</translation>
-    </message>
-    <message>
-        <source>Failed to write to coin database</source>
-        <translation>코인 데이터베이스에 기록하는데 실패했습니다</translation>
-    </message>
-    <message>
-        <source>Failed to write transaction index</source>
-        <translation>송금 인덱스에 기록하는데 실패했습니다</translation>
-    </message>
-    <message>
-        <source>Failed to write undo data</source>
-        <translation>데이터 실행 취소를 기록하는데 실패했습니다</translation>
-    </message>
-    <message>
-        <source>Force safe mode (default: 0)</source>
-        <translation>안전 모드로 강제 진입하는 기능입니다.(기본값: 0) </translation>
-    </message>
-    <message>
-        <source>Generate coins (default: 0)</source>
-        <translation>코인 생성(기본값: 0)</translation>
-    </message>
-    <message>
-        <source>How many blocks to check at startup (default: 288, 0 = all)</source>
-        <translation>시작할때 검사할 블록 갯수입니다(기본값: 288, 0 = 모두)</translation>
     </message>
     <message>
         <source>Importing...</source>
@@ -2579,10 +2495,6 @@ Address: %4
     <message>
         <source>Set maximum block size in bytes (default: %d)</source>
         <translation>최대 블락 크기를 Bytes로 지정하세요 (기본: %d)</translation>
-    </message>
-    <message>
-        <source>Set the number of threads to service RPC calls (default: 4)</source>
-        <translation>원격 프로시져 호출 서비스를 위한 쓰레드 개수를 설정합니다 (기본값 : 4)</translation>
     </message>
     <message>
         <source>Specify wallet file (within data directory)</source>
@@ -2621,10 +2533,6 @@ Address: %4
         <translation>이 사항과 관련있는 경고가 발생하거나 아주 긴 포크가 발생했을 때 명령어를 실행해 주세요. (cmd 명령어 목록에서 %s는 메시지로 대체됩니다) </translation>
     </message>
     <message>
-        <source>Output debugging information (default: 0, supplying &lt;category&gt; is optional)</source>
-        <translation>출력 오류 정보(기본값:0, 임의의 공급 카테고리)</translation>
-    </message>
-    <message>
         <source>Set maximum size of high-priority/low-fee transactions in bytes (default: %d)</source>
         <translation>최대 크기를 최우선으로 설정 / 바이트당 최소 수수료로 거래(기본값: %d)</translation>
     </message>
@@ -2641,40 +2549,8 @@ Address: %4
         <translation>최저 거래 수수료가 부족합니다. -mintxfee=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
-        <source>Limit size of signature cache to &lt;n&gt; entries (default: 50000)</source>
-        <translation>&lt;n&gt;번 째 순서에서 전자서명 캐쉬의 용량을 제한합니다. (기본값: 50000) </translation>
-    </message>
-    <message>
-        <source>Log transaction priority and fee per kB when mining blocks (default: 0)</source>
-        <translation>블럭을 채굴할 때 kB당 거래 우선 순위와 수수료를 로그에 남깁니다. (기본값: 0, 비활성화)</translation>
-    </message>
-    <message>
-        <source>Maintain a full transaction index (default: 0)</source>
-        <translation>전체 거래 지수를 유지합니다(기본값: 0)</translation>
-    </message>
-    <message>
-        <source>Maximum per-connection receive buffer, &lt;n&gt;*1000 bytes (default: 5000)</source>
-        <translation>최대 연결마다 1000bytes 버퍼를 받는다. (기본값: 5000)</translation>
-    </message>
-    <message>
-        <source>Maximum per-connection send buffer, &lt;n&gt;*1000 bytes (default: 1000)</source>
-        <translation>최대 연결 마다 1000bytes 버퍼를 보낸다.(기본값: 1000) </translation>
-    </message>
-    <message>
-        <source>Only accept block chain matching built-in checkpoints (default: 1)</source>
-        <translation>내부 중단점에 일치하는 블록 체인만 수용(기본값: 1)</translation>
-    </message>
-    <message>
-        <source>Only connect to nodes in network &lt;net&gt; (IPv4, IPv6 or Tor)</source>
-        <translation>노드가 있는 네트워크에만 접속 합니다(IPv4, IPv6 또는 Tor)</translation>
-    </message>
-    <message>
         <source>Print block on startup, if found in block index</source>
         <translation>블럭 색인을 발견하면 구동 시 블럭을 출력합니다.</translation>
-    </message>
-    <message>
-        <source>Print block tree on startup (default: 0)</source>
-        <translation>구동 시 블럭 트리를 출력합니다. (기본값: 0, 비활성화)</translation>
     </message>
     <message>
         <source>RPC SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
@@ -2693,14 +2569,6 @@ Address: %4
         <translation>추적오류 정보를 degug.log 자료로 보내는 대신 콘솔로 보내기</translation>
     </message>
     <message>
-        <source>Set minimum block size in bytes (default: 0)</source>
-        <translation>바이트 단위의 최소 블록 크기 설정(기본값: 0)</translation>
-    </message>
-    <message>
-        <source>Sets the DB_PRIVATE flag in the wallet db environment (default: 1)</source>
-        <translation>전자지갑 데이터베이스 환경에 DB_PRIVATE 플래그를 설정합니다. (기본값: 1, 활성화)</translation>
-    </message>
-    <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>
         <translation>모든 디버그 설정 보기(설정: --help -help-debug)</translation>
     </message>
@@ -2713,14 +2581,6 @@ Address: %4
         <translation>거래를 서명하는것을 실패하였습니다.</translation>
     </message>
     <message>
-        <source>Specify connection timeout in milliseconds (default: 5000)</source>
-        <translation>밀리초 단위로 연결 제한시간을 설정하십시오(기본값: 5000)</translation>
-    </message>
-    <message>
-        <source>System error: </source>
-        <translation>시스템 오류:</translation>
-    </message>
-    <message>
         <source>Transaction amount too small</source>
         <translation>거래량이 너무 적습니다</translation>
     </message>
@@ -2731,10 +2591,6 @@ Address: %4
     <message>
         <source>Transaction too large</source>
         <translation>너무 큰 거래</translation>
-    </message>
-    <message>
-        <source>Use UPnP to map the listening port (default: 0)</source>
-        <translation>UPnP사용하여 지도에서 포트 반응기다리는 중  (기본값: 0)</translation>
     </message>
     <message>
         <source>Use UPnP to map the listening port (default: 1 when listening)</source>
@@ -2777,24 +2633,12 @@ Address: %4
         <translation>지갑을 최근 형식으로 개선하시오</translation>
     </message>
     <message>
-        <source>Set key pool size to &lt;n&gt; (default: 100)</source>
-        <translation>키 풀 크기 설정 &lt;n&gt;(기본값: 100)</translation>
-    </message>
-    <message>
         <source>Rescan the block chain for missing wallet transactions</source>
         <translation>누락된 지갑 송금에 대한 블록 체인 다시 검색</translation>
     </message>
     <message>
         <source>Use OpenSSL (https) for JSON-RPC connections</source>
         <translation>JSON-RPC 연결에 OpenSSL(https) 사용</translation>
-    </message>
-    <message>
-        <source>Server certificate file (default: server.cert)</source>
-        <translation>서버 인증 파일 (기본값: server.cert)</translation>
-    </message>
-    <message>
-        <source>Server private key (default: server.pem)</source>
-        <translation>서버 개인 키(기본값: server.pem)</translation>
     </message>
     <message>
         <source>This help message</source>

@@ -5,7 +5,18 @@
 
 #include "script.h"
 
-#include <boost/foreach.hpp>
+#include "tinyformat.h"
+#include "utilstrencodings.h"
+
+namespace {
+inline std::string ValueString(const std::vector<unsigned char>& vch)
+{
+    if (vch.size() <= 4)
+        return strprintf("%d", CScriptNum(vch, false).getint());
+    else
+        return HexStr(vch);
+}
+} // anon namespace
 
 using namespace std;
 
@@ -219,7 +230,7 @@ bool CScript::IsPushOnly() const
             return false;
         // Note that IsPushOnly() *does* consider OP_RESERVED to be a
         // push-type opcode, however execution of OP_RESERVED fails, so
-        // it's not relevant to P2SH as the scriptSig would fail prior to
+        // it's not relevant to P2SH/BIP62 as the scriptSig would fail prior to
         // the P2SH special validation code being executed.
         if (opcode > OP_16)
             return false;
@@ -227,29 +238,25 @@ bool CScript::IsPushOnly() const
     return true;
 }
 
-bool CScript::HasCanonicalPushes() const
+std::string CScript::ToString() const
 {
+    std::string str;
+    opcodetype opcode;
+    std::vector<unsigned char> vch;
     const_iterator pc = begin();
     while (pc < end())
     {
-        opcodetype opcode;
-        std::vector<unsigned char> data;
-        if (!GetOp(pc, opcode, data))
-            return false;
-        if (opcode > OP_16)
-            continue;
-        if (opcode < OP_PUSHDATA1 && opcode > OP_0 && (data.size() == 1 && data[0] <= 16))
-            // Could have used an OP_n code, rather than a 1-byte push.
-            return false;
-        if (opcode == OP_PUSHDATA1 && data.size() < OP_PUSHDATA1)
-            // Could have used a normal n-byte push, rather than OP_PUSHDATA1.
-            return false;
-        if (opcode == OP_PUSHDATA2 && data.size() <= 0xFF)
-            // Could have used an OP_PUSHDATA1.
-            return false;
-        if (opcode == OP_PUSHDATA4 && data.size() <= 0xFFFF)
-            // Could have used an OP_PUSHDATA2.
-            return false;
+        if (!str.empty())
+            str += " ";
+        if (!GetOp(pc, opcode, vch))
+        {
+            str += "[error]";
+            return str;
+        }
+        if (0 <= opcode && opcode <= OP_PUSHDATA4)
+            str += ValueString(vch);
+        else
+            str += GetOpName(opcode);
     }
-    return true;
+    return str;
 }

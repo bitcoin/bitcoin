@@ -6,7 +6,7 @@ $(package)_sha256_hash=dfd71487513c871bad485806bfd1fdb304dedc84d2b01a8fb8e0940b5
 
 define $(package)_set_vars
 $(package)_config_opts=--disable-shared -without-tools --disable-sdltest
-$(package)_config_opts_x86_64_linux=--with-pic
+$(package)_config_opts_linux=--with-pic
 endef
 
 define $(package)_config_cmds

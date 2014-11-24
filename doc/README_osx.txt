@@ -20,14 +20,6 @@ https://github.com/mingwandroid/toolchain4
 In order to build a working toolchain, the following source packages are needed
 from Apple: cctools, dyld, and ld64.
 
-Beware. This part is ugly. Very very very ugly. In the future, this should be
-broken out into a new repository and cleaned up. Additionally, the binaries
-only work when built as x86 and not x86_64. This is an especially nasty
-limitation because it must be linked with the toolchain's libLTO.so, meaning
-that the entire toolchain must be x86. Gitian x86_64 should not be used until
-this has been fixed, because it would mean that several native dependencies
-(openssl, libuuid, etc) would need to be built as x86 first.
-
 These tools inject timestamps by default, which produce non-deterministic
 binaries. The ZERO_AR_DATE environment variable is used to disable that.
 

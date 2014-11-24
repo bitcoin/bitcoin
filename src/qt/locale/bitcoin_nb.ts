@@ -391,10 +391,6 @@
         <translation>Verktøylinje for faner</translation>
     </message>
     <message>
-        <source>[testnet]</source>
-        <translation>[testnett]</translation>
-    </message>
-    <message>
         <source>Bitcoin Core</source>
         <translation>Bitcoin Core</translation>
     </message>
@@ -433,10 +429,6 @@
     <message>
         <source>No block source available...</source>
         <translation>Ingen kilde for blokker tilgjengelig...</translation>
-    </message>
-    <message>
-        <source>Processed %1 blocks of transaction history.</source>
-        <translation>Lastet %1 blokker med transaksjonshistorikk.</translation>
     </message>
     <message numerus="yes">
         <source>%n hour(s)</source>
@@ -485,6 +477,10 @@
     <message>
         <source>Up to date</source>
         <translation>Ajour</translation>
+    </message>
+    <message numerus="yes">
+        <source>Processed %n blocks of transaction history.</source>
+        <translation><numerusform>Lastet %n blokk med transaksjonshistorikk.</numerusform><numerusform>Lastet %n blokker med transaksjonshistorikk.</numerusform></translation>
     </message>
     <message>
         <source>Catching up...</source>
@@ -916,13 +912,13 @@ Adresse: %4
         <source>Error</source>
         <translation>Feil</translation>
     </message>
-    <message>
-        <source>GB of free space available</source>
-        <translation>GB ledig lagringsplass</translation>
+    <message numerus="yes">
+        <source>%n GB of free space available</source>
+        <translation><numerusform>%n GB med ledig lagringsplass</numerusform><numerusform>%n GB med ledig lagringsplass</numerusform></translation>
     </message>
-    <message>
-        <source>(of %1GB needed)</source>
-        <translation>(av %1GB behøvd)</translation>
+    <message numerus="yes">
+        <source>(of %n GB needed)</source>
+        <translation><numerusform>(av %n GB som trengs)</numerusform><numerusform>(av %n GB som trengs)</numerusform></translation>
     </message>
 </context>
 <context>
@@ -1166,10 +1162,6 @@ Adresse: %4
         <translation>Informasjonen som vises kan være foreldet. Din lommebok synkroniseres automatisk med Bitcoin-nettverket etter at tilkobling er opprettet, men denne prosessen er ikke ferdig enda.</translation>
     </message>
     <message>
-        <source>Wallet</source>
-        <translation>Lommebok</translation>
-    </message>
-    <message>
         <source>Watch-only:</source>
         <translation>Kun observerbar:</translation>
     </message>
@@ -1198,6 +1190,10 @@ Adresse: %4
         <translation>Minet saldo har ikke modnet enda</translation>
     </message>
     <message>
+        <source>Balances</source>
+        <translation>Saldoer</translation>
+    </message>
+    <message>
         <source>Total:</source>
         <translation>Totalt:</translation>
     </message>
@@ -1210,6 +1206,14 @@ Adresse: %4
         <translation>Din nåværende balanse i kun observerbare adresser</translation>
     </message>
     <message>
+        <source>Spendable:</source>
+        <translation>Kan brukes:</translation>
+    </message>
+    <message>
+        <source>Recent transactions</source>
+        <translation>Nylige transaksjoner</translation>
+    </message>
+    <message>
         <source>Unconfirmed transactions to watch-only addresses</source>
         <translation>Ubekreftede transaksjoner til kun observerbare adresser</translation>
     </message>
@@ -1220,10 +1224,6 @@ Adresse: %4
     <message>
         <source>Current total balance in watch-only addresses</source>
         <translation>Nåværende totale balanse i kun observerbare adresser</translation>
-    </message>
-    <message>
-        <source>&lt;b&gt;Recent transactions&lt;/b&gt;</source>
-        <translation>&lt;b&gt;Siste transaksjoner&lt;/b&gt;</translation>
     </message>
     <message>
         <source>out of sync</source>
@@ -1485,10 +1485,6 @@ Adresse: %4
         <translation>Tjenester</translation>
     </message>
     <message>
-        <source>Sync Node</source>
-        <translation>Synk-node</translation>
-    </message>
-    <message>
         <source>Starting Height</source>
         <translation>Starthøyde</translation>
     </message>
@@ -1615,14 +1611,6 @@ Adresse: %4
     <message>
         <source>Outbound</source>
         <translation>Utgående</translation>
-    </message>
-    <message>
-        <source>Yes</source>
-        <translation>Ja</translation>
-    </message>
-    <message>
-        <source>No</source>
-        <translation>Nei</translation>
     </message>
     <message>
         <source>Unknown</source>
@@ -2473,6 +2461,10 @@ Adresse: %4
         <translation>Utvunnet</translation>
     </message>
     <message>
+        <source>watch-only</source>
+        <translation>kun observerbar</translation>
+    </message>
+    <message>
         <source>(n/a)</source>
         <translation>-</translation>
     </message>
@@ -2487,6 +2479,10 @@ Adresse: %4
     <message>
         <source>Type of transaction.</source>
         <translation>Type transaksjon.</translation>
+    </message>
+    <message>
+        <source>Whether or not a watch-only address is involved in this transaction.</source>
+        <translation>Hvorvidt en kun observerbar adresse er involvert i denne transaksjonen.</translation>
     </message>
     <message>
         <source>Destination address of transaction.</source>
@@ -2582,6 +2578,10 @@ Adresse: %4
     <message>
         <source>Export Transaction History</source>
         <translation>Eksporter Transaksjonshistorikk</translation>
+    </message>
+    <message>
+        <source>Watch-only</source>
+        <translation>Kun observer</translation>
     </message>
     <message>
         <source>Exporting Failed</source>
@@ -2699,24 +2699,8 @@ Adresse: %4
         <translation>Innstillinger:</translation>
     </message>
     <message>
-        <source>Specify configuration file (default: bitcoin.conf)</source>
-        <translation>Angi konfigurasjonsfil (standardverdi: bitcoin.conf)</translation>
-    </message>
-    <message>
-        <source>Specify pid file (default: bitcoind.pid)</source>
-        <translation>Angi pid-fil (standardverdi: bitcoind.pid)</translation>
-    </message>
-    <message>
         <source>Specify data directory</source>
         <translation>Angi mappe for datafiler</translation>
-    </message>
-    <message>
-        <source>Listen for connections on &lt;port&gt; (default: 8333 or testnet: 18333)</source>
-        <translation>Lytt etter tilkoblinger på &lt;port&gt; (standardverdi: 8333 eller testnett: 18333)</translation>
-    </message>
-    <message>
-        <source>Maintain at most &lt;n&gt; connections to peers (default: 125)</source>
-        <translation>Hold maks &lt;n&gt; koblinger åpne til andre noder (standardverdi: 125)</translation>
     </message>
     <message>
         <source>Connect to a node to retrieve peer addresses, and disconnect</source>
@@ -2725,18 +2709,6 @@ Adresse: %4
     <message>
         <source>Specify your own public address</source>
         <translation>Angi din egen offentlige adresse</translation>
-    </message>
-    <message>
-        <source>Threshold for disconnecting misbehaving peers (default: 100)</source>
-        <translation>Grenseverdi for å koble fra noder med dårlig oppførsel (standardverdi: 100)</translation>
-    </message>
-    <message>
-        <source>Number of seconds to keep misbehaving peers from reconnecting (default: 86400)</source>
-        <translation>Antall sekunder noder med dårlig oppførsel hindres fra å koble til på nytt (standardverdi: 86400)</translation>
-    </message>
-    <message>
-        <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 8332 or testnet: 18332)</source>
-        <translation>Lytt etter JSON-RPC tilkoblinger på &lt;port&gt; (standardverdi: 8332 eller testnett: 18332)</translation>
     </message>
     <message>
         <source>Accept command line and JSON-RPC commands</source>
@@ -2778,16 +2750,8 @@ Det er også anbefalt at å sette varselsmelding slik du får melding om problem
 For eksempel: varselmelding=echo %%s | mail -s "Bitcoin Varsel" admin@foo.com</translation>
     </message>
     <message>
-        <source>Acceptable ciphers (default: TLSv1.2+HIGH:TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!3DES:@STRENGTH)</source>
-        <translation>Akseptable krypteringsmetoder (standardverdi: TLSv1.2+HIGH:TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!3DES:@STRENGTH)</translation>
-    </message>
-    <message>
         <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
         <translation>Bind til angitt adresse. Bruk [vertsmaskin]:port notasjon for IPv6</translation>
-    </message>
-    <message>
-        <source>Continuously rate-limit free transactions to &lt;n&gt;*1000 bytes per minute (default:15)</source>
-        <translation>Ratebegrens gratistransaksjoner kontinuerlig til &lt;n&gt;*1000 bytes per minutt (standard: 15)</translation>
     </message>
     <message>
         <source>Delete all wallet transactions and only recover those parts of the blockchain through -rescan on startup</source>
@@ -2810,14 +2774,6 @@ For eksempel: varselmelding=echo %%s | mail -s "Bitcoin Varsel" admin@foo.com</t
         <translation>Kjør kommando når en lommeboktransaksjon endres (%s i kommando er erstattet med TxID)</translation>
     </message>
     <message>
-        <source>Flush database activity from memory pool to disk log every &lt;n&gt; megabytes (default: 100)</source>
-        <translation>Overfør aktiviteten i databasen fra minnelageret til loggen på harddisken for hver &lt;n&gt; megabytes (standardverdi: 100)</translation>
-    </message>
-    <message>
-        <source>How thorough the block verification of -checkblocks is (0-4, default: 3)</source>
-        <translation>Hvor grundig blokkverifiseringen til -checkblocks er (0-4, standard: 3)</translation>
-    </message>
-    <message>
         <source>In this mode -genproclimit controls how many blocks are generated immediately.</source>
         <translation>I denne modusen kontrollerer -genproclimit hvor mange blokker som genereres øyeblikkelig.</translation>
     </message>
@@ -2826,20 +2782,12 @@ For eksempel: varselmelding=echo %%s | mail -s "Bitcoin Varsel" admin@foo.com</t
         <translation>Angi antall tråder for skriptverifisering (%u til %d, 0 = auto, &lt;0 = la det antallet kjerner være ledig, standard: %d)</translation>
     </message>
     <message>
-        <source>Set the processor limit for when generation is on (-1 = unlimited, default: -1)</source>
-        <translation>Sett prosessorgrensen for når blokkutvinning er på (-1 = ubegrenset, standard: -1)</translation>
-    </message>
-    <message>
         <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
         <translation>Dette er en forhåndssluppet testversjon - bruk på egen risiko - ikke for bruk til blokkutvinning eller bedriftsapplikasjoner</translation>
     </message>
     <message>
         <source>Unable to bind to %s on this computer. Bitcoin Core is probably already running.</source>
         <translation>Ute av stand til å binde til %s på denne datamaskinen. Bitcoin Core kjører sannsynligvis allerede.</translation>
-    </message>
-    <message>
-        <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: -proxy)</source>
-        <translation>Bruk separate SOCKS5 proxyer for å nå noder via Tor skjulte tjenester (standardverdi: -proxy)</translation>
     </message>
     <message>
         <source>Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
@@ -2862,12 +2810,12 @@ For eksempel: varselmelding=echo %%s | mail -s "Bitcoin Varsel" admin@foo.com</t
         <translation>Advarsel: wallet.dat korrupt, data reddet! Original wallet.dat lagret som wallet.{timestamp}.bak i %s; hvis din saldo eller dine transaksjoner ikke er korrekte bør du gjenopprette fra en backup.</translation>
     </message>
     <message>
-        <source>(default: 1)</source>
-        <translation>(standardverdi: 1)</translation>
+        <source>Whitelist peers connecting from the given netmask or IP address. Can be specified multiple times.</source>
+        <translation>Hvitelist noder som kobler til fra den oppgitte nettmasken eller IP-adressen. Kan oppgis flere ganger.</translation>
     </message>
     <message>
-        <source>(default: wallet.dat)</source>
-        <translation>(standardverdi: wallet.dat)</translation>
+        <source>(default: 1)</source>
+        <translation>(standardverdi: 1)</translation>
     </message>
     <message>
         <source>&lt;category&gt; can be:</source>
@@ -2898,10 +2846,6 @@ For eksempel: varselmelding=echo %%s | mail -s "Bitcoin Varsel" admin@foo.com</t
         <translation>Valg for feilsøking/testing:</translation>
     </message>
     <message>
-        <source>Disable safemode, override a real safe mode event (default: 0)</source>
-        <translation>Slå av sikkerhetsmodus, overstyr en virkelig sikkerhetsmodushendelse (standard: 0)</translation>
-    </message>
-    <message>
         <source>Discover own IP address (default: 1 when listening and no -externalip)</source>
         <translation>Oppdag egen IP-adresse (standardverdi: 1 ved lytting og uten -externalip)</translation>
     </message>
@@ -2930,6 +2874,10 @@ For eksempel: varselmelding=echo %%s | mail -s "Bitcoin Varsel" admin@foo.com</t
         <translation>Feil under åpning av blokkdatabase</translation>
     </message>
     <message>
+        <source>Error: A fatal internal error occured, see debug.log for details</source>
+        <translation>Feil: En fatal intern feil oppstod, se debug.log for detaljer</translation>
+    </message>
+    <message>
         <source>Error: Disk space is low!</source>
         <translation>Feil: Lite ledig lagringsplass!</translation>
     </message>
@@ -2938,64 +2886,8 @@ For eksempel: varselmelding=echo %%s | mail -s "Bitcoin Varsel" admin@foo.com</t
         <translation>Feil: Lommebok låst, kan ikke opprette transaksjon!</translation>
     </message>
     <message>
-        <source>Error: system error: </source>
-        <translation>Feil: systemfeil:</translation>
-    </message>
-    <message>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
         <translation>Kunne ikke lytte på noen port. Bruk -listen=0 hvis det er dette du vil.</translation>
-    </message>
-    <message>
-        <source>Failed to read block info</source>
-        <translation>Feil ved lesing av blokkinfo</translation>
-    </message>
-    <message>
-        <source>Failed to read block</source>
-        <translation>Feil ved lesing av blokk</translation>
-    </message>
-    <message>
-        <source>Failed to sync block index</source>
-        <translation>Feil ved synkronisering av blokkindeks</translation>
-    </message>
-    <message>
-        <source>Failed to write block index</source>
-        <translation>Ved feil skriving av blokkindeks</translation>
-    </message>
-    <message>
-        <source>Failed to write block info</source>
-        <translation>Feil ved skriving av blokkinfo</translation>
-    </message>
-    <message>
-        <source>Failed to write block</source>
-        <translation>Feil ved skriving av blokk</translation>
-    </message>
-    <message>
-        <source>Failed to write file info</source>
-        <translation>Feil ved skriving av filinfo</translation>
-    </message>
-    <message>
-        <source>Failed to write to coin database</source>
-        <translation>Feil ved skriving til bitcoin sin database</translation>
-    </message>
-    <message>
-        <source>Failed to write transaction index</source>
-        <translation>Feil ved skriving av transaksjonsindeks</translation>
-    </message>
-    <message>
-        <source>Failed to write undo data</source>
-        <translation>Feil ved skriving av angredata</translation>
-    </message>
-    <message>
-        <source>Force safe mode (default: 0)</source>
-        <translation>Tving sikkerhetsmodus (standard: 0)</translation>
-    </message>
-    <message>
-        <source>Generate coins (default: 0)</source>
-        <translation>Generer bitcoins (standardverdi: 0)</translation>
-    </message>
-    <message>
-        <source>How many blocks to check at startup (default: 288, 0 = all)</source>
-        <translation>Hvor mange blokker skal sjekkes ved oppstart (standardverdi: 288, 0 = alle)</translation>
     </message>
     <message>
         <source>If &lt;category&gt; is not supplied, output all debugging information.</source>
@@ -3018,8 +2910,8 @@ For eksempel: varselmelding=echo %%s | mail -s "Bitcoin Varsel" admin@foo.com</t
         <translation>For få fildeskriptorer tilgjengelig.</translation>
     </message>
     <message>
-        <source>Prepend debug output with timestamp (default: 1)</source>
-        <translation>Sett inn tidsstempel i front av feilsøkingsdata (standardverdi: 1)</translation>
+        <source>Only connect to nodes in network &lt;net&gt; (ipv4, ipv6 or onion)</source>
+        <translation>Bare koble til noder i nettverket &lt;net&gt; (IPv4, IPv6 eller onion)</translation>
     </message>
     <message>
         <source>Rebuild block chain index from current blk000??.dat files</source>
@@ -3034,24 +2926,16 @@ For eksempel: varselmelding=echo %%s | mail -s "Bitcoin Varsel" admin@foo.com</t
         <translation>Sett maks blokkstørrelse i bytes (standardverdi: %d)</translation>
     </message>
     <message>
-        <source>Set the number of threads to service RPC calls (default: 4)</source>
-        <translation>Sett nummer av tråder til betjening av RPC-kall (standardverdi: 4)</translation>
-    </message>
-    <message>
         <source>Specify wallet file (within data directory)</source>
         <translation>Angi lommebokfil (inne i datamappe)</translation>
     </message>
     <message>
-        <source>Spend unconfirmed change when sending transactions (default: 1)</source>
-        <translation>Bruk ubekreftet veksel ved sending av transaksjoner (standardverdi: 1)</translation>
-    </message>
-    <message>
-        <source>Stop running after importing blocks from disk (default: 0)</source>
-        <translation>Avslutt etter import av blokker fra disk (standard: 0)</translation>
-    </message>
-    <message>
         <source>This is intended for regression testing tools and app development.</source>
         <translation>Dette er tiltenkt verktøy for regresjonstesting og apputvikling.</translation>
+    </message>
+    <message>
+        <source>Use UPnP to map the listening port (default: %u)</source>
+        <translation>Bruk UPnP for å sette opp lytteport (standardverdi: %u)</translation>
     </message>
     <message>
         <source>Verifying blocks...</source>
@@ -3078,10 +2962,6 @@ For eksempel: varselmelding=echo %%s | mail -s "Bitcoin Varsel" admin@foo.com</t
         <translation>Importerer blokker fra ekstern fil blk000??.dat</translation>
     </message>
     <message>
-        <source>(default: 1, 1 = keep tx meta data e.g. account owner and payment request information, 2 = drop tx meta data)</source>
-        <translation>(standardverdi: 1, 1 = behold metadata for transaksjon som f. eks. kontoeier og informasjon om betalingsanmodning, 2 = dropp metadata for transaksjon)</translation>
-    </message>
-    <message>
         <source>Allow JSON-RPC connections from specified source. Valid for &lt;ip&gt; are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24). This option can be specified multiple times</source>
         <translation>Tillat JSON-RPC-tilkoblinger fra angitt kilde. Gyldig for &lt;ip&gt; er en enkelt IP (f. eks. 1.2.3.4), et nettverk/nettmaske (f. eks. 1.2.3.4/255.255.255.0) eller et nettverk/CIDR (f. eks. 1.2.3.4/24). Dette alternativet kan angis flere ganger</translation>
     </message>
@@ -3102,6 +2982,10 @@ For eksempel: varselmelding=echo %%s | mail -s "Bitcoin Varsel" admin@foo.com</t
         <translation>Ute av stand til å låse datamappen %s. Bitcoin Core kjører sannsynligvis allerede.</translation>
     </message>
     <message>
+        <source>Continuously rate-limit free transactions to &lt;n&gt;*1000 bytes per minute (default:%u)</source>
+        <translation>Ratebegrens gratistransaksjoner kontinuerlig til &lt;n&gt;*1000 bytes per minutt (standardverdi: %u)</translation>
+    </message>
+    <message>
         <source>Create new files with system default permissions, instead of umask 077 (only effective with disabled wallet functionality)</source>
         <translation>Opprett nye filer med standardtillatelser i systemet, i stedet for umask 077 (kun virksom med lommebokfunksjonalitet slått av)</translation>
     </message>
@@ -3118,10 +3002,6 @@ For eksempel: varselmelding=echo %%s | mail -s "Bitcoin Varsel" admin@foo.com</t
         <translation>Feil: Argumentet -socks er ikke støttet. Det er ikke lenger mulig å sette SOCKS-versjon; bare SOCKS5-proxyer er støttet.</translation>
     </message>
     <message>
-        <source>Execute command when a network tx respends wallet tx input (%s=respend TxID, %t=wallet TxID)</source>
-        <translation>Utfør kommando når et nettverkstransaksjon gjenbruker inndata fra lommeboktransaksjonen (%s=gjenbruk TxID, %t=lommebok TxID)</translation>
-    </message>
-    <message>
         <source>Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)</source>
         <translation>Utfør kommando når et relevant varsel er mottatt eller vi ser en veldig lang gaffel (%s i kommando er erstattet med melding)</translation>
     </message>
@@ -3132,14 +3012,6 @@ For eksempel: varselmelding=echo %%s | mail -s "Bitcoin Varsel" admin@foo.com</t
     <message>
         <source>Fees (in BTC/Kb) smaller than this are considered zero fee for transaction creation (default: %s)</source>
         <translation>Gebyrer (i BTC/Kb) mindre enn dette anses som null gebyr for laging av transaksjoner (standardverdi: %s)</translation>
-    </message>
-    <message>
-        <source>If paytxfee is not set, include enough fee so transactions are confirmed on average within n blocks (default: 1)</source>
-        <translation>Hvis paytxfee ikke er angitt, inkluderer da nok gebyr til at transaksjoner gjennomsnittligt bekreftes innen n blokker (standardverdi: 1)</translation>
-    </message>
-    <message>
-        <source>Output debugging information (default: 0, supplying &lt;category&gt; is optional)</source>
-        <translation>Ta ut feilsøkingsinformasjon (standardverdi: 0, bruk av &lt;category&gt; er valgfritt)</translation>
     </message>
     <message>
         <source>Query for peer addresses via DNS lookup, if low on addresses (default: 1 unless -connect)</source>
@@ -3158,16 +3030,8 @@ For eksempel: varselmelding=echo %%s | mail -s "Bitcoin Varsel" admin@foo.com</t
         <translation>Advarsel: Vennligst undersøk at din datamaskin har riktig dato og klokkeslett! Hvis klokken er stilt feil vil ikke Bitcoin Core fungere riktig.</translation>
     </message>
     <message>
-        <source>Whitelist peers connecting from the given netmask or ip. Can be specified multiple times.</source>
-        <translation>Hvitelist noder som kobler til fra den oppgitte nettmasken eller IP-adressen. Kan oppgis flere ganger.</translation>
-    </message>
-    <message>
         <source>Whitelisted peers cannot be DoS banned and their transactions are always relayed, even if they are already in the mempool, useful e.g. for a gateway</source>
         <translation>Hvitlistede noder kan ikke DoS-blokkeres, og deres transaksjoner videresendes alltid, selv om de allerede er i minnelageret. Nyttig f.eks. for en gateway.</translation>
-    </message>
-    <message>
-        <source>Always query for peer addresses via DNS lookup (default: 0)</source>
-        <translation>Alltid søk etter nodeadresser via DNS-oppslag (standardverdi: 0)</translation>
     </message>
     <message>
         <source>Cannot resolve -whitebind address: '%s'</source>
@@ -3198,10 +3062,6 @@ For eksempel: varselmelding=echo %%s | mail -s "Bitcoin Varsel" admin@foo.com</t
         <translation>Gebyr (i BTC/kB) for å legge til i transaksjoner du sender (standardverdi: %s)</translation>
     </message>
     <message>
-        <source>Include IP addresses in debug output (default: 0)</source>
-        <translation>Inkludere IP-adresser i feilsøkingslogg (standard: 0)</translation>
-    </message>
-    <message>
         <source>Information</source>
         <translation>Informasjon</translation>
     </message>
@@ -3230,24 +3090,8 @@ For eksempel: varselmelding=echo %%s | mail -s "Bitcoin Varsel" admin@foo.com</t
         <translation>Behold på det meste &lt;n&gt; blokker i minnet som ikke er mulig å koble (standardverdi: %u)</translation>
     </message>
     <message>
-        <source>Limit size of signature cache to &lt;n&gt; entries (default: 50000)</source>
-        <translation>Begrens størrelsen på signatur-hurtigbufferen til &lt;n&gt; oppføringer (standard: 50000)</translation>
-    </message>
-    <message>
-        <source>Log transaction priority and fee per kB when mining blocks (default: 0)</source>
-        <translation>Logg transaksjonsprioritet og gebyr per kB under blokkutvinning (standard: 0)</translation>
-    </message>
-    <message>
-        <source>Maintain a full transaction index (default: 0)</source>
-        <translation>Oppretthold en full transaksjonsindeks (standard: 0)</translation>
-    </message>
-    <message>
-        <source>Maximum per-connection receive buffer, &lt;n&gt;*1000 bytes (default: 5000)</source>
-        <translation>Maks mottaksbuffer per forbindelse, &lt;n&gt;*1000 bytes (standardverdi: 5000)</translation>
-    </message>
-    <message>
-        <source>Maximum per-connection send buffer, &lt;n&gt;*1000 bytes (default: 1000)</source>
-        <translation>Maks sendebuffer per forbindelse, &lt;n&gt;*1000 bytes (standardverdi: 1000)</translation>
+        <source>Keep at most &lt;n&gt; unconnectable transactions in memory (default: %u)</source>
+        <translation>Hold på det meste &lt;n&gt; transaksjoner som ikke kobles i minnet (standardverdi: %u)</translation>
     </message>
     <message>
         <source>Need to specify a port with -whitebind: '%s'</source>
@@ -3258,20 +3102,8 @@ For eksempel: varselmelding=echo %%s | mail -s "Bitcoin Varsel" admin@foo.com</t
         <translation>Node alternativer for videresending:</translation>
     </message>
     <message>
-        <source>Only accept block chain matching built-in checkpoints (default: 1)</source>
-        <translation>Aksepter kun en blokkjede som passer med innebygde sjekkpunkter (standardvalg: 1)</translation>
-    </message>
-    <message>
-        <source>Only connect to nodes in network &lt;net&gt; (IPv4, IPv6 or Tor)</source>
-        <translation>Koble kun til noder i nettverket &lt;nett&gt; (IPv4, IPv6 eller Tor)</translation>
-    </message>
-    <message>
         <source>Print block on startup, if found in block index</source>
         <translation>Skriv ut blokken ved oppstart, hvis funnet i blokkindeksen</translation>
-    </message>
-    <message>
-        <source>Print block tree on startup (default: 0)</source>
-        <translation>Skriv ut blokktreet ved oppstart (standardverdi: 0)</translation>
     </message>
     <message>
         <source>RPC SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
@@ -3290,28 +3122,8 @@ For eksempel: varselmelding=echo %%s | mail -s "Bitcoin Varsel" admin@foo.com</t
         <translation>Slumpvis bland 1 av hver &lt;n&gt; nettverksmeldinger</translation>
     </message>
     <message>
-        <source>Relay and mine data carrier transactions (default: 1)</source>
-        <translation>Videresend og ufør graving av databærende transaksjoner (standardverdi: 1)</translation>
-    </message>
-    <message>
-        <source>Relay non-P2SH multisig (default: 1)</source>
-        <translation>Videresende ikke-P2SH multisig (standard: 1)</translation>
-    </message>
-    <message>
-        <source>Run a thread to flush wallet periodically (default: 1)</source>
-        <translation>Kjør en tråd som skriver lommeboken til disk periodisk (standard: 1)</translation>
-    </message>
-    <message>
         <source>Send trace/debug info to console instead of debug.log file</source>
         <translation>Send spor-/feilsøkingsinformasjon til konsollen istedenfor filen debug.log</translation>
-    </message>
-    <message>
-        <source>Set minimum block size in bytes (default: 0)</source>
-        <translation>Sett minimum blokkstørrelse i bytes (standardverdi: 0)</translation>
-    </message>
-    <message>
-        <source>Sets the DB_PRIVATE flag in the wallet db environment (default: 1)</source>
-        <translation>Setter flagget DB_PRIVATE i miljøet til lommebokdatabasen (standard: 1)</translation>
     </message>
     <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>
@@ -3324,14 +3136,6 @@ For eksempel: varselmelding=echo %%s | mail -s "Bitcoin Varsel" admin@foo.com</t
     <message>
         <source>Signing transaction failed</source>
         <translation>Signering av transaksjon feilet</translation>
-    </message>
-    <message>
-        <source>Specify connection timeout in milliseconds (default: 5000)</source>
-        <translation>Angi tidsavbrudd for forbindelse i millisekunder (standardverdi: 5000)</translation>
-    </message>
-    <message>
-        <source>System error: </source>
-        <translation>Systemfeil:</translation>
     </message>
     <message>
         <source>This is experimental software.</source>
@@ -3352,10 +3156,6 @@ For eksempel: varselmelding=echo %%s | mail -s "Bitcoin Varsel" admin@foo.com</t
     <message>
         <source>Unable to bind to %s on this computer (bind returned error %s)</source>
         <translation>Kan ikke binde til %s på denne datamaskinen (binding returnerte feilen %s)</translation>
-    </message>
-    <message>
-        <source>Use UPnP to map the listening port (default: 0)</source>
-        <translation>Bruk UPnP for lytteport (standardverdi: 0)</translation>
     </message>
     <message>
         <source>Use UPnP to map the listening port (default: 1 when listening)</source>
@@ -3410,24 +3210,12 @@ For eksempel: varselmelding=echo %%s | mail -s "Bitcoin Varsel" admin@foo.com</t
         <translation>Oppgrader lommebok til nyeste format</translation>
     </message>
     <message>
-        <source>Set key pool size to &lt;n&gt; (default: 100)</source>
-        <translation>Angi størrelsen på nøkkellageret til &lt;n&gt; (standardverdi: 100)</translation>
-    </message>
-    <message>
         <source>Rescan the block chain for missing wallet transactions</source>
         <translation>Se gjennom blokkjeden etter manglende lommeboktransaksjoner</translation>
     </message>
     <message>
         <source>Use OpenSSL (https) for JSON-RPC connections</source>
         <translation>Bruk OpenSSL (https) for JSON-RPC forbindelser</translation>
-    </message>
-    <message>
-        <source>Server certificate file (default: server.cert)</source>
-        <translation>Servers sertifikat (standardverdi: server.cert)</translation>
-    </message>
-    <message>
-        <source>Server private key (default: server.pem)</source>
-        <translation>Servers private nøkkel (standardverdi: server.pem)</translation>
     </message>
     <message>
         <source>This help message</source>
@@ -3446,12 +3234,180 @@ For eksempel: varselmelding=echo %%s | mail -s "Bitcoin Varsel" admin@foo.com</t
         <translation>Feil ved lasting av wallet.dat: Lommeboken er skadet</translation>
     </message>
     <message>
+        <source>(1 = keep tx meta data e.g. account owner and payment request information, 2 = drop tx meta data)</source>
+        <translation>(1 = behold metadata for transaksjon som f. eks. kontoeier og informasjon om betalingsanmodning, 2 = dropp metadata for transaksjon)</translation>
+    </message>
+    <message>
+        <source>Flush database activity from memory pool to disk log every &lt;n&gt; megabytes (default: %u)</source>
+        <translation>Overfør aktiviteten i databasen fra minnelageret til loggen på harddisken for hver &lt;n&gt; megabytes (standardverdi: %u)</translation>
+    </message>
+    <message>
+        <source>How thorough the block verification of -checkblocks is (0-4, default: %u)</source>
+        <translation>Hvor grundig blokkverifiseringen til -checkblocks er (0-4, standardverdi: %u)</translation>
+    </message>
+    <message>
+        <source>If paytxfee is not set, include enough fee so transactions are confirmed on average within n blocks (default: %u)</source>
+        <translation>Hvis paytxfee ikke er angitt, inkluderer da nok gebyr til at transaksjoner gjennomsnittligt bekreftes innen n blokker (standardverdi: %u)</translation>
+    </message>
+    <message>
+        <source>Log transaction priority and fee per kB when mining blocks (default: %u)</source>
+        <translation>Logg transaksjonsprioritet og gebyr per kB under blokkutvinning (standardverdi: %u)</translation>
+    </message>
+    <message>
+        <source>Maintain a full transaction index, used by the getrawtransaction rpc call (default: %u)</source>
+        <translation>Oppretthold en full transaksjonsindeks, brukt av getrawtransaction RPC-kall (standardverdi: %u)</translation>
+    </message>
+    <message>
+        <source>Number of seconds to keep misbehaving peers from reconnecting (default: %u)</source>
+        <translation>Antall sekunder noder med dårlig oppførsel hindres fra å koble til på nytt (standardverdi: %u)</translation>
+    </message>
+    <message>
+        <source>Output debugging information (default: %u, supplying &lt;category&gt; is optional)</source>
+        <translation>Ta ut feilsøkingsinformasjon (standardverdi: %u, bruk av &lt;category&gt; er valgfritt)</translation>
+    </message>
+    <message>
+        <source>Set the processor limit for when generation is on (-1 = unlimited, default: %d)</source>
+        <translation>Sett prosessorgrensen for når blokkutvinning er på (-1 = ubegrenset, standardverdi: %d)</translation>
+    </message>
+    <message>
+        <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: %s)</source>
+        <translation>Bruk separate SOCKS5 proxyer for å nå noder via Tor skjulte tjenester (standardverdi: %s)</translation>
+    </message>
+    <message>
+        <source>(default: %s)</source>
+        <translation>(standardverdi: %s)</translation>
+    </message>
+    <message>
+        <source>Acceptable ciphers (default: %s)</source>
+        <translation>Akseptable sifre (standardverdi: %s)</translation>
+    </message>
+    <message>
+        <source>Always query for peer addresses via DNS lookup (default: %u)</source>
+        <translation>Alltid søk etter nodeadresser via DNS-oppslag (standardverdi: %u)</translation>
+    </message>
+    <message>
+        <source>Disable safemode, override a real safe mode event (default: %u)</source>
+        <translation>Slå av sikkerhetsmodus, overstyr en virkelig sikkerhetsmodushendelse (standardverdi: %u)</translation>
+    </message>
+    <message>
         <source>Error loading wallet.dat</source>
         <translation>Feil ved lasting av wallet.dat</translation>
     </message>
     <message>
+        <source>Force safe mode (default: %u)</source>
+        <translation>Tving sikkerhetsmodus (standardverdi: %u)</translation>
+    </message>
+    <message>
+        <source>Generate coins (default: %u)</source>
+        <translation>Generer mynter (standardverdi: %u)</translation>
+    </message>
+    <message>
+        <source>How many blocks to check at startup (default: %u, 0 = all)</source>
+        <translation>Hvor mange blokker skal sjekkes ved oppstart (standardverdi: %u, 0 = alle)</translation>
+    </message>
+    <message>
+        <source>Include IP addresses in debug output (default: %u)</source>
+        <translation>Inkludere IP-adresser i feilsøkingslogg (standardverdi: %u)</translation>
+    </message>
+    <message>
         <source>Invalid -proxy address: '%s'</source>
         <translation>Ugyldig -proxy adresse: '%s'</translation>
+    </message>
+    <message>
+        <source>Limit size of signature cache to &lt;n&gt; entries (default: %u)</source>
+        <translation>Begrens størrelsen på hurtigbufferen for signaturer til &lt;n&gt; oppføringer (standardverdi: %u)</translation>
+    </message>
+    <message>
+        <source>Listen for JSON-RPC connections on &lt;port&gt; (default: %u or testnet: %u)</source>
+        <translation>Lytt etter JSON-RPC tilkoblinger på &lt;port&gt; (standardverdi: %u eller testnett: %u)</translation>
+    </message>
+    <message>
+        <source>Listen for connections on &lt;port&gt; (default: %u or testnet: %u)</source>
+        <translation>Lytt etter tilkoblinger på &lt;port&gt; (standardverdi: %u eller testnett: %u)</translation>
+    </message>
+    <message>
+        <source>Maintain at most &lt;n&gt; connections to peers (default: %u)</source>
+        <translation>Hold maks &lt;n&gt; koblinger åpne til andre noder (standardverdi: %u)</translation>
+    </message>
+    <message>
+        <source>Maximum per-connection receive buffer, &lt;n&gt;*1000 bytes (default: %u)</source>
+        <translation>Maks mottaksbuffer per forbindelse, &lt;n&gt;*1000 bytes (standardverdi: %u)</translation>
+    </message>
+    <message>
+        <source>Maximum per-connection send buffer, &lt;n&gt;*1000 bytes (default: %u)</source>
+        <translation>Maks sendebuffer per forbindelse, &lt;n&gt;*1000 bytes (standardverdi: %u)</translation>
+    </message>
+    <message>
+        <source>Only accept block chain matching built-in checkpoints (default: %u)</source>
+        <translation>Aksepter kun blokkjeden som stemmer med innebygde sjekkpunkter (standardvalg: %u)</translation>
+    </message>
+    <message>
+        <source>Prepend debug output with timestamp (default: %u)</source>
+        <translation>Sett inn tidsstempel i front av feilsøkingsdata (standardverdi: %u)</translation>
+    </message>
+    <message>
+        <source>Print block tree on startup (default: %u)</source>
+        <translation>Skriv ut blokktreet ved oppstart (standardverdi: %u)</translation>
+    </message>
+    <message>
+        <source>Relay and mine data carrier transactions (default: %u)</source>
+        <translation>Videresend og ufør graving av databærende transaksjoner (standardverdi: %u)</translation>
+    </message>
+    <message>
+        <source>Relay non-P2SH multisig (default: %u)</source>
+        <translation>Videresend ikke-P2SH multisig (standardverdi: %u)</translation>
+    </message>
+    <message>
+        <source>Run a thread to flush wallet periodically (default: %u)</source>
+        <translation>Kjør en tråd som skriver lommeboken til disk periodisk (standardverdi: %u)</translation>
+    </message>
+    <message>
+        <source>Server certificate file (default: %s)</source>
+        <translation>Fil for tjenersertifikat (standardverdi: %s)</translation>
+    </message>
+    <message>
+        <source>Server private key (default: %s)</source>
+        <translation>Privat nøkkel for tjener (standardverdi: %s) </translation>
+    </message>
+    <message>
+        <source>Set key pool size to &lt;n&gt; (default: %u)</source>
+        <translation>Angi størrelse på nøkkel-lager til &lt;n&gt; (standardverdi: %u)</translation>
+    </message>
+    <message>
+        <source>Set minimum block size in bytes (default: %u)</source>
+        <translation>Sett minimum blokkstørrelse i bytes (standardverdi: %u)</translation>
+    </message>
+    <message>
+        <source>Set the number of threads to service RPC calls (default: %d)</source>
+        <translation>Sett antall tråder til betjening av RPC-kall (standardverdi: %d)</translation>
+    </message>
+    <message>
+        <source>Sets the DB_PRIVATE flag in the wallet db environment (default: %u)</source>
+        <translation>Setter flagget DB_PRIVATE i miljøet til lommebokdatabasen (standardverdi: %u)</translation>
+    </message>
+    <message>
+        <source>Specify configuration file (default: %s)</source>
+        <translation>Angi konfigurasjonsfil (standardverdi: %s)</translation>
+    </message>
+    <message>
+        <source>Specify connection timeout in milliseconds (minimum: 1, default: %d)</source>
+        <translation>Angi tidsavbrudd for forbindelse i millisekunder (minimum: 1, standardverdi: %d)</translation>
+    </message>
+    <message>
+        <source>Specify pid file (default: %s)</source>
+        <translation>Angi pid-fil (standardverdi: %s)</translation>
+    </message>
+    <message>
+        <source>Spend unconfirmed change when sending transactions (default: %u)</source>
+        <translation>Bruk ubekreftet veksel ved sending av transaksjoner (standardverdi: %u)</translation>
+    </message>
+    <message>
+        <source>Stop running after importing blocks from disk (default: %u)</source>
+        <translation>Avslutt etter import av blokker fra disk (standardverdi: %u)</translation>
+    </message>
+    <message>
+        <source>Threshold for disconnecting misbehaving peers (default: %u)</source>
+        <translation>Grenseverdi for å koble fra noder med dårlig oppførsel (standardverdi: %u)</translation>
     </message>
     <message>
         <source>Unknown network specified in -onlynet: '%s'</source>

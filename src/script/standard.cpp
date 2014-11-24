@@ -5,14 +5,20 @@
 
 #include "script/standard.h"
 
+#include "pubkey.h"
 #include "script/script.h"
 #include "util.h"
+#include "utilstrencodings.h"
 
 #include <boost/foreach.hpp>
 
 using namespace std;
 
 typedef vector<unsigned char> valtype;
+
+unsigned nMaxDatacarrierBytes = MAX_OP_RETURN_RELAY;
+
+CScriptID::CScriptID(const CScript& in) : uint160(in.size() ? Hash160(in.begin(), in.end()) : 0) {}
 
 const char* GetTxnOutputType(txnouttype t)
 {
@@ -28,9 +34,9 @@ const char* GetTxnOutputType(txnouttype t)
     return NULL;
 }
 
-//
-// Return public keys or hashes from scriptPubKey, for 'standard' transaction types.
-//
+/**
+ * Return public keys or hashes from scriptPubKey, for 'standard' transaction types.
+ */
 bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, vector<vector<unsigned char> >& vSolutionsRet)
 {
     // Templates
@@ -136,8 +142,8 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, vector<vector<unsi
             }
             else if (opcode2 == OP_SMALLDATA)
             {
-                // small pushdata, <= MAX_OP_RETURN_RELAY bytes
-                if (vch1.size() > MAX_OP_RETURN_RELAY)
+                // small pushdata, <= nMaxDatacarrierBytes
+                if (vch1.size() > nMaxDatacarrierBytes)
                     break;
             }
             else if (opcode1 != opcode2 || vch1 != vch2)
@@ -280,13 +286,13 @@ public:
 
     bool operator()(const CKeyID &keyID) const {
         script->clear();
-        *script << OP_DUP << OP_HASH160 << keyID << OP_EQUALVERIFY << OP_CHECKSIG;
+        *script << OP_DUP << OP_HASH160 << ToByteVector(keyID) << OP_EQUALVERIFY << OP_CHECKSIG;
         return true;
     }
 
     bool operator()(const CScriptID &scriptID) const {
         script->clear();
-        *script << OP_HASH160 << scriptID << OP_EQUAL;
+        *script << OP_HASH160 << ToByteVector(scriptID) << OP_EQUAL;
         return true;
     }
 };
@@ -306,7 +312,7 @@ CScript GetScriptForMultisig(int nRequired, const std::vector<CPubKey>& keys)
 
     script << CScript::EncodeOP_N(nRequired);
     BOOST_FOREACH(const CPubKey& key, keys)
-        script << key;
+        script << ToByteVector(key);
     script << CScript::EncodeOP_N(keys.size()) << OP_CHECKMULTISIG;
     return script;
 }

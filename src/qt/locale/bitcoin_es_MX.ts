@@ -569,10 +569,6 @@
         <source>Form</source>
         <translation>Formulario</translation>
     </message>
-    <message>
-        <source>&lt;b&gt;Recent transactions&lt;/b&gt;</source>
-        <translation>&lt;b&gt;Transacciones recientes&lt;/b&gt;</translation>
-    </message>
     </context>
 <context>
     <name>PaymentServer</name>

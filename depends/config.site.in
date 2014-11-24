@@ -48,32 +48,37 @@ if test x@host_os@ = xmingw32; then
   fi
 fi
 
-export PATH=$prefix/native/bin:$PATH
-export PKG_CONFIG="`which pkg-config` --static"
+PATH=$prefix/native/bin:$PATH
+PKG_CONFIG="`which pkg-config` --static"
+
+# These two need to remain exported because pkg-config does not see them
+# otherwise. That means they must be unexported at the end of configure.ac to
+# avoid ruining the cache. Sigh.
+
 export PKG_CONFIG_LIBDIR=$prefix/lib/pkgconfig
 export PKG_CONFIG_PATH=$prefix/share/pkgconfig
 
-export CPPFLAGS="-I$prefix/include/ $CPPFLAGS"
-export LDFLAGS="-L$prefix/lib $LDFLAGS"
+CPPFLAGS="-I$prefix/include/ $CPPFLAGS"
+LDFLAGS="-L$prefix/lib $LDFLAGS"
 
-export CC="@CC@"
-export CXX="@CXX@"
-export OBJC="${CC}"
-export OBJCXX="${CXX}"
-export CCACHE=$prefix/native/bin/ccache
+CC="@CC@"
+CXX="@CXX@"
+OBJC="${CC}"
+OBJCXX="${CXX}"
+CCACHE=$prefix/native/bin/ccache
 
 if test -n "@AR@"; then
-  export AR=@AR@
+  AR=@AR@
   ac_cv_path_ac_pt_AR=${AR}
 fi
 
 if test -n "@RANLIB@"; then
-  export RANLIB=@RANLIB@
+  RANLIB=@RANLIB@
   ac_cv_path_ac_pt_RANLIB=${RANLIB}
 fi
 
 if test -n "@NM@"; then
-  export NM=@NM@
+  NM=@NM@
   ac_cv_path_ac_pt_NM=${NM}
 fi
 
@@ -82,14 +87,14 @@ if test -n "@debug@"; then
 fi
 
 if test -n "@CFLAGS@"; then
-  export CFLAGS="@CFLAGS@ $CFLAGS"
+  CFLAGS="@CFLAGS@ $CFLAGS"
 fi
 if test -n "@CXXFLAGS@"; then
-  export CXXFLAGS="@CXXFLAGS@ $CXXFLAGS"
+  CXXFLAGS="@CXXFLAGS@ $CXXFLAGS"
 fi
 if test -n "@CPPFLAGS@"; then
-  export CPPFLAGS="@CPPFLAGS@ $CPPFLAGS"
+  CPPFLAGS="@CPPFLAGS@ $CPPFLAGS"
 fi
 if test -n "@LDFLAGS@"; then
-  export LDFLAGS="@LDFLAGS@ $LDFLAGS"
+  LDFLAGS="@LDFLAGS@ $LDFLAGS"
 fi

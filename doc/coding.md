@@ -12,20 +12,6 @@ gradually.
   - No indentation for public/protected/private or for namespaces.
   - No extra spaces inside parenthesis; don't do ( this )
   - No space after function names; one space after if, for and while.
-- Includes need to be ordered alphabetically, separate own and foreign headers with a new-line (example key.cpp):
-```c++
-#include "key.h"
-
-#include "crypto/sha2.h"
-#include "util.h"
-
-#include <openssl/foo.h>
-```
-- Class or struct keywords in header files need to be ordered alphabetically:
-```c++
-class CAlpha;
-class CBeta;
-```
 
 Block style example:
 ```c++
@@ -128,8 +114,6 @@ Threads
 - ThreadImport : Loads blocks from blk*.dat files or bootstrap.dat.
 
 - StartNode : Starts other threads.
-
-- ThreadGetMyExternalIP : Determines outside-the-firewall IP address, sends addr message to connected peers when it determines it.
 
 - ThreadDNSAddressSeed : Loads addresses of peers from the DNS.
 

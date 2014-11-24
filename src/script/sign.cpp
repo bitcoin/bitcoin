@@ -5,7 +5,7 @@
 
 #include "script/sign.h"
 
-#include "core.h"
+#include "core/transaction.h"
 #include "key.h"
 #include "keystore.h"
 #include "script/standard.h"
@@ -46,12 +46,12 @@ bool SignN(const vector<valtype>& multisigdata, const CKeyStore& keystore, uint2
     return nSigned==nRequired;
 }
 
-//
-// Sign scriptPubKey with private keys stored in keystore, given transaction hash and hash type.
-// Signatures are returned in scriptSigRet (or returns false if scriptPubKey can't be signed),
-// unless whichTypeRet is TX_SCRIPTHASH, in which case scriptSigRet is the redemption script.
-// Returns false if scriptPubKey could not be completely satisfied.
-//
+/**
+ * Sign scriptPubKey with private keys stored in keystore, given transaction hash and hash type.
+ * Signatures are returned in scriptSigRet (or returns false if scriptPubKey can't be signed),
+ * unless whichTypeRet is TX_SCRIPTHASH, in which case scriptSigRet is the redemption script.
+ * Returns false if scriptPubKey could not be completely satisfied.
+ */
 bool Solver(const CKeyStore& keystore, const CScript& scriptPubKey, uint256 hash, int nHashType,
                   CScript& scriptSigRet, txnouttype& whichTypeRet)
 {
@@ -78,7 +78,7 @@ bool Solver(const CKeyStore& keystore, const CScript& scriptPubKey, uint256 hash
         {
             CPubKey vch;
             keystore.GetPubKey(keyID, vch);
-            scriptSigRet << vch;
+            scriptSigRet << ToByteVector(vch);
         }
         return true;
     case TX_SCRIPTHASH:
@@ -144,9 +144,9 @@ static CScript PushAll(const vector<valtype>& values)
     return result;
 }
 
-static CScript CombineMultisig(CScript scriptPubKey, const CMutableTransaction& txTo, unsigned int nIn,
+static CScript CombineMultisig(const CScript& scriptPubKey, const CTransaction& txTo, unsigned int nIn,
                                const vector<valtype>& vSolutions,
-                               vector<valtype>& sigs1, vector<valtype>& sigs2)
+                               const vector<valtype>& sigs1, const vector<valtype>& sigs2)
 {
     // Combine all the signatures we've got:
     set<valtype> allsigs;
@@ -199,7 +199,7 @@ static CScript CombineMultisig(CScript scriptPubKey, const CMutableTransaction& 
     return result;
 }
 
-static CScript CombineSignatures(CScript scriptPubKey, const CTransaction& txTo, unsigned int nIn,
+static CScript CombineSignatures(const CScript& scriptPubKey, const CTransaction& txTo, unsigned int nIn,
                                  const txnouttype txType, const vector<valtype>& vSolutions,
                                  vector<valtype>& sigs1, vector<valtype>& sigs2)
 {
@@ -244,7 +244,7 @@ static CScript CombineSignatures(CScript scriptPubKey, const CTransaction& txTo,
     return CScript();
 }
 
-CScript CombineSignatures(CScript scriptPubKey, const CTransaction& txTo, unsigned int nIn,
+CScript CombineSignatures(const CScript& scriptPubKey, const CTransaction& txTo, unsigned int nIn,
                           const CScript& scriptSig1, const CScript& scriptSig2)
 {
     txnouttype txType;

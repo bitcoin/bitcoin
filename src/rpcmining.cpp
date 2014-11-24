@@ -1,8 +1,9 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2009-2013 The Bitcoin developers
-// Distributed under the MIT/X11 software license, see the accompanying
+// Copyright (c) 2009-2014 The Bitcoin developers
+// Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include "amount.h"
 #include "chainparams.h"
 #include "core_io.h"
 #include "init.h"
@@ -27,9 +28,11 @@
 using namespace json_spirit;
 using namespace std;
 
-// Return average network hashes per second based on the last 'lookup' blocks,
-// or from the last difficulty change if 'lookup' is nonpositive.
-// If 'height' is nonnegative, compute the estimate at the time when a given block was found.
+/**
+ * Return average network hashes per second based on the last 'lookup' blocks,
+ * or from the last difficulty change if 'lookup' is nonpositive.
+ * If 'height' is nonnegative, compute the estimate at the time when a given block was found.
+ */
 Value GetNetworkHashPS(int lookup, int height) {
     CBlockIndex *pb = chainActive.Tip();
 
@@ -120,6 +123,8 @@ Value setgenerate(const Array& params, bool fHelp)
             "1. generate         (boolean, required) Set to true to turn on generation, off to turn off.\n"
             "2. genproclimit     (numeric, optional) Set the processor limit for when generation is on. Can be -1 for unlimited.\n"
             "                    Note: in -regtest mode, genproclimit controls how many blocks are generated immediately.\n"
+            "\nResult\n"
+            "[ blockhashes ]     (array, -regtest only) hashes of blocks generated\n"
             "\nExamples:\n"
             "\nSet the generation on with a limit of one processor\n"
             + HelpExampleCli("setgenerate", "true 1") +
@@ -153,26 +158,38 @@ Value setgenerate(const Array& params, bool fHelp)
         int nHeightEnd = 0;
         int nHeight = 0;
         int nGenerate = (nGenProcLimit > 0 ? nGenProcLimit : 1);
+        CReserveKey reservekey(pwalletMain);
+
         {   // Don't keep cs_main locked
             LOCK(cs_main);
             nHeightStart = chainActive.Height();
             nHeight = nHeightStart;
             nHeightEnd = nHeightStart+nGenerate;
         }
-        int nHeightLast = -1;
+        unsigned int nExtraNonce = 0;
+        Array blockHashes;
         while (nHeight < nHeightEnd)
         {
-            if (nHeightLast != nHeight)
+            auto_ptr<CBlockTemplate> pblocktemplate(CreateNewBlockWithKey(reservekey));
+            if (!pblocktemplate.get())
+                throw JSONRPCError(RPC_INTERNAL_ERROR, "Wallet keypool empty");
+            CBlock *pblock = &pblocktemplate->block;
             {
-                nHeightLast = nHeight;
-                GenerateBitcoins(fGenerate, pwalletMain, 1);
-            }
-            MilliSleep(1);
-            {   // Don't keep cs_main locked
                 LOCK(cs_main);
-                nHeight = chainActive.Height();
+                IncrementExtraNonce(pblock, chainActive.Tip(), nExtraNonce);
             }
+            while (!CheckProofOfWork(pblock->GetHash(), pblock->nBits)) {
+                // Yes, there is a chance every nonce could fail to satisfy the -regtest
+                // target -- 1 in 2^(2^32). That ain't gonna happen.
+                ++pblock->nNonce;
+            }
+            CValidationState state;
+            if (!ProcessNewBlock(state, NULL, pblock))
+                throw JSONRPCError(RPC_INTERNAL_ERROR, "ProcessNewBlock, block not accepted");
+            ++nHeight;
+            blockHashes.push_back(pblock->GetHash().GetHex());
         }
+        return blockHashes;
     }
     else // Not -regtest: start generate thread, return immediately
     {
@@ -282,6 +299,25 @@ Value prioritisetransaction(const Array& params, bool fHelp)
 }
 
 
+// NOTE: Assumes a conclusive result; if result is inconclusive, it must be handled by caller
+static Value BIP22ValidationResult(const CValidationState& state)
+{
+    if (state.IsValid())
+        return Value::null;
+
+    std::string strRejectReason = state.GetRejectReason();
+    if (state.IsError())
+        throw JSONRPCError(RPC_VERIFY_ERROR, strRejectReason);
+    if (state.IsInvalid())
+    {
+        if (strRejectReason.empty())
+            return "rejected";
+        return strRejectReason;
+    }
+    // Should be impossible
+    return "valid?";
+}
+
 Value getblocktemplate(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() > 1)
@@ -359,6 +395,36 @@ Value getblocktemplate(const Array& params, bool fHelp)
         else
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid mode");
         lpval = find_value(oparam, "longpollid");
+
+        if (strMode == "proposal")
+        {
+            const Value& dataval = find_value(oparam, "data");
+            if (dataval.type() != str_type)
+                throw JSONRPCError(RPC_TYPE_ERROR, "Missing data String key for proposal");
+
+            CBlock block;
+            if (!DecodeHexBlk(block, dataval.get_str()))
+                throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Block decode failed");
+
+            uint256 hash = block.GetHash();
+            BlockMap::iterator mi = mapBlockIndex.find(hash);
+            if (mi != mapBlockIndex.end()) {
+                CBlockIndex *pindex = mi->second;
+                if (pindex->IsValid(BLOCK_VALID_SCRIPTS))
+                    return "duplicate";
+                if (pindex->nStatus & BLOCK_FAILED_MASK)
+                    return "duplicate-invalid";
+                return "duplicate-inconclusive";
+            }
+
+            CBlockIndex* const pindexPrev = chainActive.Tip();
+            // TestBlockValidity only supports blocks built on the current Tip
+            if (block.hashPrevBlock != pindexPrev->GetBlockHash())
+                return "inconclusive-not-best-prevblk";
+            CValidationState state;
+            TestBlockValidity(state, block, pindexPrev, false, true);
+            return BIP22ValidationResult(state);
+        }
     }
 
     if (strMode != "template")
@@ -461,6 +527,8 @@ Value getblocktemplate(const Array& params, bool fHelp)
     UpdateTime(pblock, pindexPrev);
     pblock->nNonce = 0;
 
+    static const Array aCaps = boost::assign::list_of("proposal");
+
     Array transactions;
     map<uint256, int64_t> setTxIndex;
     int i = 0;
@@ -507,6 +575,7 @@ Value getblocktemplate(const Array& params, bool fHelp)
     }
 
     Object result;
+    result.push_back(Pair("capabilities", aCaps));
     result.push_back(Pair("version", pblock->nVersion));
     result.push_back(Pair("previousblockhash", pblock->hashPrevBlock.GetHex()));
     result.push_back(Pair("transactions", transactions));
@@ -525,6 +594,24 @@ Value getblocktemplate(const Array& params, bool fHelp)
 
     return result;
 }
+
+class submitblock_StateCatcher : public CValidationInterface
+{
+public:
+    uint256 hash;
+    bool found;
+    CValidationState state;
+
+    submitblock_StateCatcher(const uint256 &hashIn) : hash(hashIn), found(false), state() {};
+
+protected:
+    virtual void BlockChecked(const CBlock& block, const CValidationState& stateIn) {
+        if (block.GetHash() != hash)
+            return;
+        found = true;
+        state = stateIn;
+    };
+};
 
 Value submitblock(const Array& params, bool fHelp)
 {
@@ -547,22 +634,39 @@ Value submitblock(const Array& params, bool fHelp)
             + HelpExampleRpc("submitblock", "\"mydata\"")
         );
 
-    vector<unsigned char> blockData(ParseHex(params[0].get_str()));
-    CDataStream ssBlock(blockData, SER_NETWORK, PROTOCOL_VERSION);
-    CBlock pblock;
-    try {
-        ssBlock >> pblock;
-    }
-    catch (const std::exception &) {
+    CBlock block;
+    if (!DecodeHexBlk(block, params[0].get_str()))
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Block decode failed");
+
+    uint256 hash = block.GetHash();
+    BlockMap::iterator mi = mapBlockIndex.find(hash);
+    if (mi != mapBlockIndex.end()) {
+        CBlockIndex *pindex = mi->second;
+        if (pindex->IsValid(BLOCK_VALID_SCRIPTS))
+            return "duplicate";
+        if (pindex->nStatus & BLOCK_FAILED_MASK)
+            return "duplicate-invalid";
+        // Otherwise, we might only have the header - process the block before returning
     }
 
     CValidationState state;
-    bool fAccepted = ProcessBlock(state, NULL, &pblock);
-    if (!fAccepted)
-        return "rejected"; // TODO: report validation state
-
-    return Value::null;
+    submitblock_StateCatcher sc(block.GetHash());
+    RegisterValidationInterface(&sc);
+    bool fAccepted = ProcessNewBlock(state, NULL, &block);
+    UnregisterValidationInterface(&sc);
+    if (mi != mapBlockIndex.end())
+    {
+        if (fAccepted && !sc.found)
+            return "duplicate-inconclusive";
+        return "duplicate";
+    }
+    if (fAccepted)
+    {
+        if (!sc.found)
+            return "inconclusive";
+        state = sc.state;
+    }
+    return BIP22ValidationResult(state);
 }
 
 Value estimatefee(const Array& params, bool fHelp)

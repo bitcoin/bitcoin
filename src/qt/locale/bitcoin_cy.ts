@@ -155,10 +155,6 @@
         <translation>Bar offer tabiau</translation>
     </message>
     <message>
-        <source>[testnet]</source>
-        <translation>[testnet]</translation>
-    </message>
-    <message>
         <source>Error</source>
         <translation>Gwall</translation>
     </message>
@@ -284,10 +280,6 @@
     <message>
         <source>Form</source>
         <translation>Ffurflen</translation>
-    </message>
-    <message>
-        <source>&lt;b&gt;Recent transactions&lt;/b&gt;</source>
-        <translation>&lt;b&gt;Trafodion diweddar&lt;/b&gt;</translation>
     </message>
     </context>
 <context>

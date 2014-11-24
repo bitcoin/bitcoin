@@ -1,9 +1,10 @@
 // Copyright (c) 2010 Satoshi Nakamoto
 // Copyright (c) 2009-2014 The Bitcoin developers
-// Distributed under the MIT/X11 software license, see the accompanying
+// Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "base58.h"
+#include "clientversion.h"
 #include "init.h"
 #include "main.h"
 #include "net.h"
@@ -29,7 +30,7 @@ using namespace std;
 
 /**
  * @note Do not add or change anything in the information returned by this
- * method. `getinfo` exists for backwards-compatibilty only. It combines
+ * method. `getinfo` exists for backwards-compatibility only. It combines
  * information from wildly different sources in the program, which is a mess,
  * and is thus planned to be deprecated eventually.
  *
@@ -197,9 +198,9 @@ Value validateaddress(const Array& params, bool fHelp)
     return ret;
 }
 
-//
-// Used by addmultisigaddress / createmultisig:
-//
+/**
+ * Used by addmultisigaddress / createmultisig:
+ */
 CScript _createmultisig_redeemScript(const Array& params)
 {
     int nRequired = params[0].get_int();
@@ -292,7 +293,7 @@ Value createmultisig(const Array& params, bool fHelp)
 
     // Construct using pay-to-script-hash:
     CScript inner = _createmultisig_redeemScript(params);
-    CScriptID innerID = inner.GetID();
+    CScriptID innerID(inner);
     CBitcoinAddress address(innerID);
 
     Object result;
@@ -352,4 +353,24 @@ Value verifymessage(const Array& params, bool fHelp)
         return false;
 
     return (pubkey.GetID() == keyID);
+}
+
+Value setmocktime(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 1)
+        throw runtime_error(
+            "setmocktime timestamp\n"
+            "\nSet the local time to given timestamp (-regtest only)\n"
+            "\nArguments:\n"
+            "1. timestamp  (integer, required) Unix seconds-since-epoch timestamp\n"
+            "   Pass 0 to go back to using the system time."
+        );
+
+    if (!Params().MineBlocksOnDemand())
+        throw runtime_error("setmocktime for regression testing (-regtest mode) only");
+
+    RPCTypeCheck(params, boost::assign::list_of(int_type));
+    SetMockTime(params[0].get_int64());
+
+    return Value::null;
 }

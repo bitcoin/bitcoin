@@ -7,6 +7,7 @@
 
 #include "chainparams.h"
 #include "util.h"
+#include "utilstrencodings.h"
 
 #ifndef WIN32
 # include <arpa/inet.h>

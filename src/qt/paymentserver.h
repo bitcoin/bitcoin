@@ -2,8 +2,9 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef PAYMENTSERVER_H
-#define PAYMENTSERVER_H
+#ifndef BITCOIN_QT_PAYMENTSERVER_H
+#define BITCOIN_QT_PAYMENTSERVER_H
+
 // This class handles payment requests from clicking on
 // bitcoin: URIs
 //
@@ -135,4 +136,4 @@ private:
     OptionsModel *optionsModel;
 };
 
-#endif // PAYMENTSERVER_H
+#endif // BITCOIN_QT_PAYMENTSERVER_H

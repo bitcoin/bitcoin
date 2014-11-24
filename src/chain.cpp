@@ -7,19 +7,19 @@
 
 using namespace std;
 
-// CChain implementation
-
-CBlockIndex *CChain::SetTip(CBlockIndex *pindex) {
+/**
+ * CChain implementation
+ */
+void CChain::SetTip(CBlockIndex *pindex) {
     if (pindex == NULL) {
         vChain.clear();
-        return NULL;
+        return;
     }
     vChain.resize(pindex->nHeight + 1);
     while (pindex && vChain[pindex->nHeight] != pindex) {
         vChain[pindex->nHeight] = pindex;
         pindex = pindex->pprev;
     }
-    return pindex;
 }
 
 CBlockLocator CChain::GetLocator(const CBlockIndex *pindex) const {

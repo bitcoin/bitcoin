@@ -162,10 +162,6 @@
         <source>Tabs toolbar</source>
         <translation>Barra de herramientas</translation>
     </message>
-    <message>
-        <source>[testnet]</source>
-        <translation>[prueba_de_red]</translation>
-    </message>
     <message numerus="yes">
         <source>%n active connection(s) to Bitcoin network</source>
         <translation><numerusform>%n conexión activa a la red Bitcoin </numerusform><numerusform>%n conexiones activas a la red Bitcoin</numerusform></translation>
@@ -276,10 +272,6 @@
     <message>
         <source>Form</source>
         <translation>Formulario</translation>
-    </message>
-    <message>
-        <source>&lt;b&gt;Recent transactions&lt;/b&gt;</source>
-        <translation>&lt;b&gt;Transacciones recientes&lt;/b&gt;</translation>
     </message>
     </context>
 <context>

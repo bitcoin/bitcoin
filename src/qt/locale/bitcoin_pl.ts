@@ -387,10 +387,6 @@
         <translation>Pasek zakładek</translation>
     </message>
     <message>
-        <source>[testnet]</source>
-        <translation>[testnet]</translation>
-    </message>
-    <message>
         <source>Bitcoin Core</source>
         <translation>Rdzeń BitCoin</translation>
     </message>
@@ -425,10 +421,6 @@
     <message>
         <source>No block source available...</source>
         <translation>Brak dostępnych źródeł bloków...</translation>
-    </message>
-    <message>
-        <source>Processed %1 blocks of transaction history.</source>
-        <translation>Pobrano %1 bloków z historią transakcji.</translation>
     </message>
     <message numerus="yes">
         <source>%n hour(s)</source>
@@ -888,15 +880,7 @@ Adres: %4
         <source>Error</source>
         <translation>Błąd</translation>
     </message>
-    <message>
-        <source>GB of free space available</source>
-        <translation>GB dostępnego wolnego miejsca</translation>
-    </message>
-    <message>
-        <source>(of %1GB needed)</source>
-        <translation>(z %1GB potrzebnego)</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>OpenURIDialog</name>
     <message>
@@ -1102,10 +1086,6 @@ Adres: %4
         <translation>Wyświetlana informacja może być nieaktualna. Twój portfel synchronizuje się automatycznie z siecią bitcoin, zaraz po tym jak uzyskano połączenie, ale proces ten nie został jeszcze ukończony.</translation>
     </message>
     <message>
-        <source>Wallet</source>
-        <translation>Portfel</translation>
-    </message>
-    <message>
         <source>Available:</source>
         <translation>Dostępne:</translation>
     </message>
@@ -1136,10 +1116,6 @@ Adres: %4
     <message>
         <source>Your current total balance</source>
         <translation>Twoje obecne saldo</translation>
-    </message>
-    <message>
-        <source>&lt;b&gt;Recent transactions&lt;/b&gt;</source>
-        <translation>&lt;b&gt;Ostatnie transakcje&lt;/b&gt;</translation>
     </message>
     <message>
         <source>out of sync</source>
@@ -2347,24 +2323,8 @@ Adres: %4
         <translation>Opcje:</translation>
     </message>
     <message>
-        <source>Specify configuration file (default: bitcoin.conf)</source>
-        <translation>Wskaż plik konfiguracyjny (domyślnie: bitcoin.conf)</translation>
-    </message>
-    <message>
-        <source>Specify pid file (default: bitcoind.pid)</source>
-        <translation>Wskaż plik pid (domyślnie: bitcoin.pid)</translation>
-    </message>
-    <message>
         <source>Specify data directory</source>
         <translation>Wskaż folder danych</translation>
-    </message>
-    <message>
-        <source>Listen for connections on &lt;port&gt; (default: 8333 or testnet: 18333)</source>
-        <translation>Nasłuchuj połączeń na &lt;port&gt; (domyślnie: 8333 lub testnet: 18333)</translation>
-    </message>
-    <message>
-        <source>Maintain at most &lt;n&gt; connections to peers (default: 125)</source>
-        <translation>Utrzymuj maksymalnie &lt;n&gt; połączeń z peerami (domyślnie: 125)</translation>
     </message>
     <message>
         <source>Connect to a node to retrieve peer addresses, and disconnect</source>
@@ -2373,18 +2333,6 @@ Adres: %4
     <message>
         <source>Specify your own public address</source>
         <translation>Podaj swój publiczny adres</translation>
-    </message>
-    <message>
-        <source>Threshold for disconnecting misbehaving peers (default: 100)</source>
-        <translation>Próg po którym nastąpi rozłączenie nietrzymających się zasad peerów (domyślnie: 100)</translation>
-    </message>
-    <message>
-        <source>Number of seconds to keep misbehaving peers from reconnecting (default: 86400)</source>
-        <translation>Czas w sekundach, przez jaki nietrzymający się zasad peerzy nie będą mogli ponownie się podłączyć (domyślnie: 86400)</translation>
-    </message>
-    <message>
-        <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 8332 or testnet: 18332)</source>
-        <translation>Nasłuchuj połączeń JSON-RPC na &lt;port&gt; (domyślnie: 8332 or testnet: 18332)</translation>
     </message>
     <message>
         <source>Accept command line and JSON-RPC commands</source>
@@ -2424,10 +2372,6 @@ Użytkownik i hasło nie mogą być takie same.⏎
 Jeśli plik nie istnieje, utwórz go z uprawnieniami tylko-do-odczytu dla właściciela.⏎
 Zalecane jest ustawienie alertnotify aby poinformować o problemach:⏎
 na przykład: alertnotify=echo %%s | mail -s "Alarm Bitcoin" admin@foo.com⏎</translation>
-    </message>
-    <message>
-        <source>Acceptable ciphers (default: TLSv1.2+HIGH:TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!3DES:@STRENGTH)</source>
-        <translation>Dopuszczalne szyfry (domyślnie: TLSv1.2+HIGH:TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!3DES:@STRENGTH)</translation>
     </message>
     <message>
         <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
@@ -2472,10 +2416,6 @@ na przykład: alertnotify=echo %%s | mail -s "Alarm Bitcoin" admin@foo.com⏎</t
     <message>
         <source>(default: 1)</source>
         <translation>(domyślnie: 1)</translation>
-    </message>
-    <message>
-        <source>(default: wallet.dat)</source>
-        <translation>(domyślnie: wallet.dat)</translation>
     </message>
     <message>
         <source>Attempt to recover private keys from a corrupt wallet.dat</source>
@@ -2538,64 +2478,8 @@ na przykład: alertnotify=echo %%s | mail -s "Alarm Bitcoin" admin@foo.com⏎</t
         <translation>Błąd: Zablokowany portfel, nie można utworzyć transakcji!</translation>
     </message>
     <message>
-        <source>Error: system error: </source>
-        <translation>Błąd: błąd systemu:</translation>
-    </message>
-    <message>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
         <translation>Próba otwarcia jakiegokolwiek portu nie powiodła się. Użyj -listen=0 jeśli tego chcesz.</translation>
-    </message>
-    <message>
-        <source>Failed to read block info</source>
-        <translation>Nie udało się odczytać informacji bloku</translation>
-    </message>
-    <message>
-        <source>Failed to read block</source>
-        <translation>Nie udało się odczytać bloku.</translation>
-    </message>
-    <message>
-        <source>Failed to sync block index</source>
-        <translation>Nie udało się zsynchronizować indeksu bloków.</translation>
-    </message>
-    <message>
-        <source>Failed to write block index</source>
-        <translation>Nie udało się zapisać indeksu bloków.</translation>
-    </message>
-    <message>
-        <source>Failed to write block info</source>
-        <translation>Nie udało się zapisać informacji bloku</translation>
-    </message>
-    <message>
-        <source>Failed to write block</source>
-        <translation>Nie udało się zapisać bloku</translation>
-    </message>
-    <message>
-        <source>Failed to write file info</source>
-        <translation>Nie udało się zapisać informacji o pliku</translation>
-    </message>
-    <message>
-        <source>Failed to write to coin database</source>
-        <translation>Nie udało się zapisać do bazy monet</translation>
-    </message>
-    <message>
-        <source>Failed to write transaction index</source>
-        <translation>Nie udało się zapisać indeksu transakcji</translation>
-    </message>
-    <message>
-        <source>Failed to write undo data</source>
-        <translation>Nie udało się zapisać danych odtwarzających</translation>
-    </message>
-    <message>
-        <source>Force safe mode (default: 0)</source>
-        <translation>Wymuś tryb bezpieczny (domyślnie: 0)</translation>
-    </message>
-    <message>
-        <source>Generate coins (default: 0)</source>
-        <translation>Generuj monety (domyślnie: 0)</translation>
-    </message>
-    <message>
-        <source>How many blocks to check at startup (default: 288, 0 = all)</source>
-        <translation>Ile bloków sprawdzić przy starcie (domyślnie: 288, 0 = wszystkie)</translation>
     </message>
     <message>
         <source>Importing...</source>
@@ -2626,16 +2510,8 @@ na przykład: alertnotify=echo %%s | mail -s "Alarm Bitcoin" admin@foo.com⏎</t
         <translation>Ustaw maksymalną wielkość bloku w bajtach (domyślnie: %d)</translation>
     </message>
     <message>
-        <source>Set the number of threads to service RPC calls (default: 4)</source>
-        <translation>Ustaw liczbę wątków do odwołań RPC (domyślnie: 4)</translation>
-    </message>
-    <message>
         <source>Specify wallet file (within data directory)</source>
         <translation>Określ plik portfela (w obrębie folderu danych)</translation>
-    </message>
-    <message>
-        <source>Spend unconfirmed change when sending transactions (default: 1)</source>
-        <translation>Wydawaj niepotwierdzoną resztę podczas wysyłania transakcji (domyślnie: 1)</translation>
     </message>
     <message>
         <source>Verifying blocks...</source>
@@ -2682,44 +2558,12 @@ na przykład: alertnotify=echo %%s | mail -s "Alarm Bitcoin" admin@foo.com⏎</t
         <translation>Nieprawidłowa kwota dla -mintxfee=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
-        <source>Limit size of signature cache to &lt;n&gt; entries (default: 50000)</source>
-        <translation>Ogranicz rozmiar pamięci podręcznej sygnatur do &lt;n&gt; wpisów (domyslnie: 50000)</translation>
-    </message>
-    <message>
-        <source>Log transaction priority and fee per kB when mining blocks (default: 0)</source>
-        <translation>Loguj priorytety transakcji i opłaty na kB podczas kopania bloków (domyślnie: 0)</translation>
-    </message>
-    <message>
-        <source>Maintain a full transaction index (default: 0)</source>
-        <translation>Utrzymuj pełen indeks transakcji (domyślnie: 0)</translation>
-    </message>
-    <message>
-        <source>Maximum per-connection receive buffer, &lt;n&gt;*1000 bytes (default: 5000)</source>
-        <translation>Maksymalny bufor odbioru na połączenie, &lt;n&gt;*1000 bajtów (domyślnie: 5000)</translation>
-    </message>
-    <message>
-        <source>Maximum per-connection send buffer, &lt;n&gt;*1000 bytes (default: 1000)</source>
-        <translation>Maksymalny bufor wysyłu na połączenie, &lt;n&gt;*1000 bajtów (domyślnie: 1000)</translation>
-    </message>
-    <message>
         <source>Node relay options:</source>
         <translation>Opcje przekaźnikowe węzła:</translation>
     </message>
     <message>
-        <source>Only accept block chain matching built-in checkpoints (default: 1)</source>
-        <translation>Akceptuj tylko łańcuch bloków zgodny z wbudowanymi punktami kontrolnymi (domyślnie: 1)</translation>
-    </message>
-    <message>
-        <source>Only connect to nodes in network &lt;net&gt; (IPv4, IPv6 or Tor)</source>
-        <translation>Łącz z węzłami tylko w sieci &lt;net&gt; (IPv4, IPv6 lub Tor)</translation>
-    </message>
-    <message>
         <source>Print block on startup, if found in block index</source>
         <translation>Wyświetlaj blok podczas uruchamiania, jeżeli znaleziono indeks bloków</translation>
-    </message>
-    <message>
-        <source>Print block tree on startup (default: 0)</source>
-        <translation>Wypisz drzewo bloków podczas uruchomienia (domyślnie: 0)</translation>
     </message>
     <message>
         <source>RPC SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
@@ -2738,16 +2582,8 @@ na przykład: alertnotify=echo %%s | mail -s "Alarm Bitcoin" admin@foo.com⏎</t
         <translation>Losowo ignoruje 1 z wszystkich &lt;n&gt; wiadomości sieciowych.</translation>
     </message>
     <message>
-        <source>Run a thread to flush wallet periodically (default: 1)</source>
-        <translation>Uruchom wątek do okresowego zapisywania portfela (domyślnie: 1)</translation>
-    </message>
-    <message>
         <source>Send trace/debug info to console instead of debug.log file</source>
         <translation>Wyślij informację/raport do konsoli zamiast do pliku debug.log.</translation>
-    </message>
-    <message>
-        <source>Set minimum block size in bytes (default: 0)</source>
-        <translation>Ustaw minimalny rozmiar bloku w bajtach (domyślnie: 0)</translation>
     </message>
     <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>
@@ -2760,14 +2596,6 @@ na przykład: alertnotify=echo %%s | mail -s "Alarm Bitcoin" admin@foo.com⏎</t
     <message>
         <source>Signing transaction failed</source>
         <translation>Podpisywanie transakcji nie powiodło się</translation>
-    </message>
-    <message>
-        <source>Specify connection timeout in milliseconds (default: 5000)</source>
-        <translation>Wskaż czas oczekiwania bezczynności połączenia w milisekundach (domyślnie: 5000)</translation>
-    </message>
-    <message>
-        <source>System error: </source>
-        <translation>Błąd systemu:</translation>
     </message>
     <message>
         <source>This is experimental software.</source>
@@ -2784,10 +2612,6 @@ na przykład: alertnotify=echo %%s | mail -s "Alarm Bitcoin" admin@foo.com⏎</t
     <message>
         <source>Transaction too large</source>
         <translation>Transakcja zbyt duża</translation>
-    </message>
-    <message>
-        <source>Use UPnP to map the listening port (default: 0)</source>
-        <translation>Używaj UPnP do mapowania portu nasłuchu (domyślnie: 0)</translation>
     </message>
     <message>
         <source>Use UPnP to map the listening port (default: 1 when listening)</source>
@@ -2830,24 +2654,12 @@ na przykład: alertnotify=echo %%s | mail -s "Alarm Bitcoin" admin@foo.com⏎</t
         <translation>Zaktualizuj portfel do najnowszego formatu.</translation>
     </message>
     <message>
-        <source>Set key pool size to &lt;n&gt; (default: 100)</source>
-        <translation>Ustaw rozmiar puli kluczy na &lt;n&gt; (domyślnie: 100)</translation>
-    </message>
-    <message>
         <source>Rescan the block chain for missing wallet transactions</source>
         <translation>Przeskanuj blok łańcuchów żeby znaleźć zaginione transakcje portfela</translation>
     </message>
     <message>
         <source>Use OpenSSL (https) for JSON-RPC connections</source>
         <translation>Użyj OpenSSL (https) do połączeń JSON-RPC</translation>
-    </message>
-    <message>
-        <source>Server certificate file (default: server.cert)</source>
-        <translation>Plik certyfikatu serwera (domyślnie: server.cert)</translation>
-    </message>
-    <message>
-        <source>Server private key (default: server.pem)</source>
-        <translation>Klucz prywatny serwera (domyślnie: server.pem)</translation>
     </message>
     <message>
         <source>This help message</source>

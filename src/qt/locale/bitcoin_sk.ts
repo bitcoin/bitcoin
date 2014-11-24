@@ -93,7 +93,11 @@
         <source>Exporting Failed</source>
         <translation>Export zlyhal</translation>
     </message>
-    </context>
+    <message>
+        <source>There was an error trying to save the address list to %1. Please try again.</source>
+        <translation>Nastala chyba pri pokuse uložiť zoznam adries do %1. Skúste znovu.</translation>
+    </message>
+</context>
 <context>
     <name>AddressTableModel</name>
     <message>
@@ -178,6 +182,10 @@
     <message>
         <source>Wallet encrypted</source>
         <translation>Peňaženka zašifrovaná</translation>
+    </message>
+    <message>
+        <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
+        <translation>Zadajte nové heslo k peňaženke.&lt;br/&gt;Prosím použite heslo s dĺžkou aspoň &lt;b&gt;10 alebo viac náhodných znakov&lt;/b&gt;, alebo &lt;b&gt;8 alebo viac slov&lt;/b&gt;.</translation>
     </message>
     <message>
         <source>Bitcoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
@@ -287,6 +295,10 @@
         <translation>Otvoriť &amp;URI...</translation>
     </message>
     <message>
+        <source>Bitcoin Core client</source>
+        <translation>Bitcoin Core klient</translation>
+    </message>
+    <message>
         <source>Importing blocks from disk...</source>
         <translation>Importujem bloky z disku...</translation>
     </message>
@@ -339,6 +351,10 @@
         <translation>&amp;Prijať</translation>
     </message>
     <message>
+        <source>Show information about Bitcoin Core</source>
+        <translation>Zobraziť informácie o Bitcoin Core</translation>
+    </message>
+    <message>
         <source>&amp;Show / Hide</source>
         <translation>Zobraziť / skryť</translation>
     </message>
@@ -375,10 +391,6 @@
         <translation>Lišta záložiek</translation>
     </message>
     <message>
-        <source>[testnet]</source>
-        <translation>[testovacia sieť]</translation>
-    </message>
-    <message>
         <source>Bitcoin Core</source>
         <translation>Jadro Bitcoin</translation>
     </message>
@@ -413,10 +425,6 @@
     <message>
         <source>No block source available...</source>
         <translation>Nedostupný zdroj blokov...</translation>
-    </message>
-    <message>
-        <source>Processed %1 blocks of transaction history.</source>
-        <translation>Spracovaných %1 blokov transakčnej histórie.</translation>
     </message>
     <message>
         <source>%1 and %2</source>
@@ -863,15 +871,7 @@ Adresa: %4</translation>
         <source>Error</source>
         <translation>Chyba</translation>
     </message>
-    <message>
-        <source>GB of free space available</source>
-        <translation>GB dostupného voľného miesta</translation>
-    </message>
-    <message>
-        <source>(of %1GB needed)</source>
-        <translation>(z %1GB potrebných)</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>OpenURIDialog</name>
     <message>
@@ -1105,10 +1105,6 @@ Adresa: %4</translation>
         <translation>Zobrazené informácie môžu byť neaktuápne. Vaša peňaženka sa automaticky synchronizuje so sieťou Bitcoin po nadviazaní spojenia ale tento proces ešte nieje ukončený.</translation>
     </message>
     <message>
-        <source>Wallet</source>
-        <translation>Peňaženka</translation>
-    </message>
-    <message>
         <source>Available:</source>
         <translation>Disponibilné:</translation>
     </message>
@@ -1139,10 +1135,6 @@ Adresa: %4</translation>
     <message>
         <source>Your current total balance</source>
         <translation>Váš súčasný celkový zostatok</translation>
-    </message>
-    <message>
-        <source>&lt;b&gt;Recent transactions&lt;/b&gt;</source>
-        <translation>&lt;b&gt;Nedávne transakcie&lt;/b&gt;</translation>
     </message>
     <message>
         <source>out of sync</source>
@@ -2390,24 +2382,8 @@ Adresa: %4</translation>
         <translation>Možnosti:</translation>
     </message>
     <message>
-        <source>Specify configuration file (default: bitcoin.conf)</source>
-        <translation>Určiť súbor s nastaveniami (predvolené: bitcoin.conf)</translation>
-    </message>
-    <message>
-        <source>Specify pid file (default: bitcoind.pid)</source>
-        <translation>Určiť súbor pid (predvolené: bitcoind.pid)</translation>
-    </message>
-    <message>
         <source>Specify data directory</source>
         <translation>Určiť priečinok s dátami</translation>
-    </message>
-    <message>
-        <source>Listen for connections on &lt;port&gt; (default: 8333 or testnet: 18333)</source>
-        <translation>Načúvať spojeniam na &lt;port&gt; (prednastavené: 8333 alebo testovacia sieť: 18333)</translation>
-    </message>
-    <message>
-        <source>Maintain at most &lt;n&gt; connections to peers (default: 125)</source>
-        <translation>Udržiavať maximálne &lt;n&gt; spojení (predvolené: 125)</translation>
     </message>
     <message>
         <source>Connect to a node to retrieve peer addresses, and disconnect</source>
@@ -2416,18 +2392,6 @@ Adresa: %4</translation>
     <message>
         <source>Specify your own public address</source>
         <translation>Určite vašu vlastnú verejnú adresu</translation>
-    </message>
-    <message>
-        <source>Threshold for disconnecting misbehaving peers (default: 100)</source>
-        <translation>Hranica pre odpojenie zle sa správajúcich peerov (predvolené: 100)</translation>
-    </message>
-    <message>
-        <source>Number of seconds to keep misbehaving peers from reconnecting (default: 86400)</source>
-        <translation>Počet sekúnd kedy sa zabráni zle sa správajúcim peerom znovupripojenie (predvolené: 86400)</translation>
-    </message>
-    <message>
-        <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 8332 or testnet: 18332)</source>
-        <translation>Počúvať JSON-RPC spojeniam na &lt;port&gt; (predvolené: 8332 or testnet: 18332)</translation>
     </message>
     <message>
         <source>Accept command line and JSON-RPC commands</source>
@@ -2470,16 +2434,8 @@ napríklad: alertnotify=echo %%s | mail -s "Bitcoin Výstraha" admin@foo.com
 </translation>
     </message>
     <message>
-        <source>Acceptable ciphers (default: TLSv1.2+HIGH:TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!3DES:@STRENGTH)</source>
-        <translation>Prijateľlné šifry (prednastavené: TLSv1.2+HIGH:TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!3DES:@STRENGTH)</translation>
-    </message>
-    <message>
         <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
         <translation>Spojiť s danou adresou a vždy na nej počúvať. Použite zápis [host]:port pre IPv6</translation>
-    </message>
-    <message>
-        <source>Continuously rate-limit free transactions to &lt;n&gt;*1000 bytes per minute (default:15)</source>
-        <translation>Priebežne obmedzuj transakcie bez poplatku na &lt;n&gt;*1000 bajtov za minútu (prednastavené: 15)</translation>
     </message>
     <message>
         <source>Enter regression test mode, which uses a special chain in which blocks can be solved instantly.</source>
@@ -2498,14 +2454,6 @@ napríklad: alertnotify=echo %%s | mail -s "Bitcoin Výstraha" admin@foo.com
         <translation>Vykonaj príkaz keď sa zmení transakcia peňaženky (%s v príkaze je nahradená TxID)</translation>
     </message>
     <message>
-        <source>Flush database activity from memory pool to disk log every &lt;n&gt; megabytes (default: 100)</source>
-        <translation>Odložiť aktivitu databázy spoločnej pamäti do logu na disku každých &lt;n&gt; megabajtov (prednastavené: 100)</translation>
-    </message>
-    <message>
-        <source>How thorough the block verification of -checkblocks is (0-4, default: 3)</source>
-        <translation>Ako dôkladne sú overované bloky -checkblocks (0-4, prednastavené: 3)</translation>
-    </message>
-    <message>
         <source>In this mode -genproclimit controls how many blocks are generated immediately.</source>
         <translation>V tomto režime -getproclimit kontroluje koľko blokov sa vytvorí okamžite.</translation>
     </message>
@@ -2514,20 +2462,12 @@ napríklad: alertnotify=echo %%s | mail -s "Bitcoin Výstraha" admin@foo.com
         <translation>Nastaviť počeť vlákien overujúcich skripty (%u až %d, 0 = auto, &lt;0 = nechať toľkoto jadier voľných, prednastavené: %d)</translation>
     </message>
     <message>
-        <source>Set the processor limit for when generation is on (-1 = unlimited, default: -1)</source>
-        <translation>Nastaviť obmedzenie pre procesor keď je zapnuté generovanie (-1 = bez obmedzenia, prednastavené: -1)</translation>
-    </message>
-    <message>
         <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
         <translation>Toto je pred-testovacia verzia - použitie je na vlastné riziko - nepoužívajte na tvorbu bitcoin ani obchodovanie.</translation>
     </message>
     <message>
         <source>Unable to bind to %s on this computer. Bitcoin Core is probably already running.</source>
         <translation>Nepodarilo sa pripojiť na %s na tomto počítači. Bitcoin Jadro je už pravdepodobne spustené.</translation>
-    </message>
-    <message>
-        <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: -proxy)</source>
-        <translation>Použite rozdielne SOCKS5 proxy pre dosiahnutie peer-ov cez Tor skryté služby (prednastavené: -proxy)</translation>
     </message>
     <message>
         <source>Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
@@ -2556,10 +2496,6 @@ The network does not appear to fully agree! Some miners appear to be experiencin
         <translation>(predvolené: 1)</translation>
     </message>
     <message>
-        <source>(default: wallet.dat)</source>
-        <translation>(predvolené: wallet.dat)</translation>
-    </message>
-    <message>
         <source>&lt;category&gt; can be:</source>
         <translation>&lt;category&gt; môže byť:</translation>
     </message>
@@ -2586,10 +2522,6 @@ The network does not appear to fully agree! Some miners appear to be experiencin
     <message>
         <source>Debugging/Testing options:</source>
         <translation>Možnosti ladenia/testovania:</translation>
-    </message>
-    <message>
-        <source>Disable safemode, override a real safe mode event (default: 0)</source>
-        <translation>Vypnúť bezpečný režim, vypnúť udalosť skutočný bezpečný režim (prednastavené: 0)</translation>
     </message>
     <message>
         <source>Discover own IP address (default: 1 when listening and no -externalip)</source>
@@ -2628,64 +2560,8 @@ The network does not appear to fully agree! Some miners appear to be experiencin
         <translation>Chyba: Peňaženka je zamknutá, nemôžem vytvoriť transakciu!</translation>
     </message>
     <message>
-        <source>Error: system error: </source>
-        <translation>Chyba: systémová chyba:</translation>
-    </message>
-    <message>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
         <translation>Chyba počúvania na ktoromkoľvek porte. Použi -listen=0 ak toto chcete.</translation>
-    </message>
-    <message>
-        <source>Failed to read block info</source>
-        <translation>Zlyhalo čítanie info o bloku</translation>
-    </message>
-    <message>
-        <source>Failed to read block</source>
-        <translation>Zlyhalo čítanie bloku</translation>
-    </message>
-    <message>
-        <source>Failed to sync block index</source>
-        <translation>Zlyhalo synchronizovanie zoznamu blokov</translation>
-    </message>
-    <message>
-        <source>Failed to write block index</source>
-        <translation>Zlyhalo zapisovanie do zoznamu blokov</translation>
-    </message>
-    <message>
-        <source>Failed to write block info</source>
-        <translation>Zlyhal zápis info o bloku</translation>
-    </message>
-    <message>
-        <source>Failed to write block</source>
-        <translation>Zlyhal zápis bloku</translation>
-    </message>
-    <message>
-        <source>Failed to write file info</source>
-        <translation>Zlyhalo zapisovanie informácié o súbore</translation>
-    </message>
-    <message>
-        <source>Failed to write to coin database</source>
-        <translation>Zlyhalo zapisovanie do databázy coins</translation>
-    </message>
-    <message>
-        <source>Failed to write transaction index</source>
-        <translation>Zlyhal zápis zoznamu transakcií</translation>
-    </message>
-    <message>
-        <source>Failed to write undo data</source>
-        <translation>Zlyhalo zapisovanie </translation>
-    </message>
-    <message>
-        <source>Force safe mode (default: 0)</source>
-        <translation>Vnútiť bezpečný režim (prenastavené: 0)</translation>
-    </message>
-    <message>
-        <source>Generate coins (default: 0)</source>
-        <translation>Vytvárať mince (predvolené: 0)</translation>
-    </message>
-    <message>
-        <source>How many blocks to check at startup (default: 288, 0 = all)</source>
-        <translation>Koľko blokov skontrolovať pri spustení (predvolené: 288, 0 = všetky)</translation>
     </message>
     <message>
         <source>If &lt;category&gt; is not supplied, output all debugging information.</source>
@@ -2708,10 +2584,6 @@ The network does not appear to fully agree! Some miners appear to be experiencin
         <translation>Nedostatok kľúčových slov súboru.</translation>
     </message>
     <message>
-        <source>Prepend debug output with timestamp (default: 1)</source>
-        <translation>Na začiatok logu pre ladenie vlož dátum a čas (prednastavené: 1)</translation>
-    </message>
-    <message>
         <source>Rebuild block chain index from current blk000??.dat files</source>
         <translation>Znovu vytvoriť zoznam blokov zo súčasných blk000??.dat súborov</translation>
     </message>
@@ -2724,16 +2596,8 @@ The network does not appear to fully agree! Some miners appear to be experiencin
         <translation>Nastaviť najväčšiu veľkosť bloku v bytoch (predvolené: %d)</translation>
     </message>
     <message>
-        <source>Set the number of threads to service RPC calls (default: 4)</source>
-        <translation>Nastaviť množstvo vlákien na obsluhu RPC volaní (predvolené: 4)</translation>
-    </message>
-    <message>
         <source>Specify wallet file (within data directory)</source>
         <translation>Označ súbor peňaženky (v priečinku s dátami)</translation>
-    </message>
-    <message>
-        <source>Spend unconfirmed change when sending transactions (default: 1)</source>
-        <translation>Míňať nepotvrdený výdavok pri odosielaní (prednastavené: 1)</translation>
     </message>
     <message>
         <source>This is intended for regression testing tools and app development.</source>
@@ -2772,10 +2636,6 @@ The network does not appear to fully agree! Some miners appear to be experiencin
         <translation>Vykonať príkaz keď po prijatí patričné varovanie alebo vidíme veľmi dlhé rozdvojenie siete (%s v cmd je nahradené správou)</translation>
     </message>
     <message>
-        <source>Output debugging information (default: 0, supplying &lt;category&gt; is optional)</source>
-        <translation>Výstup informácií pre ladenie (prednastavené: 0, uvádzanie &lt;category&gt; je voliteľné)</translation>
-    </message>
-    <message>
         <source>Set maximum size of high-priority/low-fee transactions in bytes (default: %d)</source>
         <translation>Nastaviť najväčšiu veľkosť vysoká-dôležitosť/nízke-poplatky transakcií v bajtoch (prednastavené: %d)</translation>
     </message>
@@ -2792,40 +2652,8 @@ The network does not appear to fully agree! Some miners appear to be experiencin
         <translation>Neplatná suma pre -mintxfee=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
-        <source>Limit size of signature cache to &lt;n&gt; entries (default: 50000)</source>
-        <translation>Obmedziť veľkosť pomocnej pamäti pre podpisy na &lt;n&gt; vstupov (prednastavené: 50000)</translation>
-    </message>
-    <message>
-        <source>Log transaction priority and fee per kB when mining blocks (default: 0)</source>
-        <translation>Zaznamenávať dôležitosť transakcií a poplatky za kB ak hľadáme bloky (prednastavené: 0)</translation>
-    </message>
-    <message>
-        <source>Maintain a full transaction index (default: 0)</source>
-        <translation>Udržiavaj úplný zoznam transakcií (prednastavené: 0)</translation>
-    </message>
-    <message>
-        <source>Maximum per-connection receive buffer, &lt;n&gt;*1000 bytes (default: 5000)</source>
-        <translation>Maximálna veľkosť prijímacieho zásobníka pre jedno spojenie, &lt;n&gt;*1000 bytov (predvolené: 5000)</translation>
-    </message>
-    <message>
-        <source>Maximum per-connection send buffer, &lt;n&gt;*1000 bytes (default: 1000)</source>
-        <translation>Maximálna veľkosť vysielacieho zásobníka pre jedno spojenie, &lt;n&gt;*1000 bytov (predvolené: 1000)</translation>
-    </message>
-    <message>
-        <source>Only accept block chain matching built-in checkpoints (default: 1)</source>
-        <translation>Akceptuj iba kontrolné body zhodné s blockchain (prednastavené: 1)</translation>
-    </message>
-    <message>
-        <source>Only connect to nodes in network &lt;net&gt; (IPv4, IPv6 or Tor)</source>
-        <translation>Pripájať sa len k nódam v sieti &lt;net&gt; (IPv4, IPv6 alebo Tor)</translation>
-    </message>
-    <message>
         <source>Print block on startup, if found in block index</source>
         <translation>Vytlač blok pri spustení, ak nájdený v zozname blokov</translation>
-    </message>
-    <message>
-        <source>Print block tree on startup (default: 0)</source>
-        <translation>Vytlačiť strom blokov pri spustení (prednastavené: 0)</translation>
     </message>
     <message>
         <source>RPC SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
@@ -2844,20 +2672,8 @@ The network does not appear to fully agree! Some miners appear to be experiencin
         <translation>Náhodne premiešaj 1 z každých &lt;n&gt; sieťových správ</translation>
     </message>
     <message>
-        <source>Run a thread to flush wallet periodically (default: 1)</source>
-        <translation>Mať spustené vlákno pravidelného čístenia peňaženky (predvolené: 1)</translation>
-    </message>
-    <message>
         <source>Send trace/debug info to console instead of debug.log file</source>
         <translation>Odoslať trace/debug informácie na konzolu namiesto debug.info žurnálu</translation>
-    </message>
-    <message>
-        <source>Set minimum block size in bytes (default: 0)</source>
-        <translation>Nastaviť minimálnu veľkosť bloku v bytoch (predvolené: 0)</translation>
-    </message>
-    <message>
-        <source>Sets the DB_PRIVATE flag in the wallet db environment (default: 1)</source>
-        <translation>Nastaví DB_PRIVATE možnosť v db prostredí peňaženky (prednastavené: 1)</translation>
     </message>
     <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>
@@ -2872,14 +2688,6 @@ The network does not appear to fully agree! Some miners appear to be experiencin
         <translation>Podpísanie správy zlyhalo</translation>
     </message>
     <message>
-        <source>Specify connection timeout in milliseconds (default: 5000)</source>
-        <translation>Určiť aut spojenia v milisekundách (predvolené: 5000)</translation>
-    </message>
-    <message>
-        <source>System error: </source>
-        <translation>Systémová chyba:</translation>
-    </message>
-    <message>
         <source>Transaction amount too small</source>
         <translation>Suma transakcie príliš malá</translation>
     </message>
@@ -2890,10 +2698,6 @@ The network does not appear to fully agree! Some miners appear to be experiencin
     <message>
         <source>Transaction too large</source>
         <translation>Transakcia príliš veľká</translation>
-    </message>
-    <message>
-        <source>Use UPnP to map the listening port (default: 0)</source>
-        <translation>Skúsiť použiť UPnP pre mapovanie počúvajúceho portu (default: 0)</translation>
     </message>
     <message>
         <source>Use UPnP to map the listening port (default: 1 when listening)</source>
@@ -2936,24 +2740,12 @@ The network does not appear to fully agree! Some miners appear to be experiencin
         <translation>Aktualizuj peňaženku na najnovší formát.</translation>
     </message>
     <message>
-        <source>Set key pool size to &lt;n&gt; (default: 100)</source>
-        <translation>Nastaviť zásobu adries na &lt;n&gt; (predvolené: 100)</translation>
-    </message>
-    <message>
         <source>Rescan the block chain for missing wallet transactions</source>
         <translation>Znovu skenovať reťaz blokov pre chýbajúce transakcie</translation>
     </message>
     <message>
         <source>Use OpenSSL (https) for JSON-RPC connections</source>
         <translation>Použiť OpenSSL (https) pre JSON-RPC spojenia</translation>
-    </message>
-    <message>
-        <source>Server certificate file (default: server.cert)</source>
-        <translation>Súbor s certifikátom servra (predvolené: server.cert)</translation>
-    </message>
-    <message>
-        <source>Server private key (default: server.pem)</source>
-        <translation>Súkromný kľúč servra (predvolené: server.pem)</translation>
     </message>
     <message>
         <source>This help message</source>

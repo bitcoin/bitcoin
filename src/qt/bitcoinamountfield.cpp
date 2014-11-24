@@ -130,6 +130,7 @@ public:
             extra += hint - style()->subControlRect(QStyle::CC_SpinBox, &opt,
                                                     QStyle::SC_SpinBoxEditField, this).size();
             hint += extra;
+            hint.setHeight(h);
 
             opt.rect = rect();
 
@@ -218,6 +219,12 @@ void BitcoinAmountField::clear()
 {
     amount->clear();
     unit->setCurrentIndex(0);
+}
+
+void BitcoinAmountField::setEnabled(bool fEnabled)
+{
+    amount->setEnabled(fEnabled);
+    unit->setEnabled(fEnabled);
 }
 
 bool BitcoinAmountField::validate()

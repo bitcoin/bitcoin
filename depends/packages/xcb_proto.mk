@@ -6,7 +6,7 @@ $(package)_sha256_hash=7ef40ddd855b750bc597d2a435da21e55e502a0fefa85b274f2c92280
 
 define $(package)_set_vars
   $(package)_config_opts=--disable-shared
-  $(package)_config_opts_x86_64_linux=--with-pic
+  $(package)_config_opts_linux=--with-pic
 endef
 
 define $(package)_config_cmds

@@ -1,6 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2014 The Bitcoin developers
-// Distributed under the MIT/X11 software license, see the accompanying
+// Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #if defined(HAVE_CONFIG_H)
@@ -14,7 +14,7 @@
 
 using namespace std;
 
-static int64_t nMockTime = 0;  // For unit testing
+static int64_t nMockTime = 0;  //! For unit testing
 
 int64_t GetTime()
 {
@@ -42,9 +42,12 @@ int64_t GetTimeMicros()
 
 void MilliSleep(int64_t n)
 {
-// Boost's sleep_for was uninterruptable when backed by nanosleep from 1.50
-// until fixed in 1.52. Use the deprecated sleep method for the broken case.
-// See: https://svn.boost.org/trac/boost/ticket/7238
+
+/**
+ * Boost's sleep_for was uninterruptable when backed by nanosleep from 1.50
+ * until fixed in 1.52. Use the deprecated sleep method for the broken case.
+ * See: https://svn.boost.org/trac/boost/ticket/7238
+ */
 #if defined(HAVE_WORKING_BOOST_SLEEP_FOR)
     boost::this_thread::sleep_for(boost::chrono::milliseconds(n));
 #elif defined(HAVE_WORKING_BOOST_SLEEP)

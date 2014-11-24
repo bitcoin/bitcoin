@@ -5,6 +5,7 @@
 #include "bloom.h"
 
 #include "base58.h"
+#include "clientversion.h"
 #include "key.h"
 #include "main.h"
 #include "serialize.h"
@@ -14,6 +15,7 @@
 #include <vector>
 
 #include <boost/test/unit_test.hpp>
+#include <boost/tuple/tuple.hpp>
 
 using namespace std;
 using namespace boost::tuples;

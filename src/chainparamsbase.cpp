@@ -1,6 +1,6 @@
 // Copyright (c) 2010 Satoshi Nakamoto
 // Copyright (c) 2009-2014 The Bitcoin developers
-// Distributed under the MIT/X11 software license, see the accompanying
+// Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "chainparamsbase.h"
@@ -13,10 +13,9 @@
 
 using namespace boost::assign;
 
-//
-// Main network
-//
-
+/**
+ * Main network
+ */
 class CBaseMainParams : public CBaseChainParams
 {
 public:
@@ -28,9 +27,9 @@ public:
 };
 static CBaseMainParams mainParams;
 
-//
-// Testnet (v3)
-//
+/**
+ * Testnet (v3)
+ */
 class CBaseTestNetParams : public CBaseMainParams
 {
 public:
@@ -43,9 +42,9 @@ public:
 };
 static CBaseTestNetParams testNetParams;
 
-//
-// Regression test
-//
+/*
+ * Regression test
+ */
 class CBaseRegTestParams : public CBaseTestNetParams
 {
 public:
@@ -57,9 +56,9 @@ public:
 };
 static CBaseRegTestParams regTestParams;
 
-//
-// Unit test
-//
+/*
+ * Unit test
+ */
 class CBaseUnitTestParams : public CBaseMainParams
 {
 public:

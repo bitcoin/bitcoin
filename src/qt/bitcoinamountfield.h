@@ -2,8 +2,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOINAMOUNTFIELD_H
-#define BITCOINAMOUNTFIELD_H
+#ifndef BITCOIN_QT_BITCOINAMOUNTFIELD_H
+#define BITCOIN_QT_BITCOINAMOUNTFIELD_H
 
 #include "amount.h"
 
@@ -21,7 +21,9 @@ class BitcoinAmountField: public QWidget
 {
     Q_OBJECT
 
-    Q_PROPERTY(CAmount value READ value WRITE setValue NOTIFY valueChanged USER true)
+    // ugly hack: for some unknown reason CAmount (instead of qint64) does not work here as expected
+    // discussion: https://github.com/bitcoin/bitcoin/pull/5117
+    Q_PROPERTY(qint64 value READ value WRITE setValue NOTIFY valueChanged USER true)
 
 public:
     explicit BitcoinAmountField(QWidget *parent = 0);
@@ -46,6 +48,9 @@ public:
     /** Make field empty and ready for new input. */
     void clear();
 
+    /** Enable/Disable. */
+    void setEnabled(bool fEnabled);
+
     /** Qt messes up the tab chain by default in some cases (issue https://bugreports.qt-project.org/browse/QTBUG-10907),
         in these cases we have to set it up manually.
     */
@@ -67,4 +72,4 @@ private slots:
 
 };
 
-#endif // BITCOINAMOUNTFIELD_H
+#endif // BITCOIN_QT_BITCOINAMOUNTFIELD_H

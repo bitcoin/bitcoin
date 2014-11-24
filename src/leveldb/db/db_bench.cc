@@ -431,7 +431,7 @@ class Benchmark {
         benchmarks = sep + 1;
       }
 
-      // Reset parameters that may be overriddden bwlow
+      // Reset parameters that may be overridden below
       num_ = FLAGS_num;
       reads_ = (FLAGS_reads < 0 ? FLAGS_num : FLAGS_reads);
       value_size_ = FLAGS_value_size;
@@ -811,7 +811,6 @@ class Benchmark {
 
   void SeekRandom(ThreadState* thread) {
     ReadOptions options;
-    std::string value;
     int found = 0;
     for (int i = 0; i < reads_; i++) {
       Iterator* iter = db_->NewIterator(options);

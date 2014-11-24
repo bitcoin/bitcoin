@@ -2,8 +2,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef TRANSACTIONDESC_H
-#define TRANSACTIONDESC_H
+#ifndef BITCOIN_QT_TRANSACTIONDESC_H
+#define BITCOIN_QT_TRANSACTIONDESC_H
 
 #include <QObject>
 #include <QString>
@@ -28,4 +28,4 @@ private:
     static QString FormatTxStatus(const CWalletTx& wtx);
 };
 
-#endif // TRANSACTIONDESC_H
+#endif // BITCOIN_QT_TRANSACTIONDESC_H

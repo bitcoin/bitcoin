@@ -1,6 +1,6 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2009-2013 The Bitcoin developers
-// Distributed under the MIT/X11 software license, see the accompanying
+// Copyright (c) 2009-2014 The Bitcoin developers
+// Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "checkpoints.h"
@@ -225,7 +225,7 @@ Value getblockhash(const Array& params, bool fHelp)
 
     int nHeight = params[0].get_int();
     if (nHeight < 0 || nHeight > chainActive.Height())
-        throw runtime_error("Block number out of range.");
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Block height out of range");
 
     CBlockIndex* pblockindex = chainActive[nHeight];
     return pblockindex->GetBlockHash().GetHex();
@@ -319,6 +319,7 @@ Value gettxoutsetinfo(const Array& params, bool fHelp)
     Object ret;
 
     CCoinsStats stats;
+    pcoinsTip->Flush();
     if (pcoinsTip->GetStats(stats)) {
         ret.push_back(Pair("height", (int64_t)stats.nHeight));
         ret.push_back(Pair("bestblock", stats.hashBlock.GetHex()));
@@ -472,13 +473,13 @@ Value getblockchaininfo(const Array& params, bool fHelp)
     return obj;
 }
 
-/* Comparison function for sorting the getchaintips heads.  */
+/** Comparison function for sorting the getchaintips heads.  */
 struct CompareBlocksByHeight
 {
     bool operator()(const CBlockIndex* a, const CBlockIndex* b) const
     {
         /* Make sure that unequal blocks with the same height do not compare
-           equal.  Use the pointers themselves to make a distinction.  */
+           equal. Use the pointers themselves to make a distinction. */
 
         if (a->nHeight != b->nHeight)
           return (a->nHeight > b->nHeight);

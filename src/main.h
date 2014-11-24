@@ -10,18 +10,22 @@
 #include "config/bitcoin-config.h"
 #endif
 
+#include "amount.h"
 #include "chain.h"
 #include "chainparams.h"
 #include "coins.h"
-#include "core.h"
+#include "core/block.h"
+#include "core/transaction.h"
 #include "net.h"
 #include "pow.h"
 #include "script/script.h"
 #include "script/sigcache.h"
 #include "script/standard.h"
 #include "sync.h"
+#include "tinyformat.h"
 #include "txmempool.h"
 #include "uint256.h"
+#include "undo.h"
 
 #include <algorithm>
 #include <exception>
@@ -35,8 +39,15 @@
 #include <boost/unordered_map.hpp>
 
 class CBlockIndex;
+class CBlockTreeDB;
 class CBloomFilter;
 class CInv;
+class CScriptCheck;
+class CValidationInterface;
+class CValidationState;
+
+struct CBlockTemplate;
+struct CNodeStateStats;
 
 /** The maximum allowed size for a serialized block, in bytes (network rule) */
 static const unsigned int MAX_BLOCK_SIZE = 1000000;
@@ -124,22 +135,12 @@ extern CBlockIndex *pindexBestHeader;
 // Minimum disk space required - used in CheckDiskSpace()
 static const uint64_t nMinDiskSpace = 52428800;
 
-
-class CBlockTreeDB;
-class CTxUndo;
-class CScriptCheck;
-class CValidationState;
-class CWalletInterface;
-struct CNodeStateStats;
-
-struct CBlockTemplate;
-
 /** Register a wallet to receive updates from core */
-void RegisterWallet(CWalletInterface* pwalletIn);
+void RegisterValidationInterface(CValidationInterface* pwalletIn);
 /** Unregister a wallet from core */
-void UnregisterWallet(CWalletInterface* pwalletIn);
+void UnregisterValidationInterface(CValidationInterface* pwalletIn);
 /** Unregister all wallets from core */
-void UnregisterAllWallets();
+void UnregisterAllValidationInterfaces();
 /** Push an updated transaction to all registered wallets */
 void SyncWithWallets(const CTransaction& tx, const CBlock* pblock = NULL);
 
@@ -148,8 +149,16 @@ void RegisterNodeSignals(CNodeSignals& nodeSignals);
 /** Unregister a network node */
 void UnregisterNodeSignals(CNodeSignals& nodeSignals);
 
-/** Process an incoming block */
-bool ProcessBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDiskBlockPos *dbp = NULL);
+/** Process an incoming block. This only returns after the best known valid
+    block is made active. Note that it does not, however, guarantee that the
+    specific block passed to it has been checked for validity!
+    @param[out]  state   This may be set to an Error state if any error occurred processing it, including during validation/connection/etc of otherwise unrelated blocks during reorganisation; or it may be set to an Invalid state iff pblock is itself invalid (but this is not guaranteed even when the block is checked). If you want to *possibly* get feedback on whether pblock is valid, you must also install a CValidationInterface - this will have its BlockChecked method called whenever *any* block completes validation.
+    @param[in]   pfrom   The node which we are receiving the block from; it is added to mapBlockSource and may be penalised if the block is invalid.
+    @param[in]   pblock  The block we want to process.
+    @param[out]  dbp     If pblock is stored to disk (or already there), this will be set to its location.
+    @return True if state.IsValid()
+*/
+bool ProcessNewBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDiskBlockPos *dbp = NULL);
 /** Check whether enough disk space is available for an incoming block */
 bool CheckDiskSpace(uint64_t nAdditionalBytes = 0);
 /** Open a block file (blk?????.dat) */
@@ -448,11 +457,18 @@ bool ReadBlockFromDisk(CBlock& block, const CBlockIndex* pindex);
 bool DisconnectBlock(CBlock& block, CValidationState& state, CBlockIndex* pindex, CCoinsViewCache& coins, bool* pfClean = NULL);
 
 // Apply the effects of this block (with given index) on the UTXO set represented by coins
-bool ConnectBlock(CBlock& block, CValidationState& state, CBlockIndex* pindex, CCoinsViewCache& coins, bool fJustCheck = false);
+bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pindex, CCoinsViewCache& coins, bool fJustCheck = false);
 
 // Context-independent validity checks
 bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state, bool fCheckPOW = true);
 bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW = true, bool fCheckMerkleRoot = true);
+
+// Context-dependent validity checks
+bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& state, CBlockIndex *pindexPrev);
+bool ContextualCheckBlock(const CBlock& block, CValidationState& state, CBlockIndex *pindexPrev);
+
+// Check a block is completely valid from start to finish (only works on top of our current best block, with cs_main held)
+bool TestBlockValidity(CValidationState &state, const CBlock& block, CBlockIndex *pindexPrev, bool fCheckPOW = true, bool fCheckMerkleRoot = true);
 
 // Store block on disk
 // if dbp is provided, the file is known to already reside on disk
@@ -640,17 +656,18 @@ public:
 };
 
 
-class CWalletInterface {
+class CValidationInterface {
 protected:
-    virtual void SyncTransaction(const CTransaction &tx, const CBlock *pblock) =0;
-    virtual void EraseFromWallet(const uint256 &hash) =0;
-    virtual void SetBestChain(const CBlockLocator &locator) =0;
-    virtual void UpdatedTransaction(const uint256 &hash) =0;
-    virtual void Inventory(const uint256 &hash) =0;
-    virtual void ResendWalletTransactions() =0;
-    friend void ::RegisterWallet(CWalletInterface*);
-    friend void ::UnregisterWallet(CWalletInterface*);
-    friend void ::UnregisterAllWallets();
+    virtual void SyncTransaction(const CTransaction &tx, const CBlock *pblock) {};
+    virtual void EraseFromWallet(const uint256 &hash) {};
+    virtual void SetBestChain(const CBlockLocator &locator) {};
+    virtual void UpdatedTransaction(const uint256 &hash) {};
+    virtual void Inventory(const uint256 &hash) {};
+    virtual void ResendWalletTransactions() {};
+    virtual void BlockChecked(const CBlock&, const CValidationState&) {};
+    friend void ::RegisterValidationInterface(CValidationInterface*);
+    friend void ::UnregisterValidationInterface(CValidationInterface*);
+    friend void ::UnregisterAllValidationInterfaces();
 };
 
 #endif // BITCOIN_MAIN_H

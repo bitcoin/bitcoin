@@ -162,10 +162,6 @@
         <source>Tabs toolbar</source>
         <translation>แถบเครื่องมือ</translation>
     </message>
-    <message>
-        <source>[testnet]</source>
-        <translation>[testnet]</translation>
-    </message>
     <message numerus="yes">
         <source>%n active connection(s) to Bitcoin network</source>
         <translation><numerusform>%n ที่ใช้งานการเชื่อมต่อกับเครือข่าย Bitcoin</numerusform></translation>
@@ -276,10 +272,6 @@
     <message>
         <source>Form</source>
         <translation>รูป</translation>
-    </message>
-    <message>
-        <source>&lt;b&gt;Recent transactions&lt;/b&gt;</source>
-        <translation>&lt;b&gt;รายการทำธุรกรรมล่าสุด&lt;/b&gt;</translation>
     </message>
     </context>
 <context>
