@@ -71,6 +71,10 @@ static void secp256k1_num_set_bin(secp256k1_num_t *r, const unsigned char *a, un
     VERIFY_CHECK(alen > 0);
     VERIFY_CHECK(alen <= 64);
     int len = mpn_set_str(r->data, a, alen, 256);
+    if (len == 0) {
+        r->data[0] = 0;
+        len = 1;
+    }
     VERIFY_CHECK(len <= NUM_LIMBS*2);
     r->limbs = len;
     r->neg = 0;
