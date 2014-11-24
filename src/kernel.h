@@ -11,7 +11,7 @@
 extern unsigned int nModifierUpgradeTime;
 
 // MODIFIER_INTERVAL: time to elapse before new modifier is computed
-extern const unsigned int nModifierInterval;
+extern unsigned int nModifierInterval;
 
 extern bool fCoinsDataActual;
 

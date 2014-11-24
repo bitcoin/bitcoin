@@ -6,7 +6,9 @@
 
 #include "kernel.h"
 #include "txdb.h"
-#include "main.h"
+
+extern unsigned int nStakeMaxAge;
+extern unsigned int nStakeTargetSpacing;
 
 using namespace std;
 

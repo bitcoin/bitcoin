@@ -32,13 +32,6 @@ class CNode;
 //
 // Global state
 //
-static const unsigned int nStakeMinAge = 60 * 60 * 24 * 30; // 30 days as zero time weight
-static const unsigned int nStakeMaxAge = 60 * 60 * 24 * 90; // 90 days as full weight
-static const unsigned int nStakeTargetSpacing = 10 * 60; // 10-minute stakes spacing
-static const unsigned int nModifierInterval = 6 * 60 * 60; // time to elapse before new modifier is computed
-
-static const int nCoinbaseMaturity = 500;
-
 
 static const unsigned int MAX_BLOCK_SIZE = 1000000;
 static const unsigned int MAX_BLOCK_SIZE_GEN = MAX_BLOCK_SIZE/2;
@@ -78,6 +71,8 @@ extern std::map<uint256, CBlockIndex*> mapBlockIndex;
 extern std::set<std::pair<COutPoint, unsigned int> > setStakeSeen;
 extern CBlockIndex* pindexGenesisBlock;
 extern unsigned int nNodeLifespan;
+extern unsigned int nStakeMinAge;
+extern int nCoinbaseMaturity;
 extern int nBestHeight;
 extern uint256 nBestChainTrust;
 extern uint256 nBestInvalidTrust;
