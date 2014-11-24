@@ -299,6 +299,25 @@ Value prioritisetransaction(const Array& params, bool fHelp)
 }
 
 
+// NOTE: Assumes a conclusive result; if result is inconclusive, it must be handled by caller
+static Value BIP22ValidationResult(const CValidationState& state)
+{
+    if (state.IsValid())
+        return Value::null;
+
+    std::string strRejectReason = state.GetRejectReason();
+    if (state.IsError())
+        throw JSONRPCError(RPC_VERIFY_ERROR, strRejectReason);
+    if (state.IsInvalid())
+    {
+        if (strRejectReason.empty())
+            return "rejected";
+        return strRejectReason;
+    }
+    // Should be impossible
+    return "valid?";
+}
+
 Value getblocktemplate(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() > 1)
@@ -376,6 +395,36 @@ Value getblocktemplate(const Array& params, bool fHelp)
         else
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid mode");
         lpval = find_value(oparam, "longpollid");
+
+        if (strMode == "proposal")
+        {
+            const Value& dataval = find_value(oparam, "data");
+            if (dataval.type() != str_type)
+                throw JSONRPCError(RPC_TYPE_ERROR, "Missing data String key for proposal");
+
+            CBlock block;
+            if (!DecodeHexBlk(block, dataval.get_str()))
+                throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Block decode failed");
+
+            uint256 hash = block.GetHash();
+            BlockMap::iterator mi = mapBlockIndex.find(hash);
+            if (mi != mapBlockIndex.end()) {
+                CBlockIndex *pindex = mi->second;
+                if (pindex->IsValid(BLOCK_VALID_SCRIPTS))
+                    return "duplicate";
+                if (pindex->nStatus & BLOCK_FAILED_MASK)
+                    return "duplicate-invalid";
+                return "duplicate-inconclusive";
+            }
+
+            CBlockIndex* const pindexPrev = chainActive.Tip();
+            // TestBlockValidity only supports blocks built on the current Tip
+            if (block.hashPrevBlock != pindexPrev->GetBlockHash())
+                return "inconclusive-not-best-prevblk";
+            CValidationState state;
+            TestBlockValidity(state, block, pindexPrev, false, true);
+            return BIP22ValidationResult(state);
+        }
     }
 
     if (strMode != "template")
@@ -478,6 +527,8 @@ Value getblocktemplate(const Array& params, bool fHelp)
     UpdateTime(pblock, pindexPrev);
     pblock->nNonce = 0;
 
+    static const Array aCaps = boost::assign::list_of("proposal");
+
     Array transactions;
     map<uint256, int64_t> setTxIndex;
     int i = 0;
@@ -524,6 +575,7 @@ Value getblocktemplate(const Array& params, bool fHelp)
     }
 
     Object result;
+    result.push_back(Pair("capabilities", aCaps));
     result.push_back(Pair("version", pblock->nVersion));
     result.push_back(Pair("previousblockhash", pblock->hashPrevBlock.GetHex()));
     result.push_back(Pair("transactions", transactions));
@@ -582,41 +634,39 @@ Value submitblock(const Array& params, bool fHelp)
             + HelpExampleRpc("submitblock", "\"mydata\"")
         );
 
-    vector<unsigned char> blockData(ParseHex(params[0].get_str()));
-    CDataStream ssBlock(blockData, SER_NETWORK, PROTOCOL_VERSION);
-    CBlock pblock;
-    try {
-        ssBlock >> pblock;
-    }
-    catch (const std::exception &) {
+    CBlock block;
+    if (!DecodeHexBlk(block, params[0].get_str()))
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Block decode failed");
+
+    uint256 hash = block.GetHash();
+    BlockMap::iterator mi = mapBlockIndex.find(hash);
+    if (mi != mapBlockIndex.end()) {
+        CBlockIndex *pindex = mi->second;
+        if (pindex->IsValid(BLOCK_VALID_SCRIPTS))
+            return "duplicate";
+        if (pindex->nStatus & BLOCK_FAILED_MASK)
+            return "duplicate-invalid";
+        // Otherwise, we might only have the header - process the block before returning
     }
 
     CValidationState state;
-    submitblock_StateCatcher sc(pblock.GetHash());
+    submitblock_StateCatcher sc(block.GetHash());
     RegisterValidationInterface(&sc);
-    bool fAccepted = ProcessNewBlock(state, NULL, &pblock);
+    bool fAccepted = ProcessNewBlock(state, NULL, &block);
     UnregisterValidationInterface(&sc);
+    if (mi != mapBlockIndex.end())
+    {
+        if (fAccepted && !sc.found)
+            return "duplicate-inconclusive";
+        return "duplicate";
+    }
     if (fAccepted)
     {
         if (!sc.found)
             return "inconclusive";
         state = sc.state;
     }
-    if (state.IsError())
-    {
-        std::string strRejectReason = state.GetRejectReason();
-        throw JSONRPCError(RPC_VERIFY_ERROR, strRejectReason);
-    }
-    if (state.IsInvalid())
-    {
-        std::string strRejectReason = state.GetRejectReason();
-        if (strRejectReason.empty())
-            return "rejected";
-        return strRejectReason;
-    }
-
-    return Value::null;
+    return BIP22ValidationResult(state);
 }
 
 Value estimatefee(const Array& params, bool fHelp)
