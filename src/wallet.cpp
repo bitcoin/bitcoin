@@ -1681,7 +1681,7 @@ bool CWallet::GetStakeWeight(const CKeyStore& keystore, uint64& nMinWeight, uint
             }
 
             if (fDebug)
-                printf("Get stake weight: %d meta items loaded for %d coins\n", mapMeta.size(), setCoins.size());
+                printf("Get stake weight: %"PRIszu" meta items loaded for %"PRIszu" coins\n", mapMeta.size(), setCoins.size());
 
             fCoinsDataActual = true;
         }
@@ -1914,7 +1914,7 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
             }
 
             if (fDebug)
-                printf("Stake miner: %d meta items loaded for %d coins\n", mapMeta.size(), setCoins.size());
+                printf("Stake miner: %"PRIszu" meta items loaded for %"PRIszu" coins\n", mapMeta.size(), setCoins.size());
 
             fCoinsDataActual = true;
         }
