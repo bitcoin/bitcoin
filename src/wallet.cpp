@@ -2043,7 +2043,13 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
         CTxDB txdb("r");
         if (!txNew.GetCoinAge(txdb, nCoinAge))
             return error("CreateCoinStake : failed to calculate coin age");
-        nCredit += GetProofOfStakeReward(nCoinAge, nBits, txNew.nTime);
+        
+        int64 nReward = GetProofOfStakeReward(nCoinAge, nBits, txNew.nTime);
+        // Refuse to create mint that has zero or negative reward
+        if(nReward <= 0)
+            return false;
+    
+        nCredit += nReward;
     }
 
     int64 nMinFee = 0;
