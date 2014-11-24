@@ -75,7 +75,7 @@ SECP256K1_INLINE static int secp256k1_fe_equal(const secp256k1_fe_t *a, const se
     return ret;
 }
 
-static void secp256k1_fe_set_b32(secp256k1_fe_t *r, const unsigned char *a) {
+static int secp256k1_fe_set_b32(secp256k1_fe_t *r, const unsigned char *a) {
     for (int i=0; i<FIELD_LIMBS+1; i++)
         r->n[i] = 0;
     for (int i=0; i<256; i++) {
@@ -83,6 +83,7 @@ static void secp256k1_fe_set_b32(secp256k1_fe_t *r, const unsigned char *a) {
         int shift = i%GMP_NUMB_BITS;
         r->n[limb] |= (mp_limb_t)((a[31-i/8] >> (i%8)) & 0x1) << shift;
     }
+    return (mpn_cmp(r->n, secp256k1_field_p, FIELD_LIMBS) < 0);
 }
 
 /** Convert a field element to a 32-byte big endian value. Requires the input to be normalized */

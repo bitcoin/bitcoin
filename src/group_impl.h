@@ -498,11 +498,11 @@ static void secp256k1_ge_start(void) {
         secp256k1_num_set_bin(&ret->a1b2,   secp256k1_ge_consts_a1b2,   sizeof(secp256k1_ge_consts_a1b2));
         secp256k1_num_set_bin(&ret->a2,     secp256k1_ge_consts_a2,     sizeof(secp256k1_ge_consts_a2));
         secp256k1_num_set_bin(&ret->b1,     secp256k1_ge_consts_b1,     sizeof(secp256k1_ge_consts_b1));
-        secp256k1_fe_set_b32(&ret->beta, secp256k1_ge_consts_beta);
+        VERIFY_CHECK(secp256k1_fe_set_b32(&ret->beta, secp256k1_ge_consts_beta));
 #endif
         secp256k1_fe_t g_x, g_y;
-        secp256k1_fe_set_b32(&g_x, secp256k1_ge_consts_g_x);
-        secp256k1_fe_set_b32(&g_y, secp256k1_ge_consts_g_y);
+        VERIFY_CHECK(secp256k1_fe_set_b32(&g_x, secp256k1_ge_consts_g_x));
+        VERIFY_CHECK(secp256k1_fe_set_b32(&g_y, secp256k1_ge_consts_g_y));
         secp256k1_ge_set_xy(&ret->g, &g_x, &g_y);
         secp256k1_ge_consts = ret;
     }

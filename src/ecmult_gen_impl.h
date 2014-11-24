@@ -45,7 +45,7 @@ static void secp256k1_ecmult_gen_start(void) {
     {
         static const unsigned char nums_b32[32] = "The scalar for this x is unknown";
         secp256k1_fe_t nums_x;
-        secp256k1_fe_set_b32(&nums_x, nums_b32);
+        VERIFY_CHECK(secp256k1_fe_set_b32(&nums_x, nums_b32));
         secp256k1_ge_t nums_ge;
         VERIFY_CHECK(secp256k1_ge_set_xo(&nums_ge, &nums_x, 0));
         secp256k1_gej_set_ge(&nums_gej, &nums_ge);

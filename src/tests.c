@@ -38,7 +38,7 @@ void random_field_element_test(secp256k1_fe_t *fe) {
         secp256k1_num_set_bin(&num, b32, 32);
         if (secp256k1_num_cmp(&num, &secp256k1_fe_consts->p) >= 0)
             continue;
-        secp256k1_fe_set_b32(fe, b32);
+        VERIFY_CHECK(secp256k1_fe_set_b32(fe, b32));
         break;
     } while(1);
 }
@@ -440,8 +440,12 @@ void run_scalar_tests(void) {
 
 void random_fe(secp256k1_fe_t *x) {
     unsigned char bin[32];
-    secp256k1_rand256(bin);
-    secp256k1_fe_set_b32(x, bin);
+    do {
+        secp256k1_rand256(bin);
+        if (secp256k1_fe_set_b32(x, bin)) {
+            return;
+        }
+    } while(1);
 }
 
 void random_fe_non_zero(secp256k1_fe_t *nz) {
@@ -697,8 +701,8 @@ void run_ge(void) {
 
 void run_ecmult_chain(void) {
     /* random starting point A (on the curve) */
-    secp256k1_fe_t ax; secp256k1_fe_set_hex(&ax, "8b30bbe9ae2a990696b22f670709dff3727fd8bc04d3362c6c7bf458e2846004", 64);
-    secp256k1_fe_t ay; secp256k1_fe_set_hex(&ay, "a357ae915c4a65281309edf20504740f0eb3343990216b4f81063cb65f2f7e0f", 64);
+    secp256k1_fe_t ax; VERIFY_CHECK(secp256k1_fe_set_hex(&ax, "8b30bbe9ae2a990696b22f670709dff3727fd8bc04d3362c6c7bf458e2846004", 64));
+    secp256k1_fe_t ay; VERIFY_CHECK(secp256k1_fe_set_hex(&ay, "a357ae915c4a65281309edf20504740f0eb3343990216b4f81063cb65f2f7e0f", 64));
     secp256k1_gej_t a; secp256k1_gej_set_xy(&a, &ax, &ay);
     /* two random initial factors xn and gn */
     secp256k1_num_t xn;
@@ -759,7 +763,7 @@ void test_point_times_order(const secp256k1_gej_t *point) {
 }
 
 void run_point_times_order(void) {
-    secp256k1_fe_t x; secp256k1_fe_set_hex(&x, "02", 2);
+    secp256k1_fe_t x; VERIFY_CHECK(secp256k1_fe_set_hex(&x, "02", 2));
     for (int i=0; i<500; i++) {
         secp256k1_ge_t p;
         if (secp256k1_ge_set_xo(&p, &x, 1)) {
