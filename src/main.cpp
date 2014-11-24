@@ -2796,6 +2796,20 @@ FILE* AppendBlockFile(unsigned int& nFileRet)
 
 bool LoadBlockIndex(bool fAllowNew)
 {
+    if (fTestNet)
+    {
+        pchMessageStart[0] = 0xcd;
+        pchMessageStart[1] = 0xf2;
+        pchMessageStart[2] = 0xc0;
+        pchMessageStart[3] = 0xef;
+
+        bnProofOfWorkLimit = bnProofOfWorkLimitTestNet; // 16 bits PoW target limit for testnet
+        nStakeMinAge = 2 * 60 * 60; // test net min age is 2 hours
+        nModifierInterval = 20 * 60; // test modifier interval is 20 minutes
+        nCoinbaseMaturity = 10; // test maturity is 10 blocks
+        nStakeTargetSpacing = 5 * 60; // test block spacing is 5 minutes
+    }
+
     //
     // Load block index
     //
