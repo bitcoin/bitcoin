@@ -448,7 +448,7 @@ void CTxMemPool::remove(const CTransaction &origTx, std::list<CTransaction>& rem
         if (!mapTx.count(hash))
             continue;
         const CTransaction& tx = mapTx[hash].GetTx();
-        removed.push_front(tx);
+        removed.push_back(tx);
         if (fRecursive) {
             for (unsigned int i = 0; i < tx.vout.size(); i++) {
                 std::map<COutPoint, CInPoint>::iterator it = mapNextTx.find(COutPoint(hash, i));
