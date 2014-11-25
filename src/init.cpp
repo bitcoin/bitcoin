@@ -150,14 +150,9 @@ void Shutdown()
 
     {
         LOCK(cs_main);
-#ifdef ENABLE_WALLET
-        if (pwalletMain)
-            pwalletMain->SetBestChain(chainActive.GetLocator());
-#endif
-        if (pblocktree)
-            pblocktree->Flush();
-        if (pcoinsTip)
-            pcoinsTip->Flush();
+        if (pcoinsTip != NULL) {
+            FlushStateToDisk();
+        }
         delete pcoinsTip;
         pcoinsTip = NULL;
         delete pcoinsdbview;
