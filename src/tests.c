@@ -278,15 +278,38 @@ void scalar_test(void) {
 
     {
         /* Test that fetching groups of 4 bits from a scalar and recursing n(i)=16*n(i-1)+p(i) reconstructs it. */
-        secp256k1_num_t n, t, m;
-        secp256k1_num_set_int(&n, 0);
-        secp256k1_num_set_int(&m, 16);
+        secp256k1_scalar_t n;
+        secp256k1_scalar_set_int(&n, 0);
         for (int i = 0; i < 256; i += 4) {
-            secp256k1_num_set_int(&t, secp256k1_scalar_get_bits(&s, 256 - 4 - i, 4));
-            secp256k1_num_mul(&n, &n, &m);
-            secp256k1_num_add(&n, &n, &t);
+            secp256k1_scalar_t t;
+            secp256k1_scalar_set_int(&t, secp256k1_scalar_get_bits(&s, 256 - 4 - i, 4));
+            for (int j = 0; j < 4; j++) {
+                secp256k1_scalar_add(&n, &n, &n);
+            }
+            secp256k1_scalar_add(&n, &n, &t);
         }
-        CHECK(secp256k1_num_eq(&n, &snum));
+        CHECK(secp256k1_scalar_eq(&n, &s));
+    }
+
+    {
+        /* Test that fetching groups of randomly-sized bits from a scalar and recursing n(i)=b*n(i-1)+p(i) reconstructs it. */
+        secp256k1_scalar_t n;
+        secp256k1_scalar_set_int(&n, 0);
+        int i = 0;
+        while (i < 256) {
+            int now = (secp256k1_rand32() % 15) + 1;
+            if (now + i > 256) {
+                now = 256 - i;
+            }
+            secp256k1_scalar_t t;
+            secp256k1_scalar_set_int(&t, secp256k1_scalar_get_bits_var(&s, 256 - now - i, now));
+            for (int j = 0; j < now; j++) {
+                secp256k1_scalar_add(&n, &n, &n);
+            }
+            secp256k1_scalar_add(&n, &n, &t);
+            i += now;
+        }
+        CHECK(secp256k1_scalar_eq(&n, &s));
     }
 
     {
@@ -386,8 +409,7 @@ void scalar_test(void) {
         /* Test add_bit. */
         int bit = secp256k1_rand32() % 256;
         secp256k1_scalar_t b;
-        secp256k1_scalar_clear(&b);
-        secp256k1_scalar_add_bit(&b, 0);
+        secp256k1_scalar_set_int(&b, 1);
         CHECK(secp256k1_scalar_is_one(&b));
         for (int i = 0; i < bit; i++) {
             secp256k1_scalar_add(&b, &b, &b);
