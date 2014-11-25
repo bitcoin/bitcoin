@@ -75,6 +75,22 @@ static void secp256k1_scalar_add(secp256k1_scalar_t *r, const secp256k1_scalar_t
     secp256k1_scalar_reduce(r, t + secp256k1_scalar_check_overflow(r));
 }
 
+static void secp256k1_scalar_add_bit(secp256k1_scalar_t *r, unsigned int bit) {
+    VERIFY_CHECK(bit < 256);
+    uint128_t t = (uint128_t)r->d[0] + (((uint64_t)((bit >> 6) == 0)) << bit);
+    r->d[0] = t & 0xFFFFFFFFFFFFFFFFULL; t >>= 64;
+    t += (uint128_t)r->d[1] + (((uint64_t)((bit >> 6) == 1)) << (bit & 0x3F));
+    r->d[1] = t & 0xFFFFFFFFFFFFFFFFULL; t >>= 64;
+    t += (uint128_t)r->d[2] + (((uint64_t)((bit >> 6) == 2)) << (bit & 0x3F));
+    r->d[2] = t & 0xFFFFFFFFFFFFFFFFULL; t >>= 64;
+    t += (uint128_t)r->d[3] + (((uint64_t)((bit >> 6) == 3)) << (bit & 0x3F));
+    r->d[3] = t & 0xFFFFFFFFFFFFFFFFULL;
+#ifdef VERIFY
+    VERIFY_CHECK((t >> 64) == 0);
+    VERIFY_CHECK(secp256k1_scalar_check_overflow(r) == 0);
+#endif
+}
+
 static void secp256k1_scalar_set_b32(secp256k1_scalar_t *r, const unsigned char *b32, int *overflow) {
     r->d[0] = (uint64_t)b32[31] | (uint64_t)b32[30] << 8 | (uint64_t)b32[29] << 16 | (uint64_t)b32[28] << 24 | (uint64_t)b32[27] << 32 | (uint64_t)b32[26] << 40 | (uint64_t)b32[25] << 48 | (uint64_t)b32[24] << 56;
     r->d[1] = (uint64_t)b32[23] | (uint64_t)b32[22] << 8 | (uint64_t)b32[21] << 16 | (uint64_t)b32[20] << 24 | (uint64_t)b32[19] << 32 | (uint64_t)b32[18] << 40 | (uint64_t)b32[17] << 48 | (uint64_t)b32[16] << 56;
