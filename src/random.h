@@ -26,7 +26,7 @@ uint256 GetRandHash();
 
 /**
  * Seed insecure_rand using the random pool.
- * @param Deterministic Use a determinstic seed
+ * @param Deterministic Use a deterministic seed
  */
 void seed_insecure_rand(bool fDeterministic = false);
 
