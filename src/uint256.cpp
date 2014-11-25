@@ -99,7 +99,7 @@ base_uint<BITS>& base_uint<BITS>::operator/=(const base_uint& b)
     if (div_bits > num_bits) // the result is certainly 0.
         return *this;
     int shift = num_bits - div_bits;
-    div <<= shift; // shift so that div and nun align.
+    div <<= shift; // shift so that div and num align.
     while (shift >= 0) {
         if (num >= div) {
             num -= div;
