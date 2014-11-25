@@ -1,180 +1,195 @@
-# Copyright 2011-2012 pooler@litecoinpool.org
-# All rights reserved.
-#
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions
-# are met:
-# 1. Redistributions of source code must retain the above copyright
-#    notice, this list of conditions and the following disclaimer.
-# 2. Redistributions in binary form must reproduce the above copyright
-#    notice, this list of conditions and the following disclaimer in the
-#    documentation and/or other materials provided with the distribution.
-#
-# THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
-# ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-# ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
-# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
-# OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
-# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
-# OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
-# SUCH DAMAGE.
-
-
-#if defined(__x86_64__)
+/*
+ * Copyright 2011-2012 pooler@litecoinpool.org
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ */
 
 #if defined(__linux__) && defined(__ELF__)
 	.section .note.GNU-stack,"",%progbits
 #endif
 
-#define scrypt_shuffle(src, so, dest, do) \
-	movl	so+60(src), %r8d; \
-	movl	so+44(src), %r9d; \
-	movl	so+28(src), %r10d; \
-	movl	so+12(src), %r11d; \
-	movl	%r8d, do+12(dest); \
-	movl	%r9d, do+28(dest); \
-	movl	%r10d, do+44(dest); \
-	movl	%r11d, do+60(dest); \
-	movl	so+40(src), %r8d; \
-	movl	so+8(src), %r9d; \
-	movl	so+48(src), %r10d; \
-	movl	so+16(src), %r11d; \
-	movl	%r8d, do+8(dest); \
-	movl	%r9d, do+40(dest); \
-	movl	%r10d, do+16(dest); \
-	movl	%r11d, do+48(dest); \
-	movl	so+20(src), %r8d; \
-	movl	so+4(src), %r9d; \
-	movl	so+52(src), %r10d; \
-	movl	so+36(src), %r11d; \
-	movl	%r8d, do+4(dest); \
-	movl	%r9d, do+20(dest); \
-	movl	%r10d, do+36(dest); \
-	movl	%r11d, do+52(dest); \
-	movl	so+0(src), %r8d; \
-	movl	so+24(src), %r9d; \
-	movl	so+32(src), %r10d; \
-	movl	so+56(src), %r11d; \
-	movl	%r8d, do+0(dest); \
-	movl	%r9d, do+24(dest); \
-	movl	%r10d, do+32(dest); \
-	movl	%r11d, do+56(dest); \
+#if defined(__x86_64__)
+
+.macro scrypt_shuffle src, so, dest, do
+	movl	\so+60(\src), %r8d
+	movl	\so+44(\src), %r9d
+	movl	\so+28(\src), %r10d
+	movl	\so+12(\src), %r11d
+	movl	%r8d, \do+12(\dest)
+	movl	%r9d, \do+28(\dest)
+	movl	%r10d, \do+44(\dest)
+	movl	%r11d, \do+60(\dest)
+	movl	\so+40(\src), %r8d
+	movl	\so+8(\src), %r9d
+	movl	\so+48(\src), %r10d
+	movl	\so+16(\src), %r11d
+	movl	%r8d, \do+8(\dest)
+	movl	%r9d, \do+40(\dest)
+	movl	%r10d, \do+16(\dest)
+	movl	%r11d, \do+48(\dest)
+	movl	\so+20(\src), %r8d
+	movl	\so+4(\src), %r9d
+	movl	\so+52(\src), %r10d
+	movl	\so+36(\src), %r11d
+	movl	%r8d, \do+4(\dest)
+	movl	%r9d, \do+20(\dest)
+	movl	%r10d, \do+36(\dest)
+	movl	%r11d, \do+52(\dest)
+	movl	\so+0(\src), %r8d
+	movl	\so+24(\src), %r9d
+	movl	\so+32(\src), %r10d
+	movl	\so+56(\src), %r11d
+	movl	%r8d, \do+0(\dest)
+	movl	%r9d, \do+24(\dest)
+	movl	%r10d, \do+32(\dest)
+	movl	%r11d, \do+56(\dest)
+.endm
 
 
-
-#define salsa8_core_gen_doubleround() \
-	movq	72(%rsp), %r15; \
-	leaq	(%r14, %rdx), %rbp; \
-	roll	$7, %ebp; \
-	xorl	%ebp, %r9d; \
-	leaq	(%rdi, %r15), %rbp; \
-	roll	$7, %ebp; \
-	xorl	%ebp, %r10d; \
-	leaq	(%rdx, %r9), %rbp; \
-	roll	$9, %ebp; \
-	xorl	%ebp, %r11d; \
-	leaq	(%r15, %r10), %rbp; \
-	roll	$9, %ebp; \
-	xorl	%ebp, %r13d; \
-	leaq	(%r9, %r11), %rbp; \
-	roll	$13, %ebp; \
-	xorl	%ebp, %r14d; \
-	leaq	(%r10, %r13), %rbp; \
-	roll	$13, %ebp; \
-	xorl	%ebp, %edi; \
-	leaq	(%r11, %r14), %rbp; \
-	roll	$18, %ebp; \
-	xorl	%ebp, %edx; \
-	leaq	(%r13, %rdi), %rbp; \
-	roll	$18, %ebp; \
-	xorl	%ebp, %r15d; \
-	movq	48(%rsp), %rbp; \
-	movq	%r15, 72(%rsp); \
-	leaq	(%rax, %rbp), %r15; \
-	roll	$7, %r15d; \
-	xorl	%r15d, %ebx; \
-	leaq	(%rbp, %rbx), %r15; \
-	roll	$9, %r15d; \
-	xorl	%r15d, %ecx; \
-	leaq	(%rbx, %rcx), %r15; \
-	roll	$13, %r15d; \
-	xorl	%r15d, %eax; \
-	leaq	(%rcx, %rax), %r15; \
-	roll	$18, %r15d; \
-	xorl	%r15d, %ebp; \
-	movq	88(%rsp), %r15; \
-	movq	%rbp, 48(%rsp); \
-	leaq	(%r12, %r15), %rbp; \
-	roll	$7, %ebp; \
-	xorl	%ebp, %esi; \
-	leaq	(%r15, %rsi), %rbp; \
-	roll	$9, %ebp; \
-	xorl	%ebp, %r8d; \
-	leaq	(%rsi, %r8), %rbp; \
-	roll	$13, %ebp; \
-	xorl	%ebp, %r12d; \
-	leaq	(%r8, %r12), %rbp; \
-	roll	$18, %ebp; \
-	xorl	%ebp, %r15d; \
-	movq	%r15, 88(%rsp); \
-	movq	72(%rsp), %r15; \
-	leaq	(%rsi, %rdx), %rbp; \
-	roll	$7, %ebp; \
-	xorl	%ebp, %edi; \
-	leaq	(%r9, %r15), %rbp; \
-	roll	$7, %ebp; \
-	xorl	%ebp, %eax; \
-	leaq	(%rdx, %rdi), %rbp; \
-	roll	$9, %ebp; \
-	xorl	%ebp, %ecx; \
-	leaq	(%r15, %rax), %rbp; \
-	roll	$9, %ebp; \
-	xorl	%ebp, %r8d; \
-	leaq	(%rdi, %rcx), %rbp; \
-	roll	$13, %ebp; \
-	xorl	%ebp, %esi; \
-	leaq	(%rax, %r8), %rbp; \
-	roll	$13, %ebp; \
-	xorl	%ebp, %r9d; \
-	leaq	(%rcx, %rsi), %rbp; \
-	roll	$18, %ebp; \
-	xorl	%ebp, %edx; \
-	leaq	(%r8, %r9), %rbp; \
-	roll	$18, %ebp; \
-	xorl	%ebp, %r15d; \
-	movq	48(%rsp), %rbp; \
-	movq	%r15, 72(%rsp); \
-	leaq	(%r10, %rbp), %r15; \
-	roll	$7, %r15d; \
-	xorl	%r15d, %r12d; \
-	leaq	(%rbp, %r12), %r15; \
-	roll	$9, %r15d; \
-	xorl	%r15d, %r11d; \
-	leaq	(%r12, %r11), %r15; \
-	roll	$13, %r15d; \
-	xorl	%r15d, %r10d; \
-	leaq	(%r11, %r10), %r15; \
-	roll	$18, %r15d; \
-	xorl	%r15d, %ebp; \
-	movq	88(%rsp), %r15; \
-	movq	%rbp, 48(%rsp); \
-	leaq	(%rbx, %r15), %rbp; \
-	roll	$7, %ebp; \
-	xorl	%ebp, %r14d; \
-	leaq	(%r15, %r14), %rbp; \
-	roll	$9, %ebp; \
-	xorl	%ebp, %r13d; \
-	leaq	(%r14, %r13), %rbp; \
-	roll	$13, %ebp; \
-	xorl	%ebp, %ebx; \
-	leaq	(%r13, %rbx), %rbp; \
-	roll	$18, %ebp; \
-	xorl	%ebp, %r15d; \
-	movq	%r15, 88(%rsp); \
-
+.macro salsa8_core_gen_doubleround
+	movq	72(%rsp), %r15
+	
+	leaq	(%r14, %rdx), %rbp
+	roll	$7, %ebp
+	xorl	%ebp, %r9d
+	leaq	(%rdi, %r15), %rbp
+	roll	$7, %ebp
+	xorl	%ebp, %r10d
+	leaq	(%rdx, %r9), %rbp
+	roll	$9, %ebp
+	xorl	%ebp, %r11d
+	leaq	(%r15, %r10), %rbp
+	roll	$9, %ebp
+	xorl	%ebp, %r13d
+	
+	leaq	(%r9, %r11), %rbp
+	roll	$13, %ebp
+	xorl	%ebp, %r14d
+	leaq	(%r10, %r13), %rbp
+	roll	$13, %ebp
+	xorl	%ebp, %edi
+	leaq	(%r11, %r14), %rbp
+	roll	$18, %ebp
+	xorl	%ebp, %edx
+	leaq	(%r13, %rdi), %rbp
+	roll	$18, %ebp
+	xorl	%ebp, %r15d
+	
+	movq	48(%rsp), %rbp
+	movq	%r15, 72(%rsp)
+	
+	leaq	(%rax, %rbp), %r15
+	roll	$7, %r15d
+	xorl	%r15d, %ebx
+	leaq	(%rbp, %rbx), %r15
+	roll	$9, %r15d
+	xorl	%r15d, %ecx
+	leaq	(%rbx, %rcx), %r15
+	roll	$13, %r15d
+	xorl	%r15d, %eax
+	leaq	(%rcx, %rax), %r15
+	roll	$18, %r15d
+	xorl	%r15d, %ebp
+	
+	movq	88(%rsp), %r15
+	movq	%rbp, 48(%rsp)
+	
+	leaq	(%r12, %r15), %rbp
+	roll	$7, %ebp
+	xorl	%ebp, %esi
+	leaq	(%r15, %rsi), %rbp
+	roll	$9, %ebp
+	xorl	%ebp, %r8d
+	leaq	(%rsi, %r8), %rbp
+	roll	$13, %ebp
+	xorl	%ebp, %r12d
+	leaq	(%r8, %r12), %rbp
+	roll	$18, %ebp
+	xorl	%ebp, %r15d
+	
+	movq	%r15, 88(%rsp)
+	movq	72(%rsp), %r15
+	
+	leaq	(%rsi, %rdx), %rbp
+	roll	$7, %ebp
+	xorl	%ebp, %edi
+	leaq	(%r9, %r15), %rbp
+	roll	$7, %ebp
+	xorl	%ebp, %eax
+	leaq	(%rdx, %rdi), %rbp
+	roll	$9, %ebp
+	xorl	%ebp, %ecx
+	leaq	(%r15, %rax), %rbp
+	roll	$9, %ebp
+	xorl	%ebp, %r8d
+	
+	leaq	(%rdi, %rcx), %rbp
+	roll	$13, %ebp
+	xorl	%ebp, %esi
+	leaq	(%rax, %r8), %rbp
+	roll	$13, %ebp
+	xorl	%ebp, %r9d
+	leaq	(%rcx, %rsi), %rbp
+	roll	$18, %ebp
+	xorl	%ebp, %edx
+	leaq	(%r8, %r9), %rbp
+	roll	$18, %ebp
+	xorl	%ebp, %r15d
+	
+	movq	48(%rsp), %rbp
+	movq	%r15, 72(%rsp)
+	
+	leaq	(%r10, %rbp), %r15
+	roll	$7, %r15d
+	xorl	%r15d, %r12d
+	leaq	(%rbp, %r12), %r15
+	roll	$9, %r15d
+	xorl	%r15d, %r11d
+	leaq	(%r12, %r11), %r15
+	roll	$13, %r15d
+	xorl	%r15d, %r10d
+	leaq	(%r11, %r10), %r15
+	roll	$18, %r15d
+	xorl	%r15d, %ebp
+	
+	movq	88(%rsp), %r15
+	movq	%rbp, 48(%rsp)
+	
+	leaq	(%rbx, %r15), %rbp
+	roll	$7, %ebp
+	xorl	%ebp, %r14d
+	leaq	(%r15, %r14), %rbp
+	roll	$9, %ebp
+	xorl	%ebp, %r13d
+	leaq	(%r14, %r13), %rbp
+	roll	$13, %ebp
+	xorl	%ebp, %ebx
+	leaq	(%r13, %rbx), %rbp
+	roll	$18, %ebp
+	xorl	%ebp, %r15d
+	
+	movq	%r15, 88(%rsp)
+.endm
 
 	.text
 	.p2align 6
@@ -211,10 +226,10 @@ salsa8_core_gen:
 	shrq	$32, %r15
 	movq	%r15, 88(%rsp)
 	
-	salsa8_core_gen_doubleround()
-	salsa8_core_gen_doubleround()
-	salsa8_core_gen_doubleround()
-	salsa8_core_gen_doubleround()
+	salsa8_core_gen_doubleround
+	salsa8_core_gen_doubleround
+	salsa8_core_gen_doubleround
+	salsa8_core_gen_doubleround
 	
 	shlq	$32, %rdi
 	xorq	%rdi, %rdx
@@ -289,39 +304,30 @@ _scrypt_core:
 	movq	%rdx, %rsi
 #endif
 
+.macro scrypt_core_cleanup
 #if defined(WIN64)
-#define scrypt_core_cleanup() \
-	popq	%rsi; \
-	popq	%rdi; \
-	movdqa	8(%rsp), %xmm6; \
-	movdqa	24(%rsp), %xmm7; \
-	movdqa	40(%rsp), %xmm8; \
-	movdqa	56(%rsp), %xmm9; \
-	movdqa	72(%rsp), %xmm10; \
-	movdqa	88(%rsp), %xmm11; \
-	movdqa	104(%rsp), %xmm12; \
-	movdqa	120(%rsp), %xmm13; \
-	movdqa	136(%rsp), %xmm14; \
-	movdqa	152(%rsp), %xmm15; \
-	addq	$176, %rsp; \
-	popq	%r15; \
-	popq	%r14; \
-	popq	%r13; \
-	popq	%r12; \
-	popq	%rbp; \
-	popq	%rbx; \
-	
-#else
-#define scrypt_core_cleanup() \
-	popq	%r15; \
-	popq	%r14; \
-	popq	%r13; \
-	popq	%r12; \
-	popq	%rbp; \
-	popq	%rbx; \
-	
+	popq	%rsi
+	popq	%rdi
+	movdqa	8(%rsp), %xmm6
+	movdqa	24(%rsp), %xmm7
+	movdqa	40(%rsp), %xmm8
+	movdqa	56(%rsp), %xmm9
+	movdqa	72(%rsp), %xmm10
+	movdqa	88(%rsp), %xmm11
+	movdqa	104(%rsp), %xmm12
+	movdqa	120(%rsp), %xmm13
+	movdqa	136(%rsp), %xmm14
+	movdqa	152(%rsp), %xmm15
+	addq	$176, %rsp
 #endif
-
+	popq	%r15
+	popq	%r14
+	popq	%r13
+	popq	%r12
+	popq	%rbp
+	popq	%rbx
+.endm
+	
 	/* GenuineIntel processors have fast SIMD */
 	xorl	%eax, %eax
 	cpuid
@@ -462,81 +468,88 @@ scrypt_core_gen_loop2:
 	movdqa	%xmm15, 112(%rdi)
 	
 	addq	$136, %rsp
-	scrypt_core_cleanup()
+	scrypt_core_cleanup
 	ret
 
 
-#define salsa8_core_xmm_doubleround() \
-	movdqa	%xmm1, %xmm4; \
-	paddd	%xmm0, %xmm4; \
-	movdqa	%xmm4, %xmm5; \
-	pslld	$7, %xmm4; \
-	psrld	$25, %xmm5; \
-	pxor	%xmm4, %xmm3; \
-	movdqa	%xmm0, %xmm4; \
-	pxor	%xmm5, %xmm3; \
-	paddd	%xmm3, %xmm4; \
-	movdqa	%xmm4, %xmm5; \
-	pslld	$9, %xmm4; \
-	psrld	$23, %xmm5; \
-	pxor	%xmm4, %xmm2; \
-	movdqa	%xmm3, %xmm4; \
-	pxor	%xmm5, %xmm2; \
-	pshufd	$0x93, %xmm3, %xmm3; \
-	paddd	%xmm2, %xmm4; \
-	movdqa	%xmm4, %xmm5; \
-	pslld	$13, %xmm4; \
-	psrld	$19, %xmm5; \
-	pxor	%xmm4, %xmm1; \
-	movdqa	%xmm2, %xmm4; \
-	pxor	%xmm5, %xmm1; \
-	pshufd	$0x4e, %xmm2, %xmm2; \
-	paddd	%xmm1, %xmm4; \
-	movdqa	%xmm4, %xmm5; \
-	pslld	$18, %xmm4; \
-	psrld	$14, %xmm5; \
-	pxor	%xmm4, %xmm0; \
-	movdqa	%xmm3, %xmm4; \
-	pxor	%xmm5, %xmm0; \
-	pshufd	$0x39, %xmm1, %xmm1; \
-	paddd	%xmm0, %xmm4; \
-	movdqa	%xmm4, %xmm5; \
-	pslld	$7, %xmm4; \
-	psrld	$25, %xmm5; \
-	pxor	%xmm4, %xmm1; \
-	movdqa	%xmm0, %xmm4; \
-	pxor	%xmm5, %xmm1; \
-	paddd	%xmm1, %xmm4; \
-	movdqa	%xmm4, %xmm5; \
-	pslld	$9, %xmm4; \
-	psrld	$23, %xmm5; \
-	pxor	%xmm4, %xmm2; \
-	movdqa	%xmm1, %xmm4; \
-	pxor	%xmm5, %xmm2; \
-	pshufd	$0x93, %xmm1, %xmm1; \
-	paddd	%xmm2, %xmm4; \
-	movdqa	%xmm4, %xmm5; \
-	pslld	$13, %xmm4; \
-	psrld	$19, %xmm5; \
-	pxor	%xmm4, %xmm3; \
-	movdqa	%xmm2, %xmm4; \
-	pxor	%xmm5, %xmm3; \
-	pshufd	$0x4e, %xmm2, %xmm2; \
-	paddd	%xmm3, %xmm4; \
-	movdqa	%xmm4, %xmm5; \
-	pslld	$18, %xmm4; \
-	psrld	$14, %xmm5; \
-	pxor	%xmm4, %xmm0; \
-	pshufd	$0x39, %xmm3, %xmm3; \
-	pxor	%xmm5, %xmm0; \
+.macro salsa8_core_xmm_doubleround
+	movdqa	%xmm1, %xmm4
+	paddd	%xmm0, %xmm4
+	movdqa	%xmm4, %xmm5
+	pslld	$7, %xmm4
+	psrld	$25, %xmm5
+	pxor	%xmm4, %xmm3
+	movdqa	%xmm0, %xmm4
+	pxor	%xmm5, %xmm3
+	
+	paddd	%xmm3, %xmm4
+	movdqa	%xmm4, %xmm5
+	pslld	$9, %xmm4
+	psrld	$23, %xmm5
+	pxor	%xmm4, %xmm2
+	movdqa	%xmm3, %xmm4
+	pxor	%xmm5, %xmm2
+	pshufd	$0x93, %xmm3, %xmm3
+	
+	paddd	%xmm2, %xmm4
+	movdqa	%xmm4, %xmm5
+	pslld	$13, %xmm4
+	psrld	$19, %xmm5
+	pxor	%xmm4, %xmm1
+	movdqa	%xmm2, %xmm4
+	pxor	%xmm5, %xmm1
+	pshufd	$0x4e, %xmm2, %xmm2
+	
+	paddd	%xmm1, %xmm4
+	movdqa	%xmm4, %xmm5
+	pslld	$18, %xmm4
+	psrld	$14, %xmm5
+	pxor	%xmm4, %xmm0
+	movdqa	%xmm3, %xmm4
+	pxor	%xmm5, %xmm0
+	pshufd	$0x39, %xmm1, %xmm1
+	
+	paddd	%xmm0, %xmm4
+	movdqa	%xmm4, %xmm5
+	pslld	$7, %xmm4
+	psrld	$25, %xmm5
+	pxor	%xmm4, %xmm1
+	movdqa	%xmm0, %xmm4
+	pxor	%xmm5, %xmm1
+	
+	paddd	%xmm1, %xmm4
+	movdqa	%xmm4, %xmm5
+	pslld	$9, %xmm4
+	psrld	$23, %xmm5
+	pxor	%xmm4, %xmm2
+	movdqa	%xmm1, %xmm4
+	pxor	%xmm5, %xmm2
+	pshufd	$0x93, %xmm1, %xmm1
+	
+	paddd	%xmm2, %xmm4
+	movdqa	%xmm4, %xmm5
+	pslld	$13, %xmm4
+	psrld	$19, %xmm5
+	pxor	%xmm4, %xmm3
+	movdqa	%xmm2, %xmm4
+	pxor	%xmm5, %xmm3
+	pshufd	$0x4e, %xmm2, %xmm2
+	
+	paddd	%xmm3, %xmm4
+	movdqa	%xmm4, %xmm5
+	pslld	$18, %xmm4
+	psrld	$14, %xmm5
+	pxor	%xmm4, %xmm0
+	pshufd	$0x39, %xmm3, %xmm3
+	pxor	%xmm5, %xmm0
+.endm
 
-
-#define salsa8_core_xmm() \
-	salsa8_core_xmm_doubleround(); \
-	salsa8_core_xmm_doubleround(); \
-	salsa8_core_xmm_doubleround(); \
-	salsa8_core_xmm_doubleround(); \
-
+.macro salsa8_core_xmm
+	salsa8_core_xmm_doubleround
+	salsa8_core_xmm_doubleround
+	salsa8_core_xmm_doubleround
+	salsa8_core_xmm_doubleround
+.endm
 	
 	.p2align 6
 scrypt_core_xmm:
@@ -615,7 +628,7 @@ scrypt_core_xmm_loop1:
 	movdqa	%xmm9, %xmm1
 	movdqa	%xmm10, %xmm2
 	movdqa	%xmm11, %xmm3
-	salsa8_core_xmm()
+	salsa8_core_xmm
 	paddd	%xmm0, %xmm8
 	paddd	%xmm1, %xmm9
 	paddd	%xmm2, %xmm10
@@ -629,7 +642,7 @@ scrypt_core_xmm_loop1:
 	movdqa	%xmm13, %xmm1
 	movdqa	%xmm14, %xmm2
 	movdqa	%xmm15, %xmm3
-	salsa8_core_xmm()
+	salsa8_core_xmm
 	paddd	%xmm0, %xmm12
 	paddd	%xmm1, %xmm13
 	paddd	%xmm2, %xmm14
@@ -657,7 +670,7 @@ scrypt_core_xmm_loop2:
 	movdqa	%xmm9, %xmm1
 	movdqa	%xmm10, %xmm2
 	movdqa	%xmm11, %xmm3
-	salsa8_core_xmm()
+	salsa8_core_xmm
 	paddd	%xmm0, %xmm8
 	paddd	%xmm1, %xmm9
 	paddd	%xmm2, %xmm10
@@ -675,7 +688,7 @@ scrypt_core_xmm_loop2:
 	movdqa	%xmm13, %xmm1
 	movdqa	%xmm14, %xmm2
 	movdqa	%xmm15, %xmm3
-	salsa8_core_xmm()
+	salsa8_core_xmm
 	paddd	%xmm0, %xmm12
 	paddd	%xmm1, %xmm13
 	paddd	%xmm2, %xmm14
@@ -739,7 +752,7 @@ scrypt_core_xmm_loop2:
 	movdqa	%xmm14, 96(%rdi)
 	movdqa	%xmm13, 112(%rdi)
 	
-	scrypt_core_cleanup()
+	scrypt_core_cleanup
 	ret
-	
+
 #endif
