@@ -241,8 +241,8 @@ public:
             }
         }
 
-        //After new samples are added, we have to clear the sorted lists,
-        //so they'll be resorted the next time someone asks for an estimate
+        // After new samples are added, we have to clear the sorted lists,
+        // so they'll be resorted the next time someone asks for an estimate
         sortedFeeSamples.clear();
         sortedPrioritySamples.clear();
 
