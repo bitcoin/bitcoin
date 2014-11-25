@@ -33,10 +33,35 @@ case $host in
 esac
 
 case $host_os in
-  darwin*)
-     CPPFLAGS="$CPPFLAGS -I/opt/local/include"
-     LDFLAGS="$LDFLAGS -L/opt/local/lib"
-     ;;
+  *darwin*)
+     if  test x$cross_compiling != xyes; then
+       AC_PATH_PROG([BREW],brew,)
+       if test x$BREW != x; then
+         dnl These Homebrew packages may be keg-only, meaning that they won't be found
+         dnl in expected paths because they may conflict with system files. Ask
+         dnl Homebrew where each one is located, then adjust paths accordingly.
+
+         openssl_prefix=`$BREW --prefix openssl 2>/dev/null`
+         gmp_prefix=`$BREW --prefix gmp 2>/dev/null`
+         if test x$openssl_prefix != x; then
+           PKG_CONFIG_PATH="$openssl_prefix/lib/pkgconfig:$PKG_CONFIG_PATH"
+           export PKG_CONFIG_PATH
+         fi
+         if test x$gmp_prefix != x; then
+           GMP_CPPFLAGS="-I$gmp_prefix/include"
+           GMP_LIBS="-L$gmp_prefix/lib"
+         fi
+       else
+         AC_PATH_PROG([PORT],port,)
+         dnl if homebrew isn't installed and macports is, add the macports default paths
+         dnl as a last resort.
+         if test x$PORT != x; then
+           CPPFLAGS="$CPPFLAGS -isystem /opt/local/include"
+           LDFLAGS="$LDFLAGS -L/opt/local/lib"
+         fi
+       fi
+     fi
+   ;;
 esac
 
 CFLAGS="$CFLAGS -W"
@@ -236,6 +261,7 @@ fi
 
 if test x"$set_field" = x"gmp" || test x"$set_bignum" = x"gmp"; then
   SECP_LIBS="$SECP_LIBS $GMP_LIBS"
+  SECP_INCLUDES="$SECP_INCLUDES $GMP_CPPFLAGS"
 fi
 
 if test x"$use_endomorphism" = x"yes"; then
@@ -256,4 +282,10 @@ AC_SUBST(YASM_BINFMT)
 AM_CONDITIONAL([USE_ASM], [test x"$set_field" == x"64bit_asm"])
 AM_CONDITIONAL([USE_TESTS], [test x"$use_tests" != x"no"])
 AM_CONDITIONAL([USE_BENCHMARK], [test x"$use_benchmark" != x"no"])
+
+dnl make sure nothing new is exported so that we don't break the cache
+PKGCONFIG_PATH_TEMP="$PKG_CONFIG_PATH"
+unset PKG_CONFIG_PATH
+PKG_CONFIG_PATH="$PKGCONFIG_PATH_TEMP"
+
 AC_OUTPUT
