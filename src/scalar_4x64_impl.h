@@ -390,4 +390,15 @@ static void secp256k1_scalar_sqr(secp256k1_scalar_t *r, const secp256k1_scalar_t
 #undef extract
 #undef extract_fast
 
+static void secp256k1_scalar_split_128(secp256k1_scalar_t *r1, secp256k1_scalar_t *r2, const secp256k1_scalar_t *a) {
+    r1->d[0] = a->d[0];
+    r1->d[1] = a->d[1];
+    r1->d[2] = 0;
+    r1->d[3] = 0;
+    r2->d[0] = a->d[2];
+    r2->d[1] = a->d[3];
+    r2->d[2] = 0;
+    r2->d[3] = 0;
+}
+
 #endif

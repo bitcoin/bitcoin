@@ -72,4 +72,11 @@ static int secp256k1_scalar_is_high(const secp256k1_scalar_t *a);
 /** Convert a scalar to a number. */
 static void secp256k1_scalar_get_num(secp256k1_num_t *r, const secp256k1_scalar_t *a);
 
+static void secp256k1_scalar_split_128(secp256k1_scalar_t *r1, secp256k1_scalar_t *r2, const secp256k1_scalar_t *a);
+
+#ifdef USE_ENDOMORPHISM
+/** Find r1 and r2 such that r1+r2*lambda = a, and r1 and r2 are maximum 128 bits long (see secp256k1_gej_mul_lambda). */
+static void secp256k1_scalar_split_lambda_var(secp256k1_scalar_t *r1, secp256k1_scalar_t *r2, const secp256k1_scalar_t *a);
+#endif
+
 #endif

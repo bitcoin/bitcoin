@@ -198,4 +198,27 @@ static void secp256k1_scalar_inverse_var(secp256k1_scalar_t *r, const secp256k1_
 #endif
 }
 
+#ifdef USE_ENDOMORPHISM
+static void secp256k1_scalar_split_lambda_var(secp256k1_scalar_t *r1, secp256k1_scalar_t *r2, const secp256k1_scalar_t *a) {
+    unsigned char b[32];
+    secp256k1_scalar_get_b32(b, a);
+    secp256k1_num_t na;
+    secp256k1_num_set_bin(&na, b, 32);
+
+    secp256k1_num_t rn1, rn2;
+    secp256k1_gej_split_exp_var(&rn1, &rn2, &na);
+
+    secp256k1_num_get_bin(b, 32, &rn1);
+    secp256k1_scalar_set_b32(r1, b, NULL);
+    if (secp256k1_num_is_neg(&rn1)) {
+        secp256k1_scalar_negate(r1, r1);
+    }
+    secp256k1_num_get_bin(b, 32, &rn2);
+    secp256k1_scalar_set_b32(r2, b, NULL);
+    if (secp256k1_num_is_neg(&rn2)) {
+        secp256k1_scalar_negate(r2, r2);
+    }
+}
+#endif
+
 #endif
