@@ -108,7 +108,7 @@ static int secp256k1_ecdsa_sig_recover(const secp256k1_ecdsa_sig_t *sig, secp256
     secp256k1_num_get_bin(brx, 32, &rx);
     secp256k1_num_free(&rx);
     secp256k1_fe_t fx;
-    secp256k1_fe_set_b32(&fx, brx);
+    VERIFY_CHECK(secp256k1_fe_set_b32(&fx, brx)); /* Either rx < n (and n < p), or rx + n < p (checked above). */
     secp256k1_ge_t x;
     if (!secp256k1_ge_set_xo(&x, &fx, recid & 1))
         return 0;

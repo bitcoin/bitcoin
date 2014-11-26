@@ -150,7 +150,7 @@ SECP256K1_INLINE static int secp256k1_fe_equal(const secp256k1_fe_t *a, const se
     return ((t[0]^u[0]) | (t[1]^u[1]) | (t[2]^u[2]) | (t[3]^u[3]) | (t[4]^u[4])) == 0;
 }
 
-static void secp256k1_fe_set_b32(secp256k1_fe_t *r, const unsigned char *a) {
+static int secp256k1_fe_set_b32(secp256k1_fe_t *r, const unsigned char *a) {
     r->n[0] = r->n[1] = r->n[2] = r->n[3] = r->n[4] = 0;
     for (int i=0; i<32; i++) {
         for (int j=0; j<2; j++) {
@@ -159,11 +159,15 @@ static void secp256k1_fe_set_b32(secp256k1_fe_t *r, const unsigned char *a) {
             r->n[limb] |= (uint64_t)((a[31-i] >> (4*j)) & 0xF) << shift;
         }
     }
+    if (r->n[4] == 0x0FFFFFFFFFFFFULL && (r->n[3] & r->n[2] & r->n[1]) == 0xFFFFFFFFFFFFFULL && r->n[0] >= 0xFFFFEFFFFFC2FULL) {
+        return 0;
+    }
 #ifdef VERIFY
     r->magnitude = 1;
     r->normalized = 1;
     secp256k1_fe_verify(r);
 #endif
+    return 1;
 }
 
 /** Convert a field element to a 32-byte big endian value. Requires the input to be normalized */

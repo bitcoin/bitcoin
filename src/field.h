@@ -59,8 +59,8 @@ static int secp256k1_fe_is_odd(const secp256k1_fe_t *a);
 /** Compare two field elements. Requires both inputs to be normalized */
 static int secp256k1_fe_equal(const secp256k1_fe_t *a, const secp256k1_fe_t *b);
 
-/** Set a field element equal to 32-byte big endian value. Resulting field element is normalized. */
-static void secp256k1_fe_set_b32(secp256k1_fe_t *r, const unsigned char *a);
+/** Set a field element equal to 32-byte big endian value. If succesful, the resulting field element is normalized. */
+static int secp256k1_fe_set_b32(secp256k1_fe_t *r, const unsigned char *a);
 
 /** Convert a field element to a 32-byte big endian value. Requires the input to be normalized */
 static void secp256k1_fe_get_b32(unsigned char *r, const secp256k1_fe_t *a);
@@ -109,6 +109,6 @@ static void secp256k1_fe_inv_all_var(size_t len, secp256k1_fe_t r[len], const se
 static void secp256k1_fe_get_hex(char *r, int *rlen, const secp256k1_fe_t *a);
 
 /** Convert a hexadecimal string to a field element. */
-static void secp256k1_fe_set_hex(secp256k1_fe_t *r, const char *a, int alen);
+static int secp256k1_fe_set_hex(secp256k1_fe_t *r, const char *a, int alen);
 
 #endif
