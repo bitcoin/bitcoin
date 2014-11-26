@@ -65,3 +65,18 @@ Background images and other features can be added to DMG files by inserting a
 .DS_Store before creation. The easiest way to create this file is to build a
 DMG without one, move it to a device running OSX, customize the layout, then
 grab the .DS_Store file for later use. That is the approach taken here.
+
+As of OSX Mavericks (10.9), using an Apple-blessed key to sign binaries is a
+requirement in order to satisfy the new Gatekeeper requirements. Because this
+private key cannot be shared, we'll have to be a bit creative in order for the
+build process to remain somewhat deterministic. Here's how it works:
+
+- Builders use gitian to create an unsigned release. This outputs an unsigned
+  dmg which users may choose to bless and run. It also outputs an unsigned app
+  structure in the form of a tarball, which also contains all of the tools
+  that have been previously (deterministically) built in order to create a
+  final dmg.
+- The Apple keyholder uses this unsigned app to create a detached signature,
+  using the script that is also included there.
+- Builders feed the unsigned app + detached signature back into gitian. It
+  uses the pre-built tools to recombine the pieces into a deterministic dmg.
