@@ -95,7 +95,7 @@
     </message>
     <message>
       <source>Balance</source>
-      <translation>Баланс</translation>
+      <translation>Сумма</translation>
     </message>
     <message>
       <source>MintProbability</source>
