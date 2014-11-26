@@ -15,11 +15,13 @@
 #define WINDOW_A 5
 
 /** larger numbers may result in slightly better performance, at the cost of
-    exponentially larger precomputed tables. WINDOW_G == 14 results in 640 KiB. */
+    exponentially larger precomputed tables. */
 #ifdef USE_ENDOMORPHISM
-#define WINDOW_G 14
-#else
+/** Two tables for window size 15: 1.375 MiB. */
 #define WINDOW_G 15
+#else
+/** One table for window size 16: 1.375 MiB. */
+#define WINDOW_G 16
 #endif
 
 /** Fill a table 'pre' with precomputed odd multiples of a. W determines the size of the table.
