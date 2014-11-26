@@ -24,6 +24,54 @@
 #error "Please select scalar implementation"
 #endif
 
+typedef struct {
+#ifdef USE_ENDOMORPHISM
+    secp256k1_num_t a1b2, b1, a2;
+#endif
+} secp256k1_scalar_consts_t;
+
+static const secp256k1_scalar_consts_t *secp256k1_scalar_consts = NULL;
+
+static void secp256k1_scalar_start(void) {
+    if (secp256k1_scalar_consts != NULL)
+        return;
+
+    /* Allocate. */
+    secp256k1_scalar_consts_t *ret = (secp256k1_scalar_consts_t*)malloc(sizeof(secp256k1_scalar_consts_t));
+
+#ifdef USE_ENDOMORPHISM
+    static const unsigned char secp256k1_scalar_consts_a1b2[] = {
+        0x30,0x86,0xd2,0x21,0xa7,0xd4,0x6b,0xcd,
+        0xe8,0x6c,0x90,0xe4,0x92,0x84,0xeb,0x15
+    };
+    static const unsigned char secp256k1_scalar_consts_b1[] = {
+        0xe4,0x43,0x7e,0xd6,0x01,0x0e,0x88,0x28,
+        0x6f,0x54,0x7f,0xa9,0x0a,0xbf,0xe4,0xc3
+    };
+    static const unsigned char secp256k1_scalar_consts_a2[] = {
+        0x01,
+        0x14,0xca,0x50,0xf7,0xa8,0xe2,0xf3,0xf6,
+        0x57,0xc1,0x10,0x8d,0x9d,0x44,0xcf,0xd8
+    };
+
+    secp256k1_num_set_bin(&ret->a1b2, secp256k1_scalar_consts_a1b2, sizeof(secp256k1_scalar_consts_a1b2));
+    secp256k1_num_set_bin(&ret->a2, secp256k1_scalar_consts_a2, sizeof(secp256k1_scalar_consts_a2));
+    secp256k1_num_set_bin(&ret->b1, secp256k1_scalar_consts_b1, sizeof(secp256k1_scalar_consts_b1));
+#endif
+
+    /* Set the global pointer. */
+    secp256k1_scalar_consts = ret;
+}
+
+static void secp256k1_scalar_stop(void) {
+    if (secp256k1_scalar_consts == NULL)
+        return;
+
+    secp256k1_scalar_consts_t *c = (secp256k1_scalar_consts_t*)secp256k1_scalar_consts;
+    secp256k1_scalar_consts = NULL;
+    free(c);
+}
+
 static void secp256k1_scalar_get_num(secp256k1_num_t *r, const secp256k1_scalar_t *a) {
     unsigned char c[32];
     secp256k1_scalar_get_b32(c, a);
@@ -206,7 +254,29 @@ static void secp256k1_scalar_split_lambda_var(secp256k1_scalar_t *r1, secp256k1_
     secp256k1_num_set_bin(&na, b, 32);
 
     secp256k1_num_t rn1, rn2;
-    secp256k1_gej_split_exp_var(&rn1, &rn2, &na);
+
+    const secp256k1_scalar_consts_t *c = secp256k1_scalar_consts;
+    const secp256k1_num_t *order = &secp256k1_ge_consts->order;
+    secp256k1_num_t bnc1, bnc2, bnt1, bnt2, bnn2;
+
+    secp256k1_num_copy(&bnn2, order);
+    secp256k1_num_shift(&bnn2, 1);
+
+    secp256k1_num_mul(&bnc1, &na, &c->a1b2);
+    secp256k1_num_add(&bnc1, &bnc1, &bnn2);
+    secp256k1_num_div(&bnc1, &bnc1, order);
+
+    secp256k1_num_mul(&bnc2, &na, &c->b1);
+    secp256k1_num_add(&bnc2, &bnc2, &bnn2);
+    secp256k1_num_div(&bnc2, &bnc2, order);
+
+    secp256k1_num_mul(&bnt1, &bnc1, &c->a1b2);
+    secp256k1_num_mul(&bnt2, &bnc2, &c->a2);
+    secp256k1_num_add(&bnt1, &bnt1, &bnt2);
+    secp256k1_num_sub(&rn1, &na, &bnt1);
+    secp256k1_num_mul(&bnt1, &bnc1, &c->b1);
+    secp256k1_num_mul(&bnt2, &bnc2, &c->a1b2);
+    secp256k1_num_sub(&rn2, &bnt1, &bnt2);
 
     secp256k1_num_get_bin(b, 32, &rn1);
     secp256k1_scalar_set_b32(r1, b, NULL);

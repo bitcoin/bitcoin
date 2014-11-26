@@ -21,6 +21,9 @@
 #error "Please select scalar implementation"
 #endif
 
+static void secp256k1_scalar_start(void);
+static void secp256k1_scalar_stop(void);
+
 /** Clear a scalar to prevent the leak of sensitive data. */
 static void secp256k1_scalar_clear(secp256k1_scalar_t *r);
 
