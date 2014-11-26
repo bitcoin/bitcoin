@@ -9,6 +9,7 @@
 
 #include <string.h>
 
+#include "group.h"
 #include "scalar.h"
 
 #if defined HAVE_CONFIG_H
@@ -179,6 +180,22 @@ static void secp256k1_scalar_inverse(secp256k1_scalar_t *r, const secp256k1_scal
     for (int i=0; i<8; i++) /* 00 */
         secp256k1_scalar_sqr(t, t);
     secp256k1_scalar_mul(r, t, &x6); /* 111111 */
+}
+
+static void secp256k1_scalar_inverse_var(secp256k1_scalar_t *r, const secp256k1_scalar_t *x) {
+#if defined(USE_SCALAR_INV_BUILTIN)
+    secp256k1_scalar_inverse(r, x);
+#elif defined(USE_SCALAR_INV_NUM)
+    unsigned char b[32];
+    secp256k1_scalar_get_b32(b, x);
+    secp256k1_num_t n;
+    secp256k1_num_set_bin(&n, b, 32);
+    secp256k1_num_mod_inverse(&n, &n, &secp256k1_ge_consts->order);
+    secp256k1_num_get_bin(b, 32, &n);
+    secp256k1_scalar_set_b32(r, b, NULL);
+#else
+#error "Please select scalar inverse implementation"
+#endif
 }
 
 #endif
