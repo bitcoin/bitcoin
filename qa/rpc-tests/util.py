@@ -163,7 +163,7 @@ def start_node(i, dirname, extra_args=None, rpchost=None):
     Start a bitcoind and return RPC connection to it
     """
     datadir = os.path.join(dirname, "node"+str(i))
-    args = [ os.getenv("BITCOIND", "bitcoind"), "-datadir="+datadir, "-keypool=1", "-discover=0" ]
+    args = [ os.getenv("BITCOIND", "bitcoind"), "-datadir="+datadir, "-keypool=1", "-discover=0", "-rest" ]
     if extra_args is not None: args.extend(extra_args)
     bitcoind_processes[i] = subprocess.Popen(args)
     devnull = open("/dev/null", "w+")
@@ -327,3 +327,7 @@ def random_transaction(nodes, amount, min_fee, fee_increment, fee_variants):
 def assert_equal(thing1, thing2):
     if thing1 != thing2:
         raise AssertionError("%s != %s"%(str(thing1),str(thing2)))
+
+def assert_greater_than(thing1, thing2):
+    if thing1 <= thing2:
+        raise AssertionError("%s <= %s"%(str(thing1),str(thing2)))
