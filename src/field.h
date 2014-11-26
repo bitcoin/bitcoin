@@ -34,6 +34,7 @@
 
 typedef struct {
     secp256k1_num_t p;
+    secp256k1_fe_t order;
 } secp256k1_fe_consts_t;
 
 static const secp256k1_fe_consts_t *secp256k1_fe_consts = NULL;
@@ -58,6 +59,9 @@ static int secp256k1_fe_is_odd(const secp256k1_fe_t *a);
 
 /** Compare two field elements. Requires both inputs to be normalized */
 static int secp256k1_fe_equal(const secp256k1_fe_t *a, const secp256k1_fe_t *b);
+
+/** Compare two field elements. Requires both inputs to be normalized */
+static int secp256k1_fe_cmp_var(const secp256k1_fe_t *a, const secp256k1_fe_t *b);
 
 /** Set a field element equal to 32-byte big endian value. If succesful, the resulting field element is normalized. */
 static int secp256k1_fe_set_b32(secp256k1_fe_t *r, const unsigned char *a);

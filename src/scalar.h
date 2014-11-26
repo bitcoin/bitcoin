@@ -72,6 +72,9 @@ static int secp256k1_scalar_is_high(const secp256k1_scalar_t *a);
 /** Convert a scalar to a number. */
 static void secp256k1_scalar_get_num(secp256k1_num_t *r, const secp256k1_scalar_t *a);
 
+/** Compare two scalars. */
+static int secp256k1_scalar_eq(const secp256k1_scalar_t *a, const secp256k1_scalar_t *b);
+
 static void secp256k1_scalar_split_128(secp256k1_scalar_t *r1, secp256k1_scalar_t *r2, const secp256k1_scalar_t *a);
 
 #ifdef USE_ENDOMORPHISM

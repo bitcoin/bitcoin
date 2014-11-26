@@ -7,7 +7,6 @@
 #ifndef _SECP256K1_ECMULT_IMPL_H_
 #define _SECP256K1_ECMULT_IMPL_H_
 
-#include "num.h"
 #include "group.h"
 #include "scalar.h"
 #include "ecmult.h"
@@ -125,22 +124,13 @@ static void secp256k1_ecmult_stop(void) {
  *  - the number of set values in wnaf is returned. This number is at most 256, and at most one more
  *  - than the number of bits in the (absolute value) of the input.
  */
-static int secp256k1_ecmult_wnaf(int *wnaf, const secp256k1_num_t *a, int w) {
-    secp256k1_num_t x;
-    secp256k1_num_copy(&x, a);
-    int sign = 1;
-    if (secp256k1_num_is_neg(&x)) {
-        sign = -1;
-        secp256k1_num_negate(&x);
-    }
-    unsigned char cr[32];
-    secp256k1_num_get_bin(cr, 32, &x);
-    secp256k1_scalar_t s;
-    secp256k1_scalar_set_b32(&s, cr, NULL);
+static int secp256k1_ecmult_wnaf(int *wnaf, const secp256k1_scalar_t *a, int w) {
+    secp256k1_scalar_t s = *a;
 
+    int sign = 1;
     if (secp256k1_scalar_get_bits(&s, 255, 1)) {
         secp256k1_scalar_negate(&s, &s);
-        sign *= -1;
+        sign = -1;
     }
 
     int set_bits = 0;
@@ -169,13 +159,13 @@ static int secp256k1_ecmult_wnaf(int *wnaf, const secp256k1_num_t *a, int w) {
     return set_bits;
 }
 
-static void secp256k1_ecmult(secp256k1_gej_t *r, const secp256k1_gej_t *a, const secp256k1_num_t *na, const secp256k1_num_t *ng) {
+static void secp256k1_ecmult(secp256k1_gej_t *r, const secp256k1_gej_t *a, const secp256k1_scalar_t *na, const secp256k1_scalar_t *ng) {
     const secp256k1_ecmult_consts_t *c = secp256k1_ecmult_consts;
 
 #ifdef USE_ENDOMORPHISM
-    secp256k1_num_t na_1, na_lam;
+    secp256k1_scalar_t na_1, na_lam;
     /* split na into na_1 and na_lam (where na = na_1 + na_lam*lambda, and na_1 and na_lam are ~128 bit) */
-    secp256k1_gej_split_exp_var(&na_1, &na_lam, na);
+    secp256k1_scalar_split_lambda_var(&na_1, &na_lam, na);
 
     /* build wnaf representation for na_1 and na_lam. */
     int wnaf_na_1[129];   int bits_na_1   = secp256k1_ecmult_wnaf(wnaf_na_1,   &na_1,   WINDOW_A);
@@ -198,10 +188,10 @@ static void secp256k1_ecmult(secp256k1_gej_t *r, const secp256k1_gej_t *a, const
         secp256k1_gej_mul_lambda(&pre_a_lam[i], &pre_a[i]);
 
     /* Splitted G factors. */
-    secp256k1_num_t ng_1, ng_128;
+    secp256k1_scalar_t ng_1, ng_128;
 
     /* split ng into ng_1 and ng_128 (where gn = gn_1 + gn_128*2^128, and gn_1 and gn_128 are ~128 bit) */
-    secp256k1_num_split(&ng_1, &ng_128, ng, 128);
+    secp256k1_scalar_split_128(&ng_1, &ng_128, ng);
 
     /* Build wnaf representation for ng_1 and ng_128 */
     int wnaf_ng_1[129];   int bits_ng_1   = secp256k1_ecmult_wnaf(wnaf_ng_1,   &ng_1,   WINDOW_G);

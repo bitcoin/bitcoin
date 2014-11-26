@@ -152,6 +152,20 @@ SECP256K1_INLINE static int secp256k1_fe_equal(const secp256k1_fe_t *a, const se
           | (t[5]^u[5]) | (t[6]^u[6]) | (t[7]^u[7]) | (t[8]^u[8]) | (t[9]^u[9])) == 0;
 }
 
+static int secp256k1_fe_cmp_var(const secp256k1_fe_t *a, const secp256k1_fe_t *b) {
+#ifdef VERIFY
+    VERIFY_CHECK(a->normalized);
+    VERIFY_CHECK(b->normalized);
+    secp256k1_fe_verify(a);
+    secp256k1_fe_verify(b);
+#endif
+    for (int i = 9; i >= 0; i--) {
+        if (a->n[i] > b->n[i]) return 1;
+        if (a->n[i] < b->n[i]) return -1;
+    }
+    return 0;
+}
+
 static int secp256k1_fe_set_b32(secp256k1_fe_t *r, const unsigned char *a) {
     r->n[0] = r->n[1] = r->n[2] = r->n[3] = r->n[4] = 0;
     r->n[5] = r->n[6] = r->n[7] = r->n[8] = r->n[9] = 0;
