@@ -794,13 +794,16 @@ void run_ecmult_chain(void) {
 }
 
 void test_point_times_order(const secp256k1_gej_t *point) {
-    /* multiplying a point by the order results in O */
-    const secp256k1_num_t *order = &secp256k1_ge_consts->order;
-    secp256k1_num_t zero;
-    secp256k1_num_set_int(&zero, 0);
-    secp256k1_gej_t res;
-    secp256k1_ecmult(&res, point, order, order); /* calc res = order * point + order * G; */
-    CHECK(secp256k1_gej_is_infinity(&res));
+    /* X * (point + G) + (order-X) * (pointer + G) = 0 */
+    secp256k1_num_t x;
+    random_num_order_test(&x);
+    secp256k1_num_t nx;
+    secp256k1_num_sub(&nx, &secp256k1_ge_consts->order, &x);
+    secp256k1_gej_t res1, res2;
+    secp256k1_ecmult(&res1, point, &x, &x); /* calc res1 = x * point + x * G; */
+    secp256k1_ecmult(&res2, point, &nx, &nx); /* calc res2 = (order - x) * point + (order - x) * G; */
+    secp256k1_gej_add_var(&res1, &res1, &res2);
+    CHECK(secp256k1_gej_is_infinity(&res1));
 }
 
 void run_point_times_order(void) {
