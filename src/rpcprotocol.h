@@ -28,6 +28,7 @@ enum HTTPStatusCode
     HTTP_FORBIDDEN             = 403,
     HTTP_NOT_FOUND             = 404,
     HTTP_INTERNAL_SERVER_ERROR = 500,
+    HTTP_SERVICE_UNAVAILABLE   = 503,
 };
 
 //! Bitcoin RPC error codes
