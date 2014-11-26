@@ -203,7 +203,7 @@ MintingTableModel::MintingTableModel(CWallet *wallet, WalletModel *parent):
         mintingInterval(10),
         priv(new MintingTablePriv(wallet, this))
 {
-    columns << tr("Transaction") <<  tr("Address") << tr("Age") << tr("Balance") << tr("CoinDay") << tr("MintProbability") << tr("MintReward");
+    columns << tr("Transaction") <<  tr("Address") << tr("Balance") << tr("Age") << tr("CoinDay") << tr("MintProbability") << tr("MintReward");
     priv->refreshWallet();
 
     QTimer *timer = new QTimer(this);
