@@ -25,22 +25,32 @@
       <translation>Показывать вероятность найти блок в течение : </translation>
     </message>
     <message>
-      <location filename="../mintingview.cpp" line="62"/>
+      <location filename="../mintingview.cpp" line="63"/>
       <source>10 min</source>
       <translation>10 минут</translation>
     </message>
     <message>
-      <location filename="../mintingview.cpp" line="63"/>
+      <location filename="../mintingview.cpp" line="64"/>
       <source>24 hours</source>
       <translation>24 часов</translation>
     </message>
     <message>
-      <location filename="../mintingview.cpp" line="64"/>
+      <location filename="../mintingview.cpp" line="65"/>
+      <source>7 days</source>
+      <translation>7 дней</translation>
+    </message>
+    <message>
+      <location filename="../mintingview.cpp" line="66"/>
       <source>30 days</source>
       <translation>30 дней</translation>
     </message>
     <message>
-      <location filename="../mintingview.cpp" line="65"/>
+      <location filename="../mintingview.cpp" line="67"/>
+      <source>60 days</source>
+      <translation>60 дней</translation>
+    </message>
+    <message>
+      <location filename="../mintingview.cpp" line="68"/>
       <source>90 days</source>
       <translation>90 дней</translation>
     </message>

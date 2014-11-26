@@ -24,7 +24,9 @@ public:
     {
         Minting10min,
         Minting1day,
+        Minting7days,
         Minting30days,
+        Minting60days,
         Minting90days
     };
 

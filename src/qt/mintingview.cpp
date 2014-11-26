@@ -62,7 +62,9 @@ MintingView::MintingView(QWidget *parent) :
     mintingCombo = new QComboBox();
     mintingCombo->addItem(tr("10 min"), Minting10min);
     mintingCombo->addItem(tr("24 hours"), Minting1day);
+    mintingCombo->addItem(tr("7 days"), Minting7days);
     mintingCombo->addItem(tr("30 days"), Minting30days);
+    mintingCombo->addItem(tr("60 days"), Minting60days);
     mintingCombo->addItem(tr("90 days"), Minting90days);
     mintingCombo->setFixedWidth(120);
 
@@ -142,12 +144,19 @@ void MintingView::setModel(WalletModel *model)
         mintingView->horizontalHeader()->setResizeMode(
                 MintingTableModel::MintReward, QHeaderView::Stretch);
 #else
-        mintingView->horizontalHeader()->setSectionResizeMode(MintingTableModel::MintReward, QHeaderView::Stretch);
+        mintingView->horizontalHeader()->setSectionResizeMode(
+                MintingTableModel::MintReward, QHeaderView::Stretch);
 #endif
         mintingView->horizontalHeader()->resizeSection(
             MintingTableModel::Address, 0);
         mintingView->horizontalHeader()->resizeSection(
             MintingTableModel::TxHash, 0);
+        /*
+        mintingView->horizontalHeader()->setSectionHidden(
+            MintingTableModel::Address, true);
+                mintingView->horizontalHeader()->setSectionHidden(
+            MintingTableModel::TxHash, true);
+            */
     }
 }
 
@@ -162,8 +171,14 @@ void MintingView::chooseMintingInterval(int idx)
         case Minting1day:
             interval = 60*24;
             break;
+        case Minting7days:
+            interval = 60*24*7;
+            break;
         case Minting30days:
             interval = 60*24*30;
+            break;
+        case Minting60days:
+            interval = 60*24*60;
             break;
         case Minting90days:
             interval = 60*24*90;
