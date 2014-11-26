@@ -17,13 +17,6 @@
 using namespace std;
 
 typedef vector<unsigned char> valtype;
-static const valtype vchFalse(0);
-static const valtype vchZero(0);
-static const valtype vchTrue(1, 1);
-static const CScriptNum bnZero(0);
-static const CScriptNum bnOne(1);
-static const CScriptNum bnFalse(0);
-static const CScriptNum bnTrue(1);
 
 namespace {
 
@@ -239,6 +232,14 @@ bool static CheckMinimalPush(const valtype& data, opcodetype opcode) {
 
 bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, unsigned int flags, const BaseSignatureChecker& checker, ScriptError* serror)
 {
+    static const CScriptNum bnZero(0);
+    static const CScriptNum bnOne(1);
+    static const CScriptNum bnFalse(0);
+    static const CScriptNum bnTrue(1);
+    static const valtype vchFalse(0);
+    static const valtype vchZero(0);
+    static const valtype vchTrue(1, 1);
+
     CScript::const_iterator pc = script.begin();
     CScript::const_iterator pend = script.end();
     CScript::const_iterator pbegincodehash = script.begin();

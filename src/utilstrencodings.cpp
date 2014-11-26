@@ -14,13 +14,13 @@
 
 using namespace std;
 
-/**
- * safeChars chosen to allow simple messages/URLs/email addresses, but avoid anything
- * even possibly remotely dangerous like & or >
- */
-static string safeChars("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ01234567890 .,;_/:?@()");
 string SanitizeString(const string& str)
 {
+    /**
+     * safeChars chosen to allow simple messages/URLs/email addresses, but avoid anything
+     * even possibly remotely dangerous like & or >
+     */
+    static string safeChars("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ01234567890 .,;_/:?@()");
     string strResult;
     for (std::string::size_type i = 0; i < str.size(); i++)
     {
