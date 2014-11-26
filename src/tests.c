@@ -825,8 +825,9 @@ void test_wnaf(const secp256k1_num_t *number, int w) {
     secp256k1_num_t x, two, t;
     secp256k1_num_set_int(&x, 0);
     secp256k1_num_set_int(&two, 2);
-    int wnaf[257];
+    int wnaf[256];
     int bits = secp256k1_ecmult_wnaf(wnaf, number, w);
+    CHECK(bits <= 256);
     int zeroes = -1;
     for (int i=bits-1; i>=0; i--) {
         secp256k1_num_mul(&x, &x, &two);
@@ -844,7 +845,10 @@ void test_wnaf(const secp256k1_num_t *number, int w) {
         secp256k1_num_set_int(&t, v);
         secp256k1_num_add(&x, &x, &t);
     }
-    CHECK(secp256k1_num_eq(&x, number)); /* check that wnaf represents number */
+    secp256k1_num_t xcopy = x, ncopy = *number;
+    secp256k1_num_mod(&xcopy, &secp256k1_ge_consts->order);
+    secp256k1_num_mod(&ncopy, &secp256k1_ge_consts->order);
+    CHECK(secp256k1_num_eq(&xcopy, &ncopy)); /* check that wnaf represents number */
 }
 
 void run_wnaf(void) {

@@ -9,6 +9,7 @@
 
 #include "num.h"
 #include "group.h"
+#include "scalar.h"
 #include "ecmult.h"
 
 /* optimal for 128-bit and 256-bit exponents. */
@@ -121,12 +122,10 @@ static void secp256k1_ecmult_stop(void) {
  *  with the following guarantees:
  *  - each wnaf[i] is either 0, or an odd integer between -(1<<(w-1) - 1) and (1<<(w-1) - 1)
  *  - two non-zero entries in wnaf are separated by at least w-1 zeroes.
- *  - the index of the highest non-zero entry in wnaf (=return value-1) is at most bits, where
- *    bits is the number of bits necessary to represent the absolute value of the input.
+ *  - the number of set values in wnaf is returned. This number is at most 256, and at most one more
+ *  - than the number of bits in the (absolute value) of the input.
  */
 static int secp256k1_ecmult_wnaf(int *wnaf, const secp256k1_num_t *a, int w) {
-    int ret = 0;
-    int zeroes = 0;
     secp256k1_num_t x;
     secp256k1_num_copy(&x, a);
     int sign = 1;
@@ -134,25 +133,40 @@ static int secp256k1_ecmult_wnaf(int *wnaf, const secp256k1_num_t *a, int w) {
         sign = -1;
         secp256k1_num_negate(&x);
     }
-    while (!secp256k1_num_is_zero(&x)) {
-        while (!secp256k1_num_is_odd(&x)) {
-            zeroes++;
-            secp256k1_num_shift(&x, 1);
-        }
-        int word = secp256k1_num_shift(&x, w);
-        while (zeroes) {
-            wnaf[ret++] = 0;
-            zeroes--;
-        }
-        if (word & (1 << (w-1))) {
-            secp256k1_num_inc(&x);
-            wnaf[ret++] = sign * (word - (1 << w));
-        } else {
-            wnaf[ret++] = sign * word;
-        }
-        zeroes = w-1;
+    unsigned char cr[32];
+    secp256k1_num_get_bin(cr, 32, &x);
+    secp256k1_scalar_t s;
+    secp256k1_scalar_set_b32(&s, cr, NULL);
+
+    if (secp256k1_scalar_get_bits(&s, 255, 1)) {
+        secp256k1_scalar_negate(&s, &s);
+        sign *= -1;
     }
-    return ret;
+
+    int set_bits = 0;
+    int bit = 0;
+    while (bit < 256) {
+        if (secp256k1_scalar_get_bits(&s, bit, 1) == 0) {
+            bit++;
+            continue;
+        }
+        while (set_bits < bit) {
+            wnaf[set_bits++] = 0;
+        }
+        int now = w;
+        if (bit + now > 256) {
+            now = 256 - bit;
+        }
+        int word = secp256k1_scalar_get_bits_var(&s, bit, now);
+        if (word & (1 << (w-1))) {
+            secp256k1_scalar_add_bit(&s, bit + w);
+            wnaf[set_bits++] = sign * (word - (1 << w));
+        } else {
+            wnaf[set_bits++] = sign * word;
+        }
+        bit += now;
+    }
+    return set_bits;
 }
 
 static void secp256k1_ecmult(secp256k1_gej_t *r, const secp256k1_gej_t *a, const secp256k1_num_t *na, const secp256k1_num_t *ng) {
@@ -170,7 +184,7 @@ static void secp256k1_ecmult(secp256k1_gej_t *r, const secp256k1_gej_t *a, const
     if (bits_na_lam > bits) bits = bits_na_lam;
 #else
     /* build wnaf representation for na. */
-    int wnaf_na[257];     int bits_na     = secp256k1_ecmult_wnaf(wnaf_na,     na,      WINDOW_A);
+    int wnaf_na[256];     int bits_na     = secp256k1_ecmult_wnaf(wnaf_na,     na,      WINDOW_A);
     int bits = bits_na;
 #endif
 
