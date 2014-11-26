@@ -1,4 +1,4 @@
-<TS language="sr" version="2.1">
+<TS language="sr" version="2.0">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -263,10 +263,6 @@ Address: %4
     <message>
         <source>Amount</source>
         <translation>iznos</translation>
-    </message>
-    <message>
-        <source>Address</source>
-        <translation>Адреса</translation>
     </message>
     <message>
         <source>Date</source>

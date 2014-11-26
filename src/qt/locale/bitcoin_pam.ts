@@ -1,4 +1,4 @@
-<TS language="pam" version="2.1">
+<TS language="pam" version="2.0">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -389,10 +389,6 @@ Address: %4
         <translation>Alaga</translation>
     </message>
     <message>
-        <source>Address</source>
-        <translation>Address</translation>
-    </message>
-    <message>
         <source>Date</source>
         <translation>Kaaldauan</translation>
     </message>
@@ -533,10 +529,6 @@ Address: %4
     <message>
         <source>&amp;Main</source>
         <translation>&amp;Pun</translation>
-    </message>
-    <message>
-        <source>Pay transaction &amp;fee</source>
-        <translation>Mamayad &amp;bayad para king transaksion </translation>
     </message>
     <message>
         <source>Automatically start Bitcoin after logging in to the system.</source>

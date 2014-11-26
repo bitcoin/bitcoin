@@ -1,4 +1,4 @@
-<TS language="pt_PT" version="2.1">
+<TS language="pt_PT" version="2.0">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -508,10 +508,6 @@ Endereço: %4</translation>
 <context>
     <name>CoinControlDialog</name>
     <message>
-        <source>Coin Control Address Selection</source>
-        <translation>Seleção de Endereço Coin Control</translation>
-    </message>
-    <message>
         <source>Quantity:</source>
         <translation>Quantidade:</translation>
     </message>
@@ -554,10 +550,6 @@ Endereço: %4</translation>
     <message>
         <source>Amount</source>
         <translation>Quantia</translation>
-    </message>
-    <message>
-        <source>Address</source>
-        <translation>Endereço</translation>
     </message>
     <message>
         <source>Date</source>
@@ -906,14 +898,6 @@ Endereço: %4</translation>
         <translation>&amp;Principal</translation>
     </message>
     <message>
-        <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly. Most transactions are 1 kB.</source>
-        <translation>Taxa de transação opcional por KB que ajuda a assegurar que as suas transações serão processadas rapidamente. A maioria das transações tem 1 kB.</translation>
-    </message>
-    <message>
-        <source>Pay transaction &amp;fee</source>
-        <translation>Pagar &amp;taxa de transação</translation>
-    </message>
-    <message>
         <source>Automatically start Bitcoin after logging in to the system.</source>
         <translation>Começar o Bitcoin automaticamente ao iniciar sessão no sistema.</translation>
     </message>
@@ -932,14 +916,6 @@ Endereço: %4</translation>
     <message>
         <source>Number of script &amp;verification threads</source>
         <translation>Número de processos de &amp;verificação de scripts</translation>
-    </message>
-    <message>
-        <source>Connect to the Bitcoin network through a SOCKS proxy.</source>
-        <translation>Ligar à rede Bitcoin através de um proxy SOCKS.</translation>
-    </message>
-    <message>
-        <source>&amp;Connect through SOCKS proxy (default proxy):</source>
-        <translation>Ligar através de um proxy SO&amp;CKS (proxy por defeito):</translation>
     </message>
     <message>
         <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>

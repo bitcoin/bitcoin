@@ -1,4 +1,4 @@
-<TS language="ur_PK" version="2.1">
+<TS language="ur_PK" version="2.0">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -99,10 +99,6 @@
     <message>
         <source>Amount</source>
         <translation>رقم</translation>
-    </message>
-    <message>
-        <source>Address</source>
-        <translation> پتہ</translation>
     </message>
     <message>
         <source>Date</source>

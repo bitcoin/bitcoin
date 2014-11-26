@@ -1,4 +1,4 @@
-<TS language="eo" version="2.1">
+<TS language="eo" version="2.0">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -537,10 +537,6 @@ Adreso: %4
         <translation>Sumo</translation>
     </message>
     <message>
-        <source>Address</source>
-        <translation>Adreso</translation>
-    </message>
-    <message>
         <source>Date</source>
         <translation>Dato</translation>
     </message>
@@ -881,14 +877,6 @@ Adreso: %4
     <message>
         <source>&amp;Main</source>
         <translation>Ĉ&amp;efa</translation>
-    </message>
-    <message>
-        <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly. Most transactions are 1 kB.</source>
-        <translation>Nedeviga krompago por ĉiu kB, kiu helpas plirapidigi la traktadon de via transakcio. Plej multaj transakcioj grandas je 1kB.</translation>
-    </message>
-    <message>
-        <source>Pay transaction &amp;fee</source>
-        <translation>Krompago</translation>
     </message>
     <message>
         <source>Automatically start Bitcoin after logging in to the system.</source>
