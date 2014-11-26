@@ -401,7 +401,7 @@ QString MintingTableModel::formatTxHash(const KernelRecord *wtx) const
 
 QString MintingTableModel::formatTxCoinDay(const KernelRecord *wtx) const
 {
-    return QString::number(wtx->coinAge);
+    return QString::number(wtx->getCoinDay());
 }
 
 QString MintingTableModel::formatTxAge(const KernelRecord *wtx) const
