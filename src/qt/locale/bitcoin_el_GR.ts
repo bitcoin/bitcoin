@@ -1,4 +1,4 @@
-<TS language="el_GR" version="2.1">
+<TS language="el_GR" version="2.0">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -498,10 +498,6 @@ Address: %4
         <translation>Ποσό</translation>
     </message>
     <message>
-        <source>Address</source>
-        <translation>Διεύθυνση</translation>
-    </message>
-    <message>
         <source>Date</source>
         <translation>Ημερομηνία</translation>
     </message>
@@ -775,14 +771,6 @@ Address: %4
     <message>
         <source>&amp;Main</source>
         <translation>&amp;Κύριο</translation>
-    </message>
-    <message>
-        <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly. Most transactions are 1 kB.</source>
-        <translation>Η προαιρετική αμοιβή για κάθε kB επισπεύδει την επεξεργασία των συναλλαγών σας. Οι περισσότερες συναλλαγές είναι 1 kB. </translation>
-    </message>
-    <message>
-        <source>Pay transaction &amp;fee</source>
-        <translation>Αμοιβή &amp;συναλλαγής</translation>
     </message>
     <message>
         <source>Automatically start Bitcoin after logging in to the system.</source>

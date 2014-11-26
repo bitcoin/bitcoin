@@ -1,4 +1,4 @@
-<TS language="pl" version="2.1">
+<TS language="pl" version="2.0">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -557,10 +557,6 @@ Adres: %4
         <translation>Kwota</translation>
     </message>
     <message>
-        <source>Address</source>
-        <translation>Adres</translation>
-    </message>
-    <message>
         <source>Date</source>
         <translation>Data</translation>
     </message>
@@ -915,14 +911,6 @@ Adres: %4
         <translation>Główne</translation>
     </message>
     <message>
-        <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly. Most transactions are 1 kB.</source>
-        <translation>Opcjonalna prowizja za transakcje za kB, wspomaga ona szybkość przebiegu transakcji. Większość transakcji jest 1 kB.</translation>
-    </message>
-    <message>
-        <source>Pay transaction &amp;fee</source>
-        <translation>Płać prowizję za transakcje</translation>
-    </message>
-    <message>
         <source>Automatically start Bitcoin after logging in to the system.</source>
         <translation>Automatycznie uruchamia Bitcoin po zalogowaniu do systemu.</translation>
     </message>
@@ -945,10 +933,6 @@ Adres: %4
     <message>
         <source>Allow incoming connections</source>
         <translation>Zezwól na połączenia przychodzące</translation>
-    </message>
-    <message>
-        <source>Connect to the Bitcoin network through a SOCKS proxy.</source>
-        <translation>Połącz się z siecią Bitcoin poprzez SOCKS proxy.</translation>
     </message>
     <message>
         <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>

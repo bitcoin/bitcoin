@@ -1,4 +1,4 @@
-<TS language="ja" version="2.1">
+<TS language="ja" version="2.0">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -524,10 +524,6 @@ Address: %4
         <translation>総額</translation>
     </message>
     <message>
-        <source>Address</source>
-        <translation>アドレス</translation>
-    </message>
-    <message>
         <source>Date</source>
         <translation>日付</translation>
     </message>
@@ -772,14 +768,6 @@ Address: %4
     <message>
         <source>&amp;Main</source>
         <translation>メイン (&amp;M)</translation>
-    </message>
-    <message>
-        <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly. Most transactions are 1 kB.</source>
-        <translation>あたなの取引が早く処理されるように任意で kB 毎の取引手数料を設定します。ほとんどの取引は 1 kB です。</translation>
-    </message>
-    <message>
-        <source>Pay transaction &amp;fee</source>
-        <translation>支払う取引手数料 (&amp;f)</translation>
     </message>
     <message>
         <source>Automatically start Bitcoin after logging in to the system.</source>

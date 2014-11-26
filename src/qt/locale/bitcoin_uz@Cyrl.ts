@@ -1,4 +1,4 @@
-<TS language="uz@Cyrl" version="2.1">
+<TS language="uz@Cyrl" version="2.0">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -521,10 +521,6 @@ Address: %4
 <context>
     <name>CoinControlDialog</name>
     <message>
-        <source>Coin Control Address Selection</source>
-        <translation>Танга бошқарув манзилини танлаш</translation>
-    </message>
-    <message>
         <source>Quantity:</source>
         <translation>Сони:</translation>
     </message>
@@ -571,10 +567,6 @@ Address: %4
     <message>
         <source>Amount</source>
         <translation>Миқдори</translation>
-    </message>
-    <message>
-        <source>Address</source>
-        <translation>Манзил</translation>
     </message>
     <message>
         <source>Date</source>
@@ -931,14 +923,6 @@ Address: %4
         <translation>&amp;Асосий</translation>
     </message>
     <message>
-        <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly. Most transactions are 1 kB.</source>
-        <translation>Ҳар бир кб учун ўтказма солиғи ўтказмаларингизни тезроқ ўтишига ишонишингизга ёрдам беради. Кўпгина ўтказмалар 1 кб.</translation>
-    </message>
-    <message>
-        <source>Pay transaction &amp;fee</source>
-        <translation>Ўтказма &amp;солиғини тўлаш</translation>
-    </message>
-    <message>
         <source>Automatically start Bitcoin after logging in to the system.</source>
         <translation>Тизимга киргандан сўнг Bitcoin дастури автоматик ишга туширилсин.</translation>
     </message>
@@ -965,14 +949,6 @@ Address: %4
     <message>
         <source>Allow incoming connections</source>
         <translation>Кирувчи уланишларга рухсат бериш</translation>
-    </message>
-    <message>
-        <source>Connect to the Bitcoin network through a SOCKS proxy.</source>
-        <translation>Bitcoin тармоққа SOCKS прокси орқали уланинг.</translation>
-    </message>
-    <message>
-        <source>&amp;Connect through SOCKS proxy (default proxy):</source>
-        <translation>SOCKS прокси орқали &amp;уланинг (стандарт прокси):</translation>
     </message>
     <message>
         <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>

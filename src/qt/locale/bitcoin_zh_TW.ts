@@ -1,4 +1,4 @@
-<TS language="zh_TW" version="2.1">
+<TS language="zh_TW" version="2.0">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -7,7 +7,7 @@
     </message>
     <message>
         <source>Create a new address</source>
-        <translation>製造新的位址</translation>
+        <translation>新增新的位址</translation>
     </message>
     <message>
         <source>&amp;New</source>
@@ -521,10 +521,6 @@ Address: %4
 <context>
     <name>CoinControlDialog</name>
     <message>
-        <source>Coin Control Address Selection</source>
-        <translation>錢幣控制的位址選擇</translation>
-    </message>
-    <message>
         <source>Quantity:</source>
         <translation>數目:</translation>
     </message>
@@ -571,10 +567,6 @@ Address: %4
     <message>
         <source>Amount</source>
         <translation>金額</translation>
-    </message>
-    <message>
-        <source>Address</source>
-        <translation>位址</translation>
     </message>
     <message>
         <source>Date</source>
@@ -908,7 +900,15 @@ Address: %4
         <source>Error</source>
         <translation>錯誤</translation>
     </message>
-    </context>
+    <message numerus="yes">
+        <source>%n GB of free space available</source>
+        <translation><numerusform>可用空間尚存 %n GB</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>(of %n GB needed)</source>
+        <translation><numerusform>(需要 %n GB)</numerusform></translation>
+    </message>
+</context>
 <context>
     <name>OpenURIDialog</name>
     <message>
@@ -943,14 +943,6 @@ Address: %4
         <translation>主要</translation>
     </message>
     <message>
-        <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly. Most transactions are 1 kB.</source>
-        <translation>每一千位元組(kB)要付的交易手續費，如果有付可以加速網路處理你的交易。大部份交易資料的大小是 1 kB.</translation>
-    </message>
-    <message>
-        <source>Pay transaction &amp;fee</source>
-        <translation>付交易手續費</translation>
-    </message>
-    <message>
         <source>Automatically start Bitcoin after logging in to the system.</source>
         <translation>在登入系統後自動啓動位元幣軟體。</translation>
     </message>
@@ -977,14 +969,6 @@ Address: %4
     <message>
         <source>Allow incoming connections</source>
         <translation>接受外來連線</translation>
-    </message>
-    <message>
-        <source>Connect to the Bitcoin network through a SOCKS proxy.</source>
-        <translation>透過 SOCKS 代理伺服器來連線到位元幣網路。</translation>
-    </message>
-    <message>
-        <source>&amp;Connect through SOCKS proxy (default proxy):</source>
-        <translation>透過 SOCKS 代理伺服器連線(預設代理伺服器):</translation>
     </message>
     <message>
         <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
@@ -2966,10 +2950,6 @@ alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com</translation>
     <message>
         <source>Create new files with system default permissions, instead of umask 077 (only effective with disabled wallet functionality)</source>
         <translation>用系統預設權限來造出新的檔案，而不是用使用者權限罩遮(umask)值 077 (只有在關掉錢包功能時才有作用)。</translation>
-    </message>
-    <message>
-        <source>Distributed under the MIT/X11 software license, see the accompanying file COPYING or &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</source>
-        <translation>這套軟體是依據 MIT/X11 軟體授權條款散布，詳情請見附帶的 COPYING 檔案，或是以下網站:  &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</translation>
     </message>
     <message>
         <source>Error: Listening for incoming connections failed (listen returned error %s)</source>

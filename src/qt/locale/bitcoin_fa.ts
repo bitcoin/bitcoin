@@ -1,4 +1,4 @@
-<TS language="fa" version="2.1">
+<TS language="fa" version="2.0">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -437,10 +437,6 @@ Address: %4
         <translation>مبلغ</translation>
     </message>
     <message>
-        <source>Address</source>
-        <translation>نشانی</translation>
-    </message>
-    <message>
         <source>Date</source>
         <translation>تاریخ</translation>
     </message>
@@ -625,14 +621,6 @@ Address: %4
     <message>
         <source>&amp;Main</source>
         <translation>&amp;عمومی</translation>
-    </message>
-    <message>
-        <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly. Most transactions are 1 kB.</source>
-        <translation>کارمزد اختیاریِ هر کیلوبایت برای انتقال سریع‌تر تراکنش. اکثر تراکنش‌ها ۱ کیلوبایتی هستند.</translation>
-    </message>
-    <message>
-        <source>Pay transaction &amp;fee</source>
-        <translation>پرداخت &amp;کارمزد تراکنش</translation>
     </message>
     <message>
         <source>Automatically start Bitcoin after logging in to the system.</source>

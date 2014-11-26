@@ -1,4 +1,4 @@
-<TS language="ko_KR" version="2.1">
+<TS language="ko_KR" version="2.0">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -505,10 +505,6 @@ Address: %4
 <context>
     <name>CoinControlDialog</name>
     <message>
-        <source>Coin Control Address Selection</source>
-        <translation>코인 컨트롤 주소 선택</translation>
-    </message>
-    <message>
         <source>Quantity:</source>
         <translation>수량:</translation>
     </message>
@@ -555,10 +551,6 @@ Address: %4
     <message>
         <source>Amount</source>
         <translation>거래량</translation>
-    </message>
-    <message>
-        <source>Address</source>
-        <translation>주소</translation>
     </message>
     <message>
         <source>Date</source>
@@ -895,14 +887,6 @@ Address: %4
         <translation>메인(&amp;M)</translation>
     </message>
     <message>
-        <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly. Most transactions are 1 kB.</source>
-        <translation>당신의 거래가 더욱 빠르게 처리될 수 있도록 선택적으로 kBd당 거래 수수료를 지정합니다. 참고로 대부분의 거래들은 1kB입니다.</translation>
-    </message>
-    <message>
-        <source>Pay transaction &amp;fee</source>
-        <translation>송금 수수료(&amp;F)</translation>
-    </message>
-    <message>
         <source>Automatically start Bitcoin after logging in to the system.</source>
         <translation>시스템 로그인후에 비트코인을 자동으로 시작합니다.</translation>
     </message>
@@ -929,14 +913,6 @@ Address: %4
     <message>
         <source>Allow incoming connections</source>
         <translation>연결 요청을 허용합니다.</translation>
-    </message>
-    <message>
-        <source>Connect to the Bitcoin network through a SOCKS proxy.</source>
-        <translation>SOCKS 프록시를 통해 비트코인 네트워크 연결</translation>
-    </message>
-    <message>
-        <source>&amp;Connect through SOCKS proxy (default proxy):</source>
-        <translation>SOCKS 프록시를 거쳐 연결합니다 (기본값 프록시):</translation>
     </message>
     <message>
         <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
@@ -1728,6 +1704,10 @@ Address: %4
         <translation>사용된 주소 목록에 새 주소를 추가하기 위해 제목을 입력합니다. </translation>
     </message>
     <message>
+        <source>A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
+        <translation>비트코인에 첨부된 메시지: 참고용으로 거래와 함께 저장될 URI. 메모: 이 메시지는 비트코인 네트워크로 전송되지 않습니다.</translation>
+    </message>
+    <message>
         <source>This is an unverified payment request.</source>
         <translation>지급요청 미확인입니다</translation>
     </message>
@@ -2467,6 +2447,10 @@ Address: %4
     <message>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
         <translation>어떤 포트도 반응하지 않습니다. 사용자 반응=0 만약 원한다면</translation>
+    </message>
+    <message>
+        <source>If &lt;category&gt; is not supplied, output all debugging information.</source>
+        <translation>&lt;카테고리&gt;가 제공되지 않을 경우, 모든 디버깅 정보를 출력</translation>
     </message>
     <message>
         <source>Importing...</source>

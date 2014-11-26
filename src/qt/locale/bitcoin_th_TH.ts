@@ -1,4 +1,4 @@
-<TS language="th_TH" version="2.1">
+<TS language="th_TH" version="2.0">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -196,10 +196,6 @@
     </context>
 <context>
     <name>CoinControlDialog</name>
-    <message>
-        <source>Address</source>
-        <translation>ที่อยู่</translation>
-    </message>
     <message>
         <source>(no label)</source>
         <translation>(ไม่มีชื่อ)</translation>

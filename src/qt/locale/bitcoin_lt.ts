@@ -1,4 +1,4 @@
-<TS language="lt" version="2.1">
+<TS language="lt" version="2.0">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -476,10 +476,6 @@ Adresas: %4</translation>
         <translation>Suma</translation>
     </message>
     <message>
-        <source>Address</source>
-        <translation>Adresas</translation>
-    </message>
-    <message>
         <source>Date</source>
         <translation>Data</translation>
     </message>
@@ -704,10 +700,6 @@ Adresas: %4</translation>
     <message>
         <source>&amp;Main</source>
         <translation>&amp;Pagrindinės</translation>
-    </message>
-    <message>
-        <source>Pay transaction &amp;fee</source>
-        <translation>&amp;Mokėti sandorio mokestį</translation>
     </message>
     <message>
         <source>Automatically start Bitcoin after logging in to the system.</source>

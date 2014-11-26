@@ -1,4 +1,4 @@
-<TS language="sl_SI" version="2.1">
+<TS language="sl_SI" version="2.0">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -521,10 +521,6 @@ Naslov: %4
         <translation>Količina</translation>
     </message>
     <message>
-        <source>Address</source>
-        <translation>Naslov</translation>
-    </message>
-    <message>
         <source>Date</source>
         <translation>Datum</translation>
     </message>
@@ -875,14 +871,6 @@ Naslov: %4
         <translation>&amp;Glavno</translation>
     </message>
     <message>
-        <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly. Most transactions are 1 kB.</source>
-        <translation>Neobvezna pristojbina k transakciji poskrbi, da je transackcija hitro opravljena. Velikost povprečne transakcije je 1 kB.</translation>
-    </message>
-    <message>
-        <source>Pay transaction &amp;fee</source>
-        <translation>Nakazilo plačila &amp; provizija</translation>
-    </message>
-    <message>
         <source>Automatically start Bitcoin after logging in to the system.</source>
         <translation>Po prijavi v sistem samodejno zaženite Bitcoin.</translation>
     </message>
@@ -905,14 +893,6 @@ Naslov: %4
     <message>
         <source>Allow incoming connections</source>
         <translation>Dovoli prihajajoče povezave</translation>
-    </message>
-    <message>
-        <source>Connect to the Bitcoin network through a SOCKS proxy.</source>
-        <translation>V Bitcoin omrežje se poveži skozu SOCKS proxy.</translation>
-    </message>
-    <message>
-        <source>&amp;Connect through SOCKS proxy (default proxy):</source>
-        <translation>&amp;Poveži se skozi SOCKS proxy (privzet proxy):</translation>
     </message>
     <message>
         <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
