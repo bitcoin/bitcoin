@@ -125,39 +125,6 @@ void random_num_order(secp256k1_num_t *num) {
     } while(1);
 }
 
-void test_num_copy_inc_cmp(void) {
-    secp256k1_num_t n1,n2;
-    random_num_order(&n1);
-    secp256k1_num_copy(&n2, &n1);
-    CHECK(secp256k1_num_eq(&n1, &n2));
-    CHECK(secp256k1_num_eq(&n2, &n1));
-    secp256k1_num_inc(&n2);
-    CHECK(!secp256k1_num_eq(&n1, &n2));
-    CHECK(!secp256k1_num_eq(&n2, &n1));
-}
-
-
-void test_num_get_set_hex(void) {
-    secp256k1_num_t n1,n2;
-    random_num_order_test(&n1);
-    char c[64];
-    secp256k1_num_get_hex(c, 64, &n1);
-    secp256k1_num_set_hex(&n2, c, 64);
-    CHECK(secp256k1_num_eq(&n1, &n2));
-    for (int i=0; i<64; i++) {
-        /* check whether the lower 4 bits correspond to the last hex character */
-        int low1 = secp256k1_num_shift(&n1, 4);
-        int lowh = c[63];
-        int low2 = ((lowh>>6)*9+(lowh-'0'))&15;
-        CHECK(low1 == low2);
-        /* shift bits off the hex representation, and compare */
-        memmove(c+1, c, 63);
-        c[0] = '0';
-        secp256k1_num_set_hex(&n2, c, 64);
-        CHECK(secp256k1_num_eq(&n1, &n2));
-    }
-}
-
 void test_num_get_set_bin(void) {
     secp256k1_num_t n1,n2;
     random_num_order_test(&n1);
@@ -175,18 +142,6 @@ void test_num_get_set_bin(void) {
         c[0] = 0;
         secp256k1_num_set_bin(&n2, c, 32);
         CHECK(secp256k1_num_eq(&n1, &n2));
-    }
-}
-
-void run_num_int(void) {
-    secp256k1_num_t n1;
-    for (int i=-255; i<256; i++) {
-        unsigned char c1[3] = {};
-        c1[2] = abs(i);
-        unsigned char c2[3] = {0x11,0x22,0x33};
-        secp256k1_num_set_int(&n1, i);
-        secp256k1_num_get_bin(c2, 3, &n1);
-        CHECK(memcmp(c1, c2, 3) == 0);
     }
 }
 
@@ -241,13 +196,10 @@ void test_num_add_sub(void) {
 
 void run_num_smalltests(void) {
     for (int i=0; i<100*count; i++) {
-        test_num_copy_inc_cmp();
-        test_num_get_set_hex();
         test_num_get_set_bin();
         test_num_negate();
         test_num_add_sub();
     }
-    run_num_int();
 }
 
 /***** SCALAR TESTS *****/
