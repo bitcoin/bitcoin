@@ -1,4 +1,4 @@
-<TS language="hi_IN" version="2.1">
+<TS language="hi_IN" version="2.0">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -267,10 +267,6 @@ Address: %4
     <message>
         <source>Amount</source>
         <translation>राशि</translation>
-    </message>
-    <message>
-        <source>Address</source>
-        <translation>पता</translation>
     </message>
     <message>
         <source>Date</source>

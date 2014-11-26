@@ -1,4 +1,4 @@
-<TS language="mn" version="2.1">
+<TS language="mn" version="2.0">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -288,10 +288,6 @@ Address: %4
         <translation>Хэмжээ</translation>
     </message>
     <message>
-        <source>Address</source>
-        <translation>Хаяг</translation>
-    </message>
-    <message>
         <source>Date</source>
         <translation>Огноо</translation>
     </message>
@@ -400,10 +396,6 @@ Address: %4
     <message>
         <source>MB</source>
         <translation>МБ</translation>
-    </message>
-    <message>
-        <source>Connect to the Bitcoin network through a SOCKS proxy.</source>
-        <translation>Биткойны сүлжээрүү SOCKS проксигоор холбогдох.</translation>
     </message>
     <message>
         <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>

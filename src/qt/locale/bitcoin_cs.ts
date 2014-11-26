@@ -1,4 +1,4 @@
-<TS language="cs" version="2.1">
+<TS language="cs" version="2.0">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -505,10 +505,6 @@ Adresa: %4
 <context>
     <name>CoinControlDialog</name>
     <message>
-        <source>Coin Control Address Selection</source>
-        <translation>Volba adres v rámci ruční správy mincí</translation>
-    </message>
-    <message>
         <source>Quantity:</source>
         <translation>Počet:</translation>
     </message>
@@ -555,10 +551,6 @@ Adresa: %4
     <message>
         <source>Amount</source>
         <translation>Částka</translation>
-    </message>
-    <message>
-        <source>Address</source>
-        <translation>Adresa</translation>
     </message>
     <message>
         <source>Date</source>
@@ -927,14 +919,6 @@ Adresa: %4
         <translation>&amp;Hlavní</translation>
     </message>
     <message>
-        <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly. Most transactions are 1 kB.</source>
-        <translation>Dobrovolný transakční poplatek za každý započatý kB dopomáhá k rychlému zpracování tvých transakcí. Většina transakcí má do 1 kB.</translation>
-    </message>
-    <message>
-        <source>Pay transaction &amp;fee</source>
-        <translation>Platit &amp;transakční poplatek</translation>
-    </message>
-    <message>
         <source>Automatically start Bitcoin after logging in to the system.</source>
         <translation>Automaticky spustí Bitcoin po přihlášení do systému.</translation>
     </message>
@@ -961,14 +945,6 @@ Adresa: %4
     <message>
         <source>Allow incoming connections</source>
         <translation>Přijímat příchozí spojení</translation>
-    </message>
-    <message>
-        <source>Connect to the Bitcoin network through a SOCKS proxy.</source>
-        <translation>Připojí se do Bitcoinové sítě přes SOCKS proxy.</translation>
-    </message>
-    <message>
-        <source>&amp;Connect through SOCKS proxy (default proxy):</source>
-        <translation>&amp;Připojit přes SOCKS proxy (výchozí proxy):</translation>
     </message>
     <message>
         <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
@@ -2917,10 +2893,6 @@ například: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
     <message>
         <source>Create new files with system default permissions, instead of umask 077 (only effective with disabled wallet functionality)</source>
         <translation>Vytvářet nové soubory s výchozími systémovými právy namísto umask 077 (uplatní se, pouze pokud je vypnutá funkce peněženky)</translation>
-    </message>
-    <message>
-        <source>Distributed under the MIT/X11 software license, see the accompanying file COPYING or &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</source>
-        <translation>Šířen pod licencí MIT/X11, viz přiložený soubor COPYING nebo &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</translation>
     </message>
     <message>
         <source>Error: Listening for incoming connections failed (listen returned error %s)</source>

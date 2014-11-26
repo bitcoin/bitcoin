@@ -1,4 +1,4 @@
-<TS language="gl" version="2.1">
+<TS language="gl" version="2.0">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -513,10 +513,6 @@ Dirección: %4
         <translation>Cantidade</translation>
     </message>
     <message>
-        <source>Address</source>
-        <translation>Dirección</translation>
-    </message>
-    <message>
         <source>Date</source>
         <translation>Data</translation>
     </message>
@@ -817,14 +813,6 @@ Dirección: %4
     <message>
         <source>&amp;Main</source>
         <translation>&amp;Principal</translation>
-    </message>
-    <message>
-        <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly. Most transactions are 1 kB.</source>
-        <translation>Tarifa por kB de transacción opcional que axuda a asegurar que as túas transaccións son procesadas rapidamente. A maioría das transaccións son 1 kB.</translation>
-    </message>
-    <message>
-        <source>Pay transaction &amp;fee</source>
-        <translation>Pagar &amp;tarifa da transacción</translation>
     </message>
     <message>
         <source>Automatically start Bitcoin after logging in to the system.</source>

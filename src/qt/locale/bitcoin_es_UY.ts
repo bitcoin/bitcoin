@@ -1,4 +1,4 @@
-<TS language="es_UY" version="2.1">
+<TS language="es_UY" version="2.0">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -196,10 +196,6 @@
     </context>
 <context>
     <name>CoinControlDialog</name>
-    <message>
-        <source>Address</source>
-        <translation>Direccion </translation>
-    </message>
     <message>
         <source>Date</source>
         <translation>Fecha</translation>

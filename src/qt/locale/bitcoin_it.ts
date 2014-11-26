@@ -1,4 +1,4 @@
-<TS language="it" version="2.1">
+<TS language="it" version="2.0">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -522,10 +522,6 @@ Indirizzo: %4
 <context>
     <name>CoinControlDialog</name>
     <message>
-        <source>Coin Control Address Selection</source>
-        <translation>Selezione Indirizzo Coin Control</translation>
-    </message>
-    <message>
         <source>Quantity:</source>
         <translation>Quantità:</translation>
     </message>
@@ -572,10 +568,6 @@ Indirizzo: %4
     <message>
         <source>Amount</source>
         <translation>Importo</translation>
-    </message>
-    <message>
-        <source>Address</source>
-        <translation>Indirizzo</translation>
     </message>
     <message>
         <source>Date</source>
@@ -944,14 +936,6 @@ Indirizzo: %4
         <translation>&amp;Principale</translation>
     </message>
     <message>
-        <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly. Most transactions are 1 kB.</source>
-        <translation>Commissione di transazione per kB: è opzionale e contribuisce ad assicurare che le transazioni siano elaborate velocemente. La maggior parte della transazioni ha dimensioni pari a 1 kB.</translation>
-    </message>
-    <message>
-        <source>Pay transaction &amp;fee</source>
-        <translation>Paga la &amp;commissione</translation>
-    </message>
-    <message>
         <source>Automatically start Bitcoin after logging in to the system.</source>
         <translation>Avvia automaticamente Bitcoin una volta effettuato l'accesso al sistema.</translation>
     </message>
@@ -978,14 +962,6 @@ Indirizzo: %4
     <message>
         <source>Allow incoming connections</source>
         <translation>Permetti connessioni in entrata</translation>
-    </message>
-    <message>
-        <source>Connect to the Bitcoin network through a SOCKS proxy.</source>
-        <translation>Connessione alla rete Bitcoin attraverso un proxy SOCKS.</translation>
-    </message>
-    <message>
-        <source>&amp;Connect through SOCKS proxy (default proxy):</source>
-        <translation>&amp;Connessione attraverso proxy SOCKS (proxy predefinito):</translation>
     </message>
     <message>
         <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
@@ -1206,6 +1182,10 @@ Più URL vengono separati da una barra verticale |.</translation>
     <message>
         <source>Unconfirmed transactions to watch-only addresses</source>
         <translation>Transazioni non confermate su indirizzi di sola lettura</translation>
+    </message>
+    <message>
+        <source>Mined balance in watch-only addresses that has not yet matured</source>
+        <translation>l'equilibrio estratto solo nello sguardo degli indirizzi non è ancora maturo </translation>
     </message>
     <message>
         <source>out of sync</source>
@@ -1471,6 +1451,14 @@ Più URL vengono separati da una barra verticale |.</translation>
         <translation>Blocco di partenza</translation>
     </message>
     <message>
+        <source>Sync Height</source>
+        <translation>valore di sincronizzazione</translation>
+    </message>
+    <message>
+        <source>Ban Score</source>
+        <translation>divieto di segnalazione </translation>
+    </message>
+    <message>
         <source>Connection Time</source>
         <translation>Tempo di connessione</translation>
     </message>
@@ -1590,7 +1578,11 @@ Più URL vengono separati da una barra verticale |.</translation>
         <source>Unknown</source>
         <translation>Sconosciuto</translation>
     </message>
-    </context>
+    <message>
+        <source>Fetching...</source>
+        <translation>attraente</translation>
+    </message>
+</context>
 <context>
     <name>ReceiveCoinsDialog</name>
     <message>

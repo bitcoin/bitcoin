@@ -1,4 +1,4 @@
-<TS language="ar" version="2.1">
+<TS language="ar" version="2.0">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -457,10 +457,6 @@
         <translation>المبلغ</translation>
     </message>
     <message>
-        <source>Address</source>
-        <translation>عنوان</translation>
-    </message>
-    <message>
         <source>Date</source>
         <translation>التاريخ</translation>
     </message>
@@ -523,6 +519,10 @@
     <message>
         <source>high</source>
         <translation>عالي</translation>
+    </message>
+    <message>
+        <source>medium-high</source>
+        <translation>متوسط-مرتفع</translation>
     </message>
     <message>
         <source>low</source>
@@ -681,10 +681,6 @@
     <message>
         <source>&amp;Main</source>
         <translation>&amp;الرئيسي</translation>
-    </message>
-    <message>
-        <source>Pay transaction &amp;fee</source>
-        <translation>ادفع &amp;رسوم المعاملة</translation>
     </message>
     <message>
         <source>MB</source>

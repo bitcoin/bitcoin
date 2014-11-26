@@ -1,4 +1,4 @@
-<TS language="af_ZA" version="2.1">
+<TS language="af_ZA" version="2.0">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -199,10 +199,6 @@
     <message>
         <source>Amount</source>
         <translation>Bedrag</translation>
-    </message>
-    <message>
-        <source>Address</source>
-        <translation>Adres</translation>
     </message>
     <message>
         <source>Date</source>

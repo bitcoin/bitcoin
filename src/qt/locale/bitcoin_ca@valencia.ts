@@ -1,4 +1,4 @@
-<TS language="ca@valencia" version="2.1">
+<TS language="ca@valencia" version="2.0">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -497,10 +497,6 @@ Address: %4
 <context>
     <name>CoinControlDialog</name>
     <message>
-        <source>Coin Control Address Selection</source>
-        <translation>Selecció de l'adreça de control de monedes</translation>
-    </message>
-    <message>
         <source>Quantity:</source>
         <translation>Quantitat:</translation>
     </message>
@@ -547,10 +543,6 @@ Address: %4
     <message>
         <source>Amount</source>
         <translation>Quantitat</translation>
-    </message>
-    <message>
-        <source>Address</source>
-        <translation>Adreça</translation>
     </message>
     <message>
         <source>Date</source>
@@ -919,14 +911,6 @@ Address: %4
         <translation>&amp;Principal</translation>
     </message>
     <message>
-        <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly. Most transactions are 1 kB.</source>
-        <translation>Comissió opcional de transacció per kB que ajuda a assegurar que les transaccions es processen ràpidament. La majoria de transaccions són d'1 kB.</translation>
-    </message>
-    <message>
-        <source>Pay transaction &amp;fee</source>
-        <translation>Paga &amp;comissió de transacció</translation>
-    </message>
-    <message>
         <source>Automatically start Bitcoin after logging in to the system.</source>
         <translation>Inicia automàticament el Bitcoin després de l'inici de sessió del sistema.</translation>
     </message>
@@ -953,14 +937,6 @@ Address: %4
     <message>
         <source>Allow incoming connections</source>
         <translation>Permet connexions entrants</translation>
-    </message>
-    <message>
-        <source>Connect to the Bitcoin network through a SOCKS proxy.</source>
-        <translation>Connecta a la xarxa Bitcoin a través d'un proxy SOCKS.</translation>
-    </message>
-    <message>
-        <source>&amp;Connect through SOCKS proxy (default proxy):</source>
-        <translation>&amp;Connecta a través d'un proxy SOCKS (proxy per defecte):</translation>
     </message>
     <message>
         <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
@@ -2892,10 +2868,6 @@ per exemple: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
     <message>
         <source>Create new files with system default permissions, instead of umask 077 (only effective with disabled wallet functionality)</source>
         <translation>Crea fitxers nous amb els permisos per defecte del sistema, en comptes de l'umask 077 (només efectiu amb la funcionalitat de moneder inhabilitada)</translation>
-    </message>
-    <message>
-        <source>Distributed under the MIT/X11 software license, see the accompanying file COPYING or &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</source>
-        <translation>Distribuït sota la llicència de programari MIT/X11. Vegeu el fitxer acompanyant COPYING o &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</translation>
     </message>
     <message>
         <source>Error: Listening for incoming connections failed (listen returned error %s)</source>

@@ -1,4 +1,4 @@
-<TS language="hu" version="2.1">
+<TS language="hu" version="2.0">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -521,10 +521,6 @@ Cím: %4
 <context>
     <name>CoinControlDialog</name>
     <message>
-        <source>Coin Control Address Selection</source>
-        <translation>Ellenőrző cím kiválasztása</translation>
-    </message>
-    <message>
         <source>Quantity:</source>
         <translation>Mennyiség:</translation>
     </message>
@@ -571,10 +567,6 @@ Cím: %4
     <message>
         <source>Amount</source>
         <translation>Összeg</translation>
-    </message>
-    <message>
-        <source>Address</source>
-        <translation>Cím</translation>
     </message>
     <message>
         <source>Date</source>
@@ -916,14 +908,6 @@ Cím: %4
         <translation>&amp;Fő</translation>
     </message>
     <message>
-        <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly. Most transactions are 1 kB.</source>
-        <translation>Opcionális, kB-onkénti tranzakciós díj a tranzakcióid minél gyorsabb feldolgozásának elősegítésére.  A legtöbb tranzakció 1 kB-os.</translation>
-    </message>
-    <message>
-        <source>Pay transaction &amp;fee</source>
-        <translation>Tranzakciós &amp;díj fizetése</translation>
-    </message>
-    <message>
         <source>Automatically start Bitcoin after logging in to the system.</source>
         <translation>Induljon el a Bitcoin a számítógép bekapcsolásakor</translation>
     </message>
@@ -934,10 +918,6 @@ Cím: %4
     <message>
         <source>MB</source>
         <translation>MB</translation>
-    </message>
-    <message>
-        <source>Connect to the Bitcoin network through a SOCKS proxy.</source>
-        <translation>SOCKS proxyn keresztüli csatlakozás a Bitcoin hálózatához.</translation>
     </message>
     <message>
         <source>Reset all client options to default.</source>
