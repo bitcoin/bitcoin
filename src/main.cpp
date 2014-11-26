@@ -3157,13 +3157,19 @@ void PrintBlockTree()
             LogPrintf("| ");
 
         // print item
-        CBlock block;
-        ReadBlockFromDisk(block, pindex);
-        LogPrintf("%d (blk%05u.dat:0x%x)  %s  tx %u\n",
-            pindex->nHeight,
-            pindex->GetBlockPos().nFile, pindex->GetBlockPos().nPos,
-            DateTimeStrFormat("%Y-%m-%d %H:%M:%S", block.GetBlockTime()),
-            block.vtx.size());
+        if (!pindex->GetBlockPos().IsNull()) {
+            CBlock block;
+            ReadBlockFromDisk(block, pindex);
+            LogPrintf("%d (blk%05u.dat:0x%x)  %s  tx %u\n",
+                pindex->nHeight,
+                pindex->GetBlockPos().nFile, pindex->GetBlockPos().nPos,
+                DateTimeStrFormat("%Y-%m-%d %H:%M:%S", block.GetBlockTime()),
+                block.vtx.size());
+        } else {
+            LogPrintf("%d (???)  %s\n",
+                pindex->nHeight,
+                DateTimeStrFormat("%Y-%m-%d %H:%M:%S", pindex->GetBlockTime()));
+        }
 
         // put the main time-chain first
         vector<CBlockIndex*>& vNext = mapNext[pindex];
