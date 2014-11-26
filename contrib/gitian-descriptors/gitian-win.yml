@@ -17,6 +17,7 @@ packages:
 - "mingw-w64"
 - "g++-mingw-w64"
 - "nsis"
+- "zip"
 reference_datetime: "2013-06-01 00:00:00"
 remotes:
 - "url": "https://github.com/bitcoin/bitcoin.git"
@@ -27,7 +28,7 @@ script: |
   HOSTS="x86_64-w64-mingw32 i686-w64-mingw32"
   CONFIGFLAGS="--enable-upnp-default"
   FAKETIME_HOST_PROGS="g++ ar ranlib nm windres strip"
-  FAKETIME_PROGS="date makensis"
+  FAKETIME_PROGS="date makensis zip"
 
   export QT_RCC_TEST=1
   export GZIP="-9n"
@@ -75,13 +76,14 @@ script: |
   ./autogen.sh
   ./configure --prefix=${BASEPREFIX}/`echo "${HOSTS}" | awk '{print $1;}'`
   make dist
-  DISTNAME=`echo bitcoin-*.tar.gz`
+  SOURCEDIST=`echo bitcoin-*.tar.gz`
+  DISTNAME=`echo ${SOURCEDIST} | sed 's/.tar.*//'`
 
   # Correct tar file order
   mkdir -p temp
   pushd temp
-  tar xf ../$DISTNAME
-  find bitcoin-* | sort | tar --no-recursion -c -T - | gzip -9n > ../$DISTNAME
+  tar xf ../$SOURCEDIST
+  find bitcoin-* | sort | tar --no-recursion -c -T - | gzip -9n > ../$SOURCEDIST
   popd
 
   ORIGPATH="$PATH"
@@ -90,19 +92,24 @@ script: |
     export PATH=${BASEPREFIX}/${i}/native/bin:${ORIGPATH}
     mkdir -p distsrc-${i}
     cd distsrc-${i}
-    tar --strip-components=1 -xf ../$DISTNAME
+    INSTALLPATH=`pwd`/installed/${DISTNAME}
+    mkdir -p ${INSTALLPATH}
+    tar --strip-components=1 -xf ../$SOURCEDIST
 
-    ./configure --prefix=${BASEPREFIX}/${i} --bindir=${OUTDIR}/${i}/bin --includedir=${OUTDIR}/${i}/include --libdir=${OUTDIR}/${i}/lib --disable-ccache --disable-maintainer-mode --disable-dependency-tracking ${CONFIGFLAGS}
+    ./configure --prefix=${BASEPREFIX}/${i} --bindir=${INSTALLPATH}/bin --includedir=${INSTALLPATH}/include --libdir=${INSTALLPATH}/lib --disable-ccache --disable-maintainer-mode --disable-dependency-tracking ${CONFIGFLAGS}
     make ${MAKEOPTS}
     make deploy
     make install-strip
     cp -f bitcoin-*setup*.exe $OUTDIR/
-    cd ..
+    cd installed
+    mv ${DISTNAME}/bin/*.dll ${DISTNAME}/lib/
+    find . -name "lib*.la" -delete
+    find . -name "lib*.a" -delete
+    rm -rf ${DISTNAME}/lib/pkgconfig
+    find . -type f | sort | zip -X@ ${OUTDIR}/${DISTNAME}-${i}.zip
+    cd ../..
   done
   mkdir -p $OUTDIR/src
-  mv $DISTNAME $OUTDIR/src
-  mv ${OUTDIR}/x86_64-* ${OUTDIR}/64
-  mv ${OUTDIR}/i686-* ${OUTDIR}/32
-
-  # Delete unwanted stuff
-  find ${OUTDIR} -name "lib*.la" -delete
+  mv $SOURCEDIST $OUTDIR/src
+  mv ${OUTDIR}/${DISTNAME}-x86_64-*.zip ${OUTDIR}/${DISTNAME}-win64.zip
+  mv ${OUTDIR}/${DISTNAME}-i686-*.zip ${OUTDIR}/${DISTNAME}-win32.zip
