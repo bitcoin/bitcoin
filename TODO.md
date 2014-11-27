@@ -8,12 +8,12 @@ DONE:
 -----
 
 - Strings in config, path and pid (~/.bitcoin --> ~/.darkcoin)
+- Ports for communication and RPC (8333 --> 9999; 8332 --> 9998)
 
 
 MUST-HAVE:
 ----------
 
-- Ports for communication and RPC (8333 --> 9999; 8332 --> 9998)
 - Version numbers, protocol version, wallet version (compatible with DRK network)
 - Adress versions (Public keys, Multisig keys)
 - Adjust algorithm (SHA256 --> X11)

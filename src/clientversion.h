@@ -8,7 +8,7 @@
 // client versioning and copyright year
 //
 
-// These need to be macros, as version.cpp's and bitcoin-qt.rc's voodoo requires it
+// These need to be macros, as version.cpp's and darkcoin-qt.rc's voodoo requires it
 #define CLIENT_VERSION_MAJOR       0
 #define CLIENT_VERSION_MINOR       9
 #define CLIENT_VERSION_REVISION    3
