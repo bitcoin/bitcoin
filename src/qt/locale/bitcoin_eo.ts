@@ -2366,8 +2366,8 @@ Adreso: %4
         <translation>Specifi dosieron por datumoj</translation>
     </message>
     <message>
-        <source>Listen for connections on &lt;port&gt; (default: 8333 or testnet: 18333)</source>
-        <translation>Aŭskulti al &lt;port&gt; por konektoj (defaŭlte: 8333 aŭ testnet: 18333)</translation>
+        <source>Listen for connections on &lt;port&gt; (default: 9999 or testnet: 19999)</source>
+        <translation>Aŭskulti al &lt;port&gt; por konektoj (defaŭlte: 9999 aŭ testnet: 19999)</translation>
     </message>
     <message>
         <source>Maintain at most &lt;n&gt; connections to peers (default: 125)</source>
@@ -2394,8 +2394,8 @@ Adreso: %4
         <translation>Eraro okazis dum estigo de RPC-pordo %u por aŭskulti per IPv4: %s</translation>
     </message>
     <message>
-        <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 8332 or testnet: 18332)</source>
-        <translation>Aŭskulti al &lt;port&gt; por JSON-RPC-konektoj (defaŭlte: 8332 aŭ testnet: 18332)</translation>
+        <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 9998 or testnet: 19998)</source>
+        <translation>Aŭskulti al &lt;port&gt; por JSON-RPC-konektoj (defaŭlte: 9998 aŭ testnet: 19998)</translation>
     </message>
     <message>
         <source>Accept command line and JSON-RPC commands</source>
@@ -2514,8 +2514,8 @@ ekzemple: alertnotify=echo %%s | mail -s "Averto de Bitmono" admin@foo.com
         <translation>Konekti nur al specifita(j) nodo(j)</translation>
     </message>
     <message>
-        <source>Connect to JSON-RPC on &lt;port&gt; (default: 8332 or testnet: 18332)</source>
-        <translation>Konekti al la JSON-RPC per &lt;port&gt; (defaŭlte: 8332 aŭ testnet: 18332)</translation>
+        <source>Connect to JSON-RPC on &lt;port&gt; (default: 9998 or testnet: 19998)</source>
+        <translation>Konekti al la JSON-RPC per &lt;port&gt; (defaŭlte: 9998 aŭ testnet: 19998)</translation>
     </message>
     <message>
         <source>Corrupted block database detected</source>

@@ -2621,8 +2621,8 @@ Adresse: %4</translation>
         <translation>Datenverzeichnis festlegen</translation>
     </message>
     <message>
-        <source>Listen for connections on &lt;port&gt; (default: 8333 or testnet: 18333)</source>
-        <translation>&lt;port&gt; nach Verbindungen abhören (Standard: 8333 oder Testnetz: 18333)</translation>
+        <source>Listen for connections on &lt;port&gt; (default: 9999 or testnet: 19999)</source>
+        <translation>&lt;port&gt; nach Verbindungen abhören (Standard: 9999 oder Testnetz: 19999)</translation>
     </message>
     <message>
         <source>Maintain at most &lt;n&gt; connections to peers (default: 125)</source>
@@ -2649,8 +2649,8 @@ Adresse: %4</translation>
         <translation>Beim Einrichten des RPC-Ports %u zum Abhören von IPv4 ist ein Fehler aufgetreten: %s</translation>
     </message>
     <message>
-        <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 8332 or testnet: 18332)</source>
-        <translation>&lt;port&gt; nach JSON-RPC-Verbindungen abhören (Standard: 8332 oder Testnetz: 18332)</translation>
+        <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 9998 or testnet: 19998)</source>
+        <translation>&lt;port&gt; nach JSON-RPC-Verbindungen abhören (Standard: 9998 oder Testnetz: 19998)</translation>
     </message>
     <message>
         <source>Accept command line and JSON-RPC commands</source>
@@ -2833,8 +2833,8 @@ zum Beispiel: alertnotify=echo %%s | mail -s \"Bitcoin Alert\" admin@foo.com
         <translation>Über einen SOCKS-Proxy verbinden</translation>
     </message>
     <message>
-        <source>Connect to JSON-RPC on &lt;port&gt; (default: 8332 or testnet: 18332)</source>
-        <translation>Mit JSON-RPC auf &lt;port&gt; verbinden (Standard: 8332 oder Testnetz: 18332)</translation>
+        <source>Connect to JSON-RPC on &lt;port&gt; (default: 9998 or testnet: 19998)</source>
+        <translation>Mit JSON-RPC auf &lt;port&gt; verbinden (Standard: 9998 oder Testnetz: 19998)</translation>
     </message>
     <message>
         <source>Connection options:</source>
