@@ -32,8 +32,8 @@ static const int MAX_URI_LENGTH = 255;
 #define EXPORT_IMAGE_SIZE 256
 
 /* Colors for minting tab for each coin age group */
-#define COLOR_MINT_YOUNG QColor(127, 127, 240)
-#define COLOR_MINT_MATURE QColor(127, 240, 127)
-#define COLOR_MINT_OLD QColor(240, 127, 127)
+#define COLOR_MINT_YOUNG QColor(180, 180, 250)
+#define COLOR_MINT_MATURE QColor(180, 250, 180)
+#define COLOR_MINT_OLD QColor(250, 180, 180)
 
 #endif // GUICONSTANTS_H

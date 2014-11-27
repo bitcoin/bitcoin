@@ -20,10 +20,11 @@ public:
     enum ColumnIndex {
         TxHash = 0,
         Address = 1,
-        Age = 2,
-        Balance = 3,
+        Balance = 2,
+        Age = 3,
         CoinDay = 4,
-        MintProbability = 5
+        MintProbability = 5,
+        MintReward = 6
     };
 
 
@@ -51,6 +52,7 @@ private:
     QString formatTxAge(const KernelRecord *wtx) const;
     QString formatTxBalance(const KernelRecord *wtx) const;
     QString formatTxCoinDay(const KernelRecord *wtx) const;
+    QString formatTxPoSReward(KernelRecord *wtx) const;
 private slots:
     void update();
 

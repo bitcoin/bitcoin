@@ -648,8 +648,7 @@ bool CWallet::IsChange(const CTxOut& txout) const
 
 int64 CWalletTx::GetTxTime() const
 {
-    int64 n = nTimeSmart;
-    return n ? n : nTimeReceived;
+    return nTime;
 }
 
 int CWalletTx::GetRequestCount() const

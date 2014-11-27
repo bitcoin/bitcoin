@@ -17,6 +17,7 @@
 #include <QLineEdit>
 #include <QComboBox>
 #include <QMessageBox>
+#include <QMenu>
 
 MintingView::MintingView(QWidget *parent) :
     QWidget(parent), model(0), mintingView(0)
@@ -61,7 +62,9 @@ MintingView::MintingView(QWidget *parent) :
     mintingCombo = new QComboBox();
     mintingCombo->addItem(tr("10 min"), Minting10min);
     mintingCombo->addItem(tr("24 hours"), Minting1day);
+    mintingCombo->addItem(tr("7 days"), Minting7days);
     mintingCombo->addItem(tr("30 days"), Minting30days);
+    mintingCombo->addItem(tr("60 days"), Minting60days);
     mintingCombo->addItem(tr("90 days"), Minting90days);
     mintingCombo->setFixedWidth(120);
 
@@ -96,6 +99,24 @@ MintingView::MintingView(QWidget *parent) :
 
     connect(mintingCombo, SIGNAL(activated(int)), this, SLOT(chooseMintingInterval(int)));
 
+    // Actions
+    QAction *copyTxIDAction = new QAction(tr("Copy transaction ID of input"), this);
+    QAction *copyAddressAction = new QAction(tr("Copy address of input"), this);
+    QAction *showHideAddressAction = new QAction(tr("Show/hide 'Address' column"), this);
+    QAction *showHideTxIDAction = new QAction(tr("Show/hide 'Transaction' column"), this);
+
+    contextMenu = new QMenu();
+    contextMenu->addAction(copyAddressAction);
+    contextMenu->addAction(copyTxIDAction);
+    contextMenu->addAction(showHideAddressAction);
+    contextMenu->addAction(showHideTxIDAction);
+
+    connect(copyAddressAction, SIGNAL(triggered()), this, SLOT(copyAddress()));
+    connect(copyTxIDAction, SIGNAL(triggered()), this, SLOT(copyTxID()));
+    connect(showHideAddressAction, SIGNAL(triggered()), this, SLOT(showHideAddress()));
+    connect(showHideTxIDAction, SIGNAL(triggered()), this, SLOT(showHideTxID()));
+
+    connect(view, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(contextualMenu(QPoint)));
 }
 
 
@@ -118,22 +139,24 @@ void MintingView::setModel(WalletModel *model)
         mintingView->verticalHeader()->hide();
 
         mintingView->horizontalHeader()->resizeSection(
-                MintingTableModel::Address, 420);
+                MintingTableModel::Age, 60);
+        mintingView->horizontalHeader()->resizeSection(
+                MintingTableModel::Balance, 80);
+        mintingView->horizontalHeader()->resizeSection(
+                MintingTableModel::CoinDay,60);
+        mintingView->horizontalHeader()->resizeSection(
+                MintingTableModel::MintProbability, 105);
 #if QT_VERSION < 0x050000
         mintingView->horizontalHeader()->setResizeMode(
-                MintingTableModel::TxHash, QHeaderView::Stretch);
+                MintingTableModel::MintReward, QHeaderView::Stretch);
 #else
         mintingView->horizontalHeader()->setSectionResizeMode(
-                MintingTableModel::TxHash, QHeaderView::Stretch);
+                MintingTableModel::MintReward, QHeaderView::Stretch);
 #endif
         mintingView->horizontalHeader()->resizeSection(
-                MintingTableModel::Age, 120);
+            MintingTableModel::Address, 245);
         mintingView->horizontalHeader()->resizeSection(
-                MintingTableModel::Balance, 120);
-        mintingView->horizontalHeader()->resizeSection(
-                MintingTableModel::CoinDay,120);
-        mintingView->horizontalHeader()->resizeSection(
-                MintingTableModel::MintProbability, 160);
+            MintingTableModel::TxHash, 75);
     }
 }
 
@@ -148,8 +171,14 @@ void MintingView::chooseMintingInterval(int idx)
         case Minting1day:
             interval = 60*24;
             break;
+        case Minting7days:
+            interval = 60*24*7;
+            break;
         case Minting30days:
             interval = 60*24*30;
+            break;
+        case Minting60days:
+            interval = 60*24*60;
             break;
         case Minting90days:
             interval = 60*24*90;
@@ -173,16 +202,48 @@ void MintingView::exportClicked()
 
     // name, column, role
     writer.setModel(mintingProxyModel);
-    writer.addColumn(tr("Address"),0, MintingTableModel::Address);
-    writer.addColumn(tr("Transaction"), 0, MintingTableModel::TxHash);
-    writer.addColumn(tr("Age"), 0, MintingTableModel::Age);
-    writer.addColumn(tr("CoinDay"), 0, MintingTableModel::CoinDay);
-    writer.addColumn(tr("Balance"), 0, MintingTableModel::Balance);
-    writer.addColumn(tr("MintingProbability"), 0, MintingTableModel::MintProbability);
+    writer.addColumn(tr("Address"),MintingTableModel::Address,0);
+    writer.addColumn(tr("Transaction"),MintingTableModel::TxHash,0);
+    writer.addColumn(tr("Age"), MintingTableModel::Age,0);
+    writer.addColumn(tr("CoinDay"), MintingTableModel::CoinDay,0);
+    writer.addColumn(tr("Balance"), MintingTableModel::Balance,0);
+    writer.addColumn(tr("MintingProbability"), MintingTableModel::MintProbability,0);
+    writer.addColumn(tr("MintingReward"), MintingTableModel::MintReward,0);
 
     if(!writer.write())
     {
         QMessageBox::critical(this, tr("Error exporting"), tr("Could not write to file %1.").arg(filename),
                               QMessageBox::Abort, QMessageBox::Abort);
+    }
+}
+
+void MintingView::copyTxID()
+{
+    GUIUtil::copyEntryData(mintingView, MintingTableModel::TxHash, 0);
+}
+
+void MintingView::copyAddress()
+{
+    GUIUtil::copyEntryData(mintingView, MintingTableModel::Address, 0 );
+}
+
+void MintingView::showHideAddress()
+{
+    mintingView->horizontalHeader()->setSectionHidden(MintingTableModel::Address, 
+        !(mintingView->horizontalHeader()->isSectionHidden(MintingTableModel::Address)));
+}
+
+void MintingView::showHideTxID()
+{
+    mintingView->horizontalHeader()->setSectionHidden(MintingTableModel::TxHash, 
+        !(mintingView->horizontalHeader()->isSectionHidden(MintingTableModel::TxHash)));
+}
+
+void MintingView::contextualMenu(const QPoint &point)
+{
+    QModelIndex index = mintingView->indexAt(point);
+    if(index.isValid())
+    {
+        contextMenu->exec(QCursor::pos());
     }
 }

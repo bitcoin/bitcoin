@@ -25,24 +25,54 @@
       <translation>Показывать вероятность найти блок в течение : </translation>
     </message>
     <message>
-      <location filename="../mintingview.cpp" line="62"/>
+      <location filename="../mintingview.cpp" line="63"/>
       <source>10 min</source>
       <translation>10 минут</translation>
     </message>
     <message>
-      <location filename="../mintingview.cpp" line="63"/>
+      <location filename="../mintingview.cpp" line="64"/>
       <source>24 hours</source>
       <translation>24 часов</translation>
     </message>
     <message>
-      <location filename="../mintingview.cpp" line="64"/>
+      <location filename="../mintingview.cpp" line="65"/>
+      <source>7 days</source>
+      <translation>7 дней</translation>
+    </message>
+    <message>
+      <location filename="../mintingview.cpp" line="66"/>
       <source>30 days</source>
       <translation>30 дней</translation>
     </message>
     <message>
-      <location filename="../mintingview.cpp" line="65"/>
+      <location filename="../mintingview.cpp" line="67"/>
+      <source>60 days</source>
+      <translation>60 дней</translation>
+    </message>
+    <message>
+      <location filename="../mintingview.cpp" line="68"/>
       <source>90 days</source>
       <translation>90 дней</translation>
+    </message>
+    <message>
+      <location filename="../mintingview.cpp" line="103"/>
+      <source>Copy transaction ID of input</source>
+      <translation>Скопировать ID транзакции входа</translation>
+    </message>
+    <message>
+      <location filename="../mintingview.cpp" line="104"/>
+      <source>Copy address of input</source>
+      <translation>Скопировать адрес входа</translation>
+    </message>
+    <message>
+      <location filename="../mintingview.cpp" line="105"/>
+      <source>Show/hide 'Address' column</source>
+      <translation>Показать/скрыть столбец 'Адрес'</translation>
+    </message>
+    <message>
+      <location filename="../mintingview.cpp" line="106"/>
+      <source>Show/hide 'Transaction' column</source>
+      <translation>Показать/скрыть столбец 'Транзакция'</translation>
     </message>
     <message>
       <location filename="../mintingview.cpp" line="167"/>
@@ -85,11 +115,15 @@
     </message>
     <message>
       <source>Balance</source>
-      <translation>Баланс</translation>
+      <translation>Сумма</translation>
     </message>
     <message>
       <source>MintProbability</source>
       <translation>Вероятность PoS</translation>
+    </message>
+    <message>
+      <source>MintReward</source>
+      <translation>Награда PoS</translation>
     </message>
     <message>
       <source>minutes</source>
@@ -131,9 +165,17 @@
       <source>Chance to mint a block within given time interval.</source>
       <translation>Шанс найти блок в течение выбранного временного интервала.</translation>
     </message>
+    <message>
+      <source>The size of the potential rewards if the block is found at the beginning and the end given time interval.</source>
+      <translation>Размер потенциальной награды если блок найден в начале и конце выбранного временного интервала.</translation>
+    </message>
   </context>
 <context>
   <name>QObject</name>
+  <message>
+    <source>from  %1 to %2</source>
+    <translation>от %1 до %2</translation>
+  </message>
   <message>
     <source>%1 d</source>
     <translation>%1 д</translation>
