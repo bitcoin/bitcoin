@@ -202,13 +202,13 @@ void MintingView::exportClicked()
 
     // name, column, role
     writer.setModel(mintingProxyModel);
-    writer.addColumn(tr("Address"),0, MintingTableModel::Address);
-    writer.addColumn(tr("Transaction"), 0, MintingTableModel::TxHash);
-    writer.addColumn(tr("Age"), 0, MintingTableModel::Age);
-    writer.addColumn(tr("CoinDay"), 0, MintingTableModel::CoinDay);
-    writer.addColumn(tr("Balance"), 0, MintingTableModel::Balance);
-    writer.addColumn(tr("MintingProbability"), 0, MintingTableModel::MintProbability);
-    writer.addColumn(tr("MintingReward"), 0, MintingTableModel::MintReward);
+    writer.addColumn(tr("Address"),MintingTableModel::Address,0);
+    writer.addColumn(tr("Transaction"),MintingTableModel::TxHash,0);
+    writer.addColumn(tr("Age"), MintingTableModel::Age,0);
+    writer.addColumn(tr("CoinDay"), MintingTableModel::CoinDay,0);
+    writer.addColumn(tr("Balance"), MintingTableModel::Balance,0);
+    writer.addColumn(tr("MintingProbability"), MintingTableModel::MintProbability,0);
+    writer.addColumn(tr("MintingReward"), MintingTableModel::MintReward,0);
 
     if(!writer.write())
     {
