@@ -7,7 +7,6 @@
 //
 
 
-
 #include "keystore.h"
 #include "main.h"
 #include "net.h"
@@ -27,7 +26,8 @@
 extern bool AddOrphanTx(const CTransaction& tx, NodeId peer);
 extern void EraseOrphansFor(NodeId peer);
 extern unsigned int LimitOrphanTxSize(unsigned int nMaxOrphans);
-struct COrphanTx {
+struct COrphanTx
+{
     CTransaction tx;
     NodeId fromPeer;
 };
@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE(DoS_banning)
     Misbehaving(dummyNode1.GetId(), 100); // Should get banned
     SendMessages(&dummyNode1, false);
     BOOST_CHECK(CNode::IsBanned(addr1));
-    BOOST_CHECK(!CNode::IsBanned(ip(0xa0b0c001|0x0000ff00))); // Different IP, not banned
+    BOOST_CHECK(!CNode::IsBanned(ip(0xa0b0c001 | 0x0000ff00))); // Different IP, not banned
 
     CAddress addr2(ip(0xa0b0c002));
     CNode dummyNode2(INVALID_SOCKET, addr2, "", true);
@@ -99,10 +99,10 @@ BOOST_AUTO_TEST_CASE(DoS_bantime)
     SendMessages(&dummyNode, false);
     BOOST_CHECK(CNode::IsBanned(addr));
 
-    SetMockTime(nStartTime+60*60);
+    SetMockTime(nStartTime + 60 * 60);
     BOOST_CHECK(CNode::IsBanned(addr));
 
-    SetMockTime(nStartTime+60*60*24+1);
+    SetMockTime(nStartTime + 60 * 60 * 24 + 1);
     BOOST_CHECK(!CNode::IsBanned(addr));
 }
 
@@ -123,23 +123,21 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
     keystore.AddKey(key);
 
     // 50 orphan transactions:
-    for (int i = 0; i < 50; i++)
-    {
+    for (int i = 0; i < 50; i++) {
         CMutableTransaction tx;
         tx.vin.resize(1);
         tx.vin[0].prevout.n = 0;
         tx.vin[0].prevout.hash = GetRandHash();
         tx.vin[0].scriptSig << OP_1;
         tx.vout.resize(1);
-        tx.vout[0].nValue = 1*CENT;
+        tx.vout[0].nValue = 1 * CENT;
         tx.vout[0].scriptPubKey = GetScriptForDestination(key.GetPubKey().GetID());
 
         AddOrphanTx(tx, i);
     }
 
     // ... and 50 that depend on other orphans:
-    for (int i = 0; i < 50; i++)
-    {
+    for (int i = 0; i < 50; i++) {
         CTransaction txPrev = RandomOrphan();
 
         CMutableTransaction tx;
@@ -147,7 +145,7 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
         tx.vin[0].prevout.n = 0;
         tx.vin[0].prevout.hash = txPrev.GetHash();
         tx.vout.resize(1);
-        tx.vout[0].nValue = 1*CENT;
+        tx.vout[0].nValue = 1 * CENT;
         tx.vout[0].scriptPubKey = GetScriptForDestination(key.GetPubKey().GetID());
         SignSignature(keystore, txPrev, tx, 0);
 
@@ -155,17 +153,15 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
     }
 
     // This really-big orphan should be ignored:
-    for (int i = 0; i < 10; i++)
-    {
+    for (int i = 0; i < 10; i++) {
         CTransaction txPrev = RandomOrphan();
 
         CMutableTransaction tx;
         tx.vout.resize(1);
-        tx.vout[0].nValue = 1*CENT;
+        tx.vout[0].nValue = 1 * CENT;
         tx.vout[0].scriptPubKey = GetScriptForDestination(key.GetPubKey().GetID());
         tx.vin.resize(500);
-        for (unsigned int j = 0; j < tx.vin.size(); j++)
-        {
+        for (unsigned int j = 0; j < tx.vin.size(); j++) {
             tx.vin[j].prevout.n = j;
             tx.vin[j].prevout.hash = txPrev.GetHash();
         }
@@ -179,8 +175,7 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
     }
 
     // Test EraseOrphansFor:
-    for (NodeId i = 0; i < 3; i++)
-    {
+    for (NodeId i = 0; i < 3; i++) {
         size_t sizeBefore = mapOrphanTransactions.size();
         EraseOrphansFor(i);
         BOOST_CHECK(mapOrphanTransactions.size() < sizeBefore);

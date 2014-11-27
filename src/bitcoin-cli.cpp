@@ -28,7 +28,8 @@ std::string HelpMessageCli()
     strUsage += "  -datadir=<dir>         " + _("Specify data directory") + "\n";
     strUsage += "  -testnet               " + _("Use the test network") + "\n";
     strUsage += "  -regtest               " + _("Enter regression test mode, which uses a special chain in which blocks can be "
-                                                "solved instantly. This is intended for regression testing tools and app development.") + "\n";
+                                                "solved instantly. This is intended for regression testing tools and app development.") +
+                "\n";
     strUsage += "  -rpcconnect=<ip>       " + strprintf(_("Send commands to node running on <ip> (default: %s)"), "127.0.0.1") + "\n";
     strUsage += "  -rpcport=<port>        " + strprintf(_("Connect to JSON-RPC on <port> (default: %u or testnet: %u)"), 8332, 18332) + "\n";
     strUsage += "  -rpcwait               " + _("Wait for RPC server to start") + "\n";
@@ -53,11 +54,9 @@ std::string HelpMessageCli()
 class CConnectionFailed : public std::runtime_error
 {
 public:
-
-    explicit inline CConnectionFailed(const std::string& msg) :
-        std::runtime_error(msg)
-    {}
-
+    explicit inline CConnectionFailed(const std::string& msg) : std::runtime_error(msg)
+    {
+    }
 };
 
 static bool AppInitRPC(int argc, char* argv[])
@@ -66,13 +65,13 @@ static bool AppInitRPC(int argc, char* argv[])
     // Parameters
     //
     ParseParameters(argc, argv);
-    if (argc<2 || mapArgs.count("-?") || mapArgs.count("-help") || mapArgs.count("-version")) {
+    if (argc < 2 || mapArgs.count("-?") || mapArgs.count("-help") || mapArgs.count("-version")) {
         std::string strUsage = _("Bitcoin Core RPC client version") + " " + FormatFullVersion() + "\n";
         if (!mapArgs.count("-version")) {
             strUsage += "\n" + _("Usage:") + "\n" +
-                  "  bitcoin-cli [options] <command> [params]  " + _("Send command to Bitcoin Core") + "\n" +
-                  "  bitcoin-cli [options] help                " + _("List commands") + "\n" +
-                  "  bitcoin-cli [options] help <command>      " + _("Get help for a command") + "\n";
+                        "  bitcoin-cli [options] <command> [params]  " + _("Send command to Bitcoin Core") + "\n" +
+                        "  bitcoin-cli [options] help                " + _("List commands") + "\n" +
+                        "  bitcoin-cli [options] help <command>      " + _("Get help for a command") + "\n";
 
             strUsage += "\n" + HelpMessageCli();
         }
@@ -86,8 +85,8 @@ static bool AppInitRPC(int argc, char* argv[])
     }
     try {
         ReadConfigFile(mapArgs, mapMultiArgs);
-    } catch(std::exception &e) {
-        fprintf(stderr,"Error reading configuration file: %s\n", e.what());
+    } catch (std::exception& e) {
+        fprintf(stderr, "Error reading configuration file: %s\n", e.what());
         return false;
     }
     // Check for -testnet or -regtest parameter (BaseParams() calls are only valid after this clause)
@@ -104,7 +103,7 @@ Object CallRPC(const string& strMethod, const Array& params)
         throw runtime_error(strprintf(
             _("You must set rpcpassword=<password> in the configuration file:\n%s\n"
               "If the file does not exist, create it with owner-readable-only file permissions."),
-                GetConfigFile().string().c_str()));
+            GetConfigFile().string().c_str()));
 
     // Connect to localhost
     bool fUseSSL = GetBoolArg("-rpcssl", false);
@@ -113,7 +112,7 @@ Object CallRPC(const string& strMethod, const Array& params)
     context.set_options(ssl::context::no_sslv2);
     asio::ssl::stream<asio::ip::tcp::socket> sslStream(io_service, context);
     SSLIOStreamDevice<asio::ip::tcp> d(sslStream, fUseSSL);
-    iostreams::stream< SSLIOStreamDevice<asio::ip::tcp> > stream(d);
+    iostreams::stream<SSLIOStreamDevice<asio::ip::tcp> > stream(d);
 
     const bool fConnected = d.connect(GetArg("-rpcconnect", "127.0.0.1"), GetArg("-rpcport", itostr(BaseParams().RPCPort())));
     if (!fConnected)
@@ -156,7 +155,7 @@ Object CallRPC(const string& strMethod, const Array& params)
     return reply;
 }
 
-int CommandLineRPC(int argc, char *argv[])
+int CommandLineRPC(int argc, char* argv[])
 {
     string strPrint;
     int nRet = 0;
@@ -184,7 +183,7 @@ int CommandLineRPC(int argc, char *argv[])
 
                 // Parse reply
                 const Value& result = find_value(reply, "result");
-                const Value& error  = find_value(reply, "error");
+                const Value& error = find_value(reply, "error");
 
                 if (error.type() != null_type) {
                     // Error
@@ -205,23 +204,19 @@ int CommandLineRPC(int argc, char *argv[])
 
                 // Connection succeeded, no need to retry.
                 break;
-            }
-            catch (const CConnectionFailed& e) {
+            } catch (const CConnectionFailed& e) {
                 if (fWait)
                     MilliSleep(1000);
                 else
                     throw;
             }
         } while (fWait);
-    }
-    catch (boost::thread_interrupted) {
+    } catch (boost::thread_interrupted) {
         throw;
-    }
-    catch (std::exception& e) {
+    } catch (std::exception& e) {
         strPrint = string("error: ") + e.what();
         nRet = EXIT_FAILURE;
-    }
-    catch (...) {
+    } catch (...) {
         PrintExceptionContinue(NULL, "CommandLineRPC()");
         throw;
     }
@@ -237,10 +232,9 @@ int main(int argc, char* argv[])
     SetupEnvironment();
 
     try {
-        if(!AppInitRPC(argc, argv))
+        if (!AppInitRPC(argc, argv))
             return EXIT_FAILURE;
-    }
-    catch (std::exception& e) {
+    } catch (std::exception& e) {
         PrintExceptionContinue(&e, "AppInitRPC()");
         return EXIT_FAILURE;
     } catch (...) {
@@ -251,8 +245,7 @@ int main(int argc, char* argv[])
     int ret = EXIT_FAILURE;
     try {
         ret = CommandLineRPC(argc, argv);
-    }
-    catch (std::exception& e) {
+    } catch (std::exception& e) {
         PrintExceptionContinue(&e, "CommandLineRPC()");
     } catch (...) {
         PrintExceptionContinue(NULL, "CommandLineRPC()");

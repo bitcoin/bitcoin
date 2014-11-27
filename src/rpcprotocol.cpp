@@ -40,7 +40,7 @@ const size_t POST_READ_SIZE = 256 * 1024;
  * and to be compatible with other JSON-RPC implementations.
  */
 
-string HTTPPost(const string& strMsg, const map<string,string>& mapRequestHeaders)
+string HTTPPost(const string& strMsg, const map<string, string>& mapRequestHeaders)
 {
     ostringstream s;
     s << "POST / HTTP/1.1\r\n"
@@ -50,7 +50,7 @@ string HTTPPost(const string& strMsg, const map<string,string>& mapRequestHeader
       << "Content-Length: " << strMsg.size() << "\r\n"
       << "Connection: close\r\n"
       << "Accept: application/json\r\n";
-    BOOST_FOREACH(const PAIRTYPE(string, string)& item, mapRequestHeaders)
+    BOOST_FOREACH (const PAIRTYPE(string, string) & item, mapRequestHeaders)
         s << item.first << ": " << item.second << "\r\n";
     s << "\r\n" << strMsg;
 
@@ -62,15 +62,21 @@ static string rfc1123Time()
     return DateTimeStrFormat("%a, %d %b %Y %H:%M:%S +0000", GetTime());
 }
 
-static const char *httpStatusDescription(int nStatus)
+static const char* httpStatusDescription(int nStatus)
 {
     switch (nStatus) {
-        case HTTP_OK: return "OK";
-        case HTTP_BAD_REQUEST: return "Bad Request";
-        case HTTP_FORBIDDEN: return "Forbidden";
-        case HTTP_NOT_FOUND: return "Not Found";
-        case HTTP_INTERNAL_SERVER_ERROR: return "Internal Server Error";
-        default: return "";
+    case HTTP_OK:
+        return "OK";
+    case HTTP_BAD_REQUEST:
+        return "Bad Request";
+    case HTTP_FORBIDDEN:
+        return "Forbidden";
+    case HTTP_NOT_FOUND:
+        return "Not Found";
+    case HTTP_INTERNAL_SERVER_ERROR:
+        return "Internal Server Error";
+    default:
+        return "";
     }
 }
 
@@ -78,36 +84,37 @@ string HTTPError(int nStatus, bool keepalive, bool headersOnly)
 {
     if (nStatus == HTTP_UNAUTHORIZED)
         return strprintf("HTTP/1.0 401 Authorization Required\r\n"
-            "Date: %s\r\n"
-            "Server: bitcoin-json-rpc/%s\r\n"
-            "WWW-Authenticate: Basic realm=\"jsonrpc\"\r\n"
-            "Content-Type: text/html\r\n"
-            "Content-Length: 296\r\n"
-            "\r\n"
-            "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\"\r\n"
-            "\"http://www.w3.org/TR/1999/REC-html401-19991224/loose.dtd\">\r\n"
-            "<HTML>\r\n"
-            "<HEAD>\r\n"
-            "<TITLE>Error</TITLE>\r\n"
-            "<META HTTP-EQUIV='Content-Type' CONTENT='text/html; charset=ISO-8859-1'>\r\n"
-            "</HEAD>\r\n"
-            "<BODY><H1>401 Unauthorized.</H1></BODY>\r\n"
-            "</HTML>\r\n", rfc1123Time(), FormatFullVersion());
+                         "Date: %s\r\n"
+                         "Server: bitcoin-json-rpc/%s\r\n"
+                         "WWW-Authenticate: Basic realm=\"jsonrpc\"\r\n"
+                         "Content-Type: text/html\r\n"
+                         "Content-Length: 296\r\n"
+                         "\r\n"
+                         "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\"\r\n"
+                         "\"http://www.w3.org/TR/1999/REC-html401-19991224/loose.dtd\">\r\n"
+                         "<HTML>\r\n"
+                         "<HEAD>\r\n"
+                         "<TITLE>Error</TITLE>\r\n"
+                         "<META HTTP-EQUIV='Content-Type' CONTENT='text/html; charset=ISO-8859-1'>\r\n"
+                         "</HEAD>\r\n"
+                         "<BODY><H1>401 Unauthorized.</H1></BODY>\r\n"
+                         "</HTML>\r\n",
+                         rfc1123Time(),
+                         FormatFullVersion());
 
-    return HTTPReply(nStatus, httpStatusDescription(nStatus), keepalive,
-                     headersOnly, "text/plain");
+    return HTTPReply(nStatus, httpStatusDescription(nStatus), keepalive, headersOnly, "text/plain");
 }
 
-string HTTPReplyHeader(int nStatus, bool keepalive, size_t contentLength, const char *contentType)
+string HTTPReplyHeader(int nStatus, bool keepalive, size_t contentLength, const char* contentType)
 {
     return strprintf(
-            "HTTP/1.1 %d %s\r\n"
-            "Date: %s\r\n"
-            "Connection: %s\r\n"
-            "Content-Length: %u\r\n"
-            "Content-Type: %s\r\n"
-            "Server: bitcoin-json-rpc/%s\r\n"
-            "\r\n",
+        "HTTP/1.1 %d %s\r\n"
+        "Date: %s\r\n"
+        "Connection: %s\r\n"
+        "Content-Length: %u\r\n"
+        "Content-Type: %s\r\n"
+        "Server: bitcoin-json-rpc/%s\r\n"
+        "\r\n",
         nStatus,
         httpStatusDescription(nStatus),
         rfc1123Time(),
@@ -117,19 +124,16 @@ string HTTPReplyHeader(int nStatus, bool keepalive, size_t contentLength, const 
         FormatFullVersion());
 }
 
-string HTTPReply(int nStatus, const string& strMsg, bool keepalive,
-                 bool headersOnly, const char *contentType)
+string HTTPReply(int nStatus, const string& strMsg, bool keepalive, bool headersOnly, const char* contentType)
 {
-    if (headersOnly)
-    {
+    if (headersOnly) {
         return HTTPReplyHeader(nStatus, keepalive, 0, contentType);
     } else {
         return HTTPReplyHeader(nStatus, keepalive, strMsg.size(), contentType) + strMsg;
     }
 }
 
-bool ReadHTTPRequestLine(std::basic_istream<char>& stream, int &proto,
-                         string& http_method, string& http_uri)
+bool ReadHTTPRequestLine(std::basic_istream<char>& stream, int& proto, string& http_method, string& http_uri)
 {
     string str;
     getline(stream, str);
@@ -156,14 +160,14 @@ bool ReadHTTPRequestLine(std::basic_istream<char>& stream, int &proto,
         strProto = vWords[2];
 
     proto = 0;
-    const char *ver = strstr(strProto.c_str(), "HTTP/1.");
+    const char* ver = strstr(strProto.c_str(), "HTTP/1.");
     if (ver != NULL)
-        proto = atoi(ver+7);
+        proto = atoi(ver + 7);
 
     return true;
 }
 
-int ReadHTTPStatus(std::basic_istream<char>& stream, int &proto)
+int ReadHTTPStatus(std::basic_istream<char>& stream, int& proto)
 {
     string str;
     getline(stream, str);
@@ -172,28 +176,26 @@ int ReadHTTPStatus(std::basic_istream<char>& stream, int &proto)
     if (vWords.size() < 2)
         return HTTP_INTERNAL_SERVER_ERROR;
     proto = 0;
-    const char *ver = strstr(str.c_str(), "HTTP/1.");
+    const char* ver = strstr(str.c_str(), "HTTP/1.");
     if (ver != NULL)
-        proto = atoi(ver+7);
+        proto = atoi(ver + 7);
     return atoi(vWords[1].c_str());
 }
 
 int ReadHTTPHeaders(std::basic_istream<char>& stream, map<string, string>& mapHeadersRet)
 {
     int nLen = 0;
-    while (true)
-    {
+    while (true) {
         string str;
         std::getline(stream, str);
         if (str.empty() || str == "\r")
             break;
         string::size_type nColon = str.find(":");
-        if (nColon != string::npos)
-        {
+        if (nColon != string::npos) {
             string strHeader = str.substr(0, nColon);
             boost::trim(strHeader);
             boost::to_lower(strHeader);
-            string strValue = str.substr(nColon+1);
+            string strValue = str.substr(nColon + 1);
             boost::trim(strValue);
             mapHeadersRet[strHeader] = strValue;
             if (strHeader == "content-length")
@@ -204,9 +206,7 @@ int ReadHTTPHeaders(std::basic_istream<char>& stream, map<string, string>& mapHe
 }
 
 
-int ReadHTTPMessage(std::basic_istream<char>& stream, map<string,
-                    string>& mapHeadersRet, string& strMessageRet,
-                    int nProto, size_t max_size)
+int ReadHTTPMessage(std::basic_istream<char>& stream, map<string, string>& mapHeadersRet, string& strMessageRet, int nProto, size_t max_size)
 {
     mapHeadersRet.clear();
     strMessageRet = "";
@@ -217,12 +217,10 @@ int ReadHTTPMessage(std::basic_istream<char>& stream, map<string,
         return HTTP_INTERNAL_SERVER_ERROR;
 
     // Read message
-    if (nLen > 0)
-    {
+    if (nLen > 0) {
         vector<char> vch;
         size_t ptr = 0;
-        while (ptr < (size_t)nLen)
-        {
+        while (ptr < (size_t)nLen) {
             size_t bytes_to_read = std::min((size_t)nLen - ptr, POST_READ_SIZE);
             vch.resize(ptr + bytes_to_read);
             stream.read(&vch[ptr], bytes_to_read);
@@ -235,8 +233,7 @@ int ReadHTTPMessage(std::basic_istream<char>& stream, map<string,
 
     string sConHdr = mapHeadersRet["connection"];
 
-    if ((sConHdr != "close") && (sConHdr != "keep-alive"))
-    {
+    if ((sConHdr != "close") && (sConHdr != "keep-alive")) {
         if (nProto >= 1)
             mapHeadersRet["connection"] = "keep-alive";
         else

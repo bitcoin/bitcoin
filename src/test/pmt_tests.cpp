@@ -16,10 +16,11 @@ class CPartialMerkleTreeTester : public CPartialMerkleTree
 {
 public:
     // flip one bit in one of the hashes - this should break the authentication
-    void Damage() {
+    void Damage()
+    {
         unsigned int n = rand() % vHash.size();
         int bit = rand() % 256;
-        uint256 &hash = vHash[n];
+        uint256& hash = vHash[n];
         hash ^= ((uint256)1 << bit);
     }
 };
@@ -35,7 +36,7 @@ BOOST_AUTO_TEST_CASE(pmt_test1)
 
         // build a block with some dummy transactions
         CBlock block;
-        for (unsigned int j=0; j<nTx; j++) {
+        for (unsigned int j = 0; j < nTx; j++) {
             CMutableTransaction tx;
             tx.nLockTime = rand(); // actual transaction data doesn't matter; just make the nLockTime's unique
             block.vtx.push_back(CTransaction(tx));
@@ -44,11 +45,11 @@ BOOST_AUTO_TEST_CASE(pmt_test1)
         // calculate actual merkle root and height
         uint256 merkleRoot1 = block.BuildMerkleTree();
         std::vector<uint256> vTxid(nTx, 0);
-        for (unsigned int j=0; j<nTx; j++)
+        for (unsigned int j = 0; j < nTx; j++)
             vTxid[j] = block.vtx[j].GetHash();
         int nHeight = 1, nTx_ = nTx;
         while (nTx_ > 1) {
-            nTx_ = (nTx_+1)/2;
+            nTx_ = (nTx_ + 1) / 2;
             nHeight++;
         }
 
@@ -57,8 +58,8 @@ BOOST_AUTO_TEST_CASE(pmt_test1)
             // build random subset of txid's
             std::vector<bool> vMatch(nTx, false);
             std::vector<uint256> vMatchTxid1;
-            for (unsigned int j=0; j<nTx; j++) {
-                bool fInclude = (rand() & ((1 << (att/2)) - 1)) == 0;
+            for (unsigned int j = 0; j < nTx; j++) {
+                bool fInclude = (rand() & ((1 << (att / 2)) - 1)) == 0;
                 vMatch[j] = fInclude;
                 if (fInclude)
                     vMatchTxid1.push_back(vTxid[j]);
@@ -72,8 +73,8 @@ BOOST_AUTO_TEST_CASE(pmt_test1)
             ss << pmt1;
 
             // verify CPartialMerkleTree's size guarantees
-            unsigned int n = std::min<unsigned int>(nTx, 1 + vMatchTxid1.size()*nHeight);
-            BOOST_CHECK(ss.size() <= 10 + (258*n+7)/8);
+            unsigned int n = std::min<unsigned int>(nTx, 1 + vMatchTxid1.size() * nHeight);
+            BOOST_CHECK(ss.size() <= 10 + (258 * n + 7) / 8);
 
             // deserialize into a tester copy
             CPartialMerkleTreeTester pmt2;
@@ -91,7 +92,7 @@ BOOST_AUTO_TEST_CASE(pmt_test1)
             BOOST_CHECK(vMatchTxid1 == vMatchTxid2);
 
             // check that random bit flips break the authentication
-            for (int j=0; j<4; j++) {
+            for (int j = 0; j < 4; j++) {
                 CPartialMerkleTreeTester pmt3(pmt2);
                 pmt3.Damage();
                 std::vector<uint256> vMatchTxid3;

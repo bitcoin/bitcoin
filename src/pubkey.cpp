@@ -13,7 +13,8 @@
 #include "ecwrapper.h"
 #endif
 
-bool CPubKey::Verify(const uint256 &hash, const std::vector<unsigned char>& vchSig) const {
+bool CPubKey::Verify(const uint256& hash, const std::vector<unsigned char>& vchSig) const
+{
     if (!IsValid())
         return false;
 #ifdef USE_SECP256K1
@@ -29,7 +30,8 @@ bool CPubKey::Verify(const uint256 &hash, const std::vector<unsigned char>& vchS
     return true;
 }
 
-bool CPubKey::RecoverCompact(const uint256 &hash, const std::vector<unsigned char>& vchSig) {
+bool CPubKey::RecoverCompact(const uint256& hash, const std::vector<unsigned char>& vchSig)
+{
     if (vchSig.size() != 65)
         return false;
     int recid = (vchSig[0] - 27) & 3;
@@ -50,7 +52,8 @@ bool CPubKey::RecoverCompact(const uint256 &hash, const std::vector<unsigned cha
     return true;
 }
 
-bool CPubKey::IsFullyValid() const {
+bool CPubKey::IsFullyValid() const
+{
     if (!IsValid())
         return false;
 #ifdef USE_SECP256K1
@@ -64,7 +67,8 @@ bool CPubKey::IsFullyValid() const {
     return true;
 }
 
-bool CPubKey::Decompress() {
+bool CPubKey::Decompress()
+{
     if (!IsValid())
         return false;
 #ifdef USE_SECP256K1
@@ -83,13 +87,14 @@ bool CPubKey::Decompress() {
     return true;
 }
 
-bool CPubKey::Derive(CPubKey& pubkeyChild, unsigned char ccChild[32], unsigned int nChild, const unsigned char cc[32]) const {
+bool CPubKey::Derive(CPubKey& pubkeyChild, unsigned char ccChild[32], unsigned int nChild, const unsigned char cc[32]) const
+{
     assert(IsValid());
     assert((nChild >> 31) == 0);
     assert(begin() + 33 == end());
     unsigned char out[64];
-    BIP32Hash(cc, nChild, *begin(), begin()+1, out);
-    memcpy(ccChild, out+32, 32);
+    BIP32Hash(cc, nChild, *begin(), begin() + 1, out);
+    memcpy(ccChild, out + 32, 32);
 #ifdef USE_SECP256K1
     pubkeyChild = *this;
     bool ret = secp256k1_ecdsa_pubkey_tweak_add((unsigned char*)pubkeyChild.begin(), pubkeyChild.size(), out);
@@ -104,25 +109,30 @@ bool CPubKey::Derive(CPubKey& pubkeyChild, unsigned char ccChild[32], unsigned i
     return ret;
 }
 
-void CExtPubKey::Encode(unsigned char code[74]) const {
+void CExtPubKey::Encode(unsigned char code[74]) const
+{
     code[0] = nDepth;
-    memcpy(code+1, vchFingerprint, 4);
-    code[5] = (nChild >> 24) & 0xFF; code[6] = (nChild >> 16) & 0xFF;
-    code[7] = (nChild >>  8) & 0xFF; code[8] = (nChild >>  0) & 0xFF;
-    memcpy(code+9, vchChainCode, 32);
+    memcpy(code + 1, vchFingerprint, 4);
+    code[5] = (nChild >> 24) & 0xFF;
+    code[6] = (nChild >> 16) & 0xFF;
+    code[7] = (nChild >> 8) & 0xFF;
+    code[8] = (nChild >> 0) & 0xFF;
+    memcpy(code + 9, vchChainCode, 32);
     assert(pubkey.size() == 33);
-    memcpy(code+41, pubkey.begin(), 33);
+    memcpy(code + 41, pubkey.begin(), 33);
 }
 
-void CExtPubKey::Decode(const unsigned char code[74]) {
+void CExtPubKey::Decode(const unsigned char code[74])
+{
     nDepth = code[0];
-    memcpy(vchFingerprint, code+1, 4);
+    memcpy(vchFingerprint, code + 1, 4);
     nChild = (code[5] << 24) | (code[6] << 16) | (code[7] << 8) | code[8];
-    memcpy(vchChainCode, code+9, 32);
-    pubkey.Set(code+41, code+74);
+    memcpy(vchChainCode, code + 9, 32);
+    pubkey.Set(code + 41, code + 74);
 }
 
-bool CExtPubKey::Derive(CExtPubKey &out, unsigned int nChild) const {
+bool CExtPubKey::Derive(CExtPubKey& out, unsigned int nChild) const
+{
     out.nDepth = nDepth + 1;
     CKeyID id = pubkey.GetID();
     memcpy(&out.vchFingerprint[0], &id, 4);
