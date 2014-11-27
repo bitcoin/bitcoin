@@ -385,6 +385,8 @@ void BitcoinGUI::createToolBars()
     QToolBar *toolbar2 = addToolBar(tr("Actions toolbar"));
     toolbar2->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
     toolbar2->addAction(exportAction);
+    toolbar2->setVisible(false);
+    
 }
 
 void BitcoinGUI::setClientModel(ClientModel *clientModel)

@@ -41,8 +41,10 @@ public:
 
     std::string getTxID();
     int64 getAge() const;
+    uint64 getCoinDay() const;
     double getProbToMintStake(double difficulty, int timeOffset = 0) const;
     double getProbToMintWithinNMinutes(double difficulty, int minutes);
+    int64 getPoSReward(int nBits, int timeOffset);
 protected:
     int prevMinutes;
     double prevDifficulty;

@@ -26,10 +26,11 @@ extern double GetDifficulty(const CBlockIndex* blockindex);
 static int column_alignments[] = {
     Qt::AlignLeft|Qt::AlignVCenter,
     Qt::AlignLeft|Qt::AlignVCenter,
-    Qt::AlignRight|Qt::AlignVCenter,
-    Qt::AlignRight|Qt::AlignVCenter,
-    Qt::AlignRight|Qt::AlignVCenter,
-    Qt::AlignRight|Qt::AlignVCenter
+    Qt::AlignLeft|Qt::AlignVCenter,
+    Qt::AlignLeft|Qt::AlignVCenter,
+    Qt::AlignLeft|Qt::AlignVCenter,
+    Qt::AlignLeft|Qt::AlignVCenter,
+    Qt::AlignLeft|Qt::AlignVCenter
 };
 
 struct TxLessThan
@@ -134,16 +135,17 @@ public:
                             KernelRecord::decomposeOutput(wallet, mi->second);
                     if(!toInsert.empty()) /* only if something to insert */
                     {
-                        parent->beginInsertRows(QModelIndex(), lowerIndex, lowerIndex+toInsert.size()-1);
                         int insert_idx = lowerIndex;
                         BOOST_FOREACH(const KernelRecord &rec, toInsert)
                         {
-                            if(!rec.spent) {
+                            if(!rec.spent) 
+                            {
+                                parent->beginInsertRows(QModelIndex(), insert_idx, insert_idx);
                                 cachedWallet.insert(insert_idx, rec);
+                                parent->endInsertRows();
                                 insert_idx += 1;
                             }
                         }
-                        parent->endInsertRows();
                     }
                 }
                 else if(!inWallet && inModel)
@@ -202,7 +204,7 @@ MintingTableModel::MintingTableModel(CWallet *wallet, WalletModel *parent):
         mintingInterval(10),
         priv(new MintingTablePriv(wallet, this))
 {
-    columns << tr("Transaction") <<  tr("Address") << tr("Age") << tr("Balance") << tr("CoinDay") << tr("MintProbability");
+    columns << tr("Transaction") <<  tr("Address") << tr("Balance") << tr("Age") << tr("CoinDay") << tr("MintProbability") << tr("MintReward");
     priv->refreshWallet();
 
     QTimer *timer = new QTimer(this);
@@ -273,6 +275,8 @@ QVariant MintingTableModel::data(const QModelIndex &index, int role) const
             return formatTxCoinDay(rec);
         case MintProbability:
             return formatDayToMint(rec);
+        case MintReward:
+            return formatTxPoSReward(rec);
         }
         break;
       case Qt::TextAlignmentRole:
@@ -316,6 +320,8 @@ QVariant MintingTableModel::data(const QModelIndex &index, int role) const
             return rec->nValue;
         case MintProbability:
             return getDayToMint(rec);
+        case MintReward:
+            return formatTxPoSReward(rec);
         }
         break;
       case Qt::BackgroundColorRole:
@@ -359,6 +365,15 @@ QString MintingTableModel::lookupAddress(const std::string &address, bool toolti
     return description;
 }
 
+QString MintingTableModel::formatTxPoSReward(KernelRecord *wtx) const
+{
+    QString posReward;
+    int nBits = GetLastBlockIndex(pindexBest, true)->nBits;
+    posReward += QString(QObject::tr("from  %1 to %2")).arg(BitcoinUnits::formatWithUnit(walletModel->getOptionsModel()->getDisplayUnit(), wtx->getPoSReward(nBits, 0)), 
+        BitcoinUnits::formatWithUnit(walletModel->getOptionsModel()->getDisplayUnit(), wtx->getPoSReward(nBits, mintingInterval))); 
+    return posReward;
+}
+
 double MintingTableModel::getDayToMint(KernelRecord *wtx) const
 {
     const CBlockIndex *p = GetLastBlockIndex(pindexBest, true);
@@ -387,7 +402,7 @@ QString MintingTableModel::formatTxHash(const KernelRecord *wtx) const
 
 QString MintingTableModel::formatTxCoinDay(const KernelRecord *wtx) const
 {
-    return QString::number(wtx->coinAge);
+    return QString::number(wtx->getCoinDay());
 }
 
 QString MintingTableModel::formatTxAge(const KernelRecord *wtx) const
@@ -398,7 +413,7 @@ QString MintingTableModel::formatTxAge(const KernelRecord *wtx) const
 
 QString MintingTableModel::formatTxBalance(const KernelRecord *wtx) const
 {
-    return BitcoinUnits::format(walletModel->getOptionsModel()->getDisplayUnit(), wtx->nValue);
+    return BitcoinUnits::formatWithUnit(walletModel->getOptionsModel()->getDisplayUnit(), wtx->nValue);
 }
 
 QVariant MintingTableModel::headerData(int section, Qt::Orientation orientation, int role) const
@@ -428,6 +443,8 @@ QVariant MintingTableModel::headerData(int section, Qt::Orientation orientation,
                 return tr("Coin age in the output.");
             case MintProbability:
                 return tr("Chance to mint a block within given time interval.");
+            case MintReward:
+                return tr("The size of the potential rewards if the block is found at the beginning and the end given time interval.");
             }
         }
     }
@@ -447,4 +464,3 @@ QModelIndex MintingTableModel::index(int row, int column, const QModelIndex &par
         return QModelIndex();
     }
 }
-

@@ -2,7 +2,7 @@
 
 #include "wallet.h"
 #include "base58.h"
-#include "main.h"
+
 
 using namespace std;
 
@@ -73,6 +73,27 @@ std::string KernelRecord::getTxID()
 int64 KernelRecord::getAge() const
 {
     return (GetAdjustedTime() - nTime) / 86400;
+}
+
+uint64 KernelRecord::getCoinDay() const
+{
+    int64 nWeight = GetAdjustedTime() - nTime - nStakeMinAge;
+    if( nWeight <  0)
+        return 0;
+    nWeight = min(nWeight, (int64)nStakeMaxAge);
+    uint64 coinAge = (nValue * nWeight ) / (COIN * 86400);
+    return coinAge;
+}
+
+int64 KernelRecord::getPoSReward(int nBits, int minutes)
+{
+    double PoSReward;
+    int64 nWeight = GetAdjustedTime() - nTime + minutes * 60;
+    if( nWeight <  nStakeMinAge)
+        return 0;
+    uint64 coinAge = (nValue * nWeight ) / (COIN * 86400);
+    PoSReward = GetProofOfStakeReward(coinAge, nBits, GetAdjustedTime() + minutes * 60);
+    return PoSReward;
 }
 
 double KernelRecord::getProbToMintStake(double difficulty, int timeOffset) const
