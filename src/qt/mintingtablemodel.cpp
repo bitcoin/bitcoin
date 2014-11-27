@@ -135,16 +135,17 @@ public:
                             KernelRecord::decomposeOutput(wallet, mi->second);
                     if(!toInsert.empty()) /* only if something to insert */
                     {
-                        parent->beginInsertRows(QModelIndex(), lowerIndex, lowerIndex+toInsert.size()-1);
                         int insert_idx = lowerIndex;
                         BOOST_FOREACH(const KernelRecord &rec, toInsert)
                         {
-                            if(!rec.spent) {
+                            if(!rec.spent) 
+                            {
+                                parent->beginInsertRows(QModelIndex(), insert_idx, insert_idx);
                                 cachedWallet.insert(insert_idx, rec);
+                                parent->endInsertRows();
                                 insert_idx += 1;
                             }
                         }
-                        parent->endInsertRows();
                     }
                 }
                 else if(!inWallet && inModel)
