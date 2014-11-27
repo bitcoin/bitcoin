@@ -1626,97 +1626,37 @@ void CWallet::GetStakeWeightFromValue(const int64& nTime, const int64& nValue, u
 }
 
 
-// NovaCoin: get current stake weight
-bool CWallet::GetStakeWeight(const CKeyStore& keystore, uint64& nMinWeight, uint64& nMaxWeight, uint64& nWeight)
+// NovaCoin: get current stake miner statistics
+void CWallet::GetStakeStats(float &nKernelsRate, float &nCoinDaysRate)
 {
-    // Choose coins to use
-    int64 nBalance = GetBalance();
-    int64 nReserveBalance = 0;
+    static uint64 nLastKernels = 0, nLastCoinDays = 0;
+    static float nLastKernelsRate = 0, nLastCoinDaysRate = 0;
+    static unsigned int nLastTime = GetTime();
 
-    if (mapArgs.count("-reservebalance") && !ParseMoney(mapArgs["-reservebalance"], nReserveBalance))
-        return error("CreateCoinStake : invalid reserve balance amount");
 
-    if (nBalance <= nReserveBalance)
-        return false;
-
-    CTxDB txdb("r");
+    if (nKernelsTried < nLastKernels)
     {
-        LOCK2(cs_main, cs_wallet);
-        // Cache outputs unless best block or wallet transaction set changed
-        if (!fCoinsDataActual)
-        {
-            mapMeta.clear();
-            int64 nValueIn = 0;
-            CoinsSet setCoins;
-            if (!SelectCoinsSimple(nBalance - nReserveBalance, MIN_TX_FEE, MAX_MONEY, GetAdjustedTime(), nCoinbaseMaturity * 10, setCoins, nValueIn))
-                return false;
+        nLastKernels = 0;
+        nLastCoinDays = 0;
 
-            if (setCoins.empty())
-                return false;
-
-            {
-                CTxIndex txindex;
-                CBlock block;
-                for(CoinsSet::iterator pcoin = setCoins.begin(); pcoin != setCoins.end(); pcoin++)
-                {
-                    // Load transaction index item
-                    if (!txdb.ReadTxIndex(pcoin->first->GetHash(), txindex))
-                        continue;
-
-                    // Read block header
-                    if (!block.ReadFromDisk(txindex.pos.nFile, txindex.pos.nBlockPos, false))
-                        continue;
-
-                    uint64 nStakeModifier = 0;
-                    if (!GetKernelStakeModifier(block.GetHash(), nStakeModifier))
-                        continue;
-
-                    // Add meta record
-                    // (txid, vout.n) => ((txindex, (tx, vout.n)), (block, modifier))
-                    mapMeta[make_pair(pcoin->first->GetHash(), pcoin->second)] = make_pair(make_pair(txindex, *pcoin), make_pair(block, nStakeModifier));
-
-                    if (fDebug)
-                        printf("Load coin: %s\n", pcoin->first->GetHash().GetHex().c_str());
-                }
-            }
-
-            if (fDebug)
-                printf("Get stake weight: %"PRIszu" meta items loaded for %"PRIszu" coins\n", mapMeta.size(), setCoins.size());
-
-            fCoinsDataActual = true;
-        }
+        nLastTime = GetTime();
     }
 
-
-    // (txid, vout.n) => ((txindex, (tx, vout.n)), (block, modifier))
-    for(MetaMap::const_iterator meta_item = mapMeta.begin(); meta_item != mapMeta.end(); meta_item++)
+    unsigned int nInterval = GetTime() - nLastTime;
+    if (nKernelsTried > 1000 && nInterval > 5)
     {
-        // Get coin
-        CoinsSet::value_type pcoin = meta_item->second.first.second;
+        nKernelsRate = nLastKernelsRate = ( nKernelsTried - nLastKernels ) / (float) nInterval;
+        nCoinDaysRate = nLastCoinDaysRate = ( nCoinDaysTried - nLastCoinDays ) / (float) nInterval;
 
-        int64 nTimeWeight = GetWeight((int64)pcoin.first->nTime, (int64)GetTime());
-        CBigNum bnCoinDayWeight = CBigNum(pcoin.first->vout[pcoin.second].nValue) * nTimeWeight / COIN / (24 * 60 * 60);
-
-        // Weight is greater than zero
-        if (nTimeWeight > 0)
-        {
-            nWeight += bnCoinDayWeight.getuint64();
-        }
-
-        // Weight is greater than zero, but the maximum value isn't reached yet
-        if (nTimeWeight > 0 && nTimeWeight < nStakeMaxAge)
-        {
-            nMinWeight += bnCoinDayWeight.getuint64();
-        }
-
-        // Maximum weight was reached
-        if (nTimeWeight == nStakeMaxAge)
-        {
-            nMaxWeight += bnCoinDayWeight.getuint64();
-        }
+        nLastKernels = nKernelsTried;
+        nLastCoinDays = nCoinDaysTried;
+        nLastTime = GetTime();
     }
-
-    return true;
+    else
+    {
+        nKernelsRate = nLastKernelsRate;
+        nCoinDaysRate = nLastCoinDaysRate;
+    }
 }
 
 bool CWallet::MergeCoins(const int64& nAmount, const int64& nMinValue, const int64& nOutputValue, list<uint256>& listMerged)
@@ -1917,6 +1857,8 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
                 printf("Stake miner: %"PRIszu" meta items loaded for %"PRIszu" coins\n", mapMeta.size(), setCoins.size());
 
             fCoinsDataActual = true;
+            nKernelsTried = 0;
+            nCoinDaysTried = 0;
         }
     }
 
@@ -1934,7 +1876,7 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
     COutPoint prevoutStake;
     CoinsSet::value_type kernelcoin;
 
-    if (ScanForStakeKernelHash(mapMeta, settings, kernelcoin, nTimeTx, nBlockTime))
+    if (ScanForStakeKernelHash(mapMeta, settings, kernelcoin, nTimeTx, nBlockTime, nKernelsTried, nCoinDaysTried))
     {
         // Found a kernel
         if (fDebug && GetBoolArg("-printcoinstake"))

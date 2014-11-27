@@ -49,7 +49,7 @@ typedef std::set<std::pair<const CWalletTx*,unsigned int> > CoinsSet;
 typedef std::map<std::pair<uint256, unsigned int>, std::pair<std::pair<CTxIndex, std::pair<const CWalletTx*,unsigned int> >, std::pair<CBlock, uint64> > > MetaMap;
 
 // Scan given coins set for kernel solution
-bool ScanForStakeKernelHash(MetaMap &mapMeta, KernelSearchSettings &settings, CoinsSet::value_type &kernelcoin, unsigned int &nTimeTx, unsigned int &nBlockTime);
+bool ScanForStakeKernelHash(MetaMap &mapMeta, KernelSearchSettings &settings, CoinsSet::value_type &kernelcoin, unsigned int &nTimeTx, unsigned int &nBlockTime, uint64 &nKernelsTried, uint64 &nCoinDaysTried);
 
 // Check kernel hash target and coinstake signature
 // Sets hashProofOfStake on success return

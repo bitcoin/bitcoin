@@ -391,7 +391,7 @@ bool CheckStakeKernelHash(unsigned int nBits, const CBlock& blockFrom, unsigned 
 }
 
 // Scan given coins set for kernel solution
-bool ScanForStakeKernelHash(MetaMap &mapMeta, KernelSearchSettings &settings, CoinsSet::value_type &kernelcoin, unsigned int &nTimeTx, unsigned int &nBlockTime)
+bool ScanForStakeKernelHash(MetaMap &mapMeta, KernelSearchSettings &settings, CoinsSet::value_type &kernelcoin, unsigned int &nTimeTx, unsigned int &nBlockTime, uint64 &nKernelsTried, uint64 &nCoinDaysTried)
 {
     uint256 hashProofOfStake = 0;
 
@@ -441,6 +441,10 @@ bool ScanForStakeKernelHash(MetaMap &mapMeta, KernelSearchSettings &settings, Co
 
             // Calculate kernel hash
             hashProofOfStake = Hash(ss.begin(), ss.end());
+
+            // Update statistics
+            nKernelsTried += 1;
+            nCoinDaysTried += bnCoinDayWeight.getuint64();
 
             if (bnTargetProofOfStake >= CBigNum(hashProofOfStake))
             {

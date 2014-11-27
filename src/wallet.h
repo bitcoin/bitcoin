@@ -84,6 +84,10 @@ private:
     // selected coins metadata
     std::map<std::pair<uint256, unsigned int>, std::pair<std::pair<CTxIndex, std::pair<const CWalletTx*,unsigned int> >, std::pair<CBlock, uint64> > > mapMeta;
 
+    // stake mining statistics
+    uint64 nKernelsTried;
+    uint64 nCoinDaysTried;
+
 public:
     mutable CCriticalSection cs_wallet;
 
@@ -106,6 +110,8 @@ public:
         nMasterKeyMaxID = 0;
         pwalletdbEncryption = NULL;
         nOrderPosNext = 0;
+        nKernelsTried = 0;
+        nCoinDaysTried = 0;
     }
     CWallet(std::string strWalletFileIn)
     {
@@ -116,6 +122,8 @@ public:
         nMasterKeyMaxID = 0;
         pwalletdbEncryption = NULL;
         nOrderPosNext = 0;
+        nKernelsTried = 0;
+        nCoinDaysTried = 0;
     }
 
     std::map<uint256, CWalletTx> mapWallet;
@@ -203,7 +211,7 @@ public:
     bool CreateTransaction(CScript scriptPubKey, int64 nValue, CWalletTx& wtxNew, CReserveKey& reservekey, int64& nFeeRet, const CCoinControl *coinControl=NULL);
     bool CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey);
 
-    bool GetStakeWeight(const CKeyStore& keystore, uint64& nMinWeight, uint64& nMaxWeight, uint64& nWeight);
+    void GetStakeStats(float &nKernelsRate, float &nCoinDaysRate);
     void GetStakeWeightFromValue(const int64& nTime, const int64& nValue, uint64& nWeight);
     bool CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int64 nSearchInterval, CTransaction& txNew, CKey& key);
     bool MergeCoins(const int64& nAmount, const int64& nMinValue, const int64& nMaxValue, std::list<uint256>& listMerged);

@@ -671,10 +671,10 @@ void BitcoinGUI::updateMining()
         return;
     }
 
-    uint64 nMinWeight = 0, nMaxWeight = 0, nTotalWeight = 0;
-    walletModel->getStakeWeight(nMinWeight, nMaxWeight, nTotalWeight);
+    float nKernelsRate = 0, nCoinDaysRate = 0;
+    walletModel->getStakeStats(nKernelsRate, nCoinDaysRate);
 
-    if (nTotalWeight > 0)
+    if (nKernelsRate > 0)
     {
         labelMiningIcon->setPixmap(QIcon(":/icons/mining_active").pixmap(STATUSBAR_ICONSIZE,STATUSBAR_ICONSIZE));
 
@@ -697,7 +697,7 @@ void BitcoinGUI::updateMining()
         labelMiningIcon->setToolTip(tr("Stake miner is active\nYour current stake weight is %1\nNetwork weight is %2\nAverage block generation time is %3").arg(nTotalWeight).arg(dNetworkWeight).arg(msg));
 */
 
-        labelMiningIcon->setToolTip(tr("Stake miner is active\nYour current stake weight is %1\nNetwork weight is %2").arg(nTotalWeight).arg(nNetworkWeight));
+        labelMiningIcon->setToolTip(tr("Stake miner is active\nKernel rate is %1 k/s\nCD rate is %2 CD/s\nNetwork weight is %3").arg(nKernelsRate).arg(nCoinDaysRate).arg(nNetworkWeight));
     }
     else
         labelMiningIcon->setToolTip(tr("No suitable inputs were found"));
