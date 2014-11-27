@@ -23,23 +23,13 @@
 
 static int count = 64;
 
-/***** NUM TESTS *****/
-
-void random_num_negate(secp256k1_num_t *num) {
-    if (secp256k1_rand32() & 1)
-        secp256k1_num_negate(num);
-}
-
 void random_field_element_test(secp256k1_fe_t *fe) {
     do {
         unsigned char b32[32];
         secp256k1_rand256_test(b32);
-        secp256k1_num_t num;
-        secp256k1_num_set_bin(&num, b32, 32);
-        if (secp256k1_num_cmp(&num, &secp256k1_fe_consts->p) >= 0)
-            continue;
-        VERIFY_CHECK(secp256k1_fe_set_b32(fe, b32));
-        break;
+        if (secp256k1_fe_set_b32(fe, b32)) {
+            break;
+        }
     } while(1);
 }
 
@@ -75,19 +65,6 @@ void random_group_element_jacobian_test(secp256k1_gej_t *gej, const secp256k1_ge
     gej->infinity = ge->infinity;
 }
 
-void random_num_order_test(secp256k1_num_t *num) {
-    do {
-        unsigned char b32[32];
-        secp256k1_rand256_test(b32);
-        secp256k1_num_set_bin(num, b32, 32);
-        if (secp256k1_num_is_zero(num))
-            continue;
-        if (secp256k1_num_cmp(num, &secp256k1_ge_consts->order) >= 0)
-            continue;
-        break;
-    } while(1);
-}
-
 void random_scalar_order_test(secp256k1_scalar_t *num) {
     do {
         unsigned char b32[32];
@@ -112,17 +89,23 @@ void random_scalar_order(secp256k1_scalar_t *num) {
     } while(1);
 }
 
+/***** NUM TESTS *****/
+
+void random_num_negate(secp256k1_num_t *num) {
+    if (secp256k1_rand32() & 1)
+        secp256k1_num_negate(num);
+}
+
+void random_num_order_test(secp256k1_num_t *num) {
+    secp256k1_scalar_t sc;
+    random_scalar_order_test(&sc);
+    secp256k1_scalar_get_num(num, &sc);
+}
+
 void random_num_order(secp256k1_num_t *num) {
-    do {
-        unsigned char b32[32];
-        secp256k1_rand256(b32);
-        secp256k1_num_set_bin(num, b32, 32);
-        if (secp256k1_num_is_zero(num))
-            continue;
-        if (secp256k1_num_cmp(num, &secp256k1_ge_consts->order) >= 0)
-            continue;
-        break;
-    } while(1);
+    secp256k1_scalar_t sc;
+    random_scalar_order(&sc);
+    secp256k1_scalar_get_num(num, &sc);
 }
 
 void test_num_get_set_bin(void) {
@@ -208,29 +191,27 @@ void scalar_test(void) {
     unsigned char c[32];
 
     /* Set 's' to a random scalar, with value 'snum'. */
-    secp256k1_rand256_test(c);
     secp256k1_scalar_t s;
-    secp256k1_scalar_set_b32(&s, c, NULL);
-    secp256k1_num_t snum;
-    secp256k1_num_set_bin(&snum, c, 32);
-    secp256k1_num_mod(&snum, &secp256k1_ge_consts->order);
+    random_scalar_order_test(&s);
 
     /* Set 's1' to a random scalar, with value 's1num'. */
-    secp256k1_rand256_test(c);
     secp256k1_scalar_t s1;
-    secp256k1_scalar_set_b32(&s1, c, NULL);
-    secp256k1_num_t s1num;
-    secp256k1_num_set_bin(&s1num, c, 32);
-    secp256k1_num_mod(&s1num, &secp256k1_ge_consts->order);
+    random_scalar_order_test(&s1);
 
     /* Set 's2' to a random scalar, with value 'snum2', and byte array representation 'c'. */
-    secp256k1_rand256_test(c);
     secp256k1_scalar_t s2;
-    int overflow = 0;
-    secp256k1_scalar_set_b32(&s2, c, &overflow);
-    secp256k1_num_t s2num;
-    secp256k1_num_set_bin(&s2num, c, 32);
-    secp256k1_num_mod(&s2num, &secp256k1_ge_consts->order);
+    random_scalar_order_test(&s2);
+    secp256k1_scalar_get_b32(c, &s2);
+
+    secp256k1_num_t snum, s1num, s2num;
+    secp256k1_scalar_get_num(&snum, &s);
+    secp256k1_scalar_get_num(&s1num, &s1);
+    secp256k1_scalar_get_num(&s2num, &s2);
+
+    secp256k1_num_t order;
+    secp256k1_scalar_order_get_num(&order);
+    secp256k1_num_t half_order = order;
+    secp256k1_num_shift(&half_order, 1);
 
     {
         /* Test that fetching groups of 4 bits from a scalar and recursing n(i)=16*n(i-1)+p(i) reconstructs it. */
@@ -269,21 +250,10 @@ void scalar_test(void) {
     }
 
     {
-        /* Test that get_b32 returns the same as get_bin on the number. */
-        unsigned char r1[32];
-        secp256k1_scalar_get_b32(r1, &s2);
-        unsigned char r2[32];
-        secp256k1_num_get_bin(r2, 32, &s2num);
-        CHECK(memcmp(r1, r2, 32) == 0);
-        /* If no overflow occurred when assigning, it should also be equal to the original byte array. */
-        CHECK((memcmp(r1, c, 32) == 0) == (overflow == 0));
-    }
-
-    {
         /* Test that adding the scalars together is equal to adding their numbers together modulo the order. */
         secp256k1_num_t rnum;
         secp256k1_num_add(&rnum, &snum, &s2num);
-        secp256k1_num_mod(&rnum, &secp256k1_ge_consts->order);
+        secp256k1_num_mod(&rnum, &order);
         secp256k1_scalar_t r;
         secp256k1_scalar_add(&r, &s, &s2);
         secp256k1_num_t r2num;
@@ -295,7 +265,7 @@ void scalar_test(void) {
         /* Test that multipying the scalars is equal to multiplying their numbers modulo the order. */
         secp256k1_num_t rnum;
         secp256k1_num_mul(&rnum, &snum, &s2num);
-        secp256k1_num_mod(&rnum, &secp256k1_ge_consts->order);
+        secp256k1_num_mod(&rnum, &order);
         secp256k1_scalar_t r;
         secp256k1_scalar_mul(&r, &s, &s2);
         secp256k1_num_t r2num;
@@ -312,14 +282,14 @@ void scalar_test(void) {
         /* Check that comparison with zero matches comparison with zero on the number. */
         CHECK(secp256k1_num_is_zero(&snum) == secp256k1_scalar_is_zero(&s));
         /* Check that comparison with the half order is equal to testing for high scalar. */
-        CHECK(secp256k1_scalar_is_high(&s) == (secp256k1_num_cmp(&snum, &secp256k1_ge_consts->half_order) > 0));
+        CHECK(secp256k1_scalar_is_high(&s) == (secp256k1_num_cmp(&snum, &half_order) > 0));
         secp256k1_scalar_t neg;
         secp256k1_scalar_negate(&neg, &s);
         secp256k1_num_t negnum;
-        secp256k1_num_sub(&negnum, &secp256k1_ge_consts->order, &snum);
-        secp256k1_num_mod(&negnum, &secp256k1_ge_consts->order);
+        secp256k1_num_sub(&negnum, &order, &snum);
+        secp256k1_num_mod(&negnum, &order);
         /* Check that comparison with the half order is equal to testing for high scalar after negation. */
-        CHECK(secp256k1_scalar_is_high(&neg) == (secp256k1_num_cmp(&negnum, &secp256k1_ge_consts->half_order) > 0));
+        CHECK(secp256k1_scalar_is_high(&neg) == (secp256k1_num_cmp(&negnum, &half_order) > 0));
         /* Negating should change the high property, unless the value was already zero. */
         CHECK((secp256k1_scalar_is_high(&s) == secp256k1_scalar_is_high(&neg)) == secp256k1_scalar_is_zero(&s));
         secp256k1_num_t negnum2;
@@ -340,7 +310,7 @@ void scalar_test(void) {
             secp256k1_scalar_t inv;
             secp256k1_scalar_inverse(&inv, &s);
             secp256k1_num_t invnum;
-            secp256k1_num_mod_inverse(&invnum, &snum, &secp256k1_ge_consts->order);
+            secp256k1_num_mod_inverse(&invnum, &snum, &order);
             secp256k1_num_t invnum2;
             secp256k1_scalar_get_num(&invnum2, &inv);
             CHECK(secp256k1_num_eq(&invnum, &invnum2));
@@ -430,6 +400,28 @@ void scalar_test(void) {
 void run_scalar_tests(void) {
     for (int i = 0; i < 128 * count; i++) {
         scalar_test();
+    }
+
+    {
+        // (-1)+1 should be zero.
+        secp256k1_scalar_t s, o;
+        secp256k1_scalar_set_int(&s, 1);
+        secp256k1_scalar_negate(&o, &s);
+        secp256k1_scalar_add(&o, &o, &s);
+        CHECK(secp256k1_scalar_is_zero(&o));
+    }
+
+    {
+        // A scalar with value of the curve order should be 0.
+        secp256k1_num_t order;
+        secp256k1_scalar_order_get_num(&order);
+        unsigned char bin[32];
+        secp256k1_num_get_bin(bin, 32, &order);
+        secp256k1_scalar_t zero;
+        int overflow = 0;
+        secp256k1_scalar_set_b32(&zero, bin, &overflow);
+        CHECK(overflow == 1);
+        CHECK(secp256k1_scalar_is_zero(&zero));
     }
 }
 
@@ -868,11 +860,11 @@ void test_ecdsa_end_to_end(void) {
 
     /* Generate a random key and message. */
     {
-        secp256k1_num_t msg, key;
-        random_num_order_test(&msg);
-        random_num_order_test(&key);
-        secp256k1_num_get_bin(privkey, 32, &key);
-        secp256k1_num_get_bin(message, 32, &msg);
+        secp256k1_scalar_t msg, key;
+        random_scalar_order_test(&msg);
+        random_scalar_order_test(&key);
+        secp256k1_scalar_get_b32(privkey, &key);
+        secp256k1_scalar_get_b32(message, &msg);
     }
 
     /* Construct and verify corresponding public key. */

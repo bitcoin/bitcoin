@@ -75,6 +75,9 @@ static int secp256k1_scalar_is_high(const secp256k1_scalar_t *a);
 /** Convert a scalar to a number. */
 static void secp256k1_scalar_get_num(secp256k1_num_t *r, const secp256k1_scalar_t *a);
 
+/** Get the order of the group as a number. */
+static void secp256k1_scalar_order_get_num(secp256k1_num_t *r);
+
 /** Compare two scalars. */
 static int secp256k1_scalar_eq(const secp256k1_scalar_t *a, const secp256k1_scalar_t *b);
 

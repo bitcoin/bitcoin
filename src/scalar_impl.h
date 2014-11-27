@@ -25,6 +25,7 @@
 #endif
 
 typedef struct {
+    secp256k1_num_t order;
 #ifdef USE_ENDOMORPHISM
     secp256k1_num_t a1b2, b1, a2;
 #endif
@@ -39,6 +40,13 @@ static void secp256k1_scalar_start(void) {
     /* Allocate. */
     secp256k1_scalar_consts_t *ret = (secp256k1_scalar_consts_t*)malloc(sizeof(secp256k1_scalar_consts_t));
 
+    static const unsigned char secp256k1_scalar_consts_order[] = {
+        0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
+        0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFE,
+        0xBA,0xAE,0xDC,0xE6,0xAF,0x48,0xA0,0x3B,
+        0xBF,0xD2,0x5E,0x8C,0xD0,0x36,0x41,0x41
+    };
+    secp256k1_num_set_bin(&ret->order, secp256k1_scalar_consts_order, sizeof(secp256k1_scalar_consts_order));
 #ifdef USE_ENDOMORPHISM
     static const unsigned char secp256k1_scalar_consts_a1b2[] = {
         0x30,0x86,0xd2,0x21,0xa7,0xd4,0x6b,0xcd,
@@ -78,6 +86,9 @@ static void secp256k1_scalar_get_num(secp256k1_num_t *r, const secp256k1_scalar_
     secp256k1_num_set_bin(r, c, 32);
 }
 
+static void secp256k1_scalar_order_get_num(secp256k1_num_t *r) {
+    *r = secp256k1_scalar_consts->order;
+}
 
 static void secp256k1_scalar_inverse(secp256k1_scalar_t *r, const secp256k1_scalar_t *x) {
     /* First compute x ^ (2^N - 1) for some values of N. */
@@ -238,7 +249,7 @@ static void secp256k1_scalar_inverse_var(secp256k1_scalar_t *r, const secp256k1_
     secp256k1_scalar_get_b32(b, x);
     secp256k1_num_t n;
     secp256k1_num_set_bin(&n, b, 32);
-    secp256k1_num_mod_inverse(&n, &n, &secp256k1_ge_consts->order);
+    secp256k1_num_mod_inverse(&n, &n, &secp256k1_scalar_consts->order);
     secp256k1_num_get_bin(b, 32, &n);
     secp256k1_scalar_set_b32(r, b, NULL);
 #else
@@ -256,19 +267,18 @@ static void secp256k1_scalar_split_lambda_var(secp256k1_scalar_t *r1, secp256k1_
     secp256k1_num_t rn1, rn2;
 
     const secp256k1_scalar_consts_t *c = secp256k1_scalar_consts;
-    const secp256k1_num_t *order = &secp256k1_ge_consts->order;
     secp256k1_num_t bnc1, bnc2, bnt1, bnt2, bnn2;
 
-    secp256k1_num_copy(&bnn2, order);
+    secp256k1_num_copy(&bnn2, &c->order);
     secp256k1_num_shift(&bnn2, 1);
 
     secp256k1_num_mul(&bnc1, &na, &c->a1b2);
     secp256k1_num_add(&bnc1, &bnc1, &bnn2);
-    secp256k1_num_div(&bnc1, &bnc1, order);
+    secp256k1_num_div(&bnc1, &bnc1, &c->order);
 
     secp256k1_num_mul(&bnc2, &na, &c->b1);
     secp256k1_num_add(&bnc2, &bnc2, &bnn2);
-    secp256k1_num_div(&bnc2, &bnc2, order);
+    secp256k1_num_div(&bnc2, &bnc2, &c->order);
 
     secp256k1_num_mul(&bnt1, &bnc1, &c->a1b2);
     secp256k1_num_mul(&bnt2, &bnc2, &c->a2);
