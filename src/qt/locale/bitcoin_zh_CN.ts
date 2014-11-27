@@ -2629,8 +2629,8 @@ Address: %4
 </translation>
     </message>
     <message>
-        <source>Listen for connections on &lt;port&gt; (default: 8333 or testnet: 18333)</source>
-        <translation>监听端口连接 &lt;port&gt;（缺省: 8333 或测试网络: 18333）</translation>
+        <source>Listen for connections on &lt;port&gt; (default: 9999 or testnet: 19999)</source>
+        <translation>监听端口连接 &lt;port&gt;（缺省: 9999 或测试网络: 19999）</translation>
     </message>
     <message>
         <source>Maintain at most &lt;n&gt; connections to peers (default: 125)</source>
@@ -2657,8 +2657,8 @@ Address: %4
         <translation>设置RPC监听端口%u时发生错误, IPv4:%s</translation>
     </message>
     <message>
-        <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 8332 or testnet: 18332)</source>
-        <translation>JSON-RPC连接监听端口&lt;port&gt; (缺省：8332　testnet：18332)</translation>
+        <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 9998 or testnet: 19998)</source>
+        <translation>JSON-RPC连接监听端口&lt;port&gt; (缺省：9998　testnet：19998)</translation>
     </message>
     <message>
         <source>Accept command line and JSON-RPC commands</source>
@@ -2845,8 +2845,8 @@ rpcpassword=%s
         <translation>通过Socks代理连接:</translation>
     </message>
     <message>
-        <source>Connect to JSON-RPC on &lt;port&gt; (default: 8332 or testnet: 18332)</source>
-        <translation>连接到 JSON-RPC 于 &lt;port&gt;（默认: 8332，或测试网络: 18332）</translation>
+        <source>Connect to JSON-RPC on &lt;port&gt; (default: 9998 or testnet: 19998)</source>
+        <translation>连接到 JSON-RPC 于 &lt;port&gt;（默认: 9998，或测试网络: 19998）</translation>
     </message>
     <message>
         <source>Connection options:</source>

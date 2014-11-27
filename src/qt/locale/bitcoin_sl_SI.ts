@@ -1924,8 +1924,8 @@ Naslov: %4
         <translation>Določi podatkovni imenik</translation>
     </message>
     <message>
-        <source>Listen for connections on &lt;port&gt; (default: 8333 or testnet: 18333)</source>
-        <translation>Sprejmi povezave na &lt;port&gt; (privzeta vrata: 8333 ali testnet: 18333)</translation>
+        <source>Listen for connections on &lt;port&gt; (default: 9999 or testnet: 19999)</source>
+        <translation>Sprejmi povezave na &lt;port&gt; (privzeta vrata: 9999 ali testnet: 19999)</translation>
     </message>
     <message>
         <source>Maintain at most &lt;n&gt; connections to peers (default: 125)</source>
