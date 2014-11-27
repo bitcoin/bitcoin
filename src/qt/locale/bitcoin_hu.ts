@@ -2102,8 +2102,8 @@ Cím: %4
 </translation>
     </message>
     <message>
-        <source>Specify configuration file (default: bitcoin.conf)</source>
-        <translation>Konfigurációs fájl (alapértelmezett: bitcoin.conf)
+        <source>Specify configuration file (default: darkcoin.conf)</source>
+        <translation>Konfigurációs fájl (alapértelmezett: darkcoin.conf)
 </translation>
     </message>
     <message>

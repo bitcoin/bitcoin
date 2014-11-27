@@ -1,6 +1,6 @@
 Mac OS X Build Instructions and Notes
 ====================================
-This guide will show you how to build bitcoind(headless client) for OSX.
+This guide will show you how to build darkcoind(headless client) for OSX.
 
 Notes
 -----
@@ -53,7 +53,7 @@ If not, you can ensure that the Homebrew OpenSSL is correctly linked by running
 
 Rerunning "openssl version" should now return the correct version. If it
 doesn't, make sure `/usr/local/bin` comes before `/usr/bin` in your
-PATH. 
+PATH.
 
 #### Installing berkeley-db4 using Homebrew
 
@@ -61,7 +61,7 @@ The homebrew package for berkeley-db4 has been broken for some time.  It will in
 
 Running this command takes you into brew's interactive mode, which allows you to configure, make, and install by hand:
 ```
-$ brew install https://raw.github.com/mxcl/homebrew/master/Library/Formula/berkeley-db4.rb -–without-java 
+$ brew install https://raw.github.com/mxcl/homebrew/master/Library/Formula/berkeley-db4.rb -–without-java
 ```
 
 These rest of these commands are run inside brew interactive mode:
@@ -73,19 +73,19 @@ These rest of these commands are run inside brew interactive mode:
 /private/tmp/berkeley-db4-UGpd0O $ exit
 ```
 
-After exiting, you'll get a warning that the install is keg-only, which means it wasn't symlinked to `/usr/local`.  You don't need it to link it to build bitcoin, but if you want to, here's how:
+After exiting, you'll get a warning that the install is keg-only, which means it wasn't symlinked to `/usr/local`.  You don't need it to link it to build darkcoin, but if you want to, here's how:
 
     $ brew --force link berkeley-db4
 
 
-### Building `bitcoind`
+### Building `darkcoind`
 
 1. Clone the github tree to get the source code and go into the directory.
 
-        git clone https://github.com/bitcoin/bitcoin.git
-        cd bitcoin
+        git clone https://github.com/darkcoin/darkcoin.git
+        cd darkcoin
 
-2.  Build bitcoind:
+2.  Build darkcoind:
 
         ./autogen.sh
         ./configure
@@ -97,11 +97,11 @@ After exiting, you'll get a warning that the install is keg-only, which means it
 
 Creating a release build
 ------------------------
-You can ignore this section if you are building `bitcoind` for your own use.
+You can ignore this section if you are building `darkcoind` for your own use.
 
-bitcoind/bitcoin-cli binaries are not included in the Bitcoin-Qt.app bundle.
+darkcoind/darkcoin-cli binaries are not included in the Bitcoin-Qt.app bundle.
 
-If you are building `bitcoind` or `Bitcoin-Qt` for others, your build machine should be set up
+If you are building `darkcoind` or `Bitcoin-Qt` for others, your build machine should be set up
 as follows for maximum compatibility:
 
 All dependencies should be compiled with these flags:
@@ -116,23 +116,23 @@ bundle is packaged and signed to create the .dmg disk image that is distributed.
 Running
 -------
 
-It's now available at `./bitcoind`, provided that you are still in the `src`
+It's now available at `./darkcoind`, provided that you are still in the `src`
 directory. We have to first create the RPC configuration file, though.
 
-Run `./bitcoind` to get the filename where it should be put, or just try these
+Run `./darkcoind` to get the filename where it should be put, or just try these
 commands:
 
-    echo -e "rpcuser=bitcoinrpc\nrpcpassword=$(xxd -l 16 -p /dev/urandom)" > "/Users/${USER}/Library/Application Support/Bitcoin/bitcoin.conf"
-    chmod 600 "/Users/${USER}/Library/Application Support/Bitcoin/bitcoin.conf"
+    echo -e "rpcuser=darkcoinrpc\nrpcpassword=$(xxd -l 16 -p /dev/urandom)" > "/Users/${USER}/Library/Application Support/Darkcoin/darkcoin.conf"
+    chmod 600 "/Users/${USER}/Library/Application Support/Darkcoin/darkcoin.conf"
 
 When next you run it, it will start downloading the blockchain, but it won't
 output anything while it's doing this. This process may take several hours;
 you can monitor its process by looking at the debug.log file, like this:
 
-    tail -f $HOME/Library/Application\ Support/Bitcoin/debug.log
+    tail -f $HOME/Library/Application\ Support/Darkcoin/debug.log
 
 Other commands:
 
-    ./bitcoind -daemon # to start the bitcoin daemon.
-    ./bitcoin-cli --help  # for a list of command-line options.
-    ./bitcoin-cli help    # When the daemon is running, to get a list of RPC commands
+    ./darkcoind -daemon # to start the darkcoin daemon.
+    ./darkcoin-cli --help  # for a list of command-line options.
+    ./darkcoin-cli help    # When the daemon is running, to get a list of RPC commands

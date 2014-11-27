@@ -1514,8 +1514,8 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>Опции:</translation>
     </message>
     <message>
-        <source>Specify configuration file (default: bitcoin.conf)</source>
-        <translation>Задаване на файл с настройки (по подразбиране bitcoin.conf)</translation>
+        <source>Specify configuration file (default: darkcoin.conf)</source>
+        <translation>Задаване на файл с настройки (по подразбиране darkcoin.conf)</translation>
     </message>
     <message>
         <source>Specify data directory</source>

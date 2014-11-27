@@ -1605,12 +1605,12 @@ Inscriptio: %4
         <translation>Optiones:</translation>
     </message>
     <message>
-        <source>Specify configuration file (default: bitcoin.conf)</source>
-        <translation>Specifica configurationis plicam (praedefinitum: bitcoin.conf)</translation>
+        <source>Specify configuration file (default: darkcoin.conf)</source>
+        <translation>Specifica configurationis plicam (praedefinitum: darkcoin.conf)</translation>
     </message>
     <message>
         <source>Specify pid file (default: bitcoind.pid)</source>
-        <translation>Specifica pid plicam (praedefinitum: bitcoin.pid)</translation>
+        <translation>Specifica pid plicam (praedefinitum: darkcoin.pid)</translation>
     </message>
     <message>
         <source>Specify data directory</source>

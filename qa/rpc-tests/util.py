@@ -1,4 +1,5 @@
 # Copyright (c) 2014 The Bitcoin Core developers
+# Copyright (c) 2014 vertoe & the Darkcoin developers
 # Distributed under the MIT/X11 software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #
@@ -53,7 +54,7 @@ def sync_mempools(rpc_connections):
         if num_match == len(rpc_connections):
             break
         time.sleep(1)
-        
+
 
 bitcoind_processes = []
 
@@ -61,26 +62,26 @@ def initialize_chain(test_dir):
     """
     Create (or copy from cache) a 200-block-long chain and
     4 wallets.
-    bitcoind and bitcoin-cli must be in search path.
+    darkcoind and darkcoin-cli must be in search path.
     """
 
     if not os.path.isdir(os.path.join("cache", "node0")):
         devnull = open("/dev/null", "w+")
-        # Create cache directories, run bitcoinds:
+        # Create cache directories, run darkcoinds:
         for i in range(4):
             datadir = os.path.join("cache", "node"+str(i))
             os.makedirs(datadir)
-            with open(os.path.join(datadir, "bitcoin.conf"), 'w') as f:
+            with open(os.path.join(datadir, "darkcoin.conf"), 'w') as f:
                 f.write("regtest=1\n");
                 f.write("rpcuser=rt\n");
                 f.write("rpcpassword=rt\n");
                 f.write("port="+str(START_P2P_PORT+i)+"\n");
                 f.write("rpcport="+str(START_RPC_PORT+i)+"\n");
-            args = [ "bitcoind", "-keypool=1", "-datadir="+datadir ]
+            args = [ "darkcoind", "-keypool=1", "-datadir="+datadir ]
             if i > 0:
                 args.append("-connect=127.0.0.1:"+str(START_P2P_PORT))
             bitcoind_processes.append(subprocess.Popen(args))
-            subprocess.check_call([ "bitcoin-cli", "-datadir="+datadir,
+            subprocess.check_call([ "darkcoin-cli", "-datadir="+datadir,
                                     "-rpcwait", "getblockcount"], stdout=devnull)
         devnull.close()
         rpcs = []
@@ -113,13 +114,13 @@ def initialize_chain(test_dir):
         shutil.copytree(from_dir, to_dir)
 
 def start_nodes(num_nodes, dir):
-    # Start bitcoinds, and wait for RPC interface to be up and running:
+    # Start darkcoinds, and wait for RPC interface to be up and running:
     devnull = open("/dev/null", "w+")
     for i in range(num_nodes):
         datadir = os.path.join(dir, "node"+str(i))
-        args = [ "bitcoind", "-datadir="+datadir ]
+        args = [ "darkcoind", "-datadir="+datadir ]
         bitcoind_processes.append(subprocess.Popen(args))
-        subprocess.check_call([ "bitcoin-cli", "-datadir="+datadir,
+        subprocess.check_call([ "darkcoin-cli", "-datadir="+datadir,
                                   "-rpcwait", "getblockcount"], stdout=devnull)
     devnull.close()
     # Create&return JSON-RPC connections

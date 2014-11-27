@@ -1912,12 +1912,12 @@ Naslov: %4
         <translation>Možnosti:</translation>
     </message>
     <message>
-        <source>Specify configuration file (default: bitcoin.conf)</source>
-        <translation>Določi datoteko z nastavitvami (privzeta: bitcoin.conf)</translation>
+        <source>Specify configuration file (default: darkcoin.conf)</source>
+        <translation>Določi datoteko z nastavitvami (privzeta: darkcoin.conf)</translation>
     </message>
     <message>
         <source>Specify pid file (default: bitcoind.pid)</source>
-        <translation>Določi pid datoteko (privzeta: bitcoin.pid)</translation>
+        <translation>Določi pid datoteko (privzeta: darkcoin.pid)</translation>
     </message>
     <message>
         <source>Specify data directory</source>

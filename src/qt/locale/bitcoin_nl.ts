@@ -2610,8 +2610,8 @@ Adres: %4
         <translation>Opties:</translation>
     </message>
     <message>
-        <source>Specify configuration file (default: bitcoin.conf)</source>
-        <translation>Specificeer configuratiebestand (standaard: bitcoin.conf)
+        <source>Specify configuration file (default: darkcoin.conf)</source>
+        <translation>Specificeer configuratiebestand (standaard: darkcoin.conf)
 </translation>
     </message>
     <message>

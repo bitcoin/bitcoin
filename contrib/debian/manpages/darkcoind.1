@@ -1,8 +1,8 @@
-.TH BITCOIND "1" "January 2011" "bitcoind 3.19" 
+.TH BITCOIND "1" "January 2011" "bitcoind 3.19"
 .SH NAME
 bitcoind \- peer-to-peer network based digital currency
 .SH SYNOPSIS
-bitcoin [options] <command> [params]  
+bitcoin [options] <command> [params]
 .TP
 bitcoin [options] help <command> \- Get help for a command
 .SH DESCRIPTION
@@ -13,7 +13,7 @@ Bitcoins can be sent easily through the Internet, without having to trust middle
 .SH OPTIONS
 .TP
 \fB\-conf=\fR<file>
-Specify configuration file (default: bitcoin.conf)
+Specify configuration file (default: darkcoin.conf)
 .TP
 \fB\-gen\fR
 Generate coins
@@ -184,13 +184,13 @@ Moves funds between accounts.
 .TP
 \fBsendfrom* <'account'> <'bitcoinaddress'> <'amount'> ['minconf=1'] ['comment'] ['comment-to']\fR
 Sends amount from account's balance to 'bitcoinaddress'. This method will fail if there is less than amount bitcoins with ['minconf'] confirmations in the account's balance (unless account is the empty-string-named default account; it behaves like the *sendtoaddress* method). Returns transaction ID on success.
-.TP     
+.TP
 \fBsendtoaddress 'bitcoinaddress' 'amount' ['comment'] ['comment-to']\fR
 Sends amount from the server's available balance to 'bitcoinaddress'. amount is a real and is rounded to the nearest 0.01. Returns transaction id on success.
-.TP    
+.TP
 \fBstop\fR
 Stops the bitcoin server.
-.TP    
+.TP
 \fBvalidateaddress 'bitcoinaddress'\fR
 Checks that 'bitcoinaddress' looks like a proper bitcoin address. Returns an object containing:
 
@@ -201,7 +201,7 @@ Checks that 'bitcoinaddress' looks like a proper bitcoin address. Returns an obj
     *note: ismine and address are only returned if the address is valid.
 
 .SH "SEE ALSO"
-bitcoin.conf(5)
+darkcoin.conf(5)
 .SH AUTHOR
 This manual page was written by Micah Anderson <micah@debian.org> for the Debian system (but may be used by others). Permission is granted to copy, distribute and/or modify this document under the terms of the GNU General Public License, Version 3 or any later version published by the Free Software Foundation.
 

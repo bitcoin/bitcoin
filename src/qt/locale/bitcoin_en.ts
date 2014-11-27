@@ -3341,8 +3341,8 @@ Address: %4
     </message>
     <message>
         <location line="+32"/>
-        <source>Specify configuration file (default: bitcoin.conf)</source>
-        <translation>Specify configuration file (default: bitcoin.conf)</translation>
+        <source>Specify configuration file (default: darkcoin.conf)</source>
+        <translation>Specify configuration file (default: darkcoin.conf)</translation>
     </message>
     <message>
         <location line="+3"/>

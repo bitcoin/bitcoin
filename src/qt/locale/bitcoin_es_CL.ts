@@ -1356,13 +1356,13 @@ Dirección: %4</translation>
 </translation>
     </message>
     <message>
-        <source>Specify configuration file (default: bitcoin.conf)</source>
-        <translation>Especifica archivo de configuración (predeterminado: bitcoin.conf)
+        <source>Specify configuration file (default: darkcoin.conf)</source>
+        <translation>Especifica archivo de configuración (predeterminado: darkcoin.conf)
 </translation>
     </message>
     <message>
         <source>Specify pid file (default: bitcoind.pid)</source>
-        <translation>Especifica archivo pid (predeterminado: bitcoin.pid)
+        <translation>Especifica archivo pid (predeterminado: darkcoin.pid)
 </translation>
     </message>
     <message>
