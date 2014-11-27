@@ -1721,12 +1721,12 @@ Address: %4
         <translation>گزینه‌ها:</translation>
     </message>
     <message>
-        <source>Specify configuration file (default: bitcoin.conf)</source>
-        <translation>مشخص کردن فایل پیکربندی (پیش‌فرض: bitcoin.conf)</translation>
+        <source>Specify configuration file (default: darkcoin.conf)</source>
+        <translation>مشخص کردن فایل پیکربندی (پیش‌فرض: darkcoin.conf)</translation>
     </message>
     <message>
         <source>Specify pid file (default: bitcoind.pid)</source>
-        <translation>مشخص کردن فایل شناسهٔ پردازش - pid - (پیش‌فرض: bitcoin.pid)</translation>
+        <translation>مشخص کردن فایل شناسهٔ پردازش - pid - (پیش‌فرض: darkcoin.pid)</translation>
     </message>
     <message>
         <source>Specify data directory</source>

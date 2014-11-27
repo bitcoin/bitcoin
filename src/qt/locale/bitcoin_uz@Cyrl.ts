@@ -938,8 +938,8 @@ MIT/X11 дастурий таъминот лицензияси остида та
         <translation>Танламалар:</translation>
     </message>
     <message>
-        <source>Specify configuration file (default: bitcoin.conf)</source>
-        <translation>Мослаш файлини кўрсатинг (default: bitcoin.conf)</translation>
+        <source>Specify configuration file (default: darkcoin.conf)</source>
+        <translation>Мослаш файлини кўрсатинг (default: darkcoin.conf)</translation>
     </message>
     <message>
         <source>Specify pid file (default: bitcoind.pid)</source>

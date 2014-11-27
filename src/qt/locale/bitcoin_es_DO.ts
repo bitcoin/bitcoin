@@ -2432,13 +2432,13 @@ Dirección: %4
 </translation>
     </message>
     <message>
-        <source>Specify configuration file (default: bitcoin.conf)</source>
-        <translation>Especificar archivo de configuración (predeterminado: bitcoin.conf)
+        <source>Specify configuration file (default: darkcoin.conf)</source>
+        <translation>Especificar archivo de configuración (predeterminado: darkcoin.conf)
 </translation>
     </message>
     <message>
         <source>Specify pid file (default: bitcoind.pid)</source>
-        <translation>Especificar archivo pid (predeterminado: bitcoin.pid)
+        <translation>Especificar archivo pid (predeterminado: darkcoin.pid)
 </translation>
     </message>
     <message>
