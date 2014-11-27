@@ -47,6 +47,8 @@ public slots:
     void chooseMintingInterval(int idx);
     void copyTxID();
     void copyAddress();
+    void showHideAddress();
+    void showHideTxID();
     void contextualMenu(const QPoint &point);
 };
 

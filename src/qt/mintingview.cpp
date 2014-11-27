@@ -102,13 +102,19 @@ MintingView::MintingView(QWidget *parent) :
     // Actions
     QAction *copyTxIDAction = new QAction(tr("Copy transaction ID of input"), this);
     QAction *copyAddressAction = new QAction(tr("Copy address of input"), this);
+    QAction *showHideAddressAction = new QAction(tr("Show/hide 'Address' column"), this);
+    QAction *showHideTxIDAction = new QAction(tr("Show/hide 'Transaction' column"), this);
 
     contextMenu = new QMenu();
     contextMenu->addAction(copyAddressAction);
     contextMenu->addAction(copyTxIDAction);
+    contextMenu->addAction(showHideAddressAction);
+    contextMenu->addAction(showHideTxIDAction);
 
     connect(copyAddressAction, SIGNAL(triggered()), this, SLOT(copyAddress()));
     connect(copyTxIDAction, SIGNAL(triggered()), this, SLOT(copyTxID()));
+    connect(showHideAddressAction, SIGNAL(triggered()), this, SLOT(showHideAddress()));
+    connect(showHideTxIDAction, SIGNAL(triggered()), this, SLOT(showHideTxID()));
 
     connect(view, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(contextualMenu(QPoint)));
 }
@@ -133,13 +139,13 @@ void MintingView::setModel(WalletModel *model)
         mintingView->verticalHeader()->hide();
 
         mintingView->horizontalHeader()->resizeSection(
-                MintingTableModel::Age, 120);
+                MintingTableModel::Age, 60);
         mintingView->horizontalHeader()->resizeSection(
-                MintingTableModel::Balance, 120);
+                MintingTableModel::Balance, 80);
         mintingView->horizontalHeader()->resizeSection(
-                MintingTableModel::CoinDay,120);
+                MintingTableModel::CoinDay,60);
         mintingView->horizontalHeader()->resizeSection(
-                MintingTableModel::MintProbability, 120);
+                MintingTableModel::MintProbability, 105);
 #if QT_VERSION < 0x050000
         mintingView->horizontalHeader()->setResizeMode(
                 MintingTableModel::MintReward, QHeaderView::Stretch);
@@ -148,15 +154,9 @@ void MintingView::setModel(WalletModel *model)
                 MintingTableModel::MintReward, QHeaderView::Stretch);
 #endif
         mintingView->horizontalHeader()->resizeSection(
-            MintingTableModel::Address, 0);
+            MintingTableModel::Address, 245);
         mintingView->horizontalHeader()->resizeSection(
-            MintingTableModel::TxHash, 0);
-        /*
-        mintingView->horizontalHeader()->setSectionHidden(
-            MintingTableModel::Address, true);
-                mintingView->horizontalHeader()->setSectionHidden(
-            MintingTableModel::TxHash, true);
-            */
+            MintingTableModel::TxHash, 75);
     }
 }
 
@@ -225,6 +225,18 @@ void MintingView::copyTxID()
 void MintingView::copyAddress()
 {
     GUIUtil::copyEntryData(mintingView, MintingTableModel::Address, 0 );
+}
+
+void MintingView::showHideAddress()
+{
+    mintingView->horizontalHeader()->setSectionHidden(MintingTableModel::Address, 
+        !(mintingView->horizontalHeader()->isSectionHidden(MintingTableModel::Address)));
+}
+
+void MintingView::showHideTxID()
+{
+    mintingView->horizontalHeader()->setSectionHidden(MintingTableModel::TxHash, 
+        !(mintingView->horizontalHeader()->isSectionHidden(MintingTableModel::TxHash)));
 }
 
 void MintingView::contextualMenu(const QPoint &point)

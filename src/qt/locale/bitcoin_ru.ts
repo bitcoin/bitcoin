@@ -55,14 +55,24 @@
       <translation>90 дней</translation>
     </message>
     <message>
-      <location filename="../mintingview.cpp" line="101"/>
+      <location filename="../mintingview.cpp" line="103"/>
       <source>Copy transaction ID of input</source>
       <translation>Скопировать ID транзакции входа</translation>
     </message>
     <message>
-      <location filename="../mintingview.cpp" line="102"/>
+      <location filename="../mintingview.cpp" line="104"/>
       <source>Copy address of input</source>
       <translation>Скопировать адрес входа</translation>
+    </message>
+    <message>
+      <location filename="../mintingview.cpp" line="105"/>
+      <source>Show/hide 'Address' column</source>
+      <translation>Показать/скрыть столбец 'Адрес'</translation>
+    </message>
+    <message>
+      <location filename="../mintingview.cpp" line="106"/>
+      <source>Show/hide 'Transaction' column</source>
+      <translation>Показать/скрыть столбец 'Транзакция'</translation>
     </message>
     <message>
       <location filename="../mintingview.cpp" line="167"/>
