@@ -30,7 +30,8 @@ const char* bad_alloc::what() const throw()
 
 namespace __detail
 {
-struct _List_node_base {
+struct _List_node_base
+{
     void _M_hook(std::__detail::_List_node_base* const __position) throw() __attribute__((used))
     {
         _M_next = __position;

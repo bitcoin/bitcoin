@@ -9,18 +9,18 @@
 #include "script/interpreter.h"
 #include "version.h"
 
-namespace {
-
+namespace
+{
 /** A class that deserializes a single CTransaction one time. */
 class TxInputStream
 {
 public:
-    TxInputStream(int nTypeIn, int nVersionIn, const unsigned char *txTo, size_t txToLen) :
-    m_type(nTypeIn),
-    m_version(nVersionIn),
-    m_data(txTo),
-    m_remaining(txToLen)
-    {}
+    TxInputStream(int nTypeIn, int nVersionIn, const unsigned char* txTo, size_t txToLen) : m_type(nTypeIn),
+                                                                                            m_version(nVersionIn),
+                                                                                            m_data(txTo),
+                                                                                            m_remaining(txToLen)
+    {
+    }
 
     TxInputStream& read(char* pch, size_t nSize)
     {
@@ -39,7 +39,7 @@ public:
         return *this;
     }
 
-    template<typename T>
+    template <typename T>
     TxInputStream& operator>>(T& obj)
     {
         ::Unserialize(*this, obj, m_type, m_version);
@@ -62,9 +62,7 @@ inline int set_error(bitcoinconsensus_error* ret, bitcoinconsensus_error serror)
 
 } // anon namespace
 
-int bitcoinconsensus_verify_script(const unsigned char *scriptPubKey, unsigned int scriptPubKeyLen,
-                                    const unsigned char *txTo        , unsigned int txToLen,
-                                    unsigned int nIn, unsigned int flags, bitcoinconsensus_error* err)
+int bitcoinconsensus_verify_script(const unsigned char* scriptPubKey, unsigned int scriptPubKeyLen, const unsigned char* txTo, unsigned int txToLen, unsigned int nIn, unsigned int flags, bitcoinconsensus_error* err)
 {
     try {
         TxInputStream stream(SER_NETWORK, PROTOCOL_VERSION, txTo, txToLen);
@@ -75,11 +73,11 @@ int bitcoinconsensus_verify_script(const unsigned char *scriptPubKey, unsigned i
         if (tx.GetSerializeSize(SER_NETWORK, PROTOCOL_VERSION) != txToLen)
             return set_error(err, bitcoinconsensus_ERR_TX_SIZE_MISMATCH);
 
-         // Regardless of the verification result, the tx did not error.
-         set_error(err, bitcoinconsensus_ERR_OK);
+        // Regardless of the verification result, the tx did not error.
+        set_error(err, bitcoinconsensus_ERR_OK);
 
         return VerifyScript(tx.vin[nIn].scriptSig, CScript(scriptPubKey, scriptPubKey + scriptPubKeyLen), flags, SignatureChecker(tx, nIn), NULL);
-    } catch (std::exception &e) {
+    } catch (std::exception& e) {
         return set_error(err, bitcoinconsensus_ERR_TX_DESERIALIZE); // Error deserializing
     }
 }

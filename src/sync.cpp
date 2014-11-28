@@ -32,7 +32,8 @@ void PrintLockContention(const char* pszName, const char* pszFile, int nLine)
 // Complain if any thread tries to lock in a different order.
 //
 
-struct CLockLocation {
+struct CLockLocation
+{
     CLockLocation(const char* pszName, const char* pszFile, int nLine)
     {
         mutexName = pszName;

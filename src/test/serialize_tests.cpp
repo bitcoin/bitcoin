@@ -25,7 +25,7 @@ BOOST_AUTO_TEST_CASE(varints)
         BOOST_CHECK(size == ss.size());
     }
 
-    for (uint64_t i = 0;  i < 100000000000ULL; i += 999999937) {
+    for (uint64_t i = 0; i < 100000000000ULL; i += 999999937) {
         ss << VARINT(i);
         size += ::GetSerializeSize(VARINT(i), 0, 0);
         BOOST_CHECK(size == ss.size());
@@ -38,7 +38,7 @@ BOOST_AUTO_TEST_CASE(varints)
         BOOST_CHECK_MESSAGE(i == j, "decoded:" << j << " expected:" << i);
     }
 
-    for (uint64_t i = 0;  i < 100000000000ULL; i += 999999937) {
+    for (uint64_t i = 0; i < 100000000000ULL; i += 999999937) {
         uint64_t j = -1;
         ss >> VARINT(j);
         BOOST_CHECK_MESSAGE(i == j, "decoded:" << j << " expected:" << i);
@@ -50,15 +50,13 @@ BOOST_AUTO_TEST_CASE(compactsize)
     CDataStream ss(SER_DISK, 0);
     vector<char>::size_type i, j;
 
-    for (i = 1; i <= MAX_SIZE; i *= 2)
-    {
-        WriteCompactSize(ss, i-1);
+    for (i = 1; i <= MAX_SIZE; i *= 2) {
+        WriteCompactSize(ss, i - 1);
         WriteCompactSize(ss, i);
     }
-    for (i = 1; i <= MAX_SIZE; i *= 2)
-    {
+    for (i = 1; i <= MAX_SIZE; i *= 2) {
         j = ReadCompactSize(ss);
-        BOOST_CHECK_MESSAGE((i-1) == j, "decoded:" << j << " expected:" << (i-1));
+        BOOST_CHECK_MESSAGE((i - 1) == j, "decoded:" << j << " expected:" << (i - 1));
         j = ReadCompactSize(ss);
         BOOST_CHECK_MESSAGE(i == j, "decoded:" << j << " expected:" << i);
     }
@@ -70,8 +68,8 @@ static bool isCanonicalException(const std::ios_base::failure& ex)
 
     // The string returned by what() can be different for different platforms.
     // Instead of directly comparing the ex.what() with an expected string,
-    // create an instance of exception to see if ex.what() matches 
-    // the expected explanatory string returned by the exception instance. 
+    // create an instance of exception to see if ex.what() matches
+    // the expected explanatory string returned by the exception instance.
     return strcmp(expectedException.what(), ex.what()) == 0;
 }
 
@@ -135,7 +133,7 @@ BOOST_AUTO_TEST_CASE(insert_delete)
     BOOST_CHECK_EQUAL(ss[4], (char)0xff);
     BOOST_CHECK_EQUAL(ss[5], c);
 
-    ss.insert(ss.begin()+2, c);
+    ss.insert(ss.begin() + 2, c);
     BOOST_CHECK_EQUAL(ss.size(), 7);
     BOOST_CHECK_EQUAL(ss[2], c);
 
@@ -144,11 +142,11 @@ BOOST_AUTO_TEST_CASE(insert_delete)
     BOOST_CHECK_EQUAL(ss.size(), 6);
     BOOST_CHECK_EQUAL(ss[0], 0);
 
-    ss.erase(ss.begin()+ss.size()-1);
+    ss.erase(ss.begin() + ss.size() - 1);
     BOOST_CHECK_EQUAL(ss.size(), 5);
     BOOST_CHECK_EQUAL(ss[4], (char)0xff);
 
-    ss.erase(ss.begin()+1);
+    ss.erase(ss.begin() + 1);
     BOOST_CHECK_EQUAL(ss.size(), 4);
     BOOST_CHECK_EQUAL(ss[0], 0);
     BOOST_CHECK_EQUAL(ss[1], 1);

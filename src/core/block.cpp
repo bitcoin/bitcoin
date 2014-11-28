@@ -57,17 +57,14 @@ uint256 CBlock::BuildMerkleTree(bool* fMutated) const
         vMerkleTree.push_back(it->GetHash());
     int j = 0;
     bool mutated = false;
-    for (int nSize = vtx.size(); nSize > 1; nSize = (nSize + 1) / 2)
-    {
-        for (int i = 0; i < nSize; i += 2)
-        {
-            int i2 = std::min(i+1, nSize-1);
-            if (i2 == i + 1 && i2 + 1 == nSize && vMerkleTree[j+i] == vMerkleTree[j+i2]) {
+    for (int nSize = vtx.size(); nSize > 1; nSize = (nSize + 1) / 2) {
+        for (int i = 0; i < nSize; i += 2) {
+            int i2 = std::min(i + 1, nSize - 1);
+            if (i2 == i + 1 && i2 + 1 == nSize && vMerkleTree[j + i] == vMerkleTree[j + i2]) {
                 // Two identical hashes at the end of the list at a particular level.
                 mutated = true;
             }
-            vMerkleTree.push_back(Hash(BEGIN(vMerkleTree[j+i]),  END(vMerkleTree[j+i]),
-                                       BEGIN(vMerkleTree[j+i2]), END(vMerkleTree[j+i2])));
+            vMerkleTree.push_back(Hash(BEGIN(vMerkleTree[j + i]), END(vMerkleTree[j + i]), BEGIN(vMerkleTree[j + i2]), END(vMerkleTree[j + i2])));
         }
         j += nSize;
     }
@@ -83,10 +80,9 @@ std::vector<uint256> CBlock::GetMerkleBranch(int nIndex) const
         BuildMerkleTree();
     std::vector<uint256> vMerkleBranch;
     int j = 0;
-    for (int nSize = vtx.size(); nSize > 1; nSize = (nSize + 1) / 2)
-    {
-        int i = std::min(nIndex^1, nSize-1);
-        vMerkleBranch.push_back(vMerkleTree[j+i]);
+    for (int nSize = vtx.size(); nSize > 1; nSize = (nSize + 1) / 2) {
+        int i = std::min(nIndex ^ 1, nSize - 1);
+        vMerkleBranch.push_back(vMerkleTree[j + i]);
         nIndex >>= 1;
         j += nSize;
     }
@@ -97,8 +93,7 @@ uint256 CBlock::CheckMerkleBranch(uint256 hash, const std::vector<uint256>& vMer
 {
     if (nIndex == -1)
         return 0;
-    for (std::vector<uint256>::const_iterator it(vMerkleBranch.begin()); it != vMerkleBranch.end(); ++it)
-    {
+    for (std::vector<uint256>::const_iterator it(vMerkleBranch.begin()); it != vMerkleBranch.end(); ++it) {
         if (nIndex & 1)
             hash = Hash(BEGIN(*it), END(*it), BEGIN(hash), END(hash));
         else
@@ -112,14 +107,15 @@ std::string CBlock::ToString() const
 {
     std::stringstream s;
     s << strprintf("CBlock(hash=%s, ver=%d, hashPrevBlock=%s, hashMerkleRoot=%s, nTime=%u, nBits=%08x, nNonce=%u, vtx=%u)\n",
-        GetHash().ToString(),
-        nVersion,
-        hashPrevBlock.ToString(),
-        hashMerkleRoot.ToString(),
-        nTime, nBits, nNonce,
-        vtx.size());
-    for (unsigned int i = 0; i < vtx.size(); i++)
-    {
+                   GetHash().ToString(),
+                   nVersion,
+                   hashPrevBlock.ToString(),
+                   hashMerkleRoot.ToString(),
+                   nTime,
+                   nBits,
+                   nNonce,
+                   vtx.size());
+    for (unsigned int i = 0; i < vtx.size(); i++) {
         s << "  " << vtx[i].ToString() << "\n";
     }
     s << "  vMerkleTree: ";
