@@ -246,7 +246,6 @@ static const CRPCCommand vRPCCommands[] =
     { "control",            "getinfo",                &getinfo,                true,      false,      false }, /* uses wallet if enabled */
     { "control",            "help",                   &help,                   true,      true,       false },
     { "control",            "stop",                   &stop,                   true,      true,       false },
-    { "control",            "setmocktime",            &setmocktime,            true,      false,      false },
 
     /* P2P networking */
     { "network",            "getnetworkinfo",         &getnetworkinfo,         true,      false,      false },
@@ -303,6 +302,7 @@ static const CRPCCommand vRPCCommands[] =
     /* Not shown in help */
     { "hidden",             "invalidateblock",        &invalidateblock,        true,      true,       false },
     { "hidden",             "reconsiderblock",        &reconsiderblock,        true,      true,       false },
+    { "hidden",             "setmocktime",            &setmocktime,            true,      false,      false },
 
 #ifdef ENABLE_WALLET
     /* Wallet */
