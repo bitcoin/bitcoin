@@ -342,7 +342,7 @@ static void secp256k1_gej_add_ge(secp256k1_gej_t *r, const secp256k1_gej_t *a, c
      *
      *  Substituting x_i = Xi / Zi^2 and yi = Yi / Zi^3, for i=1,2,3, gives:
      *    U1 = X1*Z2^2, U2 = X2*Z1^2
-     *    S1 = X1*Z2^3, S2 = X2*Z2^3
+     *    S1 = Y1*Z2^3, S2 = Y2*Z1^3
      *    Z = Z1*Z2
      *    T = U1+U2
      *    M = S1+S2
