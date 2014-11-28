@@ -36,10 +36,8 @@ string FormatScript(const CScript& script)
                 continue;
             } else if (op >= OP_NOP && op <= OP_CHECKMULTISIGVERIFY) {
                 string str(GetOpName(op));
-                if (str.substr(0, 3) == string("OP_")) {
-                    ret += str.substr(3, string::npos) + " ";
-                    continue;
-                }
+                ret += (str + " ");
+                continue;
             }
             if (vch.size() > 0) {
                 ret += strprintf("0x%x 0x%x ", HexStr(it2, it - vch.size()), HexStr(it - vch.size(), it));

@@ -154,4 +154,21 @@ BOOST_AUTO_TEST_CASE(rpc_boostasiotocnetaddr)
     BOOST_CHECK_EQUAL(BoostAsioToCNetAddr(boost::asio::ip::address::from_string("::ffff:127.0.0.1")).ToString(), "127.0.0.1");
 }
 
+BOOST_AUTO_TEST_CASE(rpc_decoderawtransaction_scriptPubKey)
+{
+    Value result;
+    Value scriptPubKeyAsm;
+    string tx;
+    Value txid;
+    // this test case uses a main net transaction that has both P2PKH and P2SH outputs. it's from james d'angelo's awesome video about multisig -- https://www.youtube.com/watch?v=zIbUSaZBJgU.
+    tx = std::string("010000000214e74c8aa195fd544715fb4401008a7e139b23804e8c07b6bb538989270ebbdf000000008b48304502205192c9c285f47be0f0dc34cdfb6e2093b0b09d58cb361e7a996ce6d9d5bda1c2022100e82562a42ffb27e9da98eb086f5376efc3eb534b2bbee410dd1436406be2613501410460f8395ff5b0db8cac5a471d11066fb1598411153b04d76984b7c36bc01dc0699b83d995333dc513d082f423c20a4b2d1a6753daccecbf9ee01cb15af97c9fc2ffffffffcfcd79a7e8c838a08587ab9347dce1a0420a43ca4cae73b2e1b7d797b46e2a07010000008b483045022001ba3879426b190c6bf82adc91af4f58eecd27c61c6603604de5f4c1c0052f59022100e3af7e854e437fa57cf2081ab67911063d9fbd78a9050687df4da9dafeb538ba014104983fd4a1ffa71bfe7dfd623b39ba27a735b6ceb70931a25acdad529cf06d7ab454cc47bb81e1da0a0d00cb00d4085b75a1f46ef84ffe566cdc6624709c2c56dfffffffff02a45e02000000000017a9142a5edea39971049a540474c6a99edf0aa4074c58874b920000000000001976a914b9c670c7aa955c9808af7eeb9643b9fd6285cbf588ac00000000");
+    BOOST_CHECK_NO_THROW(result = CallRPC(string("decoderawtransaction ") + tx));
+    txid = find_value(result.get_obj(), "txid");
+    BOOST_CHECK_EQUAL(txid.get_str(), "73926d12845ecf0dbb51abe0d64a1e11deb385dc58df2d7e2c6ed0ab35561f8d");
+    scriptPubKeyAsm = find_value(find_value(find_value(result.get_obj(), "vout").get_array().at(0).get_obj(), "scriptPubKey").get_obj(), "asm");
+    BOOST_CHECK_EQUAL(scriptPubKeyAsm.get_str(), "HASH160 2a5edea39971049a540474c6a99edf0aa4074c58 EQUAL");
+    scriptPubKeyAsm = find_value(find_value(find_value(result.get_obj(), "vout").get_array().at(1).get_obj(), "scriptPubKey").get_obj(), "asm");
+    BOOST_CHECK_EQUAL(scriptPubKeyAsm.get_str(), "DUP HASH160 b9c670c7aa955c9808af7eeb9643b9fd6285cbf5 EQUALVERIFY CHECKSIG");
+}
+
 BOOST_AUTO_TEST_SUITE_END()

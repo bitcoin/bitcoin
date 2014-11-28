@@ -39,12 +39,12 @@ CScript ParseScript(std::string s)
                 continue;
 
             const char* name = GetOpName((opcodetype)op);
-            if (strcmp(name, "OP_UNKNOWN") == 0)
+            if (strcmp(name, "UNKNOWN") == 0)
                 continue;
             string strName(name);
             mapOpNames[strName] = (opcodetype)op;
             // Convenience: OP_ADD and just ADD are both recognized:
-            replace_first(strName, "OP_", "");
+            strName = "OP_" + strName;
             mapOpNames[strName] = (opcodetype)op;
         }
     }
