@@ -21,6 +21,7 @@
   <ItemGroup>
     <ClCompile Include="..\..\src\alert.cpp" />
     <ClCompile Include="..\..\src\scrypt-generic.c" />
+    <ClCompile Include="..\..\src\stun.cpp" />
     <ClCompile Include="..\..\src\txdb-leveldb.cpp" />
     <ClCompile Include="..\..\src\version.cpp" />
     <ClCompile Include="..\..\src\checkpoints.cpp" />
@@ -74,6 +75,7 @@
     <ClInclude Include="..\..\src\leveldb.h" />
     <ClInclude Include="..\..\src\limitedmap.h" />
     <ClInclude Include="..\..\src\main.h" />
+    <ClInclude Include="..\..\src\ministun.h" />
     <ClInclude Include="..\..\src\mruset.h" />
     <ClInclude Include="..\..\src\net.h" />
     <ClInclude Include="..\..\src\netbase.h" />
