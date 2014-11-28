@@ -160,7 +160,7 @@ string CRPCTable::help(string strCommand) const
         // We already filter duplicates, but these deprecated screw up the sort order
         if (strMethod.find("label") != string::npos)
             continue;
-        if (strCommand != "" && strMethod != strCommand)
+        if ((strCommand != "" || pcmd->category == "hidden") && strMethod != strCommand)
             continue;
 #ifdef ENABLE_WALLET
         if (pcmd->reqWallet && !pwalletMain)
@@ -246,7 +246,6 @@ static const CRPCCommand vRPCCommands[] =
     { "control",            "getinfo",                &getinfo,                true,      false,      false }, /* uses wallet if enabled */
     { "control",            "help",                   &help,                   true,      true,       false },
     { "control",            "stop",                   &stop,                   true,      true,       false },
-    { "control",            "setmocktime",            &setmocktime,            true,      false,      false },
 
     /* P2P networking */
     { "network",            "getnetworkinfo",         &getnetworkinfo,         true,      false,      false },
@@ -299,6 +298,11 @@ static const CRPCCommand vRPCCommands[] =
     { "util",               "verifymessage",          &verifymessage,          true,      false,      false },
     { "util",               "estimatefee",            &estimatefee,            true,      true,       false },
     { "util",               "estimatepriority",       &estimatepriority,       true,      true,       false },
+
+    /* Not shown in help */
+    { "hidden",             "invalidateblock",        &invalidateblock,        true,      true,       false },
+    { "hidden",             "reconsiderblock",        &reconsiderblock,        true,      true,       false },
+    { "hidden",             "setmocktime",            &setmocktime,            true,      false,      false },
 
 #ifdef ENABLE_WALLET
     /* Wallet */
