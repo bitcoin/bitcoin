@@ -83,10 +83,11 @@ bool CKey::Sign(const uint256 &hash, std::vector<unsigned char>& vchSig, uint32_
         nonce += test_case;
         int nSigLen = 72;
         int ret = secp256k1_ecdsa_sign((const unsigned char*)&hash, 32, (unsigned char*)&vchSig[0], &nSigLen, begin(), (unsigned char*)&nonce);
-        vchSig.resize(nSigLen);
         nonce = 0;
-        if (ret)
+        if (ret) {
+            vchSig.resize(nSigLen);
             return true;
+        }
     } while(true);
 }
 
