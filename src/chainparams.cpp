@@ -58,11 +58,14 @@ public:
         genesis.nBits    = 0x1e0ffff0;
         genesis.nNonce   = 28917698;
 
-        /* exit without failure */
-        printf("So far so good... Next: Update X11! \n");
+        hashGenesisBlock = genesis.GetHash();
+
+        /* exit without failure */ /* @TODO Debug remove! */
+        printf("%s #HASH\n", hashGenesisBlock.ToString().c_str()); /* @TODO Debug remove! */
+        printf("%s #HARD\n", uint256("0x00000ffd590b1485b3caadc19b22e6379c733355108f107a430458cdf3407ab6").ToString().c_str()); /* @TODO Debug remove! */
+        printf("So far so good... Next: Update X11! \n"); /* @TODO Debug remove! */
         exit(0); /* @TODO Debug remove! */
 
-        hashGenesisBlock = genesis.GetHash();
         assert(hashGenesisBlock == uint256("0x00000ffd590b1485b3caadc19b22e6379c733355108f107a430458cdf3407ab6"));
         assert(genesis.hashMerkleRoot == uint256("0xe0028eb9648db56b1ac77cf090b99048a8007e2bb64b68f092c03c7f56a662c7"));
 
@@ -127,11 +130,14 @@ public:
         genesis.nTime = 1390666206;
         genesis.nNonce = 3861367235;
 
-        /* exit without failure */
-        printf("So far so good... Next: Update X11! \n");
+        hashGenesisBlock = genesis.GetHash();
+
+        /* exit without failure */ /* @TODO Debug remove! */
+        printf("%s #HASH\n", hashGenesisBlock.ToString().c_str()); /* @TODO Debug remove! */
+        printf("%s #HARD\n", uint256("0x00000bafbc94add76cb75e2ec92894837288a481e5c005f6563d91623bf8bc2c").ToString().c_str()); /* @TODO Debug remove! */
+        printf("So far so good... Next: Update X11! \n"); /* @TODO Debug remove! */
         exit(0); /* @TODO Debug remove! */
 
-        hashGenesisBlock = genesis.GetHash();
         assert(hashGenesisBlock == uint256("0x00000bafbc94add76cb75e2ec92894837288a481e5c005f6563d91623bf8bc2c"));
 
         vFixedSeeds.clear();
@@ -168,10 +174,6 @@ public:
         hashGenesisBlock = genesis.GetHash();
         nDefaultPort = 19994;
         strDataDir = "regtest";
-
-        /* exit without failure */
-        printf("So far so good... Next: Update X11! \n");
-        exit(0); /* @TODO Debug remove! */
 
         assert(hashGenesisBlock == uint256("0x0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206"));
 

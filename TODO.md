@@ -13,6 +13,7 @@ DONE:
 - Added darkcoin seednodes
 - Adress versions (Public keys, Multisig keys)
 - Changed genesisblockhash and timestamp
+- Reviewed and updated checkpoints
 
 
 MUST-HAVE:
@@ -22,7 +23,6 @@ MUST-HAVE:
 - Adjust difficulty/subsidity (KGW, DGW based on blockheight)
 - Add masternode payment checks a.k.a. enforcement (based on blockheight)
 - Remove bitcoin dead weight (SHA256, hardcoded keys, nodes)
-- Review and update checkpoints
 
 
 ADD-ON:
@@ -34,3 +34,4 @@ ADD-ON:
 - Darksend, Instant Transactions, Atomic Transfers, etc. pp.
 - Figure out what regression tests are and fix them
 - Define BIP38 address prefixes EXT_PUBLIC_KEY and EXT_SECRET_KEY for Darkcoin
+- Include centralized checkpoint syncing (peercoin style)
