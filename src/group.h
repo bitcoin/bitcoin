@@ -81,8 +81,8 @@ static void secp256k1_gej_set_xy(secp256k1_gej_t *r, const secp256k1_fe_t *x, co
 /** Set a group element (jacobian) equal to another which is given in affine coordinates. */
 static void secp256k1_gej_set_ge(secp256k1_gej_t *r, const secp256k1_ge_t *a);
 
-/** Get the X coordinate of a group element (jacobian). */
-static void secp256k1_gej_get_x_var(secp256k1_fe_t *r, const secp256k1_gej_t *a);
+/** Compare the X coordinate of a group element (jacobian). */
+static int secp256k1_gej_eq_x_var(const secp256k1_fe_t *x, const secp256k1_gej_t *a);
 
 /** Set r equal to the inverse of a (i.e., mirrored around the X axis) */
 static void secp256k1_gej_neg_var(secp256k1_gej_t *r, const secp256k1_gej_t *a);

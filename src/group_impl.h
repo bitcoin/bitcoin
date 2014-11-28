@@ -163,9 +163,13 @@ static void secp256k1_gej_set_ge(secp256k1_gej_t *r, const secp256k1_ge_t *a) {
    secp256k1_fe_set_int(&r->z, 1);
 }
 
-static void secp256k1_gej_get_x_var(secp256k1_fe_t *r, const secp256k1_gej_t *a) {
-    secp256k1_fe_t zi2; secp256k1_fe_inv_var(&zi2, &a->z); secp256k1_fe_sqr(&zi2, &zi2);
-    secp256k1_fe_mul(r, &a->x, &zi2);
+static int secp256k1_gej_eq_x_var(const secp256k1_fe_t *x, const secp256k1_gej_t *a) {
+    VERIFY_CHECK(!a->infinity);
+    secp256k1_fe_t r; secp256k1_fe_sqr(&r, &a->z); secp256k1_fe_mul(&r, &r, x);
+    secp256k1_fe_t r2 = a->x;
+    secp256k1_fe_normalize_var(&r);
+    secp256k1_fe_normalize_var(&r2);
+    return secp256k1_fe_equal(&r, &r2);
 }
 
 static void secp256k1_gej_neg_var(secp256k1_gej_t *r, const secp256k1_gej_t *a) {
