@@ -42,7 +42,7 @@ public:
 };
 
 extern void TxToJSON(const CTransaction& tx, const uint256 hashBlock, Object& entry);
-extern Object blockToJSON(const CBlock& block, const CBlockIndex* blockindex);
+extern Object blockToJSON(const CBlock& block, const CBlockIndex* blockindex, bool txDetails = false);
 
 static RestErr RESTERR(enum HTTPStatusCode status, string message)
 {
@@ -92,7 +92,8 @@ static bool ParseHashStr(const string& strReq, uint256& v)
 static bool rest_block(AcceptedConnection* conn,
                        string& strReq,
                        map<string, string>& mapHeaders,
-                       bool fRun)
+                       bool fRun,
+                       bool showTxDetails)
 {
     vector<string> params;
     enum RetFormat rf = ParseDataFormat(params, strReq);
@@ -131,7 +132,7 @@ static bool rest_block(AcceptedConnection* conn,
     }
 
     case RF_JSON: {
-        Object objBlock = blockToJSON(block, pblockindex);
+        Object objBlock = blockToJSON(block, pblockindex, showTxDetails);
         string strJSON = write_string(Value(objBlock), false) + "\n";
         conn->stream() << HTTPReply(HTTP_OK, strJSON, fRun) << std::flush;
         return true;
@@ -144,6 +145,22 @@ static bool rest_block(AcceptedConnection* conn,
 
     // not reached
     return true; // continue to process further HTTP reqs on this cxn
+}
+
+static bool rest_block_extended(AcceptedConnection* conn,
+                       string& strReq,
+                       map<string, string>& mapHeaders,
+                       bool fRun)
+{
+    return rest_block(conn, strReq, mapHeaders, fRun, true);
+}
+
+static bool rest_block_notxdetails(AcceptedConnection* conn,
+                       string& strReq,
+                       map<string, string>& mapHeaders,
+                       bool fRun)
+{
+    return rest_block(conn, strReq, mapHeaders, fRun, false);
 }
 
 static bool rest_tx(AcceptedConnection* conn,
@@ -205,7 +222,8 @@ static const struct {
                     bool fRun);
 } uri_prefixes[] = {
       {"/rest/tx/", rest_tx},
-      {"/rest/block/", rest_block},
+      {"/rest/block/notxdetails/", rest_block_notxdetails},
+      {"/rest/block/", rest_block_extended},
 };
 
 bool HTTPReq_REST(AcceptedConnection* conn,
