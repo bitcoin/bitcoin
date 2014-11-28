@@ -25,7 +25,9 @@
 #endif
 
 typedef struct {
+#ifndef USE_NUM_NONE
     secp256k1_num_t order;
+#endif
 #ifdef USE_ENDOMORPHISM
     secp256k1_num_t a1b2, b1, a2;
 #endif
@@ -40,6 +42,7 @@ static void secp256k1_scalar_start(void) {
     /* Allocate. */
     secp256k1_scalar_consts_t *ret = (secp256k1_scalar_consts_t*)malloc(sizeof(secp256k1_scalar_consts_t));
 
+#ifndef USE_NUM_NONE
     static const unsigned char secp256k1_scalar_consts_order[] = {
         0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
         0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFE,
@@ -47,6 +50,7 @@ static void secp256k1_scalar_start(void) {
         0xBF,0xD2,0x5E,0x8C,0xD0,0x36,0x41,0x41
     };
     secp256k1_num_set_bin(&ret->order, secp256k1_scalar_consts_order, sizeof(secp256k1_scalar_consts_order));
+#endif
 #ifdef USE_ENDOMORPHISM
     static const unsigned char secp256k1_scalar_consts_a1b2[] = {
         0x30,0x86,0xd2,0x21,0xa7,0xd4,0x6b,0xcd,
@@ -80,6 +84,7 @@ static void secp256k1_scalar_stop(void) {
     free(c);
 }
 
+#ifndef USE_NUM_NONE
 static void secp256k1_scalar_get_num(secp256k1_num_t *r, const secp256k1_scalar_t *a) {
     unsigned char c[32];
     secp256k1_scalar_get_b32(c, a);
@@ -89,6 +94,7 @@ static void secp256k1_scalar_get_num(secp256k1_num_t *r, const secp256k1_scalar_
 static void secp256k1_scalar_order_get_num(secp256k1_num_t *r) {
     *r = secp256k1_scalar_consts->order;
 }
+#endif
 
 static void secp256k1_scalar_inverse(secp256k1_scalar_t *r, const secp256k1_scalar_t *x) {
     /* First compute x ^ (2^N - 1) for some values of N. */

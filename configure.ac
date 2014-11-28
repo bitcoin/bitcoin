@@ -95,7 +95,7 @@ AC_ARG_ENABLE(endomorphism,
 AC_ARG_WITH([field], [AS_HELP_STRING([--with-field=gmp|64bit|64bit_asm|32bit|auto],
 [Specify Field Implementation. Default is auto])],[req_field=$withval], [req_field=auto])
 
-AC_ARG_WITH([bignum], [AS_HELP_STRING([--with-bignum=gmp|auto],
+AC_ARG_WITH([bignum], [AS_HELP_STRING([--with-bignum=gmp|none|auto],
 [Specify Bignum Implementation. Default is auto])],[req_bignum=$withval], [req_bignum=auto])
 
 AC_ARG_WITH([scalar], [AS_HELP_STRING([--with-scalar=64bit|32bit|auto],
@@ -179,7 +179,7 @@ if test x"$req_bignum" = x"auto"; then
   fi
 
   if test x"$set_bignum" = x; then
-    AC_MSG_ERROR([no working bignum implementation found])
+    set_bignum=none
   fi
 else
   set_bignum=$req_bignum
@@ -187,8 +187,7 @@ else
   gmp)
     SECP_GMP_CHECK
     ;;
-  openssl)
-    SECP_OPENSSL_CHECK
+  none)
     ;;
   *)
     AC_MSG_ERROR([invalid bignum implementation selection])
@@ -221,10 +220,15 @@ esac
 # select bignum implementation
 case $set_bignum in
 gmp)
-  AC_DEFINE(HAVE_LIBGMP,1,[Define this symbol if libgmp is installed])
-  AC_DEFINE(USE_NUM_GMP, 1, [Define this symbol to use the gmp implementation])
+  AC_DEFINE(HAVE_LIBGMP, 1, [Define this symbol if libgmp is installed])
+  AC_DEFINE(USE_NUM_GMP, 1, [Define this symbol to use the gmp implementation for num])
   AC_DEFINE(USE_FIELD_INV_NUM, 1, [Define this symbol to use the num-based field inverse implementation])
   AC_DEFINE(USE_SCALAR_INV_NUM, 1, [Define this symbol to use the num-based scalar inverse implementation])
+  ;;
+none)
+  AC_DEFINE(USE_NUM_NONE, 1, [Define this symbol to use no num implementation])
+  AC_DEFINE(USE_FIELD_INV_BUILTIN, 1, [Define this symbol to use the native field inverse implementation])
+  AC_DEFINE(USE_SCALAR_INV_BUILTIN, 1, [Define this symbol to use the native scalar inverse implementation])
   ;;
 *)
   AC_MSG_ERROR([invalid bignum implementation])
@@ -266,6 +270,9 @@ if test x"$set_field" = x"gmp" || test x"$set_bignum" = x"gmp"; then
 fi
 
 if test x"$use_endomorphism" = x"yes"; then
+  if test x"$set_bignum" = x"none"; then
+    AC_MSG_ERROR([Cannot use endomorphism optimization without a bignum implementation])
+  fi
   AC_DEFINE(USE_ENDOMORPHISM, 1, [Define this symbol to use endomorphism])
 fi
 

@@ -267,16 +267,20 @@ static void secp256k1_fe_inv_all_var(size_t len, secp256k1_fe_t r[len], const se
 }
 
 static void secp256k1_fe_start(void) {
+#ifndef USE_NUM_NONE
     static const unsigned char secp256k1_fe_consts_p[] = {
         0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
         0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
         0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
         0xFF,0xFF,0xFF,0xFE,0xFF,0xFF,0xFC,0x2F
     };
+#endif
     if (secp256k1_fe_consts == NULL) {
         secp256k1_fe_inner_start();
         secp256k1_fe_consts_t *ret = (secp256k1_fe_consts_t*)malloc(sizeof(secp256k1_fe_consts_t));
+#ifndef USE_NUM_NONE
         secp256k1_num_set_bin(&ret->p, secp256k1_fe_consts_p, sizeof(secp256k1_fe_consts_p));
+#endif
         secp256k1_fe_consts = ret;
     }
 }

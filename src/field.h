@@ -33,7 +33,9 @@
 #endif
 
 typedef struct {
+#ifndef USE_NUM_NONE
     secp256k1_num_t p;
+#endif
     secp256k1_fe_t order;
 } secp256k1_fe_consts_t;
 
