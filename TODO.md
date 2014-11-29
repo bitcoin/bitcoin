@@ -23,6 +23,7 @@ MUST-HAVE:
 - Adjust difficulty/subsidity (KGW, DGW based on blockheight)
 - Add masternode payment checks a.k.a. enforcement (based on blockheight)
 - Remove bitcoin dead weight (SHA256, hardcoded keys, nodes)
+- Adjust wallet keypool size and add loading indicator on fresh wallet
 
 
 ADD-ON:
