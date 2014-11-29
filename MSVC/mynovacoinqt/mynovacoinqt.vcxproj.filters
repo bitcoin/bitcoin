@@ -198,6 +198,24 @@
     <ClCompile Include="..\..\src\kernelrecord.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\qt\multisiginputentry.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\qt\multisigdialog.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\qt\multisigaddressentry.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="build\moc_multisigaddressentry.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="build\moc_multisigdialog.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="build\moc_multisiginputentry.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="..\..\src\qt\aboutdialog.h">
@@ -460,6 +478,24 @@
     </CustomBuild>
     <CustomBuild Include="..\..\src\qt\mintingview.h">
       <Filter>Header Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\src\qt\multisigaddressentry.h">
+      <Filter>Header Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\src\qt\multisigdialog.h">
+      <Filter>Header Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\src\qt\multisiginputentry.h">
+      <Filter>Header Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\src\qt\forms\multisigaddressentry.ui">
+      <Filter>Form Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\src\qt\forms\multisigdialog.ui">
+      <Filter>Form Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\src\qt\forms\multisiginputentry.ui">
+      <Filter>Form Files</Filter>
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
@@ -834,6 +870,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\kernelrecord.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\txdb-leveldb.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
