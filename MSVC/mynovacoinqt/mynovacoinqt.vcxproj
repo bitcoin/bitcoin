@@ -51,7 +51,7 @@
     <WholeProgramOptimization>false</WholeProgramOptimization>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
-    <PlatformToolSet>v110</PlatformToolSet>
+    <PlatformToolSet>v110_xp</PlatformToolSet>
     <OutputDirectory>release\</OutputDirectory>
     <ATLMinimizesCRunTimeLibraryUsage>false</ATLMinimizesCRunTimeLibraryUsage>
     <ConfigurationType>Application</ConfigurationType>
@@ -296,6 +296,9 @@ C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2-64\qtbase\bin\lrelease C:\
     <ClCompile Include="..\..\src\qt\mintingfilterproxy.cpp" />
     <ClCompile Include="..\..\src\qt\mintingtablemodel.cpp" />
     <ClCompile Include="..\..\src\qt\mintingview.cpp" />
+    <ClCompile Include="..\..\src\qt\multisigaddressentry.cpp" />
+    <ClCompile Include="..\..\src\qt\multisigdialog.cpp" />
+    <ClCompile Include="..\..\src\qt\multisiginputentry.cpp" />
     <ClCompile Include="..\..\src\qt\trafficgraphwidget.cpp" />
     <ClCompile Include="..\..\src\qt\bitcoinamountfield.cpp" />
     <ClCompile Include="..\..\src\qt\bitcoingui.cpp" />
@@ -784,6 +787,60 @@ C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2-64\qtbase\bin\lrelease C:\
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">build\moc_mintingview.cpp;%(Outputs)</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">build\moc_mintingview.cpp;%(Outputs)</Outputs>
     </CustomBuild>
+    <CustomBuild Include="..\..\src\qt\multisigaddressentry.h">
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\..\src\qt\multisigaddressentry.h;%(AdditionalInputs)</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\..\src\qt\multisigaddressentry.h;%(AdditionalInputs)</AdditionalInputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2\qtbase\bin\moc.exe  -DUNICODE -DWIN32 -DQT_GUI -DBOOST_THREAD_USE_LIB -DBOOST_SPIRIT_THREADSAFE -DQT_WIDGETS_LIB -DQT_NETWORK_LIB -DQT_GUI_LIB -DQT_CORE_LIB -D_MSC_VER=1700 -D_WIN32 -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2/qtbase/mkspecs/win32-msvc2012 -IC:/MyProjects/Novacoin/MSVC/mynovacoinqt -IC:/MyProjects/Novacoin/src -IC:/MyProjects/Novacoin/src/json -IC:/MyProjects/Novacoin/src/qt -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2/qtbase/include -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2/qtbase/include/QtWidgets -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2/qtbase/include/QtNetwork -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2/qtbase/include/QtGui -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2/qtbase/include/QtCore ..\..\src\qt\multisigaddressentry.h -o build\moc_multisigaddressentry.cpp</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2-64\qtbase\bin\moc.exe  -DUNICODE -DWIN32 -DQT_GUI -DBOOST_THREAD_USE_LIB -DBOOST_SPIRIT_THREADSAFE -DQT_WIDGETS_LIB -DQT_NETWORK_LIB -DQT_GUI_LIB -DQT_CORE_LIB -D_MSC_VER=1700 -D_WIN32 -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2-64/qtbase/mkspecs/win32-msvc2012 -IC:/MyProjects/Novacoin/MSVC/mynovacoinqt -IC:/MyProjects/Novacoin/src -IC:/MyProjects/Novacoin/src/json -IC:/MyProjects/Novacoin/src/qt -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2/qtbase/include -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2-64/qtbase/include/QtWidgets -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2-64/qtbase/include/QtNetwork -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2-64/qtbase/include/QtGui -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2-64/qtbase/include/QtCore ..\..\src\qt\multisigaddressentry.h -o build\moc_multisigaddressentry.cpp</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">MOC ..\..\src\qt\multisigaddressentry.h</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">MOC ..\..\src\qt\multisigaddressentry.h</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">build\moc_multisigaddressentry.cpp;%(Outputs)</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">build\moc_multisigaddressentry.cpp;%(Outputs)</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\..\src\qt\multisigaddressentry.h;%(AdditionalInputs)</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\..\src\qt\multisigaddressentry.h;%(AdditionalInputs)</AdditionalInputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2\qtbase\bin\moc.exe  -DUNICODE -DWIN32 -DQT_GUI -DBOOST_THREAD_USE_LIB -DBOOST_SPIRIT_THREADSAFE -DQT_NO_DEBUG -DQT_WIDGETS_LIB -DQT_NETWORK_LIB -DQT_GUI_LIB -DQT_CORE_LIB -D_MSC_VER=1700 -D_WIN32 -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2/qtbase/mkspecs/win32-msvc2012 -IC:/MyProjects/Novacoin/MSVC/mynovacoinqt -IC:/MyProjects/Novacoin/src -IC:/MyProjects/Novacoin/src/json -IC:/MyProjects/Novacoin/src/qt -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2/qtbase/include -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2/qtbase/include/QtWidgets -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2/qtbase/include/QtNetwork -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2/qtbase/include/QtGui -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2/qtbase/include/QtCore ..\..\src\qt\multisigaddressentry.h -o build\moc_multisigaddressentry.cpp</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2-64\qtbase\bin\moc.exe  -DUNICODE -DWIN32 -DQT_GUI -DBOOST_THREAD_USE_LIB -DBOOST_SPIRIT_THREADSAFE -DQT_NO_DEBUG -DQT_WIDGETS_LIB -DQT_NETWORK_LIB -DQT_GUI_LIB -DQT_CORE_LIB -D_MSC_VER=1700 -D_WIN32 -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2-64/qtbase/mkspecs/win32-msvc2012 -IC:/MyProjects/Novacoin/MSVC/mynovacoinqt -IC:/MyProjects/Novacoin/src -IC:/MyProjects/Novacoin/src/json -IC:/MyProjects/Novacoin/src/qt -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2-64/qtbase/include -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2-64/qtbase/include/QtWidgets -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2-64/qtbase/include/QtNetwork -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2-64/qtbase/include/QtGui -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2-64/qtbase/include/QtCore ..\..\src\qt\multisigaddressentry.h -o build\moc_multisigaddressentry.cpp</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MOC ..\..\src\qt\multisigaddressentry.h</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">MOC ..\..\src\qt\multisigaddressentry.h</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">build\moc_multisigaddressentry.cpp;%(Outputs)</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">build\moc_multisigaddressentry.cpp;%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="..\..\src\qt\multisigdialog.h">
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\..\src\qt\multisigdialog.h;%(AdditionalInputs)</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\..\src\qt\multisigdialog.h;%(AdditionalInputs)</AdditionalInputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2\qtbase\bin\moc.exe  -DUNICODE -DWIN32 -DQT_GUI -DBOOST_THREAD_USE_LIB -DBOOST_SPIRIT_THREADSAFE -DQT_WIDGETS_LIB -DQT_NETWORK_LIB -DQT_GUI_LIB -DQT_CORE_LIB -D_MSC_VER=1700 -D_WIN32 -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2/qtbase/mkspecs/win32-msvc2012 -IC:/MyProjects/Novacoin/MSVC/mynovacoinqt -IC:/MyProjects/Novacoin/src -IC:/MyProjects/Novacoin/src/json -IC:/MyProjects/Novacoin/src/qt -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2/qtbase/include -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2/qtbase/include/QtWidgets -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2/qtbase/include/QtNetwork -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2/qtbase/include/QtGui -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2/qtbase/include/QtCore ..\..\src\qt\multisigdialog.h -o build\moc_multisigdialog.cpp</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2-64\qtbase\bin\moc.exe  -DUNICODE -DWIN32 -DQT_GUI -DBOOST_THREAD_USE_LIB -DBOOST_SPIRIT_THREADSAFE -DQT_WIDGETS_LIB -DQT_NETWORK_LIB -DQT_GUI_LIB -DQT_CORE_LIB -D_MSC_VER=1700 -D_WIN32 -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2-64/qtbase/mkspecs/win32-msvc2012 -IC:/MyProjects/Novacoin/MSVC/mynovacoinqt -IC:/MyProjects/Novacoin/src -IC:/MyProjects/Novacoin/src/json -IC:/MyProjects/Novacoin/src/qt -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2/qtbase/include -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2-64/qtbase/include/QtWidgets -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2-64/qtbase/include/QtNetwork -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2-64/qtbase/include/QtGui -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2-64/qtbase/include/QtCore ..\..\src\qt\multisigdialog.h -o build\moc_multisigdialog.cpp</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">MOC ..\..\src\qt\multisigdialog.h</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">MOC ..\..\src\qt\multisigdialog.h</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">build\moc_multisigdialog.cpp;%(Outputs)</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">build\moc_multisigdialog.cpp;%(Outputs)</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\..\src\qt\multisigdialog.h;%(AdditionalInputs)</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\..\src\qt\multisigdialog.h;%(AdditionalInputs)</AdditionalInputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2\qtbase\bin\moc.exe  -DUNICODE -DWIN32 -DQT_GUI -DBOOST_THREAD_USE_LIB -DBOOST_SPIRIT_THREADSAFE -DQT_NO_DEBUG -DQT_WIDGETS_LIB -DQT_NETWORK_LIB -DQT_GUI_LIB -DQT_CORE_LIB -D_MSC_VER=1700 -D_WIN32 -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2/qtbase/mkspecs/win32-msvc2012 -IC:/MyProjects/Novacoin/MSVC/mynovacoinqt -IC:/MyProjects/Novacoin/src -IC:/MyProjects/Novacoin/src/json -IC:/MyProjects/Novacoin/src/qt -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2/qtbase/include -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2/qtbase/include/QtWidgets -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2/qtbase/include/QtNetwork -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2/qtbase/include/QtGui -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2/qtbase/include/QtCore ..\..\src\qt\multisigdialog.h -o build\moc_multisigdialog.cpp</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2-64\qtbase\bin\moc.exe  -DUNICODE -DWIN32 -DQT_GUI -DBOOST_THREAD_USE_LIB -DBOOST_SPIRIT_THREADSAFE -DQT_NO_DEBUG -DQT_WIDGETS_LIB -DQT_NETWORK_LIB -DQT_GUI_LIB -DQT_CORE_LIB -D_MSC_VER=1700 -D_WIN32 -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2-64/qtbase/mkspecs/win32-msvc2012 -IC:/MyProjects/Novacoin/MSVC/mynovacoinqt -IC:/MyProjects/Novacoin/src -IC:/MyProjects/Novacoin/src/json -IC:/MyProjects/Novacoin/src/qt -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2-64/qtbase/include -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2-64/qtbase/include/QtWidgets -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2-64/qtbase/include/QtNetwork -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2-64/qtbase/include/QtGui -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2-64/qtbase/include/QtCore ..\..\src\qt\multisigdialog.h -o build\moc_multisigdialog.cpp</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MOC ..\..\src\qt\multisigdialog.h</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">MOC ..\..\src\qt\multisigdialog.h</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">build\moc_multisigdialog.cpp;%(Outputs)</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">build\moc_multisigdialog.cpp;%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="..\..\src\qt\multisiginputentry.h">
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\..\src\qt\multisiginputentry.h;%(AdditionalInputs)</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\..\src\qt\multisiginputentry.h;%(AdditionalInputs)</AdditionalInputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2\qtbase\bin\moc.exe  -DUNICODE -DWIN32 -DQT_GUI -DBOOST_THREAD_USE_LIB -DBOOST_SPIRIT_THREADSAFE -DQT_WIDGETS_LIB -DQT_NETWORK_LIB -DQT_GUI_LIB -DQT_CORE_LIB -D_MSC_VER=1700 -D_WIN32 -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2/qtbase/mkspecs/win32-msvc2012 -IC:/MyProjects/Novacoin/MSVC/mynovacoinqt -IC:/MyProjects/Novacoin/src -IC:/MyProjects/Novacoin/src/json -IC:/MyProjects/Novacoin/src/qt -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2/qtbase/include -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2/qtbase/include/QtWidgets -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2/qtbase/include/QtNetwork -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2/qtbase/include/QtGui -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2/qtbase/include/QtCore ..\..\src\qt\multisiginputentry.h -o build\moc_multisiginputentry.cpp</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2-64\qtbase\bin\moc.exe  -DUNICODE -DWIN32 -DQT_GUI -DBOOST_THREAD_USE_LIB -DBOOST_SPIRIT_THREADSAFE -DQT_WIDGETS_LIB -DQT_NETWORK_LIB -DQT_GUI_LIB -DQT_CORE_LIB -D_MSC_VER=1700 -D_WIN32 -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2-64/qtbase/mkspecs/win32-msvc2012 -IC:/MyProjects/Novacoin/MSVC/mynovacoinqt -IC:/MyProjects/Novacoin/src -IC:/MyProjects/Novacoin/src/json -IC:/MyProjects/Novacoin/src/qt -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2/qtbase/include -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2-64/qtbase/include/QtWidgets -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2-64/qtbase/include/QtNetwork -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2-64/qtbase/include/QtGui -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2-64/qtbase/include/QtCore ..\..\src\qt\multisiginputentry.h -o build\moc_multisiginputentry.cpp</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">MOC ..\..\src\qt\multisiginputentry.h</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">MOC ..\..\src\qt\multisiginputentry.h</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">build\moc_multisiginputentry.cpp;%(Outputs)</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">build\moc_multisiginputentry.cpp;%(Outputs)</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\..\src\qt\multisiginputentry.h;%(AdditionalInputs)</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\..\src\qt\multisiginputentry.h;%(AdditionalInputs)</AdditionalInputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2\qtbase\bin\moc.exe  -DUNICODE -DWIN32 -DQT_GUI -DBOOST_THREAD_USE_LIB -DBOOST_SPIRIT_THREADSAFE -DQT_NO_DEBUG -DQT_WIDGETS_LIB -DQT_NETWORK_LIB -DQT_GUI_LIB -DQT_CORE_LIB -D_MSC_VER=1700 -D_WIN32 -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2/qtbase/mkspecs/win32-msvc2012 -IC:/MyProjects/Novacoin/MSVC/mynovacoinqt -IC:/MyProjects/Novacoin/src -IC:/MyProjects/Novacoin/src/json -IC:/MyProjects/Novacoin/src/qt -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2/qtbase/include -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2/qtbase/include/QtWidgets -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2/qtbase/include/QtNetwork -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2/qtbase/include/QtGui -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2/qtbase/include/QtCore ..\..\src\qt\multisiginputentry.h -o build\moc_multisiginputentry.cpp</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2-64\qtbase\bin\moc.exe  -DUNICODE -DWIN32 -DQT_GUI -DBOOST_THREAD_USE_LIB -DBOOST_SPIRIT_THREADSAFE -DQT_NO_DEBUG -DQT_WIDGETS_LIB -DQT_NETWORK_LIB -DQT_GUI_LIB -DQT_CORE_LIB -D_MSC_VER=1700 -D_WIN32 -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2-64/qtbase/mkspecs/win32-msvc2012 -IC:/MyProjects/Novacoin/MSVC/mynovacoinqt -IC:/MyProjects/Novacoin/src -IC:/MyProjects/Novacoin/src/json -IC:/MyProjects/Novacoin/src/qt -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2-64/qtbase/include -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2-64/qtbase/include/QtWidgets -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2-64/qtbase/include/QtNetwork -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2-64/qtbase/include/QtGui -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2-64/qtbase/include/QtCore ..\..\src\qt\multisiginputentry.h -o build\moc_multisiginputentry.cpp</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MOC ..\..\src\qt\multisiginputentry.h</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">MOC ..\..\src\qt\multisiginputentry.h</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">build\moc_multisiginputentry.cpp;%(Outputs)</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">build\moc_multisiginputentry.cpp;%(Outputs)</Outputs>
+    </CustomBuild>
     <ClInclude Include="..\..\src\qt\qtipcserver.h" />
     <CustomBuild Include="..\..\src\qt\qvalidatedlineedit.h">
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\..\src\qt\qvalidatedlineedit.h;%(AdditionalInputs)</AdditionalInputs>
@@ -990,6 +1047,7 @@ C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2-64\qtbase\bin\lrelease C:\
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">build\moc_transactionview.cpp;%(Outputs)</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">build\moc_transactionview.cpp;%(Outputs)</Outputs>
     </CustomBuild>
+    <ClInclude Include="..\..\src\txdb-leveldb.h" />
     <ClInclude Include="..\..\src\txdb.h" />
     <ClInclude Include="..\..\src\ui_interface.h" />
     <ClInclude Include="..\..\src\uint256.h" />
@@ -1052,6 +1110,9 @@ C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2-64\qtbase\bin\lrelease C:\
     <ClCompile Include="build\moc_mintingview.cpp" />
     <ClCompile Include="build\moc_mintingtablemodel.cpp" />
     <ClCompile Include="build\moc_mintingfilterproxy.cpp" />
+    <ClCompile Include="build\moc_multisigaddressentry.cpp" />
+    <ClCompile Include="build\moc_multisigdialog.cpp" />
+    <ClCompile Include="build\moc_multisiginputentry.cpp" />
     <CustomBuild Include="build\overviewpage.moc">
       <FileType>Document</FileType>
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\..\src\qt\overviewpage.cpp;%(AdditionalInputs)</AdditionalInputs>
@@ -1212,6 +1273,63 @@ C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2-64\qtbase\bin\lrelease C:\
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">UIC ..\..\src\qt\forms\editaddressdialog.ui</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">build\ui_editaddressdialog.h;%(Outputs)</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">build\ui_editaddressdialog.h;%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="..\..\src\qt\forms\multisigaddressentry.ui">
+      <FileType>Document</FileType>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\..\src\qt\forms\multisigaddressentry.ui;%(AdditionalInputs)</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\..\src\qt\forms\multisigaddressentry.ui;%(AdditionalInputs)</AdditionalInputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">(set QT_PLUGIN_PATH=C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2\qtbase\plugins) &amp; (set PATH=C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2\qtbase\lib;%PATH:)=^)%) &amp; C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2\qtbase\bin\uic.exe ..\..\src\qt\forms\multisigaddressentry.ui -o build\ui_multisigaddressentry.h</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">(set QT_PLUGIN_PATH=C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2-64\qtbase\plugins) &amp; (set PATH=C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2-64\qtbase\lib;%PATH:)=^)%) &amp; C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2-64\qtbase\bin\uic.exe ..\..\src\qt\forms\multisigaddressentry.ui -o build\ui_multisigaddressentry.h</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">UIC ..\..\src\qt\forms\multisigaddressentry.ui</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">UIC ..\..\src\qt\forms\multisigaddressentry.ui</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">build\ui_multisigaddressentry.h;%(Outputs)</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">build\ui_multisigaddressentry.h;%(Outputs)</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\..\src\qt\forms\multisigaddressentry.ui;%(AdditionalInputs)</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\..\src\qt\forms\multisigaddressentry.ui;%(AdditionalInputs)</AdditionalInputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">(set QT_PLUGIN_PATH=C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2\qtbase\plugins) &amp; (set PATH=C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2\qtbase\lib;%PATH:)=^)%) &amp; C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2\qtbase\bin\uic.exe ..\..\src\qt\forms\multisigaddressentry.ui -o build\ui_multisigaddressentry.h</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">(set QT_PLUGIN_PATH=C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2-64\qtbase\plugins) &amp; (set PATH=C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2-64\qtbase\lib;%PATH:)=^)%) &amp; C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2-64\qtbase\bin\uic.exe ..\..\src\qt\forms\multisigaddressentry.ui -o build\ui_multisigaddressentry.h</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">UIC ..\..\src\qt\forms\multisigaddressentry.ui</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">UIC ..\..\src\qt\forms\multisigaddressentry.ui</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">build\ui_multisigaddressentry.h;%(Outputs)</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">build\ui_multisigaddressentry.h;%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="..\..\src\qt\forms\multisigdialog.ui">
+      <FileType>Document</FileType>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\..\src\qt\forms\multisigdialog.ui;%(AdditionalInputs)</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\..\src\qt\forms\multisigdialog.ui;%(AdditionalInputs)</AdditionalInputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">(set QT_PLUGIN_PATH=C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2\qtbase\plugins) &amp; (set PATH=C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2\qtbase\lib;%PATH:)=^)%) &amp; C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2\qtbase\bin\uic.exe ..\..\src\qt\forms\multisigdialog.ui -o build\ui_multisigdialog.h</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">(set QT_PLUGIN_PATH=C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2-64\qtbase\plugins) &amp; (set PATH=C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2-64\qtbase\lib;%PATH:)=^)%) &amp; C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2-64\qtbase\bin\uic.exe ..\..\src\qt\forms\multisigdialog.ui -o build\ui_multisigdialog.h</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">UIC ..\..\src\qt\forms\multisigdialog.ui</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">UIC ..\..\src\qt\forms\multisigdialog.ui</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">build\ui_multisigdialog.h;%(Outputs)</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">build\ui_multisigdialog.h;%(Outputs)</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\..\src\qt\forms\multisigdialog.ui;%(AdditionalInputs)</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\..\src\qt\forms\multisigdialog.ui;%(AdditionalInputs)</AdditionalInputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">(set QT_PLUGIN_PATH=C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2\qtbase\plugins) &amp; (set PATH=C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2\qtbase\lib;%PATH:)=^)%) &amp; C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2\qtbase\bin\uic.exe ..\..\src\qt\forms\multisigdialog.ui -o build\ui_multisigdialog.h</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">(set QT_PLUGIN_PATH=C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2-64\qtbase\plugins) &amp; (set PATH=C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2-64\qtbase\lib;%PATH:)=^)%) &amp; C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2-64\qtbase\bin\uic.exe ..\..\src\qt\forms\multisigdialog.ui -o build\ui_multisigdialog.h</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">UIC ..\..\src\qt\forms\multisigdialog.ui</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">UIC ..\..\src\qt\forms\multisigdialog.ui</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">build\ui_multisigdialog.h;%(Outputs)</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">build\ui_multisigdialog.h;%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="..\..\src\qt\forms\multisiginputentry.ui">
+      <FileType>Document</FileType>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\..\src\qt\forms\multisiginputentry.ui;%(AdditionalInputs)</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\..\src\qt\forms\multisiginputentry.ui;%(AdditionalInputs)</AdditionalInputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">(set QT_PLUGIN_PATH=C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2\qtbase\plugins) &amp; (set PATH=C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2\qtbase\lib;%PATH:)=^)%) &amp; C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2\qtbase\bin\uic.exe ..\..\src\qt\forms\multisiginputentry.ui -o build\ui_multisiginputentry.h</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">(set QT_PLUGIN_PATH=C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2-64\qtbase\plugins) &amp; (set PATH=C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2-64\qtbase\lib;%PATH:)=^)%) &amp; C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2-64\qtbase\bin\uic.exe ..\..\src\qt\forms\multisiginputentry.ui -o build\ui_multisiginputentry.h</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">UIC ..\..\src\qt\forms\multisiginputentry.ui</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">UIC ..\..\src\qt\forms\multisiginputentry.ui</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">build\ui_multisiginputentry.h;%(Outputs)</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">build\ui_multisiginputentry.h;%(Outputs)</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\..\src\qt\forms\multisiginputentry.ui;%(AdditionalInputs)</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\..\src\qt\forms\multisiginputentry.ui;%(AdditionalInputs)</AdditionalInputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">(set QT_PLUGIN_PATH=C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2\qtbase\plugins) &amp; (set PATH=C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2\qtbase\lib;%PATH:)=^)%) &amp; C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2\qtbase\bin\uic.exe ..\..\src\qt\forms\multisiginputentry.ui -o build\ui_multisiginputentry.h</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">(set QT_PLUGIN_PATH=C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2-64\qtbase\plugins) &amp; (set PATH=C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2-64\qtbase\lib;%PATH:)=^)%) &amp; C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2-64\qtbase\bin\uic.exe ..\..\src\qt\forms\multisiginputentry.ui -o build\ui_multisiginputentry.h</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">UIC ..\..\src\qt\forms\multisiginputentry.ui</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">UIC ..\..\src\qt\forms\multisiginputentry.ui</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">build\ui_multisiginputentry.h;%(Outputs)</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">build\ui_multisiginputentry.h;%(Outputs)</Outputs>
     </CustomBuild>
     <CustomBuild Include="..\..\src\qt\forms\optionsdialog.ui">
       <FileType>Document</FileType>
