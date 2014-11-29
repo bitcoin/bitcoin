@@ -348,6 +348,10 @@ Value sendtoaddress(const Array& params, bool fHelp)
 
     EnsureWalletIsUnlocked();
 
+    // Check funds
+    if (nAmount > pwalletMain->GetBalance())
+        throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Insufficient funds");
+
     string strError = pwalletMain->SendMoney(address.Get(), nAmount, wtx);
     if (strError != "")
         throw JSONRPCError(RPC_WALLET_ERROR, strError);
