@@ -1630,8 +1630,7 @@ void CWallet::GetStakeStats(float &nKernelsRate, float &nCoinDaysRate)
 {
     static uint64 nLastKernels = 0, nLastCoinDays = 0;
     static float nLastKernelsRate = 0, nLastCoinDaysRate = 0;
-    static unsigned int nLastTime = GetTime();
-
+    static int64 nLastTime = GetTime();
 
     if (nKernelsTried < nLastKernels)
     {
@@ -1641,8 +1640,9 @@ void CWallet::GetStakeStats(float &nKernelsRate, float &nCoinDaysRate)
         nLastTime = GetTime();
     }
 
-    unsigned int nInterval = GetTime() - nLastTime;
-    if (nKernelsTried > 1000 && nInterval > 5)
+    int64 nInterval = GetTime() - nLastTime;
+    //if (nKernelsTried > 1000 && nInterval > 5)
+    if (nInterval > 10)
     {
         nKernelsRate = nLastKernelsRate = ( nKernelsTried - nLastKernels ) / (float) nInterval;
         nCoinDaysRate = nLastCoinDaysRate = ( nCoinDaysTried - nLastCoinDays ) / (float) nInterval;
