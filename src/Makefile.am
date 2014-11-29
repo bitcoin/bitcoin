@@ -58,6 +58,18 @@ BITCOIN_CORE_H = \
   rpcserver.h \
   script.h \
   serialize.h \
+  sph_blake.h \
+  sph_bmw.h \
+  sph_cubehash.h \
+  sph_echo.h \
+  sph_groestl.h \
+  sph_jh.h \
+  sph_keccak.h \
+  sph_luffa.h \
+  sph_shavite.h \
+  sph_simd.h \
+  sph_skein.h \
+  sph_types.h \
   sync.h \
   threadsafety.h \
   tinyformat.h \
@@ -134,6 +146,18 @@ libbitcoin_common_a_SOURCES = \
   sync.cpp \
   util.cpp \
   version.cpp \
+  aes_helper.c \
+  luffa.c \
+  groestl.c \
+  jh.c \
+  echo.c \
+  shavite.c \
+  keccak.c \
+  skein.c \
+  bmw.c \
+  simd.c \
+  cubehash.c \
+  blake.c \
   $(BITCOIN_CORE_H)
 
 if GLIBC_BACK_COMPAT
