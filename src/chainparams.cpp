@@ -39,7 +39,7 @@ public:
         vAlertPubKey = ParseHex("040184710fa689ad5023690c80f3a49c8f13f8d45b8c857fbcbc8bc4a8e4d3eb4b10f4d4604fa08dce601aaf0f470216fe1b51850b4acf21b179c45070ac7b03a9");
         nDefaultPort = 9999;
         nRPCPort = 9998;
-        bnProofOfWorkLimit = CBigNum(~uint256(0) >> 32);
+        bnProofOfWorkLimit = CBigNum(~uint256(0) >> 20);  // Darkcoin starting difficulty is 1 / 2^12
         nSubsidyHalvingInterval = 210000;
 
         // Genesis block
@@ -59,13 +59,6 @@ public:
         genesis.nNonce   = 28917698;
 
         hashGenesisBlock = genesis.GetHash();
-
-        /* exit without failure */ /* @TODO Debug remove! */
-        printf("%s #HASH\n", hashGenesisBlock.ToString().c_str()); /* @TODO Debug remove! */
-        printf("%s #HARD\n", uint256("0x00000ffd590b1485b3caadc19b22e6379c733355108f107a430458cdf3407ab6").ToString().c_str()); /* @TODO Debug remove! */
-        printf("So far so good... Next: Update X11! \n"); /* @TODO Debug remove! */
-        exit(0); /* @TODO Debug remove! */
-
         assert(hashGenesisBlock == uint256("0x00000ffd590b1485b3caadc19b22e6379c733355108f107a430458cdf3407ab6"));
         assert(genesis.hashMerkleRoot == uint256("0xe0028eb9648db56b1ac77cf090b99048a8007e2bb64b68f092c03c7f56a662c7"));
 
@@ -131,13 +124,6 @@ public:
         genesis.nNonce = 3861367235;
 
         hashGenesisBlock = genesis.GetHash();
-
-        /* exit without failure */ /* @TODO Debug remove! */
-        printf("%s #HASH\n", hashGenesisBlock.ToString().c_str()); /* @TODO Debug remove! */
-        printf("%s #HARD\n", uint256("0x00000bafbc94add76cb75e2ec92894837288a481e5c005f6563d91623bf8bc2c").ToString().c_str()); /* @TODO Debug remove! */
-        printf("So far so good... Next: Update X11! \n"); /* @TODO Debug remove! */
-        exit(0); /* @TODO Debug remove! */
-
         assert(hashGenesisBlock == uint256("0x00000bafbc94add76cb75e2ec92894837288a481e5c005f6563d91623bf8bc2c"));
 
         vFixedSeeds.clear();
@@ -171,11 +157,11 @@ public:
         genesis.nTime = 1296688602;
         genesis.nBits = 0x207fffff;
         genesis.nNonce = 2;
-        hashGenesisBlock = genesis.GetHash();
         nDefaultPort = 19994;
         strDataDir = "regtest";
 
-        assert(hashGenesisBlock == uint256("0x0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206"));
+        hashGenesisBlock = genesis.GetHash();
+        assert(hashGenesisBlock == uint256("0xa86aac1aa39f8296820ea3d710d07178492e201ff66cc311d4ad25042bb399d0"));
 
         vSeeds.clear();  // Regtest mode doesn't have any DNS seeds.
     }
