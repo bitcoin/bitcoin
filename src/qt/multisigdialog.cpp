@@ -45,13 +45,32 @@ MultisigDialog::MultisigDialog(QWidget *parent) : QDialog(parent), ui(new Ui::Mu
 
     addInput();
     addOutput();
-    updateAmounts();
 
     connect(ui->addInputButton, SIGNAL(clicked()), this, SLOT(addInput()));
     connect(ui->addOutputButton, SIGNAL(clicked()), this, SLOT(addOutput()));
 
     ui->signTransactionButton->setEnabled(false);
     ui->sendTransactionButton->setEnabled(false);
+}
+
+void MultisigDialog::showEvent(QShowEvent *event)
+{
+    QWidget::showEvent(event);
+
+    if (!model)
+        return;
+
+    updateAmounts();
+}
+
+void MultisigDialog::hideEvent(QHideEvent *event)
+{
+    QWidget::hideEvent(event);
+
+    if (!model)
+        return;
+
+    clear();
 }
 
 MultisigDialog::~MultisigDialog()

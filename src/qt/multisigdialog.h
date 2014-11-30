@@ -36,6 +36,8 @@ class MultisigDialog : public QDialog
     ~MultisigDialog();
 
   private slots:
+    void showEvent(QShowEvent *event);
+    void hideEvent(QHideEvent *event);
     void on_createAddressButton_clicked();
     void on_copyMultisigAddressButton_clicked();
     void on_copyRedeemScriptButton_clicked();
