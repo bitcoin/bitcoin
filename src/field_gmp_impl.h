@@ -151,7 +151,8 @@ static void secp256k1_fe_reduce(secp256k1_fe_t *r, mp_limb_t *tmp) {
     r->n[FIELD_LIMBS] = mpn_add(r->n, tmp, FIELD_LIMBS, q, 1+(33+GMP_NUMB_BITS-1)/GMP_NUMB_BITS);
 }
 
-static void secp256k1_fe_mul(secp256k1_fe_t *r, const secp256k1_fe_t *a, const secp256k1_fe_t *b) {
+static void secp256k1_fe_mul(secp256k1_fe_t *r, const secp256k1_fe_t *a, const secp256k1_fe_t * SECP256K1_RESTRICT b) {
+    VERIFY_CHECK(r != b);
     secp256k1_fe_t ac = *a;
     secp256k1_fe_t bc = *b;
     secp256k1_fe_normalize(&ac);

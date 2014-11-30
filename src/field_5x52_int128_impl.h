@@ -15,7 +15,7 @@
 #define VERIFY_BITS(x, n) do { } while(0)
 #endif
 
-SECP256K1_INLINE static void secp256k1_fe_mul_inner(const uint64_t *a, const uint64_t *b, uint64_t *r) {
+SECP256K1_INLINE static void secp256k1_fe_mul_inner(const uint64_t *a, const uint64_t *b, uint64_t * SECP256K1_RESTRICT r) {
     VERIFY_BITS(a[0], 56);
     VERIFY_BITS(a[1], 56);
     VERIFY_BITS(a[2], 56);
@@ -26,6 +26,7 @@ SECP256K1_INLINE static void secp256k1_fe_mul_inner(const uint64_t *a, const uin
     VERIFY_BITS(b[2], 56);
     VERIFY_BITS(b[3], 56);
     VERIFY_BITS(b[4], 52);
+    VERIFY_CHECK(r != b);
 
     const uint64_t M = 0xFFFFFFFFFFFFFULL, R = 0x1000003D10ULL;
     /*  [... a b c] is a shorthand for ... + a<<104 + b<<52 + c<<0 mod n.
