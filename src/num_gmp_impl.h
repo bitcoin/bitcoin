@@ -225,12 +225,23 @@ static void secp256k1_num_div(secp256k1_num_t *r, const secp256k1_num_t *a, cons
     r->neg = a->neg ^ b->neg;
 }
 
-static int secp256k1_num_shift(secp256k1_num_t *r, int bits) {
-    VERIFY_CHECK(bits <= GMP_NUMB_BITS);
-    mp_limb_t ret = mpn_rshift(r->data, r->data, r->limbs, bits);
-    if (r->limbs>1 && r->data[r->limbs-1]==0) r->limbs--;
-    ret >>= (GMP_NUMB_BITS - bits);
-    return ret;
+static void secp256k1_num_shift(secp256k1_num_t *r, int bits) {
+    if (bits % GMP_NUMB_BITS) {
+        // Shift within limbs.
+        mpn_rshift(r->data, r->data, r->limbs, bits % GMP_NUMB_BITS);
+    }
+    if (bits >= GMP_NUMB_BITS) {
+        // Shift full limbs.
+        for (int i = 0; i < r->limbs; i++) {
+            int index = i + (bits / GMP_NUMB_BITS);
+            if (index < r->limbs && index < 2*NUM_LIMBS) {
+                r->data[i] = r->data[index];
+            } else {
+                r->data[i] = 0;
+            }
+        }
+    }
+    while (r->limbs>1 && r->data[r->limbs-1]==0) r->limbs--;
 }
 
 static void secp256k1_num_negate(secp256k1_num_t *r) {

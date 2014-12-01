@@ -90,4 +90,7 @@ static void secp256k1_scalar_split_128(secp256k1_scalar_t *r1, secp256k1_scalar_
 static void secp256k1_scalar_split_lambda_var(secp256k1_scalar_t *r1, secp256k1_scalar_t *r2, const secp256k1_scalar_t *a);
 #endif
 
+/** Multiply a and b (without taking the modulus!), divide by 2**shift, and round to the nearest integer. Shift must be at least 256. */
+static void secp256k1_scalar_mul_shift_var(secp256k1_scalar_t *r, const secp256k1_scalar_t *a, const secp256k1_scalar_t *b, unsigned int shift);
+
 #endif
