@@ -496,11 +496,13 @@ Value getchaintips(const Array& params, bool fHelp)
             "    \"height\": xxxx,         (numeric) height of the chain tip\n"
             "    \"hash\": \"xxxx\",         (string) block hash of the tip\n"
             "    \"branchlen\": 0          (numeric) zero for main chain\n"
+            "    \"status\": \"active\"      (string) \"active\" for the main chain\n"
             "  },\n"
             "  {\n"
             "    \"height\": xxxx,\n"
             "    \"hash\": \"xxxx\",\n"
             "    \"branchlen\": 1          (numeric) length of branch connecting the tip to the main chain\n"
+            "    \"status\": \"xxxx\"        (string) status of the chain (active, valid-fork, valid-headers, headers-only, invalid)\n"
             "  }\n"
             "]\n"
             "\nExamples:\n"
@@ -521,6 +523,9 @@ Value getchaintips(const Array& params, bool fHelp)
             setTips.erase(pprev);
     }
 
+    // Always report the currently active tip.
+    setTips.insert(chainActive.Tip());
+
     /* Construct the output array.  */
     Array res;
     BOOST_FOREACH(const CBlockIndex* block, setTips)
@@ -531,6 +536,28 @@ Value getchaintips(const Array& params, bool fHelp)
 
         const int branchLen = block->nHeight - chainActive.FindFork(block)->nHeight;
         obj.push_back(Pair("branchlen", branchLen));
+
+        string status;
+        if (chainActive.Contains(block)) {
+            // This block is part of the currently active chain.
+            status = "active";
+        } else if (block->nStatus & BLOCK_FAILED_MASK) {
+            // This block or one of its ancestors is invalid.
+            status = "invalid";
+        } else if (block->nChainTx == 0) {
+            // This block cannot be connected because full block data for it or one of its parents is missing.
+            status = "headers-only";
+        } else if (block->IsValid(BLOCK_VALID_SCRIPTS)) {
+            // This block is fully validated, but no longer part of the active chain. It was probably the active block once, but was reorganized.
+            status = "valid-fork";
+        } else if (block->IsValid(BLOCK_VALID_TREE)) {
+            // The headers for this block are valid, but it has not been validated. It was probably never part of the most-work chain.
+            status = "valid-headers";
+        } else {
+            // No clue.
+            status = "unknown";
+        }
+        obj.push_back(Pair("status", status));
 
         res.push_back(obj);
     }
