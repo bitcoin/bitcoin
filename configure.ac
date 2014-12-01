@@ -223,7 +223,8 @@ case $set_bignum in
 gmp)
   AC_DEFINE(HAVE_LIBGMP,1,[Define this symbol if libgmp is installed])
   AC_DEFINE(USE_NUM_GMP, 1, [Define this symbol to use the gmp implementation])
-  AC_DEFINE(USE_FIELD_INV_NUM, 1, [Define this symbol to use the USE_FIELD_INV_NUM implementation])
+  AC_DEFINE(USE_FIELD_INV_NUM, 1, [Define this symbol to use the num-based field inverse implementation])
+  AC_DEFINE(USE_SCALAR_INV_NUM, 1, [Define this symbol to use the num-based scalar inverse implementation])
   ;;
 *)
   AC_MSG_ERROR([invalid bignum implementation])

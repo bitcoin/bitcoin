@@ -75,6 +75,14 @@ SECP256K1_INLINE static int secp256k1_fe_equal(const secp256k1_fe_t *a, const se
     return ret;
 }
 
+SECP256K1_INLINE static int secp256k1_fe_cmp_var(const secp256k1_fe_t *a, const secp256k1_fe_t *b) {
+    for (int i=FIELD_LIMBS; i>=0; i--) {
+        if (a->n[i] > b->n[i]) return 1;
+        if (a->n[i] < b->n[i]) return -1;
+    }
+    return 0;
+}
+
 static int secp256k1_fe_set_b32(secp256k1_fe_t *r, const unsigned char *a) {
     for (int i=0; i<FIELD_LIMBS+1; i++)
         r->n[i] = 0;

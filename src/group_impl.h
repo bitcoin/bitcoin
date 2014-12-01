@@ -414,30 +414,6 @@ static void secp256k1_gej_mul_lambda(secp256k1_gej_t *r, const secp256k1_gej_t *
     *r = *a;
     secp256k1_fe_mul(&r->x, &r->x, beta);
 }
-
-static void secp256k1_gej_split_exp_var(secp256k1_num_t *r1, secp256k1_num_t *r2, const secp256k1_num_t *a) {
-    const secp256k1_ge_consts_t *c = secp256k1_ge_consts;
-    secp256k1_num_t bnc1, bnc2, bnt1, bnt2, bnn2;
-
-    secp256k1_num_copy(&bnn2, &c->order);
-    secp256k1_num_shift(&bnn2, 1);
-
-    secp256k1_num_mul(&bnc1, a, &c->a1b2);
-    secp256k1_num_add(&bnc1, &bnc1, &bnn2);
-    secp256k1_num_div(&bnc1, &bnc1, &c->order);
-
-    secp256k1_num_mul(&bnc2, a, &c->b1);
-    secp256k1_num_add(&bnc2, &bnc2, &bnn2);
-    secp256k1_num_div(&bnc2, &bnc2, &c->order);
-
-    secp256k1_num_mul(&bnt1, &bnc1, &c->a1b2);
-    secp256k1_num_mul(&bnt2, &bnc2, &c->a2);
-    secp256k1_num_add(&bnt1, &bnt1, &bnt2);
-    secp256k1_num_sub(r1, a, &bnt1);
-    secp256k1_num_mul(&bnt1, &bnc1, &c->b1);
-    secp256k1_num_mul(&bnt2, &bnc2, &c->a1b2);
-    secp256k1_num_sub(r2, &bnt1, &bnt2);
-}
 #endif
 
 
@@ -462,30 +438,11 @@ static void secp256k1_ge_start(void) {
     };
 #ifdef USE_ENDOMORPHISM
     /* properties of secp256k1's efficiently computable endomorphism */
-    static const unsigned char secp256k1_ge_consts_lambda[] = {
-        0x53,0x63,0xad,0x4c,0xc0,0x5c,0x30,0xe0,
-        0xa5,0x26,0x1c,0x02,0x88,0x12,0x64,0x5a,
-        0x12,0x2e,0x22,0xea,0x20,0x81,0x66,0x78,
-        0xdf,0x02,0x96,0x7c,0x1b,0x23,0xbd,0x72
-    };
     static const unsigned char secp256k1_ge_consts_beta[] = {
         0x7a,0xe9,0x6a,0x2b,0x65,0x7c,0x07,0x10,
         0x6e,0x64,0x47,0x9e,0xac,0x34,0x34,0xe9,
         0x9c,0xf0,0x49,0x75,0x12,0xf5,0x89,0x95,
         0xc1,0x39,0x6c,0x28,0x71,0x95,0x01,0xee
-    };
-    static const unsigned char secp256k1_ge_consts_a1b2[] = {
-        0x30,0x86,0xd2,0x21,0xa7,0xd4,0x6b,0xcd,
-        0xe8,0x6c,0x90,0xe4,0x92,0x84,0xeb,0x15
-    };
-    static const unsigned char secp256k1_ge_consts_b1[] = {
-        0xe4,0x43,0x7e,0xd6,0x01,0x0e,0x88,0x28,
-        0x6f,0x54,0x7f,0xa9,0x0a,0xbf,0xe4,0xc3
-    };
-    static const unsigned char secp256k1_ge_consts_a2[] = {
-        0x01,
-        0x14,0xca,0x50,0xf7,0xa8,0xe2,0xf3,0xf6,
-        0x57,0xc1,0x10,0x8d,0x9d,0x44,0xcf,0xd8
     };
 #endif
     if (secp256k1_ge_consts == NULL) {
@@ -494,10 +451,6 @@ static void secp256k1_ge_start(void) {
         secp256k1_num_copy(&ret->half_order, &ret->order);
         secp256k1_num_shift(&ret->half_order, 1);
 #ifdef USE_ENDOMORPHISM
-        secp256k1_num_set_bin(&ret->lambda, secp256k1_ge_consts_lambda, sizeof(secp256k1_ge_consts_lambda));
-        secp256k1_num_set_bin(&ret->a1b2,   secp256k1_ge_consts_a1b2,   sizeof(secp256k1_ge_consts_a1b2));
-        secp256k1_num_set_bin(&ret->a2,     secp256k1_ge_consts_a2,     sizeof(secp256k1_ge_consts_a2));
-        secp256k1_num_set_bin(&ret->b1,     secp256k1_ge_consts_b1,     sizeof(secp256k1_ge_consts_b1));
         VERIFY_CHECK(secp256k1_fe_set_b32(&ret->beta, secp256k1_ge_consts_beta));
 #endif
         secp256k1_fe_t g_x, g_y;

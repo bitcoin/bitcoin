@@ -21,20 +21,32 @@
 #error "Please select scalar implementation"
 #endif
 
+static void secp256k1_scalar_start(void);
+static void secp256k1_scalar_stop(void);
+
 /** Clear a scalar to prevent the leak of sensitive data. */
 static void secp256k1_scalar_clear(secp256k1_scalar_t *r);
 
-/** Access bits from a scalar. */
-static int secp256k1_scalar_get_bits(const secp256k1_scalar_t *a, int offset, int count);
+/** Access bits from a scalar. All requested bits must belong to the same 32-bit limb. */
+static unsigned int secp256k1_scalar_get_bits(const secp256k1_scalar_t *a, unsigned int offset, unsigned int count);
+
+/** Access bits from a scalar. Not constant time. */
+static unsigned int secp256k1_scalar_get_bits_var(const secp256k1_scalar_t *a, unsigned int offset, unsigned int count);
 
 /** Set a scalar from a big endian byte array. */
 static void secp256k1_scalar_set_b32(secp256k1_scalar_t *r, const unsigned char *bin, int *overflow);
+
+/** Set a scalar to an unsigned integer. */
+static void secp256k1_scalar_set_int(secp256k1_scalar_t *r, unsigned int v);
 
 /** Convert a scalar to a byte array. */
 static void secp256k1_scalar_get_b32(unsigned char *bin, const secp256k1_scalar_t* a);
 
 /** Add two scalars together (modulo the group order). */
 static void secp256k1_scalar_add(secp256k1_scalar_t *r, const secp256k1_scalar_t *a, const secp256k1_scalar_t *b);
+
+/** Add a power of two to a scalar. The result is not allowed to overflow. */
+static void secp256k1_scalar_add_bit(secp256k1_scalar_t *r, unsigned int bit);
 
 /** Multiply two scalars (modulo the group order). */
 static void secp256k1_scalar_mul(secp256k1_scalar_t *r, const secp256k1_scalar_t *a, const secp256k1_scalar_t *b);
@@ -44,6 +56,9 @@ static void secp256k1_scalar_sqr(secp256k1_scalar_t *r, const secp256k1_scalar_t
 
 /** Compute the inverse of a scalar (modulo the group order). */
 static void secp256k1_scalar_inverse(secp256k1_scalar_t *r, const secp256k1_scalar_t *a);
+
+/** Compute the inverse of a scalar (modulo the group order), without constant-time guarantee. */
+static void secp256k1_scalar_inverse_var(secp256k1_scalar_t *r, const secp256k1_scalar_t *a);
 
 /** Compute the complement of a scalar (modulo the group order). */
 static void secp256k1_scalar_negate(secp256k1_scalar_t *r, const secp256k1_scalar_t *a);
@@ -59,5 +74,15 @@ static int secp256k1_scalar_is_high(const secp256k1_scalar_t *a);
 
 /** Convert a scalar to a number. */
 static void secp256k1_scalar_get_num(secp256k1_num_t *r, const secp256k1_scalar_t *a);
+
+/** Compare two scalars. */
+static int secp256k1_scalar_eq(const secp256k1_scalar_t *a, const secp256k1_scalar_t *b);
+
+static void secp256k1_scalar_split_128(secp256k1_scalar_t *r1, secp256k1_scalar_t *r2, const secp256k1_scalar_t *a);
+
+#ifdef USE_ENDOMORPHISM
+/** Find r1 and r2 such that r1+r2*lambda = a, and r1 and r2 are maximum 128 bits long (see secp256k1_gej_mul_lambda). */
+static void secp256k1_scalar_split_lambda_var(secp256k1_scalar_t *r1, secp256k1_scalar_t *r2, const secp256k1_scalar_t *a);
+#endif
 
 #endif
