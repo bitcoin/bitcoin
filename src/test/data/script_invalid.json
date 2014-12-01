@@ -496,6 +496,25 @@ nSequences are max.
 ["0 0x02 0x0000 0", "CHECKMULTISIGVERIFY 1", "MINIMALDATA"],
 
 
+["
+Order of CHECKMULTISIG evaluation tests, inverted by swapping the order of
+pubkeys/signatures so they fail due to the STRICTENC rules on validly encoded
+signatures and pubkeys.
+"],
+[
+    "0 0x47 0x3044022044dc17b0887c161bb67ba9635bf758735bdde503e4b0a0987f587f14a4e1143d022009a215772d49a85dae40d8ca03955af26ad3978a0ff965faa12915e9586249a501 0x47 0x3044022044dc17b0887c161bb67ba9635bf758735bdde503e4b0a0987f587f14a4e1143d022009a215772d49a85dae40d8ca03955af26ad3978a0ff965faa12915e9586249a501",
+    "2 0x21 0x02865c40293a680cb9c020e7b1e106d8c1916d3cef99aa431a56d253e69256dac0 0 2 CHECKMULTISIG NOT",
+    "STRICTENC",
+    "2-of-2 CHECKMULTISIG NOT with the first pubkey invalid, and both signatures validly encoded."
+],
+[
+    "0 0x47 0x3044022044dc17b0887c161bb67ba9635bf758735bdde503e4b0a0987f587f14a4e1143d022009a215772d49a85dae40d8ca03955af26ad3978a0ff965faa12915e9586249a501 0",
+    "2 0x21 0x02865c40293a680cb9c020e7b1e106d8c1916d3cef99aa431a56d253e69256dac0 0x21 0x02865c40293a680cb9c020e7b1e106d8c1916d3cef99aa431a56d253e69256dac0 2 CHECKMULTISIG NOT",
+    "STRICTENC",
+    "2-of-2 CHECKMULTISIG NOT with both pubkeys valid, but first signature invalid."
+],
+
+["Automatically generated test cases"],
 [
     "0x47 0x3044022053205076a7bb12d2db3162a2d97d8197631f829b065948b7019b15482af819a902204328dcc02c994ca086b1226d0d5f1674d23cfae0d846143df812b81cab3391e801",
     "0x41 0x0479be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8 CHECKSIG",
@@ -616,25 +635,6 @@ nSequences are max.
     "STRICTENC",
     "P2PK with undefined hashtype"
 ],
-
-["
-Order of CHECKMULTISIG evaluation tests, inverted by swapping the order of
-pubkeys/signatures so they fail due to the STRICTENC rules on validly encoded
-signatures and pubkeys.
-"],
-[
-    "0 0x47 0x3044022044dc17b0887c161bb67ba9635bf758735bdde503e4b0a0987f587f14a4e1143d022009a215772d49a85dae40d8ca03955af26ad3978a0ff965faa12915e9586249a501 0x47 0x3044022044dc17b0887c161bb67ba9635bf758735bdde503e4b0a0987f587f14a4e1143d022009a215772d49a85dae40d8ca03955af26ad3978a0ff965faa12915e9586249a501",
-    "2 0x21 0x02865c40293a680cb9c020e7b1e106d8c1916d3cef99aa431a56d253e69256dac0 0 2 CHECKMULTISIG NOT",
-    "STRICTENC",
-    "2-of-2 CHECKMULTISIG NOT with the first pubkey invalid, and both signatures validly encoded."
-],
-[
-    "0 0x47 0x3044022044dc17b0887c161bb67ba9635bf758735bdde503e4b0a0987f587f14a4e1143d022009a215772d49a85dae40d8ca03955af26ad3978a0ff965faa12915e9586249a501 0",
-    "2 0x21 0x02865c40293a680cb9c020e7b1e106d8c1916d3cef99aa431a56d253e69256dac0 0x21 0x02865c40293a680cb9c020e7b1e106d8c1916d3cef99aa431a56d253e69256dac0 2 CHECKMULTISIG NOT",
-    "STRICTENC",
-    "2-of-2 CHECKMULTISIG NOT with both pubkeys valid, but first signature invalid."
-],
-
 [
     "0x47 0x304402207409b5b320296e5e2136a7b281a7f803028ca4ca44e2b83eebd46932677725de02202d4eea1c8d3c98e6f42614f54764e6e5e6542e213eb4d079737e9a8b6e9812ec05",
     "0x41 0x048282263212c609d9ea2a6e3e172de238d8c39cabd5ac1ca10646e23fd5f5150811f8a8098557dfe45e8256e830b60ace62d613ac2f7b17bed31b6eaff6e26caf CHECKSIG NOT",
