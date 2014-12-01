@@ -8,6 +8,7 @@
 #include "script/script.h"
 #include "uint256.h"
 #include "util.h"
+#include "utilstrencodings.h"
 
 #include <string>
 #include <vector>
@@ -162,6 +163,28 @@ BOOST_AUTO_TEST_CASE(key_test1)
         BOOST_CHECK(rkey1C == pubkey1C);
         BOOST_CHECK(rkey2C == pubkey2C);
     }
+
+    // test deterministic signing
+
+    std::vector<unsigned char> detsig, detsigc;
+    string strMsg = "Very deterministic message";
+    uint256 hashMsg = Hash(strMsg.begin(), strMsg.end());
+    BOOST_CHECK(key1.Sign(hashMsg, detsig));
+    BOOST_CHECK(key1C.Sign(hashMsg, detsigc));
+    BOOST_CHECK(detsig == detsigc);
+    BOOST_CHECK(detsig == ParseHex("304402205dbbddda71772d95ce91cd2d14b592cfbc1dd0aabd6a394b6c2d377bbe59d31d022014ddda21494a4e221f0824f0b8b924c43fa43c0ad57dccdaa11f81a6bd4582f6"));
+    BOOST_CHECK(key2.Sign(hashMsg, detsig));
+    BOOST_CHECK(key2C.Sign(hashMsg, detsigc));
+    BOOST_CHECK(detsig == detsigc);
+    BOOST_CHECK(detsig == ParseHex("3044022052d8a32079c11e79db95af63bb9600c5b04f21a9ca33dc129c2bfa8ac9dc1cd5022061d8ae5e0f6c1a16bde3719c64c2fd70e404b6428ab9a69566962e8771b5944d"));
+    BOOST_CHECK(key1.SignCompact(hashMsg, detsig));
+    BOOST_CHECK(key1C.SignCompact(hashMsg, detsigc));
+    BOOST_CHECK(detsig == ParseHex("1c5dbbddda71772d95ce91cd2d14b592cfbc1dd0aabd6a394b6c2d377bbe59d31d14ddda21494a4e221f0824f0b8b924c43fa43c0ad57dccdaa11f81a6bd4582f6"));
+    BOOST_CHECK(detsigc == ParseHex("205dbbddda71772d95ce91cd2d14b592cfbc1dd0aabd6a394b6c2d377bbe59d31d14ddda21494a4e221f0824f0b8b924c43fa43c0ad57dccdaa11f81a6bd4582f6"));
+    BOOST_CHECK(key2.SignCompact(hashMsg, detsig));
+    BOOST_CHECK(key2C.SignCompact(hashMsg, detsigc));
+    BOOST_CHECK(detsig == ParseHex("1c52d8a32079c11e79db95af63bb9600c5b04f21a9ca33dc129c2bfa8ac9dc1cd561d8ae5e0f6c1a16bde3719c64c2fd70e404b6428ab9a69566962e8771b5944d"));
+    BOOST_CHECK(detsigc == ParseHex("2052d8a32079c11e79db95af63bb9600c5b04f21a9ca33dc129c2bfa8ac9dc1cd561d8ae5e0f6c1a16bde3719c64c2fd70e404b6428ab9a69566962e8771b5944d"));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
