@@ -126,15 +126,33 @@ static int secp256k1_ecdsa_sig_verify(const secp256k1_ecdsa_sig_t *sig, const se
     secp256k1_scalar_get_b32(c, &sig->r);
     secp256k1_fe_t xr;
     secp256k1_fe_set_b32(&xr, c);
+
+    // We now have the recomputed R point in pr, and its claimed x coordinate (modulo n)
+    // in xr. Naively, we would extract the x coordinate from pr (requiring a inversion modulo p),
+    // compute the remainder modulo n, and compare it to xr. However:
+    //
+    //       xr == X(pr) mod n
+    //   <=> exists h. (xr + h * n < p && xr + h * n == X(pr))
+    //   [Since 2 * n > p, h can only be 0 or 1]
+    //   <=> (xr == X(pr)) || (xr + n < p && xr + n == X(pr))
+    //   [In Jacobian coordinates, X(pr) is pr.x / pr.z^2 mod p]
+    //   <=> (xr == pr.x / pr.z^2 mod p) || (xr + n < p && xr + n == pr.x / pr.z^2 mod p)
+    //   [Multiplying both sides of the equations by pr.z^2 mod p]
+    //   <=> (xr * pr.z^2 mod p == pr.x) || (xr + n < p && (xr + n) * pr.z^2 mod p == pr.x)
+    //
+    // Thus, we can avoid the inversion, but we have to check both cases separately.
+    // secp256k1_gej_eq_x implements the (xr * pr.z^2 mod p == pr.x) test.
     if (secp256k1_gej_eq_x_var(&xr, &pr)) {
+        // xr.x == xr * xr.z^2 mod p, so the signature is valid.
         return 1;
     }
     if (secp256k1_fe_cmp_var(&xr, &secp256k1_ecdsa_consts->p_minus_order) >= 0) {
-        // We can't add the order to r. This will be the case for almost every r.
+        // xr + p >= n, so we can skip testing the second case.
         return 0;
     }
     secp256k1_fe_add(&xr, &secp256k1_ecdsa_consts->order_as_fe);
     if (secp256k1_gej_eq_x_var(&xr, &pr)) {
+        // (xr + n) * pr.z^2 mod p == pr.x, so the signature is valid.
         return 1;
     }
     return 0;
