@@ -998,9 +998,25 @@ void test_ecdsa_edge_cases(void) {
     unsigned char pubkeyb[33];
     int pubkeyblen = 33;
     for (int recid = 0; recid < 4; recid++) {
+        // (4,4) encoded in DER.
         unsigned char sigbder[8] = {0x30, 0x06, 0x02, 0x01, 0x04, 0x02, 0x01, 0x04};
+        // (order + r,4) encoded in DER.
+        unsigned char sigbderlong[40] = {
+            0x30, 0x26, 0x02, 0x21, 0x00, 0xFF, 0xFF, 0xFF,
+            0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+            0xFF, 0xFF, 0xFF, 0xFF, 0xFE, 0xBA, 0xAE, 0xDC,
+            0xE6, 0xAF, 0x48, 0xA0, 0x3B, 0xBF, 0xD2, 0x5E,
+            0x8C, 0xD0, 0x36, 0x41, 0x45, 0x02, 0x01, 0x04
+        };
         CHECK(secp256k1_ecdsa_recover_compact(msg32, 32, sigb64, pubkeyb, &pubkeyblen, 1, recid));
         CHECK(secp256k1_ecdsa_verify(msg32, 32, sigbder, sizeof(sigbder), pubkeyb, pubkeyblen) == 1);
+        for (int recid2 = 0; recid2 < 4; recid2++) {
+            unsigned char pubkey2b[33];
+            int pubkey2blen = 33;
+            CHECK(secp256k1_ecdsa_recover_compact(msg32, 32, sigb64, pubkey2b, &pubkey2blen, 1, recid2));
+            // Verifying with (order + r,4) should always fail.
+            CHECK(secp256k1_ecdsa_verify(msg32, 32, sigbderlong, sizeof(sigbderlong), pubkey2b, pubkey2blen) != 1);
+        }
         /* Damage signature. */
         sigbder[7]++;
         CHECK(secp256k1_ecdsa_verify(msg32, 32, sigbder, sizeof(sigbder), pubkeyb, pubkeyblen) == 0);
