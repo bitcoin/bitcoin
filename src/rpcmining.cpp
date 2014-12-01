@@ -266,6 +266,7 @@ Value getmininginfo(const Array& params, bool fHelp)
 }
 
 
+// NOTE: Unlike wallet RPC (which use BTC values), mining RPCs follow GBT (BIP 22) in using satoshi amounts
 Value prioritisetransaction(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 3)
@@ -277,22 +278,20 @@ Value prioritisetransaction(const Array& params, bool fHelp)
             "2. priority delta (numeric, required) The priority to add or subtract.\n"
             "                  The transaction selection algorithm considers the tx as it would have a higher priority.\n"
             "                  (priority of a transaction is calculated: coinage * value_in_satoshis / txsize) \n"
-            "3. fee delta      (numeric, required) The absolute fee value to add or subtract in bitcoin.\n"
+            "3. fee delta      (numeric, required) The fee value (in satoshis) to add (or subtract, if negative).\n"
             "                  The fee is not actually paid, only the algorithm for selecting transactions into a block\n"
             "                  considers the transaction as it would have paid a higher (or lower) fee.\n"
             "\nResult\n"
             "true              (boolean) Returns true\n"
             "\nExamples:\n"
-            + HelpExampleCli("prioritisetransaction", "\"txid\" 0.0 0.00010000")
-            + HelpExampleRpc("prioritisetransaction", "\"txid\", 0.0, 0.00010000")
+            + HelpExampleCli("prioritisetransaction", "\"txid\" 0.0 10000")
+            + HelpExampleRpc("prioritisetransaction", "\"txid\", 0.0, 10000")
         );
 
     uint256 hash;
     hash.SetHex(params[0].get_str());
 
-    CAmount nAmount = 0;
-    if (params[2].get_real() != 0.0)
-        nAmount = AmountFromValue(params[2]);
+    CAmount nAmount = params[2].get_int64();
 
     mempool.PrioritiseTransaction(hash, params[0].get_str(), params[1].get_real(), nAmount);
     return true;
