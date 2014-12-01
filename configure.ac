@@ -270,10 +270,7 @@ if test x"$set_field" = x"gmp" || test x"$set_bignum" = x"gmp"; then
 fi
 
 if test x"$use_endomorphism" = x"yes"; then
-  if test x"$set_bignum" = x"none"; then
-    AC_MSG_ERROR([Cannot use endomorphism optimization without a bignum implementation])
-  fi
-  AC_DEFINE(USE_ENDOMORPHISM, 1, [Define this symbol to use endomorphism])
+  AC_DEFINE(USE_ENDOMORPHISM, 1, [Define this symbol to use endomorphism optimization])
 fi
 
 AC_MSG_NOTICE([Using field implementation: $set_field])
