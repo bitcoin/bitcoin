@@ -1021,6 +1021,21 @@ void test_ecdsa_edge_cases(void) {
         sigbder[7]++;
         CHECK(secp256k1_ecdsa_verify(msg32, 32, sigbder, sizeof(sigbder), pubkeyb, pubkeyblen) == 0);
     }
+
+    /* Test the case where ECDSA recomputes a point that is infinity. */
+    {
+        secp256k1_ecdsa_sig_t sig;
+        secp256k1_scalar_set_int(&sig.s, 1);
+        secp256k1_scalar_negate(&sig.s, &sig.s);
+        secp256k1_scalar_inverse(&sig.s, &sig.s);
+        secp256k1_scalar_set_int(&sig.r, 1);
+        secp256k1_gej_t keyj;
+        secp256k1_ecmult_gen(&keyj, &sig.r);
+        secp256k1_ge_t key;
+        secp256k1_ge_set_gej(&key, &keyj);
+        secp256k1_scalar_t msg = sig.s;
+        CHECK(secp256k1_ecdsa_sig_verify(&sig, &key, &msg) == 0);
+    }
 }
 
 void run_ecdsa_edge_cases(void) {
