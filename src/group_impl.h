@@ -208,25 +208,21 @@ static int secp256k1_ge_is_valid(const secp256k1_ge_t *a) {
 }
 
 static void secp256k1_gej_double_var(secp256k1_gej_t *r, const secp256k1_gej_t *a) {
-    if (a->infinity) {
-        r->infinity = 1;
-        return;
-    }
-
-    secp256k1_fe_t t5 = a->y;
-    secp256k1_fe_normalize(&t5);
-    if (secp256k1_fe_is_zero(&t5)) {
-        r->infinity = 1;
+    // For secp256k1, 2Q is infinity if and only if Q is infinity. This is because if 2Q = infinity,
+    // Q must equal -Q, or that Q.y == -(Q.y), or Q.y is 0. For a point on y^2 = x^3 + 7 to have
+    // y=0, x^3 must be -7 mod p. However, -7 has no cube root mod p.
+    r->infinity = a->infinity;
+    if (r->infinity) {
         return;
     }
 
     secp256k1_fe_t t1,t2,t3,t4;
-    secp256k1_fe_mul(&r->z, &t5, &a->z);
+    secp256k1_fe_mul(&r->z, &a->y, &a->z);
     secp256k1_fe_mul_int(&r->z, 2);       /* Z' = 2*Y*Z (2) */
     secp256k1_fe_sqr(&t1, &a->x);
     secp256k1_fe_mul_int(&t1, 3);         /* T1 = 3*X^2 (3) */
     secp256k1_fe_sqr(&t2, &t1);           /* T2 = 9*X^4 (1) */
-    secp256k1_fe_sqr(&t3, &t5);
+    secp256k1_fe_sqr(&t3, &a->y);
     secp256k1_fe_mul_int(&t3, 2);         /* T3 = 2*Y^2 (2) */
     secp256k1_fe_sqr(&t4, &t3);
     secp256k1_fe_mul_int(&t4, 2);         /* T4 = 8*Y^4 (2) */
@@ -241,7 +237,6 @@ static void secp256k1_gej_double_var(secp256k1_gej_t *r, const secp256k1_gej_t *
     secp256k1_fe_mul(&r->y, &t1, &t3);    /* Y' = 36*X^3*Y^2 - 27*X^6 (1) */
     secp256k1_fe_negate(&t2, &t4, 2);     /* T2 = -8*Y^4 (3) */
     secp256k1_fe_add(&r->y, &t2);         /* Y' = 36*X^3*Y^2 - 27*X^6 - 8*Y^4 (4) */
-    r->infinity = 0;
 }
 
 static void secp256k1_gej_add_var(secp256k1_gej_t *r, const secp256k1_gej_t *a, const secp256k1_gej_t *b) {
