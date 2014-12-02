@@ -900,4 +900,24 @@ static void secp256k1_fe_sqr(secp256k1_fe_t *r, const secp256k1_fe_t *a) {
 #endif
 }
 
+static void secp256k1_fe_cmov(secp256k1_fe_t *r, const secp256k1_fe_t *a, int flag) {
+    uint32_t mask0 = flag + ~((uint32_t)0), mask1 = ~mask0;
+    r->n[0] = (r->n[0] & mask0) | (a->n[0] & mask1);
+    r->n[1] = (r->n[1] & mask0) | (a->n[1] & mask1);
+    r->n[2] = (r->n[2] & mask0) | (a->n[2] & mask1);
+    r->n[3] = (r->n[3] & mask0) | (a->n[3] & mask1);
+    r->n[4] = (r->n[4] & mask0) | (a->n[4] & mask1);
+    r->n[5] = (r->n[5] & mask0) | (a->n[5] & mask1);
+    r->n[6] = (r->n[6] & mask0) | (a->n[6] & mask1);
+    r->n[7] = (r->n[7] & mask0) | (a->n[7] & mask1);
+    r->n[8] = (r->n[8] & mask0) | (a->n[8] & mask1);
+    r->n[9] = (r->n[9] & mask0) | (a->n[9] & mask1);
+#ifdef VERIFY
+    if (flag) {
+        r->magnitude = a->magnitude;
+        r->normalized = a->normalized;
+    }
+#endif
+}
+
 #endif
