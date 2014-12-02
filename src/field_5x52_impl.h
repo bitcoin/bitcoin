@@ -247,12 +247,13 @@ SECP256K1_INLINE static void secp256k1_fe_add(secp256k1_fe_t *r, const secp256k1
 #endif
 }
 
-static void secp256k1_fe_mul(secp256k1_fe_t *r, const secp256k1_fe_t *a, const secp256k1_fe_t *b) {
+static void secp256k1_fe_mul(secp256k1_fe_t *r, const secp256k1_fe_t *a, const secp256k1_fe_t * SECP256K1_RESTRICT b) {
 #ifdef VERIFY
     VERIFY_CHECK(a->magnitude <= 8);
     VERIFY_CHECK(b->magnitude <= 8);
     secp256k1_fe_verify(a);
     secp256k1_fe_verify(b);
+    VERIFY_CHECK(r != b);
 #endif
     secp256k1_fe_mul_inner(a->n, b->n, r->n);
 #ifdef VERIFY

@@ -217,7 +217,7 @@ static void secp256k1_gej_double_var(secp256k1_gej_t *r, const secp256k1_gej_t *
     }
 
     secp256k1_fe_t t1,t2,t3,t4;
-    secp256k1_fe_mul(&r->z, &a->y, &a->z);
+    secp256k1_fe_mul(&r->z, &a->z, &a->y);
     secp256k1_fe_mul_int(&r->z, 2);       /* Z' = 2*Y*Z (2) */
     secp256k1_fe_sqr(&t1, &a->x);
     secp256k1_fe_mul_int(&t1, 3);         /* T1 = 3*X^2 (3) */
@@ -226,7 +226,7 @@ static void secp256k1_gej_double_var(secp256k1_gej_t *r, const secp256k1_gej_t *
     secp256k1_fe_mul_int(&t3, 2);         /* T3 = 2*Y^2 (2) */
     secp256k1_fe_sqr(&t4, &t3);
     secp256k1_fe_mul_int(&t4, 2);         /* T4 = 8*Y^4 (2) */
-    secp256k1_fe_mul(&t3, &a->x, &t3);    /* T3 = 2*X*Y^2 (1) */
+    secp256k1_fe_mul(&t3, &t3, &a->x);    /* T3 = 2*X*Y^2 (1) */
     r->x = t3;
     secp256k1_fe_mul_int(&r->x, 4);       /* X' = 8*X*Y^2 (4) */
     secp256k1_fe_negate(&r->x, &r->x, 4); /* X' = -8*X*Y^2 (5) */
