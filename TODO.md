@@ -7,23 +7,23 @@ Staging tree for Darkcoin-0.9.3.
 DONE:
 -----
 
-- Strings in config, path and pid (~/.bitcoin --> ~/.darkcoin)
-- Ports for communication and RPC (8333 --> 9999; 8332 --> 9998)
+- Strings in config, path and pid (~/.darkcoin)
+- Ports for communication and RPC (port=9999; rpcport=9998)
 - Version numbers, protocol version, wallet version (compatible with DRK network)
 - Added darkcoin seednodes
-- Adress versions (Public keys, Multisig keys)
+- Updated address versions (Public keys, Multisig keys)
 - Changed genesisblockhash and timestamp
 - Reviewed and updated checkpoints
+- Adjusted algorithm (X11)
 
 
 MUST-HAVE:
 ----------
 
-- Adjust algorithm (SHA256 --> X11)
 - Adjust difficulty/subsidity (KGW, DGW based on blockheight)
 - Add masternode payment checks a.k.a. enforcement (based on blockheight)
-- Remove bitcoin dead weight (SHA256, hardcoded keys, nodes)
 - Adjust wallet keypool size and add loading indicator on fresh wallet
+- Remove Bitcoin dead weight (SHA256, hardcoded keys, nodes)
 
 
 ADD-ON:
@@ -36,3 +36,4 @@ ADD-ON:
 - Figure out what regression tests are and fix them
 - Define BIP38 address prefixes EXT_PUBLIC_KEY and EXT_SECRET_KEY for Darkcoin
 - Include centralized checkpoint syncing (peercoin style)
+- Write tests

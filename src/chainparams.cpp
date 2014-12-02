@@ -143,7 +143,7 @@ static CTestNetParams testNetParams;
 
 
 //
-// Regression test
+// Regression test --- @TODO Update RegTestParams to match DRK regression tests
 //
 class CRegTestParams : public CTestNetParams {
 public:
