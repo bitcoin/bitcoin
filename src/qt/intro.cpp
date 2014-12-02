@@ -16,8 +16,8 @@
 #include <QMessageBox>
 
 /* Minimum free space (in bytes) needed for data directory */
-static const uint64_t GB_BYTES = 1000000000LL;
-static const uint64_t BLOCK_CHAIN_SIZE = 20LL * GB_BYTES;
+static const uint64_t MB_BYTES = 1000000LL;
+static const uint64_t BLOCK_CHAIN_SIZE = 20LL * MB_BYTES;
 
 /* Check free space asynchronously to prevent hanging the UI thread.
 
@@ -112,7 +112,7 @@ Intro::Intro(QWidget *parent) :
     signalled(false)
 {
     ui->setupUi(this);
-    ui->sizeWarningLabel->setText(ui->sizeWarningLabel->text().arg(BLOCK_CHAIN_SIZE/GB_BYTES));
+    ui->sizeWarningLabel->setText(ui->sizeWarningLabel->text().arg(BLOCK_CHAIN_SIZE/MB_BYTES));
     startThread();
 }
 
@@ -215,10 +215,10 @@ void Intro::setStatus(int status, const QString &message, quint64 bytesAvailable
     {
         ui->freeSpace->setText("");
     } else {
-        QString freeString = QString::number(bytesAvailable/GB_BYTES) + tr("GB of free space available");
+        QString freeString = QString::number(bytesAvailable/MB_BYTES) + tr("MB of free space available");
         if(bytesAvailable < BLOCK_CHAIN_SIZE)
         {
-            freeString += " " + tr("(of %1GB needed)").arg(BLOCK_CHAIN_SIZE/GB_BYTES);
+            freeString += " " + tr("(of %1MB needed)").arg(BLOCK_CHAIN_SIZE/MB_BYTES);
             ui->freeSpace->setStyleSheet("QLabel { color: #800000 }");
         } else {
             ui->freeSpace->setStyleSheet("");

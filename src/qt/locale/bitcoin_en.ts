@@ -1202,7 +1202,7 @@ Address: %4
     </message>
     <message>
         <location line="+10"/>
-        <source>Crowncoin will download and store a copy of the Crowncoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
+        <source>Crowncoin will download and store a copy of the Crowncoin block chain. At least %1MB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1232,13 +1232,13 @@ Address: %4
     </message>
     <message>
         <location line="+9"/>
-        <source>GB of free space available</source>
-        <translation>GB of free space available</translation>
+        <source>MB of free space available</source>
+        <translation>MB of free space available</translation>
     </message>
     <message>
         <location line="+3"/>
-        <source>(of %1GB needed)</source>
-        <translation>(of %1GB needed)</translation>
+        <source>(of %1MB needed)</source>
+        <translation>(of %1MB needed)</translation>
     </message>
 </context>
 <context>

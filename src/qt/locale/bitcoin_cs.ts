@@ -942,8 +942,8 @@ Adresa: %4
         <translation>Tohle je poprvé, co spouštíš Crowncoin, takže si můžeš zvolit, kam bude ukládat svá data.</translation>
     </message>
     <message>
-        <source>Crowncoin will download and store a copy of the Crowncoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
-        <translation>Crowncoin bude stahovat kopii řetězce bloků. Proto bude potřeba do tohoto adresáře uložit nejméně %1 GB dat – toto číslo bude navíc v průběhu času pomalu růst. Tvá peněženka bude rovněž uložena v tomto adresáři.</translation>
+        <source>Crowncoin will download and store a copy of the Crowncoin block chain. At least %1MB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
+        <translation>Crowncoin bude stahovat kopii řetězce bloků. Proto bude potřeba do tohoto adresáře uložit nejméně %1 MB dat – toto číslo bude navíc v průběhu času pomalu růst. Tvá peněženka bude rovněž uložena v tomto adresáři.</translation>
     </message>
     <message>
         <source>Use the default data directory</source>
@@ -966,12 +966,12 @@ Adresa: %4
         <translation>Chyba</translation>
     </message>
     <message>
-        <source>GB of free space available</source>
-        <translation>GB volného místa</translation>
+        <source>MB of free space available</source>
+        <translation>MB volného místa</translation>
     </message>
     <message>
-        <source>(of %1GB needed)</source>
-        <translation>(z potřebných %1 GB)</translation>
+        <source>(of %1MB needed)</source>
+        <translation>(z potřebných %1 MB)</translation>
     </message>
 </context>
 <context>
