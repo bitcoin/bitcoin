@@ -47,7 +47,7 @@ enum WalletFeature
     FEATURE_WALLETCRYPT = 40000, // wallet encryption
     FEATURE_COMPRPUBKEY = 60000, // compressed public keys
 
-    FEATURE_LATEST = 60000
+    FEATURE_LATEST = 60002
 };
 
 

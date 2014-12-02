@@ -15,14 +15,15 @@ DONE:
 - Changed genesisblockhash and timestamp
 - Reviewed and updated checkpoints
 - Adjusted algorithm (X11)
+- Updated subsidity function (Block value)
+- Adjusted wallet keypool size to 1000 and added loading indicator on fresh wallet load
 
 
 MUST-HAVE:
 ----------
 
-- Adjust difficulty/subsidity (KGW, DGW based on blockheight)
+- Adjust difficulty (KGW, DGW based on blockheight)
 - Add masternode payment checks a.k.a. enforcement (based on blockheight)
-- Adjust wallet keypool size and add loading indicator on fresh wallet
 - Remove Bitcoin dead weight (SHA256, hardcoded keys, nodes)
 
 
