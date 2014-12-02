@@ -31,7 +31,7 @@ def http_get_call(host, port, path, response_object = 0):
 
 
 class RESTTest (BitcoinTestFramework):
-    FORMAT_SEPARATOR = "/"
+    FORMAT_SEPARATOR = "."
     
     def run_test(self):
         url = urlparse.urlparse(self.nodes[0].url)
