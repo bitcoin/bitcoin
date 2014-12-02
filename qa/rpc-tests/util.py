@@ -331,3 +331,13 @@ def assert_equal(thing1, thing2):
 def assert_greater_than(thing1, thing2):
     if thing1 <= thing2:
         raise AssertionError("%s <= %s"%(str(thing1),str(thing2)))
+
+def assert_raises(exc, fun, *args, **kwds):
+    try:
+        fun(*args, **kwds)
+    except exc:
+        pass
+    except Exception as e:
+        raise AssertionError("Unexpected exception raised: "+type(e).__name__)
+    else:
+        raise AssertionError("No exception raised")
