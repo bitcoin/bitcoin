@@ -15,7 +15,7 @@
 #define VERIFY_BITS(x, n) do { } while(0)
 #endif
 
-SECP256K1_INLINE static void secp256k1_fe_mul_inner(const uint64_t *a, const uint64_t * SECP256K1_RESTICT b, uint64_t *r) {
+SECP256K1_INLINE static void secp256k1_fe_mul_inner(const uint64_t *a, const uint64_t * SECP256K1_RESTRICT b, uint64_t *r) {
     VERIFY_BITS(a[0], 56);
     VERIFY_BITS(a[1], 56);
     VERIFY_BITS(a[2], 56);
