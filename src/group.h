@@ -27,8 +27,6 @@ typedef struct {
 
 /** Global constants related to the group */
 typedef struct {
-    secp256k1_num_t order; /* the order of the curve (= order of its generator) */
-    secp256k1_num_t half_order; /* half the order of the curve (= order of its generator) */
     secp256k1_ge_t g; /* the generator point */
 
 #ifdef USE_ENDOMORPHISM

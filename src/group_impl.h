@@ -413,12 +413,6 @@ static void secp256k1_gej_mul_lambda(secp256k1_gej_t *r, const secp256k1_gej_t *
 
 
 static void secp256k1_ge_start(void) {
-    static const unsigned char secp256k1_ge_consts_order[] = {
-        0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
-        0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFE,
-        0xBA,0xAE,0xDC,0xE6,0xAF,0x48,0xA0,0x3B,
-        0xBF,0xD2,0x5E,0x8C,0xD0,0x36,0x41,0x41
-    };
     static const unsigned char secp256k1_ge_consts_g_x[] = {
         0x79,0xBE,0x66,0x7E,0xF9,0xDC,0xBB,0xAC,
         0x55,0xA0,0x62,0x95,0xCE,0x87,0x0B,0x07,
@@ -442,9 +436,6 @@ static void secp256k1_ge_start(void) {
 #endif
     if (secp256k1_ge_consts == NULL) {
         secp256k1_ge_consts_t *ret = (secp256k1_ge_consts_t*)malloc(sizeof(secp256k1_ge_consts_t));
-        secp256k1_num_set_bin(&ret->order,  secp256k1_ge_consts_order,  sizeof(secp256k1_ge_consts_order));
-        secp256k1_num_copy(&ret->half_order, &ret->order);
-        secp256k1_num_shift(&ret->half_order, 1);
 #ifdef USE_ENDOMORPHISM
         VERIFY_CHECK(secp256k1_fe_set_b32(&ret->beta, secp256k1_ge_consts_beta));
 #endif

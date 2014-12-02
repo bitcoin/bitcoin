@@ -29,10 +29,14 @@ static void secp256k1_ecdsa_start(void) {
     /* Allocate. */
     secp256k1_ecdsa_consts_t *ret = (secp256k1_ecdsa_consts_t*)malloc(sizeof(secp256k1_ecdsa_consts_t));
 
-    unsigned char p[32];
-    secp256k1_num_get_bin(p, 32, &secp256k1_ge_consts->order);
-    secp256k1_fe_set_b32(&ret->order_as_fe, p);
+    static const unsigned char order[] = {
+        0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
+        0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFE,
+        0xBA,0xAE,0xDC,0xE6,0xAF,0x48,0xA0,0x3B,
+        0xBF,0xD2,0x5E,0x8C,0xD0,0x36,0x41,0x41
+    };
 
+    secp256k1_fe_set_b32(&ret->order_as_fe, order);
     secp256k1_fe_negate(&ret->p_minus_order, &ret->order_as_fe, 1);
     secp256k1_fe_normalize(&ret->p_minus_order);
 
