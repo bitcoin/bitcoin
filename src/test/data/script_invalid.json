@@ -1,12 +1,10 @@
 [
-["
-Format is: [scriptPubKey, scriptSig, flags, ... comments]
-It is evaluated as if there was a crediting coinbase transaction with two 0
-pushes as scriptSig, and one output of 0 satoshi and given scriptPubKey,
-followed by a spending transaction which spends this output as only input (and
-correct prevout hash), using the given scriptSig. All nLockTimes are 0, all
-nSequences are max.
-"],
+["Format is: [scriptPubKey, scriptSig, flags, ... comments]"],
+["It is evaluated as if there was a crediting coinbase transaction with two 0"],
+["pushes as scriptSig, and one output of 0 satoshi and given scriptPubKey,"],
+["followed by a spending transaction which spends this output as only input (and"],
+["correct prevout hash), using the given scriptSig. All nLockTimes are 0, all"],
+["nSequences are max."],
 
 ["", "DEPTH", "P2SH,STRICTENC",   "Test the test: we should have an empty stack after scriptSig evaluation"],
 ["  ", "DEPTH", "P2SH,STRICTENC", "and multiple spaces should not change that."],
@@ -496,11 +494,9 @@ nSequences are max.
 ["0 0x02 0x0000 0", "CHECKMULTISIGVERIFY 1", "MINIMALDATA"],
 
 
-["
-Order of CHECKMULTISIG evaluation tests, inverted by swapping the order of
-pubkeys/signatures so they fail due to the STRICTENC rules on validly encoded
-signatures and pubkeys.
-"],
+["Order of CHECKMULTISIG evaluation tests, inverted by swapping the order of"],
+["pubkeys/signatures so they fail due to the STRICTENC rules on validly encoded"],
+["signatures and pubkeys."],
 [
     "0 0x47 0x3044022044dc17b0887c161bb67ba9635bf758735bdde503e4b0a0987f587f14a4e1143d022009a215772d49a85dae40d8ca03955af26ad3978a0ff965faa12915e9586249a501 0x47 0x3044022044dc17b0887c161bb67ba9635bf758735bdde503e4b0a0987f587f14a4e1143d022009a215772d49a85dae40d8ca03955af26ad3978a0ff965faa12915e9586249a501",
     "2 0x21 0x02865c40293a680cb9c020e7b1e106d8c1916d3cef99aa431a56d253e69256dac0 0 2 CHECKMULTISIG NOT",
