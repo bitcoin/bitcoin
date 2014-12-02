@@ -18,6 +18,7 @@ using namespace std;
 using namespace json_spirit;
 
 enum RetFormat {
+    RF_UNDEF,
     RF_BINARY,
     RF_HEX,
     RF_JSON,
@@ -25,14 +26,16 @@ enum RetFormat {
 
 static const struct {
     enum RetFormat rf;
-    const char *name;
+    const char* name;
 } rf_names[] = {
-    { RF_BINARY, "binary" },            // default, if match not found
-    { RF_HEX, "hex" },
-    { RF_JSON, "json" },
+      {RF_UNDEF, ""},
+      {RF_BINARY, "bin"},
+      {RF_HEX, "hex"},
+      {RF_JSON, "json"},
 };
 
-class RestErr {
+class RestErr
+{
 public:
     enum HTTPStatusCode status;
     string message;
@@ -49,13 +52,32 @@ static RestErr RESTERR(enum HTTPStatusCode status, string message)
     return re;
 }
 
-static enum RetFormat ParseDataFormat(const string& format)
+static enum RetFormat ParseDataFormat(vector<string>& params, const string strReq)
 {
-    for (unsigned int i = 0; i < ARRAYLEN(rf_names); i++)
-        if (format == rf_names[i].name)
-            return rf_names[i].rf;
+    boost::split(params, strReq, boost::is_any_of("."));
+    if (params.size() > 1) {
+        for (unsigned int i = 0; i < ARRAYLEN(rf_names); i++)
+            if (params[1] == rf_names[i].name)
+                return rf_names[i].rf;
+    }
 
     return rf_names[0].rf;
+}
+
+static string AvailableDataFormatsString()
+{
+    string formats = "";
+    for (unsigned int i = 0; i < ARRAYLEN(rf_names); i++)
+        if (strlen(rf_names[i].name) > 0) {
+            formats.append(".");
+            formats.append(rf_names[i].name);
+            formats.append(", ");
+        }
+
+    if (formats.length() > 0)
+        return formats.substr(0, formats.length() - 2);
+
+    return formats;
 }
 
 static bool ParseHashStr(const string& strReq, uint256& v)
@@ -67,15 +89,13 @@ static bool ParseHashStr(const string& strReq, uint256& v)
     return true;
 }
 
-static bool rest_block(AcceptedConnection *conn,
+static bool rest_block(AcceptedConnection* conn,
                        string& strReq,
                        map<string, string>& mapHeaders,
                        bool fRun)
 {
     vector<string> params;
-    boost::split(params, strReq, boost::is_any_of("/"));
-
-    enum RetFormat rf = ParseDataFormat(params.size() > 1 ? params[1] : string(""));
+    enum RetFormat rf = ParseDataFormat(params, strReq);
 
     string hashStr = params[0];
     uint256 hash;
@@ -105,7 +125,7 @@ static bool rest_block(AcceptedConnection *conn,
     }
 
     case RF_HEX: {
-        string strHex = HexStr(ssBlock.begin(), ssBlock.end()) + "\n";;
+        string strHex = HexStr(ssBlock.begin(), ssBlock.end()) + "\n";
         conn->stream() << HTTPReply(HTTP_OK, strHex, fRun, false, "text/plain") << std::flush;
         return true;
     }
@@ -115,22 +135,24 @@ static bool rest_block(AcceptedConnection *conn,
         string strJSON = write_string(Value(objBlock), false) + "\n";
         conn->stream() << HTTPReply(HTTP_OK, strJSON, fRun) << std::flush;
         return true;
-     }
+    }
+
+    default: {
+        throw RESTERR(HTTP_NOT_FOUND, "output format not found (available: " + AvailableDataFormatsString() + ")");
+    }
     }
 
     // not reached
-    return true;     // continue to process further HTTP reqs on this cxn
+    return true; // continue to process further HTTP reqs on this cxn
 }
 
-static bool rest_tx(AcceptedConnection *conn,
+static bool rest_tx(AcceptedConnection* conn,
                     string& strReq,
                     map<string, string>& mapHeaders,
                     bool fRun)
 {
     vector<string> params;
-    boost::split(params, strReq, boost::is_any_of("/"));
-
-    enum RetFormat rf = ParseDataFormat(params.size() > 1 ? params[1] : string(""));
+    enum RetFormat rf = ParseDataFormat(params, strReq);
 
     string hashStr = params[0];
     uint256 hash;
@@ -153,7 +175,7 @@ static bool rest_tx(AcceptedConnection *conn,
     }
 
     case RF_HEX: {
-        string strHex = HexStr(ssTx.begin(), ssTx.end()) + "\n";;
+        string strHex = HexStr(ssTx.begin(), ssTx.end()) + "\n";
         conn->stream() << HTTPReply(HTTP_OK, strHex, fRun, false, "text/plain") << std::flush;
         return true;
     }
@@ -165,33 +187,37 @@ static bool rest_tx(AcceptedConnection *conn,
         conn->stream() << HTTPReply(HTTP_OK, strJSON, fRun) << std::flush;
         return true;
     }
+
+    default: {
+        throw RESTERR(HTTP_NOT_FOUND, "output format not found (available: " + AvailableDataFormatsString() + ")");
+    }
     }
 
     // not reached
-    return true;     // continue to process further HTTP reqs on this cxn
+    return true; // continue to process further HTTP reqs on this cxn
 }
 
 static const struct {
-    const char *prefix;
-    bool (*handler)(AcceptedConnection *conn,
+    const char* prefix;
+    bool (*handler)(AcceptedConnection* conn,
                     string& strURI,
                     map<string, string>& mapHeaders,
                     bool fRun);
 } uri_prefixes[] = {
-    { "/rest/tx/", rest_tx },
-    { "/rest/block/", rest_block },
+      {"/rest/tx/", rest_tx},
+      {"/rest/block/", rest_block},
 };
 
-bool HTTPReq_REST(AcceptedConnection *conn,
+bool HTTPReq_REST(AcceptedConnection* conn,
                   string& strURI,
                   map<string, string>& mapHeaders,
                   bool fRun)
 {
     try {
         std::string statusmessage;
-        if(RPCIsInWarmup(&statusmessage))
-            throw RESTERR(HTTP_SERVICE_UNAVAILABLE, "Service temporarily unavailable: "+statusmessage);
-        
+        if (RPCIsInWarmup(&statusmessage))
+            throw RESTERR(HTTP_SERVICE_UNAVAILABLE, "Service temporarily unavailable: " + statusmessage);
+
         for (unsigned int i = 0; i < ARRAYLEN(uri_prefixes); i++) {
             unsigned int plen = strlen(uri_prefixes[i].prefix);
             if (strURI.substr(0, plen) == uri_prefixes[i].prefix) {
@@ -199,8 +225,7 @@ bool HTTPReq_REST(AcceptedConnection *conn,
                 return uri_prefixes[i].handler(conn, strReq, mapHeaders, fRun);
             }
         }
-    }
-    catch (RestErr& re) {
+    } catch (RestErr& re) {
         conn->stream() << HTTPReply(re.status, re.message + "\r\n", false, false, "text/plain") << std::flush;
         return false;
     }
