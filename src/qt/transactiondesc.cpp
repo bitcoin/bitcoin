@@ -105,6 +105,11 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx)
                                     {
                                         strHTML += "<b>" + tr("From") + ":</b> ";
                                         strHTML += GUIUtil::HtmlEscape(CBitcoinAddress(senderAddress).ToString());
+                                        if(wallet->mapAddressBook.find(senderAddress) !=  wallet->mapAddressBook.end())
+                                            if (!wallet->mapAddressBook[senderAddress].empty())
+                                            {
+                                                strHTML += " (" + tr("label") + ": " + GUIUtil::HtmlEscape(wallet->mapAddressBook[senderAddress]) + ")";
+                                            }
                                         strHTML += "<br>";
                                     }
                                 }
