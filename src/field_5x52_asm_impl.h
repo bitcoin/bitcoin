@@ -14,7 +14,7 @@
 #ifndef _SECP256K1_FIELD_INNER5X52_IMPL_H_
 #define _SECP256K1_FIELD_INNER5X52_IMPL_H_
 
-SECP256K1_INLINE static void secp256k1_fe_mul_inner(const uint64_t *a, const uint64_t * SECP256K1_RESTRICT b, uint64_t *r) {
+SECP256K1_INLINE static void secp256k1_fe_mul_inner(uint64_t *r, const uint64_t *a, const uint64_t * SECP256K1_RESTRICT b) {
 /**
  * Registers: rdx:rax = multiplication accumulator
  *            r9:r8   = c
@@ -284,7 +284,7 @@ __asm__ __volatile__(
 );
 }
 
-SECP256K1_INLINE static void secp256k1_fe_sqr_inner(const uint64_t *a, uint64_t *r) {
+SECP256K1_INLINE static void secp256k1_fe_sqr_inner(uint64_t *r, const uint64_t *a) {
 /**
  * Registers: rdx:rax = multiplication accumulator
  *            r9:r8   = c
