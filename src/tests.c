@@ -109,26 +109,6 @@ void random_num_order(secp256k1_num_t *num) {
     secp256k1_scalar_get_num(num, &sc);
 }
 
-void test_num_get_set_bin(void) {
-    secp256k1_num_t n1,n2;
-    random_num_order_test(&n1);
-    unsigned char c[32];
-    secp256k1_num_get_bin(c, 32, &n1);
-    secp256k1_num_set_bin(&n2, c, 32);
-    CHECK(secp256k1_num_eq(&n1, &n2));
-    for (int i=0; i<32; i++) {
-        /* check whether the lower 8 bits correspond to the last byte */
-        int low1 = secp256k1_num_shift(&n1, 8);
-        int low2 = c[31];
-        CHECK(low1 == low2);
-        /* shift bits off the byte representation, and compare */
-        memmove(c+1, c, 31);
-        c[0] = 0;
-        secp256k1_num_set_bin(&n2, c, 32);
-        CHECK(secp256k1_num_eq(&n1, &n2));
-    }
-}
-
 void test_num_negate(void) {
     secp256k1_num_t n1;
     secp256k1_num_t n2;
@@ -180,7 +160,6 @@ void test_num_add_sub(void) {
 
 void run_num_smalltests(void) {
     for (int i=0; i<100*count; i++) {
-        test_num_get_set_bin();
         test_num_negate();
         test_num_add_sub();
     }
@@ -308,6 +287,24 @@ void scalar_test(void) {
         /* Negating zero should still result in zero. */
         CHECK(secp256k1_scalar_is_zero(&neg));
     }
+
+    {
+        /* Test secp256k1_scalar_mul_shift_var. */
+        secp256k1_scalar_t r;
+        unsigned int shift = 256 + (secp256k1_rand32() % 257);
+        secp256k1_scalar_mul_shift_var(&r, &s1, &s2, shift);
+        secp256k1_num_t rnum;
+        secp256k1_num_mul(&rnum, &s1num, &s2num);
+        secp256k1_num_shift(&rnum, shift - 1);
+        secp256k1_num_t one;
+        unsigned char cone[1] = {0x01};
+        secp256k1_num_set_bin(&one, cone, 1);
+        secp256k1_num_add(&rnum, &rnum, &one);
+        secp256k1_num_shift(&rnum, 1);
+        secp256k1_num_t rnum2;
+        secp256k1_scalar_get_num(&rnum2, &r);
+        CHECK(secp256k1_num_eq(&rnum, &rnum2));
+    }
 #endif
 
     {
@@ -403,6 +400,7 @@ void scalar_test(void) {
         secp256k1_scalar_mul(&r2, &s1, &s1);
         CHECK(secp256k1_scalar_eq(&r1, &r2));
     }
+
 }
 
 void run_scalar_tests(void) {
