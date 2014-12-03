@@ -133,7 +133,7 @@ static void secp256k1_scalar_add(secp256k1_scalar_t *r, const secp256k1_scalar_t
 
 static void secp256k1_scalar_add_bit(secp256k1_scalar_t *r, unsigned int bit) {
     VERIFY_CHECK(bit < 256);
-    uint64_t t = (uint64_t)r->d[0] + (((uint32_t)((bit >> 5) == 0)) << bit);
+    uint64_t t = (uint64_t)r->d[0] + (((uint32_t)((bit >> 5) == 0)) << (bit & 0x1F));
     r->d[0] = t & 0xFFFFFFFFULL; t >>= 32;
     t += (uint64_t)r->d[1] + (((uint32_t)((bit >> 5) == 1)) << (bit & 0x1F));
     r->d[1] = t & 0xFFFFFFFFULL; t >>= 32;
