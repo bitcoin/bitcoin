@@ -183,6 +183,8 @@ public:
     }
 
     std::map<uint256, CWalletTx> mapWallet;
+    std::vector<const CWalletTx*> vWallet; // contains only txs which could have unspent outputs
+    void InitVectorWallet();
 
     int64_t nOrderPosNext;
     std::map<uint256, int> mapRequestCount;
@@ -203,7 +205,7 @@ public:
     void AvailableCoins(std::vector<COutput>& vCoins, bool fOnlyConfirmed=true, const CCoinControl *coinControl = NULL) const;
     bool SelectCoinsMinConf(const CAmount& nTargetValue, int nConfMine, int nConfTheirs, std::vector<COutput> vCoins, std::set<std::pair<const CWalletTx*,unsigned int> >& setCoinsRet, CAmount& nValueRet) const;
 
-    bool IsSpent(const uint256& hash, unsigned int n) const;
+    bool IsSpent(const uint256& hash, unsigned int n, int nMinConf = 0) const;
 
     bool IsLockedCoin(uint256 hash, unsigned int n) const;
     void LockCoin(COutPoint& output);
@@ -898,6 +900,8 @@ public:
         }
         return true;
     }
+
+    bool CouldAffectBalance() const;
 
     bool WriteToDisk();
 
