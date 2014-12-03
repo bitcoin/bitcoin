@@ -1309,6 +1309,23 @@ else
   CPPFLAGS="$CPPFLAGS -DPROVIDE_FUZZ_MAIN_FUNCTION"
 fi
 
+dnl Check for libsecp256k1, only if explicitly requested
+AC_ARG_WITH([system-libsecp256k1],
+  [AS_HELP_STRING([--with-system-libsecp256k1],
+  [Build with system libsecp256k1 (default is no; DANGEROUS; NOT SUPPORTED)])],
+  [system_libsecp256k1=$withval],
+  [system_libsecp256k1=no]
+)
+if test x$system_libsecp256k1 != xno; then
+  PKG_CHECK_MODULES([libsecp256k1],[libsecp256k1],,[true])
+else
+  libsecp256k1_CFLAGS='-I$(srcdir)/secp256k1/include'
+  libsecp256k1_LIBS='secp256k1/libsecp256k1.la'
+fi
+AM_CONDITIONAL([EMBEDDED_LIBSECP256K1],[test x$system_libsecp256k1 = xno])
+AC_SUBST(libsecp256k1_CFLAGS)
+AC_SUBST(libsecp256k1_LIBS)
+
 if test x$enable_wallet != xno; then
     dnl Check for libdb_cxx only if wallet enabled
     if test "x$use_bdb" != "xno"; then
@@ -1894,8 +1911,10 @@ if test x$need_bundled_univalue = xyes; then
   AC_CONFIG_SUBDIRS([src/univalue])
 fi
 
+if test x$system_libsecp256k1 = xno; then
 ac_configure_args="${ac_configure_args} --disable-shared --with-pic --enable-benchmark=no --enable-module-recovery --enable-module-schnorrsig --enable-experimental"
 AC_CONFIG_SUBDIRS([src/secp256k1])
+fi
 
 AC_OUTPUT
 
