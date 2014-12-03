@@ -9,6 +9,9 @@
 #include "ui_interface.h"
 #include "base58.h"
 
+#include <vector>
+#include <algorithm>
+
 QString TransactionDesc::FormatTxStatus(const CWalletTx& wtx)
 {
     if (!wtx.IsFinal())
@@ -84,6 +87,7 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx)
                         {
                             if (wallet->mapAddressBook.count(address))
                             {
+                                std::vector<CTxDestination> addedAddresses;
                                 for (unsigned int i = 0; i < wtx.vin.size(); i++)
                                 {
                                     uint256 hash;
@@ -101,8 +105,10 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx)
                                     {
                                         strHTML += "<b>" + tr("From") + ":</b> " + tr("unknown") + "<br>";
                                     }
-                                    else
+                                    else if(std::find(addedAddresses.begin(), addedAddresses.end(), senderAddress) 
+                                            == addedAddresses.end() )
                                     {
+                                        addedAddresses.push_back(senderAddress);
                                         strHTML += "<b>" + tr("From") + ":</b> ";
                                         strHTML += GUIUtil::HtmlEscape(CBitcoinAddress(senderAddress).ToString());
                                         if(wallet->mapAddressBook.find(senderAddress) !=  wallet->mapAddressBook.end())
