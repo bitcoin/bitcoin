@@ -9,6 +9,9 @@
 #include "ui_interface.h"
 #include "base58.h"
 
+#include <vector>
+#include <algorithm>
+
 QString TransactionDesc::FormatTxStatus(const CWalletTx& wtx)
 {
     if (!wtx.IsFinal())
@@ -84,7 +87,38 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx)
                         {
                             if (wallet->mapAddressBook.count(address))
                             {
-                                strHTML += "<b>" + tr("From") + ":</b> " + tr("unknown") + "<br>";
+                                std::vector<CTxDestination> addedAddresses;
+                                for (unsigned int i = 0; i < wtx.vin.size(); i++)
+                                {
+                                    uint256 hash;
+                                    const CTxIn& vin = wtx.vin[i];
+                                    hash.SetHex(vin.prevout.hash.ToString());
+                                    CTransaction wtxPrev;
+                                    uint256 hashBlock = 0;
+                                    if (!GetTransaction(hash, wtxPrev, hashBlock))
+                                    {
+                                        strHTML += "<b>" + tr("From") + ":</b> " + tr("unknown") + "<br>";
+                                        continue; 
+                                    }
+                                    CTxDestination senderAddress;
+                                    if (!ExtractDestination(wtxPrev.vout[vin.prevout.n].scriptPubKey, senderAddress) )
+                                    {
+                                        strHTML += "<b>" + tr("From") + ":</b> " + tr("unknown") + "<br>";
+                                    }
+                                    else if(std::find(addedAddresses.begin(), addedAddresses.end(), senderAddress) 
+                                            == addedAddresses.end() )
+                                    {
+                                        addedAddresses.push_back(senderAddress);
+                                        strHTML += "<b>" + tr("From") + ":</b> ";
+                                        strHTML += GUIUtil::HtmlEscape(CBitcoinAddress(senderAddress).ToString());
+                                        if(wallet->mapAddressBook.find(senderAddress) !=  wallet->mapAddressBook.end())
+                                            if (!wallet->mapAddressBook[senderAddress].empty())
+                                            {
+                                                strHTML += " (" + tr("label") + ": " + GUIUtil::HtmlEscape(wallet->mapAddressBook[senderAddress]) + ")";
+                                            }
+                                        strHTML += "<br>";
+                                    }
+                                }
                                 strHTML += "<b>" + tr("To") + ":</b> ";
                                 strHTML += GUIUtil::HtmlEscape(CBitcoinAddress(address).ToString());
                                 if (!wallet->mapAddressBook[address].empty())
