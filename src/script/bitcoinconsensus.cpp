@@ -5,7 +5,7 @@
 
 #include "bitcoinconsensus.h"
 
-#include "core/transaction.h"
+#include "primitives/transaction.h"
 #include "script/interpreter.h"
 #include "version.h"
 

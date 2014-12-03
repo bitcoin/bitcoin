@@ -3,8 +3,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "core/block.h"
-#include "core/transaction.h"
+#include "primitives/block.h"
+#include "primitives/transaction.h"
 #include "main.h"
 #include "rpcserver.h"
 #include "streams.h"
