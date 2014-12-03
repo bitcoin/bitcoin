@@ -349,8 +349,7 @@ void scalar_test(void) {
             secp256k1_scalar_add(&b, &b, &b);
         }
         secp256k1_scalar_t r1 = s1, r2 = s1;
-        secp256k1_scalar_add(&r1, &r1, &b);
-        if (!(secp256k1_scalar_get_bits(&s1, 255, 1) == 1 && secp256k1_scalar_get_bits(&r1, 255, 1) == 0)) {
+        if (!secp256k1_scalar_add(&r1, &r1, &b)) {
             /* No overflow happened. */
             secp256k1_scalar_add_bit(&r2, bit);
             CHECK(secp256k1_scalar_eq(&r1, &r2));
