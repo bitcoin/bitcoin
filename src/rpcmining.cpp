@@ -381,6 +381,7 @@ Value getblocktemplate(const Array& params, bool fHelp)
 
     std::string strMode = "template";
     Value lpval = Value::null;
+    Value use_cache = Value::null;
     if (params.size() > 0)
     {
         const Object& oparam = params[0].get_obj();
@@ -424,6 +425,7 @@ Value getblocktemplate(const Array& params, bool fHelp)
             TestBlockValidity(state, block, pindexPrev, false, true);
             return BIP22ValidationResult(state);
         }
+        use_cache = find_value(oparam, "use_cache");
     }
 
     if (strMode != "template")
@@ -495,8 +497,9 @@ Value getblocktemplate(const Array& params, bool fHelp)
     static CBlockIndex* pindexPrev;
     static int64_t nStart;
     static CBlockTemplate* pblocktemplate;
-    if (pindexPrev != chainActive.Tip() ||
+    if ((use_cache.type() == null_type) ? (pindexPrev != chainActive.Tip() ||
         (mempool.GetTransactionsUpdated() != nTransactionsUpdatedLast && GetTime() - nStart > 5))
+        : (!use_cache.get_bool()))
     {
         // Clear pindexPrev so future calls make a new block, despite any failures from here on
         pindexPrev = NULL;
