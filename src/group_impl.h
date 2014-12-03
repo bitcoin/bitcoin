@@ -411,7 +411,6 @@ static void secp256k1_gej_mul_lambda(secp256k1_gej_t *r, const secp256k1_gej_t *
 }
 #endif
 
-
 static void secp256k1_ge_start(void) {
     static const unsigned char secp256k1_ge_consts_g_x[] = {
         0x79,0xBE,0x66,0x7E,0xF9,0xDC,0xBB,0xAC,

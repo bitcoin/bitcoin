@@ -170,4 +170,11 @@ static void secp256k1_fe_sqr(secp256k1_fe_t *r, const secp256k1_fe_t *a) {
     secp256k1_fe_reduce(r, tmp);
 }
 
+static void secp256k1_fe_cmov(secp256k1_fe_t *r, const secp256k1_fe_t *a, int flag) {
+    mp_limb_t mask0 = flag + ~((mp_limb_t)0), mask1 = ~mask0;
+    for (int i = 0; i <= FIELD_LIMBS; i++) {
+        r->n[i] = (r->n[i] & mask0) | (a->n[i] & mask1);
+    }
+}
+
 #endif

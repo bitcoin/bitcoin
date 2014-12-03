@@ -117,5 +117,4 @@ static void secp256k1_gej_clear(secp256k1_gej_t *r);
 /** Clear a secp256k1_ge_t to prevent leaking sensitive information. */
 static void secp256k1_ge_clear(secp256k1_ge_t *r);
 
-
 #endif
