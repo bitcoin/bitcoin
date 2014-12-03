@@ -10,7 +10,7 @@
 
 #include "amount.h"
 #include "coins.h"
-#include "core/transaction.h"
+#include "primitives/transaction.h"
 #include "sync.h"
 
 class CAutoFile;
