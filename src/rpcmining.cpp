@@ -559,6 +559,8 @@ Value getblocktemplate(const Array& params, bool fHelp)
         int index_in_template = i - 1;
         entry.push_back(Pair("fee", pblocktemplate->vTxFees[index_in_template]));
         entry.push_back(Pair("sigops", pblocktemplate->vTxSigOps[index_in_template]));
+        entry.push_back(Pair("fee_adjusted", pblocktemplate->vTxFeesAdjusted[index_in_template]));
+        entry.push_back(Pair("priority_adjusted", pblocktemplate->vTxPrioritiesAdjusted[index_in_template]));
 
         transactions.push_back(entry);
     }
