@@ -19,6 +19,7 @@ DONE:
 - Adjusted wallet keypool size to 1000 and added loading indicator on fresh wallet load
 - Adjusted difficulty and blockvalue (KGW, DGW based on blockheight)
 - Defined regression test genesis block
+- Updated wallet layout and branding
 
 
 MANDATORY:
@@ -31,11 +32,11 @@ MANDATORY:
 OPTIONAL:
 ---------
 
-- Remove Bitcoin dead weight (SHA256, hardcoded keys, nodes)
 - All the above for Testnet (including complete testnet reset)
-- Update strings and wallet layout/branding
 - Include Evan's public key for msg signing
 - Darksend, Instant Transactions, Atomic Transfers, etc. pp.
-- Define BIP38 address prefixes EXT_PUBLIC_KEY and EXT_SECRET_KEY for Darkcoin
+- Define BIP0032 addresses EXT_PUBLIC_KEY and EXT_SECRET_KEY for Darkcoin
 - Include centralized checkpoint syncing (peercoin style)
+- Remove Bitcoin dead weight (SHA256, hardcoded keys, nodes)
+- Update strings
 - Write tests
