@@ -37,6 +37,7 @@ noinst_HEADERS += src/field_gmp.h
 noinst_HEADERS += src/field_gmp_impl.h
 noinst_HEADERS += src/field.h
 noinst_HEADERS += src/field_impl.h
+noinst_HEADERS += src/bench.h
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = libsecp256k1.pc
