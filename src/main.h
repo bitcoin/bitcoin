@@ -1,5 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2014 The Bitcoin developers
+// Copyright (c) 2014 vertoe & the Darkcoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -31,6 +32,14 @@
 
 #define START_MASTERNODE_PAYMENTS_TESTNET 1403568776 //Tue, 24 Jun 2014 00:12:56 GMT
 #define START_MASTERNODE_PAYMENTS 1403728576 //Wed, 25 Jun 2014 20:36:16 GMT
+
+// Define difficulty retarget algorithms
+enum DiffMode {
+    DIFF_DEFAULT = 0, // Default to invalid 0
+    DIFF_BTC     = 1, // Retarget every x blocks (Bitcoin style)
+    DIFF_KGW     = 2, // Retarget using Kimoto Gravity Well
+    DIFF_DGW     = 3, // Retarget using Dark Gravity Wave v3
+};
 
 class CBlockIndex;
 class CBloomFilter;
