@@ -1,3 +1,4 @@
+
 #ifndef CLIENTVERSION_H
 #define CLIENTVERSION_H
 
@@ -19,7 +20,7 @@
 
 // Copyright year (2009-this)
 // Todo: update this when changing our copyright comments in the source
-#define COPYRIGHT_YEAR 2014
+#define COPYRIGHT_YEAR 2015
 
 #endif //HAVE_CONFIG_H
 
