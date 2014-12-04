@@ -2081,10 +2081,10 @@ bool ConnectBlock(CBlock& block, CValidationState& state, CBlockIndex* pindex, C
     if (fBenchmark)
         LogPrintf("- Connect %u transactions: %.2fms (%.3fms/tx, %.3fms/txin)\n", (unsigned)block.vtx.size(), 0.001 * nTime, 0.001 * nTime / block.vtx.size(), nInputs <= 1 ? 0 : 0.001 * nTime / (nInputs-1));
 
-    if (block.vtx[0].GetValueOut() > GetBlockValue(pindex->nBits, pindex->nHeight, nFees))
+    if (block.vtx[0].GetValueOut() > GetBlockValue(pindex->pprev->nBits, pindex->pprev->nHeight, nFees))
         return state.DoS(100,
                          error("ConnectBlock() : coinbase pays too much (actual=%d vs limit=%d)",
-                               block.vtx[0].GetValueOut(), GetBlockValue(pindex->nBits, pindex->nHeight, nFees)),
+                               block.vtx[0].GetValueOut(), GetBlockValue(pindex->pprev->nBits, pindex->pprev->nHeight, nFees)),
                                REJECT_INVALID, "bad-cb-amount");
 
     if (!control.Wait())
@@ -2619,10 +2619,26 @@ bool AcceptBlock(CBlock& block, CValidationState& state, CDiskBlockPos* dbp)
         pindexPrev = (*mi).second;
         nHeight = pindexPrev->nHeight+1;
 
-        // Check proof of work
-        if (block.nBits != GetNextWorkRequired(pindexPrev, &block))
-            return state.DoS(100, error("AcceptBlock() : incorrect proof of work"),
-                             REJECT_INVALID, "bad-diffbits");
+        if(TestNet()) {
+            if (block.nBits != GetNextWorkRequired(pindexPrev, &block))
+                return state.DoS(100, error("AcceptBlock() : incorrect proof of work"),
+                                 REJECT_INVALID, "bad-diffbits");
+        } else {
+            // Check proof of work (Here for the architecture issues with DGW v1 and v2)
+            if(nHeight <= 68589){
+                unsigned int nBitsNext = GetNextWorkRequired(pindexPrev, &block);
+                double n1 = ConvertBitsToDouble(block.nBits);
+                double n2 = ConvertBitsToDouble(nBitsNext);
+
+                if (abs(n1-n2) > n1*0.5)
+                    return state.DoS(100, error("AcceptBlock() : incorrect proof of work (DGW pre-fork) - %f", abs(n1-n2)),
+                                    REJECT_INVALID, "bad-diffbits");
+            } else {
+                if (block.nBits != GetNextWorkRequired(pindexPrev, &block))
+                    return state.DoS(100, error("AcceptBlock() : incorrect proof of work"),
+                                    REJECT_INVALID, "bad-diffbits");
+            }
+        }
 
         // Check timestamp against prev
         if (block.GetBlockTime() <= pindexPrev->GetMedianTimePast())
