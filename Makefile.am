@@ -68,12 +68,13 @@ bench_sign_LDFLAGS = -static
 bench_inv_SOURCES = src/bench_inv.c
 bench_inv_LDADD = $(COMMON_LIB) $(SECP_LIBS)
 bench_inv_LDFLAGS = -static
+bench_inv_CPPFLAGS = $(SECP_INCLUDES)
 endif
 
 if USE_TESTS
 noinst_PROGRAMS += tests
 tests_SOURCES = src/tests.c
-tests_CPPFLAGS = -DVERIFY $(SECP_TEST_INCLUDES)
+tests_CPPFLAGS = -DVERIFY $(SECP_INCLUDES) $(SECP_TEST_INCLUDES)
 tests_LDADD = $(COMMON_LIB) $(SECP_LIBS) $(SECP_TEST_LIBS)
 tests_LDFLAGS = -static
 TESTS = tests

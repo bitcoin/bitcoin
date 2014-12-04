@@ -208,29 +208,25 @@ static int secp256k1_ge_is_valid(const secp256k1_ge_t *a) {
 }
 
 static void secp256k1_gej_double_var(secp256k1_gej_t *r, const secp256k1_gej_t *a) {
-    if (a->infinity) {
-        r->infinity = 1;
-        return;
-    }
-
-    secp256k1_fe_t t5 = a->y;
-    secp256k1_fe_normalize(&t5);
-    if (secp256k1_fe_is_zero(&t5)) {
-        r->infinity = 1;
+    // For secp256k1, 2Q is infinity if and only if Q is infinity. This is because if 2Q = infinity,
+    // Q must equal -Q, or that Q.y == -(Q.y), or Q.y is 0. For a point on y^2 = x^3 + 7 to have
+    // y=0, x^3 must be -7 mod p. However, -7 has no cube root mod p.
+    r->infinity = a->infinity;
+    if (r->infinity) {
         return;
     }
 
     secp256k1_fe_t t1,t2,t3,t4;
-    secp256k1_fe_mul(&r->z, &t5, &a->z);
+    secp256k1_fe_mul(&r->z, &a->z, &a->y);
     secp256k1_fe_mul_int(&r->z, 2);       /* Z' = 2*Y*Z (2) */
     secp256k1_fe_sqr(&t1, &a->x);
     secp256k1_fe_mul_int(&t1, 3);         /* T1 = 3*X^2 (3) */
     secp256k1_fe_sqr(&t2, &t1);           /* T2 = 9*X^4 (1) */
-    secp256k1_fe_sqr(&t3, &t5);
+    secp256k1_fe_sqr(&t3, &a->y);
     secp256k1_fe_mul_int(&t3, 2);         /* T3 = 2*Y^2 (2) */
     secp256k1_fe_sqr(&t4, &t3);
     secp256k1_fe_mul_int(&t4, 2);         /* T4 = 8*Y^4 (2) */
-    secp256k1_fe_mul(&t3, &a->x, &t3);    /* T3 = 2*X*Y^2 (1) */
+    secp256k1_fe_mul(&t3, &t3, &a->x);    /* T3 = 2*X*Y^2 (1) */
     r->x = t3;
     secp256k1_fe_mul_int(&r->x, 4);       /* X' = 8*X*Y^2 (4) */
     secp256k1_fe_negate(&r->x, &r->x, 4); /* X' = -8*X*Y^2 (5) */
@@ -241,7 +237,6 @@ static void secp256k1_gej_double_var(secp256k1_gej_t *r, const secp256k1_gej_t *
     secp256k1_fe_mul(&r->y, &t1, &t3);    /* Y' = 36*X^3*Y^2 - 27*X^6 (1) */
     secp256k1_fe_negate(&t2, &t4, 2);     /* T2 = -8*Y^4 (3) */
     secp256k1_fe_add(&r->y, &t2);         /* Y' = 36*X^3*Y^2 - 27*X^6 - 8*Y^4 (4) */
-    r->infinity = 0;
 }
 
 static void secp256k1_gej_add_var(secp256k1_gej_t *r, const secp256k1_gej_t *a, const secp256k1_gej_t *b) {
@@ -342,7 +337,7 @@ static void secp256k1_gej_add_ge(secp256k1_gej_t *r, const secp256k1_gej_t *a, c
      *
      *  Substituting x_i = Xi / Zi^2 and yi = Yi / Zi^3, for i=1,2,3, gives:
      *    U1 = X1*Z2^2, U2 = X2*Z1^2
-     *    S1 = X1*Z2^3, S2 = X2*Z2^3
+     *    S1 = Y1*Z2^3, S2 = Y2*Z1^3
      *    Z = Z1*Z2
      *    T = U1+U2
      *    M = S1+S2
@@ -414,40 +409,9 @@ static void secp256k1_gej_mul_lambda(secp256k1_gej_t *r, const secp256k1_gej_t *
     *r = *a;
     secp256k1_fe_mul(&r->x, &r->x, beta);
 }
-
-static void secp256k1_gej_split_exp_var(secp256k1_num_t *r1, secp256k1_num_t *r2, const secp256k1_num_t *a) {
-    const secp256k1_ge_consts_t *c = secp256k1_ge_consts;
-    secp256k1_num_t bnc1, bnc2, bnt1, bnt2, bnn2;
-
-    secp256k1_num_copy(&bnn2, &c->order);
-    secp256k1_num_shift(&bnn2, 1);
-
-    secp256k1_num_mul(&bnc1, a, &c->a1b2);
-    secp256k1_num_add(&bnc1, &bnc1, &bnn2);
-    secp256k1_num_div(&bnc1, &bnc1, &c->order);
-
-    secp256k1_num_mul(&bnc2, a, &c->b1);
-    secp256k1_num_add(&bnc2, &bnc2, &bnn2);
-    secp256k1_num_div(&bnc2, &bnc2, &c->order);
-
-    secp256k1_num_mul(&bnt1, &bnc1, &c->a1b2);
-    secp256k1_num_mul(&bnt2, &bnc2, &c->a2);
-    secp256k1_num_add(&bnt1, &bnt1, &bnt2);
-    secp256k1_num_sub(r1, a, &bnt1);
-    secp256k1_num_mul(&bnt1, &bnc1, &c->b1);
-    secp256k1_num_mul(&bnt2, &bnc2, &c->a1b2);
-    secp256k1_num_sub(r2, &bnt1, &bnt2);
-}
 #endif
 
-
 static void secp256k1_ge_start(void) {
-    static const unsigned char secp256k1_ge_consts_order[] = {
-        0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
-        0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFE,
-        0xBA,0xAE,0xDC,0xE6,0xAF,0x48,0xA0,0x3B,
-        0xBF,0xD2,0x5E,0x8C,0xD0,0x36,0x41,0x41
-    };
     static const unsigned char secp256k1_ge_consts_g_x[] = {
         0x79,0xBE,0x66,0x7E,0xF9,0xDC,0xBB,0xAC,
         0x55,0xA0,0x62,0x95,0xCE,0x87,0x0B,0x07,
@@ -462,47 +426,21 @@ static void secp256k1_ge_start(void) {
     };
 #ifdef USE_ENDOMORPHISM
     /* properties of secp256k1's efficiently computable endomorphism */
-    static const unsigned char secp256k1_ge_consts_lambda[] = {
-        0x53,0x63,0xad,0x4c,0xc0,0x5c,0x30,0xe0,
-        0xa5,0x26,0x1c,0x02,0x88,0x12,0x64,0x5a,
-        0x12,0x2e,0x22,0xea,0x20,0x81,0x66,0x78,
-        0xdf,0x02,0x96,0x7c,0x1b,0x23,0xbd,0x72
-    };
     static const unsigned char secp256k1_ge_consts_beta[] = {
         0x7a,0xe9,0x6a,0x2b,0x65,0x7c,0x07,0x10,
         0x6e,0x64,0x47,0x9e,0xac,0x34,0x34,0xe9,
         0x9c,0xf0,0x49,0x75,0x12,0xf5,0x89,0x95,
         0xc1,0x39,0x6c,0x28,0x71,0x95,0x01,0xee
     };
-    static const unsigned char secp256k1_ge_consts_a1b2[] = {
-        0x30,0x86,0xd2,0x21,0xa7,0xd4,0x6b,0xcd,
-        0xe8,0x6c,0x90,0xe4,0x92,0x84,0xeb,0x15
-    };
-    static const unsigned char secp256k1_ge_consts_b1[] = {
-        0xe4,0x43,0x7e,0xd6,0x01,0x0e,0x88,0x28,
-        0x6f,0x54,0x7f,0xa9,0x0a,0xbf,0xe4,0xc3
-    };
-    static const unsigned char secp256k1_ge_consts_a2[] = {
-        0x01,
-        0x14,0xca,0x50,0xf7,0xa8,0xe2,0xf3,0xf6,
-        0x57,0xc1,0x10,0x8d,0x9d,0x44,0xcf,0xd8
-    };
 #endif
     if (secp256k1_ge_consts == NULL) {
         secp256k1_ge_consts_t *ret = (secp256k1_ge_consts_t*)malloc(sizeof(secp256k1_ge_consts_t));
-        secp256k1_num_set_bin(&ret->order,  secp256k1_ge_consts_order,  sizeof(secp256k1_ge_consts_order));
-        secp256k1_num_copy(&ret->half_order, &ret->order);
-        secp256k1_num_shift(&ret->half_order, 1);
 #ifdef USE_ENDOMORPHISM
-        secp256k1_num_set_bin(&ret->lambda, secp256k1_ge_consts_lambda, sizeof(secp256k1_ge_consts_lambda));
-        secp256k1_num_set_bin(&ret->a1b2,   secp256k1_ge_consts_a1b2,   sizeof(secp256k1_ge_consts_a1b2));
-        secp256k1_num_set_bin(&ret->a2,     secp256k1_ge_consts_a2,     sizeof(secp256k1_ge_consts_a2));
-        secp256k1_num_set_bin(&ret->b1,     secp256k1_ge_consts_b1,     sizeof(secp256k1_ge_consts_b1));
-        secp256k1_fe_set_b32(&ret->beta, secp256k1_ge_consts_beta);
+        VERIFY_CHECK(secp256k1_fe_set_b32(&ret->beta, secp256k1_ge_consts_beta));
 #endif
         secp256k1_fe_t g_x, g_y;
-        secp256k1_fe_set_b32(&g_x, secp256k1_ge_consts_g_x);
-        secp256k1_fe_set_b32(&g_y, secp256k1_ge_consts_g_y);
+        VERIFY_CHECK(secp256k1_fe_set_b32(&g_x, secp256k1_ge_consts_g_x));
+        VERIFY_CHECK(secp256k1_fe_set_b32(&g_y, secp256k1_ge_consts_g_y));
         secp256k1_ge_set_xy(&ret->g, &g_x, &g_y);
         secp256k1_ge_consts = ret;
     }
