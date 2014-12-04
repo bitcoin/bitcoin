@@ -1387,7 +1387,7 @@ unsigned int static KimotoGravityWell(const CBlockIndex* pindexLast, const CBloc
     return bnNew.GetCompact();
 }
 
-unsigned int static DarkGravityWave3(const CBlockIndex* pindexLast, const CBlockHeader *pblock) {
+unsigned int static DarkGravityWave(const CBlockIndex* pindexLast, const CBlockHeader *pblock) {
     /* current difficulty formula, darkcoin - DarkGravity v3, written by Evan Duffield - evan@darkcoin.io */
     const CBlockIndex *BlockLastSolved = pindexLast;
     const CBlockIndex *BlockReading = pindexLast;
@@ -1427,16 +1427,16 @@ unsigned int static DarkGravityWave3(const CBlockIndex* pindexLast, const CBlock
 
     CBigNum bnNew(PastDifficultyAverage);
 
-    int64_t nTargetTimespan = CountBlocks*nTargetSpacing;
+    int64_t _nTargetTimespan = CountBlocks*nTargetSpacing;
 
-    if (nActualTimespan < nTargetTimespan/3)
-        nActualTimespan = nTargetTimespan/3;
-    if (nActualTimespan > nTargetTimespan*3)
-        nActualTimespan = nTargetTimespan*3;
+    if (nActualTimespan < _nTargetTimespan/3)
+        nActualTimespan = _nTargetTimespan/3;
+    if (nActualTimespan > _nTargetTimespan*3)
+        nActualTimespan = _nTargetTimespan*3;
 
     // Retarget
     bnNew *= nActualTimespan;
-    bnNew /= nTargetTimespan;
+    bnNew /= _nTargetTimespan;
 
     if (bnNew > Params().ProofOfWorkLimit()){
         bnNew = Params().ProofOfWorkLimit();
@@ -1447,64 +1447,113 @@ unsigned int static DarkGravityWave3(const CBlockIndex* pindexLast, const CBlock
 
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock)
 {
-    unsigned int nProofOfWorkLimit = Params().ProofOfWorkLimit().GetCompact();
+        uint retarget = DIFF_BTC;
 
-    // Genesis block
-    if (pindexLast == NULL)
-        return nProofOfWorkLimit;
-
-    // Only change once per interval
-    if ((pindexLast->nHeight+1) % nInterval != 0)
-    {
-        if (TestNet())
-        {
-            // Special difficulty rule for testnet:
-            // If the new block's timestamp is more than 2* 10 minutes
-            // then allow mining of a min-difficulty block.
-            if (pblock->nTime > pindexLast->nTime + nTargetSpacing*2)
-                return nProofOfWorkLimit;
-            else
-            {
-                // Return the last non-special-min-difficulty-rules-block
-                const CBlockIndex* pindex = pindexLast;
-                while (pindex->pprev && pindex->nHeight % nInterval != 0 && pindex->nBits == nProofOfWorkLimit)
-                    pindex = pindex->pprev;
-                return pindex->nBits;
-            }
+        if (TestNet()) {
+            if (pindexLast->nHeight + 1 >= 256) retarget = DIFF_DGW;
         }
-        return pindexLast->nBits;
-    }
+        else {
+            if (pindexLast->nHeight + 1 >= 34140) retarget = DIFF_DGW;
+            else if (pindexLast->nHeight + 1 >= 15200) retarget = DIFF_KGW;
+        }
 
-    // Go back by what we want to be 14 days worth of blocks
-    const CBlockIndex* pindexFirst = pindexLast;
-    for (int i = 0; pindexFirst && i < nInterval-1; i++)
-        pindexFirst = pindexFirst->pprev;
-    assert(pindexFirst);
+        // Default Bitcoin style retargeting
+        if (retarget == DIFF_BTC)
+        {
+            unsigned int nProofOfWorkLimit = Params().ProofOfWorkLimit().GetCompact();
 
-    // Limit adjustment step
-    int64_t nActualTimespan = pindexLast->GetBlockTime() - pindexFirst->GetBlockTime();
-    LogPrintf("  nActualTimespan = %d  before bounds\n", nActualTimespan);
-    if (nActualTimespan < nTargetTimespan/4)
-        nActualTimespan = nTargetTimespan/4;
-    if (nActualTimespan > nTargetTimespan*4)
-        nActualTimespan = nTargetTimespan*4;
+            // Genesis block
+            if (pindexLast == NULL)
+                return nProofOfWorkLimit;
 
-    // Retarget
-    CBigNum bnNew;
-    bnNew.SetCompact(pindexLast->nBits);
-    bnNew *= nActualTimespan;
-    bnNew /= nTargetTimespan;
+            // Only change once per interval
+            if ((pindexLast->nHeight+1) % nInterval != 0)
+            {
+                // Special difficulty rule for testnet:
+                if (TestNet())
+                {
+                    // If the new block's timestamp is more than 2* 10 minutes
+                    // then allow mining of a min-difficulty block.
+                    if (pblock->nTime > pindexLast->nTime + nTargetSpacing*2)
+                        return nProofOfWorkLimit;
+                    else
+                    {
+                        // Return the last non-special-min-difficulty-rules-block
+                        const CBlockIndex* pindex = pindexLast;
+                        while (pindex->pprev && pindex->nHeight % nInterval != 0 && pindex->nBits == nProofOfWorkLimit)
+                            pindex = pindex->pprev;
+                        return pindex->nBits;
+                    }
+                }
+                return pindexLast->nBits;
+            }
 
-    if (bnNew > Params().ProofOfWorkLimit())
-        bnNew = Params().ProofOfWorkLimit();
+            // Darkcoin: This fixes an issue where a 51% attack can change difficulty at will.
+            // Go back the full period unless it's the first retarget after genesis.
+            // Code courtesy of Art Forz.
+            int blockstogoback = nInterval-1;
+            if ((pindexLast->nHeight+1) != nInterval)
+                blockstogoback = nInterval;
 
-    /// debug print
-    LogPrintf("GetNextWorkRequired RETARGET\n");
-    LogPrintf("nTargetTimespan = %d    nActualTimespan = %d\n", nTargetTimespan, nActualTimespan);
-    LogPrintf("Before: %08x  %s\n", pindexLast->nBits, CBigNum().SetCompact(pindexLast->nBits).getuint256().ToString());
-    LogPrintf("After:  %08x  %s\n", bnNew.GetCompact(), bnNew.getuint256().ToString());
+            // Go back by what we want to be 14 days worth of blocks
+            const CBlockIndex* pindexFirst = pindexLast;
+            for (int i = 0; pindexFirst && i < blockstogoback; i++)
+          //for (int i = 0; pindexFirst && i < nInterval-1; i++)
+                pindexFirst = pindexFirst->pprev;
+            assert(pindexFirst);
 
-    return bnNew.GetCompact();
+            // Limit adjustment step
+            //int64 nActualTimespan = pindexLast->GetBlockTime() - pindexFirst->GetBlockTime();
+            int64_t nActualTimespan = pindexLast->GetBlockTime() - pindexFirst->GetBlockTime();
+          //LogPrintf("  nActualTimespan = %"PRI64d"  before bounds\n", nActualTimespan);
+            LogPrintf("  nActualTimespan = %d  before bounds\n", nActualTimespan);
+            if (nActualTimespan < nTargetTimespan/4)
+                nActualTimespan = nTargetTimespan/4;
+            if (nActualTimespan > nTargetTimespan*4)
+                nActualTimespan = nTargetTimespan*4;
+
+            // Retarget
+            CBigNum bnNew;
+            bnNew.SetCompact(pindexLast->nBits);
+            bnNew *= nActualTimespan;
+            bnNew /= nTargetTimespan;
+
+            if (bnNew > Params().ProofOfWorkLimit())
+                bnNew = Params().ProofOfWorkLimit();
+
+            /// debug print
+            LogPrintf("GetNextWorkRequired RETARGET\n");
+          //LogPrintf("nTargetTimespan = %"PRI64d"    nActualTimespan = %"PRI64d"\n", nTargetTimespan, nActualTimespan);
+            LogPrintf("nTargetTimespan = %d    nActualTimespan = %d\n", nTargetTimespan, nActualTimespan);
+          //LogPrintf("Before: %08x  %s\n", pindexLast->nBits, CBigNum().SetCompact(pindexLast->nBits).getuint256().ToString().c_str());
+            LogPrintf("Before: %08x  %s\n", pindexLast->nBits, CBigNum().SetCompact(pindexLast->nBits).getuint256().ToString());
+          //LogPrintf("After:  %08x  %s\n", bnNew.GetCompact(), bnNew.getuint256().ToString().c_str());
+            LogPrintf("After:  %08x  %s\n", bnNew.GetCompact(), bnNew.getuint256().ToString());
+
+            return bnNew.GetCompact();
+
+        }
+
+        // Retarget using Kimoto Gravity Wave
+        else if (retarget == DIFF_KGW)
+        {
+            static const uint64_t blocksTargetSpacing = 2.5 * 60; // 2.5 minutes
+            static const unsigned int timeDaySeconds = 60 * 60 * 24;
+            uint64_t pastSecondsMin = timeDaySeconds * 0.025;
+            uint64_t pastSecondsMax = timeDaySeconds * 7;
+            uint64_t pastBlocksMin = pastSecondsMin / blocksTargetSpacing;
+            uint64_t pastBlocksMax = pastSecondsMax / blocksTargetSpacing;
+
+            return KimotoGravityWell(pindexLast, pblock, blocksTargetSpacing, pastBlocksMin, pastBlocksMax);
+        }
+
+        // Retarget using Dark Gravity Wave 3
+        else if (retarget == DIFF_DGW)
+        {
+            return DarkGravityWave(pindexLast, pblock);
+        }
+
+        return DarkGravityWave(pindexLast, pblock);
 }
 
 bool CheckProofOfWork(uint256 hash, unsigned int nBits)
@@ -1685,16 +1734,6 @@ void UpdateTime(CBlockHeader& block, const CBlockIndex* pindexPrev)
         block.nBits = GetNextWorkRequired(pindexPrev, &block);
 }
 
-
-
-
-
-
-
-
-
-
-
 void UpdateCoins(const CTransaction& tx, CValidationState &state, CCoinsViewCache &inputs, CTxUndo &txundo, int nHeight, const uint256 &txhash)
 {
     bool ret;
@@ -1812,8 +1851,6 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, CCoinsViewCach
 
     return true;
 }
-
-
 
 bool DisconnectBlock(CBlock& block, CValidationState& state, CBlockIndex* pindex, CCoinsViewCache& view, bool* pfClean)
 {
