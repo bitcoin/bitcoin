@@ -91,6 +91,7 @@ BitcoinGUI::BitcoinGUI(const NetworkStyle *networkStyle, QWidget *parent) :
     openRPCConsoleAction(0),
     openAction(0),
     showHelpMessageAction(0),
+    minimizeAction(0),
     trayIcon(0),
     trayIconMenu(0),
     notificator(0),
@@ -324,6 +325,10 @@ void BitcoinGUI::createActions(const NetworkStyle *networkStyle)
     openAction = new QAction(QApplication::style()->standardIcon(QStyle::SP_FileIcon), tr("Open &URI..."), this);
     openAction->setStatusTip(tr("Open a bitcoin: URI or payment request"));
 
+    minimizeAction = new QAction(QIcon(":/icons/minimize"), tr("&Minimize"), this);
+    minimizeAction->setStatusTip(tr("Minimize application"));
+    minimizeAction->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_M));
+
     showHelpMessageAction = new QAction(QApplication::style()->standardIcon(QStyle::SP_MessageBoxInformation), tr("&Command-line options"), this);
     showHelpMessageAction->setStatusTip(tr("Show the Bitcoin Core help message to get a list with possible Bitcoin command-line options"));
 
@@ -332,6 +337,7 @@ void BitcoinGUI::createActions(const NetworkStyle *networkStyle)
     connect(aboutQtAction, SIGNAL(triggered()), qApp, SLOT(aboutQt()));
     connect(optionsAction, SIGNAL(triggered()), this, SLOT(optionsClicked()));
     connect(toggleHideAction, SIGNAL(triggered()), this, SLOT(toggleHidden()));
+    connect(minimizeAction, SIGNAL(triggered()), this, SLOT(showMinimized()));
     connect(showHelpMessageAction, SIGNAL(triggered()), this, SLOT(showHelpMessageClicked()));
 #ifdef ENABLE_WALLET
     if(walletFrame)
@@ -381,6 +387,9 @@ void BitcoinGUI::createMenuBar()
         settings->addSeparator();
     }
     settings->addAction(optionsAction);
+
+    QMenu *window = appMenuBar->addMenu(tr("&Window"));
+    window->addAction(minimizeAction);
 
     QMenu *help = appMenuBar->addMenu(tr("&Help"));
     if(walletFrame)
@@ -807,6 +816,12 @@ void BitcoinGUI::message(const QString &title, const QString &message, unsigned 
 void BitcoinGUI::changeEvent(QEvent *e)
 {
     QMainWindow::changeEvent(e);
+
+    if(e->type() == QEvent::WindowStateChange)
+    {
+        minimizeAction->setEnabled(!isMinimized());
+    }
+
 #ifndef Q_OS_MAC // Ignored on Mac
     if(e->type() == QEvent::WindowStateChange)
     {
