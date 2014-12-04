@@ -33,7 +33,6 @@ These dependencies are required:
  ------------|------------------|----------------------
  libssl      | SSL Support      | Secure communications
  libboost    | Boost            | C++ Library
- libgmp      | secp256k1        | Arbitrary-precision arithmetic (version >= 3.1)
 
 Optional dependencies:
 
@@ -58,7 +57,7 @@ Dependency Build Instructions: Ubuntu & Debian
 ----------------------------------------------
 Build requirements:
 
-	sudo apt-get install build-essential libtool autotools-dev autoconf pkg-config libssl-dev libgmp-dev
+	sudo apt-get install build-essential libtool autotools-dev autoconf pkg-config libssl-dev
 	
 for Ubuntu 12.04 and later or Debian 7 and later libboost-all-dev has to be installed:
 
