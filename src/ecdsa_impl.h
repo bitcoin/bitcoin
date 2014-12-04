@@ -48,7 +48,7 @@ static void secp256k1_ecdsa_stop(void) {
     if (secp256k1_ecdsa_consts == NULL)
         return;
 
-    secp256k1_ecdsa_consts_t *c = (secp256k1_ecdsa_consts_t*)secp256k1_ecmult_consts;
+    secp256k1_ecdsa_consts_t *c = (secp256k1_ecdsa_consts_t*)secp256k1_ecdsa_consts;
     secp256k1_ecdsa_consts = NULL;
     free(c);
 }

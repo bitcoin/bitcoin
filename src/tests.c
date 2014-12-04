@@ -409,7 +409,7 @@ void run_scalar_tests(void) {
     }
 
     {
-        // (-1)+1 should be zero.
+        /* (-1)+1 should be zero. */
         secp256k1_scalar_t s, o;
         secp256k1_scalar_set_int(&s, 1);
         secp256k1_scalar_negate(&o, &s);
@@ -419,7 +419,7 @@ void run_scalar_tests(void) {
 
 #ifndef USE_NUM_NONE
     {
-        // A scalar with value of the curve order should be 0.
+        /* A scalar with value of the curve order should be 0. */
         secp256k1_num_t order;
         secp256k1_scalar_order_get_num(&order);
         unsigned char bin[32];
@@ -618,9 +618,17 @@ void gej_equals_gej(const secp256k1_gej_t *a, const secp256k1_gej_t *b) {
 }
 
 void test_ge(void) {
+    char ca[135];
+    char cb[68];
+    int rlen;
     secp256k1_ge_t a, b, i, n;
     random_group_element_test(&a);
     random_group_element_test(&b);
+    rlen = sizeof(ca);
+    secp256k1_ge_get_hex(ca,&rlen,&a);
+    CHECK(rlen > 4 && rlen <= (int)sizeof(ca));
+    rlen = sizeof(cb);
+    secp256k1_ge_get_hex(cb,&rlen,&b); /* Intentionally undersized buffer. */
     n = a;
     secp256k1_fe_normalize(&a.y);
     secp256k1_fe_negate(&n.y, &a.y, 1);
@@ -772,6 +780,11 @@ void test_point_times_order(const secp256k1_gej_t *point) {
     secp256k1_ecmult(&res2, point, &nx, &nx); /* calc res2 = (order - x) * point + (order - x) * G; */
     secp256k1_gej_add_var(&res1, &res1, &res2);
     CHECK(secp256k1_gej_is_infinity(&res1));
+    CHECK(secp256k1_gej_is_valid(&res1) == 0);
+    secp256k1_ge_t res3;
+    secp256k1_ge_set_gej(&res3, &res1);
+    CHECK(secp256k1_ge_is_infinity(&res3));
+    CHECK(secp256k1_ge_is_valid(&res3) == 0);
 }
 
 void run_point_times_order(void) {
@@ -842,13 +855,17 @@ void random_sign(secp256k1_ecdsa_sig_t *sig, const secp256k1_scalar_t *key, cons
 }
 
 void test_ecdsa_sign_verify(void) {
+    int recid;
+    int getrec;
     secp256k1_scalar_t msg, key;
     random_scalar_order_test(&msg);
     random_scalar_order_test(&key);
     secp256k1_gej_t pubj; secp256k1_ecmult_gen(&pubj, &key);
     secp256k1_ge_t pub; secp256k1_ge_set_gej(&pub, &pubj);
     secp256k1_ecdsa_sig_t sig;
-    random_sign(&sig, &key, &msg, NULL);
+    getrec = secp256k1_rand32()&1;
+    random_sign(&sig, &key, &msg, getrec?&recid:NULL);
+    if (getrec) CHECK(recid >= 0 && recid < 4);
     CHECK(secp256k1_ecdsa_sig_verify(&sig, &pub, &msg));
     secp256k1_scalar_t one;
     secp256k1_scalar_set_int(&one, 1);
@@ -998,9 +1015,9 @@ void test_ecdsa_edge_cases(void) {
     unsigned char pubkeyb[33];
     int pubkeyblen = 33;
     for (int recid = 0; recid < 4; recid++) {
-        // (4,4) encoded in DER.
+        /* (4,4) encoded in DER. */
         unsigned char sigbder[8] = {0x30, 0x06, 0x02, 0x01, 0x04, 0x02, 0x01, 0x04};
-        // (order + r,4) encoded in DER.
+        /* (order + r,4) encoded in DER. */
         unsigned char sigbderlong[40] = {
             0x30, 0x26, 0x02, 0x21, 0x00, 0xFF, 0xFF, 0xFF,
             0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
@@ -1014,7 +1031,7 @@ void test_ecdsa_edge_cases(void) {
             unsigned char pubkey2b[33];
             int pubkey2blen = 33;
             CHECK(secp256k1_ecdsa_recover_compact(msg32, 32, sigb64, pubkey2b, &pubkey2blen, 1, recid2));
-            // Verifying with (order + r,4) should always fail.
+            /* Verifying with (order + r,4) should always fail. */
             CHECK(secp256k1_ecdsa_verify(msg32, 32, sigbderlong, sizeof(sigbderlong), pubkey2b, pubkey2blen) != 1);
         }
         /* Damage signature. */
@@ -1035,6 +1052,36 @@ void test_ecdsa_edge_cases(void) {
         secp256k1_ge_set_gej(&key, &keyj);
         secp256k1_scalar_t msg = sig.s;
         CHECK(secp256k1_ecdsa_sig_verify(&sig, &key, &msg) == 0);
+    }
+
+    /* Test r/s equal to zero */
+    {
+        /* (1,1) encoded in DER. */
+        unsigned char sigcder[8] = {0x30, 0x06, 0x02, 0x01, 0x01, 0x02, 0x01, 0x01};
+        unsigned char sigc64[64] = {
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01,
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01,
+        };
+        unsigned char pubkeyc[65];
+        int pubkeyclen = 65;
+        CHECK(secp256k1_ecdsa_recover_compact(msg32, 32, sigc64, pubkeyc, &pubkeyclen, 0, 0) == 1);
+        CHECK(secp256k1_ecdsa_verify(msg32, 32, sigcder, sizeof(sigcder), pubkeyc, pubkeyclen) == 1);
+        sigcder[4] = 0;
+        sigc64[31] = 0;
+        CHECK(secp256k1_ecdsa_recover_compact(msg32, 32, sigc64, pubkeyb, &pubkeyblen, 1, 0) == 0);
+        CHECK(secp256k1_ecdsa_verify(msg32, 32, sigcder, sizeof(sigcder), pubkeyc, pubkeyclen) == 0);
+        sigcder[4] = 1;
+        sigcder[7] = 0;
+        sigc64[31] = 1;
+        sigc64[63] = 0;
+        CHECK(secp256k1_ecdsa_recover_compact(msg32, 32, sigc64, pubkeyb, &pubkeyblen, 1, 0) == 0);
+        CHECK(secp256k1_ecdsa_verify(msg32, 32, sigcder, sizeof(sigcder), pubkeyc, pubkeyclen) == 0);
     }
 }
 
@@ -1119,6 +1166,15 @@ int main(int argc, char **argv) {
     /* initialize */
     secp256k1_start(SECP256K1_START_SIGN | SECP256K1_START_VERIFY);
 
+    /* initializing a second time shouldn't cause any harm or memory leaks. */
+    secp256k1_start(SECP256K1_START_SIGN | SECP256K1_START_VERIFY);
+
+    /* Likewise, re-running the internal init functions should be harmless. */
+    secp256k1_fe_start();
+    secp256k1_ge_start();
+    secp256k1_scalar_start();
+    secp256k1_ecdsa_start();
+
 #ifndef USE_NUM_NONE
     /* num tests */
     run_num_smalltests();
@@ -1155,5 +1211,14 @@ int main(int argc, char **argv) {
 
     /* shutdown */
     secp256k1_stop();
+
+    /* shutting down twice shouldn't cause any double frees. */
+    secp256k1_stop();
+
+    /* Same for the internal shutdown functions. */
+    secp256k1_fe_stop();
+    secp256k1_ge_stop();
+    secp256k1_scalar_stop();
+    secp256k1_ecdsa_stop();
     return 0;
 }
