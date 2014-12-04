@@ -1,7 +1,7 @@
 Porting Bitcoin 0.9.3 to Darkcoin
 =================================
 
-Staging tree for Darkcoin-0.9.3.
+Staging tree for Darkcoin-0.11.0.
 
 
 DONE:
@@ -17,19 +17,19 @@ DONE:
 - Adjusted algorithm (X11)
 - Updated subsidity function (Block value)
 - Adjusted wallet keypool size to 1000 and added loading indicator on fresh wallet load
+- Adjusted difficulty and blockvalue (KGW, DGW based on blockheight)
 
 
-MUST-HAVE:
+MANDATORY:
 ----------
 
-- Adjust difficulty (KGW, DGW based on blockheight)
 - Add masternode payment checks a.k.a. enforcement (based on blockheight)
+
+
+OPTIONAL:
+---------
+
 - Remove Bitcoin dead weight (SHA256, hardcoded keys, nodes)
-
-
-ADD-ON:
--------
-
 - All the above for Testnet (including complete testnet reset)
 - Update strings and wallet layout/branding
 - Include Evan's public key for msg signing
