@@ -15,18 +15,6 @@ extern "C" {
 # endif
 
 # if (!defined(__STDC_VERSION__) || (__STDC_VERSION__ < 199901L) )
-#  if SECP256K1_GNUC_PREREQ(3,0)
-#   define SECP256K1_RESTRICT __restrict__
-#  elif (defined(_MSC_VER) && _MSC_VER >= 1400)
-#   define SECP256K1_RESTRICT __restrict
-#  else
-#   define SECP256K1_RESTRICT
-#  endif
-# else
-#  define SECP256K1_RESTRICT restrict
-# endif
-
-# if (!defined(__STDC_VERSION__) || (__STDC_VERSION__ < 199901L) )
 #  if SECP256K1_GNUC_PREREQ(2,7)
 #   define SECP256K1_INLINE __inline__
 #  elif (defined(_MSC_VER))

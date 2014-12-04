@@ -9,7 +9,7 @@
 
 #include "eckey.h"
 
-#include "num.h"
+#include "scalar.h"
 #include "field.h"
 #include "group.h"
 #include "ecmult_gen.h"
@@ -17,12 +17,12 @@
 static int secp256k1_eckey_pubkey_parse(secp256k1_ge_t *elem, const unsigned char *pub, int size) {
     if (size == 33 && (pub[0] == 0x02 || pub[0] == 0x03)) {
         secp256k1_fe_t x;
-        secp256k1_fe_set_b32(&x, pub+1);
-        return secp256k1_ge_set_xo(elem, &x, pub[0] == 0x03);
+        return secp256k1_fe_set_b32(&x, pub+1) && secp256k1_ge_set_xo(elem, &x, pub[0] == 0x03);
     } else if (size == 65 && (pub[0] == 0x04 || pub[0] == 0x06 || pub[0] == 0x07)) {
         secp256k1_fe_t x, y;
-        secp256k1_fe_set_b32(&x, pub+1);
-        secp256k1_fe_set_b32(&y, pub+33);
+        if (!secp256k1_fe_set_b32(&x, pub+1) || !secp256k1_fe_set_b32(&y, pub+33)) {
+            return 0;
+        }
         secp256k1_ge_set_xy(elem, &x, &y);
         if ((pub[0] == 0x06 || pub[0] == 0x07) && secp256k1_fe_is_odd(&y) != (pub[0] == 0x07))
             return 0;
@@ -154,17 +154,12 @@ static int secp256k1_eckey_privkey_tweak_add(secp256k1_scalar_t *key, const secp
     return 1;
 }
 
-static int secp256k1_eckey_pubkey_tweak_add(secp256k1_ge_t *key, const secp256k1_num_t *tweak) {
-    if (secp256k1_num_cmp(tweak, &secp256k1_ge_consts->order) >= 0)
-        return 0;
-
+static int secp256k1_eckey_pubkey_tweak_add(secp256k1_ge_t *key, const secp256k1_scalar_t *tweak) {
     secp256k1_gej_t pt;
     secp256k1_gej_set_ge(&pt, key);
-    secp256k1_num_t one;
-    secp256k1_num_init(&one);
-    secp256k1_num_set_int(&one, 1);
+    secp256k1_scalar_t one;
+    secp256k1_scalar_set_int(&one, 1);
     secp256k1_ecmult(&pt, &pt, &one, tweak);
-    secp256k1_num_free(&one);
 
     if (secp256k1_gej_is_infinity(&pt))
         return 0;
@@ -180,19 +175,15 @@ static int secp256k1_eckey_privkey_tweak_mul(secp256k1_scalar_t *key, const secp
     return 1;
 }
 
-static int secp256k1_eckey_pubkey_tweak_mul(secp256k1_ge_t *key, const secp256k1_num_t *tweak) {
-    if (secp256k1_num_is_zero(tweak))
-        return 0;
-    if (secp256k1_num_cmp(tweak, &secp256k1_ge_consts->order) >= 0)
+static int secp256k1_eckey_pubkey_tweak_mul(secp256k1_ge_t *key, const secp256k1_scalar_t *tweak) {
+    if (secp256k1_scalar_is_zero(tweak))
         return 0;
 
-    secp256k1_num_t zero;
-    secp256k1_num_init(&zero);
-    secp256k1_num_set_int(&zero, 0);
+    secp256k1_scalar_t zero;
+    secp256k1_scalar_set_int(&zero, 0);
     secp256k1_gej_t pt;
     secp256k1_gej_set_ge(&pt, key);
     secp256k1_ecmult(&pt, &pt, tweak, &zero);
-    secp256k1_num_free(&zero);
     secp256k1_ge_set_gej(key, &pt);
     return 1;
 }
