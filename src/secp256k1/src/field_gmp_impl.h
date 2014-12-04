@@ -75,7 +75,15 @@ SECP256K1_INLINE static int secp256k1_fe_equal(const secp256k1_fe_t *a, const se
     return ret;
 }
 
-static void secp256k1_fe_set_b32(secp256k1_fe_t *r, const unsigned char *a) {
+SECP256K1_INLINE static int secp256k1_fe_cmp_var(const secp256k1_fe_t *a, const secp256k1_fe_t *b) {
+    for (int i=FIELD_LIMBS; i>=0; i--) {
+        if (a->n[i] > b->n[i]) return 1;
+        if (a->n[i] < b->n[i]) return -1;
+    }
+    return 0;
+}
+
+static int secp256k1_fe_set_b32(secp256k1_fe_t *r, const unsigned char *a) {
     for (int i=0; i<FIELD_LIMBS+1; i++)
         r->n[i] = 0;
     for (int i=0; i<256; i++) {
@@ -83,6 +91,7 @@ static void secp256k1_fe_set_b32(secp256k1_fe_t *r, const unsigned char *a) {
         int shift = i%GMP_NUMB_BITS;
         r->n[limb] |= (mp_limb_t)((a[31-i/8] >> (i%8)) & 0x1) << shift;
     }
+    return (mpn_cmp(r->n, secp256k1_field_p, FIELD_LIMBS) < 0);
 }
 
 /** Convert a field element to a 32-byte big endian value. Requires the input to be normalized */
@@ -142,7 +151,8 @@ static void secp256k1_fe_reduce(secp256k1_fe_t *r, mp_limb_t *tmp) {
     r->n[FIELD_LIMBS] = mpn_add(r->n, tmp, FIELD_LIMBS, q, 1+(33+GMP_NUMB_BITS-1)/GMP_NUMB_BITS);
 }
 
-static void secp256k1_fe_mul(secp256k1_fe_t *r, const secp256k1_fe_t *a, const secp256k1_fe_t *b) {
+static void secp256k1_fe_mul(secp256k1_fe_t *r, const secp256k1_fe_t *a, const secp256k1_fe_t * SECP256K1_RESTRICT b) {
+    VERIFY_CHECK(r != b);
     secp256k1_fe_t ac = *a;
     secp256k1_fe_t bc = *b;
     secp256k1_fe_normalize(&ac);
@@ -158,6 +168,13 @@ static void secp256k1_fe_sqr(secp256k1_fe_t *r, const secp256k1_fe_t *a) {
     mp_limb_t tmp[2*FIELD_LIMBS];
     mpn_sqr(tmp, ac.n, FIELD_LIMBS);
     secp256k1_fe_reduce(r, tmp);
+}
+
+static void secp256k1_fe_cmov(secp256k1_fe_t *r, const secp256k1_fe_t *a, int flag) {
+    mp_limb_t mask0 = flag + ~((mp_limb_t)0), mask1 = ~mask0;
+    for (int i = 0; i <= FIELD_LIMBS; i++) {
+        r->n[i] = (r->n[i] & mask0) | (a->n[i] & mask1);
+    }
 }
 
 #endif
