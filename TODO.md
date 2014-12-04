@@ -18,12 +18,14 @@ DONE:
 - Updated subsidity function (Block value)
 - Adjusted wallet keypool size to 1000 and added loading indicator on fresh wallet load
 - Adjusted difficulty and blockvalue (KGW, DGW based on blockheight)
+- Defined regression test genesis block
 
 
 MANDATORY:
 ----------
 
 - Add masternode payment checks a.k.a. enforcement (based on blockheight)
+- Fix mining protocol to include correct pow and masternodes
 
 
 OPTIONAL:
@@ -34,7 +36,6 @@ OPTIONAL:
 - Update strings and wallet layout/branding
 - Include Evan's public key for msg signing
 - Darksend, Instant Transactions, Atomic Transfers, etc. pp.
-- Figure out what regression tests are and fix them
 - Define BIP38 address prefixes EXT_PUBLIC_KEY and EXT_SECRET_KEY for Darkcoin
 - Include centralized checkpoint syncing (peercoin style)
 - Write tests
