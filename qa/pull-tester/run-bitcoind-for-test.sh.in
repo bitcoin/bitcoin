@@ -9,19 +9,25 @@ mkdir -p "$DATADIR"/regtest
 touch "$DATADIR/regtest/debug.log"
 tail -q -n 1 -F "$DATADIR/regtest/debug.log" | grep -m 1 -q "Done loading" &
 WAITER=$!
+DB_CACHE_SET=""
+if [ "x$1" = "x1" ]; then DB_CACHE_SET="-dbcache=50"; fi
 PORT=`expr 10000 + $$ % 55536`
-"@abs_top_builddir@/src/bitcoind@EXEEXT@" -connect=0.0.0.0 -datadir="$DATADIR" -rpcuser=user -rpcpassword=pass -listen -keypool=3 -debug -debug=net -logtimestamps -checkmempool=0 -relaypriority=0 -port=$PORT -whitelist=127.0.0.1 -regtest -rpcport=`expr $PORT + 1` &
+"@abs_top_builddir@/src/bitcoind@EXEEXT@" -connect=0.0.0.0 -datadir="$DATADIR" -rpcuser=user -rpcpassword=pass -listen -keypool=3 -debug -debug=net -logtimestamps -checkmempool=$1 -relaypriority=0 -port=$PORT -whitelist=127.0.0.1 -regtest -rpcport=`expr $PORT + 1` $DB_CACHE_SET &
 BITCOIND=$!
+shift
 
 #Install a watchdog.
 (sleep 10 && kill -0 $WAITER 2>/dev/null && kill -9 $BITCOIND $$)&
 wait $WAITER
 
+#Write something to stdout every 5 minutes so travis doesnt get upset
+(while [ true ]; do sleep 300; echo "5-minute MARK"; done)&
+
 if [ -n "$TIMEOUT" ]; then
-  timeout "$TIMEOUT"s "$@" $PORT
+  timeout "$TIMEOUT"s "$@" $PORT > "$DATADIR/tester.log" 2>&1
   RETURN=$?
 else
-  "$@" $PORT
+  "$@" $PORT > "$DATADIR/tester.log" 2>&1
   RETURN=$?
 fi
 
@@ -31,6 +37,6 @@ kill $BITCOIND && wait $BITCOIND
 # timeout returns 124 on timeout, otherwise the return value of the child
 
 # If $RETURN is not 0, the test failed. Dump the tail of the debug log.
-if [ $RETURN -ne 0 ]; then tail -n 200 $DATADIR/regtest/debug.log; fi
+if [ $RETURN -ne 0 ]; then echo "block-tester returned $RETURN"; tail -n 200 "$DATADIR/regtest/debug.log"; tail -n 500 "$DATADIR/tester.log"; fi
 
 exit $RETURN
