@@ -498,23 +498,6 @@ void run_field_inv_var(void) {
     }
 }
 
-void run_field_inv_all(void) {
-    secp256k1_fe_t x[16], xi[16], xii[16];
-    /* Check it's safe to call for 0 elements */
-    secp256k1_fe_inv_all(0, xi, x);
-    for (int i=0; i<count; i++) {
-        size_t len = (secp256k1_rand32() & 15) + 1;
-        for (size_t j=0; j<len; j++)
-            random_fe_non_zero(&x[j]);
-        secp256k1_fe_inv_all(len, xi, x);
-        for (size_t j=0; j<len; j++)
-            CHECK(check_fe_inverse(&x[j], &xi[j]));
-        secp256k1_fe_inv_all(len, xii, xi);
-        for (size_t j=0; j<len; j++)
-            CHECK(check_fe_equal(&x[j], &xii[j]));
-    }
-}
-
 void run_field_inv_all_var(void) {
     secp256k1_fe_t x[16], xi[16], xii[16];
     /* Check it's safe to call for 0 elements */
@@ -1185,7 +1168,6 @@ int main(int argc, char **argv) {
     /* field tests */
     run_field_inv();
     run_field_inv_var();
-    run_field_inv_all();
     run_field_inv_all_var();
     run_sqr();
     run_sqrt();
