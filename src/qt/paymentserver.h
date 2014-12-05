@@ -1,5 +1,5 @@
 // Copyright (c) 2011-2014 The Bitcoin developers
-// Distributed under the MIT/X11 software license, see the accompanying
+// Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef BITCOIN_QT_PAYMENTSERVER_H
@@ -40,6 +40,8 @@
 
 class OptionsModel;
 
+class CWallet;
+
 QT_BEGIN_NAMESPACE
 class QApplication;
 class QByteArray;
@@ -49,8 +51,6 @@ class QNetworkReply;
 class QSslError;
 class QUrl;
 QT_END_NAMESPACE
-
-class CWallet;
 
 // BIP70 max payment request size in bytes (DoS protection)
 extern const qint64 BIP70_MAX_PAYMENTREQUEST_SIZE;
