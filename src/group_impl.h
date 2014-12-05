@@ -85,15 +85,16 @@ static void secp256k1_ge_set_gej_var(secp256k1_ge_t *r, secp256k1_gej_t *a) {
 
 static void secp256k1_ge_set_all_gej_var(size_t len, secp256k1_ge_t r[len], const secp256k1_gej_t a[len]) {
     size_t count = 0;
-    secp256k1_fe_t az[len];
+    secp256k1_fe_t *az = malloc(sizeof(secp256k1_fe_t) * len);
     for (size_t i=0; i<len; i++) {
         if (!a[i].infinity) {
             az[count++] = a[i].z;
         }
     }
 
-    secp256k1_fe_t azi[count];
+    secp256k1_fe_t *azi = malloc(sizeof(secp256k1_fe_t) * count);
     secp256k1_fe_inv_all_var(count, azi, az);
+    free(az);
 
     count = 0;
     for (size_t i=0; i<len; i++) {
@@ -106,6 +107,7 @@ static void secp256k1_ge_set_all_gej_var(size_t len, secp256k1_ge_t r[len], cons
             secp256k1_fe_mul(&r[i].y, &a[i].y, &zi3);
         }
     }
+    free(azi);
 }
 
 static void secp256k1_gej_set_infinity(secp256k1_gej_t *r) {

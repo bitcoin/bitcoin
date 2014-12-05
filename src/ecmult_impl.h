@@ -43,13 +43,14 @@ static void secp256k1_ecmult_table_precomp_gej_var(secp256k1_gej_t *pre, const s
 
 static void secp256k1_ecmult_table_precomp_ge_var(secp256k1_ge_t *pre, const secp256k1_gej_t *a, int w) {
     const int table_size = 1 << (w-2);
-    secp256k1_gej_t prej[table_size];
+    secp256k1_gej_t *prej = malloc(sizeof(secp256k1_gej_t) * table_size);
     prej[0] = *a;
     secp256k1_gej_t d; secp256k1_gej_double_var(&d, a);
     for (int i=1; i<table_size; i++) {
         secp256k1_gej_add_var(&prej[i], &d, &prej[i-1]);
     }
     secp256k1_ge_set_all_gej_var(table_size, pre, prej);
+    free(prej);
 }
 
 /** The number of entries a table with precomputed multiples needs to have. */
