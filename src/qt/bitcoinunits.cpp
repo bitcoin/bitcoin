@@ -1,4 +1,5 @@
-// Copyright (c) 2011-2013 The Bitcoin developers
+// Copyright (c) 2011-2014 The Bitcoin developers
+// Copyright (c) 2014 vertoe & the Darkcoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -15,9 +16,10 @@ BitcoinUnits::BitcoinUnits(QObject *parent):
 QList<BitcoinUnits::Unit> BitcoinUnits::availableUnits()
 {
     QList<BitcoinUnits::Unit> unitlist;
-    unitlist.append(BTC);
-    unitlist.append(mBTC);
-    unitlist.append(uBTC);
+    unitlist.append(DRK);
+    unitlist.append(mDRK);
+    unitlist.append(uDRK);
+    unitlist.append(duffs);
     return unitlist;
 }
 
@@ -25,9 +27,10 @@ bool BitcoinUnits::valid(int unit)
 {
     switch(unit)
     {
-    case BTC:
-    case mBTC:
-    case uBTC:
+    case DRK:
+    case mDRK:
+    case uDRK:
+    case duffs:
         return true;
     default:
         return false;
@@ -38,9 +41,10 @@ QString BitcoinUnits::name(int unit)
 {
     switch(unit)
     {
-    case BTC: return QString("BTC");
-    case mBTC: return QString("mBTC");
-    case uBTC: return QString::fromUtf8("μBTC");
+    case DRK: return QString("DRK");
+    case mDRK: return QString("mDRK");
+    case uDRK: return QString::fromUtf8("μDRK");
+    case duffs: return QString::fromUtf8("duffs");
     default: return QString("???");
     }
 }
@@ -49,9 +53,10 @@ QString BitcoinUnits::description(int unit)
 {
     switch(unit)
     {
-    case BTC: return QString("Bitcoins");
-    case mBTC: return QString("Milli-Bitcoins (1 / 1,000)");
-    case uBTC: return QString("Micro-Bitcoins (1 / 1,000,000)");
+    case DRK: return QString("Darkcoins");
+    case mDRK: return QString("Milli-Darkcoins (1 / 1,000)");
+    case uDRK: return QString("Micro-Darkcoins (1 / 1,000,000)");
+    case duffs: return QString("Ten Nano-Darkcoins (1 / 100,000,000)");
     default: return QString("???");
     }
 }
@@ -60,9 +65,10 @@ qint64 BitcoinUnits::factor(int unit)
 {
     switch(unit)
     {
-    case BTC:  return 100000000;
-    case mBTC: return 100000;
-    case uBTC: return 100;
+    case DRK:  return 100000000;
+    case mDRK: return 100000;
+    case uDRK: return 100;
+    case duffs: return 1;
     default:   return 100000000;
     }
 }
@@ -71,9 +77,10 @@ qint64 BitcoinUnits::maxAmount(int unit)
 {
     switch(unit)
     {
-    case BTC:  return Q_INT64_C(21000000);
-    case mBTC: return Q_INT64_C(21000000000);
-    case uBTC: return Q_INT64_C(21000000000000);
+    case DRK:  return Q_INT64_C(21000000);
+    case mDRK: return Q_INT64_C(21000000000);
+    case uDRK: return Q_INT64_C(21000000000000);
+    case duffs: return Q_INT64_C(2100000000000000);
     default:   return 0;
     }
 }
@@ -82,9 +89,10 @@ int BitcoinUnits::amountDigits(int unit)
 {
     switch(unit)
     {
-    case BTC: return 8; // 21,000,000 (# digits, without commas)
-    case mBTC: return 11; // 21,000,000,000
-    case uBTC: return 14; // 21,000,000,000,000
+    case DRK: return 8; // 21,000,000 (# digits, without commas)
+    case mDRK: return 11; // 21,000,000,000
+    case uDRK: return 14; // 21,000,000,000,000
+    case duffs: return 16; // 2,100,000,000,000,000
     default: return 0;
     }
 }
@@ -93,9 +101,10 @@ int BitcoinUnits::decimals(int unit)
 {
     switch(unit)
     {
-    case BTC: return 8;
-    case mBTC: return 5;
-    case uBTC: return 2;
+    case DRK: return 8;
+    case mDRK: return 5;
+    case uDRK: return 2;
+    case duffs: return 0;
     default: return 0;
     }
 }
@@ -124,6 +133,10 @@ QString BitcoinUnits::format(int unit, qint64 n, bool fPlus)
         quotient_str.insert(0, '-');
     else if (fPlus && n > 0)
         quotient_str.insert(0, '+');
+
+    if (num_decimals <= 0)
+        return quotient_str;
+
     return quotient_str + QString(".") + remainder_str;
 }
 
