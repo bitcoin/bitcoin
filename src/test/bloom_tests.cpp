@@ -7,10 +7,12 @@
 #include "base58.h"
 #include "clientversion.h"
 #include "key.h"
-#include "main.h"
+#include "merkleblock.h"
 #include "serialize.h"
+#include "streams.h"
 #include "uint256.h"
 #include "util.h"
+#include "utilstrencodings.h"
 
 #include <vector>
 
