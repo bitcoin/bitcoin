@@ -50,6 +50,9 @@ static void secp256k1_fe_stop(void);
 /** Normalize a field element. */
 static void secp256k1_fe_normalize(secp256k1_fe_t *r);
 
+/** Normalize a field element, without constant-time guarantee. */
+static void secp256k1_fe_normalize_var(secp256k1_fe_t *r);
+
 /** Set a field element equal to a small integer. Resulting field element is normalized. */
 static void secp256k1_fe_set_int(secp256k1_fe_t *r, int a);
 
@@ -93,7 +96,7 @@ static void secp256k1_fe_sqr(secp256k1_fe_t *r, const secp256k1_fe_t *a);
 /** Sets a field element to be the (modular) square root (if any exist) of another. Requires the
  *  input's magnitude to be at most 8. The output magnitude is 1 (but not guaranteed to be
  *  normalized). Return value indicates whether a square root was found. */
-static int secp256k1_fe_sqrt(secp256k1_fe_t *r, const secp256k1_fe_t *a);
+static int secp256k1_fe_sqrt_var(secp256k1_fe_t *r, const secp256k1_fe_t *a);
 
 /** Sets a field element to be the (modular) inverse of another. Requires the input's magnitude to be
  *  at most 8. The output magnitude is 1 (but not guaranteed to be normalized). */
