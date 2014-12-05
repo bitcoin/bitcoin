@@ -314,7 +314,7 @@ void SendMoney(const CTxDestination &address, CAmount nValue, CWalletTx& wtxNew)
 {
     // Check amount
     if (nValue <= 0)
-        throw JSONRPCError(RPC_WALLET_ERROR, "Invalid amount");
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid amount");
 
     if (nValue > pwalletMain->GetBalance())
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Insufficient funds");
@@ -342,8 +342,6 @@ void SendMoney(const CTxDestination &address, CAmount nValue, CWalletTx& wtxNew)
     }
     if (!pwalletMain->CommitTransaction(wtxNew, reservekey))
         throw JSONRPCError(RPC_WALLET_ERROR, "Error: The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.");
-
-    return;
 }
 
 Value sendtoaddress(const Array& params, bool fHelp)
