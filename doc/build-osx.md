@@ -38,7 +38,7 @@ Instructions: Homebrew
 
 #### Install dependencies using Homebrew
 
-        brew install autoconf automake libtool boost miniupnpc openssl pkg-config protobuf qt gmp
+        brew install autoconf automake libtool boost miniupnpc openssl pkg-config protobuf qt
 
 #### Installing berkeley-db4 using Homebrew
 

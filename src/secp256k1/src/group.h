@@ -27,14 +27,11 @@ typedef struct {
 
 /** Global constants related to the group */
 typedef struct {
-    secp256k1_num_t order; /* the order of the curve (= order of its generator) */
-    secp256k1_num_t half_order; /* half the order of the curve (= order of its generator) */
     secp256k1_ge_t g; /* the generator point */
 
 #ifdef USE_ENDOMORPHISM
     /* constants related to secp256k1's efficiently computable endomorphism */
     secp256k1_fe_t beta;
-    secp256k1_num_t lambda, a1b2, b1, a2;
 #endif
 } secp256k1_ge_consts_t;
 
@@ -112,10 +109,6 @@ static void secp256k1_gej_get_hex(char *r, int *rlen, const secp256k1_gej_t *a);
 #ifdef USE_ENDOMORPHISM
 /** Set r to be equal to lambda times a, where lambda is chosen in a way such that this is very fast. */
 static void secp256k1_gej_mul_lambda(secp256k1_gej_t *r, const secp256k1_gej_t *a);
-
-/** Find r1 and r2 such that r1+r2*lambda = a, and r1 and r2 are maximum 128 bits long (given that a is
-    not more than 256 bits). */
-static void secp256k1_gej_split_exp_var(secp256k1_num_t *r1, secp256k1_num_t *r2, const secp256k1_num_t *a);
 #endif
 
 /** Clear a secp256k1_gej_t to prevent leaking sensitive information. */
@@ -123,6 +116,5 @@ static void secp256k1_gej_clear(secp256k1_gej_t *r);
 
 /** Clear a secp256k1_ge_t to prevent leaking sensitive information. */
 static void secp256k1_ge_clear(secp256k1_ge_t *r);
-
 
 #endif
