@@ -14,6 +14,6 @@ static void secp256k1_ecmult_start(void);
 static void secp256k1_ecmult_stop(void);
 
 /** Double multiply: R = na*A + ng*G */
-static void secp256k1_ecmult(secp256k1_gej_t *r, const secp256k1_gej_t *a, const secp256k1_num_t *na, const secp256k1_num_t *ng);
+static void secp256k1_ecmult(secp256k1_gej_t *r, const secp256k1_gej_t *a, const secp256k1_scalar_t *na, const secp256k1_scalar_t *ng);
 
 #endif

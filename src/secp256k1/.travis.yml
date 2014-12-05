@@ -18,6 +18,8 @@ env:
     - FIELD=64bit     ENDOMORPHISM=yes
     - FIELD=32bit
     - FIELD=32bit     ENDOMORPHISM=yes
+    - BIGNUM=none
+    - BIGNUM=none     ENDOMORPHISM=yes
     - BUILD=distcheck
     - EXTRAFLAGS=CFLAGS=-DDETERMINISTIC
 before_script: ./autogen.sh

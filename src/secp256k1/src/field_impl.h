@@ -41,7 +41,7 @@ static void secp256k1_fe_get_hex(char *r, int *rlen, const secp256k1_fe_t *a) {
     r[64] = 0x00;
 }
 
-static void secp256k1_fe_set_hex(secp256k1_fe_t *r, const char *a, int alen) {
+static int secp256k1_fe_set_hex(secp256k1_fe_t *r, const char *a, int alen) {
     unsigned char tmp[32] = {};
     static const int cvt[256] = {0, 0, 0, 0, 0, 0, 0,0,0,0,0,0,0,0,0,0,
                                  0, 0, 0, 0, 0, 0, 0,0,0,0,0,0,0,0,0,0,
@@ -63,7 +63,7 @@ static void secp256k1_fe_set_hex(secp256k1_fe_t *r, const char *a, int alen) {
         if (alen > i*2)
             tmp[32 - alen/2 + i] = (cvt[(unsigned char)a[2*i]] << 4) + cvt[(unsigned char)a[2*i+1]];
     }
-    secp256k1_fe_set_b32(r, tmp);
+    return secp256k1_fe_set_b32(r, tmp);
 }
 
 static int secp256k1_fe_sqrt(secp256k1_fe_t *r, const secp256k1_fe_t *a) {
@@ -197,7 +197,7 @@ static void secp256k1_fe_inv(secp256k1_fe_t *r, const secp256k1_fe_t *a) {
     for (int j=0; j<3; j++) secp256k1_fe_sqr(&t1, &t1);
     secp256k1_fe_mul(&t1, &t1, &x2);
     for (int j=0; j<2; j++) secp256k1_fe_sqr(&t1, &t1);
-    secp256k1_fe_mul(r, &t1, a);
+    secp256k1_fe_mul(r, a, &t1);
 }
 
 static void secp256k1_fe_inv_var(secp256k1_fe_t *r, const secp256k1_fe_t *a) {
@@ -212,7 +212,7 @@ static void secp256k1_fe_inv_var(secp256k1_fe_t *r, const secp256k1_fe_t *a) {
     secp256k1_num_set_bin(&n, b, 32);
     secp256k1_num_mod_inverse(&n, &n, &secp256k1_fe_consts->p);
     secp256k1_num_get_bin(b, 32, &n);
-    secp256k1_fe_set_b32(r, b);
+    VERIFY_CHECK(secp256k1_fe_set_b32(r, b));
 #else
 #error "Please select field inverse implementation"
 #endif
@@ -267,16 +267,20 @@ static void secp256k1_fe_inv_all_var(size_t len, secp256k1_fe_t r[len], const se
 }
 
 static void secp256k1_fe_start(void) {
+#ifndef USE_NUM_NONE
     static const unsigned char secp256k1_fe_consts_p[] = {
         0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
         0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
         0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
         0xFF,0xFF,0xFF,0xFE,0xFF,0xFF,0xFC,0x2F
     };
+#endif
     if (secp256k1_fe_consts == NULL) {
         secp256k1_fe_inner_start();
         secp256k1_fe_consts_t *ret = (secp256k1_fe_consts_t*)malloc(sizeof(secp256k1_fe_consts_t));
+#ifndef USE_NUM_NONE
         secp256k1_num_set_bin(&ret->p, secp256k1_fe_consts_p, sizeof(secp256k1_fe_consts_p));
+#endif
         secp256k1_fe_consts = ret;
     }
 }

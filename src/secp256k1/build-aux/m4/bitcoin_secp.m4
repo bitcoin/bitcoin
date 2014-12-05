@@ -78,7 +78,13 @@ fi
 dnl
 AC_DEFUN([SECP_GMP_CHECK],[
 if test x"$has_gmp" != x"yes"; then
-  AC_CHECK_HEADER(gmp.h,[AC_CHECK_LIB(gmp, __gmpz_init,[has_gmp=yes; GMP_LIBS=-lgmp; AC_DEFINE(HAVE_LIBGMP,1,[Define this symbol if libgmp is installed])])])
+  CPPFLAGS_TEMP="$CPPFLAGS"
+  CPPFLAGS="$GMP_CPPFLAGS $CPPFLAGS"
+  LIBS_TEMP="$LIBS"
+  LIBS="$GMP_LIBS $LIBS"
+  AC_CHECK_HEADER(gmp.h,[AC_CHECK_LIB(gmp, __gmpz_init,[has_gmp=yes; GMP_LIBS="$GMP_LIBS -lgmp"; AC_DEFINE(HAVE_LIBGMP,1,[Define this symbol if libgmp is installed])])])
+  CPPFLAGS="$CPPFLAGS_TEMP"
+  LIBS="$LIBS_TEMP"
 fi
 if test x"$set_field" = x"gmp" && test x"$has_gmp" != x"yes"; then
     AC_MSG_ERROR([$set_field field support explicitly requested but libgmp was not found])
