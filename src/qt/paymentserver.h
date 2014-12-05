@@ -52,6 +52,9 @@ QT_END_NAMESPACE
 
 class CWallet;
 
+// BIP70 max payment request size in bytes (DoS protection)
+extern const qint64 BIP70_MAX_PAYMENTREQUEST_SIZE;
+
 class PaymentServer : public QObject
 {
     Q_OBJECT
@@ -84,6 +87,9 @@ public:
 
     // OptionsModel is used for getting proxy settings and display unit
     void setOptionsModel(OptionsModel *optionsModel);
+
+    // This is now public, because we use it in paymentservertests.cpp
+    static bool readPaymentRequestFromFile(const QString& filename, PaymentRequestPlus& request);
 
 signals:
     // Fired when a valid payment request is received
@@ -118,7 +124,6 @@ protected:
     bool eventFilter(QObject *object, QEvent *event);
 
 private:
-    static bool readPaymentRequestFromFile(const QString& filename, PaymentRequestPlus& request);
     bool processPaymentRequest(PaymentRequestPlus& request, SendCoinsRecipient& recipient);
     void fetchRequest(const QUrl& url);
 
