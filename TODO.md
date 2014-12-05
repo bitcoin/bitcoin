@@ -21,6 +21,8 @@ DONE:
 - Defined regression test genesis block
 - Updated wallet layout and branding
 - Reset testnet (v4) with new genesis and address version (start with x)
+- BIP0032 addresses xpub and xpriv start with x (unchanged by design)
+- Changed Darkcoin units to DRK and added duffs
 
 
 MANDATORY:
@@ -33,7 +35,6 @@ MANDATORY:
 OPTIONAL:
 ---------
 
-- Define BIP0032 addresses EXT_PUBLIC_KEY and EXT_SECRET_KEY for Darkcoin
 - Include Evan's public key for msg signing
 - Darksend, Instant Transactions, Atomic Transfers, etc. pp.
 - Include centralized checkpoint syncing (peercoin style)
