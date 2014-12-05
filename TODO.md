@@ -20,6 +20,7 @@ DONE:
 - Adjusted difficulty and blockvalue (KGW, DGW based on blockheight)
 - Defined regression test genesis block
 - Updated wallet layout and branding
+- Reset testnet (v4) with new genesis and address version (start with x)
 
 
 MANDATORY:
@@ -32,10 +33,9 @@ MANDATORY:
 OPTIONAL:
 ---------
 
-- All the above for Testnet (including complete testnet reset)
+- Define BIP0032 addresses EXT_PUBLIC_KEY and EXT_SECRET_KEY for Darkcoin
 - Include Evan's public key for msg signing
 - Darksend, Instant Transactions, Atomic Transfers, etc. pp.
-- Define BIP0032 addresses EXT_PUBLIC_KEY and EXT_SECRET_KEY for Darkcoin
 - Include centralized checkpoint syncing (peercoin style)
 - Remove Bitcoin dead weight (SHA256, hardcoded keys, nodes)
 - Update strings

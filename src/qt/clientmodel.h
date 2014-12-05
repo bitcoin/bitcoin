@@ -1,4 +1,5 @@
-// Copyright (c) 2011-2013 The Bitcoin developers
+// Copyright (c) 2011-2014 The Bitcoin developers
+// Copyright (c) 2014 vertoe & the Darkcoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -54,7 +55,7 @@ public:
     double getVerificationProgress() const;
     QDateTime getLastBlockDate() const;
 
-    //! Return network (main, testnet3, regtest)
+    //! Return network (main, testnet4, regtest)
     QString getNetworkName() const;
     //! Return true if core is doing initial block download
     bool inInitialBlockDownload() const;

@@ -101,7 +101,7 @@ static CMainParams mainParams;
 
 
 //
-// Testnet (v3)
+// Testnet (v4)
 //
 class CTestNetParams : public CMainParams {
 public:
@@ -117,21 +117,21 @@ public:
         vAlertPubKey = ParseHex("040184710fa689ad5023690c80f3a49c8f13f8d45b8c857fbcbc8bc4a8e4d3eb4b10f4d4604fa08dce601aaf0f470216fe1b51850b4acf21b179c45070ac7b03a9");
         nDefaultPort = 19999;
         nRPCPort = 19998;
-        strDataDir = "testnet3";
+        strDataDir = "testnet4";
 
         // Modify the testnet genesis block so the timestamp is valid for a later start.
-        genesis.nTime = 1390666206;
-        genesis.nNonce = 3861367235;
+        genesis.nTime = 1413333337;
+        genesis.nNonce = 3229645;
 
         hashGenesisBlock = genesis.GetHash();
-        assert(hashGenesisBlock == uint256("0x00000bafbc94add76cb75e2ec92894837288a481e5c005f6563d91623bf8bc2c"));
+        assert(hashGenesisBlock == uint256("0x00000008dfc658b2a9f79910d42e0595464e19cc332d98c0762330142f51ff73"));
 
         vFixedSeeds.clear();
         vSeeds.clear();
         vSeeds.push_back(CDNSSeedData("darkcoin.io", "testnet-seed.darkcoin.io"));
         vSeeds.push_back(CDNSSeedData("darkcoin.qa", "testnet-seed.darkcoin.qa"));
 
-        base58Prefixes[PUBKEY_ADDRESS] = list_of(138); // Testnet addresses start with x
+        base58Prefixes[PUBKEY_ADDRESS] = list_of(138); // Testnet v4 addresses start with x
         base58Prefixes[SCRIPT_ADDRESS] = list_of(196);
         base58Prefixes[SECRET_KEY]     = list_of(239);
         base58Prefixes[EXT_PUBLIC_KEY] = list_of(0x04)(0x35)(0x87)(0xCF);
