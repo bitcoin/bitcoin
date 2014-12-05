@@ -293,6 +293,7 @@ public:
         size_t index = min(nPrevSize + nBucketSize/2, sortedFeeSamples.size()-1);
         return sortedFeeSamples[index];
     }
+
     double estimatePriority(int nBlocksToConfirm)
     {
         nBlocksToConfirm--;
@@ -344,7 +345,7 @@ public:
             throw runtime_error("Corrupt estimates file. Must have between 1 and 10k entries.");
 
         std::vector<CBlockAverage> fileHistory;
-        
+
         for (size_t i = 0; i < numEntries; i++)
         {
             CBlockAverage entry;

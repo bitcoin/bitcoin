@@ -88,8 +88,6 @@ BITCOIN_CORE_H = \
   compat.h \
   compat/sanity.h \
   compressor.h \
-  primitives/block.h \
-  primitives/transaction.h \
   core_io.h \
   crypter.h \
   db.h \
@@ -109,6 +107,8 @@ BITCOIN_CORE_H = \
   netbase.h \
   noui.h \
   pow.h \
+  primitives/block.h \
+  primitives/transaction.h \
   protocol.h \
   pubkey.h \
   random.h \
@@ -237,8 +237,6 @@ libbitcoin_common_a_SOURCES = \
   chainparams.cpp \
   coins.cpp \
   compressor.cpp \
-  primitives/block.cpp \
-  primitives/transaction.cpp \
   core_read.cpp \
   core_write.cpp \
   eccryptoverify.cpp \
@@ -247,6 +245,8 @@ libbitcoin_common_a_SOURCES = \
   key.cpp \
   keystore.cpp \
   netbase.cpp \
+  primitives/block.cpp \
+  primitives/transaction.cpp \
   protocol.cpp \
   pubkey.cpp \
   script/interpreter.cpp \
@@ -352,7 +352,6 @@ bitcoin_cli_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 if BUILD_BITCOIN_LIBS
 include_HEADERS = script/bitcoinconsensus.h
 libbitcoinconsensus_la_SOURCES = \
-  primitives/transaction.cpp \
   crypto/hmac_sha512.cpp \
   crypto/ripemd160.cpp \
   crypto/sha1.cpp \
@@ -361,6 +360,7 @@ libbitcoinconsensus_la_SOURCES = \
   eccryptoverify.cpp \
   ecwrapper.cpp \
   hash.cpp \
+  primitives/transaction.cpp \
   pubkey.cpp \
   script/bitcoinconsensus.cpp \
   script/interpreter.cpp \
