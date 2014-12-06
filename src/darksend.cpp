@@ -110,7 +110,7 @@ void ProcessMessageDarksend(CNode* pfrom, std::string& strCommand, CDataStream& 
         vRecv >> nDenom >> txCollateral;
 
         std::string error = "";
-        int mn = GetMasternodeByVin(activeMasternode.vinMasternode);
+        int mn = GetMasternodeByVin(activeMasternode.vin);
         if(mn == -1){
             std::string strError = "Not in the masternode list";
             pfrom->PushMessage("dssu", darkSendPool.sessionID, darkSendPool.GetState(), darkSendPool.GetEntriesCount(), MASTERNODE_REJECTED, strError);
@@ -591,7 +591,7 @@ void CDarkSendPool::Check()
                 if(!mapDarksendBroadcastTxes.count(txNew.GetHash())){
                     CDarksendBroadcastTx dstx;
                     dstx.tx = txNew;
-                    dstx.vin = activeMasternode.vinMasternode;
+                    dstx.vin = activeMasternode.vin;
                     dstx.vchSig = vchSig;
                     dstx.sigTime = sigTime;
 
@@ -798,7 +798,7 @@ void CDarkSendPool::CheckTimeout(){
     if(state == POOL_STATUS_QUEUE && sessionUsers == GetMaxPoolTransactions()) {
         CDarksendQueue dsq;
         dsq.nDenom = sessionDenom;
-        dsq.vin = activeMasternode.vinMasternode;
+        dsq.vin = activeMasternode.vin;
         dsq.time = GetTime();
         dsq.ready = true;
         dsq.Sign();
@@ -1850,7 +1850,7 @@ bool CDarkSendPool::IsCompatibleWithSession(int64_t nDenom, CTransaction txColla
             //broadcast that I'm accepting entries, only if it's the first entry though
             CDarksendQueue dsq;
             dsq.nDenom = nDenom;
-            dsq.vin = activeMasternode.vinMasternode;
+            dsq.vin = activeMasternode.vin;
             dsq.time = GetTime();
             dsq.Sign();
             dsq.Relay();
@@ -2102,6 +2102,8 @@ void ThreadCheckDarkSendPool()
     RenameThread("bitcoin-darksend");
 
     unsigned int c = 0;
+    std::string errorMessage;
+
     while (true)
     {
         c++;
@@ -2150,16 +2152,14 @@ void ThreadCheckDarkSendPool()
             }
         }
 
-        /*
         if(c % MASTERNODE_PING_SECONDS == 0){
-            activeMasternode.RegisterAsMasterNode(false);
-        }*/
+            activeMasternode.ManageStatus();
+        }
 
         if(c % 60 == 0){
             //if we've used 1/5 of the masternode list, then clear the list.
             if((int)vecMasternodesUsed.size() > (int)darkSendMasterNodes.size() / 5) 
                 vecMasternodesUsed.clear();
-
         }
 
         //auto denom every 2.5 minutes (liquidity provides try less often)

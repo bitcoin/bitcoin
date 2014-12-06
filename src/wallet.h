@@ -7,7 +7,6 @@
 #define BITCOIN_WALLET_H
 
 #include "core.h"
-#include "darksend.h"
 #include "crypter.h"
 #include "key.h"
 #include "keystore.h"
