@@ -70,7 +70,7 @@ Object blockToJSON(const CBlock& block, const CBlockIndex* blockindex, bool txDe
         if(txDetails)
         {
             Object objTx;
-            TxToJSON(tx, block.GetHash(), objTx);
+            TxToJSON(tx, uint256(0), objTx);
             txs.push_back(objTx);
         }
         else
