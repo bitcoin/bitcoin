@@ -301,7 +301,6 @@ static void secp256k1_gej_add_ge_var(secp256k1_gej_t *r, const secp256k1_gej_t *
     secp256k1_fe_normalize(&u1);
     secp256k1_fe_normalize(&u2);
     if (secp256k1_fe_equal(&u1, &u2)) {
-        secp256k1_fe_normalize(&s1);
         secp256k1_fe_normalize(&s2);
         if (secp256k1_fe_equal(&s1, &s2)) {
             secp256k1_gej_double_var(r, a);
