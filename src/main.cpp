@@ -1447,14 +1447,12 @@ unsigned int static DarkGravityWave(const CBlockIndex* pindexLast, const CBlockH
 
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock)
 {
-        uint retarget = DIFF_BTC;
+        uint retarget = DIFF_DGW;
 
-        if (TestNet()) {
-            if (pindexLast->nHeight + 1 >= 256) retarget = DIFF_DGW;
-        }
-        else {
+        if (!TestNet()) {
             if (pindexLast->nHeight + 1 >= 34140) retarget = DIFF_DGW;
             else if (pindexLast->nHeight + 1 >= 15200) retarget = DIFF_KGW;
+            else retarget = DIFF_BTC;
         }
 
         // Default Bitcoin style retargeting
@@ -1498,14 +1496,11 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
             // Go back by what we want to be 14 days worth of blocks
             const CBlockIndex* pindexFirst = pindexLast;
             for (int i = 0; pindexFirst && i < blockstogoback; i++)
-          //for (int i = 0; pindexFirst && i < nInterval-1; i++)
                 pindexFirst = pindexFirst->pprev;
             assert(pindexFirst);
 
             // Limit adjustment step
-            //int64 nActualTimespan = pindexLast->GetBlockTime() - pindexFirst->GetBlockTime();
             int64_t nActualTimespan = pindexLast->GetBlockTime() - pindexFirst->GetBlockTime();
-          //LogPrintf("  nActualTimespan = %"PRI64d"  before bounds\n", nActualTimespan);
             LogPrintf("  nActualTimespan = %d  before bounds\n", nActualTimespan);
             if (nActualTimespan < nTargetTimespan/4)
                 nActualTimespan = nTargetTimespan/4;
@@ -1523,11 +1518,8 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
 
             /// debug print
             LogPrintf("GetNextWorkRequired RETARGET\n");
-          //LogPrintf("nTargetTimespan = %"PRI64d"    nActualTimespan = %"PRI64d"\n", nTargetTimespan, nActualTimespan);
             LogPrintf("nTargetTimespan = %d    nActualTimespan = %d\n", nTargetTimespan, nActualTimespan);
-          //LogPrintf("Before: %08x  %s\n", pindexLast->nBits, CBigNum().SetCompact(pindexLast->nBits).getuint256().ToString().c_str());
             LogPrintf("Before: %08x  %s\n", pindexLast->nBits, CBigNum().SetCompact(pindexLast->nBits).getuint256().ToString());
-          //LogPrintf("After:  %08x  %s\n", bnNew.GetCompact(), bnNew.getuint256().ToString().c_str());
             LogPrintf("After:  %08x  %s\n", bnNew.GetCompact(), bnNew.getuint256().ToString());
 
             return bnNew.GetCompact();
