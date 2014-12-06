@@ -38,5 +38,6 @@ kill $BITCOIND && wait $BITCOIND
 
 # If $RETURN is not 0, the test failed. Dump the tail of the debug log.
 if [ $RETURN -ne 0 ]; then echo "block-tester returned $RETURN"; tail -n 200 "$DATADIR/regtest/debug.log"; tail -n 500 "$DATADIR/tester.log"; fi
+if [ $RETURN = 137 ]; then dmesg | tail; fi
 
 exit $RETURN
