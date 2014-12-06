@@ -294,7 +294,7 @@ static void secp256k1_gej_add_ge_var(secp256k1_gej_t *r, const secp256k1_gej_t *
     }
     r->infinity = 0;
     secp256k1_fe_t z12; secp256k1_fe_sqr(&z12, &a->z);
-    secp256k1_fe_t u1 = a->x; secp256k1_fe_normalize(&u1);
+    secp256k1_fe_t u1 = a->x;
     secp256k1_fe_t u2; secp256k1_fe_mul(&u2, &b->x, &z12);
     secp256k1_fe_t s1 = a->y; secp256k1_fe_normalize(&s1);
     secp256k1_fe_t s2; secp256k1_fe_mul(&s2, &b->y, &z12); secp256k1_fe_mul(&s2, &s2, &a->z);
