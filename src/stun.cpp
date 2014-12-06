@@ -41,10 +41,8 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #endif
-#ifndef _MSC_VER
+#ifndef WIN32
 #include <unistd.h>
-#else
-#include <io.h>
 #endif
 #include <time.h>
 #include <errno.h>
@@ -509,10 +507,10 @@ static int StunRequest(const char *host, uint16_t port, struct sockaddr_in *mapp
     int rc = -3;
     if(bind(sock, (struct sockaddr*)&client, sizeof(client)) >= 0)
         rc = StunRequest2(sock, &server, mapped);
-#ifndef _MSC_VER
+#ifndef WIN32
     close(sock);
 #else
-    _close(sock);
+    closesocket(sock);
 #endif
     return rc;
 } // StunRequest
