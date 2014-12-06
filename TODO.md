@@ -23,13 +23,14 @@ DONE:
 - Reset testnet (v4) with new genesis and address version (start with x)
 - BIP0032 addresses xpub and xpriv start with x (unchanged by design)
 - Changed Darkcoin units to DRK and added duffs
+- Fixed internal walletminer
 
 
 MANDATORY:
 ----------
 
-- Add masternode payment checks a.k.a. enforcement (based on blockheight)
 - Fix mining protocol to include correct pow and masternodes
+- Add masternode payment checks a.k.a. enforcement (based on blockheight)
 
 
 OPTIONAL:
