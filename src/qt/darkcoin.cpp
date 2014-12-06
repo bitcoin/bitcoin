@@ -21,6 +21,7 @@
 #include "paymentserver.h"
 #include "walletmodel.h"
 #endif
+#include "masternodeconfig.h"
 
 #include "init.h"
 #include "main.h"
@@ -532,6 +533,8 @@ int main(int argc, char *argv[])
                               QObject::tr("Error: Cannot parse configuration file: %1. Only use key=value syntax.").arg(e.what()));
         return false;
     }
+
+    masternodeConfig.read(GetMasternodeConfigFile());
 
     /// 7. Determine network (and switch to network specific options)
     // - Do not call Params() before this step
