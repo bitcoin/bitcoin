@@ -46,7 +46,7 @@ void random_group_element_test(secp256k1_ge_t *ge) {
     secp256k1_fe_t fe;
     do {
         random_field_element_test(&fe);
-        if (secp256k1_ge_set_xo(ge, &fe, secp256k1_rand32() & 1))
+        if (secp256k1_ge_set_xo_var(ge, &fe, secp256k1_rand32() & 1))
             break;
     } while(1);
 }
@@ -459,7 +459,7 @@ void random_fe_non_zero(secp256k1_fe_t *nz) {
 void random_fe_non_square(secp256k1_fe_t *ns) {
     random_fe_non_zero(ns);
     secp256k1_fe_t r;
-    if (secp256k1_fe_sqrt(&r, ns)) {
+    if (secp256k1_fe_sqrt_var(&r, ns)) {
         secp256k1_fe_negate(ns, ns, 1);
     }
 }
@@ -498,23 +498,6 @@ void run_field_inv_var(void) {
     }
 }
 
-void run_field_inv_all(void) {
-    secp256k1_fe_t x[16], xi[16], xii[16];
-    /* Check it's safe to call for 0 elements */
-    secp256k1_fe_inv_all(0, xi, x);
-    for (int i=0; i<count; i++) {
-        size_t len = (secp256k1_rand32() & 15) + 1;
-        for (size_t j=0; j<len; j++)
-            random_fe_non_zero(&x[j]);
-        secp256k1_fe_inv_all(len, xi, x);
-        for (size_t j=0; j<len; j++)
-            CHECK(check_fe_inverse(&x[j], &xi[j]));
-        secp256k1_fe_inv_all(len, xii, xi);
-        for (size_t j=0; j<len; j++)
-            CHECK(check_fe_equal(&x[j], &xii[j]));
-    }
-}
-
 void run_field_inv_all_var(void) {
     secp256k1_fe_t x[16], xi[16], xii[16];
     /* Check it's safe to call for 0 elements */
@@ -549,7 +532,7 @@ void run_sqr(void) {
 
 void test_sqrt(const secp256k1_fe_t *a, const secp256k1_fe_t *k) {
     secp256k1_fe_t r1, r2;
-    int v = secp256k1_fe_sqrt(&r1, a);
+    int v = secp256k1_fe_sqrt_var(&r1, a);
     CHECK((v == 0) == (k == NULL));
 
     if (k != NULL) {
@@ -779,22 +762,22 @@ void test_point_times_order(const secp256k1_gej_t *point) {
     secp256k1_ecmult(&res2, point, &nx, &nx); /* calc res2 = (order - x) * point + (order - x) * G; */
     secp256k1_gej_add_var(&res1, &res1, &res2);
     CHECK(secp256k1_gej_is_infinity(&res1));
-    CHECK(secp256k1_gej_is_valid(&res1) == 0);
+    CHECK(secp256k1_gej_is_valid_var(&res1) == 0);
     secp256k1_ge_t res3;
     secp256k1_ge_set_gej(&res3, &res1);
     CHECK(secp256k1_ge_is_infinity(&res3));
-    CHECK(secp256k1_ge_is_valid(&res3) == 0);
+    CHECK(secp256k1_ge_is_valid_var(&res3) == 0);
 }
 
 void run_point_times_order(void) {
     secp256k1_fe_t x; VERIFY_CHECK(secp256k1_fe_set_hex(&x, "02", 2));
     for (int i=0; i<500; i++) {
         secp256k1_ge_t p;
-        if (secp256k1_ge_set_xo(&p, &x, 1)) {
-            CHECK(secp256k1_ge_is_valid(&p));
+        if (secp256k1_ge_set_xo_var(&p, &x, 1)) {
+            CHECK(secp256k1_ge_is_valid_var(&p));
             secp256k1_gej_t j;
             secp256k1_gej_set_ge(&j, &p);
-            CHECK(secp256k1_gej_is_valid(&j));
+            CHECK(secp256k1_gej_is_valid_var(&j));
             test_point_times_order(&j);
         }
         secp256k1_fe_sqr(&x, &x);
@@ -1185,7 +1168,6 @@ int main(int argc, char **argv) {
     /* field tests */
     run_field_inv();
     run_field_inv_var();
-    run_field_inv_all();
     run_field_inv_all_var();
     run_sqr();
     run_sqrt();
