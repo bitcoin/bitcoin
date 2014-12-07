@@ -1079,17 +1079,19 @@ bool GetTransaction(const uint256 &hash, CTransaction &txOut, uint256 &hashBlock
             CDiskTxPos postx;
             if (pblocktree->ReadTxIndex(hash, postx)) {
                 CAutoFile file(OpenBlockFile(postx, true), SER_DISK, CLIENT_VERSION);
+                if (file.IsNull())
+                    return error("%s: OpenBlockFile failed", __func__);
                 CBlockHeader header;
                 try {
                     file >> header;
                     fseek(file.Get(), postx.nTxOffset, SEEK_CUR);
                     file >> txOut;
                 } catch (std::exception &e) {
-                    return error("%s : Deserialize or I/O error - %s", __func__, e.what());
+                    return error("%s: Deserialize or I/O error - %s", __func__, e.what());
                 }
                 hashBlock = header.GetHash();
                 if (txOut.GetHash() != hash)
-                    return error("%s : txid mismatch", __func__);
+                    return error("%s: txid mismatch", __func__);
                 return true;
             }
         }
@@ -1135,10 +1137,10 @@ bool GetTransaction(const uint256 &hash, CTransaction &txOut, uint256 &hashBlock
 
 bool WriteBlockToDisk(CBlock& block, CDiskBlockPos& pos)
 {
-    // Open history file to append
+    // Open block file to append
     CAutoFile fileout(OpenBlockFile(pos), SER_DISK, CLIENT_VERSION);
     if (fileout.IsNull())
-        return error("WriteBlockToDisk : OpenBlockFile failed");
+        return error("%s: OpenBlockFile failed", __func__);
 
     // Write index header
     unsigned int nSize = fileout.GetSerializeSize(block);
@@ -1147,7 +1149,7 @@ bool WriteBlockToDisk(CBlock& block, CDiskBlockPos& pos)
     // Write block
     long fileOutPos = ftell(fileout.Get());
     if (fileOutPos < 0)
-        return error("WriteBlockToDisk : ftell failed");
+        return error("%s: ftell failed", __func__);
     pos.nPos = (unsigned int)fileOutPos;
     fileout << block;
 
@@ -1158,22 +1160,22 @@ bool ReadBlockFromDisk(CBlock& block, const CDiskBlockPos& pos)
 {
     block.SetNull();
 
-    // Open history file to read
+    // Open block file to read
     CAutoFile filein(OpenBlockFile(pos, true), SER_DISK, CLIENT_VERSION);
     if (filein.IsNull())
-        return error("ReadBlockFromDisk : OpenBlockFile failed");
+        return error("%s: OpenBlockFile failed", __func__);
 
     // Read block
     try {
         filein >> block;
     }
     catch (std::exception &e) {
-        return error("%s : Deserialize or I/O error - %s", __func__, e.what());
+        return error("%s: Deserialize or I/O error - %s", __func__, e.what());
     }
 
     // Check the header
     if (!CheckProofOfWork(block.GetHash(), block.nBits))
-        return error("ReadBlockFromDisk : Errors in block header");
+        return error("%s: Errors in block header", __func__);
 
     return true;
 }
@@ -4540,10 +4542,10 @@ bool CBlockUndo::WriteToDisk(CDiskBlockPos &pos, const uint256 &hashBlock)
 
 bool CBlockUndo::ReadFromDisk(const CDiskBlockPos &pos, const uint256 &hashBlock)
 {
-    // Open history file to read
+    // Open undo file to read
     CAutoFile filein(OpenUndoFile(pos, true), SER_DISK, CLIENT_VERSION);
     if (filein.IsNull())
-        return error("CBlockUndo::ReadFromDisk : OpenBlockFile failed");
+        return error("%s: OpenBlockFile failed", __func__);
 
     // Read block
     uint256 hashChecksum;
@@ -4552,7 +4554,7 @@ bool CBlockUndo::ReadFromDisk(const CDiskBlockPos &pos, const uint256 &hashBlock
         filein >> hashChecksum;
     }
     catch (std::exception &e) {
-        return error("%s : Deserialize or I/O error - %s", __func__, e.what());
+        return error("%s: Deserialize or I/O error - %s", __func__, e.what());
     }
 
     // Verify checksum
@@ -4560,7 +4562,7 @@ bool CBlockUndo::ReadFromDisk(const CDiskBlockPos &pos, const uint256 &hashBlock
     hasher << hashBlock;
     hasher << *this;
     if (hashChecksum != hasher.GetHash())
-        return error("CBlockUndo::ReadFromDisk : Checksum mismatch");
+        return error("%s: Checksum mismatch", __func__);
 
     return true;
 }
