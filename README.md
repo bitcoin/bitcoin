@@ -1,8 +1,6 @@
 Statoshi: Bitcoin Core + statistics logging
 =====================================
 
-[![Live Dashboard at statoshi.info](http://statoshi.info)]
-
 What is Statoshi?
 ----------------
 
@@ -10,6 +8,8 @@ Statoshi's objective is to protect Bitcoin by bringing transparency to the activ
 occurring on the node network. By making this data available, Bitcoin developers can 
 learn more about node performance, gain operational insight about the network, and 
 the community can be informed about attacks and aberrant behavior in a timely fashion.
+
+There is a live Grafana dashboard at [statoshi.info](http://statoshi.info)
 
 License
 -------
