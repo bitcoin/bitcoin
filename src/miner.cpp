@@ -565,7 +565,7 @@ void static BitcoinMiner(CWallet *pwallet)
             }
         }
     }
-    catch (boost::thread_interrupted)
+    catch (const boost::thread_interrupted&)
     {
         LogPrintf("BitcoinMiner terminated\n");
         throw;
