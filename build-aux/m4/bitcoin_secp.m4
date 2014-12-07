@@ -11,38 +11,16 @@ fi
 
 dnl 
 AC_DEFUN([SECP_64BIT_ASM_CHECK],[
-if test x"$host_cpu" == x"x86_64"; then
-  AC_CHECK_PROG(YASM, yasm, yasm)
-else
-  if test x"$set_field" = x"64bit_asm"; then
-    AC_MSG_ERROR([$set_field field support explicitly requested but is not compatible with this host])
-  fi
-fi
-if test x$YASM = x; then
-  if test x"$set_field" = x"64bit_asm"; then
-    AC_MSG_ERROR([$set_field field support explicitly requested but yasm was not found])
-  fi
-  has_64bit_asm=no
-else
-  case x"$host_os" in
-  xdarwin*)
-    YASM_BINFMT=macho64
-    ;;
-  x*-gnux32)
-    YASM_BINFMT=elfx32
-    ;;
-  *)
-    YASM_BINFMT=elf64
-    ;;
-  esac
-  if $YASM -f help | grep -q $YASM_BINFMT; then
-    has_64bit_asm=yes
-  else
-    if test x"$set_field" = x"64bit_asm"; then
-      AC_MSG_ERROR([$set_field field support explicitly requested but yasm doesn't support $YASM_BINFMT format])
-    fi
-    AC_MSG_WARN([yasm too old for $YASM_BINFMT format])
-    has_64bit_asm=no
+AC_MSG_CHECKING(for x86_64 assembly availability)
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+  #include <stdint.h>]],[[
+  uint64_t a = 11, tmp;
+  __asm__ __volatile__("movq $0x100000000,%1; mulq %%rsi" : "+a"(a) : "S"(tmp) : "cc", "%rdx");
+  ]])],[has_64bit_asm=yes],[has_64bit_asm=no])
+AC_MSG_RESULT([$has_64bit_asm])
+if test x"$set_field" == x"64bit_asm"; then
+  if test x"$has_64bit_asm" == x"no"; then
+    AC_MSG_ERROR([$set_field field support explicitly requested but no x86_64 assembly available])
   fi
 fi
 ])
