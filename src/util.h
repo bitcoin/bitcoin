@@ -61,6 +61,12 @@
 #define VERIFY_CHECK(cond) do { (void)(cond); } while(0)
 #endif
 
+static inline void *checked_malloc(size_t size) {
+    void *ret = malloc(size);
+    CHECK(ret != NULL);
+    return ret;
+}
+
 /* Macro for restrict, when available and not in a VERIFY build. */
 #if defined(SECP256K1_BUILD) && defined(VERIFY)
 # define SECP256K1_RESTRICT

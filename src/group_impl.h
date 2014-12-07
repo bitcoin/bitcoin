@@ -85,14 +85,14 @@ static void secp256k1_ge_set_gej_var(secp256k1_ge_t *r, secp256k1_gej_t *a) {
 
 static void secp256k1_ge_set_all_gej_var(size_t len, secp256k1_ge_t r[len], const secp256k1_gej_t a[len]) {
     size_t count = 0;
-    secp256k1_fe_t *az = malloc(sizeof(secp256k1_fe_t) * len);
+    secp256k1_fe_t *az = checked_malloc(sizeof(secp256k1_fe_t) * len);
     for (size_t i=0; i<len; i++) {
         if (!a[i].infinity) {
             az[count++] = a[i].z;
         }
     }
 
-    secp256k1_fe_t *azi = malloc(sizeof(secp256k1_fe_t) * count);
+    secp256k1_fe_t *azi = checked_malloc(sizeof(secp256k1_fe_t) * count);
     secp256k1_fe_inv_all_var(count, azi, az);
     free(az);
 
@@ -436,7 +436,7 @@ static void secp256k1_ge_start(void) {
     };
 #endif
     if (secp256k1_ge_consts == NULL) {
-        secp256k1_ge_consts_t *ret = (secp256k1_ge_consts_t*)malloc(sizeof(secp256k1_ge_consts_t));
+        secp256k1_ge_consts_t *ret = (secp256k1_ge_consts_t*)checked_malloc(sizeof(secp256k1_ge_consts_t));
 #ifdef USE_ENDOMORPHISM
         VERIFY_CHECK(secp256k1_fe_set_b32(&ret->beta, secp256k1_ge_consts_beta));
 #endif

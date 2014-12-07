@@ -253,7 +253,7 @@ static void secp256k1_fe_start(void) {
 #endif
     if (secp256k1_fe_consts == NULL) {
         secp256k1_fe_inner_start();
-        secp256k1_fe_consts_t *ret = (secp256k1_fe_consts_t*)malloc(sizeof(secp256k1_fe_consts_t));
+        secp256k1_fe_consts_t *ret = (secp256k1_fe_consts_t*)checked_malloc(sizeof(secp256k1_fe_consts_t));
 #ifndef USE_NUM_NONE
         secp256k1_num_set_bin(&ret->p, secp256k1_fe_consts_p, sizeof(secp256k1_fe_consts_p));
 #endif
