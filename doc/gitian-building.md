@@ -236,6 +236,8 @@ go with the default (`/var/lib/lxc`).
 Then set up LXC and the rest with the following, which is a complex jumble of settings and workarounds:
 
 ```bash
+# add debian user to sudoers file
+usermod -g sudo debian
 # the version of lxc-start in Debian 7.4 needs to run as root, so make sure
 # that the build script can exectute it without providing a password
 echo "%sudo ALL=NOPASSWD: /usr/bin/lxc-start" > /etc/sudoers.d/gitian-lxc
