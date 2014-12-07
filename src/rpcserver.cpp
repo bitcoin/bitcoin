@@ -174,7 +174,7 @@ string CRPCTable::help(string strCommand) const
             if (setDone.insert(pfn).second)
                 (*pfn)(params, true);
         }
-        catch (std::exception& e)
+        catch (const std::exception& e)
         {
             // Help text is returned in an exception
             string strHelp = string(e.what());
@@ -631,7 +631,7 @@ void StartRPCThreads()
             try {
                 vEndpoints.push_back(ParseEndpoint(addr, defaultPort));
             }
-            catch(const boost::system::system_error &)
+            catch (const boost::system::system_error&)
             {
                 uiInterface.ThreadSafeMessageBox(
                     strprintf(_("Could not parse -rpcbind value %s as network address"), addr),
@@ -676,7 +676,7 @@ void StartRPCThreads()
             if(bBindAny && bindAddress == asio::ip::address_v6::any() && !v6_only_error)
                 break;
         }
-        catch(boost::system::system_error &e)
+        catch (const boost::system::system_error& e)
         {
             LogPrintf("ERROR: Binding RPC on address %s port %i failed: %s\n", bindAddress.to_string(), endpoint.port(), e.what());
             strerr = strprintf(_("An error occurred while setting up the RPC address %s port %u for listening: %s"), bindAddress.to_string(), endpoint.port(), e.what());
@@ -842,11 +842,11 @@ static Object JSONRPCExecOne(const Value& req)
         Value result = tableRPC.execute(jreq.strMethod, jreq.params);
         rpc_result = JSONRPCReplyObj(result, Value::null, jreq.id);
     }
-    catch (Object& objError)
+    catch (const Object& objError)
     {
         rpc_result = JSONRPCReplyObj(Value::null, objError, jreq.id);
     }
-    catch (std::exception& e)
+    catch (const std::exception& e)
     {
         rpc_result = JSONRPCReplyObj(Value::null,
                                      JSONRPCError(RPC_PARSE_ERROR, e.what()), jreq.id);
@@ -922,12 +922,12 @@ static bool HTTPReq_JSONRPC(AcceptedConnection *conn,
 
         conn->stream() << HTTPReplyHeader(HTTP_OK, fRun, strReply.size()) << strReply << std::flush;
     }
-    catch (Object& objError)
+    catch (const Object& objError)
     {
         ErrorReply(conn->stream(), objError, jreq.id);
         return false;
     }
-    catch (std::exception& e)
+    catch (const std::exception& e)
     {
         ErrorReply(conn->stream(), JSONRPCError(RPC_PARSE_ERROR, e.what()), jreq.id);
         return false;
@@ -1013,7 +1013,7 @@ json_spirit::Value CRPCTable::execute(const std::string &strMethod, const json_s
         }
         return result;
     }
-    catch (std::exception& e)
+    catch (const std::exception& e)
     {
         throw JSONRPCError(RPC_MISC_ERROR, e.what());
     }
