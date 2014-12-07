@@ -255,7 +255,7 @@ static void secp256k1_fe_mul(secp256k1_fe_t *r, const secp256k1_fe_t *a, const s
     secp256k1_fe_verify(b);
     VERIFY_CHECK(r != b);
 #endif
-    secp256k1_fe_mul_inner(a->n, b->n, r->n);
+    secp256k1_fe_mul_inner(r->n, a->n, b->n);
 #ifdef VERIFY
     r->magnitude = 1;
     r->normalized = 0;
@@ -268,7 +268,7 @@ static void secp256k1_fe_sqr(secp256k1_fe_t *r, const secp256k1_fe_t *a) {
     VERIFY_CHECK(a->magnitude <= 8);
     secp256k1_fe_verify(a);
 #endif
-    secp256k1_fe_sqr_inner(a->n, r->n);
+    secp256k1_fe_sqr_inner(r->n, a->n);
 #ifdef VERIFY
     r->magnitude = 1;
     r->normalized = 0;
