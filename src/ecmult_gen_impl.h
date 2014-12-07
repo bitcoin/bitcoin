@@ -47,7 +47,7 @@ static void secp256k1_ecmult_gen_start(void) {
         secp256k1_fe_t nums_x;
         VERIFY_CHECK(secp256k1_fe_set_b32(&nums_x, nums_b32));
         secp256k1_ge_t nums_ge;
-        VERIFY_CHECK(secp256k1_ge_set_xo(&nums_ge, &nums_x, 0));
+        VERIFY_CHECK(secp256k1_ge_set_xo_var(&nums_ge, &nums_x, 0));
         secp256k1_gej_set_ge(&nums_gej, &nums_ge);
         /* Add G to make the bits in x uniformly distributed. */
         secp256k1_gej_add_ge_var(&nums_gej, &nums_gej, g);
@@ -73,7 +73,7 @@ static void secp256k1_ecmult_gen_start(void) {
             secp256k1_gej_double_var(&numsbase, &numsbase);
             if (j == 62) {
                 /* In the last iteration, numsbase is (1 - 2^j) * nums instead. */
-                secp256k1_gej_neg(&numsbase, &numsbase);
+                secp256k1_gej_neg_var(&numsbase, &numsbase);
                 secp256k1_gej_add_var(&numsbase, &numsbase, &nums_gej);
             }
         }
