@@ -34,7 +34,7 @@ static void secp256k1_ecmult_gen_start(void) {
         return;
 
     /* Allocate the precomputation table. */
-    secp256k1_ecmult_gen_consts_t *ret = (secp256k1_ecmult_gen_consts_t*)malloc(sizeof(secp256k1_ecmult_gen_consts_t));
+    secp256k1_ecmult_gen_consts_t *ret = (secp256k1_ecmult_gen_consts_t*)checked_malloc(sizeof(secp256k1_ecmult_gen_consts_t));
 
     /* get the generator */
     const secp256k1_ge_t *g = &secp256k1_ge_consts->g;
