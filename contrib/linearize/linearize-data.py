@@ -292,7 +292,7 @@ if __name__ == '__main__':
 	blkmap = mkblockmap(blkindex)
 
 	if not "000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f" in blkmap:
-		print("Genesis block (000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f) not found in hashlist")
+		print("Genesis block not found in hashlist")
 	else:
 		BlockDataCopier(settings, blkindex, blkmap).run()
 
