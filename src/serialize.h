@@ -79,10 +79,9 @@ inline const T* end_ptr(const std::vector<T,TAl>& v)
 
 enum SerializeType
 {
-    // primary actions
-    SER_NETWORK         = (1 << 0),
-    SER_DISK            = (1 << 1),
-    SER_GETHASH         = (1 << 2),
+    SER_NETWORK,
+    SER_DISK,
+    SER_GETHASH
 };
 
 #define READWRITE(obj)      (::SerReadWrite(s, (obj), nType, nVersion, ser_action))
