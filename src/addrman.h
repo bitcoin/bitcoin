@@ -51,7 +51,7 @@ public:
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+    inline void SerializationOp(Stream& s, Operation ser_action, SerializeType nType, int nVersion) {
         READWRITE(*(CAddress*)this);
         READWRITE(source);
         READWRITE(nLastSuccess);
@@ -275,7 +275,7 @@ public:
      * very little in common.
      */
     template<typename Stream>
-    void Serialize(Stream &s, int nType, int nVersionDummy) const
+    void Serialize(Stream &s, SerializeType nType, int nVersionDummy) const
     {
         LOCK(cs);
 
@@ -325,7 +325,7 @@ public:
     }
 
     template<typename Stream>
-    void Unserialize(Stream& s, int nType, int nVersionDummy)
+    void Unserialize(Stream& s, SerializeType nType, int nVersionDummy)
     {
         LOCK(cs);
 
@@ -422,7 +422,7 @@ public:
         Check();
     }
 
-    unsigned int GetSerializeSize(int nType, int nVersion) const
+    unsigned int GetSerializeSize(SerializeType nType, int nVersion) const
     {
         return (CSizeComputer(nType, nVersion) << *this).size();
     }

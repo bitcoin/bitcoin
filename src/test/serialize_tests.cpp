@@ -17,33 +17,33 @@ BOOST_FIXTURE_TEST_SUITE(serialize_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(sizes)
 {
-    BOOST_CHECK_EQUAL(sizeof(char), GetSerializeSize(char(0), 0));
-    BOOST_CHECK_EQUAL(sizeof(int8_t), GetSerializeSize(int8_t(0), 0));
-    BOOST_CHECK_EQUAL(sizeof(uint8_t), GetSerializeSize(uint8_t(0), 0));
-    BOOST_CHECK_EQUAL(sizeof(int16_t), GetSerializeSize(int16_t(0), 0));
-    BOOST_CHECK_EQUAL(sizeof(uint16_t), GetSerializeSize(uint16_t(0), 0));
-    BOOST_CHECK_EQUAL(sizeof(int32_t), GetSerializeSize(int32_t(0), 0));
-    BOOST_CHECK_EQUAL(sizeof(uint32_t), GetSerializeSize(uint32_t(0), 0));
-    BOOST_CHECK_EQUAL(sizeof(int64_t), GetSerializeSize(int64_t(0), 0));
-    BOOST_CHECK_EQUAL(sizeof(uint64_t), GetSerializeSize(uint64_t(0), 0));
-    BOOST_CHECK_EQUAL(sizeof(float), GetSerializeSize(float(0), 0));
-    BOOST_CHECK_EQUAL(sizeof(double), GetSerializeSize(double(0), 0));
+    BOOST_CHECK_EQUAL(sizeof(char), GetSerializeSize(char(0), SER_NETWORK));
+    BOOST_CHECK_EQUAL(sizeof(int8_t), GetSerializeSize(int8_t(0), SER_NETWORK));
+    BOOST_CHECK_EQUAL(sizeof(uint8_t), GetSerializeSize(uint8_t(0), SER_NETWORK));
+    BOOST_CHECK_EQUAL(sizeof(int16_t), GetSerializeSize(int16_t(0), SER_NETWORK));
+    BOOST_CHECK_EQUAL(sizeof(uint16_t), GetSerializeSize(uint16_t(0), SER_NETWORK));
+    BOOST_CHECK_EQUAL(sizeof(int32_t), GetSerializeSize(int32_t(0), SER_NETWORK));
+    BOOST_CHECK_EQUAL(sizeof(uint32_t), GetSerializeSize(uint32_t(0), SER_NETWORK));
+    BOOST_CHECK_EQUAL(sizeof(int64_t), GetSerializeSize(int64_t(0), SER_NETWORK));
+    BOOST_CHECK_EQUAL(sizeof(uint64_t), GetSerializeSize(uint64_t(0), SER_NETWORK));
+    BOOST_CHECK_EQUAL(sizeof(float), GetSerializeSize(float(0), SER_NETWORK));
+    BOOST_CHECK_EQUAL(sizeof(double), GetSerializeSize(double(0), SER_NETWORK));
     // Bool is serialized as char
-    BOOST_CHECK_EQUAL(sizeof(char), GetSerializeSize(bool(0), 0));
+    BOOST_CHECK_EQUAL(sizeof(char), GetSerializeSize(bool(0), SER_NETWORK));
 
     // Sanity-check GetSerializeSize and c++ type matching
-    BOOST_CHECK_EQUAL(GetSerializeSize(char(0), 0), 1);
-    BOOST_CHECK_EQUAL(GetSerializeSize(int8_t(0), 0), 1);
-    BOOST_CHECK_EQUAL(GetSerializeSize(uint8_t(0), 0), 1);
-    BOOST_CHECK_EQUAL(GetSerializeSize(int16_t(0), 0), 2);
-    BOOST_CHECK_EQUAL(GetSerializeSize(uint16_t(0), 0), 2);
-    BOOST_CHECK_EQUAL(GetSerializeSize(int32_t(0), 0), 4);
-    BOOST_CHECK_EQUAL(GetSerializeSize(uint32_t(0), 0), 4);
-    BOOST_CHECK_EQUAL(GetSerializeSize(int64_t(0), 0), 8);
-    BOOST_CHECK_EQUAL(GetSerializeSize(uint64_t(0), 0), 8);
-    BOOST_CHECK_EQUAL(GetSerializeSize(float(0), 0), 4);
-    BOOST_CHECK_EQUAL(GetSerializeSize(double(0), 0), 8);
-    BOOST_CHECK_EQUAL(GetSerializeSize(bool(0), 0), 1);
+    BOOST_CHECK_EQUAL(GetSerializeSize(char(0), SER_NETWORK), 1);
+    BOOST_CHECK_EQUAL(GetSerializeSize(int8_t(0), SER_NETWORK), 1);
+    BOOST_CHECK_EQUAL(GetSerializeSize(uint8_t(0), SER_NETWORK), 1);
+    BOOST_CHECK_EQUAL(GetSerializeSize(int16_t(0), SER_NETWORK), 2);
+    BOOST_CHECK_EQUAL(GetSerializeSize(uint16_t(0), SER_NETWORK), 2);
+    BOOST_CHECK_EQUAL(GetSerializeSize(int32_t(0), SER_NETWORK), 4);
+    BOOST_CHECK_EQUAL(GetSerializeSize(uint32_t(0), SER_NETWORK), 4);
+    BOOST_CHECK_EQUAL(GetSerializeSize(int64_t(0), SER_NETWORK), 8);
+    BOOST_CHECK_EQUAL(GetSerializeSize(uint64_t(0), SER_NETWORK), 8);
+    BOOST_CHECK_EQUAL(GetSerializeSize(float(0), SER_NETWORK), 4);
+    BOOST_CHECK_EQUAL(GetSerializeSize(double(0), SER_NETWORK), 8);
+    BOOST_CHECK_EQUAL(GetSerializeSize(bool(0), SER_NETWORK), 1);
 }
 
 BOOST_AUTO_TEST_CASE(floats_conversion)
@@ -136,13 +136,13 @@ BOOST_AUTO_TEST_CASE(varints)
     CDataStream::size_type size = 0;
     for (int i = 0; i < 100000; i++) {
         ss << VARINT(i);
-        size += ::GetSerializeSize(VARINT(i), 0, 0);
+        size += ::GetSerializeSize(VARINT(i), SER_DISK, 0);
         BOOST_CHECK(size == ss.size());
     }
 
     for (uint64_t i = 0;  i < 100000000000ULL; i += 999999937) {
         ss << VARINT(i);
-        size += ::GetSerializeSize(VARINT(i), 0, 0);
+        size += ::GetSerializeSize(VARINT(i), SER_DISK, 0);
         BOOST_CHECK(size == ss.size());
     }
 

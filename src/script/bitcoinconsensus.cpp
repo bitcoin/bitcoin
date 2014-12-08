@@ -15,7 +15,7 @@ namespace {
 class TxInputStream
 {
 public:
-    TxInputStream(int nTypeIn, int nVersionIn, const unsigned char *txTo, size_t txToLen) :
+    TxInputStream(SerializeType nTypeIn, int nVersionIn, const unsigned char *txTo, size_t txToLen) :
     m_type(nTypeIn),
     m_version(nVersionIn),
     m_data(txTo),
@@ -47,7 +47,7 @@ public:
     }
 
 private:
-    const int m_type;
+    const SerializeType m_type;
     const int m_version;
     const unsigned char* m_data;
     size_t m_remaining;

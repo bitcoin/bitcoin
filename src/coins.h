@@ -150,7 +150,7 @@ public:
         return fCoinBase;
     }
 
-    unsigned int GetSerializeSize(int nType, int nVersion) const {
+    unsigned int GetSerializeSize(SerializeType nType, int nVersion) const {
         unsigned int nSize = 0;
         unsigned int nMaskSize = 0, nMaskCode = 0;
         CalcMaskSize(nMaskSize, nMaskCode);
@@ -174,7 +174,7 @@ public:
     }
 
     template<typename Stream>
-    void Serialize(Stream &s, int nType, int nVersion) const {
+    void Serialize(Stream &s, SerializeType nType, int nVersion) const {
         unsigned int nMaskSize = 0, nMaskCode = 0;
         CalcMaskSize(nMaskSize, nMaskCode);
         bool fFirst = vout.size() > 0 && !vout[0].IsNull();
@@ -203,7 +203,7 @@ public:
     }
 
     template<typename Stream>
-    void Unserialize(Stream &s, int nType, int nVersion) {
+    void Unserialize(Stream &s, SerializeType nType, int nVersion) {
         unsigned int nCode = 0;
         // version
         ::Unserialize(s, VARINT(this->nVersion), nType, nVersion);
