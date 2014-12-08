@@ -123,10 +123,10 @@ private:
     CHash256 ctx;
 
 public:
-    int nType;
+    SerializeType nType;
     int nVersion;
 
-    CHashWriter(int nTypeIn, int nVersionIn) : nType(nTypeIn), nVersion(nVersionIn) {}
+    CHashWriter(SerializeType nTypeIn, int nVersionIn) : nType(nTypeIn), nVersion(nVersionIn) {}
 
     CHashWriter& write(const char *pch, size_t size) {
         ctx.Write((const unsigned char*)pch, size);
@@ -150,7 +150,7 @@ public:
 
 /** Compute the 256-bit hash of an object's serialization. */
 template<typename T>
-uint256 SerializeHash(const T& obj, int nType=SER_GETHASH, int nVersion=PROTOCOL_VERSION)
+uint256 SerializeHash(const T& obj, SerializeType nType=SER_GETHASH, int nVersion=PROTOCOL_VERSION)
 {
     CHashWriter ss(nType, nVersion);
     ss << obj;

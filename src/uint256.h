@@ -6,6 +6,8 @@
 #ifndef BITCOIN_UINT256_H
 #define BITCOIN_UINT256_H
 
+#include "serialize.h"
+
 #include <assert.h>
 #include <cstring>
 #include <stdexcept>
@@ -267,19 +269,19 @@ public:
         return pn[0] | (uint64_t)pn[1] << 32;
     }
 
-    unsigned int GetSerializeSize(int nType, int nVersion) const
+    unsigned int GetSerializeSize(SerializeType nType, int nVersion) const
     {
         return sizeof(pn);
     }
 
     template<typename Stream>
-    void Serialize(Stream& s, int nType, int nVersion) const
+    void Serialize(Stream& s, SerializeType nType, int nVersion) const
     {
         s.write((char*)pn, sizeof(pn));
     }
 
     template<typename Stream>
-    void Unserialize(Stream& s, int nType, int nVersion)
+    void Unserialize(Stream& s, SerializeType nType, int nVersion)
     {
         s.read((char*)pn, sizeof(pn));
     }
