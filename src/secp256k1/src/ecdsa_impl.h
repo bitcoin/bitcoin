@@ -38,7 +38,7 @@ static void secp256k1_ecdsa_start(void) {
 
     secp256k1_fe_set_b32(&ret->order_as_fe, order);
     secp256k1_fe_negate(&ret->p_minus_order, &ret->order_as_fe, 1);
-    secp256k1_fe_normalize(&ret->p_minus_order);
+    secp256k1_fe_normalize_var(&ret->p_minus_order);
 
     /* Set the global pointer. */
     secp256k1_ecdsa_consts = ret;
@@ -109,25 +109,51 @@ static int secp256k1_ecdsa_sig_serialize(unsigned char *sig, int *size, const se
     return 1;
 }
 
-static int secp256k1_ecdsa_sig_recompute(secp256k1_scalar_t *r2, const secp256k1_ecdsa_sig_t *sig, const secp256k1_ge_t *pubkey, const secp256k1_scalar_t *message) {
+static int secp256k1_ecdsa_sig_verify(const secp256k1_ecdsa_sig_t *sig, const secp256k1_ge_t *pubkey, const secp256k1_scalar_t *message) {
     if (secp256k1_scalar_is_zero(&sig->r) || secp256k1_scalar_is_zero(&sig->s))
         return 0;
 
-    int ret = 0;
     secp256k1_scalar_t sn, u1, u2;
     secp256k1_scalar_inverse_var(&sn, &sig->s);
     secp256k1_scalar_mul(&u1, &sn, message);
     secp256k1_scalar_mul(&u2, &sn, &sig->r);
     secp256k1_gej_t pubkeyj; secp256k1_gej_set_ge(&pubkeyj, pubkey);
     secp256k1_gej_t pr; secp256k1_ecmult(&pr, &pubkeyj, &u2, &u1);
-    if (!secp256k1_gej_is_infinity(&pr)) {
-        secp256k1_fe_t xr; secp256k1_gej_get_x_var(&xr, &pr);
-        secp256k1_fe_normalize(&xr);
-        unsigned char xrb[32]; secp256k1_fe_get_b32(xrb, &xr);
-        secp256k1_scalar_set_b32(r2, xrb, NULL);
-        ret = 1;
+    if (secp256k1_gej_is_infinity(&pr)) {
+        return 0;
     }
-    return ret;
+    unsigned char c[32];
+    secp256k1_scalar_get_b32(c, &sig->r);
+    secp256k1_fe_t xr;
+    secp256k1_fe_set_b32(&xr, c);
+
+    // We now have the recomputed R point in pr, and its claimed x coordinate (modulo the order)
+    // in xr. Naively, we would extract the x coordinate from pr (requiring a inversion modulo p),
+    // compute the remainder modulo the order, and compare it to xr. However:
+    //
+    //   x(R) mod n == xr
+    //   <=> exists h. (x(R) + h * order < p && x(R) == xr + h * order)
+    //   [Since 2 * order > p, h can only be 0 or 1]
+    //   <=> (x(R) == xr) || (xr + order < p && x(R) == xr + order)
+    //   <=> (R.x / R.z^2 mod p == xr) || (xr + order < p && R.x / R.z^2 mod p == xr + order)
+    //   <=> (R.x == xr * R.z^2 mod p) || (xr + order < p && R.x == (xr + order) * R.z^2 mod p)
+    //
+    // Thus, we can avoid the inversion, but we have to check both cases separately.
+    // secp256k1_gej_eq_x implements the (R.x == xr*R.z^2 mod p) test.
+    if (secp256k1_gej_eq_x_var(&xr, &pr)) {
+        // R.x == xr * R.z^2 mod p, so the signature is valid.
+        return 1;
+    }
+    if (secp256k1_fe_cmp_var(&xr, &secp256k1_ecdsa_consts->p_minus_order) >= 0) {
+        // xr + order >= n, so we can skip testing the second case.
+        return 0;
+    }
+    secp256k1_fe_add(&xr, &secp256k1_ecdsa_consts->order_as_fe);
+    if (secp256k1_gej_eq_x_var(&xr, &pr)) {
+        // R.x == (xr + order) * R.z^2 mod p, so the signature is valid.
+        return 1;
+    }
+    return 0;
 }
 
 static int secp256k1_ecdsa_sig_recover(const secp256k1_ecdsa_sig_t *sig, secp256k1_ge_t *pubkey, const secp256k1_scalar_t *message, int recid) {
@@ -144,7 +170,7 @@ static int secp256k1_ecdsa_sig_recover(const secp256k1_ecdsa_sig_t *sig, secp256
         secp256k1_fe_add(&fx, &secp256k1_ecdsa_consts->order_as_fe);
     }
     secp256k1_ge_t x;
-    if (!secp256k1_ge_set_xo(&x, &fx, recid & 1))
+    if (!secp256k1_ge_set_xo_var(&x, &fx, recid & 1))
         return 0;
     secp256k1_gej_t xj;
     secp256k1_gej_set_ge(&xj, &x);
@@ -157,13 +183,6 @@ static int secp256k1_ecdsa_sig_recover(const secp256k1_ecdsa_sig_t *sig, secp256
     secp256k1_ecmult(&qj, &xj, &u2, &u1);
     secp256k1_ge_set_gej_var(pubkey, &qj);
     return !secp256k1_gej_is_infinity(&qj);
-}
-
-static int secp256k1_ecdsa_sig_verify(const secp256k1_ecdsa_sig_t *sig, const secp256k1_ge_t *pubkey, const secp256k1_scalar_t *message) {
-    secp256k1_scalar_t r2;
-    int ret = 0;
-    ret = secp256k1_ecdsa_sig_recompute(&r2, sig, pubkey, message) && secp256k1_scalar_eq(&sig->r, &r2);
-    return ret;
 }
 
 static int secp256k1_ecdsa_sig_sign(secp256k1_ecdsa_sig_t *sig, const secp256k1_scalar_t *seckey, const secp256k1_scalar_t *message, const secp256k1_scalar_t *nonce, int *recid) {
