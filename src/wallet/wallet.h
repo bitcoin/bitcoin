@@ -84,7 +84,7 @@ public:
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action, SerializeType nType, int nVersion) {
-        if (!(nType & SER_GETHASH))
+        if (nType != SER_GETHASH)
             READWRITE(nVersion);
         READWRITE(nTime);
         READWRITE(vchPubKey);
@@ -425,7 +425,7 @@ public:
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action, SerializeType nType, int nVersion) {
-        if (!(nType & SER_GETHASH))
+        if (nType != SER_GETHASH)
             READWRITE(nVersion);
         READWRITE(vchPrivKey);
         READWRITE(nTimeCreated);
@@ -780,7 +780,7 @@ public:
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action, SerializeType nType, int nVersion) {
-        if (!(nType & SER_GETHASH))
+        if (nType != SER_GETHASH)
             READWRITE(nVersion);
         READWRITE(vchPubKey);
     }
@@ -824,7 +824,7 @@ public:
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action, SerializeType nType, int nVersion) {
-        if (!(nType & SER_GETHASH))
+        if (nType != SER_GETHASH)
             READWRITE(nVersion);
         //! Note: strAccount is serialized as part of the key, not here.
         READWRITE(nCreditDebit);

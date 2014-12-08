@@ -101,10 +101,10 @@ public:
     {
         if (ser_action.ForRead())
             Init();
-        if (nType & SER_DISK)
+        if (nType == SER_DISK)
             READWRITE(nVersion);
-        if ((nType & SER_DISK) ||
-            (nVersion >= CADDR_TIME_VERSION && !(nType & SER_GETHASH)))
+        if ((nType == SER_DISK) ||
+            (nVersion >= CADDR_TIME_VERSION && (nType == SER_NETWORK)))
             READWRITE(nTime);
         READWRITE(nServices);
         READWRITE(*(CService*)this);
