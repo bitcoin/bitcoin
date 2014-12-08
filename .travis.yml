@@ -61,6 +61,6 @@ script:
     - ./configure --cache-file=../config.cache $BITCOIN_CONFIG_ALL $BITCOIN_CONFIG || ( cat config.log && false)
     - make $MAKEJOBS $GOAL || ( echo "Build failure. Verbose build follows." && make $GOAL V=1 ; false )
     - export LD_LIBRARY_PATH=$TRAVIS_BUILD_DIR/depends/$HOST/lib
-    - if [ "$UPLOAD" = "true" ]; then scp -i ./key -o StrictHostKeyChecking=no -r $BASE_OUTDIR upload@bitcoin.sipa.be:test/ || echo "upload failed"; fi
+    - if [ "$UPLOAD" = "true" ]; then chmod 0400 ../key; scp -i ../key -o StrictHostKeyChecking=no -r $BASE_OUTDIR upload@bitcoin.sipa.be:test/ || echo "upload failed"; fi
     - if [ "$RUN_TESTS" = "true" ]; then make check; fi
     - if [ "$RUN_TESTS" = "true" ]; then qa/pull-tester/rpc-tests.sh; fi
