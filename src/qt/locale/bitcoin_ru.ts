@@ -1722,7 +1722,7 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     <message>
         <location line="-29"/>
         <source>Total of coins that was staked, and do not yet count toward the current balance</source>
-        <translation>Общая сумма всех монет, используемых для Proof-of-Stake, и не учитывающихся на балансе</translation>
+        <translation>Общая сумма всех монет, использованных для Proof-of-Stake, и не учитывающихся на балансе</translation>
     </message>
     <message>
         <location line="+75"/>
