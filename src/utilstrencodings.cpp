@@ -459,7 +459,7 @@ std::string FormatParagraph(const std::string in, size_t width, size_t indent)
         }
         // Append word
         out << in.substr(ptr, endword - ptr);
-        col += endword - ptr;
+        col += endword - ptr + 1;
         ptr = endword;
     }
     return out.str();
