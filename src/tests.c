@@ -11,6 +11,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <time.h>
+
 #include "secp256k1.c"
 #include "testrand_impl.h"
 
