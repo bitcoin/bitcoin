@@ -25,8 +25,10 @@ SECP256K1_INLINE static void secp256k1_fe_mul_inner(uint64_t *r, const uint64_t 
  *            rsi     = a / t?
  *            rbp     = R (0x1000003d10)
  */
+  void* tmp1;
+  uint64_t tmp2, tmp3;
 __asm__ __volatile__(
-    "pushq %%rbp\n"
+    "movq %%rbp,%4\n"
 
     "movq 0(%%rsi),%%r10\n"
     "movq 8(%%rsi),%%r11\n"
@@ -72,7 +74,7 @@ __asm__ __volatile__(
     "movq %%rcx,%%rsi\n"
     "movq $0xfffffffffffff,%%rdx\n"
     "andq %%rdx,%%rsi\n"
-    "pushq %%rsi\n"
+    "movq %%rsi,%5\n"
     /* d >>= 52 */
     "shrdq $52,%%r15,%%rcx\n"
     "xorq %%r15,%%r15\n"
@@ -119,7 +121,7 @@ __asm__ __volatile__(
     /* t4 &= (M >> 4) (stack) */
     "movq $0xffffffffffff,%%rax\n"
     "andq %%rax,%%rsi\n"
-    "pushq %%rsi\n"
+    "movq %%rsi,%6\n"
     /* c = a0 * b0 */
     "movq 0(%%rbx),%%rax\n"
     "mulq %%r10\n"
@@ -229,8 +231,8 @@ __asm__ __volatile__(
     "addq %%rax,%%r8\n"
     "adcq %%rdx,%%r9\n"
     /* fetch t3 (%%r10, overwrites a0),t4 (%%rsi) */
-    "popq %%rsi\n"
-    "popq %%r10\n"
+    "movq %6,%%rsi\n"
+    "movq %5,%%r10\n"
     /* d += a4 * b3 */
     "movq 24(%%rbx),%%rax\n"
     "mulq %%r14\n"
@@ -277,9 +279,9 @@ __asm__ __volatile__(
     /* r[4] = c */
     "movq %%r8,32(%%rdi)\n"
 
-    "popq %%rbp\n"
+    "movq %4,%%rbp\n"
 : "+S"(a)
-: "0"(a), "b"(b), "D"(r)
+: "0"(a), "b"(b), "D"(r), "m"(tmp1), "m"(tmp2), "m"(tmp3)
 : "%rax", "%rcx", "%rdx", "%r8", "%r9", "%r10", "%r11", "%r12", "%r13", "%r14", "%r15", "cc", "memory"
 );
 }
@@ -295,8 +297,10 @@ SECP256K1_INLINE static void secp256k1_fe_sqr_inner(uint64_t *r, const uint64_t 
  *            rsi     = a / t?
  *            rbp     = R (0x1000003d10)
  */
+  void* tmp1;
+  uint64_t tmp2, tmp3;
 __asm__ __volatile__(
-    "pushq %%rbp\n"
+    "movq %%rbp,%3\n"
 
     "movq 0(%%rsi),%%r10\n"
     "movq 8(%%rsi),%%r11\n"
@@ -331,7 +335,7 @@ __asm__ __volatile__(
     /* t3 (stack) = d & M */
     "movq %%rbx,%%rsi\n"
     "andq %%r15,%%rsi\n"
-    "pushq %%rsi\n"
+    "movq %%rsi,%4\n"
     /* d >>= 52 */
     "shrdq $52,%%rcx,%%rbx\n"
     "xorq %%rcx,%%rcx\n"
@@ -369,7 +373,7 @@ __asm__ __volatile__(
     /* t4 &= (M >> 4) (stack) */
     "movq $0xffffffffffff,%%rax\n"
     "andq %%rax,%%rsi\n"
-    "pushq %%rsi\n"
+    "movq %%rsi,%5\n"
     /* c = a0 * a0 */
     "movq %%r10,%%rax\n"
     "mulq %%r10\n"
@@ -447,8 +451,8 @@ __asm__ __volatile__(
     "addq %%rax,%%r8\n"
     "adcq %%rdx,%%r9\n"
     /* fetch t3 (%%r10, overwrites a0),t4 (%%rsi) */
-    "popq %%rsi\n"
-    "popq %%r10\n"
+    "movq %5,%%rsi\n"
+    "movq %4,%%r10\n"
     /* c += a1 * a1 */
     "movq %%r11,%%rax\n"
     "mulq %%r11\n"
@@ -492,9 +496,9 @@ __asm__ __volatile__(
     /* r[4] = c */
     "movq %%r8,32(%%rdi)\n"
 
-    "popq %%rbp\n"
+    "movq %3,%%rbp\n"
 : "+S"(a)
-: "0"(a), "D"(r)
+: "0"(a), "D"(r), "m"(tmp1), "m"(tmp2), "m"(tmp3)
 : "%rax", "%rbx", "%rcx", "%rdx", "%r8", "%r9", "%r10", "%r11", "%r12", "%r13", "%r14", "%r15", "cc", "memory"
 );
 }
