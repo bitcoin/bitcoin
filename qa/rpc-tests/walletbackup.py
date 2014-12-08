@@ -1,46 +1,48 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 # Copyright (c) 2014 The Bitcoin Core developers
 # Distributed under the MIT/X11 software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
-#
-# Exercise the wallet backup code.  Ported from walletbackup.sh.  
-#
-#
-# Test case is:
-# 4 nodes. 1 2 and 3 send transactions between each other,
-# fourth node is a miner.
-# 1 2 3 each mine a block to start, then
-# Miner creates 100 blocks so 1 2 3 each have 50 mature
-# coins to spend.
-# Then 5 iterations of 1/2/3 sending coins amongst
-# themselves to get transactions in the wallets,
-# and the miner mining one block.
-#
-# Wallets are backed up using dumpwallet/backupwallet.
-# Then 5 more iterations of transactions and mining a block.
-#
-# Miner then generates 101 more blocks, so any
-# transaction fees paid mature.
-#
-# Sanity check:
-#   Sum(1,2,3,4 balances) == 114*50
-#
-# 1/2/3 are shutdown, and their wallets erased.
-# Then restore using wallet.dat backup. And
-# confirm 1/2/3/4 balances are same as before.
-#
-# Shutdown again, restore using importwallet,
-# and confirm again balances are correct.
-#
+
+"""
+Exercise the wallet backup code.  Ported from walletbackup.sh.  
+
+Test case is:
+4 nodes. 1 2 and 3 send transactions between each other,
+fourth node is a miner.
+1 2 3 each mine a block to start, then
+Miner creates 100 blocks so 1 2 3 each have 50 mature
+coins to spend.
+Then 5 iterations of 1/2/3 sending coins amongst
+themselves to get transactions in the wallets,
+and the miner mining one block.
+
+Wallets are backed up using dumpwallet/backupwallet.
+Then 5 more iterations of transactions and mining a block.
+
+Miner then generates 101 more blocks, so any
+transaction fees paid mature.
+
+Sanity check:
+  Sum(1,2,3,4 balances) == 114*50
+
+1/2/3 are shutdown, and their wallets erased.
+Then restore using wallet.dat backup. And
+confirm 1/2/3/4 balances are same as before.
+
+Shutdown again, restore using importwallet,
+and confirm again balances are correct.
+"""
 
 from test_framework import BitcoinTestFramework
 from util import *
 from random import randint
+import logging
+logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.INFO)
 
-class WalletBackupTest (BitcoinTestFramework):
+class WalletBackupTest(BitcoinTestFramework):
 
     def setup_chain(self):
-        print("Initializing test directory "+self.options.tmpdir)
+        logging.info("Initializing test directory "+self.options.tmpdir)
         initialize_chain_clean(self.options.tmpdir, 4)
 
     # This mirrors how the network was setup in the bash test
@@ -97,8 +99,8 @@ class WalletBackupTest (BitcoinTestFramework):
         os.remove(self.options.tmpdir + "/node1/regtest/wallet.dat")
         os.remove(self.options.tmpdir + "/node2/regtest/wallet.dat")
 
-    def run_test (self):
-        print "Generating initial blockchain"
+    def run_test(self):
+        logging.info("Generating initial blockchain")
         self.nodes[0].setgenerate(True, 1)
         sync_blocks(self.nodes)
         self.nodes[1].setgenerate(True, 1)
@@ -113,12 +115,12 @@ class WalletBackupTest (BitcoinTestFramework):
         assert_equal(self.nodes[2].getbalance(), 50)
         assert_equal(self.nodes[3].getbalance(), 0)
 
-        print "Creating transactions"
+        logging.info("Creating transactions")
         # Five rounds of sending each other transactions.
         for i in range(5):
             self.do_one_round()
 
-        print "Backing up"
+        logging.info("Backing up")
         tmpdir = self.options.tmpdir
         self.nodes[0].backupwallet(tmpdir + "/node0/wallet.bak")
         self.nodes[0].dumpwallet(tmpdir + "/node0/wallet.dump")
@@ -127,7 +129,7 @@ class WalletBackupTest (BitcoinTestFramework):
         self.nodes[2].backupwallet(tmpdir + "/node2/wallet.bak")
         self.nodes[2].dumpwallet(tmpdir + "/node2/wallet.dump")
 
-        print "More transactions"
+        logging.info("More transactions")
         for i in range(5):
             self.do_one_round()
 
@@ -148,7 +150,7 @@ class WalletBackupTest (BitcoinTestFramework):
         ##
         # Test restoring spender wallets from backups
         ##
-        print "Restoring using wallet.dat"
+        logging.info("Restoring using wallet.dat")
         self.stop_three()
         self.erase_three()
 
@@ -161,7 +163,7 @@ class WalletBackupTest (BitcoinTestFramework):
         shutil.copyfile(tmpdir + "/node1/wallet.bak", tmpdir + "/node1/regtest/wallet.dat")
         shutil.copyfile(tmpdir + "/node2/wallet.bak", tmpdir + "/node2/regtest/wallet.dat")
 
-        print "Re-starting nodes"
+        logging.info("Re-starting nodes")
         self.start_three()
         sync_blocks(self.nodes)
 
@@ -169,7 +171,7 @@ class WalletBackupTest (BitcoinTestFramework):
         assert_equal(self.nodes[1].getbalance(), balance1)
         assert_equal(self.nodes[2].getbalance(), balance2)
 
-        print "Restoring using dumped wallet"
+        logging.info("Restoring using dumped wallet")
         self.stop_three()
         self.erase_three()
 
