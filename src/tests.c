@@ -863,7 +863,12 @@ void run_point_times_order(void) {
         }
         secp256k1_fe_sqr(&x, &x);
     }
-    char c[65]; int cl=65;
+    char c[65];
+    int cl = 1;
+    c[1] = 123;
+    secp256k1_fe_get_hex(c, &cl, &x); /* Check that fe_get_hex handles a too short input. */
+    CHECK(c[1] == 123);
+    cl = 65;
     secp256k1_fe_get_hex(c, &cl, &x);
     CHECK(strcmp(c, "7603CB59B0EF6C63FE6084792A0C378CDB3233A80F8A9A09A877DEAD31B38C45") == 0);
 }
@@ -1032,6 +1037,64 @@ void test_ecdsa_end_to_end(void) {
           memcmp(pubkey, recpubkey, pubkeylen) != 0);
     CHECK(recpubkeylen == pubkeylen);
 
+}
+
+void test_random_pubkeys(void) {
+    unsigned char in[65];
+    /* Generate some randomly sized pubkeys. */
+    uint32_t r = secp256k1_rand32();
+    int len = (r & 3) == 0 ? 65 : 33;
+    r>>=2;
+    if ((r & 3) == 0) len = (r & 252) >> 3;
+    r>>=8;
+    if (len == 65) {
+      in[0] = (r & 2) ? 4 : (r & 1? 6 : 7);
+    } else {
+      in[0] = (r & 1) ? 2 : 3;
+    }
+    r>>=2;
+    if ((r & 7) == 0) in[0] = (r & 2040) >> 3;
+    r>>=11;
+    if (len > 1) secp256k1_rand256(&in[1]);
+    if (len > 33) secp256k1_rand256(&in[33]);
+    secp256k1_ge_t elem;
+    secp256k1_ge_t elem2;
+    if (secp256k1_eckey_pubkey_parse(&elem, in, len)) {
+        unsigned char out[65];
+        unsigned char firstb;
+        int res;
+        int size = len;
+        firstb = in[0];
+        /* If the pubkey can be parsed, it should round-trip... */
+        CHECK(secp256k1_eckey_pubkey_serialize(&elem, out, &size, len == 33));
+        CHECK(size == len);
+        CHECK(memcmp(&in[1], &out[1], len-1) == 0);
+        /* ... except for the type of hybrid inputs. */
+        if ((in[0] != 6) && (in[0] != 7)) CHECK(in[0] == out[0]);
+        size = 65;
+        CHECK(secp256k1_eckey_pubkey_serialize(&elem, in, &size, 0));
+        CHECK(size == 65);
+        CHECK(secp256k1_eckey_pubkey_parse(&elem2, in, size));
+        CHECK(ge_equals_ge(&elem,&elem2));
+        /* Check that the X9.62 hybrid type is checked. */
+        in[0] = (r & 1) ? 6 : 7;
+        res = secp256k1_eckey_pubkey_parse(&elem2, in, size);
+        if (firstb == 2 || firstb == 3) {
+            if (in[0] == firstb + 4) CHECK(res);
+            else CHECK(!res);
+        }
+        if (res) {
+            CHECK(ge_equals_ge(&elem,&elem2));
+            CHECK(secp256k1_eckey_pubkey_serialize(&elem, out, &size, 0));
+            CHECK(memcmp(&in[1], &out[1], 64) == 0);
+        }
+    }
+}
+
+void run_random_pubkeys(void) {
+    for (int i=0; i<10*count; i++) {
+        test_random_pubkeys();
+    }
 }
 
 void run_ecdsa_end_to_end(void) {
@@ -1234,6 +1297,20 @@ void test_ecdsa_edge_cases(void) {
         siglen = 72;
         CHECK(secp256k1_ecdsa_sign(msg, 32, sig, &siglen, key, nonce) == 1);
     }
+
+    /* Privkey export where pubkey is the point at infinity. */
+    {
+        unsigned char privkey[300];
+        unsigned char seckey[32] = {
+            0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+            0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfe,
+            0xba, 0xae, 0xdc, 0xe6, 0xaf, 0x48, 0xa0, 0x3b,
+            0xbf, 0xd2, 0x5e, 0x8c, 0xd0, 0x36, 0x41, 0x41,
+        };
+        int outlen = 300;
+        CHECK(!secp256k1_ec_privkey_export(seckey, privkey, &outlen, 0));
+        CHECK(!secp256k1_ec_privkey_export(seckey, privkey, &outlen, 1));
+    }
 }
 
 void run_ecdsa_edge_cases(void) {
@@ -1351,6 +1428,7 @@ int main(int argc, char **argv) {
     run_ecmult_chain();
 
     /* ecdsa tests */
+    run_random_pubkeys();
     run_ecdsa_sign_verify();
     run_ecdsa_end_to_end();
     run_ecdsa_edge_cases();
