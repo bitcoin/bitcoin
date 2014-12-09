@@ -19,7 +19,7 @@ void bench_recover(void* arg) {
     unsigned char pubkey[33];
     for (int i=0; i<20000; i++) {
         int pubkeylen = 33;
-        CHECK(secp256k1_ecdsa_recover_compact(data->msg, 32, data->sig, pubkey, &pubkeylen, 1, i % 2));
+        CHECK(secp256k1_ecdsa_recover_compact(data->msg, data->sig, pubkey, &pubkeylen, 1, i % 2));
         for (int j = 0; j < 32; j++) {
             data->sig[j + 32] = data->msg[j];    /* Move former message to S. */
             data->msg[j] = data->sig[j];         /* Move former R to message. */
