@@ -182,7 +182,7 @@ darkcoind_LDADD = \
 if ENABLE_WALLET
 darkcoind_LDADD += libdarkcoin_wallet.a
 endif
-darkcoind_SOURCES = bitcoind.cpp
+darkcoind_SOURCES = darkcoind.cpp
 #
 
 if TARGET_WINDOWS
@@ -197,7 +197,7 @@ darkcoin_cli_LDADD = \
   libdarkcoin_cli.a \
   libdarkcoin_common.a \
   $(BOOST_LIBS)
-darkcoin_cli_SOURCES = bitcoin-cli.cpp
+darkcoin_cli_SOURCES = darkcoin-cli.cpp
 #
 
 if TARGET_WINDOWS
