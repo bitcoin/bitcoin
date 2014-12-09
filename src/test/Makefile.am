@@ -57,7 +57,7 @@ test_darkcoin_SOURCES = \
   script_tests.cpp \
   serialize_tests.cpp \
   sigopcount_tests.cpp \
-  test_bitcoin.cpp \
+  test_darkcoin.cpp \
   transaction_tests.cpp \
   uint256_tests.cpp \
   util_tests.cpp \

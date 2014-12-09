@@ -261,7 +261,7 @@ RES_ICONS = \
   res/icons/tx_mined.png
 
 BITCOIN_QT_CPP = \
-  bitcoin.cpp \
+  darkcoin.cpp \
   bitcoinaddressvalidator.cpp \
   bitcoinamountfield.cpp \
   bitcoingui.cpp \
@@ -339,7 +339,7 @@ $(QT_MOC_CPP): $(PROTOBUF_H)
 # darkcoin-qt binary #
 darkcoin_qt_CPPFLAGS = $(AM_CPPFLAGS) $(QT_INCLUDES) \
   -I$(top_srcdir)/src/qt/forms
-darkcoin_qt_SOURCES = bitcoin.cpp
+darkcoin_qt_SOURCES = darkcoin.cpp
 if TARGET_DARWIN
   darkcoin_qt_SOURCES += $(BITCOIN_MM)
 endif
