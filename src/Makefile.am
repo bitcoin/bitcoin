@@ -353,10 +353,8 @@ if BUILD_BITCOIN_LIBS
 include_HEADERS = script/bitcoinconsensus.h
 libbitcoinconsensus_la_SOURCES = \
   primitives/transaction.cpp \
-  crypto/hmac_sha512.cpp \
   crypto/sha1.cpp \
   crypto/sha256.cpp \
-  crypto/sha512.cpp \
   crypto/ripemd160.cpp \
   eccryptoverify.cpp \
   ecwrapper.cpp \
