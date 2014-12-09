@@ -70,7 +70,7 @@ __asm__ __volatile__(
     "movq %%rcx,%%rsi\n"
     "movq $0xfffffffffffff,%%rdx\n"
     "andq %%rdx,%%rsi\n"
-    "movq %%rsi,%1\n"
+    "movq %%rsi,%q1\n"
     /* d >>= 52 */
     "shrdq $52,%%r15,%%rcx\n"
     "xorq %%r15,%%r15\n"
@@ -115,11 +115,11 @@ __asm__ __volatile__(
     /* tx = t4 >> 48 (tmp3) */
     "movq %%rsi,%%rax\n"
     "shrq $48,%%rax\n"
-    "movq %%rax,%3\n"
+    "movq %%rax,%q3\n"
     /* t4 &= (M >> 4) (tmp2) */
     "movq $0xffffffffffff,%%rax\n"
     "andq %%rax,%%rsi\n"
-    "movq %%rsi,%2\n"
+    "movq %%rsi,%q2\n"
     /* c = a0 * b0 */
     "movq 0(%%rbx),%%rax\n"
     "mulq %%r10\n"
@@ -154,7 +154,7 @@ __asm__ __volatile__(
     "xorq %%r15,%%r15\n"
     /* u0 = (u0 << 4) | tx (%%rsi) */
     "shlq $4,%%rsi\n"
-    "movq %3,%%rax\n"
+    "movq %q3,%%rax\n"
     "orq %%rax,%%rsi\n"
     /* c += u0 * (R >> 4) */
     "movq $0x1000003d1,%%rax\n"
@@ -229,8 +229,8 @@ __asm__ __volatile__(
     "addq %%rax,%%r8\n"
     "adcq %%rdx,%%r9\n"
     /* fetch t3 (%%r10, overwrites a0), t4 (%%rsi) */
-    "movq %2,%%rsi\n"
-    "movq %1,%%r10\n"
+    "movq %q2,%%rsi\n"
+    "movq %q1,%%r10\n"
     /* d += a4 * b3 */
     "movq 24(%%rbx),%%rax\n"
     "mulq %%r14\n"
@@ -329,7 +329,7 @@ __asm__ __volatile__(
     /* t3 (tmp1) = d & M */
     "movq %%rbx,%%rsi\n"
     "andq %%r15,%%rsi\n"
-    "movq %%rsi,%1\n"
+    "movq %%rsi,%q1\n"
     /* d >>= 52 */
     "shrdq $52,%%rcx,%%rbx\n"
     "xorq %%rcx,%%rcx\n"
@@ -365,11 +365,11 @@ __asm__ __volatile__(
     /* tx = t4 >> 48 (tmp3) */
     "movq %%rsi,%%rax\n"
     "shrq $48,%%rax\n"
-    "movq %%rax,%3\n"
+    "movq %%rax,%q3\n"
     /* t4 &= (M >> 4) (tmp2) */
     "movq $0xffffffffffff,%%rax\n"
     "andq %%rax,%%rsi\n"
-    "movq %%rsi,%2\n"
+    "movq %%rsi,%q2\n"
     /* c = a0 * a0 */
     "movq %%r10,%%rax\n"
     "mulq %%r10\n"
@@ -393,7 +393,7 @@ __asm__ __volatile__(
     "xorq %%rcx,%%rcx\n"
     /* u0 = (u0 << 4) | tx (%%rsi) */
     "shlq $4,%%rsi\n"
-    "movq %3,%%rax\n"
+    "movq %q3,%%rax\n"
     "orq %%rax,%%rsi\n"
     /* c += u0 * (R >> 4) */
     "movq $0x1000003d1,%%rax\n"
@@ -447,8 +447,8 @@ __asm__ __volatile__(
     "addq %%rax,%%r8\n"
     "adcq %%rdx,%%r9\n"
     /* fetch t3 (%%r10, overwrites a0),t4 (%%rsi) */
-    "movq %2,%%rsi\n"
-    "movq %1,%%r10\n"
+    "movq %q2,%%rsi\n"
+    "movq %q1,%%r10\n"
     /* c += a1 * a1 */
     "movq %%r11,%%rax\n"
     "mulq %%r11\n"
