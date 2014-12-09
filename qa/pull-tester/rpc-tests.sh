@@ -15,18 +15,28 @@ fi
 
 #Run the tests
 
+testScripts=(
+    'wallet.py'
+    'listtransactions.py'
+    'mempool_resurrect_test.py'
+    'txn_doublespend.py'
+    'txn_doublespend.py --mineblock'
+    'getchaintips.py'
+    'rest.py'
+    'mempool_spendcoinbase.py'
+    'mempool_coinbase_spends.py'
+    'httpbasics.py'
+#    'forknotify.py'
+);
 if [ "x${ENABLE_BITCOIND}${ENABLE_UTILS}${ENABLE_WALLET}" = "x111" ]; then
-  ${BUILDDIR}/qa/rpc-tests/wallet.py --srcdir "${BUILDDIR}/src"
-  ${BUILDDIR}/qa/rpc-tests/listtransactions.py --srcdir "${BUILDDIR}/src"
-  ${BUILDDIR}/qa/rpc-tests/mempool_resurrect_test.py --srcdir "${BUILDDIR}/src"
-  ${BUILDDIR}/qa/rpc-tests/txn_doublespend.py --srcdir "${BUILDDIR}/src"
-  ${BUILDDIR}/qa/rpc-tests/txn_doublespend.py --mineblock --srcdir "${BUILDDIR}/src"
-  ${BUILDDIR}/qa/rpc-tests/getchaintips.py --srcdir "${BUILDDIR}/src"
-  ${BUILDDIR}/qa/rpc-tests/rest.py --srcdir "${BUILDDIR}/src"
-  ${BUILDDIR}/qa/rpc-tests/mempool_spendcoinbase.py --srcdir "${BUILDDIR}/src"
-  ${BUILDDIR}/qa/rpc-tests/httpbasics.py --srcdir "${BUILDDIR}/src"
-  ${BUILDDIR}/qa/rpc-tests/mempool_coinbase_spends.py --srcdir "${BUILDDIR}/src"
-  #${BUILDDIR}/qa/rpc-tests/forknotify.py --srcdir "${BUILDDIR}/src"
+    for (( i = 0; i < ${#testScripts[@]}; i++ ))
+    do
+        if [ -z "$1" ] || [ "$1" == "${testScripts[$i]}" ] || [ "$1.py" == "${testScripts[$i]}" ]
+        then
+            echo -e "running testscript \033[1m${testScripts[$i]}...\033[0m"
+            ${BUILDDIR}/qa/rpc-tests/${testScripts[$i]} --srcdir "${BUILDDIR}/src"
+        fi
+    done
 else
   echo "No rpc tests to run. Wallet, utils, and bitcoind must all be enabled"
 fi
