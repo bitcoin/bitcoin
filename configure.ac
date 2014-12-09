@@ -103,7 +103,11 @@ AC_ARG_WITH([scalar], [AS_HELP_STRING([--with-scalar=64bit|32bit|auto],
 
 AC_CHECK_TYPES([__int128])
 
-AC_CHECK_DECL(__builtin_expect,AC_DEFINE(HAVE_BUILTIN_EXPECT,1,[Define this symbol if __builtin_expect is available]),,)
+AC_MSG_CHECKING([for __builtin_expect])
+AC_COMPILE_IFELSE([AC_LANG_SOURCE([[void myfunc() {__builtin_expect(0,0);}]])],
+    [ AC_MSG_RESULT([yes]);AC_DEFINE(HAVE_BUILTIN_EXPECT,1,[Define this symbol if __builtin_expect is available]) ],
+    [ AC_MSG_RESULT([no])
+    ])
 
 if test x"$req_field" = x"auto"; then
   SECP_64BIT_ASM_CHECK
