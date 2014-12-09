@@ -331,7 +331,7 @@ Value getwork(const Array& params, bool fHelp)
             // Clear pindexPrev so future getworks make a new block, despite any failures from here on
             pindexPrev = NULL;
 
-            // Store the pindexBest used before CreateNewBlock, to avoid races
+            // Store the chainActive.Tip() used before CreateNewBlock, to avoid races
             nTransactionsUpdatedLast = mempool.GetTransactionsUpdated();
             CBlockIndex* pindexPrevNew = chainActive.Tip();
             nStart = GetTime();
@@ -498,7 +498,7 @@ Value getblocktemplate(const Array& params, bool fHelp)
         // Clear pindexPrev so future calls make a new block, despite any failures from here on
         pindexPrev = NULL;
 
-        // Store the pindexBest used before CreateNewBlock, to avoid races
+        // Store the chainActive.Tip() used before CreateNewBlock, to avoid races
         nTransactionsUpdatedLast = mempool.GetTransactionsUpdated();
         CBlockIndex* pindexPrevNew = chainActive.Tip();
         nStart = GetTime();

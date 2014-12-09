@@ -92,7 +92,20 @@ inline void MilliSleep(int64_t n)
 #endif
 }
 
+//Darkcoin only features
 
+extern bool fMasterNode;
+extern int nInstantXDepth;
+extern int nDarksendRounds;
+extern int nAnonymizeDarkcoinAmount;
+extern int nLiquidityProvider;
+extern bool fEnableDarksend;
+extern int64_t enforceMasternodePaymentsTime;
+extern std::string strMasterNodeAddr;
+extern int nMasternodeMinProtocol;
+extern int keysLoaded;
+extern bool fSucessfullyLoaded;
+extern std::vector<int64_t> darkSendDenominations;
 
 extern std::map<std::string, std::string> mapArgs;
 extern std::map<std::string, std::vector<std::string> > mapMultiArgs;

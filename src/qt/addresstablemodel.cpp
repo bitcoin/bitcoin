@@ -370,7 +370,7 @@ QString AddressTableModel::addRow(const QString &type, const QString &label, con
         CPubKey newKey;
         if(!wallet->GetKeyFromPool(newKey))
         {
-            WalletModel::UnlockContext ctx(walletModel->requestUnlock());
+            WalletModel::UnlockContext ctx(walletModel->requestUnlock(true));
             if(!ctx.isValid())
             {
                 // Unlock wallet failed or was cancelled
