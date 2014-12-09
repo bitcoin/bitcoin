@@ -18,6 +18,10 @@ AC_PATH_TOOL(AR, ar)
 AC_PATH_TOOL(RANLIB, ranlib)
 AC_PATH_TOOL(STRIP, strip)
 
+if test -z $CFLAGS; then
+  CFLAGS="-O3 -g"
+fi
+
 AC_PROG_CC_C99
 if test x"$ac_cv_prog_cc_c99" == x"no"; then
   AC_MSG_ERROR([c99 compiler support required])
