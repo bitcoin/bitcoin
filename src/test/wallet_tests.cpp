@@ -21,8 +21,6 @@
 
 using namespace std;
 
-typedef set<pair<const CWalletTx*,unsigned int> > CoinSet;
-
 BOOST_AUTO_TEST_SUITE(wallet_tests)
 
 static CWallet wallet;

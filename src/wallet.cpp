@@ -1233,7 +1233,7 @@ static void ApproximateBestSubset(vector<pair<CAmount, pair<const CWalletTx*,uns
 }
 
 bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, int nConfMine, int nConfTheirs, vector<COutput> vCoins,
-                                 set<pair<const CWalletTx*,unsigned int> >& setCoinsRet, CAmount& nValueRet) const
+                                 CoinSet& setCoinsRet, CAmount& nValueRet) const
 {
     setCoinsRet.clear();
     nValueRet = 0;
@@ -1333,7 +1333,7 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, int nConfMine, int
     return true;
 }
 
-bool CWallet::SelectCoins(const CAmount& nTargetValue, set<pair<const CWalletTx*,unsigned int> >& setCoinsRet, CAmount& nValueRet, const CCoinControl* coinControl) const
+bool CWallet::SelectCoins(const CAmount& nTargetValue, CoinSet& setCoinsRet, CAmount& nValueRet, const CCoinControl* coinControl) const
 {
     vector<COutput> vCoins;
     AvailableCoins(vCoins, true, coinControl);
@@ -1407,7 +1407,7 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, CAmount> >& vecSend,
                 }
 
                 // Choose coins to use
-                set<pair<const CWalletTx*,unsigned int> > setCoins;
+                CoinSet setCoins;
                 CAmount nValueIn = 0;
                 if (!SelectCoins(nTotalValue, setCoins, nValueIn, coinControl))
                 {
