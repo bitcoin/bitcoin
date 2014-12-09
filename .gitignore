@@ -6,6 +6,11 @@ src/bitcoind
 src/bitcoin-cli
 src/test/test_bitcoin
 src/qt/test/test_bitcoin-qt
+src/darkcoin
+src/darkcoind
+src/darkcoin-cli
+src/test/test_darkcoin
+src/qt/test/test_darkcoin-qt
 
 Makefile.in
 aclocal.m4
@@ -37,6 +42,7 @@ src/qt/test/moc*.cpp
 *.o-*
 *.patch
 .bitcoin
+.darkcoin
 *.a
 *.pb.cc
 *.pb.h
@@ -52,11 +58,14 @@ src/qt/test/moc*.cpp
 *.qm
 Makefile
 bitcoin-qt
+darkcoin-qt
 Bitcoin-Qt.app
+Darkcoin-Qt.app
 
 # Unit-tests
 Makefile.test
 bitcoin-qt_test
+darkcoin-qt_test
 
 # Resources cpp
 qrc_*.cpp
@@ -72,6 +81,7 @@ build
 *.gcno
 /*.info
 test_bitcoin.coverage/
+test_darkcoin.coverage/
 total.coverage/
 coverage_percent.txt
 
