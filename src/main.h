@@ -30,9 +30,6 @@
 #include <utility>
 #include <vector>
 
-#define START_MASTERNODE_PAYMENTS_TESTNET 1403568776 //Tue, 24 Jun 2014 00:12:56 GMT
-#define START_MASTERNODE_PAYMENTS 1403728576 //Wed, 25 Jun 2014 20:36:16 GMT
-
 // Define difficulty retarget algorithms
 enum DiffMode {
     DIFF_DEFAULT = 0, // Default to invalid 0
@@ -201,13 +198,11 @@ void Misbehaving(NodeId nodeid, int howmuch);
 
 /** (try to) add transaction to memory pool **/
 bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransaction &tx, bool fLimitFree,
-                        bool* pfMissingInputs, bool fRejectInsaneFee=false);
+                        bool* pfMissingInputs, bool fRejectInsaneFee=false, bool ignoreFees=false);
 
+bool AcceptableInputs(CTxMemPool& pool, CValidationState &state, const CTransaction &tx, bool ignoreFees=true);
 
-
-
-
-
+int GetInputAge(CTxIn& vin);
 
 
 struct CNodeStateStats {
@@ -607,6 +602,9 @@ bool ReadBlockFromDisk(CBlock& block, const CBlockIndex* pindex);
  *  will be true if no problems were found. Otherwise, the return value will be false in case
  *  of problems. Note that in any case, coins may be modified. */
 bool DisconnectBlock(CBlock& block, CValidationState& state, CBlockIndex* pindex, CCoinsViewCache& coins, bool* pfClean = NULL);
+
+/** Find a conflicting transcation in a block and disconnect all up to that point **/
+bool DisconnectBlockAndInputs(CValidationState &state, CTransaction txLock);
 
 // Apply the effects of this block (with given index) on the UTXO set represented by coins
 bool ConnectBlock(CBlock& block, CValidationState& state, CBlockIndex* pindex, CCoinsViewCache& coins, bool fJustCheck = false);

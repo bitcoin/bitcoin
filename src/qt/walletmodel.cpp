@@ -66,6 +66,12 @@ qint64 WalletModel::getBalance(const CCoinControl *coinControl) const
     return wallet->GetBalance();
 }
 
+
+qint64 WalletModel::getAnonymizedBalance() const
+{
+    return wallet->GetAnonymizedBalance();
+}
+
 qint64 WalletModel::getUnconfirmedBalance() const
 {
     return wallet->GetUnconfirmedBalance();
@@ -108,10 +114,12 @@ void WalletModel::pollBalanceChanged()
     if(!lockWallet)
         return;
 
-    if(chainActive.Height() != cachedNumBlocks)
+    if(chainActive.Height() != cachedNumBlocks || nDarksendRounds != cachedDarksendRounds)
     {
         // Balance and number of transactions might have changed
         cachedNumBlocks = chainActive.Height();
+        cachedDarksendRounds = nDarksendRounds;
+        cachedTxLocks = 0;
 
         checkBalanceChanged();
         if(transactionTableModel)
@@ -124,13 +132,15 @@ void WalletModel::checkBalanceChanged()
     qint64 newBalance = getBalance();
     qint64 newUnconfirmedBalance = getUnconfirmedBalance();
     qint64 newImmatureBalance = getImmatureBalance();
+    qint64 newAnonymizedBalance = getAnonymizedBalance();
 
-    if(cachedBalance != newBalance || cachedUnconfirmedBalance != newUnconfirmedBalance || cachedImmatureBalance != newImmatureBalance)
+    if(cachedBalance != newBalance || cachedUnconfirmedBalance != newUnconfirmedBalance || cachedImmatureBalance != newImmatureBalance|| cachedAnonymizedBalance != newAnonymizedBalance)
     {
         cachedBalance = newBalance;
         cachedUnconfirmedBalance = newUnconfirmedBalance;
         cachedImmatureBalance = newImmatureBalance;
-        emit balanceChanged(newBalance, newUnconfirmedBalance, newImmatureBalance);
+        cachedAnonymizedBalance = newAnonymizedBalance;
+        emit balanceChanged(newBalance, newUnconfirmedBalance, newImmatureBalance, newAnonymizedBalance);
     }
 }
 
@@ -172,6 +182,11 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
     if(recipients.empty())
     {
         return OK;
+    }
+
+    if(isAnonymizeOnlyUnlocked())
+    {
+        return AnonymizeOnlyUnlocked;
     }
 
     QSet<QString> setAddress; // Used to detect duplicates
@@ -246,7 +261,18 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
 
         CWalletTx *newTx = transaction.getTransaction();
         CReserveKey *keyChange = transaction.getPossibleKeyChange();
-        bool fCreated = wallet->CreateTransaction(vecSend, *newTx, *keyChange, nFeeRequired, strFailReason, coinControl);
+
+
+        AvailableCoinsType act = ONLY_DENOMINATED;
+        if(recipients[0].inputType == "ONLY_NONDENOMINATED"){
+            act = ONLY_NONDENOMINATED;
+        } else if(recipients[0].inputType == "ONLY_DENOMINATED"){
+            act = ONLY_DENOMINATED;
+        } else if(recipients[0].inputType == "ALL_COINS"){
+            act = ALL_COINS;
+        }
+
+        bool fCreated = wallet->CreateTransaction(vecSend, *newTx, *keyChange, nFeeRequired, strFailReason, coinControl, act);
         transaction.setTransactionFee(nFeeRequired);
 
         if(!fCreated)
@@ -268,11 +294,17 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(WalletModelTransaction &tran
 {
     QByteArray transaction_array; /* store serialized transaction */
 
+    if(isAnonymizeOnlyUnlocked())
+    {
+        return AnonymizeOnlyUnlocked;
+    }
+
     {
         LOCK2(cs_main, wallet->cs_wallet);
         CWalletTx *newTx = transaction.getTransaction();
 
         // Store PaymentRequests in wtx.vOrderForm in wallet.
+        std::string strCommand = "tx";
         foreach(const SendCoinsRecipient &rcp, transaction.getRecipients())
         {
             if (rcp.paymentRequest.IsInitialized())
@@ -283,11 +315,20 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(WalletModelTransaction &tran
                 newTx->vOrderForm.push_back(make_pair(key, value));
             }
             else if (!rcp.message.isEmpty()) // Message from normal bitcoin:URI (bitcoin:123...?message=example)
+            {
                 newTx->vOrderForm.push_back(make_pair("Message", rcp.message.toStdString()));
+            }
+
+            if(rcp.useInstantX) {
+                strCommand = "txlreq";
+            }
         }
 
         CReserveKey *keyChange = transaction.getPossibleKeyChange();
-        if(!wallet->CommitTransaction(*newTx, *keyChange))
+
+        transaction.getRecipients();
+
+        if(!wallet->CommitTransaction(*newTx, *keyChange, strCommand))
             return TransactionCommitFailed;
 
         CTransaction* t = (CTransaction*)newTx;
@@ -358,6 +399,10 @@ WalletModel::EncryptionStatus WalletModel::getEncryptionStatus() const
     {
         return Locked;
     }
+    else if (wallet->fWalletUnlockAnonymizeOnly)
+    {
+        return UnlockedForAnonymizationOnly;
+    }
     else
     {
         return Unlocked;
@@ -378,7 +423,7 @@ bool WalletModel::setWalletEncrypted(bool encrypted, const SecureString &passphr
     }
 }
 
-bool WalletModel::setWalletLocked(bool locked, const SecureString &passPhrase)
+bool WalletModel::setWalletLocked(bool locked, const SecureString &passPhrase, bool anonymizeOnly)
 {
     if(locked)
     {
@@ -388,8 +433,13 @@ bool WalletModel::setWalletLocked(bool locked, const SecureString &passPhrase)
     else
     {
         // Unlock
-        return wallet->Unlock(passPhrase);
+        return wallet->Unlock(passPhrase, anonymizeOnly);
     }
+}
+
+bool WalletModel::isAnonymizeOnlyUnlocked()
+{
+    return wallet->fWalletUnlockAnonymizeOnly;
 }
 
 bool WalletModel::changePassphrase(const SecureString &oldPass, const SecureString &newPass)
@@ -489,9 +539,16 @@ void WalletModel::unsubscribeFromCoreSignals()
 }
 
 // WalletModel::UnlockContext implementation
-WalletModel::UnlockContext WalletModel::requestUnlock()
+WalletModel::UnlockContext WalletModel::requestUnlock(bool relock)
 {
     bool was_locked = getEncryptionStatus() == Locked;
+
+    if (!was_locked && isAnonymizeOnlyUnlocked())
+    {
+       setWalletLocked(true);
+       was_locked = getEncryptionStatus() == Locked;
+    }
+
     if(was_locked)
     {
         // Request UI to unlock wallet
@@ -500,7 +557,8 @@ WalletModel::UnlockContext WalletModel::requestUnlock()
     // If wallet is still locked, unlock was failed or cancelled, mark context as invalid
     bool valid = getEncryptionStatus() != Locked;
 
-    return UnlockContext(this, valid, was_locked);
+    return UnlockContext(this, valid, relock);
+//    return UnlockContext(this, valid, was_locked && !isAnonymizeOnlyUnlocked());
 }
 
 WalletModel::UnlockContext::UnlockContext(WalletModel *wallet, bool valid, bool relock):

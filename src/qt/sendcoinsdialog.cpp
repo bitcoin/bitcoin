@@ -45,6 +45,7 @@ SendCoinsDialog::SendCoinsDialog(QWidget *parent) :
     connect(ui->pushButtonCoinControl, SIGNAL(clicked()), this, SLOT(coinControlButtonClicked()));
     connect(ui->checkBoxCoinControlChange, SIGNAL(stateChanged(int)), this, SLOT(coinControlChangeChecked(int)));
     connect(ui->lineEditCoinControlChange, SIGNAL(textEdited(const QString &)), this, SLOT(coinControlChangeEdited(const QString &)));
+    connect(ui->checkUseDarksend, SIGNAL(stateChanged ( int )), this, SLOT(updateDisplayUnit()));
 
     // Coin Control: clipboard actions
     QAction *clipboardQuantityAction = new QAction(tr("Copy quantity"), this);
@@ -89,9 +90,11 @@ void SendCoinsDialog::setModel(WalletModel *model)
                 entry->setModel(model);
             }
         }
-
-        setBalance(model->getBalance(), model->getUnconfirmedBalance(), model->getImmatureBalance());
-        connect(model, SIGNAL(balanceChanged(qint64, qint64, qint64)), this, SLOT(setBalance(qint64, qint64, qint64)));
+    }
+    if(model && model->getOptionsModel())
+    {
+        setBalance(model->getBalance(), model->getUnconfirmedBalance(), model->getImmatureBalance(), model->getAnonymizedBalance());
+        connect(model, SIGNAL(balanceChanged(qint64, qint64, qint64, qint64)), this, SLOT(setBalance(qint64, qint64, qint64, qint64)));
         connect(model->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(updateDisplayUnit()));
 
         // Coin Control
@@ -137,6 +140,27 @@ void SendCoinsDialog::on_sendButton_clicked()
         return;
     }
 
+    QString strFunds = " Using <b>Anonymous Funds</b>";
+    QString strFee = "";
+    recipients[0].inputType = "ONLY_DENOMINATED";
+
+    if(ui->checkUseDarksend->isChecked()) {
+        recipients[0].inputType = "ONLY_DENOMINATED";
+        strFunds = "Using <b>Anonymous Funds</b>";
+        strFee = "(Darksend requires this amount to be rounded up to the nearest 0.1DRK)";
+    } else {
+        recipients[0].inputType = "ALL_COINS";
+        strFunds = "Using <b>ANY AVAILABLE Funds</b>";
+    }
+
+    if(ui->checkInstantX->isChecked()) {
+        recipients[0].useInstantX = true;
+        strFunds += " and InstantX";
+    } else {
+        recipients[0].useInstantX = false;
+    }
+
+
     // Format confirmation message
     QStringList formatted;
     foreach(const SendCoinsRecipient &rcp, recipients)
@@ -144,6 +168,8 @@ void SendCoinsDialog::on_sendButton_clicked()
         // generate bold amount string
         QString amount = "<b>" + BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), rcp.amount);
         amount.append("</b>");
+	    amount.append(strFunds);
+
         // generate monospace address string
         QString address = "<span style='font-family: monospace;'>" + rcp.address;
         address.append("</span>");
@@ -177,7 +203,7 @@ void SendCoinsDialog::on_sendButton_clicked()
     fNewRecipientAllowed = false;
 
 
-    WalletModel::UnlockContext ctx(model->requestUnlock());
+    WalletModel::UnlockContext ctx(model->requestUnlock(true));
     if(!ctx.isValid())
     {
         // Unlock wallet was cancelled
@@ -211,6 +237,7 @@ void SendCoinsDialog::on_sendButton_clicked()
         // append fee string if a fee is required
         questionString.append("<hr /><span style='color:#aa0000;'>");
         questionString.append(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), txFee));
+        questionString.append(strFee);
         questionString.append("</span> ");
         questionString.append(tr("added as transaction fee"));
     }
@@ -401,20 +428,29 @@ bool SendCoinsDialog::handlePaymentRequest(const SendCoinsRecipient &rv)
     return true;
 }
 
-void SendCoinsDialog::setBalance(qint64 balance, qint64 unconfirmedBalance, qint64 immatureBalance)
+void SendCoinsDialog::setBalance(qint64 balance, qint64 unconfirmedBalance, qint64 immatureBalance, qint64 anonymizedBalance)
 {
     Q_UNUSED(unconfirmedBalance);
     Q_UNUSED(immatureBalance);
+    Q_UNUSED(anonymizedBalance);
 
     if(model && model->getOptionsModel())
     {
-        ui->labelBalance->setText(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), balance));
+	    uint64_t bal = 0;
+
+	    if(ui->checkUseDarksend->isChecked()) {
+		bal = anonymizedBalance;
+	    } else {
+		bal = balance;
+	    }
+
+        ui->labelBalance->setText(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), bal));
     }
 }
 
 void SendCoinsDialog::updateDisplayUnit()
 {
-    setBalance(model->getBalance(), 0, 0);
+    setBalance(model->getBalance(), 0, 0, 0);
 }
 
 void SendCoinsDialog::processSendCoinsReturn(const WalletModel::SendCoinsReturn &sendCoinsReturn, const QString &msgArg)
@@ -450,6 +486,11 @@ void SendCoinsDialog::processSendCoinsReturn(const WalletModel::SendCoinsReturn 
     case WalletModel::TransactionCommitFailed:
         msgParams.first = tr("The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.");
         msgParams.second = CClientUIInterface::MSG_ERROR;
+        break;
+    case WalletModel::AnonymizeOnlyUnlocked:
+        QMessageBox::warning(this, tr("Send Coins"),
+            tr("Error: The wallet was unlocked only to anonymize coins."),
+            QMessageBox::Ok, QMessageBox::Ok);
         break;
     // included to prevent a compiler warning.
     case WalletModel::OK:

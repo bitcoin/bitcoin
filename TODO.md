@@ -28,16 +28,22 @@ DONE:
 MANDATORY:
 ----------
 
-- Add masternode payment checks a.k.a. enforcement (based on blockheight)
-- Fix mining protocol to include correct pow and masternodes
+- Check rpcminer (should be working though)
 
 
-OPTIONAL:
----------
+BUGS:
+-----
 
-- Include Evan's public key for msg signing
-- Darksend, Instant Transactions, Atomic Transfers, etc. pp.
-- Include centralized checkpoint syncing (peercoin style)
-- Remove Bitcoin dead weight (SHA256, hardcoded keys, nodes)
+- Daemon and CLI tool can't connect to testnet/regtest instances (wrong port?)
+- Daemon and CLI tool can't authenticate via RPC (uh-oh?)
+- Qt wallet can't find the config file in testnet mode (wrong path?)
+
+
+ADDITIONAL:
+-----------
+
+- Include trusted public key for message signing
+- Masternodes, Enforcement, Darksend, InstantX, Atomic Transfers, ...
+- Remove Bitcoin dead weight (SHA256, hardcoded keys, seednodes, ...)
 - Update strings
 - Write tests
