@@ -18,7 +18,7 @@ AC_PATH_TOOL(AR, ar)
 AC_PATH_TOOL(RANLIB, ranlib)
 AC_PATH_TOOL(STRIP, strip)
 
-if test -z $CFLAGS; then
+if test "x$CFLAGS" = "x"; then
   CFLAGS="-O3 -g"
 fi
 
