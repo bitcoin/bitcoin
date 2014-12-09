@@ -311,10 +311,10 @@ int DEx_acceptCreate(const string &buyer, const string &seller, int, uint64_t nV
 int DEx_acceptDestroy(const string &buyer, const string &seller, int, bool bForceErase = false);
 int DEx_payment(uint256 txid, unsigned int vout, string seller, string buyer, uint64_t BTC_paid, int blockNow, uint64_t *nAmended = NULL);
 
-int MetaDEx_ADD(const string &sender_addr, unsigned int, uint64_t, int block, unsigned int property_desired, uint64_t amount_desired, const uint256 &txid, unsigned int idx);
-int MetaDEx_CANCEL_AT_PRICE(const uint256, unsigned int, const string &, unsigned int, uint64_t, unsigned int, uint64_t);
-int MetaDEx_CANCEL_ALL_FOR_PAIR(const uint256, unsigned int, const string &, unsigned int, unsigned int);
-int MetaDEx_CANCEL_EVERYTHING(const uint256, unsigned int, const string &);
+int MetaDEx_ADD(const std::string& sender_addr, unsigned int, uint64_t, int block, unsigned int property_desired, uint64_t amount_desired, const uint256& txid, unsigned int idx);
+int MetaDEx_CANCEL_AT_PRICE(const uint256&, unsigned int, const std::string&, unsigned int, uint64_t, unsigned int, uint64_t);
+int MetaDEx_CANCEL_ALL_FOR_PAIR(const uint256&, unsigned int, const std::string&, unsigned int, unsigned int);
+int MetaDEx_CANCEL_EVERYTHING(const uint256& txid, unsigned int block, const std::string& sender_addr, unsigned char ecosystem);
 md_PricesMap *get_Prices(unsigned int prop);
 md_Set *get_Indexes(md_PricesMap *p, XDOUBLE price);
 
