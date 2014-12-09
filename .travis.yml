@@ -1,5 +1,7 @@
-language: cpp
-compiler: gcc
+language: c
+compiler:
+  - clang
+  - gcc
 install:
   - sudo apt-get install -qq libssl-dev
   - if [ "$BIGNUM" = "gmp" -o "$BIGNUM" = "auto" -o "$FIELD" = "gmp" ]; then sudo apt-get install -qq libgmp-dev; fi
