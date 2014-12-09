@@ -1,12 +1,10 @@
 [
-["
-Format is: [scriptPubKey, scriptSig, flags, ... comments]
-It is evaluated as if there was a crediting coinbase transaction with two 0
-pushes as scriptSig, and one output of 0 satoshi and given scriptPubKey,
-followed by a spending transaction which spends this output as only input (and
-correct prevout hash), using the given scriptSig. All nLockTimes are 0, all
-nSequences are max.
-"],
+["Format is: [scriptPubKey, scriptSig, flags, ... comments]"],
+["It is evaluated as if there was a crediting coinbase transaction with two 0"],
+["pushes as scriptSig, and one output of 0 satoshi and given scriptPubKey,"],
+["followed by a spending transaction which spends this output as only input (and"],
+["correct prevout hash), using the given scriptSig. All nLockTimes are 0, all"],
+["nSequences are max."],
 
 ["", "DEPTH 0 EQUAL", "P2SH,STRICTENC", "Test the test: we should have an empty stack after scriptSig evaluation"],
 ["  ", "DEPTH 0 EQUAL", "P2SH,STRICTENC", "and multiple spaces should not change that."],
@@ -664,16 +662,14 @@ nSequences are max.
 ["0 0 0x02 0x0000", "CHECKMULTISIGVERIFY 1", ""],
 ["0 0x02 0x0000 0", "CHECKMULTISIGVERIFY 1", ""],
 
-["
-CHECKMULTISIG evaluation order tests. CHECKMULTISIG evaluates signatures and
-pubkeys in a specific order, and will exit early if the number of signatures
-left to check is greater than the number of keys left. As STRICTENC fails the
-script when it reaches an invalidly encoded signature or pubkey, we can use it
-to test the exact order in which signatures and pubkeys are evaluated by
-distinguishing CHECKMULTISIG returning false on the stack and the script as a
-whole failing.
-See also the corresponding inverted versions of these tests in script_invalid.json
-"],
+["CHECKMULTISIG evaluation order tests. CHECKMULTISIG evaluates signatures and"],
+["pubkeys in a specific order, and will exit early if the number of signatures"],
+["left to check is greater than the number of keys left. As STRICTENC fails the"],
+["script when it reaches an invalidly encoded signature or pubkey, we can use it"],
+["to test the exact order in which signatures and pubkeys are evaluated by"],
+["distinguishing CHECKMULTISIG returning false on the stack and the script as a"],
+["whole failing."],
+["See also the corresponding inverted versions of these tests in script_invalid.json"],
 [
     "0 0x47 0x3044022044dc17b0887c161bb67ba9635bf758735bdde503e4b0a0987f587f14a4e1143d022009a215772d49a85dae40d8ca03955af26ad3978a0ff965faa12915e9586249a501 0x47 0x3044022044dc17b0887c161bb67ba9635bf758735bdde503e4b0a0987f587f14a4e1143d022009a215772d49a85dae40d8ca03955af26ad3978a0ff965faa12915e9586249a501",
     "2 0 0x21 0x02865c40293a680cb9c020e7b1e106d8c1916d3cef99aa431a56d253e69256dac0 2 CHECKMULTISIG NOT",
