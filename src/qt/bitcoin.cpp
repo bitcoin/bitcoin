@@ -570,9 +570,9 @@ int main(int argc, char *argv[])
     }
 #ifdef ENABLE_WALLET
     // Parse URIs on command line -- this can affect Params()
-    if (!PaymentServer::ipcParseCommandLine(argc, argv))
-        exit(0);
+    PaymentServer::ipcParseCommandLine(argc, argv);
 #endif
+
     QScopedPointer<const NetworkStyle> networkStyle(NetworkStyle::instantiate(QString::fromStdString(Params().NetworkIDString())));
     assert(!networkStyle.isNull());
     // Allow for separate UI settings for testnets
