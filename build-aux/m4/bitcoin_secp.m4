@@ -30,8 +30,13 @@ AC_DEFUN([SECP_OPENSSL_CHECK],[
 if test x"$use_pkgconfig" = x"yes"; then
     : #NOP
   m4_ifdef([PKG_CHECK_MODULES],[
-    PKG_CHECK_MODULES([CRYPTO], [libcrypto], [has_libcrypto=yes; AC_DEFINE(HAVE_LIBCRYPTO,1,[Define this symbol if libcrypto is installed])],[has_libcrypto=no])
-    : #NOP
+    PKG_CHECK_MODULES([CRYPTO], [libcrypto], [has_libcrypto=yes],[has_libcrypto=no])
+    if test x"$has_libcrypto" = x"yes"; then
+      TEMP_LIBS="$LIBS"
+      LIBS="$LIBS $CRYPTO_LIBS"
+      AC_CHECK_LIB(crypto, main,[AC_DEFINE(HAVE_LIBCRYPTO,1,[Define this symbol if libcrypto is installed])],[has_libcrypto=no])
+      LIBS="$TEMP_LIBS"
+    fi
   ])
 else
   AC_CHECK_HEADER(openssl/crypto.h,[AC_CHECK_LIB(crypto, main,[has_libcrypto=yes; CRYPTO_LIBS=-lcrypto; AC_DEFINE(HAVE_LIBCRYPTO,1,[Define this symbol if libcrypto is installed])]
