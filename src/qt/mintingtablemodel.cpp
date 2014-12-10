@@ -1,4 +1,5 @@
 #include "mintingtablemodel.h"
+#include "mintingfilterproxy.h"
 #include "transactiontablemodel.h"
 #include "guiutil.h"
 #include "kernelrecord.h"
@@ -153,7 +154,27 @@ public:
                 }
                 else if(inWallet && inModel)
                 {               
-                    // Updated -- nothing to do, status update will take care of this
+                    // Updated -- remove spent coins from table
+                    std::vector<KernelRecord> toCheck = KernelRecord::decomposeOutput(wallet, mi->second);
+                    BOOST_FOREACH(const KernelRecord &rec, toCheck)
+                    {
+                        if(rec.spent)
+                        {
+                            for(int i = 0; i < cachedWallet.size(); i++)
+                            {
+                                KernelRecord cachedRec = cachedWallet.at(i);
+                                if((rec.hash == cachedRec.hash)
+                                   && (rec.nTime == cachedRec.nTime)
+                                   && (rec.nValue == cachedRec.nValue))
+                                {
+                                    parent->beginRemoveRows(QModelIndex(), i, i);
+                                    cachedWallet.removeAt(i);
+                                    parent->endRemoveRows();
+                                    break;
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -225,6 +246,16 @@ void MintingTableModel::update()
             BOOST_FOREACH(uint256 hash, wallet->vMintingWalletUpdated)
             {
                 updated.append(hash);
+
+                // Also check the inputs to remove spent outputs from the table if necessary
+                CWalletTx wtx;
+                if(wallet->GetTransaction(hash, wtx))
+                {
+                    BOOST_FOREACH(const CTxIn& txin, wtx.vin)
+                    {
+                        updated.append(txin.prevout.hash);
+                    }
+                }
             }
             wallet->vMintingWalletUpdated.clear();
         }
@@ -233,7 +264,13 @@ void MintingTableModel::update()
     if(!updated.empty())
     {
         priv->updateWallet(updated);
+        mintingProxyModel->invalidate(); // Force deletion of empty rows
     }
+}
+
+void MintingTableModel::setMintingProxyModel(MintingFilterProxy *mintingProxy)
+{
+    mintingProxyModel = mintingProxy;
 }
 
 int MintingTableModel::rowCount(const QModelIndex &parent) const
