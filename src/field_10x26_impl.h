@@ -224,18 +224,6 @@ SECP256K1_INLINE static void secp256k1_fe_clear(secp256k1_fe_t *a) {
     }
 }
 
-SECP256K1_INLINE static int secp256k1_fe_equal(const secp256k1_fe_t *a, const secp256k1_fe_t *b) {
-#ifdef VERIFY
-    VERIFY_CHECK(a->normalized);
-    VERIFY_CHECK(b->normalized);
-    secp256k1_fe_verify(a);
-    secp256k1_fe_verify(b);
-#endif
-    const uint32_t *t = a->n, *u = b->n;
-    return ((t[0]^u[0]) | (t[1]^u[1]) | (t[2]^u[2]) | (t[3]^u[3]) | (t[4]^u[4])
-          | (t[5]^u[5]) | (t[6]^u[6]) | (t[7]^u[7]) | (t[8]^u[8]) | (t[9]^u[9])) == 0;
-}
-
 static int secp256k1_fe_cmp_var(const secp256k1_fe_t *a, const secp256k1_fe_t *b) {
 #ifdef VERIFY
     VERIFY_CHECK(a->normalized);

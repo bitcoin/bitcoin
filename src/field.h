@@ -63,8 +63,8 @@ static int secp256k1_fe_is_zero(const secp256k1_fe_t *a);
 /** Check the "oddness" of a field element. Requires the input to be normalized. */
 static int secp256k1_fe_is_odd(const secp256k1_fe_t *a);
 
-/** Compare two field elements. Requires both inputs to be normalized */
-static int secp256k1_fe_equal(const secp256k1_fe_t *a, const secp256k1_fe_t *b);
+/** Compare two field elements. Requires magnitude-1 inputs. */
+static int secp256k1_fe_equal_var(const secp256k1_fe_t *a, const secp256k1_fe_t *b);
 
 /** Compare two field elements. Requires both inputs to be normalized */
 static int secp256k1_fe_cmp_var(const secp256k1_fe_t *a, const secp256k1_fe_t *b);

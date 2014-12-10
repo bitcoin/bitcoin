@@ -64,6 +64,14 @@ static int secp256k1_fe_set_hex(secp256k1_fe_t *r, const char *a, int alen) {
     return secp256k1_fe_set_b32(r, tmp);
 }
 
+SECP256K1_INLINE static int secp256k1_fe_equal_var(const secp256k1_fe_t *a, const secp256k1_fe_t *b) {
+    secp256k1_fe_t na;
+    secp256k1_fe_negate(&na, a, 1);
+    secp256k1_fe_add(&na, b);
+    secp256k1_fe_normalize_var(&na);
+    return secp256k1_fe_is_zero(&na);
+}
+
 static int secp256k1_fe_sqrt_var(secp256k1_fe_t *r, const secp256k1_fe_t *a) {
 
     /** The binary representation of (p + 1)/4 has 3 blocks of 1s, with lengths in
