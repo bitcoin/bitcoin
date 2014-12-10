@@ -48,6 +48,9 @@ static void secp256k1_fe_stop(void);
 /** Normalize a field element. */
 static void secp256k1_fe_normalize(secp256k1_fe_t *r);
 
+/** Weakly normalize a field element: reduce it magnitude to 1, but don't fully normalize. */
+static void secp256k1_fe_normalize_weak(secp256k1_fe_t *r);
+
 /** Normalize a field element, without constant-time guarantee. */
 static void secp256k1_fe_normalize_var(secp256k1_fe_t *r);
 

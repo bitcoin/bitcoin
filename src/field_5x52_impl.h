@@ -100,6 +100,30 @@ static void secp256k1_fe_normalize(secp256k1_fe_t *r) {
 #endif
 }
 
+static void secp256k1_fe_normalize_weak(secp256k1_fe_t *r) {
+    uint64_t t0 = r->n[0], t1 = r->n[1], t2 = r->n[2], t3 = r->n[3], t4 = r->n[4];
+
+    /* Reduce t4 at the start so there will be at most a single carry from the first pass */
+    uint64_t x = t4 >> 48; t4 &= 0x0FFFFFFFFFFFFULL;
+
+    /* The first pass ensures the magnitude is 1, ... */
+    t0 += x * 0x1000003D1ULL;
+    t1 += (t0 >> 52); t0 &= 0xFFFFFFFFFFFFFULL;
+    t2 += (t1 >> 52); t1 &= 0xFFFFFFFFFFFFFULL;
+    t3 += (t2 >> 52); t2 &= 0xFFFFFFFFFFFFFULL;
+    t4 += (t3 >> 52); t3 &= 0xFFFFFFFFFFFFFULL;
+
+    /* ... except for a possible carry at bit 48 of t4 (i.e. bit 256 of the field element) */
+    VERIFY_CHECK(t4 >> 49 == 0);
+
+    r->n[0] = t0; r->n[1] = t1; r->n[2] = t2; r->n[3] = t3; r->n[4] = t4;
+
+#ifdef VERIFY
+    r->magnitude = 1;
+    secp256k1_fe_verify(r);
+#endif
+}
+
 static void secp256k1_fe_normalize_var(secp256k1_fe_t *r) {
     uint64_t t0 = r->n[0], t1 = r->n[1], t2 = r->n[2], t3 = r->n[3], t4 = r->n[4];
 
