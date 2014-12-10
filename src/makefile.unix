@@ -3,6 +3,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 USE_UPNP:=0
+USE_LEVELDB:=0
 USE_IPV6:=1
 
 LINK:=$(CXX)
