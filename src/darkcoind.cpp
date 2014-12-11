@@ -1,6 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2014 The Bitcoin developers
-// Copyright (c) 2014 vertoe & the Darkcoin developers
+// Copyright (c) 2014 The Darkcoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -87,13 +87,13 @@ bool AppInit(int argc, char* argv[])
         if (mapArgs.count("-?") || mapArgs.count("--help"))
         {
             // First part of help message is specific to bitcoind / RPC client
-            std::string strUsage = _("Bitcoin Core Daemon") + " " + _("version") + " " + FormatFullVersion() + "\n\n" +
+            std::string strUsage = _("Darkcoin Core Daemon") + " " + _("version") + " " + FormatFullVersion() + "\n\n" +
                 _("Usage:") + "\n" +
-                  "  bitcoind [options]                     " + _("Start Bitcoin Core Daemon") + "\n" +
+                  "  darkcoind [options]                     " + _("Start Darkcoin Core Daemon") + "\n" +
                 _("Usage (deprecated, use bitcoin-cli):") + "\n" +
-                  "  bitcoind [options] <command> [params]  " + _("Send command to Bitcoin Core") + "\n" +
-                  "  bitcoind [options] help                " + _("List commands") + "\n" +
-                  "  bitcoind [options] help <command>      " + _("Get help for a command") + "\n";
+                  "  darkcoind [options] <command> [params]  " + _("Send command to Darkcoin Core") + "\n" +
+                  "  darkcoind [options] help                " + _("List commands") + "\n" +
+                  "  darkcoind [options] help <command>      " + _("Get help for a command") + "\n";
 
             strUsage += "\n" + HelpMessage(HMM_BITCOIND);
             strUsage += "\n" + HelpMessageCli(false);
@@ -117,7 +117,7 @@ bool AppInit(int argc, char* argv[])
         fDaemon = GetBoolArg("-daemon", false);
         if (fDaemon)
         {
-            fprintf(stdout, "Bitcoin server starting\n");
+            fprintf(stdout, "Darkcoin server starting\n");
 
             // Daemonize
             pid_t pid = fork();
