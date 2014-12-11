@@ -25,6 +25,7 @@ DIST_SUBDIRS = . qt test
 .PHONY: FORCE
 # darkcoin core #
 BITCOIN_CORE_H = \
+  activemasternode.h \
   addrman.h \
   alert.h \
   allocators.h \
@@ -39,14 +40,17 @@ BITCOIN_CORE_H = \
   compat.h \
   core.h \
   crypter.h \
+  darksend.h \
   db.h \
   hash.h \
   init.h \
+  instantx.h \
   key.h \
   keystore.h \
   leveldbwrapper.h \
   limitedmap.h \
   main.h \
+  masternode.h \
   miner.h \
   mruset.h \
   netbase.h \
@@ -100,6 +104,7 @@ obj/build.h: FORCE
 version.o: obj/build.h
 
 libdarkcoin_server_a_SOURCES = \
+  activemasternode.cpp \
   addrman.cpp \
   alert.cpp \
   bloom.cpp \
@@ -113,6 +118,7 @@ libdarkcoin_server_a_SOURCES = \
   net.cpp \
   noui.cpp \
   rpcblockchain.cpp \
+  rpcdarksend.cpp \
   rpcmining.cpp \
   rpcmisc.cpp \
   rpcnet.cpp \
@@ -124,6 +130,7 @@ libdarkcoin_server_a_SOURCES = \
   $(BITCOIN_CORE_H)
 
 libdarkcoin_wallet_a_SOURCES = \
+  activemasternode.cpp \
   db.cpp \
   crypter.cpp \
   rpcdump.cpp \
@@ -133,10 +140,14 @@ libdarkcoin_wallet_a_SOURCES = \
   $(BITCOIN_CORE_H)
 
 libdarkcoin_common_a_SOURCES = \
+  activemasternode.cpp \
   base58.cpp \
   allocators.cpp \
   chainparams.cpp \
   core.cpp \
+  darksend.cpp \
+  masternode.cpp \
+  instantx.cpp \
   hash.cpp \
   key.cpp \
   netbase.cpp \

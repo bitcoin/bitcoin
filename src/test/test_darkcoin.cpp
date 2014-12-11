@@ -10,6 +10,7 @@
 #include "txdb.h"
 #include "ui_interface.h"
 #include "util.h"
+#include "activemasternode.h"
 #ifdef ENABLE_WALLET
 #include "db.h"
 #include "wallet.h"

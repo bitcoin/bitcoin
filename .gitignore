@@ -1,11 +1,6 @@
 *.tar.gz
 
 *.exe
-src/bitcoin
-src/bitcoind
-src/bitcoin-cli
-src/test/test_bitcoin
-src/qt/test/test_bitcoin-qt
 src/darkcoin
 src/darkcoind
 src/darkcoin-cli
@@ -41,7 +36,6 @@ src/qt/test/moc*.cpp
 *.o
 *.o-*
 *.patch
-.bitcoin
 .darkcoin
 *.a
 *.pb.cc
@@ -57,14 +51,11 @@ src/qt/test/moc*.cpp
 # Compilation and Qt preprocessor part
 *.qm
 Makefile
-bitcoin-qt
 darkcoin-qt
-Bitcoin-Qt.app
 Darkcoin-Qt.app
 
 # Unit-tests
 Makefile.test
-bitcoin-qt_test
 darkcoin-qt_test
 
 # Resources cpp
@@ -80,7 +71,6 @@ build
 #lcov
 *.gcno
 /*.info
-test_bitcoin.coverage/
 test_darkcoin.coverage/
 total.coverage/
 coverage_percent.txt
@@ -93,3 +83,6 @@ qa/pull-tester/run-bitcoind-for-test.sh
 qa/pull-tester/build-tests.sh
 
 !src/leveldb*/Makefile
+
+.cproject
+.project
