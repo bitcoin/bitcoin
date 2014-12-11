@@ -521,6 +521,10 @@ Address: %4
 <context>
     <name>CoinControlDialog</name>
     <message>
+        <source>Coin Selection</source>
+        <translation>Выбор монет</translation>
+    </message>
+    <message>
         <source>Quantity:</source>
         <translation>Количество:</translation>
     </message>
@@ -1845,16 +1849,36 @@ Address: %4
         <translation>Выберите...</translation>
     </message>
     <message>
+        <source>collapse fee-settings</source>
+        <translation>Свернуть настройки комиссии</translation>
+    </message>
+    <message>
         <source>Minimize</source>
         <translation>Сворачивать</translation>
+    </message>
+    <message>
+        <source>If the custom fee is set to 1000 satoshis and the transaction is only 250 bytes, then "per kilobyte" only pays 250 satoshis in fee, while "at least" pays 1000 satoshis. For transactions bigger than a kilobyte both pay by kilobyte.</source>
+        <translation>Если комиссия установлена в 1000 сатоши, а транзакция составляет лишь 250 байт, тогда комиссия "на килобайт" составит 250 сатоши, а "как минимум" — 1000 сатоши. Для транзакций крупнее килобайта в обоих случаях будет использоваться платёж "на килобайт".</translation>
     </message>
     <message>
         <source>per kilobyte</source>
         <translation>за килобайт</translation>
     </message>
     <message>
+        <source>If the custom fee is set to 1000 satoshis and the transaction is only 250 bytes, then "per kilobyte" only pays 250 satoshis in fee, while "total at least" pays 1000 satoshis. For transactions bigger than a kilobyte both pay by kilobyte.</source>
+        <translation>Если комиссия установлена в 1000 сатоши, а транзакция составляет лишь 250 байт, тогда комиссия "на килобайт" составит 250 сатоши, а "всего как минимум" — 1000 сатоши. Для транзакций крупнее килобайта в обоих случаях будет использоваться платёж "на килобайт".</translation>
+    </message>
+    <message>
         <source>total at least</source>
-        <translation>Итого</translation>
+        <translation>Итого как минимум</translation>
+    </message>
+    <message>
+        <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks. But be aware that this can end up in a never confirming transaction once there is more demand for bitcoin transactions than the network can process.</source>
+        <translation>Уплата минимальной комиссии — не проблема, пока объём транзакций меньше, чем свободное место в блоках. Учтите, однако, что такая транзакция может никогда не подтвердиться, если спрос на транзакции превышает возможности сети по их обработке.</translation>
+    </message>
+    <message>
+        <source>(read the tooltip)</source>
+        <translation>(прочтите подсказку)</translation>
     </message>
     <message>
         <source>Recommended:</source>
@@ -1863,6 +1887,10 @@ Address: %4
     <message>
         <source>Custom:</source>
         <translation>Выборочно:</translation>
+    </message>
+    <message>
+        <source>(Smart fee not initialized yet. This usually takes a few blocks...)</source>
+        <translation>(Умная комиссия пока не инициализирована. Обычно для этого требуется несколько блоков...)</translation>
     </message>
     <message>
         <source>Confirmation time:</source>
@@ -1994,7 +2022,7 @@ Address: %4
     </message>
     <message>
         <source>Estimated to begin confirmation within %1 block(s).</source>
-        <translation>Ожидается начать подтверждение через %1 блок(ов).</translation>
+        <translation>Начало подтверждения ожидается через %1 блок(ов).</translation>
     </message>
     <message>
         <source>Warning: Invalid Bitcoin address</source>
@@ -2799,6 +2827,10 @@ rpcpassword=%s
         <translation>Удалить все транзакции бумажника с возможностью восстановить эти части цепи блоков с помощью -rescan при запуске</translation>
     </message>
     <message>
+        <source>Distributed under the MIT software license, see the accompanying file COPYING or &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</source>
+        <translation>Распространяется под лицензией MIT, см. приложенный файл COPYING или &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</translation>
+    </message>
+    <message>
         <source>Enter regression test mode, which uses a special chain in which blocks can be solved instantly.</source>
         <translation>Войти в режим тестирования на регрессии, в котором используется специальная цепь, где блоки находятся мгновенно.</translation>
     </message>
@@ -3064,7 +3096,7 @@ rpcpassword=%s
     </message>
     <message>
         <source>Set the number of threads for coin generation if enabled (-1 = all cores, default: %d)</source>
-        <translation>Задать число потоков генерации монет, если включена (-1 = число ядер процессора, по умолчанию: %d)</translation>
+        <translation>Задать число потоков генерации монет, если она включена (-1 = все ядра процессора, по умолчанию: %d)</translation>
     </message>
     <message>
         <source>This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit &lt;https://www.openssl.org/&gt; and cryptographic software written by Eric Young and UPnP software written by Thomas Bernard.</source>
@@ -3332,7 +3364,7 @@ rpcpassword=%s
     </message>
     <message>
         <source>Disable safemode, override a real safe mode event (default: %u)</source>
-        <translation>Отключить безопасный режим, отклонить реальное событие безопасного режима (по умолчанию: %u)</translation>
+        <translation>Отключить безопасный режим, перекрыть реальное событие безопасного режима (по умолчанию: %u)</translation>
     </message>
     <message>
         <source>Error loading wallet.dat</source>
