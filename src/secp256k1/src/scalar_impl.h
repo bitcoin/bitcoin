@@ -40,7 +40,7 @@ static void secp256k1_scalar_start(void) {
         return;
 
     /* Allocate. */
-    secp256k1_scalar_consts_t *ret = (secp256k1_scalar_consts_t*)malloc(sizeof(secp256k1_scalar_consts_t));
+    secp256k1_scalar_consts_t *ret = (secp256k1_scalar_consts_t*)checked_malloc(sizeof(secp256k1_scalar_consts_t));
 
 #ifndef USE_NUM_NONE
     static const unsigned char secp256k1_scalar_consts_order[] = {
