@@ -77,7 +77,7 @@ void EraseOrphansFor(NodeId peer);
 // Constant stuff for coinbase transactions we create:
 CScript COINBASE_FLAGS;
 
-const string strMessageMagic = "DarkCoin Signed Message:\n";
+const string strMessageMagic = "Darkcoin Signed Message:\n";
 
 // Internal stuff
 namespace {
@@ -1637,14 +1637,11 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
             // Go back by what we want to be 14 days worth of blocks
             const CBlockIndex* pindexFirst = pindexLast;
             for (int i = 0; pindexFirst && i < blockstogoback; i++)
-          //for (int i = 0; pindexFirst && i < nInterval-1; i++)
                 pindexFirst = pindexFirst->pprev;
             assert(pindexFirst);
 
             // Limit adjustment step
-            //int64 nActualTimespan = pindexLast->GetBlockTime() - pindexFirst->GetBlockTime();
             int64_t nActualTimespan = pindexLast->GetBlockTime() - pindexFirst->GetBlockTime();
-          //LogPrintf("  nActualTimespan = %d  before bounds\n", nActualTimespan);
             LogPrintf("  nActualTimespan = %d  before bounds\n", nActualTimespan);
             if (nActualTimespan < nTargetTimespan/4)
                 nActualTimespan = nTargetTimespan/4;
@@ -1662,11 +1659,8 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
 
             /// debug print
             LogPrintf("GetNextWorkRequired RETARGET\n");
-          //LogPrintf("nTargetTimespan = %d    nActualTimespan = %d\n", nTargetTimespan, nActualTimespan);
             LogPrintf("nTargetTimespan = %d    nActualTimespan = %d\n", nTargetTimespan, nActualTimespan);
-          //LogPrintf("Before: %08x  %s\n", pindexLast->nBits, CBigNum().SetCompact(pindexLast->nBits).getuint256().ToString().c_str());
             LogPrintf("Before: %08x  %s\n", pindexLast->nBits, CBigNum().SetCompact(pindexLast->nBits).getuint256().ToString());
-          //LogPrintf("After:  %08x  %s\n", bnNew.GetCompact(), bnNew.getuint256().ToString().c_str());
             LogPrintf("After:  %08x  %s\n", bnNew.GetCompact(), bnNew.getuint256().ToString());
 
             return bnNew.GetCompact();
@@ -4669,6 +4663,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
             LogPrint("net", "Reject %s\n", SanitizeString(ss.str()));
         }
     }
+
     else
     {
         //probably one the extensions
@@ -4676,7 +4671,6 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         ProcessMessageMasternode(pfrom, strCommand, vRecv);
         ProcessMessageInstantX(pfrom, strCommand, vRecv);
     }
-
 
 
     // Update the last seen time for this node's address
