@@ -20,18 +20,19 @@ $(sort $(foreach dep,$(2),$(2) $(call int_get_all_dependencies,$(1),$($(dep)_dep
 endef
 
 define fetch_file
-(test -f $(SOURCES_PATH)/$(4) || \
-  ( mkdir -p $$($(1)_extract_dir) && \
-  ( $(build_DOWNLOAD) "$$($(1)_extract_dir)/$(4).temp" "$(2)/$(3)" || \
-    $(build_DOWNLOAD) "$$($(1)_extract_dir)/$(4).temp" "$(FALLBACK_DOWNLOAD_PATH)/$(3)" ) && \
-    echo "$(5)  $$($(1)_extract_dir)/$(4).temp" > $$($(1)_extract_dir)/.$(4).hash && \
-    $(build_SHA256SUM) -c $$($(1)_extract_dir)/.$(4).hash && \
-    mv $$($(1)_extract_dir)/$(4).temp $(SOURCES_PATH)/$(4) ))
+(test -f $$($(1)_source_dir)/$(4) || \
+  ( mkdir -p $$($(1)_download_dir) && echo Fetching $(1)... && \
+  ( $(build_DOWNLOAD) "$$($(1)_download_dir)/$(4).temp" "$(2)/$(3)" || \
+    $(build_DOWNLOAD) "$$($(1)_download_dir)/$(4).temp" "$(FALLBACK_DOWNLOAD_PATH)/$(3)" ) && \
+    echo "$(5)  $$($(1)_download_dir)/$(4).temp" > $$($(1)_download_dir)/.$(4).hash && \
+    $(build_SHA256SUM) -c $$($(1)_download_dir)/.$(4).hash && \
+    mv $$($(1)_download_dir)/$(4).temp $$($(1)_source_dir)/$(4) && \
+    rm -rf $$($(1)_download_dir) ))
 endef
 
 define int_get_build_recipe_hash
 $(eval $(1)_all_file_checksums:=$(shell $(build_SHA256SUM) $(meta_depends) packages/$(1).mk $(addprefix $(PATCHES_PATH)/$(1)/,$($(1)_patches))))
-$(eval $(1)_recipe_hash:=$(shell echo -n "$($(1)_all_file_checksums)" | $(build_SHA256SUM)))
+$(eval $(1)_recipe_hash:=$(shell echo -n "$($(1)_all_file_checksums)" | cut -d" " -f1 | $(build_SHA256SUM)))
 endef
 
 define int_get_build_id
@@ -45,17 +46,19 @@ final_build_id_long+=$($(package)_build_id_long)
 #compute package-specific paths
 $(1)_build_subdir?=.
 $(1)_download_file?=$($(1)_file_name)
-$(1)_source:=$(SOURCES_PATH)/$($(1)_file_name)
+$(1)_source_dir:=$(SOURCES_PATH)
+$(1)_source:=$$($(1)_source_dir)/$($(1)_file_name)
 $(1)_staging_dir=$(base_staging_dir)/$(host)/$(1)/$($(1)_version)-$($(1)_build_id)
 $(1)_staging_prefix_dir:=$$($(1)_staging_dir)$($($(1)_type)_prefix)
 $(1)_extract_dir:=$(base_build_dir)/$(host)/$(1)/$($(1)_version)-$($(1)_build_id)
+$(1)_download_dir:=$(base_download_dir)/$(1)-$($(1)_version)
 $(1)_build_dir:=$$($(1)_extract_dir)/$$($(1)_build_subdir)
 $(1)_patch_dir:=$(base_build_dir)/$(host)/$(1)/$($(1)_version)-$($(1)_build_id)/.patches-$($(1)_build_id)
 $(1)_prefixbin:=$($($(1)_type)_prefix)/bin/
 $(1)_cached:=$(BASE_CACHE)/$(host)/$(1)/$(1)-$($(1)_version)-$($(1)_build_id).tar.gz
 
 #stamps
-$(1)_fetched=$$($(1)_extract_dir)/.stamp_fetched
+$(1)_fetched=$$($(1)_source_dir)/download-stamps/.stamp_fetched-$(1)-$($(1)_file_name)
 $(1)_extracted=$$($(1)_extract_dir)/.stamp_extracted
 $(1)_preprocessed=$$($(1)_extract_dir)/.stamp_preprocessed
 $(1)_cleaned=$$($(1)_extract_dir)/.stamp_cleaned
@@ -150,7 +153,6 @@ endef
 
 define int_add_cmds
 $($(1)_fetched):
-	$(AT)echo Fetching $(1)...
 	$(AT)mkdir -p $$(@D) $(SOURCES_PATH)
 	$(AT)cd $$(@D); $(call $(1)_fetch_cmds,$(1))
 	$(AT)touch $$@
