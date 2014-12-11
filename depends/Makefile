@@ -31,6 +31,7 @@ endif
 
 base_build_dir=$(BASEDIR)/work/build
 base_staging_dir=$(BASEDIR)/work/staging
+base_download_dir=$(BASEDIR)/work/download
 canonical_host:=$(shell ./config.sub $(HOST))
 build:=$(shell ./config.sub $(BUILD))
 
