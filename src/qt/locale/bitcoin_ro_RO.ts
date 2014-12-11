@@ -774,6 +774,10 @@ Adresa: %4
         <translation>versiunea</translation>
     </message>
     <message>
+        <source>(%1-bit)</source>
+        <translation>(%1-bit)</translation>
+    </message>
+    <message>
         <source>About Bitcoin Core</source>
         <translation>Despre Nucleul Bitcoin</translation>
     </message>
