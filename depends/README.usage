@@ -29,4 +29,7 @@ If some packages are not built, for example 'make NO_WALLET=1', the appropriate
 options will be passed to bitcoin's configure. In this case, --disable-wallet.
 
 Additional targets:
-download: run 'make download' to fetch sources without building them
+download: run 'make download' to fetch all sources without building them
+download-osx: run 'make download-osx' to fetch all sources needed for osx builds
+download-win: run 'make download-win' to fetch all sources needed for win builds
+download-linux: run 'make download-linux' to fetch all sources needed for linux builds

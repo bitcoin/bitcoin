@@ -39,11 +39,11 @@ $(package)_ldflags+=-m32 -Wl,-rpath=\\$$$$$$$$\$$$$$$$$ORIGIN/../lib
 $(package)_ldflags+=-L$$(native_cctools_extract_dir)/clang+llvm-3.2-x86-linux-ubuntu-12.04/lib
 endef
 define $(package)_extract_cmds
-  tar --strip-components=1 -xf $(SOURCES_PATH)/$($(package)_toolchain4_file_name) && \
+  tar --strip-components=1 -xf $($(package)_source_dir)/$($(package)_toolchain4_file_name) && \
   ln -sf $($(package)_source) cctools2odcctools/$($(package)_file_name) && \
-  ln -sf $(SOURCES_PATH)/$($(package)_ld64_file_name) cctools2odcctools/$($(package)_ld64_file_name) && \
-  ln -sf $(SOURCES_PATH)/$($(package)_dyld_file_name) cctools2odcctools/$($(package)_dyld_file_name) && \
-  tar xf $(SOURCES_PATH)/$($(package)_clang_file_name) && \
+  ln -sf $($(package)_source_dir)/$($(package)_ld64_file_name) cctools2odcctools/$($(package)_ld64_file_name) && \
+  ln -sf $($(package)_source_dir)/$($(package)_dyld_file_name) cctools2odcctools/$($(package)_dyld_file_name) && \
+  tar xf $($(package)_source_dir)/$($(package)_clang_file_name) && \
   mkdir -p $(SDK_PATH) sdks &&\
   cd sdks; ln -sf $(OSX_SDK) MacOSX$(OSX_SDK_VERSION).sdk
 endef

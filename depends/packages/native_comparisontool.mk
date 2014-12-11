@@ -17,5 +17,5 @@ endef
 
 define $(package)_stage_cmds
   mkdir -p $($(package)_staging_prefix_dir)/share/$($(package)_install_dirname) && \
-  mv $(SOURCES_PATH)/$($(package)_file_name) $($(package)_staging_prefix_dir)/share/$($(package)_install_dirname)/$($(package)_install_filename)
+  cp $($(package)_source) $($(package)_staging_prefix_dir)/share/$($(package)_install_dirname)/$($(package)_install_filename)
 endef
