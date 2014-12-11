@@ -525,6 +525,10 @@ Address: %4
 <context>
     <name>CoinControlDialog</name>
     <message>
+        <source>Coin Selection</source>
+        <translation>Вибір Монет</translation>
+    </message>
+    <message>
         <source>Quantity:</source>
         <translation>Кількість:</translation>
     </message>
@@ -571,6 +575,14 @@ Address: %4
     <message>
         <source>Amount</source>
         <translation>Кількість</translation>
+    </message>
+    <message>
+        <source>Received with label</source>
+        <translation>Отримано з позначкою</translation>
+    </message>
+    <message>
+        <source>Received with address</source>
+        <translation>Отримано з адресою</translation>
     </message>
     <message>
         <source>Date</source>
@@ -1033,6 +1045,14 @@ Address: %4
     <message>
         <source>Map port using &amp;UPnP</source>
         <translation>Відображення порту через &amp;UPnP</translation>
+    </message>
+    <message>
+        <source>Connect to the Bitcoin network through a SOCKS5 proxy.</source>
+        <translation>Підключення до мережі Bitcoin через SOCKS5 проксі.</translation>
+    </message>
+    <message>
+        <source>&amp;Connect through SOCKS5 proxy (default proxy):</source>
+        <translation>&amp;Підключення через SOCKS5 проксі (проксі за замовчуванням):</translation>
     </message>
     <message>
         <source>Proxy &amp;IP:</source>
@@ -1825,6 +1845,78 @@ Address: %4
         <translation>Вказати адресу для решти</translation>
     </message>
     <message>
+        <source>Transaction Fee:</source>
+        <translation>Комісія за передачу:</translation>
+    </message>
+    <message>
+        <source>Choose...</source>
+        <translation>Виберіть...</translation>
+    </message>
+    <message>
+        <source>collapse fee-settings</source>
+        <translation>згорнути налаштування оплат</translation>
+    </message>
+    <message>
+        <source>Minimize</source>
+        <translation>Мінімізувати</translation>
+    </message>
+    <message>
+        <source>If the custom fee is set to 1000 satoshis and the transaction is only 250 bytes, then "per kilobyte" only pays 250 satoshis in fee, while "at least" pays 1000 satoshis. For transactions bigger than a kilobyte both pay by kilobyte.</source>
+        <translation>Якщо оплата користувача встановлюється в 1000 Satoshi і розмір передачі всього 250 байт, то "за кілобайт" платить тільки 250 Satoshi, в той час як "щонайменше" платить 1000 satoshis. Для передач більших, ніж кілобайт обоє платять за кілобайт.</translation>
+    </message>
+    <message>
+        <source>per kilobyte</source>
+        <translation>за кілобайт</translation>
+    </message>
+    <message>
+        <source>If the custom fee is set to 1000 satoshis and the transaction is only 250 bytes, then "per kilobyte" only pays 250 satoshis in fee, while "total at least" pays 1000 satoshis. For transactions bigger than a kilobyte both pay by kilobyte.</source>
+        <translation>Якщо оплата користувача встановлюється в 1000 Satoshi і розмір передачі всього 250 байт, то "за кілобайт" платить тільки 250 Satoshi, в той час як "всього щонайменше" платить 1000 satoshis. Для передач більших, ніж кілобайт обоє платять за кілобайт.</translation>
+    </message>
+    <message>
+        <source>total at least</source>
+        <translation>всього щонайменше</translation>
+    </message>
+    <message>
+        <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks. But be aware that this can end up in a never confirming transaction once there is more demand for bitcoin transactions than the network can process.</source>
+        <translation>Оплата тільки мінімальних зборів є прийнятною до тих пір, як обсяг транзакцій там є меншим аніж простору в блоках. Але майте на увазі, що це може анулювати транзакцію, якщо попит на Bitcoin транзакції стане значно більшим, ніж мережа зможе обробити.</translation>
+    </message>
+    <message>
+        <source>(read the tooltip)</source>
+        <translation>(читати підказки)</translation>
+    </message>
+    <message>
+        <source>Recommended:</source>
+        <translation>Рекомендовано:</translation>
+    </message>
+    <message>
+        <source>Custom:</source>
+        <translation>Змінено:</translation>
+    </message>
+    <message>
+        <source>(Smart fee not initialized yet. This usually takes a few blocks...)</source>
+        <translation>(Розумна оплата ще не ініціалізована. Це звичайно займає кілька блоків...)</translation>
+    </message>
+    <message>
+        <source>Confirmation time:</source>
+        <translation>Час підтвердження:</translation>
+    </message>
+    <message>
+        <source>normal</source>
+        <translation>звичайний</translation>
+    </message>
+    <message>
+        <source>fast</source>
+        <translation>швидкий</translation>
+    </message>
+    <message>
+        <source>Send as zero-fee transaction if possible</source>
+        <translation>Надіслати як нульовий плата за передачу, якщо це можливо</translation>
+    </message>
+    <message>
+        <source>(confirmation may take longer)</source>
+        <translation>(підтвердження може зайняти більше часу)</translation>
+    </message>
+    <message>
         <source>Send to multiple recipients at once</source>
         <translation>Відправити на декілька адрес</translation>
     </message>
@@ -1927,6 +2019,18 @@ Address: %4
     <message>
         <source>The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
         <translation>Транзакцію відхилено! Це може статись, якщо декілька монет з вашого гаманця вже використані, наприклад, якщо ви використовуєте одну копію гаманця (wallet.dat), а монети були використані з іншої копії, але не позначені як використані в цій.</translation>
+    </message>
+    <message>
+        <source>A fee higher than %1 is considered an insanely high fee.</source>
+        <translation>Плата вища, ніж %1 вважається шалено високою.</translation>
+    </message>
+    <message>
+        <source>Pay only the minimum fee of %1</source>
+        <translation>Платити тільки мінімальний збір у розмірі %1</translation>
+    </message>
+    <message>
+        <source>Estimated to begin confirmation within %1 block(s).</source>
+        <translation>Розрахунковий початок підтвердження протягом %1 блоку(ів).</translation>
     </message>
     <message>
         <source>Warning: Invalid Bitcoin address</source>
@@ -2735,6 +2839,10 @@ rpcpassword=%s
         <translation>Видалити всі транзакції гаманця та відновити ті, що будуть знайдені під час запуску за допомогою -rescan</translation>
     </message>
     <message>
+        <source>Distributed under the MIT software license, see the accompanying file COPYING or &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</source>
+        <translation>Поширюється за ліцензією MIT, додаткова інформація міститься у файлі COPYING та за адресою &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</translation>
+    </message>
+    <message>
         <source>Enter regression test mode, which uses a special chain in which blocks can be solved instantly.</source>
         <translation>Ввійти в режим регресивного тестування, що використовує спеціальний ланцюг з миттєвим знаходженням блоків.</translation>
     </message>
@@ -2987,12 +3095,20 @@ rpcpassword=%s
         <translation>Комісії (в BTC/КБ), що менші за вказану, вважатимуться нульовими (для створення транзакції) (типово: %s)</translation>
     </message>
     <message>
+        <source>Maximum size of data in data carrier transactions we relay and mine (default: %u)</source>
+        <translation>Максимальний розмір даних в транзакціях носіїв даних, що ми передаємо і добуваємо (за замовчуванням: %u)</translation>
+    </message>
+    <message>
         <source>Query for peer addresses via DNS lookup, if low on addresses (default: 1 unless -connect)</source>
         <translation>Дізнаватися адреси учасників через DNS при замалій кількості відомих адрес (типово: 1 за відсутності -connect)</translation>
     </message>
     <message>
         <source>Set maximum size of high-priority/low-fee transactions in bytes (default: %d)</source>
         <translation>Встановити максимальний розмір транзакцій з високим пріоритетом та низькою комісією (в байтах) (типово: %d)</translation>
+    </message>
+    <message>
+        <source>Set the number of threads for coin generation if enabled (-1 = all cores, default: %d)</source>
+        <translation>Встановити кількість потоків для генерації монет (-1 = кількості ядер, типово: %d)</translation>
     </message>
     <message>
         <source>This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit &lt;https://www.openssl.org/&gt; and cryptographic software written by Eric Young and UPnP software written by Thomas Bernard.</source>
@@ -3097,6 +3213,10 @@ rpcpassword=%s
     <message>
         <source>Send trace/debug info to console instead of debug.log file</source>
         <translation>Відсилати налагоджувальну інформацію на консоль, а не у файл debug.log</translation>
+    </message>
+    <message>
+        <source>Send transactions as zero-fee transactions if possible (default: %u)</source>
+        <translation>Встановити операцію надсилання, як неоплатну операцію, якщо це можливо (за замовчуванням: %u)</translation>
     </message>
     <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>

@@ -3,15 +3,31 @@
     <name>AddressBookPage</name>
     <message>
         <source>Double-click to edit address or label</source>
-        <translation>Кликните два пута да промените адресу и/или етикету</translation>
+        <translation>Kliknite dva puta da izmenite adresu ili etiketu</translation>
     </message>
     <message>
         <source>Create a new address</source>
-        <translation>Прави нову адресу</translation>
+        <translation>Napravite novu adresu</translation>
+    </message>
+    <message>
+        <source>&amp;New</source>
+        <translation>Novo</translation>
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation>Копира изабрану адресу на системски клипборд</translation>
+        <translation>Kopirajte trenutno izabranu adresu</translation>
+    </message>
+    <message>
+        <source>&amp;Copy</source>
+        <translation>Kopirajte</translation>
+    </message>
+    <message>
+        <source>&amp;Copy Address</source>
+        <translation>Kopirajte adresu</translation>
+    </message>
+    <message>
+        <source>Delete the currently selected address from the list</source>
+        <translation>Izbrisite trenutno izabranu adresu sa liste</translation>
     </message>
     <message>
         <source>&amp;Delete</source>
