@@ -153,7 +153,7 @@ BITCOIN_MM = \
   macnotificationhandler.mm
 
 QT_MOC = \
-  bitcoin.moc \
+  darkcoin.moc \
   intro.moc \
   overviewpage.moc \
   rpcconsole.moc

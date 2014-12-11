@@ -221,7 +221,7 @@ private:
     void startThread();
 };
 
-#include "bitcoin.moc"
+#include "darkcoin.moc"
 
 BitcoinCore::BitcoinCore():
     QObject()
