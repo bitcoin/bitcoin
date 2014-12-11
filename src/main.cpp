@@ -1875,6 +1875,23 @@ bool static DisconnectTip(CValidationState &state) {
     CBlock block;
     if (!ReadBlockFromDisk(block, pindexDelete))
         return state.Abort("Failed to read block");
+
+    // Remove any will-be-too-immature-to-include-in-next-block spends from mempool:
+    list<CTransaction> removedFromMempool;
+    int immatureHeight = pindexDelete->nHeight-COINBASE_MATURITY+1;
+    if (immatureHeight > 0)
+    {
+        const CBlockIndex* immatureIndex = pindexDelete->GetAncestor(immatureHeight);
+        CBlock immatureBlock;
+        if (ReadBlockFromDisk(immatureBlock, immatureIndex))
+        {
+            const CTransaction& immatureCoinbase = immatureBlock.vtx[0];
+            mempool.remove(immatureCoinbase, removedFromMempool, true);
+        }
+        else
+            return state.Abort(strprintf("Failed to read block at height %d", immatureHeight));
+    }
+
     // Apply the block atomically to the chain state.
     int64_t nStart = GetTimeMicros();
     {
@@ -1887,18 +1904,21 @@ bool static DisconnectTip(CValidationState &state) {
     // Write the chain state to disk, if necessary.
     if (!FlushStateToDisk(state, FLUSH_STATE_IF_NEEDED))
         return false;
+
     // Resurrect mempool transactions from the disconnected block.
     BOOST_FOREACH(const CTransaction &tx, block.vtx) {
         // ignore validation errors in resurrected transactions
-        list<CTransaction> removed;
         CValidationState stateDummy;
-        if (!tx.IsCoinBase())
-            if (!AcceptToMemoryPool(mempool, stateDummy, tx, false, NULL))
-                mempool.remove(tx, removed, true);
+        if (tx.IsCoinBase() || !AcceptToMemoryPool(mempool, stateDummy, tx, false, NULL))
+            mempool.remove(tx, removedFromMempool, true);
     }
     mempool.check(pcoinsTip);
+
     // Update chainActive and related variables.
     UpdateTip(pindexDelete->pprev);
+
+    mempool.check(pcoinsTip);
+
     // Let wallets know transactions went from 1-confirmed to
     // 0-confirmed or conflicted:
     BOOST_FOREACH(const CTransaction &tx, block.vtx) {
