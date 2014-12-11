@@ -133,7 +133,7 @@ public:
 
         base58Prefixes[PUBKEY_ADDRESS] = list_of(138); // Testnet v4 addresses start with x
         base58Prefixes[SCRIPT_ADDRESS] = list_of(196);
-        base58Prefixes[SECRET_KEY]     = list_of(239);
+        base58Prefixes[SECRET_KEY]     = list_of(266);
         base58Prefixes[EXT_PUBLIC_KEY] = list_of(0x04)(0x35)(0x87)(0xCF);
         base58Prefixes[EXT_SECRET_KEY] = list_of(0x04)(0x35)(0x83)(0x94);
     }

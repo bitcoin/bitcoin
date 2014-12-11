@@ -23,6 +23,7 @@ DONE:
 - Reset testnet (v4) with new genesis and address version (start with x)
 - BIP0032 addresses xpub and xpriv start with x (unchanged by design)
 - Changed Darkcoin units to DRK and added duffs
+- Fixed internal walletminer
 
 
 MANDATORY:
