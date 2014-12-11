@@ -6,6 +6,7 @@
 #include "txmempool.h"
 
 #include "clientversion.h"
+#include "main.h"
 #include "streams.h"
 #include "util.h"
 #include "utilmoneystr.h"
@@ -426,30 +427,61 @@ bool CTxMemPool::addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry)
 }
 
 
-void CTxMemPool::remove(const CTransaction &tx, std::list<CTransaction>& removed, bool fRecursive)
+void CTxMemPool::remove(const CTransaction &origTx, std::list<CTransaction>& removed, bool fRecursive)
 {
     // Remove transaction from memory pool
     {
         LOCK(cs);
-        uint256 hash = tx.GetHash();
-        if (fRecursive) {
-            for (unsigned int i = 0; i < tx.vout.size(); i++) {
-                std::map<COutPoint, CInPoint>::iterator it = mapNextTx.find(COutPoint(hash, i));
-                if (it == mapNextTx.end())
-                    continue;
-                remove(*it->second.ptx, removed, true);
-            }
-        }
-        if (mapTx.count(hash))
+        std::deque<uint256> txToRemove;
+        txToRemove.push_back(origTx.GetHash());
+        while (!txToRemove.empty())
         {
-            removed.push_front(tx);
+            uint256 hash = txToRemove.front();
+            txToRemove.pop_front();
+            if (!mapTx.count(hash))
+                continue;
+            const CTransaction& tx = mapTx[hash].GetTx();
+            if (fRecursive) {
+                for (unsigned int i = 0; i < tx.vout.size(); i++) {
+                    std::map<COutPoint, CInPoint>::iterator it = mapNextTx.find(COutPoint(hash, i));
+                    if (it == mapNextTx.end())
+                        continue;
+                    txToRemove.push_back(it->second.ptx->GetHash());
+                }
+            }
             BOOST_FOREACH(const CTxIn& txin, tx.vin)
                 mapNextTx.erase(txin.prevout);
 
+            removed.push_back(tx);
             totalTxSize -= mapTx[hash].GetTxSize();
             mapTx.erase(hash);
             nTransactionsUpdated++;
         }
+    }
+}
+
+void CTxMemPool::removeCoinbaseSpends(const CCoinsViewCache *pcoins, unsigned int nMemPoolHeight)
+{
+    // Remove transactions spending a coinbase which are now immature
+    LOCK(cs);
+    list<CTransaction> transactionsToRemove;
+    for (std::map<uint256, CTxMemPoolEntry>::const_iterator it = mapTx.begin(); it != mapTx.end(); it++) {
+        const CTransaction& tx = it->second.GetTx();
+        BOOST_FOREACH(const CTxIn& txin, tx.vin) {
+            std::map<uint256, CTxMemPoolEntry>::const_iterator it2 = mapTx.find(txin.prevout.hash);
+            if (it2 != mapTx.end())
+                continue;
+            const CCoins *coins = pcoins->AccessCoins(txin.prevout.hash);
+            if (fSanityCheck) assert(coins);
+            if (!coins || (coins->IsCoinBase() && nMemPoolHeight - coins->nHeight < COINBASE_MATURITY)) {
+                transactionsToRemove.push_back(tx);
+                break;
+            }
+        }
+    }
+    BOOST_FOREACH(const CTransaction& tx, transactionsToRemove) {
+        list<CTransaction> removed;
+        remove(tx, removed, true);
     }
 }
 
@@ -513,17 +545,22 @@ void CTxMemPool::check(const CCoinsViewCache *pcoins) const
 
     uint64_t checkTotal = 0;
 
+    CCoinsViewCache mempoolDuplicate(const_cast<CCoinsViewCache*>(pcoins));
+
     LOCK(cs);
+    list<const CTxMemPoolEntry*> waitingOnDependants;
     for (std::map<uint256, CTxMemPoolEntry>::const_iterator it = mapTx.begin(); it != mapTx.end(); it++) {
         unsigned int i = 0;
         checkTotal += it->second.GetTxSize();
         const CTransaction& tx = it->second.GetTx();
+        bool fDependsWait = false;
         BOOST_FOREACH(const CTxIn &txin, tx.vin) {
             // Check that every mempool transaction's inputs refer to available coins, or other mempool tx's.
             std::map<uint256, CTxMemPoolEntry>::const_iterator it2 = mapTx.find(txin.prevout.hash);
             if (it2 != mapTx.end()) {
                 const CTransaction& tx2 = it2->second.GetTx();
                 assert(tx2.vout.size() > txin.prevout.n && !tx2.vout[txin.prevout.n].IsNull());
+                fDependsWait = true;
             } else {
                 const CCoins* coins = pcoins->AccessCoins(txin.prevout.hash);
                 assert(coins && coins->IsAvailable(txin.prevout.n));
@@ -534,6 +571,29 @@ void CTxMemPool::check(const CCoinsViewCache *pcoins) const
             assert(it3->second.ptx == &tx);
             assert(it3->second.n == i);
             i++;
+        }
+        if (fDependsWait)
+            waitingOnDependants.push_back(&it->second);
+        else {
+            CValidationState state; CTxUndo undo;
+            assert(CheckInputs(tx, state, mempoolDuplicate, false, 0, false, NULL));
+            UpdateCoins(tx, state, mempoolDuplicate, undo, 1000000);
+        }
+    }
+    unsigned int stepsSinceLastRemove = 0;
+    while (!waitingOnDependants.empty()) {
+        const CTxMemPoolEntry* entry = waitingOnDependants.front();
+        waitingOnDependants.pop_front();
+        CValidationState state;
+        if (!mempoolDuplicate.HaveInputs(entry->GetTx())) {
+            waitingOnDependants.push_back(entry);
+            stepsSinceLastRemove++;
+            assert(stepsSinceLastRemove < waitingOnDependants.size());
+        } else {
+            assert(CheckInputs(entry->GetTx(), state, mempoolDuplicate, false, 0, false, NULL));
+            CTxUndo undo;
+            UpdateCoins(entry->GetTx(), state, mempoolDuplicate, undo, 1000000);
+            stepsSinceLastRemove = 0;
         }
     }
     for (std::map<COutPoint, CInPoint>::const_iterator it = mapNextTx.begin(); it != mapNextTx.end(); it++) {
