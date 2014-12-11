@@ -139,8 +139,10 @@ bool CScriptCompressor::Decompress(unsigned int nSize, const std::vector<unsigne
 // * if e==9, we only know the resulting number is not zero, so output 1 + 10*(n - 1) + 9
 // (this is decodable, as d is in [1-9] and e is in [0-9])
 
-uint64_t CTxOutCompressor::CompressAmount(uint64_t n)
+uint64_t CTxOutCompressor::CompressAmount(const CAmount& _n)
 {
+    // Cast from CAmount (int64_t) to uint64_t
+    uint64_t n = _n;
     if (n == 0)
         return 0;
     int e = 0;
@@ -158,7 +160,7 @@ uint64_t CTxOutCompressor::CompressAmount(uint64_t n)
     }
 }
 
-uint64_t CTxOutCompressor::DecompressAmount(uint64_t x)
+CAmount CTxOutCompressor::DecompressAmount(uint64_t x)
 {
     // x = 0  OR  x = 1+10*(9*n + d - 1) + e  OR  x = 1+10*(n - 1) + 9
     if (x == 0)
@@ -181,5 +183,6 @@ uint64_t CTxOutCompressor::DecompressAmount(uint64_t x)
         n *= 10;
         e--;
     }
+    // Cast from uint64_t to CAmount (int64_t)
     return n;
 }
