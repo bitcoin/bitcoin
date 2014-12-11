@@ -2085,7 +2085,7 @@ bool CDarksendQueue::CheckSignature()
 
             std::string errorMessage = "";
             if(!darkSendSigner.VerifyMessage(mn.pubkey2, vchSig, strMessage, errorMessage)){
-                return error("Got bad masternode address signature %s \n", vin.ToString().c_str());
+                return error("CDarksendQueue::CheckSignature() - Got bad masternode address signature %s \n", vin.ToString().c_str());
             }
 
             return true;
