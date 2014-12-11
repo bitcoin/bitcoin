@@ -1,12 +1,12 @@
 # Copyright (c) 2014 The Bitcoin Core developers
-# Copyright (c) 2014 vertoe & the Darkcoin developers
+# Copyright (c) 2014 The Darkcoin developers
 # Distributed under the MIT/X11 software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #
 # Helpful routines for regression testing
 #
 
-# Add python-bitcoinrpc to module search path:
+# Add python-bitcoinrpc to module search path:      
 import os
 import sys
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "python-bitcoinrpc"))
