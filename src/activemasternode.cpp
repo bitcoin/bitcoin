@@ -267,7 +267,7 @@ bool CActiveMasternode::RegisterAsMasterNodeRemoteOnly(std::string strMasterNode
         return true;
     }
 
-    LogPrintf("CActiveMasternode::RegisterAsMasterNodeRemoteOnly() - No sutable vin found\n");
+    LogPrintf("CActiveMasternode::RegisterAsMasterNodeRemoteOnly() - No suitable vin found\n");
     return false;
 }
 

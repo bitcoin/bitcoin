@@ -1,6 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2014 The Bitcoin developers
-// Copyright (c) 2014 vertoe & the Darkcoin developers
+// Copyright (c) 2014 The Darkcoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #ifndef BITCOIN_WALLET_H
@@ -781,7 +781,7 @@ public:
     int Priority() const
     {
         if(tx->vout[i].nValue == DARKSEND_FEE) return -20000;
-        BOOST_FOREACH(int64_t d, darkSendDenominations) 
+        BOOST_FOREACH(int64_t d, darkSendDenominations)
             if(tx->vout[i].nValue == d) return 10000;
         if(tx->vout[i].nValue < 1*COIN) return 20000;
 
