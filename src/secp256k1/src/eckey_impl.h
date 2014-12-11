@@ -17,7 +17,7 @@
 static int secp256k1_eckey_pubkey_parse(secp256k1_ge_t *elem, const unsigned char *pub, int size) {
     if (size == 33 && (pub[0] == 0x02 || pub[0] == 0x03)) {
         secp256k1_fe_t x;
-        return secp256k1_fe_set_b32(&x, pub+1) && secp256k1_ge_set_xo(elem, &x, pub[0] == 0x03);
+        return secp256k1_fe_set_b32(&x, pub+1) && secp256k1_ge_set_xo_var(elem, &x, pub[0] == 0x03);
     } else if (size == 65 && (pub[0] == 0x04 || pub[0] == 0x06 || pub[0] == 0x07)) {
         secp256k1_fe_t x, y;
         if (!secp256k1_fe_set_b32(&x, pub+1) || !secp256k1_fe_set_b32(&y, pub+33)) {
@@ -26,7 +26,7 @@ static int secp256k1_eckey_pubkey_parse(secp256k1_ge_t *elem, const unsigned cha
         secp256k1_ge_set_xy(elem, &x, &y);
         if ((pub[0] == 0x06 || pub[0] == 0x07) && secp256k1_fe_is_odd(&y) != (pub[0] == 0x07))
             return 0;
-        return secp256k1_ge_is_valid(elem);
+        return secp256k1_ge_is_valid_var(elem);
     } else {
         return 0;
     }
@@ -36,8 +36,8 @@ static int secp256k1_eckey_pubkey_serialize(secp256k1_ge_t *elem, unsigned char 
     if (secp256k1_ge_is_infinity(elem)) {
         return 0;
     }
-    secp256k1_fe_normalize(&elem->x);
-    secp256k1_fe_normalize(&elem->y);
+    secp256k1_fe_normalize_var(&elem->x);
+    secp256k1_fe_normalize_var(&elem->y);
     secp256k1_fe_get_b32(&pub[1], &elem->x);
     if (compressed) {
         *size = 33;
