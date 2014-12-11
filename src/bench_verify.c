@@ -28,7 +28,7 @@ static void benchmark_verify(void* arg) {
         data->sig[data->siglen - 1] ^= (i & 0xFF);
         data->sig[data->siglen - 2] ^= ((i >> 8) & 0xFF);
         data->sig[data->siglen - 3] ^= ((i >> 16) & 0xFF);
-        CHECK(secp256k1_ecdsa_verify(data->msg, 32, data->sig, data->siglen, data->pubkey, data->pubkeylen) == (i == 0));
+        CHECK(secp256k1_ecdsa_verify(data->msg, data->sig, data->siglen, data->pubkey, data->pubkeylen) == (i == 0));
         data->sig[data->siglen - 1] ^= (i & 0xFF);
         data->sig[data->siglen - 2] ^= ((i >> 8) & 0xFF);
         data->sig[data->siglen - 3] ^= ((i >> 16) & 0xFF);
@@ -44,7 +44,7 @@ int main(void) {
     for (int i = 0; i < 32; i++) data.key[i] = 33 + i;
     for (int i = 0; i < 32; i++) data.nonce[i] = 65 + i;
     data.siglen = 72;
-    CHECK(secp256k1_ecdsa_sign(data.msg, 32, data.sig, &data.siglen, data.key, data.nonce));
+    CHECK(secp256k1_ecdsa_sign(data.msg, data.sig, &data.siglen, data.key, data.nonce));
     data.pubkeylen = 33;
     CHECK(secp256k1_ec_pubkey_create(data.pubkey, &data.pubkeylen, data.key, 1));
 

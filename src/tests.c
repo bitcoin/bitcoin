@@ -1009,33 +1009,33 @@ void test_ecdsa_end_to_end(void) {
     while(1) {
         unsigned char rnd[32];
         secp256k1_rand256_test(rnd);
-        if (secp256k1_ecdsa_sign(message, 32, signature, &signaturelen, privkey, rnd) == 1) {
+        if (secp256k1_ecdsa_sign(message, signature, &signaturelen, privkey, rnd) == 1) {
             break;
         }
     }
     /* Verify. */
-    CHECK(secp256k1_ecdsa_verify(message, 32, signature, signaturelen, pubkey, pubkeylen) == 1);
+    CHECK(secp256k1_ecdsa_verify(message, signature, signaturelen, pubkey, pubkeylen) == 1);
     /* Destroy signature and verify again. */
     signature[signaturelen - 1 - secp256k1_rand32() % 20] += 1 + (secp256k1_rand32() % 255);
-    CHECK(secp256k1_ecdsa_verify(message, 32, signature, signaturelen, pubkey, pubkeylen) != 1);
+    CHECK(secp256k1_ecdsa_verify(message, signature, signaturelen, pubkey, pubkeylen) != 1);
 
     /* Compact sign. */
     unsigned char csignature[64]; int recid = 0;
     while(1) {
         unsigned char rnd[32];
         secp256k1_rand256_test(rnd);
-        if (secp256k1_ecdsa_sign_compact(message, 32, csignature, privkey, rnd, &recid) == 1) {
+        if (secp256k1_ecdsa_sign_compact(message, csignature, privkey, rnd, &recid) == 1) {
             break;
         }
     }
     /* Recover. */
     unsigned char recpubkey[65]; int recpubkeylen = 0;
-    CHECK(secp256k1_ecdsa_recover_compact(message, 32, csignature, recpubkey, &recpubkeylen, pubkeylen == 33, recid) == 1);
+    CHECK(secp256k1_ecdsa_recover_compact(message, csignature, recpubkey, &recpubkeylen, pubkeylen == 33, recid) == 1);
     CHECK(recpubkeylen == pubkeylen);
     CHECK(memcmp(pubkey, recpubkey, pubkeylen) == 0);
     /* Destroy signature and verify again. */
     csignature[secp256k1_rand32() % 64] += 1 + (secp256k1_rand32() % 255);
-    CHECK(secp256k1_ecdsa_recover_compact(message, 32, csignature, recpubkey, &recpubkeylen, pubkeylen == 33, recid) != 1 ||
+    CHECK(secp256k1_ecdsa_recover_compact(message, csignature, recpubkey, &recpubkeylen, pubkeylen == 33, recid) != 1 ||
           memcmp(pubkey, recpubkey, pubkeylen) != 0);
     CHECK(recpubkeylen == pubkeylen);
 
@@ -1127,10 +1127,10 @@ void test_ecdsa_edge_cases(void) {
     };
     unsigned char pubkey[65];
     int pubkeylen = 65;
-    CHECK(!secp256k1_ecdsa_recover_compact(msg32, 32, sig64, pubkey, &pubkeylen, 0, 0));
-    CHECK(secp256k1_ecdsa_recover_compact(msg32, 32, sig64, pubkey, &pubkeylen, 0, 1));
-    CHECK(!secp256k1_ecdsa_recover_compact(msg32, 32, sig64, pubkey, &pubkeylen, 0, 2));
-    CHECK(!secp256k1_ecdsa_recover_compact(msg32, 32, sig64, pubkey, &pubkeylen, 0, 3));
+    CHECK(!secp256k1_ecdsa_recover_compact(msg32, sig64, pubkey, &pubkeylen, 0, 0));
+    CHECK(secp256k1_ecdsa_recover_compact(msg32, sig64, pubkey, &pubkeylen, 0, 1));
+    CHECK(!secp256k1_ecdsa_recover_compact(msg32, sig64, pubkey, &pubkeylen, 0, 2));
+    CHECK(!secp256k1_ecdsa_recover_compact(msg32, sig64, pubkey, &pubkeylen, 0, 3));
 
     /* signature (r,s) = (4,4), which can be recovered with all 4 recids. */
     const unsigned char sigb64[64] = {
@@ -1186,41 +1186,41 @@ void test_ecdsa_edge_cases(void) {
             0xE6, 0xAF, 0x48, 0xA0, 0x3B, 0xBF, 0xD2, 0x5E,
             0x8C, 0xD0, 0x36, 0x41, 0x45, 0x02, 0x01, 0x04
         };
-        CHECK(secp256k1_ecdsa_recover_compact(msg32, 32, sigb64, pubkeyb, &pubkeyblen, 1, recid));
-        CHECK(secp256k1_ecdsa_verify(msg32, 32, sigbder, sizeof(sigbder), pubkeyb, pubkeyblen) == 1);
+        CHECK(secp256k1_ecdsa_recover_compact(msg32, sigb64, pubkeyb, &pubkeyblen, 1, recid));
+        CHECK(secp256k1_ecdsa_verify(msg32, sigbder, sizeof(sigbder), pubkeyb, pubkeyblen) == 1);
         for (int recid2 = 0; recid2 < 4; recid2++) {
             unsigned char pubkey2b[33];
             int pubkey2blen = 33;
-            CHECK(secp256k1_ecdsa_recover_compact(msg32, 32, sigb64, pubkey2b, &pubkey2blen, 1, recid2));
+            CHECK(secp256k1_ecdsa_recover_compact(msg32, sigb64, pubkey2b, &pubkey2blen, 1, recid2));
             /* Verifying with (order + r,4) should always fail. */
-            CHECK(secp256k1_ecdsa_verify(msg32, 32, sigbderlong, sizeof(sigbderlong), pubkey2b, pubkey2blen) != 1);
+            CHECK(secp256k1_ecdsa_verify(msg32, sigbderlong, sizeof(sigbderlong), pubkey2b, pubkey2blen) != 1);
         }
         /* DER parsing tests. */
         /* Zero length r/s. */
-        CHECK(secp256k1_ecdsa_verify(msg32, 32, sigcder_zr, sizeof(sigcder_zr), pubkeyb, pubkeyblen) == -2);
-        CHECK(secp256k1_ecdsa_verify(msg32, 32, sigcder_zs, sizeof(sigcder_zs), pubkeyb, pubkeyblen) == -2);
+        CHECK(secp256k1_ecdsa_verify(msg32, sigcder_zr, sizeof(sigcder_zr), pubkeyb, pubkeyblen) == -2);
+        CHECK(secp256k1_ecdsa_verify(msg32, sigcder_zs, sizeof(sigcder_zs), pubkeyb, pubkeyblen) == -2);
         /* Leading zeros. */
-        CHECK(secp256k1_ecdsa_verify(msg32, 32, sigbderalt1, sizeof(sigbderalt1), pubkeyb, pubkeyblen) == 1);
-        CHECK(secp256k1_ecdsa_verify(msg32, 32, sigbderalt2, sizeof(sigbderalt2), pubkeyb, pubkeyblen) == 1);
-        CHECK(secp256k1_ecdsa_verify(msg32, 32, sigbderalt3, sizeof(sigbderalt3), pubkeyb, pubkeyblen) == 1);
-        CHECK(secp256k1_ecdsa_verify(msg32, 32, sigbderalt4, sizeof(sigbderalt4), pubkeyb, pubkeyblen) == 1);
+        CHECK(secp256k1_ecdsa_verify(msg32, sigbderalt1, sizeof(sigbderalt1), pubkeyb, pubkeyblen) == 1);
+        CHECK(secp256k1_ecdsa_verify(msg32, sigbderalt2, sizeof(sigbderalt2), pubkeyb, pubkeyblen) == 1);
+        CHECK(secp256k1_ecdsa_verify(msg32, sigbderalt3, sizeof(sigbderalt3), pubkeyb, pubkeyblen) == 1);
+        CHECK(secp256k1_ecdsa_verify(msg32, sigbderalt4, sizeof(sigbderalt4), pubkeyb, pubkeyblen) == 1);
         sigbderalt3[4] = 1;
-        CHECK(secp256k1_ecdsa_verify(msg32, 32, sigbderalt3, sizeof(sigbderalt3), pubkeyb, pubkeyblen) == -2);
+        CHECK(secp256k1_ecdsa_verify(msg32, sigbderalt3, sizeof(sigbderalt3), pubkeyb, pubkeyblen) == -2);
         sigbderalt4[7] = 1;
-        CHECK(secp256k1_ecdsa_verify(msg32, 32, sigbderalt4, sizeof(sigbderalt4), pubkeyb, pubkeyblen) == -2);
+        CHECK(secp256k1_ecdsa_verify(msg32, sigbderalt4, sizeof(sigbderalt4), pubkeyb, pubkeyblen) == -2);
         /* Damage signature. */
         sigbder[7]++;
-        CHECK(secp256k1_ecdsa_verify(msg32, 32, sigbder, sizeof(sigbder), pubkeyb, pubkeyblen) == 0);
+        CHECK(secp256k1_ecdsa_verify(msg32, sigbder, sizeof(sigbder), pubkeyb, pubkeyblen) == 0);
         sigbder[7]--;
-        CHECK(secp256k1_ecdsa_verify(msg32, 32, sigbder, 6, pubkeyb, pubkeyblen) == -2);
-        CHECK(secp256k1_ecdsa_verify(msg32, 32, sigbder, sizeof(sigbder)-1, pubkeyb, pubkeyblen) == -2);
+        CHECK(secp256k1_ecdsa_verify(msg32, sigbder, 6, pubkeyb, pubkeyblen) == -2);
+        CHECK(secp256k1_ecdsa_verify(msg32, sigbder, sizeof(sigbder)-1, pubkeyb, pubkeyblen) == -2);
         for(int i = 0; i<8; i++) {
             unsigned char orig = sigbder[i];
             /*Try every single-byte change.*/
             for (int c=0; c<256; c++) {
                 if (c == orig ) continue;
                 sigbder[i] = c;
-                CHECK(secp256k1_ecdsa_verify(msg32, 32, sigbder, sizeof(sigbder), pubkeyb, pubkeyblen) ==
+                CHECK(secp256k1_ecdsa_verify(msg32, sigbder, sizeof(sigbder), pubkeyb, pubkeyblen) ==
                   (i==4 || i==7) ? 0 : -2 );
             }
             sigbder[i] = orig;
@@ -1258,18 +1258,18 @@ void test_ecdsa_edge_cases(void) {
         };
         unsigned char pubkeyc[65];
         int pubkeyclen = 65;
-        CHECK(secp256k1_ecdsa_recover_compact(msg32, 32, sigc64, pubkeyc, &pubkeyclen, 0, 0) == 1);
-        CHECK(secp256k1_ecdsa_verify(msg32, 32, sigcder, sizeof(sigcder), pubkeyc, pubkeyclen) == 1);
+        CHECK(secp256k1_ecdsa_recover_compact(msg32, sigc64, pubkeyc, &pubkeyclen, 0, 0) == 1);
+        CHECK(secp256k1_ecdsa_verify(msg32, sigcder, sizeof(sigcder), pubkeyc, pubkeyclen) == 1);
         sigcder[4] = 0;
         sigc64[31] = 0;
-        CHECK(secp256k1_ecdsa_recover_compact(msg32, 32, sigc64, pubkeyb, &pubkeyblen, 1, 0) == 0);
-        CHECK(secp256k1_ecdsa_verify(msg32, 32, sigcder, sizeof(sigcder), pubkeyc, pubkeyclen) == 0);
+        CHECK(secp256k1_ecdsa_recover_compact(msg32, sigc64, pubkeyb, &pubkeyblen, 1, 0) == 0);
+        CHECK(secp256k1_ecdsa_verify(msg32, sigcder, sizeof(sigcder), pubkeyc, pubkeyclen) == 0);
         sigcder[4] = 1;
         sigcder[7] = 0;
         sigc64[31] = 1;
         sigc64[63] = 0;
-        CHECK(secp256k1_ecdsa_recover_compact(msg32, 32, sigc64, pubkeyb, &pubkeyblen, 1, 0) == 0);
-        CHECK(secp256k1_ecdsa_verify(msg32, 32, sigcder, sizeof(sigcder), pubkeyc, pubkeyclen) == 0);
+        CHECK(secp256k1_ecdsa_recover_compact(msg32, sigc64, pubkeyb, &pubkeyblen, 1, 0) == 0);
+        CHECK(secp256k1_ecdsa_verify(msg32, sigcder, sizeof(sigcder), pubkeyc, pubkeyclen) == 0);
     }
 
     /*Signature where s would be zero.*/
@@ -1294,10 +1294,10 @@ void test_ecdsa_edge_cases(void) {
         };
         unsigned char sig[72];
         int siglen = 72;
-        CHECK(secp256k1_ecdsa_sign(msg, 32, sig, &siglen, key, nonce) == 0);
+        CHECK(secp256k1_ecdsa_sign(msg, sig, &siglen, key, nonce) == 0);
         msg[31] = 0xaa;
         siglen = 72;
-        CHECK(secp256k1_ecdsa_sign(msg, 32, sig, &siglen, key, nonce) == 1);
+        CHECK(secp256k1_ecdsa_sign(msg, sig, &siglen, key, nonce) == 1);
     }
 
     /* Privkey export where pubkey is the point at infinity. */
