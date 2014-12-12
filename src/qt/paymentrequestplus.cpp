@@ -57,35 +57,33 @@ bool PaymentRequestPlus::IsInitialized() const
     return paymentRequest.IsInitialized();
 }
 
-bool PaymentRequestPlus::getMerchant(X509_STORE* certStore, QString& merchant) const
+GetMerchantStatus PaymentRequestPlus::getMerchant(X509_STORE* certStore, QString& merchant) const
 {
     merchant.clear();
 
     if (!IsInitialized())
-        return false;
+        return PR_NOTINITIALIZED;
 
     // One day we'll support more PKI types, but just
     // x509 for now:
     const EVP_MD* digestAlgorithm = NULL;
     if (paymentRequest.pki_type() == "x509+sha256") {
         digestAlgorithm = EVP_sha256();
-    }
-    else if (paymentRequest.pki_type() == "x509+sha1") {
+    } else if (paymentRequest.pki_type() == "x509+sha1") {
         digestAlgorithm = EVP_sha1();
-    }
-    else if (paymentRequest.pki_type() == "none") {
+    } else if (paymentRequest.pki_type() == "none") {
+        // This is normal for unauthenticated BIP70 payment requests
         qWarning() << "PaymentRequestPlus::getMerchant: Payment request: pki_type == none";
-        return false;
-    }
-    else {
+        return PR_UNAUTHENTICATED;
+    } else {
         qWarning() << "PaymentRequestPlus::getMerchant: Payment request: unknown pki_type " << QString::fromStdString(paymentRequest.pki_type());
-        return false;
+        return PR_PKIERROR;
     }
 
     payments::X509Certificates certChain;
     if (!certChain.ParseFromString(paymentRequest.pki_data())) {
         qWarning() << "PaymentRequestPlus::getMerchant: Payment request: error parsing pki_data";
-        return false;
+        return PR_PKIERROR;
     }
 
     std::vector<X509*> certs;
@@ -95,12 +93,12 @@ bool PaymentRequestPlus::getMerchant(X509_STORE* certStore, QString& merchant) c
         QSslCertificate qCert(certData, QSsl::Der);
         if (currentTime < qCert.effectiveDate() || currentTime > qCert.expiryDate()) {
             qWarning() << "PaymentRequestPlus::getMerchant: Payment request: certificate expired or not yet active: " << qCert;
-            return false;
+            return PR_CERTERROR;
         }
 #if QT_VERSION >= 0x050000
         if (qCert.isBlacklisted()) {
             qWarning() << "PaymentRequestPlus::getMerchant: Payment request: certificate blacklisted: " << qCert;
-            return false;
+            return PR_CERTERROR;
         }
 #endif
         const unsigned char *data = (const unsigned char *)certChain.certificate(i).data();
@@ -109,8 +107,8 @@ bool PaymentRequestPlus::getMerchant(X509_STORE* certStore, QString& merchant) c
             certs.push_back(cert);
     }
     if (certs.empty()) {
-        qWarning() << "PaymentRequestPlus::getMerchant: Payment request: empty certificate chain";
-        return false;
+        qWarning() << "PaymentRequestPlus::getMerchant: Payment request: certificate chain empty";
+        return PR_CERTERROR;
     }
 
     // The first cert is the signing cert, the rest are untrusted certs that chain
@@ -126,7 +124,7 @@ bool PaymentRequestPlus::getMerchant(X509_STORE* certStore, QString& merchant) c
     X509_STORE_CTX *store_ctx = X509_STORE_CTX_new();
     if (!store_ctx) {
         qWarning() << "PaymentRequestPlus::getMerchant: Payment request: error creating X509_STORE_CTX";
-        return false;
+        return PR_CERTERROR;
     }
 
     char *website = NULL;
@@ -190,7 +188,7 @@ bool PaymentRequestPlus::getMerchant(X509_STORE* certStore, QString& merchant) c
     for (unsigned int i = 0; i < certs.size(); i++)
         X509_free(certs[i]);
 
-    return fResult;
+    return fResult ? PR_AUTHENTICATED : PR_CERTERROR;
 }
 
 QList<std::pair<CScript,CAmount> > PaymentRequestPlus::getPayTo() const

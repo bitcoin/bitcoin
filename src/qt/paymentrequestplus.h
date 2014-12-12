@@ -15,6 +15,17 @@
 #include <QList>
 #include <QString>
 
+// Used in getMerchant() to return state
+enum GetMerchantStatus {
+    PR_NOTINITIALIZED = 0,
+    PR_PKIERROR = (1U << 0),
+    PR_CERTERROR = (1U << 1),
+    PR_UNAUTHENTICATED = (1U << 2),
+    PR_AUTHENTICATED = (1U << 3),
+
+    PR_ERROR = (PR_NOTINITIALIZED | PR_PKIERROR | PR_CERTERROR)
+};
+
 //
 // Wraps dumb protocol buffer paymentRequest
 // with extra methods
@@ -31,7 +42,7 @@ public:
     bool IsInitialized() const;
     // Returns true if merchant's identity is authenticated, and
     // returns human-readable merchant identity in merchant
-    bool getMerchant(X509_STORE* certStore, QString& merchant) const;
+    GetMerchantStatus getMerchant(X509_STORE* certStore, QString& merchant) const;
 
     // Returns list of outputs, amount
     QList<std::pair<CScript,CAmount> > getPayTo() const;
