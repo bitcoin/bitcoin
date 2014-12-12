@@ -118,7 +118,7 @@ bool PaymentRequestPlus::getMerchant(X509_STORE* certStore, QString& merchant) c
     // The first cert is the signing cert, the rest are untrusted certs that chain
     // to a valid root authority. OpenSSL needs them separately.
     STACK_OF(X509) *chain = sk_X509_new_null();
-    for (int i = certs.size()-1; i > 0; i--) {
+    for (int i = certs.size() - 1; i > 0; i--) {
         sk_X509_push(chain, certs[i]);
     }
     X509 *signing_cert = certs[0];
@@ -166,9 +166,8 @@ bool PaymentRequestPlus::getMerchant(X509_STORE* certStore, QString& merchant) c
         EVP_MD_CTX_init(&ctx);
         if (!EVP_VerifyInit_ex(&ctx, digestAlgorithm, NULL) ||
             !EVP_VerifyUpdate(&ctx, data_to_verify.data(), data_to_verify.size()) ||
-            !EVP_VerifyFinal(&ctx, (const unsigned char*)paymentRequest.signature().data(), paymentRequest.signature().size(), pubkey)) {
-
-            throw SSLVerifyError("Bad signature, invalid PaymentRequest.");
+            !EVP_VerifyFinal(&ctx, (const unsigned char*)paymentRequest.signature().data(), (unsigned int)paymentRequest.signature().size(), pubkey)) {
+            throw SSLVerifyError("Bad signature, invalid payment request.");
         }
 
         // OpenSSL API for getting human printable strings from certs is baroque.
