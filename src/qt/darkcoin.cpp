@@ -164,7 +164,7 @@ private:
     void handleRunawayException(std::exception *e);
 };
 
-/** Main Bitcoin application object */
+/** Main Darkcoin application object */
 class BitcoinApplication: public QApplication
 {
     Q_OBJECT
