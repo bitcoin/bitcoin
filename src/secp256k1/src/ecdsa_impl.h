@@ -27,7 +27,7 @@ static void secp256k1_ecdsa_start(void) {
         return;
 
     /* Allocate. */
-    secp256k1_ecdsa_consts_t *ret = (secp256k1_ecdsa_consts_t*)malloc(sizeof(secp256k1_ecdsa_consts_t));
+    secp256k1_ecdsa_consts_t *ret = (secp256k1_ecdsa_consts_t*)checked_malloc(sizeof(secp256k1_ecdsa_consts_t));
 
     static const unsigned char order[] = {
         0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
@@ -38,7 +38,7 @@ static void secp256k1_ecdsa_start(void) {
 
     secp256k1_fe_set_b32(&ret->order_as_fe, order);
     secp256k1_fe_negate(&ret->p_minus_order, &ret->order_as_fe, 1);
-    secp256k1_fe_normalize(&ret->p_minus_order);
+    secp256k1_fe_normalize_var(&ret->p_minus_order);
 
     /* Set the global pointer. */
     secp256k1_ecdsa_consts = ret;
@@ -122,7 +122,7 @@ static int secp256k1_ecdsa_sig_recompute(secp256k1_scalar_t *r2, const secp256k1
     secp256k1_gej_t pr; secp256k1_ecmult(&pr, &pubkeyj, &u2, &u1);
     if (!secp256k1_gej_is_infinity(&pr)) {
         secp256k1_fe_t xr; secp256k1_gej_get_x_var(&xr, &pr);
-        secp256k1_fe_normalize(&xr);
+        secp256k1_fe_normalize_var(&xr);
         unsigned char xrb[32]; secp256k1_fe_get_b32(xrb, &xr);
         secp256k1_scalar_set_b32(r2, xrb, NULL);
         ret = 1;
@@ -144,7 +144,7 @@ static int secp256k1_ecdsa_sig_recover(const secp256k1_ecdsa_sig_t *sig, secp256
         secp256k1_fe_add(&fx, &secp256k1_ecdsa_consts->order_as_fe);
     }
     secp256k1_ge_t x;
-    if (!secp256k1_ge_set_xo(&x, &fx, recid & 1))
+    if (!secp256k1_ge_set_xo_var(&x, &fx, recid & 1))
         return 0;
     secp256k1_gej_t xj;
     secp256k1_gej_set_ge(&xj, &x);
