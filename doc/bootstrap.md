@@ -49,8 +49,12 @@ The directory is hidden in your User folder. Go to:
 Now start the Bitcoin client software. It should show "Importing blocks from disk" like the image below. 
 ![Fig5](img/bootstrap5.png)
 
-Wait until the import finishes. The client will download the last days not covered by the import. Congratulations you have successfully imported the blockchain!
+Wait until the import finishes. This take some time (from some hours to a couple of days depending on your hardware) while the bitcoin client verifies the imported blockchain.
+
+When the import finishes, the client will download the last missing days not covered by the import. You should see the status changed to "Synchronizing with network...". 
+
+Congratulations you have successfully imported the blockchain!
 
 ### Is this safe?
 
-Yes, the above method is safe. The download contains only raw blockchain data and the client verifies this on import. Do not download the blockchain from unofficial sources, especially if they provide `*.rev` and `*.sst` files. These files are not verified and can contain malicious edits.
+Yes, the above method is safe. The download contains only raw blockchain data and the client verifies this on import (that's why it takes some time to import). Do not download the blockchain from unofficial sources, especially if they provide `*.rev` and `*.sst` files. These files are not verified and can contain malicious edits.
