@@ -59,12 +59,6 @@ bool PaymentRequestPlus::IsInitialized() const
     return paymentRequest.IsInitialized();
 }
 
-QString PaymentRequestPlus::getPKIType() const
-{
-    if (!IsInitialized()) return QString("none");
-    return QString::fromStdString(paymentRequest.pki_type());
-}
-
 bool PaymentRequestPlus::getMerchant(X509_STORE* certStore, QString& merchant) const
 {
     merchant.clear();
