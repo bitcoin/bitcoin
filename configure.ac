@@ -23,7 +23,7 @@ if test "x$CFLAGS" = "x"; then
 fi
 
 AC_PROG_CC_C99
-if test x"$ac_cv_prog_cc_c99" == x"no"; then
+if test x"$ac_cv_prog_cc_c99" = x"no"; then
   AC_MSG_ERROR([c99 compiler support required])
 fi
 
@@ -258,7 +258,7 @@ esac
 
 if test x"$use_tests" = x"yes"; then
   SECP_OPENSSL_CHECK
-  if test x"$has_openssl_ec" == x"yes"; then
+  if test x"$has_openssl_ec" = x"yes"; then
     AC_DEFINE(ENABLE_OPENSSL_TESTS, 1, [Define this symbol if OpenSSL EC functions are available])
     SECP_TEST_INCLUDES="$SSL_CFLAGS $CRYPTO_CFLAGS"
     SECP_TEST_LIBS="$CRYPTO_LIBS"
@@ -291,7 +291,7 @@ AC_SUBST(SECP_INCLUDES)
 AC_SUBST(SECP_LIBS)
 AC_SUBST(SECP_TEST_LIBS)
 AC_SUBST(SECP_TEST_INCLUDES)
-AM_CONDITIONAL([USE_ASM], [test x"$set_field" == x"64bit_asm"])
+AM_CONDITIONAL([USE_ASM], [test x"$set_field" = x"64bit_asm"])
 AM_CONDITIONAL([USE_TESTS], [test x"$use_tests" != x"no"])
 AM_CONDITIONAL([USE_BENCHMARK], [test x"$use_benchmark" != x"no"])
 
