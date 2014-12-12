@@ -31,7 +31,7 @@ using namespace std;
 using namespace boost;
 
 #if defined(NDEBUG)
-# error "Bitcoin cannot be compiled without assertions."
+# error "Darkcoin cannot be compiled without assertions."
 #endif
 
 //
@@ -2273,7 +2273,7 @@ bool FindUndoPos(CValidationState &state, int nFile, CDiskBlockPos &pos, unsigne
 static CCheckQueue<CScriptCheck> scriptcheckqueue(128);
 
 void ThreadScriptCheck() {
-    RenameThread("bitcoin-scriptch");
+    RenameThread("darkcoin-scriptch");
     scriptcheckqueue.Thread();
 }
 
