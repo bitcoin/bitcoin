@@ -143,13 +143,20 @@ void PaymentServer::LoadRootCAs(X509_STORE* _store)
 
     int nRootCerts = 0;
     const QDateTime currentTime = QDateTime::currentDateTime();
-    foreach (const QSslCertificate& cert, certList)
-    {
+
+    foreach (const QSslCertificate& cert, certList) {
+        // Don't log NULL certificates
+        if (cert.isNull())
+            continue;
+
+        // Not yet active/valid, or expired certificate
         if (currentTime < cert.effectiveDate() || currentTime > cert.expiryDate()) {
             ReportInvalidCertificate(cert);
             continue;
         }
+
 #if QT_VERSION >= 0x050000
+        // Blacklisted certificate
         if (cert.isBlacklisted()) {
             ReportInvalidCertificate(cert);
             continue;
