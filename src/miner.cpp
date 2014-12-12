@@ -1,17 +1,17 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2014 The Bitcoin developers
-// Distributed under the MIT/X11 software license, see the accompanying
+// Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "miner.h"
 
 #include "amount.h"
-#include "primitives/block.h"
-#include "primitives/transaction.h"
 #include "hash.h"
 #include "main.h"
 #include "net.h"
 #include "pow.h"
+#include "primitives/block.h"
+#include "primitives/transaction.h"
 #include "timedata.h"
 #include "util.h"
 #include "utilmoneystr.h"

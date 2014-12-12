@@ -4,8 +4,8 @@
 
 #include "bloom.h"
 
-#include "primitives/transaction.h"
 #include "hash.h"
+#include "primitives/transaction.h"
 #include "script/script.h"
 #include "script/standard.h"
 #include "streams.h"
