@@ -1,4 +1,5 @@
 // Copyright (c) 2011-2014 The Bitcoin developers
+// Copyright (c) 2014 The Darkcoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -226,7 +227,7 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, int vout, int u
 
     strHTML += "<b>" + tr("Transaction ID") + ":</b> " + TransactionRecord::formatSubTxId(wtx.GetHash(), vout) + "<br>";
 
-    // Message from normal bitcoin:URI (bitcoin:123...?message=example)
+    // Message from normal darkcoin:URI (darkcoin:XyZ...?message=example)
     foreach (const PAIRTYPE(string, string)& r, wtx.vOrderForm)
         if (r.first == "Message")
             strHTML += "<br><b>" + tr("Message") + ":</b><br>" + GUIUtil::HtmlEscape(r.second, true) + "<br>";

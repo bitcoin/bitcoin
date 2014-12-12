@@ -1,6 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2014 The Bitcoin developers
-// Copyright (c) 2014 vertoe & the Darkcoin developers
+// Copyright (c) 2014 The Darkcoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -113,7 +113,7 @@ void Shutdown()
     TRY_LOCK(cs_Shutdown, lockShutdown);
     if (!lockShutdown) return;
 
-    RenameThread("bitcoin-shutoff");
+    RenameThread("darkcoin-shutoff");
     mempool.AddTransactionsUpdated(1);
     StopRPCThreads();
     ShutdownRPCMining();
@@ -341,7 +341,7 @@ struct CImportingNow
 
 void ThreadImport(std::vector<boost::filesystem::path> vImportFiles)
 {
-    RenameThread("bitcoin-loadblk");
+    RenameThread("darkcoin-loadblk");
 
     // -reindex
     if (fReindex) {

@@ -1,5 +1,5 @@
 // Copyright (c) 2011-2014 The Bitcoin developers
-// Copyright (c) 2014 vertoe & the Darkcoin developers
+// Copyright (c) 2014 The Darkcoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -27,7 +27,8 @@ AboutDialog::AboutDialog(QWidget *parent) :
     ui->setupUi(this);
 
     // Set current copyright year
-    ui->copyrightLabel->setText(tr("Copyright") + QString(" &copy; 2009-%1 ").arg(COPYRIGHT_YEAR) + tr("The Bitcoin Core developers"));
+    ui->copyrightLabel->setText(tr("Copyright") + QString(" &copy; 2009-2014 ") + tr("The Bitcoin Core developers") + QString("<br />")
+                              + tr("Copyright") + QString(" &copy; 2014-%1 ").arg(COPYRIGHT_YEAR) + tr("The Darkcoin Core developers"));
 }
 
 void AboutDialog::setModel(ClientModel *model)
