@@ -2881,39 +2881,41 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
     {
         LOCK2(cs_main, mempool.cs);
 
-        if(chainActive.Tip()->GetBlockHash() == block.hashPrevBlock){
-            int64_t masternodePaymentAmount = GetMasternodePayment(chainActive.Tip()->nHeight+1, block.vtx[0].GetValueOut());
-            bool fIsInitialDownload = IsInitialBlockDownload();
+        if (block.GetHash() != Params().HashGenesisBlock()) {
+            if(chainActive.Tip()->GetBlockHash() == block.hashPrevBlock){
+                int64_t masternodePaymentAmount = GetMasternodePayment(chainActive.Tip()->nHeight+1, block.vtx[0].GetValueOut());
+                bool fIsInitialDownload = IsInitialBlockDownload();
 
-            // If we don't already have its previous block, skip masternode payment step
-            if (!fIsInitialDownload && chainActive.Tip() != NULL)
-            {
-                bool foundPaymentAmount = false;
-                bool foundPayee = false;
+                // If we don't already have its previous block, skip masternode payment step
+                if (!fIsInitialDownload && chainActive.Tip() != NULL)
+                {
+                    bool foundPaymentAmount = false;
+                    bool foundPayee = false;
 
-                CScript payee;
-                if(!masternodePayments.GetBlockPayee(chainActive.Tip()->nHeight+1, payee) || payee == CScript()){
-                    foundPayee = true; //doesn't require a specific payee
+                    CScript payee;
+                    if(!masternodePayments.GetBlockPayee(chainActive.Tip()->nHeight+1, payee) || payee == CScript()){
+                        foundPayee = true; //doesn't require a specific payee
+                    }
+
+                    for (unsigned int i = 0; i < block.vtx[0].vout.size(); i++) {
+                        if(block.vtx[0].vout[i].nValue == masternodePaymentAmount )
+                            foundPaymentAmount = true;
+                        if(block.vtx[0].vout[i].scriptPubKey == payee )
+                            foundPayee = true;
+                    }
+
+                    if(!foundPaymentAmount || !foundPayee) {
+                        CTxDestination address1;
+                        ExtractDestination(payee, address1);
+                        CBitcoinAddress address2(address1);
+
+                        LogPrintf("CheckBlock() : Couldn't find masternode payment(%d|%d) or payee(%d|%s) nHeight %d. \n", foundPaymentAmount, masternodePaymentAmount, foundPayee, address2.ToString().c_str(), chainActive.Tip()->nHeight+1);
+                        return state.DoS(100, error("CheckBlock() : Couldn't find masternode payment or payee"));
+                    }
                 }
-
-                for (unsigned int i = 0; i < block.vtx[0].vout.size(); i++) {
-                    if(block.vtx[0].vout[i].nValue == masternodePaymentAmount )
-                        foundPaymentAmount = true;
-                    if(block.vtx[0].vout[i].scriptPubKey == payee )
-                        foundPayee = true;
-                }
-
-                if(!foundPaymentAmount || !foundPayee) {
-                    CTxDestination address1;
-                    ExtractDestination(payee, address1);
-                    CBitcoinAddress address2(address1);
-
-                    LogPrintf("CheckBlock() : Couldn't find masternode payment(%d|%d) or payee(%d|%s) nHeight %d. \n", foundPaymentAmount, masternodePaymentAmount, foundPayee, address2.ToString().c_str(), chainActive.Tip()->nHeight+1);
-                    return state.DoS(100, error("CheckBlock() : Couldn't find masternode payment or payee"));
-                }
+            } else {
+                LogPrintf("CheckBlock() : Skipping masternode payment check - nHeight %d Hash %s\n", chainActive.Tip()->nHeight+1, block.GetHash().ToString().c_str());
             }
-        } else {
-            LogPrintf("CheckBlock() : Skipping masternode payment check - nHeight %d Hash %s\n", chainActive.Tip()->nHeight+1, block.GetHash().ToString().c_str());
         }
     }
 
