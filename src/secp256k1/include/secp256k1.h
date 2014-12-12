@@ -62,8 +62,7 @@ void secp256k1_stop(void);
  *           0: incorrect signature
  *          -1: invalid public key
  *          -2: invalid signature
- * In:       msg:       the message being verified (cannot be NULL)
- *           msglen:    the length of the message (at most 32)
+ * In:       msg32:     the 32-byte message hash being verified (cannot be NULL)
  *           sig:       the signature being verified (cannot be NULL)
  *           siglen:    the length of the signature
  *           pubkey:    the public key to verify with (cannot be NULL)
@@ -71,19 +70,17 @@ void secp256k1_stop(void);
  * Requires starting using SECP256K1_START_VERIFY.
  */
 SECP256K1_WARN_UNUSED_RESULT int secp256k1_ecdsa_verify(
-  const unsigned char *msg,
-  int msglen,
+  const unsigned char *msg32,
   const unsigned char *sig,
   int siglen,
   const unsigned char *pubkey,
   int pubkeylen
-) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(3) SECP256K1_ARG_NONNULL(5);
+) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(4);
 
 /** Create an ECDSA signature.
  *  Returns: 1: signature created
  *           0: nonce invalid, try another one
- *  In:      msg:    the message being signed (cannot be NULL)
- *           msglen: the length of the message being signed (at most 32)
+ *  In:      msg32:  the 32-byte message hash being signed (cannot be NULL)
  *           seckey: pointer to a 32-byte secret key (cannot be NULL, assumed to be valid)
  *           nonce:  pointer to a 32-byte nonce (cannot be NULL, generated with a cryptographic PRNG)
  *  Out:     sig:    pointer to an array where the signature will be placed (cannot be NULL)
@@ -92,19 +89,17 @@ SECP256K1_WARN_UNUSED_RESULT int secp256k1_ecdsa_verify(
  * Requires starting using SECP256K1_START_SIGN.
  */
 SECP256K1_WARN_UNUSED_RESULT int secp256k1_ecdsa_sign(
-  const unsigned char *msg,
-  int msglen,
+  const unsigned char *msg32,
   unsigned char *sig,
   int *siglen,
   const unsigned char *seckey,
   const unsigned char *nonce
-) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(3) SECP256K1_ARG_NONNULL(4) SECP256K1_ARG_NONNULL(5) SECP256K1_ARG_NONNULL(6);
+) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3) SECP256K1_ARG_NONNULL(4) SECP256K1_ARG_NONNULL(5);
 
 /** Create a compact ECDSA signature (64 byte + recovery id).
  *  Returns: 1: signature created
  *           0: nonce invalid, try another one
- *  In:      msg:    the message being signed (cannot be NULL)
- *           msglen: the length of the message being signed (at most 32)
+ *  In:      msg32:  the 32-byte message hash being signed (cannot be NULL)
  *           seckey: pointer to a 32-byte secret key (cannot be NULL, assumed to be valid)
  *           nonce:  pointer to a 32-byte nonce (cannot be NULL, generated with a cryptographic PRNG)
  *  Out:     sig:    pointer to a 64-byte array where the signature will be placed (cannot be NULL)
@@ -112,19 +107,17 @@ SECP256K1_WARN_UNUSED_RESULT int secp256k1_ecdsa_sign(
  * Requires starting using SECP256K1_START_SIGN.
  */
 SECP256K1_WARN_UNUSED_RESULT int secp256k1_ecdsa_sign_compact(
-  const unsigned char *msg,
-  int msglen,
+  const unsigned char *msg32,
   unsigned char *sig64,
   const unsigned char *seckey,
   const unsigned char *nonce,
   int *recid
-) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(3) SECP256K1_ARG_NONNULL(4) SECP256K1_ARG_NONNULL(5);
+) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3) SECP256K1_ARG_NONNULL(4);
 
 /** Recover an ECDSA public key from a compact signature.
  *  Returns: 1: public key successfully recovered (which guarantees a correct signature).
  *           0: otherwise.
- *  In:      msg:        the message assumed to be signed (cannot be NULL)
- *           msglen:     the length of the message (at most 32)
+ *  In:      msg32:      the 32-byte message hash assumed to be signed (cannot be NULL)
  *           sig64:      signature as 64 byte array (cannot be NULL)
  *           compressed: whether to recover a compressed or uncompressed pubkey
  *           recid:      the recovery id (0-3, as returned by ecdsa_sign_compact)
@@ -133,14 +126,13 @@ SECP256K1_WARN_UNUSED_RESULT int secp256k1_ecdsa_sign_compact(
  * Requires starting using SECP256K1_START_VERIFY.
  */
 SECP256K1_WARN_UNUSED_RESULT int secp256k1_ecdsa_recover_compact(
-  const unsigned char *msg,
-  int msglen,
+  const unsigned char *msg32,
   const unsigned char *sig64,
   unsigned char *pubkey,
   int *pubkeylen,
   int compressed,
   int recid
-) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(3) SECP256K1_ARG_NONNULL(4) SECP256K1_ARG_NONNULL(5);
+) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3) SECP256K1_ARG_NONNULL(4);
 
 /** Verify an ECDSA secret key.
  *  Returns: 1: secret key is valid
