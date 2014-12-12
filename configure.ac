@@ -82,9 +82,9 @@ AC_COMPILE_IFELSE([AC_LANG_SOURCE([[char foo;]])],
 
 
 AC_ARG_ENABLE(benchmark,
-    AS_HELP_STRING([--enable-benchmark],[compile benchmark (default is yes)]),
+    AS_HELP_STRING([--enable-benchmark],[compile benchmark (default is no)]),
     [use_benchmark=$enableval],
-    [use_benchmark=yes])
+    [use_benchmark=no])
 
 AC_ARG_ENABLE(tests,
     AS_HELP_STRING([--enable-tests],[compile tests (default is yes)]),
@@ -293,7 +293,7 @@ AC_SUBST(SECP_TEST_LIBS)
 AC_SUBST(SECP_TEST_INCLUDES)
 AM_CONDITIONAL([USE_ASM], [test x"$set_field" == x"64bit_asm"])
 AM_CONDITIONAL([USE_TESTS], [test x"$use_tests" != x"no"])
-AM_CONDITIONAL([USE_BENCHMARK], [test x"$use_benchmark" != x"no"])
+AM_CONDITIONAL([USE_BENCHMARK], [test x"$use_benchmark" = x"yes"])
 
 dnl make sure nothing new is exported so that we don't break the cache
 PKGCONFIG_PATH_TEMP="$PKG_CONFIG_PATH"
