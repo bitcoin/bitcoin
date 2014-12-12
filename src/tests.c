@@ -949,6 +949,23 @@ void run_ecdsa_sign_verify(void) {
     }
 }
 
+/** Very fast but insecure nonce generation function. Do not use for production code. */
+static int insecure_nonce_function(unsigned char *nonce32, const unsigned char *msg32, const unsigned char *key32, unsigned int counter, const void *data) {
+   (void)data;
+   for (int i = 0; i < 8; i++) {
+       ((uint32_t*)nonce32)[i] = ((uint32_t*)msg32)[i] + ((uint32_t*)key32)[i] + counter;
+   }
+   return 1;
+}
+
+/** Dummy nonce generation function that just uses a precomputed nonce, and fails if it is not accepted. Use only for testing. */
+static int precomputed_nonce_function(unsigned char *nonce32, const unsigned char *msg32, const unsigned char *key32, unsigned int counter, const void *data) {
+    (void)msg32;
+    (void)key32;
+    memcpy(nonce32, data, 32);
+    return (counter == 0);
+}
+
 void test_ecdsa_end_to_end(void) {
     unsigned char privkey[32];
     unsigned char message[32];
@@ -1006,13 +1023,7 @@ void test_ecdsa_end_to_end(void) {
 
     /* Sign. */
     unsigned char signature[72]; int signaturelen = 72;
-    while(1) {
-        unsigned char rnd[32];
-        secp256k1_rand256_test(rnd);
-        if (secp256k1_ecdsa_sign(message, signature, &signaturelen, privkey, rnd) == 1) {
-            break;
-        }
-    }
+    CHECK(secp256k1_ecdsa_sign(message, signature, &signaturelen, privkey, insecure_nonce_function, NULL) == 1);
     /* Verify. */
     CHECK(secp256k1_ecdsa_verify(message, signature, signaturelen, pubkey, pubkeylen) == 1);
     /* Destroy signature and verify again. */
@@ -1021,13 +1032,7 @@ void test_ecdsa_end_to_end(void) {
 
     /* Compact sign. */
     unsigned char csignature[64]; int recid = 0;
-    while(1) {
-        unsigned char rnd[32];
-        secp256k1_rand256_test(rnd);
-        if (secp256k1_ecdsa_sign_compact(message, csignature, privkey, rnd, &recid) == 1) {
-            break;
-        }
-    }
+    CHECK(secp256k1_ecdsa_sign_compact(message, csignature, privkey, insecure_nonce_function, NULL, &recid) == 1);
     /* Recover. */
     unsigned char recpubkey[65]; int recpubkeylen = 0;
     CHECK(secp256k1_ecdsa_recover_compact(message, csignature, recpubkey, &recpubkeylen, pubkeylen == 33, recid) == 1);
@@ -1294,12 +1299,12 @@ void test_ecdsa_edge_cases(void) {
         };
         unsigned char sig[72];
         int siglen = 72;
-        CHECK(secp256k1_ecdsa_sign(msg, sig, &siglen, key, nonce) == 0);
+        CHECK(secp256k1_ecdsa_sign(msg, sig, &siglen, key, precomputed_nonce_function, nonce) == 0);
         msg[31] = 0xaa;
         siglen = 72;
-        CHECK(secp256k1_ecdsa_sign(msg, sig, &siglen, key, nonce) == 1);
+        CHECK(secp256k1_ecdsa_sign(msg, sig, &siglen, key, precomputed_nonce_function, nonce) == 1);
         siglen = 10;
-        CHECK(secp256k1_ecdsa_sign(msg, sig, &siglen, key, nonce) != 1);
+        CHECK(secp256k1_ecdsa_sign(msg, sig, &siglen, key, precomputed_nonce_function, nonce) != 1);
     }
 
     /* Privkey export where pubkey is the point at infinity. */

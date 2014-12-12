@@ -14,12 +14,20 @@
 typedef struct {
     unsigned char msg[32];
     unsigned char key[32];
-    unsigned char nonce[32];
     unsigned char sig[72];
     int siglen;
     unsigned char pubkey[33];
     int pubkeylen;
 } benchmark_verify_t;
+
+/** Very fast but insecure nonce generation function. Do not use for production code. */
+static int insecure_nonce_function(unsigned char *nonce32, const unsigned char *msg32, const unsigned char *key32, unsigned int count, const void *data) {
+   (void)data;
+   for (int i = 0; i < 8; i++) {
+       ((uint32_t*)nonce32)[i] = ((uint32_t*)msg32)[i] + ((uint32_t*)key32)[i] + count;
+   }
+   return 1;
+}
 
 static void benchmark_verify(void* arg) {
     benchmark_verify_t* data = (benchmark_verify_t*)arg;
@@ -42,9 +50,8 @@ int main(void) {
 
     for (int i = 0; i < 32; i++) data.msg[i] = 1 + i;
     for (int i = 0; i < 32; i++) data.key[i] = 33 + i;
-    for (int i = 0; i < 32; i++) data.nonce[i] = 65 + i;
     data.siglen = 72;
-    CHECK(secp256k1_ecdsa_sign(data.msg, data.sig, &data.siglen, data.key, data.nonce));
+    secp256k1_ecdsa_sign(data.msg, data.sig, &data.siglen, data.key, insecure_nonce_function, NULL);
     data.pubkeylen = 33;
     CHECK(secp256k1_ec_pubkey_create(data.pubkey, &data.pubkeylen, data.key, 1));
 

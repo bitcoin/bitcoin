@@ -77,40 +77,64 @@ SECP256K1_WARN_UNUSED_RESULT int secp256k1_ecdsa_verify(
   int pubkeylen
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(4);
 
+/** A pointer to a function to deterministically generate a nonce.
+ * Returns: 1 if a nonce was succesfully generated. 0 will cause signing to fail.
+ * In:      msg32:     the 32-byte message hash being verified (will not be NULL)
+ *          key32:     pointer to a 32-byte secret key (will not be NULL)
+ *          attempt:   how many iterations we have tried to find a nonce.
+ *                     This will almost always be 0, but different attempt values
+ *                     are required to result in a different nonce.
+ *          data:      Arbitrary data pointer that is passed through.
+ * Out:     nonce32:   pointer to a 32-byte array to be filled by the function.
+ * Except for test cases, this function should compute some cryptographic hash of
+ * the message, the key and the attempt. It is advised to use RFC6979.
+ */
+typedef int (*secp256k1_nonce_function_t)(
+  unsigned char *nonce32,
+  const unsigned char *msg32,
+  const unsigned char *key32,
+  unsigned int attempt,
+  const void *data
+);
+
 /** Create an ECDSA signature.
  *  Returns: 1: signature created
- *           0: nonce invalid, try another one
+ *           0: the nonce generation function failed
  *  In:      msg32:  the 32-byte message hash being signed (cannot be NULL)
  *           seckey: pointer to a 32-byte secret key (cannot be NULL, assumed to be valid)
- *           nonce:  pointer to a 32-byte nonce (cannot be NULL, generated with a cryptographic PRNG)
+ *           noncefp:pointer to a nonce generation function (cannot be NULL)
+ *           ndata:  pointer to arbitrary data used by the nonce generation function (can be NULL)
  *  Out:     sig:    pointer to an array where the signature will be placed (cannot be NULL)
  *  In/Out:  siglen: pointer to an int with the length of sig, which will be updated
  *                   to contain the actual signature length (<=72).
  * Requires starting using SECP256K1_START_SIGN.
  */
-SECP256K1_WARN_UNUSED_RESULT int secp256k1_ecdsa_sign(
+int secp256k1_ecdsa_sign(
   const unsigned char *msg32,
   unsigned char *sig,
   int *siglen,
   const unsigned char *seckey,
-  const unsigned char *nonce
+  secp256k1_nonce_function_t noncefp,
+  const void *ndata
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3) SECP256K1_ARG_NONNULL(4) SECP256K1_ARG_NONNULL(5);
 
 /** Create a compact ECDSA signature (64 byte + recovery id).
  *  Returns: 1: signature created
- *           0: nonce invalid, try another one
+ *           0: the nonce generation function failed
  *  In:      msg32:  the 32-byte message hash being signed (cannot be NULL)
  *           seckey: pointer to a 32-byte secret key (cannot be NULL, assumed to be valid)
- *           nonce:  pointer to a 32-byte nonce (cannot be NULL, generated with a cryptographic PRNG)
+ *           noncefp:pointer to a nonce generation function (cannot be NULL)
+ *           ndata:  pointer to arbitrary data used by the nonce generation function (can be NULL)
  *  Out:     sig:    pointer to a 64-byte array where the signature will be placed (cannot be NULL)
  *           recid:  pointer to an int, which will be updated to contain the recovery id (can be NULL)
  * Requires starting using SECP256K1_START_SIGN.
  */
-SECP256K1_WARN_UNUSED_RESULT int secp256k1_ecdsa_sign_compact(
+int secp256k1_ecdsa_sign_compact(
   const unsigned char *msg32,
   unsigned char *sig64,
   const unsigned char *seckey,
-  const unsigned char *nonce,
+  secp256k1_nonce_function_t noncefp,
+  const void *ndata,
   int *recid
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3) SECP256K1_ARG_NONNULL(4);
 
