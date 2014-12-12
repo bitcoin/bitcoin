@@ -7,6 +7,7 @@
 
 class CWallet;
 class MintingTablePriv;
+class MintingFilterProxy;
 class KernelRecord;
 class WalletModel;
 
@@ -27,7 +28,7 @@ public:
         MintReward = 6
     };
 
-
+    void setMintingProxyModel(MintingFilterProxy *mintingProxy);
     int rowCount(const QModelIndex &parent) const;
     int columnCount(const QModelIndex &parent) const;
     QVariant data(const QModelIndex &index, int role) const;
@@ -42,6 +43,7 @@ private:
     QStringList columns;
     int mintingInterval;
     MintingTablePriv *priv;
+    MintingFilterProxy *mintingProxyModel;
 
     QString lookupAddress(const std::string &address, bool tooltip) const;
 
