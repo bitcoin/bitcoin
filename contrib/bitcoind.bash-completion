@@ -1,6 +1,6 @@
 # bash programmable completion for bitcoind(1) and bitcoin-cli(1)
 # Copyright (c) 2012,2014 Christian von Roques <roques@mti.ag>
-# Distributed under the MIT/X11 software license, see the accompanying
+# Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 have bitcoind && {
