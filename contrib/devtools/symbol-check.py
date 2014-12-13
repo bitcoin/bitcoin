@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # Copyright (c) 2014 Wladimir J. van der Laan
-# Distributed under the MIT/X11 software license, see the accompanying
+# Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 '''
 A script to check that the (Linux) executables produced by gitian only contain
