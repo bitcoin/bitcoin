@@ -58,6 +58,10 @@ static void secp256k1_fe_normalize_var(secp256k1_fe_t *r);
  *  implementation may optionally normalize the input, but this should not be relied upon. */
 static int secp256k1_fe_normalizes_to_zero(secp256k1_fe_t *r);
 
+/** Verify whether a field element represents zero i.e. would normalize to a zero value. The field
+ *  implementation may optionally normalize the input, but this should not be relied upon. */
+static int secp256k1_fe_normalizes_to_zero_var(secp256k1_fe_t *r);
+
 /** Set a field element equal to a small integer. Resulting field element is normalized. */
 static void secp256k1_fe_set_int(secp256k1_fe_t *r, int a);
 
