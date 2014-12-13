@@ -1064,15 +1064,6 @@ void run_ecdsa_sign_verify(void) {
     }
 }
 
-/** Very fast but insecure nonce generation function. Do not use for production code. */
-static int insecure_nonce_function(unsigned char *nonce32, const unsigned char *msg32, const unsigned char *key32, unsigned int counter, const void *data) {
-   (void)data;
-   for (int i = 0; i < 8; i++) {
-       ((uint32_t*)nonce32)[i] = ((uint32_t*)msg32)[i] + ((uint32_t*)key32)[i] + counter;
-   }
-   return 1;
-}
-
 /** Dummy nonce generation function that just uses a precomputed nonce, and fails if it is not accepted. Use only for testing. */
 static int precomputed_nonce_function(unsigned char *nonce32, const unsigned char *msg32, const unsigned char *key32, unsigned int counter, const void *data) {
     (void)msg32;
@@ -1138,7 +1129,7 @@ void test_ecdsa_end_to_end(void) {
 
     /* Sign. */
     unsigned char signature[72]; int signaturelen = 72;
-    CHECK(secp256k1_ecdsa_sign(message, signature, &signaturelen, privkey, insecure_nonce_function, NULL) == 1);
+    CHECK(secp256k1_ecdsa_sign(message, signature, &signaturelen, privkey, NULL, NULL) == 1);
     /* Verify. */
     CHECK(secp256k1_ecdsa_verify(message, signature, signaturelen, pubkey, pubkeylen) == 1);
     /* Destroy signature and verify again. */
@@ -1147,7 +1138,7 @@ void test_ecdsa_end_to_end(void) {
 
     /* Compact sign. */
     unsigned char csignature[64]; int recid = 0;
-    CHECK(secp256k1_ecdsa_sign_compact(message, csignature, privkey, insecure_nonce_function, NULL, &recid) == 1);
+    CHECK(secp256k1_ecdsa_sign_compact(message, csignature, privkey, NULL, NULL, &recid) == 1);
     /* Recover. */
     unsigned char recpubkey[65]; int recpubkeylen = 0;
     CHECK(secp256k1_ecdsa_recover_compact(message, csignature, recpubkey, &recpubkeylen, pubkeylen == 33, recid) == 1);

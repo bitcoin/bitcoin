@@ -70,13 +70,29 @@ end:
     return ret;
 }
 
+static int nonce_function_rfc6979(unsigned char *nonce32, const unsigned char *msg32, const unsigned char *key32, unsigned int counter, const void *data) {
+   (void)data;
+   secp256k1_rfc6979_hmac_sha256_t rng;
+   secp256k1_rfc6979_hmac_sha256_initialize(&rng, key32, 32, msg32, 32);
+   for (unsigned int i = 0; i <= counter; i++) {
+       secp256k1_rfc6979_hmac_sha256_generate(&rng, nonce32, 32);
+   }
+   secp256k1_rfc6979_hmac_sha256_finalize(&rng);
+   return 1;
+}
+
+const secp256k1_nonce_function_t secp256k1_nonce_function_rfc6979 = nonce_function_rfc6979;
+const secp256k1_nonce_function_t secp256k1_nonce_function_default = nonce_function_rfc6979;
+
 int secp256k1_ecdsa_sign(const unsigned char *msg32, unsigned char *signature, int *signaturelen, const unsigned char *seckey, secp256k1_nonce_function_t noncefp, const void* noncedata) {
     DEBUG_CHECK(secp256k1_ecmult_gen_consts != NULL);
     DEBUG_CHECK(msg32 != NULL);
     DEBUG_CHECK(signature != NULL);
     DEBUG_CHECK(signaturelen != NULL);
     DEBUG_CHECK(seckey != NULL);
-    DEBUG_CHECK(noncefp != NULL);
+    if (noncefp == NULL) {
+        noncefp = secp256k1_nonce_function_default;
+    }
 
     secp256k1_scalar_t sec, non, msg;
     secp256k1_scalar_set_b32(&sec, seckey, NULL);
@@ -114,7 +130,9 @@ int secp256k1_ecdsa_sign_compact(const unsigned char *msg32, unsigned char *sig6
     DEBUG_CHECK(msg32 != NULL);
     DEBUG_CHECK(sig64 != NULL);
     DEBUG_CHECK(seckey != NULL);
-    DEBUG_CHECK(noncefp != NULL);
+    if (noncefp == NULL) {
+        noncefp = secp256k1_nonce_function_default;
+    }
 
     secp256k1_scalar_t sec, non, msg;
     secp256k1_scalar_set_b32(&sec, seckey, NULL);
