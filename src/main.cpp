@@ -67,6 +67,13 @@ map<uint256, COrphanTx> mapOrphanTransactions;
 map<uint256, set<uint256> > mapOrphanTransactionsByPrev;
 void EraseOrphansFor(NodeId peer);
 
+/**
+ * Returns true if there are nRequired or more blocks of minVersion or above
+ * in the last Params().ToCheckBlockUpgradeMajority() blocks, starting at pstart 
+ * and going backwards.
+ */
+static bool IsSuperMajority(int minVersion, const CBlockIndex* pstart, unsigned int nRequired);
+
 /** Constant stuff for coinbase transactions we create: */
 CScript COINBASE_FLAGS;
 
@@ -2479,8 +2486,7 @@ bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& sta
         return state.DoS(100, error("%s : forked chain older than last checkpoint (height %d)", __func__, nHeight));
 
     // Reject block.nVersion=1 blocks when 95% (75% on testnet) of the network has upgraded:
-    if (block.nVersion < 2 && 
-        CBlockIndex::IsSuperMajority(2, pindexPrev, Params().RejectBlockOutdatedMajority()))
+    if (block.nVersion < 2 && IsSuperMajority(2, pindexPrev, Params().RejectBlockOutdatedMajority()))
     {
         return state.Invalid(error("%s : rejected nVersion=1 block", __func__),
                              REJECT_OBSOLETE, "bad-version");
@@ -2501,8 +2507,7 @@ bool ContextualCheckBlock(const CBlock& block, CValidationState& state, CBlockIn
 
     // Enforce block.nVersion=2 rule that the coinbase starts with serialized block height
     // if 750 of the last 1,000 blocks are version 2 or greater (51/100 if testnet):
-    if (block.nVersion >= 2 && 
-        CBlockIndex::IsSuperMajority(2, pindexPrev, Params().EnforceBlockUpgradeMajority()))
+    if (block.nVersion >= 2 && IsSuperMajority(2, pindexPrev, Params().EnforceBlockUpgradeMajority()))
     {
         CScript expect = CScript() << nHeight;
         if (block.vtx[0].vin[0].scriptSig.size() < expect.size() ||
@@ -2600,7 +2605,7 @@ bool AcceptBlock(CBlock& block, CValidationState& state, CBlockIndex** ppindex, 
     return true;
 }
 
-bool CBlockIndex::IsSuperMajority(int minVersion, const CBlockIndex* pstart, unsigned int nRequired)
+static bool IsSuperMajority(int minVersion, const CBlockIndex* pstart, unsigned int nRequired)
 {
     unsigned int nToCheck = Params().ToCheckBlockUpgradeMajority();
     unsigned int nFound = 0;
@@ -2613,54 +2618,6 @@ bool CBlockIndex::IsSuperMajority(int minVersion, const CBlockIndex* pstart, uns
     return (nFound >= nRequired);
 }
 
-/** Turn the lowest '1' bit in the binary representation of a number into a '0'. */
-int static inline InvertLowestOne(int n) { return n & (n - 1); }
-
-/** Compute what height to jump back to with the CBlockIndex::pskip pointer. */
-int static inline GetSkipHeight(int height) {
-    if (height < 2)
-        return 0;
-
-    // Determine which height to jump back to. Any number strictly lower than height is acceptable,
-    // but the following expression seems to perform well in simulations (max 110 steps to go back
-    // up to 2**18 blocks).
-    return (height & 1) ? InvertLowestOne(InvertLowestOne(height - 1)) + 1 : InvertLowestOne(height);
-}
-
-CBlockIndex* CBlockIndex::GetAncestor(int height)
-{
-    if (height > nHeight || height < 0)
-        return NULL;
-
-    CBlockIndex* pindexWalk = this;
-    int heightWalk = nHeight;
-    while (heightWalk > height) {
-        int heightSkip = GetSkipHeight(heightWalk);
-        int heightSkipPrev = GetSkipHeight(heightWalk - 1);
-        if (heightSkip == height ||
-            (heightSkip > height && !(heightSkipPrev < heightSkip - 2 &&
-                                      heightSkipPrev >= height))) {
-            // Only follow pskip if pprev->pskip isn't better than pskip->pprev.
-            pindexWalk = pindexWalk->pskip;
-            heightWalk = heightSkip;
-        } else {
-            pindexWalk = pindexWalk->pprev;
-            heightWalk--;
-        }
-    }
-    return pindexWalk;
-}
-
-const CBlockIndex* CBlockIndex::GetAncestor(int height) const
-{
-    return const_cast<CBlockIndex*>(this)->GetAncestor(height);
-}
-
-void CBlockIndex::BuildSkip()
-{
-    if (pprev)
-        pskip = pprev->GetAncestor(GetSkipHeight(nHeight));
-}
 
 bool ProcessNewBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDiskBlockPos *dbp)
 {
