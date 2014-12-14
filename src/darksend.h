@@ -7,8 +7,8 @@
 #define DARKSEND_H
 
 #include "core.h"
-#include "masternode.h"
 #include "main.h"
+#include "masternode.h"
 #include "activemasternode.h"
 
 class CTxIn;
