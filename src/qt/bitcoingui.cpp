@@ -509,10 +509,9 @@ void BitcoinGUI::createTrayIcon()
 #ifndef Q_OS_MAC
     // This is built-in on Mac
     trayIconMenu->addSeparator();
-    trayIconMenu->addAction(quitAction);
-
-    notificator = new Notificator(qApp->applicationName(), trayIcon, 0);
+    trayIconMenu->addAction(quitAction);    
 #endif
+    notificator = new Notificator(QApplication::applicationName(), trayIcon, this);
 }
 
 #ifndef Q_OS_MAC
