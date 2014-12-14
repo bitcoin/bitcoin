@@ -203,15 +203,29 @@ void SendCoinsDialog::on_sendButton_clicked()
 
     fNewRecipientAllowed = false;
 
-
-    WalletModel::UnlockContext ctx(model->requestUnlock(true));
-    if(!ctx.isValid())
+    // request unlock only if was locked or unlocked for mixing:
+    // this way we let users unlock by walletpassphrase or by menu
+    // and make many transactions while unlocking through this dialog
+    // will call relock
+    WalletModel::EncryptionStatus encStatus = model->getEncryptionStatus();
+    if(encStatus == model->Locked || encStatus == model->UnlockedForAnonymizationOnly)
     {
-        // Unlock wallet was cancelled
-        fNewRecipientAllowed = true;
+        WalletModel::UnlockContext ctx(model->requestUnlock(true));
+        if(!ctx.isValid())
+        {
+            // Unlock wallet was cancelled
+            fNewRecipientAllowed = true;
+            return;
+        }
+        send(recipients, strFee, formatted);
         return;
     }
+    // already unlocked or not encrypted at all
+    send(recipients, strFee, formatted);
+}
 
+void SendCoinsDialog::send(QList<SendCoinsRecipient> recipients, QString strFee, QStringList formatted)
+{
     // prepare transaction for getting txFee earlier
     WalletModelTransaction currentTransaction(recipients);
     WalletModel::SendCoinsReturn prepareStatus;
