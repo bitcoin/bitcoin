@@ -5,7 +5,7 @@
 #include "base58.h"
 
 #include "hash.h"
-#include "uint256.h"
+#include "blob256.h"
 
 #include <assert.h>
 #include <stdint.h>
@@ -113,7 +113,7 @@ std::string EncodeBase58Check(const std::vector<unsigned char>& vchIn)
 {
     // add 4-byte hash check to the end
     std::vector<unsigned char> vch(vchIn);
-    uint256 hash = Hash(vch.begin(), vch.end());
+    blob256 hash = Hash(vch.begin(), vch.end());
     vch.insert(vch.end(), (unsigned char*)&hash, (unsigned char*)&hash + 4);
     return EncodeBase58(vch);
 }
@@ -126,7 +126,7 @@ bool DecodeBase58Check(const char* psz, std::vector<unsigned char>& vchRet)
         return false;
     }
     // re-calculate the checksum, insure it matches the included 4-byte checksum
-    uint256 hash = Hash(vchRet.begin(), vchRet.end() - 4);
+    blob256 hash = Hash(vchRet.begin(), vchRet.end() - 4);
     if (memcmp(&hash, &vchRet.end()[-4], 4) != 0) {
         vchRet.clear();
         return false;
@@ -252,7 +252,7 @@ CTxDestination CBitcoinAddress::Get() const
 {
     if (!IsValid())
         return CNoDestination();
-    uint160 id;
+    blob160 id;
     memcpy(&id, &vchData[0], 20);
     if (vchVersion == Params().Base58Prefix(CChainParams::PUBKEY_ADDRESS))
         return CKeyID(id);
@@ -266,7 +266,7 @@ bool CBitcoinAddress::GetKeyID(CKeyID& keyID) const
 {
     if (!IsValid() || vchVersion != Params().Base58Prefix(CChainParams::PUBKEY_ADDRESS))
         return false;
-    uint160 id;
+    blob160 id;
     memcpy(&id, &vchData[0], 20);
     keyID = CKeyID(id);
     return true;

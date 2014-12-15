@@ -46,7 +46,7 @@ BOOST_AUTO_TEST_CASE(skiplist_test)
 BOOST_AUTO_TEST_CASE(getlocator_test)
 {
     // Build a main chain 100000 blocks long.
-    std::vector<uint256> vHashMain(100000);
+    std::vector<blob256> vHashMain(100000);
     std::vector<CBlockIndex> vBlocksMain(100000);
     for (unsigned int i=0; i<vBlocksMain.size(); i++) {
         vHashMain[i] = i; // Set the hash equal to the height, so we can quickly check the distances.
@@ -59,7 +59,7 @@ BOOST_AUTO_TEST_CASE(getlocator_test)
     }
 
     // Build a branch that splits off at block 49999, 50000 blocks long.
-    std::vector<uint256> vHashSide(50000);
+    std::vector<blob256> vHashSide(50000);
     std::vector<CBlockIndex> vBlocksSide(50000);
     for (unsigned int i=0; i<vBlocksSide.size(); i++) {
         vHashSide[i] = i + 50000 + (uint256(1) << 128); // Add 1<<128 to the hashes, so GetLow64() still returns the height.

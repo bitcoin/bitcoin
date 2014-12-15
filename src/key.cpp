@@ -72,18 +72,18 @@ CPubKey CKey::GetPubKey() const {
     return result;
 }
 
-bool CKey::Sign(const uint256 &hash, std::vector<unsigned char>& vchSig, uint32_t test_case) const {
+bool CKey::Sign(const blob256 &hash, std::vector<unsigned char>& vchSig, uint32_t test_case) const {
     if (!fValid)
         return false;
     vchSig.resize(72);
     RFC6979_HMAC_SHA256 prng(begin(), 32, (unsigned char*)&hash, 32);
     do {
-        uint256 nonce;
+        blob256 nonce;
         prng.Generate((unsigned char*)&nonce, 32);
         nonce += test_case;
         int nSigLen = 72;
         int ret = secp256k1_ecdsa_sign((const unsigned char*)&hash, (unsigned char*)&vchSig[0], &nSigLen, begin(), (unsigned char*)&nonce);
-        nonce = uint256();
+        nonce = blob256();
         if (ret) {
             vchSig.resize(nSigLen);
             return true;
@@ -98,24 +98,24 @@ bool CKey::VerifyPubKey(const CPubKey& pubkey) const {
     unsigned char rnd[8];
     std::string str = "Bitcoin key verification\n";
     GetRandBytes(rnd, sizeof(rnd));
-    uint256 hash;
+    blob256 hash;
     CHash256().Write((unsigned char*)str.data(), str.size()).Write(rnd, sizeof(rnd)).Finalize((unsigned char*)&hash);
     std::vector<unsigned char> vchSig;
     Sign(hash, vchSig);
     return pubkey.Verify(hash, vchSig);
 }
 
-bool CKey::SignCompact(const uint256 &hash, std::vector<unsigned char>& vchSig) const {
+bool CKey::SignCompact(const blob256 &hash, std::vector<unsigned char>& vchSig) const {
     if (!fValid)
         return false;
     vchSig.resize(65);
     int rec = -1;
     RFC6979_HMAC_SHA256 prng(begin(), 32, (unsigned char*)&hash, 32);
     do {
-        uint256 nonce;
+        blob256 nonce;
         prng.Generate((unsigned char*)&nonce, 32);
         int ret = secp256k1_ecdsa_sign_compact((const unsigned char*)&hash, &vchSig[1], begin(), (unsigned char*)&nonce, &rec);
-        nonce = uint256();
+        nonce = blob256();
         if (ret)
             break;
     } while(true);

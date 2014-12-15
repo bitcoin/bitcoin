@@ -126,7 +126,7 @@ bool DecodeHexBlk(CBlock& block, const std::string& strHexBlk)
     return true;
 }
 
-uint256 ParseHashUV(const UniValue& v, const string& strName)
+blob256 ParseHashUV(const UniValue& v, const string& strName)
 {
     string strHex;
     if (v.isStr())
@@ -134,7 +134,7 @@ uint256 ParseHashUV(const UniValue& v, const string& strName)
     if (!IsHex(strHex)) // Note: IsHex("") is false
         throw runtime_error(strName+" must be hexadecimal string (not '"+strHex+"')");
 
-    uint256 result;
+    blob256 result;
     result.SetHex(strHex);
     return result;
 }

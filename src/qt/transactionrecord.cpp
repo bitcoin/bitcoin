@@ -35,7 +35,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
     CAmount nCredit = wtx.GetCredit(ISMINE_ALL);
     CAmount nDebit = wtx.GetDebit(ISMINE_ALL);
     CAmount nNet = nCredit - nDebit;
-    uint256 hash = wtx.GetHash();
+    blob256 hash = wtx.GetHash();
     std::map<std::string, std::string> mapValue = wtx.mapValue;
 
     if (nNet > 0 || wtx.IsCoinBase())
@@ -259,7 +259,7 @@ QString TransactionRecord::getTxID() const
     return formatSubTxId(hash, idx);
 }
 
-QString TransactionRecord::formatSubTxId(const uint256 &hash, int vout)
+QString TransactionRecord::formatSubTxId(const blob256 &hash, int vout)
 {
     return QString::fromStdString(hash.ToString() + strprintf("-%03d", vout));
 }

@@ -6,7 +6,7 @@
 #include "txdb.h"
 
 #include "pow.h"
-#include "uint256.h"
+#include "blob256.h"
 
 #include <stdint.h>
 
@@ -14,36 +14,36 @@
 
 using namespace std;
 
-void static BatchWriteCoins(CLevelDBBatch &batch, const uint256 &hash, const CCoins &coins) {
+void static BatchWriteCoins(CLevelDBBatch &batch, const blob256 &hash, const CCoins &coins) {
     if (coins.IsPruned())
         batch.Erase(make_pair('c', hash));
     else
         batch.Write(make_pair('c', hash), coins);
 }
 
-void static BatchWriteHashBestChain(CLevelDBBatch &batch, const uint256 &hash) {
+void static BatchWriteHashBestChain(CLevelDBBatch &batch, const blob256 &hash) {
     batch.Write('B', hash);
 }
 
 CCoinsViewDB::CCoinsViewDB(size_t nCacheSize, bool fMemory, bool fWipe) : db(GetDataDir() / "chainstate", nCacheSize, fMemory, fWipe) {
 }
 
-bool CCoinsViewDB::GetCoins(const uint256 &txid, CCoins &coins) const {
+bool CCoinsViewDB::GetCoins(const blob256 &txid, CCoins &coins) const {
     return db.Read(make_pair('c', txid), coins);
 }
 
-bool CCoinsViewDB::HaveCoins(const uint256 &txid) const {
+bool CCoinsViewDB::HaveCoins(const blob256 &txid) const {
     return db.Exists(make_pair('c', txid));
 }
 
-uint256 CCoinsViewDB::GetBestBlock() const {
-    uint256 hashBestChain;
+blob256 CCoinsViewDB::GetBestBlock() const {
+    blob256 hashBestChain;
     if (!db.Read('B', hashBestChain))
-        return uint256();
+        return blob256();
     return hashBestChain;
 }
 
-bool CCoinsViewDB::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock) {
+bool CCoinsViewDB::BatchWrite(CCoinsMap &mapCoins, const blob256 &hashBlock) {
     CLevelDBBatch batch;
     size_t count = 0;
     size_t changed = 0;
@@ -109,7 +109,7 @@ bool CCoinsViewDB::GetStats(CCoinsStats &stats) const {
                 CDataStream ssValue(slValue.data(), slValue.data()+slValue.size(), SER_DISK, CLIENT_VERSION);
                 CCoins coins;
                 ssValue >> coins;
-                uint256 txhash;
+                blob256 txhash;
                 ssKey >> txhash;
                 ss << txhash;
                 ss << VARINT(coins.nVersion);
@@ -151,13 +151,13 @@ bool CBlockTreeDB::WriteBatchSync(const std::vector<std::pair<int, const CBlockF
     return WriteBatch(batch, true);
 }
 
-bool CBlockTreeDB::ReadTxIndex(const uint256 &txid, CDiskTxPos &pos) {
+bool CBlockTreeDB::ReadTxIndex(const blob256 &txid, CDiskTxPos &pos) {
     return Read(make_pair('t', txid), pos);
 }
 
-bool CBlockTreeDB::WriteTxIndex(const std::vector<std::pair<uint256, CDiskTxPos> >&vect) {
+bool CBlockTreeDB::WriteTxIndex(const std::vector<std::pair<blob256, CDiskTxPos> >&vect) {
     CLevelDBBatch batch;
-    for (std::vector<std::pair<uint256,CDiskTxPos> >::const_iterator it=vect.begin(); it!=vect.end(); it++)
+    for (std::vector<std::pair<blob256,CDiskTxPos> >::const_iterator it=vect.begin(); it!=vect.end(); it++)
         batch.Write(make_pair('t', it->first), it->second);
     return WriteBatch(batch);
 }
@@ -179,7 +179,7 @@ bool CBlockTreeDB::LoadBlockIndexGuts()
     boost::scoped_ptr<leveldb::Iterator> pcursor(NewIterator());
 
     CDataStream ssKeySet(SER_DISK, CLIENT_VERSION);
-    ssKeySet << make_pair('b', uint256());
+    ssKeySet << make_pair('b', blob256());
     pcursor->Seek(ssKeySet.str());
 
     // Load mapBlockIndex

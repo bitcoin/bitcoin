@@ -11,7 +11,7 @@
 
 #include "hash.h"
 #include "sync.h"
-#include "uint256.h"
+#include "blob256.h"
 #include "util.h"
 #include "utilstrencodings.h"
 
@@ -951,7 +951,7 @@ std::vector<unsigned char> CNetAddr::GetGroup() const
 
 uint64_t CNetAddr::GetHash() const
 {
-    uint256 hash = Hash(&ip[0], &ip[16]);
+    blob256 hash = Hash(&ip[0], &ip[16]);
     uint64_t nRet;
     memcpy(&nRet, &hash, sizeof(nRet));
     return nRet;

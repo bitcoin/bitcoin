@@ -55,10 +55,10 @@ void WalletTxToJSON(const CWalletTx& wtx, Object& entry)
         entry.push_back(Pair("blockindex", wtx.nIndex));
         entry.push_back(Pair("blocktime", mapBlockIndex[wtx.hashBlock]->GetBlockTime()));
     }
-    uint256 hash = wtx.GetHash();
+    blob256 hash = wtx.GetHash();
     entry.push_back(Pair("txid", hash.GetHex()));
     Array conflicts;
-    BOOST_FOREACH(const uint256& conflict, wtx.GetConflicts())
+    BOOST_FOREACH(const blob256& conflict, wtx.GetConflicts())
         conflicts.push_back(conflict.GetHex());
     entry.push_back(Pair("walletconflicts", conflicts));
     entry.push_back(Pair("time", wtx.GetTxTime()));
@@ -127,7 +127,7 @@ CBitcoinAddress GetAccountAddress(string strAccount, bool bForceNew=false)
     if (account.vchPubKey.IsValid())
     {
         CScript scriptPubKey = GetScriptForDestination(account.vchPubKey.GetID());
-        for (map<uint256, CWalletTx>::iterator it = pwalletMain->mapWallet.begin();
+        for (map<blob256, CWalletTx>::iterator it = pwalletMain->mapWallet.begin();
              it != pwalletMain->mapWallet.end() && account.vchPubKey.IsValid();
              ++it)
         {
@@ -523,7 +523,7 @@ Value getreceivedbyaddress(const Array& params, bool fHelp)
 
     // Tally
     CAmount nAmount = 0;
-    for (map<uint256, CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it)
+    for (map<blob256, CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it)
     {
         const CWalletTx& wtx = (*it).second;
         if (wtx.IsCoinBase() || !IsFinalTx(wtx))
@@ -572,7 +572,7 @@ Value getreceivedbyaccount(const Array& params, bool fHelp)
 
     // Tally
     CAmount nAmount = 0;
-    for (map<uint256, CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it)
+    for (map<blob256, CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it)
     {
         const CWalletTx& wtx = (*it).second;
         if (wtx.IsCoinBase() || !IsFinalTx(wtx))
@@ -596,7 +596,7 @@ CAmount GetAccountBalance(CWalletDB& walletdb, const string& strAccount, int nMi
     CAmount nBalance = 0;
 
     // Tally wallet transactions
-    for (map<uint256, CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it)
+    for (map<blob256, CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it)
     {
         const CWalletTx& wtx = (*it).second;
         if (!IsFinalTx(wtx) || wtx.GetBlocksToMaturity() > 0 || wtx.GetDepthInMainChain() < 0)
@@ -667,7 +667,7 @@ Value getbalance(const Array& params, bool fHelp)
         // (GetBalance() sums up all unspent TxOuts)
         // getbalance and getbalance '*' 0 should return the same number
         CAmount nBalance = 0;
-        for (map<uint256, CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it)
+        for (map<blob256, CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it)
         {
             const CWalletTx& wtx = (*it).second;
             if (!wtx.IsTrusted() || wtx.GetBlocksToMaturity() > 0)
@@ -961,7 +961,7 @@ struct tallyitem
 {
     CAmount nAmount;
     int nConf;
-    vector<uint256> txids;
+    vector<blob256> txids;
     bool fIsWatchonly;
     tallyitem()
     {
@@ -990,7 +990,7 @@ Value ListReceived(const Array& params, bool fByAccounts)
 
     // Tally
     map<CBitcoinAddress, tallyitem> mapTally;
-    for (map<uint256, CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it)
+    for (map<blob256, CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it)
     {
         const CWalletTx& wtx = (*it).second;
 
@@ -1060,7 +1060,7 @@ Value ListReceived(const Array& params, bool fByAccounts)
             Array transactions;
             if (it != mapTally.end())
             {
-                BOOST_FOREACH(const uint256& item, (*it).second.txids)
+                BOOST_FOREACH(const blob256& item, (*it).second.txids)
                 {
                     transactions.push_back(item.GetHex());
                 }
@@ -1397,7 +1397,7 @@ Value listaccounts(const Array& params, bool fHelp)
             mapAccountBalances[entry.second.name] = 0;
     }
 
-    for (map<uint256, CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it)
+    for (map<blob256, CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it)
     {
         const CWalletTx& wtx = (*it).second;
         CAmount nFee;
@@ -1477,7 +1477,7 @@ Value listsinceblock(const Array& params, bool fHelp)
 
     if (params.size() > 0)
     {
-        uint256 blockId;
+        blob256 blockId;
 
         blockId.SetHex(params[0].get_str());
         BlockMap::iterator it = mapBlockIndex.find(blockId);
@@ -1501,7 +1501,7 @@ Value listsinceblock(const Array& params, bool fHelp)
 
     Array transactions;
 
-    for (map<uint256, CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); it++)
+    for (map<blob256, CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); it++)
     {
         CWalletTx tx = (*it).second;
 
@@ -1510,7 +1510,7 @@ Value listsinceblock(const Array& params, bool fHelp)
     }
 
     CBlockIndex *pblockLast = chainActive[chainActive.Height() + 1 - target_confirms];
-    uint256 lastblock = pblockLast ? pblockLast->GetBlockHash() : uint256();
+    blob256 lastblock = pblockLast ? pblockLast->GetBlockHash() : blob256();
 
     Object ret;
     ret.push_back(Pair("transactions", transactions));
@@ -1557,7 +1557,7 @@ Value gettransaction(const Array& params, bool fHelp)
             + HelpExampleRpc("gettransaction", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
         );
 
-    uint256 hash;
+    blob256 hash;
     hash.SetHex(params[0].get_str());
 
     isminefilter filter = ISMINE_SPENDABLE;

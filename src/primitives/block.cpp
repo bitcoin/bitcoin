@@ -9,12 +9,12 @@
 #include "tinyformat.h"
 #include "utilstrencodings.h"
 
-uint256 CBlockHeader::GetHash() const
+blob256 CBlockHeader::GetHash() const
 {
     return Hash(BEGIN(nVersion), END(nNonce));
 }
 
-uint256 CBlock::BuildMerkleTree(bool* fMutated) const
+blob256 CBlock::BuildMerkleTree(bool* fMutated) const
 {
     /* WARNING! If you're reading this because you're learning about crypto
        and/or designing a new system that will use merkle trees, keep in mind
@@ -74,14 +74,14 @@ uint256 CBlock::BuildMerkleTree(bool* fMutated) const
     if (fMutated) {
         *fMutated = mutated;
     }
-    return (vMerkleTree.empty() ? uint256() : vMerkleTree.back());
+    return (vMerkleTree.empty() ? blob256() : vMerkleTree.back());
 }
 
-std::vector<uint256> CBlock::GetMerkleBranch(int nIndex) const
+std::vector<blob256> CBlock::GetMerkleBranch(int nIndex) const
 {
     if (vMerkleTree.empty())
         BuildMerkleTree();
-    std::vector<uint256> vMerkleBranch;
+    std::vector<blob256> vMerkleBranch;
     int j = 0;
     for (int nSize = vtx.size(); nSize > 1; nSize = (nSize + 1) / 2)
     {
@@ -93,11 +93,11 @@ std::vector<uint256> CBlock::GetMerkleBranch(int nIndex) const
     return vMerkleBranch;
 }
 
-uint256 CBlock::CheckMerkleBranch(uint256 hash, const std::vector<uint256>& vMerkleBranch, int nIndex)
+blob256 CBlock::CheckMerkleBranch(blob256 hash, const std::vector<blob256>& vMerkleBranch, int nIndex)
 {
     if (nIndex == -1)
-        return uint256();
-    for (std::vector<uint256>::const_iterator it(vMerkleBranch.begin()); it != vMerkleBranch.end(); ++it)
+        return blob256();
+    for (std::vector<blob256>::const_iterator it(vMerkleBranch.begin()); it != vMerkleBranch.end(); ++it)
     {
         if (nIndex & 1)
             hash = Hash(BEGIN(*it), END(*it), BEGIN(hash), END(hash));

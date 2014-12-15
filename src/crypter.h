@@ -9,7 +9,7 @@
 #include "keystore.h"
 #include "serialize.h"
 
-class uint256;
+class blob256;
 
 const unsigned int WALLET_CRYPTO_KEY_SIZE = 32;
 const unsigned int WALLET_CRYPTO_SALT_SIZE = 8;
@@ -107,8 +107,8 @@ public:
     }
 };
 
-bool EncryptSecret(const CKeyingMaterial& vMasterKey, const CKeyingMaterial &vchPlaintext, const uint256& nIV, std::vector<unsigned char> &vchCiphertext);
-bool DecryptSecret(const CKeyingMaterial& vMasterKey, const std::vector<unsigned char>& vchCiphertext, const uint256& nIV, CKeyingMaterial& vchPlaintext);
+bool EncryptSecret(const CKeyingMaterial& vMasterKey, const CKeyingMaterial &vchPlaintext, const blob256& nIV, std::vector<unsigned char> &vchCiphertext);
+bool DecryptSecret(const CKeyingMaterial& vMasterKey, const std::vector<unsigned char>& vchCiphertext, const blob256& nIV, CKeyingMaterial& vchPlaintext);
 
 /** Keystore which keeps the private keys encrypted.
  * It derives from the basic key store, which is used if no encryption is active.

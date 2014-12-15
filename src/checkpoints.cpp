@@ -6,7 +6,7 @@
 
 #include "chainparams.h"
 #include "main.h"
-#include "uint256.h"
+#include "blob256.h"
 
 #include <stdint.h>
 
@@ -25,7 +25,7 @@ namespace Checkpoints {
 
     bool fEnabled = true;
 
-    bool CheckBlock(int nHeight, const uint256& hash)
+    bool CheckBlock(int nHeight, const blob256& hash)
     {
         if (!fEnabled)
             return true;
@@ -88,7 +88,7 @@ namespace Checkpoints {
 
         BOOST_REVERSE_FOREACH(const MapCheckpoints::value_type& i, checkpoints)
         {
-            const uint256& hash = i.second;
+            const blob256& hash = i.second;
             BlockMap::const_iterator t = mapBlockIndex.find(hash);
             if (t != mapBlockIndex.end())
                 return t->second;

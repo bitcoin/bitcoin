@@ -95,9 +95,9 @@ private:
 
 public:
     mutable CCriticalSection cs;
-    std::map<uint256, CTxMemPoolEntry> mapTx;
+    std::map<blob256, CTxMemPoolEntry> mapTx;
     std::map<COutPoint, CInPoint> mapNextTx;
-    std::map<uint256, std::pair<double, CAmount> > mapDeltas;
+    std::map<blob256, std::pair<double, CAmount> > mapDeltas;
 
     CTxMemPool(const CFeeRate& _minRelayFee);
     ~CTxMemPool();
@@ -111,22 +111,22 @@ public:
     void check(const CCoinsViewCache *pcoins) const;
     void setSanityCheck(bool _fSanityCheck) { fSanityCheck = _fSanityCheck; }
 
-    bool addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry);
+    bool addUnchecked(const blob256& hash, const CTxMemPoolEntry &entry);
     void remove(const CTransaction &tx, std::list<CTransaction>& removed, bool fRecursive = false);
     void removeCoinbaseSpends(const CCoinsViewCache *pcoins, unsigned int nMemPoolHeight);
     void removeConflicts(const CTransaction &tx, std::list<CTransaction>& removed);
     void removeForBlock(const std::vector<CTransaction>& vtx, unsigned int nBlockHeight,
                         std::list<CTransaction>& conflicts);
     void clear();
-    void queryHashes(std::vector<uint256>& vtxid);
-    void pruneSpent(const uint256& hash, CCoins &coins);
+    void queryHashes(std::vector<blob256>& vtxid);
+    void pruneSpent(const blob256& hash, CCoins &coins);
     unsigned int GetTransactionsUpdated() const;
     void AddTransactionsUpdated(unsigned int n);
 
     /** Affect CreateNewBlock prioritisation of transactions */
-    void PrioritiseTransaction(const uint256 hash, const std::string strHash, double dPriorityDelta, const CAmount& nFeeDelta);
-    void ApplyDeltas(const uint256 hash, double &dPriorityDelta, CAmount &nFeeDelta);
-    void ClearPrioritisation(const uint256 hash);
+    void PrioritiseTransaction(const blob256 hash, const std::string strHash, double dPriorityDelta, const CAmount& nFeeDelta);
+    void ApplyDeltas(const blob256 hash, double &dPriorityDelta, CAmount &nFeeDelta);
+    void ClearPrioritisation(const blob256 hash);
 
     unsigned long size()
     {
@@ -139,13 +139,13 @@ public:
         return totalTxSize;
     }
 
-    bool exists(uint256 hash)
+    bool exists(blob256 hash)
     {
         LOCK(cs);
         return (mapTx.count(hash) != 0);
     }
 
-    bool lookup(uint256 hash, CTransaction& result) const;
+    bool lookup(blob256 hash, CTransaction& result) const;
 
     /** Estimate fee rate needed to get into the next nBlocks */
     CFeeRate estimateFee(int nBlocks) const;
@@ -169,8 +169,8 @@ protected:
 
 public:
     CCoinsViewMemPool(CCoinsView *baseIn, CTxMemPool &mempoolIn);
-    bool GetCoins(const uint256 &txid, CCoins &coins) const;
-    bool HaveCoins(const uint256 &txid) const;
+    bool GetCoins(const blob256 &txid, CCoins &coins) const;
+    bool HaveCoins(const blob256 &txid) const;
 };
 
 #endif // BITCOIN_TXMEMPOOL_H

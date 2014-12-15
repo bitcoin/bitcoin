@@ -31,8 +31,8 @@ struct COrphanTx {
     CTransaction tx;
     NodeId fromPeer;
 };
-extern std::map<uint256, COrphanTx> mapOrphanTransactions;
-extern std::map<uint256, std::set<uint256> > mapOrphanTransactionsByPrev;
+extern std::map<blob256, COrphanTx> mapOrphanTransactions;
+extern std::map<blob256, std::set<blob256> > mapOrphanTransactionsByPrev;
 
 CService ip(uint32_t i)
 {
@@ -108,7 +108,7 @@ BOOST_AUTO_TEST_CASE(DoS_bantime)
 
 CTransaction RandomOrphan()
 {
-    std::map<uint256, COrphanTx>::iterator it;
+    std::map<blob256, COrphanTx>::iterator it;
     it = mapOrphanTransactions.lower_bound(GetRandHash());
     if (it == mapOrphanTransactions.end())
         it = mapOrphanTransactions.begin();

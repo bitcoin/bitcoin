@@ -41,7 +41,7 @@ class COrphan
 {
 public:
     const CTransaction* ptx;
-    set<uint256> setDependsOn;
+    set<blob256> setDependsOn;
     CFeeRate feeRate;
     double dPriority;
 
@@ -139,13 +139,13 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
 
         // Priority order to process transactions
         list<COrphan> vOrphan; // list memory doesn't move
-        map<uint256, vector<COrphan*> > mapDependers;
+        map<blob256, vector<COrphan*> > mapDependers;
         bool fPrintPriority = GetBoolArg("-printpriority", false);
 
         // This vector will be sorted into a priority queue:
         vector<TxPriority> vecPriority;
         vecPriority.reserve(mempool.mapTx.size());
-        for (map<uint256, CTxMemPoolEntry>::iterator mi = mempool.mapTx.begin();
+        for (map<blob256, CTxMemPoolEntry>::iterator mi = mempool.mapTx.begin();
              mi != mempool.mapTx.end(); ++mi)
         {
             const CTransaction& tx = mi->second.GetTx();
@@ -202,7 +202,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
             unsigned int nTxSize = ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION);
             dPriority = tx.ComputePriority(dPriority, nTxSize);
 
-            uint256 hash = tx.GetHash();
+            blob256 hash = tx.GetHash();
             mempool.ApplyDeltas(hash, dPriority, nTotalIn);
 
             CFeeRate feeRate(nTotalIn-tx.GetValueOut(), nTxSize);
@@ -246,7 +246,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
                 continue;
 
             // Skip free transactions if we're past the minimum block size:
-            const uint256& hash = tx.GetHash();
+            const blob256& hash = tx.GetHash();
             double dPriorityDelta = 0;
             CAmount nFeeDelta = 0;
             mempool.ApplyDeltas(hash, dPriorityDelta, nFeeDelta);
@@ -343,7 +343,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
 void IncrementExtraNonce(CBlock* pblock, CBlockIndex* pindexPrev, unsigned int& nExtraNonce)
 {
     // Update nExtraNonce
-    static uint256 hashPrevBlock;
+    static blob256 hashPrevBlock;
     if (hashPrevBlock != pblock->hashPrevBlock)
     {
         nExtraNonce = 0;
@@ -373,7 +373,7 @@ int64_t nHPSTimerStart = 0;
 // nonce is 0xffff0000 or above, the block is rebuilt and nNonce starts over at
 // zero.
 //
-bool static ScanHash(const CBlockHeader *pblock, uint32_t& nNonce, uint256 *phash)
+bool static ScanHash(const CBlockHeader *pblock, uint32_t& nNonce, blob256 *phash)
 {
     // Write the first 76 bytes of the block header to a double-SHA256 state.
     CHash256 hasher;
@@ -483,7 +483,7 @@ void static BitcoinMiner(CWallet *pwallet)
             //
             int64_t nStart = GetTime();
             uint256 hashTarget = uint256().SetCompact(pblock->nBits);
-            uint256 hash;
+            blob256 hash;
             uint32_t nNonce = 0;
             uint32_t nOldNonce = 0;
             while (true) {

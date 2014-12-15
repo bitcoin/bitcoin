@@ -110,9 +110,9 @@ int GetRandInt(int nMax)
     return GetRand(nMax);
 }
 
-uint256 GetRandHash()
+blob256 GetRandHash()
 {
-    uint256 hash;
+    blob256 hash;
     GetRandBytes((unsigned char*)&hash, sizeof(hash));
     return hash;
 }

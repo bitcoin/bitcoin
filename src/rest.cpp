@@ -41,7 +41,7 @@ public:
     string message;
 };
 
-extern void TxToJSON(const CTransaction& tx, const uint256 hashBlock, Object& entry);
+extern void TxToJSON(const CTransaction& tx, const blob256 hashBlock, Object& entry);
 extern Object blockToJSON(const CBlock& block, const CBlockIndex* blockindex, bool txDetails = false);
 
 static RestErr RESTERR(enum HTTPStatusCode status, string message)
@@ -80,7 +80,7 @@ static string AvailableDataFormatsString()
     return formats;
 }
 
-static bool ParseHashStr(const string& strReq, uint256& v)
+static bool ParseHashStr(const string& strReq, blob256& v)
 {
     if (!IsHex(strReq) || (strReq.size() != 64))
         return false;
@@ -99,7 +99,7 @@ static bool rest_block(AcceptedConnection* conn,
     enum RetFormat rf = ParseDataFormat(params, strReq);
 
     string hashStr = params[0];
-    uint256 hash;
+    blob256 hash;
     if (!ParseHashStr(hashStr, hash))
         throw RESTERR(HTTP_BAD_REQUEST, "Invalid hash: " + hashStr);
 
@@ -172,12 +172,12 @@ static bool rest_tx(AcceptedConnection* conn,
     enum RetFormat rf = ParseDataFormat(params, strReq);
 
     string hashStr = params[0];
-    uint256 hash;
+    blob256 hash;
     if (!ParseHashStr(hashStr, hash))
         throw RESTERR(HTTP_BAD_REQUEST, "Invalid hash: " + hashStr);
 
     CTransaction tx;
-    uint256 hashBlock = uint256();
+    blob256 hashBlock = blob256();
     if (!GetTransaction(hash, tx, hashBlock, true))
         throw RESTERR(HTTP_NOT_FOUND, hashStr + " not found");
 

@@ -9,7 +9,7 @@
 #include <vector>
 #include <cstdlib>
 
-class uint256;
+class blob256;
 
 namespace eccrypto {
 

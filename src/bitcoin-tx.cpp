@@ -312,10 +312,10 @@ static bool findSighashFlags(int& flags, const string& flagStr)
     return false;
 }
 
-uint256 ParseHashUO(map<string,UniValue>& o, string strKey)
+blob256 ParseHashUO(map<string,UniValue>& o, string strKey)
 {
     if (!o.count(strKey))
-        return uint256();
+        return blob256();
     return ParseHashUV(o[strKey], strKey);
 }
 
@@ -379,7 +379,7 @@ static void MutateTxSign(CMutableTransaction& tx, const string& flagStr)
             if (!prevOut.checkObject(types))
                 throw runtime_error("prevtxs internal object typecheck fail");
 
-            uint256 txid = ParseHashUV(prevOut, "txid");
+            blob256 txid = ParseHashUV(prevOut, "txid");
 
             int nOut = atoi(prevOut["vout"].getValStr());
             if (nOut < 0)
@@ -485,7 +485,7 @@ static void MutateTx(CMutableTransaction& tx, const string& command,
 static void OutputTxJSON(const CTransaction& tx)
 {
     UniValue entry(UniValue::VOBJ);
-    TxToUniv(tx, uint256(), entry);
+    TxToUniv(tx, blob256(), entry);
 
     string jsonOutput = entry.write(4);
     fprintf(stdout, "%s\n", jsonOutput.c_str());

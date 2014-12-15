@@ -379,7 +379,7 @@ std::string LicenseInfo()
            "\n";
 }
 
-static void BlockNotifyCallback(const uint256& hashNewTip)
+static void BlockNotifyCallback(const blob256& hashNewTip)
 {
     std::string strCmd = GetArg("-blocknotify", "");
 
@@ -1168,8 +1168,8 @@ bool AppInit2(boost::thread_group& threadGroup)
             {
                 BOOST_FOREACH(const CWalletTx& wtxOld, vWtx)
                 {
-                    uint256 hash = wtxOld.GetHash();
-                    std::map<uint256, CWalletTx>::iterator mi = pwalletMain->mapWallet.find(hash);
+                    blob256 hash = wtxOld.GetHash();
+                    std::map<blob256, CWalletTx>::iterator mi = pwalletMain->mapWallet.find(hash);
                     if (mi != pwalletMain->mapWallet.end())
                     {
                         const CWalletTx* copyFrom = &wtxOld;

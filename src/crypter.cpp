@@ -102,7 +102,7 @@ bool CCrypter::Decrypt(const std::vector<unsigned char>& vchCiphertext, CKeyingM
 }
 
 
-bool EncryptSecret(const CKeyingMaterial& vMasterKey, const CKeyingMaterial &vchPlaintext, const uint256& nIV, std::vector<unsigned char> &vchCiphertext)
+bool EncryptSecret(const CKeyingMaterial& vMasterKey, const CKeyingMaterial &vchPlaintext, const blob256& nIV, std::vector<unsigned char> &vchCiphertext)
 {
     CCrypter cKeyCrypter;
     std::vector<unsigned char> chIV(WALLET_CRYPTO_KEY_SIZE);
@@ -112,7 +112,7 @@ bool EncryptSecret(const CKeyingMaterial& vMasterKey, const CKeyingMaterial &vch
     return cKeyCrypter.Encrypt(*((const CKeyingMaterial*)&vchPlaintext), vchCiphertext);
 }
 
-bool DecryptSecret(const CKeyingMaterial& vMasterKey, const std::vector<unsigned char>& vchCiphertext, const uint256& nIV, CKeyingMaterial& vchPlaintext)
+bool DecryptSecret(const CKeyingMaterial& vMasterKey, const std::vector<unsigned char>& vchCiphertext, const blob256& nIV, CKeyingMaterial& vchPlaintext)
 {
     CCrypter cKeyCrypter;
     std::vector<unsigned char> chIV(WALLET_CRYPTO_KEY_SIZE);

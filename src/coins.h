@@ -8,7 +8,7 @@
 
 #include "compressor.h"
 #include "serialize.h"
-#include "uint256.h"
+#include "blob256.h"
 #include "undo.h"
 
 #include <assert.h>
@@ -46,7 +46,7 @@
  *    - vout[1]: 835800816115944e077fe7c803cfa57f29b36bf87c1d35
  *               * 8358: compact amount representation for 60000000000 (600 BTC)
  *               * 00: special txout type pay-to-pubkey-hash
- *               * 816115944e077fe7c803cfa57f29b36bf87c1d35: address uint160
+ *               * 816115944e077fe7c803cfa57f29b36bf87c1d35: address blob160
  *    - height = 203998
  *
  *
@@ -62,11 +62,11 @@
  *  - vout[4]: 86ef97d5790061b01caab50f1b8e9c50a5057eb43c2d9563a4ee
  *             * 86ef97d579: compact amount representation for 234925952 (2.35 BTC)
  *             * 00: special txout type pay-to-pubkey-hash
- *             * 61b01caab50f1b8e9c50a5057eb43c2d9563a4ee: address uint160
+ *             * 61b01caab50f1b8e9c50a5057eb43c2d9563a4ee: address blob160
  *  - vout[16]: bbd123008c988f1a4a4de2161e0f50aac7f17e7f9555caa4
  *              * bbd123: compact amount representation for 110397 (0.001 BTC)
  *              * 00: special txout type pay-to-pubkey-hash
- *              * 8c988f1a4a4de2161e0f50aac7f17e7f9555caa4: address uint160
+ *              * 8c988f1a4a4de2161e0f50aac7f17e7f9555caa4: address blob160
  *  - height = 120891
  */
 class CCoins
@@ -261,7 +261,7 @@ public:
 class CCoinsKeyHasher
 {
 private:
-    uint256 salt;
+    blob256 salt;
 
 public:
     CCoinsKeyHasher();
@@ -271,7 +271,7 @@ public:
      * unordered_map will behave unpredictably if the custom hasher returns a
      * uint64_t, resulting in failures when syncing the chain (#4634).
      */
-    size_t operator()(const uint256& key) const {
+    size_t operator()(const blob256& key) const {
         return key.GetHash(salt);
     }
 };
@@ -289,16 +289,16 @@ struct CCoinsCacheEntry
     CCoinsCacheEntry() : coins(), flags(0) {}
 };
 
-typedef boost::unordered_map<uint256, CCoinsCacheEntry, CCoinsKeyHasher> CCoinsMap;
+typedef boost::unordered_map<blob256, CCoinsCacheEntry, CCoinsKeyHasher> CCoinsMap;
 
 struct CCoinsStats
 {
     int nHeight;
-    uint256 hashBlock;
+    blob256 hashBlock;
     uint64_t nTransactions;
     uint64_t nTransactionOutputs;
     uint64_t nSerializedSize;
-    uint256 hashSerialized;
+    blob256 hashSerialized;
     CAmount nTotalAmount;
 
     CCoinsStats() : nHeight(0), nTransactions(0), nTransactionOutputs(0), nSerializedSize(0), nTotalAmount(0) {}
@@ -310,18 +310,18 @@ class CCoinsView
 {
 public:
     //! Retrieve the CCoins (unspent transaction outputs) for a given txid
-    virtual bool GetCoins(const uint256 &txid, CCoins &coins) const;
+    virtual bool GetCoins(const blob256 &txid, CCoins &coins) const;
 
     //! Just check whether we have data for a given txid.
     //! This may (but cannot always) return true for fully spent transactions
-    virtual bool HaveCoins(const uint256 &txid) const;
+    virtual bool HaveCoins(const blob256 &txid) const;
 
     //! Retrieve the block hash whose state this CCoinsView currently represents
-    virtual uint256 GetBestBlock() const;
+    virtual blob256 GetBestBlock() const;
 
     //! Do a bulk modification (multiple CCoins changes + BestBlock change).
     //! The passed mapCoins can be modified.
-    virtual bool BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock);
+    virtual bool BatchWrite(CCoinsMap &mapCoins, const blob256 &hashBlock);
 
     //! Calculate statistics about the unspent transaction output set
     virtual bool GetStats(CCoinsStats &stats) const;
@@ -339,11 +339,11 @@ protected:
 
 public:
     CCoinsViewBacked(CCoinsView *viewIn);
-    bool GetCoins(const uint256 &txid, CCoins &coins) const;
-    bool HaveCoins(const uint256 &txid) const;
-    uint256 GetBestBlock() const;
+    bool GetCoins(const blob256 &txid, CCoins &coins) const;
+    bool HaveCoins(const blob256 &txid) const;
+    blob256 GetBestBlock() const;
     void SetBackend(CCoinsView &viewIn);
-    bool BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock);
+    bool BatchWrite(CCoinsMap &mapCoins, const blob256 &hashBlock);
     bool GetStats(CCoinsStats &stats) const;
 };
 
@@ -380,7 +380,7 @@ protected:
      * Make mutable so that we can "fill the cache" even from Get-methods
      * declared as "const".  
      */
-    mutable uint256 hashBlock;
+    mutable blob256 hashBlock;
     mutable CCoinsMap cacheCoins;
 
 public:
@@ -388,25 +388,25 @@ public:
     ~CCoinsViewCache();
 
     // Standard CCoinsView methods
-    bool GetCoins(const uint256 &txid, CCoins &coins) const;
-    bool HaveCoins(const uint256 &txid) const;
-    uint256 GetBestBlock() const;
-    void SetBestBlock(const uint256 &hashBlock);
-    bool BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock);
+    bool GetCoins(const blob256 &txid, CCoins &coins) const;
+    bool HaveCoins(const blob256 &txid) const;
+    blob256 GetBestBlock() const;
+    void SetBestBlock(const blob256 &hashBlock);
+    bool BatchWrite(CCoinsMap &mapCoins, const blob256 &hashBlock);
 
     /**
      * Return a pointer to CCoins in the cache, or NULL if not found. This is
      * more efficient than GetCoins. Modifications to other cache entries are
      * allowed while accessing the returned pointer.
      */
-    const CCoins* AccessCoins(const uint256 &txid) const;
+    const CCoins* AccessCoins(const blob256 &txid) const;
 
     /**
      * Return a modifiable reference to a CCoins. If no entry with the given
      * txid exists, a new one is created. Simultaneous modifications are not
      * allowed.
      */
-    CCoinsModifier ModifyCoins(const uint256 &txid);
+    CCoinsModifier ModifyCoins(const blob256 &txid);
 
     /**
      * Push the modifications applied to this cache to its base.
@@ -439,8 +439,8 @@ public:
     friend class CCoinsModifier;
 
 private:
-    CCoinsMap::iterator FetchCoins(const uint256 &txid);
-    CCoinsMap::const_iterator FetchCoins(const uint256 &txid) const;
+    CCoinsMap::iterator FetchCoins(const blob256 &txid);
+    CCoinsMap::const_iterator FetchCoins(const blob256 &txid) const;
 };
 
 #endif // BITCOIN_COINS_H

@@ -10,7 +10,7 @@
 
 #include "key.h"
 #include "script/script.h"
-#include "uint256.h"
+#include "blob256.h"
 #include "util.h"
 #include "utilstrencodings.h"
 
@@ -106,12 +106,12 @@ public:
     TestPayloadVisitor(std::vector<unsigned char> &exp_payload) : exp_payload(exp_payload) { }
     bool operator()(const CKeyID &id) const
     {
-        uint160 exp_key(exp_payload);
+        blob160 exp_key(exp_payload);
         return exp_key == id;
     }
     bool operator()(const CScriptID &id) const
     {
-        uint160 exp_key(exp_payload);
+        blob160 exp_key(exp_payload);
         return exp_key == id;
     }
     bool operator()(const CNoDestination &no) const
@@ -218,11 +218,11 @@ BOOST_AUTO_TEST_CASE(base58_keys_valid_gen)
             CTxDestination dest;
             if(exp_addrType == "pubkey")
             {
-                dest = CKeyID(uint160(exp_payload));
+                dest = CKeyID(blob160(exp_payload));
             }
             else if(exp_addrType == "script")
             {
-                dest = CScriptID(uint160(exp_payload));
+                dest = CScriptID(blob160(exp_payload));
             }
             else if(exp_addrType == "none")
             {

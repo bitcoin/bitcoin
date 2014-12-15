@@ -7,7 +7,7 @@
 
 #include "pubkey.h"
 #include "random.h"
-#include "uint256.h"
+#include "blob256.h"
 #include "util.h"
 
 #include <boost/thread.hpp>
@@ -24,13 +24,13 @@ class CSignatureCache
 {
 private:
      //! sigdata_type is (signature hash, signature, public key):
-    typedef boost::tuple<uint256, std::vector<unsigned char>, CPubKey> sigdata_type;
+    typedef boost::tuple<blob256, std::vector<unsigned char>, CPubKey> sigdata_type;
     std::set< sigdata_type> setValid;
     boost::shared_mutex cs_sigcache;
 
 public:
     bool
-    Get(const uint256 &hash, const std::vector<unsigned char>& vchSig, const CPubKey& pubKey)
+    Get(const blob256 &hash, const std::vector<unsigned char>& vchSig, const CPubKey& pubKey)
     {
         boost::shared_lock<boost::shared_mutex> lock(cs_sigcache);
 
@@ -41,7 +41,7 @@ public:
         return false;
     }
 
-    void Set(const uint256 &hash, const std::vector<unsigned char>& vchSig, const CPubKey& pubKey)
+    void Set(const blob256 &hash, const std::vector<unsigned char>& vchSig, const CPubKey& pubKey)
     {
         // DoS prevention: limit cache size to less than 10MB
         // (~200 bytes per cache entry times 50,000 entries)
@@ -58,7 +58,7 @@ public:
             // foil would-be DoS attackers who might try to pre-generate
             // and re-use a set of valid signatures just-slightly-greater
             // than our cache size.
-            uint256 randomHash = GetRandHash();
+            blob256 randomHash = GetRandHash();
             std::vector<unsigned char> unused;
             std::set<sigdata_type>::iterator it =
                 setValid.lower_bound(sigdata_type(randomHash, unused, unused));
@@ -74,7 +74,7 @@ public:
 
 }
 
-bool CachingSignatureChecker::VerifySignature(const std::vector<unsigned char>& vchSig, const CPubKey& pubkey, const uint256& sighash) const
+bool CachingSignatureChecker::VerifySignature(const std::vector<unsigned char>& vchSig, const CPubKey& pubkey, const blob256& sighash) const
 {
     static CSignatureCache signatureCache;
 

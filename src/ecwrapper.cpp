@@ -5,7 +5,7 @@
 #include "ecwrapper.h"
 
 #include "serialize.h"
-#include "uint256.h"
+#include "blob256.h"
 
 #include <openssl/bn.h>
 #include <openssl/ecdsa.h>
@@ -116,14 +116,14 @@ bool CECKey::SetPubKey(const unsigned char* pubkey, size_t size) {
     return o2i_ECPublicKey(&pkey, &pubkey, size) != NULL;
 }
 
-bool CECKey::Verify(const uint256 &hash, const std::vector<unsigned char>& vchSig) {
+bool CECKey::Verify(const blob256 &hash, const std::vector<unsigned char>& vchSig) {
     // -1 = error, 0 = bad sig, 1 = good
     if (ECDSA_verify(0, (unsigned char*)&hash, sizeof(hash), &vchSig[0], vchSig.size(), pkey) != 1)
         return false;
     return true;
 }
 
-bool CECKey::Recover(const uint256 &hash, const unsigned char *p64, int rec)
+bool CECKey::Recover(const blob256 &hash, const unsigned char *p64, int rec)
 {
     if (rec<0 || rec>=3)
         return false;

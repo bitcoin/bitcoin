@@ -14,7 +14,7 @@
 #include "script/script.h"
 #include "script/sign.h"
 #include "script/standard.h"
-#include "uint256.h"
+#include "blob256.h"
 #ifdef ENABLE_WALLET
 #include "wallet.h"
 #endif
@@ -54,7 +54,7 @@ void ScriptPubKeyToJSON(const CScript& scriptPubKey, Object& out, bool fIncludeH
     out.push_back(Pair("addresses", a));
 }
 
-void TxToJSON(const CTransaction& tx, const uint256 hashBlock, Object& entry)
+void TxToJSON(const CTransaction& tx, const blob256 hashBlock, Object& entry)
 {
     entry.push_back(Pair("txid", tx.GetHash().GetHex()));
     entry.push_back(Pair("version", tx.nVersion));
@@ -171,14 +171,14 @@ Value getrawtransaction(const Array& params, bool fHelp)
             + HelpExampleRpc("getrawtransaction", "\"mytxid\", 1")
         );
 
-    uint256 hash = ParseHashV(params[0], "parameter 1");
+    blob256 hash = ParseHashV(params[0], "parameter 1");
 
     bool fVerbose = false;
     if (params.size() > 1)
         fVerbose = (params[1].get_int() != 0);
 
     CTransaction tx;
-    uint256 hashBlock;
+    blob256 hashBlock;
     if (!GetTransaction(hash, tx, hashBlock, true))
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No information available about transaction");
 
@@ -346,7 +346,7 @@ Value createrawtransaction(const Array& params, bool fHelp)
     BOOST_FOREACH(const Value& input, inputs) {
         const Object& o = input.get_obj();
 
-        uint256 txid = ParseHashO(o, "txid");
+        blob256 txid = ParseHashO(o, "txid");
 
         const Value& vout_v = find_value(o, "vout");
         if (vout_v.type() != int_type)
@@ -438,7 +438,7 @@ Value decoderawtransaction(const Array& params, bool fHelp)
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX decode failed");
 
     Object result;
-    TxToJSON(tx, uint256(), result);
+    TxToJSON(tx, blob256(), result);
 
     return result;
 }
@@ -568,7 +568,7 @@ Value signrawtransaction(const Array& params, bool fHelp)
         view.SetBackend(viewMempool); // temporarily switch cache backend to db+mempool view
 
         BOOST_FOREACH(const CTxIn& txin, mergedTx.vin) {
-            const uint256& prevHash = txin.prevout.hash;
+            const blob256& prevHash = txin.prevout.hash;
             CCoins coins;
             view.AccessCoins(prevHash); // this is certainly allowed to fail
         }
@@ -608,7 +608,7 @@ Value signrawtransaction(const Array& params, bool fHelp)
 
             RPCTypeCheck(prevOut, map_list_of("txid", str_type)("vout", int_type)("scriptPubKey", str_type));
 
-            uint256 txid = ParseHashO(prevOut, "txid");
+            blob256 txid = ParseHashO(prevOut, "txid");
 
             int nOut = find_value(prevOut, "vout").get_int();
             if (nOut < 0)
@@ -730,7 +730,7 @@ Value sendrawtransaction(const Array& params, bool fHelp)
     CTransaction tx;
     if (!DecodeHexTx(tx, params[0].get_str()))
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX decode failed");
-    uint256 hashTx = tx.GetHash();
+    blob256 hashTx = tx.GetHash();
 
     bool fOverrideFees = false;
     if (params.size() > 1)

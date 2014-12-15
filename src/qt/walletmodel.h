@@ -27,7 +27,7 @@ class COutPoint;
 class COutput;
 class CPubKey;
 class CWallet;
-class uint256;
+class blob256;
 
 QT_BEGIN_NAMESPACE
 class QTimer;
@@ -187,7 +187,7 @@ public:
     bool isSpent(const COutPoint& outpoint) const;
     void listCoins(std::map<QString, std::vector<COutput> >& mapCoins) const;
 
-    bool isLockedCoin(uint256 hash, unsigned int n) const;
+    bool isLockedCoin(blob256 hash, unsigned int n) const;
     void lockCoin(COutPoint& output);
     void unlockCoin(COutPoint& output);
     void listLockedCoins(std::vector<COutPoint>& vOutpts);

@@ -7,7 +7,7 @@
 #define BITCOIN_MERKLEBLOCK_H
 
 #include "serialize.h"
-#include "uint256.h"
+#include "blob256.h"
 #include "primitives/block.h"
 #include "bloom.h"
 
@@ -42,7 +42,7 @@
  * The serialization format:
  *  - uint32     total_transactions (4 bytes)
  *  - varint     number of hashes   (1-3 bytes)
- *  - uint256[]  hashes in depth-first order (<= 32*N bytes)
+ *  - blob256[]  hashes in depth-first order (<= 32*N bytes)
  *  - varint     number of bytes of flag bits (1-3 bytes)
  *  - byte[]     flag bits, packed per 8 in a byte, least significant bit first (<= 2*N-1 bits)
  * The size constraints follow from this.
@@ -57,7 +57,7 @@ protected:
     std::vector<bool> vBits;
 
     /** txids and internal hashes */
-    std::vector<uint256> vHash;
+    std::vector<blob256> vHash;
 
     /** flag set when encountering invalid data */
     bool fBad;
@@ -68,16 +68,16 @@ protected:
     }
 
     /** calculate the hash of a node in the merkle tree (at leaf level: the txid's themselves) */
-    uint256 CalcHash(int height, unsigned int pos, const std::vector<uint256> &vTxid);
+    blob256 CalcHash(int height, unsigned int pos, const std::vector<blob256> &vTxid);
 
     /** recursive function that traverses tree nodes, storing the data as bits and hashes */
-    void TraverseAndBuild(int height, unsigned int pos, const std::vector<uint256> &vTxid, const std::vector<bool> &vMatch);
+    void TraverseAndBuild(int height, unsigned int pos, const std::vector<blob256> &vTxid, const std::vector<bool> &vMatch);
 
     /**
      * recursive function that traverses tree nodes, consuming the bits and hashes produced by TraverseAndBuild.
      * it returns the hash of the respective node.
      */
-    uint256 TraverseAndExtract(int height, unsigned int pos, unsigned int &nBitsUsed, unsigned int &nHashUsed, std::vector<uint256> &vMatch);
+    blob256 TraverseAndExtract(int height, unsigned int pos, unsigned int &nBitsUsed, unsigned int &nHashUsed, std::vector<blob256> &vMatch);
 
 public:
 
@@ -105,7 +105,7 @@ public:
     }
 
     /** Construct a partial merkle tree from a list of transaction id's, and a mask that selects a subset of them */
-    CPartialMerkleTree(const std::vector<uint256> &vTxid, const std::vector<bool> &vMatch);
+    CPartialMerkleTree(const std::vector<blob256> &vTxid, const std::vector<bool> &vMatch);
 
     CPartialMerkleTree();
 
@@ -113,7 +113,7 @@ public:
      * extract the matching txid's represented by this partial merkle tree.
      * returns the merkle root, or 0 in case of failure
      */
-    uint256 ExtractMatches(std::vector<uint256> &vMatch);
+    blob256 ExtractMatches(std::vector<blob256> &vMatch);
 };
 
 
@@ -130,7 +130,7 @@ public:
 
 public:
     /** Public only for unit testing and relay testing (not relayed) */
-    std::vector<std::pair<unsigned int, uint256> > vMatchedTxn;
+    std::vector<std::pair<unsigned int, blob256> > vMatchedTxn;
 
     /**
      * Create from a CBlock, filtering transactions according to filter

@@ -21,7 +21,7 @@ CTxIn::CTxIn(COutPoint prevoutIn, CScript scriptSigIn, uint32_t nSequenceIn)
     nSequence = nSequenceIn;
 }
 
-CTxIn::CTxIn(uint256 hashPrevTx, uint32_t nOut, CScript scriptSigIn, uint32_t nSequenceIn)
+CTxIn::CTxIn(blob256 hashPrevTx, uint32_t nOut, CScript scriptSigIn, uint32_t nSequenceIn)
 {
     prevout = COutPoint(hashPrevTx, nOut);
     scriptSig = scriptSigIn;
@@ -49,7 +49,7 @@ CTxOut::CTxOut(const CAmount& nValueIn, CScript scriptPubKeyIn)
     scriptPubKey = scriptPubKeyIn;
 }
 
-uint256 CTxOut::GetHash() const
+blob256 CTxOut::GetHash() const
 {
     return SerializeHash(*this);
 }
@@ -62,14 +62,14 @@ std::string CTxOut::ToString() const
 CMutableTransaction::CMutableTransaction() : nVersion(CTransaction::CURRENT_VERSION), nLockTime(0) {}
 CMutableTransaction::CMutableTransaction(const CTransaction& tx) : nVersion(tx.nVersion), vin(tx.vin), vout(tx.vout), nLockTime(tx.nLockTime) {}
 
-uint256 CMutableTransaction::GetHash() const
+blob256 CMutableTransaction::GetHash() const
 {
     return SerializeHash(*this);
 }
 
 void CTransaction::UpdateHash() const
 {
-    *const_cast<uint256*>(&hash) = SerializeHash(*this);
+    *const_cast<blob256*>(&hash) = SerializeHash(*this);
 }
 
 CTransaction::CTransaction() : nVersion(CTransaction::CURRENT_VERSION), vin(), vout(), nLockTime(0) { }
@@ -83,7 +83,7 @@ CTransaction& CTransaction::operator=(const CTransaction &tx) {
     *const_cast<std::vector<CTxIn>*>(&vin) = tx.vin;
     *const_cast<std::vector<CTxOut>*>(&vout) = tx.vout;
     *const_cast<unsigned int*>(&nLockTime) = tx.nLockTime;
-    *const_cast<uint256*>(&hash) = tx.hash;
+    *const_cast<blob256*>(&hash) = tx.hash;
     return *this;
 }
 

@@ -490,7 +490,7 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
     {
         // unselect already spent, very unlikely scenario, this could happen
         // when selected are spent elsewhere, like rpc or another computer
-        uint256 txhash = out.tx->GetHash();
+        blob256 txhash = out.tx->GetHash();
         COutPoint outpt(txhash, out.i);
         if (model->isSpent(outpt))
         {
@@ -764,7 +764,7 @@ void CoinControlDialog::updateView()
             nInputSum    += nInputSize;
 
             // transaction hash
-            uint256 txhash = out.tx->GetHash();
+            blob256 txhash = out.tx->GetHash();
             itemOutput->setText(COLUMN_TXHASH, QString::fromStdString(txhash.GetHex()));
 
             // vout index

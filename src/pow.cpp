@@ -75,7 +75,7 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
     return bnNew.GetCompact();
 }
 
-bool CheckProofOfWork(uint256 hash, unsigned int nBits)
+bool CheckProofOfWork(blob256 hash, unsigned int nBits)
 {
     bool fNegative;
     bool fOverflow;

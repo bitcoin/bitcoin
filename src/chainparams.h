@@ -41,7 +41,7 @@ public:
         MAX_BASE58_TYPES
     };
 
-    const uint256& HashGenesisBlock() const { return hashGenesisBlock; }
+    const blob256& HashGenesisBlock() const { return hashGenesisBlock; }
     const MessageStartChars& MessageStart() const { return pchMessageStart; }
     const std::vector<unsigned char>& AlertKey() const { return vAlertPubKey; }
     int GetDefaultPort() const { return nDefaultPort; }
@@ -82,7 +82,7 @@ public:
 protected:
     CChainParams() {}
 
-    uint256 hashGenesisBlock;
+    blob256 hashGenesisBlock;
     MessageStartChars pchMessageStart;
     //! Raw pub key bytes for the broadcast alert signing key.
     std::vector<unsigned char> vAlertPubKey;

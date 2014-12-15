@@ -6,7 +6,7 @@
 #include "key.h"
 #include "script/script.h"
 #include "script/standard.h"
-#include "uint256.h"
+#include "blob256.h"
 
 #include <vector>
 
@@ -32,7 +32,7 @@ BOOST_AUTO_TEST_CASE(GetSigOpCount)
     BOOST_CHECK_EQUAL(s1.GetSigOpCount(false), 0U);
     BOOST_CHECK_EQUAL(s1.GetSigOpCount(true), 0U);
 
-    uint160 dummy;
+    blob160 dummy;
     s1 << OP_1 << ToByteVector(dummy) << ToByteVector(dummy) << OP_2 << OP_CHECKMULTISIG;
     BOOST_CHECK_EQUAL(s1.GetSigOpCount(true), 2U);
     s1 << OP_IF << OP_CHECKSIG << OP_ENDIF;

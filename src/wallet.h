@@ -123,10 +123,10 @@ private:
      * detect and report conflicts (double-spends or
      * mutated transactions where the mutant gets mined).
      */
-    typedef std::multimap<COutPoint, uint256> TxSpends;
+    typedef std::multimap<COutPoint, blob256> TxSpends;
     TxSpends mapTxSpends;
-    void AddToSpends(const COutPoint& outpoint, const uint256& wtxid);
-    void AddToSpends(const uint256& wtxid);
+    void AddToSpends(const COutPoint& outpoint, const blob256& wtxid);
+    void AddToSpends(const blob256& wtxid);
 
     void SyncMetaData(std::pair<TxSpends::iterator, TxSpends::iterator>);
 
@@ -182,10 +182,10 @@ public:
         nTimeFirstKey = 0;
     }
 
-    std::map<uint256, CWalletTx> mapWallet;
+    std::map<blob256, CWalletTx> mapWallet;
 
     int64_t nOrderPosNext;
-    std::map<uint256, int> mapRequestCount;
+    std::map<blob256, int> mapRequestCount;
 
     std::map<CTxDestination, CAddressBookData> mapAddressBook;
 
@@ -195,7 +195,7 @@ public:
 
     int64_t nTimeFirstKey;
 
-    const CWalletTx* GetWalletTx(const uint256& hash) const;
+    const CWalletTx* GetWalletTx(const blob256& hash) const;
 
     //! check whether we are allowed to upgrade (or already support) to the named feature
     bool CanSupportFeature(enum WalletFeature wf) { AssertLockHeld(cs_wallet); return nWalletMaxVersion >= wf; }
@@ -203,9 +203,9 @@ public:
     void AvailableCoins(std::vector<COutput>& vCoins, bool fOnlyConfirmed=true, const CCoinControl *coinControl = NULL) const;
     bool SelectCoinsMinConf(const CAmount& nTargetValue, int nConfMine, int nConfTheirs, std::vector<COutput> vCoins, std::set<std::pair<const CWalletTx*,unsigned int> >& setCoinsRet, CAmount& nValueRet) const;
 
-    bool IsSpent(const uint256& hash, unsigned int n) const;
+    bool IsSpent(const blob256& hash, unsigned int n) const;
 
-    bool IsLockedCoin(uint256 hash, unsigned int n) const;
+    bool IsLockedCoin(blob256 hash, unsigned int n) const;
     void LockCoin(COutPoint& output);
     void UnlockCoin(COutPoint& output);
     void UnlockAllCoins();
@@ -273,7 +273,7 @@ public:
     bool AddToWallet(const CWalletTx& wtxIn, bool fFromLoadWallet=false);
     void SyncTransaction(const CTransaction& tx, const CBlock* pblock);
     bool AddToWalletIfInvolvingMe(const CTransaction& tx, const CBlock* pblock, bool fUpdate);
-    void EraseFromWallet(const uint256 &hash);
+    void EraseFromWallet(const blob256 &hash);
     int ScanForWalletTransactions(CBlockIndex* pindexStart, bool fUpdate = false);
     void ReacceptWalletTransactions();
     void ResendWalletTransactions();
@@ -379,13 +379,13 @@ public:
 
     bool DelAddressBook(const CTxDestination& address);
 
-    void UpdatedTransaction(const uint256 &hashTx);
+    void UpdatedTransaction(const blob256 &hashTx);
 
-    void Inventory(const uint256 &hash)
+    void Inventory(const blob256 &hash)
     {
         {
             LOCK(cs_wallet);
-            std::map<uint256, int>::iterator mi = mapRequestCount.find(hash);
+            std::map<blob256, int>::iterator mi = mapRequestCount.find(hash);
             if (mi != mapRequestCount.end())
                 (*mi).second++;
         }
@@ -409,7 +409,7 @@ public:
     int GetVersion() { LOCK(cs_wallet); return nWalletVersion; }
 
     //! Get wallet transactions that conflict with given transaction (spend same outputs)
-    std::set<uint256> GetConflicts(const uint256& txid) const;
+    std::set<blob256> GetConflicts(const blob256& txid) const;
 
     /** 
      * Address book entry changed.
@@ -424,7 +424,7 @@ public:
      * Wallet transaction added, removed or updated.
      * @note called with lock cs_wallet held.
      */
-    boost::signals2::signal<void (CWallet *wallet, const uint256 &hashTx,
+    boost::signals2::signal<void (CWallet *wallet, const blob256 &hashTx,
             ChangeType status)> NotifyTransactionChanged;
 
     /** Show progress e.g. for rescan */
@@ -494,8 +494,8 @@ private:
     int GetDepthInMainChainINTERNAL(const CBlockIndex* &pindexRet) const;
 
 public:
-    uint256 hashBlock;
-    std::vector<uint256> vMerkleBranch;
+    blob256 hashBlock;
+    std::vector<blob256> vMerkleBranch;
     int nIndex;
 
     // memory only
@@ -514,7 +514,7 @@ public:
 
     void Init()
     {
-        hashBlock = uint256();
+        hashBlock = blob256();
         nIndex = -1;
         fMerkleVerified = false;
     }
@@ -791,7 +791,7 @@ public:
             return nAvailableCreditCached;
 
         CAmount nCredit = 0;
-        uint256 hashTx = GetHash();
+        blob256 hashTx = GetHash();
         for (unsigned int i = 0; i < vout.size(); i++)
         {
             if (!pwallet->IsSpent(hashTx, i))
@@ -905,7 +905,7 @@ public:
 
     void RelayWalletTransaction();
 
-    std::set<uint256> GetConflicts() const;
+    std::set<blob256> GetConflicts() const;
 };
 
 

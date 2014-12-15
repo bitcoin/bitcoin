@@ -383,7 +383,7 @@ CTxMemPool::~CTxMemPool()
     delete minerPolicyEstimator;
 }
 
-void CTxMemPool::pruneSpent(const uint256 &hashTx, CCoins &coins)
+void CTxMemPool::pruneSpent(const blob256 &hashTx, CCoins &coins)
 {
     LOCK(cs);
 
@@ -409,7 +409,7 @@ void CTxMemPool::AddTransactionsUpdated(unsigned int n)
 }
 
 
-bool CTxMemPool::addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry)
+bool CTxMemPool::addUnchecked(const blob256& hash, const CTxMemPoolEntry &entry)
 {
     // Add to memory pool without checking anything.
     // Used by main.cpp AcceptToMemoryPool(), which DOES do
@@ -432,11 +432,11 @@ void CTxMemPool::remove(const CTransaction &origTx, std::list<CTransaction>& rem
     // Remove transaction from memory pool
     {
         LOCK(cs);
-        std::deque<uint256> txToRemove;
+        std::deque<blob256> txToRemove;
         txToRemove.push_back(origTx.GetHash());
         while (!txToRemove.empty())
         {
-            uint256 hash = txToRemove.front();
+            blob256 hash = txToRemove.front();
             txToRemove.pop_front();
             if (!mapTx.count(hash))
                 continue;
@@ -465,10 +465,10 @@ void CTxMemPool::removeCoinbaseSpends(const CCoinsViewCache *pcoins, unsigned in
     // Remove transactions spending a coinbase which are now immature
     LOCK(cs);
     list<CTransaction> transactionsToRemove;
-    for (std::map<uint256, CTxMemPoolEntry>::const_iterator it = mapTx.begin(); it != mapTx.end(); it++) {
+    for (std::map<blob256, CTxMemPoolEntry>::const_iterator it = mapTx.begin(); it != mapTx.end(); it++) {
         const CTransaction& tx = it->second.GetTx();
         BOOST_FOREACH(const CTxIn& txin, tx.vin) {
-            std::map<uint256, CTxMemPoolEntry>::const_iterator it2 = mapTx.find(txin.prevout.hash);
+            std::map<blob256, CTxMemPoolEntry>::const_iterator it2 = mapTx.find(txin.prevout.hash);
             if (it2 != mapTx.end())
                 continue;
             const CCoins *coins = pcoins->AccessCoins(txin.prevout.hash);
@@ -512,7 +512,7 @@ void CTxMemPool::removeForBlock(const std::vector<CTransaction>& vtx, unsigned i
     std::vector<CTxMemPoolEntry> entries;
     BOOST_FOREACH(const CTransaction& tx, vtx)
     {
-        uint256 hash = tx.GetHash();
+        blob256 hash = tx.GetHash();
         if (mapTx.count(hash))
             entries.push_back(mapTx[hash]);
     }
@@ -549,14 +549,14 @@ void CTxMemPool::check(const CCoinsViewCache *pcoins) const
 
     LOCK(cs);
     list<const CTxMemPoolEntry*> waitingOnDependants;
-    for (std::map<uint256, CTxMemPoolEntry>::const_iterator it = mapTx.begin(); it != mapTx.end(); it++) {
+    for (std::map<blob256, CTxMemPoolEntry>::const_iterator it = mapTx.begin(); it != mapTx.end(); it++) {
         unsigned int i = 0;
         checkTotal += it->second.GetTxSize();
         const CTransaction& tx = it->second.GetTx();
         bool fDependsWait = false;
         BOOST_FOREACH(const CTxIn &txin, tx.vin) {
             // Check that every mempool transaction's inputs refer to available coins, or other mempool tx's.
-            std::map<uint256, CTxMemPoolEntry>::const_iterator it2 = mapTx.find(txin.prevout.hash);
+            std::map<blob256, CTxMemPoolEntry>::const_iterator it2 = mapTx.find(txin.prevout.hash);
             if (it2 != mapTx.end()) {
                 const CTransaction& tx2 = it2->second.GetTx();
                 assert(tx2.vout.size() > txin.prevout.n && !tx2.vout[txin.prevout.n].IsNull());
@@ -597,8 +597,8 @@ void CTxMemPool::check(const CCoinsViewCache *pcoins) const
         }
     }
     for (std::map<COutPoint, CInPoint>::const_iterator it = mapNextTx.begin(); it != mapNextTx.end(); it++) {
-        uint256 hash = it->second.ptx->GetHash();
-        map<uint256, CTxMemPoolEntry>::const_iterator it2 = mapTx.find(hash);
+        blob256 hash = it->second.ptx->GetHash();
+        map<blob256, CTxMemPoolEntry>::const_iterator it2 = mapTx.find(hash);
         const CTransaction& tx = it2->second.GetTx();
         assert(it2 != mapTx.end());
         assert(&tx == it->second.ptx);
@@ -609,20 +609,20 @@ void CTxMemPool::check(const CCoinsViewCache *pcoins) const
     assert(totalTxSize == checkTotal);
 }
 
-void CTxMemPool::queryHashes(vector<uint256>& vtxid)
+void CTxMemPool::queryHashes(vector<blob256>& vtxid)
 {
     vtxid.clear();
 
     LOCK(cs);
     vtxid.reserve(mapTx.size());
-    for (map<uint256, CTxMemPoolEntry>::iterator mi = mapTx.begin(); mi != mapTx.end(); ++mi)
+    for (map<blob256, CTxMemPoolEntry>::iterator mi = mapTx.begin(); mi != mapTx.end(); ++mi)
         vtxid.push_back((*mi).first);
 }
 
-bool CTxMemPool::lookup(uint256 hash, CTransaction& result) const
+bool CTxMemPool::lookup(blob256 hash, CTransaction& result) const
 {
     LOCK(cs);
-    map<uint256, CTxMemPoolEntry>::const_iterator i = mapTx.find(hash);
+    map<blob256, CTxMemPoolEntry>::const_iterator i = mapTx.find(hash);
     if (i == mapTx.end()) return false;
     result = i->second.GetTx();
     return true;
@@ -674,7 +674,7 @@ CTxMemPool::ReadFeeEstimates(CAutoFile& filein)
     return true;
 }
 
-void CTxMemPool::PrioritiseTransaction(const uint256 hash, const string strHash, double dPriorityDelta, const CAmount& nFeeDelta)
+void CTxMemPool::PrioritiseTransaction(const blob256 hash, const string strHash, double dPriorityDelta, const CAmount& nFeeDelta)
 {
     {
         LOCK(cs);
@@ -685,10 +685,10 @@ void CTxMemPool::PrioritiseTransaction(const uint256 hash, const string strHash,
     LogPrintf("PrioritiseTransaction: %s priority += %f, fee += %d\n", strHash, dPriorityDelta, FormatMoney(nFeeDelta));
 }
 
-void CTxMemPool::ApplyDeltas(const uint256 hash, double &dPriorityDelta, CAmount &nFeeDelta)
+void CTxMemPool::ApplyDeltas(const blob256 hash, double &dPriorityDelta, CAmount &nFeeDelta)
 {
     LOCK(cs);
-    std::map<uint256, std::pair<double, CAmount> >::iterator pos = mapDeltas.find(hash);
+    std::map<blob256, std::pair<double, CAmount> >::iterator pos = mapDeltas.find(hash);
     if (pos == mapDeltas.end())
         return;
     const std::pair<double, CAmount> &deltas = pos->second;
@@ -696,7 +696,7 @@ void CTxMemPool::ApplyDeltas(const uint256 hash, double &dPriorityDelta, CAmount
     nFeeDelta += deltas.second;
 }
 
-void CTxMemPool::ClearPrioritisation(const uint256 hash)
+void CTxMemPool::ClearPrioritisation(const blob256 hash)
 {
     LOCK(cs);
     mapDeltas.erase(hash);
@@ -705,7 +705,7 @@ void CTxMemPool::ClearPrioritisation(const uint256 hash)
 
 CCoinsViewMemPool::CCoinsViewMemPool(CCoinsView *baseIn, CTxMemPool &mempoolIn) : CCoinsViewBacked(baseIn), mempool(mempoolIn) { }
 
-bool CCoinsViewMemPool::GetCoins(const uint256 &txid, CCoins &coins) const {
+bool CCoinsViewMemPool::GetCoins(const blob256 &txid, CCoins &coins) const {
     // If an entry in the mempool exists, always return that one, as it's guaranteed to never
     // conflict with the underlying cache, and it cannot have pruned entries (as it contains full)
     // transactions. First checking the underlying cache risks returning a pruned entry instead.
@@ -717,6 +717,6 @@ bool CCoinsViewMemPool::GetCoins(const uint256 &txid, CCoins &coins) const {
     return (base->GetCoins(txid, coins) && !coins.IsPruned());
 }
 
-bool CCoinsViewMemPool::HaveCoins(const uint256 &txid) const {
+bool CCoinsViewMemPool::HaveCoins(const blob256 &txid) const {
     return mempool.exists(txid) || base->HaveCoins(txid);
 }

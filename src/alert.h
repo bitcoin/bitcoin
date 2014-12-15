@@ -16,9 +16,9 @@
 
 class CAlert;
 class CNode;
-class uint256;
+class blob256;
 
-extern std::map<uint256, CAlert> mapAlerts;
+extern std::map<blob256, CAlert> mapAlerts;
 extern CCriticalSection cs_mapAlerts;
 
 /** Alerts are for notifying old versions if they become too obsolete and
@@ -94,7 +94,7 @@ public:
 
     void SetNull();
     bool IsNull() const;
-    uint256 GetHash() const;
+    blob256 GetHash() const;
     bool IsInEffect() const;
     bool Cancels(const CAlert& alert) const;
     bool AppliesTo(int nVersion, std::string strSubVerIn) const;
@@ -107,7 +107,7 @@ public:
     /*
      * Get copy of (active) alert object by hash. Returns a null alert if it is not found.
      */
-    static CAlert getAlertByHash(const uint256 &hash);
+    static CAlert getAlertByHash(const blob256 &hash);
 };
 
 #endif // BITCOIN_ALERT_H

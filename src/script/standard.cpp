@@ -18,7 +18,7 @@ typedef vector<unsigned char> valtype;
 
 unsigned nMaxDatacarrierBytes = MAX_OP_RETURN_RELAY;
 
-CScriptID::CScriptID(const CScript& in) : uint160(in.size() ? Hash160(in.begin(), in.end()) : uint160()) {}
+CScriptID::CScriptID(const CScript& in) : blob160(in.size() ? Hash160(in.begin(), in.end()) : blob160()) {}
 
 const char* GetTxnOutputType(txnouttype t)
 {
@@ -125,7 +125,7 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, vector<vector<unsi
             }
             else if (opcode2 == OP_PUBKEYHASH)
             {
-                if (vch1.size() != sizeof(uint160))
+                if (vch1.size() != sizeof(blob160))
                     break;
                 vSolutionsRet.push_back(vch1);
             }
@@ -218,12 +218,12 @@ bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet)
     }
     else if (whichType == TX_PUBKEYHASH)
     {
-        addressRet = CKeyID(uint160(vSolutions[0]));
+        addressRet = CKeyID(blob160(vSolutions[0]));
         return true;
     }
     else if (whichType == TX_SCRIPTHASH)
     {
-        addressRet = CScriptID(uint160(vSolutions[0]));
+        addressRet = CScriptID(blob160(vSolutions[0]));
         return true;
     }
     // Multisig txns have more than one address...

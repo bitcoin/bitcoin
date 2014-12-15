@@ -15,7 +15,7 @@
 class CPubKey;
 class CScript;
 class CTransaction;
-class uint256;
+class blob256;
 
 /** Signature hash types/flags */
 enum
@@ -71,7 +71,7 @@ enum
 
 };
 
-uint256 SignatureHash(const CScript &scriptCode, const CTransaction& txTo, unsigned int nIn, int nHashType);
+blob256 SignatureHash(const CScript &scriptCode, const CTransaction& txTo, unsigned int nIn, int nHashType);
 
 class BaseSignatureChecker
 {
@@ -91,7 +91,7 @@ private:
     unsigned int nIn;
 
 protected:
-    virtual bool VerifySignature(const std::vector<unsigned char>& vchSig, const CPubKey& vchPubKey, const uint256& sighash) const;
+    virtual bool VerifySignature(const std::vector<unsigned char>& vchSig, const CPubKey& vchPubKey, const blob256& sighash) const;
 
 public:
     SignatureChecker(const CTransaction& txToIn, unsigned int nInIn) : txTo(txToIn), nIn(nInIn) {}

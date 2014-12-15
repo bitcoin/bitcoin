@@ -5,7 +5,7 @@
 #include "merkleblock.h"
 #include "serialize.h"
 #include "streams.h"
-#include "uint256.h"
+#include "blob256.h"
 #include "version.h"
 
 #include <vector>
@@ -44,8 +44,8 @@ BOOST_AUTO_TEST_CASE(pmt_test1)
         }
 
         // calculate actual merkle root and height
-        uint256 merkleRoot1 = block.BuildMerkleTree();
-        std::vector<uint256> vTxid(nTx, uint256());
+        blob256 merkleRoot1 = block.BuildMerkleTree();
+        std::vector<blob256> vTxid(nTx, blob256());
         for (unsigned int j=0; j<nTx; j++)
             vTxid[j] = block.vtx[j].GetHash();
         int nHeight = 1, nTx_ = nTx;
@@ -58,7 +58,7 @@ BOOST_AUTO_TEST_CASE(pmt_test1)
         for (int att = 1; att < 15; att++) {
             // build random subset of txid's
             std::vector<bool> vMatch(nTx, false);
-            std::vector<uint256> vMatchTxid1;
+            std::vector<blob256> vMatchTxid1;
             for (unsigned int j=0; j<nTx; j++) {
                 bool fInclude = (rand() & ((1 << (att/2)) - 1)) == 0;
                 vMatch[j] = fInclude;
@@ -82,8 +82,8 @@ BOOST_AUTO_TEST_CASE(pmt_test1)
             ss >> pmt2;
 
             // extract merkle root and matched txids from copy
-            std::vector<uint256> vMatchTxid2;
-            uint256 merkleRoot2 = pmt2.ExtractMatches(vMatchTxid2);
+            std::vector<blob256> vMatchTxid2;
+            blob256 merkleRoot2 = pmt2.ExtractMatches(vMatchTxid2);
 
             // check that it has the same merkle root as the original, and a valid one
             BOOST_CHECK(merkleRoot1 == merkleRoot2);
@@ -96,8 +96,8 @@ BOOST_AUTO_TEST_CASE(pmt_test1)
             for (int j=0; j<4; j++) {
                 CPartialMerkleTreeTester pmt3(pmt2);
                 pmt3.Damage();
-                std::vector<uint256> vMatchTxid3;
-                uint256 merkleRoot3 = pmt3.ExtractMatches(vMatchTxid3);
+                std::vector<blob256> vMatchTxid3;
+                blob256 merkleRoot3 = pmt3.ExtractMatches(vMatchTxid3);
                 BOOST_CHECK(merkleRoot3 != merkleRoot1);
             }
         }

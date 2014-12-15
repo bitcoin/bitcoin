@@ -12,7 +12,7 @@
 
 #include "netbase.h"
 #include "serialize.h"
-#include "uint256.h"
+#include "blob256.h"
 #include "version.h"
 
 #include <stdint.h>
@@ -117,8 +117,8 @@ class CInv
 {
 public:
     CInv();
-    CInv(int typeIn, const uint256& hashIn);
-    CInv(const std::string& strType, const uint256& hashIn);
+    CInv(int typeIn, const blob256& hashIn);
+    CInv(const std::string& strType, const blob256& hashIn);
 
     ADD_SERIALIZE_METHODS;
 
@@ -138,7 +138,7 @@ public:
     // TODO: make private (improves encapsulation)
 public:
     int type;
-    uint256 hash;
+    blob256 hash;
 };
 
 enum {
