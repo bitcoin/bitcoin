@@ -75,6 +75,7 @@ BITCOIN_CORE_H = \
   allocators.h \
   amount.h \
   base58.h \
+  blob256.h \
   bloom.h \
   chain.h \
   chainparams.h \
@@ -261,18 +262,19 @@ libbitcoin_common_a_SOURCES = \
 # backward-compatibility objects and their sanity checks are linked.
 libbitcoin_util_a_CPPFLAGS = $(BITCOIN_INCLUDES)
 libbitcoin_util_a_SOURCES = \
-  compat/strnlen.cpp \
-  compat/glibc_sanity.cpp \
-  compat/glibcxx_sanity.cpp \
+  blob256.cpp \
   chainparamsbase.cpp \
   clientversion.cpp \
+  compat/glibc_sanity.cpp \
+  compat/glibcxx_sanity.cpp \
+  compat/strnlen.cpp \
   random.cpp \
   rpcprotocol.cpp \
   sync.cpp \
   uint256.cpp \
   util.cpp \
-  utilstrencodings.cpp \
   utilmoneystr.cpp \
+  utilstrencodings.cpp \
   utiltime.cpp \
   $(BITCOIN_CORE_H)
 
@@ -352,19 +354,20 @@ bitcoin_cli_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 if BUILD_BITCOIN_LIBS
 include_HEADERS = script/bitcoinconsensus.h
 libbitcoinconsensus_la_SOURCES = \
-  primitives/transaction.cpp \
+  blob256.cpp \
   crypto/hmac_sha512.cpp \
+  crypto/ripemd160.cpp \
   crypto/sha1.cpp \
   crypto/sha256.cpp \
   crypto/sha512.cpp \
-  crypto/ripemd160.cpp \
   eccryptoverify.cpp \
   ecwrapper.cpp \
   hash.cpp \
+  primitives/transaction.cpp \
   pubkey.cpp \
-  script/script.cpp \
-  script/interpreter.cpp \
   script/bitcoinconsensus.cpp \
+  script/interpreter.cpp \
+  script/script.cpp \
   uint256.cpp \
   utilstrencodings.cpp
 
