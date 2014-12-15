@@ -305,16 +305,6 @@ public:
     }
 };
 
-/** 160-bit unsigned big integer. */
-class uint160 : public base_uint<160> {
-public:
-    uint160() {}
-    uint160(const base_uint<160>& b) : base_uint<160>(b) {}
-    uint160(uint64_t b) : base_uint<160>(b) {}
-    explicit uint160(const std::string& str) : base_uint<160>(str) {}
-    explicit uint160(const std::vector<unsigned char>& vch) : base_uint<160>(vch) {}
-};
-
 /** 256-bit unsigned big integer. */
 class uint256 : public base_uint<256> {
 public:
