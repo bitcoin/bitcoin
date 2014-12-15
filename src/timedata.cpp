@@ -40,10 +40,8 @@ static int64_t abs64(int64_t n)
     return (n >= 0 ? n : -n);
 }
 
-void AddTimeData(const CNetAddr& ip, int64_t nTime)
+void AddTimeData(const CNetAddr& ip, int64_t nOffsetSample)
 {
-    int64_t nOffsetSample = nTime - GetTime();
-
     LOCK(cs_nTimeOffset);
     // Ignore duplicates
     static set<CNetAddr> setKnown;
