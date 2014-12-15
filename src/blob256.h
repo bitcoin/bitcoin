@@ -38,7 +38,6 @@ public:
             data[i] = b.data[i];
         return *this;
     }
-    explicit base_blob(const std::string& str);
     explicit base_blob(const std::vector<unsigned char>& vch);
 
     bool IsNull() const
@@ -131,7 +130,6 @@ class blob160 : public base_blob<160> {
 public:
     blob160() {}
     blob160(const base_blob<160>& b) : base_blob<160>(b) {}
-    explicit blob160(const std::string& str) : base_blob<160>(str) {}
     explicit blob160(const std::vector<unsigned char>& vch) : base_blob<160>(vch) {}
 };
 
@@ -140,7 +138,6 @@ class blob256 : public base_blob<256> {
 public:
     blob256() {}
     blob256(const base_blob<256>& b) : base_blob<256>(b) {}
-    explicit blob256(const std::string& str) : base_blob<256>(str) {}
     explicit blob256(const std::vector<unsigned char>& vch) : base_blob<256>(vch) {}
 
     /** A more secure, salted hash function.
@@ -148,5 +145,26 @@ public:
      */
     uint64_t GetHash(const blob256& salt) const;
 };
+
+/* blob256 from const char *.
+ * This is a separate function because the constructor blob256(const char*) can result
+ * in dangerously catching blob256(0).
+ */
+inline blob256 blob256S(const char *str)
+{
+    blob256 rv;
+    rv.SetHex(str);
+    return rv;
+}
+/* blob256 from std::string.
+ * This is a separate function because the constructor blob256(const std::string &str) can result
+ * in dangerously catching blob256(0) via std::string(const char*).
+ */
+inline blob256 blob256S(const std::string& str)
+{
+    blob256 rv;
+    rv.SetHex(str);
+    return rv;
+}
 
 #endif // BITCOIN_BLOB256_H

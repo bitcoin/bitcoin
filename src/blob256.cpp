@@ -10,12 +10,6 @@
 #include <string.h>
 
 template <unsigned int BITS>
-base_blob<BITS>::base_blob(const std::string& str)
-{
-    SetHex(str);
-}
-
-template <unsigned int BITS>
 base_blob<BITS>::base_blob(const std::vector<unsigned char>& vch)
 {
     assert(vch.size() == sizeof(data));
@@ -73,7 +67,6 @@ std::string base_blob<BITS>::ToString() const
 }
 
 // Explicit instantiations for base_blob<160>
-template base_blob<160>::base_blob(const std::string&);
 template base_blob<160>::base_blob(const std::vector<unsigned char>&);
 template std::string base_blob<160>::GetHex() const;
 template std::string base_blob<160>::ToString() const;
@@ -81,7 +74,6 @@ template void base_blob<160>::SetHex(const char*);
 template void base_blob<160>::SetHex(const std::string&);
 
 // Explicit instantiations for base_blob<256>
-template base_blob<256>::base_blob(const std::string&);
 template base_blob<256>::base_blob(const std::vector<unsigned char>&);
 template std::string base_blob<256>::GetHex() const;
 template std::string base_blob<256>::ToString() const;
