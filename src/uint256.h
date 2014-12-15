@@ -283,6 +283,23 @@ public:
     {
         s.read((char*)pn, sizeof(pn));
     }
+
+    // Temporary for migration to opaque uint160/256
+    uint64_t GetCheapHash() const
+    {
+        return GetLow64();
+    }
+    void SetNull()
+    {
+        memset(pn, 0, sizeof(pn));
+    }
+    bool IsNull() const
+    {
+        for (int i = 0; i < WIDTH; i++)
+            if (pn[i] != 0)
+                return false;
+        return true;
+    }
 };
 
 /** 160-bit unsigned big integer. */
@@ -329,5 +346,8 @@ public:
 
     uint64_t GetHash(const uint256& salt) const;
 };
+
+// Temporary for migration to opaque uint160/256
+inline uint256 uint256S(const std::string &x) { return uint256(x); }
 
 #endif // BITCOIN_UINT256_H
