@@ -1030,7 +1030,7 @@ public:
 
 blob256 SignatureHash(const CScript& scriptCode, const CTransaction& txTo, unsigned int nIn, int nHashType)
 {
-    static const uint256 one("0000000000000000000000000000000000000000000000000000000000000001");
+    static const blob256 one(blob256S("0000000000000000000000000000000000000000000000000000000000000001"));
     if (nIn >= txTo.vin.size()) {
         //  nIn out of range
         return one;
