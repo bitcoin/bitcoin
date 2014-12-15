@@ -43,11 +43,12 @@ void OptionsModel::Init()
     // These are Qt-only settings:
     nDisplayUnit = settings.value("nDisplayUnit", BitcoinUnits::BTC).toInt();
     bDisplayAddresses = settings.value("bDisplayAddresses", false).toBool();
-     if (!settings.contains("strThirdPartyTxUrls"))
+    if (!settings.contains("strThirdPartyTxUrls")) {
         if(fTestNet)
             settings.setValue("strThirdPartyTxUrls", "");
         else
             settings.setValue("strThirdPartyTxUrls", "https://bitinfocharts.com/novacoin/tx/%s|https://coinplorer.com/NVC/Transactions/%s|https://explorer.novaco.in/tx/%s");
+    }
     strThirdPartyTxUrls = settings.value("strThirdPartyTxUrls", "https://bitinfocharts.com/novacoin/tx/%s|https://coinplorer.com/NVC/Transactions/%s|https://explorer.novaco.in/tx/%s").toString();
     fMinimizeToTray = settings.value("fMinimizeToTray", false).toBool();
     fMinimizeOnClose = settings.value("fMinimizeOnClose", false).toBool();
