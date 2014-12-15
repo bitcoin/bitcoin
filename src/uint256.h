@@ -13,6 +13,9 @@
 #include <string>
 #include <vector>
 
+/// TODO move these
+class blob256;
+
 class uint_error : public std::runtime_error {
 public:
     explicit uint_error(const std::string& str) : std::runtime_error(str) {}
@@ -25,6 +28,26 @@ class base_uint
 protected:
     enum { WIDTH=BITS/32 };
     uint32_t pn[WIDTH];
+
+    unsigned char* begin()
+    {
+        return (unsigned char*)&pn[0];
+    }
+
+    unsigned char* end()
+    {
+        return (unsigned char*)&pn[WIDTH];
+    }
+
+    const unsigned char* begin() const
+    {
+        return (unsigned char*)&pn[0];
+    }
+
+    const unsigned char* end() const
+    {
+        return (unsigned char*)&pn[WIDTH];
+    }
 public:
 
     base_uint()
@@ -230,26 +253,6 @@ public:
     void SetHex(const std::string& str);
     std::string ToString() const;
 
-    unsigned char* begin()
-    {
-        return (unsigned char*)&pn[0];
-    }
-
-    unsigned char* end()
-    {
-        return (unsigned char*)&pn[WIDTH];
-    }
-
-    const unsigned char* begin() const
-    {
-        return (unsigned char*)&pn[0];
-    }
-
-    const unsigned char* end() const
-    {
-        return (unsigned char*)&pn[WIDTH];
-    }
-
     unsigned int size() const
     {
         return sizeof(pn);
@@ -345,6 +348,8 @@ public:
     uint32_t GetCompact(bool fNegative = false) const;
 
     uint64_t GetHash(const uint256& salt) const;
+    friend uint256 BlobToUint256(const blob256 &);
+    friend blob256 UintToBlob256(const uint256 &);
 };
 
 /// TODO move these
