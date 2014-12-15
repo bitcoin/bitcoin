@@ -84,7 +84,7 @@ bool CKey::Sign(const uint256 &hash, std::vector<unsigned char>& vchSig, uint32_
         nonce += test_case;
         int nSigLen = 72;
         int ret = secp256k1_ecdsa_sign((const unsigned char*)&hash, (unsigned char*)&vchSig[0], &nSigLen, begin(), (unsigned char*)&nonce);
-        nonce = 0;
+        nonce = uint256();
         if (ret) {
             vchSig.resize(nSigLen);
             return true;
@@ -116,7 +116,7 @@ bool CKey::SignCompact(const uint256 &hash, std::vector<unsigned char>& vchSig) 
         uint256 nonce;
         prng.Generate((unsigned char*)&nonce, 32);
         int ret = secp256k1_ecdsa_sign_compact((const unsigned char*)&hash, &vchSig[1], begin(), (unsigned char*)&nonce, &rec);
-        nonce = 0;
+        nonce = uint256();
         if (ret)
             break;
     } while(true);

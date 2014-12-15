@@ -210,7 +210,7 @@ BOOST_AUTO_TEST_CASE(set)
 BOOST_AUTO_TEST_CASE(is)
 {
     // Test CScript::IsPayToScriptHash()
-    uint160 dummy(0);
+    uint160 dummy;
     CScript p2sh;
     p2sh << OP_HASH160 << ToByteVector(dummy) << OP_EQUAL;
     BOOST_CHECK(p2sh.IsPayToScriptHash());

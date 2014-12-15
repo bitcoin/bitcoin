@@ -56,6 +56,16 @@ public:
     {
         CPureBlockHeader::SetNull();
         auxpow.reset();
+        hashPrevBlock.SetNull();
+        hashMerkleRoot.SetNull();
+        nTime = 0;
+        nBits = 0;
+        nNonce = 0;
+    }
+
+    bool IsNull() const
+    {
+        return (nBits == 0);
     }
 
     /**
