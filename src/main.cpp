@@ -3505,7 +3505,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                     if (hashSalt.IsNull())
                         hashSalt = GetRandHash();
                     uint64_t hashAddr = addr.GetHash();
-                    uint256 hashRand = hashSalt ^ (hashAddr<<32) ^ ((GetTime()+hashAddr)/(24*60*60));
+                    blob256 hashRand = UintToBlob256(BlobToUint256(hashSalt) ^ (hashAddr<<32) ^ ((GetTime()+hashAddr)/(24*60*60)));
                     hashRand = Hash(BEGIN(hashRand), END(hashRand));
                     multimap<blob256, CNode*> mapMix;
                     BOOST_FOREACH(CNode* pnode, vNodes)
@@ -3514,7 +3514,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                             continue;
                         unsigned int nPointer;
                         memcpy(&nPointer, &pnode, sizeof(nPointer));
-                        uint256 hashKey = hashRand ^ nPointer;
+                        blob256 hashKey = UintToBlob256(BlobToUint256(hashRand) ^ nPointer);
                         hashKey = Hash(BEGIN(hashKey), END(hashKey));
                         mapMix.insert(make_pair(hashKey, pnode));
                     }
@@ -4381,9 +4381,9 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
                     static blob256 hashSalt;
                     if (hashSalt.IsNull())
                         hashSalt = GetRandHash();
-                    uint256 hashRand = inv.hash ^ hashSalt;
+                    blob256 hashRand = UintToBlob256(BlobToUint256(inv.hash) ^ BlobToUint256(hashSalt));
                     hashRand = Hash(BEGIN(hashRand), END(hashRand));
-                    bool fTrickleWait = ((hashRand & 3) != 0);
+                    bool fTrickleWait = ((BlobToUint256(hashRand) & 3) != 0);
 
                     if (fTrickleWait)
                     {

@@ -81,7 +81,7 @@ bool CKey::Sign(const blob256 &hash, std::vector<unsigned char>& vchSig, uint32_
     do {
         blob256 nonce;
         prng.Generate((unsigned char*)&nonce, 32);
-        nonce += test_case;
+        nonce = UintToBlob256(BlobToUint256(nonce) + test_case);
         int nSigLen = 72;
         int ret = secp256k1_ecdsa_sign((const unsigned char*)&hash, (unsigned char*)&vchSig[0], &nSigLen, begin(), (unsigned char*)&nonce);
         nonce = blob256();

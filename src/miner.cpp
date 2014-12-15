@@ -494,7 +494,7 @@ void static BitcoinMiner(CWallet *pwallet)
                 // Check if something found
                 if (fFound)
                 {
-                    if (hash <= hashTarget)
+                    if (BlobToUint256(hash) <= hashTarget)
                     {
                         // Found a solution
                         pblock->nNonce = nNonce;
