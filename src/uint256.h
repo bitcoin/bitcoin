@@ -269,40 +269,6 @@ public:
         assert(WIDTH >= 2);
         return pn[0] | (uint64_t)pn[1] << 32;
     }
-
-    unsigned int GetSerializeSize(int nType, int nVersion) const
-    {
-        return sizeof(pn);
-    }
-
-    template<typename Stream>
-    void Serialize(Stream& s, int nType, int nVersion) const
-    {
-        s.write((char*)pn, sizeof(pn));
-    }
-
-    template<typename Stream>
-    void Unserialize(Stream& s, int nType, int nVersion)
-    {
-        s.read((char*)pn, sizeof(pn));
-    }
-
-    // Temporary for migration to blob160/256
-    uint64_t GetCheapHash() const
-    {
-        return GetLow64();
-    }
-    void SetNull()
-    {
-        memset(pn, 0, sizeof(pn));
-    }
-    bool IsNull() const
-    {
-        for (int i = 0; i < WIDTH; i++)
-            if (pn[i] != 0)
-                return false;
-        return true;
-    }
 };
 
 /** 256-bit unsigned big integer. */
@@ -337,7 +303,6 @@ public:
     uint256& SetCompact(uint32_t nCompact, bool *pfNegative = NULL, bool *pfOverflow = NULL);
     uint32_t GetCompact(bool fNegative = false) const;
 
-    uint64_t GetHash(const uint256& salt) const;
     friend uint256 BlobToUint256(const blob256 &);
     friend blob256 UintToBlob256(const uint256 &);
 };
