@@ -14,10 +14,12 @@
 #include <cstring>
 #include <cstdio>
 
+#ifndef Q_MOC_RUN
 #include <boost/type_traits/is_fundamental.hpp>
 #include <boost/tuple/tuple.hpp>
 #include <boost/tuple/tuple_comparison.hpp>
 #include <boost/tuple/tuple_io.hpp>
+#endif
 
 #include "allocators.h"
 #include "version.h"
