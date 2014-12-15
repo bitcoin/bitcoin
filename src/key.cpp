@@ -9,6 +9,7 @@
 #include "eccryptoverify.h"
 #include "pubkey.h"
 #include "random.h"
+#include "uint256.h"
 
 #include <secp256k1.h>
 #include "ecwrapper.h"

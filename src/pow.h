@@ -8,6 +8,7 @@
 
 #include <stdint.h>
 
+class blob256;
 class CBlockHeader;
 class CBlockIndex;
 class uint256;

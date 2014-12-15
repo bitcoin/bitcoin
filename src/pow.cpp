@@ -8,8 +8,9 @@
 #include "chain.h"
 #include "chainparams.h"
 #include "primitives/block.h"
-#include "uint256.h"
+#include "blob256.h"
 #include "util.h"
+#include "uint256.h"
 
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock)
 {
