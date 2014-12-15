@@ -20,7 +20,7 @@ class CScript;
 class CScriptID : public uint160
 {
 public:
-    CScriptID() : uint160(0) {}
+    CScriptID() : uint160() {}
     CScriptID(const CScript& in);
     CScriptID(const uint160& in) : uint160(in) {}
 };
