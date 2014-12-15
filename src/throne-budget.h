@@ -186,7 +186,7 @@ public:
     CTxBudgetPayment() {
         payee = CScript();
         nAmount = 0;
-        nProposalHash = 0;
+        nProposalHash = uint256();
     }
 
     ADD_SERIALIZE_METHODS;

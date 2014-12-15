@@ -227,7 +227,7 @@ private:
 public:
     std::map<uint256, CThronePaymentWinner> mapThronePayeeVotes;
     std::map<int, CThroneBlockPayees> mapThroneBlocks;
-    std::map<uint256, int> mapThronesLastVote; //prevout.hash + prevout.n, nBlockHeight
+    std::map<COutPoint, int> mapThronesLastVote;
 
     CThronePayments() {
         nSyncedFromPeer = 0;
@@ -251,19 +251,7 @@ public:
     bool IsTransactionValid(const CTransaction& txNew, int nBlockHeight);
     bool IsScheduled(CThrone& mn, int nNotBlockHeight);
 
-    bool CanVote(COutPoint outThrone, int nBlockHeight) {
-        LOCK(cs_mapThronePayeeVotes);
-
-        if(mapThronesLastVote.count(outThrone.hash + outThrone.n)) {
-            if(mapThronesLastVote[outThrone.hash + outThrone.n] == nBlockHeight) {
-                return false;
-            }
-        }
-
-        //record this throne voted
-        mapThronesLastVote[outThrone.hash + outThrone.n] = nBlockHeight;
-        return true;
-    }
+    bool CanVote(COutPoint outThrone, int nBlockHeight);
 
     int GetMinThronePaymentsProto();
     void ProcessMessageThronePayments(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
