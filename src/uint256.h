@@ -283,6 +283,23 @@ public:
     {
         s.read((char*)pn, sizeof(pn));
     }
+
+    // Temporary for migration to blob160/256
+    uint64_t GetCheapHash() const
+    {
+        return GetLow64();
+    }
+    void SetNull()
+    {
+        memset(pn, 0, sizeof(pn));
+    }
+    bool IsNull() const
+    {
+        for (int i = 0; i < WIDTH; i++)
+            if (pn[i] != 0)
+                return false;
+        return true;
+    }
 };
 
 /** 160-bit unsigned big integer. */
