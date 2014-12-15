@@ -347,4 +347,8 @@ public:
     uint64_t GetHash(const uint256& salt) const;
 };
 
+/// TODO move these
+blob256 UintToBlob256(const uint256 &);
+uint256 BlobToUint256(const blob256 &);
+
 #endif // BITCOIN_UINT256_H

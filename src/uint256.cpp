@@ -5,6 +5,7 @@
 
 #include "uint256.h"
 
+#include "blob256.h" // TODO for BlobToUint256 and UintToBlob256
 #include "utilstrencodings.h"
 
 #include <stdio.h>
@@ -354,4 +355,19 @@ uint64_t uint256::GetHash(const uint256& salt) const
     HashFinal(a, b, c);
 
     return ((((uint64_t)b) << 32) | c);
+}
+
+blob256 UintToBlob256(const uint256 &a)
+{
+    blob256 b;
+    // TODO: needs bswap32 on big-endian
+    std::copy(a.begin(), a.end(), b.begin());
+    return b;
+}
+uint256 BlobToUint256(const blob256 &a)
+{
+    uint256 b;
+    // TODO: needs bswap32 on big-endian
+    std::copy(a.begin(), a.end(), b.begin());
+    return b;
 }
