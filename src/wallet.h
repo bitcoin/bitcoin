@@ -519,7 +519,7 @@ public:
 
     void Init()
     {
-        hashBlock = 0;
+        hashBlock = uint256();
         nIndex = -1;
         fMerkleVerified = false;
     }

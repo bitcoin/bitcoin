@@ -150,14 +150,14 @@ public:
         nFile = 0;
         nDataPos = 0;
         nUndoPos = 0;
-        nChainWork = 0;
+        nChainWork = uint256();
         nTx = 0;
         nChainTx = 0;
         nStatus = 0;
         nSequenceId = 0;
 
         nVersion       = 0;
-        hashMerkleRoot = 0;
+        hashMerkleRoot = uint256();
         nTime          = 0;
         nBits          = 0;
         nNonce         = 0;
@@ -282,11 +282,11 @@ public:
     uint256 hashPrev;
 
     CDiskBlockIndex() {
-        hashPrev = 0;
+        hashPrev = uint256();
     }
 
     explicit CDiskBlockIndex(const CBlockIndex* pindex) : CBlockIndex(*pindex) {
-        hashPrev = (pprev ? pprev->GetBlockHash() : 0);
+        hashPrev = (pprev ? pprev->GetBlockHash() : uint256());
     }
 
     ADD_SERIALIZE_METHODS;
