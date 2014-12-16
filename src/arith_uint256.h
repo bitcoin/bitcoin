@@ -13,6 +13,8 @@
 #include <string>
 #include <vector>
 
+class uint256;
+
 class uint_error : public std::runtime_error {
 public:
     explicit uint_error(const std::string& str) : std::runtime_error(str) {}
@@ -345,6 +347,12 @@ public:
     uint32_t GetCompact(bool fNegative = false) const;
 
     uint64_t GetHash(const arith_uint256& salt) const;
+
+    friend uint256 ArithToUint256(const arith_uint256 &);
+    friend arith_uint256 UintToArith256(const uint256 &);
 };
+
+uint256 ArithToUint256(const arith_uint256 &);
+arith_uint256 UintToArith256(const uint256 &);
 
 #endif // BITCOIN_UINT256_H
