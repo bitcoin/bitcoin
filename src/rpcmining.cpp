@@ -64,7 +64,7 @@ Value GetNetworkHashPS(int lookup, int height) {
     if (minTime == maxTime)
         return 0;
 
-    uint256 workDiff = pb->nChainWork - pb0->nChainWork;
+    arith_uint256 workDiff = pb->nChainWork - pb0->nChainWork;
     int64_t timeDiff = maxTime - minTime;
 
     return (int64_t)(workDiff.getdouble() / timeDiff);
@@ -562,7 +562,7 @@ Value getblocktemplate(const Array& params, bool fHelp)
     Object aux;
     aux.push_back(Pair("flags", HexStr(COINBASE_FLAGS.begin(), COINBASE_FLAGS.end())));
 
-    uint256 hashTarget = uint256().SetCompact(pblock->nBits);
+    arith_uint256 hashTarget = arith_uint256().SetCompact(pblock->nBits);
 
     static Array aMutable;
     if (aMutable.empty())
