@@ -68,7 +68,11 @@ NetworkStyle::NetworkStyle(const QString &appName, const int iconColorHueShift, 
         }
 
         //convert back to QPixmap
+#if QT_VERSION >= 0x040700
         pixmap.convertFromImage(img);
+#else
+        pixmap = QPixmap::fromImage(img);
+#endif
     }
 
     appIcon             = QIcon(pixmap);
