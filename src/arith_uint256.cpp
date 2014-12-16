@@ -5,6 +5,7 @@
 
 #include "arith_uint256.h"
 
+#include "uint256.h"
 #include "utilstrencodings.h"
 
 #include <stdio.h>
@@ -354,4 +355,19 @@ uint64_t arith_uint256::GetHash(const arith_uint256& salt) const
     HashFinal(a, b, c);
 
     return ((((uint64_t)b) << 32) | c);
+}
+
+uint256 ArithToUint256(const arith_uint256 &a)
+{
+    uint256 b;
+    // TODO: needs bswap32 on big-endian
+    memcpy(b.begin(), a.pn, a.size());
+    return b;
+}
+arith_uint256 UintToArith256(const uint256 &a)
+{
+    arith_uint256 b;
+    // TODO: needs bswap32 on big-endian
+    memcpy(b.pn, a.begin(), a.size());
+    return b;
 }
