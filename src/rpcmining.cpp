@@ -856,10 +856,10 @@ Value getauxblock(const Array& params, bool fHelp)
 
         const CBlock& block = pblocktemplate->block;
 
-        uint256 target;
+        arith_uint256 target;
         bool fNegative, fOverflow;
         target.SetCompact(block.nBits, &fNegative, &fOverflow);
-        if (fNegative || fOverflow || target == 0)
+        if (fNegative || fOverflow || target.IsNull())
             throw std::runtime_error("invalid difficulty bits in block");
 
         json_spirit::Object result;

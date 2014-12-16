@@ -148,7 +148,7 @@ public:
     virtual void setDefaultConsistencyChecks(bool aDefaultConsistencyChecks)=0;
     virtual void setAllowMinDifficultyBlocks(bool aAllowMinDifficultyBlocks)=0;
     virtual void setSkipProofOfWorkCheck(bool aSkipProofOfWorkCheck)=0;
-    virtual void setProofOfWorkLimit(const uint256& limit)=0;
+    virtual void setProofOfWorkLimit(const arith_uint256& limit)=0;
 };
 
 
