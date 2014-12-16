@@ -17,6 +17,7 @@
 #include "primitives/block.h"
 #include "primitives/transaction.h"
 #include "net.h"
+#include "policy.h"
 #include "pow.h"
 #include "script/script.h"
 #include "script/sigcache.h"
@@ -115,6 +116,7 @@ struct BlockHasher
 extern CScript COINBASE_FLAGS;
 extern CCriticalSection cs_main;
 extern CTxMemPool mempool;
+extern CNodePolicy policy;
 typedef boost::unordered_map<uint256, CBlockIndex*, BlockHasher> BlockMap;
 extern BlockMap mapBlockIndex;
 extern uint64_t nLastBlockTx;
