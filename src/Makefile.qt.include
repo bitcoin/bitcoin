@@ -216,8 +216,6 @@ RES_ICONS = \
   qt/res/icons/about_qt.png \
   qt/res/icons/bitcoin.ico \
   qt/res/icons/bitcoin.png \
-  qt/res/icons/bitcoin_testnet.ico \
-  qt/res/icons/bitcoin_testnet.png \
   qt/res/icons/clock1.png \
   qt/res/icons/clock2.png \
   qt/res/icons/clock3.png \
@@ -315,9 +313,7 @@ BITCOIN_QT_CPP += \
 endif
 
 RES_IMAGES = \
-  qt/res/images/about.png \
-  qt/res/images/splash.png \
-  qt/res/images/splash_testnet.png
+  qt/res/images/about.png
 
 RES_MOVIES = $(wildcard qt/res/movies/spinner-*.png)
 
@@ -371,7 +367,7 @@ qt_bitcoin_qt_LIBTOOLFLAGS = --tag CXX
 #locale/foo.ts -> locale/foo.qm
 QT_QM=$(QT_TS:.ts=.qm)
 
-.SECONDARY: $(QT_QM)
+SECONDARY: $(QT_QM)
 
 qt/bitcoinstrings.cpp: $(libbitcoin_server_a_SOURCES) $(libbitcoin_wallet_a_SOURCES)
 	@test -n $(XGETTEXT) || echo "xgettext is required for updating translations"
