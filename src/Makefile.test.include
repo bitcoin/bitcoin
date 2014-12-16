@@ -68,6 +68,7 @@ BITCOIN_TESTS =\
   test/test_bitcoin.cpp \
   test/timedata_tests.cpp \
   test/transaction_tests.cpp \
+  test/uint256_tests.cpp \
   test/univalue_tests.cpp \
   test/util_tests.cpp
 
