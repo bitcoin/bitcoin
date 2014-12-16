@@ -278,68 +278,6 @@ uint32_t arith_uint256::GetCompact(bool fNegative) const
     return nCompact;
 }
 
-static void inline HashMix(uint32_t& a, uint32_t& b, uint32_t& c)
-{
-    // Taken from lookup3, by Bob Jenkins.
-    a -= c;
-    a ^= ((c << 4) | (c >> 28));
-    c += b;
-    b -= a;
-    b ^= ((a << 6) | (a >> 26));
-    a += c;
-    c -= b;
-    c ^= ((b << 8) | (b >> 24));
-    b += a;
-    a -= c;
-    a ^= ((c << 16) | (c >> 16));
-    c += b;
-    b -= a;
-    b ^= ((a << 19) | (a >> 13));
-    a += c;
-    c -= b;
-    c ^= ((b << 4) | (b >> 28));
-    b += a;
-}
-
-static void inline HashFinal(uint32_t& a, uint32_t& b, uint32_t& c)
-{
-    // Taken from lookup3, by Bob Jenkins.
-    c ^= b;
-    c -= ((b << 14) | (b >> 18));
-    a ^= c;
-    a -= ((c << 11) | (c >> 21));
-    b ^= a;
-    b -= ((a << 25) | (a >> 7));
-    c ^= b;
-    c -= ((b << 16) | (b >> 16));
-    a ^= c;
-    a -= ((c << 4) | (c >> 28));
-    b ^= a;
-    b -= ((a << 14) | (a >> 18));
-    c ^= b;
-    c -= ((b << 24) | (b >> 8));
-}
-
-uint64_t arith_uint256::GetHash(const arith_uint256& salt) const
-{
-    uint32_t a, b, c;
-    a = b = c = 0xdeadbeef + (WIDTH << 2);
-
-    a += pn[0] ^ salt.pn[0];
-    b += pn[1] ^ salt.pn[1];
-    c += pn[2] ^ salt.pn[2];
-    HashMix(a, b, c);
-    a += pn[3] ^ salt.pn[3];
-    b += pn[4] ^ salt.pn[4];
-    c += pn[5] ^ salt.pn[5];
-    HashMix(a, b, c);
-    a += pn[6] ^ salt.pn[6];
-    b += pn[7] ^ salt.pn[7];
-    HashFinal(a, b, c);
-
-    return ((((uint64_t)b) << 32) | c);
-}
-
 uint256 ArithToUint256(const arith_uint256 &a)
 {
     uint256 b;
