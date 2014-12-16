@@ -95,7 +95,7 @@ enum BlockStatus {
 class CBlockIndex
 {
 public:
-    //! pointer to the hash of the block, if any. memory is owned by this CBlockIndex
+    //! pointer to the hash of the block, if any. Memory is owned by this CBlockIndex
     const uint256* phashBlock;
 
     //! pointer to the index of the predecessor of this block
