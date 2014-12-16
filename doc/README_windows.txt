@@ -1,4 +1,4 @@
-Bitcoin 0.9.99 BETA
+Bitcoin 0.10.0 BETA
 
 Copyright (c) 2009-2014 Bitcoin Core Developers
 
