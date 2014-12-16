@@ -16,7 +16,7 @@
 #include "random.h"
 #include "streams.h"
 #include "sync.h"
-#include "uint256.h"
+#include "blob256.h"
 #include "utilstrencodings.h"
 
 #include <deque>
@@ -277,14 +277,14 @@ protected:
     void Fuzz(int nChance); // modifies ssSend
 
 public:
-    uint256 hashContinue;
+    blob256 hashContinue;
     int nStartingHeight;
 
     // flood relay
     std::vector<CAddress> vAddrToSend;
     mruset<CAddress> setAddrKnown;
     bool fGetAddr;
-    std::set<uint256> setKnown;
+    std::set<blob256> setKnown;
 
     // inventory based relay
     mruset<CInv> setInventoryKnown;

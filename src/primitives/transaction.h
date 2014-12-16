@@ -9,17 +9,17 @@
 #include "amount.h"
 #include "script/script.h"
 #include "serialize.h"
-#include "uint256.h"
+#include "blob256.h"
 
 /** An outpoint - a combination of a transaction hash and an index n into its vout */
 class COutPoint
 {
 public:
-    uint256 hash;
+    blob256 hash;
     uint32_t n;
 
     COutPoint() { SetNull(); }
-    COutPoint(uint256 hashIn, uint32_t nIn) { hash = hashIn; n = nIn; }
+    COutPoint(blob256 hashIn, uint32_t nIn) { hash = hashIn; n = nIn; }
 
     ADD_SERIALIZE_METHODS;
 
@@ -28,8 +28,8 @@ public:
         READWRITE(FLATDATA(*this));
     }
 
-    void SetNull() { hash = 0; n = (uint32_t) -1; }
-    bool IsNull() const { return (hash == 0 && n == (uint32_t) -1); }
+    void SetNull() { hash.SetNull(); n = (uint32_t) -1; }
+    bool IsNull() const { return (hash.IsNull() && n == (uint32_t) -1); }
 
     friend bool operator<(const COutPoint& a, const COutPoint& b)
     {
@@ -66,7 +66,7 @@ public:
     }
 
     explicit CTxIn(COutPoint prevoutIn, CScript scriptSigIn=CScript(), uint32_t nSequenceIn=std::numeric_limits<unsigned int>::max());
-    CTxIn(uint256 hashPrevTx, uint32_t nOut, CScript scriptSigIn=CScript(), uint32_t nSequenceIn=std::numeric_limits<uint32_t>::max());
+    CTxIn(blob256 hashPrevTx, uint32_t nOut, CScript scriptSigIn=CScript(), uint32_t nSequenceIn=std::numeric_limits<uint32_t>::max());
 
     ADD_SERIALIZE_METHODS;
 
@@ -132,7 +132,7 @@ public:
         return (nValue == -1);
     }
 
-    uint256 GetHash() const;
+    blob256 GetHash() const;
 
     bool IsDust(CFeeRate minRelayTxFee) const
     {
@@ -171,7 +171,7 @@ class CTransaction
 {
 private:
     /** Memory only. */
-    const uint256 hash;
+    const blob256 hash;
     void UpdateHash() const;
 
 public:
@@ -212,7 +212,7 @@ public:
         return vin.empty() && vout.empty();
     }
 
-    const uint256& GetHash() const {
+    const blob256& GetHash() const {
         return hash;
     }
 
@@ -270,7 +270,7 @@ struct CMutableTransaction
     /** Compute the hash of this CMutableTransaction. This is computed on the
      * fly, as opposed to GetHash() in CTransaction, which uses a cached result.
      */
-    uint256 GetHash() const;
+    blob256 GetHash() const;
 };
 
 #endif // BITCOIN_PRIMITIVES_TRANSACTION_H

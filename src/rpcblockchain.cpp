@@ -16,7 +16,7 @@
 using namespace json_spirit;
 using namespace std;
 
-extern void TxToJSON(const CTransaction& tx, const uint256 hashBlock, Object& entry);
+extern void TxToJSON(const CTransaction& tx, const blob256 hashBlock, Object& entry);
 void ScriptPubKeyToJSON(const CScript& scriptPubKey, Object& out, bool fIncludeHex);
 
 double GetDifficulty(const CBlockIndex* blockindex)
@@ -70,7 +70,7 @@ Object blockToJSON(const CBlock& block, const CBlockIndex* blockindex, bool txDe
         if(txDetails)
         {
             Object objTx;
-            TxToJSON(tx, uint256(0), objTx);
+            TxToJSON(tx, blob256(), objTx);
             txs.push_back(objTx);
         }
         else
@@ -181,9 +181,9 @@ Value getrawmempool(const Array& params, bool fHelp)
     {
         LOCK(mempool.cs);
         Object o;
-        BOOST_FOREACH(const PAIRTYPE(uint256, CTxMemPoolEntry)& entry, mempool.mapTx)
+        BOOST_FOREACH(const PAIRTYPE(blob256, CTxMemPoolEntry)& entry, mempool.mapTx)
         {
-            const uint256& hash = entry.first;
+            const blob256& hash = entry.first;
             const CTxMemPoolEntry& e = entry.second;
             Object info;
             info.push_back(Pair("size", (int)e.GetTxSize()));
@@ -207,11 +207,11 @@ Value getrawmempool(const Array& params, bool fHelp)
     }
     else
     {
-        vector<uint256> vtxid;
+        vector<blob256> vtxid;
         mempool.queryHashes(vtxid);
 
         Array a;
-        BOOST_FOREACH(const uint256& hash, vtxid)
+        BOOST_FOREACH(const blob256& hash, vtxid)
             a.push_back(hash.ToString());
 
         return a;
@@ -278,7 +278,7 @@ Value getblock(const Array& params, bool fHelp)
         );
 
     std::string strHash = params[0].get_str();
-    uint256 hash(strHash);
+    blob256 hash(blob256S(strHash));
 
     bool fVerbose = true;
     if (params.size() > 1)
@@ -383,7 +383,7 @@ Value gettxout(const Array& params, bool fHelp)
     Object ret;
 
     std::string strHash = params[0].get_str();
-    uint256 hash(strHash);
+    blob256 hash(blob256S(strHash));
     int n = params[1].get_int();
     bool fMempool = true;
     if (params.size() > 2)
@@ -530,9 +530,9 @@ Value getchaintips(const Array& params, bool fHelp)
        known blocks, and successively remove blocks that appear as pprev
        of another block.  */
     std::set<const CBlockIndex*, CompareBlocksByHeight> setTips;
-    BOOST_FOREACH(const PAIRTYPE(const uint256, CBlockIndex*)& item, mapBlockIndex)
+    BOOST_FOREACH(const PAIRTYPE(const blob256, CBlockIndex*)& item, mapBlockIndex)
         setTips.insert(item.second);
-    BOOST_FOREACH(const PAIRTYPE(const uint256, CBlockIndex*)& item, mapBlockIndex)
+    BOOST_FOREACH(const PAIRTYPE(const blob256, CBlockIndex*)& item, mapBlockIndex)
     {
         const CBlockIndex* pprev = item.second->pprev;
         if (pprev)
@@ -619,7 +619,7 @@ Value invalidateblock(const Array& params, bool fHelp)
         );
 
     std::string strHash = params[0].get_str();
-    uint256 hash(strHash);
+    blob256 hash(blob256S(strHash));
     CValidationState state;
 
     {
@@ -658,7 +658,7 @@ Value reconsiderblock(const Array& params, bool fHelp)
         );
 
     std::string strHash = params[0].get_str();
-    uint256 hash(strHash);
+    blob256 hash(blob256S(strHash));
     CValidationState state;
 
     {

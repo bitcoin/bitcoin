@@ -6,6 +6,7 @@
 #ifndef BITCOIN_CHAIN_H
 #define BITCOIN_CHAIN_H
 
+#include "blob256.h"
 #include "primitives/block.h"
 #include "pow.h"
 #include "tinyformat.h"
@@ -96,7 +97,7 @@ class CBlockIndex
 {
 public:
     //! pointer to the hash of the block, if any. memory is owned by this CBlockIndex
-    const uint256* phashBlock;
+    const blob256* phashBlock;
 
     //! pointer to the index of the predecessor of this block
     CBlockIndex* pprev;
@@ -133,7 +134,7 @@ public:
 
     //! block header
     int nVersion;
-    uint256 hashMerkleRoot;
+    blob256 hashMerkleRoot;
     unsigned int nTime;
     unsigned int nBits;
     unsigned int nNonce;
@@ -150,14 +151,14 @@ public:
         nFile = 0;
         nDataPos = 0;
         nUndoPos = 0;
-        nChainWork = 0;
+        nChainWork = uint256();
         nTx = 0;
         nChainTx = 0;
         nStatus = 0;
         nSequenceId = 0;
 
         nVersion       = 0;
-        hashMerkleRoot = 0;
+        hashMerkleRoot = blob256();
         nTime          = 0;
         nBits          = 0;
         nNonce         = 0;
@@ -210,7 +211,7 @@ public:
         return block;
     }
 
-    uint256 GetBlockHash() const
+    blob256 GetBlockHash() const
     {
         return *phashBlock;
     }
@@ -279,14 +280,14 @@ public:
 class CDiskBlockIndex : public CBlockIndex
 {
 public:
-    uint256 hashPrev;
+    blob256 hashPrev;
 
     CDiskBlockIndex() {
-        hashPrev = 0;
+        hashPrev = blob256();
     }
 
     explicit CDiskBlockIndex(const CBlockIndex* pindex) : CBlockIndex(*pindex) {
-        hashPrev = (pprev ? pprev->GetBlockHash() : 0);
+        hashPrev = (pprev ? pprev->GetBlockHash() : blob256());
     }
 
     ADD_SERIALIZE_METHODS;
@@ -315,7 +316,7 @@ public:
         READWRITE(nNonce);
     }
 
-    uint256 GetBlockHash() const
+    blob256 GetBlockHash() const
     {
         CBlockHeader block;
         block.nVersion        = nVersion;

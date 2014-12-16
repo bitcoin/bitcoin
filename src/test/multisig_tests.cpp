@@ -9,7 +9,7 @@
 #include "script/script_error.h"
 #include "script/interpreter.h"
 #include "script/sign.h"
-#include "uint256.h"
+#include "blob256.h"
 
 #ifdef ENABLE_WALLET
 #include "wallet_ismine.h"
@@ -29,7 +29,7 @@ BOOST_AUTO_TEST_SUITE(multisig_tests)
 CScript
 sign_multisig(CScript scriptPubKey, vector<CKey> keys, CTransaction transaction, int whichIn)
 {
-    uint256 hash = SignatureHash(scriptPubKey, transaction, whichIn, SIGHASH_ALL);
+    blob256 hash = SignatureHash(scriptPubKey, transaction, whichIn, SIGHASH_ALL);
 
     CScript result;
     result << OP_0; // CHECKMULTISIG bug workaround

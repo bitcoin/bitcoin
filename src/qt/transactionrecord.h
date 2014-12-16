@@ -6,7 +6,7 @@
 #define BITCOIN_QT_TRANSACTIONRECORD_H
 
 #include "amount.h"
-#include "uint256.h"
+#include "blob256.h"
 
 #include <QList>
 #include <QString>
@@ -87,13 +87,13 @@ public:
     {
     }
 
-    TransactionRecord(uint256 hash, qint64 time):
+    TransactionRecord(blob256 hash, qint64 time):
             hash(hash), time(time), type(Other), address(""), debit(0),
             credit(0), idx(0)
     {
     }
 
-    TransactionRecord(uint256 hash, qint64 time,
+    TransactionRecord(blob256 hash, qint64 time,
                 Type type, const std::string &address,
                 const CAmount& debit, const CAmount& credit):
             hash(hash), time(time), type(type), address(address), debit(debit), credit(credit),
@@ -108,7 +108,7 @@ public:
 
     /** @name Immutable transaction attributes
       @{*/
-    uint256 hash;
+    blob256 hash;
     qint64 time;
     Type type;
     std::string address;
@@ -129,7 +129,7 @@ public:
     QString getTxID() const;
 
     /** Format subtransaction id */
-    static QString formatSubTxId(const uint256 &hash, int vout);
+    static QString formatSubTxId(const blob256 &hash, int vout);
 
     /** Update status from core wallet tx.
      */

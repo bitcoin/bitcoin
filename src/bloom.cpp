@@ -67,7 +67,7 @@ void CBloomFilter::insert(const COutPoint& outpoint)
     insert(data);
 }
 
-void CBloomFilter::insert(const uint256& hash)
+void CBloomFilter::insert(const blob256& hash)
 {
     vector<unsigned char> data(hash.begin(), hash.end());
     insert(data);
@@ -97,7 +97,7 @@ bool CBloomFilter::contains(const COutPoint& outpoint) const
     return contains(data);
 }
 
-bool CBloomFilter::contains(const uint256& hash) const
+bool CBloomFilter::contains(const blob256& hash) const
 {
     vector<unsigned char> data(hash.begin(), hash.end());
     return contains(data);
@@ -124,7 +124,7 @@ bool CBloomFilter::IsRelevantAndUpdate(const CTransaction& tx)
         return true;
     if (isEmpty)
         return false;
-    const uint256& hash = tx.GetHash();
+    const blob256& hash = tx.GetHash();
     if (contains(hash))
         fFound = true;
 

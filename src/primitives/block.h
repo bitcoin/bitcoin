@@ -8,7 +8,7 @@
 
 #include "primitives/transaction.h"
 #include "serialize.h"
-#include "uint256.h"
+#include "blob256.h"
 
 /** The maximum allowed size for a serialized block, in bytes (network rule) */
 static const unsigned int MAX_BLOCK_SIZE = 1000000;
@@ -26,8 +26,8 @@ public:
     // header
     static const int32_t CURRENT_VERSION=2;
     int32_t nVersion;
-    uint256 hashPrevBlock;
-    uint256 hashMerkleRoot;
+    blob256 hashPrevBlock;
+    blob256 hashMerkleRoot;
     uint32_t nTime;
     uint32_t nBits;
     uint32_t nNonce;
@@ -53,8 +53,8 @@ public:
     void SetNull()
     {
         nVersion = CBlockHeader::CURRENT_VERSION;
-        hashPrevBlock = 0;
-        hashMerkleRoot = 0;
+        hashPrevBlock.SetNull();
+        hashMerkleRoot.SetNull();
         nTime = 0;
         nBits = 0;
         nNonce = 0;
@@ -65,7 +65,7 @@ public:
         return (nBits == 0);
     }
 
-    uint256 GetHash() const;
+    blob256 GetHash() const;
 
     int64_t GetBlockTime() const
     {
@@ -81,7 +81,7 @@ public:
     std::vector<CTransaction> vtx;
 
     // memory only
-    mutable std::vector<uint256> vMerkleTree;
+    mutable std::vector<blob256> vMerkleTree;
 
     CBlock()
     {
@@ -125,10 +125,10 @@ public:
     // If non-NULL, *mutated is set to whether mutation was detected in the merkle
     // tree (a duplication of transactions in the block leading to an identical
     // merkle root).
-    uint256 BuildMerkleTree(bool* mutated = NULL) const;
+    blob256 BuildMerkleTree(bool* mutated = NULL) const;
 
-    std::vector<uint256> GetMerkleBranch(int nIndex) const;
-    static uint256 CheckMerkleBranch(uint256 hash, const std::vector<uint256>& vMerkleBranch, int nIndex);
+    std::vector<blob256> GetMerkleBranch(int nIndex) const;
+    static blob256 CheckMerkleBranch(blob256 hash, const std::vector<blob256>& vMerkleBranch, int nIndex);
     std::string ToString() const;
 };
 
@@ -139,11 +139,11 @@ public:
  */
 struct CBlockLocator
 {
-    std::vector<uint256> vHave;
+    std::vector<blob256> vHave;
 
     CBlockLocator() {}
 
-    CBlockLocator(const std::vector<uint256>& vHaveIn)
+    CBlockLocator(const std::vector<blob256>& vHaveIn)
     {
         vHave = vHaveIn;
     }

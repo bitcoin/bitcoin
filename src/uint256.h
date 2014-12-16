@@ -13,6 +13,9 @@
 #include <string>
 #include <vector>
 
+/// TODO move these
+class blob256;
+
 class uint_error : public std::runtime_error {
 public:
     explicit uint_error(const std::string& str) : std::runtime_error(str) {}
@@ -25,6 +28,26 @@ class base_uint
 protected:
     enum { WIDTH=BITS/32 };
     uint32_t pn[WIDTH];
+
+    unsigned char* begin()
+    {
+        return (unsigned char*)&pn[0];
+    }
+
+    unsigned char* end()
+    {
+        return (unsigned char*)&pn[WIDTH];
+    }
+
+    const unsigned char* begin() const
+    {
+        return (unsigned char*)&pn[0];
+    }
+
+    const unsigned char* end() const
+    {
+        return (unsigned char*)&pn[WIDTH];
+    }
 public:
 
     base_uint()
@@ -230,26 +253,6 @@ public:
     void SetHex(const std::string& str);
     std::string ToString() const;
 
-    unsigned char* begin()
-    {
-        return (unsigned char*)&pn[0];
-    }
-
-    unsigned char* end()
-    {
-        return (unsigned char*)&pn[WIDTH];
-    }
-
-    const unsigned char* begin() const
-    {
-        return (unsigned char*)&pn[0];
-    }
-
-    const unsigned char* end() const
-    {
-        return (unsigned char*)&pn[WIDTH];
-    }
-
     unsigned int size() const
     {
         return sizeof(pn);
@@ -266,33 +269,6 @@ public:
         assert(WIDTH >= 2);
         return pn[0] | (uint64_t)pn[1] << 32;
     }
-
-    unsigned int GetSerializeSize(int nType, int nVersion) const
-    {
-        return sizeof(pn);
-    }
-
-    template<typename Stream>
-    void Serialize(Stream& s, int nType, int nVersion) const
-    {
-        s.write((char*)pn, sizeof(pn));
-    }
-
-    template<typename Stream>
-    void Unserialize(Stream& s, int nType, int nVersion)
-    {
-        s.read((char*)pn, sizeof(pn));
-    }
-};
-
-/** 160-bit unsigned big integer. */
-class uint160 : public base_uint<160> {
-public:
-    uint160() {}
-    uint160(const base_uint<160>& b) : base_uint<160>(b) {}
-    uint160(uint64_t b) : base_uint<160>(b) {}
-    explicit uint160(const std::string& str) : base_uint<160>(str) {}
-    explicit uint160(const std::vector<unsigned char>& vch) : base_uint<160>(vch) {}
 };
 
 /** 256-bit unsigned big integer. */
@@ -327,7 +303,12 @@ public:
     uint256& SetCompact(uint32_t nCompact, bool *pfNegative = NULL, bool *pfOverflow = NULL);
     uint32_t GetCompact(bool fNegative = false) const;
 
-    uint64_t GetHash(const uint256& salt) const;
+    friend uint256 BlobToUint256(const blob256 &);
+    friend blob256 UintToBlob256(const uint256 &);
 };
+
+/// TODO move these
+blob256 UintToBlob256(const uint256 &);
+uint256 BlobToUint256(const blob256 &);
 
 #endif // BITCOIN_UINT256_H

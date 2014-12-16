@@ -8,7 +8,7 @@
 
 #include "hash.h"
 #include "serialize.h"
-#include "uint256.h"
+#include "blob256.h"
 
 #include <stdexcept>
 #include <vector>
@@ -24,11 +24,11 @@
  */
 
 /** A reference to a CKey: the Hash160 of its serialized public key */
-class CKeyID : public uint160
+class CKeyID : public blob160
 {
 public:
-    CKeyID() : uint160(0) {}
-    CKeyID(const uint160& in) : uint160(in) {}
+    CKeyID() : blob160() {}
+    CKeyID(const blob160& in) : blob160(in) {}
 };
 
 /** An encapsulated public key. */
@@ -145,7 +145,7 @@ public:
     }
 
     //! Get the 256-bit hash of this public key.
-    uint256 GetHash() const
+    blob256 GetHash() const
     {
         return Hash(vch, vch + size());
     }
@@ -173,10 +173,10 @@ public:
      * Verify a DER signature (~72 bytes).
      * If this public key is not fully valid, the return value will be false.
      */
-    bool Verify(const uint256& hash, const std::vector<unsigned char>& vchSig) const;
+    bool Verify(const blob256& hash, const std::vector<unsigned char>& vchSig) const;
 
     //! Recover a public key from a compact signature.
-    bool RecoverCompact(const uint256& hash, const std::vector<unsigned char>& vchSig);
+    bool RecoverCompact(const blob256& hash, const std::vector<unsigned char>& vchSig);
 
     //! Turn this public key into an uncompressed public key.
     bool Decompress();

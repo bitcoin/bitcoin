@@ -7,7 +7,7 @@
 #define BITCOIN_SCRIPT_STANDARD_H
 
 #include "script/interpreter.h"
-#include "uint256.h"
+#include "blob256.h"
 
 #include <boost/variant.hpp>
 
@@ -17,12 +17,12 @@ class CKeyID;
 class CScript;
 
 /** A reference to a CScript: the Hash160 of its serialization (see script.h) */
-class CScriptID : public uint160
+class CScriptID : public blob160
 {
 public:
-    CScriptID() : uint160(0) {}
+    CScriptID() : blob160() {}
     CScriptID(const CScript& in);
-    CScriptID(const uint160& in) : uint160(in) {}
+    CScriptID(const blob160& in) : blob160(in) {}
 };
 
 static const unsigned int MAX_OP_RETURN_RELAY = 40;      //! bytes

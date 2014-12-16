@@ -108,18 +108,18 @@ Value ValueFromAmount(const CAmount& amount)
     return (double)amount / (double)COIN;
 }
 
-uint256 ParseHashV(const Value& v, string strName)
+blob256 ParseHashV(const Value& v, string strName)
 {
     string strHex;
     if (v.type() == str_type)
         strHex = v.get_str();
     if (!IsHex(strHex)) // Note: IsHex("") is false
         throw JSONRPCError(RPC_INVALID_PARAMETER, strName+" must be hexadecimal string (not '"+strHex+"')");
-    uint256 result;
+    blob256 result;
     result.SetHex(strHex);
     return result;
 }
-uint256 ParseHashO(const Object& o, string strKey)
+blob256 ParseHashO(const Object& o, string strKey)
 {
     return ParseHashV(find_value(o, strKey), strKey);
 }

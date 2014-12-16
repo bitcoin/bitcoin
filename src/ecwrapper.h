@@ -10,7 +10,7 @@
 
 #include <openssl/ec.h>
 
-class uint256;
+class blob256;
 
 /** RAII Wrapper around OpenSSL's EC_KEY */
 class CECKey {
@@ -23,7 +23,7 @@ public:
 
     void GetPubKey(std::vector<unsigned char>& pubkey, bool fCompressed);
     bool SetPubKey(const unsigned char* pubkey, size_t size);
-    bool Verify(const uint256 &hash, const std::vector<unsigned char>& vchSig);
+    bool Verify(const blob256 &hash, const std::vector<unsigned char>& vchSig);
 
     /**
      * reconstruct public key from a compact signature
@@ -31,7 +31,7 @@ public:
      * If this function succeeds, the recovered public key is guaranteed to be valid
      * (the signature is a valid signature of the given data for that key)
      */
-    bool Recover(const uint256 &hash, const unsigned char *p64, int rec);
+    bool Recover(const blob256 &hash, const unsigned char *p64, int rec);
 
     bool TweakPublic(const unsigned char vchTweak[32]);
     static bool SanityCheck();

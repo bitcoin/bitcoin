@@ -1840,7 +1840,7 @@ bool CAddrDB::Write(const CAddrMan& addr)
     CDataStream ssPeers(SER_DISK, CLIENT_VERSION);
     ssPeers << FLATDATA(Params().MessageStart());
     ssPeers << addr;
-    uint256 hash = Hash(ssPeers.begin(), ssPeers.end());
+    blob256 hash = Hash(ssPeers.begin(), ssPeers.end());
     ssPeers << hash;
 
     // open temp output file, and associate with CAutoFile
@@ -1877,13 +1877,13 @@ bool CAddrDB::Read(CAddrMan& addr)
 
     // use file size to size memory buffer
     int fileSize = boost::filesystem::file_size(pathAddr);
-    int dataSize = fileSize - sizeof(uint256);
+    int dataSize = fileSize - sizeof(blob256);
     // Don't try to resize to a negative number if file is small
     if (dataSize < 0)
         dataSize = 0;
     vector<unsigned char> vchData;
     vchData.resize(dataSize);
-    uint256 hashIn;
+    blob256 hashIn;
 
     // read data and checksum from file
     try {
@@ -1898,7 +1898,7 @@ bool CAddrDB::Read(CAddrMan& addr)
     CDataStream ssPeers(vchData, SER_DISK, CLIENT_VERSION);
 
     // verify stored checksum matches input data
-    uint256 hashTmp = Hash(ssPeers.begin(), ssPeers.end());
+    blob256 hashTmp = Hash(ssPeers.begin(), ssPeers.end());
     if (hashIn != hashTmp)
         return error("%s : Checksum mismatch, data corrupted", __func__);
 
@@ -1948,7 +1948,7 @@ CNode::CNode(SOCKET hSocketIn, CAddress addrIn, std::string addrNameIn, bool fIn
     nRefCount = 0;
     nSendSize = 0;
     nSendOffset = 0;
-    hashContinue = 0;
+    hashContinue = blob256();
     nStartingHeight = -1;
     fGetAddr = false;
     fRelayTxes = false;
@@ -2055,7 +2055,7 @@ void CNode::EndMessage() UNLOCK_FUNCTION(cs_vSend)
     memcpy((char*)&ssSend[CMessageHeader::MESSAGE_SIZE_OFFSET], &nSize, sizeof(nSize));
 
     // Set the checksum
-    uint256 hash = Hash(ssSend.begin() + CMessageHeader::HEADER_SIZE, ssSend.end());
+    blob256 hash = Hash(ssSend.begin() + CMessageHeader::HEADER_SIZE, ssSend.end());
     unsigned int nChecksum = 0;
     memcpy(&nChecksum, &hash, sizeof(nChecksum));
     assert(ssSend.size () >= CMessageHeader::CHECKSUM_OFFSET + sizeof(nChecksum));

@@ -5,7 +5,7 @@
 #ifndef BITCOIN_CHECKPOINTS_H
 #define BITCOIN_CHECKPOINTS_H
 
-#include "uint256.h"
+#include "blob256.h"
 
 #include <map>
 
@@ -17,7 +17,7 @@ class CBlockIndex;
  */
 namespace Checkpoints
 {
-typedef std::map<int, uint256> MapCheckpoints;
+typedef std::map<int, blob256> MapCheckpoints;
 
 struct CCheckpointData {
     const MapCheckpoints *mapCheckpoints;
@@ -27,7 +27,7 @@ struct CCheckpointData {
 };
 
 //! Returns true if block passes checkpoint checks
-bool CheckBlock(int nHeight, const uint256& hash);
+bool CheckBlock(int nHeight, const blob256& hash);
 
 //! Return conservative estimate of total number of blocks, 0 if unknown
 int GetTotalBlocksEstimate();

@@ -9,7 +9,7 @@
 #include "key.h"
 #include "keystore.h"
 #include "script/standard.h"
-#include "uint256.h"
+#include "blob256.h"
 
 #include <boost/foreach.hpp>
 
@@ -17,7 +17,7 @@ using namespace std;
 
 typedef vector<unsigned char> valtype;
 
-bool Sign1(const CKeyID& address, const CKeyStore& keystore, uint256 hash, int nHashType, CScript& scriptSigRet)
+bool Sign1(const CKeyID& address, const CKeyStore& keystore, blob256 hash, int nHashType, CScript& scriptSigRet)
 {
     CKey key;
     if (!keystore.GetKey(address, key))
@@ -32,7 +32,7 @@ bool Sign1(const CKeyID& address, const CKeyStore& keystore, uint256 hash, int n
     return true;
 }
 
-bool SignN(const vector<valtype>& multisigdata, const CKeyStore& keystore, uint256 hash, int nHashType, CScript& scriptSigRet)
+bool SignN(const vector<valtype>& multisigdata, const CKeyStore& keystore, blob256 hash, int nHashType, CScript& scriptSigRet)
 {
     int nSigned = 0;
     int nRequired = multisigdata.front()[0];
@@ -52,7 +52,7 @@ bool SignN(const vector<valtype>& multisigdata, const CKeyStore& keystore, uint2
  * unless whichTypeRet is TX_SCRIPTHASH, in which case scriptSigRet is the redemption script.
  * Returns false if scriptPubKey could not be completely satisfied.
  */
-bool Solver(const CKeyStore& keystore, const CScript& scriptPubKey, uint256 hash, int nHashType,
+bool Solver(const CKeyStore& keystore, const CScript& scriptPubKey, blob256 hash, int nHashType,
                   CScript& scriptSigRet, txnouttype& whichTypeRet)
 {
     scriptSigRet.clear();
@@ -71,7 +71,7 @@ bool Solver(const CKeyStore& keystore, const CScript& scriptPubKey, uint256 hash
         keyID = CPubKey(vSolutions[0]).GetID();
         return Sign1(keyID, keystore, hash, nHashType, scriptSigRet);
     case TX_PUBKEYHASH:
-        keyID = CKeyID(uint160(vSolutions[0]));
+        keyID = CKeyID(blob160(vSolutions[0]));
         if (!Sign1(keyID, keystore, hash, nHashType, scriptSigRet))
             return false;
         else
@@ -82,7 +82,7 @@ bool Solver(const CKeyStore& keystore, const CScript& scriptPubKey, uint256 hash
         }
         return true;
     case TX_SCRIPTHASH:
-        return keystore.GetCScript(uint160(vSolutions[0]), scriptSigRet);
+        return keystore.GetCScript(blob160(vSolutions[0]), scriptSigRet);
 
     case TX_MULTISIG:
         scriptSigRet << OP_0; // workaround CHECKMULTISIG bug
@@ -98,7 +98,7 @@ bool SignSignature(const CKeyStore &keystore, const CScript& fromPubKey, CMutabl
 
     // Leave out the signature from the hash, since a signature can't sign itself.
     // The checksig op will also drop the signatures from its hash.
-    uint256 hash = SignatureHash(fromPubKey, txTo, nIn, nHashType);
+    blob256 hash = SignatureHash(fromPubKey, txTo, nIn, nHashType);
 
     txnouttype whichType;
     if (!Solver(keystore, fromPubKey, hash, nHashType, txin.scriptSig, whichType))
@@ -112,7 +112,7 @@ bool SignSignature(const CKeyStore &keystore, const CScript& fromPubKey, CMutabl
         CScript subscript = txin.scriptSig;
 
         // Recompute txn hash using subscript in place of scriptPubKey:
-        uint256 hash2 = SignatureHash(subscript, txTo, nIn, nHashType);
+        blob256 hash2 = SignatureHash(subscript, txTo, nIn, nHashType);
 
         txnouttype subType;
         bool fSolved =

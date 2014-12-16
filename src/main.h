@@ -24,7 +24,7 @@
 #include "sync.h"
 #include "tinyformat.h"
 #include "txmempool.h"
-#include "uint256.h"
+#include "blob256.h"
 #include "undo.h"
 
 #include <algorithm>
@@ -109,13 +109,13 @@ static const unsigned char REJECT_CHECKPOINT = 0x43;
 
 struct BlockHasher
 {
-    size_t operator()(const uint256& hash) const { return hash.GetLow64(); }
+    size_t operator()(const blob256& hash) const { return hash.GetCheapHash(); }
 };
 
 extern CScript COINBASE_FLAGS;
 extern CCriticalSection cs_main;
 extern CTxMemPool mempool;
-typedef boost::unordered_map<uint256, CBlockIndex*, BlockHasher> BlockMap;
+typedef boost::unordered_map<blob256, CBlockIndex*, BlockHasher> BlockMap;
 extern BlockMap mapBlockIndex;
 extern uint64_t nLastBlockTx;
 extern uint64_t nLastBlockSize;
@@ -190,13 +190,13 @@ bool IsInitialBlockDownload();
 /** Format a string that describes several potential problems detected by the core */
 std::string GetWarnings(std::string strFor);
 /** Retrieve a transaction (from memory pool, or from disk, if possible) */
-bool GetTransaction(const uint256 &hash, CTransaction &tx, uint256 &hashBlock, bool fAllowSlow = false);
+bool GetTransaction(const blob256 &hash, CTransaction &tx, blob256 &hashBlock, bool fAllowSlow = false);
 /** Find the best known block, and make it the tip of the block chain */
 bool ActivateBestChain(CValidationState &state, CBlock *pblock = NULL);
 CAmount GetBlockValue(int nHeight, const CAmount& nFees);
 
 /** Create a new block index entry for a given block hash */
-CBlockIndex * InsertBlockIndex(uint256 hash);
+CBlockIndex * InsertBlockIndex(blob256 hash);
 /** Abort with a message */
 bool AbortNode(const std::string &msg, const std::string &userMessage="");
 /** Get statistics from node state */
@@ -317,8 +317,8 @@ public:
         READWRITE(vtxundo);
     }
 
-    bool WriteToDisk(CDiskBlockPos &pos, const uint256 &hashBlock);
-    bool ReadFromDisk(const CDiskBlockPos &pos, const uint256 &hashBlock);
+    bool WriteToDisk(CDiskBlockPos &pos, const blob256 &hashBlock);
+    bool ReadFromDisk(const CDiskBlockPos &pos, const blob256 &hashBlock);
 };
 
 
@@ -549,10 +549,10 @@ struct CBlockTemplate
 class CValidationInterface {
 protected:
     virtual void SyncTransaction(const CTransaction &tx, const CBlock *pblock) {};
-    virtual void EraseFromWallet(const uint256 &hash) {};
+    virtual void EraseFromWallet(const blob256 &hash) {};
     virtual void SetBestChain(const CBlockLocator &locator) {};
-    virtual void UpdatedTransaction(const uint256 &hash) {};
-    virtual void Inventory(const uint256 &hash) {};
+    virtual void UpdatedTransaction(const blob256 &hash) {};
+    virtual void Inventory(const blob256 &hash) {};
     virtual void ResendWalletTransactions() {};
     virtual void BlockChecked(const CBlock&, const CValidationState&) {};
     friend void ::RegisterValidationInterface(CValidationInterface*);

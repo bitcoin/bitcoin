@@ -6,7 +6,7 @@
 #ifndef BITCOIN_RANDOM_H
 #define BITCOIN_RANDOM_H
 
-#include "uint256.h"
+#include "blob256.h"
 
 #include <stdint.h>
 
@@ -22,7 +22,7 @@ void RandAddSeedPerfmon();
 void GetRandBytes(unsigned char* buf, int num);
 uint64_t GetRand(uint64_t nMax);
 int GetRandInt(int nMax);
-uint256 GetRandHash();
+blob256 GetRandHash();
 
 /**
  * Seed insecure_rand using the random pool.

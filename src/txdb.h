@@ -15,7 +15,7 @@
 #include <vector>
 
 class CCoins;
-class uint256;
+class blob256;
 
 //! -dbcache default (MiB)
 static const int64_t nDefaultDbCache = 100;
@@ -32,10 +32,10 @@ protected:
 public:
     CCoinsViewDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
 
-    bool GetCoins(const uint256 &txid, CCoins &coins) const;
-    bool HaveCoins(const uint256 &txid) const;
-    uint256 GetBestBlock() const;
-    bool BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock);
+    bool GetCoins(const blob256 &txid, CCoins &coins) const;
+    bool HaveCoins(const blob256 &txid) const;
+    blob256 GetBestBlock() const;
+    bool BatchWrite(CCoinsMap &mapCoins, const blob256 &hashBlock);
     bool GetStats(CCoinsStats &stats) const;
 };
 
@@ -53,8 +53,8 @@ public:
     bool ReadLastBlockFile(int &nFile);
     bool WriteReindexing(bool fReindex);
     bool ReadReindexing(bool &fReindex);
-    bool ReadTxIndex(const uint256 &txid, CDiskTxPos &pos);
-    bool WriteTxIndex(const std::vector<std::pair<uint256, CDiskTxPos> > &list);
+    bool ReadTxIndex(const blob256 &txid, CDiskTxPos &pos);
+    bool WriteTxIndex(const std::vector<std::pair<blob256, CDiskTxPos> > &list);
     bool WriteFlag(const std::string &name, bool fValue);
     bool ReadFlag(const std::string &name, bool &fValue);
     bool LoadBlockIndexGuts();

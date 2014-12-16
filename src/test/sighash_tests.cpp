@@ -22,12 +22,13 @@ using namespace json_spirit;
 extern Array read_json(const std::string& jsondata);
 
 // Old script.cpp SignatureHash function
-uint256 static SignatureHashOld(CScript scriptCode, const CTransaction& txTo, unsigned int nIn, int nHashType)
+blob256 static SignatureHashOld(CScript scriptCode, const CTransaction& txTo, unsigned int nIn, int nHashType)
 {
+    static const blob256 one(blob256S("0000000000000000000000000000000000000000000000000000000000000001"));
     if (nIn >= txTo.vin.size())
     {
         printf("ERROR: SignatureHash() : nIn=%d out of range\n", nIn);
-        return 1;
+        return one;
     }
     CMutableTransaction txTmp(txTo);
 
@@ -58,7 +59,7 @@ uint256 static SignatureHashOld(CScript scriptCode, const CTransaction& txTo, un
         if (nOut >= txTmp.vout.size())
         {
             printf("ERROR: SignatureHash() : nOut=%d out of range\n", nOut);
-            return 1;
+            return one;
         }
         txTmp.vout.resize(nOut+1);
         for (unsigned int i = 0; i < nOut; i++)
@@ -137,7 +138,7 @@ BOOST_AUTO_TEST_CASE(sighash_test)
         RandomScript(scriptCode);
         int nIn = insecure_rand() % txTo.vin.size();
 
-        uint256 sh, sho;
+        blob256 sh, sho;
         sho = SignatureHashOld(scriptCode, txTo, nIn, nHashType);
         sh = SignatureHash(scriptCode, txTo, nIn, nHashType);
         #if defined(PRINT_SIGHASH_JSON)
@@ -180,7 +181,7 @@ BOOST_AUTO_TEST_CASE(sighash_from_data)
 
         std::string raw_tx, raw_script, sigHashHex;
         int nIn, nHashType;
-        uint256 sh;
+        blob256 sh;
         CTransaction tx;
         CScript scriptCode = CScript();
 
@@ -192,7 +193,7 @@ BOOST_AUTO_TEST_CASE(sighash_from_data)
           nHashType = test[3].get_int();
           sigHashHex = test[4].get_str();
 
-          uint256 sh;
+          blob256 sh;
           CDataStream stream(ParseHex(raw_tx), SER_NETWORK, PROTOCOL_VERSION);
           stream >> tx;
 

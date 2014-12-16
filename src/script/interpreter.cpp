@@ -12,7 +12,7 @@
 #include "eccryptoverify.h"
 #include "pubkey.h"
 #include "script/script.h"
-#include "uint256.h"
+#include "blob256.h"
 
 using namespace std;
 
@@ -1028,18 +1028,19 @@ public:
 
 } // anon namespace
 
-uint256 SignatureHash(const CScript& scriptCode, const CTransaction& txTo, unsigned int nIn, int nHashType)
+blob256 SignatureHash(const CScript& scriptCode, const CTransaction& txTo, unsigned int nIn, int nHashType)
 {
+    static const blob256 one(blob256S("0000000000000000000000000000000000000000000000000000000000000001"));
     if (nIn >= txTo.vin.size()) {
         //  nIn out of range
-        return 1;
+        return one;
     }
 
     // Check for invalid use of SIGHASH_SINGLE
     if ((nHashType & 0x1f) == SIGHASH_SINGLE) {
         if (nIn >= txTo.vout.size()) {
             //  nOut out of range
-            return 1;
+            return one;
         }
     }
 
@@ -1052,7 +1053,7 @@ uint256 SignatureHash(const CScript& scriptCode, const CTransaction& txTo, unsig
     return ss.GetHash();
 }
 
-bool SignatureChecker::VerifySignature(const std::vector<unsigned char>& vchSig, const CPubKey& pubkey, const uint256& sighash) const
+bool SignatureChecker::VerifySignature(const std::vector<unsigned char>& vchSig, const CPubKey& pubkey, const blob256& sighash) const
 {
     return pubkey.Verify(sighash, vchSig);
 }
@@ -1070,7 +1071,7 @@ bool SignatureChecker::CheckSig(const vector<unsigned char>& vchSigIn, const vec
     int nHashType = vchSig.back();
     vchSig.pop_back();
 
-    uint256 sighash = SignatureHash(scriptCode, txTo, nIn, nHashType);
+    blob256 sighash = SignatureHash(scriptCode, txTo, nIn, nHashType);
 
     if (!VerifySignature(vchSig, pubkey, sighash))
         return false;

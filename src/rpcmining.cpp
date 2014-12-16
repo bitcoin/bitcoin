@@ -288,7 +288,7 @@ Value prioritisetransaction(const Array& params, bool fHelp)
             + HelpExampleRpc("prioritisetransaction", "\"txid\", 0.0, 10000")
         );
 
-    uint256 hash;
+    blob256 hash;
     hash.SetHex(params[0].get_str());
 
     CAmount nAmount = params[2].get_int64();
@@ -405,7 +405,7 @@ Value getblocktemplate(const Array& params, bool fHelp)
             if (!DecodeHexBlk(block, dataval.get_str()))
                 throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Block decode failed");
 
-            uint256 hash = block.GetHash();
+            blob256 hash = block.GetHash();
             BlockMap::iterator mi = mapBlockIndex.find(hash);
             if (mi != mapBlockIndex.end()) {
                 CBlockIndex *pindex = mi->second;
@@ -440,7 +440,7 @@ Value getblocktemplate(const Array& params, bool fHelp)
     if (lpval.type() != null_type)
     {
         // Wait to respond until either the best block changes, OR a minute has passed and there are more transactions
-        uint256 hashWatchedChain;
+        blob256 hashWatchedChain;
         boost::system_time checktxtime;
         unsigned int nTransactionsUpdatedLastLP;
 
@@ -529,11 +529,11 @@ Value getblocktemplate(const Array& params, bool fHelp)
     static const Array aCaps = boost::assign::list_of("proposal");
 
     Array transactions;
-    map<uint256, int64_t> setTxIndex;
+    map<blob256, int64_t> setTxIndex;
     int i = 0;
     BOOST_FOREACH (CTransaction& tx, pblock->vtx)
     {
-        uint256 txHash = tx.GetHash();
+        blob256 txHash = tx.GetHash();
         setTxIndex[txHash] = i++;
 
         if (tx.IsCoinBase())
@@ -597,11 +597,11 @@ Value getblocktemplate(const Array& params, bool fHelp)
 class submitblock_StateCatcher : public CValidationInterface
 {
 public:
-    uint256 hash;
+    blob256 hash;
     bool found;
     CValidationState state;
 
-    submitblock_StateCatcher(const uint256 &hashIn) : hash(hashIn), found(false), state() {};
+    submitblock_StateCatcher(const blob256 &hashIn) : hash(hashIn), found(false), state() {};
 
 protected:
     virtual void BlockChecked(const CBlock& block, const CValidationState& stateIn) {
@@ -637,7 +637,7 @@ Value submitblock(const Array& params, bool fHelp)
     if (!DecodeHexBlk(block, params[0].get_str()))
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Block decode failed");
 
-    uint256 hash = block.GetHash();
+    blob256 hash = block.GetHash();
     BlockMap::iterator mi = mapBlockIndex.find(hash);
     if (mi != mapBlockIndex.end()) {
         CBlockIndex *pindex = mi->second;

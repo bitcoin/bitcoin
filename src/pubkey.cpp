@@ -12,7 +12,7 @@
 #include "ecwrapper.h"
 #endif
 
-bool CPubKey::Verify(const uint256 &hash, const std::vector<unsigned char>& vchSig) const {
+bool CPubKey::Verify(const blob256 &hash, const std::vector<unsigned char>& vchSig) const {
     if (!IsValid())
         return false;
 #ifdef USE_SECP256K1
@@ -28,7 +28,7 @@ bool CPubKey::Verify(const uint256 &hash, const std::vector<unsigned char>& vchS
     return true;
 }
 
-bool CPubKey::RecoverCompact(const uint256 &hash, const std::vector<unsigned char>& vchSig) {
+bool CPubKey::RecoverCompact(const blob256 &hash, const std::vector<unsigned char>& vchSig) {
     if (vchSig.size() != 65)
         return false;
     int recid = (vchSig[0] - 27) & 3;

@@ -6,7 +6,7 @@
 
 #include "base58.h"
 #include "script/script.h"
-#include "uint256.h"
+#include "blob256.h"
 #include "util.h"
 #include "utilstrencodings.h"
 
@@ -31,7 +31,7 @@ static const string strAddressBad("1HV9Lc3sNHZxwj4Zk6fB38tEmBryq2cBiF");
 
 
 #ifdef KEY_TESTS_DUMPINFO
-void dumpKeyInfo(uint256 privkey)
+void dumpKeyInfo(blob256 privkey)
 {
     CKey key;
     key.resize(32);
@@ -111,7 +111,7 @@ BOOST_AUTO_TEST_CASE(key_test1)
     for (int n=0; n<16; n++)
     {
         string strMsg = strprintf("Very secret message %i: 11", n);
-        uint256 hashMsg = Hash(strMsg.begin(), strMsg.end());
+        blob256 hashMsg = Hash(strMsg.begin(), strMsg.end());
 
         // normal signatures
 
@@ -168,7 +168,7 @@ BOOST_AUTO_TEST_CASE(key_test1)
 
     std::vector<unsigned char> detsig, detsigc;
     string strMsg = "Very deterministic message";
-    uint256 hashMsg = Hash(strMsg.begin(), strMsg.end());
+    blob256 hashMsg = Hash(strMsg.begin(), strMsg.end());
     BOOST_CHECK(key1.Sign(hashMsg, detsig));
     BOOST_CHECK(key1C.Sign(hashMsg, detsigc));
     BOOST_CHECK(detsig == detsigc);

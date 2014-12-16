@@ -96,16 +96,16 @@ void CAddress::Init()
 CInv::CInv()
 {
     type = 0;
-    hash = 0;
+    hash.SetNull();
 }
 
-CInv::CInv(int typeIn, const uint256& hashIn)
+CInv::CInv(int typeIn, const blob256& hashIn)
 {
     type = typeIn;
     hash = hashIn;
 }
 
-CInv::CInv(const std::string& strType, const uint256& hashIn)
+CInv::CInv(const std::string& strType, const blob256& hashIn)
 {
     unsigned int i;
     for (i = 1; i < ARRAYLEN(ppszTypeName); i++)
@@ -117,7 +117,7 @@ CInv::CInv(const std::string& strType, const uint256& hashIn)
         }
     }
     if (i == ARRAYLEN(ppszTypeName))
-        throw std::out_of_range(strprintf("CInv::CInv(string, uint256) : unknown type '%s'", strType));
+        throw std::out_of_range(strprintf("CInv::CInv(string, blob256) : unknown type '%s'", strType));
     hash = hashIn;
 }
 
