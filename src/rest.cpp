@@ -90,8 +90,8 @@ static bool ParseHashStr(const string& strReq, uint256& v)
 }
 
 static bool rest_headers(AcceptedConnection* conn,
-                         string& strReq,
-                         map<string, string>& mapHeaders,
+                         const std::string& strReq,
+                         const std::map<std::string, std::string>& mapHeaders,
                          bool fRun)
 {
     vector<string> params;
@@ -153,8 +153,8 @@ static bool rest_headers(AcceptedConnection* conn,
 }
 
 static bool rest_block(AcceptedConnection* conn,
-                       string& strReq,
-                       map<string, string>& mapHeaders,
+                       const std::string& strReq,
+                       const std::map<std::string, std::string>& mapHeaders,
                        bool fRun,
                        bool showTxDetails)
 {
@@ -211,24 +211,24 @@ static bool rest_block(AcceptedConnection* conn,
 }
 
 static bool rest_block_extended(AcceptedConnection* conn,
-                       string& strReq,
-                       map<string, string>& mapHeaders,
+                       const std::string& strReq,
+                       const std::map<std::string, std::string>& mapHeaders,
                        bool fRun)
 {
     return rest_block(conn, strReq, mapHeaders, fRun, true);
 }
 
 static bool rest_block_notxdetails(AcceptedConnection* conn,
-                       string& strReq,
-                       map<string, string>& mapHeaders,
+                       const std::string& strReq,
+                       const std::map<std::string, std::string>& mapHeaders,
                        bool fRun)
 {
     return rest_block(conn, strReq, mapHeaders, fRun, false);
 }
 
 static bool rest_tx(AcceptedConnection* conn,
-                    string& strReq,
-                    map<string, string>& mapHeaders,
+                    const std::string& strReq,
+                    const std::map<std::string, std::string>& mapHeaders,
                     bool fRun)
 {
     vector<string> params;
@@ -280,8 +280,8 @@ static bool rest_tx(AcceptedConnection* conn,
 static const struct {
     const char* prefix;
     bool (*handler)(AcceptedConnection* conn,
-                    string& strURI,
-                    map<string, string>& mapHeaders,
+                    const std::string& strURI,
+                    const std::map<std::string, std::string>& mapHeaders,
                     bool fRun);
 } uri_prefixes[] = {
       {"/rest/tx/", rest_tx},
@@ -291,8 +291,8 @@ static const struct {
 };
 
 bool HTTPReq_REST(AcceptedConnection* conn,
-                  string& strURI,
-                  map<string, string>& mapHeaders,
+                  const std::string& strURI,
+                  const std::map<std::string, std::string>& mapHeaders,
                   bool fRun)
 {
     try {
@@ -307,7 +307,7 @@ bool HTTPReq_REST(AcceptedConnection* conn,
                 return uri_prefixes[i].handler(conn, strReq, mapHeaders, fRun);
             }
         }
-    } catch (RestErr& re) {
+    } catch (const RestErr& re) {
         conn->stream() << HTTPReply(re.status, re.message + "\r\n", false, false, "text/plain") << std::flush;
         return false;
     }
