@@ -296,10 +296,12 @@ bool CActiveMasternode::GetMasterNodeVin(CTxIn& vin, CPubKey& pubkey, CKey& secr
 	if(!strTxHash.empty()) {
 		// Let's find it
 		uint256 txHash(strTxHash);
-		int outputIndex = boost::lexical_cast<int>(outputIndex);
+		int outputIndex = 0;
+		outputIndex = boost::lexical_cast<int>(outputIndex);
 		bool found = false;
 		BOOST_FOREACH(COutput& out, possibleCoins) {
-			if(true) {
+			if(out.tx->GetHash() == txHash && out.i == outputIndex)
+			{
 				selectedOutput = &out;
 				found = true;
 				break;
