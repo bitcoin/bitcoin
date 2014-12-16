@@ -859,7 +859,7 @@ Value getauxblock(const Array& params, bool fHelp)
         arith_uint256 target;
         bool fNegative, fOverflow;
         target.SetCompact(block.nBits, &fNegative, &fOverflow);
-        if (fNegative || fOverflow || target.IsNull())
+        if (fNegative || fOverflow || target == 0)
             throw std::runtime_error("invalid difficulty bits in block");
 
         json_spirit::Object result;
