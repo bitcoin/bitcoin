@@ -118,7 +118,7 @@ public:
         pchMessageStart[3] = 0xdf;
         vAlertPubKey = ParseHex("04fc9702847840aaf195de8442ebecedf5b095cdbb9bc716bda9110971b28a49e0ead8564ff0db22209e0374782c093bb899692d524e9d6a6956e7c5ecbcd68284");
         nDefaultPort = 9340;
-        bnProofOfWorkLimit = ~uint256(0) >> 32;  // Crown starting difficulty is 1 / 2^12
+        bnProofOfWorkLimit = ~arith_uint256(0) >> 32;  // Crown starting difficulty is 1 / 2^12
         nSubsidyHalvingInterval = 2100000;
         nEnforceBlockUpgradeMajority = 750;
         nRejectBlockOutdatedMajority = 950;
@@ -333,7 +333,7 @@ public:
         nMinerThreads = 1;
         nTargetTimespan = 14 * 24 * 60 * 60; // Crown: 1 day
         nTargetSpacing = 1 * 60; // Crown: 2.5 minutes
-        bnProofOfWorkLimit = ~uint256(0) >> 1;
+        bnProofOfWorkLimit = ~arith_uint256(0) >> 1;
         genesis.nTime = 1296688602;
         genesis.nBits = 0x207fffff;
         genesis.nNonce = 1;

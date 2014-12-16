@@ -4,6 +4,7 @@
 
 #include "key.h"
 
+#include "arith_uint256.h"
 #include "crypto/hmac_sha512.h"
 #include "crypto/rfc6979_hmac_sha256.h"
 #include "eccryptoverify.h"
@@ -81,7 +82,7 @@ bool CKey::Sign(const uint256 &hash, std::vector<unsigned char>& vchSig, uint32_
     do {
         uint256 nonce;
         prng.Generate((unsigned char*)&nonce, 32);
-        nonce += test_case;
+        nonce = ArithToUint256(UintToArith256(nonce) + test_case);
         int nSigLen = 72;
         int ret = secp256k1_ecdsa_sign((const unsigned char*)&hash, (unsigned char*)&vchSig[0], &nSigLen, begin(), (unsigned char*)&nonce);
         nonce = uint256();
