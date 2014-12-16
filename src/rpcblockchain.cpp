@@ -77,7 +77,6 @@ UniValue blockheaderToJSON(const CBlockIndex* blockindex)
     return result;
 }
 
-
 UniValue blockToJSON(const CBlock& block, const CBlockIndex* blockindex, bool txDetails = false)
 {
     UniValue result(UniValue::VOBJ);
@@ -117,7 +116,6 @@ UniValue blockToJSON(const CBlock& block, const CBlockIndex* blockindex, bool tx
         result.push_back(Pair("nextblockhash", pnext->GetBlockHash().GetHex()));
     return result;
 }
-
 
 UniValue getblockcount(const UniValue& params, bool fHelp)
 {
