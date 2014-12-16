@@ -385,6 +385,7 @@ Value getnetworkinfo(const Array& params, bool fHelp)
             "  \"localservices\": \"xxxxxxxxxxxxxxxx\", (string) the services we offer to the network\n"
             "  \"timeoffset\": xxxxx,                   (numeric) the time offset\n"
             "  \"connections\": xxxxx,                  (numeric) the number of connections\n"
+            "  \"networkactive\": x,                    (numeric) the number of connections\n"
             "  \"networks\": [                          (array) information per network\n"
             "  {\n"
             "    \"name\": \"xxx\",                     (string) network (ipv4, ipv6 or onion)\n"
@@ -417,6 +418,7 @@ Value getnetworkinfo(const Array& params, bool fHelp)
     obj.push_back(Pair("localservices",       strprintf("%016x", nLocalServices)));
     obj.push_back(Pair("timeoffset",    GetTimeOffset()));
     obj.push_back(Pair("connections",   (int)vNodes.size()));
+    obj.push_back(Pair("networkactive",   (int)fNetworkActive));
     obj.push_back(Pair("networks",      GetNetworksInfo()));
     obj.push_back(Pair("relayfee",      ValueFromAmount(::minRelayTxFee.GetFeePerK())));
     Array localAddresses;
@@ -433,4 +435,16 @@ Value getnetworkinfo(const Array& params, bool fHelp)
     }
     obj.push_back(Pair("localaddresses", localAddresses));
     return obj;
+}
+
+Value setnetworkactive(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 1)
+        throw runtime_error(
+            "setnetworkactive \"true|false\"\n"
+            "Disable/Re-Enable all network activity temporarily.");
+
+    SetNetworkActive(params[0].get_bool());
+
+    return fNetworkActive;
 }

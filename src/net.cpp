@@ -67,6 +67,7 @@ namespace {
 // Global state variables
 //
 bool fDiscover = true;
+bool fNetworkActive = true;
 bool fListen = true;
 uint64_t nLocalServices = NODE_NETWORK;
 CCriticalSection cs_mapLocalHost;
@@ -866,6 +867,11 @@ void ThreadSocketHandler()
                     if (nErr != WSAEWOULDBLOCK)
                         LogPrintf("socket error accept failed: %s\n", NetworkErrorString(nErr));
                 }
+                else if (!fNetworkActive)
+                {
+                    printf("connection from %s dropped (not accepting new connections)\n", addr.ToString().c_str());
+                    CloseSocket(hSocket);
+                }
                 else if (nInbound >= nMaxConnections - MAX_OUTBOUND_CONNECTIONS)
                 {
                     CloseSocket(hSocket);
@@ -1379,6 +1385,8 @@ bool OpenNetworkConnection(const CAddress& addrConnect, CSemaphoreGrant *grantOu
     // Initiate outbound network connection
     //
     boost::this_thread::interruption_point();
+    if (!fNetworkActive)
+        return false;
     if (!pszDest) {
         if (IsLocal(addrConnect) ||
             FindNode((CNetAddr)addrConnect) || CNode::IsBanned(addrConnect) ||
@@ -1677,6 +1685,27 @@ bool StopNode()
     }
 
     return true;
+}
+
+void SetNetworkActive(bool active)
+{
+    if (fDebug)
+        printf("SetNetworkActive: %s\n", active ? "true" : "false");
+
+    if (!active) {
+        fNetworkActive = false;
+
+        LOCK(cs_vNodes);
+        // Close sockets to all nodes
+        BOOST_FOREACH(CNode* pnode, vNodes)
+        {
+            pnode->CloseSocketDisconnect();
+        }
+    } else {
+        fNetworkActive = true;
+    }
+
+    uiInterface.NotifyNetworkActiveChanged(fNetworkActive);
 }
 
 class CNetCleanup

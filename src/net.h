@@ -74,6 +74,7 @@ bool BindListenPort(const CService &bindAddr, std::string& strError, bool fWhite
 void StartNode(boost::thread_group& threadGroup);
 bool StopNode();
 void SocketSendData(CNode *pnode);
+void SetNetworkActive(bool active);
 
 typedef int NodeId;
 
@@ -119,6 +120,7 @@ CAddress GetLocalAddress(const CNetAddr *paddrPeer = NULL);
 
 
 extern bool fDiscover;
+extern bool fNetworkActive;
 extern bool fListen;
 extern uint64_t nLocalServices;
 extern uint64_t nLocalHostNonce;

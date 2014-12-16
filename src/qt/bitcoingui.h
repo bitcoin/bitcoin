@@ -25,6 +25,7 @@ class OptionsModel;
 class RPCConsole;
 class SendCoinsRecipient;
 class UnitDisplayStatusBarControl;
+class NetworkToggleStatusBarControl;
 class WalletFrame;
 class WalletModel;
 
@@ -79,7 +80,7 @@ private:
 
     UnitDisplayStatusBarControl *unitDisplayControl;
     QLabel *labelEncryptionIcon;
-    QLabel *labelConnectionsIcon;
+    NetworkToggleStatusBarControl *connectionsControl;
     QLabel *labelBlocksIcon;
     QLabel *progressBarLabel;
     QProgressBar *progressBar;
@@ -134,6 +135,9 @@ private:
     /** Disconnect core signals from GUI client */
     void unsubscribeFromCoreSignals();
 
+    /** Update UI with latest network info from model. */
+    void updateNetworkState();
+    
 signals:
     /** Signal raised when a URI was entered or dragged to the GUI */
     void receivedURI(const QString &uri);
@@ -141,6 +145,8 @@ signals:
 public slots:
     /** Set number of connections shown in the UI */
     void setNumConnections(int count);
+    /** Set network state shown in the UI */
+    void setNetworkActive(bool networkActive);
     /** Set number of blocks shown in the UI */
     void setNumBlocks(int count);
 
@@ -235,6 +241,19 @@ private slots:
     void updateDisplayUnit(int newUnits);
     /** Tells underlying optionsModel to update its current display unit. */
     void onMenuSelection(QAction* action);
+};
+
+class NetworkToggleStatusBarControl : public QLabel
+{
+    Q_OBJECT
+    
+public:
+    void setClientModel(ClientModel *clientModel);
+protected:
+    void mousePressEvent(QMouseEvent *event);
+    
+private:
+    ClientModel *clientModel;
 };
 
 #endif // BITCOIN_QT_BITCOINGUI_H

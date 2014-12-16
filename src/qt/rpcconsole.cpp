@@ -294,6 +294,9 @@ void RPCConsole::setClientModel(ClientModel *model)
         setNumBlocks(model->getNumBlocks());
         connect(model, SIGNAL(numBlocksChanged(int)), this, SLOT(setNumBlocks(int)));
 
+        updateNetworkState();
+        connect(model, SIGNAL(networkActiveChanged(bool)), this, SLOT(setNetworkActive(bool)));
+
         updateTrafficStats(model->getTotalBytesRecv(), model->getTotalBytesSent());
         connect(model, SIGNAL(bytesChanged(quint64,quint64)), this, SLOT(updateTrafficStats(quint64, quint64)));
 
@@ -389,16 +392,29 @@ void RPCConsole::message(int category, const QString &message, bool html)
     ui->messagesWidget->append(out);
 }
 
+void RPCConsole::updateNetworkState()
+{
+    QString connections = QString::number(clientModel->getNumConnections()) + " (";
+    connections += tr("In:") + " " + QString::number(clientModel->getNumConnections(CONNECTIONS_IN)) + " / ";
+    connections += tr("Out:") + " " + QString::number(clientModel->getNumConnections(CONNECTIONS_OUT)) + ")";
+    
+    if(!clientModel->getNetworkActive())
+        connections += " (" + tr("Network activity disabled") + ")";
+
+    ui->numberOfConnections->setText(connections);
+}
+
 void RPCConsole::setNumConnections(int count)
 {
     if (!clientModel)
         return;
 
-    QString connections = QString::number(count) + " (";
-    connections += tr("In:") + " " + QString::number(clientModel->getNumConnections(CONNECTIONS_IN)) + " / ";
-    connections += tr("Out:") + " " + QString::number(clientModel->getNumConnections(CONNECTIONS_OUT)) + ")";
+    updateNetworkState();
+}
 
-    ui->numberOfConnections->setText(connections);
+void RPCConsole::setNetworkActive(bool networkActive)
+{
+    updateNetworkState();
 }
 
 void RPCConsole::setNumBlocks(int count)
@@ -656,4 +672,9 @@ void RPCConsole::hideEvent(QHideEvent *event)
 
     // stop PeerTableModel auto refresh
     clientModel->getPeerTableModel()->stopAutoRefresh();
+}
+
+void RPCConsole::on_toggleNetworkActiveButton_clicked()
+{
+    clientModel->setNetworkActive(!clientModel->getNetworkActive());
 }
