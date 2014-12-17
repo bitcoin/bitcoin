@@ -96,7 +96,7 @@ AC_ARG_ENABLE(endomorphism,
     [use_endomorphism=$enableval],
     [use_endomorphism=no])
 
-AC_ARG_WITH([field], [AS_HELP_STRING([--with-field=gmp|64bit|32bit|auto],
+AC_ARG_WITH([field], [AS_HELP_STRING([--with-field=64bit|32bit|auto],
 [Specify Field Implementation. Default is auto])],[req_field=$withval], [req_field=auto])
 
 AC_ARG_WITH([bignum], [AS_HELP_STRING([--with-bignum=gmp|no|auto],
@@ -152,12 +152,6 @@ if test x"$req_field" = x"auto"; then
     fi
   fi
   if test x"$set_field" = x; then
-    SECP_GMP_CHECK
-    if test x"$has_gmp" = x"yes"; then
-      set_field=gmp
-    fi
-  fi
-  if test x"$set_field" = x; then
     set_field=32bit
   fi
 else
@@ -169,12 +163,6 @@ else
       if test x"$has_int128" != x"yes"; then
         AC_MSG_ERROR([64bit field explicitly requested but neither __int128 support or x86_64 assembly available])
       fi
-    fi
-    ;;
-  gmp)
-    SECP_GMP_CHECK
-    if test x"$has_gmp" != x"yes"; then
-      AC_MSG_ERROR([gmp field explicitly requested but libgmp not available])
     fi
     ;;
   32bit)
@@ -253,10 +241,6 @@ case $set_field in
 64bit)
   AC_DEFINE(USE_FIELD_5X52, 1, [Define this symbol to use the FIELD_5X52 implementation])
   ;;
-gmp)
-  AC_DEFINE(HAVE_LIBGMP,1,[Define this symbol if libgmp is installed])
-  AC_DEFINE(USE_FIELD_GMP, 1, [Define this symbol to use the FIELD_GMP implementation])
-  ;;
 32bit)
   AC_DEFINE(USE_FIELD_10X26, 1, [Define this symbol to use the FIELD_10X26 implementation])
   ;;
@@ -312,7 +296,7 @@ if test x"$use_tests" = x"yes"; then
   fi
 fi
 
-if test x"$set_field" = x"gmp" || test x"$set_bignum" = x"gmp"; then
+if test x"$set_bignum" = x"gmp"; then
   SECP_LIBS="$SECP_LIBS $GMP_LIBS"
   SECP_INCLUDES="$SECP_INCLUDES $GMP_CPPFLAGS"
 fi

@@ -22,9 +22,7 @@
 #include "libsecp256k1-config.h"
 #endif
 
-#if defined(USE_FIELD_GMP)
-#include "field_gmp.h"
-#elif defined(USE_FIELD_10X26)
+#if defined(USE_FIELD_10X26)
 #include "field_10x26.h"
 #elif defined(USE_FIELD_5X52)
 #include "field_5x52.h"
