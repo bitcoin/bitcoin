@@ -7,11 +7,11 @@ a perl regex one liner.
 
 For example: if it finds something like this and we're in 2014
 
-// Copyright (c) 2009-2013 The Bitcoin developers
+// Copyright (c) 2009-2013 The Bitcoin Core developers
 
 it will change it to
 
-// Copyright (c) 2009-2014 The Bitcoin developers
+// Copyright (c) 2009-2014 The Bitcoin Core developers
 
 It will do this for all the files in the folder and its children.
 
