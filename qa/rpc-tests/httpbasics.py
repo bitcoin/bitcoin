@@ -20,7 +20,7 @@ try:
 except ImportError:
     import urlparse
 
-class RESTTest (BitcoinTestFramework):        
+class HTTPBasicsTest (BitcoinTestFramework):        
     def run_test(self):        
         
         #################################################
@@ -73,4 +73,4 @@ class RESTTest (BitcoinTestFramework):
         
         
 if __name__ == '__main__':
-    RESTTest ().main ()
+    HTTPBasicsTest ().main ()
