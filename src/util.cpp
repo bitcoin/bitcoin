@@ -346,7 +346,7 @@ bool SoftSetBoolArg(const std::string& strArg, bool fValue)
         return SoftSetArg(strArg, std::string("0"));
 }
 
-static std::string FormatException(std::exception* pex, const char* pszThread)
+static std::string FormatException(const std::exception* pex, const char* pszThread)
 {
 #ifdef WIN32
     char pszModule[MAX_PATH] = "";
@@ -362,7 +362,7 @@ static std::string FormatException(std::exception* pex, const char* pszThread)
             "UNKNOWN EXCEPTION       \n%s in %s       \n", pszModule, pszThread);
 }
 
-void PrintExceptionContinue(std::exception* pex, const char* pszThread)
+void PrintExceptionContinue(const std::exception* pex, const char* pszThread)
 {
     std::string message = FormatException(pex, pszThread);
     LogPrintf("\n\n************************\n%s\n", message);
@@ -514,7 +514,7 @@ bool TryCreateDirectory(const boost::filesystem::path& p)
     try
     {
         return boost::filesystem::create_directory(p);
-    } catch (boost::filesystem::filesystem_error) {
+    } catch (const boost::filesystem::filesystem_error&) {
         if (!boost::filesystem::exists(p) || !boost::filesystem::is_directory(p))
             throw;
     }
@@ -721,8 +721,7 @@ void SetupEnvironment()
 #else // boost filesystem v2
             std::locale();                      // Raises runtime error if current locale is invalid
 #endif
-    } catch(std::runtime_error &e)
-    {
+    } catch (const std::runtime_error&) {
         setenv("LC_ALL", "C", 1); // Force C locale
     }
 #endif
