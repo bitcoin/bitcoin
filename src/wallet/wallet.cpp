@@ -1686,8 +1686,24 @@ bool CWallet::SelectCoins(const CAmount& nTargetValue, set<pair<const CWalletTx*
             (bSpendZeroConfChange && SelectCoinsMinConf(nTargetValue, 0, 1, vCoins, setCoinsRet, nValueRet)));
 }
 
+bool CWallet::FundTransaction(const CTransaction& txToFund, CMutableTransaction& txNew, CAmount &nFeeRet, int& nChangePosRet, std::string& strFailReason)
+{
+    unsigned int nSubtractFeeFromAmount = 0;
+    vector<CRecipient> vecSend;
+    
+    BOOST_FOREACH (const CTxOut& out, txToFund.vout)
+    {
+        CRecipient recipient = {out.scriptPubKey, out.nValue, nSubtractFeeFromAmount};
+        vecSend.push_back(recipient);
+    }
+    
+    CReserveKey reservekey(this);
+    CWalletTx wtx;
+    return CreateTransaction(vecSend, wtx, txNew, reservekey, nFeeRet, nChangePosRet, strFailReason, NULL, false);
+}
+
 bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend,
-                                CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet, int& nChangePosRet, std::string& strFailReason, const CCoinControl* coinControl)
+                                CWalletTx& wtxNew, CMutableTransaction& txNew, CReserveKey& reservekey, CAmount& nFeeRet, int& nChangePosRet, std::string& strFailReason, const CCoinControl* coinControl, bool sign)
 {
     CAmount nValue = 0;
     unsigned int nSubtractFeeFromAmount = 0;
@@ -1711,7 +1727,6 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend,
 
     wtxNew.fTimeReceivedIsTxTime = true;
     wtxNew.BindWallet(this);
-    CMutableTransaction txNew;
 
     // Discourage fee sniping.
     //
@@ -1907,6 +1922,14 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend,
                     strFailReason = _("Transaction too large");
                     return false;
                 }
+                
+                //remove signature if we used the signing only for the fee calculation
+                if(!sign)
+                {
+                    BOOST_FOREACH (CTxIn& vin, txNew.vin)
+                        vin.scriptSig = CScript();
+                }
+                
                 dPriority = wtxNew.ComputePriority(dPriority, nBytes);
 
                 // Can we complete this as a free transaction?
@@ -1942,8 +1965,14 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend,
             }
         }
     }
-
     return true;
+}
+
+bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend,
+                                CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet, int& nChangePosRet, std::string& strFailReason, const CCoinControl* coinControl, bool sign)
+{
+    CMutableTransaction txNew;
+    return CreateTransaction(vecSend, wtxNew, txNew, reservekey, nFeeRet, nChangePosRet, strFailReason, coinControl, sign);
 }
 
 /**
