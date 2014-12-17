@@ -611,10 +611,11 @@ public:
     CAmount GetWatchOnlyBalance() const;
     CAmount GetUnconfirmedWatchOnlyBalance() const;
     CAmount GetImmatureWatchOnlyBalance() const;
+    bool FundTransaction(const CTransaction& txToFund, CMutableTransaction& txNew, CAmount& nFeeRet, std::string& strFailReason);
     bool CreateTransaction(const std::vector<std::pair<CScript, CAmount> >& vecSend,
-                           CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet, std::string& strFailReason, const CCoinControl *coinControl = NULL);
+                           CWalletTx& wtxNew, CMutableTransaction& txNew, CReserveKey& reservekey, CAmount& nFeeRet, std::string& strFailReason, const CCoinControl *coinControl = NULL, bool sign = false);
     bool CreateTransaction(CScript scriptPubKey, const CAmount& nValue,
-                           CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet, std::string& strFailReason, const CCoinControl *coinControl = NULL);
+                           CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet, std::string& strFailReason, const CCoinControl *coinControl = NULL, bool sign = false);
     bool CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey);
 
     static CFeeRate minTxFee;
