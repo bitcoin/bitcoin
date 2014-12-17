@@ -6,9 +6,13 @@ addons:
 compiler:
   - clang
   - gcc
+cache:
+  directories:
+  - src/java/guava/
 env:
   global:
     - FIELD=auto  BIGNUM=auto  SCALAR=auto  ENDOMORPHISM=no  STATICPRECOMPUTATION=yes  ASM=no  BUILD=check  EXTRAFLAGS=  HOST=  ECDH=no  schnorr=no  RECOVERY=no  EXPERIMENTAL=no
+    - GUAVA_URL=https://search.maven.org/remotecontent?filepath=com/google/guava/guava/18.0/guava-18.0.jar GUAVA_JAR=src/java/guava/guava-18.0.jar
   matrix:
     - SCALAR=32bit    RECOVERY=yes
     - SCALAR=32bit    FIELD=32bit       ECDH=yes  EXPERIMENTAL=yes
@@ -26,6 +30,7 @@ env:
     - BUILD=distcheck
     - EXTRAFLAGS=CPPFLAGS=-DDETERMINISTIC
     - EXTRAFLAGS=CFLAGS=-O0
+    - BUILD=check-java ECDH=yes SCHNORR=yes EXPERIMENTAL=yes
 matrix:
   fast_finish: true
   include:
@@ -55,6 +60,8 @@ matrix:
           packages:
             - gcc-multilib
             - libgmp-dev:i386
+before_install: mkdir -p `dirname $GUAVA_JAR`
+install: if [ ! -f $GUAVA_JAR ]; then wget $GUAVA_URL -O $GUAVA_JAR; fi
 before_script: ./autogen.sh
 script:
  - if [ -n "$HOST" ]; then export USE_HOST="--host=$HOST"; fi

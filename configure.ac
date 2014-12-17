@@ -123,6 +123,11 @@ AC_ARG_ENABLE(module_recovery,
     [enable_module_recovery=$enableval],
     [enable_module_recovery=no])
 
+AC_ARG_ENABLE(jni,
+    AS_HELP_STRING([--enable-jni],[enable libsecp256k1_jni (default is auto)]),
+    [use_jni=$enableval],
+    [use_jni=auto])
+
 AC_ARG_WITH([field], [AS_HELP_STRING([--with-field=64bit|32bit|auto],
 [Specify Field Implementation. Default is auto])],[req_field=$withval], [req_field=auto])
 
@@ -323,6 +328,22 @@ if test x"$use_tests" = x"yes"; then
   fi
 fi
 
+if test x"$use_jni" != x"no"; then
+  AX_JNI_INCLUDE_DIR
+  if test "x$JNI_INCLUDE_DIRS" = "x"; then
+    if test x"$use_jni" = x"yes"; then
+      AC_MSG_ERROR([jni support explicitly requested but headers were not found])
+    fi
+    AC_MSG_WARN([jni headers not found. jni support disabled])
+    use_jni=no
+  else
+    use_jni=yes
+    for JNI_INCLUDE_DIR in $JNI_INCLUDE_DIRS; do
+      JNI_INCLUDES="$JNI_INCLUDES -I$JNI_INCLUDE_DIR"
+    done
+  fi
+fi
+
 if test x"$set_bignum" = x"gmp"; then
   SECP_LIBS="$SECP_LIBS $GMP_LIBS"
   SECP_INCLUDES="$SECP_INCLUDES $GMP_CPPFLAGS"
@@ -355,7 +376,10 @@ AC_MSG_NOTICE([Using field implementation: $set_field])
 AC_MSG_NOTICE([Using bignum implementation: $set_bignum])
 AC_MSG_NOTICE([Using scalar implementation: $set_scalar])
 AC_MSG_NOTICE([Using endomorphism optimizations: $use_endomorphism])
+AC_MSG_NOTICE([Building ECDH module: $enable_module_ecdh])
+AC_MSG_NOTICE([Building Schnorr signatures module: $enable_module_schnorr])
 AC_MSG_NOTICE([Building ECDSA pubkey recovery module: $enable_module_recovery])
+AC_MSG_NOTICE([Using jni: $use_jni])
 
 if test x"$enable_experimental" = x"yes"; then
   AC_MSG_NOTICE([******])
@@ -375,6 +399,7 @@ fi
 
 AC_CONFIG_HEADERS([src/libsecp256k1-config.h])
 AC_CONFIG_FILES([Makefile libsecp256k1.pc])
+AC_SUBST(JNI_INCLUDES)
 AC_SUBST(SECP_INCLUDES)
 AC_SUBST(SECP_LIBS)
 AC_SUBST(SECP_TEST_LIBS)
@@ -385,6 +410,7 @@ AM_CONDITIONAL([USE_ECMULT_STATIC_PRECOMPUTATION], [test x"$use_ecmult_static_pr
 AM_CONDITIONAL([ENABLE_MODULE_ECDH], [test x"$enable_module_ecdh" = x"yes"])
 AM_CONDITIONAL([ENABLE_MODULE_SCHNORR], [test x"$enable_module_schnorr" = x"yes"])
 AM_CONDITIONAL([ENABLE_MODULE_RECOVERY], [test x"$enable_module_recovery" = x"yes"])
+AM_CONDITIONAL([USE_JNI], [test x"$use_jni" == x"yes"])
 
 dnl make sure nothing new is exported so that we don't break the cache
 PKGCONFIG_PATH_TEMP="$PKG_CONFIG_PATH"
