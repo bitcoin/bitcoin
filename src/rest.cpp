@@ -307,7 +307,7 @@ bool HTTPReq_REST(AcceptedConnection* conn,
                 return uri_prefixes[i].handler(conn, strReq, mapHeaders, fRun);
             }
         }
-    } catch (RestErr& re) {
+    } catch (const RestErr& re) {
         conn->stream() << HTTPReply(re.status, re.message + "\r\n", false, false, "text/plain") << std::flush;
         return false;
     }
