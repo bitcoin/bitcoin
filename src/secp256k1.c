@@ -88,7 +88,7 @@ int secp256k1_ecdsa_sign(const unsigned char *msg32, unsigned char *signature, i
         ret = secp256k1_ecdsa_sig_sign(&sig, &sec, &msg, &non, NULL);
     }
     if (ret) {
-        secp256k1_ecdsa_sig_serialize(signature, signaturelen, &sig);
+        ret = secp256k1_ecdsa_sig_serialize(signature, signaturelen, &sig);
     }
     secp256k1_scalar_clear(&msg);
     secp256k1_scalar_clear(&non);
