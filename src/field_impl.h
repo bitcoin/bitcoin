@@ -13,9 +13,7 @@
 
 #include "util.h"
 
-#if defined(USE_FIELD_GMP)
-#include "field_gmp_impl.h"
-#elif defined(USE_FIELD_10X26)
+#if defined(USE_FIELD_10X26)
 #include "field_10x26_impl.h"
 #elif defined(USE_FIELD_5X52)
 #include "field_5x52_impl.h"
