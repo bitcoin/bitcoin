@@ -1298,6 +1298,8 @@ void test_ecdsa_edge_cases(void) {
         msg[31] = 0xaa;
         siglen = 72;
         CHECK(secp256k1_ecdsa_sign(msg, sig, &siglen, key, nonce) == 1);
+        siglen = 10;
+        CHECK(secp256k1_ecdsa_sign(msg, sig, &siglen, key, nonce) != 1);
     }
 
     /* Privkey export where pubkey is the point at infinity. */
