@@ -4,6 +4,11 @@ SUBDIRS = src
 
 GZIP_ENV="-9n"
 
+if BUILD_BITCOIN_LIBS
+pkgconfigdir = $(libdir)/pkgconfig
+pkgconfig_DATA = libbitcoinconsensus.pc
+endif
+
 BITCOIND_BIN=$(top_builddir)/src/bitcoind$(EXEEXT)
 BITCOIN_QT_BIN=$(top_builddir)/src/qt/bitcoin-qt$(EXEEXT)
 BITCOIN_CLI_BIN=$(top_builddir)/src/bitcoin-cli$(EXEEXT)
