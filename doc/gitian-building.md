@@ -291,7 +291,7 @@ Setting up gitian images
 -------------------------
 
 Gitian needs virtual images of the operating system to build in.
-Currently this is Ubuntu Precise for both x86 architectures.
+Currently this is Ubuntu Precise for x86_64.
 These images will be copied and used every time that a build is started to
 make sure that the build is deterministic.
 Creating the images will take a while, but only has to be done once.
@@ -300,7 +300,6 @@ Execute the following as user `debian`:
 
 ```bash
 cd gitian-builder
-bin/make-base-vm --lxc --arch i386 --suite precise
 bin/make-base-vm --lxc --arch amd64 --suite precise
 ```
 
@@ -311,33 +310,25 @@ There will be a lot of warnings printed during build of the images. These can be
 Getting and building the inputs
 --------------------------------
 
-In [doc/release-process.md](release-process.md) in the bitcoin repository under 'Fetch and build inputs'.
-you will find a list of `wget` commands that can be executed to get the dependencies.
-
-I needed to add `--no-check-certificate` to the OpenSSL wget line to make it work.
-Likely this is because the ca-certificates in Debian 7.4 is fairly old. This does not create a 
-security issue as the gitian descriptors check the integrity of the input archives and refuse to work
-if any one is corrupted.
-
-After downloading the archives, execute the `gbuild` commands to build the dependencies.
-This can take a long time, but only has to be done when the dependencies change, for example
-to upgrade the used version.
-
-**Note**: Do not forget to copy the result from `build/out` to `inputs` after every gbuild command! This will save
-you a lot of time.
-
-At any time you can check the package installation and build progress with
-
-```bash
-tail -f var/install.log
-tail -f var/build.log
-```
+Follow the instructions in [doc/release-process.md](release-process.md) in the bitcoin repository
+under 'Fetch and build inputs' to install sources which require manual intervention. Also follow
+the next step: 'Seed the Gitian sources cache', which will fetch all necessary source files allowing
+for gitian to work offline.
 
 Building Bitcoin
 ----------------
 
 To build Bitcoin (for Linux, OSX and Windows) just follow the steps under 'perform
 gitian builds' in [doc/release-process.md](release-process.md) in the bitcoin repository.
+
+This may take a long time as it also builds the dependencies needed for each descriptor.
+These dependencies will be cached after a successful build to avoid rebuilding them when possible.
+
+At any time you can check the package installation and build progress with
+
+```bash
+tail -f var/install.log
+tail -f var/build.log
 
 Output from `gbuild` will look something like
 
@@ -348,7 +339,7 @@ Output from `gbuild` will look something like
     Resolving deltas: 100% (25724/25724), done.
     From https://github.com/bitcoin/bitcoin
     ... (new tags, new branch etc)
-    --- Building for precise i386 ---
+    --- Building for precise x86_64 ---
     Stopping target if it is up
     Making a new image copy
     stdin: is not a tty
@@ -362,9 +353,6 @@ Output from `gbuild` will look something like
     Creating build script (var/build-script)
     lxc-start: Connection refused - inotify event with no name (mask 32768)
     Running build script (log in var/build.log)
-
-As when building the dependencies, the progress of package installation and building
-can be inspected in `var/install.log` and `var/build.log`.
 
 Building an alternative repository
 -----------------------------------
