@@ -8,41 +8,48 @@
 #include <iomanip>
 #include <limits>
 #include <cmath>
+#include "uint256.h"
 #include "arith_uint256.h"
 #include <string>
 #include "version.h"
 
 BOOST_AUTO_TEST_SUITE(arith_uint256_tests)
 
+/// Convert vector to arith_uint256, via uint256 blob
+inline arith_uint256 arith_uint256V(const std::vector<unsigned char>& vch)
+{
+    return UintToArith256(uint256(vch));
+}
+
 const unsigned char R1Array[] =
     "\x9c\x52\x4a\xdb\xcf\x56\x11\x12\x2b\x29\x12\x5e\x5d\x35\xd2\xd2"
     "\x22\x81\xaa\xb5\x33\xf0\x08\x32\xd5\x56\xb1\xf9\xea\xe5\x1d\x7d";
 const char R1ArrayHex[] = "7D1DE5EAF9B156D53208F033B5AA8122D2d2355d5e12292b121156cfdb4a529c";
 const double R1Ldouble = 0.4887374590559308955; // R1L equals roughly R1Ldouble * 2^256
-const arith_uint256 R1L = arith_uint256(std::vector<unsigned char>(R1Array,R1Array+32));
+const arith_uint256 R1L = arith_uint256V(std::vector<unsigned char>(R1Array,R1Array+32));
 const uint64_t R1LLow64 = 0x121156cfdb4a529cULL;
 
 const unsigned char R2Array[] =
     "\x70\x32\x1d\x7c\x47\xa5\x6b\x40\x26\x7e\x0a\xc3\xa6\x9c\xb6\xbf"
     "\x13\x30\x47\xa3\x19\x2d\xda\x71\x49\x13\x72\xf0\xb4\xca\x81\xd7";
-const arith_uint256 R2L = arith_uint256(std::vector<unsigned char>(R2Array,R2Array+32));
+const arith_uint256 R2L = arith_uint256V(std::vector<unsigned char>(R2Array,R2Array+32));
 
 const char R1LplusR2L[] = "549FB09FEA236A1EA3E31D4D58F1B1369288D204211CA751527CFC175767850C";
 
 const unsigned char ZeroArray[] =
     "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
     "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00";
-const arith_uint256 ZeroL = arith_uint256(std::vector<unsigned char>(ZeroArray,ZeroArray+32));
+const arith_uint256 ZeroL = arith_uint256V(std::vector<unsigned char>(ZeroArray,ZeroArray+32));
 
 const unsigned char OneArray[] =
     "\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
     "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00";
-const arith_uint256 OneL = arith_uint256(std::vector<unsigned char>(OneArray,OneArray+32));
+const arith_uint256 OneL = arith_uint256V(std::vector<unsigned char>(OneArray,OneArray+32));
 
 const unsigned char MaxArray[] =
     "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff"
     "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff";
-const arith_uint256 MaxL = arith_uint256(std::vector<unsigned char>(MaxArray,MaxArray+32));
+const arith_uint256 MaxL = arith_uint256V(std::vector<unsigned char>(MaxArray,MaxArray+32));
 
 const arith_uint256 HalfL = (OneL << 255);
 std::string ArrayToString(const unsigned char A[], unsigned int width)
@@ -112,10 +119,6 @@ BOOST_AUTO_TEST_CASE( basics ) // constructors, equality, inequality
     tmpL = ~R1L; BOOST_CHECK(tmpL == ~R1L);
     tmpL = ~R2L; BOOST_CHECK(tmpL == ~R2L);
     tmpL = ~MaxL; BOOST_CHECK(tmpL == ~MaxL);
-
-    // Wrong length must throw exception.
-    BOOST_CHECK_THROW(arith_uint256(std::vector<unsigned char>(OneArray,OneArray+31)), uint_error);
-    BOOST_CHECK_THROW(arith_uint256(std::vector<unsigned char>(OneArray,OneArray+20)), uint_error);
 }
 
 void shiftArrayRight(unsigned char* to, const unsigned char* from, unsigned int arrayLength, unsigned int bitsToShift)
@@ -155,7 +158,7 @@ BOOST_AUTO_TEST_CASE( shifts ) { // "<<"  ">>"  "<<="  ">>="
     for (unsigned int i = 0; i < 256; ++i)
     {
         shiftArrayLeft(TmpArray, OneArray, 32, i);
-        BOOST_CHECK(arith_uint256(std::vector<unsigned char>(TmpArray,TmpArray+32)) == (OneL << i));
+        BOOST_CHECK(arith_uint256V(std::vector<unsigned char>(TmpArray,TmpArray+32)) == (OneL << i));
         TmpL = OneL; TmpL <<= i;
         BOOST_CHECK(TmpL == (OneL << i));
         BOOST_CHECK((HalfL >> (255-i)) == (OneL << i));
@@ -163,22 +166,22 @@ BOOST_AUTO_TEST_CASE( shifts ) { // "<<"  ">>"  "<<="  ">>="
         BOOST_CHECK(TmpL == (OneL << i));
 
         shiftArrayLeft(TmpArray, R1Array, 32, i);
-        BOOST_CHECK(arith_uint256(std::vector<unsigned char>(TmpArray,TmpArray+32)) == (R1L << i));
+        BOOST_CHECK(arith_uint256V(std::vector<unsigned char>(TmpArray,TmpArray+32)) == (R1L << i));
         TmpL = R1L; TmpL <<= i;
         BOOST_CHECK(TmpL == (R1L << i));
 
         shiftArrayRight(TmpArray, R1Array, 32, i);
-        BOOST_CHECK(arith_uint256(std::vector<unsigned char>(TmpArray,TmpArray+32)) == (R1L >> i));
+        BOOST_CHECK(arith_uint256V(std::vector<unsigned char>(TmpArray,TmpArray+32)) == (R1L >> i));
         TmpL = R1L; TmpL >>= i;
         BOOST_CHECK(TmpL == (R1L >> i));
 
         shiftArrayLeft(TmpArray, MaxArray, 32, i);
-        BOOST_CHECK(arith_uint256(std::vector<unsigned char>(TmpArray,TmpArray+32)) == (MaxL << i));
+        BOOST_CHECK(arith_uint256V(std::vector<unsigned char>(TmpArray,TmpArray+32)) == (MaxL << i));
         TmpL = MaxL; TmpL <<= i;
         BOOST_CHECK(TmpL == (MaxL << i));
 
         shiftArrayRight(TmpArray, MaxArray, 32, i);
-        BOOST_CHECK(arith_uint256(std::vector<unsigned char>(TmpArray,TmpArray+32)) == (MaxL >> i));
+        BOOST_CHECK(arith_uint256V(std::vector<unsigned char>(TmpArray,TmpArray+32)) == (MaxL >> i));
         TmpL = MaxL; TmpL >>= i;
         BOOST_CHECK(TmpL == (MaxL >> i));
     }
@@ -205,7 +208,7 @@ BOOST_AUTO_TEST_CASE( unaryOperators ) // !    ~    -
 
     unsigned char TmpArray[32];
     for (unsigned int i = 0; i < 32; ++i) { TmpArray[i] = ~R1Array[i]; }
-    BOOST_CHECK(arith_uint256(std::vector<unsigned char>(TmpArray,TmpArray+32)) == (~R1L));
+    BOOST_CHECK(arith_uint256V(std::vector<unsigned char>(TmpArray,TmpArray+32)) == (~R1L));
 
     BOOST_CHECK(-ZeroL == ZeroL);
     BOOST_CHECK(-R1L == (~R1L)+1);
@@ -218,7 +221,7 @@ BOOST_AUTO_TEST_CASE( unaryOperators ) // !    ~    -
 // element of Aarray and Barray, and then converting the result into a arith_uint256.
 #define CHECKBITWISEOPERATOR(_A_,_B_,_OP_)                              \
     for (unsigned int i = 0; i < 32; ++i) { TmpArray[i] = _A_##Array[i] _OP_ _B_##Array[i]; } \
-    BOOST_CHECK(arith_uint256(std::vector<unsigned char>(TmpArray,TmpArray+32)) == (_A_##L _OP_ _B_##L));
+    BOOST_CHECK(arith_uint256V(std::vector<unsigned char>(TmpArray,TmpArray+32)) == (_A_##L _OP_ _B_##L));
 
 #define CHECKASSIGNMENTOPERATOR(_A_,_B_,_OP_)                           \
     TmpL = _A_##L; TmpL _OP_##= _B_##L; BOOST_CHECK(TmpL == (_A_##L _OP_ _B_##L));
