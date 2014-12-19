@@ -12,6 +12,7 @@
 #include "optionsmodel.h"
 #include "receiverequestdialog.h"
 #include "recentrequeststablemodel.h"
+#include "scicon.h"
 #include "walletmodel.h"
 
 #include <QAction>
@@ -33,6 +34,11 @@ ReceiveCoinsDialog::ReceiveCoinsDialog(QWidget *parent) :
     ui->receiveButton->setIcon(QIcon());
     ui->showRequestButton->setIcon(QIcon());
     ui->removeRequestButton->setIcon(QIcon());
+#else
+    ui->clearButton->setIcon(SingleColorIcon(":/icons/remove"));
+    ui->receiveButton->setIcon(SingleColorIcon(":/icons/receiving_addresses"));
+    ui->showRequestButton->setIcon(SingleColorIcon(":/icons/edit"));
+    ui->removeRequestButton->setIcon(SingleColorIcon(":/icons/remove"));
 #endif
 
     // context menu actions

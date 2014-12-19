@@ -7,6 +7,7 @@
 
 #include "addressbookpage.h"
 #include "guiutil.h"
+#include "scicon.h"
 #include "walletmodel.h"
 
 #include "base58.h"
@@ -24,6 +25,15 @@ SignVerifyMessageDialog::SignVerifyMessageDialog(QWidget *parent) :
     model(0)
 {
     ui->setupUi(this);
+
+    ui->addressBookButton_SM->setIcon(SingleColorIcon(":/icons/address-book"));
+    ui->pasteButton_SM->setIcon(SingleColorIcon(":/icons/editpaste"));
+    ui->copySignatureButton_SM->setIcon(SingleColorIcon(":/icons/editcopy"));
+    ui->signMessageButton_SM->setIcon(SingleColorIcon(":/icons/edit"));
+    ui->clearButton_SM->setIcon(SingleColorIcon(":/icons/remove"));
+    ui->addressBookButton_VM->setIcon(SingleColorIcon(":/icons/address-book"));
+    ui->verifyMessageButton_VM->setIcon(SingleColorIcon(":/icons/transaction_0"));
+    ui->clearButton_VM->setIcon(SingleColorIcon(":/icons/remove"));
 
 #if QT_VERSION >= 0x040700
     ui->signatureOut_SM->setPlaceholderText(tr("Click \"Sign Message\" to generate signature"));

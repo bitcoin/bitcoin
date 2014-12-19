@@ -8,6 +8,7 @@
 #include "clientmodel.h"
 #include "guiutil.h"
 #include "peertablemodel.h"
+#include "scicon.h"
 
 #include "main.h"
 #include "chainparams.h"
@@ -210,8 +211,9 @@ RPCConsole::RPCConsole(QWidget *parent) :
     GUIUtil::restoreWindowGeometry("nRPCConsoleWindow", this->size(), this);
 
 #ifndef Q_OS_MAC
-    ui->openDebugLogfileButton->setIcon(QIcon(":/icons/export"));
+    ui->openDebugLogfileButton->setIcon(SingleColorIcon(":/icons/export"));
 #endif
+    ui->clearButton->setIcon(SingleColorIcon(":/icons/remove"));
 
     // Install event filter for up and down arrow
     ui->lineEdit->installEventFilter(this);
@@ -348,7 +350,7 @@ void RPCConsole::clear()
         ui->messagesWidget->document()->addResource(
                     QTextDocument::ImageResource,
                     QUrl(ICON_MAPPING[i].url),
-                    QImage(ICON_MAPPING[i].source).scaled(ICON_SIZE, Qt::IgnoreAspectRatio, Qt::SmoothTransformation));
+                    SingleColorImage(ICON_MAPPING[i].source, SingleColor()).scaled(ICON_SIZE, Qt::IgnoreAspectRatio, Qt::SmoothTransformation));
     }
 
     // Set default style sheet
