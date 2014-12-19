@@ -57,7 +57,6 @@ public:
     }
 
     explicit base_uint(const std::string& str);
-    explicit base_uint(const std::vector<unsigned char>& vch);
 
     bool operator!() const
     {
@@ -257,7 +256,6 @@ public:
     arith_uint256(const base_uint<256>& b) : base_uint<256>(b) {}
     arith_uint256(uint64_t b) : base_uint<256>(b) {}
     explicit arith_uint256(const std::string& str) : base_uint<256>(str) {}
-    explicit arith_uint256(const std::vector<unsigned char>& vch) : base_uint<256>(vch) {}
 
     /**
      * The "compact" format is a representation of a whole

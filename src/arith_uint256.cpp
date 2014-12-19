@@ -18,14 +18,6 @@ base_uint<BITS>::base_uint(const std::string& str)
 }
 
 template <unsigned int BITS>
-base_uint<BITS>::base_uint(const std::vector<unsigned char>& vch)
-{
-    if (vch.size() != sizeof(pn))
-        throw uint_error("Converting vector of wrong size to base_uint");
-    memcpy(pn, &vch[0], sizeof(pn));
-}
-
-template <unsigned int BITS>
 base_uint<BITS>& base_uint<BITS>::operator<<=(unsigned int shift)
 {
     base_uint<BITS> a(*this);
@@ -154,39 +146,13 @@ double base_uint<BITS>::getdouble() const
 template <unsigned int BITS>
 std::string base_uint<BITS>::GetHex() const
 {
-    char psz[sizeof(pn) * 2 + 1];
-    for (unsigned int i = 0; i < sizeof(pn); i++)
-        sprintf(psz + i * 2, "%02x", ((unsigned char*)pn)[sizeof(pn) - i - 1]);
-    return std::string(psz, psz + sizeof(pn) * 2);
+    return ArithToUint256(*this).GetHex();
 }
 
 template <unsigned int BITS>
 void base_uint<BITS>::SetHex(const char* psz)
 {
-    memset(pn, 0, sizeof(pn));
-
-    // skip leading spaces
-    while (isspace(*psz))
-        psz++;
-
-    // skip 0x
-    if (psz[0] == '0' && tolower(psz[1]) == 'x')
-        psz += 2;
-
-    // hex string to uint
-    const char* pbegin = psz;
-    while (::HexDigit(*psz) != -1)
-        psz++;
-    psz--;
-    unsigned char* p1 = (unsigned char*)pn;
-    unsigned char* pend = p1 + WIDTH * 4;
-    while (psz >= pbegin && p1 < pend) {
-        *p1 = ::HexDigit(*psz--);
-        if (psz >= pbegin) {
-            *p1 |= ((unsigned char)::HexDigit(*psz--) << 4);
-            p1++;
-        }
-    }
+    *this = UintToArith256(uint256S(psz));
 }
 
 template <unsigned int BITS>
@@ -218,7 +184,6 @@ unsigned int base_uint<BITS>::bits() const
 
 // Explicit instantiations for base_uint<256>
 template base_uint<256>::base_uint(const std::string&);
-template base_uint<256>::base_uint(const std::vector<unsigned char>&);
 template base_uint<256>& base_uint<256>::operator<<=(unsigned int);
 template base_uint<256>& base_uint<256>::operator>>=(unsigned int);
 template base_uint<256>& base_uint<256>::operator*=(uint32_t b32);
