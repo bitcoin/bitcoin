@@ -23,7 +23,6 @@
 #include "json/json_spirit_value.h"
 
 using namespace std;
-using namespace boost;
 using namespace boost::assign;
 using namespace json_spirit;
 

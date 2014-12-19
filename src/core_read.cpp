@@ -20,7 +20,6 @@
 #include <boost/algorithm/string/split.hpp>
 #include <boost/assign/list_of.hpp>
 
-using namespace boost;
 using namespace boost::algorithm;
 using namespace std;
 
