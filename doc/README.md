@@ -1,4 +1,4 @@
-Bitcoin 0.10.99 BETA
+Bitcoin 0.10.99
 =====================
 
 Copyright (c) 2009-2014 Bitcoin Developers
