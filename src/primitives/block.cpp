@@ -8,10 +8,22 @@
 #include "hash.h"
 #include "tinyformat.h"
 #include "utilstrencodings.h"
+#include "crypto/common.h"
 
 uint256 CBlockHeader::GetHash() const
 {
+#if defined(WORDS_BIGENDIAN)
+    uint8_t data[80];
+    WriteLE32(&data[0], nVersion);
+    memcpy(&data[4], hashPrevBlock.begin(), hashPrevBlock.size());
+    memcpy(&data[36], hashMerkleRoot.begin(), hashMerkleRoot.size());
+    WriteLE32(&data[68], nTime);
+    WriteLE32(&data[72], nBits);
+    WriteLE32(&data[76], nNonce);
+    return Hash(data, data + 80);
+#else // Can take shortcut for little endian
     return Hash(BEGIN(nVersion), END(nNonce));
+#endif
 }
 
 uint256 CBlock::BuildMerkleTree(bool* fMutated) const
