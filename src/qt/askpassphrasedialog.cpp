@@ -119,7 +119,7 @@ void AskPassphraseDialog::accept()
                 {
                     QMessageBox::warning(this, tr("Wallet encrypted"),
                                          "<qt>" +
-                                         tr("Bitcoin will close now to finish the encryption process. "
+                                         tr("Bitcoin Core will close now to finish the encryption process. "
                                          "Remember that encrypting your wallet cannot fully protect "
                                          "your bitcoins from being stolen by malware infecting your computer.") +
                                          "<br><br><b>" +
