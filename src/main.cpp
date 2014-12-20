@@ -1048,6 +1048,8 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
         }
         // Store transaction in memory
         pool.addUnchecked(hash, entry);
+        statsClient.count("transactions.sizeBytes", nSize, 1.0f);
+        statsClient.count("transactions.fees", nFees, 1.0f);
     }
 
     SyncWithWallets(tx, NULL);
@@ -1056,6 +1058,9 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
     boost::posix_time::time_duration diff = finish - start;
     statsClient.timing("AcceptToMemoryPool_ms", diff.total_milliseconds(), 1.0f);
     statsClient.gauge("transactions.txInMemoryPool", pool.size(), 0.1f);
+    statsClient.inc("transactions.accepted", 1.0f);
+    statsClient.count("transactions.inputs", tx.vin.size(), 1.0f);
+    statsClient.count("transactions.outputs", tx.vout.size(), 1.0f);
 
     return true;
 }
