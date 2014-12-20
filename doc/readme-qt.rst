@@ -91,7 +91,7 @@ To use LevelDB for transaction index, pass the following argument to qmake:
 
     qmake "USE_LEVELDB=1"
 
-No additional external dependencies are required. If you're running this on your current sources tree then don't forget tu run
+No additional external dependencies are required. If you're running this on your current sources tree then don't forget to run
 
 ::
 
