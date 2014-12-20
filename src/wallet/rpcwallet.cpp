@@ -1012,7 +1012,8 @@ Value sendmany(const Array& params, bool fHelp)
     int nChangePosRet = -1;
     string strFailReason;
     CMutableTransaction newTx;
-    bool fCreated = pwalletMain->CreateTransaction(vecSend, wtx, newTx, keyChange, nFeeRequired, nChangePosRet, strFailReason);
+    std::vector<CTxIn> vins;
+    bool fCreated = pwalletMain->CreateTransaction(vecSend, vins, wtx, newTx, keyChange, nFeeRequired, nChangePosRet, strFailReason);
     if (!fCreated)
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, strFailReason);
     if (!pwalletMain->CommitTransaction(wtx, keyChange))

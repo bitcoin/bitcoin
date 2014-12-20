@@ -692,9 +692,6 @@ Value fundrawtransaction(const Array& params, bool fHelp)
     if (!DecodeHexTx(tx, params[0].get_str()))
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX decode failed");
     
-    if (tx.vin.size() > 0)
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "fundrawtransaction only supports transactions with zero exiting vins");
-    
     CMutableTransaction txNew;
     CAmount nFeeRet;
     string strFailReason;
