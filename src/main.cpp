@@ -1692,8 +1692,6 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex, bool fJustCheck)
     if (!CheckBlock(!fJustCheck, !fJustCheck, false))
         return false;
 
-    bool fProtocol048 = fTestNet || VALIDATION_SWITCH_TIME < nTime;
-
     // Do not allow blocks that contain transactions which 'overwrite' older transactions,
     // unless those are already completely spent.
     // If such overwrites are allowed, coinbases and transactions depending upon those
@@ -1783,7 +1781,7 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex, bool fJustCheck)
 
     if (IsProofOfWork())
     {
-        int64 nBlockReward = GetProofOfWorkReward(nBits, fProtocol048 ? nFees : 0);
+        int64 nBlockReward = GetProofOfWorkReward(nBits, nFees);
 
         // Check coinbase reward
         if (vtx[0].GetValueOut() > nBlockReward)
@@ -1800,7 +1798,7 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex, bool fJustCheck)
 
     // fees are not collected by proof-of-stake miners
     // fees are destroyed to compensate the entire network
-    if (fProtocol048 && fDebug && IsProofOfStake() && GetBoolArg("-printcreation"))
+    if (fDebug && IsProofOfStake() && GetBoolArg("-printcreation"))
         printf("ConnectBlock() : destroy=%s nFees=%" PRI64d "\n", FormatMoney(nFees).c_str(), nFees);
 
     if (fJustCheck)
@@ -2227,8 +2225,6 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
     if (vtx.empty() || vtx.size() > MAX_BLOCK_SIZE || ::GetSerializeSize(*this, SER_NETWORK, PROTOCOL_VERSION) > MAX_BLOCK_SIZE)
         return DoS(100, error("CheckBlock() : size limits failed"));
 
-    bool fProtocol048 = fTestNet || VALIDATION_SWITCH_TIME < nTime;
-
     // Check proof of work matches claimed amount
     if (fCheckPOW && IsProofOfWork() && !CheckProofOfWork(GetHash(), nBits))
         return DoS(50, error("CheckBlock() : proof of work failed"));
@@ -2241,18 +2237,9 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
     if (vtx.empty() || !vtx[0].IsCoinBase())
         return DoS(100, error("CheckBlock() : first tx is not coinbase"));
 
-    if (!fProtocol048)
-    {
-        // Check coinbase timestamp
-        if (GetBlockTime() < (int64)vtx[0].nTime)
-            return DoS(100, error("CheckBlock() : coinbase timestamp violation"));
-    }
-    else
-    {
-        // Check coinbase timestamp
-        if (GetBlockTime() < PastDrift((int64)vtx[0].nTime))
-            return DoS(50, error("CheckBlock() : coinbase timestamp is too late"));
-    }
+    // Check coinbase timestamp
+    if (GetBlockTime() < PastDrift((int64)vtx[0].nTime))
+        return DoS(50, error("CheckBlock() : coinbase timestamp is too late"));
 
     for (unsigned int i = 1; i < vtx.size(); i++)
     {
@@ -2266,11 +2253,8 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
 
     if (IsProofOfStake())
     {
-        if (fProtocol048)
-        {
-            if (nNonce != 0)
-                return DoS(100, error("CheckBlock() : non-zero nonce in proof-of-stake block"));
-        }
+        if (nNonce != 0)
+            return DoS(100, error("CheckBlock() : non-zero nonce in proof-of-stake block"));
 
         // Coinbase output should be empty if proof-of-stake block
         if (vtx[0].vout.size() != 1 || !vtx[0].vout[0].IsEmpty())
