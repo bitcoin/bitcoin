@@ -101,19 +101,20 @@ bool static LookupIntern(const char *pszName, std::vector<CNetAddr>& vIP, unsign
     struct addrinfo *aiTrav = aiRes;
     while (aiTrav != NULL && (nMaxSolutions == 0 || vIP.size() < nMaxSolutions))
     {
-        if (aiTrav->ai_family == AF_INET)
+        switch (aiTrav->ai_family)
         {
-            assert(aiTrav->ai_addrlen >= sizeof(sockaddr_in));
-            vIP.push_back(CNetAddr(((struct sockaddr_in*)(aiTrav->ai_addr))->sin_addr));
-        }
+            case (AF_INET):
+                assert(aiTrav->ai_addrlen >= sizeof(sockaddr_in));
+                vIP.push_back(CNetAddr(((struct sockaddr_in*)(aiTrav->ai_addr))->sin_addr));
+            break;
 
 #ifdef USE_IPV6
-        if (aiTrav->ai_family == AF_INET6)
-        {
-            assert(aiTrav->ai_addrlen >= sizeof(sockaddr_in6));
-            vIP.push_back(CNetAddr(((struct sockaddr_in6*)(aiTrav->ai_addr))->sin6_addr));
-        }
+            case (AF_INET6):
+                assert(aiTrav->ai_addrlen >= sizeof(sockaddr_in6));
+                vIP.push_back(CNetAddr(((struct sockaddr_in6*)(aiTrav->ai_addr))->sin6_addr));
+            break;
 #endif
+        }
 
         aiTrav = aiTrav->ai_next;
     }
