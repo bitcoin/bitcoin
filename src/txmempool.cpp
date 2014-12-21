@@ -788,12 +788,12 @@ bool CCoinsViewMemPool::GetCoins(const uint256 &txid, CCoins &coins) const {
     // conflict with the underlying cache, and it cannot have pruned entries (as it contains full)
     // transactions. First checking the underlying cache risks returning a pruned entry instead.
     CTransaction tx;
-    if (mempool.lookup(txid, tx)) {
+    if (mempool.lookup(txid, tx))
         coins = CCoins(tx, MEMPOOL_HEIGHT);
-        mempool.pruneSpent(txid, coins);
-        return true;
-    }
-    return (base->GetCoins(txid, coins) && !coins.IsPruned());
+    else if (!base->GetCoins(txid, coins) || coins.IsPruned())
+        return false;
+    mempool.pruneSpent(txid, coins);
+    return true;
 }
 
 bool CCoinsViewMemPool::HaveCoins(const uint256 &txid) const {
