@@ -35,17 +35,26 @@ class RawTransactionsTest(BitcoinTestFramework):
         
         self.is_network_split=False
         self.sync_all()
-    
+
     def run_test(self):
         
         self.nodes[2].setgenerate(True, 1)
-        self.nodes[0].setgenerate(True, 101)
+        self.nodes[0].setgenerate(True, 121)
         self.sync_all()
+
+        watchonly_address = self.nodes[0].getnewaddress()
+        watchonly_amount = 200
+        self.nodes[1].importaddress(watchonly_address, "", True)
+        self.nodes[0].sendtoaddress(watchonly_address, watchonly_amount)
+
         self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(),1.5);
         self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(),1.0);
         self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(),5.0);
+
         self.sync_all()
+
         self.nodes[0].setgenerate(True, 1)
+
         self.sync_all()
 
         ###############
@@ -282,6 +291,33 @@ class RawTransactionsTest(BitcoinTestFramework):
         
         assert_equal("Insufficient" in errorString, True);
         
+
+        ##################################################
+        # test a fundrawtransaction using only watchonly #
+        ##################################################
+
+        inputs = []
+        outputs = {self.nodes[2].getnewaddress() : watchonly_amount / 2.0}
+        rawtx = self.nodes[0].createrawtransaction(inputs, outputs)
+
+        result = self.nodes[1].fundrawtransaction(rawtx, True)
+
+        assert_equal("hex" in result.keys(), True)
+        assert_equal("fee" in result.keys(), True)
+
+        ###############################################################
+        # test fundrawtransaction using the entirety of watched funds #
+        ###############################################################
+
+        inputs = []
+        outputs = {self.nodes[2].getnewaddress() : watchonly_amount / 1.0}
+        rawtx = self.nodes[0].createrawtransaction(inputs, outputs)
+
+        result = self.nodes[1].fundrawtransaction(rawtx, True)
+
+        assert_equal("hex" in result.keys(), True)
+        assert_equal("fee" in result.keys(), True)
+
 
 if __name__ == '__main__':
     RawTransactionsTest().main()

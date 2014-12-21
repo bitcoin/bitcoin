@@ -770,13 +770,14 @@ Value sendrawtransaction(const Array& params, bool fHelp)
 #ifdef ENABLE_WALLET
 Value fundrawtransaction(const Array& params, bool fHelp)
 {
-    if (fHelp || params.size() != 1)
+    if (fHelp || params.size() < 1 || params.size() > 2)
         throw runtime_error(
                             "fundrawtransaction \"hexstring\"\n"
                             "\nAdd vIns to a raw transaction.\n"
                             "\nAlso see createrawtransaction and signrawtransaction calls.\n"
                             "\nArguments:\n"
                             "1. \"hexstring\"    (string, required) The hex string of the raw transaction\n"
+                            "2. includeWatching    (boolean, optional, default=false) Use watchonly outputs\n"
                             "\nResult:\n"
                             "{\n"
                             "  \"hex\": \"value\",   (string) The raw transaction with vIns (hex-encoded string)\n"
@@ -802,11 +803,15 @@ Value fundrawtransaction(const Array& params, bool fHelp)
     CTransaction tx;
     if (!DecodeHexTx(tx, params[0].get_str()))
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX decode failed");
-    
+
+    bool includeWatching = false;
+    if (params.size() > 1)
+        includeWatching = params[1].get_bool();
+
     CMutableTransaction txNew;
     CAmount nFeeRet;
     string strFailReason;
-    if(!pwalletMain->FundTransaction(tx, txNew, nFeeRet, strFailReason))
+    if(!pwalletMain->FundTransaction(tx, txNew, nFeeRet, strFailReason, includeWatching))
         throw JSONRPCError(RPC_INTERNAL_ERROR, strFailReason);
     
     Object result;
