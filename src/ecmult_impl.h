@@ -70,8 +70,8 @@ static void secp256k1_ecmult_table_precomp_ge_var(secp256k1_ge_t *pre, const sec
         (neg)((r), &(pre)[(-(n)-1)/2]); \
 } while(0)
 
-#define ECMULT_TABLE_GET_GEJ(r,pre,n,w) ECMULT_TABLE_GET((r),(pre),(n),(w),secp256k1_gej_neg_var)
-#define ECMULT_TABLE_GET_GE(r,pre,n,w)  ECMULT_TABLE_GET((r),(pre),(n),(w),secp256k1_ge_neg_var)
+#define ECMULT_TABLE_GET_GEJ(r,pre,n,w) ECMULT_TABLE_GET((r),(pre),(n),(w),secp256k1_gej_neg)
+#define ECMULT_TABLE_GET_GE(r,pre,n,w)  ECMULT_TABLE_GET((r),(pre),(n),(w),secp256k1_ge_neg)
 
 typedef struct {
     /* For accelerating the computation of a*P + b*G: */

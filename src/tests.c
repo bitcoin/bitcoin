@@ -494,9 +494,9 @@ void random_fe_non_square(secp256k1_fe_t *ns) {
 }
 
 int check_fe_equal(const secp256k1_fe_t *a, const secp256k1_fe_t *b) {
-    secp256k1_fe_t an = *a; secp256k1_fe_normalize(&an);
+    secp256k1_fe_t an = *a; secp256k1_fe_normalize_weak(&an);
     secp256k1_fe_t bn = *b; secp256k1_fe_normalize_var(&bn);
-    return secp256k1_fe_equal(&an, &bn);
+    return secp256k1_fe_equal_var(&an, &bn);
 }
 
 int check_fe_inverse(const secp256k1_fe_t *a, const secp256k1_fe_t *ai) {
@@ -523,16 +523,16 @@ void run_field_misc(void) {
         random_fe_non_zero(&y);
         /* Test the fe equality and comparison operations. */
         CHECK(secp256k1_fe_cmp_var(&x, &x) == 0);
-        CHECK(secp256k1_fe_equal(&x, &x));
+        CHECK(secp256k1_fe_equal_var(&x, &x));
         z = x;
         secp256k1_fe_add(&z,&y);
         secp256k1_fe_normalize(&z);
         /* Test the conditional move. */
         secp256k1_fe_cmov(&z, &x, 0);
-        CHECK(secp256k1_fe_equal(&x, &z) == 0);
+        CHECK(secp256k1_fe_equal_var(&x, &z) == 0);
         CHECK(secp256k1_fe_cmp_var(&x, &z) != 0);
         secp256k1_fe_cmov(&y, &x, 1);
-        CHECK(secp256k1_fe_equal(&x, &y));
+        CHECK(secp256k1_fe_equal_var(&x, &y));
         /* Test that mul_int, mul, and add agree. */
         secp256k1_fe_add(&y, &x);
         secp256k1_fe_add(&y, &x);
