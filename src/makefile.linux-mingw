@@ -4,12 +4,22 @@
 
 TARGET_PLATFORM:=i686
 #TARGET_PLATFORM:=x86_64
-
-DEPSDIR:=/usr/$(TARGET_PLATFORM)-w64-mingw32
 CC:=$(TARGET_PLATFORM)-w64-mingw32-gcc
 CXX:=$(TARGET_PLATFORM)-w64-mingw32-g++
-RANLIB=$(TARGET_PLATFORM)-w64-mingw32-ranlib
-STRIP=$(TARGET_PLATFORM)-w64-mingw32-strip
+RANLIB:=$(TARGET_PLATFORM)-w64-mingw32-ranlib
+STRIP:=$(TARGET_PLATFORM)-w64-mingw32-strip
+
+DEPSDIR:=/usr/$(TARGET_PLATFORM)-w64-mingw32
+
+BOOST_LIB_PATH:=$(DEPSDIR)/boost_1_55_0/stage/lib
+BDB_LIB_PATH:=$(DEPSDIR)/db-6.0.20/build_unix
+MINIUPNPC_LIB_PATH:=$(DEPSDIR)/miniupnpc-1.9
+OPENSSL_LIB_PATH:=$(DEPSDIR)/openssl-1.0.1h
+
+BOOST_INCLUDE_PATH:=$(DEPSDIR)/boost_1_55_0
+BDB_INCLUDE_PATH:=$(DEPSDIR)/db-6.0.20/build_unix
+MINIUPNPC_INCLUDE_PATH:=$(DEPSDIR)
+OPENSSL_INCLUDE_PATH:=$(DEPSDIR)/openssl-1.0.1h/include
 
 USE_UPNP:=0
 USE_LEVELDB:=0
@@ -18,15 +28,16 @@ USE_IPV6:=1
 INCLUDEPATHS= \
  -I"$(CURDIR)" \
  -I"$(CURDIR)"/obj \
- -I"$(DEPSDIR)/boost_1_55_0" \
- -I"$(DEPSDIR)/db-6.0.20/build_unix" \
- -I"$(DEPSDIR)/openssl-1.0.1h/include" \
- -I"$(DEPSDIR)"
+ -I"$(BOOST_INCLUDE_PATH)" \
+ -I"$(BDB_INCLUDE_PATH)" \
+ -I"$(OPENSSL_INCLUDE_PATH)" \
+ -I"$(MINIUPNPC_INCLUDE_PATH)"
 
 LIBPATHS= \
- -L"$(DEPSDIR)/boost_1_55_0/stage/lib" \
- -L"$(DEPSDIR)/db-6.0.20/build_unix" \
- -L"$(DEPSDIR)/openssl-1.0.1h"
+ -L"$(BOOST_LIB_PATH)" \
+ -L"$(BDB_LIB_PATH)" \
+ -L"$(OPENSSL_LIB_PATH)" \
+ -L"$(MINIUPNPC_LIB_PATH)"
 
 LIBS= \
  -l boost_system-mt \
@@ -36,9 +47,10 @@ LIBS= \
  -l boost_chrono-mt \
  -l db_cxx \
  -l ssl \
- -l crypto
+ -l crypto \
+ -lz
 
-DEFS=-D_MT -DWIN32 -D_WINDOWS -DBOOST_THREAD_USE_LIB -DBOOST_SPIRIT_THREADSAFE
+DEFS=-D_MT -DWIN32 -D_WINDOWS -DBOOST_THREAD_USE_LIB -DBOOST_SPIRIT_THREADSAFE -DBOOST_USE_WINDOWS_H
 DEBUGFLAGS=-g
 CFLAGS=-O3 -msse2 -w -Wall -Wextra -Wno-ignored-qualifiers -Wformat -Wformat-security -Wno-unused-parameter $(DEBUGFLAGS) $(DEFS) $(INCLUDEPATHS)
 LDFLAGS=-Wl,--dynamicbase -Wl,--nxcompat -static-libgcc -static-libstdc++
