@@ -345,6 +345,10 @@ AC_C_BIGENDIAN([AC_MSG_ERROR("Big Endian not supported")])
 dnl Check for pthread compile/link requirements
 AX_PTHREAD
 
+AC_MSG_NOTICE([The contents of configured PTHREAD_CFLAGS: $PTHREAD_CFLAGS])
+AC_MSG_NOTICE([The contents of configured PTHREAD_LIBS: $PTHREAD_LIBS])
+AC_MSG_NOTICE([The contents of configured PTHREAD_CC: $PTHREAD_CC])
+
 # The following macro will add the necessary defines to bitcoin-config.h, but
 # they also need to be passed down to any subprojects. Pull the results out of
 # the cache and add them to CPPFLAGS.
