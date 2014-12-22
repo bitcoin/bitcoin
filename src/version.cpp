@@ -11,8 +11,11 @@
 const std::string CLIENT_NAME("Satoshi");
 
 // Client version number
-#define CLIENT_VERSION_SUFFIX   "-beta"
-
+#ifdef USE_LEVELDB
+#define CLIENT_VERSION_SUFFIX   "-leveldb"
+#else
+#define CLIENT_VERSION_SUFFIX   "-bdb"
+#endif
 
 // The following part of the code determines the CLIENT_BUILD variable.
 // Several mechanisms are used for this:
