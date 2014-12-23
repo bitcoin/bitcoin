@@ -1185,6 +1185,7 @@ bool CDarkSendPool::StatusUpdate(int newState, int newEntriesCount, int newAccep
         } else if (newAccepted == 0 && sessionID == 0 && !sessionFoundMasternode) {
             LogPrintf("CDarkSendPool::StatusUpdate - entry not accepted by masternode \n");
             UnlockCoins();
+            UpdateState(POOL_STATUS_ACCEPTING_ENTRIES);
             DoAutomaticDenominating(); //try another masternode
         }
         if(sessionFoundMasternode) return true;
