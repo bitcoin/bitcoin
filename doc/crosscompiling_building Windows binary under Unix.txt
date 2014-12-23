@@ -75,7 +75,7 @@ libz.a
 
 Проверка, что установка Berkeley DB прошла успешно:
 В папке /home/<ваше имя>/db-6.0.20/build_unix должны появиться файлы:
-libdb_cxx.a
+libdb.a
 libdb_cxx.a
 
 2.5) Miniupnpc
