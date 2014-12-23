@@ -148,6 +148,31 @@ than the implementation in OpenSSL.
 
 [1] https://eprint.iacr.org/2014/161.pdf
 
+Watch-only addresses in the wallet
+==================================
+
+The wallet can now track transactions to addresses (or scripts) for which you
+do not have the private keys.
+
+This can be used to track payments without needing the private keys online on a
+possibly vulnerable system. In addition, it can help for (manual) construction
+of multisig transactions where you are only one of the signers.
+
+One new RPC, `importaddress`, is added which functions similarly to
+`importprivkey`, but instead takes an address or script (in hexadecimal) as
+argument.  After using it, outputs credited to this address or script are
+considered to be yours.
+
+The following RPCs have optional support for watch-only addresses:
+`getbalance`, `listreceivedbyaddress`, `listreceivedbyaccount`,
+`listtransactions`, `listaccounts`, `listsinceblock`, `gettransaction`. See the
+RPC documentation for those methods for more information.
+
+Compared to using `getrawtransaction`, this mechanism does not require
+`-txindex`, scales better, integrates better with the wallet, and is compatible
+with future block chain pruning functionality. It does mean the address needs
+to added to the wallet before the payment, though.
+
 0.10.0 Release notes
 =======================
 
