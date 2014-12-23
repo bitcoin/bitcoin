@@ -206,6 +206,30 @@ actually using them on mainnet has been previously inconvenient as
 standard Bitcoin Core nodes wouldn't relay them to miners, nor would
 most miners include them in blocks they mined.
 
+bitcoin-tx
+=============
+
+It has been observed that many of the RPC functions offered by bitcoind are
+"pure functions", and operate independently of the bitcoind wallet. This
+included many of the RPC "raw transaction" API functions, such as
+createrawtransaction.
+
+bitcoin-tx is a newly introduced command line utility designed to enable easy
+manipulation of bitcoin transactions. A summary of its operation may be
+obtained via "bitcoin-tx --help" Transactions may be created or signed in a
+manner similar to the RPC raw tx API. Transactions may be updated, deleting
+inputs or outputs, or appending new inputs and outputs. Custom scripts may be
+easily composed using a simple text notation, borrowed from the bitcoin test
+suite.
+
+This tool may be used for experimenting with new transaction types, signing
+multi-party transactions, and many other uses. Long term, the goal is to
+deprecate and remove "pure function" RPC API calls, as those do not require a
+server round-trip to execute.
+
+Other utilities "bitcoin-key" and "bitcoin-script" have been proposed, making
+key and script operations easily accessible via command line.
+
 0.10.0 Release notes
 =======================
 
