@@ -127,7 +127,7 @@ For example:
 | `-rpcallowip=192.168.1.1`                  | `-rpcallowip=192.168.1.1` (unchanged) |
 | `-rpcallowip=192.168.1.*`                  | `-rpcallowip=192.168.1.0/24`          |
 | `-rpcallowip=192.168.*`                    | `-rpcallowip=192.168.0.0/16`          |
-| `-rpcallowip=*` (dangerous!)               | `-rpcallowip=::/0`                    |
+| `-rpcallowip=*` (dangerous!)               | `-rpcallowip=::/0` (still dangerous!) |
 
 Using wildcards will result in the rule being rejected with the following error in debug.log:
 
@@ -182,8 +182,8 @@ of times. While using shared hosts and reusing keys are inadvisable
 for other reasons, it's a better practice to avoid the exposure.
 
 OpenSSL has code in their source repository for derandomization
-and reduction in timing leaks, and we've  eagerly wanted to use
-it for a long time but this functionality has still not made its
+and reduction in timing leaks that we've eagerly wanted to use for a
+long time, but this functionality has still not made its
 way into a released version of OpenSSL. Libsecp256k1 achieves
 significantly stronger protection: As far as we're aware this is
 the only deployed implementation of constant time signing for
