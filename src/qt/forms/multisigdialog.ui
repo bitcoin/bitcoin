@@ -658,7 +658,7 @@
            <item>
             <widget class="QPushButton" name="pasteTransactionButton">
              <property name="toolTip">
-              <string>Paste address from clipboard</string>
+              <string>Paste transaction from clipboard</string>
              </property>
              <property name="text">
               <string/>

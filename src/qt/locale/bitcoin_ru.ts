@@ -3,6 +3,270 @@
 <TS version="2.0" language="ru">
 <defaultcodec>UTF-8</defaultcodec>
   <context>
+    <name>MultisigAddressEntry</name>
+    <message>
+      <location filename="../forms/multisigaddressentry.ui" line="26"/>
+      <source>Public &amp;key:</source>
+      <translation>Публичный &amp;ключ:</translation>
+    </message>
+    <message>
+      <location filename="../forms/multisigaddressentry.ui" line="44"/>
+      <source>The public key of an address</source>
+      <translation>Публичный ключ адреса</translation>
+    </message>
+    <message>
+      <location filename="../forms/multisigaddressentry.ui" line="47"/>
+      <source>Enter a public key</source>
+      <translation>Введите публичный ключ</translation>
+    </message>
+    <message>
+      <location filename="../forms/multisigaddressentry.ui" line="54"/>
+      <source>Paste public key from clipboard</source>
+      <translation>Вставить публичный ключ из буфера обмена</translation>
+    </message>
+    <message>
+      <location filename="../forms/multisigaddressentry.ui" line="71"/>
+      <source>Remove this public key</source>
+      <translation>Удалить публичный ключ</translation>
+    </message>
+    <message>
+      <location filename="../forms/multisigaddressentry.ui" line="87"/>
+      <source>&amp;Address:</source>
+      <translation>&amp;Адрес:</translation>
+    </message>
+    <message>
+      <location filename="../forms/multisigaddressentry.ui" line="108"/>
+      <source>Address associated to the public key</source>
+      <translation>Адрес, связанный с публичным ключом</translation>
+    </message>
+    <message>
+      <location filename="../forms/multisigaddressentry.ui" line="111"/>
+      <source>Enter one of your addresses to get its public key</source>
+      <translation>Введите один из своих адресов, чтобы получить его публичный ключ</translation>
+    </message>
+    <message>
+      <location filename="../forms/multisigaddressentry.ui" line="118"/>
+      <source>Choose address from address book</source>
+      <translation>Выбрать адрес из адресной книги</translation>
+    </message>
+    <message>
+      <location filename="../forms/multisigaddressentry.ui" line="137"/>
+      <source>Label:</source>
+      <translation>Метка:</translation>
+    </message>
+    <message>
+      <location filename="../forms/multisigaddressentry.ui" line="150"/>
+      <source>Address associated to the public key</source>
+      <translation>Адрес, связанный с публичным ключом</translation>
+    </message>
+  </context>
+  <context>
+    <name>MultisigDialog</name>
+    <message>
+      <location filename="../multisigdialog.cpp" line="473"/>
+      <source>Transaction signature is complete</source>
+      <translation>Подписание транзакции завершено</translation>
+    </message>
+    <message>
+      <location filename="../multisigdialog.cpp" line="478"/>
+      <source>Transaction is NOT completely signed</source>
+      <translation>Подписание транзакции завершено не полностью</translation>
+    </message>
+    <message>
+      <location filename="../multisigdialog.cpp" line="499"/>
+      <source>Confirm send transaction</source>
+      <translation>Подтвердите отправку транзакции</translation>
+    </message>
+    <message>
+      <location filename="../multisigdialog.cpp" line="499"/>
+      <source>The fee of the transaction (%1 NVC) is smaller than the expected fee (%2 NVC). Do you want to send the transaction anyway?</source>
+      <translation>Комиссия (%1 NVC) меньше необходимой (%2 NVC). Вы хотите отправить транзакцию без изменений?</translation>
+    </message>
+    <message>
+      <location filename="../multisigdialog.cpp" line="505"/>
+      <source>The fee of the transaction (%1 NVC) is bigger than the expected fee (%2 NVC). Do you want to send the transaction anyway?</source>
+      <translation>Комиссия (%1 NVC) больше необходимой (%2 NVC). Вы хотите отправить транзакцию без изменений?</translation>
+    </message>
+    <message>
+      <location filename="../forms/multisigdialog.ui" line="14"/>
+      <source>Multisig</source>
+      <translation>Мультиподпись</translation>
+    </message>
+    <message>
+      <location filename="../forms/multisigdialog.ui" line="24"/>
+      <source>&amp;Create Address</source>
+      <translation>&amp;Создание адреса</translation>
+    </message>
+    <message>
+      <location filename="../forms/multisigdialog.ui" line="67"/>
+      <source>Add a member to the signing pool</source>
+      <translation>Добавить участника для совместного подписания</translation>
+    </message>
+    <message>
+      <location filename="../forms/multisigdialog.ui" line="70"/>
+      <source>&amp;Add public key...</source>
+      <translation>&amp;Добавить публичный ключ...</translation>
+    </message>
+    <message>
+      <location filename="../forms/multisigdialog.ui" line="87"/>
+      <source>Remove all public key fields</source>
+      <translation>Очистить все публичные ключи</translation>
+    </message>
+    <message>
+      <location filename="../forms/multisigdialog.ui" line="90"/>
+      <source>Clear all</source>
+      <translation>Очистить всё</translation>
+    </message>
+    <message>
+      <location filename="../forms/multisigdialog.ui" line="121"/>
+      <source>Required signatures:</source>
+      <translation>Требуется подписей:</translation>
+    </message>
+    <message>
+      <location filename="../forms/multisigdialog.ui" line="152"/>
+      <source>Enter a number</source>
+      <translation>Введите количество</translation>
+    </message>
+    <message>
+      <location filename="../forms/multisigdialog.ui" line="183"/>
+      <source>Create multisig address</source>
+      <translation>Создать адрес с мультиподписью</translation>
+    </message>
+    <message>
+      <location filename="../forms/multisigdialog.ui" line="207"/>
+      <source>Multisig address:</source>
+      <translation>Адрес с мультиподписью:</translation>
+    </message>
+    <message>
+      <location filename="../forms/multisigdialog.ui" line="221"/>
+      <source>Copy the multisig address to the system clipboard</source>
+      <translation>Скопировать адрес с мультиподписью в буфер обмена</translation>
+    </message>
+    <message>
+      <location filename="../forms/multisigdialog.ui" line="242"/>
+      <source>Redeem script:</source>
+      <translation>Скрипт выплаты:</translation>
+    </message>
+    <message>
+      <location filename="../forms/multisigdialog.ui" line="256"/>
+      <source>Copy the redeem script to the system clipboard</source>
+      <translation>Скопировать cкрипт выплаты в буфер обмена</translation>
+    </message>
+    <message>
+      <location filename="../forms/multisigdialog.ui" line="290"/>
+      <source>The redeem script will be required to spend the funds sent to the multisig address</source>
+      <translation>Скрипт выплаты необходим для отправки монет c адреса с мультиподписью</translation>
+    </message>
+    <message>
+      <location filename="../forms/multisigdialog.ui" line="293"/>
+      <source>Save redeem script</source>
+      <translation>Сохранить скрипт выплаты</translation>
+    </message>
+    <message>
+      <location filename="../forms/multisigdialog.ui" line="300"/>
+      <source>Add the multisig address to your personal addresses</source>
+      <translation>Добавить адрес с мультиподписью в список Ваших адресов</translation>
+    </message>
+    <message>
+      <location filename="../forms/multisigdialog.ui" line="303"/>
+      <source>Add address to wallet</source>
+      <translation>Добавить адрес в бумажник</translation>
+    </message>
+    <message>
+      <location filename="../forms/multisigdialog.ui" line="313"/>
+      <source>&amp;Spend Funds</source>
+      <translation>&amp;Отправка монет</translation>
+    </message>
+    <message>
+      <location filename="../forms/multisigdialog.ui" line="323"/>
+      <source>Inputs</source>
+      <translation>Входы</translation>
+    </message>
+    <message>
+      <location filename="../forms/multisigdialog.ui" line="385"/>
+      <source>Inputs amount:</source>
+      <translation>Сумма входов:</translation>
+    </message>
+    <message>
+      <location filename="../forms/multisigdialog.ui" line="413"/>
+      <source>Add input...</source>
+      <translation>Добавить вход...</translation>
+    </message>
+    <message>
+      <location filename="../forms/multisigdialog.ui" line="441"/>
+      <source>Outputs</source>
+      <translation>Выходы</translation>
+    </message>
+    <message>
+      <location filename="../forms/multisigdialog.ui" line="504"/>
+      <source>Outputs amount:</source>
+      <translation>Сумма выходов:</translation>
+    </message>
+    <message>
+      <location filename="../forms/multisigdialog.ui" line="545"/>
+      <source>Fee:</source>
+      <translation>Комиссия:</translation>
+    </message>
+    <message>
+      <location filename="../forms/multisigdialog.ui" line="570"/>
+      <source>Add output...</source>
+      <translation>Добавить выход...</translation>
+    </message>
+    <message>
+      <location filename="../forms/multisigdialog.ui" line="603"/>
+      <source>Create transaction</source>
+      <translation>Создать транзакцию</translation>
+    </message>
+    <message>
+      <location filename="../forms/multisigdialog.ui" line="637"/>
+      <source>Enter a raw transaction or create a new one</source>
+      <translation>Введите транзакцию в бинарном формате или создайте новую</translation>
+    </message>
+    <message>
+      <location filename="../forms/multisigdialog.ui" line="661"/>
+      <source>Paste transaction from clipboard</source>
+      <translation>Вставить транзакцию из буфера обмена</translation>
+    </message>
+    <message>
+      <location filename="../forms/multisigdialog.ui" line="685"/>
+      <source>Sign transaction</source>
+      <translation>Подписать транзакцию</translation>
+    </message>
+    <message>
+      <location filename="../forms/multisigdialog.ui" line="771"/>
+      <source>Send transaction</source>
+      <translation>Отправить транзакцию</translation>
+    </message>
+  </context>
+  <context>
+    <name>MultisigInputEntry</name>
+    <message>
+      <location filename="../forms/multisiginputentry.ui" line="34"/>
+      <source>Enter a transaction id</source>
+      <translation>Введите id транзакции</translation>
+    </message>
+    <message>
+      <location filename="../forms/multisiginputentry.ui" line="74"/>
+      <source>Transaction id:</source>
+      <translation>ID транзакции:</translation>
+    </message>
+    <message>
+      <location filename="../forms/multisiginputentry.ui" line="87"/>
+      <source>Transaction output:</source>
+      <translation>Выходы транзакции:</translation>
+    </message>
+    <message>
+      <location filename="../forms/multisiginputentry.ui" line="97"/>
+      <source>Redeem script:</source>
+      <translation>Скрипт выплаты:</translation>
+    </message>
+    <message>
+      <location filename="../forms/multisiginputentry.ui" line="121"/>
+      <source>Enter the redeem script of the address in the transaction output</source>
+      <translation>Введите скрипт выплаты адреса, содержащегося в выходе транзакции</translation>
+    </message>
+  </context>
+  <context>
     <name>MintingView</name>
     <message>
       <location filename="../mintingview.cpp" line="33"/>
@@ -482,6 +746,11 @@ Copyright © 2012-2014 The NovaCoin developers</source>
 </context>
 <context>
     <name>BitcoinGUI</name>
+      <message>
+        <location filename="../bitcoingui.cpp" line="260"/>
+        <source>Multisig</source>
+        <translation>Мультиподпись</translation>
+    </message>
     <message>
         <location filename="../bitcoingui.cpp" line="+257"/>
         <source>Sign &amp;message...</source>
@@ -899,12 +1168,8 @@ Some or all keys from:
     </message>
     <message>
         <location line="+18"/>
-        <source>Stake miner is active
-Your current stake weight is %1
-Network weight is %2</source>
-        <translation>Proof-of-Stake майнер активен
-Текущий вес %1
-Текущий вес сети %2</translation>
+        <source>Stake miner is active&lt;br&gt;Kernel rate is %1 k/s&lt;br&gt;CD rate is %2 CD/s&lt;br&gt;Network weight is %3</source>
+        <translation>Proof-of-Stake майнер активен&lt;br&gt;Попыток генерации %1 в сек&lt;br&gt;Вес попыток %2 монетодень/с&lt;br&gt;Вес сети %3 монетодней</translation>
     </message>
     <message>
         <location line="+22"/>
