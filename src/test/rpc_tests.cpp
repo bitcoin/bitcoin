@@ -153,4 +153,19 @@ BOOST_AUTO_TEST_CASE(rpc_boostasiotocnetaddr)
     BOOST_CHECK_EQUAL(BoostAsioToCNetAddr(boost::asio::ip::address::from_string("::ffff:127.0.0.1")).ToString(), "127.0.0.1");
 }
 
+BOOST_AUTO_TEST_CASE(rpc_network)
+{
+    // Sanity check network related RPC calls
+    BOOST_CHECK_NO_THROW(CallRPC("getconnectioncount"));
+    BOOST_CHECK_NO_THROW(CallRPC("getbestblockhash"));
+    BOOST_CHECK_NO_THROW(CallRPC("getblockcount"));
+    BOOST_CHECK_NO_THROW(CallRPC("getdifficulty"));
+    BOOST_CHECK_NO_THROW(CallRPC("getgenerate"));
+    BOOST_CHECK_NO_THROW(CallRPC("gethashespersec"));
+    BOOST_CHECK_NO_THROW(CallRPC("getinfo"));
+    BOOST_CHECK_NO_THROW(CallRPC("getmininginfo"));
+    BOOST_CHECK_NO_THROW(CallRPC("getpeerinfo"));
+    BOOST_CHECK_NO_THROW(CallRPC("getrawmempool"));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
