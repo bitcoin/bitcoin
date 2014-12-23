@@ -147,7 +147,7 @@
       <bool>true</bool>
      </property>
      <property name="toolTip">
-      <string>Address associated to the public key</string>
+      <string></string>
      </property>
      <property name="readOnly">
       <bool>true</bool>

@@ -11,13 +11,13 @@ STRIP:=$(TARGET_PLATFORM)-w64-mingw32-strip
 
 DEPSDIR:=/usr/$(TARGET_PLATFORM)-w64-mingw32
 
-BOOST_LIB_PATH:=$(DEPSDIR)/boost_1_55_0/stage/lib
-BDB_LIB_PATH:=$(DEPSDIR)/db-6.0.20/build_unix
+BOOST_LIB_PATH:=$(DEPSDIR)/boost_1_57_0/stage/lib
+BDB_LIB_PATH:=$(DEPSDIR)/db-6.0.20.NC/build_unix
 MINIUPNPC_LIB_PATH:=$(DEPSDIR)/miniupnpc-1.9
 OPENSSL_LIB_PATH:=$(DEPSDIR)/openssl-1.0.1h
 
-BOOST_INCLUDE_PATH:=$(DEPSDIR)/boost_1_55_0
-BDB_INCLUDE_PATH:=$(DEPSDIR)/db-6.0.20/build_unix
+BOOST_INCLUDE_PATH:=$(DEPSDIR)/boost_1_57_0
+BDB_INCLUDE_PATH:=$(DEPSDIR)/db-6.0.20.NC/build_unix
 MINIUPNPC_INCLUDE_PATH:=$(DEPSDIR)
 OPENSSL_INCLUDE_PATH:=$(DEPSDIR)/openssl-1.0.1h/include
 
@@ -48,9 +48,9 @@ LIBS= \
  -l db_cxx \
  -l ssl \
  -l crypto \
- -lz
+ -Wl,-Bstatic -lpthread -Wl,-Bdynamic
 
-DEFS=-D_MT -DWIN32 -D_WINDOWS -DBOOST_THREAD_USE_LIB -DBOOST_SPIRIT_THREADSAFE -DBOOST_USE_WINDOWS_H
+DEFS=-D_MT -DWIN32 -D_WINDOWS -DBOOST_THREAD_USE_LIB -DBOOST_SPIRIT_THREADSAFE
 DEBUGFLAGS=-g
 CFLAGS=-O2 -msse2 -w -Wall -Wextra -Wno-ignored-qualifiers -Wformat -Wformat-security -Wno-unused-parameter $(DEBUGFLAGS) $(DEFS) $(INCLUDEPATHS)
 LDFLAGS=-Wl,--dynamicbase -Wl,--nxcompat -static-libgcc -static-libstdc++
