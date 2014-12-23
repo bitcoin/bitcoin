@@ -173,6 +173,28 @@ Compared to using `getrawtransaction`, this mechanism does not require
 with future block chain pruning functionality. It does mean the address needs
 to added to the wallet before the payment, though.
 
+Consensus library
+=================
+
+Starting from 0.10.0, the Bitcoin Core distribution includes a consensus library.
+
+The purpose of this library is to make the verification functionality that is
+critical to Bitcoin's consensus available to other applications, e.g. to language
+bindings such as [python_bitcoinlib](https://pypi.python.org/pypi/python-bitcoinlib) or
+alternative node implementations.
+
+This library is called `libbitcoinconsensus.so` (or, `.dll` for Windows).
+Its interface is defined in the C header [bitcoinconsensus.h](https://github.com/bitcoin/bitcoin/blob/0.10/src/script/bitcoinconsensus.h).
+
+In its initial version the API includes two functions:
+
+- `bitcoinconsensus_verify_script` verifies a script. It returns whether the indicated input of the provided serialized transaction 
+correctly spends the passed scriptPubKey under additional constraints indicated by flags
+- `bitcoinconsensus_version` returns the API version, currently at an experimental `0`
+
+The functionality is planned to be extended to e.g. UTXO management in upcoming releases, but the interface
+for existing methods should remain stable.
+
 0.10.0 Release notes
 =======================
 
