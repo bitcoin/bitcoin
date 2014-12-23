@@ -1849,6 +1849,14 @@ Dirección: %4
         <translation>Comisión de Transacción:</translation>
     </message>
     <message>
+        <source>Choose...</source>
+        <translation>Elija...</translation>
+    </message>
+    <message>
+        <source>collapse fee-settings</source>
+        <translation>Colapsar ajustes de cuota</translation>
+    </message>
+    <message>
         <source>Minimize</source>
         <translation>Minimizar</translation>
     </message>

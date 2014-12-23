@@ -93,7 +93,11 @@
         <source>Exporting Failed</source>
         <translation>A Exportação Falhou</translation>
     </message>
-    </context>
+    <message>
+        <source>There was an error trying to save the address list to %1. Please try again.</source>
+        <translation>Houve um erro ao tentar a guardar a lista de endereços em %1. Por favor tente novamente.</translation>
+    </message>
+</context>
 <context>
     <name>AddressTableModel</name>
     <message>
@@ -291,6 +295,10 @@
         <translation>Abrir &amp;URI...</translation>
     </message>
     <message>
+        <source>Bitcoin Core client</source>
+        <translation>Cliente Bitcoin Core</translation>
+    </message>
+    <message>
         <source>Importing blocks from disk...</source>
         <translation>A importar blocos do disco...</translation>
     </message>
@@ -341,6 +349,10 @@
     <message>
         <source>&amp;Receive</source>
         <translation>&amp;Receber</translation>
+    </message>
+    <message>
+        <source>Show information about Bitcoin Core</source>
+        <translation>Mostrar informação sobre Bitcoin Core</translation>
     </message>
     <message>
         <source>&amp;Show / Hide</source>
@@ -793,6 +805,10 @@ Endereço: %4</translation>
         <translation>versão</translation>
     </message>
     <message>
+        <source>(%1-bit)</source>
+        <translation>(%1-bit)</translation>
+    </message>
+    <message>
         <source>About Bitcoin Core</source>
         <translation>Sobre o Bitcoin Core</translation>
     </message>
@@ -863,7 +879,15 @@ Endereço: %4</translation>
         <source>Error</source>
         <translation>Erro</translation>
     </message>
-    </context>
+    <message numerus="yes">
+        <source>%n GB of free space available</source>
+        <translation><numerusform>%n GB de espaço livre disponível </numerusform><numerusform>%n GB de espaço livre disponível </numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>(of %n GB needed)</source>
+        <translation><numerusform>(de %n GB necessários)</numerusform><numerusform>(de %n GB necessário)</numerusform></translation>
+    </message>
+</context>
 <context>
     <name>OpenURIDialog</name>
     <message>
@@ -1101,6 +1125,10 @@ Endereço: %4</translation>
         <translation>O seu saldo total actual</translation>
     </message>
     <message>
+        <source>Recent transactions</source>
+        <translation>transações recentes</translation>
+    </message>
+    <message>
         <source>out of sync</source>
         <translation>fora de sincronia</translation>
     </message>
@@ -1174,12 +1202,24 @@ Endereço: %4</translation>
         <translation>Quantia</translation>
     </message>
     <message>
+        <source>%1 d</source>
+        <translation>%1 d</translation>
+    </message>
+    <message>
         <source>%1 h</source>
         <translation>%1 h</translation>
     </message>
     <message>
         <source>%1 m</source>
         <translation>%1 m</translation>
+    </message>
+    <message>
+        <source>%1 s</source>
+        <translation>%1 s</translation>
+    </message>
+    <message>
+        <source>None</source>
+        <translation>Nenhum</translation>
     </message>
     <message>
         <source>N/A</source>
