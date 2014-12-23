@@ -93,6 +93,13 @@ BOOST_AUTO_TEST_CASE(rpc_wallet)
     /* 1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4X (33 chars) is an illegal address (should be 34 chars) */
     BOOST_CHECK_THROW(CallRPC("setaccount 1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4X nullaccount"), runtime_error);
 
+
+    /*********************************
+     *                  getbalance
+     *********************************/
+    BOOST_CHECK_NO_THROW(CallRPC("getbalance"));
+    BOOST_CHECK_NO_THROW(CallRPC("getbalance " + demoAddress.ToString()));
+
     /*********************************
      * 			listunspent
      *********************************/
@@ -123,6 +130,35 @@ BOOST_AUTO_TEST_CASE(rpc_wallet)
     BOOST_CHECK_THROW(CallRPC("listreceivedbyaccount 0 not_bool"), runtime_error);
     BOOST_CHECK_NO_THROW(CallRPC("listreceivedbyaccount 0 true"));
     BOOST_CHECK_THROW(CallRPC("listreceivedbyaccount 0 true extra"), runtime_error);
+
+    /*********************************
+     *          listsinceblock
+     *********************************/
+    BOOST_CHECK_NO_THROW(CallRPC("listsinceblock"));
+
+    /*********************************
+     *          listtransactions
+     *********************************/
+    BOOST_CHECK_NO_THROW(CallRPC("listtransactions"));
+    BOOST_CHECK_NO_THROW(CallRPC("listtransactions " + demoAddress.ToString()));
+    BOOST_CHECK_NO_THROW(CallRPC("listtransactions " + demoAddress.ToString() + " 20"));
+    BOOST_CHECK_NO_THROW(CallRPC("listtransactions " + demoAddress.ToString() + " 20 0"));
+    BOOST_CHECK_THROW(CallRPC("listtransactions " + demoAddress.ToString() + " not_int"), runtime_error);
+
+    /*********************************
+     *          listlockunspent
+     *********************************/
+    BOOST_CHECK_NO_THROW(CallRPC("listlockunspent"));
+
+    /*********************************
+     *          listaccounts
+     *********************************/
+    BOOST_CHECK_NO_THROW(CallRPC("listaccounts"));
+
+    /*********************************
+     *          listaddressgroupings
+     *********************************/
+    BOOST_CHECK_NO_THROW(CallRPC("listaddressgroupings"));
 
     /*********************************
      * 		getrawchangeaddress
@@ -178,6 +214,5 @@ BOOST_AUTO_TEST_CASE(rpc_wallet)
     BOOST_CHECK(arr.size() > 0);
     BOOST_CHECK(CBitcoinAddress(arr[0].get_str()).Get() == demoAddress.Get());
 }
-
 
 BOOST_AUTO_TEST_SUITE_END()
