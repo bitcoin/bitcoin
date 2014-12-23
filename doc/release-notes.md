@@ -92,15 +92,15 @@ program shutdown, and are read in at startup.
 
 New command line options for fee estimation:
 - `-txconfirmtarget=n` : create transactions that have enough fees (or priority)
-so they are likely to confirm within n blocks (default: 1). This setting
+so they are likely to begin confirmation within n blocks (default: 1). This setting
 is over-ridden by the -paytxfee option.
 
 New RPC commands for fee estimation:
 - `estimatefee nblocks` : Returns approximate fee-per-1,000-bytes needed for
-a transaction to be confirmed within nblocks. Returns -1 if not enough
+a transaction to begin confirmation within nblocks. Returns -1 if not enough
 transactions have been observed to compute a good estimate.
 - `estimatepriority nblocks` : Returns approximate priority needed for
-a zero-fee transaction to confirm within nblocks. Returns -1 if not
+a zero-fee transaction to begin confirmation within nblocks. Returns -1 if not
 enough free transactions have been observed to compute a good
 estimate.
 
