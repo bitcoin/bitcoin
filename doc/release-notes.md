@@ -29,7 +29,7 @@ Downgrading warning
 
 Because release 0.10.0 makes use of headers-first synchronization and parallel
 block download (see further), the block files and databases are not
-backwards-compatible with older versions of Bitcoin Core:
+backwards-compatible with older versions of Bitcoin Core or other software:
 
 * Blocks will be stored on disk out of order (in the order they are
 received, really), which makes it incompatible with some tools or
@@ -41,7 +41,9 @@ stored on disk, which earlier versions won't support.
 
 If you want to be able to downgrade smoothly, make a backup of your entire data
 directory. Without this your node will need start syncing (or importing from
-bootstrap.dat) anew afterwards.
+bootstrap.dat) anew afterwards. It is possible that the data from a completely
+synchronised 0.10 node may be usable in older versions as-is, but this is not
+supported and may break as soon as the older version attempts to reindex.
 
 This does not affect wallet forward or backward compatibility.
 
@@ -92,15 +94,15 @@ program shutdown, and are read in at startup.
 
 New command line options for fee estimation:
 - `-txconfirmtarget=n` : create transactions that have enough fees (or priority)
-so they are likely to confirm within n blocks (default: 1). This setting
+so they are likely to begin confirmation within n blocks (default: 1). This setting
 is over-ridden by the -paytxfee option.
 
 New RPC commands for fee estimation:
 - `estimatefee nblocks` : Returns approximate fee-per-1,000-bytes needed for
-a transaction to be confirmed within nblocks. Returns -1 if not enough
+a transaction to begin confirmation within nblocks. Returns -1 if not enough
 transactions have been observed to compute a good estimate.
 - `estimatepriority nblocks` : Returns approximate priority needed for
-a zero-fee transaction to confirm within nblocks. Returns -1 if not
+a zero-fee transaction to begin confirmation within nblocks. Returns -1 if not
 enough free transactions have been observed to compute a good
 estimate.
 
@@ -125,7 +127,7 @@ For example:
 | `-rpcallowip=192.168.1.1`                  | `-rpcallowip=192.168.1.1` (unchanged) |
 | `-rpcallowip=192.168.1.*`                  | `-rpcallowip=192.168.1.0/24`          |
 | `-rpcallowip=192.168.*`                    | `-rpcallowip=192.168.0.0/16`          |
-| `-rpcallowip=*` (dangerous!)               | `-rpcallowip=::/0`                    |
+| `-rpcallowip=*` (dangerous!)               | `-rpcallowip=::/0` (still dangerous!) |
 
 Using wildcards will result in the rule being rejected with the following error in debug.log:
 
@@ -180,8 +182,8 @@ of times. While using shared hosts and reusing keys are inadvisable
 for other reasons, it's a better practice to avoid the exposure.
 
 OpenSSL has code in their source repository for derandomization
-and reduction in timing leaks, and we've  eagerly wanted to use
-it for a long time but this functionality has still not made its
+and reduction in timing leaks that we've eagerly wanted to use for a
+long time, but this functionality has still not made its
 way into a released version of OpenSSL. Libsecp256k1 achieves
 significantly stronger protection: As far as we're aware this is
 the only deployed implementation of constant time signing for
@@ -191,11 +193,11 @@ than the implementation in OpenSSL.
 
 [1] https://eprint.iacr.org/2014/161.pdf
 
-Watch-only addresses in the wallet
-----------------------------------
+Watch-only wallet support
+-------------------------
 
-The wallet can now track transactions to addresses (or scripts) for which you
-do not have the private keys.
+The wallet can now track transactions to and from wallets for which you know
+all addresses (or scripts), even without the private keys.
 
 This can be used to track payments without needing the private keys online on a
 possibly vulnerable system. In addition, it can help for (manual) construction
@@ -204,17 +206,18 @@ of multisig transactions where you are only one of the signers.
 One new RPC, `importaddress`, is added which functions similarly to
 `importprivkey`, but instead takes an address or script (in hexadecimal) as
 argument.  After using it, outputs credited to this address or script are
-considered to be yours.
+considered to be received, and transactions consuming these outputs will be
+considered to be sent.
 
-The following RPCs have optional support for watch-only addresses:
+The following RPCs have optional support for watch-only:
 `getbalance`, `listreceivedbyaddress`, `listreceivedbyaccount`,
 `listtransactions`, `listaccounts`, `listsinceblock`, `gettransaction`. See the
 RPC documentation for those methods for more information.
 
 Compared to using `getrawtransaction`, this mechanism does not require
 `-txindex`, scales better, integrates better with the wallet, and is compatible
-with future block chain pruning functionality. It does mean the address needs
-to added to the wallet before the payment, though.
+with future block chain pruning functionality. It does mean that all relevant
+addresses need to added to the wallet before the payment, though.
 
 Consensus library
 -----------------
