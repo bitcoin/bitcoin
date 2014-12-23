@@ -299,7 +299,7 @@ export PATH=/home/<ваше имя>/mxe/usr/bin:$PATH
 cd /home/<ваше имя>/novacoin/src/leveldb
 TARGET_OS=NATIVE_WINDOWS make CROSS=i686-w64-mingw32.static- libleveldb.a libmemenv.a;
 
--Откройте файл /home/<ваше имя>/novacoin/novacoin-qt.pro в текстовом редакторе(при написании инструкции использовался WordPad)
+-Откройте файл /home/<ваше имя>/novacoin/novacoin-qt.pro в текстовом редакторе(при написании инструкции использовался Pluma 1.8.1)
 -Ниже 
 # Dependency library locations can be customized with:
 #    BOOST_INCLUDE_PATH, BOOST_LIB_PATH, BDB_INCLUDE_PATH,
