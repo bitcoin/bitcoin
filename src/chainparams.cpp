@@ -117,7 +117,7 @@ public:
         vAlertPubKey = ParseHex("04517d8a699cb43d3938d7b24faaff7cda448ca4ea267723ba614784de661949bf632d6304316b244646dea079735b9a6fc4af804efb4752075b9fe2245e14e412");
         nDefaultPort = 19999;
         nRPCPort = 19998;
-        strDataDir = "testnet4";
+        strDataDir = "testnet3";
 
         // Modify the testnet genesis block so the timestamp is valid for a later start.
         genesis.nTime = 1390666206;
@@ -131,7 +131,7 @@ public:
         vSeeds.push_back(CDNSSeedData("darkcoin.io", "testnet-seed.darkcoin.io"));
         vSeeds.push_back(CDNSSeedData("darkcoin.qa", "testnet-seed.darkcoin.qa"));
 
-        base58Prefixes[PUBKEY_ADDRESS] = list_of(138); // Testnet v4 addresses start with x
+        base58Prefixes[PUBKEY_ADDRESS] = list_of(111); // Testnet v3 addresses start with x
         base58Prefixes[SCRIPT_ADDRESS] = list_of(196);
         base58Prefixes[SECRET_KEY]     = list_of(266);
         base58Prefixes[EXT_PUBLIC_KEY] = list_of(0x04)(0x35)(0x87)(0xCF);
