@@ -577,6 +577,14 @@ Address: %4
         <translation>金額</translation>
     </message>
     <message>
+        <source>Received with label</source>
+        <translation>收款標記</translation>
+    </message>
+    <message>
+        <source>Received with address</source>
+        <translation>收款位址</translation>
+    </message>
+    <message>
         <source>Date</source>
         <translation>日期</translation>
     </message>
@@ -1842,7 +1850,7 @@ Address: %4
     </message>
     <message>
         <source>Choose...</source>
-        <translation>選擇...</translation>
+        <translation>選項...</translation>
     </message>
     <message>
         <source>collapse fee-settings</source>
@@ -1850,23 +1858,63 @@ Address: %4
     </message>
     <message>
         <source>Minimize</source>
-        <translation>最小化</translation>
+        <translation>縮小</translation>
+    </message>
+    <message>
+        <source>If the custom fee is set to 1000 satoshis and the transaction is only 250 bytes, then "per kilobyte" only pays 250 satoshis in fee, while "at least" pays 1000 satoshis. For transactions bigger than a kilobyte both pay by kilobyte.</source>
+        <translation>如果自訂手續費設定為 1000 satoshi, 而交易資料大小只有 250 個位元組的話，那麽選擇「每千位元組」就只會付 250 satoshi 的手續費，換做選「總共至少」就會付 1000 satoshi. 但是如果交易資料大小超過一千個位元組，那麽兩者都是每千位元組的費用。</translation>
     </message>
     <message>
         <source>per kilobyte</source>
         <translation>每千位元組</translation>
     </message>
     <message>
+        <source>If the custom fee is set to 1000 satoshis and the transaction is only 250 bytes, then "per kilobyte" only pays 250 satoshis in fee, while "total at least" pays 1000 satoshis. For transactions bigger than a kilobyte both pay by kilobyte.</source>
+        <translation>如果自訂手續費設定為 1000 satoshi, 而交易資料大小只有 250 個位元組的話，那麽選擇「每千位元組」就只會付 250 satoshi 的手續費，換做選「總共至少」就會付 1000 satoshi. 但是如果交易資料大小超過一千個位元組，那麽兩者都是每千位元組的費用。</translation>
+    </message>
+    <message>
+        <source>total at least</source>
+        <translation>總共最少</translation>
+    </message>
+    <message>
+        <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks. But be aware that this can end up in a never confirming transaction once there is more demand for bitcoin transactions than the network can process.</source>
+        <translation>當交易量少於區塊可容納的空間時，只付最低手續費不會有什麽問題。但是當交易量的需求成長到超過整體網路可以處理的量時，可能會造成一筆一直不會被確認的交易。</translation>
+    </message>
+    <message>
         <source>(read the tooltip)</source>
         <translation>(請看提示)</translation>
+    </message>
+    <message>
+        <source>Recommended:</source>
+        <translation>建議值:</translation>
+    </message>
+    <message>
+        <source>Custom:</source>
+        <translation>自訂:</translation>
+    </message>
+    <message>
+        <source>(Smart fee not initialized yet. This usually takes a few blocks...)</source>
+        <translation>(手續費智慧演算法還沒準備好。通常都要等幾個區塊才行...)</translation>
     </message>
     <message>
         <source>Confirmation time:</source>
         <translation>確認時間:</translation>
     </message>
     <message>
+        <source>normal</source>
+        <translation>正常</translation>
+    </message>
+    <message>
+        <source>fast</source>
+        <translation>快速</translation>
+    </message>
+    <message>
         <source>Send as zero-fee transaction if possible</source>
         <translation>盡可能送不用付手續費的交易</translation>
+    </message>
+    <message>
+        <source>(confirmation may take longer)</source>
+        <translation>(確認時間可能拉長)</translation>
     </message>
     <message>
         <source>Send to multiple recipients at once</source>
@@ -1971,6 +2019,18 @@ Address: %4
     <message>
         <source>The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
         <translation>交易被拒絕了！有時候會發生這種錯誤，是因為你錢包中的一些錢已經被花掉了。比如說你複製了錢包檔 wallet.dat, 然後用複製的錢包花掉了錢，你現在所用的原來的錢包中，卻沒有那筆錢已經花掉的紀錄。</translation>
+    </message>
+    <message>
+        <source>A fee higher than %1 is considered an insanely high fee.</source>
+        <translation>高於 %1 的手續費會被認為是不正常。</translation>
+    </message>
+    <message>
+        <source>Pay only the minimum fee of %1</source>
+        <translation>只付最低手續費 %1</translation>
+    </message>
+    <message>
+        <source>Estimated to begin confirmation within %1 block(s).</source>
+        <translation>預計可在 %1 個區塊內開始確認。</translation>
     </message>
     <message>
         <source>Warning: Invalid Bitcoin address</source>

@@ -520,6 +520,10 @@ Endereço: %4</translation>
 <context>
     <name>CoinControlDialog</name>
     <message>
+        <source>Coin Selection</source>
+        <translation>Selecionar Moeda</translation>
+    </message>
+    <message>
         <source>Quantity:</source>
         <translation>Quantidade:</translation>
     </message>
@@ -1202,6 +1206,10 @@ Endereço: %4</translation>
     <message>
         <source>Payment request has expired.</source>
         <translation>Solicitação de pagamento expirou.</translation>
+    </message>
+    <message>
+        <source>Payment request is not initialized.</source>
+        <translation>Pedido de pagamento não é inicializado.</translation>
     </message>
     <message>
         <source>Requested payment amount of %1 is too small (considered dust).</source>
