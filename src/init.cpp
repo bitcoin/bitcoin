@@ -1110,6 +1110,7 @@ bool AppInit2(boost::thread_group& threadGroup)
 
             if(!darkSendSigner.SetKey(strMasterNodePrivKey, errorMessage, key, pubkey))
             {
+                printf("%s\n", errorMessage.c_str());
                 return InitError(_("Invalid masternodeprivkey. Please see documenation."));
             }
 
