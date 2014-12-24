@@ -29,6 +29,7 @@ AC_PROG_CC_C89
 if test x"$ac_cv_prog_cc_c89" = x"no"; then
   AC_MSG_ERROR([c89 compiler support required])
 fi
+AM_PROG_AS
 
 case $host_os in
   *darwin*)
@@ -137,8 +138,8 @@ AC_ARG_WITH([bignum], [AS_HELP_STRING([--with-bignum=gmp|no|auto],
 AC_ARG_WITH([scalar], [AS_HELP_STRING([--with-scalar=64bit|32bit|auto],
 [Specify scalar implementation. Default is auto])],[req_scalar=$withval], [req_scalar=auto])
 
-AC_ARG_WITH([asm], [AS_HELP_STRING([--with-asm=x86_64|no|auto]
-[Specify assembly optimizations to use. Default is auto])],[req_asm=$withval], [req_asm=auto])
+AC_ARG_WITH([asm], [AS_HELP_STRING([--with-asm=x86_64|arm|no|auto]
+[Specify assembly optimizations to use. Default is auto (experimental: arm)])],[req_asm=$withval], [req_asm=auto])
 
 AC_CHECK_TYPES([__int128])
 
@@ -164,6 +165,8 @@ else
     if test x"$has_64bit_asm" != x"yes"; then
       AC_MSG_ERROR([x86_64 assembly optimization requested but not available])
     fi
+    ;;
+  arm)
     ;;
   no)
     ;;
@@ -257,9 +260,14 @@ else
 fi
 
 # select assembly optimization
+use_external_asm=no
+
 case $set_asm in
 x86_64)
   AC_DEFINE(USE_ASM_X86_64, 1, [Define this symbol to enable x86_64 assembly optimizations])
+  ;;
+arm)
+  use_external_asm=yes
   ;;
 no)
   ;;
@@ -371,6 +379,10 @@ fi
 
 AC_C_BIGENDIAN()
 
+if test x"$use_external_asm" = x"yes"; then
+  AC_DEFINE(USE_EXTERNAL_ASM, 1, [Define this symbol if an external (non-inline) assembly implementation is used])
+fi
+
 AC_MSG_NOTICE([Using assembly optimizations: $set_asm])
 AC_MSG_NOTICE([Using field implementation: $set_field])
 AC_MSG_NOTICE([Using bignum implementation: $set_bignum])
@@ -395,6 +407,9 @@ else
   if test x"$enable_module_ecdh" = x"yes"; then
     AC_MSG_ERROR([ECDH module is experimental. Use --enable-experimental to allow.])
   fi
+  if test x"$set_asm" = x"arm"; then
+    AC_MSG_ERROR([ARM assembly optimization is experimental. Use --enable-experimental to allow.])
+  fi
 fi
 
 AC_CONFIG_HEADERS([src/libsecp256k1-config.h])
@@ -411,6 +426,8 @@ AM_CONDITIONAL([ENABLE_MODULE_ECDH], [test x"$enable_module_ecdh" = x"yes"])
 AM_CONDITIONAL([ENABLE_MODULE_SCHNORR], [test x"$enable_module_schnorr" = x"yes"])
 AM_CONDITIONAL([ENABLE_MODULE_RECOVERY], [test x"$enable_module_recovery" = x"yes"])
 AM_CONDITIONAL([USE_JNI], [test x"$use_jni" == x"yes"])
+AM_CONDITIONAL([USE_EXTERNAL_ASM], [test x"$use_external_asm" = x"yes"])
+AM_CONDITIONAL([USE_ASM_ARM], [test x"$set_asm" = x"arm"])
 
 dnl make sure nothing new is exported so that we don't break the cache
 PKGCONFIG_PATH_TEMP="$PKG_CONFIG_PATH"
