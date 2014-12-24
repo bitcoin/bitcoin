@@ -10,7 +10,7 @@ Please report bugs using the issue tracker at github:
   https://github.com/bitcoin/bitcoin/issues
 
 Upgrading and downgrading
-==========================
+=========================
 
 How to Upgrade
 --------------
@@ -28,8 +28,8 @@ Downgrading warning
 ---------------------
 
 Because release 0.10.0 makes use of headers-first synchronization and parallel
-block download, the block files and databases are not backwards-compatible
-with older versions of Bitcoin Core:
+block download (see further), the block files and databases are not
+backwards-compatible with older versions of Bitcoin Core:
 
 * Blocks will be stored on disk out of order (in the order they are
 received, really), which makes it incompatible with some tools or
@@ -45,8 +45,37 @@ bootstrap.dat) anew afterwards.
 
 This does not affect wallet forward or backward compatibility.
 
+
+Notable changes
+===============
+
+Faster synchronization
+----------------------
+
+Bitcoin Core now uses 'headers-first synchronization'. This means that we first
+ask peers for block headers (a total of 27 megabytes, as of December 2014) and
+validate those. In a second stage, when the headers have been discovered, we
+download the blocks. However, as we already know about the whole chain in
+advance, the blocks can be downloaded in parallel from all available peers.
+
+In practice, this means a much faster and more robust synchronization. On
+recent hardware with a decent network link, it can be as little as 3 hours
+for an initial full synchronization. You may notice a slower progress in the
+very first few minutes, when headers are still being fetched and verified, but
+it should gain speed afterwards.
+
+A few RPCs were added/updated as a result of this:
+- `getblockchaininfo` now returns the number of validated headers in addition to
+the number of validated blocks.
+- `getpeerinfo` lists both the number of blocks and headers we know we have in
+common with each peer. While synchronizing, the heights of the blocks that we
+have requested from peers (but haven't received yet) are also listed as
+'inflight'.
+- A new RPC `getchaintips` lists all known branches of the block chain,
+including those we only have headers for.
+
 Transaction fee changes
-=======================
+-----------------------
 
 This release automatically estimates how high a transaction fee (or how
 high a priority) transactions require to be confirmed quickly. The default
@@ -61,27 +90,22 @@ Statistics used to estimate fees and priorities are saved in the
 data directory in the `fee_estimates.dat` file just before
 program shutdown, and are read in at startup.
 
-New Command Line Options
----------------------------
-
+New command line options for fee estimation:
 - `-txconfirmtarget=n` : create transactions that have enough fees (or priority)
 so they are likely to confirm within n blocks (default: 1). This setting
 is over-ridden by the -paytxfee option.
 
-New RPC methods
-----------------
-
+New RPC commands for fee estimation:
 - `estimatefee nblocks` : Returns approximate fee-per-1,000-bytes needed for
 a transaction to be confirmed within nblocks. Returns -1 if not enough
 transactions have been observed to compute a good estimate.
-
 - `estimatepriority nblocks` : Returns approximate priority needed for
 a zero-fee transaction to confirm within nblocks. Returns -1 if not
 enough free transactions have been observed to compute a good
 estimate.
 
 RPC access control changes
-==========================================
+--------------------------
 
 Subnet matching for the purpose of access control is now done
 by matching the binary network address, instead of with string wildcard matching.
@@ -107,8 +131,27 @@ Using wildcards will result in the rule being rejected with the following error 
 
     Error: Invalid -rpcallowip subnet specification: *. Valid are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24).
 
+
+REST interface
+--------------
+
+A new HTTP API is exposed when running with the `-rest` flag, which allows
+unauthenticated access to public node data.
+
+It is served on the same port as RPC, but does not need a password, and uses
+plain HTTP instead of JSON-RPC.
+
+Assuming a local RPC server running on port 8332, it is possible to request:
+- Blocks: http://localhost:8332/rest/block/*HASH*.*EXT*
+- Blocks without transactions: http://localhost:8332/block/notxdetails/*HASH*.*EXT*
+- Transactions (requires `-txindex`): http://localhost:8332/tx/*HASH*.*EXT*
+
+In every case, *EXT* can be `bin` (for raw binary data), `hex` (for hex-encoded binary) or `json`.
+
+For more details, see the `doc/REST-interface.md` document in the repository.
+
 RPC Server "Warm-Up" Mode
-=========================
+-------------------------
 
 The RPC server is started earlier now, before most of the expensive
 intialisations like loading the block index.  It is available now almost
@@ -120,7 +163,7 @@ started and will be available soon (for instance, so that they do not
 have to start it themselves).
 
 Improved signing security
-=========================
+-------------------------
 
 For 0.10 the security of signing against unusual attacks has been
 improved by making the signatures constant time and deterministic.
@@ -149,7 +192,7 @@ than the implementation in OpenSSL.
 [1] https://eprint.iacr.org/2014/161.pdf
 
 Watch-only addresses in the wallet
-==================================
+----------------------------------
 
 The wallet can now track transactions to addresses (or scripts) for which you
 do not have the private keys.
@@ -174,7 +217,7 @@ with future block chain pruning functionality. It does mean the address needs
 to added to the wallet before the payment, though.
 
 Consensus library
-=================
+-----------------
 
 Starting from 0.10.0, the Bitcoin Core distribution includes a consensus library.
 
@@ -196,7 +239,7 @@ The functionality is planned to be extended to e.g. UTXO management in upcoming 
 for existing methods should remain stable.
 
 Standard script rules relaxed for P2SH addresses
-================================================
+------------------------------------------------
 
 The IsStandard() rules have been almost completely removed for P2SH
 redemption scripts, allowing applications to make use of any valid
@@ -207,7 +250,7 @@ standard Bitcoin Core nodes wouldn't relay them to miners, nor would
 most miners include them in blocks they mined.
 
 bitcoin-tx
-=============
+----------
 
 It has been observed that many of the RPC functions offered by bitcoind are
 "pure functions", and operate independently of the bitcoind wallet. This
@@ -230,8 +273,8 @@ server round-trip to execute.
 Other utilities "bitcoin-key" and "bitcoin-script" have been proposed, making
 key and script operations easily accessible via command line.
 
-0.10.0 Release notes
-=======================
+0.10.0 Change log
+=================
 
 Detailed release notes follow. This overview includes changes that affect external
 behavior, not code moves, refactors or string updates.
@@ -534,7 +577,7 @@ Miscellaneous:
 - `6e6a36c` contrib: show pull # in prompt for github-merge script
 
 Credits
---------
+=======
 
 Thanks to everyone who contributed to this release:
 
