@@ -64,7 +64,7 @@ void CActiveMasternode::ManageStatus()
 
         // Set defaults
         status = MASTERNODE_NOT_CAPABLE;
-        notCapableReason = "Unknown.";
+        notCapableReason = "Unknown. Check debug.log for more information.";
 
         // Choose coins to use
         CPubKey pubKeyCollateralAddress;
