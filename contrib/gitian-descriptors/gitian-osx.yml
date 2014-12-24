@@ -90,7 +90,7 @@ script: |
   mkdir -p temp
   pushd temp
   tar xf ../$SOURCEDIST
-  find bitcoin-* | sort | tar --no-recursion -c -T - | gzip -9n > ../$SOURCEDIST
+  find bitcoin-* | sort | tar --no-recursion --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 -c -T - | gzip -9n > ../$SOURCEDIST
   popd
 
   ORIGPATH="$PATH"
@@ -116,7 +116,7 @@ script: |
     cp ${BASEPREFIX}/${i}/native/bin/${i}-pagestuff unsigned-app-${i}/pagestuff
     mv dist unsigned-app-${i}
     pushd unsigned-app-${i}
-    find . | sort | tar --no-recursion -czf ${OUTDIR}/${DISTNAME}-osx-unsigned.tar.gz -T -
+    find . | sort | tar --no-recursion --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 -c -T - | gzip -9n > ${OUTDIR}/${DISTNAME}-osx-unsigned.tar.gz
     popd
 
     make deploy
@@ -126,7 +126,7 @@ script: |
     find . -name "lib*.la" -delete
     find . -name "lib*.a" -delete
     rm -rf ${DISTNAME}/lib/pkgconfig
-    find . | sort | tar --no-recursion -c -T - | gzip -9n > ${OUTDIR}/${DISTNAME}-${i}.tar.gz
+    find . | sort | tar --no-recursion --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 -c -T - | gzip -9n > ${OUTDIR}/${DISTNAME}-${i}.tar.gz
     cd ../../
   done
   mkdir -p $OUTDIR/src
