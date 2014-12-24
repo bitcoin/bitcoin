@@ -46,5 +46,15 @@
   { "exec": "./bitcoin-tx",
     "args": ["-create", "outscript=0:"],
     "output_cmp": "txcreate2.hex"
+  },
+  { "exec": "./bitcoin-tx",
+    "args":
+    ["-create",
+     "in=4d49a71ec9da436f71ec4ee231d04f292a29cd316f598bb7068feccabdc59485:0",
+     "set=privatekeys:[\"5HpHagT65TZzG1PH3CSu63k8DbpvD8s5ip4nEB3kEsreAnchuDf\"]",
+     "set=prevtxs:[{\"txid\":\"4d49a71ec9da436f71ec4ee231d04f292a29cd316f598bb7068feccabdc59485\",\"vout\":0,\"scriptPubKey\":\"4d49a71ec9da436f71ec4ee231d04f292a29cd316f598bb7068feccabdc59485\"}]",
+     "sign=ALL",
+     "outaddr=0.001:193P6LtvS4nCnkDvM9uXn1gsSRqh4aDAz7"],
+    "output_cmp": "txcreatesign.hex"
   }
 ]
