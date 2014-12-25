@@ -41,6 +41,10 @@ class WalletTest (BitcoinTestFramework):
 
         self.nodes[0].setgenerate(True, 1)
 
+        walletinfo = self.nodes[0].getwalletinfo()
+        assert_equal(walletinfo['immature_balance'], 50)
+        assert_equal(walletinfo['balance'], 0)
+
         self.sync_all()
         self.nodes[1].setgenerate(True, 101)
         self.sync_all()
@@ -53,6 +57,9 @@ class WalletTest (BitcoinTestFramework):
         # Second transaction will be child of first, and will require a fee
         self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 11)
         self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 10)
+
+        walletinfo = self.nodes[0].getwalletinfo()
+        assert_equal(walletinfo['immature_balance'], 0)
 
         # Have node0 mine a block, thus he will collect his own fee. 
         self.nodes[0].setgenerate(True, 1)
