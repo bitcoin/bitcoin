@@ -83,8 +83,11 @@ if BUILD_BITCOIND
   bin_PROGRAMS += chaincoind
 endif
 
-if BUILD_BITCOIN_UTILS
-  bin_PROGRAMS += chaincoin-cli chaincoin-tx
+if BUILD_BITCOIN_CLI
+  bin_PROGRAMS += chaincoin-cli
+endif
+if BUILD_BITCOIN_TX
+  bin_PROGRAMS += chaincoin-tx
 endif
 
 .PHONY: FORCE check-symbols check-security
