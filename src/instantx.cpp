@@ -210,7 +210,7 @@ void DoConsensusVote(CTransaction& tx, bool approved, int64_t nBlockHeight)
     }
 
     int winner = GetCurrentMasterNode(1, nBlockHeight);
-    int n = GetMasternodeRank(activeMasternode.vinMasternode, nBlockHeight, MIN_INSTANTX_PROTO_VERSION);
+    int n = GetMasternodeRank(activeMasternode.vin, nBlockHeight, MIN_INSTANTX_PROTO_VERSION);
 
     if(n == -1 || winner == -1) 
     {
@@ -228,7 +228,7 @@ void DoConsensusVote(CTransaction& tx, bool approved, int64_t nBlockHeight)
     }
 
     CConsensusVote ctx;
-    ctx.vinMasternode = activeMasternode.vinMasternode;
+    ctx.vinMasternode = activeMasternode.vin;
     ctx.approved = approved;
     ctx.txHash = tx.GetHash();
     ctx.nBlockHeight = nBlockHeight; 
@@ -277,7 +277,7 @@ void ProcessConsensusVote(CConsensusVote& ctx)
     }
 
     //We're not the winning masternode
-    if(darkSendMasterNodes[winner].vin != activeMasternode.vinMasternode) {
+    if(darkSendMasterNodes[winner].vin != activeMasternode.vin) {
         LogPrintf("InstantX::ProcessConsensusVote - I'm not the winning masternode\n");
         return;
     }

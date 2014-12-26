@@ -1594,6 +1594,9 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
             if (pindexLast->nHeight + 1 >= 34140) retarget = DIFF_DGW;
             else if (pindexLast->nHeight + 1 >= 15200) retarget = DIFF_KGW;
             else retarget = DIFF_BTC;
+        } else {
+            if (pindexLast->nHeight + 1 >= 256) retarget = DIFF_DGW;
+            else retarget = DIFF_BTC;
         }
 
         // Default Bitcoin style retargeting
@@ -2881,13 +2884,14 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
     {
         LOCK2(cs_main, mempool.cs);
 
-        if (block.GetHash() != Params().HashGenesisBlock()) {
-            if(chainActive.Tip()->GetBlockHash() == block.hashPrevBlock){
-                int64_t masternodePaymentAmount = GetMasternodePayment(chainActive.Tip()->nHeight+1, block.vtx[0].GetValueOut());
+        CBlockIndex *pindex = chainActive.Tip();
+        if(pindex != NULL){
+            if(pindex->GetBlockHash() == block.hashPrevBlock){
+                int64_t masternodePaymentAmount = GetMasternodePayment(pindex->nHeight+1, block.vtx[0].GetValueOut());
                 bool fIsInitialDownload = IsInitialBlockDownload();
 
                 // If we don't already have its previous block, skip masternode payment step
-                if (!fIsInitialDownload && chainActive.Tip() != NULL)
+                if (!fIsInitialDownload && pindex != NULL)
                 {
                     bool foundPaymentAmount = false;
                     bool foundPayee = false;
@@ -2910,7 +2914,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
                         CBitcoinAddress address2(address1);
 
                         LogPrintf("CheckBlock() : Couldn't find masternode payment(%d|%d) or payee(%d|%s) nHeight %d. \n", foundPaymentAmount, masternodePaymentAmount, foundPayee, address2.ToString().c_str(), chainActive.Tip()->nHeight+1);
-                        return state.DoS(100, error("CheckBlock() : Couldn't find masternode payment or payee"));
+                        if(!TestNet()) return state.DoS(100, error("CheckBlock() : Couldn't find masternode payment or payee"));
                     }
                 }
             } else {

@@ -72,6 +72,15 @@ void OptionsModel::Init()
         settings.setValue("fCoinControlFeatures", false);
     fCoinControlFeatures = settings.value("fCoinControlFeatures", false).toBool();
 
+    if (!settings.contains("nDarksendRounds"))
+        settings.setValue("nDarksendRounds", 2);
+
+    if (!settings.contains("nAnonymizeDarkcoinAmount"))
+        settings.setValue("nAnonymizeDarkcoinAmount", 1000);
+
+    nDarksendRounds = settings.value("nDarksendRounds").toLongLong();
+    nAnonymizeDarkcoinAmount = settings.value("nAnonymizeDarkcoinAmount").toLongLong();
+
     // These are shared with the core or have a command-line parameter
     // and we want command-line parameters to overwrite the GUI settings.
     //

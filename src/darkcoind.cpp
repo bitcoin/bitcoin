@@ -11,6 +11,7 @@
 #include "noui.h"
 #include "ui_interface.h"
 #include "util.h"
+#include "masternodeconfig.h"
 
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/filesystem.hpp>
@@ -78,6 +79,9 @@ bool AppInit(int argc, char* argv[])
             fprintf(stderr,"Error reading configuration file: %s\n", e.what());
             return false;
         }
+
+        masternodeConfig.read(GetMasternodeConfigFile());
+
         // Check for -testnet or -regtest parameter (TestNet() calls are only valid after this clause)
         if (!SelectParamsFromCommandLine()) {
             fprintf(stderr, "Error: Invalid combination of -regtest and -testnet.\n");

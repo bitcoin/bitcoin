@@ -1113,7 +1113,7 @@ bool AppInit2(boost::thread_group& threadGroup)
                 return InitError(_("Invalid masternodeprivkey. Please see documenation."));
             }
 
-            activeMasternode.pubkeyMasterNode2 = pubkey;
+            activeMasternode.pubKeyMasternode = pubkey;
 
         } else {
             return InitError(_("You must specify a masternodeprivkey in the configuration. Please see documentation for help."));

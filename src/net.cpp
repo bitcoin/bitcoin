@@ -1911,6 +1911,15 @@ void RelayDarkSendElectionEntry(const CTxIn vin, const CService addr, const std:
     }
 }
 
+void SendDarkSendElectionEntry(const CTxIn vin, const CService addr, const std::vector<unsigned char> vchSig, const int64_t nNow, const CPubKey pubkey, const CPubKey pubkey2, const int count, const int current, const int64_t lastUpdated, const int protocolVersion)
+{
+    LOCK(cs_vNodes);
+    BOOST_FOREACH(CNode* pnode, vNodes)
+    {
+        pnode->PushMessage("dsee", vin, addr, vchSig, nNow, pubkey, pubkey2, count, current, lastUpdated, protocolVersion);
+    }
+}
+
 void RelayDarkSendElectionEntryPing(const CTxIn vin, const std::vector<unsigned char> vchSig, const int64_t nNow, const bool stop)
 {
     LOCK(cs_vNodes);
@@ -1918,6 +1927,15 @@ void RelayDarkSendElectionEntryPing(const CTxIn vin, const std::vector<unsigned 
     {
         if(!pnode->fRelayTxes) continue;
         
+        pnode->PushMessage("dseep", vin, vchSig, nNow, stop);
+    }
+}
+
+void SendDarkSendElectionEntryPing(const CTxIn vin, const std::vector<unsigned char> vchSig, const int64_t nNow, const bool stop)
+{
+    LOCK(cs_vNodes);
+    BOOST_FOREACH(CNode* pnode, vNodes)
+    {
         pnode->PushMessage("dseep", vin, vchSig, nNow, stop);
     }
 }
@@ -1930,7 +1948,6 @@ void RelayDarkSendCompletedTransaction(const int sessionID, const bool error, co
         pnode->PushMessage("dsc", sessionID, error, errorMessage);
     }
 }
-
 
 void CNode::RecordBytesRecv(uint64_t bytes)
 {
@@ -2002,11 +2019,6 @@ CAddrDB::CAddrDB()
 
 bool CAddrDB::Write(const CAddrMan& addr)
 {
-    // Generate random temporary filename
-    unsigned short randv = 0;
-    RAND_bytes((unsigned char *)&randv, sizeof(randv));
-    std::string tmpfn = strprintf("peers.dat.%04x", randv);
-
     // serialize addresses, checksum data up to that point, then append csum
     CDataStream ssPeers(SER_DISK, CLIENT_VERSION);
     ssPeers << FLATDATA(Params().MessageStart());
@@ -2014,12 +2026,12 @@ bool CAddrDB::Write(const CAddrMan& addr)
     uint256 hash = Hash(ssPeers.begin(), ssPeers.end());
     ssPeers << hash;
 
-    // open temp output file, and associate with CAutoFile
-    boost::filesystem::path pathTmp = GetDataDir() / tmpfn;
-    FILE *file = fopen(pathTmp.string().c_str(), "wb");
+    // open output file, and associate with CAutoFile
+    boost::filesystem::path pathAddr = GetDataDir() / "peers.dat";
+    FILE *file = fopen(pathAddr.string().c_str(), "wb");
     CAutoFile fileout = CAutoFile(file, SER_DISK, CLIENT_VERSION);
     if (!fileout)
-        return error("%s : Failed to open file %s", __func__, pathTmp.string());
+        return error("%s : Failed to open file %s", __func__, pathAddr.string());
 
     // Write and commit header, data
     try {
@@ -2030,10 +2042,6 @@ bool CAddrDB::Write(const CAddrMan& addr)
     }
     FileCommit(fileout);
     fileout.fclose();
-
-    // replace existing peers.dat, if any, with new peers.dat.XXXX
-    if (!RenameOver(pathTmp, pathAddr))
-        return error("%s : Rename-into-place failed", __func__);
 
     return true;
 }

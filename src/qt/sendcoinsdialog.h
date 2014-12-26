@@ -53,6 +53,7 @@ private:
     Ui::SendCoinsDialog *ui;
     WalletModel *model;
     bool fNewRecipientAllowed;
+    void send(QList<SendCoinsRecipient> recipients, QString strFee, QStringList formatted);
 
     // Process WalletModel::SendCoinsReturn and generate a pair consisting
     // of a message and message flags for use in emit message().

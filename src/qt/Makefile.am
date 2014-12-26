@@ -89,6 +89,7 @@ QT_FORMS_UI = \
   forms/addressbookpage.ui \
   forms/askpassphrasedialog.ui \
   forms/coincontroldialog.ui \
+  forms/darksendconfig.ui \
   forms/editaddressdialog.ui \
   forms/helpmessagedialog.ui \
   forms/intro.ui \
@@ -115,6 +116,7 @@ QT_MOC_CPP = \
   moc_coincontroldialog.cpp \
   moc_coincontroltreewidget.cpp \
   moc_csvmodelwriter.cpp \
+  moc_darksendconfig.cpp \
   moc_editaddressdialog.cpp \
   moc_guiutil.cpp \
   moc_intro.cpp \
@@ -177,6 +179,7 @@ BITCOIN_QT_H = \
   coincontroldialog.h \
   coincontroltreewidget.h \
   csvmodelwriter.h \
+  darksendconfig.h \
   editaddressdialog.h \
   guiconstants.h \
   guiutil.h \
@@ -268,6 +271,7 @@ BITCOIN_QT_CPP = \
   bitcoinunits.cpp \
   clientmodel.cpp \
   csvmodelwriter.cpp \
+  darksendconfig.cpp \
   guiutil.cpp \
   intro.cpp \
   monitoreddatamapper.cpp \
@@ -289,6 +293,7 @@ BITCOIN_QT_CPP += \
   askpassphrasedialog.cpp \
   coincontroldialog.cpp \
   coincontroltreewidget.cpp \
+  darksendconfig.cpp \
   editaddressdialog.cpp \
   openuridialog.cpp \
   overviewpage.cpp \
