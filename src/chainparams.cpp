@@ -36,7 +36,7 @@ public:
         pchMessageStart[1] = 0x0c;
         pchMessageStart[2] = 0x6b;
         pchMessageStart[3] = 0xbd;
-        vAlertPubKey = ParseHex("040184710fa689ad5023690c80f3a49c8f13f8d45b8c857fbcbc8bc4a8e4d3eb4b10f4d4604fa08dce601aaf0f470216fe1b51850b4acf21b179c45070ac7b03a9");
+        vAlertPubKey = ParseHex("048240a8748a80a286b270ba126705ced4f2ce5a7847b3610ea3c06513150dade2a8512ed5ea86320824683fc0818f0ac019214973e677acd1244f6d0571fc5103");
         nDefaultPort = 9999;
         nRPCPort = 9998;
         bnProofOfWorkLimit = CBigNum(~uint256(0) >> 20);  // Darkcoin starting difficulty is 1 / 2^12
@@ -114,26 +114,26 @@ public:
         pchMessageStart[2] = 0xca;
         pchMessageStart[3] = 0xff;
 
-        vAlertPubKey = ParseHex("040184710fa689ad5023690c80f3a49c8f13f8d45b8c857fbcbc8bc4a8e4d3eb4b10f4d4604fa08dce601aaf0f470216fe1b51850b4acf21b179c45070ac7b03a9");
+        vAlertPubKey = ParseHex("04517d8a699cb43d3938d7b24faaff7cda448ca4ea267723ba614784de661949bf632d6304316b244646dea079735b9a6fc4af804efb4752075b9fe2245e14e412");
         nDefaultPort = 19999;
         nRPCPort = 19998;
-        strDataDir = "testnet4";
+        strDataDir = "testnet3";
 
         // Modify the testnet genesis block so the timestamp is valid for a later start.
-        genesis.nTime = 1413333337;
-        genesis.nNonce = 3229645;
+        genesis.nTime = 1390666206;
+        genesis.nNonce = 3861367235;
 
         hashGenesisBlock = genesis.GetHash();
-        assert(hashGenesisBlock == uint256("0x00000008dfc658b2a9f79910d42e0595464e19cc332d98c0762330142f51ff73"));
+        assert(hashGenesisBlock == uint256("0x00000bafbc94add76cb75e2ec92894837288a481e5c005f6563d91623bf8bc2c"));
 
         vFixedSeeds.clear();
         vSeeds.clear();
         vSeeds.push_back(CDNSSeedData("darkcoin.io", "testnet-seed.darkcoin.io"));
         vSeeds.push_back(CDNSSeedData("darkcoin.qa", "testnet-seed.darkcoin.qa"));
 
-        base58Prefixes[PUBKEY_ADDRESS] = list_of(138); // Testnet v4 addresses start with x
+        base58Prefixes[PUBKEY_ADDRESS] = list_of(111); // Testnet v4 addresses
         base58Prefixes[SCRIPT_ADDRESS] = list_of(196);
-        base58Prefixes[SECRET_KEY]     = list_of(266);
+        base58Prefixes[SECRET_KEY]     = list_of(239);
         base58Prefixes[EXT_PUBLIC_KEY] = list_of(0x04)(0x35)(0x87)(0xCF);
         base58Prefixes[EXT_SECRET_KEY] = list_of(0x04)(0x35)(0x83)(0x94);
     }

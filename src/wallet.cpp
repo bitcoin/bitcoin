@@ -10,9 +10,11 @@
 #include "checkpoints.h"
 #include "coincontrol.h"
 #include "net.h"
+#include "darksend.h"
 
 #include <boost/algorithm/string/replace.hpp>
 #include <openssl/rand.h>
+
 
 using namespace std;
 
@@ -1246,25 +1248,6 @@ static void ApproximateBestSubset(vector<pair<int64_t, pair<const CWalletTx*,uns
     }
 }
 
-/* select coins with 1 unspent output */
-bool CWallet::SelectCoinsMasternode(CTxIn& vin, int64_t& nValueRet, CScript& pubScript) const
-{
-    CCoinControl *coinControl=NULL;
-    vector<COutput> vCoins;
-    AvailableCoins(vCoins, true, coinControl, ALL_COINS);
-
-    BOOST_FOREACH(const COutput& out, vCoins)
-    {
-        if(out.tx->vout[out.i].nValue == 1000*COIN){ //exactly
-            vin = CTxIn(out.tx->GetHash(),out.i);
-            pubScript = out.tx->vout[out.i].scriptPubKey; // the inputs PubKey
-            nValueRet = out.tx->vout[out.i].nValue;
-            return true;
-        }
-    }
-
-    return false;
-}
 
 bool CWallet::SelectCoinsMinConf(int64_t nTargetValue, int nConfMine, int nConfTheirs, vector<COutput> vCoins,
                                  set<pair<const CWalletTx*,unsigned int> >& setCoinsRet, int64_t& nValueRet) const
@@ -1433,7 +1416,7 @@ bool CWallet::SelectCoinsDark(int64_t nValueMin, int64_t nValueMax, std::vector<
     BOOST_FOREACH(const COutput& out, vCoins)
     {
         //there's no reason to allow inputs less than 1 COIN into DS (other than denominations smaller than that amount)
-        if(out.tx->vout[out.i].nValue <= 1*COIN && out.tx->vout[out.i].nValue != (.1*COIN)+1) continue;
+        if(out.tx->vout[out.i].nValue < 1*COIN && out.tx->vout[out.i].nValue != (.1*COIN)+1) continue;
         if(fMasterNode && out.tx->vout[out.i].nValue == 1000*COIN) continue; //masternode input
 
         if(nValueRet + out.tx->vout[out.i].nValue <= nValueMax){

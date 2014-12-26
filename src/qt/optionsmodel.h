@@ -42,9 +42,9 @@ public:
         ThreadsScriptVerif,     // int
         DatabaseCache,          // int
         SpendZeroConfChange,    // bool
-        OptionIDRowCount,
         DarksendRounds,    // int
         AnonymizeDarkcoinAmount, //int
+        OptionIDRowCount,
     };
 
     void Init();

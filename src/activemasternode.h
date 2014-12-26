@@ -1,4 +1,3 @@
-
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2012 The Bitcoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
@@ -19,36 +18,44 @@
 class CActiveMasternode
 {
 public:
-    CTxIn vinMasternode;
-    CPubKey pubkeyMasterNode;
-    CPubKey pubkeyMasterNode2;
+	// Initialized by init.cpp
+	// Keys for the main masternode
+	CPubKey pubKeyMasternode;
 
-    std::string strMasterNodeSignMessage;
-    std::vector<unsigned char> vchMasterNodeSignature;
+	// Initialized while registering masternode
+	CTxIn vin;
+    CService service;
 
-    std::string masterNodeAddr;
-    CService masterNodeSignAddr;
-
-    int isCapableMasterNode;
-    int64_t masterNodeSignatureTime;
-    int masternodePortOpen;
+    int status;
+    std::string notCapableReason;
 
     CActiveMasternode()
-    {
-        isCapableMasterNode = MASTERNODE_NOT_PROCESSED;
-        masternodePortOpen = 0;
+    {        
+        status = MASTERNODE_NOT_PROCESSED;
     }
+
+    void ManageStatus(); // manage status of main masternode
+
+    bool Dseep(std::string& errorMessage); // ping for main masternode
+    bool Dseep(CTxIn vin, CService service, CKey key, CPubKey pubKey, std::string &retErrorMessage, bool stop); // ping for any masternode
+
+    bool StopMasterNode(std::string& errorMessage); // stop main masternode
+    bool StopMasterNode(std::string strService, std::string strKeyMasternode, std::string& errorMessage); // stop remote masternode
+    bool StopMasterNode(CTxIn vin, CService service, CKey key, CPubKey pubKey, std::string& errorMessage); // stop any masternode
+
+    bool Register(std::string strService, std::string strKey, std::string txHash, std::string strOutputIndex, std::string& errorMessage); // register remote masternode
+    bool Register(CTxIn vin, CService service, CKey key, CPubKey pubKey, CKey keyMasternode, CPubKey pubKeyMasternode, std::string &retErrorMessage); // register any masternode
 
     // get 1000DRK input that can be used for the masternode
     bool GetMasterNodeVin(CTxIn& vin, CPubKey& pubkey, CKey& secretKey);
+    bool GetMasterNodeVin(CTxIn& vin, CPubKey& pubkey, CKey& secretKey, std::string strTxHash, std::string strOutputIndex);
+    vector<COutput> SelectCoinsMasternode();
+    bool GetVinFromOutput(COutput out, CTxIn& vin, CPubKey& pubkey, CKey& secretKey);
 
-    // start the masternode and register with the network
-    void RegisterAsMasterNode(bool stop);
-    // start a remote masternode
-    bool RegisterAsMasterNodeRemoteOnly(std::string strMasterNodeAddr, std::string strMasterNodePrivKey);
+    //bool SelectCoinsMasternode(CTxIn& vin, int64& nValueIn, CScript& pubScript, std::string strTxHash, std::string strOutputIndex);
 
     // enable hot wallet mode (run a masternode with no funds)
-    bool EnableHotColdMasterNode(CTxIn& vin, int64_t sigTime, CService& addr);
+    bool EnableHotColdMasterNode(CTxIn& vin, CService& addr);
 };
 
 #endif
