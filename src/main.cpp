@@ -2900,6 +2900,8 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
                     CScript payee;
                     if(!masternodePayments.GetBlockPayee(chainActive.Tip()->nHeight+1, payee) || payee == CScript()){
                         foundPayee = true; //doesn't require a specific payee
+                        foundPaymentAmount = true;
+                        foundPaymentAndPayee = true;
                     }
 
                     for (unsigned int i = 0; i < block.vtx[0].vout.size(); i++) {
