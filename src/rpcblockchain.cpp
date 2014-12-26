@@ -441,7 +441,7 @@ Value getblockchaininfo(const Array& params, bool fHelp)
             "Returns an object containing various state info regarding block chain processing.\n"
             "\nResult:\n"
             "{\n"
-            "  \"chain\": \"xxxx\",        (string) current chain (main, testnet4, regtest)\n"
+            "  \"chain\": \"xxxx\",        (string) current chain (main, testnet3, regtest)\n"
             "  \"blocks\": xxxxxx,         (numeric) the current number of blocks processed in the server\n"
             "  \"bestblockhash\": \"...\", (string) the hash of the currently best block\n"
             "  \"difficulty\": xxxxxx,     (numeric) the current difficulty\n"
