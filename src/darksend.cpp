@@ -1421,6 +1421,7 @@ bool CDarkSendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
     int maxRounds = 2;
     int maxAmount = DARKSEND_POOL_MAX/COIN;
     bool hasFeeInput = false;
+    int64_t lowestDenom = COIN*1;
 
     // if we have more denominated funds (of any maturity) than the nAnonymizeDarkcoinAmount, we should use use those
     if(pwalletMain->GetDenominatedBalance(true) >= nAnonymizeDarkcoinAmount*COIN ||
@@ -1433,8 +1434,8 @@ bool CDarkSendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
 
     int64_t balanceNeedsAnonymized = pwalletMain->GetBalance() - pwalletMain->GetAnonymizedBalance();
     if(balanceNeedsAnonymized > maxAmount*COIN) balanceNeedsAnonymized= maxAmount*COIN;
-    if(balanceNeedsAnonymized < COIN*2.5 ||
-        (vecDisabledDenominations.size() > 0 && balanceNeedsAnonymized < COIN*12.5)){
+    if(balanceNeedsAnonymized < lowestDenom ||
+        (vecDisabledDenominations.size() > 0 && balanceNeedsAnonymized < COIN*10)){
         LogPrintf("DoAutomaticDenominating : No funds detected in need of denominating \n");
         return false;
     }
@@ -1462,8 +1463,8 @@ bool CDarkSendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
     }
 
     // the darksend pool can only take 2.5DRK minimum
-    if(nValueIn < COIN*2.5 ||
-        (vecDisabledDenominations.size() > 0 && nValueIn < COIN*12.5)
+    if(nValueIn < lowestDenom ||
+        (vecDisabledDenominations.size() > 0 && nValueIn < COIN*10)
     ){
         //simply look for non-denominated coins
         if (pwalletMain->SelectCoinsDark(maxAmount*COIN, 9999999*COIN, vCoins, nValueIn, minRounds, maxRounds, hasFeeInput))
@@ -1791,7 +1792,7 @@ bool CDarkSendPool::SplitUpMoney(bool justCollateral)
         LogPrintf("SplitUpMoney: Not enough outputs to make a transaction\n");
         return false;
     }
-    if((!justCollateral && nTotalOut <= 1.1*COIN) || vecSend.size() < 1){
+    if((!justCollateral && nTotalOut <= 1*COIN) || vecSend.size() < 1){
         LogPrintf("SplitUpMoney: Not enough outputs to make a transaction\n");
         return false;
     }
