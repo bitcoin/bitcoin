@@ -249,7 +249,7 @@ void OverviewPage::updateDarksendProgress(){
     if(balance == 0){
         ui->darksendProgress->setValue(0);
         QString s("No inputs detected");
-        ui->darksendProgress->setToolTip(s);        
+        ui->darksendProgress->setToolTip(s);
         return;
     }
 
@@ -260,10 +260,10 @@ void OverviewPage::updateDarksendProgress(){
     double max = nAnonymizeDarkcoinAmount;
     //If it's more than the wallet amount, limit to that.
     if(max > (double)(pwalletMain->GetBalance()/COIN)-1) max = (double)(pwalletMain->GetBalance()/COIN)-1;
-    //denominated balance / anon threshold -- the percentage that we've completed 
+    //denominated balance / anon threshold -- the percentage that we've completed
     double b = ((double)(pwalletMain->GetDenominatedBalance()/COIN) / max);
 
-    double val = a*b; 
+    double val = a*b;
     if(val < 0) val = 0;
     if(val > 100) val = 100;
 
@@ -320,7 +320,7 @@ void OverviewPage::darkSendStatus()
                         LogPrintf("Wallet is locked and user declined to unlock. Disabling Darksend.\n");
                     }
                 }
-                if((nAnonymizeDarkcoinAmount*COIN)-pwalletMain->GetAnonymizedBalance() <= 1.1*COIN && 
+                if((nAnonymizeDarkcoinAmount*COIN)-pwalletMain->GetAnonymizedBalance() <= 1.1*COIN &&
                     walletModel->getEncryptionStatus() == WalletModel::Unlocked &&
                     darkSendPool.GetMyTransactionCount() == 0){
 
@@ -380,13 +380,13 @@ void OverviewPage::darkSendStatus()
         convert << "unknown state : id=" << state;
     }
 
-    if(state == POOL_STATUS_ERROR || state == POOL_STATUS_SUCCESS) darkSendPool.Check();    
+    if(state == POOL_STATUS_ERROR || state == POOL_STATUS_SUCCESS) darkSendPool.Check();
 
     QString s(convert.str().c_str());
 
     if(s != ui->darksendStatus->text())
         LogPrintf("%s\n", convert.str().c_str());
-    
+
     ui->darksendStatus->setText(s);
 
     showingDarkSendMessage++;
@@ -400,17 +400,17 @@ void OverviewPage::runDoAutomaticDenomination(){
 }
 
 void OverviewPage::toggleDarksend(){
-    int64_t balance = pwalletMain->GetBalance();
-    if(balance < 2.5*COIN){
-        QMessageBox::warning(this, tr("Darksend"),
-            tr("Darksend requires at least 2.5 DRK to use."),
-            QMessageBox::Ok, QMessageBox::Ok);
-        return;
+    if(!fEnableDarksend){
+        int64_t balance = pwalletMain->GetBalance();
+        if(balance < 1.49*COIN){
+            QMessageBox::warning(this, tr("Darksend"),
+                tr("Darksend requires at least 1.5 DRK to use."),
+                QMessageBox::Ok, QMessageBox::Ok);
+            return;
+        }
     }
 
-
     darkSendPool.cachedNumBlocks = 0;
-
     fEnableDarksend = !fEnableDarksend;
 
     if(!fEnableDarksend){
