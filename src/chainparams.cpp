@@ -66,8 +66,8 @@ public:
         vSeeds.push_back(CDNSSeedData("darkcoin.qa", "dnsseed.darkcoin.qa"));
         vSeeds.push_back(CDNSSeedData("masternode.io", "dnsseed.masternode.io"));
 
-        base58Prefixes[PUBKEY_ADDRESS] = list_of(76); // Darkcoin addresses start with X
-        base58Prefixes[SCRIPT_ADDRESS] = list_of(5);
+        base58Prefixes[PUBKEY_ADDRESS] = list_of(76); // Darkcoin addresses start with 'X'
+        base58Prefixes[SCRIPT_ADDRESS] = list_of(16); // Script addresses start with '7'
         base58Prefixes[SECRET_KEY] =     list_of(204);
         base58Prefixes[EXT_PUBLIC_KEY] = list_of(0x04)(0x88)(0xB2)(0x1E);
         base58Prefixes[EXT_SECRET_KEY] = list_of(0x04)(0x88)(0xAD)(0xE4);
@@ -133,8 +133,8 @@ public:
         vSeeds.push_back(CDNSSeedData("darkcoin.qa", "testnet-seed.darkcoin.qa"));
         vSeeds.push_back(CDNSSeedData("masternode.io", "test.dnsseed.masternode.io"));
 
-        base58Prefixes[PUBKEY_ADDRESS] = list_of(111); // Testnet v3 addresses
-        base58Prefixes[SCRIPT_ADDRESS] = list_of(196);
+        base58Prefixes[PUBKEY_ADDRESS] = list_of(139); // Testnet darkcoin addresses start with 'x' or 'y'
+        base58Prefixes[SCRIPT_ADDRESS] = list_of(19); // Testnet script addresses start with '8' or '9'
         base58Prefixes[SECRET_KEY]     = list_of(239);
         base58Prefixes[EXT_PUBLIC_KEY] = list_of(0x04)(0x35)(0x87)(0xCF);
         base58Prefixes[EXT_SECRET_KEY] = list_of(0x04)(0x35)(0x83)(0x94);
