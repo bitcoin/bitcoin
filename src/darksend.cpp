@@ -1421,11 +1421,11 @@ bool CDarkSendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
     int maxRounds = 2;
     int maxAmount = DARKSEND_POOL_MAX/COIN;
     bool hasFeeInput = false;
-    int64_t lowestDenom = COIN*1;
+    int64_t lowestDenom = COIN*0.1;
 
-    // if we have more denominated funds (of any maturity) than the nAnonymizeDarkcoinAmount, we should use use those
-    if(pwalletMain->GetDenominatedBalance(true) >= nAnonymizeDarkcoinAmount*COIN ||
-        pwalletMain->GetDenominatedBalance(true) >= pwalletMain->GetBalance()*.9) {
+    // If we can find only denominated funds, switch to only-denom mode
+    if (!pwalletMain->SelectCoinsDark(nValueMin, maxAmount*COIN, vCoins, nValueIn, -2, 2, hasFeeInput) &&
+        pwalletMain->SelectCoinsDark(nValueMin, maxAmount*COIN, vCoins, nValueIn, 0, 8, hasFeeInput)) {
         minRounds = 0;
         maxRounds = nDarksendRounds;
     }
@@ -1535,9 +1535,8 @@ bool CDarkSendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
         }
         if(sessionTotalValue > maxAmount*COIN) sessionTotalValue = maxAmount*COIN;
 
-        double fDarkcoinSubmitted = sessionTotalValue / COIN;
-
-        LogPrintf("Submiting Darksend for %f DRK\n", fDarkcoinSubmitted);
+        double fDarkcoinSubmitted = (sessionTotalValue / CENT);
+        LogPrintf("Submiting Darksend for %f DRK CENT\n", fDarkcoinSubmitted);
 
         if(pwalletMain->GetDenominatedBalance(true, true) > 0){ //get denominated unconfirmed inputs
             LogPrintf("DoAutomaticDenominating -- Found unconfirmed denominated outputs, will wait till they confirm to continue.\n");
@@ -1765,10 +1764,10 @@ bool CDarkSendPool::SplitUpMoney(bool justCollateral)
     int64_t a = 1*COIN;
 
     // ****** Add fees ************ /
-    vecSend.push_back(make_pair(scriptChange, (DARKSEND_COLLATERAL*5)+DARKSEND_FEE));
-    nTotalOut += (DARKSEND_COLLATERAL*5)+DARKSEND_FEE;
-    vecSend.push_back(make_pair(scriptChange, (DARKSEND_COLLATERAL*5)+DARKSEND_FEE));
-    nTotalOut += (DARKSEND_COLLATERAL*5)+DARKSEND_FEE;
+    vecSend.push_back(make_pair(scriptChange, (DARKSEND_COLLATERAL*2)+DARKSEND_FEE));
+    nTotalOut += (DARKSEND_COLLATERAL*2)+DARKSEND_FEE;
+    vecSend.push_back(make_pair(scriptChange, (DARKSEND_COLLATERAL*2)+DARKSEND_FEE));
+    nTotalOut += (DARKSEND_COLLATERAL*2)+DARKSEND_FEE;
 
     // ****** Add outputs in bases of two from 1 darkcoin *** /
     if(!justCollateral){

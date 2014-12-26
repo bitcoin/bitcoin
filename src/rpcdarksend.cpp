@@ -93,9 +93,9 @@ Value masternode(const Array& params, bool fHelp)
 
     if (fHelp  ||
         (strCommand != "start" && strCommand != "start-alias" && strCommand != "start-many" && strCommand != "stop" && strCommand != "stop-alias" && strCommand != "stop-many" && strCommand != "list" && strCommand != "list-conf" && strCommand != "count"  && strCommand != "enforce"
-            && strCommand != "debug" && strCommand != "current" && strCommand != "winners" && strCommand != "genkey" && strCommand != "connect"))
+            && strCommand != "debug" && strCommand != "current" && strCommand != "winners" && strCommand != "genkey" && strCommand != "connect" && strCommand != "outputs"))
         throw runtime_error(
-            "masternode <start|start-alias|start-many|stop|stop-alias|stop-many|list|list-conf|count|debug|current|winners|genkey|enforce> passphrase\n");
+            "masternode <start|start-alias|start-many|stop|stop-alias|stop-many|list|list-conf|count|debug|current|winners|genkey|enforce|outputs> [passphrase]\n");
 
     if (strCommand == "stop")
     {
@@ -122,10 +122,10 @@ Value masternode(const Array& params, bool fHelp)
         	return "stop failed: " + errorMessage;
         }
         pwalletMain->Lock();
-        
+
         if(activeMasternode.status == MASTERNODE_STOPPED) return "successfully stopped masternode";
         if(activeMasternode.status == MASTERNODE_NOT_CAPABLE) return "not capable masternode";
-        
+
         return "unknown";
     }
 
@@ -304,7 +304,7 @@ Value masternode(const Array& params, bool fHelp)
         std::string errorMessage;
         activeMasternode.ManageStatus();
         pwalletMain->Lock();
-        
+
         if(activeMasternode.status == MASTERNODE_REMOTELY_ENABLED) return "masternode started remotely";
         if(activeMasternode.status == MASTERNODE_INPUT_TOO_NEW) return "masternode input must have at least 15 confirmations";
         if(activeMasternode.status == MASTERNODE_STOPPED) return "masternode is stopped";
@@ -368,9 +368,9 @@ Value masternode(const Array& params, bool fHelp)
     	return statusObj;
 
     }
-    
+
     if (strCommand == "start-many")
-    {        
+    {
     	if(pwalletMain->IsLocked()) {
 			SecureString strWalletPass;
 			strWalletPass.reserve(100);
@@ -531,6 +531,19 @@ Value masternode(const Array& params, bool fHelp)
     	}
 
     	return resultObj;
+    }
+
+    if (strCommand == "outputs"){
+        // Find possible candidates
+        vector<COutput> possibleCoins = activeMasternode.SelectCoinsMasternode();
+
+        Object obj;
+        BOOST_FOREACH(COutput& out, possibleCoins) {
+            obj.push_back(Pair(out.tx->GetHash().ToString().c_str(), boost::lexical_cast<std::string>(out.i)));
+        }
+
+        return obj;
+
     }
 
     return Value::null;
