@@ -64,6 +64,7 @@ public:
 
         vSeeds.push_back(CDNSSeedData("darkcoin.io", "dnsseed.darkcoin.io"));
         vSeeds.push_back(CDNSSeedData("darkcoin.qa", "dnsseed.darkcoin.qa"));
+        vSeeds.push_back(CDNSSeedData("masternode.io", "dnsseed.masternode.io"));
 
         base58Prefixes[PUBKEY_ADDRESS] = list_of(76); // Darkcoin addresses start with X
         base58Prefixes[SCRIPT_ADDRESS] = list_of(5);
@@ -130,6 +131,7 @@ public:
         vSeeds.clear();
         vSeeds.push_back(CDNSSeedData("darkcoin.io", "testnet-seed.darkcoin.io"));
         vSeeds.push_back(CDNSSeedData("darkcoin.qa", "testnet-seed.darkcoin.qa"));
+        vSeeds.push_back(CDNSSeedData("masternode.io", "test.dnsseed.masternode.io"));
 
         base58Prefixes[PUBKEY_ADDRESS] = list_of(111); // Testnet v3 addresses
         base58Prefixes[SCRIPT_ADDRESS] = list_of(196);
