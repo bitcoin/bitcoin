@@ -2895,6 +2895,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
                 {
                     bool foundPaymentAmount = false;
                     bool foundPayee = false;
+                    bool foundPaymentAndPayee = false;
 
                     CScript payee;
                     if(!masternodePayments.GetBlockPayee(chainActive.Tip()->nHeight+1, payee) || payee == CScript()){
@@ -2906,9 +2907,11 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
                             foundPaymentAmount = true;
                         if(block.vtx[0].vout[i].scriptPubKey == payee )
                             foundPayee = true;
+                        if(block.vtx[0].vout[i].nValue == masternodePaymentAmount && block.vtx[0].vout[i].scriptPubKey == payee)
+                            foundPaymentAndPayee = true;
                     }
 
-                    if(!foundPaymentAmount || !foundPayee) {
+                    if(!foundPaymentAndPayee) {
                         CTxDestination address1;
                         ExtractDestination(payee, address1);
                         CBitcoinAddress address2(address1);
