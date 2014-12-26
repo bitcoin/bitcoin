@@ -1932,7 +1932,7 @@ string CWallet::PrepareDarksendDenominate(int minRounds, int maxRounds, int64_t 
     bool hasFeeInput = false;
 
     //select coins we'll use
-    if (!SelectCoinsDark(1*COIN, maxAmount, vCoins, nValueIn, minRounds, maxRounds, hasFeeInput))
+    if (!SelectCoinsDark(0.1*COIN, maxAmount, vCoins, nValueIn, minRounds, maxRounds, hasFeeInput))
     {
         vCoins.clear();
 
