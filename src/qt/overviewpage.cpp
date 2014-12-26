@@ -271,23 +271,17 @@ void OverviewPage::updateDarksendProgress(){
         return;
     }
     double nTotalValue = pwalletMain->GetTotalValue(vCoins)/CENT;
-    printf(" nTotalValue %f \n", nTotalValue);
 
     //Get average rounds of inputs
     double a = (double)pwalletMain->GetAverageAnonymizedRounds() / (double)nDarksendRounds;
-    printf(" avg %f rounds %f a %f \n", (double)pwalletMain->GetAverageAnonymizedRounds(), (double)nDarksendRounds, a);
     //Get the anon threshold
     double max = nAnonymizeDarkcoinAmount*100;
-    printf(" max %f \n", max);
     //If it's more than the wallet amount, limit to that.
     if(max > (double)nTotalValue) max = (double)nTotalValue;
-    printf(" max %f \n", max);
     //denominated balance / anon threshold -- the percentage that we've completed
     double b = ((double)(pwalletMain->GetDenominatedBalance()/CENT) / max);
-    printf(" b %f c %f \n", b, (double)(pwalletMain->GetDenominatedBalance()/CENT));
 
     double val = a*b*100;
-    printf(" v %f\n", val);
     if(val < 0) val = 0;
     if(val > 100) val = 100;
 
