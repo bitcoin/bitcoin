@@ -254,16 +254,34 @@ void OverviewPage::updateDarksendProgress(){
     }
 
     std::ostringstream convert;
-    //Get average rounds of inputs
-    double a = ((double)pwalletMain->GetAverageAnonymizedRounds() / (double)nDarksendRounds)*100;
-    //Get the anon threshold
-    double max = nAnonymizeDarkcoinAmount;
-    //If it's more than the wallet amount, limit to that.
-    if(max > (double)(pwalletMain->GetBalance()/COIN)-1) max = (double)(pwalletMain->GetBalance()/COIN)-1;
-    //denominated balance / anon threshold -- the percentage that we've completed
-    double b = ((double)(pwalletMain->GetDenominatedBalance()/COIN) / max);
 
-    double val = a*b;
+
+
+    // ** find the coins we'll use
+    std::vector<CTxIn> vCoins;
+    int64_t nValueMin = 0.01*COIN;
+    int64_t nValueIn = 0;
+    bool hasFeeInput = true;
+
+    // Calculate total mixable funds
+    if (!pwalletMain->SelectCoinsDark(nValueMin, 999999*COIN, vCoins, nValueIn, -2, 10, hasFeeInput)) {
+        ui->darksendProgress->setValue(0);
+        QString s("No inputs detected (2)");
+        ui->darksendProgress->setToolTip(s);
+        return;
+    }
+    double nTotalValue = pwalletMain->GetTotalValue(vCoins)/CENT;
+
+    //Get average rounds of inputs
+    double a = (double)pwalletMain->GetAverageAnonymizedRounds() / (double)nDarksendRounds;
+    //Get the anon threshold
+    double max = nAnonymizeDarkcoinAmount*100;
+    //If it's more than the wallet amount, limit to that.
+    if(max > (double)nTotalValue) max = (double)nTotalValue;
+    //denominated balance / anon threshold -- the percentage that we've completed
+    double b = ((double)(pwalletMain->GetDenominatedBalance()/CENT) / max);
+
+    double val = a*b*100;
     if(val < 0) val = 0;
     if(val > 100) val = 100;
 
