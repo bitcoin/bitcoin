@@ -1425,8 +1425,8 @@ bool CDarkSendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
 
     // If we can find only denominated funds, switch to only-denom mode
     if (!pwalletMain->SelectCoinsDark(nValueMin, maxAmount*COIN, vCoins, nValueIn, -2, 2, hasFeeInput) &&
-        pwalletMain->SelectCoinsDark(nValueMin, maxAmount*COIN, vCoins, nValueIn, 0, 8, hasFeeInput)) {
-        minRounds = 0;
+        pwalletMain->SelectCoinsDark(nValueMin, maxAmount*COIN, vCoins, nValueIn, 2, 8, hasFeeInput)) {
+        minRounds = 2;
         maxRounds = nDarksendRounds;
     }
     //if we're set to less than a thousand, don't submit for than that to the pool
