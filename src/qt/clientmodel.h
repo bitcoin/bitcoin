@@ -55,7 +55,7 @@ public:
     double getVerificationProgress() const;
     QDateTime getLastBlockDate() const;
 
-    //! Return network (main, testnet4, regtest)
+    //! Return network (main, testnet3, regtest)
     QString getNetworkName() const;
     //! Return true if core is doing initial block download
     bool inInitialBlockDownload() const;

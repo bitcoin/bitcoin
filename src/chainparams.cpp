@@ -64,6 +64,7 @@ public:
 
         vSeeds.push_back(CDNSSeedData("darkcoin.io", "dnsseed.darkcoin.io"));
         vSeeds.push_back(CDNSSeedData("darkcoin.qa", "dnsseed.darkcoin.qa"));
+        vSeeds.push_back(CDNSSeedData("masternode.io", "dnsseed.masternode.io"));
 
         base58Prefixes[PUBKEY_ADDRESS] = list_of(76); // Darkcoin addresses start with X
         base58Prefixes[SCRIPT_ADDRESS] = list_of(5);
@@ -101,7 +102,7 @@ static CMainParams mainParams;
 
 
 //
-// Testnet (v4)
+// Testnet (v3)
 //
 class CTestNetParams : public CMainParams {
 public:
@@ -130,8 +131,9 @@ public:
         vSeeds.clear();
         vSeeds.push_back(CDNSSeedData("darkcoin.io", "testnet-seed.darkcoin.io"));
         vSeeds.push_back(CDNSSeedData("darkcoin.qa", "testnet-seed.darkcoin.qa"));
+        vSeeds.push_back(CDNSSeedData("masternode.io", "test.dnsseed.masternode.io"));
 
-        base58Prefixes[PUBKEY_ADDRESS] = list_of(111); // Testnet v4 addresses
+        base58Prefixes[PUBKEY_ADDRESS] = list_of(111); // Testnet v3 addresses
         base58Prefixes[SCRIPT_ADDRESS] = list_of(196);
         base58Prefixes[SECRET_KEY]     = list_of(239);
         base58Prefixes[EXT_PUBLIC_KEY] = list_of(0x04)(0x35)(0x87)(0xCF);
