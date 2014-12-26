@@ -259,9 +259,9 @@ void OverviewPage::updateDarksendProgress(){
     //Get the anon threshold
     double max = nAnonymizeDarkcoinAmount;
     //If it's more than the wallet amount, limit to that.
-    if(max > (double)(pwalletMain->GetBalance()/COIN)-1) max = (double)(pwalletMain->GetBalance()/COIN)-1;
+    if(max > (double)(pwalletMain->GetBalance()/CENT)-1) max = (double)(pwalletMain->GetBalance()/CENT)-1;
     //denominated balance / anon threshold -- the percentage that we've completed
-    double b = ((double)(pwalletMain->GetDenominatedBalance()/COIN) / max);
+    double b = ((double)(pwalletMain->GetDenominatedBalance()/CENT) / max);
 
     double val = a*b;
     if(val < 0) val = 0;
