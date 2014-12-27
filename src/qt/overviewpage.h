@@ -54,13 +54,14 @@ private:
     int showingDarkSendMessage;
     int darksendActionCheck;
     int cachedNumBlocks;
-    
+
     TxViewDelegate *txdelegate;
     TransactionFilterProxy *filter;
 
 private slots:
-    void runDoAutomaticDenomination();
     void toggleDarksend();
+    void darksendAuto();
+    void darksendReset();
     void updateDisplayUnit();
     void handleTransactionClicked(const QModelIndex &index);
     void updateAlerts(const QString &warnings);

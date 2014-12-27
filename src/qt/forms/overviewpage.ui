@@ -259,7 +259,7 @@
          <property name="minimumSize">
           <size>
            <width>0</width>
-           <height>275</height>
+           <height>350</height>
           </size>
          </property>
          <property name="layoutDirection">
@@ -277,7 +277,7 @@
             <x>10</x>
             <y>40</y>
             <width>293</width>
-            <height>121</height>
+            <height>161</height>
            </rect>
           </property>
           <layout class="QFormLayout" name="formLayout">
@@ -355,6 +355,20 @@
             <widget class="QLabel" name="labelAmountRounds">
              <property name="text">
               <string>1000 DRK / 8 Rounds</string>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="0">
+            <widget class="QLabel" name="label_9">
+             <property name="text">
+              <string>Submitted Denom</string>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="1">
+            <widget class="QLabel" name="label_10">
+             <property name="text">
+              <string></string>
              </property>
             </widget>
            </item>
@@ -820,8 +834,8 @@
           <property name="geometry">
            <rect>
             <x>10</x>
-            <y>220</y>
-            <width>291</width>
+            <y>296</y>
+            <width>191</width>
             <height>51</height>
            </rect>
           </property>
@@ -833,7 +847,7 @@
           <property name="geometry">
            <rect>
             <x>10</x>
-            <y>210</y>
+            <y>200</y>
             <width>291</width>
             <height>16</height>
            </rect>
@@ -846,9 +860,9 @@
           <property name="geometry">
            <rect>
             <x>10</x>
-            <y>170</y>
+            <y>220</y>
             <width>288</width>
-            <height>43</height>
+            <height>61</height>
            </rect>
           </property>
           <property name="minimumSize">
@@ -865,6 +879,35 @@
           </property>
           <property name="wordWrap">
            <bool>true</bool>
+          </property>
+         </widget>
+         <widget class="QPushButton" name="darksendAuto">
+          <property name="geometry">
+           <rect>
+            <x>200</x>
+            <y>296</y>
+            <width>96</width>
+            <height>27</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Try Mix</string>
+          </property>
+         </widget>
+         <widget class="QPushButton" name="darksendReset">
+          <property name="geometry">
+           <rect>
+            <x>200</x>
+            <y>320</y>
+            <width>96</width>
+            <height>27</height>
+           </rect>
+          </property>
+          <property name="autoFillBackground">
+           <bool>false</bool>
+          </property>
+          <property name="text">
+           <string>Reset</string>
           </property>
          </widget>
         </widget>

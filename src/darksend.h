@@ -267,6 +267,9 @@ public:
     int minBlockSpacing; //required blocks between mixes
     CTransaction txCollateral;
 
+    //debugging data
+    std::string SubmittedDenom;
+
     std::vector<int64_t> vecDisabledDenominations;
 
     //incremented whenever a DSQ comes through
@@ -293,6 +296,7 @@ public:
         minBlockSpacing = 1;
         nDsqCount = 0;
         vecDisabledDenominations.clear();
+        SubmittedDenom = "";
 
         SetCollateralAddress(strAddress);
         SetNull();
@@ -420,6 +424,7 @@ public:
     bool SplitUpMoney(bool justCollateral=false);
     // get the denominations for a list of outputs (returns a bitshifted integer)
     int GetDenominations(const std::vector<CTxOut>& vout);
+    void GetDenominationsToString(int nDenom, std::string& strDenom);
     // get the denominations for a specific amount of darkcoin.
     int GetDenominationsByAmount(int64_t nAmount);
     int GetDenominationsByAmounts(std::vector<int64_t>& vecAmount);

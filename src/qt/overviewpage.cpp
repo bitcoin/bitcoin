@@ -210,7 +210,8 @@ void OverviewPage::setWalletModel(WalletModel *model)
 
         connect(model->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(updateDisplayUnit()));
 
-        connect(ui->runAutoDenom, SIGNAL(clicked()), this, SLOT(runDoAutomaticDenomination()));
+        connect(ui->darksendAuto, SIGNAL(clicked()), this, SLOT(darksendAuto()));
+        connect(ui->darksendReset, SIGNAL(clicked()), this, SLOT(darksendReset()));
         connect(ui->toggleDarksend, SIGNAL(clicked()), this, SLOT(toggleDarksend()));
     }
 
@@ -407,14 +408,28 @@ void OverviewPage::darkSendStatus()
 
     ui->darksendStatus->setText(s);
 
+
+    std::string out;
+    darkSendPool.GetDenominationsToString(darkSendPool.sessionDenom, out);
+    QString s2(out.c_str());
+    ui->label_10->setText(s2);
+
     showingDarkSendMessage++;
     darksendActionCheck++;
 
     // Get DarkSend Denomination Status
 }
 
-void OverviewPage::runDoAutomaticDenomination(){
+void OverviewPage::darksendAuto(){
     darkSendPool.DoAutomaticDenominating();
+}
+
+void OverviewPage::darksendReset(){
+    darkSendPool.SetNull(true);
+
+    QMessageBox::warning(this, tr("Darksend"),
+        tr("Darksend was successfully reset."),
+        QMessageBox::Ok, QMessageBox::Ok);
 }
 
 void OverviewPage::toggleDarksend(){
