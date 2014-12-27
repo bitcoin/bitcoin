@@ -46,8 +46,8 @@ public:
     /** @name Reported status
        @{*/
     Status status;
-    int64 depth;
-    int64 open_for; /**< Timestamp if status==OpenUntilDate, otherwise number of blocks */
+    int64_t depth;
+    int64_t open_for; /**< Timestamp if status==OpenUntilDate, otherwise number of blocks */
     /**@}*/
 
     /** Current number of blocks (to know whether cached status is still valid) */
@@ -79,15 +79,15 @@ public:
     {
     }
 
-    TransactionRecord(uint256 hash, int64 time):
+    TransactionRecord(uint256 hash, int64_t time):
             hash(hash), time(time), type(Other), address(""), debit(0),
             credit(0), idx(0)
     {
     }
 
-    TransactionRecord(uint256 hash, int64 time,
+    TransactionRecord(uint256 hash, int64_t time,
                 Type type, const std::string &address,
-                int64 debit, int64 credit):
+                int64_t debit, int64_t credit):
             hash(hash), time(time), type(type), address(address), debit(debit), credit(credit),
             idx(0)
     {
@@ -101,11 +101,11 @@ public:
     /** @name Immutable transaction attributes
       @{*/
     uint256 hash;
-    int64 time;
+    int64_t time;
     Type type;
     std::string address;
-    int64 debit;
-    int64 credit;
+    int64_t debit;
+    int64_t credit;
     /**@}*/
 
     /** Subtransaction index, for sort key */

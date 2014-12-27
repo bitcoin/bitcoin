@@ -1,5 +1,4 @@
 #include <stdlib.h>
-#include <stdint.h>
 
 #include "scrypt.h"
 #include "pbkdf2.h"

@@ -29,13 +29,13 @@ class CKeyMetadata
 public:
     static const int CURRENT_VERSION=1;
     int nVersion;
-    int64 nCreateTime; // 0 means unknown
+    int64_t nCreateTime; // 0 means unknown
 
     CKeyMetadata()
     {
         SetNull();
     }
-    CKeyMetadata(int64 nCreateTime_)
+    CKeyMetadata(int64_t nCreateTime_)
     {
         nVersion = CKeyMetadata::CURRENT_VERSION;
         nCreateTime = nCreateTime_;
@@ -140,7 +140,7 @@ public:
         return Read(std::string("bestblock"), locator);
     }
 
-    bool WriteOrderPosNext(int64 nOrderPosNext)
+    bool WriteOrderPosNext(int64_t nOrderPosNext)
     {
         nWalletDBUpdated++;
         return Write(std::string("orderposnext"), nOrderPosNext);
@@ -152,18 +152,18 @@ public:
         return Write(std::string("defaultkey"), vchPubKey.Raw());
     }
 
-    bool ReadPool(int64 nPool, CKeyPool& keypool)
+    bool ReadPool(int64_t nPool, CKeyPool& keypool)
     {
         return Read(std::make_pair(std::string("pool"), nPool), keypool);
     }
 
-    bool WritePool(int64 nPool, const CKeyPool& keypool)
+    bool WritePool(int64_t nPool, const CKeyPool& keypool)
     {
         nWalletDBUpdated++;
         return Write(std::make_pair(std::string("pool"), nPool), keypool);
     }
 
-    bool ErasePool(int64 nPool)
+    bool ErasePool(int64_t nPool)
     {
         nWalletDBUpdated++;
         return Erase(std::make_pair(std::string("pool"), nPool));
@@ -196,10 +196,10 @@ public:
     bool ReadAccount(const std::string& strAccount, CAccount& account);
     bool WriteAccount(const std::string& strAccount, const CAccount& account);
 private:
-    bool WriteAccountingEntry(const uint64 nAccEntryNum, const CAccountingEntry& acentry);
+    bool WriteAccountingEntry(const uint64_t nAccEntryNum, const CAccountingEntry& acentry);
 public:
     bool WriteAccountingEntry(const CAccountingEntry& acentry);
-    int64 GetAccountCreditDebit(const std::string& strAccount);
+    int64_t GetAccountCreditDebit(const std::string& strAccount);
     void ListAccountCreditDebit(const std::string& strAccount, std::list<CAccountingEntry>& acentries);
 
     DBErrors ReorderTransactions(CWallet*);

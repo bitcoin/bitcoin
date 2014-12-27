@@ -693,7 +693,7 @@ void BitcoinGUI::updateMining()
     {
         labelMiningIcon->setPixmap(QIcon(":/icons/mining_active").pixmap(STATUSBAR_ICONSIZE,STATUSBAR_ICONSIZE));
 
-        uint64 nNetworkWeight = clientModel->getPoSKernelPS();
+        uint64_t nNetworkWeight = clientModel->getPoSKernelPS();
 /*
         double dDifficulty = clientModel->getDifficulty(true);
         QString msg;

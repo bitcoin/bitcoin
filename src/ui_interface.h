@@ -6,9 +6,10 @@
 #define BITCOIN_UI_INTERFACE_H
 
 #include <string>
-#include "util.h" // for int64
 #include <boost/signals2/signal.hpp>
 #include <boost/signals2/last_value.hpp>
+
+#include "util.h"
 
 class CBasicKeyStore;
 class CWallet;
@@ -69,7 +70,7 @@ public:
     boost::signals2::signal<void (const std::string& message, const std::string& caption, int style)> ThreadSafeMessageBox;
 
     /** Ask the user whether they want to pay a fee or not. */
-    boost::signals2::signal<bool (int64 nFeeRequired, const std::string& strCaption), boost::signals2::last_value<bool> > ThreadSafeAskFee;
+    boost::signals2::signal<bool (int64_t nFeeRequired, const std::string& strCaption), boost::signals2::last_value<bool> > ThreadSafeAskFee;
 
     /** Handle a URL passed at the command line. */
     boost::signals2::signal<void (const std::string& strURI)> ThreadSafeHandleURI;
