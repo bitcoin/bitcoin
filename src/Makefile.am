@@ -195,6 +195,7 @@ libbitcoin_wallet_a_CPPFLAGS = $(BITCOIN_INCLUDES)
 libbitcoin_wallet_a_SOURCES = \
   db.cpp \
   crypter.cpp \
+  logdb.cpp \
   rpcdump.cpp \
   rpcwallet.cpp \
   wallet.cpp \

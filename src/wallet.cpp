@@ -501,7 +501,8 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
 
         // Need to completely rewrite the wallet file; if we don't, bdb might keep
         // bits of the unencrypted private key in slack space in the database file.
-        CDB::Rewrite(strWalletFile);
+        //CDB::Rewrite(strWalletFile);
+        //^^TODO
 
     }
     NotifyStatusChanged(this);
@@ -784,6 +785,12 @@ bool CWallet::IsChange(const CTxOut& txout) const
             return true;
     }
     return false;
+}
+
+bool CWallet::Flush(bool shutdown)
+{
+    //TODO: implement
+    return true;
 }
 
 int64_t CWalletTx::GetTxTime() const
@@ -1849,14 +1856,15 @@ DBErrors CWallet::LoadWallet(bool& fFirstRunRet)
     DBErrors nLoadWalletRet = CWalletDB(strWalletFile,"cr+").LoadWallet(this);
     if (nLoadWalletRet == DB_NEED_REWRITE)
     {
-        if (CDB::Rewrite(strWalletFile, "\x04pool"))
-        {
-            LOCK(cs_wallet);
-            setKeyPool.clear();
-            // Note: can't top-up keypool here, because wallet is locked.
-            // User will be prompted to unlock wallet the next operation
-            // the requires a new key.
-        }
+        // TODO
+//        if (CDB::Rewrite(strWalletFile, "\x04pool"))
+//        {
+//            LOCK(cs_wallet);
+//            setKeyPool.clear();
+//            // Note: can't top-up keypool here, because wallet is locked.
+//            // User will be prompted to unlock wallet the next operation
+//            // the requires a new key.
+//        }
     }
 
     if (nLoadWalletRet != DB_LOAD_OK)
@@ -1876,14 +1884,15 @@ DBErrors CWallet::ZapWalletTx(std::vector<CWalletTx>& vWtx)
     DBErrors nZapWalletTxRet = CWalletDB(strWalletFile,"cr+").ZapWalletTx(this, vWtx);
     if (nZapWalletTxRet == DB_NEED_REWRITE)
     {
-        if (CDB::Rewrite(strWalletFile, "\x04pool"))
-        {
-            LOCK(cs_wallet);
-            setKeyPool.clear();
-            // Note: can't top-up keypool here, because wallet is locked.
-            // User will be prompted to unlock wallet the next operation
-            // that requires a new key.
-        }
+        // TODO
+//        if (CDB::Rewrite(strWalletFile, "\x04pool"))
+//        {
+//            LOCK(cs_wallet);
+//            setKeyPool.clear();
+//            // Note: can't top-up keypool here, because wallet is locked.
+//            // User will be prompted to unlock wallet the next operation
+//            // that requires a new key.
+//        }
     }
 
     if (nZapWalletTxRet != DB_LOAD_OK)

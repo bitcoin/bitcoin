@@ -7,9 +7,10 @@
 #define BITCOIN_WALLETDB_H
 
 #include "amount.h"
-#include "db.h"
 #include "key.h"
 #include "keystore.h"
+#include "logdb.h"
+#include "util.h"
 
 #include <list>
 #include <stdint.h>
@@ -72,11 +73,11 @@ public:
     }
 };
 
-/** Access to the wallet database (wallet.dat) */
-class CWalletDB : public CDB
+/** Access to the wallet database */
+class CWalletDB : public CLogDB
 {
 public:
-    CWalletDB(const std::string& strFilename, const char* pszMode = "r+", bool fFlushOnClose = true) : CDB(strFilename, pszMode, fFlushOnClose)
+    CWalletDB(const std::string& strFilename, const char* pszMode = "r+", bool fFlushOnClose = true) : CLogDB( (GetDataDir() / strFilename).string(), (!strchr(pszMode, '+') && !strchr(pszMode, 'w')))
     {
     }
 
@@ -127,8 +128,10 @@ public:
     DBErrors LoadWallet(CWallet* pwallet);
     DBErrors FindWalletTx(CWallet* pwallet, std::vector<uint256>& vTxHash, std::vector<CWalletTx>& vWtx);
     DBErrors ZapWalletTx(CWallet* pwallet, std::vector<CWalletTx>& vWtx);
-    static bool Recover(CDBEnv& dbenv, std::string filename, bool fOnlyKeys);
-    static bool Recover(CDBEnv& dbenv, std::string filename);
+    static bool Recover(std::string filename, bool fOnlyKeys);
+    static bool Recover(std::string filename);
+    
+    static bool Verify(std::string filename, bool salvage);
 
 private:
     CWalletDB(const CWalletDB&);
@@ -138,5 +141,6 @@ private:
 };
 
 bool BackupWallet(const CWallet& wallet, const std::string& strDest);
+void ThreadFlushWalletDB(const std::string& strWalletFile);
 
 #endif // BITCOIN_WALLETDB_H
