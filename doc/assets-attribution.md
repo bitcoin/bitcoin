@@ -1,14 +1,5 @@
 The following is a list of assets used in the bitcoin source and their proper attribution.
 
-[Wladimir van der Laan](https://github.com/laanwj)
------------------------
-#### Info
-* License: MIT
-
-### Assets Used
-	src/qt/res/icons/watch*.png, src/qt/res/icons/tx_in.png,
-    src/qt/res/icons/tx_inout.png,
-
 [Typicons/Stephen Hutchings](http://typicons.com)
 -----------------------
 
@@ -30,7 +21,7 @@ The following is a list of assets used in the bitcoin source and their proper at
     src/qt/res/icons/overview.png, src/qt/res/icons/quit.png,
     src/qt/res/icons/receive.png, src/qt/res/icons/remove.png,
     src/qt/res/icons/send.png, src/qt/res/icons/synced.png,
-    src/qt/res/icons/transaction*.png, src/qt/res/icons/tx_input.png,
+    src/qt/res/icons/transaction*.png, src/qt/res/icons/tx_output.png,
 
 Jonas Schnelli
 -----------------------
@@ -38,18 +29,19 @@ Jonas Schnelli
 ### Info
 * Designer: Jonas Schnelli
 * Bitcoin Icon: (based on the original bitcoin logo from Bitboy)
-* Some icons are based on Stephan Hutchings Typicons
+* Some icons are based on Stephan Hutchings Typicons (these are under CC BY-SA license)
 * License: MIT
 
 ### Assets Used
     src/qt/res/icons/about.png, src/qt/res/icons/about_qt.png,
-    src/qt/res/icons/clock*.png, src/qt/res/icons/connect[0-3].png,
-    src/qt/res/icons/eye_minus.png, src/qt/res/icons/verify.png,
-    src/qt/res/icons/eye_plus.png, src/qt/res/icons/tx_inout.png,
-    src/qt/res/icons/tx_output.png, src/qt/res/icons/bitcoin.icns,
-    src/qt/res/src/bitcoin.svg, src/qt/res/src/bitcoin.ico,
-    src/qt/res/src/bitcoin.png, src/qt/res/src/bitcoin_testnet.png,
-    docs/bitcoin_logo_doxygen.png, src/qt/res/src/tx*.svg,
-    src/qt/res/src/connect*.svg, src/qt/res/src/clock*.svg,
-    src/qt/res/src/mine.svg, src/qt/res/src/qt.svg,
+    src/qt/res/icons/bitcoin.icns, src/qt/res/icons/bitcoin.ico,
+    src/qt/res/icons/bitcoin.png, src/qt/res/icons/clock*.png,
+    src/qt/res/icons/connect[0-3].png, src/qt/res/icons/eye_minus.png,
+    src/qt/res/icons/eye_plus.png, src/qt/res/icons/verify.png,
+    src/qt/res/icons/tx_inout.png, src/qt/res/icons/tx_input.png,
+    src/qt/res/icons/unit_btc.png, src/qt/res/icons/unit_mbtc.png,
+    src/qt/res/icons/unit_ubtc.png, src/qt/res/src/verify.svg
+    src/qt/res/src/bitcoin.svg, src/qt/res/src/clock*.svg,
+    src/qt/res/src/connect*.svg, src/qt/res/src/mine.svg,
+    src/qt/res/src/qt.svg, src/qt/res/src/tx*.svg,
     src/qt/res/src/verify.svg,
