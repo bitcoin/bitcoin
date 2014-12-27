@@ -11,6 +11,7 @@
 #include "coincontroldialog.h"
 #include "guiutil.h"
 #include "optionsmodel.h"
+#include "scicon.h"
 #include "sendcoinsentry.h"
 #include "walletmodel.h"
 
@@ -38,6 +39,10 @@ SendCoinsDialog::SendCoinsDialog(QWidget *parent) :
     ui->addButton->setIcon(QIcon());
     ui->clearButton->setIcon(QIcon());
     ui->sendButton->setIcon(QIcon());
+#else
+    ui->addButton->setIcon(SingleColorIcon(":/icons/add"));
+    ui->clearButton->setIcon(SingleColorIcon(":/icons/remove"));
+    ui->sendButton->setIcon(SingleColorIcon(":/icons/send"));
 #endif
 
     GUIUtil::setupAddressWidget(ui->lineEditCoinControlChange, this);
