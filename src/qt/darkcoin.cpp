@@ -534,7 +534,12 @@ int main(int argc, char *argv[])
         return false;
     }
 
-    masternodeConfig.read(GetMasternodeConfigFile());
+    string strErr;
+    if(!masternodeConfig.read(GetMasternodeConfigFile(), strErr)) {
+        QMessageBox::critical(0, QObject::tr("Darkcoin"),
+                              QObject::tr("Error reading masternode configuration file: %1").arg(strErr.c_str()));
+        return false;
+    }
 
     /// 7. Determine network (and switch to network specific options)
     // - Do not call Params() before this step
