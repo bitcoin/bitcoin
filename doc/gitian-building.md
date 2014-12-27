@@ -13,8 +13,8 @@ Multiple developers build the source code by following a specific descriptor
 These results are compared and only if they match, the build is accepted and uploaded
 to bitcoin.org.
 
-More independent gitian builders are needed, which is why I wrote this
-guide. It is preferred to follow these steps yourself instead of using someone else's
+More independent gitian builders are needed, which is why this guide was written.
+It is preferred to follow these steps yourself instead of using someone else's
 VM image to avoid 'contaminating' the build.
 
 Table of Contents
@@ -83,24 +83,17 @@ Unixy OSes by entering the following in a terminal:
 
 After creating the VM, we need to configure it. 
 
-- Click the `Settings` button, then go to the `Network` tab. Adapter 1 should be attacked to `NAT`.
+For this step, we'll be using the `vboxmanage` command-line tool. On Linux or OS X this should be in your PATH,
+so you shouldn't need to do anything special -- simply open a terminal window. On Windows, you'll need to change directory
+to the VirtualBox installation directory. Open a command prompt (cmd) and run this command: `cd C:\Program Files\Oracle\VirtualBox`.
 
-![](gitian-building/network_settings.png)
-
-- Click `Advanced`, then `Port Forwarding`. We want to set up a port through where we can reach the VM to get files in and out.
-- Create a new rule by clicking the plus icon.
-
-![](gitian-building/port_forwarding_rules.png)
-
-- Set up the new rule the following way:
-  - Name: `SSH`
-  - Protocol: `TCP`
-  - Leave Host IP empty
-  - Host Port: `22222`
-  - Leave Guest IP empty
-  - Guest Port: `22`
-
-- Click `Ok` twice to save.
+Then, run these two commands:
+```bash
+vboxmanage modifyvm gitianbuild --natnet1 "192.168.11/24"
+vboxmanage modifyvm gitianbuild --natpf1 "SSH,tcp,,22222,,22"
+```
+The first command adjusts the network address range used by the VM to avoid conflicting with Gitian's default settings.
+The second command defines a port forwarding rule, to allow us to SSH into the VM and transfer files in and out.
 
 Then start the VM. On the first launch you will be asked for a CD or DVD image. Choose the downloaded iso.
 
@@ -244,13 +237,10 @@ echo "cgroup  /sys/fs/cgroup  cgroup  defaults  0   0" >> /etc/fstab
 # make /etc/rc.local script that sets up bridge between guest and host
 echo '#!/bin/sh -e' > /etc/rc.local
 echo 'brctl addbr br0' >> /etc/rc.local
-echo 'ifconfig br0 10.0.3.2/24 up' >> /etc/rc.local
+echo 'ifconfig br0 10.0.2.2/24 up' >> /etc/rc.local
 echo 'exit 0' >> /etc/rc.local
-# make sure that USE_LXC is always set when logging in as debian,
-# and configure LXC IP addresses
+# make sure that USE_LXC is always set when logging in as debian
 echo 'export USE_LXC=1' >> /home/debian/.profile
-echo 'export GITIAN_HOST_IP=10.0.3.2' >> /home/debian/.profile
-echo 'export LXC_GUEST_IP=10.0.3.5' >> /home/debian/.profile
 reboot
 ```
 
