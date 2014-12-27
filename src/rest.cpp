@@ -95,7 +95,7 @@ static bool rest_headers(AcceptedConnection* conn,
                          bool fRun)
 {
     vector<string> params;
-    enum RetFormat rf = ParseDataFormat(params, strReq);
+    const RetFormat rf = ParseDataFormat(params, strReq);
     vector<string> path;
     boost::split(path, params[0], boost::is_any_of("/"));
 
@@ -159,7 +159,7 @@ static bool rest_block(AcceptedConnection* conn,
                        bool showTxDetails)
 {
     vector<string> params;
-    enum RetFormat rf = ParseDataFormat(params, strReq);
+    const RetFormat rf = ParseDataFormat(params, strReq);
 
     string hashStr = params[0];
     uint256 hash;
@@ -226,13 +226,39 @@ static bool rest_block_notxdetails(AcceptedConnection* conn,
     return rest_block(conn, strReq, mapHeaders, fRun, false);
 }
 
+static bool rest_chaininfo(AcceptedConnection* conn,
+                                   const std::string& strReq,
+                                   const std::map<std::string, std::string>& mapHeaders,
+                                   bool fRun)
+{
+    vector<string> params;
+    const RetFormat rf = ParseDataFormat(params, strReq);
+    
+    switch (rf) {
+    case RF_JSON: {
+        Array rpcParams;
+        Value chainInfoObject = getblockchaininfo(rpcParams, false);
+        
+        string strJSON = write_string(chainInfoObject, false) + "\n";
+        conn->stream() << HTTPReply(HTTP_OK, strJSON, fRun) << std::flush;
+        return true;
+    }
+    default: {
+        throw RESTERR(HTTP_NOT_FOUND, "output format not found (available: json)");
+    }
+    }
+    
+    // not reached
+    return true; // continue to process further HTTP reqs on this cxn
+}
+
 static bool rest_tx(AcceptedConnection* conn,
                     const std::string& strReq,
                     const std::map<std::string, std::string>& mapHeaders,
                     bool fRun)
 {
     vector<string> params;
-    enum RetFormat rf = ParseDataFormat(params, strReq);
+    const RetFormat rf = ParseDataFormat(params, strReq);
 
     string hashStr = params[0];
     uint256 hash;
@@ -287,6 +313,7 @@ static const struct {
       {"/rest/tx/", rest_tx},
       {"/rest/block/notxdetails/", rest_block_notxdetails},
       {"/rest/block/", rest_block_extended},
+      {"/rest/chaininfo", rest_chaininfo},
       {"/rest/headers/", rest_headers},
 };
 
