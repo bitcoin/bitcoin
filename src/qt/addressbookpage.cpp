@@ -14,6 +14,7 @@
 #include "csvmodelwriter.h"
 #include "editaddressdialog.h"
 #include "guiutil.h"
+#include "scicon.h"
 
 #include <QIcon>
 #include <QMenu>
@@ -34,6 +35,11 @@ AddressBookPage::AddressBookPage(Mode mode, Tabs tab, QWidget *parent) :
     ui->copyAddress->setIcon(QIcon());
     ui->deleteAddress->setIcon(QIcon());
     ui->exportButton->setIcon(QIcon());
+#else
+    ui->newAddress->setIcon(SingleColorIcon(":/icons/add"));
+    ui->copyAddress->setIcon(SingleColorIcon(":/icons/editcopy"));
+    ui->deleteAddress->setIcon(SingleColorIcon(":/icons/remove"));
+    ui->exportButton->setIcon(SingleColorIcon(":/icons/export"));
 #endif
 
     switch(mode)
