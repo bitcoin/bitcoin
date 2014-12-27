@@ -1700,7 +1700,7 @@ bool CWallet::SelectCoins(const CAmount& nTargetValue, set<pair<const CWalletTx*
                 
                 nValueTroughVINs    += out.tx->vout[out.i].nValue;
                 
-                // temporary keep the coin to add them later after SelectCoinsMinConf has added some
+                // temporarily keep the coin to add them later after SelectCoinsMinConf has added some
                 setTempCoins.insert(make_pair(out.tx, out.i));
                 vinOk = true;
                 
@@ -1734,16 +1734,19 @@ bool CWallet::SelectCoins(const CAmount& nTargetValue, set<pair<const CWalletTx*
 
 bool CWallet::FundTransaction(const CTransaction& txToFund, CMutableTransaction& txNew, CAmount &nFeeRet, int& nChangePosRet, std::string& strFailReason)
 {
-    unsigned int nSubtractFeeFromAmount = 0;
+    unsigned int nSubtractFeeFromAmount = 0; //TODO: implement subtract fee from amount within fundrawtransaction
     vector<CRecipient> vecSend;
     vector<CTxIn> vin;
 
+    // Only keep the vouts from the existing transaction.
+    // Form a new CRecipient vector
     BOOST_FOREACH (const CTxOut& txOut, txToFund.vout)
     {
         CRecipient recipient = {txOut.scriptPubKey, txOut.nValue, nSubtractFeeFromAmount};
         vecSend.push_back(recipient);
     }
     
+    // Store possible vin so we might only partial-final-fund the tx
     BOOST_FOREACH (const CTxIn& txIn, txToFund.vin)
     {
         vin.push_back(txIn);

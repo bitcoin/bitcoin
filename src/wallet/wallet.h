@@ -626,9 +626,9 @@ public:
     CAmount GetImmatureWatchOnlyBalance() const;
     bool FundTransaction(const CTransaction& txToFund, CMutableTransaction& txNew, CAmount& nFeeRet, int& nChangePosRet, std::string& strFailReason);
     bool CreateTransaction(const std::vector<CRecipient>& vecSend ,const std::vector<CTxIn> vins,
-                           CWalletTx& wtxNew, CMutableTransaction& txNew, CReserveKey& reservekey, CAmount& nFeeRet, int& nChangePosRet, std::string& strFailReason, const CCoinControl *coinControl = NULL, bool sign = false);
+                           CWalletTx& wtxNew, CMutableTransaction& txNew, CReserveKey& reservekey, CAmount& nFeeRet, int& nChangePosRet, std::string& strFailReason, const CCoinControl *coinControl = NULL, bool sign = true);
     bool CreateTransaction(const std::vector<CRecipient>& vecSend,
-                           CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet, int& nChangePosRet, std::string& strFailReason, const CCoinControl *coinControl = NULL, bool sign = false);
+                           CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet, int& nChangePosRet, std::string& strFailReason, const CCoinControl *coinControl = NULL, bool sign = true);
     bool CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey);
 
     static CFeeRate minTxFee;

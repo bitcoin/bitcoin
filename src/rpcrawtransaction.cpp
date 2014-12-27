@@ -662,7 +662,7 @@ Value fundrawtransaction(const Array& params, bool fHelp)
     if (fHelp || params.size() != 1)
         throw runtime_error(
                             "fundrawtransaction \"hexstring\"\n"
-                            "\nAdd vIns to a raw transaction.\n"
+                            "\nAdd inputs to a raw transaction as well as a change output.\n"
                             "\nAlso see createrawtransaction and signrawtransaction calls.\n"
                             "\nArguments:\n"
                             "1. \"hexstring\"    (string, required) The hex string of the raw transaction\n"
