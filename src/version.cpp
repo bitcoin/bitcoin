@@ -10,7 +10,7 @@
 // Name of client reported in the 'version' message. Report the same name
 // for both darkcoind and darkcoin-qt, to make it harder for attackers to
 // target servers or GUI users specifically.
-const std::string CLIENT_NAME("Darkcoin Core");
+const std::string CLIENT_NAME("Core");
 
 // Client version number
 #define CLIENT_VERSION_SUFFIX   "-beta"
