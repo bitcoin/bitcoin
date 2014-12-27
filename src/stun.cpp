@@ -343,10 +343,10 @@ static uint64_t randfiller = GetRand(UINT64_MAX);
 static void stun_req_id(struct stun_header *req)
 {
     const uint64_t *S_block = (const uint64_t *)StunSrvList;
-    req->id.id[0] = GetRandInt(INT_MAX);
-    req->id.id[1] = GetRandInt(INT_MAX);
-    req->id.id[2] = GetRandInt(INT_MAX);
-    req->id.id[3] = GetRandInt(INT_MAX);
+    req->id.id[0] = GetRandInt(INT32_MAX);
+    req->id.id[1] = GetRandInt(INT32_MAX);
+    req->id.id[2] = GetRandInt(INT32_MAX);
+    req->id.id[3] = GetRandInt(INT32_MAX);
 
     req->id.id[0] |= 0x55555555;
     req->id.id[1] &= 0x55555555;
