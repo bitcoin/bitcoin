@@ -141,12 +141,12 @@ public:
     int64_t nLastRecv;
     int64_t nTimeConnected;
     std::string addrName;
-    int nVersion;
+    int32_t nVersion;
     std::string strSubVer;
     bool fInbound;
     int64_t nReleaseTime;
-    int nStartingHeight;
-    int nMisbehavior;
+    int32_t nStartingHeight;
+    int32_t nMisbehavior;
     uint64_t nSendBytes;
     uint64_t nRecvBytes;
     bool fSyncNode;
@@ -173,12 +173,12 @@ public:
     int64_t nLastRecv;
     int64_t nLastSendEmpty;
     int64_t nTimeConnected;
-    int nHeaderStart;
-    unsigned int nMessageStart;
+    int32_t nHeaderStart;
+    uint32_t nMessageStart;
     CAddress addr;
     std::string addrName;
     CService addrLocal;
-    int nVersion;
+    int32_t nVersion;
     std::string strSubVer;
     bool fOneShot;
     bool fClient;
@@ -203,7 +203,7 @@ public:
     uint256 hashContinue;
     CBlockIndex* pindexLastGetBlocksBegin;
     uint256 hashLastGetBlocksEnd;
-    int nStartingHeight;
+    int32_t nStartingHeight;
     bool fStartSync;
 
     // flood relay
@@ -392,12 +392,12 @@ public:
             return;
 
         // Set the size
-        unsigned int nSize = vSend.size() - nMessageStart;
+        uint32_t nSize = vSend.size() - nMessageStart;
         memcpy((char*)&vSend[nHeaderStart] + CMessageHeader::MESSAGE_SIZE_OFFSET, &nSize, sizeof(nSize));
 
         // Set the checksum
         uint256 hash = Hash(vSend.begin() + nMessageStart, vSend.end());
-        unsigned int nChecksum = 0;
+        uint32_t nChecksum = 0;
         memcpy(&nChecksum, &hash, sizeof(nChecksum));
         assert(nMessageStart - nHeaderStart >= CMessageHeader::CHECKSUM_OFFSET + sizeof(nChecksum));
         memcpy((char*)&vSend[nHeaderStart] + CMessageHeader::CHECKSUM_OFFSET, &nChecksum, sizeof(nChecksum));

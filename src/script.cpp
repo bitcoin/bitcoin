@@ -625,7 +625,7 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
                     // (xn ... x2 x1 x0 n - ... x2 x1 x0 xn)
                     if (stack.size() < 2)
                         return false;
-                    int n = CastToBigNum(stacktop(-1)).getint();
+                    int n = CastToBigNum(stacktop(-1)).getint32();
                     popstack(stack);
                     if (n < 0 || n >= (int)stack.size())
                         return false;
@@ -901,7 +901,7 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
                     if ((int)stack.size() < i)
                         return false;
 
-                    int nKeysCount = CastToBigNum(stacktop(-i)).getint();
+                    int nKeysCount = CastToBigNum(stacktop(-i)).getint32();
                     if (nKeysCount < 0 || nKeysCount > 20)
                         return false;
                     nOpCount += nKeysCount;
@@ -912,7 +912,7 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
                     if ((int)stack.size() < i)
                         return false;
 
-                    int nSigsCount = CastToBigNum(stacktop(-i)).getint();
+                    int nSigsCount = CastToBigNum(stacktop(-i)).getint32();
                     if (nSigsCount < 0 || nSigsCount > nKeysCount)
                         return false;
                     int isig = ++i;

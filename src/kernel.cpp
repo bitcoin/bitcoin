@@ -330,12 +330,12 @@ bool GetKernelStakeModifier(uint256 hashBlockFrom, uint64_t& nStakeModifier)
 //   quantities so as to generate blocks faster, degrading the system back into
 //   a proof-of-work situation.
 //
-bool CheckStakeKernelHash(unsigned int nBits, const CBlock& blockFrom, unsigned int nTxPrevOffset, const CTransaction& txPrev, const COutPoint& prevout, unsigned int nTimeTx, uint256& hashProofOfStake, uint256& targetProofOfStake, bool fPrintProofOfStake)
+bool CheckStakeKernelHash(uint32_t nBits, const CBlock& blockFrom, uint32_t nTxPrevOffset, const CTransaction& txPrev, const COutPoint& prevout, uint32_t nTimeTx, uint256& hashProofOfStake, uint256& targetProofOfStake, bool fPrintProofOfStake)
 {
     if (nTimeTx < txPrev.nTime)  // Transaction timestamp violation
         return error("CheckStakeKernelHash() : nTime violation");
 
-    unsigned int nTimeBlockFrom = blockFrom.GetBlockTime();
+    uint32_t nTimeBlockFrom = blockFrom.GetBlockTime();
     if (nTimeBlockFrom + nStakeMinAge > nTimeTx) // Min age requirement
         return error("CheckStakeKernelHash() : min age violation");
 
@@ -392,7 +392,7 @@ bool CheckStakeKernelHash(unsigned int nBits, const CBlock& blockFrom, unsigned 
 }
 
 // Scan given coins set for kernel solution
-bool ScanForStakeKernelHash(MetaMap &mapMeta, KernelSearchSettings &settings, CoinsSet::value_type &kernelcoin, unsigned int &nTimeTx, unsigned int &nBlockTime, uint64_t &nKernelsTried, uint64_t &nCoinDaysTried)
+bool ScanForStakeKernelHash(MetaMap &mapMeta, KernelSearchSettings &settings, CoinsSet::value_type &kernelcoin, uint32_t &nTimeTx, uint32_t &nBlockTime, uint64_t &nKernelsTried, uint64_t &nCoinDaysTried)
 {
     uint256 hashProofOfStake = 0;
 
@@ -416,7 +416,7 @@ bool ScanForStakeKernelHash(MetaMap &mapMeta, KernelSearchSettings &settings, Co
             continue;
 
         // Transaction offset inside block
-        unsigned int nTxOffset = txindex.pos.nTxPos - txindex.pos.nBlockPos;
+        uint32_t nTxOffset = txindex.pos.nTxPos - txindex.pos.nBlockPos;
 
         // Current timestamp scanning interval
         unsigned int nCurrentSearchInterval = min((int64_t)settings.nSearchInterval, (int64_t)nMaxStakeSearchInterval);
@@ -502,7 +502,7 @@ bool CheckProofOfStake(const CTransaction& tx, unsigned int nBits, uint256& hash
 }
 
 // Get stake modifier checksum
-unsigned int GetStakeModifierChecksum(const CBlockIndex* pindex)
+uint32_t GetStakeModifierChecksum(const CBlockIndex* pindex)
 {
     assert (pindex->pprev || pindex->GetBlockHash() == (!fTestNet ? hashGenesisBlock : hashGenesisBlockTestNet));
     // Hash previous checksum with flags, hashProofOfStake and nStakeModifier
@@ -516,7 +516,7 @@ unsigned int GetStakeModifierChecksum(const CBlockIndex* pindex)
 }
 
 // Check stake modifier hard checkpoints
-bool CheckStakeModifierCheckpoints(int nHeight, unsigned int nStakeModifierChecksum)
+bool CheckStakeModifierCheckpoints(int nHeight, uint32_t nStakeModifierChecksum)
 {
     MapModifierCheckpoints& checkpoints = (fTestNet ? mapStakeModifierCheckpointsTestNet : mapStakeModifierCheckpoints);
 

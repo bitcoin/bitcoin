@@ -43,7 +43,7 @@ bool MultisigInputEntry::validate()
 
 CTxIn MultisigInputEntry::getInput()
 {
-    int nOutput = ui->transactionOutput->currentIndex();
+    unsigned int nOutput = ui->transactionOutput->currentIndex();
     CTxIn input(COutPoint(txHash, nOutput));
 
     return input;
@@ -52,7 +52,7 @@ CTxIn MultisigInputEntry::getInput()
 int64_t MultisigInputEntry::getAmount()
 {
     int64_t amount = 0;
-    int nOutput = ui->transactionOutput->currentIndex();
+    unsigned int nOutput = ui->transactionOutput->currentIndex();
     CTransaction tx;
     uint256 blockHash = 0;
 
@@ -115,7 +115,7 @@ void MultisigInputEntry::on_transactionId_textChanged(const QString &transaction
     uint256 blockHash = 0;
     if(!GetTransaction(txHash, tx, blockHash))
         return;
-    for(int i = 0; i < tx.vout.size(); i++)
+    for(unsigned int i = 0; i < tx.vout.size(); i++)
     {
         QString idStr;
         idStr.setNum(i);

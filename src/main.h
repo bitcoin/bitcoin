@@ -152,9 +152,9 @@ bool GetWalletFile(CWallet* pwallet, std::string &strWalletFileOut);
 class CDiskTxPos
 {
 public:
-    unsigned int nFile;
-    unsigned int nBlockPos;
-    unsigned int nTxPos;
+    uint32_t nFile;
+    uint32_t nBlockPos;
+    uint32_t nTxPos;
 
     CDiskTxPos()
     {
@@ -206,7 +206,7 @@ class CInPoint
 {
 public:
     CTransaction* ptx;
-    unsigned int n;
+    uint32_t n;
 
     CInPoint() { SetNull(); }
     CInPoint(CTransaction* ptxIn, unsigned int nIn) { ptx = ptxIn; n = nIn; }
@@ -221,7 +221,7 @@ class COutPoint
 {
 public:
     uint256 hash;
-    unsigned int n;
+    uint32_t n;
 
     COutPoint() { SetNull(); }
     COutPoint(uint256 hashIn, unsigned int nIn) { hash = hashIn; n = nIn; }
@@ -267,7 +267,7 @@ class CTxIn
 public:
     COutPoint prevout;
     CScript scriptSig;
-    unsigned int nSequence;
+    uint32_t nSequence;
 
     CTxIn()
     {
@@ -444,10 +444,10 @@ class CTransaction
 public:
     static const int CURRENT_VERSION=1;
     int nVersion;
-    unsigned int nTime;
+    uint32_t nTime;
     std::vector<CTxIn> vin;
     std::vector<CTxOut> vout;
-    unsigned int nLockTime;
+    uint32_t nLockTime;
 
     // Denial-of-service detection:
     mutable int nDoS;
@@ -758,7 +758,7 @@ class CMerkleTx : public CTransaction
 public:
     uint256 hashBlock;
     std::vector<uint256> vMerkleBranch;
-    int nIndex;
+    int32_t nIndex;
 
     // memory only
     mutable bool fMerkleVerified;
@@ -877,12 +877,12 @@ class CBlock
 public:
     // header
     static const int CURRENT_VERSION=6;
-    int nVersion;
+    int32_t nVersion;
     uint256 hashPrevBlock;
     uint256 hashMerkleRoot;
-    unsigned int nTime;
-    unsigned int nBits;
-    unsigned int nNonce;
+    uint32_t nTime;
+    uint32_t nBits;
+    uint32_t nNonce;
 
     // network and disk
     std::vector<CTransaction> vtx;
@@ -1163,15 +1163,15 @@ public:
     const uint256* phashBlock;
     CBlockIndex* pprev;
     CBlockIndex* pnext;
-    unsigned int nFile;
-    unsigned int nBlockPos;
+    uint32_t nFile;
+    uint32_t nBlockPos;
     uint256 nChainTrust; // ppcoin: trust score of block chain
-    int nHeight;
+    int32_t nHeight;
 
     int64_t nMint;
     int64_t nMoneySupply;
 
-    unsigned int nFlags;  // ppcoin: block index flags
+    uint32_t nFlags;  // ppcoin: block index flags
     enum  
     {
         BLOCK_PROOF_OF_STAKE = (1 << 0), // is proof-of-stake block
@@ -1180,19 +1180,19 @@ public:
     };
 
     uint64_t nStakeModifier; // hash modifier for proof-of-stake
-    unsigned int nStakeModifierChecksum; // checksum of index; in-memeory only
+    uint32_t nStakeModifierChecksum; // checksum of index; in-memeory only
 
     // proof-of-stake specific fields
     COutPoint prevoutStake;
-    unsigned int nStakeTime;
+    uint32_t nStakeTime;
     uint256 hashProofOfStake;
 
     // block header
-    int nVersion;
-    uint256 hashMerkleRoot;
-    unsigned int nTime;
-    unsigned int nBits;
-    unsigned int nNonce;
+    int32_t  nVersion;
+    uint256  hashMerkleRoot;
+    uint32_t nTime;
+    uint32_t nBits;
+    uint32_t nNonce;
 
     CBlockIndex()
     {
