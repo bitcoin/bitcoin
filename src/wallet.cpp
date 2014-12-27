@@ -1563,7 +1563,7 @@ bool CWallet::SelectCoins(const CAmount& nTargetValue, set<pair<const CWalletTx*
                 
                 nValueTroughVINs    += out.tx->vout[out.i].nValue;
                 
-                // temporary keep the coin to add them later after SelectCoinsMinConf has added some
+                // temporarily keep the coin to add them later after SelectCoinsMinConf has added some
                 setTempCoins.insert(make_pair(out.tx, out.i));
                 vinOk = true;
                 

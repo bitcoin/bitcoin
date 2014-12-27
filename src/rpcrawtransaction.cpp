@@ -796,7 +796,7 @@ Value fundrawtransaction(const Array& params, bool fHelp)
                             + HelpExampleRpc("sendrawtransaction", "\"signedhex\"")
                             );
     
-    RPCTypeCheck(params, list_of(str_type)(bool_type));
+    RPCTypeCheck(params, boost::assign::list_of(int_type)(int_type)(array_type));
     
     // parse hex string from parameter
     CTransaction tx;
