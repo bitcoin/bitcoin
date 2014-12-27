@@ -1144,6 +1144,8 @@ void CDarkSendPool::SendDarksendDenominate(std::vector<CTxIn>& vin, std::vector<
     e.Add(vin, amount, txCollateral, vout);
     myEntries.push_back(e);
 
+    GetDenominationsToString(GetDenominations(vout), SubmittedDenom);
+
     // relay our entry to the master node
     RelayDarkSendIn(vin, amount, txCollateral, vout);
     Check();
@@ -1883,6 +1885,45 @@ bool CDarkSendPool::IsCompatibleWithSession(int64_t nDenom, CTransaction txColla
     return true;
 }
 
+//create a nice string to show the denominations
+void CDarkSendPool::GetDenominationsToString(int nDenom, std::string& strDenom){
+    // Function returns as follows:
+    //
+    // bit 0 - 100DRK+1 ( bit on if present )
+    // bit 1 - 10DRK+1
+    // bit 2 - 1DRK+1
+    // bit 2 - .1DRK+1
+    // bit 3 - non-denom
+
+
+    strDenom = "";
+
+    if(nDenom & (1 << 0)) {
+        if(strDenom.size() > 0) strDenom += "+";
+        strDenom += "100";
+    }
+
+    if(nDenom & (1 << 1)) {
+        if(strDenom.size() > 0) strDenom += "+";
+        strDenom += "10";
+    }
+
+    if(nDenom & (1 << 2)) {
+        if(strDenom.size() > 0) strDenom += "+";
+        strDenom += "1";
+    }
+
+    if(nDenom & (1 << 3)) {
+        if(strDenom.size() > 0) strDenom += "+";
+        strDenom += "0.1";
+    }
+
+    if(nDenom & (1 << 4)) {
+        if(strDenom.size() > 0) strDenom += "+";
+        strDenom += "ND";
+    }
+}
+
 // return a bitshifted integer representing the denominations in this list
 int CDarkSendPool::GetDenominations(const std::vector<CTxOut>& vout){
     std::vector<pair<int64_t, int> > denomUsed;
@@ -1918,12 +1959,11 @@ int CDarkSendPool::GetDenominations(const std::vector<CTxOut>& vout){
 
     // Function returns as follows:
     //
-    // bit 0 - 500DRK+1 ( bit on if present )
-    // bit 1 - 100DRK+1
-    // bit 2 - 10DRK+1
-    // bit 3 - 1DRK+1
-    // bit 4 - fee
-    // bit 5 - other sizes
+    // bit 0 - 100DRK+1 ( bit on if present )
+    // bit 1 - 10DRK+1
+    // bit 2 - 1DRK+1
+    // bit 3 - .1DRK+1
+    // bit 4 - non-denom
 
     return denom;
 }
