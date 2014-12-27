@@ -80,7 +80,11 @@ bool AppInit(int argc, char* argv[])
             return false;
         }
 
-        masternodeConfig.read(GetMasternodeConfigFile());
+        std::string strErr;
+        if(!masternodeConfig.read(GetMasternodeConfigFile(), strErr)) {
+            fprintf(stderr,"Error reading masternode configuration file: %s\n", strErr.c_str());
+            return false;
+        }
 
         // Check for -testnet or -regtest parameter (TestNet() calls are only valid after this clause)
         if (!SelectParamsFromCommandLine()) {
