@@ -83,7 +83,7 @@ Unixy OSes by entering the following in a terminal:
 
 After creating the VM, we need to configure it. 
 
-- Click the `Settings` button, then go to the `Network` tab. Adapter 1 should be attacked to `NAT`.
+- Click the `Settings` button, then go to the `Network` tab. Adapter 1 should be attached to `NAT`.
 
 ![](gitian-building/network_settings.png)
 
