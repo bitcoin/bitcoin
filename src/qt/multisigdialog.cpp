@@ -404,7 +404,7 @@ void MultisigDialog::on_signTransactionButton_clicked()
 
     // Fetch previous transactions (inputs)
     std::map<COutPoint, CScript> mapPrevOut;
-    for(int i = 0; i < mergedTx.vin.size(); i++)
+    for(unsigned int i = 0; i < mergedTx.vin.size(); i++)
     {
         CTransaction tempTx;
         MapPrevTx mapPrevTx;
@@ -445,7 +445,7 @@ void MultisigDialog::on_signTransactionButton_clicked()
 
     // Sign what we can
     bool fComplete = true;
-    for(int i = 0; i < mergedTx.vin.size(); i++)
+    for(unsigned int i = 0; i < mergedTx.vin.size(); i++)
     {
         CTxIn& txin = mergedTx.vin[i];
         if(mapPrevOut.count(txin.prevout) == 0)
