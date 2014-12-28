@@ -319,7 +319,6 @@ void ProcessMessageDarksend(CNode* pfrom, std::string& strCommand, CDataStream& 
 
         std::string error = "";
         pfrom->PushMessage("dssu", darkSendPool.sessionID, darkSendPool.GetState(), darkSendPool.GetEntriesCount(), MASTERNODE_RESET, error);
-        //pfrom->fDisconnect = true;
         return;
     }
 
@@ -432,6 +431,12 @@ int GetInputDarksendRounds(CTxIn in, int rounds)
     }
 
     return rounds-1;
+}
+
+void CDarkSendPool::Reset(){
+    cachedLastSuccess = 0;
+    vecMasternodesUsed.clear();
+    SetNull();
 }
 
 void CDarkSendPool::SetNull(bool clearEverything){
@@ -1161,6 +1166,8 @@ bool CDarkSendPool::StatusUpdate(int newState, int newEntriesCount, int newAccep
     UpdateState(newState);
     entriesCount = newEntriesCount;
 
+    strAutoDenomResult = "Masternode: " + error;
+
     if(newAccepted != -1) {
         lastEntryAccepted = newAccepted;
         countEntriesAccepted += newAccepted;
@@ -1434,8 +1441,8 @@ bool CDarkSendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
 
     // If we can find only denominated funds, switch to only-denom mode
     if (!pwalletMain->SelectCoinsDark(nValueMin, maxAmount*COIN, vCoins, nValueIn, -2, 2, hasFeeInput) &&
-        pwalletMain->SelectCoinsDark(nValueMin, maxAmount*COIN, vCoins, nValueIn, 2, 8, hasFeeInput)) {
-        minRounds = 2;
+        pwalletMain->SelectCoinsDark(nValueMin, maxAmount*COIN, vCoins, nValueIn, 0, 8, hasFeeInput)) {
+        minRounds = 0;
         maxRounds = nDarksendRounds;
     }
     //if we're set to less than a thousand, don't submit for than that to the pool
@@ -1613,6 +1620,7 @@ bool CDarkSendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
 
                         pnode->PushMessage("dsa", sessionDenom, txCollateral);
                         LogPrintf("DoAutomaticDenominating --- connected (from queue), sending dsa for %d %d - %s\n", sessionDenom, GetDenominationsByAmount(sessionTotalValue), pnode->addr.ToString().c_str());
+                        strAutoDenomResult = "";
                         return true;
                     }
                 } else {
@@ -1676,6 +1684,7 @@ bool CDarkSendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
 
                     pnode->PushMessage("dsa", sessionDenom, txCollateral);
                     LogPrintf("DoAutomaticDenominating --- connected, sending dsa for %d - denom %d\n", sessionDenom, GetDenominationsByAmount(sessionTotalValue));
+                    strAutoDenomResult = "";
                     return true;
                 }
             } else {
@@ -1688,6 +1697,7 @@ bool CDarkSendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
         }
     }
 
+    strAutoDenomResult = "";
     if(!ready) return true;
 
     if(sessionDenom == 0) return true;

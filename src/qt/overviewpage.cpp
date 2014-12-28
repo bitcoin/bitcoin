@@ -429,7 +429,7 @@ void OverviewPage::darksendAuto(){
 }
 
 void OverviewPage::darksendReset(){
-    darkSendPool.SetNull(true);
+    darkSendPool.Reset();
 
     QMessageBox::warning(this, tr("Darksend"),
         tr("Darksend was successfully reset."),
