@@ -1864,7 +1864,7 @@ void RelayTransactionLockReq(const CTransaction& tx, const uint256& hash, bool r
 
         //there's no requests for transactions locks, so we should show it was propagated correctly
         //pwalletMain->mapRequestCount[tx.GetHash()]++;
-        
+
         pnode->PushMessage("txlreq", tx);
     }
 
@@ -1926,7 +1926,7 @@ void RelayDarkSendElectionEntryPing(const CTxIn vin, const std::vector<unsigned 
     BOOST_FOREACH(CNode* pnode, vNodes)
     {
         if(!pnode->fRelayTxes) continue;
-        
+
         pnode->PushMessage("dseep", vin, vchSig, nNow, stop);
     }
 }

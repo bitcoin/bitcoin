@@ -307,6 +307,7 @@ public:
     }
 
     bool SetCollateralAddress(std::string strAddress);
+    void Reset();
     void SetNull(bool clearEverything=false);
 
     void UnlockCoins();
