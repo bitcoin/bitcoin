@@ -5,7 +5,12 @@
 #ifndef BITCOIN_UTIL_H
 #define BITCOIN_UTIL_H
 
+#if !defined(_MSC_VER) || _MSC_VER > 1700
 #include <inttypes.h>
+#else
+#include "inttypes.h"
+#endif
+
 #include "uint256.h"
 
 #ifndef WIN32

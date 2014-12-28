@@ -24,11 +24,12 @@
 #include "allocators.h"
 #include "version.h"
 
-#ifdef _MSC_VER
-#undef max
-#endif
 
+#if !defined(_MSC_VER) || _MSC_VER > 1700
 #include <inttypes.h>
+#else
+#include "inttypes.h"
+#endif
 
 class CScript;
 class CDataStream;

@@ -83,6 +83,7 @@
     <ClInclude Include="..\..\src\script.h" />
     <ClInclude Include="..\..\src\scrypt.h" />
     <ClInclude Include="..\..\src\serialize.h" />
+    <ClInclude Include="..\..\src\stdint.h" />
     <ClInclude Include="..\..\src\sync.h" />
     <ClInclude Include="..\..\src\threadsafety.h" />
     <ClInclude Include="..\..\src\txdb-leveldb.h" />
