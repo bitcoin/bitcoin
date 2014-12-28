@@ -3,7 +3,7 @@
     <name>AddressBookPage</name>
     <message>
         <source>Double-click to edit address or label</source>
-        <translation>Doppio click per modificare l'indirizzo o l'etichetta</translation>
+        <translation>Fai doppio click per modificare o cancellare l'etichetta</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -1860,6 +1860,10 @@ Più URL vengono separati da una barra verticale |.</translation>
         <translation>Pagando solo la tariffa minima è bene finché c'è meno volume di transazioni di spazio nei blocchi. Ma essere consapevoli che questo può finire in una transazione non confermando ancora una volta non vi è più richiesta per le transazioni Bitcoin di rete in grado di elaborare.</translation>
     </message>
     <message>
+        <source>(read the tooltip)</source>
+        <translation>(leggi il suggerimento)</translation>
+    </message>
+    <message>
         <source>Recommended:</source>
         <translation>Raccomandati:</translation>
     </message>
@@ -1882,6 +1886,10 @@ Più URL vengono separati da una barra verticale |.</translation>
     <message>
         <source>Send as zero-fee transaction if possible</source>
         <translation>Invia una transazione a zero commissioni se possibile</translation>
+    </message>
+    <message>
+        <source>(confirmation may take longer)</source>
+        <translation>(la conferma potrebbe richiedere più tempo)</translation>
     </message>
     <message>
         <source>Send to multiple recipients at once</source>
@@ -2790,6 +2798,10 @@ ad esempio: alertnotify=echo %%s | mail -s "Allarme Bitcoin" admin@foo.com
         <translation>Elimina tutte le transazioni dal wallet e recupera solo le parti della blockchain con il comando -rescan all'avvio.</translation>
     </message>
     <message>
+        <source>Distributed under the MIT software license, see the accompanying file COPYING or &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</source>
+        <translation>Distribuito secondo la licenza software MIT, vedi il file incluso COPYNG oppure &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</translation>
+    </message>
+    <message>
         <source>Enter regression test mode, which uses a special chain in which blocks can be solved instantly.</source>
         <translation>Entra in modalità di test di regressione, la quale usa una speciale catena in cui i blocchi possono essere risolti istantaneamente.</translation>
     </message>
@@ -2840,6 +2852,10 @@ ad esempio: alertnotify=echo %%s | mail -s "Allarme Bitcoin" admin@foo.com
     <message>
         <source>Warning: wallet.dat corrupt, data salvaged! Original wallet.dat saved as wallet.{timestamp}.bak in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
         <translation>Attenzione: wallet.dat corrotto, dati recuperati! Il wallet.dat originale è stato salvato come wallet.{timestamp}.bak in %s; se il tuo saldo o le transazioni non sono corrette dovresti ripristinare da un backup.</translation>
+    </message>
+    <message>
+        <source>Whitelist peers connecting from the given netmask or IP address. Can be specified multiple times.</source>
+        <translation>Peer in whitelist connessi dalla data netmask oppure dall'indirizzo IP. Può essere specificato più volte.</translation>
     </message>
     <message>
         <source>(default: 1)</source>
@@ -2990,12 +3006,28 @@ ad esempio: alertnotify=echo %%s | mail -s "Allarme Bitcoin" admin@foo.com
         <translation>Importa blocchi da un file blk000??.dat esterno</translation>
     </message>
     <message>
+        <source>Allow JSON-RPC connections from specified source. Valid for &lt;ip&gt; are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24). This option can be specified multiple times</source>
+        <translation>Permetti connessioni JSON-RPC da una origine specifica. I valori validi per &lt;ip&gt; sono un singolo IP (ex: 1.2.3.4), un network/netmask (ex: 1.2.3.4/255.255.255.0) oppure un network/CIDR (ex: 1.2.3.4/24). Questa opzione può essere specificata più volte.</translation>
+    </message>
+    <message>
         <source>An error occurred while setting up the RPC address %s port %u for listening: %s</source>
         <translation>Si è verificato un errore durante l'impostazione della %s porta %u RPC per l'ascolto su: %s</translation>
     </message>
     <message>
+        <source>Bind to given address and whitelist peers connecting to it. Use [host]:port notation for IPv6</source>
+        <translation>Collega all'indirizzo indicato e resta permetti l'ascolto su questo. Usa la notazione [host]:porta per l'IPv6</translation>
+    </message>
+    <message>
+        <source>Bind to given address to listen for JSON-RPC connections. Use [host]:port notation for IPv6. This option can be specified multiple times (default: bind to all interfaces)</source>
+        <translation>Associa un indirizzo per l'ascolto di connessioni JSON-RPC. Usa l'annotazione [host]:porta per IPv6. Questa opzione può essere specificata più volte (default: associa a tutte le interfacce) </translation>
+    </message>
+    <message>
         <source>Cannot obtain a lock on data directory %s. Bitcoin Core is probably already running.</source>
         <translation>Non è possibile ottenere un lock sulla cartella %s. Probabilmente Bitcoin Core è già in esecuzione.</translation>
+    </message>
+    <message>
+        <source>Create new files with system default permissions, instead of umask 077 (only effective with disabled wallet functionality)</source>
+        <translation>Crea nuovi file con i permessi di default del sistema invece dell'umask 077 (effettiva solo con la funzionalità del wallet disabilitata)</translation>
     </message>
     <message>
         <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
@@ -3048,6 +3080,10 @@ ad esempio: alertnotify=echo %%s | mail -s "Allarme Bitcoin" admin@foo.com
     <message>
         <source>Invalid amount for -mintxfee=&lt;amount&gt;: '%s'</source>
         <translation>Importo non valido per -mintxfee=&lt;amount&gt;: '%s'</translation>
+    </message>
+    <message>
+        <source>Invalid netmask specified in -whitelist: '%s'</source>
+        <translation>Netmask non valida specificata in -whitelist: '%s'</translation>
     </message>
     <message>
         <source>Node relay options:</source>
@@ -3183,6 +3219,10 @@ ad esempio: alertnotify=echo %%s | mail -s "Allarme Bitcoin" admin@foo.com
         <translation>Errore caricamento wallet.dat: Portamonete corrotto</translation>
     </message>
     <message>
+        <source>Number of seconds to keep misbehaving peers from reconnecting (default: %u)</source>
+        <translation>Numero di secondi di sospensione per i peer di cattiva qualità prima di riconnettersi (default: %u)</translation>
+    </message>
+    <message>
         <source>(default: %s)</source>
         <translation>(default: %s)</translation>
     </message>
@@ -3203,6 +3243,10 @@ ad esempio: alertnotify=echo %%s | mail -s "Allarme Bitcoin" admin@foo.com
         <translation>Quanti blocchi da controllare all'avvio (dafault: %u, 0 = tutti)</translation>
     </message>
     <message>
+        <source>Include IP addresses in debug output (default: %u)</source>
+        <translation>Includi gli indirizzi IP nell'output del debug (default: %u)</translation>
+    </message>
+    <message>
         <source>Invalid -proxy address: '%s'</source>
         <translation>Indirizzo -proxy non valido: '%s'</translation>
     </message>
@@ -3217,6 +3261,18 @@ ad esempio: alertnotify=echo %%s | mail -s "Allarme Bitcoin" admin@foo.com
     <message>
         <source>Maintain at most &lt;n&gt; connections to peers (default: %u)</source>
         <translation>Mantieni al massimo &lt;n&gt; connessioni ai peers (default: %u)</translation>
+    </message>
+    <message>
+        <source>Maximum per-connection receive buffer, &lt;n&gt;*1000 bytes (default: %u)</source>
+        <translation>Buffer di ricezione massimo per connessione, &lt;n&gt;*1000 byte (default: %u)</translation>
+    </message>
+    <message>
+        <source>Maximum per-connection send buffer, &lt;n&gt;*1000 bytes (default: %u)</source>
+        <translation>Buffer di invio massimo per connessione, &lt;n&gt;*1000 byte (default: %u)</translation>
+    </message>
+    <message>
+        <source>Only accept block chain matching built-in checkpoints (default: %u)</source>
+        <translation>Accetta solo una catena di blocchi che corrisponde ai checkpoint predefiniti (default: %u)</translation>
     </message>
     <message>
         <source>Prepend debug output with timestamp (default: %u)</source>

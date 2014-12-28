@@ -1830,7 +1830,7 @@ Address: %4
     </message>
     <message>
         <source>After Fee:</source>
-        <translation>Після комісії</translation>
+        <translation>Після комісії:</translation>
     </message>
     <message>
         <source>Change:</source>
@@ -1910,7 +1910,7 @@ Address: %4
     </message>
     <message>
         <source>Send as zero-fee transaction if possible</source>
-        <translation>Надіслати як нульовий плата за передачу, якщо це можливо</translation>
+        <translation>Надіслати транзакцію без сплати комісії, якщо це можливо</translation>
     </message>
     <message>
         <source>(confirmation may take longer)</source>
@@ -3216,7 +3216,7 @@ rpcpassword=%s
     </message>
     <message>
         <source>Send transactions as zero-fee transactions if possible (default: %u)</source>
-        <translation>Встановити операцію надсилання, як неоплатну операцію, якщо це можливо (за замовчуванням: %u)</translation>
+        <translation>Не сплачувати комісію за надсилання транзакцій, якщо це можливо (типово: %u)</translation>
     </message>
     <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>
