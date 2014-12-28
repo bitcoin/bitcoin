@@ -693,7 +693,7 @@ void BitcoinGUI::updateMining()
     {
         labelMiningIcon->setPixmap(QIcon(":/icons/mining_active").pixmap(STATUSBAR_ICONSIZE,STATUSBAR_ICONSIZE));
 
-        uint64 nNetworkWeight = clientModel->getPoSKernelPS();
+        uint64_t nNetworkWeight = clientModel->getPoSKernelPS();
 /*
         double dDifficulty = clientModel->getDifficulty(true);
         QString msg;
@@ -712,7 +712,7 @@ void BitcoinGUI::updateMining()
         labelMiningIcon->setToolTip(tr("Stake miner is active\nYour current stake weight is %1\nNetwork weight is %2\nAverage block generation time is %3").arg(nTotalWeight).arg(dNetworkWeight).arg(msg));
 */
 
-        labelMiningIcon->setToolTip(tr("Stake miner is active\nKernel rate is %1 k/s\nCD rate is %2 CD/s\nNetwork weight is %3").arg(nKernelsRate).arg(nCoinDaysRate).arg(nNetworkWeight));
+        labelMiningIcon->setToolTip(QString("<nobr>")+tr("Stake miner is active<br>Kernel rate is %1 k/s<br>CD rate is %2 CD/s<br>Network weight is %3").arg(nKernelsRate).arg(nCoinDaysRate).arg(nNetworkWeight)+QString("<\nobr>"));
     }
     else
         labelMiningIcon->setToolTip(tr("No suitable inputs were found"));

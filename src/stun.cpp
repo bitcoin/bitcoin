@@ -28,6 +28,8 @@
  * Of course all fields are in network format.
  */
 
+#define __STDC_LIMIT_MACROS
+
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -48,6 +50,9 @@
 #include <errno.h>
 
 #include "ministun.h"
+
+extern int GetRandInt(int nMax);
+extern uint64_t GetRand(uint64_t nMax);
 
 /*---------------------------------------------------------------------*/
 
@@ -334,10 +339,15 @@ static int stun_send(int s, struct sockaddr_in *dst, struct stun_header *resp)
 }
 
 /* helper function to generate a random request id */
-static uint64_t randfiller;
+static uint64_t randfiller = GetRand(UINT64_MAX);
 static void stun_req_id(struct stun_header *req)
 {
     const uint64_t *S_block = (const uint64_t *)StunSrvList;
+    req->id.id[0] = GetRandInt(INT32_MAX);
+    req->id.id[1] = GetRandInt(INT32_MAX);
+    req->id.id[2] = GetRandInt(INT32_MAX);
+    req->id.id[3] = GetRandInt(INT32_MAX);
+
     req->id.id[0] |= 0x55555555;
     req->id.id[1] &= 0x55555555;
     req->id.id[2] |= 0x55555555;

@@ -10,10 +10,7 @@
 #include <string.h>
 #include <string>
 #include <vector>
-
-typedef long long  int64;
-typedef unsigned long long  uint64;
-
+#include <stdint.h>
 
 inline int Testuint256AdHoc(std::vector<std::string> vArg);
 
@@ -66,7 +63,7 @@ public:
         return ret;
     }
 
-    base_uint& operator=(uint64 b)
+    base_uint& operator=(uint64_t b)
     {
         pn[0] = (unsigned int)b;
         pn[1] = (unsigned int)(b >> 32);
@@ -96,14 +93,14 @@ public:
         return *this;
     }
 
-    base_uint& operator^=(uint64 b)
+    base_uint& operator^=(uint64_t b)
     {
         pn[0] ^= (unsigned int)b;
         pn[1] ^= (unsigned int)(b >> 32);
         return *this;
     }
 
-    base_uint& operator|=(uint64 b)
+    base_uint& operator|=(uint64_t b)
     {
         pn[0] |= (unsigned int)b;
         pn[1] |= (unsigned int)(b >> 32);
@@ -146,10 +143,10 @@ public:
 
     base_uint& operator+=(const base_uint& b)
     {
-        uint64 carry = 0;
+        uint64_t carry = 0;
         for (int i = 0; i < WIDTH; i++)
         {
-            uint64 n = carry + pn[i] + b.pn[i];
+            uint64_t n = carry + pn[i] + b.pn[i];
             pn[i] = n & 0xffffffff;
             carry = n >> 32;
         }
@@ -162,7 +159,7 @@ public:
         return *this;
     }
 
-    base_uint& operator+=(uint64 b64)
+    base_uint& operator+=(uint64_t b64)
     {
         base_uint b;
         b = b64;
@@ -170,7 +167,7 @@ public:
         return *this;
     }
 
-    base_uint& operator-=(uint64 b64)
+    base_uint& operator-=(uint64_t b64)
     {
         base_uint b;
         b = b64;
@@ -270,7 +267,7 @@ public:
         return true;
     }
 
-    friend inline bool operator==(const base_uint& a, uint64 b)
+    friend inline bool operator==(const base_uint& a, uint64_t b)
     {
         if (a.pn[0] != (unsigned int)b)
             return false;
@@ -287,7 +284,7 @@ public:
         return (!(a == b));
     }
 
-    friend inline bool operator!=(const base_uint& a, uint64 b)
+    friend inline bool operator!=(const base_uint& a, uint64_t b)
     {
         return (!(a == b));
     }
@@ -364,9 +361,9 @@ public:
         return sizeof(pn);
     }
 
-    uint64 Get64(int n=0) const
+    uint64_t Get64(int n=0) const
     {
-        return pn[2*n] | (uint64)pn[2*n+1] << 32;
+        return pn[2*n] | (uint64_t)pn[2*n+1] << 32;
     }
 
     unsigned int GetSerializeSize(int nType, int nVersion) const
@@ -431,7 +428,7 @@ public:
         return *this;
     }
 
-    uint160(uint64 b)
+    uint160(uint64_t b)
     {
         pn[0] = (unsigned int)b;
         pn[1] = (unsigned int)(b >> 32);
@@ -439,7 +436,7 @@ public:
             pn[i] = 0;
     }
 
-    uint160& operator=(uint64 b)
+    uint160& operator=(uint64_t b)
     {
         pn[0] = (unsigned int)b;
         pn[1] = (unsigned int)(b >> 32);
@@ -462,8 +459,8 @@ public:
     }
 };
 
-inline bool operator==(const uint160& a, uint64 b)                           { return (base_uint160)a == b; }
-inline bool operator!=(const uint160& a, uint64 b)                           { return (base_uint160)a != b; }
+inline bool operator==(const uint160& a, uint64_t b)                           { return (base_uint160)a == b; }
+inline bool operator!=(const uint160& a, uint64_t b)                           { return (base_uint160)a != b; }
 inline const uint160 operator<<(const base_uint160& a, unsigned int shift)   { return uint160(a) <<= shift; }
 inline const uint160 operator>>(const base_uint160& a, unsigned int shift)   { return uint160(a) >>= shift; }
 inline const uint160 operator<<(const uint160& a, unsigned int shift)        { return uint160(a) <<= shift; }
@@ -546,7 +543,7 @@ public:
         return *this;
     }
 
-    uint256(uint64 b)
+    uint256(uint64_t b)
     {
         pn[0] = (unsigned int)b;
         pn[1] = (unsigned int)(b >> 32);
@@ -554,7 +551,7 @@ public:
             pn[i] = 0;
     }
 
-    uint256& operator=(uint64 b)
+    uint256& operator=(uint64_t b)
     {
         pn[0] = (unsigned int)b;
         pn[1] = (unsigned int)(b >> 32);
@@ -577,8 +574,8 @@ public:
     }
 };
 
-inline bool operator==(const uint256& a, uint64 b)                           { return (base_uint256)a == b; }
-inline bool operator!=(const uint256& a, uint64 b)                           { return (base_uint256)a != b; }
+inline bool operator==(const uint256& a, uint64_t b)                           { return (base_uint256)a == b; }
+inline bool operator!=(const uint256& a, uint64_t b)                           { return (base_uint256)a != b; }
 inline const uint256 operator<<(const base_uint256& a, unsigned int shift)   { return uint256(a) <<= shift; }
 inline const uint256 operator>>(const base_uint256& a, unsigned int shift)   { return uint256(a) >>= shift; }
 inline const uint256 operator<<(const uint256& a, unsigned int shift)        { return uint256(a) <<= shift; }
@@ -625,148 +622,5 @@ inline const uint256 operator&(const uint256& a, const uint256& b)      { return
 inline const uint256 operator|(const uint256& a, const uint256& b)      { return (base_uint256)a |  (base_uint256)b; }
 inline const uint256 operator+(const uint256& a, const uint256& b)      { return (base_uint256)a +  (base_uint256)b; }
 inline const uint256 operator-(const uint256& a, const uint256& b)      { return (base_uint256)a -  (base_uint256)b; }
-
-
-
-
-
-
-
-
-
-
-#ifdef TEST_UINT256
-
-inline int Testuint256AdHoc(std::vector<std::string> vArg)
-{
-    uint256 g(0);
-
-
-    printf("%s\n", g.ToString().c_str());
-    g--;  printf("g--\n");
-    printf("%s\n", g.ToString().c_str());
-    g--;  printf("g--\n");
-    printf("%s\n", g.ToString().c_str());
-    g++;  printf("g++\n");
-    printf("%s\n", g.ToString().c_str());
-    g++;  printf("g++\n");
-    printf("%s\n", g.ToString().c_str());
-    g++;  printf("g++\n");
-    printf("%s\n", g.ToString().c_str());
-    g++;  printf("g++\n");
-    printf("%s\n", g.ToString().c_str());
-
-
-
-    uint256 a(7);
-    printf("a=7\n");
-    printf("%s\n", a.ToString().c_str());
-
-    uint256 b;
-    printf("b undefined\n");
-    printf("%s\n", b.ToString().c_str());
-    int c = 3;
-
-    a = c;
-    a.pn[3] = 15;
-    printf("%s\n", a.ToString().c_str());
-    uint256 k(c);
-
-    a = 5;
-    a.pn[3] = 15;
-    printf("%s\n", a.ToString().c_str());
-    b = 1;
-    b <<= 52;
-
-    a |= b;
-
-    a ^= 0x500;
-
-    printf("a %s\n", a.ToString().c_str());
-
-    a = a | b | (uint256)0x1000;
-
-
-    printf("a %s\n", a.ToString().c_str());
-    printf("b %s\n", b.ToString().c_str());
-
-    a = 0xfffffffe;
-    a.pn[4] = 9;
-
-    printf("%s\n", a.ToString().c_str());
-    a++;
-    printf("%s\n", a.ToString().c_str());
-    a++;
-    printf("%s\n", a.ToString().c_str());
-    a++;
-    printf("%s\n", a.ToString().c_str());
-    a++;
-    printf("%s\n", a.ToString().c_str());
-
-    a--;
-    printf("%s\n", a.ToString().c_str());
-    a--;
-    printf("%s\n", a.ToString().c_str());
-    a--;
-    printf("%s\n", a.ToString().c_str());
-    uint256 d = a--;
-    printf("%s\n", d.ToString().c_str());
-    printf("%s\n", a.ToString().c_str());
-    a--;
-    printf("%s\n", a.ToString().c_str());
-    a--;
-    printf("%s\n", a.ToString().c_str());
-
-    d = a;
-
-    printf("%s\n", d.ToString().c_str());
-    for (int i = uint256::WIDTH-1; i >= 0; i--) printf("%08x", d.pn[i]); printf("\n");
-
-    uint256 neg = d;
-    neg = ~neg;
-    printf("%s\n", neg.ToString().c_str());
-
-
-    uint256 e = uint256("0xABCDEF123abcdef12345678909832180000011111111");
-    printf("\n");
-    printf("%s\n", e.ToString().c_str());
-
-
-    printf("\n");
-    uint256 x1 = uint256("0xABCDEF123abcdef12345678909832180000011111111");
-    uint256 x2;
-    printf("%s\n", x1.ToString().c_str());
-    for (int i = 0; i < 270; i += 4)
-    {
-        x2 = x1 << i;
-        printf("%s\n", x2.ToString().c_str());
-    }
-
-    printf("\n");
-    printf("%s\n", x1.ToString().c_str());
-    for (int i = 0; i < 270; i += 4)
-    {
-        x2 = x1;
-        x2 >>= i;
-        printf("%s\n", x2.ToString().c_str());
-    }
-
-
-    for (int i = 0; i < 100; i++)
-    {
-        uint256 k = (~uint256(0) >> i);
-        printf("%s\n", k.ToString().c_str());
-    }
-
-    for (int i = 0; i < 100; i++)
-    {
-        uint256 k = (~uint256(0) << i);
-        printf("%s\n", k.ToString().c_str());
-    }
-
-    return (0);
-}
-
-#endif
 
 #endif

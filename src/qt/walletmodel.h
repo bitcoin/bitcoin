@@ -103,7 +103,7 @@ public:
     bool importWallet(const QString &filename);
 
     void getStakeStats(float &nKernelsRate, float &nCoinDaysRate);
-    void getStakeWeightFromValue(const qint64& nTime, const qint64& nValue, quint64& nWeight);
+    void getStakeWeightFromValue(const int64_t& nTime, const int64_t& nValue, uint64_t& nWeight);
 
     // RAI object for unlocking wallet, returned by requestUnlock()
     class UnlockContext
