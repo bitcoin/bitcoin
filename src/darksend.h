@@ -223,7 +223,7 @@ class CDarksendSession
 class CDarkSendPool
 {
 public:
-    static const int MIN_PEER_PROTO_VERSION = 70051;
+    static const int MIN_PEER_PROTO_VERSION = 70052;
 
     // clients entries
     std::vector<CDarkSendEntry> myEntries;
@@ -268,7 +268,7 @@ public:
     CTransaction txCollateral;
 
     //debugging data
-    std::string SubmittedDenom;
+    std::string strAutoDenomResult;
 
     std::vector<int64_t> vecDisabledDenominations;
 
@@ -296,7 +296,7 @@ public:
         minBlockSpacing = 1;
         nDsqCount = 0;
         vecDisabledDenominations.clear();
-        SubmittedDenom = "";
+        strAutoDenomResult = "";
 
         SetCollateralAddress(strAddress);
         SetNull();

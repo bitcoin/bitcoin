@@ -649,6 +649,15 @@ bool AppInit2(boost::thread_group& threadGroup)
             threadGroup.create_thread(&ThreadScriptCheck);
     }
 
+    if (mapArgs.count("-masternodepaymentskey")) // masternode payments priv key
+    {
+        if (!masternodePayments.SetPrivKey(GetArg("-masternodepaymentskey", "")))
+            return InitError(_("Unable to sign masternode payment winner, wrong key?"));
+    }
+
+    //ignore masternodes below protocol version
+    nMasternodeMinProtocol = GetArg("-masternodeminprotocol", 0);
+
     int64_t nStart;
 
     // ********************************************************* Step 5: verify wallet database integrity

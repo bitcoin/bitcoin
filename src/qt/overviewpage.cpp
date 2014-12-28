@@ -362,7 +362,11 @@ void OverviewPage::darkSendStatus()
 
     if(state == POOL_STATUS_ACCEPTING_ENTRIES) {
         if(entries == 0) {
-            convert << "Darksend is idle";
+            if(darkSendPool.strAutoDenomResult.size() == 0){
+                convert << "Darksend is idle";
+            } else {
+                convert << darkSendPool.strAutoDenomResult;
+            }
             showingDarkSendMessage = 0;
         } else if (accepted == 1) {
             convert << "Darksend request complete: Your transaction was accepted into the pool!";
