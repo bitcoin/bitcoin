@@ -1,5 +1,5 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2009-2014 The Bitcoin developers
+// Copyright (c) 2009-2014 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -52,6 +52,9 @@ bool IsRPCRunning();
 void SetRPCWarmupStatus(const std::string& newStatus);
 /* Mark warmup as done.  RPC calls will be processed from now on.  */
 void SetRPCWarmupFinished();
+
+/* returns the current warmup state.  */
+bool RPCIsInWarmup(std::string *statusOut);
 
 /**
  * Type-check arguments; throws JSONRPCError if wrong type given. Does not check that
@@ -220,11 +223,13 @@ extern json_spirit::Value gettxoutsetinfo(const json_spirit::Array& params, bool
 extern json_spirit::Value gettxout(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value verifychain(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value getchaintips(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value invalidateblock(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value reconsiderblock(const json_spirit::Array& params, bool fHelp);
 
 // in rest.cpp
 extern bool HTTPReq_REST(AcceptedConnection *conn,
-                  std::string& strURI,
-                  std::map<std::string, std::string>& mapHeaders,
+                  const std::string& strURI,
+                  const std::map<std::string, std::string>& mapHeaders,
                   bool fRun);
 
 #endif // BITCOIN_RPCSERVER_H

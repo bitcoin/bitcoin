@@ -1,4 +1,4 @@
-<TS language="it" version="2.1">
+<TS language="it" version="2.0">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -478,6 +478,10 @@
         <source>Up to date</source>
         <translation>Aggiornato</translation>
     </message>
+    <message numerus="yes">
+        <source>Processed %n blocks of transaction history.</source>
+        <translation><numerusform>Processati %n blocchi dello storico transazioni.</numerusform><numerusform>Processati %n blocchi dello storico delle transazioni.</numerusform></translation>
+    </message>
     <message>
         <source>Catching up...</source>
         <translation>In aggiornamento...</translation>
@@ -522,8 +526,9 @@ Indirizzo: %4
 <context>
     <name>CoinControlDialog</name>
     <message>
-        <source>Coin Control Address Selection</source>
-        <translation>Selezione Indirizzo Coin Control</translation>
+        <source>Coin Selection</source>
+        <translation>Seleziona Moneta
+</translation>
     </message>
     <message>
         <source>Quantity:</source>
@@ -574,8 +579,12 @@ Indirizzo: %4
         <translation>Importo</translation>
     </message>
     <message>
-        <source>Address</source>
-        <translation>Indirizzo</translation>
+        <source>Received with label</source>
+        <translation>Ricevuto con etichetta</translation>
+    </message>
+    <message>
+        <source>Received with address</source>
+        <translation>Ricevuto con l'indirizzo</translation>
     </message>
     <message>
         <source>Date</source>
@@ -944,14 +953,6 @@ Indirizzo: %4
         <translation>&amp;Principale</translation>
     </message>
     <message>
-        <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly. Most transactions are 1 kB.</source>
-        <translation>Commissione di transazione per kB: è opzionale e contribuisce ad assicurare che le transazioni siano elaborate velocemente. La maggior parte della transazioni ha dimensioni pari a 1 kB.</translation>
-    </message>
-    <message>
-        <source>Pay transaction &amp;fee</source>
-        <translation>Paga la &amp;commissione</translation>
-    </message>
-    <message>
         <source>Automatically start Bitcoin after logging in to the system.</source>
         <translation>Avvia automaticamente Bitcoin una volta effettuato l'accesso al sistema.</translation>
     </message>
@@ -978,14 +979,6 @@ Indirizzo: %4
     <message>
         <source>Allow incoming connections</source>
         <translation>Permetti connessioni in entrata</translation>
-    </message>
-    <message>
-        <source>Connect to the Bitcoin network through a SOCKS proxy.</source>
-        <translation>Connessione alla rete Bitcoin attraverso un proxy SOCKS.</translation>
-    </message>
-    <message>
-        <source>&amp;Connect through SOCKS proxy (default proxy):</source>
-        <translation>&amp;Connessione attraverso proxy SOCKS (proxy predefinito):</translation>
     </message>
     <message>
         <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
@@ -1047,6 +1040,14 @@ Più URL vengono separati da una barra verticale |.</translation>
     <message>
         <source>Map port using &amp;UPnP</source>
         <translation>Mappa le porte tramite &amp;UPnP</translation>
+    </message>
+    <message>
+        <source>Connect to the Bitcoin network through a SOCKS5 proxy.</source>
+        <translation>Connessione alla rete Bitcoin attraverso un proxy SOCKS5.</translation>
+    </message>
+    <message>
+        <source>&amp;Connect through SOCKS5 proxy (default proxy):</source>
+        <translation>&amp;Connessione attraverso proxy SOCKS5 (proxy predefinito):</translation>
     </message>
     <message>
         <source>Proxy &amp;IP:</source>
@@ -1206,6 +1207,14 @@ Più URL vengono separati da una barra verticale |.</translation>
     <message>
         <source>Unconfirmed transactions to watch-only addresses</source>
         <translation>Transazioni non confermate su indirizzi di sola lettura</translation>
+    </message>
+    <message>
+        <source>Mined balance in watch-only addresses that has not yet matured</source>
+        <translation>l'equilibrio estratto solo nello sguardo degli indirizzi non è ancora maturo </translation>
+    </message>
+    <message>
+        <source>Current total balance in watch-only addresses</source>
+        <translation>Saldo corrente totale negli indirizzi watch-only</translation>
     </message>
     <message>
         <source>out of sync</source>
@@ -1471,6 +1480,14 @@ Più URL vengono separati da una barra verticale |.</translation>
         <translation>Blocco di partenza</translation>
     </message>
     <message>
+        <source>Sync Height</source>
+        <translation>valore di sincronizzazione</translation>
+    </message>
+    <message>
+        <source>Ban Score</source>
+        <translation>divieto di segnalazione </translation>
+    </message>
+    <message>
         <source>Connection Time</source>
         <translation>Tempo di connessione</translation>
     </message>
@@ -1590,7 +1607,11 @@ Più URL vengono separati da una barra verticale |.</translation>
         <source>Unknown</source>
         <translation>Sconosciuto</translation>
     </message>
-    </context>
+    <message>
+        <source>Fetching...</source>
+        <translation>attraente</translation>
+    </message>
+</context>
 <context>
     <name>ReceiveCoinsDialog</name>
     <message>
@@ -1817,6 +1838,50 @@ Più URL vengono separati da una barra verticale |.</translation>
     <message>
         <source>Custom change address</source>
         <translation>Personalizza indirizzo di resto</translation>
+    </message>
+    <message>
+        <source>Transaction Fee:</source>
+        <translation>Tasse di Transazione</translation>
+    </message>
+    <message>
+        <source>Choose...</source>
+        <translation>Scegli...</translation>
+    </message>
+    <message>
+        <source>Minimize</source>
+        <translation>Minimizza</translation>
+    </message>
+    <message>
+        <source>per kilobyte</source>
+        <translation>per kilobyte</translation>
+    </message>
+    <message>
+        <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks. But be aware that this can end up in a never confirming transaction once there is more demand for bitcoin transactions than the network can process.</source>
+        <translation>Pagando solo la tariffa minima è bene finché c'è meno volume di transazioni di spazio nei blocchi. Ma essere consapevoli che questo può finire in una transazione non confermando ancora una volta non vi è più richiesta per le transazioni Bitcoin di rete in grado di elaborare.</translation>
+    </message>
+    <message>
+        <source>Recommended:</source>
+        <translation>Raccomandati:</translation>
+    </message>
+    <message>
+        <source>Custom:</source>
+        <translation>Personalizza:</translation>
+    </message>
+    <message>
+        <source>Confirmation time:</source>
+        <translation>Tempo di conferma:</translation>
+    </message>
+    <message>
+        <source>normal</source>
+        <translation>normale</translation>
+    </message>
+    <message>
+        <source>fast</source>
+        <translation>veloce</translation>
+    </message>
+    <message>
+        <source>Send as zero-fee transaction if possible</source>
+        <translation>Invia una transazione a zero commissioni se possibile</translation>
     </message>
     <message>
         <source>Send to multiple recipients at once</source>
@@ -2949,6 +3014,22 @@ ad esempio: alertnotify=echo %%s | mail -s "Allarme Bitcoin" admin@foo.com
         <translation>Imposta la dimensione massima in byte delle transazioni ad alta-priorità/basse-commissioni (predefinita: %d)</translation>
     </message>
     <message>
+        <source>Cannot resolve -whitebind address: '%s'</source>
+        <translation>Impossibile risolvere -whitebind address: '%s'</translation>
+    </message>
+    <message>
+        <source>Connect through SOCKS5 proxy</source>
+        <translation>Connetti attraverso SOCKS5 proxy</translation>
+    </message>
+    <message>
+        <source>Error loading wallet.dat: Wallet requires newer version of Bitcoin Core</source>
+        <translation>Errore caricamento wallet.dat: il wallet richiede una versione nuova di Bitcoin Core</translation>
+    </message>
+    <message>
+        <source>Fee (in BTC/kB) to add to transactions you send (default: %s)</source>
+        <translation>Commissione (in BTC/kB) da aggiungere alla transazione che invii (default: %s)</translation>
+    </message>
+    <message>
         <source>Information</source>
         <translation>Informazioni</translation>
     </message>
@@ -2987,6 +3068,10 @@ ad esempio: alertnotify=echo %%s | mail -s "Allarme Bitcoin" admin@foo.com
     <message>
         <source>Send trace/debug info to console instead of debug.log file</source>
         <translation>Invia le informazioni di trace/debug alla console invece che al file debug.log</translation>
+    </message>
+    <message>
+        <source>Send transactions as zero-fee transactions if possible (default: %u)</source>
+        <translation>Invia transazioni a zero commissioni se possibile (default: %u)</translation>
     </message>
     <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>
@@ -3094,8 +3179,60 @@ ad esempio: alertnotify=echo %%s | mail -s "Allarme Bitcoin" admin@foo.com
         <translation>Errore caricamento wallet.dat</translation>
     </message>
     <message>
+        <source>Force safe mode (default: %u)</source>
+        <translation>Forza modalità provvisoria (dafault: %u)</translation>
+    </message>
+    <message>
+        <source>Generate coins (default: %u)</source>
+        <translation>Genera coins (default: %u)</translation>
+    </message>
+    <message>
+        <source>How many blocks to check at startup (default: %u, 0 = all)</source>
+        <translation>Quanti blocchi da controllare all'avvio (dafault: %u, 0 = tutti)</translation>
+    </message>
+    <message>
         <source>Invalid -proxy address: '%s'</source>
         <translation>Indirizzo -proxy non valido: '%s'</translation>
+    </message>
+    <message>
+        <source>Maintain at most &lt;n&gt; connections to peers (default: %u)</source>
+        <translation>Mantieni al massimo &lt;n&gt; connessioni ai peers (default: %u)</translation>
+    </message>
+    <message>
+        <source>Prepend debug output with timestamp (default: %u)</source>
+        <translation>Pretendi output di debug con timestamp (default: %u)</translation>
+    </message>
+    <message>
+        <source>Print block tree on startup (default: %u)</source>
+        <translation>Stampa l'albero dei blocchi all'avvio (default: %u)</translation>
+    </message>
+    <message>
+        <source>Server certificate file (default: %s)</source>
+        <translation>File certificato del server (default: %s)</translation>
+    </message>
+    <message>
+        <source>Server private key (default: %s)</source>
+        <translation>Chiave privata del server (default: %s)</translation>
+    </message>
+    <message>
+        <source>Specify configuration file (default: %s)</source>
+        <translation>Specifica il file di configurazione (default: %s)</translation>
+    </message>
+    <message>
+        <source>Specify connection timeout in milliseconds (minimum: 1, default: %d)</source>
+        <translation>Specifica il timeout di connessione in millisecondi (minimo:1, default: %d)</translation>
+    </message>
+    <message>
+        <source>Specify pid file (default: %s)</source>
+        <translation>Specifica il file pid (default: %s)</translation>
+    </message>
+    <message>
+        <source>Spend unconfirmed change when sending transactions (default: %u)</source>
+        <translation>Spendi il resto non confermato quando si inviano transazioni (default: %u)</translation>
+    </message>
+    <message>
+        <source>Stop running after importing blocks from disk (default: %u)</source>
+        <translation>Interrompi dopo aver importato i blocchi dal disco (default: %u)</translation>
     </message>
     <message>
         <source>Unknown network specified in -onlynet: '%s'</source>

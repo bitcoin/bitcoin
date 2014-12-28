@@ -103,6 +103,62 @@ static void secp256k1_fe_normalize(secp256k1_fe_t *r) {
 #endif
 }
 
+static void secp256k1_fe_normalize_var(secp256k1_fe_t *r) {
+    uint32_t t0 = r->n[0], t1 = r->n[1], t2 = r->n[2], t3 = r->n[3], t4 = r->n[4],
+             t5 = r->n[5], t6 = r->n[6], t7 = r->n[7], t8 = r->n[8], t9 = r->n[9];
+
+    /* Reduce t9 at the start so there will be at most a single carry from the first pass */
+    uint32_t x = t9 >> 22; t9 &= 0x03FFFFFUL;
+    uint32_t m;
+
+    /* The first pass ensures the magnitude is 1, ... */
+    t0 += x * 0x3D1UL; t1 += (x << 6);
+    t1 += (t0 >> 26); t0 &= 0x3FFFFFFUL;
+    t2 += (t1 >> 26); t1 &= 0x3FFFFFFUL;
+    t3 += (t2 >> 26); t2 &= 0x3FFFFFFUL; m = t2;
+    t4 += (t3 >> 26); t3 &= 0x3FFFFFFUL; m &= t3;
+    t5 += (t4 >> 26); t4 &= 0x3FFFFFFUL; m &= t4;
+    t6 += (t5 >> 26); t5 &= 0x3FFFFFFUL; m &= t5;
+    t7 += (t6 >> 26); t6 &= 0x3FFFFFFUL; m &= t6;
+    t8 += (t7 >> 26); t7 &= 0x3FFFFFFUL; m &= t7;
+    t9 += (t8 >> 26); t8 &= 0x3FFFFFFUL; m &= t8;
+
+    /* ... except for a possible carry at bit 22 of t9 (i.e. bit 256 of the field element) */
+    VERIFY_CHECK(t9 >> 23 == 0);
+
+    /* At most a single final reduction is needed; check if the value is >= the field characteristic */
+    x = (t9 >> 22) | ((t9 == 0x03FFFFFUL) & (m == 0x3FFFFFFUL)
+        & ((t1 + 0x40UL + ((t0 + 0x3D1UL) >> 26)) > 0x3FFFFFFUL));
+
+    if (x) {
+        t0 += 0x3D1UL; t1 += (x << 6);
+        t1 += (t0 >> 26); t0 &= 0x3FFFFFFUL;
+        t2 += (t1 >> 26); t1 &= 0x3FFFFFFUL;
+        t3 += (t2 >> 26); t2 &= 0x3FFFFFFUL;
+        t4 += (t3 >> 26); t3 &= 0x3FFFFFFUL;
+        t5 += (t4 >> 26); t4 &= 0x3FFFFFFUL;
+        t6 += (t5 >> 26); t5 &= 0x3FFFFFFUL;
+        t7 += (t6 >> 26); t6 &= 0x3FFFFFFUL;
+        t8 += (t7 >> 26); t7 &= 0x3FFFFFFUL;
+        t9 += (t8 >> 26); t8 &= 0x3FFFFFFUL;
+
+        /* If t9 didn't carry to bit 22 already, then it should have after any final reduction */
+        VERIFY_CHECK(t9 >> 22 == x);
+
+        /* Mask off the possible multiple of 2^256 from the final reduction */
+        t9 &= 0x03FFFFFUL;
+    }
+
+    r->n[0] = t0; r->n[1] = t1; r->n[2] = t2; r->n[3] = t3; r->n[4] = t4;
+    r->n[5] = t5; r->n[6] = t6; r->n[7] = t7; r->n[8] = t8; r->n[9] = t9;
+
+#ifdef VERIFY
+    r->magnitude = 1;
+    r->normalized = 1;
+    secp256k1_fe_verify(r);
+#endif
+}
+
 SECP256K1_INLINE static void secp256k1_fe_set_int(secp256k1_fe_t *r, int a) {
     r->n[0] = a;
     r->n[1] = r->n[2] = r->n[3] = r->n[4] = r->n[5] = r->n[6] = r->n[7] = r->n[8] = r->n[9] = 0;
@@ -152,7 +208,21 @@ SECP256K1_INLINE static int secp256k1_fe_equal(const secp256k1_fe_t *a, const se
           | (t[5]^u[5]) | (t[6]^u[6]) | (t[7]^u[7]) | (t[8]^u[8]) | (t[9]^u[9])) == 0;
 }
 
-static void secp256k1_fe_set_b32(secp256k1_fe_t *r, const unsigned char *a) {
+static int secp256k1_fe_cmp_var(const secp256k1_fe_t *a, const secp256k1_fe_t *b) {
+#ifdef VERIFY
+    VERIFY_CHECK(a->normalized);
+    VERIFY_CHECK(b->normalized);
+    secp256k1_fe_verify(a);
+    secp256k1_fe_verify(b);
+#endif
+    for (int i = 9; i >= 0; i--) {
+        if (a->n[i] > b->n[i]) return 1;
+        if (a->n[i] < b->n[i]) return -1;
+    }
+    return 0;
+}
+
+static int secp256k1_fe_set_b32(secp256k1_fe_t *r, const unsigned char *a) {
     r->n[0] = r->n[1] = r->n[2] = r->n[3] = r->n[4] = 0;
     r->n[5] = r->n[6] = r->n[7] = r->n[8] = r->n[9] = 0;
     for (int i=0; i<32; i++) {
@@ -162,11 +232,15 @@ static void secp256k1_fe_set_b32(secp256k1_fe_t *r, const unsigned char *a) {
             r->n[limb] |= (uint32_t)((a[31-i] >> (2*j)) & 0x3) << shift;
         }
     }
+    if (r->n[9] == 0x3FFFFFUL && (r->n[8] & r->n[7] & r->n[6] & r->n[5] & r->n[4] & r->n[3] & r->n[2]) == 0x3FFFFFFUL && (r->n[1] + 0x40UL + ((r->n[0] + 0x3D1UL) >> 26)) > 0x3FFFFFFUL) {
+        return 0;
+    }
 #ifdef VERIFY
     r->magnitude = 1;
     r->normalized = 1;
     secp256k1_fe_verify(r);
 #endif
+    return 1;
 }
 
 /** Convert a field element to a 32-byte big endian value. Requires the input to be normalized */
@@ -253,7 +327,7 @@ SECP256K1_INLINE static void secp256k1_fe_add(secp256k1_fe_t *r, const secp256k1
 #define VERIFY_BITS(x, n) do { } while(0)
 #endif
 
-SECP256K1_INLINE static void secp256k1_fe_mul_inner(const uint32_t *a, const uint32_t *b, uint32_t *r) {
+SECP256K1_INLINE static void secp256k1_fe_mul_inner(uint32_t *r, const uint32_t *a, const uint32_t * SECP256K1_RESTRICT b) {
     VERIFY_BITS(a[0], 30);
     VERIFY_BITS(a[1], 30);
     VERIFY_BITS(a[2], 30);
@@ -580,7 +654,7 @@ SECP256K1_INLINE static void secp256k1_fe_mul_inner(const uint32_t *a, const uin
     /* [r9 r8 r7 r6 r5 r4 r3 r2 r1 r0] = [p18 p17 p16 p15 p14 p13 p12 p11 p10 p9 p8 p7 p6 p5 p4 p3 p2 p1 p0] */
 }
 
-SECP256K1_INLINE static void secp256k1_fe_sqr_inner(const uint32_t *a, uint32_t *r) {
+SECP256K1_INLINE static void secp256k1_fe_sqr_inner(uint32_t *r, const uint32_t *a) {
     VERIFY_BITS(a[0], 30);
     VERIFY_BITS(a[1], 30);
     VERIFY_BITS(a[2], 30);
@@ -853,14 +927,15 @@ SECP256K1_INLINE static void secp256k1_fe_sqr_inner(const uint32_t *a, uint32_t 
 }
 
 
-static void secp256k1_fe_mul(secp256k1_fe_t *r, const secp256k1_fe_t *a, const secp256k1_fe_t *b) {
+static void secp256k1_fe_mul(secp256k1_fe_t *r, const secp256k1_fe_t *a, const secp256k1_fe_t * SECP256K1_RESTRICT b) {
 #ifdef VERIFY
     VERIFY_CHECK(a->magnitude <= 8);
     VERIFY_CHECK(b->magnitude <= 8);
     secp256k1_fe_verify(a);
     secp256k1_fe_verify(b);
+    VERIFY_CHECK(r != b);
 #endif
-    secp256k1_fe_mul_inner(a->n, b->n, r->n);
+    secp256k1_fe_mul_inner(r->n, a->n, b->n);
 #ifdef VERIFY
     r->magnitude = 1;
     r->normalized = 0;
@@ -873,11 +948,31 @@ static void secp256k1_fe_sqr(secp256k1_fe_t *r, const secp256k1_fe_t *a) {
     VERIFY_CHECK(a->magnitude <= 8);
     secp256k1_fe_verify(a);
 #endif
-    secp256k1_fe_sqr_inner(a->n, r->n);
+    secp256k1_fe_sqr_inner(r->n, a->n);
 #ifdef VERIFY
     r->magnitude = 1;
     r->normalized = 0;
     secp256k1_fe_verify(r);
+#endif
+}
+
+static void secp256k1_fe_cmov(secp256k1_fe_t *r, const secp256k1_fe_t *a, int flag) {
+    uint32_t mask0 = flag + ~((uint32_t)0), mask1 = ~mask0;
+    r->n[0] = (r->n[0] & mask0) | (a->n[0] & mask1);
+    r->n[1] = (r->n[1] & mask0) | (a->n[1] & mask1);
+    r->n[2] = (r->n[2] & mask0) | (a->n[2] & mask1);
+    r->n[3] = (r->n[3] & mask0) | (a->n[3] & mask1);
+    r->n[4] = (r->n[4] & mask0) | (a->n[4] & mask1);
+    r->n[5] = (r->n[5] & mask0) | (a->n[5] & mask1);
+    r->n[6] = (r->n[6] & mask0) | (a->n[6] & mask1);
+    r->n[7] = (r->n[7] & mask0) | (a->n[7] & mask1);
+    r->n[8] = (r->n[8] & mask0) | (a->n[8] & mask1);
+    r->n[9] = (r->n[9] & mask0) | (a->n[9] & mask1);
+#ifdef VERIFY
+    if (flag) {
+        r->magnitude = a->magnitude;
+        r->normalized = a->normalized;
+    }
 #endif
 }
 

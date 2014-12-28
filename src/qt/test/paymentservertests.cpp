@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2014 The Bitcoin developers
+// Copyright (c) 2009-2014 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,6 +7,7 @@
 #include "optionsmodel.h"
 #include "paymentrequestdata.h"
 
+#include "random.h"
 #include "util.h"
 #include "utilstrencodings.h"
 
@@ -107,6 +108,17 @@ void PaymentServerTests::paymentServerTests()
     r = handleRequest(server, data);
     r.paymentRequest.getMerchant(caStore, merchant);
     QCOMPARE(merchant, QString(""));
+
+    // Just get some random data big enough to trigger BIP70 DoS protection
+    unsigned char randData[BIP70_MAX_PAYMENTREQUEST_SIZE + 1];
+    GetRandBytes(randData, sizeof(randData));
+    // Write data to a temp file:
+    QTemporaryFile tempFile;
+    tempFile.open();
+    tempFile.write((const char*)randData, sizeof(randData));
+    tempFile.close();
+    // Trigger BIP70 DoS protection
+    QCOMPARE(PaymentServer::readPaymentRequestFromFile(tempFile.fileName(), r.paymentRequest), false);
 
     delete server;
 }

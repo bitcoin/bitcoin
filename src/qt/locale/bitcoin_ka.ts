@@ -1,4 +1,4 @@
-<TS language="ka" version="2.1">
+<TS language="ka" version="2.0">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -485,10 +485,6 @@ Address: %4
 <context>
     <name>CoinControlDialog</name>
     <message>
-        <source>Coin Control Address Selection</source>
-        <translation>მონეტების კონტროლის მისამართის არჩევა</translation>
-    </message>
-    <message>
         <source>Quantity:</source>
         <translation>რაოდენობა:</translation>
     </message>
@@ -531,10 +527,6 @@ Address: %4
     <message>
         <source>Amount</source>
         <translation>თანხა</translation>
-    </message>
-    <message>
-        <source>Address</source>
-        <translation>მისამართი</translation>
     </message>
     <message>
         <source>Date</source>
@@ -879,14 +871,6 @@ Address: %4
         <translation>&amp;მთავარი</translation>
     </message>
     <message>
-        <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly. Most transactions are 1 kB.</source>
-        <translation>დამატებითი საკომისიო თითო კილობაიტზე; აჩქარებს ტრანსაქციის შესრულებას. ტრანსაქციების უმეტესობა არის 1 კბ.</translation>
-    </message>
-    <message>
-        <source>Pay transaction &amp;fee</source>
-        <translation>ტრანსაქციის სა&amp;ფასურის გადახდა</translation>
-    </message>
-    <message>
         <source>Automatically start Bitcoin after logging in to the system.</source>
         <translation>სისტემაში შესვლის შემდეგ Bitcoin-ის ავტომატური გაშვება.</translation>
     </message>
@@ -905,14 +889,6 @@ Address: %4
     <message>
         <source>Number of script &amp;verification threads</source>
         <translation>სკრიპტის &amp;ვერიფიცირების ნაკადების რაოდენობა</translation>
-    </message>
-    <message>
-        <source>Connect to the Bitcoin network through a SOCKS proxy.</source>
-        <translation>Bitcoin-ქსელზე მიერთება SOCKS-პროქსით.</translation>
-    </message>
-    <message>
-        <source>&amp;Connect through SOCKS proxy (default proxy):</source>
-        <translation>SO&amp;CKS (ნაგულისხმევი) პროქსი მიერთებისათვის:</translation>
     </message>
     <message>
         <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>

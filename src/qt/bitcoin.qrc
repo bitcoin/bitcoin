@@ -4,11 +4,11 @@
         <file alias="address-book">res/icons/address-book.png</file>
         <file alias="quit">res/icons/quit.png</file>
         <file alias="send">res/icons/send.png</file>
-        <file alias="connect_0">res/icons/connect0_16.png</file>
-        <file alias="connect_1">res/icons/connect1_16.png</file>
-        <file alias="connect_2">res/icons/connect2_16.png</file>
-        <file alias="connect_3">res/icons/connect3_16.png</file>
-        <file alias="connect_4">res/icons/connect4_16.png</file>
+        <file alias="connect_0">res/icons/connect0.png</file>
+        <file alias="connect_1">res/icons/connect1.png</file>
+        <file alias="connect_2">res/icons/connect2.png</file>
+        <file alias="connect_3">res/icons/connect3.png</file>
+        <file alias="connect_4">res/icons/connect4.png</file>
         <file alias="transaction_0">res/icons/transaction0.png</file>
         <file alias="transaction_confirmed">res/icons/transaction2.png</file>
         <file alias="transaction_conflicted">res/icons/transaction_conflicted.png</file>
@@ -25,7 +25,6 @@
         <file alias="editpaste">res/icons/editpaste.png</file>
         <file alias="editcopy">res/icons/editcopy.png</file>
         <file alias="add">res/icons/add.png</file>
-        <file alias="bitcoin_testnet">res/icons/bitcoin_testnet.png</file>
         <file alias="edit">res/icons/edit.png</file>
         <file alias="history">res/icons/history.png</file>
         <file alias="overview">res/icons/overview.png</file>
@@ -43,13 +42,15 @@
         <file alias="lock_open">res/icons/lock_open.png</file>
         <file alias="key">res/icons/key.png</file>
         <file alias="filesave">res/icons/filesave.png</file>
-        <file alias="qrcode">res/icons/qrcode.png</file>
         <file alias="debugwindow">res/icons/debugwindow.png</file>
+        <file alias="open">res/icons/open.png</file>
+        <file alias="info">res/icons/info.png</file>
+        <file alias="about">res/icons/about.png</file>
+        <file alias="about_qt">res/icons/about_qt.png</file>
+        <file alias="verify">res/icons/verify.png</file>
     </qresource>
     <qresource prefix="/images">
         <file alias="about">res/images/about.png</file>
-        <file alias="splash">res/images/splash.png</file>
-        <file alias="splash_testnet">res/images/splash_testnet.png</file>
     </qresource>
     <qresource prefix="/movies">
         <file alias="spinner-000">res/movies/spinner-000.png</file>
@@ -87,5 +88,6 @@
         <file alias="spinner-032">res/movies/spinner-032.png</file>
         <file alias="spinner-033">res/movies/spinner-033.png</file>
         <file alias="spinner-034">res/movies/spinner-034.png</file>
+        <file alias="spinner-035">res/movies/spinner-035.png</file>
     </qresource>
 </RCC>

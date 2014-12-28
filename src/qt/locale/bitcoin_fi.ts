@@ -1,4 +1,4 @@
-<TS language="fi" version="2.1">
+<TS language="fi" version="2.0">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -520,10 +520,6 @@ Osoite: %4</translation>
 <context>
     <name>CoinControlDialog</name>
     <message>
-        <source>Coin Control Address Selection</source>
-        <translation>Kolikkokontrollin osoitteen valinta</translation>
-    </message>
-    <message>
         <source>Quantity:</source>
         <translation>Määrä:</translation>
     </message>
@@ -570,10 +566,6 @@ Osoite: %4</translation>
     <message>
         <source>Amount</source>
         <translation>Määrä</translation>
-    </message>
-    <message>
-        <source>Address</source>
-        <translation>Osoite</translation>
     </message>
     <message>
         <source>Date</source>
@@ -942,14 +934,6 @@ Osoite: %4</translation>
         <translation>&amp;Yleiset</translation>
     </message>
     <message>
-        <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly. Most transactions are 1 kB.</source>
-        <translation>Valinnainen rahansiirtopalkkio per kB auttaa varmistamaan että rahansiirtosi prosessoidaan nopeasti. Useimmat rahansiirrot ovat alle 1 kB.</translation>
-    </message>
-    <message>
-        <source>Pay transaction &amp;fee</source>
-        <translation>Maksa rahansiirtopalkkio</translation>
-    </message>
-    <message>
         <source>Automatically start Bitcoin after logging in to the system.</source>
         <translation>Käynnistä Bitcoin kirjautumisen yhteydessä.</translation>
     </message>
@@ -976,14 +960,6 @@ Osoite: %4</translation>
     <message>
         <source>Allow incoming connections</source>
         <translation>Hyväksy sisääntulevia yhteyksiä</translation>
-    </message>
-    <message>
-        <source>Connect to the Bitcoin network through a SOCKS proxy.</source>
-        <translation>Yhdistä Bitcoin-verkkoon SOCKS proxyn kautta.</translation>
-    </message>
-    <message>
-        <source>&amp;Connect through SOCKS proxy (default proxy):</source>
-        <translation>&amp;Yhdistä SOCKS proxyn kautta (oletus proxy):</translation>
     </message>
     <message>
         <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>

@@ -1,4 +1,4 @@
-<TS language="et" version="2.1">
+<TS language="et" version="2.0">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -408,10 +408,6 @@ Aadress: %4⏎</translation>
         <translation>Kogus</translation>
     </message>
     <message>
-        <source>Address</source>
-        <translation>Aadress</translation>
-    </message>
-    <message>
         <source>Date</source>
         <translation>Kuupäev</translation>
     </message>
@@ -548,10 +544,6 @@ Aadress: %4⏎</translation>
     <message>
         <source>Options</source>
         <translation>Valikud</translation>
-    </message>
-    <message>
-        <source>Pay transaction &amp;fee</source>
-        <translation>Tasu tehingu &amp;fee</translation>
     </message>
     <message>
         <source>Automatically start Bitcoin after logging in to the system.</source>

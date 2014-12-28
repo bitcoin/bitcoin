@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2014 The Bitcoin developers
+// Copyright (c) 2009-2014 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -122,8 +122,12 @@ public:
      */
     CPubKey GetPubKey() const;
 
-    //! Create a DER-serialized signature.
-    bool Sign(const uint256& hash, std::vector<unsigned char>& vchSig) const;
+    /**
+     * Create a DER-serialized signature.
+     * The test_case parameter tweaks the deterministic nonce, and is only for
+     * testing. It should be zero for normal use.
+     */
+    bool Sign(const uint256& hash, std::vector<unsigned char>& vchSig, uint32_t test_case = 0) const;
 
     /**
      * Create a compact signature (65 bytes), which allows reconstructing the used public key.

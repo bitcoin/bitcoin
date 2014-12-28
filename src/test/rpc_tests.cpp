@@ -1,5 +1,5 @@
 // Copyright (c) 2012-2013 The Bitcoin Core developers
-// Distributed under the MIT/X11 software license, see the accompanying
+// Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "rpcserver.h"
@@ -39,8 +39,7 @@ Value CallRPC(string args)
         Value result = (*method)(params, false);
         return result;
     }
-    catch (Object& objError)
-    {
+    catch (const Object& objError) {
         throw runtime_error(find_value(objError, "message").get_str());
     }
 }

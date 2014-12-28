@@ -1,4 +1,4 @@
-<TS language="ja" version="2.1">
+<TS language="ja" version="2.0">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -70,6 +70,10 @@
         <translation>これらは支払いを送信するためのあなたの Bitcoin アドレスです。コインを送信する前に、常に額と受信アドレスを確認してください。</translation>
     </message>
     <message>
+        <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
+        <translation>これらは支払いを受け取るためのビットコインアドレスです。トランザクションごとに新しい受け取り用アドレスを作成することが推奨されます。</translation>
+    </message>
+    <message>
         <source>Copy &amp;Label</source>
         <translation>ラベルをコピー (&amp;L)</translation>
     </message>
@@ -89,7 +93,11 @@
         <source>Exporting Failed</source>
         <translation>エクスポート失敗</translation>
     </message>
-    </context>
+    <message>
+        <source>There was an error trying to save the address list to %1. Please try again.</source>
+        <translation>トランザクション履歴を %1 へ保存する際にエラーが発生しました。再試行してください。</translation>
+    </message>
+</context>
 <context>
     <name>AddressTableModel</name>
     <message>
@@ -174,6 +182,10 @@
     <message>
         <source>Wallet encrypted</source>
         <translation>ウォレットは暗号化されました</translation>
+    </message>
+    <message>
+        <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
+        <translation>ウォレットの新しいパスフレーズを入力してください。&lt;br/&gt;&lt;b&gt;10文字以上のランダムな文字&lt;/b&gt;で構成されたものか、&lt;b&gt;8単語以上の単語&lt;/b&gt;で構成されたパスフレーズを使用してください。</translation>
     </message>
     <message>
         <source>Bitcoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
@@ -283,6 +295,10 @@
         <translation>URI を開く (&amp;U)...</translation>
     </message>
     <message>
+        <source>Bitcoin Core client</source>
+        <translation>Bitcoinコア クライアント</translation>
+    </message>
+    <message>
         <source>Importing blocks from disk...</source>
         <translation>ディスクからブロックをインポートしています...</translation>
     </message>
@@ -335,6 +351,10 @@
         <translation>受信 (&amp;R)</translation>
     </message>
     <message>
+        <source>Show information about Bitcoin Core</source>
+        <translation>Bitcoinコアに関する情報を表示</translation>
+    </message>
+    <message>
         <source>&amp;Show / Hide</source>
         <translation>見る/隠す (&amp;S)</translation>
     </message>
@@ -375,8 +395,16 @@
         <translation>Bitcoin のコア</translation>
     </message>
     <message>
+        <source>Request payments (generates QR codes and bitcoin: URIs)</source>
+        <translation>支払いを要求する (QRコードとbitcoin:ではじまるURIを生成する)</translation>
+    </message>
+    <message>
         <source>&amp;About Bitcoin Core</source>
         <translation>ビットコインコアについて (&amp;A)</translation>
+    </message>
+    <message>
+        <source>Show the list of used sending addresses and labels</source>
+        <translation>使用済みの送金用アドレスとラベルの一覧を表示する</translation>
     </message>
     <message>
         <source>Show the list of used receiving addresses and labels</source>
@@ -484,6 +512,10 @@ Address: %4
 <context>
     <name>CoinControlDialog</name>
     <message>
+        <source>Coin Selection</source>
+        <translation>コイン選択</translation>
+    </message>
+    <message>
         <source>Quantity:</source>
         <translation>数量:</translation>
     </message>
@@ -524,10 +556,6 @@ Address: %4
         <translation>総額</translation>
     </message>
     <message>
-        <source>Address</source>
-        <translation>アドレス</translation>
-    </message>
-    <message>
         <source>Date</source>
         <translation>日付</translation>
     </message>
@@ -558,6 +586,14 @@ Address: %4
     <message>
         <source>Copy transaction ID</source>
         <translation>取引 ID をコピー</translation>
+    </message>
+    <message>
+        <source>Lock unspent</source>
+        <translation>未使用トランザクションをロックする</translation>
+    </message>
+    <message>
+        <source>Unlock unspent</source>
+        <translation>未使用トランザクションをアンロックする</translation>
     </message>
     <message>
         <source>Copy quantity</source>
@@ -681,6 +717,10 @@ Address: %4
         <translation>バージョン</translation>
     </message>
     <message>
+        <source>About Bitcoin Core</source>
+        <translation>Bitcoinコアについて</translation>
+    </message>
+    <message>
         <source>Command-line options</source>
         <translation>コマンドライン オプション</translation>
     </message>
@@ -739,7 +779,15 @@ Address: %4
         <source>Error</source>
         <translation>エラー</translation>
     </message>
-    </context>
+    <message numerus="yes">
+        <source>%n GB of free space available</source>
+        <translation><numerusform>%n GBの空き容量が利用可能</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>(of %n GB needed)</source>
+        <translation><numerusform>(%n GB必要)</numerusform></translation>
+    </message>
+</context>
 <context>
     <name>OpenURIDialog</name>
     <message>
@@ -774,14 +822,6 @@ Address: %4
         <translation>メイン (&amp;M)</translation>
     </message>
     <message>
-        <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly. Most transactions are 1 kB.</source>
-        <translation>あたなの取引が早く処理されるように任意で kB 毎の取引手数料を設定します。ほとんどの取引は 1 kB です。</translation>
-    </message>
-    <message>
-        <source>Pay transaction &amp;fee</source>
-        <translation>支払う取引手数料 (&amp;f)</translation>
-    </message>
-    <message>
         <source>Automatically start Bitcoin after logging in to the system.</source>
         <translation>システムにログインした時に自動的に Bitcoin を起動します。</translation>
     </message>
@@ -796,6 +836,14 @@ Address: %4
     <message>
         <source>MB</source>
         <translation>MB</translation>
+    </message>
+    <message>
+        <source>Number of script &amp;verification threads</source>
+        <translation>スクリプト検証用スレッド数 (&amp;V)</translation>
+    </message>
+    <message>
+        <source>Accept connections from outside</source>
+        <translation>外部からの接続を許可する</translation>
     </message>
     <message>
         <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
@@ -945,6 +993,14 @@ Address: %4
         <translation>あなたの現在の残高</translation>
     </message>
     <message>
+        <source>Recent transactions</source>
+        <translation>最近のトランザクション</translation>
+    </message>
+    <message>
+        <source>Mined balance in watch-only addresses that has not yet matured</source>
+        <translation>ウォッチオンリーアドレスの採掘された残高のうち、成熟していないもの</translation>
+    </message>
+    <message>
         <source>out of sync</source>
         <translation>同期していない</translation>
     </message>
@@ -958,6 +1014,14 @@ Address: %4
     <message>
         <source>Invalid payment address %1</source>
         <translation>支払いのアドレス「%1」は無効です</translation>
+    </message>
+    <message>
+        <source>Payment request rejected</source>
+        <translation>支払い要求は拒否されました</translation>
+    </message>
+    <message>
+        <source>Payment request has expired.</source>
+        <translation>支払いのリクエストは期限切れです</translation>
     </message>
     <message>
         <source>Payment request error</source>
@@ -986,6 +1050,10 @@ Address: %4
 </context>
 <context>
     <name>PeerTableModel</name>
+    <message>
+        <source>User Agent</source>
+        <translation>ユーザエージェント</translation>
+    </message>
     </context>
 <context>
     <name>QObject</name>
@@ -1074,6 +1142,10 @@ Address: %4
     <message>
         <source>Current number of blocks</source>
         <translation>現在のブロック数</translation>
+    </message>
+    <message>
+        <source>User Agent</source>
+        <translation>ユーザエージェント</translation>
     </message>
     <message>
         <source>Last block time</source>
@@ -1167,12 +1239,20 @@ Address: %4
         <translation>メッセージ (&amp;M):</translation>
     </message>
     <message>
+        <source>Clear all fields of the form.</source>
+        <translation>全ての入力項目をクリア</translation>
+    </message>
+    <message>
         <source>Clear</source>
         <translation>クリア</translation>
     </message>
     <message>
         <source>Show</source>
         <translation>表示</translation>
+    </message>
+    <message>
+        <source>Remove the selected entries from the list</source>
+        <translation>リストから選択項目を削除</translation>
     </message>
     <message>
         <source>Copy label</source>
@@ -1320,6 +1400,10 @@ Address: %4
         <translation>受取人を追加 (&amp;R)</translation>
     </message>
     <message>
+        <source>Clear all fields of the form.</source>
+        <translation>全ての入力項目をクリア</translation>
+    </message>
+    <message>
         <source>Clear &amp;All</source>
         <translation>すべてクリア (&amp;A)</translation>
     </message>
@@ -1445,7 +1529,15 @@ Address: %4
 </context>
 <context>
     <name>ShutdownWindow</name>
-    </context>
+    <message>
+        <source>Bitcoin Core is shutting down...</source>
+        <translation>Bitcoin Coreをシャットダウンしています。</translation>
+    </message>
+    <message>
+        <source>Do not shut down the computer until this window disappears.</source>
+        <translation>このウィンドウが消えるまでコンピュータをシャットダウンしないで下さい。</translation>
+    </message>
+</context>
 <context>
     <name>SignVerifyMessageDialog</name>
     <message>
@@ -1968,7 +2060,11 @@ Address: %4
     </context>
 <context>
     <name>WalletFrame</name>
-    </context>
+    <message>
+        <source>No wallet has been loaded.</source>
+        <translation>ウォレットがロードされていません</translation>
+    </message>
+</context>
 <context>
     <name>WalletModel</name>
     <message>

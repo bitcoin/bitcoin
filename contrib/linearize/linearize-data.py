@@ -2,8 +2,8 @@
 #
 # linearize-data.py: Construct a linear, no-fork version of the chain.
 #
-# Copyright (c) 2013-2014 The Bitcoin developers
-# Distributed under the MIT/X11 software license, see the accompanying
+# Copyright (c) 2013-2014 The Bitcoin Core developers
+# Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #
 
@@ -148,7 +148,7 @@ class BlockDataCopier:
 				outFname = self.settings['output_file']
 			else:
 				outFname = "%s/blk%05d.dat" % (self.settings['output'], outFn)
-			print("Output file" + outFname)
+			print("Output file " + outFname)
 			self.outF = open(outFname, "wb")
 
 		self.outF.write(inhdr)
@@ -189,7 +189,7 @@ class BlockDataCopier:
 		while self.blkCountOut < len(self.blkindex):
 			if not self.inF:
 				fname = self.inFileName(self.inFn)
-				print("Input file" + fname)
+				print("Input file " + fname)
 				try:
 					self.inF = open(fname, "rb")
 				except IOError:
@@ -205,7 +205,7 @@ class BlockDataCopier:
 
 			inMagic = inhdr[:4]
 			if (inMagic != self.settings['netmagic']):
-				print("Invalid magic:" + inMagic)
+				print("Invalid magic: " + inMagic)
 				return
 			inLenLE = inhdr[4:]
 			su = struct.unpack("<I", inLenLE)
@@ -292,7 +292,7 @@ if __name__ == '__main__':
 	blkmap = mkblockmap(blkindex)
 
 	if not "000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f" in blkmap:
-		print("not found")
+		print("Genesis block not found in hashlist")
 	else:
 		BlockDataCopier(settings, blkindex, blkmap).run()
 

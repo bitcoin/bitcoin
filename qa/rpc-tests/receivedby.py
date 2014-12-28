@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 # Copyright (c) 2014 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -124,6 +124,7 @@ class ReceivedByTest(BitcoinTestFramework):
         balance_by_account = rec_by_accountArr = self.nodes[1].getreceivedbyaccount(account)
 
         txid = self.nodes[0].sendtoaddress(addr, 0.1)
+        self.sync_all()
 
         # listreceivedbyaccount should return received_by_account_json because of 0 confirmations
         check_array_result(self.nodes[1].listreceivedbyaccount(),

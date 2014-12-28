@@ -1,10 +1,9 @@
-// Copyright (c) 2009-2014 The Bitcoin developers
+// Copyright (c) 2009-2014 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "pubkey.h"
 
-#include "crypto/sha2.h"
 #include "eccryptoverify.h"
 
 #ifdef USE_SECP256K1
@@ -17,7 +16,7 @@ bool CPubKey::Verify(const uint256 &hash, const std::vector<unsigned char>& vchS
     if (!IsValid())
         return false;
 #ifdef USE_SECP256K1
-    if (secp256k1_ecdsa_verify((const unsigned char*)&hash, 32, &vchSig[0], vchSig.size(), begin(), size()) != 1)
+    if (secp256k1_ecdsa_verify((const unsigned char*)&hash, &vchSig[0], vchSig.size(), begin(), size()) != 1)
         return false;
 #else
     CECKey key;
@@ -36,7 +35,7 @@ bool CPubKey::RecoverCompact(const uint256 &hash, const std::vector<unsigned cha
     bool fComp = ((vchSig[0] - 27) & 4) != 0;
 #ifdef USE_SECP256K1
     int pubkeylen = 65;
-    if (!secp256k1_ecdsa_recover_compact((const unsigned char*)&hash, 32, &vchSig[1], (unsigned char*)begin(), &pubkeylen, fComp, recid))
+    if (!secp256k1_ecdsa_recover_compact((const unsigned char*)&hash, &vchSig[1], (unsigned char*)begin(), &pubkeylen, fComp, recid))
         return false;
     assert((int)size() == pubkeylen);
 #else

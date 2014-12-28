@@ -27,14 +27,11 @@ typedef struct {
 
 /** Global constants related to the group */
 typedef struct {
-    secp256k1_num_t order; /* the order of the curve (= order of its generator) */
-    secp256k1_num_t half_order; /* half the order of the curve (= order of its generator) */
     secp256k1_ge_t g; /* the generator point */
 
 #ifdef USE_ENDOMORPHISM
     /* constants related to secp256k1's efficiently computable endomorphism */
     secp256k1_fe_t beta;
-    secp256k1_num_t lambda, a1b2, b1, a2;
 #endif
 } secp256k1_ge_consts_t;
 
@@ -54,15 +51,16 @@ static void secp256k1_ge_set_xy(secp256k1_ge_t *r, const secp256k1_fe_t *x, cons
 
 /** Set a group element (affine) equal to the point with the given X coordinate, and given oddness
  *  for Y. Return value indicates whether the result is valid. */
-static int secp256k1_ge_set_xo(secp256k1_ge_t *r, const secp256k1_fe_t *x, int odd);
+static int secp256k1_ge_set_xo_var(secp256k1_ge_t *r, const secp256k1_fe_t *x, int odd);
 
 /** Check whether a group element is the point at infinity. */
 static int secp256k1_ge_is_infinity(const secp256k1_ge_t *a);
 
 /** Check whether a group element is valid (i.e., on the curve). */
-static int secp256k1_ge_is_valid(const secp256k1_ge_t *a);
+static int secp256k1_ge_is_valid_var(const secp256k1_ge_t *a);
 
 static void secp256k1_ge_neg(secp256k1_ge_t *r, const secp256k1_ge_t *a);
+static void secp256k1_ge_neg_var(secp256k1_ge_t *r, const secp256k1_ge_t *a);
 
 /** Get a hex representation of a point. *rlen will be overwritten with the real length. */
 static void secp256k1_ge_get_hex(char *r, int *rlen, const secp256k1_ge_t *a);
@@ -87,7 +85,7 @@ static void secp256k1_gej_set_ge(secp256k1_gej_t *r, const secp256k1_ge_t *a);
 static void secp256k1_gej_get_x_var(secp256k1_fe_t *r, const secp256k1_gej_t *a);
 
 /** Set r equal to the inverse of a (i.e., mirrored around the X axis) */
-static void secp256k1_gej_neg(secp256k1_gej_t *r, const secp256k1_gej_t *a);
+static void secp256k1_gej_neg_var(secp256k1_gej_t *r, const secp256k1_gej_t *a);
 
 /** Check whether a group element is the point at infinity. */
 static int secp256k1_gej_is_infinity(const secp256k1_gej_t *a);
@@ -112,10 +110,6 @@ static void secp256k1_gej_get_hex(char *r, int *rlen, const secp256k1_gej_t *a);
 #ifdef USE_ENDOMORPHISM
 /** Set r to be equal to lambda times a, where lambda is chosen in a way such that this is very fast. */
 static void secp256k1_gej_mul_lambda(secp256k1_gej_t *r, const secp256k1_gej_t *a);
-
-/** Find r1 and r2 such that r1+r2*lambda = a, and r1 and r2 are maximum 128 bits long (given that a is
-    not more than 256 bits). */
-static void secp256k1_gej_split_exp_var(secp256k1_num_t *r1, secp256k1_num_t *r2, const secp256k1_num_t *a);
 #endif
 
 /** Clear a secp256k1_gej_t to prevent leaking sensitive information. */
@@ -123,6 +117,5 @@ static void secp256k1_gej_clear(secp256k1_gej_t *r);
 
 /** Clear a secp256k1_ge_t to prevent leaking sensitive information. */
 static void secp256k1_ge_clear(secp256k1_ge_t *r);
-
 
 #endif

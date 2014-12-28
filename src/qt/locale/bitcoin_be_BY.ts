@@ -1,4 +1,4 @@
-<TS language="be_BY" version="2.1">
+<TS language="be_BY" version="2.0">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -351,10 +351,6 @@ Address: %4
     <message>
         <source>Amount</source>
         <translation>Колькасць</translation>
-    </message>
-    <message>
-        <source>Address</source>
-        <translation>Адрас</translation>
     </message>
     <message>
         <source>Date</source>

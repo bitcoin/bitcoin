@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 # Copyright (c) 2014 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -19,6 +19,7 @@ class GetChainTipsTest (BitcoinTestFramework):
         assert_equal (len (tips), 1)
         assert_equal (tips[0]['branchlen'], 0)
         assert_equal (tips[0]['height'], 200)
+        assert_equal (tips[0]['status'], 'active')
 
         # Split the network and build two chains of different lengths.
         self.split_network ()
@@ -31,12 +32,14 @@ class GetChainTipsTest (BitcoinTestFramework):
         shortTip = tips[0]
         assert_equal (shortTip['branchlen'], 0)
         assert_equal (shortTip['height'], 210)
+        assert_equal (tips[0]['status'], 'active')
 
         tips = self.nodes[3].getchaintips ()
         assert_equal (len (tips), 1)
         longTip = tips[0]
         assert_equal (longTip['branchlen'], 0)
         assert_equal (longTip['height'], 220)
+        assert_equal (tips[0]['status'], 'active')
 
         # Join the network halves and check that we now have two tips
         # (at least at the nodes that previously had the short chain).
@@ -47,7 +50,9 @@ class GetChainTipsTest (BitcoinTestFramework):
         assert_equal (tips[0], longTip)
 
         assert_equal (tips[1]['branchlen'], 10)
-        tips[1]['branchlen'] = 0;
+        assert_equal (tips[1]['status'], 'valid-fork')
+        tips[1]['branchlen'] = 0
+        tips[1]['status'] = 'active'
         assert_equal (tips[1], shortTip)
 
 if __name__ == '__main__':

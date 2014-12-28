@@ -1,10 +1,10 @@
-// Copyright (c) 2011-2013 The Bitcoin developers
-// Distributed under the MIT/X11 software license, see the accompanying
+// Copyright (c) 2011-2013 The Bitcoin Core developers
+// Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "bitcoinunits.h"
 
-#include "core/transaction.h"
+#include "primitives/transaction.h"
 
 #include <QStringList>
 
@@ -106,10 +106,8 @@ QString BitcoinUnits::format(int unit, const CAmount& nIn, bool fPlus, Separator
     QString quotient_str = QString::number(quotient);
     QString remainder_str = QString::number(remainder).rightJustified(num_decimals, '0');
 
-    // Use SI-stule separators as these are locale indendent and can't be
-    // confused with the decimal marker.  Rule is to use a thin space every
-    // three digits on *both* sides of the decimal point - but only if there
-    // are five or more digits
+    // Use SI-style thin space separators as these are locale independent and can't be
+    // confused with the decimal marker.
     QChar thin_sp(THIN_SP_CP);
     int q_size = quotient_str.size();
     if (separators == separatorAlways || (separators == separatorStandard && q_size > 4))

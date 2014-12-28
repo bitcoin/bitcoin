@@ -41,7 +41,7 @@ static void secp256k1_fe_get_hex(char *r, int *rlen, const secp256k1_fe_t *a) {
     r[64] = 0x00;
 }
 
-static void secp256k1_fe_set_hex(secp256k1_fe_t *r, const char *a, int alen) {
+static int secp256k1_fe_set_hex(secp256k1_fe_t *r, const char *a, int alen) {
     unsigned char tmp[32] = {};
     static const int cvt[256] = {0, 0, 0, 0, 0, 0, 0,0,0,0,0,0,0,0,0,0,
                                  0, 0, 0, 0, 0, 0, 0,0,0,0,0,0,0,0,0,0,
@@ -63,10 +63,10 @@ static void secp256k1_fe_set_hex(secp256k1_fe_t *r, const char *a, int alen) {
         if (alen > i*2)
             tmp[32 - alen/2 + i] = (cvt[(unsigned char)a[2*i]] << 4) + cvt[(unsigned char)a[2*i+1]];
     }
-    secp256k1_fe_set_b32(r, tmp);
+    return secp256k1_fe_set_b32(r, tmp);
 }
 
-static int secp256k1_fe_sqrt(secp256k1_fe_t *r, const secp256k1_fe_t *a) {
+static int secp256k1_fe_sqrt_var(secp256k1_fe_t *r, const secp256k1_fe_t *a) {
 
     /** The binary representation of (p + 1)/4 has 3 blocks of 1s, with lengths in
      *  { 2, 22, 223 }. Use an addition chain to calculate 2^n - 1 for each block:
@@ -132,7 +132,7 @@ static int secp256k1_fe_sqrt(secp256k1_fe_t *r, const secp256k1_fe_t *a) {
     secp256k1_fe_sqr(&t1, r);
     secp256k1_fe_negate(&t1, &t1, 1);
     secp256k1_fe_add(&t1, a);
-    secp256k1_fe_normalize(&t1);
+    secp256k1_fe_normalize_var(&t1);
     return secp256k1_fe_is_zero(&t1);
 }
 
@@ -197,7 +197,7 @@ static void secp256k1_fe_inv(secp256k1_fe_t *r, const secp256k1_fe_t *a) {
     for (int j=0; j<3; j++) secp256k1_fe_sqr(&t1, &t1);
     secp256k1_fe_mul(&t1, &t1, &x2);
     for (int j=0; j<2; j++) secp256k1_fe_sqr(&t1, &t1);
-    secp256k1_fe_mul(r, &t1, a);
+    secp256k1_fe_mul(r, a, &t1);
 }
 
 static void secp256k1_fe_inv_var(secp256k1_fe_t *r, const secp256k1_fe_t *a) {
@@ -206,40 +206,16 @@ static void secp256k1_fe_inv_var(secp256k1_fe_t *r, const secp256k1_fe_t *a) {
 #elif defined(USE_FIELD_INV_NUM)
     unsigned char b[32];
     secp256k1_fe_t c = *a;
-    secp256k1_fe_normalize(&c);
+    secp256k1_fe_normalize_var(&c);
     secp256k1_fe_get_b32(b, &c);
     secp256k1_num_t n;
     secp256k1_num_set_bin(&n, b, 32);
     secp256k1_num_mod_inverse(&n, &n, &secp256k1_fe_consts->p);
     secp256k1_num_get_bin(b, 32, &n);
-    secp256k1_fe_set_b32(r, b);
+    VERIFY_CHECK(secp256k1_fe_set_b32(r, b));
 #else
 #error "Please select field inverse implementation"
 #endif
-}
-
-static void secp256k1_fe_inv_all(size_t len, secp256k1_fe_t r[len], const secp256k1_fe_t a[len]) {
-    if (len < 1)
-        return;
-
-    VERIFY_CHECK((r + len <= a) || (a + len <= r));
-
-    r[0] = a[0];
-
-    size_t i = 0;
-    while (++i < len) {
-        secp256k1_fe_mul(&r[i], &r[i - 1], &a[i]);
-    }
-
-    secp256k1_fe_t u; secp256k1_fe_inv(&u, &r[--i]);
-
-    while (i > 0) {
-        int j = i--;
-        secp256k1_fe_mul(&r[j], &r[i], &u);
-        secp256k1_fe_mul(&u, &u, &a[j]);
-    }
-
-    r[0] = u;
 }
 
 static void secp256k1_fe_inv_all_var(size_t len, secp256k1_fe_t r[len], const secp256k1_fe_t a[len]) {
@@ -267,16 +243,20 @@ static void secp256k1_fe_inv_all_var(size_t len, secp256k1_fe_t r[len], const se
 }
 
 static void secp256k1_fe_start(void) {
+#ifndef USE_NUM_NONE
     static const unsigned char secp256k1_fe_consts_p[] = {
         0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
         0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
         0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
         0xFF,0xFF,0xFF,0xFE,0xFF,0xFF,0xFC,0x2F
     };
+#endif
     if (secp256k1_fe_consts == NULL) {
         secp256k1_fe_inner_start();
-        secp256k1_fe_consts_t *ret = (secp256k1_fe_consts_t*)malloc(sizeof(secp256k1_fe_consts_t));
+        secp256k1_fe_consts_t *ret = (secp256k1_fe_consts_t*)checked_malloc(sizeof(secp256k1_fe_consts_t));
+#ifndef USE_NUM_NONE
         secp256k1_num_set_bin(&ret->p, secp256k1_fe_consts_p, sizeof(secp256k1_fe_consts_p));
+#endif
         secp256k1_fe_consts = ret;
     }
 }

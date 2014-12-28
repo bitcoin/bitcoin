@@ -1,4 +1,4 @@
-<TS language="es_CL" version="2.1">
+<TS language="es_CL" version="2.0">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -356,10 +356,6 @@ Dirección: %4</translation>
         <translation>Cantidad</translation>
     </message>
     <message>
-        <source>Address</source>
-        <translation>Dirección</translation>
-    </message>
-    <message>
         <source>Date</source>
         <translation>Fecha</translation>
     </message>
@@ -477,10 +473,6 @@ Dirección: %4</translation>
     <message>
         <source>&amp;Main</source>
         <translation>&amp;Principal</translation>
-    </message>
-    <message>
-        <source>Pay transaction &amp;fee</source>
-        <translation>Comisión de &amp;transacciónes</translation>
     </message>
     <message>
         <source>Automatically start Bitcoin after logging in to the system.</source>

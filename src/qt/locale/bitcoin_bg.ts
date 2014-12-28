@@ -1,4 +1,4 @@
-<TS language="bg" version="2.1">
+<TS language="bg" version="2.0">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -365,10 +365,6 @@
         <translation>Сума</translation>
     </message>
     <message>
-        <source>Address</source>
-        <translation>Адрес</translation>
-    </message>
-    <message>
         <source>Date</source>
         <translation>Дата</translation>
     </message>
@@ -509,10 +505,6 @@
     <message>
         <source>&amp;Main</source>
         <translation>&amp;Основни</translation>
-    </message>
-    <message>
-        <source>Pay transaction &amp;fee</source>
-        <translation>&amp;Такса за изходяща трансакция</translation>
     </message>
     <message>
         <source>&amp;Start Bitcoin on system login</source>

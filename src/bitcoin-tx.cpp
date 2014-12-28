@@ -1,18 +1,20 @@
-// Copyright (c) 2009-2014 The Bitcoin developers
-// Distributed under the MIT/X11 software license, see the accompanying
+// Copyright (c) 2009-2014 The Bitcoin Core developers
+// Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "base58.h"
 #include "clientversion.h"
-#include "core/transaction.h"
+#include "primitives/block.h" // for MAX_BLOCK_SIZE
+#include "primitives/transaction.h"
 #include "core_io.h"
+#include "coins.h"
 #include "keystore.h"
-#include "main.h" // for MAX_BLOCK_SIZE
 #include "script/script.h"
 #include "script/sign.h"
 #include "ui_interface.h" // for _(...)
 #include "univalue/univalue.h"
 #include "util.h"
+#include "utilstrencodings.h"
 #include "utilmoneystr.h"
 
 #include <stdio.h>
@@ -57,6 +59,7 @@ static bool AppInitRawTx(int argc, char* argv[])
         strUsage += "  -?                      " + _("This help message") + "\n";
         strUsage += "  -create                 " + _("Create new, empty TX.") + "\n";
         strUsage += "  -json                   " + _("Select JSON output") + "\n";
+        strUsage += "  -txid                   " + _("Output only the hex-encoded transaction id of the resultant transaction.") + "\n";
         strUsage += "  -regtest                " + _("Enter regression test mode, which uses a special chain in which blocks can be solved instantly.") + "\n";
         strUsage += "  -testnet                " + _("Use the test network") + "\n";
         strUsage += "\n";
@@ -488,6 +491,13 @@ static void OutputTxJSON(const CTransaction& tx)
     fprintf(stdout, "%s\n", jsonOutput.c_str());
 }
 
+static void OutputTxHash(const CTransaction& tx)
+{
+    string strHexHash = tx.GetHash().GetHex(); // the hex-encoded transaction hash (aka the transaction id)
+
+    fprintf(stdout, "%s\n", strHexHash.c_str());
+}
+
 static void OutputTxHex(const CTransaction& tx)
 {
     string strHex = EncodeHexTx(tx);
@@ -499,6 +509,8 @@ static void OutputTx(const CTransaction& tx)
 {
     if (GetBoolArg("-json", false))
         OutputTxJSON(tx);
+    else if (GetBoolArg("-txid", false))
+        OutputTxHash(tx);
     else
         OutputTxHex(tx);
 }
@@ -574,10 +586,10 @@ static int CommandLineRawTx(int argc, char* argv[])
         OutputTx(tx);
     }
 
-    catch (boost::thread_interrupted) {
+    catch (const boost::thread_interrupted&) {
         throw;
     }
-    catch (std::exception& e) {
+    catch (const std::exception& e) {
         strPrint = string("error: ") + e.what();
         nRet = EXIT_FAILURE;
     }
@@ -600,7 +612,7 @@ int main(int argc, char* argv[])
         if(!AppInitRawTx(argc, argv))
             return EXIT_FAILURE;
     }
-    catch (std::exception& e) {
+    catch (const std::exception& e) {
         PrintExceptionContinue(&e, "AppInitRawTx()");
         return EXIT_FAILURE;
     } catch (...) {
@@ -612,7 +624,7 @@ int main(int argc, char* argv[])
     try {
         ret = CommandLineRawTx(argc, argv);
     }
-    catch (std::exception& e) {
+    catch (const std::exception& e) {
         PrintExceptionContinue(&e, "CommandLineRawTx()");
     } catch (...) {
         PrintExceptionContinue(NULL, "CommandLineRawTx()");

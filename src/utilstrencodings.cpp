@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2014 The Bitcoin developers
+// Copyright (c) 2009-2014 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -14,13 +14,13 @@
 
 using namespace std;
 
-/**
- * safeChars chosen to allow simple messages/URLs/email addresses, but avoid anything
- * even possibly remotely dangerous like & or >
- */
-static string safeChars("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ01234567890 .,;_/:?@()");
 string SanitizeString(const string& str)
 {
+    /**
+     * safeChars chosen to allow simple messages/URLs/email addresses, but avoid anything
+     * even possibly remotely dangerous like & or >
+     */
+    static string safeChars("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ01234567890 .,;_/:?@()");
     string strResult;
     for (std::string::size_type i = 0; i < str.size(); i++)
     {
@@ -459,7 +459,7 @@ std::string FormatParagraph(const std::string in, size_t width, size_t indent)
         }
         // Append word
         out << in.substr(ptr, endword - ptr);
-        col += endword - ptr;
+        col += endword - ptr + 1;
         ptr = endword;
     }
     return out.str();

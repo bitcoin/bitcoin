@@ -1,11 +1,11 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2014 The Bitcoin developers
+// Copyright (c) 2009-2014 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "utilmoneystr.h"
 
-#include "core/transaction.h"
+#include "primitives/transaction.h"
 #include "tinyformat.h"
 #include "utilstrencodings.h"
 

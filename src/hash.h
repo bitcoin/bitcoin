@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2013 The Bitcoin developers
+// Copyright (c) 2009-2013 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,7 +7,7 @@
 #define BITCOIN_HASH_H
 
 #include "crypto/ripemd160.h"
-#include "crypto/sha2.h"
+#include "crypto/sha256.h"
 #include "serialize.h"
 #include "uint256.h"
 #include "version.h"
