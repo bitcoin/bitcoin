@@ -208,6 +208,13 @@ public:
 
     void setuint64(uint64_t n)
     {
+        if (sizeof(n) == sizeof(size_t))
+        {
+            if (!BN_set_word(this, n))
+                throw bignum_error("CBigNum conversion from uint64_t : BN_set_word failed");
+            return;
+        }
+
         unsigned char pch[sizeof(n) + 6];
         unsigned char* p = pch + 4;
         bool fLeadingZeroes = true;
