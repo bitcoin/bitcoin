@@ -1144,8 +1144,6 @@ void CDarkSendPool::SendDarksendDenominate(std::vector<CTxIn>& vin, std::vector<
     e.Add(vin, amount, txCollateral, vout);
     myEntries.push_back(e);
 
-    GetDenominationsToString(GetDenominations(vout), SubmittedDenom);
-
     // relay our entry to the master node
     RelayDarkSendIn(vin, amount, txCollateral, vout);
     Check();
@@ -1397,14 +1395,17 @@ bool CDarkSendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
 
     if(chainActive.Tip()->nHeight-cachedLastSuccess < minBlockSpacing) {
         LogPrintf("CDarkSendPool::DoAutomaticDenominating - Last successful darksend was too recent\n");
+        strAutoDenomResult = "Last successful darksend was too recent";
         return false;
     }
     if(!fEnableDarksend) {
         if(fDebug) LogPrintf("CDarkSendPool::DoAutomaticDenominating - Darksend is disabled\n");
+        strAutoDenomResult = "Darksend is disabled";
         return false;
     }
 
     if (!fDryRun && pwalletMain->IsLocked()){
+        strAutoDenomResult = "Wallet is locked";
         return false;
     }
 
@@ -1412,6 +1413,12 @@ bool CDarkSendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
         if(darkSendPool.GetMyTransactionCount() > 0){
             return true;
         }
+    }
+
+    if(darkSendMasterNodes.size() == 0){
+        if(fDebug) LogPrintf("CDarkSendPool::DoAutomaticDenominating - No masternodes detected\n");
+        strAutoDenomResult = "No masternodes detected";
+        return false;
     }
 
     // ** find the coins we'll use
@@ -1439,6 +1446,7 @@ bool CDarkSendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
     if(balanceNeedsAnonymized < lowestDenom ||
         (vecDisabledDenominations.size() > 0 && balanceNeedsAnonymized < COIN*10)){
         LogPrintf("DoAutomaticDenominating : No funds detected in need of denominating \n");
+        strAutoDenomResult = "No funds detected in need of denominating";
         return false;
     }
 
@@ -1461,6 +1469,7 @@ bool CDarkSendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
         }
 
         LogPrintf("DoAutomaticDenominating : No funds detected in need of denominating (2)\n");
+        strAutoDenomResult = "No funds detected in need of denominating (2)";
         return false;
     }
 
@@ -1542,6 +1551,7 @@ bool CDarkSendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
 
         if(pwalletMain->GetDenominatedBalance(true, true) > 0){ //get denominated unconfirmed inputs
             LogPrintf("DoAutomaticDenominating -- Found unconfirmed denominated outputs, will wait till they confirm to continue.\n");
+            strAutoDenomResult = "Found unconfirmed denominated outputs, will wait till they confirm to continue.";
             return false;
         }
 
@@ -1607,6 +1617,7 @@ bool CDarkSendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
                     }
                 } else {
                     LogPrintf("DoAutomaticDenominating --- error connecting \n");
+                    strAutoDenomResult = "Error connecting to masternode";
                     return DoAutomaticDenominating();
                 }
             }
@@ -1672,6 +1683,7 @@ bool CDarkSendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
                 return DoAutomaticDenominating();
             }
         } else {
+            strAutoDenomResult = "No compatible masternode found";
             return false;
         }
     }
