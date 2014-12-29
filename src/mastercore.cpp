@@ -1342,7 +1342,7 @@ uint64_t txFee = 0;
         int nRequired;
 
         // CScript is a std::vector
-        if (msc_debug_script) file_log("scriptPubKey: %s\n", wtx.vout[i].scriptPubKey.mscore_getHex().c_str());
+        if (msc_debug_script) file_log("scriptPubKey: %s\n", HexStr(wtx.vout[i].scriptPubKey));
 
         if (ExtractDestinations(wtx.vout[i].scriptPubKey, type, vDest, nRequired))
         {
