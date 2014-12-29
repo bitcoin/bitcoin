@@ -143,7 +143,7 @@ public:
     {
         uint64_t n = BN_get_word(this);
         if (!BN_is_negative(this))
-            return (n > (uint64_t)std::numeric_limits<int32_t>::max() ? std::numeric_limits<int32_t>::max() : n);
+            return (n > (uint64_t)std::numeric_limits<int32_t>::max() ? std::numeric_limits<int32_t>::max() : (int32_t)n);
         else
             return (n > (uint64_t)std::numeric_limits<int32_t>::max() ? std::numeric_limits<int32_t>::min() : -(int32_t)n);
     }
@@ -183,7 +183,7 @@ public:
             }
             *p++ = c;
         }
-        uint32_t nSize = p - (pch + 4);
+        uint32_t nSize = (uint32_t) (p - (pch + 4));
         pch[0] = (nSize >> 24) & 0xff;
         pch[1] = (nSize >> 16) & 0xff;
         pch[2] = (nSize >> 8) & 0xff;
@@ -193,7 +193,7 @@ public:
 
     uint64_t getuint64()
     {
-        unsigned int nSize = BN_bn2mpi(this, NULL);
+        size_t nSize = BN_bn2mpi(this, NULL);
         if (nSize < 4)
             return 0;
         std::vector<uint8_t> vch(nSize);
@@ -201,7 +201,7 @@ public:
         if (vch.size() > 4)
             vch[4] &= 0x7f;
         uint64_t n = 0;
-        for (unsigned int i = 0, j = vch.size()-1; i < sizeof(n) && j >= 4; i++, j--)
+        for (size_t i = 0, j = vch.size()-1; i < sizeof(n) && j >= 4; i++, j--)
             ((uint8_t*)&n)[i] = vch[j];
         return n;
     }
@@ -211,7 +211,7 @@ public:
         // Use BN_set_word if word size is sufficient for uint64_t
         if (sizeof(n) <= sizeof(BN_ULONG))
         {
-            if (!BN_set_word(this, n))
+            if (!BN_set_word(this, (BN_ULONG)n))
                 throw bignum_error("CBigNum conversion from uint64_t : BN_set_word failed");
             return;
         }
@@ -233,12 +233,12 @@ public:
             }
             *p++ = c;
         }
-        uint32_t nSize = p - (pch + 4);
+        uint32_t nSize = (uint32_t) (p - (pch + 4));
         pch[0] = (nSize >> 24) & 0xff;
         pch[1] = (nSize >> 16) & 0xff;
         pch[2] = (nSize >> 8) & 0xff;
         pch[3] = (nSize) & 0xff;
-        BN_mpi2bn(pch, p - pch, this);
+        BN_mpi2bn(pch, (int)(p - pch), this);
     }
 
     void setuint160(uint160 n)
@@ -261,12 +261,12 @@ public:
             }
             *p++ = c;
         }
-        uint32_t nSize = p - (pch + 4);
+        uint32_t nSize = (uint32_t) (p - (pch + 4));
         pch[0] = (nSize >> 24) & 0xff;
         pch[1] = (nSize >> 16) & 0xff;
         pch[2] = (nSize >> 8) & 0xff;
         pch[3] = (nSize >> 0) & 0xff;
-        BN_mpi2bn(pch, p - pch, this);
+        BN_mpi2bn(pch, (int) (p - pch), this);
     }
 
     uint160 getuint160() const
@@ -279,7 +279,7 @@ public:
         if (vch.size() > 4)
             vch[4] &= 0x7f;
         uint160 n = 0;
-        for (unsigned int i = 0, j = vch.size()-1; i < sizeof(n) && j >= 4; i++, j--)
+        for (size_t i = 0, j = vch.size()-1; i < sizeof(n) && j >= 4; i++, j--)
             ((uint8_t*)&n)[i] = vch[j];
         return n;
     }
@@ -304,12 +304,12 @@ public:
             }
             *p++ = c;
         }
-        uint32_t nSize = p - (pch + 4);
+        uint32_t nSize = (uint32_t) (p - (pch + 4));
         pch[0] = (nSize >> 24) & 0xff;
         pch[1] = (nSize >> 16) & 0xff;
         pch[2] = (nSize >> 8) & 0xff;
         pch[3] = (nSize >> 0) & 0xff;
-        BN_mpi2bn(pch, p - pch, this);
+        BN_mpi2bn(pch, (int) (p - pch), this);
     }
 
     uint256 getuint256() const
@@ -322,14 +322,14 @@ public:
         if (vch.size() > 4)
             vch[4] &= 0x7f;
         uint256 n = 0;
-        for (unsigned int i = 0, j = vch.size()-1; i < sizeof(n) && j >= 4; i++, j--)
+        for (size_t i = 0, j = vch.size()-1; i < sizeof(n) && j >= 4; i++, j--)
             ((uint8_t*)&n)[i] = vch[j];
         return n;
     }
 
     void setBytes(const std::vector<uint8_t>& vchBytes)
     {
-        BN_bin2bn(&vchBytes[0], vchBytes.size(), this);
+        BN_bin2bn(&vchBytes[0], (int) vchBytes.size(), this);
     }
 
     std::vector<uint8_t> getBytes() const
@@ -349,7 +349,7 @@ public:
     void setvch(const std::vector<uint8_t>& vch)
     {
         std::vector<uint8_t> vch2(vch.size() + 4);
-        uint32_t nSize = vch.size();
+        uint32_t nSize = (uint32_t) vch.size();
         // BIGNUM's byte stream format expects 4 bytes of
         // big endian size data info at the front
         vch2[0] = (nSize >> 24) & 0xff;
@@ -358,7 +358,7 @@ public:
         vch2[3] = (nSize >> 0) & 0xff;
         // swap data to big endian
         reverse_copy(vch.begin(), vch.end(), vch2.begin() + 4);
-        BN_mpi2bn(&vch2[0], vch2.size(), this);
+        BN_mpi2bn(&vch2[0], (int) vch2.size(), this);
     }
 
     std::vector<uint8_t> getvch() const
@@ -381,7 +381,7 @@ public:
         if (nSize >= 1) vch[4] = (nCompact >> 16) & 0xff;
         if (nSize >= 2) vch[5] = (nCompact >> 8) & 0xff;
         if (nSize >= 3) vch[6] = (nCompact >> 0) & 0xff;
-        BN_mpi2bn(&vch[0], vch.size(), this);
+        BN_mpi2bn(&vch[0], (int) vch.size(), this);
         return *this;
     }
 
@@ -587,7 +587,7 @@ public:
         if(ret < 0){
             throw bignum_error("CBigNum::isPrime :BN_is_prime");
         }
-        return ret;
+        return ret != 0;
     }
 
     bool isOne() const {
