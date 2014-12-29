@@ -922,7 +922,6 @@ bool CDarkSendPool::IsCollateralValid(const CTransaction& txCollateral){
     int64_t nValueOut = 0;
     bool missingTx = false;
 
-    CTransaction tx;
     BOOST_FOREACH(const CTxOut o, txCollateral.vout){
         nValueOut += o.nValue;
 
@@ -957,9 +956,8 @@ bool CDarkSendPool::IsCollateralValid(const CTransaction& txCollateral){
 
     if(fDebug) LogPrintf("CDarkSendPool::IsCollateralValid %s\n", txCollateral.ToString().c_str());
 
-    CWalletTx wtxCollateral = CWalletTx(pwalletMain, txCollateral);
     CValidationState state;
-    if(AcceptableInputs(mempool, state, tx)){
+    if(!AcceptableInputs(mempool, state, txCollateral)){
         if(fDebug) LogPrintf ("CDarkSendPool::IsCollateralValid - didn't pass IsAcceptable\n");
         return false;
     }
@@ -1166,7 +1164,7 @@ bool CDarkSendPool::StatusUpdate(int newState, int newEntriesCount, int newAccep
     UpdateState(newState);
     entriesCount = newEntriesCount;
 
-    strAutoDenomResult = "Masternode: " + error;
+    if(error.size() > 0) strAutoDenomResult = "Masternode: " + error;
 
     if(newAccepted != -1) {
         lastEntryAccepted = newAccepted;
