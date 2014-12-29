@@ -36,12 +36,19 @@ void random_field_element_test(secp256k1_fe_t *fe) {
 }
 
 void random_field_element_magnitude(secp256k1_fe_t *fe) {
+    int n = secp256k1_rand32() % 9;
     secp256k1_fe_normalize(fe);
-    int n = secp256k1_rand32() % 4;
-    for (int i = 0; i < n; i++) {
-        secp256k1_fe_negate(fe, fe, 1 + 2*i);
-        secp256k1_fe_negate(fe, fe, 2 + 2*i);
+    if (n == 0) {
+        return;
     }
+    secp256k1_fe_t zero;
+    secp256k1_fe_clear(&zero);
+    secp256k1_fe_negate(&zero, &zero, 0);
+    secp256k1_fe_mul_int(&zero, n - 1);
+    secp256k1_fe_add(fe, &zero);
+#ifdef VERIFY
+    CHECK(fe->magnitude == n);
+#endif
 }
 
 void random_group_element_test(secp256k1_ge_t *ge) {
@@ -771,108 +778,125 @@ void run_sqrt(void) {
 
 /***** GROUP TESTS *****/
 
-int ge_equals_ge(const secp256k1_ge_t *a, const secp256k1_ge_t *b) {
-    if (a->infinity && b->infinity)
-        return 1;
-    return check_fe_equal(&a->x, &b->x) && check_fe_equal(&a->y, &b->y);
+void ge_equals_ge(const secp256k1_ge_t *a, const secp256k1_ge_t *b) {
+    CHECK(a->infinity == b->infinity);
+    if (a->infinity)
+        return;
+    CHECK(secp256k1_fe_equal_var(&a->x, &b->x));
+    CHECK(secp256k1_fe_equal_var(&b->y, &b->y));
 }
 
 void ge_equals_gej(const secp256k1_ge_t *a, const secp256k1_gej_t *b) {
-    secp256k1_ge_t bb;
-    secp256k1_gej_t bj = *b;
-    secp256k1_ge_set_gej_var(&bb, &bj);
-    CHECK(ge_equals_ge(a, &bb));
-}
-
-void gej_equals_gej(const secp256k1_gej_t *a, const secp256k1_gej_t *b) {
-    secp256k1_ge_t aa, bb;
-    secp256k1_gej_t aj = *a, bj = *b;
-    secp256k1_ge_set_gej_var(&aa, &aj);
-    secp256k1_ge_set_gej_var(&bb, &bj);
-    CHECK(ge_equals_ge(&aa, &bb));
+    CHECK(a->infinity == b->infinity);
+    if (a->infinity)
+        return;
+    /* Check a.x * b.z^2 == b.x && a.y * b.z^3 == b.y, to avoid inverses. */
+    secp256k1_fe_t z2s;
+    secp256k1_fe_sqr(&z2s, &b->z);
+    secp256k1_fe_t u1, u2, s1, s2;
+    secp256k1_fe_mul(&u1, &a->x, &z2s);
+    u2 = b->x; secp256k1_fe_normalize_weak(&u2);
+    secp256k1_fe_mul(&s1, &a->y, &z2s); secp256k1_fe_mul(&s1, &s1, &b->z);
+    s2 = b->y; secp256k1_fe_normalize_weak(&s2);
+    CHECK(secp256k1_fe_equal_var(&u1, &u2));
+    CHECK(secp256k1_fe_equal_var(&s1, &s2));
 }
 
 void test_ge(void) {
-    char ca[135];
-    char cb[68];
-    int rlen;
-    secp256k1_ge_t a, b, i, n;
-    random_group_element_test(&a);
-    random_group_element_test(&b);
-    rlen = sizeof(ca);
-    secp256k1_ge_get_hex(ca,&rlen,&a);
-    CHECK(rlen > 4 && rlen <= (int)sizeof(ca));
-    rlen = sizeof(cb);
-    secp256k1_ge_get_hex(cb,&rlen,&b); /* Intentionally undersized buffer. */
-    n = a;
-    secp256k1_fe_normalize(&a.y);
-    secp256k1_fe_negate(&n.y, &a.y, 1);
-    secp256k1_ge_set_infinity(&i);
-    random_field_element_magnitude(&a.x);
-    random_field_element_magnitude(&a.y);
-    random_field_element_magnitude(&b.x);
-    random_field_element_magnitude(&b.y);
-    random_field_element_magnitude(&n.x);
-    random_field_element_magnitude(&n.y);
+    int runs = 4;
+    /* Points: (infinity, p1, p1, -p1, -p1, p2, p2, -p2, -p2, p3, p3, -p3, -p3, p4, p4, -p4, -p4).
+     * The second in each pair of identical points uses a random Z coordinate in the Jacobian form.
+     * All magnitudes are randomized.
+     * All 17*17 combinations of points are added to eachother, using all applicable methods.
+     */
+    secp256k1_ge_t *ge = malloc(sizeof(secp256k1_ge_t) * (1 + 4 * runs));
+    secp256k1_gej_t *gej = malloc(sizeof(secp256k1_gej_t) * (1 + 4 * runs));
+    secp256k1_gej_set_infinity(&gej[0]);
+    secp256k1_ge_clear(&ge[0]);
+    secp256k1_ge_set_gej_var(&ge[0], &gej[0]);
+    for (int i = 0; i < runs; i++) {
+        secp256k1_ge_t g;
+        random_group_element_test(&g);
+        ge[1 + 4 * i] = g;
+        ge[2 + 4 * i] = g;
+        secp256k1_ge_neg(&ge[3 + 4 * i], &g);
+        secp256k1_ge_neg(&ge[4 + 4 * i], &g);
+        secp256k1_gej_set_ge(&gej[1 + 4 * i], &ge[1 + 4 * i]);
+        random_group_element_jacobian_test(&gej[2 + 4 * i], &ge[2 + 4 * i]);
+        secp256k1_gej_set_ge(&gej[3 + 4 * i], &ge[3 + 4 * i]);
+        random_group_element_jacobian_test(&gej[4 + 4 * i], &ge[4 + 4 * i]);
+        for (int j = 0; j < 4; j++) {
+            random_field_element_magnitude(&ge[1 + j + 4 * i].x);
+            random_field_element_magnitude(&ge[1 + j + 4 * i].y);
+            random_field_element_magnitude(&gej[1 + j + 4 * i].x);
+            random_field_element_magnitude(&gej[1 + j + 4 * i].y);
+            random_field_element_magnitude(&gej[1 + j + 4 * i].z);
+        }
+    }
 
-    secp256k1_gej_t aj, bj, ij, nj;
-    random_group_element_jacobian_test(&aj, &a);
-    random_group_element_jacobian_test(&bj, &b);
-    secp256k1_gej_set_infinity(&ij);
-    random_group_element_jacobian_test(&nj, &n);
-    random_field_element_magnitude(&aj.x);
-    random_field_element_magnitude(&aj.y);
-    random_field_element_magnitude(&aj.z);
-    random_field_element_magnitude(&bj.x);
-    random_field_element_magnitude(&bj.y);
-    random_field_element_magnitude(&bj.z);
-    random_field_element_magnitude(&nj.x);
-    random_field_element_magnitude(&nj.y);
-    random_field_element_magnitude(&nj.z);
+    for (int i1 = 0; i1 < 1 + 4 * runs; i1++) {
+        for (int i2 = 0; i2 < 1 + 4 * runs; i2++) {
+            /* Compute reference result using gej + gej (var). */
+            secp256k1_gej_t refj, resj;
+            secp256k1_ge_t ref;
+            secp256k1_gej_add_var(&refj, &gej[i1], &gej[i2]);
+            secp256k1_ge_set_gej_var(&ref, &refj);
 
-    /* gej + gej adds */
-    secp256k1_gej_t aaj; secp256k1_gej_add_var(&aaj, &aj, &aj);
-    secp256k1_gej_t abj; secp256k1_gej_add_var(&abj, &aj, &bj);
-    secp256k1_gej_t aij; secp256k1_gej_add_var(&aij, &aj, &ij);
-    secp256k1_gej_t anj; secp256k1_gej_add_var(&anj, &aj, &nj);
-    secp256k1_gej_t iaj; secp256k1_gej_add_var(&iaj, &ij, &aj);
-    secp256k1_gej_t iij; secp256k1_gej_add_var(&iij, &ij, &ij);
+            /* Test gej + ge (var). */
+            secp256k1_gej_add_ge_var(&resj, &gej[i1], &ge[i2]);
+            ge_equals_gej(&ref, &resj);
 
-    /* gej + ge adds */
-    secp256k1_gej_t aa; secp256k1_gej_add_ge_var(&aa, &aj, &a);
-    secp256k1_gej_t ab; secp256k1_gej_add_ge_var(&ab, &aj, &b);
-    secp256k1_gej_t ai; secp256k1_gej_add_ge_var(&ai, &aj, &i);
-    secp256k1_gej_t an; secp256k1_gej_add_ge_var(&an, &aj, &n);
-    secp256k1_gej_t ia; secp256k1_gej_add_ge_var(&ia, &ij, &a);
-    secp256k1_gej_t ii; secp256k1_gej_add_ge_var(&ii, &ij, &i);
+            /* Test gej + ge (const). */
+            if (i2 != 0) {
+                /* secp256k1_gej_add_ge does not support its second argument being infinity. */
+                secp256k1_gej_add_ge(&resj, &gej[i1], &ge[i2]);
+                ge_equals_gej(&ref, &resj);
+            }
 
-    /* const gej + ge adds */
-    secp256k1_gej_t aac; secp256k1_gej_add_ge(&aac, &aj, &a);
-    secp256k1_gej_t abc; secp256k1_gej_add_ge(&abc, &aj, &b);
-    secp256k1_gej_t anc; secp256k1_gej_add_ge(&anc, &aj, &n);
-    secp256k1_gej_t iac; secp256k1_gej_add_ge(&iac, &ij, &a);
+            /* Test doubling (var). */
+            if ((i1 == 0 && i2 == 0) || ((i1 + 3)/4 == (i2 + 3)/4 && ((i1 + 3)%4)/2 == ((i2 + 3)%4)/2)) {
+                /* Normal doubling. */
+                secp256k1_gej_double_var(&resj, &gej[i1]);
+                ge_equals_gej(&ref, &resj);
+                secp256k1_gej_double_var(&resj, &gej[i2]);
+                ge_equals_gej(&ref, &resj);
+            }
 
-    CHECK(secp256k1_gej_is_infinity(&an));
-    CHECK(secp256k1_gej_is_infinity(&anj));
-    CHECK(secp256k1_gej_is_infinity(&anc));
-    gej_equals_gej(&aa, &aaj);
-    gej_equals_gej(&aa, &aac);
-    gej_equals_gej(&ab, &abj);
-    gej_equals_gej(&ab, &abc);
-    gej_equals_gej(&an, &anj);
-    gej_equals_gej(&an, &anc);
-    gej_equals_gej(&ia, &iaj);
-    gej_equals_gej(&ai, &aij);
-    gej_equals_gej(&ii, &iij);
-    ge_equals_gej(&a, &ai);
-    ge_equals_gej(&a, &ai);
-    ge_equals_gej(&a, &iaj);
-    ge_equals_gej(&a, &iaj);
-    ge_equals_gej(&a, &iac);
+            /* Test adding opposites. */
+            if ((i1 == 0 && i2 == 0) || ((i1 + 3)/4 == (i2 + 3)/4 && ((i1 + 3)%4)/2 != ((i2 + 3)%4)/2)) {
+                CHECK(secp256k1_ge_is_infinity(&ref));
+            }
+
+            /* Test adding infinity. */
+            if (i1 == 0) {
+                CHECK(secp256k1_ge_is_infinity(&ge[i1]));
+                CHECK(secp256k1_gej_is_infinity(&gej[i1]));
+                ge_equals_gej(&ref, &gej[i2]);
+            }
+            if (i2 == 0) {
+                CHECK(secp256k1_ge_is_infinity(&ge[i2]));
+                CHECK(secp256k1_gej_is_infinity(&gej[i2]));
+                ge_equals_gej(&ref, &gej[i1]);
+            }
+        }
+    }
+
+    /* Test batch gej -> ge conversion. */
+    {
+        secp256k1_ge_t *ge_set_all = malloc((4 * runs + 1) * sizeof(secp256k1_ge_t));
+        secp256k1_ge_set_all_gej_var(4 * runs + 1, ge_set_all, gej);
+        for (int i = 0; i < 4 * runs + 1; i++) {
+            ge_equals_gej(&ge_set_all[i], &gej[i]);
+        }
+        free(ge_set_all);
+    }
+
+    free(ge);
+    free(gej);
 }
 
 void run_ge(void) {
-    for (int i = 0; i < 2000*count; i++) {
+    for (int i = 0; i < count * 32; i++) {
         test_ge();
     }
 }
@@ -1188,7 +1212,7 @@ void test_random_pubkeys(void) {
         CHECK(secp256k1_eckey_pubkey_serialize(&elem, in, &size, 0));
         CHECK(size == 65);
         CHECK(secp256k1_eckey_pubkey_parse(&elem2, in, size));
-        CHECK(ge_equals_ge(&elem,&elem2));
+        ge_equals_ge(&elem,&elem2);
         /* Check that the X9.62 hybrid type is checked. */
         in[0] = (r & 1) ? 6 : 7;
         res = secp256k1_eckey_pubkey_parse(&elem2, in, size);
@@ -1197,7 +1221,7 @@ void test_random_pubkeys(void) {
             else CHECK(!res);
         }
         if (res) {
-            CHECK(ge_equals_ge(&elem,&elem2));
+            ge_equals_ge(&elem,&elem2);
             CHECK(secp256k1_eckey_pubkey_serialize(&elem, out, &size, 0));
             CHECK(memcmp(&in[1], &out[1], 64) == 0);
         }
