@@ -97,6 +97,8 @@ buildqt64.bat
 -Откройте Microsoft Visual Studio 2012
 -Нажмите СЕРВИС -> Параметры.. -> Текстовый редактор -> Все языки -> Табуляция и поставьте флажок "Вставлять пробелы"
 (Если у вас английская версия, то это выглядит так: Tools->Options->Text Editor->All Languages->Tabs и поставьте флажок "Insert Spaces" вместо "Keep Tabs".)
+-Если у вас версия Microsoft Visual Studio 2012 и меньше, то перенесите из папки C:\GitHub\novacoin\MSVC\include файл inttypes.h в папку C:\GitHub\novacoin\src
+-Если у вас версия Microsoft Visual Studio 2008 и меньше, то перенесите из папки C:\GitHub\novacoin\MSVC\include файл stdint.h в папку C:\GitHub\novacoin\src
 
 3.1 Скачиваем исходники
 -Зайдите на сайт https://github.com/novacoin-project/novacoin 
