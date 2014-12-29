@@ -881,6 +881,29 @@ void test_ge(void) {
         }
     }
 
+    /* Test adding all points together in random order equals infinity. */
+    {
+        secp256k1_gej_t *gej_shuffled = malloc((4 * runs + 1) * sizeof(secp256k1_gej_t));
+        for (int i = 0; i < 4 * runs + 1; i++) {
+            gej_shuffled[i] = gej[i];
+        }
+        for (int i = 0; i < 4 * runs + 1; i++) {
+            int swap = i + secp256k1_rand32() % (4 * runs + 1 - i);
+            if (swap != i) {
+                secp256k1_gej_t t = gej_shuffled[i];
+                gej_shuffled[i] = gej_shuffled[swap];
+                gej_shuffled[swap] = t;
+            }
+        }
+        secp256k1_gej_t sum;
+        secp256k1_gej_set_infinity(&sum);
+        for (int i = 0; i < 4 * runs + 1; i++) {
+            secp256k1_gej_add_var(&sum, &sum, &gej_shuffled[i]);
+        }
+        CHECK(secp256k1_gej_is_infinity(&sum));
+        free(gej_shuffled);
+    }
+
     /* Test batch gej -> ge conversion. */
     {
         secp256k1_ge_t *ge_set_all = malloc((4 * runs + 1) * sizeof(secp256k1_ge_t));
