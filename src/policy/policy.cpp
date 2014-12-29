@@ -8,6 +8,7 @@
 #include "policy/policy.h"
 
 #include "amount.h"
+#include "coins.h"
 #include "consensus/validation.h"
 #include "primitives/transaction.h"
 #include "tinyformat.h"
@@ -39,6 +40,16 @@ public:
     virtual CAmount GetDustThreshold(const CTxOut& txout) const;
     virtual bool ApproveOutput(const CTxOut& txout) const;
     virtual bool ApproveTx(const CTransaction&, CValidationState&) const;
+    /**
+     * Check transaction inputs to mitigate two
+     * potential denial-of-service attacks:
+     * 
+     * 1. scriptSigs with extra data stuffed into them,
+     *    not consumed by scriptPubKey (or P2SH script)
+     * 2. P2SH scripts with a crazy number of expensive
+     *    CHECKSIG/CHECKMULTISIG operations
+     */
+    virtual bool ApproveTxInputs(const CTransaction& tx, const CCoinsViewEfficient& mapInputs) const;
 };
 
 /** Global variables and their interfaces */
@@ -173,6 +184,65 @@ bool CStandardPolicy::ApproveTx(const CTransaction& tx, CValidationState& state)
     // only one OP_RETURN txout is permitted
     if (nDataOut > 1)
         return state.DoS(0, false, REJECT_NONSTANDARD, "multi-op-return");
+
+    return true;
+}
+
+bool CStandardPolicy::ApproveTxInputs(const CTransaction& tx, const CCoinsViewEfficient& mapInputs) const
+{
+    if (tx.IsCoinBase())
+        return true; // Coinbases don't use vin normally
+
+    for (unsigned int i = 0; i < tx.vin.size(); i++)
+    {
+        const CTxOut& prev = mapInputs.GetOutputFor(tx.vin[i]);
+
+        std::vector<std::vector<unsigned char> > vSolutions;
+        txnouttype whichType;
+        // get the scriptPubKey corresponding to this input:
+        const CScript& prevScript = prev.scriptPubKey;
+        if (!Solver(prevScript, whichType, vSolutions))
+            return false;
+        int nArgsExpected = ScriptSigArgsExpected(whichType, vSolutions);
+        if (nArgsExpected < 0)
+            return false;
+
+        // Transactions with extra stuff in their scriptSigs are
+        // non-standard. Note that this EvalScript() call will
+        // be quick, because if there are any operations
+        // beside "push data" in the scriptSig
+        // Policy().ValidateTx() will have already returned false
+        // and this method isn't called.
+        std::vector<std::vector<unsigned char> > stack;
+        if (!EvalScript(stack, tx.vin[i].scriptSig, SCRIPT_VERIFY_NONE, BaseSignatureChecker()))
+            return false;
+
+        if (whichType == TX_SCRIPTHASH)
+        {
+            if (stack.empty())
+                return false;
+            CScript subscript(stack.back().begin(), stack.back().end());
+            std::vector<std::vector<unsigned char> > vSolutions2;
+            txnouttype whichType2;
+            if (Solver(subscript, whichType2, vSolutions2))
+            {
+                int tmpExpected = ScriptSigArgsExpected(whichType2, vSolutions2);
+                if (tmpExpected < 0)
+                    return false;
+                nArgsExpected += tmpExpected;
+            }
+            else
+            {
+                // Any other Script with less than 15 sigops OK:
+                unsigned int sigops = subscript.GetSigOpCount(true);
+                // ... extra data left on the stack after execution is OK, too:
+                return (sigops <= MAX_P2SH_SIGOPS);
+            }
+        }
+
+        if (stack.size() != (unsigned int)nArgsExpected)
+            return false;
+    }
 
     return true;
 }
