@@ -20,6 +20,8 @@ struct Params {
     int nMajorityEnforceBlockUpgrade;
     int nMajorityRejectBlockOutdated;
     int nMajorityWindow;
+    /** Block height at which BIP34 becomes active */
+    int nBIP34Height;
     /** Proof of work parameters */
     arith_uint256 powLimit;
     bool fPowAllowMinDifficultyBlocks;
