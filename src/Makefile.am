@@ -160,6 +160,7 @@ OMNICORE_H = \
   mastercore_errors.h \
   mastercore_parse_string.h \
   mastercore_rpc.h \
+  mastercore_script.h \
   mastercore_sp.h \
   mastercore_tx.h \
   mastercore_version.h
@@ -170,6 +171,7 @@ OMNICORE_CPP = \
   mastercore_dex.cpp \
   mastercore_parse_string.cpp \
   mastercore_rpc.cpp \
+  mastercore_script.cpp \
   mastercore_sp.cpp \
   mastercore_tx.cpp \
   mastercore_version.cpp

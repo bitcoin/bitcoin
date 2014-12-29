@@ -18,6 +18,7 @@
 #include "mastercore_convert.h"
 #include "mastercore_dex.h"
 #include "mastercore_errors.h"
+#include "mastercore_script.h"
 #include "mastercore_sp.h"
 #include "mastercore_tx.h"
 #include "mastercore_version.h"
@@ -1205,7 +1206,7 @@ uint64_t txFee = 0;
                   if (msc_debug_parser_data) file_log("saving address_data #%d: %s:%s\n", i, strAddress.c_str(), wtx.vout[i].scriptPubKey.ToString().c_str());
 
                   // saving for Class A processing or reference
-                  wtx.vout[i].scriptPubKey.mscore_parse(script_data);
+                  GetScriptPushes(wtx.vout[i].scriptPubKey, script_data);
                   address_data.push_back(strAddress);
                   value_data.push_back(wtx.vout[i].nValue);
                 }
@@ -1364,7 +1365,9 @@ uint64_t txFee = 0;
             }
           if (msc_debug_script) file_log("\n");
 
-          wtx.vout[i].scriptPubKey.mscore_parse(multisig_script_data, false);
+          // ignore first public key, as it should belong to the sender
+          // and it be used to avoid the creation of unspendable dust
+          GetScriptPushes(wtx.vout[i].scriptPubKey, multisig_script_data, true);
         }
               }
             } // end of the outputs' for loop
@@ -4054,38 +4057,6 @@ int validity = 0;
   if ((int)0 == validity) return false;
 
   return true;
-}
-
-std::string CScript::mscore_parse(std::vector<std::string>&msc_parsed, bool bNoBypass) const
-{
-    int count = 0;
-    std::string str;
-    opcodetype opcode;
-    std::vector<unsigned char> vch;
-    const_iterator pc = begin();
-    while (pc < end())
-    {
-        if (!str.empty())
-        {
-            str += "\n";
-        }
-        if (!GetOp(pc, opcode, vch))
-        {
-            str += "[error]";
-            return str;
-        }
-        if (0 <= opcode && opcode <= OP_PUSHDATA4)
-        {
-            str += ValueString(vch);
-            if (count || bNoBypass) msc_parsed.push_back(ValueString(vch));
-            count++;
-        }
-        else
-        {
-            str += GetOpName(opcode);
-        }
-    }
-    return str;
 }
 
 int mastercore_handler_block_begin(int nBlockPrev, CBlockIndex const * pBlockIndex) {
