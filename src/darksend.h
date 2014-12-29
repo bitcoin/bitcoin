@@ -284,7 +284,7 @@ public:
         if(!(Params().NetworkID() == CChainParams::TESTNET)) {
             strAddress = "Xq19GqFvajRrEdDHYRKGYjTsQfpV5jyipF";
         } else {
-            strAddress = "mxE2Rp3oYpSEFdsN5TdHWhZvEHm3PJQQVm";
+            strAddress = "y1EZuxhhNMAUofTBEeLqGE1bJrpC2TWRNp";
         }
 
         lastSplitUpBlock = 0;
@@ -296,7 +296,6 @@ public:
         minBlockSpacing = 1;
         nDsqCount = 0;
         vecDisabledDenominations.clear();
-        strAutoDenomResult = "";
 
         SetCollateralAddress(strAddress);
         SetNull();
