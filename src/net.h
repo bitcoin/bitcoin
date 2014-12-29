@@ -29,8 +29,8 @@ extern int nBestHeight;
 
 
 
-inline unsigned int ReceiveBufferSize() { return 1000*GetArg("-maxreceivebuffer", 5*1000); }
-inline unsigned int SendBufferSize() { return 1000*GetArg("-maxsendbuffer", 1*1000); }
+inline uint64_t ReceiveBufferSize() { return 1000*GetArg("-maxreceivebuffer", 5*1000); }
+inline uint64_t SendBufferSize() { return 1000*GetArg("-maxsendbuffer", 1*1000); }
 
 void AddOneShot(std::string strDest);
 bool RecvLine(SOCKET hSocket, std::string& strLine);
@@ -251,7 +251,7 @@ public:
         fGetAddr = false;
         nMisbehavior = 0;
         hashCheckpointKnown = 0;
-        setInventoryKnown.max_size(SendBufferSize() / 1000);
+        setInventoryKnown.max_size((size_t)SendBufferSize() / 1000);
 
         // Be shy and don't send version until we hear
         if (hSocket != INVALID_SOCKET && !fInbound)
@@ -359,9 +359,9 @@ public:
         ENTER_CRITICAL_SECTION(cs_vSend);
         if (nHeaderStart != -1)
             AbortMessage();
-        nHeaderStart = vSend.size();
+        nHeaderStart = (int32_t)vSend.size();
         vSend << CMessageHeader(pszCommand, 0);
-        nMessageStart = vSend.size();
+        nMessageStart = (uint32_t)vSend.size();
         if (fDebug)
             printf("sending: %s ", pszCommand);
     }
@@ -392,7 +392,7 @@ public:
             return;
 
         // Set the size
-        uint32_t nSize = vSend.size() - nMessageStart;
+        uint32_t nSize = (uint32_t) vSend.size() - nMessageStart;
         memcpy((char*)&vSend[nHeaderStart] + CMessageHeader::MESSAGE_SIZE_OFFSET, &nSize, sizeof(nSize));
 
         // Set the checksum
@@ -415,7 +415,7 @@ public:
     {
         if (nHeaderStart < 0)
             return;
-        int nSize = vSend.size() - nMessageStart;
+        int nSize = (int) vSend.size() - nMessageStart;
         if (nSize > 0)
             EndMessage();
         else

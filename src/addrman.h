@@ -569,7 +569,7 @@ public:
     // Return the number of (unique) addresses in all tables.
     int size()
     {
-        return vRandom.size();
+        return (int) vRandom.size();
     }
 
     // Consistency check
