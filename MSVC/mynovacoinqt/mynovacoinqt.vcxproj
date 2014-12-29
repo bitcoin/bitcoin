@@ -230,7 +230,7 @@ C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2-64\qtbase\bin\lrelease C:\
       <WarningLevel>0</WarningLevel>
     </Midl>
     <ResourceCompile>
-      <PreprocessorDefinitions>_WINDOWS;UNICODE;WIN32;QT_GUI;BOOST_THREAD_USE_LIB;BOOST_SPIRIT_THREADSAFE;QT_NO_DEBUG;QT_WIDGETS_LIB;QT_NETWORK_LIB;QT_GUI_LIB;QT_CORE_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_WINDOWS;UNICODE;WIN32;QT_GUI;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;BOOST_THREAD_USE_LIB;BOOST_SPIRIT_THREADSAFE;QT_NO_DEBUG;QT_WIDGETS_LIB;QT_NETWORK_LIB;QT_GUI_LIB;QT_CORE_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ResourceCompile>
     <PreBuildEvent>
       <Command>C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2\qtbase\bin\lrelease C:\MyProjects\Novacoin\src\qt\locale\bitcoin_en.ts -qm C:\MyProjects\Novacoin\src\qt\locale\bitcoin_en.qm
@@ -248,7 +248,7 @@ C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2\qtbase\bin\lrelease C:\MyP
       <ExceptionHandling>Sync</ExceptionHandling>
       <ObjectFileName>$(IntDir)</ObjectFileName>
       <Optimization>MaxSpeed</Optimization>
-      <PreprocessorDefinitions>USE_UPNP;USE_QRCODE;UNICODE;WIN32;QT_CORE_LIB;QT_GUI_LIB;QT_WIDGETS_LIB;QT_GUI;_SCL_SECURE_NO_WARNINGS;USE_LEVELDB;USE_IPV6=1;__STDC_FORMAT_MACROS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>USE_UPNP;USE_QRCODE;UNICODE;WIN32;QT_CORE_LIB;QT_GUI_LIB;QT_WIDGETS_LIB;QT_GUI;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;USE_LEVELDB;USE_IPV6=1;__STDC_FORMAT_MACROS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessToFile>false</PreprocessToFile>
       <ProgramDataBaseFileName>$(IntDir)vc$(PlatformToolsetVersion).pdb</ProgramDataBaseFileName>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
@@ -277,7 +277,7 @@ C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2\qtbase\bin\lrelease C:\MyP
       <WarningLevel>0</WarningLevel>
     </Midl>
     <ResourceCompile>
-      <PreprocessorDefinitions>_WINDOWS;UNICODE;WIN32;QT_GUI;BOOST_THREAD_USE_LIB;BOOST_SPIRIT_THREADSAFE;QT_NO_DEBUG;QT_WIDGETS_LIB;QT_NETWORK_LIB;QT_GUI_LIB;QT_CORE_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_WINDOWS;UNICODE;WIN32;QT_GUI;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;BOOST_THREAD_USE_LIB;BOOST_SPIRIT_THREADSAFE;QT_NO_DEBUG;QT_WIDGETS_LIB;QT_NETWORK_LIB;QT_GUI_LIB;QT_CORE_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ResourceCompile>
     <PreBuildEvent>
       <Command>C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2-64\qtbase\bin\lrelease C:\MyProjects\Novacoin\src\qt\locale\bitcoin_en.ts -qm C:\MyProjects\Novacoin\src\qt\locale\bitcoin_en.qm
