@@ -330,7 +330,7 @@
        <item>
         <widget class="QCheckBox" name="minimizeOnClose">
          <property name="toolTip">
-          <string>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Quit in the menu.</string>
+          <string>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Exit in the menu.</string>
          </property>
          <property name="text">
           <string>M&amp;inimize on close</string>
