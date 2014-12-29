@@ -12,7 +12,12 @@
 #include <string>
 
 class CFeeRate;
+class CTransaction;
 class CTxOut;
+class CValidationState;
+
+/** The maximum size for transactions we're willing to relay/mine */
+static const unsigned int MAX_STANDARD_TX_SIZE = 100000;
 
 extern CFeeRate minRelayTxFee;
 
@@ -23,6 +28,10 @@ public:
     virtual void InitFromArgs(const std::map<std::string, std::string>&) = 0;
     virtual bool ValidateScript(const CScript&, txnouttype&) const = 0;
     virtual bool ValidateOutput(const CTxOut& txout) const = 0;
+    /** Check for standard transaction types
+     * @return True if all outputs (scriptPubKeys) use only standard transaction forms
+     */
+    virtual bool ValidateTx(const CTransaction&, CValidationState&) const = 0;
 };
 
 /** Return a CPolicy of the type described in the parameter string */
