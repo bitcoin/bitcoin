@@ -650,14 +650,16 @@ void StartRPCThreads()
 
     bool fListening = false;
     std::string strerr;
+    std::string straddress;
     BOOST_FOREACH(const ip::tcp::endpoint &endpoint, vEndpoints)
     {
-        asio::ip::address bindAddress = endpoint.address();
-        LogPrintf("Binding RPC on address %s port %i (IPv4+IPv6 bind any: %i)\n", bindAddress.to_string(), endpoint.port(), bBindAny);
-        boost::system::error_code v6_only_error;
-        boost::shared_ptr<ip::tcp::acceptor> acceptor(new ip::tcp::acceptor(*rpc_io_service));
-
         try {
+            asio::ip::address bindAddress = endpoint.address();
+            straddress = bindAddress.to_string();
+            LogPrintf("Binding RPC on address %s port %i (IPv4+IPv6 bind any: %i)\n", straddress, endpoint.port(), bBindAny);
+            boost::system::error_code v6_only_error;
+            boost::shared_ptr<ip::tcp::acceptor> acceptor(new ip::tcp::acceptor(*rpc_io_service));
+
             acceptor->open(endpoint.protocol());
             acceptor->set_option(boost::asio::ip::tcp::acceptor::reuse_address(true));
 
@@ -678,8 +680,8 @@ void StartRPCThreads()
         }
         catch (const boost::system::system_error& e)
         {
-            LogPrintf("ERROR: Binding RPC on address %s port %i failed: %s\n", bindAddress.to_string(), endpoint.port(), e.what());
-            strerr = strprintf(_("An error occurred while setting up the RPC address %s port %u for listening: %s"), bindAddress.to_string(), endpoint.port(), e.what());
+            LogPrintf("ERROR: Binding RPC on address %s port %i failed: %s\n", straddress, endpoint.port(), e.what());
+            strerr = strprintf(_("An error occurred while setting up the RPC address %s port %u for listening: %s"), straddress, endpoint.port(), e.what());
         }
     }
 
