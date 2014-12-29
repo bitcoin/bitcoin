@@ -217,7 +217,7 @@ void TransactionView::setModel(WalletModel *model)
         transactionView->setColumnWidth(TransactionTableModel::Amount, AMOUNT_MINIMUM_COLUMN_WIDTH);
         transactionView->setColumnWidth(TransactionTableModel::Balance, BALANCE_MINIMUM_COLUMN_WIDTH);
 
-        columnResizingFixer = new GUIUtil::TableViewLastColumnResizingFixer(transactionView, AMOUNT_MINIMUM_COLUMN_WIDTH, MINIMUM_COLUMN_WIDTH);
+        columnResizingFixer = new GUIUtil::TableViewLastColumnResizingFixer(transactionView, TransactionTableModel::Balance, TransactionTableModel::ToAddress, MINIMUM_COLUMN_WIDTH);
 
         if (model->getOptionsModel())
         {
@@ -369,7 +369,6 @@ void TransactionView::exportClicked()
     writer.addColumn(tr("Label"), 0, TransactionTableModel::LabelRole);
     writer.addColumn(tr("Address"), 0, TransactionTableModel::AddressRole);
     writer.addColumn(BitcoinUnits::getAmountColumnTitle(model->getOptionsModel()->getDisplayUnit()), 0, TransactionTableModel::FormattedAmountRole);
-    writer.addColumn(tr("Balance"), 0, TransactionTableModel::BalanceRole);
     writer.addColumn(BitcoinUnits::getBalanceColumnTitle(model->getOptionsModel()->getDisplayUnit()), 0, TransactionTableModel::FormattedBalanceRole);
     writer.addColumn(tr("ID"), 0, TransactionTableModel::TxIDRole);
 
@@ -544,7 +543,7 @@ void TransactionView::focusTransaction(const QModelIndex &idx)
 void TransactionView::resizeEvent(QResizeEvent* event)
 {
     QWidget::resizeEvent(event);
-    columnResizingFixer->stretchColumnWidth(TransactionTableModel::ToAddress);
+    columnResizingFixer->resized();
 }
 
 // Need to override default Ctrl+C action for amount as default behaviour is just to copy DisplayRole text
