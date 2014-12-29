@@ -8,6 +8,7 @@
 #include "policy/policy.h"
 
 #include "amount.h"
+#include "chainparams.h"
 #include "coins.h"
 #include "consensus/validation.h"
 #include "policy/feerate.h"
@@ -90,9 +91,24 @@ public:
     virtual bool ValidateTxFee(const CAmount&, size_t, const CTransaction&, int nHeight, bool fRejectAbsurdFee, bool fLimitFree, const CCoinsViewEfficient&, CTxMemPool&, CValidationState&) const;
 };
 
+/** Default Policy for testnet and regtest */
+class CTestPolicy : public CStandardPolicy 
+{
+public:
+    virtual bool ValidateTx(const CTransaction& tx, std::string& reason) const
+    {
+        return true;
+    }
+    virtual bool ValidateTxInputs(const CTransaction& tx, const CCoinsViewEfficient& mapInputs) const
+    {
+        return true;
+    }
+};
+
 /** Global variables and their interfaces */
 
 static CStandardPolicy standardPolicy;
+static CTestPolicy testPolicy;
 
 static CPolicy* pCurrentPolicy = 0;
 
@@ -100,6 +116,8 @@ CPolicy& Policy(std::string policy)
 {
     if (policy == "standard")
         return standardPolicy;
+    else if (policy == "test")
+        return testPolicy;
     throw std::runtime_error(strprintf(_("Unknown policy '%s'"), policy));
 }
 
@@ -130,7 +148,7 @@ std::string GetPolicyUsageStr(std::string selectedPolicy)
 
 void InitPolicyFromArgs(const std::map<std::string, std::string>& mapArgs)
 {
-    SelectPolicy(GetArg("-policy", "standard", mapArgs));
+    SelectPolicy(GetArg("-policy", Params().RequireStandard() ? "standard" : "test", mapArgs));
     pCurrentPolicy->InitFromArgs(mapArgs);
 }
 

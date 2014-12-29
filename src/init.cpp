@@ -730,7 +730,7 @@ bool AppInit2(boost::thread_group& threadGroup)
     const char* pszP2SH = "/P2SH/";
     COINBASE_FLAGS << std::vector<unsigned char>(pszP2SH, pszP2SH+strlen(pszP2SH));
 
-    // Init Policy
+    // Init Policy from arguments or use the network default accessing Params()
     try {
         InitPolicyFromArgs(mapArgs);
     } catch(std::exception &e) {
