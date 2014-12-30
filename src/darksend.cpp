@@ -1976,7 +1976,7 @@ int CDarkSendPool::GetDenominationsByAmounts(std::vector<int64_t>& vecAmount){
     return GetDenominations(vout1);
 }
 
-int CDarkSendPool::GetDenominationsByAmount(int64_t nAmount){
+int CDarkSendPool::GetDenominationsByAmount(int64_t nAmount, int nDenomTarget){
     CScript e = CScript();
     int64_t nValueLeft = nAmount;
 
@@ -1984,6 +1984,15 @@ int CDarkSendPool::GetDenominationsByAmount(int64_t nAmount){
 
     // Make outputs by looping through denominations, from small to large
     BOOST_REVERSE_FOREACH(int64_t v, darkSendDenominations){
+        if(nDenomTarget != 0){
+            bool fAccepted = false;
+            if((nDenomTarget & (1 << 0)) && v == ((100*COIN)+1)) {fAccepted = true;}
+            else if((nDenomTarget & (1 << 1)) && v == ((10*COIN)+1)) {fAccepted = true;}
+            else if((nDenomTarget & (1 << 2)) && v == ((1*COIN)+1)) {fAccepted = true;}
+            else if((nDenomTarget & (1 << 3)) && v == ((.1*COIN)+1)) {fAccepted = true;}
+            if(!fAccepted) continue;
+        }
+
         int nOutputs = 0;
 
         if(std::find(vecDisabledDenominations.begin(), vecDisabledDenominations.end(), v) != vecDisabledDenominations.end())

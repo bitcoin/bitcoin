@@ -1452,6 +1452,16 @@ struct CompareByPriority
 
 bool CWallet::SelectCoinsByDenominations(int nDenom, int64_t nValueMin, int64_t nValueMax, std::vector<CTxIn>& setCoinsRet, int64_t& nValueRet, int nDarksendRoundsMin, int nDarksendRoundsMax)
 {
+    //if the forth bit is on, it doesn't matter which inputs we chose
+    if(nDenom & (1 << 4)) {
+        if(SelectCoinsDark(nValueMin, nValueMax, setCoinsRet, nValueRet, nDarksendRoundsMin, nDarksendRoundsMax)){
+            int64_t nTotalValue = GetTotalValue(setCoinsRet);
+            return nDenom == darkSendPool.GetDenominationsByAmount(nTotalValue, nDenom);
+        } else {
+            return false;
+        }
+    }
+
     CCoinControl *coinControl=NULL;
 
     setCoinsRet.clear();
