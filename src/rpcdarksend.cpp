@@ -28,13 +28,13 @@ Value darksend(const Array& params, bool fHelp)
             "<amount> is a real and is rounded to the nearest 0.00000001"
             + HelpRequiringPassphrase());
 
-    if(fMasterNode)
-        return "DarkSend is not supported from masternodes";
-
     if (pwalletMain->IsLocked())
         throw JSONRPCError(RPC_WALLET_UNLOCK_NEEDED, "Error: Please enter the wallet passphrase with walletpassphrase first.");
 
     if(params[0].get_str() == "auto"){
+        if(fMasterNode)
+            return "DarkSend is not supported from masternodes";
+
         darkSendPool.DoAutomaticDenominating();
         return "DoAutomaticDenominating";
     }

@@ -1450,9 +1450,94 @@ struct CompareByPriority
     }
 };
 
+bool CWallet::SelectCoinsByDenominations(int nDenom, int64_t nValueMin, int64_t nValueMax, std::vector<CTxIn>& setCoinsRet, int64_t& nValueRet, int nDarksendRoundsMin, int nDarksendRoundsMax)
+{
+    CCoinControl *coinControl=NULL;
+
+    setCoinsRet.clear();
+    nValueRet = 0;
+
+    vector<COutput> vCoins;
+    AvailableCoins(vCoins, false, coinControl, ALL_COINS);
+
+    set<pair<const CWalletTx*,unsigned int> > setCoinsRet2;
+
+    //order the array so fees are first, then denominated money, then the rest.
+    std::random_shuffle(vCoins.rbegin(), vCoins.rend());
+
+    //keep track of each denomination that we have
+    int fFound100 = false;
+    int fFound10 = false;
+    int fFound1 = false;
+    int fFoundDot1 = false;
+    int fFoundND = false;
+
+    //Check to see if any of the denomination are off, in that case mark them as fulfilled
+    if(!(nDenom & (1 << 0))) fFound100 = true;
+    if(!(nDenom & (1 << 1))) fFound10 = true;
+    if(!(nDenom & (1 << 2))) fFound1 = true;
+    if(!(nDenom & (1 << 3))) fFoundDot1 = true;
+    if(!(nDenom & (1 << 4))) fFoundND = true;
+
+    BOOST_FOREACH(const COutput& out, vCoins)
+    {
+        //there's no reason to allow inputs less than 1 COIN into DS (other than denominations smaller than that amount)
+        if(out.tx->vout[out.i].nValue < 1*COIN && out.tx->vout[out.i].nValue != (.1*COIN)+1) continue;
+        if(fMasterNode && out.tx->vout[out.i].nValue == 1000*COIN) continue; //masternode input
+
+        if(nValueRet + out.tx->vout[out.i].nValue <= nValueMax){
+            bool fAccepted = false;
+
+            // Function returns as follows:
+            //
+            // bit 0 - 100DRK+1 ( bit on if present )
+            // bit 1 - 10DRK+1
+            // bit 2 - 1DRK+1
+            // bit 3 - .1DRK+1
+            // bit 4 - non-denom
+
+            CTxIn vin = CTxIn(out.tx->GetHash(),out.i);
+
+            int rounds = GetInputDarksendRounds(vin);
+            if(rounds >= nDarksendRoundsMax) continue;
+            if(rounds < nDarksendRoundsMin) continue;
+
+            if(fFound100 && fFound10 && fFound1 && fFoundDot1 && fFoundND){ //if fulfilled
+                //Denomination criterion has been met, we can take any matching denominations
+                if((nDenom & (1 << 0)) && out.tx->vout[out.i].nValue == ((100*COIN)+1)) {fAccepted = true;}
+                else if((nDenom & (1 << 1)) && out.tx->vout[out.i].nValue == ((10*COIN)+1)) {fAccepted = true;}
+                else if((nDenom & (1 << 2)) && out.tx->vout[out.i].nValue == ((1*COIN)+1)) {fAccepted = true;}
+                else if((nDenom & (1 << 3)) && out.tx->vout[out.i].nValue == ((.1*COIN)+1)) {fAccepted = true;}
+                else if((nDenom & (1 << 4))) {fAccepted = true;}
+            } else {
+                //Criterion has not been satisfied, we will only take 1 of each until it is.
+                if((nDenom & (1 << 0)) && out.tx->vout[out.i].nValue == ((100*COIN)+1) && !fFound100) {fAccepted = true; fFound100 = true;}
+                else if((nDenom & (1 << 1)) && out.tx->vout[out.i].nValue == ((10*COIN)+1) && !fFound10) {fAccepted = true; fFound10 = true;}
+                else if((nDenom & (1 << 2)) && out.tx->vout[out.i].nValue == ((1*COIN)+1) && !fFound1) {fAccepted = true; fFound1 = true;}
+                else if((nDenom & (1 << 3)) && out.tx->vout[out.i].nValue == ((.1*COIN)+1) && !fFoundDot1) {fAccepted = true; fFoundDot1 = true;}
+                else if((nDenom & (1 << 4)) && !fFoundND) {fAccepted = true; fFoundND = true;}
+            }
+            if(!fAccepted) continue;
+
+            vin.prevPubKey = out.tx->vout[out.i].scriptPubKey; // the inputs PubKey
+            nValueRet += out.tx->vout[out.i].nValue;
+            setCoinsRet.push_back(vin);
+            setCoinsRet2.insert(make_pair(out.tx, out.i));
+        }
+    }
+
+    if(nValueRet >= nValueMin && fFound100 && fFound10 &&  fFound1 && fFoundDot1 && fFoundND) return true;
+
+    return false;
+}
+
+
 bool CWallet::SelectCoinsDark(int64_t nValueMin, int64_t nValueMax, std::vector<CTxIn>& setCoinsRet, int64_t& nValueRet, int nDarksendRoundsMin, int nDarksendRoundsMax, bool& hasFeeInput) const
 {
     CCoinControl *coinControl=NULL;
+
+    setCoinsRet.clear();
+    nValueRet = 0;
 
     vector<COutput> vCoins;
     AvailableCoins(vCoins, false, coinControl, ALL_COINS);
@@ -1962,40 +2047,29 @@ int64_t CWallet::GetTotalValue(std::vector<CTxIn> vCoins) {
     return nTotalValue;
 }
 
-string CWallet::PrepareDarksendDenominate(int minRounds, int maxRounds, int64_t maxAmount)
+string CWallet::PrepareDarksendDenominate(int minRounds, int maxRounds)
 {
     if (IsLocked())
         return _("Error: Wallet locked, unable to create transaction!");
 
-    if(darkSendPool.GetState() != POOL_STATUS_ERROR && darkSendPool.GetState() != POOL_STATUS_SUCCESS){
-        if(darkSendPool.GetMyTransactionCount() > 0){
+    if(darkSendPool.GetState() != POOL_STATUS_ERROR && darkSendPool.GetState() != POOL_STATUS_SUCCESS)
+        if(darkSendPool.GetMyTransactionCount() > 0)
             return _("Error: You already have pending entries in the Darksend pool");
-        }
-    }
 
     // ** find the coins we'll use
     std::vector<CTxIn> vCoins;
     int64_t nValueIn = 0;
     CReserveKey reservekey(this);
 
-    //make sure we
-    bool hasFeeInput = false;
-
     //select coins we'll use
-    if (!SelectCoinsDark(0.1*COIN, maxAmount, vCoins, nValueIn, minRounds, maxRounds, hasFeeInput))
-    {
-        vCoins.clear();
-
+    if (!SelectCoinsByDenominations(darkSendPool.sessionDenom, 0.1*COIN, DARKSEND_POOL_MAX, vCoins, nValueIn, minRounds, maxRounds))
         return _("Insufficient funds");
-    }
 
     // calculate total value out
     int64_t nTotalValue = GetTotalValue(vCoins);
-
-    LogPrintf("PrepareDarksendDenominate - preparing darksend denominate . Asked for: %d,  Got: %d \n", maxAmount, nTotalValue);
+    LogPrintf("PrepareDarksendDenominate - preparing darksend denominate . Got: %d \n", nTotalValue);
 
     //--------------
-
     BOOST_FOREACH(CTxIn v, vCoins)
         LockCoin(v.prevout);
 
