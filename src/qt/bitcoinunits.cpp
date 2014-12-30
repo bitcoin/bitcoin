@@ -179,3 +179,13 @@ QVariant BitcoinUnits::data(const QModelIndex &index, int role) const
     }
     return QVariant();
 }
+
+QString BitcoinUnits::getAmountColumnTitle(int unit)
+{
+    QString amountTitle = QObject::tr("Amount");
+    if (BitcoinUnits::valid(unit))
+    {
+        amountTitle += " ("+BitcoinUnits::name(unit) + ")";
+    }
+    return amountTitle;
+}

@@ -437,6 +437,10 @@
 <context>
   <name>QObject</name>
   <message>
+    <source>Amount</source>
+    <translation>Количество</translation>
+  </message>
+  <message>
     <source>NovaCoins</source>
     <translation>NovaCoins</translation>
   </message>
@@ -2987,11 +2991,6 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
         <location line="+0"/>
         <source>Address</source>
         <translation>Адрес</translation>
-    </message>
-    <message>
-        <location line="+0"/>
-        <source>Amount</source>
-        <translation>Количество</translation>
     </message>
     <message numerus="yes">
         <location line="+57"/>
