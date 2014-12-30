@@ -13,7 +13,7 @@
 #include "keystore.h"
 #include "bignum.h"
 
-typedef std::vector<unsigned char> valtype;
+typedef std::vector<uint8_t> valtype;
 
 class CTransaction;
 
@@ -236,8 +236,6 @@ enum opcodetype
 
 const char* GetOpName(opcodetype opcode);
 
-
-
 inline std::string ValueString(const std::vector<unsigned char>& vch)
 {
     if (vch.size() <= 4)
@@ -258,22 +256,15 @@ inline std::string StackString(const std::vector<std::vector<unsigned char> >& v
     return str;
 }
 
-
-
-
-
-
-
-
 /** Serialized script, used inside transaction inputs and outputs */
-class CScript : public std::vector<unsigned char>
+class CScript : public std::vector<uint8_t>
 {
 protected:
     CScript& push_int64(int64_t n)
     {
         if (n == -1 || (n >= 1 && n <= 16))
         {
-            push_back(n + (OP_1 - 1));
+            push_back((uint8_t)n + (OP_1 - 1));
         }
         else
         {
@@ -287,7 +278,7 @@ protected:
     {
         if (n >= 1 && n <= 16)
         {
-            push_back(n + (OP_1 - 1));
+            push_back((uint8_t)n + (OP_1 - 1));
         }
         else
         {
@@ -299,10 +290,10 @@ protected:
 
 public:
     CScript() { }
-    CScript(const CScript& b) : std::vector<unsigned char>(b.begin(), b.end()) { }
-    CScript(const_iterator pbegin, const_iterator pend) : std::vector<unsigned char>(pbegin, pend) { }
+    CScript(const CScript& b) : std::vector<uint8_t>(b.begin(), b.end()) { }
+    CScript(const_iterator pbegin, const_iterator pend) : std::vector<uint8_t>(pbegin, pend) { }
 #ifndef _MSC_VER
-    CScript(const unsigned char* pbegin, const unsigned char* pend) : std::vector<unsigned char>(pbegin, pend) { }
+    CScript(const uint8_t* pbegin, const uint8_t* pend) : std::vector<uint8_t>(pbegin, pend) { }
 #endif
 
     CScript& operator+=(const CScript& b)
@@ -331,8 +322,7 @@ public:
     explicit CScript(opcodetype b)     { operator<<(b); }
     explicit CScript(const uint256& b) { operator<<(b); }
     explicit CScript(const CBigNum& b) { operator<<(b); }
-    explicit CScript(const std::vector<unsigned char>& b) { operator<<(b); }
-
+    explicit CScript(const std::vector<uint8_t>& b) { operator<<(b); }
 
     CScript& operator<<(int8_t  b) { return push_int64(b); }
     CScript& operator<<(int16_t b) { return push_int64(b); }
@@ -348,27 +338,27 @@ public:
     {
         if (opcode < 0 || opcode > 0xff)
             throw std::runtime_error("CScript::operator<<() : invalid opcode");
-        insert(end(), (unsigned char)opcode);
+        insert(end(), (uint8_t)opcode);
         return *this;
     }
 
     CScript& operator<<(const uint160& b)
     {
         insert(end(), sizeof(b));
-        insert(end(), (unsigned char*)&b, (unsigned char*)&b + sizeof(b));
+        insert(end(), (uint8_t*)&b, (uint8_t*)&b + sizeof(b));
         return *this;
     }
 
     CScript& operator<<(const uint256& b)
     {
         insert(end(), sizeof(b));
-        insert(end(), (unsigned char*)&b, (unsigned char*)&b + sizeof(b));
+        insert(end(), (uint8_t*)&b, (uint8_t*)&b + sizeof(b));
         return *this;
     }
 
     CScript& operator<<(const CPubKey& key)
     {
-        std::vector<unsigned char> vchKey = key.Raw();
+        std::vector<uint8_t> vchKey = key.Raw();
         return (*this) << vchKey;
     }
 
@@ -392,14 +382,14 @@ public:
         else if (b.size() <= 0xffff)
         {
             insert(end(), OP_PUSHDATA2);
-            uint16_t nSize = b.size();
-            insert(end(), (unsigned char*)&nSize, (unsigned char*)&nSize + sizeof(nSize));
+            uint16_t nSize = (uint16_t) b.size();
+            insert(end(), (uint8_t*)&nSize, (uint8_t*)&nSize + sizeof(nSize));
         }
         else
         {
             insert(end(), OP_PUSHDATA4);
-            uint32_t nSize = b.size();
-            insert(end(), (unsigned char*)&nSize, (unsigned char*)&nSize + sizeof(nSize));
+            uint32_t nSize = (uint32_t) b.size();
+            insert(end(), (uint8_t*)&nSize, (uint8_t*)&nSize + sizeof(nSize));
         }
         insert(end(), b.begin(), b.end());
         return *this;
@@ -414,7 +404,7 @@ public:
     }
 
 
-    bool GetOp(iterator& pc, opcodetype& opcodeRet, std::vector<unsigned char>& vchRet)
+    bool GetOp(iterator& pc, opcodetype& opcodeRet, std::vector<uint8_t>& vchRet)
     {
          // Wrapper so it can be called with either iterator or const_iterator
          const_iterator pc2 = pc;
@@ -431,7 +421,7 @@ public:
          return fRet;
     }
 
-    bool GetOp(const_iterator& pc, opcodetype& opcodeRet, std::vector<unsigned char>& vchRet) const
+    bool GetOp(const_iterator& pc, opcodetype& opcodeRet, std::vector<uint8_t>& vchRet) const
     {
         return GetOp2(pc, opcodeRet, &vchRet);
     }
@@ -441,7 +431,7 @@ public:
         return GetOp2(pc, opcodeRet, NULL);
     }
 
-    bool GetOp2(const_iterator& pc, opcodetype& opcodeRet, std::vector<unsigned char>* pvchRet) const
+    bool GetOp2(const_iterator& pc, opcodetype& opcodeRet, std::vector<uint8_t>* pvchRet) const
     {
         opcodeRet = OP_INVALIDOPCODE;
         if (pvchRet)
@@ -452,12 +442,12 @@ public:
         // Read instruction
         if (end() - pc < 1)
             return false;
-        unsigned int opcode = *pc++;
+        uint32_t opcode = *pc++;
 
         // Immediate operand
         if (opcode <= OP_PUSHDATA4)
         {
-            unsigned int nSize;
+            uint32_t nSize;
             if (opcode < OP_PUSHDATA1)
             {
                 nSize = opcode;
@@ -483,7 +473,7 @@ public:
                 memcpy(&nSize, &pc[0], 4);
                 pc += 4;
             }
-            if (end() - pc < 0 || (unsigned int)(end() - pc) < nSize)
+            if (end() - pc < 0 || (uint32_t)(end() - pc) < nSize)
                 return false;
             if (pvchRet)
                 pvchRet->assign(pc, pc + nSize);
@@ -582,7 +572,7 @@ public:
     {
         std::string str;
         opcodetype opcode;
-        std::vector<unsigned char> vch;
+        std::vector<uint8_t> vch;
         const_iterator pc = begin();
         while (pc < end())
         {

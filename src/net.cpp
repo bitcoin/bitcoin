@@ -804,7 +804,7 @@ void ThreadSocketHandler2(void* parg)
                 if (lockRecv)
                 {
                     CDataStream& vRecv = pnode->vRecv;
-                    unsigned int nPos = vRecv.size();
+                    uint64_t nPos = vRecv.size();
 
                     if (nPos > ReceiveBufferSize()) {
                         if (!pnode->fDisconnect)

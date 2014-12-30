@@ -88,7 +88,7 @@ public:
     CBigNum(uint64_t n) { BN_init(this); setuint64(n); }
 
     explicit CBigNum(uint256 n) { BN_init(this); setuint256(n); }
-    explicit CBigNum(const std::vector<unsigned char>& vch)
+    explicit CBigNum(const std::vector<uint8_t>& vch)
     {
         BN_init(this);
         setvch(vch);
@@ -143,15 +143,15 @@ public:
     {
         uint64_t n = BN_get_word(this);
         if (!BN_is_negative(this))
-            return (n > (uint64_t)std::numeric_limits<int32_t>::max() ? std::numeric_limits<int32_t>::max() : n);
+            return (n > (uint64_t)std::numeric_limits<int32_t>::max() ? std::numeric_limits<int32_t>::max() : (int32_t)n);
         else
             return (n > (uint64_t)std::numeric_limits<int32_t>::max() ? std::numeric_limits<int32_t>::min() : -(int32_t)n);
     }
 
     void setint64(int64_t sn)
     {
-        unsigned char pch[sizeof(sn) + 6];
-        unsigned char* p = pch + 4;
+        uint8_t pch[sizeof(sn) + 6];
+        uint8_t* p = pch + 4;
         bool fNegative;
         uint64_t n;
 
@@ -169,7 +169,7 @@ public:
         bool fLeadingZeroes = true;
         for (int i = 0; i < 8; i++)
         {
-            unsigned char c = (n >> 56) & 0xff;
+            uint8_t c = (n >> 56) & 0xff;
             n <<= 8;
             if (fLeadingZeroes)
             {
@@ -183,7 +183,7 @@ public:
             }
             *p++ = c;
         }
-        uint32_t nSize = p - (pch + 4);
+        uint32_t nSize = (uint32_t) (p - (pch + 4));
         pch[0] = (nSize >> 24) & 0xff;
         pch[1] = (nSize >> 16) & 0xff;
         pch[2] = (nSize >> 8) & 0xff;
@@ -193,27 +193,35 @@ public:
 
     uint64_t getuint64()
     {
-        unsigned int nSize = BN_bn2mpi(this, NULL);
+        size_t nSize = BN_bn2mpi(this, NULL);
         if (nSize < 4)
             return 0;
-        std::vector<unsigned char> vch(nSize);
+        std::vector<uint8_t> vch(nSize);
         BN_bn2mpi(this, &vch[0]);
         if (vch.size() > 4)
             vch[4] &= 0x7f;
         uint64_t n = 0;
-        for (unsigned int i = 0, j = vch.size()-1; i < sizeof(n) && j >= 4; i++, j--)
-            ((unsigned char*)&n)[i] = vch[j];
+        for (size_t i = 0, j = vch.size()-1; i < sizeof(n) && j >= 4; i++, j--)
+            ((uint8_t*)&n)[i] = vch[j];
         return n;
     }
 
     void setuint64(uint64_t n)
     {
-        unsigned char pch[sizeof(n) + 6];
-        unsigned char* p = pch + 4;
+        // Use BN_set_word if word size is sufficient for uint64_t
+        if (sizeof(n) <= sizeof(BN_ULONG))
+        {
+            if (!BN_set_word(this, (BN_ULONG)n))
+                throw bignum_error("CBigNum conversion from uint64_t : BN_set_word failed");
+            return;
+        }
+
+        uint8_t pch[sizeof(n) + 6];
+        uint8_t* p = pch + 4;
         bool fLeadingZeroes = true;
         for (int i = 0; i < 8; i++)
         {
-            unsigned char c = (n >> 56) & 0xff;
+            uint8_t c = (n >> 56) & 0xff;
             n <<= 8;
             if (fLeadingZeroes)
             {
@@ -225,24 +233,24 @@ public:
             }
             *p++ = c;
         }
-        uint32_t nSize = p - (pch + 4);
+        uint32_t nSize = (uint32_t) (p - (pch + 4));
         pch[0] = (nSize >> 24) & 0xff;
         pch[1] = (nSize >> 16) & 0xff;
         pch[2] = (nSize >> 8) & 0xff;
         pch[3] = (nSize) & 0xff;
-        BN_mpi2bn(pch, p - pch, this);
+        BN_mpi2bn(pch, (int)(p - pch), this);
     }
 
     void setuint160(uint160 n)
     {
-        unsigned char pch[sizeof(n) + 6];
-        unsigned char* p = pch + 4;
+        uint8_t pch[sizeof(n) + 6];
+        uint8_t* p = pch + 4;
         bool fLeadingZeroes = true;
-        unsigned char* pbegin = (unsigned char*)&n;
-        unsigned char* psrc = pbegin + sizeof(n);
+        uint8_t* pbegin = (uint8_t*)&n;
+        uint8_t* psrc = pbegin + sizeof(n);
         while (psrc != pbegin)
         {
-            unsigned char c = *(--psrc);
+            uint8_t c = *(--psrc);
             if (fLeadingZeroes)
             {
                 if (c == 0)
@@ -253,12 +261,12 @@ public:
             }
             *p++ = c;
         }
-        uint32_t nSize = p - (pch + 4);
+        uint32_t nSize = (uint32_t) (p - (pch + 4));
         pch[0] = (nSize >> 24) & 0xff;
         pch[1] = (nSize >> 16) & 0xff;
         pch[2] = (nSize >> 8) & 0xff;
         pch[3] = (nSize >> 0) & 0xff;
-        BN_mpi2bn(pch, p - pch, this);
+        BN_mpi2bn(pch, (int) (p - pch), this);
     }
 
     uint160 getuint160() const
@@ -266,26 +274,26 @@ public:
         unsigned int nSize = BN_bn2mpi(this, NULL);
         if (nSize < 4)
             return 0;
-        std::vector<unsigned char> vch(nSize);
+        std::vector<uint8_t> vch(nSize);
         BN_bn2mpi(this, &vch[0]);
         if (vch.size() > 4)
             vch[4] &= 0x7f;
         uint160 n = 0;
-        for (unsigned int i = 0, j = vch.size()-1; i < sizeof(n) && j >= 4; i++, j--)
-            ((unsigned char*)&n)[i] = vch[j];
+        for (size_t i = 0, j = vch.size()-1; i < sizeof(n) && j >= 4; i++, j--)
+            ((uint8_t*)&n)[i] = vch[j];
         return n;
     }
 
     void setuint256(uint256 n)
     {
-        unsigned char pch[sizeof(n) + 6];
-        unsigned char* p = pch + 4;
+        uint8_t pch[sizeof(n) + 6];
+        uint8_t* p = pch + 4;
         bool fLeadingZeroes = true;
-        unsigned char* pbegin = (unsigned char*)&n;
-        unsigned char* psrc = pbegin + sizeof(n);
+        uint8_t* pbegin = (uint8_t*)&n;
+        uint8_t* psrc = pbegin + sizeof(n);
         while (psrc != pbegin)
         {
-            unsigned char c = *(--psrc);
+            uint8_t c = *(--psrc);
             if (fLeadingZeroes)
             {
                 if (c == 0)
@@ -296,12 +304,12 @@ public:
             }
             *p++ = c;
         }
-        uint32_t nSize = p - (pch + 4);
+        uint32_t nSize = (uint32_t) (p - (pch + 4));
         pch[0] = (nSize >> 24) & 0xff;
         pch[1] = (nSize >> 16) & 0xff;
         pch[2] = (nSize >> 8) & 0xff;
         pch[3] = (nSize >> 0) & 0xff;
-        BN_mpi2bn(pch, p - pch, this);
+        BN_mpi2bn(pch, (int) (p - pch), this);
     }
 
     uint256 getuint256() const
@@ -309,26 +317,26 @@ public:
         unsigned int nSize = BN_bn2mpi(this, NULL);
         if (nSize < 4)
             return 0;
-        std::vector<unsigned char> vch(nSize);
+        std::vector<uint8_t> vch(nSize);
         BN_bn2mpi(this, &vch[0]);
         if (vch.size() > 4)
             vch[4] &= 0x7f;
         uint256 n = 0;
-        for (unsigned int i = 0, j = vch.size()-1; i < sizeof(n) && j >= 4; i++, j--)
-            ((unsigned char*)&n)[i] = vch[j];
+        for (size_t i = 0, j = vch.size()-1; i < sizeof(n) && j >= 4; i++, j--)
+            ((uint8_t*)&n)[i] = vch[j];
         return n;
     }
 
-    void setBytes(const std::vector<unsigned char>& vchBytes)
+    void setBytes(const std::vector<uint8_t>& vchBytes)
     {
-        BN_bin2bn(&vchBytes[0], vchBytes.size(), this);
+        BN_bin2bn(&vchBytes[0], (int) vchBytes.size(), this);
     }
 
-    std::vector<unsigned char> getBytes() const
+    std::vector<uint8_t> getBytes() const
     {
         int nBytes = BN_num_bytes(this);
 
-        std::vector<unsigned char> vchBytes(nBytes);
+        std::vector<uint8_t> vchBytes(nBytes);
 
         int n = BN_bn2bin(this, &vchBytes[0]);
         if (n != nBytes) {
@@ -338,10 +346,10 @@ public:
         return vchBytes;
     }
 
-    void setvch(const std::vector<unsigned char>& vch)
+    void setvch(const std::vector<uint8_t>& vch)
     {
-        std::vector<unsigned char> vch2(vch.size() + 4);
-        uint32_t nSize = vch.size();
+        std::vector<uint8_t> vch2(vch.size() + 4);
+        uint32_t nSize = (uint32_t) vch.size();
         // BIGNUM's byte stream format expects 4 bytes of
         // big endian size data info at the front
         vch2[0] = (nSize >> 24) & 0xff;
@@ -350,15 +358,15 @@ public:
         vch2[3] = (nSize >> 0) & 0xff;
         // swap data to big endian
         reverse_copy(vch.begin(), vch.end(), vch2.begin() + 4);
-        BN_mpi2bn(&vch2[0], vch2.size(), this);
+        BN_mpi2bn(&vch2[0], (int) vch2.size(), this);
     }
 
-    std::vector<unsigned char> getvch() const
+    std::vector<uint8_t> getvch() const
     {
         unsigned int nSize = BN_bn2mpi(this, NULL);
         if (nSize <= 4)
-            return std::vector<unsigned char>();
-        std::vector<unsigned char> vch(nSize);
+            return std::vector<uint8_t>();
+        std::vector<uint8_t> vch(nSize);
         BN_bn2mpi(this, &vch[0]);
         vch.erase(vch.begin(), vch.begin() + 4);
         reverse(vch.begin(), vch.end());
@@ -368,19 +376,19 @@ public:
     CBigNum& SetCompact(uint32_t nCompact)
     {
         uint32_t nSize = nCompact >> 24;
-        std::vector<unsigned char> vch(4 + nSize);
+        std::vector<uint8_t> vch(4 + nSize);
         vch[3] = nSize;
         if (nSize >= 1) vch[4] = (nCompact >> 16) & 0xff;
         if (nSize >= 2) vch[5] = (nCompact >> 8) & 0xff;
         if (nSize >= 3) vch[6] = (nCompact >> 0) & 0xff;
-        BN_mpi2bn(&vch[0], vch.size(), this);
+        BN_mpi2bn(&vch[0], (int) vch.size(), this);
         return *this;
     }
 
     uint32_t GetCompact() const
     {
         uint32_t nSize = BN_bn2mpi(this, NULL);
-        std::vector<unsigned char> vch(nSize);
+        std::vector<uint8_t> vch(nSize);
         nSize -= 4;
         BN_bn2mpi(this, &vch[0]);
         uint32_t nCompact = nSize << 24;
@@ -413,7 +421,7 @@ public:
         while (isxdigit(*psz))
         {
             *this <<= 4;
-            int n = phexdigit[(unsigned char)*psz++];
+            int n = phexdigit[(uint8_t)*psz++];
             *this += n;
         }
         if (fNegative)
@@ -437,7 +445,7 @@ public:
             if (!BN_div(&dv, &rem, &bn, &bnBase, pctx))
                 throw bignum_error("CBigNum::ToString() : BN_div failed");
             bn = dv;
-            unsigned int c = rem.getuint32();
+            uint32_t c = rem.getuint32();
             str += "0123456789abcdef"[c];
         }
         if (BN_is_negative(this))
@@ -465,7 +473,7 @@ public:
     template<typename Stream>
     void Unserialize(Stream& s, int nType=0, int nVersion=PROTOCOL_VERSION)
     {
-        std::vector<unsigned char> vch;
+        std::vector<uint8_t> vch;
         ::Unserialize(s, vch, nType, nVersion);
         setvch(vch);
     }
@@ -502,7 +510,7 @@ public:
         CBigNum ret;
         if (!BN_mod_mul(&ret, this, &b, &m, pctx))
             throw bignum_error("CBigNum::mul_mod : BN_mod_mul failed");
-        
+
         return ret;
     }
 
@@ -579,7 +587,7 @@ public:
         if(ret < 0){
             throw bignum_error("CBigNum::isPrime :BN_is_prime");
         }
-        return ret;
+        return ret != 0;
     }
 
     bool isOne() const {

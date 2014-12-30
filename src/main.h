@@ -471,7 +471,7 @@ public:
     void SetNull()
     {
         nVersion = CTransaction::CURRENT_VERSION;
-        nTime = GetAdjustedTime();
+        nTime = (uint32_t) GetAdjustedTime();
         vin.clear();
         vout.clear();
         nLockTime = 0;
@@ -619,6 +619,7 @@ public:
             filein >> *this;
         }
         catch (std::exception &e) {
+            (void)e;
             return error("%s() : deserialize or I/O error", BOOST_CURRENT_FUNCTION);
         }
 
@@ -975,7 +976,7 @@ public:
         hashSig >>= 159; // take the first bit of the hash
         if (fDebug && GetBoolArg("-printstakemodifier"))
             printf(" entropybit=%" PRId64 "\n", hashSig.Get64());
-        return hashSig.Get64();
+        return (unsigned int)hashSig.Get64();
     }
 
     // ppcoin: two types of block: proof-of-work or proof-of-stake
@@ -1009,7 +1010,7 @@ public:
         BOOST_FOREACH(const CTransaction& tx, vtx)
             vMerkleTree.push_back(tx.GetHash());
         int j = 0;
-        for (int nSize = vtx.size(); nSize > 1; nSize = (nSize + 1) / 2)
+        for (int nSize = (int)vtx.size(); nSize > 1; nSize = (nSize + 1) / 2)
         {
             for (int i = 0; i < nSize; i += 2)
             {
@@ -1028,7 +1029,7 @@ public:
             BuildMerkleTree();
         std::vector<uint256> vMerkleBranch;
         int j = 0;
-        for (int nSize = vtx.size(); nSize > 1; nSize = (nSize + 1) / 2)
+        for (int nSize = (int)vtx.size(); nSize > 1; nSize = (nSize + 1) / 2)
         {
             int i = std::min(nIndex^1, nSize-1);
             vMerkleBranch.push_back(vMerkleTree[j+i]);
@@ -1096,6 +1097,7 @@ public:
             filein >> *this;
         }
         catch (std::exception &e) {
+            (void)e;
             return error("%s() : deserialize or I/O error", BOOST_CURRENT_FUNCTION);
         }
 
@@ -1354,7 +1356,7 @@ public:
 
     bool GeneratedStakeModifier() const
     {
-        return (nFlags & BLOCK_STAKE_MODIFIER);
+        return (nFlags & BLOCK_STAKE_MODIFIER) != 0;
     }
 
     void SetStakeModifier(uint64_t nModifier, bool fGeneratedStakeModifier)
@@ -1634,7 +1636,7 @@ public:
     void clear();
     void queryHashes(std::vector<uint256>& vtxid);
 
-    unsigned long size()
+    size_t size()
     {
         LOCK(cs);
         return mapTx.size();
