@@ -68,7 +68,7 @@ Release Process
 	mv build/out/bitcoin-*.zip build/out/bitcoin-*.exe ../
 	./bin/gbuild --commit bitcoin=v${VERSION} ../bitcoin/contrib/gitian-descriptors/gitian-osx.yml
 	./bin/gsign --signer $SIGNER --release ${VERSION}-osx-unsigned --destination ../gitian.sigs/ ../bitcoin/contrib/gitian-descriptors/gitian-osx.yml
-	mv build/out/bitcoin-*-unsigned.tar.gz inputs
+	mv build/out/bitcoin-*-unsigned.tar.gz inputs/bitcoin-osx-unsigned.tar.gz
 	mv build/out/bitcoin-*.tar.gz build/out/bitcoin-*.dmg ../
 	popd
   Build output expected:
@@ -102,7 +102,7 @@ Commit your signature to gitian.sigs:
 	cp signature.tar.gz inputs/
 	./bin/gbuild -i ../bitcoin/contrib/gitian-descriptors/gitian-osx-signer.yml
 	./bin/gsign --signer $SIGNER --release ${VERSION}-osx-signed --destination ../gitian.sigs/ ../bitcoin/contrib/gitian-descriptors/gitian-osx-signer.yml
-	mv build/out/bitcoin-${VERSION}-osx.dmg ../
+	mv build/out/bitcoin-osx-signed.dmg ../bitcoin-${VERSION}-osx.dmg
 	popd
 
 Commit your signature for the signed OSX binary:
