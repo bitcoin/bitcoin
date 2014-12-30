@@ -2088,70 +2088,41 @@ string CWallet::PrepareDarksendDenominate(int minRounds, int maxRounds)
     int64_t nValueLeft = nTotalValue;
     std::vector<CTxOut> vOut;
 
-    //if minRounds >= 0, we want to use our denominations the same (in and out should match).
-    if(minRounds >= 0){
+    // Make outputs by looping through denominations, from small to large
+    BOOST_REVERSE_FOREACH(int64_t v, darkSendDenominations){
+        bool fAccepted = false;
+        if((darkSendPool.sessionDenom & (1 << 0)) && v == ((100*COIN)+1)) {fAccepted = true;}
+        else if((darkSendPool.sessionDenom & (1 << 1)) && v == ((10*COIN)+1)) {fAccepted = true;}
+        else if((darkSendPool.sessionDenom & (1 << 2)) && v == ((1*COIN)+1)) {fAccepted = true;}
+        else if((darkSendPool.sessionDenom & (1 << 3)) && v == ((.1*COIN)+1)) {fAccepted = true;}
+        if(!fAccepted) continue;
 
-        CWalletTx wtx;
-        BOOST_FOREACH(CTxIn i, vCoins){
-            if (mapWallet.count(i.prevout.hash))
-            {
-                CWalletTx& wtx = mapWallet[i.prevout.hash];
-                if(i.prevout.n < wtx.vout.size()){
-                    CScript scriptChange;
-                    CPubKey vchPubKey;
-                    //use a unique change address
-                    assert(reservekey.GetReservedKey(vchPubKey)); // should never fail, as we just unlocked
-                    scriptChange.SetDestination(vchPubKey.GetID());
-                    reservekey.KeepKey();
+        int nOutputs = 0;
 
-                    CTxOut o(wtx.vout[i.prevout.n].nValue, scriptChange);
-                    vOut.push_back(o);
-
-                    //increment outputs and subtract denomination amount
-                    nValueLeft -= wtx.vout[i.prevout.n].nValue;
-                }
-            } else {
-                LogPrintf("GetTotalValue -- Couldn't find transaction\n");
-            }
+        if(std::find(darkSendPool.vecDisabledDenominations.begin(),
+            darkSendPool.vecDisabledDenominations.end(), v) !=
+            darkSendPool.vecDisabledDenominations.end()){
+            continue;
         }
 
-    } else {
-        // Make outputs by looping through denominations, from small to large
-        BOOST_REVERSE_FOREACH(int64_t v, darkSendDenominations){
-            bool fAccepted = false;
-            if((darkSendPool.sessionDenom & (1 << 0)) && v == ((100*COIN)+1)) {fAccepted = true;}
-            else if((darkSendPool.sessionDenom & (1 << 1)) && v == ((10*COIN)+1)) {fAccepted = true;}
-            else if((darkSendPool.sessionDenom & (1 << 2)) && v == ((1*COIN)+1)) {fAccepted = true;}
-            else if((darkSendPool.sessionDenom & (1 << 3)) && v == ((.1*COIN)+1)) {fAccepted = true;}
-            if(!fAccepted) continue;
+        // add each output up to 10 times until it can't be added again
+        while(nValueLeft - v >= 0 && nOutputs <= 10) {
+            CScript scriptChange;
+            CPubKey vchPubKey;
+            //use a unique change address
+            assert(reservekey.GetReservedKey(vchPubKey)); // should never fail, as we just unlocked
+            scriptChange.SetDestination(vchPubKey.GetID());
+            reservekey.KeepKey();
 
-            int nOutputs = 0;
+            CTxOut o(v, scriptChange);
+            vOut.push_back(o);
 
-            if(std::find(darkSendPool.vecDisabledDenominations.begin(),
-                darkSendPool.vecDisabledDenominations.end(), v) !=
-                darkSendPool.vecDisabledDenominations.end()){
-                continue;
-            }
-
-            // add each output up to 10 times until it can't be added again
-            while(nValueLeft - v >= 0 && nOutputs <= 10) {
-                CScript scriptChange;
-                CPubKey vchPubKey;
-                //use a unique change address
-                assert(reservekey.GetReservedKey(vchPubKey)); // should never fail, as we just unlocked
-                scriptChange.SetDestination(vchPubKey.GetID());
-                reservekey.KeepKey();
-
-                CTxOut o(v, scriptChange);
-                vOut.push_back(o);
-
-                //increment outputs and subtract denomination amount
-                nOutputs++;
-                nValueLeft -= v;
-            }
-
-            if(nValueLeft == 0) break;
+            //increment outputs and subtract denomination amount
+            nOutputs++;
+            nValueLeft -= v;
         }
+
+        if(nValueLeft == 0) break;
     }
 
     // if we have anything left over, send it back as change
