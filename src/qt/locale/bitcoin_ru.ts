@@ -437,6 +437,18 @@
 <context>
   <name>QObject</name>
   <message>
+    <source>NovaCoins</source>
+    <translation>NovaCoins</translation>
+  </message>
+  <message>
+    <source>Milli-NovaCoins (1 / 1,000)</source>
+    <translation>Милли-NovaCoins (1 / 1000)</translation>
+  </message>
+  <message>
+    <source>Micro-NovaCoins (1 / 1,000,000)</source>
+    <translation>Микро-NovaCoins (1 / 1000000)</translation>
+  </message>
+  <message>
     <source>from  %1 to %2</source>
     <translation>от %1 до %2</translation>
   </message>
