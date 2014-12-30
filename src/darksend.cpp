@@ -1434,12 +1434,11 @@ bool CDarkSendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
     int64_t nValueMax = DARKSEND_POOL_MAX;
     int64_t nValueIn = 0;
     int maxAmount = DARKSEND_POOL_MAX/COIN;
-    bool hasFeeInput = false;
     int64_t lowestDenom = COIN*0.1;
 
     // If we can find only denominated funds, switch to only-denom mode
-    if (!pwalletMain->SelectCoinsDark(nValueMin, maxAmount*COIN, vCoins, nValueIn, -2, 2, hasFeeInput) &&
-        pwalletMain->SelectCoinsDark(nValueMin, maxAmount*COIN, vCoins, nValueIn, 0, nDarksendRounds, hasFeeInput)) {
+    if (!pwalletMain->SelectCoinsDark(nValueMin, maxAmount*COIN, vCoins, nValueIn, -2, 2) &&
+        pwalletMain->SelectCoinsDark(nValueMin, maxAmount*COIN, vCoins, nValueIn, 0, nDarksendRounds)) {
         sessionMinRounds = 0;
         sessionMaxRounds = nDarksendRounds;
     }
@@ -1461,13 +1460,13 @@ bool CDarkSendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
     }
 
     // select coins that should be given to the pool
-    if (!pwalletMain->SelectCoinsDark(nValueMin, maxAmount*COIN, vCoins, nValueIn, sessionMinRounds, sessionMaxRounds, hasFeeInput))
+    if (!pwalletMain->SelectCoinsDark(nValueMin, maxAmount*COIN, vCoins, nValueIn, sessionMinRounds, sessionMaxRounds))
     {
         nValueIn = 0;
         vCoins.clear();
 
         // look for inputs larger than the max amount, if we find anything we need to split it up
-        if (pwalletMain->SelectCoinsDark(maxAmount*COIN, 9999999*COIN, vCoins, nValueIn, sessionMinRounds, sessionMaxRounds, hasFeeInput))
+        if (pwalletMain->SelectCoinsDark(maxAmount*COIN, 9999999*COIN, vCoins, nValueIn, sessionMinRounds, sessionMaxRounds))
         {
             if(!fDryRun) SplitUpMoney();
             return true;
@@ -1483,7 +1482,7 @@ bool CDarkSendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
         (vecDisabledDenominations.size() > 0 && nValueIn < COIN*10)
     ){
         //simply look for non-denominated coins
-        if (pwalletMain->SelectCoinsDark(maxAmount*COIN, 9999999*COIN, vCoins, nValueIn, sessionMinRounds, sessionMaxRounds, hasFeeInput))
+        if (pwalletMain->SelectCoinsDark(maxAmount*COIN, 9999999*COIN, vCoins, nValueIn, sessionMinRounds, sessionMaxRounds))
         {
             if(!fDryRun) SplitUpMoney();
             return true;

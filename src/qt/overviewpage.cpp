@@ -256,16 +256,13 @@ void OverviewPage::updateDarksendProgress(){
 
     std::ostringstream convert;
 
-
-
     // ** find the coins we'll use
     std::vector<CTxIn> vCoins;
     int64_t nValueMin = 0.01*COIN;
     int64_t nValueIn = 0;
-    bool hasFeeInput = true;
 
     // Calculate total mixable funds
-    if (!pwalletMain->SelectCoinsDark(nValueMin, 999999*COIN, vCoins, nValueIn, -2, 10, hasFeeInput)) {
+    if (!pwalletMain->SelectCoinsDark(nValueMin, 999999*COIN, vCoins, nValueIn, -2, 10)) {
         ui->darksendProgress->setValue(0);
         QString s("No inputs detected (2)");
         ui->darksendProgress->setToolTip(s);

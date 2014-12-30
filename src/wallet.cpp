@@ -1533,8 +1533,7 @@ bool CWallet::SelectCoinsByDenominations(int nDenom, int64_t nValueMin, int64_t 
     return false;
 }
 
-
-bool CWallet::SelectCoinsDark(int64_t nValueMin, int64_t nValueMax, std::vector<CTxIn>& setCoinsRet, int64_t& nValueRet, int nDarksendRoundsMin, int nDarksendRoundsMax, bool& hasFeeInput) const
+bool CWallet::SelectCoinsDark(int64_t nValueMin, int64_t nValueMax, std::vector<CTxIn>& setCoinsRet, int64_t& nValueRet, int nDarksendRoundsMin, int nDarksendRoundsMax) const
 {
     CCoinControl *coinControl=NULL;
 
@@ -2063,9 +2062,19 @@ string CWallet::PrepareDarksendDenominate(int minRounds, int maxRounds)
     int64_t nValueIn = 0;
     CReserveKey reservekey(this);
 
-    //select coins we'll use
-    if (!SelectCoinsByDenominations(darkSendPool.sessionDenom, 0.1*COIN, DARKSEND_POOL_MAX, vCoins, nValueIn, minRounds, maxRounds))
-        return _("Insufficient funds");
+    /*
+        Select the coins we'll use
+
+        if minRounds < 0 it means that non-denominational inputs are coming into the mix
+        if minRounds > 0 it means only denominated inputs are going in and coming out
+    */
+    if(minRounds >= 0){
+        if (!SelectCoinsByDenominations(darkSendPool.sessionDenom, 0.1*COIN, DARKSEND_POOL_MAX, vCoins, nValueIn, minRounds, maxRounds))
+            return _("Insufficient funds");
+    } else {
+        if (!SelectCoinsDark(0.1*COIN, DARKSEND_POOL_MAX, vCoins, nValueIn, minRounds, maxRounds))
+            return _("Insufficient funds");
+    }
 
     // calculate total value out
     int64_t nTotalValue = GetTotalValue(vCoins);
@@ -2079,8 +2088,9 @@ string CWallet::PrepareDarksendDenominate(int minRounds, int maxRounds)
     int64_t nValueLeft = nTotalValue;
     std::vector<CTxOut> vOut;
 
-    //if minRounds >= 0, we want to use our exact denominations.
+    //if minRounds >= 0, we want to use our denominations the same (in and out should match).
     if(minRounds >= 0){
+
         CWalletTx wtx;
         BOOST_FOREACH(CTxIn i, vCoins){
             if (mapWallet.count(i.prevout.hash))
@@ -2108,6 +2118,13 @@ string CWallet::PrepareDarksendDenominate(int minRounds, int maxRounds)
     } else {
         // Make outputs by looping through denominations, from small to large
         BOOST_REVERSE_FOREACH(int64_t v, darkSendDenominations){
+            bool fAccepted = false;
+            if((darkSendPool.sessionDenom & (1 << 0)) && v == ((100*COIN)+1)) {fAccepted = true;}
+            else if((darkSendPool.sessionDenom & (1 << 1)) && v == ((10*COIN)+1)) {fAccepted = true;}
+            else if((darkSendPool.sessionDenom & (1 << 2)) && v == ((1*COIN)+1)) {fAccepted = true;}
+            else if((darkSendPool.sessionDenom & (1 << 3)) && v == ((.1*COIN)+1)) {fAccepted = true;}
+            if(!fAccepted) continue;
+
             int nOutputs = 0;
 
             if(std::find(darkSendPool.vecDisabledDenominations.begin(),
@@ -2138,6 +2155,7 @@ string CWallet::PrepareDarksendDenominate(int minRounds, int maxRounds)
     }
 
     // if we have anything left over, send it back as change
+
     if(nValueLeft > 0){
         CScript scriptChange;
         CPubKey vchPubKey;
