@@ -1466,11 +1466,11 @@ bool CWallet::SelectCoinsByDenominations(int nDenom, int64_t nValueMin, int64_t 
     std::random_shuffle(vCoins.rbegin(), vCoins.rend());
 
     //keep track of each denomination that we have
-    int fFound100 = false;
-    int fFound10 = false;
-    int fFound1 = false;
-    int fFoundDot1 = false;
-    int fFoundND = false;
+    bool fFound100 = false;
+    bool fFound10 = false;
+    bool fFound1 = false;
+    bool fFoundDot1 = false;
+    bool fFoundND = false;
 
     //Check to see if any of the denomination are off, in that case mark them as fulfilled
     if(!(nDenom & (1 << 0))) fFound100 = true;
@@ -1511,11 +1511,13 @@ bool CWallet::SelectCoinsByDenominations(int nDenom, int64_t nValueMin, int64_t 
                 else if((nDenom & (1 << 4))) {fAccepted = true;}
             } else {
                 //Criterion has not been satisfied, we will only take 1 of each until it is.
-                if((nDenom & (1 << 0)) && out.tx->vout[out.i].nValue == ((100*COIN)+1) && !fFound100) {fAccepted = true; fFound100 = true;}
-                else if((nDenom & (1 << 1)) && out.tx->vout[out.i].nValue == ((10*COIN)+1) && !fFound10) {fAccepted = true; fFound10 = true;}
-                else if((nDenom & (1 << 2)) && out.tx->vout[out.i].nValue == ((1*COIN)+1) && !fFound1) {fAccepted = true; fFound1 = true;}
-                else if((nDenom & (1 << 3)) && out.tx->vout[out.i].nValue == ((.1*COIN)+1) && !fFoundDot1) {fAccepted = true; fFoundDot1 = true;}
-                else if((nDenom & (1 << 4)) && !fFoundND) {fAccepted = true; fFoundND = true;}
+                if((nDenom & (1 << 0)) && out.tx->vout[out.i].nValue == ((100*COIN)+1)) {fAccepted = true; fFound100 = true;}
+                else if((nDenom & (1 << 1)) && out.tx->vout[out.i].nValue == ((10*COIN)+1)) {fAccepted = true; fFound10 = true;}
+                else if((nDenom & (1 << 2)) && out.tx->vout[out.i].nValue == ((1*COIN)+1)) {fAccepted = true; fFound1 = true;}
+                else if((nDenom & (1 << 3)) && out.tx->vout[out.i].nValue == ((.1*COIN)+1)) {fAccepted = true; fFoundDot1 = true;}
+                else if((nDenom & (1 << 4)) && !fFoundND) {
+                	fAccepted = true; fFoundND = true;
+                }
             }
             if(!fAccepted) continue;
 
