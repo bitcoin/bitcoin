@@ -257,6 +257,8 @@ public:
     int sessionUsers; //N Users have said they'll join
     bool sessionFoundMasternode; //If we've found a compatible masternode
     int sessionTries;
+    int sessionMinRounds;
+    int sessionMaxRounds;
     int64_t sessionTotalValue; //used for autoDenom
     std::vector<CTransaction> vecSessionCollateral;
 
@@ -296,6 +298,8 @@ public:
         minBlockSpacing = 1;
         nDsqCount = 0;
         vecDisabledDenominations.clear();
+        sessionMinRounds = 0;
+        sessionMaxRounds = 0;
 
         SetCollateralAddress(strAddress);
         SetNull();
@@ -383,6 +387,7 @@ public:
 
     // Passively run Darksend in the background according to the configuration in settings (only for QT)
     bool DoAutomaticDenominating(bool fDryRun=false, bool ready=false);
+    bool PrepareDarksendDenominate();
 
 
     // check for process in Darksend
