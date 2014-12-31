@@ -441,6 +441,11 @@ public:
 private:
     CCoinsMap::iterator FetchCoins(const uint256 &txid);
     CCoinsMap::const_iterator FetchCoins(const uint256 &txid) const;
+
+    /**
+     * By making the copy constructor private, we prevent accidentally using it when one intends to create a cache on top of a base cache.
+     */
+    CCoinsViewCache(const CCoinsViewCache &);
 };
 
 #endif // BITCOIN_COINS_H
