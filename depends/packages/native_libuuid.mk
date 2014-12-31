@@ -6,9 +6,6 @@ $(package)_sha256_hash=dbc7a138a3218d9b80a0626b5b692d76934d6746d8cbb762751be3378
 
 define $(package)_set_vars
 $(package)_config_opts=--disable-elf-shlibs --disable-uuidd
-$(package)_cflags+=-m32
-$(package)_ldflags+=-m32
-$(package)_cxxflags+=-m32
 endef
 
 define $(package)_config_cmds
