@@ -437,6 +437,22 @@
 <context>
   <name>QObject</name>
   <message>
+    <source>Amount</source>
+    <translation>Количество</translation>
+  </message>
+  <message>
+    <source>NovaCoins</source>
+    <translation>NovaCoins</translation>
+  </message>
+  <message>
+    <source>Milli-NovaCoins (1 / 1,000)</source>
+    <translation>Милли-NovaCoins (1 / 1000)</translation>
+  </message>
+  <message>
+    <source>Micro-NovaCoins (1 / 1,000,000)</source>
+    <translation>Микро-NovaCoins (1 / 1000000)</translation>
+  </message>
+  <message>
     <source>from  %1 to %2</source>
     <translation>от %1 до %2</translation>
   </message>
@@ -1712,13 +1728,18 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     </message>
     <message>
         <location line="+6"/>
-        <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly. Most transactions are 1 kB. Fee 0.01 recommended.</source>
-        <translation>Опциональная комиссия за каждый КБ транзакции, которая позволяет быть уверенным, что Ваша транзакция будет обработана быстро.  Большинство транзакций занимают 1КБ.  Рекомендуется комиссия 0.01.</translation>
+        <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly. Most transactions are 1 kB. Fee 0.001 recommended.</source>
+        <translation>Опциональная комиссия за каждый КБ транзакции, которая позволяет быть уверенным, что Ваша транзакция будет обработана быстро.  Большинство транзакций занимают 1КБ.  Рекомендуется комиссия 0.001.</translation>
     </message>
     <message>
         <location line="+15"/>
         <source>Pay transaction &amp;fee</source>
         <translation>Заплатить ко&amp;миссию</translation>
+    </message>
+    <message>
+        <location line="67"/>
+        <source>per kilobyte</source>
+        <translation>за килобайт</translation>
     </message>
     <message>
         <location line="+31"/>
@@ -2970,11 +2991,6 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
         <location line="+0"/>
         <source>Address</source>
         <translation>Адрес</translation>
-    </message>
-    <message>
-        <location line="+0"/>
-        <source>Amount</source>
-        <translation>Количество</translation>
     </message>
     <message numerus="yes">
         <location line="+57"/>

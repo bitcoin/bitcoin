@@ -45,9 +45,9 @@ QString BitcoinUnits::description(int unit)
 {
     switch(unit)
     {
-    case BTC: return QString("NovaCoins");
-    case mBTC: return QString("Milli-NovaCoins (1 / 1,000)");
-    case uBTC: return QString("Micro-NovaCoins (1 / 1,000,000)");
+    case BTC: return QString(QObject::tr("NovaCoins"));
+    case mBTC: return QString(QObject::tr("Milli-NovaCoins (1 / 1,000)"));
+    case uBTC: return QString(QObject::tr("Micro-NovaCoins (1 / 1,000,000)"));
     default: return QString("???");
     }
 }
@@ -178,4 +178,14 @@ QVariant BitcoinUnits::data(const QModelIndex &index, int role) const
         }
     }
     return QVariant();
+}
+
+QString BitcoinUnits::getAmountColumnTitle(int unit)
+{
+    QString amountTitle = QObject::tr("Amount");
+    if (BitcoinUnits::valid(unit))
+    {
+        amountTitle += " ("+BitcoinUnits::name(unit) + ")";
+    }
+    return amountTitle;
 }
