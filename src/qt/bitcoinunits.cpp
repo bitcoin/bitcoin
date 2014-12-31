@@ -39,25 +39,53 @@ bool BitcoinUnits::valid(int unit)
 
 QString BitcoinUnits::name(int unit)
 {
-    switch(unit)
+    if(!TestNet() && !RegTest())
     {
-    case DRK: return QString("DRK");
-    case mDRK: return QString("mDRK");
-    case uDRK: return QString::fromUtf8("μDRK");
-    case duffs: return QString::fromUtf8("duffs");
-    default: return QString("???");
+        switch(unit)
+        {
+            case DRK: return QString("DRK");
+            case mDRK: return QString("mDRK");
+            case uDRK: return QString::fromUtf8("μDRK");
+            case duffs: return QString::fromUtf8("duffs");
+            default: return QString("???");
+        }
+    }
+    else
+    {
+        switch(unit)
+        {
+            case DRK: return QString("tDRK");
+            case mDRK: return QString("mtDRK");
+            case uDRK: return QString::fromUtf8("μtDRK");
+            case duffs: return QString::fromUtf8("tduffs");
+            default: return QString("???");
+        }
     }
 }
 
 QString BitcoinUnits::description(int unit)
 {
-    switch(unit)
+    if(!TestNet() && !RegTest())
     {
-    case DRK: return QString("Darkcoins");
-    case mDRK: return QString("Milli-Darkcoins (1 / 1,000)");
-    case uDRK: return QString("Micro-Darkcoins (1 / 1,000,000)");
-    case duffs: return QString("Ten Nano-Darkcoins (1 / 100,000,000)");
-    default: return QString("???");
+        switch(unit)
+        {
+            case DRK: return QString("Darkcoins");
+            case mDRK: return QString("Milli-Darkcoins (1 / 1,000)");
+            case uDRK: return QString("Micro-Darkcoins (1 / 1,000,000)");
+            case duffs: return QString("Ten Nano-Darkcoins (1 / 100,000,000)");
+            default: return QString("???");
+        }
+    }
+    else
+    {
+        switch(unit)
+        {
+            case DRK: return QString("Testdarkcoins");
+            case mDRK: return QString("Milli-Testdarkcoins (1 / 1,000)");
+            case uDRK: return QString("Micro-Testdarkcoins (1 / 1,000,000)");
+            case duffs: return QString("Ten Nano-Testdarkcoins (1 / 100,000,000)");
+            default: return QString("???");
+        }
     }
 }
 
