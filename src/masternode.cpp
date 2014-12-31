@@ -734,9 +734,11 @@ void CMasternodePayments::CleanPaymentList()
 {
     if(chainActive.Tip() == NULL) return;
 
+    int nLimit = std::max(((int)vecMasternodes.size())*2, 1000);
+
     vector<CMasternodePaymentWinner>::iterator it;
     for(it=vWinning.begin();it<vWinning.end();it++){
-        if(chainActive.Tip()->nHeight - (*it).nBlockHeight > 1000){
+        if(chainActive.Tip()->nHeight - (*it).nBlockHeight > nLimit){
             if(fDebug) LogPrintf("CMasternodePayments::CleanPaymentList - Removing old masternode payment - block %d\n", (*it).nBlockHeight);
             vWinning.erase(it);
             break;
@@ -766,21 +768,30 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
     uint256 blockHash = 0;
     if(!darkSendPool.GetBlockHash(blockHash, nBlockHeight-576)) return false;
 
-    BOOST_FOREACH(CMasterNode& mn, vecMasternodes) {
-        mn.Check();
+    std::vector<CTxIn> vecLastPayments;
+    int c = 0;
+    BOOST_REVERSE_FOREACH(CMasternodePaymentWinner& winner, vWinning){
+        vecLastPayments.push_back(winner.vin);
+        //if we have one full payment cycle, break
+        if(++c > (int)vecMasternodes.size()) break;
+    }
 
+    BOOST_FOREACH(CMasterNode& mn, vecMasternodes) {
+        bool found = false;
+        BOOST_FOREACH(CTxIn& vin, vecLastPayments)
+            if(mn.vin == vin) found = true;
+
+        if(found) continue;
+
+        mn.Check();
         if(!mn.IsEnabled()) {
             continue;
         }
 
-        if(LastPayment(mn) < vecMasternodes.size()*.9) continue;
-
-        uint64_t score = CalculateScore(blockHash, mn.vin);
-        if(score > winner.score){
-            winner.score = score;
-            winner.nBlockHeight = nBlockHeight;
-            winner.vin = mn.vin;
-        }
+        winner.score = 0;
+        winner.nBlockHeight = nBlockHeight;
+        winner.vin = mn.vin;
+        break;
     }
 
     if(winner.nBlockHeight == 0) return false; //no masternodes available
