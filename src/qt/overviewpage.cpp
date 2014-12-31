@@ -411,12 +411,12 @@ void OverviewPage::darkSendStatus()
 
 
     if(darkSendPool.sessionDenom == 0){
-        ui->label_10->setText("n/a");
+        ui->labelSubmittedDenom->setText("n/a");
     } else {
         std::string out;
         darkSendPool.GetDenominationsToString(darkSendPool.sessionDenom, out);
         QString s2(out.c_str());
-        ui->label_10->setText(s2);
+        ui->labelSubmittedDenom->setText(s2);
     }
 
     showingDarkSendMessage++;

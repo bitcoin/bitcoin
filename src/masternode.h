@@ -24,7 +24,7 @@ class CMasternodePayments;
 #define MASTERNODE_NOT_CAPABLE                 2
 #define MASTERNODE_STOPPED                     3
 #define MASTERNODE_INPUT_TOO_NEW               4
-#define MASTERNODE_PORT_NOT_OPEN               6 
+#define MASTERNODE_PORT_NOT_OPEN               6
 #define MASTERNODE_PORT_OPEN                   7
 #define MASTERNODE_SYNC_IN_PROCESS             8
 #define MASTERNODE_REMOTELY_ENABLED            9
@@ -38,7 +38,7 @@ class CMasternodePayments;
 
 using namespace std;
 
-extern std::vector<CMasterNode> darkSendMasterNodes;
+extern std::vector<CMasterNode> vecMasternodes;
 extern CMasternodePayments masternodePayments;
 extern std::vector<CTxIn> vecMasternodeAskedFor;
 extern map<uint256, int> mapSeenMasternodeVotes;
@@ -57,10 +57,10 @@ int GetMasternodeByRank(int findRank, int64_t nBlockHeight=0, int minProtocol=0)
 
 void ProcessMessageMasternode(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
 
-// 
+//
 // The Masternode Class. For managing the darksend process. It contains the input of the 1000DRK, signature to prove
 // it's the one who own that ip address and code for calculating the payment election.
-//  
+//
 class CMasterNode
 {
 public:
@@ -92,7 +92,7 @@ public:
         now = newNow;
         enabled = 1;
         lastTimeSeen = 0;
-        unitTest = false;    
+        unitTest = false;
         cacheInputAge = 0;
         cacheInputAgeBlock = 0;
         nLastDsq = 0;
@@ -124,7 +124,7 @@ public:
     bool UpdatedWithin(int seconds)
     {
         // LogPrintf("UpdatedWithin %d, %d --  %d \n", GetAdjustedTime() , lastTimeSeen, (GetAdjustedTime() - lastTimeSeen) < seconds);
-        
+
         return (GetAdjustedTime() - lastTimeSeen) < seconds;
     }
 
@@ -183,7 +183,7 @@ public:
 };
 
 //
-// Masternode Payments Class 
+// Masternode Payments Class
 // Keeps track of who should get paid for which blocks
 //
 
@@ -206,11 +206,11 @@ public:
     bool SetPrivKey(std::string strPrivKey);
     bool CheckSignature(CMasternodePaymentWinner& winner);
     bool Sign(CMasternodePaymentWinner& winner);
-    
-    // Deterministically calculate a given "score" for a masternode depending on how close it's hash is 
-    // to the blockHeight. The further away they are the better, the furthest will win the election 
+
+    // Deterministically calculate a given "score" for a masternode depending on how close it's hash is
+    // to the blockHeight. The further away they are the better, the furthest will win the election
     // and get paid this block
-    // 
+    //
 
     uint64_t CalculateScore(uint256 blockHash, CTxIn& vin);
     bool GetWinningMasternode(int nBlockHeight, CTxIn& vinOut);
@@ -226,7 +226,7 @@ public:
 };
 
 /*//
-// Masternode Scanning Error 
+// Masternode Scanning Error
 // Enforces proof-of-service by scanning the masternode network
 //
 
@@ -249,11 +249,11 @@ public:
     bool SetPrivKey(std::string strPrivKey);
     bool CheckSignature(CMasternodePaymentWinner& winner);
     bool Sign(CMasternodePaymentWinner& winner);
-    
-    // Deterministically calculate a given "score" for a masternode depending on how close it's hash is 
-    // to the blockHeight. The further away they are the better, the furthest will win the election 
+
+    // Deterministically calculate a given "score" for a masternode depending on how close it's hash is
+    // to the blockHeight. The further away they are the better, the furthest will win the election
     // and get paid this block
-    // 
+    //
 
     uint64_t CalculateScore(uint256 blockHash, CTxIn& vin);
     bool GetWinningMasternode(int nBlockHeight, CTxIn& vinOut);

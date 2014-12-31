@@ -251,7 +251,7 @@ Value masternode(const Array& params, bool fHelp)
         }
 
         Object obj;
-        BOOST_FOREACH(CMasterNode mn, darkSendMasterNodes) {
+        BOOST_FOREACH(CMasterNode mn, vecMasternodes) {
             mn.Check();
 
             if(strCommand == "active"){
@@ -278,7 +278,7 @@ Value masternode(const Array& params, bool fHelp)
         }
         return obj;
     }
-    if (strCommand == "count") return (int)darkSendMasterNodes.size();
+    if (strCommand == "count") return (int)vecMasternodes.size();
 
     if (strCommand == "start")
     {
@@ -455,7 +455,7 @@ Value masternode(const Array& params, bool fHelp)
     {
         int winner = GetCurrentMasterNode(1);
         if(winner >= 0) {
-            return darkSendMasterNodes[winner].addr.ToString().c_str();
+            return vecMasternodes[winner].addr.ToString().c_str();
         }
 
         return "unknown";

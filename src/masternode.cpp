@@ -7,7 +7,7 @@
 #include <boost/lexical_cast.hpp>
 
 /** The list of active masternodes */
-std::vector<CMasterNode> darkSendMasterNodes;
+std::vector<CMasterNode> vecMasternodes;
 /** Object for who's going to get paid on which blocks */
 CMasternodePayments masternodePayments;
 // keep track of masternode votes I've seen
@@ -26,7 +26,7 @@ void ProcessMasternodeConnections(){
     BOOST_FOREACH(CNode* pnode, vNodes)
     {
         //if it's our masternode, let it be
-        if(darkSendPool.submittedToMasternode == pnode->addr) continue;
+        if((CNetAddr)darkSendPool.submittedToMasternode == (CNetAddr)pnode->addr) continue;
 
         if(pnode->fDarkSendMaster){
             LogPrintf("Closing masternode connection %s \n", pnode->addr.ToString().c_str());
@@ -98,11 +98,14 @@ void ProcessMessageMasternode(CNode* pfrom, std::string& strCommand, CDataStream
             return;
         }
 
-        if((Params().NetworkID() == CChainParams::TESTNET && addr.GetPort() != 19999) || (!(Params().NetworkID() == CChainParams::TESTNET) && addr.GetPort() != 9999)) return;
+        if(
+            (Params().NetworkID() == CChainParams::TESTNET && addr.GetPort() != 19999) ||
+            (Params().NetworkID() == CChainParams::REGTEST && addr.GetPort() != 19999) ||
+            (Params().NetworkID() == CChainParams::MAIN && addr.GetPort() != 9999)) return;
 
         //search existing masternode list, this is where we update existing masternodes with new dsee broadcasts
 
-        BOOST_FOREACH(CMasterNode& mn, darkSendMasterNodes) {
+        BOOST_FOREACH(CMasterNode& mn, vecMasternodes) {
             if(mn.vin.prevout == vin.prevout) {
                 // count == -1 when it's a new entry
                 //   e.g. We don't want the entry relayed/time updated when we're syncing the list
@@ -129,12 +132,12 @@ void ProcessMessageMasternode(CNode* pfrom, std::string& strCommand, CDataStream
 
         // make sure the vout that was signed is related to the transaction that spawned the masternode
         //  - this is expensive, so it's only done once per masternode
-/*        if(!darkSendSigner.IsVinAssociatedWithPubkey(vin, pubkey)) {
+        if(!darkSendSigner.IsVinAssociatedWithPubkey(vin, pubkey)) {
             LogPrintf("dsee - Got mismatched pubkey and vin\n");
             Misbehaving(pfrom->GetId(), 100);
             return;
         }
-*/
+
         if(fDebug) LogPrintf("dsee - Got NEW masternode entry %s\n", addr.ToString().c_str());
 
         // make sure it's still unspent
@@ -160,7 +163,7 @@ void ProcessMessageMasternode(CNode* pfrom, std::string& strCommand, CDataStream
             // add our masternode
             CMasterNode mn(addr, vin, pubkey, vchSig, sigTime, pubkey2, protocolVersion);
             mn.UpdateLastSeen(lastUpdated);
-            darkSendMasterNodes.push_back(mn);
+            vecMasternodes.push_back(mn);
 
             // if it matches our masternodeprivkey, then we've been remotely activated
             if(pubkey2 == activeMasternode.pubKeyMasternode && protocolVersion == PROTOCOL_VERSION){
@@ -208,7 +211,7 @@ void ProcessMessageMasternode(CNode* pfrom, std::string& strCommand, CDataStream
 
         // see if we have this masternode
 
-        BOOST_FOREACH(CMasterNode& mn, darkSendMasterNodes) {
+        BOOST_FOREACH(CMasterNode& mn, vecMasternodes) {
             if(mn.vin.prevout == vin.prevout) {
             	// LogPrintf("dseep - Found corresponding mn for vin: %s\n", vin.ToString().c_str());
             	// take this only if it's newer
@@ -279,10 +282,10 @@ void ProcessMessageMasternode(CNode* pfrom, std::string& strCommand, CDataStream
             }
         } //else, asking for a specific node which is ok
 
-        int count = darkSendMasterNodes.size()-1;
+        int count = vecMasternodes.size()-1;
         int i = 0;
 
-        BOOST_FOREACH(CMasterNode mn, darkSendMasterNodes) {
+        BOOST_FOREACH(CMasterNode mn, vecMasternodes) {
 
             if(mn.addr.IsRFC1918()) continue; //local network
 
@@ -402,7 +405,7 @@ int CountMasternodesAboveProtocol(int protocolVersion)
 {
     int i = 0;
 
-    BOOST_FOREACH(CMasterNode& mn, darkSendMasterNodes) {
+    BOOST_FOREACH(CMasterNode& mn, vecMasternodes) {
         if(mn.protocolVersion < protocolVersion) continue;
         i++;
     }
@@ -416,7 +419,7 @@ int GetMasternodeByVin(CTxIn& vin)
 {
     int i = 0;
 
-    BOOST_FOREACH(CMasterNode& mn, darkSendMasterNodes) {
+    BOOST_FOREACH(CMasterNode& mn, vecMasternodes) {
         if (mn.vin == vin) return i;
         i++;
     }
@@ -431,7 +434,7 @@ int GetCurrentMasterNode(int mod, int64_t nBlockHeight, int minProtocol)
     int winner = -1;
 
     // scan for winner
-    BOOST_FOREACH(CMasterNode mn, darkSendMasterNodes) {
+    BOOST_FOREACH(CMasterNode mn, vecMasternodes) {
         mn.Check();
         if(mn.protocolVersion < minProtocol) continue;
         if(!mn.IsEnabled()) {
@@ -462,7 +465,7 @@ int GetMasternodeByRank(int findRank, int64_t nBlockHeight, int minProtocol)
     std::vector<pair<unsigned int, int> > vecMasternodeScores;
 
     i = 0;
-    BOOST_FOREACH(CMasterNode mn, darkSendMasterNodes) {
+    BOOST_FOREACH(CMasterNode mn, vecMasternodes) {
         mn.Check();
         if(mn.protocolVersion < minProtocol) continue;
         if(!mn.IsEnabled()) {
@@ -493,7 +496,7 @@ int GetMasternodeRank(CTxIn& vin, int64_t nBlockHeight, int minProtocol)
 {
     std::vector<pair<unsigned int, CTxIn> > vecMasternodeScores;
 
-    BOOST_FOREACH(CMasterNode mn, darkSendMasterNodes) {
+    BOOST_FOREACH(CMasterNode mn, vecMasternodes) {
         mn.Check();
         if(mn.protocolVersion < minProtocol) continue;
         if(!mn.IsEnabled()) {
@@ -608,15 +611,15 @@ void CMasterNode::Check()
 bool CMasternodePayments::CheckSignature(CMasternodePaymentWinner& winner)
 {
     //note: need to investigate why this is failing
-/*    std::string strMessage = winner.vin.ToString().c_str() + boost::lexical_cast<std::string>(winner.nBlockHeight);
-    std::string strPubKey = (Params().NetworkID() == CChainParams::TESTNET) ? strTestPubKey : strMainPubKey;
+    std::string strMessage = winner.vin.ToString().c_str() + boost::lexical_cast<std::string>(winner.nBlockHeight);
+    std::string strPubKey = (Params().NetworkID() == CChainParams::MAIN) ? strMainPubKey : strTestPubKey;
     CPubKey pubkey(ParseHex(strPubKey));
 
     std::string errorMessage = "";
     if(!darkSendSigner.VerifyMessage(pubkey, winner.vchSig, strMessage, errorMessage)){
         return false;
     }
-*/
+
     return true;
 }
 
@@ -763,14 +766,14 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
     uint256 blockHash = 0;
     if(!darkSendPool.GetBlockHash(blockHash, nBlockHeight-576)) return false;
 
-    BOOST_FOREACH(CMasterNode& mn, darkSendMasterNodes) {
+    BOOST_FOREACH(CMasterNode& mn, vecMasternodes) {
         mn.Check();
 
         if(!mn.IsEnabled()) {
             continue;
         }
 
-        if(LastPayment(mn) < darkSendMasterNodes.size()*.9) continue;
+        if(LastPayment(mn) < vecMasternodes.size()*.9) continue;
 
         uint64_t score = CalculateScore(blockHash, mn.vin);
         if(score > winner.score){
