@@ -1,0 +1,159 @@
+---
+name: "osx-depends"
+suites:
+- "precise"
+architectures:
+- "i386"
+packages:
+- "git-core"
+- "automake"
+- "p7zip-full"
+
+reference_datetime: "2013-06-01 00:00:00"
+remotes: []
+files:
+- "boost_1_55_0.tar.bz2"
+- "db-4.8.30.NC.tar.gz"
+- "miniupnpc-1.9.20140701.tar.gz"
+- "openssl-1.0.1i.tar.gz"
+- "protobuf-2.5.0.tar.bz2"
+- "qrencode-3.4.3.tar.bz2"
+- "MacOSX10.7.sdk.tar.gz"
+- "osx-native-depends-r3.tar.gz"
+
+script: |
+
+  echo "fff00023dd79486d444c8e29922f4072e1d451fc5a4d2b6075852ead7f2b7b52  boost_1_55_0.tar.bz2" | sha256sum -c
+  echo "12edc0df75bf9abd7f82f821795bcee50f42cb2e5f76a6a281b85732798364ef  db-4.8.30.NC.tar.gz" | sha256sum -c
+  echo "26f3985bad7768b8483b793448ae49414cdc4451d0ec83e7c1944367e15f9f07  miniupnpc-1.9.20140701.tar.gz"   | sha256sum -c
+  echo "3c179f46ca77069a6a0bac70212a9b3b838b2f66129cb52d568837fc79d8fcc7  openssl-1.0.1i.tar.gz" | sha256sum -c
+  echo "13bfc5ae543cf3aa180ac2485c0bc89495e3ae711fc6fab4f8ffe90dfb4bb677  protobuf-2.5.0.tar.bz2" | sha256sum -c
+  echo "dfd71487513c871bad485806bfd1fdb304dedc84d2b01a8fb8e0940b50597a98  qrencode-3.4.3.tar.bz2" | sha256sum -c
+
+  REVISION=r6
+  export SOURCES_PATH=`pwd`
+  export TAR_OPTIONS="-m --mtime="$REFERENCE_DATE\\\ $REFERENCE_TIME""
+  export PATH=$HOME:$PATH
+  export SOURCES_PATH=`pwd`
+  export ZERO_AR_DATE=1
+
+  mkdir -p osx-cross-depends/build
+  cd osx-cross-depends
+
+  PREFIX=`pwd`/prefix
+  NATIVEPREFIX=`pwd`/native-prefix
+  BUILD_BASE=`pwd`/build
+  SDK=`pwd`/SDKs/MacOSX10.7.sdk
+  HOST=x86_64-apple-darwin11
+  MIN_VERSION=10.6
+
+  INT_CFLAGS="-target ${HOST} -mmacosx-version-min=${MIN_VERSION} --sysroot ${SDK} -msse2 -Qunused-arguments"
+  INT_CXXFLAGS="${INT_CFLAGS}"
+  INT_LDFLAGS="-L${PREFIX}/lib -L${SDK}/usr/lib/i686-apple-darwin10/4.2.1"
+  INT_LDFLAGS_CLANG="-B${NATIVEPREFIX}/bin"
+  INT_CPPFLAGS="-I${PREFIX}/include"
+  INT_CC=clang
+  INT_CXX=clang++
+  INT_OBJC=clang
+  INT_OBJCXX=clang++
+  INT_AR=${HOST}-ar
+  INT_RANLIB=${HOST}-ranlib
+  INT_LIBTOOL=${HOST}-libtool
+  INT_INSTALL_NAME_TOOL=${HOST}-install_name_tool
+
+  export PATH=${NATIVEPREFIX}/bin:${PATH}
+
+  mkdir -p ${NATIVEPREFIX}/bin
+  mkdir -p ${NATIVEPREFIX}/lib
+  mkdir -p ${PREFIX}/bin
+  mkdir -p ${PREFIX}/lib
+  mkdir -p ${BUILD_BASE}
+
+  mkdir -p SDKs
+  tar -C SDKs -xf ${SOURCES_PATH}/MacOSX10.7.sdk.tar.gz
+
+  tar xf /home/ubuntu/build/osx-native-depends-r3.tar.gz
+
+  # bdb
+  SOURCE_FILE=${SOURCES_PATH}/db-4.8.30.NC.tar.gz
+  BUILD_DIR=${BUILD_BASE}/db-4.8.30.NC
+
+  tar -C ${BUILD_BASE} -xf ${SOURCE_FILE}
+  sed -i 's/__atomic_compare_exchange/__atomic_compare_exchange_db/g' ${BUILD_DIR}/dbinc/atomic.h
+  pushd ${BUILD_DIR}
+  cd build_unix;
+  ../dist/configure --host=${HOST} --prefix="${PREFIX}" --disable-shared --enable-cxx CC="${INT_CC}" CXX="${INT_CXX}" AR="${INT_AR}" RANLIB="${INT_RANLIB}" OBJC="${INT_OBJC}" OBJCXX="${INT_OBJCXX}" CFLAGS="${INT_CFLAGS}" CXXFLAGS="${INT_CXXFLAGS}" LDFLAGS="${INT_CLANG_LDFLAGS} ${INT_LDFLAGS}" CPPFLAGS="${INT_CPPFLAGS}"
+  make $MAKEOPTS libdb.a libdb_cxx.a
+  make  install_lib install_include
+  popd
+
+  # openssl
+  SOURCE_FILE=${SOURCES_PATH}/openssl-1.0.1i.tar.gz
+  BUILD_DIR=${BUILD_BASE}/openssl-1.0.1i
+
+  tar -C ${BUILD_BASE} -xf ${SOURCE_FILE}
+  pushd ${BUILD_DIR}
+  sed -ie "s|cc:|${INT_CC}:|" ${BUILD_DIR}/Configure
+  sed -ie "s|\(-arch [_a-zA-Z0-9]*\)|\1 --sysroot ${SDK}  -target ${HOST} -msse2|" ${BUILD_DIR}/Configure
+  AR="${INT_AR}" RANLIB="${INT_RANLIB}" ./Configure --prefix=${PREFIX} --openssldir=${PREFIX}/etc/openssl zlib shared no-krb5 darwin64-x86_64-cc ${INT_LDFLAGS} ${INT_CLANG_LDFLAGS} ${INT_CPPFLAGS}
+  sed -i "s|engines apps test|engines|" ${BUILD_DIR}/Makefile
+  sed -i "/define DATE/d" ${BUILD_DIR}/crypto/Makefile
+  make -j1 build_libs libcrypto.pc libssl.pc openssl.pc
+  make -j1 install_sw
+  popd
+
+  #libminiupnpc
+  SOURCE_FILE=${SOURCES_PATH}/miniupnpc-1.9.20140701.tar.gz
+  BUILD_DIR=${BUILD_BASE}/miniupnpc-1.9.20140701
+
+  tar -C ${BUILD_BASE} -xf ${SOURCE_FILE}
+  pushd ${BUILD_DIR}
+  CFLAGS="${INT_CFLAGS} ${INT_CPPFLAGS}" make $MAKEOPTS OS=Darwin CC="${INT_CC}" AR="${INT_AR}" libminiupnpc.a
+  install -d ${PREFIX}/include/miniupnpc
+  install *.h ${PREFIX}/include/miniupnpc
+  install libminiupnpc.a  ${PREFIX}/lib
+  popd
+
+  # qrencode
+  SOURCE_FILE=${SOURCES_PATH}/qrencode-3.4.3.tar.bz2
+  BUILD_DIR=${BUILD_BASE}/qrencode-3.4.3
+  tar -C ${BUILD_BASE} -xf ${SOURCE_FILE}
+  pushd ${BUILD_DIR}
+
+  # m4 folder is not included in the stable release, which can confuse aclocal
+  # if its timestamp ends up being earlier than configure.ac when extracted
+  touch aclocal.m4
+  ./configure --host=${HOST} --prefix="${PREFIX}" --disable-shared CC="${INT_CC}" CXX="${INT_CXX}" AR="${INT_AR}" RANLIB="${INT_RANLIB}" OBJC="${INT_OBJC}" OBJCXX="${INT_OBJCXX}" CFLAGS="${INT_CFLAGS}" CXXFLAGS="${INT_CXXFLAGS}" LDFLAGS="${INT_CLANG_LDFLAGS} ${INT_LDFLAGS}" CPPFLAGS="${INT_CPPFLAGS}" --disable-shared -without-tools --disable-sdltest --disable-dependency-tracking
+  make $MAKEOPTS
+  make install
+  popd
+
+  # libprotobuf
+  SOURCE_FILE=${SOURCES_PATH}/protobuf-2.5.0.tar.bz2
+  BUILD_DIR=${BUILD_BASE}/protobuf-2.5.0
+
+  tar -C ${BUILD_BASE} -xjf ${SOURCE_FILE}
+  pushd ${BUILD_DIR}
+  ./configure --host=${HOST} --prefix="${PREFIX}" --disable-shared --enable-cxx CC="${INT_CC}" CXX="${INT_CXX}" AR="${INT_AR}" RANLIB="${INT_RANLIB}" OBJC="${INT_OBJC}" OBJCXX="${INT_OBJCXX}" CFLAGS="${INT_CFLAGS}" CXXFLAGS="${INT_CXXFLAGS}" LDFLAGS="${INT_CLANG_LDFLAGS} ${INT_LDFLAGS}" CPPFLAGS="${INT_CPPFLAGS}" --enable-shared=no --disable-dependency-tracking --with-protoc=${NATIVEPREFIX}/bin/protoc
+  cd src
+  make $MAKEOPTS libprotobuf.la
+  make install-libLTLIBRARIES install-nobase_includeHEADERS
+  cd ..
+  make install-pkgconfigDATA
+  popd
+
+  # boost
+  SOURCE_FILE=${SOURCES_PATH}/boost_1_55_0.tar.bz2
+  BUILD_DIR=${BUILD_BASE}/boost_1_55_0
+
+  tar -C ${BUILD_BASE} -xf ${SOURCE_FILE}
+  pushd ${BUILD_DIR}
+  ./bootstrap.sh --with-libraries=chrono,filesystem,program_options,system,thread,test
+  echo "using darwin : : ${INT_CXX} : <cxxflags>\"${INT_CFLAGS} ${INT_CPPFLAGS}\" <linkflags>\"${INT_LDFLAGS} ${INT_CLANG_LDFLAGS}\" <archiver>\"${INT_LIBTOOL}\" <striper>\"${INT_STRIP}\" : ;" > "user-config.jam"
+  ./b2 -d2 --layout=tagged --build-type=complete --prefix="${PREFIX}" --toolset=darwin-4.2.1 --user-config=user-config.jam variant=release threading=multi link=static install
+  popd
+
+  export GZIP="-9n"
+  find prefix | sort | tar --no-recursion -czf osx-depends-${REVISION}.tar.gz -T -
+
+  mv osx-depends-${REVISION}.tar.gz $OUTDIR

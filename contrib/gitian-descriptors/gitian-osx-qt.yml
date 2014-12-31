@@ -1,0 +1,186 @@
+---
+name: "osx-qt"
+suites:
+- "precise"
+architectures:
+- "i386"
+packages:
+- "git-core"
+- "automake"
+- "p7zip-full"
+
+reference_datetime: "2013-06-01 00:00:00"
+remotes: []
+files:
+- "qt-everywhere-opensource-src-5.2.1.tar.gz"
+- "osx-native-depends-r3.tar.gz"
+- "osx-depends-r6.tar.gz"
+- "MacOSX10.7.sdk.tar.gz"
+
+script: |
+
+  echo "84e924181d4ad6db00239d87250cc89868484a14841f77fb85ab1f1dbdcd7da1  qt-everywhere-opensource-src-5.2.1.tar.gz" | sha256sum -c
+
+  REVISION=r5
+  export SOURCES_PATH=`pwd`
+  export TAR_OPTIONS="-m --mtime="$REFERENCE_DATE\\\ $REFERENCE_TIME""
+  export ZERO_AR_DATE=1
+
+  export TZ=UTC
+
+  REAL_DATE=`which date`
+  echo '#!/bin/bash' > $HOME/date
+  echo "$REAL_DATE -d \"${REFERENCE_DATETIME}\" \"\$@\"" >> $HOME/date
+
+  chmod +x $HOME/date
+  export PATH=$HOME:$PATH
+
+  mkdir -p osx-cross-depends/build
+  cd osx-cross-depends
+
+  PREFIX=`pwd`/prefix
+  NATIVEPREFIX=`pwd`/native-prefix
+  BUILD_BASE=`pwd`/build
+  SDK=`pwd`/SDKs/MacOSX10.7.sdk
+  HOST=x86_64-apple-darwin11
+  MIN_VERSION=10.6
+
+  INT_CFLAGS="-target ${HOST} -mmacosx-version-min=${MIN_VERSION} --sysroot ${SDK} -msse2 -Qunused-arguments"
+  INT_CXXFLAGS="${INT_CFLAGS}"
+  INT_LDFLAGS="-L${PREFIX}/lib -L${SDK}/usr/lib/i686-apple-darwin10/4.2.1"
+  INT_LDFLAGS_CLANG="-B${NATIVEPREFIX}/bin"
+  INT_CPPFLAGS="-I${PREFIX}/include"
+  INT_CC=clang
+  INT_CXX=clang++
+  INT_OBJC=clang
+  INT_OBJCXX=clang++
+  INT_AR=${HOST}-ar
+  INT_RANLIB=${HOST}-ranlib
+  INT_LIBTOOL=${HOST}-libtool
+  INT_INSTALL_NAME_TOOL=${HOST}-install_name_tool
+
+  export PATH=${NATIVEPREFIX}/bin:${PATH}
+
+  mkdir -p ${NATIVEPREFIX}/bin
+  mkdir -p ${NATIVEPREFIX}/lib
+  mkdir -p ${PREFIX}/bin
+  mkdir -p ${PREFIX}/lib
+  mkdir -p ${BUILD_BASE}
+
+  mkdir -p SDKs
+  tar -C SDKs -xf ${SOURCES_PATH}/MacOSX10.7.sdk.tar.gz
+
+  tar xf /home/ubuntu/build/osx-native-depends-r3.tar.gz
+
+  export PATH=`pwd`/native-prefix/bin:$PATH
+  tar xf /home/ubuntu/build/osx-depends-r6.tar.gz
+
+  SOURCE_FILE=${SOURCES_PATH}/qt-everywhere-opensource-src-5.2.1.tar.gz
+  BUILD_DIR=${BUILD_BASE}/qt-everywhere-opensource-src-5.2.1
+
+
+  tar -C ${BUILD_BASE} -xf ${SOURCE_FILE}
+
+  # Install our mkspec. All files are pulled from the macx-clang spec, except for
+  # our custom qmake.conf
+  SPECFILE=${BUILD_DIR}/qtbase/mkspecs/macx-clang-linux/qmake.conf
+
+  mkdir -p ${BUILD_DIR}/qtbase/mkspecs/macx-clang-linux
+  cp -f ${BUILD_DIR}/qtbase/mkspecs/macx-clang/Info.plist.lib ${BUILD_DIR}/qtbase/mkspecs/macx-clang-linux/
+  cp -f ${BUILD_DIR}/qtbase/mkspecs/macx-clang/Info.plist.app ${BUILD_DIR}/qtbase/mkspecs/macx-clang-linux/
+  cp -f ${BUILD_DIR}/qtbase/mkspecs/macx-clang/qplatformdefs.h ${BUILD_DIR}/qtbase/mkspecs/macx-clang-linux/
+
+  cat > ${SPECFILE} <<ENDCONF
+
+  MAKEFILE_GENERATOR      = UNIX
+  CONFIG                 += app_bundle incremental global_init_link_order lib_version_first plugin_no_soname absolute_library_soname
+  QMAKE_INCREMENTAL_STYLE = sublib
+
+  include(../common/macx.conf)
+  include(../common/gcc-base-mac.conf)
+  include(../common/clang.conf)
+  include(../common/clang-mac.conf)
+
+  QMAKE_XCODE_VERSION=4.3
+  QMAKE_XCODE_DEVELOPER_PATH=/Developer
+
+  QMAKE_MACOSX_DEPLOYMENT_TARGET = ${MIN_VERSION}
+
+  QMAKE_MAC_SDK=macosx
+  QMAKE_MAC_SDK.macosx.path = ${SDK}
+  QMAKE_MAC_SDK.macosx.platform_name = macosx
+  QMAKE_MAC_SDK_PATH=${SDK}
+
+  QMAKE_CFLAGS += -target ${HOST}
+  QMAKE_OBJECTIVE_CFLAGS += -target ${HOST}
+  QMAKE_CXXFLAGS += -target ${HOST}
+
+  QMAKE_LFLAGS += -target ${HOST}
+  QMAKE_AR = ${HOST}-ar cq
+  QMAKE_RANLIB=${HOST}-ranlib
+  QMAKE_LIBTOOL=${HOST}-libtool
+  QMAKE_INSTALL_NAME_TOOL=${HOST}-install_name_tool
+
+  load(qt_config)
+
+  ENDCONF
+
+  pushd ${BUILD_DIR}
+  ./configure -release -opensource -openssl-linked \
+  -no-audio-backend  -no-javascript-jit -no-sql-sqlite -no-sql-tds \
+  -no-cups -no-iconv -no-dbus -no-gif -no-audio-backend -no-freetype \
+  -no-javascript-jit -no-sql-sqlite -no-nis -no-cups -no-iconv -no-pch \
+  -no-dbus -no-gif -no-sm -nomake examples -no-feature-style-plastique \
+  -no-xcb -no-qml-debug -no-pch -no-nis \
+  -no-feature-style-cde -no-feature-style-s60 -no-feature-style-motif \
+  -no-feature-style-windowsmobile -no-feature-style-windowsce \
+  -no-feature-style-cleanlooks \
+  -no-sql-db2 -no-sql-ibase -no-sql-oci -no-sql-tds -no-sql-mysql \
+  -no-sql-odbc -no-sql-psql -no-sql-sqlite -no-sql-sqlite2 \
+  -skip qtsvg -skip qtwebkit -skip qtwebkit-examples -skip qtserialport \
+  -skip qtdeclarative -skip qtmultimedia -skip qtimageformats \
+  -skip qtlocation -skip qtsensors -skip qtquick1 -skip qtxmlpatterns \
+  -skip qtquickcontrols -skip qtactiveqt -skip qtconnectivity \
+  -skip qtwinextras -skip qtscript \
+  -prefix ${PREFIX} -bindir ${NATIVEPREFIX}/bin \
+  -confirm-license -xplatform macx-clang-linux -v ${INT_LDFLAGS}
+
+  # RCC's output is sorted using each file entry's hash as the key. Unfortunately,
+  # the hash function uses a random seed for each run so the results aren't
+  # deterministic. This leads to static resources being defined in a random order,
+  # which in-turn means that object files are not predictable.
+  # Fortunately, this upsets Qt's unit tests as well, so they've added the
+  # QT_RCC_TEST environment variable to set a pre-defined seed. Here, do the same
+  # thing for the same reason.
+  QT_RCC_TEST=1 make $MAKEOPTS module-qtbase-make_first
+
+
+  make $MAKEOPTS module-qttranslations-make_first
+  make $MAKEOPTS module-qttools-make_first
+  make $MAKEOPTS -C qtbase
+  make -C qtbase install
+  make -C qttranslations install
+  make -C qttools/src/linguist install
+  popd
+
+  # This file should not be installed to the destination. It's native and
+  # non-deterministic. Remove it.
+  # See: https://bugreports.qt-project.org/browse/QTBUG-31393
+  rm -f ${PREFIX}/lib/libQt5Bootstrap.a
+
+  rm -f ${PREFIX}/lib/Qt*.framework/Qt*.prl
+  pushd ${PREFIX}/include
+  ln -sf ../lib/QtNetwork.framework/Headers/ QtNetwork
+  ln -sf ../lib/QtWidgets.framework/Headers/ QtWidgets
+  ln -sf ../lib/QtGui.framework/Headers/ QtGui
+  ln -sf ../lib/QtCore.framework/Headers/ QtCore
+  ln -sf ../lib/QtTest.framework/Headers/ QtTest
+  popd
+
+  rm -f ${PREFIX}/lib/*.la
+  find ${PREFIX}/lib -name "*.prl" -delete
+
+  export GZIP="-9n"
+  find native-prefix prefix | sort | tar --no-recursion -czf osx-depends-qt-5.2.1-${REVISION}.tar.gz -T -
+
+  mv osx-depends-qt-5.2.1-${REVISION}.tar.gz $OUTDIR
