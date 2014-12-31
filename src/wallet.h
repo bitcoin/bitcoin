@@ -163,6 +163,7 @@ public:
 
     // Adds a watch-only address to the store, and saves it to disk.
     bool AddWatchOnly(const CScript &dest);
+    bool RemoveWatchOnly(const CScript &dest);
     // Adds a watch-only address to the store, without saving it to disk (used by LoadWallet)
     bool LoadWatchOnly(const CScript &dest);
 
@@ -347,6 +348,9 @@ public:
      * @note called with lock cs_wallet held.
      */
     boost::signals2::signal<void (CWallet *wallet, const uint256 &hashTx, ChangeType status)> NotifyTransactionChanged;
+
+    /** Watch-only address added */
+    boost::signals2::signal<void (bool fHaveWatchOnly)> NotifyWatchonlyChanged;
 };
 
 /** A key allocated from the key pool. */
@@ -647,22 +651,37 @@ public:
         return nDebit;
     }
 
-    int64_t GetCredit(bool fUseCache=true) const
+    int64_t GetCredit(const isminefilter& filter) const
     {
         // Must wait until coinbase is safely deep enough in the chain before valuing it
         if ((IsCoinBase() || IsCoinStake()) && GetBlocksToMaturity() > 0)
             return 0;
 
-        // GetBalance can assume transactions in mapWallet won't change
-        if (fUseCache) {
+        int64_t credit = 0;
+        if (filter & MINE_SPENDABLE)
+        {
+            // GetBalance can assume transactions in mapWallet won't change
             if (fCreditCached)
-                return nCreditCached;
+                credit += nCreditCached;
+            else
+            {
+                nCreditCached = pwallet->GetCredit(*this, MINE_SPENDABLE);
+                fCreditCached = true;
+                credit += nCreditCached;
+            }
         }
-
-        nCreditCached = pwallet->GetCredit(*this, MINE_ALL);
-        fCreditCached = true;
-
-        return nCreditCached;
+        if (filter & MINE_WATCH_ONLY)
+        {
+            if (fWatchCreditCached)
+                credit += nWatchCreditCached;
+            else
+            {
+                nWatchCreditCached = pwallet->GetCredit(*this, MINE_WATCH_ONLY);
+                fWatchCreditCached = true;
+                credit += nWatchCreditCached;
+            }
+        }
+        return credit;
     }
 
     int64_t GetImmatureCredit(bool fUseCache=true) const

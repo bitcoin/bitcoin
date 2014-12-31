@@ -56,8 +56,6 @@ Value importprivkey(const Array& params, bool fHelp)
     key.SetSecret(secret, fCompressed);
     CKeyID vchAddress = key.GetPubKey().GetID();
     {
-        LOCK2(cs_main, pwalletMain->cs_wallet);
-
         pwalletMain->MarkDirty();
         pwalletMain->SetAddressBookName(vchAddress, strLabel);
 
@@ -99,7 +97,8 @@ Value importaddress(const Array& params, bool fHelp)
         fRescan = params[2].get_bool();
 
     {
-        LOCK2(cs_main, pwalletMain->cs_wallet);
+        if (::IsMine(*pwalletMain, script) == MINE_SPENDABLE)
+            throw JSONRPCError(RPC_WALLET_ERROR, "The wallet already contains the private key for this address or script");
 
         // Don't throw error in case an address is already there
         if (pwalletMain->HaveWatchOnly(script))
@@ -119,6 +118,44 @@ Value importaddress(const Array& params, bool fHelp)
             pwalletMain->ReacceptWalletTransactions();
         }
     }
+
+    return Value::null;
+}
+
+Value removeaddress(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 1)
+        throw runtime_error(
+            "removeaddress 'address'\n"
+            "\nRemoves watch-only address or script (in hex) added by importaddress.\n"
+            "\nArguments:\n"
+            "1. 'address' (string, required) The address\n"
+            "\nExamples:\n"
+            "\nremoveaddress 4EqHMPgEAf56CQmU6ZWS8Ug4d7N3gsQVQA\n"
+            "\nRemove watch-only address 4EqHMPgEAf56CQmU6ZWS8Ug4d7N3gsQVQA\n");
+
+    CScript script;
+
+    CBitcoinAddress address(params[0].get_str());
+    if (address.IsValid()) {
+        script.SetDestination(address.Get());
+    } else if (IsHex(params[0].get_str())) {
+        std::vector<unsigned char> data(ParseHex(params[0].get_str()));
+        script = CScript(data.begin(), data.end());
+    } else {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin address or script");
+    }
+
+    if (::IsMine(*pwalletMain, script) == MINE_SPENDABLE)
+        throw JSONRPCError(RPC_WALLET_ERROR, "The wallet contains the private key for this address or script - can't remove it");
+
+    if (!pwalletMain->HaveWatchOnly(script))
+        throw JSONRPCError(RPC_WALLET_ERROR, "The wallet does not contain this address or script");
+
+    pwalletMain->MarkDirty();
+
+    if (!pwalletMain->RemoveWatchOnly(script))
+        throw JSONRPCError(RPC_WALLET_ERROR, "Error removing address from wallet");
 
     return Value::null;
 }

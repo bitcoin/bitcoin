@@ -65,6 +65,7 @@ public:
     MintingTableModel *getMintingTableModel();
     TransactionTableModel *getTransactionTableModel();
 
+    bool haveWatchOnly() const;
     qint64 getBalance() const;
     qint64 getBalanceWatchOnly() const;
     qint64 getStake() const;
@@ -139,6 +140,7 @@ public:
 
 private:
     CWallet *wallet;
+    bool fHaveWatchOnly;
 
     // Wallet has an options model for wallet-specific options
     // (transaction fee, for example)
@@ -163,7 +165,6 @@ private:
     void unsubscribeFromCoreSignals();
     void checkBalanceChanged();
 
-
 public slots:
     /* Wallet status might have changed */
     void updateStatus();
@@ -171,6 +172,8 @@ public slots:
     void updateTransaction(const QString &hash, int status);
     /* New, updated or removed address book entry */
     void updateAddressBook(const QString &address, const QString &label, bool isMine, int status);
+    /* Watchonly added */
+    void updateWatchOnlyFlag(bool fHaveWatchonly);
     /* Current, immature or unconfirmed balance might have changed - emit 'balanceChanged' if so */
     void pollBalanceChanged();
 
@@ -191,6 +194,9 @@ signals:
 
     // Asynchronous error notification
     void error(const QString &title, const QString &message, bool modal);
+
+    // Watch-only address added
+    void notifyWatchonlyChanged(bool fHaveWatchonly);
 };
 
 
