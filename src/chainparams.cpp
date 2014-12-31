@@ -156,7 +156,6 @@ public:
         vSeeds.push_back(CDNSSeedData("bluematt.me", "dnsseed.bluematt.me"));
         vSeeds.push_back(CDNSSeedData("dashjr.org", "dnsseed.bitcoin.dashjr.org"));
         vSeeds.push_back(CDNSSeedData("bitcoinstats.com", "seed.bitcoinstats.com"));
-        vSeeds.push_back(CDNSSeedData("bitnodes.io", "seed.bitnodes.io"));
         vSeeds.push_back(CDNSSeedData("xf2.org", "bitseed.xf2.org"));
 
         base58Prefixes[PUBKEY_ADDRESS] = list_of(0);
