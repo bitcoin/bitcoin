@@ -135,10 +135,7 @@ static int secp256k1_fe_sqrt_var(secp256k1_fe_t *r, const secp256k1_fe_t *a) {
     /* Check that a square root was actually calculated */
 
     secp256k1_fe_sqr(&t1, r);
-    secp256k1_fe_negate(&t1, &t1, 1);
-    secp256k1_fe_add(&t1, a);
-    secp256k1_fe_normalize_var(&t1);
-    return secp256k1_fe_is_zero(&t1);
+    return secp256k1_fe_equal_var(&t1, a);
 }
 
 static void secp256k1_fe_inv(secp256k1_fe_t *r, const secp256k1_fe_t *a) {
