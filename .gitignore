@@ -113,3 +113,7 @@ qa/pull-tester/test.*/*
 /doc/doxygen/
 
 libbitcoinconsensus.pc
+
+# ctags/etags TAGS file
+tags
+TAGS
