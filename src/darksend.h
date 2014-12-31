@@ -158,7 +158,7 @@ public:
 
     bool GetAddress(CService &addr)
     {
-        BOOST_FOREACH(CMasterNode mn, darkSendMasterNodes) {
+        BOOST_FOREACH(CMasterNode mn, vecMasternodes) {
             if(mn.vin == vin){
                 addr = mn.addr;
                 return true;
@@ -169,7 +169,7 @@ public:
 
     bool GetProtocolVersion(int &protocolVersion)
     {
-        BOOST_FOREACH(CMasterNode mn, darkSendMasterNodes) {
+        BOOST_FOREACH(CMasterNode mn, vecMasternodes) {
             if(mn.vin == vin){
                 protocolVersion = mn.protocolVersion;
                 return true;
@@ -283,7 +283,7 @@ public:
             to behave themselves. If they don't it takes their money. */
 
         std::string strAddress = "";
-        if(!(Params().NetworkID() == CChainParams::TESTNET)) {
+        if(Params().NetworkID() == CChainParams::MAIN) {
             strAddress = "Xq19GqFvajRrEdDHYRKGYjTsQfpV5jyipF";
         } else {
             strAddress = "y1EZuxhhNMAUofTBEeLqGE1bJrpC2TWRNp";
@@ -369,7 +369,7 @@ public:
     int GetMaxPoolTransactions()
     {
         //if we're on testnet, just use two transactions per merge
-        if(Params().NetworkID() == CChainParams::TESTNET) return 2;
+        if(Params().NetworkID() == CChainParams::TESTNET || Params().NetworkID() == CChainParams::REGTEST) return 2;
 
         //use the production amount
         return POOL_MAX_TRANSACTIONS;

@@ -170,7 +170,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
                 //no masternode detected
                 int winningNode = GetCurrentMasterNode(1);
                 if(winningNode >= 0){
-                    pblock->payee.SetDestination(darkSendMasterNodes[winningNode].pubkey.GetID());
+                    pblock->payee.SetDestination(vecMasternodes[winningNode].pubkey.GetID());
                 } else {
                     LogPrintf("CreateNewBlock: Failed to detect masternode to pay\n");
                     hasPayment = false;
