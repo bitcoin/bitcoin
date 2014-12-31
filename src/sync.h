@@ -13,49 +13,44 @@
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/recursive_mutex.hpp>
 
-
-////////////////////////////////////////////////
-//                                            //
-// THE SIMPLE DEFINITON, EXCLUDING DEBUG CODE //
-//                                            //
-////////////////////////////////////////////////
-
-/*
- 
- 
- 
-CCriticalSection mutex;
-    boost::recursive_mutex mutex;
-
-LOCK(mutex);
-    boost::unique_lock<boost::recursive_mutex> criticalblock(mutex);
-
-LOCK2(mutex1, mutex2);
-    boost::unique_lock<boost::recursive_mutex> criticalblock1(mutex1);
-    boost::unique_lock<boost::recursive_mutex> criticalblock2(mutex2);
-
-TRY_LOCK(mutex, name);
-    boost::unique_lock<boost::recursive_mutex> name(mutex, boost::try_to_lock_t);
-
-ENTER_CRITICAL_SECTION(mutex); // no RAII
-    mutex.lock();
-
-LEAVE_CRITICAL_SECTION(mutex); // no RAII
-    mutex.unlock();
- 
- 
- 
+/**
+ * ////////////////////////////////////////////////
+ * //                                            //
+ * // THE SIMPLE DEFINITON, EXCLUDING DEBUG CODE //
+ * //                                            //
+ * ////////////////////////////////////////////////
+ * CCriticalSection mutex;
+ *     boost::recursive_mutex mutex;
+ * 
+ * LOCK(mutex);
+ *     boost::unique_lock<boost::recursive_mutex> criticalblock(mutex);
+ * 
+ * LOCK2(mutex1, mutex2);
+ *     boost::unique_lock<boost::recursive_mutex> criticalblock1(mutex1);
+ *     boost::unique_lock<boost::recursive_mutex> criticalblock2(mutex2);
+ * 
+ * TRY_LOCK(mutex, name);
+ *     boost::unique_lock<boost::recursive_mutex> name(mutex, boost::try_to_lock_t);
+ * 
+ * ENTER_CRITICAL_SECTION(mutex); // no RAII
+ *     mutex.lock();
+ * 
+ * LEAVE_CRITICAL_SECTION(mutex); // no RAII
+ *     mutex.unlock();
  */
 
+/**
+ * ///////////////////////////////
+ * //                           //
+ * // THE ACTUAL IMPLEMENTATION //
+ * //                           //
+ * ///////////////////////////////
+ */
 
-///////////////////////////////
-//                           //
-// THE ACTUAL IMPLEMENTATION //
-//                           //
-///////////////////////////////
-
-// Template mixin that adds -Wthread-safety locking annotations to a
-// subset of the mutex API.
+/**
+ * Template mixin that adds -Wthread-safety locking
+ * annotations to a subset of the mutex API.
+ */
 template <typename PARENT>
 class LOCKABLE AnnotatedMixin : public PARENT
 {
@@ -76,8 +71,10 @@ public:
     }
 };
 
-/** Wrapped boost mutex: supports recursive locking, but no waiting  */
-// TODO: We should move away from using the recursive lock by default.
+/**
+ * Wrapped boost mutex: supports recursive locking, but no waiting
+ * TODO: We should move away from using the recursive lock by default.
+ */
 typedef AnnotatedMixin<boost::recursive_mutex> CCriticalSection;
 
 /** Wrapped boost mutex: supports waiting but not recursive locking */
@@ -92,9 +89,7 @@ void LeaveCritical();
 std::string LocksHeld();
 void AssertLockHeldInternal(const char* pszName, const char* pszFile, int nLine, void* cs);
 #else
-void static inline EnterCritical(const char* pszName, const char* pszFile, int nLine, void* cs, bool fTry = false)
-{
-}
+void static inline EnterCritical(const char* pszName, const char* pszFile, int nLine, void* cs, bool fTry = false) {}
 void static inline LeaveCritical() {}
 void static inline AssertLockHeldInternal(const char* pszName, const char* pszFile, int nLine, void* cs) {}
 #endif
