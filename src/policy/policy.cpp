@@ -15,10 +15,12 @@
 #include "tinyformat.h"
 #include "ui_interface.h"
 #include "util.h"
+#include "utilmoneystr.h"
 #include "utilstrencodings.h"
 
 /** Fees smaller than this (in satoshi) are considered zero fee (for relaying and mining) */
 CFeeRate minRelayTxFee = CFeeRate(1000);
+static const std::string defaultMinRelayTxFee = "0.00001000";
 /** The maximum number of bytes in OP_RETURN outputs that we're willing to relay/mine */
 static const unsigned int MAX_OP_RETURN_RELAY = 80;
 
@@ -136,6 +138,7 @@ std::vector<std::pair<std::string, std::string> > CStandardPolicy::GetOptionsHel
     optionsHelp.push_back(std::make_pair("-datacarrier", strprintf(_("Relay and mine data carrier transactions (default: %u)"), 1)));
     optionsHelp.push_back(std::make_pair("-datacarriersize", strprintf(_("Maximum size of data in data carrier transactions we relay and mine (default: %u)"), MAX_OP_RETURN_RELAY)));
     optionsHelp.push_back(std::make_pair("-permitbaremultisig", strprintf(_("Relay non-P2SH multisig (default: %u)"), 1)));
+    optionsHelp.push_back(std::make_pair("-minrelaytxfee=<amt>", strprintf(_("Fees (in BTC/Kb) smaller than this are considered zero fee for relaying (default: %s)"), defaultMinRelayTxFee)));
     return optionsHelp;
 }
 
@@ -145,6 +148,18 @@ void CStandardPolicy::InitFromArgs(const std::map<std::string, std::string>& map
         nMaxDatacarrierBytes = GetArg("-datacarriersize", nMaxDatacarrierBytes, mapArgs);
     else
         nMaxDatacarrierBytes = 0;
+    // Fee-per-kilobyte amount considered the same as "free"
+    // If you are mining, be careful setting this:
+    // if you set it to zero then
+    // a transaction spammer can cheaply fill blocks using
+    // 1-satoshi-fee transactions. It should be set above the real
+    // cost to you of processing a transaction.
+    std::string strRelayFee = GetArg("-minrelaytxfee", defaultMinRelayTxFee, mapArgs);
+    CAmount n = 0;
+    if (ParseMoney(strRelayFee, n) && Consensus::VerifyAmount(n))
+        minRelayTxFee = CFeeRate(n);
+    else
+        throw std::runtime_error(strprintf(_("Invalid amount for -minrelaytxfee=<amount>: '%s'"), strRelayFee));
     fIsBareMultisigStd = GetArg("-permitbaremultisig", fIsBareMultisigStd, mapArgs);
 }
 
