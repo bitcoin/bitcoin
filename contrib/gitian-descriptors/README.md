@@ -27,6 +27,7 @@ Once you've got the right hardware and software:
 
     # Create base images
     cd gitian-builder
+    bin/make-base-vm --suite precise --arch i386
     bin/make-base-vm --suite precise --arch amd64
     cd ..
 
