@@ -11,6 +11,10 @@
 #include <map>
 #include <string>
 
+class CFeeRate;
+
+extern CFeeRate minRelayTxFee;
+
 /** Abstract interface for Policy */
 class CPolicy
 {

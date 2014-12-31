@@ -9,6 +9,7 @@
 #include "main.h"
 #include "net.h"
 #include "netbase.h"
+#include "policy.h"
 #include "protocol.h"
 #include "sync.h"
 #include "timedata.h"

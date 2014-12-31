@@ -7,11 +7,15 @@
 
 #include "policy.h"
 
+#include "amount.h"
 #include "tinyformat.h"
 #include "ui_interface.h"
+#include "utilmoneystr.h"
 #include "utilstrencodings.h"
 
 static const unsigned int MAX_OP_RETURN_RELAY = 40; //! bytes
+/** Fees smaller than this (in satoshi) are considered zero fee (for relaying and mining) */
+CFeeRate minRelayTxFee = CFeeRate(1000);
 
 /** Declaration of Standard Policy implementing CPolicy */
 class CStandardPolicy : public CPolicy
@@ -54,6 +58,7 @@ std::string GetPolicyUsageStr()
     std::string strUsage = "";
     strUsage += "  -datacarrier           " + strprintf(_("Relay and mine data carrier transactions (default: %u)"), 1) + "\n";
     strUsage += "  -datacarriersize       " + strprintf(_("Maximum size of data in data carrier transactions we relay and mine (default: %u)"), MAX_OP_RETURN_RELAY) + "\n";
+    strUsage += "  -minrelaytxfee=<amt>   " + strprintf(_("Fees (in BTC/Kb) smaller than this are considered zero fee for relaying (default: %s)"), FormatMoney(::minRelayTxFee.GetFeePerK())) + "\n";
     strUsage += "  -policy                " + strprintf(_("Select a specific type of policy (default: %s)"), "standard") + "\n";
     return strUsage;
 }
@@ -62,6 +67,18 @@ void InitPolicyFromArgs(const std::map<std::string, std::string>& mapArgs)
 {
     SelectPolicy(GetArg("-policy", "standard", mapArgs));
     pCurrentPolicy->InitFromArgs(mapArgs);
+    // Fee-per-kilobyte amount considered the same as "free"
+    // If you are mining, be careful setting this:
+    // if you set it to zero then
+    // a transaction spammer can cheaply fill blocks using
+    // 1-satoshi-fee transactions. It should be set above the real
+    // cost to you of processing a transaction.
+    std::string strRelayFee = GetArg("-minrelaytxfee", "0.00001000", mapArgs);
+    CAmount n = 0;
+    if (ParseMoney(strRelayFee, n) && MoneyRange(n))
+        ::minRelayTxFee = CFeeRate(n);
+    else
+        throw std::runtime_error(strprintf(_("Invalid amount for -minrelaytxfee=<amount>: '%s'"), strRelayFee));
 }
 
 /** CStandardPolicy implementation */

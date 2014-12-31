@@ -108,7 +108,6 @@ extern int nScriptCheckThreads;
 extern bool fTxIndex;
 extern bool fIsBareMultisigStd;
 extern unsigned int nCoinCacheSize;
-extern CFeeRate minRelayTxFee;
 
 /** Best header we've seen so far (used for getheaders queries' starting points). */
 extern CBlockIndex *pindexBestHeader;
