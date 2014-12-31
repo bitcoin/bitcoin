@@ -9,6 +9,8 @@
 #include <QAbstractListModel>
 #include <QString>
 
+#include "chainparams.h"
+
 /** Darkcoin unit definitions. Encapsulates parsing and formatting
    and serves as list model for drop-down selection boxes.
 */
