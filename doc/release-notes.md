@@ -575,6 +575,7 @@ Miscellaneous:
 - `772ab0e` contrib: use batched JSON-RPC in linarize-hashes (optimization)
 - `7ab4358` Update bash-completion for v0.10
 - `6e6a36c` contrib: show pull # in prompt for github-merge script
+- `5b9f842` Upgrade leveldb to 1.18, make chainstate databases compatible between ARM and x86 (issue #2293)
 
 Credits
 =======
