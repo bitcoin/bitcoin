@@ -432,12 +432,12 @@ bool ToolTipToRichTextFilter::eventFilter(QObject *obj, QEvent *evt)
  * Initializes all internal variables and set the handled
  * columns into interactive mode.
  */
-TableViewLastColumnResizingFixer::TableViewLastColumnResizingFixer(QTableView* table, int lastColumnIndex, int stretchColumnIndex, int minimumColumnWidth) :
+TableViewLastColumnResizingFixer::TableViewLastColumnResizingFixer(QTableView* table, int stretchColumnIndex, int minimumColumnWidth) :
     tableView(table),
-    lastColIndex(lastColumnIndex),
     stretchColIndex(stretchColumnIndex),
     minColWidth(minimumColumnWidth)
 {
+    lastColIndex = tableView->horizontalHeader()->count() - 1;
     setViewHeaderResizeMode(stretchColumnIndex, QHeaderView::Interactive);
     setViewHeaderResizeMode(lastColIndex, QHeaderView::Interactive);
 }

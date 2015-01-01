@@ -142,7 +142,7 @@ namespace GUIUtil
         Q_OBJECT
 
         public:
-            TableViewLastColumnResizingFixer(QTableView* table, int lastColumnIndex, int stretchColumnIndex, int minimumColumnWidth);
+            TableViewLastColumnResizingFixer(QTableView* table, int stretchColumnIndex, int minimumColumnWidth);
             void resized();
 
         private:

@@ -80,7 +80,7 @@ void ReceiveCoinsDialog::setModel(WalletModel *model)
             SIGNAL(selectionChanged(QItemSelection, QItemSelection)), this,
             SLOT(recentRequestsView_selectionChanged(QItemSelection, QItemSelection)));
         // Last 2 columns are set by the columnResizingFixer, when the table geometry is ready.
-        columnResizingFixer = new GUIUtil::TableViewLastColumnResizingFixer(tableView, RecentRequestsTableModel::Amount, RecentRequestsTableModel::Message, MINIMUM_COLUMN_WIDTH);
+        columnResizingFixer = new GUIUtil::TableViewLastColumnResizingFixer(tableView, RecentRequestsTableModel::Message, MINIMUM_COLUMN_WIDTH);
     }
 }
 

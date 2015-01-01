@@ -217,7 +217,7 @@ void TransactionView::setModel(WalletModel *model)
         transactionView->setColumnWidth(TransactionTableModel::Amount, AMOUNT_MINIMUM_COLUMN_WIDTH);
         transactionView->setColumnWidth(TransactionTableModel::Balance, BALANCE_MINIMUM_COLUMN_WIDTH);
 
-        columnResizingFixer = new GUIUtil::TableViewLastColumnResizingFixer(transactionView, TransactionTableModel::Balance, TransactionTableModel::ToAddress, MINIMUM_COLUMN_WIDTH);
+        columnResizingFixer = new GUIUtil::TableViewLastColumnResizingFixer(transactionView, TransactionTableModel::ToAddress, MINIMUM_COLUMN_WIDTH);
 
         if (model->getOptionsModel())
         {
