@@ -1588,7 +1588,7 @@ unsigned int static DarkGravityWave(const CBlockIndex* pindexLast, const CBlockH
 
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock)
 {
-        uint retarget = DIFF_DGW;
+        unsigned int retarget = DIFF_DGW;
 
         if (!TestNet()) {
             if (pindexLast->nHeight + 1 >= 34140) retarget = DIFF_DGW;
