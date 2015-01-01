@@ -97,6 +97,7 @@ Value importaddress(const Array& params, bool fHelp)
         fRescan = params[2].get_bool();
 
     {
+        LOCK2(cs_main, pwalletMain->cs_wallet);
         if (::IsMine(*pwalletMain, script) == MINE_SPENDABLE)
             throw JSONRPCError(RPC_WALLET_ERROR, "The wallet already contains the private key for this address or script");
 
@@ -151,6 +152,8 @@ Value removeaddress(const Array& params, bool fHelp)
 
     if (!pwalletMain->HaveWatchOnly(script))
         throw JSONRPCError(RPC_WALLET_ERROR, "The wallet does not contain this address or script");
+
+    LOCK2(cs_main, pwalletMain->cs_wallet);
 
     pwalletMain->MarkDirty();
 
