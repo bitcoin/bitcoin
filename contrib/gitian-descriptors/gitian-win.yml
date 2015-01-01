@@ -67,8 +67,10 @@ script: |
       # Make source code archive which is architecture independent so it only needs to be done once
       cd $HOME/build/darkcoin
       ./autogen.sh
-      ./configure --bindir=$OUTDIR --prefix=$STAGING --host=$HOST --with-qt-plugindir=$STAGING/plugins  --with-qt-incdir=$STAGING/include --with-qt-bindir=$STAGING/host/bin --with-boost=$STAGING --disable-maintainer-mode --with-protoc-bindir=$STAGING/host/bin --disable-dependency-tracking CPPFLAGS="-I$STAGING/include ${OPTFLAGS}" LDFLAGS="-L$STAGING/lib ${OPTFLAGS}" CXXFLAGS="-frandom-seed=darkcoin ${OPTFLAGS}"
-      make dist
+      #./configure --bindir=$OUTDIR --prefix=$STAGING --host=$HOST --with-qt-plugindir=$STAGING/plugins  --with-qt-incdir=$STAGING/include --with-qt-bindir=$STAGING/host/bin --with-boost=$STAGING --disable-maintainer-mode --with-protoc-bindir=$STAGING/host/bin --disable-dependency-tracking CPPFLAGS="-I$STAGING/include ${OPTFLAGS}" LDFLAGS="-L$STAGING/lib ${OPTFLAGS}" CXXFLAGS="-frandom-seed=darkcoin ${OPTFLAGS}"
+      #make dist
+      ./configure --bindir=$OUTDIR --prefix=$STAGING --host=$HOST --with-qt-plugindir=$STAGING/plugins  --with-qt-incdir=$STAGING/include --with-qt-bindir=$STAGING/host/bin --with-boost=$STAGING --with-protoc-bindir=$STAGING/host/bin CPPFLAGS="-I$STAGING/include ${OPTFLAGS}" LDFLAGS="-L$STAGING/lib ${OPTFLAGS}" CXXFLAGS="-frandom-seed=darkcoin ${OPTFLAGS}"
+      make -j 9
       DISTNAME=`echo darkcoin-*.tar.gz`
       NEEDDIST=0
     fi
