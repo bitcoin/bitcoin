@@ -129,7 +129,7 @@ public:
         return Write(std::make_pair(std::string("watchs"), dest), '1');
     }
 
-    bool CWalletDB::EraseWatchOnly(const CScript &dest)
+    bool EraseWatchOnly(const CScript &dest)
     {
         nWalletDBUpdated++;
         return Erase(std::make_pair(std::string("watchs"), dest));
