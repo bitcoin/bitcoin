@@ -5,11 +5,6 @@
 #ifndef BITCOIN_UTIL_H
 #define BITCOIN_UTIL_H
 
-#if !defined(_MSC_VER) || _MSC_VER > 1700
-#include <inttypes.h>
-#else
-#include "inttypes.h"
-#endif
 
 #include "uint256.h"
 
@@ -32,6 +27,11 @@
 #endif
 
 #include <stdarg.h>
+
+#if defined(__USE_MINGW_ANSI_STDIO)
+#undef __USE_MINGW_ANSI_STDIO // This constant forces MinGW to conduct stupid behavior
+#endif
+#include <inttypes.h>
 
 #include "netbase.h" // for AddTimeData
 

@@ -21,15 +21,14 @@
 #include <boost/tuple/tuple_io.hpp>
 #endif
 
+#if defined __USE_MINGW_ANSI_STDIO
+#undef __USE_MINGW_ANSI_STDIO // This constant forces MinGW to conduct stupid behavior
+#endif
+#include <inttypes.h>
+
 #include "allocators.h"
 #include "version.h"
 
-
-#if !defined(_MSC_VER) || _MSC_VER > 1700
-#include <inttypes.h>
-#else
-#include "inttypes.h"
-#endif
 
 class CScript;
 class CDataStream;
