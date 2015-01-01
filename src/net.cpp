@@ -1478,6 +1478,8 @@ void ThreadOpenAddedConnections2(void* parg)
         }
         BOOST_FOREACH(vector<CService>& vserv, lservAddressesToAdd)
         {
+            if (vserv.size() == 0)
+                continue;
             CSemaphoreGrant grant(*semOutbound);
             OpenNetworkConnection(CAddress(vserv[i % vserv.size()]), &grant);
             Sleep(500);
