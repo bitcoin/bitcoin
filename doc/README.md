@@ -1,7 +1,7 @@
 Bitcoin 0.10.99
 =====================
 
-Copyright (c) 2009-2014 Bitcoin Developers
+Copyright (c) 2009-2015 Bitcoin Developers
 
 
 Setup
