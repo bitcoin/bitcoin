@@ -129,6 +129,12 @@ public:
         return Write(std::make_pair(std::string("watchs"), dest), '1');
     }
 
+    bool EraseWatchOnly(const CScript &dest)
+    {
+        nWalletDBUpdated++;
+        return Erase(std::make_pair(std::string("watchs"), dest));
+    }
+
     bool WriteBestBlock(const CBlockLocator& locator)
     {
         nWalletDBUpdated++;

@@ -158,6 +158,14 @@ void OverviewPage::setBalance(qint64 total, qint64 watchOnly, qint64 stake, qint
     bool showWatchOnly = watchOnly != 0;
     ui->labelBalanceWatchOnly->setVisible(showWatchOnly);
     ui->labelBalanceWatchOnlyText->setVisible(showWatchOnly);
+   
+}
+
+// show/hide watch-only labels
+void OverviewPage::updateWatchOnlyLabels(bool showWatchOnly)
+{
+    ui->labelBalanceWatchOnly->setVisible(showWatchOnly);
+    ui->labelBalanceWatchOnlyText->setVisible(showWatchOnly);
 }
 
 void OverviewPage::setNumTransactions(int count)
@@ -190,6 +198,9 @@ void OverviewPage::setModel(WalletModel *model)
         connect(model, SIGNAL(numTransactionsChanged(int)), this, SLOT(setNumTransactions(int)));
 
         connect(model->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(updateDisplayUnit()));
+
+        updateWatchOnlyLabels(model->haveWatchOnly());
+        connect(model, SIGNAL(notifyWatchonlyChanged(bool)), this, SLOT(updateWatchOnlyLabels(bool)));
     }
 
     // update the display unit, to not use the default ("BTC")
