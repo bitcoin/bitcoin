@@ -282,13 +282,6 @@ public:
         /* DarkSend uses collateral addresses to trust parties entering the pool
             to behave themselves. If they don't it takes their money. */
 
-        std::string strAddress = "";
-        if(Params().NetworkID() == CChainParams::MAIN) {
-            strAddress = "Xq19GqFvajRrEdDHYRKGYjTsQfpV5jyipF";
-        } else {
-            strAddress = "y1EZuxhhNMAUofTBEeLqGE1bJrpC2TWRNp";
-        }
-
         lastSplitUpBlock = 0;
         cachedLastSuccess = 0;
         cachedNumBlocks = 0;
@@ -301,8 +294,17 @@ public:
         sessionMinRounds = 0;
         sessionMaxRounds = 0;
 
-        SetCollateralAddress(strAddress);
         SetNull();
+    }
+
+    void InitCollateralAddress(){
+        std::string strAddress = "";
+        if(Params().NetworkID() == CChainParams::MAIN) {
+            strAddress = "Xq19GqFvajRrEdDHYRKGYjTsQfpV5jyipF";
+        } else {
+            strAddress = "y1EZuxhhNMAUofTBEeLqGE1bJrpC2TWRNp";
+        }
+        SetCollateralAddress(strAddress);
     }
 
     void SetMinBlockSpacing(int minBlockSpacingIn){
