@@ -367,6 +367,9 @@
            </item>
            <item row="4" column="1">
             <widget class="QLabel" name="labelSubmittedDenom">
+             <property name="statusTip">
+              <string>The denominations you submitted to the Masternode. To mix, other users must submit the exact same denominations.</string>
+             </property>
              <property name="text">
               <string>n/a</string>
              </property>
@@ -890,6 +893,9 @@
             <height>27</height>
            </rect>
           </property>
+          <property name="toolTip">
+           <string>Try to manually submit a Darksend request.</string>
+          </property>
           <property name="text">
            <string>Try Mix</string>
           </property>
@@ -902,6 +908,9 @@
             <width>96</width>
             <height>27</height>
            </rect>
+          </property>
+          <property name="toolTip">
+           <string>Reset the current status of Darksend (can interrupt Darksend if it's in the process of Mixing, which can cost you money!)</string>
           </property>
           <property name="autoFillBackground">
            <bool>false</bool>
