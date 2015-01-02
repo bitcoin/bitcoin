@@ -10,6 +10,7 @@
 
 #include <vector>
 
+#include <boost/assign/list_of.hpp>
 #include <boost/test/unit_test.hpp>
 
 using namespace std;
@@ -102,6 +103,16 @@ BOOST_AUTO_TEST_CASE(pmt_test1)
             }
         }
     }
+}
+
+BOOST_AUTO_TEST_CASE(pmt_malleability)
+{
+    std::vector<uint256> vTxid = boost::assign::list_of(1)(2)(3)(4)(5)(6)(7)(8)(9)(10)(9)(10);
+    std::vector<bool> vMatch = boost::assign::list_of(false)(false)(false)(false)(false)(false)(false)(false)(false)(true)(true)(false);
+
+    CPartialMerkleTree tree(vTxid, vMatch);
+    std::vector<uint256> vTxid2;
+    BOOST_CHECK(tree.ExtractMatches(vTxid) == 0);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
