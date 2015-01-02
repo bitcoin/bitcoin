@@ -93,10 +93,16 @@ uint256 CPartialMerkleTree::TraverseAndExtract(int height, unsigned int pos, uns
     } else {
         // otherwise, descend into the subtrees to extract matched txids and hashes
         uint256 left = TraverseAndExtract(height-1, pos*2, nBitsUsed, nHashUsed, vMatch), right;
-        if (pos*2+1 < CalcTreeWidth(height-1))
+        if (pos*2+1 < CalcTreeWidth(height-1)) {
             right = TraverseAndExtract(height-1, pos*2+1, nBitsUsed, nHashUsed, vMatch);
-        else
+            if (right == left) {
+                // If the left and right branch should never be identical as the transaction
+                // hashes covered by them must be unique.
+                fBad = true;
+            }
+        } else {
             right = left;
+        }
         // and combine them before returning
         return Hash(BEGIN(left), END(left), BEGIN(right), END(right));
     }
