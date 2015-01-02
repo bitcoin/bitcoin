@@ -5,7 +5,7 @@ suites:
 architectures:
 - "i386"
 - "amd64"
-packages:
+packages: 
 - "g++"
 - "git-core"
 - "unzip"
@@ -20,13 +20,13 @@ packages:
 - "libqt4-dbus"
 - "libqt4-network"
 - "libqt4-test"
-reference_datetime: "2013-06-01 00:00:00"
+reference_datetime: "2014-01-10 00:00:00"
 remotes:
 - "url": "https://github.com/darkcoin/darkcoin.git"
   "dir": "darkcoin"
 files:
-- "darkcoin-deps-linux32-gitian-r8.zip"
-- "darkcoin-deps-linux64-gitian-r8.zip"
+- "bitcoin-deps-linux32-gitian-r8.zip"
+- "bitcoin-deps-linux64-gitian-r8.zip"
 - "boost-linux32-1.55.0-gitian-r1.zip"
 - "boost-linux64-1.55.0-gitian-r1.zip"
 - "qt-linux32-4.6.4-gitian-r1.tar.gz"
@@ -43,7 +43,7 @@ script: |
   #
   mkdir -p $STAGING
   cd $STAGING
-  unzip ../build/darkcoin-deps-linux${GBUILD_BITS}-gitian-r8.zip
+  unzip ../build/bitcoin-deps-linux${GBUILD_BITS}-gitian-r8.zip
   unzip ../build/boost-linux${GBUILD_BITS}-1.55.0-gitian-r1.zip
   tar -zxf ../build/qt-linux${GBUILD_BITS}-4.6.4-gitian-r1.tar.gz
   cd ../build
@@ -73,7 +73,7 @@ script: |
   mkdir -p distsrc
   cd distsrc
   tar --strip-components=1 -xf ../$DISTNAME
-  do_configure --bindir=$BINDIR
+  do_configure --bindir=$BINDIR 
   make $MAKEOPTS
   make $MAKEOPTS install-strip
   make $MAKEOPTS clean
