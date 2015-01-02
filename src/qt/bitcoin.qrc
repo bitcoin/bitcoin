@@ -35,9 +35,6 @@
         <file alias="tx_input">res/icons/tx_input.png</file>
         <file alias="tx_output">res/icons/tx_output.png</file>
         <file alias="tx_inout">res/icons/tx_inout.png</file>
-        <file alias="unit_btc">res/icons/unit_btc.png</file>
-        <file alias="unit_mbtc">res/icons/unit_mbtc.png</file>
-        <file alias="unit_ubtc">res/icons/unit_ubtc.png</file>
         <file alias="lock_closed">res/icons/lock_closed.png</file>
         <file alias="lock_open">res/icons/lock_open.png</file>
         <file alias="key">res/icons/key.png</file>
