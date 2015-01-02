@@ -12,7 +12,7 @@ packages:
 - "pkg-config"
 - "p7zip-full"
 
-reference_datetime: "2013-06-01 00:00:00"
+reference_datetime: "2014-01-10 00:00:00"
 remotes:
 - "url": "https://github.com/darkcoin/darkcoin.git"
   "dir": "darkcoin"

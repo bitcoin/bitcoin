@@ -1,5 +1,5 @@
 ---
-name: "darkcoin-deps"
+name: "bitcoin-deps"
 suites:
 - "precise"
 architectures:
@@ -73,16 +73,16 @@ script: |
   --- miniupnpc-1.9/Makefile.mingw.orig   2013-09-29 18:52:51.014087958 -1000
   +++ miniupnpc-1.9/Makefile.mingw        2013-09-29 19:09:29.663318691 -1000
   @@ -67,8 +67,8 @@
-
+   
    wingenminiupnpcstrings.o:	wingenminiupnpcstrings.c
-
+   
   -miniupnpcstrings.h: miniupnpcstrings.h.in wingenminiupnpcstrings
   -	wingenminiupnpcstrings \$< \$@
-  +miniupnpcstrings.h: miniupnpcstrings.h.in
+  +miniupnpcstrings.h: miniupnpcstrings.h.in 
   +	sed -e 's|OS/version|MSWindows/5.1.2600|' -e 's|MINIUPNPC_VERSION_STRING \"version\"|MINIUPNPC_VERSION_STRING \"VERSIONHERE\"|' \$< > \$@
-
+   
    minixml.o:	minixml.c minixml.h miniupnpcstrings.h
-
+   
   " | sed "s/VERSIONHERE/$(cat VERSION)/" | patch -p1
     mkdir -p dll
     make -f Makefile.mingw CC=$HOST-gcc AR=$HOST-ar libminiupnpc.a
@@ -124,5 +124,5 @@ script: |
     done
     #
     cd $INSTALLPREFIX
-    find include lib | sort | zip -X@ $OUTDIR/darkcoin-deps-win$BITS-gitian-r15.zip
+    find include lib | sort | zip -X@ $OUTDIR/bitcoin-deps-win$BITS-gitian-r15.zip
   done # for BITS in
