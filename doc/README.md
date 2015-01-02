@@ -1,8 +1,5 @@
-Bitcoin 0.10.0 BETA
+Bitcoin Core 0.10.0
 =====================
-
-Copyright (c) 2009-2014 Bitcoin Developers
-
 
 Setup
 ---------------------
