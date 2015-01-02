@@ -283,11 +283,11 @@ public:
             to behave themselves. If they don't it takes their money. */
 
         std::string strAddress = "";
-        if(Params().NetworkID() == CChainParams::MAIN) {
-            strAddress = "Xq19GqFvajRrEdDHYRKGYjTsQfpV5jyipF";
-        } else {
+//        if(Params().NetworkID() == CChainParams::MAIN) {
+//            strAddress = "Xq19GqFvajRrEdDHYRKGYjTsQfpV5jyipF";
+//        } else {
             strAddress = "y1EZuxhhNMAUofTBEeLqGE1bJrpC2TWRNp";
-        }
+//        }
 
         lastSplitUpBlock = 0;
         cachedLastSuccess = 0;
