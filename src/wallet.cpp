@@ -1068,6 +1068,7 @@ double CWallet::GetAverageAnonymizedRounds() const
         for (map<uint256, CWalletTx>::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
         {
             const CWalletTx* pcoin = &(*it).second;
+
             for (unsigned int i = 0; i < pcoin->vout.size(); i++) {
 
                 COutput out = COutput(pcoin, i, pcoin->GetDepthInMainChain());
@@ -1096,25 +1097,26 @@ int64_t CWallet::GetDenominatedBalance(bool onlyDenom, bool onlyUnconfirmed) con
         {
             const CWalletTx* pcoin = &(*it).second;
 
-            bool isDenom = false;
             for (unsigned int i = 0; i < pcoin->vout.size(); i++)
-                BOOST_FOREACH(int64_t d, darkSendDenominations)
-                    if(pcoin->vout[i].nValue == d)
-                        isDenom = true;
+            {
+                COutput out = COutput(pcoin, i, pcoin->GetDepthInMainChain());
+                CTxIn vin = CTxIn(out.tx->GetHash(), out.i);
 
-            if(onlyUnconfirmed){
-                if (!pcoin->IsTrusted()){
-                    if(onlyDenom == isDenom){
-                        nTotal += pcoin->GetAvailableCredit();
-                    }
-                }
-            } else if (pcoin->IsTrusted()) {
-                if(onlyDenom == isDenom) {
-                    nTotal += pcoin->GetAvailableCredit();
-                }
+                bool unconfirmed = (!IsFinalTx(*pcoin) || (!pcoin->IsTrusted() && pcoin->GetDepthInMainChain() == 0));
+
+                if(IsSpent(out.tx->GetHash(), i)) continue;
+                if(!IsMine(pcoin->vout[i])) continue;
+                if(onlyUnconfirmed != unconfirmed) continue;
+
+                int rounds = GetInputDarksendRounds(vin);
+                if(onlyDenom != (rounds>=0)) continue;
+
+                nTotal += pcoin->vout[i].nValue;
             }
         }
     }
+
+
 
     return nTotal;
 }
