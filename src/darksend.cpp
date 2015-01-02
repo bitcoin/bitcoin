@@ -756,6 +756,15 @@ void CDarkSendPool::ChargeRandomFees(){
         BOOST_FOREACH(const CTransaction& txCollateral, vecSessionCollateral) {
             int r = rand()%1000;
 
+            /*
+                Collateral Fee Charges:
+
+                Being that DarkSend has "no fees" we need to have some kind of cost associated
+                with using it to stop abuse. Otherwise it could serve as an attack vector and
+                allow endless transaction that would bloat Darkcoin and make it unusable. To
+                stop these kinds of attacks 1 in 50 successful transactions are charged. This
+                adds up to a cost of 0.002DRK per transaction on average.
+            */
             if(r <= 20)
             {
                 LogPrintf("CDarkSendPool::ChargeRandomFees -- charging random fees. %u\n", i);
