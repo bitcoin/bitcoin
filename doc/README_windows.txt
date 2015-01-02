@@ -1,13 +1,5 @@
-Bitcoin 0.10.99
-
-Copyright (c) 2009-2014 Bitcoin Core Developers
-
-Distributed under the MIT software license, see the accompanying
-file COPYING or http://www.opensource.org/licenses/mit-license.php.
-This product includes software developed by the OpenSSL Project for use in
-the OpenSSL Toolkit (https://www.openssl.org/).  This product includes
-cryptographic software written by Eric Young (eay@cryptsoft.com).
-
+Bitcoin Core 0.10.99
+=====================
 
 Intro
 -----
