@@ -1164,6 +1164,8 @@ bool AppInit2(boost::thread_group& threadGroup)
     darkSendDenominations.push_back( (1     * COIN)+1 );
     darkSendDenominations.push_back( (.1     * COIN)+1 );
 
+    darkSendPool.InitCollateralAddress();
+
     threadGroup.create_thread(boost::bind(&ThreadCheckDarkSendPool));
 
     // ********************************************************* Step 11: load peers
