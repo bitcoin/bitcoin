@@ -1,10 +1,9 @@
 package=native_cctools
-$(package)_version=59d21d2c793c51d205c8b4ab14b9b28e63c72445
+$(package)_version=ee31ae567931c426136c94aad457c7b51d844beb
 $(package)_download_path=https://github.com/theuni/cctools-port/archive
 $(package)_file_name=$($(package)_version).tar.gz
-$(package)_sha256_hash=e13c7129b9d496adf4d674156b4a1d72d8b936f29f377aae8f8b5e7b650cc305
+$(package)_sha256_hash=ef107e6ab1b3994cb22e14f4f5c59ea0c0b5a988e6b21d42ed9616b018bbcbf9
 $(package)_build_subdir=cctools
-$(package)_dependencies=native_libuuid native_openssl
 $(package)_clang_version=3.3
 $(package)_clang_download_path=http://llvm.org/releases/$($(package)_clang_version)
 $(package)_clang_download_file=clang+llvm-$($(package)_clang_version)-amd64-Ubuntu-12.04.2.tar.gz
@@ -25,8 +24,10 @@ define $(package)_extract_cmds
 endef
 
 define $(package)_set_vars
-$(package)_config_opts=--target=$(host) CC=toolchain/clang CXX=toolchain/clang++
+$(package)_config_opts=--target=$(host) --disable-libuuid
 $(package)_ldflags+=-Wl,-rpath=\\$$$$$$$$\$$$$$$$$ORIGIN/../lib
+$(package)_cc=$($(package)_extract_dir)/toolchain/bin/clang
+$(package)_cxx=$($(package)_extract_dir)/toolchain/bin/clang++
 endef
 
 define $(package)_preprocess_cmds
@@ -34,12 +35,10 @@ define $(package)_preprocess_cmds
 endef
 
 define $(package)_config_cmds
-  export "PATH=$($(package)_extract_dir)/toolchain/bin:$(PATH)" && \
   $($(package)_autoconf)
 endef
 
 define $(package)_build_cmds
-  export "PATH=$($(package)_extract_dir)/toolchain/bin:$(PATH)" && \
   $(MAKE)
 endef
 
