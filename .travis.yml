@@ -33,7 +33,7 @@ matrix:
     - compiler: ": 32-bit + dash"
       env: HOST=i686-pc-linux-gnu PACKAGES="g++-multilib bc" RUN_TESTS=true GOAL="install" BITCOIN_CONFIG="--enable-glibc-back-compat" USE_SHELL="/bin/dash"
     - compiler: ": Cross-Mac"
-      env: HOST=x86_64-apple-darwin11 PACKAGES="gcc-multilib g++-multilib cmake libcap-dev libz-dev libbz2-dev" OSX_SDK=10.7 GOAL="deploy"
+      env: HOST=x86_64-apple-darwin11 PACKAGES="cmake libcap-dev libz-dev libbz2-dev" OSX_SDK=10.7 GOAL="deploy"
     - compiler: ": Win64"
       env: HOST=x86_64-w64-mingw32 PACKAGES="nsis gcc-mingw-w64-x86-64 g++-mingw-w64-x86-64 binutils-mingw-w64-x86-64 mingw-w64-dev wine bc" RUN_TESTS=true GOAL="deploy" BITCOIN_CONFIG="--enable-gui" MAKEJOBS="-j2"
     - compiler: ": Win32"
