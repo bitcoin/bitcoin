@@ -202,7 +202,7 @@ void TransactionView::setModel(WalletModel *model, bool fShoudAddThirdPartyURL)
         transactionView->horizontalHeader()->setSectionResizeMode(TransactionTableModel::ToAddress, QHeaderView::Stretch);
 #endif
         transactionView->horizontalHeader()->resizeSection(
-                TransactionTableModel::Amount, 120);
+                TransactionTableModel::Amount, 130);
 
         if (model->getOptionsModel() && fShoudAddThirdPartyURL)
         {
