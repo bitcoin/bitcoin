@@ -28,7 +28,7 @@ using namespace boost;
 
 CWallet* pwalletMain;
 CClientUIInterface uiInterface;
-std::string strWalletFileName;
+std::string strWalletFileName = "wallet.dat";
 bool fConfChange;
 unsigned int nNodeLifespan;
 unsigned int nDerivationMethodIndex;
