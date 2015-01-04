@@ -31,6 +31,7 @@ static void secp256k1_fe_verify(const secp256k1_fe_t *a) {
     r &= (d[8] <= 0x3FFFFFFUL * m);
     r &= (d[9] <= 0x03FFFFFUL * m);
     r &= (a->magnitude >= 0);
+    r &= (a->magnitude <= 32);
     if (a->normalized) {
         r &= (a->magnitude <= 1);
         if (r && (d[9] == 0x03FFFFFUL)) {
