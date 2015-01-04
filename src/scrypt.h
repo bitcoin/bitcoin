@@ -7,6 +7,6 @@
 #include "util.h"
 #include "net.h"
 
-uint256 scrypt_blockhash(const void* input);
+uint256 scrypt_blockhash(const uint8_t* input);
 
 #endif // SCRYPT_MINE_H

@@ -39,10 +39,10 @@
 
 // Generic scrypt_core implementation
 
-static INLINE void xor_salsa8(unsigned int B[16], const unsigned int Bx[16])
+static INLINE void xor_salsa8(uint32_t B[16], const uint32_t Bx[16])
 {
-    unsigned int x00,x01,x02,x03,x04,x05,x06,x07,x08,x09,x10,x11,x12,x13,x14,x15;
-    int i;
+    uint32_t x00,x01,x02,x03,x04,x05,x06,x07,x08,x09,x10,x11,x12,x13,x14,x15;
+    int8_t i;
 
     x00 = (B[0] ^= Bx[0]);
     x01 = (B[1] ^= Bx[1]);
@@ -107,9 +107,10 @@ static INLINE void xor_salsa8(unsigned int B[16], const unsigned int Bx[16])
     B[15] += x15;
 }
 
-void scrypt_core(unsigned int *X, unsigned int *V)
+void scrypt_core(uint32_t *X, uint32_t *V)
 {
-    unsigned int i, j, k;
+    uint16_t i, k;
+    uint32_t j;
 
     for (i = 0; i < 1024; i++) {
         memcpy(&V[i * 32], X, 128);
