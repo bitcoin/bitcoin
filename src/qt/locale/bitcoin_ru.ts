@@ -36,6 +36,7 @@
     </message>
     <message>
       <location filename="../forms/multisigaddressentry.ui" line="108"/>
+      <location line="150"/>
       <source>Address associated to the public key</source>
       <translation>Адрес, связанный с публичным ключом</translation>
     </message>
@@ -53,11 +54,6 @@
       <location filename="../forms/multisigaddressentry.ui" line="137"/>
       <source>Label:</source>
       <translation>Метка:</translation>
-    </message>
-    <message>
-      <location filename="../forms/multisigaddressentry.ui" line="150"/>
-      <source>Address associated to the public key</source>
-      <translation>Адрес, связанный с публичным ключом</translation>
     </message>
   </context>
   <context>
