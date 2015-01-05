@@ -60,7 +60,6 @@ static int secp256k1_ge_is_infinity(const secp256k1_ge_t *a);
 static int secp256k1_ge_is_valid_var(const secp256k1_ge_t *a);
 
 static void secp256k1_ge_neg(secp256k1_ge_t *r, const secp256k1_ge_t *a);
-static void secp256k1_ge_neg_var(secp256k1_ge_t *r, const secp256k1_ge_t *a);
 
 /** Get a hex representation of a point. *rlen will be overwritten with the real length. */
 static void secp256k1_ge_get_hex(char *r, int *rlen, const secp256k1_ge_t *a);
@@ -81,11 +80,11 @@ static void secp256k1_gej_set_xy(secp256k1_gej_t *r, const secp256k1_fe_t *x, co
 /** Set a group element (jacobian) equal to another which is given in affine coordinates. */
 static void secp256k1_gej_set_ge(secp256k1_gej_t *r, const secp256k1_ge_t *a);
 
-/** Get the X coordinate of a group element (jacobian). */
-static void secp256k1_gej_get_x_var(secp256k1_fe_t *r, const secp256k1_gej_t *a);
+/** Compare the X coordinate of a group element (jacobian). */
+static int secp256k1_gej_eq_x_var(const secp256k1_fe_t *x, const secp256k1_gej_t *a);
 
 /** Set r equal to the inverse of a (i.e., mirrored around the X axis) */
-static void secp256k1_gej_neg_var(secp256k1_gej_t *r, const secp256k1_gej_t *a);
+static void secp256k1_gej_neg(secp256k1_gej_t *r, const secp256k1_gej_t *a);
 
 /** Check whether a group element is the point at infinity. */
 static int secp256k1_gej_is_infinity(const secp256k1_gej_t *a);
