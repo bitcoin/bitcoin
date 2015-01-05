@@ -1119,6 +1119,36 @@ static int precomputed_nonce_function(unsigned char *nonce32, const unsigned cha
     return (counter == 0);
 }
 
+static int nonce_function_test_fail(unsigned char *nonce32, const unsigned char *msg32, const unsigned char *key32, unsigned int counter, const void *data) {
+   /* Dummy nonce generator that has a fatal error on the first counter value. */
+   if (counter == 0) return 0;
+   return nonce_function_rfc6979(nonce32, msg32, key32, counter - 1, data);
+}
+
+static int nonce_function_test_retry(unsigned char *nonce32, const unsigned char *msg32, const unsigned char *key32, unsigned int counter, const void *data) {
+   /* Dummy nonce generator that produces unacceptable nonces for the first several counter values. */
+   if (counter < 3) {
+       memset(nonce32, counter==0 ? 0 : 255, 32);
+       if (counter == 2) nonce32[31]--;
+       return 1;
+   }
+   if (counter < 5) {
+       static const unsigned char order[] = {
+           0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
+           0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFE,
+           0xBA,0xAE,0xDC,0xE6,0xAF,0x48,0xA0,0x3B,
+           0xBF,0xD2,0x5E,0x8C,0xD0,0x36,0x41,0x41
+       };
+       memcpy(nonce32, order, 32);
+       if (counter == 4) nonce32[31]++;
+       return 1;
+   }
+   /* Retry rate of 6979 is negligible esp. as we only call this in determinstic tests. */
+   /* If someone does fine a case where it retries for secp256k1, we'd like to know. */
+   if (counter > 5) return 0;
+   return nonce_function_rfc6979(nonce32, msg32, key32, counter - 5, data);
+}
+
 void test_ecdsa_end_to_end(void) {
     unsigned char privkey[32];
     unsigned char message[32];
@@ -1438,6 +1468,12 @@ void test_ecdsa_edge_cases(void) {
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01,
         };
+        static const unsigned char nonce2[32] = {
+            0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
+            0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFE,
+            0xBA,0xAE,0xDC,0xE6,0xAF,0x48,0xA0,0x3B,
+            0xBF,0xD2,0x5E,0x8C,0xD0,0x36,0x41,0x40
+        };
         const unsigned char key[32] = {
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -1453,11 +1489,73 @@ void test_ecdsa_edge_cases(void) {
         unsigned char sig[72];
         int siglen = 72;
         CHECK(secp256k1_ecdsa_sign(msg, sig, &siglen, key, precomputed_nonce_function, nonce) == 0);
+        CHECK(secp256k1_ecdsa_sign(msg, sig, &siglen, key, precomputed_nonce_function, nonce2) == 0);
         msg[31] = 0xaa;
         siglen = 72;
         CHECK(secp256k1_ecdsa_sign(msg, sig, &siglen, key, precomputed_nonce_function, nonce) == 1);
+        CHECK(secp256k1_ecdsa_sign(msg, sig, &siglen, key, precomputed_nonce_function, nonce2) == 1);
         siglen = 10;
         CHECK(secp256k1_ecdsa_sign(msg, sig, &siglen, key, precomputed_nonce_function, nonce) != 1);
+    }
+
+    /* Nonce function corner cases. */
+    {
+        unsigned char key[32];
+        unsigned char msg[32];
+        unsigned char sig[72];
+        memset(key, 0, 32);
+        memset(msg, 0, 32);
+        key[31] = 1;
+        msg[31] = 1;
+        int siglen = 72;
+        int recid;
+        /* Nonce function failure results in signature failure. */
+        CHECK(secp256k1_ecdsa_sign(msg, sig, &siglen, key, nonce_function_test_fail, NULL) == 0);
+        CHECK(secp256k1_ecdsa_sign_compact(msg, sig, key, nonce_function_test_fail, NULL, &recid) == 0);
+        /* The retry loop successfully makes its way to the first good value. */
+        unsigned char sig2[72];
+        int siglen2 = 72;
+        siglen = 72;
+        CHECK(secp256k1_ecdsa_sign(msg, sig, &siglen, key, nonce_function_test_retry, NULL) == 1);
+        CHECK(secp256k1_ecdsa_sign(msg, sig2, &siglen2, key, nonce_function_rfc6979, NULL) == 1);
+        CHECK((siglen == siglen2) && (memcmp(sig, sig2, siglen) == 0));
+        int recid2;
+        CHECK(secp256k1_ecdsa_sign_compact(msg, sig, key, nonce_function_test_retry, NULL, &recid) == 1);
+        CHECK(secp256k1_ecdsa_sign_compact(msg, sig2, key, nonce_function_rfc6979, NULL, &recid2) == 1);
+        CHECK((recid == recid2) && (memcmp(sig, sig2, 64) == 0));
+        /* The default nonce function is determinstic. */
+        siglen = 72;
+        siglen2 = 72;
+        CHECK(secp256k1_ecdsa_sign(msg, sig, &siglen, key, NULL, NULL) == 1);
+        CHECK(secp256k1_ecdsa_sign(msg, sig2, &siglen2, key, NULL, NULL) == 1);
+        CHECK((siglen == siglen2) && (memcmp(sig, sig2, siglen) == 0));
+        CHECK(secp256k1_ecdsa_sign_compact(msg, sig, key, NULL, NULL, &recid) == 1);
+        CHECK(secp256k1_ecdsa_sign_compact(msg, sig2, key, NULL, NULL, &recid2) == 1);
+        CHECK((recid == recid2) && (memcmp(sig, sig2, 64) == 0));
+        /* The default nonce function changes output with different messages. */
+        secp256k1_ecdsa_sig_t s[512];
+        for(int i=0; i<256; i++) {
+            siglen2 = 72;
+            msg[0] = i;
+            CHECK(secp256k1_ecdsa_sign(msg, sig2, &siglen2, key, NULL, NULL) == 1);
+            CHECK(secp256k1_ecdsa_sig_parse(&s[i], sig2, siglen2));
+            for (int j=0; j<i; j++) {
+                CHECK(!secp256k1_scalar_eq(&s[i].r, &s[j].r));
+            }
+        }
+        msg[0] = 0;
+        msg[31] = 2;
+        /* The default nonce function changes output with different keys. */
+        for(int i=256; i<512; i++) {
+            siglen2 = 72;
+            key[0] = i - 256;
+            CHECK(secp256k1_ecdsa_sign(msg, sig2, &siglen2, key, NULL, NULL) == 1);
+            CHECK(secp256k1_ecdsa_sig_parse(&s[i], sig2, siglen2));
+            for (int j=0; j<i; j++) {
+                CHECK(!secp256k1_scalar_eq(&s[i].r, &s[j].r));
+            }
+        }
+        key[0] = 0;
     }
 
     /* Privkey export where pubkey is the point at infinity. */
