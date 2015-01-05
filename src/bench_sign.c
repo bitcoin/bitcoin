@@ -26,7 +26,7 @@ static void bench_sign(void* arg) {
     unsigned char sig[64];
     for (int i=0; i<20000; i++) {
         int recid = 0;
-        secp256k1_ecdsa_sign_compact(data->msg, sig, data->key, NULL, NULL, &recid);
+        CHECK(secp256k1_ecdsa_sign_compact(data->msg, sig, data->key, NULL, NULL, &recid));
         for (int j = 0; j < 32; j++) {
             data->msg[j] = sig[j];             /* Move former R to message. */
             data->key[j] = sig[j + 32];        /* Move former S to key.     */
