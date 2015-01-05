@@ -227,7 +227,7 @@ Starting from 0.10.0, the Bitcoin Core distribution includes a consensus library
 
 The purpose of this library is to make the verification functionality that is
 critical to Bitcoin's consensus available to other applications, e.g. to language
-bindings such as [python_bitcoinlib](https://pypi.python.org/pypi/python-bitcoinlib) or
+bindings such as [python-bitcoinlib](https://pypi.python.org/pypi/python-bitcoinlib) or
 alternative node implementations.
 
 This library is called `libbitcoinconsensus.so` (or, `.dll` for Windows).
