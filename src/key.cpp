@@ -77,13 +77,13 @@ bool CKey::Sign(const uint256 &hash, std::vector<unsigned char>& vchSig, uint32_
     if (!fValid)
         return false;
     vchSig.resize(72);
-    RFC6979_HMAC_SHA256 prng(begin(), 32, (unsigned char*)&hash, 32);
+    RFC6979_HMAC_SHA256 prng(begin(), 32, hash.begin(), 32);
     do {
         uint256 nonce;
-        prng.Generate((unsigned char*)&nonce, 32);
+        prng.Generate(nonce.begin(), 32);
         nonce += test_case;
         int nSigLen = 72;
-        int ret = secp256k1_ecdsa_sign((const unsigned char*)&hash, (unsigned char*)&vchSig[0], &nSigLen, begin(), (unsigned char*)&nonce);
+        int ret = secp256k1_ecdsa_sign(hash.begin(), (unsigned char*)&vchSig[0], &nSigLen, begin(), nonce.begin());
         nonce = 0;
         if (ret) {
             vchSig.resize(nSigLen);
@@ -100,7 +100,7 @@ bool CKey::VerifyPubKey(const CPubKey& pubkey) const {
     std::string str = "Bitcoin key verification\n";
     GetRandBytes(rnd, sizeof(rnd));
     uint256 hash;
-    CHash256().Write((unsigned char*)str.data(), str.size()).Write(rnd, sizeof(rnd)).Finalize((unsigned char*)&hash);
+    CHash256().Write((unsigned char*)str.data(), str.size()).Write(rnd, sizeof(rnd)).Finalize(hash.begin());
     std::vector<unsigned char> vchSig;
     Sign(hash, vchSig);
     return pubkey.Verify(hash, vchSig);
@@ -111,11 +111,11 @@ bool CKey::SignCompact(const uint256 &hash, std::vector<unsigned char>& vchSig) 
         return false;
     vchSig.resize(65);
     int rec = -1;
-    RFC6979_HMAC_SHA256 prng(begin(), 32, (unsigned char*)&hash, 32);
+    RFC6979_HMAC_SHA256 prng(begin(), 32, hash.begin(), 32);
     do {
         uint256 nonce;
-        prng.Generate((unsigned char*)&nonce, 32);
-        int ret = secp256k1_ecdsa_sign_compact((const unsigned char*)&hash, &vchSig[1], begin(), (unsigned char*)&nonce, &rec);
+        prng.Generate(nonce.begin(), 32);
+        int ret = secp256k1_ecdsa_sign_compact(hash.begin(), &vchSig[1], begin(), nonce.begin(), &rec);
         nonce = 0;
         if (ret)
             break;

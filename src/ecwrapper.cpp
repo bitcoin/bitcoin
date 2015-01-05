@@ -118,7 +118,7 @@ bool CECKey::SetPubKey(const unsigned char* pubkey, size_t size) {
 
 bool CECKey::Verify(const uint256 &hash, const std::vector<unsigned char>& vchSig) {
     // -1 = error, 0 = bad sig, 1 = good
-    if (ECDSA_verify(0, (unsigned char*)&hash, sizeof(hash), &vchSig[0], vchSig.size(), pkey) != 1)
+    if (ECDSA_verify(0, hash.begin(), hash.size(), &vchSig[0], vchSig.size(), pkey) != 1)
         return false;
     return true;
 }
@@ -130,7 +130,7 @@ bool CECKey::Recover(const uint256 &hash, const unsigned char *p64, int rec)
     ECDSA_SIG *sig = ECDSA_SIG_new();
     BN_bin2bn(&p64[0],  32, sig->r);
     BN_bin2bn(&p64[32], 32, sig->s);
-    bool ret = ECDSA_SIG_recover_key_GFp(pkey, sig, (unsigned char*)&hash, sizeof(hash), rec, 0) == 1;
+    bool ret = ECDSA_SIG_recover_key_GFp(pkey, sig, hash.begin(), hash.size(), rec, 0) == 1;
     ECDSA_SIG_free(sig);
     return ret;
 }

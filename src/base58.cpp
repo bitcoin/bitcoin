@@ -114,7 +114,7 @@ std::string EncodeBase58Check(const std::vector<unsigned char>& vchIn)
     // add 4-byte hash check to the end
     std::vector<unsigned char> vch(vchIn);
     uint256 hash = Hash(vch.begin(), vch.end());
-    vch.insert(vch.end(), (unsigned char*)&hash, (unsigned char*)&hash + 4);
+    vch.insert(vch.end(), hash.begin(), hash.begin() + 4);
     return EncodeBase58(vch);
 }
 
