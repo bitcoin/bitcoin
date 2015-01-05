@@ -7,6 +7,7 @@
 #define BITCOIN_PRIMITIVES_BLOCK_H
 
 #include "primitives/transaction.h"
+#include "primitives/base.h"
 #include "serialize.h"
 #include "uint256.h"
 
@@ -20,36 +21,9 @@ static const unsigned int MAX_BLOCK_SIZE = 1000000;
  * in the block is a special one that creates a new coin owned by the creator
  * of the block.
  */
-class CBlockHeader
+class CBlockHeader : public CBlockHeaderBase
 {
 public:
-    // header
-    static const int32_t CURRENT_VERSION=2;
-    int32_t nVersion;
-    uint256 hashPrevBlock;
-    uint256 hashMerkleRoot;
-    uint32_t nTime;
-    uint32_t nBits;
-    uint32_t nNonce;
-
-    CBlockHeader()
-    {
-        SetNull();
-    }
-
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
-        READWRITE(this->nVersion);
-        nVersion = this->nVersion;
-        READWRITE(hashPrevBlock);
-        READWRITE(hashMerkleRoot);
-        READWRITE(nTime);
-        READWRITE(nBits);
-        READWRITE(nNonce);
-    }
-
     void SetNull()
     {
         nVersion = CBlockHeader::CURRENT_VERSION;
@@ -74,11 +48,9 @@ public:
 };
 
 
-class CBlock : public CBlockHeader
+class CBlock : public CBlockBase<CBlockHeader, CTransaction>
 {
 public:
-    // network and disk
-    std::vector<CTransaction> vtx;
 
     // memory only
     mutable std::vector<uint256> vMerkleTree;
@@ -88,19 +60,7 @@ public:
         SetNull();
     }
 
-    CBlock(const CBlockHeader &header)
-    {
-        SetNull();
-        *((CBlockHeader*)this) = header;
-    }
-
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
-        READWRITE(*(CBlockHeader*)this);
-        READWRITE(vtx);
-    }
+    CBlock(const CBlockHeader &header) : CBlockBase(header) {}
 
     void SetNull()
     {
@@ -137,25 +97,11 @@ public:
  * other node doesn't have the same branch, it can find a recent common trunk.
  * The further back it is, the further before the fork it may be.
  */
-struct CBlockLocator
+struct CBlockLocator : public CBlockLocatorBase
 {
-    std::vector<uint256> vHave;
 
     CBlockLocator() {}
-
-    CBlockLocator(const std::vector<uint256>& vHaveIn)
-    {
-        vHave = vHaveIn;
-    }
-
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
-        if (!(nType & SER_GETHASH))
-            READWRITE(nVersion);
-        READWRITE(vHave);
-    }
+    CBlockLocator(const std::vector<uint256>& vHaveIn) : CBlockLocatorBase(vHaveIn){}
 
     void SetNull()
     {

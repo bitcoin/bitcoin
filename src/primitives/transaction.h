@@ -10,26 +10,18 @@
 #include "script/script.h"
 #include "serialize.h"
 #include "uint256.h"
+#include "primitives/base.h"
 
 /** An outpoint - a combination of a transaction hash and an index n into its vout */
-class COutPoint
+class COutPoint : public COutPointBase
 {
 public:
-    uint256 hash;
-    uint32_t n;
-
-    COutPoint() { SetNull(); }
-    COutPoint(uint256 hashIn, uint32_t nIn) { hash = hashIn; n = nIn; }
-
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
-        READWRITE(FLATDATA(*this));
-    }
-
-    void SetNull() { hash = 0; n = (uint32_t) -1; }
-    bool IsNull() const { return (hash == 0 && n == (uint32_t) -1); }
+    COutPoint(){}
+    COutPoint(uint256 hashIn, uint32_t nIn) : COutPointBase(hashIn, nIn){}
+    COutPoint(const COutPointBase& in) : COutPointBase(in){}
+    COutPoint(const COutPoint& in) : COutPointBase(in.hash, in.n){}
+    void SetNull() { hash = 0; n = nNullValue; }
+    bool IsNull() const { return (hash == 0 && n == nNullValue); }
 
     friend bool operator<(const COutPoint& a, const COutPoint& b)
     {
@@ -53,13 +45,9 @@ public:
  * transaction's output that it claims and a signature that matches the
  * output's public key.
  */
-class CTxIn
+class CTxIn : public CTxInBase<COutPoint>
 {
 public:
-    COutPoint prevout;
-    CScript scriptSig;
-    uint32_t nSequence;
-
     CTxIn()
     {
         nSequence = std::numeric_limits<unsigned int>::max();
@@ -67,15 +55,6 @@ public:
 
     explicit CTxIn(COutPoint prevoutIn, CScript scriptSigIn=CScript(), uint32_t nSequenceIn=std::numeric_limits<unsigned int>::max());
     CTxIn(uint256 hashPrevTx, uint32_t nOut, CScript scriptSigIn=CScript(), uint32_t nSequenceIn=std::numeric_limits<uint32_t>::max());
-
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
-        READWRITE(prevout);
-        READWRITE(scriptSig);
-        READWRITE(nSequence);
-    }
 
     bool IsFinal() const
     {
@@ -100,11 +79,9 @@ public:
 /** An output of a transaction.  It contains the public key that the next input
  * must be able to sign with to claim it.
  */
-class CTxOut
+class CTxOut : public CTxOutBase
 {
 public:
-    CAmount nValue;
-    CScript scriptPubKey;
 
     CTxOut()
     {
@@ -113,23 +90,15 @@ public:
 
     CTxOut(const CAmount& nValueIn, CScript scriptPubKeyIn);
 
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
-        READWRITE(nValue);
-        READWRITE(scriptPubKey);
-    }
-
     void SetNull()
     {
-        nValue = -1;
+        nValue = nValueNull;
         scriptPubKey.clear();
     }
 
     bool IsNull() const
     {
-        return (nValue == -1);
+        return (nValue == nValueNull);
     }
 
     uint256 GetHash() const;
@@ -167,7 +136,8 @@ struct CMutableTransaction;
 /** The basic transaction that is broadcasted on the network and contained in
  * blocks.  A transaction can contain multiple inputs and outputs.
  */
-class CTransaction
+
+class CTransaction : public CTransactionBase<CTxIn, CTxOut>
 {
 private:
     /** Memory only. */
@@ -175,18 +145,6 @@ private:
     void UpdateHash() const;
 
 public:
-    static const int32_t CURRENT_VERSION=1;
-
-    // The local variables are made const to prevent unintended modification
-    // without updating the cached hash value. However, CTransaction is not
-    // actually immutable; deserialization and assignment are implemented,
-    // and bypass the constness. This is safe, as they update the entire
-    // structure, including the hash.
-    const int32_t nVersion;
-    const std::vector<CTxIn> vin;
-    const std::vector<CTxOut> vout;
-    const uint32_t nLockTime;
-
     /** Construct a CTransaction that qualifies as IsNull() */
     CTransaction();
 
@@ -199,11 +157,7 @@ public:
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
-        READWRITE(*const_cast<int32_t*>(&this->nVersion));
-        nVersion = this->nVersion;
-        READWRITE(*const_cast<std::vector<CTxIn>*>(&vin));
-        READWRITE(*const_cast<std::vector<CTxOut>*>(&vout));
-        READWRITE(*const_cast<uint32_t*>(&nLockTime));
+        CTransactionBase::SerializationOp<Stream,Operation>(s, ser_action, nType, nVersion);
         if (ser_action.ForRead())
             UpdateHash();
     }
@@ -246,26 +200,10 @@ public:
 };
 
 /** A mutable version of CTransaction. */
-struct CMutableTransaction
+struct CMutableTransaction : public CMutableTransactionBase<CTxIn, CTxOut>
 {
-    int32_t nVersion;
-    std::vector<CTxIn> vin;
-    std::vector<CTxOut> vout;
-    uint32_t nLockTime;
-
     CMutableTransaction();
     CMutableTransaction(const CTransaction& tx);
-
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
-        READWRITE(this->nVersion);
-        nVersion = this->nVersion;
-        READWRITE(vin);
-        READWRITE(vout);
-        READWRITE(nLockTime);
-    }
 
     /** Compute the hash of this CMutableTransaction. This is computed on the
      * fly, as opposed to GetHash() in CTransaction, which uses a cached result.
