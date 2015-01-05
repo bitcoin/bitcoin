@@ -240,7 +240,7 @@ static bool rest_tx(AcceptedConnection* conn,
         throw RESTERR(HTTP_BAD_REQUEST, "Invalid hash: " + hashStr);
 
     CTransaction tx;
-    uint256 hashBlock = 0;
+    uint256 hashBlock = uint256();
     if (!GetTransaction(hash, tx, hashBlock, true))
         throw RESTERR(HTTP_NOT_FOUND, hashStr + " not found");
 
