@@ -39,9 +39,7 @@ Jonas Schnelli
     src/qt/res/icons/connect[0-3].png, src/qt/res/icons/eye_minus.png,
     src/qt/res/icons/eye_plus.png, src/qt/res/icons/verify.png,
     src/qt/res/icons/tx_inout.png, src/qt/res/icons/tx_input.png,
-    src/qt/res/icons/unit_btc.png, src/qt/res/icons/unit_mbtc.png,
-    src/qt/res/icons/unit_ubtc.png, src/qt/res/src/verify.svg
-    src/qt/res/src/bitcoin.svg, src/qt/res/src/clock*.svg,
-    src/qt/res/src/connect*.svg, src/qt/res/src/mine.svg,
-    src/qt/res/src/qt.svg, src/qt/res/src/tx*.svg,
+    src/qt/res/src/verify.svg, src/qt/res/src/bitcoin.svg,
+    src/qt/res/src/clock*.svg, src/qt/res/src/connect*.svg,
+    src/qt/res/src/mine.svg, src/qt/res/src/qt.svg, src/qt/res/src/tx*.svg,
     src/qt/res/src/verify.svg,

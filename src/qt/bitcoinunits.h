@@ -76,8 +76,6 @@ public:
     static QList<Unit> availableUnits();
     //! Is unit ID valid?
     static bool valid(int unit);
-    //! Identifier, e.g. for image names
-    static QString id(int unit);
     //! Short name
     static QString name(int unit);
     //! Longer description
