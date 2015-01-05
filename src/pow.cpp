@@ -11,7 +11,7 @@
 #include "uint256.h"
 #include "util.h"
 
-unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock)
+unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, int64_t nTime)
 {
     unsigned int nProofOfWorkLimit = Params().ProofOfWorkLimit().GetCompact();
 
@@ -27,7 +27,7 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
             // Special difficulty rule for testnet:
             // If the new block's timestamp is more than 2* 10 minutes
             // then allow mining of a min-difficulty block.
-            if (pblock->GetBlockTime() > pindexLast->GetBlockTime() + Params().TargetSpacing()*2)
+            if (nTime > pindexLast->GetBlockTime() + Params().TargetSpacing()*2)
                 return nProofOfWorkLimit;
             else
             {
@@ -75,6 +75,16 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
     return bnNew.GetCompact();
 }
 
+bool CheckChallenge(const CBlockHeader& block, const CBlockIndex& indexLast)
+{
+    return block.nBits == GetNextWorkRequired(&indexLast, block.GetBlockTime());
+}
+
+void ResetChallenge(CBlockHeader& block, const CBlockIndex& indexLast)
+{
+    block.nBits = GetNextWorkRequired(&indexLast, block.GetBlockTime());
+}
+
 bool CheckProofOfWork(uint256 hash, unsigned int nBits)
 {
     bool fNegative;
@@ -110,4 +120,44 @@ uint256 GetBlockProof(const CBlockIndex& block)
     // as bnTarget+1, it is equal to ((2**256 - bnTarget - 1) / (bnTarget+1)) + 1,
     // or ~bnTarget / (nTarget+1) + 1.
     return (~bnTarget / (bnTarget + 1)) + 1;
+}
+
+double GetChallengeDifficulty(const CBlockIndex* blockindex)
+{
+    int nShift = (blockindex->nBits >> 24) & 0xff;
+
+    double dDiff =
+        (double)0x0000ffff / (double)(blockindex->nBits & 0x00ffffff);
+
+    while (nShift < 29)
+    {
+        dDiff *= 256.0;
+        nShift++;
+    }
+    while (nShift > 29)
+    {
+        dDiff /= 256.0;
+        nShift--;
+    }
+    return dDiff;
+}
+
+std::string GetChallengeStr(const CBlockIndex& block)
+{
+    return strprintf("%08x", block.nBits);
+}
+
+std::string GetChallengeStrHex(const CBlockIndex& block)
+{
+    return uint256().SetCompact(block.nBits).GetHex();
+}
+
+uint32_t GetNonce(const CBlockHeader& block)
+{
+    return block.nNonce;
+}
+
+void SetNonce(CBlockHeader& block, uint32_t nNonce)
+{
+    block.nNonce = nNonce;
 }
