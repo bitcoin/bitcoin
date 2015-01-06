@@ -197,7 +197,7 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     // Double-clicking on a transaction on the transaction history page shows details
     connect(transactionView, SIGNAL(doubleClicked(QModelIndex)), transactionView, SLOT(showDetails()));
 
-    rpcConsole = new RPCConsole(this);
+    rpcConsole = new RPCConsole(0);
     connect(openRPCConsoleAction, SIGNAL(triggered()), rpcConsole, SLOT(show()));
 
     // Clicking on "Verify Message" in the address book sends you to the verify message tab
@@ -215,6 +215,8 @@ BitcoinGUI::~BitcoinGUI()
 #ifdef Q_OS_MAC
     delete appMenuBar;
 #endif
+
+    delete rpcConsole;
 }
 
 void BitcoinGUI::createActions()
@@ -809,6 +811,9 @@ void BitcoinGUI::closeEvent(QCloseEvent *event)
         }
 #endif
     }
+    // close rpcConsole in case it was open to make some space for the shutdown window
+    rpcConsole->close();
+
     QMainWindow::closeEvent(event);
 }
 

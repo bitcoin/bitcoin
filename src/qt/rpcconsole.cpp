@@ -189,7 +189,7 @@ void RPCExecutor::request(const QString &command)
 }
 
 RPCConsole::RPCConsole(QWidget *parent) :
-    QDialog(parent, DIALOGWINDOWHINTS),
+    QWidget(parent),
     ui(new Ui::RPCConsole),
     historyPtr(0)
 {
@@ -255,7 +255,7 @@ bool RPCConsole::eventFilter(QObject* obj, QEvent *event)
             }
         }
     }
-    return QDialog::eventFilter(obj, event);
+    return QWidget::eventFilter(obj, event);
 }
 
 void RPCConsole::setClientModel(ClientModel *model)
@@ -493,4 +493,12 @@ void RPCConsole::hideEvent(QHideEvent *event)
 
     if (!clientModel)
         return;
+}
+
+void RPCConsole::keyPressEvent(QKeyEvent *event)
+{
+    if(windowType() != Qt::Widget && event->key() == Qt::Key_Escape)
+    {
+        close();
+    }
 }
