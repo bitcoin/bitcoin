@@ -343,6 +343,12 @@ win32:QMAKE_LRELEASE = $$[QT_INSTALL_BINS]/lrelease
 LIBS += -lboost_system$$BOOST_LIB_SUFFIX -lboost_filesystem$$BOOST_LIB_SUFFIX -lboost_program_options$$BOOST_LIB_SUFFIX -lboost_thread$$BOOST_THREAD_LIB_SUFFIX
 на
 LIBS += -lboost_system$$BOOST_LIB_SUFFIX -lboost_filesystem$$BOOST_LIB_SUFFIX -lboost_program_options$$BOOST_LIB_SUFFIX -lboost_thread_win32$$BOOST_THREAD_LIB_SUFFIX
+
+Измените
+windows:LIBS += -lboost_chrono$$BOOST_LIB_SUFFIX -Wl,-Bstatic -lpthread -Wl,-Bdynamic
+на
+windows:LIBS += -lboost_chrono$$BOOST_LIB_SUFFIX
+
 -Сохраните измененный файл novacoin-qt.pro
 -Откройте терминал и выполните следующие команды
 
