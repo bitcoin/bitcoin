@@ -272,6 +272,11 @@ win32:QMAKE_LFLAGS........................
 на 
 win32:QMAKE_LFLAGS *= -Wl,--large-address-aware -static 
 
+Измените 
+windows:LIBS += -lboost_chrono$$BOOST_LIB_SUFFIX -Wl,-Bstatic -lpthread -Wl,-Bdynamic
+на
+windows:LIBS += -lboost_chrono$$BOOST_LIB_SUFFIX
+
 -Сохраните измененный файл novacoin-qt.pro
 -Откройте командную строку Windows и выполните следующий код:
 
