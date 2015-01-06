@@ -17,21 +17,21 @@ static double gettimedouble(void) {
     return tv.tv_usec * 0.000001 + tv.tv_sec;
 }
 
-void run_benchmark(void (*benchmark)(void*), void (*setup)(void*), void (*teardown)(void*), void* data, int count, int iter) {
+void run_benchmark(void (*benchmark)(void*,int), void (*setup)(void*), void (*teardown)(void*), void* data, int count, int iters) {
     double min = HUGE_VAL;
     double sum = 0.0;
     double max = 0.0;
     for (int i = 0; i < count; i++) {
         if (setup) setup(data);
         double begin = gettimedouble();
-        benchmark(data);
+        benchmark(data, iters);
         double total = gettimedouble() - begin;
         if (teardown) teardown(data);
         if (total < min) min = total;
         if (total > max) max = total;
         sum += total;
     }
-    printf("min %.3fus / avg %.3fus / max %.3fus\n", min * 1000000.0 / iter, (sum / count) * 1000000.0 / iter, max * 1000000.0 / iter);
+    printf("min %.3fus / avg %.3fus / max %.3fus\n", min * 1000000.0 / iters, (sum / count) * 1000000.0 / iters, max * 1000000.0 / iters);
 }
 
 #endif

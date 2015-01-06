@@ -60,7 +60,7 @@ bench_sign_SOURCES = src/bench_sign.c
 bench_sign_LDADD = libsecp256k1.la $(SECP_LIBS)
 bench_sign_LDFLAGS = -static
 bench_inv_SOURCES = src/bench_inv.c
-bench_inv_LDADD = $(SECP_LIBS)
+bench_inv_LDADD = libsecp256k1.la $(SECP_LIBS)
 bench_inv_LDFLAGS = -static
 bench_inv_CPPFLAGS = $(SECP_INCLUDES)
 endif
