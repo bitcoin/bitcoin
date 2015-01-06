@@ -23,12 +23,6 @@
 #include <string>
 #include <vector>
 
-#include <boost/algorithm/string/classification.hpp>
-#include <boost/algorithm/string/predicate.hpp>
-#include <boost/algorithm/string/replace.hpp>
-#include <boost/algorithm/string/split.hpp>
-#include <boost/filesystem/operations.hpp>
-#include <boost/filesystem/path.hpp>
 #include <boost/foreach.hpp>
 #include <boost/test/unit_test.hpp>
 #include "json/json_spirit_reader_template.h"
@@ -37,7 +31,6 @@
 
 using namespace std;
 using namespace json_spirit;
-using namespace boost::algorithm;
 
 // Uncomment if you want to output updated JSON tests.
 // #define UPDATE_JSON_TESTS

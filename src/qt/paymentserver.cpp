@@ -46,7 +46,6 @@
 #include <QUrlQuery>
 #endif
 
-using namespace boost;
 using namespace std;
 
 const int BITCOIN_IPC_CONNECT_TIMEOUT = 1000; // milliseconds
