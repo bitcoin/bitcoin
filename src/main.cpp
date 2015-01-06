@@ -345,6 +345,24 @@ void MarkBlockAsInFlight(NodeId nodeid, const uint256& hash, CBlockIndex *pindex
     mapBlocksInFlight[hash] = std::make_pair(nodeid, it);
 }
 
+// Requires cs_main.
+bool IsBlockTransferTimedOut(const uint256& hash, NodeId newnode) {
+    // 20 minutes ~ 2 blocks - maybe this should be configurable for slow nodes
+    int64_t nTimeout = GetTimeMicros() - Params().TargetSpacing() * 2 * 1000000;
+
+    map<uint256, pair<NodeId, list<QueuedBlock>::iterator> >::iterator itInFlight = mapBlocksInFlight.find(hash);
+    if (itInFlight->second.second->nTime < nTimeout &&
+        itInFlight->second.first != newnode)
+    {
+        LogPrintf("Peer=%d failed to transfer block %s in twice the expected block interval, requesting elsewhere...\n",
+                  itInFlight->second.first, hash.ToString());
+        Misbehaving(itInFlight->second.first, 10);
+        return true;
+    }
+
+    return false;
+}
+
 /** Check whether the last unknown block a peer advertized is not yet known. */
 void ProcessBlockAvailability(NodeId nodeid) {
     CNodeState *state = State(nodeid);
@@ -458,8 +476,17 @@ void FindNextBlocksToDownload(NodeId nodeid, unsigned int count, std::vector<CBl
             if (pindex->nStatus & BLOCK_HAVE_DATA) {
                 if (pindex->nChainTx)
                     state->pindexLastCommonBlock = pindex;
-            } else if (mapBlocksInFlight.count(pindex->GetBlockHash()) == 0) {
+            } else if (mapBlocksInFlight.count(pindex->GetBlockHash()) == 0 ||
+                       (nMaxHeight == state->pindexBestKnownBlock->nHeight &&
+                       state->nBlocksInFlight == 0 &&
+                       IsBlockTransferTimedOut(pindex->GetBlockHash(), nodeid))) {
                 // The block is not already downloaded, and not yet in flight.
+                // Or even if the block is in flight, is:
+                //  a) The download window extended beyond the tip, disabling stall detection? (window end == peer tip)
+                //  b) This peer likely fast and bored? (nBlocksInFlight == 0)
+                //  c) The transfer from someone else taking an unreasonable amount of time? (timed out)
+                // Otherwise stated: A good candidate to request again here, regardless of
+                // the fact that it's already in flight.
                 if (pindex->nHeight > nWindowEnd) {
                     // We reached the end of the window.
                     if (vBlocks.size() == 0 && waitingfor != nodeid) {
