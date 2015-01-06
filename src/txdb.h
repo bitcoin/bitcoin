@@ -45,6 +45,7 @@ class CBlockTreeDB : public CLevelDBWrapper
 public:
     CBlockTreeDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
 private:
+    uint256 salt;
     CBlockTreeDB(const CBlockTreeDB&);
     void operator=(const CBlockTreeDB&);
 public:
@@ -57,6 +58,8 @@ public:
     bool ReadReindexing(bool &fReindex);
     bool ReadTxIndex(const uint256 &txid, CDiskTxPos &pos);
     bool WriteTxIndex(const std::vector<std::pair<uint256, CDiskTxPos> > &list);
+    bool ReadAddrIndex(uint160 addrid, std::vector<CExtDiskTxPos> &list);
+    bool AddAddrIndex(const std::vector<std::pair<uint160, CExtDiskTxPos> > &list);
     bool WriteFlag(const std::string &name, bool fValue);
     bool ReadFlag(const std::string &name, bool &fValue);
     bool LoadBlockIndexGuts();

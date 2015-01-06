@@ -201,6 +201,7 @@ extern json_spirit::Value getnetworkinfo(const json_spirit::Array& params, bool 
 extern json_spirit::Value setmocktime(const json_spirit::Array& params, bool fHelp);
 
 extern json_spirit::Value getrawtransaction(const json_spirit::Array& params, bool fHelp); // in rcprawtransaction.cpp
+extern json_spirit::Value searchrawtransactions(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value listunspent(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value lockunspent(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value listlockunspent(const json_spirit::Array& params, bool fHelp);
