@@ -51,6 +51,10 @@ extern "C" {
  *  secp256k1_start() returns, all other functions are thread-safe.
  */
 void secp256k1_start(unsigned int flags);
+#ifndef SECP256K1_PRIMARY
+extern unsigned int ecmult_impl_windowG;
+#endif
+
 
 /** Free all memory associated with this library. After this, no
  *  functions can be called anymore, except secp256k1_start()

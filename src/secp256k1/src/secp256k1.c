@@ -6,7 +6,9 @@
 
 #define SECP256K1_BUILD (1)
 
+#define SECP256K1_PRIMARY (1)
 #include "include/secp256k1.h"
+#undef SECP256K1_PRIMARY
 
 #include "util.h"
 #include "num_impl.h"
