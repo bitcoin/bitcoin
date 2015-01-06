@@ -3,6 +3,8 @@
 
 #include <QObject>
 
+#include <stdint.h>
+
 class OptionsModel;
 class AddressTableModel;
 class TransactionTableModel;
@@ -12,6 +14,13 @@ QT_BEGIN_NAMESPACE
 class QDateTime;
 class QTimer;
 QT_END_NAMESPACE
+
+enum NumConnections {
+    CONNECTIONS_NONE = 0,
+    CONNECTIONS_IN = (1U << 0),
+    CONNECTIONS_OUT = (1U << 1),
+    CONNECTIONS_ALL = (CONNECTIONS_IN | CONNECTIONS_OUT),
+};
 
 /** Model for Bitcoin network client. */
 class ClientModel : public QObject
@@ -26,7 +35,8 @@ public:
     double getPoSKernelPS();
     double getDifficulty(bool fProofofStake);
 
-    int getNumConnections() const;
+    //! Return number of connections, default is in- and outbound (total)
+    int getNumConnections(uint8_t flags = CONNECTIONS_ALL) const;
     int getNumBlocks() const;
     int getNumBlocksAtStartup();
 
