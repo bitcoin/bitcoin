@@ -131,8 +131,13 @@ namespace {
         uint256 hash;
         CBlockIndex *pindex;  //! Optional.
         int64_t nTime;  //! Time of "getdata" request in microseconds.
+        int nValidatedQueuedBefore;  //! Number of blocks queued with validated headers (globally) at the time this one is requested.
+        bool fValidatedHeaders;  //! Whether this block has validated headers at the time of request.
     };
     map<uint256, pair<NodeId, list<QueuedBlock>::iterator> > mapBlocksInFlight;
+
+    /** Number of blocks in flight with validated headers. */
+    int nQueuedValidatedHeaders = 0;
 
     /** Number of preferable block download peers. */
     int nPreferredDownload = 0;
@@ -315,6 +320,7 @@ void MarkBlockAsReceived(const uint256& hash) {
     map<uint256, pair<NodeId, list<QueuedBlock>::iterator> >::iterator itInFlight = mapBlocksInFlight.find(hash);
     if (itInFlight != mapBlocksInFlight.end()) {
         CNodeState *state = State(itInFlight->second.first);
+        nQueuedValidatedHeaders -= itInFlight->second.second->fValidatedHeaders;
         state->vBlocksInFlight.erase(itInFlight->second.second);
         state->nBlocksInFlight--;
         state->nStallingSince = 0;
@@ -330,7 +336,8 @@ void MarkBlockAsInFlight(NodeId nodeid, const uint256& hash, CBlockIndex *pindex
     // Make sure it's not listed somewhere already.
     MarkBlockAsReceived(hash);
 
-    QueuedBlock newentry = {hash, pindex, GetTimeMicros()};
+    QueuedBlock newentry = {hash, pindex, GetTimeMicros(), nQueuedValidatedHeaders, pindex != NULL};
+    nQueuedValidatedHeaders += newentry.fValidatedHeaders;
     list<QueuedBlock>::iterator it = state->vBlocksInFlight.insert(state->vBlocksInFlight.end(), newentry);
     state->nBlocksInFlight++;
     mapBlocksInFlight[hash] = std::make_pair(nodeid, it);
@@ -4495,6 +4502,15 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
             // the download window should be much larger than the to-be-downloaded set of blocks, so disconnection
             // should only happen during initial block download.
             LogPrintf("Peer=%d is stalling block download, disconnecting\n", pto->id);
+            pto->fDisconnect = true;
+        }
+        // In case there is a block that has been in flight from this peer for (1 + 0.5 * N) times the block interval
+        // (with N the number of validated blocks that were in flight at the time it was requested), disconnect due to
+        // timeout. We compensate for in-flight blocks to prevent killing off peers due to our own downstream link
+        // being saturated. We only count validated in-flight blocks so peers can't advertize nonexisting block hashes
+        // to unreasonably increase our timeout.
+        if (!pto->fDisconnect && state.vBlocksInFlight.size() > 0 && state.vBlocksInFlight.front().nTime < nNow - 500000 * Params().TargetSpacing() * (2 + state.vBlocksInFlight.front().nValidatedQueuedBefore)) {
+            LogPrintf("Timeout downloading block %s from peer=%d, disconnecting\n", state.vBlocksInFlight.front().hash.ToString(), pto->id);
             pto->fDisconnect = true;
         }
 
