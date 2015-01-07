@@ -26,6 +26,7 @@ testScripts=(
     'mempool_spendcoinbase.py'
     'mempool_coinbase_spends.py'
     'httpbasics.py'
+    'zapwallettxes.py'
 #    'forknotify.py'
 );
 if [ "x${ENABLE_BITCOIND}${ENABLE_UTILS}${ENABLE_WALLET}" = "x111" ]; then
@@ -33,7 +34,7 @@ if [ "x${ENABLE_BITCOIND}${ENABLE_UTILS}${ENABLE_WALLET}" = "x111" ]; then
     do
         if [ -z "$1" ] || [ "$1" == "${testScripts[$i]}" ] || [ "$1.py" == "${testScripts[$i]}" ]
         then
-            echo -e "running testscript \033[1m${testScripts[$i]}...\033[0m"
+            echo -e "Running testscript \033[1m${testScripts[$i]}...\033[0m"
             ${BUILDDIR}/qa/rpc-tests/${testScripts[$i]} --srcdir "${BUILDDIR}/src"
         fi
     done
