@@ -85,6 +85,9 @@
           </property>
           <item row="0" column="0">
            <widget class="QLabel" name="label">
+            <property name="toolTip">
+             <string>Your current balance</string>
+            </property>
             <property name="text">
              <string>Balance:</string>
             </property>
@@ -114,6 +117,9 @@
           </item>
           <item row="1" column="0">
            <widget class="QLabel" name="labelBalanceWatchOnlyText">
+            <property name="toolTip">
+             <string>Your unspendable balance</string>
+            </property>
             <property name="text">
              <string>Unspendable:</string>
             </property>
@@ -143,6 +149,9 @@
           </item>
           <item row="2" column="0">
            <widget class="QLabel" name="label_6">
+            <property name="toolTip">
+             <string>Total of coins that was staked, and do not yet count toward the current balance</string>
+            </property>
             <property name="text">
              <string>Stake:</string>
             </property>
@@ -172,6 +181,9 @@
           </item>
           <item row="3" column="0">
            <widget class="QLabel" name="label_3">
+            <property name="toolTip">
+             <string>Total of transactions that have yet to be confirmed, and do not yet count toward the current balance</string>
+            </property>
             <property name="text">
              <string>Unconfirmed:</string>
             </property>
@@ -201,6 +213,9 @@
           </item>
           <item row="4" column="0">
            <widget class="QLabel" name="labelImmatureText">
+            <property name="toolTip">
+             <string>Mined balance that has not yet matured</string>
+            </property>
             <property name="text">
              <string>Immature:</string>
             </property>
@@ -227,6 +242,9 @@
           </item>
           <item row="5" column="0">
            <widget class="QLabel" name="label_2">
+            <property name="toolTip">
+             <string>Total number of transactions in wallet</string>
+            </property>
             <property name="text">
              <string>Number of transactions:</string>
             </property>

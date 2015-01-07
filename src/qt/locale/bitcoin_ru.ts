@@ -1978,6 +1978,7 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     </message>
     <message>
         <location line="+13"/>
+        <location line="217"/>
         <source>Mined balance that has not yet matured</source>
         <translation>Баланс добытых монет, который ещё не созрел</translation>
     </message>
@@ -1988,26 +1989,31 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     </message>
     <message>
         <location line="-147"/>
+        <location line="89"/>
         <source>Your current balance</source>
         <translation>Ваш текущий баланс</translation>
     </message>
     <message>
         <location line="-147"/>
+        <location line="121"/>
         <source>Your unspendable balance</source>
         <translation>Недоступный баланс</translation>
     </message>
     <message>
+        <location line="185"/>
         <location line="+58"/>
         <source>Total of transactions that have yet to be confirmed, and do not yet count toward the current balance</source>
         <translation>Общая сумма всех транзакций, которые до сих пор не подтверждены, и до сих пор не учитываются в текущем балансе</translation>
     </message>
     <message>
+        <location line="153"/>
         <location line="-29"/>
         <source>Total of coins that was staked, and do not yet count toward the current balance</source>
         <translation>Общая сумма всех монет, использованных для Proof-of-Stake, и не учитывающихся на балансе</translation>
     </message>
     <message>
         <location line="+75"/>
+        <location line="246"/>
         <source>Total number of transactions in wallet</source>
         <translation>Общее количество транзакций в Вашем бумажнике</translation>
     </message>
