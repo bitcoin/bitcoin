@@ -1,0 +1,387 @@
+﻿Данный способ должен подходить для любой Unix системы: Linux, FreeBSD, MacOS X
+При написании этого руководства использовался Linux Mint 17.1 ( http://linuxmint.com/ )
+1) Подготовка системы для кросскомпиляции.
+
+ sudo apt-get install git bison cmake flex g++ gperf ruby scons libghc-zlib-dev  libghc-zlib-bindings-dev
+
+2) Установка MXE и зависимостей
+ cd /home/<ваше имя>/
+ git clone https://github.com/mxw/mxe.git
+ 
+
+2.1) gcc
+ cd /home/<ваше имя>/mxe
+ make gcc zlib
+
+Проверка того, что установка gcc прошла успешно:
+В папке /home/<ваше имя>/mxe/usr/bin должен появиться файл i686-w64-mingw32.static-gcc и i686-w64-mingw32.static-g++
+И при запуске ./i686-w64-mingw32.static-gcc -v должно выдаваться
+......
+Thread model: win32
+gcc version 4.9.2 (GCC)
+
+В папке /home/<ваше имя>/mxe/usr/i686-w64-mingw32.static/lib должен быть файл:
+libz.a
+
+2.2) Openssl
+ 
+ cd /home/<ваше имя>/mxe
+ make openssl
+
+Проверка что установка Openssl прошла успешно:
+В папке /home/<ваше имя>/mxe/usr/i686-w64-mingw32.static/lib должны появиться два файла
+-libssl.a
+-libcrypto.a
+В папке mxe/usr/i686-w64-mingw32.static/include должна появиться папка openssl
+
+2.3) Boost
+
+ cd /home/<ваше имя>/mxe
+ make boost
+
+Откройте файл /home/<ваше имя>/mxe/usr/i686-w64-mingw32.static/include/boost/interprocess/detail/win32_api.hpp
+и измените 
+#include <Wbemidl.h>
+#include <Objbase.h>
+#include <Shlobj.h>
+
+на
+
+#include <wbemidl.h>
+#include <objbase.h>
+#include <shlobj.h>
+
+Проверка что установка Boost прошла успешно:
+В /home/<ваше имя>/mxe/usr/i686-w64-mingw32.static/lib папке должны появиться файлы:
+-libboost_имябиблиотеки_mt.a (libboost_atomic-mt.a и другие подобные файлы)
+-libboost_имябиблиотеки_mt-d.a (libboost_atomic-mt-d.a и другие подобные файлы)
+
+В папке /home/<ваше имя>/mxe/usr/i686-w64-mingw32.static/include должна появиться папка boost
+
+2.4) Berkeley DB
+-Скачайте http://download.oracle.com/berkeley-db/db-6.0.20.tar.gz
+-Распакуйте в домашнюю папку
+-Откройте файл /home/<ваше имя>/db-6.0.20/src/dbinc/winioctl.h
+-Измените 
+#include <WinIoCtl.h>
+на
+#include <winioctl.h>
+-Сохраните файл
+-Откройте терминал
+ cd /home/<ваше имя>/db-6.0.20/build_unix
+ export PATH=/home/<ваше имя>/mxe/usr/bin:$PATH
+ ../dist/configure --host=i686-w64-mingw32.static --enable-mingw --enable-cxx --disable-shared --disable-replication
+ make
+
+Проверка, что установка Berkeley DB прошла успешно:
+В папке /home/<ваше имя>/db-6.0.20/build_unix должны появиться файлы:
+libdb.a
+libdb_cxx.a
+
+2.5) Miniupnpc
+-Скачайте http://miniupnp.free.fr/files/download.php?file=miniupnpc-1.9.20141128.tar.gz
+-Распакуйте в домашнюю папку
+-Переименуйте папку miniupnpc-1.9.20141128 в miniupnpc
+-Перейдите в папку miniupnpc и создайте файл miniupnpcstrings.h
+-Напишите в нём:
+
+#ifndef MINIUPNPCSTRINGS_H_INCLUDED
+#define MINIUPNPCSTRINGS_H_INCLUDED
+
+#define OS_STRING "MSWindows/6.1.7601"
+#define MINIUPNPC_VERSION_STRING "1.9"
+
+#if 0
+/* according to "UPnP Device Architecture 1.0" */
+#define UPNP_VERSION_STRING "UPnP/1.0"
+#else
+/* according to "UPnP Device Architecture 1.1" */
+#define UPNP_VERSION_STRING "UPnP/1.1"
+#endif
+
+#endif
+
+и сохраните файл
+-Откройте файл Makefile.mingw
+-Измените строку 7:
+измените
+ CC = gcc
+на
+ CC=$(CROSS)gcc
+
+-Удалите строки с 68 по 72
+
+wingenminiupnpcstrings:	wingenminiupnpcstrings.o
+
+wingenminiupnpcstrings.o:	wingenminiupnpcstrings.c
+
+miniupnpcstrings.h: miniupnpcstrings.h.in wingenminiupnpcstrings
+	wingenminiupnpcstrings $< $@
+
+-Сохраните файл
+
+-Откройте терминал
+
+ export PATH=/home/<ваше имя>/mxe/usr/bin:$PATH
+ make CROSS=i686-w64-mingw32.static- -f Makefile.mingw init upnpc-static
+
+
+Проверка, что установка Miniupnpc прошла успешно:
+В папке miniupnpc должен появиться файл libminiupnpc.a
+
+
+2.6) qrencode
+-Скачайте http://download.sourceforge.net/libpng/libpng-1.6.15.tar.gz?download
+-Распакуйте в домашнюю папку
+-Откройте терминал
+
+ export PATH=/home/<ваше имя>/mxe/usr/bin:$PATH
+ cd /home/<ваше имя>/libpng-1.6.15
+ ./configure --host=i686-w64-mingw32.static --disable-shared
+ make
+ cp .libs/libpng16.a .libs/libpng.a
+
+Проверка что libpng собралась успешно:
+в папке /home/<ваше имя>/libpng-1.6.15/.libs должен быть файл:
+libpng.a
+
+-Скачайте http://fukuchi.org/works/qrencode/qrencode-3.4.4.tar.gz
+-Распакуйте в домашнюю папку
+-Откройте терминал
+ export PATH=/home/<ваше имя>/mxe/usr/bin:$PATH
+ cd /home/<ваше имя>/qrencode-3.4.4
+
+ LIBS="../libpng-1.6.15/.libs/libpng.a ../mxe/usr/i686-w64-mingw32.static/lib/libz.a" \
+ png_CFLAGS="-I../libpng-1.6.15" \
+ png_LIBS="-L../libpng-1.6.15/.libs" \
+ ./configure --host=i686-w64-mingw32.static --enable-static --disable-shared --without-tools
+
+ make
+
+Проверка что qrencode успешно собралась:
+в папке /home/<ваше имя>/qrencode-3.4.4/.libs должен быть файл:
+libqrencode.a
+
+2.7 Qt 5 и Qt 4
+
+Qt 4
+-Откройте терминал
+
+ cd /home/<ваше имя>/mxe
+ make qt
+
+Проверка что Qt4 собрался правильно:
+-Откройте терминал
+-Введите следующие команды
+ export PATH=/home/<ваше имя>/mxe/usr/bin:$PATH
+ i686-w64-mingw32.static-qmake-qt4 -v
+
+-Должно появиться в ответ
+QMake version 2.01a
+Using Qt version 4.8.6 in /home/<ваше имя>/mxe/usr/i686-w64-mingw32.static/qt/lib
+
+Qt 5
+-Откройте терминал
+
+ export PATH=/home/<ваше имя>/mxe/usr/bin:$PATH
+ cd /home/<ваше имя>/mxe
+ make qtbase qttools qttranslations
+
+Проверка что Qt5 собрался правильно:
+-Откройте терминал
+-Введите следующие команды
+ export PATH=/home/<ваше имя>/mxe/usr/bin:$PATH
+ i686-w64-mingw32.static-qmake-qt5 -v
+
+-Должно появиться в ответ
+QMake version 3.0
+Using Qt version 5.4.0 in /home/<ваше имя>/mxe/usr/i686-w64-mingw32.static/qt5/lib
+
+3. Компиляция
+
+3.1 Скачиваем исходники
+-Перейдите в домашнюю папку
+-Откройте терминал
+
+ git clone https://github.com/novacoin-project/novacoin.git
+
+3.2 Собираем novacoind 
+-Откройте файл makefile.mingw в текстовом редакторе.(При написании инструкции использовался Pluma 1.8.1)
+-Вставьте 
+CC=$(CROSS)gcc
+CXX=$(CROSS)g++
+-Поменяйте USE_UPNP:=0 на USE_UPNP:=1
+-Добавьте  строчку USE_ASM:=1
+-Поменяйте текущие INCLUDEPATHS, LIBPATHS, LIBS на:
+
+BOOST_SUFFIX?=-mt
+
+INCLUDEPATHS= \
+ -I"$(CURDIR)" \
+ -I"/home/<ваше имя>/mxe/usr/i686-w64-mingw32.static/include" \
+ -I"/home/<ваше имя>/" \
+ -I"/home/<ваше имя>/db-6.0.20/build_unix" \
+ 
+LIBPATHS= \
+ -L"$(CURDIR)/leveldb" \
+ -L"/home/<ваше имя>/mxe/usr/i686-w64-mingw32.static/lib" \
+ -L"/home/<ваше имя>/miniupnpc" \
+ -L"/home/<ваше имя>/db-6.0.20/build_unix" \
+
+LIBS= \
+  -l leveldb \
+  -l memenv \
+  -l boost_system$(BOOST_SUFFIX) \
+  -l boost_filesystem$(BOOST_SUFFIX) \
+  -l boost_program_options$(BOOST_SUFFIX) \
+  -l boost_thread$(BOOST_SUFFIX) \
+  -l boost_chrono$(BOOST_SUFFIX) \
+  -l db_cxx \
+  -l ssl \
+  -l crypto \
+  -l z
+-Поменяйте LDFLAGS=-Wl,--dynamicbase -Wl,--nxcompat на 
+LDFLAGS=-Wl,--dynamicbase -Wl,--nxcompat -Wl,--large-address-aware -static
+
+-Поменяйте в последних строчках makefile.mingw
+g++ -c $(CFLAGS) -o $@ $<
+на
+$(CXX) -c $(CFLAGS) -o $@ $<
+
+g++ $(CFLAGS) $(LDFLAGS) -o $@ $(LIBPATHS) $^ $(LIBS)
+на
+$(CXX) $(CFLAGS) $(LDFLAGS) -o $@ $(LIBPATHS) $^ $(LIBS)
+
+-Если вы хотите использовать LevelDB как базу блоков то измените:
+USE_LEVELDB:=0 
+на
+USE_LEVELDB:=1
+(выше USE_IPV6:=1)
+Откройте файл /home/<ваше имя>/novacoin/src/leveldb/Makefile
+Вставьте ниже строчки CXXFLAGS += -I. -I./include $(PLATFORM_CXXFLAGS) $(OPT) следующие строки:
+
+CC=$(CROSS)gcc
+CXX=$(CROSS)g++
+Сохраните файл
+
+Снова возвращаемся в файл makefile.mingw, измените 
+cd leveldb; make; cd ..
+на 
+cd leveldb; TARGET_OS=NATIVE_WINDOWS make CROSS=i686-w64-mingw32.static- libleveldb.a libmemenv.a; cd ..
+
+Ещё измените
+obj/txdb-leveldb.o: leveldb/libleveldb.lib
+на
+obj/txdb-leveldb.o: leveldb/libleveldb.a
+
+Если вы хотите использовать BerkeleyDB как базу блоков, то просто удалите строчку USE_LEVELDB:=1
+
+-Сохраните измененный файл makefile.mingw
+
+-Откройте терминал
+cd /home/<ваше имя>/novacoin/src
+export PATH=/home/<ваше имя>/mxe/usr/bin:$PATH
+make CROSS=i686-w64-mingw32.static- -f makefile.mingw
+strip novacoind.exe
+
+
+Во время линковки будут выдаваться подобные сообщения:
+libboost_thread_win32-mt.a(thread.o): duplicate section `.rdata$_ZTVN5boost16exception_detail10clone_implINS0_19error_info_injectorINS_9gregorian9bad_monthEEEEE[__ZTVN5boost16exception_detail10clone_implINS0_19error_info_injectorINS_9gregorian9bad_monthEEEEE]' has different size
+Игнорируйте их. На работоспособность программы это никак не влияет
+
+
+3.3 Собираем Novacoin QT
+
+Внимание: Если вы хотите собирать Novacoin Qt с LevelDB, но пропустили шаг со сборкой novacoind.exe, то 
+-Измените Makefile в папке leveldb также как в пункте 3.2
+-Откройте терминал и выполните следующие команды:
+export PATH=/home/<ваше имя>/mxe/usr/bin:$PATH
+cd /home/<ваше имя>/novacoin/src/leveldb
+TARGET_OS=NATIVE_WINDOWS make CROSS=i686-w64-mingw32.static- libleveldb.a libmemenv.a;
+
+-Откройте файл /home/<ваше имя>/novacoin/novacoin-qt.pro в текстовом редакторе(при написании инструкции использовался Pluma 1.8.1)
+-Ниже 
+# Dependency library locations can be customized with:
+#    BOOST_INCLUDE_PATH, BOOST_LIB_PATH, BDB_INCLUDE_PATH,
+#    BDB_LIB_PATH, OPENSSL_INCLUDE_PATH and OPENSSL_LIB_PATH respectively
+замените прописанные пути к зависимостям на
+
+BOOST_LIB_SUFFIX=-mt
+BOOST_INCLUDE_PATH=/home/<ваше имя>/mxe/usr/i686-w64-mingw32.static/include
+BOOST_LIB_PATH=/home/<ваше имя>/mxe/usr/i686-w64-mingw32.static/lib
+BDB_INCLUDE_PATH=/home/<ваше имя>/db-6.0.20/build_unix
+BDB_LIB_PATH=//home/<ваше имя>/db-6.0.20/build_unix
+OPENSSL_INCLUDE_PATH=/home/<ваше имя>/mxe/usr/i686-w64-mingw32.static/include
+OPENSSL_LIB_PATH=/home/<ваше имя>/mxe/usr/i686-w64-mingw32.static/lib
+MINIUPNPC_INCLUDE_PATH=/home/<ваше имя>/
+MINIUPNPC_LIB_PATH=/home/<ваше имя>/miniupnpc
+QRENCODE_INCLUDE_PATH=/home/<ваше имя>/qrencode-3.4.4
+QRENCODE_LIB_PATH=/home/<ваше имя>/qrencode-3.4.4/.libs
+
+Так же измените(если ещё не изменено) 
+LIBS += -lshlwapi
+genleveldb.commands = cd $$PWD/src/leveldb && CC=$$QMAKE_CC CXX=$$QMAKE_CXX TARGET_OS=OS_WINDOWS_CROSSCOMPILE $(MAKE) OPT=\"$$QMAKE_CXXFLAGS $$QMAKE_CXXFLAGS_RELEASE\" libleveldb.a libmemenv.a && $$QMAKE_RANLIB $$PWD/src/leveldb/libleveldb.a && $$QMAKE_RANLIB $$PWD/src/leveldb/libmemenv.a
+
+на
+ 
+LIBS += -lshlwapi
+#genleveldb.commands = cd $$PWD/src/leveldb && CC=$$QMAKE_CC CXX=$$QMAKE_CXX TARGET_OS=OS_WINDOWS_CROSSCOMPILE $(MAKE) OPT=\"$$QMAKE_CXXFLAGS $$QMAKE_CXXFLAGS_RELEASE\" libleveldb.a libmemenv.a && $$QMAKE_RANLIB $$PWD/src/leveldb/libleveldb.a && $$QMAKE_RANLIB $$PWD/src/leveldb/libmemenv.a
+
+Если в файле нет такой строчки CONFIG += static , то добавьте её.
+
+Измените 
+win32:QMAKE_LFLAGS........................
+на 
+win32:QMAKE_LFLAGS *= -Wl,--large-address-aware -static 
+
+Измените 
+win32:QMAKE_LRELEASE = $$[QT_INSTALL_BINS]\\lrelease.exe
+на
+win32:QMAKE_LRELEASE = $$[QT_INSTALL_BINS]/lrelease
+
+Измените
+LIBS += -lboost_system$$BOOST_LIB_SUFFIX -lboost_filesystem$$BOOST_LIB_SUFFIX -lboost_program_options$$BOOST_LIB_SUFFIX -lboost_thread$$BOOST_THREAD_LIB_SUFFIX
+на
+LIBS += -lboost_system$$BOOST_LIB_SUFFIX -lboost_filesystem$$BOOST_LIB_SUFFIX -lboost_program_options$$BOOST_LIB_SUFFIX -lboost_thread_win32$$BOOST_THREAD_LIB_SUFFIX
+
+Измените
+windows:LIBS += -lboost_chrono$$BOOST_LIB_SUFFIX -Wl,-Bstatic -lpthread -Wl,-Bdynamic
+на
+windows:LIBS += -lboost_chrono$$BOOST_LIB_SUFFIX
+
+-Сохраните измененный файл novacoin-qt.pro
+-Откройте терминал и выполните следующие команды
+
+Qt4 + транзакционный индекс LevelDB
+
+export PATH=/home/<ваше имя>/mxe/usr/bin:$PATH
+cd /home/<ваше имя>/novacoin
+i686-w64-mingw32.static-qmake-qt4 "USE_QRCODE=1" "USE_UPNP=1" "USE_IPV6=1" "USE_LEVELDB=1" "USE_ASM=1" novacoin-qt.pro
+make -j n -f Makefile.Release  (вместо n количество ядер вашего процессора, которые вы хотите выделить под сборку)
+
+Qt4 + транзакционный индекс BDB
+
+export PATH=/home/<ваше имя>/mxe/usr/bin:$PATH
+cd /home/<ваше имя>/novacoin
+i686-w64-mingw32.static-qmake-qt4 "USE_QRCODE=1" "USE_UPNP=1" "USE_IPV6=1" "USE_ASM=1" novacoin-qt.pro
+make -j n -f Makefile.Release  (вместо n количество ядер вашего процессора, которые вы хотите выделить под сборку)
+
+Qt5 + транзакционный индекс LevelDB
+
+export PATH=/home/<ваше имя>/mxe/usr/bin:$PATH
+cd /home/<ваше имя>/novacoin
+i686-w64-mingw32.static-qmake-qt5 "USE_QRCODE=1" "USE_UPNP=1" "USE_IPV6=1" "USE_LEVELDB=1" "USE_ASM=1" novacoin-qt.pro
+make -j n -f Makefile.Release  (вместо n количество ядер вашего процессора, которые вы хотите выделить под сборку)
+
+Qt5 + транзакционный индекс BDB
+
+export PATH=/home/<ваше имя>/mxe/usr/bin:$PATH
+cd /home/<ваше имя>/novacoin
+i686-w64-mingw32.static-qmake-qt5 "USE_QRCODE=1" "USE_UPNP=1" "USE_IPV6=1" "USE_ASM=1" novacoin-qt.pro
+make -j n -f Makefile.Release  (вместо n количество ядер вашего процессора, которые вы хотите выделить под сборку)
+
+
+Если всё сделано правильно, то файл novacoin-qt.exe будет находится в папке /home/<ваше имя>/novacoin/release
+Во время линковки будут выдаваться подобные сообщения:
+libboost_thread_win32-mt.a(thread.o): duplicate section `.rdata$_ZTVN5boost16exception_detail10clone_implINS0_19error_info_injectorINS_9gregorian9bad_monthEEEEE[__ZTVN5boost16exception_detail10clone_implINS0_19error_info_injectorINS_9gregorian9bad_monthEEEEE]' has different size
+Игнорируйте их. На работоспособность программы это никак не влияет 
