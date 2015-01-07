@@ -498,12 +498,9 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
         Unlock(strWalletPassphrase);
         NewKeyPool();
         Lock();
-
-        // Need to completely rewrite the wallet file; if we don't, bdb might keep
-        // bits of the unencrypted private key in slack space in the database file.
-        //CDB::Rewrite(strWalletFile);
-        //^^TODO
-
+        
+        // Rewrite wallet because we may use a append only backend
+        CWalletDB(strWalletFile).Rewrite();
     }
     NotifyStatusChanged(this);
 
@@ -789,8 +786,7 @@ bool CWallet::IsChange(const CTxOut& txout) const
 
 bool CWallet::Flush(bool shutdown)
 {
-    //TODO: implement
-    return true;
+    return CWalletDB(strWalletFile).Flush(shutdown);
 }
 
 int64_t CWalletTx::GetTxTime() const

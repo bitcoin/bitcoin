@@ -752,6 +752,15 @@ DBErrors CWalletDB::ZapWalletTx(CWallet* pwallet, vector<CWalletTx>& vWtx)
     return DB_LOAD_OK;
 }
 
+DBErrors CWalletDB::Rewrite()
+{
+    //TODO: implement
+    //Here we need a way of write down the whole mapData to a new file
+    //Flush_() needs to be rewritten
+    
+    return DB_LOAD_OK;
+}
+
 void ThreadFlushWalletDB(const string& strFile)
 {
 //    // Make this thread recognisable as the wallet flushing thread

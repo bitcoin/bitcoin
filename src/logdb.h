@@ -12,6 +12,7 @@
 #include "serialize.h"
 #include "streams.h"
 #include "sync.h"
+#include "util.h"
 #include "version.h"
 
 #include <boost/filesystem.hpp>
@@ -37,9 +38,6 @@ private:
     std::map<data_t, data_t> mapData;
     size_t nUsed; // continuously updated
     size_t nWritten; // updated when writing a new block
-
-    mutable CCriticalSection cs_nRefCount;
-    int nRefCount; // number of attached CLogDB's
     
     // cached changes
     std::set<data_t> setDirty;
@@ -75,7 +73,7 @@ public:
         file = fopen(pszFile, fCreate ? "a+b" : "r+b");
 
         if (file == NULL) {
-            printf("Error opening %s: %s\n", pszFile, strerror(errno));
+            LogPrintf("Error opening %s: %s\n", pszFile, strerror(errno));
                 return false;
         }
 
@@ -86,15 +84,7 @@ public:
 //    bool Close()            { CRITICAL_BLOCK(cs) return Close_();          return false; }
 //    bool IsDirty() const    { CRITICAL_BLOCK(cs) return !setDirty.empty(); return false; }
 //    bool IsOpen() const     { return file != NULL; }
-
-    bool Close() {
-        boost::lock_guard<boost::shared_mutex> lock(mutex);
-        return Close_();
-    }
 };
-
-
-static std::vector<std::pair<std::string, CLogDBFile *> > openDbs;
 
 class CLogDB
 {
@@ -116,51 +106,37 @@ public:
     bool TxnAbort();
     bool TxnBegin();
     bool TxnCommit();
-
+    bool Flush(bool shutdown = false);
+    
     CLogDB(std::string pathAndFile, bool fReadOnlyIn = false) : fReadOnly(fReadOnlyIn), fTransaction(false)
     {
-        //check if this db is already open
-        bool found = false;
-        for(std::vector<std::pair<std::string, CLogDBFile *> >::iterator it = openDbs.begin(); it != openDbs.end(); ++it) {
-            if(it->first == pathAndFile)
-            {
-                db = it->second;
-                found = true;
-                break;
-            }
-            /* std::cout << *it; ... */
-        }
-        if(!found)
-        {
-            db = new CLogDBFile();
-            bool createFile = true;
-            if(boost::filesystem::exists(pathAndFile))
-                createFile = false;
-            
-            db->Open(pathAndFile.c_str(), createFile);
-            openDbs.push_back(make_pair(pathAndFile, db));
-        }
-
-        LOCK(db->cs_nRefCount);
-            db->nRefCount++;
+        db = new CLogDBFile();
+        bool createFile = true;
+        if(boost::filesystem::exists(pathAndFile))
+            createFile = false;
+        
+        db->Open(pathAndFile.c_str(), createFile);
     }
 
     ~CLogDB() {
         TxnAbort();
-        LOCK(db->cs_nRefCount);
-        db->nRefCount--;
-        if (db->nRefCount == 0)
         {
             boost::lock_guard<boost::shared_mutex> lock(db->mutex);
-            db->Flush_();
+            db->Close_();
         }
+        delete db;
     }
 
     bool Write(const data_t &key, const data_t &value);
     bool Erase(const data_t &key);
     bool Read(const data_t &key, data_t &value);
     bool Exists(const data_t &key);
-
+    
+    bool Close() {
+        boost::lock_guard<boost::shared_mutex> lock(db->mutex);
+        return db->Close_();
+    }
+    
 protected:
     bool Write_(const data_t &key, const data_t &value, bool fOverwrite = true);
     bool Erase_(const data_t &key);

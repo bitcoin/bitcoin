@@ -6,7 +6,9 @@
 #include <unistd.h>
 
 #include "logdb.h"
-#include "util.h"
+
+#define LOGDB_MAX_KEY_SIZE 0x1000
+#define LOGDB_MAX_VALUE_SIZE 0x100000
 
 using namespace std;
 
@@ -73,7 +75,6 @@ void CLogDBFile::Init_()
     mapData.clear();
     nUsed = 0;
     nWritten = 0;
-    nRefCount = 0;
     setDirty.clear();
 }
 
@@ -93,6 +94,7 @@ bool CLogDBFile::Write_(const data_t &key, const data_t &value, bool fOverwrite,
     nUsed += key.size() + value.size();
 
     // update data
+    mapData.erase(key);
     mapData.insert(make_pair(key, value));
     if (!fLoad)
         setDirty.insert(key);
@@ -135,6 +137,8 @@ bool CLogDBFile::Close_()
     if (file)
     {
         Flush_();
+        
+        LogPrintf("CLogDBFile::Close(): closing file\n");
         fclose(file);
         Init_();
     }
@@ -183,7 +187,7 @@ bool CLogDBFile::Load_()
             LogPrintf("CLogDBFile::Load(): loading record mode %i\n", entry.nMode);
 
             uint32_t nKeySize = ReadInt(file);
-            if (nKeySize >= 0x1000)
+            if (nKeySize >= LOGDB_MAX_KEY_SIZE)
             {
                 LogPrintf("CLogDBFile::Load(): oversizes key (%lu bytes)\n", (unsigned long)nKeySize);
                 return false;
@@ -203,7 +207,7 @@ bool CLogDBFile::Load_()
             if (entry.nMode == 1)
             {
                 int nValueSize = ReadInt(file);
-                if (nValueSize >= 0x100000)
+                if (nValueSize >= LOGDB_MAX_VALUE_SIZE)
                 {
                     LogPrintf("CLogDBFile::Load(): oversized value (%lu bytes)\n", (unsigned long)nValueSize);
                     return false;
@@ -410,6 +414,16 @@ bool CLogDB::TxnCommit() {
 }
 
 bool CLogDB::Write_(const data_t &key, const data_t &value, bool fOverwrite) {
+    if (key.size() >= LOGDB_MAX_KEY_SIZE)
+    {
+        LogPrintf("CLogDB::Write(): max keysize exceeded\n");
+        return false;
+    }
+    if (value.size() >= LOGDB_MAX_VALUE_SIZE)
+    {
+        LogPrintf("CLogDB::Write(): max keysize exceeded\n");
+        return false;
+    }
     if (fReadOnly)
         return false;
 
@@ -486,4 +500,12 @@ bool CLogDB::Exists_(const data_t &key) {
         TxnCommit();
 
     return fRet;
+}
+
+bool CLogDB::Flush(bool shutdown)
+{
+    boost::lock_guard<boost::shared_mutex> lock(db->mutex);
+    bool state = db->Flush_();
+    
+    return state;
 }

@@ -128,11 +128,14 @@ public:
     DBErrors LoadWallet(CWallet* pwallet);
     DBErrors FindWalletTx(CWallet* pwallet, std::vector<uint256>& vTxHash, std::vector<CWalletTx>& vWtx);
     DBErrors ZapWalletTx(CWallet* pwallet, std::vector<CWalletTx>& vWtx);
+    
+    DBErrors Rewrite();
+    
     static bool Recover(std::string filename, bool fOnlyKeys);
     static bool Recover(std::string filename);
     
     static bool Verify(std::string filename, bool salvage);
-
+    
 private:
     CWalletDB(const CWalletDB&);
     void operator=(const CWalletDB&);
