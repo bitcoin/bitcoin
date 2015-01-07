@@ -8,6 +8,7 @@
 #include "uint256.h"
 #include "arith_uint256.h"
 #include "version.h"
+#include "random.h"
 
 #include <vector>
 
@@ -21,8 +22,8 @@ class CPartialMerkleTreeTester : public CPartialMerkleTree
 public:
     // flip one bit in one of the hashes - this should break the authentication
     void Damage() {
-        unsigned int n = rand() % vHash.size();
-        int bit = rand() % 256;
+        unsigned int n = insecure_rand() % vHash.size();
+        int bit = insecure_rand() % 256;
         *(vHash[n].begin() + (bit>>3)) ^= 1<<(bit&7);
     }
 };
@@ -31,6 +32,7 @@ BOOST_AUTO_TEST_SUITE(pmt_tests)
 
 BOOST_AUTO_TEST_CASE(pmt_test1)
 {
+    seed_insecure_rand(false);
     static const unsigned int nTxCounts[] = {1, 4, 7, 17, 56, 100, 127, 256, 312, 513, 1000, 4095};
 
     for (int n = 0; n < 12; n++) {
@@ -40,7 +42,7 @@ BOOST_AUTO_TEST_CASE(pmt_test1)
         CBlock block;
         for (unsigned int j=0; j<nTx; j++) {
             CMutableTransaction tx;
-            tx.nLockTime = rand(); // actual transaction data doesn't matter; just make the nLockTime's unique
+            tx.nLockTime = j; // actual transaction data doesn't matter; just make the nLockTime's unique
             block.vtx.push_back(CTransaction(tx));
         }
 
@@ -61,7 +63,7 @@ BOOST_AUTO_TEST_CASE(pmt_test1)
             std::vector<bool> vMatch(nTx, false);
             std::vector<uint256> vMatchTxid1;
             for (unsigned int j=0; j<nTx; j++) {
-                bool fInclude = (rand() & ((1 << (att/2)) - 1)) == 0;
+                bool fInclude = (insecure_rand() & ((1 << (att/2)) - 1)) == 0;
                 vMatch[j] = fInclude;
                 if (fInclude)
                     vMatchTxid1.push_back(vTxid[j]);
