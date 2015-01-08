@@ -1675,6 +1675,8 @@ bool CDarkSendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
     if(!ready) return true;
 
     if(sessionDenom == 0) return true;
+    
+    return false;
 }
 
 
