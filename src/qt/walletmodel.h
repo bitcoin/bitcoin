@@ -40,7 +40,7 @@ public:
     explicit SendCoinsRecipient(const QString &addr, const QString &label, const CAmount& amount, const QString &message):
         address(addr), label(label), amount(amount), message(message), nVersion(SendCoinsRecipient::CURRENT_VERSION) {}
 
-    // If from an insecure payment request, this is used for storing
+    // If from an unauthenticated payment request, this is used for storing
     // the addresses, e.g. address-A<br />address-B<br />address-C.
     // Info: As we don't need to process addresses in here when using
     // payment requests, we can abuse it for displaying an address list.
@@ -111,7 +111,8 @@ public:
         DuplicateAddress,
         TransactionCreationFailed, // Error returned when wallet is still locked
         TransactionCommitFailed,
-        InsaneFee
+        InsaneFee,
+        PaymentRequestExpired
     };
 
     enum EncryptionStatus
