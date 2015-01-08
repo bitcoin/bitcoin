@@ -18,6 +18,8 @@ void HandleError(const leveldb::Status& status) throw(leveldb_error)
     if (status.ok())
         return;
     LogPrintf("%s\n", status.ToString());
+    /* This is not the most elegant approach. But it is important that we reliably shut down if the database begins failing at runtime. */
+    assert(false && "Database error. Hardware may be failing. Reindex is likely required.");
     if (status.IsCorruption())
         throw leveldb_error("Database corrupted");
     if (status.IsIOError())
