@@ -192,7 +192,7 @@ private:
             // Neither or both fee and priority sufficient to get confirmed:
             // don't know why they got confirmed.
         }
-        LogPrint("estimatefee", "Seen TX confirm: %s : %s fee/%g priority, took %d blocks\n",
+        LogPrint("estimatefee", "Seen TX confirm: %s: %s fee/%g priority, took %d blocks\n",
                  assignedTo, feeRate.ToString(), dPriority, nBlocksAgo);
     }
 
@@ -658,7 +658,7 @@ CTxMemPool::WriteFeeEstimates(CAutoFile& fileout) const
         minerPolicyEstimator->Write(fileout);
     }
     catch (const std::exception&) {
-        LogPrintf("CTxMemPool::WriteFeeEstimates() : unable to write policy estimator data (non-fatal)");
+        LogPrintf("CTxMemPool::WriteFeeEstimates(): unable to write policy estimator data (non-fatal)");
         return false;
     }
     return true;
@@ -671,13 +671,13 @@ CTxMemPool::ReadFeeEstimates(CAutoFile& filein)
         int nVersionRequired, nVersionThatWrote;
         filein >> nVersionRequired >> nVersionThatWrote;
         if (nVersionRequired > CLIENT_VERSION)
-            return error("CTxMemPool::ReadFeeEstimates() : up-version (%d) fee estimate file", nVersionRequired);
+            return error("CTxMemPool::ReadFeeEstimates(): up-version (%d) fee estimate file", nVersionRequired);
 
         LOCK(cs);
         minerPolicyEstimator->Read(filein, minRelayFee);
     }
     catch (const std::exception&) {
-        LogPrintf("CTxMemPool::ReadFeeEstimates() : unable to read policy estimator data (non-fatal)");
+        LogPrintf("CTxMemPool::ReadFeeEstimates(): unable to read policy estimator data (non-fatal)");
         return false;
     }
     return true;
