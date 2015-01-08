@@ -12,7 +12,7 @@
 
 #include <stdint.h>
 
-#define START_MASTERNODE_PAYMENTS_TESTNET 1403568776 //Tue, 24 Jun 2014 00:12:56 GMT
+#define START_MASTERNODE_PAYMENTS_TESTNET 1420837558 //Fri, 09 Jan 2015 21:05:58 GMT
 #define START_MASTERNODE_PAYMENTS 1403728576 //Wed, 25 Jun 2014 20:36:16 GMT
 
 static const int64_t DARKSEND_COLLATERAL = (0.1*COIN);
@@ -181,7 +181,7 @@ public:
         // to spend something, then we consider it dust.
         // A typical txout is 34 bytes big, and will
         // need a CTxIn of at least 148 bytes to spend,
-        // so dust is a txout less than 546 satoshis 
+        // so dust is a txout less than 546 satoshis
         // with default nMinRelayTxFee.
         return ((nValue*1000)/(3*((int)GetSerializeSize(SER_DISK,0)+148)) < nMinRelayTxFee);
     }

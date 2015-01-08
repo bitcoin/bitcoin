@@ -2918,7 +2918,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
                         CBitcoinAddress address2(address1);
 
                         LogPrintf("CheckBlock() : Couldn't find masternode payment(%d|%d) or payee(%d|%s) nHeight %d. \n", foundPaymentAmount, masternodePaymentAmount, foundPayee, address2.ToString().c_str(), chainActive.Tip()->nHeight+1);
-                        if(!TestNet() && !RegTest()) return state.DoS(100, error("CheckBlock() : Couldn't find masternode payment or payee"));
+                        if(!RegTest()) return state.DoS(100, error("CheckBlock() : Couldn't find masternode payment or payee"));
                     }
                 }
             } else {
