@@ -31,12 +31,15 @@ LIBBITCOIN_CRYPTO=crypto/libbitcoin_crypto.a
 LIBBITCOIN_UNIVALUE=univalue/libbitcoin_univalue.a
 LIBBITCOINQT=qt/libbitcoinqt.a
 LIBSECP256K1=secp256k1/libsecp256k1.la
+LIBBITCOIND=libbitcoind.so
 
 $(LIBSECP256K1): $(wildcard secp256k1/src/*) $(wildcard secp256k1/include/*)
 	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C $(@D) $(@F)
 
 # Make is not made aware of per-object dependencies to avoid limiting building parallelization
 # But to build the less dependent modules first, we manually select their order here:
+
+if !ENABLE_DAEMONLIB
 noinst_LIBRARIES = \
   crypto/libbitcoin_crypto.a \
   libbitcoin_util.a \
@@ -77,6 +80,7 @@ BITCOIN_CORE_H = \
   arith_uint256.h \
   base58.h \
   bloom.h \
+  bitcoind.h \
   chain.h \
   chainparamsbase.h \
   chainparams.h \
@@ -153,10 +157,17 @@ JSON_H = \
   json/json_spirit_writer.h \
   json/json_spirit_writer_template.h
 
+else
+.PHONY: FORCE
+BITCOIN_INCLUDES += $(BDB_CPPFLAGS)
+endif
+
 obj/build.h: FORCE
 	@$(MKDIR_P) $(builddir)/obj
 	@$(top_srcdir)/share/genbuild.sh $(abs_top_builddir)/src/obj/build.h \
 	  $(abs_top_srcdir)
+
+if !ENABLE_DAEMONLIB
 libbitcoin_util_a-clientversion.$(OBJEXT): obj/build.h
 
 # server: shared between bitcoind and bitcoin-qt
@@ -166,6 +177,7 @@ libbitcoin_server_a_SOURCES = \
   alert.cpp \
   bloom.cpp \
   chain.cpp \
+  bitcoind.cpp \
   checkpoints.cpp \
   init.cpp \
   leveldbwrapper.cpp \
@@ -306,7 +318,7 @@ bitcoind_LDADD = \
 if ENABLE_WALLET
 bitcoind_LDADD += libbitcoin_wallet.a
 endif
-bitcoind_SOURCES = bitcoind.cpp
+bitcoind_SOURCES = bitcoin-main.cpp
 #
 
 if TARGET_WINDOWS
@@ -382,6 +394,7 @@ if USE_LIBSECP256K1
 libbitcoinconsensus_la_LIBADD += secp256k1/libsecp256k1.la
 endif
 endif
+endif
 
 CLEANFILES = leveldb/libleveldb.a leveldb/libmemenv.a *.gcda *.gcno
 
@@ -407,6 +420,9 @@ clean-local:
 	@test -f $(PROTOC)
 	$(AM_V_GEN) $(PROTOC) --cpp_out=$(@D) --proto_path=$(abspath $(<D) $<)
 
+if ENABLE_DAEMONLIB
+include Makefile.daemon.include
+else
 if ENABLE_TESTS
 include Makefile.test.include
 endif
@@ -417,4 +433,5 @@ endif
 
 if ENABLE_QT_TESTS
 include Makefile.qttest.include
+endif
 endif

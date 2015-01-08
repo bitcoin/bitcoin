@@ -15,7 +15,15 @@ namespace boost
 class thread_group;
 } // namespace boost
 
+#ifdef ENABLE_WALLET
+extern std::string strWalletFile;
 extern CWallet* pwalletMain;
+#endif
+
+#include <boost/filesystem/path.hpp>
+#include <boost/thread/mutex.hpp>
+
+void ThreadImport(std::vector<boost::filesystem::path> vImportFiles);
 
 void StartShutdown();
 bool ShutdownRequested();
