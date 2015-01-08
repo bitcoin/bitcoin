@@ -297,10 +297,13 @@ bool CTransaction::ReadFromDisk(COutPoint prevout)
     return ReadFromDisk(txdb, prevout, txindex);
 }
 
-bool CTransaction::IsStandard() const
+bool CTransaction::IsStandard(string& strReason) const
 {
     if (nVersion > CTransaction::CURRENT_VERSION)
+    {
+        strReason = "version";
         return false;
+    }
 
     unsigned int nDataOut = 0;
     txnouttype whichType;
@@ -310,24 +313,34 @@ bool CTransaction::IsStandard() const
         // pay-to-script-hash, which is 3 ~80-byte signatures, 3
         // ~65-byte public keys, plus a few script ops.
         if (txin.scriptSig.size() > 500)
+        {
+            strReason = "scriptsig-size";
             return false;
+        }
         if (!txin.scriptSig.IsPushOnly())
+        {
+            strReason = "scriptsig-not-pushonly";
             return false;
+        }
         if (!txin.scriptSig.HasCanonicalPushes()) {
+            strReason = "txin-scriptsig-not-canonicalpushes";
             return false;
         }
     }
     BOOST_FOREACH(const CTxOut& txout, vout) {
         if (!::IsStandard(txout.scriptPubKey, whichType)) {
+            strReason = "scriptpubkey";
             return false;
         }
         if (whichType == TX_NULL_DATA)
             nDataOut++;
         else {
             if (txout.nValue == 0) {
+                strReason = "txout-value=0";
                 return false;
             }
             if (!txout.scriptPubKey.HasCanonicalPushes()) {
+                strReason = "txout-scriptsig-not-canonicalpushes";
                 return false;
             }
         }
@@ -335,6 +348,7 @@ bool CTransaction::IsStandard() const
 
     // only one OP_RETURN txout is permitted
     if (nDataOut > 1) {
+        strReason = "multi-op-return";
         return false;
     }
 
@@ -625,8 +639,9 @@ bool CTxMemPool::accept(CTxDB& txdb, CTransaction &tx, bool fCheckInputs,
         return error("CTxMemPool::accept() : not accepting nLockTime beyond 2038 yet");
 
     // Rather not work on nonstandard transactions (unless -testnet)
-    if (!fTestNet && !tx.IsStandard())
-        return error("CTxMemPool::accept() : nonstandard transaction type");
+    string strNonStd;
+    if (!fTestNet && !tx.IsStandard(strNonStd))
+        return error("CTxMemPool::accept() : nonstandard transaction (%s)", strNonStd.c_str());
 
     // Do we already have it?
     uint256 hash = tx.GetHash();
