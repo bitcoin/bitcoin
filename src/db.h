@@ -25,9 +25,6 @@ class COutPoint;
 
 extern unsigned int nWalletDBUpdated;
 
-void ThreadFlushWalletDB(const std::string& strWalletFile);
-
-
 class CDBEnv
 {
 private:
