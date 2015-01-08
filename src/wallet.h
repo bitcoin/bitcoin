@@ -320,14 +320,14 @@ public:
     CAmount GetCredit(const CTxOut& txout, const isminefilter& filter) const
     {
         if (!MoneyRange(txout.nValue))
-            throw std::runtime_error("CWallet::GetCredit() : value out of range");
+            throw std::runtime_error("CWallet::GetCredit(): value out of range");
         return ((IsMine(txout) & filter) ? txout.nValue : 0);
     }
     bool IsChange(const CTxOut& txout) const;
     CAmount GetChange(const CTxOut& txout) const
     {
         if (!MoneyRange(txout.nValue))
-            throw std::runtime_error("CWallet::GetChange() : value out of range");
+            throw std::runtime_error("CWallet::GetChange(): value out of range");
         return (IsChange(txout) ? txout.nValue : 0);
     }
     bool IsMine(const CTransaction& tx) const
@@ -349,7 +349,7 @@ public:
         {
             nDebit += GetDebit(txin, filter);
             if (!MoneyRange(nDebit))
-                throw std::runtime_error("CWallet::GetDebit() : value out of range");
+                throw std::runtime_error("CWallet::GetDebit(): value out of range");
         }
         return nDebit;
     }
@@ -360,7 +360,7 @@ public:
         {
             nCredit += GetCredit(txout, filter);
             if (!MoneyRange(nCredit))
-                throw std::runtime_error("CWallet::GetCredit() : value out of range");
+                throw std::runtime_error("CWallet::GetCredit(): value out of range");
         }
         return nCredit;
     }
@@ -371,7 +371,7 @@ public:
         {
             nChange += GetChange(txout);
             if (!MoneyRange(nChange))
-                throw std::runtime_error("CWallet::GetChange() : value out of range");
+                throw std::runtime_error("CWallet::GetChange(): value out of range");
         }
         return nChange;
     }
@@ -804,7 +804,7 @@ public:
                 const CTxOut &txout = vout[i];
                 nCredit += pwallet->GetCredit(txout, ISMINE_SPENDABLE);
                 if (!MoneyRange(nCredit))
-                    throw std::runtime_error("CWalletTx::GetAvailableCredit() : value out of range");
+                    throw std::runtime_error("CWalletTx::GetAvailableCredit(): value out of range");
             }
         }
 
@@ -847,7 +847,7 @@ public:
                 const CTxOut &txout = vout[i];
                 nCredit += pwallet->GetCredit(txout, ISMINE_WATCH_ONLY);
                 if (!MoneyRange(nCredit))
-                    throw std::runtime_error("CWalletTx::GetAvailableCredit() : value out of range");
+                    throw std::runtime_error("CWalletTx::GetAvailableCredit(): value out of range");
             }
         }
 

@@ -333,7 +333,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
 
         CValidationState state;
         if (!TestBlockValidity(state, *pblock, pindexPrev, false, false))
-            throw std::runtime_error("CreateNewBlock() : TestBlockValidity failed");
+            throw std::runtime_error("CreateNewBlock(): TestBlockValidity failed");
     }
 
     return pblocktemplate.release();
@@ -420,7 +420,7 @@ static bool ProcessBlockFound(CBlock* pblock, CWallet& wallet, CReserveKey& rese
     {
         LOCK(cs_main);
         if (pblock->hashPrevBlock != chainActive.Tip()->GetBlockHash())
-            return error("BitcoinMiner : generated block is stale");
+            return error("BitcoinMiner: generated block is stale");
     }
 
     // Remove key from key pool
@@ -435,7 +435,7 @@ static bool ProcessBlockFound(CBlock* pblock, CWallet& wallet, CReserveKey& rese
     // Process this block the same as if we had received it from another node
     CValidationState state;
     if (!ProcessNewBlock(state, NULL, pblock))
-        return error("BitcoinMiner : ProcessNewBlock, block not accepted");
+        return error("BitcoinMiner: ProcessNewBlock, block not accepted");
 
     return true;
 }
