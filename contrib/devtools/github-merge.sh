@@ -82,13 +82,15 @@ function cleanup() {
 }
 
 # Create unsigned merge commit.
+PRTITLE=`curl -s https://api.github.com/repos/$REPO/pulls/$PULL | grep -e '  "title": ".*",'| awk -F'"' '{print $4}'`
+MERGEMESSAGE="Merge #$PULL: $PRTITLE"
 (
-  echo "Merge pull request #$PULL"
+  echo $MERGEMESSAGE
   echo ""
   git log --no-merges --topo-order --pretty='format:%h %s (%an)' pull/"$PULL"/base..pull/"$PULL"/head
 )>"$TMPDIR/message"
 if git merge -q --commit --no-edit --no-ff -m "$(<"$TMPDIR/message")" pull/"$PULL"/head; then
-  if [ "d$(git log --pretty='format:%s' -n 1)" != "dMerge pull request #$PULL" ]; then
+  if [ "d$(git log --pretty='format:%s' -n 1)" != "d$MERGEMESSAGE" ]; then
     echo "ERROR: Creating merge failed (already merged?)." >&2
     cleanup
     exit 4
