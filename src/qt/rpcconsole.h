@@ -1,7 +1,7 @@
 #ifndef RPCCONSOLE_H
 #define RPCCONSOLE_H
 
-#include <QDialog>
+#include <QWidget>
 
 namespace Ui {
     class RPCConsole;
@@ -9,7 +9,7 @@ namespace Ui {
 class ClientModel;
 
 /** Local Bitcoin RPC console. */
-class RPCConsole: public QDialog
+class RPCConsole: public QWidget
 {
     Q_OBJECT
 
@@ -29,6 +29,7 @@ public:
 
 protected:
     virtual bool eventFilter(QObject* obj, QEvent *event);
+    void keyPressEvent(QKeyEvent *);
 
 private slots:
     void on_lineEdit_returnPressed();

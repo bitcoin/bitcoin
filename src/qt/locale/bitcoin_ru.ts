@@ -2085,6 +2085,21 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
 <context>
     <name>RPCConsole</name>
     <message>
+      <location filename="../rpcconsole.cpp" line="352"/>
+      <source>Inbound:</source>
+      <translation>Входящие:</translation>
+    </message>
+    <message>
+      <location filename="../rpcconsole.cpp" line="353"/>
+      <source>Outbound:</source>
+      <translation>Исходящие:</translation>
+    </message>
+    <message>
+      <location filename="../forms/rpcconsole.ui" line="118"/>
+      <source>Using BerkeleyDB version</source>
+      <translation>Используется версия BerkeleyDB</translation>
+    </message>
+    <message>
         <location filename="../forms/rpcconsole.ui" line="+582"/>
         <source>Received:</source>
         <translation>Получено:</translation>
