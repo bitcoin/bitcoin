@@ -1,5 +1,5 @@
 bin_PROGRAMS += qt/bitcoin-qt
-noinst_LIBRARIES += qt/libbitcoinqt.a
+EXTRA_LIBRARIES += qt/libbitcoinqt.a
 
 # bitcoin qt core #
 QT_TS = \
