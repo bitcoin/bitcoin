@@ -20,9 +20,6 @@
 
 #include <db_cxx.h>
 
-class CDiskBlockIndex;
-class COutPoint;
-
 extern unsigned int nWalletDBUpdated;
 
 class CDBEnv
