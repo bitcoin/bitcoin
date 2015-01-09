@@ -116,10 +116,6 @@ BOOST_AUTO_TEST_CASE(multisig_verify)
         }
     }
     s.clear();
-    s << OP_0 << OP_0;
-    BOOST_CHECK(!VerifyScript(s, a_or_b, flags, SignatureChecker(txTo[1], 0), &err));
-    BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_SIG_DER, ScriptErrorString(err));
-    s.clear();
     s << OP_0 << OP_1;
     BOOST_CHECK(!VerifyScript(s, a_or_b, flags, SignatureChecker(txTo[1], 0), &err));
     BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_SIG_DER, ScriptErrorString(err));
