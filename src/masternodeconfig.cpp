@@ -1,3 +1,5 @@
+
+#include "net.h"
 #include "masternodeconfig.h"
 #include "util.h"
 
@@ -26,6 +28,13 @@ bool CMasternodeConfig::read(boost::filesystem::path path, std::string& strErr) 
             streamConfig.close();
             return false;
         }
+
+        if(CService(ip).GetPort() != 19999 && CService(ip).GetPort() != 9999)  {
+            strErr = "Invalid port (must be 9999 for mainnet or 19999 for testnet) detected in masternode.conf: " + line;
+            streamConfig.close();
+            return false;
+        }
+
         add(alias, ip, privKey, txHash, outputIndex);
     }
 
