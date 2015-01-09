@@ -569,6 +569,14 @@ bool PaymentServer::processPaymentRequest(PaymentRequestPlus& request, SendCoins
             return false;
         }
 
+        // Bitcoin amounts are stored as (optional) uint64 in the protobuf messages (see paymentrequest.proto),
+        // but CAmount is defined as int64_t. Because of that we need to verify that amounts are in a valid range
+        // and no overflow has happened.
+        if (!verifyAmount(sendingTo.second)) {
+            emit message(tr("Payment request rejected"), tr("Invalid payment request."), CClientUIInterface::MSG_ERROR);
+            return false;
+        }
+
         // Extract and check amounts
         CTxOut txOut(sendingTo.second, sendingTo.first);
         if (txOut.IsDust(::minRelayTxFee)) {
@@ -580,6 +588,11 @@ bool PaymentServer::processPaymentRequest(PaymentRequestPlus& request, SendCoins
         }
 
         recipient.amount += sendingTo.second;
+        // Also verify that the final amount is still in a valid range after adding additional amounts.
+        if (!verifyAmount(recipient.amount)) {
+            emit message(tr("Payment request rejected"), tr("Invalid payment request."), CClientUIInterface::MSG_ERROR);
+            return false;
+        }
     }
     // Store addresses and format them to fit nicely into the GUI
     recipient.address = addresses.join("<br />");
@@ -765,6 +778,18 @@ bool PaymentServer::verifyExpired(const payments::PaymentDetails& requestDetails
         qWarning() << QString("PaymentServer::%1: Payment request expired \"%2\".")
             .arg(__func__)
             .arg(requestExpires);
+    }
+    return fVerified;
+}
+
+bool PaymentServer::verifyAmount(const CAmount& requestAmount)
+{
+    bool fVerified = MoneyRange(requestAmount);
+    if (!fVerified) {
+        qWarning() << QString("PaymentServer::%1: Payment request amount out of allowed range (%2, allowed 0 - %3).")
+            .arg(__func__)
+            .arg(requestAmount)
+            .arg(MAX_MONEY);
     }
     return fVerified;
 }
