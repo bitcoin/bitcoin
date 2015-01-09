@@ -1866,7 +1866,7 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
                         continue;
 
                     // Add meta record
-                    // txid => ((txindex, (tx, vout.n)), (block, modifier))
+                    // (txid, vout.n) => ((txindex, (tx, vout.n)), (block, modifier))
                     mapMeta[make_pair(pcoin->first->GetHash(), pcoin->second)] = make_pair(make_pair(txindex, *pcoin), make_pair(block, nStakeModifier));
 
                     if (fDebug)
