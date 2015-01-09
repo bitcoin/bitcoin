@@ -73,8 +73,8 @@ HelpMessageDialog::HelpMessageDialog(QWidget *parent, bool about) :
         tf.setBorderStyle(QTextFrameFormat::BorderStyle_None);
         tf.setCellPadding(2);
         QVector<QTextLength> widths;
-        widths << QTextLength(QTextLength::PercentageLength, 20);
-        widths << QTextLength(QTextLength::PercentageLength, 80);
+        widths << QTextLength(QTextLength::PercentageLength, 35);
+        widths << QTextLength(QTextLength::PercentageLength, 65);
         tf.setColumnWidthConstraints(widths);
         QTextTable *table = cursor.insertTable(2, 2, tf);
 
