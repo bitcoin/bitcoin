@@ -44,7 +44,7 @@ Release Process
  Fetch and build inputs: (first time, or when dependency versions change)
 
 	wget 'http://miniupnp.free.fr/files/download.php?file=miniupnpc-1.9.20140701.tar.gz' -O miniupnpc-1.9.20140701.tar.gz
-	wget 'https://www.openssl.org/source/openssl-1.0.1i.tar.gz'
+	wget 'https://www.openssl.org/source/openssl-1.0.1k.tar.gz'
 	wget 'http://download.oracle.com/berkeley-db/db-4.8.30.NC.tar.gz'
 	wget 'http://zlib.net/zlib-1.2.8.tar.gz'
 	wget 'ftp://ftp.simplesystems.org/pub/png/src/history/libpng16/libpng-1.6.8.tar.gz'
@@ -89,16 +89,16 @@ Release Process
 
  The expected SHA256 hashes of the intermediate inputs are:
 
-    b66e8374031adf8d5309c046615fe4f561c3a7e3c1f6885675c13083db0c4d3b  bitcoin-deps-linux32-gitian-r8.zip
-    ec83deb4e81bea5ac1fb5e3f1b88cd02ca665306f0c2290ef4f19b974525005e  bitcoin-deps-linux64-gitian-r8.zip
+    b1f6f10148d4c4a1a69a58e703427578dc5a4de86eefd6b925e3abf3c8fbe542  bitcoin-deps-linux32-gitian-r9.zip
+    71e03e434af269dcbf3cb685cd1a5d51b8d2c904b67035eb4e5c1a2623b9f0df  bitcoin-deps-linux64-gitian-r9.zip
     f29b7d9577417333fb56e023c2977f5726a7c297f320b175a4108cf7cd4c2d29  boost-linux32-1.55.0-gitian-r1.zip
     88232451c4104f7eb16e469ac6474fd1231bd485687253f7b2bdf46c0781d535  boost-linux64-1.55.0-gitian-r1.zip
     57e57dbdadc818cd270e7e00500a5e1085b3bcbdef69a885f0fb7573a8d987e1  qt-linux32-4.6.4-gitian-r1.tar.gz
     60eb4b9c5779580b7d66529efa5b2836ba1a70edde2a0f3f696d647906a826be  qt-linux64-4.6.4-gitian-r1.tar.gz
     60dc2d3b61e9c7d5dbe2f90d5955772ad748a47918ff2d8b74e8db9b1b91c909  boost-win32-1.55.0-gitian-r6.zip
     f65fcaf346bc7b73bc8db3a8614f4f6bee2f61fcbe495e9881133a7c2612a167  boost-win64-1.55.0-gitian-r6.zip
-    9c2572b021b3b50dc9441f2e96d672ac1da4cb6c9f88a1711aa0234882f353cf  bitcoin-deps-win32-gitian-r15.zip
-    94e9f6d861140d9130a15830eba40eba4c8c830440506ac7cc0d1e3217293c25  bitcoin-deps-win64-gitian-r15.zip
+    2af17b1968bd7d46b260c8d16474e1f339cde1b9e96265c80f6626ea0c2785a9  bitcoin-deps-win32-gitian-r16.zip
+    7608bdf7848101d48ba8a296cb9c29ac68193405f11d8075fb46154ff3476233  bitcoin-deps-win64-gitian-r16.zip
     963e3e5e85879010a91143c90a711a5d1d5aba992e38672cdf7b54e42c56b2f1  qt-win32-5.2.0-gitian-r3.zip
     751c579830d173ef3e6f194e83d18b92ebef6df03289db13ab77a52b6bc86ef0  qt-win64-5.2.0-gitian-r3.zip
     e2e403e1a08869c7eed4d4293bce13d51ec6a63592918b90ae215a0eceb44cb4  protobuf-win32-2.5.0-gitian-r4.zip
