@@ -117,10 +117,23 @@ bool CECKey::SetPubKey(const unsigned char* pubkey, size_t size) {
 }
 
 bool CECKey::Verify(const uint256 &hash, const std::vector<unsigned char>& vchSig) {
-    // -1 = error, 0 = bad sig, 1 = good
-    if (ECDSA_verify(0, (unsigned char*)&hash, sizeof(hash), &vchSig[0], vchSig.size(), pkey) != 1)
+    if (vchSig.empty())
         return false;
-    return true;
+
+    // New versions of OpenSSL will reject non-canonical DER signatures. de/re-serialize first.
+    unsigned char *norm_der = NULL;
+    ECDSA_SIG *norm_sig = ECDSA_SIG_new();
+    const unsigned char* sigptr = &vchSig[0];
+    d2i_ECDSA_SIG(&norm_sig, &sigptr, vchSig.size());
+    int derlen = i2d_ECDSA_SIG(norm_sig, &norm_der);
+    ECDSA_SIG_free(norm_sig);
+    if (derlen <= 0)
+        return false;
+
+    // -1 = error, 0 = bad sig, 1 = good
+    bool ret = ECDSA_verify(0, (unsigned char*)&hash, sizeof(hash), norm_der, derlen, pkey) == 1;
+    OPENSSL_free(norm_der);
+    return ret;
 }
 
 bool CECKey::Recover(const uint256 &hash, const unsigned char *p64, int rec)
