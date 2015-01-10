@@ -650,6 +650,10 @@ Value createmultisig(const Array& params, bool fHelp)
     CScript inner;
     inner.SetMultisig(nRequired, pubkeys);
 
+    if (inner.size() > MAX_SCRIPT_ELEMENT_SIZE)
+        throw runtime_error(
+            strprintf("redeemScript exceeds size limit: %" PRIszu " > %d", inner.size(), MAX_SCRIPT_ELEMENT_SIZE));
+
     CScriptID innerID = inner.GetID();
     CBitcoinAddress address(innerID);
 
