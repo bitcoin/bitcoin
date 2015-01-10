@@ -18,7 +18,7 @@ remotes:
   "dir": "bitcoin"
 files:
 - "osx-native-depends-r3.tar.gz"
-- "osx-depends-r6.tar.gz"
+- "osx-depends-r7.tar.gz"
 - "osx-depends-qt-5.2.1-r5.tar.gz"
 - "MacOSX10.7.sdk.tar.gz"
 
@@ -37,7 +37,7 @@ script: |
   tar -C osx-cross-depends/SDKs -xf ${SOURCES_PATH}/MacOSX10.7.sdk.tar.gz
 
   tar -C osx-cross-depends -xf osx-native-depends-r3.tar.gz
-  tar -C osx-cross-depends -xf osx-depends-r6.tar.gz
+  tar -C osx-cross-depends -xf osx-depends-r7.tar.gz
   tar -C osx-cross-depends -xf osx-depends-qt-5.2.1-r5.tar.gz
   export PATH=`pwd`/osx-cross-depends/native-prefix/bin:$PATH
 
