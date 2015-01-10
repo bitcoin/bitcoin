@@ -117,6 +117,9 @@ bool CECKey::SetPubKey(const unsigned char* pubkey, size_t size) {
 }
 
 bool CECKey::Verify(const uint256 &hash, const std::vector<unsigned char>& vchSig) {
+    if (vchSig.empty())
+        return false;
+
     // New versions of OpenSSL will reject non-canonical DER signatures. de/re-serialize first.
     unsigned char *norm_der = NULL;
     ECDSA_SIG *norm_sig = ECDSA_SIG_new();
