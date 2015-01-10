@@ -5,7 +5,7 @@ define(_CLIENT_VERSION_MINOR, 10)
 define(_CLIENT_VERSION_REVISION, 99)
 define(_CLIENT_VERSION_BUILD, 0)
 define(_CLIENT_VERSION_IS_RELEASE, false)
-define(_COPYRIGHT_YEAR, 2014)
+define(_COPYRIGHT_YEAR, 2015)
 AC_INIT([Bitcoin Core],[_CLIENT_VERSION_MAJOR._CLIENT_VERSION_MINOR._CLIENT_VERSION_REVISION],[info@bitcoin.org],[bitcoin])
 AC_CONFIG_SRCDIR([src/main.cpp])
 AC_CONFIG_HEADERS([src/config/bitcoin-config.h])
@@ -170,6 +170,24 @@ if test "x$CXXFLAGS_overridden" = "xno"; then
   CXXFLAGS="$CXXFLAGS -Wall -Wextra -Wformat -Wformat-security -Wno-unused-parameter"
 fi
 CPPFLAGS="$CPPFLAGS -DBOOST_SPIRIT_THREADSAFE -DHAVE_BUILD_INFO -D__STDC_FORMAT_MACROS"
+
+AC_ARG_WITH([utils],
+  [AS_HELP_STRING([--with-utils],
+  [build bitcoin-cli bitcoin-tx (default=yes)])],
+  [build_bitcoin_utils=$withval],
+  [build_bitcoin_utils=yes])
+
+AC_ARG_WITH([libs],
+  [AS_HELP_STRING([--with-libs],
+  [build libraries (default=yes)])],
+  [build_bitcoin_libs=$withval],
+  [build_bitcoin_libs=yes])
+
+AC_ARG_WITH([daemon],
+  [AS_HELP_STRING([--with-daemon],
+  [build bitcoind daemon (default=yes)])],
+  [build_bitcoind=$withval],
+  [build_bitcoind=yes])
 
 AC_LANG_PUSH([C++])
 
@@ -500,6 +518,19 @@ if test x$use_upnp != xno; then
   )
 fi
 
+BITCOIN_QT_INIT
+
+dnl sets $bitcoin_enable_qt, $bitcoin_enable_qt_test, $bitcoin_enable_qt_dbus
+BITCOIN_QT_CONFIGURE([$use_pkgconfig], [qt4])
+
+if test x$build_bitcoin_utils$build_bitcoind$bitcoin_enable_qt$use_tests = xnononono; then
+    use_boost=no
+else
+    use_boost=yes
+fi
+
+if test x$use_boost = xyes; then
+
 dnl Check for boost libs
 AX_BOOST_BASE
 AX_BOOST_SYSTEM
@@ -537,6 +568,10 @@ if test x$use_reduce_exports != xno; then
   CPPFLAGS="$TEMP_CPPFLAGS"
 fi
 
+elif test x$use_reduce_exports = xauto; then
+    use_reduce_exports=yes
+fi
+
 if test x$use_reduce_exports != xno; then
     CXXFLAGS="$CXXFLAGS $RE_CXXFLAGS"
     AX_CHECK_LINK_FLAG([[-Wl,--exclude-libs,ALL]], [RELDFLAGS="-Wl,--exclude-libs,ALL"])
@@ -548,6 +583,8 @@ if test x$use_tests = xyes; then
     AC_MSG_ERROR(hexdump is required for tests)
   fi
 
+
+  if test x$use_boost = xyes; then
 
   AX_BOOST_UNIT_TEST_FRAMEWORK
 
@@ -568,7 +605,11 @@ if test x$use_tests = xyes; then
     [AC_MSG_RESULT(no)])
   LIBS="$TEMP_LIBS"
   CPPFLAGS="$TEMP_CPPFLAGS"
+
+  fi
 fi
+
+if test x$use_boost = xyes; then
 
 BOOST_LIBS="$BOOST_LDFLAGS $BOOST_SYSTEM_LIB $BOOST_FILESYSTEM_LIB $BOOST_PROGRAM_OPTIONS_LIB $BOOST_THREAD_LIB"
 
@@ -626,25 +667,7 @@ if test x$boost_sleep != xyes; then
   AC_MSG_ERROR(No working boost sleep implementation found.)
 fi
 
-AC_ARG_WITH([utils],
-  [AS_HELP_STRING([--with-utils],
-  [build bitcoin-cli bitcoin-tx (default=yes)])],
-  [build_bitcoin_utils=$withval],
-  [build_bitcoin_utils=yes])
-
-AC_ARG_WITH([libs],
-  [AS_HELP_STRING([--with-libs],
-  [build libraries (default=yes)])],
-  [build_bitcoin_libs=$withval],
-  [build_bitcoin_libs=yes])
-
-AC_ARG_WITH([daemon],
-  [AS_HELP_STRING([--with-daemon],
-  [build bitcoind daemon (default=yes)])],
-  [build_bitcoind=$withval],
-  [build_bitcoind=yes])
-
-BITCOIN_QT_INIT
+fi
 
 if test x$use_pkgconfig = xyes; then
 
@@ -678,6 +701,14 @@ else
   fi
 fi
 
+CFLAGS_TEMP="$CFLAGS"
+LIBS_TEMP="$LIBS"
+CFLAGS="$CFLAGS $SSL_CFLAGS $CRYPTO_CFLAGS"
+LIBS="$LIBS $SSL_LIBS $CRYPTO_LIBS"
+AC_CHECK_HEADER([openssl/ec.h],, AC_MSG_ERROR(OpenSSL ec header missing),)
+CFLAGS="$CFLAGS_TEMP"
+LIBS="$LIBS_TEMP"
+
 BITCOIN_QT_PATH_PROGS([PROTOC], [protoc],$protoc_bin_path)
 
 AC_MSG_CHECKING([whether to build bitcoind])
@@ -695,9 +726,6 @@ if test x$build_bitcoin_libs = xyes; then
   AC_CONFIG_FILES([libbitcoinconsensus.pc:libbitcoinconsensus.pc.in])
 fi
 AC_MSG_RESULT($build_bitcoin_libs)
-
-dnl sets $bitcoin_enable_qt, $bitcoin_enable_qt_test, $bitcoin_enable_qt_dbus
-BITCOIN_QT_CONFIGURE([$use_pkgconfig], [qt4])
 
 AC_LANG_POP
 
@@ -812,7 +840,7 @@ else
   AC_MSG_RESULT([no])
 fi
 
-if test x$build_bitcoin_utils$build_bitcoin_libs$build_bitcoind$bitcoin_enable_qt$use_tests = xnononono; then
+if test x$build_bitcoin_utils$build_bitcoin_libs$build_bitcoind$bitcoin_enable_qt$use_tests = xnonononono; then
   AC_MSG_ERROR([No targets! Please specify at least one of: --with-utils --with-libs --with-daemon --with-gui or --enable-tests])
 fi
 

@@ -19,6 +19,7 @@ extern CScript ParseScript(std::string s);
 extern bool DecodeHexTx(CTransaction& tx, const std::string& strHexTx);
 extern bool DecodeHexBlk(CBlock&, const std::string& strHexBlk);
 extern uint256 ParseHashUV(const UniValue& v, const std::string& strName);
+extern uint256 ParseHashStr(const std::string&, const std::string& strName);
 extern std::vector<unsigned char> ParseHexUV(const UniValue& v, const std::string& strName);
 
 // core_write.cpp

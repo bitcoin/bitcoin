@@ -9,10 +9,6 @@
 
 #include <assert.h>
 
-#include <boost/assign/list_of.hpp>
-
-using namespace boost::assign;
-
 /**
  * Main network
  */
@@ -21,7 +17,6 @@ class CBaseMainParams : public CBaseChainParams
 public:
     CBaseMainParams()
     {
-        networkID = CBaseChainParams::MAIN;
         nRPCPort = 8332;
     }
 };
@@ -35,7 +30,6 @@ class CBaseTestNetParams : public CBaseMainParams
 public:
     CBaseTestNetParams()
     {
-        networkID = CBaseChainParams::TESTNET;
         nRPCPort = 18332;
         strDataDir = "testnet3";
     }
@@ -50,7 +44,6 @@ class CBaseRegTestParams : public CBaseTestNetParams
 public:
     CBaseRegTestParams()
     {
-        networkID = CBaseChainParams::REGTEST;
         strDataDir = "regtest";
     }
 };
@@ -64,7 +57,6 @@ class CBaseUnitTestParams : public CBaseMainParams
 public:
     CBaseUnitTestParams()
     {
-        networkID = CBaseChainParams::UNITTEST;
         strDataDir = "unittest";
     }
 };

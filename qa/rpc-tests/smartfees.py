@@ -16,20 +16,20 @@ class EstimateFeeTest(BitcoinTestFramework):
     def setup_network(self):
         self.nodes = []
         self.nodes.append(start_node(0, self.options.tmpdir,
-                            ["-debug=mempool", "-debug=estimatefee"]))
+                            ["-debug=mempool", "-debug=estimatefee", "-relaypriority=0"]))
         # Node1 mines small-but-not-tiny blocks, and allows free transactions.
         # NOTE: the CreateNewBlock code starts counting block size at 1,000 bytes,
         # so blockmaxsize of 2,000 is really just 1,000 bytes (room enough for
         # 6 or 7 transactions)
         self.nodes.append(start_node(1, self.options.tmpdir,
                                 ["-blockprioritysize=1500", "-blockmaxsize=2000",
-                                 "-debug=mempool", "-debug=estimatefee"]))
+                                 "-debug=mempool", "-debug=estimatefee", "-relaypriority=0"]))
         connect_nodes(self.nodes[1], 0)
 
         # Node2 is a stingy miner, that
         # produces very small blocks (room for only 3 or so transactions)
         node2args = [ "-blockprioritysize=0", "-blockmaxsize=1500",
-                      "-debug=mempool", "-debug=estimatefee"]
+                      "-debug=mempool", "-debug=estimatefee", "-relaypriority=0"]
         self.nodes.append(start_node(2, self.options.tmpdir, node2args))
         connect_nodes(self.nodes[2], 0)
 

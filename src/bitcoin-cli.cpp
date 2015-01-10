@@ -15,8 +15,6 @@
 #define _(x) std::string(x) /* Keep the _() around in case gettext or such will be used later to translate non-UI */
 
 using namespace std;
-using namespace boost;
-using namespace boost::asio;
 using namespace json_spirit;
 
 std::string HelpMessageCli()
@@ -108,12 +106,12 @@ Object CallRPC(const string& strMethod, const Array& params)
 
     // Connect to localhost
     bool fUseSSL = GetBoolArg("-rpcssl", false);
-    asio::io_service io_service;
-    ssl::context context(io_service, ssl::context::sslv23);
-    context.set_options(ssl::context::no_sslv2 | ssl::context::no_sslv3);
-    asio::ssl::stream<asio::ip::tcp::socket> sslStream(io_service, context);
-    SSLIOStreamDevice<asio::ip::tcp> d(sslStream, fUseSSL);
-    iostreams::stream< SSLIOStreamDevice<asio::ip::tcp> > stream(d);
+    boost::asio::io_service io_service;
+    boost::asio::ssl::context context(io_service, boost::asio::ssl::context::sslv23);
+    context.set_options(boost::asio::ssl::context::no_sslv2 | boost::asio::ssl::context::no_sslv3);
+    boost::asio::ssl::stream<boost::asio::ip::tcp::socket> sslStream(io_service, context);
+    SSLIOStreamDevice<boost::asio::ip::tcp> d(sslStream, fUseSSL);
+    boost::iostreams::stream< SSLIOStreamDevice<boost::asio::ip::tcp> > stream(d);
 
     const bool fConnected = d.connect(GetArg("-rpcconnect", "127.0.0.1"), GetArg("-rpcport", itostr(BaseParams().RPCPort())));
     if (!fConnected)

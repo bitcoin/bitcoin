@@ -9,6 +9,7 @@
 #include "addresstablemodel.h"
 #include "guiutil.h"
 #include "optionsmodel.h"
+#include "scicon.h"
 #include "walletmodel.h"
 
 #include <QApplication>
@@ -20,6 +21,12 @@ SendCoinsEntry::SendCoinsEntry(QWidget *parent) :
     model(0)
 {
     ui->setupUi(this);
+
+    ui->addressBookButton->setIcon(SingleColorIcon(":/icons/address-book"));
+    ui->pasteButton->setIcon(SingleColorIcon(":/icons/editpaste"));
+    ui->deleteButton->setIcon(SingleColorIcon(":/icons/remove"));
+    ui->deleteButton_is->setIcon(SingleColorIcon(":/icons/remove"));
+    ui->deleteButton_s->setIcon(SingleColorIcon(":/icons/remove"));
 
     setCurrentWidget(ui->SendCoins);
 

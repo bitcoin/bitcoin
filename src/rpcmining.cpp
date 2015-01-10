@@ -64,7 +64,7 @@ Value GetNetworkHashPS(int lookup, int height) {
     if (minTime == maxTime)
         return 0;
 
-    uint256 workDiff = pb->nChainWork - pb0->nChainWork;
+    arith_uint256 workDiff = pb->nChainWork - pb0->nChainWork;
     int64_t timeDiff = maxTime - minTime;
 
     return (int64_t)(workDiff.getdouble() / timeDiff);
@@ -288,8 +288,7 @@ Value prioritisetransaction(const Array& params, bool fHelp)
             + HelpExampleRpc("prioritisetransaction", "\"txid\", 0.0, 10000")
         );
 
-    uint256 hash;
-    hash.SetHex(params[0].get_str());
+    uint256 hash = ParseHashStr(params[0].get_str(), "txid");
 
     CAmount nAmount = params[2].get_int64();
 
@@ -563,7 +562,7 @@ Value getblocktemplate(const Array& params, bool fHelp)
     Object aux;
     aux.push_back(Pair("flags", HexStr(COINBASE_FLAGS.begin(), COINBASE_FLAGS.end())));
 
-    uint256 hashTarget = uint256().SetCompact(pblock->nBits);
+    arith_uint256 hashTarget = arith_uint256().SetCompact(pblock->nBits);
 
     static Array aMutable;
     if (aMutable.empty())
@@ -674,7 +673,7 @@ Value estimatefee(const Array& params, bool fHelp)
         throw runtime_error(
             "estimatefee nblocks\n"
             "\nEstimates the approximate fee per kilobyte\n"
-            "needed for a transaction to get confirmed\n"
+            "needed for a transaction to begin confirmation\n"
             "within nblocks blocks.\n"
             "\nArguments:\n"
             "1. nblocks     (numeric)\n"
@@ -706,7 +705,7 @@ Value estimatepriority(const Array& params, bool fHelp)
         throw runtime_error(
             "estimatepriority nblocks\n"
             "\nEstimates the approximate priority\n"
-            "a zero-fee transaction needs to get confirmed\n"
+            "a zero-fee transaction needs to begin confirmation\n"
             "within nblocks blocks.\n"
             "\nArguments:\n"
             "1. nblocks     (numeric)\n"

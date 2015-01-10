@@ -46,7 +46,6 @@
 #include <QUrlQuery>
 #endif
 
-using namespace boost;
 using namespace std;
 
 const int BITCOIN_IPC_CONNECT_TIMEOUT = 1000; // milliseconds
@@ -667,8 +666,7 @@ void PaymentServer::netRequestFinished(QNetworkReply* reply)
 
     // BIP70 DoS protection
     if (reply->size() > BIP70_MAX_PAYMENTREQUEST_SIZE) {
-        QString msg = tr("Payment request %2 is too large (%3 bytes, allowed %4 bytes).")
-            .arg(__func__)
+        QString msg = tr("Payment request %1 is too large (%2 bytes, allowed %3 bytes).")
             .arg(reply->request().url().toString())
             .arg(reply->size())
             .arg(BIP70_MAX_PAYMENTREQUEST_SIZE);

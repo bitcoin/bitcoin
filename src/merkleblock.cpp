@@ -76,7 +76,7 @@ uint256 CPartialMerkleTree::TraverseAndExtract(int height, unsigned int pos, uns
     if (nBitsUsed >= vBits.size()) {
         // overflowed the bits array - failure
         fBad = true;
-        return 0;
+        return uint256();
     }
     bool fParentOfMatch = vBits[nBitsUsed++];
     if (height==0 || !fParentOfMatch) {
@@ -84,7 +84,7 @@ uint256 CPartialMerkleTree::TraverseAndExtract(int height, unsigned int pos, uns
         if (nHashUsed >= vHash.size()) {
             // overflowed the hash array - failure
             fBad = true;
-            return 0;
+            return uint256();
         }
         const uint256 &hash = vHash[nHashUsed++];
         if (height==0 && fParentOfMatch) // in case of height 0, we have a matched txid
@@ -93,10 +93,16 @@ uint256 CPartialMerkleTree::TraverseAndExtract(int height, unsigned int pos, uns
     } else {
         // otherwise, descend into the subtrees to extract matched txids and hashes
         uint256 left = TraverseAndExtract(height-1, pos*2, nBitsUsed, nHashUsed, vMatch), right;
-        if (pos*2+1 < CalcTreeWidth(height-1))
+        if (pos*2+1 < CalcTreeWidth(height-1)) {
             right = TraverseAndExtract(height-1, pos*2+1, nBitsUsed, nHashUsed, vMatch);
-        else
+            if (right == left) {
+                // If the left and right branch should never be identical as the transaction
+                // hashes covered by them must be unique.
+                fBad = true;
+            }
+        } else {
             right = left;
+        }
         // and combine them before returning
         return Hash(BEGIN(left), END(left), BEGIN(right), END(right));
     }
@@ -122,16 +128,16 @@ uint256 CPartialMerkleTree::ExtractMatches(std::vector<uint256> &vMatch) {
     vMatch.clear();
     // An empty set will not work
     if (nTransactions == 0)
-        return 0;
+        return uint256();
     // check for excessively high numbers of transactions
     if (nTransactions > MAX_BLOCK_SIZE / 60) // 60 is the lower bound for the size of a serialized CTransaction
-        return 0;
+        return uint256();
     // there can never be more hashes provided than one for every txid
     if (vHash.size() > nTransactions)
-        return 0;
+        return uint256();
     // there must be at least one bit per node in the partial tree, and at least one node per hash
     if (vBits.size() < vHash.size())
-        return 0;
+        return uint256();
     // calculate height of tree
     int nHeight = 0;
     while (CalcTreeWidth(nHeight) > 1)
@@ -141,12 +147,12 @@ uint256 CPartialMerkleTree::ExtractMatches(std::vector<uint256> &vMatch) {
     uint256 hashMerkleRoot = TraverseAndExtract(nHeight, 0, nBitsUsed, nHashUsed, vMatch);
     // verify that no problems occured during the tree traversal
     if (fBad)
-        return 0;
+        return uint256();
     // verify that all bits were consumed (except for the padding caused by serializing it as a byte sequence)
     if ((nBitsUsed+7)/8 != (vBits.size()+7)/8)
-        return 0;
+        return uint256();
     // verify that all hashes were consumed
     if (nHashUsed != vHash.size())
-        return 0;
+        return uint256();
     return hashMerkleRoot;
 }

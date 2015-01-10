@@ -7,7 +7,7 @@ $(package)_dependencies=openssl
 $(package)_linux_dependencies=freetype fontconfig dbus libxcb libX11 xproto libXext
 $(package)_build_subdir=qtbase
 $(package)_qt_libs=corelib network widgets gui plugins testlib
-$(package)_patches=mac-qmake.conf fix-xcb-include-order.patch qt5-tablet-osx.patch
+$(package)_patches=mac-qmake.conf fix-xcb-include-order.patch qt5-tablet-osx.patch qt5-yosemite.patch
 
 define $(package)_set_vars
 $(package)_config_opts_release = -release
@@ -34,7 +34,7 @@ $(package)_config_opts += -qt-libpng -qt-libjpeg -qt-zlib -qt-pcre
 
 ifneq ($(build_os),darwin)
 $(package)_config_opts_darwin = -xplatform macx-clang-linux -device-option MAC_SDK_PATH=$(OSX_SDK) -device-option CROSS_COMPILE="$(host)-"
-$(package)_config_opts_darwin += -device-option MAC_MIN_VERSION=$(OSX_MIN_VERSION) -device-option MAC_TARGET=$(host)
+$(package)_config_opts_darwin += -device-option MAC_MIN_VERSION=$(OSX_MIN_VERSION) -device-option MAC_TARGET=$(host) -device-option MAC_LD64_VERSION=$(LD64_VERSION)
 endif
 
 $(package)_config_opts_linux  = -qt-xkbcommon -qt-xcb  -no-eglfs -no-linuxfb -system-freetype -no-sm -fontconfig -no-xinput2 -no-libudev -no-egl -no-opengl
@@ -56,6 +56,7 @@ define $(package)_preprocess_cmds
   cp -f $($(package)_patch_dir)/mac-qmake.conf qtbase/mkspecs/macx-clang-linux/qmake.conf && \
   patch -p1 < $($(package)_patch_dir)/fix-xcb-include-order.patch && \
   patch -p1 < $($(package)_patch_dir)/qt5-tablet-osx.patch && \
+  patch -d qtbase -p1 < $($(package)_patch_dir)/qt5-yosemite.patch && \
   echo "QMAKE_CFLAGS     += $($(package)_cflags) $($(package)_cppflags)" >> qtbase/mkspecs/common/gcc-base.conf && \
   echo "QMAKE_CXXFLAGS   += $($(package)_cxxflags) $($(package)_cppflags)" >> qtbase/mkspecs/common/gcc-base.conf && \
   echo "QMAKE_LFLAGS     += $($(package)_ldflags)" >> qtbase/mkspecs/common/gcc-base.conf && \

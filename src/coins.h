@@ -9,7 +9,6 @@
 #include "compressor.h"
 #include "serialize.h"
 #include "uint256.h"
-#include "undo.h"
 
 #include <assert.h>
 #include <stdint.h>
@@ -237,11 +236,8 @@ public:
         Cleanup();
     }
 
-    //! mark an outpoint spent, and construct undo information
-    bool Spend(const COutPoint &out, CTxInUndo &undo);
-
     //! mark a vout spent
-    bool Spend(int nPos);
+    bool Spend(uint32_t nPos);
 
     //! check whether a particular output is still available
     bool IsAvailable(unsigned int nPos) const {
@@ -301,7 +297,7 @@ struct CCoinsStats
     uint256 hashSerialized;
     CAmount nTotalAmount;
 
-    CCoinsStats() : nHeight(0), hashBlock(0), nTransactions(0), nTransactionOutputs(0), nSerializedSize(0), hashSerialized(0), nTotalAmount(0) {}
+    CCoinsStats() : nHeight(0), nTransactions(0), nTransactionOutputs(0), nSerializedSize(0), nTotalAmount(0) {}
 };
 
 
@@ -441,6 +437,11 @@ public:
 private:
     CCoinsMap::iterator FetchCoins(const uint256 &txid);
     CCoinsMap::const_iterator FetchCoins(const uint256 &txid) const;
+
+    /**
+     * By making the copy constructor private, we prevent accidentally using it when one intends to create a cache on top of a base cache.
+     */
+    CCoinsViewCache(const CCoinsViewCache &);
 };
 
 #endif // BITCOIN_COINS_H

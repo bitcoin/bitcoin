@@ -24,7 +24,6 @@
 
 using namespace std;
 using namespace json_spirit;
-using namespace boost::algorithm;
 
 // In script_tests.cpp
 extern Array read_json(const std::string& jsondata);
@@ -38,7 +37,8 @@ static std::map<string, unsigned int> mapFlagNames = boost::assign::map_list_of
     (string("SIGPUSHONLY"), (unsigned int)SCRIPT_VERIFY_SIGPUSHONLY)
     (string("MINIMALDATA"), (unsigned int)SCRIPT_VERIFY_MINIMALDATA)
     (string("NULLDUMMY"), (unsigned int)SCRIPT_VERIFY_NULLDUMMY)
-    (string("DISCOURAGE_UPGRADABLE_NOPS"), (unsigned int)SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_NOPS);
+    (string("DISCOURAGE_UPGRADABLE_NOPS"), (unsigned int)SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_NOPS)
+    (string("CLEANSTACK"), (unsigned int)SCRIPT_VERIFY_CLEANSTACK);
 
 unsigned int ParseScriptFlags(string strFlags)
 {
@@ -47,7 +47,7 @@ unsigned int ParseScriptFlags(string strFlags)
     }
     unsigned int flags = 0;
     vector<string> words;
-    split(words, strFlags, is_any_of(","));
+    boost::algorithm::split(words, strFlags, boost::algorithm::is_any_of(","));
 
     BOOST_FOREACH(string word, words)
     {
@@ -118,7 +118,7 @@ BOOST_AUTO_TEST_CASE(tx_valid)
                     break;
                 }
 
-                mapprevOutScriptPubKeys[COutPoint(uint256(vinput[0].get_str()), vinput[1].get_int())] = ParseScript(vinput[2].get_str());
+                mapprevOutScriptPubKeys[COutPoint(uint256S(vinput[0].get_str()), vinput[1].get_int())] = ParseScript(vinput[2].get_str());
             }
             if (!fValid)
             {
@@ -194,7 +194,7 @@ BOOST_AUTO_TEST_CASE(tx_invalid)
                     break;
                 }
 
-                mapprevOutScriptPubKeys[COutPoint(uint256(vinput[0].get_str()), vinput[1].get_int())] = ParseScript(vinput[2].get_str());
+                mapprevOutScriptPubKeys[COutPoint(uint256S(vinput[0].get_str()), vinput[1].get_int())] = ParseScript(vinput[2].get_str());
             }
             if (!fValid)
             {
