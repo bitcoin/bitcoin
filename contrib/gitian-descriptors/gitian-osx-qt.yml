@@ -21,7 +21,7 @@ script: |
 
   echo "84e924181d4ad6db00239d87250cc89868484a14841f77fb85ab1f1dbdcd7da1  qt-everywhere-opensource-src-5.2.1.tar.gz" | sha256sum -c
 
-  REVISION=r5
+  REVISION=r6
   export SOURCES_PATH=`pwd`
   export TAR_OPTIONS="-m --mtime="$REFERENCE_DATE\\\ $REFERENCE_TIME""
   export ZERO_AR_DATE=1
