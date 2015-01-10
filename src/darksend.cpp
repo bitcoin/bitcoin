@@ -435,6 +435,7 @@ int GetInputDarksendRounds(CTxIn in, int rounds)
 void CDarkSendPool::Reset(){
     cachedLastSuccess = 0;
     vecMasternodesUsed.clear();
+    UnlockCoins();
     SetNull();
 }
 
@@ -1675,7 +1676,7 @@ bool CDarkSendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
     if(!ready) return true;
 
     if(sessionDenom == 0) return true;
-    
+
     return false;
 }
 
