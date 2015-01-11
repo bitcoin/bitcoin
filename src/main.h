@@ -95,6 +95,7 @@ extern int64_t nMinimumInputValue;
 extern bool fUseFastIndex;
 extern unsigned int nDerivationMethodIndex;
 extern int nScriptCheckThreads;
+extern const uint256 entropyStore[38];
 
 // Minimum disk space required - used in CheckDiskSpace()
 static const uint64_t nMinDiskSpace = 52428800;
@@ -865,9 +866,6 @@ public:
 };
 
 
-
-
-
 /** Nodes collect new transactions into a block, hash them into a hash tree,
  * and scan through nonce values to make the block's hash satisfy proof-of-work
  * requirements.  When they solve the proof-of-work, they broadcast the block
@@ -963,10 +961,10 @@ public:
     void UpdateTime(const CBlockIndex* pindexPrev);
 
     // ppcoin: entropy bit for stake modifier if chosen by modifier
-    unsigned int GetStakeEntropyBit(unsigned int nTime) const
+    unsigned int GetStakeEntropyBit(unsigned int nHeight) const
     {
         // Protocol switch to support p2pool at novacoin block #9689
-        if (nTime >= ENTROPY_SWITCH_TIME || fTestNet)
+        if (nHeight >= 9689 || fTestNet)
         {
             // Take last bit of block hash as entropy bit
             unsigned int nEntropyBit = ((GetHash().Get64()) & 1ULL);
@@ -974,14 +972,15 @@ public:
                 printf("GetStakeEntropyBit: nTime=%u hashBlock=%s nEntropyBit=%u\n", nTime, GetHash().ToString().c_str(), nEntropyBit);
             return nEntropyBit;
         }
-        // Before novacoin block #9689 - old protocol
-        uint160 hashSig = Hash160(vchBlockSig);
+
+        // Before novacoin block #9689 - get from pregenerated table
+        int nBitNum = nHeight & 0xFF;
+        int nItemNum = nHeight / 0xFF;
+
+        unsigned int nEntropyBit = (unsigned int) ((entropyStore[nItemNum] & (uint256(1) << nBitNum)) >> nBitNum).Get64();
         if (fDebug && GetBoolArg("-printstakemodifier"))
-            printf("GetStakeEntropyBit: hashSig=%s", hashSig.ToString().c_str());
-        hashSig >>= 159; // take the first bit of the hash
-        if (fDebug && GetBoolArg("-printstakemodifier"))
-            printf(" entropybit=%" PRId64 "\n", hashSig.Get64());
-        return (unsigned int)hashSig.Get64();
+            printf("GetStakeEntropyBit: from pregenerated table, nHeight=%d nEntropyBit=%u\n", nHeight, nEntropyBit);
+        return nEntropyBit;
     }
 
     // ppcoin: two types of block: proof-of-work or proof-of-stake
@@ -1146,7 +1145,7 @@ public:
     bool AcceptBlock();
     bool GetCoinAge(uint64_t& nCoinAge) const; // ppcoin: calculate total coin age spent in block
     bool SignBlock(CWallet& keystore);
-    bool CheckBlockSignature(bool fProofOfStake) const;
+    bool CheckBlockSignature() const;
 
 private:
     bool SetBestChainInner(CTxDB& txdb, CBlockIndex *pindexNew);
