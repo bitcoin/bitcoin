@@ -551,13 +551,9 @@ bool CTransaction::CheckTransaction() const
 
 int64_t CTransaction::GetMinFee(unsigned int nBlockSize, bool fAllowFree, enum GetMinFee_mode mode, unsigned int nBytes) const
 {
-    // Use new fees approach if we are on test network or 
-    //    switch date has been reached
-    bool fNewApproach = fTestNet || nTime > FEE_SWITCH_TIME;
-
     int64_t nMinTxFee = MIN_TX_FEE, nMinRelayTxFee = MIN_RELAY_TX_FEE;
 
-    if(!fNewApproach || IsCoinStake())
+    if(IsCoinStake())
     {
         // Enforce 0.01 as minimum fee for old approach or coinstake
         nMinTxFee = CENT;
@@ -570,41 +566,30 @@ int64_t CTransaction::GetMinFee(unsigned int nBlockSize, bool fAllowFree, enum G
     unsigned int nNewBlockSize = nBlockSize + nBytes;
     int64_t nMinFee = (1 + (int64_t)nBytes / 1000) * nBaseFee;
 
-    if (fNewApproach)
+    if (fAllowFree)
     {
-        if (fAllowFree)
+        if (nBlockSize == 1)
         {
-            if (nBlockSize == 1)
-            {
-                // Transactions under 1K are free
-                if (nBytes < 1000)
-                    nMinFee = 0;
-            }
-            else
-            {
-                // Free transaction area
-                if (nNewBlockSize < 27000)
-                    nMinFee = 0;
-            }
+            // Transactions under 1K are free
+            if (nBytes < 1000)
+                nMinFee = 0;
         }
+        else
+        {
+            // Free transaction area
+            if (nNewBlockSize < 27000)
+                nMinFee = 0;
+        }
+    }
 
-        // To limit dust spam, require additional MIN_TX_FEE/MIN_RELAY_TX_FEE for 
-        //    each non empty output which is less than 0.01
-        //
-        // It's safe to ignore empty outputs here, because these inputs are allowed
-        //     only for coinbase and coinstake transactions.
-        BOOST_FOREACH(const CTxOut& txout, vout)
-            if (txout.nValue < CENT && !txout.IsEmpty())
-                nMinFee += nBaseFee;
-    }
-    else if (nMinFee < nBaseFee)
-    {
-        // To limit dust spam, require MIN_TX_FEE/MIN_RELAY_TX_FEE if 
-        //    any output is less than 0.01
-        BOOST_FOREACH(const CTxOut& txout, vout)
-            if (txout.nValue < CENT)
-                nMinFee = nBaseFee;
-    }
+    // To limit dust spam, require additional MIN_TX_FEE/MIN_RELAY_TX_FEE for
+    //    each non empty output which is less than 0.01
+    //
+    // It's safe to ignore empty outputs here, because these inputs are allowed
+    //     only for coinbase and coinstake transactions.
+    BOOST_FOREACH(const CTxOut& txout, vout)
+        if (txout.nValue < CENT && !txout.IsEmpty())
+            nMinFee += nBaseFee;
 
     // Raise the price as the block approaches full
     if (nBlockSize != 1 && nNewBlockSize >= MAX_BLOCK_SIZE_GEN/2)

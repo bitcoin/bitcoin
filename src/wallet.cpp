@@ -1542,26 +1542,6 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, int64_t> >& vecSend, 
                 }
 
                 int64_t nChange = nValueIn - nValue - nFeeRet;
-                // if sub-cent change is required, the fee must be raised to at least MIN_TX_FEE
-                // or until nChange becomes zero
-                // NOTE: this depends on the exact behaviour of GetMinFee
-                if (wtxNew.nTime < FEE_SWITCH_TIME && !fTestNet)
-                {
-                    if (nFeeRet < MIN_TX_FEE && nChange > 0 && nChange < CENT)
-                    {
-                        int64_t nMoveToFee = min(nChange, MIN_TX_FEE - nFeeRet);
-                        nChange -= nMoveToFee;
-                        nFeeRet += nMoveToFee;
-                    }
-
-                    // sub-cent change is moved to fee
-                    if (nChange > 0 && nChange < CENT)
-                    {
-                        nFeeRet += nChange;
-                        nChange = 0;
-                    }
-                }
-
                 if (nChange > 0)
                 {
                     // Fill a vout to ourself
@@ -1613,15 +1593,8 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, int64_t> >& vecSend, 
                 dPriority /= nBytes;
 
                 // Check that enough fee is included
-                int64_t nPayFee = nTransactionFee * (1 + (int64_t)nBytes / 1000);
                 bool fAllowFree = CTransaction::AllowFree(dPriority);
-
-                // Disable free transactions until 1 July 2014
-                if (!fTestNet && wtxNew.nTime < FEE_SWITCH_TIME)
-                {
-                    fAllowFree = false;
-                }
-
+                int64_t nPayFee = nTransactionFee * (1 + (int64_t)nBytes / 1000);
                 int64_t nMinFee = wtxNew.GetMinFee(1, fAllowFree, GMF_SEND, nBytes);
 
                 if (nFeeRet < max(nPayFee, nMinFee))

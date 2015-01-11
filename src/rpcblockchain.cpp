@@ -140,7 +140,7 @@ Object blockToJSON(const CBlock& block, const CBlockIndex* blockindex, bool fPri
 
     result.push_back(Pair("tx", txinfo));
 
-    if ( block.IsProofOfStake() || (!fTestNet && block.GetBlockTime() < ENTROPY_SWITCH_TIME) )
+    if ( block.IsProofOfStake() )
         result.push_back(Pair("signature", HexStr(block.vchBlockSig.begin(), block.vchBlockSig.end())));
 
     return result;
