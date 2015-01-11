@@ -46,7 +46,7 @@ namespace Checkpoints
     CBlockIndex* GetLastCheckpoint(const std::map<uint256, CBlockIndex*>& mapBlockIndex);
 
     // Returns last checkpoint timestamp
-    int GetLastCheckpointTime();
+    unsigned int GetLastCheckpointTime();
 
     extern uint256 hashSyncCheckpoint;
     extern CSyncCheckpoint checkpointMessage;

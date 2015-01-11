@@ -52,7 +52,7 @@ namespace Checkpoints
         return checkpoints.rbegin()->first;
     }
 
-    int GetLastCheckpointTime()
+    unsigned int GetLastCheckpointTime()
     {
         MapCheckpoints& checkpoints = (fTestNet ? mapCheckpointsTestnet : mapCheckpoints);
 
