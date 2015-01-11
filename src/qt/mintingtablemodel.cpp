@@ -352,7 +352,7 @@ QVariant MintingTableModel::data(const QModelIndex &index, int role) const
         case Age:
             return static_cast<qlonglong>(rec->getAge());
         case CoinDay:
-            return static_cast<qlonglong>(rec->coinAge);
+            return static_cast<qlonglong>(rec->getCoinDay());
         case Balance:
             return static_cast<qlonglong>(rec->nValue);
         case MintProbability:
