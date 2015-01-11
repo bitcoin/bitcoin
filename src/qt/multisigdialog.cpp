@@ -169,6 +169,11 @@ void MultisigDialog::on_createAddressButton_clicked()
 
     CScript script;
     script.SetMultisig(required, pubkeys);
+    if (script.size() > MAX_SCRIPT_ELEMENT_SIZE)
+    {
+        QMessageBox::warning(this, tr("Error"), tr("Redeem script exceeds size limit: %1 > %2\nReduce the number of addresses involved in the address creation.").arg(script.size()).arg(MAX_SCRIPT_ELEMENT_SIZE), QMessageBox::Ok);
+        return;
+    }
     CScriptID scriptID = script.GetID();
     CBitcoinAddress address(scriptID);
 

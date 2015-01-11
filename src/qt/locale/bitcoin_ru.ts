@@ -59,27 +59,39 @@
   <context>
     <name>MultisigDialog</name>
     <message>
-      <location filename="../multisigdialog.cpp" line="473"/>
+      <location filename="../multisigdialog.cpp" line="174"/>
+      <source>Error</source>
+      <translation>Ошибка</translation>
+    </message>
+    <message>
+      <location filename="../multisigdialog.cpp" line="174"/>
+      <source>Redeem script exceeds size limit: %1 > %2
+Reduce the number of addresses involved in the address creation.</source>
+      <translation>Скрипт выплаты превышает максимальный размер: %1 > %2
+Уменьшите число адресов, участвующих в создании адреса с мультиподписью</translation>
+    </message>
+    <message>
+      <location filename="../multisigdialog.cpp" line="478"/>
       <source>Transaction signature is complete</source>
       <translation>Подписание транзакции завершено</translation>
     </message>
     <message>
-      <location filename="../multisigdialog.cpp" line="478"/>
+      <location filename="../multisigdialog.cpp" line="483"/>
       <source>Transaction is NOT completely signed</source>
       <translation>Подписание транзакции завершено не полностью</translation>
     </message>
     <message>
-      <location filename="../multisigdialog.cpp" line="499"/>
+      <location filename="../multisigdialog.cpp" line="504"/>
       <source>Confirm send transaction</source>
       <translation>Подтвердите отправку транзакции</translation>
     </message>
     <message>
-      <location filename="../multisigdialog.cpp" line="499"/>
+      <location filename="../multisigdialog.cpp" line="504"/>
       <source>The fee of the transaction (%1 NVC) is smaller than the expected fee (%2 NVC). Do you want to send the transaction anyway?</source>
       <translation>Комиссия (%1 NVC) меньше необходимой (%2 NVC). Вы хотите отправить транзакцию без изменений?</translation>
     </message>
     <message>
-      <location filename="../multisigdialog.cpp" line="505"/>
+      <location filename="../multisigdialog.cpp" line="509"/>
       <source>The fee of the transaction (%1 NVC) is bigger than the expected fee (%2 NVC). Do you want to send the transaction anyway?</source>
       <translation>Комиссия (%1 NVC) больше необходимой (%2 NVC). Вы хотите отправить транзакцию без изменений?</translation>
     </message>
