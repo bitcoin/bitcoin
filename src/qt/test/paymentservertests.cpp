@@ -65,38 +65,44 @@ void PaymentServerTests::paymentServerTests()
     OptionsModel optionsModel;
     PaymentServer* server = new PaymentServer(NULL, false);
     X509_STORE* caStore = X509_STORE_new();
-    X509_STORE_add_cert(caStore, parse_b64der_cert(caCert_BASE64));
+    X509_STORE_add_cert(caStore, parse_b64der_cert(caCert1_BASE64));
     PaymentServer::LoadRootCAs(caStore);
     server->setOptionsModel(&optionsModel);
     server->uiReady();
 
-    // Now feed PaymentRequests to server, and observe signals it produces:
-    std::vector<unsigned char> data = DecodeBase64(paymentrequest1_BASE64);
-    SendCoinsRecipient r = handleRequest(server, data);
+    std::vector<unsigned char> data;
+    SendCoinsRecipient r;
     QString merchant;
+
+    // Now feed PaymentRequests to server, and observe signals it produces
+
+    // This payment request validates directly against the
+    // caCert1 certificate authority:
+    data = DecodeBase64(paymentrequest1_cert1_BASE64);
+    r = handleRequest(server, data);
     r.paymentRequest.getMerchant(caStore, merchant);
     QCOMPARE(merchant, QString("testmerchant.org"));
 
-    // Version of the above, with an expired certificate:
-    data = DecodeBase64(paymentrequest2_BASE64);
+    // Signed, but expired, merchant cert in the request:
+    data = DecodeBase64(paymentrequest2_cert1_BASE64);
     r = handleRequest(server, data);
     r.paymentRequest.getMerchant(caStore, merchant);
     QCOMPARE(merchant, QString(""));
 
-    // Long certificate chain:
-    data = DecodeBase64(paymentrequest3_BASE64);
+    // 10-long certificate chain, all intermediates valid:
+    data = DecodeBase64(paymentrequest3_cert1_BASE64);
     r = handleRequest(server, data);
     r.paymentRequest.getMerchant(caStore, merchant);
     QCOMPARE(merchant, QString("testmerchant8.org"));
 
     // Long certificate chain, with an expired certificate in the middle:
-    data = DecodeBase64(paymentrequest4_BASE64);
+    data = DecodeBase64(paymentrequest4_cert1_BASE64);
     r = handleRequest(server, data);
     r.paymentRequest.getMerchant(caStore, merchant);
     QCOMPARE(merchant, QString(""));
 
     // Validly signed, but by a CA not in our root CA list:
-    data = DecodeBase64(paymentrequest5_BASE64);
+    data = DecodeBase64(paymentrequest5_cert1_BASE64);
     r = handleRequest(server, data);
     r.paymentRequest.getMerchant(caStore, merchant);
     QCOMPARE(merchant, QString(""));
@@ -104,7 +110,7 @@ void PaymentServerTests::paymentServerTests()
     // Try again with no root CA's, verifiedMerchant should be empty:
     caStore = X509_STORE_new();
     PaymentServer::LoadRootCAs(caStore);
-    data = DecodeBase64(paymentrequest1_BASE64);
+    data = DecodeBase64(paymentrequest1_cert1_BASE64);
     r = handleRequest(server, data);
     r.paymentRequest.getMerchant(caStore, merchant);
     QCOMPARE(merchant, QString(""));
