@@ -1052,10 +1052,6 @@ bool AcceptableInputs(CTxMemPool& pool, CValidationState &state, const CTransact
             CCoinsViewMemPool viewMemPool(*pcoinsTip, pool);
             view.SetBackend(viewMemPool);
 
-            // do we already have it?
-            if (view.HaveCoins(hash))
-                return false;
-
             // do all inputs exist?
             // Note that this does not check for the presence of actual outputs (see the next check for that),
             // only helps filling in pfMissingInputs (to determine missing vs spent).
