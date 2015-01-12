@@ -5,6 +5,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "rpcserver.h"
+#include "base58.h"
 #include "chainparams.h"
 #include "init.h"
 #include "net.h"
@@ -456,6 +457,9 @@ Value getblocktemplate(const Array& params, bool fHelp)
             "  \"curtime\" : ttt,                  (numeric) current timestamp in seconds since epoch (Jan 1 1970 GMT)\n"
             "  \"bits\" : \"xxx\",                 (string) compressed target of next block\n"
             "  \"height\" : n                      (numeric) The height of the next block\n"
+            "  \"payee\" : required payee\n"
+            "  \"payee_amount\" : required amount to pay\n"
+            "  \"votes\" : show vote candidates for this block\n"
             "}\n"
 
             "\nExamples:\n"
@@ -570,6 +574,8 @@ Value getblocktemplate(const Array& params, bool fHelp)
         aMutable.push_back("prevblock");
     }
 
+    Array aVotes;
+
     Object result;
     result.push_back(Pair("version", pblock->nVersion));
     result.push_back(Pair("previousblockhash", pblock->hashPrevBlock.GetHex()));
@@ -585,6 +591,31 @@ Value getblocktemplate(const Array& params, bool fHelp)
     result.push_back(Pair("curtime", (int64_t)pblock->nTime));
     result.push_back(Pair("bits", HexBits(pblock->nBits)));
     result.push_back(Pair("height", (int64_t)(pindexPrev->nHeight+1)));
+    result.push_back(Pair("votes", aVotes));
+
+
+    if(pblock->payee != CScript()){
+        CTxDestination address1;
+        ExtractDestination(pblock->payee, address1);
+        CBitcoinAddress address2(address1);
+        result.push_back(Pair("payee", address2.ToString().c_str()));
+        result.push_back(Pair("payee_amount", (int64_t)GetMasternodePayment(pindexPrev->nHeight+1, pblock->vtx[0].GetValueOut())));
+    } else {
+        result.push_back(Pair("payee", ""));
+        result.push_back(Pair("payee_amount", ""));
+    }
+
+    bool MasternodePayments = false;
+
+    if(TestNet()){
+        if(pblock->nTime > START_MASTERNODE_PAYMENTS_TESTNET) MasternodePayments = true;
+    } else {
+        if(pblock->nTime > START_MASTERNODE_PAYMENTS) MasternodePayments = true;
+    }
+
+
+    result.push_back(Pair("masternode_payments", MasternodePayments));
+    result.push_back(Pair("enforce_masternode_payments", true));
 
     return result;
 }

@@ -435,6 +435,7 @@ int GetInputDarksendRounds(CTxIn in, int rounds)
 void CDarkSendPool::Reset(){
     cachedLastSuccess = 0;
     vecMasternodesUsed.clear();
+    UnlockCoins();
     SetNull();
 }
 
@@ -756,6 +757,15 @@ void CDarkSendPool::ChargeRandomFees(){
         BOOST_FOREACH(const CTransaction& txCollateral, vecSessionCollateral) {
             int r = rand()%1000;
 
+            /*
+                Collateral Fee Charges:
+
+                Being that DarkSend has "no fees" we need to have some kind of cost associated
+                with using it to stop abuse. Otherwise it could serve as an attack vector and
+                allow endless transaction that would bloat Darkcoin and make it unusable. To
+                stop these kinds of attacks 1 in 50 successful transactions are charged. This
+                adds up to a cost of 0.002DRK per transaction on average.
+            */
             if(r <= 20)
             {
                 LogPrintf("CDarkSendPool::ChargeRandomFees -- charging random fees. %u\n", i);
@@ -1519,7 +1529,7 @@ bool CDarkSendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
         if(sessionTotalValue > maxAmount*COIN) sessionTotalValue = maxAmount*COIN;
 
         double fDarkcoinSubmitted = (sessionTotalValue / CENT);
-        LogPrintf("Submiting Darksend for %f DRK CENT\n", fDarkcoinSubmitted);
+        LogPrintf("Submitting Darksend for %f DRK CENT\n", fDarkcoinSubmitted);
 
         if(pwalletMain->GetDenominatedBalance(true, true) > 0){ //get denominated unconfirmed inputs
             LogPrintf("DoAutomaticDenominating -- Found unconfirmed denominated outputs, will wait till they confirm to continue.\n");
@@ -1666,6 +1676,8 @@ bool CDarkSendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
     if(!ready) return true;
 
     if(sessionDenom == 0) return true;
+
+    return false;
 }
 
 
