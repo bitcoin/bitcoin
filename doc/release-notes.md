@@ -1,6 +1,6 @@
-Bitcoin Core version 0.9.3 is now available from:
+Bitcoin Core version 0.9.4 is now available from:
 
-  https://bitcoin.org/bin/0.9.3/
+  https://bitcoin.org/bin/0.9.4/
 
 This is a new minor version release, bringing only bug fixes and updated
 translations. Upgrading to this release is recommended.
@@ -9,93 +9,87 @@ Please report bugs using the issue tracker at github:
 
   https://github.com/bitcoin/bitcoin/issues
 
-Upgrading and downgrading
-==========================
-
 How to Upgrade
---------------
+===============
 
 If you are running an older version, shut it down. Wait until it has completely
 shut down (which might take a few minutes for older versions), then run the
 installer (on Windows) or just copy over /Applications/Bitcoin-Qt (on Mac) or
 bitcoind/bitcoin-qt (on Linux).
 
-If you are upgrading from version 0.7.2 or earlier, the first time you run
-0.9.3 your blockchain files will be re-indexed, which will take anywhere from 
-30 minutes to several hours, depending on the speed of your machine.
+OpenSSL Warning
+================
 
-Downgrading warnings
---------------------
+OpenSSL 1.0.0p / 1.0.1k was recently released and is being pushed out by
+various operating system maintainers. Review by Gregory Maxwell determined that
+this update is incompatible with the Bitcoin system and could lead to consensus
+forks.
 
-The 'chainstate' for this release is not always compatible with previous
-releases, so if you run 0.9.x and then decide to switch back to a
-0.8.x release you might get a blockchain validation error when starting the
-old release (due to 'pruned outputs' being omitted from the index of
-unspent transaction outputs).
+Bitcoin Core released binaries from https://bitcoin.org are unaffected,
+as are any built with the gitian deterministic build system.
 
-Running the old release with the -reindex option will rebuild the chainstate
-data structures and correct the problem.
+However, if you are running either
 
-Also, the first time you run a 0.8.x release on a 0.9 wallet it will rescan
-the blockchain for missing spent coins, which will take a long time (tens
-of minutes on a typical machine).
+- The Ubuntu PPA from https://launchpad.net/~bitcoin/+archive/ubuntu/bitcoin
+- A third-party or self-compiled Bitcoin Core
 
-0.9.3 Release notes
-=======================
+upgrade to Bitcoin Core 0.9.4, which includes a workaround, **before** updating
+OpenSSL.
+
+The incompatibility is due to the OpenSSL update changing the
+behavior of ECDSA validation to reject any signature which is
+not encoded in a very rigid manner. This was a result of
+OpenSSL's change for CVE-2014-8275 "Certificate fingerprints
+can be modified".
+
+We are specifically aware of potential hard-forks due to signature
+encoding handling and had been hoping to close them via BIP62 in 0.10.
+BIP62's purpose is to improve transaction malleability handling and
+as a side effect rigidly defines the encoding for signatures, but the
+overall scope of BIP62 has made it take longer than we'd like to
+deploy.
+
+0.9.4 changelog
+================
+
+Validation:
+- b8e81b7 consensus: guard against openssl's new strict DER checks
+- 60c51f1 fail immediately on an empty signature
+- 037bfef Improve robustness of DER recoding code
+
+Command-line options:
+- cd5164a Make -proxy set all network types, avoiding a connect leak.
+
+P2P:
+- bb424e4 Limit the number of new addressses to accumulate
 
 RPC:
-- Avoid a segfault on getblock if it can't read a block from disk
-- Add paranoid return value checks in base58
+- 0a94661 Disable SSLv3 (in favor of TLS) for the RPC client and server.
 
-Protocol and network code:
-- Don't poll showmyip.com, it doesn't exist anymore
-- Add a way to limit deserialized string lengths and use it
-- Add a new checkpoint at block 295,000
-- Increase IsStandard() scriptSig length
-- Avoid querying DNS seeds, if we have open connections
-- Remove a useless millisleep in socket handler
-- Stricter memory limits on CNode
-- Better orphan transaction handling
-- Add `-maxorphantx=<n>` and `-maxorphanblocks=<n>` options for control over the maximum orphan transactions and blocks
-
-Wallet:
-- Check redeemScript size does not exceed 520 byte limit
-- Ignore (and warn about) too-long redeemScripts while loading wallet
-
-GUI:
-- fix 'opens in testnet mode when presented with a BIP-72 link with no fallback'
-- AvailableCoins: acquire cs_main mutex
-- Fix unicode character display on MacOSX
+Build system:
+- f047dfa gitian: openssl-1.0.1i.tar.gz -> openssl-1.0.1k.tar.gz
+- 5b9f78d build: Fix OSX build when using Homebrew and qt5
+- ffab1dd Keep symlinks when copying into .app bundle
+- 613247f osx: fix signing to make Gatekeeper happy (again)
 
 Miscellaneous:
-- key.cpp: fail with a friendlier message on missing ssl EC support
-- Remove bignum dependency for scripts
-- Upgrade OpenSSL to 1.0.1i (see https://www.openssl.org/news/secadv_20140806.txt - just to be sure, no critical issues for Bitcoin Core)
-- Upgrade miniupnpc to 1.9.20140701
-- Fix boost detection in build system on some platforms
+- 25b49b5 Refactor -alertnotify code
+- 2743529 doc: Add instructions for consistent Mac OS X build names
 
 Credits
 --------
 
-Thanks to everyone who contributed to this release:
+Thanks to who contributed to this release, at least:
 
-- Andrew Poelstra
 - Cory Fields
 - Gavin Andresen
+- Gregory Maxwell
 - Jeff Garzik
-- Johnathan Corgan
-- Julian Haight
-- Michael Ford
-- Pavel Vasin
-- Peter Todd
-- phantomcircuit
+- Luke Dashjr
+- Matt Corallo
 - Pieter Wuille
-- Rose Toomey
-- Ruben Dario Ponticelli
-- shshshsh
-- Trevin Hofmann
-- Warren Togami
+- Saivann
+- Sergio Demian Lerner
 - Wladimir J. van der Laan
-- Zak Wilcox
 
 As well as everyone that helped translating on [Transifex](https://www.transifex.com/projects/p/bitcoin/).
