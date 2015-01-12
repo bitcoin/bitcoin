@@ -2168,8 +2168,15 @@ void ThreadCheckDarkSendPool()
 
         if(c % 60 == 0){
             vector<CMasterNode>::iterator it = vecMasternodes.begin();
+            //check them separately
             while(it != vecMasternodes.end()){
                 (*it).Check();
+                ++it;
+            }
+
+            //remove inactive
+            it = vecMasternodes.begin();
+            while(it != vecMasternodes.end()){
                 if((*it).enabled == 4 || (*it).enabled == 3){
                     LogPrintf("Removing inactive masternode %s\n", (*it).addr.ToString().c_str());
                     it = vecMasternodes.erase(it);
@@ -2181,7 +2188,6 @@ void ThreadCheckDarkSendPool()
             masternodePayments.CleanPaymentList();
             CleanTransactionLocksList();
         }
-
 
         //try to sync the masternode list and payment list every 20 seconds
         if(c % 5 == 0 && RequestedMasterNodeList <= 2){
