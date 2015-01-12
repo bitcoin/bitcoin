@@ -119,7 +119,6 @@ def initialize_chain(test_dir):
         wait_bitcoinds()
         for i in range(4):
             os.remove(log_filename("cache", i, "debug.log"))
-            os.remove(log_filename("cache", i, "db.log"))
             os.remove(log_filename("cache", i, "peers.dat"))
             os.remove(log_filename("cache", i, "fee_estimates.dat"))
 

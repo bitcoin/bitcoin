@@ -76,6 +76,40 @@ void CLogDBFile::Init_()
     nUsed = 0;
     nWritten = 0;
     setDirty.clear();
+    version = logdb_version;
+}
+
+bool CLogDBFile::Open_(const char *pszFile, bool fCreate)
+{
+    file = fopen(pszFile, fCreate ? "a+b" : "r+b");
+    
+    if (file == NULL) {
+        LogPrintf("CLogDB::Open Error opening %s: %s\n", pszFile, strerror(errno));
+        return false;
+    }
+    
+    if (fCreate)
+    {
+        if (ftell(file) > 0)
+        {
+            LogPrintf("CLogDB::Open Error creating %s. Existing file detected\n", pszFile);
+            return false;
+        }
+        else
+        {
+            if (fwrite(logdb_header_magic, 4, 1, file) != 1)
+            {
+                LogPrintf("CLogDBFile::Flush_(): error writing magic: %s\n", strerror(errno));
+            }
+            WriteInt(file, version);
+            fflush(file);
+            FileCommit(file);
+            fclose(file);
+            file = fopen(pszFile, "r+b");
+        }
+    }
+    
+    return true;
 }
 
 bool CLogDBFile::Write_(const data_t &key, const data_t &value, bool fOverwrite, bool fLoad)
@@ -147,14 +181,26 @@ bool CLogDBFile::Close_()
 
 bool CLogDBFile::Load_()
 {
+    if (feof(file))
+        return true;
+    
+    //logdb header
+    if (getc(file) != logdb_header_magic[0]) return feof(file);
+    if (getc(file) != logdb_header_magic[1]) return false;
+    if (getc(file) != logdb_header_magic[2]) return false;
+    if (getc(file) != logdb_header_magic[3]) return false;
+    
+    version = ReadInt(file);
+    if (version == 0) return false;
+    
     do
     {
         if (feof(file))
             return true;
-        if (getc(file) != 0xCC) return feof(file);
-        if (getc(file) != 0xC4) return false;
-        if (getc(file) != 0xE6) return false;
-        if (getc(file) != 0xB0) return false;
+        if (getc(file) != logdb_frameheader_magic[0]) return feof(file);
+        if (getc(file) != logdb_frameheader_magic[1]) return false;
+        if (getc(file) != logdb_frameheader_magic[2]) return false;
+        if (getc(file) != logdb_frameheader_magic[3]) return false;
 
         LogPrintf("CLogDB::Load(): frame header found\n");
 
@@ -280,9 +326,7 @@ bool CLogDBFile::Flush_()
 
     LogPrintf("CLogDBFile::Flush_(): dirty entries found\n");
 
-    unsigned char magic[4]={0xCC,0xC4,0xE6,0xB0};
-
-    if (fwrite(magic, 4, 1, file) != 1)
+    if (fwrite(logdb_frameheader_magic, 4, 1, file) != 1)
     {
         LogPrintf("CLogDBFile::Flush_(): error writing magic: %s\n", strerror(errno));
     }
@@ -410,7 +454,13 @@ bool CLogDB::TxnCommit() {
     else
         db->mutex.unlock();
 
+    db->Flush_();
+    
     return true;
+}
+
+bool CLogDB::Load() {
+    return db->Load_();
 }
 
 bool CLogDB::Write_(const data_t &key, const data_t &value, bool fOverwrite) {

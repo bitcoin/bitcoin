@@ -20,7 +20,9 @@
 
 #include "crypto/sha256.h"
 
-extern unsigned int nWalletDBUpdated;
+static const unsigned char logdb_frameheader_magic[4] = {0xB1,0xA0,0xEE,0xC9};
+static const unsigned char logdb_header_magic[4]      = {0xCC,0xC4,0xE6,0xB0};
+static const int64_t logdb_version                    = 10000;
 
 typedef std::vector<unsigned char> data_t;
 
@@ -33,7 +35,8 @@ private:
 
     FILE *file;
     CSHA256 ctxState;
-
+    uint64_t version;
+    
     // database
     std::map<data_t, data_t> mapData;
     size_t nUsed; // continuously updated
@@ -52,8 +55,9 @@ protected:
     bool Exists_(const data_t &key) const;
     bool Erase_(const data_t &key, bool fLoad = false);
     bool Flush_();
+    bool Open_(const char *pszFile, bool fCreate = true);
     bool Close_();
-
+    
 public:
     CLogDBFile()
     {
@@ -70,14 +74,7 @@ public:
         boost::lock_guard<boost::shared_mutex> lock(mutex);
         Close_();
 
-        file = fopen(pszFile, fCreate ? "a+b" : "r+b");
-
-        if (file == NULL) {
-            LogPrintf("Error opening %s: %s\n", pszFile, strerror(errno));
-                return false;
-        }
-
-        return Load_();
+        return Open_(pszFile, fCreate);
     }
 
 //    bool Flush()            { CRITICAL_BLOCK(cs) return Flush_();          return false; }
@@ -131,6 +128,7 @@ public:
     bool Erase(const data_t &key);
     bool Read(const data_t &key, data_t &value);
     bool Exists(const data_t &key);
+    bool Load();
     
     bool Close() {
         boost::lock_guard<boost::shared_mutex> lock(db->mutex);

@@ -99,6 +99,7 @@ BITCOIN_CORE_H = \
   keystore.h \
   leveldbwrapper.h \
   limitedmap.h \
+  logdb.h \
   main.h \
   merkleblock.h \
   miner.h \

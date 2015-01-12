@@ -10,7 +10,6 @@
 #include "ui_interface.h"
 #include "util.h"
 #ifdef ENABLE_WALLET
-#include "db.h"
 #include "wallet.h"
 #endif
 
@@ -33,9 +32,6 @@ struct TestingSetup {
         fPrintToDebugLog = false; // don't want to write to debug.log file
         SelectParams(CBaseChainParams::UNITTEST);
         noui_connect();
-#ifdef ENABLE_WALLET
-        bitdb.MakeMock();
-#endif
         pathTemp = GetTempPath() / strprintf("test_bitcoin_%lu_%i", (unsigned long)GetTime(), (int)(GetRand(100000)));
         boost::filesystem::create_directories(pathTemp);
         mapArgs["-datadir"] = pathTemp.string();
@@ -45,7 +41,7 @@ struct TestingSetup {
         InitBlockIndex();
 #ifdef ENABLE_WALLET
         bool fFirstRun;
-        pwalletMain = new CWallet("wallet.dat");
+        pwalletMain = new CWallet("wallet.wal");
         pwalletMain->LoadWallet(fFirstRun);
         RegisterValidationInterface(pwalletMain);
 #endif
@@ -66,9 +62,6 @@ struct TestingSetup {
         delete pcoinsTip;
         delete pcoinsdbview;
         delete pblocktree;
-#ifdef ENABLE_WALLET
-        bitdb.Flush(true);
-#endif
         boost::filesystem::remove_all(pathTemp);
     }
 };

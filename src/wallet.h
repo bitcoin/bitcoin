@@ -57,12 +57,7 @@ class CWalletTx;
 /** (client) version numbers for particular wallet features */
 enum WalletFeature
 {
-    FEATURE_BASE = 10500, // the earliest version new wallets supports (only useful for getinfo's clientversion output)
-
-    FEATURE_WALLETCRYPT = 40000, // wallet encryption
-    FEATURE_COMPRPUBKEY = 60000, // compressed public keys
-
-    FEATURE_LATEST = 60000
+    FEATURE_BASE = 10000, // the earliest version of logdb wallets
 };
 
 
@@ -435,6 +430,9 @@ class CWallet : public CCryptoKeyStore, public CValidationInterface
 private:
     bool SelectCoins(const CAmount& nTargetValue, std::set<std::pair<const CWalletTx*,unsigned int> >& setCoinsRet, CAmount& nValueRet, const CCoinControl *coinControl = NULL) const;
 
+    //! handle to the wallet backend
+    CWalletDB *walletDB;
+
     CWalletDB *pwalletdbEncryption;
 
     //! the current wallet version: clients below this version are not able to load the wallet
@@ -488,6 +486,10 @@ public:
         SetNull();
 
         strWalletFile = strWalletFileIn;
+        
+        //instantiate a wallet backend object and maps the stored values
+        walletDB = new CWalletDB(strWalletFile);
+        
         fFileBacked = true;
     }
 
@@ -495,6 +497,9 @@ public:
     {
         delete pwalletdbEncryption;
         pwalletdbEncryption = NULL;
+        
+        // make sure to discard the handle (it might close the db/file)
+        delete walletDB;
     }
 
     void SetNull()
@@ -633,7 +638,11 @@ public:
     std::map<CTxDestination, CAmount> GetAddressBalances();
 
     std::set<CTxDestination> GetAccountAddresses(std::string strAccount) const;
-
+    void ListAccountCreditDebit(const std::string& strAccount, std::list<CAccountingEntry>& entries);
+    CAmount GetAccountCreditDebit(const std::string& strAccount);
+    bool ReadAccount(const std::string& strAccount, CAccount& account);
+    bool WriteAccount(const std::string& strAccount, const CAccount& account);
+    bool MoveAccount(const std::string& strFrom, const std::string& strTo, CAmount nAmount, const std::string& strComment);
     isminetype IsMine(const CTxIn& txin) const;
     CAmount GetDebit(const CTxIn& txin, const isminefilter& filter) const;
     isminetype IsMine(const CTxOut& txout) const
@@ -699,9 +708,10 @@ public:
         return nChange;
     }
     void SetBestChain(const CBlockLocator& loc);
-
+    bool ReadBestBlock(CBlockLocator& locator);
+    
     DBErrors LoadWallet(bool& fFirstRunRet);
-    DBErrors ZapWalletTx(std::vector<CWalletTx>& vWtx);
+    bool ZapWalletTx(std::vector<CWalletTx>& vWtx);
 
     bool SetAddressBook(const CTxDestination& address, const std::string& strName, const std::string& purpose);
 
@@ -727,9 +737,6 @@ public:
 
     bool SetDefaultKey(const CPubKey &vchPubKey);
 
-    //! signify that a particular wallet feature is now used. this may change nWalletVersion and nWalletMaxVersion if those are lower
-    bool SetMinVersion(enum WalletFeature, CWalletDB* pwalletdbIn = NULL, bool fExplicit = false);
-
     //! change which version we're allowed to upgrade to (note that this does not immediately imply upgrading to that format)
     bool SetMaxVersion(int nVersion);
 
@@ -741,6 +748,9 @@ public:
 
     //! Flush wallet
     bool Flush(bool shutdown);
+    
+    //! Write down a specific wallet transaction
+    bool WriteTxToDisk(const CWalletTx& wtx);
     
     /** 
      * Address book entry changed.
@@ -1095,6 +1105,17 @@ public:
 
     bool SetDefaultKey(const CPubKey &vchPubKey);
 
+    void GetAmounts(std::list<COutputEntry>& listReceived,
+                    std::list<COutputEntry>& listSent, CAmount& nFee, std::string& strSentAccount, const isminefilter& filter) const;
+
+    void GetAccountAmounts(const std::string& strAccount, CAmount& nReceived,
+                           CAmount& nSent, CAmount& nFee, const isminefilter& filter) const;
+    
+    bool IsFromMe(const isminefilter& filter) const
+    {
+        return (GetDebit(filter) > 0);
+    }
+
     //! signify that a particular wallet feature is now used. this may change nWalletVersion and nWalletMaxVersion if those are lower
     bool SetMinVersion(enum WalletFeature, CWalletDB* pwalletdbIn = NULL, bool fExplicit = false);
 
@@ -1103,6 +1124,9 @@ public:
 
     //! get the current wallet format (the oldest client version guaranteed to understand this wallet)
     int GetVersion() { LOCK(cs_wallet); return nWalletVersion; }
+        
+    int64_t GetTxTime() const;
+    int GetRequestCount() const;
 
     //! Get wallet transactions that conflict with given transaction (spend same outputs)
     std::set<uint256> GetConflicts(const uint256& txid) const;

@@ -25,7 +25,6 @@
 #include "utilmoneystr.h"
 #ifdef ENABLE_WALLET
 #include "wallet.h"
-#include "walletdb.h"
 #endif
 
 #include <stdint.h>
@@ -46,6 +45,7 @@ using namespace std;
 
 #ifdef ENABLE_WALLET
 CWallet* pwalletMain = NULL;
+static const char* DEFAULT_WALLET_FILENAME="wallet.wal";
 #endif
 bool fFeeEstimatesInitialized = false;
 
@@ -67,7 +67,6 @@ enum BindFlags {
 };
 
 static const char* FEE_ESTIMATES_FILENAME="fee_estimates.dat";
-static const char* DEFAULT_WALLET_FILENAME="wallet.wal";
 CClientUIInterface uiInterface;
 
 //////////////////////////////////////////////////////////////////////////////
@@ -1089,13 +1088,14 @@ bool AppInit2(boost::thread_group& threadGroup)
 
         // needed to restore wallet transaction meta data after -zapwallettxes
         std::vector<CWalletTx> vWtx;
-
+        bool fFirstRun = true;
+        
         if (GetBoolArg("-zapwallettxes", false)) {
             uiInterface.InitMessage(_("Zapping all transactions from wallet..."));
 
             pwalletMain = new CWallet(strWalletFile);
-            DBErrors nZapWalletRet = pwalletMain->ZapWalletTx(vWtx);
-            if (nZapWalletRet != DB_LOAD_OK) {
+            pwalletMain->LoadWallet(fFirstRun);
+            if (!pwalletMain->ZapWalletTx(vWtx)) {
                 uiInterface.InitMessage(strprintf(_("Error loading wallet file (%s): Wallet corrupted"), strWalletFile));
                 return false;
             }
@@ -1107,7 +1107,6 @@ bool AppInit2(boost::thread_group& threadGroup)
         uiInterface.InitMessage(_("Loading wallet..."));
 
         nStart = GetTimeMillis();
-        bool fFirstRun = true;
         pwalletMain = new CWallet(strWalletFile);
         DBErrors nLoadWalletRet = pwalletMain->LoadWallet(fFirstRun);
         if (nLoadWalletRet != DB_LOAD_OK)
@@ -1120,32 +1119,12 @@ bool AppInit2(boost::thread_group& threadGroup)
                              " or address book entries might be missing or incorrect."), strWalletFile));
                 InitWarning(msg);
             }
-            else if (nLoadWalletRet == DB_TOO_NEW)
-                strErrors << strprintf(_("Error loading wallet file (%s): Wallet requires newer version of Bitcoin Core"), strWalletFile) << "\n";
-            else if (nLoadWalletRet == DB_NEED_REWRITE)
-            {
-                strErrors << _("Wallet needed to be rewritten: restart Bitcoin Core to complete") << "\n";
-                LogPrintf("%s", strErrors.str());
-                return InitError(strErrors.str());
-            }
-            else
-                strErrors << strprintf(_("Error loading wallet file (%s)"), strWalletFile) << "\n";
         }
 
         if (GetBoolArg("-upgradewallet", fFirstRun))
         {
-            int nMaxVersion = GetArg("-upgradewallet", 0);
-            if (nMaxVersion == 0) // the -upgradewallet without argument case
-            {
-                LogPrintf("Performing wallet upgrade to %i\n", FEATURE_LATEST);
-                nMaxVersion = CLIENT_VERSION;
-                pwalletMain->SetMinVersion(FEATURE_LATEST); // permanently upgrade the wallet immediately
-            }
-            else
-                LogPrintf("Allowing wallet upgrade up to %i\n", nMaxVersion);
-            if (nMaxVersion < pwalletMain->GetVersion())
-                strErrors << _("Cannot downgrade wallet") << "\n";
-            pwalletMain->SetMaxVersion(nMaxVersion);
+            LogPrintf("There is no upgrade required (your version: %d)\n", pwalletMain->GetVersion());
+
         }
 
         if (fFirstRun)
@@ -1173,9 +1152,8 @@ bool AppInit2(boost::thread_group& threadGroup)
             pindexRescan = chainActive.Genesis();
         else
         {
-            CWalletDB walletdb(strWalletFile);
             CBlockLocator locator;
-            if (walletdb.ReadBestBlock(locator))
+            if (pwalletMain->ReadBestBlock(locator))
                 pindexRescan = FindForkInGlobalIndex(chainActive, locator);
             else
                 pindexRescan = chainActive.Genesis();
@@ -1188,7 +1166,6 @@ bool AppInit2(boost::thread_group& threadGroup)
             pwalletMain->ScanForWalletTransactions(pindexRescan, true);
             LogPrintf(" rescan      %15dms\n", GetTimeMillis() - nStart);
             pwalletMain->SetBestChain(chainActive.GetLocator());
-            nWalletDBUpdated++;
 
             // Restore wallet transaction metadata after -zapwallettxes=1
             if (GetBoolArg("-zapwallettxes", false) && GetArg("-zapwallettxes", "1") != "2")
@@ -1210,7 +1187,7 @@ bool AppInit2(boost::thread_group& threadGroup)
                         copyTo->fFromMe = copyFrom->fFromMe;
                         copyTo->strFromAccount = copyFrom->strFromAccount;
                         copyTo->nOrderPos = copyFrom->nOrderPos;
-                        copyTo->WriteToDisk(&walletdb);
+                        pwalletMain->WriteTxToDisk(*copyTo);
                     }
                 }
             }
@@ -1278,9 +1255,6 @@ bool AppInit2(boost::thread_group& threadGroup)
     if (pwalletMain) {
         // Add wallet transactions that aren't already in a block to mapTransactions
         pwalletMain->ReacceptWalletTransactions();
-
-        // Run a thread to flush wallet periodically
-        threadGroup.create_thread(boost::bind(&ThreadFlushWalletDB, boost::ref(pwalletMain->strWalletFile)));
     }
 #endif
 
