@@ -964,7 +964,11 @@ Endereço: %4</translation>
         <source>GB of free space available</source>
         <translation>GB de espaço disponível</translation>
     </message>
-    </context>
+    <message>
+        <source>(of %1GB needed)</source>
+        <translation>(Mais de %1GB necessário)</translation>
+    </message>
+</context>
 <context>
     <name>OpenURIDialog</name>
     <message>
@@ -1269,6 +1273,10 @@ Endereço: %4</translation>
         <translation>URI não pode ser decodificado! Isso pode ter sido causado por um endereço Bitcoin inválido ou por parâmetros URI malformados.</translation>
     </message>
     <message>
+        <source>Requested payment amount of %1 is too small (considered dust).</source>
+        <translation>Valor do pagamento solicitado de %1 é muito pequeno (Considerado poeira).</translation>
+    </message>
+    <message>
         <source>Payment request error</source>
         <translation>Erro no pedido de pagamento</translation>
     </message>
@@ -1301,8 +1309,20 @@ Endereço: %4</translation>
         <translation>Cobrança não verificada para scripts de pagamento personalizados não é suportado.</translation>
     </message>
     <message>
+        <source>Refund from %1</source>
+        <translation>Reembolso de %1</translation>
+    </message>
+    <message>
+        <source>Error communicating with %1: %2</source>
+        <translation>Erro na comunicação com %1: %2</translation>
+    </message>
+    <message>
         <source>Payment request can not be parsed or processed!</source>
         <translation>Cobrança não pôde ser processada!</translation>
+    </message>
+    <message>
+        <source>Bad response from server %1</source>
+        <translation>Resposta incorreta do servidor %1</translation>
     </message>
     <message>
         <source>Payment acknowledged</source>
@@ -1326,6 +1346,10 @@ Endereço: %4</translation>
     <message>
         <source>Error: Invalid combination of -regtest and -testnet.</source>
         <translation>Erro: Combinação inválida de-regtest e testnet.</translation>
+    </message>
+    <message>
+        <source>Bitcoin Core didn't yet exit safely...</source>
+        <translation>Bitcoin Core ainda não terminou com segurança...</translation>
     </message>
     <message>
         <source>Enter a Bitcoin address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)</source>
@@ -2025,6 +2049,10 @@ Endereço: %4</translation>
     <message>
         <source>Verify the message to ensure it was signed with the specified Bitcoin address</source>
         <translation>Verificar mensagem para se assegurar que ela foi assinada pelo dono de um endereço Bitcoin específico.</translation>
+    </message>
+    <message>
+        <source>Verify &amp;Message</source>
+        <translation>Verificar &amp;Mensagem</translation>
     </message>
     <message>
         <source>Reset all verify message fields</source>
@@ -3001,6 +3029,10 @@ por exemplo: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com⏎
         <translation>Aguarde um servidor RPC para iniciar</translation>
     </message>
     <message>
+        <source>Wallet %s resides outside data directory %s</source>
+        <translation>Carteira %s reside fora do diretório de dados %s</translation>
+    </message>
+    <message>
         <source>Wallet options:</source>
         <translation>Opções da Carteira:</translation>
     </message>
@@ -3021,6 +3053,10 @@ por exemplo: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com⏎
         <translation>Não foi possível obter proteção exclusiva ao diretório de dados %s. Bitcoin Core já está sendo executado provavelmente.</translation>
     </message>
     <message>
+        <source>Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)</source>
+        <translation>Executa o comando quando um alerta relevante é recebido ou vemos uma longa segregação  (%s em cmd é substituída pela mensagem)</translation>
+    </message>
+    <message>
         <source>Output debugging information (default: 0, supplying &lt;category&gt; is optional)</source>
         <translation>Informação de saída de debug (padrão: 0, definir &lt;category&gt; é opcional)</translation>
     </message>
@@ -3035,6 +3071,10 @@ por exemplo: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com⏎
     <message>
         <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: '%s'</source>
         <translation>Quantidade inválida para -minrelaytxfee=&lt;amount&gt;: '%s'</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -mintxfee=&lt;amount&gt;: '%s'</source>
+        <translation>Valor inválido para -mintxfee=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
         <source>Limit size of signature cache to &lt;n&gt; entries (default: 50000)</source>

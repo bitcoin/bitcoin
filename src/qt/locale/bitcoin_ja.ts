@@ -2,6 +2,10 @@
 <context>
     <name>AboutDialog</name>
     <message>
+        <source>About Bitcoin Core</source>
+        <translation>Bitcoinコアについて</translation>
+    </message>
+    <message>
         <source>&lt;b&gt;Bitcoin Core&lt;/b&gt; version</source>
         <translation>&lt;b&gt;ビットコインコア&lt;/b&gt; バージョン</translation>
     </message>
@@ -97,6 +101,10 @@ MIT/X11 ソフトウェア ライセンスの下で配布されています。�
     <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
         <translation>これらは支払いを送信するためのあなたの Bitcoin アドレスです。コインを送信する前に、常に額と受信アドレスを確認してください。</translation>
+    </message>
+    <message>
+        <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
+        <translation>これらは支払いを受け取るためのビットコインアドレスです。トランザクションごとに新しい受け取り用アドレスを作成することが推奨されます。</translation>
     </message>
     <message>
         <source>Copy &amp;Label</source>
@@ -416,8 +424,16 @@ MIT/X11 ソフトウェア ライセンスの下で配布されています。�
         <translation>Bitcoin のコア</translation>
     </message>
     <message>
+        <source>Request payments (generates QR codes and bitcoin: URIs)</source>
+        <translation>支払いを要求する (QRコードとbitcoin:ではじまるURIを生成する)</translation>
+    </message>
+    <message>
         <source>&amp;About Bitcoin Core</source>
         <translation>ビットコインコアについて (&amp;A)</translation>
+    </message>
+    <message>
+        <source>Show the list of used sending addresses and labels</source>
+        <translation>使用済みの送金用アドレスとラベルの一覧を表示する</translation>
     </message>
     <message>
         <source>Show the list of used receiving addresses and labels</source>
@@ -618,6 +634,14 @@ Address: %4
         <translation>取引 ID をコピー</translation>
     </message>
     <message>
+        <source>Lock unspent</source>
+        <translation>未使用トランザクションをロックする</translation>
+    </message>
+    <message>
+        <source>Unlock unspent</source>
+        <translation>未使用トランザクションをアンロックする</translation>
+    </message>
+    <message>
         <source>Copy quantity</source>
         <translation>数量をコピーする</translation>
     </message>
@@ -731,6 +755,10 @@ Address: %4
 <context>
     <name>HelpMessageDialog</name>
     <message>
+        <source>Bitcoin Core - Command-line options</source>
+        <translation>ビットコインコア - コマンドライン オプション</translation>
+    </message>
+    <message>
         <source>Bitcoin Core</source>
         <translation>Bitcoin のコア</translation>
     </message>
@@ -772,6 +800,10 @@ Address: %4
     <message>
         <source>Welcome</source>
         <translation>ようこそ</translation>
+    </message>
+    <message>
+        <source>Welcome to Bitcoin Core.</source>
+        <translation>ようこそ！</translation>
     </message>
     <message>
         <source>Use the default data directory</source>
@@ -858,6 +890,10 @@ Address: %4
     <message>
         <source>MB</source>
         <translation>MB</translation>
+    </message>
+    <message>
+        <source>Number of script &amp;verification threads</source>
+        <translation>スクリプト検証用スレッド数 (&amp;V)</translation>
     </message>
     <message>
         <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
@@ -1267,12 +1303,20 @@ Address: %4
         <translation>メッセージ (&amp;M):</translation>
     </message>
     <message>
+        <source>Clear all fields of the form.</source>
+        <translation>全ての入力項目をクリア</translation>
+    </message>
+    <message>
         <source>Clear</source>
         <translation>クリア</translation>
     </message>
     <message>
         <source>Show</source>
         <translation>表示</translation>
+    </message>
+    <message>
+        <source>Remove the selected entries from the list</source>
+        <translation>リストから選択項目を削除</translation>
     </message>
     <message>
         <source>Copy label</source>
@@ -1420,6 +1464,10 @@ Address: %4
         <translation>受取人を追加 (&amp;R)</translation>
     </message>
     <message>
+        <source>Clear all fields of the form.</source>
+        <translation>全ての入力項目をクリア</translation>
+    </message>
+    <message>
         <source>Clear &amp;All</source>
         <translation>すべてクリア (&amp;A)</translation>
     </message>
@@ -1557,7 +1605,15 @@ Address: %4
 </context>
 <context>
     <name>ShutdownWindow</name>
-    </context>
+    <message>
+        <source>Bitcoin Core is shutting down...</source>
+        <translation>Bitcoin Coreをシャットダウンしています。</translation>
+    </message>
+    <message>
+        <source>Do not shut down the computer until this window disappears.</source>
+        <translation>このウィンドウが消えるまでコンピュータをシャットダウンしないで下さい。</translation>
+    </message>
+</context>
 <context>
     <name>SignVerifyMessageDialog</name>
     <message>
@@ -2097,7 +2153,11 @@ Address: %4
 </context>
 <context>
     <name>WalletFrame</name>
-    </context>
+    <message>
+        <source>No wallet has been loaded.</source>
+        <translation>ウォレットがロードされていません</translation>
+    </message>
+</context>
 <context>
     <name>WalletModel</name>
     <message>
@@ -2557,6 +2617,10 @@ rpcpassword=%s
     <message>
         <source>Specify connection timeout in milliseconds (default: 5000)</source>
         <translation>接続のタイムアウトをミリセコンドで指定 (初期値: 5000)</translation>
+    </message>
+    <message>
+        <source>Start Bitcoin Core Daemon</source>
+        <translation>Bitcoinコアのデーモンを起動</translation>
     </message>
     <message>
         <source>System error: </source>
