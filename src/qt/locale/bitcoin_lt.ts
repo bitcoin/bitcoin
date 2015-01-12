@@ -2,6 +2,10 @@
 <context>
     <name>AboutDialog</name>
     <message>
+        <source>About Bitcoin Core</source>
+        <translation>Apie Bitcoin Core</translation>
+    </message>
+    <message>
         <source>
 This is experimental software.
 
@@ -58,6 +62,18 @@ Platinama pagal MIT/X11 licenciją, kurią rasite faile COPYING arba http://www.
         <translation>&amp;Trinti</translation>
     </message>
     <message>
+        <source>C&amp;hoose</source>
+        <translation>P&amp;asirinkti</translation>
+    </message>
+    <message>
+        <source>Sending addresses</source>
+        <translation>Siunčiami adresai</translation>
+    </message>
+    <message>
+        <source>Receiving addresses</source>
+        <translation>Gaunami adresai</translation>
+    </message>
+    <message>
         <source>Copy &amp;Label</source>
         <translation>Kopijuoti ž&amp;ymę</translation>
     </message>
@@ -66,8 +82,16 @@ Platinama pagal MIT/X11 licenciją, kurią rasite faile COPYING arba http://www.
         <translation>&amp;Keisti</translation>
     </message>
     <message>
+        <source>Export Address List</source>
+        <translation>Eksportuoti adresų sąrašą</translation>
+    </message>
+    <message>
         <source>Comma separated file (*.csv)</source>
         <translation>Kableliais išskirtas failas (*.csv)</translation>
+    </message>
+    <message>
+        <source>Exporting Failed</source>
+        <translation>Eksportavimas nepavyko</translation>
     </message>
     </context>
 <context>
@@ -203,6 +227,10 @@ Platinama pagal MIT/X11 licenciją, kurią rasite faile COPYING arba http://www.
         <translation>&amp;Apžvalga</translation>
     </message>
     <message>
+        <source>Node</source>
+        <translation>Taškas</translation>
+    </message>
+    <message>
         <source>Show general overview of wallet</source>
         <translation>Rodyti piniginės bendrą apžvalgą</translation>
     </message>
@@ -249,6 +277,14 @@ Platinama pagal MIT/X11 licenciją, kurią rasite faile COPYING arba http://www.
     <message>
         <source>&amp;Change Passphrase...</source>
         <translation>&amp;Keisti slaptafrazę...</translation>
+    </message>
+    <message>
+        <source>&amp;Sending addresses...</source>
+        <translation>&amp;Siunčiami adresai...</translation>
+    </message>
+    <message>
+        <source>&amp;Receiving addresses...</source>
+        <translation>&amp;Gaunami adresai...</translation>
     </message>
     <message>
         <source>Importing blocks from disk...</source>
@@ -311,6 +347,10 @@ Platinama pagal MIT/X11 licenciją, kurią rasite faile COPYING arba http://www.
         <translation>Rodyti arba slėpti pagrindinį langą</translation>
     </message>
     <message>
+        <source>Encrypt the private keys that belong to your wallet</source>
+        <translation>Užšifruoti privačius raktus, kurie priklauso jūsų piniginei</translation>
+    </message>
+    <message>
         <source>&amp;File</source>
         <translation>&amp;Failas</translation>
     </message>
@@ -333,6 +373,10 @@ Platinama pagal MIT/X11 licenciją, kurią rasite faile COPYING arba http://www.
     <message>
         <source>Bitcoin Core</source>
         <translation>Bitcoin branduolys</translation>
+    </message>
+    <message>
+        <source>&amp;About Bitcoin Core</source>
+        <translation>&amp;Apie Bitcoin Core</translation>
     </message>
     <message>
         <source>Bitcoin client</source>
@@ -412,8 +456,44 @@ Adresas: %4</translation>
 <context>
     <name>CoinControlDialog</name>
     <message>
+        <source>Quantity:</source>
+        <translation>Kiekis:</translation>
+    </message>
+    <message>
+        <source>Bytes:</source>
+        <translation>Baitai:</translation>
+    </message>
+    <message>
         <source>Amount:</source>
         <translation>Suma:</translation>
+    </message>
+    <message>
+        <source>Priority:</source>
+        <translation>Pirmumas:</translation>
+    </message>
+    <message>
+        <source>Fee:</source>
+        <translation>Mokestis:</translation>
+    </message>
+    <message>
+        <source>After Fee:</source>
+        <translation>Po mokesčio:</translation>
+    </message>
+    <message>
+        <source>Change:</source>
+        <translation>Graža:</translation>
+    </message>
+    <message>
+        <source>(un)select all</source>
+        <translation>(ne)pasirinkti viską</translation>
+    </message>
+    <message>
+        <source>Tree mode</source>
+        <translation>Medžio režimas</translation>
+    </message>
+    <message>
+        <source>List mode</source>
+        <translation>Sąrašo režimas</translation>
     </message>
     <message>
         <source>Amount</source>
@@ -428,8 +508,16 @@ Adresas: %4</translation>
         <translation>Data</translation>
     </message>
     <message>
+        <source>Confirmations</source>
+        <translation>Patvirtinimai</translation>
+    </message>
+    <message>
         <source>Confirmed</source>
         <translation>Patvirtintas</translation>
+    </message>
+    <message>
+        <source>Priority</source>
+        <translation>Pirmumas</translation>
     </message>
     <message>
         <source>Copy address</source>
@@ -442,6 +530,74 @@ Adresas: %4</translation>
     <message>
         <source>Copy amount</source>
         <translation>Kopijuoti sumą</translation>
+    </message>
+    <message>
+        <source>Copy quantity</source>
+        <translation>Kopijuoti kiekį</translation>
+    </message>
+    <message>
+        <source>Copy fee</source>
+        <translation>Kopijuoti mokestį</translation>
+    </message>
+    <message>
+        <source>Copy after fee</source>
+        <translation>Kopijuoti po mokesčio</translation>
+    </message>
+    <message>
+        <source>Copy bytes</source>
+        <translation>Kopijuoti baitus</translation>
+    </message>
+    <message>
+        <source>Copy priority</source>
+        <translation>Kopijuoti pirmumą</translation>
+    </message>
+    <message>
+        <source>highest</source>
+        <translation>auksčiausias</translation>
+    </message>
+    <message>
+        <source>higher</source>
+        <translation>aukštesnis</translation>
+    </message>
+    <message>
+        <source>high</source>
+        <translation>aukštas</translation>
+    </message>
+    <message>
+        <source>medium-high</source>
+        <translation>vidutiniškai aukštas</translation>
+    </message>
+    <message>
+        <source>medium</source>
+        <translation>vidutiniškai</translation>
+    </message>
+    <message>
+        <source>low-medium</source>
+        <translation>žemai-vidutiniškas</translation>
+    </message>
+    <message>
+        <source>low</source>
+        <translation>žemas</translation>
+    </message>
+    <message>
+        <source>lower</source>
+        <translation>žemesnis</translation>
+    </message>
+    <message>
+        <source>lowest</source>
+        <translation>žemiausias</translation>
+    </message>
+    <message>
+        <source>none</source>
+        <translation>niekas</translation>
+    </message>
+    <message>
+        <source>yes</source>
+        <translation>taip</translation>
+    </message>
+    <message>
+        <source>no</source>
+        <translation>ne</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -497,6 +653,10 @@ Adresas: %4</translation>
 </context>
 <context>
     <name>FreespaceChecker</name>
+    <message>
+        <source>name</source>
+        <translation>pavadinimas</translation>
+    </message>
     </context>
 <context>
     <name>HelpMessageDialog</name>
@@ -534,6 +694,10 @@ Adresas: %4</translation>
     <message>
         <source>Welcome</source>
         <translation>Sveiki</translation>
+    </message>
+    <message>
+        <source>Welcome to Bitcoin Core.</source>
+        <translation>Sveiki atvykę į Bitcoin Core.</translation>
     </message>
     <message>
         <source>Bitcoin</source>
@@ -656,6 +820,10 @@ Adresas: %4</translation>
     <message>
         <source>default</source>
         <translation>numatyta</translation>
+    </message>
+    <message>
+        <source>none</source>
+        <translation>niekas</translation>
     </message>
     <message>
         <source>The supplied proxy address is invalid.</source>
@@ -901,8 +1069,32 @@ Adresas: %4</translation>
         <translation>Siųsti monetas</translation>
     </message>
     <message>
+        <source>Quantity:</source>
+        <translation>Kiekis:</translation>
+    </message>
+    <message>
+        <source>Bytes:</source>
+        <translation>Baitai:</translation>
+    </message>
+    <message>
         <source>Amount:</source>
         <translation>Suma:</translation>
+    </message>
+    <message>
+        <source>Priority:</source>
+        <translation>Pirmumas:</translation>
+    </message>
+    <message>
+        <source>Fee:</source>
+        <translation>Mokestis:</translation>
+    </message>
+    <message>
+        <source>After Fee:</source>
+        <translation>Po mokesčio:</translation>
+    </message>
+    <message>
+        <source>Change:</source>
+        <translation>Graža:</translation>
     </message>
     <message>
         <source>Send to multiple recipients at once</source>
@@ -933,8 +1125,28 @@ Adresas: %4</translation>
         <translation>Patvirtinti monetų siuntimą</translation>
     </message>
     <message>
+        <source>Copy quantity</source>
+        <translation>Kopijuoti kiekį</translation>
+    </message>
+    <message>
         <source>Copy amount</source>
         <translation>Kopijuoti sumą</translation>
+    </message>
+    <message>
+        <source>Copy fee</source>
+        <translation>Kopijuoti mokestį</translation>
+    </message>
+    <message>
+        <source>Copy after fee</source>
+        <translation>Kopijuoti po mokesčio</translation>
+    </message>
+    <message>
+        <source>Copy bytes</source>
+        <translation>Kopijuoti baitus</translation>
+    </message>
+    <message>
+        <source>Copy priority</source>
+        <translation>Kopijuoti pirmumą</translation>
     </message>
     <message>
         <source>The recipient address is not valid, please recheck.</source>
@@ -1394,6 +1606,10 @@ Adresas: %4</translation>
     <message>
         <source>Show transaction details</source>
         <translation>Rodyti sandėrio detales</translation>
+    </message>
+    <message>
+        <source>Exporting Failed</source>
+        <translation>Eksportavimas nepavyko</translation>
     </message>
     <message>
         <source>Comma separated file (*.csv)</source>

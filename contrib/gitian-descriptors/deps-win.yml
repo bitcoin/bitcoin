@@ -14,7 +14,7 @@ packages:
 reference_datetime: "2011-01-30 00:00:00"
 remotes: []
 files:
-- "openssl-1.0.1i.tar.gz"
+- "openssl-1.0.1k.tar.gz"
 - "db-4.8.30.NC.tar.gz"
 - "miniupnpc-1.9.20140701.tar.gz"
 - "zlib-1.2.8.tar.gz"
@@ -28,7 +28,7 @@ script: |
   INDIR=$HOME/build
   TEMPDIR=$HOME/tmp
   # Input Integrity Check
-  echo "3c179f46ca77069a6a0bac70212a9b3b838b2f66129cb52d568837fc79d8fcc7  openssl-1.0.1i.tar.gz"  | sha256sum -c
+  echo "8f9faeaebad088e772f4ef5e38252d472be4d878c6b3a2718c10a4fcebe7a41c  openssl-1.0.1k.tar.gz"  | sha256sum -c
   echo "12edc0df75bf9abd7f82f821795bcee50f42cb2e5f76a6a281b85732798364ef  db-4.8.30.NC.tar.gz"    | sha256sum -c
   echo "26f3985bad7768b8483b793448ae49414cdc4451d0ec83e7c1944367e15f9f07  miniupnpc-1.9.20140701.tar.gz"   | sha256sum -c
   echo "36658cb768a54c1d4dec43c3116c27ed893e88b02ecfcb44f2166f9c0b7f2a0d  zlib-1.2.8.tar.gz"      | sha256sum -c
@@ -48,8 +48,8 @@ script: |
     mkdir -p $INSTALLPREFIX $BUILDDIR
     cd $BUILDDIR
     #
-    tar xzf $INDIR/openssl-1.0.1i.tar.gz
-    cd openssl-1.0.1i
+    tar xzf $INDIR/openssl-1.0.1k.tar.gz
+    cd openssl-1.0.1k
     if [ "$BITS" == "32" ]; then
       OPENSSL_TGT=mingw
     else
@@ -124,5 +124,5 @@ script: |
     done
     #
     cd $INSTALLPREFIX
-    find include lib | sort | zip -X@ $OUTDIR/bitcoin-deps-win$BITS-gitian-r15.zip
+    find include lib | sort | zip -X@ $OUTDIR/bitcoin-deps-win$BITS-gitian-r16.zip
   done # for BITS in

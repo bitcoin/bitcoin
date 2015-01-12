@@ -3,9 +3,9 @@ Darkcoin Core staging tree 0.11
 
 http://www.darkcoin.io
 
-Copyright (c) 2009-2014 Bitcoin Core Developers
+Copyright (c) 2009-2015 Bitcoin Core Developers
 
-Copyright (c) 2014 Darkcoin Core Developers
+Copyright (c) 2014-2015 Darkcoin Core Developers
 
 
 What is Darkcoin?
