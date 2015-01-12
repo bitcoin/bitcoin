@@ -20,10 +20,6 @@ shut down (which might take a few minutes for older versions), then run the
 installer (on Windows) or just copy over /Applications/Bitcoin-Qt (on Mac) or
 bitcoind/bitcoin-qt (on Linux).
 
-If you are upgrading from version 0.7.2 or earlier, the first time you run
-0.10.0 your blockchain files will be re-indexed, which will take anywhere from 
-30 minutes to several hours, depending on the speed of your machine.
-
 Downgrading warning
 ---------------------
 
@@ -382,6 +378,7 @@ Block and transaction handling:
 - `723d12c` Remove txn which are invalidated by coinbase maturity during reorg
 - `0cb8763` Check against MANDATORY flags prior to accepting to mempool
 - `8446262` Reject headers that build on an invalid parent
+- `008138c` Bugfix: only track UTXO modification after lookup
 
 P2P protocol and network code:
 - `f80cffa` Do not trigger a DoS ban if SCRIPT_VERIFY_NULLDUMMY fails
@@ -409,6 +406,10 @@ P2P protocol and network code:
 - `845c86d` Do not use third party services for IP detection
 - `12a49ca` Limit the number of new addressses to accumulate
 - `35e408f` Regard connection failures as attempt for addrman
+- `a3a7317` Introduce 10 minute block download timeout
+- `3022e7d` Require sufficent priority for relay of free transactions
+- `58fda4d` Update seed IPs, based on bitcoin.sipa.be crawler data
+- `18021d0` Remove bitnodes.io from dnsseeds.
 
 Validation:
 - `6fd7ef2` Also switch the (unused) verification code to low-s instead of even-s
@@ -423,6 +424,9 @@ Validation:
 - `0391423` Discourage NOPs reserved for soft-fork upgrades
 - `98b135f` Make STRICTENC invalid pubkeys fail the script rather than the opcode
 - `307f7d4` Report script evaluation failures in log and reject messages
+- `ace39db` consensus: guard against openssl's new strict DER checks
+- `12b7c44` Improve robustness of DER recoding code
+- `76ce5c8` fail immediately on an empty signature
 
 Build system:
 - `f25e3ad` Fix build in OS X 10.9
@@ -439,6 +443,8 @@ Build system:
 - `d5fd094` build: fix qt test build when libprotobuf is in a non-standard path
 - `2cf5f16` Add libbitcoinconsensus library
 - `914868a` build: add a deterministic dmg signer 
+- `2d375fe` depends: bump openssl to 1.0.1k
+- `b7a4ecc` Build: Only check for boost when building code that requires it
 
 Wallet:
 - `b33d1f5` Use fee/priority estimates in wallet CreateTransaction
@@ -494,6 +500,9 @@ GUI:
 - `e7876b2` [Wallet] Prevent user from paying a non-sense fee
 - `c1c9d5b` Add Smartfee to GUI
 - `e0a25c5` Make askpassphrase dialog behave more sanely
+- `94b362d` On close of splashscreen interrupt verifyDB
+- `b790d13` English translation update
+- `8543b0d` Correct tooltip on address book page
 
 Tests:
 - `b41e594` Fix script test handling of empty scripts
@@ -552,6 +561,8 @@ Tests:
 - `34318d7` RPC-test based on invalidateblock for mempool coinbase spends
 - `76ec867` Use actually valid transactions for script tests
 - `c8589bf` Add actual signature tests
+- `e2677d7` Fix smartfees test for change to relay policy
+- `263b65e` tests: run sanity checks in tests too
 
 Miscellaneous:
 - `122549f` Fix incorrect checkpoint data for testnet3
@@ -580,6 +591,9 @@ Miscellaneous:
 - `7ab4358` Update bash-completion for v0.10
 - `6e6a36c` contrib: show pull # in prompt for github-merge script
 - `5b9f842` Upgrade leveldb to 1.18, make chainstate databases compatible between ARM and x86 (issue #2293)
+- `4e7c219` Catch UTXO set read errors and shutdown
+- `867c600` Catch LevelDB errors during flush
+- `06ca065` Fix CScriptID(const CScript& in) in empty script case
 
 Credits
 =======
