@@ -70,7 +70,9 @@ qint64 WalletModel::getBalance(const CCoinControl *coinControl) const
 
 qint64 WalletModel::getAnonymizedBalance() const
 {
-    return wallet->GetAnonymizedBalance();
+    qint64 ret = wallet->GetAnonymizedBalance() - (COIN/10);
+    if (ret < 0) ret = 0;
+    return ret;
 }
 
 qint64 WalletModel::getUnconfirmedBalance() const

@@ -366,8 +366,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
         nLastBlockTx = nBlockTx;
         nLastBlockSize = nBlockSize;
         LogPrintf("CreateNewBlock(): total size %u\n", nBlockSize);
-
-        int64_t blockValue = GetBlockValue(GetNextWorkRequired(pindexPrev, pblock), pindexPrev->nHeight+1, nFees);
+        int64_t blockValue = GetBlockValue(pindexPrev->nBits, pindexPrev->nHeight, nFees);
         int64_t masternodePayment = GetMasternodePayment(pindexPrev->nHeight+1, blockValue);
 
         //create masternode payment
