@@ -15,7 +15,7 @@ files:
 - "boost_1_55_0.tar.bz2"
 - "db-4.8.30.NC.tar.gz"
 - "miniupnpc-1.9.20140701.tar.gz"
-- "openssl-1.0.1i.tar.gz"
+- "openssl-1.0.1k.tar.gz"
 - "protobuf-2.5.0.tar.bz2"
 - "qrencode-3.4.3.tar.bz2"
 - "MacOSX10.7.sdk.tar.gz"
@@ -26,11 +26,11 @@ script: |
   echo "fff00023dd79486d444c8e29922f4072e1d451fc5a4d2b6075852ead7f2b7b52  boost_1_55_0.tar.bz2" | sha256sum -c
   echo "12edc0df75bf9abd7f82f821795bcee50f42cb2e5f76a6a281b85732798364ef  db-4.8.30.NC.tar.gz" | sha256sum -c
   echo "26f3985bad7768b8483b793448ae49414cdc4451d0ec83e7c1944367e15f9f07  miniupnpc-1.9.20140701.tar.gz"   | sha256sum -c
-  echo "3c179f46ca77069a6a0bac70212a9b3b838b2f66129cb52d568837fc79d8fcc7  openssl-1.0.1i.tar.gz" | sha256sum -c
+  echo "8f9faeaebad088e772f4ef5e38252d472be4d878c6b3a2718c10a4fcebe7a41c  openssl-1.0.1k.tar.gz" | sha256sum -c
   echo "13bfc5ae543cf3aa180ac2485c0bc89495e3ae711fc6fab4f8ffe90dfb4bb677  protobuf-2.5.0.tar.bz2" | sha256sum -c
   echo "dfd71487513c871bad485806bfd1fdb304dedc84d2b01a8fb8e0940b50597a98  qrencode-3.4.3.tar.bz2" | sha256sum -c
 
-  REVISION=r6
+  REVISION=r7
   export SOURCES_PATH=`pwd`
   export TAR_OPTIONS="-m --mtime="$REFERENCE_DATE\\\ $REFERENCE_TIME""
   export PATH=$HOME:$PATH
@@ -88,8 +88,8 @@ script: |
   popd
 
   # openssl
-  SOURCE_FILE=${SOURCES_PATH}/openssl-1.0.1i.tar.gz
-  BUILD_DIR=${BUILD_BASE}/openssl-1.0.1i
+  SOURCE_FILE=${SOURCES_PATH}/openssl-1.0.1k.tar.gz
+  BUILD_DIR=${BUILD_BASE}/openssl-1.0.1k
 
   tar -C ${BUILD_BASE} -xf ${SOURCE_FILE}
   pushd ${BUILD_DIR}
