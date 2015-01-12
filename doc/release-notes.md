@@ -53,28 +53,28 @@ deploy.
 ================
 
 Validation:
-- b8e81b7 consensus: guard against openssl's new strict DER checks
-- 60c51f1 fail immediately on an empty signature
-- 037bfef Improve robustness of DER recoding code
+- `b8e81b7` consensus: guard against openssl's new strict DER checks
+- `60c51f1` fail immediately on an empty signature
+- `037bfef` Improve robustness of DER recoding code
 
 Command-line options:
-- cd5164a Make -proxy set all network types, avoiding a connect leak.
+- `cd5164a` Make -proxy set all network types, avoiding a connect leak.
 
 P2P:
-- bb424e4 Limit the number of new addressses to accumulate
+- `bb424e4` Limit the number of new addressses to accumulate
 
 RPC:
-- 0a94661 Disable SSLv3 (in favor of TLS) for the RPC client and server.
+- `0a94661` Disable SSLv3 (in favor of TLS) for the RPC client and server.
 
 Build system:
-- f047dfa gitian: openssl-1.0.1i.tar.gz -> openssl-1.0.1k.tar.gz
-- 5b9f78d build: Fix OSX build when using Homebrew and qt5
-- ffab1dd Keep symlinks when copying into .app bundle
-- 613247f osx: fix signing to make Gatekeeper happy (again)
+- `f047dfa` gitian: openssl-1.0.1i.tar.gz -> openssl-1.0.1k.tar.gz
+- `5b9f78d` build: Fix OSX build when using Homebrew and qt5
+- `ffab1dd` Keep symlinks when copying into .app bundle
+- `613247f` osx: fix signing to make Gatekeeper happy (again)
 
 Miscellaneous:
-- 25b49b5 Refactor -alertnotify code
-- 2743529 doc: Add instructions for consistent Mac OS X build names
+- `25b49b5` Refactor -alertnotify code
+- `2743529` doc: Add instructions for consistent Mac OS X build names
 
 Credits
 --------
