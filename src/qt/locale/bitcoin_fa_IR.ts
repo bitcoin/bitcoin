@@ -13,6 +13,10 @@
         <translation>گشایش حسابی جدید</translation>
     </message>
     <message>
+        <source>&amp;New</source>
+        <translation>جدید</translation>
+    </message>
+    <message>
         <source>Copy the currently selected address to the system clipboard</source>
         <translation>کپی کردن حساب انتخاب شده به حافظه سیستم - کلیپ بورد</translation>
     </message>
