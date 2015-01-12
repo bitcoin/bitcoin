@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>560</width>
+    <width>576</width>
     <height>400</height>
    </rect>
   </property>
@@ -130,7 +130,6 @@
          </property>
         </spacer>
        </item>
-
        <item>
         <layout class="QHBoxLayout" name="horizontalLayout_2_Main">
          <item>
@@ -149,7 +148,7 @@
             <number>1</number>
            </property>
            <property name="maximum">
-            <number>8</number>
+            <number>16</number>
            </property>
            <property name="value">
             <number>2</number>
@@ -158,7 +157,7 @@
          </item>
         </layout>
        </item>
-        <item>
+       <item>
         <layout class="QHBoxLayout" name="horizontalLayout">
          <item>
           <widget class="QLabel" name="label_2">
@@ -201,9 +200,6 @@
         </layout>
        </item>
       </layout>
-
-
-
      </widget>
      <widget class="QWidget" name="tabWallet">
       <attribute name="title">
