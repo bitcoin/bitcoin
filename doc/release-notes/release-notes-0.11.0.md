@@ -86,6 +86,7 @@ RPC:
 - Add rpc command 'getunconfirmedbalance' to obtain total unconfirmed balance
 - Explicitly ensure that wallet is unlocked in `importprivkey`
 - Add check for valid keys in `importprivkey`
+- Disable SSLv3 (in favor of TLS) for the RPC client and server.
 
 
 Command-line options:
@@ -102,6 +103,7 @@ Command-line options:
 - RPC client option: '-rpcwait', to wait for server start
 - Remove '-logtodebugger'
 - Allow `-noserver` with darkcoind
+- Make -proxy set all network types, avoiding a connect leak.
 
 
 Block-chain handling and storage:
@@ -145,6 +147,7 @@ Protocol and network code:
 - Process received messages one at a time without sleeping between messages
 - Improve logging of failed connections
 - Add some additional logging to give extra network insight
+- Limit the number of new addressses to accumulate
 
 
 Wallet:
@@ -236,6 +239,9 @@ Validation:
 - Reject non-canonically-encoded serialization sizes
 - Reject dust amounts during validation
 - Accept nLockTime transactions that finalize in the next block
+- consensus: guard against openssl's new strict DER checks
+- fail immediately on an empty signature
+- Improve robustness of DER recoding code
 
 
 Build system:
@@ -260,6 +266,9 @@ Build system:
 - Solaris compatibility fixes
 - Check integrity of gitian input source tarballs
 - Enable full GCC Stack-smashing protection for all OSes
+- build: Fix OSX build when using Homebrew and qt5
+- Keep symlinks when copying into .app bundle
+- osx: fix signing to make Gatekeeper happy (again)
 
 
 Miscellaneous:
@@ -274,3 +283,5 @@ Miscellaneous:
 - Add missing cs_main and wallet locks
 - Avoid exception at startup when system locale not recognized
 - devtools: add a script to fetch and postprocess translations
+- Refactor -alertnotify code
+- doc: Add instructions for consistent Mac OS X build names
