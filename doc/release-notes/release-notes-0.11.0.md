@@ -28,6 +28,8 @@ Darkcoin Core:
 - Add `-regtest` mode, similar to testnet but private with instant block
   generation with `setgenerate` RPC.
 - Add separate darkcoin-cli client
+- Implemented KeyPass integration for CLI, RPC and Qt: 
+  `keepass`, `keepassport`, `keepasskey`, `keepassid`, `keepassname`
 
 
 Masternodes:
@@ -49,6 +51,7 @@ Darksend:
 - Added denomination information to Overview tab
 - Added more detailed Darksend status information to Overview tab
 - Added Darksend high precision matching engine
+- Added Darksend balance to `getinfo`
 
 
 RPC:
