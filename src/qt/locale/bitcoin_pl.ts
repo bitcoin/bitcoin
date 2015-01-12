@@ -570,6 +570,10 @@ Adres: %4
 <context>
     <name>CoinControlDialog</name>
     <message>
+        <source>Coin Control Address Selection</source>
+        <translation>Sterowanie Monetą Wybór Adresu</translation>
+    </message>
+    <message>
         <source>Quantity:</source>
         <translation>Ilość:</translation>
     </message>
@@ -676,6 +680,10 @@ Adres: %4
     <message>
         <source>Copy priority</source>
         <translation>Skopiuj priorytet</translation>
+    </message>
+    <message>
+        <source>Copy low output</source>
+        <translation>Skopiuj niską wartość</translation>
     </message>
     <message>
         <source>Copy change</source>
@@ -1611,6 +1619,10 @@ Adres: %4
         <translation>Wyślij Monety</translation>
     </message>
     <message>
+        <source>Coin Control Features</source>
+        <translation>Funkcje sterowania monet</translation>
+    </message>
+    <message>
         <source>Inputs...</source>
         <translation>Wejścia...</translation>
     </message>
@@ -1653,6 +1665,10 @@ Adres: %4
     <message>
         <source>If this is activated, but the change address is empty or invalid, change will be sent to a newly generated address.</source>
         <translation>Kiedy ta opcja jest wybrana, ale adres reszty jest pusty lub nieprawidłowy to reszta będzie wysyłana na adres nowo-wygenerowany.</translation>
+    </message>
+    <message>
+        <source>Custom change address</source>
+        <translation>Niestandardowe zmiany adresu</translation>
     </message>
     <message>
         <source>Send to multiple recipients at once</source>
@@ -1713,6 +1729,10 @@ Adres: %4
     <message>
         <source>Copy priority</source>
         <translation>Skopiuj priorytet</translation>
+    </message>
+    <message>
+        <source>Copy low output</source>
+        <translation>Skopiuj niską wartość</translation>
     </message>
     <message>
         <source>Copy change</source>
@@ -2037,6 +2057,10 @@ Adres: %4
         <translation>Otwórz do %1</translation>
     </message>
     <message>
+        <source>conflicted</source>
+        <translation>konflikt</translation>
+    </message>
+    <message>
         <source>%1/offline</source>
         <translation>%1/offline</translation>
     </message>
@@ -2221,6 +2245,10 @@ Adres: %4
     <message>
         <source>Confirming (%1 of %2 recommended confirmations)</source>
         <translation>Potwierdzanie (%1 z %2 rekomendowanych potwierdzeń)</translation>
+    </message>
+    <message>
+        <source>Conflicted</source>
+        <translation>Konflikt</translation>
     </message>
     <message>
         <source>Received with</source>
@@ -2526,6 +2554,10 @@ Adres: %4
         <translation>Akceptuj linię poleceń oraz polecenia JSON-RPC</translation>
     </message>
     <message>
+        <source>Bitcoin Core RPC client version</source>
+        <translation>Wersja klienta Bitcoin Core RPC</translation>
+    </message>
+    <message>
         <source>Run in the background as a daemon and accept commands</source>
         <translation>Uruchom w tle jako daemon i przyjmuj polecenia</translation>
     </message>
@@ -2625,8 +2657,16 @@ na przykład: alertnotify=echo %%s | mail -s "Alarm Bitcoin" admin@foo.com⏎</t
         <translation>(domyślnie: wallet.dat)</translation>
     </message>
     <message>
+        <source>&lt;category&gt; can be:</source>
+        <translation>&lt;category&gt; mogą być:</translation>
+    </message>
+    <message>
         <source>Attempt to recover private keys from a corrupt wallet.dat</source>
         <translation>Próbuj odzyskać klucze prywatne z uszkodzonego wallet.dat</translation>
+    </message>
+    <message>
+        <source>Bitcoin Core Daemon</source>
+        <translation>Bitcoin Core Daemon</translation>
     </message>
     <message>
         <source>Block creation options:</source>

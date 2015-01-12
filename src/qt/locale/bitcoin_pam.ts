@@ -29,8 +29,20 @@ Ing produktung ini atin yang makayabeng software a gewa dareng OpenSSL Project p
         <translation>Maglalang kang bayung address</translation>
     </message>
     <message>
+        <source>&amp;New</source>
+        <translation>&amp;Bayu</translation>
+    </message>
+    <message>
         <source>Copy the currently selected address to the system clipboard</source>
         <translation>Kopyan me ing salukuyan at makipiling address keng system clipboard</translation>
+    </message>
+    <message>
+        <source>&amp;Copy</source>
+        <translation>&amp;Kopyan</translation>
+    </message>
+    <message>
+        <source>C&amp;lose</source>
+        <translation>I&amp;sara</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -45,8 +57,32 @@ Ing produktung ini atin yang makayabeng software a gewa dareng OpenSSL Project p
         <translation>&amp;Ilako</translation>
     </message>
     <message>
+        <source>Choose the address to send coins to</source>
+        <translation>Pilinan ing address a magpadalang coins kang</translation>
+    </message>
+    <message>
+        <source>Choose the address to receive coins with</source>
+        <translation>Pilinan ing address a tumanggap coins a atin</translation>
+    </message>
+    <message>
+        <source>C&amp;hoose</source>
+        <translation>P&amp;ilinan</translation>
+    </message>
+    <message>
+        <source>Sending addresses</source>
+        <translation>Address king pamag-Send</translation>
+    </message>
+    <message>
+        <source>Receiving addresses</source>
+        <translation>Address king pamag-Tanggap</translation>
+    </message>
+    <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
         <translation>Reni reng kekang Bitcoin address king pamagpadalang kabayaran. Lawan mulang masalese reng alaga ampo ing address na ning tumanggap bayu ka magpadalang barya.</translation>
+    </message>
+    <message>
+        <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
+        <translation>Reni reng kekang Bitcoin addresses keng pamananggap bayad. Rerekomenda mi na gumamit kang bayung address keng balang transaksiyon.</translation>
     </message>
     <message>
         <source>Copy &amp;Label</source>

@@ -34,16 +34,36 @@ Eric Young (eay@cryptsoft.com) y UPnP software escrito por Thomas Bernard.</tran
         <translation>Crea una nueva dirección</translation>
     </message>
     <message>
+        <source>&amp;New</source>
+        <translation>y nueva</translation>
+    </message>
+    <message>
         <source>Copy the currently selected address to the system clipboard</source>
         <translation>Copia la dirección seleccionada al portapapeles</translation>
+    </message>
+    <message>
+        <source>&amp;Copy</source>
+        <translation>y copiar</translation>
+    </message>
+    <message>
+        <source>C&amp;lose</source>
+        <translation>C y perder</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
         <translation>&amp;Copia dirección</translation>
     </message>
     <message>
+        <source>Delete the currently selected address from the list</source>
+        <translation>Eliminar la dirección seleccionada de la lista</translation>
+    </message>
+    <message>
         <source>Export the data in the current tab to a file</source>
         <translation>Exportar los datos de la pestaña actual a un archivo</translation>
+    </message>
+    <message>
+        <source>&amp;Export</source>
+        <translation>y exportar</translation>
     </message>
     <message>
         <source>&amp;Delete</source>
@@ -243,6 +263,10 @@ Eric Young (eay@cryptsoft.com) y UPnP software escrito por Thomas Bernard.</tran
         <translation>&amp;Cambiar la contraseña...</translation>
     </message>
     <message>
+        <source>Open &amp;URI...</source>
+        <translation>Abrir y url...</translation>
+    </message>
+    <message>
         <source>Reindexing blocks on disk...</source>
         <translation>Cargando el index de bloques...</translation>
     </message>
@@ -283,6 +307,10 @@ Eric Young (eay@cryptsoft.com) y UPnP software escrito por Thomas Bernard.</tran
         <translation>&amp;Envía</translation>
     </message>
     <message>
+        <source>&amp;Receive</source>
+        <translation>y recibir</translation>
+    </message>
+    <message>
         <source>&amp;Show / Hide</source>
         <translation>&amp;Mostrar/Ocultar</translation>
     </message>
@@ -309,6 +337,10 @@ Eric Young (eay@cryptsoft.com) y UPnP software escrito por Thomas Bernard.</tran
     <message>
         <source>[testnet]</source>
         <translation>[red-de-pruebas]</translation>
+    </message>
+    <message>
+        <source>Bitcoin Core</source>
+        <translation>bitcoin core</translation>
     </message>
     <message>
         <source>Bitcoin client</source>
@@ -408,6 +440,10 @@ Dirección: %4</translation>
         <translation>Confirmado</translation>
     </message>
     <message>
+        <source>Priority</source>
+        <translation>prioridad</translation>
+    </message>
+    <message>
         <source>Copy address</source>
         <translation>Copia dirección</translation>
     </message>
@@ -418,6 +454,18 @@ Dirección: %4</translation>
     <message>
         <source>Copy amount</source>
         <translation>Copiar Cantidad</translation>
+    </message>
+    <message>
+        <source>medium</source>
+        <translation>medio</translation>
+    </message>
+    <message>
+        <source>yes</source>
+        <translation>si</translation>
+    </message>
+    <message>
+        <source>no</source>
+        <translation>no</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -481,6 +529,10 @@ Dirección: %4</translation>
 <context>
     <name>HelpMessageDialog</name>
     <message>
+        <source>Bitcoin Core</source>
+        <translation>bitcoin core</translation>
+    </message>
+    <message>
         <source>version</source>
         <translation>versión</translation>
     </message>
@@ -501,6 +553,10 @@ Dirección: %4</translation>
 <context>
     <name>Intro</name>
     <message>
+        <source>Welcome</source>
+        <translation>bienvenido</translation>
+    </message>
+    <message>
         <source>Bitcoin</source>
         <translation>Bitcoin</translation>
     </message>
@@ -511,6 +567,10 @@ Dirección: %4</translation>
     </context>
 <context>
     <name>OpenURIDialog</name>
+    <message>
+        <source>URI:</source>
+        <translation>url:</translation>
+    </message>
     </context>
 <context>
     <name>OptionsDialog</name>
@@ -543,6 +603,10 @@ Dirección: %4</translation>
         <translation>&amp;Red</translation>
     </message>
     <message>
+        <source>Expert</source>
+        <translation>experto</translation>
+    </message>
+    <message>
         <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
         <translation>Abre automáticamente el puerto del cliente Bitcoin en el router. Esto funciona solo cuando tu router es compatible con UPnP y está habilitado.</translation>
     </message>
@@ -561,6 +625,11 @@ Dirección: %4</translation>
     <message>
         <source>Port of the proxy (e.g. 9050)</source>
         <translation>Puerto del servidor proxy (ej. 9050)</translation>
+    </message>
+    <message>
+        <source>&amp;Window</source>
+        <translation>y windows
+</translation>
     </message>
     <message>
         <source>Show only a tray icon after minimizing the window.</source>
@@ -680,6 +749,10 @@ Dirección: %4</translation>
     <message>
         <source>&amp;Information</source>
         <translation>&amp;Información</translation>
+    </message>
+    <message>
+        <source>General</source>
+        <translation>General</translation>
     </message>
     <message>
         <source>Startup time</source>
@@ -985,6 +1058,10 @@ Dirección: %4</translation>
 </context>
 <context>
     <name>SplashScreen</name>
+    <message>
+        <source>Bitcoin Core</source>
+        <translation>bitcoin core</translation>
+    </message>
     <message>
         <source>[testnet]</source>
         <translation>[red-de-pruebas]</translation>
@@ -1317,6 +1394,10 @@ Dirección: %4</translation>
 </context>
 <context>
     <name>WalletView</name>
+    <message>
+        <source>&amp;Export</source>
+        <translation>y exportar</translation>
+    </message>
     <message>
         <source>Export the data in the current tab to a file</source>
         <translation>Exportar los datos de la pestaña actual a un archivo</translation>

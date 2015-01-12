@@ -3038,6 +3038,10 @@ fx: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
         <translation>Vent på opstart af RPC-server</translation>
     </message>
     <message>
+        <source>Wallet %s resides outside data directory %s</source>
+        <translation>Tegnebog %s findes uden for datamappe %s</translation>
+    </message>
+    <message>
         <source>Wallet options:</source>
         <translation>Tilvalg for tegnebog:</translation>
     </message>

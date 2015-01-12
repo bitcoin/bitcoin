@@ -17,11 +17,11 @@ Distributed under the MIT/X11 software license, see the accompanying file COPYIN
 
 This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit (http://www.openssl.org/) and cryptographic software written by Eric Young (eay@cryptsoft.com) and UPnP software written by Thomas Bernard.</source>
         <translation>
- Ce logiciel est expérimental.
+Ce logiciel est expérimental.
 
- Distribué sous licence logicielle MIT/X11, voir le fichier COPYING joint ou http://www.opensource.org/licenses/mit-license.php.
+Distribué sous licence MIT/X11 d'utilisation d'un logiciel. Consultez le fichier joint COPYING ou http://www.opensource.org/licenses/mit-license.php.
 
- Ce produit comprend des logiciels développés par le projet OpenSSL afin d'être utilisés dans la boîte à outils OpenSSL (http://www.openssl.org/), un logiciel de chiffrement écrit par Eric Young (eay@cryptsoft.com), et un logiciel UPnP développé par Thomas Bernard.</translation>
+Ce produit comprend des logiciels développés par le projet OpenSSL afin d'être utilisés dans la boîte à outils OpenSSL (http://www.openssl.org/), un logiciel de chiffrement écrit par Eric Young (eay@cryptsoft.com) et un logiciel UPnP développé par Thomas Bernard.</translation>
     </message>
     <message>
         <source>Copyright</source>
@@ -768,6 +768,10 @@ Adresse : %4
     <message>
         <source>This label turns red, if the priority is smaller than "medium".</source>
         <translation>Cette étiquette devient rouge si la priorité est plus basse que « moyenne »</translation>
+    </message>
+    <message>
+        <source>This label turns red, if any recipient receives an amount smaller than %1.</source>
+        <translation>Cette étiquette devient rouge si un destinataire reçoit un montant inférieur à %1.</translation>
     </message>
     <message>
         <source>This means a fee of at least %1 is required.</source>
@@ -2364,7 +2368,7 @@ Adresse : %4
     </message>
     <message>
         <source>Mined</source>
-        <translation>Extrait</translation>
+        <translation>Miné</translation>
     </message>
     <message>
         <source>(n/a)</source>
@@ -2435,7 +2439,7 @@ Adresse : %4
     </message>
     <message>
         <source>Mined</source>
-        <translation>Extrait</translation>
+        <translation>Miné</translation>
     </message>
     <message>
         <source>Other</source>
@@ -2607,7 +2611,7 @@ Adresse : %4
     </message>
     <message>
         <source>Specify pid file (default: bitcoind.pid)</source>
-        <translation>Spécifier le fichier PID (par défaut : bitcoind.pid)</translation>
+        <translation>Spécifier le fichier pid (par défaut : bitcoind.pid)</translation>
     </message>
     <message>
         <source>Specify data directory</source>
@@ -2631,11 +2635,11 @@ Adresse : %4
     </message>
     <message>
         <source>Threshold for disconnecting misbehaving peers (default: 100)</source>
-        <translation>Seuil de déconnexion des pairs de mauvaise qualité (par défaut : 100)</translation>
+        <translation>Seuil de déconnexion des pairs présentant un mauvais comportement (par défaut : 100)</translation>
     </message>
     <message>
         <source>Number of seconds to keep misbehaving peers from reconnecting (default: 86400)</source>
-        <translation>Délai en secondes de refus de reconnexion aux pairs de mauvaise qualité (par défaut : 86400)</translation>
+        <translation>Délai en secondes de refus de reconnexion pour les pairs présentant un mauvais comportement (par défaut : 86400)</translation>
     </message>
     <message>
         <source>An error occurred while setting up the RPC port %u for listening on IPv4: %s</source>
@@ -2643,7 +2647,7 @@ Adresse : %4
     </message>
     <message>
         <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 8332 or testnet: 18332)</source>
-        <translation>Écouter les connexions JSON-RPC sur le &lt;port&gt; (par défaut : 8332 ou tesnet : 18332)</translation>
+        <translation>Écouter les connexions JSON-RPC sur &lt;port&gt; (par défaut : 8332 ou tesnet : 18332)</translation>
     </message>
     <message>
         <source>Accept command line and JSON-RPC commands</source>
@@ -2735,11 +2739,11 @@ par exemple : alertnotify=echo %%s | mail -s "Alerte Bitcoin" admin@foo.com
     </message>
     <message>
         <source>Flush database activity from memory pool to disk log every &lt;n&gt; megabytes (default: 100)</source>
-        <translation>Purger l’activité de la base de données de la mémoire vers le journal sur disque tous les &lt;n&gt; mégaoctets (par défaut : 100)</translation>
+        <translation>Purger l’activité de la base de données de la zone de mémoire vers le journal sur disque tous les &lt;n&gt; mégaoctets (par défaut : 100)</translation>
     </message>
     <message>
         <source>How thorough the block verification of -checkblocks is (0-4, default: 3)</source>
-        <translation>À quel point la vérification des blocs -checkblocks est approfondie (0-4, par défaut : 3)</translation>
+        <translation>Degré de profondeur de la vérification des blocs -checkblocks (0-4, par défaut : 3)</translation>
     </message>
     <message>
         <source>In this mode -genproclimit controls how many blocks are generated immediately.</source>
@@ -2951,7 +2955,7 @@ par exemple : alertnotify=echo %%s | mail -s "Alerte Bitcoin" admin@foo.com
     </message>
     <message>
         <source>How many blocks to check at startup (default: 288, 0 = all)</source>
-        <translation>Nombre de blocs à vérifier au démarrage (par défaut : 288, 0 = tout)</translation>
+        <translation>Nombre de blocs à vérifier au démarrage (par défaut : 288, 0 = tous)</translation>
     </message>
     <message>
         <source>If &lt;category&gt; is not supplied, output all debugging information.</source>
@@ -2975,7 +2979,7 @@ par exemple : alertnotify=echo %%s | mail -s "Alerte Bitcoin" admin@foo.com
     </message>
     <message>
         <source>Prepend debug output with timestamp (default: 1)</source>
-        <translation>Ajouter l'horodatage au début des résultats de débogage (par défaut : 1)</translation>
+        <translation>Ajouter l'horodatage au début de la sortie de débogage (par défaut : 1)</translation>
     </message>
     <message>
         <source>RPC client options:</source>
@@ -3059,7 +3063,7 @@ par exemple : alertnotify=echo %%s | mail -s "Alerte Bitcoin" admin@foo.com
     </message>
     <message>
         <source>Output debugging information (default: 0, supplying &lt;category&gt; is optional)</source>
-        <translation>Informations du résultat de débogage (par défaut : 0, fournir &lt;category&gt; est optionnel)</translation>
+        <translation>Extraire les informations de débogage (par défaut : 0, fournir &lt;category&gt; est optionnel)</translation>
     </message>
     <message>
         <source>Set maximum size of high-priority/low-fee transactions in bytes (default: %d)</source>
@@ -3083,7 +3087,7 @@ par exemple : alertnotify=echo %%s | mail -s "Alerte Bitcoin" admin@foo.com
     </message>
     <message>
         <source>Log transaction priority and fee per kB when mining blocks (default: 0)</source>
-        <translation>Journaliser la priorité des transactions et les frais par ko lors du minage (par défaut : 0) </translation>
+        <translation>Lors du minage, journaliser la priorité des transactions et les frais par ko (par défaut : 0) </translation>
     </message>
     <message>
         <source>Maintain a full transaction index (default: 0)</source>
@@ -3091,15 +3095,15 @@ par exemple : alertnotify=echo %%s | mail -s "Alerte Bitcoin" admin@foo.com
     </message>
     <message>
         <source>Maximum per-connection receive buffer, &lt;n&gt;*1000 bytes (default: 5000)</source>
-        <translation>Tampon maximal de réception par « -connection » &lt;n&gt;*1 000 octets (par défaut : 5 000)</translation>
+        <translation>Tampon maximal de réception par connexion, &lt;n&gt;*1 000 octets (par défaut : 5000)</translation>
     </message>
     <message>
         <source>Maximum per-connection send buffer, &lt;n&gt;*1000 bytes (default: 1000)</source>
-        <translation>Tampon maximal d'envoi par « -connection », &lt;n&gt;*1 000 octets (par défaut : 1 000)</translation>
+        <translation>Tampon maximal d'envoi par connexion », &lt;n&gt;*1000 octets (par défaut : 1000)</translation>
     </message>
     <message>
         <source>Only accept block chain matching built-in checkpoints (default: 1)</source>
-        <translation>N'accepter que la chaîne de blocs correspondant aux points de vérification internes (par défaut : 1)</translation>
+        <translation>N'accepter qu'une chaîne de blocs correspondant aux points de vérification intégrés (par défaut : 1)</translation>
     </message>
     <message>
         <source>Only connect to nodes in network &lt;net&gt; (IPv4, IPv6 or Tor)</source>
@@ -3131,7 +3135,7 @@ par exemple : alertnotify=echo %%s | mail -s "Alerte Bitcoin" admin@foo.com
     </message>
     <message>
         <source>Run a thread to flush wallet periodically (default: 1)</source>
-        <translation>Exécuter un exétron pour purger le portefeuille périodiquement (par défaut : 1) </translation>
+        <translation>Exécuter une tâche pour purger le portefeuille périodiquement (par défaut : 1) </translation>
     </message>
     <message>
         <source>SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
@@ -3147,11 +3151,11 @@ par exemple : alertnotify=echo %%s | mail -s "Alerte Bitcoin" admin@foo.com
     </message>
     <message>
         <source>Set minimum block size in bytes (default: 0)</source>
-        <translation>Définir la taille minimale de bloc en octets (par défaut : 0)</translation>
+        <translation>Définir la taille de bloc minimale en octets (par défaut : 0)</translation>
     </message>
     <message>
         <source>Sets the DB_PRIVATE flag in the wallet db environment (default: 1)</source>
-        <translation>Définit le drapeau DB_PRIVATE dans l'environnement de la base de données du portefeuille (par défaut : 1)</translation>
+        <translation>Définit le drapeau DB_PRIVATE dans l'environnement de la BD du portefeuille (par défaut : 1)</translation>
     </message>
     <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>
@@ -3195,11 +3199,11 @@ par exemple : alertnotify=echo %%s | mail -s "Alerte Bitcoin" admin@foo.com
     </message>
     <message>
         <source>Use UPnP to map the listening port (default: 0)</source>
-        <translation>Utiliser l'UPnP pour rediriger le port d'écoute (par défaut : 0)</translation>
+        <translation>Utiliser l'UPnP pour mapper le port d'écoute (par défaut : 0)</translation>
     </message>
     <message>
         <source>Use UPnP to map the listening port (default: 1 when listening)</source>
-        <translation>Utiliser l'UPnP pour rediriger le port d'écoute (par défaut : 1 lors de l'écoute)</translation>
+        <translation>Utiliser l'UPnP pour mapper le port d'écoute (par défaut : 1 lors de l'écoute)</translation>
     </message>
     <message>
         <source>Username for JSON-RPC connections</source>
@@ -3251,7 +3255,7 @@ par exemple : alertnotify=echo %%s | mail -s "Alerte Bitcoin" admin@foo.com
     </message>
     <message>
         <source>Set key pool size to &lt;n&gt; (default: 100)</source>
-        <translation>Régler la taille de la réserve de clefs sur &lt;n&gt; (par défaut : 100)</translation>
+        <translation>Définir la taille de la réserve de clefs à &lt;n&gt; (par défaut : 100)</translation>
     </message>
     <message>
         <source>Rescan the block chain for missing wallet transactions</source>
@@ -3263,7 +3267,7 @@ par exemple : alertnotify=echo %%s | mail -s "Alerte Bitcoin" admin@foo.com
     </message>
     <message>
         <source>Server certificate file (default: server.cert)</source>
-        <translation>Fichier de certificat serveur (par défaut : server.cert)</translation>
+        <translation>Fichier de certification du serveur (par défaut : server.cert)</translation>
     </message>
     <message>
         <source>Server private key (default: server.pem)</source>

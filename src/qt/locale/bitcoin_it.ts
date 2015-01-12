@@ -1094,6 +1094,10 @@ Più URL vengono separati da una barra verticale |.</translation>
         <translation>Disabilitando l'uso di resti non confermati, il resto di una transazione non potrà essere speso fino a quando la transazione non avrà ottenuto almeno una conferma. Questa impostazione influisce inoltre sul calcolo saldo.</translation>
     </message>
     <message>
+        <source>&amp;Spend unconfirmed change</source>
+        <translation>&amp;Spendere resti non confermati</translation>
+    </message>
+    <message>
         <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
         <translation>Apri automaticamente la porta del client Bitcoin sul router. Il protocollo UPnP deve essere supportato da parte del router ed attivo.</translation>
     </message>
