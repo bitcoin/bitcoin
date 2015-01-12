@@ -31,7 +31,11 @@ Este produto inclui software desenvolvido pelo Projecto OpenSSL para uso no Open
         <source>The Bitcoin Core developers</source>
         <translation>Os programadores Bitcoin Core</translation>
     </message>
-    </context>
+    <message>
+        <source>(%1-bit)</source>
+        <translation>(%1-bit)</translation>
+    </message>
+</context>
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -2902,6 +2906,10 @@ por exemplo: alertnotify=echo %%s | mail -s "Alerta Bitcoin" admin@foo.com</tran
     <message>
         <source>Select SOCKS version for -proxy (4 or 5, default: 5)</source>
         <translation>Selecione a versão do proxy socks a usar (4 ou 5, por defeito: 5)</translation>
+    </message>
+    <message>
+        <source>Set database cache size in megabytes (%d to %d, default: %d)</source>
+        <translation>Definir o tamanho da cache de base de dados em megabytes (%d a %d, padrão: %d)</translation>
     </message>
     <message>
         <source>Set maximum block size in bytes (default: %d)</source>

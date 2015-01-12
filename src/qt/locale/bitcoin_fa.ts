@@ -26,6 +26,10 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>ایجاد نشانی جدید</translation>
     </message>
     <message>
+        <source>&amp;New</source>
+        <translation>&amp;جدید</translation>
+    </message>
+    <message>
         <source>Copy the currently selected address to the system clipboard</source>
         <translation>کپی نشانی انتخاب شده به حافظهٔ سیستم</translation>
     </message>
@@ -76,6 +80,10 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <source>Comma separated file (*.csv)</source>
         <translation>پروندهٔ نوع CSV جداشونده با کاما (*.csv)</translation>
+    </message>
+    <message>
+        <source>Exporting Failed</source>
+        <translation>استخراج انجام نشد</translation>
     </message>
     </context>
 <context>
@@ -1623,6 +1631,10 @@ Address: %4
     <message>
         <source>Show transaction details</source>
         <translation>نمایش جزئیات تراکنش</translation>
+    </message>
+    <message>
+        <source>Exporting Failed</source>
+        <translation>استخراج انجام نشد</translation>
     </message>
     <message>
         <source>Comma separated file (*.csv)</source>
