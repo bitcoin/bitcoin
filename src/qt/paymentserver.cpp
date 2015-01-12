@@ -526,7 +526,7 @@ bool PaymentServer::readPaymentRequestFromFile(const QString& filename, PaymentR
     return request.parse(data);
 }
 
-bool PaymentServer::processPaymentRequest(PaymentRequestPlus& request, SendCoinsRecipient& recipient)
+bool PaymentServer::processPaymentRequest(const PaymentRequestPlus& request, SendCoinsRecipient& recipient)
 {
     if (!optionsModel)
         return false;
