@@ -261,6 +261,13 @@ void OverviewPage::updateDarksendProgress(){
     int64_t nValueMin = 0.01*COIN;
     int64_t nValueIn = 0;
 
+    if(pwalletMain->GetDenominatedBalance(true, true) > 0){ //get denominated unconfirmed inputs
+        QString s("Found unconfirmed denominated outputs, will wait till they confirm to recalculate.");
+        ui->darksendProgress->setToolTip(s);
+        return;
+    }
+
+
     // Calculate total mixable funds
     if (!pwalletMain->SelectCoinsDark(nValueMin, 999999*COIN, vCoins, nValueIn, -2, 10)) {
         ui->darksendProgress->setValue(0);
@@ -270,14 +277,17 @@ void OverviewPage::updateDarksendProgress(){
     }
     double nTotalValue = pwalletMain->GetTotalValue(vCoins)/CENT;
 
-    //Get average rounds of inputs
-    double a = (double)pwalletMain->GetAverageAnonymizedRounds() / (double)nDarksendRounds;
     //Get the anon threshold
     double max = nAnonymizeDarkcoinAmount*100;
     //If it's more than the wallet amount, limit to that.
     if(max > (double)nTotalValue) max = (double)nTotalValue;
     //denominated balance / anon threshold -- the percentage that we've completed
     double b = ((double)(pwalletMain->GetDenominatedBalance()/CENT) / max);
+    if(b > 1) b = 1;
+
+    //Get average rounds of inputs
+    double a = (double)pwalletMain->GetAverageAnonymizedRounds() / (double)nDarksendRounds;
+    if(a > 1) a = 1;
 
     double val = a*b*100;
     if(val < 0) val = 0;
