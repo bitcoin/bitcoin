@@ -115,6 +115,34 @@ void PaymentServerTests::paymentServerTests()
     r.paymentRequest.getMerchant(caStore, merchant);
     QCOMPARE(merchant, QString(""));
 
+    // Load second root certificate
+    caStore = X509_STORE_new();
+    X509_STORE_add_cert(caStore, parse_b64der_cert(caCert2_BASE64));
+    PaymentServer::LoadRootCAs(caStore);
+
+    QByteArray byteArray;
+
+    // For the tests below we just need the payment request data from
+    // paymentrequestdata.h parsed + stored in r.paymentRequest.
+    //
+    // These tests require us to bypass the following normal client execution flow
+    // shown below to be able to explicitly just trigger a certain condition!
+    //
+    // handleRequest()
+    // -> PaymentServer::eventFilter()
+    //   -> PaymentServer::handleURIOrFile()
+    //     -> PaymentServer::readPaymentRequestFromFile()
+    //       -> PaymentServer::processPaymentRequest()
+
+    // Contains a testnet paytoaddress, so payment request network doesn't match client network:
+    data = DecodeBase64(paymentrequest1_cert2_BASE64);
+    byteArray = QByteArray((const char*)&data[0], data.size());
+    r.paymentRequest.parse(byteArray);
+    // Ensure the request is initialized, because network "main" is default, even for
+    // uninizialized payment requests and that will fail our test here.
+    QVERIFY(r.paymentRequest.IsInitialized());
+    QCOMPARE(PaymentServer::verifyNetwork(r.paymentRequest.getDetails()), false);
+
     // Just get some random data big enough to trigger BIP70 DoS protection
     unsigned char randData[BIP70_MAX_PAYMENTREQUEST_SIZE + 1];
     GetRandBytes(randData, sizeof(randData));
