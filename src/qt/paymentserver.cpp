@@ -312,7 +312,7 @@ PaymentServer::PaymentServer(QObject* parent, bool startLocalServer) :
 
     // Install global event filter to catch QFileOpenEvents
     // on Mac: sent when you click bitcoin: links
-    // other OSes: helpful when dealing with payment request files (in the future)
+    // other OSes: helpful when dealing with payment request files
     if (parent)
         parent->installEventFilter(this);
 
@@ -343,14 +343,13 @@ PaymentServer::~PaymentServer()
 }
 
 //
-// OSX-specific way of handling bitcoin: URIs and
-// PaymentRequest mime types
+// OSX-specific way of handling bitcoin: URIs and PaymentRequest mime types.
+// Also used by paymentservertests.cpp and when opening a payment request file
+// via "Open URI..." menu entry.
 //
 bool PaymentServer::eventFilter(QObject *object, QEvent *event)
 {
-    // clicking on bitcoin: URIs creates FileOpen events on the Mac
-    if (event->type() == QEvent::FileOpen)
-    {
+    if (event->type() == QEvent::FileOpen) {
         QFileOpenEvent *fileEvent = static_cast<QFileOpenEvent*>(event);
         if (!fileEvent->file().isEmpty())
             handleURIOrFile(fileEvent->file());
@@ -571,9 +570,9 @@ bool PaymentServer::processPaymentRequest(const PaymentRequestPlus& request, Sen
             addresses.append(QString::fromStdString(CBitcoinAddress(dest).ToString()));
         }
         else if (!recipient.authenticatedMerchant.isEmpty()) {
-            // Insecure payments to custom bitcoin addresses are not supported
-            // (there is no good way to tell the user where they are paying in a way
-            // they'd have a chance of understanding).
+            // Unauthenticated payment requests to custom bitcoin addresses are not supported
+            // (there is no good way to tell the user where they are paying in a way they'd
+            // have a chance of understanding).
             emit message(tr("Payment request rejected"),
                 tr("Unverified payment requests to custom payment scripts are unsupported."),
                 CClientUIInterface::MSG_ERROR);
