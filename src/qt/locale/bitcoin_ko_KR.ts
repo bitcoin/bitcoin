@@ -7,7 +7,7 @@
     </message>
     <message>
         <source>&lt;b&gt;Bitcoin Core&lt;/b&gt; version</source>
-        <translation>&lt;b&gt;비트코인 코어&lt;/b&gt; 버젼</translation>
+        <translation>&lt;b&gt;비트코인 코어&lt;/b&gt; 버전</translation>
     </message>
     <message>
         <source>
@@ -29,7 +29,7 @@ MIT/X11 프로그램 라이선스에 따라 배포합니다. COPYING 또는 http
     </message>
     <message>
         <source>The Bitcoin Core developers</source>
-        <translation>비트코인코어 개발자들</translation>
+        <translation>비트코인 코어 개발자</translation>
     </message>
     <message>
         <source>(%1-bit)</source>
@@ -48,7 +48,7 @@ MIT/X11 프로그램 라이선스에 따라 배포합니다. COPYING 또는 http
     </message>
     <message>
         <source>&amp;New</source>
-        <translation>새 항목(N)</translation>
+        <translation>새 항목 (&amp;N)</translation>
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
@@ -60,11 +60,11 @@ MIT/X11 프로그램 라이선스에 따라 배포합니다. COPYING 또는 http
     </message>
     <message>
         <source>C&amp;lose</source>
-        <translation>닫기 (L)</translation>
+        <translation>닫기 (&amp;L)</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
-        <translation>계좌 복사(&amp;C)</translation>
+        <translation>주소 복사 (&amp;C)</translation>
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
@@ -76,11 +76,11 @@ MIT/X11 프로그램 라이선스에 따라 배포합니다. COPYING 또는 http
     </message>
     <message>
         <source>&amp;Export</source>
-        <translation>&amp;내보내기</translation>
+        <translation>내보내기 (&amp;E)</translation>
     </message>
     <message>
         <source>&amp;Delete</source>
-        <translation>&amp;삭제</translation>
+        <translation>삭제 (&amp;D)</translation>
     </message>
     <message>
         <source>Choose the address to send coins to</source>
@@ -92,7 +92,7 @@ MIT/X11 프로그램 라이선스에 따라 배포합니다. COPYING 또는 http
     </message>
     <message>
         <source>C&amp;hoose</source>
-        <translation>선택하기 (H)</translation>
+        <translation>선택 (&amp;H)</translation>
     </message>
     <message>
         <source>Sending addresses</source>
@@ -112,11 +112,11 @@ MIT/X11 프로그램 라이선스에 따라 배포합니다. COPYING 또는 http
     </message>
     <message>
         <source>Copy &amp;Label</source>
-        <translation>표 복사</translation>
+        <translation>주소 복사 (&amp;L)</translation>
     </message>
     <message>
         <source>&amp;Edit</source>
-        <translation>편집&amp;</translation>
+        <translation>편집 (&amp;E)</translation>
     </message>
     <message>
         <source>Export Address List</source>
@@ -135,7 +135,7 @@ MIT/X11 프로그램 라이선스에 따라 배포합니다. COPYING 또는 http
     <name>AddressTableModel</name>
     <message>
         <source>Label</source>
-        <translation>표</translation>
+        <translation>이름</translation>
     </message>
     <message>
         <source>Address</source>
@@ -143,7 +143,7 @@ MIT/X11 프로그램 라이선스에 따라 배포합니다. COPYING 또는 http
     </message>
     <message>
         <source>(no label)</source>
-        <translation>(표 없음)</translation>
+        <translation>(이름 없음)</translation>
     </message>
 </context>
 <context>
@@ -265,7 +265,7 @@ MIT/X11 프로그램 라이선스에 따라 배포합니다. COPYING 또는 http
     </message>
     <message>
         <source>&amp;Overview</source>
-        <translation>&amp;개요</translation>
+        <translation>개요 (&amp;O)</translation>
     </message>
     <message>
         <source>Node</source>
@@ -277,7 +277,7 @@ MIT/X11 프로그램 라이선스에 따라 배포합니다. COPYING 또는 http
     </message>
     <message>
         <source>&amp;Transactions</source>
-        <translation>&amp;거래</translation>
+        <translation>거래 (&amp;T)</translation>
     </message>
     <message>
         <source>Browse transaction history</source>
@@ -321,15 +321,15 @@ MIT/X11 프로그램 라이선스에 따라 배포합니다. COPYING 또는 http
     </message>
     <message>
         <source>&amp;Sending addresses...</source>
-        <translation>&amp;주소 보내는 중</translation>
+        <translation>보내는 주소 (&amp;S)</translation>
     </message>
     <message>
         <source>&amp;Receiving addresses...</source>
-        <translation>&amp; 주소 받는 중</translation>
+        <translation>받는 주소 (&amp;R)</translation>
     </message>
     <message>
         <source>Open &amp;URI...</source>
-        <translation>URI&amp;열기...</translation>
+        <translation>&amp;URI 열기...</translation>
     </message>
     <message>
         <source>Importing blocks from disk...</source>
@@ -357,7 +357,7 @@ MIT/X11 프로그램 라이선스에 따라 배포합니다. COPYING 또는 http
     </message>
     <message>
         <source>&amp;Debug window</source>
-        <translation>디버그 창&amp;</translation>
+        <translation>디버그 창 (&amp;D)</translation>
     </message>
     <message>
         <source>Open debugging and diagnostic console</source>
@@ -365,7 +365,7 @@ MIT/X11 프로그램 라이선스에 따라 배포합니다. COPYING 또는 http
     </message>
     <message>
         <source>&amp;Verify message...</source>
-        <translation>메시지 확인&amp;...</translation>
+        <translation>메시지 확인... (&amp;V)</translation>
     </message>
     <message>
         <source>Bitcoin</source>
@@ -405,19 +405,19 @@ MIT/X11 프로그램 라이선스에 따라 배포합니다. COPYING 또는 http
     </message>
     <message>
         <source>&amp;File</source>
-        <translation>&amp;파일</translation>
+        <translation>파일 (&amp;F)</translation>
     </message>
     <message>
         <source>&amp;Settings</source>
-        <translation>&amp;설정</translation>
+        <translation>설정 (&amp;S)</translation>
     </message>
     <message>
         <source>&amp;Help</source>
-        <translation>&amp;도움말</translation>
+        <translation>도움말 (&amp;H)</translation>
     </message>
     <message>
         <source>Tabs toolbar</source>
-        <translation>툴바 색인표</translation>
+        <translation>탭 형식 툴바</translation>
     </message>
     <message>
         <source>[testnet]</source>
@@ -429,11 +429,11 @@ MIT/X11 프로그램 라이선스에 따라 배포합니다. COPYING 또는 http
     </message>
     <message>
         <source>Request payments (generates QR codes and bitcoin: URIs)</source>
-        <translation>지불 요청하기 (QR코드와 비트코인이 생성됩니다: URIs)</translation>
+        <translation>지불 요청하기 (QR코드와 bitcoin: URI가 생성됩니다)</translation>
     </message>
     <message>
         <source>&amp;About Bitcoin Core</source>
-        <translation>&amp;비트코인 코어 소개</translation>
+        <translation>비트코인 코어 소개 (&amp;A)</translation>
     </message>
     <message>
         <source>Show the list of used sending addresses and labels</source>
@@ -445,11 +445,11 @@ MIT/X11 프로그램 라이선스에 따라 배포합니다. COPYING 또는 http
     </message>
     <message>
         <source>Open a bitcoin: URI or payment request</source>
-        <translation>비트코인: URI 또는 지불요청 열기</translation>
+        <translation>bitcoin: URI 또는 지불요청 열기</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>
-        <translation>명령어-라인 옵션</translation>
+        <translation>명령줄 옵션 (&amp;C)</translation>
     </message>
     <message>
         <source>Show the Bitcoin Core help message to get a list with possible Bitcoin command-line options</source>
@@ -475,6 +475,18 @@ MIT/X11 프로그램 라이선스에 따라 배포합니다. COPYING 또는 http
         <source>Processed %1 blocks of transaction history.</source>
         <translation>%1 블록의 거래 기록들이 처리됨.</translation>
     </message>
+    <message numerus="yes">
+        <source>%n hour(s)</source>
+        <translation><numerusform>%n시간</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>%n day(s)</source>
+        <translation><numerusform>%n일</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>%n week(s)</source>
+        <translation><numerusform>%n주</numerusform></translation>
+    </message>
     <message>
         <source>%1 and %2</source>
         <translation>%1 그리고 %2</translation>
@@ -485,7 +497,7 @@ MIT/X11 프로그램 라이선스에 따라 배포합니다. COPYING 또는 http
     </message>
     <message>
         <source>%1 behind</source>
-        <translation>%1 뒤에</translation>
+        <translation>%1 뒤처짐</translation>
     </message>
     <message>
         <source>Last received block was generated %1 ago.</source>
@@ -509,11 +521,11 @@ MIT/X11 프로그램 라이선스에 따라 배포합니다. COPYING 또는 http
     </message>
     <message>
         <source>Up to date</source>
-        <translation>현재까지</translation>
+        <translation>최신</translation>
     </message>
     <message>
         <source>Catching up...</source>
-        <translation>블록 따라잡기...</translation>
+        <translation>블록 따라잡는 중...</translation>
     </message>
     <message>
         <source>Sent transaction</source>
@@ -590,8 +602,12 @@ Address: %4
         <translation>수수료 이후:</translation>
     </message>
     <message>
+        <source>Change:</source>
+        <translation>체인지:</translation>
+    </message>
+    <message>
         <source>(un)select all</source>
-        <translation>모두 선택(하지 않음)</translation>
+        <translation>모두 선택(취소)</translation>
     </message>
     <message>
         <source>Tree mode</source>
@@ -631,7 +647,7 @@ Address: %4
     </message>
     <message>
         <source>Copy label</source>
-        <translation>라벨 복사하기</translation>
+        <translation>이름 복사</translation>
     </message>
     <message>
         <source>Copy amount</source>
@@ -747,7 +763,7 @@ Address: %4
     </message>
     <message>
         <source>(no label)</source>
-        <translation>(표 없슴)</translation>
+        <translation>(이름 없음)</translation>
     </message>
     <message>
         <source>change from %1 (%2)</source>
@@ -1499,7 +1515,7 @@ Address: %4
     </message>
     <message>
         <source>Copy label</source>
-        <translation>표 복사하기</translation>
+        <translation>이름 복사</translation>
     </message>
     <message>
         <source>Copy message</source>
@@ -1550,7 +1566,7 @@ Address: %4
     </message>
     <message>
         <source>Label</source>
-        <translation>표</translation>
+        <translation>이름</translation>
     </message>
     <message>
         <source>Message</source>
@@ -1573,7 +1589,7 @@ Address: %4
     </message>
     <message>
         <source>Label</source>
-        <translation>표</translation>
+        <translation>이름</translation>
     </message>
     <message>
         <source>Message</source>
@@ -1585,7 +1601,7 @@ Address: %4
     </message>
     <message>
         <source>(no label)</source>
-        <translation>(표 없슴)</translation>
+        <translation>(이름 없음)</translation>
     </message>
     <message>
         <source>(no message)</source>
@@ -1645,6 +1661,10 @@ Address: %4
     <message>
         <source>After Fee:</source>
         <translation>수수료 이후:</translation>
+    </message>
+    <message>
+        <source>Change:</source>
+        <translation>체인지:</translation>
     </message>
     <message>
         <source>Custom change address</source>
@@ -1752,7 +1772,7 @@ Address: %4
     </message>
     <message>
         <source>(no label)</source>
-        <translation>(표 없슴)</translation>
+        <translation>(이름 없음)</translation>
     </message>
     <message>
         <source>Warning: Unknown change address</source>
@@ -1791,7 +1811,7 @@ Address: %4
     </message>
     <message>
         <source>Enter a label for this address to add it to your address book</source>
-        <translation>당신의 주소록에 이 주소를 추가하기 위하여 표를 입역하세요 </translation>
+        <translation>주소록에 추가될 이 주소의 이름을 입력해 주세요</translation>
     </message>
     <message>
         <source>&amp;Label:</source>
@@ -1832,6 +1852,10 @@ Address: %4
     <message>
         <source>Enter a label for this address to add it to the list of used addresses</source>
         <translation>사용된 주소 목록에 새 주소를 추가하기 위해 제목을 입력합니다. </translation>
+    </message>
+    <message>
+        <source>A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
+        <translation>비트코인에 첨부된 메시지: 참고용으로 거래와 함께 저장될 URI. 메모: 이 메시지는 비트코인 네트워크로 전송되지 않습니다.</translation>
     </message>
     <message>
         <source>This is an unverified payment request.</source>
@@ -2078,7 +2102,7 @@ Address: %4
     </message>
     <message>
         <source>label</source>
-        <translation>라벨</translation>
+        <translation>이름</translation>
     </message>
     <message>
         <source>Credit</source>
@@ -2339,7 +2363,7 @@ Address: %4
     </message>
     <message>
         <source>Copy label</source>
-        <translation>표 복사하기</translation>
+        <translation>이름 복사</translation>
     </message>
     <message>
         <source>Copy amount</source>
@@ -2351,7 +2375,7 @@ Address: %4
     </message>
     <message>
         <source>Edit label</source>
-        <translation>표 수정하기</translation>
+        <translation>이름 수정</translation>
     </message>
     <message>
         <source>Show transaction details</source>
@@ -2395,7 +2419,7 @@ Address: %4
     </message>
     <message>
         <source>Label</source>
-        <translation>표</translation>
+        <translation>이름</translation>
     </message>
     <message>
         <source>Address</source>
@@ -2436,7 +2460,7 @@ Address: %4
     <name>WalletView</name>
     <message>
         <source>&amp;Export</source>
-        <translation>&amp;내보내기</translation>
+        <translation>내보내기 (&amp;E)</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
@@ -2503,7 +2527,7 @@ Address: %4
     </message>
     <message>
         <source>Maintain at most &lt;n&gt; connections to peers (default: 125)</source>
-        <translation>가장 잘 연결되는 사용자를 유지합니다(기본값: 125)</translation>
+        <translation>최대 &lt;n&gt;개의 연결을 유지합니다. (기본값: 125)</translation>
     </message>
     <message>
         <source>Connect to a node to retrieve peer addresses, and disconnect</source>
@@ -2772,6 +2796,10 @@ Address: %4
         <translation>시작할때 검사할 블록 갯수입니다(기본값: 288, 0 = 모두)</translation>
     </message>
     <message>
+        <source>If &lt;category&gt; is not supplied, output all debugging information.</source>
+        <translation>&lt;카테고리&gt;가 제공되지 않을 경우, 모든 디버깅 정보를 출력</translation>
+    </message>
+    <message>
         <source>Importing...</source>
         <translation>들여오기 중...</translation>
     </message>
@@ -2832,6 +2860,10 @@ Address: %4
         <translation>RPC서버가 시작되길 기다리십시요</translation>
     </message>
     <message>
+        <source>Wallet %s resides outside data directory %s</source>
+        <translation>지갑 %s는 데이터 디렉토리 %s 밖에 위치합니다.</translation>
+    </message>
+    <message>
         <source>Wallet options:</source>
         <translation>지갑 옵션:</translation>
     </message>
@@ -2846,6 +2878,10 @@ Address: %4
     <message>
         <source>Imports blocks from external blk000??.dat file</source>
         <translation>외부 blk000??.dat 파일에서 블록을 가져옵니다.</translation>
+    </message>
+    <message>
+        <source>Cannot obtain a lock on data directory %s. Bitcoin Core is probably already running.</source>
+        <translation>데이터 디렉토리 %s에 락을 걸 수 없었습니다. 비트코인 코어가 이미 실행 중인 것으로 보입니다.</translation>
     </message>
     <message>
         <source>Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)</source>
@@ -2918,6 +2954,10 @@ Address: %4
     <message>
         <source>Randomly drop 1 of every &lt;n&gt; network messages</source>
         <translation>모든 네트워크 메시지 마다 무작위로 1이 떨어진다</translation>
+    </message>
+    <message>
+        <source>Run a thread to flush wallet periodically (default: 1)</source>
+        <translation>주기적으로 지갑을 비우도록 설정 (기본값: 1)</translation>
     </message>
     <message>
         <source>SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>

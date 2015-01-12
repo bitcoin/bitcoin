@@ -25,6 +25,7 @@
 #include "db.h"
 #include "wallet.h"
 #include "walletdb.h"
+#include "keepass.h"
 #endif
 
 #include <stdint.h>
@@ -248,6 +249,11 @@ std::string HelpMessage(HelpMessageMode hmm)
 #ifdef ENABLE_WALLET
     strUsage += "\n" + _("Wallet options:") + "\n";
     strUsage += "  -disablewallet         " + _("Do not load the wallet and disable wallet RPC calls") + "\n";
+    strUsage += "  -keepass               " + _("Use KeePass 2 integration using KeePassHttp plugin (default: 0)") + "\n";
+    strUsage += "  -keepassport=<port>    " + _("Connect to KeePassHttp on port <port> (default: 19455)") + "\n";
+    strUsage += "  -keepasskey=<key>      " + _("KeePassHttp key for AES encrypted communication with KeePass") + "\n";
+    strUsage += "  -keepassid=<name>      " + _("KeePassHttp id for the established association") + "\n";
+    strUsage += "  -keepassname=<name>    " + _("Name to construct url for KeePass entry that stores the wallet passphrase") + "\n";
     strUsage += "  -keypool=<n>           " + _("Set key pool size to <n> (default: 100)") + "\n";
     strUsage += "  -paytxfee=<amt>        " + _("Fee per kB to add to transactions you send") + "\n";
     strUsage += "  -rescan                " + _("Rescan the block chain for missing wallet transactions") + " " + _("on startup") + "\n";
@@ -707,6 +713,10 @@ bool AppInit2(boost::thread_group& threadGroup)
             if (r == CDBEnv::RECOVER_FAIL)
                 return InitError(_("wallet.dat corrupt, salvage failed"));
         }
+
+    // Initialize KeePass Integration
+    keePassInt.init();
+
     } // (!fDisableWallet)
 #endif // ENABLE_WALLET
     // ********************************************************* Step 6: network initialization

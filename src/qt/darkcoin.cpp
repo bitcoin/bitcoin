@@ -535,7 +535,7 @@ int main(int argc, char *argv[])
     }
 
     string strErr;
-    if(!masternodeConfig.read(GetMasternodeConfigFile(), strErr)) {
+    if(!masternodeConfig.read(strErr)) {
         QMessageBox::critical(0, QObject::tr("Darkcoin"),
                               QObject::tr("Error reading masternode configuration file: %1").arg(strErr.c_str()));
         return false;

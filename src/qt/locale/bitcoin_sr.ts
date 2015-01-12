@@ -1,6 +1,14 @@
 <TS language="sr" version="2.1">
 <context>
     <name>AboutDialog</name>
+    <message>
+        <source>About Bitcoin Core</source>
+        <translation>O Bitcoin Coru</translation>
+    </message>
+    <message>
+        <source>&lt;b&gt;Bitcoin Core&lt;/b&gt; version</source>
+        <translation>Bitcoin Core verzija</translation>
+    </message>
     </context>
 <context>
     <name>AddressBookPage</name>
@@ -13,8 +21,24 @@
         <translation>Прави нову адресу</translation>
     </message>
     <message>
+        <source>&amp;New</source>
+        <translation>Novo</translation>
+    </message>
+    <message>
         <source>Copy the currently selected address to the system clipboard</source>
         <translation>Копира изабрану адресу на системски клипборд</translation>
+    </message>
+    <message>
+        <source>&amp;Copy</source>
+        <translation>Kopirajte</translation>
+    </message>
+    <message>
+        <source>&amp;Copy Address</source>
+        <translation>Kopirajte adresu</translation>
+    </message>
+    <message>
+        <source>Delete the currently selected address from the list</source>
+        <translation>Izbrisite trenutno izabranu adresu sa liste</translation>
     </message>
     <message>
         <source>&amp;Delete</source>
