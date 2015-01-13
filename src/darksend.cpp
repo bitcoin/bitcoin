@@ -1499,6 +1499,7 @@ bool CDarkSendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
         }
 
         LogPrintf("DoAutomaticDenominating : Too little to denominate \n");
+        strAutoDenomResult = "Too little to denominate";
         return false;
     }
 
