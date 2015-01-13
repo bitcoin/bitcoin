@@ -30,7 +30,7 @@
        <item>
         <widget class="QLabel" name="infoLabel_SM">
          <property name="text">
-          <string>You can sign messages with your addresses to prove you own them. Be careful not to sign anything vague, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</string>
+          <string>You can sign messages/agreements with your addresses to prove you can receive bitcoins sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</string>
          </property>
          <property name="textFormat">
           <enum>Qt::PlainText</enum>
@@ -237,7 +237,7 @@
        <item>
         <widget class="QLabel" name="infoLabel_VM">
          <property name="text">
-          <string>Enter the signing address, message (ensure you copy line breaks, spaces, tabs, etc. exactly) and signature below to verify the message. Be careful not to read more into the signature than what is in the signed message itself, to avoid being tricked by a man-in-the-middle attack.</string>
+          <string>Enter the receiver's address, message (ensure you copy line breaks, spaces, tabs, etc. exactly) and signature below to verify the message. Be careful not to read more into the signature than what is in the signed message itself, to avoid being tricked by a man-in-the-middle attack. Note that this only proves the signing party receives with the address, it cannot prove sendership of any transaction!</string>
          </property>
          <property name="textFormat">
           <enum>Qt::PlainText</enum>
