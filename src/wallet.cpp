@@ -1794,7 +1794,7 @@ bool CWallet::MergeCoins(const int64_t& nAmount, const int64_t& nMinValue, const
 }
 
 
-bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int64_t nSearchInterval, CTransaction& txNew, CKey& key)
+bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, uint32_t nSearchInterval, CTransaction& txNew, CKey& key)
 {
     // The following combine threshold is important to security
     // Should not be adjusted if you don't understand the consequences
@@ -1876,18 +1876,11 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
     int64_t nCredit = 0;
     CScript scriptPubKeyKernel;
 
-    KernelSearchSettings settings;
-    settings.nBits = nBits;
-    settings.nTime = txNew.nTime;
-    settings.nOffset = 0;
-    settings.nLimit = mapMeta.size();
-    settings.nSearchInterval = nSearchInterval;
-
     unsigned int nTimeTx, nBlockTime;
     COutPoint prevoutStake;
     CoinsSet::value_type kernelcoin;
 
-    if (ScanForStakeKernelHash(mapMeta, settings, kernelcoin, nTimeTx, nBlockTime, nKernelsTried, nCoinDaysTried))
+    if (ScanForStakeKernelHash(mapMeta, nBits, txNew.nTime, nSearchInterval, kernelcoin, nTimeTx, nBlockTime, nKernelsTried, nCoinDaysTried))
     {
         // Found a kernel
         if (fDebug && GetBoolArg("-printcoinstake"))

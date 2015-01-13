@@ -2636,11 +2636,11 @@ bool CBlock::SignBlock(CWallet& wallet)
     if (IsProofOfStake())
         return true;
 
-    static int64_t nLastCoinStakeSearchTime = GetAdjustedTime(); // startup timestamp
+    static uint32_t nLastCoinStakeSearchTime = GetAdjustedTime(); // startup timestamp
 
     CKey key;
     CTransaction txCoinStake;
-    int64_t nSearchTime = txCoinStake.nTime; // search to current time
+    uint32_t nSearchTime = txCoinStake.nTime; // search to current time
 
     if (nSearchTime > nLastCoinStakeSearchTime)
     {

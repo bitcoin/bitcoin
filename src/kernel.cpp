@@ -434,7 +434,7 @@ bool CheckStakeKernelHash(uint32_t nBits, const CBlock& blockFrom, uint32_t nTxP
 }
 
 // Scan given coins set for kernel solution
-bool ScanForStakeKernelHash(MetaMap &mapMeta, KernelSearchSettings &settings, CoinsSet::value_type &kernelcoin, uint32_t &nTimeTx, uint32_t &nBlockTime, uint64_t &nKernelsTried, uint64_t &nCoinDaysTried)
+bool ScanForStakeKernelHash(MetaMap &mapMeta, uint32_t nBits, uint32_t nTime, uint32_t nSearchInterval, CoinsSet::value_type &kernelcoin, uint32_t &nTimeTx, uint32_t &nBlockTime, uint64_t &nKernelsTried, uint64_t &nCoinDaysTried)
 {
     uint256 hashProofOfStake = 0;
 
@@ -451,21 +451,21 @@ bool ScanForStakeKernelHash(MetaMap &mapMeta, KernelSearchSettings &settings, Co
         // Get coin
         CoinsSet::value_type pcoin = meta_item->second.first.second;
 
-        static int nMaxStakeSearchInterval = 60;
+        static unsigned int nMaxStakeSearchInterval = 60;
 
         // only count coins meeting min age requirement
-        if (nStakeMinAge + block.nTime > settings.nTime - nMaxStakeSearchInterval)
+        if (nStakeMinAge + block.nTime > nTime - nMaxStakeSearchInterval)
             continue;
 
         // Transaction offset inside block
         uint32_t nTxOffset = txindex.pos.nTxPos - txindex.pos.nBlockPos;
 
         // Current timestamp scanning interval
-        unsigned int nCurrentSearchInterval = min((int64_t)settings.nSearchInterval, (int64_t)nMaxStakeSearchInterval);
+        unsigned int nCurrentSearchInterval = min(nSearchInterval, nMaxStakeSearchInterval);
 
         nBlockTime = block.nTime;
         CBigNum bnTargetPerCoinDay;
-        bnTargetPerCoinDay.SetCompact(settings.nBits);
+        bnTargetPerCoinDay.SetCompact(nBits);
         int64_t nValueIn = pcoin.first->vout[pcoin.second].nValue;
 
         // Search backward in time from the given timestamp 
@@ -473,7 +473,7 @@ bool ScanForStakeKernelHash(MetaMap &mapMeta, KernelSearchSettings &settings, Co
         // Stopping search in case of shutting down or cache invalidation
         for (unsigned int n=0; n<nCurrentSearchInterval && fCoinsDataActual && !fShutdown; n++)
         {
-            nTimeTx = settings.nTime - n;
+            nTimeTx = nTime - n;
             CBigNum bnCoinDayWeight = CBigNum(nValueIn) * GetWeight((int64_t)pcoin.first->nTime, (int64_t)nTimeTx) / COIN / (24 * 60 * 60);
             CBigNum bnTargetProofOfStake = bnCoinDayWeight * bnTargetPerCoinDay;
 

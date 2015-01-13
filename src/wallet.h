@@ -27,6 +27,14 @@ class CReserveKey;
 class COutput;
 class CCoinControl;
 
+// Set of selected transactions
+typedef std::set<std::pair<const CWalletTx*,unsigned int> > CoinsSet;
+
+// Preloaded coins metadata
+// (txid, vout.n) => ((txindex, (tx, vout.n)), (block, modifier))
+typedef std::map<std::pair<uint256, unsigned int>, std::pair<std::pair<CTxIndex, std::pair<const CWalletTx*,unsigned int> >, std::pair<CBlock, uint64_t> > > MetaMap;
+
+
 /** (client) version numbers for particular wallet features */
 enum WalletFeature
 {
@@ -214,7 +222,7 @@ public:
 
     void GetStakeStats(float &nKernelsRate, float &nCoinDaysRate);
     void GetStakeWeightFromValue(const int64_t& nTime, const int64_t& nValue, uint64_t& nWeight);
-    bool CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int64_t nSearchInterval, CTransaction& txNew, CKey& key);
+    bool CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, uint32_t nSearchInterval, CTransaction& txNew, CKey& key);
     bool MergeCoins(const int64_t& nAmount, const int64_t& nMinValue, const int64_t& nMaxValue, std::list<uint256>& listMerged);
 
     std::string SendMoney(CScript scriptPubKey, int64_t nValue, CWalletTx& wtxNew, bool fAskFee=false);
