@@ -8,7 +8,7 @@
 #include <openssl/rand.h>
 #include <boost/lexical_cast.hpp>
 #include <boost/foreach.hpp>
-#include <boost/asio.hpp>
+//#include <boost/asio.hpp>
 
 #include "util.h"
 #include "json/json_spirit_writer_template.h"
