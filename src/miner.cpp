@@ -123,11 +123,6 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
     txNew.vout.resize(1);
     txNew.vout[0].scriptPubKey = scriptPubKeyIn;
 
-    // Add our coinbase tx as first transaction
-    pblock->vtx.push_back(txNew);
-    pblocktemplate->vTxFees.push_back(-1); // updated at end
-    pblocktemplate->vTxSigOps.push_back(-1); // updated at end
-
     // Largest block you're willing to create:
     unsigned int nBlockMaxSize = GetArg("-blockmaxsize", DEFAULT_BLOCK_MAX_SIZE);
     // Limit to betweeen 1K and MAX_BLOCK_SIZE-1K for sanity:
@@ -191,6 +186,11 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
                 LogPrintf("Masternode payment to %s\n", address2.ToString().c_str());
             }
         }
+
+        // Add our coinbase tx as first transaction
+        pblock->vtx.push_back(txNew);
+        pblocktemplate->vTxFees.push_back(-1); // updated at end
+        pblocktemplate->vTxSigOps.push_back(-1); // updated at end
 
         // Priority order to process transactions
         list<COrphan> vOrphan; // list memory doesn't move
@@ -366,8 +366,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
         nLastBlockTx = nBlockTx;
         nLastBlockSize = nBlockSize;
         LogPrintf("CreateNewBlock(): total size %u\n", nBlockSize);
-
-        int64_t blockValue = GetBlockValue(GetNextWorkRequired(pindexPrev, pblock), pindexPrev->nHeight+1, nFees);
+        int64_t blockValue = GetBlockValue(pindexPrev->nBits, pindexPrev->nHeight, nFees);
         int64_t masternodePayment = GetMasternodePayment(pindexPrev->nHeight+1, blockValue);
 
         //create masternode payment
@@ -386,6 +385,8 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
         pblock->nNonce         = 0;
         pblock->vtx[0].vin[0].scriptSig = CScript() << OP_0 << OP_0;
         pblocktemplate->vTxSigOps[0] = GetLegacySigOpCount(pblock->vtx[0]);
+
+        printf("CreateTx %s\n", pblock->vtx[0].ToString().c_str());
 
         CBlockIndex indexDummy(*pblock);
         indexDummy.pprev = pindexPrev;

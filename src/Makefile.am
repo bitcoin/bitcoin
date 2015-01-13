@@ -46,6 +46,7 @@ BITCOIN_CORE_H = \
   init.h \
   instantx.h \
   key.h \
+  keepass.h \
   keystore.h \
   leveldbwrapper.h \
   limitedmap.h \
@@ -138,6 +139,7 @@ libdarkcoin_wallet_a_SOURCES = \
   rpcwallet.cpp \
   wallet.cpp \
   walletdb.cpp \
+  keepass.cpp \
   $(BITCOIN_CORE_H)
 
 libdarkcoin_common_a_SOURCES = \
@@ -148,7 +150,7 @@ libdarkcoin_common_a_SOURCES = \
   core.cpp \
   darksend.cpp \
   masternode.cpp \
-  masternodeconfig.cpp \ 
+  masternodeconfig.cpp \
   instantx.cpp \
   hash.cpp \
   key.cpp \
