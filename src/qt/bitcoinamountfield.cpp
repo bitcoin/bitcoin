@@ -166,11 +166,12 @@ protected:
 
     StepEnabled stepEnabled() const
     {
-        StepEnabled rv = 0;
         if (isReadOnly()) // Disable steps when AmountSpinBox is read-only
             return StepNone;
-        if(text().isEmpty()) // Allow step-up with empty field
+        if (text().isEmpty()) // Allow step-up with empty field
             return StepUpEnabled;
+
+        StepEnabled rv = 0;
         bool valid = false;
         CAmount val = value(&valid);
         if(valid)
