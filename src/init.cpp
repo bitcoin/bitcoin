@@ -1142,7 +1142,7 @@ bool AppInit2(boost::thread_group& threadGroup)
     fEnableDarksend = GetBoolArg("-enabledarksend", false);
 
     nDarksendRounds = GetArg("-darksendrounds", 2);
-    if(nDarksendRounds > 8) nDarksendRounds = 8;
+    if(nDarksendRounds > 16) nDarksendRounds = 16;
     if(nDarksendRounds < 1) nDarksendRounds = 1;
 
     nLiquidityProvider = GetArg("-liquidityprovider", 0); //1-100

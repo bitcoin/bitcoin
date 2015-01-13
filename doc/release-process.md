@@ -26,7 +26,7 @@ Release Process
 ##perform gitian builds
 
  From a directory containing the bitcoin source, gitian-builder and gitian.sigs
-  
+
 	export SIGNER=(your gitian key, ie bluematt, sipa, etc)
 	export VERSION=(new version, e.g. 0.8.0)
 	pushd ./bitcoin
@@ -37,7 +37,7 @@ Release Process
 
  Register and download the Apple SDK (see OSX Readme for details)
 	visit https://developer.apple.com/downloads/download.action?path=Developer_Tools/xcode_4.6.3/xcode4630916281a.dmg
- 
+
  Using a Mac, create a tarball for the 10.7 SDK
 	tar -C /Volumes/Xcode/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/ -czf MacOSX10.7.sdk.tar.gz MacOSX10.7.sdk
 
@@ -50,7 +50,7 @@ Release Process
 	wget 'ftp://ftp.simplesystems.org/pub/png/src/history/libpng16/libpng-1.6.8.tar.gz'
 	wget 'https://fukuchi.org/works/qrencode/qrencode-3.4.3.tar.bz2'
 	wget 'https://downloads.sourceforge.net/project/boost/boost/1.55.0/boost_1_55_0.tar.bz2'
-	wget 'https://svn.boost.org/trac/boost/raw-attachment/ticket/7262/boost-mingw.patch' -O \ 
+	wget 'https://svn.boost.org/trac/boost/raw-attachment/ticket/7262/boost-mingw.patch' -O \
 	     boost-mingw-gas-cross-compile-2013-03-03.patch
 	wget 'https://download.qt-project.org/official_releases/qt/5.2/5.2.0/single/qt-everywhere-opensource-src-5.2.0.tar.gz'
 	wget 'https://download.qt-project.org/archive/qt/4.6/qt-everywhere-opensource-src-4.6.4.tar.gz'
@@ -104,26 +104,26 @@ Release Process
     e2e403e1a08869c7eed4d4293bce13d51ec6a63592918b90ae215a0eceb44cb4  protobuf-win32-2.5.0-gitian-r4.zip
     a0999037e8b0ef9ade13efd88fee261ba401f5ca910068b7e0cd3262ba667db0  protobuf-win64-2.5.0-gitian-r4.zip
 
- Build bitcoind and bitcoin-qt on Linux32, Linux64, and Win32:
-  
-		./bin/gbuild --commit darkcoin=v${VERSION} ../darkcoin/contrib/gitian-descriptors/gitian-linux.yml
-		./bin/gsign --signer $SIGNER --release ${VERSION} --destination ../gitian.sigs/ ../darkcoin/contrib/gitian-descriptors/gitian-linux.yml
-		pushd build/out
-		zip -r darkcoin-${VERSION}-linux-gitian.zip *
-		mv darkcoin-${VERSION}-linux-gitian.zip ../../../
-		popd
-		./bin/gbuild --commit darkcoin=v${VERSION} ../darkcoin/contrib/gitian-descriptors/gitian-win.yml
-		./bin/gsign --signer $SIGNER --release ${VERSION}-win --destination ../gitian.sigs/ ../darkcoin/contrib/gitian-descriptors/gitian-win.yml
-		pushd build/out
-		zip -r darkcoin-${VERSION}-win-gitian.zip *
-		mv darkcoin-${VERSION}-win-gitian.zip ../../../
-		popd
-		    ./bin/gbuild --commit darkcoin=v${VERSION} ../darkcoin/contrib/gitian-descriptors/gitian-osx-bitcoin.yml
-		    ./bin/gsign --signer $SIGNER --release ${VERSION}-osx --destination ../gitian.sigs/ ../darkcoin/contrib/gitian-descriptors/gitian-osx-darkcoin.yml
-		pushd build/out
-		mv darkcoin-Qt.dmg ../../../
-		popd
-		popd
+ Build darkcoind and darkcoin-qt on Linux32, Linux64, and Win32:
+
+	./bin/gbuild --commit darkcoin=v${VERSION} ../darkcoin/contrib/gitian-descriptors/gitian-linux.yml
+	./bin/gsign --signer $SIGNER --release ${VERSION} --destination ../gitian.sigs/ ../darkcoin/contrib/gitian-descriptors/gitian-linux.yml
+	pushd build/out
+	zip -r darkcoin-${VERSION}-linux-gitian.zip *
+	mv darkcoin-${VERSION}-linux-gitian.zip ../../../
+	popd
+	./bin/gbuild --commit darkcoin=v${VERSION} ../darkcoin/contrib/gitian-descriptors/gitian-win.yml
+	./bin/gsign --signer $SIGNER --release ${VERSION}-win --destination ../gitian.sigs/ ../darkcoin/contrib/gitian-descriptors/gitian-win.yml
+	pushd build/out
+	zip -r darkcoin-${VERSION}-win-gitian.zip *
+	mv darkcoin-${VERSION}-win-gitian.zip ../../../
+	popd
+    ./bin/gbuild --commit darkcoin=v${VERSION} ../darkcoin/contrib/gitian-descriptors/gitian-osx-bitcoin.yml
+    ./bin/gsign --signer $SIGNER --release ${VERSION}-osx --destination ../gitian.sigs/ ../bitcoin/contrib/gitian-descriptors/gitian-osx-bitcoin.yml
+	pushd build/out
+	mv Darkcoin-Qt.dmg ../../../
+	popd
+	popd
 
   Build output expected:
 
@@ -211,4 +211,4 @@ Hash: SHA256
 
 - Add release notes for the new version to the directory `doc/release-notes` in git master
 
-- Celebrate 
+- Celebrate
