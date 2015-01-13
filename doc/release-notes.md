@@ -1,3 +1,10 @@
+0.8.7.5 changes
+=============
+- openssl-1.0.1k or older versions patched for CVE-2014-8275 broke compatibility with Bitcoin and Litecoin.
+  This update patches Litecoin to maintain compatibility with CVE-2014-8275 patched openssl.
+- If you are running v0.8.7.4 as distributed by litecoin.org you do not need to upgrade.
+  The binaries distributed on litecoin.org contain their own copy of openssl so they are unaffected by this issue.
+
 0.8.7.4 changes
 =============
 - Enforce v2 blocks at height 710000 on mainnet, 400000 on testnet
