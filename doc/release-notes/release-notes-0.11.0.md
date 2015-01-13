@@ -25,7 +25,6 @@ Darkcoin Core:
 - Added units for testnet: tDRK, mtDRK, utDRK, tduffs
 - Added new DNS seed from masternode.io
 - Fixed wallet locking after sending coins
-- Consider generated coins mature at 101 instead of 120 blocks
 - Add `-regtest` mode, similar to testnet but private with instant block
   generation with `setgenerate` RPC.
 - Add separate darkcoin-cli client
