@@ -14,7 +14,7 @@ reference_datetime: "2011-01-30 00:00:00"
 remotes: []
 files:
 - "qt-everywhere-opensource-src-4.8.5.tar.gz"
-- "bitcoin08-deps-win32-gitian-r12.zip"
+- "bitcoin08-deps-win32-gitian-r13.zip"
 script: |
   #
   HOST=i686-w64-mingw32
@@ -26,7 +26,7 @@ script: |
   mkdir -p $INSTDIR/host/bin
   #
   # Need mingw-compiled openssl from bitcoin-deps:
-  unzip bitcoin08-deps-win32-gitian-r12.zip
+  unzip bitcoin08-deps-win32-gitian-r13.zip
   DEPSDIR=`pwd`
   #
   tar xzf qt-everywhere-opensource-src-4.8.5.tar.gz
@@ -61,4 +61,4 @@ script: |
 
   # as zip stores file timestamps, use faketime to intercept stat calls to set dates for all files to reference date
   export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1
-  zip -r $OUTDIR/qt-win32-4.8.5-gitian-r7.zip *
+  zip -r $OUTDIR/qt-win32-4.8.5-gitian-r8.zip *
