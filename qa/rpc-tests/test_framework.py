@@ -33,8 +33,11 @@ class BitcoinTestFramework(object):
         print("Initializing test directory "+self.options.tmpdir)
         initialize_chain(self.options.tmpdir)
 
+    def setup_nodes(self):
+        return start_nodes(4, self.options.tmpdir)
+
     def setup_network(self, split = False):
-        self.nodes = start_nodes(4, self.options.tmpdir)
+        self.nodes = self.setup_nodes()
 
         # Connect the nodes as a "chain".  This allows us
         # to split the network between nodes 1 and 2 to get

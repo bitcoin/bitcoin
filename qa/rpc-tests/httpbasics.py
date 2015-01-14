@@ -21,6 +21,9 @@ except ImportError:
     import urlparse
 
 class HTTPBasicsTest (BitcoinTestFramework):        
+    def setup_nodes(self):
+        return start_nodes(4, self.options.tmpdir, extra_args=[['-rpckeepalive']]*4)
+
     def run_test(self):        
         
         #################################################
