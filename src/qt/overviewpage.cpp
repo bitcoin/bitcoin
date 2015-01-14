@@ -304,8 +304,6 @@ void OverviewPage::updateDarksendProgress(){
 
 void OverviewPage::darkSendStatus()
 {
-    if(!IsInitialBlockDownload()) return;
-
     int nBestHeight = chainActive.Tip()->nHeight;
 
     if(nBestHeight != darkSendPool.cachedNumBlocks)
