@@ -20,6 +20,7 @@
 class AmountSpinBox: public QAbstractSpinBox
 {
     Q_OBJECT
+
 public:
     explicit AmountSpinBox(QWidget *parent):
         QAbstractSpinBox(parent),
@@ -72,23 +73,6 @@ public:
         setValue(val);
     }
 
-    StepEnabled stepEnabled() const
-    {
-        StepEnabled rv = 0;
-        if(text().isEmpty()) // Allow step-up with empty field
-            return StepUpEnabled;
-        bool valid = false;
-        CAmount val = value(&valid);
-        if(valid)
-        {
-            if(val > 0)
-                rv |= StepDownEnabled;
-            if(val < BitcoinUnits::maxMoney())
-                rv |= StepUpEnabled;
-        }
-        return rv;
-    }
-
     void setDisplayUnit(int unit)
     {
         bool valid = false;
@@ -139,6 +123,7 @@ public:
         }
         return cachedMinimumSizeHint;
     }
+
 private:
     int currentUnit;
     CAmount singleStep;
@@ -177,6 +162,26 @@ protected:
             }
         }
         return QAbstractSpinBox::event(event);
+    }
+
+    StepEnabled stepEnabled() const
+    {
+        if (isReadOnly()) // Disable steps when AmountSpinBox is read-only
+            return StepNone;
+        if (text().isEmpty()) // Allow step-up with empty field
+            return StepUpEnabled;
+
+        StepEnabled rv = 0;
+        bool valid = false;
+        CAmount val = value(&valid);
+        if(valid)
+        {
+            if(val > 0)
+                rv |= StepDownEnabled;
+            if(val < BitcoinUnits::maxMoney())
+                rv |= StepUpEnabled;
+        }
+        return rv;
     }
 
 signals:
