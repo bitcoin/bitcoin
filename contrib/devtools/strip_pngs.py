@@ -21,8 +21,10 @@ def content_hash(filename):
 #optimize png, remove various color profiles, remove ancillary chunks (alla) and text chunks (text)
 #pngcrush -brute -ow -rem gAMA -rem cHRM -rem iCCP -rem sRGB -rem alla -rem text
 
+pngcrush = 'pngcrush'
+git = 'git'
 folders = ["src/qt/res/movies", "src/qt/res/icons", "src/qt/res/images"]
-basePath = subprocess.check_output("git rev-parse --show-toplevel", shell=True).rstrip('\n')
+basePath = subprocess.check_output([git, 'rev-parse', '--show-toplevel']).rstrip('\n')
 totalSaveBytes = 0
 
 outputArray = []
@@ -38,13 +40,15 @@ for folder in folders:
         
             pngCrushOutput = ""
             try:
-                pngCrushOutput = subprocess.check_output("pngcrush -brute -ow -rem gAMA -rem cHRM -rem iCCP -rem sRGB -rem alla -rem text "+file_path+" >/dev/null 2>&1", shell=True).rstrip('\n')
+                pngCrushOutput = subprocess.check_output(
+                        [pngcrush, "-brute", "-ow", "-rem", "gAMA", "-rem", "cHRM", "-rem", "iCCP", "-rem", "sRGB", "-rem", "alla", "-rem", "text", file_path],
+                        stderr=subprocess.STDOUT).rstrip('\n')
             except:
                 print "pngcrush is not installed, aborting..."
                 sys.exit(0)
         
             #verify
-            if "Not a PNG file" in subprocess.check_output("pngcrush -n -v "+file_path+" >/dev/null 2>&1", shell=True):
+            if "Not a PNG file" in subprocess.check_output([pngcrush, "-n", "-v", file_path], stderr=subprocess.STDOUT):
                 print "PNG file "+file+" is corrupted after crushing, check out pngcursh version"
                 sys.exit(1)
             
