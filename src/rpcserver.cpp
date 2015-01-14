@@ -954,7 +954,7 @@ void ServiceConnection(AcceptedConnection *conn)
         ReadHTTPMessage(conn->stream(), mapHeaders, strRequest, nProto, MAX_SIZE);
 
         // HTTP Keep-Alive is false; close connection immediately
-        if (mapHeaders["connection"] == "close")
+        if ((mapHeaders["connection"] == "close") || (!GetBoolArg("-rpckeepalive", false)))
             fRun = false;
 
         // Process via JSON-RPC API

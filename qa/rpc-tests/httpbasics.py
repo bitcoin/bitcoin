@@ -20,7 +20,10 @@ try:
 except ImportError:
     import urlparse
 
-class RESTTest (BitcoinTestFramework):        
+class HTTPBasicsTest (BitcoinTestFramework):        
+    def setup_nodes(self):
+        return start_nodes(4, self.options.tmpdir, extra_args=[['-rpckeepalive=1'], ['-rpckeepalive=0'], [], []])
+
     def run_test(self):        
         
         #################################################
@@ -71,6 +74,29 @@ class RESTTest (BitcoinTestFramework):
         assert_equal('"error":null' in out1, True)
         assert_equal(conn.sock!=None, False) #now the connection must be closed after the response        
         
+        #node1 (2nd node) is running with disabled keep-alive option
+        urlNode1 = urlparse.urlparse(self.nodes[1].url)
+        authpair = urlNode1.username + ':' + urlNode1.password
+        headers = {"Authorization": "Basic " + base64.b64encode(authpair)}
+                
+        conn = httplib.HTTPConnection(urlNode1.hostname, urlNode1.port)
+        conn.connect()
+        conn.request('GET', '/', '{"method": "getbestblockhash"}', headers)
+        out1 = conn.getresponse().read();
+        assert_equal('"error":null' in out1, True)
+        assert_equal(conn.sock!=None, False) #connection must be closed because keep-alive was set to false
+        
+        #node2 (third node) is running with standard keep-alive parameters which means keep-alive is off
+        urlNode2 = urlparse.urlparse(self.nodes[2].url)
+        authpair = urlNode2.username + ':' + urlNode2.password
+        headers = {"Authorization": "Basic " + base64.b64encode(authpair)}
+                
+        conn = httplib.HTTPConnection(urlNode2.hostname, urlNode2.port)
+        conn.connect()
+        conn.request('GET', '/', '{"method": "getbestblockhash"}', headers)
+        out1 = conn.getresponse().read();
+        assert_equal('"error":null' in out1, True)
+        assert_equal(conn.sock!=None, False) #connection must be closed because bitcoind should use keep-alive by default
         
 if __name__ == '__main__':
-    RESTTest ().main ()
+    HTTPBasicsTest ().main ()
