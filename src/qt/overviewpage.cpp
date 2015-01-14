@@ -246,6 +246,8 @@ void OverviewPage::showOutOfSyncWarning(bool fShow)
 }
 
 void OverviewPage::updateDarksendProgress(){
+    if(IsInitialBlockDownload()) return;
+
     int64_t balance = pwalletMain->GetBalance();
     if(balance == 0){
         ui->darksendProgress->setValue(0);
@@ -302,6 +304,8 @@ void OverviewPage::updateDarksendProgress(){
 
 void OverviewPage::darkSendStatus()
 {
+    if(!IsInitialBlockDownload()) return;
+
     int nBestHeight = chainActive.Tip()->nHeight;
 
     if(nBestHeight != darkSendPool.cachedNumBlocks)
