@@ -164,9 +164,24 @@ void MultisigDialog::on_createAddressButton_clicked()
         pubkeys[i].SetPubKey(vchPubKey);
     }
 
-    if((required == 0) || (required > pubkeys.size()))
+    if(pubkeys.size() > 16)
+    {
+        QMessageBox::warning(this, tr("Error"), tr("Number of addresses involved in the address creation > %1\nReduce the number").arg(16), QMessageBox::Ok);
         return;
+    }
 
+    if(required == 0)
+    {
+        QMessageBox::warning(this, tr("Error"), tr("Number of required signatures is 0\nNumber of required signatures must be between 1 and number of keys involved in the creation of address."), QMessageBox::Ok);
+        return;
+    }
+
+    if(required > pubkeys.size())
+    {
+        QMessageBox::warning(this, tr("Error"), tr("Number of required signatures > Number of keys involved in the creation of address."), QMessageBox::Ok);
+        return;
+    }
+    
     CScript script;
     script.SetMultisig(required, pubkeys);
     if (script.size() > MAX_SCRIPT_ELEMENT_SIZE)
