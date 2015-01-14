@@ -36,6 +36,52 @@ static void CopyNodeStats(std::vector<CNodeStats>& vstats)
     }
 }
 
+Value getaddrmaninfo(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 0)
+        throw runtime_error(
+            "getaddrmaninfo\n"
+            "Returns a dump of addrman data.");
+
+    vector<CAddress> vAddr = addrman.GetAddr();
+
+    Array ret;
+
+    BOOST_FOREACH(const CAddress &addr, vAddr) {
+        // Don't return addresses older than nCutOff timestamp
+        int64_t nCutOff = GetTime() - (nNodeLifespan * 24 * 60 * 60);
+
+        if (!addr.IsRoutable() || addr.IsLocal() || addr.nTime > nCutOff)
+            continue;
+
+        Object addrManItem;
+        addrManItem.push_back(Pair("address", addr.ToString()));
+
+        string strNetType;
+        switch(addr.GetNetwork())
+        {
+            case NET_TOR:
+                strNetType = "tor";
+            break;
+            case NET_I2P:
+                strNetType = "i2p";
+            case NET_IPV4:
+                strNetType = "ipv4";
+            break;
+            default:
+            case NET_IPV6:
+                strNetType = "ipv6";
+
+        }
+        addrManItem.push_back(Pair("type", strNetType));
+        addrManItem.push_back(Pair("time", (int64_t)addr.nTime));
+
+        ret.push_back(addrManItem);
+    }
+
+    return ret;
+}
+
 Value getpeerinfo(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 0)
