@@ -7,6 +7,7 @@
 #include "test/test_bitcoin.h"
 
 #include "clientversion.h"
+#include "consensus/consensus.h"
 #include "consensus/validation.h"
 #include "core_io.h"
 #include "key.h"
@@ -134,7 +135,7 @@ BOOST_AUTO_TEST_CASE(tx_valid)
             stream >> tx;
 
             CValidationState state;
-            BOOST_CHECK_MESSAGE(CheckTransaction(tx, state), strTest);
+            BOOST_CHECK_MESSAGE(Consensus::CheckTx(tx, state), strTest);
             BOOST_CHECK(state.IsValid());
 
             for (unsigned int i = 0; i < tx.vin.size(); i++)
@@ -210,7 +211,7 @@ BOOST_AUTO_TEST_CASE(tx_invalid)
             stream >> tx;
 
             CValidationState state;
-            fValid = CheckTransaction(tx, state) && state.IsValid();
+            fValid = Consensus::CheckTx(tx, state) && state.IsValid();
 
             for (unsigned int i = 0; i < tx.vin.size() && fValid; i++)
             {
@@ -239,11 +240,11 @@ BOOST_AUTO_TEST_CASE(basic_transaction_tests)
     CMutableTransaction tx;
     stream >> tx;
     CValidationState state;
-    BOOST_CHECK_MESSAGE(CheckTransaction(tx, state) && state.IsValid(), "Simple deserialized transaction should be valid.");
+    BOOST_CHECK_MESSAGE(Consensus::CheckTx(tx, state) && state.IsValid(), "Simple deserialized transaction should be valid.");
 
     // Check that duplicate txins fail
     tx.vin.push_back(tx.vin[0]);
-    BOOST_CHECK_MESSAGE(!CheckTransaction(tx, state) || !state.IsValid(), "Transaction with duplicate txins should be invalid.");
+    BOOST_CHECK_MESSAGE(!Consensus::CheckTx(tx, state) || !state.IsValid(), "Transaction with duplicate txins should be invalid.");
 }
 
 //

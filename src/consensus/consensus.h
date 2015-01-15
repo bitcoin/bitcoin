@@ -10,6 +10,7 @@
 
 class CBlockHeader;
 class CBlockIndex;
+class CTransaction;
 class CValidationState;
 
 /** The maximum allowed size for a serialized block, in bytes (network rule) */
@@ -32,6 +33,7 @@ namespace Consensus {
 bool VerifyBlockHeader(const CBlockHeader& block, CValidationState& state, const Consensus::Params& params, int64_t nTime, CBlockIndex* pindexPrev);
 
 /** Context-independent validity checks */
+bool CheckTx(const CTransaction& tx, CValidationState &state);
 bool CheckBlockHeader(const CBlockHeader& block, int64_t nTime, CValidationState& state, const Consensus::Params& params, bool fCheckPOW = true);
 
 /** Context-dependent validity checks */
