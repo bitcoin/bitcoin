@@ -354,14 +354,14 @@
            <item row="3" column="1">
             <widget class="QLabel" name="labelAmountRounds">
              <property name="text">
-              <string>1000 DRK / 8 Rounds</string>
+              <string>0 DRK / 0 Rounds</string>
              </property>
             </widget>
            </item>
            <item row="4" column="0">
             <widget class="QLabel" name="label_9">
              <property name="text">
-              <string>Submitted Denom</string>
+              <string>Submitted Denom:</string>
              </property>
             </widget>
            </item>

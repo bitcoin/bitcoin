@@ -13,21 +13,23 @@ Darkcoin Core:
 - Rebrand to `Darkcoin Core`
 - Version bumped to 0.11 to indicate a new major release
 - Renamed client to identify with network from `Satoshi` to `Core`
-- Bump protocol version to 70052
+- Bumped protocol version to 70052
 - Changed p2sh-address versions to start with `7` (instead of `3`, this affects
   public keys only, old scripts remain valid and usable!)
 - Changed testnet address versions to start with `x` or `y` (instead of `m` or
   `n`, this affects public keys only, old wallets remain valid and usable!)
 - Defined BIP32 (HD) address versions to start with `drkp`/`drkv` (`DRKP`/`DRKV`
   for testnet)
+- Adapted BIP44 coin type `5` for Darkcoin (0x80000005) as defined in SLIP-0044
 - Added new units: `duffs` (1 / 100.000.000 DRK)
 - Added units for testnet: tDRK, mtDRK, utDRK, tduffs
 - Added new DNS seed from masternode.io
 - Fixed wallet locking after sending coins
-- Consider generated coins mature at 101 instead of 120 blocks
 - Add `-regtest` mode, similar to testnet but private with instant block
   generation with `setgenerate` RPC.
 - Add separate darkcoin-cli client
+- Implemented KeyPass integration for CLI, RPC and Qt: 
+  `keepass`, `keepassport`, `keepasskey`, `keepassid`, `keepassname`
 
 
 Masternodes:
@@ -49,6 +51,8 @@ Darksend:
 - Added denomination information to Overview tab
 - Added more detailed Darksend status information to Overview tab
 - Added Darksend high precision matching engine
+- Added Darksend balance to `getinfo`
+- Changed maximum rounds of mixing to 16
 
 
 RPC:
