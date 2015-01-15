@@ -760,60 +760,48 @@ unsigned int GetP2SHSigOpCount(const CTransaction& tx, const CCoinsViewCache& in
 
 
 
-bool CheckTransaction(const CTransaction& tx, CValidationState &state)
+bool Consensus::CheckTx(const CTransaction& tx, CValidationState &state)
 {
     // Basic checks that don't depend on any context
     if (tx.vin.empty())
-        return state.DoS(10, error("CheckTransaction(): vin empty"),
-                         REJECT_INVALID, "bad-txns-vin-empty");
+        return state.DoS(10, false, REJECT_INVALID, "bad-txns-vin-empty");
     if (tx.vout.empty())
-        return state.DoS(10, error("CheckTransaction(): vout empty"),
-                         REJECT_INVALID, "bad-txns-vout-empty");
+        return state.DoS(10, false, REJECT_INVALID, "bad-txns-vout-empty");
     // Size limits
     if (::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION) > MAX_BLOCK_SIZE)
-        return state.DoS(100, error("CheckTransaction(): size limits failed"),
-                         REJECT_INVALID, "bad-txns-oversize");
+        return state.DoS(100, false, REJECT_INVALID, "bad-txns-oversize");
 
     // Check for negative or overflow output values
     CAmount nValueOut = 0;
-    BOOST_FOREACH(const CTxOut& txout, tx.vout)
-    {
-        if (txout.nValue < 0)
-            return state.DoS(100, error("CheckTransaction(): txout.nValue negative"),
-                             REJECT_INVALID, "bad-txns-vout-negative");
-        if (txout.nValue > MAX_MONEY)
-            return state.DoS(100, error("CheckTransaction(): txout.nValue too high"),
-                             REJECT_INVALID, "bad-txns-vout-toolarge");
-        nValueOut += txout.nValue;
+    for (unsigned int i = 0; i < tx.vout.size(); i++) {
+        if (tx.vout[i].nValue < 0)
+            return state.DoS(100, false, REJECT_INVALID, "bad-txns-vout-negative");
+        if (tx.vout[i].nValue > MAX_MONEY)
+            return state.DoS(100, false, REJECT_INVALID, "bad-txns-vout-toolarge");
+        nValueOut += tx.vout[i].nValue;
         if (!MoneyRange(nValueOut))
-            return state.DoS(100, error("CheckTransaction(): txout total out of range"),
-                             REJECT_INVALID, "bad-txns-txouttotal-toolarge");
+            return state.DoS(100, false, REJECT_INVALID, "bad-txns-txouttotal-toolarge");
     }
 
     // Check for duplicate inputs
-    set<COutPoint> vInOutPoints;
-    BOOST_FOREACH(const CTxIn& txin, tx.vin)
-    {
-        if (vInOutPoints.count(txin.prevout))
-            return state.DoS(100, error("CheckTransaction(): duplicate inputs"),
-                             REJECT_INVALID, "bad-txns-inputs-duplicate");
-        vInOutPoints.insert(txin.prevout);
+    std::set<COutPoint> vInOutPoints;
+    for (unsigned int i = 0; i < tx.vin.size(); i++) {
+        if (vInOutPoints.count(tx.vin[i].prevout))
+            return state.DoS(100, false, REJECT_INVALID, "bad-txns-inputs-duplicate");
+        vInOutPoints.insert(tx.vin[i].prevout);
     }
 
     if (tx.IsCoinBase())
     {
         if (tx.vin[0].scriptSig.size() < 2 || tx.vin[0].scriptSig.size() > 100)
-            return state.DoS(100, error("CheckTransaction(): coinbase script size"),
-                             REJECT_INVALID, "bad-cb-length");
+            return state.DoS(100, false, REJECT_INVALID, "bad-cb-length");
     }
     else
     {
-        BOOST_FOREACH(const CTxIn& txin, tx.vin)
-            if (txin.prevout.IsNull())
-                return state.DoS(10, error("CheckTransaction(): prevout is null"),
-                                 REJECT_INVALID, "bad-txns-prevout-null");
+        for (unsigned int i = 0; i < tx.vin.size(); i++)
+            if (tx.vin[i].prevout.IsNull())
+                return state.DoS(10, false, REJECT_INVALID, "bad-txns-prevout-null");
     }
-
     return true;
 }
 
@@ -854,13 +842,13 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
     if (pfMissingInputs)
         *pfMissingInputs = false;
 
-    if (!CheckTransaction(tx, state))
-        return error("AcceptToMemoryPool: CheckTransaction failed");
-
     // Coinbase is only valid in a block, not as a loose transaction
     if (tx.IsCoinBase())
         return state.DoS(100, error("AcceptToMemoryPool: coinbase as individual tx"),
                          REJECT_INVALID, "coinbase");
+
+    if (!Consensus::CheckTx(tx, state))
+        return error("%s: Consensus::CheckTx(): ", __func__, state.GetRejectReason().c_str());
 
     // Rather not work on nonstandard transactions (unless -testnet/-regtest)
     string reason;
@@ -2536,8 +2524,8 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
 
     // Check transactions
     BOOST_FOREACH(const CTransaction& tx, block.vtx)
-        if (!CheckTransaction(tx, state))
-            return error("CheckBlock(): CheckTransaction failed");
+        if (!Consensus::CheckTx(tx, state))
+            return error("%s: Consensus::CheckTx(): ", __func__, state.GetRejectReason().c_str());
 
     unsigned int nSigOps = 0;
     BOOST_FOREACH(const CTransaction& tx, block.vtx)

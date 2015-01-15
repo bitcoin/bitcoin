@@ -6,8 +6,8 @@
 #include "wallet/walletdb.h"
 
 #include "base58.h"
+#include "consensus/consensus.h"
 #include "consensus/validation.h"
-#include "main.h"
 #include "protocol.h"
 #include "serialize.h"
 #include "sync.h"
@@ -371,8 +371,10 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
             CWalletTx wtx;
             ssValue >> wtx;
             CValidationState state;
-            if (!(CheckTransaction(wtx, state) && (wtx.GetHash() == hash) && state.IsValid()))
+            if (!(Consensus::CheckTx(wtx, state) && (wtx.GetHash() == hash) && state.IsValid())) {
+                strErr = strprintf("%s: Consensus::CheckTx(): ", __func__, state.GetRejectReason().c_str());
                 return false;
+            }
 
             // Undo serialize changes in 31600
             if (31404 <= wtx.fTimeReceivedIsTxTime && wtx.fTimeReceivedIsTxTime <= 31703)

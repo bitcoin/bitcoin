@@ -12,6 +12,7 @@
 #include <stdint.h>
 
 class CBlockHeader;
+class CTransaction;
 class CValidationState;
 
 /** The maximum allowed size for a serialized block, in bytes (network rule) */
@@ -29,6 +30,10 @@ static const unsigned int LOCKTIME_THRESHOLD = 500000000; // Tue Nov  5 00:53:20
  * Verify_ means all data provided was enough for this level and its "consensus-verified".
  */
 namespace Consensus {
+
+/** Transaction validation functions */
+
+bool CheckTx(const CTransaction&, CValidationState&);
 
 /** Block header validation functions */
 
@@ -50,5 +55,7 @@ bool CheckProofOfWork(uint256 hash, unsigned int nBits, const Consensus::Params&
  * in the last Consensus::Params::nMajorityWindow blocks, starting at pstart and going backwards.
  */
 bool IsSuperMajority(int minVersion, const CBlockIndexBase* pstart, unsigned nRequired, const Consensus::Params& consensusParams, PrevIndexGetter);
+
+} // namespace Consensus
 
 #endif // BITCOIN_CONSENSUS_CONSENSUS_H
