@@ -138,20 +138,20 @@
             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This setting determines the amount of individual masternodes that an input will be anonymized through. More rounds of anonymization gives a higher degree of privacy, but also costs more in fees.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
            </property>
            <property name="text">
-            <string>Darksend Rounds To Use</string>
+            <string>Darksend rounds to use</string>
            </property>
           </widget>
          </item>
          <item>
           <widget class="QSpinBox" name="darksendRounds">
            <property name="minimum">
-            <number>1</number>
+            <number>2</number>
            </property>
            <property name="maximum">
             <number>16</number>
            </property>
            <property name="value">
-            <number>2</number>
+            <number>8</number>
            </property>
           </widget>
          </item>
@@ -184,7 +184,7 @@
          <item>
           <widget class="QSpinBox" name="anonymizeDarkcoin">
            <property name="minimum">
-            <number>1</number>
+            <number>2</number>
            </property>
            <property name="maximum">
             <number>2000</number>
