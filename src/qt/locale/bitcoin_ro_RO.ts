@@ -31,7 +31,11 @@ Acest produs include programe dezvoltate de către OpenSSL Project pentru a fi f
         <source>The Bitcoin Core developers</source>
         <translation>Dezvoltatorii Bitcoin Core</translation>
     </message>
-    </context>
+    <message>
+        <source>(%1-bit)</source>
+        <translation>(%1-bit)</translation>
+    </message>
+</context>
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -76,7 +80,7 @@ Acest produs include programe dezvoltate de către OpenSSL Project pentru a fi f
     </message>
     <message>
         <source>&amp;Delete</source>
-        <translation>Ște&amp;rge</translation>
+        <translation>&amp;Șterge</translation>
     </message>
     <message>
         <source>Choose the address to send coins to</source>
@@ -320,6 +324,14 @@ Acest produs include programe dezvoltate de către OpenSSL Project pentru a fi f
         <translation>S&amp;chimbă parola...</translation>
     </message>
     <message>
+        <source>&amp;Sending addresses...</source>
+        <translation>&amp;Trimitere adrese...</translation>
+    </message>
+    <message>
+        <source>&amp;Receiving addresses...</source>
+        <translation>&amp;Primire adrese...</translation>
+    </message>
+    <message>
         <source>Open &amp;URI...</source>
         <translation>Vizitaţi &amp;URI...</translation>
     </message>
@@ -444,6 +456,10 @@ Acest produs include programe dezvoltate de către OpenSSL Project pentru a fi f
         <translation>Command-line setări</translation>
     </message>
     <message>
+        <source>Show the Bitcoin Core help message to get a list with possible Bitcoin command-line options</source>
+        <translation>Arată mesajul de ajutor Bitcoin Core pentru a obține o listă cu opțiunile posibile de linii de comandă Bitcoin</translation>
+    </message>
+    <message>
         <source>Bitcoin client</source>
         <translation>Client Bitcoin</translation>
     </message>
@@ -478,6 +494,10 @@ Acest produs include programe dezvoltate de către OpenSSL Project pentru a fi f
     <message>
         <source>%1 and %2</source>
         <translation>%1 si %2</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n year(s)</source>
+        <translation><numerusform>%n an</numerusform><numerusform>%n ani</numerusform><numerusform>%n ani</numerusform></translation>
     </message>
     <message>
         <source>%1 behind</source>

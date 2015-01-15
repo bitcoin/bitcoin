@@ -13,21 +13,23 @@ Darkcoin Core:
 - Rebrand to `Darkcoin Core`
 - Version bumped to 0.11 to indicate a new major release
 - Renamed client to identify with network from `Satoshi` to `Core`
-- Bump protocol version to 70052
+- Bumped protocol version to 70052
 - Changed p2sh-address versions to start with `7` (instead of `3`, this affects
   public keys only, old scripts remain valid and usable!)
 - Changed testnet address versions to start with `x` or `y` (instead of `m` or
   `n`, this affects public keys only, old wallets remain valid and usable!)
 - Defined BIP32 (HD) address versions to start with `drkp`/`drkv` (`DRKP`/`DRKV`
   for testnet)
+- Adapted BIP44 coin type `5` for Darkcoin (0x80000005) as defined in SLIP-0044
 - Added new units: `duffs` (1 / 100.000.000 DRK)
 - Added units for testnet: tDRK, mtDRK, utDRK, tduffs
 - Added new DNS seed from masternode.io
 - Fixed wallet locking after sending coins
-- Consider generated coins mature at 101 instead of 120 blocks
 - Add `-regtest` mode, similar to testnet but private with instant block
   generation with `setgenerate` RPC.
 - Add separate darkcoin-cli client
+- Implemented KeyPass integration for CLI, RPC and Qt: 
+  `keepass`, `keepassport`, `keepasskey`, `keepassid`, `keepassname`
 
 
 Masternodes:
@@ -49,6 +51,8 @@ Darksend:
 - Added denomination information to Overview tab
 - Added more detailed Darksend status information to Overview tab
 - Added Darksend high precision matching engine
+- Added Darksend balance to `getinfo`
+- Changed maximum rounds of mixing to 16
 
 
 RPC:
@@ -86,6 +90,7 @@ RPC:
 - Add rpc command 'getunconfirmedbalance' to obtain total unconfirmed balance
 - Explicitly ensure that wallet is unlocked in `importprivkey`
 - Add check for valid keys in `importprivkey`
+- Disable SSLv3 (in favor of TLS) for the RPC client and server.
 
 
 Command-line options:
@@ -102,6 +107,7 @@ Command-line options:
 - RPC client option: '-rpcwait', to wait for server start
 - Remove '-logtodebugger'
 - Allow `-noserver` with darkcoind
+- Make -proxy set all network types, avoiding a connect leak.
 
 
 Block-chain handling and storage:
@@ -145,6 +151,7 @@ Protocol and network code:
 - Process received messages one at a time without sleeping between messages
 - Improve logging of failed connections
 - Add some additional logging to give extra network insight
+- Limit the number of new addressses to accumulate
 
 
 Wallet:
@@ -236,6 +243,9 @@ Validation:
 - Reject non-canonically-encoded serialization sizes
 - Reject dust amounts during validation
 - Accept nLockTime transactions that finalize in the next block
+- consensus: guard against openssl's new strict DER checks
+- fail immediately on an empty signature
+- Improve robustness of DER recoding code
 
 
 Build system:
@@ -260,6 +270,9 @@ Build system:
 - Solaris compatibility fixes
 - Check integrity of gitian input source tarballs
 - Enable full GCC Stack-smashing protection for all OSes
+- build: Fix OSX build when using Homebrew and qt5
+- Keep symlinks when copying into .app bundle
+- osx: fix signing to make Gatekeeper happy (again)
 
 
 Miscellaneous:
@@ -274,3 +287,5 @@ Miscellaneous:
 - Add missing cs_main and wallet locks
 - Avoid exception at startup when system locale not recognized
 - devtools: add a script to fetch and postprocess translations
+- Refactor -alertnotify code
+- doc: Add instructions for consistent Mac OS X build names

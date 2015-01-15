@@ -3,11 +3,15 @@
     <name>AboutDialog</name>
     <message>
         <source>About Bitcoin Core</source>
-        <translation>O Bitcoin Jezrgu</translation>
+        <translation>O Bitcoinovoj jezgri</translation>
+    </message>
+    <message>
+        <source>&lt;b&gt;Bitcoin Core&lt;/b&gt; version</source>
+        <translation>&lt;b&gt;Bitcoinova jezgra&lt;/b&gt; inačica</translation>
     </message>
     <message>
         <source>Copyright</source>
-        <translation>Autorsko pravo</translation>
+        <translation>Autorsko pravo </translation>
     </message>
     </context>
 <context>
@@ -21,12 +25,28 @@
         <translation>Dodajte novu adresu</translation>
     </message>
     <message>
+        <source>&amp;New</source>
+        <translation>&amp;Nova</translation>
+    </message>
+    <message>
         <source>Copy the currently selected address to the system clipboard</source>
         <translation>Kopiraj trenutno odabranu adresu u međuspremnik</translation>
     </message>
     <message>
+        <source>&amp;Copy</source>
+        <translation>&amp;Kopiraj</translation>
+    </message>
+    <message>
+        <source>C&amp;lose</source>
+        <translation>&amp;Zatvori</translation>
+    </message>
+    <message>
         <source>&amp;Copy Address</source>
         <translation>&amp;Kopirati adresu</translation>
+    </message>
+    <message>
+        <source>Delete the currently selected address from the list</source>
+        <translation>Brisanje trenutno odabrane adrese s popisa.</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
@@ -41,6 +61,34 @@
         <translation>&amp;Brisanje</translation>
     </message>
     <message>
+        <source>Choose the address to send coins to</source>
+        <translation>Odabir adrese na koju šaljete novac</translation>
+    </message>
+    <message>
+        <source>Choose the address to receive coins with</source>
+        <translation>Odaberi adresu na koju primaš novac</translation>
+    </message>
+    <message>
+        <source>C&amp;hoose</source>
+        <translation>&amp;Odaberi</translation>
+    </message>
+    <message>
+        <source>Sending addresses</source>
+        <translation>Adresa za slanje</translation>
+    </message>
+    <message>
+        <source>Receiving addresses</source>
+        <translation>Adresa za primanje</translation>
+    </message>
+    <message>
+        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation>Ovo su vaše Bitcoin adrese za slanje uplate. Uvijek provjerite iznos i adresu primatelja prije slanja novca.</translation>
+    </message>
+    <message>
+        <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
+        <translation>Ovo su vaše Bitcoin adrese za primanje isplate. Preporučamo da koristite novu primateljsku adresu za svaku transakciju.</translation>
+    </message>
+    <message>
         <source>Copy &amp;Label</source>
         <translation>Kopirati &amp;oznaku</translation>
     </message>
@@ -49,8 +97,16 @@
         <translation>&amp;Izmjeniti</translation>
     </message>
     <message>
+        <source>Export Address List</source>
+        <translation>Izvezi listu adresa</translation>
+    </message>
+    <message>
         <source>Comma separated file (*.csv)</source>
         <translation>Datoteka vrijednosti odvojenih zarezom (*. csv)</translation>
+    </message>
+    <message>
+        <source>Exporting Failed</source>
+        <translation>Izvoz neuspješan</translation>
     </message>
     </context>
 <context>
@@ -70,6 +126,10 @@
 </context>
 <context>
     <name>AskPassphraseDialog</name>
+    <message>
+        <source>Passphrase Dialog</source>
+        <translation>Dijalog lozinke</translation>
+    </message>
     <message>
         <source>Enter passphrase</source>
         <translation>Unesite lozinku</translation>
@@ -127,6 +187,10 @@
         <translation>Jeste li sigurni da želite šifrirati svoj novčanik?</translation>
     </message>
     <message>
+        <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
+        <translation>VAŽNO: Sve prethodne pričuve vašeg novčanika trebale bi biti zamijenjene novo stvorenom, šifriranom datotekom novčanika. Zbog sigurnosnih razloga, prethodne pričuve nešifriranog novčanika će postati beskorisne čim počnete koristiti novi, šifrirani novčanik.</translation>
+    </message>
+    <message>
         <source>Warning: The Caps Lock key is on!</source>
         <translation>Upozorenje: Tipka Caps Lock je uključena!</translation>
     </message>
@@ -182,6 +246,10 @@
         <translation>&amp;Pregled</translation>
     </message>
     <message>
+        <source>Node</source>
+        <translation>Čvor</translation>
+    </message>
+    <message>
         <source>Show general overview of wallet</source>
         <translation>Prikaži opći pregled novčanika</translation>
     </message>
@@ -230,6 +298,18 @@
         <translation>&amp;Promijena lozinke...</translation>
     </message>
     <message>
+        <source>&amp;Sending addresses...</source>
+        <translation>Adrese za s&amp;lanje</translation>
+    </message>
+    <message>
+        <source>&amp;Receiving addresses...</source>
+        <translation>Adrese za p&amp;rimanje</translation>
+    </message>
+    <message>
+        <source>Open &amp;URI...</source>
+        <translation>Otvori &amp;URI...</translation>
+    </message>
+    <message>
         <source>Importing blocks from disk...</source>
         <translation>Importiranje blokova sa diska...</translation>
     </message>
@@ -254,6 +334,14 @@
         <translation>Promijenite lozinku za šifriranje novčanika</translation>
     </message>
     <message>
+        <source>&amp;Debug window</source>
+        <translation>&amp;Ispravljanje programerskih pogrešaka</translation>
+    </message>
+    <message>
+        <source>Open debugging and diagnostic console</source>
+        <translation>Otvori konzolu za dijagnostiku i otklanjanje programskih pogrešaka.</translation>
+    </message>
+    <message>
         <source>&amp;Verify message...</source>
         <translation>&amp;Potvrdite poruku...</translation>
     </message>
@@ -268,6 +356,30 @@
     <message>
         <source>&amp;Send</source>
         <translation>&amp;Pošalji</translation>
+    </message>
+    <message>
+        <source>&amp;Receive</source>
+        <translation>Pri&amp;miti</translation>
+    </message>
+    <message>
+        <source>&amp;Show / Hide</source>
+        <translation>Po&amp;kaži / Sakrij</translation>
+    </message>
+    <message>
+        <source>Show or hide the main Window</source>
+        <translation>Prikaži ili sakrij glavni prozor</translation>
+    </message>
+    <message>
+        <source>Encrypt the private keys that belong to your wallet</source>
+        <translation>Šifriraj privatne ključeve koji pripadaju tvom novčaniku</translation>
+    </message>
+    <message>
+        <source>Sign messages with your Bitcoin addresses to prove you own them</source>
+        <translation>Potpiši poruke svojim Bitcoin adresama kako bi dokazao da si njihov vlasnik</translation>
+    </message>
+    <message>
+        <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
+        <translation>Provjerite porkue kako bi se uvjerili da su potpisane navedenim Bitcoin adresama</translation>
     </message>
     <message>
         <source>&amp;File</source>
@@ -292,6 +404,22 @@
     <message>
         <source>Bitcoin Core</source>
         <translation>Bitcoin Jezgra</translation>
+    </message>
+    <message>
+        <source>Request payments (generates QR codes and bitcoin: URIs)</source>
+        <translation>Zatraži uplate (Stvara QR kodove i bitcoin: URIje)</translation>
+    </message>
+    <message>
+        <source>&amp;About Bitcoin Core</source>
+        <translation>&amp;O Bitcoin Jezgri</translation>
+    </message>
+    <message>
+        <source>Show the list of used sending addresses and labels</source>
+        <translation>Prikaži popis korištenih adresa i oznaka za slanje isplate</translation>
+    </message>
+    <message>
+        <source>Show the list of used receiving addresses and labels</source>
+        <translation>Prikaži popis korištenih adresa i oznaka za primanje isplate</translation>
     </message>
     <message>
         <source>Bitcoin client</source>
@@ -1242,6 +1370,10 @@ Adresa:%4
     <message>
         <source>Show transaction details</source>
         <translation>Prikaži detalje transakcije</translation>
+    </message>
+    <message>
+        <source>Exporting Failed</source>
+        <translation>Izvoz neuspješan</translation>
     </message>
     <message>
         <source>Comma separated file (*.csv)</source>

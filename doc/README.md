@@ -1,7 +1,9 @@
-Bitcoin 0.9.3 BETA
-=====================
+Darkcoin 0.11.x BETA
+====================
 
-Copyright (c) 2009-2014 Bitcoin Developers
+Copyright (c) 2009-2015 Bitcoin Developers
+
+Copyright (c) 2014-2015 Darkcoin Developers
 
 
 Setup
@@ -10,7 +12,7 @@ Setup
 
 Running
 ---------------------
-The following are some helpful notes on how to run Bitcoin on your native platform. 
+The following are some helpful notes on how to run Bitcoin on your native platform.
 
 ### Unix
 
