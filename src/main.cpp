@@ -1170,7 +1170,7 @@ int CMerkleTx::GetBlocksToMaturity() const
 {
     if (!IsCoinBase())
         return 0;
-    return max(0, (COINBASE_MATURITY+1) - GetDepthInMainChain());
+    return max(0, (COINBASE_MATURITY+20) - GetDepthInMainChain());
 }
 
 
@@ -3210,8 +3210,10 @@ bool ProcessBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDiskBl
         mapOrphanBlocksByPrev.erase(hashPrev);
     }
 
-    darkSendPool.CheckTimeout();
-    darkSendPool.NewBlock();
+    if(!IsInitialBlockDownload()){
+        darkSendPool.CheckTimeout();
+        darkSendPool.NewBlock();
+    }
 
     LogPrintf("ProcessBlock: ACCEPTED\n");
     return true;
