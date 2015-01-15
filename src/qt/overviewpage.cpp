@@ -454,9 +454,14 @@ void OverviewPage::darksendReset(){
 void OverviewPage::toggleDarksend(){
     if(!fEnableDarksend){
         int64_t balance = pwalletMain->GetBalance();
-        if(balance < 1.49*COIN){
+        float minAmount = 1.49 * COIN;
+        if(balance < minAmount){
+            QString strMinAmount(
+                BitcoinUnits::formatWithUnit(
+                    walletModel->getOptionsModel()->getDisplayUnit(),
+                    minAmount));
             QMessageBox::warning(this, tr("Darksend"),
-                tr("Darksend requires at least 1.5 DRK to use."),
+                tr("Darksend requires at least %1 to use.").arg(strMinAmount),
                 QMessageBox::Ok, QMessageBox::Ok);
             return;
         }
