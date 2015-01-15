@@ -1236,7 +1236,7 @@ void CWallet::AvailableCoins(vector<COutput>& vCoins, bool fOnlyConfirmed, const
                    COutput out = COutput(pcoin, i, pcoin->GetDepthInMainChain());
                    CTxIn vin = CTxIn(out.tx->GetHash(), out.i);
                    int rounds = GetInputDarksendRounds(vin);
-                   if(rounds >= nDarksendRounds) found = true;
+                   if(rounds >= 0) found = true;
                 } else if(coin_type == ONLY_NONDENOMINATED) {
                     found = true;
                     BOOST_FOREACH(int64_t d, darkSendDenominations)
@@ -1507,16 +1507,6 @@ struct CompareByPriority
 
 bool CWallet::SelectCoinsByDenominations(int nDenom, int64_t nValueMin, int64_t nValueMax, std::vector<CTxIn>& setCoinsRet, int64_t& nValueRet, int nDarksendRoundsMin, int nDarksendRoundsMax)
 {
-    //if the forth bit is on, it doesn't matter which inputs we chose
-    if(nDenom & (1 << 4)) {
-        if(SelectCoinsDark(nValueMin, nValueMax, setCoinsRet, nValueRet, nDarksendRoundsMin, nDarksendRoundsMax)){
-            int64_t nTotalValue = GetTotalValue(setCoinsRet);
-            return nDenom == darkSendPool.GetDenominationsByAmount(nTotalValue, nDenom);
-        } else {
-            return false;
-        }
-    }
-
     CCoinControl *coinControl=NULL;
 
     setCoinsRet.clear();
@@ -1535,21 +1525,18 @@ bool CWallet::SelectCoinsByDenominations(int nDenom, int64_t nValueMin, int64_t 
     bool fFound10 = false;
     bool fFound1 = false;
     bool fFoundDot1 = false;
-    bool fFoundND = false;
 
     //Check to see if any of the denomination are off, in that case mark them as fulfilled
     if(!(nDenom & (1 << 0))) fFound100 = true;
     if(!(nDenom & (1 << 1))) fFound10 = true;
     if(!(nDenom & (1 << 2))) fFound1 = true;
     if(!(nDenom & (1 << 3))) fFoundDot1 = true;
-    if(!(nDenom & (1 << 4))) fFoundND = true;
 
     BOOST_FOREACH(const COutput& out, vCoins)
     {
         //there's no reason to allow inputs less than 1 COIN into DS (other than denominations smaller than that amount)
         if(out.tx->vout[out.i].nValue < 1*COIN && out.tx->vout[out.i].nValue != (.1*COIN)+1) continue;
         if(fMasterNode && out.tx->vout[out.i].nValue == 1000*COIN) continue; //masternode input
-
         if(nValueRet + out.tx->vout[out.i].nValue <= nValueMax){
             bool fAccepted = false;
 
@@ -1559,7 +1546,6 @@ bool CWallet::SelectCoinsByDenominations(int nDenom, int64_t nValueMin, int64_t 
             // bit 1 - 10DRK+1
             // bit 2 - 1DRK+1
             // bit 3 - .1DRK+1
-            // bit 4 - non-denom
 
             CTxIn vin = CTxIn(out.tx->GetHash(),out.i);
 
@@ -1567,22 +1553,18 @@ bool CWallet::SelectCoinsByDenominations(int nDenom, int64_t nValueMin, int64_t 
             if(rounds >= nDarksendRoundsMax) continue;
             if(rounds < nDarksendRoundsMin) continue;
 
-            if(fFound100 && fFound10 && fFound1 && fFoundDot1 && fFoundND){ //if fulfilled
+            if(fFound100 && fFound10 && fFound1 && fFoundDot1){ //if fulfilled
                 //Denomination criterion has been met, we can take any matching denominations
                 if((nDenom & (1 << 0)) && out.tx->vout[out.i].nValue == ((100*COIN)+1)) {fAccepted = true;}
                 else if((nDenom & (1 << 1)) && out.tx->vout[out.i].nValue == ((10*COIN)+1)) {fAccepted = true;}
                 else if((nDenom & (1 << 2)) && out.tx->vout[out.i].nValue == ((1*COIN)+1)) {fAccepted = true;}
                 else if((nDenom & (1 << 3)) && out.tx->vout[out.i].nValue == ((.1*COIN)+1)) {fAccepted = true;}
-                else if((nDenom & (1 << 4))) {fAccepted = true;}
             } else {
                 //Criterion has not been satisfied, we will only take 1 of each until it is.
                 if((nDenom & (1 << 0)) && out.tx->vout[out.i].nValue == ((100*COIN)+1)) {fAccepted = true; fFound100 = true;}
                 else if((nDenom & (1 << 1)) && out.tx->vout[out.i].nValue == ((10*COIN)+1)) {fAccepted = true; fFound10 = true;}
                 else if((nDenom & (1 << 2)) && out.tx->vout[out.i].nValue == ((1*COIN)+1)) {fAccepted = true; fFound1 = true;}
                 else if((nDenom & (1 << 3)) && out.tx->vout[out.i].nValue == ((.1*COIN)+1)) {fAccepted = true; fFoundDot1 = true;}
-                else if((nDenom & (1 << 4)) && !fFoundND) {
-                	fAccepted = true; fFoundND = true;
-                }
             }
             if(!fAccepted) continue;
 
@@ -1593,9 +1575,7 @@ bool CWallet::SelectCoinsByDenominations(int nDenom, int64_t nValueMin, int64_t 
         }
     }
 
-    if(nValueRet >= nValueMin && fFound100 && fFound10 &&  fFound1 && fFoundDot1 && fFoundND) return true;
-
-    return false;
+    return (nValueRet >= nValueMin && fFound100 && fFound10 && fFound1 && fFoundDot1);
 }
 
 bool CWallet::SelectCoinsDark(int64_t nValueMin, int64_t nValueMax, std::vector<CTxIn>& setCoinsRet, int64_t& nValueRet, int nDarksendRoundsMin, int nDarksendRoundsMax) const
@@ -1606,7 +1586,7 @@ bool CWallet::SelectCoinsDark(int64_t nValueMin, int64_t nValueMax, std::vector<
     nValueRet = 0;
 
     vector<COutput> vCoins;
-    AvailableCoins(vCoins, false, coinControl, ALL_COINS);
+    AvailableCoins(vCoins, false, coinControl, nDarksendRoundsMin < 0 ? ONLY_NONDENOMINATED : ONLY_DENOMINATED);
 
     set<pair<const CWalletTx*,unsigned int> > setCoinsRet2;
 
@@ -2130,14 +2110,10 @@ string CWallet::PrepareDarksendDenominate(int minRounds, int maxRounds)
     /*
         Select the coins we'll use
 
-        if minRounds < 0 it means that non-denominational inputs are coming into the mix
-        if minRounds > 0 it means only denominated inputs are going in and coming out
+        if minRounds >= 0 it means only denominated inputs are going in and coming out
     */
     if(minRounds >= 0){
         if (!SelectCoinsByDenominations(darkSendPool.sessionDenom, 0.1*COIN, DARKSEND_POOL_MAX, vCoins, nValueIn, minRounds, maxRounds))
-            return _("Insufficient funds");
-    } else {
-        if (!SelectCoinsDark(0.1*COIN, DARKSEND_POOL_MAX, vCoins, nValueIn, minRounds, maxRounds))
             return _("Insufficient funds");
     }
 
@@ -2163,12 +2139,6 @@ string CWallet::PrepareDarksendDenominate(int minRounds, int maxRounds)
         if(!fAccepted) continue;
 
         int nOutputs = 0;
-
-        if(std::find(darkSendPool.vecDisabledDenominations.begin(),
-            darkSendPool.vecDisabledDenominations.end(), v) !=
-            darkSendPool.vecDisabledDenominations.end()){
-            continue;
-        }
 
         // add each output up to 10 times until it can't be added again
         while(nValueLeft - v >= 0 && nOutputs <= 10) {
