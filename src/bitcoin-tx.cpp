@@ -4,7 +4,7 @@
 
 #include "base58.h"
 #include "clientversion.h"
-#include "primitives/block.h" // for MAX_BLOCK_SIZE
+#include "consensus/consensus.h" // for MAX_BLOCK_SIZE
 #include "primitives/transaction.h"
 #include "core_io.h"
 #include "coins.h"

@@ -6,8 +6,8 @@
 #include "walletdb.h"
 
 #include "base58.h"
+#include "consensus/consensus.h"
 #include "consensus/validation.h"
-#include "main.h"
 #include "net.h"
 #include "protocol.h"
 #include "serialize.h"

@@ -12,6 +12,7 @@
 
 #include "chain.h"
 #include "coins.h"
+#include "consensus/consensus.h"
 #include "net.h"
 #include "primitives/block.h"
 #include "script/script_error.h"
