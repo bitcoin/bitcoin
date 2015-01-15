@@ -148,7 +148,12 @@ void SendCoinsDialog::on_sendButton_clicked()
     if(ui->checkUseDarksend->isChecked()) {
         recipients[0].inputType = "ONLY_DENOMINATED";
         strFunds = "Using <b>Anonymous Funds</b>";
-        strFee = "(Darksend requires this amount to be rounded up to the nearest 0.1DRK)";
+        QString strNearestAmount(
+            BitcoinUnits::formatWithUnit(
+                model->getOptionsModel()->getDisplayUnit(), 0.1 * COIN));
+        strFee = QString(
+            "(Darksend requires this amount to be rounded up to the nearest %1.)"
+        ).arg(strNearestAmount);
     } else {
         recipients[0].inputType = "ALL_COINS";
         strFunds = "Using <b>ANY AVAILABLE Funds</b>";
