@@ -1,5 +1,5 @@
 // Copyright (c) 2011-2014 The Bitcoin developers
-// Copyright (c) 2014 The Darkcoin developers
+// Copyright (c) 2014-2015 The Darkcoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -141,17 +141,22 @@ void SendCoinsDialog::on_sendButton_clicked()
         return;
     }
 
-    QString strFunds = " Using <b>Anonymous Funds</b>";
+    QString strFunds = "using <b>anonymous funds</b>";
     QString strFee = "";
     recipients[0].inputType = "ONLY_DENOMINATED";
 
     if(ui->checkUseDarksend->isChecked()) {
         recipients[0].inputType = "ONLY_DENOMINATED";
-        strFunds = "Using <b>Anonymous Funds</b>";
-        strFee = "(Darksend requires this amount to be rounded up to the nearest 0.1DRK)";
+        strFunds = "using <b>anonymous funds</b>";
+        QString strNearestAmount(
+            BitcoinUnits::formatWithUnit(
+                model->getOptionsModel()->getDisplayUnit(), 0.1 * COIN));
+        strFee = QString(tr(
+            "(darksend requires this amount to be rounded up to the nearest %1)."
+        ).arg(strNearestAmount));
     } else {
         recipients[0].inputType = "ALL_COINS";
-        strFunds = "Using <b>ANY AVAILABLE Funds</b>";
+        strFunds = "using <b>any available funds (not recommended)</b>";
     }
 
     if(ui->checkInstantX->isChecked()) {
@@ -168,8 +173,7 @@ void SendCoinsDialog::on_sendButton_clicked()
     {
         // generate bold amount string
         QString amount = "<b>" + BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), rcp.amount);
-        amount.append("</b>");
-	    amount.append(strFunds);
+        amount.append("</b> ").append(strFunds);
 
         // generate monospace address string
         QString address = "<span style='font-family: monospace;'>" + rcp.address;
@@ -252,9 +256,10 @@ void SendCoinsDialog::send(QList<SendCoinsRecipient> recipients, QString strFee,
         // append fee string if a fee is required
         questionString.append("<hr /><span style='color:#aa0000;'>");
         questionString.append(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), txFee));
-        questionString.append(strFee);
         questionString.append("</span> ");
-        questionString.append(tr("added as transaction fee"));
+        questionString.append(tr("are added as transaction fee"));
+        questionString.append(" ");
+        questionString.append(strFee);
     }
 
     // add total amount in all subdivision units

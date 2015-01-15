@@ -1,6 +1,6 @@
 // Copyright (c) 2010 Satoshi Nakamoto
 // Copyright (c) 2009-2014 The Bitcoin developers
-// Copyright (c) 2014 The Darkcoin developers
+// Copyright (c) 2014-2015 The Darkcoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -71,6 +71,7 @@ public:
         base58Prefixes[SECRET_KEY] =     list_of(204);                    // Darkcoin private keys start with '7' or 'X'
         base58Prefixes[EXT_PUBLIC_KEY] = list_of(0x02)(0xFE)(0x52)(0xF8); // Darkcoin BIP32 pubkeys start with 'drkv'
         base58Prefixes[EXT_SECRET_KEY] = list_of(0x02)(0xFE)(0x52)(0xCC); // Darkcoin BIP32 prvkeys start with 'drkp'
+        base58Prefixes[EXT_COIN_TYPE]  = list_of(0x80000005);             // Darkcoin BIP44 coin type is '5'
 
         // Convert the pnSeeds array into usable address objects.
         for (unsigned int i = 0; i < ARRAYLEN(pnSeed); i++)
@@ -138,6 +139,7 @@ public:
         base58Prefixes[SECRET_KEY]     = list_of(239);                    // Testnet private keys start with '9' or 'c' (Bitcoin defaults)
         base58Prefixes[EXT_PUBLIC_KEY] = list_of(0x3a)(0x80)(0x61)(0xa0); // Testnet darkcoin BIP32 pubkeys start with 'DRKV'
         base58Prefixes[EXT_SECRET_KEY] = list_of(0x3a)(0x80)(0x58)(0x37); // Testnet darkcoin BIP32 prvkeys start with 'DRKP'
+        base58Prefixes[EXT_COIN_TYPE]  = list_of(0x80000001);             // Testnet darkcoin BIP44 coin type is '5' (All coin's testnet default)
     }
     virtual Network NetworkID() const { return CChainParams::TESTNET; }
 };
