@@ -308,10 +308,14 @@ void OverviewPage::darkSendStatus()
     {
         updateDarksendProgress();
 
-        std::ostringstream convert2;
-        convert2 << nAnonymizeDarkcoinAmount << " DRK / " << nDarksendRounds << " Rounds";
-        QString s2(convert2.str().c_str());
-        ui->labelAmountRounds->setText(s2);
+        QString strSettings(" Rounds");
+        strSettings.prepend(QString::number(nDarksendRounds)).prepend(" / ");
+        strSettings.prepend(BitcoinUnits::formatWithUnit(
+            walletModel->getOptionsModel()->getDisplayUnit(),
+            nAnonymizeDarkcoinAmount * COIN)
+        );
+
+        ui->labelAmountRounds->setText(strSettings);
     }
 
     if(!fEnableDarksend) {
