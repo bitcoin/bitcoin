@@ -246,6 +246,8 @@ void OverviewPage::showOutOfSyncWarning(bool fShow)
 }
 
 void OverviewPage::updateDarksendProgress(){
+    if(IsInitialBlockDownload()) return;
+
     int64_t balance = pwalletMain->GetBalance();
     if(balance == 0){
         ui->darksendProgress->setValue(0);
