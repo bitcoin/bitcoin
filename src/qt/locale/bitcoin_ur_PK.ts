@@ -12,6 +12,34 @@
         <source>Create a new address</source>
         <translation>نیا ایڈریس بنائیں</translation>
     </message>
+    <message>
+        <source>&amp;New</source>
+        <translation>نیا</translation>
+    </message>
+    <message>
+        <source>&amp;Copy</source>
+        <translation>نقل</translation>
+    </message>
+    <message>
+        <source>C&amp;lose</source>
+        <translation>بند</translation>
+    </message>
+    <message>
+        <source>&amp;Copy Address</source>
+        <translation>کاپی پتہ</translation>
+    </message>
+    <message>
+        <source>&amp;Export</source>
+        <translation>برآمد</translation>
+    </message>
+    <message>
+        <source>&amp;Delete</source>
+        <translation>مٹا</translation>
+    </message>
+    <message>
+        <source>C&amp;hoose</source>
+        <translation>چننا</translation>
+    </message>
     </context>
 <context>
     <name>AddressTableModel</name>
@@ -41,6 +69,10 @@
     <message>
         <source>Repeat new passphrase</source>
         <translation>نیا پاس فریز دہرائیں</translation>
+    </message>
+    <message>
+        <source>Encrypt wallet</source>
+        <translation>بٹوے کی رمزنگاری</translation>
     </message>
     <message>
         <source>Unlock wallet</source>
@@ -288,6 +320,10 @@
     </context>
 <context>
     <name>WalletView</name>
+    <message>
+        <source>&amp;Export</source>
+        <translation>برآمد</translation>
+    </message>
     </context>
 <context>
     <name>bitcoin-core</name>

@@ -81,7 +81,7 @@ bool AppInit(int argc, char* argv[])
         }
 
         std::string strErr;
-        if(!masternodeConfig.read(GetMasternodeConfigFile(), strErr)) {
+        if(!masternodeConfig.read(strErr)) {
             fprintf(stderr,"Error reading masternode configuration file: %s\n", strErr.c_str());
             return false;
         }
