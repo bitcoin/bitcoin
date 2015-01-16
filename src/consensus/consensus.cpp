@@ -23,12 +23,10 @@ bool Consensus::CheckTx(const CTransaction& tx, CValidationState &state)
     // Check for negative or overflow output values
     CAmount nValueOut = 0;
     for (unsigned int i = 0; i < tx.vout.size(); i++) {
-        if (tx.vout[i].nValue < 0)
-            return state.DoS(100, false, REJECT_INVALID, "bad-txns-vout-negative");
-        if (tx.vout[i].nValue > MAX_MONEY)
-            return state.DoS(100, false, REJECT_INVALID, "bad-txns-vout-toolarge");
+        if (!MoneyRange(tx.vout[i].nValue))
+            return state.DoS(100, false, REJECT_INVALID, "bad-txns-vout-outofrange");
         nValueOut += tx.vout[i].nValue;
-        if (!MoneyRange(nValueOut))
+        if (nValueOut > MAX_MONEY)
             return state.DoS(100, false, REJECT_INVALID, "bad-txns-txouttotal-toolarge");
     }
 
