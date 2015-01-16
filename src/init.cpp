@@ -788,8 +788,10 @@ bool AppInit2(boost::thread_group& threadGroup)
     LogPrintf("Using at most %i connections (%i file descriptors available)\n", nMaxConnections, nFD);
     std::ostringstream strErrors;
 
-    LogPrintf("Using %u threads for script verification\n", nScriptCheckThreads);
-    if (nScriptCheckThreads) {
+    if (!nScriptCheckThreads) {
+        LogPrintf("Using direct script verification (threads disabled)\n", logScriptCheckThreads);
+    } else {
+        LogPrintf("Using %u threads for script verification\n", logScriptCheckThreads);
         for (int i=0; i<nScriptCheckThreads-1; i++)
             threadGroup.create_thread(&ThreadScriptCheck);
     }
