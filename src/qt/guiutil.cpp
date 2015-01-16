@@ -67,6 +67,9 @@ static boost::filesystem::detail::utf8_codecvt_facet utf8;
 
 #if defined(Q_OS_MAC)
 extern double NSAppKitVersionNumber;
+#if !defined(NSAppKitVersionNumber10_8)
+#define NSAppKitVersionNumber10_8 1187
+#endif
 #if !defined(NSAppKitVersionNumber10_9)
 #define NSAppKitVersionNumber10_9 1265
 #endif
@@ -383,7 +386,7 @@ void openDebugLogfile()
         QDesktopServices::openUrl(QUrl::fromLocalFile(boostPathToQString(pathDebug)));
 }
 
-void SubstituteFonts()
+void SubstituteFonts(const QString& language)
 {
 #if defined(Q_OS_MAC)
 // Background:
@@ -393,12 +396,28 @@ void SubstituteFonts()
 // If this fallback is not properly loaded, some characters may fail to
 // render correctly.
 //
+// The same thing happened with 10.10. .Helvetica Neue DeskInterface is now default.
+//
 // Solution: If building with the 10.7 SDK or lower and the user's platform
 // is 10.9 or higher at runtime, substitute the correct font. This needs to
 // happen before the QApplication is created.
 #if defined(MAC_OS_X_VERSION_MAX_ALLOWED) && MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_8
-    if (floor(NSAppKitVersionNumber) >= NSAppKitVersionNumber10_9)
-        QFont::insertSubstitution(".Lucida Grande UI", "Lucida Grande");
+    if (floor(NSAppKitVersionNumber) > NSAppKitVersionNumber10_8)
+    {
+        if (floor(NSAppKitVersionNumber) <= NSAppKitVersionNumber10_9)
+            /* On a 10.9 - 10.9.x system */
+            QFont::insertSubstitution(".Lucida Grande UI", "Lucida Grande");
+        else
+        {
+            /* 10.10 or later system */
+            if (language == "zh_CN" || language == "zh_TW" || language == "zh_HK") // traditional or simplified Chinese
+              QFont::insertSubstitution(".Helvetica Neue DeskInterface", "Heiti SC");
+            else if (language == "ja") // Japanesee
+              QFont::insertSubstitution(".Helvetica Neue DeskInterface", "Songti SC");
+            else
+              QFont::insertSubstitution(".Helvetica Neue DeskInterface", "Lucida Grande");
+        }
+    }
 #endif
 #endif
 }

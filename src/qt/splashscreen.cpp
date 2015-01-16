@@ -37,7 +37,7 @@ SplashScreen::SplashScreen(Qt::WindowFlags f, const NetworkStyle *networkStyle) 
     QString copyrightText   = QChar(0xA9)+QString(" 2009-%1 ").arg(COPYRIGHT_YEAR) + QString(tr("The Bitcoin Core developers"));
     QString titleAddText    = networkStyle->getTitleAddText();
 
-    QString font            = "Arial";
+    QString font            = QApplication::font().toString();
 
     // load the bitmap for writing some text over it
     pixmap     = networkStyle->getSplashImage();
