@@ -258,8 +258,8 @@
         <widget class="QFrame" name="frameDarksend">
          <property name="minimumSize">
           <size>
-           <width>0</width>
-           <height>350</height>
+           <width>10</width>
+           <height>250</height>
           </size>
          </property>
          <property name="layoutDirection">
