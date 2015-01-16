@@ -1,0 +1,241 @@
+/* Global Styles */
+* {
+    font-family: "WeblySleek UI Normal";
+}
+
+QMainWindow {
+    background: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 0,
+                stop: 0 #cacaca, stop: 0.5 #e3e3e3,
+                stop: 1.0 #cacaca);
+}
+
+/* Global Styles - Buttons */
+QToolButton, QPushButton {
+    background: #303030;
+    border: 1px solid #555555;
+    color: #ffffff;
+    margin: 5px;
+    padding-top: 4px;
+    padding-bottom: 4px;
+    padding-left: 6px;
+    padding-right: 6px;
+}
+
+QToolButton:checked, QPushButton:checked {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                stop: 0 #59ac25, stop: 1 #1d6f02);
+}
+
+QToolButton:hover, QPushButton:hover {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                stop: 0 #59ac25, stop: 1 #1d6f02);
+}
+
+QToolButton:!enabled, QPushButton:!enabled {
+    background: gray;
+}
+
+/* Global Styles - Inputs */
+QLineEdit {
+    background: #fefefe;
+    border-radius: 0px;
+    border: 1px solid #252526;
+}
+
+QTextEdit {
+    background: #fefefe;
+    border-radius: 0px;
+    border: 1px solid #252526;
+}
+
+QSpinBox, QDoubleSpinBox   {
+    background: #fefefe;
+    border-radius: 0px;
+    border: 1px solid #252526;
+    padding: 0px;
+}
+
+QSpinBox::up-button, QDoubleSpinBox::up-button   {
+    subcontrol-origin: border;
+    subcontrol-position: top right;
+    background: #303030;
+    border: 1px solid #555555;
+    color: #ffffff;
+}
+
+QSpinBox::up-button:hover, QDoubleSpinBox::up-button:hover   {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                stop: 0 #59ac25, stop: 1 #1d6f02);
+}
+
+QSpinBox::up-arrow, QDoubleSpinBox::up-arrow   {
+    image: url(:/controls/caret-up);
+    width: 7px;
+    height: 7px;
+}
+
+QSpinBox::down-button, QDoubleSpinBox::down-button   {
+    subcontrol-origin: border;
+    subcontrol-position: bottom right; /* position at bottom right corner */
+    background: #303030;
+    border: 1px solid #555555;
+    color: #ffffff;
+}
+
+QSpinBox::down-button:hover, QDoubleSpinBox::down-button:hover   {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                stop: 0 #59ac25, stop: 1 #1d6f02);
+}
+
+
+QSpinBox::down-arrow, QDoubleSpinBox::down-arrow   {
+    image: url(:/controls/caret-down);
+    width: 7px;
+    height: 7px;
+}
+
+QComboBox {
+    background: #fefefe;
+    border: 1px solid #555555;
+    color: #303030;
+}
+
+QComboBox::down-arrow {
+    image: url(:/controls/caret-down);
+    width: 7px;
+    height: 7px;
+}
+
+QComboBox::drop-down{
+    subcontrol-origin: padding;
+    subcontrol-position: top right;
+    background: #303030;
+    width: 15px;
+}
+
+QTableView {
+    show-decoration-selected: 1;
+    background: #303030;
+    alternate-background-color: #3f3f3f;
+    color: #fefefe;
+    gridline-color: #211f20;
+    selection-background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #59ac25, stop: 1 #1d6f02);
+ }
+
+QHeaderView::section {
+    background-color: #211f20;
+    border-color: #202020;
+    color: #fefefe;
+ }
+
+QHeaderView::section:checked
+{
+    background-color: #211f20;
+}
+
+QHeaderView::down-arrow {
+    image: url(:/controls/caret-down);
+}
+
+QHeaderView::up-arrow {
+    image: url(:/controls/caret-up);
+}
+
+/* Global Styles - Misc */
+QToolTip {
+    background: #237123;
+    border: 1px solid #218521;
+    color: #fefefe;
+    opacity: 210;
+}
+
+/* Toolbar */
+QToolBar {
+    background: #211f20;
+    border-bottom: 1px solid #f8ef7f;
+}
+
+QToolBar > QLabel {
+    margin-left: 20px;
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+QToolBar > QToolButton {
+    margin-top: 30px;
+    font-size: 14px;
+    padding-top: 4px;
+    padding-bottom: 4px;
+    padding-left: 6px;
+    padding-right: 6px;
+}
+
+/* Status Bar */
+QStatusBar {
+    background: #211f20;
+    border-top: 1px solid #f8ef7f;
+}
+
+QStatusBar QLabel {
+    color: #ffffff;
+}
+
+/* Overview Page */
+QFrame {
+    border: none;
+}
+
+QFrame#frameOverview {
+    border-right: 1px solid #008000;
+}
+
+QFrame QLabel#titleBalance, QFrame QLabel#titleNumTransactions,
+QFrame QLabel#titleStake, QFrame QLabel#titleUnconfirmed {
+    color: #008000;
+    font-size: 14px;
+    margin-left: 3px;
+}
+
+QFrame QLabel#labelBalance, QFrame QLabel#labelNumTransactions,
+QFrame QLabel#labelStake, QFrame QLabel#labelUnconfirmed {
+    font-weight: normal;
+    font-size: 20px;
+    margin-bottom: 30px;
+}
+
+QFrame QLabel#titleStake, QFrame QLabel#labelStake,
+QFrame QLabel#titleNumTransactions, QFrame QLabel#labelNumTransactions {
+    margin-left: 70px;
+}
+
+QFrame QLabel#titleWallet {
+    font-weight: bold;
+    font-size: 20px;
+    margin-bottom: 30px;
+}
+
+QFrame QLabel#titleTx {
+    font-weight: bold;
+    font-size: 20px;
+}
+
+/* Logo Mask */
+QStackedWidget {
+    background-image: url(:/images/logomask);
+    background-repeat: no-repeat;
+    background-position: bottom left;
+}
+
+/* Send Page */
+QScrollArea {
+    background-image: url(:/images/transparent);
+}
+
+QScrollArea * {
+    background-image: url(:/images/transparent);
+}
+
+QDialog#SendCoinsDialog QLabel#labelBalance {
+    margin-bottom: 0px;
+}

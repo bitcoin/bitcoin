@@ -51,6 +51,8 @@
 #include <QSettings>
 #include <QDesktopWidget>
 #include <QListWidget>
+#include <QFile>
+#include <QFontDatabase>
 
 #include <iostream>
 
@@ -69,6 +71,13 @@ BitcoinGUI::BitcoinGUI(QWidget *parent) :
 {
     restoreWindowGeometry();
     setWindowTitle(tr("Peercoin (PPCoin)") + " - " + tr("Wallet"));
+    
+    QFontDatabase::addApplicationFont(":/fonts/weblysleek");
+    QFile styleFile(":/themes/default");
+    styleFile.open(QFile::ReadOnly);
+    QString styleSheet = QLatin1String(styleFile.readAll());
+    this->setStyleSheet(styleSheet);
+
 #ifndef Q_OS_MAC
     QApplication::setWindowIcon(QIcon(":icons/ppcoin"));
     setWindowIcon(QIcon(":icons/ppcoin"));
@@ -292,8 +301,12 @@ void BitcoinGUI::createMenuBar()
 
 void BitcoinGUI::createToolBars()
 {
+    QLabel *imageLogo = new QLabel;
+    imageLogo->setPixmap(QPixmap(":/images/logo"));
     QToolBar *toolbar = addToolBar(tr("Tabs toolbar"));
-    toolbar->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+    toolbar->setMovable(false);
+    toolbar->setToolButtonStyle(Qt::ToolButtonTextOnly);
+    toolbar->addWidget(imageLogo);
     toolbar->addAction(overviewAction);
     toolbar->addAction(sendCoinsAction);
     toolbar->addAction(receiveCoinsAction);

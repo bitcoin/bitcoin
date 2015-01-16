@@ -39,7 +39,7 @@
      </property>
      <layout class="QVBoxLayout" name="verticalLayoutCoinControl2">
       <property name="spacing">
-       <number>-1</number>
+       <number>6</number>
       </property>
       <property name="leftMargin">
        <number>0</number>
@@ -130,7 +130,7 @@
              </font>
             </property>
             <property name="styleSheet">
-             <string notr="true">color:red;font-weight:bold;</string>
+             <string notr="true">color:#880015;</string>
             </property>
             <property name="text">
              <string>Insufficient funds!</string>
@@ -173,7 +173,16 @@
            <string notr="true"/>
           </property>
           <layout class="QHBoxLayout" name="horizontalLayoutCoinControl5">
-           <property name="margin">
+           <property name="leftMargin">
+            <number>0</number>
+           </property>
+           <property name="topMargin">
+            <number>0</number>
+           </property>
+           <property name="rightMargin">
+            <number>0</number>
+           </property>
+           <property name="bottomMargin">
             <number>0</number>
            </property>
            <item>
@@ -626,7 +635,7 @@
         <x>0</x>
         <y>0</y>
         <width>830</width>
-        <height>165</height>
+        <height>122</height>
        </rect>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_2">

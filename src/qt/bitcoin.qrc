@@ -47,6 +47,9 @@
         <file alias="about">res/images/about.png</file>
         <file alias="splash">res/images/splash.png</file>
         <file alias="splash_testnet">res/images/splash_testnet.png</file>
+        <file alias="logo">res/images/peerunity_logo.png</file>
+        <file alias="logomask">res/images/logomask.png</file>
+        <file alias="transparent">res/images/transparent-background.png</file>
     </qresource>
     <qresource prefix="/movies">
         <file alias="update_spinner">res/movies/update_spinner.mng</file>
@@ -99,5 +102,15 @@
         <file alias="uk">locale/bitcoin_uk.qm</file>
         <file alias="zh_CN">locale/bitcoin_zh_CN.qm</file>
         <file alias="zh_TW">locale/bitcoin_zh_TW.qm</file>
+    </qresource>
+    <qresource prefix="/themes">
+        <file alias="default">res/themes/default.qss</file>
+    </qresource>
+    <qresource prefix="/fonts">
+        <file alias="weblysleek">res/fonts/WeblySleek.ttf</file>
+    </qresource>
+    <qresource prefix="/controls">
+        <file alias="caret-down">res/images/controls/caret-down.png</file>
+        <file alias="caret-up">res/images/controls/caret-up.png</file>
     </qresource>
 </RCC>
