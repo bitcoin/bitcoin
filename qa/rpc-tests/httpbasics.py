@@ -35,13 +35,13 @@ class HTTPBasicsTest (BitcoinTestFramework):
         
         conn = httplib.HTTPConnection(url.hostname, url.port)
         conn.connect()
-        conn.request('GET', '/', '{"method": "getbestblockhash"}', headers)
+        conn.request('POST', '/', '{"method": "getbestblockhash"}', headers)
         out1 = conn.getresponse().read();
         assert_equal('"error":null' in out1, True)
         assert_equal(conn.sock!=None, True) #according to http/1.1 connection must still be open!
         
         #send 2nd request without closing connection
-        conn.request('GET', '/', '{"method": "getchaintips"}', headers)
+        conn.request('POST', '/', '{"method": "getchaintips"}', headers)
         out2 = conn.getresponse().read();
         assert_equal('"error":null' in out1, True) #must also response with a correct json-rpc message
         assert_equal(conn.sock!=None, True) #according to http/1.1 connection must still be open!
@@ -52,13 +52,13 @@ class HTTPBasicsTest (BitcoinTestFramework):
         
         conn = httplib.HTTPConnection(url.hostname, url.port)
         conn.connect()
-        conn.request('GET', '/', '{"method": "getbestblockhash"}', headers)
+        conn.request('POST', '/', '{"method": "getbestblockhash"}', headers)
         out1 = conn.getresponse().read();
         assert_equal('"error":null' in out1, True)
         assert_equal(conn.sock!=None, True) #according to http/1.1 connection must still be open!
         
         #send 2nd request without closing connection
-        conn.request('GET', '/', '{"method": "getchaintips"}', headers)
+        conn.request('POST', '/', '{"method": "getchaintips"}', headers)
         out2 = conn.getresponse().read();
         assert_equal('"error":null' in out1, True) #must also response with a correct json-rpc message
         assert_equal(conn.sock!=None, True) #according to http/1.1 connection must still be open!
@@ -69,7 +69,7 @@ class HTTPBasicsTest (BitcoinTestFramework):
         
         conn = httplib.HTTPConnection(url.hostname, url.port)
         conn.connect()
-        conn.request('GET', '/', '{"method": "getbestblockhash"}', headers)
+        conn.request('POST', '/', '{"method": "getbestblockhash"}', headers)
         out1 = conn.getresponse().read();
         assert_equal('"error":null' in out1, True)
         assert_equal(conn.sock!=None, False) #now the connection must be closed after the response        
@@ -81,7 +81,7 @@ class HTTPBasicsTest (BitcoinTestFramework):
                 
         conn = httplib.HTTPConnection(urlNode1.hostname, urlNode1.port)
         conn.connect()
-        conn.request('GET', '/', '{"method": "getbestblockhash"}', headers)
+        conn.request('POST', '/', '{"method": "getbestblockhash"}', headers)
         out1 = conn.getresponse().read();
         assert_equal('"error":null' in out1, True)
         assert_equal(conn.sock!=None, False) #connection must be closed because keep-alive was set to false
@@ -93,10 +93,10 @@ class HTTPBasicsTest (BitcoinTestFramework):
                 
         conn = httplib.HTTPConnection(urlNode2.hostname, urlNode2.port)
         conn.connect()
-        conn.request('GET', '/', '{"method": "getbestblockhash"}', headers)
+        conn.request('POST', '/', '{"method": "getbestblockhash"}', headers)
         out1 = conn.getresponse().read();
         assert_equal('"error":null' in out1, True)
-        assert_equal(conn.sock!=None, False) #connection must be closed because bitcoind should use keep-alive by default
+        assert_equal(conn.sock!=None, True) #connection must be closed because bitcoind should use keep-alive by default
         
 if __name__ == '__main__':
     HTTPBasicsTest ().main ()
