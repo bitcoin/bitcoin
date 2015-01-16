@@ -499,3 +499,21 @@ void RPCConsole::updateTrafficStats(quint64 totalBytesIn, quint64 totalBytesOut)
     ui->lblBytesIn->setText(FormatBytes(totalBytesIn));
     ui->lblBytesOut->setText(FormatBytes(totalBytesOut));
 }
+
+void RPCConsole::showInfo()
+{
+    ui->tabWidget->setCurrentIndex(0);
+    show();
+}
+
+void RPCConsole::showConsole()
+{
+    ui->tabWidget->setCurrentIndex(1);
+    show();
+}
+
+void RPCConsole::showNetwork()
+{
+    ui->tabWidget->setCurrentIndex(2);
+    show();
+}
