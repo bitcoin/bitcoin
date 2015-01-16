@@ -228,8 +228,6 @@ void UnlinkPrunedFiles(std::set<int>& setFilesToPrune);
 
 /** Create a new block index entry for a given block hash */
 CBlockIndex * InsertBlockIndex(uint256 hash);
-/** Abort with a message */
-bool AbortNode(const std::string &msg, const std::string &userMessage="");
 /** Get statistics from node state */
 bool GetNodeStateStats(NodeId nodeid, CNodeStateStats &stats);
 /** Increase a node's misbehavior score. */
@@ -494,10 +492,6 @@ public:
             strRejectReason = strRejectReasonIn;
         mode = MODE_ERROR;
         return false;
-    }
-    bool Abort(const std::string &msg) {
-        AbortNode(msg);
-        return Error(msg);
     }
     bool IsValid() const {
         return mode == MODE_VALID;
