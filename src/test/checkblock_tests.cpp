@@ -7,6 +7,7 @@
 //
 
 #include "clientversion.h"
+#include "consensus/validation.h"
 #include "main.h"
 #include "primitives/block.h"
 #include "streams.h"
