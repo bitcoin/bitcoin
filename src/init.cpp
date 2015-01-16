@@ -788,8 +788,10 @@ bool AppInit2(boost::thread_group& threadGroup)
     LogPrintf("Using at most %i connections (%i file descriptors available)\n", nMaxConnections, nFD);
     std::ostringstream strErrors;
 
-    LogPrintf("Using %u threads for script verification\n", nScriptCheckThreads);
-    if (nScriptCheckThreads) {
+    if (!nScriptCheckThreads) {
+        LogPrintf("Using direct script verification (threads disabled)\n", logScriptCheckThreads);
+    } else {
+        LogPrintf("Using %u threads for script verification\n", logScriptCheckThreads);
         for (int i=0; i<nScriptCheckThreads-1; i++)
             threadGroup.create_thread(&ThreadScriptCheck);
     }
@@ -1233,7 +1235,7 @@ bool AppInit2(boost::thread_group& threadGroup)
         }
     } // (!fDisableWallet)
 #else // ENABLE_WALLET
-    LogPrintf("No wallet compiled in!\n");
+    LogPrintf("No wallet support compiled in!\n");
 #endif // !ENABLE_WALLET
     // ********************************************************* Step 9: import blocks
 
