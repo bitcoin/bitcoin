@@ -124,19 +124,22 @@ void PaymentServer::LoadRootCAs(X509_STORE* _store)
     // and get 'I don't like X.509 certificates, don't trust anybody' behavior:
     QString certFile = QString::fromStdString(GetArg("-rootcertificates", "-system-"));
 
-    if (certFile.isEmpty())
-        return; // Empty store
+    // Empty store
+    if (certFile.isEmpty()) {
+        qDebug() << QString("PaymentServer::%1: Payment request authentication via X.509 certificates disabled.").arg(__func__);
+        return;
+    }
 
     QList<QSslCertificate> certList;
 
-    if (certFile != "-system-")
-    {
+    if (certFile != "-system-") {
+            qDebug() << QString("PaymentServer::%1: Using \"%2\" as trusted root certificate.").arg(__func__).arg(certFile);
+
         certList = QSslCertificate::fromPath(certFile);
         // Use those certificates when fetching payment requests, too:
         QSslSocket::setDefaultCaCertificates(certList);
-    }
-    else
-        certList = QSslSocket::systemCaCertificates ();
+    } else
+        certList = QSslSocket::systemCaCertificates();
 
     int nRootCerts = 0;
     const QDateTime currentTime = QDateTime::currentDateTime();
