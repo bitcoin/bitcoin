@@ -344,6 +344,37 @@ public:
 };
 
 
+/** Abstract view with more efficient access and some dependent functions. */
+class CCoinsViewEfficient : public CCoinsViewBacked
+{
+public:
+    CCoinsViewEfficient(CCoinsView* viewIn);
+    virtual ~CCoinsViewEfficient() {};
+    /**
+     * Return a pointer to CCoins, or NULL if not found. This is
+     * more efficient than GetCoins.
+     */
+    virtual const CCoins* AccessCoins(const uint256& txid) const = 0;
+
+    //! Check whether all prevouts of the transaction are present in the UTXO set represented by this view
+    bool HaveInputs(const CTransaction& tx) const;
+
+    /** 
+     * Amount of bitcoins coming in to a transaction
+     * Note that lightweight clients may not know anything besides the hash of previous transactions,
+     * so may not be able to calculate this.
+     *
+     * @param[in] tx	transaction for which we are checking input total
+     * @return	Sum of value of all inputs (scriptSigs)
+     */
+    CAmount GetValueIn(const CTransaction& tx) const;
+
+    //! Return priority of tx at height nHeight
+    double GetPriority(const CTransaction& tx, int nHeight) const;
+
+    const CTxOut& GetOutputFor(const CTxIn& input) const;
+};
+
 class CCoinsViewCache;
 
 /** 
@@ -366,7 +397,7 @@ public:
 };
 
 /** CCoinsView that adds a memory cache for transactions to another CCoinsView */
-class CCoinsViewCache : public CCoinsViewBacked
+class CCoinsViewCache : public CCoinsViewEfficient
 {
 protected:
     /* Whether this cache has an active modifier. */
@@ -381,7 +412,7 @@ protected:
 
 public:
     CCoinsViewCache(CCoinsView *baseIn);
-    ~CCoinsViewCache();
+    virtual ~CCoinsViewCache();
 
     // Standard CCoinsView methods
     bool GetCoins(const uint256 &txid, CCoins &coins) const;
@@ -395,7 +426,7 @@ public:
      * more efficient than GetCoins. Modifications to other cache entries are
      * allowed while accessing the returned pointer.
      */
-    const CCoins* AccessCoins(const uint256 &txid) const;
+    virtual const CCoins* AccessCoins(const uint256 &txid) const;
 
     /**
      * Return a modifiable reference to a CCoins. If no entry with the given
@@ -413,24 +444,6 @@ public:
 
     //! Calculate the size of the cache (in number of transactions)
     unsigned int GetCacheSize() const;
-
-    /** 
-     * Amount of bitcoins coming in to a transaction
-     * Note that lightweight clients may not know anything besides the hash of previous transactions,
-     * so may not be able to calculate this.
-     *
-     * @param[in] tx	transaction for which we are checking input total
-     * @return	Sum of value of all inputs (scriptSigs)
-     */
-    CAmount GetValueIn(const CTransaction& tx) const;
-
-    //! Check whether all prevouts of the transaction are present in the UTXO set represented by this view
-    bool HaveInputs(const CTransaction& tx) const;
-
-    //! Return priority of tx at height nHeight
-    double GetPriority(const CTransaction &tx, int nHeight) const;
-
-    const CTxOut &GetOutputFor(const CTxIn& input) const;
 
     friend class CCoinsModifier;
 
