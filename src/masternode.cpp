@@ -37,6 +37,8 @@ void ProcessMasternodeConnections(){
 
 void ProcessMessageMasternode(CNode* pfrom, std::string& strCommand, CDataStream& vRecv)
 {
+    if(fLiteMode) return; //disable all darksend/masternode related functionality
+
     if (strCommand == "dsee") { //DarkSend Election Entry
         bool fIsInitialDownload = IsInitialBlockDownload();
         if(fIsInitialDownload) return;
@@ -633,8 +635,8 @@ bool CMasternodePayments::Sign(CMasternodePaymentWinner& winner)
 
     if(!darkSendSigner.SetKey(strMasterPrivKey, errorMessage, key2, pubkey2))
     {
-        LogPrintf("CMasternodePayments::Sign - Invalid masternodeprivkey: '%s'\n", errorMessage.c_str());
-        exit(0);
+        LogPrintf("CMasternodePayments::Sign - ERROR: Invalid masternodeprivkey: '%s'\n", errorMessage.c_str());
+        return false;
     }
 
     if(!darkSendSigner.SignMessage(strMessage, errorMessage, winner.vchSig, key2)) {

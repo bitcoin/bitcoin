@@ -42,6 +42,8 @@ int RequestedMasterNodeList = 0;
 
 void ProcessMessageDarksend(CNode* pfrom, std::string& strCommand, CDataStream& vRecv)
 {
+    if(fLiteMode) return; //disable all darksend/masternode related functionality
+
     if (strCommand == "dsf") { //DarkSend Final tx
         if (pfrom->nVersion < darkSendPool.MIN_PEER_PROTO_VERSION) {
             return;
@@ -579,8 +581,8 @@ void CDarkSendPool::Check()
 
                 if(!darkSendSigner.SetKey(strMasterNodePrivKey, strError, key2, pubkey2))
                 {
-                    LogPrintf("Invalid masternodeprivkey: '%s'\n", strError.c_str());
-                    exit(0);
+                    LogPrintf("CDarkSendPool::Check() - ERROR: Invalid masternodeprivkey: '%s'\n", strError.c_str());
+                    return;
                 }
 
                 if(!darkSendSigner.SignMessage(strMessage, strError, vchSig, key2)) {
@@ -2137,8 +2139,8 @@ bool CDarksendQueue::Sign()
 
     if(!darkSendSigner.SetKey(strMasterNodePrivKey, errorMessage, key2, pubkey2))
     {
-        LogPrintf("Invalid masternodeprivkey: '%s'\n", errorMessage.c_str());
-        exit(0);
+        LogPrintf("CDarksendQueue():Relay - ERROR: Invalid masternodeprivkey: '%s'\n", errorMessage.c_str());
+        return false;
     }
 
     if(!darkSendSigner.SignMessage(strMessage, errorMessage, vchSig, key2)) {
@@ -2188,6 +2190,8 @@ bool CDarksendQueue::CheckSignature()
 
 void ThreadCheckDarkSendPool()
 {
+    if(fLiteMode) return; //disable all darksend/masternode related functionality
+
     // Make this thread recognisable as the wallet flushing thread
     RenameThread("bitcoin-darksend");
 
