@@ -1115,8 +1115,7 @@ bool AppInit2(boost::thread_group& threadGroup)
         if(!strMasterNodeAddr.empty()){
             CService addrTest = CService(strMasterNodeAddr);
             if (!addrTest.IsValid()) {
-                printf("Invalid -masternodeaddr address: '%s'\n", mapArgs["-strMasterNodeAddr"].c_str());
-                exit(0);
+                return InitError("Invalid -masternodeaddr address: " + strMasterNodeAddr);
             }
         }
 
@@ -1163,6 +1162,12 @@ bool AppInit2(boost::thread_group& threadGroup)
         if(nInstantXDepth < 0) nAnonymizeDarkcoinAmount = 0;
     } else {
         nInstantXDepth = 0;
+    }
+
+    //lite mode disables all Masternode and Darksend related functionality
+    fLiteMode = GetBoolArg("-litemode", false);
+    if(fMasterNode && fLiteMode){
+        return InitError("You can not start a masternode in litemode");
     }
 
     LogPrintf("nInstantXDepth %d\n", nInstantXDepth);

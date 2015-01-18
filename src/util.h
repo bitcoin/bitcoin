@@ -95,6 +95,7 @@ inline void MilliSleep(int64_t n)
 //Darkcoin only features
 
 extern bool fMasterNode;
+extern bool fLiteMode;
 extern int nInstantXDepth;
 extern int nDarksendRounds;
 extern int nAnonymizeDarkcoinAmount;
