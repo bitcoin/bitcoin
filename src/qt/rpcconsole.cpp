@@ -507,7 +507,7 @@ void RPCConsole::hideEvent(QHideEvent *event)
 void RPCConsole::keyPressEvent(QKeyEvent *event)
 {
 #ifdef ANDROID
-    if(windowType() != Qt::Widget && event->key() == event->key() == Qt::Key_Back)
+    if(windowType() != Qt::Widget && event->key() == Qt::Key_Back)
     {
         close();
     }
