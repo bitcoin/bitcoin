@@ -6,6 +6,7 @@
 
 #include "test_bitcoin.h"
 
+#include "coinscache.h"
 #include "main.h"
 #include "random.h"
 #include "txdb.h"

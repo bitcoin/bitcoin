@@ -14,6 +14,7 @@
 #include "sync.h"
 
 class CAutoFile;
+class CCoinsViewCache;
 
 inline double AllowFreeThreshold()
 {

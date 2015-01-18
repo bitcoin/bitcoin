@@ -13,7 +13,6 @@
 #include "amount.h"
 #include "chain.h"
 #include "chainparams.h"
-#include "coins.h"
 #include "net.h"
 #include "primitives/block.h"
 #include "primitives/transaction.h"

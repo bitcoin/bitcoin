@@ -10,6 +10,7 @@
 #include "transactionrecord.h"
 
 #include "base58.h"
+#include "coinscache.h"
 #include "consensus/consensus.h"
 #include "main.h"
 #include "script/script.h"

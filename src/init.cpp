@@ -12,6 +12,8 @@
 #include "addrman.h"
 #include "amount.h"
 #include "checkpoints.h"
+#include "coins.h"
+#include "coinscache.h"
 #include "compat/sanity.h"
 #include "consensus/validation.h"
 #include "key.h"
