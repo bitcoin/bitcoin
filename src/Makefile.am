@@ -136,6 +136,7 @@ BITCOIN_CORE_H = \
   utilmoneystr.h \
   utilstrencodings.h \
   utiltime.h \
+  validationinterface.h \
   version.h \
   walletdb.h \
   wallet.h \
@@ -186,6 +187,7 @@ libbitcoin_server_a_SOURCES = \
   timedata.cpp \
   txdb.cpp \
   txmempool.cpp \
+  validationinterface.cpp \
   $(JSON_H) \
   $(BITCOIN_CORE_H)
 
