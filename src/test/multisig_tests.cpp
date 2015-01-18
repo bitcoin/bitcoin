@@ -4,11 +4,13 @@
 
 #include "key.h"
 #include "keystore.h"
-#include "main.h"
+#include "primitives/transaction.h"
+#include "script/interpreter.h"
 #include "script/script.h"
 #include "script/script_error.h"
-#include "script/interpreter.h"
 #include "script/sign.h"
+#include "script/standard.h"
+#include "tinyformat.h"
 #include "uint256.h"
 
 #ifdef ENABLE_WALLET

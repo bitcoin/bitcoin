@@ -3,11 +3,11 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include "chainparams.h"
 #include "clientversion.h"
-#include "rpcserver.h"
 #include "init.h"
-#include "main.h"
 #include "noui.h"
+#include "rpcserver.h"
 #include "ui_interface.h"
 #include "util.h"
 

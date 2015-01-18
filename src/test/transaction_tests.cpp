@@ -6,20 +6,26 @@
 #include "data/tx_valid.json.h"
 
 #include "clientversion.h"
+#include "core_io.h"
 #include "key.h"
 #include "keystore.h"
 #include "main.h"
+#include "primitives/transaction.h"
+#include "script/interpreter.h"
 #include "script/script.h"
 #include "script/script_error.h"
-#include "core_io.h"
+#include "script/standard.h"
+#include "streams.h"
+#include "utilstrencodings.h"
 
 #include <map>
 #include <string>
 
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
-#include <boost/test/unit_test.hpp>
 #include <boost/assign/list_of.hpp>
+#include <boost/foreach.hpp>
+#include <boost/test/unit_test.hpp>
 #include "json/json_spirit_writer_template.h"
 
 using namespace std;

@@ -7,11 +7,17 @@
 
 #include "amount.h"
 #include "primitives/transaction.h"
+#include "chain.h"
+#include "chainparams.h"
 #include "hash.h"
 #include "main.h"
 #include "net.h"
 #include "pow.h"
+#include "primitives/block.h"
+#include "primitives/transaction.h"
+#include "script/standard.h"
 #include "timedata.h"
+#include "txmempool.h"
 #include "util.h"
 #include "utilmoneystr.h"
 #ifdef ENABLE_WALLET

@@ -6,10 +6,11 @@
 #include "amount.h"
 #include "base58.h"
 #include "core_io.h"
-#include "rpcserver.h"
 #include "init.h"
+#include "main.h"
 #include "net.h"
 #include "netbase.h"
+#include "rpcserver.h"
 #include "timedata.h"
 #include "util.h"
 #include "utilmoneystr.h"
@@ -19,6 +20,7 @@
 #include <stdint.h>
 
 #include <boost/assign/list_of.hpp>
+#include <boost/foreach.hpp>
 #include "json/json_spirit_utils.h"
 #include "json/json_spirit_value.h"
 

@@ -15,6 +15,7 @@
 
 #include "coincontrol.h"
 #include "main.h"
+#include "txmempool.h"
 #include "wallet.h"
 
 #include <boost/assign/list_of.hpp> // for 'map_list_of()'

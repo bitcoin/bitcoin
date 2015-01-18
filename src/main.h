@@ -10,21 +10,12 @@
 #include "config/bitcoin-config.h"
 #endif
 
-#include "amount.h"
 #include "chain.h"
-#include "chainparams.h"
 #include "coins.h"
-#include "primitives/block.h"
-#include "primitives/transaction.h"
 #include "net.h"
-#include "pow.h"
-#include "script/script.h"
-#include "script/sigcache.h"
-#include "script/standard.h"
+#include "primitives/block.h"
+#include "script/script_error.h"
 #include "sync.h"
-#include "tinyformat.h"
-#include "txmempool.h"
-#include "uint256.h"
 
 #include <algorithm>
 #include <exception>
@@ -35,13 +26,16 @@
 #include <utility>
 #include <vector>
 
+#include <boost/filesystem/path.hpp>
 #include <boost/unordered_map.hpp>
 
 class CBlockIndex;
 class CBlockTreeDB;
 class CBloomFilter;
+class CCoinsViewCache;
 class CInv;
 class CScriptCheck;
+class CTxMemPool;
 class CValidationInterface;
 class CValidationState;
 

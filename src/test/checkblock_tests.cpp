@@ -6,10 +6,10 @@
 // Unit tests for block.CheckBlock()
 //
 
-
-
 #include "clientversion.h"
 #include "main.h"
+#include "primitives/block.h"
+#include "streams.h"
 #include "utiltime.h"
 
 #include <cstdio>

@@ -7,11 +7,12 @@
 #include "chainparams.h"
 #include "core_io.h"
 #include "init.h"
-#include "net.h"
 #include "main.h"
 #include "miner.h"
+#include "net.h"
 #include "pow.h"
 #include "rpcserver.h"
+#include "txmempool.h"
 #include "util.h"
 #include "validationinterface.h"
 #ifdef ENABLE_WALLET
