@@ -6,6 +6,8 @@
 #include "txmempool.h"
 
 #include "clientversion.h"
+#include "coins.h"
+#include "coinscache.h"
 #include "main.h"
 #include "streams.h"
 #include "util.h"

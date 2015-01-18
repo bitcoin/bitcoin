@@ -10,12 +10,13 @@
 #include "transactionrecord.h"
 
 #include "base58.h"
-#include "wallet/db.h"
+#include "coinscache.h"
 #include "main.h"
 #include "script/script.h"
 #include "timedata.h"
 #include "ui_interface.h"
 #include "util.h"
+#include "wallet/db.h"
 #include "wallet/wallet.h"
 
 #include <stdint.h>

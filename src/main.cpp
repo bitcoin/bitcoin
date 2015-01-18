@@ -11,6 +11,8 @@
 #include "chainparams.h"
 #include "checkpoints.h"
 #include "checkqueue.h"
+#include "coins.h"
+#include "coinscache.h"
 #include "init.h"
 #include "merkleblock.h"
 #include "net.h"
