@@ -45,8 +45,6 @@ class CScriptCheck;
 class CValidationInterface;
 class CValidationState;
 
-struct CNodeStateStats;
-
 /** Default for -blockmaxsize and -blockminsize, which control the range of sizes the mining code will create **/
 static const unsigned int DEFAULT_BLOCK_MAX_SIZE = 750000;
 static const unsigned int DEFAULT_BLOCK_MIN_SIZE = 0;
@@ -206,14 +204,6 @@ void FlushStateToDisk();
 /** (try to) add transaction to memory pool **/
 bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransaction &tx, bool fLimitFree,
                         bool* pfMissingInputs, bool fRejectInsaneFee=false);
-
-
-struct CNodeStateStats {
-    int nMisbehavior;
-    int nSyncHeight;
-    int nCommonHeight;
-    std::vector<int> vHeightInFlight;
-};
 
 struct CDiskTxPos : public CDiskBlockPos
 {

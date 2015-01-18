@@ -167,7 +167,12 @@ public:
     std::string addrLocal;
 };
 
-
+struct CNodeStateStats {
+    int nMisbehavior;
+    int nSyncHeight;
+    int nCommonHeight;
+    std::vector<int> vHeightInFlight;
+};
 
 
 class CNetMessage {
