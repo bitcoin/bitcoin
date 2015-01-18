@@ -414,7 +414,7 @@ int GetInputDarksendRounds(CTxIn in, int rounds)
 
         if(!found) {
             //LogPrintf(" - NOT FOUND\n");
-            return rounds;
+            return rounds - 1; // -1 because of the pre-mixing creation of denominated amounts
         }
 
         // find my vin and look that up
@@ -1435,28 +1435,21 @@ bool CDarkSendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
         return false;
     }
 
-    sessionMinRounds = -2; //non denominated funds are rounds of less than 0
-    sessionMaxRounds = 2;
-
     // ** find the coins we'll use
     std::vector<CTxIn> vCoins;
     int64_t nValueMin = 0.01*COIN;
-    int64_t nValueMax = DARKSEND_POOL_MAX;
     int64_t nValueIn = 0;
-    int maxAmount = DARKSEND_POOL_MAX/COIN;
     int64_t lowestDenom = COIN*0.1;
 
-    // If we can find only denominated funds, switch to only-denom mode
-    if (!pwalletMain->SelectCoinsDark(nValueMin, maxAmount*COIN, vCoins, nValueIn, -2, 2) &&
-        pwalletMain->SelectCoinsDark(nValueMin, maxAmount*COIN, vCoins, nValueIn, 0, nDarksendRounds)) {
-        sessionMinRounds = 0;
-        sessionMaxRounds = nDarksendRounds;
-    }
-    //if we're set to less than a thousand, don't submit for than that to the pool
-    if(nAnonymizeDarkcoinAmount < DARKSEND_POOL_MAX/COIN) maxAmount = nAnonymizeDarkcoinAmount;
+    int64_t balanceNeedsAnonymized = nAnonymizeDarkcoinAmount*COIN - pwalletMain->GetAnonymizedBalance();
 
-    int64_t balanceNeedsAnonymized = pwalletMain->GetBalance() - pwalletMain->GetAnonymizedBalance();
-    if(balanceNeedsAnonymized > maxAmount*COIN) balanceNeedsAnonymized= maxAmount*COIN;
+    // if balanceNeedsAnonymized is more than pool max, take the pool max
+    if(balanceNeedsAnonymized > DARKSEND_POOL_MAX) balanceNeedsAnonymized = DARKSEND_POOL_MAX;
+
+    // if balanceNeedsAnonymized is more than (non-anonymized - COIN), take (non-anonymized - COIN)
+    int64_t nonanonymized = pwalletMain->GetBalance() - pwalletMain->GetAnonymizedBalance() - COIN;
+    if(balanceNeedsAnonymized > nonanonymized) balanceNeedsAnonymized = nonanonymized;
+
     if(balanceNeedsAnonymized < lowestDenom ||
         (vecDisabledDenominations.size() > 0 && balanceNeedsAnonymized < COIN*10)){
         LogPrintf("DoAutomaticDenominating : No funds detected in need of denominating \n");
@@ -1464,43 +1457,22 @@ bool CDarkSendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
         return false;
     }
 
-    // if the balance is more the pool max, take the pool max
-    if(balanceNeedsAnonymized > nValueMax) {
-        balanceNeedsAnonymized = nValueMax;
-    }
-
     // select coins that should be given to the pool
-    if (!pwalletMain->SelectCoinsDark(nValueMin, maxAmount*COIN, vCoins, nValueIn, sessionMinRounds, sessionMaxRounds))
+    if (!pwalletMain->SelectCoinsDark(nValueMin, balanceNeedsAnonymized, vCoins, nValueIn, 0, nDarksendRounds))
     {
         nValueIn = 0;
         vCoins.clear();
 
-        // look for inputs larger than the max amount, if we find anything we need to split it up
-        if (pwalletMain->SelectCoinsDark(maxAmount*COIN, 9999999*COIN, vCoins, nValueIn, sessionMinRounds, sessionMaxRounds))
+        if (pwalletMain->SelectCoinsDark(nValueMin, 9999999*COIN, vCoins, nValueIn, -2, 0))
         {
-            if(!fDryRun) SplitUpMoney();
+            if(!fDryRun) return CreateDenominated(balanceNeedsAnonymized);
             return true;
+        } else {
+            LogPrintf("DoAutomaticDenominating : No funds detected in need of denominating (2)\n");
+            strAutoDenomResult = "No funds detected in need of denominating (2)";
+            return false;
         }
 
-        LogPrintf("DoAutomaticDenominating : No funds detected in need of denominating (2)\n");
-        strAutoDenomResult = "No funds detected in need of denominating (2)";
-        return false;
-    }
-
-    // the darksend pool can only take 2.5DRK minimum
-    if(nValueIn < lowestDenom ||
-        (vecDisabledDenominations.size() > 0 && nValueIn < COIN*10)
-    ){
-        //simply look for non-denominated coins
-        if (pwalletMain->SelectCoinsDark(maxAmount*COIN, 9999999*COIN, vCoins, nValueIn, sessionMinRounds, sessionMaxRounds))
-        {
-            if(!fDryRun) SplitUpMoney();
-            return true;
-        }
-
-        LogPrintf("DoAutomaticDenominating : Too little to denominate \n");
-        strAutoDenomResult = "Too little to denominate";
-        return false;
     }
 
     //check to see if we have the fee sized inputs, it requires these
@@ -1527,7 +1499,7 @@ bool CDarkSendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
         sessionTotalValue = pwalletMain->GetTotalValue(vCoins);
 
         //randomize the amounts we mix
-        if(sessionTotalValue > maxAmount*COIN) sessionTotalValue = maxAmount*COIN;
+        if(sessionTotalValue > balanceNeedsAnonymized) sessionTotalValue = balanceNeedsAnonymized;
 
         double fDarkcoinSubmitted = (sessionTotalValue / CENT);
         LogPrintf("Submitting Darksend for %f DRK CENT\n", fDarkcoinSubmitted);
@@ -1561,16 +1533,11 @@ bool CDarkSendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
                 }
 
                 // Try to match their denominations if possible
-                if (!pwalletMain->SelectCoinsByDenominations(dsq.nDenom, nValueMin, maxAmount*COIN, vCoins, nValueIn, -2, 2)){
-                    if (!pwalletMain->SelectCoinsByDenominations(dsq.nDenom, nValueMin, maxAmount*COIN, vCoins, nValueIn, 2, nDarksendRounds)){
+                if (!pwalletMain->SelectCoinsByDenominations(dsq.nDenom, nValueMin, balanceNeedsAnonymized, vCoins, nValueIn, 0, nDarksendRounds)){
+//                    if (!pwalletMain->SelectCoinsByDenominations(dsq.nDenom, nValueMin, balanceNeedsAnonymized, vCoins, nValueIn, -2, 0)){
                         LogPrintf("DoAutomaticDenominating - Couldn't match denominations\n");
                         continue;
-                    }
-                    sessionMinRounds = 2;
-                    sessionMaxRounds = nDarksendRounds;
-                } else {
-                    sessionMinRounds = -2;
-                    sessionMaxRounds = 2;
+//                    }
                 }
 
                 // connect to masternode and submit the queue request
@@ -1648,15 +1615,9 @@ bool CDarkSendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
 
                     vecMasternodesUsed.push_back(vecMasternodes[i].vin);
 
-                    if(sessionMinRounds >= 0){
-                        //use same denominations
-                        std::vector<int64_t> vecAmounts;
-                        pwalletMain->ConvertList(vCoins, vecAmounts);
-                        sessionDenom = GetDenominationsByAmounts(vecAmounts);
-                    } else {
-                        //use all possible denominations
-                        sessionDenom = GetDenominationsByAmount(sessionTotalValue);
-                    }
+                    std::vector<int64_t> vecAmounts;
+                    pwalletMain->ConvertList(vCoins, vecAmounts);
+                    sessionDenom = GetDenominationsByAmounts(vecAmounts);
 
                     pnode->PushMessage("dsa", sessionDenom, txCollateral);
                     LogPrintf("DoAutomaticDenominating --- connected, sending dsa for %d - denom %d\n", sessionDenom, GetDenominationsByAmount(sessionTotalValue));
@@ -1685,7 +1646,7 @@ bool CDarkSendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
 bool CDarkSendPool::PrepareDarksendDenominate()
 {
     // Submit transaction to the pool if we get here, use sessionDenom so we use the same amount of money
-    std::string strError = pwalletMain->PrepareDarksendDenominate(sessionMinRounds, sessionMaxRounds);
+    std::string strError = pwalletMain->PrepareDarksendDenominate(0, nDarksendRounds);
     LogPrintf("DoAutomaticDenominating : Running darksend denominate. Return '%s'\n", strError.c_str());
 
     if(strError == "") return true;
@@ -1746,13 +1707,17 @@ bool CDarkSendPool::SplitUpMoney(bool justCollateral)
         return false;
     }
 
+    // should split up to remaining amount only...
     int64_t nTotalBalance = pwalletMain->GetDenominatedBalance(false);
-    if(justCollateral && nTotalBalance > 1*COIN) nTotalBalance = 1*COIN;
+    int64_t nSplitBalance = nAnonymizeDarkcoinAmount*COIN - pwalletMain->GetDenominatedBalance();
+    if(nSplitBalance > nTotalBalance) nSplitBalance = nTotalBalance;
+    // ...or up to 1 DRK if it's just collateral
+    if(justCollateral && nSplitBalance > 1*COIN) nSplitBalance = 1*COIN;
     int64_t nTotalOut = 0;
     lastSplitUpBlock = chainActive.Tip()->nHeight;
 
     LogPrintf("DoAutomaticDenominating: Split up large input (justCollateral %d):\n", justCollateral);
-    LogPrintf(" -- nTotalBalance %d\n", nTotalBalance);
+    LogPrintf(" -- nSplitBalance %d\n", nSplitBalance);
     LogPrintf(" -- denom %d \n", pwalletMain->GetDenominatedBalance(false));
 
     // make our change address
@@ -1781,7 +1746,7 @@ bool CDarkSendPool::SplitUpMoney(bool justCollateral)
         bool continuing = true;
 
         while(continuing){
-            if(nTotalOut + a < nTotalBalance){
+            if(nTotalOut + a < nSplitBalance){
                 //LogPrintf(" nTotalOut %d, added %d\n", nTotalOut, a);
 
                 vecSend.push_back(make_pair(scriptChange, a));
@@ -1816,6 +1781,88 @@ bool CDarkSendPool::SplitUpMoney(bool justCollateral)
     LogPrintf("SplitUpMoney Success: tx %s\n", wtx.GetHash().GetHex().c_str());
 
     splitUpInARow++;
+    return true;
+}
+
+// Create denominations
+bool CDarkSendPool::CreateDenominated(int64_t nTotalValue)
+{
+    // make our change address
+    CReserveKey reservekey(pwalletMain);
+
+    CScript scriptChange;
+    CPubKey vchPubKey;
+    assert(reservekey.GetReservedKey(vchPubKey)); // should never fail, as we just unlocked
+    scriptChange.SetDestination(vchPubKey.GetID());
+
+    CWalletTx wtx;
+    int64_t nFeeRet = 0;
+    std::string strFail = "";
+    vector< pair<CScript, int64_t> > vecSend;
+    int64_t nValueLeft = nTotalValue;
+
+    // ****** Add fees ************ /
+    vecSend.push_back(make_pair(scriptChange, (DARKSEND_COLLATERAL*2)+DARKSEND_FEE));
+    nValueLeft -= (DARKSEND_COLLATERAL*2)+DARKSEND_FEE;
+    vecSend.push_back(make_pair(scriptChange, (DARKSEND_COLLATERAL*2)+DARKSEND_FEE));
+    nValueLeft -= (DARKSEND_COLLATERAL*2)+DARKSEND_FEE;
+
+    // ****** Add denoms ************ /
+    BOOST_REVERSE_FOREACH(int64_t v, darkSendDenominations){
+
+        int nOutputs = 0;
+
+        if(std::find(vecDisabledDenominations.begin(),
+            vecDisabledDenominations.end(), v) !=
+            vecDisabledDenominations.end()){
+            continue;
+        }
+
+        // add each output up to 10 times until it can't be added again
+        while(nValueLeft - v >= 0 && nOutputs <= 10) {
+            CScript scriptChange;
+            CPubKey vchPubKey;
+            //use a unique change address
+            assert(reservekey.GetReservedKey(vchPubKey)); // should never fail, as we just unlocked
+            scriptChange.SetDestination(vchPubKey.GetID());
+            reservekey.KeepKey();
+
+            vecSend.push_back(make_pair(scriptChange, v));
+
+            //increment outputs and subtract denomination amount
+            nOutputs++;
+            nValueLeft -= v;
+            LogPrintf("CreateDenominated1 %d\n", nValueLeft);
+        }
+
+        if(nValueLeft == 0) break;
+    }
+    LogPrintf("CreateDenominated2 %d\n", nValueLeft);
+
+    // if we have anything left over, send it back as change
+
+    if(nValueLeft > 0){
+        CScript scriptChange;
+        CPubKey vchPubKey;
+        assert(reservekey.GetReservedKey(vchPubKey)); // should never fail, as we just unlocked
+        scriptChange.SetDestination(vchPubKey.GetID());
+        reservekey.KeepKey();
+
+        vecSend.push_back(make_pair(scriptChange, nValueLeft));
+    }
+
+    CCoinControl *coinControl=NULL;
+    bool success = pwalletMain->CreateTransaction(vecSend, wtx, reservekey,
+            nFeeRet, strFail, coinControl, ONLY_NONDENOMINATED);
+    if(!success){
+        LogPrintf("CreateDenominated: Error - %s\n", strFail.c_str());
+        return false;
+    }
+
+    pwalletMain->CommitTransaction(wtx, reservekey);
+
+    LogPrintf("CreateDenominated Success: tx %s\n", wtx.GetHash().GetHex().c_str());
+
     return true;
 }
 
@@ -1898,7 +1945,6 @@ void CDarkSendPool::GetDenominationsToString(int nDenom, std::string& strDenom){
     // bit 1 - 10DRK+1
     // bit 2 - 1DRK+1
     // bit 3 - .1DRK+1
-    // bit 3 - non-denom
 
 
     strDenom = "";
@@ -1923,10 +1969,6 @@ void CDarkSendPool::GetDenominationsToString(int nDenom, std::string& strDenom){
         strDenom += "0.1";
     }
 
-    if(nDenom & (1 << 4)) {
-        if(strDenom.size() > 0) strDenom += "+";
-        strDenom += "ND";
-    }
 }
 
 // return a bitshifted integer representing the denominations in this list
@@ -1938,7 +1980,6 @@ int CDarkSendPool::GetDenominations(const std::vector<CTxOut>& vout){
         denomUsed.push_back(make_pair(d, 0));
 
     // look for denominations and update uses to 1
-    bool found_non_denom = false;
     BOOST_FOREACH(CTxOut out, vout){
         bool found = false;
         BOOST_FOREACH (PAIRTYPE(int64_t, int)& s, denomUsed){
@@ -1947,12 +1988,7 @@ int CDarkSendPool::GetDenominations(const std::vector<CTxOut>& vout){
                 found = true;
             }
         }
-        if(!found) found_non_denom = true;
-    }
-
-    //if other inputs are in here, flip the last bit
-    if(found_non_denom){
-        denomUsed.push_back(make_pair(0, 1));
+        if(!found) return 0;
     }
 
     int denom = 0;
@@ -1968,7 +2004,6 @@ int CDarkSendPool::GetDenominations(const std::vector<CTxOut>& vout){
     // bit 1 - 10DRK+1
     // bit 2 - 1DRK+1
     // bit 3 - .1DRK+1
-    // bit 4 - non-denom
 
     return denom;
 }
