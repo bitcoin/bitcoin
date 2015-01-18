@@ -258,7 +258,6 @@ LIBS += -lboost_system$$BOOST_LIB_SUFFIX -lboost_filesystem$$BOOST_LIB_SUFFIX -l
 -Должно найтись Android устройство. https://yadi.sk/i/wFWZLxtie4DrN
 Если Windows не может найти драйвер для устройства, то укажите самостоятельно в папке C:\Android\sdk\extras\google\usb_driver есть файл android_winusb.inf
 -В QtCreator'е нажмите на зеленого робота и выберите Сборка: Выпуск
--Нажмите зеленую стрелку(Запустить)
--Выберите свой телефон/планшет и ждите завершения компиляции.
-https://yadi.sk/i/hKHKL_Phe4EFL
+-Нажмите зеленую стрелку(Запустить)(https://yadi.sk/i/hKHKL_Phe4EFL)
+-Выберите свой телефон/планшет, нажмите OK и ждите завершения компиляции.
 -После завершения компиляции Novacoin-Qt будет установлен на ваш телефон/планшет и запущен. А в папке C:\Android\build-novacoin-qt-Android_armeabi_v7a_GCC_4_9_Qt_5_4_0-Release\android-build\bin будет файл QtApp-debug.apk. Переименуйте его в Novacoin-Qt-0.5.1-debug.apk и можно распростронять :)
