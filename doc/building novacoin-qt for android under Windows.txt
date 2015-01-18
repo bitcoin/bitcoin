@@ -164,10 +164,6 @@ TARGET_OS=OS_ANDROID_CROSSCOMPILE make libleveldb.a libmemenv.a
 Откройте файл src\netbase.cpp
 Измените #include <sys/fcntl.h> на #include <fcntl.h>
 
-Отмените вот этот коммит https://github.com/novacoin-project/novacoin/commit/a75927ea86b5456e0cb0bf68226c8e3402197ec8
-(То есть в файлах bitcoingui.cpp, rpcconsole.ui, rpcconsole.cpp, rpcconsole.h удалите зеленые строки этого коммита, и верните красные)
-(С ним у меня не получалось закрыть "Окно отладки", конечно нужно искать решение лучше чем отменять коммит, но пока так...)
-
 Откройте файл novacoin-qt.pro
 Вместо 
 
@@ -240,6 +236,12 @@ LIBS += -lboost_system$$BOOST_LIB_SUFFIX -lboost_filesystem$$BOOST_LIB_SUFFIX -l
 LIBS += -lboost_system$$BOOST_LIB_SUFFIX -lboost_filesystem$$BOOST_LIB_SUFFIX -lboost_program_options$$BOOST_LIB_SUFFIX -lboost_thread_pthread$$BOOST_THREAD_LIB_SUFFIX
 
 -Откройте файл C:\Qt\Qt5.4.0\Tools\QtCreator\bin\qtcreator.exe
+-Нажмите "Инструменты"->"Параметры", затем выберите вкладку Android
+-Вставьте в строку "Размещение JDK" C:\Program Files (x86)\Java\jdk1.8.0_25
+-Вставьте в строку "Размещение SDK для Android" C:\Android\sdk
+-Вставьте в строку "Размещение NDK для Android" C:\Android\android-ndk-r10d
+-Вставьте в строку "Программа Ant" C:\Android\apache-ant-1.9.4\bin\ant.bat
+-Нажмите "OK"
 -Нажмите "Файл"->"Открыть файл или проект..."
 -Найдите "novacoin-qt.pro" и нажмите "открыть"
 -Поставьте галочку напротив Android для armeabi-v7a(GCC 4.9, Qt 5.4.0), остальные галочки уберите
