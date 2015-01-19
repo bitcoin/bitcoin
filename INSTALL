@@ -1,5 +1,16 @@
-Building Bitcoin
+Building Darkcoin
 
-See doc/build-*.md for instructions on building bitcoind,
+Use the autogen script to prepare the build environment.
+
+    ./autogen.sh
+    ./configure
+    make
+
+Precompiled binaries are available at github, see
+https://github.com/darkcoinproject/darkcoin-binaries
+
+Always verify the signatures and checksums.
+
+See doc/build-*.md for instructions on building darkcoind,
 the intended-for-services, no-graphical-interface, reference
-implementation of Bitcoin.
+implementation of Darkcoin.

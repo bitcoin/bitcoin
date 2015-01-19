@@ -35,6 +35,7 @@ std::map<uint256, CTransactionLock> mapTxLocks;
 void ProcessMessageInstantX(CNode* pfrom, std::string& strCommand, CDataStream& vRecv)
 {
     return;
+    if(fLiteMode) return; //disable all darksend/masternode related functionality
 
     if (strCommand == "txlreq")
     {
@@ -387,8 +388,8 @@ bool CConsensusVote::Sign()
 
     if(!darkSendSigner.SetKey(strMasterNodePrivKey, errorMessage, key2, pubkey2))
     {
-        LogPrintf("Invalid masternodeprivkey: '%s'\n", errorMessage.c_str());
-        exit(0);
+        LogPrintf("CActiveMasternode::RegisterAsMasterNode() - ERROR: Invalid masternodeprivkey: '%s'\n", errorMessage.c_str());
+        return false;
     }
 
     CScript pubkey;

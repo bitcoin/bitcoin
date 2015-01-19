@@ -1,9 +1,12 @@
 Multi masternode config
 =======================
 
-The multi masternode config allows to control multiple masternodes from a single wallet. The wallet needs to have a valid collaral input of 1000 coins for each masternode. To use this, place a file named masternode.conf in the data directory of your install.
+The multi masternode config allows to control multiple masternodes from a single wallet. The wallet needs to have a valid collaral output of 1000 coins for each masternode. To use this, place a file named masternode.conf in the data directory of your install:
+ * Windows: %APPDATA%\Darkcoin\
+ * Mac OS: ~/Library/Application Support/Darkcoin/
+ * Unix/Linux: ~/.darkcoin/
 
-The new masternode.conf format consists of a space seperated text file. Each line consisting of an alias, address, private key, collateral output transaction and collateral output index.
+The new masternode.conf format consists of a space seperated text file. Each line consisting of an alias, IP address followed by port, masternode private key, collateral output transaction id and collateral output index.
 
 Example:
 ```
@@ -17,10 +20,11 @@ http://test.explorer.darkcoin.fr/tx/2bcd3c84c84f87eaa86e4e56834c92927a07f9e18718
 output index 0 has amount 1000
 
 The following new RPC commands are supported:
-* list-conf: shows the parsed masternode.conf 
+* list-conf: shows the parsed masternode.conf
 * start-alias \<alias\>
 * stop-alias \<alias\>
 * start-many
 * stop-many
+* outputs: list available collateral output transaction ids and corresponding collateral output indexes
 
 When using the multi masternode setup, it is advised to run the wallet with 'masternode=0' as it is not needed anymore.

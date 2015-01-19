@@ -257,8 +257,6 @@ public:
     int sessionUsers; //N Users have said they'll join
     bool sessionFoundMasternode; //If we've found a compatible masternode
     int sessionTries;
-    int sessionMinRounds;
-    int sessionMaxRounds;
     int64_t sessionTotalValue; //used for autoDenom
     std::vector<CTransaction> vecSessionCollateral;
 
@@ -291,8 +289,6 @@ public:
         minBlockSpacing = 1;
         nDsqCount = 0;
         vecDisabledDenominations.clear();
-        sessionMinRounds = 0;
-        sessionMaxRounds = 0;
 
         SetNull();
     }
@@ -429,6 +425,7 @@ public:
     bool SendRandomPaymentToSelf();
     // split up large inputs or make fee sized inputs
     bool SplitUpMoney(bool justCollateral=false);
+    bool CreateDenominated(int64_t nTotalValue);
     // get the denominations for a list of outputs (returns a bitshifted integer)
     int GetDenominations(const std::vector<CTxOut>& vout);
     void GetDenominationsToString(int nDenom, std::string& strDenom);
