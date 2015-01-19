@@ -6,7 +6,7 @@
 
 #include "chain.h"
 #include "chainparams.h"
-#include "main.h"
+#include "main.h" // mapBlockIndex
 #include "uint256.h"
 
 #include <stdint.h>

@@ -14,7 +14,7 @@
 #include "core_io.h"
 #include "key.h"
 #include "keystore.h"
-#include "main.h"
+#include "main.h" // cs_main
 #include "policy/policy.h"
 #include "primitives/transaction.h"
 #include "script/interpreter.h"

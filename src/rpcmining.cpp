@@ -10,7 +10,7 @@
 #include "consensus/validation.h"
 #include "core_io.h"
 #include "init.h"
-#include "main.h"
+#include "main.h" // chainActive
 #include "miner.h"
 #include "net.h"
 #include "rpcserver.h"

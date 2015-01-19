@@ -6,7 +6,7 @@
 #include "rpcclient.h"
 
 #include "base58.h"
-#include "main.h"
+#include "main.h" // cs_main
 #include "wallet/wallet.h"
 
 #include "test/test_bitcoin.h"

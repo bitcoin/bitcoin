@@ -11,7 +11,7 @@
 #include "coinscache.h"
 #include "consensus/consensus.h"
 #include "consensus/validation.h"
-#include "main.h"
+#include "main.h" // mapBlockIndex
 #include "streams.h"
 #include "util.h"
 #include "utilmoneystr.h"

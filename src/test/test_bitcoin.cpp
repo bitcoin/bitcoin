@@ -8,7 +8,7 @@
 
 #include "chainparams.h"
 #include "coinscache.h"
-#include "main.h"
+#include "main.h" // pblocktree, pcoinsdbview, pcoinsTip
 #include "policy/policy.h"
 #include "random.h"
 #include "txdb.h"

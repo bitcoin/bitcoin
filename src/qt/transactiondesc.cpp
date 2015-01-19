@@ -12,6 +12,7 @@
 #include "base58.h"
 #include "coinscache.h"
 #include "consensus/consensus.h"
+// #include "main.h" // cs_main
 #include "script/script.h"
 #include "timedata.h"
 #include "ui_interface.h"

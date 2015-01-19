@@ -8,7 +8,7 @@
 #include "checkpoints.h"
 #include "coinscache.h"
 #include "consensus/validation.h"
-#include "main.h"
+#include "main.h" // chainActive
 #include "primitives/transaction.h"
 #include "rpcserver.h"
 #include "sync.h"

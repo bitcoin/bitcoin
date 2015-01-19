@@ -6,7 +6,7 @@
 
 #include "chainparams.h"
 #include "clientversion.h"
-#include "main.h"
+#include "main.h" // GetNodeStateStats()
 #include "net.h"
 #include "netbase.h"
 #include "policy/policy.h"

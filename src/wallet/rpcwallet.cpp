@@ -8,7 +8,7 @@
 #include "consensus/consensus.h"
 #include "core_io.h"
 #include "init.h"
-#include "main.h"
+#include "main.h" // mapBlockIndex
 #include "net.h"
 #include "netbase.h"
 #include "rpcserver.h"

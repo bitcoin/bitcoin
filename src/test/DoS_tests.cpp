@@ -5,7 +5,7 @@
 #include "chainparams.h"
 #include "consensus/pow.h"
 #include "keystore.h"
-#include "main.h"
+#include "main.h" // SendMessages()
 #include "net.h"
 #include "primitives/transaction.h"
 #include "script/sign.h"
