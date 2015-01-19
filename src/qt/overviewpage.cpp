@@ -121,9 +121,6 @@ OverviewPage::OverviewPage(QWidget *parent) :
 
     connect(ui->listTransactions, SIGNAL(clicked(QModelIndex)), this, SLOT(handleTransactionClicked(QModelIndex)));
 
-    timer = new QTimer(this);
-    connect(timer, SIGNAL(timeout()), this, SLOT(darkSendStatus()));
-    timer->start(333);
 
     // init "out of sync" warning labels
     ui->labelWalletStatus->setText("(" + tr("out of sync") + ")");
@@ -132,7 +129,15 @@ OverviewPage::OverviewPage(QWidget *parent) :
     showingDarkSendMessage = 0;
     darksendActionCheck = 0;
 
-    if(fMasterNode){
+    if(fLiteMode){
+        ui->frameDarksend->setVisible(false);
+    } else {
+        timer = new QTimer(this);
+        connect(timer, SIGNAL(timeout()), this, SLOT(darkSendStatus()));
+        timer->start(333);
+    }
+
+    if(fMasterNode || fLiteMode){
         ui->toggleDarksend->setText("(Disabled)");
         ui->toggleDarksend->setEnabled(false);
     }else if(!fEnableDarksend){

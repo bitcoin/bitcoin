@@ -97,6 +97,7 @@ using namespace std;
 bool fMasterNode = false;
 string strMasterNodePrivKey = "";
 string strMasterNodeAddr = "";
+bool fLiteMode = false;
 int nInstantXDepth = 1;
 int nDarksendRounds = 2;
 int nAnonymizeDarkcoinAmount = 1000;
