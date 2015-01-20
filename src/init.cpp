@@ -1170,6 +1170,7 @@ bool AppInit2(boost::thread_group& threadGroup)
         return InitError("You can not start a masternode in litemode");
     }
 
+    LogPrintf("fLiteMode %d\n", fLiteMode);
     LogPrintf("nInstantXDepth %d\n", nInstantXDepth);
     LogPrintf("Darksend rounds %d\n", nDarksendRounds);
     LogPrintf("Anonymize Darkcoin Amount %d\n", nAnonymizeDarkcoinAmount);
