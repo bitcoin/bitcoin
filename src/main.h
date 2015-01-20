@@ -45,7 +45,6 @@ class CScriptCheck;
 class CValidationInterface;
 class CValidationState;
 
-struct CBlockTemplate;
 struct CNodeStateStats;
 
 /** Default for -blockmaxsize and -blockminsize, which control the range of sizes the mining code will create **/
@@ -512,17 +511,6 @@ extern CCoinsViewCache *pcoinsTip;
 
 /** Global variable that points to the active block tree (protected by cs_main) */
 extern CBlockTreeDB *pblocktree;
-
-struct CBlockTemplate
-{
-    CBlock block;
-    std::vector<CAmount> vTxFees;
-    std::vector<int64_t> vTxSigOps;
-};
-
-
-
-
 
 
 class CValidationInterface {
