@@ -187,7 +187,10 @@ BitcoinGUI::BitcoinGUI(bool fIsTestnet, QWidget *parent) :
     statusBar()->addWidget(progressBar);
     statusBar()->addPermanentWidget(frameBlocks);
 
-    connect(openRPCConsoleAction, SIGNAL(triggered()), rpcConsole, SLOT(show()));
+    connect(openInfoAction, SIGNAL(triggered()), rpcConsole, SLOT(showInfo()));
+    connect(openRPCConsoleAction, SIGNAL(triggered()), rpcConsole, SLOT(showConsole()));
+    connect(openNetworkAction, SIGNAL(triggered()), rpcConsole, SLOT(showNetwork()));
+
 
     // prevents an oben debug window from becoming stuck/unusable on client shutdown
     connect(quitAction, SIGNAL(triggered()), rpcConsole, SLOT(hide()));
@@ -300,8 +303,12 @@ void BitcoinGUI::createActions(bool fIsTestnet)
     verifyMessageAction = new QAction(QIcon(":/icons/transaction_0"), tr("&Verify message..."), this);
     verifyMessageAction->setStatusTip(tr("Verify messages to ensure they were signed with specified Darkcoin addresses"));
 
-    openRPCConsoleAction = new QAction(QIcon(":/icons/debugwindow"), tr("&Debug window"), this);
-    openRPCConsoleAction->setStatusTip(tr("Open debugging and diagnostic console"));
+    openInfoAction = new QAction(QApplication::style()->standardIcon(QStyle::SP_MessageBoxInformation), tr("&Information"), this);
+    openInfoAction->setStatusTip(tr("Show diagnostic information"));
+    openRPCConsoleAction = new QAction(QIcon(":/icons/debugwindow"), tr("&Debug console"), this);
+    openRPCConsoleAction->setStatusTip(tr("Open debugging console"));
+    openNetworkAction = new QAction(QIcon(":/icons/connect_4"), tr("&Network Monitor"), this);
+    openNetworkAction->setStatusTip(tr("Show network monitor"));
 
     usedSendingAddressesAction = new QAction(QIcon(":/icons/address-book"), tr("&Sending addresses..."), this);
     usedSendingAddressesAction->setStatusTip(tr("Show the list of used sending addresses and labels"));
@@ -373,11 +380,15 @@ void BitcoinGUI::createMenuBar()
     }
     settings->addAction(optionsAction);
 
-    QMenu *help = appMenuBar->addMenu(tr("&Help"));
     if(walletFrame)
     {
-        help->addAction(openRPCConsoleAction);
+        QMenu *tools = appMenuBar->addMenu(tr("&Tools"));
+        tools->addAction(openInfoAction);
+        tools->addAction(openRPCConsoleAction);
+        tools->addAction(openNetworkAction);
     }
+
+    QMenu *help = appMenuBar->addMenu(tr("&Help"));
     help->addAction(showHelpMessageAction);
     help->addSeparator();
     help->addAction(aboutAction);
@@ -520,7 +531,9 @@ void BitcoinGUI::createTrayIconMenu()
     trayIconMenu->addAction(verifyMessageAction);
     trayIconMenu->addSeparator();
     trayIconMenu->addAction(optionsAction);
+    trayIconMenu->addAction(openInfoAction);
     trayIconMenu->addAction(openRPCConsoleAction);
+    trayIconMenu->addAction(openNetworkAction);
 #ifndef Q_OS_MAC // This is built-in on Mac
     trayIconMenu->addSeparator();
     trayIconMenu->addAction(quitAction);
