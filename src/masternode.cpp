@@ -764,7 +764,7 @@ int CMasternodePayments::LastPayment(CMasterNode& mn)
 
 bool CMasternodePayments::ProcessBlock(int nBlockHeight)
 {
-    if(strMasterPrivKey.empty()) return false;
+    if(!enabled) return false;
     CMasternodePaymentWinner winner;
 
     uint256 blockHash = 0;
@@ -839,6 +839,7 @@ bool CMasternodePayments::SetPrivKey(std::string strPrivKey)
 
     if(CheckSignature(winner)){
         LogPrintf("CMasternodePayments::SetPrivKey - Successfully initialized as masternode payments master\n");
+        enabled = true;
         return true;
     } else {
         return false;
