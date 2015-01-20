@@ -3211,7 +3211,7 @@ bool ProcessBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDiskBl
     }
 
     if(!fLiteMode){
-        if(!IsInitialBlockDownload()){
+        if (!fImporting && !fReindex && chainActive.Height() > Checkpoints::GetTotalBlocksEstimate()){
             darkSendPool.CheckTimeout();
             darkSendPool.NewBlock();
         }
