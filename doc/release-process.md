@@ -44,11 +44,11 @@ Release Process
 
  Register and download the Apple SDK: (see OSX Readme for details)
  
- https://developer.apple.com/downloads/download.action?path=Developer_Tools/xcode_4.6.3/xcode4630916281a.dmg
+ https://developer.apple.com/downloads/download.action?path=Developer_Tools/xcode_6.1.1/xcode_6.1.1.dmg
  
- Using a Mac, create a tarball for the 10.7 SDK and copy it to the inputs directory:
+ Using a Mac, create a tarball for the 10.9 SDK and copy it to the inputs directory:
  
-	tar -C /Volumes/Xcode/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/ -czf MacOSX10.7.sdk.tar.gz MacOSX10.7.sdk
+	tar -C /Volumes/Xcode/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/ -czf MacOSX10.9.sdk.tar.gz MacOSX10.9.sdk
 
 ###Optional: Seed the Gitian sources cache
 
