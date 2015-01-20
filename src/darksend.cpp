@@ -793,6 +793,8 @@ void CDarkSendPool::ChargeRandomFees(){
 // Check for various timeouts (queue objects, darksend, etc)
 //
 void CDarkSendPool::CheckTimeout(){
+    if(!fEnableDarksend) return;
+
     // catching hanging sessions
     if(!fMasterNode) {
         if(state == POOL_STATUS_TRANSMISSION) {
