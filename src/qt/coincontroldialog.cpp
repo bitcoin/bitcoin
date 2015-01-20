@@ -304,19 +304,19 @@ void CoinControlDialog::clipboardAmount()
 // copy label "Fee" to clipboard
 void CoinControlDialog::clipboardFee()
 {
-    GUIUtil::setClipboard(ui->labelCoinControlFee->text().left(ui->labelCoinControlFee->text().indexOf(" ")).replace("~", ""));
+    GUIUtil::setClipboard(ui->labelCoinControlFee->text().left(ui->labelCoinControlFee->text().indexOf(" ")).replace(ASYMP_UTF8, ""));
 }
 
 // copy label "After fee" to clipboard
 void CoinControlDialog::clipboardAfterFee()
 {
-    GUIUtil::setClipboard(ui->labelCoinControlAfterFee->text().left(ui->labelCoinControlAfterFee->text().indexOf(" ")).replace("~", ""));
+    GUIUtil::setClipboard(ui->labelCoinControlAfterFee->text().left(ui->labelCoinControlAfterFee->text().indexOf(" ")).replace(ASYMP_UTF8, ""));
 }
 
 // copy label "Bytes" to clipboard
 void CoinControlDialog::clipboardBytes()
 {
-    GUIUtil::setClipboard(ui->labelCoinControlBytes->text().replace("~", ""));
+    GUIUtil::setClipboard(ui->labelCoinControlBytes->text().replace(ASYMP_UTF8, ""));
 }
 
 // copy label "Priority" to clipboard
@@ -334,7 +334,7 @@ void CoinControlDialog::clipboardLowOutput()
 // copy label "Change" to clipboard
 void CoinControlDialog::clipboardChange()
 {
-    GUIUtil::setClipboard(ui->labelCoinControlChange->text().left(ui->labelCoinControlChange->text().indexOf(" ")).replace("~", ""));
+    GUIUtil::setClipboard(ui->labelCoinControlChange->text().left(ui->labelCoinControlChange->text().indexOf(" ")).replace(ASYMP_UTF8, ""));
 }
 
 // treeview: sort
@@ -600,16 +600,16 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
     l2->setText(BitcoinUnits::formatWithUnit(nDisplayUnit, nAmount));        // Amount
     l3->setText(BitcoinUnits::formatWithUnit(nDisplayUnit, nPayFee));        // Fee
     l4->setText(BitcoinUnits::formatWithUnit(nDisplayUnit, nAfterFee));      // After Fee
-    l5->setText(((nBytes > 0) ? "~" : "") + QString::number(nBytes));        // Bytes
+    l5->setText(((nBytes > 0) ? ASYMP_UTF8 : "") + QString::number(nBytes));        // Bytes
     l6->setText(sPriorityLabel);                                             // Priority
     l7->setText(fDust ? tr("yes") : tr("no"));                               // Dust
     l8->setText(BitcoinUnits::formatWithUnit(nDisplayUnit, nChange));        // Change
     if (nPayFee > 0 && !(payTxFee.GetFeePerK() > 0 && fPayAtLeastCustomFee && nBytes < 1000))
     {
-        l3->setText("~" + l3->text());
-        l4->setText("~" + l4->text());
+        l3->setText(ASYMP_UTF8 + l3->text());
+        l4->setText(ASYMP_UTF8 + l4->text());
         if (nChange > 0)
-            l8->setText("~" + l8->text());
+            l8->setText(ASYMP_UTF8 + l8->text());
     }
 
     // turn labels "red"
