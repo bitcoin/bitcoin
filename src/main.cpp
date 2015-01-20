@@ -3210,9 +3210,11 @@ bool ProcessBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDiskBl
         mapOrphanBlocksByPrev.erase(hashPrev);
     }
 
-    if(!IsInitialBlockDownload()){
-        darkSendPool.CheckTimeout();
-        darkSendPool.NewBlock();
+    if(!fLiteMode){
+        if(!IsInitialBlockDownload()){
+            darkSendPool.CheckTimeout();
+            darkSendPool.NewBlock();
+        }
     }
 
     LogPrintf("ProcessBlock: ACCEPTED\n");
