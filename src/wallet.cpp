@@ -1505,17 +1505,16 @@ struct CompareByPriority
     }
 };
 
-bool CWallet::SelectCoinsByDenominations(int nDenom, int64_t nValueMin, int64_t nValueMax, std::vector<CTxIn>& setCoinsRet, int64_t& nValueRet, int nDarksendRoundsMin, int nDarksendRoundsMax)
+bool CWallet::SelectCoinsByDenominations(int nDenom, int64_t nValueMin, int64_t nValueMax, std::vector<CTxIn>& setCoinsRet, vector<COutput>& setCoinsRet2, int64_t& nValueRet, int nDarksendRoundsMin, int nDarksendRoundsMax)
 {
     CCoinControl *coinControl=NULL;
 
     setCoinsRet.clear();
     nValueRet = 0;
 
+    setCoinsRet2.clear();
     vector<COutput> vCoins;
     AvailableCoins(vCoins, false, coinControl, ALL_COINS);
-
-    set<pair<const CWalletTx*,unsigned int> > setCoinsRet2;
 
     //order the array so fees are first, then denominated money, then the rest.
     std::random_shuffle(vCoins.rbegin(), vCoins.rend());
@@ -1579,7 +1578,7 @@ bool CWallet::SelectCoinsByDenominations(int nDenom, int64_t nValueMin, int64_t 
             vin.prevPubKey = out.tx->vout[out.i].scriptPubKey; // the inputs PubKey
             nValueRet += out.tx->vout[out.i].nValue;
             setCoinsRet.push_back(vin);
-            setCoinsRet2.insert(make_pair(out.tx, out.i));
+            setCoinsRet2.push_back(out);
         }
     }
 
@@ -2112,6 +2111,7 @@ string CWallet::PrepareDarksendDenominate(int minRounds, int maxRounds)
 
     // ** find the coins we'll use
     std::vector<CTxIn> vCoins;
+    std::vector<COutput> vCoins2;
     int64_t nValueIn = 0;
     CReserveKey reservekey(this);
 
@@ -2121,7 +2121,7 @@ string CWallet::PrepareDarksendDenominate(int minRounds, int maxRounds)
         if minRounds >= 0 it means only denominated inputs are going in and coming out
     */
     if(minRounds >= 0){
-        if (!SelectCoinsByDenominations(darkSendPool.sessionDenom, 0.1*COIN, DARKSEND_POOL_MAX, vCoins, nValueIn, minRounds, maxRounds))
+        if (!SelectCoinsByDenominations(darkSendPool.sessionDenom, 0.1*COIN, DARKSEND_POOL_MAX, vCoins, vCoins2, nValueIn, minRounds, maxRounds))
             return _("Insufficient funds");
     }
 
@@ -2138,48 +2138,28 @@ string CWallet::PrepareDarksendDenominate(int minRounds, int maxRounds)
     std::vector<CTxOut> vOut;
 
     // Make outputs by looping through denominations, from small to large
-    BOOST_REVERSE_FOREACH(int64_t v, darkSendDenominations){
-        bool fAccepted = false;
-        if((darkSendPool.sessionDenom & (1 << 0)) && v == ((100*COIN)+1)) {fAccepted = true;}
-        else if((darkSendPool.sessionDenom & (1 << 1)) && v == ((10*COIN)+1)) {fAccepted = true;}
-        else if((darkSendPool.sessionDenom & (1 << 2)) && v == ((1*COIN)+1)) {fAccepted = true;}
-        else if((darkSendPool.sessionDenom & (1 << 3)) && v == ((.1*COIN)+1)) {fAccepted = true;}
-        if(!fAccepted) continue;
 
-        int nOutputs = 0;
+    BOOST_FOREACH(const COutput& out, vCoins2){
+        CScript scriptChange;
+        CPubKey vchPubKey;
+        //use a unique change address
+        assert(reservekey.GetReservedKey(vchPubKey)); // should never fail, as we just unlocked
+        scriptChange.SetDestination(vchPubKey.GetID());
+        reservekey.KeepKey();
 
-        // add each output up to 10 times until it can't be added again
-        while(nValueLeft - v >= 0 && nOutputs <= 10) {
-            CScript scriptChange;
-            CPubKey vchPubKey;
-            //use a unique change address
-            assert(reservekey.GetReservedKey(vchPubKey)); // should never fail, as we just unlocked
-            scriptChange.SetDestination(vchPubKey.GetID());
-            reservekey.KeepKey();
+        CTxOut o(out.tx->vout[out.i].nValue, scriptChange);
+        vOut.push_back(o);
 
-            CTxOut o(v, scriptChange);
-            vOut.push_back(o);
-
-            //increment outputs and subtract denomination amount
-            nOutputs++;
-            nValueLeft -= v;
-        }
+        //increment outputs and subtract denomination amount
+        nValueLeft -= out.tx->vout[out.i].nValue;
 
         if(nValueLeft == 0) break;
     }
 
     // if we have anything left over, send it back as change
 
-    if(nValueLeft > 0){
-        CScript scriptChange;
-        CPubKey vchPubKey;
-        assert(reservekey.GetReservedKey(vchPubKey)); // should never fail, as we just unlocked
-        scriptChange.SetDestination(vchPubKey.GetID());
-        reservekey.KeepKey();
-
-        CTxOut o(nValueLeft, scriptChange);
-        vOut.push_back(o);
-    }
+    if(nValueLeft != 0)
+        return "Error: change left-over in pool. Must use denominations only";
 
     darkSendPool.SendDarksendDenominate(vCoins, vOut, nValueIn);
 

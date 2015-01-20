@@ -256,7 +256,6 @@ public:
     int sessionDenom; //Users must submit an denom matching this
     int sessionUsers; //N Users have said they'll join
     bool sessionFoundMasternode; //If we've found a compatible masternode
-    int sessionTries;
     int64_t sessionTotalValue; //used for autoDenom
     std::vector<CTransaction> vecSessionCollateral;
 
@@ -269,8 +268,6 @@ public:
 
     //debugging data
     std::string strAutoDenomResult;
-
-    std::vector<int64_t> vecDisabledDenominations;
 
     //incremented whenever a DSQ comes through
     int64_t nDsqCount;
@@ -288,7 +285,6 @@ public:
         txCollateral = CTransaction();
         minBlockSpacing = 1;
         nDsqCount = 0;
-        vecDisabledDenominations.clear();
 
         SetNull();
     }
