@@ -1359,7 +1359,6 @@ void CDarkSendPool::NewBlock()
 {
     if(fDebug) LogPrintf("CDarkSendPool::NewBlock \n");
 
-    if(IsInitialBlockDownload()) return;
 
     masternodePayments.ProcessBlock(chainActive.Tip()->nHeight+10);
 
