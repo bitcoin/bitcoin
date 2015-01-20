@@ -767,7 +767,7 @@ if config.dmg is not None:
         for path, dirs, files in os.walk("dist"):
             for file in files:
                 size += os.path.getsize(os.path.join(path, file))
-        size += int(size * 0.1)
+        size += int(size * 0.15)
         
         if verbose >= 3:
             print "Creating temp image for modification..."
@@ -791,7 +791,8 @@ if config.dmg is not None:
             print "+ Applying fancy settings +"
         
         if fancy.has_key("background_picture"):
-            bg_path = os.path.join(disk_root, os.path.basename(fancy["background_picture"]))
+            bg_path = os.path.join(disk_root, ".background", os.path.basename(fancy["background_picture"]))
+            os.mkdir(os.path.dirname(bg_path))
             if verbose >= 3:
                 print fancy["background_picture"], "->", bg_path
             shutil.copy2(fancy["background_picture"], bg_path)
@@ -849,8 +850,8 @@ if config.dmg is not None:
         if bg_path is not None:
             # Set background file, then call SetFile to make it invisible.
             # (note: making it invisible first makes set background picture fail)
-            bgscript = Template("""set background picture of theViewOptions to file "$bgpic"
-                   do shell script "SetFile -a V /Volumes/$disk/$bgpic" """)
+            bgscript = Template("""set background picture of theViewOptions to file ".background:$bgpic"
+                   do shell script "SetFile -a V /Volumes/$disk/.background/$bgpic" """)
             params["background_commands"] = bgscript.substitute({"bgpic" : os.path.basename(bg_path), "disk" : params["disk"]})
 
         s = appscript.substitute(params)
