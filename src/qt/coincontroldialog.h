@@ -25,6 +25,8 @@ namespace Ui {
     class CoinControlDialog;
 }
 
+#define ASYMP_UTF8 "\xE2\x89\x88"
+
 class CoinControlDialog : public QDialog
 {
     Q_OBJECT
