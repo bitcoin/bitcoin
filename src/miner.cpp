@@ -112,6 +112,8 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
     pblock->vtx.push_back(CTransaction());
     pblocktemplate->vTxFees.push_back(-1); // updated at end
     pblocktemplate->vTxSigOps.push_back(-1); // updated at end
+    pblocktemplate->vTxFeesAdjusted.push_back(-1);  // updated at end
+    pblocktemplate->vTxPrioritiesAdjusted.push_back(0);
 
     // Largest block you're willing to create:
     unsigned int nBlockMaxSize = GetArg("-blockmaxsize", DEFAULT_BLOCK_MAX_SIZE);
@@ -285,6 +287,13 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
             pblock->vtx.push_back(tx);
             pblocktemplate->vTxFees.push_back(nTxFees);
             pblocktemplate->vTxSigOps.push_back(nTxSigOps);
+            {
+                CAmount nTxFeesAdj = nTxFees;
+                double dummy;
+                mempool.ApplyDeltas(hash, dummy, nTxFeesAdj);
+                pblocktemplate->vTxFeesAdjusted.push_back(nTxFeesAdj);
+            }
+            pblocktemplate->vTxPrioritiesAdjusted.push_back(dPriority);
             nBlockSize += nTxSize;
             ++nBlockTx;
             nBlockSigOps += nTxSigOps;
