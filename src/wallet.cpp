@@ -1558,6 +1558,9 @@ bool CWallet::SelectCoinsByDenominations(int nDenom, int64_t nValueMin, int64_t 
                 if(nValueRet >= nValueMin){
                     //random reduce the max amount we'll submit for anonymity
                     nValueMax -= (rand() % (nValueMax/5));
+                    //on average use 50% of the inputs or less
+                    int r = (rand() % (int)vCoins.size());
+                    if((int)setCoinsRet.size() > r) return true;
                 }
                 //Denomination criterion has been met, we can take any matching denominations
                 if((nDenom & (1 << 0)) && out.tx->vout[out.i].nValue == ((100*COIN)+1)) {fAccepted = true;}
