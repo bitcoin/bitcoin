@@ -91,6 +91,7 @@ void ProcessMessageDarksend(CNode* pfrom, std::string& strCommand, CDataStream& 
     }
 
     else if (strCommand == "dsa") { //DarkSend Acceptable
+
         if (pfrom->nVersion < darkSendPool.MIN_PEER_PROTO_VERSION) {
             std::string strError = "incompatible version";
             LogPrintf("dsa -- incompatible version! \n");
@@ -140,12 +141,14 @@ void ProcessMessageDarksend(CNode* pfrom, std::string& strCommand, CDataStream& 
             return;
         }
     } else if (strCommand == "dsq") { //DarkSend Queue
+
         if (pfrom->nVersion < darkSendPool.MIN_PEER_PROTO_VERSION) {
             return;
         }
 
         CDarksendQueue dsq;
         vRecv >> dsq;
+
 
         CService addr;
         if(!dsq.GetAddress(addr)) return;
@@ -155,7 +158,6 @@ void ProcessMessageDarksend(CNode* pfrom, std::string& strCommand, CDataStream& 
 
         int mn = GetMasternodeByVin(dsq.vin);
         if(mn == -1) return;
-
 
         // if the queue is ready, submit if we can
         if(dsq.ready) {
@@ -324,6 +326,7 @@ void ProcessMessageDarksend(CNode* pfrom, std::string& strCommand, CDataStream& 
     }
 
     else if (strCommand == "dssu") { //DarkSend status update
+
         if (pfrom->nVersion < darkSendPool.MIN_PEER_PROTO_VERSION) {
             return;
         }
@@ -1527,6 +1530,9 @@ bool CDarkSendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
                 if(!dsq.GetProtocolVersion(protocolVersion)) continue;
                 if(protocolVersion < MIN_PEER_PROTO_VERSION) continue;
 
+                //non-denom's are incompatible
+                if((dsq.nDenom & (1 << 4))) continue;
+
                 //don't reuse masternodes
                 BOOST_FOREACH(CTxIn usedVin, vecMasternodesUsed){
                     if(dsq.vin == usedVin) {
@@ -1537,7 +1543,7 @@ bool CDarkSendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
                 // Try to match their denominations if possible
                 if (!pwalletMain->SelectCoinsByDenominations(dsq.nDenom, nValueMin, balanceNeedsAnonymized, vCoins, nValueIn, 0, nDarksendRounds)){
 //                    if (!pwalletMain->SelectCoinsByDenominations(dsq.nDenom, nValueMin, balanceNeedsAnonymized, vCoins, nValueIn, -2, 0)){
-                        LogPrintf("DoAutomaticDenominating - Couldn't match denominations\n");
+                        LogPrintf("DoAutomaticDenominating - Couldn't match denominations %d\n", dsq.nDenom);
                         continue;
 //                    }
                 }
@@ -1545,6 +1551,7 @@ bool CDarkSendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
                 // connect to masternode and submit the queue request
                 if(ConnectNode((CAddress)addr, NULL, true)){
                     submittedToMasternode = addr;
+
                     LOCK(cs_vNodes);
                     BOOST_FOREACH(CNode* pnode, vNodes)
                     {
@@ -1602,10 +1609,11 @@ bool CDarkSendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
             LogPrintf("DoAutomaticDenominating -- attempt %d connection to masternode %s\n", sessionTries, vecMasternodes[i].addr.ToString().c_str());
             if(ConnectNode((CAddress)vecMasternodes[i].addr, NULL, true)){
                 submittedToMasternode = vecMasternodes[i].addr;
+
                 LOCK(cs_vNodes);
                 BOOST_FOREACH(CNode* pnode, vNodes)
                 {
-                	if((CNetAddr)pnode->addr != (CNetAddr)vecMasternodes[i].addr) continue;
+                    if((CNetAddr)pnode->addr != (CNetAddr)vecMasternodes[i].addr) continue;
 
                     std::string strReason;
                     if(txCollateral == CTransaction()){
@@ -1947,6 +1955,7 @@ void CDarkSendPool::GetDenominationsToString(int nDenom, std::string& strDenom){
     // bit 1 - 10DRK+1
     // bit 2 - 1DRK+1
     // bit 3 - .1DRK+1
+    // bit 3 - non-denom
 
 
     strDenom = "";
@@ -1970,7 +1979,6 @@ void CDarkSendPool::GetDenominationsToString(int nDenom, std::string& strDenom){
         if(strDenom.size() > 0) strDenom += "+";
         strDenom += "0.1";
     }
-
 }
 
 // return a bitshifted integer representing the denominations in this list
@@ -2009,6 +2017,7 @@ int CDarkSendPool::GetDenominations(const std::vector<CTxOut>& vout){
 
     return denom;
 }
+
 
 int CDarkSendPool::GetDenominationsByAmounts(std::vector<int64_t>& vecAmount){
     CScript e = CScript();

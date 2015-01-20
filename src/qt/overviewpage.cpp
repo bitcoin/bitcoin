@@ -344,29 +344,6 @@ void OverviewPage::darkSendStatus()
         // Balance and number of transactions might have changed
         darkSendPool.cachedNumBlocks = nBestHeight;
 
-        if (pwalletMain->GetBalance() - pwalletMain->GetAnonymizedBalance() > 2*COIN){
-            if (walletModel->getEncryptionStatus() != WalletModel::Unencrypted){
-                if((nAnonymizeDarkcoinAmount*COIN)-pwalletMain->GetAnonymizedBalance() > 1.1*COIN &&
-                    walletModel->getEncryptionStatus() == WalletModel::Locked){
-
-                    WalletModel::UnlockContext ctx(walletModel->requestUnlock(false));
-                    if(!ctx.isValid()){
-                        //unlock was cancelled
-                        fEnableDarksend = false;
-                        darkSendPool.cachedNumBlocks = 0;
-                        LogPrintf("Wallet is locked and user declined to unlock. Disabling Darksend.\n");
-                    }
-                }
-                if((nAnonymizeDarkcoinAmount*COIN)-pwalletMain->GetAnonymizedBalance() <= 1.1*COIN &&
-                    walletModel->getEncryptionStatus() == WalletModel::Unlocked &&
-                    darkSendPool.GetMyTransactionCount() == 0){
-
-                    LogPrintf("Darksend is complete, locking wallet.\n");
-                    walletModel->setWalletLocked(true);
-                }
-            }
-        }
-
         /* *******************************************************/
 
         ui->darksendEnabled->setText("Enabled");
@@ -472,6 +449,24 @@ void OverviewPage::toggleDarksend(){
                 QMessageBox::Ok, QMessageBox::Ok);
             return;
         }
+
+
+        if (pwalletMain->GetBalance() - pwalletMain->GetAnonymizedBalance() > 2*COIN){
+            if (walletModel->getEncryptionStatus() != WalletModel::Unencrypted){
+                if((nAnonymizeDarkcoinAmount*COIN)-pwalletMain->GetAnonymizedBalance() > 1.1*COIN &&
+                    walletModel->getEncryptionStatus() == WalletModel::Locked){
+
+                    WalletModel::UnlockContext ctx(walletModel->requestUnlock(false));
+                    if(!ctx.isValid()){
+                        //unlock was cancelled
+                        fEnableDarksend = false;
+                        darkSendPool.cachedNumBlocks = 0;
+                        LogPrintf("Wallet is locked and user declined to unlock. Disabling Darksend.\n");
+                    }
+                }
+            }
+        }
+
     }
 
     darkSendPool.cachedNumBlocks = 0;
