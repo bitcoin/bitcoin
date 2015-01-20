@@ -6,7 +6,6 @@
 #include "miner.h"
 
 #include "amount.h"
-#include "primitives/block.h"
 #include "primitives/transaction.h"
 #include "hash.h"
 #include "main.h"
