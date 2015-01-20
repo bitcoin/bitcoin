@@ -18,6 +18,7 @@
 using namespace std;
 using namespace boost;
 
+CCriticalSection cs_darksend;
 
 /** The main object for accessing darksend */
 CDarkSendPool darkSendPool;
@@ -461,7 +462,6 @@ void CDarkSendPool::SetNull(bool clearEverything){
     sessionUsers = 0;
     sessionDenom = 0;
     sessionFoundMasternode = false;
-    sessionTries = 0;
     vecSessionCollateral.clear();
     txCollateral = CTransaction();
 
@@ -864,7 +864,6 @@ void CDarkSendPool::CheckTimeout(){
             sessionUsers = 0;
             sessionDenom = 0;
             sessionFoundMasternode = false;
-            sessionTries = 0;
             vecSessionCollateral.clear();
 
             UpdateState(POOL_STATUS_ACCEPTING_ENTRIES);
@@ -1410,6 +1409,8 @@ void CDarkSendPool::ClearLastMessage()
 //
 bool CDarkSendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
 {
+    LOCK(cs_darksend);
+
     if(fMasterNode) return false;
     if(state == POOL_STATUS_ERROR || state == POOL_STATUS_SUCCESS) return false;
 
@@ -1443,6 +1444,7 @@ bool CDarkSendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
 
     // ** find the coins we'll use
     std::vector<CTxIn> vCoins;
+    std::vector<COutput> vCoins2;
     int64_t nValueMin = 0.01*COIN;
     int64_t nValueIn = 0;
     int64_t lowestDenom = COIN*0.1;
@@ -1456,8 +1458,7 @@ bool CDarkSendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
     int64_t nonanonymized = pwalletMain->GetBalance() - pwalletMain->GetAnonymizedBalance() - COIN;
     if(balanceNeedsAnonymized > nonanonymized) balanceNeedsAnonymized = nonanonymized;
 
-    if(balanceNeedsAnonymized < lowestDenom ||
-        (vecDisabledDenominations.size() > 0 && balanceNeedsAnonymized < COIN*10)){
+    if(balanceNeedsAnonymized < lowestDenom){
         LogPrintf("DoAutomaticDenominating : No funds detected in need of denominating \n");
         strAutoDenomResult = "No funds detected in need of denominating";
         return false;
@@ -1488,15 +1489,6 @@ bool CDarkSendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
     }
 
     if(fDryRun) return true;
-
-    if(vecDisabledDenominations.size() == 0){
-        //if we have 20x 0.1DRk and 1DRK inputs, we can start just anonymizing 10DRK inputs.
-        if(pwalletMain->CountInputsWithAmount((1     * COIN)+1) >= 20 &&
-            pwalletMain->CountInputsWithAmount((.1     * COIN)+1) >= 20){
-            vecDisabledDenominations.push_back((1     * COIN)+1);
-            vecDisabledDenominations.push_back((.1     * COIN)+1);
-        }
-    }
 
     // initial phase, find a masternode
     if(!sessionFoundMasternode){
@@ -1542,11 +1534,9 @@ bool CDarkSendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
                 }
 
                 // Try to match their denominations if possible
-                if (!pwalletMain->SelectCoinsByDenominations(dsq.nDenom, nValueMin, balanceNeedsAnonymized, vCoins, nValueIn, 0, nDarksendRounds)){
-//                    if (!pwalletMain->SelectCoinsByDenominations(dsq.nDenom, nValueMin, balanceNeedsAnonymized, vCoins, nValueIn, -2, 0)){
-                        LogPrintf("DoAutomaticDenominating - Couldn't match denominations %d\n", dsq.nDenom);
-                        continue;
-//                    }
+                if (!pwalletMain->SelectCoinsByDenominations(dsq.nDenom, nValueMin, balanceNeedsAnonymized, vCoins, vCoins2, nValueIn, 0, nDarksendRounds)){
+                    LogPrintf("DoAutomaticDenominating - Couldn't match denominations %d\n", dsq.nDenom);
+                    continue;
                 }
 
                 // connect to masternode and submit the queue request
@@ -1584,30 +1574,33 @@ bool CDarkSendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
             }
         }
 
-        // otherwise, try one randomly
-        if(sessionTries++ < 10){
-            //pick a random masternode to use
-            int max_value = vecMasternodes.size();
-            if(max_value <= 0) return false;
-            int i = (rand() % max_value);
+        //shuffle masternodes around before we try to connect
+        std::random_shuffle ( vecMasternodes.begin(), vecMasternodes.end() );
+        int i = 0;
 
+        // otherwise, try one randomly
+        while(i < 10)
+        {
             //don't reuse masternodes
             BOOST_FOREACH(CTxIn usedVin, vecMasternodesUsed) {
                 if(vecMasternodes[i].vin == usedVin){
-                    return DoAutomaticDenominating();
+                    i++;
+                    continue;
                 }
             }
             if(vecMasternodes[i].protocolVersion < MIN_PEER_PROTO_VERSION) {
-                return DoAutomaticDenominating();
+                i++;
+                continue;
             }
 
             if(vecMasternodes[i].nLastDsq != 0 &&
                 vecMasternodes[i].nLastDsq + CountMasternodesAboveProtocol(darkSendPool.MIN_PEER_PROTO_VERSION)/5 > darkSendPool.nDsqCount){
-                return DoAutomaticDenominating();
+                i++;
+                continue;
             }
 
             lastTimeChanged = GetTimeMillis();
-            LogPrintf("DoAutomaticDenominating -- attempt %d connection to masternode %s\n", sessionTries, vecMasternodes[i].addr.ToString().c_str());
+            LogPrintf("DoAutomaticDenominating -- attempt %d connection to masternode %s\n", i, vecMasternodes[i].addr.ToString().c_str());
             if(ConnectNode((CAddress)vecMasternodes[i].addr, NULL, true)){
                 submittedToMasternode = vecMasternodes[i].addr;
 
@@ -1619,7 +1612,7 @@ bool CDarkSendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
                     std::string strReason;
                     if(txCollateral == CTransaction()){
                         if(!pwalletMain->CreateCollateralTransaction(txCollateral, strReason)){
-                            LogPrintf("DoAutomaticDenominating -- dsa error:%s\n", strReason.c_str());
+                            LogPrintf("DoAutomaticDenominating -- create collateral error:%s\n", strReason.c_str());
                             return false;
                         }
                     }
@@ -1636,13 +1629,13 @@ bool CDarkSendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
                     return true;
                 }
             } else {
-                LogPrintf("DoAutomaticDenominating --- error connecting \n");
-                return DoAutomaticDenominating();
+                i++;
+                continue;
             }
-        } else {
-            strAutoDenomResult = "No compatible masternode found";
-            return false;
         }
+
+        strAutoDenomResult = "No compatible masternode found";
+        return false;
     }
 
     strAutoDenomResult = "";
@@ -1820,14 +1813,7 @@ bool CDarkSendPool::CreateDenominated(int64_t nTotalValue)
 
     // ****** Add denoms ************ /
     BOOST_REVERSE_FOREACH(int64_t v, darkSendDenominations){
-
         int nOutputs = 0;
-
-        if(std::find(vecDisabledDenominations.begin(),
-            vecDisabledDenominations.end(), v) !=
-            vecDisabledDenominations.end()){
-            continue;
-        }
 
         // add each output up to 10 times until it can't be added again
         while(nValueLeft - v >= 0 && nOutputs <= 10) {
@@ -2054,9 +2040,6 @@ int CDarkSendPool::GetDenominationsByAmount(int64_t nAmount, int nDenomTarget){
         }
 
         int nOutputs = 0;
-
-        if(std::find(vecDisabledDenominations.begin(), vecDisabledDenominations.end(), v) != vecDisabledDenominations.end())
-            continue;
 
         // add each output up to 10 times until it can't be added again
         while(nValueLeft - v >= 0 && nOutputs <= 10) {
