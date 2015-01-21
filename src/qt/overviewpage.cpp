@@ -450,20 +450,19 @@ void OverviewPage::toggleDarksend(){
             return;
         }
 
-
-        if (pwalletMain->GetBalance() - pwalletMain->GetAnonymizedBalance() > 2*COIN){
-            if (walletModel->getEncryptionStatus() != WalletModel::Unencrypted){
-                if((nAnonymizeDarkcoinAmount*COIN)-pwalletMain->GetAnonymizedBalance() > 1.1*COIN &&
-                    walletModel->getEncryptionStatus() == WalletModel::Locked){
-
-                    WalletModel::UnlockContext ctx(walletModel->requestUnlock(false));
-                    if(!ctx.isValid()){
-                        //unlock was cancelled
-                        fEnableDarksend = false;
-                        darkSendPool.cachedNumBlocks = 0;
-                        LogPrintf("Wallet is locked and user declined to unlock. Disabling Darksend.\n");
-                    }
-                }
+        // if wallet is locked, ask for a passphrase
+        if (walletModel->getEncryptionStatus() == WalletModel::Locked)
+        {
+            WalletModel::UnlockContext ctx(walletModel->requestUnlock(false));
+            if(!ctx.isValid())
+            {
+                //unlock was cancelled
+                darkSendPool.cachedNumBlocks = 0;
+                QMessageBox::warning(this, tr("Darksend"),
+                    tr("Wallet is locked and user declined to unlock. Disabling Darksend."),
+                    QMessageBox::Ok, QMessageBox::Ok);
+                if (fDebug) LogPrintf("Wallet is locked and user declined to unlock. Disabling Darksend.\n");
+                return;
             }
         }
 
