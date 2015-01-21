@@ -5,6 +5,7 @@
 
 #include "random.h"
 
+#include "support/cleanse.h"
 #ifdef WIN32
 #include "compat.h" // for Windows API
 #endif
@@ -18,7 +19,6 @@
 #include <sys/time.h>
 #endif
 
-#include <openssl/crypto.h>
 #include <openssl/err.h>
 #include <openssl/rand.h>
 
@@ -40,7 +40,7 @@ void RandAddSeed()
     // Seed with CPU performance counter
     int64_t nCounter = GetPerformanceCounter();
     RAND_add(&nCounter, sizeof(nCounter), 1.5);
-    OPENSSL_cleanse((void*)&nCounter, sizeof(nCounter));
+    memory_cleanse((void*)&nCounter, sizeof(nCounter));
 }
 
 void RandAddSeedPerfmon()
@@ -70,7 +70,7 @@ void RandAddSeedPerfmon()
     RegCloseKey(HKEY_PERFORMANCE_DATA);
     if (ret == ERROR_SUCCESS) {
         RAND_add(begin_ptr(vData), nSize, nSize / 100.0);
-        OPENSSL_cleanse(begin_ptr(vData), nSize);
+        memory_cleanse(begin_ptr(vData), nSize);
         LogPrint("rand", "%s: %lu bytes\n", __func__, nSize);
     } else {
         static bool warned = false; // Warn only once
