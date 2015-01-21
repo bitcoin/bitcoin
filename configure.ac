@@ -64,13 +64,6 @@ AC_PATH_PROG(CCACHE,ccache)
 AC_PATH_PROG(XGETTEXT,xgettext)
 AC_PATH_PROG(HEXDUMP,hexdump)
 
-# This m4 will only be used if a system copy cannot be found. This is helpful
-# on systems where autotools are installed but the pkg-config macros are not in
-# a default location. It is currently used for building on OSX where autotools
-# are preinstalled but pkg-config comes from macports or homebrew. It should
-# probably be removed when building on <= 10.6 is no longer supported.
-m4_include([pkg.m4])
-
 dnl pkg-config check.
 PKG_PROG_PKG_CONFIG
 
