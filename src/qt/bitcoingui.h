@@ -93,7 +93,9 @@ private:
     QAction *unlockWalletAction;
     QAction *lockWalletAction;
     QAction *aboutQtAction;
+    QAction *openInfoAction;
     QAction *openRPCConsoleAction;
+    QAction *openNetworkAction;
     QAction *openAction;
     QAction *showHelpMessageAction;
 
