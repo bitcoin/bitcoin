@@ -707,7 +707,7 @@ bool IsFinalTx(const CTransaction &tx, int nBlockHeight, int64_t nBlockTime)
     if ((int64_t)tx.nLockTime < ((int64_t)tx.nLockTime < LOCKTIME_THRESHOLD ? (int64_t)nBlockHeight : nBlockTime))
         return true;
     BOOST_FOREACH(const CTxIn& txin, tx.vin)
-        if (!txin.IsFinal())
+        if (txin.nSequence != std::numeric_limits<uint32_t>::max())
             return false;
     return true;
 }
