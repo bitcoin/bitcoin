@@ -1660,7 +1660,6 @@ int main(int argc, char **argv) {
     /* Likewise, re-running the internal init functions should be harmless. */
     secp256k1_fe_start();
     secp256k1_ge_start();
-    secp256k1_scalar_start();
     secp256k1_ecdsa_start();
 
     run_sha256_tests();
@@ -1711,7 +1710,6 @@ int main(int argc, char **argv) {
     /* Same for the internal shutdown functions. */
     secp256k1_fe_stop();
     secp256k1_ge_stop();
-    secp256k1_scalar_stop();
     secp256k1_ecdsa_stop();
     return 0;
 }

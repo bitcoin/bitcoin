@@ -22,7 +22,6 @@
 void secp256k1_start(unsigned int flags) {
     secp256k1_fe_start();
     secp256k1_ge_start();
-    secp256k1_scalar_start();
     secp256k1_ecdsa_start();
     if (flags & SECP256K1_START_SIGN) {
         secp256k1_ecmult_gen_start();
@@ -36,7 +35,6 @@ void secp256k1_stop(void) {
     secp256k1_ecmult_stop();
     secp256k1_ecmult_gen_stop();
     secp256k1_ecdsa_stop();
-    secp256k1_scalar_stop();
     secp256k1_ge_stop();
     secp256k1_fe_stop();
 }
