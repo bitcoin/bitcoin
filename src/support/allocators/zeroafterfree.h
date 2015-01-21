@@ -6,7 +6,7 @@
 #ifndef BITCOIN_ALLOCATORS_ZEROAFTERFREE_H
 #define BITCOIN_ALLOCATORS_ZEROAFTERFREE_H
 
-#include <openssl/crypto.h> // for OPENSSL_cleanse()
+#include "support/cleanse.h"
 
 #include <memory>
 #include <vector>
@@ -37,7 +37,7 @@ struct zero_after_free_allocator : public std::allocator<T> {
     void deallocate(T* p, std::size_t n)
     {
         if (p != NULL)
-            OPENSSL_cleanse(p, sizeof(T) * n);
+            memory_cleanse(p, sizeof(T) * n);
         std::allocator<T>::deallocate(p, n);
     }
 };

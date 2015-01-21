@@ -9,6 +9,8 @@
 
 #include "base58.h"
 
+#include <openssl/x509.h>
+
 #include <QByteArray>
 #include <QList>
 #include <QString>

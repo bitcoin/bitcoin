@@ -35,7 +35,6 @@
 #include "db.h"
 #include "wallet.h"
 #include "walletdb.h"
-#include "keepass.h"
 #endif
 
 #include <stdint.h>
@@ -341,11 +340,6 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += "  -auxminingaddr           " + _("Address for getauxblock coinbase") + "\n";
     strUsage += "  -createwalletbackups=<n> " + _("Number of automatic wallet backups (default: 10)") + "\n";
     strUsage += "  -disablewallet           " + _("Do not load the wallet and disable wallet RPC calls") + "\n";
-    strUsage += "  -keepass                 " + strprintf(_("Use KeePass 2 integration using KeePassHttp plugin (default: %u)"), 0) + "\n";
-    strUsage += "  -keepassport=<port>      " + strprintf(_("Connect to KeePassHttp on port <port> (default: %u)"), 19455) + "\n";
-    strUsage += "  -keepasskey=<key>        " + _("KeePassHttp key for AES encrypted communication with KeePass") + "\n";
-    strUsage += "  -keepassid=<name>        " + _("KeePassHttp id for the established association") + "\n";
-    strUsage += "  -keepassname=<name>      " + _("Name to construct url for KeePass entry that stores the wallet passphrase") + "\n";
     strUsage += "  -keypool=<n>             " + strprintf(_("Set key pool size to <n> (default: %u)"), 100) + "\n";
     if (GetBoolArg("-help-debug", false))
         strUsage += "  -mintxfee=<amt>          " + strprintf(_("Fees (in CRW/Kb) smaller than this are considered zero fee for transaction creation (default: %s)"), FormatMoney(CWallet::minTxFee.GetFeePerK())) + "\n";
@@ -381,7 +375,7 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += "                         " + _("If <category> is not supplied, output all debugging information.") + "\n";
     strUsage += "                         " + _("<category> can be:\n");
     strUsage += "                           addrman, alert, bench, coindb, db, lock, rand, rpc, selectcoins, mempool, net,\n"; // Don't translate these and qt below
-    strUsage += "                           crown (or specifically: darksend, instantx, throne, keepass, mnpayments, mnbudget)"; // Don't translate these and qt below
+    strUsage += "                           crown (or specifically: darksend, instantx, throne, mnpayments, mnbudget)"; // Don't translate these and qt below
     if (mode == HMM_BITCOIN_QT)
         strUsage += ", qt";
     strUsage += ".\n";
@@ -1009,9 +1003,6 @@ bool AppInit2(boost::thread_group& threadGroup)
             if (r == CDBEnv::RECOVER_FAIL)
                 return InitError(_("wallet.dat corrupt, salvage failed"));
         }
-
-    // Initialize KeePass Integration
-    keePassInt.init();
 
     } // (!fDisableWallet)
 #endif // ENABLE_WALLET

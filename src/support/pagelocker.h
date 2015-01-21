@@ -6,12 +6,12 @@
 #ifndef BITCOIN_ALLOCATORS_PAGELOCKER_H
 #define BITCOIN_ALLOCATORS_PAGELOCKER_H
 
+#include "support/cleanse.h"
+
 #include <map>
 
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/once.hpp>
-
-#include <openssl/crypto.h> // for OPENSSL_cleanse()
 
 /**
  * Thread-safe class to keep track of locked (ie, non-swappable) memory pages.
@@ -170,7 +170,7 @@ void LockObject(const T& t)
 template <typename T>
 void UnlockObject(const T& t)
 {
-    OPENSSL_cleanse((void*)(&t), sizeof(T));
+    memory_cleanse((void*)(&t), sizeof(T));
     LockedPageManager::Instance().UnlockRange((void*)(&t), sizeof(T));
 }
 

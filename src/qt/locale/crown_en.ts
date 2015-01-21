@@ -4294,11 +4294,6 @@ https://www.transifex.com/projects/p/crown/</translation>
         <translation>InstantX requires inputs with at least 6 confirmations, you might need to wait a few minutes and try again.</translation>
     </message>
     <message>
-        <location line="+17"/>
-        <source>Name to construct url for KeePass entry that stores the wallet passphrase</source>
-        <translation>Name to construct url for KeePass entry that stores the wallet passphrase</translation>
-    </message>
-    <message>
         <location line="+10"/>
         <source>Query for peer addresses via DNS lookup, if low on addresses (default: 1 unless -connect)</source>
         <translation>Query for peer addresses via DNS lookup, if low on addresses (default: 1 unless -connect)</translation>
@@ -4826,11 +4821,6 @@ for example: alertnotify=echo %%s | mail -s &quot;Crown Alert&quot; admin@foo.co
         <translation>Connect through SOCKS5 proxy</translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>Connect to KeePassHttp on port &lt;port&gt; (default: %u)</source>
-        <translation>Connect to KeePassHttp on port &lt;port&gt; (default: %u)</translation>
-    </message>
-    <message>
         <location line="+3"/>
         <source>Copyright (C) 2009-%i The Bitcoin Core Developers</source>
         <translation>Copyright (C) 2009-%i The Bitcoin Core Developers</translation>
@@ -5266,11 +5256,6 @@ for example: alertnotify=echo %%s | mail -s &quot;Crown Alert&quot; admin@foo.co
         <translation>Threshold for disconnecting misbehaving peers (default: %u)</translation>
     </message>
     <message>
-        <location line="+14"/>
-        <source>Use KeePass 2 integration using KeePassHttp plugin (default: %u)</source>
-        <translation>Use KeePass 2 integration using KeePassHttp plugin (default: %u)</translation>
-    </message>
-    <message>
         <location line="+1"/>
         <source>Use N separate thrones to anonymize funds  (2-8, default: %u)</source>
         <translation>Use N separate thrones to anonymize funds  (2-8, default: %u)</translation>
@@ -5344,16 +5329,6 @@ for example: alertnotify=echo %%s | mail -s &quot;Crown Alert&quot; admin@foo.co
         <location line="+1"/>
         <source>Invalid script detected.</source>
         <translation>Invalid script detected.</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>KeePassHttp id for the established association</source>
-        <translation>KeePassHttp id for the established association</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>KeePassHttp key for AES encrypted communication with KeePass</source>
-        <translation>KeePassHttp key for AES encrypted communication with KeePass</translation>
     </message>
     <message>
         <location line="+1"/>

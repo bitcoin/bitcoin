@@ -3362,10 +3362,6 @@ https://www.transifex.com/projects/p/crown/</translation>
         <translation>InstantX nécessite des entrées avec au moins 6 confirmations, vous devriez attendre quelques minutes avant de réessayer.</translation>
     </message>
     <message>
-        <source>Name to construct url for KeePass entry that stores the wallet passphrase</source>
-        <translation>Nom pour construire l'URL pour l'entrée KeePass qui conserve la phrase de passe du portefeuille</translation>
-    </message>
-    <message>
         <source>Query for peer addresses via DNS lookup, if low on addresses (default: 1 unless -connect)</source>
         <translation>Requête pour adresses de pairs via recherche DNS, si peu d'adresses (par défaut: 1 sauf si -connect)</translation>
     </message>
@@ -3792,10 +3788,6 @@ Pour exemple: alertnotify=echo %%s | mail -s "Alerte Crown" admin@foo.com
         <translation>Connexion à travers un serveur mandataire SOCKS5</translation>
     </message>
     <message>
-        <source>Connect to KeePassHttp on port &lt;port&gt; (default: %u)</source>
-        <translation>Connecter à KeePassHttp sur le port &lt;port&gt; (par défaut: %u)</translation>
-    </message>
-    <message>
         <source>Copyright (C) 2009-%i The Bitcoin Core Developers</source>
         <translation>Copyright (C) 2009-%i The Bitcoin Core Developers</translation>
     </message>
@@ -4144,10 +4136,6 @@ Pour exemple: alertnotify=echo %%s | mail -s "Alerte Crown" admin@foo.com
         <translation>Seuil de déconnexion des pairs présentant un mauvais comportement (par défaut : %u)</translation>
     </message>
     <message>
-        <source>Use KeePass 2 integration using KeePassHttp plugin (default: %u)</source>
-        <translation>Utiliser l'intégration KeePass 2 en utilisant le greffon KeePassHttp (par défaut : %u)</translation>
-    </message>
-    <message>
         <source>Use N separate thrones to anonymize funds  (2-8, default: %u)</source>
         <translation>Utiliser N thrones différents pour anonymiser les fonds (2-8, par défaut : %u)</translation>
     </message>
@@ -4206,14 +4194,6 @@ Pour exemple: alertnotify=echo %%s | mail -s "Alerte Crown" admin@foo.com
     <message>
         <source>Invalid script detected.</source>
         <translation>Script invalide détecté.</translation>
-    </message>
-    <message>
-        <source>KeePassHttp id for the established association</source>
-        <translation>Id KeePassHttp pour l'association établie</translation>
-    </message>
-    <message>
-        <source>KeePassHttp key for AES encrypted communication with KeePass</source>
-        <translation>Clé KeePassHttp pour la communication chiffrée AES avec KeePass</translation>
     </message>
     <message>
         <source>Keep N CRW anonymized (default: %u)</source>

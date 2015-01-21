@@ -49,7 +49,7 @@ struct secure_allocator : public std::allocator<T> {
     void deallocate(T* p, std::size_t n)
     {
         if (p != NULL) {
-            OPENSSL_cleanse(p, sizeof(T) * n);
+            memory_cleanse(p, sizeof(T) * n);
             LockedPageManager::Instance().UnlockRange(p, sizeof(T) * n);
         }
         std::allocator<T>::deallocate(p, n);

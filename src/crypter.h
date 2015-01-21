@@ -82,8 +82,8 @@ public:
 
     void CleanKey()
     {
-        OPENSSL_cleanse(chKey, sizeof(chKey));
-        OPENSSL_cleanse(chIV, sizeof(chIV));
+        memory_cleanse(chKey, sizeof(chKey));
+        memory_cleanse(chIV, sizeof(chIV));
         fKeySet = false;
     }
 

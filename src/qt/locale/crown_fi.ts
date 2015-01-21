@@ -3367,10 +3367,6 @@ Näillä toiminnoilla voit korjata korruptoituneen lohkoketjun tai puuttuvat/van
         <translation>InstantX vaatii syötteille vähintään 6 vahvistusta, odota muutama minuutti ja yritä uudelleen.</translation>
     </message>
     <message>
-        <source>Name to construct url for KeePass entry that stores the wallet passphrase</source>
-        <translation>Rakenne url nimi KeePass merkinnälle joka talentaa lompakon salasanan</translation>
-    </message>
-    <message>
         <source>Query for peer addresses via DNS lookup, if low on addresses (default: 1 unless -connect)</source>
         <translation>Tiedustele vertaisverkon osoitteita DNS hakua käyttäen jos osoitteita ei ole riittävästi (oletus: 1 paitsi jos -connect)</translation>
     </message>
@@ -3799,10 +3795,6 @@ esimerkiksi: alertnotify=echo %%s | mail -s "Crown Hälytys" admin@foo.com
         <translation>Yhdistä SOCKS5 proxyn kautta</translation>
     </message>
     <message>
-        <source>Connect to KeePassHttp on port &lt;port&gt; (default: %u)</source>
-        <translation>Yhdistä KeePassHttp porttiin &lt;port&gt; (oletus: %u)</translation>
-    </message>
-    <message>
         <source>Copyright (C) 2009-%i The Bitcoin Core Developers</source>
         <translation>Copyright (C) 2009-%i Bitcoin Core Kehittäjät</translation>
     </message>
@@ -4151,10 +4143,6 @@ esimerkiksi: alertnotify=echo %%s | mail -s "Crown Hälytys" admin@foo.com
         <translation>Yhteyden kynnysaika huonosti käyttäyville peers:lle (oletus: %u)</translation>
     </message>
     <message>
-        <source>Use KeePass 2 integration using KeePassHttp plugin (default: %u)</source>
-        <translation>Käytä KeePass 2 integraatiota käyttäen KeePassHttp liitännäistä (oletus: %u)</translation>
-    </message>
-    <message>
         <source>Use N separate thrones to anonymize funds  (2-8, default: %u)</source>
         <translation>Käytä N erillistä thronea varojen anonymisointiin (2-8, oletus: %u)</translation>
     </message>
@@ -4213,14 +4201,6 @@ esimerkiksi: alertnotify=echo %%s | mail -s "Crown Hälytys" admin@foo.com
     <message>
         <source>Invalid script detected.</source>
         <translation>Virheellinen scripti havaittu.</translation>
-    </message>
-    <message>
-        <source>KeePassHttp id for the established association</source>
-        <translation>KeePassHttp tunnus (id) yhdistymiseen</translation>
-    </message>
-    <message>
-        <source>KeePassHttp key for AES encrypted communication with KeePass</source>
-        <translation>KeePassHttp avain AES salattuun viestintään</translation>
     </message>
     <message>
         <source>Keep N CRW anonymized (default: %u)</source>

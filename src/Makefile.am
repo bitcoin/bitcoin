@@ -100,7 +100,6 @@ BITCOIN_CORE_H = \
   init.h \
   instantx.h \
   key.h \
-  keepass.h \
   keystore.h \
   leveldbwrapper.h \
   limitedmap.h \
@@ -139,6 +138,7 @@ BITCOIN_CORE_H = \
   support/allocators/secure.h \
   support/allocators/zeroafterfree.h \
   support/pagelocker.h \
+  support/cleanse.h \
   sync.h \
   threadsafety.h \
   timedata.h \
@@ -230,7 +230,6 @@ libbitcoin_wallet_a_SOURCES = \
   wallet.cpp \
   wallet_ismine.cpp \
   walletdb.cpp \
-  keepass.cpp \
   $(BITCOIN_CORE_H)
 
 # crypto primitives library
@@ -303,6 +302,7 @@ libbitcoin_util_a_SOURCES = \
   compat/strnlen.cpp \
   random.cpp \
   rpcprotocol.cpp \
+  support/cleanse.cpp \
   sync.cpp \
   uint256.cpp \
   util.cpp \
@@ -387,7 +387,6 @@ crown_cli_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 if BUILD_BITCOIN_LIBS
 include_HEADERS = script/bitcoinconsensus.h
 libbitcoinconsensus_la_SOURCES = \
-  allocators.cpp \
   arith_uint256.cpp \
   crypto/hmac_sha512.cpp \
   crypto/ripemd160.cpp \

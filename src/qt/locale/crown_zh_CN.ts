@@ -3645,10 +3645,6 @@ https://www.transifex.com/projects/p/crown/</translation>
         <translation>通过SOCKS5代理连接</translation>
     </message>
     <message>
-        <source>Connect to KeePassHttp on port &lt;port&gt; (default: %u)</source>
-        <translation>连接至 KeePassHttp 端口 &lt;port&gt; (默认: %u)</translation>
-    </message>
-    <message>
         <source>Copyright (C) 2009-%i The Bitcoin Core Developers</source>
         <translation>版权(C) 2009-%i The Bitcoin Core Developers</translation>
     </message>

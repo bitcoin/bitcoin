@@ -3362,10 +3362,6 @@ https://www.transifex.com/projects/p/crown/</translation>
         <translation>InstantX требует наличия средств с хотя бы 6 подтверждениями, возможно Вам нужно подождать пару минут и попробовать снова.</translation>
     </message>
     <message>
-        <source>Name to construct url for KeePass entry that stores the wallet passphrase</source>
-        <translation>Имя для создания ссылки на запись KeePass, хранящую пароль к кошельку</translation>
-    </message>
-    <message>
         <source>Query for peer addresses via DNS lookup, if low on addresses (default: 1 unless -connect)</source>
         <translation>Запрашивать адреса участников с помощью DNS, если адресов мало (по умолчанию: 1, если не указан -connect)</translation>
     </message>
@@ -3792,10 +3788,6 @@ rpcpassword=%s
         <translation>Соединяться через SOCKS5 прокси</translation>
     </message>
     <message>
-        <source>Connect to KeePassHttp on port &lt;port&gt; (default: %u)</source>
-        <translation>Соединяться c KeePassHttp по порту &lt;port&gt; (по умолчанию: %u)</translation>
-    </message>
-    <message>
         <source>Copyright (C) 2009-%i The Bitcoin Core Developers</source>
         <translation>Copyright (C) 2009-%i The Bitcoin Core Developers</translation>
     </message>
@@ -4144,10 +4136,6 @@ rpcpassword=%s
         <translation>Порог для отключения некорректно ведущих себя пиров (по умолчанию: %u)</translation>
     </message>
     <message>
-        <source>Use KeePass 2 integration using KeePassHttp plugin (default: %u)</source>
-        <translation>Использовать интеграцию с KeePass 2 через плагин KeePassHttp (по умолчанию: %u)</translation>
-    </message>
-    <message>
         <source>Use N separate thrones to anonymize funds  (2-8, default: %u)</source>
         <translation>Использовать N отдельных мастернод для анонимизации средств (2-8, по умолчанию: %u)</translation>
     </message>
@@ -4206,14 +4194,6 @@ rpcpassword=%s
     <message>
         <source>Invalid script detected.</source>
         <translation>Обнаружен некорректный скрипт.</translation>
-    </message>
-    <message>
-        <source>KeePassHttp id for the established association</source>
-        <translation>Идентификатор KeePassHttp для установленной ассоциации</translation>
-    </message>
-    <message>
-        <source>KeePassHttp key for AES encrypted communication with KeePass</source>
-        <translation>Ключ KeePassHttp для зашифрованной коммуникации с KeePass</translation>
     </message>
     <message>
         <source>Keep N CRW anonymized (default: %u)</source>

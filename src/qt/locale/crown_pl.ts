@@ -3362,10 +3362,6 @@ https://www.transifex.com/projects/p/crown/</translation>
         <translation>InstantX potrzebuje aby transakcja wejściowa miała co najmniej 6 potwierdzeń. Poczekaj kilka minut i spróbuj ponownie.</translation>
     </message>
     <message>
-        <source>Name to construct url for KeePass entry that stores the wallet passphrase</source>
-        <translation>Nazwa służąca do stworzenia linka do KeePass w którym trzymane jest hasło portfela</translation>
-    </message>
-    <message>
         <source>Query for peer addresses via DNS lookup, if low on addresses (default: 1 unless -connect)</source>
         <translation>Jeśli pula adresów jest niska, pytaj o adresy peer przez podgląd DNS (domyślnie: 1 chyba że -connect)</translation>
     </message>
@@ -3791,10 +3787,6 @@ Zaleca się również aby ustawić alarm powiadomień tzw. alertnotify, aby dać
         <translation>Połączenie poprzez SOCKS5 proxy</translation>
     </message>
     <message>
-        <source>Connect to KeePassHttp on port &lt;port&gt; (default: %u)</source>
-        <translation>Podłącz do KeePassHttp na porcie &lt;port&gt; (domyślny: %u)</translation>
-    </message>
-    <message>
         <source>Copyright (C) 2009-%i The Bitcoin Core Developers</source>
         <translation>Prawo autorskie (c) 2009-%i deweloperzy Bitcoin</translation>
     </message>
@@ -4143,10 +4135,6 @@ Zaleca się również aby ustawić alarm powiadomień tzw. alertnotify, aby dać
         <translation>Próg dla niewłaściwie działających, odłączających sie peerów (domyślnie: %u)</translation>
     </message>
     <message>
-        <source>Use KeePass 2 integration using KeePassHttp plugin (default: %u)</source>
-        <translation>Użyj integracji KeePass 2 z wtyczką KeePass Http (domyślnie: %u)</translation>
-    </message>
-    <message>
         <source>Use N separate thrones to anonymize funds  (2-8, default: %u)</source>
         <translation>Użyj N oddzielnych masternodów aby zanonimizować fundusze (2-8, domyślnie: %u)</translation>
     </message>
@@ -4205,14 +4193,6 @@ Zaleca się również aby ustawić alarm powiadomień tzw. alertnotify, aby dać
     <message>
         <source>Invalid script detected.</source>
         <translation>Wykryto nieprawidłowy skrypt.</translation>
-    </message>
-    <message>
-        <source>KeePassHttp id for the established association</source>
-        <translation>ID KeePassHttp dla ustanowionego skojażenia</translation>
-    </message>
-    <message>
-        <source>KeePassHttp key for AES encrypted communication with KeePass</source>
-        <translation>Klucz KeePassHttp dla zaszyfrowanego metodą AES połączenia z KeePass</translation>
     </message>
     <message>
         <source>Keep N CRW anonymized (default: %u)</source>
