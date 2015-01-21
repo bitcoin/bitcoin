@@ -30,21 +30,6 @@
 #error "Please select field implementation"
 #endif
 
-typedef struct {
-#ifndef USE_NUM_NONE
-    secp256k1_num_t p;
-#endif
-    secp256k1_fe_t order;
-} secp256k1_fe_consts_t;
-
-static const secp256k1_fe_consts_t *secp256k1_fe_consts = NULL;
-
-/** Initialize field element precomputation data. */
-static void secp256k1_fe_start(void);
-
-/** Unload field element precomputation data. */
-static void secp256k1_fe_stop(void);
-
 /** Normalize a field element. */
 static void secp256k1_fe_normalize(secp256k1_fe_t *r);
 

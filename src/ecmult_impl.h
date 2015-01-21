@@ -91,8 +91,7 @@ static void secp256k1_ecmult_start(void) {
     secp256k1_ecmult_consts_t *ret = (secp256k1_ecmult_consts_t*)checked_malloc(sizeof(secp256k1_ecmult_consts_t));
 
     /* get the generator */
-    const secp256k1_ge_t *g = &secp256k1_ge_consts->g;
-    secp256k1_gej_t gj; secp256k1_gej_set_ge(&gj, g);
+    secp256k1_gej_t gj; secp256k1_gej_set_ge(&gj, &secp256k1_ge_const_g);
 
 #ifdef USE_ENDOMORPHISM
     /* calculate 2^128*generator */

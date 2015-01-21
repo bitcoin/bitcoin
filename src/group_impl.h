@@ -13,6 +13,18 @@
 #include "field.h"
 #include "group.h"
 
+static const secp256k1_ge_t secp256k1_ge_const_g = {
+    SECP256K1_FE_CONST(
+        0x79BE667EUL, 0xF9DCBBACUL, 0x55A06295UL, 0xCE870B07UL,
+        0x029BFCDBUL, 0x2DCE28D9UL, 0x59F2815BUL, 0x16F81798UL
+    ),
+    SECP256K1_FE_CONST(
+        0x483ADA77UL, 0x26A3C465UL, 0x5DA4FBFCUL, 0x0E1108A8UL,
+        0xFD17B448UL, 0xA6855419UL, 0x9C47D08FUL, 0xFB10D4B8UL
+    ),
+    0
+};
+
 static void secp256k1_ge_set_infinity(secp256k1_ge_t *r) {
     r->infinity = 1;
 }
@@ -396,53 +408,13 @@ static void secp256k1_gej_get_hex(char *r, int *rlen, const secp256k1_gej_t *a) 
 
 #ifdef USE_ENDOMORPHISM
 static void secp256k1_gej_mul_lambda(secp256k1_gej_t *r, const secp256k1_gej_t *a) {
-    const secp256k1_fe_t *beta = &secp256k1_ge_consts->beta;
+    static const secp256k1_fe_t beta = SECP256K1_FE_CONST(
+        0x7ae96a2bul, 0x657c0710ul, 0x6e64479eul, 0xac3434e9ul,
+        0x9cf04975ul, 0x12f58995ul, 0xc1396c28ul, 0x719501eeul
+    );
     *r = *a;
-    secp256k1_fe_mul(&r->x, &r->x, beta);
+    secp256k1_fe_mul(&r->x, &r->x, &beta);
 }
 #endif
-
-static void secp256k1_ge_start(void) {
-    static const unsigned char secp256k1_ge_consts_g_x[] = {
-        0x79,0xBE,0x66,0x7E,0xF9,0xDC,0xBB,0xAC,
-        0x55,0xA0,0x62,0x95,0xCE,0x87,0x0B,0x07,
-        0x02,0x9B,0xFC,0xDB,0x2D,0xCE,0x28,0xD9,
-        0x59,0xF2,0x81,0x5B,0x16,0xF8,0x17,0x98
-    };
-    static const unsigned char secp256k1_ge_consts_g_y[] = {
-        0x48,0x3A,0xDA,0x77,0x26,0xA3,0xC4,0x65,
-        0x5D,0xA4,0xFB,0xFC,0x0E,0x11,0x08,0xA8,
-        0xFD,0x17,0xB4,0x48,0xA6,0x85,0x54,0x19,
-        0x9C,0x47,0xD0,0x8F,0xFB,0x10,0xD4,0xB8
-    };
-#ifdef USE_ENDOMORPHISM
-    /* properties of secp256k1's efficiently computable endomorphism */
-    static const unsigned char secp256k1_ge_consts_beta[] = {
-        0x7a,0xe9,0x6a,0x2b,0x65,0x7c,0x07,0x10,
-        0x6e,0x64,0x47,0x9e,0xac,0x34,0x34,0xe9,
-        0x9c,0xf0,0x49,0x75,0x12,0xf5,0x89,0x95,
-        0xc1,0x39,0x6c,0x28,0x71,0x95,0x01,0xee
-    };
-#endif
-    if (secp256k1_ge_consts == NULL) {
-        secp256k1_ge_consts_t *ret = (secp256k1_ge_consts_t*)checked_malloc(sizeof(secp256k1_ge_consts_t));
-#ifdef USE_ENDOMORPHISM
-        VERIFY_CHECK(secp256k1_fe_set_b32(&ret->beta, secp256k1_ge_consts_beta));
-#endif
-        secp256k1_fe_t g_x, g_y;
-        VERIFY_CHECK(secp256k1_fe_set_b32(&g_x, secp256k1_ge_consts_g_x));
-        VERIFY_CHECK(secp256k1_fe_set_b32(&g_y, secp256k1_ge_consts_g_y));
-        secp256k1_ge_set_xy(&ret->g, &g_x, &g_y);
-        secp256k1_ge_consts = ret;
-    }
-}
-
-static void secp256k1_ge_stop(void) {
-    if (secp256k1_ge_consts != NULL) {
-        secp256k1_ge_consts_t *c = (secp256k1_ge_consts_t*)secp256k1_ge_consts;
-        free((void*)c);
-        secp256k1_ge_consts = NULL;
-    }
-}
 
 #endif

@@ -42,11 +42,7 @@ void bench_inv(void* arg) {
 }
 
 int main(void) {
-    secp256k1_ge_start();
-
     bench_inv_t data;
     run_benchmark(bench_inv, bench_inv_setup, NULL, &data, 10, 20000);
-
-    secp256k1_ge_stop();
     return 0;
 }

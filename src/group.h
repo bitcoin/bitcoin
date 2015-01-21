@@ -25,24 +25,6 @@ typedef struct {
     int infinity; /* whether this represents the point at infinity */
 } secp256k1_gej_t;
 
-/** Global constants related to the group */
-typedef struct {
-    secp256k1_ge_t g; /* the generator point */
-
-#ifdef USE_ENDOMORPHISM
-    /* constants related to secp256k1's efficiently computable endomorphism */
-    secp256k1_fe_t beta;
-#endif
-} secp256k1_ge_consts_t;
-
-static const secp256k1_ge_consts_t *secp256k1_ge_consts = NULL;
-
-/** Initialize the group module. */
-static void secp256k1_ge_start(void);
-
-/** De-initialize the group module. */
-static void secp256k1_ge_stop(void);
-
 /** Set a group element equal to the point at infinity */
 static void secp256k1_ge_set_infinity(secp256k1_ge_t *r);
 

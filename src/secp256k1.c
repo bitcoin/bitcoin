@@ -20,9 +20,6 @@
 #include "hash_impl.h"
 
 void secp256k1_start(unsigned int flags) {
-    secp256k1_fe_start();
-    secp256k1_ge_start();
-    secp256k1_ecdsa_start();
     if (flags & SECP256K1_START_SIGN) {
         secp256k1_ecmult_gen_start();
     }
@@ -34,9 +31,6 @@ void secp256k1_start(unsigned int flags) {
 void secp256k1_stop(void) {
     secp256k1_ecmult_stop();
     secp256k1_ecmult_gen_stop();
-    secp256k1_ecdsa_stop();
-    secp256k1_ge_stop();
-    secp256k1_fe_stop();
 }
 
 int secp256k1_ecdsa_verify(const unsigned char *msg32, const unsigned char *sig, int siglen, const unsigned char *pubkey, int pubkeylen) {
