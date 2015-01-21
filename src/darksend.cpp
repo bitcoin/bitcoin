@@ -793,7 +793,7 @@ void CDarkSendPool::ChargeRandomFees(){
 // Check for various timeouts (queue objects, darksend, etc)
 //
 void CDarkSendPool::CheckTimeout(){
-    if(!fEnableDarksend) return;
+    if(!fEnableDarksend && !fMasterNode) return;
 
     // catching hanging sessions
     if(!fMasterNode) {
@@ -2032,10 +2032,10 @@ int CDarkSendPool::GetDenominationsByAmount(int64_t nAmount, int nDenomTarget){
     BOOST_REVERSE_FOREACH(int64_t v, darkSendDenominations){
         if(nDenomTarget != 0){
             bool fAccepted = false;
-            if((nDenomTarget & (1 << 0)) && v == ((100*COIN)+1)) {fAccepted = true;}
-            else if((nDenomTarget & (1 << 1)) && v == ((10*COIN)+1)) {fAccepted = true;}
-            else if((nDenomTarget & (1 << 2)) && v == ((1*COIN)+1)) {fAccepted = true;}
-            else if((nDenomTarget & (1 << 3)) && v == ((.1*COIN)+1)) {fAccepted = true;}
+            if((nDenomTarget & (1 << 0)) &&      v == ((100*COIN)+100000)) {fAccepted = true;}
+            else if((nDenomTarget & (1 << 1)) && v == ((10*COIN) +10000)) {fAccepted = true;}
+            else if((nDenomTarget & (1 << 2)) && v == ((1*COIN)  +1000)) {fAccepted = true;}
+            else if((nDenomTarget & (1 << 3)) && v == ((.1*COIN) +100)) {fAccepted = true;}
             if(!fAccepted) continue;
         }
 
