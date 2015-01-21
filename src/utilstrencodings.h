@@ -9,6 +9,7 @@
 #ifndef BITCOIN_UTILSTRENCODINGS_H
 #define BITCOIN_UTILSTRENCODINGS_H
 
+#include <map>
 #include <stdint.h>
 #include <string>
 #include <vector>
@@ -93,6 +94,34 @@ bool TimingResistantEqual(const T& a, const T& b)
     for (size_t i = 0; i < a.size(); i++)
         accumulator |= a[i] ^ b[i%b.size()];
     return accumulator == 0;
+}
+
+inline int64_t GetArg(const std::string& strArg, int64_t nDefault, const std::map<std::string, std::string>& mapArgs)
+{
+    std::map<std::string, std::string>::const_iterator it = mapArgs.find(strArg);
+    if (it != mapArgs.end())
+        return atoi64(it->second);
+    return nDefault;
+}
+
+inline std::string GetArg(const std::string& strArg, const std::string strDefault, const std::map<std::string, std::string>& mapArgs)
+{
+    std::map<std::string, std::string>::const_iterator it = mapArgs.find(strArg);
+    if (it != mapArgs.end())
+        return it->second;
+    return strDefault;
+}
+
+inline bool GetBoolArg(const std::string& strArg, bool fDefault, const std::map<std::string, std::string>& mapArgs)
+{
+    std::map<std::string, std::string>::const_iterator it = mapArgs.find(strArg);
+    if (it != mapArgs.end())
+    {
+        if (it->second.empty())
+            return true;
+        return (atoi(it->second) != 0);
+    }
+    return fDefault;
 }
 
 #endif // BITCOIN_UTILSTRENCODINGS_H

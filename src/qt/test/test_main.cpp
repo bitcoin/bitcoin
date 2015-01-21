@@ -6,6 +6,7 @@
 #include "config/bitcoin-config.h"
 #endif
 
+#include "policy.h"
 #include "uritests.h"
 
 #ifdef ENABLE_WALLET
@@ -29,6 +30,7 @@ int main(int argc, char *argv[])
 {
     bool fInvalid = false;
 
+    SelectPolicy("standard");
     // Don't remove this, it's needed to access
     // QCoreApplication:: in the tests
     QCoreApplication app(argc, argv);

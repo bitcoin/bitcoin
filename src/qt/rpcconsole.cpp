@@ -10,7 +10,6 @@
 #include "peertablemodel.h"
 #include "scicon.h"
 
-#include "main.h"
 #include "chainparams.h"
 #include "rpcserver.h"
 #include "rpcclient.h"

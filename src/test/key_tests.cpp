@@ -10,6 +10,7 @@
 #include "util.h"
 #include "utilstrencodings.h"
 
+#include <stdio.h>
 #include <string>
 #include <vector>
 

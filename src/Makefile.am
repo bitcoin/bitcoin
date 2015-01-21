@@ -88,6 +88,8 @@ BITCOIN_CORE_H = \
   coins.h \
   compat.h \
   compressor.h \
+  consensus/consensus.h \
+  consensus/validation.h \
   core_io.h \
   crypter.h \
   db.h \
@@ -106,6 +108,7 @@ BITCOIN_CORE_H = \
   netbase.h \
   net.h \
   noui.h \
+  policy.h \
   pow.h \
   primitives/block.h \
   primitives/transaction.h \
@@ -136,6 +139,7 @@ BITCOIN_CORE_H = \
   utilmoneystr.h \
   utilstrencodings.h \
   utiltime.h \
+  validationinterface.h \
   version.h \
   walletdb.h \
   wallet.h \
@@ -174,6 +178,7 @@ libbitcoin_server_a_SOURCES = \
   miner.cpp \
   net.cpp \
   noui.cpp \
+  policy.cpp \
   pow.cpp \
   rest.cpp \
   rpcblockchain.cpp \
@@ -186,6 +191,7 @@ libbitcoin_server_a_SOURCES = \
   timedata.cpp \
   txdb.cpp \
   txmempool.cpp \
+  validationinterface.cpp \
   $(JSON_H) \
   $(BITCOIN_CORE_H)
 
@@ -239,6 +245,7 @@ libbitcoin_common_a_SOURCES = \
   chainparams.cpp \
   coins.cpp \
   compressor.cpp \
+  consensus/consensus.cpp \
   primitives/block.cpp \
   primitives/transaction.cpp \
   core_read.cpp \

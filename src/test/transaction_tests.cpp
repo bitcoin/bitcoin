@@ -6,20 +6,29 @@
 #include "data/tx_valid.json.h"
 
 #include "clientversion.h"
+#include "consensus/consensus.h"
+#include "consensus/validation.h"
+#include "core_io.h"
 #include "key.h"
 #include "keystore.h"
 #include "main.h"
+#include "policy.h"
+#include "primitives/transaction.h"
+#include "script/interpreter.h"
 #include "script/script.h"
 #include "script/script_error.h"
-#include "core_io.h"
+#include "script/standard.h"
+#include "streams.h"
+#include "utilstrencodings.h"
 
 #include <map>
 #include <string>
 
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
-#include <boost/test/unit_test.hpp>
 #include <boost/assign/list_of.hpp>
+#include <boost/foreach.hpp>
+#include <boost/test/unit_test.hpp>
 #include "json/json_spirit_writer_template.h"
 
 using namespace std;
@@ -132,7 +141,7 @@ BOOST_AUTO_TEST_CASE(tx_valid)
             stream >> tx;
 
             CValidationState state;
-            BOOST_CHECK_MESSAGE(CheckTransaction(tx, state), strTest);
+            BOOST_CHECK_MESSAGE(Consensus::CheckTx(tx, state), strTest);
             BOOST_CHECK(state.IsValid());
 
             for (unsigned int i = 0; i < tx.vin.size(); i++)
@@ -208,7 +217,7 @@ BOOST_AUTO_TEST_CASE(tx_invalid)
             stream >> tx;
 
             CValidationState state;
-            fValid = CheckTransaction(tx, state) && state.IsValid();
+            fValid = Consensus::CheckTx(tx, state) && state.IsValid();
 
             for (unsigned int i = 0; i < tx.vin.size() && fValid; i++)
             {
@@ -237,11 +246,11 @@ BOOST_AUTO_TEST_CASE(basic_transaction_tests)
     CMutableTransaction tx;
     stream >> tx;
     CValidationState state;
-    BOOST_CHECK_MESSAGE(CheckTransaction(tx, state) && state.IsValid(), "Simple deserialized transaction should be valid.");
+    BOOST_CHECK_MESSAGE(Consensus::CheckTx(tx, state) && state.IsValid(), "Simple deserialized transaction should be valid.");
 
     // Check that duplicate txins fail
     tx.vin.push_back(tx.vin[0]);
-    BOOST_CHECK_MESSAGE(!CheckTransaction(tx, state) || !state.IsValid(), "Transaction with duplicate txins should be invalid.");
+    BOOST_CHECK_MESSAGE(!Consensus::CheckTx(tx, state) || !state.IsValid(), "Transaction with duplicate txins should be invalid.");
 }
 
 //
@@ -335,44 +344,44 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     key.MakeNewKey(true);
     t.vout[0].scriptPubKey = GetScriptForDestination(key.GetPubKey().GetID());
 
-    string reason;
-    BOOST_CHECK(IsStandardTx(t, reason));
+    CValidationState state;
+    BOOST_CHECK(Policy("standard").ValidateTx(t, state));
 
     t.vout[0].nValue = 501; // dust
-    BOOST_CHECK(!IsStandardTx(t, reason));
+    BOOST_CHECK(!Policy("standard").ValidateTx(t, state));
 
     t.vout[0].nValue = 601; // not dust
-    BOOST_CHECK(IsStandardTx(t, reason));
+    BOOST_CHECK(Policy("standard").ValidateTx(t, state));
 
     t.vout[0].scriptPubKey = CScript() << OP_1;
-    BOOST_CHECK(!IsStandardTx(t, reason));
+    BOOST_CHECK(!Policy("standard").ValidateTx(t, state));
 
     // 40-byte TX_NULL_DATA (standard)
     t.vout[0].scriptPubKey = CScript() << OP_RETURN << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38");
-    BOOST_CHECK(IsStandardTx(t, reason));
+    BOOST_CHECK(Policy("standard").ValidateTx(t, state));
 
     // 41-byte TX_NULL_DATA (non-standard)
     t.vout[0].scriptPubKey = CScript() << OP_RETURN << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef3800");
-    BOOST_CHECK(!IsStandardTx(t, reason));
+    BOOST_CHECK(!Policy("standard").ValidateTx(t, state));
 
     // TX_NULL_DATA w/o PUSHDATA
     t.vout.resize(1);
     t.vout[0].scriptPubKey = CScript() << OP_RETURN;
-    BOOST_CHECK(IsStandardTx(t, reason));
+    BOOST_CHECK(Policy("standard").ValidateTx(t, state));
 
     // Only one TX_NULL_DATA permitted in all cases
     t.vout.resize(2);
     t.vout[0].scriptPubKey = CScript() << OP_RETURN << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38");
     t.vout[1].scriptPubKey = CScript() << OP_RETURN << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38");
-    BOOST_CHECK(!IsStandardTx(t, reason));
+    BOOST_CHECK(!Policy("standard").ValidateTx(t, state));
 
     t.vout[0].scriptPubKey = CScript() << OP_RETURN << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38");
     t.vout[1].scriptPubKey = CScript() << OP_RETURN;
-    BOOST_CHECK(!IsStandardTx(t, reason));
+    BOOST_CHECK(!Policy("standard").ValidateTx(t, state));
 
     t.vout[0].scriptPubKey = CScript() << OP_RETURN;
     t.vout[1].scriptPubKey = CScript() << OP_RETURN;
-    BOOST_CHECK(!IsStandardTx(t, reason));
+    BOOST_CHECK(!Policy("standard").ValidateTx(t, state));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

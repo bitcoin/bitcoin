@@ -307,27 +307,17 @@ void ParseParameters(int argc, const char* const argv[])
 
 std::string GetArg(const std::string& strArg, const std::string& strDefault)
 {
-    if (mapArgs.count(strArg))
-        return mapArgs[strArg];
-    return strDefault;
+    return GetArg(strArg, strDefault, mapArgs);
 }
 
 int64_t GetArg(const std::string& strArg, int64_t nDefault)
 {
-    if (mapArgs.count(strArg))
-        return atoi64(mapArgs[strArg]);
-    return nDefault;
+    return GetArg(strArg, nDefault, mapArgs);
 }
 
 bool GetBoolArg(const std::string& strArg, bool fDefault)
 {
-    if (mapArgs.count(strArg))
-    {
-        if (mapArgs[strArg].empty())
-            return true;
-        return (atoi(mapArgs[strArg]) != 0);
-    }
-    return fDefault;
+    return GetBoolArg(strArg, fDefault, mapArgs);
 }
 
 bool SoftSetArg(const std::string& strArg, const std::string& strValue)

@@ -8,16 +8,21 @@
 #include "base58.h"
 #include "checkpoints.h"
 #include "coincontrol.h"
+#include "consensus/validation.h"
+#include "main.h"
 #include "net.h"
+#include "policy.h"
 #include "script/script.h"
 #include "script/sign.h"
 #include "timedata.h"
+#include "txmempool.h"
 #include "util.h"
 #include "utilmoneystr.h"
 
 #include <assert.h>
 
 #include <boost/algorithm/string/replace.hpp>
+#include <boost/foreach.hpp>
 #include <boost/thread.hpp>
 
 using namespace std;
@@ -780,6 +785,50 @@ bool CWallet::IsChange(const CTxOut& txout) const
     return false;
 }
 
+bool CWallet::IsMine(const CTransaction& tx) const
+{
+    BOOST_FOREACH(const CTxOut& txout, tx.vout)
+        if (IsMine(txout))
+            return true;
+    return false;
+}
+
+CAmount CWallet::GetDebit(const CTransaction& tx, const isminefilter& filter) const
+{
+    CAmount nDebit = 0;
+    BOOST_FOREACH(const CTxIn& txin, tx.vin)
+    {
+        nDebit += GetDebit(txin, filter);
+        if (!MoneyRange(nDebit))
+            throw std::runtime_error("CWallet::GetDebit() : value out of range");
+    }
+    return nDebit;
+}
+
+CAmount CWallet::GetCredit(const CTransaction& tx, const isminefilter& filter) const
+{
+    CAmount nCredit = 0;
+    BOOST_FOREACH(const CTxOut& txout, tx.vout)
+    {
+        nCredit += GetCredit(txout, filter);
+        if (!MoneyRange(nCredit))
+            throw std::runtime_error("CWallet::GetCredit() : value out of range");
+    }
+    return nCredit;
+}
+
+CAmount CWallet::GetChange(const CTransaction& tx) const
+{
+    CAmount nChange = 0;
+    BOOST_FOREACH(const CTxOut& txout, tx.vout)
+    {
+        nChange += GetChange(txout);
+        if (!MoneyRange(nChange))
+            throw std::runtime_error("CWallet::GetChange() : value out of range");
+    }
+    return nChange;
+}
+
 int64_t CWalletTx::GetTxTime() const
 {
     int64_t n = nTimeSmart;
@@ -915,6 +964,32 @@ void CWalletTx::GetAccountAmounts(const string& strAccount, CAmount& nReceived,
     }
 }
 
+bool CWalletTx::IsTrusted() const
+{
+    // Quick answer in most cases
+    if (!IsFinalTx(*this))
+        return false;
+    int nDepth = GetDepthInMainChain();
+    if (nDepth >= 1)
+        return true;
+    if (nDepth < 0)
+        return false;
+    if (!bSpendZeroConfChange || !IsFromMe(ISMINE_ALL)) // using wtx's cached debit
+        return false;
+
+    // Trusted if all inputs are from us and are in the mempool:
+    BOOST_FOREACH(const CTxIn& txin, vin)
+    {
+        // Transactions not sent by us: not trusted
+        const CWalletTx* parent = pwallet->GetWalletTx(txin.prevout.hash);
+        if (parent == NULL)
+            return false;
+        const CTxOut& parentOut = parent->vout[txin.prevout.n];
+        if (pwallet->IsMine(parentOut) != ISMINE_SPENDABLE)
+            return false;
+    }
+    return true;
+}
 
 bool CWalletTx::WriteToDisk()
 {
@@ -1420,7 +1495,7 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, CAmount> >& vecSend,
                 BOOST_FOREACH (const PAIRTYPE(CScript, CAmount)& s, vecSend)
                 {
                     CTxOut txout(s.second, s.first);
-                    if (txout.IsDust(::minRelayTxFee))
+                    if (Policy().ValidateOutput(txout))
                     {
                         strFailReason = _("Transaction amount too small");
                         return false;
@@ -1481,7 +1556,7 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, CAmount> >& vecSend,
 
                     // Never create dust outputs; if we would, just
                     // add the dust to the fee.
-                    if (newTxOut.IsDust(::minRelayTxFee))
+                    if (Policy().ValidateOutput(newTxOut))
                     {
                         nFeeRet += nChange;
                         reservekey.ReturnKey();
