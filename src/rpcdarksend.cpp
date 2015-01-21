@@ -300,10 +300,12 @@ Value masternode(const Array& params, bool fHelp)
             }
         }
 
-        activeMasternode.status = MASTERNODE_NOT_PROCESSED; // TODO: consider better way
-        std::string errorMessage;
-        activeMasternode.ManageStatus();
-        pwalletMain->Lock();
+        if(activeMasternode.status != MASTERNODE_REMOTELY_ENABLED && activeMasternode.status != MASTERNODE_ENABLED){
+            activeMasternode.status = MASTERNODE_NOT_PROCESSED; // TODO: consider better way
+            std::string errorMessage;
+            activeMasternode.ManageStatus();
+            pwalletMain->Lock();
+        }
 
         if(activeMasternode.status == MASTERNODE_REMOTELY_ENABLED) return "masternode started remotely";
         if(activeMasternode.status == MASTERNODE_INPUT_TOO_NEW) return "masternode input must have at least 15 confirmations";
