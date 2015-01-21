@@ -28,7 +28,7 @@ static const unsigned int MAX_STANDARD_TX_SIGOPS = MAX_BLOCK_SIGOPS/5;
  * but in the future other flags may be added, such as a soft-fork to enforce
  * strict DER encoding.
  * 
- * Failing one of these tests may trigger a DoS ban - see CheckInputs() for
+ * Failing one of these tests may trigger a DoS ban - see CheckInputsScripts() for
  * details.
  */
 static const unsigned int MANDATORY_SCRIPT_VERIFY_FLAGS = SCRIPT_VERIFY_P2SH;

@@ -855,6 +855,9 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
         view.SetBackend(dummy);
         }
 
+        if (!tx.IsCoinBase() && !Consensus::CheckTxInputs(tx, state, view, GetSpendHeight(view)))
+            return error("%s: Consensus::CheckTxInputs failed %s %s", __func__, state.GetRejectReason(), hash.ToString());
+
         // Check for non-standard pay-to-script-hash in inputs
         if (Params().RequireStandard() && !AreInputsStandard(tx, view))
             return error("AcceptToMemoryPool: nonstandard transaction input");
@@ -921,10 +924,8 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
 
         // Check against previous transactions
         // This is done last to help prevent CPU exhaustion denial-of-service attacks.
-        if (!CheckInputs(tx, state, view, true, STANDARD_SCRIPT_VERIFY_FLAGS, true))
-        {
-            return error("AcceptToMemoryPool: ConnectInputs failed %s", hash.ToString());
-        }
+        if (!CheckInputsScripts(tx, state, view, STANDARD_SCRIPT_VERIFY_FLAGS, true))
+            return error("%s: CheckInputsScripts failed with STANDARD flags %s %s", __func__, state.GetRejectReason(), hash.ToString());
 
         // Check again against just the consensus-critical mandatory script
         // verification flags, in case of bugs in the standard flags that cause
@@ -935,10 +936,8 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
         // There is a similar check in CreateNewBlock() to prevent creating
         // invalid blocks, however allowing such transactions into the mempool
         // can be exploited as a DoS attack.
-        if (!CheckInputs(tx, state, view, true, MANDATORY_SCRIPT_VERIFY_FLAGS, true))
-        {
-            return error("AcceptToMemoryPool: BUG! PLEASE REPORT THIS! ConnectInputs failed against MANDATORY but not STANDARD flags %s", hash.ToString());
-        }
+        if (!CheckInputsScripts(tx, state, view, MANDATORY_SCRIPT_VERIFY_FLAGS, true))
+            return error("%s: BUG! PLEASE REPORT THIS! CheckInputsScripts failed against MANDATORY but not STANDARD flags %s %s", __func__, state.GetRejectReason(), hash.ToString());
 
         // Store transaction in memory
         pool.addUnchecked(hash, entry);
@@ -1272,11 +1271,8 @@ int GetSpendHeight(const CCoinsViewEfficient& inputs)
     return pindexPrev->nHeight + 1;
 }
 
-bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsViewCache &inputs, bool fScriptChecks, unsigned int flags, bool cacheStore, std::vector<CScriptCheck> *pvChecks)
+bool CheckInputsScripts(const CTransaction& tx, CValidationState& state, const CCoinsViewEfficient& inputs, unsigned int flags, bool cacheStore, std::vector<CScriptCheck>* pvChecks)
 {
-        if (!Consensus::CheckTxInputs(tx, state, inputs, GetSpendHeight(inputs)))
-            return error("%s: Consensus::CheckTxInputs failed %s %s", __func__, state.GetRejectReason(), tx.GetHash().ToString());
-
         if (pvChecks)
             pvChecks->reserve(tx.vin.size());
 
@@ -1287,7 +1283,6 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
         // Skip ECDSA signature verification when connecting blocks
         // before the last block chain checkpoint. This is safe because block merkle hashes are
         // still computed and checked, and any change will be caught at the next checkpoint.
-        if (fScriptChecks) {
             for (unsigned int i = 0; i < tx.vin.size(); i++) {
                 const COutPoint &prevout = tx.vin[i].prevout;
                 const CCoins* coins = inputs.AccessCoins(prevout.hash);
@@ -1321,7 +1316,6 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
                     return state.DoS(100,false, REJECT_INVALID, strprintf("mandatory-script-verify-flag-failed (%s)", ScriptErrorString(check.GetScriptError())));
                 }
             }
-        }
 
     return true;
 }
@@ -1621,15 +1615,18 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, const Consensus:
 
         if (!tx.IsCoinBase())
         {
+            // This check will be repeated in Consensus::CheckTxInputs, but scoring DoS 0 if fails instead of 100
             if (!view.HaveInputs(tx))
                 return state.DoS(100, error("ConnectBlock(): inputs missing/spent"),
                                  REJECT_INVALID, "bad-txns-inputs-missingorspent");
+            if (!Consensus::CheckTxInputs(tx, state, view, GetSpendHeight(view)))
+                return error("%s: Consensus::CheckTxInputs failed %s %s", __func__, state.GetRejectReason(), tx.GetHash().ToString());
 
             nFees += view.GetValueIn(tx) - Consensus::GetValueOut(tx);
 
             std::vector<CScriptCheck> vChecks;
-            if (!CheckInputs(tx, state, view, fScriptChecks, flags, false, nScriptCheckThreads ? &vChecks : NULL))
-                return false;
+            if (fScriptChecks && !CheckInputsScripts(tx, state, view, flags, false, nScriptCheckThreads ? &vChecks : NULL))
+                return error("%s: CheckInputsScripts failed %s %s", __func__, state.GetRejectReason(), tx.GetHash().ToString());
             control.Add(vChecks);
         }
 

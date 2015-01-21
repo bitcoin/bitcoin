@@ -226,13 +226,13 @@ CAmount GetMinRelayFee(const CTransaction& tx, unsigned int nBytes, bool fAllowF
 bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs);
 
 /**
- * Check whether all inputs of this transaction are valid (no double spends, scripts & sigs, amounts)
+ * Check whether all inputs of this transaction are valid (scripts and sigs)
  * This does not modify the UTXO set. If pvChecks is not NULL, script checks are pushed onto it
- * instead of being performed inline.
+ * instead of being performed inline. This does not check double spends and amounts.
  * Preconditions: tx.IsCoinBase() is false
  */
-bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsViewCache &view, bool fScriptChecks,
-                 unsigned int flags, bool cacheStore, std::vector<CScriptCheck> *pvChecks = NULL);
+bool CheckInputsScripts(const CTransaction& tx, CValidationState& state, const CCoinsViewEfficient& view, 
+                        unsigned int flags, bool cacheStore, std::vector<CScriptCheck> *pvChecks = NULL);
 
 /** Apply the effects of this transaction on the UTXO set represented by view */
 void UpdateCoins(const CTransaction& tx, CValidationState &state, CCoinsViewCache &inputs, int nHeight);
