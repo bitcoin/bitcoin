@@ -128,7 +128,7 @@ public:
     DBErrors FindWalletTx(CWallet* pwallet, std::vector<uint256>& vTxHash, std::vector<CWalletTx>& vWtx);
     bool ZapWalletTx(CWallet* pwallet, std::vector<CWalletTx>& vWtx);
     
-    DBErrors Rewrite();
+    DBErrors RewriteAndReplace(const std::string& walletFile); //rewrites and compacts database, will replace existing wallet file
     
     static bool Recover(std::string filename, bool fOnlyKeys);
     static bool Recover(std::string filename);

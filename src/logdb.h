@@ -34,6 +34,8 @@ private:
     mutable boost::shared_mutex mutex;
 
     FILE *file;
+    std::string fileName;
+    
     CSHA256 ctxState;
     uint64_t version;
     
@@ -57,6 +59,7 @@ protected:
     bool Flush_();
     bool Open_(const char *pszFile, bool fCreate = true);
     bool Close_();
+    bool Reopen_(bool readOnly);
     
 public:
     CLogDBFile()
@@ -129,6 +132,8 @@ public:
     bool Read(const data_t &key, data_t &value);
     bool Exists(const data_t &key);
     bool Load();
+    bool Rewrite(const std::string &file); //rewrite and compact to a new file
+    bool ReloadDB(const std::string& walletFile); //!reload the db file
     
     bool Close() {
         boost::lock_guard<boost::shared_mutex> lock(db->mutex);

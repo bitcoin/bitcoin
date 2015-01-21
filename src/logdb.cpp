@@ -4,6 +4,7 @@
 
 #include <stdio.h>
 #include <unistd.h>
+#include <sys/stat.h>
 
 #include "logdb.h"
 
@@ -81,7 +82,19 @@ void CLogDBFile::Init_()
 
 bool CLogDBFile::Open_(const char *pszFile, bool fCreate)
 {
-    file = fopen(pszFile, fCreate ? "a+b" : "r+b");
+    fileName = string(pszFile);
+    
+    size_t size;
+    struct stat sbuf;
+    if (stat(pszFile, &sbuf) != 0) {
+        size = 0;
+    } else {
+        size = sbuf.st_size;
+    }
+    
+    LogPrintf("CLogDB::Open Filesize %ld\n", size);
+    
+    file = fopen(pszFile, "a+b");
     
     if (file == NULL) {
         LogPrintf("CLogDB::Open Error opening %s: %s\n", pszFile, strerror(errno));
@@ -99,16 +112,17 @@ bool CLogDBFile::Open_(const char *pszFile, bool fCreate)
         {
             if (fwrite(logdb_header_magic, 4, 1, file) != 1)
             {
-                LogPrintf("CLogDBFile::Flush_(): error writing magic: %s\n", strerror(errno));
+                LogPrintf("CLogDBFile::Open_(): error writing magic: %s\n", strerror(errno));
             }
             WriteInt(file, version);
             fflush(file);
             FileCommit(file);
-            fclose(file);
-            file = fopen(pszFile, "r+b");
+            
+            LogPrintf("CLogDBFile::Open_(): pos1: %ld\n", ftell(file));
         }
     }
-    
+
+    LogPrintf("CLogDBFile::Open_(): pos3: %ld\n", ftell(file));
     return true;
 }
 
@@ -181,8 +195,12 @@ bool CLogDBFile::Close_()
 
 bool CLogDBFile::Load_()
 {
+    LogPrintf("CLogDB::Load(): start loading\n");
     if (feof(file))
+    {
+        LogPrintf("CLogDB::Load(): eof, return\n");
         return true;
+    }
     
     //logdb header
     if (getc(file) != logdb_header_magic[0]) return feof(file);
@@ -190,14 +208,28 @@ bool CLogDBFile::Load_()
     if (getc(file) != logdb_header_magic[2]) return false;
     if (getc(file) != logdb_header_magic[3]) return false;
     
+    LogPrintf("CLogDB::Load(): header okay %ld\n", ftell(file));
+    
     version = ReadInt(file);
     if (version == 0) return false;
     
+    LogPrintf("CLogDB::Load(): version okay %d, %ld\n", version, ftell(file));
+    
     do
     {
+        LogPrintf("CLogDB::Load(): check for frame\n");
         if (feof(file))
+        {
+            LogPrintf("CLogDB::Load(): end of file, returning\n");
             return true;
-        if (getc(file) != logdb_frameheader_magic[0]) return feof(file);
+        }
+        int aChar = getc(file);
+        if (aChar != logdb_frameheader_magic[0])
+        {
+            LogPrintf("CLogDB::Load(): first frame headerbyte is wront found %2x pos: %ld\n", aChar, ftell(file));
+            return feof(file);
+        }
+        LogPrintf("CLogDB::Load(): first frame headerbyte is okay (%2x) pos: %ld\n", aChar, ftell(file));
         if (getc(file) != logdb_frameheader_magic[1]) return false;
         if (getc(file) != logdb_frameheader_magic[2]) return false;
         if (getc(file) != logdb_frameheader_magic[3]) return false;
@@ -317,6 +349,17 @@ bool CLogDBFile::Load_()
     LogPrintf("CLogDBFile::Load(): done\n");
 }
 
+bool CLogDBFile::Reopen_(bool readOnly)
+{
+    fclose(file);
+    file = fopen(fileName.c_str(), (readOnly) ? "rb+" : "ab+");
+    
+    if(file)
+        return true;
+    else
+        return false;
+}
+
 bool CLogDBFile::Flush_()
 {
     LogPrintf("CLogDBFile::Flush_()\n");
@@ -326,11 +369,15 @@ bool CLogDBFile::Flush_()
 
     LogPrintf("CLogDBFile::Flush_(): dirty entries found\n");
 
+    LogPrintf("CLogDBFile::Flush(): current fpos: %ld\n", ftell(file));
+    
     if (fwrite(logdb_frameheader_magic, 4, 1, file) != 1)
     {
         LogPrintf("CLogDBFile::Flush_(): error writing magic: %s\n", strerror(errno));
     }
 
+    LogPrintf("CLogDBFile::Flush(): current fpos (afther header): %ld\n", ftell(file));
+    
     CSHA256 ctx = ctxState;
 
     for (set<data_t>::iterator it = setDirty.begin(); it != setDirty.end(); it++)
@@ -390,7 +437,7 @@ bool CLogDBFile::Flush_()
     FileCommit(file);
     ctxState = ctx;
 
-    LogPrintf("CLogDBFile::Flush(): wrote frame\n");
+    LogPrintf("CLogDBFile::Flush(): wrote frame pos: %ld\n", ftell(file));
 
     setDirty.clear();
 
@@ -459,8 +506,23 @@ bool CLogDB::TxnCommit() {
     return true;
 }
 
+bool CLogDB::ReloadDB(const string& walletFile)
+{
+    delete db;
+    db = new CLogDBFile();
+    db->Open(walletFile.c_str(), false);
+    if(!Load())
+        return false;
+
+    return true;
+}
+
 bool CLogDB::Load() {
-    return db->Load_();
+    db->Reopen_(true);
+    bool loadRet = db->Load_();
+    db->Reopen_(false);
+    
+    return loadRet;
 }
 
 bool CLogDB::Write_(const data_t &key, const data_t &value, bool fOverwrite) {
@@ -558,4 +620,21 @@ bool CLogDB::Flush(bool shutdown)
     bool state = db->Flush_();
     
     return state;
+}
+
+bool CLogDB::Rewrite(const string &file)
+{
+    Flush();
+
+    CLogDBFile *newDB = new CLogDBFile();
+    newDB->Open(file.c_str(), true); // create new file
+    
+    for (std::map<data_t, data_t>::iterator it = db->mapData.begin(); it != db->mapData.end(); it++)
+    {
+        newDB->Write_((*it).first, (*it).second);
+    }
+    
+    newDB->Flush_();
+    
+    return true;
 }

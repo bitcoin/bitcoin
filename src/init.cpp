@@ -834,7 +834,11 @@ bool AppInit2(boost::thread_group& threadGroup)
         LogPrintf("Using wallet %s\n", strWalletFile);
         uiInterface.InitMessage(_("Verifying wallet..."));
 
-        CWalletDB::Verify(strWalletFile, GetBoolArg("-salvagewallet", false));
+        if (!CWalletDB::Verify(strWalletFile, GetBoolArg("-salvagewallet", false)))
+        {
+            string msg = strprintf(_("Corrupt wallet detected (filename: %s)!"), strWalletFile);
+            return InitError(msg);
+        }
     } // (!fDisableWallet)
 #endif // ENABLE_WALLET
     // ********************************************************* Step 6: network initialization

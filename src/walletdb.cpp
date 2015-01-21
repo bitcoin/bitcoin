@@ -707,11 +707,30 @@ bool CWalletDB::ZapWalletTx(CWallet* pwallet, vector<CWalletTx>& vWtx)
     return true;
 }
 
-DBErrors CWalletDB::Rewrite()
+DBErrors CWalletDB::RewriteAndReplace(const string& walletFile)
 {
-    //TODO: implement
-    //Here we need a way of write down the whole mapData to a new file
-    //Flush_() needs to be rewritten
+    std::string newFile = walletFile+".tmp";
+    Rewrite(newFile);
+    
+    //simple verify
+    CLogDBFile *newDB = new CLogDBFile();
+    bool dbLoadRet = newDB->Open(newFile.c_str(), false);
+    delete newDB;
+    
+    if(dbLoadRet)
+    {
+        Close();
+        
+        
+        boost::filesystem::remove_all(walletFile);
+        RenameOver(newFile, walletFile);
+        
+        //reopen the db
+        if(!ReloadDB(walletFile))
+        {
+            return DB_CORRUPT;
+        }
+    }
     
     return DB_LOAD_OK;
 }
@@ -775,8 +794,12 @@ bool CWalletDB::Recover(std::string filename)
 
 bool CWalletDB::Verify(std::string filename, bool salvage)
 {
-    //TODO
-    return false;
+    // simple verifying by loading the db keystore but not load the keys itself
+    CWalletDB *newDB = new CWalletDB(filename);
+    bool loadRet = newDB->Load();
+    delete newDB;
+    
+    return loadRet;
 }
 
 bool CWalletDB::WriteDestData(const std::string &address, const std::string &key, const std::string &value)

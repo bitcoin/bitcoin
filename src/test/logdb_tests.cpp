@@ -18,8 +18,13 @@ BOOST_AUTO_TEST_SUITE(logdb_tests)
 
 BOOST_AUTO_TEST_CASE(logdb_test_1)
 {
+    fPrintToConsole = true;
+    
     boost::filesystem::path tmpPath = GetTempPath() / strprintf("test_bitcoin_logdb_%lu_%i.logdb", (unsigned long)GetTime(), (int)(GetRand(100000)));    
     std::string dbFile = tmpPath.string();
+    
+    
+    LogPrintf("%s", dbFile);
     
     int max_loops = 1;
     
@@ -30,13 +35,17 @@ BOOST_AUTO_TEST_CASE(logdb_test_1)
         CLogDB *aDB = new CLogDB(dbFile, false);
         aDB->Load();
         aDB->Write(std::string("testvalue"), std::string("aValue"));
+
+        std::string returnString;
+        aDB->Read(std::string("testvalue"), returnString);
+        BOOST_CHECK_EQUAL(returnString, std::string("aValue"));
+        
         aDB->Flush(true); //shutdown, close the file
         aDB->Close();
         delete aDB;
         
         aDB = new CLogDB(dbFile, false);
         aDB->Load();
-        std::string returnString;
         aDB->Read(std::string("testvalue"), returnString);
         BOOST_CHECK_EQUAL(returnString, std::string("aValue"));
         aDB->Write(std::string("testvalue"), std::string("aValue2"));
@@ -134,7 +143,61 @@ BOOST_AUTO_TEST_CASE(logdb_test_1)
         aDB2->Close();
         delete aDB2;
     }
+}
+
+
+BOOST_AUTO_TEST_CASE(logdb_test_rewrite)
+{
+    boost::filesystem::path tmpPath = GetTempPath() / strprintf("test_bitcoin_logdb_compact_%lu_%i.logdb", (unsigned long)GetTime(), (int)(GetRand(100000)));
     
+    std::string dbFile = tmpPath.string();
+    std::string dbFileRewritten = dbFile+".tmp";
+    
+
+    CLogDB *aDB = new CLogDB(dbFile, false);
+    aDB->Load();
+    aDB->Write(std::string("testvalue"), std::string("aValue"));
+    aDB->Flush(true); //shutdown, close the file
+    aDB->Close();
+    delete aDB;
+    
+    aDB = new CLogDB(dbFile, false);
+    aDB->Load();
+    std::string returnString;
+    aDB->Read(std::string("testvalue"), returnString);
+    BOOST_CHECK_EQUAL(returnString, std::string("aValue"));
+    aDB->Write(std::string("testvalue"), std::string("aValue2")); //overwrite value
+    aDB->Read(std::string("testvalue"), returnString);
+    BOOST_CHECK_EQUAL(returnString, std::string("aValue2"));
+    
+    aDB->Rewrite(dbFileRewritten); //this new db should only containe key "testvalue" once
+    
+    aDB->Flush(true); //shutdown, close the file
+    aDB->Close();
+    delete aDB;
+    
+    
+    //open the new compact db and check of the value
+    aDB = new CLogDB(dbFileRewritten, false);
+    aDB->Load();
+    aDB->Read(std::string("testvalue"), returnString);
+    BOOST_CHECK_EQUAL(returnString, std::string("aValue2"));
+    aDB->Close();
+    delete aDB;
+
+    
+    // compare filesizes
+    FILE *fh = fopen(dbFile.c_str(), "rb");
+    fseek(fh, 0L, SEEK_END);
+    size_t oldFileSize = ftell(fh);
+    fclose(fh);
+    
+    fh = fopen(dbFileRewritten.c_str(), "rb");
+    fseek(fh, 0L, SEEK_END);
+    size_t newFileSize = ftell(fh);
+    fclose(fh);
+    
+    BOOST_CHECK(newFileSize > (oldFileSize-8)/2.0); // file size must be half the size minus the ~8 header (depends on version int length) bytes
 }
 
 BOOST_AUTO_TEST_SUITE_END()

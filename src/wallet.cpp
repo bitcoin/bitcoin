@@ -430,38 +430,31 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
         mapMasterKeys[++nMasterKeyMaxID] = kMasterKey;
         if (fFileBacked)
         {
-            assert(!pwalletdbEncryption);
-            pwalletdbEncryption = new CWalletDB(strWalletFile);
-            if (!pwalletdbEncryption->TxnBegin()) {
-                delete pwalletdbEncryption;
-                pwalletdbEncryption = NULL;
+            if (!walletDB->TxnBegin())
                 return false;
-            }
-            pwalletdbEncryption->WriteMasterKey(nMasterKeyMaxID, kMasterKey);
+            
+            walletDB->WriteMasterKey(nMasterKeyMaxID, kMasterKey);
         }
 
         if (!EncryptKeys(vMasterKey))
         {
-            if (fFileBacked) {
-                pwalletdbEncryption->TxnAbort();
-                delete pwalletdbEncryption;
-            }
+            if (fFileBacked)
+                walletDB->TxnAbort();
+            
             // We now probably have half of our keys encrypted in memory, and half not...
             // die and let the user reload their unencrypted wallet.
+            LogPrintf("Encryption failed. Exiting...\n");
             assert(false);
         }
 
         if (fFileBacked)
         {
-            if (!pwalletdbEncryption->TxnCommit()) {
-                delete pwalletdbEncryption;
+            if (!walletDB->TxnCommit()) {
                 // We now have keys encrypted in memory, but not on disk...
                 // die to avoid confusion and let the user reload their unencrypted wallet.
+                LogPrintf("Encryption transaction commit failed. Exiting...\n");
                 assert(false);
             }
-
-            delete pwalletdbEncryption;
-            pwalletdbEncryption = NULL;
         }
 
         Lock();
@@ -470,7 +463,12 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
         Lock();
         
         // Rewrite wallet because we may use a append only backend
-        walletDB->Rewrite();
+        boost::filesystem::path walletFile = GetDataDir() / strWalletFile;
+        if(walletDB->RewriteAndReplace(walletFile.string()) != DB_LOAD_OK)
+        {
+            LogPrintf("Corrupt wallet detected after encryption/file-move...\n");
+            assert(false);
+        }
     }
     NotifyStatusChanged(this);
 
