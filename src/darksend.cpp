@@ -1447,32 +1447,45 @@ bool CDarkSendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
     std::vector<COutput> vCoins2;
     int64_t nValueMin = 0.01*COIN;
     int64_t nValueIn = 0;
-    int64_t lowestDenom = COIN*0.1;
 
-    int64_t balanceNeedsAnonymized = nAnonymizeDarkcoinAmount*COIN - pwalletMain->GetAnonymizedBalance();
+    // should not be less than fees in DARKSEND_FEE + few (lets say 5) smallest denoms
+    int64_t nLowestDenom = DARKSEND_FEE + darkSendDenominations[darkSendDenominations.size() - 1]*5;
+
+    // if there is no DS fee yet
+    if(!pwalletMain->HasDarksendFeeInputs())
+        // should have some additional amount for them
+        nLowestDenom += (DARKSEND_COLLATERAL*4)+DARKSEND_FEE*2;
+
+    int64_t nBalanceNeedsAnonymized = nAnonymizeDarkcoinAmount*COIN - pwalletMain->GetAnonymizedBalance();
 
     // if balanceNeedsAnonymized is more than pool max, take the pool max
-    if(balanceNeedsAnonymized > DARKSEND_POOL_MAX) balanceNeedsAnonymized = DARKSEND_POOL_MAX;
+    if(nBalanceNeedsAnonymized > DARKSEND_POOL_MAX) nBalanceNeedsAnonymized = DARKSEND_POOL_MAX;
 
     // if balanceNeedsAnonymized is more than (non-anonymized - COIN), take (non-anonymized - COIN)
-    int64_t nonanonymized = pwalletMain->GetBalance() - pwalletMain->GetAnonymizedBalance() - COIN;
-    if(balanceNeedsAnonymized > nonanonymized) balanceNeedsAnonymized = nonanonymized;
+    int64_t nBalanceNotYetAnonymized = pwalletMain->GetBalance() - pwalletMain->GetAnonymizedBalance() - COIN;
+    if(nBalanceNeedsAnonymized > nBalanceNotYetAnonymized) nBalanceNeedsAnonymized = nBalanceNotYetAnonymized;
 
-    if(balanceNeedsAnonymized < lowestDenom){
-        LogPrintf("DoAutomaticDenominating : No funds detected in need of denominating \n");
-        strAutoDenomResult = "No funds detected in need of denominating";
-        return false;
+    if(nBalanceNeedsAnonymized < nLowestDenom)
+    {
+        if(nBalanceNeedsAnonymized > 0)
+            nBalanceNeedsAnonymized = nLowestDenom;
+        else
+        {
+            LogPrintf("DoAutomaticDenominating : No funds detected in need of denominating \n");
+            strAutoDenomResult = "No funds detected in need of denominating";
+            return false;
+        }
     }
 
     // select coins that should be given to the pool
-    if (!pwalletMain->SelectCoinsDark(nValueMin, balanceNeedsAnonymized, vCoins, nValueIn, 0, nDarksendRounds))
+    if (!pwalletMain->SelectCoinsDark(nValueMin, nBalanceNeedsAnonymized, vCoins, nValueIn, 0, nDarksendRounds))
     {
         nValueIn = 0;
         vCoins.clear();
 
         if (pwalletMain->SelectCoinsDark(nValueMin, 9999999*COIN, vCoins, nValueIn, -2, 0))
         {
-            if(!fDryRun) return CreateDenominated(balanceNeedsAnonymized);
+            if(!fDryRun) return CreateDenominated(nBalanceNeedsAnonymized);
             return true;
         } else {
             LogPrintf("DoAutomaticDenominating : No funds detected in need of denominating (2)\n");
@@ -1497,10 +1510,10 @@ bool CDarkSendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
         sessionTotalValue = pwalletMain->GetTotalValue(vCoins);
 
         //randomize the amounts we mix
-        if(sessionTotalValue > balanceNeedsAnonymized) sessionTotalValue = balanceNeedsAnonymized;
+        if(sessionTotalValue > nBalanceNeedsAnonymized) sessionTotalValue = nBalanceNeedsAnonymized;
 
         double fDarkcoinSubmitted = (sessionTotalValue / CENT);
-        LogPrintf("Submitting Darksend for %f DRK CENT\n", fDarkcoinSubmitted);
+        LogPrintf("Submitting Darksend for %f DRK CENT - sessionTotalValue %d\n", fDarkcoinSubmitted, sessionTotalValue);
 
         if(pwalletMain->GetDenominatedBalance(true, true) > 0){ //get denominated unconfirmed inputs
             LogPrintf("DoAutomaticDenominating -- Found unconfirmed denominated outputs, will wait till they confirm to continue.\n");
@@ -1534,7 +1547,7 @@ bool CDarkSendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
                 }
 
                 // Try to match their denominations if possible
-                if (!pwalletMain->SelectCoinsByDenominations(dsq.nDenom, nValueMin, balanceNeedsAnonymized, vCoins, vCoins2, nValueIn, 0, nDarksendRounds)){
+                if (!pwalletMain->SelectCoinsByDenominations(dsq.nDenom, nValueMin, nBalanceNeedsAnonymized, vCoins, vCoins2, nValueIn, 0, nDarksendRounds)){
                     LogPrintf("DoAutomaticDenominating - Couldn't match denominations %d\n", dsq.nDenom);
                     continue;
                 }
@@ -1806,17 +1819,19 @@ bool CDarkSendPool::CreateDenominated(int64_t nTotalValue)
     int64_t nValueLeft = nTotalValue;
 
     // ****** Add fees ************ /
-    vecSend.push_back(make_pair(scriptChange, (DARKSEND_COLLATERAL*2)+DARKSEND_FEE));
-    nValueLeft -= (DARKSEND_COLLATERAL*2)+DARKSEND_FEE;
-    vecSend.push_back(make_pair(scriptChange, (DARKSEND_COLLATERAL*2)+DARKSEND_FEE));
-    nValueLeft -= (DARKSEND_COLLATERAL*2)+DARKSEND_FEE;
+    if(!pwalletMain->HasDarksendFeeInputs()) {
+        vecSend.push_back(make_pair(scriptChange, (DARKSEND_COLLATERAL*2)+DARKSEND_FEE));
+        nValueLeft -= (DARKSEND_COLLATERAL*2)+DARKSEND_FEE;
+        vecSend.push_back(make_pair(scriptChange, (DARKSEND_COLLATERAL*2)+DARKSEND_FEE));
+        nValueLeft -= (DARKSEND_COLLATERAL*2)+DARKSEND_FEE;
+    }
 
     // ****** Add denoms ************ /
     BOOST_REVERSE_FOREACH(int64_t v, darkSendDenominations){
         int nOutputs = 0;
 
         // add each output up to 10 times until it can't be added again
-        while(nValueLeft - v >= 0 && nOutputs <= 10) {
+        while(nValueLeft - v >= DARKSEND_FEE && nOutputs <= 10) {
             CScript scriptChange;
             CPubKey vchPubKey;
             //use a unique change address
@@ -1836,17 +1851,7 @@ bool CDarkSendPool::CreateDenominated(int64_t nTotalValue)
     }
     LogPrintf("CreateDenominated2 %d\n", nValueLeft);
 
-    // if we have anything left over, send it back as change
-
-    if(nValueLeft > 0){
-        CScript scriptChange;
-        CPubKey vchPubKey;
-        assert(reservekey.GetReservedKey(vchPubKey)); // should never fail, as we just unlocked
-        scriptChange.SetDestination(vchPubKey.GetID());
-        reservekey.KeepKey();
-
-        vecSend.push_back(make_pair(scriptChange, nValueLeft));
-    }
+    // if we have anything left over, it will be automatically send back as change - there is no need to send it manually
 
     CCoinControl *coinControl=NULL;
     bool success = pwalletMain->CreateTransaction(vecSend, wtx, reservekey,
@@ -2048,6 +2053,7 @@ int CDarkSendPool::GetDenominationsByAmount(int64_t nAmount, int nDenomTarget){
             nValueLeft -= v;
             nOutputs++;
         }
+        LogPrintf("GetDenominationsByAmount --- %d nOutputs %d\n", v, nOutputs);
     }
 
     //add non-denom left overs as change
