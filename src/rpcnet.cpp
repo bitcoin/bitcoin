@@ -36,18 +36,31 @@ static void CopyNodeStats(std::vector<CNodeStats>& vstats)
     }
 }
 
+struct addrManItemSort {
+    bool operator()(const CAddrInfo &leftItem, const CAddrInfo &rightItem) {
+        int64_t nTime = GetTime();
+        return leftItem.GetChance(nTime) > rightItem.GetChance(nTime);
+    }
+};
+
 Value getaddrmaninfo(const Array& params, bool fHelp)
 {
-    if (fHelp || params.size() != 0)
+    if (fHelp || params.size() > 1)
         throw runtime_error(
-            "getaddrmaninfo\n"
+            "getaddrmaninfo [networkType]\n"
             "Returns a dump of addrman data.");
 
-    // Return a full list of "online" address items
+    // Get a full list of "online" address items
     vector<CAddrInfo> vAddr = addrman.GetOnlineAddr();
 
-    Array ret;
+    // Sort by the GetChance result backwardly
+    sort(vAddr.begin(), vAddr.end(), addrManItemSort());
 
+    string strFilterNetType = "ipv4";
+    if (params.size() == 1)
+        strFilterNetType = params[0].get_str();
+
+    Array ret;
     BOOST_FOREACH(const CAddrInfo &addr, vAddr) {
         if (!addr.IsRoutable() || addr.IsLocal())
             continue;
@@ -64,14 +77,18 @@ Value getaddrmaninfo(const Array& params, bool fHelp)
 //            case NET_I2P:
 //                strNetType = "i2p";
 //            break;
-            case NET_IPV4:
-                strNetType = "ipv4";
-            break;
-            default:
             case NET_IPV6:
                 strNetType = "ipv6";
+            break;
+            default:
+            case NET_IPV4:
+                strNetType = "ipv4";
 
         }
+
+        if (strNetType != strFilterNetType)
+            continue;
+
         addrManItem.push_back(Pair("chance", addr.GetChance(GetTime())));
         addrManItem.push_back(Pair("type", strNetType));
         addrManItem.push_back(Pair("time", (int64_t)addr.nTime));
