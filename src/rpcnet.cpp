@@ -44,11 +44,11 @@ Value getaddrmaninfo(const Array& params, bool fHelp)
             "Returns a dump of addrman data.");
 
     // Return a full list of "online" address items
-    vector<CAddress> vAddr = addrman.GetOnlineAddr();
+    vector<CAddrInfo> vAddr = addrman.GetOnlineAddr();
 
     Array ret;
 
-    BOOST_FOREACH(const CAddress &addr, vAddr) {
+    BOOST_FOREACH(const CAddrInfo &addr, vAddr) {
         if (!addr.IsRoutable() || addr.IsLocal())
             continue;
 
@@ -72,6 +72,7 @@ Value getaddrmaninfo(const Array& params, bool fHelp)
                 strNetType = "ipv6";
 
         }
+        addrManItem.push_back(Pair("chance", addr.GetChance(GetTime())));
         addrManItem.push_back(Pair("type", strNetType));
         addrManItem.push_back(Pair("time", (int64_t)addr.nTime));
 

@@ -507,7 +507,7 @@ void CAddrMan::GetAddr_(std::vector<CAddress> &vAddr)
     }
 }
 
-void CAddrMan::GetOnlineAddr_(std::vector<CAddress> &vAddr)
+void CAddrMan::GetOnlineAddr_(std::vector<CAddrInfo> &vAddr)
 {
     for (std::map<int, CAddrInfo>::const_iterator it = mapInfo.begin(); it != mapInfo.end(); it++)
     {
