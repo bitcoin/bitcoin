@@ -314,8 +314,7 @@ BITCOIN_QT_CPP += \
   qt/walletview.cpp
 endif
 
-RES_IMAGES = \
-  qt/res/images/about.png
+RES_IMAGES = 
 
 RES_MOVIES = $(wildcard qt/res/movies/spinner-*.png)
 
