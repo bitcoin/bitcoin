@@ -273,7 +273,7 @@ void ProcessMessageMasternode(CNode* pfrom, std::string& strCommand, CDataStream
                 {
                     int64_t t = (*i).second;
                     if (GetTime() < t) {
-                        Misbehaving(pfrom->GetId(), 100);
+                        Misbehaving(pfrom->GetId(), 20);
                         LogPrintf("dseg - peer already asked me for the list\n");
                         return;
                     }
@@ -284,7 +284,7 @@ void ProcessMessageMasternode(CNode* pfrom, std::string& strCommand, CDataStream
             }
         } //else, asking for a specific node which is ok
 
-        int count = vecMasternodes.size()-1;
+        int count = vecMasternodes.size();
         int i = 0;
 
         BOOST_FOREACH(CMasterNode mn, vecMasternodes) {
