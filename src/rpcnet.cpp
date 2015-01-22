@@ -43,15 +43,13 @@ Value getaddrmaninfo(const Array& params, bool fHelp)
             "getaddrmaninfo\n"
             "Returns a dump of addrman data.");
 
-    vector<CAddress> vAddr = addrman.GetAddr();
+    // Return a full list of "online" address items
+    vector<CAddress> vAddr = addrman.GetOnlineAddr();
 
     Array ret;
 
     BOOST_FOREACH(const CAddress &addr, vAddr) {
-        // Don't return addresses older than nCutOff timestamp
-        int64_t nCutOff = GetTime() - (nNodeLifespan * 24 * 60 * 60);
-
-        if (!addr.IsRoutable() || addr.IsLocal() || addr.nTime > nCutOff)
+        if (!addr.IsRoutable() || addr.IsLocal())
             continue;
 
         Object addrManItem;

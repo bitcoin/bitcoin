@@ -239,6 +239,7 @@ protected:
 
     // Select several addresses at once.
     void GetAddr_(std::vector<CAddress> &vAddr);
+    void GetOnlineAddr_(std::vector<CAddress> &vAddr);
 
     // Mark an entry as currently-connected-to.
     void Connected_(const CService &addr, int64_t nTime);
@@ -660,6 +661,18 @@ public:
         {
             LOCK(cs);
             GetAddr_(vAddr);
+        }
+        Check();
+        return vAddr;
+    }
+
+    std::vector<CAddress> GetOnlineAddr()
+    {
+        Check();
+        std::vector<CAddress> vAddr;
+        {
+            LOCK(cs);
+            GetOnlineAddr_(vAddr);
         }
         Check();
         return vAddr;

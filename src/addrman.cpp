@@ -507,6 +507,17 @@ void CAddrMan::GetAddr_(std::vector<CAddress> &vAddr)
     }
 }
 
+void CAddrMan::GetOnlineAddr_(std::vector<CAddress> &vAddr)
+{
+    for (std::map<int, CAddrInfo>::const_iterator it = mapInfo.begin(); it != mapInfo.end(); it++)
+    {
+        CAddrInfo addr = it->second;
+        bool fCurrentlyOnline = (GetAdjustedTime() - addr.nTime < 24 * 60 * 60);
+        if (fCurrentlyOnline)
+            vAddr.push_back(addr);
+    }
+}
+
 void CAddrMan::Connected_(const CService &addr, int64_t nTime)
 {
     CAddrInfo *pinfo = Find(addr);
