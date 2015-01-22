@@ -58,11 +58,12 @@ Value getaddrmaninfo(const Array& params, bool fHelp)
         string strNetType;
         switch(addr.GetNetwork())
         {
-            case NET_TOR:
-                strNetType = "tor";
-            break;
-            case NET_I2P:
-                strNetType = "i2p";
+//            case NET_TOR:
+//                strNetType = "tor";
+//            break;
+//            case NET_I2P:
+//                strNetType = "i2p";
+//            break;
             case NET_IPV4:
                 strNetType = "ipv4";
             break;
