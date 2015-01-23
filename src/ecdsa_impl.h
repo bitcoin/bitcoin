@@ -15,43 +15,14 @@
 #include "ecmult_gen.h"
 #include "ecdsa.h"
 
-typedef struct {
-    secp256k1_fe_t order_as_fe;
-    secp256k1_fe_t p_minus_order;
-} secp256k1_ecdsa_consts_t;
+static const secp256k1_fe_t secp256k1_ecdsa_const_order_as_fe = SECP256K1_FE_CONST(
+    0xFFFFFFFFUL, 0xFFFFFFFFUL, 0xFFFFFFFFUL, 0xFFFFFFFEUL,
+    0xBAAEDCE6UL, 0xAF48A03BUL, 0xBFD25E8CUL, 0xD0364141UL
+);
 
-static const secp256k1_ecdsa_consts_t *secp256k1_ecdsa_consts = NULL;
-
-static void secp256k1_ecdsa_start(void) {
-    if (secp256k1_ecdsa_consts != NULL)
-        return;
-
-    /* Allocate. */
-    secp256k1_ecdsa_consts_t *ret = (secp256k1_ecdsa_consts_t*)checked_malloc(sizeof(secp256k1_ecdsa_consts_t));
-
-    static const unsigned char order[] = {
-        0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
-        0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFE,
-        0xBA,0xAE,0xDC,0xE6,0xAF,0x48,0xA0,0x3B,
-        0xBF,0xD2,0x5E,0x8C,0xD0,0x36,0x41,0x41
-    };
-
-    secp256k1_fe_set_b32(&ret->order_as_fe, order);
-    secp256k1_fe_negate(&ret->p_minus_order, &ret->order_as_fe, 1);
-    secp256k1_fe_normalize_var(&ret->p_minus_order);
-
-    /* Set the global pointer. */
-    secp256k1_ecdsa_consts = ret;
-}
-
-static void secp256k1_ecdsa_stop(void) {
-    if (secp256k1_ecdsa_consts == NULL)
-        return;
-
-    secp256k1_ecdsa_consts_t *c = (secp256k1_ecdsa_consts_t*)secp256k1_ecdsa_consts;
-    secp256k1_ecdsa_consts = NULL;
-    free(c);
-}
+static const secp256k1_fe_t secp256k1_ecdsa_const_p_minus_order = SECP256K1_FE_CONST(
+    0, 0, 0, 1, 0x45512319UL, 0x50B75FC4UL, 0x402DA172UL, 0x2FC9BAEEUL
+);
 
 static int secp256k1_ecdsa_sig_parse(secp256k1_ecdsa_sig_t *r, const unsigned char *sig, int size) {
     if (sig[0] != 0x30) return 0;
@@ -146,11 +117,11 @@ static int secp256k1_ecdsa_sig_verify(const secp256k1_ecdsa_sig_t *sig, const se
         // xr.x == xr * xr.z^2 mod p, so the signature is valid.
         return 1;
     }
-    if (secp256k1_fe_cmp_var(&xr, &secp256k1_ecdsa_consts->p_minus_order) >= 0) {
+    if (secp256k1_fe_cmp_var(&xr, &secp256k1_ecdsa_const_p_minus_order) >= 0) {
         // xr + p >= n, so we can skip testing the second case.
         return 0;
     }
-    secp256k1_fe_add(&xr, &secp256k1_ecdsa_consts->order_as_fe);
+    secp256k1_fe_add(&xr, &secp256k1_ecdsa_const_order_as_fe);
     if (secp256k1_gej_eq_x_var(&xr, &pr)) {
         // (xr + n) * pr.z^2 mod p == pr.x, so the signature is valid.
         return 1;
@@ -167,9 +138,9 @@ static int secp256k1_ecdsa_sig_recover(const secp256k1_ecdsa_sig_t *sig, secp256
     secp256k1_fe_t fx;
     VERIFY_CHECK(secp256k1_fe_set_b32(&fx, brx)); /* brx comes from a scalar, so is less than the order; certainly less than p */
     if (recid & 2) {
-        if (secp256k1_fe_cmp_var(&fx, &secp256k1_ecdsa_consts->p_minus_order) >= 0)
+        if (secp256k1_fe_cmp_var(&fx, &secp256k1_ecdsa_const_p_minus_order) >= 0)
             return 0;
-        secp256k1_fe_add(&fx, &secp256k1_ecdsa_consts->order_as_fe);
+        secp256k1_fe_add(&fx, &secp256k1_ecdsa_const_order_as_fe);
     }
     secp256k1_ge_t x;
     if (!secp256k1_ge_set_xo_var(&x, &fx, recid & 1))

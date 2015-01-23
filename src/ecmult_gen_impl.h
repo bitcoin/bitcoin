@@ -37,8 +37,7 @@ static void secp256k1_ecmult_gen_start(void) {
     secp256k1_ecmult_gen_consts_t *ret = (secp256k1_ecmult_gen_consts_t*)checked_malloc(sizeof(secp256k1_ecmult_gen_consts_t));
 
     /* get the generator */
-    const secp256k1_ge_t *g = &secp256k1_ge_consts->g;
-    secp256k1_gej_t gj; secp256k1_gej_set_ge(&gj, g);
+    secp256k1_gej_t gj; secp256k1_gej_set_ge(&gj, &secp256k1_ge_const_g);
 
     /* Construct a group element with no known corresponding scalar (nothing up my sleeve). */
     secp256k1_gej_t nums_gej;
@@ -50,7 +49,7 @@ static void secp256k1_ecmult_gen_start(void) {
         VERIFY_CHECK(secp256k1_ge_set_xo_var(&nums_ge, &nums_x, 0));
         secp256k1_gej_set_ge(&nums_gej, &nums_ge);
         /* Add G to make the bits in x uniformly distributed. */
-        secp256k1_gej_add_ge_var(&nums_gej, &nums_gej, g);
+        secp256k1_gej_add_ge_var(&nums_gej, &nums_gej, &secp256k1_ge_const_g);
     }
 
     /* compute prec. */

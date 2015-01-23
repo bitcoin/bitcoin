@@ -13,9 +13,6 @@
 #include "num.h"
 #include "field.h"
 
-static void secp256k1_fe_inner_start(void) {}
-static void secp256k1_fe_inner_stop(void) {}
-
 #ifdef VERIFY
 static void secp256k1_fe_verify(const secp256k1_fe_t *a) {
     const uint32_t *d = a->n;

@@ -206,13 +206,20 @@ static void secp256k1_fe_inv_var(secp256k1_fe_t *r, const secp256k1_fe_t *a) {
 #if defined(USE_FIELD_INV_BUILTIN)
     secp256k1_fe_inv(r, a);
 #elif defined(USE_FIELD_INV_NUM)
+    static const unsigned char prime[32] = {
+        0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
+        0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
+        0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
+        0xFF,0xFF,0xFF,0xFE,0xFF,0xFF,0xFC,0x2F
+    };
     unsigned char b[32];
     secp256k1_fe_t c = *a;
     secp256k1_fe_normalize_var(&c);
     secp256k1_fe_get_b32(b, &c);
-    secp256k1_num_t n;
+    secp256k1_num_t n, m;
     secp256k1_num_set_bin(&n, b, 32);
-    secp256k1_num_mod_inverse(&n, &n, &secp256k1_fe_consts->p);
+    secp256k1_num_set_bin(&m, prime, 32);
+    secp256k1_num_mod_inverse(&n, &n, &m);
     secp256k1_num_get_bin(b, 32, &n);
     VERIFY_CHECK(secp256k1_fe_set_b32(r, b));
 #else
@@ -242,34 +249,6 @@ static void secp256k1_fe_inv_all_var(size_t len, secp256k1_fe_t r[len], const se
     }
 
     r[0] = u;
-}
-
-static void secp256k1_fe_start(void) {
-#ifndef USE_NUM_NONE
-    static const unsigned char secp256k1_fe_consts_p[] = {
-        0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
-        0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
-        0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
-        0xFF,0xFF,0xFF,0xFE,0xFF,0xFF,0xFC,0x2F
-    };
-#endif
-    if (secp256k1_fe_consts == NULL) {
-        secp256k1_fe_inner_start();
-        secp256k1_fe_consts_t *ret = (secp256k1_fe_consts_t*)checked_malloc(sizeof(secp256k1_fe_consts_t));
-#ifndef USE_NUM_NONE
-        secp256k1_num_set_bin(&ret->p, secp256k1_fe_consts_p, sizeof(secp256k1_fe_consts_p));
-#endif
-        secp256k1_fe_consts = ret;
-    }
-}
-
-static void secp256k1_fe_stop(void) {
-    if (secp256k1_fe_consts != NULL) {
-        secp256k1_fe_consts_t *c = (secp256k1_fe_consts_t*)secp256k1_fe_consts;
-        free((void*)c);
-        secp256k1_fe_consts = NULL;
-        secp256k1_fe_inner_stop();
-    }
 }
 
 #endif
