@@ -9,9 +9,10 @@
 #include "qvalidatedlineedit.h"
 #include "walletmodel.h"
 
-#include "primitives/transaction.h"
 #include "init.h"
 #include "main.h"
+#include "policy/policy.h"
+#include "primitives/transaction.h"
 #include "protocol.h"
 #include "script/script.h"
 #include "script/standard.h"
