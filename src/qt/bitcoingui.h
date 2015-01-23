@@ -16,6 +16,7 @@ class SignVerifyMessageDialog;
 class MultisigDialog;
 class Notificator;
 class RPCConsole;
+class AboutDialog;
 
 QT_BEGIN_NAMESPACE
 class QLabel;
@@ -108,6 +109,7 @@ private:
     TransactionView *transactionView;
     MintingView *mintingView;
     RPCConsole *rpcConsole;
+    AboutDialog *aboutDialog;
 
     QMovie *syncIconMovie;
 

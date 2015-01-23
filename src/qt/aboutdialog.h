@@ -1,7 +1,7 @@
 #ifndef ABOUTDIALOG_H
 #define ABOUTDIALOG_H
 
-#include <QDialog>
+#include <QWidget>
 
 namespace Ui {
     class AboutDialog;
@@ -9,7 +9,7 @@ namespace Ui {
 class ClientModel;
 
 /** "About" dialog box */
-class AboutDialog : public QDialog
+class AboutDialog : public QWidget
 {
     Q_OBJECT
 
@@ -20,6 +20,8 @@ public:
     void setModel(ClientModel *model);
 private:
     Ui::AboutDialog *ui;
+
+    void keyPressEvent(QKeyEvent *);
 
 private slots:
     void on_buttonBox_accepted();
