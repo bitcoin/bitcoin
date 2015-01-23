@@ -40,7 +40,7 @@ static void secp256k1_fe_get_hex(char *r, int *rlen, const secp256k1_fe_t *a) {
 }
 
 static int secp256k1_fe_set_hex(secp256k1_fe_t *r, const char *a, int alen) {
-    unsigned char tmp[32] = {};
+    unsigned char tmp[32] = {0};
     static const int cvt[256] = {0, 0, 0, 0, 0, 0, 0,0,0,0,0,0,0,0,0,0,
                                  0, 0, 0, 0, 0, 0, 0,0,0,0,0,0,0,0,0,0,
                                  0, 0, 0, 0, 0, 0, 0,0,0,0,0,0,0,0,0,0,
@@ -227,7 +227,7 @@ static void secp256k1_fe_inv_var(secp256k1_fe_t *r, const secp256k1_fe_t *a) {
 #endif
 }
 
-static void secp256k1_fe_inv_all_var(size_t len, secp256k1_fe_t r[len], const secp256k1_fe_t a[len]) {
+static void secp256k1_fe_inv_all_var(size_t len, secp256k1_fe_t *r, const secp256k1_fe_t *a) {
     if (len < 1)
         return;
 

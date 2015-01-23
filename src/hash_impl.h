@@ -128,7 +128,7 @@ static void secp256k1_sha256_write(secp256k1_sha256_t *hash, const unsigned char
     const unsigned char* end = data + len;
     size_t bufsize = hash->bytes % 64;
     if (bufsize && bufsize + len >= 64) {
-        // Fill the buffer, and process it.
+        /* Fill the buffer, and process it. */
         memcpy(hash->buf + bufsize, data, 64 - bufsize);
         hash->bytes += 64 - bufsize;
         data += 64 - bufsize;
@@ -136,13 +136,13 @@ static void secp256k1_sha256_write(secp256k1_sha256_t *hash, const unsigned char
         bufsize = 0;
     }
     while (end >= data + 64) {
-        // Process full chunks directly from the source.
+        /* Process full chunks directly from the source. */
         secp256k1_sha256_transform(hash->s, data);
         hash->bytes += 64;
         data += 64;
     }
     if (end > data) {
-        // Fill the buffer with what remains.
+        /* Fill the buffer with what remains. */
         memcpy(hash->buf + bufsize, data, end - data);
         hash->bytes += end - data;
     }
