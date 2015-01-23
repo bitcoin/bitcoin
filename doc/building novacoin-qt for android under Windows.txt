@@ -145,25 +145,6 @@ TARGET_OS=OS_ANDROID_CROSSCOMPILE make libleveldb.a libmemenv.a
 3. Компиляция
 3.1 Собираем Novacoin QT
 
-Откройте файл src\compat.h
-Измените #include <sys/fcntl.h> на #include <fcntl.h>
-
-Откройте файл src\util.cpp
-Закоментируйте строки с 59 по 61
-//#ifndef WIN32
-//#include <execinfo.h>
-//#endif
-Закоментируйте строки с 1062 по 1067
-//#ifndef WIN32
-//        void* pszBuffer[32];
-//        size_t size;
-//        size = backtrace(pszBuffer, 32);
-//        backtrace_symbols_fd(pszBuffer, size, fileno(fileout));
-//#endif
-
-Откройте файл src\netbase.cpp
-Измените #include <sys/fcntl.h> на #include <fcntl.h>
-
 Откройте файл novacoin-qt.pro
 Вместо 
 

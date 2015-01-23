@@ -56,7 +56,7 @@ namespace boost {
 # include <sys/prctl.h>
 #endif
 
-#ifndef WIN32
+#if !defined(WIN32) && !defined(ANDROID)
 #include <execinfo.h>
 #endif
 
@@ -1059,7 +1059,7 @@ void LogStackTrace() {
     printf("\n\n******* exception encountered *******\n");
     if (fileout)
     {
-#ifndef WIN32
+#if !defined(WIN32) && !defined(ANDROID)
         void* pszBuffer[32];
         size_t size;
         size = backtrace(pszBuffer, 32);
