@@ -2228,8 +2228,8 @@ void ThreadCheckDarkSendPool()
             CleanTransactionLocksList();
         }
 
-        //try to sync the masternode list and payment list every 20 seconds
-        if(c % 5 == 0 && RequestedMasterNodeList <= 2){
+        //try to sync the masternode list and payment list every 5 seconds from at least 3 nodes
+        if(c % 5 == 0 && (RequestedMasterNodeList <= 2 || vecMasternodes.size() == 0)){
             bool fIsInitialDownload = IsInitialBlockDownload();
             if(!fIsInitialDownload) {
                 LOCK(cs_vNodes);
