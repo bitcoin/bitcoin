@@ -752,3 +752,9 @@ void CoinControlDialog::keyPressEvent(QKeyEvent *event)
     }
 #endif
 }
+
+void CoinControlDialog::closeEvent(QCloseEvent* e)
+{
+    QWidget::closeEvent(e);
+    emit beforeClose();
+}

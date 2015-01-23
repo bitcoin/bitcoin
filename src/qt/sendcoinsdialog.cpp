@@ -81,8 +81,7 @@ SendCoinsDialog::SendCoinsDialog(QWidget *parent) :
     fNewRecipientAllowed = true;
 
     coinControl = new CoinControlDialog(0);
-    QAction *updateLabes = new QAction(coinControl);
-    connect(updateLabes, SIGNAL(close()), this, SLOT(coinControlUpdateLabels()));
+    connect(coinControl, SIGNAL(beforeClose()), this, SLOT(coinControlUpdateLabels()));
 }
 
 void SendCoinsDialog::setModel(WalletModel *model)

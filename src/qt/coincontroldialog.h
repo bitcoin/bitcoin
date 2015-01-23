@@ -19,6 +19,8 @@ class CCoinControl;
 class CoinControlDialog : public QWidget
 {
     Q_OBJECT
+signals:
+    void beforeClose();
 
 public:
     explicit CoinControlDialog(QWidget *parent = 0);
@@ -32,6 +34,9 @@ public:
 
     static QList<qint64> payAmounts;
     static CCoinControl *coinControl;
+
+protected:
+    void closeEvent(QCloseEvent* e);
 
 private:
     Ui::CoinControlDialog *ui;
