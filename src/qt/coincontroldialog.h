@@ -3,7 +3,7 @@
 
 #include <QAbstractButton>
 #include <QAction>
-#include <QDialog>
+#include <QWidget>
 #include <QList>
 #include <QMenu>
 #include <QPoint>
@@ -16,7 +16,7 @@ namespace Ui {
 class WalletModel;
 class CCoinControl;
 
-class CoinControlDialog : public QDialog
+class CoinControlDialog : public QWidget
 {
     Q_OBJECT
 
@@ -27,7 +27,7 @@ public:
     void setModel(WalletModel *model);
 
     // static because also called from sendcoinsdialog
-    static void updateLabels(WalletModel*, QDialog*);
+    static void updateLabels(WalletModel*, QWidget*);
     static QString getPriorityLabel(double);
 
     static QList<qint64> payAmounts;
@@ -48,6 +48,8 @@ private:
     QString strPad(QString, int, QString);
     void sortView(int, Qt::SortOrder);
     void updateView();
+
+    void keyPressEvent(QKeyEvent *);
 
     enum
     {
@@ -85,7 +87,7 @@ private slots:
     void radioListMode(bool);
     void viewItemChanged(QTreeWidgetItem*, int);
     void headerSectionClicked(int);
-    void buttonBoxClicked(QAbstractButton*);
+    void on_buttonBox_accepted();
     void buttonSelectAllClicked();
     //void updateLabelLocked();
 };
