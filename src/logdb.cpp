@@ -11,6 +11,14 @@
 #define LOGDB_MAX_KEY_SIZE 0x1000
 #define LOGDB_MAX_VALUE_SIZE 0x100000
 
+static const unsigned char logdb_frameheader_magic[4] = {0xB1,0xA0,0xEE,0xC9};
+
+#ifdef DEBUG_LOGDB
+#define LogDBDebug(...) LogPrint(NULL, __VA_ARGS__)
+#else
+#define LogDBDebug(...) ;
+#endif
+
 using namespace std;
 
 // Compact integers: least-significant digit first base-128 encoding.
@@ -49,7 +57,7 @@ uint64_t static ReadInt(FILE *file)
 }
 
 // File format
-// 
+//
 // The file consists of a list of frames, each of which consists of:
 // 4 bytes magic: 0xCC 0xC4 0xE6 0xB0
 // N records, each of which consists of:
@@ -77,24 +85,12 @@ void CLogDBFile::Init_()
     nUsed = 0;
     nWritten = 0;
     setDirty.clear();
-    version = logdb_version;
 }
 
 bool CLogDBFile::Open_(const char *pszFile, bool fCreate)
 {
-    fileName = string(pszFile);
-    
-    size_t size;
-    struct stat sbuf;
-    if (stat(pszFile, &sbuf) != 0) {
-        size = 0;
-    } else {
-        size = sbuf.st_size;
-    }
-    
-    LogPrintf("CLogDB::Open Filesize %ld\n", size);
-    
-    file = fopen(pszFile, "a+b");
+    fileName = string(pszFile); //keep filename
+    file = fopen(pszFile, "a+b"); //always use "append"-mode by default
     
     if (file == NULL) {
         LogPrintf("CLogDB::Open Error opening %s: %s\n", pszFile, strerror(errno));
@@ -108,21 +104,8 @@ bool CLogDBFile::Open_(const char *pszFile, bool fCreate)
             LogPrintf("CLogDB::Open Error creating %s. Existing file detected\n", pszFile);
             return false;
         }
-        else
-        {
-            if (fwrite(logdb_header_magic, 4, 1, file) != 1)
-            {
-                LogPrintf("CLogDBFile::Open_(): error writing magic: %s\n", strerror(errno));
-            }
-            WriteInt(file, version);
-            fflush(file);
-            FileCommit(file);
-            
-            LogPrintf("CLogDBFile::Open_(): pos1: %ld\n", ftell(file));
-        }
     }
 
-    LogPrintf("CLogDBFile::Open_(): pos3: %ld\n", ftell(file));
     return true;
 }
 
@@ -186,7 +169,7 @@ bool CLogDBFile::Close_()
     {
         Flush_();
         
-        LogPrintf("CLogDBFile::Close(): closing file\n");
+        LogDBDebug("CLogDBFile::Close(): closing file\n");
         fclose(file);
         Init_();
     }
@@ -195,46 +178,29 @@ bool CLogDBFile::Close_()
 
 bool CLogDBFile::Load_()
 {
-    LogPrintf("CLogDB::Load(): start loading\n");
+    LogDBDebug("CLogDB::Load(): start loading\n");
+    
     if (feof(file))
-    {
-        LogPrintf("CLogDB::Load(): eof, return\n");
         return true;
-    }
-    
-    //logdb header
-    if (getc(file) != logdb_header_magic[0]) return feof(file);
-    if (getc(file) != logdb_header_magic[1]) return false;
-    if (getc(file) != logdb_header_magic[2]) return false;
-    if (getc(file) != logdb_header_magic[3]) return false;
-    
-    LogPrintf("CLogDB::Load(): header okay %ld\n", ftell(file));
-    
-    version = ReadInt(file);
-    if (version == 0) return false;
-    
-    LogPrintf("CLogDB::Load(): version okay %d, %ld\n", version, ftell(file));
     
     do
     {
-        LogPrintf("CLogDB::Load(): check for frame\n");
         if (feof(file))
         {
-            LogPrintf("CLogDB::Load(): end of file, returning\n");
+            LogDBDebug("CLogDB::Load(): end of file, returning\n");
             return true;
         }
         int aChar = getc(file);
         if (aChar != logdb_frameheader_magic[0])
         {
-            LogPrintf("CLogDB::Load(): first frame headerbyte is wront found %2x pos: %ld\n", aChar, ftell(file));
+            LogDBDebug("CLogDB::Load(): first frame headerbyte is incorrect found %2x\n", aChar);
             return feof(file);
         }
-        LogPrintf("CLogDB::Load(): first frame headerbyte is okay (%2x) pos: %ld\n", aChar, ftell(file));
         if (getc(file) != logdb_frameheader_magic[1]) return false;
         if (getc(file) != logdb_frameheader_magic[2]) return false;
         if (getc(file) != logdb_frameheader_magic[3]) return false;
 
-        LogPrintf("CLogDB::Load(): frame header found\n");
+        LogDBDebug("CLogDB::Load(): frame header found\n");
 
         vector<CModEntry> vMod;
 
@@ -253,7 +219,7 @@ bool CLogDBFile::Load_()
             entry.nMode = getc(file);
             if (entry.nMode > 2)
             {
-                LogPrintf("CLogDBFile::Load(): unknown record mode\n");
+                LogDBDebug("CLogDBFile::Load(): unknown record mode\n");
                 return false;
             }
 
@@ -262,22 +228,22 @@ bool CLogDBFile::Load_()
             if (entry.nMode == 0)
                 break;
 
-            LogPrintf("CLogDBFile::Load(): loading record mode %i\n", entry.nMode);
+            LogDBDebug("CLogDBFile::Load(): loading record mode %i\n", entry.nMode);
 
             uint32_t nKeySize = ReadInt(file);
             if (nKeySize >= LOGDB_MAX_KEY_SIZE)
             {
-                LogPrintf("CLogDBFile::Load(): oversizes key (%lu bytes)\n", (unsigned long)nKeySize);
+                LogDBDebug("CLogDBFile::Load(): oversizes key (%lu bytes)\n", (unsigned long)nKeySize);
                 return false;
             }
             entry.key.resize(nKeySize);
             if (fread(&entry.key[0], nKeySize, 1, file) != 1)
             {
-                LogPrintf("CLogDBFile::Load(): unable to read key (%lu bytes)\n", (unsigned long)nKeySize);
+                LogDBDebug("CLogDBFile::Load(): unable to read key (%lu bytes)\n", (unsigned long)nKeySize);
                 return false;
             }
 
-            LogPrintf("CLogDBFile::load(): loading key (%.*s)\n", nKeySize, &entry.key[0]);
+            LogDBDebug("CLogDBFile::load(): loading key (%.*s)\n", nKeySize, &entry.key[0]);
 
             ctx.Write((const unsigned char *)&nKeySize, 4);
             ctx.Write((const unsigned char *)&entry.key[0], nKeySize);
@@ -287,13 +253,13 @@ bool CLogDBFile::Load_()
                 int nValueSize = ReadInt(file);
                 if (nValueSize >= LOGDB_MAX_VALUE_SIZE)
                 {
-                    LogPrintf("CLogDBFile::Load(): oversized value (%lu bytes)\n", (unsigned long)nValueSize);
+                    LogDBDebug("CLogDBFile::Load(): oversized value (%lu bytes)\n", (unsigned long)nValueSize);
                     return false;
                 }
                 entry.value.resize(nValueSize);
                 if (fread(&entry.value[0], nValueSize, 1, file) != 1)
                 {
-                    LogPrintf("CLogDBFile::Load(): unable to read value (%lu bytes)\n", (unsigned long)nValueSize);
+                    LogDBDebug("CLogDBFile::Load(): unable to read value (%lu bytes)\n", (unsigned long)nValueSize);
                     return false;
                 }
 
@@ -307,7 +273,7 @@ bool CLogDBFile::Load_()
         unsigned char check[8];
         if (fread(check, 8, 1, file)!=1)
         {
-            LogPrintf("CLogDBFile::Load(): unable to read checksum\n");
+            LogDBDebug("CLogDBFile::Load(): unable to read checksum\n");
             return false;
         }
 
@@ -319,10 +285,6 @@ bool CLogDBFile::Load_()
         {
             LogPrintf("CLogDBFile::Load(): checksum failed\n");
             return false;
-        }
-        else
-        {
-            LogPrintf("CLogDBFile::Load(): checksum OK\n");
         }
 
         // if we reach this point, the entire read frame was valid
@@ -346,7 +308,7 @@ bool CLogDBFile::Load_()
 
     } while(true);
 
-    LogPrintf("CLogDBFile::Load(): done\n");
+    LogDBDebug("CLogDBFile::Load(): done\n");
 }
 
 bool CLogDBFile::Reopen_(bool readOnly)
@@ -362,21 +324,19 @@ bool CLogDBFile::Reopen_(bool readOnly)
 
 bool CLogDBFile::Flush_()
 {
-    LogPrintf("CLogDBFile::Flush_()\n");
+    LogDBDebug("CLogDBFile::Flush_()\n");
 
     if (setDirty.empty())
         return true;
 
-    LogPrintf("CLogDBFile::Flush_(): dirty entries found\n");
+    LogDBDebug("CLogDBFile::Flush_(): dirty entries found\n");
 
-    LogPrintf("CLogDBFile::Flush(): current fpos: %ld\n", ftell(file));
-    
     if (fwrite(logdb_frameheader_magic, 4, 1, file) != 1)
     {
-        LogPrintf("CLogDBFile::Flush_(): error writing magic: %s\n", strerror(errno));
+        LogDBDebug("CLogDBFile::Flush_(): error writing magic: %s\n", strerror(errno));
+        return false;
     }
 
-    LogPrintf("CLogDBFile::Flush(): current fpos (afther header): %ld\n", ftell(file));
     
     CSHA256 ctx = ctxState;
 
@@ -392,7 +352,7 @@ bool CLogDBFile::Flush_()
             uint32_t nDataSize = (*it2).second.size();
             nWritten += nKeySize + nDataSize;
 
-            LogPrintf("CLogDBFile::Flush(): writing update(%.*s)\n", nKeySize, &(*it)[0]);
+            LogDBDebug("CLogDBFile::Flush(): writing update (keysize: %d, str0-2: %.3s)\n", nKeySize, &(*it)[0]);
 
             putc(nMode, file);
             WriteInt(file, nKeySize);
@@ -413,7 +373,8 @@ bool CLogDBFile::Flush_()
             uint32_t nKeySize = (*it).size();
             nWritten += nKeySize;
 
-            LogPrintf("CLogDBFile::Flush(): writing erase(%.*s)\n", nKeySize, &(*it)[0]);
+            
+            LogDBDebug("CLogDBFile::Flush(): writing erase (keysize: %d, str0-2: %.3s)\n", nKeySize, &(*it)[0]);
 
             putc(nMode, file);
             WriteInt(file, nKeySize);
@@ -437,7 +398,7 @@ bool CLogDBFile::Flush_()
     FileCommit(file);
     ctxState = ctx;
 
-    LogPrintf("CLogDBFile::Flush(): wrote frame pos: %ld\n", ftell(file));
+    LogDBDebug("CLogDBFile::Flush(): wrote frame pos: %ld\n", ftell(file));
 
     setDirty.clear();
 
@@ -494,14 +455,14 @@ bool CLogDB::TxnCommit() {
     }
     mapData.clear();
     setDirty.clear();
-
+    if (!fReadOnly)
+        db->Flush_();
+    
     fTransaction = false;
     if (fReadOnly)
         db->mutex.unlock_shared();
     else
         db->mutex.unlock();
-
-    db->Flush_();
     
     return true;
 }
@@ -511,16 +472,29 @@ bool CLogDB::ReloadDB(const string& walletFile)
     delete db;
     db = new CLogDBFile();
     db->Open(walletFile.c_str(), false);
-    if(!Load())
+    if (!Load())
+    {
+        loaded = false;
         return false;
+    }
 
     return true;
 }
 
 bool CLogDB::Load() {
+    
+    // for loading we need the file in "rb+" mode.
     db->Reopen_(true);
+    
+    // map to memory
     bool loadRet = db->Load_();
-    db->Reopen_(false);
+    
+    // reset the file to append writing mode "ab+"
+    if (loadRet)
+    {
+        db->Reopen_(false);
+        loaded = true;
+    }
     
     return loadRet;
 }

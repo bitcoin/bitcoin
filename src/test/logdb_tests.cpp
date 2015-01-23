@@ -18,8 +18,6 @@ BOOST_AUTO_TEST_SUITE(logdb_tests)
 
 BOOST_AUTO_TEST_CASE(logdb_test_1)
 {
-    fPrintToConsole = true;
-    
     boost::filesystem::path tmpPath = GetTempPath() / strprintf("test_bitcoin_logdb_%lu_%i.logdb", (unsigned long)GetTime(), (int)(GetRand(100000)));    
     std::string dbFile = tmpPath.string();
     

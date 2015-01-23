@@ -1126,10 +1126,7 @@ bool AppInit2(boost::thread_group& threadGroup)
         }
 
         if (GetBoolArg("-upgradewallet", fFirstRun))
-        {
             LogPrintf("There is no upgrade required (your version: %d)\n", pwalletMain->GetVersion());
-
-        }
 
         if (fFirstRun)
         {

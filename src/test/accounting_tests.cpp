@@ -31,6 +31,8 @@ GetResults(CWalletDB& walletdb, std::map<CAmount, CAccountingEntry>& results)
 BOOST_AUTO_TEST_CASE(acc_orderupgrade)
 {
     CWalletDB walletdb(pwalletMain->strWalletFile);
+    walletdb.Load();
+    
     std::vector<CWalletTx*> vpwtx;
     CWalletTx wtx;
     CAccountingEntry ae;

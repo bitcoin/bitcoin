@@ -20,10 +20,6 @@
 
 #include "crypto/sha256.h"
 
-static const unsigned char logdb_frameheader_magic[4] = {0xB1,0xA0,0xEE,0xC9};
-static const unsigned char logdb_header_magic[4]      = {0xCC,0xC4,0xE6,0xB0};
-static const int64_t logdb_version                    = 10000;
-
 typedef std::vector<unsigned char> data_t;
 
 class CLogDB;
@@ -37,7 +33,6 @@ private:
     std::string fileName;
     
     CSHA256 ctxState;
-    uint64_t version;
     
     // database
     std::map<data_t, data_t> mapData;
@@ -92,9 +87,9 @@ public:
     typedef data_t key_type;
     typedef data_t value_type;
     typedef std::map<key_type, value_type>::const_iterator const_iterator;
-
-private:
     mutable CCriticalSection cs;
+    
+private:
     CLogDBFile *db; // pointer to non-const db
     const bool fReadOnly; // readonly CLogDB's use a shared lock instead of a normal
 
@@ -102,20 +97,23 @@ private:
     std::map<data_t, data_t> mapData; // must be empty outside transactions
     std::set<data_t> setDirty;
 
+    bool loaded;
+    
 public:
     bool TxnAbort();
     bool TxnBegin();
     bool TxnCommit();
     bool Flush(bool shutdown = false);
     
-    CLogDB(std::string pathAndFile, bool fReadOnlyIn = false) : fReadOnly(fReadOnlyIn), fTransaction(false)
+    CLogDB(std::string pathAndFile, bool fReadOnlyIn = false) : fReadOnly(fReadOnlyIn), fTransaction(false), loaded(false)
     {
         db = new CLogDBFile();
         bool createFile = true;
         if(boost::filesystem::exists(pathAndFile))
             createFile = false;
         
-        db->Open(pathAndFile.c_str(), createFile);
+        if(db->Open(pathAndFile.c_str(), createFile) && createFile)
+            loaded = true;
     }
 
     ~CLogDB() {
@@ -137,6 +135,7 @@ public:
     
     bool Close() {
         boost::lock_guard<boost::shared_mutex> lock(db->mutex);
+        loaded = false;
         return db->Close_();
     }
     
@@ -154,6 +153,8 @@ public:
 template<typename K, typename V>
 bool Write(const K &key, const V &value, bool fOverwrite = true)
 {
+    if (!loaded) return false;
+    
     CDataStream ssk(SER_DISK, CLIENT_VERSION);
     ssk << key;
     data_t datak(ssk.begin(), ssk.end());
@@ -165,6 +166,8 @@ bool Write(const K &key, const V &value, bool fOverwrite = true)
 template<typename K, typename V>
 bool Read(const K &key, V &value)
 {
+    if (!loaded) return false;
+    
     CDataStream ssk(SER_DISK, CLIENT_VERSION);
     ssk << key;
     data_t datak(ssk.begin(), ssk.end());
@@ -178,6 +181,8 @@ bool Read(const K &key, V &value)
 template<typename K>
 bool Exists(const K &key)
 {
+    if (!loaded) return false;
+    
     CDataStream ssk(SER_DISK, CLIENT_VERSION);
     ssk << key;
     data_t datak(ssk.begin(), ssk.end());
@@ -186,6 +191,8 @@ bool Exists(const K &key)
 template<typename K>
 bool Erase(const K &key)
 {
+    if (!loaded) return false;
+    
     CDataStream ssk(SER_DISK, CLIENT_VERSION);
     ssk << key;
     data_t datak(ssk.begin(), ssk.end());

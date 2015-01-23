@@ -110,8 +110,6 @@ public:
     bool WritePool(int64_t nPool, const CKeyPool& keypool);
     bool ErasePool(int64_t nPool);
 
-    bool WriteMinVersion(int nVersion);
-
     bool ReadAccount(const std::string& strAccount, CAccount& account);
     bool WriteAccount(const std::string& strAccount, const CAccount& account);
 
@@ -141,7 +139,5 @@ private:
 
     bool WriteAccountingEntry(const uint64_t nAccEntryNum, const CAccountingEntry& acentry);
 };
-
-bool BackupWallet(const CWallet& wallet, const std::string& strDest);
 
 #endif // BITCOIN_WALLETDB_H
