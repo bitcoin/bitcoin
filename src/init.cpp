@@ -310,6 +310,24 @@ std::string HelpMessage(HelpMessageMode hmm)
     }
     strUsage += "  -shrinkdebugfile       " + _("Shrink debug.log file on client startup (default: 1 when no -debug)") + "\n";
     strUsage += "  -testnet               " + _("Use the test network") + "\n";
+    strUsage += "  -litemode=<n>          " + _("Disable all Masternode and Darksend related functionality (0-1, default: 0)") + "\n";
+
+    strUsage += "\n" + _("Masternode options:") + "\n";
+    strUsage += "  -masternode=<n>            " + _("Enable the client to act as a masternode (0-1, default: 0)") + "\n";
+    strUsage += "  -mnconf=<file>             " + _("Specify masternode configuration file (default: masternode.conf)") + "\n";
+    strUsage += "  -masternodeprivkey=<n>     " + _("Set the masternode private key") + "\n";
+    strUsage += "  -masternodeaddr=<n>        " + _("Set external address:port to get to this masternode (example: address:port)") + "\n";
+    strUsage += "  -masternodeminprotocol=<n> " + _("Ignore masternodes less than version (example: 70050; default : 0)") + "\n";
+
+    strUsage += "\n" + _("Darksend options:") + "\n";
+    strUsage += "  -enabledarksend=<n>          " + _("Enable use of automated darksend for funds stored in this wallet (0-1, default: 0)") + "\n";
+    strUsage += "  -darksendrounds=<n>          " + _("Use N separate masternodes to anonymize funds  (2-8, default: 2)") + "\n";
+    strUsage += "  -anonymizedarkcoinamount=<n> " + _("Keep N darkcoin anonymized (default: 0)") + "\n";
+    strUsage += "  -liquidityprovider=<n>       " + _("Provide liquidity to Darksend by infrequently mixing coins on a continual basis (0-100, default: 0, 1=very frequent, high fees, 100=very infrequent, low fees)") + "\n";
+
+    strUsage += "\n" + _("InstantX options:") + "\n";
+    strUsage += "  -enableinstantx=<n>    " + _("Enable instantx, show confirmations for locked transactions (bool, default: true)") + "\n";
+    strUsage += "  -instantxdepth=<n>     " + _("Show N confirmations for a successfully locked transaciton (0-9999, default: 1)") + "\n";
 
     strUsage += "\n" + _("Block creation options:") + "\n";
     strUsage += "  -blockminsize=<n>      " + _("Set minimum block size in bytes (default: 0)") + "\n";
@@ -1144,7 +1162,7 @@ bool AppInit2(boost::thread_group& threadGroup)
     if(nDarksendRounds > 16) nDarksendRounds = 16;
     if(nDarksendRounds < 1) nDarksendRounds = 1;
 
-    nLiquidityProvider = GetArg("-liquidityprovider", 0); //1-100
+    nLiquidityProvider = GetArg("-liquidityprovider", 0); //0-100
     if(nLiquidityProvider != 0) {
         darkSendPool.SetMinBlockSpacing(std::min(nLiquidityProvider,100)*15);
         fEnableDarksend = true;
