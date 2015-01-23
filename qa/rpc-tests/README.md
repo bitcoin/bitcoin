@@ -12,7 +12,7 @@ Base class for new regression tests.
 ### [listtransactions.py](listtransactions.py)
 Tests for the listtransactions RPC call.
 
-### [util.py](util.sh)
+### [util.py](util.py)
 Generally useful functions.
 
 Bash-based tests, to be ported to Python:
