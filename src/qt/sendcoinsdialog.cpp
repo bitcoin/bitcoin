@@ -26,7 +26,8 @@
 SendCoinsDialog::SendCoinsDialog(QWidget *parent) :
     QDialog(parent, DIALOGWINDOWHINTS),
     ui(new Ui::SendCoinsDialog),
-    model(0)
+    model(0),
+    coinControl(0)
 {
     ui->setupUi(this);
 
@@ -78,6 +79,9 @@ SendCoinsDialog::SendCoinsDialog(QWidget *parent) :
     ui->labelCoinControlChange->addAction(clipboardChangeAction);
 
     fNewRecipientAllowed = true;
+
+    coinControl = new CoinControlDialog(0);
+    connect(coinControl, SIGNAL(beforeClose()), this, SLOT(coinControlUpdateLabels()));
 }
 
 void SendCoinsDialog::setModel(WalletModel *model)
@@ -109,6 +113,7 @@ void SendCoinsDialog::setModel(WalletModel *model)
 
 SendCoinsDialog::~SendCoinsDialog()
 {
+    delete coinControl;
     delete ui;
 }
 
@@ -444,10 +449,9 @@ void SendCoinsDialog::coinControlFeatureChanged(bool checked)
 // Coin Control: button inputs -> show actual coin control dialog
 void SendCoinsDialog::coinControlButtonClicked()
 {
-    CoinControlDialog dlg;
-    dlg.setModel(model);
-    dlg.exec();
-    coinControlUpdateLabels();
+    coinControl->setModel(model);
+    coinControl->setWindowModality(Qt::ApplicationModal);
+    coinControl->show();
 }
 
 // Coin Control: checkbox custom change address

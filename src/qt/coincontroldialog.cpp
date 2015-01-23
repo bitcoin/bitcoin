@@ -21,13 +21,14 @@
 #include <QString>
 #include <QTreeWidget>
 #include <QTreeWidgetItem>
+#include <QKeyEvent>
 
 using namespace std;
 QList<qint64> CoinControlDialog::payAmounts;
 CCoinControl* CoinControlDialog::coinControl = new CCoinControl();
 
 CoinControlDialog::CoinControlDialog(QWidget *parent) :
-    QDialog(parent, DIALOGWINDOWHINTS),
+    QWidget(parent, DIALOGWINDOWHINTS),
     ui(new Ui::CoinControlDialog),
     model(0)
 {
@@ -153,10 +154,9 @@ QString CoinControlDialog::strPad(QString s, int nPadLength, QString sPadding)
 }
 
 // ok button
-void CoinControlDialog::buttonBoxClicked(QAbstractButton* button)
+void CoinControlDialog::on_buttonBox_accepted()
 {
-    if (ui->buttonBox->buttonRole(button) == QDialogButtonBox::AcceptRole)
-        done(QDialog::Accepted); // closes the dialog
+    close(); // closes the dialog
 }
 
 // (un)select all
@@ -416,7 +416,7 @@ QString CoinControlDialog::getPriorityLabel(double dPriority)
     else ui->labelLocked->setVisible(false);
 }*/
 
-void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
+void CoinControlDialog::updateLabels(WalletModel *model, QWidget* dialog)
 {
     if (!model) return;
 
@@ -736,4 +736,25 @@ void CoinControlDialog::updateView()
     // sort view
     sortView(sortColumn, sortOrder);
     ui->treeWidget->setEnabled(true);
+}
+
+void CoinControlDialog::keyPressEvent(QKeyEvent *event)
+{
+#ifdef ANDROID
+    if(event->key() == Qt::Key_Back)
+    {
+        close();
+    }
+#else
+    if(event->key() == Qt::Key_Escape)
+    {
+        close();
+    }
+#endif
+}
+
+void CoinControlDialog::closeEvent(QCloseEvent* e)
+{
+    QWidget::closeEvent(e);
+    emit beforeClose();
 }

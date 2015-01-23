@@ -10,6 +10,7 @@ namespace Ui {
 class WalletModel;
 class SendCoinsEntry;
 class SendCoinsRecipient;
+class CoinControlDialog;
 
 QT_BEGIN_NAMESPACE
 class QUrl;
@@ -48,6 +49,7 @@ private:
     Ui::SendCoinsDialog *ui;
     WalletModel *model;
     bool fNewRecipientAllowed;
+    CoinControlDialog *coinControl;
 
 private slots:
     void on_sendButton_clicked();
