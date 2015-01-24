@@ -836,7 +836,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
         unsigned int nSize = entry.GetTxSize();
 
         bool fValidateFee = nFees >= ::minRelayTxFee.GetFee(nSize);
-        if (fLimitFree) {
+        if (fLimitFree && !fValidateFee) {
             double dPriorityDelta = 0;
             CAmount nFeeDelta = 0;
             mempool.ApplyDeltas(hash, dPriorityDelta, nFeeDelta);
@@ -846,10 +846,9 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
                 //   to be considered to fall into this category. We don't want to encourage sending
                 //   multiple transactions instead of one big transaction to avoid fees.
                   (fAllowFree && nSize < (DEFAULT_BLOCK_PRIORITY_SIZE - 1000))))
-                if (!fValidateFee)
-                    return state.DoS(0, error("AcceptToMemoryPool: not enough fees %s, %d < %d",
-                                              hash.ToString(), nFees, ::minRelayTxFee.GetFee(nSize)),
-                                     REJECT_INSUFFICIENTFEE, "insufficient fee");
+                return state.DoS(0, error("AcceptToMemoryPool: not enough fees %s, %d < %d",
+                                          hash.ToString(), nFees, ::minRelayTxFee.GetFee(nSize)),
+                                 REJECT_INSUFFICIENTFEE, "insufficient fee");
         }
 
         // Require that free transactions have sufficient priority to be mined in the next block.
