@@ -14,7 +14,9 @@
 #include <string>
 
 class CFeeRate;
+class CTransaction;
 class CTxOut;
+class CValidationState;
 
 /** Default for -blockmaxsize and -blockminsize, which control the range of sizes the mining code will create **/
 static const unsigned int DEFAULT_BLOCK_MAX_SIZE = 750000;
@@ -66,6 +68,11 @@ public:
     virtual bool ApproveScript(const CScript&, txnouttype&) const = 0;
     virtual CAmount GetDustThreshold(const CTxOut& txout) const = 0;
     virtual bool ApproveOutput(const CTxOut& txout) const = 0;
+    /**
+     * Check for standard transaction types
+     * @return True if all outputs (scriptPubKeys) use only standard transaction forms
+     */
+    virtual bool ApproveTx(const CTransaction&, CValidationState&) const = 0;
 };
 
 /** Return a CPolicy of the type described in the parameter string */

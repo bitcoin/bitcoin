@@ -8,6 +8,7 @@
 #include "policy/policy.h"
 
 #include "amount.h"
+#include "consensus/validation.h"
 #include "primitives/transaction.h"
 #include "tinyformat.h"
 #include "ui_interface.h"
@@ -37,6 +38,7 @@ public:
      */
     virtual CAmount GetDustThreshold(const CTxOut& txout) const;
     virtual bool ApproveOutput(const CTxOut& txout) const;
+    virtual bool ApproveTx(const CTransaction&, CValidationState&) const;
 };
 
 /** Global variables and their interfaces */
@@ -124,4 +126,53 @@ CAmount CStandardPolicy::GetDustThreshold(const CTxOut& txout) const
 bool CStandardPolicy::ApproveOutput(const CTxOut& txout) const
 {
     return txout.nValue < GetDustThreshold(txout);
+}
+
+bool CStandardPolicy::ApproveTx(const CTransaction& tx, CValidationState& state) const
+{
+    if (tx.nVersion > CTransaction::CURRENT_VERSION || tx.nVersion < 1)
+        return state.DoS(0, false, REJECT_NONSTANDARD, "version");
+
+    // Extremely large transactions with lots of inputs can cost the network
+    // almost as much to process as they cost the sender in fees, because
+    // computing signature hashes is O(ninputs*txsize). Limiting transactions
+    // to MAX_STANDARD_TX_SIZE mitigates CPU exhaustion attacks.
+    unsigned int sz = tx.GetSerializeSize(SER_NETWORK, CTransaction::CURRENT_VERSION);
+    if (sz >= MAX_STANDARD_TX_SIZE)
+        return state.DoS(0, false, REJECT_NONSTANDARD, "tx-size");
+
+    for (unsigned int i = 0; i < tx.vin.size(); i++) {
+        // Biggest 'standard' txin is a 15-of-15 P2SH multisig with compressed
+        // keys. (remember the 520 byte limit on redeemScript size) That works
+        // out to a (15*(33+1))+3=513 byte redeemScript, 513+1+15*(73+1)+3=1627
+        // bytes of scriptSig, which we round off to 1650 bytes for some minor
+        // future-proofing. That's also enough to spend a 20-of-20
+        // CHECKMULTISIG scriptPubKey, though such a scriptPubKey is not
+        // considered standard)
+        if (tx.vin[i].scriptSig.size() > 1650)
+            return state.DoS(0, false, REJECT_NONSTANDARD, "scriptsig-size");
+
+        if (!tx.vin[i].scriptSig.IsPushOnly())
+            return state.DoS(0, false, REJECT_NONSTANDARD, "scriptsig-not-pushonly");
+    }
+
+    unsigned int nDataOut = 0;
+    txnouttype whichType;
+    for (unsigned int i = 0; i < tx.vout.size(); i++) {
+        if (!ApproveScript(tx.vout[i].scriptPubKey, whichType))
+            return state.DoS(0, false, REJECT_NONSTANDARD, "scriptpubkey");
+
+        if (whichType == TX_NULL_DATA)
+            nDataOut++;
+        else if ((whichType == TX_MULTISIG) && (!fIsBareMultisigStd))
+            return state.DoS(0, false, REJECT_NONSTANDARD, "bare-multisig");
+        else if (ApproveOutput(tx.vout[i]))
+            return state.DoS(0, false, REJECT_NONSTANDARD, "dust");
+    }
+
+    // only one OP_RETURN txout is permitted
+    if (nDataOut > 1)
+        return state.DoS(0, false, REJECT_NONSTANDARD, "multi-op-return");
+
+    return true;
 }
