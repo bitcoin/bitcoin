@@ -6,7 +6,7 @@
 
 2) Установка MXE и зависимостей
  cd /home/<ваше имя>/
- git clone https://github.com/mxw/mxe.git
+ git clone https://github.com/mxe/mxe.git
  
 
 2.1) gcc
