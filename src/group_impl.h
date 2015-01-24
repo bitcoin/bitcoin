@@ -93,7 +93,7 @@ static void secp256k1_ge_set_gej_var(secp256k1_ge_t *r, secp256k1_gej_t *a) {
     r->y = a->y;
 }
 
-static void secp256k1_ge_set_all_gej_var(size_t len, secp256k1_ge_t r[len], const secp256k1_gej_t a[len]) {
+static void secp256k1_ge_set_all_gej_var(size_t len, secp256k1_ge_t *r, const secp256k1_gej_t *a) {
     size_t count = 0;
     secp256k1_fe_t *az = checked_malloc(sizeof(secp256k1_fe_t) * len);
     for (size_t i=0; i<len; i++) {
@@ -220,9 +220,10 @@ static int secp256k1_ge_is_valid_var(const secp256k1_ge_t *a) {
 }
 
 static void secp256k1_gej_double_var(secp256k1_gej_t *r, const secp256k1_gej_t *a) {
-    // For secp256k1, 2Q is infinity if and only if Q is infinity. This is because if 2Q = infinity,
-    // Q must equal -Q, or that Q.y == -(Q.y), or Q.y is 0. For a point on y^2 = x^3 + 7 to have
-    // y=0, x^3 must be -7 mod p. However, -7 has no cube root mod p.
+    /** For secp256k1, 2Q is infinity if and only if Q is infinity. This is because if 2Q = infinity,
+     *  Q must equal -Q, or that Q.y == -(Q.y), or Q.y is 0. For a point on y^2 = x^3 + 7 to have
+     *  y=0, x^3 must be -7 mod p. However, -7 has no cube root mod p.
+     */
     r->infinity = a->infinity;
     if (r->infinity) {
         return;

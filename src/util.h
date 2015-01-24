@@ -61,7 +61,7 @@
 #define VERIFY_CHECK(cond) do { (void)(cond); } while(0)
 #endif
 
-static inline void *checked_malloc(size_t size) {
+static SECP256K1_INLINE void *checked_malloc(size_t size) {
     void *ret = malloc(size);
     CHECK(ret != NULL);
     return ret;
