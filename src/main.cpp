@@ -831,14 +831,11 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
         unsigned int nSize = entry.GetTxSize();
 
         CAmount nMinFee = ::minRelayTxFee.GetFee(nSize);
-        {
-            LOCK(mempool.cs);
-            double dPriorityDelta = 0;
-            CAmount nFeeDelta = 0;
-            mempool.ApplyDeltas(hash, dPriorityDelta, nFeeDelta);
-            if (dPriorityDelta > 0 || nFeeDelta > 0)
-                nMinFee = 0;
-        }
+        double dPriorityDelta = 0;
+        CAmount nFeeDelta = 0;
+        mempool.ApplyDeltas(hash, dPriorityDelta, nFeeDelta);
+        if (dPriorityDelta > 0 || nFeeDelta > 0)
+            nMinFee = 0;
 
         if (fAllowFree) {
             // There is a free transaction area in blocks created by most miners,
