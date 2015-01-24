@@ -1237,12 +1237,12 @@ void CWallet::AvailableCoins(vector<COutput>& vCoins, bool fOnlyConfirmed, const
                    CTxIn vin = CTxIn(out.tx->GetHash(), out.i);
                    int rounds = GetInputDarksendRounds(vin);
                    if(rounds >= 0) found = true;
-                } else if(coin_type == ONLY_NONDENOMINATED) {
+                } else if(coin_type == ONLY_NONDENOMINATED || coin_type == ONLY_NONDENOMINATED_MN) {
                     found = true;
                     BOOST_FOREACH(int64_t d, darkSendDenominations)
                         if(pcoin->vout[i].nValue == d)
                             found = false;
-
+                    if(coin_type == ONLY_NONDENOMINATED_MN) found = found && (pcoin->vout[i].nValue != 1000*COIN);
                 } else {
                     found = true;
                 }
@@ -1459,9 +1459,6 @@ bool CWallet::SelectCoins(int64_t nTargetValue, set<pair<const CWalletTx*,unsign
 
     //if we're doing only denominated, we need to round up to the nearest .1DRK
     if(coin_type == ONLY_DENOMINATED){
-        // denominate our funds
-        std::vector<CTxOut> vOut;
-
         // Make outputs by looping through denominations, from large to small
         BOOST_FOREACH(int64_t v, darkSendDenominations)
         {
@@ -1699,7 +1696,7 @@ bool CWallet::HasDarksendFeeInputs() const
     vector<COutput> vCoins;
     AvailableCoins(vCoins, false, coinControl, ALL_COINS);
 
-    bool found_collateral = false;
+    int nFound = 0;
     BOOST_FOREACH(const COutput& out, vCoins)
     {
         if(
@@ -1708,11 +1705,11 @@ bool CWallet::HasDarksendFeeInputs() const
             out.tx->vout[out.i].nValue == (DARKSEND_COLLATERAL * 3)+DARKSEND_FEE ||
             out.tx->vout[out.i].nValue == (DARKSEND_COLLATERAL * 2)+DARKSEND_FEE ||
             out.tx->vout[out.i].nValue == (DARKSEND_COLLATERAL * 1)+DARKSEND_FEE
-        ) found_collateral = true;
+        ) nFound++;
 
     }
 
-    return found_collateral;
+    return nFound > 1; // should have more than one just in case
 }
 
 bool CWallet::SelectCoinsWithoutDenomination(int64_t nTargetValue, set<pair<const CWalletTx*,unsigned int> >& setCoinsRet, int64_t& nValueRet) const
@@ -1852,6 +1849,8 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, int64_t> >& vecSend,
                         strFailReason = _("Insufficient funds");
                     else if (coin_type == ONLY_NONDENOMINATED)
                         strFailReason = _("Unable to locate enough Darksend non-denominated funds for this transaction");
+                    else if (coin_type == ONLY_NONDENOMINATED_MN)
+                        strFailReason = _("Unable to locate enough Darksend non-denominated funds for this transaction that are not equal 1000 DRK");
                     else
                         strFailReason = _("Unable to locate enough Darksend denominated funds for this transaction");
 
@@ -2017,7 +2016,7 @@ bool CWallet::CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey, std:
         if (!wtxNew.AcceptToMemoryPool(false))
         {
             // This must not fail. The transaction has already been signed and recorded.
-            LogPrintf("CommitTransaction() : Error: Transaction not valid");
+            LogPrintf("CommitTransaction() : Error: Transaction not valid\n");
             return false;
         }
         wtxNew.RelayWalletTransaction(strCommand);
