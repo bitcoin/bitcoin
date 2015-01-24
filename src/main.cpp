@@ -848,8 +848,6 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
             if (nSize < (DEFAULT_BLOCK_PRIORITY_SIZE - 1000))
                 nMinFee = 0;
         }
-        if (!MoneyRange(nMinFee))
-            nMinFee = MAX_MONEY;
 
         // Don't accept it if it can't get into a block
         if (fLimitFree && nFees < nMinFee)
