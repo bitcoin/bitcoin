@@ -27,7 +27,7 @@
 } while(0)
 #endif
 
-#ifndef HAVE_BUILTIN_EXPECT
+#ifdef HAVE_BUILTIN_EXPECT
 #define EXPECT(x,c) __builtin_expect((x),(c))
 #else
 #define EXPECT(x,c) (x)
