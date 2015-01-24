@@ -329,6 +329,7 @@ At any time you can check the package installation and build progress with
 ```bash
 tail -f var/install.log
 tail -f var/build.log
+```
 
 Output from `gbuild` will look something like
 
