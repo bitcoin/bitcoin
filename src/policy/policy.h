@@ -57,7 +57,6 @@ static const unsigned int STANDARD_NOT_MANDATORY_VERIFY_FLAGS = STANDARD_SCRIPT_
 
 /** GLOBALS: These variables are supposed to become CStandardPolicy attributes */
 
-extern bool fIsBareMultisigStd;
 extern CFeeRate minRelayTxFee;
 
 inline double AllowFreeThreshold()

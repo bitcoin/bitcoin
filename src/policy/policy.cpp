@@ -17,7 +17,6 @@
 #include "util.h"
 #include "utilstrencodings.h"
 
-bool fIsBareMultisigStd = true;
 /** Fees smaller than this (in satoshi) are considered zero fee (for relaying and mining) */
 CFeeRate minRelayTxFee = CFeeRate(1000);
 /** The maximum number of bytes in OP_RETURN outputs that we're willing to relay/mine */
@@ -28,8 +27,10 @@ class CStandardPolicy : public CPolicy
 {
 protected:
     unsigned nMaxDatacarrierBytes;
+    bool fIsBareMultisigStd;
 public:
-    CStandardPolicy() : nMaxDatacarrierBytes(MAX_OP_RETURN_RELAY) {};
+    CStandardPolicy() : nMaxDatacarrierBytes(MAX_OP_RETURN_RELAY),
+                        fIsBareMultisigStd(true) {};
 
     virtual std::vector<std::pair<std::string, std::string> > GetOptionsHelp() const;
     virtual void InitFromArgs(const std::map<std::string, std::string>&);
@@ -111,6 +112,7 @@ std::vector<std::pair<std::string, std::string> > CStandardPolicy::GetOptionsHel
     std::vector<std::pair<std::string, std::string> > optionsHelp;
     optionsHelp.push_back(std::make_pair("-datacarrier", strprintf(_("Relay and mine data carrier transactions (default: %u)"), 1)));
     optionsHelp.push_back(std::make_pair("-datacarriersize", strprintf(_("Maximum size of data in data carrier transactions we relay and mine (default: %u)"), MAX_OP_RETURN_RELAY)));
+    optionsHelp.push_back(std::make_pair("-permitbaremultisig", strprintf(_("Relay non-P2SH multisig (default: %u)"), 1)));
     return optionsHelp;
 }
 
@@ -120,6 +122,7 @@ void CStandardPolicy::InitFromArgs(const std::map<std::string, std::string>& map
         nMaxDatacarrierBytes = GetArg("-datacarriersize", nMaxDatacarrierBytes, mapArgs);
     else
         nMaxDatacarrierBytes = 0;
+    fIsBareMultisigStd = GetArg("-permitbaremultisig", fIsBareMultisigStd, mapArgs);
 }
 
 bool CStandardPolicy::ApproveScript(const CScript& scriptPubKey, txnouttype& whichType) const
