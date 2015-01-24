@@ -89,6 +89,7 @@ BITCOIN_CORE_H = \
   compressor.h \
   consensus/consensus.h \
   consensus/params.h \
+  consensus/validation.h \
   core_io.h \
   wallet/db.h \
   eccryptoverify.h \

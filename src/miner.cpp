@@ -7,6 +7,7 @@
 
 #include "amount.h"
 #include "consensus/consensus.h"
+#include "consensus/validation.h"
 #include "hash.h"
 #include "main.h"
 #include "net.h"
