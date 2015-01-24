@@ -68,6 +68,7 @@ bool fAlerts = DEFAULT_ALERTS;
 
 /** Fees smaller than this (in satoshi) are considered zero fee (for relaying and mining) */
 CFeeRate minRelayTxFee = CFeeRate(1000);
+bool fAllowFree = true;
 
 CTxMemPool mempool(::minRelayTxFee);
 
@@ -718,36 +719,6 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state)
     return true;
 }
 
-CAmount GetMinRelayFee(const CTransaction& tx, unsigned int nBytes, bool fAllowFree)
-{
-    {
-        LOCK(mempool.cs);
-        uint256 hash = tx.GetHash();
-        double dPriorityDelta = 0;
-        CAmount nFeeDelta = 0;
-        mempool.ApplyDeltas(hash, dPriorityDelta, nFeeDelta);
-        if (dPriorityDelta > 0 || nFeeDelta > 0)
-            return 0;
-    }
-
-    CAmount nMinFee = ::minRelayTxFee.GetFee(nBytes);
-
-    if (fAllowFree)
-    {
-        // There is a free transaction area in blocks created by most miners,
-        // * If we are relaying we allow transactions up to DEFAULT_BLOCK_PRIORITY_SIZE - 1000
-        //   to be considered to fall into this category. We don't want to encourage sending
-        //   multiple transactions instead of one big transaction to avoid fees.
-        if (nBytes < (DEFAULT_BLOCK_PRIORITY_SIZE - 1000))
-            nMinFee = 0;
-    }
-
-    if (!MoneyRange(nMinFee))
-        nMinFee = MAX_MONEY;
-    return nMinFee;
-}
-
-
 bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransaction &tx, bool fLimitFree,
                         bool* pfMissingInputs, bool fRejectAbsurdFee)
 {
@@ -859,11 +830,31 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
         CTxMemPoolEntry entry(tx, nFees, GetTime(), dPriority, chainActive.Height(), mempool.HasNoInputsOf(tx));
         unsigned int nSize = entry.GetTxSize();
 
+        CAmount nMinFee = ::minRelayTxFee.GetFee(nSize);
+        {
+            LOCK(mempool.cs);
+            double dPriorityDelta = 0;
+            CAmount nFeeDelta = 0;
+            mempool.ApplyDeltas(hash, dPriorityDelta, nFeeDelta);
+            if (dPriorityDelta > 0 || nFeeDelta > 0)
+                nMinFee = 0;
+        }
+
+        if (fAllowFree) {
+            // There is a free transaction area in blocks created by most miners,
+            // * If we are relaying we allow transactions up to DEFAULT_BLOCK_PRIORITY_SIZE - 1000
+            //   to be considered to fall into this category. We don't want to encourage sending
+            //   multiple transactions instead of one big transaction to avoid fees.
+            if (nSize < (DEFAULT_BLOCK_PRIORITY_SIZE - 1000))
+                nMinFee = 0;
+        }
+        if (!MoneyRange(nMinFee))
+            nMinFee = MAX_MONEY;
+
         // Don't accept it if it can't get into a block
-        CAmount txMinFee = GetMinRelayFee(tx, nSize, true);
-        if (fLimitFree && nFees < txMinFee)
+        if (fLimitFree && nFees < nMinFee)
             return state.DoS(0, error("AcceptToMemoryPool: not enough fees %s, %d < %d",
-                                      hash.ToString(), nFees, txMinFee),
+                                      hash.ToString(), nFees, nMinFee),
                              REJECT_INSUFFICIENTFEE, "insufficient fee");
 
         // Require that free transactions have sufficient priority to be mined in the next block.
