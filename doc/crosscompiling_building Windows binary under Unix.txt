@@ -39,18 +39,6 @@ libz.a
  cd /home/<ваше имя>/mxe
  make boost
 
-Откройте файл /home/<ваше имя>/mxe/usr/i686-w64-mingw32.static/include/boost/interprocess/detail/win32_api.hpp
-и измените 
-#include <Wbemidl.h>
-#include <Objbase.h>
-#include <Shlobj.h>
-
-на
-
-#include <wbemidl.h>
-#include <objbase.h>
-#include <shlobj.h>
-
 Проверка что установка Boost прошла успешно:
 В /home/<ваше имя>/mxe/usr/i686-w64-mingw32.static/lib папке должны появиться файлы:
 -libboost_имябиблиотеки_mt.a (libboost_atomic-mt.a и другие подобные файлы)
