@@ -46,9 +46,6 @@
         <file alias="about_qt">res/icons/about_qt.png</file>
         <file alias="verify">res/icons/verify.png</file>
     </qresource>
-    <qresource prefix="/images">
-        <file alias="about">res/images/about.png</file>
-    </qresource>
     <qresource prefix="/movies">
         <file alias="spinner-000">res/movies/spinner-000.png</file>
         <file alias="spinner-001">res/movies/spinner-001.png</file>

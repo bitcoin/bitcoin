@@ -124,19 +124,22 @@ void PaymentServer::LoadRootCAs(X509_STORE* _store)
     // and get 'I don't like X.509 certificates, don't trust anybody' behavior:
     QString certFile = QString::fromStdString(GetArg("-rootcertificates", "-system-"));
 
-    if (certFile.isEmpty())
-        return; // Empty store
+    // Empty store
+    if (certFile.isEmpty()) {
+        qDebug() << QString("PaymentServer::%1: Payment request authentication via X.509 certificates disabled.").arg(__func__);
+        return;
+    }
 
     QList<QSslCertificate> certList;
 
-    if (certFile != "-system-")
-    {
+    if (certFile != "-system-") {
+            qDebug() << QString("PaymentServer::%1: Using \"%2\" as trusted root certificate.").arg(__func__).arg(certFile);
+
         certList = QSslCertificate::fromPath(certFile);
         // Use those certificates when fetching payment requests, too:
         QSslSocket::setDefaultCaCertificates(certList);
-    }
-    else
-        certList = QSslSocket::systemCaCertificates ();
+    } else
+        certList = QSslSocket::systemCaCertificates();
 
     int nRootCerts = 0;
     const QDateTime currentTime = QDateTime::currentDateTime();
@@ -521,8 +524,7 @@ bool PaymentServer::processPaymentRequest(PaymentRequestPlus& request, SendCoins
         const payments::PaymentDetails& details = request.getDetails();
 
         // Payment request network matches client network?
-        if (details.network() != Params().NetworkIDString())
-        {
+        if (!verifyNetwork(request.getDetails())) {
             emit message(tr("Payment request rejected"), tr("Payment request network doesn't match client network."),
                 CClientUIInterface::MSG_ERROR);
 
@@ -744,4 +746,16 @@ void PaymentServer::handlePaymentACK(const QString& paymentACKMsg)
 {
     // currently we don't futher process or store the paymentACK message
     emit message(tr("Payment acknowledged"), paymentACKMsg, CClientUIInterface::ICON_INFORMATION | CClientUIInterface::MODAL);
+}
+
+bool PaymentServer::verifyNetwork(const payments::PaymentDetails& requestDetails)
+{
+    bool fVerified = requestDetails.network() == Params().NetworkIDString();
+    if (!fVerified) {
+        qWarning() << QString("PaymentServer::%1: Payment request network \"%2\" doesn't match client network \"%3\".")
+            .arg(__func__)
+            .arg(QString::fromStdString(requestDetails.network()))
+            .arg(QString::fromStdString(Params().NetworkIDString()));
+    }
+    return fVerified;
 }

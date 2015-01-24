@@ -111,7 +111,28 @@ bool ShutdownRequested()
     return fRequestShutdown;
 }
 
+class CCoinsViewErrorCatcher : public CCoinsViewBacked
+{
+public:
+    CCoinsViewErrorCatcher(CCoinsView* view) : CCoinsViewBacked(view) {}
+    bool GetCoins(const uint256 &txid, CCoins &coins) const {
+        try {
+            return CCoinsViewBacked::GetCoins(txid, coins);
+        } catch(const std::runtime_error& e) {
+            uiInterface.ThreadSafeMessageBox(_("Error reading from database, shutting down."), "", CClientUIInterface::MSG_ERROR);
+            LogPrintf("Error reading from database: %s\n", e.what());
+            // Starting the shutdown sequence and returning false to the caller would be
+            // interpreted as 'entry not found' (as opposed to unable to read data), and
+            // could lead to invalid interpration. Just exit immediately, as we can't
+            // continue anyway, and all writes should be atomic.
+            abort();
+        }
+    }
+    // Writes do not need similar protection, as failure to write is handled by the caller.
+};
+
 static CCoinsViewDB *pcoinsdbview = NULL;
+static CCoinsViewErrorCatcher *pcoinscatcher = NULL;
 
 void Shutdown()
 {
@@ -154,6 +175,8 @@ void Shutdown()
         }
         delete pcoinsTip;
         pcoinsTip = NULL;
+        delete pcoinscatcher;
+        pcoinscatcher = NULL;
         delete pcoinsdbview;
         pcoinsdbview = NULL;
         delete pblocktree;
@@ -357,6 +380,7 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += "  -rpcport=<port>        " + strprintf(_("Listen for JSON-RPC connections on <port> (default: %u or testnet: %u)"), 8332, 18332) + "\n";
     strUsage += "  -rpcallowip=<ip>       " + _("Allow JSON-RPC connections from specified source. Valid for <ip> are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24). This option can be specified multiple times") + "\n";
     strUsage += "  -rpcthreads=<n>        " + strprintf(_("Set the number of threads to service RPC calls (default: %d)"), 4) + "\n";
+    strUsage += "  -rpckeepalive          " + strprintf(_("RPC support for HTTP persistent connections (default: %d)"), 1) + "\n";
 
     strUsage += "\n" + _("RPC SSL options: (see the Bitcoin Wiki for SSL setup instructions)") + "\n";
     strUsage += "  -rpcssl                                  " + _("Use OpenSSL (https) for JSON-RPC connections") + "\n";
@@ -990,11 +1014,13 @@ bool AppInit2(boost::thread_group& threadGroup)
                 UnloadBlockIndex();
                 delete pcoinsTip;
                 delete pcoinsdbview;
+                delete pcoinscatcher;
                 delete pblocktree;
 
                 pblocktree = new CBlockTreeDB(nBlockTreeDBCache, false, fReindex);
                 pcoinsdbview = new CCoinsViewDB(nCoinDBCache, false, fReindex);
-                pcoinsTip = new CCoinsViewCache(pcoinsdbview);
+                pcoinscatcher = new CCoinsViewErrorCatcher(pcoinsdbview);
+                pcoinsTip = new CCoinsViewCache(pcoinscatcher);
 
                 if (fReindex)
                     pblocktree->WriteReindexing(true);

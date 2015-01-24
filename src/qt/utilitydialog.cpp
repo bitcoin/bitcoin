@@ -12,6 +12,7 @@
 
 #include "clientversion.h"
 #include "init.h"
+#include "util.h"
 
 #include <stdio.h>
 
@@ -73,8 +74,8 @@ HelpMessageDialog::HelpMessageDialog(QWidget *parent, bool about) :
         tf.setBorderStyle(QTextFrameFormat::BorderStyle_None);
         tf.setCellPadding(2);
         QVector<QTextLength> widths;
-        widths << QTextLength(QTextLength::PercentageLength, 20);
-        widths << QTextLength(QTextLength::PercentageLength, 80);
+        widths << QTextLength(QTextLength::PercentageLength, 35);
+        widths << QTextLength(QTextLength::PercentageLength, 65);
         tf.setColumnWidthConstraints(widths);
         QTextTable *table = cursor.insertTable(2, 2, tf);
 
@@ -108,6 +109,12 @@ HelpMessageDialog::HelpMessageDialog(QWidget *parent, bool about) :
         cursor.movePosition(QTextCursor::NextRow);
         cursor.insertText(tr("UI options") + ":", bold);
         cursor.movePosition(QTextCursor::NextRow);
+        if (GetBoolArg("-help-debug", false)) {
+            cursor.insertText("-allowselfsignedrootcertificates");
+            cursor.movePosition(QTextCursor::NextCell);
+            cursor.insertText(tr("Allow self signed root certificates (default: 0)"));
+            cursor.movePosition(QTextCursor::NextCell);
+        }
         cursor.insertText("-choosedatadir");
         cursor.movePosition(QTextCursor::NextCell);
         cursor.insertText(tr("Choose data directory on startup (default: 0)"));
