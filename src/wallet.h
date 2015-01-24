@@ -35,6 +35,7 @@ extern unsigned int nTxConfirmTarget;
 extern bool bSpendZeroConfChange;
 extern bool fSendFreeTransactions;
 extern bool fPayAtLeastCustomFee;
+extern int nPruneWallet;
 
 //! -paytxfee default
 static const CAmount DEFAULT_TRANSACTION_FEE = 0;
@@ -52,6 +53,7 @@ class CCoinControl;
 class COutput;
 class CReserveKey;
 class CScript;
+class CSTXO;
 class CWalletTx;
 
 /** (client) version numbers for particular wallet features */
@@ -147,6 +149,7 @@ public:
 
     bool fFileBacked;
     std::string strWalletFile;
+    bool fUsingAccounts;
 
     std::set<int64_t> setKeyPool;
     std::map<CKeyID, CKeyMetadata> mapKeyMetadata;
@@ -185,6 +188,7 @@ public:
         nNextResend = 0;
         nLastResend = 0;
         nTimeFirstKey = 0;
+        fUsingAccounts = false;
     }
 
     std::map<uint256, CWalletTx> mapWallet;
@@ -208,7 +212,7 @@ public:
     void AvailableCoins(std::vector<COutput>& vCoins, bool fOnlyConfirmed=true, const CCoinControl *coinControl = NULL) const;
     bool SelectCoinsMinConf(const CAmount& nTargetValue, int nConfMine, int nConfTheirs, std::vector<COutput> vCoins, std::set<std::pair<const CWalletTx*,unsigned int> >& setCoinsRet, CAmount& nValueRet) const;
 
-    bool IsSpent(const uint256& hash, unsigned int n) const;
+    bool IsSpent(const uint256& hash, unsigned int n, int nMinConf = 0) const;
 
     bool IsLockedCoin(uint256 hash, unsigned int n) const;
     void LockCoin(COutPoint& output);
@@ -277,8 +281,10 @@ public:
     void MarkDirty();
     bool AddToWallet(const CWalletTx& wtxIn, bool fFromLoadWallet=false);
     void SyncTransaction(const CTransaction& tx, const CBlock* pblock);
-    bool AddToWalletIfInvolvingMe(const CTransaction& tx, const CBlock* pblock, bool fUpdate);
+    bool AddToWalletIfInvolvingMe(const CTransaction& tx, const CBlock* pblock, bool fUpdate, CSTXO* pstxo = NULL);
     void EraseFromWallet(const uint256 &hash);
+    void EraseFromWallet(std::map<uint256, CWalletTx>::iterator it, CWalletDB& walletdb);
+    int64_t PruneWallet(int nDays);
     int ScanForWalletTransactions(CBlockIndex* pindexStart, bool fUpdate = false);
     void ReacceptWalletTransactions();
     void ResendWalletTransactions();
@@ -911,6 +917,8 @@ public:
     void RelayWalletTransaction();
 
     std::set<uint256> GetConflicts() const;
+
+    bool IsPrunable(int nDays, CSTXO* pstxo = NULL, std::set<const CWalletTx*> *pIsPrunableCache = NULL) const;
 };
 
 

@@ -396,6 +396,9 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
                 wss.fAnyUnordered = true;
 
             pwallet->AddToWallet(wtx, true);
+
+            if (!wtx.strFromAccount.empty())
+                pwallet->fUsingAccounts = true;
         }
         else if (strType == "acentry")
         {
@@ -413,6 +416,8 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
                 if (acentry.nOrderPos == -1)
                     wss.fAnyUnordered = true;
             }
+
+            pwallet->fUsingAccounts = true;
         }
         else if (strType == "watchs")
         {

@@ -123,6 +123,7 @@ BITCOIN_CORE_H = \
   script/standard.h \
   serialize.h \
   streams.h \
+  stxo.h \
   sync.h \
   threadsafety.h \
   timedata.h \
@@ -197,6 +198,7 @@ libbitcoin_wallet_a_SOURCES = \
   crypter.cpp \
   rpcdump.cpp \
   rpcwallet.cpp \
+  stxo.cpp \
   wallet.cpp \
   wallet_ismine.cpp \
   walletdb.cpp \

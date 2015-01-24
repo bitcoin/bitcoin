@@ -104,6 +104,7 @@ protected:
 public:
     void Flush();
     void Close();
+    void Compact();
 
 private:
     CDB(const CDB&);

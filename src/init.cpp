@@ -304,6 +304,7 @@ std::string HelpMessage(HelpMessageMode mode)
     if (GetBoolArg("-help-debug", false))
         strUsage += "  -mintxfee=<amt>        " + strprintf(_("Fees (in BTC/Kb) smaller than this are considered zero fee for transaction creation (default: %s)"), FormatMoney(CWallet::minTxFee.GetFeePerK())) + "\n";
     strUsage += "  -paytxfee=<amt>        " + strprintf(_("Fee (in BTC/kB) to add to transactions you send (default: %s)"), FormatMoney(payTxFee.GetFeePerK())) + "\n";
+    strUsage += "  -prunewallet=<n>       " + _("Erase transactions older than <n> days and without unspent outputs on startup. Useful to shrink and speed up large wallets. 0 means do not prune. (default: 0)") + "\n";
     strUsage += "  -rescan                " + _("Rescan the block chain for missing wallet transactions") + " " + _("on startup") + "\n";
     strUsage += "  -salvagewallet         " + _("Attempt to recover private keys from a corrupt wallet.dat") + " " + _("on startup") + "\n";
     strUsage += "  -sendfreetransactions  " + strprintf(_("Send transactions as zero-fee transactions if possible (default: %u)"), 0) + "\n";
@@ -332,7 +333,7 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += "  -debug=<category>      " + strprintf(_("Output debugging information (default: %u, supplying <category> is optional)"), 0) + "\n";
     strUsage += "                         " + _("If <category> is not supplied, output all debugging information.") + "\n";
     strUsage += "                         " + _("<category> can be:");
-    strUsage +=                                 " addrman, alert, bench, coindb, db, lock, rand, rpc, selectcoins, mempool, net"; // Don't translate these and qt below
+    strUsage +=                                 " addrman, alert, bench, coindb, db, lock, rand, rpc, selectcoins, mempool, net, wallet"; // Don't translate these and qt below
     if (mode == HMM_BITCOIN_QT)
         strUsage += ", qt";
     strUsage += ".\n";
@@ -743,6 +744,7 @@ bool AppInit2(boost::thread_group& threadGroup)
     nTxConfirmTarget = GetArg("-txconfirmtarget", 1);
     bSpendZeroConfChange = GetArg("-spendzeroconfchange", true);
     fSendFreeTransactions = GetArg("-sendfreetransactions", false);
+    nPruneWallet = GetArg("-prunewallet", 0);
 
     std::string strWalletFile = GetArg("-wallet", "wallet.dat");
 #endif // ENABLE_WALLET
@@ -1179,6 +1181,12 @@ bool AppInit2(boost::thread_group& threadGroup)
             }
 
             pwalletMain->SetBestChain(chainActive.GetLocator());
+        }
+
+        if (pwalletMain->PruneWallet(nPruneWallet) == -1)
+        {
+            nPruneWallet = 0;
+            strErrors << _("Error: Sorry, but wallet pruning is not supported if you are using the account-feature.") << "\n";
         }
 
         LogPrintf("%s", strErrors.str());
