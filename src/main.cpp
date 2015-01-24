@@ -830,23 +830,25 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
         CTxMemPoolEntry entry(tx, nFees, GetTime(), dPriority, chainActive.Height(), mempool.HasNoInputsOf(tx));
         unsigned int nSize = entry.GetTxSize();
 
-        CAmount nMinFee = ::minRelayTxFee.GetFee(nSize);
-        double dPriorityDelta = 0;
-        CAmount nFeeDelta = 0;
-        mempool.ApplyDeltas(hash, dPriorityDelta, nFeeDelta);
-        if ((dPriorityDelta > 0 || nFeeDelta > 0) ||
-            // There is a free transaction area in blocks created by most miners,
-            // * If we are relaying we allow transactions up to DEFAULT_BLOCK_PRIORITY_SIZE - 1000
-            //   to be considered to fall into this category. We don't want to encourage sending
-            //   multiple transactions instead of one big transaction to avoid fees.
-            (fAllowFree && nSize < (DEFAULT_BLOCK_PRIORITY_SIZE - 1000)))
-            nMinFee = 0;
+        if (fLimitFree) {
+            CAmount nMinFee = ::minRelayTxFee.GetFee(nSize);
+            double dPriorityDelta = 0;
+            CAmount nFeeDelta = 0;
+            mempool.ApplyDeltas(hash, dPriorityDelta, nFeeDelta);
+            if ((dPriorityDelta > 0 || nFeeDelta > 0) ||
+                // There is a free transaction area in blocks created by most miners,
+                // * If we are relaying we allow transactions up to DEFAULT_BLOCK_PRIORITY_SIZE - 1000
+                //   to be considered to fall into this category. We don't want to encourage sending
+                //   multiple transactions instead of one big transaction to avoid fees.
+                (fAllowFree && nSize < (DEFAULT_BLOCK_PRIORITY_SIZE - 1000)))
+                nMinFee = 0;
 
-        // Don't accept it if it can't get into a block
-        if (fLimitFree && nFees < nMinFee)
-            return state.DoS(0, error("AcceptToMemoryPool: not enough fees %s, %d < %d",
-                                      hash.ToString(), nFees, nMinFee),
-                             REJECT_INSUFFICIENTFEE, "insufficient fee");
+            // Don't accept it if it can't get into a block
+            if (nFees < nMinFee)
+                return state.DoS(0, error("AcceptToMemoryPool: not enough fees %s, %d < %d",
+                                          hash.ToString(), nFees, nMinFee),
+                                 REJECT_INSUFFICIENTFEE, "insufficient fee");
+        }
 
         // Require that free transactions have sufficient priority to be mined in the next block.
         if (GetBoolArg("-relaypriority", true) && nFees < ::minRelayTxFee.GetFee(nSize) && !AllowFree(view.GetPriority(tx, chainActive.Height() + 1))) {
