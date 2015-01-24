@@ -79,6 +79,10 @@ const string strMessageMagic = "NovaCoin Signed Message:\n";
 int64_t nTransactionFee = MIN_TX_FEE;
 int64_t nMinimumInputValue = MIN_TX_FEE;
 
+// Ping and address broadcast intervals
+int64_t nPingInterval = 30 * 60;
+int64_t nBroadcastInterval = 24 * 60 * 60;
+
 extern enum Checkpoints::CPMode CheckpointsMode;
 
 //////////////////////////////////////////////////////////////////////////////
@@ -3932,7 +3936,7 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
 
         // Keep-alive ping. We send a nonce of zero because we don't use it anywhere
         // right now.
-        if (pto->nLastSend && GetTime() - pto->nLastSend > 30 * 60 && pto->vSend.empty()) {
+        if (pto->nLastSend && GetTime() - pto->nLastSend > nPingInterval && pto->vSend.empty()) {
             uint64_t nonce = 0;
             if (pto->nVersion > BIP0031_VERSION)
                 pto->PushMessage("ping", nonce);
@@ -3951,7 +3955,7 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
 
         // Address refresh broadcast
         static int64_t nLastRebroadcast;
-        if (!IsInitialBlockDownload() && (GetTime() - nLastRebroadcast > 24 * 60 * 60))
+        if (!IsInitialBlockDownload() && (GetTime() - nLastRebroadcast > nBroadcastInterval))
         {
             {
                 LOCK(cs_vNodes);

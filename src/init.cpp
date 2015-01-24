@@ -38,6 +38,10 @@ bool fUseFastStakeMiner;
 bool fUseMemoryLog;
 enum Checkpoints::CPMode CheckpointsMode;
 
+// Ping and address broadcast intervals
+extern int64_t nPingInterval;
+extern int64_t nBroadcastInterval;
+
 //////////////////////////////////////////////////////////////////////////////
 //
 // Shutdown
@@ -374,17 +378,25 @@ bool AppInit2()
     fUseMemoryLog = GetBoolArg("-memorylog", true);
     nMinerSleep = GetArg("-minersleep", 500);
 
+    // Ping and address broadcast intervals
+    nPingInterval = max<int64_t>(10 * 60, GetArg("-keepalive", 30 * 60));
+
+    nBroadcastInterval = max<int64_t>(6 * 60 * 60, GetArg("-addrsetlifetime", 24 * 60 * 60));
+
     CheckpointsMode = Checkpoints::STRICT;
     std::string strCpMode = GetArg("-cppolicy", "strict");
 
-    if(strCpMode == "strict")
+    if(strCpMode == "strict") {
         CheckpointsMode = Checkpoints::STRICT;
+    }
 
-    if(strCpMode == "advisory")
+    if(strCpMode == "advisory") {
         CheckpointsMode = Checkpoints::ADVISORY;
+    }
 
-    if(strCpMode == "permissive")
+    if(strCpMode == "permissive") {
         CheckpointsMode = Checkpoints::PERMISSIVE;
+    }
 
     nDerivationMethodIndex = 0;
 
