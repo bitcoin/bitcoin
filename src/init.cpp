@@ -31,7 +31,6 @@ CClientUIInterface uiInterface;
 std::string strWalletFileName;
 bool fConfChange;
 unsigned int nNodeLifespan;
-unsigned int nDerivationMethodIndex;
 unsigned int nMinerSleep;
 bool fUseFastIndex;
 bool fUseFastStakeMiner;
@@ -397,8 +396,6 @@ bool AppInit2()
     if(strCpMode == "permissive") {
         CheckpointsMode = Checkpoints::PERMISSIVE;
     }
-
-    nDerivationMethodIndex = 0;
 
     fTestNet = GetBoolArg("-testnet");
     if (fTestNet) {

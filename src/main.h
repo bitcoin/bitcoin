@@ -93,7 +93,6 @@ extern std::map<uint256, CBlock*> mapOrphanBlocks;
 extern int64_t nTransactionFee;
 extern int64_t nMinimumInputValue;
 extern bool fUseFastIndex;
-extern unsigned int nDerivationMethodIndex;
 extern int nScriptCheckThreads;
 extern const uint256 entropyStore[38];
 
