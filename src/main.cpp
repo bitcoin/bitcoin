@@ -831,7 +831,6 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
         unsigned int nSize = entry.GetTxSize();
 
         if (fLimitFree) {
-            CAmount nMinFee = ::minRelayTxFee.GetFee(nSize);
             double dPriorityDelta = 0;
             CAmount nFeeDelta = 0;
             mempool.ApplyDeltas(hash, dPriorityDelta, nFeeDelta);
@@ -840,13 +839,17 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
                 // * If we are relaying we allow transactions up to DEFAULT_BLOCK_PRIORITY_SIZE - 1000
                 //   to be considered to fall into this category. We don't want to encourage sending
                 //   multiple transactions instead of one big transaction to avoid fees.
-                (fAllowFree && nSize < (DEFAULT_BLOCK_PRIORITY_SIZE - 1000)))
-                nMinFee = 0;
-
-            // Don't accept it if it can't get into a block
-            if (nFees < nMinFee)
+                (fAllowFree && nSize < (DEFAULT_BLOCK_PRIORITY_SIZE - 1000))) 
+            {
+                // Don't accept it if it can't get into a block
+                if (nFees < 0)
+                    return state.DoS(0, error("AcceptToMemoryPool: not enough fees %s, %d < %d",
+                                              hash.ToString(), nFees, 0),
+                                     REJECT_INSUFFICIENTFEE, "insufficient fee");
+            }
+            else if (nFees < ::minRelayTxFee.GetFee(nSize))
                 return state.DoS(0, error("AcceptToMemoryPool: not enough fees %s, %d < %d",
-                                          hash.ToString(), nFees, nMinFee),
+                                          hash.ToString(), nFees, ::minRelayTxFee.GetFee(nSize)),
                                  REJECT_INSUFFICIENTFEE, "insufficient fee");
         }
 
