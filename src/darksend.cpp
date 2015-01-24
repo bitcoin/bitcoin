@@ -1461,21 +1461,23 @@ bool CDarkSendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
     // if balanceNeedsAnonymized is more than pool max, take the pool max
     if(nBalanceNeedsAnonymized > DARKSEND_POOL_MAX) nBalanceNeedsAnonymized = DARKSEND_POOL_MAX;
 
-    // if balanceNeedsAnonymized is more than (non-anonymized - COIN), take (non-anonymized - COIN)
-    int64_t nBalanceNotYetAnonymized = pwalletMain->GetBalance() - pwalletMain->GetAnonymizedBalance() - COIN;
+    // if balanceNeedsAnonymized is more than non-anonymized, take non-anonymized
+    int64_t nBalanceNotYetAnonymized = pwalletMain->GetBalance() - pwalletMain->GetAnonymizedBalance();
     if(nBalanceNeedsAnonymized > nBalanceNotYetAnonymized) nBalanceNeedsAnonymized = nBalanceNotYetAnonymized;
 
     if(nBalanceNeedsAnonymized < nLowestDenom)
     {
-        if(nBalanceNeedsAnonymized > 0)
-            nBalanceNeedsAnonymized = nLowestDenom;
-        else
-        {
+//        if(nBalanceNeedsAnonymized > nValueMin)
+//            nBalanceNeedsAnonymized = nLowestDenom;
+//        else
+//        {
             LogPrintf("DoAutomaticDenominating : No funds detected in need of denominating \n");
             strAutoDenomResult = "No funds detected in need of denominating";
             return false;
-        }
+//        }
     }
+
+    if (fDebug) LogPrintf("DoAutomaticDenominating : nLowestDenom=%d, nBalanceNeedsAnonymized=%d\n", nLowestDenom, nBalanceNeedsAnonymized);
 
     // select coins that should be given to the pool
     if (!pwalletMain->SelectCoinsDark(nValueMin, nBalanceNeedsAnonymized, vCoins, nValueIn, 0, nDarksendRounds))
@@ -1488,8 +1490,8 @@ bool CDarkSendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
             if(!fDryRun) return CreateDenominated(nBalanceNeedsAnonymized);
             return true;
         } else {
-            LogPrintf("DoAutomaticDenominating : No funds detected in need of denominating (2)\n");
-            strAutoDenomResult = "No funds detected in need of denominating (2)";
+            LogPrintf("DoAutomaticDenominating : Can't denominate - no compatible inputs left\n");
+            strAutoDenomResult = "Can't denominate - no compatible inputs left";
             return false;
         }
 
@@ -1855,7 +1857,7 @@ bool CDarkSendPool::CreateDenominated(int64_t nTotalValue)
 
     CCoinControl *coinControl=NULL;
     bool success = pwalletMain->CreateTransaction(vecSend, wtx, reservekey,
-            nFeeRet, strFail, coinControl, ONLY_NONDENOMINATED);
+            nFeeRet, strFail, coinControl, ONLY_NONDENOMINATED_MN);
     if(!success){
         LogPrintf("CreateDenominated: Error - %s\n", strFail.c_str());
         return false;

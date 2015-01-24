@@ -55,7 +55,8 @@ enum AvailableCoinsType
 {
     ALL_COINS = 1,
     ONLY_DENOMINATED = 2,
-    ONLY_NONDENOMINATED = 3
+    ONLY_NONDENOMINATED = 3,
+    ONLY_NONDENOMINATED_MN = 4 // ONLY_NONDENOMINATED and not 1000 DRK at the same time
 };
 
 
