@@ -3,10 +3,10 @@
 ## Two Options for Setting up your Wallet
 There are many ways to setup a wallet to support start-many. This guide will walk through two of them.
 
-1. Importing an existing wallet (recommended if you are consolidating wallets).
-2. Sending 1,000 DRK to new wallet addresses.
+1. [Importing an existing wallet (recommended if you are consolidating wallets).](#option1)
+2. [Sending 1,000 DRK to new wallet addresses.](#option2)
 
-## Option 1. Importing an existing wallet
+## <a name="option1"></a>Option 1. Importing an existing wallet
 
 This is the way to go if you are consolidating multiple wallets into one that supports start-many. 
 
@@ -38,7 +38,7 @@ The wallet will re-scan and you will see your available balance increase by the 
 
 [Skip Option 2. and go to Create masternode.conf file](#masternodeconf)
 
-## Option 2. Starting with a new wallet
+## <a name="option2"></a>Option 2. Starting with a new wallet
 
 [If you used Option 1 above, then you can skip down to Create masternode.conf file.](#masternodeconf)
 
@@ -62,8 +62,6 @@ Just like setting up a standard MN. Send exactly 1,000 DRK to each new address c
 
 ### Create New Masternode Private Keys
 
-*Please note, the masternode priviate key is not the same as a wallet private key. Never put your wallet private key in the masternode.conf file. That is equivalent to putting your 1,000 DRK on the remote server and defeats the purpose of a hot/cold setup.*
-
 Open your QT Wallet and go to console (from the menu select Tools => Debug Console)
 
 Issue the following:
@@ -80,7 +78,9 @@ Create the masternode.conf file in the same directory as your wallet.dat.
 
 Copy the masternode private key and correspondig collateral output transaction that holds the 1K DRK.
 
-The masternode private key may be an existing key from Option 1, or a newly generated key from Option 2. 
+The masternode private key may be an existing key from [Option 1](#option1), or a newly generated key from [Option 2](#option2). 
+
+*Please note, the masternode priviate key is not the same as a wallet private key. Never put your wallet private key in the masternode.conf file. That is equivalent to putting your 1,000 DRK on the remote server and defeats the purpose of a hot/cold setup.*
 
 ### Get the collateral output
 
