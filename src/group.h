@@ -43,8 +43,8 @@ static int secp256k1_ge_is_valid_var(const secp256k1_ge_t *a);
 
 static void secp256k1_ge_neg(secp256k1_ge_t *r, const secp256k1_ge_t *a);
 
-/** Get a hex representation of a point. *rlen will be overwritten with the real length. */
-static void secp256k1_ge_get_hex(char *r, int *rlen, const secp256k1_ge_t *a);
+/** Get a 131-character hex representation of a point. */
+static void secp256k1_ge_get_hex(char *r131, const secp256k1_ge_t *a);
 
 /** Set a group element equal to another which is given in jacobian coordinates */
 static void secp256k1_ge_set_gej(secp256k1_ge_t *r, secp256k1_gej_t *a);
@@ -85,8 +85,8 @@ static void secp256k1_gej_add_ge(secp256k1_gej_t *r, const secp256k1_gej_t *a, c
     guarantee, and b is allowed to be infinity. */
 static void secp256k1_gej_add_ge_var(secp256k1_gej_t *r, const secp256k1_gej_t *a, const secp256k1_ge_t *b);
 
-/** Get a hex representation of a point. *rlen will be overwritten with the real length. */
-static void secp256k1_gej_get_hex(char *r, int *rlen, const secp256k1_gej_t *a);
+/** Get a 131-character hex representation of a point. */
+static void secp256k1_gej_get_hex(char *r131, const secp256k1_gej_t *a);
 
 #ifdef USE_ENDOMORPHISM
 /** Set r to be equal to lambda times a, where lambda is chosen in a way such that this is very fast. */

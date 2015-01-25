@@ -21,29 +21,23 @@
 #error "Please select field implementation"
 #endif
 
-static void secp256k1_fe_get_hex(char *r, int *rlen, const secp256k1_fe_t *a) {
+static void secp256k1_fe_get_hex(char *r64, const secp256k1_fe_t *a) {
     secp256k1_fe_t b;
     int i;
     unsigned char tmp[32];
-    if (*rlen < 65) {
-        *rlen = 65;
-        return;
-    }
-    *rlen = 65;
     b = *a;
     secp256k1_fe_normalize(&b);
     secp256k1_fe_get_b32(tmp, &b);
     for (i=0; i<32; i++) {
         static const char *c = "0123456789ABCDEF";
-        r[2*i]   = c[(tmp[i] >> 4) & 0xF];
-        r[2*i+1] = c[(tmp[i]) & 0xF];
+        r64[2*i]   = c[(tmp[i] >> 4) & 0xF];
+        r64[2*i+1] = c[(tmp[i]) & 0xF];
     }
-    r[64] = 0x00;
 }
 
-static int secp256k1_fe_set_hex(secp256k1_fe_t *r, const char *a, int alen) {
+static int secp256k1_fe_set_hex(secp256k1_fe_t *r, const char *a64) {
     int i;
-    unsigned char tmp[32] = {0};
+    unsigned char tmp[32];
     static const int cvt[256] = {0, 0, 0, 0, 0, 0, 0,0,0,0,0,0,0,0,0,0,
                                  0, 0, 0, 0, 0, 0, 0,0,0,0,0,0,0,0,0,0,
                                  0, 0, 0, 0, 0, 0, 0,0,0,0,0,0,0,0,0,0,
@@ -61,8 +55,7 @@ static int secp256k1_fe_set_hex(secp256k1_fe_t *r, const char *a, int alen) {
                                  0, 0, 0, 0, 0, 0, 0,0,0,0,0,0,0,0,0,0,
                                  0, 0, 0, 0, 0, 0, 0,0,0,0,0,0,0,0,0,0};
     for (i=0; i<32; i++) {
-        if (alen > i*2)
-            tmp[32 - alen/2 + i] = (cvt[(unsigned char)a[2*i]] << 4) + cvt[(unsigned char)a[2*i+1]];
+        tmp[i] = (cvt[(unsigned char)a64[2*i]] << 4) + cvt[(unsigned char)a64[2*i+1]];
     }
     return secp256k1_fe_set_b32(r, tmp);
 }

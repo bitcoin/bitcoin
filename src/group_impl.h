@@ -45,25 +45,12 @@ static void secp256k1_ge_neg(secp256k1_ge_t *r, const secp256k1_ge_t *a) {
     secp256k1_fe_negate(&r->y, &r->y, 1);
 }
 
-static void secp256k1_ge_get_hex(char *r, int *rlen, const secp256k1_ge_t *a) {
-    char cx[65]; int lx=65;
-    char cy[65]; int ly=65;
-    secp256k1_fe_get_hex(cx, &lx, &a->x);
-    secp256k1_fe_get_hex(cy, &ly, &a->y);
-    lx = strlen(cx);
-    ly = strlen(cy);
-    int len = lx + ly + 3 + 1;
-    if (*rlen < len) {
-        *rlen = len;
-        return;
-    }
-    *rlen = len;
-    r[0] = '(';
-    memcpy(r+1, cx, lx);
-    r[1+lx] = ',';
-    memcpy(r+2+lx, cy, ly);
-    r[2+lx+ly] = ')';
-    r[3+lx+ly] = 0;
+static void secp256k1_ge_get_hex(char *r131, const secp256k1_ge_t *a) {
+    r131[0] = '(';
+    secp256k1_fe_get_hex(r131 + 1, &a->x);
+    r131[65] = ',';
+    secp256k1_fe_get_hex(r131 + 66, &a->y);
+    r131[130] = ')';
 }
 
 static void secp256k1_ge_set_gej(secp256k1_ge_t *r, secp256k1_gej_t *a) {
@@ -399,12 +386,10 @@ static void secp256k1_gej_add_ge(secp256k1_gej_t *r, const secp256k1_gej_t *a, c
     r->infinity = infinity;
 }
 
-
-
-static void secp256k1_gej_get_hex(char *r, int *rlen, const secp256k1_gej_t *a) {
+static void secp256k1_gej_get_hex(char *r131, const secp256k1_gej_t *a) {
     secp256k1_gej_t c = *a;
     secp256k1_ge_t t; secp256k1_ge_set_gej(&t, &c);
-    secp256k1_ge_get_hex(r, rlen, &t);
+    secp256k1_ge_get_hex(r131, &t);
 }
 
 #ifdef USE_ENDOMORPHISM

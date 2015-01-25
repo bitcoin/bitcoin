@@ -928,8 +928,8 @@ void run_ge(void) {
 
 void run_ecmult_chain(void) {
     /* random starting point A (on the curve) */
-    secp256k1_fe_t ax; VERIFY_CHECK(secp256k1_fe_set_hex(&ax, "8b30bbe9ae2a990696b22f670709dff3727fd8bc04d3362c6c7bf458e2846004", 64));
-    secp256k1_fe_t ay; VERIFY_CHECK(secp256k1_fe_set_hex(&ay, "a357ae915c4a65281309edf20504740f0eb3343990216b4f81063cb65f2f7e0f", 64));
+    secp256k1_fe_t ax; VERIFY_CHECK(secp256k1_fe_set_hex(&ax, "8b30bbe9ae2a990696b22f670709dff3727fd8bc04d3362c6c7bf458e2846004"));
+    secp256k1_fe_t ay; VERIFY_CHECK(secp256k1_fe_set_hex(&ay, "a357ae915c4a65281309edf20504740f0eb3343990216b4f81063cb65f2f7e0f"));
     secp256k1_gej_t a; secp256k1_gej_set_xy(&a, &ax, &ay);
     /* two random initial factors xn and gn */
     static const unsigned char xni[32] = {
@@ -976,19 +976,18 @@ void run_ecmult_chain(void) {
 
         /* verify */
         if (i == 19999) {
-            char res[132]; int resl = 132;
-            secp256k1_gej_get_hex(res, &resl, &x);
-            CHECK(strcmp(res, "(D6E96687F9B10D092A6F35439D86CEBEA4535D0D409F53586440BD74B933E830,B95CBCA2C77DA786539BE8FD53354D2D3B4F566AE658045407ED6015EE1B2A88)") == 0);
+            char res[131];
+            secp256k1_gej_get_hex(res, &x);
+            CHECK(memcmp(res, "(D6E96687F9B10D092A6F35439D86CEBEA4535D0D409F53586440BD74B933E830,B95CBCA2C77DA786539BE8FD53354D2D3B4F566AE658045407ED6015EE1B2A88)", 131) == 0);
         }
     }
     /* redo the computation, but directly with the resulting ae and ge coefficients: */
     secp256k1_gej_t x2; secp256k1_ecmult(&x2, &a, &ae, &ge);
-    char res[132]; int resl = 132;
-    char res2[132]; int resl2 = 132;
-    secp256k1_gej_get_hex(res, &resl, &x);
-    secp256k1_gej_get_hex(res2, &resl2, &x2);
-    CHECK(strcmp(res, res2) == 0);
-    CHECK(strlen(res) == 131);
+    char res[131];
+    char res2[131];
+    secp256k1_gej_get_hex(res, &x);
+    secp256k1_gej_get_hex(res2, &x2);
+    CHECK(memcmp(res, res2, 131) == 0);
 }
 
 void test_point_times_order(const secp256k1_gej_t *point) {
@@ -1015,7 +1014,7 @@ void test_point_times_order(const secp256k1_gej_t *point) {
 }
 
 void run_point_times_order(void) {
-    secp256k1_fe_t x; VERIFY_CHECK(secp256k1_fe_set_hex(&x, "02", 2));
+    secp256k1_fe_t x; VERIFY_CHECK(secp256k1_fe_set_hex(&x, "0000000000000000000000000000000000000000000000000000000000000002"));
     for (int i=0; i<500; i++) {
         secp256k1_ge_t p;
         if (secp256k1_ge_set_xo_var(&p, &x, 1)) {
@@ -1027,14 +1026,9 @@ void run_point_times_order(void) {
         }
         secp256k1_fe_sqr(&x, &x);
     }
-    char c[65];
-    int cl = 1;
-    c[1] = 123;
-    secp256k1_fe_get_hex(c, &cl, &x); /* Check that fe_get_hex handles a too short input. */
-    CHECK(c[1] == 123);
-    cl = 65;
-    secp256k1_fe_get_hex(c, &cl, &x);
-    CHECK(strcmp(c, "7603CB59B0EF6C63FE6084792A0C378CDB3233A80F8A9A09A877DEAD31B38C45") == 0);
+    char c[64];
+    secp256k1_fe_get_hex(c, &x);
+    CHECK(memcmp(c, "7603CB59B0EF6C63FE6084792A0C378CDB3233A80F8A9A09A877DEAD31B38C45", 64) == 0);
 }
 
 void test_wnaf(const secp256k1_scalar_t *number, int w) {
