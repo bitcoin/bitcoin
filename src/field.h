@@ -104,11 +104,11 @@ static void secp256k1_fe_inv_var(secp256k1_fe_t *r, const secp256k1_fe_t *a);
  *  outputs must not overlap in memory. */
 static void secp256k1_fe_inv_all_var(size_t len, secp256k1_fe_t *r, const secp256k1_fe_t *a);
 
-/** Convert a field element to a hexadecimal string. */
-static void secp256k1_fe_get_hex(char *r, int *rlen, const secp256k1_fe_t *a);
+/** Convert a field element to a 64-character hexadecimal string. */
+static void secp256k1_fe_get_hex(char *r64, const secp256k1_fe_t *a);
 
-/** Convert a hexadecimal string to a field element. */
-static int secp256k1_fe_set_hex(secp256k1_fe_t *r, const char *a, int alen);
+/** Convert a 64-character hexadecimal string to a field element. */
+static int secp256k1_fe_set_hex(secp256k1_fe_t *r, const char *a64);
 
 /** If flag is true, set *r equal to *a; otherwise leave it. Constant-time. */
 static void secp256k1_fe_cmov(secp256k1_fe_t *r, const secp256k1_fe_t *a, int flag);
