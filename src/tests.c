@@ -685,12 +685,18 @@ void run_field_misc(void) {
         z = x;
         secp256k1_fe_add(&z,&y);
         secp256k1_fe_normalize(&z);
-        /* Test the conditional move. */
-        secp256k1_fe_cmov(&z, &x, 0);
-        CHECK(secp256k1_fe_equal_var(&x, &z) == 0);
-        CHECK(secp256k1_fe_cmp_var(&x, &z) != 0);
-        secp256k1_fe_cmov(&y, &x, 1);
-        CHECK(secp256k1_fe_equal_var(&x, &y));
+        /* Test storage conversion and conditional moves. */
+        secp256k1_fe_storage_t xs, ys, zs;
+        secp256k1_fe_to_storage(&xs, &x);
+        secp256k1_fe_to_storage(&ys, &y);
+        secp256k1_fe_to_storage(&zs, &z);
+        secp256k1_fe_storage_cmov(&zs, &xs, 0);
+        CHECK(memcmp(&xs, &zs, sizeof(xs)) != 0);
+        secp256k1_fe_storage_cmov(&ys, &xs, 1);
+        CHECK(memcmp(&xs, &ys, sizeof(xs)) == 0);
+        secp256k1_fe_from_storage(&x, &xs);
+        secp256k1_fe_from_storage(&y, &ys);
+        secp256k1_fe_from_storage(&z, &zs);
         /* Test that mul_int, mul, and add agree. */
         secp256k1_fe_add(&y, &x);
         secp256k1_fe_add(&y, &x);
