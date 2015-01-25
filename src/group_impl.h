@@ -409,6 +409,11 @@ static void secp256k1_ge_from_storage(secp256k1_ge_t *r, const secp256k1_ge_stor
     r->infinity = 0;
 }
 
+static SECP256K1_INLINE void secp256k1_ge_storage_cmov(secp256k1_ge_storage_t *r, const secp256k1_ge_storage_t *a, int flag) {
+    secp256k1_fe_storage_cmov(&r->x, &a->x, flag);
+    secp256k1_fe_storage_cmov(&r->y, &a->y, flag);
+}
+
 #ifdef USE_ENDOMORPHISM
 static void secp256k1_gej_mul_lambda(secp256k1_gej_t *r, const secp256k1_gej_t *a) {
     static const secp256k1_fe_t beta = SECP256K1_FE_CONST(

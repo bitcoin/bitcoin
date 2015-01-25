@@ -24,7 +24,7 @@ typedef struct {
      * None of the resulting prec group elements have a known scalar, and neither do any of
      * the intermediate sums while computing a*G.
      */
-    secp256k1_fe_t prec[64][16][2]; /* prec[j][i] = (16^j * i * G + U_i).{x,y} */
+    secp256k1_ge_storage_t prec[64][16]; /* prec[j][i] = 16^j * i * G + U_i */
 } secp256k1_ecmult_gen_consts_t;
 
 static const secp256k1_ecmult_gen_consts_t *secp256k1_ecmult_gen_consts = NULL;
@@ -80,9 +80,7 @@ static void secp256k1_ecmult_gen_start(void) {
     }
     for (int j=0; j<64; j++) {
         for (int i=0; i<16; i++) {
-            VERIFY_CHECK(!secp256k1_ge_is_infinity(&prec[j*16 + i]));
-            ret->prec[j][i][0] = prec[j*16 + i].x;
-            ret->prec[j][i][1] = prec[j*16 + i].y;
+            secp256k1_ge_to_storage(&ret->prec[j][i], &prec[j*16 + i]);
         }
     }
 
@@ -101,16 +99,17 @@ static void secp256k1_ecmult_gen_stop(void) {
 
 static void secp256k1_ecmult_gen(secp256k1_gej_t *r, const secp256k1_scalar_t *gn) {
     const secp256k1_ecmult_gen_consts_t *c = secp256k1_ecmult_gen_consts;
-    secp256k1_gej_set_infinity(r);
     secp256k1_ge_t add;
+    secp256k1_ge_storage_t adds;
+    secp256k1_gej_set_infinity(r);
     add.infinity = 0;
     int bits;
     for (int j=0; j<64; j++) {
         bits = secp256k1_scalar_get_bits(gn, j * 4, 4);
         for (int i=0; i<16; i++) {
-            secp256k1_fe_cmov(&add.x, &c->prec[j][i][0], i == bits);
-            secp256k1_fe_cmov(&add.y, &c->prec[j][i][1], i == bits);
+            secp256k1_ge_storage_cmov(&adds, &c->prec[j][i], i == bits);
         }
+        secp256k1_ge_from_storage(&add, &adds);
         secp256k1_gej_add_ge(r, r, &add);
     }
     bits = 0;
