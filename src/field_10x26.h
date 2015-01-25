@@ -37,4 +37,10 @@ typedef struct {
 #define SECP256K1_FE_CONST(d7, d6, d5, d4, d3, d2, d1, d0) {SECP256K1_FE_CONST_INNER((d7), (d6), (d5), (d4), (d3), (d2), (d1), (d0))}
 #endif
 
+typedef struct {
+    uint32_t n[8];
+} secp256k1_fe_storage_t;
+
+#define SECP256K1_FE_STORAGE_CONST(d7, d6, d5, d4, d3, d2, d1, d0) {{ (d0), (d1), (d2), (d3), (d4), (d5), (d6), (d7) }}
+
 #endif
