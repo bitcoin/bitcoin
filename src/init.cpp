@@ -17,7 +17,7 @@
 #include "main.h"
 #include "miner.h"
 #include "net.h"
-#include "rpcserver.h"
+#include "rpc/server.h"
 #include "script/standard.h"
 #include "txdb.h"
 #include "ui_interface.h"

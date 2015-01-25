@@ -12,8 +12,8 @@
 
 #include "main.h"
 #include "chainparams.h"
-#include "rpcserver.h"
-#include "rpcclient.h"
+#include "rpc/server.h"
+#include "rpc/client.h"
 #include "util.h"
 
 #include "json/json_spirit_value.h"
