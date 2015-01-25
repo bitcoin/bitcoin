@@ -259,8 +259,6 @@ public:
     int64_t sessionTotalValue; //used for autoDenom
     std::vector<CTransaction> vecSessionCollateral;
 
-    int lastSplitUpBlock;
-    int splitUpInARow; // how many splits we've done since a success?
     int cachedLastSuccess;
     int cachedNumBlocks; //used for the overview screen
     int minBlockSpacing; //required blocks between mixes
@@ -277,11 +275,9 @@ public:
         /* DarkSend uses collateral addresses to trust parties entering the pool
             to behave themselves. If they don't it takes their money. */
 
-        lastSplitUpBlock = 0;
         cachedLastSuccess = 0;
         cachedNumBlocks = 0;
         unitTest = false;
-        splitUpInARow = 0;
         txCollateral = CTransaction();
         minBlockSpacing = 1;
         nDsqCount = 0;
@@ -420,7 +416,7 @@ public:
     // used for liquidity providers
     bool SendRandomPaymentToSelf();
     // split up large inputs or make fee sized inputs
-    bool SplitUpMoney(bool justCollateral=false);
+    bool MakeCollateralAmounts();
     bool CreateDenominated(int64_t nTotalValue);
     // get the denominations for a list of outputs (returns a bitshifted integer)
     int GetDenominations(const std::vector<CTxOut>& vout);
