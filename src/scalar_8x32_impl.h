@@ -630,6 +630,7 @@ static void secp256k1_scalar_sqr(secp256k1_scalar_t *r, const secp256k1_scalar_t
     secp256k1_scalar_reduce_512(r, l);
 }
 
+#ifdef USE_ENDOMORPHISM
 static void secp256k1_scalar_split_128(secp256k1_scalar_t *r1, secp256k1_scalar_t *r2, const secp256k1_scalar_t *a) {
     r1->d[0] = a->d[0];
     r1->d[1] = a->d[1];
@@ -648,6 +649,7 @@ static void secp256k1_scalar_split_128(secp256k1_scalar_t *r1, secp256k1_scalar_
     r2->d[6] = 0;
     r2->d[7] = 0;
 }
+#endif
 
 SECP256K1_INLINE static int secp256k1_scalar_eq(const secp256k1_scalar_t *a, const secp256k1_scalar_t *b) {
     return ((a->d[0] ^ b->d[0]) | (a->d[1] ^ b->d[1]) | (a->d[2] ^ b->d[2]) | (a->d[3] ^ b->d[3]) | (a->d[4] ^ b->d[4]) | (a->d[5] ^ b->d[5]) | (a->d[6] ^ b->d[6]) | (a->d[7] ^ b->d[7])) == 0;
