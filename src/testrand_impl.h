@@ -33,7 +33,8 @@ SECP256K1_INLINE static uint32_t secp256k1_rand32(void) {
 }
 
 static void secp256k1_rand256(unsigned char *b32) {
-    for (int i=0; i<8; i++) {
+    int i;
+    for (i = 0; i < 8; i++) {
         uint32_t r = secp256k1_rand32();
         b32[i*4 + 0] = (r >>  0) & 0xFF;
         b32[i*4 + 1] = (r >>  8) & 0xFF;
