@@ -1172,6 +1172,22 @@ uint32_t pnSeed[] =
     0x4d226805,
 };
 
+const char* pchTorSeed[] = 
+{
+    "seedp4knqnoei57u.onion",
+    "seedr3hhlepyi7fd.onion",
+    "seed3uuomkclbiz4.onion",
+    "seedeh7qck3ouff5.onion",
+    "5rg3vq4jagckeckf.onion",
+    "seedt3sraf53ajiy.onion",
+    "seedg4qyccsg42oq.onion",
+    "novaqrtoywpg7jly.onion",
+    "seed3d5wolqbgrcb.onion",
+    "seed24u5dwph3qw4.onion",
+    "mj26ulzbs2oskgym.onion",
+    "eqon4usunavt76m7.onion",
+};
+
 void DumpAddresses()
 {
     int64_t nStart = GetTimeMillis();
@@ -1316,7 +1332,7 @@ void ThreadOpenConnections2(void* parg)
             return;
 
         // Add seed nodes if IRC isn't working
-        if (addrman.size()==0 && (GetTime() - nStart > 60) && !fTestNet)
+        if (!IsLimited(NET_IPV4) && addrman.size()==0 && (GetTime() - nStart > 60) && !fTestNet)
         {
             std::vector<CAddress> vAdd;
             for (unsigned int i = 0; i < ARRAYLEN(pnSeed); i++)
@@ -1333,6 +1349,20 @@ void ThreadOpenConnections2(void* parg)
                 vAdd.push_back(addr);
             }
             addrman.Add(vAdd, CNetAddr("127.0.0.1"));
+        }
+
+        // Add Tor nodes if we have connection with onion router
+        if (mapArgs.count("-tor"))
+        {
+            std::vector<CAddress> vAdd;
+            for (unsigned int i = 0; i < ARRAYLEN(pchTorSeed); i++)
+            {
+                const int64_t nOneWeek = 7*24*60*60;
+                CAddress addr(CService(pchTorSeed[i], GetDefaultPort()));
+                addr.nTime = GetTime()-GetRand(nOneWeek)-nOneWeek;
+                vAdd.push_back(addr);
+            }
+            addrman.Add(vAdd, CNetAddr("dummyaddress.onion"));
         }
 
         //
@@ -1855,12 +1885,17 @@ void StartNode(void* parg)
             printf("Error: NewThread(ThreadDNSAddressSeed) failed\n");
 
     // Map ports with UPnP
-    if (fUseUPnP)
+    if (!fUseUPnP)
+        printf("UPNP port mapping is disabled\n");
+    else
         MapPort();
 
     // Get addresses from IRC and advertise ours
-    if (!NewThread(ThreadIRCSeed, NULL))
-        printf("Error: NewThread(ThreadIRCSeed) failed\n");
+    if (!GetBoolArg("-irc", true))
+        printf("IRC seeding disabled\n");
+    else
+        if (!NewThread(ThreadIRCSeed, NULL))
+            printf("Error: NewThread(ThreadIRCSeed) failed\n");
 
     // Send and receive from sockets, accept connections
     if (!NewThread(ThreadSocketHandler, NULL))

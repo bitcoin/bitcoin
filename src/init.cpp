@@ -661,12 +661,21 @@ bool AppInit2()
     }
 
     // see Step 2: parameter interactions for more information about these
-    fNoListen = !GetBoolArg("-listen", true);
-    fDiscover = GetBoolArg("-discover", true);
-    fNameLookup = GetBoolArg("-dns", true);
+    if (!IsLimited(NET_IPV4) || !IsLimited(NET_IPV6))
+    {
+        fNoListen = !GetBoolArg("-listen", true);
+        fDiscover = GetBoolArg("-discover", true);
+        fNameLookup = GetBoolArg("-dns", true);
 #ifdef USE_UPNP
-    fUseUPnP = GetBoolArg("-upnp", USE_UPNP);
+        fUseUPnP = GetBoolArg("-upnp", USE_UPNP);
 #endif
+    } else {
+        // Don't listen, discover addresses or search for nodes if IPv4 and IPv6 networking is disabled.
+        fNoListen = true;
+        fDiscover = fNameLookup = fUseUPnP = false;
+        SoftSetBoolArg("-irc", false);
+        SoftSetBoolArg("-dnsseed", false);
+    }
 
     bool fBound = false;
     if (!fNoListen)

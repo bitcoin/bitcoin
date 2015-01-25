@@ -20,9 +20,11 @@ OptionsDialog::OptionsDialog(QWidget *parent) :
     model(0),
     mapper(0),
     fRestartWarningDisplayed_Proxy(false),
+    fRestartWarningDisplayed_Tor(false),
     fRestartWarningDisplayed_Lang(false),
     fRestartWarningDisplayed_URL(false),
-    fProxyIpValid(true)
+    fProxyIpValid(true),
+    fTorIpValid(true)
 {
     ui->setupUi(this);
 
@@ -35,6 +37,11 @@ OptionsDialog::OptionsDialog(QWidget *parent) :
     ui->proxyPort->setEnabled(false);
     ui->proxyPort->setValidator(new QIntValidator(1, 65535, this));
 
+    ui->torIp->setEnabled(false);
+    ui->torPort->setEnabled(false);
+    ui->torPort->setValidator(new QIntValidator(1, 65535, this));
+    ui->TorOnly->setEnabled(false);
+
     ui->socksVersion->setEnabled(false);
     ui->socksVersion->addItem("5", 5);
     ui->socksVersion->addItem("4", 4);
@@ -45,7 +52,14 @@ OptionsDialog::OptionsDialog(QWidget *parent) :
     connect(ui->connectSocks, SIGNAL(toggled(bool)), ui->socksVersion, SLOT(setEnabled(bool)));
     connect(ui->connectSocks, SIGNAL(clicked(bool)), this, SLOT(showRestartWarning_Proxy()));
 
+    connect(ui->connectTor, SIGNAL(clicked(bool)), this, SLOT(showRestartWarning_Tor()));
+    connect(ui->connectTor, SIGNAL(toggled(bool)), ui->torIp, SLOT(setEnabled(bool)));
+    connect(ui->connectTor, SIGNAL(toggled(bool)), ui->torPort, SLOT(setEnabled(bool)));
+    connect(ui->connectTor, SIGNAL(toggled(bool)), ui->TorOnly, SLOT(setEnabled(bool)));
+    connect(ui->TorOnly, SIGNAL(toggled(bool)), ui->connectSocks, SLOT(setDisabled(bool)));
+
     ui->proxyIp->installEventFilter(this);
+    ui->torIp->installEventFilter(this);
 
     /* Window elements init */
 #ifdef Q_OS_MAC
@@ -100,6 +114,8 @@ OptionsDialog::OptionsDialog(QWidget *parent) :
     connect(mapper, SIGNAL(currentIndexChanged(int)), this, SLOT(disableApplyButton()));
     /* setup/change UI elements when proxy IP is invalid/valid */
     connect(this, SIGNAL(proxyIpValid(QValidatedLineEdit *, bool)), this, SLOT(handleProxyIpValid(QValidatedLineEdit *, bool)));
+    /* setup/change UI elements when Tor IP is invalid/valid */
+    connect(this, SIGNAL(torIpValid(QValidatedLineEdit *, bool)), this, SLOT(handleTorIpValid(QValidatedLineEdit *, bool)));
 }
 
 OptionsDialog::~OptionsDialog()
@@ -146,6 +162,11 @@ void OptionsDialog::setMapper()
     mapper->addMapping(ui->proxyPort, OptionsModel::ProxyPort);
     mapper->addMapping(ui->socksVersion, OptionsModel::ProxySocksVersion);
 
+    mapper->addMapping(ui->connectTor, OptionsModel::TorUse);
+    mapper->addMapping(ui->torIp, OptionsModel::TorIP);
+    mapper->addMapping(ui->torPort, OptionsModel::TorPort);
+    mapper->addMapping(ui->TorOnly, OptionsModel::TorOnly);
+
     /* Window */
 #ifndef Q_OS_MAC
     mapper->addMapping(ui->minimizeToTray, OptionsModel::MinimizeToTray);
@@ -173,7 +194,7 @@ void OptionsDialog::disableApplyButton()
 void OptionsDialog::enableSaveButtons()
 {
     /* prevent enabling of the save buttons when data modified, if there is an invalid proxy address present */
-    if(fProxyIpValid)
+    if(fProxyIpValid && fTorIpValid)
         setSaveButtonState(true);
 }
 
@@ -211,6 +232,15 @@ void OptionsDialog::showRestartWarning_Proxy()
     {
         QMessageBox::warning(this, tr("Warning"), tr("This setting will take effect after restarting NovaCoin."), QMessageBox::Ok);
         fRestartWarningDisplayed_Proxy = true;
+    }
+}
+
+void OptionsDialog::showRestartWarning_Tor()
+{
+    if(!fRestartWarningDisplayed_Proxy)
+    {
+        QMessageBox::warning(this, tr("Warning"), tr("This setting will take effect after restarting NovaCoin."), QMessageBox::Ok);
+        fRestartWarningDisplayed_Tor = true;
     }
 }
 
@@ -261,6 +291,25 @@ void OptionsDialog::handleProxyIpValid(QValidatedLineEdit *object, bool fState)
     }
 }
 
+void OptionsDialog::handleTorIpValid(QValidatedLineEdit *object, bool fState)
+{
+    // this is used in a check before re-enabling the save buttons
+    fTorIpValid = fState;
+
+    if(fTorIpValid)
+    {
+        enableSaveButtons();
+        ui->statusLabel->clear();
+    }
+    else
+    {
+        disableSaveButtons();
+        object->setValid(fTorIpValid);
+        ui->statusLabel->setStyleSheet("QLabel { color: red; }");
+        ui->statusLabel->setText(tr("The supplied tor address is invalid."));
+    }
+}
+
 bool OptionsDialog::eventFilter(QObject *object, QEvent *event)
 {
     if(event->type() == QEvent::FocusOut)
@@ -270,6 +319,13 @@ bool OptionsDialog::eventFilter(QObject *object, QEvent *event)
             CService addr;
             /* Check proxyIp for a valid IPv4/IPv6 address and emit the proxyIpValid signal */
             emit proxyIpValid(ui->proxyIp, LookupNumeric(ui->proxyIp->text().toStdString().c_str(), addr));
+        }
+
+        if(object == ui->torIp)
+        {
+            CService addr;
+            /* Check proxyIp for a valid IPv4/IPv6 address and emit the torIpValid signal */
+            emit torIpValid(ui->torIp, LookupNumeric(ui->torIp->text().toStdString().c_str(), addr));
         }
     }
     return QDialog::eventFilter(object, event);

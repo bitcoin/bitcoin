@@ -600,9 +600,11 @@ bool GetBoolArg(const std::string& strArg, bool fDefault)
 
 bool SoftSetArg(const std::string& strArg, const std::string& strValue)
 {
-    if (mapArgs.count(strArg))
+    if (mapArgs.count(strArg) || mapMultiArgs.count(strArg))
         return false;
     mapArgs[strArg] = strValue;
+    mapMultiArgs[strArg].push_back(strValue);
+
     return true;
 }
 

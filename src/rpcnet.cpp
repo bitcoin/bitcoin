@@ -56,7 +56,7 @@ Value getaddrmaninfo(const Array& params, bool fHelp)
     // Sort by the GetChance result backwardly
     sort(vAddr.begin(), vAddr.end(), addrManItemSort());
 
-    string strFilterNetType = "ipv4";
+    string strFilterNetType = "";
     if (params.size() == 1)
         strFilterNetType = params[0].get_str();
 
@@ -71,9 +71,9 @@ Value getaddrmaninfo(const Array& params, bool fHelp)
         string strNetType;
         switch(addr.GetNetwork())
         {
-//            case NET_TOR:
-//                strNetType = "tor";
-//            break;
+            case NET_TOR:
+                strNetType = "tor";
+            break;
 //            case NET_I2P:
 //                strNetType = "i2p";
 //            break;
@@ -86,7 +86,7 @@ Value getaddrmaninfo(const Array& params, bool fHelp)
 
         }
 
-        if (strNetType != strFilterNetType)
+        if (strFilterNetType.size() != 0 && strNetType != strFilterNetType)
             continue;
 
         addrManItem.push_back(Pair("chance", addr.GetChance(GetTime())));
