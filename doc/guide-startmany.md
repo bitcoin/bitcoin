@@ -68,6 +68,8 @@ Issue the following:
 
 ```masternode genkey```
 
+*Note: A masternode private key will need to be created for each MasterNode you run. You should not use the same masternode private key for multiple MasterNodes.*
+
 Close your QT Wallet.
 
 ## <a name="masternodeconf"></a>Create masternode.conf file
