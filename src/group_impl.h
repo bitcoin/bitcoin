@@ -392,6 +392,23 @@ static void secp256k1_gej_get_hex(char *r131, const secp256k1_gej_t *a) {
     secp256k1_ge_get_hex(r131, &t);
 }
 
+static void secp256k1_ge_to_storage(secp256k1_ge_storage_t *r, const secp256k1_ge_t *a) {
+    secp256k1_fe_t x, y;
+    VERIFY_CHECK(!a->infinity);
+    x = a->x;
+    secp256k1_fe_normalize(&x);
+    y = a->y;
+    secp256k1_fe_normalize(&y);
+    secp256k1_fe_to_storage(&r->x, &x);
+    secp256k1_fe_to_storage(&r->y, &y);
+}
+
+static void secp256k1_ge_from_storage(secp256k1_ge_t *r, const secp256k1_ge_storage_t *a) {
+    secp256k1_fe_from_storage(&r->x, &a->x);
+    secp256k1_fe_from_storage(&r->y, &a->y);
+    r->infinity = 0;
+}
+
 #ifdef USE_ENDOMORPHISM
 static void secp256k1_gej_mul_lambda(secp256k1_gej_t *r, const secp256k1_gej_t *a) {
     static const secp256k1_fe_t beta = SECP256K1_FE_CONST(
