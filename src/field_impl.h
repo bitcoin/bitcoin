@@ -202,6 +202,7 @@ static void secp256k1_fe_inv_var(secp256k1_fe_t *r, const secp256k1_fe_t *a) {
 #if defined(USE_FIELD_INV_BUILTIN)
     secp256k1_fe_inv(r, a);
 #elif defined(USE_FIELD_INV_NUM)
+    secp256k1_num_t n, m;
     static const unsigned char prime[32] = {
         0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
         0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
@@ -212,7 +213,6 @@ static void secp256k1_fe_inv_var(secp256k1_fe_t *r, const secp256k1_fe_t *a) {
     secp256k1_fe_t c = *a;
     secp256k1_fe_normalize_var(&c);
     secp256k1_fe_get_b32(b, &c);
-    secp256k1_num_t n, m;
     secp256k1_num_set_bin(&n, b, 32);
     secp256k1_num_set_bin(&m, prime, 32);
     secp256k1_num_mod_inverse(&n, &n, &m);
