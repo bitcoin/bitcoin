@@ -78,13 +78,13 @@ RANLIB /c/Android/android-ndk-r10d/toolchains/arm-linux-androideabi-4.9/prebuilt
 В инструкции все зависимости сохраняются в папку C:\Android\deps
 
 2.1 OpenSSL 
--Скачайте http://www.openssl.org/source/openssl-1.0.1k.tar.gz
+-Скачайте http://www.openssl.org/source/openssl-1.0.2.tar.gz
 -Перейдите в папку C:\MinGW\msys\1.0 и запустите msys.bat
 Из MinGw shell выполните следующий код:
 
 cd /c/deps/
-tar xvfz openssl-1.0.1k.tar.gz
-cd openssl-1.0.1k
+tar xvfz openssl-1.0.2.tar.gz
+cd openssl-1.0.2
 Configure no-shared no-dso android-armv7
 make
 
@@ -169,8 +169,8 @@ BOOST_INCLUDE_PATH=C:/Android/deps/boost_1_57_0
 BOOST_LIB_PATH=C:/Android/deps/boost_1_57_0/stage/lib
 BDB_INCLUDE_PATH=C:/Android/deps/db-6.0.20/build_unix
 BDB_LIB_PATH=C:/Android/deps/db-6.0.20/build_unix
-OPENSSL_INCLUDE_PATH=C:/Android/deps/openssl-1.0.1k/include
-OPENSSL_LIB_PATH=C:/Android/deps/openssl-1.0.1k
+OPENSSL_INCLUDE_PATH=C:/Android/deps/openssl-1.0.2/include
+OPENSSL_LIB_PATH=C:/Android/deps/openssl-1.0.2
 
 Вместо
 
