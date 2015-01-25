@@ -627,6 +627,42 @@ int check_fe_inverse(const secp256k1_fe_t *a, const secp256k1_fe_t *ai) {
     return check_fe_equal(&x, &one);
 }
 
+void run_field_convert(void) {
+    static const unsigned char b32[32] = {
+        0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
+        0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18,
+        0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28, 0x29,
+        0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x40
+    };
+    static const char *c64 = "0001020304050607111213141516171822232425262728293334353637383940";
+    static const secp256k1_fe_storage_t fes = SECP256K1_FE_STORAGE_CONST(
+        0x00010203UL, 0x04050607UL, 0x11121314UL, 0x15161718UL,
+        0x22232425UL, 0x26272829UL, 0x33343536UL, 0x37383940UL
+    );
+    static const secp256k1_fe_t fe = SECP256K1_FE_CONST(
+        0x00010203UL, 0x04050607UL, 0x11121314UL, 0x15161718UL,
+        0x22232425UL, 0x26272829UL, 0x33343536UL, 0x37383940UL
+    );
+    secp256k1_fe_t fe2;
+    unsigned char b322[32];
+    char c642[64];
+    secp256k1_fe_storage_t fes2;
+    /* Check conversions to fe. */
+    CHECK(secp256k1_fe_set_b32(&fe2, b32));
+    CHECK(secp256k1_fe_equal_var(&fe, &fe2));
+    CHECK(secp256k1_fe_set_hex(&fe2, c64));
+    CHECK(secp256k1_fe_equal_var(&fe, &fe2));
+    secp256k1_fe_from_storage(&fe2, &fes);
+    CHECK(secp256k1_fe_equal_var(&fe, &fe2));
+    /* Check conversion from fe. */
+    secp256k1_fe_get_b32(b322, &fe);
+    CHECK(memcmp(b322, b32, 32) == 0);
+    secp256k1_fe_get_hex(c642, &fe);
+    CHECK(memcmp(c642, c64, 64) == 0);
+    secp256k1_fe_to_storage(&fes2, &fe);
+    CHECK(memcmp(&fes2, &fes, sizeof(fes)) == 0);
+}
+
 void run_field_misc(void) {
     const unsigned char f32_5[32] = {
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -649,12 +685,18 @@ void run_field_misc(void) {
         z = x;
         secp256k1_fe_add(&z,&y);
         secp256k1_fe_normalize(&z);
-        /* Test the conditional move. */
-        secp256k1_fe_cmov(&z, &x, 0);
-        CHECK(secp256k1_fe_equal_var(&x, &z) == 0);
-        CHECK(secp256k1_fe_cmp_var(&x, &z) != 0);
-        secp256k1_fe_cmov(&y, &x, 1);
-        CHECK(secp256k1_fe_equal_var(&x, &y));
+        /* Test storage conversion and conditional moves. */
+        secp256k1_fe_storage_t xs, ys, zs;
+        secp256k1_fe_to_storage(&xs, &x);
+        secp256k1_fe_to_storage(&ys, &y);
+        secp256k1_fe_to_storage(&zs, &z);
+        secp256k1_fe_storage_cmov(&zs, &xs, 0);
+        CHECK(memcmp(&xs, &zs, sizeof(xs)) != 0);
+        secp256k1_fe_storage_cmov(&ys, &xs, 1);
+        CHECK(memcmp(&xs, &ys, sizeof(xs)) == 0);
+        secp256k1_fe_from_storage(&x, &xs);
+        secp256k1_fe_from_storage(&y, &ys);
+        secp256k1_fe_from_storage(&z, &zs);
         /* Test that mul_int, mul, and add agree. */
         secp256k1_fe_add(&y, &x);
         secp256k1_fe_add(&y, &x);
@@ -1668,6 +1710,7 @@ int main(int argc, char **argv) {
     run_field_inv_var();
     run_field_inv_all_var();
     run_field_misc();
+    run_field_convert();
     run_sqr();
     run_sqrt();
 

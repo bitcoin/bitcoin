@@ -398,18 +398,33 @@ static void secp256k1_fe_sqr(secp256k1_fe_t *r, const secp256k1_fe_t *a) {
 #endif
 }
 
-static void secp256k1_fe_cmov(secp256k1_fe_t *r, const secp256k1_fe_t *a, int flag) {
+static inline void secp256k1_fe_storage_cmov(secp256k1_fe_storage_t *r, const secp256k1_fe_storage_t *a, int flag) {
     uint64_t mask0 = flag + ~((uint64_t)0), mask1 = ~mask0;
     r->n[0] = (r->n[0] & mask0) | (a->n[0] & mask1);
     r->n[1] = (r->n[1] & mask0) | (a->n[1] & mask1);
     r->n[2] = (r->n[2] & mask0) | (a->n[2] & mask1);
     r->n[3] = (r->n[3] & mask0) | (a->n[3] & mask1);
-    r->n[4] = (r->n[4] & mask0) | (a->n[4] & mask1);
+}
+
+static void secp256k1_fe_to_storage(secp256k1_fe_storage_t *r, const secp256k1_fe_t *a) {
 #ifdef VERIFY
-    if (flag) {
-        r->magnitude = a->magnitude;
-        r->normalized = a->normalized;
-    }
+    VERIFY_CHECK(a->normalized);
+#endif
+    r->n[0] = a->n[0] | a->n[1] << 52;
+    r->n[1] = a->n[1] >> 12 | a->n[2] << 40;
+    r->n[2] = a->n[2] >> 24 | a->n[3] << 28;
+    r->n[3] = a->n[3] >> 36 | a->n[4] << 16;
+}
+
+static inline void secp256k1_fe_from_storage(secp256k1_fe_t *r, const secp256k1_fe_storage_t *a) {
+    r->n[0] = a->n[0] & 0xFFFFFFFFFFFFFULL;
+    r->n[1] = a->n[0] >> 52 | ((a->n[1] << 12) & 0xFFFFFFFFFFFFFULL);
+    r->n[2] = a->n[1] >> 40 | ((a->n[2] << 24) & 0xFFFFFFFFFFFFFULL);
+    r->n[3] = a->n[2] >> 28 | ((a->n[3] << 36) & 0xFFFFFFFFFFFFFULL);
+    r->n[4] = a->n[3] >> 16;
+#ifdef VERIFY
+    r->magnitude = 1;
+    r->normalized = 1;
 #endif
 }
 

@@ -25,6 +25,11 @@ typedef struct {
     int infinity; /* whether this represents the point at infinity */
 } secp256k1_gej_t;
 
+typedef struct {
+    secp256k1_fe_storage_t x;
+    secp256k1_fe_storage_t y;
+} secp256k1_ge_storage_t;
+
 /** Set a group element equal to the point at infinity */
 static void secp256k1_ge_set_infinity(secp256k1_ge_t *r);
 
@@ -98,5 +103,14 @@ static void secp256k1_gej_clear(secp256k1_gej_t *r);
 
 /** Clear a secp256k1_ge_t to prevent leaking sensitive information. */
 static void secp256k1_ge_clear(secp256k1_ge_t *r);
+
+/** Convert a group element to the storage type. */
+static void secp256k1_ge_to_storage(secp256k1_ge_storage_t *r, const secp256k1_ge_t*);
+
+/** Convert a group element back from the storage type. */
+static void secp256k1_ge_from_storage(secp256k1_ge_t *r, const secp256k1_ge_storage_t*);
+
+/** If flag is true, set *r equal to *a; otherwise leave it. Constant-time. */
+static void secp256k1_ge_storage_cmov(secp256k1_ge_storage_t *r, const secp256k1_ge_storage_t *a, int flag);
 
 #endif

@@ -43,16 +43,21 @@ static void secp256k1_ecmult_table_precomp_gej_var(secp256k1_gej_t *pre, const s
         secp256k1_gej_add_var(&pre[i], &d, &pre[i-1]);
 }
 
-static void secp256k1_ecmult_table_precomp_ge_var(secp256k1_ge_t *pre, const secp256k1_gej_t *a, int w) {
+static void secp256k1_ecmult_table_precomp_ge_storage_var(secp256k1_ge_storage_t *pre, const secp256k1_gej_t *a, int w) {
     const int table_size = 1 << (w-2);
     secp256k1_gej_t *prej = checked_malloc(sizeof(secp256k1_gej_t) * table_size);
+    secp256k1_ge_t *prea = checked_malloc(sizeof(secp256k1_ge_t) * table_size);
     prej[0] = *a;
     secp256k1_gej_t d; secp256k1_gej_double_var(&d, a);
     for (int i=1; i<table_size; i++) {
         secp256k1_gej_add_var(&prej[i], &d, &prej[i-1]);
     }
-    secp256k1_ge_set_all_gej_var(table_size, pre, prej);
+    secp256k1_ge_set_all_gej_var(table_size, prea, prej);
+    for (int i=0; i<table_size; i++) {
+        secp256k1_ge_to_storage(&pre[i], &prea[i]);
+    }
     free(prej);
+    free(prea);
 }
 
 /** The number of entries a table with precomputed multiples needs to have. */
@@ -60,24 +65,32 @@ static void secp256k1_ecmult_table_precomp_ge_var(secp256k1_ge_t *pre, const sec
 
 /** The following two macro retrieves a particular odd multiple from a table
  *  of precomputed multiples. */
-#define ECMULT_TABLE_GET(r,pre,n,w,neg) do { \
+#define ECMULT_TABLE_GET_GEJ(r,pre,n,w) do { \
     VERIFY_CHECK(((n) & 1) == 1); \
     VERIFY_CHECK((n) >= -((1 << ((w)-1)) - 1)); \
     VERIFY_CHECK((n) <=  ((1 << ((w)-1)) - 1)); \
     if ((n) > 0) \
         *(r) = (pre)[((n)-1)/2]; \
     else \
-        (neg)((r), &(pre)[(-(n)-1)/2]); \
+        secp256k1_gej_neg((r), &(pre)[(-(n)-1)/2]); \
 } while(0)
-
-#define ECMULT_TABLE_GET_GEJ(r,pre,n,w) ECMULT_TABLE_GET((r),(pre),(n),(w),secp256k1_gej_neg)
-#define ECMULT_TABLE_GET_GE(r,pre,n,w)  ECMULT_TABLE_GET((r),(pre),(n),(w),secp256k1_ge_neg)
+#define ECMULT_TABLE_GET_GE_STORAGE(r,pre,n,w) do { \
+    VERIFY_CHECK(((n) & 1) == 1); \
+    VERIFY_CHECK((n) >= -((1 << ((w)-1)) - 1)); \
+    VERIFY_CHECK((n) <=  ((1 << ((w)-1)) - 1)); \
+    if ((n) > 0) \
+        secp256k1_ge_from_storage((r), &(pre)[((n)-1)/2]); \
+    else {\
+        secp256k1_ge_from_storage((r), &(pre)[(-(n)-1)/2]); \
+        secp256k1_ge_neg((r), (r)); \
+    } \
+} while(0)
 
 typedef struct {
     /* For accelerating the computation of a*P + b*G: */
-    secp256k1_ge_t pre_g[ECMULT_TABLE_SIZE(WINDOW_G)];    /* odd multiples of the generator */
+    secp256k1_ge_storage_t pre_g[ECMULT_TABLE_SIZE(WINDOW_G)];    /* odd multiples of the generator */
 #ifdef USE_ENDOMORPHISM
-    secp256k1_ge_t pre_g_128[ECMULT_TABLE_SIZE(WINDOW_G)]; /* odd multiples of 2^128*generator */
+    secp256k1_ge_storage_t pre_g_128[ECMULT_TABLE_SIZE(WINDOW_G)]; /* odd multiples of 2^128*generator */
 #endif
 } secp256k1_ecmult_consts_t;
 
@@ -101,9 +114,9 @@ static void secp256k1_ecmult_start(void) {
 #endif
 
     /* precompute the tables with odd multiples */
-    secp256k1_ecmult_table_precomp_ge_var(ret->pre_g, &gj, WINDOW_G);
+    secp256k1_ecmult_table_precomp_ge_storage_var(ret->pre_g, &gj, WINDOW_G);
 #ifdef USE_ENDOMORPHISM
-    secp256k1_ecmult_table_precomp_ge_var(ret->pre_g_128, &g_128j, WINDOW_G);
+    secp256k1_ecmult_table_precomp_ge_storage_var(ret->pre_g_128, &g_128j, WINDOW_G);
 #endif
 
     /* Set the global pointer to the precomputation table. */
@@ -224,11 +237,11 @@ static void secp256k1_ecmult(secp256k1_gej_t *r, const secp256k1_gej_t *a, const
             secp256k1_gej_add_var(r, r, &tmpj);
         }
         if (i < bits_ng_1 && (n = wnaf_ng_1[i])) {
-            ECMULT_TABLE_GET_GE(&tmpa, c->pre_g, n, WINDOW_G);
+            ECMULT_TABLE_GET_GE_STORAGE(&tmpa, c->pre_g, n, WINDOW_G);
             secp256k1_gej_add_ge_var(r, r, &tmpa);
         }
         if (i < bits_ng_128 && (n = wnaf_ng_128[i])) {
-            ECMULT_TABLE_GET_GE(&tmpa, c->pre_g_128, n, WINDOW_G);
+            ECMULT_TABLE_GET_GE_STORAGE(&tmpa, c->pre_g_128, n, WINDOW_G);
             secp256k1_gej_add_ge_var(r, r, &tmpa);
         }
 #else
@@ -237,7 +250,7 @@ static void secp256k1_ecmult(secp256k1_gej_t *r, const secp256k1_gej_t *a, const
             secp256k1_gej_add_var(r, r, &tmpj);
         }
         if (i < bits_ng && (n = wnaf_ng[i])) {
-            ECMULT_TABLE_GET_GE(&tmpa, c->pre_g, n, WINDOW_G);
+            ECMULT_TABLE_GET_GE_STORAGE(&tmpa, c->pre_g, n, WINDOW_G);
             secp256k1_gej_add_ge_var(r, r, &tmpa);
         }
 #endif
