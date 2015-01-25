@@ -36,11 +36,11 @@ importprivkey [single_instance_private_key]
 
 The wallet will re-scan and you will see your available balance increase by the amount that was in the imported wallet.
 
-Skip Option 2. and go to Create masternode.conf file
+[Skip Option 2. and go to Create masternode.conf file](#masternodeconf)
 
 ## Option 2. Starting with a new wallet
 
-If you used Option 1 above, then you can skip down to Create masternode.conf file.
+[If you used Option 1 above, then you can skip down to Create masternode.conf file.](#masternodeconf)
 
 ### Create New Wallet Addresses
 
@@ -60,7 +60,9 @@ Close your QT Wallet.
 
 Just like setting up a standard MN. Send exactly 1,000 DRK to each new address created above.
 
-### Create New Keys
+### Create New Masternode Private Keys
+
+*Please note, the masternode priviate key is not the same as a wallet private key. Never put your wallet private key in the masternode.conf file. That is equivalent to putting your 1,000 DRK on the remote server and defeats the purpose of a hot/cold setup.*
 
 Open your QT Wallet and go to console (from the menu select Tools => Debug Console)
 
@@ -70,15 +72,15 @@ Issue the following:
 
 Close your QT Wallet.
 
-## Create masternode.conf file
+## <a name="masternodeconf"></a>Create masternode.conf file
 
 Remember... this is local. Make sure your QT is not running.
 
 Create the masternode.conf file in the same directory as your wallet.dat.
 
-Copy the private key and correspondig collateral output transaction that holds the 1K DRK.
+Copy the masternode private key and correspondig collateral output transaction that holds the 1K DRK.
 
-The private key may be an existing key from Option 1, or a newly generated key from Option 2. 
+The masternode private key may be an existing key from Option 1, or a newly generated key from Option 2. 
 
 ### Get the collateral output
 
@@ -112,14 +114,14 @@ If you are using a masternode.conf file you no longer need the darkcoin.conf fil
 
 ## Update darkcoin.conf on server
 
-If you generated a new private key, you will need to update the remote darkcoin.conf files.
+If you generated a new masternode private key, you will need to update the remote darkcoin.conf files.
 
 Shut down the daemon and then edit the file.
 
 ```sudo nano .darkcoin/darkcoin.conf```
 
 ### Edit the masternodeprivkey
-If you generated a new private key, you will need to update the masternodeprivkey value in your remote darkcoin.conf file.
+If you generated a new masternode private key, you will need to update the masternodeprivkey value in your remote darkcoin.conf file.
 
 ## Start your MasterNodes
 
