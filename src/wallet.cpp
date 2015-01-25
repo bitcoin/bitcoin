@@ -1237,12 +1237,12 @@ void CWallet::AvailableCoins(vector<COutput>& vCoins, bool fOnlyConfirmed, const
                    CTxIn vin = CTxIn(out.tx->GetHash(), out.i);
                    int rounds = GetInputDarksendRounds(vin);
                    if(rounds >= 0) found = true;
-                } else if(coin_type == ONLY_NONDENOMINATED || coin_type == ONLY_NONDENOMINATED_MN) {
+                } else if(coin_type == ONLY_NONDENOMINATED || coin_type == ONLY_NONDENOMINATED_NOTMN) {
                     found = true;
                     BOOST_FOREACH(int64_t d, darkSendDenominations)
                         if(pcoin->vout[i].nValue == d)
                             found = false;
-                    if(coin_type == ONLY_NONDENOMINATED_MN) found = found && (pcoin->vout[i].nValue != 1000*COIN);
+                    if(coin_type == ONLY_NONDENOMINATED_NOTMN) found = found && (pcoin->vout[i].nValue != 1000*COIN);
                 } else {
                     found = true;
                 }
@@ -1590,7 +1590,7 @@ bool CWallet::SelectCoinsDark(int64_t nValueMin, int64_t nValueMax, std::vector<
     nValueRet = 0;
 
     vector<COutput> vCoins;
-    AvailableCoins(vCoins, false, coinControl, nDarksendRoundsMin < 0 ? ONLY_NONDENOMINATED : ONLY_DENOMINATED);
+    AvailableCoins(vCoins, false, coinControl, nDarksendRoundsMin < 0 ? ONLY_NONDENOMINATED_NOTMN : ONLY_DENOMINATED);
 
     set<pair<const CWalletTx*,unsigned int> > setCoinsRet2;
 
@@ -1849,7 +1849,7 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, int64_t> >& vecSend,
                         strFailReason = _("Insufficient funds");
                     else if (coin_type == ONLY_NONDENOMINATED)
                         strFailReason = _("Unable to locate enough Darksend non-denominated funds for this transaction");
-                    else if (coin_type == ONLY_NONDENOMINATED_MN)
+                    else if (coin_type == ONLY_NONDENOMINATED_NOTMN)
                         strFailReason = _("Unable to locate enough Darksend non-denominated funds for this transaction that are not equal 1000 DRK");
                     else
                         strFailReason = _("Unable to locate enough Darksend denominated funds for this transaction");
