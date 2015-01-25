@@ -18,14 +18,16 @@ static double gettimedouble(void) {
 }
 
 void run_benchmark(void (*benchmark)(void*), void (*setup)(void*), void (*teardown)(void*), void* data, int count, int iter) {
+    int i;
     double min = HUGE_VAL;
     double sum = 0.0;
     double max = 0.0;
-    for (int i = 0; i < count; i++) {
+    for (i = 0; i < count; i++) {
+        double begin, total;
         if (setup) setup(data);
-        double begin = gettimedouble();
+        begin = gettimedouble();
         benchmark(data);
-        double total = gettimedouble() - begin;
+        total = gettimedouble() - begin;
         if (teardown) teardown(data);
         if (total < min) min = total;
         if (total > max) max = total;

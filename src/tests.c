@@ -1741,7 +1741,7 @@ int main(int argc, char **argv) {
 
     /* find random seed */
     if (argc > 2) {
-        seed = strtoull(argv[2], NULL, 0);
+        sscanf(argv[2], "%" I64uFORMAT, (unsigned long long*)&seed);
     } else {
         FILE *frand = fopen("/dev/urandom", "r");
         if (!frand || !fread(&seed, sizeof(seed), 1, frand)) {
@@ -1752,7 +1752,7 @@ int main(int argc, char **argv) {
     secp256k1_rand_seed(seed);
 
     printf("test count = %i\n", count);
-    printf("random seed = %llu\n", (unsigned long long)seed);
+    printf("random seed = %" I64uFORMAT "\n", (unsigned long long)seed);
 
     /* initialize */
     secp256k1_start(SECP256K1_START_SIGN | SECP256K1_START_VERIFY);

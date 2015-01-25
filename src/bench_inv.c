@@ -33,9 +33,10 @@ void bench_inv_setup(void* arg) {
 }
 
 void bench_inv(void* arg) {
+    int i;
     bench_inv_t *data = (bench_inv_t*)arg;
 
-    for (int i=0; i<20000; i++) {
+    for (i = 0; i < 20000; i++) {
         secp256k1_scalar_inverse(&data->x, &data->x);
         secp256k1_scalar_add(&data->x, &data->x, &data->base);
     }
