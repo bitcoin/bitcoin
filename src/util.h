@@ -84,4 +84,8 @@ static SECP256K1_INLINE void *checked_malloc(size_t size) {
 # endif
 #endif
 
+#if defined(HAVE___INT128)
+typedef unsigned __int128 uint128_t;
+#endif
+
 #endif
