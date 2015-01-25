@@ -50,6 +50,4 @@ void AppendParamsHelpMessages(std::string& strUsage, bool debugHelp=true);
  */
 std::string ChainNameFromCommandLine();
 
-extern Container<CBaseChainParams> cGlobalChainBaseParams;
-
 #endif // BITCOIN_CHAINPARAMSBASE_H

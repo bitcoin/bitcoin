@@ -96,6 +96,8 @@ BITCOIN_CORE_H = \
   core_io.h \
   eccryptoverify.h \
   ecwrapper.h \
+  globals/chainparamsbaseglobals.h \
+  globals/chainparamsglobals.h \
   hash.h \
   init.h \
   key.h \
@@ -243,6 +245,7 @@ libbitcoin_common_a_SOURCES = \
   core_write.cpp \
   eccryptoverify.cpp \
   ecwrapper.cpp \
+  globals/chainparamsglobals.cpp \
   hash.cpp \
   key.cpp \
   keystore.cpp \
@@ -270,6 +273,7 @@ libbitcoin_util_a_SOURCES = \
   compat/glibc_sanity.cpp \
   compat/glibcxx_sanity.cpp \
   compat/strnlen.cpp \
+  globals/chainparamsbaseglobals.cpp \
   random.cpp \
   rpcprotocol.cpp \
   support/cleanse.cpp \

@@ -234,13 +234,6 @@ public:
     }
 };
 
-Container<CChainParams> cGlobalChainParams;
-static Container<CChainParams> cGlobalSwitchingChainParams;
-
-const CChainParams &Params() {
-    return cGlobalChainParams.Get();
-}
-
 CChainParams* CChainParams::Factory(const std::string& chain)
 {
     if (chain == CBaseChainParams::MAIN)
@@ -250,16 +243,4 @@ CChainParams* CChainParams::Factory(const std::string& chain)
     else if (chain == CBaseChainParams::REGTEST)
         return new CRegTestParams();
     throw std::runtime_error(strprintf(_("%s: Unknown chain %s."), __func__, chain));
-}
-
-const CChainParams& Params(const std::string& chain)
-{
-    cGlobalSwitchingChainParams.Set(CChainParams::Factory(chain));
-    return cGlobalSwitchingChainParams.Get();
-}
-
-void SelectParams(const std::string& network)
-{
-    cGlobalChainBaseParams.Set(CBaseChainParams::Factory(network));
-    cGlobalChainParams.Set(CChainParams::Factory(network));
 }

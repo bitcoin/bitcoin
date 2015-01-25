@@ -6,6 +6,8 @@
 #include "rpcserver.h"
 
 #include "base58.h"
+#include "chainparamsbase.h"
+#include "globals/chainparamsbaseglobals.h"
 #include "init.h"
 #include "random.h"
 #include "sync.h"

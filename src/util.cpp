@@ -10,6 +10,7 @@
 #include "util.h"
 
 #include "chainparamsbase.h"
+#include "globals/chainparamsbaseglobals.h"
 #include "random.h"
 #include "serialize.h"
 #include "sync.h"

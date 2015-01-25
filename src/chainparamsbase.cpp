@@ -73,8 +73,6 @@ public:
 };
 static CBaseUnitTestParams unitTestParams;
 
-Container<CBaseChainParams> cGlobalChainBaseParams;
-
 CBaseChainParams* CBaseChainParams::Factory(const std::string& chain)
 {
     if (chain == CBaseChainParams::MAIN)

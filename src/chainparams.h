@@ -9,6 +9,7 @@
 #include "chainparamsbase.h"
 #include "checkpoints.h"
 #include "consensus/params.h"
+#include "globals/chainparamsglobals.h" // TODO remove from here, blame @jtimon, not @theuni
 #include "primitives/block.h"
 #include "protocol.h"
 #include "templates.hpp"
@@ -101,24 +102,5 @@ protected:
     bool fTestnetToBeDeprecatedFieldRPC;
     Checkpoints::CCheckpointData checkpointData;
 };
-
-/**
- * Return the currently selected parameters. This won't change after app
- * startup, except for unit tests.
- */
-const CChainParams &Params();
-
-/**
- * @returns CChainParams for the given BIP70 chain name.
- */
-const CChainParams& Params(const std::string& chain);
-
-/**
- * Sets the params returned by Params() to those for the given BIP70 chain name.
- * @throws std::runtime_error when the chain is not supported.
- */
-void SelectParams(const std::string& chain);
-
-extern Container<CChainParams> cGlobalChainParams;
 
 #endif // BITCOIN_CHAINPARAMS_H
