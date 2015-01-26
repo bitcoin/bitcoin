@@ -273,13 +273,13 @@ void ProcessMessageMasternode(CNode* pfrom, std::string& strCommand, CDataStream
                 {
                     int64_t t = (*i).second;
                     if (GetTime() < t) {
-                        Misbehaving(pfrom->GetId(), 20);
+                        Misbehaving(pfrom->GetId(), 34);
                         LogPrintf("dseg - peer already asked me for the list\n");
                         return;
                     }
                 }
 
-                int64_t askAgain = GetTime()+(60*60*24);
+                int64_t askAgain = GetTime()+(60*60*3);
                 askedForMasternodeList[pfrom->addr] = askAgain;
             }
         } //else, asking for a specific node which is ok
