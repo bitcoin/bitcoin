@@ -39,13 +39,13 @@ gcc version 4.9.2 (i686-posix-dwarf-rev0, Built by MinGW-W64 project)
 В инструкции все зависимости сохраняются в папку c:\deps
 
 2.1 OpenSSL 
--Скачайте http://www.openssl.org/source/openssl-1.0.1j.tar.gz
+-Скачайте https://openssl.org/source/openssl-1.0.2.tar.gz
 -Перейдите в папку C:\MinGW\msys\1.0 и запустите msys.bat
 Из MinGw shell выполните следующий код:
 
 cd /c/deps/
-tar xvfz openssl-1.0.1j.tar.gz
-cd openssl-1.0.1j
+tar xvfz openssl-1.0.2.tar.gz
+cd openssl-1.0.2
 Configure no-shared no-dso mingw
 make
 
@@ -114,8 +114,8 @@ http://download.qt-project.org/official_releases/qt/5.4/5.4.0/submodules/qttrans
 -Переименуйте папку qtbase-opensource-src-5.4.0 в 5.4.0
 -Откройте командную строку Windows и выполните следующий код:
 
-set INCLUDE=C:\deps\libpng-1.6.15;C:\deps\openssl-1.0.1j\include
-set LIB=C:\deps\libpng-1.6.15\.libs;C:\deps\openssl-1.0.1j
+set INCLUDE=C:\deps\libpng-1.6.15;C:\deps\openssl-1.0.2\include
+set LIB=C:\deps\libpng-1.6.15\.libs;C:\deps\openssl-1.0.2
 
 cd C:\Qt\5.4.0
 
@@ -169,14 +169,14 @@ INCLUDEPATHS= \
  -I"/c/deps/boost_1_57_0" \
  -I"/c/deps" \
  -I"/c/deps/db-6.0.20/build_unix" \
- -I"/c/deps/openssl-1.0.1j/include"
+ -I"/c/deps/openssl-1.0.2/include"
  
 LIBPATHS= \
  -L"$(CURDIR)/leveldb" \
  -L"/c/deps/boost_1_57_0/stage/lib" \
  -L"/c/deps/miniupnpc" \
  -L"/c/deps/db-6.0.20/build_unix" \
- -L"/c/deps/openssl-1.0.1j"
+ -L"/c/deps/openssl-1.0.2"
 
 LIBS= \
   -l leveldb \
@@ -249,8 +249,8 @@ BOOST_INCLUDE_PATH=C:/deps/boost_1_57_0
 BOOST_LIB_PATH=C:/deps/boost_1_57_0/stage/lib
 BDB_INCLUDE_PATH=C:/deps/db-6.0.20/build_unix
 BDB_LIB_PATH=C:/deps/db-6.0.20/build_unix
-OPENSSL_INCLUDE_PATH=C:/deps/openssl-1.0.1j/include
-OPENSSL_LIB_PATH=C:/deps/openssl-1.0.1j
+OPENSSL_INCLUDE_PATH=C:/deps/openssl-1.0.2/include
+OPENSSL_LIB_PATH=C:/deps/openssl-1.0.2
 MINIUPNPC_INCLUDE_PATH=C:/deps/
 MINIUPNPC_LIB_PATH=C:/deps/miniupnpc
 QRENCODE_INCLUDE_PATH=C:/deps/qrencode-3.4.4
@@ -335,13 +335,13 @@ gcc version 4.9.2 (x86_64-posix-seh-rev0, Built by MinGW-W64 project)
 2. Построение зависимостей.
 В инструкции все зависимости сохраняются в папку c:\deps\x64
 
-2.1  OpenSSL: http://www.openssl.org/source/openssl-1.0.1j.tar.gz
+2.1  OpenSSL: http://www.openssl.org/source/openssl-1.0.2.tar.gz
 -Перейдите в папку C:\MinGW\msys\1.0 и запустите msys.bat
 Из MinGw shell выполните следующий код:
 
 cd /c/deps/x64/
-tar xvfz openssl-1.0.1j.tar.gz
-cd openssl-1.0.1j
+tar xvfz openssl-1.0.2.tar.gz
+cd openssl-1.0.2
 Configure no-shared no-dso mingw64
 make
 
@@ -383,8 +383,8 @@ http://download.qt-project.org/official_releases/qt/5.4/5.4.0/submodules/qttrans
 -Переименуйте папку qttranslations-opensource-src-5.4.0 в qttranslations-opensource-src-5.4.0-x64
 -Откройте командную строку Windows и выполните следующий код:
 
-set INCLUDE=C:\deps\x64\libpng-1.6.15;C:\deps\x64\openssl-1.0.1j\include
-set LIB=C:\deps\x64\libpng-1.6.15\.libs;C:\deps\x64\openssl-1.0.1j
+set INCLUDE=C:\deps\x64\libpng-1.6.15;C:\deps\x64\openssl-1.0.2\include
+set LIB=C:\deps\x64\libpng-1.6.15\.libs;C:\deps\x64\openssl-1.0.2
 
 cd C:\Qt\5.4.0-x64
 
