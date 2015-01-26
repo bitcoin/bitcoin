@@ -462,7 +462,7 @@ static void secp256k1_scalar_reduce_512(secp256k1_scalar_t *r, const uint32_t *l
     secp256k1_scalar_reduce(r, c + secp256k1_scalar_check_overflow(r));
 }
 
-static void secp256k1_scalar_mul_512(uint32_t l[16], const secp256k1_scalar_t *a, const secp256k1_scalar_t *b) {
+static void secp256k1_scalar_mul_512(uint32_t *l, const secp256k1_scalar_t *a, const secp256k1_scalar_t *b) {
     /* 96 bit accumulator. */
     uint32_t c0 = 0, c1 = 0, c2 = 0;
 
@@ -550,7 +550,7 @@ static void secp256k1_scalar_mul_512(uint32_t l[16], const secp256k1_scalar_t *a
     l[15] = c0;
 }
 
-static void secp256k1_scalar_sqr_512(uint32_t l[16], const secp256k1_scalar_t *a) {
+static void secp256k1_scalar_sqr_512(uint32_t *l, const secp256k1_scalar_t *a) {
     /* 96 bit accumulator. */
     uint32_t c0 = 0, c1 = 0, c2 = 0;
 
