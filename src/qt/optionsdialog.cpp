@@ -41,6 +41,7 @@ OptionsDialog::OptionsDialog(QWidget *parent) :
     ui->torPort->setEnabled(false);
     ui->torPort->setValidator(new QIntValidator(1, 65535, this));
     ui->TorOnly->setEnabled(false);
+    ui->torName->setEnabled(false);
 
     ui->socksVersion->setEnabled(false);
     ui->socksVersion->addItem("5", 5);
@@ -56,6 +57,7 @@ OptionsDialog::OptionsDialog(QWidget *parent) :
     connect(ui->connectTor, SIGNAL(toggled(bool)), ui->torIp, SLOT(setEnabled(bool)));
     connect(ui->connectTor, SIGNAL(toggled(bool)), ui->torPort, SLOT(setEnabled(bool)));
     connect(ui->connectTor, SIGNAL(toggled(bool)), ui->TorOnly, SLOT(setEnabled(bool)));
+    connect(ui->connectTor, SIGNAL(toggled(bool)), ui->torName, SLOT(setEnabled(bool)));
     connect(ui->TorOnly, SIGNAL(toggled(bool)), ui->connectSocks, SLOT(setDisabled(bool)));
 
     ui->proxyIp->installEventFilter(this);
@@ -166,6 +168,8 @@ void OptionsDialog::setMapper()
     mapper->addMapping(ui->torIp, OptionsModel::TorIP);
     mapper->addMapping(ui->torPort, OptionsModel::TorPort);
     mapper->addMapping(ui->TorOnly, OptionsModel::TorOnly);
+    mapper->addMapping(ui->torName, OptionsModel::TorName);
+
 
     /* Window */
 #ifndef Q_OS_MAC

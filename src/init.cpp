@@ -244,6 +244,7 @@ std::string HelpMessage()
         "  -proxy=<ip:port>       " + _("Connect through socks proxy") + "\n" +
         "  -socks=<n>             " + _("Select the version of socks proxy to use (4-5, default: 5)") + "\n" +
         "  -tor=<ip:port>         " + _("Use proxy to reach tor hidden services (default: same as -proxy)") + "\n"
+        "  -torname=<host.onion>  " + _("Send the specified hidden service name when connecting to Tor nodes (default: none)") + "\n"
         "  -dns                   " + _("Allow DNS lookups for -addnode, -seednode and -connect") + "\n" +
         "  -port=<port>           " + _("Listen for connections on <port> (default: 7777 or testnet: 17777)") + "\n" +
         "  -maxconnections=<n>    " + _("Maintain at most <n> connections to peers (default: 125)") + "\n" +
@@ -697,9 +698,25 @@ bool AppInit2()
 #endif
             if (!IsLimited(NET_IPV4))
                 fBound |= Bind(CService(inaddr_any, GetListenPort()), !fBound);
+
         }
         if (!fBound)
             return InitError(_("Failed to listen on any port. Use -listen=0 if you want this."));
+    }
+
+    // If Tor is reachable then listen on loopback interface,
+    //    to allow allow other users reach you through the hidden service
+    if (!IsLimited(NET_TOR) && mapArgs.count("-torname")) {
+        std::string strError;
+        struct in_addr inaddr_loopback;
+        inaddr_loopback.s_addr = htonl(INADDR_LOOPBACK);
+
+#ifdef USE_IPV6
+        if (!BindListenPort(CService(in6addr_loopback, GetListenPort()), strError))
+            return InitError(strError);
+#endif
+        if (!BindListenPort(CService(inaddr_loopback, GetListenPort()), strError))
+            return InitError(strError);
     }
 
     if (mapArgs.count("-externalip"))

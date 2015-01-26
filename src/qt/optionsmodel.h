@@ -29,6 +29,7 @@ public:
         TorIP,             // QString
         TorPort,           // int
         TorOnly,           // bool
+        TorName,           // QString
         Fee,               // qint64
         DisplayUnit,       // BitcoinUnits::Unit
         DisplayAddresses,  // bool

@@ -91,6 +91,14 @@ void OptionsModel::Init()
         SoftSetArg("-tor", settings.value("addrTor").toString().toStdString());
         if (settings.value("fTorOnly").toBool())
             SoftSetArg("-onlynet", "tor");
+
+        if (settings.value("TorName").toString().length() == 22) {
+            std::string strTorName = settings.value("TorName").toString().toStdString();
+
+            CService addrTorName(strTorName, GetListenPort());
+            if (addrTorName.IsValid())
+                SoftSetArg("-torname", strTorName);
+        }
     }
 
     if (settings.contains("detachDB"))
@@ -229,6 +237,8 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
         }
         case TorOnly:
             return settings.value("fTorOnly", false);
+        case TorName:
+            return settings.value("TorName", "");
         case Fee:
             return QVariant(static_cast<qlonglong>(nTransactionFee));
         case DisplayUnit:
@@ -338,6 +348,9 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
         case TorOnly: {
             settings.setValue("fTorOnly", value.toBool());
             ApplyTorSettings();
+        }
+        case TorName: {
+            settings.setValue("TorName", value.toString());
         }
         break;
         case Fee:
