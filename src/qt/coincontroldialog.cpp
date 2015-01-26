@@ -539,7 +539,7 @@ void CoinControlDialog::updateLabels(WalletModel *model, QWidget* dialog)
     l2->setText(BitcoinUnits::formatWithUnit(nDisplayUnit, nAmount));            // Amount
     l3->setText(BitcoinUnits::formatWithUnit(nDisplayUnit, nPayFee, false, 3));  // Fee
     l4->setText(BitcoinUnits::formatWithUnit(nDisplayUnit, nAfterFee));          // After Fee
-    l5->setText(((nBytes > 0) ? "~" : "") + QString::number(nBytes));            // Bytes
+    l5->setText(((nBytes > 0) ? ASYMP_UTF8 : "") + QString::number(nBytes));     // Bytes
     l6->setText(sPriorityLabel);                                                 // Priority
     l7->setText((fLowOutput ? (fDust ? tr("DUST") : tr("yes")) : tr("no")));     // Low Output / Dust
     l8->setText(BitcoinUnits::formatWithUnit(nDisplayUnit, nChange));            // Change
