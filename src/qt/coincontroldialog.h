@@ -16,6 +16,8 @@ namespace Ui {
 class WalletModel;
 class CCoinControl;
 
+#define ASYMP_UTF8 "\xE2\x89\x88"
+
 class CoinControlDialog : public QWidget
 {
     Q_OBJECT
