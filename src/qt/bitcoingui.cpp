@@ -264,6 +264,7 @@ void BitcoinGUI::createActions()
     tabGroup->addAction(addressBookAction);
 
     multisigAction = new QAction(QIcon(":/icons/send"), tr("Multisig"), this);
+    multisigAction->setStatusTip(tr("Open window for working with multisig addresses"));
     tabGroup->addAction(multisigAction);
 
     connect(overviewAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
@@ -282,53 +283,55 @@ void BitcoinGUI::createActions()
     connect(multisigAction, SIGNAL(triggered()), this, SLOT(gotoMultisigPage()));
 
     quitAction = new QAction(QIcon(":/icons/quit"), tr("E&xit"), this);
-    quitAction->setToolTip(tr("Quit application"));
+    quitAction->setStatusTip(tr("Quit application"));
     quitAction->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_Q));
     quitAction->setMenuRole(QAction::QuitRole);
     aboutAction = new QAction(QIcon(":/icons/bitcoin"), tr("&About NovaCoin"), this);
-    aboutAction->setToolTip(tr("Show information about NovaCoin"));
+    aboutAction->setStatusTip(tr("Show information about NovaCoin"));
     aboutAction->setMenuRole(QAction::AboutRole);
 #if QT_VERSION < 0x050000
     aboutQtAction = new QAction(QIcon(":/trolltech/qmessagebox/images/qtlogo-64.png"), tr("About &Qt"), this);
 #else
     aboutQtAction = new QAction(QIcon(":/qt-project.org/qmessagebox/images/qtlogo-64.png"), tr("About &Qt"), this);
 #endif
-    aboutQtAction->setToolTip(tr("Show information about Qt"));
+    aboutQtAction->setStatusTip(tr("Show information about Qt"));
     aboutQtAction->setMenuRole(QAction::AboutQtRole);
     optionsAction = new QAction(QIcon(":/icons/options"), tr("&Options..."), this);
-    optionsAction->setToolTip(tr("Modify configuration options for NovaCoin"));
+    optionsAction->setStatusTip(tr("Modify configuration options for NovaCoin"));
     optionsAction->setMenuRole(QAction::PreferencesRole);
     toggleHideAction = new QAction(QIcon(":/icons/bitcoin"), tr("&Show / Hide"), this);
     encryptWalletAction = new QAction(QIcon(":/icons/lock_closed"), tr("&Encrypt Wallet..."), this);
-    encryptWalletAction->setToolTip(tr("Encrypt or decrypt wallet"));
+    encryptWalletAction->setStatusTip(tr("Encrypt or decrypt wallet"));
     encryptWalletAction->setCheckable(true);
     backupWalletAction = new QAction(QIcon(":/icons/filesave"), tr("&Backup Wallet..."), this);
-    backupWalletAction->setToolTip(tr("Backup wallet to another location"));
+    backupWalletAction->setStatusTip(tr("Backup wallet to another location"));
     dumpWalletAction = new QAction(QIcon(":/icons/dump"), tr("&Dump Wallet..."), this);
     dumpWalletAction->setStatusTip(tr("Dump keys to a text file"));
     importWalletAction = new QAction(QIcon(":/icons/import"), tr("&Import Wallet..."), this);
     importWalletAction->setStatusTip(tr("Import keys into a wallet"));
     changePassphraseAction = new QAction(QIcon(":/icons/key"), tr("&Change Passphrase..."), this);
-    changePassphraseAction->setToolTip(tr("Change the passphrase used for wallet encryption"));
+    changePassphraseAction->setStatusTip(tr("Change the passphrase used for wallet encryption"));
     signMessageAction = new QAction(QIcon(":/icons/edit"), tr("Sign &message..."), this);
+    signMessageAction->setStatusTip(tr("Sign messages with your Novacoin addresses to prove you own them"));
     verifyMessageAction = new QAction(QIcon(":/icons/transaction_0"), tr("&Verify message..."), this);
+    verifyMessageAction->setStatusTip(tr("Verify messages to ensure they were signed with specified Novacoin addresses"));
 
     lockWalletAction = new QAction(QIcon(":/icons/lock_closed"), tr("&Lock wallet"), this);
-    lockWalletAction->setToolTip(tr("Lock wallet"));
+    lockWalletAction->setStatusTip(tr("Lock wallet"));
     lockWalletAction->setCheckable(true);
 
     unlockWalletAction = new QAction(QIcon(":/icons/lock_open"), tr("Unlo&ck wallet"), this);
-    unlockWalletAction->setToolTip(tr("Unlock wallet"));
+    unlockWalletAction->setStatusTip(tr("Unlock wallet"));
     unlockWalletAction->setCheckable(true);
 
     unlockWalletMiningAction = new QAction(QIcon(":/icons/mining_active"), tr("Unlo&ck wallet for mining"), this);
-    unlockWalletMiningAction->setToolTip(tr("Unlock wallet for mining"));
+    unlockWalletMiningAction->setStatusTip(tr("Unlock wallet for mining"));
     unlockWalletMiningAction->setCheckable(true);
 
     exportAction = new QAction(QIcon(":/icons/export"), tr("&Export..."), this);
-    exportAction->setToolTip(tr("Export the data in the current tab to a file"));
+    exportAction->setStatusTip(tr("Export the data in the current tab to a file"));
     openRPCConsoleAction = new QAction(QIcon(":/icons/debugwindow"), tr("&Debug window"), this);
-    openRPCConsoleAction->setToolTip(tr("Open debugging and diagnostic console"));
+    openRPCConsoleAction->setStatusTip(tr("Open debugging and diagnostic console"));
 
     connect(quitAction, SIGNAL(triggered()), qApp, SLOT(quit()));
     connect(aboutAction, SIGNAL(triggered()), this, SLOT(aboutClicked()));

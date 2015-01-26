@@ -1045,6 +1045,21 @@ Some or all keys from:
         <translation>Изменить пароль шифрования бумажника</translation>
     </message>
     <message>
+      <location line="267"/>
+      <source>Open window for working with multisig addresses</source>
+      <translation>Открыть окно для работы с адресами с мультиподписью</translation>
+    </message>
+    <message>
+      <location line="315"/>
+      <source>Sign messages with your Novacoin addresses to prove you own them</source>
+      <translation>Подписать сообщения вашим Novacoin адресом, чтобы доказать, что вы им владеете</translation>
+    </message>
+    <message>
+      <location line="317"/>
+      <source>Verify messages to ensure they were signed with specified Novacoin addresses</source>
+      <translation>Проверить сообщения, чтобы удостовериться, что они подписаны определенным Novacoin адресом</translation>
+    </message>
+    <message>
         <location line="+6"/>
         <source>&amp;Debug window</source>
         <translation>&amp;Окно отладки</translation>
