@@ -178,8 +178,8 @@ void TransactionView::setModel(WalletModel *model, bool fShoudAddThirdPartyURL)
         transactionProxyModel->setSortCaseSensitivity(Qt::CaseInsensitive);
         transactionProxyModel->setFilterCaseSensitivity(Qt::CaseInsensitive);
 
-//        transactionProxyModel->setSortRole(Qt::EditRole);
-        transactionProxyModel->setSortRole(TransactionTableModel::DateRole);
+        transactionProxyModel->setSortRole(Qt::EditRole);
+//        transactionProxyModel->setSortRole(TransactionTableModel::DateRole);
 
         transactionView->setModel(transactionProxyModel);
         transactionView->setAlternatingRowColors(true);
