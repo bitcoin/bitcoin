@@ -2,7 +2,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "crypto/rfc6979_hmac_sha256.h"
 #include "crypto/ripemd160.h"
 #include "crypto/sha1.h"
 #include "crypto/sha256.h"
@@ -246,40 +245,6 @@ BOOST_AUTO_TEST_CASE(hmac_sha512_testvectors) {
                    "642062792074686520484d414320616c676f726974686d2e",
                    "e37b6a775dc87dbaa4dfa9f96e5e3ffddebd71f8867289865df5a32d20cdc944"
                    "b6022cac3c4982b10d5eeb55c3e4de15134676fb6de0446065c97440fa8c6a58");
-}
-
-void TestRFC6979(const std::string& hexkey, const std::string& hexmsg, const std::vector<std::string>& hexout)
-{
-    std::vector<unsigned char> key = ParseHex(hexkey);
-    std::vector<unsigned char> msg = ParseHex(hexmsg);
-    RFC6979_HMAC_SHA256 rng(&key[0], key.size(), &msg[0], msg.size());
-
-    for (unsigned int i = 0; i < hexout.size(); i++) {
-        std::vector<unsigned char> out = ParseHex(hexout[i]);
-        std::vector<unsigned char> gen;
-        gen.resize(out.size());
-        rng.Generate(&gen[0], gen.size());
-        BOOST_CHECK(out == gen);
-    }
-}
-
-BOOST_AUTO_TEST_CASE(rfc6979_hmac_sha256)
-{
-    TestRFC6979(
-        "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f00",
-        "4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a",
-        boost::assign::list_of
-            ("4fe29525b2086809159acdf0506efb86b0ec932c7ba44256ab321e421e67e9fb")
-            ("2bf0fff1d3c378a22dc5de1d856522325c65b504491a0cbd01cb8f3aa67ffd4a")
-            ("f528b410cb541f77000d7afb6c5b53c5c471eab43e466d9ac5190c39c82fd82e"));
-
-    TestRFC6979(
-        "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF",
-        "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-        boost::assign::list_of
-            ("9c236c165b82ae0cd590659e100b6bab3036e7ba8b06749baf6981e16f1a2b95")
-            ("df471061625bc0ea14b682feee2c9c02f235da04204c1d62a1536c6e17aed7a9")
-            ("7597887cbd76321f32e30440679a22cf7f8d9d2eac390e581fea091ce202ba94"));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
