@@ -10,4 +10,3 @@ Type=Application
 Icon=darkcoin128
 MimeType=x-scheme-handler/darkcoin;
 Categories=Office;Finance;
-Name[en_US]=darkcoin-qt.desktop
