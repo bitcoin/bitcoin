@@ -1746,11 +1746,18 @@ bool CDarkSendPool::MakeCollateralAmounts()
     }
 
     CCoinControl *coinControl=NULL;
-	bool success = pwalletMain->CreateTransaction(vecSend, wtx, reservekey,
-            nFeeRet, strFail, coinControl, ALL_COINS);
+    // try to use non-denominated and not mn-like funds
+    bool success = pwalletMain->CreateTransaction(vecSend, wtx, reservekey,
+            nFeeRet, strFail, coinControl, ONLY_NONDENOMINATED_NOTMN);
     if(!success){
-        LogPrintf("MakeCollateralAmounts: Error - %s\n", strFail.c_str());
-        return false;
+        // if we failed (most likeky not enough funds), try to use denominated instead -
+        // MN-like funds should not be touched in any case and we can't mix denominated without collaterals anyway
+        success = pwalletMain->CreateTransaction(vecSend, wtx, reservekey,
+                nFeeRet, strFail, coinControl, ONLY_DENOMINATED);
+        if(!success){
+            LogPrintf("MakeCollateralAmounts: Error - %s\n", strFail.c_str());
+            return false;
+        }
     }
 
     // use the same cachedLastSuccess as for DS mixinx to prevent race
