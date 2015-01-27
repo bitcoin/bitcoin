@@ -34,7 +34,6 @@ std::map<uint256, CTransactionLock> mapTxLocks;
 
 void ProcessMessageInstantX(CNode* pfrom, std::string& strCommand, CDataStream& vRecv)
 {
-    return;
     if(fLiteMode) return; //disable all darksend/masternode related functionality
 
     if (strCommand == "txlreq")
