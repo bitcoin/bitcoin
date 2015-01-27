@@ -1450,8 +1450,8 @@ bool CDarkSendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
     // should not be less than fees in DARKSEND_FEE + few (lets say 5) smallest denoms
     int64_t nLowestDenom = DARKSEND_FEE + darkSendDenominations[darkSendDenominations.size() - 1]*5;
 
-    // if there is no DS fee yet
-    if(!pwalletMain->HasDarksendFeeInputs())
+    // if there are no DS collateral inputs yet
+    if(!pwalletMain->HasCollateralInputs())
         // should have some additional amount for them
         nLowestDenom += (DARKSEND_COLLATERAL*4)+DARKSEND_FEE*2;
 
@@ -1496,8 +1496,8 @@ bool CDarkSendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
 
     }
 
-    //check to see if we have the fee sized inputs, it requires these
-    if(!pwalletMain->HasDarksendFeeInputs()){
+    //check to see if we have the collateral sized inputs, it requires these
+    if(!pwalletMain->HasCollateralInputs()){
         if(!fDryRun) MakeCollateralAmounts();
         return true;
     }
@@ -1715,11 +1715,9 @@ bool CDarkSendPool::SendRandomPaymentToSelf()
 bool CDarkSendPool::MakeCollateralAmounts()
 {
     // should split up to remaining amount only...
-    int64_t nTotalBalance = pwalletMain->GetDenominatedBalance(false);
+    int64_t nTotalBalance = pwalletMain->GetBalance();
     int64_t nSplitBalance = nAnonymizeDarkcoinAmount*COIN - pwalletMain->GetDenominatedBalance();
     if(nSplitBalance > nTotalBalance) nSplitBalance = nTotalBalance;
-    // ...but up to 1 DRK only
-    if(nSplitBalance > 1*COIN) nSplitBalance = 1*COIN;
     int64_t nTotalOut = 0;
 
     LogPrintf("DoAutomaticDenominating: MakeCollateralAmounts: nSplitBalance %d nTotalBalance %d\n", nSplitBalance, pwalletMain->GetDenominatedBalance(false));
@@ -1737,20 +1735,19 @@ bool CDarkSendPool::MakeCollateralAmounts()
     std::string strFail = "";
     vector< pair<CScript, int64_t> > vecSend;
 
-    // ****** Add fees ************ /
     vecSend.push_back(make_pair(scriptChange, (DARKSEND_COLLATERAL*2)+DARKSEND_FEE));
     nTotalOut += (DARKSEND_COLLATERAL*2)+DARKSEND_FEE;
     vecSend.push_back(make_pair(scriptChange, (DARKSEND_COLLATERAL*2)+DARKSEND_FEE));
     nTotalOut += (DARKSEND_COLLATERAL*2)+DARKSEND_FEE;
 
     if(nTotalOut > nSplitBalance) {
-        LogPrintf("MakeCollateralAmounts: Not enough outputs to make a transaction\n");
+        LogPrintf("MakeCollateralAmounts: Not enough balance to split\n");
         return false;
     }
 
     CCoinControl *coinControl=NULL;
 	bool success = pwalletMain->CreateTransaction(vecSend, wtx, reservekey,
-            nFeeRet, strFail, coinControl, ONLY_NONDENOMINATED_NOTMN);
+            nFeeRet, strFail, coinControl, ALL_COINS);
     if(!success){
         LogPrintf("MakeCollateralAmounts: Error - %s\n", strFail.c_str());
         return false;
@@ -1782,8 +1779,8 @@ bool CDarkSendPool::CreateDenominated(int64_t nTotalValue)
     vector< pair<CScript, int64_t> > vecSend;
     int64_t nValueLeft = nTotalValue;
 
-    // ****** Add fees ************ /
-    if(!pwalletMain->HasDarksendFeeInputs()) {
+    // ****** Add collateral outputs ************ /
+    if(!pwalletMain->HasCollateralInputs()) {
         vecSend.push_back(make_pair(scriptChange, (DARKSEND_COLLATERAL*2)+DARKSEND_FEE));
         nValueLeft -= (DARKSEND_COLLATERAL*2)+DARKSEND_FEE;
         vecSend.push_back(make_pair(scriptChange, (DARKSEND_COLLATERAL*2)+DARKSEND_FEE));

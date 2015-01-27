@@ -1239,10 +1239,11 @@ void CWallet::AvailableCoins(vector<COutput>& vCoins, bool fOnlyConfirmed, const
                    if(rounds >= 0) found = true;
                 } else if(coin_type == ONLY_NONDENOMINATED || coin_type == ONLY_NONDENOMINATED_NOTMN) {
                     found = true;
+                    if (IsCollateralAmount(pcoin->vout[i].nValue)) continue; // do not use collateral amounts
                     BOOST_FOREACH(int64_t d, darkSendDenominations)
                         if(pcoin->vout[i].nValue == d)
                             found = false;
-                    if(coin_type == ONLY_NONDENOMINATED_NOTMN) found = found && (pcoin->vout[i].nValue != 1000*COIN);
+                    if(found && coin_type == ONLY_NONDENOMINATED_NOTMN) found = (pcoin->vout[i].nValue != 1000*COIN); // do not use MN funds
                 } else {
                     found = true;
                 }
@@ -1640,13 +1641,8 @@ bool CWallet::SelectCoinsCollateral(std::vector<CTxIn>& setCoinsRet, int64_t& nV
     BOOST_FOREACH(const COutput& out, vCoins)
     {
         // collateral inputs will always be a multiple of DARSEND_COLLATERAL, up to five
-        if(
-            out.tx->vout[out.i].nValue == (DARKSEND_COLLATERAL * 5)+DARKSEND_FEE ||
-            out.tx->vout[out.i].nValue == (DARKSEND_COLLATERAL * 4)+DARKSEND_FEE ||
-            out.tx->vout[out.i].nValue == (DARKSEND_COLLATERAL * 3)+DARKSEND_FEE ||
-            out.tx->vout[out.i].nValue == (DARKSEND_COLLATERAL * 2)+DARKSEND_FEE ||
-            out.tx->vout[out.i].nValue == (DARKSEND_COLLATERAL * 1)+DARKSEND_FEE
-        ){
+        if(IsCollateralAmount(out.tx->vout[out.i].nValue))
+        {
             CTxIn vin = CTxIn(out.tx->GetHash(),out.i);
 
             vin.prevPubKey = out.tx->vout[out.i].scriptPubKey; // the inputs PubKey
@@ -1689,7 +1685,7 @@ int CWallet::CountInputsWithAmount(int64_t nInputAmount)
     return nTotal;
 }
 
-bool CWallet::HasDarksendFeeInputs() const
+bool CWallet::HasCollateralInputs() const
 {
     CCoinControl *coinControl=NULL;
 
@@ -1698,18 +1694,18 @@ bool CWallet::HasDarksendFeeInputs() const
 
     int nFound = 0;
     BOOST_FOREACH(const COutput& out, vCoins)
-    {
-        if(
-            out.tx->vout[out.i].nValue == (DARKSEND_COLLATERAL * 5)+DARKSEND_FEE ||
-            out.tx->vout[out.i].nValue == (DARKSEND_COLLATERAL * 4)+DARKSEND_FEE ||
-            out.tx->vout[out.i].nValue == (DARKSEND_COLLATERAL * 3)+DARKSEND_FEE ||
-            out.tx->vout[out.i].nValue == (DARKSEND_COLLATERAL * 2)+DARKSEND_FEE ||
-            out.tx->vout[out.i].nValue == (DARKSEND_COLLATERAL * 1)+DARKSEND_FEE
-        ) nFound++;
-
-    }
+        if(IsCollateralAmount(out.tx->vout[out.i].nValue)) nFound++;
 
     return nFound > 1; // should have more than one just in case
+}
+
+bool CWallet::IsCollateralAmount(int64_t nInputAmount) const
+{
+    return  nInputAmount == (DARKSEND_COLLATERAL * 5)+DARKSEND_FEE ||
+            nInputAmount == (DARKSEND_COLLATERAL * 4)+DARKSEND_FEE ||
+            nInputAmount == (DARKSEND_COLLATERAL * 3)+DARKSEND_FEE ||
+            nInputAmount == (DARKSEND_COLLATERAL * 2)+DARKSEND_FEE ||
+            nInputAmount == (DARKSEND_COLLATERAL * 1)+DARKSEND_FEE;
 }
 
 bool CWallet::SelectCoinsWithoutDenomination(int64_t nTargetValue, set<pair<const CWalletTx*,unsigned int> >& setCoinsRet, int64_t& nValueRet) const
