@@ -1880,6 +1880,12 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, int64_t> >& vecSend,
                     nFeeRet += nMoveToFee;
                 }
 
+                //over pay for denominated transactions
+                if(coin_type == ONLY_DENOMINATED) {
+                    nFeeRet = nChange;
+                    nChange = 0;
+                }
+
                 if (nChange > 0)
                 {
                     // Fill a vout to ourself
