@@ -217,6 +217,7 @@ static int secp256k1_ge_is_valid_var(const secp256k1_ge_t *a) {
 }
 
 static void secp256k1_gej_double_var(secp256k1_gej_t *r, const secp256k1_gej_t *a) {
+    /* Operations: 3 mul, 4 sqr, 0 normalize, 12 mul_int/add/negate */
     secp256k1_fe_t t1,t2,t3,t4;
     /** For secp256k1, 2Q is infinity if and only if Q is infinity. This is because if 2Q = infinity,
      *  Q must equal -Q, or that Q.y == -(Q.y), or Q.y is 0. For a point on y^2 = x^3 + 7 to have
@@ -250,6 +251,7 @@ static void secp256k1_gej_double_var(secp256k1_gej_t *r, const secp256k1_gej_t *
 }
 
 static void secp256k1_gej_add_var(secp256k1_gej_t *r, const secp256k1_gej_t *a, const secp256k1_gej_t *b) {
+    /* Operations: 12 mul, 4 sqr, 2 normalize, 12 mul_int/add/negate */
     secp256k1_fe_t z22, z12, u1, u2, s1, s2, h, i, i2, h2, h3, t;
     if (a->infinity) {
         *r = *b;
@@ -288,6 +290,7 @@ static void secp256k1_gej_add_var(secp256k1_gej_t *r, const secp256k1_gej_t *a, 
 }
 
 static void secp256k1_gej_add_ge_var(secp256k1_gej_t *r, const secp256k1_gej_t *a, const secp256k1_ge_t *b) {
+    /* 8 mul, 3 sqr, 4 normalize, 12 mul_int/add/negate */
     secp256k1_fe_t z12, u1, u2, s1, s2, h, i, i2, h2, h3, t;
     if (a->infinity) {
         r->infinity = b->infinity;
@@ -328,6 +331,7 @@ static void secp256k1_gej_add_ge_var(secp256k1_gej_t *r, const secp256k1_gej_t *
 }
 
 static void secp256k1_gej_add_ge(secp256k1_gej_t *r, const secp256k1_gej_t *a, const secp256k1_ge_t *b) {
+    /* Operations: 7 mul, 5 sqr, 5 normalize, 19 mul_int/add/negate */
     secp256k1_fe_t zz, u1, u2, s1, s2, z, t, m, n, q, rr;
     int infinity;
     VERIFY_CHECK(!b->infinity);
