@@ -7,6 +7,7 @@
 #define BITCOIN_SCRIPT_INTERPRETER_H
 
 #include "script_error.h"
+#include "primitives/transaction.h"
 
 #include <vector>
 #include <stdint.h>
@@ -14,7 +15,6 @@
 
 class CPubKey;
 class CScript;
-class CTransaction;
 class uint256;
 
 /** Signature hash types/flags */
@@ -93,7 +93,7 @@ public:
 class SignatureChecker : public BaseSignatureChecker
 {
 private:
-    const CTransaction& txTo;
+    const CTransaction txTo;
     unsigned int nIn;
 
 protected:
