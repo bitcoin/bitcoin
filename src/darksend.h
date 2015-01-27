@@ -266,6 +266,8 @@ public:
     int minBlockSpacing; //required blocks between mixes
     CTransaction txCollateral;
 
+    int64_t lastNewBlock;
+
     //debugging data
     std::string strAutoDenomResult;
 
@@ -285,6 +287,7 @@ public:
         txCollateral = CTransaction();
         minBlockSpacing = 1;
         nDsqCount = 0;
+        lastNewBlock = 0;
 
         SetNull();
     }
