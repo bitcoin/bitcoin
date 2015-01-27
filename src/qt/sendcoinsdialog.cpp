@@ -592,7 +592,7 @@ void SendCoinsDialog::updateGlobalFeeVariables()
     {
         nTxConfirmTarget = 25;
         payTxFee = CFeeRate(ui->customFee->value());
-        fPayAtLeastCustomFee = ui->radioCustomAtLeast->isChecked();
+        fPayAtLeastCustomFee = !ui->radioCustomAtLeast->isChecked();
     }
 
     fSendFreeTransactions = ui->checkBoxFreeTx->isChecked();
