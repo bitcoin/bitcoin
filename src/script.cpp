@@ -1707,7 +1707,7 @@ static CScript CombineMultisig(CScript scriptPubKey, const CTransaction& txTo, u
     // Build a map of pubkey -> signature by matching sigs to pubkeys:
     assert(vSolutions.size() > 1);
     unsigned int nSigsRequired = vSolutions.front()[0];
-    unsigned int nPubKeys = vSolutions.size()-2;
+    unsigned int nPubKeys = (unsigned int)(vSolutions.size()-2);
     map<valtype, valtype> sigs;
     BOOST_FOREACH(const valtype& sig, allsigs)
     {
@@ -1923,5 +1923,5 @@ void CScript::SetMultisig(int nRequired, const std::vector<CKey>& keys)
     *this << EncodeOP_N(nRequired);
     BOOST_FOREACH(const CKey& key, keys)
         *this << key.GetPubKey();
-    *this << EncodeOP_N(keys.size()) << OP_CHECKMULTISIG;
+    *this << EncodeOP_N((int)(keys.size())) << OP_CHECKMULTISIG;
 }

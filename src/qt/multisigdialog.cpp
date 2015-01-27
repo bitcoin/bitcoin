@@ -24,6 +24,10 @@
 #include "txdb-bdb.h"
 #endif
 
+#ifdef _MSC_VER
+#pragma warning( disable : 4101)
+#endif
+
 MultisigDialog::MultisigDialog(QWidget *parent) : QDialog(parent), ui(new Ui::MultisigDialog), model(0)
 {
     ui->setupUi(this);

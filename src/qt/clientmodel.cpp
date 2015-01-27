@@ -52,7 +52,7 @@ int ClientModel::getNumConnections(uint8_t flags) const
 {
     LOCK(cs_vNodes);
     if (flags == CONNECTIONS_ALL) // Shortcut if we want total
-        return vNodes.size();
+        return (int)(vNodes.size());
 
     int nNum = 0;
     BOOST_FOREACH(CNode* pnode, vNodes)
