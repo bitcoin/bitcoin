@@ -458,6 +458,7 @@ void CDarkSendPool::SetNull(bool clearEverything){
     entriesCount = 0;
     lastEntryAccepted = 0;
     countEntriesAccepted = 0;
+    lastNewBlock = 0;
 
     sessionUsers = 0;
     sessionDenom = 0;
@@ -1360,6 +1361,11 @@ void CDarkSendPool::NewBlock()
 {
     if(fDebug) LogPrintf("CDarkSendPool::NewBlock \n");
 
+    //we we're processing lots of blocks, we'll just leave
+    if(GetTime() - lastNewBlock < 10) return;
+    lastNewBlock = GetTime();
+
+    darkSendPool.CheckTimeout();
 
     masternodePayments.ProcessBlock(chainActive.Tip()->nHeight+10);
 
