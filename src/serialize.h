@@ -230,20 +230,20 @@ void WriteCompactSize(Stream& os, uint64_t nSize)
 {
     if (nSize < 253)
     {
-        unsigned char chSize = nSize;
+        unsigned char chSize = (unsigned char)nSize;
         WRITEDATA(os, chSize);
     }
     else if (nSize <= std::numeric_limits<unsigned short>::max())
     {
         unsigned char chSize = 253;
-        unsigned short xSize = nSize;
+        unsigned short xSize = (unsigned short)nSize;
         WRITEDATA(os, chSize);
         WRITEDATA(os, xSize);
     }
     else if (nSize <= std::numeric_limits<unsigned int>::max())
     {
         unsigned char chSize = 254;
-        unsigned int xSize = nSize;
+        unsigned int xSize = (unsigned int)nSize;
         WRITEDATA(os, chSize);
         WRITEDATA(os, xSize);
     }
@@ -376,13 +376,13 @@ public:
 
     unsigned int GetSerializeSize(int, int=0) const
     {
-        return pend - pbegin;
+        return (unsigned int)(pend - pbegin);
     }
 
     template<typename Stream>
     void Serialize(Stream& s, int, int=0) const
     {
-        s.write(pbegin, pend - pbegin);
+        s.write(pbegin, (int)(pend - pbegin));
     }
 
     template<typename Stream>
@@ -506,7 +506,7 @@ inline void Unserialize(Stream& is, T& a, long nType, int nVersion)
 template<typename C>
 unsigned int GetSerializeSize(const std::basic_string<C>& str, int, int)
 {
-    return GetSizeOfCompactSize(str.size()) + str.size() * sizeof(str[0]);
+    return (unsigned int)(GetSizeOfCompactSize(str.size()) + str.size() * sizeof(str[0]));
 }
 
 template<typename Stream, typename C>
@@ -514,13 +514,13 @@ void Serialize(Stream& os, const std::basic_string<C>& str, int, int)
 {
     WriteCompactSize(os, str.size());
     if (!str.empty())
-        os.write((char*)&str[0], str.size() * sizeof(str[0]));
+        os.write((char*)&str[0], (int)(str.size() * sizeof(str[0])));
 }
 
 template<typename Stream, typename C>
 void Unserialize(Stream& is, std::basic_string<C>& str, int, int)
 {
-    unsigned int nSize = ReadCompactSize(is);
+    unsigned int nSize = (unsigned int)(ReadCompactSize(is));
     str.resize(nSize);
     if (nSize != 0)
         is.read((char*)&str[0], nSize * sizeof(str[0]));
@@ -534,7 +534,7 @@ void Unserialize(Stream& is, std::basic_string<C>& str, int, int)
 template<typename T, typename A>
 unsigned int GetSerializeSize_impl(const std::vector<T, A>& v, int nType, int nVersion, const boost::true_type&)
 {
-    return (GetSizeOfCompactSize(v.size()) + v.size() * sizeof(T));
+    return (unsigned int)(GetSizeOfCompactSize(v.size()) + v.size() * sizeof(T));
 }
 
 template<typename T, typename A>
@@ -558,7 +558,7 @@ void Serialize_impl(Stream& os, const std::vector<T, A>& v, int nType, int nVers
 {
     WriteCompactSize(os, v.size());
     if (!v.empty())
-        os.write((char*)&v[0], v.size() * sizeof(T));
+        os.write((char*)&v[0], (int)(v.size() * sizeof(T)));
 }
 
 template<typename Stream, typename T, typename A>
@@ -581,7 +581,7 @@ void Unserialize_impl(Stream& is, std::vector<T, A>& v, int nType, int nVersion,
 {
     // Limit size per read so bogus size value won't cause out of memory
     v.clear();
-    unsigned int nSize = ReadCompactSize(is);
+    unsigned int nSize = (unsigned int)(ReadCompactSize(is));
     unsigned int i = 0;
     while (i < nSize)
     {
@@ -596,7 +596,7 @@ template<typename Stream, typename T, typename A>
 void Unserialize_impl(Stream& is, std::vector<T, A>& v, int nType, int nVersion, const boost::false_type&)
 {
     v.clear();
-    unsigned int nSize = ReadCompactSize(is);
+    unsigned int nSize = (unsigned int)(ReadCompactSize(is));
     unsigned int i = 0;
     unsigned int nMid = 0;
     while (nMid < nSize)
@@ -754,7 +754,7 @@ template<typename Stream, typename K, typename T, typename Pred, typename A>
 void Unserialize(Stream& is, std::map<K, T, Pred, A>& m, int nType, int nVersion)
 {
     m.clear();
-    unsigned int nSize = ReadCompactSize(is);
+    unsigned int nSize = (unsigned int)(ReadCompactSize(is));
     typename std::map<K, T, Pred, A>::iterator mi = m.begin();
     for (unsigned int i = 0; i < nSize; i++)
     {
@@ -958,7 +958,7 @@ public:
         if (it == vch.begin() + nReadPos && (unsigned int)(last - first) <= nReadPos)
         {
             // special case for inserting at the front when there's room
-            nReadPos -= (last - first);
+            nReadPos -= (unsigned int)(last - first);
             memcpy(&vch[nReadPos], &first[0], last - first);
         }
         else
@@ -988,7 +988,7 @@ public:
         if (it == vch.begin() + nReadPos && (unsigned int)(last - first) <= nReadPos)
         {
             // special case for inserting at the front when there's room
-            nReadPos -= (last - first);
+            nReadPos -= (unsigned int)(last - first);
             memcpy(&vch[nReadPos], &first[0], last - first);
         }
         else
@@ -1025,7 +1025,7 @@ public:
             }
             else
             {
-                nReadPos = (last - vch.begin());
+                nReadPos = (unsigned int)(last - vch.begin());
                 return last;
             }
         }
@@ -1044,7 +1044,7 @@ public:
         // Rewind by n characters if the buffer hasn't been compacted yet
         if (n > nReadPos)
             return false;
-        nReadPos -= n;
+        nReadPos -= (unsigned int)n;
         return true;
     }
 
@@ -1060,13 +1060,13 @@ public:
     }
 
     bool eof() const             { return size() == 0; }
-    bool fail() const            { return state & (std::ios::badbit | std::ios::failbit); }
+    bool fail() const            { return (state & (std::ios::badbit | std::ios::failbit)) != 0; }
     bool good() const            { return !eof() && (state == 0); }
     void clear(short n)          { state = n; }  // name conflict with vector clear()
     short exceptions()           { return exceptmask; }
     short exceptions(short mask) { short prev = exceptmask; exceptmask = mask; setstate(0, "CDataStream"); return prev; }
     CDataStream* rdbuf()         { return this; }
-    int in_avail()               { return size(); }
+    int in_avail()               { return (int)(size()); }
 
     void SetType(int n)          { nType = n; }
     int GetType()                { return nType; }
@@ -1086,7 +1086,7 @@ public:
             {
                 setstate(std::ios::failbit, "CDataStream::read() : end of data");
                 memset(pch, 0, nSize);
-                nSize = vch.size() - nReadPos;
+                nSize = (int)(vch.size() - nReadPos);
             }
             memcpy(pch, &vch[nReadPos], nSize);
             nReadPos = 0;
@@ -1108,7 +1108,7 @@ public:
             if (nReadPosNext > vch.size())
             {
                 setstate(std::ios::failbit, "CDataStream::ignore() : end of data");
-                nSize = vch.size() - nReadPos;
+                nSize = (int)(vch.size() - nReadPos);
             }
             nReadPos = 0;
             vch.clear();
@@ -1228,7 +1228,7 @@ public:
             throw std::ios_base::failure(psz);
     }
 
-    bool fail() const            { return state & (std::ios::badbit | std::ios::failbit); }
+    bool fail() const            { return (state & (std::ios::badbit | std::ios::failbit)) != 0; }
     bool good() const            { return state == 0; }
     void clear(short n = 0)      { state = n; }
     short exceptions()           { return exceptmask; }
@@ -1312,9 +1312,9 @@ protected:
 
     // read data from the source to fill the buffer
     bool Fill() {
-        unsigned int pos = nSrcPos % vchBuf.size();
-        unsigned int readNow = vchBuf.size() - pos;
-        unsigned int nAvail = vchBuf.size() - (nSrcPos - nReadPos) - nRewind;
+        unsigned int pos = (unsigned int)(nSrcPos % vchBuf.size());
+        unsigned int readNow = (unsigned int)(vchBuf.size() - pos);
+        unsigned int nAvail = (unsigned int)(vchBuf.size() - (nSrcPos - nReadPos) - nRewind);
         if (nAvail < readNow)
             readNow = nAvail;
         if (readNow == 0)
@@ -1357,7 +1357,7 @@ public:
         while (nSize > 0) {
             if (nReadPos == nSrcPos)
                 Fill();
-            unsigned int pos = nReadPos % vchBuf.size();
+            unsigned int pos = (unsigned int)(nReadPos % vchBuf.size());
             size_t nNow = nSize;
             if (nNow + pos > vchBuf.size())
                 nNow = vchBuf.size() - pos;
@@ -1391,7 +1391,7 @@ public:
     }
 
     bool Seek(uint64_t nPos) {
-        long nLongPos = nPos;
+        long nLongPos = (long)nPos;
         if (nPos != (uint64_t)nLongPos)
             return false;
         if (fseek(src, nLongPos, SEEK_SET))

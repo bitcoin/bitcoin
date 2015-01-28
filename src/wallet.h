@@ -328,7 +328,7 @@ public:
 
     unsigned int GetKeyPoolSize()
     {
-        return setKeyPool.size();
+        return (unsigned int)(setKeyPool.size());
     }
 
     bool GetTransaction(const uint256 &hashTx, CWalletTx& wtx);

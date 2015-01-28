@@ -75,7 +75,7 @@ int WalletModel::getNumTransactions() const
     int numTransactions = 0;
     {
         LOCK(wallet->cs_wallet);
-        numTransactions = wallet->mapWallet.size();
+        numTransactions = (int)(wallet->mapWallet.size());
     }
     return numTransactions;
 }

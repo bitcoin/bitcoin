@@ -3,6 +3,9 @@
 #include "wallet.h"
 #include "base58.h"
 
+#ifdef _MSC_VER
+#pragma warning( disable : 4345)
+#endif
 
 using namespace std;
 
@@ -87,7 +90,7 @@ uint64_t KernelRecord::getCoinDay() const
 
 int64_t KernelRecord::getPoSReward(int nBits, int minutes)
 {
-    double PoSReward;
+    int64_t PoSReward;
     int64_t nWeight = GetAdjustedTime() - nTime + minutes * 60;
     if( nWeight <  nStakeMinAge)
         return 0;
@@ -103,7 +106,7 @@ double KernelRecord::getProbToMintStake(double difficulty, int timeOffset) const
     //int dayWeight = (min((GetAdjustedTime() - nTime) + timeOffset, (int64_t)(nStakeMinAge+nStakeMaxAge)) - nStakeMinAge) / 86400;
     //uint64_t coinAge = max(nValue * dayWeight / COIN, (int64_t)0);
     //return target * coinAge / pow(static_cast<double>(2), 256);
-    int Weight = (min((GetAdjustedTime() - nTime) + timeOffset, (int64_t)(nStakeMinAge+nStakeMaxAge)) - nStakeMinAge);
+    int64_t Weight = (min((GetAdjustedTime() - nTime) + timeOffset, (int64_t)(nStakeMinAge+nStakeMaxAge)) - nStakeMinAge);
     uint64_t coinAge = max(nValue * Weight / (COIN * 86400), (int64_t)0);
     return coinAge / (pow(static_cast<double>(2),32) * difficulty);
 }
