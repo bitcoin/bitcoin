@@ -767,6 +767,14 @@ int64_t CWallet::IsDenominated(const CTxIn &txin) const
     return 0;
 }
 
+bool CWallet::IsDenominatedAmount(int64_t nInputAmount) const
+{
+    BOOST_FOREACH(int64_t d, darkSendDenominations)
+        if(nInputAmount == d)
+            return true;
+    return false;
+}
+
 bool CWallet::IsChange(const CTxOut& txout) const
 {
     CTxDestination address;
@@ -1139,6 +1147,31 @@ double CWallet::GetAverageAnonymizedRounds() const
     if(fCount == 0) return 0;
 
     return fTotal/fCount;
+}
+
+int64_t CWallet::GetNormalizedAnonymizedBalance() const
+{
+    int64_t nTotal = 0;
+
+    {
+        LOCK(cs_wallet);
+        for (map<uint256, CWalletTx>::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
+        {
+            const CWalletTx* pcoin = &(*it).second;
+            for (unsigned int i = 0; i < pcoin->vout.size(); i++) {
+
+                COutput out = COutput(pcoin, i, pcoin->GetDepthInMainChain());
+                CTxIn vin = CTxIn(out.tx->GetHash(), out.i);
+
+                if(IsSpent(out.tx->GetHash(), i) || !IsMine(pcoin->vout[i]) || !IsDenominated(vin)) continue;
+
+                int rounds = GetInputDarksendRounds(vin);
+                nTotal += pcoin->vout[i].nValue * rounds / nDarksendRounds;
+            }
+        }
+    }
+
+    return nTotal;
 }
 
 int64_t CWallet::GetDenominatedBalance(bool onlyDenom, bool onlyUnconfirmed) const
