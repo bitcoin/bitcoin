@@ -84,7 +84,8 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     trayIcon(0),
     notificator(0),
     rpcConsole(0),
-    aboutDialog(0)
+    aboutDialog(0),
+    optionsDialog(0)
 {
     resize(850, 550);
     setWindowTitle(tr("NovaCoin") + " - " + tr("Wallet"));
@@ -202,6 +203,7 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     connect(openRPCConsoleAction, SIGNAL(triggered()), rpcConsole, SLOT(show()));
 
     aboutDialog = new AboutDialog(0);
+    optionsDialog = new OptionsDialog(0);
 
     // Clicking on "Verify Message" in the address book sends you to the verify message tab
     connect(addressBookPage, SIGNAL(verifyMessage(QString)), this, SLOT(gotoVerifyMessageTab(QString)));
@@ -221,6 +223,7 @@ BitcoinGUI::~BitcoinGUI()
 
     delete rpcConsole;
     delete aboutDialog;
+    delete optionsDialog;
 }
 
 void BitcoinGUI::createActions()
@@ -538,9 +541,10 @@ void BitcoinGUI::optionsClicked()
 {
     if(!clientModel || !clientModel->getOptionsModel())
         return;
-    OptionsDialog dlg;
-    dlg.setModel(clientModel->getOptionsModel());
-    dlg.exec();
+
+    optionsDialog->setModel(clientModel->getOptionsModel());
+    optionsDialog->setWindowModality(Qt::ApplicationModal);
+    optionsDialog->show();
 }
 
 void BitcoinGUI::aboutClicked()

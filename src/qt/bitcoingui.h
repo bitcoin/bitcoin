@@ -17,6 +17,7 @@ class MultisigDialog;
 class Notificator;
 class RPCConsole;
 class AboutDialog;
+class OptionsDialog;
 
 QT_BEGIN_NAMESPACE
 class QLabel;
@@ -110,6 +111,7 @@ private:
     MintingView *mintingView;
     RPCConsole *rpcConsole;
     AboutDialog *aboutDialog;
+    OptionsDialog *optionsDialog;
 
     QMovie *syncIconMovie;
 
