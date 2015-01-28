@@ -13,9 +13,10 @@
 #include <QMessageBox>
 #include <QRegExp>
 #include <QRegExpValidator>
+#include <QKeyEvent>
 
 OptionsDialog::OptionsDialog(QWidget *parent) :
-    QDialog(parent, DIALOGWINDOWHINTS),
+    QWidget(parent, DIALOGWINDOWHINTS),
     ui(new Ui::OptionsDialog),
     model(0),
     mapper(0),
@@ -216,12 +217,14 @@ void OptionsDialog::setSaveButtonState(bool fState)
 void OptionsDialog::on_okButton_clicked()
 {
     mapper->submit();
-    accept();
+//    accept();
+    close();
 }
 
 void OptionsDialog::on_cancelButton_clicked()
 {
-    reject();
+//    reject();
+    close();
 }
 
 void OptionsDialog::on_applyButton_clicked()
@@ -332,5 +335,20 @@ bool OptionsDialog::eventFilter(QObject *object, QEvent *event)
             emit torIpValid(ui->torIp, LookupNumeric(ui->torIp->text().toStdString().c_str(), addr));
         }
     }
-    return QDialog::eventFilter(object, event);
+    return QWidget::eventFilter(object, event);
+}
+
+void OptionsDialog::keyPressEvent(QKeyEvent *event)
+{
+#ifdef ANDROID
+    if(windowType() != Qt::Widget && event->key() == Qt::Key_Back)
+    {
+        close();
+    }
+#else
+    if(windowType() != Qt::Widget && event->key() == Qt::Key_Escape)
+    {
+        close();
+    }
+#endif
 }

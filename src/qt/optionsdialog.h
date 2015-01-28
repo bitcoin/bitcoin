@@ -1,7 +1,7 @@
 #ifndef OPTIONSDIALOG_H
 #define OPTIONSDIALOG_H
 
-#include <QDialog>
+#include <QWidget>
 
 namespace Ui {
 class OptionsDialog;
@@ -11,7 +11,7 @@ class MonitoredDataMapper;
 class QValidatedLineEdit;
 
 /** Preferences dialog. */
-class OptionsDialog : public QDialog
+class OptionsDialog : public QWidget
 {
     Q_OBJECT
 
@@ -24,6 +24,7 @@ public:
 
 protected:
     bool eventFilter(QObject *object, QEvent *event);
+    void keyPressEvent(QKeyEvent *);
 
 private slots:
     /* enable only apply button */
