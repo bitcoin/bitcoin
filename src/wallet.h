@@ -279,6 +279,7 @@ public:
     int64_t GetImmatureBalance() const;
     int64_t GetAnonymizedBalance() const;
     double GetAverageAnonymizedRounds() const;
+    int64_t GetNormalizedAnonymizedBalance() const;
     int64_t GetDenominatedBalance(bool onlyDenom=true, bool onlyUnconfirmed=false) const;
 
     bool CreateTransaction(const std::vector<std::pair<CScript, int64_t> >& vecSend,
@@ -324,6 +325,8 @@ public:
         }
         return ret;
     }
+
+    bool IsDenominatedAmount(int64_t nInputAmount) const;
 
     bool IsMine(const CTxIn& txin) const;
     int64_t GetDebit(const CTxIn& txin) const;
