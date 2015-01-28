@@ -250,58 +250,53 @@ void OverviewPage::showOutOfSyncWarning(bool fShow)
     ui->labelTransactionsStatus->setVisible(fShow);
 }
 
-void OverviewPage::updateDarksendProgress(){
+void OverviewPage::updateDarksendProgress()
+{
     if(IsInitialBlockDownload()) return;
 
-    int64_t balance = pwalletMain->GetBalance();
-    if(balance == 0){
+    int64_t nBalance = pwalletMain->GetBalance();
+    if(nBalance == 0)
+    {
         ui->darksendProgress->setValue(0);
         QString s("No inputs detected");
         ui->darksendProgress->setToolTip(s);
         return;
     }
 
-    std::ostringstream convert;
-
-    // ** find the coins we'll use
-    std::vector<CTxIn> vCoins;
-    int64_t nValueMin = 0.01*COIN;
-    int64_t nValueIn = 0;
-
-    if(pwalletMain->GetDenominatedBalance(true, true) > 0){ //get denominated unconfirmed inputs
+    //get denominated unconfirmed inputs
+    if(pwalletMain->GetDenominatedBalance(true, true) > 0)
+    {
         QString s("Found unconfirmed denominated outputs, will wait till they confirm to recalculate.");
         ui->darksendProgress->setToolTip(s);
         return;
     }
 
-
-    // Calculate total mixable funds
-    if (!pwalletMain->SelectCoinsDark(nValueMin, 999999*COIN, vCoins, nValueIn, -2, 10)) {
-        ui->darksendProgress->setValue(0);
-        QString s("No inputs detected (2)");
-        ui->darksendProgress->setToolTip(s);
-        return;
-    }
-    double nTotalValue = pwalletMain->GetTotalValue(vCoins)/CENT;
-
     //Get the anon threshold
-    double max = nAnonymizeDarkcoinAmount*100;
-    //If it's more than the wallet amount, limit to that.
-    if(max > (double)nTotalValue) max = (double)nTotalValue;
-    //denominated balance / anon threshold -- the percentage that we've completed
-    double b = ((double)(pwalletMain->GetDenominatedBalance()/CENT) / max);
-    if(b > 1) b = 1;
+    int64_t nMaxToAnonymize = nAnonymizeDarkcoinAmount*COIN;
 
-    //Get average rounds of inputs
-    double a = (double)pwalletMain->GetAverageAnonymizedRounds() / (double)nDarksendRounds;
-    if(a > 1) a = 1;
+    // If it's more than the wallet amount, limit to that.
+    if(nMaxToAnonymize > nBalance) nMaxToAnonymize = nBalance;
 
-    double val = a*b*100;
-    if(val < 0) val = 0;
-    if(val > 100) val = 100;
+    if(nMaxToAnonymize == 0) return;
 
-    ui->darksendProgress->setValue(val);//rounds avg * denom progress
-    convert << "Inputs have an average of " << pwalletMain->GetAverageAnonymizedRounds() << " of " << nDarksendRounds << " rounds (" << a << "/" << b << ")";
+    // calculate parts of the progress, each of them shouldn't be higher than 1:
+    // mixing progress of denominated balance
+    float denomPart = (float)pwalletMain->GetNormalizedAnonymizedBalance() / pwalletMain->GetDenominatedBalance();
+    denomPart = denomPart > 1 ? 1 : denomPart;
+
+    // % of fully anonymized balance
+    float anonPart = (float)pwalletMain->GetAnonymizedBalance() / nMaxToAnonymize;
+    // if anonPart is > 1 then we are done, make denomPart equal 1 too
+    anonPart = anonPart > 1 ? (denomPart = 1, 1) : anonPart;
+
+    // apply some weights to them (sum should be <=100) and calculate the whole progress
+    int progress = 80 * denomPart + 20 * anonPart;
+    if(progress > 100) progress = 100;
+
+    ui->darksendProgress->setValue(progress);
+
+    std::ostringstream convert;
+    convert << "Progress: " << progress << "%, inputs have an average of " << pwalletMain->GetAverageAnonymizedRounds() << " of " << nDarksendRounds << " rounds";
     QString s(convert.str().c_str());
     ui->darksendProgress->setToolTip(s);
 }
