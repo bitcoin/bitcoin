@@ -309,9 +309,9 @@ public:
 
     std::set<CTxDestination> GetAccountAddresses(std::string strAccount) const;
 
-    int64_t IsDenominated(const CTxIn &txin) const;
+    bool IsDenominated(const CTxIn &txin) const;
 
-    int64_t IsDenominated(const CTransaction& tx) const
+    bool IsDenominated(const CTransaction& tx) const
     {
         /*
             Return false if ANY inputs are non-denom
