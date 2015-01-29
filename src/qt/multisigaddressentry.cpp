@@ -92,6 +92,8 @@ void MultisigAddressEntry::on_pubkey_textChanged(const QString &pubkey)
     QString associatedLabel = model->getAddressTableModel()->labelForAddress(address.ToString().c_str());
     if(!associatedLabel.isEmpty())
         ui->label->setText(associatedLabel);
+    else
+        ui->label->setText(QString());
 }
 
 void MultisigAddressEntry::on_address_textChanged(const QString &address)
