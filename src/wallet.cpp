@@ -1505,14 +1505,12 @@ struct CompareByPriority
 
 bool CWallet::SelectCoinsByDenominations(int nDenom, int64_t nValueMin, int64_t nValueMax, std::vector<CTxIn>& setCoinsRet, vector<COutput>& setCoinsRet2, int64_t& nValueRet, int nDarksendRoundsMin, int nDarksendRoundsMax)
 {
-    CCoinControl *coinControl=NULL;
-
     setCoinsRet.clear();
     nValueRet = 0;
 
     setCoinsRet2.clear();
     vector<COutput> vCoins;
-    AvailableCoins(vCoins, false, coinControl, ALL_COINS);
+    AvailableCoins(vCoins);
 
     //order the array so fees are first, then denominated money, then the rest.
     std::random_shuffle(vCoins.rbegin(), vCoins.rend());
@@ -1591,7 +1589,7 @@ bool CWallet::SelectCoinsDark(int64_t nValueMin, int64_t nValueMax, std::vector<
     nValueRet = 0;
 
     vector<COutput> vCoins;
-    AvailableCoins(vCoins, false, coinControl, nDarksendRoundsMin < 0 ? ONLY_NONDENOMINATED_NOTMN : ONLY_DENOMINATED);
+    AvailableCoins(vCoins, true, coinControl, nDarksendRoundsMin < 0 ? ONLY_NONDENOMINATED_NOTMN : ONLY_DENOMINATED);
 
     set<pair<const CWalletTx*,unsigned int> > setCoinsRet2;
 
@@ -1627,12 +1625,10 @@ bool CWallet::SelectCoinsDark(int64_t nValueMin, int64_t nValueMax, std::vector<
 
 bool CWallet::SelectCoinsCollateral(std::vector<CTxIn>& setCoinsRet, int64_t& nValueRet) const
 {
-    CCoinControl *coinControl=NULL;
-
     vector<COutput> vCoins;
 
     //printf(" selecting coins for collateral\n");
-    AvailableCoins(vCoins, false, coinControl, ALL_COINS);
+    AvailableCoins(vCoins);
 
     //printf("found coins %d\n", (int)vCoins.size());
 
@@ -1687,10 +1683,8 @@ int CWallet::CountInputsWithAmount(int64_t nInputAmount)
 
 bool CWallet::HasCollateralInputs() const
 {
-    CCoinControl *coinControl=NULL;
-
     vector<COutput> vCoins;
-    AvailableCoins(vCoins, false, coinControl, ALL_COINS);
+    AvailableCoins(vCoins);
 
     int nFound = 0;
     BOOST_FOREACH(const COutput& out, vCoins)
