@@ -1,47 +1,47 @@
 // RPC calls
 
-#include "rpcserver.h"
-#include "util.h"
-#include "init.h"
-#include "wallet.h"
-
-#include <stdint.h>
-#include <string.h>
-#include <map>
-
-#include <fstream>
-#include <vector>
-#include <string>
-
-#include <boost/algorithm/string.hpp>
-#include <boost/algorithm/string/find.hpp>
-#include <boost/lexical_cast.hpp>
-#include <boost/format.hpp>
-
-#include "json/json_spirit_utils.h"
-#include "json/json_spirit_value.h"
-
-#include "leveldb/db.h"
-#include "leveldb/write_batch.h"
-
-#include <openssl/sha.h>
-
-using namespace std;
-using namespace boost;
-using namespace json_spirit;
+#include "mastercore_rpc.h"
 
 #include "mastercore.h"
-
-using namespace mastercore;
-
 #include "mastercore_convert.h"
 #include "mastercore_dex.h"
-#include "mastercore_parse_string.h"
-#include "mastercore_tx.h"
-#include "mastercore_sp.h"
-#include "mastercore_rpc.h"
 #include "mastercore_errors.h"
+#include "mastercore_parse_string.h"
+#include "mastercore_sp.h"
+#include "mastercore_tx.h"
 #include "mastercore_version.h"
+
+#include "core.h"
+#include "init.h"
+#include "main.h"
+#include "rpcserver.h"
+#include "uint256.h"
+#include "util.h"
+#include "wallet.h"
+
+#include <boost/algorithm/string.hpp>
+#include <boost/exception/to_string.hpp>
+#include <boost/lexical_cast.hpp>
+
+#include "json/json_spirit_value.h"
+
+#include <stdint.h>
+
+#include <map>
+#include <stdexcept>
+#include <string>
+#include <vector>
+
+using boost::algorithm::token_compress_on;
+using boost::to_string;
+
+using std::map;
+using std::runtime_error;
+using std::string;
+
+using namespace json_spirit;
+using namespace mastercore;
+
 
 void PropertyToJSON(const CMPSPInfo::Entry& sProperty, Object& property_obj)
 {
@@ -1357,7 +1357,7 @@ Value listblocktransactions_MP(const Array& params, bool fHelp)
 }
 
 // this function standardizes the RPC output for gettransaction_MP and listtransaction_MP into a central function
-int populateRPCTransactionObject(uint256 txid, Object *txobj, string filterAddress = "")
+int populateRPCTransactionObject(const uint256& txid, Object *txobj, std::string filterAddress = "")
 {
     //uint256 hash;
     //hash.SetHex(params[0].get_str());

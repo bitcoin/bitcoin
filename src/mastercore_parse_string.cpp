@@ -1,10 +1,11 @@
 #include "mastercore_parse_string.h"
 
+#include <boost/lexical_cast.hpp>
+
 #include <stdint.h>
+
 #include <algorithm>
 #include <string>
-
-#include <boost/lexical_cast.hpp>
 
 namespace mastercore
 {

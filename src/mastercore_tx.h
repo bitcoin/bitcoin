@@ -1,7 +1,26 @@
 #ifndef _MASTERCOIN_TX
 #define _MASTERCOIN_TX 1
 
+class CMPOffer;
+class CMPMetaDEx;
+
 #include "mastercore.h"
+
+#include "uint256.h"
+#include "util.h"
+
+#include <stdint.h>
+#include <stdio.h>
+#include <string.h>
+
+#include <string>
+#include <utility>
+
+using std::pair;
+using std::string;
+
+using mastercore::c_strMasterProtocolTXType;
+
 
 // The class responsible for tx interpreting/parsing.
 //

@@ -1,6 +1,8 @@
 #ifndef _MASTERCOIN_ERRORS
 #define _MASTERCOIN_ERRORS 1
 
+#include <string>
+
 enum MPRPCErrorCode
 {
     //INTERNAL_1packet

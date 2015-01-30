@@ -6,10 +6,30 @@
 #ifndef _MASTERCOIN
 #define _MASTERCOIN 1
 
-#include "netbase.h"
-#include "protocol.h"
+class CBlockIndex;
+class CTransaction;
 
-#include "tinyformat.h"
+#include "sync.h"
+#include "uint256.h"
+#include "util.h"
+
+#include <boost/filesystem/path.hpp>
+
+#include "leveldb/db.h"
+
+#include "json/json_spirit_value.h"
+
+#include <stdint.h>
+#include <stdio.h>
+
+#include <map>
+#include <string>
+#include <vector>
+
+using json_spirit::Array;
+
+using std::string;
+
 
 #define DISABLE_METADEX
 
@@ -129,10 +149,6 @@ enum FILETYPES {
 #define OMNI_PROPERTY_BTC   0
 #define OMNI_PROPERTY_MSC   1
 #define OMNI_PROPERTY_TMSC  2
-
-#include <boost/multiprecision/cpp_dec_float.hpp>
-using boost::multiprecision::cpp_dec_float_100;
-typedef cpp_dec_float_100 XDOUBLE;
 
 int mp_LogPrintStr(const std::string &str);
 
@@ -529,7 +545,7 @@ bool isCrowdsalePurchase(uint256 txid, string address, int64_t *propertyId = NUL
 bool isMPinBlockRange(int starting_block, int ending_block, bool bDeleteFound);
 std::string FormatIndivisibleMP(int64_t n);
 
-int ClassB_send(const string &senderAddress, const string &receiverAddress, const string &redemptionAddress, const vector<unsigned char> &data, uint256 & txid, int64_t additional = 0);
+int ClassB_send(const string &senderAddress, const string &receiverAddress, const string &redemptionAddress, const std::vector<unsigned char> &data, uint256 & txid, int64_t additional = 0);
 
 uint256 send_INTERNAL_1packet(const string &FromAddress, const string &ToAddress, const string &RedeemAddress, unsigned int PropertyID, uint64_t Amount,
  unsigned int PropertyID_2, uint64_t Amount_2, unsigned int TransactionType, int64_t additional, int *error_code = NULL);

@@ -1,62 +1,34 @@
 // DEx & MetaDEx
 
-#include "base58.h"
-#include "rpcserver.h"
-#include "init.h"
+#include "mastercore_dex.h"
+
+#include "mastercore.h"
+#include "mastercore_convert.h"
+#include "mastercore_errors.h"
+#include "mastercore_tx.h"
+
 #include "util.h"
-#include "wallet.h"
 
-#include <stdint.h>
-#include <string.h>
-
-#include <map>
-#include <set>
-
-#include <fstream>
-#include <algorithm>
-
-#include <vector>
-
-#include <utility>
-#include <string>
-
-#include <boost/assign/list_of.hpp>
 #include <boost/algorithm/string.hpp>
-#include <boost/algorithm/string/find.hpp>
-#include <boost/algorithm/string/join.hpp>
-#include <boost/lexical_cast.hpp>
 #include <boost/format.hpp>
-#include <boost/filesystem.hpp>
-#include "json/json_spirit_utils.h"
-#include "json/json_spirit_value.h"
-
-#include "leveldb/db.h"
-#include "leveldb/write_batch.h"
 
 #include <openssl/sha.h>
 
-#include <boost/math/constants/constants.hpp>
-#include <boost/multiprecision/cpp_int.hpp>
-#include <boost/multiprecision/cpp_dec_float.hpp>
+#include <stdint.h>
 
-using boost::multiprecision::int128_t;
-using boost::multiprecision::cpp_int;
-using boost::multiprecision::cpp_dec_float;
-using boost::multiprecision::cpp_dec_float_100;
+#include <fstream>
+#include <map>
+#include <set>
+#include <string>
+#include <utility>
+#include <vector>
 
-using namespace std;
-using namespace boost;
-using namespace boost::assign;
-using namespace json_spirit;
-using namespace leveldb;
+using boost::algorithm::token_compress_on;
 
-#include "mastercore.h"
+using std::string;
 
 using namespace mastercore;
 
-#include "mastercore_convert.h"
-#include "mastercore_dex.h"
-#include "mastercore_tx.h"
 
 extern int msc_debug_metadex1, msc_debug_metadex2, msc_debug_metadex3;
 
@@ -1016,7 +988,7 @@ bool MetaDEx_compare::operator()(const CMPMetaDEx &lhs, const CMPMetaDEx &rhs) c
   else return lhs.getBlock() < rhs.getBlock();
 }
 
-void CMPMetaDEx::saveOffer(ofstream &file, SHA256_CTX *shaCtx) const
+void CMPMetaDEx::saveOffer(std::ofstream &file, SHA256_CTX *shaCtx) const
 {
     string lineOut = (boost::format("%s,%d,%d,%d,%d,%d,%d,%d,%s,%d")
       % addr
@@ -1035,6 +1007,6 @@ void CMPMetaDEx::saveOffer(ofstream &file, SHA256_CTX *shaCtx) const
     SHA256_Update(shaCtx, lineOut.c_str(), lineOut.length());
 
     // write the line
-    file << lineOut << endl;
+    file << lineOut << std::endl;
 }
 

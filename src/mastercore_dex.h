@@ -3,6 +3,31 @@
 
 #include "mastercore.h"
 
+#include "main.h"
+#include "uint256.h"
+
+#include <boost/format.hpp>
+#include <boost/multiprecision/cpp_dec_float.hpp>
+
+#include <openssl/sha.h>
+
+#include <stdint.h>
+
+#include <fstream>
+#include <map>
+#include <set>
+#include <string>
+#include <utility>
+
+using boost::multiprecision::cpp_dec_float_100;
+
+using std::endl;
+using std::ofstream;
+using std::string;
+
+typedef cpp_dec_float_100 XDOUBLE;
+
+
 // this is the internal format for the offer primary key (TODO: replace by a class method)
 #define STR_SELLOFFER_ADDR_PROP_COMBO(x) ( x + "-" + strprintf("%d", prop))
 #define STR_ACCEPT_ADDR_PROP_ADDR_COMBO( _seller , _buyer ) ( _seller + "-" + strprintf("%d", prop) + "+" + _buyer)
@@ -11,9 +36,6 @@
 
 #define DISPLAY_PRECISION_LEN  50
 #define INTERNAL_PRECISION_LEN 50
-
-#include <boost/multiprecision/cpp_dec_float.hpp>
-using boost::multiprecision::cpp_dec_float_100;
 
 // a single outstanding offer -- from one seller of one property, internally may have many accepts
 class CMPOffer
@@ -168,9 +190,6 @@ public:
   }
 
 };  // end of CMPAccept class
-
-typedef cpp_dec_float_100 XDOUBLE;
-// typedef double XDOUBLE;
 
 // a metadex trade
 class CMPMetaDEx

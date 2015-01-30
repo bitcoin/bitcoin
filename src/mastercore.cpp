@@ -13,71 +13,79 @@
 // global TODO: need locks on the maps in this file & balances (moneys[],reserved[] & raccept[]) !!!
 //
 
+#include "mastercore.h"
+
+#include "mastercore_convert.h"
+#include "mastercore_dex.h"
+#include "mastercore_errors.h"
+#include "mastercore_sp.h"
+#include "mastercore_tx.h"
+#include "mastercore_version.h"
+
 #include "base58.h"
-#include "rpcserver.h"
+#include "chainparams.h"
+#include "coincontrol.h"
 #include "init.h"
+#include "sync.h"
+#include "uint256.h"
 #include "util.h"
 #include "wallet.h"
-// #include "walletdb.h"
-#include "coincontrol.h"
 
-#include <stdint.h>
-#include <string.h>
-#include <set>
-#include <map>
-
-#include <fstream>
-#include <algorithm>
-
-#include <vector>
-
-#include <utility>
-#include <string>
-
-#include <boost/assign/list_of.hpp>
 #include <boost/algorithm/string.hpp>
-#include <boost/algorithm/string/find.hpp>
-#include <boost/algorithm/string/join.hpp>
-#include <boost/lexical_cast.hpp>
-#include <boost/format.hpp>
+#include <boost/exception/to_string.hpp>
 #include <boost/filesystem.hpp>
-#include "json/json_spirit_utils.h"
-#include "json/json_spirit_value.h"
-
-#include "leveldb/db.h"
-#include "leveldb/write_batch.h"
+#include <boost/foreach.hpp>
+#include <boost/format.hpp>
+#include <boost/lexical_cast.hpp>
+#include <boost/multiprecision/cpp_int.hpp>
+#include <boost/thread/mutex.hpp>
 
 #include <openssl/sha.h>
 
-// #include "tinyformat.h"
+#include "json/json_spirit_value.h"
+#include "json/json_spirit_writer_template.h"
 
-#include <boost/multiprecision/cpp_int.hpp>
+#include "leveldb/db.h"
+
+#include <assert.h>
+#include <stdint.h>
+#include <stdio.h>
+
+#include <fstream>
+#include <map>
+#include <set>
+#include <string>
+#include <vector>
+
+using boost::algorithm::token_compress_on;
+using boost::multiprecision::cpp_int;
+using boost::multiprecision::int128_t;
+using boost::to_string;
+
+using json_spirit::Array;
+using json_spirit::Pair;
+using json_spirit::Object;
+using json_spirit::write_string;
+
+using leveldb::Iterator;
+using leveldb::Slice;
+using leveldb::Status;
+
+using std::make_pair;
+using std::map;
+using std::ofstream;
+using std::string;
+using std::vector;
+
+using namespace mastercore;
+
 
 // comment out MY_HACK & others here - used for Unit Testing only !
 // #define MY_HACK
 
-using boost::multiprecision::int128_t;
-using boost::multiprecision::cpp_int;
-using namespace std;
-using namespace boost;
-using namespace boost::assign;
-using namespace json_spirit;
-using namespace leveldb;
-
 static string exodus_address = "1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P";
 static const string exodus_testnet = "mpexoDuSkGGqvqrkrjiFng38QPkJQVFyqv";
 static const string getmoney_testnet = "moneyqMan7uh8FqdCA2BV5yZ8qVrc9ikLP";
-
-#include "mastercore.h"
-
-using namespace mastercore;
-
-#include "mastercore_convert.h"
-#include "mastercore_dex.h"
-#include "mastercore_tx.h"
-#include "mastercore_sp.h"
-#include "mastercore_errors.h"
-#include "mastercore_version.h"
 
 // part of 'breakout' feature
 static const int nBlockTop = 0;
@@ -2013,7 +2021,7 @@ static int msc_file_load(const string &filename, int what, bool verifyHash = fal
     file_log("%s(%s), line %d, file: %s\n", __FUNCTION__, filename.c_str(), __LINE__, __FILE__);
   }
 
-  ifstream file;
+  std::ifstream file;
   file.open(filename.c_str());
   if (!file.is_open())
   {

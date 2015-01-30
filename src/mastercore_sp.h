@@ -3,6 +3,45 @@
 
 #include "mastercore.h"
 
+class CBlockIndex;
+
+#include "uint256.h"
+#include "util.h"
+
+#include <boost/algorithm/string.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/format.hpp>
+#include <boost/lexical_cast.hpp>
+
+#include <openssl/sha.h>
+
+#include "json/json_spirit_reader_template.h"
+#include "json/json_spirit_value.h"
+
+#include "leveldb/db.h"
+#include "leveldb/write_batch.h"
+
+#include <stdint.h>
+#include <stdio.h>
+
+#include <fstream>
+#include <map>
+#include <string>
+#include <vector>
+
+using boost::algorithm::token_compress_on;
+
+using json_spirit::Object;
+using json_spirit::Pair;
+using json_spirit::Value;
+using json_spirit::read_string;
+using json_spirit::obj_type;
+
+using std::endl;
+using std::ofstream;
+using std::string;
+
+
 class CMPSPInfo
 {
 public:

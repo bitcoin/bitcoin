@@ -1,46 +1,39 @@
 // Smart Properties & Crowd Sales
 
-#include "base58.h"
-#include "rpcserver.h"
-#include "init.h"
-#include "util.h"
-#include "wallet.h"
+#include "mastercore_sp.h"
 
-#include <stdint.h>
-#include <string.h>
+#include "mastercore.h"
 
-#include <fstream>
-#include <algorithm>
+#include "main.h"
+#include "uint256.h"
 
-#include <vector>
-
-#include <utility>
-#include <string>
-
-#include <boost/assign/list_of.hpp>
 #include <boost/algorithm/string.hpp>
-#include <boost/algorithm/string/find.hpp>
-#include <boost/lexical_cast.hpp>
-#include <boost/format.hpp>
 #include <boost/filesystem.hpp>
-
-#include "json/json_spirit_utils.h"
-#include "json/json_spirit_value.h"
+#include <boost/format.hpp>
+#include <boost/lexical_cast.hpp>
 
 #include "leveldb/db.h"
 #include "leveldb/write_batch.h"
 
-using namespace std;
-using namespace boost;
-using namespace boost::assign;
-using namespace json_spirit;
-using namespace leveldb;
+#include "json/json_spirit_value.h"
+#include "json/json_spirit_writer_template.h"
 
-#include "mastercore.h"
+#include <stdint.h>
+
+#include <map>
+#include <string>
+#include <vector>
+
+using boost::algorithm::token_compress_on;
+
+using json_spirit::Object;
+using json_spirit::Value;
+using json_spirit::write_string;
+
+using std::string;
 
 using namespace mastercore;
 
-#include "mastercore_sp.h"
 
 unsigned int CMPSPInfo::updateSP(unsigned int propertyID, Entry const &info)
 {
