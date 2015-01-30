@@ -85,6 +85,21 @@
         <file alias="spinner-034">res/movies/spinner-034.png</file>
     </qresource>
     <qresource prefix="/translations">
+        <file alias="ar">locale/darkcoin_ar.qm</file>
+        <file alias="cs">locale/darkcoin_cs.qm</file>
+        <file alias="de">locale/darkcoin_de.qm</file>
         <file alias="en">locale/darkcoin_en.qm</file>
+        <file alias="es">locale/darkcoin_es.qm</file>
+        <file alias="fr">locale/darkcoin_fr.qm</file>
+        <file alias="hu_HU">locale/darkcoin_hu_HU.qm</file>
+        <file alias="it">locale/darkcoin_it.qm</file>
+        <file alias="nl_BE">locale/darkcoin_nl_BE.qm</file>
+        <file alias="pl">locale/darkcoin_pl.qm</file>
+        <file alias="pt">locale/darkcoin_pt.qm</file>
+        <file alias="ru">locale/darkcoin_ru.qm</file>
+        <file alias="sv">locale/darkcoin_sv.qm</file>
+        <file alias="tr">locale/darkcoin_tr.qm</file>
+        <file alias="vi_VN">locale/darkcoin_vi_VN.qm</file>
+        <file alias="zh">locale/darkcoin_zh.qm</file>
     </qresource>
 </RCC>
