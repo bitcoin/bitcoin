@@ -5,9 +5,10 @@
 #include "recentrequeststablemodel.h"
 
 #include "bitcoinunits.h"
-#include "clientversion.h"
 #include "guiutil.h"
 #include "optionsmodel.h"
+
+#include "clientversion.h"
 #include "streams.h"
 
 #include <boost/foreach.hpp>
