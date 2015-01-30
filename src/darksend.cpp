@@ -1405,6 +1405,8 @@ bool CDarkSendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
 {
     LOCK(cs_darksend);
 
+    if(IsInitialBlockDownload()) return false;
+
     if(fMasterNode) return false;
     if(state == POOL_STATUS_ERROR || state == POOL_STATUS_SUCCESS) return false;
 
