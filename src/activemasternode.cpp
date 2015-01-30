@@ -361,12 +361,11 @@ bool CActiveMasternode::GetVinFromOutput(COutput out, CTxIn& vin, CPubKey& pubke
 // get all possible outputs for running masternode
 vector<COutput> CActiveMasternode::SelectCoinsMasternode()
 {
-    CCoinControl *coinControl=NULL;
     vector<COutput> vCoins;
     vector<COutput> filteredCoins;
 
     // Retrieve all possible outputs
-    pwalletMain->AvailableCoins(vCoins, true, coinControl, ALL_COINS);
+    pwalletMain->AvailableCoins(vCoins);
 
     // Filter
     BOOST_FOREACH(const COutput& out, vCoins)
