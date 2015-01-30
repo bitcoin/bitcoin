@@ -175,10 +175,8 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
             for (unsigned int nOut = 0; nOut < wtx.vout.size(); nOut++)
             {
                 const CTxOut& txout = wtx.vout[nOut];
-
-                BOOST_FOREACH(int64_t d, darkSendDenominations)
-                    if(txout.nValue == d)
-                        isDarksent = true;
+                isDarksent = wallet->IsDenominatedAmount(txout.nValue);
+                if(isDarksent) break;  // no need to loop more
             }
 
             parts.append(TransactionRecord(hash, nTime, isDarksent ? TransactionRecord::DarksendDenominate : TransactionRecord::Other, "", nNet, 0));
