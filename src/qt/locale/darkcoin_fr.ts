@@ -4,12 +4,12 @@
     <message>
         <location filename="../forms/aboutdialog.ui" line="14"/>
         <source>About Darkcoin Core</source>
-        <translation type="unfinished"/>
+        <translation>A propos de Darkcoin Core</translation>
     </message>
     <message>
         <location filename="../forms/aboutdialog.ui" line="53"/>
         <source>&lt;b&gt;Darkcoin Core&lt;/b&gt; version</source>
-        <translation type="unfinished"/>
+        <translation>Version de &lt;b&gt;Darkcoin Core&lt;/b&gt;</translation>
     </message>
     <message>
         <location filename="../forms/aboutdialog.ui" line="111"/>
@@ -27,52 +27,52 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/addressbookpage.ui" line="30"/>
         <source>Double-click to edit address or label</source>
-        <translation type="unfinished"/>
+        <translation>Double-cliquer pour éditer adresse ou étiquette</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="57"/>
         <source>Create a new address</source>
-        <translation type="unfinished"/>
+        <translation>Créer une nouvelle adresse</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="60"/>
         <source>&amp;New</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Nouveau</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="71"/>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation type="unfinished"/>
+        <translation>Copier l&apos;adresse actuellement sélectionnée vers le presse-papiers du système</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="74"/>
         <source>&amp;Copy</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Copier</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="85"/>
         <source>Delete the currently selected address from the list</source>
-        <translation type="unfinished"/>
+        <translation>Supprimer l&apos;adresse actuellement sélectionnée de la liste</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="88"/>
         <source>&amp;Delete</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Supprimer</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="112"/>
         <source>Export the data in the current tab to a file</source>
-        <translation type="unfinished"/>
+        <translation>Exporter les données de l&apos;onglet actuel vers un fichier</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="115"/>
         <source>&amp;Export</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Exporter</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="132"/>
         <source>C&amp;lose</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Fermer</translation>
     </message>
 </context>
 <context>
@@ -85,17 +85,17 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="47"/>
         <source>Enter passphrase</source>
-        <translation type="unfinished"/>
+        <translation>Entrer mot de passe</translation>
     </message>
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="61"/>
         <source>New passphrase</source>
-        <translation type="unfinished"/>
+        <translation>Nouveau mot de passe</translation>
     </message>
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="75"/>
         <source>Repeat new passphrase</source>
-        <translation type="unfinished"/>
+        <translation>Répéter mot de passe</translation>
     </message>
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="108"/>
@@ -105,7 +105,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="111"/>
         <source>For anonymization only</source>
-        <translation type="unfinished"/>
+        <translation>Pour anonymisation uniquement</translation>
     </message>
 </context>
 <context>
@@ -118,7 +118,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/coincontroldialog.ui" line="48"/>
         <source>Quantity:</source>
-        <translation type="unfinished"/>
+        <translation>Quantité :</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="77"/>
@@ -128,17 +128,17 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/coincontroldialog.ui" line="122"/>
         <source>Amount:</source>
-        <translation type="unfinished"/>
+        <translation>Montant :</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="151"/>
         <source>Priority:</source>
-        <translation type="unfinished"/>
+        <translation>Priorité :</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="196"/>
         <source>Fee:</source>
-        <translation type="unfinished"/>
+        <translation>Frais :</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="228"/>
@@ -173,12 +173,12 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/coincontroldialog.ui" line="446"/>
         <source>Amount</source>
-        <translation type="unfinished"/>
+        <translation>Montant</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="456"/>
         <source>Address</source>
-        <translation type="unfinished"/>
+        <translation>Adresse</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="461"/>
@@ -188,7 +188,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/coincontroldialog.ui" line="466"/>
         <source>Date</source>
-        <translation type="unfinished"/>
+        <translation>Date</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="471"/>
@@ -198,12 +198,12 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/coincontroldialog.ui" line="474"/>
         <source>Confirmed</source>
-        <translation type="unfinished"/>
+        <translation>Confirmé</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="479"/>
         <source>Priority</source>
-        <translation type="unfinished"/>
+        <translation>Priorité</translation>
     </message>
 </context>
 <context>
@@ -211,7 +211,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/editaddressdialog.ui" line="14"/>
         <source>Edit Address</source>
-        <translation type="unfinished"/>
+        <translation>Editer Adresse</translation>
     </message>
     <message>
         <location filename="../forms/editaddressdialog.ui" line="25"/>
@@ -226,7 +226,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/editaddressdialog.ui" line="42"/>
         <source>&amp;Address</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Adresse</translation>
     </message>
     <message>
         <location filename="../forms/editaddressdialog.ui" line="52"/>
@@ -247,12 +247,12 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/intro.ui" line="14"/>
         <source>Welcome</source>
-        <translation type="unfinished"/>
+        <translation>Bienvenue</translation>
     </message>
     <message>
         <location filename="../forms/intro.ui" line="23"/>
         <source>Welcome to Darkcoin Core.</source>
-        <translation type="unfinished"/>
+        <translation>Bienvenue à Darkcoin Core</translation>
     </message>
     <message>
         <location filename="../forms/intro.ui" line="49"/>
@@ -982,7 +982,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="225"/>
         <source>Quantity:</source>
-        <translation type="unfinished"/>
+        <translation>Quantité :</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="260"/>
@@ -992,17 +992,17 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="308"/>
         <source>Amount:</source>
-        <translation type="unfinished"/>
+        <translation>Montant :</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="340"/>
         <source>Priority:</source>
-        <translation type="unfinished"/>
+        <translation>Priorité :</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="388"/>
         <source>Fee:</source>
-        <translation type="unfinished"/>
+        <translation>Frais :</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="420"/>

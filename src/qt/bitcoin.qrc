@@ -91,12 +91,15 @@
         <file alias="en">locale/darkcoin_en.qm</file>
         <file alias="es">locale/darkcoin_es.qm</file>
         <file alias="fr">locale/darkcoin_fr.qm</file>
+        <file alias="fr_FR">locale/darkcoin_fr_FR.qm</file>
         <file alias="hu_HU">locale/darkcoin_hu_HU.qm</file>
         <file alias="it">locale/darkcoin_it.qm</file>
+        <file alias="lv_LV">locale/darkcoin_lv_LV.qm</file>
         <file alias="nl_BE">locale/darkcoin_nl_BE.qm</file>
         <file alias="pl">locale/darkcoin_pl.qm</file>
         <file alias="pt">locale/darkcoin_pt.qm</file>
         <file alias="ru">locale/darkcoin_ru.qm</file>
+        <file alias="ru_lv">locale/darkcoin_ru_lv.qm</file>
         <file alias="sv">locale/darkcoin_sv.qm</file>
         <file alias="tr">locale/darkcoin_tr.qm</file>
         <file alias="vi_VN">locale/darkcoin_vi_VN.qm</file>
