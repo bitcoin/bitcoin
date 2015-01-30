@@ -18,17 +18,19 @@ QT_TS = \
   locale/darkcoin_en.ts \
   locale/darkcoin_es.ts \
   locale/darkcoin_fr.ts \
+  locale/darkcoin_fr_FR.ts \
   locale/darkcoin_hu_HU.ts \
   locale/darkcoin_it.ts \
+  locale/darkcoin_lv_LV.ts \
   locale/darkcoin_nl_BE.ts \
   locale/darkcoin_pl.ts \
   locale/darkcoin_pt.ts \
   locale/darkcoin_ru.ts \
+  locale/darkcoin_ru_lv.ts \
   locale/darkcoin_sv.ts \
   locale/darkcoin_tr.ts \
   locale/darkcoin_vi_VN.ts \
-  locale/darkcoin_zh.ts \
-
+  locale/darkcoin_zh.ts
 
 QT_FORMS_UI = \
   forms/aboutdialog.ui \
