@@ -394,45 +394,34 @@ int GetInputDarksendRounds(CTxIn in, int rounds)
     padding.insert(0, ((rounds+1)*5)+3, ' ');
 
     CWalletTx tx;
-    if(pwalletMain->GetTransaction(in.prevout.hash,tx)){
+    if(pwalletMain->GetTransaction(in.prevout.hash,tx))
+    {
         // bounds check
         if(in.prevout.n >= tx.vout.size()) return -4;
 
         if(tx.vout[in.prevout.n].nValue == DARKSEND_FEE) return -3;
 
-        if(rounds == 0){ //make sure the final output is non-denominate
-            bool found = false;
-            BOOST_FOREACH(int64_t d, darkSendDenominations)
-                if(tx.vout[in.prevout.n].nValue == d) found = true;
+        //make sure the final output is non-denominate
+        if(rounds == 0 && !pwalletMain->IsDenominatedAmount(tx.vout[in.prevout.n].nValue)) return -2; //NOT DENOM
 
-            if(!found) {
-                //LogPrintf(" - NOT DENOM\n");
-                return -2;
-            }
-        }
         bool found = false;
-
-        BOOST_FOREACH(CTxOut out, tx.vout){
-            BOOST_FOREACH(int64_t d, darkSendDenominations)
-                if(out.nValue == d)
-                    found = true;
+        BOOST_FOREACH(CTxOut out, tx.vout)
+        {
+            found = pwalletMain->IsDenominatedAmount(out.nValue);
+            if(found) break; // no need to loop more
         }
-
-        if(!found) {
-            //LogPrintf(" - NOT FOUND\n");
-            return rounds - 1; // -1 because of the pre-mixing creation of denominated amounts
-        }
+        if(!found) return rounds - 1; //NOT FOUND, "-1" because of the pre-mixing creation of denominated amounts
 
         // find my vin and look that up
-        BOOST_FOREACH(CTxIn in2, tx.vin) {
-            if(pwalletMain->IsMine(in2)){
+        BOOST_FOREACH(CTxIn in2, tx.vin)
+        {
+            if(pwalletMain->IsMine(in2))
+            {
                 //LogPrintf("rounds :: %s %s %d NEXT\n", padding.c_str(), in.ToString().c_str(), rounds);
                 int n = GetInputDarksendRounds(in2, rounds+1);
                 if(n != -3) return n;
             }
         }
-    } else {
-        //LogPrintf("rounds :: %s %s %d NOTFOUND\n", padding.c_str(), in.ToString().c_str(), rounds);
     }
 
     return rounds-1;

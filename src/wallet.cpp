@@ -747,7 +747,7 @@ int64_t CWallet::GetDebit(const CTxIn &txin) const
     return 0;
 }
 
-int64_t CWallet::IsDenominated(const CTxIn &txin) const
+bool CWallet::IsDenominated(const CTxIn &txin) const
 {
     {
         LOCK(cs_wallet);
@@ -755,16 +755,10 @@ int64_t CWallet::IsDenominated(const CTxIn &txin) const
         if (mi != mapWallet.end())
         {
             const CWalletTx& prev = (*mi).second;
-            if (txin.prevout.n < prev.vout.size()){
-                BOOST_FOREACH(int64_t d, darkSendDenominations){
-                    if(prev.vout[txin.prevout.n].nValue == d) {
-                        return true;
-                    }
-                }
-            }
+            if (txin.prevout.n < prev.vout.size()) return IsDenominatedAmount(prev.vout[txin.prevout.n].nValue);
         }
     }
-    return 0;
+    return false;
 }
 
 bool CWallet::IsDenominatedAmount(int64_t nInputAmount) const
@@ -1193,9 +1187,7 @@ int64_t CWallet::GetDenominatedBalance(bool onlyDenom, bool onlyUnconfirmed) con
                 if(IsSpent(out.tx->GetHash(), i)) continue;
                 if(!IsMine(pcoin->vout[i])) continue;
                 if(onlyUnconfirmed != unconfirmed) continue;
-
-                int rounds = GetInputDarksendRounds(vin);
-                if(onlyDenom != (rounds>=0)) continue;
+                if(onlyDenom != IsDenominatedAmount(pcoin->vout[i].nValue)) continue;
 
                 nTotal += pcoin->vout[i].nValue;
             }
@@ -1266,16 +1258,11 @@ void CWallet::AvailableCoins(vector<COutput>& vCoins, bool fOnlyConfirmed, const
                 if(coin_type == ONLY_DENOMINATED) {
                     //should make this a vector
 
-                   COutput out = COutput(pcoin, i, pcoin->GetDepthInMainChain());
-                   CTxIn vin = CTxIn(out.tx->GetHash(), out.i);
-                   int rounds = GetInputDarksendRounds(vin);
-                   if(rounds >= 0) found = true;
+                    found = IsDenominatedAmount(pcoin->vout[i].nValue);
                 } else if(coin_type == ONLY_NONDENOMINATED || coin_type == ONLY_NONDENOMINATED_NOTMN) {
                     found = true;
                     if (IsCollateralAmount(pcoin->vout[i].nValue)) continue; // do not use collateral amounts
-                    BOOST_FOREACH(int64_t d, darkSendDenominations)
-                        if(pcoin->vout[i].nValue == d)
-                            found = false;
+                    found = !IsDenominatedAmount(pcoin->vout[i].nValue);
                     if(found && coin_type == ONLY_NONDENOMINATED_NOTMN) found = (pcoin->vout[i].nValue != 1000*COIN); // do not use MN funds
                 } else {
                     found = true;
@@ -1392,14 +1379,7 @@ bool CWallet::SelectCoinsMinConf(int64_t nTargetValue, int nConfMine, int nConfT
             int i = output.i;
             int64_t n = pcoin->vout[i].nValue;
 
-            if (tryDenom == 0) // first run?
-            {
-                bool found = false;
-                BOOST_FOREACH(int64_t d, darkSendDenominations) // loop through predefined denoms
-                    if(n == d)
-                        found = true;
-                if (found) continue; // we don't want denom values on first run
-            }
+            if (tryDenom == 0 && IsDenominatedAmount(n)) continue; // we don't want denom values on first run
 
             pair<int64_t,pair<const CWalletTx*,unsigned int> > coin = make_pair(n,make_pair(pcoin, i));
 
