@@ -118,7 +118,7 @@ Denna produkt inkluderar programvara utvecklad genom OpenSSL Project för använ
     <message>
         <location filename="../forms/coincontroldialog.ui" line="14"/>
         <source>Coin Control Address Selection</source>
-        <translation>Myntkontroll - adressval</translation>
+        <translation>Adressval för myntkontroll</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="48"/>
@@ -213,6 +213,69 @@ Denna produkt inkluderar programvara utvecklad genom OpenSSL Project för använ
     </message>
 </context>
 <context>
+    <name>DarksendConfig</name>
+    <message>
+        <location filename="../forms/darksendconfig.ui" line="14"/>
+        <source>Configure Darksend+</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../forms/darksendconfig.ui" line="26"/>
+        <source>Basic Privacy</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../forms/darksendconfig.ui" line="39"/>
+        <source>High Privacy</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../forms/darksendconfig.ui" line="52"/>
+        <source>Maximum Privacy</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../forms/darksendconfig.ui" line="65"/>
+        <source>Please select an privacy level. </source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../forms/darksendconfig.ui" line="78"/>
+        <source>Use 2 separate masternodes to mix funds up to 1000DRK</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../forms/darksendconfig.ui" line="91"/>
+        <source>Use 4 separate masternodes to mix funds up to 1000DRK</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../forms/darksendconfig.ui" line="104"/>
+        <source>Use 8 separate masternodes</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../forms/darksendconfig.ui" line="117"/>
+        <source>This option is the quickest and will cost about ~0.025DRK to anonymize 1000DRK</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../forms/darksendconfig.ui" line="130"/>
+        <source>This option is moderately fast and will cost about 0.05DRK to anonymize 1000DRK</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../forms/darksendconfig.ui" line="143"/>
+        <source>This is the slowest and most secure option. Using maximum anonymity will cost</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../forms/darksendconfig.ui" line="156"/>
+        <source>0.1DRK per 1000DRK you anonymize.</source>
+        <translation type="unfinished"/>
+    </message>
+</context>
+<context>
     <name>EditAddressDialog</name>
     <message>
         <location filename="../forms/editaddressdialog.ui" line="14"/>
@@ -227,7 +290,7 @@ Denna produkt inkluderar programvara utvecklad genom OpenSSL Project för använ
     <message>
         <location filename="../forms/editaddressdialog.ui" line="35"/>
         <source>The label associated with this address list entry</source>
-        <translation>Den associerade etiketten med adressens listnotering</translation>
+        <translation>Den associerade etiketten med adressens listninmatning</translation>
     </message>
     <message>
         <location filename="../forms/editaddressdialog.ui" line="42"/>
@@ -237,7 +300,7 @@ Denna produkt inkluderar programvara utvecklad genom OpenSSL Project för använ
     <message>
         <location filename="../forms/editaddressdialog.ui" line="52"/>
         <source>The address associated with this address list entry. This can only be modified for sending addresses.</source>
-        <translation>Adressen associerad med adressens listnotering. Detta kan endast ändras för avsändaradresser.</translation>
+        <translation>Adressen associerad med adressens listinmatning. Detta kan endast ändras för avsändaradresser.</translation>
     </message>
 </context>
 <context>
@@ -314,7 +377,7 @@ Denna produkt inkluderar programvara utvecklad genom OpenSSL Project för använ
     <message>
         <location filename="../forms/optionsdialog.ui" line="27"/>
         <source>&amp;Main</source>
-        <translation>&amp;Huvudsaklig</translation>
+        <translation>&amp;Primär</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="33"/>
@@ -324,7 +387,7 @@ Denna produkt inkluderar programvara utvecklad genom OpenSSL Project för använ
     <message>
         <location filename="../forms/optionsdialog.ui" line="36"/>
         <source>&amp;Start Darkcoin on system login</source>
-        <translation>&amp;Starta Darkcoin på systeminloggningen</translation>
+        <translation>&amp;Starta Darkcoin vid systeminloggning</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="45"/>
@@ -344,12 +407,12 @@ Denna produkt inkluderar programvara utvecklad genom OpenSSL Project för använ
     <message>
         <location filename="../forms/optionsdialog.ui" line="101"/>
         <source>(0 = auto, &lt;0 = leave that many cores free)</source>
-        <translation>(0 = automatisk, &lt;0 = lämna så många kärnor fria)</translation>
+        <translation>(0 = automatisk, &lt;0 = lämna så många kärnor lediga)</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="138"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This setting determines the amount of individual masternodes that an input will be anonymized through. More rounds of anonymization gives a higher degree of privacy, but also costs more in fees.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Denna inställning bestämmer antalet individuella masternodes som en indata kommer att anonymiseras genom. Flera omgångar anonymiseringar ger en högre grad integritet men kostar också mer i avgifter.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Denna inställning bestämmer antalet individuella masternodes som en indata kommer att anonymiseras genom. Fler omgångar anonymiseringar ger en högre grad integritet men kostar också mer i avgifter.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="141"/>
@@ -359,22 +422,22 @@ Denna produkt inkluderar programvara utvecklad genom OpenSSL Project för använ
     <message>
         <location filename="../forms/optionsdialog.ui" line="180"/>
         <source>Amount of Darkcoin to keep anonymized</source>
-        <translation>Antalet Darkcoins att hålla anonymiserade</translation>
+        <translation>Antalet Darkcoins att bibehålla anonymiserade</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="206"/>
         <source>W&amp;allet</source>
-        <translation>P&amp;lånbok</translation>
+        <translation>&amp;Plånbok</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="212"/>
         <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly. Most transactions are 1 kB.</source>
-        <translation>Valfri transaktionsavgift per kB som säkerställer att dina transaktioner bearbetas snabbt. De flesta transaktioner är  1 kB.</translation>
+        <translation>Valfri transaktionsavgift per kB som säkerställer att dina transaktioner bearbetas snabbt. De flesta transaktioner är 1 kB.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="227"/>
         <source>Pay transaction &amp;fee</source>
-        <translation>Betala transaktions&amp;avgift</translation>
+        <translation>Betala &amp;transaktionsavgift</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="271"/>
@@ -394,12 +457,12 @@ Denna produkt inkluderar programvara utvecklad genom OpenSSL Project för använ
     <message>
         <location filename="../forms/optionsdialog.ui" line="287"/>
         <source>If you disable the spending of unconfirmed change, the change from a transaction cannot be used until that transaction has at least one confirmation. This also affects how your balance is computed.</source>
-        <translation>Om du inaktiverar utgifterna för obekräftade förändringar, kan förändringen från en transaktion inte användas förrän den transaktionen har minst en bekräftelse. Detta påverkar också hur ditt saldo beräknas.</translation>
+        <translation>Om du inaktiverar utgifterna för overifierad växel kan växlen från en transaktion inte användas förrän den transaktionen har minst en verifiering. Detta påverkar också hur ditt saldo beräknas.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="290"/>
         <source>&amp;Spend unconfirmed change</source>
-        <translation>&amp;Spendera obekräftad växel</translation>
+        <translation>&amp;Spendera overifierad växel</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="301"/>
@@ -409,7 +472,7 @@ Denna produkt inkluderar programvara utvecklad genom OpenSSL Project för använ
     <message>
         <location filename="../forms/optionsdialog.ui" line="307"/>
         <source>Automatically open the Darkcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation>Öppna automatiskt klientporten Darkcoin på routern. Detta fungerar bara om din router stödjer UPnP och den är aktiverad.</translation>
+        <translation>Öppna automatiskt klientporten Darkcoin på routern. Detta fungerar bara om din router stöder UPnP och är aktiverad.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="310"/>
@@ -454,7 +517,7 @@ Denna produkt inkluderar programvara utvecklad genom OpenSSL Project för använ
     <message>
         <location filename="../forms/optionsdialog.ui" line="406"/>
         <source>SOCKS version of the proxy (e.g. 5)</source>
-        <translation>SOCKS-version av proxyn (t.ex. 5)</translation>
+        <translation>Proxyns SOCKS-version (t.ex. 5)</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="442"/>
@@ -464,17 +527,17 @@ Denna produkt inkluderar programvara utvecklad genom OpenSSL Project för använ
     <message>
         <location filename="../forms/optionsdialog.ui" line="448"/>
         <source>Show only a tray icon after minimizing the window.</source>
-        <translation>Visa bara en fältikon efter att ha minimerat fönstret.</translation>
+        <translation>Visa bara en fältikon efter att fönstret minimerats.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="451"/>
         <source>&amp;Minimize to the tray instead of the taskbar</source>
-        <translation>&amp;Minimera tll verktygsfältet istället för aktivitetsfältet</translation>
+        <translation>&amp;Minimera till verktygsfältet istället för aktivitetsfältet</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="458"/>
         <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Quit in the menu.</source>
-        <translation>Minimera istället för att gå ur applikationen när fönstret stängs. När denna inställning är aktiverad kommer applikationen endast att stängas om du valt Avsluta i menyn.</translation>
+        <translation>Minimera istället för att gå ur applikationen när fönstret är stängt. När denna inställning är aktiverad kommer applikationen endast att stängas efter att du har valt Avsluta i menyn.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="461"/>
@@ -489,22 +552,22 @@ Denna produkt inkluderar programvara utvecklad genom OpenSSL Project för använ
     <message>
         <location filename="../forms/optionsdialog.ui" line="490"/>
         <source>User Interface &amp;language:</source>
-        <translation>Användargränssnit&amp;språk:</translation>
+        <translation>&amp;Användargränsnitt&amp;språk:</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="503"/>
         <source>The user interface language can be set here. This setting will take effect after restarting Darkcoin.</source>
-        <translation>Användargränssnittspråket kan ställas in här. Denna inställning börjar gälla efter att du har startat om Darkcoin.</translation>
+        <translation>Användargränssnittspråket kan ställas in här. Denna inställning börjar gälla efter att Darkcoin startats om.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="514"/>
         <source>&amp;Unit to show amounts in:</source>
-        <translation>&amp;Enhet att visa belopp i:</translation>
+        <translation>&amp;Enhet att visa antal i:</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="527"/>
         <source>Choose the default subdivision unit to show in the interface and when sending coins.</source>
-        <translation>Välj standardindelningsenhet att visa i gränssnittet och när du skickar mynt.</translation>
+        <translation>Välj standardindelningsenhet att visa i gränssnittet och när mynt skickas.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="536"/>
@@ -520,17 +583,17 @@ Denna produkt inkluderar programvara utvecklad genom OpenSSL Project för använ
         <location filename="../forms/optionsdialog.ui" line="548"/>
         <location filename="../forms/optionsdialog.ui" line="561"/>
         <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
-        <translation>Tredjepartswebbadresser (t. ex. en blockutforskare) som visas under transaktionsfliken som kontextmenyposter. %:en i URL:en ersätts av transaktionshash. Flera URL:s skiljs åt av en vertikalstång |.</translation>
+        <translation>Tredjepartswebbadresser (t. ex. en blockutforskare) som visas under transaktionsfliken som kontextmenyposter. %:en i URL:en ersätts av transaktionshash. Flera URL:s skiljs åt av en vertikalstång, |.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="551"/>
         <source>Third party transaction URLs</source>
-        <translation>Tredjepartstransaktions-URL:er</translation>
+        <translation>Tredjepartstransaktion-URL:er</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="592"/>
         <source>Active command-line options that override above options:</source>
-        <translation>Aktiva kommandoradsalternativ som åsidosätter ovanstående alternativ:</translation>
+        <translation>Aktiva kommandoradalternativ som åsidosätter ovanstående alternativ:</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="635"/>
@@ -589,7 +652,7 @@ Denna produkt inkluderar programvara utvecklad genom OpenSSL Project för använ
     <message>
         <location filename="../forms/overviewpage.ui" line="156"/>
         <source>Total of transactions that have yet to be confirmed, and do not yet count toward the spendable balance</source>
-        <translation>Totalt antal transaktioner som ännu inte har bekräftats och ännu inte räknas till ett tillgängligt saldo</translation>
+        <translation>Totalt antal transaktioner som ännu inte har bekräftats och ännu inte räknas som tillgängligt saldo</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="172"/>
@@ -599,7 +662,7 @@ Denna produkt inkluderar programvara utvecklad genom OpenSSL Project för använ
     <message>
         <location filename="../forms/overviewpage.ui" line="185"/>
         <source>Mined balance that has not yet matured</source>
-        <translation>Utvunnet saldo som inte har mognat än</translation>
+        <translation>Utvunnet saldo som ännu inte har mognat</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="201"/>
@@ -860,7 +923,7 @@ Denna produkt inkluderar programvara utvecklad genom OpenSSL Project för använ
         <location filename="../forms/receivecoinsdialog.ui" line="51"/>
         <location filename="../forms/receivecoinsdialog.ui" line="74"/>
         <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Darkcoin network.</source>
-        <translation>Ett valfritt meddelande att bifoga betalningsbegärandet vilket kan visas när begäran öppnas. Notera: Meddelandet kommer inte att skickas med betalningen över Darkcoin-nätverket.</translation>
+        <translation>Ett valfritt meddelande att bifoga betalningsbegärandet vilket kommer att visas när begäran öppnas. Notera: Meddelandet kommer inte att skickas med betalningen över Darkcoin-nätverket.</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="54"/>
@@ -1028,7 +1091,7 @@ Denna produkt inkluderar programvara utvecklad genom OpenSSL Project för använ
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="544"/>
         <source>If this is activated, but the change address is empty or invalid, change will be sent to a newly generated address.</source>
-        <translation>Om detta är aktiverat men växeladressen är tom eller ogiltig kommer växeln att skickas till en nyligen genererad adress.</translation>
+        <translation>Om detta är aktiverat men växeladressen är tom eller ogiltig kommer växeln att skickas till en nygenererad adress.</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="547"/>
@@ -1043,7 +1106,7 @@ Denna produkt inkluderar programvara utvecklad genom OpenSSL Project för använ
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="671"/>
         <source>S&amp;end</source>
-        <translation>S&amp;kicka</translation>
+        <translation>&amp;Skicka</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="691"/>
@@ -1133,7 +1196,7 @@ Denna produkt inkluderar programvara utvecklad genom OpenSSL Project för använ
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="124"/>
         <source>Enter a label for this address to add it to the list of used addresses</source>
-        <translation>Skriv in en etikett för denna adress för att lägga till den i listan för använda adresser</translation>
+        <translation>Skriv in en etikett för denna adress för att lägga till den i listan med använda adresser</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="131"/>
@@ -1150,7 +1213,7 @@ Denna produkt inkluderar programvara utvecklad genom OpenSSL Project för använ
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="157"/>
         <source>A message that was attached to the darkcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Darkcoin network.</source>
-        <translation>Ett meddelande som var bifogat till Darkcoin: URI vilket var lagrat med transaktionen för ditt avseende. Notera: Meddelandet kommer inte att skickas över Darkcoin-nätverket.</translation>
+        <translation>Ett meddelande var bifogat till Darkcoin: URI vilket kommer att lagras med transaktionen för ditt avseende. Notera: Meddelandet kommer inte att skickas över Darkcoin-nätverket.</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="583"/>
@@ -1190,7 +1253,7 @@ Denna produkt inkluderar programvara utvecklad genom OpenSSL Project för använ
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="30"/>
         <source>You can sign messages with your addresses to prove you own them. Be careful not to sign anything vague, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
-        <translation>Du kan signera meddelanden med dina adresser för att bevisa att du äger dem. Var försiktig att inte skriva på någonting oklart då phishing-attacker kan försöka lura dig att skriva över din identitet till dem. Signera endast väldetaljerade uppgifter du samtycker till.</translation>
+        <translation>Du kan signera meddelanden med dina adresser för att bevisa att du äger dem. Var försiktig att inte skriva på någonting oklart då phishing-attacker kan försöka lura dig till att skriva över din identitet till dem. Signera endast väldetaljerade uppgifter du samtycker till.</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="48"/>
@@ -1222,7 +1285,7 @@ Denna produkt inkluderar programvara utvecklad genom OpenSSL Project för använ
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="97"/>
         <source>Enter the message you want to sign here</source>
-        <translation>Skriv in meddelande du vill signera här</translation>
+        <translation>Skriv in meddelandet du vill signera här</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="104"/>
@@ -1237,7 +1300,7 @@ Denna produkt inkluderar programvara utvecklad genom OpenSSL Project för använ
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="152"/>
         <source>Sign the message to prove you own this Darkcoin address</source>
-        <translation>Signera meddelande för att bevisa att du äger denna Darkcoin-adress</translation>
+        <translation>Signera meddelandet för att bevisa att du äger denna Darkcoin-adress</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="155"/>
@@ -1263,7 +1326,7 @@ Denna produkt inkluderar programvara utvecklad genom OpenSSL Project för använ
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="237"/>
         <source>Enter the signing address, message (ensure you copy line breaks, spaces, tabs, etc. exactly) and signature below to verify the message. Be careful not to read more into the signature than what is in the signed message itself, to avoid being tricked by a man-in-the-middle attack.</source>
-        <translation>Skriv in signeringsadressen, meddelande (försäkra dig om att du kopierar linjeavbrott, mellanslag, flikar etc.) och signera nedtill för att verifiera meddelandet.  Var försiktig med att inte läsa in mer i signaturen än vad som finns i det signerade meddelandet för att undvika att bli lurad av en mellanhandattack.</translation>
+        <translation>Skriv in signeringsadressens meddelande (försäkra dig om att du kopierar linjeavbrott, mellanslag, flikar etc.) och signera nedtill för att verifiera meddelandet.  Var försiktig med att inte läsa in mer i signaturen än vad som finns i det signerade meddelandet för att undvika att bli lurad av en mellanhandattack.</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="258"/>

@@ -212,6 +212,69 @@ Questo prodotto include del software prodotto dal progetto OpenSSL per l&apos;ut
     </message>
 </context>
 <context>
+    <name>DarksendConfig</name>
+    <message>
+        <location filename="../forms/darksendconfig.ui" line="14"/>
+        <source>Configure Darksend+</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../forms/darksendconfig.ui" line="26"/>
+        <source>Basic Privacy</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../forms/darksendconfig.ui" line="39"/>
+        <source>High Privacy</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../forms/darksendconfig.ui" line="52"/>
+        <source>Maximum Privacy</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../forms/darksendconfig.ui" line="65"/>
+        <source>Please select an privacy level. </source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../forms/darksendconfig.ui" line="78"/>
+        <source>Use 2 separate masternodes to mix funds up to 1000DRK</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../forms/darksendconfig.ui" line="91"/>
+        <source>Use 4 separate masternodes to mix funds up to 1000DRK</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../forms/darksendconfig.ui" line="104"/>
+        <source>Use 8 separate masternodes</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../forms/darksendconfig.ui" line="117"/>
+        <source>This option is the quickest and will cost about ~0.025DRK to anonymize 1000DRK</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../forms/darksendconfig.ui" line="130"/>
+        <source>This option is moderately fast and will cost about 0.05DRK to anonymize 1000DRK</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../forms/darksendconfig.ui" line="143"/>
+        <source>This is the slowest and most secure option. Using maximum anonymity will cost</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../forms/darksendconfig.ui" line="156"/>
+        <source>0.1DRK per 1000DRK you anonymize.</source>
+        <translation type="unfinished"/>
+    </message>
+</context>
+<context>
     <name>EditAddressDialog</name>
     <message>
         <location filename="../forms/editaddressdialog.ui" line="14"/>
