@@ -48,7 +48,7 @@ int main(void) {
     data.pubkeylen = 33;
     CHECK(secp256k1_ec_pubkey_create(data.pubkey, &data.pubkeylen, data.key, 1));
 
-    run_benchmark(benchmark_verify, NULL, NULL, &data, 10, 20000);
+    run_benchmark("ecdsa_verify", benchmark_verify, NULL, NULL, &data, 10, 20000);
 
     secp256k1_stop();
     return 0;

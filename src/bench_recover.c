@@ -42,7 +42,7 @@ int main(void) {
     bench_recover_t data;
     secp256k1_start(SECP256K1_START_VERIFY);
 
-    run_benchmark(bench_recover, bench_recover_setup, NULL, &data, 10, 20000);
+    run_benchmark("ecdsa_recover", bench_recover, bench_recover_setup, NULL, &data, 10, 20000);
 
     secp256k1_stop();
     return 0;
