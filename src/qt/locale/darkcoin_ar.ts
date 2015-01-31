@@ -22,18 +22,20 @@ This is experimental software.
 Distributed under the MIT/X11 software license, see the accompanying file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit (http://www.openssl.org/) and cryptographic software written by Eric Young (eay@cryptsoft.com) and UPnP software written by Thomas Bernard.</source>
-        <translation type="unfinished"/>
+        <translation>هذا هو برنامج تجريبي .
+ موزع تحت رخصة البرمجيات MIT / X11، انظر نسخ ملف أو المصاحب http://www.opensource.org/licenses/mit-license.php
+ يشتمل هذا المنتج على برنامج تم تطويره من قبل بينسل مشروع للاستخدام في مجموعة أدوات OpenSSL (http://www.openssl.org/) وبرامج التشفير كتبه اريك يونغ (eay@cryptsoft.com) والبرمجيات بنب كتبه توماس برنارد.</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="30"/>
         <location filename="../utilitydialog.cpp" line="31"/>
         <source>Copyright</source>
-        <translation type="unfinished"/>
+        <translation>الحقوق محفوظة</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="30"/>
         <source>The Bitcoin Core developers</source>
-        <translation type="unfinished"/>
+        <translation>مطوري جوهر البيت كوين</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="31"/>
@@ -53,86 +55,86 @@ This product includes software developed by the OpenSSL Project for use in the O
         <location filename="../forms/addressbookpage.ui" line="30"/>
         <location filename="../forms/ui_addressbookpage.h" line="126"/>
         <source>Double-click to edit address or label</source>
-        <translation type="unfinished"/>
+        <translation>أنقر بالماوس مرتين لتعديل العنوان او الوصف</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="57"/>
         <location filename="../forms/ui_addressbookpage.h" line="129"/>
         <source>Create a new address</source>
-        <translation type="unfinished"/>
+        <translation>انشأ عنوان جديد</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="60"/>
         <location filename="../forms/ui_addressbookpage.h" line="131"/>
         <source>&amp;New</source>
-        <translation type="unfinished"/>
+        <translation>&amp;جديد</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="71"/>
         <location filename="../forms/ui_addressbookpage.h" line="133"/>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation type="unfinished"/>
+        <translation>قم بنسخ القوانين المختارة لحافظة النظام</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="74"/>
         <location filename="../forms/ui_addressbookpage.h" line="135"/>
         <source>&amp;Copy</source>
-        <translation type="unfinished"/>
+        <translation>&amp;نسخ</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="85"/>
         <location filename="../forms/ui_addressbookpage.h" line="137"/>
         <source>Delete the currently selected address from the list</source>
-        <translation type="unfinished"/>
+        <translation>حذف العنوان المحدد من القائمة</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="88"/>
         <location filename="../forms/ui_addressbookpage.h" line="139"/>
         <source>&amp;Delete</source>
-        <translation type="unfinished"/>
+        <translation>&amp;أمسح</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="112"/>
         <location filename="../forms/ui_addressbookpage.h" line="141"/>
         <source>Export the data in the current tab to a file</source>
-        <translation type="unfinished"/>
+        <translation>تحميل البيانات في علامة التبويب الحالية إلى ملف.</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="115"/>
         <location filename="../forms/ui_addressbookpage.h" line="143"/>
         <source>&amp;Export</source>
-        <translation type="unfinished"/>
+        <translation>&amp;تصدير</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="132"/>
         <location filename="../forms/ui_addressbookpage.h" line="144"/>
         <source>C&amp;lose</source>
-        <translation type="unfinished"/>
+        <translation>&amp;اغلاق</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="45"/>
         <source>Choose the address to send coins to</source>
-        <translation type="unfinished"/>
+        <translation>اختر العنوان الذي سترسل له العملات</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="46"/>
         <source>Choose the address to receive coins with</source>
-        <translation type="unfinished"/>
+        <translation>اختر العنوان الذي تستقبل عليه العملات</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="51"/>
         <source>C&amp;hoose</source>
-        <translation type="unfinished"/>
+        <translation>&amp;اختر</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="57"/>
         <source>Sending addresses</source>
-        <translation type="unfinished"/>
+        <translation>ارسال العناوين</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="58"/>
         <source>Receiving addresses</source>
-        <translation type="unfinished"/>
+        <translation>استقبال العناوين</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="65"/>
@@ -147,32 +149,32 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../addressbookpage.cpp" line="75"/>
         <source>&amp;Copy Address</source>
-        <translation type="unfinished"/>
+        <translation>انسخ العنوان</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="76"/>
         <source>Copy &amp;Label</source>
-        <translation type="unfinished"/>
+        <translation>نسخ &amp;الوصف</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="77"/>
         <source>&amp;Edit</source>
-        <translation type="unfinished"/>
+        <translation>تعديل</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="271"/>
         <source>Export Address List</source>
-        <translation type="unfinished"/>
+        <translation>تصدير قائمة العناوين</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="272"/>
         <source>Comma separated file (*.csv)</source>
-        <translation type="unfinished"/>
+        <translation>ملف مفصول بفواصل (*.csv)</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="285"/>
         <source>Exporting Failed</source>
-        <translation type="unfinished"/>
+        <translation>فشل التصدير</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="286"/>
@@ -185,17 +187,17 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../addresstablemodel.cpp" line="169"/>
         <source>Label</source>
-        <translation type="unfinished"/>
+        <translation>وصف</translation>
     </message>
     <message>
         <location filename="../addresstablemodel.cpp" line="169"/>
         <source>Address</source>
-        <translation type="unfinished"/>
+        <translation>عنوان</translation>
     </message>
     <message>
         <location filename="../addresstablemodel.cpp" line="205"/>
         <source>(no label)</source>
-        <translation type="unfinished"/>
+        <translation>(لا وصف)</translation>
     </message>
 </context>
 <context>
@@ -204,25 +206,25 @@ This product includes software developed by the OpenSSL Project for use in the O
         <location filename="../forms/askpassphrasedialog.ui" line="26"/>
         <location filename="../forms/ui_askpassphrasedialog.h" line="135"/>
         <source>Passphrase Dialog</source>
-        <translation type="unfinished"/>
+        <translation>حوار جملة السر</translation>
     </message>
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="47"/>
         <location filename="../forms/ui_askpassphrasedialog.h" line="136"/>
         <source>Enter passphrase</source>
-        <translation type="unfinished"/>
+        <translation>ادخل كلمة المرور</translation>
     </message>
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="61"/>
         <location filename="../forms/ui_askpassphrasedialog.h" line="137"/>
         <source>New passphrase</source>
-        <translation type="unfinished"/>
+        <translation>كلمة مرور جديدة</translation>
     </message>
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="75"/>
         <location filename="../forms/ui_askpassphrasedialog.h" line="138"/>
         <source>Repeat new passphrase</source>
-        <translation type="unfinished"/>
+        <translation>ادخل كلمة المرور الجديدة مرة أخرى</translation>
     </message>
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="108"/>
@@ -239,47 +241,47 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../askpassphrasedialog.cpp" line="41"/>
         <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;10 or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
-        <translation type="unfinished"/>
+        <translation>أدخل كلمة مرور جديدة للمحفظة. &lt;br/&gt;الرجاء استخدام كلمة مرور تتكون &lt;b&gt;من 10 حروف عشوائية على الاقل&lt;/b&gt;, أو &lt;b&gt;أكثر من 7 كلمات&lt;/b&gt;. </translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="42"/>
         <source>Encrypt wallet</source>
-        <translation type="unfinished"/>
+        <translation>تشفير المحفظة</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="48"/>
         <source>This operation needs your wallet passphrase to unlock the wallet.</source>
-        <translation type="unfinished"/>
+        <translation>هذه العملية تحتاج كلمة مرور محفظتك لفتحها</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="53"/>
         <source>Unlock wallet</source>
-        <translation type="unfinished"/>
+        <translation>إفتح المحفظة</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="56"/>
         <source>This operation needs your wallet passphrase to decrypt the wallet.</source>
-        <translation type="unfinished"/>
+        <translation>هذه العملية تحتاج كلمة مرور محفظتك لفك تشفيرها </translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="61"/>
         <source>Decrypt wallet</source>
-        <translation type="unfinished"/>
+        <translation>فك تشفير المحفظة</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="64"/>
         <source>Change passphrase</source>
-        <translation type="unfinished"/>
+        <translation>تغيير كلمة المرور</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="65"/>
         <source>Enter the old and new passphrase to the wallet.</source>
-        <translation type="unfinished"/>
+        <translation>أدخل كلمة المرور القديمة والجديدة للمحفظة.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="112"/>
         <source>Confirm wallet encryption</source>
-        <translation type="unfinished"/>
+        <translation>تأكيد تشفير المحفظة</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="113"/>
@@ -289,13 +291,13 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../askpassphrasedialog.cpp" line="113"/>
         <source>Are you sure you wish to encrypt your wallet?</source>
-        <translation type="unfinished"/>
+        <translation>هل أنت متأكد من رغبتك في تشفير محفظتك ؟</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="122"/>
         <location filename="../askpassphrasedialog.cpp" line="181"/>
         <source>Wallet encrypted</source>
-        <translation type="unfinished"/>
+        <translation>محفظة مشفرة</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="124"/>
@@ -305,7 +307,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../askpassphrasedialog.cpp" line="128"/>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
-        <translation type="unfinished"/>
+        <translation>هام: أي نسخة إحتياطية سابقة  قمت بها لمحفظتك يجب استبدالها  بأخرى حديثة، مشفرة. لأسباب أمنية، النسخ الاحتياطية السابقة لملفات المحفظة الغير مشفرة تصبح عديمة الفائدة مع بداية استخدام المحفظة المشفرة الجديدة.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="137"/>
@@ -313,46 +315,46 @@ This product includes software developed by the OpenSSL Project for use in the O
         <location filename="../askpassphrasedialog.cpp" line="187"/>
         <location filename="../askpassphrasedialog.cpp" line="193"/>
         <source>Wallet encryption failed</source>
-        <translation type="unfinished"/>
+        <translation>فشل تشفير المحفظة</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="138"/>
         <source>Wallet encryption failed due to an internal error. Your wallet was not encrypted.</source>
-        <translation type="unfinished"/>
+        <translation>فشل تشفير المحفظة بسبب خطأ داخلي. لم يتم تشفير محفظتك.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="145"/>
         <location filename="../askpassphrasedialog.cpp" line="194"/>
         <source>The supplied passphrases do not match.</source>
-        <translation type="unfinished"/>
+        <translation>كلمتي المرور ليستا متطابقتان</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="157"/>
         <source>Wallet unlock failed</source>
-        <translation type="unfinished"/>
+        <translation>فشل فتح المحفظة</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="158"/>
         <location filename="../askpassphrasedialog.cpp" line="169"/>
         <location filename="../askpassphrasedialog.cpp" line="188"/>
         <source>The passphrase entered for the wallet decryption was incorrect.</source>
-        <translation type="unfinished"/>
+        <translation>كلمة المرور التي تم إدخالها لفك تشفير المحفظة غير صحيحة.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="168"/>
         <source>Wallet decryption failed</source>
-        <translation type="unfinished"/>
+        <translation>فشل   فك التشفير المحفظة</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="182"/>
         <source>Wallet passphrase was successfully changed.</source>
-        <translation type="unfinished"/>
+        <translation>لقد تم تغير عبارة مرور المحفظة بنجاح</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="230"/>
         <location filename="../askpassphrasedialog.cpp" line="254"/>
         <source>Warning: The Caps Lock key is on!</source>
-        <translation type="unfinished"/>
+        <translation>تحذير: مفتاح الحروف الكبيرة مفعل</translation>
     </message>
 </context>
 <context>
@@ -365,28 +367,28 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="85"/>
         <source>Wallet</source>
-        <translation type="unfinished"/>
+        <translation>محفظة</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="87"/>
         <source>Node</source>
-        <translation type="unfinished"/>
+        <translation>جهاز</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="101"/>
         <location filename="../bitcoingui.cpp" line="494"/>
         <source>[testnet]</source>
-        <translation type="unfinished"/>
+        <translation>[testnet]</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="226"/>
         <source>&amp;Overview</source>
-        <translation type="unfinished"/>
+        <translation>&amp;نظرة عامة</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="227"/>
         <source>Show general overview of wallet</source>
-        <translation type="unfinished"/>
+        <translation>إظهار نظرة عامة على المحفظة</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="233"/>
@@ -401,7 +403,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="240"/>
         <source>&amp;Receive</source>
-        <translation type="unfinished"/>
+        <translation>&amp;استقبل</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="241"/>
@@ -411,22 +413,22 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="247"/>
         <source>&amp;Transactions</source>
-        <translation type="unfinished"/>
+        <translation>&amp;المعاملات</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="248"/>
         <source>Browse transaction history</source>
-        <translation type="unfinished"/>
+        <translation>تصفح سجل المعاملات</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="265"/>
         <source>E&amp;xit</source>
-        <translation type="unfinished"/>
+        <translation>خروج</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="266"/>
         <source>Quit application</source>
-        <translation type="unfinished"/>
+        <translation>الخروج من التطبيق</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="270"/>
@@ -443,17 +445,17 @@ This product includes software developed by the OpenSSL Project for use in the O
         <location filename="../bitcoingui.cpp" line="276"/>
         <location filename="../bitcoingui.cpp" line="278"/>
         <source>About &amp;Qt</source>
-        <translation type="unfinished"/>
+        <translation>عن</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="280"/>
         <source>Show information about Qt</source>
-        <translation type="unfinished"/>
+        <translation>اظهر المعلومات</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="282"/>
         <source>&amp;Options...</source>
-        <translation type="unfinished"/>
+        <translation>&amp;خيارات ...</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="283"/>
@@ -464,42 +466,42 @@ This product includes software developed by the OpenSSL Project for use in the O
         <location filename="../bitcoingui.cpp" line="286"/>
         <location filename="../bitcoingui.cpp" line="288"/>
         <source>&amp;Show / Hide</source>
-        <translation type="unfinished"/>
+        <translation>&amp;عرض / اخفاء</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="289"/>
         <source>Show or hide the main Window</source>
-        <translation type="unfinished"/>
+        <translation>عرض او اخفاء النافذة الرئيسية</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="291"/>
         <source>&amp;Encrypt Wallet...</source>
-        <translation type="unfinished"/>
+        <translation>&amp;تشفير المحفظة</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="292"/>
         <source>Encrypt the private keys that belong to your wallet</source>
-        <translation type="unfinished"/>
+        <translation>تشفير المفتاح الخاص بمحفظتك</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="294"/>
         <source>&amp;Backup Wallet...</source>
-        <translation type="unfinished"/>
+        <translation>&amp;نسخ احتياط للمحفظة</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="295"/>
         <source>Backup wallet to another location</source>
-        <translation type="unfinished"/>
+        <translation>احفظ نسخة احتياطية للمحفظة في مكان آخر</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="296"/>
         <source>&amp;Change Passphrase...</source>
-        <translation type="unfinished"/>
+        <translation>&amp;تغيير كلمة المرور</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="297"/>
         <source>Change the passphrase used for wallet encryption</source>
-        <translation type="unfinished"/>
+        <translation>تغيير كلمة المرور المستخدمة لتشفير المحفظة</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="298"/>
@@ -519,7 +521,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="301"/>
         <source>Sign &amp;message...</source>
-        <translation type="unfinished"/>
+        <translation>التوقيع و الرسائل</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="302"/>
@@ -529,7 +531,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="303"/>
         <source>&amp;Verify message...</source>
-        <translation type="unfinished"/>
+        <translation>&amp;التحقق من الرسالة...</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="304"/>
@@ -569,7 +571,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="313"/>
         <source>&amp;Sending addresses...</source>
-        <translation type="unfinished"/>
+        <translation>ارسال العناوين.</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="314"/>
@@ -579,7 +581,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="315"/>
         <source>&amp;Receiving addresses...</source>
-        <translation type="unfinished"/>
+        <translation>استقبال العناوين</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="316"/>
@@ -589,7 +591,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="318"/>
         <source>Open &amp;URI...</source>
-        <translation type="unfinished"/>
+        <translation>افتح &amp;URI...</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="319"/>
@@ -609,12 +611,12 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="358"/>
         <source>&amp;File</source>
-        <translation type="unfinished"/>
+        <translation>&amp;ملف</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="372"/>
         <source>&amp;Settings</source>
-        <translation type="unfinished"/>
+        <translation>&amp;الاعدادات</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="385"/>
@@ -624,12 +626,12 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="391"/>
         <source>&amp;Help</source>
-        <translation type="unfinished"/>
+        <translation>&amp;مساعدة</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="402"/>
         <source>Tabs toolbar</source>
-        <translation type="unfinished"/>
+        <translation>شريط أدوات علامات التبويب</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="489"/>
@@ -645,7 +647,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="650"/>
         <source>Synchronizing with network...</source>
-        <translation type="unfinished"/>
+        <translation>مزامنة مع الشبكة ...</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="653"/>
@@ -670,7 +672,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="675"/>
         <source>Up to date</source>
-        <translation type="unfinished"/>
+        <translation>محدث</translation>
     </message>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="696"/>
@@ -706,7 +708,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="719"/>
         <source>Catching up...</source>
-        <translation type="unfinished"/>
+        <translation>اللحاق بالركب ...</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="735"/>
@@ -726,27 +728,27 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="764"/>
         <source>Error</source>
-        <translation type="unfinished"/>
+        <translation>خطأ</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="767"/>
         <source>Warning</source>
-        <translation type="unfinished"/>
+        <translation>تحذير</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="770"/>
         <source>Information</source>
-        <translation type="unfinished"/>
+        <translation>معلومات</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="849"/>
         <source>Sent transaction</source>
-        <translation type="unfinished"/>
+        <translation>المعاملات  المرسلة</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="849"/>
         <source>Incoming transaction</source>
-        <translation type="unfinished"/>
+        <translation>المعاملات الواردة</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="850"/>
@@ -760,7 +762,7 @@ Address: %4
     <message>
         <location filename="../bitcoingui.cpp" line="921"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
-        <translation type="unfinished"/>
+        <translation>المحفظة &lt;b&gt;مشفرة&lt;/b&gt; و &lt;b&gt;مفتوحة&lt;/b&gt; حاليا</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="931"/>
@@ -770,7 +772,7 @@ Address: %4
     <message>
         <location filename="../bitcoingui.cpp" line="941"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
-        <translation type="unfinished"/>
+        <translation>المحفظة &lt;b&gt;مشفرة&lt;/b&gt; و &lt;b&gt;مقفلة&lt;/b&gt; حاليا</translation>
     </message>
     <message>
         <location filename="../darkcoin.cpp" line="449"/>
@@ -783,7 +785,7 @@ Address: %4
     <message>
         <location filename="../clientmodel.cpp" line="135"/>
         <source>Network Alert</source>
-        <translation type="unfinished"/>
+        <translation>تنبيه من الشبكة</translation>
     </message>
 </context>
 <context>
@@ -798,7 +800,7 @@ Address: %4
         <location filename="../forms/coincontroldialog.ui" line="48"/>
         <location filename="../forms/ui_coincontroldialog.h" line="320"/>
         <source>Quantity:</source>
-        <translation type="unfinished"/>
+        <translation>الكمية:</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="77"/>
@@ -810,19 +812,19 @@ Address: %4
         <location filename="../forms/coincontroldialog.ui" line="122"/>
         <location filename="../forms/ui_coincontroldialog.h" line="322"/>
         <source>Amount:</source>
-        <translation type="unfinished"/>
+        <translation>القيمة</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="151"/>
         <location filename="../forms/ui_coincontroldialog.h" line="323"/>
         <source>Priority:</source>
-        <translation type="unfinished"/>
+        <translation>افضلية :</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="196"/>
         <location filename="../forms/ui_coincontroldialog.h" line="324"/>
         <source>Fee:</source>
-        <translation type="unfinished"/>
+        <translation>رسوم :</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="228"/>
@@ -834,13 +836,13 @@ Address: %4
         <location filename="../forms/coincontroldialog.ui" line="276"/>
         <location filename="../forms/ui_coincontroldialog.h" line="326"/>
         <source>After Fee:</source>
-        <translation type="unfinished"/>
+        <translation>بعد الرسوم :</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="308"/>
         <location filename="../forms/ui_coincontroldialog.h" line="327"/>
         <source>Change:</source>
-        <translation type="unfinished"/>
+        <translation>تعديل :</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="364"/>
@@ -864,13 +866,13 @@ Address: %4
         <location filename="../forms/coincontroldialog.ui" line="446"/>
         <location filename="../forms/ui_coincontroldialog.h" line="337"/>
         <source>Amount</source>
-        <translation type="unfinished"/>
+        <translation>المبلغ</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="456"/>
         <location filename="../forms/ui_coincontroldialog.h" line="336"/>
         <source>Address</source>
-        <translation type="unfinished"/>
+        <translation>عنوان</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="461"/>
@@ -882,46 +884,46 @@ Address: %4
         <location filename="../forms/coincontroldialog.ui" line="466"/>
         <location filename="../forms/ui_coincontroldialog.h" line="334"/>
         <source>Date</source>
-        <translation type="unfinished"/>
+        <translation>التاريخ</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="471"/>
         <location filename="../forms/ui_coincontroldialog.h" line="333"/>
         <source>Confirmations</source>
-        <translation type="unfinished"/>
+        <translation>تأكيد</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="474"/>
         <location filename="../forms/ui_coincontroldialog.h" line="339"/>
         <source>Confirmed</source>
-        <translation type="unfinished"/>
+        <translation>تأكيد</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="479"/>
         <location filename="../forms/ui_coincontroldialog.h" line="332"/>
         <source>Priority</source>
-        <translation type="unfinished"/>
+        <translation>أفضلية</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="43"/>
         <source>Copy address</source>
-        <translation type="unfinished"/>
+        <translation>  انسخ العنوان</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="44"/>
         <source>Copy label</source>
-        <translation type="unfinished"/>
+        <translation> انسخ التسمية</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="45"/>
         <location filename="../coincontroldialog.cpp" line="71"/>
         <source>Copy amount</source>
-        <translation type="unfinished"/>
+        <translation>نسخ القيمة</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="46"/>
         <source>Copy transaction ID</source>
-        <translation type="unfinished"/>
+        <translation>نسخ رقم المعاملة</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="47"/>
@@ -936,17 +938,17 @@ Address: %4
     <message>
         <location filename="../coincontroldialog.cpp" line="70"/>
         <source>Copy quantity</source>
-        <translation type="unfinished"/>
+        <translation>نسخ الكمية</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="72"/>
         <source>Copy fee</source>
-        <translation type="unfinished"/>
+        <translation>نسخ الرسوم</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="73"/>
         <source>Copy after fee</source>
-        <translation type="unfinished"/>
+        <translation>نسخ بعد الرسوم</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="74"/>
@@ -956,7 +958,7 @@ Address: %4
     <message>
         <location filename="../coincontroldialog.cpp" line="75"/>
         <source>Copy priority</source>
-        <translation type="unfinished"/>
+        <translation>نسخ الافضلية</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="76"/>
@@ -966,27 +968,27 @@ Address: %4
     <message>
         <location filename="../coincontroldialog.cpp" line="77"/>
         <source>Copy change</source>
-        <translation type="unfinished"/>
+        <translation>نسخ التغييرات</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="410"/>
         <source>highest</source>
-        <translation type="unfinished"/>
+        <translation>الاعلى</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="411"/>
         <source>higher</source>
-        <translation type="unfinished"/>
+        <translation>اعلى</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="412"/>
         <source>high</source>
-        <translation type="unfinished"/>
+        <translation>عالي</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="413"/>
         <source>medium-high</source>
-        <translation type="unfinished"/>
+        <translation>متوسط-مرتفع</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="414"/>
@@ -1001,17 +1003,17 @@ Address: %4
     <message>
         <location filename="../coincontroldialog.cpp" line="419"/>
         <source>low</source>
-        <translation type="unfinished"/>
+        <translation>منخفض</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="420"/>
         <source>lower</source>
-        <translation type="unfinished"/>
+        <translation>أدنى</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="421"/>
         <source>lowest</source>
-        <translation type="unfinished"/>
+        <translation>الأدنى</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="432"/>
@@ -1021,7 +1023,7 @@ Address: %4
     <message>
         <location filename="../coincontroldialog.cpp" line="464"/>
         <source>none</source>
-        <translation type="unfinished"/>
+        <translation>لا شيء</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="605"/>
@@ -1031,12 +1033,12 @@ Address: %4
     <message>
         <location filename="../coincontroldialog.cpp" line="605"/>
         <source>yes</source>
-        <translation type="unfinished"/>
+        <translation>نعم</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="605"/>
         <source>no</source>
-        <translation type="unfinished"/>
+        <translation>لا</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="615"/>
@@ -1089,7 +1091,7 @@ Address: %4
         <location filename="../coincontroldialog.cpp" line="670"/>
         <location filename="../coincontroldialog.cpp" line="731"/>
         <source>(no label)</source>
-        <translation type="unfinished"/>
+        <translation>(لا وصف)</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="724"/>
@@ -1099,7 +1101,7 @@ Address: %4
     <message>
         <location filename="../coincontroldialog.cpp" line="725"/>
         <source>(change)</source>
-        <translation type="unfinished"/>
+        <translation>(تغير)</translation>
     </message>
 </context>
 <context>
@@ -1205,13 +1207,13 @@ Address: %4
         <location filename="../forms/editaddressdialog.ui" line="14"/>
         <location filename="../forms/ui_editaddressdialog.h" line="91"/>
         <source>Edit Address</source>
-        <translation type="unfinished"/>
+        <translation>عدل العنوان</translation>
     </message>
     <message>
         <location filename="../forms/editaddressdialog.ui" line="25"/>
         <location filename="../forms/ui_editaddressdialog.h" line="92"/>
         <source>&amp;Label</source>
-        <translation type="unfinished"/>
+        <translation>&amp;وصف</translation>
     </message>
     <message>
         <location filename="../forms/editaddressdialog.ui" line="35"/>
@@ -1223,7 +1225,7 @@ Address: %4
         <location filename="../forms/editaddressdialog.ui" line="42"/>
         <location filename="../forms/ui_editaddressdialog.h" line="96"/>
         <source>&amp;Address</source>
-        <translation type="unfinished"/>
+        <translation>&amp;العنوان</translation>
     </message>
     <message>
         <location filename="../forms/editaddressdialog.ui" line="52"/>
@@ -1234,22 +1236,22 @@ Address: %4
     <message>
         <location filename="../editaddressdialog.cpp" line="29"/>
         <source>New receiving address</source>
-        <translation type="unfinished"/>
+        <translation>عنوان أستلام جديد</translation>
     </message>
     <message>
         <location filename="../editaddressdialog.cpp" line="33"/>
         <source>New sending address</source>
-        <translation type="unfinished"/>
+        <translation>عنوان إرسال جديد</translation>
     </message>
     <message>
         <location filename="../editaddressdialog.cpp" line="36"/>
         <source>Edit receiving address</source>
-        <translation type="unfinished"/>
+        <translation>تعديل عنوان الأستلام</translation>
     </message>
     <message>
         <location filename="../editaddressdialog.cpp" line="40"/>
         <source>Edit sending address</source>
-        <translation type="unfinished"/>
+        <translation>تعديل عنوان الارسال</translation>
     </message>
     <message>
         <location filename="../editaddressdialog.cpp" line="111"/>
@@ -1259,17 +1261,17 @@ Address: %4
     <message>
         <location filename="../editaddressdialog.cpp" line="116"/>
         <source>The entered address &quot;%1&quot; is already in the address book.</source>
-        <translation type="unfinished"/>
+        <translation>هدا العنوان &quot;%1&quot; موجود مسبقا في دفتر العناوين</translation>
     </message>
     <message>
         <location filename="../editaddressdialog.cpp" line="121"/>
         <source>Could not unlock wallet.</source>
-        <translation type="unfinished"/>
+        <translation> يمكن فتح المحفظة.</translation>
     </message>
     <message>
         <location filename="../editaddressdialog.cpp" line="126"/>
         <source>New key generation failed.</source>
-        <translation type="unfinished"/>
+        <translation>فشل توليد مفتاح جديد.</translation>
     </message>
 </context>
 <context>
@@ -1277,12 +1279,12 @@ Address: %4
     <message>
         <location filename="../intro.cpp" line="69"/>
         <source>A new data directory will be created.</source>
-        <translation type="unfinished"/>
+        <translation>سيتم انشاء دليل بيانات جديد</translation>
     </message>
     <message>
         <location filename="../intro.cpp" line="91"/>
         <source>name</source>
-        <translation type="unfinished"/>
+        <translation>الاسم</translation>
     </message>
     <message>
         <location filename="../intro.cpp" line="93"/>
@@ -1297,7 +1299,7 @@ Address: %4
     <message>
         <location filename="../intro.cpp" line="103"/>
         <source>Cannot create data directory here.</source>
-        <translation type="unfinished"/>
+        <translation>لا يمكن انشاء دليل بيانات هنا .</translation>
     </message>
 </context>
 <context>
@@ -1316,12 +1318,12 @@ Address: %4
     <message>
         <location filename="../utilitydialog.cpp" line="69"/>
         <source>version</source>
-        <translation type="unfinished"/>
+        <translation>النسخة</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="71"/>
         <source>Usage:</source>
-        <translation type="unfinished"/>
+        <translation>المستخدم</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="72"/>
@@ -1331,7 +1333,7 @@ Address: %4
     <message>
         <location filename="../utilitydialog.cpp" line="76"/>
         <source>UI options</source>
-        <translation type="unfinished"/>
+        <translation>خيارات UI</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="77"/>
@@ -1365,7 +1367,7 @@ Address: %4
         <location filename="../forms/intro.ui" line="14"/>
         <location filename="../forms/ui_intro.h" line="183"/>
         <source>Welcome</source>
-        <translation type="unfinished"/>
+        <translation>أهلا</translation>
     </message>
     <message>
         <location filename="../forms/intro.ui" line="23"/>
@@ -1389,13 +1391,13 @@ Address: %4
         <location filename="../forms/intro.ui" line="69"/>
         <location filename="../forms/ui_intro.h" line="187"/>
         <source>Use the default data directory</source>
-        <translation type="unfinished"/>
+        <translation>استخدام دليل البانات الافتراضي</translation>
     </message>
     <message>
         <location filename="../forms/intro.ui" line="76"/>
         <location filename="../forms/ui_intro.h" line="188"/>
         <source>Use a custom data directory:</source>
-        <translation type="unfinished"/>
+        <translation>استخدام دليل بيانات مخصص:</translation>
     </message>
     <message>
         <location filename="../intro.cpp" line="185"/>
@@ -1410,12 +1412,12 @@ Address: %4
     <message>
         <location filename="../intro.cpp" line="210"/>
         <source>Error</source>
-        <translation type="unfinished"/>
+        <translation>خطأ</translation>
     </message>
     <message>
         <location filename="../intro.cpp" line="219"/>
         <source>GB of free space available</source>
-        <translation type="unfinished"/>
+        <translation>قيقا بايت مساحة متاحة</translation>
     </message>
     <message>
         <location filename="../intro.cpp" line="222"/>
@@ -1447,12 +1449,12 @@ Address: %4
         <location filename="../forms/openuridialog.ui" line="40"/>
         <location filename="../forms/ui_openuridialog.h" line="97"/>
         <source>Select payment request file</source>
-        <translation type="unfinished"/>
+        <translation>حدد ملف طلب الدفع</translation>
     </message>
     <message>
         <location filename="../openuridialog.cpp" line="48"/>
         <source>Select payment request file to open</source>
-        <translation type="unfinished"/>
+        <translation>حدد ملف طلب الدفع لفتحه</translation>
     </message>
 </context>
 <context>
@@ -1461,13 +1463,13 @@ Address: %4
         <location filename="../forms/optionsdialog.ui" line="14"/>
         <location filename="../forms/ui_optionsdialog.h" line="532"/>
         <source>Options</source>
-        <translation type="unfinished"/>
+        <translation>خيارات ...</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="27"/>
         <location filename="../forms/ui_optionsdialog.h" line="548"/>
         <source>&amp;Main</source>
-        <translation type="unfinished"/>
+        <translation>&amp;الرئيسي</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="33"/>
@@ -1491,7 +1493,7 @@ Address: %4
         <location filename="../forms/optionsdialog.ui" line="61"/>
         <location filename="../forms/ui_optionsdialog.h" line="538"/>
         <source>MB</source>
-        <translation type="unfinished"/>
+        <translation>م ب</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="88"/>
@@ -1527,7 +1529,7 @@ Address: %4
         <location filename="../forms/optionsdialog.ui" line="206"/>
         <location filename="../forms/ui_optionsdialog.h" line="560"/>
         <source>W&amp;allet</source>
-        <translation type="unfinished"/>
+        <translation>&amp;محفظة</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="212"/>
@@ -1539,13 +1541,13 @@ Address: %4
         <location filename="../forms/optionsdialog.ui" line="227"/>
         <location filename="../forms/ui_optionsdialog.h" line="550"/>
         <source>Pay transaction &amp;fee</source>
-        <translation type="unfinished"/>
+        <translation>ادفع &amp;رسوم المعاملة</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="271"/>
         <location filename="../forms/ui_optionsdialog.h" line="551"/>
         <source>Expert</source>
-        <translation type="unfinished"/>
+        <translation>تصدير</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="277"/>
@@ -1575,7 +1577,7 @@ Address: %4
         <location filename="../forms/optionsdialog.ui" line="301"/>
         <location filename="../forms/ui_optionsdialog.h" line="581"/>
         <source>&amp;Network</source>
-        <translation type="unfinished"/>
+        <translation>&amp;الشبكة</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="307"/>
@@ -1605,7 +1607,7 @@ Address: %4
         <location filename="../forms/optionsdialog.ui" line="329"/>
         <location filename="../forms/ui_optionsdialog.h" line="569"/>
         <source>Proxy &amp;IP:</source>
-        <translation type="unfinished"/>
+        <translation>بروكسي &amp;اي بي:</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="354"/>
@@ -1617,13 +1619,13 @@ Address: %4
         <location filename="../forms/optionsdialog.ui" line="361"/>
         <location filename="../forms/ui_optionsdialog.h" line="573"/>
         <source>&amp;Port:</source>
-        <translation type="unfinished"/>
+        <translation>&amp;المنفذ:</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="386"/>
         <location filename="../forms/ui_optionsdialog.h" line="575"/>
         <source>Port of the proxy (e.g. 9050)</source>
-        <translation type="unfinished"/>
+        <translation>منفذ البروكسي (مثلا 9050)</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="393"/>
@@ -1641,7 +1643,7 @@ Address: %4
         <location filename="../forms/optionsdialog.ui" line="442"/>
         <location filename="../forms/ui_optionsdialog.h" line="590"/>
         <source>&amp;Window</source>
-        <translation type="unfinished"/>
+        <translation>نافذه</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="448"/>
@@ -1671,13 +1673,13 @@ Address: %4
         <location filename="../forms/optionsdialog.ui" line="482"/>
         <location filename="../forms/ui_optionsdialog.h" line="610"/>
         <source>&amp;Display</source>
-        <translation type="unfinished"/>
+        <translation>&amp;عرض</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="490"/>
         <location filename="../forms/ui_optionsdialog.h" line="591"/>
         <source>User Interface &amp;language:</source>
-        <translation type="unfinished"/>
+        <translation>واجهة المستخدم &amp;اللغة:</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="503"/>
@@ -1707,7 +1709,7 @@ Address: %4
         <location filename="../forms/optionsdialog.ui" line="539"/>
         <location filename="../forms/ui_optionsdialog.h" line="602"/>
         <source>&amp;Display addresses in transaction list</source>
-        <translation type="unfinished"/>
+        <translation>عرض العناوين في قائمة الصفقة</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="548"/>
@@ -1721,7 +1723,7 @@ Address: %4
         <location filename="../forms/optionsdialog.ui" line="551"/>
         <location filename="../forms/ui_optionsdialog.h" line="606"/>
         <source>Third party transaction URLs</source>
-        <translation type="unfinished"/>
+        <translation>عنوان النطاق للطرف الثالث</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="592"/>
@@ -1739,34 +1741,34 @@ Address: %4
         <location filename="../forms/optionsdialog.ui" line="638"/>
         <location filename="../forms/ui_optionsdialog.h" line="616"/>
         <source>&amp;Reset Options</source>
-        <translation type="unfinished"/>
+        <translation>&amp;استعادة الخيارات</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="699"/>
         <location filename="../forms/ui_optionsdialog.h" line="618"/>
         <source>&amp;OK</source>
-        <translation type="unfinished"/>
+        <translation>تم</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="706"/>
         <location filename="../forms/ui_optionsdialog.h" line="619"/>
         <source>&amp;Cancel</source>
-        <translation type="unfinished"/>
+        <translation>الغاء</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="73"/>
         <source>default</source>
-        <translation type="unfinished"/>
+        <translation>الافتراضي</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="134"/>
         <source>none</source>
-        <translation type="unfinished"/>
+        <translation>لا شيء</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="222"/>
         <source>Confirm options reset</source>
-        <translation type="unfinished"/>
+        <translation>تأكيد استعادة الخيارات</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="223"/>
@@ -1787,7 +1789,7 @@ Address: %4
     <message>
         <location filename="../optionsdialog.cpp" line="291"/>
         <source>The supplied proxy address is invalid.</source>
-        <translation type="unfinished"/>
+        <translation>عنوان الوكيل توفيره غير صالح.</translation>
     </message>
 </context>
 <context>
@@ -1796,13 +1798,13 @@ Address: %4
         <location filename="../forms/overviewpage.ui" line="14"/>
         <location filename="../forms/ui_overviewpage.h" line="456"/>
         <source>Form</source>
-        <translation type="unfinished"/>
+        <translation>نمودج</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="57"/>
         <location filename="../forms/ui_overviewpage.h" line="457"/>
         <source>Wallet</source>
-        <translation type="unfinished"/>
+        <translation>محفظة</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="64"/>
@@ -1816,7 +1818,7 @@ Address: %4
         <location filename="../forms/overviewpage.ui" line="108"/>
         <location filename="../forms/ui_overviewpage.h" line="461"/>
         <source>Available:</source>
-        <translation type="unfinished"/>
+        <translation>متوفر</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="124"/>
@@ -1828,7 +1830,7 @@ Address: %4
         <location filename="../forms/overviewpage.ui" line="140"/>
         <location filename="../forms/ui_overviewpage.h" line="465"/>
         <source>Pending:</source>
-        <translation type="unfinished"/>
+        <translation>معلق:</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="156"/>
@@ -1840,7 +1842,7 @@ Address: %4
         <location filename="../forms/overviewpage.ui" line="172"/>
         <location filename="../forms/ui_overviewpage.h" line="469"/>
         <source>Immature:</source>
-        <translation type="unfinished"/>
+        <translation>غير ناضجة</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="185"/>
@@ -1852,13 +1854,13 @@ Address: %4
         <location filename="../forms/overviewpage.ui" line="201"/>
         <location filename="../forms/ui_overviewpage.h" line="473"/>
         <source>Total:</source>
-        <translation type="unfinished"/>
+        <translation>المجموع:</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="217"/>
         <location filename="../forms/ui_overviewpage.h" line="475"/>
         <source>Your current total balance</source>
-        <translation type="unfinished"/>
+        <translation>رصيدك الكلي الحالي</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="296"/>
@@ -1969,13 +1971,13 @@ Address: %4
         <location filename="../forms/overviewpage.ui" line="955"/>
         <location filename="../forms/ui_overviewpage.h" line="501"/>
         <source>&lt;b&gt;Recent transactions&lt;/b&gt;</source>
-        <translation type="unfinished"/>
+        <translation>اخر المعملات </translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="126"/>
         <location filename="../overviewpage.cpp" line="127"/>
         <source>out of sync</source>
-        <translation type="unfinished"/>
+        <translation>خارج المزامنه</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="429"/>
@@ -2133,22 +2135,22 @@ Address: %4
     <message>
         <location filename="../receiverequestdialog.cpp" line="36"/>
         <source>&amp;Save Image...</source>
-        <translation type="unfinished"/>
+        <translation>&amp;حفظ الصورة</translation>
     </message>
     <message>
         <location filename="../receiverequestdialog.cpp" line="39"/>
         <source>&amp;Copy Image</source>
-        <translation type="unfinished"/>
+        <translation>&amp;نسخ الصورة</translation>
     </message>
     <message>
         <location filename="../receiverequestdialog.cpp" line="71"/>
         <source>Save QR Code</source>
-        <translation type="unfinished"/>
+        <translation>حفظ رمز الاستجابة السريعة QR</translation>
     </message>
     <message>
         <location filename="../receiverequestdialog.cpp" line="71"/>
         <source>PNG Image (*.png)</source>
-        <translation type="unfinished"/>
+        <translation>صورة PNG (*.png)</translation>
     </message>
 </context>
 <context>
@@ -2163,7 +2165,7 @@ Address: %4
         <location filename="../forms/rpcconsole.ui" line="24"/>
         <location filename="../forms/ui_rpcconsole.h" line="500"/>
         <source>&amp;Information</source>
-        <translation type="unfinished"/>
+        <translation>المعلومات</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="33"/>
@@ -2175,19 +2177,19 @@ Address: %4
         <location filename="../forms/rpcconsole.ui" line="46"/>
         <location filename="../forms/ui_rpcconsole.h" line="473"/>
         <source>General</source>
-        <translation type="unfinished"/>
+        <translation>عام</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="53"/>
         <location filename="../forms/ui_rpcconsole.h" line="474"/>
         <source>Name</source>
-        <translation type="unfinished"/>
+        <translation>الاسم</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="60"/>
         <location filename="../forms/ui_rpcconsole.h" line="475"/>
         <source>Client name</source>
-        <translation type="unfinished"/>
+        <translation>اسم العميل</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="70"/>
@@ -2211,13 +2213,13 @@ Address: %4
         <location filename="../forms/ui_rpcconsole.h" line="497"/>
         <location filename="../forms/ui_rpcconsole.h" line="499"/>
         <source>N/A</source>
-        <translation type="unfinished"/>
+        <translation>غير معروف</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="83"/>
         <location filename="../forms/ui_rpcconsole.h" line="477"/>
         <source>Number of connections</source>
-        <translation type="unfinished"/>
+        <translation>عدد الاتصالات</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="90"/>
@@ -2229,19 +2231,19 @@ Address: %4
         <location filename="../forms/rpcconsole.ui" line="93"/>
         <location filename="../forms/ui_rpcconsole.h" line="481"/>
         <source>&amp;Open</source>
-        <translation type="unfinished"/>
+        <translation>الفتح</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="116"/>
         <location filename="../forms/ui_rpcconsole.h" line="482"/>
         <source>Startup time</source>
-        <translation type="unfinished"/>
+        <translation>وقت البدء</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="129"/>
         <location filename="../forms/ui_rpcconsole.h" line="483"/>
         <source>Network</source>
-        <translation type="unfinished"/>
+        <translation>الشبكه</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="152"/>
@@ -2265,7 +2267,7 @@ Address: %4
         <location filename="../forms/rpcconsole.ui" line="182"/>
         <location filename="../forms/ui_rpcconsole.h" line="488"/>
         <source>Build date</source>
-        <translation type="unfinished"/>
+        <translation>وقت البناء</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="205"/>
@@ -2277,7 +2279,7 @@ Address: %4
         <location filename="../forms/rpcconsole.ui" line="305"/>
         <location filename="../forms/ui_rpcconsole.h" line="496"/>
         <source>Client version</source>
-        <translation type="unfinished"/>
+        <translation>نسخه العميل</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="334"/>
@@ -2301,33 +2303,33 @@ Address: %4
         <location filename="../forms/rpcconsole.ui" line="421"/>
         <location filename="../forms/ui_rpcconsole.h" line="510"/>
         <source>&amp;Network Traffic</source>
-        <translation type="unfinished"/>
+        <translation>&amp;حركة مرور الشبكة</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="473"/>
         <location filename="../forms/ui_rpcconsole.h" line="506"/>
         <source>&amp;Clear</source>
-        <translation type="unfinished"/>
+        <translation>&amp;مسح</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="486"/>
         <location filename="../forms/ui_rpcconsole.h" line="507"/>
         <source>Totals</source>
-        <translation type="unfinished"/>
+        <translation>المجاميع</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="550"/>
         <location filename="../forms/ui_rpcconsole.h" line="508"/>
         <location filename="../rpcconsole.cpp" line="365"/>
         <source>In:</source>
-        <translation type="unfinished"/>
+        <translation>داخل:</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="630"/>
         <location filename="../forms/ui_rpcconsole.h" line="509"/>
         <location filename="../rpcconsole.cpp" line="366"/>
         <source>Out:</source>
-        <translation type="unfinished"/>
+        <translation>خارج:</translation>
     </message>
     <message>
         <location filename="../rpcconsole.cpp" line="331"/>
@@ -2337,7 +2339,7 @@ Address: %4
     <message>
         <location filename="../rpcconsole.cpp" line="332"/>
         <source>Use up and down arrows to navigate history, and &lt;b&gt;Ctrl-L&lt;/b&gt; to clear screen.</source>
-        <translation type="unfinished"/>
+        <translation>استخدم اسهم الاعلى و الاسفل للتنقل بين السجلات و &lt;b&gt;Ctrl-L&lt;/b&gt;  لمسح الشاشة</translation>
     </message>
     <message>
         <location filename="../rpcconsole.cpp" line="333"/>
@@ -2406,7 +2408,7 @@ Address: %4
         <location filename="../forms/receivecoinsdialog.ui" line="54"/>
         <location filename="../forms/ui_receivecoinsdialog.h" line="262"/>
         <source>&amp;Message:</source>
-        <translation type="unfinished"/>
+        <translation>&amp;رسالة:</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="67"/>
@@ -2426,7 +2428,7 @@ Address: %4
         <location filename="../forms/receivecoinsdialog.ui" line="91"/>
         <location filename="../forms/ui_receivecoinsdialog.h" line="273"/>
         <source>&amp;Label:</source>
-        <translation type="unfinished"/>
+        <translation>&amp;الوصف:</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="104"/>
@@ -2440,7 +2442,7 @@ Address: %4
         <location filename="../forms/receivecoinsdialog.ui" line="107"/>
         <location filename="../forms/ui_receivecoinsdialog.h" line="277"/>
         <source>&amp;Amount:</source>
-        <translation type="unfinished"/>
+        <translation>&amp;القيمة</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="141"/>
@@ -2452,19 +2454,19 @@ Address: %4
         <location filename="../forms/receivecoinsdialog.ui" line="158"/>
         <location filename="../forms/ui_receivecoinsdialog.h" line="283"/>
         <source>Clear all fields of the form.</source>
-        <translation type="unfinished"/>
+        <translation>مسح كل حقول النموذج المطلوبة</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="161"/>
         <location filename="../forms/ui_receivecoinsdialog.h" line="285"/>
         <source>Clear</source>
-        <translation type="unfinished"/>
+        <translation>مسح</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="239"/>
         <location filename="../forms/ui_receivecoinsdialog.h" line="287"/>
         <source>Requested payments history</source>
-        <translation type="unfinished"/>
+        <translation>سجل طلبات الدفع</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="261"/>
@@ -2476,7 +2478,7 @@ Address: %4
         <location filename="../forms/receivecoinsdialog.ui" line="264"/>
         <location filename="../forms/ui_receivecoinsdialog.h" line="291"/>
         <source>Show</source>
-        <translation type="unfinished"/>
+        <translation>عرض</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="278"/>
@@ -2488,22 +2490,22 @@ Address: %4
         <location filename="../forms/receivecoinsdialog.ui" line="281"/>
         <location filename="../forms/ui_receivecoinsdialog.h" line="295"/>
         <source>Remove</source>
-        <translation type="unfinished"/>
+        <translation>ازل</translation>
     </message>
     <message>
         <location filename="../receivecoinsdialog.cpp" line="39"/>
         <source>Copy label</source>
-        <translation type="unfinished"/>
+        <translation> انسخ التسمية</translation>
     </message>
     <message>
         <location filename="../receivecoinsdialog.cpp" line="40"/>
         <source>Copy message</source>
-        <translation type="unfinished"/>
+        <translation>انسخ الرسالة</translation>
     </message>
     <message>
         <location filename="../receivecoinsdialog.cpp" line="41"/>
         <source>Copy amount</source>
-        <translation type="unfinished"/>
+        <translation>نسخ القيمة</translation>
     </message>
 </context>
 <context>
@@ -2512,25 +2514,25 @@ Address: %4
         <location filename="../forms/receiverequestdialog.ui" line="29"/>
         <location filename="../forms/ui_receiverequestdialog.h" line="117"/>
         <source>QR Code</source>
-        <translation type="unfinished"/>
+        <translation>رمز كيو ار</translation>
     </message>
     <message>
         <location filename="../forms/receiverequestdialog.ui" line="75"/>
         <location filename="../forms/ui_receiverequestdialog.h" line="119"/>
         <source>Copy &amp;URI</source>
-        <translation type="unfinished"/>
+        <translation>نسخ  &amp;URI</translation>
     </message>
     <message>
         <location filename="../forms/receiverequestdialog.ui" line="82"/>
         <location filename="../forms/ui_receiverequestdialog.h" line="120"/>
         <source>Copy &amp;Address</source>
-        <translation type="unfinished"/>
+        <translation>نسخ &amp;العنوان</translation>
     </message>
     <message>
         <location filename="../forms/receiverequestdialog.ui" line="89"/>
         <location filename="../forms/ui_receiverequestdialog.h" line="121"/>
         <source>&amp;Save Image...</source>
-        <translation type="unfinished"/>
+        <translation>&amp;حفظ الصورة</translation>
     </message>
     <message>
         <location filename="../receiverequestdialog.cpp" line="136"/>
@@ -2540,32 +2542,32 @@ Address: %4
     <message>
         <location filename="../receiverequestdialog.cpp" line="142"/>
         <source>Payment information</source>
-        <translation type="unfinished"/>
+        <translation>معلومات الدفع</translation>
     </message>
     <message>
         <location filename="../receiverequestdialog.cpp" line="143"/>
         <source>URI</source>
-        <translation type="unfinished"/>
+        <translation> URI</translation>
     </message>
     <message>
         <location filename="../receiverequestdialog.cpp" line="145"/>
         <source>Address</source>
-        <translation type="unfinished"/>
+        <translation>عنوان</translation>
     </message>
     <message>
         <location filename="../receiverequestdialog.cpp" line="147"/>
         <source>Amount</source>
-        <translation type="unfinished"/>
+        <translation>المبلغ</translation>
     </message>
     <message>
         <location filename="../receiverequestdialog.cpp" line="149"/>
         <source>Label</source>
-        <translation type="unfinished"/>
+        <translation>وصف</translation>
     </message>
     <message>
         <location filename="../receiverequestdialog.cpp" line="151"/>
         <source>Message</source>
-        <translation type="unfinished"/>
+        <translation>رسالة</translation>
     </message>
     <message>
         <location filename="../receiverequestdialog.cpp" line="161"/>
@@ -2583,32 +2585,32 @@ Address: %4
     <message>
         <location filename="../recentrequeststablemodel.cpp" line="24"/>
         <source>Date</source>
-        <translation type="unfinished"/>
+        <translation>التاريخ</translation>
     </message>
     <message>
         <location filename="../recentrequeststablemodel.cpp" line="24"/>
         <source>Label</source>
-        <translation type="unfinished"/>
+        <translation>وصف</translation>
     </message>
     <message>
         <location filename="../recentrequeststablemodel.cpp" line="24"/>
         <source>Message</source>
-        <translation type="unfinished"/>
+        <translation>رسالة</translation>
     </message>
     <message>
         <location filename="../recentrequeststablemodel.cpp" line="24"/>
         <source>Amount</source>
-        <translation type="unfinished"/>
+        <translation>المبلغ</translation>
     </message>
     <message>
         <location filename="../recentrequeststablemodel.cpp" line="62"/>
         <source>(no label)</source>
-        <translation type="unfinished"/>
+        <translation>(لا وصف)</translation>
     </message>
     <message>
         <location filename="../recentrequeststablemodel.cpp" line="71"/>
         <source>(no message)</source>
-        <translation type="unfinished"/>
+        <translation>( لا رسائل )</translation>
     </message>
     <message>
         <location filename="../recentrequeststablemodel.cpp" line="79"/>
@@ -2625,7 +2627,7 @@ Address: %4
         <location filename="../sendcoinsdialog.cpp" line="511"/>
         <location filename="../sendcoinsdialog.cpp" line="521"/>
         <source>Send Coins</source>
-        <translation type="unfinished"/>
+        <translation>إرسال Coins</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="90"/>
@@ -2643,19 +2645,19 @@ Address: %4
         <location filename="../forms/sendcoinsdialog.ui" line="117"/>
         <location filename="../forms/ui_sendcoinsdialog.h" line="518"/>
         <source>automatically selected</source>
-        <translation type="unfinished"/>
+        <translation>اختيار تلقائيا</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="136"/>
         <location filename="../forms/ui_sendcoinsdialog.h" line="519"/>
         <source>Insufficient funds!</source>
-        <translation type="unfinished"/>
+        <translation>الرصيد غير كافي!</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="225"/>
         <location filename="../forms/ui_sendcoinsdialog.h" line="520"/>
         <source>Quantity:</source>
-        <translation type="unfinished"/>
+        <translation>الكمية :</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="260"/>
@@ -2667,19 +2669,19 @@ Address: %4
         <location filename="../forms/sendcoinsdialog.ui" line="308"/>
         <location filename="../forms/ui_sendcoinsdialog.h" line="522"/>
         <source>Amount:</source>
-        <translation type="unfinished"/>
+        <translation>القيمة :</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="340"/>
         <location filename="../forms/ui_sendcoinsdialog.h" line="523"/>
         <source>Priority:</source>
-        <translation type="unfinished"/>
+        <translation>افضلية :</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="388"/>
         <location filename="../forms/ui_sendcoinsdialog.h" line="524"/>
         <source>Fee:</source>
-        <translation type="unfinished"/>
+        <translation>رسوم :</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="420"/>
@@ -2691,13 +2693,13 @@ Address: %4
         <location filename="../forms/sendcoinsdialog.ui" line="468"/>
         <location filename="../forms/ui_sendcoinsdialog.h" line="526"/>
         <source>After Fee:</source>
-        <translation type="unfinished"/>
+        <translation>بعد الرسوم :</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="500"/>
         <location filename="../forms/ui_sendcoinsdialog.h" line="527"/>
         <source>Change:</source>
-        <translation type="unfinished"/>
+        <translation>تعديل :</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="544"/>
@@ -2715,37 +2717,37 @@ Address: %4
         <location filename="../forms/sendcoinsdialog.ui" line="668"/>
         <location filename="../forms/ui_sendcoinsdialog.h" line="534"/>
         <source>Confirm the send action</source>
-        <translation type="unfinished"/>
+        <translation>تأكيد الإرسال</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="671"/>
         <location filename="../forms/ui_sendcoinsdialog.h" line="536"/>
         <source>S&amp;end</source>
-        <translation type="unfinished"/>
+        <translation>&amp;ارسال</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="691"/>
         <location filename="../forms/ui_sendcoinsdialog.h" line="538"/>
         <source>Clear all fields of the form.</source>
-        <translation type="unfinished"/>
+        <translation>مسح كل حقول النموذج المطلوبة</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="694"/>
         <location filename="../forms/ui_sendcoinsdialog.h" line="540"/>
         <source>Clear &amp;All</source>
-        <translation type="unfinished"/>
+        <translation>مسح الكل</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="711"/>
         <location filename="../forms/ui_sendcoinsdialog.h" line="542"/>
         <source>Send to multiple recipients at once</source>
-        <translation type="unfinished"/>
+        <translation>إرسال إلى عدة مستلمين في وقت واحد</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="714"/>
         <location filename="../forms/ui_sendcoinsdialog.h" line="544"/>
         <source>Add &amp;Recipient</source>
-        <translation type="unfinished"/>
+        <translation>أضافة &amp;مستلم</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="759"/>
@@ -2763,27 +2765,27 @@ Address: %4
         <location filename="../forms/sendcoinsdialog.ui" line="779"/>
         <location filename="../forms/ui_sendcoinsdialog.h" line="547"/>
         <source>Balance:</source>
-        <translation type="unfinished"/>
+        <translation>الرصيد:</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="52"/>
         <source>Copy quantity</source>
-        <translation type="unfinished"/>
+        <translation>نسخ الكمية </translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="53"/>
         <source>Copy amount</source>
-        <translation type="unfinished"/>
+        <translation>نسخ القيمة</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="54"/>
         <source>Copy fee</source>
-        <translation type="unfinished"/>
+        <translation>نسخ الرسوم</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="55"/>
         <source>Copy after fee</source>
-        <translation type="unfinished"/>
+        <translation>نسخ بعد الرسوم</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="56"/>
@@ -2793,7 +2795,7 @@ Address: %4
     <message>
         <location filename="../sendcoinsdialog.cpp" line="57"/>
         <source>Copy priority</source>
-        <translation type="unfinished"/>
+        <translation>نسخ الافضلية</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="58"/>
@@ -2803,7 +2805,7 @@ Address: %4
     <message>
         <location filename="../sendcoinsdialog.cpp" line="59"/>
         <source>Copy change</source>
-        <translation type="unfinished"/>
+        <translation>نسخ التعديل</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="154"/>
@@ -2831,17 +2833,17 @@ Address: %4
     <message>
         <location filename="../sendcoinsdialog.cpp" line="274"/>
         <source>Total Amount %1 (= %2)</source>
-        <translation type="unfinished"/>
+        <translation>مجموع المبلغ %1 (= %2)</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="276"/>
         <source>or</source>
-        <translation type="unfinished"/>
+        <translation>أو</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="278"/>
         <source>Confirm send coins</source>
-        <translation type="unfinished"/>
+        <translation>تأكيد الإرسال Coins</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="433"/>
@@ -2861,12 +2863,12 @@ Address: %4
     <message>
         <location filename="../sendcoinsdialog.cpp" line="491"/>
         <source>The amount to pay must be larger than 0.</source>
-        <translation type="unfinished"/>
+        <translation>المبلغ المدفوع يجب ان يكون اكبر من 0</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="494"/>
         <source>The amount exceeds your balance.</source>
-        <translation type="unfinished"/>
+        <translation>القيمة تتجاوز رصيدك</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="497"/>
@@ -2906,7 +2908,7 @@ Address: %4
     <message>
         <location filename="../sendcoinsdialog.cpp" line="645"/>
         <source>(no label)</source>
-        <translation type="unfinished"/>
+        <translation>(لا وصف)</translation>
     </message>
 </context>
 <context>
@@ -2921,7 +2923,7 @@ Address: %4
         <location filename="../forms/sendcoinsentry.ui" line="36"/>
         <location filename="../forms/ui_sendcoinsentry.h" line="425"/>
         <source>Pay &amp;To:</source>
-        <translation type="unfinished"/>
+        <translation>ادفع &amp;الى :</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="54"/>
@@ -2939,19 +2941,19 @@ Address: %4
         <location filename="../forms/sendcoinsentry.ui" line="71"/>
         <location filename="../forms/ui_sendcoinsentry.h" line="433"/>
         <source>Alt+A</source>
-        <translation type="unfinished"/>
+        <translation>Alt+A</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="78"/>
         <location filename="../forms/ui_sendcoinsentry.h" line="435"/>
         <source>Paste address from clipboard</source>
-        <translation type="unfinished"/>
+        <translation>الصق العنوان من لوحة المفاتيح</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="88"/>
         <location filename="../forms/ui_sendcoinsentry.h" line="438"/>
         <source>Alt+P</source>
-        <translation type="unfinished"/>
+        <translation>Alt+P</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="95"/>
@@ -2967,7 +2969,7 @@ Address: %4
         <location filename="../forms/sendcoinsentry.ui" line="111"/>
         <location filename="../forms/ui_sendcoinsentry.h" line="443"/>
         <source>&amp;Label:</source>
-        <translation type="unfinished"/>
+        <translation>&amp;وصف :</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="124"/>
@@ -2989,7 +2991,7 @@ Address: %4
         <location filename="../forms/sendcoinsentry.ui" line="147"/>
         <location filename="../forms/ui_sendcoinsentry.h" line="448"/>
         <source>Message:</source>
-        <translation type="unfinished"/>
+        <translation>الرسائل</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="157"/>
@@ -3028,7 +3030,7 @@ Address: %4
     <message>
         <location filename="../sendcoinsentry.cpp" line="31"/>
         <source>Enter a label for this address to add it to your address book</source>
-        <translation type="unfinished"/>
+        <translation>إدخال تسمية لهذا العنوان لإضافته إلى دفتر العناوين الخاص بك</translation>
     </message>
 </context>
 <context>
@@ -3041,7 +3043,7 @@ Address: %4
     <message>
         <location filename="../utilitydialog.cpp" line="130"/>
         <source>Do not shut down the computer until this window disappears.</source>
-        <translation type="unfinished"/>
+        <translation>لا توقف عمل الكمبيوتر حتى تختفي هذه النافذة</translation>
     </message>
 </context>
 <context>
@@ -3056,7 +3058,7 @@ Address: %4
         <location filename="../forms/signverifymessagedialog.ui" line="24"/>
         <location filename="../forms/ui_signverifymessagedialog.h" line="315"/>
         <source>&amp;Sign Message</source>
-        <translation type="unfinished"/>
+        <translation>&amp;توقيع الرسالة</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="30"/>
@@ -3084,31 +3086,31 @@ Address: %4
         <location filename="../forms/ui_signverifymessagedialog.h" line="292"/>
         <location filename="../forms/ui_signverifymessagedialog.h" line="324"/>
         <source>Alt+A</source>
-        <translation type="unfinished"/>
+        <translation>Alt+A</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="75"/>
         <location filename="../forms/ui_signverifymessagedialog.h" line="294"/>
         <source>Paste address from clipboard</source>
-        <translation type="unfinished"/>
+        <translation>انسخ العنوان من لوحة المفاتيح</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="85"/>
         <location filename="../forms/ui_signverifymessagedialog.h" line="297"/>
         <source>Alt+P</source>
-        <translation type="unfinished"/>
+        <translation>Alt+P</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="97"/>
         <location filename="../forms/ui_signverifymessagedialog.h" line="299"/>
         <source>Enter the message you want to sign here</source>
-        <translation type="unfinished"/>
+        <translation>ادخل الرسالة التي تريد توقيعها هنا</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="104"/>
         <location filename="../forms/ui_signverifymessagedialog.h" line="301"/>
         <source>Signature</source>
-        <translation type="unfinished"/>
+        <translation>التوقيع</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="131"/>
@@ -3126,7 +3128,7 @@ Address: %4
         <location filename="../forms/signverifymessagedialog.ui" line="155"/>
         <location filename="../forms/ui_signverifymessagedialog.h" line="309"/>
         <source>Sign &amp;Message</source>
-        <translation type="unfinished"/>
+        <translation>توقيع $الرسالة</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="169"/>
@@ -3140,13 +3142,13 @@ Address: %4
         <location filename="../forms/ui_signverifymessagedialog.h" line="313"/>
         <location filename="../forms/ui_signverifymessagedialog.h" line="332"/>
         <source>Clear &amp;All</source>
-        <translation type="unfinished"/>
+        <translation>مسح الكل</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="231"/>
         <location filename="../forms/ui_signverifymessagedialog.h" line="334"/>
         <source>&amp;Verify Message</source>
-        <translation type="unfinished"/>
+        <translation>&amp;تحقق رسالة</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="237"/>
@@ -3170,7 +3172,7 @@ Address: %4
         <location filename="../forms/signverifymessagedialog.ui" line="298"/>
         <location filename="../forms/ui_signverifymessagedialog.h" line="328"/>
         <source>Verify &amp;Message</source>
-        <translation type="unfinished"/>
+        <translation>تحقق &amp;الرسالة</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="312"/>
@@ -3181,7 +3183,7 @@ Address: %4
     <message>
         <location filename="../signverifymessagedialog.cpp" line="30"/>
         <source>Click &quot;Sign Message&quot; to generate signature</source>
-        <translation type="unfinished"/>
+        <translation>اضغط  &quot;توقيع الرسالة&quot; لتوليد التوقيع</translation>
     </message>
     <message>
         <location filename="../signverifymessagedialog.cpp" line="31"/>
@@ -3192,7 +3194,7 @@ Address: %4
         <location filename="../signverifymessagedialog.cpp" line="114"/>
         <location filename="../signverifymessagedialog.cpp" line="194"/>
         <source>The entered address is invalid.</source>
-        <translation type="unfinished"/>
+        <translation>العنوان المدخل غير صالح</translation>
     </message>
     <message>
         <location filename="../signverifymessagedialog.cpp" line="114"/>
@@ -3200,33 +3202,33 @@ Address: %4
         <location filename="../signverifymessagedialog.cpp" line="194"/>
         <location filename="../signverifymessagedialog.cpp" line="202"/>
         <source>Please check the address and try again.</source>
-        <translation type="unfinished"/>
+        <translation>الرجاء التأكد من العنوان والمحاولة مرة اخرى</translation>
     </message>
     <message>
         <location filename="../signverifymessagedialog.cpp" line="122"/>
         <location filename="../signverifymessagedialog.cpp" line="202"/>
         <source>The entered address does not refer to a key.</source>
-        <translation type="unfinished"/>
+        <translation>العنوان المدخل لا يشير الى مفتاح</translation>
     </message>
     <message>
         <location filename="../signverifymessagedialog.cpp" line="130"/>
         <source>Wallet unlock was cancelled.</source>
-        <translation type="unfinished"/>
+        <translation>تم الغاء عملية فتح المحفظة</translation>
     </message>
     <message>
         <location filename="../signverifymessagedialog.cpp" line="138"/>
         <source>Private key for the entered address is not available.</source>
-        <translation type="unfinished"/>
+        <translation>المفتاح الخاص للعنوان المدخل غير موجود.</translation>
     </message>
     <message>
         <location filename="../signverifymessagedialog.cpp" line="150"/>
         <source>Message signing failed.</source>
-        <translation type="unfinished"/>
+        <translation>فشل توقيع الرسالة.</translation>
     </message>
     <message>
         <location filename="../signverifymessagedialog.cpp" line="155"/>
         <source>Message signed.</source>
-        <translation type="unfinished"/>
+        <translation>الرسالة موقعة.</translation>
     </message>
     <message>
         <location filename="../signverifymessagedialog.cpp" line="213"/>
@@ -3237,7 +3239,7 @@ Address: %4
         <location filename="../signverifymessagedialog.cpp" line="213"/>
         <location filename="../signverifymessagedialog.cpp" line="226"/>
         <source>Please check the signature and try again.</source>
-        <translation type="unfinished"/>
+        <translation>فضلا تاكد من التوقيع وحاول مرة اخرى</translation>
     </message>
     <message>
         <location filename="../signverifymessagedialog.cpp" line="226"/>
@@ -3247,12 +3249,12 @@ Address: %4
     <message>
         <location filename="../signverifymessagedialog.cpp" line="233"/>
         <source>Message verification failed.</source>
-        <translation type="unfinished"/>
+        <translation>فشلت عملية التأكد من الرسالة.</translation>
     </message>
     <message>
         <location filename="../signverifymessagedialog.cpp" line="238"/>
         <source>Message verified.</source>
-        <translation type="unfinished"/>
+        <translation>تم تأكيد الرسالة.</translation>
     </message>
 </context>
 <context>
@@ -3265,7 +3267,7 @@ Address: %4
     <message>
         <location filename="../splashscreen.cpp" line="35"/>
         <source>The Bitcoin Core developers</source>
-        <translation type="unfinished"/>
+        <translation>مطوري جوهر البيت كوين</translation>
     </message>
     <message>
         <location filename="../splashscreen.cpp" line="36"/>
@@ -3275,7 +3277,7 @@ Address: %4
     <message>
         <location filename="../splashscreen.cpp" line="37"/>
         <source>[testnet]</source>
-        <translation type="unfinished"/>
+        <translation>[testnet]</translation>
     </message>
 </context>
 <context>
@@ -3301,7 +3303,7 @@ Address: %4
     <message>
         <location filename="../transactiondesc.cpp" line="36"/>
         <source>conflicted</source>
-        <translation type="unfinished"/>
+        <translation>يتعارض</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="38"/>
@@ -3316,17 +3318,17 @@ Address: %4
     <message>
         <location filename="../transactiondesc.cpp" line="42"/>
         <source>%1 confirmations</source>
-        <translation type="unfinished"/>
+        <translation>تأكيد %1</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="59"/>
         <source>Status</source>
-        <translation type="unfinished"/>
+        <translation>الحالة.</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="64"/>
         <source>, has not been successfully broadcast yet</source>
-        <translation type="unfinished"/>
+        <translation>,  لم يتم حتى الآن البث بنجاح</translation>
     </message>
     <message numerus="yes">
         <location filename="../transactiondesc.cpp" line="66"/>
@@ -3336,46 +3338,46 @@ Address: %4
     <message>
         <location filename="../transactiondesc.cpp" line="70"/>
         <source>Date</source>
-        <translation type="unfinished"/>
+        <translation>التاريخ</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="77"/>
         <source>Source</source>
-        <translation type="unfinished"/>
+        <translation>المصدر</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="77"/>
         <source>Generated</source>
-        <translation type="unfinished"/>
+        <translation>تم اصداره.</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="82"/>
         <location filename="../transactiondesc.cpp" line="99"/>
         <source>From</source>
-        <translation type="unfinished"/>
+        <translation>من</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="99"/>
         <source>unknown</source>
-        <translation type="unfinished"/>
+        <translation>غير معروف</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="100"/>
         <location filename="../transactiondesc.cpp" line="122"/>
         <location filename="../transactiondesc.cpp" line="180"/>
         <source>To</source>
-        <translation type="unfinished"/>
+        <translation>الى</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="103"/>
         <location filename="../transactiondesc.cpp" line="105"/>
         <source>own address</source>
-        <translation type="unfinished"/>
+        <translation>عنوانه</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="103"/>
         <source>label</source>
-        <translation type="unfinished"/>
+        <translation>علامة</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="140"/>
@@ -3394,7 +3396,7 @@ Address: %4
     <message>
         <location filename="../transactiondesc.cpp" line="144"/>
         <source>not accepted</source>
-        <translation type="unfinished"/>
+        <translation>غير مقبولة</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="188"/>
@@ -3402,12 +3404,12 @@ Address: %4
         <location filename="../transactiondesc.cpp" line="211"/>
         <location filename="../transactiondesc.cpp" line="264"/>
         <source>Debit</source>
-        <translation type="unfinished"/>
+        <translation>دين</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="202"/>
         <source>Transaction fee</source>
-        <translation type="unfinished"/>
+        <translation>رسوم المعاملة</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="218"/>
@@ -3418,22 +3420,22 @@ Address: %4
         <location filename="../transactiondesc.cpp" line="224"/>
         <location filename="../transactiondesc.cpp" line="233"/>
         <source>Message</source>
-        <translation type="unfinished"/>
+        <translation>رسالة </translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="226"/>
         <source>Comment</source>
-        <translation type="unfinished"/>
+        <translation>تعليق</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="228"/>
         <source>Transaction ID</source>
-        <translation type="unfinished"/>
+        <translation>رقم المعاملة</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="246"/>
         <source>Merchant</source>
-        <translation type="unfinished"/>
+        <translation>تاجر</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="253"/>
@@ -3448,7 +3450,7 @@ Address: %4
     <message>
         <location filename="../transactiondesc.cpp" line="269"/>
         <source>Transaction</source>
-        <translation type="unfinished"/>
+        <translation>معاملة</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="272"/>
@@ -3458,17 +3460,17 @@ Address: %4
     <message>
         <location filename="../transactiondesc.cpp" line="293"/>
         <source>Amount</source>
-        <translation type="unfinished"/>
+        <translation>المبلغ</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="294"/>
         <source>true</source>
-        <translation type="unfinished"/>
+        <translation>صحيح</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="294"/>
         <source>false</source>
-        <translation type="unfinished"/>
+        <translation>خاطئ</translation>
     </message>
 </context>
 <context>
@@ -3477,13 +3479,13 @@ Address: %4
         <location filename="../forms/transactiondescdialog.ui" line="14"/>
         <location filename="../forms/ui_transactiondescdialog.h" line="60"/>
         <source>Transaction details</source>
-        <translation type="unfinished"/>
+        <translation>تفاصيل المعاملة</translation>
     </message>
     <message>
         <location filename="../forms/transactiondescdialog.ui" line="20"/>
         <location filename="../forms/ui_transactiondescdialog.h" line="62"/>
         <source>This pane shows a detailed description of the transaction</source>
-        <translation type="unfinished"/>
+        <translation>يبين هذا الجزء وصفا مفصلا لهده المعاملة</translation>
     </message>
 </context>
 <context>
@@ -3491,22 +3493,22 @@ Address: %4
     <message>
         <location filename="../transactiontablemodel.cpp" line="238"/>
         <source>Date</source>
-        <translation type="unfinished"/>
+        <translation>التاريخ</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="238"/>
         <source>Type</source>
-        <translation type="unfinished"/>
+        <translation>النوع</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="238"/>
         <source>Address</source>
-        <translation type="unfinished"/>
+        <translation>عنوان</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="238"/>
         <source>Amount</source>
-        <translation type="unfinished"/>
+        <translation>المبلغ</translation>
     </message>
     <message numerus="yes">
         <location filename="../transactiontablemodel.cpp" line="287"/>
@@ -3521,7 +3523,7 @@ Address: %4
     <message>
         <location filename="../transactiontablemodel.cpp" line="293"/>
         <source>Offline</source>
-        <translation type="unfinished"/>
+        <translation>غير متصل</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="296"/>
@@ -3551,22 +3553,22 @@ Address: %4
     <message>
         <location filename="../transactiontablemodel.cpp" line="311"/>
         <source>This block was not received by any other nodes and will probably not be accepted!</source>
-        <translation type="unfinished"/>
+        <translation>لم يتم تلقى هذه الكتلة (Block) من قبل أي العقد الأخرى وربما لن تكون مقبولة!</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="314"/>
         <source>Generated but not accepted</source>
-        <translation type="unfinished"/>
+        <translation>ولدت ولكن لم تقبل</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="356"/>
         <source>Received with</source>
-        <translation type="unfinished"/>
+        <translation>استقبل مع</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="358"/>
         <source>Received from</source>
-        <translation type="unfinished"/>
+        <translation>استقبل من</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="360"/>
@@ -3576,17 +3578,17 @@ Address: %4
     <message>
         <location filename="../transactiontablemodel.cpp" line="363"/>
         <source>Sent to</source>
-        <translation type="unfinished"/>
+        <translation>أرسل إلى</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="365"/>
         <source>Payment to yourself</source>
-        <translation type="unfinished"/>
+        <translation>دفع لنفسك</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="367"/>
         <source>Mined</source>
-        <translation type="unfinished"/>
+        <translation>Mined</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="370"/>
@@ -3611,32 +3613,32 @@ Address: %4
     <message>
         <location filename="../transactiontablemodel.cpp" line="418"/>
         <source>(n/a)</source>
-        <translation type="unfinished"/>
+        <translation>غير متوفر</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="610"/>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
-        <translation type="unfinished"/>
+        <translation>حالة المعاملة. تحوم حول هذا الحقل لعرض عدد  التأكيدات.</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="612"/>
         <source>Date and time that the transaction was received.</source>
-        <translation type="unfinished"/>
+        <translation>التاريخ والوقت الذي تم فيه تلقي المعاملة.</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="614"/>
         <source>Type of transaction.</source>
-        <translation type="unfinished"/>
+        <translation>نوع المعاملات</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="616"/>
         <source>Destination address of transaction.</source>
-        <translation type="unfinished"/>
+        <translation>عنوان وجهة  المعاملة</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="618"/>
         <source>Amount removed from or added to balance.</source>
-        <translation type="unfinished"/>
+        <translation>المبلغ الذي أزيل أو أضيف الى الرصيد</translation>
     </message>
 </context>
 <context>
@@ -3645,47 +3647,47 @@ Address: %4
         <location filename="../transactionview.cpp" line="60"/>
         <location filename="../transactionview.cpp" line="76"/>
         <source>All</source>
-        <translation type="unfinished"/>
+        <translation>الكل</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="61"/>
         <source>Today</source>
-        <translation type="unfinished"/>
+        <translation>اليوم</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="62"/>
         <source>This week</source>
-        <translation type="unfinished"/>
+        <translation>هدا الاسبوع</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="63"/>
         <source>This month</source>
-        <translation type="unfinished"/>
+        <translation>هدا الشهر</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="64"/>
         <source>Last month</source>
-        <translation type="unfinished"/>
+        <translation>الشهر الماضي</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="65"/>
         <source>This year</source>
-        <translation type="unfinished"/>
+        <translation>هدا العام</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="66"/>
         <source>Range...</source>
-        <translation type="unfinished"/>
+        <translation>المدى...</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="77"/>
         <source>Received with</source>
-        <translation type="unfinished"/>
+        <translation>استقبل مع</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="79"/>
         <source>Sent to</source>
-        <translation type="unfinished"/>
+        <translation>أرسل إلى</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="81"/>
@@ -3700,57 +3702,57 @@ Address: %4
     <message>
         <location filename="../transactionview.cpp" line="83"/>
         <source>To yourself</source>
-        <translation type="unfinished"/>
+        <translation>إليك</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="84"/>
         <source>Mined</source>
-        <translation type="unfinished"/>
+        <translation>Mined</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="85"/>
         <source>Other</source>
-        <translation type="unfinished"/>
+        <translation>اخرى</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="91"/>
         <source>Enter address or label to search</source>
-        <translation type="unfinished"/>
+        <translation>ادخل عنوان أووصف للبحث</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="97"/>
         <source>Min amount</source>
-        <translation type="unfinished"/>
+        <translation>الحد الأدنى</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="131"/>
         <source>Copy address</source>
-        <translation type="unfinished"/>
+        <translation>  انسخ عنوان</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="132"/>
         <source>Copy label</source>
-        <translation type="unfinished"/>
+        <translation> انسخ التسمية</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="133"/>
         <source>Copy amount</source>
-        <translation type="unfinished"/>
+        <translation>نسخ الكمية</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="134"/>
         <source>Copy transaction ID</source>
-        <translation type="unfinished"/>
+        <translation>نسخ رقم العملية</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="135"/>
         <source>Edit label</source>
-        <translation type="unfinished"/>
+        <translation>عدل الوصف</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="136"/>
         <source>Show transaction details</source>
-        <translation type="unfinished"/>
+        <translation>عرض تفاصيل المعاملة</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="299"/>
@@ -3760,47 +3762,47 @@ Address: %4
     <message>
         <location filename="../transactionview.cpp" line="300"/>
         <source>Comma separated file (*.csv)</source>
-        <translation type="unfinished"/>
+        <translation>ملف مفصول بفواصل (*.csv)</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="309"/>
         <source>Confirmed</source>
-        <translation type="unfinished"/>
+        <translation>تأكيد</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="310"/>
         <source>Date</source>
-        <translation type="unfinished"/>
+        <translation>التاريخ</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="311"/>
         <source>Type</source>
-        <translation type="unfinished"/>
+        <translation>النوع</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="312"/>
         <source>Label</source>
-        <translation type="unfinished"/>
+        <translation>وصف</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="313"/>
         <source>Address</source>
-        <translation type="unfinished"/>
+        <translation>عنوان</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="314"/>
         <source>Amount</source>
-        <translation type="unfinished"/>
+        <translation>المبلغ</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="315"/>
         <source>ID</source>
-        <translation type="unfinished"/>
+        <translation>العنوان</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="318"/>
         <source>Exporting Failed</source>
-        <translation type="unfinished"/>
+        <translation>فشل التصدير</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="318"/>
@@ -3810,7 +3812,7 @@ Address: %4
     <message>
         <location filename="../transactionview.cpp" line="322"/>
         <source>Exporting Successful</source>
-        <translation type="unfinished"/>
+        <translation>نجح التصدير</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="322"/>
@@ -3820,12 +3822,12 @@ Address: %4
     <message>
         <location filename="../transactionview.cpp" line="431"/>
         <source>Range:</source>
-        <translation type="unfinished"/>
+        <translation>المدى:</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="439"/>
         <source>to</source>
-        <translation type="unfinished"/>
+        <translation>الى</translation>
     </message>
 </context>
 <context>
@@ -3841,7 +3843,7 @@ Address: %4
     <message>
         <location filename="../walletmodel.cpp" line="286"/>
         <source>Send Coins</source>
-        <translation type="unfinished"/>
+        <translation>إرسال Coins</translation>
     </message>
 </context>
 <context>
@@ -3849,17 +3851,17 @@ Address: %4
     <message>
         <location filename="../walletview.cpp" line="44"/>
         <source>&amp;Export</source>
-        <translation type="unfinished"/>
+        <translation>&amp;تصدير</translation>
     </message>
     <message>
         <location filename="../walletview.cpp" line="45"/>
         <source>Export the data in the current tab to a file</source>
-        <translation type="unfinished"/>
+        <translation>تحميل البيانات في علامة التبويب الحالية إلى ملف.</translation>
     </message>
     <message>
         <location filename="../walletview.cpp" line="229"/>
         <source>Backup Wallet</source>
-        <translation type="unfinished"/>
+        <translation>نسخ احتياط للمحفظة</translation>
     </message>
     <message>
         <location filename="../walletview.cpp" line="230"/>
@@ -3869,7 +3871,7 @@ Address: %4
     <message>
         <location filename="../walletview.cpp" line="236"/>
         <source>Backup Failed</source>
-        <translation type="unfinished"/>
+        <translation>فشل النسخ الاحتياطي</translation>
     </message>
     <message>
         <location filename="../walletview.cpp" line="236"/>
@@ -3879,7 +3881,7 @@ Address: %4
     <message>
         <location filename="../walletview.cpp" line="240"/>
         <source>Backup Successful</source>
-        <translation type="unfinished"/>
+        <translation>نجاح  النسخ الاحتياطي</translation>
     </message>
     <message>
         <location filename="../walletview.cpp" line="240"/>
