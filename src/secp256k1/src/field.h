@@ -22,9 +22,7 @@
 #include "libsecp256k1-config.h"
 #endif
 
-#if defined(USE_FIELD_GMP)
-#include "field_gmp.h"
-#elif defined(USE_FIELD_10X26)
+#if defined(USE_FIELD_10X26)
 #include "field_10x26.h"
 #elif defined(USE_FIELD_5X52)
 #include "field_5x52.h"
@@ -50,8 +48,19 @@ static void secp256k1_fe_stop(void);
 /** Normalize a field element. */
 static void secp256k1_fe_normalize(secp256k1_fe_t *r);
 
+/** Weakly normalize a field element: reduce it magnitude to 1, but don't fully normalize. */
+static void secp256k1_fe_normalize_weak(secp256k1_fe_t *r);
+
 /** Normalize a field element, without constant-time guarantee. */
 static void secp256k1_fe_normalize_var(secp256k1_fe_t *r);
+
+/** Verify whether a field element represents zero i.e. would normalize to a zero value. The field
+ *  implementation may optionally normalize the input, but this should not be relied upon. */
+static int secp256k1_fe_normalizes_to_zero(secp256k1_fe_t *r);
+
+/** Verify whether a field element represents zero i.e. would normalize to a zero value. The field
+ *  implementation may optionally normalize the input, but this should not be relied upon. */
+static int secp256k1_fe_normalizes_to_zero_var(secp256k1_fe_t *r);
 
 /** Set a field element equal to a small integer. Resulting field element is normalized. */
 static void secp256k1_fe_set_int(secp256k1_fe_t *r, int a);
@@ -62,8 +71,8 @@ static int secp256k1_fe_is_zero(const secp256k1_fe_t *a);
 /** Check the "oddness" of a field element. Requires the input to be normalized. */
 static int secp256k1_fe_is_odd(const secp256k1_fe_t *a);
 
-/** Compare two field elements. Requires both inputs to be normalized */
-static int secp256k1_fe_equal(const secp256k1_fe_t *a, const secp256k1_fe_t *b);
+/** Compare two field elements. Requires magnitude-1 inputs. */
+static int secp256k1_fe_equal_var(const secp256k1_fe_t *a, const secp256k1_fe_t *b);
 
 /** Compare two field elements. Requires both inputs to be normalized */
 static int secp256k1_fe_cmp_var(const secp256k1_fe_t *a, const secp256k1_fe_t *b);

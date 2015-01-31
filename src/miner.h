@@ -31,7 +31,4 @@ CBlockTemplate* CreateNewBlockWithKey(CReserveKey& reservekey);
 void IncrementExtraNonce(CBlock* pblock, CBlockIndex* pindexPrev, unsigned int& nExtraNonce);
 void UpdateTime(CBlockHeader* block, const CBlockIndex* pindexPrev);
 
-extern double dHashesPerSec;
-extern int64_t nHPSTimerStart;
-
 #endif // BITCOIN_MINER_H

@@ -6,6 +6,7 @@
 
 #include "addresstablemodel.h"
 #include "guiconstants.h"
+#include "paymentserver.h"
 #include "recentrequeststablemodel.h"
 #include "transactiontablemodel.h"
 
@@ -294,11 +295,16 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(WalletModelTransaction &tran
         LOCK2(cs_main, wallet->cs_wallet);
         CWalletTx *newTx = transaction.getTransaction();
 
-        // Store PaymentRequests in wtx.vOrderForm in wallet.
         foreach(const SendCoinsRecipient &rcp, transaction.getRecipients())
         {
             if (rcp.paymentRequest.IsInitialized())
             {
+                // Make sure any payment requests involved are still valid.
+                if (PaymentServer::verifyExpired(rcp.paymentRequest.getDetails())) {
+                    return PaymentRequestExpired;
+                }
+
+                // Store PaymentRequests in wtx.vOrderForm in wallet.
                 std::string key("PaymentRequest");
                 std::string value;
                 rcp.paymentRequest.SerializeToString(&value);

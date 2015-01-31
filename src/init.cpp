@@ -1211,6 +1211,8 @@ bool AppInit2(boost::thread_group& threadGroup)
             // Restore wallet transaction metadata after -zapwallettxes=1
             if (GetBoolArg("-zapwallettxes", false) && GetArg("-zapwallettxes", "1") != "2")
             {
+                CWalletDB walletdb(strWalletFile);
+
                 BOOST_FOREACH(const CWalletTx& wtxOld, vWtx)
                 {
                     uint256 hash = wtxOld.GetHash();
@@ -1226,7 +1228,7 @@ bool AppInit2(boost::thread_group& threadGroup)
                         copyTo->fFromMe = copyFrom->fFromMe;
                         copyTo->strFromAccount = copyFrom->strFromAccount;
                         copyTo->nOrderPos = copyFrom->nOrderPos;
-                        copyTo->WriteToDisk();
+                        copyTo->WriteToDisk(&walletdb);
                     }
                 }
             }
@@ -1252,6 +1254,11 @@ bool AppInit2(boost::thread_group& threadGroup)
             vImportFiles.push_back(strFile);
     }
     threadGroup.create_thread(boost::bind(&ThreadImport, vImportFiles));
+    if (chainActive.Tip() == NULL) {
+        LogPrintf("Waiting for genesis block to be imported...\n");
+        while (!fRequestShutdown && chainActive.Tip() == NULL)
+            MilliSleep(10);
+    }
 
     // ********************************************************* Step 10: start node
 

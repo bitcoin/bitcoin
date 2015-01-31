@@ -93,6 +93,8 @@ public:
 
     // Verify that the payment request network matches the client network
     static bool verifyNetwork(const payments::PaymentDetails& requestDetails);
+    // Verify if the payment request is expired
+    static bool verifyExpired(const payments::PaymentDetails& requestDetails);
 
 signals:
     // Fired when a valid payment request is received
