@@ -514,7 +514,7 @@ Este produto inclui software desenvolvido pelo Projecto OpenSSL para uso no Open
     <message>
         <location filename="../bitcoingui.cpp" line="299"/>
         <source>Unlock wallet</source>
-        <translation type="unfinished"/>
+        <translation>Desbloquear carteira</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="300"/>
@@ -544,7 +544,7 @@ Este produto inclui software desenvolvido pelo Projecto OpenSSL para uso no Open
     <message>
         <location filename="../bitcoingui.cpp" line="306"/>
         <source>&amp;Information</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Informação</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="307"/>
@@ -4352,7 +4352,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="199"/>
         <source>Error</source>
-        <translation type="unfinished"/>
+        <translation>Erro</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="200"/>
@@ -4512,7 +4512,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="226"/>
         <source>Information</source>
-        <translation type="unfinished"/>
+        <translation>Informação</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="227"/>
@@ -4932,7 +4932,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="315"/>
         <source>Usage:</source>
-        <translation type="unfinished"/>
+        <translation>Utilização:</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="316"/>
@@ -5002,7 +5002,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="329"/>
         <source>Warning</source>
-        <translation type="unfinished"/>
+        <translation>Aviso</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="330"/>
@@ -5032,7 +5032,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="335"/>
         <source>version</source>
-        <translation type="unfinished"/>
+        <translation>versão</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="336"/>

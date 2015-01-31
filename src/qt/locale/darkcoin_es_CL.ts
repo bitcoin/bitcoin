@@ -517,7 +517,7 @@ Eric Young (eay@cryptsoft.com) y UPnP software escrito por Thomas Bernard.</tran
     <message>
         <location filename="../bitcoingui.cpp" line="299"/>
         <source>Unlock wallet</source>
-        <translation type="unfinished"/>
+        <translation>Desbloquea billetera</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="300"/>
@@ -547,7 +547,7 @@ Eric Young (eay@cryptsoft.com) y UPnP software escrito por Thomas Bernard.</tran
     <message>
         <location filename="../bitcoingui.cpp" line="306"/>
         <source>&amp;Information</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Información</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="307"/>
@@ -4050,7 +4050,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Darkcoin Alert&quot; admin@foo
     <message>
         <location filename="../bitcoinstrings.cpp" line="131"/>
         <source>Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
-        <translation type="unfinished"/>
+        <translation>Precaución: -paytxfee es muy alta. Esta es la comisión que pagarás si envias una transacción.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="134"/>
@@ -4102,7 +4102,8 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="161"/>
         <source>Accept command line and JSON-RPC commands</source>
-        <translation type="unfinished"/>
+        <translation>Aceptar comandos consola y JSON-RPC
+</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="162"/>
@@ -4112,17 +4113,19 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="163"/>
         <source>Add a node to connect to and attempt to keep the connection open</source>
-        <translation type="unfinished"/>
+        <translation>Agrega un nodo para conectarse and attempt to keep the connection open</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="164"/>
         <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
-        <translation type="unfinished"/>
+        <translation>Permite búsqueda DNS para addnode y connect
+</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="165"/>
         <source>Allow JSON-RPC connections from specified IP address</source>
-        <translation type="unfinished"/>
+        <translation>Permite conexiones JSON-RPC desde la dirección IP especificada
+</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="167"/>
@@ -4242,7 +4245,8 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="174"/>
         <source>Connect only to the specified node(s)</source>
-        <translation type="unfinished"/>
+        <translation>Conecta solo al nodo especificado
+</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="175"/>
@@ -4307,7 +4311,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="189"/>
         <source>Done loading</source>
-        <translation type="unfinished"/>
+        <translation>Carga completa</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="190"/>
@@ -4327,17 +4331,17 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="193"/>
         <source>Error loading block database</source>
-        <translation type="unfinished"/>
+        <translation>Error cargando blkindex.dat</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="194"/>
         <source>Error loading wallet.dat</source>
-        <translation type="unfinished"/>
+        <translation>Error cargando wallet.dat</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="195"/>
         <source>Error loading wallet.dat: Wallet corrupted</source>
-        <translation type="unfinished"/>
+        <translation>Error cargando wallet.dat: Billetera corrupta</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="196"/>
@@ -4357,12 +4361,12 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="199"/>
         <source>Error</source>
-        <translation type="unfinished"/>
+        <translation>Error</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="200"/>
         <source>Error: Disk space is low!</source>
-        <translation type="unfinished"/>
+        <translation>Atención: Poco espacio en el disco duro</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="201"/>
@@ -4377,7 +4381,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="203"/>
         <source>Error: system error: </source>
-        <translation type="unfinished"/>
+        <translation>Error: error de sistema:</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="204"/>
@@ -4387,32 +4391,32 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="205"/>
         <source>Failed to read block info</source>
-        <translation type="unfinished"/>
+        <translation>Falló la lectura de la información del bloque</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="206"/>
         <source>Failed to read block</source>
-        <translation type="unfinished"/>
+        <translation>Falló la lectura del bloque</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="207"/>
         <source>Failed to sync block index</source>
-        <translation type="unfinished"/>
+        <translation>Falló sincronización del índice del bloque</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="208"/>
         <source>Failed to write block index</source>
-        <translation type="unfinished"/>
+        <translation>Falló la escritura del bloque del índice</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="209"/>
         <source>Failed to write block info</source>
-        <translation type="unfinished"/>
+        <translation>Falló la escritura de la información del bloque</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="210"/>
         <source>Failed to write block</source>
-        <translation type="unfinished"/>
+        <translation>Falló la escritura del bloque</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="211"/>
@@ -4437,7 +4441,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="215"/>
         <source>Fee per kB to add to transactions you send</source>
-        <translation type="unfinished"/>
+        <translation>Comisión por kB para adicionarla a las transacciones enviadas</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="216"/>
@@ -4482,7 +4486,8 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="219"/>
         <source>Get help for a command</source>
-        <translation type="unfinished"/>
+        <translation>Recibir ayuda para un comando
+</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="220"/>
@@ -4507,7 +4512,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="224"/>
         <source>Imports blocks from external blk000??.dat file</source>
-        <translation type="unfinished"/>
+        <translation>Importar bloques desde el archivo externo blk000??.dat </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="225"/>
@@ -4517,7 +4522,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="226"/>
         <source>Information</source>
-        <translation type="unfinished"/>
+        <translation>Información</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="227"/>
@@ -4532,7 +4537,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="229"/>
         <source>Insufficient funds</source>
-        <translation type="unfinished"/>
+        <translation>Fondos insuficientes</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="230"/>
@@ -4542,7 +4547,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="231"/>
         <source>Invalid -proxy address: &apos;%s&apos;</source>
-        <translation type="unfinished"/>
+        <translation>Dirección -proxy invalida: &apos;%s&apos;</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="232"/>
@@ -4557,12 +4562,12 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="234"/>
         <source>Invalid amount for -paytxfee=&lt;amount&gt;: &apos;%s&apos;</source>
-        <translation type="unfinished"/>
+        <translation>Cantidad inválida para -paytxfee=&lt;amount&gt;: &apos;%s&apos;</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="235"/>
         <source>Invalid amount</source>
-        <translation type="unfinished"/>
+        <translation>Cantidad inválida</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="236"/>
@@ -4602,7 +4607,8 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="243"/>
         <source>List commands</source>
-        <translation type="unfinished"/>
+        <translation>Muestra comandos
+</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="244"/>
@@ -4612,12 +4618,12 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="245"/>
         <source>Loading addresses...</source>
-        <translation type="unfinished"/>
+        <translation>Cargando direcciónes...</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="246"/>
         <source>Loading block index...</source>
-        <translation type="unfinished"/>
+        <translation>Cargando el index de bloques...</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="247"/>
@@ -4627,7 +4633,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="248"/>
         <source>Loading wallet...</source>
-        <translation type="unfinished"/>
+        <translation>Cargando cartera...</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="249"/>
@@ -4642,7 +4648,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="251"/>
         <source>Maintain at most &lt;n&gt; connections to peers (default: 125)</source>
-        <translation type="unfinished"/>
+        <translation>Mantener al menos &lt;n&gt; conecciones por cliente (por defecto: 125) </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="252"/>
@@ -4677,12 +4683,14 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="258"/>
         <source>Options:</source>
-        <translation type="unfinished"/>
+        <translation>Opciones:
+</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="259"/>
         <source>Password for JSON-RPC connections</source>
-        <translation type="unfinished"/>
+        <translation>Contraseña para las conexiones JSON-RPC
+</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="260"/>
@@ -4727,12 +4735,13 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="269"/>
         <source>Rescan the block chain for missing wallet transactions</source>
-        <translation type="unfinished"/>
+        <translation>Rescanea la cadena de bloques para transacciones perdidas de la cartera
+</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="270"/>
         <source>Rescanning...</source>
-        <translation type="unfinished"/>
+        <translation>Rescaneando...</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="271"/>
@@ -4742,7 +4751,8 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="272"/>
         <source>Run in the background as a daemon and accept commands</source>
-        <translation type="unfinished"/>
+        <translation>Correr como demonio y acepta comandos
+</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="274"/>
@@ -4757,22 +4767,25 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="276"/>
         <source>Send commands to node running on &lt;ip&gt; (default: 127.0.0.1)</source>
-        <translation type="unfinished"/>
+        <translation>Envia comando al nodo situado en &lt;ip&gt; (predeterminado: 127.0.0.1)
+</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="277"/>
         <source>Send trace/debug info to console instead of debug.log file</source>
-        <translation type="unfinished"/>
+        <translation>Enviar informacion de seguimiento a la consola en vez del archivo debug.log</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="278"/>
         <source>Server certificate file (default: server.cert)</source>
-        <translation type="unfinished"/>
+        <translation>Certificado del servidor (Predeterminado: server.cert)
+</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="279"/>
         <source>Server private key (default: server.pem)</source>
-        <translation type="unfinished"/>
+        <translation>Clave privada del servidor (Predeterminado: server.pem)
+</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="280"/>
@@ -4782,7 +4795,8 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="281"/>
         <source>Set key pool size to &lt;n&gt; (default: 100)</source>
-        <translation type="unfinished"/>
+        <translation>Ajusta el numero de claves en reserva &lt;n&gt; (predeterminado: 100)
+</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="282"/>
@@ -4792,7 +4806,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="283"/>
         <source>Set minimum block size in bytes (default: 0)</source>
-        <translation type="unfinished"/>
+        <translation>Establezca el tamaño mínimo del bloque en bytes (por defecto: 0)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="284"/>
@@ -4837,12 +4851,13 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="292"/>
         <source>Specify connection timeout in milliseconds (default: 5000)</source>
-        <translation type="unfinished"/>
+        <translation>Especifica tiempo de espera para conexion en milisegundos (predeterminado: 5000)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="293"/>
         <source>Specify data directory</source>
-        <translation type="unfinished"/>
+        <translation>Especifica directorio para los datos
+</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="294"/>
@@ -4877,12 +4892,13 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="300"/>
         <source>System error: </source>
-        <translation type="unfinished"/>
+        <translation>Error de sistema:</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="301"/>
         <source>This help message</source>
-        <translation type="unfinished"/>
+        <translation>Este mensaje de ayuda
+</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="302"/>
@@ -4892,12 +4908,12 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="303"/>
         <source>Threshold for disconnecting misbehaving peers (default: 100)</source>
-        <translation type="unfinished"/>
+        <translation>Umbral de desconección de clientes con mal comportamiento (por defecto: 100)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="304"/>
         <source>To use the %s option</source>
-        <translation type="unfinished"/>
+        <translation>Para utilizar la opción %s</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="305"/>
@@ -4927,7 +4943,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="313"/>
         <source>Upgrade wallet to latest format</source>
-        <translation type="unfinished"/>
+        <translation>Actualizar billetera al formato actual</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="314"/>
@@ -4937,7 +4953,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="315"/>
         <source>Usage:</source>
-        <translation type="unfinished"/>
+        <translation>Uso:</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="316"/>
@@ -4952,27 +4968,30 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="318"/>
         <source>Use OpenSSL (https) for JSON-RPC connections</source>
-        <translation type="unfinished"/>
+        <translation>Usa OpenSSL (https) para las conexiones JSON-RPC
+</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="319"/>
         <source>Use UPnP to map the listening port (default: 0)</source>
-        <translation type="unfinished"/>
+        <translation>Intenta usar UPnP para mapear el puerto de escucha (default: 0)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="320"/>
         <source>Use UPnP to map the listening port (default: 1 when listening)</source>
-        <translation type="unfinished"/>
+        <translation>Intenta usar UPnP para mapear el puerto de escucha (default: 1 when listening)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="321"/>
         <source>Use the test network</source>
-        <translation type="unfinished"/>
+        <translation>Usa la red de pruebas
+</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="322"/>
         <source>Username for JSON-RPC connections</source>
-        <translation type="unfinished"/>
+        <translation>Usuario para las conexiones JSON-RPC
+</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="323"/>
@@ -5007,7 +5026,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="329"/>
         <source>Warning</source>
-        <translation type="unfinished"/>
+        <translation>Atención</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="330"/>
@@ -5017,7 +5036,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="331"/>
         <source>Warning: This version is obsolete, upgrade required!</source>
-        <translation type="unfinished"/>
+        <translation>Advertencia: Esta versión está obsoleta, se necesita actualizar!</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="332"/>
@@ -5037,12 +5056,12 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="335"/>
         <source>version</source>
-        <translation type="unfinished"/>
+        <translation>versión</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="336"/>
         <source>wallet.dat corrupt, salvage failed</source>
-        <translation type="unfinished"/>
+        <translation>wallet.dat corrompió, guardado fallido</translation>
     </message>
 </context>
 </TS>

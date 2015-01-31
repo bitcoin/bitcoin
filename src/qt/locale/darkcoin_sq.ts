@@ -509,7 +509,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="299"/>
         <source>Unlock wallet</source>
-        <translation type="unfinished"/>
+        <translation>ç&apos;kyç portofolin.</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="300"/>
