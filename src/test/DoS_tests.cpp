@@ -6,9 +6,7 @@
 // Unit tests for denial-of-service detection/prevention code
 //
 
-
-
-#include "keystore.h"
+#include "basic_keystore.h"
 #include "main.h"
 #include "net.h"
 #include "pow.h"

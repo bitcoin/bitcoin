@@ -6,8 +6,10 @@
 #define BITCOIN_CRYPTER_H
 
 #include "allocators.h"
-#include "keystore.h"
+#include "basic_keystore.h"
 #include "serialize.h"
+
+#include <boost/signals2/signal.hpp>
 
 class uint256;
 
