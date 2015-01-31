@@ -19,7 +19,12 @@ This is experimental software.
 Distributed under the MIT/X11 software license, see the accompanying file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit (http://www.openssl.org/) and cryptographic software written by Eric Young (eay@cryptsoft.com) and UPnP software written by Thomas Bernard.</source>
-        <translation type="unfinished"/>
+        <translation>
+Šī ir eksperimentāla programmatūra.
+
+Izplatīta balstoties uz MIT/X11 programatūras licenci, skatīt pievienoto saiti - http://www.opensource.org/licenses/mit-license.php
+
+Šis produkts ietver programmatūru, kura iztrādāta OpenSSL Project lietošanai OpenSSL Toolkit (http://www.openssl.org/) un kriptografiskā programmatūra kuru izstrādājis Eric Young (eay@cryptsoft.com) un UPnP programmatūra, kuru izstrādājis Thomas Bernard.</translation>
     </message>
 </context>
 <context>
@@ -27,52 +32,52 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/addressbookpage.ui" line="30"/>
         <source>Double-click to edit address or label</source>
-        <translation type="unfinished"/>
+        <translation>Dubultklikšķis, lai rediģētu adresi vai formu</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="57"/>
         <source>Create a new address</source>
-        <translation type="unfinished"/>
+        <translation>Izveidot jaunu adresi</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="60"/>
         <source>&amp;New</source>
-        <translation type="unfinished"/>
+        <translation>Jauna</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="71"/>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation type="unfinished"/>
+        <translation>Kopēt iezīmēto adresi sistēmas starpliktuvē</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="74"/>
         <source>&amp;Copy</source>
-        <translation type="unfinished"/>
+        <translation>Kopēt</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="85"/>
         <source>Delete the currently selected address from the list</source>
-        <translation type="unfinished"/>
+        <translation>Dzēst iezīmēto adresi no saraksta</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="88"/>
         <source>&amp;Delete</source>
-        <translation type="unfinished"/>
+        <translation>Dzēst</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="112"/>
         <source>Export the data in the current tab to a file</source>
-        <translation type="unfinished"/>
+        <translation>Eksportēt pašreizējā cilnē esošos datus failā</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="115"/>
         <source>&amp;Export</source>
-        <translation type="unfinished"/>
+        <translation>Eksportēt</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="132"/>
         <source>C&amp;lose</source>
-        <translation type="unfinished"/>
+        <translation>Aizvērt</translation>
     </message>
 </context>
 <context>
@@ -80,32 +85,33 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="26"/>
         <source>Passphrase Dialog</source>
-        <translation type="unfinished"/>
+        <translation>Paroles logs</translation>
     </message>
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="47"/>
         <source>Enter passphrase</source>
-        <translation type="unfinished"/>
+        <translation>Ievadiet paroli</translation>
     </message>
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="61"/>
         <source>New passphrase</source>
-        <translation type="unfinished"/>
+        <translation>Jauna parole</translation>
     </message>
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="75"/>
         <source>Repeat new passphrase</source>
-        <translation type="unfinished"/>
+        <translation>Jaunā parole atkārtoti</translation>
     </message>
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="108"/>
         <source>Serves to disable the trivial sendmoney when OS account compromised. Provides no real security.</source>
-        <translation type="unfinished"/>
+        <translation>Kalpo lai atslēgtu sīku sūtījumnaudu, kad OS konts apdraudēts.
+Nesniedz reālu drošību</translation>
     </message>
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="111"/>
         <source>For anonymization only</source>
-        <translation type="unfinished"/>
+        <translation>Vienīgi anonimizēšanai</translation>
     </message>
 </context>
 <context>
@@ -113,96 +119,159 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/coincontroldialog.ui" line="14"/>
         <source>Coin Control Address Selection</source>
-        <translation type="unfinished"/>
+        <translation>Monētu kontroles adrešu izvēle</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="48"/>
         <source>Quantity:</source>
-        <translation type="unfinished"/>
+        <translation>Daudzums:</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="77"/>
         <source>Bytes:</source>
-        <translation type="unfinished"/>
+        <translation>Baiti:</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="122"/>
         <source>Amount:</source>
-        <translation type="unfinished"/>
+        <translation>Apjoms:</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="151"/>
         <source>Priority:</source>
-        <translation type="unfinished"/>
+        <translation>Prioritāte:</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="196"/>
         <source>Fee:</source>
-        <translation type="unfinished"/>
+        <translation>Nodoklis:</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="228"/>
         <source>Low Output:</source>
-        <translation type="unfinished"/>
+        <translation>Zema Izvade:</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="276"/>
         <source>After Fee:</source>
-        <translation type="unfinished"/>
+        <translation>Gala nodoklis:</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="308"/>
         <source>Change:</source>
-        <translation type="unfinished"/>
+        <translation>Mainīt:</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="364"/>
         <source>(un)select all</source>
-        <translation type="unfinished"/>
+        <translation>(ne)iezīmēt visu</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="377"/>
         <source>Tree mode</source>
-        <translation type="unfinished"/>
+        <translation>&quot;Tree&quot; veids</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="393"/>
         <source>List mode</source>
-        <translation type="unfinished"/>
+        <translation>Saraksta veids</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="446"/>
         <source>Amount</source>
-        <translation type="unfinished"/>
+        <translation>Apjoms</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="456"/>
         <source>Address</source>
-        <translation type="unfinished"/>
+        <translation>Adrese</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="461"/>
         <source>Darksend Rounds</source>
-        <translation type="unfinished"/>
+        <translation>Darksend Cikli</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="466"/>
         <source>Date</source>
-        <translation type="unfinished"/>
+        <translation>Datums</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="471"/>
         <source>Confirmations</source>
-        <translation type="unfinished"/>
+        <translation>Apstiprinājumi</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="474"/>
         <source>Confirmed</source>
-        <translation type="unfinished"/>
+        <translation>Apstiprināts</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="479"/>
         <source>Priority</source>
+        <translation>Prioritāte</translation>
+    </message>
+</context>
+<context>
+    <name>DarksendConfig</name>
+    <message>
+        <location filename="../forms/darksendconfig.ui" line="14"/>
+        <source>Configure Darksend+</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../forms/darksendconfig.ui" line="26"/>
+        <source>Basic Privacy</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../forms/darksendconfig.ui" line="39"/>
+        <source>High Privacy</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../forms/darksendconfig.ui" line="52"/>
+        <source>Maximum Privacy</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../forms/darksendconfig.ui" line="65"/>
+        <source>Please select an privacy level. </source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../forms/darksendconfig.ui" line="78"/>
+        <source>Use 2 separate masternodes to mix funds up to 1000DRK</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../forms/darksendconfig.ui" line="91"/>
+        <source>Use 4 separate masternodes to mix funds up to 1000DRK</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../forms/darksendconfig.ui" line="104"/>
+        <source>Use 8 separate masternodes</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../forms/darksendconfig.ui" line="117"/>
+        <source>This option is the quickest and will cost about ~0.025DRK to anonymize 1000DRK</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../forms/darksendconfig.ui" line="130"/>
+        <source>This option is moderately fast and will cost about 0.05DRK to anonymize 1000DRK</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../forms/darksendconfig.ui" line="143"/>
+        <source>This is the slowest and most secure option. Using maximum anonymity will cost</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../forms/darksendconfig.ui" line="156"/>
+        <source>0.1DRK per 1000DRK you anonymize.</source>
         <translation type="unfinished"/>
     </message>
 </context>
@@ -211,27 +280,27 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/editaddressdialog.ui" line="14"/>
         <source>Edit Address</source>
-        <translation type="unfinished"/>
+        <translation>Rediģēt Adresi</translation>
     </message>
     <message>
         <location filename="../forms/editaddressdialog.ui" line="25"/>
         <source>&amp;Label</source>
-        <translation type="unfinished"/>
+        <translation>Forma</translation>
     </message>
     <message>
         <location filename="../forms/editaddressdialog.ui" line="35"/>
         <source>The label associated with this address list entry</source>
-        <translation type="unfinished"/>
+        <translation>Forma saistīta ar šo adrešu ierakstu sarakstu</translation>
     </message>
     <message>
         <location filename="../forms/editaddressdialog.ui" line="42"/>
         <source>&amp;Address</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Adrese</translation>
     </message>
     <message>
         <location filename="../forms/editaddressdialog.ui" line="52"/>
         <source>The address associated with this address list entry. This can only be modified for sending addresses.</source>
-        <translation type="unfinished"/>
+        <translation>Adrese saistīta ar šo adrešu ierakstu sarakstu. Rediģēšana atļauta tikai sūtīšanas adresēm.</translation>
     </message>
 </context>
 <context>
@@ -239,7 +308,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/helpmessagedialog.ui" line="19"/>
         <source>Darkcoin Core - Command-line options</source>
-        <translation type="unfinished"/>
+        <translation>Darkcoin Core - Komand-līnijas uzstādījumi</translation>
     </message>
 </context>
 <context>
@@ -247,32 +316,34 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/intro.ui" line="14"/>
         <source>Welcome</source>
-        <translation type="unfinished"/>
+        <translation>Sveicināti</translation>
     </message>
     <message>
         <location filename="../forms/intro.ui" line="23"/>
         <source>Welcome to Darkcoin Core.</source>
-        <translation type="unfinished"/>
+        <translation>Laipni lūdzam Darkcoin Core.</translation>
     </message>
     <message>
         <location filename="../forms/intro.ui" line="49"/>
         <source>As this is the first time the program is launched, you can choose where Darkcoin Core will store its data.</source>
-        <translation type="unfinished"/>
+        <translation>Par cik šī ir pirmā reize, kad programma tiek palaista, Jums jāizvēlas kur Darkcoin Core glabās datus Jūsu datorā.</translation>
     </message>
     <message>
         <location filename="../forms/intro.ui" line="59"/>
         <source>Darkcoin Core will download and store a copy of the Darkcoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
-        <translation type="unfinished"/>
+        <translation>Darkcoin Core lejupielādēs un saglabās kopiju no  Darkcoin&apos;a blokķēdes.
+Vismaz %1GB datu tiks saglabāti šajā direktorijā un nākotnē palielināsies.
+Maiciņš arī glabāsies šajā direkotrijā.</translation>
     </message>
     <message>
         <location filename="../forms/intro.ui" line="69"/>
         <source>Use the default data directory</source>
-        <translation type="unfinished"/>
+        <translation>Lietot pirmatnējo datu glabātuvi.</translation>
     </message>
     <message>
         <location filename="../forms/intro.ui" line="76"/>
         <source>Use a custom data directory:</source>
-        <translation type="unfinished"/>
+        <translation>Lietot izvēlēto datu glabātuvi:</translation>
     </message>
 </context>
 <context>
@@ -280,22 +351,22 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/openuridialog.ui" line="14"/>
         <source>Open URI</source>
-        <translation type="unfinished"/>
+        <translation>Atvērt URI</translation>
     </message>
     <message>
         <location filename="../forms/openuridialog.ui" line="20"/>
         <source>Open payment request from URI or file</source>
-        <translation type="unfinished"/>
+        <translation>Atvērt maksas pieprasījumu no URI vai faila</translation>
     </message>
     <message>
         <location filename="../forms/openuridialog.ui" line="29"/>
         <source>URI:</source>
-        <translation type="unfinished"/>
+        <translation>URI:</translation>
     </message>
     <message>
         <location filename="../forms/openuridialog.ui" line="40"/>
         <source>Select payment request file</source>
-        <translation type="unfinished"/>
+        <translation>Izvēlēties maksājuma pieprasījuma failu</translation>
     </message>
 </context>
 <context>
@@ -303,167 +374,169 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/optionsdialog.ui" line="14"/>
         <source>Options</source>
-        <translation type="unfinished"/>
+        <translation>Opcijas</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="27"/>
         <source>&amp;Main</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Galvenā</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="33"/>
         <source>Automatically start Darkcoin after logging in to the system.</source>
-        <translation type="unfinished"/>
+        <translation>Automātiski sākt Darkcoin pēc ielogošanās sistēmā.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="36"/>
         <source>&amp;Start Darkcoin on system login</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Sākt Darkcoin pie ielogošanās sistēmā</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="45"/>
         <source>Size of &amp;database cache</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Datubāzes kešatmiņas izmērs</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="61"/>
         <source>MB</source>
-        <translation type="unfinished"/>
+        <translation>MB</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="88"/>
         <source>Number of script &amp;verification threads</source>
-        <translation type="unfinished"/>
+        <translation>Pārbaudes pavedienu skaits </translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="101"/>
         <source>(0 = auto, &lt;0 = leave that many cores free)</source>
-        <translation type="unfinished"/>
+        <translation>(0=automātiski, &lt;0 = atbrīvoto kodolu skaits)</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="138"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This setting determines the amount of individual masternodes that an input will be anonymized through. More rounds of anonymization gives a higher degree of privacy, but also costs more in fees.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"/>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt; Šis iestatījums nosaka masternodes skaitu caur cik notiks anonimizācijas process. Lielāks skaits garantē augstāku privātumu, bet ir paaugstināts nodoklis.
+&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="141"/>
         <source>Darksend rounds to use</source>
-        <translation type="unfinished"/>
+        <translation>Darksend ciklu skaits</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="180"/>
         <source>Amount of Darkcoin to keep anonymized</source>
-        <translation type="unfinished"/>
+        <translation>Anonīmo Darkcoin apjoms, kas jāsaglabā</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="206"/>
         <source>W&amp;allet</source>
-        <translation type="unfinished"/>
+        <translation>Maciņš</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="212"/>
         <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly. Most transactions are 1 kB.</source>
-        <translation type="unfinished"/>
+        <translation>Izvēles transakcijas nodoklis uz kB, kas nodrošina ātru transakciju. Vairums transakciju izmērs ir 1kB.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="227"/>
         <source>Pay transaction &amp;fee</source>
-        <translation type="unfinished"/>
+        <translation>Maksāt transakcijas &amp;nodokli</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="271"/>
         <source>Expert</source>
-        <translation type="unfinished"/>
+        <translation>Eksperts</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="277"/>
         <source>Whether to show coin control features or not.</source>
-        <translation type="unfinished"/>
+        <translation>Rādīt monētu kontroles iespējas vai nē.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="280"/>
         <source>Enable coin &amp;control features</source>
-        <translation type="unfinished"/>
+        <translation>Iespējot monētu &amp;kontroles iespējas</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="287"/>
         <source>If you disable the spending of unconfirmed change, the change from a transaction cannot be used until that transaction has at least one confirmation. This also affects how your balance is computed.</source>
-        <translation type="unfinished"/>
+        <translation>Ja atspējo izmaksas no neapstiprinātas maiņas, izmaiņas no transakcijas iespējamas tikai vismaz pēc transakcijas viena apstiprinājuma.
+Tas iespaido arī jūsu bilances aprēķinu.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="290"/>
         <source>&amp;Spend unconfirmed change</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Izlietot neapstiprināto maiņu</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="301"/>
         <source>&amp;Network</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Tīkls</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="307"/>
         <source>Automatically open the Darkcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation type="unfinished"/>
+        <translation>Automātiski atvērt Darcoin klienta vārtus rūterī. Iespējams tikai tad, ja rūteris atbalsta UPnP un tas ir iespējots.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="310"/>
         <source>Map port using &amp;UPnP</source>
-        <translation type="unfinished"/>
+        <translation>Kartēt vārtu lietošanu &amp;UPnP</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="317"/>
         <source>Connect to the Darkcoin network through a SOCKS proxy.</source>
-        <translation type="unfinished"/>
+        <translation>Pieslēgties Darkcoin tīklam caur SOCKS proxy.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="320"/>
         <source>&amp;Connect through SOCKS proxy (default proxy):</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Pieslēgties caur SOCKS proxy (standarta proxy):</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="329"/>
         <source>Proxy &amp;IP:</source>
-        <translation type="unfinished"/>
+        <translation>Proxy &amp;IP:</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="354"/>
         <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
-        <translation type="unfinished"/>
+        <translation>IP adrese priekš proxy (piem. IPv4: 127.0.0.1 / IPv6: ::1)</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="361"/>
         <source>&amp;Port:</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Vārti:</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="386"/>
         <source>Port of the proxy (e.g. 9050)</source>
-        <translation type="unfinished"/>
+        <translation>Vārti priekš proxy (piem. 9050)</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="393"/>
         <source>SOCKS &amp;Version:</source>
-        <translation type="unfinished"/>
+        <translation>SOCKS &amp;Versija:</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="406"/>
         <source>SOCKS version of the proxy (e.g. 5)</source>
-        <translation type="unfinished"/>
+        <translation>SOCKS versija priekš proxy (piem. 5)</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="442"/>
         <source>&amp;Window</source>
-        <translation type="unfinished"/>
+        <translation>&amp; Logs</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="448"/>
         <source>Show only a tray icon after minimizing the window.</source>
-        <translation type="unfinished"/>
+        <translation>Rādīt ikonu tikai pēc loga minimizācijas.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="451"/>
         <source>&amp;Minimize to the tray instead of the taskbar</source>
-        <translation type="unfinished"/>
+        <translation>&amp; Minimizēt uz tray nevis rīkjoslu</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="458"/>
@@ -982,42 +1055,42 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="225"/>
         <source>Quantity:</source>
-        <translation type="unfinished"/>
+        <translation>Daudzums:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="260"/>
         <source>Bytes:</source>
-        <translation type="unfinished"/>
+        <translation>Baiti:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="308"/>
         <source>Amount:</source>
-        <translation type="unfinished"/>
+        <translation>Apjoms:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="340"/>
         <source>Priority:</source>
-        <translation type="unfinished"/>
+        <translation>Prioritāte:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="388"/>
         <source>Fee:</source>
-        <translation type="unfinished"/>
+        <translation>Nodoklis:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="420"/>
         <source>Low Output:</source>
-        <translation type="unfinished"/>
+        <translation>Zema Izvade:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="468"/>
         <source>After Fee:</source>
-        <translation type="unfinished"/>
+        <translation>Gala nodoklis:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="500"/>
         <source>Change:</source>
-        <translation type="unfinished"/>
+        <translation>Mainīt:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="544"/>
