@@ -23,33 +23,32 @@ Distributed under the MIT/X11 software license, see the accompanying file COPYIN
 
 This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit (http://www.openssl.org/) and cryptographic software written by Eric Young (eay@cryptsoft.com) and UPnP software written by Thomas Bernard.</source>
         <translation>
-Ez egy kísérleti szoftver.
+Ez egy kísérleti program.
+MIT/X11 szoftverlicenc alatt kiadva, lásd a mellékelt fájlt COPYING vagy http://www.opensource.org/licenses/mit-license.php.
 
-Terjesztve az MIT/X11 szoftver licence alatt, részletekért nyissa meg a mellékelt COPYING fájlt vagy a http://www.opensource.org/licenses/mit-license.php címet.
-
-Ez a termék tartalmaz az OpenSSL Project által az OpenSSL Toolkit-hez (http://www.openssl.org/) írt szoftvert, Eric Young (eay@cryptsoft.com) által írt kriptográfiai szofvert, valamint Thomas Bernard által írt UPnP szoftvert.</translation>
+Ez a termék az OpenSSL Project által lett kifejlesztve az OpenSSL Toolkit (http://www.openssl.org/) és kriptográfiai szoftvertben való felhasználásra,  írta Eric Young (eay@cryptsoft.com) és UPnP szoftver, írta Thomas Bernard.</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="30"/>
         <location filename="../utilitydialog.cpp" line="31"/>
         <source>Copyright</source>
-        <translation type="unfinished"/>
+        <translation>Minden jog fenntartva</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="30"/>
         <source>The Bitcoin Core developers</source>
-        <translation type="unfinished"/>
+        <translation>A Bitcoin Core fejlesztők</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="31"/>
         <source>The Darkcoin Core developers</source>
-        <translation type="unfinished"/>
+        <translation>A Darkcoin Core fejlesztők</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="43"/>
         <location filename="../utilitydialog.cpp" line="45"/>
         <source>(%1-bit)</source>
-        <translation type="unfinished"/>
+        <translation>(%1-bit)</translation>
     </message>
 </context>
 <context>
@@ -58,7 +57,7 @@ Ez a termék tartalmaz az OpenSSL Project által az OpenSSL Toolkit-hez (http://
         <location filename="../forms/addressbookpage.ui" line="30"/>
         <location filename="../forms/ui_addressbookpage.h" line="126"/>
         <source>Double-click to edit address or label</source>
-        <translation>Dupla kattintással szerkeszthető a cím vagy címke</translation>
+        <translation>Dupla-kattintás a cím vagy a címke szerkesztéséhez</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="57"/>
@@ -76,7 +75,7 @@ Ez a termék tartalmaz az OpenSSL Project által az OpenSSL Toolkit-hez (http://
         <location filename="../forms/addressbookpage.ui" line="71"/>
         <location filename="../forms/ui_addressbookpage.h" line="133"/>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation>Kijelölt cím vágólapra másolása</translation>
+        <translation>A kiválasztott cím másolása a vágólapra</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="74"/>
@@ -88,7 +87,7 @@ Ez a termék tartalmaz az OpenSSL Project által az OpenSSL Toolkit-hez (http://
         <location filename="../forms/addressbookpage.ui" line="85"/>
         <location filename="../forms/ui_addressbookpage.h" line="137"/>
         <source>Delete the currently selected address from the list</source>
-        <translation>Kijelölt cím törlése a listából</translation>
+        <translation>Kiválasztott cím törlése a listából</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="88"/>
@@ -100,7 +99,7 @@ Ez a termék tartalmaz az OpenSSL Project által az OpenSSL Toolkit-hez (http://
         <location filename="../forms/addressbookpage.ui" line="112"/>
         <location filename="../forms/ui_addressbookpage.h" line="141"/>
         <source>Export the data in the current tab to a file</source>
-        <translation>Az oldalon található adat exportálása fájlba</translation>
+        <translation>Jelenlegi nézet exportálása fájlba</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="115"/>
@@ -117,72 +116,72 @@ Ez a termék tartalmaz az OpenSSL Project által az OpenSSL Toolkit-hez (http://
     <message>
         <location filename="../addressbookpage.cpp" line="45"/>
         <source>Choose the address to send coins to</source>
-        <translation type="unfinished"/>
+        <translation>Válaszd ki a címet, ahová küldesz</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="46"/>
         <source>Choose the address to receive coins with</source>
-        <translation type="unfinished"/>
+        <translation>Válaszd ki a címet, amivel fogadsz</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="51"/>
         <source>C&amp;hoose</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Kiválaszt</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="57"/>
         <source>Sending addresses</source>
-        <translation type="unfinished"/>
+        <translation>Küldési címek</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="58"/>
         <source>Receiving addresses</source>
-        <translation type="unfinished"/>
+        <translation>Fogadó címek</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="65"/>
         <source>These are your Darkcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation type="unfinished"/>
+        <translation>Ezek a mentett Darkcoin címeid fizetések küldéséhez. A biztonság kedvéért ajánlott  fizetés küldése előtt a cím újbóli ellenőrzése.</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="69"/>
         <source>These are your Darkcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation type="unfinished"/>
+        <translation>Ezek a Darkcoin címeid fizetések fogadásához. Ajánlott minden tranzakcióhoz új fogadási címet használni.</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="75"/>
         <source>&amp;Copy Address</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Cím másolása</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="76"/>
         <source>Copy &amp;Label</source>
-        <translation type="unfinished"/>
+        <translation>Címke &amp;másolása</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="77"/>
         <source>&amp;Edit</source>
-        <translation type="unfinished"/>
+        <translation>Sz&amp;erkesztés</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="271"/>
         <source>Export Address List</source>
-        <translation type="unfinished"/>
+        <translation>Címjegyzék exportálása</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="272"/>
         <source>Comma separated file (*.csv)</source>
-        <translation type="unfinished"/>
+        <translation>Vesszővel elválasztott fájl (*. csv)</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="285"/>
         <source>Exporting Failed</source>
-        <translation type="unfinished"/>
+        <translation>Az exportálás sikertelen volt</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="286"/>
         <source>There was an error trying to save the address list to %1.</source>
-        <translation type="unfinished"/>
+        <translation>Hiba történt a címlista mentésekor az alábbi helyre: %1.</translation>
     </message>
 </context>
 <context>
@@ -190,7 +189,7 @@ Ez a termék tartalmaz az OpenSSL Project által az OpenSSL Toolkit-hez (http://
     <message>
         <location filename="../addresstablemodel.cpp" line="169"/>
         <source>Label</source>
-        <translation type="unfinished"/>
+        <translation>Címke</translation>
     </message>
     <message>
         <location filename="../addresstablemodel.cpp" line="169"/>
@@ -200,7 +199,7 @@ Ez a termék tartalmaz az OpenSSL Project által az OpenSSL Toolkit-hez (http://
     <message>
         <location filename="../addresstablemodel.cpp" line="205"/>
         <source>(no label)</source>
-        <translation type="unfinished"/>
+        <translation>(nincs címke)</translation>
     </message>
 </context>
 <context>
@@ -209,13 +208,13 @@ Ez a termék tartalmaz az OpenSSL Project által az OpenSSL Toolkit-hez (http://
         <location filename="../forms/askpassphrasedialog.ui" line="26"/>
         <location filename="../forms/ui_askpassphrasedialog.h" line="135"/>
         <source>Passphrase Dialog</source>
-        <translation>Jelszó ablak</translation>
+        <translation>Kulcsszó párbeszédablak</translation>
     </message>
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="47"/>
         <location filename="../forms/ui_askpassphrasedialog.h" line="136"/>
         <source>Enter passphrase</source>
-        <translation>Írja be a jelszót</translation>
+        <translation>Add meg a jelszót</translation>
     </message>
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="61"/>
@@ -227,7 +226,7 @@ Ez a termék tartalmaz az OpenSSL Project által az OpenSSL Toolkit-hez (http://
         <location filename="../forms/askpassphrasedialog.ui" line="75"/>
         <location filename="../forms/ui_askpassphrasedialog.h" line="138"/>
         <source>Repeat new passphrase</source>
-        <translation>Új jelszó megismétlése</translation>
+        <translation>Új jelszó újra</translation>
     </message>
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="108"/>
@@ -245,47 +244,47 @@ Ez a termék tartalmaz az OpenSSL Project által az OpenSSL Toolkit-hez (http://
     <message>
         <location filename="../askpassphrasedialog.cpp" line="41"/>
         <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;10 or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
-        <translation type="unfinished"/>
+        <translation>Írd be az új jelszót a tárcához.&lt;br/&gt;Használj legalább 10&lt;br/&gt;véletlenszerű karaktert&lt;/b&gt; vagy &lt;b&gt;legalább nyolc szót&lt;/b&gt;.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="42"/>
         <source>Encrypt wallet</source>
-        <translation type="unfinished"/>
+        <translation>Tárca kódolása</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="48"/>
         <source>This operation needs your wallet passphrase to unlock the wallet.</source>
-        <translation type="unfinished"/>
+        <translation>A tárcád megnyitásához a műveletnek szüksége van a tárcád jelszavára.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="53"/>
         <source>Unlock wallet</source>
-        <translation type="unfinished"/>
+        <translation>Tárca megnyitása</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="56"/>
         <source>This operation needs your wallet passphrase to decrypt the wallet.</source>
-        <translation type="unfinished"/>
+        <translation>A tárcád dekódolásához a műveletnek szüksége van a tárcád jelszavára.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="61"/>
         <source>Decrypt wallet</source>
-        <translation type="unfinished"/>
+        <translation>Tárca dekódolása</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="64"/>
         <source>Change passphrase</source>
-        <translation type="unfinished"/>
+        <translation>Jelszó megváltoztatása</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="65"/>
         <source>Enter the old and new passphrase to the wallet.</source>
-        <translation type="unfinished"/>
+        <translation>Írd be a tárca régi és új jelszavát.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="112"/>
         <source>Confirm wallet encryption</source>
-        <translation type="unfinished"/>
+        <translation>Biztosan kódolni akarod a tárcát?</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="113"/>
@@ -295,13 +294,13 @@ Ez a termék tartalmaz az OpenSSL Project által az OpenSSL Toolkit-hez (http://
     <message>
         <location filename="../askpassphrasedialog.cpp" line="113"/>
         <source>Are you sure you wish to encrypt your wallet?</source>
-        <translation type="unfinished"/>
+        <translation>Biztosan kódolni akarod a tárcát?</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="122"/>
         <location filename="../askpassphrasedialog.cpp" line="181"/>
         <source>Wallet encrypted</source>
-        <translation type="unfinished"/>
+        <translation>Tárca kódolva</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="124"/>
@@ -311,7 +310,7 @@ Ez a termék tartalmaz az OpenSSL Project által az OpenSSL Toolkit-hez (http://
     <message>
         <location filename="../askpassphrasedialog.cpp" line="128"/>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
-        <translation type="unfinished"/>
+        <translation>FONTOS: A pénztárca-fájl korábbi mentéseit ezzel az új, titkosított pénztárca-fájllal kell helyettesíteni. Biztonsági okokból a pénztárca-fájl korábbi titkosítás nélküli mentései haszontalanná válnak amint elkezdi használni az új, titkosított pénztárcát.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="137"/>
@@ -319,46 +318,46 @@ Ez a termék tartalmaz az OpenSSL Project által az OpenSSL Toolkit-hez (http://
         <location filename="../askpassphrasedialog.cpp" line="187"/>
         <location filename="../askpassphrasedialog.cpp" line="193"/>
         <source>Wallet encryption failed</source>
-        <translation type="unfinished"/>
+        <translation>Tárca kódolása sikertelen.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="138"/>
         <source>Wallet encryption failed due to an internal error. Your wallet was not encrypted.</source>
-        <translation type="unfinished"/>
+        <translation>Tárca kódolása belső hiba miatt sikertelen. A tárcád nem lett kódolva.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="145"/>
         <location filename="../askpassphrasedialog.cpp" line="194"/>
         <source>The supplied passphrases do not match.</source>
-        <translation type="unfinished"/>
+        <translation>A megadott jelszavak nem egyeznek.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="157"/>
         <source>Wallet unlock failed</source>
-        <translation type="unfinished"/>
+        <translation>Tárca megnyitása sikertelen</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="158"/>
         <location filename="../askpassphrasedialog.cpp" line="169"/>
         <location filename="../askpassphrasedialog.cpp" line="188"/>
         <source>The passphrase entered for the wallet decryption was incorrect.</source>
-        <translation type="unfinished"/>
+        <translation>Hibás jelszó.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="168"/>
         <source>Wallet decryption failed</source>
-        <translation type="unfinished"/>
+        <translation>Dekódolás sikertelen.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="182"/>
         <source>Wallet passphrase was successfully changed.</source>
-        <translation type="unfinished"/>
+        <translation>Jelszó megváltoztatva.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="230"/>
         <location filename="../askpassphrasedialog.cpp" line="254"/>
         <source>Warning: The Caps Lock key is on!</source>
-        <translation type="unfinished"/>
+        <translation>Vigyázat: a Caps Lock be van kapcsolva!</translation>
     </message>
 </context>
 <context>
@@ -376,28 +375,28 @@ Ez a termék tartalmaz az OpenSSL Project által az OpenSSL Toolkit-hez (http://
     <message>
         <location filename="../bitcoingui.cpp" line="87"/>
         <source>Node</source>
-        <translation type="unfinished"/>
+        <translation>Csomópont</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="101"/>
         <location filename="../bitcoingui.cpp" line="494"/>
         <source>[testnet]</source>
-        <translation type="unfinished"/>
+        <translation>[teszthálózat]</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="226"/>
         <source>&amp;Overview</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Áttekintés</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="227"/>
         <source>Show general overview of wallet</source>
-        <translation type="unfinished"/>
+        <translation>Tárca általános áttekintése</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="233"/>
         <source>&amp;Send</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Küldés</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="234"/>
@@ -407,7 +406,7 @@ Ez a termék tartalmaz az OpenSSL Project által az OpenSSL Toolkit-hez (http://
     <message>
         <location filename="../bitcoingui.cpp" line="240"/>
         <source>&amp;Receive</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Fogadás</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="241"/>
@@ -417,22 +416,22 @@ Ez a termék tartalmaz az OpenSSL Project által az OpenSSL Toolkit-hez (http://
     <message>
         <location filename="../bitcoingui.cpp" line="247"/>
         <source>&amp;Transactions</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Tranzakciók</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="248"/>
         <source>Browse transaction history</source>
-        <translation type="unfinished"/>
+        <translation>Tranzakciótörténet megtekintése</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="265"/>
         <source>E&amp;xit</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Kilépés</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="266"/>
         <source>Quit application</source>
-        <translation type="unfinished"/>
+        <translation>Kilépés</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="270"/>
@@ -449,17 +448,17 @@ Ez a termék tartalmaz az OpenSSL Project által az OpenSSL Toolkit-hez (http://
         <location filename="../bitcoingui.cpp" line="276"/>
         <location filename="../bitcoingui.cpp" line="278"/>
         <source>About &amp;Qt</source>
-        <translation type="unfinished"/>
+        <translation>A &amp;Qt-ról</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="280"/>
         <source>Show information about Qt</source>
-        <translation type="unfinished"/>
+        <translation>Információk a Qt ról</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="282"/>
         <source>&amp;Options...</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Opciók...</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="283"/>
@@ -470,42 +469,42 @@ Ez a termék tartalmaz az OpenSSL Project által az OpenSSL Toolkit-hez (http://
         <location filename="../bitcoingui.cpp" line="286"/>
         <location filename="../bitcoingui.cpp" line="288"/>
         <source>&amp;Show / Hide</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Mutat / Elrejt</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="289"/>
         <source>Show or hide the main Window</source>
-        <translation type="unfinished"/>
+        <translation>Főablakot mutat/elrejt</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="291"/>
         <source>&amp;Encrypt Wallet...</source>
-        <translation type="unfinished"/>
+        <translation>Tárca &amp;kódolása...</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="292"/>
         <source>Encrypt the private keys that belong to your wallet</source>
-        <translation type="unfinished"/>
+        <translation>A pénztárcájához tartozó privát kulcsok titkosítása</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="294"/>
         <source>&amp;Backup Wallet...</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Bisztonsági másolat készítése a Tárcáról</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="295"/>
         <source>Backup wallet to another location</source>
-        <translation type="unfinished"/>
+        <translation>Biztonsági másolat készítése a Tárcáról egy másik helyre</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="296"/>
         <source>&amp;Change Passphrase...</source>
-        <translation type="unfinished"/>
+        <translation>Jelszó &amp;megváltoztatása...</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="297"/>
         <source>Change the passphrase used for wallet encryption</source>
-        <translation type="unfinished"/>
+        <translation>Tárcakódoló jelszó megváltoztatása</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="298"/>
@@ -515,7 +514,7 @@ Ez a termék tartalmaz az OpenSSL Project által az OpenSSL Toolkit-hez (http://
     <message>
         <location filename="../bitcoingui.cpp" line="299"/>
         <source>Unlock wallet</source>
-        <translation type="unfinished"/>
+        <translation>Tárca megnyitása</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="300"/>
@@ -525,7 +524,7 @@ Ez a termék tartalmaz az OpenSSL Project által az OpenSSL Toolkit-hez (http://
     <message>
         <location filename="../bitcoingui.cpp" line="301"/>
         <source>Sign &amp;message...</source>
-        <translation type="unfinished"/>
+        <translation>Üzenet aláírása...</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="302"/>
@@ -535,7 +534,7 @@ Ez a termék tartalmaz az OpenSSL Project által az OpenSSL Toolkit-hez (http://
     <message>
         <location filename="../bitcoingui.cpp" line="303"/>
         <source>&amp;Verify message...</source>
-        <translation type="unfinished"/>
+        <translation>Üzenet &amp;valódiságának ellenőrzése</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="304"/>
@@ -575,27 +574,27 @@ Ez a termék tartalmaz az OpenSSL Project által az OpenSSL Toolkit-hez (http://
     <message>
         <location filename="../bitcoingui.cpp" line="313"/>
         <source>&amp;Sending addresses...</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Küldési címek...</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="314"/>
         <source>Show the list of used sending addresses and labels</source>
-        <translation type="unfinished"/>
+        <translation>A használt küldési címek és címkék mutatása</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="315"/>
         <source>&amp;Receiving addresses...</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Fogadó címek...</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="316"/>
         <source>Show the list of used receiving addresses and labels</source>
-        <translation type="unfinished"/>
+        <translation>A használt fogadó címek és címkék megtekintése</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="318"/>
         <source>Open &amp;URI...</source>
-        <translation type="unfinished"/>
+        <translation>&amp;URI azonosító megnyitása...</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="319"/>
@@ -605,7 +604,7 @@ Ez a termék tartalmaz az OpenSSL Project által az OpenSSL Toolkit-hez (http://
     <message>
         <location filename="../bitcoingui.cpp" line="321"/>
         <source>&amp;Command-line options</source>
-        <translation type="unfinished"/>
+        <translation>Paran&amp;cssor kapcsolók</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="322"/>
@@ -615,12 +614,12 @@ Ez a termék tartalmaz az OpenSSL Project által az OpenSSL Toolkit-hez (http://
     <message>
         <location filename="../bitcoingui.cpp" line="358"/>
         <source>&amp;File</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Fájl</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="372"/>
         <source>&amp;Settings</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Beállítások</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="385"/>
@@ -630,12 +629,12 @@ Ez a termék tartalmaz az OpenSSL Project által az OpenSSL Toolkit-hez (http://
     <message>
         <location filename="../bitcoingui.cpp" line="391"/>
         <source>&amp;Help</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Súgó</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="402"/>
         <source>Tabs toolbar</source>
-        <translation type="unfinished"/>
+        <translation>Fül eszköztár</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="489"/>
@@ -651,32 +650,32 @@ Ez a termék tartalmaz az OpenSSL Project által az OpenSSL Toolkit-hez (http://
     <message>
         <location filename="../bitcoingui.cpp" line="650"/>
         <source>Synchronizing with network...</source>
-        <translation type="unfinished"/>
+        <translation>Szinkronizálás a hálózattal...</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="653"/>
         <source>Importing blocks from disk...</source>
-        <translation type="unfinished"/>
+        <translation>A blokkok importálása lemezről...</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="656"/>
         <source>Reindexing blocks on disk...</source>
-        <translation type="unfinished"/>
+        <translation>A blokkok lemezen történő ujraindexelése...</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="660"/>
         <source>No block source available...</source>
-        <translation type="unfinished"/>
+        <translation>Blokk forrása ismeretlen...</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="670"/>
         <source>Processed %1 blocks of transaction history.</source>
-        <translation type="unfinished"/>
+        <translation>A tranzakció-történet %1 blokkja feldolgozva.</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="675"/>
         <source>Up to date</source>
-        <translation type="unfinished"/>
+        <translation>Naprakész</translation>
     </message>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="696"/>
@@ -697,7 +696,7 @@ Ez a termék tartalmaz az OpenSSL Project által az OpenSSL Toolkit-hez (http://
     <message>
         <location filename="../bitcoingui.cpp" line="710"/>
         <source>%1 and %2</source>
-        <translation type="unfinished"/>
+        <translation>%1 és %2</translation>
     </message>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="710"/>
@@ -707,22 +706,22 @@ Ez a termék tartalmaz az OpenSSL Project által az OpenSSL Toolkit-hez (http://
     <message>
         <location filename="../bitcoingui.cpp" line="714"/>
         <source>%1 behind</source>
-        <translation type="unfinished"/>
+        <translation>%1 lemaradás</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="719"/>
         <source>Catching up...</source>
-        <translation type="unfinished"/>
+        <translation>Frissítés...</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="735"/>
         <source>Last received block was generated %1 ago.</source>
-        <translation type="unfinished"/>
+        <translation>Az utolsóként kapott blokk kora: %1.</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="737"/>
         <source>Transactions after this will not yet be visible.</source>
-        <translation type="unfinished"/>
+        <translation>Ez utáni tranzakciók még nem lesznek láthatóak. </translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="750"/>
@@ -732,27 +731,27 @@ Ez a termék tartalmaz az OpenSSL Project által az OpenSSL Toolkit-hez (http://
     <message>
         <location filename="../bitcoingui.cpp" line="764"/>
         <source>Error</source>
-        <translation type="unfinished"/>
+        <translation>Hiba</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="767"/>
         <source>Warning</source>
-        <translation type="unfinished"/>
+        <translation>Figyelem</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="770"/>
         <source>Information</source>
-        <translation type="unfinished"/>
+        <translation>Információ</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="849"/>
         <source>Sent transaction</source>
-        <translation type="unfinished"/>
+        <translation>Tranzakció elküldve.</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="849"/>
         <source>Incoming transaction</source>
-        <translation type="unfinished"/>
+        <translation>Beérkező tranzakció</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="850"/>
@@ -761,12 +760,16 @@ Amount: %2
 Type: %3
 Address: %4
 </source>
-        <translation type="unfinished"/>
+        <translation>Dátum: %1
+Összeg: %2
+Típus: %3
+Cím: %4
+</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="921"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
-        <translation type="unfinished"/>
+        <translation>Tárca &lt;b&gt;kódolva&lt;/b&gt; és jelenleg &lt;b&gt;nyitva&lt;/b&gt;.</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="931"/>
@@ -776,7 +779,7 @@ Address: %4
     <message>
         <location filename="../bitcoingui.cpp" line="941"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
-        <translation type="unfinished"/>
+        <translation>Tárca &lt;b&gt;kódolva&lt;/b&gt; és jelenleg &lt;b&gt;zárva&lt;/b&gt;.</translation>
     </message>
     <message>
         <location filename="../darkcoin.cpp" line="449"/>
@@ -789,7 +792,7 @@ Address: %4
     <message>
         <location filename="../clientmodel.cpp" line="135"/>
         <source>Network Alert</source>
-        <translation type="unfinished"/>
+        <translation>Hálózati figyelmeztetés</translation>
     </message>
 </context>
 <context>
@@ -798,7 +801,7 @@ Address: %4
         <location filename="../forms/coincontroldialog.ui" line="14"/>
         <location filename="../forms/ui_coincontroldialog.h" line="319"/>
         <source>Coin Control Address Selection</source>
-        <translation>Coin Control cím választás</translation>
+        <translation>Ellenőrző cím kiválasztása</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="48"/>
@@ -810,7 +813,7 @@ Address: %4
         <location filename="../forms/coincontroldialog.ui" line="77"/>
         <location filename="../forms/ui_coincontroldialog.h" line="321"/>
         <source>Bytes:</source>
-        <translation>Byte:</translation>
+        <translation>Bájtok:</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="122"/>
@@ -828,7 +831,7 @@ Address: %4
         <location filename="../forms/coincontroldialog.ui" line="196"/>
         <location filename="../forms/ui_coincontroldialog.h" line="324"/>
         <source>Fee:</source>
-        <translation>Költség:</translation>
+        <translation>Díjak:</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="228"/>
@@ -840,7 +843,7 @@ Address: %4
         <location filename="../forms/coincontroldialog.ui" line="276"/>
         <location filename="../forms/ui_coincontroldialog.h" line="326"/>
         <source>After Fee:</source>
-        <translation>Költségek után:</translation>
+        <translation>Utólagos díj:</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="308"/>
@@ -852,7 +855,7 @@ Address: %4
         <location filename="../forms/coincontroldialog.ui" line="364"/>
         <location filename="../forms/ui_coincontroldialog.h" line="328"/>
         <source>(un)select all</source>
-        <translation>összes (ki)jelölése</translation>
+        <translation>mindent kiválaszt/elvet</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="377"/>
@@ -911,58 +914,58 @@ Address: %4
     <message>
         <location filename="../coincontroldialog.cpp" line="43"/>
         <source>Copy address</source>
-        <translation type="unfinished"/>
+        <translation>Cím másolása</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="44"/>
         <source>Copy label</source>
-        <translation type="unfinished"/>
+        <translation>Címke másolása</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="45"/>
         <location filename="../coincontroldialog.cpp" line="71"/>
         <source>Copy amount</source>
-        <translation type="unfinished"/>
+        <translation>Összeg másolása</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="46"/>
         <source>Copy transaction ID</source>
-        <translation type="unfinished"/>
+        <translation>Tranzakcióazonosító másolása</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="47"/>
         <source>Lock unspent</source>
-        <translation type="unfinished"/>
+        <translation>Megmaradt zárolása</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="48"/>
         <source>Unlock unspent</source>
-        <translation type="unfinished"/>
+        <translation>Zárolás feloldása</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="70"/>
         <source>Copy quantity</source>
-        <translation type="unfinished"/>
+        <translation>Mennyiség másolása</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="72"/>
         <source>Copy fee</source>
-        <translation type="unfinished"/>
+        <translation>Díj másolása</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="73"/>
         <source>Copy after fee</source>
-        <translation type="unfinished"/>
+        <translation>Utólagos díj másolása</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="74"/>
         <source>Copy bytes</source>
-        <translation type="unfinished"/>
+        <translation>Byte-ok másolása </translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="75"/>
         <source>Copy priority</source>
-        <translation type="unfinished"/>
+        <translation>Prioritás másolása</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="76"/>
@@ -972,62 +975,62 @@ Address: %4
     <message>
         <location filename="../coincontroldialog.cpp" line="77"/>
         <source>Copy change</source>
-        <translation type="unfinished"/>
+        <translation>Visszajáró másolása</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="410"/>
         <source>highest</source>
-        <translation type="unfinished"/>
+        <translation>legmagasabb</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="411"/>
         <source>higher</source>
-        <translation type="unfinished"/>
+        <translation>magasabb</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="412"/>
         <source>high</source>
-        <translation type="unfinished"/>
+        <translation>magas</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="413"/>
         <source>medium-high</source>
-        <translation type="unfinished"/>
+        <translation>közepesen-magas</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="414"/>
         <source>medium</source>
-        <translation type="unfinished"/>
+        <translation>közepes</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="418"/>
         <source>low-medium</source>
-        <translation type="unfinished"/>
+        <translation>alacsony-közepes</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="419"/>
         <source>low</source>
-        <translation type="unfinished"/>
+        <translation>alacsony</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="420"/>
         <source>lower</source>
-        <translation type="unfinished"/>
+        <translation>alacsonyabb</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="421"/>
         <source>lowest</source>
-        <translation type="unfinished"/>
+        <translation>legalacsonyabb</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="432"/>
         <source>(%1 locked)</source>
-        <translation type="unfinished"/>
+        <translation>(%1 zárolva)</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="464"/>
         <source>none</source>
-        <translation type="unfinished"/>
+        <translation>semmi</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="605"/>
@@ -1037,43 +1040,43 @@ Address: %4
     <message>
         <location filename="../coincontroldialog.cpp" line="605"/>
         <source>yes</source>
-        <translation type="unfinished"/>
+        <translation>igen</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="605"/>
         <source>no</source>
-        <translation type="unfinished"/>
+        <translation>nem</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="615"/>
         <source>This label turns red, if the transaction size is greater than 1000 bytes.</source>
-        <translation type="unfinished"/>
+        <translation>Ez a címke piros lesz, ha tranzakció mérete nagyobb 1000 byte-nál.</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="616"/>
         <location filename="../coincontroldialog.cpp" line="621"/>
         <source>This means a fee of at least %1 per kB is required.</source>
-        <translation type="unfinished"/>
+        <translation>Legalább %1 díj szüksége kB-onként.</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="617"/>
         <source>Can vary +/- 1 byte per input.</source>
-        <translation type="unfinished"/>
+        <translation>Bemenetenként +/- 1 byte-al változhat.</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="619"/>
         <source>Transactions with higher priority are more likely to get included into a block.</source>
-        <translation type="unfinished"/>
+        <translation>Nagyobb prioritású tranzakciók nagyobb valószínűséggel kerülnek be egy blokkba.</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="620"/>
         <source>This label turns red, if the priority is smaller than &quot;medium&quot;.</source>
-        <translation type="unfinished"/>
+        <translation>Ez a címke piros lesz, ha a prioritás közepesnél alacsonyabb.</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="623"/>
         <source>This label turns red, if any recipient receives an amount smaller than %1.</source>
-        <translation type="unfinished"/>
+        <translation>Ez a címke piros lesz, ha valamelyik elfogadó kevesebbet kap mint %1.</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="624"/>
@@ -1095,17 +1098,17 @@ Address: %4
         <location filename="../coincontroldialog.cpp" line="670"/>
         <location filename="../coincontroldialog.cpp" line="731"/>
         <source>(no label)</source>
-        <translation type="unfinished"/>
+        <translation>(nincs címke)</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="724"/>
         <source>change from %1 (%2)</source>
-        <translation type="unfinished"/>
+        <translation>visszajáró %1-ből (%2)</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="725"/>
         <source>(change)</source>
-        <translation type="unfinished"/>
+        <translation>(visszajáró)</translation>
     </message>
 </context>
 <context>
@@ -1217,13 +1220,13 @@ Address: %4
         <location filename="../forms/editaddressdialog.ui" line="25"/>
         <location filename="../forms/ui_editaddressdialog.h" line="92"/>
         <source>&amp;Label</source>
-        <translation>&amp;Címke</translation>
+        <translation>Cím&amp;ke</translation>
     </message>
     <message>
         <location filename="../forms/editaddressdialog.ui" line="35"/>
         <location filename="../forms/ui_editaddressdialog.h" line="94"/>
         <source>The label associated with this address list entry</source>
-        <translation>A címhez kapcsolt címke</translation>
+        <translation>Ehhez a listaelemhez rendelt címke </translation>
     </message>
     <message>
         <location filename="../forms/editaddressdialog.ui" line="42"/>
@@ -1235,27 +1238,27 @@ Address: %4
         <location filename="../forms/editaddressdialog.ui" line="52"/>
         <location filename="../forms/ui_editaddressdialog.h" line="98"/>
         <source>The address associated with this address list entry. This can only be modified for sending addresses.</source>
-        <translation>A címhez kapcsolt címke. Csak a cél címeknél módosítható.</translation>
+        <translation>Ehhez a címlistaelemhez rendelt cím. Csak a küldő címek módosíthatók.</translation>
     </message>
     <message>
         <location filename="../editaddressdialog.cpp" line="29"/>
         <source>New receiving address</source>
-        <translation type="unfinished"/>
+        <translation>Új fogadó cím</translation>
     </message>
     <message>
         <location filename="../editaddressdialog.cpp" line="33"/>
         <source>New sending address</source>
-        <translation type="unfinished"/>
+        <translation>Új küldő cím</translation>
     </message>
     <message>
         <location filename="../editaddressdialog.cpp" line="36"/>
         <source>Edit receiving address</source>
-        <translation type="unfinished"/>
+        <translation>Fogadó cím szerkesztése</translation>
     </message>
     <message>
         <location filename="../editaddressdialog.cpp" line="40"/>
         <source>Edit sending address</source>
-        <translation type="unfinished"/>
+        <translation>Küldő cím szerkesztése</translation>
     </message>
     <message>
         <location filename="../editaddressdialog.cpp" line="111"/>
@@ -1265,17 +1268,17 @@ Address: %4
     <message>
         <location filename="../editaddressdialog.cpp" line="116"/>
         <source>The entered address &quot;%1&quot; is already in the address book.</source>
-        <translation type="unfinished"/>
+        <translation>A megadott &quot;%1&quot; cím már szerepel a címjegyzékben.</translation>
     </message>
     <message>
         <location filename="../editaddressdialog.cpp" line="121"/>
         <source>Could not unlock wallet.</source>
-        <translation type="unfinished"/>
+        <translation>Tárca feloldása sikertelen</translation>
     </message>
     <message>
         <location filename="../editaddressdialog.cpp" line="126"/>
         <source>New key generation failed.</source>
-        <translation type="unfinished"/>
+        <translation>Új kulcs generálása sikertelen</translation>
     </message>
 </context>
 <context>
@@ -1283,12 +1286,12 @@ Address: %4
     <message>
         <location filename="../intro.cpp" line="69"/>
         <source>A new data directory will be created.</source>
-        <translation type="unfinished"/>
+        <translation>Új adatkönyvtár lesz létrehozva.</translation>
     </message>
     <message>
         <location filename="../intro.cpp" line="91"/>
         <source>name</source>
-        <translation type="unfinished"/>
+        <translation>Név</translation>
     </message>
     <message>
         <location filename="../intro.cpp" line="93"/>
@@ -1298,12 +1301,12 @@ Address: %4
     <message>
         <location filename="../intro.cpp" line="96"/>
         <source>Path already exists, and is not a directory.</source>
-        <translation type="unfinished"/>
+        <translation>Az elérési út létezik, de nem egy könyvtáré.</translation>
     </message>
     <message>
         <location filename="../intro.cpp" line="103"/>
         <source>Cannot create data directory here.</source>
-        <translation type="unfinished"/>
+        <translation>Adatkönyvtár nem hozható itt létre.</translation>
     </message>
 </context>
 <context>
@@ -1322,47 +1325,48 @@ Address: %4
     <message>
         <location filename="../utilitydialog.cpp" line="69"/>
         <source>version</source>
-        <translation type="unfinished"/>
+        <translation>verzió</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="71"/>
         <source>Usage:</source>
-        <translation type="unfinished"/>
+        <translation>Használat:</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="72"/>
         <source>command-line options</source>
-        <translation type="unfinished"/>
+        <translation>parancssoros opciók</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="76"/>
         <source>UI options</source>
-        <translation type="unfinished"/>
+        <translation>UI opciók</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="77"/>
         <source>Choose data directory on startup (default: 0)</source>
-        <translation type="unfinished"/>
+        <translation>Adatkönyvtár kiválasztása induláskor (alapbeállítás: 0)</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="78"/>
         <source>Set language, for example &quot;de_DE&quot; (default: system locale)</source>
-        <translation type="unfinished"/>
+        <translation>Nyelvbeállítás, például &quot;de_DE&quot; (alapértelmezett: rendszer nyelve)</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="79"/>
         <source>Start minimized</source>
-        <translation type="unfinished"/>
+        <translation>Indítás lekicsinyítve
+</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="80"/>
         <source>Set SSL root certificates for payment request (default: -system-)</source>
-        <translation type="unfinished"/>
+        <translation>SLL gyökér-igazolások megadása fizetési kérelmekhez (alapértelmezett: -system-)</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="81"/>
         <source>Show splash screen on startup (default: 1)</source>
-        <translation type="unfinished"/>
+        <translation>Indítóképernyő mutatása induláskor (alapértelmezett: 1)</translation>
     </message>
 </context>
 <context>
@@ -1371,7 +1375,7 @@ Address: %4
         <location filename="../forms/intro.ui" line="14"/>
         <location filename="../forms/ui_intro.h" line="183"/>
         <source>Welcome</source>
-        <translation>Üdvözöljük</translation>
+        <translation>Üdvözlünk</translation>
     </message>
     <message>
         <location filename="../forms/intro.ui" line="23"/>
@@ -1417,17 +1421,17 @@ A pénztárca fájl is ebben a könyvtárban kerül letárolásra.</translation>
     <message>
         <location filename="../intro.cpp" line="210"/>
         <source>Error</source>
-        <translation type="unfinished"/>
+        <translation>Hiba</translation>
     </message>
     <message>
         <location filename="../intro.cpp" line="219"/>
         <source>GB of free space available</source>
-        <translation type="unfinished"/>
+        <translation>GB hely érhető el</translation>
     </message>
     <message>
         <location filename="../intro.cpp" line="222"/>
         <source>(of %1GB needed)</source>
-        <translation type="unfinished"/>
+        <translation>( ebből %1GB szükséges)</translation>
     </message>
 </context>
 <context>
@@ -1442,7 +1446,7 @@ A pénztárca fájl is ebben a könyvtárban kerül letárolásra.</translation>
         <location filename="../forms/openuridialog.ui" line="20"/>
         <location filename="../forms/ui_openuridialog.h" line="94"/>
         <source>Open payment request from URI or file</source>
-        <translation>Fizetési bekérő megnyitása URI-ból vagy fájlból</translation>
+        <translation>Fizetési kérelem megnyitása URI azonosítóból vagy fájlból</translation>
     </message>
     <message>
         <location filename="../forms/openuridialog.ui" line="29"/>
@@ -1454,7 +1458,7 @@ A pénztárca fájl is ebben a könyvtárban kerül letárolásra.</translation>
         <location filename="../forms/openuridialog.ui" line="40"/>
         <location filename="../forms/ui_openuridialog.h" line="97"/>
         <source>Select payment request file</source>
-        <translation>Fizetési bekérő fájl kiválasztása</translation>
+        <translation>Fizetési kérelmi fájl kiválasztása</translation>
     </message>
     <message>
         <location filename="../openuridialog.cpp" line="48"/>
@@ -1468,13 +1472,13 @@ A pénztárca fájl is ebben a könyvtárban kerül letárolásra.</translation>
         <location filename="../forms/optionsdialog.ui" line="14"/>
         <location filename="../forms/ui_optionsdialog.h" line="532"/>
         <source>Options</source>
-        <translation>Beállítások</translation>
+        <translation>Opciók</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="27"/>
         <location filename="../forms/ui_optionsdialog.h" line="548"/>
         <source>&amp;Main</source>
-        <translation>&amp;Általános</translation>
+        <translation>&amp;Fő</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="33"/>
@@ -1540,13 +1544,13 @@ A pénztárca fájl is ebben a könyvtárban kerül letárolásra.</translation>
         <location filename="../forms/optionsdialog.ui" line="212"/>
         <location filename="../forms/ui_optionsdialog.h" line="549"/>
         <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly. Most transactions are 1 kB.</source>
-        <translation>Opcionálisan válaszható tranzakció költség kB-onként, mely elősegíti a tranzakciók mielőbi feldolgozását. Egy átlagos tranzakció 1 kB.</translation>
+        <translation>Opcionális, kB-onkénti tranzakciós díj a tranzakcióid minél gyorsabb feldolgozásának elősegítésére.  A legtöbb tranzakció 1 kB-os.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="227"/>
         <location filename="../forms/ui_optionsdialog.h" line="550"/>
         <source>Pay transaction &amp;fee</source>
-        <translation>Tranzakciós díj &amp;fizetése</translation>
+        <translation>Tranzakciós &amp;díj fizetése</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="271"/>
@@ -1594,7 +1598,7 @@ A pénztárca fájl is ebben a könyvtárban kerül letárolásra.</translation>
         <location filename="../forms/optionsdialog.ui" line="310"/>
         <location filename="../forms/ui_optionsdialog.h" line="564"/>
         <source>Map port using &amp;UPnP</source>
-        <translation>&amp;UPnP használata</translation>
+        <translation>&amp;UPnP port-feltérképezés</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="317"/>
@@ -1630,19 +1634,19 @@ A pénztárca fájl is ebben a könyvtárban kerül letárolásra.</translation>
         <location filename="../forms/optionsdialog.ui" line="386"/>
         <location filename="../forms/ui_optionsdialog.h" line="575"/>
         <source>Port of the proxy (e.g. 9050)</source>
-        <translation>Proxy portja (pl. 9050)</translation>
+        <translation>Proxy portja (pl.: 9050)</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="393"/>
         <location filename="../forms/ui_optionsdialog.h" line="577"/>
         <source>SOCKS &amp;Version:</source>
-        <translation>SOCKS &amp;verzió:</translation>
+        <translation>SOCKS &amp;Verzió:</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="406"/>
         <location filename="../forms/ui_optionsdialog.h" line="579"/>
         <source>SOCKS version of the proxy (e.g. 5)</source>
-        <translation>Proxy SOCKS &amp;verziója (pl. 5)</translation>
+        <translation>A proxy SOCKS verziója  (pl. 5)</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="442"/>
@@ -1654,25 +1658,25 @@ A pénztárca fájl is ebben a könyvtárban kerül letárolásra.</translation>
         <location filename="../forms/optionsdialog.ui" line="448"/>
         <location filename="../forms/ui_optionsdialog.h" line="583"/>
         <source>Show only a tray icon after minimizing the window.</source>
-        <translation>Ikon mutatása az értesítési területen az ablak kicsinyítésekor.</translation>
+        <translation>Kicsinyítés után csak eszköztár-ikont mutass</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="451"/>
         <location filename="../forms/ui_optionsdialog.h" line="585"/>
         <source>&amp;Minimize to the tray instead of the taskbar</source>
-        <translation>&amp;Kicsinyítés az értesítési felületre a tálca helyett</translation>
+        <translation>&amp;Kicsinyítés a tálcára az eszköztár helyett</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="458"/>
         <location filename="../forms/ui_optionsdialog.h" line="587"/>
         <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Quit in the menu.</source>
-        <translation>A jobb felső sarokban található bezárás gombra való kattintáskor az alkalmazás nem bezáródik, hanem kicsinyítés során az értesítési felületre kerül. Az alkalmazás bezárásához az értesítési felületen jobb gombbal az ikonra kattintva válasszuk a Bezárás menüpontot.</translation>
+        <translation>Az alkalmazásból való kilépés helyett az eszköztárba kicsinyíti az alkalmazást az ablak bezárásakor. Ez esetben az alkalmazás csak a Kilépés menüponttal zárható be.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="461"/>
         <location filename="../forms/ui_optionsdialog.h" line="589"/>
         <source>M&amp;inimize on close</source>
-        <translation>Bezárás helyett &amp;kicsinytés</translation>
+        <translation>K&amp;icsinyítés záráskor</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="482"/>
@@ -1684,7 +1688,7 @@ A pénztárca fájl is ebben a könyvtárban kerül letárolásra.</translation>
         <location filename="../forms/optionsdialog.ui" line="490"/>
         <location filename="../forms/ui_optionsdialog.h" line="591"/>
         <source>User Interface &amp;language:</source>
-        <translation>Megjelenítési &amp;nyelv:</translation>
+        <translation>Felhasználófelület nye&amp;lve:</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="503"/>
@@ -1696,13 +1700,13 @@ A pénztárca fájl is ebben a könyvtárban kerül letárolásra.</translation>
         <location filename="../forms/optionsdialog.ui" line="514"/>
         <location filename="../forms/ui_optionsdialog.h" line="595"/>
         <source>&amp;Unit to show amounts in:</source>
-        <translation>&amp;DRK mértékegység választása</translation>
+        <translation>&amp;Mértékegység:</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="527"/>
         <location filename="../forms/ui_optionsdialog.h" line="597"/>
         <source>Choose the default subdivision unit to show in the interface and when sending coins.</source>
-        <translation>Itt megadhatjuk, hogy alapértelmezésként milyen mértékegységet használjon a program.</translation>
+        <translation>Válaszd ki az interfészen és érmék küldésekor megjelenítendő alapértelmezett alegységet.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="536"/>
@@ -1714,7 +1718,7 @@ A pénztárca fájl is ebben a könyvtárban kerül letárolásra.</translation>
         <location filename="../forms/optionsdialog.ui" line="539"/>
         <location filename="../forms/ui_optionsdialog.h" line="602"/>
         <source>&amp;Display addresses in transaction list</source>
-        <translation>&amp;Címek mutatása a tranzakció listában</translation>
+        <translation>&amp;Címek megjelenítése a tranzakciólistában</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="548"/>
@@ -1740,13 +1744,13 @@ A pénztárca fájl is ebben a könyvtárban kerül letárolásra.</translation>
         <location filename="../forms/optionsdialog.ui" line="635"/>
         <location filename="../forms/ui_optionsdialog.h" line="614"/>
         <source>Reset all client options to default.</source>
-        <translation>Visszaállít minden kliens beállítást alapértelmezettre.</translation>
+        <translation>Minden kliensbeállítás alapértelmezettre állítása.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="638"/>
         <location filename="../forms/ui_optionsdialog.h" line="616"/>
         <source>&amp;Reset Options</source>
-        <translation>&amp;Beállítások viszaállítása</translation>
+        <translation>Beállítások tö&amp;rlése</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="699"/>
@@ -1758,22 +1762,22 @@ A pénztárca fájl is ebben a könyvtárban kerül letárolásra.</translation>
         <location filename="../forms/optionsdialog.ui" line="706"/>
         <location filename="../forms/ui_optionsdialog.h" line="619"/>
         <source>&amp;Cancel</source>
-        <translation>&amp;Mégse</translation>
+        <translation>Megszakítás</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="73"/>
         <source>default</source>
-        <translation type="unfinished"/>
+        <translation>alapértelmezett</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="134"/>
         <source>none</source>
-        <translation type="unfinished"/>
+        <translation>semmi</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="222"/>
         <source>Confirm options reset</source>
-        <translation type="unfinished"/>
+        <translation>Beállítások törlésének jóváhagyása.</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="223"/>
@@ -1794,7 +1798,7 @@ A pénztárca fájl is ebben a könyvtárban kerül letárolásra.</translation>
     <message>
         <location filename="../optionsdialog.cpp" line="291"/>
         <source>The supplied proxy address is invalid.</source>
-        <translation type="unfinished"/>
+        <translation>A megadott proxy cím nem érvényes.</translation>
     </message>
 </context>
 <context>
@@ -1823,25 +1827,25 @@ A pénztárca fájl is ebben a könyvtárban kerül letárolásra.</translation>
         <location filename="../forms/overviewpage.ui" line="108"/>
         <location filename="../forms/ui_overviewpage.h" line="461"/>
         <source>Available:</source>
-        <translation>Egyenleg:</translation>
+        <translation>Elérhető:</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="124"/>
         <location filename="../forms/ui_overviewpage.h" line="463"/>
         <source>Your current spendable balance</source>
-        <translation>A jelenlegi elkölthető egyenleg</translation>
+        <translation>Jelenlegi egyenleg</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="140"/>
         <location filename="../forms/ui_overviewpage.h" line="465"/>
         <source>Pending:</source>
-        <translation>Függő:</translation>
+        <translation>Küldés:</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="156"/>
         <location filename="../forms/ui_overviewpage.h" line="467"/>
         <source>Total of transactions that have yet to be confirmed, and do not yet count toward the spendable balance</source>
-        <translation>A jelenleg még nem megerősített, függő státuszban levő tranzakciók összege, mely még nem számít bele az elkölthető egyenlegbe</translation>
+        <translation>Még megerősítésre váró, a jelenlegi egyenlegbe be nem számított tranzakciók</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="172"/>
@@ -1853,7 +1857,7 @@ A pénztárca fájl is ebben a könyvtárban kerül letárolásra.</translation>
         <location filename="../forms/overviewpage.ui" line="185"/>
         <location filename="../forms/ui_overviewpage.h" line="471"/>
         <source>Mined balance that has not yet matured</source>
-        <translation>A kibányászott egyenleg még nem érett meg (és addig nem használható)</translation>
+        <translation>Bányászott egyenleg amely még nem érett be.</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="201"/>
@@ -1865,7 +1869,7 @@ A pénztárca fájl is ebben a könyvtárban kerül letárolásra.</translation>
         <location filename="../forms/overviewpage.ui" line="217"/>
         <location filename="../forms/ui_overviewpage.h" line="475"/>
         <source>Your current total balance</source>
-        <translation>Aktuális egyenleg</translation>
+        <translation>Aktuális egyenleged</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="296"/>
@@ -1982,7 +1986,7 @@ A pénztárca fájl is ebben a könyvtárban kerül letárolásra.</translation>
         <location filename="../overviewpage.cpp" line="126"/>
         <location filename="../overviewpage.cpp" line="127"/>
         <source>out of sync</source>
-        <translation type="unfinished"/>
+        <translation>Nincs szinkronban.</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="429"/>
@@ -2031,7 +2035,7 @@ A pénztárca fájl is ebben a könyvtárban kerül letárolásra.</translation>
         <location filename="../paymentserver.cpp" line="404"/>
         <location filename="../paymentserver.cpp" line="417"/>
         <source>URI handling</source>
-        <translation type="unfinished"/>
+        <translation>URI kezelés</translation>
     </message>
     <message>
         <location filename="../paymentserver.cpp" line="405"/>
@@ -2140,22 +2144,22 @@ A pénztárca fájl is ebben a könyvtárban kerül letárolásra.</translation>
     <message>
         <location filename="../receiverequestdialog.cpp" line="36"/>
         <source>&amp;Save Image...</source>
-        <translation>Kép &amp;mentése</translation>
+        <translation>&amp;Kép mentése</translation>
     </message>
     <message>
         <location filename="../receiverequestdialog.cpp" line="39"/>
         <source>&amp;Copy Image</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Kép másolása</translation>
     </message>
     <message>
         <location filename="../receiverequestdialog.cpp" line="71"/>
         <source>Save QR Code</source>
-        <translation type="unfinished"/>
+        <translation>QR kód mentése</translation>
     </message>
     <message>
         <location filename="../receiverequestdialog.cpp" line="71"/>
         <source>PNG Image (*.png)</source>
-        <translation type="unfinished"/>
+        <translation>PNG kép (*.png)</translation>
     </message>
 </context>
 <context>
@@ -2164,7 +2168,7 @@ A pénztárca fájl is ebben a könyvtárban kerül letárolásra.</translation>
         <location filename="../forms/rpcconsole.ui" line="14"/>
         <location filename="../forms/ui_rpcconsole.h" line="471"/>
         <source>Debug window</source>
-        <translation>Parancssor</translation>
+        <translation>Debug ablak</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="24"/>
@@ -2194,7 +2198,7 @@ A pénztárca fájl is ebben a könyvtárban kerül letárolásra.</translation>
         <location filename="../forms/rpcconsole.ui" line="60"/>
         <location filename="../forms/ui_rpcconsole.h" line="475"/>
         <source>Client name</source>
-        <translation>Kliens neve</translation>
+        <translation>Kliens néve</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="70"/>
@@ -2242,7 +2246,7 @@ A pénztárca fájl is ebben a könyvtárban kerül letárolásra.</translation>
         <location filename="../forms/rpcconsole.ui" line="116"/>
         <location filename="../forms/ui_rpcconsole.h" line="482"/>
         <source>Startup time</source>
-        <translation>Indítási idő</translation>
+        <translation>Bekapcsolás ideje</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="129"/>
@@ -2254,13 +2258,13 @@ A pénztárca fájl is ebben a könyvtárban kerül letárolásra.</translation>
         <location filename="../forms/rpcconsole.ui" line="152"/>
         <location filename="../forms/ui_rpcconsole.h" line="485"/>
         <source>Last block time</source>
-        <translation>Utolsó blokk időpontja</translation>
+        <translation>Utolsó blokk ideje</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="165"/>
         <location filename="../forms/ui_rpcconsole.h" line="486"/>
         <source>Debug log file</source>
-        <translation>Debug log fájl</translation>
+        <translation>Debug naplófájl</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="172"/>
@@ -2272,7 +2276,7 @@ A pénztárca fájl is ebben a könyvtárban kerül letárolásra.</translation>
         <location filename="../forms/rpcconsole.ui" line="182"/>
         <location filename="../forms/ui_rpcconsole.h" line="488"/>
         <source>Build date</source>
-        <translation>Build dátuma</translation>
+        <translation>Fordítás dátuma</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="205"/>
@@ -2296,13 +2300,13 @@ A pénztárca fájl is ebben a könyvtárban kerül letárolásra.</translation>
         <location filename="../forms/rpcconsole.ui" line="349"/>
         <location filename="../forms/ui_rpcconsole.h" line="505"/>
         <source>&amp;Console</source>
-        <translation>&amp;Parancssor</translation>
+        <translation>&amp;Konzol</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="398"/>
         <location filename="../forms/ui_rpcconsole.h" line="502"/>
         <source>Clear console</source>
-        <translation>Ablak törlése</translation>
+        <translation>Konzol törlése</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="421"/>
@@ -2344,32 +2348,32 @@ A pénztárca fájl is ebben a könyvtárban kerül letárolásra.</translation>
     <message>
         <location filename="../rpcconsole.cpp" line="332"/>
         <source>Use up and down arrows to navigate history, and &lt;b&gt;Ctrl-L&lt;/b&gt; to clear screen.</source>
-        <translation type="unfinished"/>
+        <translation>Navigálhat a fel és le nyilakkal, és &lt;b&gt;Ctrl-L&lt;/b&gt; -vel törölheti a képernyőt.</translation>
     </message>
     <message>
         <location filename="../rpcconsole.cpp" line="333"/>
         <source>Type &lt;b&gt;help&lt;/b&gt; for an overview of available commands.</source>
-        <translation type="unfinished"/>
+        <translation>Írd be azt, hogy &lt;b&gt;help&lt;/b&gt; az elérhető parancsok áttekintéséhez.</translation>
     </message>
     <message>
         <location filename="../rpcconsole.cpp" line="472"/>
         <source>%1 B</source>
-        <translation type="unfinished"/>
+        <translation>%1 B</translation>
     </message>
     <message>
         <location filename="../rpcconsole.cpp" line="474"/>
         <source>%1 KB</source>
-        <translation type="unfinished"/>
+        <translation>%1 KB</translation>
     </message>
     <message>
         <location filename="../rpcconsole.cpp" line="476"/>
         <source>%1 MB</source>
-        <translation type="unfinished"/>
+        <translation>%1 MB</translation>
     </message>
     <message>
         <location filename="../rpcconsole.cpp" line="478"/>
         <source>%1 GB</source>
-        <translation type="unfinished"/>
+        <translation>%1 GB</translation>
     </message>
     <message>
         <location filename="../rpcconsole.cpp" line="485"/>
@@ -2465,7 +2469,7 @@ A pénztárca fájl is ebben a könyvtárban kerül letárolásra.</translation>
         <location filename="../forms/receivecoinsdialog.ui" line="161"/>
         <location filename="../forms/ui_receivecoinsdialog.h" line="285"/>
         <source>Clear</source>
-        <translation>Alaphelyzet</translation>
+        <translation>Törlés</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="239"/>
@@ -2483,7 +2487,7 @@ A pénztárca fájl is ebben a könyvtárban kerül letárolásra.</translation>
         <location filename="../forms/receivecoinsdialog.ui" line="264"/>
         <location filename="../forms/ui_receivecoinsdialog.h" line="291"/>
         <source>Show</source>
-        <translation>Mutatás</translation>
+        <translation>Mutat</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="278"/>
@@ -2495,22 +2499,22 @@ A pénztárca fájl is ebben a könyvtárban kerül letárolásra.</translation>
         <location filename="../forms/receivecoinsdialog.ui" line="281"/>
         <location filename="../forms/ui_receivecoinsdialog.h" line="295"/>
         <source>Remove</source>
-        <translation>Törlés</translation>
+        <translation>Eltávolítás</translation>
     </message>
     <message>
         <location filename="../receivecoinsdialog.cpp" line="39"/>
         <source>Copy label</source>
-        <translation type="unfinished"/>
+        <translation>Címke másolása</translation>
     </message>
     <message>
         <location filename="../receivecoinsdialog.cpp" line="40"/>
         <source>Copy message</source>
-        <translation type="unfinished"/>
+        <translation>Üzenet másolása</translation>
     </message>
     <message>
         <location filename="../receivecoinsdialog.cpp" line="41"/>
         <source>Copy amount</source>
-        <translation type="unfinished"/>
+        <translation>Összeg másolása</translation>
     </message>
 </context>
 <context>
@@ -2537,7 +2541,7 @@ A pénztárca fájl is ebben a könyvtárban kerül letárolásra.</translation>
         <location filename="../forms/receiverequestdialog.ui" line="89"/>
         <location filename="../forms/ui_receiverequestdialog.h" line="121"/>
         <source>&amp;Save Image...</source>
-        <translation>Kép &amp;mentése</translation>
+        <translation>&amp;Kép mentése</translation>
     </message>
     <message>
         <location filename="../receiverequestdialog.cpp" line="136"/>
@@ -2552,7 +2556,7 @@ A pénztárca fájl is ebben a könyvtárban kerül letárolásra.</translation>
     <message>
         <location filename="../receiverequestdialog.cpp" line="143"/>
         <source>URI</source>
-        <translation type="unfinished"/>
+        <translation>URI:</translation>
     </message>
     <message>
         <location filename="../receiverequestdialog.cpp" line="145"/>
@@ -2567,22 +2571,22 @@ A pénztárca fájl is ebben a könyvtárban kerül letárolásra.</translation>
     <message>
         <location filename="../receiverequestdialog.cpp" line="149"/>
         <source>Label</source>
-        <translation type="unfinished"/>
+        <translation>Címke</translation>
     </message>
     <message>
         <location filename="../receiverequestdialog.cpp" line="151"/>
         <source>Message</source>
-        <translation type="unfinished"/>
+        <translation>Üzenet</translation>
     </message>
     <message>
         <location filename="../receiverequestdialog.cpp" line="161"/>
         <source>Resulting URI too long, try to reduce the text for label / message.</source>
-        <translation type="unfinished"/>
+        <translation>A keletkezett URI túl hosszú, próbálja meg csökkenteni a cimkeszöveg / üzenet méretét.</translation>
     </message>
     <message>
         <location filename="../receiverequestdialog.cpp" line="166"/>
         <source>Error encoding URI into QR Code.</source>
-        <translation type="unfinished"/>
+        <translation>Hiba lépett fel az URI QR kóddá alakításakor</translation>
     </message>
 </context>
 <context>
@@ -2595,12 +2599,12 @@ A pénztárca fájl is ebben a könyvtárban kerül letárolásra.</translation>
     <message>
         <location filename="../recentrequeststablemodel.cpp" line="24"/>
         <source>Label</source>
-        <translation type="unfinished"/>
+        <translation>Címke</translation>
     </message>
     <message>
         <location filename="../recentrequeststablemodel.cpp" line="24"/>
         <source>Message</source>
-        <translation type="unfinished"/>
+        <translation>Üzenet</translation>
     </message>
     <message>
         <location filename="../recentrequeststablemodel.cpp" line="24"/>
@@ -2610,7 +2614,7 @@ A pénztárca fájl is ebben a könyvtárban kerül letárolásra.</translation>
     <message>
         <location filename="../recentrequeststablemodel.cpp" line="62"/>
         <source>(no label)</source>
-        <translation type="unfinished"/>
+        <translation>(nincs címke)</translation>
     </message>
     <message>
         <location filename="../recentrequeststablemodel.cpp" line="71"/>
@@ -2632,7 +2636,7 @@ A pénztárca fájl is ebben a könyvtárban kerül letárolásra.</translation>
         <location filename="../sendcoinsdialog.cpp" line="511"/>
         <location filename="../sendcoinsdialog.cpp" line="521"/>
         <source>Send Coins</source>
-        <translation>Küldés</translation>
+        <translation>Érmék küldése</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="90"/>
@@ -2668,7 +2672,7 @@ A pénztárca fájl is ebben a könyvtárban kerül letárolásra.</translation>
         <location filename="../forms/sendcoinsdialog.ui" line="260"/>
         <location filename="../forms/ui_sendcoinsdialog.h" line="521"/>
         <source>Bytes:</source>
-        <translation>Byte:</translation>
+        <translation>Bájtok:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="308"/>
@@ -2686,7 +2690,7 @@ A pénztárca fájl is ebben a könyvtárban kerül letárolásra.</translation>
         <location filename="../forms/sendcoinsdialog.ui" line="388"/>
         <location filename="../forms/ui_sendcoinsdialog.h" line="524"/>
         <source>Fee:</source>
-        <translation>Költség:</translation>
+        <translation>Díjak:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="420"/>
@@ -2698,7 +2702,7 @@ A pénztárca fájl is ebben a könyvtárban kerül letárolásra.</translation>
         <location filename="../forms/sendcoinsdialog.ui" line="468"/>
         <location filename="../forms/ui_sendcoinsdialog.h" line="526"/>
         <source>After Fee:</source>
-        <translation>Költségek után:</translation>
+        <translation>Utólagos díj:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="500"/>
@@ -2740,19 +2744,19 @@ A pénztárca fájl is ebben a könyvtárban kerül letárolásra.</translation>
         <location filename="../forms/sendcoinsdialog.ui" line="694"/>
         <location filename="../forms/ui_sendcoinsdialog.h" line="540"/>
         <source>Clear &amp;All</source>
-        <translation>&amp;Minden törlése</translation>
+        <translation>Mindent &amp;töröl</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="711"/>
         <location filename="../forms/ui_sendcoinsdialog.h" line="542"/>
         <source>Send to multiple recipients at once</source>
-        <translation>Több címzettnek küldés egyszerre</translation>
+        <translation>Küldés több címzettnek egyszerre</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="714"/>
         <location filename="../forms/ui_sendcoinsdialog.h" line="544"/>
         <source>Add &amp;Recipient</source>
-        <translation>&amp;Fogadó hozzáadása</translation>
+        <translation>&amp;Címzett hozzáadása</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="759"/>
@@ -2775,32 +2779,32 @@ A pénztárca fájl is ebben a könyvtárban kerül letárolásra.</translation>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="52"/>
         <source>Copy quantity</source>
-        <translation type="unfinished"/>
+        <translation>Mennyiség másolása</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="53"/>
         <source>Copy amount</source>
-        <translation type="unfinished"/>
+        <translation>Összeg másolása</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="54"/>
         <source>Copy fee</source>
-        <translation type="unfinished"/>
+        <translation>Díj másolása</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="55"/>
         <source>Copy after fee</source>
-        <translation type="unfinished"/>
+        <translation>Utólagos díj másolása</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="56"/>
         <source>Copy bytes</source>
-        <translation type="unfinished"/>
+        <translation>Byte-ok másolása </translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="57"/>
         <source>Copy priority</source>
-        <translation type="unfinished"/>
+        <translation>Prioritás másolása</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="58"/>
@@ -2810,7 +2814,7 @@ A pénztárca fájl is ebben a könyvtárban kerül letárolásra.</translation>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="59"/>
         <source>Copy change</source>
-        <translation type="unfinished"/>
+        <translation>Visszajáró másolása</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="154"/>
@@ -2843,12 +2847,12 @@ A pénztárca fájl is ebben a könyvtárban kerül letárolásra.</translation>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="276"/>
         <source>or</source>
-        <translation type="unfinished"/>
+        <translation>vagy</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="278"/>
         <source>Confirm send coins</source>
-        <translation type="unfinished"/>
+        <translation>Küldés megerősítése</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="433"/>
@@ -2863,27 +2867,27 @@ A pénztárca fájl is ebben a könyvtárban kerül letárolásra.</translation>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="488"/>
         <source>The recipient address is not valid, please recheck.</source>
-        <translation type="unfinished"/>
+        <translation>A címzett címe érvénytelen, kérlek, ellenőrizd.</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="491"/>
         <source>The amount to pay must be larger than 0.</source>
-        <translation type="unfinished"/>
+        <translation>A fizetendő összegnek nagyobbnak kell lennie 0-nál.</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="494"/>
         <source>The amount exceeds your balance.</source>
-        <translation type="unfinished"/>
+        <translation>Nincs ennyi bitcoin az egyenlegeden.</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="497"/>
         <source>The total exceeds your balance when the %1 transaction fee is included.</source>
-        <translation type="unfinished"/>
+        <translation>A küldeni kívánt összeg és a %1 tranzakciós díj együtt meghaladja az egyenlegeden rendelkezésedre álló összeget.</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="500"/>
         <source>Duplicate address found, can only send to each address once per send operation.</source>
-        <translation type="unfinished"/>
+        <translation>Többször szerepel ugyanaz a cím. Egy küldési műveletben egy címre csak egyszer lehet küldeni.</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="503"/>
@@ -2913,7 +2917,7 @@ A pénztárca fájl is ebben a könyvtárban kerül letárolásra.</translation>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="645"/>
         <source>(no label)</source>
-        <translation type="unfinished"/>
+        <translation>(nincs címke)</translation>
     </message>
 </context>
 <context>
@@ -2952,7 +2956,7 @@ A pénztárca fájl is ebben a könyvtárban kerül letárolásra.</translation>
         <location filename="../forms/sendcoinsentry.ui" line="78"/>
         <location filename="../forms/ui_sendcoinsentry.h" line="435"/>
         <source>Paste address from clipboard</source>
-        <translation>Cím másolása a vágólapról</translation>
+        <translation>Cím beillesztése a vágólapról</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="88"/>
@@ -2990,7 +2994,7 @@ A pénztárca fájl is ebben a könyvtárban kerül letárolásra.</translation>
         <location filename="../forms/ui_sendcoinsentry.h" line="461"/>
         <location filename="../forms/ui_sendcoinsentry.h" line="471"/>
         <source>A&amp;mount:</source>
-        <translation>&amp;Összeg:</translation>
+        <translation>Összeg:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="147"/>
@@ -3024,7 +3028,7 @@ A pénztárca fájl is ebben a könyvtárban kerül letárolásra.</translation>
         <location filename="../forms/ui_sendcoinsentry.h" line="460"/>
         <location filename="../forms/ui_sendcoinsentry.h" line="470"/>
         <source>Memo:</source>
-        <translation>Memo:</translation>
+        <translation>Jegyzet:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="1115"/>
@@ -3035,7 +3039,8 @@ A pénztárca fájl is ebben a könyvtárban kerül letárolásra.</translation>
     <message>
         <location filename="../sendcoinsentry.cpp" line="31"/>
         <source>Enter a label for this address to add it to your address book</source>
-        <translation type="unfinished"/>
+        <translation>Milyen címkével kerüljön be ez a cím a címtáradba?
+</translation>
     </message>
 </context>
 <context>
@@ -3057,20 +3062,19 @@ A pénztárca fájl is ebben a könyvtárban kerül letárolásra.</translation>
         <location filename="../forms/signverifymessagedialog.ui" line="14"/>
         <location filename="../forms/ui_signverifymessagedialog.h" line="283"/>
         <source>Signatures - Sign / Verify a Message</source>
-        <translation>Aláírások - Üzenet aláírása / hitelesítése</translation>
+        <translation>Aláírások - üzenet aláírása/ellenőrzése</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="24"/>
         <location filename="../forms/ui_signverifymessagedialog.h" line="315"/>
         <source>&amp;Sign Message</source>
-        <translation>Üzenet &amp;aláírása</translation>
+        <translation>Üzenet aláírása...</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="30"/>
         <location filename="../forms/ui_signverifymessagedialog.h" line="284"/>
         <source>You can sign messages with your addresses to prove you own them. Be careful not to sign anything vague, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
-        <translation>Aláírhat üzeneteket a címével annak bizonyítására, hogy a tulajdonában állnak. Figyeljen, hogy ne írjon alá semmi bizonytalan üzenetet, mivel rosszindulatú emberek trükkökkel arra vehetik rá, hogy a - nem a valódi, hanem a Darkcoin címhez tartozó - személyazonosságát kiadja nekik.
-Csak olyan üzeneteket írjon alá, amik részletesen ki vannak fejtve, és azok minden pontjával egyetért.</translation>
+        <translation>Aláírhat a címeivel üzeneteket, amivel bizonyíthatja, hogy a címek az önéi. Vigyázzon, hogy ne írjon alá semmi félreérthetőt, mivel a phising támadásokkal megpróbálhatják becsapni, hogy az azonosságát átírja másokra. Csak olyan részletes állításokat írjon alá, amivel egyetért.</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="48"/>
@@ -3098,7 +3102,7 @@ Csak olyan üzeneteket írjon alá, amik részletesen ki vannak fejtve, és azok
         <location filename="../forms/signverifymessagedialog.ui" line="75"/>
         <location filename="../forms/ui_signverifymessagedialog.h" line="294"/>
         <source>Paste address from clipboard</source>
-        <translation>Cím másolása a vágólapról</translation>
+        <translation>Cím beillesztése a vágólapról</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="85"/>
@@ -3110,7 +3114,7 @@ Csak olyan üzeneteket írjon alá, amik részletesen ki vannak fejtve, és azok
         <location filename="../forms/signverifymessagedialog.ui" line="97"/>
         <location filename="../forms/ui_signverifymessagedialog.h" line="299"/>
         <source>Enter the message you want to sign here</source>
-        <translation>Írja be az üzenetet, amit alá szeretne írni</translation>
+        <translation>Ide írja az aláírandó üzenetet</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="104"/>
@@ -3122,7 +3126,7 @@ Csak olyan üzeneteket írjon alá, amik részletesen ki vannak fejtve, és azok
         <location filename="../forms/signverifymessagedialog.ui" line="131"/>
         <location filename="../forms/ui_signverifymessagedialog.h" line="303"/>
         <source>Copy the current signature to the system clipboard</source>
-        <translation>Aktuális aláírás másolása a vágólapra</translation>
+        <translation>A jelenleg kiválasztott aláírás másolása a rendszer-vágólapra</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="152"/>
@@ -3148,19 +3152,19 @@ Csak olyan üzeneteket írjon alá, amik részletesen ki vannak fejtve, és azok
         <location filename="../forms/ui_signverifymessagedialog.h" line="313"/>
         <location filename="../forms/ui_signverifymessagedialog.h" line="332"/>
         <source>Clear &amp;All</source>
-        <translation>&amp;Minden törlése</translation>
+        <translation>Mindent &amp;töröl</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="231"/>
         <location filename="../forms/ui_signverifymessagedialog.h" line="334"/>
         <source>&amp;Verify Message</source>
-        <translation>Üzenet &amp;hitelesítése</translation>
+        <translation>Üzenet ellenőrzése</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="237"/>
         <location filename="../forms/ui_signverifymessagedialog.h" line="316"/>
         <source>Enter the signing address, message (ensure you copy line breaks, spaces, tabs, etc. exactly) and signature below to verify the message. Be careful not to read more into the signature than what is in the signed message itself, to avoid being tricked by a man-in-the-middle attack.</source>
-        <translation>Írja be az aláíró címet, az üzenetet (figyelve arra, hogy az üzenet egy az egyben legyen másolva: sortörések, tab-ok, space-ek, stb) és az aláírást, hogy a hitelesítést elvégezze. Figyeljen, hogy ne olvasson ki többet az aláírásból mint ami ténylegesen az aláírt üzenetben, hogy elkerülje a közbeékelődéses támadás esélyét.</translation>
+        <translation>Írja be az aláírás címét, az üzenetet (ügyelve arra, hogy az új-sor, szóköz, tab, stb. karaktereket is pontosan) és az aláírást az üzenet ellenőrzéséhez. Ügyeljen arra, ne gondoljon többet az aláírásról, mint amennyi az aláírt szövegben ténylegesen áll, hogy elkerülje a köztes-ember (man-in-the-middle) támadást.</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="258"/>
@@ -3200,7 +3204,7 @@ Csak olyan üzeneteket írjon alá, amik részletesen ki vannak fejtve, és azok
         <location filename="../signverifymessagedialog.cpp" line="114"/>
         <location filename="../signverifymessagedialog.cpp" line="194"/>
         <source>The entered address is invalid.</source>
-        <translation type="unfinished"/>
+        <translation>A megadott cím nem érvényes.</translation>
     </message>
     <message>
         <location filename="../signverifymessagedialog.cpp" line="114"/>
@@ -3208,7 +3212,7 @@ Csak olyan üzeneteket írjon alá, amik részletesen ki vannak fejtve, és azok
         <location filename="../signverifymessagedialog.cpp" line="194"/>
         <location filename="../signverifymessagedialog.cpp" line="202"/>
         <source>Please check the address and try again.</source>
-        <translation type="unfinished"/>
+        <translation>Ellenőrizze a címet és próbálja meg újra.</translation>
     </message>
     <message>
         <location filename="../signverifymessagedialog.cpp" line="122"/>
@@ -3224,28 +3228,28 @@ Csak olyan üzeneteket írjon alá, amik részletesen ki vannak fejtve, és azok
     <message>
         <location filename="../signverifymessagedialog.cpp" line="138"/>
         <source>Private key for the entered address is not available.</source>
-        <translation type="unfinished"/>
+        <translation>A megadott cím privát kulcsa nem található.</translation>
     </message>
     <message>
         <location filename="../signverifymessagedialog.cpp" line="150"/>
         <source>Message signing failed.</source>
-        <translation type="unfinished"/>
+        <translation>Üzenet aláírása nem sikerült.</translation>
     </message>
     <message>
         <location filename="../signverifymessagedialog.cpp" line="155"/>
         <source>Message signed.</source>
-        <translation type="unfinished"/>
+        <translation>Üzenet aláírva.</translation>
     </message>
     <message>
         <location filename="../signverifymessagedialog.cpp" line="213"/>
         <source>The signature could not be decoded.</source>
-        <translation type="unfinished"/>
+        <translation>Az aláírást nem sikerült dekódolni.</translation>
     </message>
     <message>
         <location filename="../signverifymessagedialog.cpp" line="213"/>
         <location filename="../signverifymessagedialog.cpp" line="226"/>
         <source>Please check the signature and try again.</source>
-        <translation type="unfinished"/>
+        <translation>Ellenőrizd az aláírást és próbáld újra.</translation>
     </message>
     <message>
         <location filename="../signverifymessagedialog.cpp" line="226"/>
@@ -3255,12 +3259,12 @@ Csak olyan üzeneteket írjon alá, amik részletesen ki vannak fejtve, és azok
     <message>
         <location filename="../signverifymessagedialog.cpp" line="233"/>
         <source>Message verification failed.</source>
-        <translation type="unfinished"/>
+        <translation>Az üzenet ellenőrzése nem sikerült.</translation>
     </message>
     <message>
         <location filename="../signverifymessagedialog.cpp" line="238"/>
         <source>Message verified.</source>
-        <translation type="unfinished"/>
+        <translation>Üzenet ellenőrizve.</translation>
     </message>
 </context>
 <context>
@@ -3273,17 +3277,17 @@ Csak olyan üzeneteket írjon alá, amik részletesen ki vannak fejtve, és azok
     <message>
         <location filename="../splashscreen.cpp" line="35"/>
         <source>The Bitcoin Core developers</source>
-        <translation type="unfinished"/>
+        <translation>A Bitcoin Core fejlesztői</translation>
     </message>
     <message>
         <location filename="../splashscreen.cpp" line="36"/>
         <source>The Darkcoin Core developers</source>
-        <translation type="unfinished"/>
+        <translation>A Darkcoin Core fejlesztők</translation>
     </message>
     <message>
         <location filename="../splashscreen.cpp" line="37"/>
         <source>[testnet]</source>
-        <translation type="unfinished"/>
+        <translation>[teszthálózat]</translation>
     </message>
 </context>
 <context>
@@ -3291,7 +3295,7 @@ Csak olyan üzeneteket írjon alá, amik részletesen ki vannak fejtve, és azok
     <message>
         <location filename="../trafficgraphwidget.cpp" line="79"/>
         <source>KB/s</source>
-        <translation type="unfinished"/>
+        <translation>KB/s</translation>
     </message>
 </context>
 <context>
@@ -3304,7 +3308,7 @@ Csak olyan üzeneteket írjon alá, amik részletesen ki vannak fejtve, és azok
     <message>
         <location filename="../transactiondesc.cpp" line="30"/>
         <source>Open until %1</source>
-        <translation type="unfinished"/>
+        <translation>Megnyitva %1-ig</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="36"/>
@@ -3319,22 +3323,22 @@ Csak olyan üzeneteket írjon alá, amik részletesen ki vannak fejtve, és azok
     <message>
         <location filename="../transactiondesc.cpp" line="40"/>
         <source>%1/unconfirmed</source>
-        <translation type="unfinished"/>
+        <translation>%1/megerősítetlen</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="42"/>
         <source>%1 confirmations</source>
-        <translation type="unfinished"/>
+        <translation>%1 megerősítés</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="59"/>
         <source>Status</source>
-        <translation type="unfinished"/>
+        <translation>Állapot</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="64"/>
         <source>, has not been successfully broadcast yet</source>
-        <translation type="unfinished"/>
+        <translation>, még nem sikerült elküldeni.</translation>
     </message>
     <message numerus="yes">
         <location filename="../transactiondesc.cpp" line="66"/>
@@ -3349,41 +3353,41 @@ Csak olyan üzeneteket írjon alá, amik részletesen ki vannak fejtve, és azok
     <message>
         <location filename="../transactiondesc.cpp" line="77"/>
         <source>Source</source>
-        <translation type="unfinished"/>
+        <translation>Forrás</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="77"/>
         <source>Generated</source>
-        <translation type="unfinished"/>
+        <translation>Legenerálva</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="82"/>
         <location filename="../transactiondesc.cpp" line="99"/>
         <source>From</source>
-        <translation type="unfinished"/>
+        <translation>Űrlap</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="99"/>
         <source>unknown</source>
-        <translation type="unfinished"/>
+        <translation>ismeretlen</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="100"/>
         <location filename="../transactiondesc.cpp" line="122"/>
         <location filename="../transactiondesc.cpp" line="180"/>
         <source>To</source>
-        <translation type="unfinished"/>
+        <translation>Címzett</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="103"/>
         <location filename="../transactiondesc.cpp" line="105"/>
         <source>own address</source>
-        <translation type="unfinished"/>
+        <translation>saját cím</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="103"/>
         <source>label</source>
-        <translation type="unfinished"/>
+        <translation>címke</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="140"/>
@@ -3392,7 +3396,7 @@ Csak olyan üzeneteket írjon alá, amik részletesen ki vannak fejtve, és azok
         <location filename="../transactiondesc.cpp" line="214"/>
         <location filename="../transactiondesc.cpp" line="267"/>
         <source>Credit</source>
-        <translation type="unfinished"/>
+        <translation>Jóváírás</translation>
     </message>
     <message numerus="yes">
         <location filename="../transactiondesc.cpp" line="142"/>
@@ -3402,7 +3406,7 @@ Csak olyan üzeneteket írjon alá, amik részletesen ki vannak fejtve, és azok
     <message>
         <location filename="../transactiondesc.cpp" line="144"/>
         <source>not accepted</source>
-        <translation type="unfinished"/>
+        <translation>elutasítva</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="188"/>
@@ -3410,33 +3414,33 @@ Csak olyan üzeneteket írjon alá, amik részletesen ki vannak fejtve, és azok
         <location filename="../transactiondesc.cpp" line="211"/>
         <location filename="../transactiondesc.cpp" line="264"/>
         <source>Debit</source>
-        <translation type="unfinished"/>
+        <translation>Terhelés</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="202"/>
         <source>Transaction fee</source>
-        <translation type="unfinished"/>
+        <translation>Tranzakciós díj</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="218"/>
         <source>Net amount</source>
-        <translation type="unfinished"/>
+        <translation>Nettó összeg</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="224"/>
         <location filename="../transactiondesc.cpp" line="233"/>
         <source>Message</source>
-        <translation type="unfinished"/>
+        <translation>Üzenet</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="226"/>
         <source>Comment</source>
-        <translation type="unfinished"/>
+        <translation>Megjegyzés</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="228"/>
         <source>Transaction ID</source>
-        <translation type="unfinished"/>
+        <translation>Tranzakcióazonosító</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="246"/>
@@ -3451,17 +3455,17 @@ Csak olyan üzeneteket írjon alá, amik részletesen ki vannak fejtve, és azok
     <message>
         <location filename="../transactiondesc.cpp" line="261"/>
         <source>Debug information</source>
-        <translation type="unfinished"/>
+        <translation>Debug információ</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="269"/>
         <source>Transaction</source>
-        <translation type="unfinished"/>
+        <translation>Tranzakció</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="272"/>
         <source>Inputs</source>
-        <translation type="unfinished"/>
+        <translation>Bemenetek</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="293"/>
@@ -3471,12 +3475,12 @@ Csak olyan üzeneteket írjon alá, amik részletesen ki vannak fejtve, és azok
     <message>
         <location filename="../transactiondesc.cpp" line="294"/>
         <source>true</source>
-        <translation type="unfinished"/>
+        <translation>igaz</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="294"/>
         <source>false</source>
-        <translation type="unfinished"/>
+        <translation>hamis</translation>
     </message>
 </context>
 <context>
@@ -3485,13 +3489,13 @@ Csak olyan üzeneteket írjon alá, amik részletesen ki vannak fejtve, és azok
         <location filename="../forms/transactiondescdialog.ui" line="14"/>
         <location filename="../forms/ui_transactiondescdialog.h" line="60"/>
         <source>Transaction details</source>
-        <translation>Tranzakció részletek</translation>
+        <translation>Tranzakció részletei</translation>
     </message>
     <message>
         <location filename="../forms/transactiondescdialog.ui" line="20"/>
         <location filename="../forms/ui_transactiondescdialog.h" line="62"/>
         <source>This pane shows a detailed description of the transaction</source>
-        <translation>Egy a lap a tranzakció részletes leírását mutatja</translation>
+        <translation>Ez a mező a tranzakció részleteit mutatja</translation>
     </message>
 </context>
 <context>
@@ -3504,7 +3508,7 @@ Csak olyan üzeneteket írjon alá, amik részletesen ki vannak fejtve, és azok
     <message>
         <location filename="../transactiontablemodel.cpp" line="238"/>
         <source>Type</source>
-        <translation type="unfinished"/>
+        <translation>Típus</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="238"/>
@@ -3524,12 +3528,12 @@ Csak olyan üzeneteket írjon alá, amik részletesen ki vannak fejtve, és azok
     <message>
         <location filename="../transactiontablemodel.cpp" line="290"/>
         <source>Open until %1</source>
-        <translation type="unfinished"/>
+        <translation>%1-ig megnyitva</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="293"/>
         <source>Offline</source>
-        <translation type="unfinished"/>
+        <translation>Offline</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="296"/>
@@ -3544,7 +3548,7 @@ Csak olyan üzeneteket írjon alá, amik részletesen ki vannak fejtve, és azok
     <message>
         <location filename="../transactiontablemodel.cpp" line="302"/>
         <source>Confirmed (%1 confirmations)</source>
-        <translation type="unfinished"/>
+        <translation>Megerősítve (%1 megerősítés)</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="305"/>
@@ -3559,22 +3563,22 @@ Csak olyan üzeneteket írjon alá, amik részletesen ki vannak fejtve, és azok
     <message>
         <location filename="../transactiontablemodel.cpp" line="311"/>
         <source>This block was not received by any other nodes and will probably not be accepted!</source>
-        <translation type="unfinished"/>
+        <translation>Ezt a blokkot egyetlen másik csomópont sem kapta meg, így valószínűleg nem lesz elfogadva!</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="314"/>
         <source>Generated but not accepted</source>
-        <translation type="unfinished"/>
+        <translation>Legenerálva, de még el nem fogadva.</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="356"/>
         <source>Received with</source>
-        <translation type="unfinished"/>
+        <translation>Erre a címre</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="358"/>
         <source>Received from</source>
-        <translation type="unfinished"/>
+        <translation>Erről az</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="360"/>
@@ -3584,17 +3588,17 @@ Csak olyan üzeneteket írjon alá, amik részletesen ki vannak fejtve, és azok
     <message>
         <location filename="../transactiontablemodel.cpp" line="363"/>
         <source>Sent to</source>
-        <translation type="unfinished"/>
+        <translation>Erre a címre</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="365"/>
         <source>Payment to yourself</source>
-        <translation type="unfinished"/>
+        <translation>Magadnak kifizetve</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="367"/>
         <source>Mined</source>
-        <translation type="unfinished"/>
+        <translation>Kibányászva</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="370"/>
@@ -3619,32 +3623,32 @@ Csak olyan üzeneteket írjon alá, amik részletesen ki vannak fejtve, és azok
     <message>
         <location filename="../transactiontablemodel.cpp" line="418"/>
         <source>(n/a)</source>
-        <translation type="unfinished"/>
+        <translation>(nincs)</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="610"/>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
-        <translation type="unfinished"/>
+        <translation>Tranzakció állapota. Húzd ide a kurzort, hogy lásd a megerősítések számát.</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="612"/>
         <source>Date and time that the transaction was received.</source>
-        <translation type="unfinished"/>
+        <translation>Tranzakció fogadásának dátuma és időpontja.</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="614"/>
         <source>Type of transaction.</source>
-        <translation type="unfinished"/>
+        <translation>Tranzakció típusa.</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="616"/>
         <source>Destination address of transaction.</source>
-        <translation type="unfinished"/>
+        <translation>A tranzakció címzettjének címe.</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="618"/>
         <source>Amount removed from or added to balance.</source>
-        <translation type="unfinished"/>
+        <translation>Az egyenleghez jóváírt vagy ráterhelt összeg.</translation>
     </message>
 </context>
 <context>
@@ -3653,47 +3657,47 @@ Csak olyan üzeneteket írjon alá, amik részletesen ki vannak fejtve, és azok
         <location filename="../transactionview.cpp" line="60"/>
         <location filename="../transactionview.cpp" line="76"/>
         <source>All</source>
-        <translation type="unfinished"/>
+        <translation>Mind</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="61"/>
         <source>Today</source>
-        <translation type="unfinished"/>
+        <translation>Mai</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="62"/>
         <source>This week</source>
-        <translation type="unfinished"/>
+        <translation>Ezen a héten</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="63"/>
         <source>This month</source>
-        <translation type="unfinished"/>
+        <translation>Ebben a hónapban</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="64"/>
         <source>Last month</source>
-        <translation type="unfinished"/>
+        <translation>Múlt hónapban</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="65"/>
         <source>This year</source>
-        <translation type="unfinished"/>
+        <translation>Ebben az évben</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="66"/>
         <source>Range...</source>
-        <translation type="unfinished"/>
+        <translation>Tartomány ...</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="77"/>
         <source>Received with</source>
-        <translation type="unfinished"/>
+        <translation>Erre a címre</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="79"/>
         <source>Sent to</source>
-        <translation type="unfinished"/>
+        <translation>Erre a címre</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="81"/>
@@ -3708,57 +3712,57 @@ Csak olyan üzeneteket írjon alá, amik részletesen ki vannak fejtve, és azok
     <message>
         <location filename="../transactionview.cpp" line="83"/>
         <source>To yourself</source>
-        <translation type="unfinished"/>
+        <translation>Magadnak</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="84"/>
         <source>Mined</source>
-        <translation type="unfinished"/>
+        <translation>Kibányászva</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="85"/>
         <source>Other</source>
-        <translation type="unfinished"/>
+        <translation>Más</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="91"/>
         <source>Enter address or label to search</source>
-        <translation type="unfinished"/>
+        <translation>Írd be a keresendő címet vagy címkét</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="97"/>
         <source>Min amount</source>
-        <translation type="unfinished"/>
+        <translation>Minimális összeg</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="131"/>
         <source>Copy address</source>
-        <translation type="unfinished"/>
+        <translation>Cím másolása</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="132"/>
         <source>Copy label</source>
-        <translation type="unfinished"/>
+        <translation>Címke másolása</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="133"/>
         <source>Copy amount</source>
-        <translation type="unfinished"/>
+        <translation>Összeg másolása</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="134"/>
         <source>Copy transaction ID</source>
-        <translation type="unfinished"/>
+        <translation>Tranzakcióazonosító másolása</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="135"/>
         <source>Edit label</source>
-        <translation type="unfinished"/>
+        <translation>Címke szerkesztése</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="136"/>
         <source>Show transaction details</source>
-        <translation type="unfinished"/>
+        <translation>Tranzakciós részletek megjelenítése</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="299"/>
@@ -3768,7 +3772,7 @@ Csak olyan üzeneteket írjon alá, amik részletesen ki vannak fejtve, és azok
     <message>
         <location filename="../transactionview.cpp" line="300"/>
         <source>Comma separated file (*.csv)</source>
-        <translation type="unfinished"/>
+        <translation>Vesszővel elválasztott fájl (*.csv)</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="309"/>
@@ -3783,12 +3787,12 @@ Csak olyan üzeneteket írjon alá, amik részletesen ki vannak fejtve, és azok
     <message>
         <location filename="../transactionview.cpp" line="311"/>
         <source>Type</source>
-        <translation type="unfinished"/>
+        <translation>Típus</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="312"/>
         <source>Label</source>
-        <translation type="unfinished"/>
+        <translation>Címke</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="313"/>
@@ -3803,12 +3807,12 @@ Csak olyan üzeneteket írjon alá, amik részletesen ki vannak fejtve, és azok
     <message>
         <location filename="../transactionview.cpp" line="315"/>
         <source>ID</source>
-        <translation type="unfinished"/>
+        <translation>Azonosító</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="318"/>
         <source>Exporting Failed</source>
-        <translation type="unfinished"/>
+        <translation>Az exportálás sikertelen volt</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="318"/>
@@ -3828,12 +3832,12 @@ Csak olyan üzeneteket írjon alá, amik részletesen ki vannak fejtve, és azok
     <message>
         <location filename="../transactionview.cpp" line="431"/>
         <source>Range:</source>
-        <translation type="unfinished"/>
+        <translation>Tartomány:</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="439"/>
         <source>to</source>
-        <translation type="unfinished"/>
+        <translation>meddig</translation>
     </message>
 </context>
 <context>
@@ -3849,7 +3853,7 @@ Csak olyan üzeneteket írjon alá, amik részletesen ki vannak fejtve, és azok
     <message>
         <location filename="../walletmodel.cpp" line="286"/>
         <source>Send Coins</source>
-        <translation>Küldés</translation>
+        <translation>Érmék küldése</translation>
     </message>
 </context>
 <context>
@@ -3857,27 +3861,27 @@ Csak olyan üzeneteket írjon alá, amik részletesen ki vannak fejtve, és azok
     <message>
         <location filename="../walletview.cpp" line="44"/>
         <source>&amp;Export</source>
-        <translation>&amp;Exportálás</translation>
+        <translation>&amp;Exportálás...</translation>
     </message>
     <message>
         <location filename="../walletview.cpp" line="45"/>
         <source>Export the data in the current tab to a file</source>
-        <translation>Az oldalon található adat exportálása fájlba</translation>
+        <translation>Jelenlegi nézet exportálása fájlba</translation>
     </message>
     <message>
         <location filename="../walletview.cpp" line="229"/>
         <source>Backup Wallet</source>
-        <translation type="unfinished"/>
+        <translation>Biztonsági másolat készítése a Tárcáról</translation>
     </message>
     <message>
         <location filename="../walletview.cpp" line="230"/>
         <source>Wallet Data (*.dat)</source>
-        <translation type="unfinished"/>
+        <translation>Tárca fájl (*.dat)</translation>
     </message>
     <message>
         <location filename="../walletview.cpp" line="236"/>
         <source>Backup Failed</source>
-        <translation type="unfinished"/>
+        <translation>Biztonsági másolat készítése sikertelen</translation>
     </message>
     <message>
         <location filename="../walletview.cpp" line="236"/>
@@ -3887,7 +3891,7 @@ Csak olyan üzeneteket írjon alá, amik részletesen ki vannak fejtve, és azok
     <message>
         <location filename="../walletview.cpp" line="240"/>
         <source>Backup Successful</source>
-        <translation type="unfinished"/>
+        <translation>Sikeres biztonsági mentés</translation>
     </message>
     <message>
         <location filename="../walletview.cpp" line="240"/>
@@ -4352,7 +4356,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="199"/>
         <source>Error</source>
-        <translation type="unfinished"/>
+        <translation>Hiba</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="200"/>
@@ -4512,7 +4516,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="226"/>
         <source>Information</source>
-        <translation type="unfinished"/>
+        <translation>Információ</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="227"/>
@@ -4932,7 +4936,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="315"/>
         <source>Usage:</source>
-        <translation type="unfinished"/>
+        <translation>Használat:</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="316"/>
@@ -5002,7 +5006,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="329"/>
         <source>Warning</source>
-        <translation type="unfinished"/>
+        <translation>Figyelem</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="330"/>
@@ -5032,7 +5036,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="335"/>
         <source>version</source>
-        <translation type="unfinished"/>
+        <translation>verzió</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="336"/>
