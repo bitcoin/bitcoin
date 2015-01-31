@@ -1223,7 +1223,7 @@ Address: %4
         <location filename="../forms/editaddressdialog.ui" line="35"/>
         <location filename="../forms/ui_editaddressdialog.h" line="94"/>
         <source>The label associated with this address list entry</source>
-        <translation>Den associerade etiketten med adressens listninmatning</translation>
+        <translation>Den associerade etiketten med denna adress listinmatning</translation>
     </message>
     <message>
         <location filename="../forms/editaddressdialog.ui" line="42"/>
@@ -1235,7 +1235,7 @@ Address: %4
         <location filename="../forms/editaddressdialog.ui" line="52"/>
         <location filename="../forms/ui_editaddressdialog.h" line="98"/>
         <source>The address associated with this address list entry. This can only be modified for sending addresses.</source>
-        <translation>Adressen associerad med adressens listinmatning. Detta kan endast anpassas för avsändaradresser.</translation>
+        <translation>Adressen associerad med denna adress listinmatning. Detta kan endast anpassas för avsändaradresser.</translation>
     </message>
     <message>
         <location filename="../editaddressdialog.cpp" line="29"/>
@@ -1383,13 +1383,13 @@ Address: %4
         <location filename="../forms/intro.ui" line="49"/>
         <location filename="../forms/ui_intro.h" line="185"/>
         <source>As this is the first time the program is launched, you can choose where Darkcoin Core will store its data.</source>
-        <translation>Eftersom detta är första gången programmet startas kan du välja var Darkcoin Core ska lagra sin data.</translation>
+        <translation>Då detta är första gången programmet startas kan du välja var Darkcoin Core ska lagra sin data.</translation>
     </message>
     <message>
         <location filename="../forms/intro.ui" line="59"/>
         <location filename="../forms/ui_intro.h" line="186"/>
         <source>Darkcoin Core will download and store a copy of the Darkcoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
-        <translation>Darkcoin Core kommer att laddas ned och lagra en kopia av Darkcoins blockkedja. Minst 1% GB data kommer att lagras i denna adresskatalog och den kommer att växa med tiden. Plånboken kommer också att lagras i denna adresskatalog.</translation>
+        <translation>Darkcoin Core kommer att laddas ned och lagra en kopia av Darkcoins blockkedja. Minst 1% GB data kommer att lagras i denna katalog och den kommer att växa med tiden. Plånboken kommer också att lagras i denna katalog.</translation>
     </message>
     <message>
         <location filename="../forms/intro.ui" line="69"/>
@@ -1479,7 +1479,7 @@ Address: %4
         <location filename="../forms/optionsdialog.ui" line="33"/>
         <location filename="../forms/ui_optionsdialog.h" line="534"/>
         <source>Automatically start Darkcoin after logging in to the system.</source>
-        <translation>Starta Darkcoin automatiskt efter att ha loggat in på systemet.</translation>
+        <translation>Starta Darkcoin automatiskt efter att systeminloggning.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="36"/>
@@ -1503,19 +1503,19 @@ Address: %4
         <location filename="../forms/optionsdialog.ui" line="88"/>
         <location filename="../forms/ui_optionsdialog.h" line="539"/>
         <source>Number of script &amp;verification threads</source>
-        <translation>Antal skript &amp;verifieringstrådar</translation>
+        <translation>Antal skript&amp;verifieringstrådar</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="101"/>
         <location filename="../forms/ui_optionsdialog.h" line="541"/>
         <source>(0 = auto, &lt;0 = leave that many cores free)</source>
-        <translation>(0 = automatisk, &lt;0 = lämna så många kärnor lediga)</translation>
+        <translation>(0 = automatisk, &lt;0 = lämna så här många kärnor lediga)</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="138"/>
         <location filename="../forms/ui_optionsdialog.h" line="544"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This setting determines the amount of individual masternodes that an input will be anonymized through. More rounds of anonymization gives a higher degree of privacy, but also costs more in fees.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Denna inställning bestämmer antalet individuella masternodes som en indata kommer att anonymiseras genom. Fler anonymiseringsomgångar ger en högre grad integritet men kostar också mer i avgifter.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Denna inställning bestämmer antalet individuella masternodes som en indata kommer att anonymiseras genom. Fler anonymiseringsomgångar ger en högre grad av integritet men kostar också mer i avgifter.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="141"/>
@@ -1527,7 +1527,7 @@ Address: %4
         <location filename="../forms/optionsdialog.ui" line="180"/>
         <location filename="../forms/ui_optionsdialog.h" line="547"/>
         <source>Amount of Darkcoin to keep anonymized</source>
-        <translation>Antalet Darkcoins att bibehålla anonymiserade</translation>
+        <translation>Antal Darkcoins att bibehålla anonymiserade</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="206"/>
@@ -1569,7 +1569,7 @@ Address: %4
         <location filename="../forms/optionsdialog.ui" line="287"/>
         <location filename="../forms/ui_optionsdialog.h" line="557"/>
         <source>If you disable the spending of unconfirmed change, the change from a transaction cannot be used until that transaction has at least one confirmation. This also affects how your balance is computed.</source>
-        <translation>Om du inaktiverar kostnaderna för overifierad växel kan växeln från en transaktion inte användas förrän den transaktionen har minst en bekräftelse. Detta påverkar också hur ditt saldo beräknas.</translation>
+        <translation>Om du inaktiverar kostnaderna för obekräftad växel kan växeln från en transaktion inte användas förrän den transaktionen har minst en bekräftelse. Detta påverkar också hur ditt saldo beräknas.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="290"/>
@@ -1593,7 +1593,7 @@ Address: %4
         <location filename="../forms/optionsdialog.ui" line="310"/>
         <location filename="../forms/ui_optionsdialog.h" line="564"/>
         <source>Map port using &amp;UPnP</source>
-        <translation>Kartport som använder &amp;UPnP</translation>
+        <translation>Kartport använder &amp;UPnP</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="317"/>
@@ -1665,7 +1665,7 @@ Address: %4
         <location filename="../forms/optionsdialog.ui" line="458"/>
         <location filename="../forms/ui_optionsdialog.h" line="587"/>
         <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Quit in the menu.</source>
-        <translation>Minimera istället för att gå ur applikationen när fönstret är stängt. När detta alternativ är aktiverat kommer applikationen endast att stängas efter att du har valt Avsluta i menyn.</translation>
+        <translation>Minimera istället för att gå ur applikationen när fönstret är stängt. När detta alternativ är aktiverat kommer applikationen endast att stängas efter att ha valt Avsluta i menyn.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="461"/>
@@ -1683,7 +1683,7 @@ Address: %4
         <location filename="../forms/optionsdialog.ui" line="490"/>
         <location filename="../forms/ui_optionsdialog.h" line="591"/>
         <source>User Interface &amp;language:</source>
-        <translation>&amp;Användargränsnitt&amp;språk:</translation>
+        <translation>Användargränsnitt&amp;språk:</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="503"/>
@@ -1713,7 +1713,7 @@ Address: %4
         <location filename="../forms/optionsdialog.ui" line="539"/>
         <location filename="../forms/ui_optionsdialog.h" line="602"/>
         <source>&amp;Display addresses in transaction list</source>
-        <translation>&amp;Visa adresser i transaktionlistan</translation>
+        <translation>&amp;Visa adresser i transaktionslistan</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="548"/>
@@ -1721,13 +1721,13 @@ Address: %4
         <location filename="../forms/ui_optionsdialog.h" line="604"/>
         <location filename="../forms/ui_optionsdialog.h" line="608"/>
         <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
-        <translation>Tredjepart-URL (t. ex. en blockutforskare) som visas under transaktionfliken som kontextmenyposter. %:en i URL:en ersätts av transaktionhash. Flera URL:s skiljs åt av en vertikalstång, |.</translation>
+        <translation>Tredjeparts-URL (t. ex. en blockutforskare) som visas under transaktionsfliken som kontextmenyposter. %:en i URL:en ersätts av transaktionshash. Flera URL:s skiljs åt av en vertikalstång, |.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="551"/>
         <location filename="../forms/ui_optionsdialog.h" line="606"/>
         <source>Third party transaction URLs</source>
-        <translation>Tredjeparttransaktion-URL:er</translation>
+        <translation>Tredjepartstransaktion-URL:er</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="592"/>
@@ -1816,7 +1816,7 @@ Address: %4
         <location filename="../forms/ui_overviewpage.h" line="459"/>
         <location filename="../forms/ui_overviewpage.h" line="503"/>
         <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Darkcoin network after a connection is established, but this process has not completed yet.</source>
-        <translation>Den visade informationen kan vara utdaterad. Din plånbok synkroniseras automatiskt med Darkcoin-nätverket efter att en anslutning har etablerats men denna process har inte färdigställts än.</translation>
+        <translation>Den visade informationen kan vara utdaterad. Din plånbok synkroniseras automatiskt med Darkcoin-nätverket efter att en anslutning har etablerats men denna process har inte slutförts än.</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="108"/>
@@ -1846,7 +1846,7 @@ Address: %4
         <location filename="../forms/overviewpage.ui" line="172"/>
         <location filename="../forms/ui_overviewpage.h" line="469"/>
         <source>Immature:</source>
-        <translation>Omogen:</translation>
+        <translation>Omoget:</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="185"/>
@@ -2181,7 +2181,7 @@ Address: %4
         <location filename="../forms/rpcconsole.ui" line="46"/>
         <location filename="../forms/ui_rpcconsole.h" line="473"/>
         <source>General</source>
-        <translation>Allmän</translation>
+        <translation>Allmänt</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="53"/>
@@ -3058,7 +3058,7 @@ Address: %4
         <location filename="../forms/signverifymessagedialog.ui" line="14"/>
         <location filename="../forms/ui_signverifymessagedialog.h" line="283"/>
         <source>Signatures - Sign / Verify a Message</source>
-        <translation>Signaturer - signera/bekräfta ett meddelande</translation>
+        <translation>Signaturer - signera/verifiera ett meddelande</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="24"/>
@@ -3160,19 +3160,19 @@ Address: %4
         <location filename="../forms/signverifymessagedialog.ui" line="237"/>
         <location filename="../forms/ui_signverifymessagedialog.h" line="316"/>
         <source>Enter the signing address, message (ensure you copy line breaks, spaces, tabs, etc. exactly) and signature below to verify the message. Be careful not to read more into the signature than what is in the signed message itself, to avoid being tricked by a man-in-the-middle attack.</source>
-        <translation>Skriv in signaturadressens meddelande (försäkra dig om att du kopierar linjeavbrott, mellanslag, flikar etc.) och signera nedtill för att verifiera meddelandet.  Var försiktig med att inte läsa in mer i signaturen än vad som finns i det signerade meddelandet för att undvika att bli lurad av en mellanhandattack.</translation>
+        <translation>Skriv in signaturadressens meddelande (försäkra dig om att du kopierar linjeavbrott, mellanslag, flikar etc. precist) och signera nedtill för att verifiera meddelandet. Var försiktig med att inte läsa in mer i signaturen än vad som finns i själva det signerade meddelandet för att undvika att bli lurad av en mellanhandattack.</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="258"/>
         <location filename="../forms/ui_signverifymessagedialog.h" line="318"/>
         <source>The address the message was signed with (e.g. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</source>
-        <translation>Adressen meddelandet signerades med  (t. ex. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
+        <translation>Adressen meddelandet signerades med (t. ex. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="295"/>
         <location filename="../forms/ui_signverifymessagedialog.h" line="326"/>
         <source>Verify the message to ensure it was signed with the specified Darkcoin address</source>
-        <translation>Verifiera meddelandet för att försäkra dig om att den signerades med den angivna Darkcoin-adressen</translation>
+        <translation>Verifiera meddelandet för att garantera att den signerades med den angivna Darkcoin-adressen</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="298"/>

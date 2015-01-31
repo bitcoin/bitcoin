@@ -33,23 +33,23 @@ Dit product bevat software ontwikkeld door het OpenSSL Project voor gebruik in d
         <location filename="../utilitydialog.cpp" line="30"/>
         <location filename="../utilitydialog.cpp" line="31"/>
         <source>Copyright</source>
-        <translation type="unfinished"/>
+        <translation>Copyright</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="30"/>
         <source>The Bitcoin Core developers</source>
-        <translation type="unfinished"/>
+        <translation>De Bitcoin Core ontwikkelaars</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="31"/>
         <source>The Darkcoin Core developers</source>
-        <translation type="unfinished"/>
+        <translation>De Darkcoin Core ontwikkelaars</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="43"/>
         <location filename="../utilitydialog.cpp" line="45"/>
         <source>(%1-bit)</source>
-        <translation type="unfinished"/>
+        <translation>(%1-bit)</translation>
     </message>
 </context>
 <context>
@@ -127,7 +127,7 @@ Dit product bevat software ontwikkeld door het OpenSSL Project voor gebruik in d
     <message>
         <location filename="../addressbookpage.cpp" line="51"/>
         <source>C&amp;hoose</source>
-        <translation type="unfinished"/>
+        <translation>K&amp;iezen</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="57"/>
@@ -162,7 +162,7 @@ Dit product bevat software ontwikkeld door het OpenSSL Project voor gebruik in d
     <message>
         <location filename="../addressbookpage.cpp" line="77"/>
         <source>&amp;Edit</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Bewerk</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="271"/>
@@ -3107,7 +3107,7 @@ Address: %4
         <location filename="../forms/signverifymessagedialog.ui" line="97"/>
         <location filename="../forms/ui_signverifymessagedialog.h" line="299"/>
         <source>Enter the message you want to sign here</source>
-        <translation>Geef hier het bericht in die u wilt tekenen</translation>
+        <translation>Voer hier het bericht in dat u wilt ondertekenen</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="104"/>
@@ -3131,7 +3131,7 @@ Address: %4
         <location filename="../forms/signverifymessagedialog.ui" line="155"/>
         <location filename="../forms/ui_signverifymessagedialog.h" line="309"/>
         <source>Sign &amp;Message</source>
-        <translation>Teken &amp;Bericht</translation>
+        <translation>Onderteken &amp;Bericht</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="169"/>
@@ -3270,12 +3270,12 @@ Address: %4
     <message>
         <location filename="../splashscreen.cpp" line="35"/>
         <source>The Bitcoin Core developers</source>
-        <translation type="unfinished"/>
+        <translation>De Bitcoin Core ontwikkelaars</translation>
     </message>
     <message>
         <location filename="../splashscreen.cpp" line="36"/>
         <source>The Darkcoin Core developers</source>
-        <translation type="unfinished"/>
+        <translation>De Darkcoin Core ontwikkelaars</translation>
     </message>
     <message>
         <location filename="../splashscreen.cpp" line="37"/>
@@ -3482,7 +3482,7 @@ Address: %4
         <location filename="../forms/transactiondescdialog.ui" line="14"/>
         <location filename="../forms/ui_transactiondescdialog.h" line="60"/>
         <source>Transaction details</source>
-        <translation>Transactie details</translation>
+        <translation>Transactiedetails</translation>
     </message>
     <message>
         <location filename="../forms/transactiondescdialog.ui" line="20"/>
@@ -3846,7 +3846,7 @@ Address: %4
     <message>
         <location filename="../walletmodel.cpp" line="286"/>
         <source>Send Coins</source>
-        <translation>Munten Versturen</translation>
+        <translation>Stuur Munten</translation>
     </message>
 </context>
 <context>
