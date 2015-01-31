@@ -1,15 +1,15 @@
-<?xml version="1.0" ?><!DOCTYPE TS><TS language="vi_VN" version="2.0">
+<?xml version="1.0" ?><!DOCTYPE TS><TS language="nl" version="2.0">
 <context>
     <name>AboutDialog</name>
     <message>
         <location filename="../forms/aboutdialog.ui" line="14"/>
         <source>About Darkcoin Core</source>
-        <translation>Giới thiệu về Darkcoin Core</translation>
+        <translation>Over Darkcoin Core</translation>
     </message>
     <message>
         <location filename="../forms/aboutdialog.ui" line="53"/>
         <source>&lt;b&gt;Darkcoin Core&lt;/b&gt; version</source>
-        <translation>&lt;b&gt;Darkcoin Core&lt;/b&gt; phiên bản</translation>
+        <translation>&lt;b&gt;Darkcoin Core&lt;/b&gt; versie</translation>
     </message>
     <message>
         <location filename="../forms/aboutdialog.ui" line="111"/>
@@ -20,11 +20,11 @@ Distributed under the MIT/X11 software license, see the accompanying file COPYIN
 
 This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit (http://www.openssl.org/) and cryptographic software written by Eric Young (eay@cryptsoft.com) and UPnP software written by Thomas Bernard.</source>
         <translation>
-Đây là phần mềm thử nghiệm.
+Dit is experimentele software.
 
-Phát hành dưới giấy phép phần mềm MIT/X11, hãy xem file đi kèm theo đây hoặc  http://www.opensource.org/licenses/mit-license.php.
+Gedistribueerd onder de MIT/X11 software licentie, zie het bijgevoegde bestand COPYING of lees http://www.opensource.org/licenses/mit-license.php.
 
-Sản phẩm này bao gồm phần mềm được phát triển bởi dự án OpenSSL cho việc sử dụng trong bộ công cụ OpenSSL Toolkit (http://www.openssl.org/) và phần mềm mã hoá được viết bởi Eric Young (eay@cryptsoft.com) và phần mềm UPnP được viết bởi Thomas Bernard.</translation>
+Dit product bevat software ontwikkeld door het OpenSSL Project voor gebruik in de OpenSSL Toolkit (http://www.openssl.org/) en cryptografische software geschreven door Eric Young (eay@cryptsoft.com) en UPnP software geschreven door Thomas Bernard.</translation>
     </message>
 </context>
 <context>
@@ -32,52 +32,52 @@ Sản phẩm này bao gồm phần mềm được phát triển bởi dự án O
     <message>
         <location filename="../forms/addressbookpage.ui" line="30"/>
         <source>Double-click to edit address or label</source>
-        <translation>Nháy đúp để sửa địa chỉ hoặc nhãn</translation>
+        <translation>Dubbelklik om het adres of label te bewerken</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="57"/>
         <source>Create a new address</source>
-        <translation>Tạo một địa chỉ mới</translation>
+        <translation>Genereer een nieuw adres</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="60"/>
         <source>&amp;New</source>
-        <translation>&amp;Mới</translation>
+        <translation>&amp;Nieuw</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="71"/>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation>Chép địa chỉ đã được chọn vào vùng đệm clipboard</translation>
+        <translation>Kopieer het geselecteerde adres naar het systeem klembord.</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="74"/>
         <source>&amp;Copy</source>
-        <translation>&amp;Copy</translation>
+        <translation>&amp;Kopieer</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="85"/>
         <source>Delete the currently selected address from the list</source>
-        <translation>Xoá địa chỉ đang được chọn khỏi danh sách</translation>
+        <translation>Verwijder het geslecteerde adres uit de lijst</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="88"/>
         <source>&amp;Delete</source>
-        <translation>&amp;Xoá</translation>
+        <translation>&amp;Verwijder</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="112"/>
         <source>Export the data in the current tab to a file</source>
-        <translation>Kết xuất dữ liệu trong tab này sang một file</translation>
+        <translation>Exporteer de gegevens in het huidige tabblad naar een bestand</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="115"/>
         <source>&amp;Export</source>
-        <translation>&amp;Kết xuất</translation>
+        <translation>&amp;Exporteer</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="132"/>
         <source>C&amp;lose</source>
-        <translation>Đó&amp;ng</translation>
+        <translation>S&amp;luit</translation>
     </message>
 </context>
 <context>
@@ -85,32 +85,32 @@ Sản phẩm này bao gồm phần mềm được phát triển bởi dự án O
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="26"/>
         <source>Passphrase Dialog</source>
-        <translation>Khung hội thoại mật khẩu</translation>
+        <translation>Wachtwoord Dialoogvenster</translation>
     </message>
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="47"/>
         <source>Enter passphrase</source>
-        <translation>Mời nhập mật khẩu</translation>
+        <translation>Voer wachtwoord in</translation>
     </message>
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="61"/>
         <source>New passphrase</source>
-        <translation>Mật khẩu mới</translation>
+        <translation>Nieuw wachtwoord</translation>
     </message>
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="75"/>
         <source>Repeat new passphrase</source>
-        <translation>Nhập lại mật khẩu mới</translation>
+        <translation>Herhaal nieuwe wachtwoord</translation>
     </message>
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="108"/>
         <source>Serves to disable the trivial sendmoney when OS account compromised. Provides no real security.</source>
-        <translation>Phục vụ để tắt tính năng chuyển tiền vô giá trị khi tài khoản của hệ điều hành bị xâm nhập. Không cung cấp đủ an ninh thực sự.</translation>
+        <translation>Dient voor het uitschakelen van de triviale sendmoney wanneer het gebruikersaccount van het besturingssysteem gecompromitteerd is. Biedt geen echte veiligheid.</translation>
     </message>
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="111"/>
         <source>For anonymization only</source>
-        <translation>Chỉ dùng cho mục đích vô danh</translation>
+        <translation>Alleen voor anonimisering</translation>
     </message>
 </context>
 <context>
@@ -118,12 +118,12 @@ Sản phẩm này bao gồm phần mềm được phát triển bởi dự án O
     <message>
         <location filename="../forms/coincontroldialog.ui" line="14"/>
         <source>Coin Control Address Selection</source>
-        <translation>Chọn địa chỉ Coin Control</translation>
+        <translation>Munt Controle Adres Selectie</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="48"/>
         <source>Quantity:</source>
-        <translation>Số lượng:</translation>
+        <translation>Hoeveelheid:</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="77"/>
@@ -133,82 +133,82 @@ Sản phẩm này bao gồm phần mềm được phát triển bởi dự án O
     <message>
         <location filename="../forms/coincontroldialog.ui" line="122"/>
         <source>Amount:</source>
-        <translation>Số tiền:</translation>
+        <translation>Bedrag:</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="151"/>
         <source>Priority:</source>
-        <translation>Ưu tiên:</translation>
+        <translation>Prioriteit:</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="196"/>
         <source>Fee:</source>
-        <translation>Phí:</translation>
+        <translation>Vergoeding:</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="228"/>
         <source>Low Output:</source>
-        <translation>Low Output:</translation>
+        <translation>Lage Output:</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="276"/>
         <source>After Fee:</source>
-        <translation>Phí sau:</translation>
+        <translation>Na Vergoeding:</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="308"/>
         <source>Change:</source>
-        <translation>Trả lại:</translation>
+        <translation>Wisselgeld:</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="364"/>
         <source>(un)select all</source>
-        <translation>(bỏ) chọn tất cả</translation>
+        <translation>(de)selecteer alles</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="377"/>
         <source>Tree mode</source>
-        <translation>Kiểu cây</translation>
+        <translation>Boom weergave</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="393"/>
         <source>List mode</source>
-        <translation>Kiểu danh sách</translation>
+        <translation>Lijst weergave</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="446"/>
         <source>Amount</source>
-        <translation>Số tiền</translation>
+        <translation>Bedrag</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="456"/>
         <source>Address</source>
-        <translation>Địa chỉ</translation>
+        <translation>Adres</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="461"/>
         <source>Darksend Rounds</source>
-        <translation>Số vòng Darksend</translation>
+        <translation>Darksend Rondes</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="466"/>
         <source>Date</source>
-        <translation>Ngày</translation>
+        <translation>Datum</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="471"/>
         <source>Confirmations</source>
-        <translation>Lượt xác nhận</translation>
+        <translation>Bevestigingen</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="474"/>
         <source>Confirmed</source>
-        <translation>Đã được xác nhận</translation>
+        <translation>Bevestigd</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="479"/>
         <source>Priority</source>
-        <translation>Ưu tiên</translation>
+        <translation>Prioriteit</translation>
     </message>
 </context>
 <context>
@@ -279,27 +279,27 @@ Sản phẩm này bao gồm phần mềm được phát triển bởi dự án O
     <message>
         <location filename="../forms/editaddressdialog.ui" line="14"/>
         <source>Edit Address</source>
-        <translation>Sửa địa chỉ</translation>
+        <translation>Adres Aanpassen</translation>
     </message>
     <message>
         <location filename="../forms/editaddressdialog.ui" line="25"/>
         <source>&amp;Label</source>
-        <translation>&amp;Nhãn</translation>
+        <translation>&amp;Label</translation>
     </message>
     <message>
         <location filename="../forms/editaddressdialog.ui" line="35"/>
         <source>The label associated with this address list entry</source>
-        <translation>Nhãn tương ứng với địa chỉ này trong danh sách đầu vào</translation>
+        <translation>Het label geassocieerd met dit adreslijst item</translation>
     </message>
     <message>
         <location filename="../forms/editaddressdialog.ui" line="42"/>
         <source>&amp;Address</source>
-        <translation>Địa &amp;chỉ</translation>
+        <translation>&amp;Adres</translation>
     </message>
     <message>
         <location filename="../forms/editaddressdialog.ui" line="52"/>
         <source>The address associated with this address list entry. This can only be modified for sending addresses.</source>
-        <translation>Địa chỉ tương ứng với địa chỉ này trong danh sách đầu vào. Chỉ có thể thay đổi địa chỉ gửi đi.</translation>
+        <translation>Het adres geassocieerd met dit adreslijst item. Dit kan alleen aangepast worden voor verzendadressen.</translation>
     </message>
 </context>
 <context>
@@ -307,7 +307,7 @@ Sản phẩm này bao gồm phần mềm được phát triển bởi dự án O
     <message>
         <location filename="../forms/helpmessagedialog.ui" line="19"/>
         <source>Darkcoin Core - Command-line options</source>
-        <translation>Darkcoin Core - Các tuỳ chọn dòng lệnh</translation>
+        <translation>Darkcoin Core - Command-line opties</translation>
     </message>
 </context>
 <context>
@@ -315,32 +315,32 @@ Sản phẩm này bao gồm phần mềm được phát triển bởi dự án O
     <message>
         <location filename="../forms/intro.ui" line="14"/>
         <source>Welcome</source>
-        <translation>Chào mừng</translation>
+        <translation>Welkom</translation>
     </message>
     <message>
         <location filename="../forms/intro.ui" line="23"/>
         <source>Welcome to Darkcoin Core.</source>
-        <translation>Chào mừng đến với Darkcoin Core.</translation>
+        <translation>Welkom bij Darkcoin Core</translation>
     </message>
     <message>
         <location filename="../forms/intro.ui" line="49"/>
         <source>As this is the first time the program is launched, you can choose where Darkcoin Core will store its data.</source>
-        <translation>Đây là lần đầu tiên chương trình được khởi động, bạn có thể chọn nơi mà Darkcoin Core sẽ lưu dữ liệu.</translation>
+        <translation>Gezien dit de eerste keer is dat het programma word uitgevoerd, kunt u kiezen waar Darkcoin Core zijn gegevens opslaat.</translation>
     </message>
     <message>
         <location filename="../forms/intro.ui" line="59"/>
         <source>Darkcoin Core will download and store a copy of the Darkcoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
-        <translation>Darkcoin Core sẽ tải và lưu một bản của sổ cái Darkcoin. Ít nhất %1GB dữ liệu sẽ được lưu trong thư mục này, và nó sẽ tăng lên theo thời gian. Ví của bạn cũng sẽ được lưu trong thư mục này.</translation>
+        <translation>Darkcoin Core zal een kopie van de Darkcoin block chain downloaden en opslaan. Ten minste %1GB aan data zal worden opgeslagen in deze folder, dit zal toenemen in de toekomst. De beurs zal ook in deze folder worden opgeslagen.</translation>
     </message>
     <message>
         <location filename="../forms/intro.ui" line="69"/>
         <source>Use the default data directory</source>
-        <translation>Sử dụng thư mục dữ liệu ngầm định</translation>
+        <translation>Gebruik de standaard data folder</translation>
     </message>
     <message>
         <location filename="../forms/intro.ui" line="76"/>
         <source>Use a custom data directory:</source>
-        <translation>Sử dụng thư mục dữ liệu tuỳ chọn:</translation>
+        <translation>Gebruik een aangepaste data folder:</translation>
     </message>
 </context>
 <context>
@@ -348,12 +348,12 @@ Sản phẩm này bao gồm phần mềm được phát triển bởi dự án O
     <message>
         <location filename="../forms/openuridialog.ui" line="14"/>
         <source>Open URI</source>
-        <translation>Mở URI</translation>
+        <translation>Open URI</translation>
     </message>
     <message>
         <location filename="../forms/openuridialog.ui" line="20"/>
         <source>Open payment request from URI or file</source>
-        <translation>Mở yêu cầu thanh toán từ URI hoặc file</translation>
+        <translation>Open een betalingsverzoek vanaf een URI of een bestand</translation>
     </message>
     <message>
         <location filename="../forms/openuridialog.ui" line="29"/>
@@ -363,7 +363,7 @@ Sản phẩm này bao gồm phần mềm được phát triển bởi dự án O
     <message>
         <location filename="../forms/openuridialog.ui" line="40"/>
         <source>Select payment request file</source>
-        <translation>Chọn file yêu cầ thanh toán</translation>
+        <translation>Selecteer een betalingsverzoek bestand</translation>
     </message>
 </context>
 <context>
@@ -371,27 +371,27 @@ Sản phẩm này bao gồm phần mềm được phát triển bởi dự án O
     <message>
         <location filename="../forms/optionsdialog.ui" line="14"/>
         <source>Options</source>
-        <translation>Các tuỳ chọn</translation>
+        <translation>Opties</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="27"/>
         <source>&amp;Main</source>
-        <translation>&amp;Chính</translation>
+        <translation>&amp;Hoofd</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="33"/>
         <source>Automatically start Darkcoin after logging in to the system.</source>
-        <translation>Tự động khởi động Darkcoin sau khi đăng nhập hệ thống.</translation>
+        <translation>Darkcoin automatisch starten na inloggen op het systeem.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="36"/>
         <source>&amp;Start Darkcoin on system login</source>
-        <translation>&amp;Khởi động Darkcoin khi đăng nhập hệ thống</translation>
+        <translation>&amp;Start Darkcoin bij inloggen systeem</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="45"/>
         <source>Size of &amp;database cache</source>
-        <translation>Kích thước của dữ liệu cache</translation>
+        <translation>Grootte van de &amp;database cache</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="61"/>
@@ -401,92 +401,92 @@ Sản phẩm này bao gồm phần mềm được phát triển bởi dự án O
     <message>
         <location filename="../forms/optionsdialog.ui" line="88"/>
         <source>Number of script &amp;verification threads</source>
-        <translation>Số lượng các luồng kịch bản kiểm tra</translation>
+        <translation>Aantal script &amp;verificatie threads</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="101"/>
         <source>(0 = auto, &lt;0 = leave that many cores free)</source>
-        <translation>(0 = tự động, &lt;0 = để đó rất nhiều lõi miễn phí)</translation>
+        <translation>(0 = auto, &lt;0 = laat dat aantal cores vrij)</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="138"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This setting determines the amount of individual masternodes that an input will be anonymized through. More rounds of anonymization gives a higher degree of privacy, but also costs more in fees.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Thiết lập này xác định số tiền cho mỗi master nodes mà đầu vào thông qua đó được ẩn danh. Càng có nhiều vòng ẩn danh thì sẽ cho mức độ riêng tư càng cao, nhưng nó cũng tốn nhiều phí hơn.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Deze instelling bepaalt het aantal individuele masternodes waardoor een input zal worden geanonimiseerd. Meer anonimisatie rondes geeft een hoger niveau van privacy, maar kost ook meer aan vergoedingen.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="141"/>
         <source>Darksend rounds to use</source>
-        <translation>Số vòng Darksend sử dụng</translation>
+        <translation>Darksend rondes te gebruiken</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="180"/>
         <source>Amount of Darkcoin to keep anonymized</source>
-        <translation>Lượng Darkcoin muốn giữ vô danh</translation>
+        <translation>Aantal Darkcoin om geanonimiseerd te houden</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="206"/>
         <source>W&amp;allet</source>
-        <translation>&amp;Ví</translation>
+        <translation>P$ortemonnee</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="212"/>
         <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly. Most transactions are 1 kB.</source>
-        <translation>Tuỳ chọn phí giao dịch trên kB có thể giúp cho giao dịch của bạn được xử lý nhanh chóng. Hầu hết các giao dịch khoảng 1 kB.</translation>
+        <translation>Optionele transactie vergoeding per kB dat er voor zorgt dat uw transacties snel worden verwerkt. De meeste transacties zijn 1kB.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="227"/>
         <source>Pay transaction &amp;fee</source>
-        <translation>Trả &amp;phí giao dịch</translation>
+        <translation>Betaal transactie &amp;vergoeding</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="271"/>
         <source>Expert</source>
-        <translation>Chuyên gia</translation>
+        <translation>Expert</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="277"/>
         <source>Whether to show coin control features or not.</source>
-        <translation>Hiển thị hoặc không hiển thị tính năng coin control.</translation>
+        <translation>Munt controle mogelijkheden weergeven of niet.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="280"/>
         <source>Enable coin &amp;control features</source>
-        <translation>Bật tính năng Coin &amp;control</translation>
+        <translation>Schakel munt &amp;controle mogelijkheden in</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="287"/>
         <source>If you disable the spending of unconfirmed change, the change from a transaction cannot be used until that transaction has at least one confirmation. This also affects how your balance is computed.</source>
-        <translation>Nếu bạn tắt chức năng chi tiêu các khoản tiền trả lại chưa được xác nhận, thì những khoản trả lại đó sẽ không thể sử dụng đến tận khi các giao dịch đó được ít nhất một lần xác nhận. Điều này cũng ảnh hưởng đến cách tính số dư của bạn.</translation>
+        <translation>Wanneer u het uitgeven van onbevestigde wisselmunt uitzet, dan kan de wisselmunt van een transactie niet worden gebruikt tenminste tot wanneer deze transactie minstens één bevestiging heeft. Dit heeft ook invloed op de berekening van uw balans.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="290"/>
         <source>&amp;Spend unconfirmed change</source>
-        <translation>&amp;Tiêu phần trả lại chưa được xác nhận</translation>
+        <translation>&amp;Onbevestigd wisselgeld uitgeven</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="301"/>
         <source>&amp;Network</source>
-        <translation>&amp;Mạng</translation>
+        <translation>&amp;Netwerk</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="307"/>
         <source>Automatically open the Darkcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation>Tự động mở cổng phần mềm Darkcoin trên rounter. Nó chỉ làm việc khi router của bạn hỗ trợ UPnP và nó phải được bật.</translation>
+        <translation>Open automatisch de Darkcoin client poort op de router. Dit werkt alleen als uw router UPnP ondersteunt en deze is ingeschakeld.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="310"/>
         <source>Map port using &amp;UPnP</source>
-        <translation>Ánh xạ cổng sử dụng &amp;UPnP</translation>
+        <translation>Poort instellen via &amp;UPnP</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="317"/>
         <source>Connect to the Darkcoin network through a SOCKS proxy.</source>
-        <translation>Kết nối với mạng lưới Darkcoin thông qua một SOCKS proxy.</translation>
+        <translation>Verbind met het Darkcoin netwerk via een SOCKS proxy.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="320"/>
         <source>&amp;Connect through SOCKS proxy (default proxy):</source>
-        <translation>&amp;Kết nối qua SOCKS proxy (proxy ngầm định):</translation>
+        <translation>&amp;Verbind via SOCKS proxy (standaard proxy):</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="329"/>
@@ -496,113 +496,113 @@ Sản phẩm này bao gồm phần mềm được phát triển bởi dự án O
     <message>
         <location filename="../forms/optionsdialog.ui" line="354"/>
         <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
-        <translation>Địa chỉ IP của proxy (ví dụ: IPv4: 127.0.0.1 / IPv6: ::1)</translation>
+        <translation>IP adres van de proxy (bijv.: IPv4: 127.0.0.1 / IPv6: ::1)</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="361"/>
         <source>&amp;Port:</source>
-        <translation>&amp;Cổng:</translation>
+        <translation>&amp;Poort:</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="386"/>
         <source>Port of the proxy (e.g. 9050)</source>
-        <translation>Cổng của proxy (ví dụ: 9050)</translation>
+        <translation>Poort van de proxy (bijv.: 9050)</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="393"/>
         <source>SOCKS &amp;Version:</source>
-        <translation>Phiên bản SOCKS:</translation>
+        <translation>SOCKS &amp;Versie:</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="406"/>
         <source>SOCKS version of the proxy (e.g. 5)</source>
-        <translation>Phiên bản SOCKS của proxy (ví dụ: 5)</translation>
+        <translation>SOCKS versie van de proxy (bijv.: 5)</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="442"/>
         <source>&amp;Window</source>
-        <translation>&amp;Cửa sổ</translation>
+        <translation>&amp;Venster</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="448"/>
         <source>Show only a tray icon after minimizing the window.</source>
-        <translation>Chỉ hiển thị biểu tượng ở khai sau khi thu nhỏ cửa sổ.</translation>
+        <translation>Toon alleen een pictogram in het systeemvak nadat het venster is geminimaliseerd.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="451"/>
         <source>&amp;Minimize to the tray instead of the taskbar</source>
-        <translation>Thu &amp;nhỏ về khay thay vì về thanh taskbar</translation>
+        <translation>&amp;Minimaliseer naar het systeemvak in plaats van de taakbalk</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="458"/>
         <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Quit in the menu.</source>
-        <translation>Thu nhỏ thay vì thoát ứng dụng khi cửa sổ được đóng lại. Khi tuỳ chọn này được bật thì chương trình sẽ chỉ đóng sau khi chọn chức năng Thoát trong menu.</translation>
+        <translation>Minimaliseer in plaats van afsluiten van de applicatie wanneer het venster wordt gesloten. Wanneer deze optie is geactiveerd zal de applicatie alleen gesloten worden na het kiezen van Afsluiten in het menu.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="461"/>
         <source>M&amp;inimize on close</source>
-        <translation>Thu &amp;nhỏ khi đóng</translation>
+        <translation>M&amp;inimaliseren bij het sluit</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="482"/>
         <source>&amp;Display</source>
-        <translation>&amp;Hiển thị</translation>
+        <translation>&amp;Weergave</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="490"/>
         <source>User Interface &amp;language:</source>
-        <translation>&amp;Ngôn ngữ người dùng:</translation>
+        <translation>Gebruikersinterface &amp;taal:</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="503"/>
         <source>The user interface language can be set here. This setting will take effect after restarting Darkcoin.</source>
-        <translation>Ngôn ngữ người dùng có thể thiết lập ở đây. Thiết lập này sẽ có tác dụng sau khi khởi động lại Darkcoin.</translation>
+        <translation>De taal van de gebruikersinterface kan hier worden ingesteld. Deze instelling wordt pas van kracht na het herstarten van Darkcoin.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="514"/>
         <source>&amp;Unit to show amounts in:</source>
-        <translation>Đơn vị &amp;hiển thị số lượng:</translation>
+        <translation>&amp;Eenheid om bedragen in weer te geven:</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="527"/>
         <source>Choose the default subdivision unit to show in the interface and when sending coins.</source>
-        <translation>Chọn đơn vị phân khu mặc định để hiển thị trong giao diện và khi gửi tiền.</translation>
+        <translation>Kies een standaard onderverdelingseenheid om te tonen in de interface en bij het sturen van munten.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="536"/>
         <source>Whether to show Darkcoin addresses in the transaction list or not.</source>
-        <translation>Hiển thị hoặc không hiển thị địa chỉ Darkcoin trong danh giao dịch</translation>
+        <translation>Darkcoin adressen weergeven in transactielijsten of niet.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="539"/>
         <source>&amp;Display addresses in transaction list</source>
-        <translation>&amp;Hiển thị địa chỉ trong danh sách giao dịch</translation>
+        <translation>&amp;Toon adressen in transactielijst</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="548"/>
         <location filename="../forms/optionsdialog.ui" line="561"/>
         <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
-        <translation>Địa chỉ web của bên thứ ba (VD: chức năng kiểm tra số cái) mà nó xuất hiện trong tab giao dịch giống như các mục trong menu ngữ cảnh. %s trong địa chỉ web được thay thế bởi mã băm giao dịch. Nhiều địa chỉ web được phân cách bởi dấu gạch đứng |.</translation>
+        <translation>Derde partij URLs (vb. een blok verkenner) die voorkomt in de transactie tab als context menu items. %s wordt vervangen door de transactie hash. Meerdere URLs worden gescheiden door een verticale streep |.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="551"/>
         <source>Third party transaction URLs</source>
-        <translation>URLs của giao dịch bên thứ ba</translation>
+        <translation>Transactie URL&apos;s van derden</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="592"/>
         <source>Active command-line options that override above options:</source>
-        <translation>Kích hoạt các tuỳ chọn dòng lệnh sẽ thay thế cho các tuỳ chọn trên:</translation>
+        <translation>Actieve command-line opties die bovenstaande opties overschrijven:</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="635"/>
         <source>Reset all client options to default.</source>
-        <translation>Tái lập lại tất cả các tuỳ chọn về ngầm định.</translation>
+        <translation>Reset alle client opties naar de standaardwaarden.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="638"/>
         <source>&amp;Reset Options</source>
-        <translation>&amp;Tái lập Tuỳ chọn</translation>
+        <translation>&amp;Reset Opties</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="699"/>
@@ -612,7 +612,7 @@ Sản phẩm này bao gồm phần mềm được phát triển bởi dự án O
     <message>
         <location filename="../forms/optionsdialog.ui" line="706"/>
         <source>&amp;Cancel</source>
-        <translation>&amp;Huỷ</translation>
+        <translation>&amp;Annuleren</translation>
     </message>
 </context>
 <context>
@@ -620,78 +620,78 @@ Sản phẩm này bao gồm phần mềm được phát triển bởi dự án O
     <message>
         <location filename="../forms/overviewpage.ui" line="14"/>
         <source>Form</source>
-        <translation>Biểu mẫu</translation>
+        <translation>Formulier</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="57"/>
         <source>Wallet</source>
-        <translation>Ví</translation>
+        <translation>Beurs</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="64"/>
         <location filename="../forms/overviewpage.ui" line="962"/>
         <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Darkcoin network after a connection is established, but this process has not completed yet.</source>
-        <translation>Thông tin được hiển thị có thể đã lỗi thời. Ví của bạn sẽ tự động đồng bộ với mạng lưới Darkcoin sau khi kết nối được thiết lập, tuy nhiên quá trình này chưa hoàn thành.</translation>
+        <translation>De weergegeven informatie kan achterhaald zijn. De beurs synchroniseert automatisch met het Darkcoin netwerk nadat de verbinding is gelegd, maar dit proces is nog niet beeindigd.</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="108"/>
         <source>Available:</source>
-        <translation>Sẵn sàng:</translation>
+        <translation>Beschikbaar:</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="124"/>
         <source>Your current spendable balance</source>
-        <translation>Số dư có thể chi tiêu của bạn</translation>
+        <translation>Uw huidige beschikbare balans</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="140"/>
         <source>Pending:</source>
-        <translation>Đang chờ:</translation>
+        <translation>Wachtende:</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="156"/>
         <source>Total of transactions that have yet to be confirmed, and do not yet count toward the spendable balance</source>
-        <translation>Tổng của những giao dịch chưa được xác nhận, và do đó chưa được tính vào số dư có thể tiêu được</translation>
+        <translation>Totaal van de transacties die nog moeten bevestigd worden, en die nog niet worden bijgeteld bij de beschikbare balans</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="172"/>
         <source>Immature:</source>
-        <translation>Chưa chín muồi:</translation>
+        <translation>Immatuur</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="185"/>
         <source>Mined balance that has not yet matured</source>
-        <translation>Số dư khai thác được chưa được xác nhận đủ</translation>
+        <translation>Gemijnde balans is not niet matuur</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="201"/>
         <source>Total:</source>
-        <translation>Tổng:</translation>
+        <translation>Totaal:</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="217"/>
         <source>Your current total balance</source>
-        <translation>Tổng số dư hiện tại của bạn</translation>
+        <translation>Uw huidige totale balans</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="296"/>
         <source>Status:</source>
-        <translation>Tình trạng:</translation>
+        <translation>Status:</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="303"/>
         <source>Enabled/Disabled</source>
-        <translation>Bật/Tắt</translation>
+        <translation>Ingeschakeld/Uitgeschakeld</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="310"/>
         <source>Completion:</source>
-        <translation>Hoàn thành:</translation>
+        <translation>Voltooing:</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="330"/>
         <source>Darksend Balance:</source>
-        <translation>Số dư cho Darksend:</translation>
+        <translation>Darksend Balans:</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="343"/>
@@ -701,27 +701,27 @@ Sản phẩm này bao gồm phần mềm được phát triển bởi dự án O
     <message>
         <location filename="../forms/overviewpage.ui" line="350"/>
         <source>Amount and Rounds:</source>
-        <translation>Số tiền và số vòng:</translation>
+        <translation>Aantal en Rondes:</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="357"/>
         <source>0 DRK / 0 Rounds</source>
-        <translation>0 DRK / 0 Vòng</translation>
+        <translation>0 DRK / 0 Rondes</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="364"/>
         <source>Submitted Denom:</source>
-        <translation>Mệnh giá được gửi:</translation>
+        <translation>Ingebrachte Denom:</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="371"/>
         <source>The denominations you submitted to the Masternode. To mix, other users must submit the exact same denominations.</source>
-        <translation>Mệnh giá mà bạn gửi cho Masternode. Để trộn, những người dùng khác cũng cần gửi chính xác dùng loại mệnh giá đó.</translation>
+        <translation>De denominaties zijn bij de Masternode ingebracht. Om te mixen moeten andere gebruikers exact dezelfde denominaties inbrengen.</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="374"/>
         <source>n/a</source>
-        <translation>không áp dụng</translation>
+        <translation>n/a</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="396"/>
@@ -731,37 +731,37 @@ Sản phẩm này bao gồm phần mềm được phát triển bởi dự án O
     <message>
         <location filename="../forms/overviewpage.ui" line="846"/>
         <source>Start/Stop Mixing</source>
-        <translation>Bắt đầu/Tắt việc trộn</translation>
+        <translation>Start/Stop Mixen</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="878"/>
         <source>(Last Message)</source>
-        <translation>(Thông điệp cuối)</translation>
+        <translation>(Laatste Bericht)</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="897"/>
         <source>Try to manually submit a Darksend request.</source>
-        <translation>Thử gửi yêu cầu Darksend bằng tay.</translation>
+        <translation>Probeer manueel een Darksend aanvraag in te brengen.</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="900"/>
         <source>Try Mix</source>
-        <translation>Thử Trộn</translation>
+        <translation>Probeer te Mixen</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="913"/>
         <source>Reset the current status of Darksend (can interrupt Darksend if it&apos;s in the process of Mixing, which can cost you money!)</source>
-        <translation>Tái lập lại trạng thái hiện tại của Darksend (có thể gián đoạn Darksend nếu nó đang trong quá trình trộn, điều đó có thể làm bạn bị mất tiền!)</translation>
+        <translation>Reset de huidige status van Darksend (kan Darksend onderbreken indien het Mix proces bezig is, wat u geld kan kosten!)</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="919"/>
         <source>Reset</source>
-        <translation>Khởi động lại</translation>
+        <translation>Reset</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="955"/>
         <source>&lt;b&gt;Recent transactions&lt;/b&gt;</source>
-        <translation>&lt;b&gt;Các giao dịch gần đây&lt;/b&gt;</translation>
+        <translation>&lt;b&gt;Recente transacties&lt;/b&gt;</translation>
     </message>
 </context>
 <context>
@@ -769,32 +769,32 @@ Sản phẩm này bao gồm phần mềm được phát triển bởi dự án O
     <message>
         <location filename="../forms/rpcconsole.ui" line="14"/>
         <source>Debug window</source>
-        <translation>Cửa sổ gỡ rối</translation>
+        <translation>Debug venster</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="24"/>
         <source>&amp;Information</source>
-        <translation>&amp;Thông tin</translation>
+        <translation>&amp;Informatie</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="33"/>
         <source>Masternode Count</source>
-        <translation>Số Masternode</translation>
+        <translation>Masternode Telling</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="46"/>
         <source>General</source>
-        <translation>Chung chung</translation>
+        <translation>Algemeen</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="53"/>
         <source>Name</source>
-        <translation>Tên</translation>
+        <translation>Naam</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="60"/>
         <source>Client name</source>
-        <translation>Phiên bản</translation>
+        <translation>Client naam</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="70"/>
@@ -808,62 +808,62 @@ Sản phẩm này bao gồm phần mềm được phát triển bởi dự án O
         <location filename="../forms/rpcconsole.ui" line="315"/>
         <location filename="../forms/rpcconsole.ui" line="341"/>
         <source>N/A</source>
-        <translation>Không áp dụng</translation>
+        <translation>N/A</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="83"/>
         <source>Number of connections</source>
-        <translation>Số kết nối</translation>
+        <translation>Aantal verbindingen</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="90"/>
         <source>Open the Darkcoin debug log file from the current data directory. This can take a few seconds for large log files.</source>
-        <translation>Mở file nhật kỹ lỗi Darkcoin từ thư mục hiện tại. Nó có thể mất vài giây trong trường hợp file log lớn.</translation>
+        <translation>Open het Darkcoin debug log bestand in de huidige data folder. Dit kan enkele seconden in beslag nemen bij grote bestanden.</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="93"/>
         <source>&amp;Open</source>
-        <translation>&amp;Mở</translation>
+        <translation>&amp;Open</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="116"/>
         <source>Startup time</source>
-        <translation>Thời gian khởi động</translation>
+        <translation>Startup tijd</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="129"/>
         <source>Network</source>
-        <translation>Mạng</translation>
+        <translation>Netwerk</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="152"/>
         <source>Last block time</source>
-        <translation>Thời gian block cuối cùng</translation>
+        <translation>Tijd laatste blok</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="165"/>
         <source>Debug log file</source>
-        <translation>Debug log file</translation>
+        <translation>Debug log bestand</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="172"/>
         <source>Using OpenSSL version</source>
-        <translation>Sử dụng phiên bản OpenSSL</translation>
+        <translation>Gebruikt OpenSSL versie</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="182"/>
         <source>Build date</source>
-        <translation>Ngày xây dựng</translation>
+        <translation>Bouwdatum</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="205"/>
         <source>Current number of blocks</source>
-        <translation>Số khối hiện tại</translation>
+        <translation>Huidig aantal blokken</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="305"/>
         <source>Client version</source>
-        <translation>Phiên bản</translation>
+        <translation>Client versie</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="334"/>
@@ -878,32 +878,32 @@ Sản phẩm này bao gồm phần mềm được phát triển bởi dự án O
     <message>
         <location filename="../forms/rpcconsole.ui" line="398"/>
         <source>Clear console</source>
-        <translation>Xoá console</translation>
+        <translation>Console uitvegen</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="421"/>
         <source>&amp;Network Traffic</source>
-        <translation>&amp;Lưu lượng mạng</translation>
+        <translation>&amp;Netwerk Verkeer</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="473"/>
         <source>&amp;Clear</source>
-        <translation>&amp;Xoá</translation>
+        <translation>&amp;Uitvegen</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="486"/>
         <source>Totals</source>
-        <translation>Tổng</translation>
+        <translation>Totalen</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="550"/>
         <source>In:</source>
-        <translation>Vào:</translation>
+        <translation>Inkomend:</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="630"/>
         <source>Out:</source>
-        <translation>Ra:</translation>
+        <translation>Uitgaand:</translation>
     </message>
 </context>
 <context>
@@ -911,90 +911,90 @@ Sản phẩm này bao gồm phần mềm được phát triển bởi dự án O
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="34"/>
         <source>Reuse one of the previously used receiving addresses. Reusing addresses has security and privacy issues. Do not use this unless re-generating a payment request made before.</source>
-        <translation>Sử dụng lại địa chỉ đã được sử dụng để nhận trước đây. Sử dụng lại địa chỉ nảy sinh vấn đề an ninh và riêng tư. Đừng sử dụng nó trừ khi bạn tạo lại yêu cầu thanh toán mà bạn đã làm trước đây.</translation>
+        <translation>Hergebruik een van de vorige gebruikte ontvangstadressen. Hergebruik van adressen heeft veiligheids- en privacy-implicaties. Gebruik dit niet tenzij om een betalingsverzoek opnieuw te genereren.</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="37"/>
         <source>R&amp;euse an existing receiving address (not recommended)</source>
-        <translation>Tái &amp;sử dụng lại địa chỉ nhận đã có (không khuyến khích)</translation>
+        <translation>H&amp;ergebruik een bestaand ontvangstadres (afgeraden)</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="51"/>
         <location filename="../forms/receivecoinsdialog.ui" line="74"/>
         <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Darkcoin network.</source>
-        <translation>Một thông điệp tuỳ chọn để đính vào yêu cầu thanh toán, nó sẽ hiển thị khi yêu cầu được mở. Chú ý: Thông điệp sẽ không được gửi thông qua mạng lưới Darkcoin.</translation>
+        <translation>Een optioneel bericht om aan het betalingsverzoek toe te voegen, die zal worden getoond wanneer het verzoek wordt geopend. Nota: Het bericht zal niet verzonden worden met de betaling over het Darkcoin netwerk.</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="54"/>
         <source>&amp;Message:</source>
-        <translation>&amp;Thông điệp:</translation>
+        <translation>&amp;Bericht:</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="67"/>
         <location filename="../forms/receivecoinsdialog.ui" line="88"/>
         <source>An optional label to associate with the new receiving address.</source>
-        <translation>Một nhãn tuỳ chọn để liên kết với địa chỉ nhận mới.</translation>
+        <translation>Een optionele label om te associëren met een nieuw ontvangstadres.</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="81"/>
         <source>Use this form to request payments. All fields are &lt;b&gt;optional&lt;/b&gt;.</source>
-        <translation>Sử dụng biểu mẫu này để yêu cầu thanh toán. Tất cả các trường đều là &lt;b&gt;không bắt buộc&lt;/b&gt;.</translation>
+        <translation>Gebruik dit formulier om een betaling te verzoeken. Alle velden zijn &lt;b&gt;optioneel&lt;/b&gt;</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="91"/>
         <source>&amp;Label:</source>
-        <translation>&amp;Nhãn:</translation>
+        <translation>&amp;Label</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="104"/>
         <location filename="../forms/receivecoinsdialog.ui" line="126"/>
         <source>An optional amount to request. Leave this empty or zero to not request a specific amount.</source>
-        <translation>Một tuỳ chọn về số tiền yêu cầu. Để nó trống hoặc bằng không để không yêu cầu một số tiền cụ thể.</translation>
+        <translation>Een optioneel bedrag om te verzoeken. Laat dit leeg of zet op nul om geen specifiek bedrag op te geven.</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="107"/>
         <source>&amp;Amount:</source>
-        <translation>&amp;Số tiền:</translation>
+        <translation>&amp;Bedrag:</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="141"/>
         <source>&amp;Request payment</source>
-        <translation>&amp;Yêu cầu thanh toán</translation>
+        <translation>&amp;Verzoek betaling</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="158"/>
         <source>Clear all fields of the form.</source>
-        <translation>Xoá tất cả các ô.</translation>
+        <translation>Wis alle velden van het formulier.</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="161"/>
         <source>Clear</source>
-        <translation>Xoá</translation>
+        <translation>Wis</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="239"/>
         <source>Requested payments history</source>
-        <translation>Xem lịch sử thanh toán</translation>
+        <translation>Betalingsverzoek geschiedenis</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="261"/>
         <source>Show the selected request (does the same as double clicking an entry)</source>
-        <translation>Hiển thị những yêu cầu được chọn (giống như click đúp vào mỗi thành phần)</translation>
+        <translation>Toon geslecteerde verzoeken (doet hetzelfde als een item dubbelklikken)</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="264"/>
         <source>Show</source>
-        <translation>Xem</translation>
+        <translation>Weergeven</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="278"/>
         <source>Remove the selected entries from the list</source>
-        <translation>Xoá thành phần được chọn khỏi danh sách</translation>
+        <translation>Verwijder geselecteerde items uit de lijst</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="281"/>
         <source>Remove</source>
-        <translation>Xoá</translation>
+        <translation>Verwijder</translation>
     </message>
 </context>
 <context>
@@ -1002,22 +1002,22 @@ Sản phẩm này bao gồm phần mềm được phát triển bởi dự án O
     <message>
         <location filename="../forms/receiverequestdialog.ui" line="29"/>
         <source>QR Code</source>
-        <translation>Mã QR</translation>
+        <translation>QR Code</translation>
     </message>
     <message>
         <location filename="../forms/receiverequestdialog.ui" line="75"/>
         <source>Copy &amp;URI</source>
-        <translation>Copy &amp;URI</translation>
+        <translation>Copieer &amp;URI</translation>
     </message>
     <message>
         <location filename="../forms/receiverequestdialog.ui" line="82"/>
         <source>Copy &amp;Address</source>
-        <translation>Copy địa chỉ</translation>
+        <translation>Kopieer &amp;Adres</translation>
     </message>
     <message>
         <location filename="../forms/receiverequestdialog.ui" line="89"/>
         <source>&amp;Save Image...</source>
-        <translation>&amp;Lưu ảnh...</translation>
+        <translation>&amp;Image opslaan...</translation>
     </message>
 </context>
 <context>
@@ -1025,32 +1025,32 @@ Sản phẩm này bao gồm phần mềm được phát triển bởi dự án O
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="14"/>
         <source>Send Coins</source>
-        <translation>Gửi tiền</translation>
+        <translation>Munten Versturen</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="90"/>
         <source>Coin Control Features</source>
-        <translation>Tính năng Coin Control</translation>
+        <translation>Munt Controle Mogelijkheden</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="110"/>
         <source>Inputs...</source>
-        <translation>Đầu vào...</translation>
+        <translation>Inputs...</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="117"/>
         <source>automatically selected</source>
-        <translation>tự động chọn</translation>
+        <translation>automatisch geselecteerd</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="136"/>
         <source>Insufficient funds!</source>
-        <translation>Không đủ tiền!</translation>
+        <translation>Onvoldoende saldo!</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="225"/>
         <source>Quantity:</source>
-        <translation>Số lượng:</translation>
+        <translation>Hoeveelheid:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="260"/>
@@ -1060,72 +1060,72 @@ Sản phẩm này bao gồm phần mềm được phát triển bởi dự án O
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="308"/>
         <source>Amount:</source>
-        <translation>Số tiền:</translation>
+        <translation>Bedrag:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="340"/>
         <source>Priority:</source>
-        <translation>Ưu tiên:</translation>
+        <translation>Prioriteit:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="388"/>
         <source>Fee:</source>
-        <translation>Phí:</translation>
+        <translation>Vergoeding:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="420"/>
         <source>Low Output:</source>
-        <translation>Low Output:</translation>
+        <translation>Lage Output:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="468"/>
         <source>After Fee:</source>
-        <translation>Phí sau:</translation>
+        <translation>Na Vergoeding:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="500"/>
         <source>Change:</source>
-        <translation>Trả lại:</translation>
+        <translation>Wisselgeld:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="544"/>
         <source>If this is activated, but the change address is empty or invalid, change will be sent to a newly generated address.</source>
-        <translation>Nếu nó được kích hoạt, nhưng địa chỉ tiền nhận lại là trống hoặc không hợp lệ, thì tiền lẻ trả lại sẽ được gửi đến một địa chỉ được sinh mới.</translation>
+        <translation>Wanneer dit is geactiveerd, maar het pasmunt adres is leeg of ongeldig, dan wordt de pasmunt gestuurd naar een nieuw aangemaakte adres.</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="547"/>
         <source>Custom change address</source>
-        <translation>Thay đổi địa chỉ tiền trả lại</translation>
+        <translation>Aangepaste pasmunt adres</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="668"/>
         <source>Confirm the send action</source>
-        <translation>Xác nhận việc gửi</translation>
+        <translation>Bevestig de verzend actie</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="671"/>
         <source>S&amp;end</source>
-        <translation>&amp;Gửi</translation>
+        <translation>V$erzenden</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="691"/>
         <source>Clear all fields of the form.</source>
-        <translation>Xoá tất cả các ô.</translation>
+        <translation>Wis alle velden van het formulier.</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="694"/>
         <source>Clear &amp;All</source>
-        <translation>Xoá &amp;Tất cả</translation>
+        <translation>Wis &amp;Alles</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="711"/>
         <source>Send to multiple recipients at once</source>
-        <translation>Gửi đến nhiều địa chỉ một lúc</translation>
+        <translation>Tegelijk naar meerdere ontvangers versturen</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="714"/>
         <source>Add &amp;Recipient</source>
-        <translation>Thêm &amp;Người nhận</translation>
+        <translation>Voeg &amp;Ontvanger</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="759"/>
@@ -1140,7 +1140,7 @@ Sản phẩm này bao gồm phần mềm được phát triển bởi dự án O
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="779"/>
         <source>Balance:</source>
-        <translation>Số dư:</translation>
+        <translation>Balans:</translation>
     </message>
 </context>
 <context>
@@ -1148,22 +1148,22 @@ Sản phẩm này bao gồm phần mềm được phát triển bởi dự án O
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="21"/>
         <source>This is a normal payment.</source>
-        <translation>Đây là giao dịch thông thường.</translation>
+        <translation>Dit is een normale betaling.</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="36"/>
         <source>Pay &amp;To:</source>
-        <translation>Trả &amp;Cho</translation>
+        <translation>Betaal &amp;Aan:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="54"/>
         <source>The address to send the payment to (e.g. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</source>
-        <translation>Địa chỉ để gửi thanh toán (VD: XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
+        <translation>Het adres om de betaling naar te versturen (bijv. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="61"/>
         <source>Choose previously used address</source>
-        <translation>Chọn địa chỉ đã sử dụng trước</translation>
+        <translation>Kies eerder gebruikt adres</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="71"/>
@@ -1173,7 +1173,7 @@ Sản phẩm này bao gồm phần mềm được phát triển bởi dự án O
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="78"/>
         <source>Paste address from clipboard</source>
-        <translation>Dán địa chỉ từ clipboard</translation>
+        <translation>Plak adres van het klembord</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="88"/>
@@ -1185,56 +1185,56 @@ Sản phẩm này bao gồm phần mềm được phát triển bởi dự án O
         <location filename="../forms/sendcoinsentry.ui" line="619"/>
         <location filename="../forms/sendcoinsentry.ui" line="1155"/>
         <source>Remove this entry</source>
-        <translation>Xoá thành phần này</translation>
+        <translation>Verwijder deze vermelding</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="111"/>
         <source>&amp;Label:</source>
-        <translation>&amp;Nhãn:</translation>
+        <translation>&amp;Label:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="124"/>
         <source>Enter a label for this address to add it to the list of used addresses</source>
-        <translation>Nhập nhãn cho địa chỉ này để đưa vào danh sách địa chỉ đã dùng</translation>
+        <translation>Voer een label voor dit adres in om het toe te voegen aan de lijst van gebruikte adressen</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="131"/>
         <location filename="../forms/sendcoinsentry.ui" line="652"/>
         <location filename="../forms/sendcoinsentry.ui" line="1188"/>
         <source>A&amp;mount:</source>
-        <translation>&amp;Số tiền:</translation>
+        <translation>B$edrag</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="147"/>
         <source>Message:</source>
-        <translation>Thông điệp:</translation>
+        <translation>Bericht:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="157"/>
         <source>A message that was attached to the darkcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Darkcoin network.</source>
-        <translation>Một thông điệp được đính với darkcoin: URI đó sẽ được lưu trữ với các giao dịch cho các bạn tham khảo. Lưu ý: Thông điệp này sẽ không được gửi qua mạng Darkcoin. </translation>
+        <translation>Een boodschap die was bijgevoegd aan de darkcoin: URI die met de transactie voor uw referentie wordt opgeslagen. Opmerking: Dit bericht zal niet over het Darkcoin netwerk worden verzonden.</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="583"/>
         <source>This is an unverified payment request.</source>
-        <translation>Đây là yêu cầu thanh toán chưa được xác thực.</translation>
+        <translation>Dit is een niet-geverifieerd betalingsverzoek.</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="601"/>
         <location filename="../forms/sendcoinsentry.ui" line="1133"/>
         <source>Pay To:</source>
-        <translation>Trả cho:</translation>
+        <translation>Betaal Aan:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="635"/>
         <location filename="../forms/sendcoinsentry.ui" line="1171"/>
         <source>Memo:</source>
-        <translation>Ghi nhớ:</translation>
+        <translation>Memo:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="1115"/>
         <source>This is a verified payment request.</source>
-        <translation>Đây là một yêu cầu thanh toán được xác thực.</translation>
+        <translation>Dit is een geverifieerd betalingsverzoek.</translation>
     </message>
 </context>
 <context>
@@ -1242,28 +1242,28 @@ Sản phẩm này bao gồm phần mềm được phát triển bởi dự án O
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="14"/>
         <source>Signatures - Sign / Verify a Message</source>
-        <translation>Chữ ký - Ký / Kiểm tra Thông điệp</translation>
+        <translation>Handtekeningen - Teken / Verifieer een Bericht</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="24"/>
         <source>&amp;Sign Message</source>
-        <translation>&amp;Ký thông điệp</translation>
+        <translation>&amp;Onderteken Bericht</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="30"/>
         <source>You can sign messages with your addresses to prove you own them. Be careful not to sign anything vague, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
-        <translation>Bạn có thể ký vào thông điệp với địa chỉ của bạn để chứng minh bạn là chủ của nó. Hãy cẩn thận không ký vào những gì mơ hồ, như là thứ lừa đảo để lừa bạn ký xác nhận của bạn vào đó cho họ. Chỉ ký vào những gì mà bạn hoàn thoàn đồng ý.</translation>
+        <translation>U kan berichten tekenen met uw adressen om te bewijzen dat u deze bezit. Gelieve voorzichtig te zijn om niets vaags te ondertekenen aangezien phishing aanvallen u kunnen misleiden om uw identiteit naar hen te ondertekenen. Teken enkel volledig gedetailleerde uitspraken waarmee u akkoord gaat.</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="48"/>
         <source>The address to sign the message with (e.g. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</source>
-        <translation>Địa chỉ để ký thông điệp với (VD: XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
+        <translation>Het adres om het bericht mee te tekenen (vb. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="55"/>
         <location filename="../forms/signverifymessagedialog.ui" line="265"/>
         <source>Choose previously used address</source>
-        <translation>Chọn địa chỉ đã dùng</translation>
+        <translation>Kies eerder gebruikt adres</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="65"/>
@@ -1274,7 +1274,7 @@ Sản phẩm này bao gồm phần mềm được phát triển bởi dự án O
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="75"/>
         <source>Paste address from clipboard</source>
-        <translation>Dán địa chỉ từ clipboard</translation>
+        <translation>Plak adres van het systeem klembord</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="85"/>
@@ -1284,68 +1284,68 @@ Sản phẩm này bao gồm phần mềm được phát triển bởi dự án O
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="97"/>
         <source>Enter the message you want to sign here</source>
-        <translation>Nhập vào thông điệp mà bạn muốn ký tại đây</translation>
+        <translation>Geef hier het bericht in die u wilt tekenen</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="104"/>
         <source>Signature</source>
-        <translation>Chữ ký</translation>
+        <translation>Handtekening</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="131"/>
         <source>Copy the current signature to the system clipboard</source>
-        <translation>Copy chữ ký hiện tại vào bộ đệm của hệ thống</translation>
+        <translation>Kopieer de huidige handtekening naar het systeem klembord</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="152"/>
         <source>Sign the message to prove you own this Darkcoin address</source>
-        <translation>Ký vào thông điệp để chứng tỏ bạn sở hữu địa chỉ Darkcoin</translation>
+        <translation>Teken het bericht om te bewijzen dat u dit Darkcoin adres bezit</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="155"/>
         <source>Sign &amp;Message</source>
-        <translation>&amp;Ký thông điệp</translation>
+        <translation>Teken &amp;Bericht</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="169"/>
         <source>Reset all sign message fields</source>
-        <translation>Tái lập lại tất cả các trường cần ký</translation>
+        <translation>Reset alle velden voor ondertekenen</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="172"/>
         <location filename="../forms/signverifymessagedialog.ui" line="315"/>
         <source>Clear &amp;All</source>
-        <translation>Xoá &amp;tất cả</translation>
+        <translation>Wis &amp;Alles</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="231"/>
         <source>&amp;Verify Message</source>
-        <translation>&amp;Xác thực Thông điệp</translation>
+        <translation>&amp;Verifieer Bericht</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="237"/>
         <source>Enter the signing address, message (ensure you copy line breaks, spaces, tabs, etc. exactly) and signature below to verify the message. Be careful not to read more into the signature than what is in the signed message itself, to avoid being tricked by a man-in-the-middle attack.</source>
-        <translation>Hãy nhập địa chỉ ký, thông điệp (hãy chắc chắn rằng bạn copy cả các dấu xuống dòng, dấu cách, tab,... một cách chính xác) và chữ ký dưới đây để xác thực cho thông điệp. Hãy cẩn thận không thêm vào chữ ký hơn so với bản thân nó trong thông điệp đã ký, để tránh bị đánh lừa bởi kiểu tấn công người trung gian.</translation>
+        <translation>Geef een onderteken adres, bericht (zorg dat u zeker nieuwe lijnen, spaties, tabs, enz. exact kopieert) en teken hieronder om het bericht te verifieren. Gelieve voorzichtig zijn om niet meer te lezen in de handtekening dan hetgeen zich in het ondertekende bericht bevindt, om te vermijden om misleid te worden door een man-in-the-middle aanval.</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="258"/>
         <source>The address the message was signed with (e.g. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</source>
-        <translation>Địa chỉ mà thông điệp được ký (VD: XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
+        <translation>Het adres waarmee het bericht werd ondertekend (vb. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="295"/>
         <source>Verify the message to ensure it was signed with the specified Darkcoin address</source>
-        <translation>Kiểm tra lại thông điệp để đảm bảo rằng nó được ký với địa chỉ Darkcoin cụ thể</translation>
+        <translation>Verifieer het bericht om zeker te zijn dat het getekend werd met het opgegeven Darkcoin adres</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="298"/>
         <source>Verify &amp;Message</source>
-        <translation>Xác thực &amp;Thông điệp</translation>
+        <translation>Verifieer &amp;Bericht</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="312"/>
         <source>Reset all verify message fields</source>
-        <translation>Tái lập lại tất cả các trường kiểm tra</translation>
+        <translation>Reset alle verifieer-bericht velden</translation>
     </message>
 </context>
 <context>
@@ -1353,12 +1353,12 @@ Sản phẩm này bao gồm phần mềm được phát triển bởi dự án O
     <message>
         <location filename="../forms/transactiondescdialog.ui" line="14"/>
         <source>Transaction details</source>
-        <translation>Chi tiết giao dịch</translation>
+        <translation>Transactie details</translation>
     </message>
     <message>
         <location filename="../forms/transactiondescdialog.ui" line="20"/>
         <source>This pane shows a detailed description of the transaction</source>
-        <translation>Bảng này hiển thị mô tả chi tiết về giao dịch</translation>
+        <translation>Dit paneel toont een gedetailleerde beschrijving van de transactie</translation>
     </message>
 </context>
 </TS>
