@@ -210,25 +210,25 @@ Denna produkten innehåller mjukvara utvecklad av OpenSSL Project för användni
         <location filename="../forms/askpassphrasedialog.ui" line="26"/>
         <location filename="../forms/ui_askpassphrasedialog.h" line="135"/>
         <source>Passphrase Dialog</source>
-        <translation>Lösenords Dialog</translation>
+        <translation>Lösenfrasdialog</translation>
     </message>
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="47"/>
         <location filename="../forms/ui_askpassphrasedialog.h" line="136"/>
         <source>Enter passphrase</source>
-        <translation>Ange lösenord</translation>
+        <translation>Ange lösenfras</translation>
     </message>
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="61"/>
         <location filename="../forms/ui_askpassphrasedialog.h" line="137"/>
         <source>New passphrase</source>
-        <translation>Nytt lösenord</translation>
+        <translation>Ny lösenfras</translation>
     </message>
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="75"/>
         <location filename="../forms/ui_askpassphrasedialog.h" line="138"/>
         <source>Repeat new passphrase</source>
-        <translation>Upprepa nytt lösenord</translation>
+        <translation>Upprepa ny lösenfras</translation>
     </message>
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="108"/>
@@ -275,17 +275,17 @@ Denna produkten innehåller mjukvara utvecklad av OpenSSL Project för användni
     <message>
         <location filename="../askpassphrasedialog.cpp" line="64"/>
         <source>Change passphrase</source>
-        <translation>Ändra lösenord</translation>
+        <translation>Ändra lösenfras</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="65"/>
         <source>Enter the old and new passphrase to the wallet.</source>
-        <translation>Ange plånbokens gamla och nya lösenord.</translation>
+        <translation>Skriv in den gamla och den nya lösenfrasen till plånboken.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="112"/>
         <source>Confirm wallet encryption</source>
-        <translation>Bekräfta kryptering av plånbok</translation>
+        <translation>Bekräfta plånbokskryptering</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="113"/>
@@ -319,46 +319,46 @@ Denna produkten innehåller mjukvara utvecklad av OpenSSL Project för användni
         <location filename="../askpassphrasedialog.cpp" line="187"/>
         <location filename="../askpassphrasedialog.cpp" line="193"/>
         <source>Wallet encryption failed</source>
-        <translation>Kryptering av plånbok misslyckades</translation>
+        <translation>Plånbokskrypteringen misslyckades</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="138"/>
         <source>Wallet encryption failed due to an internal error. Your wallet was not encrypted.</source>
-        <translation>Kryptering av plånbok misslyckades på grund av ett internt fel. Din plånbok blev inte krypterad.</translation>
+        <translation>Plånbokskrypteringen misslyckades på grund av ett internt fel. Din plånbok blev inte krypterad.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="145"/>
         <location filename="../askpassphrasedialog.cpp" line="194"/>
         <source>The supplied passphrases do not match.</source>
-        <translation>De angivna lösenorden överensstämmer inte.</translation>
+        <translation>Den angivna lösenfrasen överensstämmer inte.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="157"/>
         <source>Wallet unlock failed</source>
-        <translation>Upplåsning av plånbok misslyckades</translation>
+        <translation>Plånboksupplåsning misslyckades</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="158"/>
         <location filename="../askpassphrasedialog.cpp" line="169"/>
         <location filename="../askpassphrasedialog.cpp" line="188"/>
         <source>The passphrase entered for the wallet decryption was incorrect.</source>
-        <translation>Lösenordet för dekryptering av plånbok var felaktig.</translation>
+        <translation>Den inmatade lösenfrasen för plånboksdekryptering var felaktig.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="168"/>
         <source>Wallet decryption failed</source>
-        <translation>Dekryptering av plånbok misslyckades</translation>
+        <translation>Plånboksdekryptering misslyckades.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="182"/>
         <source>Wallet passphrase was successfully changed.</source>
-        <translation>Plånbokens lösenord har ändrats.</translation>
+        <translation>Plånbokens lösenfras ändrades framgångsrikt.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="230"/>
         <location filename="../askpassphrasedialog.cpp" line="254"/>
         <source>Warning: The Caps Lock key is on!</source>
-        <translation>Varning: Caps Lock är påslaget!</translation>
+        <translation>Varning: Caps Lock är aktiverat!</translation>
     </message>
 </context>
 <context>
@@ -393,7 +393,7 @@ Denna produkten innehåller mjukvara utvecklad av OpenSSL Project för användni
     <message>
         <location filename="../bitcoingui.cpp" line="227"/>
         <source>Show general overview of wallet</source>
-        <translation>Visa översiktsvy av plånbok</translation>
+        <translation>Visa allmän plånboksöversikt</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="233"/>
@@ -408,7 +408,7 @@ Denna produkten innehåller mjukvara utvecklad av OpenSSL Project för användni
     <message>
         <location filename="../bitcoingui.cpp" line="240"/>
         <source>&amp;Receive</source>
-        <translation>&amp;Ta emot</translation>
+        <translation>&amp;Motta</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="241"/>
@@ -423,17 +423,17 @@ Denna produkten innehåller mjukvara utvecklad av OpenSSL Project för användni
     <message>
         <location filename="../bitcoingui.cpp" line="248"/>
         <source>Browse transaction history</source>
-        <translation>Bläddra i transaktionshistorik</translation>
+        <translation>Bläddra i transaktionshistoriken</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="265"/>
         <source>E&amp;xit</source>
-        <translation>&amp;Avsluta</translation>
+        <translation>A&amp;vsluta</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="266"/>
         <source>Quit application</source>
-        <translation>Avsluta programmet</translation>
+        <translation>Avsluta applikationen</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="270"/>
@@ -471,7 +471,7 @@ Denna produkten innehåller mjukvara utvecklad av OpenSSL Project för användni
         <location filename="../bitcoingui.cpp" line="286"/>
         <location filename="../bitcoingui.cpp" line="288"/>
         <source>&amp;Show / Hide</source>
-        <translation>&amp;Visa / Göm</translation>
+        <translation>&amp;Visa/göm</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="289"/>
@@ -486,7 +486,7 @@ Denna produkten innehåller mjukvara utvecklad av OpenSSL Project för användni
     <message>
         <location filename="../bitcoingui.cpp" line="292"/>
         <source>Encrypt the private keys that belong to your wallet</source>
-        <translation>Kryptera de privata nycklar som tillhör din plånbok</translation>
+        <translation>Kryptera de privata nycklarna som tillhör din plånbok</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="294"/>
@@ -501,12 +501,12 @@ Denna produkten innehåller mjukvara utvecklad av OpenSSL Project för användni
     <message>
         <location filename="../bitcoingui.cpp" line="296"/>
         <source>&amp;Change Passphrase...</source>
-        <translation>&amp;Byt Lösenord...</translation>
+        <translation>&amp;Ändra lösenfras...</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="297"/>
         <source>Change the passphrase used for wallet encryption</source>
-        <translation>Byt lösenord för kryptering av plånbok</translation>
+        <translation>Ändra lösenfrasen som används för plånbokskryptering</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="298"/>
@@ -576,22 +576,22 @@ Denna produkten innehåller mjukvara utvecklad av OpenSSL Project för användni
     <message>
         <location filename="../bitcoingui.cpp" line="313"/>
         <source>&amp;Sending addresses...</source>
-        <translation>Av&amp;sändaradresser...</translation>
+        <translation>&amp;Avsändaradresser...</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="314"/>
         <source>Show the list of used sending addresses and labels</source>
-        <translation>Visa listan av använda avsändaradresser och etiketter</translation>
+        <translation>Visa listan med använda avsändaradresser och etiketter</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="315"/>
         <source>&amp;Receiving addresses...</source>
-        <translation>Mottaga&amp;radresser...</translation>
+        <translation>&amp;Mottagaradresser...</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="316"/>
         <source>Show the list of used receiving addresses and labels</source>
-        <translation>Visa listan av använda mottagningsadresser och etiketter</translation>
+        <translation>Visa listan med använda mottagaradresser och etiketter</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="318"/>
@@ -606,7 +606,7 @@ Denna produkten innehåller mjukvara utvecklad av OpenSSL Project för användni
     <message>
         <location filename="../bitcoingui.cpp" line="321"/>
         <source>&amp;Command-line options</source>
-        <translation>&amp;Kommandoradsalternativ</translation>
+        <translation>%Kommandoradalternativ</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="322"/>
@@ -616,7 +616,7 @@ Denna produkten innehåller mjukvara utvecklad av OpenSSL Project för användni
     <message>
         <location filename="../bitcoingui.cpp" line="358"/>
         <source>&amp;File</source>
-        <translation>&amp;Arkiv</translation>
+        <translation>&amp;Fil</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="372"/>
@@ -636,7 +636,7 @@ Denna produkten innehåller mjukvara utvecklad av OpenSSL Project för användni
     <message>
         <location filename="../bitcoingui.cpp" line="402"/>
         <source>Tabs toolbar</source>
-        <translation>Verktygsfält för Tabbar</translation>
+        <translation>Verktygsfält för tabbar</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="489"/>
@@ -662,22 +662,22 @@ Denna produkten innehåller mjukvara utvecklad av OpenSSL Project för användni
     <message>
         <location filename="../bitcoingui.cpp" line="656"/>
         <source>Reindexing blocks on disk...</source>
-        <translation>Återindexerar block på disken...</translation>
+        <translation>Återindexerar block på disk...</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="660"/>
         <source>No block source available...</source>
-        <translation>Ingen block-källa tillgänglig...</translation>
+        <translation>Ingen tillgänglig blockkälla...</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="670"/>
         <source>Processed %1 blocks of transaction history.</source>
-        <translation>Bearbetat %1 block i transaktionshistoriken.</translation>
+        <translation>Utfört %1 block från transaktionshistoriken</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="675"/>
         <source>Up to date</source>
-        <translation>Uppdaterad</translation>
+        <translation>Aktuell</translation>
     </message>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="696"/>
@@ -748,7 +748,7 @@ Denna produkten innehåller mjukvara utvecklad av OpenSSL Project för användni
     <message>
         <location filename="../bitcoingui.cpp" line="849"/>
         <source>Sent transaction</source>
-        <translation>Transaktion skickad</translation>
+        <translation>Skickad transaktion</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="849"/>
@@ -763,7 +763,7 @@ Type: %3
 Address: %4
 </source>
         <translation>Datum: %1
-Belopp: %2
+Antal: %2
 Typ: %3
 Adress: %4
 </translation>
@@ -771,22 +771,22 @@ Adress: %4
     <message>
         <location filename="../bitcoingui.cpp" line="921"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
-        <translation>Denna plånbok är &lt;b&gt;krypterad&lt;/b&gt; och för närvarande &lt;b&gt;olåst&lt;/b&gt;</translation>
+        <translation>Plånboken är &lt;b&gt;krypterad&lt;/b&gt; och för närvarande &lt;b&gt;olåst&lt;/b&gt;</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="931"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt; for anonimization only</source>
-        <translation type="unfinished"/>
+        <translation>Plånboken är &lt;b&gt;krypterad&lt;/b&gt; och för närvarande &lt;b&gt;olåst&lt;/b&gt; endast för anonymisering</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="941"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
-        <translation>Denna plånbok är &lt;b&gt;krypterad&lt;/b&gt; och för närvarande &lt;b&gt;låst&lt;/b&gt;</translation>
+        <translation>Plånboken är &lt;b&gt;krypterad&lt;/b&gt; och för närvarande &lt;b&gt;låst&lt;/b&gt;</translation>
     </message>
     <message>
         <location filename="../darkcoin.cpp" line="449"/>
         <source>A fatal error occurred. Darkcoin can no longer continue safely and will quit.</source>
-        <translation type="unfinished"/>
+        <translation>Ett ödesdigert misstag inträffade. Darkcoin kan inte längre fortsätta säkert och kommer att avslutas.</translation>
     </message>
 </context>
 <context>
@@ -809,13 +809,13 @@ Adress: %4
         <location filename="../forms/coincontroldialog.ui" line="48"/>
         <location filename="../forms/ui_coincontroldialog.h" line="320"/>
         <source>Quantity:</source>
-        <translation>Kvantitet:</translation>
+        <translation>Antal:</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="77"/>
         <location filename="../forms/ui_coincontroldialog.h" line="321"/>
         <source>Bytes:</source>
-        <translation>Antal Byte:</translation>
+        <translation>Bytes:</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="122"/>
@@ -839,7 +839,7 @@ Adress: %4
         <location filename="../forms/coincontroldialog.ui" line="228"/>
         <location filename="../forms/ui_coincontroldialog.h" line="325"/>
         <source>Low Output:</source>
-        <translation>Låg utmatning:</translation>
+        <translation>Låg utdata:</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="276"/>
@@ -875,7 +875,7 @@ Adress: %4
         <location filename="../forms/coincontroldialog.ui" line="446"/>
         <location filename="../forms/ui_coincontroldialog.h" line="337"/>
         <source>Amount</source>
-        <translation>Mängd</translation>
+        <translation>Antal</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="456"/>
@@ -899,7 +899,8 @@ Adress: %4
         <location filename="../forms/coincontroldialog.ui" line="471"/>
         <location filename="../forms/ui_coincontroldialog.h" line="333"/>
         <source>Confirmations</source>
-        <translation>Konfirmationer</translation>
+        <translation>Bekräftelser
+</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="474"/>
@@ -932,22 +933,22 @@ Adress: %4
     <message>
         <location filename="../coincontroldialog.cpp" line="46"/>
         <source>Copy transaction ID</source>
-        <translation>Kopiera transaktions ID</translation>
+        <translation>Kopiera transaktions-id</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="47"/>
         <source>Lock unspent</source>
-        <translation>Lås ospenderat</translation>
+        <translation>Lås oförbrukat</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="48"/>
         <source>Unlock unspent</source>
-        <translation>Lås upp ospenderat</translation>
+        <translation>Lås upp oförbrukat</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="70"/>
         <source>Copy quantity</source>
-        <translation>Kopiera kvantitet</translation>
+        <translation>Kopiera antal</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="72"/>
@@ -962,7 +963,7 @@ Adress: %4
     <message>
         <location filename="../coincontroldialog.cpp" line="74"/>
         <source>Copy bytes</source>
-        <translation>Kopiera byte</translation>
+        <translation>Kopiera bytes</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="75"/>
@@ -972,7 +973,7 @@ Adress: %4
     <message>
         <location filename="../coincontroldialog.cpp" line="76"/>
         <source>Copy low output</source>
-        <translation>Kopiera låg utmatning</translation>
+        <translation>Kopiera låg utdata</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="77"/>
@@ -1007,7 +1008,7 @@ Adress: %4
     <message>
         <location filename="../coincontroldialog.cpp" line="418"/>
         <source>low-medium</source>
-        <translation>lågmedel</translation>
+        <translation>medellåg</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="419"/>
@@ -1032,7 +1033,7 @@ Adress: %4
     <message>
         <location filename="../coincontroldialog.cpp" line="464"/>
         <source>none</source>
-        <translation>ingen</translation>
+        <translation>inga</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="605"/>
@@ -1052,44 +1053,44 @@ Adress: %4
     <message>
         <location filename="../coincontroldialog.cpp" line="615"/>
         <source>This label turns red, if the transaction size is greater than 1000 bytes.</source>
-        <translation>Denna etikett blir röd om transaktionen överstiger 1000 byte.</translation>
+        <translation>Denna etikett blir röd om transaktionen är större än 1000 bytes.</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="616"/>
         <location filename="../coincontroldialog.cpp" line="621"/>
         <source>This means a fee of at least %1 per kB is required.</source>
-        <translation>Detta betyder att en avgift på minst %1 per kB behövs.</translation>
+        <translation>Detta betyder att den begärda avgiften som minst är %1 per kB</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="617"/>
         <source>Can vary +/- 1 byte per input.</source>
-        <translation>Kan variera +/- 1 byte per inmatning.</translation>
+        <translation>Kan variera +/- 1 byte per utdata.</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="619"/>
         <source>Transactions with higher priority are more likely to get included into a block.</source>
-        <translation>Transaktioner med högre prioritet har större sannolikhet att inkluderas i ett block.</translation>
+        <translation>Transaktioner med högre prioritet är mer benägna att inkluderas i ett block.</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="620"/>
         <source>This label turns red, if the priority is smaller than &quot;medium&quot;.</source>
-        <translation>Denna etikett blir röd om prioriteten är mindre än &quot;medium&quot;.</translation>
+        <translation>Denna etikett blir röd om prioriteten är mindre än &quot;medel&quot;.</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="623"/>
         <source>This label turns red, if any recipient receives an amount smaller than %1.</source>
-        <translation>Denna etikett blir röd om någon mottagare får en betalning som är mindre än %1.</translation>
+        <translation>Denna etikett blir röd om en mottagare får ett belopp mindre än %1.</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="624"/>
         <location filename="../coincontroldialog.cpp" line="628"/>
         <source>This means a fee of at least %1 is required.</source>
-        <translation>Detta betyder att en avgift på minst %1 behövs.</translation>
+        <translation>Detta betyder att en lägsta avgift på %1 krävs.</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="625"/>
         <source>Amounts below 0.546 times the minimum relay fee are shown as dust.</source>
-        <translation>Belopp mindre än 0.546 gånger den minsta vidarebefordringsavgiften visa som damm.</translation>
+        <translation>Belopp mindre än 0.546 gånger den minsta vidarebefordringsavgiften visas som damm.</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="627"/>
