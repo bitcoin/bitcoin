@@ -509,7 +509,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="299"/>
         <source>Unlock wallet</source>
-        <translation type="unfinished"/>
+        <translation>بٹوا ان لاک</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="300"/>
@@ -4344,7 +4344,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="199"/>
         <source>Error</source>
-        <translation type="unfinished"/>
+        <translation>نقص</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="200"/>

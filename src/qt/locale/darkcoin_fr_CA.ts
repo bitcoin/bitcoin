@@ -514,7 +514,7 @@ Ce produit comprend des logiciels développés par le projet OpenSSL pour être 
     <message>
         <location filename="../bitcoingui.cpp" line="299"/>
         <source>Unlock wallet</source>
-        <translation type="unfinished"/>
+        <translation>Débarrer Porte-Feuille</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="300"/>
