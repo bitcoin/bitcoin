@@ -4,12 +4,12 @@
     <message>
         <location filename="../forms/aboutdialog.ui" line="14"/>
         <source>About Darkcoin Core</source>
-        <translation type="unfinished"/>
+        <translation>关于Darkcoin Core</translation>
     </message>
     <message>
         <location filename="../forms/aboutdialog.ui" line="53"/>
         <source>&lt;b&gt;Darkcoin Core&lt;/b&gt; version</source>
-        <translation type="unfinished"/>
+        <translation>&lt;b&gt;Darkcoin Core&lt;/b&gt;版本</translation>
     </message>
     <message>
         <location filename="../forms/aboutdialog.ui" line="111"/>
@@ -27,37 +27,37 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/addressbookpage.ui" line="30"/>
         <source>Double-click to edit address or label</source>
-        <translation type="unfinished"/>
+        <translation>双击来编辑地址或标签</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="57"/>
         <source>Create a new address</source>
-        <translation type="unfinished"/>
+        <translation>创建新地址</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="60"/>
         <source>&amp;New</source>
-        <translation type="unfinished"/>
+        <translation>&amp;新建</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="71"/>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation type="unfinished"/>
+        <translation>复制已选择的地址致系统剪贴板</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="74"/>
         <source>&amp;Copy</source>
-        <translation type="unfinished"/>
+        <translation>&amp;复制</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="85"/>
         <source>Delete the currently selected address from the list</source>
-        <translation type="unfinished"/>
+        <translation>在列表中删除已选择的地址</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="88"/>
         <source>&amp;Delete</source>
-        <translation type="unfinished"/>
+        <translation>&amp;删除</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="112"/>
@@ -67,12 +67,12 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/addressbookpage.ui" line="115"/>
         <source>&amp;Export</source>
-        <translation type="unfinished"/>
+        <translation>&amp;输出</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="132"/>
         <source>C&amp;lose</source>
-        <translation type="unfinished"/>
+        <translation>&amp;关闭</translation>
     </message>
 </context>
 <context>
@@ -80,22 +80,22 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="26"/>
         <source>Passphrase Dialog</source>
-        <translation type="unfinished"/>
+        <translation>密码对话框</translation>
     </message>
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="47"/>
         <source>Enter passphrase</source>
-        <translation type="unfinished"/>
+        <translation>键入密码</translation>
     </message>
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="61"/>
         <source>New passphrase</source>
-        <translation type="unfinished"/>
+        <translation>新密码</translation>
     </message>
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="75"/>
         <source>Repeat new passphrase</source>
-        <translation type="unfinished"/>
+        <translation>重复新密码</translation>
     </message>
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="108"/>
@@ -105,7 +105,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="111"/>
         <source>For anonymization only</source>
-        <translation type="unfinished"/>
+        <translation>只为匿名化</translation>
     </message>
 </context>
 <context>
@@ -118,92 +118,92 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/coincontroldialog.ui" line="48"/>
         <source>Quantity:</source>
-        <translation type="unfinished"/>
+        <translation>数量：</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="77"/>
         <source>Bytes:</source>
-        <translation type="unfinished"/>
+        <translation>字节：</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="122"/>
         <source>Amount:</source>
-        <translation type="unfinished"/>
+        <translation>总计：</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="151"/>
         <source>Priority:</source>
-        <translation type="unfinished"/>
+        <translation>优先权：</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="196"/>
         <source>Fee:</source>
-        <translation type="unfinished"/>
+        <translation>费用：</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="228"/>
         <source>Low Output:</source>
-        <translation type="unfinished"/>
+        <translation>低输出：</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="276"/>
         <source>After Fee:</source>
-        <translation type="unfinished"/>
+        <translation>付费后：</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="308"/>
         <source>Change:</source>
-        <translation type="unfinished"/>
+        <translation>余额：</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="364"/>
         <source>(un)select all</source>
-        <translation type="unfinished"/>
+        <translation>(不)全选</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="377"/>
         <source>Tree mode</source>
-        <translation type="unfinished"/>
+        <translation>决策树：</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="393"/>
         <source>List mode</source>
-        <translation type="unfinished"/>
+        <translation>列表模式</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="446"/>
         <source>Amount</source>
-        <translation type="unfinished"/>
+        <translation>总计</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="456"/>
         <source>Address</source>
-        <translation type="unfinished"/>
+        <translation>地址</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="461"/>
         <source>Darksend Rounds</source>
-        <translation type="unfinished"/>
+        <translation>匿名发送循环数</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="466"/>
         <source>Date</source>
-        <translation type="unfinished"/>
+        <translation>时期</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="471"/>
         <source>Confirmations</source>
-        <translation type="unfinished"/>
+        <translation>确认</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="474"/>
         <source>Confirmed</source>
-        <translation type="unfinished"/>
+        <translation>认证的</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="479"/>
         <source>Priority</source>
-        <translation type="unfinished"/>
+        <translation>优先权</translation>
     </message>
 </context>
 <context>
@@ -211,27 +211,27 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/editaddressdialog.ui" line="14"/>
         <source>Edit Address</source>
-        <translation type="unfinished"/>
+        <translation>编辑地址</translation>
     </message>
     <message>
         <location filename="../forms/editaddressdialog.ui" line="25"/>
         <source>&amp;Label</source>
-        <translation type="unfinished"/>
+        <translation>&amp;标签</translation>
     </message>
     <message>
         <location filename="../forms/editaddressdialog.ui" line="35"/>
         <source>The label associated with this address list entry</source>
-        <translation type="unfinished"/>
+        <translation>标签与此地址列表条目相连</translation>
     </message>
     <message>
         <location filename="../forms/editaddressdialog.ui" line="42"/>
         <source>&amp;Address</source>
-        <translation type="unfinished"/>
+        <translation>&amp;地址</translation>
     </message>
     <message>
         <location filename="../forms/editaddressdialog.ui" line="52"/>
         <source>The address associated with this address list entry. This can only be modified for sending addresses.</source>
-        <translation type="unfinished"/>
+        <translation>标签与此地址列表条目相连。只能在发送地址进行修改。</translation>
     </message>
 </context>
 <context>
@@ -239,7 +239,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/helpmessagedialog.ui" line="19"/>
         <source>Darkcoin Core - Command-line options</source>
-        <translation type="unfinished"/>
+        <translation>Darkcoin Core - 命令行选项</translation>
     </message>
 </context>
 <context>
@@ -247,32 +247,32 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/intro.ui" line="14"/>
         <source>Welcome</source>
-        <translation type="unfinished"/>
+        <translation>欢迎</translation>
     </message>
     <message>
         <location filename="../forms/intro.ui" line="23"/>
         <source>Welcome to Darkcoin Core.</source>
-        <translation type="unfinished"/>
+        <translation>欢迎来到Darkcoin Core。</translation>
     </message>
     <message>
         <location filename="../forms/intro.ui" line="49"/>
         <source>As this is the first time the program is launched, you can choose where Darkcoin Core will store its data.</source>
-        <translation type="unfinished"/>
+        <translation>鉴于这是程序第一次启动，您可以选择在哪里存储Darkcoin Core数据。</translation>
     </message>
     <message>
         <location filename="../forms/intro.ui" line="59"/>
         <source>Darkcoin Core will download and store a copy of the Darkcoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
-        <translation type="unfinished"/>
+        <translation>Darkcoin Core将会下载并存储暗黑币数据块链。在此路径下将至少会存储1GB数据，并且将持续增加。钱包文件也将会存储在此路径下。</translation>
     </message>
     <message>
         <location filename="../forms/intro.ui" line="69"/>
         <source>Use the default data directory</source>
-        <translation type="unfinished"/>
+        <translation>使用默认路径</translation>
     </message>
     <message>
         <location filename="../forms/intro.ui" line="76"/>
         <source>Use a custom data directory:</source>
-        <translation type="unfinished"/>
+        <translation>使用自定义路径：</translation>
     </message>
 </context>
 <context>
@@ -280,22 +280,22 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/openuridialog.ui" line="14"/>
         <source>Open URI</source>
-        <translation type="unfinished"/>
+        <translation>打开链接</translation>
     </message>
     <message>
         <location filename="../forms/openuridialog.ui" line="20"/>
         <source>Open payment request from URI or file</source>
-        <translation type="unfinished"/>
+        <translation>通过链接或文件打开付款请求</translation>
     </message>
     <message>
         <location filename="../forms/openuridialog.ui" line="29"/>
         <source>URI:</source>
-        <translation type="unfinished"/>
+        <translation>链接：</translation>
     </message>
     <message>
         <location filename="../forms/openuridialog.ui" line="40"/>
         <source>Select payment request file</source>
-        <translation type="unfinished"/>
+        <translation>选择付款请求文件</translation>
     </message>
 </context>
 <context>
@@ -303,37 +303,37 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/optionsdialog.ui" line="14"/>
         <source>Options</source>
-        <translation type="unfinished"/>
+        <translation>选项</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="27"/>
         <source>&amp;Main</source>
-        <translation type="unfinished"/>
+        <translation>&amp;主要的</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="33"/>
         <source>Automatically start Darkcoin after logging in to the system.</source>
-        <translation type="unfinished"/>
+        <translation>在系统启动后自动运行Darkcoin程序</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="36"/>
         <source>&amp;Start Darkcoin on system login</source>
-        <translation type="unfinished"/>
+        <translation>&amp;在系统登录时启动Darkcoin</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="45"/>
         <source>Size of &amp;database cache</source>
-        <translation type="unfinished"/>
+        <translation>&amp;数据库缓存大小</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="61"/>
         <source>MB</source>
-        <translation type="unfinished"/>
+        <translation>MB</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="88"/>
         <source>Number of script &amp;verification threads</source>
-        <translation type="unfinished"/>
+        <translation>脚本数&amp;认证线程</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="101"/>
@@ -982,42 +982,42 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="225"/>
         <source>Quantity:</source>
-        <translation type="unfinished"/>
+        <translation>数量：</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="260"/>
         <source>Bytes:</source>
-        <translation type="unfinished"/>
+        <translation>字节：</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="308"/>
         <source>Amount:</source>
-        <translation type="unfinished"/>
+        <translation>总计：</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="340"/>
         <source>Priority:</source>
-        <translation type="unfinished"/>
+        <translation>优先权：</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="388"/>
         <source>Fee:</source>
-        <translation type="unfinished"/>
+        <translation>费用：</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="420"/>
         <source>Low Output:</source>
-        <translation type="unfinished"/>
+        <translation>低输出：</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="468"/>
         <source>After Fee:</source>
-        <translation type="unfinished"/>
+        <translation>付费后：</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="500"/>
         <source>Change:</source>
-        <translation type="unfinished"/>
+        <translation>余额：</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="544"/>

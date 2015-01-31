@@ -4,12 +4,12 @@
     <message>
         <location filename="../forms/aboutdialog.ui" line="14"/>
         <source>About Darkcoin Core</source>
-        <translation type="unfinished"/>
+        <translation>O Darkcoin Core</translation>
     </message>
     <message>
         <location filename="../forms/aboutdialog.ui" line="53"/>
         <source>&lt;b&gt;Darkcoin Core&lt;/b&gt; version</source>
-        <translation type="unfinished"/>
+        <translation>&lt;b&gt;Darkcoin Core&lt;b&gt; wersja</translation>
     </message>
     <message>
         <location filename="../forms/aboutdialog.ui" line="111"/>
@@ -19,7 +19,11 @@ This is experimental software.
 Distributed under the MIT/X11 software license, see the accompanying file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit (http://www.openssl.org/) and cryptographic software written by Eric Young (eay@cryptsoft.com) and UPnP software written by Thomas Bernard.</source>
-        <translation type="unfinished"/>
+        <translation>To jest wersja eksperymentalna
+
+Jest ona rozpowszechniana na licencji MIT/X11, proszę zapoznać się z plikiem COPYING lub http://www.opensource.org/licenses/mit-license.php.
+
+Produkt ten zawiera oprogramowanie stworzone przez OpenSSL Project do użytku z OpenSSL Toolkit (http://openssl.org/), oprogramowanie kryptograficzne napisane przez Eric Young (eay@cryptsoft.com) oraz oprogramowanie UPnP stworzone przez Thomas Bernard.</translation>
     </message>
 </context>
 <context>
@@ -27,52 +31,52 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/addressbookpage.ui" line="30"/>
         <source>Double-click to edit address or label</source>
-        <translation type="unfinished"/>
+        <translation>Kliknij dwukrotnie aby dokonać edycji adresu lub nazwy</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="57"/>
         <source>Create a new address</source>
-        <translation type="unfinished"/>
+        <translation>Stwórz nowy adres</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="60"/>
         <source>&amp;New</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Nowy</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="71"/>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation type="unfinished"/>
+        <translation>Skopiuj wybrany adres do schowka systemu</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="74"/>
         <source>&amp;Copy</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Kopiuj</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="85"/>
         <source>Delete the currently selected address from the list</source>
-        <translation type="unfinished"/>
+        <translation>Usuń wybrany adres z listy</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="88"/>
         <source>&amp;Delete</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Usuń</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="112"/>
         <source>Export the data in the current tab to a file</source>
-        <translation type="unfinished"/>
+        <translation>Eksportuj dane z tej zakładki do pliku</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="115"/>
         <source>&amp;Export</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Eksportuj</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="132"/>
         <source>C&amp;lose</source>
-        <translation type="unfinished"/>
+        <translation>Z&amp;amknij</translation>
     </message>
 </context>
 <context>
@@ -80,32 +84,32 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="26"/>
         <source>Passphrase Dialog</source>
-        <translation type="unfinished"/>
+        <translation>Dialog hasła</translation>
     </message>
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="47"/>
         <source>Enter passphrase</source>
-        <translation type="unfinished"/>
+        <translation>Wpisz hasło</translation>
     </message>
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="61"/>
         <source>New passphrase</source>
-        <translation type="unfinished"/>
+        <translation>Nowe hasło</translation>
     </message>
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="75"/>
         <source>Repeat new passphrase</source>
-        <translation type="unfinished"/>
+        <translation>Powtórz nowe hasło</translation>
     </message>
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="108"/>
         <source>Serves to disable the trivial sendmoney when OS account compromised. Provides no real security.</source>
-        <translation type="unfinished"/>
+        <translation>Służy do zablokowania funkcji wysyłania monet gdy konto użytkownika systemu operacyjnego zostało przejęte przez kogoś innego. Nie oferuje prawdziwego bezpieczeństwa. Wirus lub haker wciąż może uzyskać dostęp do twojego portfela.</translation>
     </message>
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="111"/>
         <source>For anonymization only</source>
-        <translation type="unfinished"/>
+        <translation>Tylko dla anonimizacji</translation>
     </message>
 </context>
 <context>
@@ -113,97 +117,97 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/coincontroldialog.ui" line="14"/>
         <source>Coin Control Address Selection</source>
-        <translation type="unfinished"/>
+        <translation>Wybór adresu kontrolującego monety</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="48"/>
         <source>Quantity:</source>
-        <translation type="unfinished"/>
+        <translation>Ilość</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="77"/>
         <source>Bytes:</source>
-        <translation type="unfinished"/>
+        <translation>Bity</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="122"/>
         <source>Amount:</source>
-        <translation type="unfinished"/>
+        <translation>Kwota</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="151"/>
         <source>Priority:</source>
-        <translation type="unfinished"/>
+        <translation>Priorytet</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="196"/>
         <source>Fee:</source>
-        <translation type="unfinished"/>
+        <translation>Opłata</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="228"/>
         <source>Low Output:</source>
-        <translation type="unfinished"/>
+        <translation>Niska wartość wyjściowa</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="276"/>
         <source>After Fee:</source>
-        <translation type="unfinished"/>
+        <translation>Po opłacie</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="308"/>
         <source>Change:</source>
-        <translation type="unfinished"/>
+        <translation>Reszta</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="364"/>
         <source>(un)select all</source>
-        <translation type="unfinished"/>
+        <translation>zaznacz/odznacz wszystkie</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="377"/>
         <source>Tree mode</source>
-        <translation type="unfinished"/>
+        <translation>Tryb drzewa</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="393"/>
         <source>List mode</source>
-        <translation type="unfinished"/>
+        <translation>Tryb listy</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="446"/>
         <source>Amount</source>
-        <translation type="unfinished"/>
+        <translation>Kwota</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="456"/>
         <source>Address</source>
-        <translation type="unfinished"/>
+        <translation>Adres</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="461"/>
         <source>Darksend Rounds</source>
-        <translation type="unfinished"/>
+        <translation>Ilość rund mieszania</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="466"/>
         <source>Date</source>
-        <translation type="unfinished"/>
+        <translation>Data</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="471"/>
         <source>Confirmations</source>
-        <translation type="unfinished"/>
+        <translation>Potwierdzenia</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="474"/>
         <source>Confirmed</source>
-        <translation type="unfinished"/>
+        <translation>Potwierdzone</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="479"/>
         <source>Priority</source>
-        <translation type="unfinished"/>
+        <translation>Priorytet</translation>
     </message>
 </context>
 <context>
@@ -211,27 +215,27 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/editaddressdialog.ui" line="14"/>
         <source>Edit Address</source>
-        <translation type="unfinished"/>
+        <translation>Edytuj adres</translation>
     </message>
     <message>
         <location filename="../forms/editaddressdialog.ui" line="25"/>
         <source>&amp;Label</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Nazwa</translation>
     </message>
     <message>
         <location filename="../forms/editaddressdialog.ui" line="35"/>
         <source>The label associated with this address list entry</source>
-        <translation type="unfinished"/>
+        <translation>Nazwa powiązana z tym wejściem do listy adresów</translation>
     </message>
     <message>
         <location filename="../forms/editaddressdialog.ui" line="42"/>
         <source>&amp;Address</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Adres</translation>
     </message>
     <message>
         <location filename="../forms/editaddressdialog.ui" line="52"/>
         <source>The address associated with this address list entry. This can only be modified for sending addresses.</source>
-        <translation type="unfinished"/>
+        <translation>Adres związany z tym wpisem do listy adresów. Może być zmienione tylko dla adresów wysyłających.</translation>
     </message>
 </context>
 <context>
@@ -239,7 +243,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/helpmessagedialog.ui" line="19"/>
         <source>Darkcoin Core - Command-line options</source>
-        <translation type="unfinished"/>
+        <translation>Darkcoin Core - Opcje wiersza poleceń</translation>
     </message>
 </context>
 <context>
@@ -247,32 +251,32 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/intro.ui" line="14"/>
         <source>Welcome</source>
-        <translation type="unfinished"/>
+        <translation>Witaj</translation>
     </message>
     <message>
         <location filename="../forms/intro.ui" line="23"/>
         <source>Welcome to Darkcoin Core.</source>
-        <translation type="unfinished"/>
+        <translation>Witaj w Darkcoin Core</translation>
     </message>
     <message>
         <location filename="../forms/intro.ui" line="49"/>
         <source>As this is the first time the program is launched, you can choose where Darkcoin Core will store its data.</source>
-        <translation type="unfinished"/>
+        <translation>Ponieważ uruchomiłeś ten program po raz pierwszy, możesz wybrać gdzie Darkcoin Core będzie przechowywał dane.</translation>
     </message>
     <message>
         <location filename="../forms/intro.ui" line="59"/>
         <source>Darkcoin Core will download and store a copy of the Darkcoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
-        <translation type="unfinished"/>
+        <translation>Darkcoin Core ściągnie i przechowa  kopię blockchain na twoim dysku. Co najmniej 1GB danych zostanie zapisanych w tym katalogu, a wraz z upływem czasu blockchain będzie stopniowo wymagał coraz więcej miejsca. Twój portfel również zostanie zapisany w tym katalogu.</translation>
     </message>
     <message>
         <location filename="../forms/intro.ui" line="69"/>
         <source>Use the default data directory</source>
-        <translation type="unfinished"/>
+        <translation>Użyj domyślnego katalogu</translation>
     </message>
     <message>
         <location filename="../forms/intro.ui" line="76"/>
         <source>Use a custom data directory:</source>
-        <translation type="unfinished"/>
+        <translation>Wybierz swój własny katalog:</translation>
     </message>
 </context>
 <context>
@@ -280,22 +284,22 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/openuridialog.ui" line="14"/>
         <source>Open URI</source>
-        <translation type="unfinished"/>
+        <translation>Otwórz URI</translation>
     </message>
     <message>
         <location filename="../forms/openuridialog.ui" line="20"/>
         <source>Open payment request from URI or file</source>
-        <translation type="unfinished"/>
+        <translation>Otwórz żądanie zapłaty z linku lub pliku</translation>
     </message>
     <message>
         <location filename="../forms/openuridialog.ui" line="29"/>
         <source>URI:</source>
-        <translation type="unfinished"/>
+        <translation>URI:</translation>
     </message>
     <message>
         <location filename="../forms/openuridialog.ui" line="40"/>
         <source>Select payment request file</source>
-        <translation type="unfinished"/>
+        <translation>Wybierz plik z żądaniem opłaty</translation>
     </message>
 </context>
 <context>
@@ -303,248 +307,248 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/optionsdialog.ui" line="14"/>
         <source>Options</source>
-        <translation type="unfinished"/>
+        <translation>Opcje</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="27"/>
         <source>&amp;Main</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Główny</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="33"/>
         <source>Automatically start Darkcoin after logging in to the system.</source>
-        <translation type="unfinished"/>
+        <translation>Automatycznie uruchom Darkcoin po zalogowaniu się do systemu.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="36"/>
         <source>&amp;Start Darkcoin on system login</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Uruchom Darkcoin po zalogowaniu się do systemu</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="45"/>
         <source>Size of &amp;database cache</source>
-        <translation type="unfinished"/>
+        <translation>Rozmiar &amp;pamięci podręcznej bazy danych.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="61"/>
         <source>MB</source>
-        <translation type="unfinished"/>
+        <translation>MB</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="88"/>
         <source>Number of script &amp;verification threads</source>
-        <translation type="unfinished"/>
+        <translation>Liczba skryptów i wątków &amp;weryfikacji</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="101"/>
         <source>(0 = auto, &lt;0 = leave that many cores free)</source>
-        <translation type="unfinished"/>
+        <translation>(0=auto, &lt;0 = zostaw tyle wolnych rdzeni)</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="138"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This setting determines the amount of individual masternodes that an input will be anonymized through. More rounds of anonymization gives a higher degree of privacy, but also costs more in fees.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"/>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Tutaj możesz ustawić liczbę masternodów, przez które transakcja zostanie przepuszczona. Im większa liczba masternodów tym większy poziom anonimowości, ale opłata jest również wyższa.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="141"/>
         <source>Darksend rounds to use</source>
-        <translation type="unfinished"/>
+        <translation>Ilość rund Darksend.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="180"/>
         <source>Amount of Darkcoin to keep anonymized</source>
-        <translation type="unfinished"/>
+        <translation>Ilość Darkcoinów, które mają pozostać anonimowe.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="206"/>
         <source>W&amp;allet</source>
-        <translation type="unfinished"/>
+        <translation>P&amp;ortfel</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="212"/>
         <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly. Most transactions are 1 kB.</source>
-        <translation type="unfinished"/>
+        <translation>Opcjonalna opłata za kB, dzięki której twoja transakcja zostanie przesłana szybciej. Większość transakcji wynosi 1Kb.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="227"/>
         <source>Pay transaction &amp;fee</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Zapłać za transakcję</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="271"/>
         <source>Expert</source>
-        <translation type="unfinished"/>
+        <translation>Ekspert</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="277"/>
         <source>Whether to show coin control features or not.</source>
-        <translation type="unfinished"/>
+        <translation>Czy pokazać funkcje kontroli monet czy nie.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="280"/>
         <source>Enable coin &amp;control features</source>
-        <translation type="unfinished"/>
+        <translation>Włącz funkcje &amp;kontroli monet</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="287"/>
         <source>If you disable the spending of unconfirmed change, the change from a transaction cannot be used until that transaction has at least one confirmation. This also affects how your balance is computed.</source>
-        <translation type="unfinished"/>
+        <translation>Jeśli wyłączysz możliwość wydawania niepotwierdzonej reszty, to reszta z transakcji nie może zostać użyta dopóki nie ma przynajmniej jednego potwierdzona. To również wpływa na to jak wyliczane jest twoje saldo.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="290"/>
         <source>&amp;Spend unconfirmed change</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Wydaj niepotwierdzoną resztę</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="301"/>
         <source>&amp;Network</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Sieć</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="307"/>
         <source>Automatically open the Darkcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation type="unfinished"/>
+        <translation>Automatycznie uruchamiaj port klienta Darkcoina na ruterze. To działa tylko jeśli twój ruter wspiera  i ma włączone UPnP.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="310"/>
         <source>Map port using &amp;UPnP</source>
-        <translation type="unfinished"/>
+        <translation>Mapuj port używając &amp;UPnP</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="317"/>
         <source>Connect to the Darkcoin network through a SOCKS proxy.</source>
-        <translation type="unfinished"/>
+        <translation>Połącz się z siecią Darkcoina przez proxy SOCKS</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="320"/>
         <source>&amp;Connect through SOCKS proxy (default proxy):</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Połącz się przez SOCKS proxy (opcja domyślna):</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="329"/>
         <source>Proxy &amp;IP:</source>
-        <translation type="unfinished"/>
+        <translation>&amp;IP proxy:</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="354"/>
         <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
-        <translation type="unfinished"/>
+        <translation>IP proxy (np. IPv4: 127.0.0.1 / IPv6: ::1)</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="361"/>
         <source>&amp;Port:</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Port:</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="386"/>
         <source>Port of the proxy (e.g. 9050)</source>
-        <translation type="unfinished"/>
+        <translation>Port proxy (np. 9050)</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="393"/>
         <source>SOCKS &amp;Version:</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Wersja SOCKS:</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="406"/>
         <source>SOCKS version of the proxy (e.g. 5)</source>
-        <translation type="unfinished"/>
+        <translation>Wersja SOCKS proxy (np. 5)</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="442"/>
         <source>&amp;Window</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Okno</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="448"/>
         <source>Show only a tray icon after minimizing the window.</source>
-        <translation type="unfinished"/>
+        <translation>Po zminimalizowaniu okna pokaż ikonę w zasobniku.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="451"/>
         <source>&amp;Minimize to the tray instead of the taskbar</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Zminimalizuj do zasobnika zamiast do pasku zadań.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="458"/>
         <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Quit in the menu.</source>
-        <translation type="unfinished"/>
+        <translation>Zminimalizuj zamiast zamknąć program. Kiedy ta opcja jest włączona program zostanie zamknięty tylko po wybraniu opcji Zamknij w menu.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="461"/>
         <source>M&amp;inimize on close</source>
-        <translation type="unfinished"/>
+        <translation>Z&amp;minimalizyj przy wyjściu</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="482"/>
         <source>&amp;Display</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Widok</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="490"/>
         <source>User Interface &amp;language:</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Język interfejsu użytkownika</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="503"/>
         <source>The user interface language can be set here. This setting will take effect after restarting Darkcoin.</source>
-        <translation type="unfinished"/>
+        <translation>Tutaj można ustawić język interfejsu użytkownika. To ustawienie zostanie zapisane po ponownym uruchomieniu Darkcoin.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="514"/>
         <source>&amp;Unit to show amounts in:</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Pokaż kwotę w tej jednostce:</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="527"/>
         <source>Choose the default subdivision unit to show in the interface and when sending coins.</source>
-        <translation type="unfinished"/>
+        <translation>Wybierz jednostkę jaka będzie wyświetlana w interfejsie oraz podczas wysyłania monet.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="536"/>
         <source>Whether to show Darkcoin addresses in the transaction list or not.</source>
-        <translation type="unfinished"/>
+        <translation>Czy wyświetlić adres Darkcoin w liście transakcji czy nie</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="539"/>
         <source>&amp;Display addresses in transaction list</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Wyświetl adres w liście transakcji</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="548"/>
         <location filename="../forms/optionsdialog.ui" line="561"/>
         <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
-        <translation type="unfinished"/>
+        <translation>URL osób trzecich (np. eksplorator bloków), które pojawiają się w zakładce transakcji jako pozycje w menu kontekstowym. %s w URL jest zastąpione przez hash transakcji. Wielokrotne URL są oddzielane przez pionową poprzeczkę |.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="551"/>
         <source>Third party transaction URLs</source>
-        <translation type="unfinished"/>
+        <translation>URL transakcji osób trzecich</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="592"/>
         <source>Active command-line options that override above options:</source>
-        <translation type="unfinished"/>
+        <translation>Aktywne opcje w wierszu poleceń, które nadpisują powyższe ustawienia:</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="635"/>
         <source>Reset all client options to default.</source>
-        <translation type="unfinished"/>
+        <translation>Resetuje wszystkie ustawienia.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="638"/>
         <source>&amp;Reset Options</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Resetuj ustawienia</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="699"/>
         <source>&amp;OK</source>
-        <translation type="unfinished"/>
+        <translation>&amp;OK</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="706"/>
         <source>&amp;Cancel</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Anuluj</translation>
     </message>
 </context>
 <context>
@@ -552,148 +556,148 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/overviewpage.ui" line="14"/>
         <source>Form</source>
-        <translation type="unfinished"/>
+        <translation>Formularz</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="57"/>
         <source>Wallet</source>
-        <translation type="unfinished"/>
+        <translation>Portfel</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="64"/>
         <location filename="../forms/overviewpage.ui" line="962"/>
         <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Darkcoin network after a connection is established, but this process has not completed yet.</source>
-        <translation type="unfinished"/>
+        <translation>Wyświetlona informacja może być przedawniona. Twój portfel automatycznie zsynchronizuje sie z siecią Darkcoin jak tylko zostanie ustanowione połączenie, jednakże proces ten jeszcze się nie zakończył.</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="108"/>
         <source>Available:</source>
-        <translation type="unfinished"/>
+        <translation>Dostępne:</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="124"/>
         <source>Your current spendable balance</source>
-        <translation type="unfinished"/>
+        <translation>Twóje obecne środki do wydania</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="140"/>
         <source>Pending:</source>
-        <translation type="unfinished"/>
+        <translation>Oczekujące:</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="156"/>
         <source>Total of transactions that have yet to be confirmed, and do not yet count toward the spendable balance</source>
-        <translation type="unfinished"/>
+        <translation>Całkowita ilość transakcji, która musi pozostać jeszcze potwierdzona, a która to nie została jeszcze zaliczona do możliwych środków do wydania.</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="172"/>
         <source>Immature:</source>
-        <translation type="unfinished"/>
+        <translation>Niedojrzały:</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="185"/>
         <source>Mined balance that has not yet matured</source>
-        <translation type="unfinished"/>
+        <translation>Wykopany balans, który jeszcze nie dojrzał</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="201"/>
         <source>Total:</source>
-        <translation type="unfinished"/>
+        <translation>Ogółem:</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="217"/>
         <source>Your current total balance</source>
-        <translation type="unfinished"/>
+        <translation>Twój obecny bilans ogółem</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="296"/>
         <source>Status:</source>
-        <translation type="unfinished"/>
+        <translation>Status:</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="303"/>
         <source>Enabled/Disabled</source>
-        <translation type="unfinished"/>
+        <translation>Włączony/Wyłączony</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="310"/>
         <source>Completion:</source>
-        <translation type="unfinished"/>
+        <translation>Ukończone:</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="330"/>
         <source>Darksend Balance:</source>
-        <translation type="unfinished"/>
+        <translation>Bilans Darksend:</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="343"/>
         <source>0 DRK</source>
-        <translation type="unfinished"/>
+        <translation>0 DRK</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="350"/>
         <source>Amount and Rounds:</source>
-        <translation type="unfinished"/>
+        <translation>Ilość oraz Rundy:</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="357"/>
         <source>0 DRK / 0 Rounds</source>
-        <translation type="unfinished"/>
+        <translation>0 DRK / 0 Rund</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="364"/>
         <source>Submitted Denom:</source>
-        <translation type="unfinished"/>
+        <translation>Zgłoszone denominacje:</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="371"/>
         <source>The denominations you submitted to the Masternode. To mix, other users must submit the exact same denominations.</source>
-        <translation type="unfinished"/>
+        <translation>Denominacje zgłoszone do Masternodów. Aby je wymieszać, pozostali uzytkownicy muszą zgłosić dokładnie te same denominacje.</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="374"/>
         <source>n/a</source>
-        <translation type="unfinished"/>
+        <translation>nie dotyczy</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="396"/>
         <source>Darksend</source>
-        <translation type="unfinished"/>
+        <translation>Darksend</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="846"/>
         <source>Start/Stop Mixing</source>
-        <translation type="unfinished"/>
+        <translation>Start/Stop Mieszanie</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="878"/>
         <source>(Last Message)</source>
-        <translation type="unfinished"/>
+        <translation>(Ostatnia Wiadomość)</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="897"/>
         <source>Try to manually submit a Darksend request.</source>
-        <translation type="unfinished"/>
+        <translation>Prubój ręcznie zgłosić żądanie Darksend.</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="900"/>
         <source>Try Mix</source>
-        <translation type="unfinished"/>
+        <translation>Mieszaj</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="913"/>
         <source>Reset the current status of Darksend (can interrupt Darksend if it&apos;s in the process of Mixing, which can cost you money!)</source>
-        <translation type="unfinished"/>
+        <translation>Zresetuj obecny stan darksend (może przerwać Darksend, jeżeli jest w trakcie Mieszania. Może Cię to kosztować! )</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="919"/>
         <source>Reset</source>
-        <translation type="unfinished"/>
+        <translation>Reset</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="955"/>
         <source>&lt;b&gt;Recent transactions&lt;/b&gt;</source>
-        <translation type="unfinished"/>
+        <translation>&lt;b&gt;Ostatnie transakcje&lt;/b&gt;</translation>
     </message>
 </context>
 <context>
@@ -701,32 +705,32 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/rpcconsole.ui" line="14"/>
         <source>Debug window</source>
-        <translation type="unfinished"/>
+        <translation>Okno debugowania</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="24"/>
         <source>&amp;Information</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Informacje</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="33"/>
         <source>Masternode Count</source>
-        <translation type="unfinished"/>
+        <translation>Ilość masternodów</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="46"/>
         <source>General</source>
-        <translation type="unfinished"/>
+        <translation>Ogólny</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="53"/>
         <source>Name</source>
-        <translation type="unfinished"/>
+        <translation>Nazwa</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="60"/>
         <source>Client name</source>
-        <translation type="unfinished"/>
+        <translation>Nazwa klienta</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="70"/>
@@ -740,102 +744,102 @@ This product includes software developed by the OpenSSL Project for use in the O
         <location filename="../forms/rpcconsole.ui" line="315"/>
         <location filename="../forms/rpcconsole.ui" line="341"/>
         <source>N/A</source>
-        <translation type="unfinished"/>
+        <translation>Nie dotyczy</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="83"/>
         <source>Number of connections</source>
-        <translation type="unfinished"/>
+        <translation>Ilość połączeń</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="90"/>
         <source>Open the Darkcoin debug log file from the current data directory. This can take a few seconds for large log files.</source>
-        <translation type="unfinished"/>
+        <translation>Otwiera plik z zapisami debugowania Darkcoina z obecnego katalogu. Może to potrfać kilka sekund w zależności od rozmiaru pliku.</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="93"/>
         <source>&amp;Open</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Otwórz</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="116"/>
         <source>Startup time</source>
-        <translation type="unfinished"/>
+        <translation>Czas włączenia</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="129"/>
         <source>Network</source>
-        <translation type="unfinished"/>
+        <translation>Sieć</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="152"/>
         <source>Last block time</source>
-        <translation type="unfinished"/>
+        <translation>Czas ostatniego bloku</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="165"/>
         <source>Debug log file</source>
-        <translation type="unfinished"/>
+        <translation>Plik zapisu debugowania</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="172"/>
         <source>Using OpenSSL version</source>
-        <translation type="unfinished"/>
+        <translation>Używa wersji OpenSSl</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="182"/>
         <source>Build date</source>
-        <translation type="unfinished"/>
+        <translation>Data wersji obecnej</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="205"/>
         <source>Current number of blocks</source>
-        <translation type="unfinished"/>
+        <translation>Obecna ilość bloków</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="305"/>
         <source>Client version</source>
-        <translation type="unfinished"/>
+        <translation>Wersja  klienta</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="334"/>
         <source>Block chain</source>
-        <translation type="unfinished"/>
+        <translation>Łańcuch bloków</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="349"/>
         <source>&amp;Console</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Konsola</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="398"/>
         <source>Clear console</source>
-        <translation type="unfinished"/>
+        <translation>Wyczyść konsole</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="421"/>
         <source>&amp;Network Traffic</source>
-        <translation type="unfinished"/>
+        <translation>Ruch &amp;sieci</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="473"/>
         <source>&amp;Clear</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Wyczyść</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="486"/>
         <source>Totals</source>
-        <translation type="unfinished"/>
+        <translation>Całkowite</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="550"/>
         <source>In:</source>
-        <translation type="unfinished"/>
+        <translation>Wejście:</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="630"/>
         <source>Out:</source>
-        <translation type="unfinished"/>
+        <translation>Wyjście:</translation>
     </message>
 </context>
 <context>
@@ -848,7 +852,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="37"/>
         <source>R&amp;euse an existing receiving address (not recommended)</source>
-        <translation type="unfinished"/>
+        <translation>O&amp;drzuć istniejący adres odbiorczy (nie zalecane)</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="51"/>
@@ -859,7 +863,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="54"/>
         <source>&amp;Message:</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Wiadomość:</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="67"/>
@@ -870,12 +874,12 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="81"/>
         <source>Use this form to request payments. All fields are &lt;b&gt;optional&lt;/b&gt;.</source>
-        <translation type="unfinished"/>
+        <translation>Użyj tego formularza aby zażądać płątności. Wszystkie pola są &lt;b&gt;opcjonalne&lt;/b&gt;</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="91"/>
         <source>&amp;Label:</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Etykieta:</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="104"/>
@@ -886,27 +890,27 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="107"/>
         <source>&amp;Amount:</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Ilość:</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="141"/>
         <source>&amp;Request payment</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Zażądaj płatności</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="158"/>
         <source>Clear all fields of the form.</source>
-        <translation type="unfinished"/>
+        <translation>Wyczyść wszystkie pola formularza.</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="161"/>
         <source>Clear</source>
-        <translation type="unfinished"/>
+        <translation>Wyczyść</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="239"/>
         <source>Requested payments history</source>
-        <translation type="unfinished"/>
+        <translation>Historia żądanych płatności</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="261"/>
@@ -916,17 +920,17 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="264"/>
         <source>Show</source>
-        <translation type="unfinished"/>
+        <translation>Pokaż</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="278"/>
         <source>Remove the selected entries from the list</source>
-        <translation type="unfinished"/>
+        <translation>Usuń wybrane wpisy z listy</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="281"/>
         <source>Remove</source>
-        <translation type="unfinished"/>
+        <translation>Usuń</translation>
     </message>
 </context>
 <context>
@@ -934,22 +938,22 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/receiverequestdialog.ui" line="29"/>
         <source>QR Code</source>
-        <translation type="unfinished"/>
+        <translation>Kod QR</translation>
     </message>
     <message>
         <location filename="../forms/receiverequestdialog.ui" line="75"/>
         <source>Copy &amp;URI</source>
-        <translation type="unfinished"/>
+        <translation>Kopiuj &amp;URI</translation>
     </message>
     <message>
         <location filename="../forms/receiverequestdialog.ui" line="82"/>
         <source>Copy &amp;Address</source>
-        <translation type="unfinished"/>
+        <translation>Kopiuj &amp;adres</translation>
     </message>
     <message>
         <location filename="../forms/receiverequestdialog.ui" line="89"/>
         <source>&amp;Save Image...</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Zapisz obraz...</translation>
     </message>
 </context>
 <context>
@@ -957,67 +961,67 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="14"/>
         <source>Send Coins</source>
-        <translation type="unfinished"/>
+        <translation>Wyślij monety</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="90"/>
         <source>Coin Control Features</source>
-        <translation type="unfinished"/>
+        <translation>Funkcja kontroli monet</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="110"/>
         <source>Inputs...</source>
-        <translation type="unfinished"/>
+        <translation>Wejścia...</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="117"/>
         <source>automatically selected</source>
-        <translation type="unfinished"/>
+        <translation>Wybrane automatycznie</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="136"/>
         <source>Insufficient funds!</source>
-        <translation type="unfinished"/>
+        <translation>Niewystarczające środki!</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="225"/>
         <source>Quantity:</source>
-        <translation type="unfinished"/>
+        <translation>Ilość:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="260"/>
         <source>Bytes:</source>
-        <translation type="unfinished"/>
+        <translation>Bity:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="308"/>
         <source>Amount:</source>
-        <translation type="unfinished"/>
+        <translation>Kwota:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="340"/>
         <source>Priority:</source>
-        <translation type="unfinished"/>
+        <translation>Pierwszeństwo:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="388"/>
         <source>Fee:</source>
-        <translation type="unfinished"/>
+        <translation>Opłata:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="420"/>
         <source>Low Output:</source>
-        <translation type="unfinished"/>
+        <translation>Niska wartość wyjściowa:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="468"/>
         <source>After Fee:</source>
-        <translation type="unfinished"/>
+        <translation>Po opłacie:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="500"/>
         <source>Change:</source>
-        <translation type="unfinished"/>
+        <translation>Reszta:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="544"/>
@@ -1032,47 +1036,47 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="668"/>
         <source>Confirm the send action</source>
-        <translation type="unfinished"/>
+        <translation>Potwierdź akcje wysyłania</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="671"/>
         <source>S&amp;end</source>
-        <translation type="unfinished"/>
+        <translation>W&amp;yślij</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="691"/>
         <source>Clear all fields of the form.</source>
-        <translation type="unfinished"/>
+        <translation>Wyczyść wszystkie pola formularza</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="694"/>
         <source>Clear &amp;All</source>
-        <translation type="unfinished"/>
+        <translation>Wyczyść &amp;wszystko</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="711"/>
         <source>Send to multiple recipients at once</source>
-        <translation type="unfinished"/>
+        <translation>Wyślij do wielu odbiorców</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="714"/>
         <source>Add &amp;Recipient</source>
-        <translation type="unfinished"/>
+        <translation>Dodaj &amp;odbiorcę</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="759"/>
         <source>Darksend</source>
-        <translation type="unfinished"/>
+        <translation>Darksend</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="772"/>
         <source>InstantX</source>
-        <translation type="unfinished"/>
+        <translation>InstantX</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="779"/>
         <source>Balance:</source>
-        <translation type="unfinished"/>
+        <translation>Balans:</translation>
     </message>
 </context>
 <context>
@@ -1080,12 +1084,12 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="21"/>
         <source>This is a normal payment.</source>
-        <translation type="unfinished"/>
+        <translation>To jest normalna płatność</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="36"/>
         <source>Pay &amp;To:</source>
-        <translation type="unfinished"/>
+        <translation>Zapłać &amp;dla:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="54"/>
@@ -1095,51 +1099,51 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="61"/>
         <source>Choose previously used address</source>
-        <translation type="unfinished"/>
+        <translation>Wybierz wcześniej użyty adres</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="71"/>
         <source>Alt+A</source>
-        <translation type="unfinished"/>
+        <translation>Alt+A</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="78"/>
         <source>Paste address from clipboard</source>
-        <translation type="unfinished"/>
+        <translation>Wklej adres ze schowka</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="88"/>
         <source>Alt+P</source>
-        <translation type="unfinished"/>
+        <translation>Alt+P</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="95"/>
         <location filename="../forms/sendcoinsentry.ui" line="619"/>
         <location filename="../forms/sendcoinsentry.ui" line="1155"/>
         <source>Remove this entry</source>
-        <translation type="unfinished"/>
+        <translation>Usuń ten wpis</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="111"/>
         <source>&amp;Label:</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Etykieta:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="124"/>
         <source>Enter a label for this address to add it to the list of used addresses</source>
-        <translation type="unfinished"/>
+        <translation>Nadaj etykietę dla tego adresu aby dodać go do listy używanych adresów</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="131"/>
         <location filename="../forms/sendcoinsentry.ui" line="652"/>
         <location filename="../forms/sendcoinsentry.ui" line="1188"/>
         <source>A&amp;mount:</source>
-        <translation type="unfinished"/>
+        <translation>I&amp;lość:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="147"/>
         <source>Message:</source>
-        <translation type="unfinished"/>
+        <translation>Wiadomość:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="157"/>
@@ -1149,24 +1153,24 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="583"/>
         <source>This is an unverified payment request.</source>
-        <translation type="unfinished"/>
+        <translation>To jest niezweryfikowane żądanie zapłaty</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="601"/>
         <location filename="../forms/sendcoinsentry.ui" line="1133"/>
         <source>Pay To:</source>
-        <translation type="unfinished"/>
+        <translation>Zapłać dla:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="635"/>
         <location filename="../forms/sendcoinsentry.ui" line="1171"/>
         <source>Memo:</source>
-        <translation type="unfinished"/>
+        <translation>Memo:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="1115"/>
         <source>This is a verified payment request.</source>
-        <translation type="unfinished"/>
+        <translation>To jest zweryfikowane żądanie płatności</translation>
     </message>
 </context>
 <context>
@@ -1179,7 +1183,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="24"/>
         <source>&amp;Sign Message</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Oznacz wiadomość</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="30"/>
@@ -1195,33 +1199,33 @@ This product includes software developed by the OpenSSL Project for use in the O
         <location filename="../forms/signverifymessagedialog.ui" line="55"/>
         <location filename="../forms/signverifymessagedialog.ui" line="265"/>
         <source>Choose previously used address</source>
-        <translation type="unfinished"/>
+        <translation>Wybierz wcześniej użyty adres</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="65"/>
         <location filename="../forms/signverifymessagedialog.ui" line="275"/>
         <source>Alt+A</source>
-        <translation type="unfinished"/>
+        <translation>Alt+A</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="75"/>
         <source>Paste address from clipboard</source>
-        <translation type="unfinished"/>
+        <translation>Wklej adres ze schowka</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="85"/>
         <source>Alt+P</source>
-        <translation type="unfinished"/>
+        <translation>Alt+P</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="97"/>
         <source>Enter the message you want to sign here</source>
-        <translation type="unfinished"/>
+        <translation>Wprowadź wiadomość która chcesz tu oznaczyć</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="104"/>
         <source>Signature</source>
-        <translation type="unfinished"/>
+        <translation>Podpis</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="131"/>
@@ -1236,23 +1240,23 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="155"/>
         <source>Sign &amp;Message</source>
-        <translation type="unfinished"/>
+        <translation>Oznacz &amp;wiadomość</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="169"/>
         <source>Reset all sign message fields</source>
-        <translation type="unfinished"/>
+        <translation>Zresetuj wszystkie zapisane pola wiadomości</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="172"/>
         <location filename="../forms/signverifymessagedialog.ui" line="315"/>
         <source>Clear &amp;All</source>
-        <translation type="unfinished"/>
+        <translation>Wyczyść &amp;wszystko</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="231"/>
         <source>&amp;Verify Message</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Zweryfikuj wiadomość</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="237"/>
@@ -1267,12 +1271,12 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="295"/>
         <source>Verify the message to ensure it was signed with the specified Darkcoin address</source>
-        <translation type="unfinished"/>
+        <translation>Zweryfikuj wiadomość aby upewnić się, że została zapisana przez konkretny adres Darkcoin</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="298"/>
         <source>Verify &amp;Message</source>
-        <translation type="unfinished"/>
+        <translation>Zweryfikuj &amp;wiadomość</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="312"/>
@@ -1285,7 +1289,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/transactiondescdialog.ui" line="14"/>
         <source>Transaction details</source>
-        <translation type="unfinished"/>
+        <translation>Szczegóły transakcji</translation>
     </message>
     <message>
         <location filename="../forms/transactiondescdialog.ui" line="20"/>
