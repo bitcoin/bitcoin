@@ -61,7 +61,7 @@ class WalletTest (BitcoinTestFramework):
         walletinfo = self.nodes[0].getwalletinfo()
         assert_equal(walletinfo['immature_balance'], 0)
 
-        # Have node0 mine a block, thus he will collect his own fee. 
+        # Have node0 mine a block, thus they will collect their own fee. 
         self.nodes[0].setgenerate(True, 1)
         self.sync_all()
 
