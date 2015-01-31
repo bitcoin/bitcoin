@@ -33,23 +33,23 @@ Dieses Produkt enthält Software, die vom OpenSSL-Projekt zur Verwendung im Open
         <location filename="../utilitydialog.cpp" line="30"/>
         <location filename="../utilitydialog.cpp" line="31"/>
         <source>Copyright</source>
-        <translation type="unfinished"/>
+        <translation>Urheberrecht</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="30"/>
         <source>The Bitcoin Core developers</source>
-        <translation type="unfinished"/>
+        <translation>Die &quot;Bitcoin Core&quot;-Entwickler</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="31"/>
         <source>The Darkcoin Core developers</source>
-        <translation type="unfinished"/>
+        <translation>Die &quot;Darkcoin Core&quot;-Entwickler</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="43"/>
         <location filename="../utilitydialog.cpp" line="45"/>
         <source>(%1-bit)</source>
-        <translation type="unfinished"/>
+        <translation>(%1-Bit)</translation>
     </message>
 </context>
 <context>
@@ -117,72 +117,72 @@ Dieses Produkt enthält Software, die vom OpenSSL-Projekt zur Verwendung im Open
     <message>
         <location filename="../addressbookpage.cpp" line="45"/>
         <source>Choose the address to send coins to</source>
-        <translation type="unfinished"/>
+        <translation>Wählen Sie die Adresse aus, an die Sie Darkcoins überweisen möchten</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="46"/>
         <source>Choose the address to receive coins with</source>
-        <translation type="unfinished"/>
+        <translation>Wählen Sie die Adresse aus, über die Sie Darkcoins empfangen wollen</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="51"/>
         <source>C&amp;hoose</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Auswählen</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="57"/>
         <source>Sending addresses</source>
-        <translation type="unfinished"/>
+        <translation>Zahlungsadressen</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="58"/>
         <source>Receiving addresses</source>
-        <translation type="unfinished"/>
+        <translation>Empfangsadressen</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="65"/>
         <source>These are your Darkcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation type="unfinished"/>
+        <translation>Dies sind ihre Darkcoin-Adressen zum Tätigen von Überweisungen. Bitte prüfen Sie den Betrag und die Empfangsadresse, bevor Sie Darkcoins überweisen.</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="69"/>
         <source>These are your Darkcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation type="unfinished"/>
+        <translation>Dies sind ihre Darkcoin-Adressen zum Empfangen von Zahlungen. Es wird empfohlen für jede Transaktion eine neue Empfangsadresse zu verwenden.</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="75"/>
         <source>&amp;Copy Address</source>
-        <translation type="unfinished"/>
+        <translation>Adresse &amp;kopieren</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="76"/>
         <source>Copy &amp;Label</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Bezeichnung kopieren</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="77"/>
         <source>&amp;Edit</source>
-        <translation type="unfinished"/>
+        <translation>B&amp;earbeiten</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="271"/>
         <source>Export Address List</source>
-        <translation type="unfinished"/>
+        <translation>Adressliste exportieren</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="272"/>
         <source>Comma separated file (*.csv)</source>
-        <translation type="unfinished"/>
+        <translation>Kommagetrennte-Datei (*.csv)</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="285"/>
         <source>Exporting Failed</source>
-        <translation type="unfinished"/>
+        <translation>Exportieren fehlgeschlagen</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="286"/>
         <source>There was an error trying to save the address list to %1.</source>
-        <translation type="unfinished"/>
+        <translation>Beim Speichern der Adressliste nach %1 ist ein Fehler aufgetreten.</translation>
     </message>
 </context>
 <context>
@@ -190,7 +190,7 @@ Dieses Produkt enthält Software, die vom OpenSSL-Projekt zur Verwendung im Open
     <message>
         <location filename="../addresstablemodel.cpp" line="169"/>
         <source>Label</source>
-        <translation type="unfinished"/>
+        <translation>Bezeichnung</translation>
     </message>
     <message>
         <location filename="../addresstablemodel.cpp" line="169"/>
@@ -200,7 +200,7 @@ Dieses Produkt enthält Software, die vom OpenSSL-Projekt zur Verwendung im Open
     <message>
         <location filename="../addresstablemodel.cpp" line="205"/>
         <source>(no label)</source>
-        <translation type="unfinished"/>
+        <translation>(keine Bezeichnung)</translation>
     </message>
 </context>
 <context>
@@ -244,73 +244,73 @@ Dieses Produkt enthält Software, die vom OpenSSL-Projekt zur Verwendung im Open
     <message>
         <location filename="../askpassphrasedialog.cpp" line="41"/>
         <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;10 or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
-        <translation type="unfinished"/>
+        <translation>Geben Sie die neue Passphrase für die Wallet ein.&lt;br/&gt; Bitte benutzen Sie eine Passphrase bestehend aus &lt;b&gt;10 oder mehr zufälligen Zeichen &lt;/b&gt;oder &lt;b&gt;8 oder mehr Wörtern.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="42"/>
         <source>Encrypt wallet</source>
-        <translation type="unfinished"/>
+        <translation>Wallet verschlüsseln</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="48"/>
         <source>This operation needs your wallet passphrase to unlock the wallet.</source>
-        <translation type="unfinished"/>
+        <translation>Dieser Vorgang benötigt ihre Passphrase, um die Wallet zu entsperren.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="53"/>
         <source>Unlock wallet</source>
-        <translation type="unfinished"/>
+        <translation>Wallet entsperren</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="56"/>
         <source>This operation needs your wallet passphrase to decrypt the wallet.</source>
-        <translation type="unfinished"/>
+        <translation>Dieser Vorgang benötigt ihre Passphrase, um die Wallet zu entschlüsseln.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="61"/>
         <source>Decrypt wallet</source>
-        <translation type="unfinished"/>
+        <translation>Wallet entschlüsseln</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="64"/>
         <source>Change passphrase</source>
-        <translation type="unfinished"/>
+        <translation>Passphrase ändern</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="65"/>
         <source>Enter the old and new passphrase to the wallet.</source>
-        <translation type="unfinished"/>
+        <translation>Geben Sie die alte und neue Wallet-Passphrase ein.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="112"/>
         <source>Confirm wallet encryption</source>
-        <translation type="unfinished"/>
+        <translation>Wallet-Verschlüsselung bestätigen</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="113"/>
         <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR DARKCOINS&lt;/b&gt;!</source>
-        <translation type="unfinished"/>
+        <translation>Warnung: Wenn Sie ihre Wallet verschlüsseln und ihre Passphrase verlieren werden Sie &lt;b&gt;alle ihre Darkcoins verlieren&lt;/b&gt;!</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="113"/>
         <source>Are you sure you wish to encrypt your wallet?</source>
-        <translation type="unfinished"/>
+        <translation>Sind Sie sich sicher, dass Sie ihre Wallet verschlüsseln möchten?</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="122"/>
         <location filename="../askpassphrasedialog.cpp" line="181"/>
         <source>Wallet encrypted</source>
-        <translation type="unfinished"/>
+        <translation>Wallet verschlüsselt</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="124"/>
         <source>Darkcoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your darkcoins from being stolen by malware infecting your computer.</source>
-        <translation type="unfinished"/>
+        <translation>Darkcoin wird jetzt beendet, um den Verschlüsselungsprozess abzuschließen. Bitte beachten Sie, dass die Wallet-Verschlüsselung nicht vollständig vor Diebstahl ihrer Darkcoins durch Schadsoftware schützt, die ihren Computer befällt.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="128"/>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
-        <translation type="unfinished"/>
+        <translation>WICHTIG: Alle vorherigen Wallet-Sicherungen sollten durch die neu erzeugte, verschlüsselte Wallet ersetzt werden. Aus Sicherheitsgründen werden vorherige Sicherungen der unverschlüsselten Wallet nutzlos, sobald Sie die neue, verschlüsselte Wallet verwenden.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="137"/>
@@ -318,46 +318,46 @@ Dieses Produkt enthält Software, die vom OpenSSL-Projekt zur Verwendung im Open
         <location filename="../askpassphrasedialog.cpp" line="187"/>
         <location filename="../askpassphrasedialog.cpp" line="193"/>
         <source>Wallet encryption failed</source>
-        <translation type="unfinished"/>
+        <translation>Wallet-Verschlüsselung fehlgeschlagen</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="138"/>
         <source>Wallet encryption failed due to an internal error. Your wallet was not encrypted.</source>
-        <translation type="unfinished"/>
+        <translation>Die Wallet-Verschlüsselung ist aufgrund eines internen Fehlers fehlgeschlagen. Ihre Wallet wurde nicht verschlüsselt.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="145"/>
         <location filename="../askpassphrasedialog.cpp" line="194"/>
         <source>The supplied passphrases do not match.</source>
-        <translation type="unfinished"/>
+        <translation>Die eingegebenen Passphrasen stimmen nicht überein.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="157"/>
         <source>Wallet unlock failed</source>
-        <translation type="unfinished"/>
+        <translation>Wallet-Entsperrung fehlgeschlagen</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="158"/>
         <location filename="../askpassphrasedialog.cpp" line="169"/>
         <location filename="../askpassphrasedialog.cpp" line="188"/>
         <source>The passphrase entered for the wallet decryption was incorrect.</source>
-        <translation type="unfinished"/>
+        <translation>Die eingegebene Passphrase zur Wallet-Entschlüsselung war nicht korrekt.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="168"/>
         <source>Wallet decryption failed</source>
-        <translation type="unfinished"/>
+        <translation>Wallet-Entschlüsselung fehlgeschlagen</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="182"/>
         <source>Wallet passphrase was successfully changed.</source>
-        <translation type="unfinished"/>
+        <translation>Die Wallet-Passphrase wurde erfolgreich geändert.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="230"/>
         <location filename="../askpassphrasedialog.cpp" line="254"/>
         <source>Warning: The Caps Lock key is on!</source>
-        <translation type="unfinished"/>
+        <translation>Warnung: Die Feststelltaste ist aktiviert!</translation>
     </message>
 </context>
 <context>
@@ -365,7 +365,7 @@ Dieses Produkt enthält Software, die vom OpenSSL-Projekt zur Verwendung im Open
     <message>
         <location filename="../bitcoingui.cpp" line="76"/>
         <source>Darkcoin Core</source>
-        <translation type="unfinished"/>
+        <translation>Darkcoin Core</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="85"/>
@@ -375,121 +375,121 @@ Dieses Produkt enthält Software, die vom OpenSSL-Projekt zur Verwendung im Open
     <message>
         <location filename="../bitcoingui.cpp" line="87"/>
         <source>Node</source>
-        <translation type="unfinished"/>
+        <translation>Knoten</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="101"/>
         <location filename="../bitcoingui.cpp" line="494"/>
         <source>[testnet]</source>
-        <translation type="unfinished"/>
+        <translation>[Testnetz]</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="226"/>
         <source>&amp;Overview</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Übersicht</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="227"/>
         <source>Show general overview of wallet</source>
-        <translation type="unfinished"/>
+        <translation>Allgemeine Wallet-Übersicht anzeigen</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="233"/>
         <source>&amp;Send</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Überweisen</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="234"/>
         <source>Send coins to a Darkcoin address</source>
-        <translation type="unfinished"/>
+        <translation>Darkcoins an eine Darkcoin-Adresse überweisen</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="240"/>
         <source>&amp;Receive</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Empfangen</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="241"/>
         <source>Request payments (generates QR codes and darkcoin: URIs)</source>
-        <translation type="unfinished"/>
+        <translation>Zahlungen anfordern (erzeugt QR-Codes und &quot;darkcoin:&quot;-URIs)</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="247"/>
         <source>&amp;Transactions</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Transaktionen</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="248"/>
         <source>Browse transaction history</source>
-        <translation type="unfinished"/>
+        <translation>Transaktionsverlauf durchsehen</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="265"/>
         <source>E&amp;xit</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Beenden</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="266"/>
         <source>Quit application</source>
-        <translation type="unfinished"/>
+        <translation>Anwendung beenden</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="270"/>
         <location filename="../bitcoingui.cpp" line="272"/>
         <source>&amp;About Darkcoin Core</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Über Darkcoin Core</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="273"/>
         <source>Show information about Darkcoin</source>
-        <translation type="unfinished"/>
+        <translation>Informationen über Darkcoin anzeigen</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="276"/>
         <location filename="../bitcoingui.cpp" line="278"/>
         <source>About &amp;Qt</source>
-        <translation type="unfinished"/>
+        <translation>Über &amp;Qt</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="280"/>
         <source>Show information about Qt</source>
-        <translation type="unfinished"/>
+        <translation>Informationen über Qt anzeigen</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="282"/>
         <source>&amp;Options...</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Konfiguration...</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="283"/>
         <source>Modify configuration options for Darkcoin</source>
-        <translation type="unfinished"/>
+        <translation>Die Konfiguration des Clients bearbeiten</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="286"/>
         <location filename="../bitcoingui.cpp" line="288"/>
         <source>&amp;Show / Hide</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Anzeigen / Verstecken</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="289"/>
         <source>Show or hide the main Window</source>
-        <translation type="unfinished"/>
+        <translation>Das Hauptfenster anzeigen oder verstecken</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="291"/>
         <source>&amp;Encrypt Wallet...</source>
-        <translation type="unfinished"/>
+        <translation>Wallet &amp;verschlüsseln...</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="292"/>
         <source>Encrypt the private keys that belong to your wallet</source>
-        <translation type="unfinished"/>
+        <translation>Verschlüsselt die zu ihrer Wallet gehörenden privaten Schlüssel</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="294"/>
         <source>&amp;Backup Wallet...</source>
-        <translation type="unfinished"/>
+        <translation>Wallet &amp;sichern...</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="295"/>
@@ -514,7 +514,7 @@ Dieses Produkt enthält Software, die vom OpenSSL-Projekt zur Verwendung im Open
     <message>
         <location filename="../bitcoingui.cpp" line="299"/>
         <source>Unlock wallet</source>
-        <translation type="unfinished"/>
+        <translation>Wallet entsperren</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="300"/>
@@ -1094,7 +1094,7 @@ Address: %4
         <location filename="../coincontroldialog.cpp" line="670"/>
         <location filename="../coincontroldialog.cpp" line="731"/>
         <source>(no label)</source>
-        <translation type="unfinished"/>
+        <translation>(keine Bezeichnung)</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="724"/>
@@ -1316,7 +1316,7 @@ Address: %4
     <message>
         <location filename="../utilitydialog.cpp" line="69"/>
         <source>Darkcoin Core</source>
-        <translation type="unfinished"/>
+        <translation>Darkcoin Core</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="69"/>
@@ -2565,7 +2565,7 @@ Address: %4
     <message>
         <location filename="../receiverequestdialog.cpp" line="149"/>
         <source>Label</source>
-        <translation type="unfinished"/>
+        <translation>Bezeichnung</translation>
     </message>
     <message>
         <location filename="../receiverequestdialog.cpp" line="151"/>
@@ -2593,7 +2593,7 @@ Address: %4
     <message>
         <location filename="../recentrequeststablemodel.cpp" line="24"/>
         <source>Label</source>
-        <translation type="unfinished"/>
+        <translation>Bezeichnung</translation>
     </message>
     <message>
         <location filename="../recentrequeststablemodel.cpp" line="24"/>
@@ -2608,7 +2608,7 @@ Address: %4
     <message>
         <location filename="../recentrequeststablemodel.cpp" line="62"/>
         <source>(no label)</source>
-        <translation type="unfinished"/>
+        <translation>(keine Bezeichnung)</translation>
     </message>
     <message>
         <location filename="../recentrequeststablemodel.cpp" line="71"/>
@@ -2911,7 +2911,7 @@ Address: %4
     <message>
         <location filename="../sendcoinsdialog.cpp" line="645"/>
         <source>(no label)</source>
-        <translation type="unfinished"/>
+        <translation>(keine Bezeichnung)</translation>
     </message>
 </context>
 <context>
@@ -3265,22 +3265,22 @@ Address: %4
     <message>
         <location filename="../splashscreen.cpp" line="33"/>
         <source>Darkcoin Core</source>
-        <translation type="unfinished"/>
+        <translation>Darkcoin Core</translation>
     </message>
     <message>
         <location filename="../splashscreen.cpp" line="35"/>
         <source>The Bitcoin Core developers</source>
-        <translation type="unfinished"/>
+        <translation>Die &quot;Bitcoin Core&quot;-Entwickler</translation>
     </message>
     <message>
         <location filename="../splashscreen.cpp" line="36"/>
         <source>The Darkcoin Core developers</source>
-        <translation type="unfinished"/>
+        <translation>Die &quot;Darkcoin Core&quot;-Entwickler</translation>
     </message>
     <message>
         <location filename="../splashscreen.cpp" line="37"/>
         <source>[testnet]</source>
-        <translation type="unfinished"/>
+        <translation>[Testnetz]</translation>
     </message>
 </context>
 <context>
@@ -3765,7 +3765,7 @@ Address: %4
     <message>
         <location filename="../transactionview.cpp" line="300"/>
         <source>Comma separated file (*.csv)</source>
-        <translation type="unfinished"/>
+        <translation>Kommagetrennte-Datei (*.csv)</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="309"/>
@@ -3785,7 +3785,7 @@ Address: %4
     <message>
         <location filename="../transactionview.cpp" line="312"/>
         <source>Label</source>
-        <translation type="unfinished"/>
+        <translation>Bezeichnung</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="313"/>
@@ -3805,7 +3805,7 @@ Address: %4
     <message>
         <location filename="../transactionview.cpp" line="318"/>
         <source>Exporting Failed</source>
-        <translation type="unfinished"/>
+        <translation>Exportieren fehlgeschlagen</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="318"/>

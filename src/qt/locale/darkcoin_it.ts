@@ -33,23 +33,23 @@ Questo prodotto include del software prodotto dal progetto OpenSSL per l&apos;ut
         <location filename="../utilitydialog.cpp" line="30"/>
         <location filename="../utilitydialog.cpp" line="31"/>
         <source>Copyright</source>
-        <translation type="unfinished"/>
+        <translation>Copyright</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="30"/>
         <source>The Bitcoin Core developers</source>
-        <translation type="unfinished"/>
+        <translation>Gli sviluppatori di Bitcoin Core</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="31"/>
         <source>The Darkcoin Core developers</source>
-        <translation type="unfinished"/>
+        <translation>Gli sviluppatori di Darkcoin Core</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="43"/>
         <location filename="../utilitydialog.cpp" line="45"/>
         <source>(%1-bit)</source>
-        <translation type="unfinished"/>
+        <translation>(%1-bit)</translation>
     </message>
 </context>
 <context>
@@ -117,32 +117,32 @@ Questo prodotto include del software prodotto dal progetto OpenSSL per l&apos;ut
     <message>
         <location filename="../addressbookpage.cpp" line="45"/>
         <source>Choose the address to send coins to</source>
-        <translation type="unfinished"/>
+        <translation>Scegli l&apos;indirizzo al quale mandare le monete</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="46"/>
         <source>Choose the address to receive coins with</source>
-        <translation type="unfinished"/>
+        <translation>Scegli l&apos;indirizzo sul quale ricevere le monete</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="51"/>
         <source>C&amp;hoose</source>
-        <translation type="unfinished"/>
+        <translation>S&amp;cegli</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="57"/>
         <source>Sending addresses</source>
-        <translation type="unfinished"/>
+        <translation>Indirizzi mittenti</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="58"/>
         <source>Receiving addresses</source>
-        <translation type="unfinished"/>
+        <translation>Indirizzi riceventi</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="65"/>
         <source>These are your Darkcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation type="unfinished"/>
+        <translation>Questi sono i tuoi indirizzi Darkcoin per inviare i pagamenti. Controlla sempre l&apos;ammontare e l&apos;indirizzo destinatario prima di inviare le monete.</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="69"/>
@@ -152,17 +152,17 @@ Questo prodotto include del software prodotto dal progetto OpenSSL per l&apos;ut
     <message>
         <location filename="../addressbookpage.cpp" line="75"/>
         <source>&amp;Copy Address</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Copia indirizzo</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="76"/>
         <source>Copy &amp;Label</source>
-        <translation type="unfinished"/>
+        <translation>Copia &amp;etichetta</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="77"/>
         <source>&amp;Edit</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Modifica</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="271"/>
@@ -177,7 +177,7 @@ Questo prodotto include del software prodotto dal progetto OpenSSL per l&apos;ut
     <message>
         <location filename="../addressbookpage.cpp" line="285"/>
         <source>Exporting Failed</source>
-        <translation type="unfinished"/>
+        <translation>Esportazione fallita</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="286"/>
@@ -190,7 +190,7 @@ Questo prodotto include del software prodotto dal progetto OpenSSL per l&apos;ut
     <message>
         <location filename="../addresstablemodel.cpp" line="169"/>
         <source>Label</source>
-        <translation type="unfinished"/>
+        <translation>Etichetta</translation>
     </message>
     <message>
         <location filename="../addresstablemodel.cpp" line="169"/>
@@ -259,7 +259,7 @@ Questo prodotto include del software prodotto dal progetto OpenSSL per l&apos;ut
     <message>
         <location filename="../askpassphrasedialog.cpp" line="53"/>
         <source>Unlock wallet</source>
-        <translation type="unfinished"/>
+        <translation>Sblocca portafoglio</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="56"/>
@@ -269,7 +269,7 @@ Questo prodotto include del software prodotto dal progetto OpenSSL per l&apos;ut
     <message>
         <location filename="../askpassphrasedialog.cpp" line="61"/>
         <source>Decrypt wallet</source>
-        <translation type="unfinished"/>
+        <translation>Decripta portafoglio</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="64"/>
@@ -514,7 +514,7 @@ Questo prodotto include del software prodotto dal progetto OpenSSL per l&apos;ut
     <message>
         <location filename="../bitcoingui.cpp" line="299"/>
         <source>Unlock wallet</source>
-        <translation type="unfinished"/>
+        <translation>Sblocca portafoglio</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="300"/>
@@ -2565,7 +2565,7 @@ Address: %4
     <message>
         <location filename="../receiverequestdialog.cpp" line="149"/>
         <source>Label</source>
-        <translation type="unfinished"/>
+        <translation>Etichetta</translation>
     </message>
     <message>
         <location filename="../receiverequestdialog.cpp" line="151"/>
@@ -2593,7 +2593,7 @@ Address: %4
     <message>
         <location filename="../recentrequeststablemodel.cpp" line="24"/>
         <source>Label</source>
-        <translation type="unfinished"/>
+        <translation>Etichetta</translation>
     </message>
     <message>
         <location filename="../recentrequeststablemodel.cpp" line="24"/>
@@ -3270,12 +3270,12 @@ Address: %4
     <message>
         <location filename="../splashscreen.cpp" line="35"/>
         <source>The Bitcoin Core developers</source>
-        <translation type="unfinished"/>
+        <translation>Gli sviluppatori di Bitcoin Core</translation>
     </message>
     <message>
         <location filename="../splashscreen.cpp" line="36"/>
         <source>The Darkcoin Core developers</source>
-        <translation type="unfinished"/>
+        <translation>Gli sviluppatori di Darkcoin Core</translation>
     </message>
     <message>
         <location filename="../splashscreen.cpp" line="37"/>
@@ -3785,7 +3785,7 @@ Address: %4
     <message>
         <location filename="../transactionview.cpp" line="312"/>
         <source>Label</source>
-        <translation type="unfinished"/>
+        <translation>Etichetta</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="313"/>
@@ -3805,7 +3805,7 @@ Address: %4
     <message>
         <location filename="../transactionview.cpp" line="318"/>
         <source>Exporting Failed</source>
-        <translation type="unfinished"/>
+        <translation>Esportazione fallita</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="318"/>

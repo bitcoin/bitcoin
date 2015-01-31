@@ -3854,7 +3854,7 @@ Address: %4
     <message>
         <location filename="../walletview.cpp" line="44"/>
         <source>&amp;Export</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Exportar</translation>
     </message>
     <message>
         <location filename="../walletview.cpp" line="45"/>
