@@ -5,13 +5,13 @@
         <location filename="../forms/aboutdialog.ui" line="14"/>
         <location filename="../forms/ui_aboutdialog.h" line="131"/>
         <source>About Darkcoin Core</source>
-        <translation>О Darkcoin Core</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/aboutdialog.ui" line="53"/>
         <location filename="../forms/ui_aboutdialog.h" line="132"/>
         <source>&lt;b&gt;Darkcoin Core&lt;/b&gt; version</source>
-        <translation>Версия &lt;b&gt;Darkcoin Core&lt;/b&gt;</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/aboutdialog.ui" line="111"/>
@@ -233,13 +233,13 @@ This product includes software developed by the OpenSSL Project for use in the O
         <location filename="../forms/askpassphrasedialog.ui" line="108"/>
         <location filename="../forms/ui_askpassphrasedialog.h" line="141"/>
         <source>Serves to disable the trivial sendmoney when OS account compromised. Provides no real security.</source>
-        <translation>Служит для простейшего отключения функции sendmoney в случае компрометации аккаунта ОС. Не обеспечивает настоящей безопасности.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="111"/>
         <location filename="../forms/ui_askpassphrasedialog.h" line="143"/>
         <source>For anonymization only</source>
-        <translation>Только для анонимизации</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="41"/>
@@ -544,7 +544,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="306"/>
         <source>&amp;Information</source>
-        <translation>&amp;Информация</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="307"/>
@@ -881,7 +881,7 @@ Address: %4
         <location filename="../forms/coincontroldialog.ui" line="461"/>
         <location filename="../forms/ui_coincontroldialog.h" line="335"/>
         <source>Darksend Rounds</source>
-        <translation>Раундов Darksend</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="466"/>
@@ -1311,7 +1311,7 @@ Address: %4
         <location filename="../forms/helpmessagedialog.ui" line="19"/>
         <location filename="../forms/ui_helpmessagedialog.h" line="105"/>
         <source>Darkcoin Core - Command-line options</source>
-        <translation>Darkcoin Core - опции командной строки</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="69"/>
@@ -1376,19 +1376,19 @@ Address: %4
         <location filename="../forms/intro.ui" line="23"/>
         <location filename="../forms/ui_intro.h" line="184"/>
         <source>Welcome to Darkcoin Core.</source>
-        <translation>Добро пожаловать в Darkcoin Core.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/intro.ui" line="49"/>
         <location filename="../forms/ui_intro.h" line="185"/>
         <source>As this is the first time the program is launched, you can choose where Darkcoin Core will store its data.</source>
-        <translation>Так как вы впервые запустили программу, вы можете выбрать, где Darkcoin Core будет хранить данные.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/intro.ui" line="59"/>
         <location filename="../forms/ui_intro.h" line="186"/>
         <source>Darkcoin Core will download and store a copy of the Darkcoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
-        <translation>Darkcoin Core скачает и сохранит копию цепи блоков. Как минимум, %1ГБ данных будет храниться в этом каталоге, и со временем он будет расти. Бумажник будет также сохранён в этом каталоге.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/intro.ui" line="69"/>
@@ -1478,13 +1478,13 @@ Address: %4
         <location filename="../forms/optionsdialog.ui" line="33"/>
         <location filename="../forms/ui_optionsdialog.h" line="534"/>
         <source>Automatically start Darkcoin after logging in to the system.</source>
-        <translation>Автоматически запускать Darkcoin после входа в систему</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="36"/>
         <location filename="../forms/ui_optionsdialog.h" line="536"/>
         <source>&amp;Start Darkcoin on system login</source>
-        <translation>&amp;Запускать Darkcoin при входе в систему</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="45"/>
@@ -1514,19 +1514,19 @@ Address: %4
         <location filename="../forms/optionsdialog.ui" line="138"/>
         <location filename="../forms/ui_optionsdialog.h" line="544"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This setting determines the amount of individual masternodes that an input will be anonymized through. More rounds of anonymization gives a higher degree of privacy, but also costs more in fees.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Эта настройка определяет количество отдельных мастернод, через которые пройдет анонимизация. Чем больше роундов, тем выше степень конфиденциальности, но также выше и суммарная стоимость комиссий&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="141"/>
         <location filename="../forms/ui_optionsdialog.h" line="546"/>
         <source>Darksend rounds to use</source>
-        <translation>Количество раундов Darksend</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="180"/>
         <location filename="../forms/ui_optionsdialog.h" line="547"/>
         <source>Amount of Darkcoin to keep anonymized</source>
-        <translation>Сумма постоянно анонимизированных Darkcoin</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="206"/>
@@ -1586,7 +1586,7 @@ Address: %4
         <location filename="../forms/optionsdialog.ui" line="307"/>
         <location filename="../forms/ui_optionsdialog.h" line="562"/>
         <source>Automatically open the Darkcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation>Автоматически открыть порт для Darkcoin-клиента на роутере. Работает только если Ваш роутер поддерживает UPnP и данная функция на нем включена.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="310"/>
@@ -1598,7 +1598,7 @@ Address: %4
         <location filename="../forms/optionsdialog.ui" line="317"/>
         <location filename="../forms/ui_optionsdialog.h" line="566"/>
         <source>Connect to the Darkcoin network through a SOCKS proxy.</source>
-        <translation>Подключаться к сети Darkcoin через прокси SOCKS5</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="320"/>
@@ -1688,7 +1688,7 @@ Address: %4
         <location filename="../forms/optionsdialog.ui" line="503"/>
         <location filename="../forms/ui_optionsdialog.h" line="593"/>
         <source>The user interface language can be set here. This setting will take effect after restarting Darkcoin.</source>
-        <translation>Здесь можно выбрать язык интерфейса. Настройки вступят в силу после перезапуска Darkcoin.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="514"/>
@@ -1706,7 +1706,7 @@ Address: %4
         <location filename="../forms/optionsdialog.ui" line="536"/>
         <location filename="../forms/ui_optionsdialog.h" line="600"/>
         <source>Whether to show Darkcoin addresses in the transaction list or not.</source>
-        <translation>Показывать ли адреса Darkcoin в списке транзакций или нет.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="539"/>
@@ -1815,7 +1815,7 @@ Address: %4
         <location filename="../forms/ui_overviewpage.h" line="459"/>
         <location filename="../forms/ui_overviewpage.h" line="503"/>
         <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Darkcoin network after a connection is established, but this process has not completed yet.</source>
-        <translation>Отображаемая информация может быть устаревшей. Ваш бумажник автоматически синхронизируется с сетью Darkcoin после подключения, но этот процесс еще не завершён.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="108"/>
@@ -1869,61 +1869,61 @@ Address: %4
         <location filename="../forms/overviewpage.ui" line="296"/>
         <location filename="../forms/ui_overviewpage.h" line="477"/>
         <source>Status:</source>
-        <translation>Статус:</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="303"/>
         <location filename="../forms/ui_overviewpage.h" line="478"/>
         <source>Enabled/Disabled</source>
-        <translation>Включено/Выключено</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="310"/>
         <location filename="../forms/ui_overviewpage.h" line="479"/>
         <source>Completion:</source>
-        <translation>Завершение:</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="330"/>
         <location filename="../forms/ui_overviewpage.h" line="480"/>
         <source>Darksend Balance:</source>
-        <translation>Баланс Darksend:</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="343"/>
         <location filename="../forms/ui_overviewpage.h" line="481"/>
         <source>0 DRK</source>
-        <translation>0 DRK</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="350"/>
         <location filename="../forms/ui_overviewpage.h" line="482"/>
         <source>Amount and Rounds:</source>
-        <translation>Сумма и раунды:</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="357"/>
         <location filename="../forms/ui_overviewpage.h" line="483"/>
         <source>0 DRK / 0 Rounds</source>
-        <translation>0 DRK / 0 раундов</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="364"/>
         <location filename="../forms/ui_overviewpage.h" line="484"/>
         <source>Submitted Denom:</source>
-        <translation>Предоставленные деноминации:</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="371"/>
         <location filename="../forms/ui_overviewpage.h" line="486"/>
         <source>The denominations you submitted to the Masternode. To mix, other users must submit the exact same denominations.</source>
-        <translation>Деноминации, предоставленные Вами мастерноде. Для перемешивания другие пользователи должны предоставить точно такой же набор деноминаций.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="374"/>
         <location filename="../forms/ui_overviewpage.h" line="488"/>
         <source>n/a</source>
-        <translation>н/д</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="396"/>
@@ -1932,43 +1932,43 @@ Address: %4
         <location filename="../overviewpage.cpp" line="442"/>
         <location filename="../overviewpage.cpp" line="456"/>
         <source>Darksend</source>
-        <translation>Darksend</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="846"/>
         <location filename="../forms/ui_overviewpage.h" line="491"/>
         <source>Start/Stop Mixing</source>
-        <translation>Начать/Остановить перемешивание</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="878"/>
         <location filename="../forms/ui_overviewpage.h" line="492"/>
         <source>(Last Message)</source>
-        <translation>(Последнее сообщение)</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="897"/>
         <location filename="../forms/ui_overviewpage.h" line="494"/>
         <source>Try to manually submit a Darksend request.</source>
-        <translation>Попробовать отправить Darksend-запрос вручную.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="900"/>
         <location filename="../forms/ui_overviewpage.h" line="496"/>
         <source>Try Mix</source>
-        <translation>Попробовать перемешать</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="913"/>
         <location filename="../forms/ui_overviewpage.h" line="498"/>
         <source>Reset the current status of Darksend (can interrupt Darksend if it&apos;s in the process of Mixing, which can cost you money!)</source>
-        <translation>Сбросить текущий статус Darksend (можно прервать процесс перемешивания Darksend, но это может стоить Вам немного денег)</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="919"/>
         <location filename="../forms/ui_overviewpage.h" line="500"/>
         <source>Reset</source>
-        <translation>Сбросить</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="955"/>
@@ -2174,7 +2174,7 @@ Address: %4
         <location filename="../forms/rpcconsole.ui" line="33"/>
         <location filename="../forms/ui_rpcconsole.h" line="472"/>
         <source>Masternode Count</source>
-        <translation>Количество мастернод</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="46"/>
@@ -2228,7 +2228,7 @@ Address: %4
         <location filename="../forms/rpcconsole.ui" line="90"/>
         <location filename="../forms/ui_rpcconsole.h" line="479"/>
         <source>Open the Darkcoin debug log file from the current data directory. This can take a few seconds for large log files.</source>
-        <translation>Открыть отладочный лог-файл Darkcoin из текущего каталога данных.  Для больших лог-файлов это действие может занимать несколько секунд.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="93"/>
@@ -2405,7 +2405,7 @@ Address: %4
         <location filename="../forms/ui_receivecoinsdialog.h" line="260"/>
         <location filename="../forms/ui_receivecoinsdialog.h" line="267"/>
         <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Darkcoin network.</source>
-        <translation>Необязательное сообщение для запроса платежа, которое будет показано при открытии запроса. Примечание: сообщение не будет отправлено вместе с платежом через сеть Darkcoin.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="54"/>
@@ -2756,13 +2756,13 @@ Address: %4
         <location filename="../forms/sendcoinsdialog.ui" line="759"/>
         <location filename="../forms/ui_sendcoinsdialog.h" line="545"/>
         <source>Darksend</source>
-        <translation>Darksend</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="772"/>
         <location filename="../forms/ui_sendcoinsdialog.h" line="546"/>
         <source>InstantX</source>
-        <translation>InstantX</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="779"/>
@@ -2932,7 +2932,7 @@ Address: %4
         <location filename="../forms/sendcoinsentry.ui" line="54"/>
         <location filename="../forms/ui_sendcoinsentry.h" line="427"/>
         <source>The address to send the payment to (e.g. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</source>
-        <translation>Адрес, на который будет выслан платёж (например, XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="61"/>
@@ -3000,7 +3000,7 @@ Address: %4
         <location filename="../forms/sendcoinsentry.ui" line="157"/>
         <location filename="../forms/ui_sendcoinsentry.h" line="450"/>
         <source>A message that was attached to the darkcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Darkcoin network.</source>
-        <translation>К darkcoin: URI было прикреплено сообщение, которое будет сохранено вместе с транзакцией только для вашего сведения. Примечание: сообщение не будет отправлено через сеть Darkcoin.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="583"/>
@@ -3073,7 +3073,7 @@ Address: %4
         <location filename="../forms/signverifymessagedialog.ui" line="48"/>
         <location filename="../forms/ui_signverifymessagedialog.h" line="286"/>
         <source>The address to sign the message with (e.g. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</source>
-        <translation>Адрес, которым вы хотите подписать сообщение  (напр. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="55"/>
@@ -3125,7 +3125,7 @@ Address: %4
         <location filename="../forms/signverifymessagedialog.ui" line="152"/>
         <location filename="../forms/ui_signverifymessagedialog.h" line="307"/>
         <source>Sign the message to prove you own this Darkcoin address</source>
-        <translation>Подписать сообщение, чтобы доказать владение этим адресом Darkcoin</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="155"/>
@@ -3163,13 +3163,13 @@ Address: %4
         <location filename="../forms/signverifymessagedialog.ui" line="258"/>
         <location filename="../forms/ui_signverifymessagedialog.h" line="318"/>
         <source>The address the message was signed with (e.g. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</source>
-        <translation>Адрес, которым было подписано сообщение (например, XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="295"/>
         <location filename="../forms/ui_signverifymessagedialog.h" line="326"/>
         <source>Verify the message to ensure it was signed with the specified Darkcoin address</source>
-        <translation>Проверить сообщение, чтобы убедиться, что оно было подписано указанным адресом Darkcoin</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="298"/>

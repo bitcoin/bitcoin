@@ -5,13 +5,13 @@
         <location filename="../forms/aboutdialog.ui" line="14"/>
         <location filename="../forms/ui_aboutdialog.h" line="131"/>
         <source>About Darkcoin Core</source>
-        <translation>O Darkcoin Core</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/aboutdialog.ui" line="53"/>
         <location filename="../forms/ui_aboutdialog.h" line="132"/>
         <source>&lt;b&gt;Darkcoin Core&lt;/b&gt; version</source>
-        <translation>&lt;b&gt;Darkcoin Core&lt;b&gt; wersja</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/aboutdialog.ui" line="111"/>
@@ -22,22 +22,23 @@ This is experimental software.
 Distributed under the MIT/X11 software license, see the accompanying file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit (http://www.openssl.org/) and cryptographic software written by Eric Young (eay@cryptsoft.com) and UPnP software written by Thomas Bernard.</source>
-        <translation>To jest wersja eksperymentalna
+        <translation>
+Jest to oprogramowanie eksperymentalne.
 
-Jest ona rozpowszechniana na licencji MIT/X11, proszę zapoznać się z plikiem COPYING lub http://www.opensource.org/licenses/mit-license.php.
+Dystrybutowane pod licencją oprogramowania MIT/X11, zobacz akompaniujący plik COPYING lub odwiedź http://www.opensource.org/licenses/mit-license.php.
 
-Produkt ten zawiera oprogramowanie stworzone przez OpenSSL Project do użytku z OpenSSL Toolkit (http://openssl.org/), oprogramowanie kryptograficzne napisane przez Eric Young (eay@cryptsoft.com) oraz oprogramowanie UPnP stworzone przez Thomas Bernard.</translation>
+Ten produkt zawiera oprogramowanie opracowane przez Projekt OpenSSL do użycia w OpenSSL Toolkit (http://www.openssl.org/) i  oprogramowanie kryptograficzne napisane przez Eric Young (eay@cryptsoft.com) i także oprogramowanie UPnP napisane przez Thomas Bernard.</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="30"/>
         <location filename="../utilitydialog.cpp" line="31"/>
         <source>Copyright</source>
-        <translation type="unfinished"/>
+        <translation>Prawo autorskie</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="30"/>
         <source>The Bitcoin Core developers</source>
-        <translation type="unfinished"/>
+        <translation>Deweloperzy Bitcoin Core</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="31"/>
@@ -48,7 +49,7 @@ Produkt ten zawiera oprogramowanie stworzone przez OpenSSL Project do użytku z 
         <location filename="../utilitydialog.cpp" line="43"/>
         <location filename="../utilitydialog.cpp" line="45"/>
         <source>(%1-bit)</source>
-        <translation type="unfinished"/>
+        <translation>(%1-bit)</translation>
     </message>
 </context>
 <context>
@@ -57,13 +58,13 @@ Produkt ten zawiera oprogramowanie stworzone przez OpenSSL Project do użytku z 
         <location filename="../forms/addressbookpage.ui" line="30"/>
         <location filename="../forms/ui_addressbookpage.h" line="126"/>
         <source>Double-click to edit address or label</source>
-        <translation>Kliknij dwukrotnie aby dokonać edycji adresu lub nazwy</translation>
+        <translation>Kliknij dwukrotnie, aby edytować adres lub etykietę</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="57"/>
         <location filename="../forms/ui_addressbookpage.h" line="129"/>
         <source>Create a new address</source>
-        <translation>Stwórz nowy adres</translation>
+        <translation>Utwórz nowy adres</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="60"/>
@@ -75,7 +76,7 @@ Produkt ten zawiera oprogramowanie stworzone przez OpenSSL Project do użytku z 
         <location filename="../forms/addressbookpage.ui" line="71"/>
         <location filename="../forms/ui_addressbookpage.h" line="133"/>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation>Skopiuj wybrany adres do schowka systemu</translation>
+        <translation>Skopiuj aktualnie wybrany adres do schowka</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="74"/>
@@ -87,7 +88,7 @@ Produkt ten zawiera oprogramowanie stworzone przez OpenSSL Project do użytku z 
         <location filename="../forms/addressbookpage.ui" line="85"/>
         <location filename="../forms/ui_addressbookpage.h" line="137"/>
         <source>Delete the currently selected address from the list</source>
-        <translation>Usuń wybrany adres z listy</translation>
+        <translation>Usuń zaznaczony adres z listy</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="88"/>
@@ -99,7 +100,7 @@ Produkt ten zawiera oprogramowanie stworzone przez OpenSSL Project do użytku z 
         <location filename="../forms/addressbookpage.ui" line="112"/>
         <location filename="../forms/ui_addressbookpage.h" line="141"/>
         <source>Export the data in the current tab to a file</source>
-        <translation>Eksportuj dane z tej zakładki do pliku</translation>
+        <translation>Eksportuj dane z aktywnej karty do pliku</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="115"/>
@@ -116,27 +117,27 @@ Produkt ten zawiera oprogramowanie stworzone przez OpenSSL Project do użytku z 
     <message>
         <location filename="../addressbookpage.cpp" line="45"/>
         <source>Choose the address to send coins to</source>
-        <translation type="unfinished"/>
+        <translation>Wybierz adres do którego wysłać BitCoin/y</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="46"/>
         <source>Choose the address to receive coins with</source>
-        <translation type="unfinished"/>
+        <translation>Wybierz adres do otrzymania monet.</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="51"/>
         <source>C&amp;hoose</source>
-        <translation type="unfinished"/>
+        <translation>W&amp;ybierz</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="57"/>
         <source>Sending addresses</source>
-        <translation type="unfinished"/>
+        <translation>Adres wysyłania</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="58"/>
         <source>Receiving addresses</source>
-        <translation type="unfinished"/>
+        <translation>Adres odbiorczy</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="65"/>
@@ -151,37 +152,37 @@ Produkt ten zawiera oprogramowanie stworzone przez OpenSSL Project do użytku z 
     <message>
         <location filename="../addressbookpage.cpp" line="75"/>
         <source>&amp;Copy Address</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Kopiuj adres</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="76"/>
         <source>Copy &amp;Label</source>
-        <translation type="unfinished"/>
+        <translation>Kopiuj &amp;Etykietę</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="77"/>
         <source>&amp;Edit</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Modyfikuj</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="271"/>
         <source>Export Address List</source>
-        <translation type="unfinished"/>
+        <translation>Eksportuj listę adresową</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="272"/>
         <source>Comma separated file (*.csv)</source>
-        <translation type="unfinished"/>
+        <translation>Plik *.CSV (rozdzielany przecinkami)</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="285"/>
         <source>Exporting Failed</source>
-        <translation type="unfinished"/>
+        <translation>Błąd przy próbie eksportu</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="286"/>
         <source>There was an error trying to save the address list to %1.</source>
-        <translation type="unfinished"/>
+        <translation>Wystąpił błąd podczas próby zapisu listy adresów do %1.</translation>
     </message>
 </context>
 <context>
@@ -189,7 +190,7 @@ Produkt ten zawiera oprogramowanie stworzone przez OpenSSL Project do użytku z 
     <message>
         <location filename="../addresstablemodel.cpp" line="169"/>
         <source>Label</source>
-        <translation type="unfinished"/>
+        <translation>Etykieta</translation>
     </message>
     <message>
         <location filename="../addresstablemodel.cpp" line="169"/>
@@ -199,7 +200,7 @@ Produkt ten zawiera oprogramowanie stworzone przez OpenSSL Project do użytku z 
     <message>
         <location filename="../addresstablemodel.cpp" line="205"/>
         <source>(no label)</source>
-        <translation type="unfinished"/>
+        <translation>(bez etykiety)</translation>
     </message>
 </context>
 <context>
@@ -208,7 +209,7 @@ Produkt ten zawiera oprogramowanie stworzone przez OpenSSL Project do użytku z 
         <location filename="../forms/askpassphrasedialog.ui" line="26"/>
         <location filename="../forms/ui_askpassphrasedialog.h" line="135"/>
         <source>Passphrase Dialog</source>
-        <translation>Dialog hasła</translation>
+        <translation>Okienko Hasła</translation>
     </message>
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="47"/>
@@ -232,58 +233,58 @@ Produkt ten zawiera oprogramowanie stworzone przez OpenSSL Project do użytku z 
         <location filename="../forms/askpassphrasedialog.ui" line="108"/>
         <location filename="../forms/ui_askpassphrasedialog.h" line="141"/>
         <source>Serves to disable the trivial sendmoney when OS account compromised. Provides no real security.</source>
-        <translation>Służy do zablokowania funkcji wysyłania monet gdy konto użytkownika systemu operacyjnego zostało przejęte przez kogoś innego. Nie oferuje prawdziwego bezpieczeństwa. Wirus lub haker wciąż może uzyskać dostęp do twojego portfela.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="111"/>
         <location filename="../forms/ui_askpassphrasedialog.h" line="143"/>
         <source>For anonymization only</source>
-        <translation>Tylko dla anonimizacji</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="41"/>
         <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;10 or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
-        <translation type="unfinished"/>
+        <translation>Wprowadź nowe hasło dla portfela.&lt;br/&gt;Proszę użyć hasła składającego się z &lt;b&gt;10 lub więcej losowych znaków&lt;/b&gt; lub &lt;b&gt;ośmiu lub więcej słów&lt;/b&gt;.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="42"/>
         <source>Encrypt wallet</source>
-        <translation type="unfinished"/>
+        <translation>Zaszyfruj portfel</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="48"/>
         <source>This operation needs your wallet passphrase to unlock the wallet.</source>
-        <translation type="unfinished"/>
+        <translation>Ta operacja wymaga hasła do portfela ażeby odblokować portfel.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="53"/>
         <source>Unlock wallet</source>
-        <translation type="unfinished"/>
+        <translation>Odblokuj portfel</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="56"/>
         <source>This operation needs your wallet passphrase to decrypt the wallet.</source>
-        <translation type="unfinished"/>
+        <translation>Ta operacja wymaga hasła do portfela ażeby odszyfrować portfel.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="61"/>
         <source>Decrypt wallet</source>
-        <translation type="unfinished"/>
+        <translation>Odszyfruj portfel</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="64"/>
         <source>Change passphrase</source>
-        <translation type="unfinished"/>
+        <translation>Zmień hasło</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="65"/>
         <source>Enter the old and new passphrase to the wallet.</source>
-        <translation type="unfinished"/>
+        <translation>Podaj stare i nowe hasło do portfela.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="112"/>
         <source>Confirm wallet encryption</source>
-        <translation type="unfinished"/>
+        <translation>Potwierdź szyfrowanie portfela</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="113"/>
@@ -293,13 +294,13 @@ Produkt ten zawiera oprogramowanie stworzone przez OpenSSL Project do użytku z 
     <message>
         <location filename="../askpassphrasedialog.cpp" line="113"/>
         <source>Are you sure you wish to encrypt your wallet?</source>
-        <translation type="unfinished"/>
+        <translation>Jesteś pewien, że chcesz zaszyfrować swój portfel?</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="122"/>
         <location filename="../askpassphrasedialog.cpp" line="181"/>
         <source>Wallet encrypted</source>
-        <translation type="unfinished"/>
+        <translation>Portfel zaszyfrowany</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="124"/>
@@ -309,7 +310,7 @@ Produkt ten zawiera oprogramowanie stworzone przez OpenSSL Project do użytku z 
     <message>
         <location filename="../askpassphrasedialog.cpp" line="128"/>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
-        <translation type="unfinished"/>
+        <translation>WAŻNE: Wszystkie wykonane wcześniej kopie pliku portfela powinny być zamienione na nowe, szyfrowane pliki. Z powodów bezpieczeństwa, poprzednie kopie nieszyfrowanych plików portfela staną się bezużyteczne jak tylko zaczniesz korzystać z nowego, szyfrowanego portfela.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="137"/>
@@ -317,46 +318,46 @@ Produkt ten zawiera oprogramowanie stworzone przez OpenSSL Project do użytku z 
         <location filename="../askpassphrasedialog.cpp" line="187"/>
         <location filename="../askpassphrasedialog.cpp" line="193"/>
         <source>Wallet encryption failed</source>
-        <translation type="unfinished"/>
+        <translation>Szyfrowanie portfela nie powiodło się</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="138"/>
         <source>Wallet encryption failed due to an internal error. Your wallet was not encrypted.</source>
-        <translation type="unfinished"/>
+        <translation>Szyfrowanie portfela nie powiodło się z powodu wewnętrznego błędu. Twój portfel nie został zaszyfrowany.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="145"/>
         <location filename="../askpassphrasedialog.cpp" line="194"/>
         <source>The supplied passphrases do not match.</source>
-        <translation type="unfinished"/>
+        <translation>Podane hasła nie są takie same.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="157"/>
         <source>Wallet unlock failed</source>
-        <translation type="unfinished"/>
+        <translation>Odblokowanie portfela nie powiodło się</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="158"/>
         <location filename="../askpassphrasedialog.cpp" line="169"/>
         <location filename="../askpassphrasedialog.cpp" line="188"/>
         <source>The passphrase entered for the wallet decryption was incorrect.</source>
-        <translation type="unfinished"/>
+        <translation>Wprowadzone hasło do odszyfrowania portfela jest niepoprawne.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="168"/>
         <source>Wallet decryption failed</source>
-        <translation type="unfinished"/>
+        <translation>Odszyfrowanie portfela nie powiodło się</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="182"/>
         <source>Wallet passphrase was successfully changed.</source>
-        <translation type="unfinished"/>
+        <translation>Hasło portfela zostało pomyślnie zmienione.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="230"/>
         <location filename="../askpassphrasedialog.cpp" line="254"/>
         <source>Warning: The Caps Lock key is on!</source>
-        <translation type="unfinished"/>
+        <translation>Uwaga: Klawisz Caps Lock jest włączony</translation>
     </message>
 </context>
 <context>
@@ -374,28 +375,28 @@ Produkt ten zawiera oprogramowanie stworzone przez OpenSSL Project do użytku z 
     <message>
         <location filename="../bitcoingui.cpp" line="87"/>
         <source>Node</source>
-        <translation type="unfinished"/>
+        <translation>Węzeł</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="101"/>
         <location filename="../bitcoingui.cpp" line="494"/>
         <source>[testnet]</source>
-        <translation type="unfinished"/>
+        <translation>[testnet]</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="226"/>
         <source>&amp;Overview</source>
-        <translation type="unfinished"/>
+        <translation>P&amp;odsumowanie</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="227"/>
         <source>Show general overview of wallet</source>
-        <translation type="unfinished"/>
+        <translation>Pokazuje ogólny zarys portfela</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="233"/>
         <source>&amp;Send</source>
-        <translation type="unfinished"/>
+        <translation>Wyślij</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="234"/>
@@ -405,7 +406,7 @@ Produkt ten zawiera oprogramowanie stworzone przez OpenSSL Project do użytku z 
     <message>
         <location filename="../bitcoingui.cpp" line="240"/>
         <source>&amp;Receive</source>
-        <translation type="unfinished"/>
+        <translation>Odbie&amp;rz</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="241"/>
@@ -415,22 +416,22 @@ Produkt ten zawiera oprogramowanie stworzone przez OpenSSL Project do użytku z 
     <message>
         <location filename="../bitcoingui.cpp" line="247"/>
         <source>&amp;Transactions</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Transakcje</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="248"/>
         <source>Browse transaction history</source>
-        <translation type="unfinished"/>
+        <translation>Przeglądaj historię transakcji</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="265"/>
         <source>E&amp;xit</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Zakończ</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="266"/>
         <source>Quit application</source>
-        <translation type="unfinished"/>
+        <translation>Zamknij program</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="270"/>
@@ -447,17 +448,17 @@ Produkt ten zawiera oprogramowanie stworzone przez OpenSSL Project do użytku z 
         <location filename="../bitcoingui.cpp" line="276"/>
         <location filename="../bitcoingui.cpp" line="278"/>
         <source>About &amp;Qt</source>
-        <translation type="unfinished"/>
+        <translation>O &amp;Qt</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="280"/>
         <source>Show information about Qt</source>
-        <translation type="unfinished"/>
+        <translation>Pokazuje informacje o Qt</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="282"/>
         <source>&amp;Options...</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Opcje...</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="283"/>
@@ -468,42 +469,42 @@ Produkt ten zawiera oprogramowanie stworzone przez OpenSSL Project do użytku z 
         <location filename="../bitcoingui.cpp" line="286"/>
         <location filename="../bitcoingui.cpp" line="288"/>
         <source>&amp;Show / Hide</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Pokaż / Ukryj</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="289"/>
         <source>Show or hide the main Window</source>
-        <translation type="unfinished"/>
+        <translation>Pokazuje lub ukrywa główne okno</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="291"/>
         <source>&amp;Encrypt Wallet...</source>
-        <translation type="unfinished"/>
+        <translation>Zaszyfruj Portf&amp;el</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="292"/>
         <source>Encrypt the private keys that belong to your wallet</source>
-        <translation type="unfinished"/>
+        <translation>Szyfruj klucze prywatne, które są powiązane z twoim portfelem</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="294"/>
         <source>&amp;Backup Wallet...</source>
-        <translation type="unfinished"/>
+        <translation>Wykonaj kopię zapasową...</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="295"/>
         <source>Backup wallet to another location</source>
-        <translation type="unfinished"/>
+        <translation>Zapasowy portfel w innej lokalizacji</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="296"/>
         <source>&amp;Change Passphrase...</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Zmień hasło...</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="297"/>
         <source>Change the passphrase used for wallet encryption</source>
-        <translation type="unfinished"/>
+        <translation>Zmień hasło użyte do szyfrowania portfela</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="298"/>
@@ -523,7 +524,7 @@ Produkt ten zawiera oprogramowanie stworzone przez OpenSSL Project do użytku z 
     <message>
         <location filename="../bitcoingui.cpp" line="301"/>
         <source>Sign &amp;message...</source>
-        <translation type="unfinished"/>
+        <translation>Podpisz wiado&amp;mość...</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="302"/>
@@ -533,7 +534,7 @@ Produkt ten zawiera oprogramowanie stworzone przez OpenSSL Project do użytku z 
     <message>
         <location filename="../bitcoingui.cpp" line="303"/>
         <source>&amp;Verify message...</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Zweryfikuj wiadomość...</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="304"/>
@@ -543,7 +544,7 @@ Produkt ten zawiera oprogramowanie stworzone przez OpenSSL Project do użytku z 
     <message>
         <location filename="../bitcoingui.cpp" line="306"/>
         <source>&amp;Information</source>
-        <translation>&amp;Informacje</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="307"/>
@@ -573,27 +574,27 @@ Produkt ten zawiera oprogramowanie stworzone przez OpenSSL Project do użytku z 
     <message>
         <location filename="../bitcoingui.cpp" line="313"/>
         <source>&amp;Sending addresses...</source>
-        <translation type="unfinished"/>
+        <translation>Adres wysyłania</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="314"/>
         <source>Show the list of used sending addresses and labels</source>
-        <translation type="unfinished"/>
+        <translation>Pokaż listę użytych adresów wysyłających i etykiety</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="315"/>
         <source>&amp;Receiving addresses...</source>
-        <translation type="unfinished"/>
+        <translation>Adres odbiorczy</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="316"/>
         <source>Show the list of used receiving addresses and labels</source>
-        <translation type="unfinished"/>
+        <translation>Pokaż listę użytych adresów odbiorczych i etykiety</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="318"/>
         <source>Open &amp;URI...</source>
-        <translation type="unfinished"/>
+        <translation>Otwórz URI...</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="319"/>
@@ -603,7 +604,7 @@ Produkt ten zawiera oprogramowanie stworzone przez OpenSSL Project do użytku z 
     <message>
         <location filename="../bitcoingui.cpp" line="321"/>
         <source>&amp;Command-line options</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Opcje konsoli</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="322"/>
@@ -613,12 +614,12 @@ Produkt ten zawiera oprogramowanie stworzone przez OpenSSL Project do użytku z 
     <message>
         <location filename="../bitcoingui.cpp" line="358"/>
         <source>&amp;File</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Plik</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="372"/>
         <source>&amp;Settings</source>
-        <translation type="unfinished"/>
+        <translation>P&amp;referencje</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="385"/>
@@ -628,12 +629,12 @@ Produkt ten zawiera oprogramowanie stworzone przez OpenSSL Project do użytku z 
     <message>
         <location filename="../bitcoingui.cpp" line="391"/>
         <source>&amp;Help</source>
-        <translation type="unfinished"/>
+        <translation>Pomo&amp;c</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="402"/>
         <source>Tabs toolbar</source>
-        <translation type="unfinished"/>
+        <translation>Pasek zakładek</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="489"/>
@@ -649,32 +650,32 @@ Produkt ten zawiera oprogramowanie stworzone przez OpenSSL Project do użytku z 
     <message>
         <location filename="../bitcoingui.cpp" line="650"/>
         <source>Synchronizing with network...</source>
-        <translation type="unfinished"/>
+        <translation>Synchronizacja z siecią...</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="653"/>
         <source>Importing blocks from disk...</source>
-        <translation type="unfinished"/>
+        <translation>Importowanie bloków z dysku...</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="656"/>
         <source>Reindexing blocks on disk...</source>
-        <translation type="unfinished"/>
+        <translation>Ponowne indeksowanie bloków na dysku...</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="660"/>
         <source>No block source available...</source>
-        <translation type="unfinished"/>
+        <translation>Brak dostępnych źródeł bloków...</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="670"/>
         <source>Processed %1 blocks of transaction history.</source>
-        <translation type="unfinished"/>
+        <translation>Pobrano %1 bloków z historią transakcji.</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="675"/>
         <source>Up to date</source>
-        <translation type="unfinished"/>
+        <translation>Aktualny</translation>
     </message>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="696"/>
@@ -695,7 +696,7 @@ Produkt ten zawiera oprogramowanie stworzone przez OpenSSL Project do użytku z 
     <message>
         <location filename="../bitcoingui.cpp" line="710"/>
         <source>%1 and %2</source>
-        <translation type="unfinished"/>
+        <translation>%1 i %2</translation>
     </message>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="710"/>
@@ -705,22 +706,22 @@ Produkt ten zawiera oprogramowanie stworzone przez OpenSSL Project do użytku z 
     <message>
         <location filename="../bitcoingui.cpp" line="714"/>
         <source>%1 behind</source>
-        <translation type="unfinished"/>
+        <translation>%1 wstecz</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="719"/>
         <source>Catching up...</source>
-        <translation type="unfinished"/>
+        <translation>Łapanie bloków...</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="735"/>
         <source>Last received block was generated %1 ago.</source>
-        <translation type="unfinished"/>
+        <translation>Ostatni otrzymany blok został wygenerowany %1 temu.</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="737"/>
         <source>Transactions after this will not yet be visible.</source>
-        <translation type="unfinished"/>
+        <translation>Transakcje po tym momencie nie będą jeszcze widoczne.</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="750"/>
@@ -730,27 +731,27 @@ Produkt ten zawiera oprogramowanie stworzone przez OpenSSL Project do użytku z 
     <message>
         <location filename="../bitcoingui.cpp" line="764"/>
         <source>Error</source>
-        <translation type="unfinished"/>
+        <translation>Błąd</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="767"/>
         <source>Warning</source>
-        <translation type="unfinished"/>
+        <translation>Ostrzeżenie</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="770"/>
         <source>Information</source>
-        <translation type="unfinished"/>
+        <translation>Informacja</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="849"/>
         <source>Sent transaction</source>
-        <translation type="unfinished"/>
+        <translation>Transakcja wysłana</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="849"/>
         <source>Incoming transaction</source>
-        <translation type="unfinished"/>
+        <translation>Transakcja przychodząca</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="850"/>
@@ -759,12 +760,16 @@ Amount: %2
 Type: %3
 Address: %4
 </source>
-        <translation type="unfinished"/>
+        <translation>Data: %1
+Kwota: %2
+Typ: %3
+Adres: %4
+</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="921"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
-        <translation type="unfinished"/>
+        <translation>Portfel jest &lt;b&gt;zaszyfrowany&lt;/b&gt; i obecnie &lt;b&gt;niezablokowany&lt;/b&gt;</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="931"/>
@@ -774,7 +779,7 @@ Address: %4
     <message>
         <location filename="../bitcoingui.cpp" line="941"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
-        <translation type="unfinished"/>
+        <translation>Portfel jest &lt;b&gt;zaszyfrowany&lt;/b&gt; i obecnie &lt;b&gt;zablokowany&lt;/b&gt;</translation>
     </message>
     <message>
         <location filename="../darkcoin.cpp" line="449"/>
@@ -787,7 +792,7 @@ Address: %4
     <message>
         <location filename="../clientmodel.cpp" line="135"/>
         <source>Network Alert</source>
-        <translation type="unfinished"/>
+        <translation>Sieć Alert</translation>
     </message>
 </context>
 <context>
@@ -796,37 +801,37 @@ Address: %4
         <location filename="../forms/coincontroldialog.ui" line="14"/>
         <location filename="../forms/ui_coincontroldialog.h" line="319"/>
         <source>Coin Control Address Selection</source>
-        <translation>Wybór adresu kontrolującego monety</translation>
+        <translation>Sterowanie Monetą Wybór Adresu</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="48"/>
         <location filename="../forms/ui_coincontroldialog.h" line="320"/>
         <source>Quantity:</source>
-        <translation>Ilość</translation>
+        <translation>Ilość:</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="77"/>
         <location filename="../forms/ui_coincontroldialog.h" line="321"/>
         <source>Bytes:</source>
-        <translation>Bity</translation>
+        <translation>Bajtów:</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="122"/>
         <location filename="../forms/ui_coincontroldialog.h" line="322"/>
         <source>Amount:</source>
-        <translation>Kwota</translation>
+        <translation>Kwota:</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="151"/>
         <location filename="../forms/ui_coincontroldialog.h" line="323"/>
         <source>Priority:</source>
-        <translation>Priorytet</translation>
+        <translation>Priorytet:</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="196"/>
         <location filename="../forms/ui_coincontroldialog.h" line="324"/>
         <source>Fee:</source>
-        <translation>Opłata</translation>
+        <translation>Opłata:</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="228"/>
@@ -838,31 +843,31 @@ Address: %4
         <location filename="../forms/coincontroldialog.ui" line="276"/>
         <location filename="../forms/ui_coincontroldialog.h" line="326"/>
         <source>After Fee:</source>
-        <translation>Po opłacie</translation>
+        <translation>Po opłacie:</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="308"/>
         <location filename="../forms/ui_coincontroldialog.h" line="327"/>
         <source>Change:</source>
-        <translation>Reszta</translation>
+        <translation>Reszta:</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="364"/>
         <location filename="../forms/ui_coincontroldialog.h" line="328"/>
         <source>(un)select all</source>
-        <translation>zaznacz/odznacz wszystkie</translation>
+        <translation>Zaznacz/Odznacz wszystko</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="377"/>
         <location filename="../forms/ui_coincontroldialog.h" line="329"/>
         <source>Tree mode</source>
-        <translation>Tryb drzewa</translation>
+        <translation>Widok drzewa</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="393"/>
         <location filename="../forms/ui_coincontroldialog.h" line="330"/>
         <source>List mode</source>
-        <translation>Tryb listy</translation>
+        <translation>Widok listy</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="446"/>
@@ -880,7 +885,7 @@ Address: %4
         <location filename="../forms/coincontroldialog.ui" line="461"/>
         <location filename="../forms/ui_coincontroldialog.h" line="335"/>
         <source>Darksend Rounds</source>
-        <translation>Ilość rund mieszania</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="466"/>
@@ -898,7 +903,7 @@ Address: %4
         <location filename="../forms/coincontroldialog.ui" line="474"/>
         <location filename="../forms/ui_coincontroldialog.h" line="339"/>
         <source>Confirmed</source>
-        <translation>Potwierdzone</translation>
+        <translation>Potwierdzony</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="479"/>
@@ -909,175 +914,175 @@ Address: %4
     <message>
         <location filename="../coincontroldialog.cpp" line="43"/>
         <source>Copy address</source>
-        <translation type="unfinished"/>
+        <translation>Kopiuj adres</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="44"/>
         <source>Copy label</source>
-        <translation type="unfinished"/>
+        <translation>Kopiuj etykietę</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="45"/>
         <location filename="../coincontroldialog.cpp" line="71"/>
         <source>Copy amount</source>
-        <translation type="unfinished"/>
+        <translation>Kopiuj kwotę</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="46"/>
         <source>Copy transaction ID</source>
-        <translation type="unfinished"/>
+        <translation>Skopiuj ID transakcji</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="47"/>
         <source>Lock unspent</source>
-        <translation type="unfinished"/>
+        <translation>Zablokuj</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="48"/>
         <source>Unlock unspent</source>
-        <translation type="unfinished"/>
+        <translation>Odblokuj</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="70"/>
         <source>Copy quantity</source>
-        <translation type="unfinished"/>
+        <translation>Skopiuj ilość</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="72"/>
         <source>Copy fee</source>
-        <translation type="unfinished"/>
+        <translation>Skopiuj opłatę</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="73"/>
         <source>Copy after fee</source>
-        <translation type="unfinished"/>
+        <translation>Skopiuj ilość po opłacie</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="74"/>
         <source>Copy bytes</source>
-        <translation type="unfinished"/>
+        <translation>Skopiuj ilość bajtów</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="75"/>
         <source>Copy priority</source>
-        <translation type="unfinished"/>
+        <translation>Skopiuj priorytet</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="76"/>
         <source>Copy low output</source>
-        <translation type="unfinished"/>
+        <translation>Skopiuj niską wartość</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="77"/>
         <source>Copy change</source>
-        <translation type="unfinished"/>
+        <translation>Skopiuj resztę</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="410"/>
         <source>highest</source>
-        <translation type="unfinished"/>
+        <translation>najwyższa</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="411"/>
         <source>higher</source>
-        <translation type="unfinished"/>
+        <translation>wyższa</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="412"/>
         <source>high</source>
-        <translation type="unfinished"/>
+        <translation>wysoka</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="413"/>
         <source>medium-high</source>
-        <translation type="unfinished"/>
+        <translation>średnio wysoki</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="414"/>
         <source>medium</source>
-        <translation type="unfinished"/>
+        <translation>średnia</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="418"/>
         <source>low-medium</source>
-        <translation type="unfinished"/>
+        <translation>średnio niski</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="419"/>
         <source>low</source>
-        <translation type="unfinished"/>
+        <translation>niski</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="420"/>
         <source>lower</source>
-        <translation type="unfinished"/>
+        <translation>niższy</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="421"/>
         <source>lowest</source>
-        <translation type="unfinished"/>
+        <translation>najniższy</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="432"/>
         <source>(%1 locked)</source>
-        <translation type="unfinished"/>
+        <translation>(%1 zablokowane)</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="464"/>
         <source>none</source>
-        <translation type="unfinished"/>
+        <translation>żaden</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="605"/>
         <source>Dust</source>
-        <translation type="unfinished"/>
+        <translation>Pył</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="605"/>
         <source>yes</source>
-        <translation type="unfinished"/>
+        <translation>tak</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="605"/>
         <source>no</source>
-        <translation type="unfinished"/>
+        <translation>nie</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="615"/>
         <source>This label turns red, if the transaction size is greater than 1000 bytes.</source>
-        <translation type="unfinished"/>
+        <translation>Etykieta staje się czerwona kiedy transakcja jest większa niż 1000 bajtów.</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="616"/>
         <location filename="../coincontroldialog.cpp" line="621"/>
         <source>This means a fee of at least %1 per kB is required.</source>
-        <translation type="unfinished"/>
+        <translation>Oznacza to wymaganą opłatę minimum %1 na kB.</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="617"/>
         <source>Can vary +/- 1 byte per input.</source>
-        <translation type="unfinished"/>
+        <translation>Waha się +/- 1 bajt na wejście.</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="619"/>
         <source>Transactions with higher priority are more likely to get included into a block.</source>
-        <translation type="unfinished"/>
+        <translation>Transakcje o wyższym priorytecie zostają szybciej dołączone do bloku.</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="620"/>
         <source>This label turns red, if the priority is smaller than &quot;medium&quot;.</source>
-        <translation type="unfinished"/>
+        <translation>Ta etykieta jest czerwona, jeżeli priorytet jest mniejszy niż &quot;średni&quot;</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="623"/>
         <source>This label turns red, if any recipient receives an amount smaller than %1.</source>
-        <translation type="unfinished"/>
+        <translation>Etykieta staje się czerwona kiedy którykolwiek odbiorca otrzymuje kwotę mniejszą niż %1.</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="624"/>
         <location filename="../coincontroldialog.cpp" line="628"/>
         <source>This means a fee of at least %1 is required.</source>
-        <translation type="unfinished"/>
+        <translation>Oznacza to, że wymagana jest opłata przynajmniej %1.</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="625"/>
@@ -1087,23 +1092,23 @@ Address: %4
     <message>
         <location filename="../coincontroldialog.cpp" line="627"/>
         <source>This label turns red, if the change is smaller than %1.</source>
-        <translation type="unfinished"/>
+        <translation>Etykieta staje się czerwona kiedy reszta jest mniejsza niż %1.</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="670"/>
         <location filename="../coincontroldialog.cpp" line="731"/>
         <source>(no label)</source>
-        <translation type="unfinished"/>
+        <translation>(bez etykiety)</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="724"/>
         <source>change from %1 (%2)</source>
-        <translation type="unfinished"/>
+        <translation>reszta z %1 (%2)</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="725"/>
         <source>(change)</source>
-        <translation type="unfinished"/>
+        <translation>(reszta)</translation>
     </message>
 </context>
 <context>
@@ -1112,73 +1117,73 @@ Address: %4
         <location filename="../forms/darksendconfig.ui" line="14"/>
         <location filename="../forms/ui_darksendconfig.h" line="96"/>
         <source>Configure Darksend+</source>
-        <translation>Skonfiguruj Darksend+</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="26"/>
         <location filename="../forms/ui_darksendconfig.h" line="97"/>
         <source>Basic Privacy</source>
-        <translation>Podstawowa prywatność</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="39"/>
         <location filename="../forms/ui_darksendconfig.h" line="98"/>
         <source>High Privacy</source>
-        <translation>Wysoka prywatność</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="52"/>
         <location filename="../forms/ui_darksendconfig.h" line="99"/>
         <source>Maximum Privacy</source>
-        <translation>Maksymalna prywatność</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="65"/>
         <location filename="../forms/ui_darksendconfig.h" line="100"/>
         <source>Please select an privacy level. </source>
-        <translation>Prosze wybrać poziom prywatności.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="78"/>
         <location filename="../forms/ui_darksendconfig.h" line="101"/>
         <source>Use 2 separate masternodes to mix funds up to 1000DRK</source>
-        <translation>Użyj 2 oddzielnych masternodów aby wymieszać środki max do 1000 DRK</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="91"/>
         <location filename="../forms/ui_darksendconfig.h" line="102"/>
         <source>Use 4 separate masternodes to mix funds up to 1000DRK</source>
-        <translation>Użyj 4 oddzielnych masternodów aby wymieszać środki max do 1000 DRK</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="104"/>
         <location filename="../forms/ui_darksendconfig.h" line="103"/>
         <source>Use 8 separate masternodes</source>
-        <translation>Użyj 8 oddzielnych masternodów</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="117"/>
         <location filename="../forms/ui_darksendconfig.h" line="104"/>
         <source>This option is the quickest and will cost about ~0.025DRK to anonymize 1000DRK</source>
-        <translation>Ta opcja jest najszybszą i będzie kosztować około 0.025DRK by zanonimizować 1000DRK</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="130"/>
         <location filename="../forms/ui_darksendconfig.h" line="105"/>
         <source>This option is moderately fast and will cost about 0.05DRK to anonymize 1000DRK</source>
-        <translation>Ta opcja oferuje średni poziom prędkości i będzie kosztować około 0.05DRK by zanonimizować 1000DRK</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="143"/>
         <location filename="../forms/ui_darksendconfig.h" line="106"/>
         <source>This is the slowest and most secure option. Using maximum anonymity will cost</source>
-        <translation>Jest to najwolniejsza lecz najbardziej bezpieczna opcja. Maksymalny poziom zanonimizowania będzie kosztować</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="156"/>
         <location filename="../forms/ui_darksendconfig.h" line="107"/>
         <source>0.1DRK per 1000DRK you anonymize.</source>
-        <translation>0.1DRK za 1000DRK które chcesz zanonimizować.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../darksendconfig.cpp" line="43"/>
@@ -1209,19 +1214,19 @@ Address: %4
         <location filename="../forms/editaddressdialog.ui" line="14"/>
         <location filename="../forms/ui_editaddressdialog.h" line="91"/>
         <source>Edit Address</source>
-        <translation>Edytuj adres</translation>
+        <translation>Zmień adres</translation>
     </message>
     <message>
         <location filename="../forms/editaddressdialog.ui" line="25"/>
         <location filename="../forms/ui_editaddressdialog.h" line="92"/>
         <source>&amp;Label</source>
-        <translation>&amp;Nazwa</translation>
+        <translation>&amp;Etykieta</translation>
     </message>
     <message>
         <location filename="../forms/editaddressdialog.ui" line="35"/>
         <location filename="../forms/ui_editaddressdialog.h" line="94"/>
         <source>The label associated with this address list entry</source>
-        <translation>Nazwa powiązana z tym wejściem do listy adresów</translation>
+        <translation>Etykieta skojarzona z tym wpisem na liście adresów</translation>
     </message>
     <message>
         <location filename="../forms/editaddressdialog.ui" line="42"/>
@@ -1233,27 +1238,27 @@ Address: %4
         <location filename="../forms/editaddressdialog.ui" line="52"/>
         <location filename="../forms/ui_editaddressdialog.h" line="98"/>
         <source>The address associated with this address list entry. This can only be modified for sending addresses.</source>
-        <translation>Adres związany z tym wpisem do listy adresów. Może być zmienione tylko dla adresów wysyłających.</translation>
+        <translation>Ten adres jest skojarzony z wpisem na liście adresów. Może być zmodyfikowany jedynie dla adresów wysyłających.</translation>
     </message>
     <message>
         <location filename="../editaddressdialog.cpp" line="29"/>
         <source>New receiving address</source>
-        <translation type="unfinished"/>
+        <translation>Nowy adres odbiorczy</translation>
     </message>
     <message>
         <location filename="../editaddressdialog.cpp" line="33"/>
         <source>New sending address</source>
-        <translation type="unfinished"/>
+        <translation>Nowy adres wysyłania</translation>
     </message>
     <message>
         <location filename="../editaddressdialog.cpp" line="36"/>
         <source>Edit receiving address</source>
-        <translation type="unfinished"/>
+        <translation>Zmień adres odbioru</translation>
     </message>
     <message>
         <location filename="../editaddressdialog.cpp" line="40"/>
         <source>Edit sending address</source>
-        <translation type="unfinished"/>
+        <translation>Zmień adres wysyłania</translation>
     </message>
     <message>
         <location filename="../editaddressdialog.cpp" line="111"/>
@@ -1263,17 +1268,17 @@ Address: %4
     <message>
         <location filename="../editaddressdialog.cpp" line="116"/>
         <source>The entered address &quot;%1&quot; is already in the address book.</source>
-        <translation type="unfinished"/>
+        <translation>Wprowadzony adres &quot;%1&quot; już istnieje w książce adresowej.</translation>
     </message>
     <message>
         <location filename="../editaddressdialog.cpp" line="121"/>
         <source>Could not unlock wallet.</source>
-        <translation type="unfinished"/>
+        <translation>Nie można było odblokować portfela.</translation>
     </message>
     <message>
         <location filename="../editaddressdialog.cpp" line="126"/>
         <source>New key generation failed.</source>
-        <translation type="unfinished"/>
+        <translation>Tworzenie nowego klucza nie powiodło się.</translation>
     </message>
 </context>
 <context>
@@ -1281,27 +1286,27 @@ Address: %4
     <message>
         <location filename="../intro.cpp" line="69"/>
         <source>A new data directory will be created.</source>
-        <translation type="unfinished"/>
+        <translation>Utworzono nowy folder danych.</translation>
     </message>
     <message>
         <location filename="../intro.cpp" line="91"/>
         <source>name</source>
-        <translation type="unfinished"/>
+        <translation>nazwa</translation>
     </message>
     <message>
         <location filename="../intro.cpp" line="93"/>
         <source>Directory already exists. Add %1 if you intend to create a new directory here.</source>
-        <translation type="unfinished"/>
+        <translation>Katalog już istnieje. Dodaj %1 jeśli masz zamiar utworzyć tutaj nowy katalog.</translation>
     </message>
     <message>
         <location filename="../intro.cpp" line="96"/>
         <source>Path already exists, and is not a directory.</source>
-        <translation type="unfinished"/>
+        <translation>Ścieżka już istnieje i nie wskazuje na folder.</translation>
     </message>
     <message>
         <location filename="../intro.cpp" line="103"/>
         <source>Cannot create data directory here.</source>
-        <translation type="unfinished"/>
+        <translation>Nie można było tutaj utworzyć folderu.</translation>
     </message>
 </context>
 <context>
@@ -1310,7 +1315,7 @@ Address: %4
         <location filename="../forms/helpmessagedialog.ui" line="19"/>
         <location filename="../forms/ui_helpmessagedialog.h" line="105"/>
         <source>Darkcoin Core - Command-line options</source>
-        <translation>Darkcoin Core - Opcje wiersza poleceń</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="69"/>
@@ -1320,37 +1325,37 @@ Address: %4
     <message>
         <location filename="../utilitydialog.cpp" line="69"/>
         <source>version</source>
-        <translation type="unfinished"/>
+        <translation>wersja</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="71"/>
         <source>Usage:</source>
-        <translation type="unfinished"/>
+        <translation>Użycie:</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="72"/>
         <source>command-line options</source>
-        <translation type="unfinished"/>
+        <translation>opcje konsoli</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="76"/>
         <source>UI options</source>
-        <translation type="unfinished"/>
+        <translation>UI opcje</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="77"/>
         <source>Choose data directory on startup (default: 0)</source>
-        <translation type="unfinished"/>
+        <translation>Wybierz folder danych przy starcie (domyślnie: 0)</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="78"/>
         <source>Set language, for example &quot;de_DE&quot; (default: system locale)</source>
-        <translation type="unfinished"/>
+        <translation>Ustaw Język, na przykład &quot;pl_PL&quot; (domyślnie: systemowy)</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="79"/>
         <source>Start minimized</source>
-        <translation type="unfinished"/>
+        <translation>Uruchom zminimalizowany</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="80"/>
@@ -1360,7 +1365,7 @@ Address: %4
     <message>
         <location filename="../utilitydialog.cpp" line="81"/>
         <source>Show splash screen on startup (default: 1)</source>
-        <translation type="unfinished"/>
+        <translation>Pokazuj okno powitalne przy starcie (domyślnie: 1)</translation>
     </message>
 </context>
 <context>
@@ -1375,31 +1380,31 @@ Address: %4
         <location filename="../forms/intro.ui" line="23"/>
         <location filename="../forms/ui_intro.h" line="184"/>
         <source>Welcome to Darkcoin Core.</source>
-        <translation>Witaj w Darkcoin Core</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/intro.ui" line="49"/>
         <location filename="../forms/ui_intro.h" line="185"/>
         <source>As this is the first time the program is launched, you can choose where Darkcoin Core will store its data.</source>
-        <translation>Ponieważ uruchomiłeś ten program po raz pierwszy, możesz wybrać gdzie Darkcoin Core będzie przechowywał dane.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/intro.ui" line="59"/>
         <location filename="../forms/ui_intro.h" line="186"/>
         <source>Darkcoin Core will download and store a copy of the Darkcoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
-        <translation>Darkcoin Core ściągnie i przechowa  kopię blockchain na twoim dysku. Co najmniej 1GB danych zostanie zapisanych w tym katalogu, a wraz z upływem czasu blockchain będzie stopniowo wymagał coraz więcej miejsca. Twój portfel również zostanie zapisany w tym katalogu.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/intro.ui" line="69"/>
         <location filename="../forms/ui_intro.h" line="187"/>
         <source>Use the default data directory</source>
-        <translation>Użyj domyślnego katalogu</translation>
+        <translation>Użyj domyślnego folderu danych</translation>
     </message>
     <message>
         <location filename="../forms/intro.ui" line="76"/>
         <location filename="../forms/ui_intro.h" line="188"/>
         <source>Use a custom data directory:</source>
-        <translation>Wybierz swój własny katalog:</translation>
+        <translation>Użyj wybranego folderu dla danych</translation>
     </message>
     <message>
         <location filename="../intro.cpp" line="185"/>
@@ -1409,22 +1414,22 @@ Address: %4
     <message>
         <location filename="../intro.cpp" line="186"/>
         <source>Error: Specified data directory &quot;%1&quot; can not be created.</source>
-        <translation type="unfinished"/>
+        <translation>Błąd: Określony folder danych &quot;%1&quot; nie mógł zostać utworzony.</translation>
     </message>
     <message>
         <location filename="../intro.cpp" line="210"/>
         <source>Error</source>
-        <translation type="unfinished"/>
+        <translation>Błąd</translation>
     </message>
     <message>
         <location filename="../intro.cpp" line="219"/>
         <source>GB of free space available</source>
-        <translation type="unfinished"/>
+        <translation>GB dostępnego wolnego miejsca</translation>
     </message>
     <message>
         <location filename="../intro.cpp" line="222"/>
         <source>(of %1GB needed)</source>
-        <translation type="unfinished"/>
+        <translation>(z %1GB potrzebnego)</translation>
     </message>
 </context>
 <context>
@@ -1433,13 +1438,13 @@ Address: %4
         <location filename="../forms/openuridialog.ui" line="14"/>
         <location filename="../forms/ui_openuridialog.h" line="93"/>
         <source>Open URI</source>
-        <translation>Otwórz URI</translation>
+        <translation>Otwórz URI:</translation>
     </message>
     <message>
         <location filename="../forms/openuridialog.ui" line="20"/>
         <location filename="../forms/ui_openuridialog.h" line="94"/>
         <source>Open payment request from URI or file</source>
-        <translation>Otwórz żądanie zapłaty z linku lub pliku</translation>
+        <translation>Otwórz żądanie zapłaty z URI lub pliku</translation>
     </message>
     <message>
         <location filename="../forms/openuridialog.ui" line="29"/>
@@ -1451,12 +1456,12 @@ Address: %4
         <location filename="../forms/openuridialog.ui" line="40"/>
         <location filename="../forms/ui_openuridialog.h" line="97"/>
         <source>Select payment request file</source>
-        <translation>Wybierz plik z żądaniem opłaty</translation>
+        <translation>Otwórz żądanie zapłaty z pliku</translation>
     </message>
     <message>
         <location filename="../openuridialog.cpp" line="48"/>
         <source>Select payment request file to open</source>
-        <translation type="unfinished"/>
+        <translation>Wybierz plik żądania zapłaty do otwarcia</translation>
     </message>
 </context>
 <context>
@@ -1471,19 +1476,19 @@ Address: %4
         <location filename="../forms/optionsdialog.ui" line="27"/>
         <location filename="../forms/ui_optionsdialog.h" line="548"/>
         <source>&amp;Main</source>
-        <translation>&amp;Główny</translation>
+        <translation>Główne</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="33"/>
         <location filename="../forms/ui_optionsdialog.h" line="534"/>
         <source>Automatically start Darkcoin after logging in to the system.</source>
-        <translation>Automatycznie uruchom Darkcoin po zalogowaniu się do systemu.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="36"/>
         <location filename="../forms/ui_optionsdialog.h" line="536"/>
         <source>&amp;Start Darkcoin on system login</source>
-        <translation>&amp;Uruchom Darkcoin po zalogowaniu się do systemu</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="45"/>
@@ -1501,7 +1506,7 @@ Address: %4
         <location filename="../forms/optionsdialog.ui" line="88"/>
         <location filename="../forms/ui_optionsdialog.h" line="539"/>
         <source>Number of script &amp;verification threads</source>
-        <translation>Liczba skryptów i wątków &amp;weryfikacji</translation>
+        <translation>Liczba wątków &amp;weryfikacji skryptu</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="101"/>
@@ -1513,37 +1518,37 @@ Address: %4
         <location filename="../forms/optionsdialog.ui" line="138"/>
         <location filename="../forms/ui_optionsdialog.h" line="544"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This setting determines the amount of individual masternodes that an input will be anonymized through. More rounds of anonymization gives a higher degree of privacy, but also costs more in fees.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Tutaj możesz ustawić liczbę masternodów, przez które transakcja zostanie przepuszczona. Im większa liczba masternodów tym większy poziom anonimowości, ale opłata jest również wyższa.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="141"/>
         <location filename="../forms/ui_optionsdialog.h" line="546"/>
         <source>Darksend rounds to use</source>
-        <translation>Ilość rund Darksend.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="180"/>
         <location filename="../forms/ui_optionsdialog.h" line="547"/>
         <source>Amount of Darkcoin to keep anonymized</source>
-        <translation>Ilość Darkcoinów, które mają pozostać anonimowe.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="206"/>
         <location filename="../forms/ui_optionsdialog.h" line="560"/>
         <source>W&amp;allet</source>
-        <translation>P&amp;ortfel</translation>
+        <translation>Portfel</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="212"/>
         <location filename="../forms/ui_optionsdialog.h" line="549"/>
         <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly. Most transactions are 1 kB.</source>
-        <translation>Opcjonalna opłata za kB, dzięki której twoja transakcja zostanie przesłana szybciej. Większość transakcji wynosi 1Kb.</translation>
+        <translation>Opcjonalna prowizja za transakcje za kB, wspomaga ona szybkość przebiegu transakcji. Większość transakcji jest 1 kB.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="227"/>
         <location filename="../forms/ui_optionsdialog.h" line="550"/>
         <source>Pay transaction &amp;fee</source>
-        <translation>&amp;Zapłać za transakcję</translation>
+        <translation>Płać prowizję za transakcje</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="271"/>
@@ -1585,7 +1590,7 @@ Address: %4
         <location filename="../forms/optionsdialog.ui" line="307"/>
         <location filename="../forms/ui_optionsdialog.h" line="562"/>
         <source>Automatically open the Darkcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation>Automatycznie uruchamiaj port klienta Darkcoina na ruterze. To działa tylko jeśli twój ruter wspiera  i ma włączone UPnP.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="310"/>
@@ -1597,7 +1602,7 @@ Address: %4
         <location filename="../forms/optionsdialog.ui" line="317"/>
         <location filename="../forms/ui_optionsdialog.h" line="566"/>
         <source>Connect to the Darkcoin network through a SOCKS proxy.</source>
-        <translation>Połącz się z siecią Darkcoina przez proxy SOCKS</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="320"/>
@@ -1609,13 +1614,13 @@ Address: %4
         <location filename="../forms/optionsdialog.ui" line="329"/>
         <location filename="../forms/ui_optionsdialog.h" line="569"/>
         <source>Proxy &amp;IP:</source>
-        <translation>&amp;IP proxy:</translation>
+        <translation>Proxy &amp;IP: </translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="354"/>
         <location filename="../forms/ui_optionsdialog.h" line="571"/>
         <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
-        <translation>IP proxy (np. IPv4: 127.0.0.1 / IPv6: ::1)</translation>
+        <translation>Adres IP serwera proxy (np. IPv4: 127.0.0.1 / IPv6: ::1)</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="361"/>
@@ -1633,13 +1638,13 @@ Address: %4
         <location filename="../forms/optionsdialog.ui" line="393"/>
         <location filename="../forms/ui_optionsdialog.h" line="577"/>
         <source>SOCKS &amp;Version:</source>
-        <translation>&amp;Wersja SOCKS:</translation>
+        <translation>Wersja &amp;SOCKS</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="406"/>
         <location filename="../forms/ui_optionsdialog.h" line="579"/>
         <source>SOCKS version of the proxy (e.g. 5)</source>
-        <translation>Wersja SOCKS proxy (np. 5)</translation>
+        <translation>SOCKS wersja serwera proxy (np. 5)</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="442"/>
@@ -1651,67 +1656,67 @@ Address: %4
         <location filename="../forms/optionsdialog.ui" line="448"/>
         <location filename="../forms/ui_optionsdialog.h" line="583"/>
         <source>Show only a tray icon after minimizing the window.</source>
-        <translation>Po zminimalizowaniu okna pokaż ikonę w zasobniku.</translation>
+        <translation>Pokazuj tylko ikonę przy zegarku po zminimalizowaniu okna.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="451"/>
         <location filename="../forms/ui_optionsdialog.h" line="585"/>
         <source>&amp;Minimize to the tray instead of the taskbar</source>
-        <translation>&amp;Zminimalizuj do zasobnika zamiast do pasku zadań.</translation>
+        <translation>&amp;Minimalizuj do paska przy zegarku zamiast do paska zadań</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="458"/>
         <location filename="../forms/ui_optionsdialog.h" line="587"/>
         <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Quit in the menu.</source>
-        <translation>Zminimalizuj zamiast zamknąć program. Kiedy ta opcja jest włączona program zostanie zamknięty tylko po wybraniu opcji Zamknij w menu.</translation>
+        <translation>Minimalizuje zamiast zakończyć działanie programu przy zamykaniu okna. Kiedy ta opcja jest włączona, program zakończy działanie po wybieraniu Zamknij w menu.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="461"/>
         <location filename="../forms/ui_optionsdialog.h" line="589"/>
         <source>M&amp;inimize on close</source>
-        <translation>Z&amp;minimalizyj przy wyjściu</translation>
+        <translation>M&amp;inimalizuj przy zamknięciu</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="482"/>
         <location filename="../forms/ui_optionsdialog.h" line="610"/>
         <source>&amp;Display</source>
-        <translation>&amp;Widok</translation>
+        <translation>&amp;Wyświetlanie</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="490"/>
         <location filename="../forms/ui_optionsdialog.h" line="591"/>
         <source>User Interface &amp;language:</source>
-        <translation>&amp;Język interfejsu użytkownika</translation>
+        <translation>Język &amp;Użytkownika:</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="503"/>
         <location filename="../forms/ui_optionsdialog.h" line="593"/>
         <source>The user interface language can be set here. This setting will take effect after restarting Darkcoin.</source>
-        <translation>Tutaj można ustawić język interfejsu użytkownika. To ustawienie zostanie zapisane po ponownym uruchomieniu Darkcoin.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="514"/>
         <location filename="../forms/ui_optionsdialog.h" line="595"/>
         <source>&amp;Unit to show amounts in:</source>
-        <translation>&amp;Pokaż kwotę w tej jednostce:</translation>
+        <translation>&amp;Jednostka pokazywana przy kwocie:</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="527"/>
         <location filename="../forms/ui_optionsdialog.h" line="597"/>
         <source>Choose the default subdivision unit to show in the interface and when sending coins.</source>
-        <translation>Wybierz jednostkę jaka będzie wyświetlana w interfejsie oraz podczas wysyłania monet.</translation>
+        <translation>Wybierz podział jednostki pokazywany w interfejsie  oraz podczas wysyłania monet</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="536"/>
         <location filename="../forms/ui_optionsdialog.h" line="600"/>
         <source>Whether to show Darkcoin addresses in the transaction list or not.</source>
-        <translation>Czy wyświetlić adres Darkcoin w liście transakcji czy nie</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="539"/>
         <location filename="../forms/ui_optionsdialog.h" line="602"/>
         <source>&amp;Display addresses in transaction list</source>
-        <translation>&amp;Wyświetl adres w liście transakcji</translation>
+        <translation>&amp;Wyświetlaj adresy w liście transakcji</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="548"/>
@@ -1731,19 +1736,19 @@ Address: %4
         <location filename="../forms/optionsdialog.ui" line="592"/>
         <location filename="../forms/ui_optionsdialog.h" line="611"/>
         <source>Active command-line options that override above options:</source>
-        <translation>Aktywne opcje w wierszu poleceń, które nadpisują powyższe ustawienia:</translation>
+        <translation>Aktywne opcje linii komend, które nadpisują powyższe opcje:</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="635"/>
         <location filename="../forms/ui_optionsdialog.h" line="614"/>
         <source>Reset all client options to default.</source>
-        <translation>Resetuje wszystkie ustawienia.</translation>
+        <translation>Przywróć domyślne wszystkie ustawienia klienta.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="638"/>
         <location filename="../forms/ui_optionsdialog.h" line="616"/>
         <source>&amp;Reset Options</source>
-        <translation>&amp;Resetuj ustawienia</translation>
+        <translation>Z&amp;resetuj Ustawienia</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="699"/>
@@ -1760,38 +1765,38 @@ Address: %4
     <message>
         <location filename="../optionsdialog.cpp" line="73"/>
         <source>default</source>
-        <translation type="unfinished"/>
+        <translation>domyślny</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="134"/>
         <source>none</source>
-        <translation type="unfinished"/>
+        <translation>żaden</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="222"/>
         <source>Confirm options reset</source>
-        <translation type="unfinished"/>
+        <translation>Potwierdź reset ustawień</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="223"/>
         <location filename="../optionsdialog.cpp" line="253"/>
         <source>Client restart required to activate changes.</source>
-        <translation type="unfinished"/>
+        <translation>Wymagany restart programu, aby uaktywnić zmiany.</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="223"/>
         <source>Client will be shutdown, do you want to proceed?</source>
-        <translation type="unfinished"/>
+        <translation>Program zostanie wyłączony. Czy chcesz kontynuować?</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="257"/>
         <source>This change would require a client restart.</source>
-        <translation type="unfinished"/>
+        <translation>Ta zmiana może wymagać ponownego uruchomienia klienta.</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="291"/>
         <source>The supplied proxy address is invalid.</source>
-        <translation type="unfinished"/>
+        <translation>Adres podanego proxy jest nieprawidłowy</translation>
     </message>
 </context>
 <context>
@@ -1814,7 +1819,7 @@ Address: %4
         <location filename="../forms/ui_overviewpage.h" line="459"/>
         <location filename="../forms/ui_overviewpage.h" line="503"/>
         <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Darkcoin network after a connection is established, but this process has not completed yet.</source>
-        <translation>Wyświetlona informacja może być przedawniona. Twój portfel automatycznie zsynchronizuje sie z siecią Darkcoin jak tylko zostanie ustanowione połączenie, jednakże proces ten jeszcze się nie zakończył.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="108"/>
@@ -1826,103 +1831,103 @@ Address: %4
         <location filename="../forms/overviewpage.ui" line="124"/>
         <location filename="../forms/ui_overviewpage.h" line="463"/>
         <source>Your current spendable balance</source>
-        <translation>Twóje obecne środki do wydania</translation>
+        <translation>Twoje obecne saldo</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="140"/>
         <location filename="../forms/ui_overviewpage.h" line="465"/>
         <source>Pending:</source>
-        <translation>Oczekujące:</translation>
+        <translation>W toku:</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="156"/>
         <location filename="../forms/ui_overviewpage.h" line="467"/>
         <source>Total of transactions that have yet to be confirmed, and do not yet count toward the spendable balance</source>
-        <translation>Całkowita ilość transakcji, która musi pozostać jeszcze potwierdzona, a która to nie została jeszcze zaliczona do możliwych środków do wydania.</translation>
+        <translation>Suma transakcji, które nie zostały jeszcze potwierdzone, a które nie zostały wliczone do twojego obecnego salda</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="172"/>
         <location filename="../forms/ui_overviewpage.h" line="469"/>
         <source>Immature:</source>
-        <translation>Niedojrzały:</translation>
+        <translation>Niedojrzały: </translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="185"/>
         <location filename="../forms/ui_overviewpage.h" line="471"/>
         <source>Mined balance that has not yet matured</source>
-        <translation>Wykopany balans, który jeszcze nie dojrzał</translation>
+        <translation>Balans wydobycia, który jeszcze nie dojrzał</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="201"/>
         <location filename="../forms/ui_overviewpage.h" line="473"/>
         <source>Total:</source>
-        <translation>Ogółem:</translation>
+        <translation>Wynosi ogółem:</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="217"/>
         <location filename="../forms/ui_overviewpage.h" line="475"/>
         <source>Your current total balance</source>
-        <translation>Twój obecny bilans ogółem</translation>
+        <translation>Twoje obecne saldo</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="296"/>
         <location filename="../forms/ui_overviewpage.h" line="477"/>
         <source>Status:</source>
-        <translation>Status:</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="303"/>
         <location filename="../forms/ui_overviewpage.h" line="478"/>
         <source>Enabled/Disabled</source>
-        <translation>Włączony/Wyłączony</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="310"/>
         <location filename="../forms/ui_overviewpage.h" line="479"/>
         <source>Completion:</source>
-        <translation>Ukończone:</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="330"/>
         <location filename="../forms/ui_overviewpage.h" line="480"/>
         <source>Darksend Balance:</source>
-        <translation>Bilans Darksend:</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="343"/>
         <location filename="../forms/ui_overviewpage.h" line="481"/>
         <source>0 DRK</source>
-        <translation>0 DRK</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="350"/>
         <location filename="../forms/ui_overviewpage.h" line="482"/>
         <source>Amount and Rounds:</source>
-        <translation>Ilość oraz Rundy:</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="357"/>
         <location filename="../forms/ui_overviewpage.h" line="483"/>
         <source>0 DRK / 0 Rounds</source>
-        <translation>0 DRK / 0 Rund</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="364"/>
         <location filename="../forms/ui_overviewpage.h" line="484"/>
         <source>Submitted Denom:</source>
-        <translation>Zgłoszone denominacje:</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="371"/>
         <location filename="../forms/ui_overviewpage.h" line="486"/>
         <source>The denominations you submitted to the Masternode. To mix, other users must submit the exact same denominations.</source>
-        <translation>Denominacje zgłoszone do Masternodów. Aby je wymieszać, pozostali uzytkownicy muszą zgłosić dokładnie te same denominacje.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="374"/>
         <location filename="../forms/ui_overviewpage.h" line="488"/>
         <source>n/a</source>
-        <translation>nie dotyczy</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="396"/>
@@ -1931,43 +1936,43 @@ Address: %4
         <location filename="../overviewpage.cpp" line="442"/>
         <location filename="../overviewpage.cpp" line="456"/>
         <source>Darksend</source>
-        <translation>Darksend</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="846"/>
         <location filename="../forms/ui_overviewpage.h" line="491"/>
         <source>Start/Stop Mixing</source>
-        <translation>Start/Stop Mieszanie</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="878"/>
         <location filename="../forms/ui_overviewpage.h" line="492"/>
         <source>(Last Message)</source>
-        <translation>(Ostatnia Wiadomość)</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="897"/>
         <location filename="../forms/ui_overviewpage.h" line="494"/>
         <source>Try to manually submit a Darksend request.</source>
-        <translation>Prubój ręcznie zgłosić żądanie Darksend.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="900"/>
         <location filename="../forms/ui_overviewpage.h" line="496"/>
         <source>Try Mix</source>
-        <translation>Mieszaj</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="913"/>
         <location filename="../forms/ui_overviewpage.h" line="498"/>
         <source>Reset the current status of Darksend (can interrupt Darksend if it&apos;s in the process of Mixing, which can cost you money!)</source>
-        <translation>Zresetuj obecny stan darksend (może przerwać Darksend, jeżeli jest w trakcie Mieszania. Może Cię to kosztować! )</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="919"/>
         <location filename="../forms/ui_overviewpage.h" line="500"/>
         <source>Reset</source>
-        <translation>Reset</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="955"/>
@@ -1979,7 +1984,7 @@ Address: %4
         <location filename="../overviewpage.cpp" line="126"/>
         <location filename="../overviewpage.cpp" line="127"/>
         <source>out of sync</source>
-        <translation type="unfinished"/>
+        <translation>desynchronizacja</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="429"/>
@@ -2007,7 +2012,7 @@ Address: %4
         <location filename="../paymentserver.cpp" line="631"/>
         <location filename="../paymentserver.cpp" line="647"/>
         <source>Payment request error</source>
-        <translation type="unfinished"/>
+        <translation>Błąd żądania płatności</translation>
     </message>
     <message>
         <location filename="../paymentserver.cpp" line="294"/>
@@ -2017,18 +2022,18 @@ Address: %4
     <message>
         <location filename="../paymentserver.cpp" line="352"/>
         <source>Net manager warning</source>
-        <translation type="unfinished"/>
+        <translation>Ostrzeżenie menedżera sieci</translation>
     </message>
     <message>
         <location filename="../paymentserver.cpp" line="353"/>
         <source>Your active proxy doesn&apos;t support SOCKS5, which is required for payment requests via proxy.</source>
-        <translation type="unfinished"/>
+        <translation>Twoje aktywne proxy nie obsługuje SOCKS5, co jest wymagane dla żądania płatności przez proxy.</translation>
     </message>
     <message>
         <location filename="../paymentserver.cpp" line="404"/>
         <location filename="../paymentserver.cpp" line="417"/>
         <source>URI handling</source>
-        <translation type="unfinished"/>
+        <translation>Obsługa URI</translation>
     </message>
     <message>
         <location filename="../paymentserver.cpp" line="405"/>
@@ -2058,17 +2063,17 @@ Address: %4
     <message>
         <location filename="../paymentserver.cpp" line="514"/>
         <source>Requested payment amount of %1 is too small (considered dust).</source>
-        <translation type="unfinished"/>
+        <translation>Żądana kwota %1 jest za niska (uznano za kurz).</translation>
     </message>
     <message>
         <location filename="../paymentserver.cpp" line="565"/>
         <source>Refund from %1</source>
-        <translation type="unfinished"/>
+        <translation>Zwrot z %1</translation>
     </message>
     <message>
         <location filename="../paymentserver.cpp" line="608"/>
         <source>Error communicating with %1: %2</source>
-        <translation type="unfinished"/>
+        <translation>Błąd komunikacji z %1 : %2</translation>
     </message>
     <message>
         <location filename="../paymentserver.cpp" line="632"/>
@@ -2078,17 +2083,17 @@ Address: %4
     <message>
         <location filename="../paymentserver.cpp" line="643"/>
         <source>Bad response from server %1</source>
-        <translation type="unfinished"/>
+        <translation>Błędna odpowiedź z serwera %1</translation>
     </message>
     <message>
         <location filename="../paymentserver.cpp" line="665"/>
         <source>Network request error</source>
-        <translation type="unfinished"/>
+        <translation>Błąd żądania sieci</translation>
     </message>
     <message>
         <location filename="../paymentserver.cpp" line="676"/>
         <source>Payment acknowledged</source>
-        <translation type="unfinished"/>
+        <translation>Płatność potwierdzona</translation>
     </message>
 </context>
 <context>
@@ -2104,12 +2109,12 @@ Address: %4
     <message>
         <location filename="../darkcoin.cpp" line="526"/>
         <source>Error: Specified data directory &quot;%1&quot; does not exist.</source>
-        <translation type="unfinished"/>
+        <translation>Błąd: Określony folder danych &quot;%1&quot; nie istnieje.</translation>
     </message>
     <message>
         <location filename="../darkcoin.cpp" line="533"/>
         <source>Error: Cannot parse configuration file: %1. Only use key=value syntax.</source>
-        <translation type="unfinished"/>
+        <translation>Błąd: Nie można przetworzyć pliku konfiguracyjnego: %1. Używaj tylko składni klucz=wartość.</translation>
     </message>
     <message>
         <location filename="../darkcoin.cpp" line="540"/>
@@ -2119,7 +2124,7 @@ Address: %4
     <message>
         <location filename="../darkcoin.cpp" line="552"/>
         <source>Error: Invalid combination of -regtest and -testnet.</source>
-        <translation type="unfinished"/>
+        <translation>Błąd: Niepoprawna kombinacja -regtest i -testnet.</translation>
     </message>
     <message>
         <location filename="../darkcoin.cpp" line="612"/>
@@ -2142,17 +2147,17 @@ Address: %4
     <message>
         <location filename="../receiverequestdialog.cpp" line="39"/>
         <source>&amp;Copy Image</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Kopiuj obraz</translation>
     </message>
     <message>
         <location filename="../receiverequestdialog.cpp" line="71"/>
         <source>Save QR Code</source>
-        <translation type="unfinished"/>
+        <translation>Zapisz Kod QR</translation>
     </message>
     <message>
         <location filename="../receiverequestdialog.cpp" line="71"/>
         <source>PNG Image (*.png)</source>
-        <translation type="unfinished"/>
+        <translation>Obraz PNG (*.png)</translation>
     </message>
 </context>
 <context>
@@ -2173,13 +2178,13 @@ Address: %4
         <location filename="../forms/rpcconsole.ui" line="33"/>
         <location filename="../forms/ui_rpcconsole.h" line="472"/>
         <source>Masternode Count</source>
-        <translation>Ilość masternodów</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="46"/>
         <location filename="../forms/ui_rpcconsole.h" line="473"/>
         <source>General</source>
-        <translation>Ogólny</translation>
+        <translation>Ogólne</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="53"/>
@@ -2215,19 +2220,19 @@ Address: %4
         <location filename="../forms/ui_rpcconsole.h" line="497"/>
         <location filename="../forms/ui_rpcconsole.h" line="499"/>
         <source>N/A</source>
-        <translation>Nie dotyczy</translation>
+        <translation>NIEDOSTĘPNE</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="83"/>
         <location filename="../forms/ui_rpcconsole.h" line="477"/>
         <source>Number of connections</source>
-        <translation>Ilość połączeń</translation>
+        <translation>Liczba połączeń</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="90"/>
         <location filename="../forms/ui_rpcconsole.h" line="479"/>
         <source>Open the Darkcoin debug log file from the current data directory. This can take a few seconds for large log files.</source>
-        <translation>Otwiera plik z zapisami debugowania Darkcoina z obecnego katalogu. Może to potrfać kilka sekund w zależności od rozmiaru pliku.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="93"/>
@@ -2239,7 +2244,7 @@ Address: %4
         <location filename="../forms/rpcconsole.ui" line="116"/>
         <location filename="../forms/ui_rpcconsole.h" line="482"/>
         <source>Startup time</source>
-        <translation>Czas włączenia</translation>
+        <translation>Czas uruchomienia</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="129"/>
@@ -2257,37 +2262,37 @@ Address: %4
         <location filename="../forms/rpcconsole.ui" line="165"/>
         <location filename="../forms/ui_rpcconsole.h" line="486"/>
         <source>Debug log file</source>
-        <translation>Plik zapisu debugowania</translation>
+        <translation>Plik logowania debugowania</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="172"/>
         <location filename="../forms/ui_rpcconsole.h" line="487"/>
         <source>Using OpenSSL version</source>
-        <translation>Używa wersji OpenSSl</translation>
+        <translation>Używana wersja OpenSSL</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="182"/>
         <location filename="../forms/ui_rpcconsole.h" line="488"/>
         <source>Build date</source>
-        <translation>Data wersji obecnej</translation>
+        <translation>Data kompilacji</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="205"/>
         <location filename="../forms/ui_rpcconsole.h" line="490"/>
         <source>Current number of blocks</source>
-        <translation>Obecna ilość bloków</translation>
+        <translation>Aktualna liczba bloków</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="305"/>
         <location filename="../forms/ui_rpcconsole.h" line="496"/>
         <source>Client version</source>
-        <translation>Wersja  klienta</translation>
+        <translation>Wersja klienta</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="334"/>
         <location filename="../forms/ui_rpcconsole.h" line="498"/>
         <source>Block chain</source>
-        <translation>Łańcuch bloków</translation>
+        <translation>Ciąg bloków</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="349"/>
@@ -2299,13 +2304,13 @@ Address: %4
         <location filename="../forms/rpcconsole.ui" line="398"/>
         <location filename="../forms/ui_rpcconsole.h" line="502"/>
         <source>Clear console</source>
-        <translation>Wyczyść konsole</translation>
+        <translation>Wyczyść konsolę</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="421"/>
         <location filename="../forms/ui_rpcconsole.h" line="510"/>
         <source>&amp;Network Traffic</source>
-        <translation>Ruch &amp;sieci</translation>
+        <translation>$Ruch sieci</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="473"/>
@@ -2317,7 +2322,7 @@ Address: %4
         <location filename="../forms/rpcconsole.ui" line="486"/>
         <location filename="../forms/ui_rpcconsole.h" line="507"/>
         <source>Totals</source>
-        <translation>Całkowite</translation>
+        <translation>Kwota ogólna</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="550"/>
@@ -2341,47 +2346,47 @@ Address: %4
     <message>
         <location filename="../rpcconsole.cpp" line="332"/>
         <source>Use up and down arrows to navigate history, and &lt;b&gt;Ctrl-L&lt;/b&gt; to clear screen.</source>
-        <translation type="unfinished"/>
+        <translation>Użyj strzałek do przewijania historii i &lt;b&gt;Ctrl-L&lt;/b&gt; aby wyczyścić ekran</translation>
     </message>
     <message>
         <location filename="../rpcconsole.cpp" line="333"/>
         <source>Type &lt;b&gt;help&lt;/b&gt; for an overview of available commands.</source>
-        <translation type="unfinished"/>
+        <translation>Wpisz &lt;b&gt;help&lt;/b&gt; aby uzyskać listę dostępnych komend</translation>
     </message>
     <message>
         <location filename="../rpcconsole.cpp" line="472"/>
         <source>%1 B</source>
-        <translation type="unfinished"/>
+        <translation>%1 B</translation>
     </message>
     <message>
         <location filename="../rpcconsole.cpp" line="474"/>
         <source>%1 KB</source>
-        <translation type="unfinished"/>
+        <translation>%1 KB</translation>
     </message>
     <message>
         <location filename="../rpcconsole.cpp" line="476"/>
         <source>%1 MB</source>
-        <translation type="unfinished"/>
+        <translation>%1 MB</translation>
     </message>
     <message>
         <location filename="../rpcconsole.cpp" line="478"/>
         <source>%1 GB</source>
-        <translation type="unfinished"/>
+        <translation>%1 GB</translation>
     </message>
     <message>
         <location filename="../rpcconsole.cpp" line="485"/>
         <source>%1 m</source>
-        <translation type="unfinished"/>
+        <translation>%1 m</translation>
     </message>
     <message>
         <location filename="../rpcconsole.cpp" line="490"/>
         <source>%1 h</source>
-        <translation type="unfinished"/>
+        <translation>%1 h</translation>
     </message>
     <message>
         <location filename="../rpcconsole.cpp" line="492"/>
         <source>%1 h %2 m</source>
-        <translation type="unfinished"/>
+        <translation>%1 h %2 m</translation>
     </message>
 </context>
 <context>
@@ -2390,7 +2395,7 @@ Address: %4
         <location filename="../forms/receivecoinsdialog.ui" line="34"/>
         <location filename="../forms/ui_receivecoinsdialog.h" line="255"/>
         <source>Reuse one of the previously used receiving addresses. Reusing addresses has security and privacy issues. Do not use this unless re-generating a payment request made before.</source>
-        <translation>Próbujesz użyć jednego z wykorzystanych adresów odbiorczych. Ponowne użycie adresu obniża bezpieczeństwo i prywatność. Nie rób tego z wyjątkiem ponowienia żądania płatności, która nie doszła do skutku.</translation>
+        <translation>Użyj jeden z poprzednio użytych adresów odbiorczych. Podczas ponownego używania adresów występują problemy z bezpieczeństwem i prywatnością. Nie korzystaj z tej opcji, chyba że odtwarzasz żądanie płatności wykonane już wcześniej.</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="37"/>
@@ -2404,7 +2409,7 @@ Address: %4
         <location filename="../forms/ui_receivecoinsdialog.h" line="260"/>
         <location filename="../forms/ui_receivecoinsdialog.h" line="267"/>
         <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Darkcoin network.</source>
-        <translation>Opcjonalna wiadomość do żądania płatności. Wiadomość wyświetli się po otwarciu żądania. Pamiętaj: Wiadomość nie zostanie wysłana razem z płatnością poprzez sieć Darkcoin.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="54"/>
@@ -2418,13 +2423,13 @@ Address: %4
         <location filename="../forms/ui_receivecoinsdialog.h" line="264"/>
         <location filename="../forms/ui_receivecoinsdialog.h" line="271"/>
         <source>An optional label to associate with the new receiving address.</source>
-        <translation>Opcjonalna nazwa, która będzie powiązana z adresem odbiorczym.</translation>
+        <translation>Opcjonalna etykieta do skojarzenia z nowym adresem odbiorczym.</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="81"/>
         <location filename="../forms/ui_receivecoinsdialog.h" line="269"/>
         <source>Use this form to request payments. All fields are &lt;b&gt;optional&lt;/b&gt;.</source>
-        <translation>Użyj tego formularza aby zażądać płątności. Wszystkie pola są &lt;b&gt;opcjonalne&lt;/b&gt;</translation>
+        <translation>Użyj tego formularza do zażądania płatności. Wszystkie pola są &lt;b&gt;opcjonalne&lt;/b&gt;.</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="91"/>
@@ -2450,13 +2455,13 @@ Address: %4
         <location filename="../forms/receivecoinsdialog.ui" line="141"/>
         <location filename="../forms/ui_receivecoinsdialog.h" line="281"/>
         <source>&amp;Request payment</source>
-        <translation>&amp;Zażądaj płatności</translation>
+        <translation>&amp;Żądaj płatności</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="158"/>
         <location filename="../forms/ui_receivecoinsdialog.h" line="283"/>
         <source>Clear all fields of the form.</source>
-        <translation>Wyczyść wszystkie pola formularza.</translation>
+        <translation>Wyczyść pola formularza</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="161"/>
@@ -2468,7 +2473,7 @@ Address: %4
         <location filename="../forms/receivecoinsdialog.ui" line="239"/>
         <location filename="../forms/ui_receivecoinsdialog.h" line="287"/>
         <source>Requested payments history</source>
-        <translation>Historia żądanych płatności</translation>
+        <translation>Żądanie historii płatności</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="261"/>
@@ -2486,7 +2491,7 @@ Address: %4
         <location filename="../forms/receivecoinsdialog.ui" line="278"/>
         <location filename="../forms/ui_receivecoinsdialog.h" line="293"/>
         <source>Remove the selected entries from the list</source>
-        <translation>Usuń wybrane wpisy z listy</translation>
+        <translation>Usuń zaznaczone z listy</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="281"/>
@@ -2497,17 +2502,17 @@ Address: %4
     <message>
         <location filename="../receivecoinsdialog.cpp" line="39"/>
         <source>Copy label</source>
-        <translation type="unfinished"/>
+        <translation>Kopiuj etykietę</translation>
     </message>
     <message>
         <location filename="../receivecoinsdialog.cpp" line="40"/>
         <source>Copy message</source>
-        <translation type="unfinished"/>
+        <translation>Kopiuj wiadomość</translation>
     </message>
     <message>
         <location filename="../receivecoinsdialog.cpp" line="41"/>
         <source>Copy amount</source>
-        <translation type="unfinished"/>
+        <translation>Kopiuj kwotę</translation>
     </message>
 </context>
 <context>
@@ -2539,17 +2544,17 @@ Address: %4
     <message>
         <location filename="../receiverequestdialog.cpp" line="136"/>
         <source>Request payment to %1</source>
-        <translation type="unfinished"/>
+        <translation>Żądaj płatności do %1</translation>
     </message>
     <message>
         <location filename="../receiverequestdialog.cpp" line="142"/>
         <source>Payment information</source>
-        <translation type="unfinished"/>
+        <translation>Informacje o płatności</translation>
     </message>
     <message>
         <location filename="../receiverequestdialog.cpp" line="143"/>
         <source>URI</source>
-        <translation type="unfinished"/>
+        <translation>URI</translation>
     </message>
     <message>
         <location filename="../receiverequestdialog.cpp" line="145"/>
@@ -2564,22 +2569,22 @@ Address: %4
     <message>
         <location filename="../receiverequestdialog.cpp" line="149"/>
         <source>Label</source>
-        <translation type="unfinished"/>
+        <translation>Etykieta</translation>
     </message>
     <message>
         <location filename="../receiverequestdialog.cpp" line="151"/>
         <source>Message</source>
-        <translation type="unfinished"/>
+        <translation>Wiadomość</translation>
     </message>
     <message>
         <location filename="../receiverequestdialog.cpp" line="161"/>
         <source>Resulting URI too long, try to reduce the text for label / message.</source>
-        <translation type="unfinished"/>
+        <translation>Wynikowy URI jest zbyt długi, spróbuj zmniejszyć tekst etykiety / wiadomości</translation>
     </message>
     <message>
         <location filename="../receiverequestdialog.cpp" line="166"/>
         <source>Error encoding URI into QR Code.</source>
-        <translation type="unfinished"/>
+        <translation>Błąd kodowania URI w Kodzie QR.</translation>
     </message>
 </context>
 <context>
@@ -2592,12 +2597,12 @@ Address: %4
     <message>
         <location filename="../recentrequeststablemodel.cpp" line="24"/>
         <source>Label</source>
-        <translation type="unfinished"/>
+        <translation>Etykieta</translation>
     </message>
     <message>
         <location filename="../recentrequeststablemodel.cpp" line="24"/>
         <source>Message</source>
-        <translation type="unfinished"/>
+        <translation>Wiadomość</translation>
     </message>
     <message>
         <location filename="../recentrequeststablemodel.cpp" line="24"/>
@@ -2607,17 +2612,17 @@ Address: %4
     <message>
         <location filename="../recentrequeststablemodel.cpp" line="62"/>
         <source>(no label)</source>
-        <translation type="unfinished"/>
+        <translation>(bez etykiety)</translation>
     </message>
     <message>
         <location filename="../recentrequeststablemodel.cpp" line="71"/>
         <source>(no message)</source>
-        <translation type="unfinished"/>
+        <translation>(brak wiadomości)</translation>
     </message>
     <message>
         <location filename="../recentrequeststablemodel.cpp" line="79"/>
         <source>(no amount)</source>
-        <translation type="unfinished"/>
+        <translation>(brak kwoty)</translation>
     </message>
 </context>
 <context>
@@ -2629,13 +2634,13 @@ Address: %4
         <location filename="../sendcoinsdialog.cpp" line="511"/>
         <location filename="../sendcoinsdialog.cpp" line="521"/>
         <source>Send Coins</source>
-        <translation>Wyślij monety</translation>
+        <translation>Wyślij Monety</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="90"/>
         <location filename="../forms/ui_sendcoinsdialog.h" line="516"/>
         <source>Coin Control Features</source>
-        <translation>Funkcja kontroli monet</translation>
+        <translation>Funkcje sterowania monet</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="110"/>
@@ -2647,13 +2652,13 @@ Address: %4
         <location filename="../forms/sendcoinsdialog.ui" line="117"/>
         <location filename="../forms/ui_sendcoinsdialog.h" line="518"/>
         <source>automatically selected</source>
-        <translation>Wybrane automatycznie</translation>
+        <translation>zaznaczone automatycznie</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="136"/>
         <location filename="../forms/ui_sendcoinsdialog.h" line="519"/>
         <source>Insufficient funds!</source>
-        <translation>Niewystarczające środki!</translation>
+        <translation>Niewystarczające środki</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="225"/>
@@ -2665,7 +2670,7 @@ Address: %4
         <location filename="../forms/sendcoinsdialog.ui" line="260"/>
         <location filename="../forms/ui_sendcoinsdialog.h" line="521"/>
         <source>Bytes:</source>
-        <translation>Bity:</translation>
+        <translation>Bajtów:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="308"/>
@@ -2677,7 +2682,7 @@ Address: %4
         <location filename="../forms/sendcoinsdialog.ui" line="340"/>
         <location filename="../forms/ui_sendcoinsdialog.h" line="523"/>
         <source>Priority:</source>
-        <translation>Pierwszeństwo:</translation>
+        <translation>Priorytet:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="388"/>
@@ -2707,25 +2712,25 @@ Address: %4
         <location filename="../forms/sendcoinsdialog.ui" line="544"/>
         <location filename="../forms/ui_sendcoinsdialog.h" line="529"/>
         <source>If this is activated, but the change address is empty or invalid, change will be sent to a newly generated address.</source>
-        <translation>Jeśli ta opcja jest aktywna a pole adresu jest puste lub adres jest błędny to reszta zostanie przesłana na nowo wygenerowany adres.</translation>
+        <translation>Kiedy ta opcja jest wybrana, ale adres reszty jest pusty lub nieprawidłowy to reszta będzie wysyłana na adres nowo-wygenerowany.</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="547"/>
         <location filename="../forms/ui_sendcoinsdialog.h" line="531"/>
         <source>Custom change address</source>
-        <translation type="unfinished"/>
+        <translation>Niestandardowe zmiany adresu</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="668"/>
         <location filename="../forms/ui_sendcoinsdialog.h" line="534"/>
         <source>Confirm the send action</source>
-        <translation>Potwierdź akcje wysyłania</translation>
+        <translation>Potwierdź akcję wysyłania</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="671"/>
         <location filename="../forms/ui_sendcoinsdialog.h" line="536"/>
         <source>S&amp;end</source>
-        <translation>W&amp;yślij</translation>
+        <translation>Wy&amp;syłka</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="691"/>
@@ -2743,71 +2748,71 @@ Address: %4
         <location filename="../forms/sendcoinsdialog.ui" line="711"/>
         <location filename="../forms/ui_sendcoinsdialog.h" line="542"/>
         <source>Send to multiple recipients at once</source>
-        <translation>Wyślij do wielu odbiorców</translation>
+        <translation>Wyślij do wielu odbiorców na raz</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="714"/>
         <location filename="../forms/ui_sendcoinsdialog.h" line="544"/>
         <source>Add &amp;Recipient</source>
-        <translation>Dodaj &amp;odbiorcę</translation>
+        <translation>Dodaj Odbio&amp;rce</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="759"/>
         <location filename="../forms/ui_sendcoinsdialog.h" line="545"/>
         <source>Darksend</source>
-        <translation>Darksend</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="772"/>
         <location filename="../forms/ui_sendcoinsdialog.h" line="546"/>
         <source>InstantX</source>
-        <translation>InstantX</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="779"/>
         <location filename="../forms/ui_sendcoinsdialog.h" line="547"/>
         <source>Balance:</source>
-        <translation>Balans:</translation>
+        <translation>Saldo:</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="52"/>
         <source>Copy quantity</source>
-        <translation type="unfinished"/>
+        <translation>Skopiuj ilość</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="53"/>
         <source>Copy amount</source>
-        <translation type="unfinished"/>
+        <translation>Kopiuj kwotę</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="54"/>
         <source>Copy fee</source>
-        <translation type="unfinished"/>
+        <translation>Skopiuj opłatę</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="55"/>
         <source>Copy after fee</source>
-        <translation type="unfinished"/>
+        <translation>Skopiuj ilość po opłacie</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="56"/>
         <source>Copy bytes</source>
-        <translation type="unfinished"/>
+        <translation>Skopiuj ilość bajtów</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="57"/>
         <source>Copy priority</source>
-        <translation type="unfinished"/>
+        <translation>Skopiuj priorytet</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="58"/>
         <source>Copy low output</source>
-        <translation type="unfinished"/>
+        <translation>Skopiuj niską wartość</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="59"/>
         <source>Copy change</source>
-        <translation type="unfinished"/>
+        <translation>Skopiuj resztę</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="154"/>
@@ -2820,12 +2825,12 @@ Address: %4
         <location filename="../sendcoinsdialog.cpp" line="198"/>
         <location filename="../sendcoinsdialog.cpp" line="202"/>
         <source>%1 to %2</source>
-        <translation type="unfinished"/>
+        <translation>%1 do %2</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="251"/>
         <source>Are you sure you want to send?</source>
-        <translation type="unfinished"/>
+        <translation>Czy na pewno chcesz wysłać?</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="260"/>
@@ -2835,62 +2840,62 @@ Address: %4
     <message>
         <location filename="../sendcoinsdialog.cpp" line="274"/>
         <source>Total Amount %1 (= %2)</source>
-        <translation type="unfinished"/>
+        <translation>Łączna kwota %1 (= %2)</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="276"/>
         <source>or</source>
-        <translation type="unfinished"/>
+        <translation>lub</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="278"/>
         <source>Confirm send coins</source>
-        <translation type="unfinished"/>
+        <translation>Potwierdź wysyłanie monet</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="433"/>
         <source>Payment request expired</source>
-        <translation type="unfinished"/>
+        <translation>Zażądanie płatności upłynęło</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="441"/>
         <source>Invalid payment address %1</source>
-        <translation type="unfinished"/>
+        <translation>błędny adres płatności %1</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="488"/>
         <source>The recipient address is not valid, please recheck.</source>
-        <translation type="unfinished"/>
+        <translation>Adres odbiorcy jest nieprawidłowy, proszę poprawić</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="491"/>
         <source>The amount to pay must be larger than 0.</source>
-        <translation type="unfinished"/>
+        <translation>Kwota do zapłacenia musi być większa od 0.</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="494"/>
         <source>The amount exceeds your balance.</source>
-        <translation type="unfinished"/>
+        <translation>Kwota przekracza twoje saldo.</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="497"/>
         <source>The total exceeds your balance when the %1 transaction fee is included.</source>
-        <translation type="unfinished"/>
+        <translation>Suma przekracza twoje saldo, gdy doliczymy %1 prowizji transakcyjnej.</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="500"/>
         <source>Duplicate address found, can only send to each address once per send operation.</source>
-        <translation type="unfinished"/>
+        <translation>Znaleziono powtórzony adres, można wysłać tylko raz na każdy adres podczas operacji wysyłania.</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="503"/>
         <source>Transaction creation failed!</source>
-        <translation type="unfinished"/>
+        <translation>Utworzenie transakcji nie powiodło się!</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="507"/>
         <source>The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
-        <translation type="unfinished"/>
+        <translation>Transakcja została odrzucona! Może się to zdarzyć jeśli część monet z portfela została już wydana używając kopii pliku wallet.dat i nie zostało to tutaj uwzględnione.</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="512"/>
@@ -2905,12 +2910,12 @@ Address: %4
     <message>
         <location filename="../sendcoinsdialog.cpp" line="634"/>
         <source>Warning: Unknown change address</source>
-        <translation type="unfinished"/>
+        <translation>Ostrzeżenie: Nieznany adres</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="645"/>
         <source>(no label)</source>
-        <translation type="unfinished"/>
+        <translation>(bez etykiety)</translation>
     </message>
 </context>
 <context>
@@ -2919,7 +2924,7 @@ Address: %4
         <location filename="../forms/sendcoinsentry.ui" line="21"/>
         <location filename="../forms/ui_sendcoinsentry.h" line="423"/>
         <source>This is a normal payment.</source>
-        <translation>To jest normalna płatność</translation>
+        <translation>To jest standardowa płatność</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="36"/>
@@ -2931,13 +2936,13 @@ Address: %4
         <location filename="../forms/sendcoinsentry.ui" line="54"/>
         <location filename="../forms/ui_sendcoinsentry.h" line="427"/>
         <source>The address to send the payment to (e.g. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</source>
-        <translation>Adres na który wysłać płatność (np. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="61"/>
         <location filename="../forms/ui_sendcoinsentry.h" line="430"/>
         <source>Choose previously used address</source>
-        <translation>Wybierz wcześniej użyty adres</translation>
+        <translation>Wybierz wcześniej użyty adres </translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="71"/>
@@ -2977,7 +2982,7 @@ Address: %4
         <location filename="../forms/sendcoinsentry.ui" line="124"/>
         <location filename="../forms/ui_sendcoinsentry.h" line="445"/>
         <source>Enter a label for this address to add it to the list of used addresses</source>
-        <translation>Nadaj etykietę dla tego adresu aby dodać go do listy używanych adresów</translation>
+        <translation>Wprowadź etykietę dla tego adresu by dodać go do listy użytych adresów</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="131"/>
@@ -2987,7 +2992,7 @@ Address: %4
         <location filename="../forms/ui_sendcoinsentry.h" line="461"/>
         <location filename="../forms/ui_sendcoinsentry.h" line="471"/>
         <source>A&amp;mount:</source>
-        <translation>I&amp;lość:</translation>
+        <translation>Su&amp;ma:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="147"/>
@@ -3005,7 +3010,7 @@ Address: %4
         <location filename="../forms/sendcoinsentry.ui" line="583"/>
         <location filename="../forms/ui_sendcoinsentry.h" line="453"/>
         <source>This is an unverified payment request.</source>
-        <translation>To jest niezweryfikowane żądanie zapłaty</translation>
+        <translation>To żądanie zapłaty nie zostało zweryfikowane.</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="601"/>
@@ -3013,7 +3018,7 @@ Address: %4
         <location filename="../forms/ui_sendcoinsentry.h" line="455"/>
         <location filename="../forms/ui_sendcoinsentry.h" line="465"/>
         <source>Pay To:</source>
-        <translation>Zapłać dla:</translation>
+        <translation>Wpłać do:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="635"/>
@@ -3021,18 +3026,18 @@ Address: %4
         <location filename="../forms/ui_sendcoinsentry.h" line="460"/>
         <location filename="../forms/ui_sendcoinsentry.h" line="470"/>
         <source>Memo:</source>
-        <translation>Memo:</translation>
+        <translation>Notatka:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="1115"/>
         <location filename="../forms/ui_sendcoinsentry.h" line="463"/>
         <source>This is a verified payment request.</source>
-        <translation>To jest zweryfikowane żądanie płatności</translation>
+        <translation>Zweryfikowano żądanie zapłaty.</translation>
     </message>
     <message>
         <location filename="../sendcoinsentry.cpp" line="31"/>
         <source>Enter a label for this address to add it to your address book</source>
-        <translation type="unfinished"/>
+        <translation>Wprowadź etykietę dla tego adresu by dodać go do książki adresowej</translation>
     </message>
 </context>
 <context>
@@ -3045,7 +3050,7 @@ Address: %4
     <message>
         <location filename="../utilitydialog.cpp" line="130"/>
         <source>Do not shut down the computer until this window disappears.</source>
-        <translation type="unfinished"/>
+        <translation>Nie wyłączaj komputera dopóki to okno nie zniknie.</translation>
     </message>
 </context>
 <context>
@@ -3054,25 +3059,25 @@ Address: %4
         <location filename="../forms/signverifymessagedialog.ui" line="14"/>
         <location filename="../forms/ui_signverifymessagedialog.h" line="283"/>
         <source>Signatures - Sign / Verify a Message</source>
-        <translation type="unfinished"/>
+        <translation>Podpisy - Podpisz / zweryfikuj wiadomość</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="24"/>
         <location filename="../forms/ui_signverifymessagedialog.h" line="315"/>
         <source>&amp;Sign Message</source>
-        <translation>&amp;Oznacz wiadomość</translation>
+        <translation>Podpi&amp;sz Wiadomość</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="30"/>
         <location filename="../forms/ui_signverifymessagedialog.h" line="284"/>
         <source>You can sign messages with your addresses to prove you own them. Be careful not to sign anything vague, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
-        <translation type="unfinished"/>
+        <translation>Możesz podpisywać wiadomości swoimi adresami aby udowodnić, że jesteś ich właścicielem. Uważaj, aby nie podpisywać niczego co wzbudza Twoje podejrzenia, ponieważ ktoś może stosować phishing próbując nakłonić Cię do ich podpisania. Akceptuj i podpisuj tylko w pełni zrozumiałe komunikaty i wiadomości.</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="48"/>
         <location filename="../forms/ui_signverifymessagedialog.h" line="286"/>
         <source>The address to sign the message with (e.g. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</source>
-        <translation>Adres, którym ma być podpisana wiadomość (np.: XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="55"/>
@@ -3106,7 +3111,7 @@ Address: %4
         <location filename="../forms/signverifymessagedialog.ui" line="97"/>
         <location filename="../forms/ui_signverifymessagedialog.h" line="299"/>
         <source>Enter the message you want to sign here</source>
-        <translation>Wprowadź wiadomość która chcesz tu oznaczyć</translation>
+        <translation>Wprowadź wiadomość, którą chcesz podpisać, tutaj</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="104"/>
@@ -3118,25 +3123,25 @@ Address: %4
         <location filename="../forms/signverifymessagedialog.ui" line="131"/>
         <location filename="../forms/ui_signverifymessagedialog.h" line="303"/>
         <source>Copy the current signature to the system clipboard</source>
-        <translation>Skopiuj obecny podpis do systemowego schowka</translation>
+        <translation>Kopiuje aktualny podpis do schowka systemowego</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="152"/>
         <location filename="../forms/ui_signverifymessagedialog.h" line="307"/>
         <source>Sign the message to prove you own this Darkcoin address</source>
-        <translation>Podpisz wiadomość aby udowodnić, że jesteś właścicielem adresu Darkcoin.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="155"/>
         <location filename="../forms/ui_signverifymessagedialog.h" line="309"/>
         <source>Sign &amp;Message</source>
-        <translation>Oznacz &amp;wiadomość</translation>
+        <translation>Podpisz Wiado&amp;mość</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="169"/>
         <location filename="../forms/ui_signverifymessagedialog.h" line="311"/>
         <source>Reset all sign message fields</source>
-        <translation>Zresetuj wszystkie zapisane pola wiadomości</translation>
+        <translation>Zresetuj wszystkie pola podpisanej wiadomości</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="172"/>
@@ -3156,36 +3161,36 @@ Address: %4
         <location filename="../forms/signverifymessagedialog.ui" line="237"/>
         <location filename="../forms/ui_signverifymessagedialog.h" line="316"/>
         <source>Enter the signing address, message (ensure you copy line breaks, spaces, tabs, etc. exactly) and signature below to verify the message. Be careful not to read more into the signature than what is in the signed message itself, to avoid being tricked by a man-in-the-middle attack.</source>
-        <translation type="unfinished"/>
+        <translation>Wpisz adres podpisu, wiadomość (upewnij się, że dokładnie skopiujesz wszystkie zakończenia linii, spacje, tabulacje itp.) oraz podpis poniżej by sprawdzić wiadomość. Uważaj by nie dodać więcej do podpisu niż do samej podpisywanej wiadomości by uniknąć ataku man-in-the-middle (człowiek pośrodku)</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="258"/>
         <location filename="../forms/ui_signverifymessagedialog.h" line="318"/>
         <source>The address the message was signed with (e.g. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</source>
-        <translation>Adres, którym została podpisana wiadomość (np.:  XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="295"/>
         <location filename="../forms/ui_signverifymessagedialog.h" line="326"/>
         <source>Verify the message to ensure it was signed with the specified Darkcoin address</source>
-        <translation>Zweryfikuj wiadomość aby upewnić się, że została zapisana przez konkretny adres Darkcoin</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="298"/>
         <location filename="../forms/ui_signverifymessagedialog.h" line="328"/>
         <source>Verify &amp;Message</source>
-        <translation>Zweryfikuj &amp;wiadomość</translation>
+        <translation>Zweryfikuj Wiado&amp;mość</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="312"/>
         <location filename="../forms/ui_signverifymessagedialog.h" line="330"/>
         <source>Reset all verify message fields</source>
-        <translation>Zresetuj wszystkie pola wiadomości weryfikującej.</translation>
+        <translation>Resetuje wszystkie pola weryfikacji wiadomości</translation>
     </message>
     <message>
         <location filename="../signverifymessagedialog.cpp" line="30"/>
         <source>Click &quot;Sign Message&quot; to generate signature</source>
-        <translation type="unfinished"/>
+        <translation>Kliknij &quot;Podpisz Wiadomość&quot; żeby uzyskać podpis</translation>
     </message>
     <message>
         <location filename="../signverifymessagedialog.cpp" line="31"/>
@@ -3196,7 +3201,7 @@ Address: %4
         <location filename="../signverifymessagedialog.cpp" line="114"/>
         <location filename="../signverifymessagedialog.cpp" line="194"/>
         <source>The entered address is invalid.</source>
-        <translation type="unfinished"/>
+        <translation>Podany adres jest nieprawidłowy.</translation>
     </message>
     <message>
         <location filename="../signverifymessagedialog.cpp" line="114"/>
@@ -3204,59 +3209,59 @@ Address: %4
         <location filename="../signverifymessagedialog.cpp" line="194"/>
         <location filename="../signverifymessagedialog.cpp" line="202"/>
         <source>Please check the address and try again.</source>
-        <translation type="unfinished"/>
+        <translation>Proszę sprawdzić adres i spróbować ponownie.</translation>
     </message>
     <message>
         <location filename="../signverifymessagedialog.cpp" line="122"/>
         <location filename="../signverifymessagedialog.cpp" line="202"/>
         <source>The entered address does not refer to a key.</source>
-        <translation type="unfinished"/>
+        <translation>Wprowadzony adres nie odnosi się do klucza.</translation>
     </message>
     <message>
         <location filename="../signverifymessagedialog.cpp" line="130"/>
         <source>Wallet unlock was cancelled.</source>
-        <translation type="unfinished"/>
+        <translation>Odblokowanie portfela zostało anulowane.</translation>
     </message>
     <message>
         <location filename="../signverifymessagedialog.cpp" line="138"/>
         <source>Private key for the entered address is not available.</source>
-        <translation type="unfinished"/>
+        <translation>Klucz prywatny dla podanego adresu nie jest dostępny</translation>
     </message>
     <message>
         <location filename="../signverifymessagedialog.cpp" line="150"/>
         <source>Message signing failed.</source>
-        <translation type="unfinished"/>
+        <translation>Podpisanie wiadomości nie powiodło się</translation>
     </message>
     <message>
         <location filename="../signverifymessagedialog.cpp" line="155"/>
         <source>Message signed.</source>
-        <translation type="unfinished"/>
+        <translation>Wiadomość podpisana.</translation>
     </message>
     <message>
         <location filename="../signverifymessagedialog.cpp" line="213"/>
         <source>The signature could not be decoded.</source>
-        <translation type="unfinished"/>
+        <translation>Podpis nie może zostać zdekodowany.</translation>
     </message>
     <message>
         <location filename="../signverifymessagedialog.cpp" line="213"/>
         <location filename="../signverifymessagedialog.cpp" line="226"/>
         <source>Please check the signature and try again.</source>
-        <translation type="unfinished"/>
+        <translation>Sprawdź podpis i spróbuj ponownie.</translation>
     </message>
     <message>
         <location filename="../signverifymessagedialog.cpp" line="226"/>
         <source>The signature did not match the message digest.</source>
-        <translation type="unfinished"/>
+        <translation>Podpis nie odpowiadał streszczeniu wiadomości</translation>
     </message>
     <message>
         <location filename="../signverifymessagedialog.cpp" line="233"/>
         <source>Message verification failed.</source>
-        <translation type="unfinished"/>
+        <translation>Weryfikacja wiadomości nie powiodła się.</translation>
     </message>
     <message>
         <location filename="../signverifymessagedialog.cpp" line="238"/>
         <source>Message verified.</source>
-        <translation type="unfinished"/>
+        <translation>Wiadomość zweryfikowana.</translation>
     </message>
 </context>
 <context>
@@ -3269,7 +3274,7 @@ Address: %4
     <message>
         <location filename="../splashscreen.cpp" line="35"/>
         <source>The Bitcoin Core developers</source>
-        <translation type="unfinished"/>
+        <translation>Deweloperzy Bitcoin Core</translation>
     </message>
     <message>
         <location filename="../splashscreen.cpp" line="36"/>
@@ -3279,7 +3284,7 @@ Address: %4
     <message>
         <location filename="../splashscreen.cpp" line="37"/>
         <source>[testnet]</source>
-        <translation type="unfinished"/>
+        <translation>[testnet]</translation>
     </message>
 </context>
 <context>
@@ -3287,7 +3292,7 @@ Address: %4
     <message>
         <location filename="../trafficgraphwidget.cpp" line="79"/>
         <source>KB/s</source>
-        <translation type="unfinished"/>
+        <translation>KB/s</translation>
     </message>
 </context>
 <context>
@@ -3300,37 +3305,37 @@ Address: %4
     <message>
         <location filename="../transactiondesc.cpp" line="30"/>
         <source>Open until %1</source>
-        <translation type="unfinished"/>
+        <translation>Otwórz do %1</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="36"/>
         <source>conflicted</source>
-        <translation type="unfinished"/>
+        <translation>konflikt</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="38"/>
         <source>%1/offline</source>
-        <translation type="unfinished"/>
+        <translation>%1/offline</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="40"/>
         <source>%1/unconfirmed</source>
-        <translation type="unfinished"/>
+        <translation>%1/niezatwierdzone</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="42"/>
         <source>%1 confirmations</source>
-        <translation type="unfinished"/>
+        <translation>%1 potwierdzeń</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="59"/>
         <source>Status</source>
-        <translation type="unfinished"/>
+        <translation>Status</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="64"/>
         <source>, has not been successfully broadcast yet</source>
-        <translation type="unfinished"/>
+        <translation>, nie został jeszcze pomyślnie wyemitowany</translation>
     </message>
     <message numerus="yes">
         <location filename="../transactiondesc.cpp" line="66"/>
@@ -3345,41 +3350,41 @@ Address: %4
     <message>
         <location filename="../transactiondesc.cpp" line="77"/>
         <source>Source</source>
-        <translation type="unfinished"/>
+        <translation>Źródło</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="77"/>
         <source>Generated</source>
-        <translation type="unfinished"/>
+        <translation>Wygenerowano</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="82"/>
         <location filename="../transactiondesc.cpp" line="99"/>
         <source>From</source>
-        <translation type="unfinished"/>
+        <translation>Od</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="99"/>
         <source>unknown</source>
-        <translation type="unfinished"/>
+        <translation>nieznany</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="100"/>
         <location filename="../transactiondesc.cpp" line="122"/>
         <location filename="../transactiondesc.cpp" line="180"/>
         <source>To</source>
-        <translation type="unfinished"/>
+        <translation>Do</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="103"/>
         <location filename="../transactiondesc.cpp" line="105"/>
         <source>own address</source>
-        <translation type="unfinished"/>
+        <translation>własny adres</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="103"/>
         <source>label</source>
-        <translation type="unfinished"/>
+        <translation>etykieta</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="140"/>
@@ -3388,7 +3393,7 @@ Address: %4
         <location filename="../transactiondesc.cpp" line="214"/>
         <location filename="../transactiondesc.cpp" line="267"/>
         <source>Credit</source>
-        <translation type="unfinished"/>
+        <translation>Przypisy</translation>
     </message>
     <message numerus="yes">
         <location filename="../transactiondesc.cpp" line="142"/>
@@ -3398,7 +3403,7 @@ Address: %4
     <message>
         <location filename="../transactiondesc.cpp" line="144"/>
         <source>not accepted</source>
-        <translation type="unfinished"/>
+        <translation>niezaakceptowane</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="188"/>
@@ -3406,58 +3411,58 @@ Address: %4
         <location filename="../transactiondesc.cpp" line="211"/>
         <location filename="../transactiondesc.cpp" line="264"/>
         <source>Debit</source>
-        <translation type="unfinished"/>
+        <translation>Debet</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="202"/>
         <source>Transaction fee</source>
-        <translation type="unfinished"/>
+        <translation>Prowizja transakcji</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="218"/>
         <source>Net amount</source>
-        <translation type="unfinished"/>
+        <translation>Kwota netto</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="224"/>
         <location filename="../transactiondesc.cpp" line="233"/>
         <source>Message</source>
-        <translation type="unfinished"/>
+        <translation>Wiadomość</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="226"/>
         <source>Comment</source>
-        <translation type="unfinished"/>
+        <translation>Komentarz</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="228"/>
         <source>Transaction ID</source>
-        <translation type="unfinished"/>
+        <translation>ID transakcji</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="246"/>
         <source>Merchant</source>
-        <translation type="unfinished"/>
+        <translation>Kupiec</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="253"/>
         <source>Generated coins must mature %1 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to &quot;not accepted&quot; and it won&apos;t be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.</source>
-        <translation type="unfinished"/>
+        <translation>Wygenerowane monety muszą dojrzeć przez %1 bloków zanim będzie można je wysłać. Gdy wygenerowałeś ten blok został on ogłoszony w sieci i dodany do łańcucha bloków. Jeżeli nie uda mu się wejść do łańcucha jego status zostanie zmieniony na &quot;nie zaakceptowano&quot; i nie będzie można go wydać. To czasem zdarza się gdy inny węzeł wygeneruje blok w kilka sekund od twojego.</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="261"/>
         <source>Debug information</source>
-        <translation type="unfinished"/>
+        <translation>Informacje debugowania</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="269"/>
         <source>Transaction</source>
-        <translation type="unfinished"/>
+        <translation>Transakcja</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="272"/>
         <source>Inputs</source>
-        <translation type="unfinished"/>
+        <translation>Wejścia</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="293"/>
@@ -3467,12 +3472,12 @@ Address: %4
     <message>
         <location filename="../transactiondesc.cpp" line="294"/>
         <source>true</source>
-        <translation type="unfinished"/>
+        <translation>prawda</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="294"/>
         <source>false</source>
-        <translation type="unfinished"/>
+        <translation>fałsz</translation>
     </message>
 </context>
 <context>
@@ -3487,7 +3492,7 @@ Address: %4
         <location filename="../forms/transactiondescdialog.ui" line="20"/>
         <location filename="../forms/ui_transactiondescdialog.h" line="62"/>
         <source>This pane shows a detailed description of the transaction</source>
-        <translation>Ta zakładka pokazuje szczegółowy dane transakcji.</translation>
+        <translation>Ten panel pokazuje szczegółowy opis transakcji</translation>
     </message>
 </context>
 <context>
@@ -3500,7 +3505,7 @@ Address: %4
     <message>
         <location filename="../transactiontablemodel.cpp" line="238"/>
         <source>Type</source>
-        <translation type="unfinished"/>
+        <translation>Typ</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="238"/>
@@ -3520,32 +3525,32 @@ Address: %4
     <message>
         <location filename="../transactiontablemodel.cpp" line="290"/>
         <source>Open until %1</source>
-        <translation type="unfinished"/>
+        <translation>Otwórz do %1</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="293"/>
         <source>Offline</source>
-        <translation type="unfinished"/>
+        <translation>Offline</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="296"/>
         <source>Unconfirmed</source>
-        <translation type="unfinished"/>
+        <translation>Niepotwierdzone:</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="299"/>
         <source>Confirming (%1 of %2 recommended confirmations)</source>
-        <translation type="unfinished"/>
+        <translation>Potwierdzanie (%1 z %2 rekomendowanych potwierdzeń)</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="302"/>
         <source>Confirmed (%1 confirmations)</source>
-        <translation type="unfinished"/>
+        <translation>Zatwierdzony (%1 potwierdzeń)</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="305"/>
         <source>Conflicted</source>
-        <translation type="unfinished"/>
+        <translation>Konflikt</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="308"/>
@@ -3555,22 +3560,22 @@ Address: %4
     <message>
         <location filename="../transactiontablemodel.cpp" line="311"/>
         <source>This block was not received by any other nodes and will probably not be accepted!</source>
-        <translation type="unfinished"/>
+        <translation>Ten blok nie został odebrany przez jakikolwiek inny węzeł i prawdopodobnie nie zostanie zaakceptowany!</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="314"/>
         <source>Generated but not accepted</source>
-        <translation type="unfinished"/>
+        <translation>Wygenerowano ale nie zaakceptowano</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="356"/>
         <source>Received with</source>
-        <translation type="unfinished"/>
+        <translation>Otrzymane przez</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="358"/>
         <source>Received from</source>
-        <translation type="unfinished"/>
+        <translation>Odebrano od</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="360"/>
@@ -3580,17 +3585,17 @@ Address: %4
     <message>
         <location filename="../transactiontablemodel.cpp" line="363"/>
         <source>Sent to</source>
-        <translation type="unfinished"/>
+        <translation>Wysłano do</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="365"/>
         <source>Payment to yourself</source>
-        <translation type="unfinished"/>
+        <translation>Płatność do siebie</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="367"/>
         <source>Mined</source>
-        <translation type="unfinished"/>
+        <translation>Wydobyto</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="370"/>
@@ -3615,32 +3620,32 @@ Address: %4
     <message>
         <location filename="../transactiontablemodel.cpp" line="418"/>
         <source>(n/a)</source>
-        <translation type="unfinished"/>
+        <translation>(brak)</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="610"/>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
-        <translation type="unfinished"/>
+        <translation>Status transakcji. Najedź na pole, aby zobaczyć liczbę potwierdzeń.</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="612"/>
         <source>Date and time that the transaction was received.</source>
-        <translation type="unfinished"/>
+        <translation>Data i czas odebrania transakcji.</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="614"/>
         <source>Type of transaction.</source>
-        <translation type="unfinished"/>
+        <translation>Rodzaj transakcji.</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="616"/>
         <source>Destination address of transaction.</source>
-        <translation type="unfinished"/>
+        <translation>Adres docelowy transakcji.</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="618"/>
         <source>Amount removed from or added to balance.</source>
-        <translation type="unfinished"/>
+        <translation>Kwota usunięta z lub dodana do konta.</translation>
     </message>
 </context>
 <context>
@@ -3649,47 +3654,47 @@ Address: %4
         <location filename="../transactionview.cpp" line="60"/>
         <location filename="../transactionview.cpp" line="76"/>
         <source>All</source>
-        <translation type="unfinished"/>
+        <translation>Wszystko</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="61"/>
         <source>Today</source>
-        <translation type="unfinished"/>
+        <translation>Dzisiaj</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="62"/>
         <source>This week</source>
-        <translation type="unfinished"/>
+        <translation>W tym tygodniu</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="63"/>
         <source>This month</source>
-        <translation type="unfinished"/>
+        <translation>W tym miesiącu</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="64"/>
         <source>Last month</source>
-        <translation type="unfinished"/>
+        <translation>W zeszłym miesiącu</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="65"/>
         <source>This year</source>
-        <translation type="unfinished"/>
+        <translation>W tym roku</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="66"/>
         <source>Range...</source>
-        <translation type="unfinished"/>
+        <translation>Zakres...</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="77"/>
         <source>Received with</source>
-        <translation type="unfinished"/>
+        <translation>Otrzymane przez</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="79"/>
         <source>Sent to</source>
-        <translation type="unfinished"/>
+        <translation>Wysłano do</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="81"/>
@@ -3704,72 +3709,72 @@ Address: %4
     <message>
         <location filename="../transactionview.cpp" line="83"/>
         <source>To yourself</source>
-        <translation type="unfinished"/>
+        <translation>Do siebie</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="84"/>
         <source>Mined</source>
-        <translation type="unfinished"/>
+        <translation>Wydobyto</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="85"/>
         <source>Other</source>
-        <translation type="unfinished"/>
+        <translation>Inne</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="91"/>
         <source>Enter address or label to search</source>
-        <translation type="unfinished"/>
+        <translation>Wprowadź adres albo etykietę żeby wyszukać</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="97"/>
         <source>Min amount</source>
-        <translation type="unfinished"/>
+        <translation>Min suma</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="131"/>
         <source>Copy address</source>
-        <translation type="unfinished"/>
+        <translation>Kopiuj adres</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="132"/>
         <source>Copy label</source>
-        <translation type="unfinished"/>
+        <translation>Kopiuj etykietę</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="133"/>
         <source>Copy amount</source>
-        <translation type="unfinished"/>
+        <translation>Kopiuj kwotę</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="134"/>
         <source>Copy transaction ID</source>
-        <translation type="unfinished"/>
+        <translation>Skopiuj ID transakcji</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="135"/>
         <source>Edit label</source>
-        <translation type="unfinished"/>
+        <translation>Zmień etykietę</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="136"/>
         <source>Show transaction details</source>
-        <translation type="unfinished"/>
+        <translation>Pokaż szczegóły transakcji</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="299"/>
         <source>Export Transaction History</source>
-        <translation type="unfinished"/>
+        <translation>Eksport historii transakcji</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="300"/>
         <source>Comma separated file (*.csv)</source>
-        <translation type="unfinished"/>
+        <translation>CSV (rozdzielany przecinkami)</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="309"/>
         <source>Confirmed</source>
-        <translation>Potwierdzone</translation>
+        <translation>Potwierdzony</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="310"/>
@@ -3779,12 +3784,12 @@ Address: %4
     <message>
         <location filename="../transactionview.cpp" line="311"/>
         <source>Type</source>
-        <translation type="unfinished"/>
+        <translation>Typ</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="312"/>
         <source>Label</source>
-        <translation type="unfinished"/>
+        <translation>Etykieta</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="313"/>
@@ -3799,37 +3804,37 @@ Address: %4
     <message>
         <location filename="../transactionview.cpp" line="315"/>
         <source>ID</source>
-        <translation type="unfinished"/>
+        <translation>ID</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="318"/>
         <source>Exporting Failed</source>
-        <translation type="unfinished"/>
+        <translation>Błąd przy próbie eksportu</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="318"/>
         <source>There was an error trying to save the transaction history to %1.</source>
-        <translation type="unfinished"/>
+        <translation>Wystąpił błąd przy próbie zapisu historii transakcji do %1.</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="322"/>
         <source>Exporting Successful</source>
-        <translation type="unfinished"/>
+        <translation>Eksport powiódł się</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="322"/>
         <source>The transaction history was successfully saved to %1.</source>
-        <translation type="unfinished"/>
+        <translation>Historia transakcji została zapisana do %1.</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="431"/>
         <source>Range:</source>
-        <translation type="unfinished"/>
+        <translation>Zakres:</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="439"/>
         <source>to</source>
-        <translation type="unfinished"/>
+        <translation>do</translation>
     </message>
 </context>
 <context>
@@ -3837,7 +3842,7 @@ Address: %4
     <message>
         <location filename="../walletframe.cpp" line="26"/>
         <source>No wallet has been loaded.</source>
-        <translation type="unfinished"/>
+        <translation>Nie załadowano żadnego portfela.</translation>
     </message>
 </context>
 <context>
@@ -3845,7 +3850,7 @@ Address: %4
     <message>
         <location filename="../walletmodel.cpp" line="286"/>
         <source>Send Coins</source>
-        <translation>Wyślij monety</translation>
+        <translation>Wyślij płatność</translation>
     </message>
 </context>
 <context>
@@ -3858,37 +3863,37 @@ Address: %4
     <message>
         <location filename="../walletview.cpp" line="45"/>
         <source>Export the data in the current tab to a file</source>
-        <translation>Eksportuj dane z tej zakładki do pliku</translation>
+        <translation>Eksportuj dane z aktywnej karty do pliku</translation>
     </message>
     <message>
         <location filename="../walletview.cpp" line="229"/>
         <source>Backup Wallet</source>
-        <translation type="unfinished"/>
+        <translation>Kopia Zapasowa Portfela</translation>
     </message>
     <message>
         <location filename="../walletview.cpp" line="230"/>
         <source>Wallet Data (*.dat)</source>
-        <translation type="unfinished"/>
+        <translation>Dane Portfela (*.dat)</translation>
     </message>
     <message>
         <location filename="../walletview.cpp" line="236"/>
         <source>Backup Failed</source>
-        <translation type="unfinished"/>
+        <translation>Nie udało się wykonać kopii zapasowej</translation>
     </message>
     <message>
         <location filename="../walletview.cpp" line="236"/>
         <source>There was an error trying to save the wallet data to %1.</source>
-        <translation type="unfinished"/>
+        <translation>Wystąpił błąd przy próbie zapisu pliku portfela do %1.</translation>
     </message>
     <message>
         <location filename="../walletview.cpp" line="240"/>
         <source>Backup Successful</source>
-        <translation type="unfinished"/>
+        <translation>Wykonano Kopię Zapasową</translation>
     </message>
     <message>
         <location filename="../walletview.cpp" line="240"/>
         <source>The wallet data was successfully saved to %1.</source>
-        <translation type="unfinished"/>
+        <translation>Plik portfela został zapisany do %1.</translation>
     </message>
 </context>
 <context>

@@ -5,13 +5,13 @@
         <location filename="../forms/aboutdialog.ui" line="14"/>
         <location filename="../forms/ui_aboutdialog.h" line="131"/>
         <source>About Darkcoin Core</source>
-        <translation>Darkcoin Core névjegye</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/aboutdialog.ui" line="53"/>
         <location filename="../forms/ui_aboutdialog.h" line="132"/>
         <source>&lt;b&gt;Darkcoin Core&lt;/b&gt; version</source>
-        <translation>&lt;b&gt;Darkcoin Core&lt;/b&gt; verzió</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/aboutdialog.ui" line="111"/>
@@ -233,14 +233,13 @@ Ez a termék tartalmaz az OpenSSL Project által az OpenSSL Toolkit-hez (http://
         <location filename="../forms/askpassphrasedialog.ui" line="108"/>
         <location filename="../forms/ui_askpassphrasedialog.h" line="141"/>
         <source>Serves to disable the trivial sendmoney when OS account compromised. Provides no real security.</source>
-        <translation>Kikapcsolja kód szinten a pénz küldési lehetőséget. 
-Önmagában nem nyújt igazi védelmet az esetleges támadókkal szemben, mivel nyitott pénztárca esetén egy vírus, vagy egy tapasztaltabb hacker a memória szkennelésével hozzáférhet az egyenleghez.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="111"/>
         <location filename="../forms/ui_askpassphrasedialog.h" line="143"/>
         <source>For anonymization only</source>
-        <translation>Kizárólag anonimizáláshoz</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="41"/>
@@ -545,7 +544,7 @@ Ez a termék tartalmaz az OpenSSL Project által az OpenSSL Toolkit-hez (http://
     <message>
         <location filename="../bitcoingui.cpp" line="306"/>
         <source>&amp;Information</source>
-        <translation>&amp;Információ</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="307"/>
@@ -882,7 +881,7 @@ Address: %4
         <location filename="../forms/coincontroldialog.ui" line="461"/>
         <location filename="../forms/ui_coincontroldialog.h" line="335"/>
         <source>Darksend Rounds</source>
-        <translation>Darksend körök</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="466"/>
@@ -1312,7 +1311,7 @@ Address: %4
         <location filename="../forms/helpmessagedialog.ui" line="19"/>
         <location filename="../forms/ui_helpmessagedialog.h" line="105"/>
         <source>Darkcoin Core - Command-line options</source>
-        <translation>Darkcoin Code - Parancssorban használható parancsok</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="69"/>
@@ -1377,20 +1376,19 @@ Address: %4
         <location filename="../forms/intro.ui" line="23"/>
         <location filename="../forms/ui_intro.h" line="184"/>
         <source>Welcome to Darkcoin Core.</source>
-        <translation>Üdvözöljük a Darkcoin Core-ban</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/intro.ui" line="49"/>
         <location filename="../forms/ui_intro.h" line="185"/>
         <source>As this is the first time the program is launched, you can choose where Darkcoin Core will store its data.</source>
-        <translation>Ez a program első indítása, így kiválaszthatja, hogy a Darkcoin Core hol tárolja az adatait.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/intro.ui" line="59"/>
         <location filename="../forms/ui_intro.h" line="186"/>
         <source>Darkcoin Core will download and store a copy of the Darkcoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
-        <translation>A Darkcoin Core működéséhez szükséges a Darkcoin blokklánc letöltése és tárolása, melyhez legalább %1GB tárhely szükséges. A jövőben a tárhelyigény tovább nőhet.
-A pénztárca fájl is ebben a könyvtárban kerül letárolásra.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/intro.ui" line="69"/>
@@ -1480,13 +1478,13 @@ A pénztárca fájl is ebben a könyvtárban kerül letárolásra.</translation>
         <location filename="../forms/optionsdialog.ui" line="33"/>
         <location filename="../forms/ui_optionsdialog.h" line="534"/>
         <source>Automatically start Darkcoin after logging in to the system.</source>
-        <translation>Darkcoin kliens automatikus indítása a rendszerbe való bejelentkezéskor</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="36"/>
         <location filename="../forms/ui_optionsdialog.h" line="536"/>
         <source>&amp;Start Darkcoin on system login</source>
-        <translation>&amp;Indítás bejelentkezéskor</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="45"/>
@@ -1516,19 +1514,19 @@ A pénztárca fájl is ebben a könyvtárban kerül letárolásra.</translation>
         <location filename="../forms/optionsdialog.ui" line="138"/>
         <location filename="../forms/ui_optionsdialog.h" line="544"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This setting determines the amount of individual masternodes that an input will be anonymized through. More rounds of anonymization gives a higher degree of privacy, but also costs more in fees.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Ez a beállítás határozza meg, hogy a pénzmozgás hány különböző masternode-on keresztül legyen anonimizálva. Több körös anonimizálás nagyobb fokú biztonságot nyújt, de a költsége is magasabb.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="141"/>
         <location filename="../forms/ui_optionsdialog.h" line="546"/>
         <source>Darksend rounds to use</source>
-        <translation>Darksend körök száma</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="180"/>
         <location filename="../forms/ui_optionsdialog.h" line="547"/>
         <source>Amount of Darkcoin to keep anonymized</source>
-        <translation>Mindig legyen anonimizálva ennyi Darkcoin</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="206"/>
@@ -1588,7 +1586,7 @@ A pénztárca fájl is ebben a könyvtárban kerül letárolásra.</translation>
         <location filename="../forms/optionsdialog.ui" line="307"/>
         <location filename="../forms/ui_optionsdialog.h" line="562"/>
         <source>Automatically open the Darkcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation>Automatikusan megnyitja a Darkcoin kliens portját a routeren. Csak abban az esetben működik, ha a routeren engedélyezve van az UPnP használata.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="310"/>
@@ -1600,7 +1598,7 @@ A pénztárca fájl is ebben a könyvtárban kerül letárolásra.</translation>
         <location filename="../forms/optionsdialog.ui" line="317"/>
         <location filename="../forms/ui_optionsdialog.h" line="566"/>
         <source>Connect to the Darkcoin network through a SOCKS proxy.</source>
-        <translation>Darkcoin hálózathoz való kapcsolódás SOCKS proxy-n keresztül</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="320"/>
@@ -1690,7 +1688,7 @@ A pénztárca fájl is ebben a könyvtárban kerül letárolásra.</translation>
         <location filename="../forms/optionsdialog.ui" line="503"/>
         <location filename="../forms/ui_optionsdialog.h" line="593"/>
         <source>The user interface language can be set here. This setting will take effect after restarting Darkcoin.</source>
-        <translation>A program megjelenítési nyelve itt állítható. Ez a beállítás a program újraindítása után lép életbe.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="514"/>
@@ -1708,7 +1706,7 @@ A pénztárca fájl is ebben a könyvtárban kerül letárolásra.</translation>
         <location filename="../forms/optionsdialog.ui" line="536"/>
         <location filename="../forms/ui_optionsdialog.h" line="600"/>
         <source>Whether to show Darkcoin addresses in the transaction list or not.</source>
-        <translation>A tranzakció listában ennek a beállításnak a függvényében jelennek meg a címek.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="539"/>
@@ -1817,7 +1815,7 @@ A pénztárca fájl is ebben a könyvtárban kerül letárolásra.</translation>
         <location filename="../forms/ui_overviewpage.h" line="459"/>
         <location filename="../forms/ui_overviewpage.h" line="503"/>
         <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Darkcoin network after a connection is established, but this process has not completed yet.</source>
-        <translation>A megjelenített információ elavult lehet. A pénztárca automatikusan szinkronizál a Darkcoin hálózattal a kapcsolat létesítése után, de ez a folyamat még nem fejeződött be.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="108"/>
@@ -1871,61 +1869,61 @@ A pénztárca fájl is ebben a könyvtárban kerül letárolásra.</translation>
         <location filename="../forms/overviewpage.ui" line="296"/>
         <location filename="../forms/ui_overviewpage.h" line="477"/>
         <source>Status:</source>
-        <translation>Állapot:</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="303"/>
         <location filename="../forms/ui_overviewpage.h" line="478"/>
         <source>Enabled/Disabled</source>
-        <translation>Bekapcsolva/Kikapcsolva</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="310"/>
         <location filename="../forms/ui_overviewpage.h" line="479"/>
         <source>Completion:</source>
-        <translation>Készültség:</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="330"/>
         <location filename="../forms/ui_overviewpage.h" line="480"/>
         <source>Darksend Balance:</source>
-        <translation>Darksend egyenleg:</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="343"/>
         <location filename="../forms/ui_overviewpage.h" line="481"/>
         <source>0 DRK</source>
-        <translation>0 DRK</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="350"/>
         <location filename="../forms/ui_overviewpage.h" line="482"/>
         <source>Amount and Rounds:</source>
-        <translation>Összeg és körök száma:</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="357"/>
         <location filename="../forms/ui_overviewpage.h" line="483"/>
         <source>0 DRK / 0 Rounds</source>
-        <translation>0 DRK / 0 kör</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="364"/>
         <location filename="../forms/ui_overviewpage.h" line="484"/>
         <source>Submitted Denom:</source>
-        <translation>Feladott bontás:</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="371"/>
         <location filename="../forms/ui_overviewpage.h" line="486"/>
         <source>The denominations you submitted to the Masternode. To mix, other users must submit the exact same denominations.</source>
-        <translation>A masternode felé feladott bontás - 10DRK, 1DRK, stb. Az anonimizáláshoz szükséges, hogy más felhasználók is adjanak fel azonos bontásokat.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="374"/>
         <location filename="../forms/ui_overviewpage.h" line="488"/>
         <source>n/a</source>
-        <translation>nem elérhető</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="396"/>
@@ -1934,43 +1932,43 @@ A pénztárca fájl is ebben a könyvtárban kerül letárolásra.</translation>
         <location filename="../overviewpage.cpp" line="442"/>
         <location filename="../overviewpage.cpp" line="456"/>
         <source>Darksend</source>
-        <translation>Darksend</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="846"/>
         <location filename="../forms/ui_overviewpage.h" line="491"/>
         <source>Start/Stop Mixing</source>
-        <translation>Anonimizálás indítása/leállítása</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="878"/>
         <location filename="../forms/ui_overviewpage.h" line="492"/>
         <source>(Last Message)</source>
-        <translation>(Utolsó üzenet)</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="897"/>
         <location filename="../forms/ui_overviewpage.h" line="494"/>
         <source>Try to manually submit a Darksend request.</source>
-        <translation>Egy manuális Darksend kör feladása.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="900"/>
         <location filename="../forms/ui_overviewpage.h" line="496"/>
         <source>Try Mix</source>
-        <translation>Manuális</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="913"/>
         <location filename="../forms/ui_overviewpage.h" line="498"/>
         <source>Reset the current status of Darksend (can interrupt Darksend if it&apos;s in the process of Mixing, which can cost you money!)</source>
-        <translation>Visszaállítja a Darksend jelenlegi státuszát (ez megállíthatja a Darksend-et ha épp mixelés közben van, és ennek költség vonzata lehet)</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="919"/>
         <location filename="../forms/ui_overviewpage.h" line="500"/>
         <source>Reset</source>
-        <translation>Visszaállítás</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="955"/>
@@ -2176,7 +2174,7 @@ A pénztárca fájl is ebben a könyvtárban kerül letárolásra.</translation>
         <location filename="../forms/rpcconsole.ui" line="33"/>
         <location filename="../forms/ui_rpcconsole.h" line="472"/>
         <source>Masternode Count</source>
-        <translation>Masternode-ok száma</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="46"/>
@@ -2230,7 +2228,7 @@ A pénztárca fájl is ebben a könyvtárban kerül letárolásra.</translation>
         <location filename="../forms/rpcconsole.ui" line="90"/>
         <location filename="../forms/ui_rpcconsole.h" line="479"/>
         <source>Open the Darkcoin debug log file from the current data directory. This can take a few seconds for large log files.</source>
-        <translation>A Darkcoin debug log megnyitása az aktuális adatkönyvtárból. Ez néhány másodpercig is eltarthat nagyobb log fájlok esetén.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="93"/>
@@ -2407,7 +2405,7 @@ A pénztárca fájl is ebben a könyvtárban kerül letárolásra.</translation>
         <location filename="../forms/ui_receivecoinsdialog.h" line="260"/>
         <location filename="../forms/ui_receivecoinsdialog.h" line="267"/>
         <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Darkcoin network.</source>
-        <translation>Egy opcionális üzenet, melyet a fizetési bekérőhöz csatolhat, és ami a bekérő megnyitásakor megjelenik. Figyelem: Az üzenet NEM kerül elküldésre a Darkcoin hálózaton.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="54"/>
@@ -2758,13 +2756,13 @@ A pénztárca fájl is ebben a könyvtárban kerül letárolásra.</translation>
         <location filename="../forms/sendcoinsdialog.ui" line="759"/>
         <location filename="../forms/ui_sendcoinsdialog.h" line="545"/>
         <source>Darksend</source>
-        <translation>Darksend</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="772"/>
         <location filename="../forms/ui_sendcoinsdialog.h" line="546"/>
         <source>InstantX</source>
-        <translation>InstantX</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="779"/>
@@ -2934,7 +2932,7 @@ A pénztárca fájl is ebben a könyvtárban kerül letárolásra.</translation>
         <location filename="../forms/sendcoinsentry.ui" line="54"/>
         <location filename="../forms/ui_sendcoinsentry.h" line="427"/>
         <source>The address to send the payment to (e.g. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</source>
-        <translation>Erre a címre küldi a fizetést (pl. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="61"/>
@@ -3002,7 +3000,7 @@ A pénztárca fájl is ebben a könyvtárban kerül letárolásra.</translation>
         <location filename="../forms/sendcoinsentry.ui" line="157"/>
         <location filename="../forms/ui_sendcoinsentry.h" line="450"/>
         <source>A message that was attached to the darkcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Darkcoin network.</source>
-        <translation>Egy üzenet ami a Darkcoin URI-hoz volt kapcsolva, és a tranzakcióval együtt tárolva lesz jövőbeli tájékoztatás céljából. Megjegyzés: Az üzenet NEM kerül elküldésre a darkcoin hálózaton.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="583"/>
@@ -3076,7 +3074,7 @@ Csak olyan üzeneteket írjon alá, amik részletesen ki vannak fejtve, és azok
         <location filename="../forms/signverifymessagedialog.ui" line="48"/>
         <location filename="../forms/ui_signverifymessagedialog.h" line="286"/>
         <source>The address to sign the message with (e.g. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</source>
-        <translation>Az üzenetet ezzel a címmel írja alá (pl. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="55"/>
@@ -3128,7 +3126,7 @@ Csak olyan üzeneteket írjon alá, amik részletesen ki vannak fejtve, és azok
         <location filename="../forms/signverifymessagedialog.ui" line="152"/>
         <location filename="../forms/ui_signverifymessagedialog.h" line="307"/>
         <source>Sign the message to prove you own this Darkcoin address</source>
-        <translation>Üzenet aláírása annak bizonyítására, hogy ez a Darkcoin cím a tulajdonában van</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="155"/>
@@ -3166,13 +3164,13 @@ Csak olyan üzeneteket írjon alá, amik részletesen ki vannak fejtve, és azok
         <location filename="../forms/signverifymessagedialog.ui" line="258"/>
         <location filename="../forms/ui_signverifymessagedialog.h" line="318"/>
         <source>The address the message was signed with (e.g. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</source>
-        <translation>Az üzenetet az alábbi címmel lett aláírva (pl. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="295"/>
         <location filename="../forms/ui_signverifymessagedialog.h" line="326"/>
         <source>Verify the message to ensure it was signed with the specified Darkcoin address</source>
-        <translation>Üzenet hitelesítése annak érdekében, hogy meggyőződjünk arról, hogy a megadott Darkcoin címmel lett aláírva</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="298"/>
