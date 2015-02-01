@@ -1,6 +1,6 @@
 @ECHO ON
 SET OLDPATH=%PATH%
-cd C:\MyProjects\Deps\openssl-1.0.1j
+cd C:\MyProjects\Deps\openssl-1.0.2
 if %errorlevel% NEQ 0 goto ERRORCLEANUP
 REM first change the debug compiler options
 perl -pi.bak -e "s#/Zi#/Z7#g;" util/pl/VC-32.pl

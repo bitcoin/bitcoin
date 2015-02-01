@@ -23,7 +23,7 @@ http://sourceforge.net/projects/nasm/files/latest/download
 Скопируйте папку build-helpers(находится в архиве с исходниками в папке MSVC) и вставьте в папку C:\MyProjects\Deps
 
 2.1 OpenSSL 
--Скачайте http://www.openssl.org/source/openssl-1.0.1j.tar.gz
+-Скачайте http://www.openssl.org/source/openssl-1.0.2.tar.gz
 -Распакуйте архив в папку C:\MyProjects\Deps
 -Откройте командную строку Windows и выполните следующий код:
 
@@ -49,8 +49,8 @@ C:\MyProjects\Deps\db-6.0.20\build_windows\x64\Static Release\libdb60s.lib
 C:\MyProjects\Deps\db-6.0.20\build_windows\x64\Static Debug\libdb60sd.lib
 
 2.3 Boost
--Скачайте http://sourceforge.net/projects/boost/files/boost/1.55.0/boost_1_55_0.7z/download
--Распакуйте boost_1_55_0.7z в папку C:\MyProjects\Deps
+-Скачайте http://sourceforge.net/projects/boost/files/boost/1.57.0/boost_1_57_0.7z/download
+-Распакуйте boost_1_57_0.7z в папку C:\MyProjects\Deps
 -Откройте командную строку Windows и выполните следующий код:
 
 cd C:\MyProjects\Deps\build-helpers
