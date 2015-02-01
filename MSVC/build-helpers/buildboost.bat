@@ -1,5 +1,5 @@
 @ECHO ON
-cd C:\MyProjects\Deps\boost_1_55_0
+cd C:\MyProjects\Deps\boost_1_57_0
 if %errorlevel% NEQ 0 goto ERRORCLEANUP
 md stage\lib\x64
 call "C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\vcvarsall.bat" x86_amd64
