@@ -1179,16 +1179,18 @@ int CMerkleTx::IsTransactionLocked() const
     return 0;
 }
 
-int CMerkleTx::GetDepthInMainChain(CBlockIndex* &pindexRet) const
+int CMerkleTx::GetDepthInMainChain(CBlockIndex* &pindexRet, bool enableIX) const
 {
     AssertLockHeld(cs_main);
     int nResult = GetDepthInMainChainINTERNAL(pindexRet);
     if (nResult == 0 && !mempool.exists(GetHash()))
         return -1; // Not in chain, not in mempool
 
-    if (nResult < 6){
-        int minConfirms = IsTransactionLocked();
-        return minConfirms+nResult;
+    if(enableIX){
+        if (nResult < 6){
+            int minConfirms = IsTransactionLocked();
+            return minConfirms+nResult;
+        }
     }
 
     return nResult;

@@ -480,8 +480,8 @@ public:
     // -1  : not in blockchain, and not in memory pool (conflicted transaction)
     //  0  : in memory pool, waiting to be included in a block
     // >=1 : this many blocks deep in the main chain
-    int GetDepthInMainChain(CBlockIndex* &pindexRet) const;
-    int GetDepthInMainChain() const { CBlockIndex *pindexRet; return GetDepthInMainChain(pindexRet); }
+    int GetDepthInMainChain(CBlockIndex* &pindexRet, bool enableIX=true) const;
+    int GetDepthInMainChain(bool enableIX=true) const { CBlockIndex *pindexRet; return GetDepthInMainChain(pindexRet, enableIX); }
     bool IsInMainChain() const { CBlockIndex *pindexRet; return GetDepthInMainChainINTERNAL(pindexRet) > 0; }
     int GetBlocksToMaturity() const;
     bool AcceptToMemoryPool(bool fLimitFree=true);
