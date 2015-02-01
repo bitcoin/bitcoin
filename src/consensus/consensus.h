@@ -12,6 +12,7 @@
 #include <stdint.h>
 
 class CBlockHeader;
+class CCoinsViewCache;
 class CTransaction;
 class CValidationState;
 
@@ -40,6 +41,13 @@ bool CheckTx(const CTransaction&, CValidationState&);
  * Preconditions: tx.IsCoinBase() is false.
  */
 bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs, int nSpendHeight);
+/**
+ * Preconditions: tx.IsCoinBase() is false.
+ * Check whether all inputs of this transaction are valid (scripts and sigs)
+ * This does not modify the UTXO set. This does not check double spends and amounts.
+ * This is the more expensive consensus check for a transaction, do it last.
+ */
+bool CheckTxInputsScripts(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs, bool cacheStore, unsigned int flags);
 
 /** Block header validation functions */
 
@@ -61,7 +69,5 @@ bool CheckProofOfWork(uint256 hash, unsigned int nBits, const Consensus::Params&
  * in the last Consensus::Params::nMajorityWindow blocks, starting at pstart and going backwards.
  */
 bool IsSuperMajority(int minVersion, const CBlockIndexBase* pstart, unsigned nRequired, const Consensus::Params& consensusParams, PrevIndexGetter);
-
-} // namespace Consensus
 
 #endif // BITCOIN_CONSENSUS_CONSENSUS_H
