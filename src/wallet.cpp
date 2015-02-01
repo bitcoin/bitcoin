@@ -1229,7 +1229,7 @@ int64_t CWallet::GetImmatureBalance() const
 }
 
 // populate vCoins with vector of spendable COutputs
-void CWallet::AvailableCoins(vector<COutput>& vCoins, bool fOnlyConfirmed, const CCoinControl *coinControl, AvailableCoinsType coin_type) const
+void CWallet::AvailableCoins(vector<COutput>& vCoins, bool fOnlyConfirmed, const CCoinControl *coinControl, AvailableCoinsType coin_type, int minimum_confirmations) const
 {
     vCoins.clear();
 
@@ -1250,7 +1250,7 @@ void CWallet::AvailableCoins(vector<COutput>& vCoins, bool fOnlyConfirmed, const
                 continue;
 
             int nDepth = pcoin->GetDepthInMainChain();
-            if (nDepth < 0)
+            if (nDepth < minimum_confirmations)
                 continue;
 
             for (unsigned int i = 0; i < pcoin->vout.size(); i++) {
@@ -1466,10 +1466,10 @@ bool CWallet::SelectCoinsMinConf(int64_t nTargetValue, int nConfMine, int nConfT
     return true;
 }
 
-bool CWallet::SelectCoins(int64_t nTargetValue, set<pair<const CWalletTx*,unsigned int> >& setCoinsRet, int64_t& nValueRet, const CCoinControl* coinControl, AvailableCoinsType coin_type) const
+bool CWallet::SelectCoins(int64_t nTargetValue, set<pair<const CWalletTx*,unsigned int> >& setCoinsRet, int64_t& nValueRet, const CCoinControl* coinControl, AvailableCoinsType coin_type, int minimum_confirmations) const
 {
     vector<COutput> vCoins;
-    AvailableCoins(vCoins, true, coinControl);
+    AvailableCoins(vCoins, true, coinControl, ALL_COINS, minimum_confirmations);
 
     //if we're doing only denominated, we need to round up to the nearest .1DRK
     if(coin_type == ONLY_DENOMINATED){
@@ -1799,7 +1799,7 @@ bool CWallet::ConvertList(std::vector<CTxIn> vCoins, std::vector<int64_t>& vecAm
 }
 
 bool CWallet::CreateTransaction(const vector<pair<CScript, int64_t> >& vecSend,
-                                CWalletTx& wtxNew, CReserveKey& reservekey, int64_t& nFeeRet, std::string& strFailReason, const CCoinControl* coinControl, AvailableCoinsType coin_type)
+                                CWalletTx& wtxNew, CReserveKey& reservekey, int64_t& nFeeRet, std::string& strFailReason, const CCoinControl* coinControl, AvailableCoinsType coin_type, bool useIX)
 {
     int64_t nValue = 0;
     BOOST_FOREACH (const PAIRTYPE(CScript, int64_t)& s, vecSend)
@@ -1846,7 +1846,9 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, int64_t> >& vecSend,
                 // Choose coins to use
                 set<pair<const CWalletTx*,unsigned int> > setCoins;
                 int64_t nValueIn = 0;
-                if (!SelectCoins(nTotalValue, setCoins, nValueIn, coinControl, coin_type))
+                int minconfirmations = 0;
+                if (useIX) minconfirmations = 5;
+                if (!SelectCoins(nTotalValue, setCoins, nValueIn, coinControl, coin_type, minconfirmations))
                 {
                     if(coin_type == ALL_COINS)
                         strFailReason = _("Insufficient funds");
