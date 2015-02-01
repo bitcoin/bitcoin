@@ -3242,12 +3242,12 @@ Address: %4
         <location filename="../signverifymessagedialog.cpp" line="213"/>
         <location filename="../signverifymessagedialog.cpp" line="226"/>
         <source>Please check the signature and try again.</source>
-        <translation type="unfinished"/>
+        <translation>Hãy kiểm tra chữ ký và thử lại.</translation>
     </message>
     <message>
         <location filename="../signverifymessagedialog.cpp" line="226"/>
         <source>The signature did not match the message digest.</source>
-        <translation type="unfinished"/>
+        <translation>Chữ ký không tương xứng với nội dung thông điệp.</translation>
     </message>
     <message>
         <location filename="../signverifymessagedialog.cpp" line="233"/>
@@ -3270,7 +3270,7 @@ Address: %4
     <message>
         <location filename="../splashscreen.cpp" line="35"/>
         <source>The Bitcoin Core developers</source>
-        <translation type="unfinished"/>
+        <translation>Nhóm phát triển Bitcoin Core</translation>
     </message>
     <message>
         <location filename="../splashscreen.cpp" line="36"/>
@@ -3288,7 +3288,7 @@ Address: %4
     <message>
         <location filename="../trafficgraphwidget.cpp" line="79"/>
         <source>KB/s</source>
-        <translation type="unfinished"/>
+        <translation>KB/s</translation>
     </message>
 </context>
 <context>
@@ -3306,7 +3306,7 @@ Address: %4
     <message>
         <location filename="../transactiondesc.cpp" line="36"/>
         <source>conflicted</source>
-        <translation type="unfinished"/>
+        <translation>xung đột</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="38"/>
@@ -3326,7 +3326,7 @@ Address: %4
     <message>
         <location filename="../transactiondesc.cpp" line="59"/>
         <source>Status</source>
-        <translation type="unfinished"/>
+        <translation>Trạng thái</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="64"/>
@@ -3346,7 +3346,7 @@ Address: %4
     <message>
         <location filename="../transactiondesc.cpp" line="77"/>
         <source>Source</source>
-        <translation type="unfinished"/>
+        <translation>Nguồn</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="77"/>
@@ -3357,30 +3357,30 @@ Address: %4
         <location filename="../transactiondesc.cpp" line="82"/>
         <location filename="../transactiondesc.cpp" line="99"/>
         <source>From</source>
-        <translation type="unfinished"/>
+        <translation>Từ</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="99"/>
         <source>unknown</source>
-        <translation type="unfinished"/>
+        <translation>không biết</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="100"/>
         <location filename="../transactiondesc.cpp" line="122"/>
         <location filename="../transactiondesc.cpp" line="180"/>
         <source>To</source>
-        <translation type="unfinished"/>
+        <translation>Đến</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="103"/>
         <location filename="../transactiondesc.cpp" line="105"/>
         <source>own address</source>
-        <translation type="unfinished"/>
+        <translation>địa chỉ của mình</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="103"/>
         <source>label</source>
-        <translation type="unfinished"/>
+        <translation>nhãn</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="140"/>
@@ -3389,7 +3389,7 @@ Address: %4
         <location filename="../transactiondesc.cpp" line="214"/>
         <location filename="../transactiondesc.cpp" line="267"/>
         <source>Credit</source>
-        <translation type="unfinished"/>
+        <translation>Có</translation>
     </message>
     <message numerus="yes">
         <location filename="../transactiondesc.cpp" line="142"/>
@@ -3399,7 +3399,7 @@ Address: %4
     <message>
         <location filename="../transactiondesc.cpp" line="144"/>
         <source>not accepted</source>
-        <translation type="unfinished"/>
+        <translation>không chấp nhận</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="188"/>
@@ -3407,12 +3407,12 @@ Address: %4
         <location filename="../transactiondesc.cpp" line="211"/>
         <location filename="../transactiondesc.cpp" line="264"/>
         <source>Debit</source>
-        <translation type="unfinished"/>
+        <translation>Nợ</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="202"/>
         <source>Transaction fee</source>
-        <translation type="unfinished"/>
+        <translation>Phí giao dịch</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="218"/>
@@ -3423,22 +3423,22 @@ Address: %4
         <location filename="../transactiondesc.cpp" line="224"/>
         <location filename="../transactiondesc.cpp" line="233"/>
         <source>Message</source>
-        <translation type="unfinished"/>
+        <translation>Thông điệp</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="226"/>
         <source>Comment</source>
-        <translation type="unfinished"/>
+        <translation>Bình luận</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="228"/>
         <source>Transaction ID</source>
-        <translation type="unfinished"/>
+        <translation>Mã giao dịch</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="246"/>
         <source>Merchant</source>
-        <translation type="unfinished"/>
+        <translation>Người bán</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="253"/>
@@ -3453,12 +3453,12 @@ Address: %4
     <message>
         <location filename="../transactiondesc.cpp" line="269"/>
         <source>Transaction</source>
-        <translation type="unfinished"/>
+        <translation>Giao dịch</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="272"/>
         <source>Inputs</source>
-        <translation type="unfinished"/>
+        <translation>Đầu vào</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="293"/>
@@ -3468,12 +3468,12 @@ Address: %4
     <message>
         <location filename="../transactiondesc.cpp" line="294"/>
         <source>true</source>
-        <translation type="unfinished"/>
+        <translation>đúng</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="294"/>
         <source>false</source>
-        <translation type="unfinished"/>
+        <translation>sai</translation>
     </message>
 </context>
 <context>
@@ -3501,7 +3501,7 @@ Address: %4
     <message>
         <location filename="../transactiontablemodel.cpp" line="238"/>
         <source>Type</source>
-        <translation type="unfinished"/>
+        <translation>Kiểu</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="238"/>
@@ -3531,7 +3531,7 @@ Address: %4
     <message>
         <location filename="../transactiontablemodel.cpp" line="296"/>
         <source>Unconfirmed</source>
-        <translation type="unfinished"/>
+        <translation>Chưa xác thực</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="299"/>
@@ -3541,12 +3541,12 @@ Address: %4
     <message>
         <location filename="../transactiontablemodel.cpp" line="302"/>
         <source>Confirmed (%1 confirmations)</source>
-        <translation type="unfinished"/>
+        <translation>Được xác nhận (%1 xác nhận)</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="305"/>
         <source>Conflicted</source>
-        <translation type="unfinished"/>
+        <translation>Xung đột</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="308"/>
