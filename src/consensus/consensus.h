@@ -50,6 +50,13 @@ bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& sta
  * This does not modify the UTXO set. This does not check scripts and sigs.
  */
 bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoinsViewEfficient& inputs, int nSpendHeight);
+/**
+ * Preconditions: tx.IsCoinBase() is false.
+ * Check whether all inputs of this transaction are valid (scripts and sigs)
+ * This does not modify the UTXO set. This does not check double spends and amounts.
+ * This is the more expensive consensus check for a transaction, do it last.
+ */
+bool CheckTxInputsScripts(const CTransaction& tx, CValidationState& state, const CCoinsViewEfficient& inputs, bool cacheStore, unsigned int flags);
 
 /** Utility functions */
 /**
