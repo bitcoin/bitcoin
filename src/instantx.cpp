@@ -22,6 +22,7 @@ std::map<uint256, CTransaction> mapTxLockReq;
 std::map<uint256, CTransaction> mapTxLockReqRejected;
 std::map<uint256, int> mapTxLockVote;
 std::map<uint256, CTransactionLock> mapTxLocks;
+int nCompleteTXLocks;
 
 //txlock - Locks transaction
 //
@@ -175,12 +176,16 @@ void ProcessConsensusVote(CConsensusVote& ctx)
         return;
     }
 
-    std::map<uint256, CTransactionLock>::iterator a = mapTxLocks.find(ctx.tx.GetHash());
-    if (a == mapTxLocks.end()){
+    if (!mapTxLocks.count(ctx.tx.GetHash())){
+        LogPrintf("InstantX::ProcessConsensusVote - New Transaction Lock %s !\n", ctx.tx.GetHash().ToString().c_str());
+
         CTransactionLock newLock;
         newLock.nBlockHeight = ctx.nBlockHeight;
+        newLock.nExpiration = GetTime()+(60*60);
         newLock.tx = ctx.tx;
         mapTxLocks.insert(make_pair(ctx.tx.GetHash(), newLock));
+    } else {
+        LogPrintf("InstantX::ProcessConsensusVote - Transaction Lock Exists %s !\n", ctx.tx.GetHash().ToString().c_str());
     }
 
     //compile consessus vote
@@ -189,6 +194,8 @@ void ProcessConsensusVote(CConsensusVote& ctx)
         (*i).second.AddSignature(ctx);
         if((*i).second.CountSignatures() >= INSTANTX_SIGNATURES_REQUIRED){
             LogPrintf("InstantX::ProcessConsensusVote - Transaction Lock Is Complete %s !\n", (*i).second.GetHash().ToString().c_str());
+            pwalletMain->UpdatedTransaction((*i).second.tx.GetHash());
+            nCompleteTXLocks++;
         }
         return;
     }
@@ -204,7 +211,7 @@ void CleanTransactionLocksList()
     std::map<uint256, CTransactionLock>::iterator it = mapTxLocks.begin();
 
     while(it != mapTxLocks.end()) {
-        if(chainActive.Tip()->nHeight - it->second.nBlockHeight > 3){ //keep them for an hour
+        if(GetTime() > it->second.nExpiration){ //keep them for an hour
             LogPrintf("Removing old transaction lock %s\n", it->second.GetHash().ToString().c_str());
             mapTxLocks.erase(it++);
         } else {
@@ -217,12 +224,14 @@ void CleanTransactionLocksList()
 uint256 CConsensusVote::GetHash() const
 {
 
-    std::string str = tx.GetHash().ToString().c_str();
-    str += vinMasternode.ToString().c_str();
-    str += boost::lexical_cast<std::string>(nBlockHeight);
-    str += boost::lexical_cast<std::string>(approved);
+    std::string strHash = tx.GetHash().ToString().c_str();
+    strHash += vinMasternode.ToString().c_str();
+    strHash += boost::lexical_cast<std::string>(nBlockHeight);
+    strHash += boost::lexical_cast<std::string>(approved);
 
-    return Hash(BEGIN(str), END(str));
+    printf("%s\n", strHash.c_str());
+
+    return Hash(BEGIN(strHash), END(strHash));
 }
 
 
