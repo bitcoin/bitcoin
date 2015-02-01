@@ -11,7 +11,7 @@
         <location filename="../forms/aboutdialog.ui" line="53"/>
         <location filename="../forms/ui_aboutdialog.h" line="132"/>
         <source>&lt;b&gt;Darkcoin Core&lt;/b&gt; version</source>
-        <translation>Versión del Darkcoin Core</translation>
+        <translation>Versión del &lt;b&gt;Darkcoin Core&lt;/b&gt;</translation>
     </message>
     <message>
         <location filename="../forms/aboutdialog.ui" line="111"/>
@@ -73,7 +73,7 @@ Eric Young (eay@cryptsoft.com) y el software UPnP escrito por Thomas Bernard.</t
         <location filename="../forms/addressbookpage.ui" line="60"/>
         <location filename="../forms/ui_addressbookpage.h" line="131"/>
         <source>&amp;New</source>
-        <translation>Nuevo</translation>
+        <translation>&amp;Nuevo</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="71"/>
@@ -130,7 +130,7 @@ Eric Young (eay@cryptsoft.com) y el software UPnP escrito por Thomas Bernard.</t
     <message>
         <location filename="../addressbookpage.cpp" line="51"/>
         <source>C&amp;hoose</source>
-        <translation>&amp;Escoger</translation>
+        <translation>E&amp;scoger</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="57"/>
@@ -155,12 +155,12 @@ Eric Young (eay@cryptsoft.com) y el software UPnP escrito por Thomas Bernard.</t
     <message>
         <location filename="../addressbookpage.cpp" line="75"/>
         <source>&amp;Copy Address</source>
-        <translation>&amp;Copiar dirección</translation>
+        <translation>&amp;Copiar Dirección</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="76"/>
         <source>Copy &amp;Label</source>
-        <translation>Copiar &amp;etiqueta</translation>
+        <translation>Copiar E&amp;tiqueta</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="77"/>
@@ -236,7 +236,7 @@ Eric Young (eay@cryptsoft.com) y el software UPnP escrito por Thomas Bernard.</t
         <location filename="../forms/askpassphrasedialog.ui" line="108"/>
         <location filename="../forms/ui_askpassphrasedialog.h" line="141"/>
         <source>Serves to disable the trivial sendmoney when OS account compromised. Provides no real security.</source>
-        <translation>Sirve  para deshabilitar sendmoney trivial cuando una cuenta del SO se ve comprometida . No ofrece seguridad real.</translation>
+        <translation>Sirve  para desactivar sendmoney trivial cuando una cuenta del SO se ve comprometida . No ofrece seguridad real.</translation>
     </message>
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="111"/>
@@ -292,7 +292,7 @@ Eric Young (eay@cryptsoft.com) y el software UPnP escrito por Thomas Bernard.</t
     <message>
         <location filename="../askpassphrasedialog.cpp" line="113"/>
         <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR DARKCOINS&lt;/b&gt;!</source>
-        <translation>Atención: Si encriptas tu cartera y pierdes tu contraseña, PERDERÁS TODOS TUS DARKCOINS</translation>
+        <translation>Atención: Si encriptas tu cartera y pierdes tu contraseña, &lt;b&gt;PERDERÁS TODOS TUS DARKCOINS&lt;/b&gt;</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="113"/>
@@ -834,7 +834,7 @@ Dirección: %4
         <location filename="../forms/coincontroldialog.ui" line="196"/>
         <location filename="../forms/ui_coincontroldialog.h" line="324"/>
         <source>Fee:</source>
-        <translation>Tasa:</translation>
+        <translation>Comisión:</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="228"/>
@@ -846,7 +846,7 @@ Dirección: %4
         <location filename="../forms/coincontroldialog.ui" line="276"/>
         <location filename="../forms/ui_coincontroldialog.h" line="326"/>
         <source>After Fee:</source>
-        <translation>Después de tasas:</translation>
+        <translation>Después de comisiones:</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="308"/>
@@ -983,47 +983,47 @@ Dirección: %4
     <message>
         <location filename="../coincontroldialog.cpp" line="410"/>
         <source>highest</source>
-        <translation>lo más alto</translation>
+        <translation>la más alta</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="411"/>
         <source>higher</source>
-        <translation>más alto</translation>
+        <translation>más alta</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="412"/>
         <source>high</source>
-        <translation>alto</translation>
+        <translation>alta</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="413"/>
         <source>medium-high</source>
-        <translation>medio-alto</translation>
+        <translation>media-alta</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="414"/>
         <source>medium</source>
-        <translation>medio</translation>
+        <translation>media</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="418"/>
         <source>low-medium</source>
-        <translation>bajo-medio</translation>
+        <translation>baja-media</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="419"/>
         <source>low</source>
-        <translation>bajo</translation>
+        <translation>baja</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="420"/>
         <source>lower</source>
-        <translation>más bajo</translation>
+        <translation>más baja</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="421"/>
         <source>lowest</source>
-        <translation>lo más bajo</translation>
+        <translation>la más baja</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="432"/>
@@ -1150,19 +1150,19 @@ Dirección: %4
         <location filename="../forms/darksendconfig.ui" line="78"/>
         <location filename="../forms/ui_darksendconfig.h" line="101"/>
         <source>Use 2 separate masternodes to mix funds up to 1000DRK</source>
-        <translation>Usar 2 nodos maestros distintos para mexclar fondos hasta 1000DRK</translation>
+        <translation>Usar 2 masternodes distintos para mexclar fondos hasta 1000DRK</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="91"/>
         <location filename="../forms/ui_darksendconfig.h" line="102"/>
         <source>Use 4 separate masternodes to mix funds up to 1000DRK</source>
-        <translation>Usar 4 nodos maestros distintos para mezclar fondos hasta 1000DRK</translation>
+        <translation>Usar 4 masternodes distintos para mezclar fondos hasta 1000DRK</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="104"/>
         <location filename="../forms/ui_darksendconfig.h" line="103"/>
         <source>Use 8 separate masternodes</source>
-        <translation>Usar 8 nodos maestros distintos</translation>
+        <translation>Usar 8 masternodes distintos</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="117"/>
@@ -1223,7 +1223,7 @@ Dirección: %4
         <location filename="../forms/editaddressdialog.ui" line="25"/>
         <location filename="../forms/ui_editaddressdialog.h" line="92"/>
         <source>&amp;Label</source>
-        <translation>&amp;Etiqueta</translation>
+        <translation>E&amp;tiqueta</translation>
     </message>
     <message>
         <location filename="../forms/editaddressdialog.ui" line="35"/>
@@ -2137,7 +2137,7 @@ Dirección: %4
     <message>
         <location filename="../guiutil.cpp" line="101"/>
         <source>Enter a Darkcoin address (e.g. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</source>
-        <translation>Introduzca una dirección Darkcoin (e.g. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
+        <translation>Introduzca una dirección Darkcoin (p.ej. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
     </message>
 </context>
 <context>
@@ -2145,12 +2145,12 @@ Dirección: %4
     <message>
         <location filename="../receiverequestdialog.cpp" line="36"/>
         <source>&amp;Save Image...</source>
-        <translation>Guardar Imagen...</translation>
+        <translation>&amp;Guardar Imagen...</translation>
     </message>
     <message>
         <location filename="../receiverequestdialog.cpp" line="39"/>
         <source>&amp;Copy Image</source>
-        <translation>Copiar imagen</translation>
+        <translation>&amp;Copiar imagen</translation>
     </message>
     <message>
         <location filename="../receiverequestdialog.cpp" line="71"/>
@@ -2418,7 +2418,7 @@ Dirección: %4
         <location filename="../forms/receivecoinsdialog.ui" line="54"/>
         <location filename="../forms/ui_receivecoinsdialog.h" line="262"/>
         <source>&amp;Message:</source>
-        <translation>Mensaje:</translation>
+        <translation>&amp;Mensaje:</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="67"/>
@@ -2542,7 +2542,7 @@ Dirección: %4
         <location filename="../forms/receiverequestdialog.ui" line="89"/>
         <location filename="../forms/ui_receiverequestdialog.h" line="121"/>
         <source>&amp;Save Image...</source>
-        <translation>Guardar Imagen...</translation>
+        <translation>&amp;Guardar Imagen...</translation>
     </message>
     <message>
         <location filename="../receiverequestdialog.cpp" line="136"/>
@@ -2655,13 +2655,13 @@ Dirección: %4
         <location filename="../forms/sendcoinsdialog.ui" line="117"/>
         <location filename="../forms/ui_sendcoinsdialog.h" line="518"/>
         <source>automatically selected</source>
-        <translation>Seleccionado automáticamente</translation>
+        <translation>seleccionado automáticamente</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="136"/>
         <location filename="../forms/ui_sendcoinsdialog.h" line="519"/>
         <source>Insufficient funds!</source>
-        <translation>Fondos insuficientes!</translation>
+        <translation>¡Fondos insuficientes!</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="225"/>
@@ -2691,7 +2691,7 @@ Dirección: %4
         <location filename="../forms/sendcoinsdialog.ui" line="388"/>
         <location filename="../forms/ui_sendcoinsdialog.h" line="524"/>
         <source>Fee:</source>
-        <translation>Tasa:</translation>
+        <translation>Comisión:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="420"/>
@@ -2703,7 +2703,7 @@ Dirección: %4
         <location filename="../forms/sendcoinsdialog.ui" line="468"/>
         <location filename="../forms/ui_sendcoinsdialog.h" line="526"/>
         <source>After Fee:</source>
-        <translation>Después de tasas:</translation>
+        <translation>Después de comisión:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="500"/>
@@ -2790,7 +2790,7 @@ Dirección: %4
     <message>
         <location filename="../sendcoinsdialog.cpp" line="54"/>
         <source>Copy fee</source>
-        <translation>Copiar donación</translation>
+        <translation>Copiar comisión</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="55"/>
@@ -2853,7 +2853,7 @@ Dirección: %4
     <message>
         <location filename="../sendcoinsdialog.cpp" line="278"/>
         <source>Confirm send coins</source>
-        <translation>Confirmar el envío de bitcoins</translation>
+        <translation>Confirmar el envío de darkcoins</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="433"/>
@@ -2898,7 +2898,7 @@ Dirección: %4
     <message>
         <location filename="../sendcoinsdialog.cpp" line="507"/>
         <source>The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
-        <translation>¡La transacción fue rechazada! Esto puede haber ocurrido si alguno de los bitcoins de su monedero ya estaba gastado o si ha usado una copia de wallet.dat y los bitcoins estaban gastados en la copia pero no se habían marcado como gastados aqui.</translation>
+        <translation>¡La transacción fue rechazada! Esto puede haber ocurrido si alguno de los darkcoins de su monedero ya estaba gastado o si ha usado una copia de wallet.dat y los bitcoins estaban gastados en la copia pero no se habían marcado como gastados aqui.</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="512"/>
@@ -2908,12 +2908,12 @@ Dirección: %4
     <message>
         <location filename="../sendcoinsdialog.cpp" line="625"/>
         <source>Warning: Invalid Darkcoin address</source>
-        <translation>Alerta: Dirección de Darkcoin inválida</translation>
+        <translation>Alerta: Dirección de Darkcoin no válida</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="634"/>
         <source>Warning: Unknown change address</source>
-        <translation>Alerta: Dirección de Bitcoin inválida</translation>
+        <translation>Alerta: Dirección de cambio desconocida</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="645"/>
@@ -3440,7 +3440,7 @@ Dirección: %4
     <message>
         <location filename="../transactiondesc.cpp" line="228"/>
         <source>Transaction ID</source>
-        <translation>Identificador de transacción</translation>
+        <translation>ID de transacción</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="246"/>
@@ -3450,7 +3450,7 @@ Dirección: %4
     <message>
         <location filename="../transactiondesc.cpp" line="253"/>
         <source>Generated coins must mature %1 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to &quot;not accepted&quot; and it won&apos;t be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.</source>
-        <translation>Los bitcoins generados deben madurar %1 bloques antes de que puedan gastarse. Cuando generó este bloque, se transmitió a la red para que se añadiera a la cadena de bloques. Si no consigue entrar en la cadena, su estado cambiará a &quot;no aceptado&quot; y ya no se podrá gastar. Esto puede ocurrir ocasionalmente si otro nodo genera un bloque a pocos segundos del suyo.</translation>
+        <translation>Los darkcoins generados deben madurar %1 bloques antes de que puedan gastarse. Cuando generó este bloque, se transmitió a la red para que se añadiera a la cadena de bloques. Si no consigue entrar en la cadena, su estado cambiará a &quot;no aceptado&quot; y ya no se podrá gastar. Esto puede ocurrir ocasionalmente si otro nodo genera un bloque a pocos segundos del suyo.</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="261"/>
@@ -3465,7 +3465,7 @@ Dirección: %4
     <message>
         <location filename="../transactiondesc.cpp" line="272"/>
         <source>Inputs</source>
-        <translation>entradas</translation>
+        <translation>Entradas</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="293"/>
@@ -3915,23 +3915,14 @@ It is also recommended to set alertnotify so you are notified of problems;
 for example: alertnotify=echo %%s | mail -s &quot;Darkcoin Alert&quot; admin@foo.com
 </source>
         <translation>%s, debe establecer un valor rpcpassword en el archivo de configuración:
-
 %s
-
 Se recomienda utilizar la siguiente contraseña aleatoria:
-
 rpcuser=darkcoinrpc
-
 rpcpassword=%s
-
 (no es necesario recordar esta contraseña)
-
 El nombre de usuario y la contraseña NO DEBEN ser iguales.
-
 Si el archivo no existe, créelo con permisos de archivo de solo lectura.
-
 Se recomienda también establecer alertnotify para recibir notificaciones de problemas;
-
 Por ejemplo: alertnotify=echo %%s | mail -s &quot;Darkcoin Alert&quot; admin@foo.com 
 </translation>
     </message>
@@ -3978,7 +3969,7 @@ Por ejemplo: alertnotify=echo %%s | mail -s &quot;Darkcoin Alert&quot; admin@foo
     <message>
         <location filename="../bitcoinstrings.cpp" line="59"/>
         <source>Error: The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
-        <translation>¡Error: se ha rechazado la transacción! Esto puede ocurrir si ya se han gastado algunos de los bitcoins del monedero, como ocurriría si hubiera hecho una copia de wallet.dat y se hubieran gastado bitcoins a partir de la copia, con lo que no se habrían marcado aquí como gastados.</translation>
+        <translation>¡Error: se ha rechazado la transacción! Esto puede ocurrir si ya se han gastado algunos de los darkcoins del monedero, como ocurriría si hubiera hecho una copia de wallet.dat y se hubieran gastado darkcoins a partir de la copia, con lo que no se habrían marcado aquí como gastados.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="63"/>
@@ -4100,8 +4091,8 @@ Por ejemplo: alertnotify=echo %%s | mail -s &quot;Darkcoin Alert&quot; admin@foo
         <source>You must set rpcpassword=&lt;password&gt; in the configuration file:
 %s
 If the file does not exist, create it with owner-readable-only file permissions.</source>
-        <translation>Tiene que establecer rpcpassword=&lt;contraseña&gt; en el fichero de configuración: ⏎
-%s ⏎
+        <translation>Tiene que establecer rpcpassword=&lt;password&gt; en el fichero de configuración:
+%s
 Si el archivo no existe, créelo con permiso de lectura solamente del propietario.</translation>
     </message>
     <message>
@@ -4504,8 +4495,7 @@ Si el archivo no existe, créelo con permiso de lectura solamente del propietari
     <message>
         <location filename="../bitcoinstrings.cpp" line="219"/>
         <source>Get help for a command</source>
-        <translation>Recibir ayuda para un comando
-</translation>
+        <translation>Recibir ayuda para un comando</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="220"/>
@@ -4701,14 +4691,12 @@ Si el archivo no existe, créelo con permiso de lectura solamente del propietari
     <message>
         <location filename="../bitcoinstrings.cpp" line="258"/>
         <source>Options:</source>
-        <translation>Opciones:
-</translation>
+        <translation>Opciones:</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="259"/>
         <source>Password for JSON-RPC connections</source>
-        <translation>Contraseña para las conexiones JSON-RPC
-</translation>
+        <translation>Contraseña para las conexiones JSON-RPC</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="260"/>
@@ -4743,7 +4731,7 @@ Si el archivo no existe, créelo con permiso de lectura solamente del propietari
     <message>
         <location filename="../bitcoinstrings.cpp" line="267"/>
         <source>Randomly fuzz 1 of every &lt;n&gt; network messages</source>
-        <translation>Introducir datos fuzz en 1 de cada &lt;n&gt; mensajes de red al azar</translation>
+        <translation>Fuzzear 1 de cada &lt;n&gt; mensajes de red al azar</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="268"/>
@@ -4768,8 +4756,7 @@ Si el archivo no existe, créelo con permiso de lectura solamente del propietari
     <message>
         <location filename="../bitcoinstrings.cpp" line="272"/>
         <source>Run in the background as a daemon and accept commands</source>
-        <translation>Ejecutar en segundo plano como daemon y aceptar comandos
-</translation>
+        <translation>Ejecutar en segundo plano como daemon y aceptar comandos</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="274"/>
@@ -4784,8 +4771,7 @@ Si el archivo no existe, créelo con permiso de lectura solamente del propietari
     <message>
         <location filename="../bitcoinstrings.cpp" line="276"/>
         <source>Send commands to node running on &lt;ip&gt; (default: 127.0.0.1)</source>
-        <translation>Enviar comando al nodo situado en &lt;ip&gt; (predeterminado: 127.0.0.1)
-</translation>
+        <translation>Enviar comando al nodo situado en &lt;ip&gt; (predeterminado: 127.0.0.1)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="277"/>
@@ -4795,14 +4781,12 @@ Si el archivo no existe, créelo con permiso de lectura solamente del propietari
     <message>
         <location filename="../bitcoinstrings.cpp" line="278"/>
         <source>Server certificate file (default: server.cert)</source>
-        <translation>Certificado del servidor (predeterminado: server.cert)
-</translation>
+        <translation>Certificado del servidor (predeterminado: server.cert)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="279"/>
         <source>Server private key (default: server.pem)</source>
-        <translation>Clave privada del servidor (predeterminado: server.pem)
-</translation>
+        <translation>Clave privada del servidor (predeterminado: server.pem)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="280"/>
@@ -4812,8 +4796,7 @@ Si el archivo no existe, créelo con permiso de lectura solamente del propietari
     <message>
         <location filename="../bitcoinstrings.cpp" line="281"/>
         <source>Set key pool size to &lt;n&gt; (default: 100)</source>
-        <translation>Ajustar el número de claves en reserva &lt;n&gt; (predeterminado: 100)
-</translation>
+        <translation>Ajustar el número de claves en reserva &lt;n&gt; (predeterminado: 100)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="282"/>
@@ -4858,7 +4841,7 @@ Si el archivo no existe, créelo con permiso de lectura solamente del propietari
     <message>
         <location filename="../bitcoinstrings.cpp" line="290"/>
         <source>Signing transaction failed</source>
-        <translation>Transacción falló</translation>
+        <translation>Falló la firma de la transacción</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="291"/>
@@ -4913,13 +4896,12 @@ Si el archivo no existe, créelo con permiso de lectura solamente del propietari
     <message>
         <location filename="../bitcoinstrings.cpp" line="301"/>
         <source>This help message</source>
-        <translation>Este mensaje de ayuda
-</translation>
+        <translation>Este mensaje de ayuda</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="302"/>
         <source>This is intended for regression testing tools and app development.</source>
-        <translation>Esto afecta a las herramientas de prueba de regresión y al desarrollo informático de la aplicación.</translation>
+        <translation>Esto está enfocado a las herramientas de prueba de regresión y desarrollo de aplicaciones</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="303"/>
@@ -4934,7 +4916,7 @@ Si el archivo no existe, créelo con permiso de lectura solamente del propietari
     <message>
         <location filename="../bitcoinstrings.cpp" line="305"/>
         <source>Transaction amount too small</source>
-        <translation>Cantidad de la transacción demasiado pequeña</translation>
+        <translation>Cuantía de la transacción demasiado pequeña</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="306"/>
@@ -4984,8 +4966,7 @@ Si el archivo no existe, créelo con permiso de lectura solamente del propietari
     <message>
         <location filename="../bitcoinstrings.cpp" line="318"/>
         <source>Use OpenSSL (https) for JSON-RPC connections</source>
-        <translation>Usar OpenSSL (https) para las conexiones JSON-RPC
-</translation>
+        <translation>Usar OpenSSL (https) para las conexiones JSON-RPC</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="319"/>
@@ -5000,14 +4981,12 @@ Si el archivo no existe, créelo con permiso de lectura solamente del propietari
     <message>
         <location filename="../bitcoinstrings.cpp" line="321"/>
         <source>Use the test network</source>
-        <translation>Usar la red de pruebas
-</translation>
+        <translation>Usar la red de pruebas</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="322"/>
         <source>Username for JSON-RPC connections</source>
-        <translation>Nombre de usuario para las conexiones JSON-RPC
-</translation>
+        <translation>Nombre de usuario para las conexiones JSON-RPC</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="323"/>

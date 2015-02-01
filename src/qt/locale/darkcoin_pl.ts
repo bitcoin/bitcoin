@@ -4923,12 +4923,12 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="313"/>
         <source>Upgrade wallet to latest format</source>
-        <translation type="unfinished"/>
+        <translation>Ulepsz plik wallet.dat do nowego formatu</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="314"/>
         <source>Usage (deprecated, use darkcoin-cli):</source>
-        <translation type="unfinished"/>
+        <translation>Użycie (niewłaściwy, użyj darkcoin-cli):</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="315"/>
@@ -4938,27 +4938,27 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="316"/>
         <source>Use KeePass 2 integration using KeePassHttp plugin (default: 0)</source>
-        <translation type="unfinished"/>
+        <translation>Użyj zintegrowany KeePass 2 używając wtyczkę KeePass Http (domyślny: 0)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="317"/>
         <source>Use N separate masternodes to anonymize funds  (2-8, default: 2)</source>
-        <translation type="unfinished"/>
+        <translation>Użyj N oddzielnych masternodów aby zanonimizować pieniądze (2-8, domyślny: 2)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="318"/>
         <source>Use OpenSSL (https) for JSON-RPC connections</source>
-        <translation type="unfinished"/>
+        <translation>Użyj OpenSSL (https) dal połączeń JSON-RPC</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="319"/>
         <source>Use UPnP to map the listening port (default: 0)</source>
-        <translation type="unfinished"/>
+        <translation>Użyj UPnP aby zmapować używany port (domyślny: 0)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="320"/>
         <source>Use UPnP to map the listening port (default: 1 when listening)</source>
-        <translation type="unfinished"/>
+        <translation>Użyj UPnP aby zmapować używany port (domyślny: 1 kiedy nasłuchuje)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="321"/>
@@ -4968,7 +4968,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="322"/>
         <source>Username for JSON-RPC connections</source>
-        <translation type="unfinished"/>
+        <translation>Nazwa użytkownika dla połączeń JSON-RPC </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="323"/>
@@ -4983,22 +4983,22 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="325"/>
         <source>Wait for RPC server to start</source>
-        <translation>Zaczekaj na start serwera RCP</translation>
+        <translation>Zaczekaj na start serwera RPC</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="326"/>
         <source>Wallet %s resides outside data directory %s</source>
-        <translation type="unfinished"/>
+        <translation>Plik wallet %s znajduje się poza katalogiem danych %s</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="327"/>
         <source>Wallet needed to be rewritten: restart Darkcoin to complete</source>
-        <translation type="unfinished"/>
+        <translation>Portfel musi zostać ponownie zapisany: uruchom Darkcoin ponownie aby dokończyć operacje</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="328"/>
         <source>Wallet options:</source>
-        <translation>Opcja portfela:</translation>
+        <translation>Opcje portfela:</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="329"/>
@@ -5008,27 +5008,27 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="330"/>
         <source>Warning: Deprecated argument -debugnet ignored, use -debug=net</source>
-        <translation type="unfinished"/>
+        <translation>Ostrzeżenie: Niewłaściwy argument -debugnet zignorowany, użyj -debug=net</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="331"/>
         <source>Warning: This version is obsolete, upgrade required!</source>
-        <translation type="unfinished"/>
+        <translation>Ostrzeżenie: Wersja nieaktualna, zalecana aktualizacja!</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="332"/>
         <source>You need to rebuild the database using -reindex to change -txindex</source>
-        <translation type="unfinished"/>
+        <translation>Musisz odnowić bazę danych używając -reindex aby zmienić -txindex</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="333"/>
         <source>Zapping all transactions from wallet...</source>
-        <translation type="unfinished"/>
+        <translation>Zappowanie wszystkich transakcji z portfela</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="334"/>
         <source>on startup</source>
-        <translation type="unfinished"/>
+        <translation>podczas uruchomienia</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="335"/>
@@ -5038,7 +5038,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="336"/>
         <source>wallet.dat corrupt, salvage failed</source>
-        <translation type="unfinished"/>
+        <translation>Plik wallet.dat zepsuty, odzyskanie nie powiodło się</translation>
     </message>
 </context>
 </TS>

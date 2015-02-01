@@ -341,7 +341,7 @@ Sản phẩm này bao gồm phần mềm được phát triển bởi dự án O
         <location filename="../askpassphrasedialog.cpp" line="169"/>
         <location filename="../askpassphrasedialog.cpp" line="188"/>
         <source>The passphrase entered for the wallet decryption was incorrect.</source>
-        <translation type="unfinished"/>
+        <translation>Mật khẩu bạn nhập để giải mã ví không chính xác.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="168"/>
@@ -716,12 +716,12 @@ Sản phẩm này bao gồm phần mềm được phát triển bởi dự án O
     <message>
         <location filename="../bitcoingui.cpp" line="735"/>
         <source>Last received block was generated %1 ago.</source>
-        <translation type="unfinished"/>
+        <translation>Khối vừa nhận đã được sinh ra từ %1.</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="737"/>
         <source>Transactions after this will not yet be visible.</source>
-        <translation type="unfinished"/>
+        <translation>Các giao dịch sau đây sẽ chưa thể thấy được.</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="750"/>
@@ -931,12 +931,12 @@ Address: %4
     <message>
         <location filename="../coincontroldialog.cpp" line="47"/>
         <source>Lock unspent</source>
-        <translation type="unfinished"/>
+        <translation>Khoá khoản chưa tiêu</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="48"/>
         <source>Unlock unspent</source>
-        <translation type="unfinished"/>
+        <translation>Mở khoản chưa tiêu</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="70"/>
@@ -1078,7 +1078,7 @@ Address: %4
         <location filename="../coincontroldialog.cpp" line="624"/>
         <location filename="../coincontroldialog.cpp" line="628"/>
         <source>This means a fee of at least %1 is required.</source>
-        <translation type="unfinished"/>
+        <translation>Có nghĩa là cần mức phí ít nhất 1%.</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="625"/>
@@ -1137,49 +1137,49 @@ Address: %4
         <location filename="../forms/darksendconfig.ui" line="65"/>
         <location filename="../forms/ui_darksendconfig.h" line="100"/>
         <source>Please select an privacy level. </source>
-        <translation type="unfinished"/>
+        <translation>Hãy chọn mức độ riêng tư.</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="78"/>
         <location filename="../forms/ui_darksendconfig.h" line="101"/>
         <source>Use 2 separate masternodes to mix funds up to 1000DRK</source>
-        <translation type="unfinished"/>
+        <translation>Dùng 2 masternodes riêng biệt để trộn khoản lên đến 1000DRK</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="91"/>
         <location filename="../forms/ui_darksendconfig.h" line="102"/>
         <source>Use 4 separate masternodes to mix funds up to 1000DRK</source>
-        <translation type="unfinished"/>
+        <translation>Dùng 4 masternodes riêng biệt để trộn khoản lên đến 1000DRK</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="104"/>
         <location filename="../forms/ui_darksendconfig.h" line="103"/>
         <source>Use 8 separate masternodes</source>
-        <translation type="unfinished"/>
+        <translation>Dùng 8 masternodes riêng biệt</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="117"/>
         <location filename="../forms/ui_darksendconfig.h" line="104"/>
         <source>This option is the quickest and will cost about ~0.025DRK to anonymize 1000DRK</source>
-        <translation type="unfinished"/>
+        <translation>Tuỳ chọn này là nhanh nhất và sẽ mất phí khoảng ~0.025DRK để vô danh 1000DRK</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="130"/>
         <location filename="../forms/ui_darksendconfig.h" line="105"/>
         <source>This option is moderately fast and will cost about 0.05DRK to anonymize 1000DRK</source>
-        <translation type="unfinished"/>
+        <translation>Tuỳ chọn này tương đối nhanh và sẽ mất phí khoảng 0.05DRK để vô danh hoá 1000DRK</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="143"/>
         <location filename="../forms/ui_darksendconfig.h" line="106"/>
         <source>This is the slowest and most secure option. Using maximum anonymity will cost</source>
-        <translation type="unfinished"/>
+        <translation>Đây là tuỳ chọn chậm nhất và an toàn nhất. Sử dụng mức vô danh cao nhất sẽ tốn kém</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="156"/>
         <location filename="../forms/ui_darksendconfig.h" line="107"/>
         <source>0.1DRK per 1000DRK you anonymize.</source>
-        <translation type="unfinished"/>
+        <translation>0.1DRK cho mỗi 1000DRK bạn ẩn danh.</translation>
     </message>
     <message>
         <location filename="../darksendconfig.cpp" line="43"/>
@@ -2808,7 +2808,7 @@ Address: %4
     <message>
         <location filename="../sendcoinsdialog.cpp" line="59"/>
         <source>Copy change</source>
-        <translation type="unfinished"/>
+        <translation>Sao chép tiền trả lại</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="154"/>
@@ -4234,12 +4234,12 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="174"/>
         <source>Connect only to the specified node(s)</source>
-        <translation type="unfinished"/>
+        <translation>Kết nối chỉ với (các) nút nhất định</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="175"/>
         <source>Connect through SOCKS proxy</source>
-        <translation type="unfinished"/>
+        <translation>Kết nối thông qua SOCKS proxy</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="176"/>
@@ -4259,22 +4259,22 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="179"/>
         <source>Connection options:</source>
-        <translation type="unfinished"/>
+        <translation>Tuỳ chọn kết nối:</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="180"/>
         <source>Corrupted block database detected</source>
-        <translation type="unfinished"/>
+        <translation>Phát hiện ra dữ liệu khối bị hỏng</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="183"/>
         <source>Darksend options:</source>
-        <translation type="unfinished"/>
+        <translation>Tuỳ chọn Darksend:</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="184"/>
         <source>Debugging/Testing options:</source>
-        <translation type="unfinished"/>
+        <translation>Tuỳ chọn Gỡ rối/Kiểm tra:</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="185"/>
@@ -4524,7 +4524,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="229"/>
         <source>Insufficient funds</source>
-        <translation type="unfinished"/>
+        <translation>Không đủ tiền</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="230"/>
@@ -4534,7 +4534,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="231"/>
         <source>Invalid -proxy address: &apos;%s&apos;</source>
-        <translation type="unfinished"/>
+        <translation>Địa chỉ proxy không hợp lệ: &apos;%s&apos;</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="232"/>
@@ -4594,7 +4594,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="243"/>
         <source>List commands</source>
-        <translation type="unfinished"/>
+        <translation>Liệt kê các lệnh</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="244"/>
@@ -4604,7 +4604,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="245"/>
         <source>Loading addresses...</source>
-        <translation type="unfinished"/>
+        <translation>Nạp các địa chỉ...</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="246"/>
@@ -4639,7 +4639,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="252"/>
         <source>Masternode options:</source>
-        <translation type="unfinished"/>
+        <translation>Tuỳ chọn Masternode:</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="253"/>
@@ -4669,7 +4669,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="258"/>
         <source>Options:</source>
-        <translation type="unfinished"/>
+        <translation>Tuỳ chọn:</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="259"/>
@@ -4744,7 +4744,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="275"/>
         <source>Send command to Darkcoin Core</source>
-        <translation type="unfinished"/>
+        <translation>Gửi lệnh đến Darkcoin Core</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="276"/>
@@ -4759,12 +4759,12 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="278"/>
         <source>Server certificate file (default: server.cert)</source>
-        <translation type="unfinished"/>
+        <translation>Tệp chứng thực máy chủ (ngầm định: server.cert)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="279"/>
         <source>Server private key (default: server.pem)</source>
-        <translation type="unfinished"/>
+        <translation>Mã riêng của máy chủ (ngầm định: server.pem)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="280"/>
@@ -4819,7 +4819,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="290"/>
         <source>Signing transaction failed</source>
-        <translation type="unfinished"/>
+        <translation>Thất bại khi ký giao dịch</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="291"/>
@@ -4834,7 +4834,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="293"/>
         <source>Specify data directory</source>
-        <translation type="unfinished"/>
+        <translation>Hãy chọn thư mục</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="294"/>
@@ -4869,7 +4869,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="300"/>
         <source>System error: </source>
-        <translation type="unfinished"/>
+        <translation>Lỗi hệ thống:</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="301"/>
@@ -4894,17 +4894,17 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="305"/>
         <source>Transaction amount too small</source>
-        <translation type="unfinished"/>
+        <translation>Số tiền của giao dịch quá nhỏ</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="306"/>
         <source>Transaction amounts must be positive</source>
-        <translation type="unfinished"/>
+        <translation>Số tiền của giao dịch phải là số dương</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="307"/>
         <source>Transaction too large</source>
-        <translation type="unfinished"/>
+        <translation>Giao dịch quá lớn</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="311"/>
@@ -4994,12 +4994,12 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="328"/>
         <source>Wallet options:</source>
-        <translation type="unfinished"/>
+        <translation>Tuỳ chọn ví:</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="329"/>
         <source>Warning</source>
-        <translation type="unfinished"/>
+        <translation>Cảnh báo</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="330"/>
@@ -5034,7 +5034,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="336"/>
         <source>wallet.dat corrupt, salvage failed</source>
-        <translation type="unfinished"/>
+        <translation>wallet.dat bị lỗi, cứu chữa không thành công.</translation>
     </message>
 </context>
 </TS>
