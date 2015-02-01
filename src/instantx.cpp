@@ -119,6 +119,7 @@ void ProcessMessageInstantX(CNode* pfrom, std::string& strCommand, CDataStream& 
         LOCK(cs_vNodes);
         BOOST_FOREACH(CNode* pnode, vNodes)
         {
+            printf("relay txlvote to %s : %s\n", pnode->addr.ToString().c_str(), ctx.tx.ToString().c_str());
             pnode->PushMessage("txlvote", ctx);
         }
         return;

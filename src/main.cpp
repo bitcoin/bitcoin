@@ -1168,7 +1168,7 @@ int CMerkleTx::IsTransactionLocked() const
             return nInstantXDepth;
         } else {
             LogPrintf("InstantX::ProcessConsensusVote - Incomplete TX Lock %d %s\n", (*i).second.CountSignatures(), (*i).second.GetHash().ToString().c_str());
-            return nInstantXDepth;
+            return 0;
         }
     }
 
