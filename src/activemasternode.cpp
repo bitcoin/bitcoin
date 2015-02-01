@@ -39,17 +39,6 @@ void CActiveMasternode::ManageStatus()
         	service = CService(strMasterNodeAddr);
         }
 
-		if(
-            (Params().NetworkID() == CChainParams::TESTNET && service.GetPort() != 19999) ||
-            (Params().NetworkID() == CChainParams::REGTEST && service.GetPort() != 19999) ||
-            (Params().NetworkID() == CChainParams::MAIN && service.GetPort() != 9999) )
-        {
-            notCapableReason = "Invalid port: " + boost::lexical_cast<string>(service.GetPort()) + " -only 9999 or 19999 are supported.";
-            status = MASTERNODE_NOT_CAPABLE;
-            LogPrintf("CActiveMasternode::ManageStatus() - not capable: %s\n", notCapableReason.c_str());
-            return;
-        }
-
         LogPrintf("CActiveMasternode::ManageStatus() - Checking inbound connection to '%s'\n", service.ToString().c_str());
 
         if(Params().NetworkID() != CChainParams::REGTEST){

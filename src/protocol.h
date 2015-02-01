@@ -136,7 +136,7 @@ enum
     // MSG_FILTERED_BLOCK should not appear in any invs except as a part of getdata.
     MSG_FILTERED_BLOCK,
     MSG_TXLOCK_REQUEST,
-    MSG_TXLOCK,
+    MSG_TXLOCK_VOTE,
 };
 
 #endif // __INCLUDED_PROTOCOL_H__

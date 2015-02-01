@@ -435,7 +435,7 @@ CNode* FindNode(const CService& addr)
 {
     LOCK(cs_vNodes);
     BOOST_FOREACH(CNode* pnode, vNodes)
-        if((CNetAddr)pnode->addr == (CNetAddr)addr)
+        if(pnode->addr == addr)
             return (pnode);
     return NULL;
 }

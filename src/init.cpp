@@ -1199,7 +1199,7 @@ bool AppInit2(boost::thread_group& threadGroup)
 
     bool fEnableInstantX = GetBoolArg("-enableinstantx", true);
     if(fEnableInstantX){
-        nInstantXDepth = GetArg("-instantxdepth", 1);
+        nInstantXDepth = GetArg("-instantxdepth", 5);
         if(nInstantXDepth > 60) nInstantXDepth = 60;
         if(nInstantXDepth < 0) nAnonymizeDarkcoinAmount = 0;
     } else {
