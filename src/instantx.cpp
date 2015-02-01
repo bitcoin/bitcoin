@@ -23,8 +23,6 @@ std::map<uint256, CTransaction> mapTxLockReqRejected;
 std::map<uint256, int> mapTxLockVote;
 std::map<uint256, CTransactionLock> mapTxLocks;
 
-#define INSTANTX_SIGNATURES_REQUIRED           2
-
 //txlock - Locks transaction
 //
 //step 1.) Broadcast intention to lock transaction inputs, "txlreg", CTransaction
@@ -190,7 +188,7 @@ void ProcessConsensusVote(CConsensusVote& ctx)
     if (i != mapTxLocks.end()){
         (*i).second.AddSignature(ctx);
         if((*i).second.CountSignatures() >= INSTANTX_SIGNATURES_REQUIRED){
-            LogPrintf("InstantX::ProcessConsensusVote - Transaction Lock Is Complete, broadcasting!\n");
+            LogPrintf("InstantX::ProcessConsensusVote - Transaction Lock Is Complete %s !\n", (*i).second.GetHash().ToString().c_str());
         }
         return;
     }
