@@ -888,7 +888,7 @@ Dirección: %4
         <location filename="../forms/coincontroldialog.ui" line="461"/>
         <location filename="../forms/ui_coincontroldialog.h" line="335"/>
         <source>Darksend Rounds</source>
-        <translation type="unfinished"/>
+        <translation>Rondas de Darksend</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="466"/>
@@ -1120,95 +1120,95 @@ Dirección: %4
         <location filename="../forms/darksendconfig.ui" line="14"/>
         <location filename="../forms/ui_darksendconfig.h" line="96"/>
         <source>Configure Darksend+</source>
-        <translation type="unfinished"/>
+        <translation>Configurar Darksend+</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="26"/>
         <location filename="../forms/ui_darksendconfig.h" line="97"/>
         <source>Basic Privacy</source>
-        <translation type="unfinished"/>
+        <translation>Privacidad Básica</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="39"/>
         <location filename="../forms/ui_darksendconfig.h" line="98"/>
         <source>High Privacy</source>
-        <translation type="unfinished"/>
+        <translation>Privacidad Alta</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="52"/>
         <location filename="../forms/ui_darksendconfig.h" line="99"/>
         <source>Maximum Privacy</source>
-        <translation type="unfinished"/>
+        <translation>Privacidad Máxima</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="65"/>
         <location filename="../forms/ui_darksendconfig.h" line="100"/>
         <source>Please select an privacy level. </source>
-        <translation type="unfinished"/>
+        <translation>Por favor, seleccione un nivel de privacidad</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="78"/>
         <location filename="../forms/ui_darksendconfig.h" line="101"/>
         <source>Use 2 separate masternodes to mix funds up to 1000DRK</source>
-        <translation type="unfinished"/>
+        <translation>Usar 2 nodos maestros distintos para mexclar fondos hasta 1000DRK</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="91"/>
         <location filename="../forms/ui_darksendconfig.h" line="102"/>
         <source>Use 4 separate masternodes to mix funds up to 1000DRK</source>
-        <translation type="unfinished"/>
+        <translation>Usar 4 nodos maestros distintos para mezclar fondos hasta 1000DRK</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="104"/>
         <location filename="../forms/ui_darksendconfig.h" line="103"/>
         <source>Use 8 separate masternodes</source>
-        <translation type="unfinished"/>
+        <translation>Usar 8 nodos maestros distintos</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="117"/>
         <location filename="../forms/ui_darksendconfig.h" line="104"/>
         <source>This option is the quickest and will cost about ~0.025DRK to anonymize 1000DRK</source>
-        <translation type="unfinished"/>
+        <translation>Esta opción es la más rápida y costará aprox. ~0.025DRK para anonimizar 1000DRK</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="130"/>
         <location filename="../forms/ui_darksendconfig.h" line="105"/>
         <source>This option is moderately fast and will cost about 0.05DRK to anonymize 1000DRK</source>
-        <translation type="unfinished"/>
+        <translation>Esta opción es razonáblemente rápida y costará unos 0.05DRK para anonimizar 1000DRK</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="143"/>
         <location filename="../forms/ui_darksendconfig.h" line="106"/>
         <source>This is the slowest and most secure option. Using maximum anonymity will cost</source>
-        <translation type="unfinished"/>
+        <translation>Esta es la opción más lenta y segura de todas. Usar la anonimización máxima costará</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="156"/>
         <location filename="../forms/ui_darksendconfig.h" line="107"/>
         <source>0.1DRK per 1000DRK you anonymize.</source>
-        <translation type="unfinished"/>
+        <translation>0.1DRK por cada 1000DRK que anonimice.</translation>
     </message>
     <message>
         <location filename="../darksendconfig.cpp" line="43"/>
         <location filename="../darksendconfig.cpp" line="58"/>
         <location filename="../darksendconfig.cpp" line="73"/>
         <source>Darksend Configuration</source>
-        <translation type="unfinished"/>
+        <translation>Configuración de Darksend</translation>
     </message>
     <message>
         <location filename="../darksendconfig.cpp" line="44"/>
         <source>Darksend was successfully set to basic (%1 and 2 rounds). You can change this at any time by opening Darkcoin&apos;s configuration screen.</source>
-        <translation type="unfinished"/>
+        <translation>Darksend fue configurado con éxito en la básica (%1 y 2 rondas). Puede cambiarlo en cualquier momento abriendo la pantalla de configuración de Darkcoin.</translation>
     </message>
     <message>
         <location filename="../darksendconfig.cpp" line="59"/>
         <source>Darksend was successfully set to high (%1 and 8 rounds). You can change this at any time by opening Darkcoin&apos;s configuration screen.</source>
-        <translation type="unfinished"/>
+        <translation>Darksend fue configurado con éxito en la alta (%1 y 8 rondas). Puede cambiarlo en cualquier momento abriendo la pantalla de configuración de Darkcoin.</translation>
     </message>
     <message>
         <location filename="../darksendconfig.cpp" line="74"/>
         <source>Darksend was successfully set to maximum (%1 and 16 rounds). You can change this at any time by opening Darkcoin&apos;s configuration screen.</source>
-        <translation type="unfinished"/>
+        <translation>Darksend fue configurado con éxito en la máxima (%1 y 16 rondas). Puede cambiarlo en cualquier momento abriendo la pantalla de configuración de Darkcoin.</translation>
     </message>
 </context>
 <context>
@@ -1266,7 +1266,7 @@ Dirección: %4
     <message>
         <location filename="../editaddressdialog.cpp" line="111"/>
         <source>The entered address &quot;%1&quot; is not a valid Darkcoin address.</source>
-        <translation type="unfinished"/>
+        <translation>La dirección introducida &quot;%1&quot; no es una dirección Darkcoin válida.</translation>
     </message>
     <message>
         <location filename="../editaddressdialog.cpp" line="116"/>
@@ -1318,7 +1318,7 @@ Dirección: %4
         <location filename="../forms/helpmessagedialog.ui" line="19"/>
         <location filename="../forms/ui_helpmessagedialog.h" line="105"/>
         <source>Darkcoin Core - Command-line options</source>
-        <translation type="unfinished"/>
+        <translation>Darkcoin Core - Opciones de consola de comandos</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="69"/>
@@ -1383,19 +1383,19 @@ Dirección: %4
         <location filename="../forms/intro.ui" line="23"/>
         <location filename="../forms/ui_intro.h" line="184"/>
         <source>Welcome to Darkcoin Core.</source>
-        <translation type="unfinished"/>
+        <translation>Bienvenido a Darkcoin Core</translation>
     </message>
     <message>
         <location filename="../forms/intro.ui" line="49"/>
         <location filename="../forms/ui_intro.h" line="185"/>
         <source>As this is the first time the program is launched, you can choose where Darkcoin Core will store its data.</source>
-        <translation type="unfinished"/>
+        <translation>Al ser la primera vez que se ejecuta el programa, puede elegir dónde almacenará sus datos Darkcoin Core.</translation>
     </message>
     <message>
         <location filename="../forms/intro.ui" line="59"/>
         <location filename="../forms/ui_intro.h" line="186"/>
         <source>Darkcoin Core will download and store a copy of the Darkcoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
-        <translation type="unfinished"/>
+        <translation>Darkcoin Core va a descargar y guardar una copia de la cadena de bloques de Darkcoin. Se almacenará al menos %1GB de datos en este directorio, que irá creciendo con el tiempo. El monedero se guardará también en este directorio.</translation>
     </message>
     <message>
         <location filename="../forms/intro.ui" line="69"/>
@@ -1485,13 +1485,13 @@ Dirección: %4
         <location filename="../forms/optionsdialog.ui" line="33"/>
         <location filename="../forms/ui_optionsdialog.h" line="534"/>
         <source>Automatically start Darkcoin after logging in to the system.</source>
-        <translation type="unfinished"/>
+        <translation>Iniciar Darkcoin automáticamente al ingresar en el sistema.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="36"/>
         <location filename="../forms/ui_optionsdialog.h" line="536"/>
         <source>&amp;Start Darkcoin on system login</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Iniciar Darkcoin al ingresar en el sistema</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="45"/>
@@ -1521,19 +1521,19 @@ Dirección: %4
         <location filename="../forms/optionsdialog.ui" line="138"/>
         <location filename="../forms/ui_optionsdialog.h" line="544"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This setting determines the amount of individual masternodes that an input will be anonymized through. More rounds of anonymization gives a higher degree of privacy, but also costs more in fees.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"/>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Esta opción determina la cantidad de nodos maestros únicos por los que circulará una entrada para anonimizarla. A mayor número de rondas de anonimización, mayor grado de privacidad,, pero también implica un mayor coste en las tasas.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="141"/>
         <location filename="../forms/ui_optionsdialog.h" line="546"/>
         <source>Darksend rounds to use</source>
-        <translation type="unfinished"/>
+        <translation>Rondas de Darksend a usar</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="180"/>
         <location filename="../forms/ui_optionsdialog.h" line="547"/>
         <source>Amount of Darkcoin to keep anonymized</source>
-        <translation type="unfinished"/>
+        <translation>Cantidad de Darkcoin a mantener anonimizada</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="206"/>
@@ -1593,7 +1593,7 @@ Dirección: %4
         <location filename="../forms/optionsdialog.ui" line="307"/>
         <location filename="../forms/ui_optionsdialog.h" line="562"/>
         <source>Automatically open the Darkcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation type="unfinished"/>
+        <translation>Abrir automáticamente el puerto del cliente Darkcoin en el router. Esta opción solo funciona si el router admite UPnP y está activado.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="310"/>
@@ -1605,7 +1605,7 @@ Dirección: %4
         <location filename="../forms/optionsdialog.ui" line="317"/>
         <location filename="../forms/ui_optionsdialog.h" line="566"/>
         <source>Connect to the Darkcoin network through a SOCKS proxy.</source>
-        <translation type="unfinished"/>
+        <translation>Conectarse a la red Darkcoin a través de un proxy SOCKS.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="320"/>
@@ -1695,7 +1695,7 @@ Dirección: %4
         <location filename="../forms/optionsdialog.ui" line="503"/>
         <location filename="../forms/ui_optionsdialog.h" line="593"/>
         <source>The user interface language can be set here. This setting will take effect after restarting Darkcoin.</source>
-        <translation type="unfinished"/>
+        <translation>El idioma de la interfaz de usuario puede establecerse aquí. Este ajuste se aplicará cuando se reinicie Darkcoin.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="514"/>
@@ -1713,7 +1713,7 @@ Dirección: %4
         <location filename="../forms/optionsdialog.ui" line="536"/>
         <location filename="../forms/ui_optionsdialog.h" line="600"/>
         <source>Whether to show Darkcoin addresses in the transaction list or not.</source>
-        <translation type="unfinished"/>
+        <translation>Mostrar o no las direcciones Darkcoin en la lista de transacciones.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="539"/>
@@ -1822,7 +1822,7 @@ Dirección: %4
         <location filename="../forms/ui_overviewpage.h" line="459"/>
         <location filename="../forms/ui_overviewpage.h" line="503"/>
         <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Darkcoin network after a connection is established, but this process has not completed yet.</source>
-        <translation type="unfinished"/>
+        <translation>La información mostrada puede estar desactualizada. Su monedero se sincroniza automáticamente con la red Darkcoin después de que se haya establecido una conexión, pero este proceso aún no se ha completado.</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="108"/>
@@ -1876,61 +1876,61 @@ Dirección: %4
         <location filename="../forms/overviewpage.ui" line="296"/>
         <location filename="../forms/ui_overviewpage.h" line="477"/>
         <source>Status:</source>
-        <translation type="unfinished"/>
+        <translation>Estado</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="303"/>
         <location filename="../forms/ui_overviewpage.h" line="478"/>
         <source>Enabled/Disabled</source>
-        <translation type="unfinished"/>
+        <translation>Activada/Desactivada</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="310"/>
         <location filename="../forms/ui_overviewpage.h" line="479"/>
         <source>Completion:</source>
-        <translation type="unfinished"/>
+        <translation>Completado:</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="330"/>
         <location filename="../forms/ui_overviewpage.h" line="480"/>
         <source>Darksend Balance:</source>
-        <translation type="unfinished"/>
+        <translation>Saldo de Darksend:</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="343"/>
         <location filename="../forms/ui_overviewpage.h" line="481"/>
         <source>0 DRK</source>
-        <translation type="unfinished"/>
+        <translation>0 DRK</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="350"/>
         <location filename="../forms/ui_overviewpage.h" line="482"/>
         <source>Amount and Rounds:</source>
-        <translation type="unfinished"/>
+        <translation>Cantidad y Rondas:</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="357"/>
         <location filename="../forms/ui_overviewpage.h" line="483"/>
         <source>0 DRK / 0 Rounds</source>
-        <translation type="unfinished"/>
+        <translation>0 DRK / 0 Rondas</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="364"/>
         <location filename="../forms/ui_overviewpage.h" line="484"/>
         <source>Submitted Denom:</source>
-        <translation type="unfinished"/>
+        <translation>Denom Enviados:</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="371"/>
         <location filename="../forms/ui_overviewpage.h" line="486"/>
         <source>The denominations you submitted to the Masternode. To mix, other users must submit the exact same denominations.</source>
-        <translation type="unfinished"/>
+        <translation>Las denominaciones que envió al Nodo Maestro. Para mezclar, otros usuarios deben enviar el mismo número exacto de denominaciones.</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="374"/>
         <location filename="../forms/ui_overviewpage.h" line="488"/>
         <source>n/a</source>
-        <translation type="unfinished"/>
+        <translation>n/d</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="396"/>
@@ -1939,43 +1939,43 @@ Dirección: %4
         <location filename="../overviewpage.cpp" line="442"/>
         <location filename="../overviewpage.cpp" line="456"/>
         <source>Darksend</source>
-        <translation type="unfinished"/>
+        <translation>Darksend</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="846"/>
         <location filename="../forms/ui_overviewpage.h" line="491"/>
         <source>Start/Stop Mixing</source>
-        <translation type="unfinished"/>
+        <translation>Comenzar/Parar Mezclado</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="878"/>
         <location filename="../forms/ui_overviewpage.h" line="492"/>
         <source>(Last Message)</source>
-        <translation type="unfinished"/>
+        <translation>(Último Mensaje)</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="897"/>
         <location filename="../forms/ui_overviewpage.h" line="494"/>
         <source>Try to manually submit a Darksend request.</source>
-        <translation type="unfinished"/>
+        <translation>Intentar enviar manualmente una solicitud Darksend.</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="900"/>
         <location filename="../forms/ui_overviewpage.h" line="496"/>
         <source>Try Mix</source>
-        <translation type="unfinished"/>
+        <translation>Intentar Mezcla</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="913"/>
         <location filename="../forms/ui_overviewpage.h" line="498"/>
         <source>Reset the current status of Darksend (can interrupt Darksend if it&apos;s in the process of Mixing, which can cost you money!)</source>
-        <translation type="unfinished"/>
+        <translation>Reiniciar el estado actual de Darksend (¡puede interrumpir Darksend si está en el proceso de Mezcla, lo cual puede costarle dinero!)</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="919"/>
         <location filename="../forms/ui_overviewpage.h" line="500"/>
         <source>Reset</source>
-        <translation type="unfinished"/>
+        <translation>Reiniciar</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="955"/>
@@ -1992,17 +1992,17 @@ Dirección: %4
     <message>
         <location filename="../overviewpage.cpp" line="429"/>
         <source>Darksend was successfully reset.</source>
-        <translation type="unfinished"/>
+        <translation>Darksend se reinició correctamente.</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="443"/>
         <source>Darksend requires at least %1 to use.</source>
-        <translation type="unfinished"/>
+        <translation>Darksend requiere al menos %1 para su uso.</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="457"/>
         <source>Wallet is locked and user declined to unlock. Disabling Darksend.</source>
-        <translation type="unfinished"/>
+        <translation>El monedero está bloqueado y el usuario rechazó desbloquearlo. Desactivando Darksend.</translation>
     </message>
 </context>
 <context>
@@ -2020,7 +2020,7 @@ Dirección: %4
     <message>
         <location filename="../paymentserver.cpp" line="294"/>
         <source>Cannot start darkcoin: click-to-pay handler</source>
-        <translation type="unfinished"/>
+        <translation>No se pudo iniciar darkcoin: manejador de pago-al-clic</translation>
     </message>
     <message>
         <location filename="../paymentserver.cpp" line="352"/>
@@ -2046,7 +2046,7 @@ Dirección: %4
     <message>
         <location filename="../paymentserver.cpp" line="418"/>
         <source>URI can not be parsed! This can be caused by an invalid Darkcoin address or malformed URI parameters.</source>
-        <translation type="unfinished"/>
+        <translation>¡No se puede interpretar la URI! Esto puede deberse a una dirección Darkcoin inválida o a parámetros de URI mal formados.</translation>
     </message>
     <message>
         <location filename="../paymentserver.cpp" line="432"/>
@@ -2122,7 +2122,7 @@ Dirección: %4
     <message>
         <location filename="../darkcoin.cpp" line="540"/>
         <source>Error reading masternode configuration file: %1</source>
-        <translation type="unfinished"/>
+        <translation>Error en la lectura del archivo con la configuración del masternode: %1</translation>
     </message>
     <message>
         <location filename="../darkcoin.cpp" line="552"/>
@@ -2132,12 +2132,12 @@ Dirección: %4
     <message>
         <location filename="../darkcoin.cpp" line="612"/>
         <source>Darkcoin Core didn&apos;t yet exit safely...</source>
-        <translation type="unfinished"/>
+        <translation>Darkcoin core no se ha cerrado de forma segura todavía...</translation>
     </message>
     <message>
         <location filename="../guiutil.cpp" line="101"/>
         <source>Enter a Darkcoin address (e.g. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</source>
-        <translation type="unfinished"/>
+        <translation>Introduzca una dirección Darkcoin (e.g. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
     </message>
 </context>
 <context>
@@ -2181,7 +2181,7 @@ Dirección: %4
         <location filename="../forms/rpcconsole.ui" line="33"/>
         <location filename="../forms/ui_rpcconsole.h" line="472"/>
         <source>Masternode Count</source>
-        <translation type="unfinished"/>
+        <translation>Recuento de Masternodes</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="46"/>
@@ -2235,7 +2235,7 @@ Dirección: %4
         <location filename="../forms/rpcconsole.ui" line="90"/>
         <location filename="../forms/ui_rpcconsole.h" line="479"/>
         <source>Open the Darkcoin debug log file from the current data directory. This can take a few seconds for large log files.</source>
-        <translation type="unfinished"/>
+        <translation>Abrir el archivo de registro de depuración en el directorio actual de datos. Esto puede llevar varios segundos para archivos de registro grandes.</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="93"/>
@@ -2344,7 +2344,7 @@ Dirección: %4
     <message>
         <location filename="../rpcconsole.cpp" line="331"/>
         <source>Welcome to the Darkcoin RPC console.</source>
-        <translation type="unfinished"/>
+        <translation>Bienvenido a la consola RPC de Darkcoin</translation>
     </message>
     <message>
         <location filename="../rpcconsole.cpp" line="332"/>
@@ -2412,7 +2412,7 @@ Dirección: %4
         <location filename="../forms/ui_receivecoinsdialog.h" line="260"/>
         <location filename="../forms/ui_receivecoinsdialog.h" line="267"/>
         <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Darkcoin network.</source>
-        <translation type="unfinished"/>
+        <translation>Un mensaje opcional para adjuntar a la solicitud de pago, que se muestra cuando se abre la solicitud. Nota: El mensaje no se enviará con el pago por la red Darkcoin.</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="54"/>
@@ -2763,13 +2763,13 @@ Dirección: %4
         <location filename="../forms/sendcoinsdialog.ui" line="759"/>
         <location filename="../forms/ui_sendcoinsdialog.h" line="545"/>
         <source>Darksend</source>
-        <translation type="unfinished"/>
+        <translation>Darksend</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="772"/>
         <location filename="../forms/ui_sendcoinsdialog.h" line="546"/>
         <source>InstantX</source>
-        <translation type="unfinished"/>
+        <translation>InstantX</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="779"/>
@@ -2820,7 +2820,7 @@ Dirección: %4
     <message>
         <location filename="../sendcoinsdialog.cpp" line="154"/>
         <source>(darksend requires this amount to be rounded up to the nearest %1).</source>
-        <translation type="unfinished"/>
+        <translation>(darksend requiere que esta cantidad sea redondeada al %1 más cercano).</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="188"/>
@@ -2838,7 +2838,7 @@ Dirección: %4
     <message>
         <location filename="../sendcoinsdialog.cpp" line="260"/>
         <source>are added as transaction fee</source>
-        <translation type="unfinished"/>
+        <translation>añadido como comisión de transacción</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="274"/>
@@ -2903,12 +2903,12 @@ Dirección: %4
     <message>
         <location filename="../sendcoinsdialog.cpp" line="512"/>
         <source>Error: The wallet was unlocked only to anonymize coins.</source>
-        <translation type="unfinished"/>
+        <translation>Error: El monedero se desbloqueó solo para anonimizar darkcoins.</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="625"/>
         <source>Warning: Invalid Darkcoin address</source>
-        <translation type="unfinished"/>
+        <translation>Alerta: Dirección de Darkcoin inválida</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="634"/>
@@ -2939,7 +2939,7 @@ Dirección: %4
         <location filename="../forms/sendcoinsentry.ui" line="54"/>
         <location filename="../forms/ui_sendcoinsentry.h" line="427"/>
         <source>The address to send the payment to (e.g. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</source>
-        <translation type="unfinished"/>
+        <translation>La dirección a la que enviar el pago (p.ej. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="61"/>
@@ -3007,7 +3007,7 @@ Dirección: %4
         <location filename="../forms/sendcoinsentry.ui" line="157"/>
         <location filename="../forms/ui_sendcoinsentry.h" line="450"/>
         <source>A message that was attached to the darkcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Darkcoin network.</source>
-        <translation type="unfinished"/>
+        <translation>Un mensaje que se adjuntó a la darkcoin: URL que será almacenada con la transacción para su referencia. Nota: Este mensaje no se enviará a través de la red Darkcoin.</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="583"/>
@@ -3048,7 +3048,7 @@ Dirección: %4
     <message>
         <location filename="../utilitydialog.cpp" line="129"/>
         <source>Darkcoin Core is shutting down...</source>
-        <translation type="unfinished"/>
+        <translation>Darkcoin Core se está cerrando...</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="130"/>
@@ -3080,7 +3080,7 @@ Dirección: %4
         <location filename="../forms/signverifymessagedialog.ui" line="48"/>
         <location filename="../forms/ui_signverifymessagedialog.h" line="286"/>
         <source>The address to sign the message with (e.g. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</source>
-        <translation type="unfinished"/>
+        <translation>La dirección con la que firmar el mensaje (p.ej. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="55"/>
@@ -3132,7 +3132,7 @@ Dirección: %4
         <location filename="../forms/signverifymessagedialog.ui" line="152"/>
         <location filename="../forms/ui_signverifymessagedialog.h" line="307"/>
         <source>Sign the message to prove you own this Darkcoin address</source>
-        <translation type="unfinished"/>
+        <translation>Firmar el mensaje para demostrar que se posee esta dirección Darkcoin</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="155"/>
@@ -3170,13 +3170,13 @@ Dirección: %4
         <location filename="../forms/signverifymessagedialog.ui" line="258"/>
         <location filename="../forms/ui_signverifymessagedialog.h" line="318"/>
         <source>The address the message was signed with (e.g. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</source>
-        <translation type="unfinished"/>
+        <translation>La dirección con la que se firmó el mensaje (p.ej. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="295"/>
         <location filename="../forms/ui_signverifymessagedialog.h" line="326"/>
         <source>Verify the message to ensure it was signed with the specified Darkcoin address</source>
-        <translation type="unfinished"/>
+        <translation>Verificar el mensaje para garantizar que fue firmado con la dirección Darkcoin indicada</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="298"/>
@@ -3198,7 +3198,7 @@ Dirección: %4
     <message>
         <location filename="../signverifymessagedialog.cpp" line="31"/>
         <source>Enter a Darkcoin address (e.g. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</source>
-        <translation type="unfinished"/>
+        <translation>Introduzca una dirección Darkcoin (e.g. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
     </message>
     <message>
         <location filename="../signverifymessagedialog.cpp" line="114"/>
@@ -3303,7 +3303,7 @@ Dirección: %4
     <message numerus="yes">
         <location filename="../transactiondesc.cpp" line="28"/>
         <source>Open for %n more block(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation><numerusform>Abrir para %n bloque más</numerusform><numerusform>Abrir para %n bloque(s) más</numerusform></translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="30"/>
@@ -3343,7 +3343,7 @@ Dirección: %4
     <message numerus="yes">
         <location filename="../transactiondesc.cpp" line="66"/>
         <source>, broadcast through %n node(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation><numerusform>, transmitir a través de %n nodo</numerusform><numerusform>, transmitir a través de %n nodo(s)</numerusform></translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="70"/>
@@ -3401,7 +3401,7 @@ Dirección: %4
     <message numerus="yes">
         <location filename="../transactiondesc.cpp" line="142"/>
         <source>matures in %n more block(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation><numerusform>disponible en %n bloque más</numerusform><numerusform>disponible en %n bloque(s) más</numerusform></translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="144"/>
@@ -3523,7 +3523,7 @@ Dirección: %4
     <message numerus="yes">
         <location filename="../transactiontablemodel.cpp" line="287"/>
         <source>Open for %n more block(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation><numerusform>Abrir para %n bloque más</numerusform><numerusform>Abrir para %n bloque(s) más</numerusform></translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="290"/>
@@ -3583,7 +3583,7 @@ Dirección: %4
     <message>
         <location filename="../transactiontablemodel.cpp" line="360"/>
         <source>Received via Darksend</source>
-        <translation type="unfinished"/>
+        <translation>Recibido mediante Darksend</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="363"/>
@@ -3603,22 +3603,22 @@ Dirección: %4
     <message>
         <location filename="../transactiontablemodel.cpp" line="370"/>
         <source>Darksend Denominate</source>
-        <translation type="unfinished"/>
+        <translation>Denominación Darksend</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="372"/>
         <source>Darksend Collateral Payment</source>
-        <translation type="unfinished"/>
+        <translation>Pago de Colateral Darksend</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="374"/>
         <source>Darksend Split Up Large Inputs</source>
-        <translation type="unfinished"/>
+        <translation>Separar Entradas Grandes de Darksend</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="376"/>
         <source>Darksent</source>
-        <translation type="unfinished"/>
+        <translation>Darksent</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="418"/>
@@ -3702,12 +3702,12 @@ Dirección: %4
     <message>
         <location filename="../transactionview.cpp" line="81"/>
         <source>Darksent</source>
-        <translation type="unfinished"/>
+        <translation>Darksent</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="82"/>
         <source>Darksend Denominate</source>
-        <translation type="unfinished"/>
+        <translation>Denominación Darksend</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="83"/>
@@ -3914,7 +3914,26 @@ If the file does not exist, create it with owner-readable-only file permissions.
 It is also recommended to set alertnotify so you are notified of problems;
 for example: alertnotify=echo %%s | mail -s &quot;Darkcoin Alert&quot; admin@foo.com
 </source>
-        <translation type="unfinished"/>
+        <translation>%s, debe establecer un valor rpcpassword en el archivo de configuración:
+
+%s
+
+Se recomienda utilizar la siguiente contraseña aleatoria:
+
+rpcuser=darkcoinrpc
+
+rpcpassword=%s
+
+(no es necesario recordar esta contraseña)
+
+El nombre de usuario y la contraseña NO DEBEN ser iguales.
+
+Si el archivo no existe, créelo con permisos de archivo de solo lectura.
+
+Se recomienda también establecer alertnotify para recibir notificaciones de problemas;
+
+Por ejemplo: alertnotify=echo %%s | mail -s &quot;Darkcoin Alert&quot; admin@foo.com 
+</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="25"/>
@@ -3939,7 +3958,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Darkcoin Alert&quot; admin@foo
     <message>
         <location filename="../bitcoinstrings.cpp" line="36"/>
         <source>Cannot obtain a lock on data directory %s. Darkcoin Core is probably already running.</source>
-        <translation type="unfinished"/>
+        <translation>No se ha podido bloquear el directorio de datos %s. Probablemente ya se está ejecutando Darkcoin Core.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="39"/>
@@ -4004,7 +4023,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Darkcoin Alert&quot; admin@foo
     <message>
         <location filename="../bitcoinstrings.cpp" line="88"/>
         <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 9998 or testnet: 19998)</source>
-        <translation type="unfinished"/>
+        <translation>Escuchar conexiones JSON-RPC en &lt;puerto&gt; (predeterminado: 9998 o testnet: 19998)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="92"/>
@@ -4039,7 +4058,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Darkcoin Alert&quot; admin@foo
     <message>
         <location filename="../bitcoinstrings.cpp" line="120"/>
         <source>Unable to bind to %s on this computer. Darkcoin Core is probably already running.</source>
-        <translation type="unfinished"/>
+        <translation>No se puede enlazar a% s en este equipo. Darkcoin Core probablemente ya está en funcionamiento.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="128"/>
@@ -4054,7 +4073,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Darkcoin Alert&quot; admin@foo
     <message>
         <location filename="../bitcoinstrings.cpp" line="134"/>
         <source>Warning: Please check that your computer&apos;s date and time are correct! If your clock is wrong Darkcoin will not work properly.</source>
-        <translation type="unfinished"/>
+        <translation>Advertencia: Verifique que la fecha y hora de su ordenador son correctas! Si su reloj está mal Darkcoin no funcionará correctamente.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="137"/>
@@ -4135,12 +4154,12 @@ Si el archivo no existe, créelo con permiso de lectura solamente del propietari
     <message>
         <location filename="../bitcoinstrings.cpp" line="181"/>
         <source>Darkcoin Core Daemon</source>
-        <translation type="unfinished"/>
+        <translation>Darkcoin Core Daemon</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="182"/>
         <source>Darkcoin Core RPC client version</source>
-        <translation type="unfinished"/>
+        <translation>Versión del cliente RPC de Darkcoin Core</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="168"/>
@@ -4150,72 +4169,72 @@ Si el archivo no existe, créelo con permiso de lectura solamente del propietari
     <message>
         <location filename="../bitcoinstrings.cpp" line="42"/>
         <source>Disable all Masternode and Darksend related functionality (0-1, default: 0)</source>
-        <translation type="unfinished"/>
+        <translation>Desactivar todas las funciones relacionadas con el Masternode y con Darksend (0-1, por defecto: 0)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="44"/>
         <source>Enable instantx, show confirmations for locked transactions (bool, default: true)</source>
-        <translation type="unfinished"/>
+        <translation>Habilitar InstantX, mostrar las confirmaciones de transacciones bloqueadas (bool, por defecto: true)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="47"/>
         <source>Enable use of automated darksend for funds stored in this wallet (0-1, default: 0)</source>
-        <translation type="unfinished"/>
+        <translation>Activar el uso automatizado de Darksend para los fondos almacenados en este monedero (0-1, por defecto: 0)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="57"/>
         <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
-        <translation type="unfinished"/>
+        <translation>Error: Ha fallado la escucha de conexiones entrantes (listen ha devuelto el error %s)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="66"/>
         <source>Error: Wallet unlocked for anonymization only, unable to create transaction.</source>
-        <translation type="unfinished"/>
+        <translation>Error: Monedero desbloqueado sólo para anonimización, incapaz de crear la transacción.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="90"/>
         <source>Name to construct url for KeePass entry that stores the wallet passphrase</source>
-        <translation type="unfinished"/>
+        <translation>Nombre para construir la url de la entrada KeePass que almancena la contraseña del monedero</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="97"/>
         <source>Provide liquidity to Darksend by infrequently mixing coins on a continual basis (0-100, default: 0, 1=very frequent, high fees, 100=very infrequent, low fees)</source>
-        <translation type="unfinished"/>
+        <translation>Ofrecer liquidez a Darksen mezclando raramente darkcoins en una forma contínua (0-100, predeterminado: 0, 1=muy frecuente, comisiones altas, 100=muy infrecuente, comisiones bajas)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="101"/>
         <source>Query for peer addresses via DNS lookup, if low on addresses (default: 1 unless -connect)</source>
-        <translation type="unfinished"/>
+        <translation>Petición de direcciones de pares mediante búsqueda de DNS , si las direcciones son pocas (predeterminado: 1 salvo con -connect)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="104"/>
         <source>Set external address:port to get to this masternode (example: address:port)</source>
-        <translation type="unfinished"/>
+        <translation>Ajustar dirección externa:puerto para conseguir este masternode (p.ej. dirección:puerto)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="114"/>
         <source>Show N confirmations for a successfully locked transaciton (0-9999, default: 1)</source>
-        <translation type="unfinished"/>
+        <translation>Mostrar N confirmaciones para una transacción bloqueada exitósamente (0-9999, predeterminado: 1)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="123"/>
         <source>Unable to locate enough Darksend non-denominated funds for this transaction that are not equal 1000 DRK</source>
-        <translation type="unfinished"/>
+        <translation>No se pueden localizar suficientes fondos no denominados Darksend para esta transacción que no sean iguales a 1000 DRK</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="126"/>
         <source>Unable to locate enough Darksend non-denominated funds for this transaction</source>
-        <translation type="unfinished"/>
+        <translation>No se pueden encontrar suficientes fondos no denominados de Darksend para esta transacción</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="155"/>
         <source>You must specify a masternodeprivkey in the configuration. Please see documentation for help.</source>
-        <translation type="unfinished"/>
+        <translation>Debe especificar un masternodeprivkey en la configuración. Por favor, consulte la documentación para obtener ayuda.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="166"/>
         <source>Always query for peer addresses via DNS lookup (default: 0)</source>
-        <translation type="unfinished"/>
+        <translation>Solicitar siempre direcciones de pares mediante búsqueda DNS (predeterminado: 0)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="169"/>
@@ -4255,12 +4274,12 @@ Si el archivo no existe, créelo con permiso de lectura solamente del propietari
     <message>
         <location filename="../bitcoinstrings.cpp" line="176"/>
         <source>Connect to JSON-RPC on &lt;port&gt; (default: 9998 or testnet: 19998)</source>
-        <translation type="unfinished"/>
+        <translation>Conectar a JSON-RPC en &lt;port&gt; (predeterminado: 9998 o testnet: 19998)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="177"/>
         <source>Connect to KeePassHttp on port &lt;port&gt; (default: 19455)</source>
-        <translation type="unfinished"/>
+        <translation>Conectar a KeepassHttp con el puerto &lt;port&gt; (predeterminado: 19455)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="178"/>
@@ -4280,7 +4299,7 @@ Si el archivo no existe, créelo con permiso de lectura solamente del propietari
     <message>
         <location filename="../bitcoinstrings.cpp" line="183"/>
         <source>Darksend options:</source>
-        <translation type="unfinished"/>
+        <translation>Opciones de Darksend:</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="184"/>
@@ -4315,7 +4334,7 @@ Si el archivo no existe, créelo con permiso de lectura solamente del propietari
     <message>
         <location filename="../bitcoinstrings.cpp" line="190"/>
         <source>Enable the client to act as a masternode (0-1, default: 0)</source>
-        <translation type="unfinished"/>
+        <translation>Permitir que el cliente pueda actuar como  Masternode (0-1, por defecto: 0)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="191"/>
@@ -4345,7 +4364,7 @@ Si el archivo no existe, créelo con permiso de lectura solamente del propietari
     <message>
         <location filename="../bitcoinstrings.cpp" line="196"/>
         <source>Error loading wallet.dat: Wallet requires newer version of Darkcoin</source>
-        <translation type="unfinished"/>
+        <translation>Error cargando wallet.dat: El monedero requiere la versión más reciente de Darkcoin</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="197"/>
@@ -4355,7 +4374,7 @@ Si el archivo no existe, créelo con permiso de lectura solamente del propietari
     <message>
         <location filename="../bitcoinstrings.cpp" line="198"/>
         <source>Error reading from database, shutting down.</source>
-        <translation type="unfinished"/>
+        <translation>Error leyendo la base de datos, cerrando.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="199"/>
@@ -4375,7 +4394,7 @@ Si el archivo no existe, créelo con permiso de lectura solamente del propietari
     <message>
         <location filename="../bitcoinstrings.cpp" line="202"/>
         <source>Error: You already have pending entries in the Darksend pool</source>
-        <translation type="unfinished"/>
+        <translation>Error: Ya tiene entradas pendientes en el pool de Darksend</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="203"/>
@@ -4450,27 +4469,27 @@ Si el archivo no existe, créelo con permiso de lectura solamente del propietari
     <message>
         <location filename="../bitcoinstrings.cpp" line="263"/>
         <source>RPC SSL options: (see the Darkcoin Wiki for SSL setup instructions)</source>
-        <translation type="unfinished"/>
+        <translation>Opciones SSL de RPC: (véase la wiki de Darkcoin para las instrucciones de instalación de SSL)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="273"/>
         <source>SSL options: (see the Darkcoin Wiki for SSL setup instructions)</source>
-        <translation type="unfinished"/>
+        <translation>Opciones SSL: (ver la Wiki de Darkcoin para instrucciones de configuración SSL)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="308"/>
         <source>Unable to bind to %s on this computer (bind returned error %s)</source>
-        <translation type="unfinished"/>
+        <translation>No es posible enlazar con %s en este sistema (bind ha dado el error %s)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="309"/>
         <source>Unable to locate enough Darksend denominated funds for this transaction</source>
-        <translation type="unfinished"/>
+        <translation>No se pueden encontrar suficientes fondos denominados de Darksend para esta transacción</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="310"/>
         <source>Unable to sign masternode payment winner, wrong key?</source>
-        <translation type="unfinished"/>
+        <translation>No fue posible firmar el Masternode ganador del pago, ¿se equivocó de tecla?</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="217"/>
@@ -4501,7 +4520,7 @@ Si el archivo no existe, créelo con permiso de lectura solamente del propietari
     <message>
         <location filename="../bitcoinstrings.cpp" line="222"/>
         <source>Ignore masternodes less than version (example: 70050; default : 0)</source>
-        <translation type="unfinished"/>
+        <translation>Ignorar Masternodes de versión inferior (ejemplo: 70050; por defecto: 0)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="223"/>
@@ -4526,12 +4545,12 @@ Si el archivo no existe, créelo con permiso de lectura solamente del propietari
     <message>
         <location filename="../bitcoinstrings.cpp" line="227"/>
         <source>Initialization sanity check failed. Darkcoin Core is shutting down.</source>
-        <translation type="unfinished"/>
+        <translation>La comprobación de validez de inicio falló. Darkcoin Core se está cerrando.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="228"/>
         <source>InstantX options:</source>
-        <translation type="unfinished"/>
+        <translation>Opciones de InstantX:</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="229"/>
@@ -4571,32 +4590,32 @@ Si el archivo no existe, créelo con permiso de lectura solamente del propietari
     <message>
         <location filename="../bitcoinstrings.cpp" line="236"/>
         <source>Invalid masternodeprivkey. Please see documenation.</source>
-        <translation type="unfinished"/>
+        <translation>Masternodeprivkey inválido. Por favor, lea la  documentación.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="237"/>
         <source>KeePassHttp id for the established association</source>
-        <translation type="unfinished"/>
+        <translation>Identificación del KeePassHttp para la asociación establecida</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="238"/>
         <source>KeePassHttp key for AES encrypted communication with KeePass</source>
-        <translation type="unfinished"/>
+        <translation>Clave KeePassHttp para la comunicación cifrada AES con KeePass</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="239"/>
         <source>Keep N darkcoin anonymized (default: 0)</source>
-        <translation type="unfinished"/>
+        <translation>Mantenga N darkcoins anónimos (por defecto: 0)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="240"/>
         <source>Keep at most &lt;n&gt; unconnectable blocks in memory (default: %u)</source>
-        <translation type="unfinished"/>
+        <translation>Mantener a lo sumo &lt;n&gt; bloques no conectables en memoria (por defecto: %u)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="241"/>
         <source>Keep at most &lt;n&gt; unconnectable transactions in memory (default: %u)</source>
-        <translation type="unfinished"/>
+        <translation>Mantenga a lo sumo &lt;n&gt; transacciones no conectables en la memoria (por defecto:% u)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="242"/>
@@ -4612,7 +4631,7 @@ Si el archivo no existe, créelo con permiso de lectura solamente del propietari
     <message>
         <location filename="../bitcoinstrings.cpp" line="244"/>
         <source>Listen for connections on &lt;port&gt; (default: 9999 or testnet: 19999)</source>
-        <translation type="unfinished"/>
+        <translation>Escuchar las conexiones en &lt;port&gt; (por defecto: 9999 o testnet: 19999)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="245"/>
@@ -4760,7 +4779,7 @@ Si el archivo no existe, créelo con permiso de lectura solamente del propietari
     <message>
         <location filename="../bitcoinstrings.cpp" line="275"/>
         <source>Send command to Darkcoin Core</source>
-        <translation>Enviar comando para Darkcoin Core</translation>
+        <translation>Enviar orden a Darkcoin Core</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="276"/>
@@ -4809,7 +4828,7 @@ Si el archivo no existe, créelo con permiso de lectura solamente del propietari
     <message>
         <location filename="../bitcoinstrings.cpp" line="284"/>
         <source>Set the masternode private key</source>
-        <translation type="unfinished"/>
+        <translation>Establezca la clave privada del masternode</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="285"/>
@@ -4844,7 +4863,7 @@ Si el archivo no existe, créelo con permiso de lectura solamente del propietari
     <message>
         <location filename="../bitcoinstrings.cpp" line="291"/>
         <source>Specify configuration file (default: darkcoin.conf)</source>
-        <translation type="unfinished"/>
+        <translation>Especificar el archivo de configuración (predeterminado: darkcoin.conf)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="292"/>
@@ -4859,12 +4878,12 @@ Si el archivo no existe, créelo con permiso de lectura solamente del propietari
     <message>
         <location filename="../bitcoinstrings.cpp" line="294"/>
         <source>Specify masternode configuration file (default: masternode.conf)</source>
-        <translation type="unfinished"/>
+        <translation>Especificar el archivo de configuración del Masternode (predeterminado: masternode.conf)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="295"/>
         <source>Specify pid file (default: darkcoind.pid)</source>
-        <translation type="unfinished"/>
+        <translation>Especificar archivo pid (por defecto: darkcoind.pid)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="296"/>
@@ -4884,7 +4903,7 @@ Si el archivo no existe, créelo con permiso de lectura solamente del propietari
     <message>
         <location filename="../bitcoinstrings.cpp" line="299"/>
         <source>Start Darkcoin Core Daemon</source>
-        <translation type="unfinished"/>
+        <translation>Iniciar Daemon de Darkcoin Core </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="300"/>
@@ -4945,7 +4964,7 @@ Si el archivo no existe, créelo con permiso de lectura solamente del propietari
     <message>
         <location filename="../bitcoinstrings.cpp" line="314"/>
         <source>Usage (deprecated, use darkcoin-cli):</source>
-        <translation type="unfinished"/>
+        <translation>Uso (obsoleto, use darkcoin-cli):</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="315"/>
@@ -4955,12 +4974,12 @@ Si el archivo no existe, créelo con permiso de lectura solamente del propietari
     <message>
         <location filename="../bitcoinstrings.cpp" line="316"/>
         <source>Use KeePass 2 integration using KeePassHttp plugin (default: 0)</source>
-        <translation type="unfinished"/>
+        <translation>Utilice la integración KeePass 2 usando el plugin KeePassHttp (por defecto: 0)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="317"/>
         <source>Use N separate masternodes to anonymize funds  (2-8, default: 2)</source>
-        <translation type="unfinished"/>
+        <translation>Utilice N masternodes distintos para anonimizar los fondos (2-8, por defecto: 2)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="318"/>
