@@ -108,20 +108,20 @@ void ProcessMessageInstantX(CNode* pfrom, std::string& strCommand, CDataStream& 
         CInv inv(MSG_TXLOCK_VOTE, ctx.GetHash());
         pfrom->AddInventoryKnown(inv);
 
-        if(mapTxLockVote.count(inv.hash)){
+        if(mapTxLockVote.count(ctx.GetHash())){
             return;
         }
 
-        mapTxLockVote.insert(make_pair(inv.hash, 1));
+        mapTxLockVote.insert(make_pair(ctx.GetHash(), 1));
 
         ProcessConsensusVote(ctx);
 
         LOCK(cs_vNodes);
         BOOST_FOREACH(CNode* pnode, vNodes)
         {
-            printf("relay txlvote to %s : %s\n", pnode->addr.ToString().c_str(), ctx.tx.ToString().c_str());
             pnode->PushMessage("txlvote", ctx);
         }
+
         return;
     }
 }
@@ -144,7 +144,7 @@ void DoConsensusVote(CTransaction& tx, bool approved, int64_t nBlockHeight)
         LogPrintf("InstantX::DoConsensusVote - Signature invalid\n");
         return;
     }
-
+    
     LOCK(cs_vNodes);
     BOOST_FOREACH(CNode* pnode, vNodes)
     {
@@ -224,15 +224,7 @@ void CleanTransactionLocksList()
 
 uint256 CConsensusVote::GetHash() const
 {
-
-    std::string strHash = tx.GetHash().ToString().c_str();
-    strHash += vinMasternode.ToString().c_str();
-    strHash += boost::lexical_cast<std::string>(nBlockHeight);
-    strHash += boost::lexical_cast<std::string>(approved);
-
-    printf("%s\n", strHash.c_str());
-
-    return Hash(BEGIN(strHash), END(strHash));
+    return vinMasternode.prevout.hash + tx.GetHash();
 }
 
 
