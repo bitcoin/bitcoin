@@ -12,77 +12,31 @@ DIST_SUBDIRS = . test
 
 # darkcoin qt core #
 QT_TS = \
-  locale/bitcoin_ach.ts \
-  locale/bitcoin_af_ZA.ts \
-  locale/bitcoin_ar.ts \
-  locale/bitcoin_be_BY.ts \
-  locale/bitcoin_bg.ts \
-  locale/bitcoin_bs.ts \
-  locale/bitcoin_ca_ES.ts \
-  locale/bitcoin_ca.ts \
-  locale/bitcoin_ca@valencia.ts \
-  locale/bitcoin_cmn.ts \
-  locale/bitcoin_cs.ts \
-  locale/bitcoin_cy.ts \
-  locale/bitcoin_da.ts \
-  locale/bitcoin_de.ts \
-  locale/bitcoin_el_GR.ts \
-  locale/bitcoin_en.ts \
-  locale/bitcoin_eo.ts \
-  locale/bitcoin_es_CL.ts \
-  locale/bitcoin_es_DO.ts \
-  locale/bitcoin_es_MX.ts \
-  locale/bitcoin_es.ts \
-  locale/bitcoin_es_UY.ts \
-  locale/bitcoin_et.ts \
-  locale/bitcoin_eu_ES.ts \
-  locale/bitcoin_fa_IR.ts \
-  locale/bitcoin_fa.ts \
-  locale/bitcoin_fi.ts \
-  locale/bitcoin_fr_CA.ts \
-  locale/bitcoin_fr.ts \
-  locale/bitcoin_gl.ts \
-  locale/bitcoin_gu_IN.ts \
-  locale/bitcoin_he.ts \
-  locale/bitcoin_hi_IN.ts \
-  locale/bitcoin_hr.ts \
-  locale/bitcoin_hu.ts \
-  locale/bitcoin_id_ID.ts \
-  locale/bitcoin_it.ts \
-  locale/bitcoin_ja.ts \
-  locale/bitcoin_ka.ts \
-  locale/bitcoin_kk_KZ.ts \
-  locale/bitcoin_ko_KR.ts \
-  locale/bitcoin_ky.ts \
-  locale/bitcoin_la.ts \
-  locale/bitcoin_lt.ts \
-  locale/bitcoin_lv_LV.ts \
-  locale/bitcoin_mn.ts \
-  locale/bitcoin_ms_MY.ts \
-  locale/bitcoin_nb.ts \
-  locale/bitcoin_nl.ts \
-  locale/bitcoin_pam.ts \
-  locale/bitcoin_pl.ts \
-  locale/bitcoin_pt_BR.ts \
-  locale/bitcoin_pt_PT.ts \
-  locale/bitcoin_ro_RO.ts \
-  locale/bitcoin_ru.ts \
-  locale/bitcoin_sah.ts \
-  locale/bitcoin_sk.ts \
-  locale/bitcoin_sl_SI.ts \
-  locale/bitcoin_sq.ts \
-  locale/bitcoin_sr.ts \
-  locale/bitcoin_sv.ts \
-  locale/bitcoin_th_TH.ts \
-  locale/bitcoin_tr.ts \
-  locale/bitcoin_uk.ts \
-  locale/bitcoin_ur_PK.ts \
-  locale/bitcoin_uz@Cyrl.ts \
-  locale/bitcoin_vi.ts \
-  locale/bitcoin_vi_VN.ts \
-  locale/bitcoin_zh_CN.ts \
-  locale/bitcoin_zh_HK.ts \
-  locale/bitcoin_zh_TW.ts
+  locale/darkcoin_ar.ts \
+  locale/darkcoin_bs.ts \
+  locale/darkcoin_cs.ts \
+  locale/darkcoin_de.ts \
+  locale/darkcoin_en.ts \
+  locale/darkcoin_en_US.ts \
+  locale/darkcoin_es.ts \
+  locale/darkcoin_fr.ts \
+  locale/darkcoin_fr_FR.ts \
+  locale/darkcoin_hu_HU.ts \
+  locale/darkcoin_id_ID.ts \
+  locale/darkcoin_it.ts \
+  locale/darkcoin_lv_LV.ts \
+  locale/darkcoin_nl.ts \
+  locale/darkcoin_nl_BE.ts \
+  locale/darkcoin_nl_NL.ts \
+  locale/darkcoin_pl.ts \
+  locale/darkcoin_pt.ts \
+  locale/darkcoin_ru.ts \
+  locale/darkcoin_ru_lv.ts \
+  locale/darkcoin_sk.ts \
+  locale/darkcoin_sv.ts \
+  locale/darkcoin_tr.ts \
+  locale/darkcoin_vi_VN.ts \
+  locale/darkcoin_zh.ts
 
 QT_FORMS_UI = \
   forms/aboutdialog.ui \
@@ -373,7 +327,7 @@ bitcoinstrings.cpp: FORCE
 
 translate: bitcoinstrings.cpp $(QT_FORMS_UI) $(QT_FORMS_UI) $(BITCOIN_QT_CPP) $(BITCOIN_QT_H) $(BITCOIN_MM)
 	@test -n $(LUPDATE) || echo "lupdate is required for updating translations"
-	@QT_SELECT=$(QT_SELECT) $(LUPDATE) $^ -locations relative -no-obsolete -ts locale/bitcoin_en.ts
+	@QT_SELECT=$(QT_SELECT) $(LUPDATE) $^ -locations relative -no-obsolete -ts locale/darkcoin_en.ts
 
 $(QT_QRC_CPP): $(QT_QRC) $(QT_QM) $(QT_FORMS_H) $(RES_ICONS) $(RES_IMAGES) $(RES_MOVIES) $(PROTOBUF_H)
 	@cd $(abs_srcdir); test -f $(RCC) && QT_SELECT=$(QT_SELECT) $(RCC) -name darkcoin -o $(abs_builddir)/$@ $< || \
