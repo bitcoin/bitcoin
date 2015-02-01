@@ -1160,21 +1160,14 @@ int CMerkleTx::IsTransactionLocked() const
 {
     if(nInstantXDepth == 0) return 0;
 
-    //printf("mapTxLocks start\n");
-    typedef std::map<uint256, CTransactionLock>::iterator it_ctxl;
-
-    int found = 0;
-    for (unsigned int b = 0; b < vout.size(); b++) {
-        for(it_ctxl it = mapTxLocks.begin(); it != mapTxLocks.end(); it++) {
-            for (unsigned int a = 0; a < it->second.tx.vout.size(); a++) {
-                if(vout[b] == it->second.tx.vout[a])
-                    found++;
-            }
-            if(found > 0) break;
+    //compile consessus vote
+    std::map<uint256, CTransactionLock>::iterator i = mapTxLocks.find(GetHash());
+    if (i != mapTxLocks.end()){
+        if((*i).second.CountSignatures() >= INSTANTX_SIGNATURES_REQUIRED){
+            LogPrintf("InstantX::ProcessConsensusVote - Transaction Lock Is Complete %s !\n", (*i).second.GetHash().ToString().c_str());
+            return nInstantXDepth;
         }
     }
-    //printf("mapTxLocks end %d %d\n", found , (int)vout.size());
-    if(found == (int)vout.size()) return nInstantXDepth;
 
     return 0;
 }
