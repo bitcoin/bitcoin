@@ -5,13 +5,13 @@
         <location filename="../forms/aboutdialog.ui" line="14"/>
         <location filename="../forms/ui_aboutdialog.h" line="131"/>
         <source>About Darkcoin Core</source>
-        <translation type="unfinished"/>
+        <translation>Giới thiệu về Darkcoin Core</translation>
     </message>
     <message>
         <location filename="../forms/aboutdialog.ui" line="53"/>
         <location filename="../forms/ui_aboutdialog.h" line="132"/>
         <source>&lt;b&gt;Darkcoin Core&lt;/b&gt; version</source>
-        <translation type="unfinished"/>
+        <translation>&lt;b&gt;Darkcoin Core&lt;/b&gt; phiên bản</translation>
     </message>
     <message>
         <location filename="../forms/aboutdialog.ui" line="111"/>
@@ -22,29 +22,34 @@ This is experimental software.
 Distributed under the MIT/X11 software license, see the accompanying file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit (http://www.openssl.org/) and cryptographic software written by Eric Young (eay@cryptsoft.com) and UPnP software written by Thomas Bernard.</source>
-        <translation type="unfinished"/>
+        <translation>
+Đây là phần mềm thử nghiệm.
+
+Phát hành dưới giấy phép phần mềm MIT/X11, hãy xem file đi kèm theo đây hoặc  http://www.opensource.org/licenses/mit-license.php.
+
+Sản phẩm này bao gồm phần mềm được phát triển bởi dự án OpenSSL cho việc sử dụng trong bộ công cụ OpenSSL Toolkit (http://www.openssl.org/) và phần mềm mã hoá được viết bởi Eric Young (eay@cryptsoft.com) và phần mềm UPnP được viết bởi Thomas Bernard.</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="30"/>
         <location filename="../utilitydialog.cpp" line="31"/>
         <source>Copyright</source>
-        <translation type="unfinished"/>
+        <translation>Bản quyền</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="30"/>
         <source>The Bitcoin Core developers</source>
-        <translation type="unfinished"/>
+        <translation>Nhóm phát triển Bitcoin Core</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="31"/>
         <source>The Darkcoin Core developers</source>
-        <translation type="unfinished"/>
+        <translation>Nhóm phát triển Darkcoin Core</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="43"/>
         <location filename="../utilitydialog.cpp" line="45"/>
         <source>(%1-bit)</source>
-        <translation type="unfinished"/>
+        <translation>(%1-bit)</translation>
     </message>
 </context>
 <context>
@@ -53,7 +58,7 @@ This product includes software developed by the OpenSSL Project for use in the O
         <location filename="../forms/addressbookpage.ui" line="30"/>
         <location filename="../forms/ui_addressbookpage.h" line="126"/>
         <source>Double-click to edit address or label</source>
-        <translation>Click đúp chuột để chỉnh sửa địa chỉ hoặc nhãn dữ liệu</translation>
+        <translation>Nháy đúp để sửa địa chỉ hoặc nhãn</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="57"/>
@@ -65,74 +70,74 @@ This product includes software developed by the OpenSSL Project for use in the O
         <location filename="../forms/addressbookpage.ui" line="60"/>
         <location filename="../forms/ui_addressbookpage.h" line="131"/>
         <source>&amp;New</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Mới</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="71"/>
         <location filename="../forms/ui_addressbookpage.h" line="133"/>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation>Sao chép các địa chỉ đã được chọn vào bộ nhớ tạm thời của hệ thống</translation>
+        <translation>Chép địa chỉ đã được chọn vào vùng đệm clipboard</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="74"/>
         <location filename="../forms/ui_addressbookpage.h" line="135"/>
         <source>&amp;Copy</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Sao chép</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="85"/>
         <location filename="../forms/ui_addressbookpage.h" line="137"/>
         <source>Delete the currently selected address from the list</source>
-        <translation type="unfinished"/>
+        <translation>Xoá địa chỉ đang được chọn khỏi danh sách</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="88"/>
         <location filename="../forms/ui_addressbookpage.h" line="139"/>
         <source>&amp;Delete</source>
-        <translation>&amp;Xóa</translation>
+        <translation>&amp;Xoá</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="112"/>
         <location filename="../forms/ui_addressbookpage.h" line="141"/>
         <source>Export the data in the current tab to a file</source>
-        <translation type="unfinished"/>
+        <translation>Kết xuất dữ liệu trong tab này sang một file</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="115"/>
         <location filename="../forms/ui_addressbookpage.h" line="143"/>
         <source>&amp;Export</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Kết xuất</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="132"/>
         <location filename="../forms/ui_addressbookpage.h" line="144"/>
         <source>C&amp;lose</source>
-        <translation type="unfinished"/>
+        <translation>Đó&amp;ng</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="45"/>
         <source>Choose the address to send coins to</source>
-        <translation type="unfinished"/>
+        <translation>Chọn địa chỉ để gửi tiền đến</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="46"/>
         <source>Choose the address to receive coins with</source>
-        <translation type="unfinished"/>
+        <translation>Chọn địa chỉ để nhận tiền</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="51"/>
         <source>C&amp;hoose</source>
-        <translation type="unfinished"/>
+        <translation>C&amp;họn</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="57"/>
         <source>Sending addresses</source>
-        <translation type="unfinished"/>
+        <translation>Đia chỉ gửi</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="58"/>
         <source>Receiving addresses</source>
-        <translation type="unfinished"/>
+        <translation>Địa chỉ nhận</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="65"/>
@@ -147,37 +152,37 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../addressbookpage.cpp" line="75"/>
         <source>&amp;Copy Address</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Sao chép Địa chỉ</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="76"/>
         <source>Copy &amp;Label</source>
-        <translation type="unfinished"/>
+        <translation>Sao chép &amp;Nhãn</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="77"/>
         <source>&amp;Edit</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Sửa</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="271"/>
         <source>Export Address List</source>
-        <translation type="unfinished"/>
+        <translation>Kết xuất danh sách Địa chỉ</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="272"/>
         <source>Comma separated file (*.csv)</source>
-        <translation>Tập tin tách biệt bởi dấu phẩy (*.csv)</translation>
+        <translation>File định dạng phân cách bởi dấu phẩy (*.csv)</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="285"/>
         <source>Exporting Failed</source>
-        <translation type="unfinished"/>
+        <translation>Kết xuất không thành công</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="286"/>
         <source>There was an error trying to save the address list to %1.</source>
-        <translation type="unfinished"/>
+        <translation>Có một lỗi xảy ra khi lưu danh sách địa chỉ vào %1.</translation>
     </message>
 </context>
 <context>
@@ -185,7 +190,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../addresstablemodel.cpp" line="169"/>
         <source>Label</source>
-        <translation>Nhãn dữ liệu</translation>
+        <translation>Nhãn</translation>
     </message>
     <message>
         <location filename="../addresstablemodel.cpp" line="169"/>
@@ -195,7 +200,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../addresstablemodel.cpp" line="205"/>
         <source>(no label)</source>
-        <translation>(chưa có nhãn)</translation>
+        <translation>(không có nhãn)</translation>
     </message>
 </context>
 <context>
@@ -204,37 +209,37 @@ This product includes software developed by the OpenSSL Project for use in the O
         <location filename="../forms/askpassphrasedialog.ui" line="26"/>
         <location filename="../forms/ui_askpassphrasedialog.h" line="135"/>
         <source>Passphrase Dialog</source>
-        <translation type="unfinished"/>
+        <translation>Khung hội thoại mật khẩu</translation>
     </message>
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="47"/>
         <location filename="../forms/ui_askpassphrasedialog.h" line="136"/>
         <source>Enter passphrase</source>
-        <translation type="unfinished"/>
+        <translation>Mời nhập mật khẩu</translation>
     </message>
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="61"/>
         <location filename="../forms/ui_askpassphrasedialog.h" line="137"/>
         <source>New passphrase</source>
-        <translation type="unfinished"/>
+        <translation>Mật khẩu mới</translation>
     </message>
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="75"/>
         <location filename="../forms/ui_askpassphrasedialog.h" line="138"/>
         <source>Repeat new passphrase</source>
-        <translation type="unfinished"/>
+        <translation>Nhập lại mật khẩu mới</translation>
     </message>
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="108"/>
         <location filename="../forms/ui_askpassphrasedialog.h" line="141"/>
         <source>Serves to disable the trivial sendmoney when OS account compromised. Provides no real security.</source>
-        <translation type="unfinished"/>
+        <translation>Phục vụ để tắt tính năng chuyển tiền vô giá trị khi tài khoản của hệ điều hành bị xâm nhập. Không cung cấp đủ an ninh thực sự.</translation>
     </message>
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="111"/>
         <location filename="../forms/ui_askpassphrasedialog.h" line="143"/>
         <source>For anonymization only</source>
-        <translation type="unfinished"/>
+        <translation>Chỉ dùng cho mục đích vô danh</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="41"/>
@@ -244,42 +249,42 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../askpassphrasedialog.cpp" line="42"/>
         <source>Encrypt wallet</source>
-        <translation type="unfinished"/>
+        <translation>Mã hoá ví</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="48"/>
         <source>This operation needs your wallet passphrase to unlock the wallet.</source>
-        <translation type="unfinished"/>
+        <translation>Công việc này cần mật khẩu ví của bạn để mở khoá ví.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="53"/>
         <source>Unlock wallet</source>
-        <translation type="unfinished"/>
+        <translation>Mở khoá ví</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="56"/>
         <source>This operation needs your wallet passphrase to decrypt the wallet.</source>
-        <translation type="unfinished"/>
+        <translation>Công việc này cần mật khẩu ví của bạn để giải mã ví.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="61"/>
         <source>Decrypt wallet</source>
-        <translation type="unfinished"/>
+        <translation>Giải mã ví</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="64"/>
         <source>Change passphrase</source>
-        <translation type="unfinished"/>
+        <translation>Đổi mật khẩu</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="65"/>
         <source>Enter the old and new passphrase to the wallet.</source>
-        <translation type="unfinished"/>
+        <translation>Hãy nhập mật khẩu cũ và mật khẩu mới cho ví.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="112"/>
         <source>Confirm wallet encryption</source>
-        <translation type="unfinished"/>
+        <translation>Xác nhận mã hoá ví</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="113"/>
@@ -289,13 +294,13 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../askpassphrasedialog.cpp" line="113"/>
         <source>Are you sure you wish to encrypt your wallet?</source>
-        <translation type="unfinished"/>
+        <translation>Bạn có chắc là mình muốn mã hoá ví?</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="122"/>
         <location filename="../askpassphrasedialog.cpp" line="181"/>
         <source>Wallet encrypted</source>
-        <translation type="unfinished"/>
+        <translation>Ví đã được mã hoá.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="124"/>
@@ -313,7 +318,7 @@ This product includes software developed by the OpenSSL Project for use in the O
         <location filename="../askpassphrasedialog.cpp" line="187"/>
         <location filename="../askpassphrasedialog.cpp" line="193"/>
         <source>Wallet encryption failed</source>
-        <translation type="unfinished"/>
+        <translation>Mã hoá ví không thành công</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="138"/>
@@ -324,12 +329,12 @@ This product includes software developed by the OpenSSL Project for use in the O
         <location filename="../askpassphrasedialog.cpp" line="145"/>
         <location filename="../askpassphrasedialog.cpp" line="194"/>
         <source>The supplied passphrases do not match.</source>
-        <translation type="unfinished"/>
+        <translation>Mật khẩu bạn cung cấp không tương xứng.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="157"/>
         <source>Wallet unlock failed</source>
-        <translation type="unfinished"/>
+        <translation>Mở khoá ví không thành công</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="158"/>
@@ -341,18 +346,18 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../askpassphrasedialog.cpp" line="168"/>
         <source>Wallet decryption failed</source>
-        <translation type="unfinished"/>
+        <translation>Giải mã ví không thành công</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="182"/>
         <source>Wallet passphrase was successfully changed.</source>
-        <translation type="unfinished"/>
+        <translation>Mật khẩu ví đã được đổi thành công.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="230"/>
         <location filename="../askpassphrasedialog.cpp" line="254"/>
         <source>Warning: The Caps Lock key is on!</source>
-        <translation type="unfinished"/>
+        <translation>Cảnh báo: Khoá Caps Lock đang được bật!</translation>
     </message>
 </context>
 <context>
@@ -360,246 +365,246 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="76"/>
         <source>Darkcoin Core</source>
-        <translation type="unfinished"/>
+        <translation>Darkcoin Core</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="85"/>
         <source>Wallet</source>
-        <translation type="unfinished"/>
+        <translation>Ví</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="87"/>
         <source>Node</source>
-        <translation type="unfinished"/>
+        <translation>Nút</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="101"/>
         <location filename="../bitcoingui.cpp" line="494"/>
         <source>[testnet]</source>
-        <translation type="unfinished"/>
+        <translation>[mạng thử]</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="226"/>
         <source>&amp;Overview</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Tổng thể</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="227"/>
         <source>Show general overview of wallet</source>
-        <translation type="unfinished"/>
+        <translation>Hiển thị thông tin tổng thể của ví</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="233"/>
         <source>&amp;Send</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Gửi</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="234"/>
         <source>Send coins to a Darkcoin address</source>
-        <translation type="unfinished"/>
+        <translation>Gửi tiền vào địa chỉ Darkcoin</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="240"/>
         <source>&amp;Receive</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Nhận</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="241"/>
         <source>Request payments (generates QR codes and darkcoin: URIs)</source>
-        <translation type="unfinished"/>
+        <translation>Yêu cầu thanh toán (sinh mã QR và darkcoin: URIs)</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="247"/>
         <source>&amp;Transactions</source>
-        <translation type="unfinished"/>
+        <translation>Các &amp;Giao dịch</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="248"/>
         <source>Browse transaction history</source>
-        <translation type="unfinished"/>
+        <translation>Xem lịch sử giao dịch</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="265"/>
         <source>E&amp;xit</source>
-        <translation type="unfinished"/>
+        <translation>T&amp;hoát</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="266"/>
         <source>Quit application</source>
-        <translation type="unfinished"/>
+        <translation>Thoát ứng dụng</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="270"/>
         <location filename="../bitcoingui.cpp" line="272"/>
         <source>&amp;About Darkcoin Core</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Về Darkcoin Core</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="273"/>
         <source>Show information about Darkcoin</source>
-        <translation type="unfinished"/>
+        <translation>Hiển thị thông tin giới thiệu về Darkcoin</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="276"/>
         <location filename="../bitcoingui.cpp" line="278"/>
         <source>About &amp;Qt</source>
-        <translation type="unfinished"/>
+        <translation>Về &amp;QT</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="280"/>
         <source>Show information about Qt</source>
-        <translation type="unfinished"/>
+        <translation>Hiển thị thông tin giới thiệu về Qt</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="282"/>
         <source>&amp;Options...</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Tuỳ chọn...</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="283"/>
         <source>Modify configuration options for Darkcoin</source>
-        <translation type="unfinished"/>
+        <translation>Thay đổi tuỳ chọn cấu hình cho Darkcoin</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="286"/>
         <location filename="../bitcoingui.cpp" line="288"/>
         <source>&amp;Show / Hide</source>
-        <translation type="unfinished"/>
+        <translation>Ẩ&amp;n / Hiện</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="289"/>
         <source>Show or hide the main Window</source>
-        <translation type="unfinished"/>
+        <translation>Hiển thị hoặc ẩn cửa sổ chính</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="291"/>
         <source>&amp;Encrypt Wallet...</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Mã hoá Ví...</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="292"/>
         <source>Encrypt the private keys that belong to your wallet</source>
-        <translation type="unfinished"/>
+        <translation>Mã hoá khoá riêng mà thuộc về ví của bạn</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="294"/>
         <source>&amp;Backup Wallet...</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Sao lưu Ví...</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="295"/>
         <source>Backup wallet to another location</source>
-        <translation type="unfinished"/>
+        <translation>Sao lưu ví vào vị trí khác</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="296"/>
         <source>&amp;Change Passphrase...</source>
-        <translation type="unfinished"/>
+        <translation>Đổi &amp;Mật khẩu...</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="297"/>
         <source>Change the passphrase used for wallet encryption</source>
-        <translation type="unfinished"/>
+        <translation>Đổi mật khẩu dùng để mã hoá ví</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="298"/>
         <source>&amp;Unlock Wallet...</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Mở khoá Ví...</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="299"/>
         <source>Unlock wallet</source>
-        <translation type="unfinished"/>
+        <translation>Mở khoá ví</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="300"/>
         <source>&amp;Lock Wallet</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Khoá Ví</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="301"/>
         <source>Sign &amp;message...</source>
-        <translation type="unfinished"/>
+        <translation>Ký vào &amp;thông điệp...</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="302"/>
         <source>Sign messages with your Darkcoin addresses to prove you own them</source>
-        <translation type="unfinished"/>
+        <translation>Ký vào thông điệp với địa chỉ Darkcoin để chứng minh bạn là chủ của chúng</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="303"/>
         <source>&amp;Verify message...</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Kiểm tra thông điệp...</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="304"/>
         <source>Verify messages to ensure they were signed with specified Darkcoin addresses</source>
-        <translation type="unfinished"/>
+        <translation>Kiểm tra thông điệp để đảm bảo rằng nó đã được ký bằng địa chỉ Darkcoin nhất định</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="306"/>
         <source>&amp;Information</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Thông tin</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="307"/>
         <source>Show diagnostic information</source>
-        <translation type="unfinished"/>
+        <translation>Hiển thị thông tin chuẩn đoán</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="308"/>
         <source>&amp;Debug console</source>
-        <translation type="unfinished"/>
+        <translation>Giao diện gỡ rối</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="309"/>
         <source>Open debugging console</source>
-        <translation type="unfinished"/>
+        <translation>Mở giao diện gỡ rối</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="310"/>
         <source>&amp;Network Monitor</source>
-        <translation type="unfinished"/>
+        <translation>Theo dõi &amp;Mạng</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="311"/>
         <source>Show network monitor</source>
-        <translation type="unfinished"/>
+        <translation>Hiển thị thông tin theo dõi mạng</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="313"/>
         <source>&amp;Sending addresses...</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Gửi địa chỉ...</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="314"/>
         <source>Show the list of used sending addresses and labels</source>
-        <translation type="unfinished"/>
+        <translation>Hiển thị danh sách các địa chỉ đã sử dụng và các nhãn</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="315"/>
         <source>&amp;Receiving addresses...</source>
-        <translation type="unfinished"/>
+        <translation>Địa chỉ nhận...</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="316"/>
         <source>Show the list of used receiving addresses and labels</source>
-        <translation type="unfinished"/>
+        <translation>Hiển thị danh sách các địa chỉ đã sử dụng để nhận và các nhãn</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="318"/>
         <source>Open &amp;URI...</source>
-        <translation type="unfinished"/>
+        <translation>Mở &amp;URI...</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="319"/>
         <source>Open a darkcoin: URI or payment request</source>
-        <translation type="unfinished"/>
+        <translation>Mở một darkcoin: URI hoặc một yêu cầu thanh toán</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="321"/>
         <source>&amp;Command-line options</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Các Tuỳ chọn dòng lệnh</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="322"/>
@@ -609,99 +614,99 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="358"/>
         <source>&amp;File</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Tệp</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="372"/>
         <source>&amp;Settings</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Thiết đặt</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="385"/>
         <source>&amp;Tools</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Công cụ</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="391"/>
         <source>&amp;Help</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Trợ giúp</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="402"/>
         <source>Tabs toolbar</source>
-        <translation type="unfinished"/>
+        <translation>Bảng Thanh công cụ</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="489"/>
         <location filename="../bitcoingui.cpp" line="494"/>
         <source>Darkcoin client</source>
-        <translation type="unfinished"/>
+        <translation>Phần mềm Darkcoin</translation>
     </message>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="638"/>
         <source>%n active connection(s) to Darkcoin network</source>
-        <translation type="unfinished"><numerusform></numerusform></translation>
+        <translation><numerusform>%n (các) kết nối hoạt động tới mạng lưới Darkcoin</numerusform></translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="650"/>
         <source>Synchronizing with network...</source>
-        <translation type="unfinished"/>
+        <translation>Đang đồng bộ với mạng lưới...</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="653"/>
         <source>Importing blocks from disk...</source>
-        <translation type="unfinished"/>
+        <translation>Nhập các khối từ đĩa...</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="656"/>
         <source>Reindexing blocks on disk...</source>
-        <translation type="unfinished"/>
+        <translation>Sắp xếp lại các khối trên đĩa...</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="660"/>
         <source>No block source available...</source>
-        <translation type="unfinished"/>
+        <translation>Không thấy nguồn sẵn sàng của các khối...</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="670"/>
         <source>Processed %1 blocks of transaction history.</source>
-        <translation type="unfinished"/>
+        <translation>Đang xử lý %1 các khối của lịch sử giao dịch.</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="675"/>
         <source>Up to date</source>
-        <translation type="unfinished"/>
+        <translation>Mới nhất</translation>
     </message>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="696"/>
         <source>%n hour(s)</source>
-        <translation type="unfinished"><numerusform></numerusform></translation>
+        <translation><numerusform>%n giờ</numerusform></translation>
     </message>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="700"/>
         <source>%n day(s)</source>
-        <translation type="unfinished"><numerusform></numerusform></translation>
+        <translation><numerusform>%n ngày</numerusform></translation>
     </message>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="704"/>
         <location filename="../bitcoingui.cpp" line="710"/>
         <source>%n week(s)</source>
-        <translation type="unfinished"><numerusform></numerusform></translation>
+        <translation><numerusform>%n tuần</numerusform></translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="710"/>
         <source>%1 and %2</source>
-        <translation type="unfinished"/>
+        <translation>%1 và %2</translation>
     </message>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="710"/>
         <source>%n year(s)</source>
-        <translation type="unfinished"><numerusform></numerusform></translation>
+        <translation><numerusform>%n năm</numerusform></translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="714"/>
         <source>%1 behind</source>
-        <translation type="unfinished"/>
+        <translation>%1 đằng sau</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="719"/>
@@ -721,32 +726,32 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="750"/>
         <source>Darkcoin</source>
-        <translation type="unfinished"/>
+        <translation>Darkcoin</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="764"/>
         <source>Error</source>
-        <translation type="unfinished"/>
+        <translation>Lỗi</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="767"/>
         <source>Warning</source>
-        <translation type="unfinished"/>
+        <translation>Cảnh báo</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="770"/>
         <source>Information</source>
-        <translation type="unfinished"/>
+        <translation>Thông tin</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="849"/>
         <source>Sent transaction</source>
-        <translation type="unfinished"/>
+        <translation>Giao dịch gửi đi</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="849"/>
         <source>Incoming transaction</source>
-        <translation type="unfinished"/>
+        <translation>Giao dịch nhận về</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="850"/>
@@ -783,7 +788,7 @@ Address: %4
     <message>
         <location filename="../clientmodel.cpp" line="135"/>
         <source>Network Alert</source>
-        <translation type="unfinished"/>
+        <translation>Cảnh báo mạng</translation>
     </message>
 </context>
 <context>
@@ -792,79 +797,79 @@ Address: %4
         <location filename="../forms/coincontroldialog.ui" line="14"/>
         <location filename="../forms/ui_coincontroldialog.h" line="319"/>
         <source>Coin Control Address Selection</source>
-        <translation type="unfinished"/>
+        <translation>Chọn địa chỉ Coin Control</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="48"/>
         <location filename="../forms/ui_coincontroldialog.h" line="320"/>
         <source>Quantity:</source>
-        <translation type="unfinished"/>
+        <translation>Số lượng:</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="77"/>
         <location filename="../forms/ui_coincontroldialog.h" line="321"/>
         <source>Bytes:</source>
-        <translation type="unfinished"/>
+        <translation>Bytes:</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="122"/>
         <location filename="../forms/ui_coincontroldialog.h" line="322"/>
         <source>Amount:</source>
-        <translation type="unfinished"/>
+        <translation>Số tiền:</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="151"/>
         <location filename="../forms/ui_coincontroldialog.h" line="323"/>
         <source>Priority:</source>
-        <translation type="unfinished"/>
+        <translation>Ưu tiên:</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="196"/>
         <location filename="../forms/ui_coincontroldialog.h" line="324"/>
         <source>Fee:</source>
-        <translation type="unfinished"/>
+        <translation>Phí:</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="228"/>
         <location filename="../forms/ui_coincontroldialog.h" line="325"/>
         <source>Low Output:</source>
-        <translation type="unfinished"/>
+        <translation>Low Output:</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="276"/>
         <location filename="../forms/ui_coincontroldialog.h" line="326"/>
         <source>After Fee:</source>
-        <translation type="unfinished"/>
+        <translation>Phí sau:</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="308"/>
         <location filename="../forms/ui_coincontroldialog.h" line="327"/>
         <source>Change:</source>
-        <translation type="unfinished"/>
+        <translation>Trả lại:</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="364"/>
         <location filename="../forms/ui_coincontroldialog.h" line="328"/>
         <source>(un)select all</source>
-        <translation type="unfinished"/>
+        <translation>(bỏ) chọn tất cả</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="377"/>
         <location filename="../forms/ui_coincontroldialog.h" line="329"/>
         <source>Tree mode</source>
-        <translation type="unfinished"/>
+        <translation>Kiểu cây</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="393"/>
         <location filename="../forms/ui_coincontroldialog.h" line="330"/>
         <source>List mode</source>
-        <translation type="unfinished"/>
+        <translation>Kiểu danh sách</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="446"/>
         <location filename="../forms/ui_coincontroldialog.h" line="337"/>
         <source>Amount</source>
-        <translation>Số lượng</translation>
+        <translation>Số tiền</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="456"/>
@@ -876,52 +881,52 @@ Address: %4
         <location filename="../forms/coincontroldialog.ui" line="461"/>
         <location filename="../forms/ui_coincontroldialog.h" line="335"/>
         <source>Darksend Rounds</source>
-        <translation type="unfinished"/>
+        <translation>Số vòng Darksend</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="466"/>
         <location filename="../forms/ui_coincontroldialog.h" line="334"/>
         <source>Date</source>
-        <translation type="unfinished"/>
+        <translation>Ngày</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="471"/>
         <location filename="../forms/ui_coincontroldialog.h" line="333"/>
         <source>Confirmations</source>
-        <translation type="unfinished"/>
+        <translation>Lượt xác nhận</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="474"/>
         <location filename="../forms/ui_coincontroldialog.h" line="339"/>
         <source>Confirmed</source>
-        <translation type="unfinished"/>
+        <translation>Đã được xác nhận</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="479"/>
         <location filename="../forms/ui_coincontroldialog.h" line="332"/>
         <source>Priority</source>
-        <translation type="unfinished"/>
+        <translation>Ưu tiên</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="43"/>
         <source>Copy address</source>
-        <translation type="unfinished"/>
+        <translation>Sao chép địa chỉ</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="44"/>
         <source>Copy label</source>
-        <translation type="unfinished"/>
+        <translation>Sao chép nhãn</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="45"/>
         <location filename="../coincontroldialog.cpp" line="71"/>
         <source>Copy amount</source>
-        <translation type="unfinished"/>
+        <translation>Sao chép số tiền</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="46"/>
         <source>Copy transaction ID</source>
-        <translation type="unfinished"/>
+        <translation>Sao chép mã giao dịch</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="47"/>
@@ -936,12 +941,12 @@ Address: %4
     <message>
         <location filename="../coincontroldialog.cpp" line="70"/>
         <source>Copy quantity</source>
-        <translation type="unfinished"/>
+        <translation>Sao chép số lượng</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="72"/>
         <source>Copy fee</source>
-        <translation type="unfinished"/>
+        <translation>Sao chép phí</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="73"/>
@@ -951,12 +956,12 @@ Address: %4
     <message>
         <location filename="../coincontroldialog.cpp" line="74"/>
         <source>Copy bytes</source>
-        <translation type="unfinished"/>
+        <translation>Sao chép các bytes</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="75"/>
         <source>Copy priority</source>
-        <translation type="unfinished"/>
+        <translation>Sao chép ưu tiên</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="76"/>
@@ -966,77 +971,77 @@ Address: %4
     <message>
         <location filename="../coincontroldialog.cpp" line="77"/>
         <source>Copy change</source>
-        <translation type="unfinished"/>
+        <translation>Sao chép tiền trả lại</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="410"/>
         <source>highest</source>
-        <translation type="unfinished"/>
+        <translation>cao nhất</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="411"/>
         <source>higher</source>
-        <translation type="unfinished"/>
+        <translation>cao hơn</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="412"/>
         <source>high</source>
-        <translation type="unfinished"/>
+        <translation>cao</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="413"/>
         <source>medium-high</source>
-        <translation type="unfinished"/>
+        <translation>cao-vừa</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="414"/>
         <source>medium</source>
-        <translation type="unfinished"/>
+        <translation>vừa</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="418"/>
         <source>low-medium</source>
-        <translation type="unfinished"/>
+        <translation>thấp-vừa</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="419"/>
         <source>low</source>
-        <translation type="unfinished"/>
+        <translation>thấp</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="420"/>
         <source>lower</source>
-        <translation type="unfinished"/>
+        <translation>thấp hơn</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="421"/>
         <source>lowest</source>
-        <translation type="unfinished"/>
+        <translation>thấp nhất</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="432"/>
         <source>(%1 locked)</source>
-        <translation type="unfinished"/>
+        <translation>(%1 được khoá)</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="464"/>
         <source>none</source>
-        <translation type="unfinished"/>
+        <translation>không có</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="605"/>
         <source>Dust</source>
-        <translation type="unfinished"/>
+        <translation>Bụi</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="605"/>
         <source>yes</source>
-        <translation type="unfinished"/>
+        <translation>có</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="605"/>
         <source>no</source>
-        <translation type="unfinished"/>
+        <translation>không</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="615"/>
@@ -1089,7 +1094,7 @@ Address: %4
         <location filename="../coincontroldialog.cpp" line="670"/>
         <location filename="../coincontroldialog.cpp" line="731"/>
         <source>(no label)</source>
-        <translation>(chưa có nhãn)</translation>
+        <translation>(không có nhãn)</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="724"/>
@@ -1108,25 +1113,25 @@ Address: %4
         <location filename="../forms/darksendconfig.ui" line="14"/>
         <location filename="../forms/ui_darksendconfig.h" line="96"/>
         <source>Configure Darksend+</source>
-        <translation type="unfinished"/>
+        <translation>Cấu hình Darksend+</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="26"/>
         <location filename="../forms/ui_darksendconfig.h" line="97"/>
         <source>Basic Privacy</source>
-        <translation type="unfinished"/>
+        <translation>Mức Riêng tư Cơ bản</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="39"/>
         <location filename="../forms/ui_darksendconfig.h" line="98"/>
         <source>High Privacy</source>
-        <translation type="unfinished"/>
+        <translation>Mức Riêng tư Cao</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="52"/>
         <location filename="../forms/ui_darksendconfig.h" line="99"/>
         <source>Maximum Privacy</source>
-        <translation type="unfinished"/>
+        <translation>Mức Riêng tư Tối đa</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="65"/>
@@ -1181,7 +1186,7 @@ Address: %4
         <location filename="../darksendconfig.cpp" line="58"/>
         <location filename="../darksendconfig.cpp" line="73"/>
         <source>Darksend Configuration</source>
-        <translation type="unfinished"/>
+        <translation>Cấu hình Darksend</translation>
     </message>
     <message>
         <location filename="../darksendconfig.cpp" line="44"/>
@@ -1205,71 +1210,71 @@ Address: %4
         <location filename="../forms/editaddressdialog.ui" line="14"/>
         <location filename="../forms/ui_editaddressdialog.h" line="91"/>
         <source>Edit Address</source>
-        <translation type="unfinished"/>
+        <translation>Sửa địa chỉ</translation>
     </message>
     <message>
         <location filename="../forms/editaddressdialog.ui" line="25"/>
         <location filename="../forms/ui_editaddressdialog.h" line="92"/>
         <source>&amp;Label</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Nhãn</translation>
     </message>
     <message>
         <location filename="../forms/editaddressdialog.ui" line="35"/>
         <location filename="../forms/ui_editaddressdialog.h" line="94"/>
         <source>The label associated with this address list entry</source>
-        <translation type="unfinished"/>
+        <translation>Nhãn tương ứng với địa chỉ này trong danh sách đầu vào</translation>
     </message>
     <message>
         <location filename="../forms/editaddressdialog.ui" line="42"/>
         <location filename="../forms/ui_editaddressdialog.h" line="96"/>
         <source>&amp;Address</source>
-        <translation type="unfinished"/>
+        <translation>Địa &amp;chỉ</translation>
     </message>
     <message>
         <location filename="../forms/editaddressdialog.ui" line="52"/>
         <location filename="../forms/ui_editaddressdialog.h" line="98"/>
         <source>The address associated with this address list entry. This can only be modified for sending addresses.</source>
-        <translation type="unfinished"/>
+        <translation>Địa chỉ tương ứng với địa chỉ này trong danh sách đầu vào. Chỉ có thể thay đổi địa chỉ gửi đi.</translation>
     </message>
     <message>
         <location filename="../editaddressdialog.cpp" line="29"/>
         <source>New receiving address</source>
-        <translation type="unfinished"/>
+        <translation>Địa chỉ nhận mới</translation>
     </message>
     <message>
         <location filename="../editaddressdialog.cpp" line="33"/>
         <source>New sending address</source>
-        <translation type="unfinished"/>
+        <translation>Địa chỉ gửi mới</translation>
     </message>
     <message>
         <location filename="../editaddressdialog.cpp" line="36"/>
         <source>Edit receiving address</source>
-        <translation type="unfinished"/>
+        <translation>Sửa địa chỉ nhận</translation>
     </message>
     <message>
         <location filename="../editaddressdialog.cpp" line="40"/>
         <source>Edit sending address</source>
-        <translation type="unfinished"/>
+        <translation>Sửa địa chỉ gửi</translation>
     </message>
     <message>
         <location filename="../editaddressdialog.cpp" line="111"/>
         <source>The entered address &quot;%1&quot; is not a valid Darkcoin address.</source>
-        <translation type="unfinished"/>
+        <translation>Địa chỉ vừa nhập &quot;%1&quot; không phải địa chỉ Darkcoin hợp lệ.</translation>
     </message>
     <message>
         <location filename="../editaddressdialog.cpp" line="116"/>
         <source>The entered address &quot;%1&quot; is already in the address book.</source>
-        <translation type="unfinished"/>
+        <translation>Địa chỉ vừa nhập &quot;%1&quot; đã có trong danh sách địa chỉ.</translation>
     </message>
     <message>
         <location filename="../editaddressdialog.cpp" line="121"/>
         <source>Could not unlock wallet.</source>
-        <translation type="unfinished"/>
+        <translation>Không thể mở khoá ví.</translation>
     </message>
     <message>
         <location filename="../editaddressdialog.cpp" line="126"/>
         <source>New key generation failed.</source>
-        <translation type="unfinished"/>
+        <translation>Sinh khoá mới không thành công.</translation>
     </message>
 </context>
 <context>
@@ -1277,12 +1282,12 @@ Address: %4
     <message>
         <location filename="../intro.cpp" line="69"/>
         <source>A new data directory will be created.</source>
-        <translation type="unfinished"/>
+        <translation>Một thư mục dữ liệu mớ đã được tạo.</translation>
     </message>
     <message>
         <location filename="../intro.cpp" line="91"/>
         <source>name</source>
-        <translation type="unfinished"/>
+        <translation>tên</translation>
     </message>
     <message>
         <location filename="../intro.cpp" line="93"/>
@@ -1306,32 +1311,32 @@ Address: %4
         <location filename="../forms/helpmessagedialog.ui" line="19"/>
         <location filename="../forms/ui_helpmessagedialog.h" line="105"/>
         <source>Darkcoin Core - Command-line options</source>
-        <translation type="unfinished"/>
+        <translation>Darkcoin Core - Các tuỳ chọn dòng lệnh</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="69"/>
         <source>Darkcoin Core</source>
-        <translation type="unfinished"/>
+        <translation>Darkcoin Core</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="69"/>
         <source>version</source>
-        <translation type="unfinished"/>
+        <translation>phiên bản</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="71"/>
         <source>Usage:</source>
-        <translation type="unfinished"/>
+        <translation>Cách dùng:</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="72"/>
         <source>command-line options</source>
-        <translation type="unfinished"/>
+        <translation>tuỳ chọn dòng lệnh</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="76"/>
         <source>UI options</source>
-        <translation type="unfinished"/>
+        <translation>Tuỳ chọn giao diện</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="77"/>
@@ -1365,42 +1370,42 @@ Address: %4
         <location filename="../forms/intro.ui" line="14"/>
         <location filename="../forms/ui_intro.h" line="183"/>
         <source>Welcome</source>
-        <translation type="unfinished"/>
+        <translation>Chào mừng</translation>
     </message>
     <message>
         <location filename="../forms/intro.ui" line="23"/>
         <location filename="../forms/ui_intro.h" line="184"/>
         <source>Welcome to Darkcoin Core.</source>
-        <translation type="unfinished"/>
+        <translation>Chào mừng đến với Darkcoin Core.</translation>
     </message>
     <message>
         <location filename="../forms/intro.ui" line="49"/>
         <location filename="../forms/ui_intro.h" line="185"/>
         <source>As this is the first time the program is launched, you can choose where Darkcoin Core will store its data.</source>
-        <translation type="unfinished"/>
+        <translation>Đây là lần đầu tiên chương trình được khởi động, bạn có thể chọn nơi mà Darkcoin Core sẽ lưu dữ liệu.</translation>
     </message>
     <message>
         <location filename="../forms/intro.ui" line="59"/>
         <location filename="../forms/ui_intro.h" line="186"/>
         <source>Darkcoin Core will download and store a copy of the Darkcoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
-        <translation type="unfinished"/>
+        <translation>Darkcoin Core sẽ tải và lưu một bản của sổ cái Darkcoin. Ít nhất %1GB dữ liệu sẽ được lưu trong thư mục này, và nó sẽ tăng lên theo thời gian. Ví của bạn cũng sẽ được lưu trong thư mục này.</translation>
     </message>
     <message>
         <location filename="../forms/intro.ui" line="69"/>
         <location filename="../forms/ui_intro.h" line="187"/>
         <source>Use the default data directory</source>
-        <translation type="unfinished"/>
+        <translation>Sử dụng thư mục dữ liệu ngầm định</translation>
     </message>
     <message>
         <location filename="../forms/intro.ui" line="76"/>
         <location filename="../forms/ui_intro.h" line="188"/>
         <source>Use a custom data directory:</source>
-        <translation type="unfinished"/>
+        <translation>Sử dụng thư mục dữ liệu tuỳ chọn:</translation>
     </message>
     <message>
         <location filename="../intro.cpp" line="185"/>
         <source>Darkcoin</source>
-        <translation type="unfinished"/>
+        <translation>Darkcoin</translation>
     </message>
     <message>
         <location filename="../intro.cpp" line="186"/>
@@ -1410,7 +1415,7 @@ Address: %4
     <message>
         <location filename="../intro.cpp" line="210"/>
         <source>Error</source>
-        <translation type="unfinished"/>
+        <translation>Lỗi</translation>
     </message>
     <message>
         <location filename="../intro.cpp" line="219"/>
@@ -1420,7 +1425,7 @@ Address: %4
     <message>
         <location filename="../intro.cpp" line="222"/>
         <source>(of %1GB needed)</source>
-        <translation type="unfinished"/>
+        <translation>(của %1GB cần thiết)</translation>
     </message>
 </context>
 <context>
@@ -1429,30 +1434,30 @@ Address: %4
         <location filename="../forms/openuridialog.ui" line="14"/>
         <location filename="../forms/ui_openuridialog.h" line="93"/>
         <source>Open URI</source>
-        <translation type="unfinished"/>
+        <translation>Mở URI</translation>
     </message>
     <message>
         <location filename="../forms/openuridialog.ui" line="20"/>
         <location filename="../forms/ui_openuridialog.h" line="94"/>
         <source>Open payment request from URI or file</source>
-        <translation type="unfinished"/>
+        <translation>Mở yêu cầu thanh toán từ URI hoặc file</translation>
     </message>
     <message>
         <location filename="../forms/openuridialog.ui" line="29"/>
         <location filename="../forms/ui_openuridialog.h" line="95"/>
         <source>URI:</source>
-        <translation type="unfinished"/>
+        <translation>URI:</translation>
     </message>
     <message>
         <location filename="../forms/openuridialog.ui" line="40"/>
         <location filename="../forms/ui_openuridialog.h" line="97"/>
         <source>Select payment request file</source>
-        <translation type="unfinished"/>
+        <translation>Chọn file yêu cầ thanh toán</translation>
     </message>
     <message>
         <location filename="../openuridialog.cpp" line="48"/>
         <source>Select payment request file to open</source>
-        <translation type="unfinished"/>
+        <translation>Chọn tệp yêu cầu thanh toán để mở</translation>
     </message>
 </context>
 <context>
@@ -1461,253 +1466,253 @@ Address: %4
         <location filename="../forms/optionsdialog.ui" line="14"/>
         <location filename="../forms/ui_optionsdialog.h" line="532"/>
         <source>Options</source>
-        <translation type="unfinished"/>
+        <translation>Các tuỳ chọn</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="27"/>
         <location filename="../forms/ui_optionsdialog.h" line="548"/>
         <source>&amp;Main</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Chính</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="33"/>
         <location filename="../forms/ui_optionsdialog.h" line="534"/>
         <source>Automatically start Darkcoin after logging in to the system.</source>
-        <translation type="unfinished"/>
+        <translation>Tự động khởi động Darkcoin sau khi đăng nhập hệ thống.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="36"/>
         <location filename="../forms/ui_optionsdialog.h" line="536"/>
         <source>&amp;Start Darkcoin on system login</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Khởi động Darkcoin khi đăng nhập hệ thống</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="45"/>
         <location filename="../forms/ui_optionsdialog.h" line="537"/>
         <source>Size of &amp;database cache</source>
-        <translation type="unfinished"/>
+        <translation>Kích thước của dữ liệu cache</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="61"/>
         <location filename="../forms/ui_optionsdialog.h" line="538"/>
         <source>MB</source>
-        <translation type="unfinished"/>
+        <translation>MB</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="88"/>
         <location filename="../forms/ui_optionsdialog.h" line="539"/>
         <source>Number of script &amp;verification threads</source>
-        <translation type="unfinished"/>
+        <translation>Số lượng các luồng kịch bản kiểm tra</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="101"/>
         <location filename="../forms/ui_optionsdialog.h" line="541"/>
         <source>(0 = auto, &lt;0 = leave that many cores free)</source>
-        <translation type="unfinished"/>
+        <translation>(0 = tự động, &lt;0 = để đó rất nhiều lõi miễn phí)</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="138"/>
         <location filename="../forms/ui_optionsdialog.h" line="544"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This setting determines the amount of individual masternodes that an input will be anonymized through. More rounds of anonymization gives a higher degree of privacy, but also costs more in fees.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"/>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Thiết lập này xác định số tiền cho mỗi master nodes mà đầu vào thông qua đó được ẩn danh. Càng có nhiều vòng ẩn danh thì sẽ cho mức độ riêng tư càng cao, nhưng nó cũng tốn nhiều phí hơn.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="141"/>
         <location filename="../forms/ui_optionsdialog.h" line="546"/>
         <source>Darksend rounds to use</source>
-        <translation type="unfinished"/>
+        <translation>Số vòng Darksend sử dụng</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="180"/>
         <location filename="../forms/ui_optionsdialog.h" line="547"/>
         <source>Amount of Darkcoin to keep anonymized</source>
-        <translation type="unfinished"/>
+        <translation>Lượng Darkcoin muốn giữ vô danh</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="206"/>
         <location filename="../forms/ui_optionsdialog.h" line="560"/>
         <source>W&amp;allet</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Ví</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="212"/>
         <location filename="../forms/ui_optionsdialog.h" line="549"/>
         <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly. Most transactions are 1 kB.</source>
-        <translation type="unfinished"/>
+        <translation>Tuỳ chọn phí giao dịch trên kB có thể giúp cho giao dịch của bạn được xử lý nhanh chóng. Hầu hết các giao dịch khoảng 1 kB.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="227"/>
         <location filename="../forms/ui_optionsdialog.h" line="550"/>
         <source>Pay transaction &amp;fee</source>
-        <translation type="unfinished"/>
+        <translation>Trả &amp;phí giao dịch</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="271"/>
         <location filename="../forms/ui_optionsdialog.h" line="551"/>
         <source>Expert</source>
-        <translation type="unfinished"/>
+        <translation>Chuyên gia</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="277"/>
         <location filename="../forms/ui_optionsdialog.h" line="553"/>
         <source>Whether to show coin control features or not.</source>
-        <translation type="unfinished"/>
+        <translation>Hiển thị hoặc không hiển thị tính năng coin control.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="280"/>
         <location filename="../forms/ui_optionsdialog.h" line="555"/>
         <source>Enable coin &amp;control features</source>
-        <translation type="unfinished"/>
+        <translation>Bật tính năng Coin &amp;control</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="287"/>
         <location filename="../forms/ui_optionsdialog.h" line="557"/>
         <source>If you disable the spending of unconfirmed change, the change from a transaction cannot be used until that transaction has at least one confirmation. This also affects how your balance is computed.</source>
-        <translation type="unfinished"/>
+        <translation>Nếu bạn tắt chức năng chi tiêu các khoản tiền trả lại chưa được xác nhận, thì những khoản trả lại đó sẽ không thể sử dụng đến tận khi các giao dịch đó được ít nhất một lần xác nhận. Điều này cũng ảnh hưởng đến cách tính số dư của bạn.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="290"/>
         <location filename="../forms/ui_optionsdialog.h" line="559"/>
         <source>&amp;Spend unconfirmed change</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Tiêu phần trả lại chưa được xác nhận</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="301"/>
         <location filename="../forms/ui_optionsdialog.h" line="581"/>
         <source>&amp;Network</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Mạng</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="307"/>
         <location filename="../forms/ui_optionsdialog.h" line="562"/>
         <source>Automatically open the Darkcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation type="unfinished"/>
+        <translation>Tự động mở cổng phần mềm Darkcoin trên rounter. Nó chỉ làm việc khi router của bạn hỗ trợ UPnP và nó phải được bật.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="310"/>
         <location filename="../forms/ui_optionsdialog.h" line="564"/>
         <source>Map port using &amp;UPnP</source>
-        <translation type="unfinished"/>
+        <translation>Ánh xạ cổng sử dụng &amp;UPnP</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="317"/>
         <location filename="../forms/ui_optionsdialog.h" line="566"/>
         <source>Connect to the Darkcoin network through a SOCKS proxy.</source>
-        <translation type="unfinished"/>
+        <translation>Kết nối với mạng lưới Darkcoin thông qua một SOCKS proxy.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="320"/>
         <location filename="../forms/ui_optionsdialog.h" line="568"/>
         <source>&amp;Connect through SOCKS proxy (default proxy):</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Kết nối qua SOCKS proxy (proxy ngầm định):</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="329"/>
         <location filename="../forms/ui_optionsdialog.h" line="569"/>
         <source>Proxy &amp;IP:</source>
-        <translation type="unfinished"/>
+        <translation>Proxy &amp;IP:</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="354"/>
         <location filename="../forms/ui_optionsdialog.h" line="571"/>
         <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
-        <translation type="unfinished"/>
+        <translation>Địa chỉ IP của proxy (ví dụ: IPv4: 127.0.0.1 / IPv6: ::1)</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="361"/>
         <location filename="../forms/ui_optionsdialog.h" line="573"/>
         <source>&amp;Port:</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Cổng:</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="386"/>
         <location filename="../forms/ui_optionsdialog.h" line="575"/>
         <source>Port of the proxy (e.g. 9050)</source>
-        <translation type="unfinished"/>
+        <translation>Cổng của proxy (ví dụ: 9050)</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="393"/>
         <location filename="../forms/ui_optionsdialog.h" line="577"/>
         <source>SOCKS &amp;Version:</source>
-        <translation type="unfinished"/>
+        <translation>Phiên bản SOCKS:</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="406"/>
         <location filename="../forms/ui_optionsdialog.h" line="579"/>
         <source>SOCKS version of the proxy (e.g. 5)</source>
-        <translation type="unfinished"/>
+        <translation>Phiên bản SOCKS của proxy (ví dụ: 5)</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="442"/>
         <location filename="../forms/ui_optionsdialog.h" line="590"/>
         <source>&amp;Window</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Cửa sổ</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="448"/>
         <location filename="../forms/ui_optionsdialog.h" line="583"/>
         <source>Show only a tray icon after minimizing the window.</source>
-        <translation type="unfinished"/>
+        <translation>Chỉ hiển thị biểu tượng ở khai sau khi thu nhỏ cửa sổ.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="451"/>
         <location filename="../forms/ui_optionsdialog.h" line="585"/>
         <source>&amp;Minimize to the tray instead of the taskbar</source>
-        <translation type="unfinished"/>
+        <translation>Thu &amp;nhỏ về khay thay vì về thanh taskbar</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="458"/>
         <location filename="../forms/ui_optionsdialog.h" line="587"/>
         <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Quit in the menu.</source>
-        <translation type="unfinished"/>
+        <translation>Thu nhỏ thay vì thoát ứng dụng khi cửa sổ được đóng lại. Khi tuỳ chọn này được bật thì chương trình sẽ chỉ đóng sau khi chọn chức năng Thoát trong menu.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="461"/>
         <location filename="../forms/ui_optionsdialog.h" line="589"/>
         <source>M&amp;inimize on close</source>
-        <translation type="unfinished"/>
+        <translation>Thu &amp;nhỏ khi đóng</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="482"/>
         <location filename="../forms/ui_optionsdialog.h" line="610"/>
         <source>&amp;Display</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Hiển thị</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="490"/>
         <location filename="../forms/ui_optionsdialog.h" line="591"/>
         <source>User Interface &amp;language:</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Ngôn ngữ người dùng:</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="503"/>
         <location filename="../forms/ui_optionsdialog.h" line="593"/>
         <source>The user interface language can be set here. This setting will take effect after restarting Darkcoin.</source>
-        <translation type="unfinished"/>
+        <translation>Ngôn ngữ người dùng có thể thiết lập ở đây. Thiết lập này sẽ có tác dụng sau khi khởi động lại Darkcoin.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="514"/>
         <location filename="../forms/ui_optionsdialog.h" line="595"/>
         <source>&amp;Unit to show amounts in:</source>
-        <translation type="unfinished"/>
+        <translation>Đơn vị &amp;hiển thị số lượng:</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="527"/>
         <location filename="../forms/ui_optionsdialog.h" line="597"/>
         <source>Choose the default subdivision unit to show in the interface and when sending coins.</source>
-        <translation type="unfinished"/>
+        <translation>Chọn đơn vị phân khu mặc định để hiển thị trong giao diện và khi gửi tiền.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="536"/>
         <location filename="../forms/ui_optionsdialog.h" line="600"/>
         <source>Whether to show Darkcoin addresses in the transaction list or not.</source>
-        <translation type="unfinished"/>
+        <translation>Hiển thị hoặc không hiển thị địa chỉ Darkcoin trong danh giao dịch</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="539"/>
         <location filename="../forms/ui_optionsdialog.h" line="602"/>
         <source>&amp;Display addresses in transaction list</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Hiển thị địa chỉ trong danh sách giao dịch</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="548"/>
@@ -1715,79 +1720,79 @@ Address: %4
         <location filename="../forms/ui_optionsdialog.h" line="604"/>
         <location filename="../forms/ui_optionsdialog.h" line="608"/>
         <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
-        <translation type="unfinished"/>
+        <translation>Địa chỉ web của bên thứ ba (VD: chức năng kiểm tra số cái) mà nó xuất hiện trong tab giao dịch giống như các mục trong menu ngữ cảnh. %s trong địa chỉ web được thay thế bởi mã băm giao dịch. Nhiều địa chỉ web được phân cách bởi dấu gạch đứng |.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="551"/>
         <location filename="../forms/ui_optionsdialog.h" line="606"/>
         <source>Third party transaction URLs</source>
-        <translation type="unfinished"/>
+        <translation>URLs của giao dịch bên thứ ba</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="592"/>
         <location filename="../forms/ui_optionsdialog.h" line="611"/>
         <source>Active command-line options that override above options:</source>
-        <translation type="unfinished"/>
+        <translation>Kích hoạt các tuỳ chọn dòng lệnh sẽ thay thế cho các tuỳ chọn trên:</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="635"/>
         <location filename="../forms/ui_optionsdialog.h" line="614"/>
         <source>Reset all client options to default.</source>
-        <translation type="unfinished"/>
+        <translation>Tái lập lại tất cả các tuỳ chọn về ngầm định.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="638"/>
         <location filename="../forms/ui_optionsdialog.h" line="616"/>
         <source>&amp;Reset Options</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Tái lập Tuỳ chọn</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="699"/>
         <location filename="../forms/ui_optionsdialog.h" line="618"/>
         <source>&amp;OK</source>
-        <translation type="unfinished"/>
+        <translation>&amp;OK</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="706"/>
         <location filename="../forms/ui_optionsdialog.h" line="619"/>
         <source>&amp;Cancel</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Huỷ</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="73"/>
         <source>default</source>
-        <translation type="unfinished"/>
+        <translation>ngầm định</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="134"/>
         <source>none</source>
-        <translation type="unfinished"/>
+        <translation>không có</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="222"/>
         <source>Confirm options reset</source>
-        <translation type="unfinished"/>
+        <translation>Xác nhận tái lập tuỳ chọn</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="223"/>
         <location filename="../optionsdialog.cpp" line="253"/>
         <source>Client restart required to activate changes.</source>
-        <translation type="unfinished"/>
+        <translation>Cần phải khởi động phần mềm để kích hoạt các thay đổi.</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="223"/>
         <source>Client will be shutdown, do you want to proceed?</source>
-        <translation type="unfinished"/>
+        <translation>Phần mềm sẽ được tắt, bạn có muốn tiến hành?</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="257"/>
         <source>This change would require a client restart.</source>
-        <translation type="unfinished"/>
+        <translation>Thay đổi này có thể cần phải khởi động lại phần mềm.</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="291"/>
         <source>The supplied proxy address is invalid.</source>
-        <translation type="unfinished"/>
+        <translation>Địa chỉ proxy được cung cấp không hợp lệ.</translation>
     </message>
 </context>
 <context>
@@ -1796,13 +1801,13 @@ Address: %4
         <location filename="../forms/overviewpage.ui" line="14"/>
         <location filename="../forms/ui_overviewpage.h" line="456"/>
         <source>Form</source>
-        <translation type="unfinished"/>
+        <translation>Biểu mẫu</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="57"/>
         <location filename="../forms/ui_overviewpage.h" line="457"/>
         <source>Wallet</source>
-        <translation type="unfinished"/>
+        <translation>Ví</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="64"/>
@@ -1810,115 +1815,115 @@ Address: %4
         <location filename="../forms/ui_overviewpage.h" line="459"/>
         <location filename="../forms/ui_overviewpage.h" line="503"/>
         <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Darkcoin network after a connection is established, but this process has not completed yet.</source>
-        <translation type="unfinished"/>
+        <translation>Thông tin được hiển thị có thể đã lỗi thời. Ví của bạn sẽ tự động đồng bộ với mạng lưới Darkcoin sau khi kết nối được thiết lập, tuy nhiên quá trình này chưa hoàn thành.</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="108"/>
         <location filename="../forms/ui_overviewpage.h" line="461"/>
         <source>Available:</source>
-        <translation type="unfinished"/>
+        <translation>Sẵn sàng:</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="124"/>
         <location filename="../forms/ui_overviewpage.h" line="463"/>
         <source>Your current spendable balance</source>
-        <translation type="unfinished"/>
+        <translation>Số dư có thể chi tiêu của bạn</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="140"/>
         <location filename="../forms/ui_overviewpage.h" line="465"/>
         <source>Pending:</source>
-        <translation type="unfinished"/>
+        <translation>Đang chờ:</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="156"/>
         <location filename="../forms/ui_overviewpage.h" line="467"/>
         <source>Total of transactions that have yet to be confirmed, and do not yet count toward the spendable balance</source>
-        <translation type="unfinished"/>
+        <translation>Tổng của những giao dịch chưa được xác nhận, và do đó chưa được tính vào số dư có thể tiêu được</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="172"/>
         <location filename="../forms/ui_overviewpage.h" line="469"/>
         <source>Immature:</source>
-        <translation type="unfinished"/>
+        <translation>Chưa chín muồi:</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="185"/>
         <location filename="../forms/ui_overviewpage.h" line="471"/>
         <source>Mined balance that has not yet matured</source>
-        <translation type="unfinished"/>
+        <translation>Số dư khai thác được chưa được xác nhận đủ</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="201"/>
         <location filename="../forms/ui_overviewpage.h" line="473"/>
         <source>Total:</source>
-        <translation type="unfinished"/>
+        <translation>Tổng:</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="217"/>
         <location filename="../forms/ui_overviewpage.h" line="475"/>
         <source>Your current total balance</source>
-        <translation type="unfinished"/>
+        <translation>Tổng số dư hiện tại của bạn</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="296"/>
         <location filename="../forms/ui_overviewpage.h" line="477"/>
         <source>Status:</source>
-        <translation type="unfinished"/>
+        <translation>Tình trạng:</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="303"/>
         <location filename="../forms/ui_overviewpage.h" line="478"/>
         <source>Enabled/Disabled</source>
-        <translation type="unfinished"/>
+        <translation>Bật/Tắt</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="310"/>
         <location filename="../forms/ui_overviewpage.h" line="479"/>
         <source>Completion:</source>
-        <translation type="unfinished"/>
+        <translation>Hoàn thành:</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="330"/>
         <location filename="../forms/ui_overviewpage.h" line="480"/>
         <source>Darksend Balance:</source>
-        <translation type="unfinished"/>
+        <translation>Số dư cho Darksend:</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="343"/>
         <location filename="../forms/ui_overviewpage.h" line="481"/>
         <source>0 DRK</source>
-        <translation type="unfinished"/>
+        <translation>0 DRK</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="350"/>
         <location filename="../forms/ui_overviewpage.h" line="482"/>
         <source>Amount and Rounds:</source>
-        <translation type="unfinished"/>
+        <translation>Số tiền và số vòng:</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="357"/>
         <location filename="../forms/ui_overviewpage.h" line="483"/>
         <source>0 DRK / 0 Rounds</source>
-        <translation type="unfinished"/>
+        <translation>0 DRK / 0 Vòng</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="364"/>
         <location filename="../forms/ui_overviewpage.h" line="484"/>
         <source>Submitted Denom:</source>
-        <translation type="unfinished"/>
+        <translation>Mệnh giá được gửi:</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="371"/>
         <location filename="../forms/ui_overviewpage.h" line="486"/>
         <source>The denominations you submitted to the Masternode. To mix, other users must submit the exact same denominations.</source>
-        <translation type="unfinished"/>
+        <translation>Mệnh giá mà bạn gửi cho Masternode. Để trộn, những người dùng khác cũng cần gửi chính xác dùng loại mệnh giá đó.</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="374"/>
         <location filename="../forms/ui_overviewpage.h" line="488"/>
         <source>n/a</source>
-        <translation type="unfinished"/>
+        <translation>không áp dụng</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="396"/>
@@ -1927,49 +1932,49 @@ Address: %4
         <location filename="../overviewpage.cpp" line="442"/>
         <location filename="../overviewpage.cpp" line="456"/>
         <source>Darksend</source>
-        <translation type="unfinished"/>
+        <translation>Darksend</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="846"/>
         <location filename="../forms/ui_overviewpage.h" line="491"/>
         <source>Start/Stop Mixing</source>
-        <translation type="unfinished"/>
+        <translation>Bắt đầu/Tắt việc trộn</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="878"/>
         <location filename="../forms/ui_overviewpage.h" line="492"/>
         <source>(Last Message)</source>
-        <translation type="unfinished"/>
+        <translation>(Thông điệp cuối)</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="897"/>
         <location filename="../forms/ui_overviewpage.h" line="494"/>
         <source>Try to manually submit a Darksend request.</source>
-        <translation type="unfinished"/>
+        <translation>Thử gửi yêu cầu Darksend bằng tay.</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="900"/>
         <location filename="../forms/ui_overviewpage.h" line="496"/>
         <source>Try Mix</source>
-        <translation type="unfinished"/>
+        <translation>Thử Trộn</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="913"/>
         <location filename="../forms/ui_overviewpage.h" line="498"/>
         <source>Reset the current status of Darksend (can interrupt Darksend if it&apos;s in the process of Mixing, which can cost you money!)</source>
-        <translation type="unfinished"/>
+        <translation>Tái lập lại trạng thái hiện tại của Darksend (có thể gián đoạn Darksend nếu nó đang trong quá trình trộn, điều đó có thể làm bạn bị mất tiền!)</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="919"/>
         <location filename="../forms/ui_overviewpage.h" line="500"/>
         <source>Reset</source>
-        <translation type="unfinished"/>
+        <translation>Khởi động lại</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="955"/>
         <location filename="../forms/ui_overviewpage.h" line="501"/>
         <source>&lt;b&gt;Recent transactions&lt;/b&gt;</source>
-        <translation type="unfinished"/>
+        <translation>&lt;b&gt;Các giao dịch gần đây&lt;/b&gt;</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="126"/>
@@ -1980,17 +1985,17 @@ Address: %4
     <message>
         <location filename="../overviewpage.cpp" line="429"/>
         <source>Darksend was successfully reset.</source>
-        <translation type="unfinished"/>
+        <translation>Darksend vừa được tái lập thành công.</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="443"/>
         <source>Darksend requires at least %1 to use.</source>
-        <translation type="unfinished"/>
+        <translation>Darksend cần ít nhất %1 để sử dụng.</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="457"/>
         <source>Wallet is locked and user declined to unlock. Disabling Darksend.</source>
-        <translation type="unfinished"/>
+        <translation>Ví đã được khoá và người dùng từ chối mở khoá. Đang tắt Darksend.</translation>
     </message>
 </context>
 <context>
@@ -2003,7 +2008,7 @@ Address: %4
         <location filename="../paymentserver.cpp" line="631"/>
         <location filename="../paymentserver.cpp" line="647"/>
         <source>Payment request error</source>
-        <translation type="unfinished"/>
+        <translation>Yêu cầu thanh toán bị lỗi</translation>
     </message>
     <message>
         <location filename="../paymentserver.cpp" line="294"/>
@@ -2059,12 +2064,12 @@ Address: %4
     <message>
         <location filename="../paymentserver.cpp" line="565"/>
         <source>Refund from %1</source>
-        <translation type="unfinished"/>
+        <translation>Trả lại từ %1</translation>
     </message>
     <message>
         <location filename="../paymentserver.cpp" line="608"/>
         <source>Error communicating with %1: %2</source>
-        <translation type="unfinished"/>
+        <translation>Lỗi kết nối với %1: %2</translation>
     </message>
     <message>
         <location filename="../paymentserver.cpp" line="632"/>
@@ -2079,12 +2084,12 @@ Address: %4
     <message>
         <location filename="../paymentserver.cpp" line="665"/>
         <source>Network request error</source>
-        <translation type="unfinished"/>
+        <translation>Yêu cầu mạng bị lỗi</translation>
     </message>
     <message>
         <location filename="../paymentserver.cpp" line="676"/>
         <source>Payment acknowledged</source>
-        <translation type="unfinished"/>
+        <translation>Thanh toán được ghi nhận</translation>
     </message>
 </context>
 <context>
@@ -2095,7 +2100,7 @@ Address: %4
         <location filename="../darkcoin.cpp" line="539"/>
         <location filename="../darkcoin.cpp" line="552"/>
         <source>Darkcoin</source>
-        <translation type="unfinished"/>
+        <translation>Darkcoin</translation>
     </message>
     <message>
         <location filename="../darkcoin.cpp" line="526"/>
@@ -2133,22 +2138,22 @@ Address: %4
     <message>
         <location filename="../receiverequestdialog.cpp" line="36"/>
         <source>&amp;Save Image...</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Lưu ảnh...</translation>
     </message>
     <message>
         <location filename="../receiverequestdialog.cpp" line="39"/>
         <source>&amp;Copy Image</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Sao chép ảnh</translation>
     </message>
     <message>
         <location filename="../receiverequestdialog.cpp" line="71"/>
         <source>Save QR Code</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Lưu mã QR</translation>
     </message>
     <message>
         <location filename="../receiverequestdialog.cpp" line="71"/>
         <source>PNG Image (*.png)</source>
-        <translation type="unfinished"/>
+        <translation>Ảnh dạng PNG (*.png)</translation>
     </message>
 </context>
 <context>
@@ -2157,37 +2162,37 @@ Address: %4
         <location filename="../forms/rpcconsole.ui" line="14"/>
         <location filename="../forms/ui_rpcconsole.h" line="471"/>
         <source>Debug window</source>
-        <translation type="unfinished"/>
+        <translation>Cửa sổ gỡ rối</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="24"/>
         <location filename="../forms/ui_rpcconsole.h" line="500"/>
         <source>&amp;Information</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Thông tin</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="33"/>
         <location filename="../forms/ui_rpcconsole.h" line="472"/>
         <source>Masternode Count</source>
-        <translation type="unfinished"/>
+        <translation>Số Masternode</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="46"/>
         <location filename="../forms/ui_rpcconsole.h" line="473"/>
         <source>General</source>
-        <translation type="unfinished"/>
+        <translation>Chung chung</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="53"/>
         <location filename="../forms/ui_rpcconsole.h" line="474"/>
         <source>Name</source>
-        <translation type="unfinished"/>
+        <translation>Tên</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="60"/>
         <location filename="../forms/ui_rpcconsole.h" line="475"/>
         <source>Client name</source>
-        <translation type="unfinished"/>
+        <translation>Phiên bản</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="70"/>
@@ -2211,128 +2216,128 @@ Address: %4
         <location filename="../forms/ui_rpcconsole.h" line="497"/>
         <location filename="../forms/ui_rpcconsole.h" line="499"/>
         <source>N/A</source>
-        <translation type="unfinished"/>
+        <translation>Không áp dụng</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="83"/>
         <location filename="../forms/ui_rpcconsole.h" line="477"/>
         <source>Number of connections</source>
-        <translation type="unfinished"/>
+        <translation>Số kết nối</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="90"/>
         <location filename="../forms/ui_rpcconsole.h" line="479"/>
         <source>Open the Darkcoin debug log file from the current data directory. This can take a few seconds for large log files.</source>
-        <translation type="unfinished"/>
+        <translation>Mở file nhật kỹ lỗi Darkcoin từ thư mục hiện tại. Nó có thể mất vài giây trong trường hợp file log lớn.</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="93"/>
         <location filename="../forms/ui_rpcconsole.h" line="481"/>
         <source>&amp;Open</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Mở</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="116"/>
         <location filename="../forms/ui_rpcconsole.h" line="482"/>
         <source>Startup time</source>
-        <translation type="unfinished"/>
+        <translation>Thời gian khởi động</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="129"/>
         <location filename="../forms/ui_rpcconsole.h" line="483"/>
         <source>Network</source>
-        <translation type="unfinished"/>
+        <translation>Mạng</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="152"/>
         <location filename="../forms/ui_rpcconsole.h" line="485"/>
         <source>Last block time</source>
-        <translation type="unfinished"/>
+        <translation>Thời gian block cuối cùng</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="165"/>
         <location filename="../forms/ui_rpcconsole.h" line="486"/>
         <source>Debug log file</source>
-        <translation type="unfinished"/>
+        <translation>Debug log file</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="172"/>
         <location filename="../forms/ui_rpcconsole.h" line="487"/>
         <source>Using OpenSSL version</source>
-        <translation type="unfinished"/>
+        <translation>Sử dụng phiên bản OpenSSL</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="182"/>
         <location filename="../forms/ui_rpcconsole.h" line="488"/>
         <source>Build date</source>
-        <translation type="unfinished"/>
+        <translation>Ngày xây dựng</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="205"/>
         <location filename="../forms/ui_rpcconsole.h" line="490"/>
         <source>Current number of blocks</source>
-        <translation type="unfinished"/>
+        <translation>Số khối hiện tại</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="305"/>
         <location filename="../forms/ui_rpcconsole.h" line="496"/>
         <source>Client version</source>
-        <translation type="unfinished"/>
+        <translation>Phiên bản</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="334"/>
         <location filename="../forms/ui_rpcconsole.h" line="498"/>
         <source>Block chain</source>
-        <translation type="unfinished"/>
+        <translation>Block chain</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="349"/>
         <location filename="../forms/ui_rpcconsole.h" line="505"/>
         <source>&amp;Console</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Console</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="398"/>
         <location filename="../forms/ui_rpcconsole.h" line="502"/>
         <source>Clear console</source>
-        <translation type="unfinished"/>
+        <translation>Xoá console</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="421"/>
         <location filename="../forms/ui_rpcconsole.h" line="510"/>
         <source>&amp;Network Traffic</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Lưu lượng mạng</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="473"/>
         <location filename="../forms/ui_rpcconsole.h" line="506"/>
         <source>&amp;Clear</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Xoá</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="486"/>
         <location filename="../forms/ui_rpcconsole.h" line="507"/>
         <source>Totals</source>
-        <translation type="unfinished"/>
+        <translation>Tổng</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="550"/>
         <location filename="../forms/ui_rpcconsole.h" line="508"/>
         <location filename="../rpcconsole.cpp" line="365"/>
         <source>In:</source>
-        <translation type="unfinished"/>
+        <translation>Vào:</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="630"/>
         <location filename="../forms/ui_rpcconsole.h" line="509"/>
         <location filename="../rpcconsole.cpp" line="366"/>
         <source>Out:</source>
-        <translation type="unfinished"/>
+        <translation>Ra:</translation>
     </message>
     <message>
         <location filename="../rpcconsole.cpp" line="331"/>
         <source>Welcome to the Darkcoin RPC console.</source>
-        <translation type="unfinished"/>
+        <translation>Chào mừng đến với giao tiếp Darkcoin RPC</translation>
     </message>
     <message>
         <location filename="../rpcconsole.cpp" line="332"/>
@@ -2347,37 +2352,37 @@ Address: %4
     <message>
         <location filename="../rpcconsole.cpp" line="472"/>
         <source>%1 B</source>
-        <translation type="unfinished"/>
+        <translation>%1 B</translation>
     </message>
     <message>
         <location filename="../rpcconsole.cpp" line="474"/>
         <source>%1 KB</source>
-        <translation type="unfinished"/>
+        <translation>%1 KB</translation>
     </message>
     <message>
         <location filename="../rpcconsole.cpp" line="476"/>
         <source>%1 MB</source>
-        <translation type="unfinished"/>
+        <translation>%1 MB</translation>
     </message>
     <message>
         <location filename="../rpcconsole.cpp" line="478"/>
         <source>%1 GB</source>
-        <translation type="unfinished"/>
+        <translation>%1 GB</translation>
     </message>
     <message>
         <location filename="../rpcconsole.cpp" line="485"/>
         <source>%1 m</source>
-        <translation type="unfinished"/>
+        <translation>%1 phút</translation>
     </message>
     <message>
         <location filename="../rpcconsole.cpp" line="490"/>
         <source>%1 h</source>
-        <translation type="unfinished"/>
+        <translation>%1 giờ</translation>
     </message>
     <message>
         <location filename="../rpcconsole.cpp" line="492"/>
         <source>%1 h %2 m</source>
-        <translation type="unfinished"/>
+        <translation>%1 giờ %2 phút</translation>
     </message>
 </context>
 <context>
@@ -2386,13 +2391,13 @@ Address: %4
         <location filename="../forms/receivecoinsdialog.ui" line="34"/>
         <location filename="../forms/ui_receivecoinsdialog.h" line="255"/>
         <source>Reuse one of the previously used receiving addresses. Reusing addresses has security and privacy issues. Do not use this unless re-generating a payment request made before.</source>
-        <translation type="unfinished"/>
+        <translation>Sử dụng lại địa chỉ đã được sử dụng để nhận trước đây. Sử dụng lại địa chỉ nảy sinh vấn đề an ninh và riêng tư. Đừng sử dụng nó trừ khi bạn tạo lại yêu cầu thanh toán mà bạn đã làm trước đây.</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="37"/>
         <location filename="../forms/ui_receivecoinsdialog.h" line="257"/>
         <source>R&amp;euse an existing receiving address (not recommended)</source>
-        <translation type="unfinished"/>
+        <translation>Tái &amp;sử dụng lại địa chỉ nhận đã có (không khuyến khích)</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="51"/>
@@ -2400,13 +2405,13 @@ Address: %4
         <location filename="../forms/ui_receivecoinsdialog.h" line="260"/>
         <location filename="../forms/ui_receivecoinsdialog.h" line="267"/>
         <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Darkcoin network.</source>
-        <translation type="unfinished"/>
+        <translation>Một thông điệp tuỳ chọn để đính vào yêu cầu thanh toán, nó sẽ hiển thị khi yêu cầu được mở. Chú ý: Thông điệp sẽ không được gửi thông qua mạng lưới Darkcoin.</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="54"/>
         <location filename="../forms/ui_receivecoinsdialog.h" line="262"/>
         <source>&amp;Message:</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Thông điệp:</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="67"/>
@@ -2414,19 +2419,19 @@ Address: %4
         <location filename="../forms/ui_receivecoinsdialog.h" line="264"/>
         <location filename="../forms/ui_receivecoinsdialog.h" line="271"/>
         <source>An optional label to associate with the new receiving address.</source>
-        <translation type="unfinished"/>
+        <translation>Một nhãn tuỳ chọn để liên kết với địa chỉ nhận mới.</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="81"/>
         <location filename="../forms/ui_receivecoinsdialog.h" line="269"/>
         <source>Use this form to request payments. All fields are &lt;b&gt;optional&lt;/b&gt;.</source>
-        <translation type="unfinished"/>
+        <translation>Sử dụng biểu mẫu này để yêu cầu thanh toán. Tất cả các trường đều là &lt;b&gt;không bắt buộc&lt;/b&gt;.</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="91"/>
         <location filename="../forms/ui_receivecoinsdialog.h" line="273"/>
         <source>&amp;Label:</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Nhãn:</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="104"/>
@@ -2434,76 +2439,76 @@ Address: %4
         <location filename="../forms/ui_receivecoinsdialog.h" line="275"/>
         <location filename="../forms/ui_receivecoinsdialog.h" line="279"/>
         <source>An optional amount to request. Leave this empty or zero to not request a specific amount.</source>
-        <translation type="unfinished"/>
+        <translation>Một tuỳ chọn về số tiền yêu cầu. Để nó trống hoặc bằng không để không yêu cầu một số tiền cụ thể.</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="107"/>
         <location filename="../forms/ui_receivecoinsdialog.h" line="277"/>
         <source>&amp;Amount:</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Số tiền:</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="141"/>
         <location filename="../forms/ui_receivecoinsdialog.h" line="281"/>
         <source>&amp;Request payment</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Yêu cầu thanh toán</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="158"/>
         <location filename="../forms/ui_receivecoinsdialog.h" line="283"/>
         <source>Clear all fields of the form.</source>
-        <translation type="unfinished"/>
+        <translation>Xoá tất cả các ô.</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="161"/>
         <location filename="../forms/ui_receivecoinsdialog.h" line="285"/>
         <source>Clear</source>
-        <translation type="unfinished"/>
+        <translation>Xoá</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="239"/>
         <location filename="../forms/ui_receivecoinsdialog.h" line="287"/>
         <source>Requested payments history</source>
-        <translation type="unfinished"/>
+        <translation>Xem lịch sử thanh toán</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="261"/>
         <location filename="../forms/ui_receivecoinsdialog.h" line="289"/>
         <source>Show the selected request (does the same as double clicking an entry)</source>
-        <translation type="unfinished"/>
+        <translation>Hiển thị những yêu cầu được chọn (giống như click đúp vào mỗi thành phần)</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="264"/>
         <location filename="../forms/ui_receivecoinsdialog.h" line="291"/>
         <source>Show</source>
-        <translation type="unfinished"/>
+        <translation>Xem</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="278"/>
         <location filename="../forms/ui_receivecoinsdialog.h" line="293"/>
         <source>Remove the selected entries from the list</source>
-        <translation type="unfinished"/>
+        <translation>Xoá thành phần được chọn khỏi danh sách</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="281"/>
         <location filename="../forms/ui_receivecoinsdialog.h" line="295"/>
         <source>Remove</source>
-        <translation type="unfinished"/>
+        <translation>Xoá</translation>
     </message>
     <message>
         <location filename="../receivecoinsdialog.cpp" line="39"/>
         <source>Copy label</source>
-        <translation type="unfinished"/>
+        <translation>Sao chép nhãn</translation>
     </message>
     <message>
         <location filename="../receivecoinsdialog.cpp" line="40"/>
         <source>Copy message</source>
-        <translation type="unfinished"/>
+        <translation>Sao chép thông điệp</translation>
     </message>
     <message>
         <location filename="../receivecoinsdialog.cpp" line="41"/>
         <source>Copy amount</source>
-        <translation type="unfinished"/>
+        <translation>Sao chép số tiền</translation>
     </message>
 </context>
 <context>
@@ -2512,40 +2517,40 @@ Address: %4
         <location filename="../forms/receiverequestdialog.ui" line="29"/>
         <location filename="../forms/ui_receiverequestdialog.h" line="117"/>
         <source>QR Code</source>
-        <translation type="unfinished"/>
+        <translation>Mã QR</translation>
     </message>
     <message>
         <location filename="../forms/receiverequestdialog.ui" line="75"/>
         <location filename="../forms/ui_receiverequestdialog.h" line="119"/>
         <source>Copy &amp;URI</source>
-        <translation type="unfinished"/>
+        <translation>Copy &amp;URI</translation>
     </message>
     <message>
         <location filename="../forms/receiverequestdialog.ui" line="82"/>
         <location filename="../forms/ui_receiverequestdialog.h" line="120"/>
         <source>Copy &amp;Address</source>
-        <translation type="unfinished"/>
+        <translation>Copy địa chỉ</translation>
     </message>
     <message>
         <location filename="../forms/receiverequestdialog.ui" line="89"/>
         <location filename="../forms/ui_receiverequestdialog.h" line="121"/>
         <source>&amp;Save Image...</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Lưu ảnh...</translation>
     </message>
     <message>
         <location filename="../receiverequestdialog.cpp" line="136"/>
         <source>Request payment to %1</source>
-        <translation type="unfinished"/>
+        <translation>Yêu cầu thanh toán tới %1</translation>
     </message>
     <message>
         <location filename="../receiverequestdialog.cpp" line="142"/>
         <source>Payment information</source>
-        <translation type="unfinished"/>
+        <translation>Thông tin thanh toán</translation>
     </message>
     <message>
         <location filename="../receiverequestdialog.cpp" line="143"/>
         <source>URI</source>
-        <translation type="unfinished"/>
+        <translation>URI</translation>
     </message>
     <message>
         <location filename="../receiverequestdialog.cpp" line="145"/>
@@ -2555,17 +2560,17 @@ Address: %4
     <message>
         <location filename="../receiverequestdialog.cpp" line="147"/>
         <source>Amount</source>
-        <translation>Số lượng</translation>
+        <translation>Số tiền</translation>
     </message>
     <message>
         <location filename="../receiverequestdialog.cpp" line="149"/>
         <source>Label</source>
-        <translation>Nhãn dữ liệu</translation>
+        <translation>Nhãn</translation>
     </message>
     <message>
         <location filename="../receiverequestdialog.cpp" line="151"/>
         <source>Message</source>
-        <translation type="unfinished"/>
+        <translation>Thông điệp</translation>
     </message>
     <message>
         <location filename="../receiverequestdialog.cpp" line="161"/>
@@ -2583,37 +2588,37 @@ Address: %4
     <message>
         <location filename="../recentrequeststablemodel.cpp" line="24"/>
         <source>Date</source>
-        <translation type="unfinished"/>
+        <translation>Ngày</translation>
     </message>
     <message>
         <location filename="../recentrequeststablemodel.cpp" line="24"/>
         <source>Label</source>
-        <translation>Nhãn dữ liệu</translation>
+        <translation>Nhãn</translation>
     </message>
     <message>
         <location filename="../recentrequeststablemodel.cpp" line="24"/>
         <source>Message</source>
-        <translation type="unfinished"/>
+        <translation>Thông điệp</translation>
     </message>
     <message>
         <location filename="../recentrequeststablemodel.cpp" line="24"/>
         <source>Amount</source>
-        <translation>Số lượng</translation>
+        <translation>Số tiền</translation>
     </message>
     <message>
         <location filename="../recentrequeststablemodel.cpp" line="62"/>
         <source>(no label)</source>
-        <translation>(chưa có nhãn)</translation>
+        <translation>(không có nhãn)</translation>
     </message>
     <message>
         <location filename="../recentrequeststablemodel.cpp" line="71"/>
         <source>(no message)</source>
-        <translation type="unfinished"/>
+        <translation>(không thông điệp)</translation>
     </message>
     <message>
         <location filename="../recentrequeststablemodel.cpp" line="79"/>
         <source>(no amount)</source>
-        <translation type="unfinished"/>
+        <translation>(không số tiền)</translation>
     </message>
 </context>
 <context>
@@ -2625,160 +2630,160 @@ Address: %4
         <location filename="../sendcoinsdialog.cpp" line="511"/>
         <location filename="../sendcoinsdialog.cpp" line="521"/>
         <source>Send Coins</source>
-        <translation type="unfinished"/>
+        <translation>Gửi tiền</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="90"/>
         <location filename="../forms/ui_sendcoinsdialog.h" line="516"/>
         <source>Coin Control Features</source>
-        <translation type="unfinished"/>
+        <translation>Tính năng Coin Control</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="110"/>
         <location filename="../forms/ui_sendcoinsdialog.h" line="517"/>
         <source>Inputs...</source>
-        <translation type="unfinished"/>
+        <translation>Đầu vào...</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="117"/>
         <location filename="../forms/ui_sendcoinsdialog.h" line="518"/>
         <source>automatically selected</source>
-        <translation type="unfinished"/>
+        <translation>tự động chọn</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="136"/>
         <location filename="../forms/ui_sendcoinsdialog.h" line="519"/>
         <source>Insufficient funds!</source>
-        <translation type="unfinished"/>
+        <translation>Không đủ tiền!</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="225"/>
         <location filename="../forms/ui_sendcoinsdialog.h" line="520"/>
         <source>Quantity:</source>
-        <translation type="unfinished"/>
+        <translation>Số lượng:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="260"/>
         <location filename="../forms/ui_sendcoinsdialog.h" line="521"/>
         <source>Bytes:</source>
-        <translation type="unfinished"/>
+        <translation>Bytes:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="308"/>
         <location filename="../forms/ui_sendcoinsdialog.h" line="522"/>
         <source>Amount:</source>
-        <translation type="unfinished"/>
+        <translation>Số tiền:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="340"/>
         <location filename="../forms/ui_sendcoinsdialog.h" line="523"/>
         <source>Priority:</source>
-        <translation type="unfinished"/>
+        <translation>Ưu tiên:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="388"/>
         <location filename="../forms/ui_sendcoinsdialog.h" line="524"/>
         <source>Fee:</source>
-        <translation type="unfinished"/>
+        <translation>Phí:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="420"/>
         <location filename="../forms/ui_sendcoinsdialog.h" line="525"/>
         <source>Low Output:</source>
-        <translation type="unfinished"/>
+        <translation>Low Output:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="468"/>
         <location filename="../forms/ui_sendcoinsdialog.h" line="526"/>
         <source>After Fee:</source>
-        <translation type="unfinished"/>
+        <translation>Phí sau:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="500"/>
         <location filename="../forms/ui_sendcoinsdialog.h" line="527"/>
         <source>Change:</source>
-        <translation type="unfinished"/>
+        <translation>Trả lại:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="544"/>
         <location filename="../forms/ui_sendcoinsdialog.h" line="529"/>
         <source>If this is activated, but the change address is empty or invalid, change will be sent to a newly generated address.</source>
-        <translation type="unfinished"/>
+        <translation>Nếu nó được kích hoạt, nhưng địa chỉ tiền nhận lại là trống hoặc không hợp lệ, thì tiền lẻ trả lại sẽ được gửi đến một địa chỉ được sinh mới.</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="547"/>
         <location filename="../forms/ui_sendcoinsdialog.h" line="531"/>
         <source>Custom change address</source>
-        <translation type="unfinished"/>
+        <translation>Thay đổi địa chỉ tiền trả lại</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="668"/>
         <location filename="../forms/ui_sendcoinsdialog.h" line="534"/>
         <source>Confirm the send action</source>
-        <translation type="unfinished"/>
+        <translation>Xác nhận việc gửi</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="671"/>
         <location filename="../forms/ui_sendcoinsdialog.h" line="536"/>
         <source>S&amp;end</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Gửi</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="691"/>
         <location filename="../forms/ui_sendcoinsdialog.h" line="538"/>
         <source>Clear all fields of the form.</source>
-        <translation type="unfinished"/>
+        <translation>Xoá tất cả các ô.</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="694"/>
         <location filename="../forms/ui_sendcoinsdialog.h" line="540"/>
         <source>Clear &amp;All</source>
-        <translation type="unfinished"/>
+        <translation>Xoá &amp;Tất cả</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="711"/>
         <location filename="../forms/ui_sendcoinsdialog.h" line="542"/>
         <source>Send to multiple recipients at once</source>
-        <translation type="unfinished"/>
+        <translation>Gửi đến nhiều địa chỉ một lúc</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="714"/>
         <location filename="../forms/ui_sendcoinsdialog.h" line="544"/>
         <source>Add &amp;Recipient</source>
-        <translation type="unfinished"/>
+        <translation>Thêm &amp;Người nhận</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="759"/>
         <location filename="../forms/ui_sendcoinsdialog.h" line="545"/>
         <source>Darksend</source>
-        <translation type="unfinished"/>
+        <translation>Darksend</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="772"/>
         <location filename="../forms/ui_sendcoinsdialog.h" line="546"/>
         <source>InstantX</source>
-        <translation type="unfinished"/>
+        <translation>InstantX</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="779"/>
         <location filename="../forms/ui_sendcoinsdialog.h" line="547"/>
         <source>Balance:</source>
-        <translation type="unfinished"/>
+        <translation>Số dư:</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="52"/>
         <source>Copy quantity</source>
-        <translation type="unfinished"/>
+        <translation>Sao chép số lượng</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="53"/>
         <source>Copy amount</source>
-        <translation type="unfinished"/>
+        <translation>Sao chép số tiền</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="54"/>
         <source>Copy fee</source>
-        <translation type="unfinished"/>
+        <translation>Sao chép phí</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="55"/>
@@ -2788,12 +2793,12 @@ Address: %4
     <message>
         <location filename="../sendcoinsdialog.cpp" line="56"/>
         <source>Copy bytes</source>
-        <translation type="unfinished"/>
+        <translation>Sao chép bytes</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="57"/>
         <source>Copy priority</source>
-        <translation type="unfinished"/>
+        <translation>Sao chép ưu tiên</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="58"/>
@@ -2803,7 +2808,7 @@ Address: %4
     <message>
         <location filename="../sendcoinsdialog.cpp" line="59"/>
         <source>Copy change</source>
-        <translation type="unfinished"/>
+        <translation>Sao chép tiền trả lại</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="154"/>
@@ -2816,42 +2821,42 @@ Address: %4
         <location filename="../sendcoinsdialog.cpp" line="198"/>
         <location filename="../sendcoinsdialog.cpp" line="202"/>
         <source>%1 to %2</source>
-        <translation type="unfinished"/>
+        <translation>%1 đến %2</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="251"/>
         <source>Are you sure you want to send?</source>
-        <translation type="unfinished"/>
+        <translation>Bạn có chắc mình muốn gửi?</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="260"/>
         <source>are added as transaction fee</source>
-        <translation type="unfinished"/>
+        <translation>được thêm vào như là phí giao dịch</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="274"/>
         <source>Total Amount %1 (= %2)</source>
-        <translation type="unfinished"/>
+        <translation>Tổng số tiền %1 (= %2)</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="276"/>
         <source>or</source>
-        <translation type="unfinished"/>
+        <translation>hoặc</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="278"/>
         <source>Confirm send coins</source>
-        <translation type="unfinished"/>
+        <translation>Xác nhận việc gửi tiền</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="433"/>
         <source>Payment request expired</source>
-        <translation type="unfinished"/>
+        <translation>Yêu cầu thanh toán đã hết hạn</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="441"/>
         <source>Invalid payment address %1</source>
-        <translation type="unfinished"/>
+        <translation>Địa chỉ thanh toán không hợp lệ %1</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="488"/>
@@ -2861,17 +2866,17 @@ Address: %4
     <message>
         <location filename="../sendcoinsdialog.cpp" line="491"/>
         <source>The amount to pay must be larger than 0.</source>
-        <translation type="unfinished"/>
+        <translation>Số tiền thanh toán phải lớn hơn 0.</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="494"/>
         <source>The amount exceeds your balance.</source>
-        <translation type="unfinished"/>
+        <translation>Số tiền này lớn hơn số dư của bạn.</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="497"/>
         <source>The total exceeds your balance when the %1 transaction fee is included.</source>
-        <translation type="unfinished"/>
+        <translation>Tổng số lớn hơn số dư của bạn khi tính cả %1 phí giao dịch.</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="500"/>
@@ -2881,7 +2886,7 @@ Address: %4
     <message>
         <location filename="../sendcoinsdialog.cpp" line="503"/>
         <source>Transaction creation failed!</source>
-        <translation type="unfinished"/>
+        <translation>Tạo giao dịch không thành công!</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="507"/>
@@ -2896,17 +2901,17 @@ Address: %4
     <message>
         <location filename="../sendcoinsdialog.cpp" line="625"/>
         <source>Warning: Invalid Darkcoin address</source>
-        <translation type="unfinished"/>
+        <translation>Cảnh báo: Địa chỉ Darkcoin không hợp lệ</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="634"/>
         <source>Warning: Unknown change address</source>
-        <translation type="unfinished"/>
+        <translation>Cảnh báo: Không biết địa chỉ trả lại</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="645"/>
         <source>(no label)</source>
-        <translation>(chưa có nhãn)</translation>
+        <translation>(không có nhãn)</translation>
     </message>
 </context>
 <context>
@@ -2915,43 +2920,43 @@ Address: %4
         <location filename="../forms/sendcoinsentry.ui" line="21"/>
         <location filename="../forms/ui_sendcoinsentry.h" line="423"/>
         <source>This is a normal payment.</source>
-        <translation type="unfinished"/>
+        <translation>Đây là giao dịch thông thường.</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="36"/>
         <location filename="../forms/ui_sendcoinsentry.h" line="425"/>
         <source>Pay &amp;To:</source>
-        <translation type="unfinished"/>
+        <translation>Trả &amp;Cho</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="54"/>
         <location filename="../forms/ui_sendcoinsentry.h" line="427"/>
         <source>The address to send the payment to (e.g. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</source>
-        <translation type="unfinished"/>
+        <translation>Địa chỉ để gửi thanh toán (VD: XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="61"/>
         <location filename="../forms/ui_sendcoinsentry.h" line="430"/>
         <source>Choose previously used address</source>
-        <translation type="unfinished"/>
+        <translation>Chọn địa chỉ đã sử dụng trước</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="71"/>
         <location filename="../forms/ui_sendcoinsentry.h" line="433"/>
         <source>Alt+A</source>
-        <translation type="unfinished"/>
+        <translation>Alt+A</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="78"/>
         <location filename="../forms/ui_sendcoinsentry.h" line="435"/>
         <source>Paste address from clipboard</source>
-        <translation type="unfinished"/>
+        <translation>Dán địa chỉ từ clipboard</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="88"/>
         <location filename="../forms/ui_sendcoinsentry.h" line="438"/>
         <source>Alt+P</source>
-        <translation type="unfinished"/>
+        <translation>Alt+P</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="95"/>
@@ -2961,19 +2966,19 @@ Address: %4
         <location filename="../forms/ui_sendcoinsentry.h" line="457"/>
         <location filename="../forms/ui_sendcoinsentry.h" line="467"/>
         <source>Remove this entry</source>
-        <translation type="unfinished"/>
+        <translation>Xoá thành phần này</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="111"/>
         <location filename="../forms/ui_sendcoinsentry.h" line="443"/>
         <source>&amp;Label:</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Nhãn:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="124"/>
         <location filename="../forms/ui_sendcoinsentry.h" line="445"/>
         <source>Enter a label for this address to add it to the list of used addresses</source>
-        <translation type="unfinished"/>
+        <translation>Nhập nhãn cho địa chỉ này để đưa vào danh sách địa chỉ đã dùng</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="131"/>
@@ -2983,25 +2988,25 @@ Address: %4
         <location filename="../forms/ui_sendcoinsentry.h" line="461"/>
         <location filename="../forms/ui_sendcoinsentry.h" line="471"/>
         <source>A&amp;mount:</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Số tiền:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="147"/>
         <location filename="../forms/ui_sendcoinsentry.h" line="448"/>
         <source>Message:</source>
-        <translation type="unfinished"/>
+        <translation>Thông điệp:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="157"/>
         <location filename="../forms/ui_sendcoinsentry.h" line="450"/>
         <source>A message that was attached to the darkcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Darkcoin network.</source>
-        <translation type="unfinished"/>
+        <translation>Một thông điệp được đính với darkcoin: URI đó sẽ được lưu trữ với các giao dịch cho các bạn tham khảo. Lưu ý: Thông điệp này sẽ không được gửi qua mạng Darkcoin. </translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="583"/>
         <location filename="../forms/ui_sendcoinsentry.h" line="453"/>
         <source>This is an unverified payment request.</source>
-        <translation type="unfinished"/>
+        <translation>Đây là yêu cầu thanh toán chưa được xác thực.</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="601"/>
@@ -3009,7 +3014,7 @@ Address: %4
         <location filename="../forms/ui_sendcoinsentry.h" line="455"/>
         <location filename="../forms/ui_sendcoinsentry.h" line="465"/>
         <source>Pay To:</source>
-        <translation type="unfinished"/>
+        <translation>Trả cho:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="635"/>
@@ -3017,13 +3022,13 @@ Address: %4
         <location filename="../forms/ui_sendcoinsentry.h" line="460"/>
         <location filename="../forms/ui_sendcoinsentry.h" line="470"/>
         <source>Memo:</source>
-        <translation type="unfinished"/>
+        <translation>Ghi nhớ:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="1115"/>
         <location filename="../forms/ui_sendcoinsentry.h" line="463"/>
         <source>This is a verified payment request.</source>
-        <translation type="unfinished"/>
+        <translation>Đây là một yêu cầu thanh toán được xác thực.</translation>
     </message>
     <message>
         <location filename="../sendcoinsentry.cpp" line="31"/>
@@ -3036,12 +3041,12 @@ Address: %4
     <message>
         <location filename="../utilitydialog.cpp" line="129"/>
         <source>Darkcoin Core is shutting down...</source>
-        <translation type="unfinished"/>
+        <translation>Darkcoin Core đang được tắt...</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="130"/>
         <source>Do not shut down the computer until this window disappears.</source>
-        <translation type="unfinished"/>
+        <translation>Đừng tắt máy tính cho đến khi cửa sổ này biến mất.</translation>
     </message>
 </context>
 <context>
@@ -3050,25 +3055,25 @@ Address: %4
         <location filename="../forms/signverifymessagedialog.ui" line="14"/>
         <location filename="../forms/ui_signverifymessagedialog.h" line="283"/>
         <source>Signatures - Sign / Verify a Message</source>
-        <translation type="unfinished"/>
+        <translation>Chữ ký - Ký / Kiểm tra Thông điệp</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="24"/>
         <location filename="../forms/ui_signverifymessagedialog.h" line="315"/>
         <source>&amp;Sign Message</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Ký thông điệp</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="30"/>
         <location filename="../forms/ui_signverifymessagedialog.h" line="284"/>
         <source>You can sign messages with your addresses to prove you own them. Be careful not to sign anything vague, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
-        <translation type="unfinished"/>
+        <translation>Bạn có thể ký vào thông điệp với địa chỉ của bạn để chứng minh bạn là chủ của nó. Hãy cẩn thận không ký vào những gì mơ hồ, như là thứ lừa đảo để lừa bạn ký xác nhận của bạn vào đó cho họ. Chỉ ký vào những gì mà bạn hoàn thoàn đồng ý.</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="48"/>
         <location filename="../forms/ui_signverifymessagedialog.h" line="286"/>
         <source>The address to sign the message with (e.g. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</source>
-        <translation type="unfinished"/>
+        <translation>Địa chỉ để ký thông điệp với (VD: XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="55"/>
@@ -3076,7 +3081,7 @@ Address: %4
         <location filename="../forms/ui_signverifymessagedialog.h" line="289"/>
         <location filename="../forms/ui_signverifymessagedialog.h" line="321"/>
         <source>Choose previously used address</source>
-        <translation type="unfinished"/>
+        <translation>Chọn địa chỉ đã dùng</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="65"/>
@@ -3084,55 +3089,55 @@ Address: %4
         <location filename="../forms/ui_signverifymessagedialog.h" line="292"/>
         <location filename="../forms/ui_signverifymessagedialog.h" line="324"/>
         <source>Alt+A</source>
-        <translation type="unfinished"/>
+        <translation>Alt+A</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="75"/>
         <location filename="../forms/ui_signverifymessagedialog.h" line="294"/>
         <source>Paste address from clipboard</source>
-        <translation type="unfinished"/>
+        <translation>Dán địa chỉ từ clipboard</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="85"/>
         <location filename="../forms/ui_signverifymessagedialog.h" line="297"/>
         <source>Alt+P</source>
-        <translation type="unfinished"/>
+        <translation>Alt+P</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="97"/>
         <location filename="../forms/ui_signverifymessagedialog.h" line="299"/>
         <source>Enter the message you want to sign here</source>
-        <translation type="unfinished"/>
+        <translation>Nhập vào thông điệp mà bạn muốn ký tại đây</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="104"/>
         <location filename="../forms/ui_signverifymessagedialog.h" line="301"/>
         <source>Signature</source>
-        <translation type="unfinished"/>
+        <translation>Chữ ký</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="131"/>
         <location filename="../forms/ui_signverifymessagedialog.h" line="303"/>
         <source>Copy the current signature to the system clipboard</source>
-        <translation type="unfinished"/>
+        <translation>Copy chữ ký hiện tại vào bộ đệm của hệ thống</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="152"/>
         <location filename="../forms/ui_signverifymessagedialog.h" line="307"/>
         <source>Sign the message to prove you own this Darkcoin address</source>
-        <translation type="unfinished"/>
+        <translation>Ký vào thông điệp để chứng tỏ bạn sở hữu địa chỉ Darkcoin</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="155"/>
         <location filename="../forms/ui_signverifymessagedialog.h" line="309"/>
         <source>Sign &amp;Message</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Ký thông điệp</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="169"/>
         <location filename="../forms/ui_signverifymessagedialog.h" line="311"/>
         <source>Reset all sign message fields</source>
-        <translation type="unfinished"/>
+        <translation>Tái lập lại tất cả các trường cần ký</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="172"/>
@@ -3140,43 +3145,43 @@ Address: %4
         <location filename="../forms/ui_signverifymessagedialog.h" line="313"/>
         <location filename="../forms/ui_signverifymessagedialog.h" line="332"/>
         <source>Clear &amp;All</source>
-        <translation type="unfinished"/>
+        <translation>Xoá &amp;tất cả</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="231"/>
         <location filename="../forms/ui_signverifymessagedialog.h" line="334"/>
         <source>&amp;Verify Message</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Xác thực Thông điệp</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="237"/>
         <location filename="../forms/ui_signverifymessagedialog.h" line="316"/>
         <source>Enter the signing address, message (ensure you copy line breaks, spaces, tabs, etc. exactly) and signature below to verify the message. Be careful not to read more into the signature than what is in the signed message itself, to avoid being tricked by a man-in-the-middle attack.</source>
-        <translation type="unfinished"/>
+        <translation>Hãy nhập địa chỉ ký, thông điệp (hãy chắc chắn rằng bạn copy cả các dấu xuống dòng, dấu cách, tab,... một cách chính xác) và chữ ký dưới đây để xác thực cho thông điệp. Hãy cẩn thận không thêm vào chữ ký hơn so với bản thân nó trong thông điệp đã ký, để tránh bị đánh lừa bởi kiểu tấn công người trung gian.</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="258"/>
         <location filename="../forms/ui_signverifymessagedialog.h" line="318"/>
         <source>The address the message was signed with (e.g. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</source>
-        <translation type="unfinished"/>
+        <translation>Địa chỉ mà thông điệp được ký (VD: XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="295"/>
         <location filename="../forms/ui_signverifymessagedialog.h" line="326"/>
         <source>Verify the message to ensure it was signed with the specified Darkcoin address</source>
-        <translation type="unfinished"/>
+        <translation>Kiểm tra lại thông điệp để đảm bảo rằng nó được ký với địa chỉ Darkcoin cụ thể</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="298"/>
         <location filename="../forms/ui_signverifymessagedialog.h" line="328"/>
         <source>Verify &amp;Message</source>
-        <translation type="unfinished"/>
+        <translation>Xác thực &amp;Thông điệp</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="312"/>
         <location filename="../forms/ui_signverifymessagedialog.h" line="330"/>
         <source>Reset all verify message fields</source>
-        <translation type="unfinished"/>
+        <translation>Tái lập lại tất cả các trường kiểm tra</translation>
     </message>
     <message>
         <location filename="../signverifymessagedialog.cpp" line="30"/>
@@ -3192,7 +3197,7 @@ Address: %4
         <location filename="../signverifymessagedialog.cpp" line="114"/>
         <location filename="../signverifymessagedialog.cpp" line="194"/>
         <source>The entered address is invalid.</source>
-        <translation type="unfinished"/>
+        <translation>Địa chỉ vừa nhập không hợp lệ.</translation>
     </message>
     <message>
         <location filename="../signverifymessagedialog.cpp" line="114"/>
@@ -3200,7 +3205,7 @@ Address: %4
         <location filename="../signverifymessagedialog.cpp" line="194"/>
         <location filename="../signverifymessagedialog.cpp" line="202"/>
         <source>Please check the address and try again.</source>
-        <translation type="unfinished"/>
+        <translation>Hãy kiểm tra địa chỉ và thử lại.</translation>
     </message>
     <message>
         <location filename="../signverifymessagedialog.cpp" line="122"/>
@@ -3211,7 +3216,7 @@ Address: %4
     <message>
         <location filename="../signverifymessagedialog.cpp" line="130"/>
         <source>Wallet unlock was cancelled.</source>
-        <translation type="unfinished"/>
+        <translation>Mở khoá ví bị huỷ bỏ.</translation>
     </message>
     <message>
         <location filename="../signverifymessagedialog.cpp" line="138"/>
@@ -3221,38 +3226,38 @@ Address: %4
     <message>
         <location filename="../signverifymessagedialog.cpp" line="150"/>
         <source>Message signing failed.</source>
-        <translation type="unfinished"/>
+        <translation>Ký vào thông điệp thất bại.</translation>
     </message>
     <message>
         <location filename="../signverifymessagedialog.cpp" line="155"/>
         <source>Message signed.</source>
-        <translation type="unfinished"/>
+        <translation>Thông điệp đã được ký.</translation>
     </message>
     <message>
         <location filename="../signverifymessagedialog.cpp" line="213"/>
         <source>The signature could not be decoded.</source>
-        <translation type="unfinished"/>
+        <translation>Chữ ký không thể giải mã được.</translation>
     </message>
     <message>
         <location filename="../signverifymessagedialog.cpp" line="213"/>
         <location filename="../signverifymessagedialog.cpp" line="226"/>
         <source>Please check the signature and try again.</source>
-        <translation type="unfinished"/>
+        <translation>Hãy kiểm tra chữ ký và thử lại.</translation>
     </message>
     <message>
         <location filename="../signverifymessagedialog.cpp" line="226"/>
         <source>The signature did not match the message digest.</source>
-        <translation type="unfinished"/>
+        <translation>Chữ ký không tương xứng với nội dung thông điệp.</translation>
     </message>
     <message>
         <location filename="../signverifymessagedialog.cpp" line="233"/>
         <source>Message verification failed.</source>
-        <translation type="unfinished"/>
+        <translation>Không thể xác thực thông điệp.</translation>
     </message>
     <message>
         <location filename="../signverifymessagedialog.cpp" line="238"/>
         <source>Message verified.</source>
-        <translation type="unfinished"/>
+        <translation>Thông điệp đã được xác thực.</translation>
     </message>
 </context>
 <context>
@@ -3260,22 +3265,22 @@ Address: %4
     <message>
         <location filename="../splashscreen.cpp" line="33"/>
         <source>Darkcoin Core</source>
-        <translation type="unfinished"/>
+        <translation>Darkcoin Core</translation>
     </message>
     <message>
         <location filename="../splashscreen.cpp" line="35"/>
         <source>The Bitcoin Core developers</source>
-        <translation type="unfinished"/>
+        <translation>Nhóm phát triển Bitcoin Core</translation>
     </message>
     <message>
         <location filename="../splashscreen.cpp" line="36"/>
         <source>The Darkcoin Core developers</source>
-        <translation type="unfinished"/>
+        <translation>Nhóm phát triển Darkcoin Core</translation>
     </message>
     <message>
         <location filename="../splashscreen.cpp" line="37"/>
         <source>[testnet]</source>
-        <translation type="unfinished"/>
+        <translation>[mạng thử]</translation>
     </message>
 </context>
 <context>
@@ -3283,7 +3288,7 @@ Address: %4
     <message>
         <location filename="../trafficgraphwidget.cpp" line="79"/>
         <source>KB/s</source>
-        <translation type="unfinished"/>
+        <translation>KB/s</translation>
     </message>
 </context>
 <context>
@@ -3301,7 +3306,7 @@ Address: %4
     <message>
         <location filename="../transactiondesc.cpp" line="36"/>
         <source>conflicted</source>
-        <translation type="unfinished"/>
+        <translation>xung đột</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="38"/>
@@ -3321,7 +3326,7 @@ Address: %4
     <message>
         <location filename="../transactiondesc.cpp" line="59"/>
         <source>Status</source>
-        <translation type="unfinished"/>
+        <translation>Trạng thái</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="64"/>
@@ -3336,12 +3341,12 @@ Address: %4
     <message>
         <location filename="../transactiondesc.cpp" line="70"/>
         <source>Date</source>
-        <translation type="unfinished"/>
+        <translation>Ngày</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="77"/>
         <source>Source</source>
-        <translation type="unfinished"/>
+        <translation>Nguồn</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="77"/>
@@ -3352,30 +3357,30 @@ Address: %4
         <location filename="../transactiondesc.cpp" line="82"/>
         <location filename="../transactiondesc.cpp" line="99"/>
         <source>From</source>
-        <translation type="unfinished"/>
+        <translation>Từ</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="99"/>
         <source>unknown</source>
-        <translation type="unfinished"/>
+        <translation>không biết</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="100"/>
         <location filename="../transactiondesc.cpp" line="122"/>
         <location filename="../transactiondesc.cpp" line="180"/>
         <source>To</source>
-        <translation type="unfinished"/>
+        <translation>Đến</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="103"/>
         <location filename="../transactiondesc.cpp" line="105"/>
         <source>own address</source>
-        <translation type="unfinished"/>
+        <translation>địa chỉ của mình</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="103"/>
         <source>label</source>
-        <translation type="unfinished"/>
+        <translation>nhãn</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="140"/>
@@ -3384,7 +3389,7 @@ Address: %4
         <location filename="../transactiondesc.cpp" line="214"/>
         <location filename="../transactiondesc.cpp" line="267"/>
         <source>Credit</source>
-        <translation type="unfinished"/>
+        <translation>Có</translation>
     </message>
     <message numerus="yes">
         <location filename="../transactiondesc.cpp" line="142"/>
@@ -3394,7 +3399,7 @@ Address: %4
     <message>
         <location filename="../transactiondesc.cpp" line="144"/>
         <source>not accepted</source>
-        <translation type="unfinished"/>
+        <translation>không chấp nhận</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="188"/>
@@ -3402,12 +3407,12 @@ Address: %4
         <location filename="../transactiondesc.cpp" line="211"/>
         <location filename="../transactiondesc.cpp" line="264"/>
         <source>Debit</source>
-        <translation type="unfinished"/>
+        <translation>Nợ</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="202"/>
         <source>Transaction fee</source>
-        <translation type="unfinished"/>
+        <translation>Phí giao dịch</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="218"/>
@@ -3418,22 +3423,22 @@ Address: %4
         <location filename="../transactiondesc.cpp" line="224"/>
         <location filename="../transactiondesc.cpp" line="233"/>
         <source>Message</source>
-        <translation type="unfinished"/>
+        <translation>Thông điệp</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="226"/>
         <source>Comment</source>
-        <translation type="unfinished"/>
+        <translation>Bình luận</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="228"/>
         <source>Transaction ID</source>
-        <translation type="unfinished"/>
+        <translation>Mã giao dịch</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="246"/>
         <source>Merchant</source>
-        <translation type="unfinished"/>
+        <translation>Người bán</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="253"/>
@@ -3448,27 +3453,27 @@ Address: %4
     <message>
         <location filename="../transactiondesc.cpp" line="269"/>
         <source>Transaction</source>
-        <translation type="unfinished"/>
+        <translation>Giao dịch</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="272"/>
         <source>Inputs</source>
-        <translation type="unfinished"/>
+        <translation>Đầu vào</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="293"/>
         <source>Amount</source>
-        <translation>Số lượng</translation>
+        <translation>Số tiền</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="294"/>
         <source>true</source>
-        <translation type="unfinished"/>
+        <translation>đúng</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="294"/>
         <source>false</source>
-        <translation type="unfinished"/>
+        <translation>sai</translation>
     </message>
 </context>
 <context>
@@ -3477,13 +3482,13 @@ Address: %4
         <location filename="../forms/transactiondescdialog.ui" line="14"/>
         <location filename="../forms/ui_transactiondescdialog.h" line="60"/>
         <source>Transaction details</source>
-        <translation type="unfinished"/>
+        <translation>Chi tiết giao dịch</translation>
     </message>
     <message>
         <location filename="../forms/transactiondescdialog.ui" line="20"/>
         <location filename="../forms/ui_transactiondescdialog.h" line="62"/>
         <source>This pane shows a detailed description of the transaction</source>
-        <translation type="unfinished"/>
+        <translation>Bảng này hiển thị mô tả chi tiết về giao dịch</translation>
     </message>
 </context>
 <context>
@@ -3491,12 +3496,12 @@ Address: %4
     <message>
         <location filename="../transactiontablemodel.cpp" line="238"/>
         <source>Date</source>
-        <translation type="unfinished"/>
+        <translation>Ngày</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="238"/>
         <source>Type</source>
-        <translation type="unfinished"/>
+        <translation>Kiểu</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="238"/>
@@ -3506,7 +3511,7 @@ Address: %4
     <message>
         <location filename="../transactiontablemodel.cpp" line="238"/>
         <source>Amount</source>
-        <translation>Số lượng</translation>
+        <translation>Số tiền</translation>
     </message>
     <message numerus="yes">
         <location filename="../transactiontablemodel.cpp" line="287"/>
@@ -3526,22 +3531,22 @@ Address: %4
     <message>
         <location filename="../transactiontablemodel.cpp" line="296"/>
         <source>Unconfirmed</source>
-        <translation type="unfinished"/>
+        <translation>Chưa xác thực</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="299"/>
         <source>Confirming (%1 of %2 recommended confirmations)</source>
-        <translation type="unfinished"/>
+        <translation>Đang xác nhận (%1 của %2 xác nhận được đề nghị)</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="302"/>
         <source>Confirmed (%1 confirmations)</source>
-        <translation type="unfinished"/>
+        <translation>Được xác nhận (%1 xác nhận)</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="305"/>
         <source>Conflicted</source>
-        <translation type="unfinished"/>
+        <translation>Xung đột</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="308"/>
@@ -3561,32 +3566,32 @@ Address: %4
     <message>
         <location filename="../transactiontablemodel.cpp" line="356"/>
         <source>Received with</source>
-        <translation type="unfinished"/>
+        <translation>Nhận với</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="358"/>
         <source>Received from</source>
-        <translation type="unfinished"/>
+        <translation>Nhận từ</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="360"/>
         <source>Received via Darksend</source>
-        <translation type="unfinished"/>
+        <translation>Nhận qua Darksend</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="363"/>
         <source>Sent to</source>
-        <translation type="unfinished"/>
+        <translation>Gửi đến</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="365"/>
         <source>Payment to yourself</source>
-        <translation type="unfinished"/>
+        <translation>Trả cho bản thân bạn</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="367"/>
         <source>Mined</source>
-        <translation type="unfinished"/>
+        <translation>Được đào</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="370"/>
@@ -3606,12 +3611,12 @@ Address: %4
     <message>
         <location filename="../transactiontablemodel.cpp" line="376"/>
         <source>Darksent</source>
-        <translation type="unfinished"/>
+        <translation>Darksent</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="418"/>
         <source>(n/a)</source>
-        <translation type="unfinished"/>
+        <translation>(không áp dụng)</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="610"/>
@@ -3621,12 +3626,12 @@ Address: %4
     <message>
         <location filename="../transactiontablemodel.cpp" line="612"/>
         <source>Date and time that the transaction was received.</source>
-        <translation type="unfinished"/>
+        <translation>Thời gian giao dịch đã được nhận.</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="614"/>
         <source>Type of transaction.</source>
-        <translation type="unfinished"/>
+        <translation>Kiểu giao dịch.</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="616"/>
@@ -3645,52 +3650,52 @@ Address: %4
         <location filename="../transactionview.cpp" line="60"/>
         <location filename="../transactionview.cpp" line="76"/>
         <source>All</source>
-        <translation type="unfinished"/>
+        <translation>Tất cả</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="61"/>
         <source>Today</source>
-        <translation type="unfinished"/>
+        <translation>Hôm nay</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="62"/>
         <source>This week</source>
-        <translation type="unfinished"/>
+        <translation>Tuần này</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="63"/>
         <source>This month</source>
-        <translation type="unfinished"/>
+        <translation>Tháng này</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="64"/>
         <source>Last month</source>
-        <translation type="unfinished"/>
+        <translation>Tháng gần nhất</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="65"/>
         <source>This year</source>
-        <translation type="unfinished"/>
+        <translation>Năm nay</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="66"/>
         <source>Range...</source>
-        <translation type="unfinished"/>
+        <translation>Khoảng...</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="77"/>
         <source>Received with</source>
-        <translation type="unfinished"/>
+        <translation>Nhận với</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="79"/>
         <source>Sent to</source>
-        <translation type="unfinished"/>
+        <translation>Gửi đến</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="81"/>
         <source>Darksent</source>
-        <translation type="unfinished"/>
+        <translation>Darksent</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="82"/>
@@ -3700,52 +3705,52 @@ Address: %4
     <message>
         <location filename="../transactionview.cpp" line="83"/>
         <source>To yourself</source>
-        <translation type="unfinished"/>
+        <translation>Đến bản thân bạn</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="84"/>
         <source>Mined</source>
-        <translation type="unfinished"/>
+        <translation>Được đào</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="85"/>
         <source>Other</source>
-        <translation type="unfinished"/>
+        <translation>Khác</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="91"/>
         <source>Enter address or label to search</source>
-        <translation type="unfinished"/>
+        <translation>Nhập địa chỉ hoặc nhãn để tìm</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="97"/>
         <source>Min amount</source>
-        <translation type="unfinished"/>
+        <translation>Số tiền tối thiểu</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="131"/>
         <source>Copy address</source>
-        <translation type="unfinished"/>
+        <translation>Sao chép địa chỉ</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="132"/>
         <source>Copy label</source>
-        <translation type="unfinished"/>
+        <translation>Sao chép nhãn</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="133"/>
         <source>Copy amount</source>
-        <translation type="unfinished"/>
+        <translation>Sao chép số tiền</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="134"/>
         <source>Copy transaction ID</source>
-        <translation type="unfinished"/>
+        <translation>Sao chép mã giao dịch</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="135"/>
         <source>Edit label</source>
-        <translation type="unfinished"/>
+        <translation>Sửa nhãn</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="136"/>
@@ -3760,27 +3765,27 @@ Address: %4
     <message>
         <location filename="../transactionview.cpp" line="300"/>
         <source>Comma separated file (*.csv)</source>
-        <translation>Tập tin tách biệt bởi dấu phẩy (*.csv)</translation>
+        <translation>File định dạng phân cách bởi dấu phẩy (*.csv)</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="309"/>
         <source>Confirmed</source>
-        <translation type="unfinished"/>
+        <translation>Đã được xác nhận</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="310"/>
         <source>Date</source>
-        <translation type="unfinished"/>
+        <translation>Ngày</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="311"/>
         <source>Type</source>
-        <translation type="unfinished"/>
+        <translation>Kiểu</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="312"/>
         <source>Label</source>
-        <translation>Nhãn dữ liệu</translation>
+        <translation>Nhãn</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="313"/>
@@ -3790,17 +3795,17 @@ Address: %4
     <message>
         <location filename="../transactionview.cpp" line="314"/>
         <source>Amount</source>
-        <translation>Số lượng</translation>
+        <translation>Số tiền</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="315"/>
         <source>ID</source>
-        <translation type="unfinished"/>
+        <translation>Mã</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="318"/>
         <source>Exporting Failed</source>
-        <translation type="unfinished"/>
+        <translation>Kết xuất không thành công</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="318"/>
@@ -3810,7 +3815,7 @@ Address: %4
     <message>
         <location filename="../transactionview.cpp" line="322"/>
         <source>Exporting Successful</source>
-        <translation type="unfinished"/>
+        <translation>Kết xuất thành công</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="322"/>
@@ -3820,12 +3825,12 @@ Address: %4
     <message>
         <location filename="../transactionview.cpp" line="431"/>
         <source>Range:</source>
-        <translation type="unfinished"/>
+        <translation>Khoảng:</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="439"/>
         <source>to</source>
-        <translation type="unfinished"/>
+        <translation>đến</translation>
     </message>
 </context>
 <context>
@@ -3841,7 +3846,7 @@ Address: %4
     <message>
         <location filename="../walletmodel.cpp" line="286"/>
         <source>Send Coins</source>
-        <translation type="unfinished"/>
+        <translation>Gửi tiền</translation>
     </message>
 </context>
 <context>
@@ -3849,17 +3854,17 @@ Address: %4
     <message>
         <location filename="../walletview.cpp" line="44"/>
         <source>&amp;Export</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Kết xuất</translation>
     </message>
     <message>
         <location filename="../walletview.cpp" line="45"/>
         <source>Export the data in the current tab to a file</source>
-        <translation type="unfinished"/>
+        <translation>Kết xuất dữ liệu trong tab này sang một file</translation>
     </message>
     <message>
         <location filename="../walletview.cpp" line="229"/>
         <source>Backup Wallet</source>
-        <translation type="unfinished"/>
+        <translation>Sao lưu Ví</translation>
     </message>
     <message>
         <location filename="../walletview.cpp" line="230"/>
@@ -4344,7 +4349,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="199"/>
         <source>Error</source>
-        <translation type="unfinished"/>
+        <translation>Lỗi</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="200"/>
@@ -4504,7 +4509,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="226"/>
         <source>Information</source>
-        <translation type="unfinished"/>
+        <translation>Thông tin</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="227"/>
@@ -4924,7 +4929,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="315"/>
         <source>Usage:</source>
-        <translation type="unfinished"/>
+        <translation>Cách dùng:</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="316"/>
@@ -4994,7 +4999,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="329"/>
         <source>Warning</source>
-        <translation type="unfinished"/>
+        <translation>Cảnh báo</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="330"/>
@@ -5024,7 +5029,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="335"/>
         <source>version</source>
-        <translation type="unfinished"/>
+        <translation>phiên bản</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="336"/>

@@ -38,7 +38,7 @@ Sản phẩm này bao gồm phần mềm được phát triển bởi dự án O
     <message>
         <location filename="../utilitydialog.cpp" line="30"/>
         <source>The Bitcoin Core developers</source>
-        <translation type="unfinished"/>
+        <translation>Nhóm phát triển Bitcoin Core</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="31"/>
@@ -3536,7 +3536,7 @@ Address: %4
     <message>
         <location filename="../transactiontablemodel.cpp" line="299"/>
         <source>Confirming (%1 of %2 recommended confirmations)</source>
-        <translation type="unfinished"/>
+        <translation>Đang xác nhận (%1 của %2 xác nhận được đề nghị)</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="302"/>
@@ -3566,32 +3566,32 @@ Address: %4
     <message>
         <location filename="../transactiontablemodel.cpp" line="356"/>
         <source>Received with</source>
-        <translation type="unfinished"/>
+        <translation>Nhận với</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="358"/>
         <source>Received from</source>
-        <translation type="unfinished"/>
+        <translation>Nhận từ</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="360"/>
         <source>Received via Darksend</source>
-        <translation type="unfinished"/>
+        <translation>Nhận qua Darksend</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="363"/>
         <source>Sent to</source>
-        <translation type="unfinished"/>
+        <translation>Gửi đến</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="365"/>
         <source>Payment to yourself</source>
-        <translation type="unfinished"/>
+        <translation>Trả cho bản thân bạn</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="367"/>
         <source>Mined</source>
-        <translation type="unfinished"/>
+        <translation>Được đào</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="370"/>
@@ -3611,12 +3611,12 @@ Address: %4
     <message>
         <location filename="../transactiontablemodel.cpp" line="376"/>
         <source>Darksent</source>
-        <translation type="unfinished"/>
+        <translation>Darksent</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="418"/>
         <source>(n/a)</source>
-        <translation type="unfinished"/>
+        <translation>(không áp dụng)</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="610"/>
@@ -3626,12 +3626,12 @@ Address: %4
     <message>
         <location filename="../transactiontablemodel.cpp" line="612"/>
         <source>Date and time that the transaction was received.</source>
-        <translation type="unfinished"/>
+        <translation>Thời gian giao dịch đã được nhận.</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="614"/>
         <source>Type of transaction.</source>
-        <translation type="unfinished"/>
+        <translation>Kiểu giao dịch.</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="616"/>
@@ -3650,52 +3650,52 @@ Address: %4
         <location filename="../transactionview.cpp" line="60"/>
         <location filename="../transactionview.cpp" line="76"/>
         <source>All</source>
-        <translation type="unfinished"/>
+        <translation>Tất cả</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="61"/>
         <source>Today</source>
-        <translation type="unfinished"/>
+        <translation>Hôm nay</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="62"/>
         <source>This week</source>
-        <translation type="unfinished"/>
+        <translation>Tuần này</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="63"/>
         <source>This month</source>
-        <translation type="unfinished"/>
+        <translation>Tháng này</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="64"/>
         <source>Last month</source>
-        <translation type="unfinished"/>
+        <translation>Tháng gần nhất</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="65"/>
         <source>This year</source>
-        <translation type="unfinished"/>
+        <translation>Năm nay</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="66"/>
         <source>Range...</source>
-        <translation type="unfinished"/>
+        <translation>Khoảng...</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="77"/>
         <source>Received with</source>
-        <translation type="unfinished"/>
+        <translation>Nhận với</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="79"/>
         <source>Sent to</source>
-        <translation type="unfinished"/>
+        <translation>Gửi đến</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="81"/>
         <source>Darksent</source>
-        <translation type="unfinished"/>
+        <translation>Darksent</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="82"/>
@@ -3705,52 +3705,52 @@ Address: %4
     <message>
         <location filename="../transactionview.cpp" line="83"/>
         <source>To yourself</source>
-        <translation type="unfinished"/>
+        <translation>Đến bản thân bạn</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="84"/>
         <source>Mined</source>
-        <translation type="unfinished"/>
+        <translation>Được đào</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="85"/>
         <source>Other</source>
-        <translation type="unfinished"/>
+        <translation>Khác</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="91"/>
         <source>Enter address or label to search</source>
-        <translation type="unfinished"/>
+        <translation>Nhập địa chỉ hoặc nhãn để tìm</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="97"/>
         <source>Min amount</source>
-        <translation type="unfinished"/>
+        <translation>Số tiền tối thiểu</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="131"/>
         <source>Copy address</source>
-        <translation type="unfinished"/>
+        <translation>Sao chép địa chỉ</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="132"/>
         <source>Copy label</source>
-        <translation type="unfinished"/>
+        <translation>Sao chép nhãn</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="133"/>
         <source>Copy amount</source>
-        <translation type="unfinished"/>
+        <translation>Sao chép số tiền</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="134"/>
         <source>Copy transaction ID</source>
-        <translation type="unfinished"/>
+        <translation>Sao chép mã giao dịch</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="135"/>
         <source>Edit label</source>
-        <translation type="unfinished"/>
+        <translation>Sửa nhãn</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="136"/>
@@ -3780,7 +3780,7 @@ Address: %4
     <message>
         <location filename="../transactionview.cpp" line="311"/>
         <source>Type</source>
-        <translation type="unfinished"/>
+        <translation>Kiểu</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="312"/>
@@ -3800,7 +3800,7 @@ Address: %4
     <message>
         <location filename="../transactionview.cpp" line="315"/>
         <source>ID</source>
-        <translation type="unfinished"/>
+        <translation>Mã</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="318"/>
@@ -3815,7 +3815,7 @@ Address: %4
     <message>
         <location filename="../transactionview.cpp" line="322"/>
         <source>Exporting Successful</source>
-        <translation type="unfinished"/>
+        <translation>Kết xuất thành công</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="322"/>
@@ -3825,12 +3825,12 @@ Address: %4
     <message>
         <location filename="../transactionview.cpp" line="431"/>
         <source>Range:</source>
-        <translation type="unfinished"/>
+        <translation>Khoảng:</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="439"/>
         <source>to</source>
-        <translation type="unfinished"/>
+        <translation>đến</translation>
     </message>
 </context>
 <context>
@@ -3864,17 +3864,17 @@ Address: %4
     <message>
         <location filename="../walletview.cpp" line="229"/>
         <source>Backup Wallet</source>
-        <translation type="unfinished"/>
+        <translation>Sao lưu Ví</translation>
     </message>
     <message>
         <location filename="../walletview.cpp" line="230"/>
         <source>Wallet Data (*.dat)</source>
-        <translation type="unfinished"/>
+        <translation>Dữ liệu Ví (*.dat)</translation>
     </message>
     <message>
         <location filename="../walletview.cpp" line="236"/>
         <source>Backup Failed</source>
-        <translation type="unfinished"/>
+        <translation>Sao lưu không thành công</translation>
     </message>
     <message>
         <location filename="../walletview.cpp" line="236"/>
@@ -3884,7 +3884,7 @@ Address: %4
     <message>
         <location filename="../walletview.cpp" line="240"/>
         <source>Backup Successful</source>
-        <translation type="unfinished"/>
+        <translation>Sao lưu thành công</translation>
     </message>
     <message>
         <location filename="../walletview.cpp" line="240"/>
@@ -4079,12 +4079,12 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="158"/>
         <source>(default: 1)</source>
-        <translation type="unfinished"/>
+        <translation>(ngầm định: 1)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="159"/>
         <source>(default: wallet.dat)</source>
-        <translation type="unfinished"/>
+        <translation>(ngầm định: wallet.dat)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="160"/>
@@ -4209,7 +4209,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="169"/>
         <source>Cannot downgrade wallet</source>
-        <translation type="unfinished"/>
+        <translation>Không thể hạ cấp ví</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="170"/>
@@ -4224,7 +4224,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="172"/>
         <source>Cannot write default address</source>
-        <translation type="unfinished"/>
+        <translation>Không thể viết vào địa chỉ ngầm định</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="173"/>
@@ -4299,7 +4299,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="189"/>
         <source>Done loading</source>
-        <translation type="unfinished"/>
+        <translation>Nạp xong</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="190"/>
@@ -4509,7 +4509,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="226"/>
         <source>Information</source>
-        <translation type="unfinished"/>
+        <translation>Thông tin</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="227"/>
@@ -4519,7 +4519,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="228"/>
         <source>InstantX options:</source>
-        <translation type="unfinished"/>
+        <translation>Tuỳ chọn InstantX:</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="229"/>
@@ -4554,7 +4554,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="235"/>
         <source>Invalid amount</source>
-        <translation type="unfinished"/>
+        <translation>Số tiền không hợp lệ</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="236"/>
@@ -4619,7 +4619,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="248"/>
         <source>Loading wallet...</source>
-        <translation type="unfinished"/>
+        <translation>Đang tải ví...</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="249"/>
