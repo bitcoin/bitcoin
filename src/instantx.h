@@ -27,6 +27,7 @@ static const int MIN_INSTANTX_PROTO_VERSION = 70047;
 
 extern map<uint256, CTransaction> mapTxLockReq;
 extern map<uint256, CTransactionLock> mapTxLocks;
+extern int nCompleteTXLocks;
 
 void ProcessMessageInstantX(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
 
@@ -69,6 +70,7 @@ public:
     int nBlockHeight;
     CTransaction tx;
     std::vector<CConsensusVote> vecConsensusVotes;
+    int nExpiration;
 
     bool SignaturesValid();
     int CountSignatures();

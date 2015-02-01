@@ -1164,10 +1164,10 @@ int CMerkleTx::IsTransactionLocked() const
     std::map<uint256, CTransactionLock>::iterator i = mapTxLocks.find(GetHash());
     if (i != mapTxLocks.end()){
         if((*i).second.CountSignatures() >= INSTANTX_SIGNATURES_REQUIRED){
-            LogPrintf("InstantX::ProcessConsensusVote - Transaction Lock Is Complete %s !\n", (*i).second.GetHash().ToString().c_str());
+            LogPrintf("InstantX::ProcessConsensusVote - Transaction Lock Is Complete %s\n", (*i).second.GetHash().ToString().c_str());
             return nInstantXDepth;
         } else {
-            LogPrintf("InstantX::ProcessConsensusVote - Incomplete TX Lock %d !\n", (*i).second.CountSignatures(), (*i).second.GetHash().ToString().c_str());
+            LogPrintf("InstantX::ProcessConsensusVote - Incomplete TX Lock %d %s\n", (*i).second.CountSignatures(), (*i).second.GetHash().ToString().c_str());
             return nInstantXDepth;
         }
     }
