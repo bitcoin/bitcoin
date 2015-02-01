@@ -43,7 +43,7 @@ Izplatīta saskaņā ar MIT/X11 programmatūras licenci, skatīt pievienoto datn
     <message>
         <location filename="../utilitydialog.cpp" line="31"/>
         <source>The Darkcoin Core developers</source>
-        <translation type="unfinished"/>
+        <translation>Darkcoin Core izstrādātāji</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="43"/>
@@ -117,7 +117,7 @@ Izplatīta saskaņā ar MIT/X11 programmatūras licenci, skatīt pievienoto datn
     <message>
         <location filename="../addressbookpage.cpp" line="45"/>
         <source>Choose the address to send coins to</source>
-        <translation>Izvēlies adresi uz kuru sūtīt bitcoins</translation>
+        <translation>Izvēlies adresi uz kuru sūtīt monētas</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="46"/>
@@ -142,12 +142,12 @@ Izplatīta saskaņā ar MIT/X11 programmatūras licenci, skatīt pievienoto datn
     <message>
         <location filename="../addressbookpage.cpp" line="65"/>
         <source>These are your Darkcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation type="unfinished"/>
+        <translation>Šīs ir Darkcoin sūtīšanas adreses. Vienmēr pārbaudiet apjomu un saņemšanas adresi pirms sūtat monētas.</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="69"/>
         <source>These are your Darkcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation type="unfinished"/>
+        <translation>Šīs ir Darkcoin saņemšanas adreses. Rekomendējams katru reizi lietot jaunu saņemšanas adresi katrai transakcijai.</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="75"/>
@@ -182,7 +182,7 @@ Izplatīta saskaņā ar MIT/X11 programmatūras licenci, skatīt pievienoto datn
     <message>
         <location filename="../addressbookpage.cpp" line="286"/>
         <source>There was an error trying to save the address list to %1.</source>
-        <translation type="unfinished"/>
+        <translation>Notikusi kļūme mēģinot saglabāt maciņa datus uz %1.</translation>
     </message>
 </context>
 <context>
@@ -290,7 +290,7 @@ Nesniedz reālu drošību</translation>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="113"/>
         <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR DARKCOINS&lt;/b&gt;!</source>
-        <translation type="unfinished"/>
+        <translation>Uzmanību: Ja nošifrēsiet maciņu un pazaudēsiet paroli, Jūs &lt;b&gt;ZAUDĒSIET VISUS JŪSU DARKCOINUS&lt;/b&gt;</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="113"/>
@@ -306,7 +306,7 @@ Nesniedz reālu drošību</translation>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="124"/>
         <source>Darkcoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your darkcoins from being stolen by malware infecting your computer.</source>
-        <translation type="unfinished"/>
+        <translation>Darkcoin aizvērsies, lai pabeigtu šifrēšanu. Atcerieties, ka maciņa šifrēšana nevar pilnībā novērst Darkcoinu zādzību, ko veic datorā ieviesušās kaitīgas programmas.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="128"/>
@@ -366,7 +366,7 @@ Nesniedz reālu drošību</translation>
     <message>
         <location filename="../bitcoingui.cpp" line="76"/>
         <source>Darkcoin Core</source>
-        <translation type="unfinished"/>
+        <translation>Darkcoin Core</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="85"/>
@@ -402,7 +402,7 @@ Nesniedz reālu drošību</translation>
     <message>
         <location filename="../bitcoingui.cpp" line="234"/>
         <source>Send coins to a Darkcoin address</source>
-        <translation type="unfinished"/>
+        <translation>Nosūtīt monētas uz Darkcoin adresi</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="240"/>
@@ -412,7 +412,7 @@ Nesniedz reālu drošību</translation>
     <message>
         <location filename="../bitcoingui.cpp" line="241"/>
         <source>Request payments (generates QR codes and darkcoin: URIs)</source>
-        <translation type="unfinished"/>
+        <translation>Pieprasīt maksājumus (izveido QR kodu un darkcoin: URIs)</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="247"/>
@@ -438,12 +438,12 @@ Nesniedz reālu drošību</translation>
         <location filename="../bitcoingui.cpp" line="270"/>
         <location filename="../bitcoingui.cpp" line="272"/>
         <source>&amp;About Darkcoin Core</source>
-        <translation type="unfinished"/>
+        <translation>Par Darkcoin Core</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="273"/>
         <source>Show information about Darkcoin</source>
-        <translation type="unfinished"/>
+        <translation>Parādīt informāciju par Darkcoin</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="276"/>
@@ -464,7 +464,7 @@ Nesniedz reālu drošību</translation>
     <message>
         <location filename="../bitcoingui.cpp" line="283"/>
         <source>Modify configuration options for Darkcoin</source>
-        <translation type="unfinished"/>
+        <translation>Mainīt Darkcoin konfigurācijas uzstādījumus</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="286"/>
@@ -510,7 +510,7 @@ Nesniedz reālu drošību</translation>
     <message>
         <location filename="../bitcoingui.cpp" line="298"/>
         <source>&amp;Unlock Wallet...</source>
-        <translation type="unfinished"/>
+        <translation>Atslēgt maciņu</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="299"/>
@@ -520,7 +520,7 @@ Nesniedz reālu drošību</translation>
     <message>
         <location filename="../bitcoingui.cpp" line="300"/>
         <source>&amp;Lock Wallet</source>
-        <translation type="unfinished"/>
+        <translation>Aizslēgt maciņu</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="301"/>
@@ -530,7 +530,7 @@ Nesniedz reālu drošību</translation>
     <message>
         <location filename="../bitcoingui.cpp" line="302"/>
         <source>Sign messages with your Darkcoin addresses to prove you own them</source>
-        <translation type="unfinished"/>
+        <translation>Parakstīt ziņojumus ar savām Darkcoin adresēm lai pierādītu, ka tās pieder Jums</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="303"/>
@@ -540,7 +540,7 @@ Nesniedz reālu drošību</translation>
     <message>
         <location filename="../bitcoingui.cpp" line="304"/>
         <source>Verify messages to ensure they were signed with specified Darkcoin addresses</source>
-        <translation type="unfinished"/>
+        <translation>Pārbaudīt ziņojumus lai pārliecinātos, ka tie tika parakstīti ar norādītajām Darkcoin adresēm</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="306"/>
@@ -550,27 +550,27 @@ Nesniedz reālu drošību</translation>
     <message>
         <location filename="../bitcoingui.cpp" line="307"/>
         <source>Show diagnostic information</source>
-        <translation type="unfinished"/>
+        <translation>Rādīt diagnostikas informāciju</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="308"/>
         <source>&amp;Debug console</source>
-        <translation type="unfinished"/>
+        <translation>Atkļūdošanas logs</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="309"/>
         <source>Open debugging console</source>
-        <translation type="unfinished"/>
+        <translation>Atvērt atkļūdošanas un diagnostikas konsoli</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="310"/>
         <source>&amp;Network Monitor</source>
-        <translation type="unfinished"/>
+        <translation>Tīkla novērošana</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="311"/>
         <source>Show network monitor</source>
-        <translation type="unfinished"/>
+        <translation>Rādīt tīklā novērošanu</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="313"/>
@@ -580,7 +580,7 @@ Nesniedz reālu drošību</translation>
     <message>
         <location filename="../bitcoingui.cpp" line="314"/>
         <source>Show the list of used sending addresses and labels</source>
-        <translation type="unfinished"/>
+        <translation>Rādīt lietoto sūtīšanas adrešu sarakstu un formas</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="315"/>
@@ -590,7 +590,7 @@ Nesniedz reālu drošību</translation>
     <message>
         <location filename="../bitcoingui.cpp" line="316"/>
         <source>Show the list of used receiving addresses and labels</source>
-        <translation type="unfinished"/>
+        <translation>Rādīt lietoto saņemšanas adrešu sarakstu un formas</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="318"/>
@@ -600,7 +600,7 @@ Nesniedz reālu drošību</translation>
     <message>
         <location filename="../bitcoingui.cpp" line="319"/>
         <source>Open a darkcoin: URI or payment request</source>
-        <translation type="unfinished"/>
+        <translation>Atvērt darkcoin URI vai maksājuma pieprasījumu</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="321"/>
@@ -625,7 +625,7 @@ Nesniedz reālu drošību</translation>
     <message>
         <location filename="../bitcoingui.cpp" line="385"/>
         <source>&amp;Tools</source>
-        <translation type="unfinished"/>
+        <translation>Rīki</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="391"/>
@@ -641,7 +641,7 @@ Nesniedz reālu drošību</translation>
         <location filename="../bitcoingui.cpp" line="489"/>
         <location filename="../bitcoingui.cpp" line="494"/>
         <source>Darkcoin client</source>
-        <translation type="unfinished"/>
+        <translation>Darkcoin klients</translation>
     </message>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="638"/>
@@ -717,17 +717,17 @@ Nesniedz reālu drošību</translation>
     <message>
         <location filename="../bitcoingui.cpp" line="735"/>
         <source>Last received block was generated %1 ago.</source>
-        <translation type="unfinished"/>
+        <translation>Pēdējais bloks radīts %1 atpakaļ</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="737"/>
         <source>Transactions after this will not yet be visible.</source>
-        <translation>Transakcijas pēc šī vel nebūs redzamas</translation>
+        <translation>Transakcijas pēc šī vēl nebūs redzamas</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="750"/>
         <source>Darkcoin</source>
-        <translation type="unfinished"/>
+        <translation>Darkcoin</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="764"/>
@@ -775,7 +775,7 @@ Adrese: %4
     <message>
         <location filename="../bitcoingui.cpp" line="931"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt; for anonimization only</source>
-        <translation type="unfinished"/>
+        <translation>Maciņš ir &lt;b&gt;šifrēts&lt;/b&gt; un pašlaik &lt;b&gt;atvērts&lt;/b&gt; tikai priekš anonimizācijai</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="941"/>
@@ -785,7 +785,7 @@ Adrese: %4
     <message>
         <location filename="../darkcoin.cpp" line="449"/>
         <source>A fatal error occurred. Darkcoin can no longer continue safely and will quit.</source>
-        <translation type="unfinished"/>
+        <translation>Radās fatāla kļūda. Darkcoin Core nevar vairs droši turpināt un tiks izslēgta.</translation>
     </message>
 </context>
 <context>
@@ -862,7 +862,7 @@ Adrese: %4
         <location filename="../forms/coincontroldialog.ui" line="377"/>
         <location filename="../forms/ui_coincontroldialog.h" line="329"/>
         <source>Tree mode</source>
-        <translation>Koka režīms</translation>
+        <translation>Tree veids</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="393"/>
@@ -1051,39 +1051,39 @@ Adrese: %4
     <message>
         <location filename="../coincontroldialog.cpp" line="615"/>
         <source>This label turns red, if the transaction size is greater than 1000 bytes.</source>
-        <translation type="unfinished"/>
+        <translation>Šis logs kļūst sarkans, ja transakcijas izmērs ir lielāks par 100 baitiem.</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="616"/>
         <location filename="../coincontroldialog.cpp" line="621"/>
         <source>This means a fee of at least %1 per kB is required.</source>
-        <translation type="unfinished"/>
+        <translation>Tas nozīmē nodokli vismaz %1 uz kB tiks pieprasīts.</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="617"/>
         <source>Can vary +/- 1 byte per input.</source>
-        <translation type="unfinished"/>
+        <translation>Var atšķirties par +/- 1 baitu uz ievadīto apjomu</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="619"/>
         <source>Transactions with higher priority are more likely to get included into a block.</source>
-        <translation type="unfinished"/>
+        <translation>Transakcijas ar augstāku prioritāti tiks iekļautas blokā ātrāk.</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="620"/>
         <source>This label turns red, if the priority is smaller than &quot;medium&quot;.</source>
-        <translation type="unfinished"/>
+        <translation>Šis logs kļūst sarkans, ja prioritāte ir mazāka par &quot;vidēja&quot;</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="623"/>
         <source>This label turns red, if any recipient receives an amount smaller than %1.</source>
-        <translation type="unfinished"/>
+        <translation>Šis logs kļūst sarkans, ja saņēmējs saņem apjomu mazāku par %1.</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="624"/>
         <location filename="../coincontroldialog.cpp" line="628"/>
         <source>This means a fee of at least %1 is required.</source>
-        <translation type="unfinished"/>
+        <translation>Vismaz %1 nodoklis pieprasīts.</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="625"/>
@@ -1321,7 +1321,7 @@ Adrese: %4
     <message>
         <location filename="../utilitydialog.cpp" line="69"/>
         <source>Darkcoin Core</source>
-        <translation type="unfinished"/>
+        <translation>Darkcoin Core</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="69"/>
@@ -1412,7 +1412,7 @@ Maiciņš arī glabāsies šajā direkotrijā.</translation>
     <message>
         <location filename="../intro.cpp" line="185"/>
         <source>Darkcoin</source>
-        <translation type="unfinished"/>
+        <translation>Darkcoin</translation>
     </message>
     <message>
         <location filename="../intro.cpp" line="186"/>
@@ -1447,7 +1447,7 @@ Maiciņš arī glabāsies šajā direkotrijā.</translation>
         <location filename="../forms/openuridialog.ui" line="20"/>
         <location filename="../forms/ui_openuridialog.h" line="94"/>
         <source>Open payment request from URI or file</source>
-        <translation>Atvērt maksājuma pieprasījumu no URI vai datnes</translation>
+        <translation>Atvērt maksājuma pieprasījumu no URI vai faila</translation>
     </message>
     <message>
         <location filename="../forms/openuridialog.ui" line="29"/>
@@ -1673,13 +1673,13 @@ Tas iespaido arī jūsu bilances aprēķinu.</translation>
         <location filename="../forms/optionsdialog.ui" line="458"/>
         <location filename="../forms/ui_optionsdialog.h" line="587"/>
         <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Quit in the menu.</source>
-        <translation>Logu aizverot, minimizēt, nevis beigt darbu. Kad šī izvēlne iespējota, programma aizvērsies tikai pēc Beigt komandas izvēlnē.</translation>
+        <translation>Minimizēt  aplikāciju, kad Windows aizvērts. Kad šī opcija iespējota, aplikāciju var atslēgt tikai uzspiežot Iziet galvenajā izvēlnē.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="461"/>
         <location filename="../forms/ui_optionsdialog.h" line="589"/>
         <source>M&amp;inimize on close</source>
-        <translation>M&amp;inimizēt aizverot</translation>
+        <translation>Minimizēt aizverot</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="482"/>
@@ -1691,7 +1691,7 @@ Tas iespaido arī jūsu bilances aprēķinu.</translation>
         <location filename="../forms/optionsdialog.ui" line="490"/>
         <location filename="../forms/ui_optionsdialog.h" line="591"/>
         <source>User Interface &amp;language:</source>
-        <translation>Lietotāja interfeiss un &amp;valoda:</translation>
+        <translation>Lietotāja interfeiss un valoda:</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="503"/>
@@ -2109,7 +2109,7 @@ Tas iespaido arī jūsu bilances aprēķinu.</translation>
         <location filename="../darkcoin.cpp" line="539"/>
         <location filename="../darkcoin.cpp" line="552"/>
         <source>Darkcoin</source>
-        <translation type="unfinished"/>
+        <translation>Darkcoin</translation>
     </message>
     <message>
         <location filename="../darkcoin.cpp" line="526"/>
@@ -3274,7 +3274,7 @@ Tas iespaido arī jūsu bilances aprēķinu.</translation>
     <message>
         <location filename="../splashscreen.cpp" line="33"/>
         <source>Darkcoin Core</source>
-        <translation type="unfinished"/>
+        <translation>Darkcoin Core</translation>
     </message>
     <message>
         <location filename="../splashscreen.cpp" line="35"/>
@@ -3284,7 +3284,7 @@ Tas iespaido arī jūsu bilances aprēķinu.</translation>
     <message>
         <location filename="../splashscreen.cpp" line="36"/>
         <source>The Darkcoin Core developers</source>
-        <translation type="unfinished"/>
+        <translation>Darkcoin Core izstrādātāji</translation>
     </message>
     <message>
         <location filename="../splashscreen.cpp" line="37"/>
