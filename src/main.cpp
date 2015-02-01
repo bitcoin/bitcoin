@@ -1156,12 +1156,40 @@ int CMerkleTx::GetDepthInMainChainINTERNAL(CBlockIndex* &pindexRet) const
     return chainActive.Height() - pindex->nHeight + 1;
 }
 
+int CMerkleTx::IsTransactionLocked() const
+{
+    if(nInstantXDepth == 0) return 0;
+
+    //printf("mapTxLocks start\n");
+    typedef std::map<uint256, CTransactionLock>::iterator it_ctxl;
+
+    int found = 0;
+    for (unsigned int b = 0; b < vout.size(); b++) {
+        for(it_ctxl it = mapTxLocks.begin(); it != mapTxLocks.end(); it++) {
+            for (unsigned int a = 0; a < it->second.tx.vout.size(); a++) {
+                if(vout[b] == it->second.tx.vout[a])
+                    found++;
+            }
+            if(found > 0) break;
+        }
+    }
+    //printf("mapTxLocks end %d %d\n", found , (int)vout.size());
+    if(found == (int)vout.size()) return nInstantXDepth;
+
+    return 0;
+}
+
 int CMerkleTx::GetDepthInMainChain(CBlockIndex* &pindexRet) const
 {
     AssertLockHeld(cs_main);
     int nResult = GetDepthInMainChainINTERNAL(pindexRet);
     if (nResult == 0 && !mempool.exists(GetHash()))
         return -1; // Not in chain, not in mempool
+
+    if (nResult < 6){
+        int minConfirms = IsTransactionLocked();
+        return minConfirms+nResult;
+    }
 
     return nResult;
 }

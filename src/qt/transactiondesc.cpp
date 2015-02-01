@@ -31,15 +31,28 @@ QString TransactionDesc::FormatTxStatus(const CWalletTx& wtx)
     }
     else
     {
-        int nDepth = wtx.GetDepthInMainChain();
-        if (nDepth < 0)
-            return tr("conflicted");
-        else if (GetAdjustedTime() - wtx.nTimeReceived > 2 * 60 && wtx.GetRequestCount() == 0)
-            return tr("%1/offline").arg(nDepth);
-        else if (nDepth < 6)
-            return tr("%1/unconfirmed").arg(nDepth);
-        else
-            return tr("%1 confirmations").arg(nDepth);
+        QString strUsingIX = "";
+        if(wtx.IsTransactionLocked()){
+            int nDepth = wtx.GetDepthInMainChain();
+            if (nDepth < 0)
+                return tr("conflicted");
+            else if (GetAdjustedTime() - wtx.nTimeReceived > 2 * 60 && wtx.GetRequestCount() == 0)
+                return tr("%1/offline (instantx)").arg(nDepth);
+            else if (nDepth < 6)
+                return tr("%1/instantx").arg(nDepth);
+            else
+                return tr("%1 confirmations (instantx)").arg(nDepth);
+        } else {
+            int nDepth = wtx.GetDepthInMainChain();
+            if (nDepth < 0)
+                return tr("conflicted");
+            else if (GetAdjustedTime() - wtx.nTimeReceived > 2 * 60 && wtx.GetRequestCount() == 0)
+                return tr("%1/offline").arg(nDepth);
+            else if (nDepth < 6)
+                return tr("%1/unconfirmed").arg(nDepth);
+            else
+                return tr("%1 confirmations").arg(nDepth);
+        }
     }
 }
 

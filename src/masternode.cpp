@@ -26,7 +26,7 @@ void ProcessMasternodeConnections(){
     BOOST_FOREACH(CNode* pnode, vNodes)
     {
         //if it's our masternode, let it be
-        if((CNetAddr)darkSendPool.submittedToMasternode == (CNetAddr)pnode->addr) continue;
+        if(darkSendPool.submittedToMasternode == pnode->addr) continue;
 
         if(pnode->fDarkSendMaster){
             LogPrintf("Closing masternode connection %s \n", pnode->addr.ToString().c_str());
@@ -100,11 +100,6 @@ void ProcessMessageMasternode(CNode* pfrom, std::string& strCommand, CDataStream
             Misbehaving(pfrom->GetId(), 100);
             return;
         }
-
-        if(
-            (Params().NetworkID() == CChainParams::TESTNET && addr.GetPort() != 19999) ||
-            (Params().NetworkID() == CChainParams::REGTEST && addr.GetPort() != 19999) ||
-            (Params().NetworkID() == CChainParams::MAIN && addr.GetPort() != 9999)) return;
 
         //search existing masternode list, this is where we update existing masternodes with new dsee broadcasts
 
@@ -269,7 +264,7 @@ void ProcessMessageMasternode(CNode* pfrom, std::string& strCommand, CDataStream
 
         if(vin == CTxIn()) { //only should ask for this once
             //local network
-            if(!pfrom->addr.IsRFC1918())
+            if(!pfrom->addr.IsRFC1918() && Params().NetworkID() == CChainParams::MAIN)
             {
                 std::map<CNetAddr, int64_t>::iterator i = askedForMasternodeList.find(pfrom->addr);
                 if (i != askedForMasternodeList.end())

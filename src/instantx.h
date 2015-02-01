@@ -44,16 +44,18 @@ class CConsensusVote
 public:
     CTxIn vinMasternode;
     bool approved;
-    uint256 txHash;
-    std::vector<unsigned char> vchMasterNodeSignature;
+    CTransaction tx;
     int nBlockHeight;
+    std::vector<unsigned char> vchMasterNodeSignature;
+
+    uint256 GetHash() const;
 
     bool SignatureValid();
     bool Sign();
 
     IMPLEMENT_SERIALIZE
     (
-        READWRITE(txHash);
+        READWRITE(tx);
         READWRITE(vinMasternode);
         READWRITE(approved);
         READWRITE(vchMasterNodeSignature);

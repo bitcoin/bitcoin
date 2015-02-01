@@ -128,6 +128,7 @@ OverviewPage::OverviewPage(QWidget *parent) :
 
     showingDarkSendMessage = 0;
     darksendActionCheck = 0;
+    lastNewBlock = 0;
 
     if(fLiteMode){
         ui->frameDarksend->setVisible(false);
@@ -308,6 +309,10 @@ void OverviewPage::darkSendStatus()
 
     if(nBestHeight != darkSendPool.cachedNumBlocks)
     {
+        //we we're processing lots of blocks, we'll just leave
+        if(GetTime() - lastNewBlock < 10) return;
+        lastNewBlock = GetTime();
+
         updateDarksendProgress();
 
         QString strSettings(" Rounds");
