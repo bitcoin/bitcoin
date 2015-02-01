@@ -49,10 +49,13 @@ void ProcessMessageInstantX(CNode* pfrom, std::string& strCommand, CDataStream& 
             return;
         }
 
-        int nTxAge = GetInputAge(tx.vin[0]);
-        if(nTxAge <= 0){
-            LogPrintf("ProcessMessageInstantX::txlreq - Transaction not found / too new: %d / %s\n", nTxAge, tx.GetHash().ToString().c_str());
-            return;
+        int nTxAge = 0;
+        BOOST_REVERSE_FOREACH(CTxIn i, tx.vin){
+            nTxAge = GetInputAge(i);
+            if(nTxAge <= 5){
+                LogPrintf("ProcessMessageInstantX::txlreq - Transaction not found / too new: %d / %s\n", nTxAge, tx.GetHash().ToString().c_str());
+                return;
+            }
         }
         int nBlockHeight = chainActive.Tip()->nHeight - nTxAge; //calculate the height
 
