@@ -15,6 +15,7 @@ QT_TS = \
   locale/darkcoin_ach.ts \
   locale/darkcoin_af_ZA.ts \
   locale/darkcoin_ar.ts \
+  locale/darkcoin_bar.ts \
   locale/darkcoin_be_BY.ts \
   locale/darkcoin_bg.ts \
   locale/darkcoin_bs.ts \

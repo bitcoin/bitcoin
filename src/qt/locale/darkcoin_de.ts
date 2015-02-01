@@ -31,7 +31,7 @@ http://www.opensource.org/licenses/mit-license.php.
 Dieses Produkt enthält zudem folgende Dritt-Software: 
 - OpenSSL-Projekt: OpenSSL-Toolkit (https://www.openssl.org) 
 - Kryptographische Bibliotheken: Eric Young (eay@cryptsoft.com) 
--Thomas Bernard (UPnP-Software)</translation>
+-Thomas Bernard: UPnP-Software</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="30"/>
@@ -4190,7 +4190,7 @@ Falls die Konfigurationsdatei nicht existiert, erzeugen Sie diese bitte mit Lese
     <message>
         <location filename="../bitcoinstrings.cpp" line="97"/>
         <source>Provide liquidity to Darksend by infrequently mixing coins on a continual basis (0-100, default: 0, 1=very frequent, high fees, 100=very infrequent, low fees)</source>
-        <translation type="unfinished"/>
+        <translation>Durch diese Einstellung können Sie dem Darksend-Netzwerk zusätzliche Liquidität zur Verfügung stellen in dem Sie von Zeit zu Zeit bereits anonymisierte Darkcoins wieder dem Mixing-Prozess zuführen. (0-100) [0=aus, 1=sehr oft, 100=sehr selten] Voreinstellung: 0 </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="101"/>
@@ -4205,22 +4205,23 @@ Falls die Konfigurationsdatei nicht existiert, erzeugen Sie diese bitte mit Lese
     <message>
         <location filename="../bitcoinstrings.cpp" line="114"/>
         <source>Show N confirmations for a successfully locked transaciton (0-9999, default: 1)</source>
-        <translation type="unfinished"/>
+        <translation>Zeige N Bestätigungen bevor eine Zahlung als &quot;in das Netzwerk eingebucht&quot; (&quot;locked&quot;) markiert wird (0-9999, Voreinstellung: 1)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="123"/>
         <source>Unable to locate enough Darksend non-denominated funds for this transaction that are not equal 1000 DRK</source>
-        <translation type="unfinished"/>
+        <translation>Nicht genügend nicht für Darksend vorbereitete Beträge (Darksend denomination) gefunden. 
+(Beträge mit genau 1000 DRK wurden ausgelassen)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="126"/>
         <source>Unable to locate enough Darksend non-denominated funds for this transaction</source>
-        <translation type="unfinished"/>
+        <translation>Nicht genügend nicht für Darksend vorbereitete Beträge (Darksend denomination) gefunden.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="155"/>
         <source>You must specify a masternodeprivkey in the configuration. Please see documentation for help.</source>
-        <translation type="unfinished"/>
+        <translation>Es muss ein Masternode-Geheimschlüssel (masternodeprivkey) in der Konfiguration angegeben werden. Für weitere Informationen siehe Dokumentation.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="166"/>
@@ -4325,7 +4326,7 @@ Falls die Konfigurationsdatei nicht existiert, erzeugen Sie diese bitte mit Lese
     <message>
         <location filename="../bitcoinstrings.cpp" line="190"/>
         <source>Enable the client to act as a masternode (0-1, default: 0)</source>
-        <translation type="unfinished"/>
+        <translation>Masternode-Modus aktivieren. (0=aus, 1=an; Voreinstellung: 0)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="191"/>
@@ -4385,7 +4386,7 @@ Falls die Konfigurationsdatei nicht existiert, erzeugen Sie diese bitte mit Lese
     <message>
         <location filename="../bitcoinstrings.cpp" line="202"/>
         <source>Error: You already have pending entries in the Darksend pool</source>
-        <translation type="unfinished"/>
+        <translation>Fehler: Es sind bereits anstehende Einträge im Darksend-Pool</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="203"/>
@@ -4475,12 +4476,12 @@ Falls die Konfigurationsdatei nicht existiert, erzeugen Sie diese bitte mit Lese
     <message>
         <location filename="../bitcoinstrings.cpp" line="309"/>
         <source>Unable to locate enough Darksend denominated funds for this transaction</source>
-        <translation type="unfinished"/>
+        <translation>Nicht genügend für Darksend vorbereitete Beträge (Darksend denomination) gefunden.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="310"/>
         <source>Unable to sign masternode payment winner, wrong key?</source>
-        <translation type="unfinished"/>
+        <translation>Die Zahlung an den Gewinner der Masternode-Runde konnte nicht signiert werden. Wurde der Key falsch gesetzt?</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="217"/>
@@ -4510,7 +4511,7 @@ Falls die Konfigurationsdatei nicht existiert, erzeugen Sie diese bitte mit Lese
     <message>
         <location filename="../bitcoinstrings.cpp" line="222"/>
         <source>Ignore masternodes less than version (example: 70050; default : 0)</source>
-        <translation type="unfinished"/>
+        <translation>Masternodes mit einer Version welche älter ist als X ignorieren (z.B. Version 70050, Voreinstellung: 0)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="223"/>
@@ -4535,7 +4536,8 @@ Falls die Konfigurationsdatei nicht existiert, erzeugen Sie diese bitte mit Lese
     <message>
         <location filename="../bitcoinstrings.cpp" line="227"/>
         <source>Initialization sanity check failed. Darkcoin Core is shutting down.</source>
-        <translation type="unfinished"/>
+        <translation>Fehler beim Initialisieren (Plausibilitätsprüfung fehlgeschlagen).
+Darkcoin Core wird heruntergefahren.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="228"/>
@@ -4580,32 +4582,32 @@ Falls die Konfigurationsdatei nicht existiert, erzeugen Sie diese bitte mit Lese
     <message>
         <location filename="../bitcoinstrings.cpp" line="236"/>
         <source>Invalid masternodeprivkey. Please see documenation.</source>
-        <translation type="unfinished"/>
+        <translation>Masternode-Geheimschlüssel (masternodeprivkey) ist ungültig. Siehe Dokumentation. </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="237"/>
         <source>KeePassHttp id for the established association</source>
-        <translation type="unfinished"/>
+        <translation>&quot;KeePassHttp id&quot; für bestehende verknüpfte Verbindungen.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="238"/>
         <source>KeePassHttp key for AES encrypted communication with KeePass</source>
-        <translation type="unfinished"/>
+        <translation>&quot;KeePassHttp key&quot; für die  AES-verschlüsselte Kommunikation mit &quot;KeePass&quot;</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="239"/>
         <source>Keep N darkcoin anonymized (default: 0)</source>
-        <translation type="unfinished"/>
+        <translation>Betrag welcher anonymisiert vorgehalten wird. (Voreinstellung: 0)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="240"/>
         <source>Keep at most &lt;n&gt; unconnectable blocks in memory (default: %u)</source>
-        <translation type="unfinished"/>
+        <translation>Maximal &lt;n&gt; (noch) nicht einsortierte Blöcke zwischenspeichern (Voreinstellung: %u)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="241"/>
         <source>Keep at most &lt;n&gt; unconnectable transactions in memory (default: %u)</source>
-        <translation type="unfinished"/>
+        <translation>Maximal &lt;n&gt; (noch) nicht einsortierte Zahlungen zwischenspeichern (Voreinstellung: %u)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="242"/>
@@ -4620,7 +4622,7 @@ Falls die Konfigurationsdatei nicht existiert, erzeugen Sie diese bitte mit Lese
     <message>
         <location filename="../bitcoinstrings.cpp" line="244"/>
         <source>Listen for connections on &lt;port&gt; (default: 9999 or testnet: 19999)</source>
-        <translation type="unfinished"/>
+        <translation>&lt;port&gt; nach Verbindungen abhören (Standard: 9999 oder Testnetz: 19999)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="245"/>

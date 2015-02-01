@@ -88,6 +88,7 @@
         <file alias="ach">locale/darkcoin_ach.qm</file>
         <file alias="af_ZA">locale/darkcoin_af_ZA.qm</file>
         <file alias="ar">locale/darkcoin_ar.qm</file>
+        <file alias="ar">locale/darkcoin_bar.qm</file>
         <file alias="be_BY">locale/darkcoin_be_BY.qm</file>
         <file alias="bg">locale/darkcoin_bg.qm</file>
         <file alias="bs">locale/darkcoin_bs.qm</file>
