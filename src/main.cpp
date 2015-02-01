@@ -1166,6 +1166,9 @@ int CMerkleTx::IsTransactionLocked() const
         if((*i).second.CountSignatures() >= INSTANTX_SIGNATURES_REQUIRED){
             LogPrintf("InstantX::ProcessConsensusVote - Transaction Lock Is Complete %s !\n", (*i).second.GetHash().ToString().c_str());
             return nInstantXDepth;
+        } else {
+            LogPrintf("InstantX::ProcessConsensusVote - Incomplete TX Lock %d !\n", (*i).second.CountSignatures(), (*i).second.GetHash().ToString().c_str());
+            return nInstantXDepth;
         }
     }
 
