@@ -159,7 +159,7 @@ tar -xzvf db-4.8.30.NC.tar.gz
 
 # Build the library and install to our prefix
 cd db-4.8.30.NC/build_unix/
-#  Note: Do a static build so that it can be embedded into the exectuable, instead of having to find a .so at runtime
+#  Note: Do a static build so that it can be embedded into the executable, instead of having to find a .so at runtime
 ../dist/configure --enable-cxx --disable-shared --with-pic --prefix=$BDB_PREFIX
 make install
 
@@ -196,7 +196,7 @@ Hardening enables the following features:
 * Position Independent Executable
     Build position independent code to take advantage of Address Space Layout Randomization
     offered by some kernels. An attacker who is able to cause execution of code at an arbitrary
-    memory location is thwarted if he doesn't know where anything useful is located.
+    memory location is thwarted if he or she doesn't know where anything useful is located.
     The stack and heap are randomly located by default but this allows the code section to be
     randomly located as well.
 
