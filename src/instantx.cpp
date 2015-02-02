@@ -22,7 +22,7 @@ std::map<uint256, CTransaction> mapTxLockReq;
 std::map<uint256, CTransaction> mapTxLockReqRejected;
 std::map<uint256, int> mapTxLockVote;
 std::map<uint256, CTransactionLock> mapTxLocks;
-std::map<uint256, int> mapUnknownVotes; //track votes with no tx for DOS
+std::map<uint256, int64_t> mapUnknownVotes; //track votes with no tx for DOS
 int nCompleteTXLocks;
 
 //txlock - Locks transaction
@@ -117,18 +117,24 @@ void ProcessMessageInstantX(CNode* pfrom, std::string& strCommand, CDataStream& 
 
         if(ProcessConsensusVote(ctx)){
             //Spam/Dos protection
+            /*
+                Masternodes will sometimes propagate votes before the transaction is known to the client.
+                This tracks those messages and allows it at the same rate of the rest of the network, if
+                a peer violates it, it will simply be ignored
+            */
             if(!mapTxLockReq.count(ctx.txHash) && !mapTxLockReqRejected.count(ctx.txHash)){
                 if(!mapUnknownVotes.count(ctx.vinMasternode.prevout.hash)){
                     //TODO: Make an algorithm to calculate the average time per IX/MNCOUNT
                     mapUnknownVotes[ctx.vinMasternode.prevout.hash] = GetTime()+(60*10);
                 }
 
-                if(mapUnknownVotes[ctx.vinMasternode.prevout.hash] > GetTime()){
-                    LogPrintf("ProcessMessageInstantX::txlreq - masternode is spamming transaction votes: %s %s : rejected %s\n",
-                        ctx.vinMasternode.ToString().c_str(),
-                        ctx.txHash.ToString().c_str()
-                    );
-                    return;
+                if(mapUnknownVotes[ctx.vinMasternode.prevout.hash] > GetTime() &&
+                    mapUnknownVotes[ctx.vinMasternode.prevout.hash] - GetAverageVoteTime() > 60*10){
+                        LogPrintf("ProcessMessageInstantX::txlreq - masternode is spamming transaction votes: %s %s : rejected %s\n",
+                            ctx.vinMasternode.ToString().c_str(),
+                            ctx.txHash.ToString().c_str()
+                        );
+                        return;
                 } else {
                     mapUnknownVotes[ctx.vinMasternode.prevout.hash] = GetTime()+(60*10);
                 }
@@ -216,14 +222,32 @@ bool ProcessConsensusVote(CConsensusVote& ctx)
         (*i).second.AddSignature(ctx);
         if((*i).second.CountSignatures() >= INSTANTX_SIGNATURES_REQUIRED){
             LogPrintf("InstantX::ProcessConsensusVote - Transaction Lock Is Complete %s !\n", (*i).second.GetHash().ToString().c_str());
-            if(pwalletMain->UpdatedTransaction((*i).second.txHash))
+            
+            if(pwalletMain->UpdatedTransaction((*i).second.txHash)){
                 nCompleteTXLocks++;
+            }
         }
         return true;
     }
 
 
     return false;
+}
+
+
+int64_t GetAverageVoteTime()
+{
+    std::map<uint256, int64_t>::iterator it = mapUnknownVotes.begin();
+    int64_t total = 0;
+    int64_t count = 0;
+
+    while(it != mapUnknownVotes.end()) {
+        total+= it->second;
+        count++;
+        it++;
+    }
+
+    return total / count;
 }
 
 void CleanTransactionLocksList()

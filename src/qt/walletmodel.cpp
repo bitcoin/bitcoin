@@ -123,8 +123,9 @@ void WalletModel::pollBalanceChanged()
         cachedDarksendRounds = nDarksendRounds;
 
         checkBalanceChanged();
-        if(transactionTableModel)
+        if(transactionTableModel){
             transactionTableModel->updateConfirmations();
+        }
     }
 }
 
