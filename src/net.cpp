@@ -434,9 +434,16 @@ CNode* FindNode(std::string addrName)
 CNode* FindNode(const CService& addr)
 {
     LOCK(cs_vNodes);
-    BOOST_FOREACH(CNode* pnode, vNodes)
-        if(pnode->addr == addr)
-            return (pnode);
+    BOOST_FOREACH(CNode* pnode, vNodes){
+        if(RegTest()){
+            //if using regtest, just check the IP
+            if((CNetAddr)pnode->addr == (CNetAddr)addr)
+                return (pnode);
+        } else {
+            if(pnode->addr == addr)
+                return (pnode);
+        }
+    }
     return NULL;
 }
 
