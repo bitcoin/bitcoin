@@ -227,12 +227,11 @@ bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
 
 /**
  * Check whether all inputs of this transaction are valid (scripts and sigs)
- * This does not modify the UTXO set. If pvChecks is not NULL, script checks are pushed onto it
- * instead of being performed inline. This does not check double spends and amounts.
+ * This does not modify the UTXO set. This does not check double spends and amounts.
  * Preconditions: tx.IsCoinBase() is false
  */
 bool CheckInputsScripts(const CTransaction& tx, CValidationState& state, const CCoinsViewEfficient& view, 
-                        unsigned int flags, bool cacheStore, std::vector<CScriptCheck> *pvChecks = NULL);
+                        unsigned int flags, bool cacheStore);
 
 /** Apply the effects of this transaction on the UTXO set represented by view */
 void UpdateCoins(const CTransaction& tx, CValidationState &state, CCoinsViewCache &inputs, int nHeight);
