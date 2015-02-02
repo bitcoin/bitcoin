@@ -5,13 +5,13 @@
         <location filename="../forms/aboutdialog.ui" line="14"/>
         <location filename="../forms/ui_aboutdialog.h" line="131"/>
         <source>About Darkcoin Core</source>
-        <translation type="unfinished"/>
+        <translation>Mogsch mea´ wissn?</translation>
     </message>
     <message>
         <location filename="../forms/aboutdialog.ui" line="53"/>
         <location filename="../forms/ui_aboutdialog.h" line="132"/>
         <source>&lt;b&gt;Darkcoin Core&lt;/b&gt; version</source>
-        <translation type="unfinished"/>
+        <translation>Darkcoin Coa</translation>
     </message>
     <message>
         <location filename="../forms/aboutdialog.ui" line="111"/>
@@ -22,29 +22,34 @@ This is experimental software.
 Distributed under the MIT/X11 software license, see the accompanying file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit (http://www.openssl.org/) and cryptographic software written by Eric Young (eay@cryptsoft.com) and UPnP software written by Thomas Bernard.</source>
-        <translation type="unfinished"/>
+        <translation>Di Sofdware is manchmal a bissal waggelig. K´ört so.
+
+Gschenkt is das woardn unter de so´gnoondn Em Ai Ti - Lizenz. Des kandscha HIER anschaun, ode du guggscht im Netz unda:  http://www.opensource.org/licenses/mit-license.php
+
+Abropos, da ham no Andre vorhea mitgarbaited:
+Die vom OpenESESEL-Projekt (http://www.openssl.org/), da Young Eric  (eay@cryptsoft.com) und des Gfriggl mit die UPNP-Dingsn is vom Bernhard Thomas.</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="30"/>
         <location filename="../utilitydialog.cpp" line="31"/>
         <source>Copyright</source>
-        <translation type="unfinished"/>
+        <translation>Koppyraidt</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="30"/>
         <source>The Bitcoin Core developers</source>
-        <translation type="unfinished"/>
+        <translation>Di Bitcoin Coa Ma´ha</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="31"/>
         <source>The Darkcoin Core developers</source>
-        <translation type="unfinished"/>
+        <translation>Die Darkcoin Coa Ma´ha</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="43"/>
         <location filename="../utilitydialog.cpp" line="45"/>
         <source>(%1-bit)</source>
-        <translation type="unfinished"/>
+        <translation>(%1-bitzla)</translation>
     </message>
 </context>
 <context>
@@ -53,131 +58,131 @@ This product includes software developed by the OpenSSL Project for use in the O
         <location filename="../forms/addressbookpage.ui" line="30"/>
         <location filename="../forms/ui_addressbookpage.h" line="126"/>
         <source>Double-click to edit address or label</source>
-        <translation type="unfinished"/>
+        <translation>Zwo mal drauf drugga, damitsch di Adressen oda des Baperl ändan kansch.</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="57"/>
         <location filename="../forms/ui_addressbookpage.h" line="129"/>
         <source>Create a new address</source>
-        <translation type="unfinished"/>
+        <translation>neue Adressn</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="60"/>
         <location filename="../forms/ui_addressbookpage.h" line="131"/>
         <source>&amp;New</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Neu</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="71"/>
         <location filename="../forms/ui_addressbookpage.h" line="133"/>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation type="unfinished"/>
+        <translation>Di Adressn die groad haschd zwisch-en-spai-chan. Zum woandas hinkopian, woasdscho.</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="74"/>
         <location filename="../forms/ui_addressbookpage.h" line="135"/>
         <source>&amp;Copy</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Kopian</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="85"/>
         <location filename="../forms/ui_addressbookpage.h" line="137"/>
         <source>Delete the currently selected address from the list</source>
-        <translation type="unfinished"/>
+        <translation>Di Adressn die groad ausguäald hoschd in´n Mülleima duan</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="88"/>
         <location filename="../forms/ui_addressbookpage.h" line="139"/>
         <source>&amp;Delete</source>
-        <translation type="unfinished"/>
+        <translation>&amp;undWegg!</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="112"/>
         <location filename="../forms/ui_addressbookpage.h" line="141"/>
         <source>Export the data in the current tab to a file</source>
-        <translation type="unfinished"/>
+        <translation>Di DADN dis grod gibd (- woaschscho, des wos ma hald so schbaichad-) schbaichan. So wi exl oda wi da grampf hoast.</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="115"/>
         <location filename="../forms/ui_addressbookpage.h" line="143"/>
         <source>&amp;Export</source>
-        <translation type="unfinished"/>
+        <translation>&amp;kanschHam</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="132"/>
         <location filename="../forms/ui_addressbookpage.h" line="144"/>
         <source>C&amp;lose</source>
-        <translation type="unfinished"/>
+        <translation>und&amp;Zumaha</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="45"/>
         <source>Choose the address to send coins to</source>
-        <translation type="unfinished"/>
+        <translation>Wea solls griagn? (Di Adressn willi wissn)</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="46"/>
         <source>Choose the address to receive coins with</source>
-        <translation type="unfinished"/>
+        <translation>Wo wilsch hihaba? (Dai Adressn willi wissn)</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="51"/>
         <source>C&amp;hoose</source>
-        <translation type="unfinished"/>
+        <translation>&amp;und Etzad  (was solls wean guada moa/mädle)</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="57"/>
         <source>Sending addresses</source>
-        <translation type="unfinished"/>
+        <translation>fon da komds</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="58"/>
         <source>Receiving addresses</source>
-        <translation type="unfinished"/>
+        <translation>da hin geds</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="65"/>
         <source>These are your Darkcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation type="unfinished"/>
+        <translation>Däs son daine Darkcoin Adresssn fon denen du los-schicka konsch. Obachd gebn ob du au dem richdign des richdige Goild niabaschiabsd. (net z´vui!)</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="69"/>
         <source>These are your Darkcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation type="unfinished"/>
+        <translation>Däs son daine Adressn wodu daine Monedn grischd. I dad ja füa jedes mal a Andere verwendn.</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="75"/>
         <source>&amp;Copy Address</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Adressn kopian</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="76"/>
         <source>Copy &amp;Label</source>
-        <translation type="unfinished"/>
+        <translation>&amp;´S Baperl kopian</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="77"/>
         <source>&amp;Edit</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Ändan</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="271"/>
         <source>Export Address List</source>
-        <translation type="unfinished"/>
+        <translation>Die gonzn Adressn wo andasch hinschbaichan</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="272"/>
         <source>Comma separated file (*.csv)</source>
-        <translation type="unfinished"/>
+        <translation>ZE ES FAU - woaschtscho - zeigl, komma, zeigl, komma, undsowaida. (*.csv)</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="285"/>
         <source>Exporting Failed</source>
-        <translation type="unfinished"/>
+        <translation>Weild a Depp bischd. Nix gehd, goarnix.</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="286"/>
         <source>There was an error trying to save the address list to %1.</source>
-        <translation type="unfinished"/>
+        <translation>Nix ankommen is im %1 - weild a Depp bischd.</translation>
     </message>
 </context>
 <context>
@@ -185,17 +190,17 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../addresstablemodel.cpp" line="169"/>
         <source>Label</source>
-        <translation type="unfinished"/>
+        <translation>Baperl</translation>
     </message>
     <message>
         <location filename="../addresstablemodel.cpp" line="169"/>
         <source>Address</source>
-        <translation type="unfinished"/>
+        <translation>Adressn</translation>
     </message>
     <message>
         <location filename="../addresstablemodel.cpp" line="205"/>
         <source>(no label)</source>
-        <translation type="unfinished"/>
+        <translation>(koi Baperl)</translation>
     </message>
 </context>
 <context>
@@ -204,108 +209,113 @@ This product includes software developed by the OpenSSL Project for use in the O
         <location filename="../forms/askpassphrasedialog.ui" line="26"/>
         <location filename="../forms/ui_askpassphrasedialog.h" line="135"/>
         <source>Passphrase Dialog</source>
-        <translation type="unfinished"/>
+        <translation>Dem Alibaba sai Schprücherl</translation>
     </message>
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="47"/>
         <location filename="../forms/ui_askpassphrasedialog.h" line="136"/>
         <source>Enter passphrase</source>
-        <translation type="unfinished"/>
+        <translation>Alibaba-Schprücherl aingebn</translation>
     </message>
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="61"/>
         <location filename="../forms/ui_askpassphrasedialog.h" line="137"/>
         <source>New passphrase</source>
-        <translation type="unfinished"/>
+        <translation>naies Alibaba-Sprücherl</translation>
     </message>
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="75"/>
         <location filename="../forms/ui_askpassphrasedialog.h" line="138"/>
         <source>Repeat new passphrase</source>
-        <translation type="unfinished"/>
+        <translation>des naie Alibaba-Schprücherl noh´amal</translation>
     </message>
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="108"/>
         <location filename="../forms/ui_askpassphrasedialog.h" line="141"/>
         <source>Serves to disable the trivial sendmoney when OS account compromised. Provides no real security.</source>
-        <translation type="unfinished"/>
+        <translation>Wänn ona an daim Kompjuta war, sold Darkcon nimma gehn. Bringd nix, aba bitte, mach dai Kroizerl wend drann glaubsch.</translation>
     </message>
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="111"/>
         <location filename="../forms/ui_askpassphrasedialog.h" line="143"/>
         <source>For anonymization only</source>
-        <translation type="unfinished"/>
+        <translation>nur füan Kapuzzn-Modus</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="41"/>
         <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;10 or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
-        <translation type="unfinished"/>
+        <translation>Dai Alibaba-Schprücherl eingebn.
+Gib Obachd, das &lt;b&gt;zmindeschd 10 zuafällige buachstob&lt;/b&gt; verwendeschd, oda &lt;b&gt;8 zuafällige wöarta&lt;/b&gt;.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="42"/>
         <source>Encrypt wallet</source>
-        <translation type="unfinished"/>
+        <translation>Goidbaidl zuaschliaßn (mit Technik-woastscho)</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="48"/>
         <source>This operation needs your wallet passphrase to unlock the wallet.</source>
-        <translation type="unfinished"/>
+        <translation>Damid des ma´ha kanschd, musd dain Goidbaidl mid daim Alibaba-Schrücherl aufma´ha.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="53"/>
         <source>Unlock wallet</source>
-        <translation type="unfinished"/>
+        <translation>Goidbaidl aufma´ha</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="56"/>
         <source>This operation needs your wallet passphrase to decrypt the wallet.</source>
-        <translation type="unfinished"/>
+        <translation>Damid des ma´ha kanschd, musd dain Goidbaidl mid daim Alibaba-Schrücherl zuma´ha.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="61"/>
         <source>Decrypt wallet</source>
-        <translation type="unfinished"/>
+        <translation>Goidbaidl aufma´ha</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="64"/>
         <source>Change passphrase</source>
-        <translation type="unfinished"/>
+        <translation>S´ Alibaba-Schprücherl ändan</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="65"/>
         <source>Enter the old and new passphrase to the wallet.</source>
-        <translation type="unfinished"/>
+        <translation>S´ alde und des noie Alibaba-Schprücherl füa dain Goidbaidl aingebn.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="112"/>
         <source>Confirm wallet encryption</source>
-        <translation type="unfinished"/>
+        <translation>Mim Schprücherl zuma´hn!</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="113"/>
         <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR DARKCOINS&lt;/b&gt;!</source>
-        <translation type="unfinished"/>
+        <translation>Wend dain Goidbaidl mim Schprücherl zumachsd, und du weischn dann nimma SAN OLLE DAINE DARKCONS FUTSCH !</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="113"/>
         <source>Are you sure you wish to encrypt your wallet?</source>
-        <translation type="unfinished"/>
+        <translation>Bischd da si´ha dassd dain Goidbaidl mim Schrücherl zuma´hn wilschd?</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="122"/>
         <location filename="../askpassphrasedialog.cpp" line="181"/>
         <source>Wallet encrypted</source>
-        <translation type="unfinished"/>
+        <translation>Goidbaidl is zu.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="124"/>
         <source>Darkcoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your darkcoins from being stolen by malware infecting your computer.</source>
-        <translation type="unfinished"/>
+        <translation>Darkcoin wiard zua-gmocht damid des mit dem Schprücherl und so funktioniert. 
+
+Weil ma groad dabei san: Wennd da so an Virus oda so was auf dain Kompjuta hoschd, dann hilfd da des fai nix, mid dem Sprücherl und so.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="128"/>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
-        <translation type="unfinished"/>
+        <translation>OBACHT: Olle Kopi-en di du vorher schomal gmacht haschd, soldeschd weghaun und die noie &quot;wallet&quot; (dai Goidbaidl-Datai) da hinpflanzn.
+
+Wenn´d jezzad anfängsch den noin Goidbaild zu nuzzn dann gehd da alde nimma. Weils bessa so is.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="137"/>
@@ -313,46 +323,46 @@ This product includes software developed by the OpenSSL Project for use in the O
         <location filename="../askpassphrasedialog.cpp" line="187"/>
         <location filename="../askpassphrasedialog.cpp" line="193"/>
         <source>Wallet encryption failed</source>
-        <translation type="unfinished"/>
+        <translation>Nix god, goarnix. Goidbaidl is ned zu. Weil´d a Depp bischd. </translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="138"/>
         <source>Wallet encryption failed due to an internal error. Your wallet was not encrypted.</source>
-        <translation type="unfinished"/>
+        <translation>Dai Goidbaidl hoad koan Schprücherl krigt, irgendwas mit disa Softwäh. Obacht: Goidbaidl is ned zua!</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="145"/>
         <location filename="../askpassphrasedialog.cpp" line="194"/>
         <source>The supplied passphrases do not match.</source>
-        <translation type="unfinished"/>
+        <translation>Mai Burli. Des erschdemal wo du dai Schprücherl aingebn hoast, und des zwodemal... sog ma mal so, ...glaich ausgschaugd ham die Schprücherl ned.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="157"/>
         <source>Wallet unlock failed</source>
-        <translation type="unfinished"/>
+        <translation>Goidbaild aufma´ha had ned klappd.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="158"/>
         <location filename="../askpassphrasedialog.cpp" line="169"/>
         <location filename="../askpassphrasedialog.cpp" line="188"/>
         <source>The passphrase entered for the wallet decryption was incorrect.</source>
-        <translation type="unfinished"/>
+        <translation>Des Schrücherl und der Goidbaidl passa ned zam.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="168"/>
         <source>Wallet decryption failed</source>
-        <translation type="unfinished"/>
+        <translation>Goidbaild zuma´ha had ned klappd.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="182"/>
         <source>Wallet passphrase was successfully changed.</source>
-        <translation type="unfinished"/>
+        <translation>´S noie Schprücherl gilded.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="230"/>
         <location filename="../askpassphrasedialog.cpp" line="254"/>
         <source>Warning: The Caps Lock key is on!</source>
-        <translation type="unfinished"/>
+        <translation>Mai Burli, dai Olles-Gross-Mach-Taste is druggd.</translation>
     </message>
 </context>
 <context>
@@ -360,23 +370,23 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="76"/>
         <source>Darkcoin Core</source>
-        <translation type="unfinished"/>
+        <translation>Darkcoin Koa</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="85"/>
         <source>Wallet</source>
-        <translation type="unfinished"/>
+        <translation>Goidbaidl</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="87"/>
         <source>Node</source>
-        <translation type="unfinished"/>
+        <translation>Knotn </translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="101"/>
         <location filename="../bitcoingui.cpp" line="494"/>
         <source>[testnet]</source>
-        <translation type="unfinished"/>
+        <translation>[kindazimma]</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="226"/>
@@ -443,12 +453,12 @@ This product includes software developed by the OpenSSL Project for use in the O
         <location filename="../bitcoingui.cpp" line="276"/>
         <location filename="../bitcoingui.cpp" line="278"/>
         <source>About &amp;Qt</source>
-        <translation type="unfinished"/>
+        <translation>mea´ üba &amp;QT</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="280"/>
         <source>Show information about Qt</source>
-        <translation type="unfinished"/>
+        <translation>zaigma wasd haschd üba Qt</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="282"/>
@@ -509,7 +519,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="299"/>
         <source>Unlock wallet</source>
-        <translation type="unfinished"/>
+        <translation>Goidbaidl aufma´ha</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="300"/>
@@ -716,22 +726,22 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="737"/>
         <source>Transactions after this will not yet be visible.</source>
-        <translation type="unfinished"/>
+        <translation>Überwaisungen danach sigschd ned.</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="750"/>
         <source>Darkcoin</source>
-        <translation type="unfinished"/>
+        <translation>Darkcoin</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="764"/>
         <source>Error</source>
-        <translation type="unfinished"/>
+        <translation>Nix god. (Weil´d a Depp bischd)</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="767"/>
         <source>Warning</source>
-        <translation type="unfinished"/>
+        <translation>Obacht</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="770"/>
@@ -870,7 +880,7 @@ Address: %4
         <location filename="../forms/coincontroldialog.ui" line="456"/>
         <location filename="../forms/ui_coincontroldialog.h" line="336"/>
         <source>Address</source>
-        <translation type="unfinished"/>
+        <translation>Adressn</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="461"/>
@@ -1089,7 +1099,7 @@ Address: %4
         <location filename="../coincontroldialog.cpp" line="670"/>
         <location filename="../coincontroldialog.cpp" line="731"/>
         <source>(no label)</source>
-        <translation type="unfinished"/>
+        <translation>(koi Baperl)</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="724"/>
@@ -1311,7 +1321,7 @@ Address: %4
     <message>
         <location filename="../utilitydialog.cpp" line="69"/>
         <source>Darkcoin Core</source>
-        <translation type="unfinished"/>
+        <translation>Darkcoin Koa</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="69"/>
@@ -1400,7 +1410,7 @@ Address: %4
     <message>
         <location filename="../intro.cpp" line="185"/>
         <source>Darkcoin</source>
-        <translation type="unfinished"/>
+        <translation>Darkcoin</translation>
     </message>
     <message>
         <location filename="../intro.cpp" line="186"/>
@@ -1410,7 +1420,7 @@ Address: %4
     <message>
         <location filename="../intro.cpp" line="210"/>
         <source>Error</source>
-        <translation type="unfinished"/>
+        <translation>Nix god. (Weil´d a Depp bischd)</translation>
     </message>
     <message>
         <location filename="../intro.cpp" line="219"/>
@@ -1802,7 +1812,7 @@ Address: %4
         <location filename="../forms/overviewpage.ui" line="57"/>
         <location filename="../forms/ui_overviewpage.h" line="457"/>
         <source>Wallet</source>
-        <translation type="unfinished"/>
+        <translation>Goidbaidl</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="64"/>
@@ -2095,7 +2105,7 @@ Address: %4
         <location filename="../darkcoin.cpp" line="539"/>
         <location filename="../darkcoin.cpp" line="552"/>
         <source>Darkcoin</source>
-        <translation type="unfinished"/>
+        <translation>Darkcoin</translation>
     </message>
     <message>
         <location filename="../darkcoin.cpp" line="526"/>
@@ -2550,7 +2560,7 @@ Address: %4
     <message>
         <location filename="../receiverequestdialog.cpp" line="145"/>
         <source>Address</source>
-        <translation type="unfinished"/>
+        <translation>Adressn</translation>
     </message>
     <message>
         <location filename="../receiverequestdialog.cpp" line="147"/>
@@ -2560,7 +2570,7 @@ Address: %4
     <message>
         <location filename="../receiverequestdialog.cpp" line="149"/>
         <source>Label</source>
-        <translation type="unfinished"/>
+        <translation>Baperl</translation>
     </message>
     <message>
         <location filename="../receiverequestdialog.cpp" line="151"/>
@@ -2588,7 +2598,7 @@ Address: %4
     <message>
         <location filename="../recentrequeststablemodel.cpp" line="24"/>
         <source>Label</source>
-        <translation type="unfinished"/>
+        <translation>Baperl</translation>
     </message>
     <message>
         <location filename="../recentrequeststablemodel.cpp" line="24"/>
@@ -2603,7 +2613,7 @@ Address: %4
     <message>
         <location filename="../recentrequeststablemodel.cpp" line="62"/>
         <source>(no label)</source>
-        <translation type="unfinished"/>
+        <translation>(koi Baperl)</translation>
     </message>
     <message>
         <location filename="../recentrequeststablemodel.cpp" line="71"/>
@@ -2906,7 +2916,7 @@ Address: %4
     <message>
         <location filename="../sendcoinsdialog.cpp" line="645"/>
         <source>(no label)</source>
-        <translation type="unfinished"/>
+        <translation>(koi Baperl)</translation>
     </message>
 </context>
 <context>
@@ -3260,22 +3270,22 @@ Address: %4
     <message>
         <location filename="../splashscreen.cpp" line="33"/>
         <source>Darkcoin Core</source>
-        <translation type="unfinished"/>
+        <translation>Darkcoin Koa</translation>
     </message>
     <message>
         <location filename="../splashscreen.cpp" line="35"/>
         <source>The Bitcoin Core developers</source>
-        <translation type="unfinished"/>
+        <translation>Di Bitcoin Coa Ma´ha</translation>
     </message>
     <message>
         <location filename="../splashscreen.cpp" line="36"/>
         <source>The Darkcoin Core developers</source>
-        <translation type="unfinished"/>
+        <translation>Die Darkcoin Coa Ma´ha</translation>
     </message>
     <message>
         <location filename="../splashscreen.cpp" line="37"/>
         <source>[testnet]</source>
-        <translation type="unfinished"/>
+        <translation>[kindazimma]</translation>
     </message>
 </context>
 <context>
@@ -3501,7 +3511,7 @@ Address: %4
     <message>
         <location filename="../transactiontablemodel.cpp" line="238"/>
         <source>Address</source>
-        <translation type="unfinished"/>
+        <translation>Adressn</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="238"/>
@@ -3760,7 +3770,7 @@ Address: %4
     <message>
         <location filename="../transactionview.cpp" line="300"/>
         <source>Comma separated file (*.csv)</source>
-        <translation type="unfinished"/>
+        <translation>ZE ES FAU - woaschtscho - zeigl, komma, zeigl, komma, undsowaida. (*.csv)</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="309"/>
@@ -3780,12 +3790,12 @@ Address: %4
     <message>
         <location filename="../transactionview.cpp" line="312"/>
         <source>Label</source>
-        <translation type="unfinished"/>
+        <translation>Baperl</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="313"/>
         <source>Address</source>
-        <translation type="unfinished"/>
+        <translation>Adressn</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="314"/>
@@ -3800,7 +3810,7 @@ Address: %4
     <message>
         <location filename="../transactionview.cpp" line="318"/>
         <source>Exporting Failed</source>
-        <translation type="unfinished"/>
+        <translation>Weild a Depp bischd. Nix gehd, goarnix.</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="318"/>
@@ -3849,12 +3859,12 @@ Address: %4
     <message>
         <location filename="../walletview.cpp" line="44"/>
         <source>&amp;Export</source>
-        <translation type="unfinished"/>
+        <translation>&amp;kanschHam</translation>
     </message>
     <message>
         <location filename="../walletview.cpp" line="45"/>
         <source>Export the data in the current tab to a file</source>
-        <translation type="unfinished"/>
+        <translation>Di DADN dis grod gibd (- woaschscho, des wos ma hald so schbaichad-) schbaichan. So wi exl oda wi da grampf hoast.</translation>
     </message>
     <message>
         <location filename="../walletview.cpp" line="229"/>
@@ -4344,7 +4354,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="199"/>
         <source>Error</source>
-        <translation type="unfinished"/>
+        <translation>Nix god. (Weil´d a Depp bischd)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="200"/>
@@ -4994,7 +5004,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="329"/>
         <source>Warning</source>
-        <translation type="unfinished"/>
+        <translation>Obacht</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="330"/>

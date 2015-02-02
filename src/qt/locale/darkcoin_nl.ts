@@ -509,7 +509,7 @@ Dit product bevat software ontwikkeld door het OpenSSL Project voor gebruik in d
     <message>
         <location filename="../bitcoingui.cpp" line="298"/>
         <source>&amp;Unlock Wallet...</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Ontgrendel portemonnee</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="299"/>
@@ -519,7 +519,7 @@ Dit product bevat software ontwikkeld door het OpenSSL Project voor gebruik in d
     <message>
         <location filename="../bitcoingui.cpp" line="300"/>
         <source>&amp;Lock Wallet</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Vergrendel portemonnee</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="301"/>
@@ -549,7 +549,7 @@ Dit product bevat software ontwikkeld door het OpenSSL Project voor gebruik in d
     <message>
         <location filename="../bitcoingui.cpp" line="307"/>
         <source>Show diagnostic information</source>
-        <translation type="unfinished"/>
+        <translation>Toon diagnostische informatie</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="308"/>
@@ -564,12 +564,12 @@ Dit product bevat software ontwikkeld door het OpenSSL Project voor gebruik in d
     <message>
         <location filename="../bitcoingui.cpp" line="310"/>
         <source>&amp;Network Monitor</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Netwerk Monitor</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="311"/>
         <source>Show network monitor</source>
-        <translation type="unfinished"/>
+        <translation>Toon netwerk monitor</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="313"/>
@@ -599,7 +599,7 @@ Dit product bevat software ontwikkeld door het OpenSSL Project voor gebruik in d
     <message>
         <location filename="../bitcoingui.cpp" line="319"/>
         <source>Open a darkcoin: URI or payment request</source>
-        <translation type="unfinished"/>
+        <translation>Open een darkcoin: URI of betalingsverzoek</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="321"/>
@@ -624,7 +624,7 @@ Dit product bevat software ontwikkeld door het OpenSSL Project voor gebruik in d
     <message>
         <location filename="../bitcoingui.cpp" line="385"/>
         <source>&amp;Tools</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Gereedschap</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="391"/>
@@ -640,7 +640,7 @@ Dit product bevat software ontwikkeld door het OpenSSL Project voor gebruik in d
         <location filename="../bitcoingui.cpp" line="489"/>
         <location filename="../bitcoingui.cpp" line="494"/>
         <source>Darkcoin client</source>
-        <translation type="unfinished"/>
+        <translation>Darkcoin cliënt </translation>
     </message>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="638"/>
@@ -701,7 +701,8 @@ Dit product bevat software ontwikkeld door het OpenSSL Project voor gebruik in d
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="710"/>
         <source>%n year(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation><numerusform>%n jaren</numerusform><numerusform>
+</numerusform></translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="714"/>
@@ -726,7 +727,7 @@ Dit product bevat software ontwikkeld door het OpenSSL Project voor gebruik in d
     <message>
         <location filename="../bitcoingui.cpp" line="750"/>
         <source>Darkcoin</source>
-        <translation type="unfinished"/>
+        <translation>Darkcoin</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="764"/>
@@ -784,7 +785,7 @@ Adres: %4
     <message>
         <location filename="../darkcoin.cpp" line="449"/>
         <source>A fatal error occurred. Darkcoin can no longer continue safely and will quit.</source>
-        <translation type="unfinished"/>
+        <translation>Een fatale fout is opgetreden. Darkcoin kan niet langer veilig opereren en zal sluiten.</translation>
     </message>
 </context>
 <context>
@@ -1117,37 +1118,38 @@ Adres: %4
         <location filename="../forms/darksendconfig.ui" line="14"/>
         <location filename="../forms/ui_darksendconfig.h" line="96"/>
         <source>Configure Darksend+</source>
-        <translation type="unfinished"/>
+        <translation>Configureer Darksend+</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="26"/>
         <location filename="../forms/ui_darksendconfig.h" line="97"/>
         <source>Basic Privacy</source>
-        <translation type="unfinished"/>
+        <translation>Eenvoudige Privacy</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="39"/>
         <location filename="../forms/ui_darksendconfig.h" line="98"/>
         <source>High Privacy</source>
-        <translation type="unfinished"/>
+        <translation>Hoge Privacy</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="52"/>
         <location filename="../forms/ui_darksendconfig.h" line="99"/>
         <source>Maximum Privacy</source>
-        <translation type="unfinished"/>
+        <translation>Maximum Privacy</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="65"/>
         <location filename="../forms/ui_darksendconfig.h" line="100"/>
         <source>Please select an privacy level. </source>
-        <translation type="unfinished"/>
+        <translation>Kies een privacy niveau</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="78"/>
         <location filename="../forms/ui_darksendconfig.h" line="101"/>
         <source>Use 2 separate masternodes to mix funds up to 1000DRK</source>
-        <translation type="unfinished"/>
+        <translation>
+</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="91"/>
@@ -1159,38 +1161,38 @@ Adres: %4
         <location filename="../forms/darksendconfig.ui" line="104"/>
         <location filename="../forms/ui_darksendconfig.h" line="103"/>
         <source>Use 8 separate masternodes</source>
-        <translation type="unfinished"/>
+        <translation>Gebruik 8 verschillende masternodes</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="117"/>
         <location filename="../forms/ui_darksendconfig.h" line="104"/>
         <source>This option is the quickest and will cost about ~0.025DRK to anonymize 1000DRK</source>
-        <translation type="unfinished"/>
+        <translation>Deze optie is het snelst en kost ongeveer ~0.025DRK om 1000DRK te anonimiseren</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="130"/>
         <location filename="../forms/ui_darksendconfig.h" line="105"/>
         <source>This option is moderately fast and will cost about 0.05DRK to anonymize 1000DRK</source>
-        <translation type="unfinished"/>
+        <translation>Deze optie is het gemiddeld snel en kost ongeveer 0.05DRK om 1000DRK te anonimiseren</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="143"/>
         <location filename="../forms/ui_darksendconfig.h" line="106"/>
         <source>This is the slowest and most secure option. Using maximum anonymity will cost</source>
-        <translation type="unfinished"/>
+        <translation>Deze optie is het langzaamst en meest veilig. Maximimum anonimiteit kost</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="156"/>
         <location filename="../forms/ui_darksendconfig.h" line="107"/>
         <source>0.1DRK per 1000DRK you anonymize.</source>
-        <translation type="unfinished"/>
+        <translation>0.1DRK per 1000DRK je anonimiseerd</translation>
     </message>
     <message>
         <location filename="../darksendconfig.cpp" line="43"/>
         <location filename="../darksendconfig.cpp" line="58"/>
         <location filename="../darksendconfig.cpp" line="73"/>
         <source>Darksend Configuration</source>
-        <translation type="unfinished"/>
+        <translation>Darksend Configuratie</translation>
     </message>
     <message>
         <location filename="../darksendconfig.cpp" line="44"/>
@@ -1409,7 +1411,7 @@ Adres: %4
     <message>
         <location filename="../intro.cpp" line="185"/>
         <source>Darkcoin</source>
-        <translation type="unfinished"/>
+        <translation>Darkcoin</translation>
     </message>
     <message>
         <location filename="../intro.cpp" line="186"/>
@@ -1989,12 +1991,12 @@ Adres: %4
     <message>
         <location filename="../overviewpage.cpp" line="429"/>
         <source>Darksend was successfully reset.</source>
-        <translation type="unfinished"/>
+        <translation>Darksend is succesvol gereset</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="443"/>
         <source>Darksend requires at least %1 to use.</source>
-        <translation type="unfinished"/>
+        <translation>Darksend benodigd ten minste %1 om te gebruiken.</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="457"/>
@@ -2104,7 +2106,7 @@ Adres: %4
         <location filename="../darkcoin.cpp" line="539"/>
         <location filename="../darkcoin.cpp" line="552"/>
         <source>Darkcoin</source>
-        <translation type="unfinished"/>
+        <translation>Darkcoin</translation>
     </message>
     <message>
         <location filename="../darkcoin.cpp" line="526"/>
@@ -2134,7 +2136,7 @@ Adres: %4
     <message>
         <location filename="../guiutil.cpp" line="101"/>
         <source>Enter a Darkcoin address (e.g. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</source>
-        <translation type="unfinished"/>
+        <translation>Voer een Darkcoin adres in (b.v. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
     </message>
 </context>
 <context>
@@ -3045,7 +3047,7 @@ Adres: %4
     <message>
         <location filename="../utilitydialog.cpp" line="129"/>
         <source>Darkcoin Core is shutting down...</source>
-        <translation type="unfinished"/>
+        <translation>Darkcoin Core is aan het sluiten...</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="130"/>
@@ -3195,7 +3197,7 @@ Adres: %4
     <message>
         <location filename="../signverifymessagedialog.cpp" line="31"/>
         <source>Enter a Darkcoin address (e.g. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</source>
-        <translation type="unfinished"/>
+        <translation>Voer een Darkcoin adres in (b.v. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
     </message>
     <message>
         <location filename="../signverifymessagedialog.cpp" line="114"/>
@@ -3580,7 +3582,7 @@ Adres: %4
     <message>
         <location filename="../transactiontablemodel.cpp" line="360"/>
         <source>Received via Darksend</source>
-        <translation type="unfinished"/>
+        <translation>Ontvangen via Darksend</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="363"/>
@@ -3615,7 +3617,7 @@ Adres: %4
     <message>
         <location filename="../transactiontablemodel.cpp" line="376"/>
         <source>Darksent</source>
-        <translation type="unfinished"/>
+        <translation>Darksent</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="418"/>
@@ -3699,7 +3701,7 @@ Adres: %4
     <message>
         <location filename="../transactionview.cpp" line="81"/>
         <source>Darksent</source>
-        <translation type="unfinished"/>
+        <translation>Darksent</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="82"/>
@@ -4128,7 +4130,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="181"/>
         <source>Darkcoin Core Daemon</source>
-        <translation type="unfinished"/>
+        <translation>Darkcoin Core Daemon</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="182"/>
@@ -4273,7 +4275,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="183"/>
         <source>Darksend options:</source>
-        <translation type="unfinished"/>
+        <translation>Darksend opties:</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="184"/>
@@ -4303,7 +4305,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="189"/>
         <source>Done loading</source>
-        <translation type="unfinished"/>
+        <translation>Klaar met laden</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="190"/>
@@ -4323,12 +4325,12 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="193"/>
         <source>Error loading block database</source>
-        <translation type="unfinished"/>
+        <translation>Fout tijdens laden van block database</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="194"/>
         <source>Error loading wallet.dat</source>
-        <translation type="unfinished"/>
+        <translation>Fout bij het laden van wallet.dat</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="195"/>
@@ -4358,7 +4360,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="200"/>
         <source>Error: Disk space is low!</source>
-        <translation type="unfinished"/>
+        <translation>Fout: Schijfruimte is laag!</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="201"/>

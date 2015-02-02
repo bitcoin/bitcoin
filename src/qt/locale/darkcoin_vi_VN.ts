@@ -142,12 +142,12 @@ Sản phẩm này bao gồm phần mềm được phát triển bởi dự án O
     <message>
         <location filename="../addressbookpage.cpp" line="65"/>
         <source>These are your Darkcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation type="unfinished"/>
+        <translation>Đây là các địa chỉ Darkcoin của bạn để gửi thanh toán. Luôn luôn kiểm tra số tiền và địa chỉ nhận trước khi bạn gửi tiền.</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="69"/>
         <source>These are your Darkcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation type="unfinished"/>
+        <translation>Đây là các địa chỉ Darkcoin của bạn để nhận thanh toán. Gợi ý là sử dụng một địa chỉ nhận mới cho mỗi giao dịch.</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="75"/>
@@ -323,7 +323,7 @@ Sản phẩm này bao gồm phần mềm được phát triển bởi dự án O
     <message>
         <location filename="../askpassphrasedialog.cpp" line="138"/>
         <source>Wallet encryption failed due to an internal error. Your wallet was not encrypted.</source>
-        <translation type="unfinished"/>
+        <translation>Mã hoá ví bị lỗi vì lỗi bên trong của phần mềm. Ví của bạn không được mã hoá.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="145"/>
@@ -711,7 +711,7 @@ Sản phẩm này bao gồm phần mềm được phát triển bởi dự án O
     <message>
         <location filename="../bitcoingui.cpp" line="719"/>
         <source>Catching up...</source>
-        <translation type="unfinished"/>
+        <translation>Đang nạp bộ đệm...</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="735"/>
@@ -765,22 +765,22 @@ Address: %4
     <message>
         <location filename="../bitcoingui.cpp" line="921"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
-        <translation type="unfinished"/>
+        <translation>Ví &lt;b&gt;đã được mã hoá&lt;/b&gt; và hiện tại &lt;b&gt;đã được mở&lt;/b&gt;</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="931"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt; for anonimization only</source>
-        <translation type="unfinished"/>
+        <translation>Ví &lt;b&gt;đã được mã hoá&lt;/b&gt; và hiện tại &lt;b&gt;đã được mở&lt;/b&gt; chỉ để cho việc ẩn danh</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="941"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
-        <translation type="unfinished"/>
+        <translation>Ví &lt;b&gt;đã được mã hoá&lt;/b&gt; và hiện tại &lt;b&gt;đã được khoá&lt;/b&gt;</translation>
     </message>
     <message>
         <location filename="../darkcoin.cpp" line="449"/>
         <source>A fatal error occurred. Darkcoin can no longer continue safely and will quit.</source>
-        <translation type="unfinished"/>
+        <translation>Một lỗi nghiêm trọng đã xảy ra. Darkcoin không thể tiếp tục một cách an toàn và sẽ thoát.</translation>
     </message>
 </context>
 <context>
@@ -1052,7 +1052,7 @@ Address: %4
         <location filename="../coincontroldialog.cpp" line="616"/>
         <location filename="../coincontroldialog.cpp" line="621"/>
         <source>This means a fee of at least %1 per kB is required.</source>
-        <translation type="unfinished"/>
+        <translation>Điều này có nghĩa là cần một mức phí ít nhất %1 cho mỗi kB.</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="617"/>
@@ -1067,12 +1067,12 @@ Address: %4
     <message>
         <location filename="../coincontroldialog.cpp" line="620"/>
         <source>This label turns red, if the priority is smaller than &quot;medium&quot;.</source>
-        <translation type="unfinished"/>
+        <translation>Nhãn này chuyển sang đỏ, nếu ưu tiên thấp hơn &quot;trung bình&quot;.</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="623"/>
         <source>This label turns red, if any recipient receives an amount smaller than %1.</source>
-        <translation type="unfinished"/>
+        <translation>Nhãn này chuyển sang đỏ, nếu bất kỳ bên nhận nào nhận một số tiền nhỏ hơn %1.</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="624"/>
@@ -1088,7 +1088,7 @@ Address: %4
     <message>
         <location filename="../coincontroldialog.cpp" line="627"/>
         <source>This label turns red, if the change is smaller than %1.</source>
-        <translation type="unfinished"/>
+        <translation>Nhãn này sẽ chuyển sang đỏ, nếu phần trả lại nhỏ hơn %1.</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="670"/>
@@ -1099,7 +1099,7 @@ Address: %4
     <message>
         <location filename="../coincontroldialog.cpp" line="724"/>
         <source>change from %1 (%2)</source>
-        <translation type="unfinished"/>
+        <translation>phần trả lại từ %1 (%2)</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="725"/>
@@ -1191,17 +1191,17 @@ Address: %4
     <message>
         <location filename="../darksendconfig.cpp" line="44"/>
         <source>Darksend was successfully set to basic (%1 and 2 rounds). You can change this at any time by opening Darkcoin&apos;s configuration screen.</source>
-        <translation type="unfinished"/>
+        <translation>Darksend được thiết lập thành công về mức cơ bản (%1 và 2 vòng). Bạn có thể thay đổi nó bất cứ thời gian nào bằng cách mở màn hình cấu hình Darkcoin.</translation>
     </message>
     <message>
         <location filename="../darksendconfig.cpp" line="59"/>
         <source>Darksend was successfully set to high (%1 and 8 rounds). You can change this at any time by opening Darkcoin&apos;s configuration screen.</source>
-        <translation type="unfinished"/>
+        <translation>Darksend được thiết lập thành công về mức cao (%1 và 8 vòng). Bạn có thể thay đổi nó bất cứ thời gian nào bằng cách mở màn hình cấu hình Darkcoin.</translation>
     </message>
     <message>
         <location filename="../darksendconfig.cpp" line="74"/>
         <source>Darksend was successfully set to maximum (%1 and 16 rounds). You can change this at any time by opening Darkcoin&apos;s configuration screen.</source>
-        <translation type="unfinished"/>
+        <translation>Darksend được thiết lập thành công về mức tối đa (%1 và 16 vòng). Bạn có thể thay đổi nó bất cứ thời gian nào bằng cách mở màn hình cấu hình Darkcoin.</translation>
     </message>
 </context>
 <context>
@@ -1292,17 +1292,17 @@ Address: %4
     <message>
         <location filename="../intro.cpp" line="93"/>
         <source>Directory already exists. Add %1 if you intend to create a new directory here.</source>
-        <translation type="unfinished"/>
+        <translation>Thư mục đã tồn tại. Thêm %1 nếu bạn định tạo một thư mục mới tại đây.</translation>
     </message>
     <message>
         <location filename="../intro.cpp" line="96"/>
         <source>Path already exists, and is not a directory.</source>
-        <translation type="unfinished"/>
+        <translation>Đường dẫn đã tồn tại, và nó không phải là thư mục.</translation>
     </message>
     <message>
         <location filename="../intro.cpp" line="103"/>
         <source>Cannot create data directory here.</source>
-        <translation type="unfinished"/>
+        <translation>Không thể tạo thư mục dữ liệu ở đây.</translation>
     </message>
 </context>
 <context>
@@ -1341,27 +1341,27 @@ Address: %4
     <message>
         <location filename="../utilitydialog.cpp" line="77"/>
         <source>Choose data directory on startup (default: 0)</source>
-        <translation type="unfinished"/>
+        <translation>Chọn thư mục dữ liệu khi khởi động (ngầm định: 0)</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="78"/>
         <source>Set language, for example &quot;de_DE&quot; (default: system locale)</source>
-        <translation type="unfinished"/>
+        <translation>Chọn ngôn ngữ, ví dụ &quot;vn_VN&quot; (ngầm định: theo hệ thống)</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="79"/>
         <source>Start minimized</source>
-        <translation type="unfinished"/>
+        <translation>Bắt đầu thu nhỏ</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="80"/>
         <source>Set SSL root certificates for payment request (default: -system-)</source>
-        <translation type="unfinished"/>
+        <translation>Đặt chứng thực gốc cho yêu cầu thanh toán (ngầm định: -hệ thống-)</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="81"/>
         <source>Show splash screen on startup (default: 1)</source>
-        <translation type="unfinished"/>
+        <translation>Hiển thị màn hình giới thiệu khi khởi động (ngầm định: 1)</translation>
     </message>
 </context>
 <context>
@@ -1410,7 +1410,7 @@ Address: %4
     <message>
         <location filename="../intro.cpp" line="186"/>
         <source>Error: Specified data directory &quot;%1&quot; can not be created.</source>
-        <translation type="unfinished"/>
+        <translation>Lỗi: Thư mục dữ liệu được chọn &quot;%1&quot; không thể được tạo.</translation>
     </message>
     <message>
         <location filename="../intro.cpp" line="210"/>
@@ -1420,7 +1420,7 @@ Address: %4
     <message>
         <location filename="../intro.cpp" line="219"/>
         <source>GB of free space available</source>
-        <translation type="unfinished"/>
+        <translation>GB không gian trống còn lại</translation>
     </message>
     <message>
         <location filename="../intro.cpp" line="222"/>
@@ -1980,7 +1980,7 @@ Address: %4
         <location filename="../overviewpage.cpp" line="126"/>
         <location filename="../overviewpage.cpp" line="127"/>
         <source>out of sync</source>
-        <translation type="unfinished"/>
+        <translation>không đồng bộ</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="429"/>
@@ -2013,17 +2013,17 @@ Address: %4
     <message>
         <location filename="../paymentserver.cpp" line="294"/>
         <source>Cannot start darkcoin: click-to-pay handler</source>
-        <translation type="unfinished"/>
+        <translation>Không thể khởi động darkcoin: trình xử lý click-to-pay</translation>
     </message>
     <message>
         <location filename="../paymentserver.cpp" line="352"/>
         <source>Net manager warning</source>
-        <translation type="unfinished"/>
+        <translation>Cảnh báo quản lý mạng</translation>
     </message>
     <message>
         <location filename="../paymentserver.cpp" line="353"/>
         <source>Your active proxy doesn&apos;t support SOCKS5, which is required for payment requests via proxy.</source>
-        <translation type="unfinished"/>
+        <translation>Proxy hiện tại không hỗ trợ SOCKS5, nó là cần thiết để cho yêu cầu thanh toán thông qua proxy.</translation>
     </message>
     <message>
         <location filename="../paymentserver.cpp" line="404"/>
@@ -2074,7 +2074,7 @@ Address: %4
     <message>
         <location filename="../paymentserver.cpp" line="632"/>
         <source>Payment request can not be parsed or processed!</source>
-        <translation type="unfinished"/>
+        <translation>Yêu cầu thanh toán không thể xử lý được.</translation>
     </message>
     <message>
         <location filename="../paymentserver.cpp" line="643"/>
@@ -2105,32 +2105,32 @@ Address: %4
     <message>
         <location filename="../darkcoin.cpp" line="526"/>
         <source>Error: Specified data directory &quot;%1&quot; does not exist.</source>
-        <translation type="unfinished"/>
+        <translation>Lỗi: Thư mục được chọn &quot;%1&quot; không tồn tại.</translation>
     </message>
     <message>
         <location filename="../darkcoin.cpp" line="533"/>
         <source>Error: Cannot parse configuration file: %1. Only use key=value syntax.</source>
-        <translation type="unfinished"/>
+        <translation>Lỗi: Không phân tích được tệp cấu hình: %1. Chỉ sử dụng cú pháp key=value.</translation>
     </message>
     <message>
         <location filename="../darkcoin.cpp" line="540"/>
         <source>Error reading masternode configuration file: %1</source>
-        <translation type="unfinished"/>
+        <translation>Lỗi đọc tệp cấu hình masternode: %1</translation>
     </message>
     <message>
         <location filename="../darkcoin.cpp" line="552"/>
         <source>Error: Invalid combination of -regtest and -testnet.</source>
-        <translation type="unfinished"/>
+        <translation>Lỗi: Tổng hợp không hợp lệ của -regtest và -testnet.</translation>
     </message>
     <message>
         <location filename="../darkcoin.cpp" line="612"/>
         <source>Darkcoin Core didn&apos;t yet exit safely...</source>
-        <translation type="unfinished"/>
+        <translation>Darkcoin Core chưa được thoát một cách an toàn...</translation>
     </message>
     <message>
         <location filename="../guiutil.cpp" line="101"/>
         <source>Enter a Darkcoin address (e.g. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</source>
-        <translation type="unfinished"/>
+        <translation>Hãy nhập địa chỉ Darkcoin (VD: XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
     </message>
 </context>
 <context>
@@ -2342,12 +2342,12 @@ Address: %4
     <message>
         <location filename="../rpcconsole.cpp" line="332"/>
         <source>Use up and down arrows to navigate history, and &lt;b&gt;Ctrl-L&lt;/b&gt; to clear screen.</source>
-        <translation type="unfinished"/>
+        <translation>Sử dụng các phím mũi tên lên và xuống để xem lịch sử, và &lt;b&gt;Ctrl-L&lt;/b&gt; để xoá màn hình.</translation>
     </message>
     <message>
         <location filename="../rpcconsole.cpp" line="333"/>
         <source>Type &lt;b&gt;help&lt;/b&gt; for an overview of available commands.</source>
-        <translation type="unfinished"/>
+        <translation>Gõ &lt;b&gt;help&lt;/b&gt; để xem tổng thể các lệnh có thể dùng.</translation>
     </message>
     <message>
         <location filename="../rpcconsole.cpp" line="472"/>
@@ -2575,12 +2575,12 @@ Address: %4
     <message>
         <location filename="../receiverequestdialog.cpp" line="161"/>
         <source>Resulting URI too long, try to reduce the text for label / message.</source>
-        <translation type="unfinished"/>
+        <translation>Kết quả là URI quá dài, hãy thử rút gọn chữ trong nhãn / thông điệp.</translation>
     </message>
     <message>
         <location filename="../receiverequestdialog.cpp" line="166"/>
         <source>Error encoding URI into QR Code.</source>
-        <translation type="unfinished"/>
+        <translation>Lỗi mã hoá URI thành mã QR.</translation>
     </message>
 </context>
 <context>
@@ -2861,7 +2861,7 @@ Address: %4
     <message>
         <location filename="../sendcoinsdialog.cpp" line="488"/>
         <source>The recipient address is not valid, please recheck.</source>
-        <translation type="unfinished"/>
+        <translation>Địa chỉ nhận không hợp lệ, hãy kiểm tra lại.</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="491"/>
@@ -2881,7 +2881,7 @@ Address: %4
     <message>
         <location filename="../sendcoinsdialog.cpp" line="500"/>
         <source>Duplicate address found, can only send to each address once per send operation.</source>
-        <translation type="unfinished"/>
+        <translation>Thấy trùng địa chỉ, chỉ có thể gửi cho mỗi địa chỉ một lần trong một giao dịch gửi.</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="503"/>
@@ -2896,7 +2896,7 @@ Address: %4
     <message>
         <location filename="../sendcoinsdialog.cpp" line="512"/>
         <source>Error: The wallet was unlocked only to anonymize coins.</source>
-        <translation type="unfinished"/>
+        <translation>Lỗi: Ví vừa được mở chỉ cho việc ẩn danh tiền.</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="625"/>
@@ -3033,7 +3033,7 @@ Address: %4
     <message>
         <location filename="../sendcoinsentry.cpp" line="31"/>
         <source>Enter a label for this address to add it to your address book</source>
-        <translation type="unfinished"/>
+        <translation>Nhập nhãn cho địa chỉ để thêm nó vào sổ địa chỉ của bạn.</translation>
     </message>
 </context>
 <context>
@@ -3186,12 +3186,12 @@ Address: %4
     <message>
         <location filename="../signverifymessagedialog.cpp" line="30"/>
         <source>Click &quot;Sign Message&quot; to generate signature</source>
-        <translation type="unfinished"/>
+        <translation>Bấm &quot;Ký Thông điệp&quot; để sinh chữ ký</translation>
     </message>
     <message>
         <location filename="../signverifymessagedialog.cpp" line="31"/>
         <source>Enter a Darkcoin address (e.g. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</source>
-        <translation type="unfinished"/>
+        <translation>Nhập một địa chỉ Dardcoin: (VD: XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
     </message>
     <message>
         <location filename="../signverifymessagedialog.cpp" line="114"/>
@@ -3211,7 +3211,7 @@ Address: %4
         <location filename="../signverifymessagedialog.cpp" line="122"/>
         <location filename="../signverifymessagedialog.cpp" line="202"/>
         <source>The entered address does not refer to a key.</source>
-        <translation type="unfinished"/>
+        <translation>Địa chỉ bạn nhập không đề cập đến một khoá.</translation>
     </message>
     <message>
         <location filename="../signverifymessagedialog.cpp" line="130"/>
@@ -3221,7 +3221,7 @@ Address: %4
     <message>
         <location filename="../signverifymessagedialog.cpp" line="138"/>
         <source>Private key for the entered address is not available.</source>
-        <translation type="unfinished"/>
+        <translation>Khoá riêng cho địa chỉ vừa nhập không có.</translation>
     </message>
     <message>
         <location filename="../signverifymessagedialog.cpp" line="150"/>
@@ -3301,7 +3301,7 @@ Address: %4
     <message>
         <location filename="../transactiondesc.cpp" line="30"/>
         <source>Open until %1</source>
-        <translation type="unfinished"/>
+        <translation>Mở đến khi %1</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="36"/>
@@ -3311,17 +3311,17 @@ Address: %4
     <message>
         <location filename="../transactiondesc.cpp" line="38"/>
         <source>%1/offline</source>
-        <translation type="unfinished"/>
+        <translation>%1/ngắt kết nối</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="40"/>
         <source>%1/unconfirmed</source>
-        <translation type="unfinished"/>
+        <translation>%1/chưa xác nhận</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="42"/>
         <source>%1 confirmations</source>
-        <translation type="unfinished"/>
+        <translation>%1 xác nhận</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="59"/>
@@ -3336,7 +3336,7 @@ Address: %4
     <message numerus="yes">
         <location filename="../transactiondesc.cpp" line="66"/>
         <source>, broadcast through %n node(s)</source>
-        <translation type="unfinished"><numerusform></numerusform></translation>
+        <translation><numerusform>, phát sóng thông qua %n nút</numerusform></translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="70"/>
@@ -3351,7 +3351,7 @@ Address: %4
     <message>
         <location filename="../transactiondesc.cpp" line="77"/>
         <source>Generated</source>
-        <translation type="unfinished"/>
+        <translation>Đã được sinh</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="82"/>
@@ -3448,7 +3448,7 @@ Address: %4
     <message>
         <location filename="../transactiondesc.cpp" line="261"/>
         <source>Debug information</source>
-        <translation type="unfinished"/>
+        <translation>Thông tin gỡ rối</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="269"/>
@@ -3521,12 +3521,12 @@ Address: %4
     <message>
         <location filename="../transactiontablemodel.cpp" line="290"/>
         <source>Open until %1</source>
-        <translation type="unfinished"/>
+        <translation>Mở đến khi %1</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="293"/>
         <source>Offline</source>
-        <translation type="unfinished"/>
+        <translation>Ngắt kết nối</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="296"/>
@@ -3556,12 +3556,12 @@ Address: %4
     <message>
         <location filename="../transactiontablemodel.cpp" line="311"/>
         <source>This block was not received by any other nodes and will probably not be accepted!</source>
-        <translation type="unfinished"/>
+        <translation>Khối này đã không nhận được bởi bất kỳ các nút nào khác và có thể sẽ không được chấp nhận!</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="314"/>
         <source>Generated but not accepted</source>
-        <translation type="unfinished"/>
+        <translation>Đã sinh nhưng không được chấp nhận</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="356"/>
@@ -3621,7 +3621,7 @@ Address: %4
     <message>
         <location filename="../transactiontablemodel.cpp" line="610"/>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
-        <translation type="unfinished"/>
+        <translation>Trạng thái giao dịch: Di chuột qua ô này để hiển thị số lần xác nhận.</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="612"/>
@@ -3636,12 +3636,12 @@ Address: %4
     <message>
         <location filename="../transactiontablemodel.cpp" line="616"/>
         <source>Destination address of transaction.</source>
-        <translation type="unfinished"/>
+        <translation>Địa chỉ đích của giao dịch.</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="618"/>
         <source>Amount removed from or added to balance.</source>
-        <translation type="unfinished"/>
+        <translation>Lượng tiền được gỡ bỏ hoặc thêm vào số dư.</translation>
     </message>
 </context>
 <context>
@@ -3755,12 +3755,12 @@ Address: %4
     <message>
         <location filename="../transactionview.cpp" line="136"/>
         <source>Show transaction details</source>
-        <translation type="unfinished"/>
+        <translation>Xem chi tiết giao dịch</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="299"/>
         <source>Export Transaction History</source>
-        <translation type="unfinished"/>
+        <translation>Kết xuất Lịch sử Giao dịch</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="300"/>
@@ -3810,7 +3810,7 @@ Address: %4
     <message>
         <location filename="../transactionview.cpp" line="318"/>
         <source>There was an error trying to save the transaction history to %1.</source>
-        <translation type="unfinished"/>
+        <translation>Có một lỗi xảy ra khi lưu lịch sử giao dịch vào %1.</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="322"/>
@@ -3820,7 +3820,7 @@ Address: %4
     <message>
         <location filename="../transactionview.cpp" line="322"/>
         <source>The transaction history was successfully saved to %1.</source>
-        <translation type="unfinished"/>
+        <translation>Lịch sử giao dịch đã được lưu thành công vào %1.</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="431"/>
@@ -4124,17 +4124,17 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="181"/>
         <source>Darkcoin Core Daemon</source>
-        <translation type="unfinished"/>
+        <translation>Darkcoin Core Daemon</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="182"/>
         <source>Darkcoin Core RPC client version</source>
-        <translation type="unfinished"/>
+        <translation>Phiên bản phần mềm Darkcoin Core RPC</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="168"/>
         <source>Block creation options:</source>
-        <translation type="unfinished"/>
+        <translation>Tuỳ chọn tạo khối:</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="42"/>
@@ -4294,7 +4294,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="188"/>
         <source>Do you want to rebuild the block database now?</source>
-        <translation type="unfinished"/>
+        <translation>Bạn có muốn xây dựng lại dữ liệu khối bây giờ không?</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="189"/>
@@ -4304,32 +4304,32 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="190"/>
         <source>Enable the client to act as a masternode (0-1, default: 0)</source>
-        <translation type="unfinished"/>
+        <translation>Cho phép phần mềm hoạt động như là masternode (0-1, ngầm định: 0)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="191"/>
         <source>Error initializing block database</source>
-        <translation type="unfinished"/>
+        <translation>Lỗi khởi tạo cơ sở dữ liệu khối</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="192"/>
         <source>Error initializing wallet database environment %s!</source>
-        <translation type="unfinished"/>
+        <translation>Lỗi khởi tạo cơ sở dữ liệu môi trường ví %s!</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="193"/>
         <source>Error loading block database</source>
-        <translation type="unfinished"/>
+        <translation>Lỗi nạp cơ sở dữ liệu khối</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="194"/>
         <source>Error loading wallet.dat</source>
-        <translation type="unfinished"/>
+        <translation>Lỗi nạp wallet.dat</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="195"/>
         <source>Error loading wallet.dat: Wallet corrupted</source>
-        <translation type="unfinished"/>
+        <translation>Lỗi nạp wallet.dat: Ví bị lỗi</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="196"/>
@@ -4339,12 +4339,12 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="197"/>
         <source>Error opening block database</source>
-        <translation type="unfinished"/>
+        <translation>Lỗi mở cơ sở dữ liệu khối</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="198"/>
         <source>Error reading from database, shutting down.</source>
-        <translation type="unfinished"/>
+        <translation>Lỗi đọc từ cơ sở dữ liệu, đang tắt phần mềm.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="199"/>
@@ -4354,12 +4354,12 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="200"/>
         <source>Error: Disk space is low!</source>
-        <translation type="unfinished"/>
+        <translation>Lỗi: Dung lượng đĩa thấp!</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="201"/>
         <source>Error: Wallet locked, unable to create transaction!</source>
-        <translation type="unfinished"/>
+        <translation>Lỗi: Ví đã bị khoá, không thể tạo giao dịch!</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="202"/>
@@ -4369,7 +4369,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="203"/>
         <source>Error: system error: </source>
-        <translation type="unfinished"/>
+        <translation>Lỗi: lỗi hệ thống.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="204"/>
@@ -4379,52 +4379,52 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="205"/>
         <source>Failed to read block info</source>
-        <translation type="unfinished"/>
+        <translation>Thất bại trong việc đọc thông tin khối</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="206"/>
         <source>Failed to read block</source>
-        <translation type="unfinished"/>
+        <translation>Thất bại trong việc đọc khối</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="207"/>
         <source>Failed to sync block index</source>
-        <translation type="unfinished"/>
+        <translation>Thất bại trong việc đồng bộ chỉ mục khối</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="208"/>
         <source>Failed to write block index</source>
-        <translation type="unfinished"/>
+        <translation>Thất bại trong việc ghi chỉ mục khối</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="209"/>
         <source>Failed to write block info</source>
-        <translation type="unfinished"/>
+        <translation>Thất bại trong việc ghi thông tin khối</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="210"/>
         <source>Failed to write block</source>
-        <translation type="unfinished"/>
+        <translation>Thất bại trong việc ghi khối</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="211"/>
         <source>Failed to write file info</source>
-        <translation type="unfinished"/>
+        <translation>Thất bại trong việc ghi thông tin tệp</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="212"/>
         <source>Failed to write to coin database</source>
-        <translation type="unfinished"/>
+        <translation>Thất bại trong việc ghi cơ sở dữ liệu tiền</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="213"/>
         <source>Failed to write transaction index</source>
-        <translation type="unfinished"/>
+        <translation>Thất bại trong việc ghi chỉ mục giao dịch</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="214"/>
         <source>Failed to write undo data</source>
-        <translation type="unfinished"/>
+        <translation>Thất bại trong việc ghi dữ liệu hoãn</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="215"/>
@@ -4464,7 +4464,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="217"/>
         <source>Force safe mode (default: 0)</source>
-        <translation type="unfinished"/>
+        <translation>Cưỡng bức ở chế độ an toàn (ngầm định: 0)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="218"/>
@@ -4474,7 +4474,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="219"/>
         <source>Get help for a command</source>
-        <translation type="unfinished"/>
+        <translation>Để có trợ giúp cho một lệnh</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="220"/>
@@ -4494,12 +4494,12 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="223"/>
         <source>Importing...</source>
-        <translation type="unfinished"/>
+        <translation>Đang nạp...</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="224"/>
         <source>Imports blocks from external blk000??.dat file</source>
-        <translation type="unfinished"/>
+        <translation>Nạp khối từ tệp ngoài blk000??.dat</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="225"/>
@@ -4654,7 +4654,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="255"/>
         <source>Not enough file descriptors available.</source>
-        <translation type="unfinished"/>
+        <translation>Chưa có đủ thông tin mô tả tệp.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="256"/>
@@ -4674,7 +4674,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="259"/>
         <source>Password for JSON-RPC connections</source>
-        <translation type="unfinished"/>
+        <translation>Mật khẩu cho kết nối JSON-RPC</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="260"/>
@@ -4694,12 +4694,12 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="264"/>
         <source>RPC client options:</source>
-        <translation type="unfinished"/>
+        <translation>Tuỳ chọn phần mềm RPC:</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="265"/>
         <source>RPC server options:</source>
-        <translation type="unfinished"/>
+        <translation>Tuỳ chọn cho RPC server</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="266"/>
@@ -4714,7 +4714,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="268"/>
         <source>Rebuild block chain index from current blk000??.dat files</source>
-        <translation type="unfinished"/>
+        <translation>Tái tạo lại chỉ mục chuỗi khối từ tệp blk000??.dat</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="269"/>
@@ -4789,7 +4789,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="284"/>
         <source>Set the masternode private key</source>
-        <translation type="unfinished"/>
+        <translation>Đặt khoá riêng cho masternode</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="285"/>
@@ -4824,12 +4824,12 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="291"/>
         <source>Specify configuration file (default: darkcoin.conf)</source>
-        <translation type="unfinished"/>
+        <translation>Xác định tệp cấu hình (ngầm định: darkcoin.conf)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="292"/>
         <source>Specify connection timeout in milliseconds (default: 5000)</source>
-        <translation type="unfinished"/>
+        <translation>Xác định thời gian chờ kết nối tính theo mili giây (ngầm định: 5000)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="293"/>
@@ -4839,32 +4839,32 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="294"/>
         <source>Specify masternode configuration file (default: masternode.conf)</source>
-        <translation type="unfinished"/>
+        <translation>Xác định tệp cấu hình masternode (ngầm định: masternode.conf)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="295"/>
         <source>Specify pid file (default: darkcoind.pid)</source>
-        <translation type="unfinished"/>
+        <translation>Xác định tệp pid (ngầm định: darkcoind.pid)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="296"/>
         <source>Specify wallet file (within data directory)</source>
-        <translation type="unfinished"/>
+        <translation>Xác định tệp ví (trong thư mục dữ liệu)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="297"/>
         <source>Specify your own public address</source>
-        <translation type="unfinished"/>
+        <translation>Hãy xác định địa chỉ công khai của bạn</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="298"/>
         <source>Spend unconfirmed change when sending transactions (default: 1)</source>
-        <translation type="unfinished"/>
+        <translation>Tiên các khoản trả lại chưa được xác nhận khi gửi các giao dịch (ngầm định: 1)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="299"/>
         <source>Start Darkcoin Core Daemon</source>
-        <translation type="unfinished"/>
+        <translation>Khởi động Darkcoin Core Daemon</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="300"/>
@@ -4889,7 +4889,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="304"/>
         <source>To use the %s option</source>
-        <translation type="unfinished"/>
+        <translation>Để sử dụng tuỳ chọn %s</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="305"/>
@@ -4959,7 +4959,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="321"/>
         <source>Use the test network</source>
-        <translation type="unfinished"/>
+        <translation>Sử dụng mạng thử</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="322"/>
@@ -4969,27 +4969,27 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="323"/>
         <source>Verifying blocks...</source>
-        <translation type="unfinished"/>
+        <translation>Đang kiểm tra các khối...</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="324"/>
         <source>Verifying wallet...</source>
-        <translation type="unfinished"/>
+        <translation>Đang kiểm tra ví...</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="325"/>
         <source>Wait for RPC server to start</source>
-        <translation type="unfinished"/>
+        <translation>Chờ cho RPC server khởi động</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="326"/>
         <source>Wallet %s resides outside data directory %s</source>
-        <translation type="unfinished"/>
+        <translation>Ví %s nằm ở bên ngoài thư mục dữ liệu %s</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="327"/>
         <source>Wallet needed to be rewritten: restart Darkcoin to complete</source>
-        <translation type="unfinished"/>
+        <translation>Ví cần được ghi lại: khởi động lại Darkcoin để hoàn tất</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="328"/>
@@ -5009,12 +5009,12 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="331"/>
         <source>Warning: This version is obsolete, upgrade required!</source>
-        <translation type="unfinished"/>
+        <translation>Cảnh báo: Phiên bản này đã cũ, cần phải cập nhật mới!</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="332"/>
         <source>You need to rebuild the database using -reindex to change -txindex</source>
-        <translation type="unfinished"/>
+        <translation>Bạn cần xây dựng lại cơ sở dữ liệu sử dụng -reindex để thay cho -txindex</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="333"/>

@@ -1118,85 +1118,85 @@ Adrese: %4
         <location filename="../forms/darksendconfig.ui" line="14"/>
         <location filename="../forms/ui_darksendconfig.h" line="96"/>
         <source>Configure Darksend+</source>
-        <translation type="unfinished"/>
+        <translation>Konfigurēt Darksend+</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="26"/>
         <location filename="../forms/ui_darksendconfig.h" line="97"/>
         <source>Basic Privacy</source>
-        <translation type="unfinished"/>
+        <translation>Pamata Privātums</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="39"/>
         <location filename="../forms/ui_darksendconfig.h" line="98"/>
         <source>High Privacy</source>
-        <translation type="unfinished"/>
+        <translation>Augsts Privātums</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="52"/>
         <location filename="../forms/ui_darksendconfig.h" line="99"/>
         <source>Maximum Privacy</source>
-        <translation type="unfinished"/>
+        <translation>Maksimālais Privātums</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="65"/>
         <location filename="../forms/ui_darksendconfig.h" line="100"/>
         <source>Please select an privacy level. </source>
-        <translation type="unfinished"/>
+        <translation>Lūdzu izvēlēties privātuma līmeni</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="78"/>
         <location filename="../forms/ui_darksendconfig.h" line="101"/>
         <source>Use 2 separate masternodes to mix funds up to 1000DRK</source>
-        <translation type="unfinished"/>
+        <translation>Lietot 2 atsevišķas masternodes, lai miksētu apjomu virs 1000DRK</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="91"/>
         <location filename="../forms/ui_darksendconfig.h" line="102"/>
         <source>Use 4 separate masternodes to mix funds up to 1000DRK</source>
-        <translation type="unfinished"/>
+        <translation>Lietot 4 atsevišķas masternodes, lai miksētu apjomu virs 1000DRK</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="104"/>
         <location filename="../forms/ui_darksendconfig.h" line="103"/>
         <source>Use 8 separate masternodes</source>
-        <translation type="unfinished"/>
+        <translation>Lietot 8 atsevišķas masternodes</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="117"/>
         <location filename="../forms/ui_darksendconfig.h" line="104"/>
         <source>This option is the quickest and will cost about ~0.025DRK to anonymize 1000DRK</source>
-        <translation type="unfinished"/>
+        <translation>Šī opcija ir visātrākā un maksa aptuveni 0.025DRK, lai anonimizētu 1000DRK</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="130"/>
         <location filename="../forms/ui_darksendconfig.h" line="105"/>
         <source>This option is moderately fast and will cost about 0.05DRK to anonymize 1000DRK</source>
-        <translation type="unfinished"/>
+        <translation>Šī opcija ir nedaudz ātrāka, un maksa aptuveni 0.05DRK, lai anonimizētu 1000DRK</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="143"/>
         <location filename="../forms/ui_darksendconfig.h" line="106"/>
         <source>This is the slowest and most secure option. Using maximum anonymity will cost</source>
-        <translation type="unfinished"/>
+        <translation>Šī opcija ir lēnākā un drošākā.  Lietojot maksimālo anonimizāciju maksa ir</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="156"/>
         <location filename="../forms/ui_darksendconfig.h" line="107"/>
         <source>0.1DRK per 1000DRK you anonymize.</source>
-        <translation type="unfinished"/>
+        <translation>0.1DRK par Jūsu 1000DRK anonimizāciju.</translation>
     </message>
     <message>
         <location filename="../darksendconfig.cpp" line="43"/>
         <location filename="../darksendconfig.cpp" line="58"/>
         <location filename="../darksendconfig.cpp" line="73"/>
         <source>Darksend Configuration</source>
-        <translation type="unfinished"/>
+        <translation>Darksend Iestatījumi</translation>
     </message>
     <message>
         <location filename="../darksendconfig.cpp" line="44"/>
         <source>Darksend was successfully set to basic (%1 and 2 rounds). You can change this at any time by opening Darkcoin&apos;s configuration screen.</source>
-        <translation type="unfinished"/>
+        <translation>Darksend veiksmīgi iestatīts uz pamata (%1 un 2 cikli). Jūs varat mainīt šo iestatījumu jebkurā brīdī atverot Darkcoin&apos;a iestatījumu logu.</translation>
     </message>
     <message>
         <location filename="../darksendconfig.cpp" line="59"/>

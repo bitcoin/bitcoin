@@ -647,7 +647,7 @@ Denna produkten innehåller mjukvara utvecklad av OpenSSL Project för användni
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="638"/>
         <source>%n active connection(s) to Darkcoin network</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation><numerusform>%n aktiv anslutning till Darkcoin-nätverket</numerusform><numerusform>%n aktiva anslutningar till Darkcoin-nätverket</numerusform></translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="650"/>
@@ -682,18 +682,18 @@ Denna produkten innehåller mjukvara utvecklad av OpenSSL Project för användni
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="696"/>
         <source>%n hour(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation><numerusform>%n timme</numerusform><numerusform>%n timmar</numerusform></translation>
     </message>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="700"/>
         <source>%n day(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation><numerusform>%n dag</numerusform><numerusform>%n dagar</numerusform></translation>
     </message>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="704"/>
         <location filename="../bitcoingui.cpp" line="710"/>
         <source>%n week(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation><numerusform>%n vecka</numerusform><numerusform>%n veckor</numerusform></translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="710"/>
@@ -703,7 +703,7 @@ Denna produkten innehåller mjukvara utvecklad av OpenSSL Project för användni
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="710"/>
         <source>%n year(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation><numerusform>%n år</numerusform><numerusform>%n år</numerusform></translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="714"/>
@@ -1120,95 +1120,95 @@ Adress: %4
         <location filename="../forms/darksendconfig.ui" line="14"/>
         <location filename="../forms/ui_darksendconfig.h" line="96"/>
         <source>Configure Darksend+</source>
-        <translation type="unfinished"/>
+        <translation>Konfigurera Darksend+</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="26"/>
         <location filename="../forms/ui_darksendconfig.h" line="97"/>
         <source>Basic Privacy</source>
-        <translation type="unfinished"/>
+        <translation>Grundläggande integritet</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="39"/>
         <location filename="../forms/ui_darksendconfig.h" line="98"/>
         <source>High Privacy</source>
-        <translation type="unfinished"/>
+        <translation>Hög integritet</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="52"/>
         <location filename="../forms/ui_darksendconfig.h" line="99"/>
         <source>Maximum Privacy</source>
-        <translation type="unfinished"/>
+        <translation>Maximal integritet</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="65"/>
         <location filename="../forms/ui_darksendconfig.h" line="100"/>
         <source>Please select an privacy level. </source>
-        <translation type="unfinished"/>
+        <translation>Vänligen välj en integritetsnivå.</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="78"/>
         <location filename="../forms/ui_darksendconfig.h" line="101"/>
         <source>Use 2 separate masternodes to mix funds up to 1000DRK</source>
-        <translation type="unfinished"/>
+        <translation>Använd 2 enskilda masternoder att mixa saldo med - upp till 1000DRK</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="91"/>
         <location filename="../forms/ui_darksendconfig.h" line="102"/>
         <source>Use 4 separate masternodes to mix funds up to 1000DRK</source>
-        <translation type="unfinished"/>
+        <translation>Använda 4 enskilda masternoder att mixa saldo med - upp till 1000DRK</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="104"/>
         <location filename="../forms/ui_darksendconfig.h" line="103"/>
         <source>Use 8 separate masternodes</source>
-        <translation type="unfinished"/>
+        <translation>Använda 8 enskilda masternoder</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="117"/>
         <location filename="../forms/ui_darksendconfig.h" line="104"/>
         <source>This option is the quickest and will cost about ~0.025DRK to anonymize 1000DRK</source>
-        <translation type="unfinished"/>
+        <translation>Detta alternativ är det snabbaste och kommer att kosta cirka ~0,025DRK för att anonymisera 1000DRK</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="130"/>
         <location filename="../forms/ui_darksendconfig.h" line="105"/>
         <source>This option is moderately fast and will cost about 0.05DRK to anonymize 1000DRK</source>
-        <translation type="unfinished"/>
+        <translation>Detta alternativ är relativt snabbt och kommer att kosta cirka 0,05DRK för att anonymisera 1000DRK.</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="143"/>
         <location filename="../forms/ui_darksendconfig.h" line="106"/>
         <source>This is the slowest and most secure option. Using maximum anonymity will cost</source>
-        <translation type="unfinished"/>
+        <translation>Detta är det långsammaste och mest säkra alternativ. Att använda maximal anonymitet kommer att kosta</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="156"/>
         <location filename="../forms/ui_darksendconfig.h" line="107"/>
         <source>0.1DRK per 1000DRK you anonymize.</source>
-        <translation type="unfinished"/>
+        <translation>0,1DRK per 1000DRK du anonymiserar.</translation>
     </message>
     <message>
         <location filename="../darksendconfig.cpp" line="43"/>
         <location filename="../darksendconfig.cpp" line="58"/>
         <location filename="../darksendconfig.cpp" line="73"/>
         <source>Darksend Configuration</source>
-        <translation type="unfinished"/>
+        <translation>Darksend-konfiguration</translation>
     </message>
     <message>
         <location filename="../darksendconfig.cpp" line="44"/>
         <source>Darksend was successfully set to basic (%1 and 2 rounds). You can change this at any time by opening Darkcoin&apos;s configuration screen.</source>
-        <translation type="unfinished"/>
+        <translation>Darksend ställdes framgångsrikt in på grundläggande (%1 och 2 omgångar). Du kan ändra detta när som helst genom att öppna Darkcoins konfigurationsfönster.</translation>
     </message>
     <message>
         <location filename="../darksendconfig.cpp" line="59"/>
         <source>Darksend was successfully set to high (%1 and 8 rounds). You can change this at any time by opening Darkcoin&apos;s configuration screen.</source>
-        <translation type="unfinished"/>
+        <translation>Darksend ställdes framgångsrikt in på hög (%1 och 8 omgångar). Du kan ändrad detta när som helst genom att öppna Darkcoins konfigurationsfönster.</translation>
     </message>
     <message>
         <location filename="../darksendconfig.cpp" line="74"/>
         <source>Darksend was successfully set to maximum (%1 and 16 rounds). You can change this at any time by opening Darkcoin&apos;s configuration screen.</source>
-        <translation type="unfinished"/>
+        <translation>Darksend ställdes framgångsrikt in på maximal (%1 och 16 omgångar). Du kan ändra detta när som helst genom att öppna Darkcoins konfigurationsfönster.</translation>
     </message>
 </context>
 <context>
@@ -1266,7 +1266,7 @@ Adress: %4
     <message>
         <location filename="../editaddressdialog.cpp" line="111"/>
         <source>The entered address &quot;%1&quot; is not a valid Darkcoin address.</source>
-        <translation type="unfinished"/>
+        <translation>Den angivna adressen &quot;%1&quot; är inte en giltig Darkcoin-adress.</translation>
     </message>
     <message>
         <location filename="../editaddressdialog.cpp" line="116"/>
@@ -1993,17 +1993,17 @@ Adress: %4
     <message>
         <location filename="../overviewpage.cpp" line="429"/>
         <source>Darksend was successfully reset.</source>
-        <translation type="unfinished"/>
+        <translation>Darksen återställdes framgångsrikt.</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="443"/>
         <source>Darksend requires at least %1 to use.</source>
-        <translation type="unfinished"/>
+        <translation>Darksend kräver åtminstone %1 att använda.</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="457"/>
         <source>Wallet is locked and user declined to unlock. Disabling Darksend.</source>
-        <translation type="unfinished"/>
+        <translation>Plånboken är låst och användaren nekade till att låsa upp. Inaktiverar Darksend.</translation>
     </message>
 </context>
 <context>
@@ -2021,7 +2021,7 @@ Adress: %4
     <message>
         <location filename="../paymentserver.cpp" line="294"/>
         <source>Cannot start darkcoin: click-to-pay handler</source>
-        <translation type="unfinished"/>
+        <translation>Kan inte starta darkcoin: klicka-för-att-betala hanterare</translation>
     </message>
     <message>
         <location filename="../paymentserver.cpp" line="352"/>
@@ -2047,7 +2047,7 @@ Adress: %4
     <message>
         <location filename="../paymentserver.cpp" line="418"/>
         <source>URI can not be parsed! This can be caused by an invalid Darkcoin address or malformed URI parameters.</source>
-        <translation type="unfinished"/>
+        <translation>URI kan inte parsas! Detta kan orsakas av en ogiltig Darkcoin-adress eller vanställda URI-parametrar.</translation>
     </message>
     <message>
         <location filename="../paymentserver.cpp" line="432"/>
@@ -2345,7 +2345,7 @@ Adress: %4
     <message>
         <location filename="../rpcconsole.cpp" line="331"/>
         <source>Welcome to the Darkcoin RPC console.</source>
-        <translation type="unfinished"/>
+        <translation>Välkommen till Darkcoins RPC-konsol.</translation>
     </message>
     <message>
         <location filename="../rpcconsole.cpp" line="332"/>
@@ -2728,7 +2728,7 @@ Adress: %4
         <location filename="../forms/sendcoinsdialog.ui" line="668"/>
         <location filename="../forms/ui_sendcoinsdialog.h" line="534"/>
         <source>Confirm the send action</source>
-        <translation>Bekräfta sändordern</translation>
+        <translation>Bekräfta sändningshandlingen</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="671"/>
@@ -3229,12 +3229,12 @@ Adress: %4
     <message>
         <location filename="../signverifymessagedialog.cpp" line="138"/>
         <source>Private key for the entered address is not available.</source>
-        <translation>Privatnyckel för den angivna adressen är inte tillgänglig.</translation>
+        <translation>Privatnyckeln för den angivna adressen är inte tillgänglig.</translation>
     </message>
     <message>
         <location filename="../signverifymessagedialog.cpp" line="150"/>
         <source>Message signing failed.</source>
-        <translation>Signering av meddelandet misslyckades.</translation>
+        <translation>Signeringen av meddelandet misslyckades.</translation>
     </message>
     <message>
         <location filename="../signverifymessagedialog.cpp" line="155"/>
@@ -3250,7 +3250,7 @@ Adress: %4
         <location filename="../signverifymessagedialog.cpp" line="213"/>
         <location filename="../signverifymessagedialog.cpp" line="226"/>
         <source>Please check the signature and try again.</source>
-        <translation>Kontrollera signaturen och försök igen.</translation>
+        <translation>Vad god kontrollera adressen och försök igen.</translation>
     </message>
     <message>
         <location filename="../signverifymessagedialog.cpp" line="226"/>
@@ -3345,7 +3345,7 @@ Adress: %4
     <message numerus="yes">
         <location filename="../transactiondesc.cpp" line="66"/>
         <source>, broadcast through %n node(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation><numerusform>, utsänd genom %n nod</numerusform><numerusform>, utsänd genom %n noder</numerusform></translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="70"/>
@@ -3403,7 +3403,7 @@ Adress: %4
     <message numerus="yes">
         <location filename="../transactiondesc.cpp" line="142"/>
         <source>matures in %n more block(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation><numerusform>mognar om %n block</numerusform><numerusform>mognar om %n block</numerusform></translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="144"/>
@@ -3416,7 +3416,7 @@ Adress: %4
         <location filename="../transactiondesc.cpp" line="211"/>
         <location filename="../transactiondesc.cpp" line="264"/>
         <source>Debit</source>
-        <translation>Belasta</translation>
+        <translation>Debet</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="202"/>
@@ -3585,7 +3585,7 @@ Adress: %4
     <message>
         <location filename="../transactiontablemodel.cpp" line="360"/>
         <source>Received via Darksend</source>
-        <translation type="unfinished"/>
+        <translation>Mottagen genom Darksend</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="363"/>
@@ -3605,22 +3605,22 @@ Adress: %4
     <message>
         <location filename="../transactiontablemodel.cpp" line="370"/>
         <source>Darksend Denominate</source>
-        <translation type="unfinished"/>
+        <translation>Darksend-denomination</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="372"/>
         <source>Darksend Collateral Payment</source>
-        <translation type="unfinished"/>
+        <translation>Darskends säkerhetsbetalning</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="374"/>
         <source>Darksend Split Up Large Inputs</source>
-        <translation type="unfinished"/>
+        <translation>Darksend, dela upp stora inmatningar</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="376"/>
         <source>Darksent</source>
-        <translation type="unfinished"/>
+        <translation>Dark-skickat</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="418"/>
@@ -3704,12 +3704,12 @@ Adress: %4
     <message>
         <location filename="../transactionview.cpp" line="81"/>
         <source>Darksent</source>
-        <translation type="unfinished"/>
+        <translation>Dark-skickat</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="82"/>
         <source>Darksend Denominate</source>
-        <translation type="unfinished"/>
+        <translation>Darksend-denomination</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="83"/>
@@ -3921,27 +3921,27 @@ for example: alertnotify=echo %%s | mail -s &quot;Darkcoin Alert&quot; admin@foo
     <message>
         <location filename="../bitcoinstrings.cpp" line="25"/>
         <source>Acceptable ciphers (default: TLSv1.2+HIGH:TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!3DES:@STRENGTH)</source>
-        <translation type="unfinished"/>
+        <translation>Godtagbara chiffers  (standard: TLSv1.2+HIGH:TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!3DES:@STRENGTH)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="28"/>
         <source>An error occurred while setting up the RPC port %u for listening on IPv4: %s</source>
-        <translation type="unfinished"/>
+        <translation>Ett fel inträffad vid inställning av RPC-prt %u för lyssning på IPv4: %s</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="30"/>
         <source>An error occurred while setting up the RPC port %u for listening on IPv6, falling back to IPv4: %s</source>
-        <translation type="unfinished"/>
+        <translation>Ett fel inträffade vid inställning av RPC-prt %u för lyssning på IPv6, går tillbaka till IPv4: %s</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="33"/>
         <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
-        <translation type="unfinished"/>
+        <translation>Sammanbind till fastställd adress och lyssna alltid på det. Använd [host]:port notation för IPv6</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="36"/>
         <source>Cannot obtain a lock on data directory %s. Darkcoin Core is probably already running.</source>
-        <translation type="unfinished"/>
+        <translation>Kan inte erhålla ett lås på datakatalog %s. Darkcoin Core körs förmodligen redan.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="39"/>
@@ -3961,17 +3961,17 @@ for example: alertnotify=echo %%s | mail -s &quot;Darkcoin Alert&quot; admin@foo
     <message>
         <location filename="../bitcoinstrings.cpp" line="59"/>
         <source>Error: The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
-        <translation type="unfinished"/>
+        <translation>Fel: Transaktionen avslogs! Detta kan hända om några av mynten i din plånbok redan har spenderats, t. ex. om du har använt en kopia av wallet.dat och mynt spenderades i kopian men inte har markerats som spenderade här.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="63"/>
         <source>Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds!</source>
-        <translation type="unfinished"/>
+        <translation>Fel: Transaktion kräver en transaktionsavgift om åtminstone %s på grund av dess mängd, komplexitet eller användning av mottagna belopp.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="68"/>
         <source>Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)</source>
-        <translation type="unfinished"/>
+        <translation>Exekvera kommandot när ett viktigt larm mottas eller vi ser en jättelång förgrening (%s i cmd ersätts av meddelande)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="71"/>
