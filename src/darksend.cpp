@@ -1324,7 +1324,7 @@ bool CDarkSendPool::GetLastValidBlockHash(uint256& hash, int mod, int nBlockHeig
     const CBlockIndex *BlockReading = chainActive.Tip();
 
     if (chainActive.Tip() == NULL) return false;
-    if (BlockLastSolved == NULL || BlockLastSolved->nHeight == 0 || (chainActive.Tip()->nHeight+1 < nBlockHeight) return false;
+    if (BlockLastSolved == NULL || BlockLastSolved->nHeight == 0 || chainActive.Tip()->nHeight+1 < nBlockHeight) return false;
 
     int nBlocksAgo = 0;
     if(nBlockHeight > 0) nBlocksAgo = (chainActive.Tip()->nHeight+1)-nBlockHeight;
