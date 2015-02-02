@@ -1245,7 +1245,7 @@ bool AppInit2(boost::thread_group& threadGroup)
     // scan for better chains in the block chain database, that are not yet connected in the active best chain
     CValidationState state;
     if (!ActivateBestChain(state))
-        strErrors << "Failed to connect best block";
+        strErrors << _("Failed to connect best block (try to rebuild block chain index using -reindex)") << "\n";
 
     std::vector<boost::filesystem::path> vImportFiles;
     if (mapArgs.count("-loadblock"))
