@@ -198,8 +198,8 @@ void ProcessConsensusVote(CConsensusVote& ctx)
         (*i).second.AddSignature(ctx);
         if((*i).second.CountSignatures() >= INSTANTX_SIGNATURES_REQUIRED){
             LogPrintf("InstantX::ProcessConsensusVote - Transaction Lock Is Complete %s !\n", (*i).second.GetHash().ToString().c_str());
-            pwalletMain->UpdatedTransaction((*i).second.tx.GetHash());
-            nCompleteTXLocks++;
+            if(pwalletMain->UpdatedTransaction((*i).second.tx.GetHash()))
+                nCompleteTXLocks++;
         }
         return;
     }
