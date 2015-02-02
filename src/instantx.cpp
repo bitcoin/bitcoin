@@ -119,6 +119,9 @@ void ProcessMessageInstantX(CNode* pfrom, std::string& strCommand, CDataStream& 
         LOCK(cs_vNodes);
         BOOST_FOREACH(CNode* pnode, vNodes)
         {
+            if(!pnode->fRelayTxes)
+                continue;
+
             pnode->PushMessage("txlvote", ctx);
         }
 
@@ -144,7 +147,7 @@ void DoConsensusVote(CTransaction& tx, bool approved, int64_t nBlockHeight)
         LogPrintf("InstantX::DoConsensusVote - Signature invalid\n");
         return;
     }
-    
+
     LOCK(cs_vNodes);
     BOOST_FOREACH(CNode* pnode, vNodes)
     {
