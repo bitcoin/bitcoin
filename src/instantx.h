@@ -23,7 +23,7 @@ class CConsensusVote;
 class CTransaction;
 class CTransactionLock;
 
-static const int MIN_INSTANTX_PROTO_VERSION = 70055;
+static const int MIN_INSTANTX_PROTO_VERSION = 70056;
 
 extern map<uint256, CTransaction> mapTxLockReq;
 extern map<uint256, CTransactionLock> mapTxLocks;
@@ -45,7 +45,7 @@ class CConsensusVote
 public:
     CTxIn vinMasternode;
     bool approved;
-    CTransaction tx;
+    uint256 txHash;
     int nBlockHeight;
     std::vector<unsigned char> vchMasterNodeSignature;
 
@@ -56,7 +56,7 @@ public:
 
     IMPLEMENT_SERIALIZE
     (
-        READWRITE(tx);
+        READWRITE(txHash);
         READWRITE(vinMasternode);
         READWRITE(approved);
         READWRITE(vchMasterNodeSignature);
@@ -68,7 +68,7 @@ class CTransactionLock
 {
 public:
     int nBlockHeight;
-    CTransaction tx;
+    uint256 txHash;
     std::vector<CConsensusVote> vecConsensusVotes;
     int nExpiration;
 
@@ -76,17 +76,11 @@ public:
     int CountSignatures();
     bool AllInFavor();
     void AddSignature(CConsensusVote cv);
+
     uint256 GetHash()
     {
-        return tx.GetHash();
+        return txHash;
     }
-
-    IMPLEMENT_SERIALIZE
-    (
-        READWRITE(tx);
-        READWRITE(nBlockHeight);
-        READWRITE(vecConsensusVotes);
-    )
 };
 
 
