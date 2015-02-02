@@ -18,6 +18,8 @@ map<uint256, int> mapSeenMasternodeScanningErrors;
 std::map<CNetAddr, int64_t> askedForMasternodeList;
 // which masternodes we've asked for
 std::map<COutPoint, int64_t> askedForMasternodeListEntry;
+// which masternodes we've asked for
+std::map<int, CScript> cacheBlockPayee;
 
 // manage the masternode connections
 void ProcessMasternodeConnections(){
@@ -357,32 +359,23 @@ void ProcessMessageMasternode(CNode* pfrom, std::string& strCommand, CDataStream
         if(masternodePayments.AddWinningMasternode(winner)){
             masternodePayments.Relay(winner);
         }
-    } /*else if (strCommand == "mnse") { //Masternode Scanning Error
-        CMasternodeScanningError entry;
-        vRecv >> entry;
 
-        if(chainActive.Tip() == NULL) return;
-
-        uint256 hash = entry.GetHash();
-        if(mapSeenMasternodeScanningErrors.count(hash)) {
-            if(fDebug) LogPrintf("mnse - seen entry addr %d error %d\n", entry.addr.ToString().c_str(), entry.error.c_str());
-            return;
+        if(chainActive.Tip()){
+            //cache payments
+            int success = 0;
+            int fail = 0;
+            for(int nBlockHeight = chainActive.Tip()->nHeight; nBlockHeight < chainActive.Tip()->nHeight+10; nBlockHeight++){
+                CScript payee;
+                if(masternodePayments.GetBlockPayee(nBlockHeight, payee)){
+                    success++;
+                } else {
+                    fail++;
+                }
+            }
+            LogPrintf("mnw - cached block payees - success %d fail %d\n", success, fail);
         }
 
-        LogPrintf("mnse - seen entry addr %d error %d\n", entry.addr.ToString().c_str(), entry.error.c_str());
-
-        if(!masternodeScanningError.CheckSignature(entry)){
-            LogPrintf("mnse - invalid signature\n");
-            Misbehaving(pfrom->GetId(), 100);
-            return;
-        }
-
-        mapSeenMasternodeVotes.insert(make_pair(hash, 1));
-
-        if(masternodeScanningError.AddWinningMasternode(entry)){
-            masternodeScanningError.Relay(entry);
-        }
-    }*/
+    }
 }
 
 struct CompareValueOnly
@@ -668,6 +661,13 @@ uint64_t CMasternodePayments::CalculateScore(uint256 blockHash, CTxIn& vin)
 
 bool CMasternodePayments::GetBlockPayee(int nBlockHeight, CScript& payee)
 {
+
+    // if it's cached, use it
+    if(cacheBlockPayee.count(nBlockHeight)){
+        payee = cacheBlockPayee[nBlockHeight];
+        return true;
+    }
+
     BOOST_FOREACH(CMasternodePaymentWinner& winner, vWinning){
         if(winner.nBlockHeight == nBlockHeight) {
 
@@ -677,6 +677,7 @@ bool CMasternodePayments::GetBlockPayee(int nBlockHeight, CScript& payee)
                 BOOST_FOREACH(CTxOut out, tx.vout){
                     if(out.nValue == 1000*COIN){
                         payee = out.scriptPubKey;
+                        cacheBlockPayee.insert(make_pair(nBlockHeight, payee));
                         return true;
                     }
                 }
