@@ -529,7 +529,7 @@ Questo prodotto include software sviluppato dal progetto OpenSSL per l&apos;uso 
     <message>
         <location filename="../bitcoingui.cpp" line="302"/>
         <source>Sign messages with your Darkcoin addresses to prove you own them</source>
-        <translation type="unfinished"/>
+        <translation>Firma i messaggi con il tuo indirizzo Darkcoin per dimostrarne che li possiedi</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="303"/>
@@ -599,7 +599,7 @@ Questo prodotto include software sviluppato dal progetto OpenSSL per l&apos;uso 
     <message>
         <location filename="../bitcoingui.cpp" line="319"/>
         <source>Open a darkcoin: URI or payment request</source>
-        <translation type="unfinished"/>
+        <translation>Apri un URI o una richiesta di pagamento</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="321"/>
@@ -1196,7 +1196,7 @@ Indirizzo: %4
     <message>
         <location filename="../darksendconfig.cpp" line="44"/>
         <source>Darksend was successfully set to basic (%1 and 2 rounds). You can change this at any time by opening Darkcoin&apos;s configuration screen.</source>
-        <translation type="unfinished"/>
+        <translation>Dark send è statto correttamente impostato su base (%1 e 2 round). Puoi cambiare questa impostazione in qualsiasi momento tu lo voglia dalla finestra di configurazione.</translation>
     </message>
     <message>
         <location filename="../darksendconfig.cpp" line="59"/>

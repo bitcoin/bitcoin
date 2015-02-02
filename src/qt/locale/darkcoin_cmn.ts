@@ -5,13 +5,13 @@
         <location filename="../forms/aboutdialog.ui" line="14"/>
         <location filename="../forms/ui_aboutdialog.h" line="131"/>
         <source>About Darkcoin Core</source>
-        <translation type="unfinished"/>
+        <translation>关于暗黑币核心</translation>
     </message>
     <message>
         <location filename="../forms/aboutdialog.ui" line="53"/>
         <location filename="../forms/ui_aboutdialog.h" line="132"/>
         <source>&lt;b&gt;Darkcoin Core&lt;/b&gt; version</source>
-        <translation type="unfinished"/>
+        <translation>&lt;b&gt;暗黑币核心&lt;/b&gt; 版本</translation>
     </message>
     <message>
         <location filename="../forms/aboutdialog.ui" line="111"/>
@@ -43,7 +43,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../utilitydialog.cpp" line="31"/>
         <source>The Darkcoin Core developers</source>
-        <translation type="unfinished"/>
+        <translation>暗黑币核心开发人员</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="43"/>
@@ -142,12 +142,12 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../addressbookpage.cpp" line="65"/>
         <source>These are your Darkcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation type="unfinished"/>
+        <translation>这些是你要付款过去的暗黑币位址。在付款之前，务必要检查金额和收款位址是否正确。</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="69"/>
         <source>These are your Darkcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation type="unfinished"/>
+        <translation>这些是你用来收款的暗黑币位址。建议在每次交易时，都使用一个新的收款位址。</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="75"/>
@@ -289,7 +289,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../askpassphrasedialog.cpp" line="113"/>
         <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR DARKCOINS&lt;/b&gt;!</source>
-        <translation type="unfinished"/>
+        <translation>警告:如果把钱包加​​密后又忘记密码，你就会从此&lt;b&gt;失去所有的暗黑币了&lt;/b&gt;!</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="113"/>
@@ -365,7 +365,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="76"/>
         <source>Darkcoin Core</source>
-        <translation type="unfinished"/>
+        <translation>暗黑币核心</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="85"/>
@@ -437,7 +437,7 @@ This product includes software developed by the OpenSSL Project for use in the O
         <location filename="../bitcoingui.cpp" line="270"/>
         <location filename="../bitcoingui.cpp" line="272"/>
         <source>&amp;About Darkcoin Core</source>
-        <translation type="unfinished"/>
+        <translation>关于暗黑币核心</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="273"/>
@@ -463,7 +463,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="283"/>
         <source>Modify configuration options for Darkcoin</source>
-        <translation type="unfinished"/>
+        <translation>修改暗黑币配置选项</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="286"/>
@@ -509,7 +509,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="298"/>
         <source>&amp;Unlock Wallet...</source>
-        <translation type="unfinished"/>
+        <translation>&amp;解锁钱包</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="299"/>
@@ -519,7 +519,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="300"/>
         <source>&amp;Lock Wallet</source>
-        <translation type="unfinished"/>
+        <translation>&amp;锁定钱包</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="301"/>
@@ -624,7 +624,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="385"/>
         <source>&amp;Tools</source>
-        <translation type="unfinished"/>
+        <translation>工具</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="391"/>
@@ -640,7 +640,7 @@ This product includes software developed by the OpenSSL Project for use in the O
         <location filename="../bitcoingui.cpp" line="489"/>
         <location filename="../bitcoingui.cpp" line="494"/>
         <source>Darkcoin client</source>
-        <translation type="unfinished"/>
+        <translation>暗黑币客户端</translation>
     </message>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="638"/>
@@ -726,7 +726,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="750"/>
         <source>Darkcoin</source>
-        <translation type="unfinished"/>
+        <translation>暗黑幣</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="764"/>
@@ -1320,7 +1320,7 @@ Address: %4
     <message>
         <location filename="../utilitydialog.cpp" line="69"/>
         <source>Darkcoin Core</source>
-        <translation type="unfinished"/>
+        <translation>暗黑币核心</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="69"/>
@@ -1410,7 +1410,7 @@ Address: %4
     <message>
         <location filename="../intro.cpp" line="185"/>
         <source>Darkcoin</source>
-        <translation type="unfinished"/>
+        <translation>暗黑幣</translation>
     </message>
     <message>
         <location filename="../intro.cpp" line="186"/>
@@ -2105,7 +2105,7 @@ Address: %4
         <location filename="../darkcoin.cpp" line="539"/>
         <location filename="../darkcoin.cpp" line="552"/>
         <source>Darkcoin</source>
-        <translation type="unfinished"/>
+        <translation>暗黑幣</translation>
     </message>
     <message>
         <location filename="../darkcoin.cpp" line="526"/>
@@ -3270,7 +3270,7 @@ Address: %4
     <message>
         <location filename="../splashscreen.cpp" line="33"/>
         <source>Darkcoin Core</source>
-        <translation type="unfinished"/>
+        <translation>暗黑币核心</translation>
     </message>
     <message>
         <location filename="../splashscreen.cpp" line="35"/>
@@ -3280,7 +3280,7 @@ Address: %4
     <message>
         <location filename="../splashscreen.cpp" line="36"/>
         <source>The Darkcoin Core developers</source>
-        <translation type="unfinished"/>
+        <translation>暗黑币核心开发人员</translation>
     </message>
     <message>
         <location filename="../splashscreen.cpp" line="37"/>
@@ -4999,7 +4999,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="328"/>
         <source>Wallet options:</source>
-        <translation type="unfinished"/>
+        <translation>钱包选项：</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="329"/>
@@ -5029,7 +5029,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="334"/>
         <source>on startup</source>
-        <translation type="unfinished"/>
+        <translation>正在启动</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="335"/>

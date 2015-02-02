@@ -484,7 +484,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="292"/>
         <source>Encrypt the private keys that belong to your wallet</source>
-        <translation type="unfinished"/>
+        <translation>Криптирай частните ключове принадлежащи към твоя портфейл</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="294"/>
@@ -579,7 +579,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="314"/>
         <source>Show the list of used sending addresses and labels</source>
-        <translation type="unfinished"/>
+        <translation>Покажи списъкът от използвани изходящи адреси и етикети</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="315"/>
@@ -589,7 +589,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="316"/>
         <source>Show the list of used receiving addresses and labels</source>
-        <translation type="unfinished"/>
+        <translation>Покажи списъкът от използвани входящи адреси и етикети</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="318"/>
@@ -716,7 +716,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="735"/>
         <source>Last received block was generated %1 ago.</source>
-        <translation type="unfinished"/>
+        <translation>Последният получен блок беше генериран преди %1.</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="737"/>
@@ -807,7 +807,7 @@ Address: %4
         <location filename="../forms/coincontroldialog.ui" line="48"/>
         <location filename="../forms/ui_coincontroldialog.h" line="320"/>
         <source>Quantity:</source>
-        <translation type="unfinished"/>
+        <translation>Количество:</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="77"/>
@@ -1050,7 +1050,7 @@ Address: %4
     <message>
         <location filename="../coincontroldialog.cpp" line="615"/>
         <source>This label turns red, if the transaction size is greater than 1000 bytes.</source>
-        <translation type="unfinished"/>
+        <translation>Етикетът става червен, ако размерът на транзакцията е по-голям от 1000 байта.</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="616"/>
@@ -1066,7 +1066,7 @@ Address: %4
     <message>
         <location filename="../coincontroldialog.cpp" line="619"/>
         <source>Transactions with higher priority are more likely to get included into a block.</source>
-        <translation type="unfinished"/>
+        <translation>Транзакции с по-висок приоритет е по-вероятно да бъдат включени в блок.</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="620"/>
@@ -1398,7 +1398,7 @@ Address: %4
         <location filename="../forms/intro.ui" line="69"/>
         <location filename="../forms/ui_intro.h" line="187"/>
         <source>Use the default data directory</source>
-        <translation type="unfinished"/>
+        <translation>Използвайте директория за данните по подразбиране</translation>
     </message>
     <message>
         <location filename="../forms/intro.ui" line="76"/>
@@ -2491,7 +2491,7 @@ Address: %4
         <location filename="../forms/receivecoinsdialog.ui" line="278"/>
         <location filename="../forms/ui_receivecoinsdialog.h" line="293"/>
         <source>Remove the selected entries from the list</source>
-        <translation type="unfinished"/>
+        <translation>Премахни избраните позиции от списъка</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="281"/>
@@ -2617,7 +2617,7 @@ Address: %4
     <message>
         <location filename="../recentrequeststablemodel.cpp" line="71"/>
         <source>(no message)</source>
-        <translation type="unfinished"/>
+        <translation>(няма съобщение)</translation>
     </message>
     <message>
         <location filename="../recentrequeststablemodel.cpp" line="79"/>
@@ -2652,19 +2652,19 @@ Address: %4
         <location filename="../forms/sendcoinsdialog.ui" line="117"/>
         <location filename="../forms/ui_sendcoinsdialog.h" line="518"/>
         <source>automatically selected</source>
-        <translation type="unfinished"/>
+        <translation>автоматично избрано</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="136"/>
         <location filename="../forms/ui_sendcoinsdialog.h" line="519"/>
         <source>Insufficient funds!</source>
-        <translation type="unfinished"/>
+        <translation>Недостатъчно средства!</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="225"/>
         <location filename="../forms/ui_sendcoinsdialog.h" line="520"/>
         <source>Quantity:</source>
-        <translation type="unfinished"/>
+        <translation>Количество:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="260"/>
@@ -2982,7 +2982,7 @@ Address: %4
         <location filename="../forms/sendcoinsentry.ui" line="124"/>
         <location filename="../forms/ui_sendcoinsentry.h" line="445"/>
         <source>Enter a label for this address to add it to the list of used addresses</source>
-        <translation type="unfinished"/>
+        <translation>Въведете име за този адрес, за да го добавите в списъка с адреси</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="131"/>
