@@ -40,6 +40,8 @@ bool ProcessConsensusVote(CConsensusVote& ctx);
 // keep transaction locks in memory for an hour
 void CleanTransactionLocksList();
 
+int64_t GetAverageVoteTime();
+
 class CConsensusVote
 {
 public:

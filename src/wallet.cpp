@@ -1250,7 +1250,7 @@ void CWallet::AvailableCoins(vector<COutput>& vCoins, bool fOnlyConfirmed, const
                 continue;
 
             int nDepth = pcoin->GetDepthInMainChain(false);
-            if (nDepth < minimum_confirmations)
+            if (nDepth <= minimum_confirmations)
                 continue;
 
             for (unsigned int i = 0; i < pcoin->vout.size(); i++) {
