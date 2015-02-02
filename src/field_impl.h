@@ -29,6 +29,7 @@ static void secp256k1_fe_get_hex(char *r64, const secp256k1_fe_t *a) {
     secp256k1_fe_normalize(&b);
     secp256k1_fe_get_b32(tmp, &b);
     for (i=0; i<32; i++) {
+        /* Hex character table. */
         static const char *c = "0123456789ABCDEF";
         r64[2*i]   = c[(tmp[i] >> 4) & 0xF];
         r64[2*i+1] = c[(tmp[i]) & 0xF];
@@ -38,6 +39,7 @@ static void secp256k1_fe_get_hex(char *r64, const secp256k1_fe_t *a) {
 static int secp256k1_fe_set_hex(secp256k1_fe_t *r, const char *a64) {
     int i;
     unsigned char tmp[32];
+    /* Byte to hex value table. */
     static const int cvt[256] = {0, 0, 0, 0, 0, 0, 0,0,0,0,0,0,0,0,0,0,
                                  0, 0, 0, 0, 0, 0, 0,0,0,0,0,0,0,0,0,0,
                                  0, 0, 0, 0, 0, 0, 0,0,0,0,0,0,0,0,0,0,
@@ -203,6 +205,7 @@ static void secp256k1_fe_inv_var(secp256k1_fe_t *r, const secp256k1_fe_t *a) {
     secp256k1_fe_inv(r, a);
 #elif defined(USE_FIELD_INV_NUM)
     secp256k1_num_t n, m;
+    /* secp256k1 field prime, value p defined in "Standards for Efficient Cryptography" (SEC2) 2.7.1. */
     static const unsigned char prime[32] = {
         0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
         0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
