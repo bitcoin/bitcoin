@@ -82,7 +82,7 @@ Value getnewaddress(const Array& params, bool fHelp)
             "If 'account' is specified (DEPRECATED), it is added to the address book \n"
             "so payments received with the address will be credited to 'account'.\n"
             "\nArguments:\n"
-            "1. \"account\"        (string, optional) DEPRECATED. The account name for the address to be linked to. if not provided, the default account \"\" is used. It can also be set to the empty string \"\" to represent the default account. The account does not need to exist, it will be created if there is no account by the given name.\n"
+            "1. \"account\"        (string, optional) DEPRECATED. The account name for the address to be linked to. If not provided, the default account \"\" is used. It can also be set to the empty string \"\" to represent the default account. The account does not need to exist, it will be created if there is no account by the given name.\n"
             "\nResult:\n"
             "\"bitcoinaddress\"    (string) The new bitcoin address\n"
             "\nExamples:\n"
@@ -319,7 +319,7 @@ void SendMoney(const CTxDestination &address, CAmount nValue, CWalletTx& wtxNew)
     if (pwalletMain->IsLocked())
     {
         strError = "Error: Wallet locked, unable to create transaction!";
-        LogPrintf("SendMoney() : %s", strError);
+        LogPrintf("SendMoney(): %s", strError);
         throw JSONRPCError(RPC_WALLET_ERROR, strError);
     }
 
@@ -333,7 +333,7 @@ void SendMoney(const CTxDestination &address, CAmount nValue, CWalletTx& wtxNew)
     {
         if (nValue + nFeeRequired > pwalletMain->GetBalance())
             strError = strprintf("Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds!", FormatMoney(nFeeRequired));
-        LogPrintf("SendMoney() : %s\n", strError);
+        LogPrintf("SendMoney(): %s\n", strError);
         throw JSONRPCError(RPC_WALLET_ERROR, strError);
     }
     if (!pwalletMain->CommitTransaction(wtxNew, reservekey))

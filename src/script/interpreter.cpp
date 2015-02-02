@@ -60,7 +60,7 @@ bool CastToBool(const valtype& vch)
 static inline void popstack(vector<valtype>& stack)
 {
     if (stack.empty())
-        throw runtime_error("popstack() : stack empty");
+        throw runtime_error("popstack(): stack empty");
     stack.pop_back();
 }
 
