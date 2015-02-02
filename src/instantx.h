@@ -35,7 +35,7 @@ void ProcessMessageInstantX(CNode* pfrom, std::string& strCommand, CDataStream& 
 void DoConsensusVote(CTransaction& tx, bool approved, int64_t nBlockHeight);
 
 //process consensus vote message
-void ProcessConsensusVote(CConsensusVote& ctx);
+bool ProcessConsensusVote(CConsensusVote& ctx);
 
 // keep transaction locks in memory for an hour
 void CleanTransactionLocksList();
@@ -44,7 +44,6 @@ class CConsensusVote
 {
 public:
     CTxIn vinMasternode;
-    bool approved;
     uint256 txHash;
     int nBlockHeight;
     std::vector<unsigned char> vchMasterNodeSignature;
@@ -58,7 +57,6 @@ public:
     (
         READWRITE(txHash);
         READWRITE(vinMasternode);
-        READWRITE(approved);
         READWRITE(vchMasterNodeSignature);
         READWRITE(nBlockHeight);
     )
@@ -74,7 +72,6 @@ public:
 
     bool SignaturesValid();
     int CountSignatures();
-    bool AllInFavor();
     void AddSignature(CConsensusVote cv);
 
     uint256 GetHash()
