@@ -977,7 +977,7 @@ bool AppInit2(boost::thread_group& threadGroup)
             } catch (const boost::filesystem::filesystem_error& e) {
                 // Note: hardlink creation failing is not a disaster, it just means
                 // blocks will get re-downloaded from peers.
-                LogPrintf("Error hardlinking blk%04u.dat : %s\n", i, e.what());
+                LogPrintf("Error hardlinking blk%04u.dat: %s\n", i, e.what());
                 break;
             }
         }
