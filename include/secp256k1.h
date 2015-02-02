@@ -78,7 +78,7 @@ SECP256K1_WARN_UNUSED_RESULT int secp256k1_ecdsa_verify(
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(4);
 
 /** A pointer to a function to deterministically generate a nonce.
- * Returns: 1 if a nonce was succesfully generated. 0 will cause signing to fail.
+ * Returns: 1 if a nonce was successfully generated. 0 will cause signing to fail.
  * In:      msg32:     the 32-byte message hash being verified (will not be NULL)
  *          key32:     pointer to a 32-byte secret key (will not be NULL)
  *          attempt:   how many iterations we have tried to find a nonce.
@@ -115,6 +115,32 @@ extern const secp256k1_nonce_function_t secp256k1_nonce_function_default;
  *  In/Out:  siglen: pointer to an int with the length of sig, which will be updated
  *                   to contain the actual signature length (<=72).
  * Requires starting using SECP256K1_START_SIGN.
+ *
+ * The sig always has an s value in the lower half of the range (From 0x1
+ * to 0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0,
+ * inclusive), unlike many other implementations.
+ * With ECDSA a third-party can can forge a second distinct signature
+ * of the same message given a single initial signature without knowing
+ * the key by setting s to its additive inverse mod-order, 'flipping' the
+ * sign of the random point R which is not included in the signature.
+ * Since the forgery is of the same message this isn't universally
+ * problematic, but in systems where message malleability or uniqueness
+ * of signatures is important this can cause issues.  This forgery can be
+ * blocked by all verifiers forcing signers to use a canonical form. The
+ * lower-S form reduces the size of signatures slightly on average when
+ * variable length encodings (such as DER) are used and is cheap to
+ * verify, making it a good choice. Security of always using lower-S is
+ * assured because anyone can trivially modify a signature after the
+ * fact to enforce this property.  Adjusting it inside the signing
+ * function avoids the need to re-serialize or have curve specific
+ * constants outside of the library.  By always using a canonical form
+ * even in applications where it isn't needed it becomes possible to
+ * impose a requirement later if a need is discovered.
+ * No other forms of ECDSA malleability are known and none seem likely,
+ * but there is no formal proof that ECDSA, even with this additional
+ * restriction, is free of other malleability.  Commonly used serialization
+ * schemes will also accept various non-unique encodings, so care should
+ * be taken when this property is required for an application.
  */
 int secp256k1_ecdsa_sign(
   const unsigned char *msg32,
