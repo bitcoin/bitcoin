@@ -1096,7 +1096,7 @@ int64_t CWallet::GetAnonymizedBalance() const
             if (pcoin->IsTrusted()){
                 for (unsigned int i = 0; i < pcoin->vout.size(); i++) {
 
-                    COutput out = COutput(pcoin, i, pcoin->GetDepthInMainChain());
+                    COutput out = COutput(pcoin, i, pcoin->GetDepthInMainChain(false));
                     CTxIn vin = CTxIn(out.tx->GetHash(), out.i);
 
                     if(IsSpent(out.tx->GetHash(), i) || !IsMine(pcoin->vout[i]) || !IsDenominated(vin)) continue;
@@ -1126,7 +1126,7 @@ double CWallet::GetAverageAnonymizedRounds() const
 
             for (unsigned int i = 0; i < pcoin->vout.size(); i++) {
 
-                COutput out = COutput(pcoin, i, pcoin->GetDepthInMainChain());
+                COutput out = COutput(pcoin, i, pcoin->GetDepthInMainChain(false));
                 CTxIn vin = CTxIn(out.tx->GetHash(), out.i);
 
                 if(IsSpent(out.tx->GetHash(), i) || !IsMine(pcoin->vout[i]) || !IsDenominated(vin)) continue;
@@ -1154,7 +1154,7 @@ int64_t CWallet::GetNormalizedAnonymizedBalance() const
             const CWalletTx* pcoin = &(*it).second;
             for (unsigned int i = 0; i < pcoin->vout.size(); i++) {
 
-                COutput out = COutput(pcoin, i, pcoin->GetDepthInMainChain());
+                COutput out = COutput(pcoin, i, pcoin->GetDepthInMainChain(false));
                 CTxIn vin = CTxIn(out.tx->GetHash(), out.i);
 
                 if(IsSpent(out.tx->GetHash(), i) || !IsMine(pcoin->vout[i]) || !IsDenominated(vin)) continue;
@@ -1179,10 +1179,10 @@ int64_t CWallet::GetDenominatedBalance(bool onlyDenom, bool onlyUnconfirmed) con
 
             for (unsigned int i = 0; i < pcoin->vout.size(); i++)
             {
-                COutput out = COutput(pcoin, i, pcoin->GetDepthInMainChain());
+                COutput out = COutput(pcoin, i, pcoin->GetDepthInMainChain(false));
                 CTxIn vin = CTxIn(out.tx->GetHash(), out.i);
 
-                bool unconfirmed = (!IsFinalTx(*pcoin) || (!pcoin->IsTrusted() && pcoin->GetDepthInMainChain() == 0));
+                bool unconfirmed = (!IsFinalTx(*pcoin) || (!pcoin->IsTrusted() && pcoin->GetDepthInMainChain(false) == 0));
 
                 if(IsSpent(out.tx->GetHash(), i)) continue;
                 if(!IsMine(pcoin->vout[i])) continue;
