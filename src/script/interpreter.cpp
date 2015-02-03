@@ -135,8 +135,8 @@ bool static IsValidSignatureEncoding(const std::vector<unsigned char> &sig) {
     // Check whether the R element is an integer.
     if (sig[2] != 0x02) return false;
 
-    // Zero-length integers are not allowed for R.
-    if (lenR == 0) return false;
+    // R needs to be between 1 and 33 bytes.
+    if (lenR == 0 || lenR > 33) return false;
 
     // Negative numbers are not allowed for R.
     if (sig[4] & 0x80) return false;
@@ -148,8 +148,8 @@ bool static IsValidSignatureEncoding(const std::vector<unsigned char> &sig) {
     // Check whether the S element is an integer.
     if (sig[lenR + 4] != 0x02) return false;
 
-    // Zero-length integers are not allowed for S.
-    if (lenS == 0) return false;
+    // S needs to be between 1 and 33 bytes.
+    if (lenS == 0 || lenS > 33) return false;
 
     // Negative numbers are not allowed for S.
     if (sig[lenR + 6] & 0x80) return false;
