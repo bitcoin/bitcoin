@@ -17,7 +17,18 @@
 
 using namespace std;
 
+<<<<<<< HEAD
 UniValue
+=======
+Value ping_overwrite_tests(const Array& params, bool fHelp)
+{
+    Object obj;
+    obj.push_back(Pair("Test", "123"));
+    return obj;
+}
+
+Array
+>>>>>>> [Modularization] add possibility to extend or overwrite RPC calls
 createArgs(int nRequired, const char* address1=NULL, const char* address2=NULL)
 {
     UniValue result(UniValue::VARR);
@@ -258,6 +269,24 @@ BOOST_AUTO_TEST_CASE(rpc_ban)
     o1 = ar[0].get_obj();
     adr = find_value(o1, "address");
     BOOST_CHECK_EQUAL(adr.get_str(), "2001:4d48:ac57:400:cacf:e9ff:fe1d:9c63/ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff");
+}
+
+BOOST_AUTO_TEST_CASE(rpc_flex_table)
+{
+    UniValue r = CallRPC(string("ping"));
+    BOOST_CHECK(r.is_null());
+ 
+    const CRPCCommand newCmd = { "network","testcmd",  &ping_overwrite_tests,true,false,false };
+    tableRPC.AddOrReplaceCommand(newCmd);
+    
+    BOOST_CHECK_NO_THROW(r = CallRPC(string("testcmd")));
+    BOOST_CHECK_EQUAL(find_value(r.get_obj(), "Test").get_str(), "123");
+    
+    const CRPCCommand newPingCmd = { "network","ping",  &ping_overwrite_tests,true,false,false };
+    tableRPC.AddOrReplaceCommand(newPingCmd);
+    
+    BOOST_CHECK_NO_THROW(r = CallRPC(string("ping")));
+    BOOST_CHECK_EQUAL(find_value(r.get_obj(), "Test").get_str(), "123");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
