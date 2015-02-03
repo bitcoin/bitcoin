@@ -273,6 +273,26 @@ server round-trip to execute.
 Other utilities "bitcoin-key" and "bitcoin-script" have been proposed, making
 key and script operations easily accessible via command line.
 
+Mining enhancements
+-------------------
+
+The `prioritisetransaction` RPC method has been added to enable miners to
+manipulate the priority of transactions on an individual basis.
+
+Bitcoin Core now supports BIP 22 long polling, so mining software can be
+notified immediately of new templates rather than having to poll periodically.
+
+Support for BIP 23 block proposals is now available in Bitcoin Core's
+`getblocktemplate` method. This enables miners to check the basic validity of
+their next block before expending work on it, reducing risks of accidental
+hardforks or mining invalid blocks.
+
+Two new options to control mining policy:
+- `-datacarrier=0/1` : Relay and mine "data carrier" (OP_RETURN) transactions
+if this is 1.
+- `-datacarriersize=n` : Maximum size, in bytes, we consider acceptable for
+"data carrier" outputs.
+
 0.10.0 Change log
 =================
 
