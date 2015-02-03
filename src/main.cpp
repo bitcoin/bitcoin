@@ -2892,6 +2892,34 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
             return state.DoS(100, error("CheckBlock() : more than one coinbase"),
                              REJECT_INVALID, "bad-cb-multiple");
 
+
+    // ----------- instantX transaction scanning -----------
+
+    std::map<uint256, CTransactionLock>::iterator it = mapTxLocks.begin();
+
+    while(it != mapTxLocks.end()) {
+        if(mapTxLockReq.count((*it).second.txHash)){
+            CTransaction& tx = mapTxLockReq[(*it).second.txHash];
+            for (unsigned int a = 0; a < tx.vin.size(); a++) {
+                for (unsigned int b = 0; b < block.vtx.size(); b++) {
+                    //we found the locked tx in the block
+                    if(tx.GetHash() == block.vtx[b].GetHash()) continue;
+
+                    for (unsigned int c = 0; c < block.vtx[b].vin.size(); c++) {
+                        if(tx.vin[a].prevout == block.vtx[b].vin[c].prevout) {
+                            return state.DoS(100, error("CheckBlock() : found conflicting transaction with transaction lock"),
+                                             REJECT_INVALID, "conflicting-tx-ix");
+                        }
+                    }
+                }
+            }
+        }
+        it++;
+    }
+    
+    
+    // ----------- masternode payments -----------
+
     bool MasternodePayments = false;
 
     if(TestNet()){
