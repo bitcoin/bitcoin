@@ -1945,7 +1945,7 @@ Adresse: %4</translation>
         <location filename="../forms/overviewpage.ui" line="846"/>
         <location filename="../forms/ui_overviewpage.h" line="491"/>
         <source>Start/Stop Mixing</source>
-        <translation>Starte/Stoppe das Mixen</translation>
+        <translation>Starte/Stoppe das Mischen</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="878"/>
@@ -2650,7 +2650,7 @@ Adresse: %4</translation>
         <location filename="../forms/sendcoinsdialog.ui" line="110"/>
         <location filename="../forms/ui_sendcoinsdialog.h" line="517"/>
         <source>Inputs...</source>
-        <translation>Eingaben...</translation>
+        <translation>Inputs...</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="117"/>
