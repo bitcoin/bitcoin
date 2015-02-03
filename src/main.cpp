@@ -26,6 +26,7 @@
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
+#include <boost/lexical_cast.hpp>
 
 using namespace std;
 using namespace boost;
@@ -1196,7 +1197,7 @@ int CMerkleTx::GetBlocksToMaturity() const
 {
     if (!IsCoinBase())
         return 0;
-    return max(0, (COINBASE_MATURITY+20) - GetDepthInMainChain());
+    return max(0, COINBASE_MATURITY - GetDepthInMainChain());
 }
 
 
@@ -2115,7 +2116,8 @@ bool DisconnectBlock(CBlock& block, CValidationState& state, CBlockIndex* pindex
 */
 bool DisconnectBlockAndInputs(CValidationState &state, CTransaction txLock)
 {
-/*    // All modifications to the coin state will be done in this cache.
+    /*
+    // All modifications to the coin state will be done in this cache.
     // Only when all have succeeded, we push it to pcoinsTip.
     CCoinsViewCache view(*pcoinsTip, true);
 
@@ -2126,7 +2128,9 @@ bool DisconnectBlockAndInputs(CValidationState &state, CTransaction txLock)
     bool foundConflictingTx = false;
 
     //remove anything conflicting in the memory pool
-    mempool.removeConflicts(txLock);
+    list<CTransaction> txConflicted;
+    mempool.removeConflicts(txLock, txConflicted);
+
 
     // List of what to disconnect (typically nothing)
     vector<CBlockIndex*> vDisconnect;
@@ -2136,7 +2140,7 @@ bool DisconnectBlockAndInputs(CValidationState &state, CTransaction txLock)
         pindexNew = BlockReading->pprev; //new best block
 
         CBlock block;
-        if (!block.ReadFromDisk(BlockReading))
+        if (!ReadBlockFromDisk(block, BlockReading))
             return state.Abort(_("Failed to read block"));
 
         // Queue memory transactions to resurrect.
@@ -2162,7 +2166,7 @@ bool DisconnectBlockAndInputs(CValidationState &state, CTransaction txLock)
     }
 
     if (vDisconnect.size() > 0) {
-        LogPrintf("REORGANIZE: Disconnect Conflicting Blocks %"PRIszu" blocks; %s..\n", vDisconnect.size(), pindexNew->GetBlockHash().ToString().c_str());
+        LogPrintf("REORGANIZE: Disconnect Conflicting Blocks %lli blocks; %s..\n", vDisconnect.size(), pindexNew->GetBlockHash().ToString().c_str());
         BOOST_FOREACH(CBlockIndex* pindex, vDisconnect) {
             LogPrintf(" -- disconnect %s\n", pindex->GetBlockHash().ToString().c_str());
         }
@@ -2172,10 +2176,10 @@ bool DisconnectBlockAndInputs(CValidationState &state, CTransaction txLock)
     vector<CTransaction> vResurrect;
     BOOST_FOREACH(CBlockIndex* pindex, vDisconnect) {
         CBlock block;
-        if (!block.ReadFromDisk(pindex))
+        if (!ReadBlockFromDisk(block, pindex))
             return state.Abort(_("Failed to read block"));
-        int64 nStart = GetTimeMicros();
-        if (!block.DisconnectBlock(state, pindex, view))
+        int64_t nStart = GetTimeMicros();
+        if (!DisconnectBlock(block, state, pindex, view))
             return error("DisconnectBlockAndInputs/SetBestBlock() : DisconnectBlock %s failed", pindex->GetBlockHash().ToString().c_str());
         if (fBenchmark)
             LogPrintf("- Disconnect: %.2fms\n", (GetTimeMicros() - nStart) * 0.001);
@@ -2197,21 +2201,7 @@ bool DisconnectBlockAndInputs(CValidationState &state, CTransaction txLock)
 
     }
 
-    // Make sure it's successfully written to disk before changing memory structure
-    bool fIsInitialDownload = IsInitialBlockDownload();
-    if (!fIsInitialDownload || pcoinsTip->GetCacheSize() > nCoinCacheSize) {
-        // Typical CCoins structures on disk are around 100 bytes in size.
-        // Pushing a new one to the database can cause it to be written
-        // twice (once in the log, and once in the tables). This is already
-        // an overestimation, as most will delete an existing entry or
-        // overwrite one. Still, use a conservative safety factor of 2.
-        if (!CheckDiskSpace(100 * 2 * 2 * pcoinsTip->GetCacheSize()))
-            return state.Error();
-        FlushBlockFile();
-        pblocktree->Sync();
-        if (!pcoinsTip->Flush())
-            return state.Abort(_("Failed to write to coin database"));
-    }
+    mempool.check(pcoinsTip);
 
     // At this point, all changes have been done to the database.
     // Proceed by updating the memory structures.
@@ -2225,11 +2215,12 @@ bool DisconnectBlockAndInputs(CValidationState &state, CTransaction txLock)
     BOOST_FOREACH(CTransaction& tx, vResurrect) {
         // ignore validation errors in resurrected transactions
         CValidationState stateDummy;
-        if (!tx.AcceptToMemoryPool(stateDummy, true, false))
+        if (!tx.AcceptToMemoryPool(mempool, stateDummy, tx, true, false))
             mempool.remove(tx, true);
     }
 
     // Update best block in wallet (so we can detect restored wallets)
+
     if ((pindexNew->nHeight % 20160) == 0 || (!fIsInitialDownload && (pindexNew->nHeight % 144) == 0))
     {
         const CBlockLocator locator(pindexNew);
@@ -2274,8 +2265,8 @@ bool DisconnectBlockAndInputs(CValidationState &state, CTransaction txLock)
         boost::replace_all(strCmd, "%s", hashBestChain.GetHex());
         boost::thread t(runCommand, strCmd); // thread runs free
     }
-*/
-    return true;
+
+*/    return true;
 }
 
 void static FlushBlockFile(bool fFinalize = false)
@@ -4002,13 +3993,27 @@ void static ProcessGetData(CNode* pfrom)
                     }
                 }
                 if (!pushed && inv.type == MSG_TX) {
-                    CTransaction tx;
-                    if (mempool.lookup(inv.hash, tx)) {
+
+                    if(mapDarksendBroadcastTxes.count(inv.hash)){
                         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
                         ss.reserve(1000);
-                        ss << tx;
-                        pfrom->PushMessage("tx", ss);
+                        ss <<
+                            mapDarksendBroadcastTxes[inv.hash].tx <<
+                            mapDarksendBroadcastTxes[inv.hash].vin <<
+                            mapDarksendBroadcastTxes[inv.hash].vchSig <<
+                            mapDarksendBroadcastTxes[inv.hash].sigTime;
+
+                        pfrom->PushMessage("dstx", ss);
                         pushed = true;
+                    } else {
+                        CTransaction tx;
+                        if (mempool.lookup(inv.hash, tx)) {
+                            CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
+                            ss.reserve(1000);
+                            ss << tx;
+                            pfrom->PushMessage("tx", ss);
+                            pushed = true;
+                        }
                     }
                 }
                 if (!pushed) {
@@ -4381,12 +4386,58 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
     }
 
 
-    else if (strCommand == "tx")
+    else if (strCommand == "tx"|| strCommand == "dstx")
     {
         vector<uint256> vWorkQueue;
         vector<uint256> vEraseQueue;
         CTransaction tx;
-        vRecv >> tx;
+
+        //masternode signed transaction
+        bool allowFree = false;
+        CTxIn vin;
+        vector<unsigned char> vchSig;
+        int64_t sigTime;
+
+        if(strCommand == "tx") {
+            vRecv >> tx;
+        } else if (strCommand == "dstx") {
+            //these allow masternodes to publish a limited amount of free transactions
+            vRecv >> tx >> vin >> vchSig >> sigTime;
+
+            BOOST_FOREACH(CMasterNode& mn, vecMasternodes) {
+                if(mn.vin == vin) {
+                    if(!mn.allowFreeTx){
+                        //multiple peers can send us a valid masternode transaction
+                        if(fDebug) LogPrintf("dstx: Masternode sending too many transactions %s\n", tx.GetHash().ToString().c_str());
+                        return true;
+                    }
+
+                    std::string strMessage = tx.GetHash().ToString() + boost::lexical_cast<std::string>(sigTime);
+
+                    std::string errorMessage = "";
+                    if(!darkSendSigner.VerifyMessage(mn.pubkey2, vchSig, strMessage, errorMessage)){
+                        LogPrintf("dstx: Got bad masternode address signature %s \n", vin.ToString().c_str());
+                        //pfrom->Misbehaving(20);
+                        return false;
+                    }
+
+                    LogPrintf("dstx: Got Masternode transaction %s\n", tx.GetHash().ToString().c_str());
+
+                    allowFree = true;
+                    mn.allowFreeTx = false;
+
+                    if(!mapDarksendBroadcastTxes.count(tx.GetHash())){
+                        CDarksendBroadcastTx dstx;
+                        dstx.tx = tx;
+                        dstx.vin = vin;
+                        dstx.vchSig = vchSig;
+                        dstx.sigTime = sigTime;
+
+                        mapDarksendBroadcastTxes.insert(make_pair(tx.GetHash(), dstx));
+                    }
+                }
+            }
+        }
 
         CInv inv(MSG_TX, tx.GetHash());
         pfrom->AddInventoryKnown(inv);
@@ -4395,7 +4446,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 
         bool fMissingInputs = false;
         CValidationState state;
-        if (AcceptToMemoryPool(mempool, state, tx, true, &fMissingInputs))
+        if (AcceptToMemoryPool(mempool, state, tx, true, &fMissingInputs, allowFree))
         {
             mempool.check(pcoinsTip);
             RelayTransaction(tx, inv.hash);
