@@ -359,6 +359,8 @@ void OverviewPage::darkSendStatus()
     int accepted = darkSendPool.GetLastEntryAccepted();
 
     std::ostringstream convert;
+    
+    convert << "Last Darksend message:\n";
 
     if(state == POOL_STATUS_ACCEPTING_ENTRIES) {
         if(entries == 0) {
