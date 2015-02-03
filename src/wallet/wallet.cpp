@@ -3,7 +3,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "wallet.h"
+#include "wallet/wallet.h"
 
 #include "base58.h"
 #include "checkpoints.h"
