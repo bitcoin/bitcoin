@@ -41,7 +41,7 @@ int main(void) {
     bench_sign_t data;
     secp256k1_start(SECP256K1_START_SIGN);
 
-    run_benchmark(bench_sign, bench_sign_setup, NULL, &data, 10, 20000);
+    run_benchmark("ecdsa_sign", bench_sign, bench_sign_setup, NULL, &data, 10, 20000);
 
     secp256k1_stop();
     return 0;

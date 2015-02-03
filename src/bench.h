@@ -17,7 +17,18 @@ static double gettimedouble(void) {
     return tv.tv_usec * 0.000001 + tv.tv_sec;
 }
 
-void run_benchmark(void (*benchmark)(void*), void (*setup)(void*), void (*teardown)(void*), void* data, int count, int iter) {
+void print_number(double x) {
+    double y = x;
+    int c = 0;
+    if (y < 0.0) y = -y;
+    while (y < 100.0) {
+        y *= 10.0;
+        c++;
+    }
+    printf("%.*f", c, x);
+}
+
+void run_benchmark(char *name, void (*benchmark)(void*), void (*setup)(void*), void (*teardown)(void*), void* data, int count, int iter) {
     int i;
     double min = HUGE_VAL;
     double sum = 0.0;
@@ -33,7 +44,13 @@ void run_benchmark(void (*benchmark)(void*), void (*setup)(void*), void (*teardo
         if (total > max) max = total;
         sum += total;
     }
-    printf("min %.3fus / avg %.3fus / max %.3fus\n", min * 1000000.0 / iter, (sum / count) * 1000000.0 / iter, max * 1000000.0 / iter);
+    printf("%s: min ", name);
+    print_number(min * 1000000.0 / iter);
+    printf("us / avg ");
+    print_number((sum / count) * 1000000.0 / iter);
+    printf("us / avg ");
+    print_number(max * 1000000.0 / iter);
+    printf("us\n");
 }
 
 #endif
