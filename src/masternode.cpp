@@ -18,8 +18,6 @@ map<uint256, int> mapSeenMasternodeScanningErrors;
 std::map<CNetAddr, int64_t> askedForMasternodeList;
 // which masternodes we've asked for
 std::map<COutPoint, int64_t> askedForMasternodeListEntry;
-// which masternodes we've asked for
-std::map<int, CScript> cacheBlockPayee;
 
 // manage the masternode connections
 void ProcessMasternodeConnections(){
@@ -68,6 +66,8 @@ void ProcessMessageMasternode(CNode* pfrom, std::string& strCommand, CDataStream
         }
 
         bool isLocal = addr.IsRFC1918() || addr.IsLocal();
+        if(RegTest()) isLocal = false;
+
         std::string vchPubKey(pubkey.begin(), pubkey.end());
         std::string vchPubKey2(pubkey2.begin(), pubkey2.end());
 
@@ -359,22 +359,6 @@ void ProcessMessageMasternode(CNode* pfrom, std::string& strCommand, CDataStream
         if(masternodePayments.AddWinningMasternode(winner)){
             masternodePayments.Relay(winner);
         }
-
-        if(chainActive.Tip()){
-            //cache payments
-            int success = 0;
-            int fail = 0;
-            for(int nBlockHeight = chainActive.Tip()->nHeight; nBlockHeight < chainActive.Tip()->nHeight+10; nBlockHeight++){
-                CScript payee;
-                if(masternodePayments.GetBlockPayee(nBlockHeight, payee)){
-                    success++;
-                } else {
-                    fail++;
-                }
-            }
-            LogPrintf("mnw - cached block payees - success %d fail %d\n", success, fail);
-        }
-
     }
 }
 
@@ -661,29 +645,10 @@ uint64_t CMasternodePayments::CalculateScore(uint256 blockHash, CTxIn& vin)
 
 bool CMasternodePayments::GetBlockPayee(int nBlockHeight, CScript& payee)
 {
-
-    // if it's cached, use it
-    if(cacheBlockPayee.count(nBlockHeight)){
-        payee = cacheBlockPayee[nBlockHeight];
-        return true;
-    }
-
     BOOST_FOREACH(CMasternodePaymentWinner& winner, vWinning){
         if(winner.nBlockHeight == nBlockHeight) {
-
-            CTransaction tx;
-            uint256 hash;
-            if(GetTransaction(winner.vin.prevout.hash, tx, hash, true)){
-                BOOST_FOREACH(CTxOut out, tx.vout){
-                    if(out.nValue == 1000*COIN){
-                        payee = out.scriptPubKey;
-                        cacheBlockPayee.insert(make_pair(nBlockHeight, payee));
-                        return true;
-                    }
-                }
-            }
-
-            return false;
+            payee = winner.payee;
+            return true;
         }
     }
 
@@ -718,6 +683,7 @@ bool CMasternodePayments::AddWinningMasternode(CMasternodePaymentWinner& winnerI
             if(winner.score < winnerIn.score){
                 winner.score = winnerIn.score;
                 winner.vin = winnerIn.vin;
+                winner.payee = winnerIn.payee;
                 winner.vchSig = winnerIn.vchSig;
                 return true;
             }
@@ -747,20 +713,6 @@ void CMasternodePayments::CleanPaymentList()
             break;
         }
     }
-}
-
-int CMasternodePayments::LastPayment(CMasterNode& mn)
-{
-    if(chainActive.Tip() == NULL) return 0;
-
-    int ret = mn.GetMasternodeInputAge();
-
-    BOOST_FOREACH(CMasternodePaymentWinner& winner, vWinning){
-        if(winner.vin == mn.vin && chainActive.Tip()->nHeight - winner.nBlockHeight < ret)
-            ret = chainActive.Tip()->nHeight - winner.nBlockHeight;
-    }
-
-    return ret;
 }
 
 bool CMasternodePayments::ProcessBlock(int nBlockHeight)
@@ -795,6 +747,8 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
         winner.score = 0;
         winner.nBlockHeight = nBlockHeight;
         winner.vin = mn.vin;
+        winner.payee.SetDestination(mn.pubkey.GetID());
+
         break;
     }
 
