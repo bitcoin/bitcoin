@@ -1365,8 +1365,7 @@ bool CWallet::SelectCoinsMinConf(int64_t nTargetValue, int nConfMine, int nConfT
     for (unsigned int tryDenom = 0; tryDenom < 2; tryDenom++)
     {
         if (fDebug) LogPrint("selectcoins", "tryDenom: %d\n", tryDenom);
-        setCoinsRet.clear();
-        nValueRet = 0;
+        vValue.clear();
         nTotalLower = 0;
 
         BOOST_FOREACH(COutput output, vCoins)
