@@ -835,6 +835,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
         CTxMemPoolEntry entry(tx, nFees, GetTime(), dPriority, chainActive.Height(), mempool.HasNoInputsOf(tx));
         unsigned int nSize = entry.GetTxSize();
 
+        bool fValidateFee = nFees >= ::minRelayTxFee.GetFee(nSize);
         if (fLimitFree) {
             double dPriorityDelta = 0;
             CAmount nFeeDelta = 0;
@@ -845,21 +846,20 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
                 //   to be considered to fall into this category. We don't want to encourage sending
                 //   multiple transactions instead of one big transaction to avoid fees.
                   (fAllowFree && nSize < (DEFAULT_BLOCK_PRIORITY_SIZE - 1000))))
-                if (nFees < ::minRelayTxFee.GetFee(nSize))
+                if (!fValidateFee)
                     return state.DoS(0, error("AcceptToMemoryPool: not enough fees %s, %d < %d",
                                               hash.ToString(), nFees, ::minRelayTxFee.GetFee(nSize)),
                                      REJECT_INSUFFICIENTFEE, "insufficient fee");
         }
 
         // Require that free transactions have sufficient priority to be mined in the next block.
-        if (GetBoolArg("-relaypriority", true) && nFees < ::minRelayTxFee.GetFee(nSize) && !AllowFree(view.GetPriority(tx, chainActive.Height() + 1))) {
+        if (GetBoolArg("-relaypriority", true) && !fValidateFee && !AllowFree(view.GetPriority(tx, chainActive.Height() + 1)))
             return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "insufficient priority");
-        }
 
         // Continuously rate-limit free (really, very-low-fee) transactions
         // This mitigates 'penny-flooding' -- sending thousands of free transactions just to
         // be annoying or make others' transactions take longer to confirm.
-        if (fLimitFree && nFees < ::minRelayTxFee.GetFee(nSize))
+        if (fLimitFree && !fValidateFee)
         {
             static CCriticalSection csFreeLimiter;
             static double dFreeCount;
