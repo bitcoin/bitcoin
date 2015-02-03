@@ -1096,7 +1096,7 @@ int64_t CWallet::GetAnonymizedBalance() const
             if (pcoin->IsTrusted()){
                 for (unsigned int i = 0; i < pcoin->vout.size(); i++) {
 
-                    COutput out = COutput(pcoin, i, pcoin->GetDepthInMainChain());
+                    COutput out = COutput(pcoin, i, pcoin->GetDepthInMainChain(false));
                     CTxIn vin = CTxIn(out.tx->GetHash(), out.i);
 
                     if(IsSpent(out.tx->GetHash(), i) || !IsMine(pcoin->vout[i]) || !IsDenominated(vin)) continue;
@@ -1126,7 +1126,7 @@ double CWallet::GetAverageAnonymizedRounds() const
 
             for (unsigned int i = 0; i < pcoin->vout.size(); i++) {
 
-                COutput out = COutput(pcoin, i, pcoin->GetDepthInMainChain());
+                COutput out = COutput(pcoin, i, pcoin->GetDepthInMainChain(false));
                 CTxIn vin = CTxIn(out.tx->GetHash(), out.i);
 
                 if(IsSpent(out.tx->GetHash(), i) || !IsMine(pcoin->vout[i]) || !IsDenominated(vin)) continue;
@@ -1154,7 +1154,7 @@ int64_t CWallet::GetNormalizedAnonymizedBalance() const
             const CWalletTx* pcoin = &(*it).second;
             for (unsigned int i = 0; i < pcoin->vout.size(); i++) {
 
-                COutput out = COutput(pcoin, i, pcoin->GetDepthInMainChain());
+                COutput out = COutput(pcoin, i, pcoin->GetDepthInMainChain(false));
                 CTxIn vin = CTxIn(out.tx->GetHash(), out.i);
 
                 if(IsSpent(out.tx->GetHash(), i) || !IsMine(pcoin->vout[i]) || !IsDenominated(vin)) continue;
@@ -1179,10 +1179,10 @@ int64_t CWallet::GetDenominatedBalance(bool onlyDenom, bool onlyUnconfirmed) con
 
             for (unsigned int i = 0; i < pcoin->vout.size(); i++)
             {
-                COutput out = COutput(pcoin, i, pcoin->GetDepthInMainChain());
+                COutput out = COutput(pcoin, i, pcoin->GetDepthInMainChain(false));
                 CTxIn vin = CTxIn(out.tx->GetHash(), out.i);
 
-                bool unconfirmed = (!IsFinalTx(*pcoin) || (!pcoin->IsTrusted() && pcoin->GetDepthInMainChain() == 0));
+                bool unconfirmed = (!IsFinalTx(*pcoin) || (!pcoin->IsTrusted() && pcoin->GetDepthInMainChain(false) == 0));
 
                 if(IsSpent(out.tx->GetHash(), i)) continue;
                 if(!IsMine(pcoin->vout[i])) continue;
@@ -1229,7 +1229,7 @@ int64_t CWallet::GetImmatureBalance() const
 }
 
 // populate vCoins with vector of spendable COutputs
-void CWallet::AvailableCoins(vector<COutput>& vCoins, bool fOnlyConfirmed, const CCoinControl *coinControl, AvailableCoinsType coin_type, int minimum_confirmations) const
+void CWallet::AvailableCoins(vector<COutput>& vCoins, bool fOnlyConfirmed, const CCoinControl *coinControl, AvailableCoinsType coin_type, bool useIX) const
 {
     vCoins.clear();
 
@@ -1250,7 +1250,8 @@ void CWallet::AvailableCoins(vector<COutput>& vCoins, bool fOnlyConfirmed, const
                 continue;
 
             int nDepth = pcoin->GetDepthInMainChain(false);
-            if (nDepth <= minimum_confirmations)
+            // do not use IX coins until we have at least 1 blockchain confirmation
+            if (useIX && nDepth < 1)
                 continue;
 
             for (unsigned int i = 0; i < pcoin->vout.size(); i++) {
@@ -1466,10 +1467,10 @@ bool CWallet::SelectCoinsMinConf(int64_t nTargetValue, int nConfMine, int nConfT
     return true;
 }
 
-bool CWallet::SelectCoins(int64_t nTargetValue, set<pair<const CWalletTx*,unsigned int> >& setCoinsRet, int64_t& nValueRet, const CCoinControl* coinControl, AvailableCoinsType coin_type, int minimum_confirmations) const
+bool CWallet::SelectCoins(int64_t nTargetValue, set<pair<const CWalletTx*,unsigned int> >& setCoinsRet, int64_t& nValueRet, const CCoinControl* coinControl, AvailableCoinsType coin_type, bool useIX) const
 {
     vector<COutput> vCoins;
-    AvailableCoins(vCoins, true, coinControl, ALL_COINS, minimum_confirmations);
+    AvailableCoins(vCoins, true, coinControl, ALL_COINS, useIX);
 
     //if we're doing only denominated, we need to round up to the nearest .1DRK
     if(coin_type == ONLY_DENOMINATED){
@@ -1846,9 +1847,8 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, int64_t> >& vecSend,
                 // Choose coins to use
                 set<pair<const CWalletTx*,unsigned int> > setCoins;
                 int64_t nValueIn = 0;
-                int minconfirmations = 0;
-                if (useIX) minconfirmations = 5;
-                if (!SelectCoins(nTotalValue, setCoins, nValueIn, coinControl, coin_type, minconfirmations))
+
+                if (!SelectCoins(nTotalValue, setCoins, nValueIn, coinControl, coin_type, useIX))
                 {
                     if(coin_type == ALL_COINS)
                         strFailReason = _("Insufficient funds");
