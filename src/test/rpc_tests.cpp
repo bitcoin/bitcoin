@@ -16,6 +16,13 @@
 using namespace std;
 using namespace json_spirit;
 
+Value ping_overwrite_tests(const Array& params, bool fHelp)
+{
+    Object obj;
+    obj.push_back(Pair("Test", "123"));
+    return obj;
+}
+
 Array
 createArgs(int nRequired, const char* address1=NULL, const char* address2=NULL)
 {
@@ -154,5 +161,25 @@ BOOST_AUTO_TEST_CASE(rpc_boostasiotocnetaddr)
     // v4 mapped must be interpreted as IPv4
     BOOST_CHECK_EQUAL(BoostAsioToCNetAddr(boost::asio::ip::address::from_string("::ffff:127.0.0.1")).ToString(), "127.0.0.1");
 }
+
+BOOST_AUTO_TEST_CASE(rpc_flex_table)
+{
+    Value r = CallRPC(string("ping"));
+    BOOST_CHECK(r.is_null());
+ 
+    const CRPCCommand newCmd = { "network","testcmd",  &ping_overwrite_tests,true,false,false };
+    tableRPC.AddOrReplaceCommand(newCmd);
+    
+    BOOST_CHECK_NO_THROW(r = CallRPC(string("testcmd")));
+    BOOST_CHECK_EQUAL(find_value(r.get_obj(), "Test").get_str(), "123");
+    
+    const CRPCCommand newPingCmd = { "network","ping",  &ping_overwrite_tests,true,false,false };
+    tableRPC.AddOrReplaceCommand(newPingCmd);
+    
+    BOOST_CHECK_NO_THROW(r = CallRPC(string("ping")));
+    BOOST_CHECK_EQUAL(find_value(r.get_obj(), "Test").get_str(), "123");
+}
+
+
 
 BOOST_AUTO_TEST_SUITE_END()
