@@ -6,7 +6,7 @@
 
 #include "base58.h"
 #include "timedata.h"
-#include "wallet.h"
+#include "wallet/wallet.h"
 
 #include <stdint.h>
 

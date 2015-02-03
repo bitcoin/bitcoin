@@ -10,7 +10,7 @@
 #include "script/sign.h"
 
 #ifdef ENABLE_WALLET
-#include "wallet_ismine.h"
+#include "wallet/wallet_ismine.h"
 #endif
 
 #include <vector>
