@@ -84,7 +84,7 @@ void ProcessMessageInstantX(CNode* pfrom, std::string& strCommand, CDataStream& 
             return;
 
         } else {
-            mapTxLockReqRejected.insert(make_pair(inv.hash, tx));
+            mapTxLockReqRejected.insert(make_pair(tx.GetHash(), tx));
 
             // can we get the conflicting transaction as proof?
 
@@ -95,6 +95,31 @@ void ProcessMessageInstantX(CNode* pfrom, std::string& strCommand, CDataStream& 
                 pfrom->addr.ToString().c_str(), pfrom->cleanSubVer.c_str(),
                 tx.GetHash().ToString().c_str()
             );
+
+            // resolve conflicts
+            /*std::map<uint256, CTransactionLock>::iterator i = mapTxLocks.find(tx.GetHash());
+            if (i != mapTxLocks.end()){
+                if((*i).second.CountSignatures() >= INSTANTX_SIGNATURES_REQUIRED){
+                    LogPrintf("ProcessMessageInstantX::txlreq - Found IX lock\n");
+
+                    uint256 txHash = (*i).second.txHash;
+                    CValidationState state;
+                    bool fMissingInputs = false;
+                    DisconnectBlockAndInputs(state, mapTxLockReqRejected[txHash]);
+
+                    if (AcceptToMemoryPool(mempool, state, tx, true, &fMissingInputs))
+                    {
+                        LogPrintf("ProcessMessageInstantX::txlreq - Transaction Lock Request : accepted (resolved) %s\n",
+                            pfrom->addr.ToString().c_str(), pfrom->cleanSubVer.c_str(),
+                            tx.GetHash().ToString().c_str()
+                        );
+                    } else {
+                        LogPrintf("ERROR: InstantX::ProcessConsensusVote - Transaction Lock Request : rejected (failed to resolve) %s\n",
+                            tx.GetHash().ToString().c_str()
+                        );
+                    }
+                }
+            }*/
 
             //record prevout, increment the amount of times seen. Ban if over 100
 
@@ -222,10 +247,31 @@ bool ProcessConsensusVote(CConsensusVote& ctx)
         (*i).second.AddSignature(ctx);
         if((*i).second.CountSignatures() >= INSTANTX_SIGNATURES_REQUIRED){
             LogPrintf("InstantX::ProcessConsensusVote - Transaction Lock Is Complete %s !\n", (*i).second.GetHash().ToString().c_str());
-            
+
             if(pwalletMain->UpdatedTransaction((*i).second.txHash)){
                 nCompleteTXLocks++;
             }
+
+            // resolve conflicts
+            /*
+            //if this tx lock was rejected, we need to remove the conflicting blocks
+            if(mapTxLockReqRejected.count((*i).second.txHash)){
+                CValidationState state;
+                bool fMissingInputs = false;
+                DisconnectBlockAndInputs(state, mapTxLockReqRejected[(*i).second.txHash]);
+
+                if (AcceptToMemoryPool(mempool, state, mapTxLockReqRejected[(*i).second.txHash], true, &fMissingInputs))
+                {
+                    LogPrintf("ProcessMessageInstantX::txlreq - Transaction Lock Request : accepted (resolved) %s\n",
+                        mapTxLockReqRejected[(*i).second.txHash].GetHash().ToString().c_str()
+                    );
+
+                } else {
+                    LogPrintf("ERROR: InstantX::ProcessConsensusVote - Transaction Lock Request : rejected (failed to resolve) %s\n",
+                        mapTxLockReqRejected[(*i).second.txHash].GetHash().ToString().c_str()
+                    );
+                }
+            }*/
         }
         return true;
     }
