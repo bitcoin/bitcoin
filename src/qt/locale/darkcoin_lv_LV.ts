@@ -311,7 +311,7 @@ Nesniedz reālu drošību</translation>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="128"/>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
-        <translation type="unfinished"/>
+        <translation>SVARĪGI: Visi iepriekšējie Jūsu maciņa dublējuma faili ir jāaizvieto ar jaunizveidoto, šifrēto maciņa failu. Drošības apsvērumu dēļ iepriekšējie dublējumi no nešifrētā maciņa failiem kļūst nelietojami, tiklīdz sākat lietot jauno, šifrēto maciņu.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="137"/>
@@ -610,7 +610,7 @@ Nesniedz reālu drošību</translation>
     <message>
         <location filename="../bitcoingui.cpp" line="322"/>
         <source>Show the Darkcoin Core help message to get a list with possible Darkcoin command-line options</source>
-        <translation type="unfinished"/>
+        <translation>Rādīt Darkcoin Core palīdzības logu, lai iegūtu sarakstu ar iespējamiem Darkcoin komandjoslas iestatījumiem.</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="358"/>
@@ -1088,12 +1088,12 @@ Adrese: %4
     <message>
         <location filename="../coincontroldialog.cpp" line="625"/>
         <source>Amounts below 0.546 times the minimum relay fee are shown as dust.</source>
-        <translation type="unfinished"/>
+        <translation>Apjomi, kas 0.546 reizes mazāki par minimumu tiek rādīti kā putekļi.</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="627"/>
         <source>This label turns red, if the change is smaller than %1.</source>
-        <translation type="unfinished"/>
+        <translation>Šis logs kļūst sarkans, ja maiņa mazāka par %1.</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="670"/>
@@ -1201,12 +1201,12 @@ Adrese: %4
     <message>
         <location filename="../darksendconfig.cpp" line="59"/>
         <source>Darksend was successfully set to high (%1 and 8 rounds). You can change this at any time by opening Darkcoin&apos;s configuration screen.</source>
-        <translation type="unfinished"/>
+        <translation>Darksend veiksmīgi iestatīts uz Augsts (%1 un 8 cikli).  Jūs varat mainīt šo iestatījumu jebkurā brīdī atverot Darkcoin&apos;a iestatījumu logu.</translation>
     </message>
     <message>
         <location filename="../darksendconfig.cpp" line="74"/>
         <source>Darksend was successfully set to maximum (%1 and 16 rounds). You can change this at any time by opening Darkcoin&apos;s configuration screen.</source>
-        <translation type="unfinished"/>
+        <translation>Darksend veiksmīgi iestatīts uz maksimumu (%1 un 2 cikli). Jūs varat mainīt šo iestatījumu jebkurā brīdī atverot Darkcoin&apos;a iestatījumu logu.</translation>
     </message>
 </context>
 <context>
@@ -1264,7 +1264,7 @@ Adrese: %4
     <message>
         <location filename="../editaddressdialog.cpp" line="111"/>
         <source>The entered address &quot;%1&quot; is not a valid Darkcoin address.</source>
-        <translation type="unfinished"/>
+        <translation>Ievadītā adrese &quot;%1&quot; nav derīga Darcoin adrese.</translation>
     </message>
     <message>
         <location filename="../editaddressdialog.cpp" line="116"/>
@@ -1297,7 +1297,7 @@ Adrese: %4
     <message>
         <location filename="../intro.cpp" line="93"/>
         <source>Directory already exists. Add %1 if you intend to create a new directory here.</source>
-        <translation type="unfinished"/>
+        <translation>Glabātuve jau pastāv. Pievienojiet %1 ja vēlaties izveidot jaunu direktoriju šeit.</translation>
     </message>
     <message>
         <location filename="../intro.cpp" line="96"/>
@@ -1346,7 +1346,7 @@ Adrese: %4
     <message>
         <location filename="../utilitydialog.cpp" line="77"/>
         <source>Choose data directory on startup (default: 0)</source>
-        <translation type="unfinished"/>
+        <translation>Izvēlieties datu glabātuvi pie startēšanas (pamata: 0)</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="78"/>
@@ -1361,7 +1361,7 @@ Adrese: %4
     <message>
         <location filename="../utilitydialog.cpp" line="80"/>
         <source>Set SSL root certificates for payment request (default: -system-)</source>
-        <translation type="unfinished"/>
+        <translation>Uzstādiet SLL root sertifikātus maksājumu pieprasīšanai (pamata- sistēma-)</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="81"/>
@@ -1417,7 +1417,7 @@ Maiciņš arī glabāsies šajā direkotrijā.</translation>
     <message>
         <location filename="../intro.cpp" line="186"/>
         <source>Error: Specified data directory &quot;%1&quot; can not be created.</source>
-        <translation type="unfinished"/>
+        <translation>Kļūda: Nevar izveidot norādīto datu glabātuvi &quot;%1&quot; </translation>
     </message>
     <message>
         <location filename="../intro.cpp" line="210"/>

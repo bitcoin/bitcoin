@@ -401,7 +401,7 @@ Tento výrobok obsahuje sofvér, ktorý vyvynul OpenSSL Project pre použitie v 
     <message>
         <location filename="../bitcoingui.cpp" line="234"/>
         <source>Send coins to a Darkcoin address</source>
-        <translation type="unfinished"/>
+        <translation>Poslať mince na Darkcoin adresu</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="240"/>
@@ -442,7 +442,7 @@ Tento výrobok obsahuje sofvér, ktorý vyvynul OpenSSL Project pre použitie v 
     <message>
         <location filename="../bitcoingui.cpp" line="273"/>
         <source>Show information about Darkcoin</source>
-        <translation type="unfinished"/>
+        <translation>Zobraziť informácie o Darkcoin</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="276"/>
@@ -554,12 +554,12 @@ Tento výrobok obsahuje sofvér, ktorý vyvynul OpenSSL Project pre použitie v 
     <message>
         <location filename="../bitcoingui.cpp" line="308"/>
         <source>&amp;Debug console</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Konzola pre ladenie</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="309"/>
         <source>Open debugging console</source>
-        <translation type="unfinished"/>
+        <translation>Otvor konzolu pre ladenie</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="310"/>
@@ -3915,17 +3915,17 @@ for example: alertnotify=echo %%s | mail -s &quot;Darkcoin Alert&quot; admin@foo
     <message>
         <location filename="../bitcoinstrings.cpp" line="25"/>
         <source>Acceptable ciphers (default: TLSv1.2+HIGH:TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!3DES:@STRENGTH)</source>
-        <translation type="unfinished"/>
+        <translation>Akceptovateľné šifry (predvolené: TLSv1.2+HIGH:TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!3DES:@STRENGTH)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="28"/>
         <source>An error occurred while setting up the RPC port %u for listening on IPv4: %s</source>
-        <translation type="unfinished"/>
+        <translation>Pri nastavovaní portu RPC %u pre počúvanie na IPv4 došlo k chybe: %s</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="30"/>
         <source>An error occurred while setting up the RPC port %u for listening on IPv6, falling back to IPv4: %s</source>
-        <translation type="unfinished"/>
+        <translation>Chyba pri nastavovaní portu RPC %u pre počúvanie na IPv6, spadne späť na IPv4: %s</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="33"/>
@@ -4082,17 +4082,17 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="158"/>
         <source>(default: 1)</source>
-        <translation type="unfinished"/>
+        <translation>(predvolené: 1)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="159"/>
         <source>(default: wallet.dat)</source>
-        <translation type="unfinished"/>
+        <translation>(predvolené: wallet.dat)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="160"/>
         <source>&lt;category&gt; can be:</source>
-        <translation type="unfinished"/>
+        <translation>&lt;category&gt; môže byť:</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="161"/>
@@ -4892,7 +4892,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="304"/>
         <source>To use the %s option</source>
-        <translation type="unfinished"/>
+        <translation>Použiť možnosť %s</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="305"/>
@@ -4907,17 +4907,17 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="307"/>
         <source>Transaction too large</source>
-        <translation type="unfinished"/>
+        <translation>Transakcia je príliš veľká</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="311"/>
         <source>Unknown -socks proxy version requested: %i</source>
-        <translation type="unfinished"/>
+        <translation>Požadovaná neznáma SOCKS proxy verzia: %i</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="312"/>
         <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
-        <translation type="unfinished"/>
+        <translation>Špecifikovaná neznáma sieť v -onlynet: &apos;%s&apos;</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="313"/>
@@ -4947,7 +4947,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="318"/>
         <source>Use OpenSSL (https) for JSON-RPC connections</source>
-        <translation type="unfinished"/>
+        <translation>Použiť OpenSSL (https) pre JSON-RPC spojenia</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="319"/>
@@ -4957,7 +4957,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="320"/>
         <source>Use UPnP to map the listening port (default: 1 when listening)</source>
-        <translation type="unfinished"/>
+        <translation>Skúsiť použiť UPnP pre mapovanie počúvajúceho portu (predvolené: 1 počas počúvania)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="321"/>
@@ -4967,7 +4967,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="322"/>
         <source>Username for JSON-RPC connections</source>
-        <translation type="unfinished"/>
+        <translation>Užívateľské meno pre JSON-RPC spojenia</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="323"/>
@@ -4982,22 +4982,22 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="325"/>
         <source>Wait for RPC server to start</source>
-        <translation type="unfinished"/>
+        <translation>Pred spustením počkať na RPC server</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="326"/>
         <source>Wallet %s resides outside data directory %s</source>
-        <translation type="unfinished"/>
+        <translation>Peňaženka %s je umiestnená mimo dátový adresár %s.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="327"/>
         <source>Wallet needed to be rewritten: restart Darkcoin to complete</source>
-        <translation type="unfinished"/>
+        <translation>Peňaženka potrebuje byť prepísaná: k dokončeniu reštartujte Darkcoin</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="328"/>
         <source>Wallet options:</source>
-        <translation type="unfinished"/>
+        <translation>Možnosti peňaženky:</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="329"/>
@@ -5007,12 +5007,12 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="330"/>
         <source>Warning: Deprecated argument -debugnet ignored, use -debug=net</source>
-        <translation type="unfinished"/>
+        <translation>Upozornenie: Zastaraný argument -debugnet bol ignorovaný, použite -debug=net</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="331"/>
         <source>Warning: This version is obsolete, upgrade required!</source>
-        <translation type="unfinished"/>
+        <translation>Upozornenie: Táto verzia je zastaraná, vyžaduje sa aktualizácia!</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="332"/>
@@ -5037,7 +5037,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="336"/>
         <source>wallet.dat corrupt, salvage failed</source>
-        <translation type="unfinished"/>
+        <translation>wallet.dat je poškodený, záchrana zlyhala</translation>
     </message>
 </context>
 </TS>

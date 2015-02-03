@@ -67,13 +67,13 @@ Eric Young (eay@cryptsoft.com) y el software UPnP escrito por Thomas Bernard.</t
         <location filename="../forms/addressbookpage.ui" line="57"/>
         <location filename="../forms/ui_addressbookpage.h" line="129"/>
         <source>Create a new address</source>
-        <translation>Crear una nueva dirección</translation>
+        <translation>Crear una dirección nueva</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="60"/>
         <location filename="../forms/ui_addressbookpage.h" line="131"/>
         <source>&amp;New</source>
-        <translation>&amp;Nuevo</translation>
+        <translation>&amp;Nueva</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="71"/>
@@ -91,7 +91,7 @@ Eric Young (eay@cryptsoft.com) y el software UPnP escrito por Thomas Bernard.</t
         <location filename="../forms/addressbookpage.ui" line="85"/>
         <location filename="../forms/ui_addressbookpage.h" line="137"/>
         <source>Delete the currently selected address from the list</source>
-        <translation>Borrar de la lista la dirección seleccionada</translation>
+        <translation>Elimina la dirección seleccionada de la lista</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="88"/>
@@ -103,29 +103,29 @@ Eric Young (eay@cryptsoft.com) y el software UPnP escrito por Thomas Bernard.</t
         <location filename="../forms/addressbookpage.ui" line="112"/>
         <location filename="../forms/ui_addressbookpage.h" line="141"/>
         <source>Export the data in the current tab to a file</source>
-        <translation>Exportar a un archivo los datos de esta pestaña</translation>
+        <translation>Exporta los datos en la pestaña actual a un archivo</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="115"/>
         <location filename="../forms/ui_addressbookpage.h" line="143"/>
         <source>&amp;Export</source>
-        <translation>&amp;Exportar</translation>
+        <translation>E&amp;xportar</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="132"/>
         <location filename="../forms/ui_addressbookpage.h" line="144"/>
         <source>C&amp;lose</source>
-        <translation>&amp;Cerrar</translation>
+        <translation>Ce&amp;rrar</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="45"/>
         <source>Choose the address to send coins to</source>
-        <translation>Escoja la dirección a la que enviar bitcoins</translation>
+        <translation>Elige la dirección para enviar las monedas</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="46"/>
         <source>Choose the address to receive coins with</source>
-        <translation>Escoja la dirección de la que recibir bitcoins</translation>
+        <translation>Elige la dirección para recibir las monedas</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="51"/>
@@ -145,7 +145,7 @@ Eric Young (eay@cryptsoft.com) y el software UPnP escrito por Thomas Bernard.</t
     <message>
         <location filename="../addressbookpage.cpp" line="65"/>
         <source>These are your Darkcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>Estas son sus direcciones Darkcoin para enviar pagos. Compruebe siempre la cantidad y la dirección receptora antes de enviar bitcoins.</translation>
+        <translation>Estas son sus direcciones Darkcoin para enviar pagos. Compruebe siempre la cantidad y la dirección receptora antes de enviar darkcoins.</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="69"/>
@@ -155,7 +155,7 @@ Eric Young (eay@cryptsoft.com) y el software UPnP escrito por Thomas Bernard.</t
     <message>
         <location filename="../addressbookpage.cpp" line="75"/>
         <source>&amp;Copy Address</source>
-        <translation>&amp;Copiar Dirección</translation>
+        <translation>Copiar &amp;Dirección</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="76"/>
@@ -170,22 +170,22 @@ Eric Young (eay@cryptsoft.com) y el software UPnP escrito por Thomas Bernard.</t
     <message>
         <location filename="../addressbookpage.cpp" line="271"/>
         <source>Export Address List</source>
-        <translation>Exportar la lista de direcciones </translation>
+        <translation>Exportar la Lista de Direcciones </translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="272"/>
         <source>Comma separated file (*.csv)</source>
-        <translation>Archivos de columnas separadas por coma (*.csv)</translation>
+        <translation>Archivo de valores separados por comas (*.csv)</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="285"/>
         <source>Exporting Failed</source>
-        <translation>Error exportando</translation>
+        <translation>Error al exportar</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="286"/>
         <source>There was an error trying to save the address list to %1.</source>
-        <translation>Ha habido un error al intentar guardar los datos del monedero en %1.</translation>
+        <translation>Se produjo un error al intentar guardar la lista de direcciones en %1.</translation>
     </message>
 </context>
 <context>
@@ -292,7 +292,7 @@ Eric Young (eay@cryptsoft.com) y el software UPnP escrito por Thomas Bernard.</t
     <message>
         <location filename="../askpassphrasedialog.cpp" line="113"/>
         <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR DARKCOINS&lt;/b&gt;!</source>
-        <translation>Atención: Si encriptas tu cartera y pierdes tu contraseña, &lt;b&gt;PERDERÁS TODOS TUS DARKCOINS&lt;/b&gt;</translation>
+        <translation>Advertencia: Si cifra la cartera y pierde su contraseña, ¡&lt;b&gt;PERDERÁ TODOS SUS DARKCOINS&lt;/b&gt;!</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="113"/>
@@ -308,12 +308,12 @@ Eric Young (eay@cryptsoft.com) y el software UPnP escrito por Thomas Bernard.</t
     <message>
         <location filename="../askpassphrasedialog.cpp" line="124"/>
         <source>Darkcoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your darkcoins from being stolen by malware infecting your computer.</source>
-        <translation>Darkcoin se cerrará para finalizar el proceso de cifrado. Recuerde que el cifrado de su monedero no puede proteger totalmente sus darkcoins del robo por un malware que infecte su sistema.</translation>
+        <translation>Darkcoin se cerrará ahora para finalizar el proceso de cifrado. Recuerde que el cifrado de su monedero no puede proteger totalmente sus darkcoins del robo por un malware que infecte su sistema.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="128"/>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
-        <translation>IMPORTANTE: Cualquier copia de seguridad que haya realizado previamente de su archivo de monedero debe reemplazarse con el nuevo archivo de monedero cifrado. Por razones de seguridad, las copias de seguridad previas del archivo de monedero no cifradas serán inservibles en cuanto comience a usar el nuevo monedero cifrado.</translation>
+        <translation>IMPORTANTE: Cualquier copia de seguridad que haya realizado previamente de su archivo del monedero debe reemplazarse con el nuevo archivo de monedero cifrado. Por razones de seguridad, las copias de seguridad previas del archivo de monedero no cifradas serán inservibles en cuanto comience a usar el nuevo monedero cifrado.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="137"/>
@@ -326,7 +326,7 @@ Eric Young (eay@cryptsoft.com) y el software UPnP escrito por Thomas Bernard.</t
     <message>
         <location filename="../askpassphrasedialog.cpp" line="138"/>
         <source>Wallet encryption failed due to an internal error. Your wallet was not encrypted.</source>
-        <translation>Ha fallado el cifrado del monedero debido a un error interno. El monedero no ha sido cifrado.</translation>
+        <translation>Ha fallado el cifrado del monedero debido a un error interno. El monedero no se cifró.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="145"/>
@@ -414,7 +414,7 @@ Eric Young (eay@cryptsoft.com) y el software UPnP escrito por Thomas Bernard.</t
     <message>
         <location filename="../bitcoingui.cpp" line="241"/>
         <source>Request payments (generates QR codes and darkcoin: URIs)</source>
-        <translation>Solicitar pagos (genera códigos QR y URL&apos;s de Darkcoin)</translation>
+        <translation>Solicitar pagos (genera códigos QR y URIs de Darkcoin)</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="247"/>
@@ -445,7 +445,7 @@ Eric Young (eay@cryptsoft.com) y el software UPnP escrito por Thomas Bernard.</t
     <message>
         <location filename="../bitcoingui.cpp" line="273"/>
         <source>Show information about Darkcoin</source>
-        <translation>Muestra información acerca de Darkcoin</translation>
+        <translation>Mostrar información acerca de Darkcoin</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="276"/>
@@ -482,7 +482,7 @@ Eric Young (eay@cryptsoft.com) y el software UPnP escrito por Thomas Bernard.</t
     <message>
         <location filename="../bitcoingui.cpp" line="291"/>
         <source>&amp;Encrypt Wallet...</source>
-        <translation>&amp;Cifrar monedero…</translation>
+        <translation>Ci&amp;frar monedero…</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="292"/>
@@ -497,7 +497,7 @@ Eric Young (eay@cryptsoft.com) y el software UPnP escrito por Thomas Bernard.</t
     <message>
         <location filename="../bitcoingui.cpp" line="295"/>
         <source>Backup wallet to another location</source>
-        <translation>Copia de seguridad del monedero en otra ubicación</translation>
+        <translation>Crear copia de seguridad del monedero en otra ubicación</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="296"/>
@@ -512,7 +512,7 @@ Eric Young (eay@cryptsoft.com) y el software UPnP escrito por Thomas Bernard.</t
     <message>
         <location filename="../bitcoingui.cpp" line="298"/>
         <source>&amp;Unlock Wallet...</source>
-        <translation>Desbloquear el monedero</translation>
+        <translation>&amp;Desbloquear el monedero</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="299"/>
@@ -522,7 +522,7 @@ Eric Young (eay@cryptsoft.com) y el software UPnP escrito por Thomas Bernard.</t
     <message>
         <location filename="../bitcoingui.cpp" line="300"/>
         <source>&amp;Lock Wallet</source>
-        <translation>Bloquear el monedero</translation>
+        <translation>&amp;Bloquear el monedero</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="301"/>
@@ -592,7 +592,7 @@ Eric Young (eay@cryptsoft.com) y el software UPnP escrito por Thomas Bernard.</t
     <message>
         <location filename="../bitcoingui.cpp" line="316"/>
         <source>Show the list of used receiving addresses and labels</source>
-        <translation>Muestra la lista de direcciones de recepción y etiquetas</translation>
+        <translation>Mostrar la lista de direcciones de recepción y etiquetas</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="318"/>
@@ -612,7 +612,7 @@ Eric Young (eay@cryptsoft.com) y el software UPnP escrito por Thomas Bernard.</t
     <message>
         <location filename="../bitcoingui.cpp" line="322"/>
         <source>Show the Darkcoin Core help message to get a list with possible Darkcoin command-line options</source>
-        <translation>Muestra el mensaje de ayuda Darkcoin Core para obtener una lista con las posibles opciones de la consola de comandos de Darkcoin</translation>
+        <translation>Mostrar el mensaje de ayuda de Darkcoin Core para obtener una lista con las posibles opciones de la consola de comandos</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="358"/>
@@ -714,7 +714,7 @@ Eric Young (eay@cryptsoft.com) y el software UPnP escrito por Thomas Bernard.</t
     <message>
         <location filename="../bitcoingui.cpp" line="719"/>
         <source>Catching up...</source>
-        <translation>Actualizando...</translation>
+        <translation>Poniendo al día...</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="735"/>
@@ -764,7 +764,7 @@ Type: %3
 Address: %4
 </source>
         <translation>Fecha: %1
-Cantidad: %2
+Cuantía: %2
 Tipo: %3
 Dirección: %4
 </translation>
@@ -804,7 +804,7 @@ Dirección: %4
         <location filename="../forms/coincontroldialog.ui" line="14"/>
         <location filename="../forms/ui_coincontroldialog.h" line="319"/>
         <source>Coin Control Address Selection</source>
-        <translation>Selección de direcciones bajo Coin Control</translation>
+        <translation>Selección de Direcciones bajo Coin Control</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="48"/>
@@ -876,7 +876,7 @@ Dirección: %4
         <location filename="../forms/coincontroldialog.ui" line="446"/>
         <location filename="../forms/ui_coincontroldialog.h" line="337"/>
         <source>Amount</source>
-        <translation>Cantidad</translation>
+        <translation>Cuantía</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="456"/>
@@ -933,7 +933,7 @@ Dirección: %4
     <message>
         <location filename="../coincontroldialog.cpp" line="46"/>
         <source>Copy transaction ID</source>
-        <translation>Copiar identificador de transacción</translation>
+        <translation>Copiar ID de transacción</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="47"/>
@@ -953,12 +953,12 @@ Dirección: %4
     <message>
         <location filename="../coincontroldialog.cpp" line="72"/>
         <source>Copy fee</source>
-        <translation>Copiar donación</translation>
+        <translation>Copiar comisión</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="73"/>
         <source>Copy after fee</source>
-        <translation>Copiar después de aplicar donación</translation>
+        <translation>Copiar después de aplicar comisión</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="74"/>
@@ -1028,7 +1028,7 @@ Dirección: %4
     <message>
         <location filename="../coincontroldialog.cpp" line="432"/>
         <source>(%1 locked)</source>
-        <translation>(%1 bloqueado)</translation>
+        <translation>(%1 bloqueada)</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="464"/>
@@ -1059,7 +1059,7 @@ Dirección: %4
         <location filename="../coincontroldialog.cpp" line="616"/>
         <location filename="../coincontroldialog.cpp" line="621"/>
         <source>This means a fee of at least %1 per kB is required.</source>
-        <translation>Esto implica que se requiere una tarifa de al menos %1 por kB</translation>
+        <translation>Esto implica que se requiere una comisión de al menos %1 por kB</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="617"/>
@@ -1069,33 +1069,33 @@ Dirección: %4
     <message>
         <location filename="../coincontroldialog.cpp" line="619"/>
         <source>Transactions with higher priority are more likely to get included into a block.</source>
-        <translation>Las transacciones con alta prioridad son más propensas a ser incluidas dentro de un bloque.</translation>
+        <translation>Las transacciones con prioridad alta son más propensas a ser incluidas dentro de un bloque.</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="620"/>
         <source>This label turns red, if the priority is smaller than &quot;medium&quot;.</source>
-        <translation>Esta etiqueta se muestra en rojo si la prioridad es menor que &quot;media&quot;.</translation>
+        <translation>Esta etiqueta se torna roja si la prioridad es menor que &quot;media&quot;.</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="623"/>
         <source>This label turns red, if any recipient receives an amount smaller than %1.</source>
-        <translation>Esta etiqueta se torna roja si cualquier destinatario recibe una cantidad menor a %1.</translation>
+        <translation>Esta etiqueta se torna roja si cualquier destinatario recibe una cuantía menor a %1.</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="624"/>
         <location filename="../coincontroldialog.cpp" line="628"/>
         <source>This means a fee of at least %1 is required.</source>
-        <translation>Esto significa que se necesita una tarifa de al menos %1.</translation>
+        <translation>Esto significa que se necesita una comisión de al menos %1.</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="625"/>
         <source>Amounts below 0.546 times the minimum relay fee are shown as dust.</source>
-        <translation>Cantidades por debajo de 0.546 veces la tasa serán mostradas como basura</translation>
+        <translation>Cuantías por debajo de 0.546 veces la comisión mínima serán mostradas como basura.</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="627"/>
         <source>This label turns red, if the change is smaller than %1.</source>
-        <translation>Esta etiqueta se vuelve roja si el cambio es menor que %1</translation>
+        <translation>Esta etiqueta se torna roja si el cambio es menor que %1.</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="670"/>
@@ -1106,7 +1106,7 @@ Dirección: %4
     <message>
         <location filename="../coincontroldialog.cpp" line="724"/>
         <source>change from %1 (%2)</source>
-        <translation>Enviar desde %1 (%2)</translation>
+        <translation>cambiar desde %1 (%2)</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="725"/>
@@ -1144,7 +1144,7 @@ Dirección: %4
         <location filename="../forms/darksendconfig.ui" line="65"/>
         <location filename="../forms/ui_darksendconfig.h" line="100"/>
         <source>Please select an privacy level. </source>
-        <translation>Por favor, seleccione un nivel de privacidad</translation>
+        <translation>Por favor, seleccione un nivel de privacidad.</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="78"/>
@@ -1407,7 +1407,7 @@ Dirección: %4
         <location filename="../forms/intro.ui" line="76"/>
         <location filename="../forms/ui_intro.h" line="188"/>
         <source>Use a custom data directory:</source>
-        <translation>Utilice un directorio de datos personalizado:</translation>
+        <translation>Utilizar un directorio de datos personalizado:</translation>
     </message>
     <message>
         <location filename="../intro.cpp" line="185"/>
@@ -1441,13 +1441,13 @@ Dirección: %4
         <location filename="../forms/openuridialog.ui" line="14"/>
         <location filename="../forms/ui_openuridialog.h" line="93"/>
         <source>Open URI</source>
-        <translation>Abrir URI...</translation>
+        <translation>Abrir URI</translation>
     </message>
     <message>
         <location filename="../forms/openuridialog.ui" line="20"/>
         <location filename="../forms/ui_openuridialog.h" line="94"/>
         <source>Open payment request from URI or file</source>
-        <translation>El pago requiere una URI o archivo</translation>
+        <translation>Abrir solicitud de pago desde una URI o archivo</translation>
     </message>
     <message>
         <location filename="../forms/openuridialog.ui" line="29"/>
@@ -1464,7 +1464,7 @@ Dirección: %4
     <message>
         <location filename="../openuridialog.cpp" line="48"/>
         <source>Select payment request file to open</source>
-        <translation>Abrir archivo de solicitud de pago</translation>
+        <translation>Seleccionar archivo de solicitud de pago a abrir</translation>
     </message>
 </context>
 <context>
@@ -1509,7 +1509,7 @@ Dirección: %4
         <location filename="../forms/optionsdialog.ui" line="88"/>
         <location filename="../forms/ui_optionsdialog.h" line="539"/>
         <source>Number of script &amp;verification threads</source>
-        <translation>Número de procesos de &amp;verificación de scripts</translation>
+        <translation>Número de hilos de &amp;verificación de scripts</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="101"/>
@@ -1521,7 +1521,7 @@ Dirección: %4
         <location filename="../forms/optionsdialog.ui" line="138"/>
         <location filename="../forms/ui_optionsdialog.h" line="544"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This setting determines the amount of individual masternodes that an input will be anonymized through. More rounds of anonymization gives a higher degree of privacy, but also costs more in fees.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Esta opción determina la cantidad de nodos maestros únicos por los que circulará una entrada para anonimizarla. A mayor número de rondas de anonimización, mayor grado de privacidad,, pero también implica un mayor coste en las tasas.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Esta opción determina la cantidad de masternodes únicos por los que circulará una entrada para anonimizarla. A mayor número de rondas de anonimización, mayor grado de privacidad,, pero también implica un mayor coste en las tasas.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="141"/>
@@ -1533,7 +1533,7 @@ Dirección: %4
         <location filename="../forms/optionsdialog.ui" line="180"/>
         <location filename="../forms/ui_optionsdialog.h" line="547"/>
         <source>Amount of Darkcoin to keep anonymized</source>
-        <translation>Cantidad de Darkcoin a mantener anonimizada</translation>
+        <translation>Cuantía de Darkcoins a mantener anonimizada</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="206"/>
@@ -1545,13 +1545,13 @@ Dirección: %4
         <location filename="../forms/optionsdialog.ui" line="212"/>
         <location filename="../forms/ui_optionsdialog.h" line="549"/>
         <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly. Most transactions are 1 kB.</source>
-        <translation>Tarifa de transacción opcional por kB que ayuda a asegurar que sus transacciones sean procesadas rápidamente. La mayoría de transacciones son de 1kB.</translation>
+        <translation>Comisión de transacción opcional por kB que ayuda a asegurar que sus transacciones sean procesadas rápidamente. La mayoría de transacciones son de 1kB.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="227"/>
         <location filename="../forms/ui_optionsdialog.h" line="550"/>
         <source>Pay transaction &amp;fee</source>
-        <translation>Comisión de &amp;transacciones</translation>
+        <translation>Pagar comisión de &amp;transacción</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="271"/>
@@ -1563,13 +1563,13 @@ Dirección: %4
         <location filename="../forms/optionsdialog.ui" line="277"/>
         <location filename="../forms/ui_optionsdialog.h" line="553"/>
         <source>Whether to show coin control features or not.</source>
-        <translation>Mostrar o no funcionalidad de Coin Control</translation>
+        <translation>Mostrar o no funcionalidad de Coin Control.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="280"/>
         <location filename="../forms/ui_optionsdialog.h" line="555"/>
         <source>Enable coin &amp;control features</source>
-        <translation>Habilitar funcionalidad de &amp;coin control</translation>
+        <translation>Activar funcionalidad de &amp;coin control</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="287"/>
@@ -1659,19 +1659,19 @@ Dirección: %4
         <location filename="../forms/optionsdialog.ui" line="448"/>
         <location filename="../forms/ui_optionsdialog.h" line="583"/>
         <source>Show only a tray icon after minimizing the window.</source>
-        <translation>Minimizar la ventana a la bandeja de iconos del sistema.</translation>
+        <translation>Mostrar solo un icono de bandeja tras minimizar la ventana.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="451"/>
         <location filename="../forms/ui_optionsdialog.h" line="585"/>
         <source>&amp;Minimize to the tray instead of the taskbar</source>
-        <translation>&amp;Minimizar a la bandeja en vez de a la barra de tareas</translation>
+        <translation>&amp;Minimizar en la bandeja en vez de en la barra de tareas</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="458"/>
         <location filename="../forms/ui_optionsdialog.h" line="587"/>
         <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Quit in the menu.</source>
-        <translation>Minimizar en lugar de salir de la aplicación al cerrar la ventana. Cuando esta opción está activa, la aplicación solo se puede cerrar seleccionando Salir desde el menú.</translation>
+        <translation>Minimizar en lugar de salir de la aplicación al cerrar la ventana. Cuando esta opción está activada, la aplicación solo se puede cerrar seleccionando Salir desde el menú.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="461"/>
@@ -1695,19 +1695,19 @@ Dirección: %4
         <location filename="../forms/optionsdialog.ui" line="503"/>
         <location filename="../forms/ui_optionsdialog.h" line="593"/>
         <source>The user interface language can be set here. This setting will take effect after restarting Darkcoin.</source>
-        <translation>El idioma de la interfaz de usuario puede establecerse aquí. Este ajuste se aplicará cuando se reinicie Darkcoin.</translation>
+        <translation>El idioma de la interfaz de usuario puede establecerse aquí. Este ajuste se aplicará después de reiniciar Darkcoin.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="514"/>
         <location filename="../forms/ui_optionsdialog.h" line="595"/>
         <source>&amp;Unit to show amounts in:</source>
-        <translation>Mostrar las cantidades en la &amp;unidad:</translation>
+        <translation>&amp;Unidad para mostrar las cuantías:</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="527"/>
         <location filename="../forms/ui_optionsdialog.h" line="597"/>
         <source>Choose the default subdivision unit to show in the interface and when sending coins.</source>
-        <translation>Elegir la subdivisión predeterminada para mostrar cantidades en la interfaz y cuando se envían bitcoins.</translation>
+        <translation>Elegir la subdivisión predeterminada para mostrar las cuantías en la interfaz y cuando se envían darkcoins.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="536"/>
@@ -1727,7 +1727,7 @@ Dirección: %4
         <location filename="../forms/ui_optionsdialog.h" line="604"/>
         <location filename="../forms/ui_optionsdialog.h" line="608"/>
         <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
-        <translation>URLs de terceros (por ejemplo, un explorador de bloques) que aparecen en la pestaña de transacciones como items del menú contextual. El %s en la URL es reemplazado por el hash de la transacción. Se pueden separar múltiples URLs por una barra vertical |.</translation>
+        <translation>URLs de terceros (p.ej. un explorador de bloques) que aparecen en la pestaña de transacciones como elementos del menú contextual. El %s en la URL es reemplazado por el hash de la transacción. Se pueden separar múltiples URLs con una barra vertical |.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="551"/>
@@ -1739,7 +1739,7 @@ Dirección: %4
         <location filename="../forms/optionsdialog.ui" line="592"/>
         <location filename="../forms/ui_optionsdialog.h" line="611"/>
         <source>Active command-line options that override above options:</source>
-        <translation>Opciones activas de consola de comandos que tienen preferencia sobre las opciones antes mencionadas:</translation>
+        <translation>Opciones activas de la consola de comandos que tienen preferencia sobre las opciones antes mencionadas:</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="635"/>
@@ -1751,7 +1751,7 @@ Dirección: %4
         <location filename="../forms/optionsdialog.ui" line="638"/>
         <location filename="../forms/ui_optionsdialog.h" line="616"/>
         <source>&amp;Reset Options</source>
-        <translation>&amp;Restablecer opciones</translation>
+        <translation> Opciones para &amp;Restablecer</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="699"/>
@@ -1808,7 +1808,7 @@ Dirección: %4
         <location filename="../forms/overviewpage.ui" line="14"/>
         <location filename="../forms/ui_overviewpage.h" line="456"/>
         <source>Form</source>
-        <translation>Desde</translation>
+        <translation>Formulario</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="57"/>
@@ -1834,7 +1834,7 @@ Dirección: %4
         <location filename="../forms/overviewpage.ui" line="124"/>
         <location filename="../forms/ui_overviewpage.h" line="463"/>
         <source>Your current spendable balance</source>
-        <translation>Su balance actual gastable</translation>
+        <translation>Su saldo actual gastable</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="140"/>
@@ -1846,7 +1846,7 @@ Dirección: %4
         <location filename="../forms/overviewpage.ui" line="156"/>
         <location filename="../forms/ui_overviewpage.h" line="467"/>
         <source>Total of transactions that have yet to be confirmed, and do not yet count toward the spendable balance</source>
-        <translation>Total de transacciones que deben ser confirmadas, y que no cuentan con el balance gastable necesario</translation>
+        <translation>Total de transacciones que deben ser confirmadas, y que no se incluyen en el saldo gastable</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="172"/>
@@ -1870,7 +1870,7 @@ Dirección: %4
         <location filename="../forms/overviewpage.ui" line="217"/>
         <location filename="../forms/ui_overviewpage.h" line="475"/>
         <source>Your current total balance</source>
-        <translation>Su balance actual total</translation>
+        <translation>Su saldo toal actual</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="296"/>
@@ -1906,7 +1906,7 @@ Dirección: %4
         <location filename="../forms/overviewpage.ui" line="350"/>
         <location filename="../forms/ui_overviewpage.h" line="482"/>
         <source>Amount and Rounds:</source>
-        <translation>Cantidad y Rondas:</translation>
+        <translation>Cuantía y Rondas:</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="357"/>
@@ -1924,7 +1924,7 @@ Dirección: %4
         <location filename="../forms/overviewpage.ui" line="371"/>
         <location filename="../forms/ui_overviewpage.h" line="486"/>
         <source>The denominations you submitted to the Masternode. To mix, other users must submit the exact same denominations.</source>
-        <translation>Las denominaciones que envió al Nodo Maestro. Para mezclar, otros usuarios deben enviar el mismo número exacto de denominaciones.</translation>
+        <translation>Las denominaciones que envió al Masternode. Para poder mezclar, otros usuarios deben enviar el mismo número exacto de denominaciones.</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="374"/>
@@ -1963,7 +1963,7 @@ Dirección: %4
         <location filename="../forms/overviewpage.ui" line="900"/>
         <location filename="../forms/ui_overviewpage.h" line="496"/>
         <source>Try Mix</source>
-        <translation>Intentar Mezcla</translation>
+        <translation>Probar</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="913"/>
@@ -1981,7 +1981,7 @@ Dirección: %4
         <location filename="../forms/overviewpage.ui" line="955"/>
         <location filename="../forms/ui_overviewpage.h" line="501"/>
         <source>&lt;b&gt;Recent transactions&lt;/b&gt;</source>
-        <translation>&lt;b&gt;Movimientos recientes&lt;/b&gt;</translation>
+        <translation>&lt;b&gt;Transacciones recientes&lt;/b&gt;</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="126"/>
@@ -2015,7 +2015,7 @@ Dirección: %4
         <location filename="../paymentserver.cpp" line="631"/>
         <location filename="../paymentserver.cpp" line="647"/>
         <source>Payment request error</source>
-        <translation>Error en petición de pago</translation>
+        <translation>Error en solicitud de pago</translation>
     </message>
     <message>
         <location filename="../paymentserver.cpp" line="294"/>
@@ -2025,7 +2025,7 @@ Dirección: %4
     <message>
         <location filename="../paymentserver.cpp" line="352"/>
         <source>Net manager warning</source>
-        <translation>Advertencia del gestor de red</translation>
+        <translation>Aviso del gestor de red</translation>
     </message>
     <message>
         <location filename="../paymentserver.cpp" line="353"/>
@@ -2061,17 +2061,17 @@ Dirección: %4
     <message>
         <location filename="../paymentserver.cpp" line="506"/>
         <source>Unverified payment requests to custom payment scripts are unsupported.</source>
-        <translation>No están soportadas las peticiones inseguras a scripts de pago personalizados</translation>
+        <translation>No están soportadas las solicitudes de pago no verificadas a scripts de pago personalizados.</translation>
     </message>
     <message>
         <location filename="../paymentserver.cpp" line="514"/>
         <source>Requested payment amount of %1 is too small (considered dust).</source>
-        <translation>La cantidad del pago solicitado (%1) es demasiado pequeña (considerada polvo).</translation>
+        <translation>La cuantía de pago solicitado del %1 es demasiado pequeña (considerada basura).</translation>
     </message>
     <message>
         <location filename="../paymentserver.cpp" line="565"/>
         <source>Refund from %1</source>
-        <translation>Devolución de %1</translation>
+        <translation>Reembolso desde %1</translation>
     </message>
     <message>
         <location filename="../paymentserver.cpp" line="608"/>
@@ -2117,7 +2117,7 @@ Dirección: %4
     <message>
         <location filename="../darkcoin.cpp" line="533"/>
         <source>Error: Cannot parse configuration file: %1. Only use key=value syntax.</source>
-        <translation>Error: No se ha podido leer el archivo de configuración: %1. Debe utilizarse solamente la sintaxis clave=valor.</translation>
+        <translation>Error: No se ha podido procesar el archivo de configuración: %1. Debe utilizarse solamente la sintaxis clave=valor.</translation>
     </message>
     <message>
         <location filename="../darkcoin.cpp" line="540"/>
@@ -2132,7 +2132,7 @@ Dirección: %4
     <message>
         <location filename="../darkcoin.cpp" line="612"/>
         <source>Darkcoin Core didn&apos;t yet exit safely...</source>
-        <translation>Darkcoin core no se ha cerrado de forma segura todavía...</translation>
+        <translation>Darkcoin Core no se ha cerrado de forma segura todavía...</translation>
     </message>
     <message>
         <location filename="../guiutil.cpp" line="101"/>
@@ -2160,7 +2160,7 @@ Dirección: %4
     <message>
         <location filename="../receiverequestdialog.cpp" line="71"/>
         <source>PNG Image (*.png)</source>
-        <translation>Imágenes PNG (*.png)</translation>
+        <translation>Imagen PNG (*.png)</translation>
     </message>
 </context>
 <context>
@@ -2235,7 +2235,7 @@ Dirección: %4
         <location filename="../forms/rpcconsole.ui" line="90"/>
         <location filename="../forms/ui_rpcconsole.h" line="479"/>
         <source>Open the Darkcoin debug log file from the current data directory. This can take a few seconds for large log files.</source>
-        <translation>Abrir el archivo de registro de depuración en el directorio actual de datos. Esto puede llevar varios segundos para archivos de registro grandes.</translation>
+        <translation>Abrir el archivo de registro de depuración en el directorio actual de datos. Esto puede requerir varios segundos para archivos de registro grandes.</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="93"/>
@@ -2307,7 +2307,7 @@ Dirección: %4
         <location filename="../forms/rpcconsole.ui" line="398"/>
         <location filename="../forms/ui_rpcconsole.h" line="502"/>
         <source>Clear console</source>
-        <translation>Borrar consola</translation>
+        <translation>Limpiar consola</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="421"/>
@@ -2319,13 +2319,13 @@ Dirección: %4
         <location filename="../forms/rpcconsole.ui" line="473"/>
         <location filename="../forms/ui_rpcconsole.h" line="506"/>
         <source>&amp;Clear</source>
-        <translation>&amp;Vaciar</translation>
+        <translation>&amp;Limpiar</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="486"/>
         <location filename="../forms/ui_rpcconsole.h" line="507"/>
         <source>Totals</source>
-        <translation>Total:</translation>
+        <translation>Totales:</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="550"/>
@@ -2398,13 +2398,13 @@ Dirección: %4
         <location filename="../forms/receivecoinsdialog.ui" line="34"/>
         <location filename="../forms/ui_receivecoinsdialog.h" line="255"/>
         <source>Reuse one of the previously used receiving addresses. Reusing addresses has security and privacy issues. Do not use this unless re-generating a payment request made before.</source>
-        <translation>Reutilizar una de las direcciones previamente usadas para recibir. Reutilizar direcciones tiene problemas de seguridad y privacidad. No lo uses a menos que antes regeneres una solicitud de pago.</translation>
+        <translation>Reutilizar una de las direcciones previamente usadas para recibir. Reutilizar direcciones conlleva problemas de seguridad y privacidad. No lo emplee a menos que regenere una solicitud de pago anterior.</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="37"/>
         <location filename="../forms/ui_receivecoinsdialog.h" line="257"/>
         <source>R&amp;euse an existing receiving address (not recommended)</source>
-        <translation>R&amp;eutilizar una dirección existente para recibir (no recomendado)</translation>
+        <translation>&amp;Reutilizar una dirección receptora existente (no recomendado)</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="51"/>
@@ -2412,7 +2412,7 @@ Dirección: %4
         <location filename="../forms/ui_receivecoinsdialog.h" line="260"/>
         <location filename="../forms/ui_receivecoinsdialog.h" line="267"/>
         <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Darkcoin network.</source>
-        <translation>Un mensaje opcional para adjuntar a la solicitud de pago, que se muestra cuando se abre la solicitud. Nota: El mensaje no se enviará con el pago por la red Darkcoin.</translation>
+        <translation>Un mensaje opcional para adjuntar a la solicitud de pago, el cual se muestra cuando se abre la solicitud. Nota: El mensaje no se enviará con el pago por la red Darkcoin.</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="54"/>
@@ -2446,13 +2446,13 @@ Dirección: %4
         <location filename="../forms/ui_receivecoinsdialog.h" line="275"/>
         <location filename="../forms/ui_receivecoinsdialog.h" line="279"/>
         <source>An optional amount to request. Leave this empty or zero to not request a specific amount.</source>
-        <translation>Para solicitar una cantidad opcional. Deje este vacío o cero para no solicitar una cantidad específica.</translation>
+        <translation>Una cuantía opcional a solicitar. Deje este campo vacío o con cero para no solicitar una cuantía específica.</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="107"/>
         <location filename="../forms/ui_receivecoinsdialog.h" line="277"/>
         <source>&amp;Amount:</source>
-        <translation>Cantidad</translation>
+        <translation>&amp;Cuantía:</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="141"/>
@@ -2464,13 +2464,13 @@ Dirección: %4
         <location filename="../forms/receivecoinsdialog.ui" line="158"/>
         <location filename="../forms/ui_receivecoinsdialog.h" line="283"/>
         <source>Clear all fields of the form.</source>
-        <translation>Vaciar todos los campos del formulario.</translation>
+        <translation>Limpiar todos los campos del formulario.</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="161"/>
         <location filename="../forms/ui_receivecoinsdialog.h" line="285"/>
         <source>Clear</source>
-        <translation>Vaciar</translation>
+        <translation>Limpiar</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="239"/>
@@ -2482,7 +2482,7 @@ Dirección: %4
         <location filename="../forms/receivecoinsdialog.ui" line="261"/>
         <location filename="../forms/ui_receivecoinsdialog.h" line="289"/>
         <source>Show the selected request (does the same as double clicking an entry)</source>
-        <translation>Muestra la petición seleccionada (También doble clic)</translation>
+        <translation>Mostrar la solicitud seleccionada (igual que hacer doble clic en una entrada)</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="264"/>
@@ -2494,7 +2494,7 @@ Dirección: %4
         <location filename="../forms/receivecoinsdialog.ui" line="278"/>
         <location filename="../forms/ui_receivecoinsdialog.h" line="293"/>
         <source>Remove the selected entries from the list</source>
-        <translation>Borrar de la lista las direcciónes actualmente seleccionadas</translation>
+        <translation>Eliminar las entradas seleccionadas de la lista</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="281"/>
@@ -2567,7 +2567,7 @@ Dirección: %4
     <message>
         <location filename="../receiverequestdialog.cpp" line="147"/>
         <source>Amount</source>
-        <translation>Cantidad</translation>
+        <translation>Cuantía</translation>
     </message>
     <message>
         <location filename="../receiverequestdialog.cpp" line="149"/>
@@ -2610,7 +2610,7 @@ Dirección: %4
     <message>
         <location filename="../recentrequeststablemodel.cpp" line="24"/>
         <source>Amount</source>
-        <translation>Cantidad</translation>
+        <translation>Cuantía</translation>
     </message>
     <message>
         <location filename="../recentrequeststablemodel.cpp" line="62"/>
@@ -2620,12 +2620,12 @@ Dirección: %4
     <message>
         <location filename="../recentrequeststablemodel.cpp" line="71"/>
         <source>(no message)</source>
-        <translation>(Ningun mensaje)</translation>
+        <translation>(ningún mensaje)</translation>
     </message>
     <message>
         <location filename="../recentrequeststablemodel.cpp" line="79"/>
         <source>(no amount)</source>
-        <translation>(sin cantidad)</translation>
+        <translation>(ninguna cuantía)</translation>
     </message>
 </context>
 <context>
@@ -2637,7 +2637,7 @@ Dirección: %4
         <location filename="../sendcoinsdialog.cpp" line="511"/>
         <location filename="../sendcoinsdialog.cpp" line="521"/>
         <source>Send Coins</source>
-        <translation>Enviar bitcoins</translation>
+        <translation>Enviar Darkcoins</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="90"/>
@@ -2655,7 +2655,7 @@ Dirección: %4
         <location filename="../forms/sendcoinsdialog.ui" line="117"/>
         <location filename="../forms/ui_sendcoinsdialog.h" line="518"/>
         <source>automatically selected</source>
-        <translation>seleccionado automáticamente</translation>
+        <translation>seleccionadas automáticamente</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="136"/>
@@ -2721,7 +2721,7 @@ Dirección: %4
         <location filename="../forms/sendcoinsdialog.ui" line="547"/>
         <location filename="../forms/ui_sendcoinsdialog.h" line="531"/>
         <source>Custom change address</source>
-        <translation>Dirección propia</translation>
+        <translation>Dirección de cambio personalizada</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="668"/>
@@ -2739,25 +2739,25 @@ Dirección: %4
         <location filename="../forms/sendcoinsdialog.ui" line="691"/>
         <location filename="../forms/ui_sendcoinsdialog.h" line="538"/>
         <source>Clear all fields of the form.</source>
-        <translation>Vaciar todos los campos del formulario</translation>
+        <translation>Limpiar todos los campos del formulario.</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="694"/>
         <location filename="../forms/ui_sendcoinsdialog.h" line="540"/>
         <source>Clear &amp;All</source>
-        <translation>Vaciar &amp;todo</translation>
+        <translation>Limpiar &amp;Todo</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="711"/>
         <location filename="../forms/ui_sendcoinsdialog.h" line="542"/>
         <source>Send to multiple recipients at once</source>
-        <translation>Enviar a múltiples destinatarios de una vez</translation>
+        <translation>Enviar a múltiples destinatarios simultáneamente</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="714"/>
         <location filename="../forms/ui_sendcoinsdialog.h" line="544"/>
         <source>Add &amp;Recipient</source>
-        <translation>Añadir &amp;destinatario</translation>
+        <translation>Añadir &amp;Destinatario</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="759"/>
@@ -2815,7 +2815,7 @@ Dirección: %4
     <message>
         <location filename="../sendcoinsdialog.cpp" line="59"/>
         <source>Copy change</source>
-        <translation>Copiar Cambio</translation>
+        <translation>Copiar cambio</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="154"/>
@@ -2838,12 +2838,12 @@ Dirección: %4
     <message>
         <location filename="../sendcoinsdialog.cpp" line="260"/>
         <source>are added as transaction fee</source>
-        <translation>añadido como comisión de transacción</translation>
+        <translation>se añaden como comisión de transacción</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="274"/>
         <source>Total Amount %1 (= %2)</source>
-        <translation>Cuantía Total %1 (=%2)</translation>
+        <translation>Cuantía Total %1 (= %2)</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="276"/>
@@ -2858,7 +2858,7 @@ Dirección: %4
     <message>
         <location filename="../sendcoinsdialog.cpp" line="433"/>
         <source>Payment request expired</source>
-        <translation>Petición de pago expirada</translation>
+        <translation>La solicitud de pago expiró</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="441"/>
@@ -2873,17 +2873,17 @@ Dirección: %4
     <message>
         <location filename="../sendcoinsdialog.cpp" line="491"/>
         <source>The amount to pay must be larger than 0.</source>
-        <translation>La cantidad por pagar tiene que ser mayor de 0.</translation>
+        <translation>La cuantía a pagar debe ser mayor que 0.</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="494"/>
         <source>The amount exceeds your balance.</source>
-        <translation>La cantidad sobrepasa su saldo.</translation>
+        <translation>La cuantía sobrepasa su saldo.</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="497"/>
         <source>The total exceeds your balance when the %1 transaction fee is included.</source>
-        <translation>El total sobrepasa su saldo cuando se incluye la tasa de envío de %1</translation>
+        <translation>El total sobrepasa su saldo cuando se incluye la comisión de envío de %1</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="500"/>
@@ -2898,7 +2898,7 @@ Dirección: %4
     <message>
         <location filename="../sendcoinsdialog.cpp" line="507"/>
         <source>The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
-        <translation>¡La transacción fue rechazada! Esto puede haber ocurrido si alguno de los darkcoins de su monedero ya estaba gastado o si ha usado una copia de wallet.dat y los bitcoins estaban gastados en la copia pero no se habían marcado como gastados aqui.</translation>
+        <translation>¡La transacción fue rechazada! Esto puede suceder si alguno de los darkcoins de su monedero ya se habían gastado, por ejemplo si usó una copia de wallet.dat y los darkcoin se gastaron en dicha copia pero no se aparecen como gastados aqui.</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="512"/>
@@ -2908,12 +2908,12 @@ Dirección: %4
     <message>
         <location filename="../sendcoinsdialog.cpp" line="625"/>
         <source>Warning: Invalid Darkcoin address</source>
-        <translation>Alerta: Dirección de Darkcoin no válida</translation>
+        <translation>Aviso: Dirección de Darkcoin no válida</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="634"/>
         <source>Warning: Unknown change address</source>
-        <translation>Alerta: Dirección de cambio desconocida</translation>
+        <translation>Aviso: Dirección de cambio desconocida</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="645"/>
@@ -2933,7 +2933,7 @@ Dirección: %4
         <location filename="../forms/sendcoinsentry.ui" line="36"/>
         <location filename="../forms/ui_sendcoinsentry.h" line="425"/>
         <source>Pay &amp;To:</source>
-        <translation>&amp;Pagar a:</translation>
+        <translation>Pagar &amp;a:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="54"/>
@@ -2973,13 +2973,13 @@ Dirección: %4
         <location filename="../forms/ui_sendcoinsentry.h" line="457"/>
         <location filename="../forms/ui_sendcoinsentry.h" line="467"/>
         <source>Remove this entry</source>
-        <translation>Eliminar esta transacción</translation>
+        <translation>Eliminar esta entrada</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="111"/>
         <location filename="../forms/ui_sendcoinsentry.h" line="443"/>
         <source>&amp;Label:</source>
-        <translation>&amp;Etiqueta:</translation>
+        <translation>E&amp;tiqueta:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="124"/>
@@ -2995,7 +2995,7 @@ Dirección: %4
         <location filename="../forms/ui_sendcoinsentry.h" line="461"/>
         <location filename="../forms/ui_sendcoinsentry.h" line="471"/>
         <source>A&amp;mount:</source>
-        <translation>Ca&amp;ntidad:</translation>
+        <translation>C&amp;uantía:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="147"/>
@@ -3007,13 +3007,13 @@ Dirección: %4
         <location filename="../forms/sendcoinsentry.ui" line="157"/>
         <location filename="../forms/ui_sendcoinsentry.h" line="450"/>
         <source>A message that was attached to the darkcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Darkcoin network.</source>
-        <translation>Un mensaje que se adjuntó a la darkcoin: URL que será almacenada con la transacción para su referencia. Nota: Este mensaje no se enviará a través de la red Darkcoin.</translation>
+        <translation>Un mensaje que se adjuntó al darkcoin: URI que será almacenada con la transacción para su referencia. Nota: Este mensaje no se enviará a través de la red Darkcoin.</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="583"/>
         <location filename="../forms/ui_sendcoinsentry.h" line="453"/>
         <source>This is an unverified payment request.</source>
-        <translation>Esto es una petición de pago no verificado.</translation>
+        <translation>Esto es una solicitud de pago no verificada.</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="601"/>
@@ -3035,7 +3035,7 @@ Dirección: %4
         <location filename="../forms/sendcoinsentry.ui" line="1115"/>
         <location filename="../forms/ui_sendcoinsentry.h" line="463"/>
         <source>This is a verified payment request.</source>
-        <translation>Esto es una petición de pago verificado.</translation>
+        <translation>Esta es una solicitud de pago verificada.</translation>
     </message>
     <message>
         <location filename="../sendcoinsentry.cpp" line="31"/>
@@ -3062,7 +3062,7 @@ Dirección: %4
         <location filename="../forms/signverifymessagedialog.ui" line="14"/>
         <location filename="../forms/ui_signverifymessagedialog.h" line="283"/>
         <source>Signatures - Sign / Verify a Message</source>
-        <translation>Firmas - Firmar / verificar un mensaje</translation>
+        <translation>Firmas - Firmar / Verificar un mensaje</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="24"/>
@@ -3114,7 +3114,7 @@ Dirección: %4
         <location filename="../forms/signverifymessagedialog.ui" line="97"/>
         <location filename="../forms/ui_signverifymessagedialog.h" line="299"/>
         <source>Enter the message you want to sign here</source>
-        <translation>Introduzca el mensaje que desea firmar aquí</translation>
+        <translation>Introduzca aquí el mensaje que desea firmar</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="104"/>
@@ -3138,13 +3138,13 @@ Dirección: %4
         <location filename="../forms/signverifymessagedialog.ui" line="155"/>
         <location filename="../forms/ui_signverifymessagedialog.h" line="309"/>
         <source>Sign &amp;Message</source>
-        <translation>Firmar &amp;mensaje</translation>
+        <translation>Firmar &amp;Mensaje</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="169"/>
         <location filename="../forms/ui_signverifymessagedialog.h" line="311"/>
         <source>Reset all sign message fields</source>
-        <translation>Vaciar todos los campos de la firma de mensaje</translation>
+        <translation>Restablecer todos los campos de la firma de mensaje</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="172"/>
@@ -3152,7 +3152,7 @@ Dirección: %4
         <location filename="../forms/ui_signverifymessagedialog.h" line="313"/>
         <location filename="../forms/ui_signverifymessagedialog.h" line="332"/>
         <source>Clear &amp;All</source>
-        <translation>Vaciar &amp;todo</translation>
+        <translation>Limpiar &amp;todo</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="231"/>
@@ -3182,13 +3182,13 @@ Dirección: %4
         <location filename="../forms/signverifymessagedialog.ui" line="298"/>
         <location filename="../forms/ui_signverifymessagedialog.h" line="328"/>
         <source>Verify &amp;Message</source>
-        <translation>Verificar &amp;mensaje</translation>
+        <translation>Verificar &amp;Mensaje</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="312"/>
         <location filename="../forms/ui_signverifymessagedialog.h" line="330"/>
         <source>Reset all verify message fields</source>
-        <translation>Vaciar todos los campos de la verificación de mensaje</translation>
+        <translation>Restablecer todos los campos de la verificación de mensaje</translation>
     </message>
     <message>
         <location filename="../signverifymessagedialog.cpp" line="30"/>
@@ -3198,7 +3198,7 @@ Dirección: %4
     <message>
         <location filename="../signverifymessagedialog.cpp" line="31"/>
         <source>Enter a Darkcoin address (e.g. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</source>
-        <translation>Introduzca una dirección Darkcoin (e.g. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
+        <translation>Introduzca una dirección Darkcoin (p.ej. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
     </message>
     <message>
         <location filename="../signverifymessagedialog.cpp" line="114"/>
@@ -3318,7 +3318,7 @@ Dirección: %4
     <message>
         <location filename="../transactiondesc.cpp" line="38"/>
         <source>%1/offline</source>
-        <translation>%1/fuera de línea</translation>
+        <translation>%1/sin conexión</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="40"/>
@@ -3424,7 +3424,7 @@ Dirección: %4
     <message>
         <location filename="../transactiondesc.cpp" line="218"/>
         <source>Net amount</source>
-        <translation>Cantidad neta</translation>
+        <translation>Cuantía neta</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="224"/>
@@ -3470,7 +3470,7 @@ Dirección: %4
     <message>
         <location filename="../transactiondesc.cpp" line="293"/>
         <source>Amount</source>
-        <translation>Cantidad</translation>
+        <translation>Cuantía</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="294"/>
@@ -3518,7 +3518,7 @@ Dirección: %4
     <message>
         <location filename="../transactiontablemodel.cpp" line="238"/>
         <source>Amount</source>
-        <translation>Cantidad</translation>
+        <translation>Cuantía</translation>
     </message>
     <message numerus="yes">
         <location filename="../transactiontablemodel.cpp" line="287"/>
@@ -3578,7 +3578,7 @@ Dirección: %4
     <message>
         <location filename="../transactiontablemodel.cpp" line="358"/>
         <source>Received from</source>
-        <translation>Recibidos de</translation>
+        <translation>Recibido desde</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="360"/>
@@ -3613,7 +3613,7 @@ Dirección: %4
     <message>
         <location filename="../transactiontablemodel.cpp" line="374"/>
         <source>Darksend Split Up Large Inputs</source>
-        <translation>Separar Entradas Grandes de Darksend</translation>
+        <translation>Entradas Grandes separadas de Darksend</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="376"/>
@@ -3648,7 +3648,7 @@ Dirección: %4
     <message>
         <location filename="../transactiontablemodel.cpp" line="618"/>
         <source>Amount removed from or added to balance.</source>
-        <translation>Cantidad retirada o añadida al saldo.</translation>
+        <translation>Cuantía retirada o añadida al saldo.</translation>
     </message>
 </context>
 <context>
@@ -3752,7 +3752,7 @@ Dirección: %4
     <message>
         <location filename="../transactionview.cpp" line="134"/>
         <source>Copy transaction ID</source>
-        <translation>Copiar identificador de transacción</translation>
+        <translation>Copiar ID de transacción</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="135"/>
@@ -3772,7 +3772,7 @@ Dirección: %4
     <message>
         <location filename="../transactionview.cpp" line="300"/>
         <source>Comma separated file (*.csv)</source>
-        <translation>Archivos de columnas separadas por coma (*.csv)</translation>
+        <translation>Archivos de valores separados por comas (*.csv)</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="309"/>
@@ -3802,7 +3802,7 @@ Dirección: %4
     <message>
         <location filename="../transactionview.cpp" line="314"/>
         <source>Amount</source>
-        <translation>Cantidad</translation>
+        <translation>Cuantía</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="315"/>
@@ -3812,22 +3812,22 @@ Dirección: %4
     <message>
         <location filename="../transactionview.cpp" line="318"/>
         <source>Exporting Failed</source>
-        <translation>Error exportando</translation>
+        <translation>Error al exportar</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="318"/>
         <source>There was an error trying to save the transaction history to %1.</source>
-        <translation>Ha habido un error al intentar guardar la transacción con %1.</translation>
+        <translation>Se produjo un error al intentar guardar el historial de transacciones en %1.</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="322"/>
         <source>Exporting Successful</source>
-        <translation>Exportación finalizada</translation>
+        <translation>Exportación Finalizada</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="322"/>
         <source>The transaction history was successfully saved to %1.</source>
-        <translation>La transacción ha sido guardada en %1.</translation>
+        <translation>El historial de transacciones se guardó correctamente en %1.</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="431"/>
@@ -3845,7 +3845,7 @@ Dirección: %4
     <message>
         <location filename="../walletframe.cpp" line="26"/>
         <source>No wallet has been loaded.</source>
-        <translation>No se ha cargado ningún monedero</translation>
+        <translation>No se ha cargado ningún monedero.</translation>
     </message>
 </context>
 <context>
@@ -3853,7 +3853,7 @@ Dirección: %4
     <message>
         <location filename="../walletmodel.cpp" line="286"/>
         <source>Send Coins</source>
-        <translation>Enviar bitcoins</translation>
+        <translation>Enviar Monedas</translation>
     </message>
 </context>
 <context>
@@ -3861,7 +3861,7 @@ Dirección: %4
     <message>
         <location filename="../walletview.cpp" line="44"/>
         <source>&amp;Export</source>
-        <translation>&amp;Exportar</translation>
+        <translation>E&amp;xportar</translation>
     </message>
     <message>
         <location filename="../walletview.cpp" line="45"/>
@@ -3871,17 +3871,17 @@ Dirección: %4
     <message>
         <location filename="../walletview.cpp" line="229"/>
         <source>Backup Wallet</source>
-        <translation>Copia de seguridad del monedero</translation>
+        <translation>Realizar Copia de Seguridad del Monedero</translation>
     </message>
     <message>
         <location filename="../walletview.cpp" line="230"/>
         <source>Wallet Data (*.dat)</source>
-        <translation>Datos de monedero (*.dat)</translation>
+        <translation>Datos de Monedero (*.dat)</translation>
     </message>
     <message>
         <location filename="../walletview.cpp" line="236"/>
         <source>Backup Failed</source>
-        <translation>Ha fallado el respaldo</translation>
+        <translation>Falló la Copia de Seguridad</translation>
     </message>
     <message>
         <location filename="../walletview.cpp" line="236"/>
@@ -3891,7 +3891,7 @@ Dirección: %4
     <message>
         <location filename="../walletview.cpp" line="240"/>
         <source>Backup Successful</source>
-        <translation>Se ha completado la copia de seguridad del monedero</translation>
+        <translation>Backup Exitoso</translation>
     </message>
     <message>
         <location filename="../walletview.cpp" line="240"/>
@@ -3979,7 +3979,7 @@ Por ejemplo: alertnotify=echo %%s | mail -s &quot;Darkcoin Alert&quot; admin@foo
     <message>
         <location filename="../bitcoinstrings.cpp" line="68"/>
         <source>Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)</source>
-        <translation>Ejecutar un comando cuando se reciba una alerta importante o cuando veamos un fork demasiado largo (%s en cmd se reemplazará por el mensaje)</translation>
+        <translation>Ejecutar un comando cuando se reciba un aviso importante o cuando veamos un fork demasiado largo (%s en cmd se reemplazará por el mensaje)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="71"/>
@@ -4014,7 +4014,7 @@ Por ejemplo: alertnotify=echo %%s | mail -s &quot;Darkcoin Alert&quot; admin@foo
     <message>
         <location filename="../bitcoinstrings.cpp" line="88"/>
         <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 9998 or testnet: 19998)</source>
-        <translation>Escuchar conexiones JSON-RPC en &lt;puerto&gt; (predeterminado: 9998 o testnet: 19998)</translation>
+        <translation>Escuchar conexiones JSON-RPC en &lt;port&gt; (predeterminado: 9998 o testnet: 19998)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="92"/>
@@ -4064,17 +4064,17 @@ Por ejemplo: alertnotify=echo %%s | mail -s &quot;Darkcoin Alert&quot; admin@foo
     <message>
         <location filename="../bitcoinstrings.cpp" line="134"/>
         <source>Warning: Please check that your computer&apos;s date and time are correct! If your clock is wrong Darkcoin will not work properly.</source>
-        <translation>Advertencia: Verifique que la fecha y hora de su ordenador son correctas! Si su reloj está mal Darkcoin no funcionará correctamente.</translation>
+        <translation>Aviso: ¡Verifique que la fecha y hora de su ordenador son correctas! Si su reloj está mal ajustado, Darkcoin no funcionará correctamente.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="137"/>
         <source>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</source>
-        <translation>Atención: ¡Parece que la red no está totalmente de acuerdo! Algunos mineros están presentando inconvenientes.</translation>
+        <translation>Aviso: ¡Parece que la red no está totalmente de acuerdo! Algunos mineros están experimentando problemas.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="140"/>
         <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
-        <translation>Atención: ¡Parece que no estamos completamente de acuerdo con nuestros pares! Podría necesitar una actualización, u otros nodos podrían necesitarla.</translation>
+        <translation>Aviso: ¡Parece que no estamos completamente de acuerdo con nuestros pares! Podría necesitar una actualización, u otros nodos podrían necesitarla.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="143"/>
@@ -4113,7 +4113,7 @@ Si el archivo no existe, créelo con permiso de lectura solamente del propietari
     <message>
         <location filename="../bitcoinstrings.cpp" line="161"/>
         <source>Accept command line and JSON-RPC commands</source>
-        <translation>Aceptar comandos consola y JSON-RPC
+        <translation>Aceptar comandos de la consola y JSON-RPC
 </translation>
     </message>
     <message>
@@ -4140,7 +4140,7 @@ Si el archivo no existe, créelo con permiso de lectura solamente del propietari
     <message>
         <location filename="../bitcoinstrings.cpp" line="167"/>
         <source>Attempt to recover private keys from a corrupt wallet.dat</source>
-        <translation>Intento de recuperar claves privadas de un wallet.dat corrupto</translation>
+        <translation>Intentar recuperar claves privadas de un wallet.dat corrupto</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="181"/>
@@ -4185,12 +4185,12 @@ Si el archivo no existe, créelo con permiso de lectura solamente del propietari
     <message>
         <location filename="../bitcoinstrings.cpp" line="90"/>
         <source>Name to construct url for KeePass entry that stores the wallet passphrase</source>
-        <translation>Nombre para construir la url de la entrada KeePass que almancena la contraseña del monedero</translation>
+        <translation>Nombre para construir la url de la entrada KeePass que almacena la contraseña del monedero</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="97"/>
         <source>Provide liquidity to Darksend by infrequently mixing coins on a continual basis (0-100, default: 0, 1=very frequent, high fees, 100=very infrequent, low fees)</source>
-        <translation>Ofrecer liquidez a Darksen mezclando raramente darkcoins en una forma contínua (0-100, predeterminado: 0, 1=muy frecuente, comisiones altas, 100=muy infrecuente, comisiones bajas)</translation>
+        <translation>Ofrecer liquidez a Darksen mezclando darkcoins con poca frecuencia y de forma contínua (0-100, predeterminado: 0, 1=muy frecuente, comisiones altas, 100=muy infrecuente, comisiones bajas)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="101"/>
@@ -4200,7 +4200,7 @@ Si el archivo no existe, créelo con permiso de lectura solamente del propietari
     <message>
         <location filename="../bitcoinstrings.cpp" line="104"/>
         <source>Set external address:port to get to this masternode (example: address:port)</source>
-        <translation>Ajustar dirección externa:puerto para conseguir este masternode (p.ej. dirección:puerto)</translation>
+        <translation>Ajustar dirección externa:puerto para acceder a este masternode (p.ej. dirección:puerto)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="114"/>
@@ -4210,7 +4210,7 @@ Si el archivo no existe, créelo con permiso de lectura solamente del propietari
     <message>
         <location filename="../bitcoinstrings.cpp" line="123"/>
         <source>Unable to locate enough Darksend non-denominated funds for this transaction that are not equal 1000 DRK</source>
-        <translation>No se pueden localizar suficientes fondos no denominados Darksend para esta transacción que no sean iguales a 1000 DRK</translation>
+        <translation>No se pueden localizar suficientes fondos Darksend no denominados para esta transacción que no sean iguales a 1000 DRK</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="126"/>
@@ -4220,7 +4220,7 @@ Si el archivo no existe, créelo con permiso de lectura solamente del propietari
     <message>
         <location filename="../bitcoinstrings.cpp" line="155"/>
         <source>You must specify a masternodeprivkey in the configuration. Please see documentation for help.</source>
-        <translation>Debe especificar un masternodeprivkey en la configuración. Por favor, consulte la documentación para obtener ayuda.</translation>
+        <translation>Debe especificar una masternodeprivkey en la configuración. Por favor, consulte la documentación para obtener ayuda.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="166"/>
@@ -4230,7 +4230,7 @@ Si el archivo no existe, créelo con permiso de lectura solamente del propietari
     <message>
         <location filename="../bitcoinstrings.cpp" line="169"/>
         <source>Cannot downgrade wallet</source>
-        <translation>No se puede rebajar el monedero</translation>
+        <translation>No se puede regresar a una versión anterior del monedero</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="170"/>
@@ -4250,7 +4250,7 @@ Si el archivo no existe, créelo con permiso de lectura solamente del propietari
     <message>
         <location filename="../bitcoinstrings.cpp" line="173"/>
         <source>Clear list of wallet transactions (diagnostic tool; implies -rescan)</source>
-        <translation>Vaciar lista de transacciones del monedero (herramienta de diagnóstico; implica -rescan)</translation>
+        <translation>Limpiar lista de transacciones del monedero (herramienta de diagnóstico; implica -rescan)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="174"/>
@@ -4295,12 +4295,12 @@ Si el archivo no existe, créelo con permiso de lectura solamente del propietari
     <message>
         <location filename="../bitcoinstrings.cpp" line="184"/>
         <source>Debugging/Testing options:</source>
-        <translation>Opciones de depuración/pruebas:</translation>
+        <translation>Opciones de Depuración/Pruebas:</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="185"/>
         <source>Disable safemode, override a real safe mode event (default: 0)</source>
-        <translation>Inhabilitar el modo seguro, no considerar un suceso real de modo seguro (predeterminado: 0)</translation>
+        <translation>Desactivar el modo seguro, no considerar un suceso real de modo seguro (predeterminado: 0)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="186"/>
@@ -4320,7 +4320,7 @@ Si el archivo no existe, créelo con permiso de lectura solamente del propietari
     <message>
         <location filename="../bitcoinstrings.cpp" line="189"/>
         <source>Done loading</source>
-        <translation>Generado pero no aceptado</translation>
+        <translation>Carga finalizada</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="190"/>
@@ -4360,7 +4360,7 @@ Si el archivo no existe, créelo con permiso de lectura solamente del propietari
     <message>
         <location filename="../bitcoinstrings.cpp" line="197"/>
         <source>Error opening block database</source>
-        <translation>Error al abrir base de datos de bloques.</translation>
+        <translation>Error al abrir la base de datos de bloques.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="198"/>
@@ -4435,7 +4435,7 @@ Si el archivo no existe, créelo con permiso de lectura solamente del propietari
     <message>
         <location filename="../bitcoinstrings.cpp" line="212"/>
         <source>Failed to write to coin database</source>
-        <translation>No se ha podido escribir en la base de datos de bitcoins</translation>
+        <translation>No se ha podido escribir en la base de datos de monedas</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="213"/>
@@ -4450,7 +4450,7 @@ Si el archivo no existe, créelo con permiso de lectura solamente del propietari
     <message>
         <location filename="../bitcoinstrings.cpp" line="215"/>
         <source>Fee per kB to add to transactions you send</source>
-        <translation>Donación por KB añadida a las transacciones que envíe</translation>
+        <translation>Comisión por KB que se añade a las transacciones que envíe</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="216"/>
@@ -4490,7 +4490,7 @@ Si el archivo no existe, créelo con permiso de lectura solamente del propietari
     <message>
         <location filename="../bitcoinstrings.cpp" line="218"/>
         <source>Generate coins (default: 0)</source>
-        <translation>Generar bitcoins (predeterminado: 0)</translation>
+        <translation>Generar darkcoins (predeterminado: 0)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="219"/>
@@ -4500,12 +4500,12 @@ Si el archivo no existe, créelo con permiso de lectura solamente del propietari
     <message>
         <location filename="../bitcoinstrings.cpp" line="220"/>
         <source>How many blocks to check at startup (default: 288, 0 = all)</source>
-        <translation>Cuántos bloques comprobar al iniciar (predeterminado: 288, 0 = todos)</translation>
+        <translation>Cuántos bloques comprobar al inicio (predeterminado: 288, 0 = todos)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="221"/>
         <source>If &lt;category&gt; is not supplied, output all debugging information.</source>
-        <translation>Si no se proporciona &lt;category&gt;, mostrar toda la depuración</translation>
+        <translation>Si no se proporciona &lt;category&gt;, mostrar toda la información de depuración</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="222"/>
@@ -4525,7 +4525,7 @@ Si el archivo no existe, créelo con permiso de lectura solamente del propietari
     <message>
         <location filename="../bitcoinstrings.cpp" line="225"/>
         <source>Incorrect or no genesis block found. Wrong datadir for network?</source>
-        <translation>Incorrecto o bloque de génesis no encontrado. Datadir equivocada para la red?</translation>
+        <translation>Bloque génesis incorrecto o no encontrado. ¿Es el directorio datadir incorrecto para la red?</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="226"/>
@@ -4560,17 +4560,17 @@ Si el archivo no existe, créelo con permiso de lectura solamente del propietari
     <message>
         <location filename="../bitcoinstrings.cpp" line="232"/>
         <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: &apos;%s&apos;</source>
-        <translation>Cantidad inválida para -minrelaytxfee=&lt;amount&gt;: &apos;%s&apos;</translation>
+        <translation>Cuantía inválida para -minrelaytxfee=&lt;amount&gt;: &apos;%s&apos;</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="233"/>
         <source>Invalid amount for -mintxfee=&lt;amount&gt;: &apos;%s&apos;</source>
-        <translation>Cantidad inválida para -mintxfee=&lt;amount&gt;: &apos;%s&apos;</translation>
+        <translation>Cuantía inválida para -mintxfee=&lt;amount&gt;: &apos;%s&apos;</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="234"/>
         <source>Invalid amount for -paytxfee=&lt;amount&gt;: &apos;%s&apos;</source>
-        <translation>Cantidad inválida para -paytxfee=&lt;amount&gt;: &apos;%s&apos;</translation>
+        <translation>Cuantía inválida para -paytxfee=&lt;amount&gt;: &apos;%s&apos;</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="235"/>
@@ -4580,7 +4580,7 @@ Si el archivo no existe, créelo con permiso de lectura solamente del propietari
     <message>
         <location filename="../bitcoinstrings.cpp" line="236"/>
         <source>Invalid masternodeprivkey. Please see documenation.</source>
-        <translation>Masternodeprivkey inválido. Por favor, lea la  documentación.</translation>
+        <translation>Masternodeprivkey inválida. Por favor, lea la  documentación.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="237"/>
@@ -4615,7 +4615,7 @@ Si el archivo no existe, créelo con permiso de lectura solamente del propietari
     <message>
         <location filename="../bitcoinstrings.cpp" line="243"/>
         <source>List commands</source>
-        <translation>Muestra comandos
+        <translation>Listar comandos
 </translation>
     </message>
     <message>
@@ -4646,7 +4646,7 @@ Si el archivo no existe, créelo con permiso de lectura solamente del propietari
     <message>
         <location filename="../bitcoinstrings.cpp" line="249"/>
         <source>Log transaction priority and fee per kB when mining blocks (default: 0)</source>
-        <translation>Registrar en el log la prioridad de transacciones y la comisión por kB al minar bloques (predeterminado: 0)</translation>
+        <translation>Registrar prioridad de las transacciones y comisión por kB al minar bloques (predeterminado: 0)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="250"/>
@@ -4661,17 +4661,17 @@ Si el archivo no existe, créelo con permiso de lectura solamente del propietari
     <message>
         <location filename="../bitcoinstrings.cpp" line="252"/>
         <source>Masternode options:</source>
-        <translation>Opciones del Masternode</translation>
+        <translation>Opciones del Masternode:</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="253"/>
         <source>Maximum per-connection receive buffer, &lt;n&gt;*1000 bytes (default: 5000)</source>
-        <translation>Búfer de recepción máximo por conexión, &lt;n&gt;*1000 bytes (predeterminado: 5000)</translation>
+        <translation>Búfer máximo de recepción por conexión, &lt;n&gt;*1000 bytes (predeterminado: 5000)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="254"/>
         <source>Maximum per-connection send buffer, &lt;n&gt;*1000 bytes (default: 1000)</source>
-        <translation>Búfer de recepción máximo por conexión, , &lt;n&gt;*1000 bytes (predeterminado: 1000)</translation>
+        <translation>Búfer máximo de envío por conexión, , &lt;n&gt;*1000 bytes (predeterminado: 1000)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="255"/>
@@ -4741,7 +4741,7 @@ Si el archivo no existe, créelo con permiso de lectura solamente del propietari
     <message>
         <location filename="../bitcoinstrings.cpp" line="269"/>
         <source>Rescan the block chain for missing wallet transactions</source>
-        <translation>Volver a examinar la cadena de bloques en busca de transacciones del monedero perdidas</translation>
+        <translation>Volver a examinar la cadena de bloques en busca de transacciones perdidas del monedero</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="270"/>
@@ -4751,7 +4751,7 @@ Si el archivo no existe, créelo con permiso de lectura solamente del propietari
     <message>
         <location filename="../bitcoinstrings.cpp" line="271"/>
         <source>Run a thread to flush wallet periodically (default: 1)</source>
-        <translation>Ejecutar un hilo (thread) para limpiar de la memoria el monedero periódicamente (predeterminado: 1)</translation>
+        <translation>Ejecutar un hilo (thread) para refrescar el monedero periódicamente (predeterminado: 1)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="272"/>
@@ -4816,7 +4816,7 @@ Si el archivo no existe, créelo con permiso de lectura solamente del propietari
     <message>
         <location filename="../bitcoinstrings.cpp" line="285"/>
         <source>Set the number of threads to service RPC calls (default: 4)</source>
-        <translation>Establecer el número de procesos para atender las llamadas RPC (predeterminado: 4)</translation>
+        <translation>Establecer el número de hilos para atender las llamadas RPC (predeterminado: 4)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="286"/>
@@ -4851,7 +4851,7 @@ Si el archivo no existe, créelo con permiso de lectura solamente del propietari
     <message>
         <location filename="../bitcoinstrings.cpp" line="292"/>
         <source>Specify connection timeout in milliseconds (default: 5000)</source>
-        <translation>Especificar el tiempo máximo de conexión en milisegundos (predeterminado: 5000)</translation>
+        <translation>Especificar el tiempo máximo de desconexión en milisegundos (predeterminado: 5000)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="293"/>
@@ -4901,7 +4901,7 @@ Si el archivo no existe, créelo con permiso de lectura solamente del propietari
     <message>
         <location filename="../bitcoinstrings.cpp" line="302"/>
         <source>This is intended for regression testing tools and app development.</source>
-        <translation>Esto está enfocado a las herramientas de prueba de regresión y desarrollo de aplicaciones</translation>
+        <translation>Esto está enfocado a las herramientas de prueba de regresión y desarrollo de aplicaciones.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="303"/>
@@ -4921,7 +4921,7 @@ Si el archivo no existe, créelo con permiso de lectura solamente del propietari
     <message>
         <location filename="../bitcoinstrings.cpp" line="306"/>
         <source>Transaction amounts must be positive</source>
-        <translation>Las cantidades en las transacciones deben ser positivas</translation>
+        <translation>Las cuantías en las transacciones deben ser positivas</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="307"/>
@@ -4941,7 +4941,7 @@ Si el archivo no existe, créelo con permiso de lectura solamente del propietari
     <message>
         <location filename="../bitcoinstrings.cpp" line="313"/>
         <source>Upgrade wallet to latest format</source>
-        <translation>Actualizar el monedero al último formato</translation>
+        <translation>Actualizar el monedero al formato más reciente</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="314"/>
@@ -5011,7 +5011,7 @@ Si el archivo no existe, créelo con permiso de lectura solamente del propietari
     <message>
         <location filename="../bitcoinstrings.cpp" line="327"/>
         <source>Wallet needed to be rewritten: restart Darkcoin to complete</source>
-        <translation>El monedero necesita ser reescrito: reinicia Darkcoin para completar</translation>
+        <translation>El monedero necesita ser reescrito: reinicie Darkcoin para terminar</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="328"/>
@@ -5026,12 +5026,12 @@ Si el archivo no existe, créelo con permiso de lectura solamente del propietari
     <message>
         <location filename="../bitcoinstrings.cpp" line="330"/>
         <source>Warning: Deprecated argument -debugnet ignored, use -debug=net</source>
-        <translation>Aviso: Argumento -debugnet anticuado, utilice -debug=net</translation>
+        <translation>Aviso: El argumento obsoleto -debugnet se ignoró, utilice -debug=net</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="331"/>
         <source>Warning: This version is obsolete, upgrade required!</source>
-        <translation>Aviso: Esta versión es obsoleta, actualización necesaria!</translation>
+        <translation>Aviso: Esta versión se ha quedado obsoleta, ¡actualización obligatoria!</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="332"/>
@@ -5056,7 +5056,7 @@ Si el archivo no existe, créelo con permiso de lectura solamente del propietari
     <message>
         <location filename="../bitcoinstrings.cpp" line="336"/>
         <source>wallet.dat corrupt, salvage failed</source>
-        <translation>wallet.dat corrupto. Ha fallado la recuperación.</translation>
+        <translation>wallet.dat dañado, falló el rescate</translation>
     </message>
 </context>
 </TS>

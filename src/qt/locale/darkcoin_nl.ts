@@ -1155,7 +1155,7 @@ Adres: %4
         <location filename="../forms/darksendconfig.ui" line="91"/>
         <location filename="../forms/ui_darksendconfig.h" line="102"/>
         <source>Use 4 separate masternodes to mix funds up to 1000DRK</source>
-        <translation type="unfinished"/>
+        <translation>Gebruik 4 verschillende masternodes om tot en met  1000DRK te mixen</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="104"/>
@@ -1197,17 +1197,17 @@ Adres: %4
     <message>
         <location filename="../darksendconfig.cpp" line="44"/>
         <source>Darksend was successfully set to basic (%1 and 2 rounds). You can change this at any time by opening Darkcoin&apos;s configuration screen.</source>
-        <translation type="unfinished"/>
+        <translation>Darksend is succesvol geconfigureed als &apos;eenvoudig&apos; (%1 en 2 rondes). Je kan dit op elk ogenblik veranderen in het configuratiescherm van Darksend.</translation>
     </message>
     <message>
         <location filename="../darksendconfig.cpp" line="59"/>
         <source>Darksend was successfully set to high (%1 and 8 rounds). You can change this at any time by opening Darkcoin&apos;s configuration screen.</source>
-        <translation type="unfinished"/>
+        <translation>Darksend is succesvol geconfigureed als &apos;hoog&apos;(%1 en 8 rondes). Je kan dit op elk ogenblik veranderen in het configuratiescherm van Darksend.</translation>
     </message>
     <message>
         <location filename="../darksendconfig.cpp" line="74"/>
         <source>Darksend was successfully set to maximum (%1 and 16 rounds). You can change this at any time by opening Darkcoin&apos;s configuration screen.</source>
-        <translation type="unfinished"/>
+        <translation>Darksend is succesvol geconfigureed als &apos;maximum&apos;(%1 en 16 rondes). Je kan dit op elk ogenblik veranderen in het configuratiescherm van Darksend.</translation>
     </message>
 </context>
 <context>
@@ -1265,7 +1265,7 @@ Adres: %4
     <message>
         <location filename="../editaddressdialog.cpp" line="111"/>
         <source>The entered address &quot;%1&quot; is not a valid Darkcoin address.</source>
-        <translation type="unfinished"/>
+        <translation>Het ingevoerde adres &quot;%1&quot; is geen geldig Darkcoin adres.</translation>
     </message>
     <message>
         <location filename="../editaddressdialog.cpp" line="116"/>
@@ -4795,7 +4795,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="284"/>
         <source>Set the masternode private key</source>
-        <translation type="unfinished"/>
+        <translation>Stel de masternode private key in</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="285"/>
@@ -4905,12 +4905,12 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="306"/>
         <source>Transaction amounts must be positive</source>
-        <translation type="unfinished"/>
+        <translation>Transactiebedrag moet positief zijn</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="307"/>
         <source>Transaction too large</source>
-        <translation type="unfinished"/>
+        <translation>Transactie te groot</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="311"/>
@@ -4925,7 +4925,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="313"/>
         <source>Upgrade wallet to latest format</source>
-        <translation type="unfinished"/>
+        <translation>Upgrade portemonnee naar nieuwste format</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="314"/>

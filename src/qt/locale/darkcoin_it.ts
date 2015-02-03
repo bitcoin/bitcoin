@@ -1996,7 +1996,7 @@ Più URL vengono separati da una barra verticale |.</translation>
     <message>
         <location filename="../overviewpage.cpp" line="443"/>
         <source>Darksend requires at least %1 to use.</source>
-        <translation type="unfinished"/>
+        <translation>Darksend ha bisogno almeno dell&apos; 1% per essere usato.</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="457"/>

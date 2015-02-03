@@ -88,7 +88,7 @@ Ten produkt zawiera oprogramowanie opracowane przez Projekt OpenSSL do użycia w
         <location filename="../forms/addressbookpage.ui" line="85"/>
         <location filename="../forms/ui_addressbookpage.h" line="137"/>
         <source>Delete the currently selected address from the list</source>
-        <translation>Usuń zaznaczony adres z listy</translation>
+        <translation>Usuń obecnie zaznaczony adres z listy</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="88"/>
@@ -1360,7 +1360,7 @@ Adres: %4
     <message>
         <location filename="../utilitydialog.cpp" line="80"/>
         <source>Set SSL root certificates for payment request (default: -system-)</source>
-        <translation type="unfinished"/>
+        <translation>Ustaw główne cerytfikaty SSL dla żądań płatności (domyślnie: -system-)</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="81"/>
@@ -2341,7 +2341,7 @@ Adres: %4
     <message>
         <location filename="../rpcconsole.cpp" line="331"/>
         <source>Welcome to the Darkcoin RPC console.</source>
-        <translation type="unfinished"/>
+        <translation>Witaj w konsoli RPC Darkcoina</translation>
     </message>
     <message>
         <location filename="../rpcconsole.cpp" line="332"/>
@@ -2817,7 +2817,7 @@ Adres: %4
     <message>
         <location filename="../sendcoinsdialog.cpp" line="154"/>
         <source>(darksend requires this amount to be rounded up to the nearest %1).</source>
-        <translation type="unfinished"/>
+        <translation>(darksend wymaga aby kwota ta została zaokrąglona do najbliższego 1%).</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="188"/>
@@ -2835,7 +2835,7 @@ Adres: %4
     <message>
         <location filename="../sendcoinsdialog.cpp" line="260"/>
         <source>are added as transaction fee</source>
-        <translation type="unfinished"/>
+        <translation>dodane są jako opłata za transakcje</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="274"/>
@@ -2900,12 +2900,12 @@ Adres: %4
     <message>
         <location filename="../sendcoinsdialog.cpp" line="512"/>
         <source>Error: The wallet was unlocked only to anonymize coins.</source>
-        <translation type="unfinished"/>
+        <translation>Błąd: Portfel został odblokowany tylko dla anonimizacji monet.</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="625"/>
         <source>Warning: Invalid Darkcoin address</source>
-        <translation type="unfinished"/>
+        <translation>Ostrzeżenie: adres Darkcoin jest nieprawidlowy </translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="634"/>
@@ -3004,7 +3004,7 @@ Adres: %4
         <location filename="../forms/sendcoinsentry.ui" line="157"/>
         <location filename="../forms/ui_sendcoinsentry.h" line="450"/>
         <source>A message that was attached to the darkcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Darkcoin network.</source>
-        <translation type="unfinished"/>
+        <translation>Wiadomość, która została dołączona do darkcoin: Link, który zostanie zapisany wraz z transakcją do wglądu w przyszłości. Zauważ. że sama wiadomość nie zostanie wysłana przez sieć Darkcoina.</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="583"/>
@@ -3045,7 +3045,7 @@ Adres: %4
     <message>
         <location filename="../utilitydialog.cpp" line="129"/>
         <source>Darkcoin Core is shutting down...</source>
-        <translation type="unfinished"/>
+        <translation>Trwa zamykanie Darkcoin Core</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="130"/>
@@ -3161,7 +3161,7 @@ Adres: %4
         <location filename="../forms/signverifymessagedialog.ui" line="237"/>
         <location filename="../forms/ui_signverifymessagedialog.h" line="316"/>
         <source>Enter the signing address, message (ensure you copy line breaks, spaces, tabs, etc. exactly) and signature below to verify the message. Be careful not to read more into the signature than what is in the signed message itself, to avoid being tricked by a man-in-the-middle attack.</source>
-        <translation>Wpisz adres podpisu, wiadomość (upewnij się, że dokładnie skopiujesz wszystkie zakończenia linii, spacje, tabulacje itp.) oraz podpis poniżej by sprawdzić wiadomość. Uważaj by nie dodać więcej do podpisu niż do samej podpisywanej wiadomości by uniknąć ataku man-in-the-middle (człowiek pośrodku)</translation>
+        <translation>Wpisz adres podpisującu, podaj wiadomość (upewnij się, że dokładnie skopiujesz wszystkie zakończenia linii, spacje, tabulacje itp.) oraz podpis poniżej by sprawdzić wiadomość. Uważaj by nie dodać więcej do podpisu niż do samej podpisywanej wiadomości by uniknąć ataku man-in-the-middle (człowiek pośrodku)</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="258"/>
@@ -3615,7 +3615,7 @@ Adres: %4
     <message>
         <location filename="../transactiontablemodel.cpp" line="376"/>
         <source>Darksent</source>
-        <translation type="unfinished"/>
+        <translation>Darksent</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="418"/>
@@ -3699,7 +3699,7 @@ Adres: %4
     <message>
         <location filename="../transactionview.cpp" line="81"/>
         <source>Darksent</source>
-        <translation type="unfinished"/>
+        <translation>Darksent</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="82"/>
@@ -3911,7 +3911,16 @@ If the file does not exist, create it with owner-readable-only file permissions.
 It is also recommended to set alertnotify so you are notified of problems;
 for example: alertnotify=echo %%s | mail -s &quot;Darkcoin Alert&quot; admin@foo.com
 </source>
-        <translation type="unfinished"/>
+        <translation>%s, musisz ustawić hasło rpc w pliku konfiguracji:
+%s
+Zalecane jest abyś użył te o to losowo stworzone hasło
+rpcuser=darkcoinrpc
+rpcpassword=%s
+(Nie musisz pamiętać tego hasła)
+Twoje hasło NIE MOŻE być takie samo jak twój login.
+Jeśli plik ten nie istnieje, stwórz go z uprawnieniami do odczytu tylko przez właściciela.
+Zaleca się również aby ustawić alarm powiadomień tzw. alertnotify, aby dać ci znać w razie wystąpienia jekiegoś problemu, na przykład: alertnotify=echo %%s I -s &quot;Darkcoin Alert&quot; admin@foo.com
+</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="25"/>
@@ -3921,62 +3930,62 @@ for example: alertnotify=echo %%s | mail -s &quot;Darkcoin Alert&quot; admin@foo
     <message>
         <location filename="../bitcoinstrings.cpp" line="28"/>
         <source>An error occurred while setting up the RPC port %u for listening on IPv4: %s</source>
-        <translation type="unfinished"/>
+        <translation>Wystąpił błąd podczas zakładania portu %u RPC służącego do nasłuchu na IPv4: %s</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="30"/>
         <source>An error occurred while setting up the RPC port %u for listening on IPv6, falling back to IPv4: %s</source>
-        <translation type="unfinished"/>
+        <translation>Wystąpił błąd podczas ustawiania portu %u służącego do nasłuchu na IPv6 przez co nastąpił powrót do do IPv4: s%</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="33"/>
         <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
-        <translation type="unfinished"/>
+        <translation>Związany z danym adresem oraz zawsze prowadzący na nim nasłuch.  Użyj [host]:oznaczenie dla IPv6</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="36"/>
         <source>Cannot obtain a lock on data directory %s. Darkcoin Core is probably already running.</source>
-        <translation type="unfinished"/>
+        <translation>Nie można zablokować katalogu danych %s. Prawdopodobnie Darkcoin jest już uruchomiony. </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="39"/>
         <source>Continuously rate-limit free transactions to &lt;n&gt;*1000 bytes per minute (default:15)</source>
-        <translation type="unfinished"/>
+        <translation>Utrzymuj limit tempa darmowych transakcji do &lt;n&gt;*1000 bitów na minutę (domyślnie: 15)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="50"/>
         <source>Enter regression test mode, which uses a special chain in which blocks can be solved instantly. This is intended for regression testing tools and app development.</source>
-        <translation type="unfinished"/>
+        <translation>Wejdź w regresyjny tryb testowy, który używa specjalnego łańcucha, w którym bloki mogą być rozwiązywane natychmiastowo. Tryb ten został stworzony dla narzędzi do testowania regresyjnego oraz dla tworzenia aplikacji.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="54"/>
         <source>Enter regression test mode, which uses a special chain in which blocks can be solved instantly.</source>
-        <translation type="unfinished"/>
+        <translation>Wejdź w regresyjny tryb testowy, który używa specjalnego łańcucha, w którym bloki mogą być rozwiązywane natychmiastowo. </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="59"/>
         <source>Error: The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
-        <translation type="unfinished"/>
+        <translation>Transakcja została odrzucona! Może się to zdarzyć jeśli część monet z portfela została już wydana używając kopii pliku wallet.dat i nie zostało to tutaj uwzględnione.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="63"/>
         <source>Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds!</source>
-        <translation type="unfinished"/>
+        <translation>Błąd: Z powodu wielkości kwoty, swojego skomplikowania, lub użycia niedawno otrzymanych monet, transakcja ta wymaga uiszczenia opłaty o wysokości co najmniej %s </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="68"/>
         <source>Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)</source>
-        <translation type="unfinished"/>
+        <translation>Wykonaj komendę po otrzymaniu odpowiedniego zawiadomienia lub po obserwacji bardzo długiego rozszczepienia (%s w konsoli jest zastąpiony przez wiadomość)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="71"/>
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
-        <translation type="unfinished"/>
+        <translation>Wykonaj komendę kiedy zmienia się transakcja portfela (%s w konsoli jest zastąpione przez TxID)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="74"/>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
-        <translation type="unfinished"/>
+        <translation>Wykonaj komendę przy zmianie najlepszego bloku (%s w konsoli jest zastąpione przez hasz bloku)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="77"/>
@@ -4128,7 +4137,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="181"/>
         <source>Darkcoin Core Daemon</source>
-        <translation type="unfinished"/>
+        <translation>Darkcoin Core Daemon</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="182"/>
@@ -4268,7 +4277,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="180"/>
         <source>Corrupted block database detected</source>
-        <translation type="unfinished"/>
+        <translation>Wykryto uszkodzoną bazę danych bloków</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="183"/>
@@ -4298,12 +4307,12 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="188"/>
         <source>Do you want to rebuild the block database now?</source>
-        <translation type="unfinished"/>
+        <translation>Czy chcesz teraz przebudować bazę danych bloków?</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="189"/>
         <source>Done loading</source>
-        <translation type="unfinished"/>
+        <translation>Wczytywanie zakończone</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="190"/>
@@ -4323,32 +4332,32 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="193"/>
         <source>Error loading block database</source>
-        <translation type="unfinished"/>
+        <translation>Błąd wczytywania bloku bazy danych</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="194"/>
         <source>Error loading wallet.dat</source>
-        <translation type="unfinished"/>
+        <translation>Błąd wczytywania wallet.dat</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="195"/>
         <source>Error loading wallet.dat: Wallet corrupted</source>
-        <translation type="unfinished"/>
+        <translation>Błąd wczytywania wallet.dat: Portfel uszkodzony</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="196"/>
         <source>Error loading wallet.dat: Wallet requires newer version of Darkcoin</source>
-        <translation type="unfinished"/>
+        <translation>Błą wczytywania wallet.dat: Portfel wymaga nowszej wersji Darkcoin</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="197"/>
         <source>Error opening block database</source>
-        <translation type="unfinished"/>
+        <translation>Błąd otwarcia bloku bazy danych</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="198"/>
         <source>Error reading from database, shutting down.</source>
-        <translation type="unfinished"/>
+        <translation>Błąd odczytu bazy danych, następuje zamknięcie.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="199"/>
@@ -4358,12 +4367,12 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="200"/>
         <source>Error: Disk space is low!</source>
-        <translation type="unfinished"/>
+        <translation>Błąd: Przestrzeń dyskowa jest niska!</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="201"/>
         <source>Error: Wallet locked, unable to create transaction!</source>
-        <translation type="unfinished"/>
+        <translation>Błąd: Portfel zamknięty, niemożliwym jest stworzenie transakcji!</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="202"/>
@@ -4373,17 +4382,17 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="203"/>
         <source>Error: system error: </source>
-        <translation type="unfinished"/>
+        <translation>Błąd systemu</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="204"/>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
-        <translation type="unfinished"/>
+        <translation>Nie powiódł się nasłuch żadnego z portów. Użyj -słuchaj=0 jeśli tego chcesz.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="205"/>
         <source>Failed to read block info</source>
-        <translation type="unfinished"/>
+        <translation>Niepowodzenie przy odczycie informacji o bloku</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="206"/>
@@ -4413,7 +4422,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="211"/>
         <source>Failed to write file info</source>
-        <translation type="unfinished"/>
+        <translation>Niepowodzenie przy zapisie informacji o pliku</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="212"/>
@@ -4458,7 +4467,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="309"/>
         <source>Unable to locate enough Darksend denominated funds for this transaction</source>
-        <translation type="unfinished"/>
+        <translation>Niemożliwym jest zlokalizowanie wystarczającej ilości zdenominowanych środków Darksend dla tej transakcji</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="310"/>

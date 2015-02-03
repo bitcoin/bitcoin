@@ -25,7 +25,6 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>
 Detta är experimentell mjukvara.
 
-
 Distribuerad under mjukvarulicensen MIT/X11, se den medföljande filen COPYING eller http://www.opensource.org/licenses/mit-license.php.
 
 Denna produkten innehåller mjukvara utvecklad av OpenSSL Project för användning i OpenSSL Toolkit (http://www.openssl.org/) och kryptografisk mjukvara utvecklad av Eric Young (eay@cryptsoft.com) samt UPnP-mjukvara skriven av Thomas Bernard.</translation>
@@ -34,7 +33,7 @@ Denna produkten innehåller mjukvara utvecklad av OpenSSL Project för användni
         <location filename="../utilitydialog.cpp" line="30"/>
         <location filename="../utilitydialog.cpp" line="31"/>
         <source>Copyright</source>
-        <translation>Copyright</translation>
+        <translation>Upphovsrätt</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="30"/>
@@ -101,7 +100,7 @@ Denna produkten innehåller mjukvara utvecklad av OpenSSL Project för användni
         <location filename="../forms/addressbookpage.ui" line="112"/>
         <location filename="../forms/ui_addressbookpage.h" line="141"/>
         <source>Export the data in the current tab to a file</source>
-        <translation>Exportera informationen i den nuvarande fliken till en fil</translation>
+        <translation>Exportera datan i den nuvarande fliken till en fil</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="115"/>
@@ -118,7 +117,7 @@ Denna produkten innehåller mjukvara utvecklad av OpenSSL Project för användni
     <message>
         <location filename="../addressbookpage.cpp" line="45"/>
         <source>Choose the address to send coins to</source>
-        <translation>Välj en adress att sända betalning till</translation>
+        <translation>Välj en adress att skicka betalningen till</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="46"/>
@@ -143,7 +142,7 @@ Denna produkten innehåller mjukvara utvecklad av OpenSSL Project för användni
     <message>
         <location filename="../addressbookpage.cpp" line="65"/>
         <source>These are your Darkcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>Dessa är dina Darkcoin-adresser för att skicka betalningar. Kontrollera alltid beloppet och mottagaradressen innan du skickar mynt.</translation>
+        <translation>Dessa är dina Darkcoin-adresser för att skicka betalningar. Kontrollera alltid mängden och mottagaradressen innan du skickar mynt.</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="69"/>
@@ -163,7 +162,7 @@ Denna produkten innehåller mjukvara utvecklad av OpenSSL Project för användni
     <message>
         <location filename="../addressbookpage.cpp" line="77"/>
         <source>&amp;Edit</source>
-        <translation>&amp;Editera</translation>
+        <translation>&amp;Redigera</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="271"/>
@@ -255,7 +254,7 @@ Denna produkten innehåller mjukvara utvecklad av OpenSSL Project för användni
     <message>
         <location filename="../askpassphrasedialog.cpp" line="48"/>
         <source>This operation needs your wallet passphrase to unlock the wallet.</source>
-        <translation>Denna operation behöver din plånboks lösenord för att låsa upp plånboken.</translation>
+        <translation>Denna handling kräver din plånboks lösenord för att låsa upp plånboken.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="53"/>
@@ -265,7 +264,7 @@ Denna produkten innehåller mjukvara utvecklad av OpenSSL Project för användni
     <message>
         <location filename="../askpassphrasedialog.cpp" line="56"/>
         <source>This operation needs your wallet passphrase to decrypt the wallet.</source>
-        <translation>Denna operation behöver din plånboks lösenord för att dekryptera plånboken.</translation>
+        <translation>Denna handling kräver din plånboks lösenord för att dekryptera plånboken.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="61"/>
@@ -306,7 +305,7 @@ Denna produkten innehåller mjukvara utvecklad av OpenSSL Project för användni
     <message>
         <location filename="../askpassphrasedialog.cpp" line="124"/>
         <source>Darkcoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your darkcoins from being stolen by malware infecting your computer.</source>
-        <translation>Darkcoin kommer nu att avsluta krypteringsprocessen. Kom ihåg att krypteringen av din plånbok kan inte helt skydda dig mot att dina Darkcoins blir stulna av skadeprogram som har infekterat din dator.,</translation>
+        <translation>Darkcoin kommer nu att avsluta krypteringsprocessen. Kom ihåg att krypteringen av din plånbok inte helt kan skydda dig mot att dina Darkcoins blir stulna av skadeprogram som har infekterat din dator.,</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="128"/>
@@ -531,7 +530,7 @@ Denna produkten innehåller mjukvara utvecklad av OpenSSL Project för användni
     <message>
         <location filename="../bitcoingui.cpp" line="302"/>
         <source>Sign messages with your Darkcoin addresses to prove you own them</source>
-        <translation>Signera meddelande med dina Darkcoin-adresser för att bevisa att du äger dem</translation>
+        <translation>Signera meddelanden med dina Darkcoin-adresser för att bevisa att du äger dem</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="303"/>
@@ -601,7 +600,7 @@ Denna produkten innehåller mjukvara utvecklad av OpenSSL Project för användni
     <message>
         <location filename="../bitcoingui.cpp" line="319"/>
         <source>Open a darkcoin: URI or payment request</source>
-        <translation>Öppna en Darkcoin.URI eller betalningsbegäran</translation>
+        <translation>Öppna en Darkcoin: URI eller betalningsbegäran</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="321"/>
@@ -652,7 +651,7 @@ Denna produkten innehåller mjukvara utvecklad av OpenSSL Project för användni
     <message>
         <location filename="../bitcoingui.cpp" line="650"/>
         <source>Synchronizing with network...</source>
-        <translation>Synkroniserar med nätverk...</translation>
+        <translation>Synkroniserar med nätverket...</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="653"/>
@@ -821,7 +820,7 @@ Adress: %4
         <location filename="../forms/coincontroldialog.ui" line="122"/>
         <location filename="../forms/ui_coincontroldialog.h" line="322"/>
         <source>Amount:</source>
-        <translation>Belopp:</translation>
+        <translation>Mängd:</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="151"/>
@@ -875,7 +874,7 @@ Adress: %4
         <location filename="../forms/coincontroldialog.ui" line="446"/>
         <location filename="../forms/ui_coincontroldialog.h" line="337"/>
         <source>Amount</source>
-        <translation>Antal</translation>
+        <translation>Mängd</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="456"/>
@@ -928,7 +927,7 @@ Adress: %4
         <location filename="../coincontroldialog.cpp" line="45"/>
         <location filename="../coincontroldialog.cpp" line="71"/>
         <source>Copy amount</source>
-        <translation>Kopiera belopp</translation>
+        <translation>Kopiera mängd</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="46"/>
@@ -948,7 +947,7 @@ Adress: %4
     <message>
         <location filename="../coincontroldialog.cpp" line="70"/>
         <source>Copy quantity</source>
-        <translation>Kopiera antal</translation>
+        <translation>Kopiera mängd</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="72"/>
@@ -1229,7 +1228,7 @@ Adress: %4
         <location filename="../forms/editaddressdialog.ui" line="35"/>
         <location filename="../forms/ui_editaddressdialog.h" line="94"/>
         <source>The label associated with this address list entry</source>
-        <translation>Etiketten associerad med denna adresslistas post</translation>
+        <translation>Etiketten associerad med denna adresslistans inmatning</translation>
     </message>
     <message>
         <location filename="../forms/editaddressdialog.ui" line="42"/>
@@ -1241,7 +1240,7 @@ Adress: %4
         <location filename="../forms/editaddressdialog.ui" line="52"/>
         <location filename="../forms/ui_editaddressdialog.h" line="98"/>
         <source>The address associated with this address list entry. This can only be modified for sending addresses.</source>
-        <translation>Adressen associerad med denna adresslistas post. Detta kan bara ändras för sändningsadresser.</translation>
+        <translation>Adressen associerad med denna adresslistans post. Detta kan bara ändras för avsändaradreser.</translation>
     </message>
     <message>
         <location filename="../editaddressdialog.cpp" line="29"/>
@@ -1299,7 +1298,7 @@ Adress: %4
     <message>
         <location filename="../intro.cpp" line="93"/>
         <source>Directory already exists. Add %1 if you intend to create a new directory here.</source>
-        <translation>Katalogen finns redan. Läggtill %1 om du vill skapa en ny katalog här.</translation>
+        <translation>Katalogen finns redan. Lägg till %1 om du vill skapa en ny katalog här.</translation>
     </message>
     <message>
         <location filename="../intro.cpp" line="96"/>
@@ -1344,7 +1343,7 @@ Adress: %4
     <message>
         <location filename="../utilitydialog.cpp" line="76"/>
         <source>UI options</source>
-        <translation>UI alternativ</translation>
+        <translation>UI- alternativ</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="77"/>
@@ -1359,7 +1358,7 @@ Adress: %4
     <message>
         <location filename="../utilitydialog.cpp" line="79"/>
         <source>Start minimized</source>
-        <translation>Starta som minimerad</translation>
+        <translation>Starta minimerat</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="80"/>
@@ -1428,7 +1427,7 @@ Adress: %4
     <message>
         <location filename="../intro.cpp" line="219"/>
         <source>GB of free space available</source>
-        <translation>GB ledigt utrymme är tillgängligt</translation>
+        <translation>GB ledigt utrymme tillgängligt</translation>
     </message>
     <message>
         <location filename="../intro.cpp" line="222"/>
@@ -1465,7 +1464,7 @@ Adress: %4
     <message>
         <location filename="../openuridialog.cpp" line="48"/>
         <source>Select payment request file to open</source>
-        <translation>Välj betalningsbegäransfil att öppna</translation>
+        <translation>Välj betalningsbegäranfil att öppna</translation>
     </message>
 </context>
 <context>
@@ -1486,7 +1485,7 @@ Adress: %4
         <location filename="../forms/optionsdialog.ui" line="33"/>
         <location filename="../forms/ui_optionsdialog.h" line="534"/>
         <source>Automatically start Darkcoin after logging in to the system.</source>
-        <translation>Starta Darkcoin automatiskt efter att systeminloggning.</translation>
+        <translation>Starta Darkcoin automatiskt efter systeminloggning.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="36"/>
@@ -3447,7 +3446,7 @@ Adress: %4
     <message>
         <location filename="../transactiondesc.cpp" line="246"/>
         <source>Merchant</source>
-        <translation>Handlare</translation>
+        <translation>Köpman</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="253"/>
@@ -3457,7 +3456,7 @@ Adress: %4
     <message>
         <location filename="../transactiondesc.cpp" line="261"/>
         <source>Debug information</source>
-        <translation>Debug information</translation>
+        <translation>Avsökningsinformation</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="269"/>
@@ -3467,7 +3466,7 @@ Adress: %4
     <message>
         <location filename="../transactiondesc.cpp" line="272"/>
         <source>Inputs</source>
-        <translation>Inputs</translation>
+        <translation>Indatan</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="293"/>
@@ -3525,12 +3524,12 @@ Adress: %4
     <message numerus="yes">
         <location filename="../transactiontablemodel.cpp" line="287"/>
         <source>Open for %n more block(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform>Öppna för %n fler block</numerusform></translation>
+        <translation><numerusform>Öppen för %n fler block</numerusform><numerusform>Öppen för %n fler block</numerusform></translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="290"/>
         <source>Open until %1</source>
-        <translation>Öppet till %1</translation>
+        <translation>Öppen till %1</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="293"/>
@@ -3545,27 +3544,27 @@ Adress: %4
     <message>
         <location filename="../transactiontablemodel.cpp" line="299"/>
         <source>Confirming (%1 of %2 recommended confirmations)</source>
-        <translation>Konfirmerar (%1 of %2 konfirmeringar)</translation>
+        <translation>Bekräftar (%1 of %2 bekräftelser)</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="302"/>
         <source>Confirmed (%1 confirmations)</source>
-        <translation>Bekräftad (%1 bekräftelser)</translation>
+        <translation>Bekräftade (%1 bekräftelser)</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="305"/>
         <source>Conflicted</source>
-        <translation>Konflikterade</translation>
+        <translation>Konflikterad</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="308"/>
         <source>Immature (%1 confirmations, will be available after %2)</source>
-        <translation>Omogen (%1 konfirmeringar, blir tillgänglig efter %2)</translation>
+        <translation>Omogen (%1 bekräftelser, blir tillgänglig efter %2)</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="311"/>
         <source>This block was not received by any other nodes and will probably not be accepted!</source>
-        <translation>Det här blocket togs inte emot av några andra noder och kommer antagligen inte att bli godkänt.</translation>
+        <translation>Det här blocket togs inte emot av några andra noder och kommer antagligen inte att bli godkänd.</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="314"/>
@@ -3580,7 +3579,7 @@ Adress: %4
     <message>
         <location filename="../transactiontablemodel.cpp" line="358"/>
         <source>Received from</source>
-        <translation>Mottaget från</translation>
+        <translation>Mottagen från</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="360"/>
@@ -3600,7 +3599,7 @@ Adress: %4
     <message>
         <location filename="../transactiontablemodel.cpp" line="367"/>
         <source>Mined</source>
-        <translation>Genererade</translation>
+        <translation>Utvunnen</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="370"/>
@@ -3625,7 +3624,7 @@ Adress: %4
     <message>
         <location filename="../transactiontablemodel.cpp" line="418"/>
         <source>(n/a)</source>
-        <translation>(n/a)</translation>
+        <translation>(e/t)</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="610"/>
@@ -3635,7 +3634,7 @@ Adress: %4
     <message>
         <location filename="../transactiontablemodel.cpp" line="612"/>
         <source>Date and time that the transaction was received.</source>
-        <translation>Tidpunkt då transaktionen mottogs.</translation>
+        <translation>Datum och tid då transaktionen mottogs.</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="614"/>
@@ -3650,7 +3649,7 @@ Adress: %4
     <message>
         <location filename="../transactiontablemodel.cpp" line="618"/>
         <source>Amount removed from or added to balance.</source>
-        <translation>Belopp draget eller tillagt till balans.</translation>
+        <translation>Mängd draget eller tillagt till balansen.</translation>
     </message>
 </context>
 <context>
@@ -3679,12 +3678,12 @@ Adress: %4
     <message>
         <location filename="../transactionview.cpp" line="64"/>
         <source>Last month</source>
-        <translation>Föregående månad</translation>
+        <translation>Förra månaden</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="65"/>
         <source>This year</source>
-        <translation>Det här året</translation>
+        <translation>Detta år</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="66"/>
@@ -3719,7 +3718,7 @@ Adress: %4
     <message>
         <location filename="../transactionview.cpp" line="84"/>
         <source>Mined</source>
-        <translation>Genererade</translation>
+        <translation>Utvunnen</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="85"/>
@@ -3729,7 +3728,7 @@ Adress: %4
     <message>
         <location filename="../transactionview.cpp" line="91"/>
         <source>Enter address or label to search</source>
-        <translation>Sök efter adress eller etikett </translation>
+        <translation>Skriv in en adress eller etikett för att söka</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="97"/>
@@ -3749,17 +3748,17 @@ Adress: %4
     <message>
         <location filename="../transactionview.cpp" line="133"/>
         <source>Copy amount</source>
-        <translation>Kopiera belopp</translation>
+        <translation>Kopiera mängd</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="134"/>
         <source>Copy transaction ID</source>
-        <translation>Kopiera transaktions ID</translation>
+        <translation>Kopiera transaktions-ID</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="135"/>
         <source>Edit label</source>
-        <translation>Ändra etikett</translation>
+        <translation>Redigera etikett</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="136"/>
@@ -3829,12 +3828,12 @@ Adress: %4
     <message>
         <location filename="../transactionview.cpp" line="322"/>
         <source>The transaction history was successfully saved to %1.</source>
-        <translation>Transaktionshistoriken sparades utan problem till %1.</translation>
+        <translation>Transaktionshistoriken sparades framgångsrikt till %1.</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="431"/>
         <source>Range:</source>
-        <translation>Intervall:</translation>
+        <translation>Period:</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="439"/>
@@ -3855,7 +3854,7 @@ Adress: %4
     <message>
         <location filename="../walletmodel.cpp" line="286"/>
         <source>Send Coins</source>
-        <translation>Skicka pengar</translation>
+        <translation>Skicka mynt</translation>
     </message>
 </context>
 <context>
@@ -3868,7 +3867,7 @@ Adress: %4
     <message>
         <location filename="../walletview.cpp" line="45"/>
         <source>Export the data in the current tab to a file</source>
-        <translation>Exportera informationen i den nuvarande fliken till en fil</translation>
+        <translation>Exportera datan i den nuvarande fliken till en fil</translation>
     </message>
     <message>
         <location filename="../walletview.cpp" line="229"/>
@@ -3878,12 +3877,12 @@ Adress: %4
     <message>
         <location filename="../walletview.cpp" line="230"/>
         <source>Wallet Data (*.dat)</source>
-        <translation>Plånboks-data (*.dat)</translation>
+        <translation>Plånboksdata (*.dat)</translation>
     </message>
     <message>
         <location filename="../walletview.cpp" line="236"/>
         <source>Backup Failed</source>
-        <translation>Säkerhetskopiering misslyckades</translation>
+        <translation>Säkerhetskopieringenmisslyckades</translation>
     </message>
     <message>
         <location filename="../walletview.cpp" line="236"/>
@@ -3921,7 +3920,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Darkcoin Alert&quot; admin@foo
     <message>
         <location filename="../bitcoinstrings.cpp" line="25"/>
         <source>Acceptable ciphers (default: TLSv1.2+HIGH:TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!3DES:@STRENGTH)</source>
-        <translation>Godtagbara chiffers  (standard: TLSv1.2+HIGH:TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!3DES:@STRENGTH)</translation>
+        <translation>Godtagbara chiffers (standard: TLSv1.2+HIGH:TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!3DES:@STRENGTH)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="28"/>
@@ -3976,199 +3975,203 @@ for example: alertnotify=echo %%s | mail -s &quot;Darkcoin Alert&quot; admin@foo
     <message>
         <location filename="../bitcoinstrings.cpp" line="71"/>
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
-        <translation type="unfinished"/>
+        <translation>Exekvera kommandot när en plånbokstransaktion ändras (%:en i cmd ersätts av TxID) </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="74"/>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
-        <translation type="unfinished"/>
+        <translation>Exekvera kommandot när det bästa blocket ändras (%:en i cmd ersätts av blockhash)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="77"/>
         <source>Fees smaller than this are considered zero fee (for transaction creation) (default:</source>
-        <translation type="unfinished"/>
+        <translation>Avgifter som är mindre än denna blir avgiftsfria (för skapande av transaktioner)(standard:</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="80"/>
         <source>Flush database activity from memory pool to disk log every &lt;n&gt; megabytes (default: 100)</source>
-        <translation type="unfinished"/>
+        <translation>Flytta databasaktivitet från minnespoolen för varje disklog &lt;n&gt; megabytes (standard: 100)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="83"/>
         <source>How thorough the block verification of -checkblocks is (0-4, default: 3)</source>
-        <translation type="unfinished"/>
+        <translation>Hur genomarbetad blockverifieringen för -checkblocks är (0-4, standard: 3)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="85"/>
         <source>In this mode -genproclimit controls how many blocks are generated immediately.</source>
-        <translation type="unfinished"/>
+        <translation>I detta läge kontrollerar -genproclimit hur många block som genereras omedelbart.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="88"/>
         <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 9998 or testnet: 19998)</source>
-        <translation type="unfinished"/>
+        <translation>Lyssna på JSON-RPC-anslutningar på &lt;port&gt; (standard: 9998 eller testnät: 19998)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="92"/>
         <source>Number of seconds to keep misbehaving peers from reconnecting (default: 86400)</source>
-        <translation type="unfinished"/>
+        <translation>Antal sekunder dåliga anslutningar ska vänta före återanslutning (standard: 86400)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="95"/>
         <source>Output debugging information (default: 0, supplying &lt;category&gt; is optional)</source>
-        <translation type="unfinished"/>
+        <translation>Skriv felsökningsinformation (standard: 0, angivelse av &lt;kategori&gt; är valfri)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="106"/>
         <source>Set maximum size of high-priority/low-fee transactions in bytes (default: %d)</source>
-        <translation type="unfinished"/>
+        <translation>Sätt en maxgräns för högprioritet/lågavgiftsbelagda transaktioner i byte (standard: %d)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="108"/>
         <source>Set the number of script verification threads (%u to %d, 0 = auto, &lt;0 = leave that many cores free, default: %d)</source>
-        <translation type="unfinished"/>
+        <translation>Sätt antalet skriptverifieringstrådar (%u till %d, 0 = auto, &lt;0 = lämna så många kärnor fria, standard: %d)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="111"/>
         <source>Set the processor limit for when generation is on (-1 = unlimited, default: -1)</source>
-        <translation type="unfinished"/>
+        <translation>Sätt en processorsbegränsning för när generering är på (-1 = obegränsad, standard: -1)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="117"/>
         <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
-        <translation type="unfinished"/>
+        <translation>Detta är en förhandsutgiven testutgåva - använd på egen risk - använd inte för utvinning eller handelsprogram</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="120"/>
         <source>Unable to bind to %s on this computer. Darkcoin Core is probably already running.</source>
-        <translation type="unfinished"/>
+        <translation>Det går inte att binda till %s på denna dator. Darkcoin Core körs förmodligen redan.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="128"/>
         <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: -proxy)</source>
-        <translation type="unfinished"/>
+        <translation>Använd separat SOCKS5-proxy för att nå förbindelser via Tor dolda tjänster (standard: -proxy)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="131"/>
         <source>Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
-        <translation type="unfinished"/>
+        <translation>Varning: paytxfee är väldigt högt satt! Detta är en transaktionsavgift du kommer att få betala om du kommer att skicka en transaktion.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="134"/>
         <source>Warning: Please check that your computer&apos;s date and time are correct! If your clock is wrong Darkcoin will not work properly.</source>
-        <translation type="unfinished"/>
+        <translation>Varning: Vänligen kolla så att ditt datum och din tid är korrekt! Om din klocka är fel kommer Darkcoin inte fungera ordentligt.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="137"/>
         <source>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</source>
-        <translation type="unfinished"/>
+        <translation>Varning: Nätverket verkar inte hålla med fullständigt! Några minare verkar uppleva problem.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="140"/>
         <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
-        <translation type="unfinished"/>
+        <translation>Varning: Vi verkar inte hålla med fullständigt med våra noter! Du kanske måste uppgradera, eller så måste andra noter uppgraderas.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="143"/>
         <source>Warning: error reading wallet.dat! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
-        <translation type="unfinished"/>
+        <translation>Varning: Fel under läsning av wallet.dat! Alla nycklar måste läsas korrekt, men transaktionsdatan eller adressboksposterna kanske saknas eller är inkorrekta.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="146"/>
         <source>Warning: wallet.dat corrupt, data salvaged! Original wallet.dat saved as wallet.{timestamp}.bak in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
-        <translation type="unfinished"/>
+        <translation>Varning: wallet.dat försörd, data räddad! Den ursprungliga wallet.dat är sparad som wallet.{timestamp}.bak i %; om ditt saldo eller dina transaktioner är inkorrekta bör du återskapa från en säkerhetskopia.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="150"/>
         <source>You must set rpcpassword=&lt;password&gt; in the configuration file:
 %s
 If the file does not exist, create it with owner-readable-only file permissions.</source>
-        <translation type="unfinished"/>
+        <translation>Du måste sätta rpcpassword=&lt;lösenord&gt; i konfigurationsfilen:
+
+%s
+
+Om filen inte existerar, skapa den och ge inga andra än ägaren läsarrättigheter.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="158"/>
         <source>(default: 1)</source>
-        <translation type="unfinished"/>
+        <translation>(standard: 1)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="159"/>
         <source>(default: wallet.dat)</source>
-        <translation type="unfinished"/>
+        <translation>(standard: wallet.dat)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="160"/>
         <source>&lt;category&gt; can be:</source>
-        <translation type="unfinished"/>
+        <translation>&lt;category&gt; kan vara:</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="161"/>
         <source>Accept command line and JSON-RPC commands</source>
-        <translation type="unfinished"/>
+        <translation>Acceptera kommandolinje- och JSON-RPC-kommandon</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="162"/>
         <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
-        <translation type="unfinished"/>
+        <translation>Acceptera anslutningar utifrån (standard: 1 om ingen -proxy eller -connect)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="163"/>
         <source>Add a node to connect to and attempt to keep the connection open</source>
-        <translation type="unfinished"/>
+        <translation>Lägg till en not för att ansluta till och försök att hålla anslutningen öppen</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="164"/>
         <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
-        <translation type="unfinished"/>
+        <translation>Tillåt DNS-uppslag för -addnode, -seednode och -connect</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="165"/>
         <source>Allow JSON-RPC connections from specified IP address</source>
-        <translation type="unfinished"/>
+        <translation>Tillåt JSON-RPC-anslutningar från en specifik IP-adress</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="167"/>
         <source>Attempt to recover private keys from a corrupt wallet.dat</source>
-        <translation type="unfinished"/>
+        <translation>Försök att återskapa privata nycklar från en förstörd wallet.dat</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="181"/>
         <source>Darkcoin Core Daemon</source>
-        <translation type="unfinished"/>
+        <translation>Darkcoin Core Daemon</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="182"/>
         <source>Darkcoin Core RPC client version</source>
-        <translation type="unfinished"/>
+        <translation>Darkcoin Core RPC klientversion</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="168"/>
         <source>Block creation options:</source>
-        <translation type="unfinished"/>
+        <translation>Blockskapandeinställningar:</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="42"/>
         <source>Disable all Masternode and Darksend related functionality (0-1, default: 0)</source>
-        <translation type="unfinished"/>
+        <translation>Avaktivera alla Masternode och Darksend-relaterade funktioner (0-1, standard: 0)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="44"/>
         <source>Enable instantx, show confirmations for locked transactions (bool, default: true)</source>
-        <translation type="unfinished"/>
+        <translation>Aktivera instantx, visa bekräftelser för stängda transaktioner (bool, standard: true)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="47"/>
         <source>Enable use of automated darksend for funds stored in this wallet (0-1, default: 0)</source>
-        <translation type="unfinished"/>
+        <translation>Aktivera Darksend automatiskt (0-1, standard: 0)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="57"/>
         <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
-        <translation type="unfinished"/>
+        <translation>Fel: Lyssnande på inkommande anslutningar misslyckades (lyssna på återkommande fel %)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="66"/>
         <source>Error: Wallet unlocked for anonymization only, unable to create transaction.</source>
-        <translation type="unfinished"/>
+        <translation>Fel: Plånbok upplåst för anonymisering endast, kan inte skapa transaktion.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="90"/>
