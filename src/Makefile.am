@@ -78,8 +78,8 @@ BITCOIN_CORE_H = \
   base58.h \
   bloom.h \
   chain.h \
-  chainparamsbase.h \
   chainparams.h \
+  chainparamsbase.h \
   chainparamsseeds.h \
   checkpoints.h \
   checkqueue.h \
@@ -87,6 +87,7 @@ BITCOIN_CORE_H = \
   coincontrol.h \
   coins.h \
   compat.h \
+  compat/sanity.h \
   compressor.h \
   core_io.h \
   crypter.h \
@@ -103,8 +104,8 @@ BITCOIN_CORE_H = \
   merkleblock.h \
   miner.h \
   mruset.h \
-  netbase.h \
   net.h \
+  netbase.h \
   noui.h \
   pow.h \
   primitives/block.h \
@@ -116,8 +117,8 @@ BITCOIN_CORE_H = \
   rpcprotocol.h \
   rpcserver.h \
   script/interpreter.h \
-  script/script_error.h \
   script/script.h \
+  script/script_error.h \
   script/sigcache.h \
   script/sign.h \
   script/standard.h \
@@ -137,10 +138,9 @@ BITCOIN_CORE_H = \
   utilstrencodings.h \
   utiltime.h \
   version.h \
-  walletdb.h \
   wallet.h \
   wallet_ismine.h \
-  compat/sanity.h
+  walletdb.h
 
 JSON_H = \
   json/json_spirit.h \
@@ -193,8 +193,8 @@ libbitcoin_server_a_SOURCES = \
 # when wallet enabled
 libbitcoin_wallet_a_CPPFLAGS = $(BITCOIN_INCLUDES)
 libbitcoin_wallet_a_SOURCES = \
-  db.cpp \
   crypter.cpp \
+  db.cpp \
   rpcdump.cpp \
   rpcwallet.cpp \
   wallet.cpp \
@@ -205,27 +205,27 @@ libbitcoin_wallet_a_SOURCES = \
 # crypto primitives library
 crypto_libbitcoin_crypto_a_CPPFLAGS = $(BITCOIN_CONFIG_INCLUDES)
 crypto_libbitcoin_crypto_a_SOURCES = \
-  crypto/sha1.cpp \
-  crypto/sha256.cpp \
-  crypto/sha512.cpp \
   crypto/hmac_sha256.cpp \
   crypto/hmac_sha512.cpp \
   crypto/ripemd160.cpp \
+  crypto/sha1.cpp \
+  crypto/sha256.cpp \
+  crypto/sha512.cpp \
   crypto/common.h \
-  crypto/sha256.h \
-  crypto/sha512.h \
   crypto/hmac_sha256.h \
   crypto/hmac_sha512.h \
+  crypto/ripemd160.h \
   crypto/sha1.h \
-  crypto/ripemd160.h
+  crypto/sha256.h \
+  crypto/sha512.h
 
 # univalue JSON library
 univalue_libbitcoin_univalue_a_SOURCES = \
   univalue/univalue.cpp \
-  univalue/univalue_read.cpp \
-  univalue/univalue_write.cpp \
+  univalue/univalue.h \
   univalue/univalue_escapes.h \
-  univalue/univalue.h
+  univalue/univalue_read.cpp \
+  univalue/univalue_write.cpp
 
 # common: shared between bitcoind, and bitcoin-qt and non-server tools
 libbitcoin_common_a_CPPFLAGS = $(BITCOIN_INCLUDES)
@@ -237,8 +237,6 @@ libbitcoin_common_a_SOURCES = \
   chainparams.cpp \
   coins.cpp \
   compressor.cpp \
-  primitives/block.cpp \
-  primitives/transaction.cpp \
   core_read.cpp \
   core_write.cpp \
   eccryptoverify.cpp \
@@ -247,13 +245,15 @@ libbitcoin_common_a_SOURCES = \
   key.cpp \
   keystore.cpp \
   netbase.cpp \
+  primitives/block.cpp \
+  primitives/transaction.cpp \
   protocol.cpp \
   pubkey.cpp \
   script/interpreter.cpp \
   script/script.cpp \
+  script/script_error.cpp \
   script/sign.cpp \
   script/standard.cpp \
-  script/script_error.cpp \
   $(BITCOIN_CORE_H)
 
 # util: shared between all executables.
