@@ -99,13 +99,14 @@ void ProcessMessageInstantX(CNode* pfrom, std::string& strCommand, CDataStream& 
             // resolve conflicts
             std::map<uint256, CTransactionLock>::iterator i = mapTxLocks.find(tx.GetHash());
             if (i != mapTxLocks.end()){
+                //we only care if we have a complete tx lock
                 if((*i).second.CountSignatures() >= INSTANTX_SIGNATURES_REQUIRED){
                     LogPrintf("ProcessMessageInstantX::txlreq - Found Existing Complete IX Lock\n");
 
                     uint256 txHash = (*i).second.txHash;
                     CValidationState state;
                     bool fMissingInputs = false;
-                    DisconnectBlockAndInputs(state, mapTxLockReqRejected[txHash]);
+                    DisconnectBlockAndInputs(state, tx);
 
                     if (AcceptToMemoryPool(mempool, state, tx, true, &fMissingInputs))
                     {
@@ -120,8 +121,6 @@ void ProcessMessageInstantX(CNode* pfrom, std::string& strCommand, CDataStream& 
                     }
                 }
             }
-
-            //record prevout, increment the amount of times seen. Ban if over 100
 
             return;
         }
@@ -255,7 +254,7 @@ bool ProcessConsensusVote(CConsensusVote& ctx)
             }
 
             // resolve conflicts
-            
+
             //if this tx lock was rejected, we need to remove the conflicting blocks
             if(mapTxLockReqRejected.count((*i).second.txHash)){
                 CValidationState state;

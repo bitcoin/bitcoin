@@ -2903,7 +2903,10 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
             for (unsigned int a = 0; a < tx.vin.size(); a++) {
                 for (unsigned int b = 0; b < block.vtx.size(); b++) {
                     //we found the locked tx in the block
-                    if(tx.GetHash() == block.vtx[b].GetHash()) continue;
+                    if(tx.GetHash() == block.vtx[b].GetHash()) {
+                        printf("CheckBlock -- found locked transaction\n");
+                        continue;
+                    }
 
                     for (unsigned int c = 0; c < block.vtx[b].vin.size(); c++) {
                         if(tx.vin[a].prevout == block.vtx[b].vin[c].prevout) {
@@ -2916,8 +2919,8 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
         }
         it++;
     }
-    
-    
+
+
     // ----------- masternode payments -----------
 
     bool MasternodePayments = false;
