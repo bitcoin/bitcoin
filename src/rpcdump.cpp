@@ -91,6 +91,8 @@ Value importprivkey(const Array& params, bool fHelp)
             + HelpExampleRpc("importprivkey", "\"mykey\", \"testing\", false")
         );
 
+    LOCK2(cs_main, pwalletMain->cs_wallet);
+
     EnsureWalletIsUnlocked();
 
     string strSecret = params[0].get_str();
@@ -158,6 +160,8 @@ Value importaddress(const Array& params, bool fHelp)
             + HelpExampleRpc("importaddress", "\"myaddress\", \"testing\", false")
         );
 
+    LOCK2(cs_main, pwalletMain->cs_wallet);
+
     CScript script;
 
     CBitcoinAddress address(params[0].get_str());
@@ -222,6 +226,8 @@ Value importwallet(const Array& params, bool fHelp)
             "\nImport using the json rpc call\n"
             + HelpExampleRpc("importwallet", "\"test\"")
         );
+
+    LOCK2(cs_main, pwalletMain->cs_wallet);
 
     EnsureWalletIsUnlocked();
 
@@ -322,6 +328,8 @@ Value dumpprivkey(const Array& params, bool fHelp)
             + HelpExampleRpc("dumpprivkey", "\"myaddress\"")
         );
 
+    LOCK2(cs_main, pwalletMain->cs_wallet);
+
     EnsureWalletIsUnlocked();
 
     string strAddress = params[0].get_str();
@@ -350,6 +358,8 @@ Value dumpwallet(const Array& params, bool fHelp)
             + HelpExampleCli("dumpwallet", "\"test\"")
             + HelpExampleRpc("dumpwallet", "\"test\"")
         );
+
+    LOCK2(cs_main, pwalletMain->cs_wallet);
 
     EnsureWalletIsUnlocked();
 
