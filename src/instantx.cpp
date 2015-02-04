@@ -97,15 +97,15 @@ void ProcessMessageInstantX(CNode* pfrom, std::string& strCommand, CDataStream& 
             );
 
             // resolve conflicts
-            /*std::map<uint256, CTransactionLock>::iterator i = mapTxLocks.find(tx.GetHash());
+            std::map<uint256, CTransactionLock>::iterator i = mapTxLocks.find(tx.GetHash());
             if (i != mapTxLocks.end()){
+                //we only care if we have a complete tx lock
                 if((*i).second.CountSignatures() >= INSTANTX_SIGNATURES_REQUIRED){
-                    LogPrintf("ProcessMessageInstantX::txlreq - Found IX lock\n");
+                    LogPrintf("ProcessMessageInstantX::txlreq - Found Existing Complete IX Lock\n");
 
-                    uint256 txHash = (*i).second.txHash;
                     CValidationState state;
                     bool fMissingInputs = false;
-                    DisconnectBlockAndInputs(state, mapTxLockReqRejected[txHash]);
+                    DisconnectBlockAndInputs(state, tx);
 
                     if (AcceptToMemoryPool(mempool, state, tx, true, &fMissingInputs))
                     {
@@ -119,9 +119,7 @@ void ProcessMessageInstantX(CNode* pfrom, std::string& strCommand, CDataStream& 
                         );
                     }
                 }
-            }*/
-
-            //record prevout, increment the amount of times seen. Ban if over 100
+            }
 
             return;
         }
@@ -149,7 +147,6 @@ void ProcessMessageInstantX(CNode* pfrom, std::string& strCommand, CDataStream& 
             */
             if(!mapTxLockReq.count(ctx.txHash) && !mapTxLockReqRejected.count(ctx.txHash)){
                 if(!mapUnknownVotes.count(ctx.vinMasternode.prevout.hash)){
-                    //TODO: Make an algorithm to calculate the average time per IX/MNCOUNT
                     mapUnknownVotes[ctx.vinMasternode.prevout.hash] = GetTime()+(60*10);
                 }
 
@@ -238,22 +235,25 @@ bool ProcessConsensusVote(CConsensusVote& ctx)
         newLock.txHash = ctx.txHash;
         mapTxLocks.insert(make_pair(ctx.txHash, newLock));
     } else {
-        LogPrintf("InstantX::ProcessConsensusVote - Transaction Lock Exists %s !\n", ctx.txHash.ToString().c_str());
+        if(fDebug) LogPrintf("InstantX::ProcessConsensusVote - Transaction Lock Exists %s !\n", ctx.txHash.ToString().c_str());
     }
 
     //compile consessus vote
     std::map<uint256, CTransactionLock>::iterator i = mapTxLocks.find(ctx.txHash);
     if (i != mapTxLocks.end()){
         (*i).second.AddSignature(ctx);
+
+        if(fDebug) LogPrintf("InstantX::ProcessConsensusVote - Transaction Lock Votes %d - %s !\n", (*i).second.CountSignatures(), ctx.GetHash().ToString().c_str());
+
         if((*i).second.CountSignatures() >= INSTANTX_SIGNATURES_REQUIRED){
-            LogPrintf("InstantX::ProcessConsensusVote - Transaction Lock Is Complete %s !\n", (*i).second.GetHash().ToString().c_str());
+            if(fDebug) LogPrintf("InstantX::ProcessConsensusVote - Transaction Lock Is Complete %s !\n", (*i).second.GetHash().ToString().c_str());
 
             if(pwalletMain->UpdatedTransaction((*i).second.txHash)){
                 nCompleteTXLocks++;
             }
 
             // resolve conflicts
-            /*
+
             //if this tx lock was rejected, we need to remove the conflicting blocks
             if(mapTxLockReqRejected.count((*i).second.txHash)){
                 CValidationState state;
@@ -271,7 +271,7 @@ bool ProcessConsensusVote(CConsensusVote& ctx)
                         mapTxLockReqRejected[(*i).second.txHash].GetHash().ToString().c_str()
                     );
                 }
-            }*/
+            }
         }
         return true;
     }
