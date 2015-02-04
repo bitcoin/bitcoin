@@ -4025,22 +4025,22 @@ Zaleca się również aby ustawić alarm powiadomień tzw. alertnotify, aby dać
     <message>
         <location filename="../bitcoinstrings.cpp" line="106"/>
         <source>Set maximum size of high-priority/low-fee transactions in bytes (default: %d)</source>
-        <translation type="unfinished"/>
+        <translation>Ustaw maksymalny rozmiar transakcji o wysokim/niskim priorytecie w bajtach (domyślny: %d)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="108"/>
         <source>Set the number of script verification threads (%u to %d, 0 = auto, &lt;0 = leave that many cores free, default: %d)</source>
-        <translation type="unfinished"/>
+        <translation>Ustaw liczbę wątków weryfikacji skryptu (%u do %d, 0 = auto, &lt;0 = zostaw tyle rdzeni wolnych, domyślnie: %d)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="111"/>
         <source>Set the processor limit for when generation is on (-1 = unlimited, default: -1)</source>
-        <translation type="unfinished"/>
+        <translation>Ustaw limit na pracę procesora kiedy generowanie jest włączone (-1 = brak limitu, domyślnie: -1)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="117"/>
         <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
-        <translation type="unfinished"/>
+        <translation>Ta wersja nie jest jeszcze gotowa na oficjalne wydanie - używaj jej na własne ryzyko - nie używaj tej wersji do kopania monet lub do świadczenia usług komercyjnych.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="120"/>
@@ -4055,17 +4055,17 @@ Zaleca się również aby ustawić alarm powiadomień tzw. alertnotify, aby dać
     <message>
         <location filename="../bitcoinstrings.cpp" line="131"/>
         <source>Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
-        <translation type="unfinished"/>
+        <translation>Uwaga: -paytxfee jest bardzo wysoki! To jest opłata którą będziesz musiał uiścić jeśli dokonasz transakcji.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="134"/>
         <source>Warning: Please check that your computer&apos;s date and time are correct! If your clock is wrong Darkcoin will not work properly.</source>
-        <translation type="unfinished"/>
+        <translation>Uwaga: Proszę sprawdzić czy data i czas na twoim komputerze są poprawne! Jeśli twój zegar nie pokazuje prawidłowej godziny to Darkcoin może nie działać poprawnie.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="137"/>
         <source>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</source>
-        <translation type="unfinished"/>
+        <translation>Uwaga: Wygląda na to, że istnieją pewne rozbieżności w sieci! Możliwe, że niektórzy kopacze doświadczają problemów technicznych. </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="140"/>
@@ -4080,14 +4080,16 @@ Zaleca się również aby ustawić alarm powiadomień tzw. alertnotify, aby dać
     <message>
         <location filename="../bitcoinstrings.cpp" line="146"/>
         <source>Warning: wallet.dat corrupt, data salvaged! Original wallet.dat saved as wallet.{timestamp}.bak in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
-        <translation type="unfinished"/>
+        <translation>Uwaga: plik wallet.dat jest uszkodzony, ale dane zostały odzyskane! Oryginalny plik wallet.dat został zapisany jako wallet.{timestamp}.bak w %s; jeżeli twoje saldo lub transakcje są nieprawidłowe powinieneś przwyrócić ten plik z kopi zapasowej.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="150"/>
         <source>You must set rpcpassword=&lt;password&gt; in the configuration file:
 %s
 If the file does not exist, create it with owner-readable-only file permissions.</source>
-        <translation type="unfinished"/>
+        <translation>Musisz ustawić rpcpassword=&lt;password&gt; w pliku konfiguracji:
+%s
+Jeżeli plik ten nie istnieje, stwórz go z uprawnieniami tylko do odczytu przez właściciela.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="158"/>
@@ -4102,7 +4104,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="160"/>
         <source>&lt;category&gt; can be:</source>
-        <translation type="unfinished"/>
+        <translation>&lt;category&gt; może być:</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="161"/>
@@ -4112,7 +4114,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="162"/>
         <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
-        <translation type="unfinished"/>
+        <translation>Pozwól na połączenia z zewnątrz (domyślnie: 1 jeśli nie -proxy lub -connect)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="163"/>
@@ -4122,7 +4124,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="164"/>
         <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
-        <translation type="unfinished"/>
+        <translation>Pozwól na wyszukiwanie DNS dla -addnode, seednode oraz -połącz</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="165"/>
@@ -4197,17 +4199,17 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="114"/>
         <source>Show N confirmations for a successfully locked transaciton (0-9999, default: 1)</source>
-        <translation type="unfinished"/>
+        <translation>Pokaż N potwierdzeń dla pomyślnie zamkniętej transakcji (0-9999, domyślnie: 1)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="123"/>
         <source>Unable to locate enough Darksend non-denominated funds for this transaction that are not equal 1000 DRK</source>
-        <translation type="unfinished"/>
+        <translation>Niemożliwym jest zlokalizowanie wystarczającej ilości zdenominowanych środków Darksend dla tej transakcji, które nie równają się 1000 DRK</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="126"/>
         <source>Unable to locate enough Darksend non-denominated funds for this transaction</source>
-        <translation type="unfinished"/>
+        <translation>Niemożliwym jest zlokalizowanie wystarczającej ilości zdenominowanych środków Darksend dla tej transakcji</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="155"/>
