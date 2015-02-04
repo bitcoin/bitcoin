@@ -309,9 +309,13 @@ bool ProcessConsensusVote(CConsensusVote& ctx)
         if((*i).second.CountSignatures() >= INSTANTX_SIGNATURES_REQUIRED){
             if(fDebug) LogPrintf("InstantX::ProcessConsensusVote - Transaction Lock Is Complete %s !\n", (*i).second.GetHash().ToString().c_str());
 
-            if(pwalletMain->UpdatedTransaction((*i).second.txHash)){
-                nCompleteTXLocks++;
+#ifdef ENABLE_WALLET
+            if(pwalletMain){
+                if(pwalletMain->UpdatedTransaction((*i).second.txHash)){
+                    nCompleteTXLocks++;
+                }
             }
+#endif
 
             if(mapTxLockReq.count(ctx.txHash)){
                 CTransaction& tx = mapTxLockReq[ctx.txHash];
