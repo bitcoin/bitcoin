@@ -12,6 +12,7 @@
 #include "net.h"
 #include "darksend.h"
 #include "keepass.h"
+#include "instantx.h"
 
 #include <boost/algorithm/string/replace.hpp>
 #include <openssl/rand.h>
@@ -1000,6 +1001,7 @@ void CWalletTx::RelayWalletTransaction(std::string strCommand)
             LogPrintf("Relaying wtx %s\n", hash.ToString());
 
             if(strCommand == "txlreq"){
+                mapTxLockReq.insert(make_pair(hash, (CTransaction)*this));
                 RelayTransactionLockReq((CTransaction)*this, hash, true);
             } else {
                 RelayTransaction((CTransaction)*this, hash);
