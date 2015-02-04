@@ -1873,9 +1873,6 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, int64_t> >& vecSend,
                     dPriority += (double)nCredit * (pcoin.first->GetDepthInMainChain()+1);
                 }
 
-                // IX has a minimum fee of 0.01 DRK
-                if(useIX && nFeeRet < COIN*0.01 ) nFeeRet = COIN*0.01;
-
                 int64_t nChange = nValueIn - nValue - nFeeRet;
 
                 // The following if statement should be removed once enough miners
@@ -1893,6 +1890,10 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, int64_t> >& vecSend,
                 if(coin_type == ONLY_DENOMINATED) {
                     nFeeRet = nChange;
                     nChange = 0;
+                } else if(useIX && nFeeRet < COIN*0.01 && nChange > ((COIN*0.01)-nFeeRet)) {
+                    // IX has a minimum fee of 0.01 DRK
+                    nChange -= (COIN*0.01)-nFeeRet;
+                    nFeeRet = COIN*0.01;
                 }
 
                 if (nChange > 0)
