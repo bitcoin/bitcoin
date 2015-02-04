@@ -16,6 +16,8 @@ and a new version of enforcement compatible with the newer Bitcoin architechure.
 - Added --instantxdepth, which will show X confirmations when a transaction lock is present
 - fix coin control crash https://github.com/bitcoin/bitcoin/pull/5700
 - always get only confirmed coins by AvailableCoins for every DS relative action
+- New languages supported Portuguese, German, Russian, Polish, Spanish, Vietnamese, French,
+Italian, Catalan, Chinese, Danish, Finnish, Swedish, Czech, Turkish and Bavarian (and many more)
 
 
 Thanks to who contributed to this release, at least:
@@ -23,6 +25,7 @@ Thanks to who contributed to this release, at least:
 - Vertoe
 - Udjin
 - Holger Schinzel
+- Raze
 - Mario Müller
 - Crowning
 - Alexandre Devilliers

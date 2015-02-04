@@ -717,6 +717,7 @@ void CMasternodePayments::CleanPaymentList()
 
 bool CMasternodePayments::ProcessBlock(int nBlockHeight)
 {
+
     if(!enabled) return false;
     CMasternodePaymentWinner winner;
 
@@ -749,7 +750,13 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
         break;
     }
 
-    if(winner.nBlockHeight == 0) return false; //no masternodes available
+    //if we can't find someone to get paid, pick randomly
+    if(winner.nBlockHeight == 0 && vecMasternodes.size() > 1) {
+        winner.score = 0;
+        winner.nBlockHeight = nBlockHeight;
+        winner.vin = vecMasternodes[0].vin;
+        winner.payee.SetDestination(vecMasternodes[0].pubkey.GetID());
+    }
 
     if(Sign(winner)){
         if(AddWinningMasternode(winner)){
