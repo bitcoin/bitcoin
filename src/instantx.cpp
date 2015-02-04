@@ -54,23 +54,6 @@ void ProcessMessageInstantX(CNode* pfrom, std::string& strCommand, CDataStream& 
             return;
         }
 
-        int nTxAge = 0;
-        BOOST_REVERSE_FOREACH(CTxIn i, tx.vin){
-            nTxAge = GetInputAge(i);
-            if(nTxAge < 6)
-            {
-                LogPrintf("ProcessMessageInstantX::txlreq - Transaction not found / too new: %d / %s\n", nTxAge, tx.GetHash().ToString().c_str());
-                return;
-            }
-        }
-
-        /*
-            Use a blockheight newer than the input.
-            This prevents attackers from using transaction mallibility to predict which masternodes
-            they'll use.
-        */
-        int nBlockHeight = (chainActive.Tip()->nHeight - nTxAge)+4;
-
         BOOST_FOREACH(const CTxOut o, tx.vout){
             if(!o.scriptPubKey.IsNormalPaymentScript()){
                 printf ("ProcessMessageInstantX::txlreq - Invalid Script %s\n", tx.ToString().c_str());
@@ -78,13 +61,16 @@ void ProcessMessageInstantX(CNode* pfrom, std::string& strCommand, CDataStream& 
             }
         }
 
+        int nBlockHeight = CreateNewLock(tx);
+
         bool fMissingInputs = false;
         CValidationState state;
 
+        
         if (AcceptToMemoryPool(mempool, state, tx, true, &fMissingInputs))
         {
             RelayTransactionLockReq(tx, tx.GetHash());
-            DoConsensusVote(tx, true, nBlockHeight);
+            DoConsensusVote(tx, nBlockHeight);
 
             mapTxLockReq.insert(make_pair(tx.GetHash(), tx));
 
@@ -101,7 +87,6 @@ void ProcessMessageInstantX(CNode* pfrom, std::string& strCommand, CDataStream& 
             // can we get the conflicting transaction as proof?
 
             RelayTransactionLockReq(tx, inv.hash);
-            DoConsensusVote(tx, false, nBlockHeight);
 
             LogPrintf("ProcessMessageInstantX::txlreq - Transaction Lock Request: %s %s : rejected %s\n",
                 pfrom->addr.ToString().c_str(), pfrom->cleanSubVer.c_str(),
@@ -219,15 +204,25 @@ bool IsIXTXValid(const CTransaction& txCollateral){
     return true;
 }
 
-
-// check if we need to vote on this transaction
-void DoConsensusVote(CTransaction& tx, bool approved, int64_t nBlockHeight)
+int64_t CreateNewLock(CTransaction tx)
 {
-    if(!fMasterNode) return;
+
+    int64_t nTxAge = 0;
+    BOOST_REVERSE_FOREACH(CTxIn i, tx.vin){
+        nTxAge = GetInputAge(i);
+        if(nTxAge < 6)
+        {
+            LogPrintf("ProcessMessageInstantX::txlreq - Transaction not found / too new: %d / %s\n", nTxAge, tx.GetHash().ToString().c_str());
+            return 0;
+        }
+    }
 
     /*
-        nBlockHeight calculated from the transaction is the authoritive source
+        Use a blockheight newer than the input.
+        This prevents attackers from using transaction mallibility to predict which masternodes
+        they'll use.
     */
+    int nBlockHeight = (chainActive.Tip()->nHeight - nTxAge)+4;
 
     if (!mapTxLocks.count(tx.GetHash())){
         LogPrintf("InstantX::ProcessConsensusVote - New Transaction Lock %s !\n", tx.GetHash().ToString().c_str());
@@ -241,6 +236,18 @@ void DoConsensusVote(CTransaction& tx, bool approved, int64_t nBlockHeight)
         mapTxLocks[tx.GetHash()].nBlockHeight = nBlockHeight;
         if(fDebug) LogPrintf("InstantX::ProcessConsensusVote - Transaction Lock Exists %s !\n", tx.GetHash().ToString().c_str());
     }
+
+    return nBlockHeight;
+}
+
+// check if we need to vote on this transaction
+void DoConsensusVote(CTransaction& tx, int64_t nBlockHeight)
+{
+    if(!fMasterNode) return;
+
+    /*
+        nBlockHeight calculated from the transaction is the authoritive source
+    */
 
     CConsensusVote ctx;
     ctx.vinMasternode = activeMasternode.vin;
