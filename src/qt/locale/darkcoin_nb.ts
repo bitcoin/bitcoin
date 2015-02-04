@@ -1,21 +1,18 @@
-<?xml version="1.0" ?><!DOCTYPE TS><TS language="nb" version="2.1">
+<?xml version="1.0" ?><!DOCTYPE TS><TS language="nb" version="2.0">
 <context>
     <name>AboutDialog</name>
     <message>
         <location filename="../forms/aboutdialog.ui" line="14"/>
-        <location filename="../forms/ui_aboutdialog.h" line="131"/>
         <source>About Darkcoin Core</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/aboutdialog.ui" line="53"/>
-        <location filename="../forms/ui_aboutdialog.h" line="132"/>
         <source>&lt;b&gt;Darkcoin Core&lt;/b&gt; version</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/aboutdialog.ui" line="111"/>
-        <location filename="../forms/ui_aboutdialog.h" line="133"/>
         <source>
 This is experimental software.
 
@@ -56,61 +53,51 @@ Dette produktet inneholder programvare utviklet av OpenSSL Project for bruk i Op
     <name>AddressBookPage</name>
     <message>
         <location filename="../forms/addressbookpage.ui" line="30"/>
-        <location filename="../forms/ui_addressbookpage.h" line="126"/>
         <source>Double-click to edit address or label</source>
         <translation>Dobbelklikk for å redigere adresse eller merkelapp</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="57"/>
-        <location filename="../forms/ui_addressbookpage.h" line="129"/>
         <source>Create a new address</source>
         <translation>Lag en ny adresse</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="60"/>
-        <location filename="../forms/ui_addressbookpage.h" line="131"/>
         <source>&amp;New</source>
         <translation>&amp;Ny</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="71"/>
-        <location filename="../forms/ui_addressbookpage.h" line="133"/>
         <source>Copy the currently selected address to the system clipboard</source>
         <translation>Kopier den valgte adressen til systemets utklippstavle</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="74"/>
-        <location filename="../forms/ui_addressbookpage.h" line="135"/>
         <source>&amp;Copy</source>
         <translation>&amp;Kopier</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="85"/>
-        <location filename="../forms/ui_addressbookpage.h" line="137"/>
         <source>Delete the currently selected address from the list</source>
         <translation>Slett den valgte adressen fra listen.</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="88"/>
-        <location filename="../forms/ui_addressbookpage.h" line="139"/>
         <source>&amp;Delete</source>
         <translation>&amp;Slett</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="112"/>
-        <location filename="../forms/ui_addressbookpage.h" line="141"/>
         <source>Export the data in the current tab to a file</source>
         <translation>Eksporter data fra nåværende fane til fil</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="115"/>
-        <location filename="../forms/ui_addressbookpage.h" line="143"/>
         <source>&amp;Export</source>
         <translation>&amp;Eksporter</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="132"/>
-        <location filename="../forms/ui_addressbookpage.h" line="144"/>
         <source>C&amp;lose</source>
         <translation>&amp;Lukk</translation>
     </message>
@@ -207,37 +194,31 @@ Dette produktet inneholder programvare utviklet av OpenSSL Project for bruk i Op
     <name>AskPassphraseDialog</name>
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="26"/>
-        <location filename="../forms/ui_askpassphrasedialog.h" line="135"/>
         <source>Passphrase Dialog</source>
         <translation>Dialog for Adgangsfrase</translation>
     </message>
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="47"/>
-        <location filename="../forms/ui_askpassphrasedialog.h" line="136"/>
         <source>Enter passphrase</source>
         <translation>Angi adgangsfrase</translation>
     </message>
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="61"/>
-        <location filename="../forms/ui_askpassphrasedialog.h" line="137"/>
         <source>New passphrase</source>
         <translation>Ny adgangsfrase</translation>
     </message>
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="75"/>
-        <location filename="../forms/ui_askpassphrasedialog.h" line="138"/>
         <source>Repeat new passphrase</source>
         <translation>Gjenta ny adgangsfrase</translation>
     </message>
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="108"/>
-        <location filename="../forms/ui_askpassphrasedialog.h" line="141"/>
         <source>Serves to disable the trivial sendmoney when OS account compromised. Provides no real security.</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="111"/>
-        <location filename="../forms/ui_askpassphrasedialog.h" line="143"/>
         <source>For anonymization only</source>
         <translation type="unfinished"/>
     </message>
@@ -799,115 +780,96 @@ Adresse: %4
     <name>CoinControlDialog</name>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="14"/>
-        <location filename="../forms/ui_coincontroldialog.h" line="319"/>
         <source>Coin Control Address Selection</source>
         <translation>Myntkontroll Adresse Valg</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="48"/>
-        <location filename="../forms/ui_coincontroldialog.h" line="320"/>
         <source>Quantity:</source>
         <translation>Mengde:</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="77"/>
-        <location filename="../forms/ui_coincontroldialog.h" line="321"/>
         <source>Bytes:</source>
         <translation>Bytes:</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="122"/>
-        <location filename="../forms/ui_coincontroldialog.h" line="322"/>
         <source>Amount:</source>
         <translation>Beløp:</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="151"/>
-        <location filename="../forms/ui_coincontroldialog.h" line="323"/>
         <source>Priority:</source>
         <translation>Prioritet:</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="196"/>
-        <location filename="../forms/ui_coincontroldialog.h" line="324"/>
         <source>Fee:</source>
         <translation>Avgift:</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="228"/>
-        <location filename="../forms/ui_coincontroldialog.h" line="325"/>
         <source>Low Output:</source>
         <translation>Svake Utdata:</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="276"/>
-        <location filename="../forms/ui_coincontroldialog.h" line="326"/>
         <source>After Fee:</source>
         <translation>Etter Gebyr:</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="308"/>
-        <location filename="../forms/ui_coincontroldialog.h" line="327"/>
         <source>Change:</source>
         <translation>Veksel:</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="364"/>
-        <location filename="../forms/ui_coincontroldialog.h" line="328"/>
         <source>(un)select all</source>
         <translation>velg (fjern) alt</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="377"/>
-        <location filename="../forms/ui_coincontroldialog.h" line="329"/>
         <source>Tree mode</source>
         <translation>Tremodus</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="393"/>
-        <location filename="../forms/ui_coincontroldialog.h" line="330"/>
         <source>List mode</source>
         <translation>Listemodus</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="446"/>
-        <location filename="../forms/ui_coincontroldialog.h" line="337"/>
         <source>Amount</source>
         <translation>Beløp</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="456"/>
-        <location filename="../forms/ui_coincontroldialog.h" line="336"/>
         <source>Address</source>
         <translation>Adresse</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="461"/>
-        <location filename="../forms/ui_coincontroldialog.h" line="335"/>
         <source>Darksend Rounds</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="466"/>
-        <location filename="../forms/ui_coincontroldialog.h" line="334"/>
         <source>Date</source>
         <translation>Dato</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="471"/>
-        <location filename="../forms/ui_coincontroldialog.h" line="333"/>
         <source>Confirmations</source>
         <translation>Bekreftelser</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="474"/>
-        <location filename="../forms/ui_coincontroldialog.h" line="339"/>
         <source>Confirmed</source>
         <translation>Bekreftet</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="479"/>
-        <location filename="../forms/ui_coincontroldialog.h" line="332"/>
         <source>Priority</source>
         <translation>Prioritet</translation>
     </message>
@@ -1115,74 +1077,62 @@ Adresse: %4
     <name>DarksendConfig</name>
     <message>
         <location filename="../forms/darksendconfig.ui" line="14"/>
-        <location filename="../forms/ui_darksendconfig.h" line="96"/>
-        <source>Configure Darksend+</source>
+        <source>Configure Darksend</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="26"/>
-        <location filename="../forms/ui_darksendconfig.h" line="97"/>
         <source>Basic Privacy</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="39"/>
-        <location filename="../forms/ui_darksendconfig.h" line="98"/>
         <source>High Privacy</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="52"/>
-        <location filename="../forms/ui_darksendconfig.h" line="99"/>
         <source>Maximum Privacy</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="65"/>
-        <location filename="../forms/ui_darksendconfig.h" line="100"/>
-        <source>Please select an privacy level. </source>
+        <source>Please select a privacy level.</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="78"/>
-        <location filename="../forms/ui_darksendconfig.h" line="101"/>
-        <source>Use 2 separate masternodes to mix funds up to 1000DRK</source>
+        <source>Use 2 separate masternodes to mix funds up to 1000 DRK</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="91"/>
-        <location filename="../forms/ui_darksendconfig.h" line="102"/>
-        <source>Use 4 separate masternodes to mix funds up to 1000DRK</source>
+        <source>Use 8 separate masternodes to mix funds up to 1000 DRK</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="104"/>
-        <location filename="../forms/ui_darksendconfig.h" line="103"/>
-        <source>Use 8 separate masternodes</source>
+        <source>Use 16 separate masternodes</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="117"/>
-        <location filename="../forms/ui_darksendconfig.h" line="104"/>
-        <source>This option is the quickest and will cost about ~0.025DRK to anonymize 1000DRK</source>
+        <source>This option is the quickest and will cost about ~0.025 DRK to anonymize 1000 DRK</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="130"/>
-        <location filename="../forms/ui_darksendconfig.h" line="105"/>
-        <source>This option is moderately fast and will cost about 0.05DRK to anonymize 1000DRK</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location filename="../forms/darksendconfig.ui" line="143"/>
-        <location filename="../forms/ui_darksendconfig.h" line="106"/>
-        <source>This is the slowest and most secure option. Using maximum anonymity will cost</source>
+        <source>This option is moderately fast and will cost about 0.05 DRK to anonymize 1000 DRK</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="156"/>
-        <location filename="../forms/ui_darksendconfig.h" line="107"/>
-        <source>0.1DRK per 1000DRK you anonymize.</source>
+        <source>0.1 DRK per 1000 DRK you anonymize.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../forms/darksendconfig.ui" line="143"/>
+        <source>This is the slowest and most secure option. Using maximum anonymity will cost</source>
         <translation type="unfinished"/>
     </message>
     <message>
@@ -1212,31 +1162,26 @@ Adresse: %4
     <name>EditAddressDialog</name>
     <message>
         <location filename="../forms/editaddressdialog.ui" line="14"/>
-        <location filename="../forms/ui_editaddressdialog.h" line="91"/>
         <source>Edit Address</source>
         <translation>Rediger adresse</translation>
     </message>
     <message>
         <location filename="../forms/editaddressdialog.ui" line="25"/>
-        <location filename="../forms/ui_editaddressdialog.h" line="92"/>
         <source>&amp;Label</source>
         <translation>&amp;Merkelapp</translation>
     </message>
     <message>
         <location filename="../forms/editaddressdialog.ui" line="35"/>
-        <location filename="../forms/ui_editaddressdialog.h" line="94"/>
         <source>The label associated with this address list entry</source>
         <translation>Merkelappen koblet til denne adresseliste oppføringen</translation>
     </message>
     <message>
         <location filename="../forms/editaddressdialog.ui" line="42"/>
-        <location filename="../forms/ui_editaddressdialog.h" line="96"/>
         <source>&amp;Address</source>
         <translation>&amp;Adresse</translation>
     </message>
     <message>
         <location filename="../forms/editaddressdialog.ui" line="52"/>
-        <location filename="../forms/ui_editaddressdialog.h" line="98"/>
         <source>The address associated with this address list entry. This can only be modified for sending addresses.</source>
         <translation>Adressen til denne oppføringen i adresseboken. Denne kan kun endres for utsendingsadresser.</translation>
     </message>
@@ -1313,7 +1258,6 @@ Adresse: %4
     <name>HelpMessageDialog</name>
     <message>
         <location filename="../forms/helpmessagedialog.ui" line="19"/>
-        <location filename="../forms/ui_helpmessagedialog.h" line="105"/>
         <source>Darkcoin Core - Command-line options</source>
         <translation type="unfinished"/>
     </message>
@@ -1372,37 +1316,31 @@ Adresse: %4
     <name>Intro</name>
     <message>
         <location filename="../forms/intro.ui" line="14"/>
-        <location filename="../forms/ui_intro.h" line="183"/>
         <source>Welcome</source>
         <translation>Velkommen</translation>
     </message>
     <message>
         <location filename="../forms/intro.ui" line="23"/>
-        <location filename="../forms/ui_intro.h" line="184"/>
         <source>Welcome to Darkcoin Core.</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/intro.ui" line="49"/>
-        <location filename="../forms/ui_intro.h" line="185"/>
         <source>As this is the first time the program is launched, you can choose where Darkcoin Core will store its data.</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/intro.ui" line="59"/>
-        <location filename="../forms/ui_intro.h" line="186"/>
         <source>Darkcoin Core will download and store a copy of the Darkcoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/intro.ui" line="69"/>
-        <location filename="../forms/ui_intro.h" line="187"/>
         <source>Use the default data directory</source>
         <translation>Bruk standard datamappe</translation>
     </message>
     <message>
         <location filename="../forms/intro.ui" line="76"/>
-        <location filename="../forms/ui_intro.h" line="188"/>
         <source>Use a custom data directory:</source>
         <translation>Bruk en egendefinert datamappe:</translation>
     </message>
@@ -1436,25 +1374,21 @@ Adresse: %4
     <name>OpenURIDialog</name>
     <message>
         <location filename="../forms/openuridialog.ui" line="14"/>
-        <location filename="../forms/ui_openuridialog.h" line="93"/>
         <source>Open URI</source>
         <translation>Åpne URI</translation>
     </message>
     <message>
         <location filename="../forms/openuridialog.ui" line="20"/>
-        <location filename="../forms/ui_openuridialog.h" line="94"/>
         <source>Open payment request from URI or file</source>
         <translation>Åpne betalingsetterspørring fra URI eller fil</translation>
     </message>
     <message>
         <location filename="../forms/openuridialog.ui" line="29"/>
-        <location filename="../forms/ui_openuridialog.h" line="95"/>
         <source>URI:</source>
         <translation>URI:</translation>
     </message>
     <message>
         <location filename="../forms/openuridialog.ui" line="40"/>
-        <location filename="../forms/ui_openuridialog.h" line="97"/>
         <source>Select payment request file</source>
         <translation>Velg fil for betalingsetterspørring</translation>
     </message>
@@ -1468,297 +1402,247 @@ Adresse: %4
     <name>OptionsDialog</name>
     <message>
         <location filename="../forms/optionsdialog.ui" line="14"/>
-        <location filename="../forms/ui_optionsdialog.h" line="532"/>
         <source>Options</source>
         <translation>Innstillinger</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="27"/>
-        <location filename="../forms/ui_optionsdialog.h" line="548"/>
         <source>&amp;Main</source>
         <translation>&amp;Hoved</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="33"/>
-        <location filename="../forms/ui_optionsdialog.h" line="534"/>
         <source>Automatically start Darkcoin after logging in to the system.</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="36"/>
-        <location filename="../forms/ui_optionsdialog.h" line="536"/>
         <source>&amp;Start Darkcoin on system login</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="45"/>
-        <location filename="../forms/ui_optionsdialog.h" line="537"/>
         <source>Size of &amp;database cache</source>
         <translation>Størrelse på &amp;database hurtigbuffer</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="61"/>
-        <location filename="../forms/ui_optionsdialog.h" line="538"/>
         <source>MB</source>
         <translation>MB</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="88"/>
-        <location filename="../forms/ui_optionsdialog.h" line="539"/>
         <source>Number of script &amp;verification threads</source>
         <translation>Antall script &amp;verifikasjonstråder</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="101"/>
-        <location filename="../forms/ui_optionsdialog.h" line="541"/>
         <source>(0 = auto, &lt;0 = leave that many cores free)</source>
         <translation>(0 = automatisk, &lt;0 = la så mange kjerner være ledig)</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="138"/>
-        <location filename="../forms/ui_optionsdialog.h" line="544"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This setting determines the amount of individual masternodes that an input will be anonymized through. More rounds of anonymization gives a higher degree of privacy, but also costs more in fees.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="141"/>
-        <location filename="../forms/ui_optionsdialog.h" line="546"/>
         <source>Darksend rounds to use</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="180"/>
-        <location filename="../forms/ui_optionsdialog.h" line="547"/>
         <source>Amount of Darkcoin to keep anonymized</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="206"/>
-        <location filename="../forms/ui_optionsdialog.h" line="560"/>
         <source>W&amp;allet</source>
         <translation>L&amp;ommebok</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="212"/>
-        <location filename="../forms/ui_optionsdialog.h" line="549"/>
         <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly. Most transactions are 1 kB.</source>
         <translation>Valgfritt transaksjonsgebyr per kB som sikrer at dine transaksjoner blir raskt prosessert. De fleste transaksjoner er 1 kB.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="227"/>
-        <location filename="../forms/ui_optionsdialog.h" line="550"/>
         <source>Pay transaction &amp;fee</source>
         <translation>Betal &amp;transaksjonsgebyr</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="271"/>
-        <location filename="../forms/ui_optionsdialog.h" line="551"/>
         <source>Expert</source>
         <translation>Ekspert</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="277"/>
-        <location filename="../forms/ui_optionsdialog.h" line="553"/>
         <source>Whether to show coin control features or not.</source>
         <translation>Skal myntkontroll funksjoner vises eller ikke.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="280"/>
-        <location filename="../forms/ui_optionsdialog.h" line="555"/>
         <source>Enable coin &amp;control features</source>
         <translation>Aktiver &amp;myntkontroll funksjoner</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="287"/>
-        <location filename="../forms/ui_optionsdialog.h" line="557"/>
         <source>If you disable the spending of unconfirmed change, the change from a transaction cannot be used until that transaction has at least one confirmation. This also affects how your balance is computed.</source>
         <translation>Hvis du sperrer for bruk av ubekreftet veksel, kan ikke vekselen fra transaksjonen bli brukt før transaksjonen har minimum en bekreftelse. Dette påvirker også hvordan balansen din blir beregnet.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="290"/>
-        <location filename="../forms/ui_optionsdialog.h" line="559"/>
         <source>&amp;Spend unconfirmed change</source>
         <translation>&amp;Bruk ubekreftet veksel</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="301"/>
-        <location filename="../forms/ui_optionsdialog.h" line="581"/>
         <source>&amp;Network</source>
         <translation>&amp;Nettverk</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="307"/>
-        <location filename="../forms/ui_optionsdialog.h" line="562"/>
         <source>Automatically open the Darkcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="310"/>
-        <location filename="../forms/ui_optionsdialog.h" line="564"/>
         <source>Map port using &amp;UPnP</source>
         <translation>Sett opp port ved hjelp av &amp;UPnP</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="317"/>
-        <location filename="../forms/ui_optionsdialog.h" line="566"/>
         <source>Connect to the Darkcoin network through a SOCKS proxy.</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="320"/>
-        <location filename="../forms/ui_optionsdialog.h" line="568"/>
         <source>&amp;Connect through SOCKS proxy (default proxy):</source>
         <translation>&amp;Koble til gjennom SOCKS proxy (standardvalg proxy):</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="329"/>
-        <location filename="../forms/ui_optionsdialog.h" line="569"/>
         <source>Proxy &amp;IP:</source>
         <translation>Proxy &amp;IP:</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="354"/>
-        <location filename="../forms/ui_optionsdialog.h" line="571"/>
         <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
         <translation>IP-adressen til proxyen (f.eks. IPv4: 127.0.0.1 / IPv6: ::1)</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="361"/>
-        <location filename="../forms/ui_optionsdialog.h" line="573"/>
         <source>&amp;Port:</source>
         <translation>&amp;Port:</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="386"/>
-        <location filename="../forms/ui_optionsdialog.h" line="575"/>
         <source>Port of the proxy (e.g. 9050)</source>
         <translation>Proxyens port (f.eks. 9050)</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="393"/>
-        <location filename="../forms/ui_optionsdialog.h" line="577"/>
         <source>SOCKS &amp;Version:</source>
         <translation>SOCKS &amp;Versjon:</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="406"/>
-        <location filename="../forms/ui_optionsdialog.h" line="579"/>
         <source>SOCKS version of the proxy (e.g. 5)</source>
         <translation>Proxyens SOCKS versjon (f.eks. 5)</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="442"/>
-        <location filename="../forms/ui_optionsdialog.h" line="590"/>
         <source>&amp;Window</source>
         <translation>&amp;Vindu</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="448"/>
-        <location filename="../forms/ui_optionsdialog.h" line="583"/>
         <source>Show only a tray icon after minimizing the window.</source>
         <translation>Vis kun ikon i systemkurv etter minimering av vinduet.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="451"/>
-        <location filename="../forms/ui_optionsdialog.h" line="585"/>
         <source>&amp;Minimize to the tray instead of the taskbar</source>
         <translation>&amp;Minimer til systemkurv istedenfor oppgavelinjen</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="458"/>
-        <location filename="../forms/ui_optionsdialog.h" line="587"/>
         <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Quit in the menu.</source>
         <translation>Minimerer vinduet istedenfor å avslutte applikasjonen når vinduet lukkes. Når dette er slått på avsluttes applikasjonen kun ved å velge avslutt i menyen.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="461"/>
-        <location filename="../forms/ui_optionsdialog.h" line="589"/>
         <source>M&amp;inimize on close</source>
         <translation>M&amp;inimer ved lukking</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="482"/>
-        <location filename="../forms/ui_optionsdialog.h" line="610"/>
         <source>&amp;Display</source>
         <translation>&amp;Visning</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="490"/>
-        <location filename="../forms/ui_optionsdialog.h" line="591"/>
         <source>User Interface &amp;language:</source>
         <translation>&amp;Språk for brukergrensesnitt</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="503"/>
-        <location filename="../forms/ui_optionsdialog.h" line="593"/>
         <source>The user interface language can be set here. This setting will take effect after restarting Darkcoin.</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="514"/>
-        <location filename="../forms/ui_optionsdialog.h" line="595"/>
         <source>&amp;Unit to show amounts in:</source>
         <translation>&amp;Enhet for visning av beløper:</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="527"/>
-        <location filename="../forms/ui_optionsdialog.h" line="597"/>
         <source>Choose the default subdivision unit to show in the interface and when sending coins.</source>
         <translation>Velg standard delt enhet for visning i grensesnittet og for sending av bitcoins.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="536"/>
-        <location filename="../forms/ui_optionsdialog.h" line="600"/>
         <source>Whether to show Darkcoin addresses in the transaction list or not.</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="539"/>
-        <location filename="../forms/ui_optionsdialog.h" line="602"/>
         <source>&amp;Display addresses in transaction list</source>
         <translation>&amp;Vis adresser i transaksjonslisten</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="548"/>
         <location filename="../forms/optionsdialog.ui" line="561"/>
-        <location filename="../forms/ui_optionsdialog.h" line="604"/>
-        <location filename="../forms/ui_optionsdialog.h" line="608"/>
         <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
         <translation>Tredjepart URLer (f. eks. en blokkutforsker) som dukker opp i transaksjonsfanen som kontekst meny elementer. %s i URLen er erstattet med transaksjonen sin hash. Flere URLer er separert av en vertikal linje |.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="551"/>
-        <location filename="../forms/ui_optionsdialog.h" line="606"/>
         <source>Third party transaction URLs</source>
         <translation>Tredjepart transaksjon URLer</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="592"/>
-        <location filename="../forms/ui_optionsdialog.h" line="611"/>
         <source>Active command-line options that override above options:</source>
         <translation>Aktive kommandolinjevalg som overstyrer valgene ovenfor:</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="635"/>
-        <location filename="../forms/ui_optionsdialog.h" line="614"/>
         <source>Reset all client options to default.</source>
         <translation>Tilbakestill alle klient valg til standard</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="638"/>
-        <location filename="../forms/ui_optionsdialog.h" line="616"/>
         <source>&amp;Reset Options</source>
         <translation>&amp;Tilbakestill Instillinger</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="699"/>
-        <location filename="../forms/ui_optionsdialog.h" line="618"/>
         <source>&amp;OK</source>
         <translation>&amp;OK</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="706"/>
-        <location filename="../forms/ui_optionsdialog.h" line="619"/>
         <source>&amp;Cancel</source>
         <translation>&amp;Avbryt</translation>
     </message>
@@ -1802,181 +1686,151 @@ Adresse: %4
 <context>
     <name>OverviewPage</name>
     <message>
-        <location filename="../forms/overviewpage.ui" line="14"/>
-        <location filename="../forms/ui_overviewpage.h" line="456"/>
+        <location filename="../forms/overviewpage.ui" line="20"/>
         <source>Form</source>
         <translation>Skjema</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="57"/>
-        <location filename="../forms/ui_overviewpage.h" line="457"/>
+        <location filename="../forms/overviewpage.ui" line="63"/>
         <source>Wallet</source>
         <translation>Lommebok</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="64"/>
-        <location filename="../forms/overviewpage.ui" line="962"/>
-        <location filename="../forms/ui_overviewpage.h" line="459"/>
-        <location filename="../forms/ui_overviewpage.h" line="503"/>
+        <location filename="../forms/overviewpage.ui" line="70"/>
+        <location filename="../forms/overviewpage.ui" line="986"/>
         <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Darkcoin network after a connection is established, but this process has not completed yet.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="108"/>
-        <location filename="../forms/ui_overviewpage.h" line="461"/>
+        <location filename="../forms/overviewpage.ui" line="114"/>
         <source>Available:</source>
         <translation>Tilgjengelig:</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="124"/>
-        <location filename="../forms/ui_overviewpage.h" line="463"/>
+        <location filename="../forms/overviewpage.ui" line="130"/>
         <source>Your current spendable balance</source>
         <translation>Din nåværende saldo</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="140"/>
-        <location filename="../forms/ui_overviewpage.h" line="465"/>
+        <location filename="../forms/overviewpage.ui" line="146"/>
         <source>Pending:</source>
         <translation>Under behandling:</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="156"/>
-        <location filename="../forms/ui_overviewpage.h" line="467"/>
+        <location filename="../forms/overviewpage.ui" line="162"/>
         <source>Total of transactions that have yet to be confirmed, and do not yet count toward the spendable balance</source>
         <translation>Totalt antall ubekreftede transaksjoner som ikke teller med i saldo</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="172"/>
-        <location filename="../forms/ui_overviewpage.h" line="469"/>
+        <location filename="../forms/overviewpage.ui" line="178"/>
         <source>Immature:</source>
         <translation>Umoden:</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="185"/>
-        <location filename="../forms/ui_overviewpage.h" line="471"/>
+        <location filename="../forms/overviewpage.ui" line="191"/>
         <source>Mined balance that has not yet matured</source>
         <translation>Minet saldo har ikke modnet enda</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="201"/>
-        <location filename="../forms/ui_overviewpage.h" line="473"/>
+        <location filename="../forms/overviewpage.ui" line="207"/>
         <source>Total:</source>
         <translation>Totalt:</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="217"/>
-        <location filename="../forms/ui_overviewpage.h" line="475"/>
+        <location filename="../forms/overviewpage.ui" line="223"/>
         <source>Your current total balance</source>
         <translation>Din nåværende saldo</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="296"/>
-        <location filename="../forms/ui_overviewpage.h" line="477"/>
+        <location filename="../forms/overviewpage.ui" line="302"/>
         <source>Status:</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="303"/>
-        <location filename="../forms/ui_overviewpage.h" line="478"/>
+        <location filename="../forms/overviewpage.ui" line="309"/>
         <source>Enabled/Disabled</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="310"/>
-        <location filename="../forms/ui_overviewpage.h" line="479"/>
+        <location filename="../forms/overviewpage.ui" line="316"/>
         <source>Completion:</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="330"/>
-        <location filename="../forms/ui_overviewpage.h" line="480"/>
+        <location filename="../forms/overviewpage.ui" line="336"/>
         <source>Darksend Balance:</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="343"/>
-        <location filename="../forms/ui_overviewpage.h" line="481"/>
+        <location filename="../forms/overviewpage.ui" line="349"/>
         <source>0 DRK</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="350"/>
-        <location filename="../forms/ui_overviewpage.h" line="482"/>
+        <location filename="../forms/overviewpage.ui" line="356"/>
         <source>Amount and Rounds:</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="357"/>
-        <location filename="../forms/ui_overviewpage.h" line="483"/>
+        <location filename="../forms/overviewpage.ui" line="363"/>
         <source>0 DRK / 0 Rounds</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="364"/>
-        <location filename="../forms/ui_overviewpage.h" line="484"/>
+        <location filename="../forms/overviewpage.ui" line="370"/>
         <source>Submitted Denom:</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="371"/>
-        <location filename="../forms/ui_overviewpage.h" line="486"/>
+        <location filename="../forms/overviewpage.ui" line="377"/>
         <source>The denominations you submitted to the Masternode. To mix, other users must submit the exact same denominations.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="374"/>
-        <location filename="../forms/ui_overviewpage.h" line="488"/>
+        <location filename="../forms/overviewpage.ui" line="380"/>
         <source>n/a</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="396"/>
-        <location filename="../forms/ui_overviewpage.h" line="489"/>
-        <location filename="../overviewpage.cpp" line="428"/>
-        <location filename="../overviewpage.cpp" line="442"/>
-        <location filename="../overviewpage.cpp" line="456"/>
+        <location filename="../forms/overviewpage.ui" line="402"/>
+        <location filename="../overviewpage.cpp" line="440"/>
+        <location filename="../overviewpage.cpp" line="454"/>
+        <location filename="../overviewpage.cpp" line="468"/>
         <source>Darksend</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="846"/>
-        <location filename="../forms/ui_overviewpage.h" line="491"/>
+        <location filename="../forms/overviewpage.ui" line="858"/>
         <source>Start/Stop Mixing</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="878"/>
-        <location filename="../forms/ui_overviewpage.h" line="492"/>
+        <location filename="../forms/overviewpage.ui" line="890"/>
         <source>(Last Message)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="897"/>
-        <location filename="../forms/ui_overviewpage.h" line="494"/>
+        <location filename="../forms/overviewpage.ui" line="915"/>
         <source>Try to manually submit a Darksend request.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="900"/>
-        <location filename="../forms/ui_overviewpage.h" line="496"/>
+        <location filename="../forms/overviewpage.ui" line="918"/>
         <source>Try Mix</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="913"/>
-        <location filename="../forms/ui_overviewpage.h" line="498"/>
+        <location filename="../forms/overviewpage.ui" line="937"/>
         <source>Reset the current status of Darksend (can interrupt Darksend if it&apos;s in the process of Mixing, which can cost you money!)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="919"/>
-        <location filename="../forms/ui_overviewpage.h" line="500"/>
+        <location filename="../forms/overviewpage.ui" line="943"/>
         <source>Reset</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="955"/>
-        <location filename="../forms/ui_overviewpage.h" line="501"/>
+        <location filename="../forms/overviewpage.ui" line="979"/>
         <source>&lt;b&gt;Recent transactions&lt;/b&gt;</source>
         <translation>&lt;b&gt;Siste transaksjoner&lt;/b&gt;</translation>
     </message>
@@ -1987,17 +1841,155 @@ Adresse: %4
         <translation>ute av synk</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="429"/>
+        <location filename="../overviewpage.cpp" line="142"/>
+        <location filename="../overviewpage.cpp" line="338"/>
+        <source>Disabled</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../overviewpage.cpp" line="145"/>
+        <location filename="../overviewpage.cpp" line="340"/>
+        <location filename="../overviewpage.cpp" line="482"/>
+        <source>Start Darksend Mixing</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../overviewpage.cpp" line="147"/>
+        <location filename="../overviewpage.cpp" line="484"/>
+        <source>Stop Darksend Mixing</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../overviewpage.cpp" line="267"/>
+        <source>No inputs detected</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../overviewpage.cpp" line="275"/>
+        <source>Found unconfirmed denominated outputs, will wait till they confirm to recalculate.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../overviewpage.cpp" line="323"/>
+        <source>Rounds</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../overviewpage.cpp" line="354"/>
+        <source>Enabled</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../overviewpage.cpp" line="363"/>
+        <source>Last Darksend message:
+</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../overviewpage.cpp" line="368"/>
+        <location filename="../overviewpage.cpp" line="393"/>
+        <source>Darksend is idle.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../overviewpage.cpp" line="374"/>
+        <source>Darksend request complete: Your transaction was accepted into the pool!</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../overviewpage.cpp" line="380"/>
+        <source>Submitted following entries to masternode:</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../overviewpage.cpp" line="381"/>
+        <location filename="../overviewpage.cpp" line="382"/>
+        <location filename="../overviewpage.cpp" line="383"/>
+        <source>Submitted to masternode, Waiting for more entries</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../overviewpage.cpp" line="386"/>
+        <source>Found enough users, signing ...</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../overviewpage.cpp" line="387"/>
+        <source>Found enough users, signing ( waiting. )</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../overviewpage.cpp" line="388"/>
+        <source>Found enough users, signing ( waiting.. )</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../overviewpage.cpp" line="389"/>
+        <source>Found enough users, signing ( waiting... )</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../overviewpage.cpp" line="391"/>
+        <source>Transmitting final transaction.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../overviewpage.cpp" line="395"/>
+        <source>Finalizing transaction.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../overviewpage.cpp" line="397"/>
+        <source>Darksend request incomplete:</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../overviewpage.cpp" line="397"/>
+        <source>Will retry...</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../overviewpage.cpp" line="399"/>
+        <source>Darksend request complete:</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../overviewpage.cpp" line="401"/>
+        <source>Submitted to masternode, waiting in queue .</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../overviewpage.cpp" line="402"/>
+        <source>Submitted to masternode, waiting in queue ..</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../overviewpage.cpp" line="403"/>
+        <source>Submitted to masternode, waiting in queue ...</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../overviewpage.cpp" line="405"/>
+        <source>Unknown state:</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../overviewpage.cpp" line="419"/>
+        <source>N/A</source>
+        <translation>-</translation>
+    </message>
+    <message>
+        <location filename="../overviewpage.cpp" line="441"/>
         <source>Darksend was successfully reset.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="443"/>
+        <location filename="../overviewpage.cpp" line="455"/>
         <source>Darksend requires at least %1 to use.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="457"/>
+        <location filename="../overviewpage.cpp" line="469"/>
         <source>Wallet is locked and user declined to unlock. Disabling Darksend.</source>
         <translation type="unfinished"/>
     </message>
@@ -2164,37 +2156,31 @@ Adresse: %4
     <name>RPCConsole</name>
     <message>
         <location filename="../forms/rpcconsole.ui" line="14"/>
-        <location filename="../forms/ui_rpcconsole.h" line="471"/>
-        <source>Debug window</source>
-        <translation>Feilsøkingsvindu</translation>
+        <source>Tools window</source>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="24"/>
-        <location filename="../forms/ui_rpcconsole.h" line="500"/>
         <source>&amp;Information</source>
         <translation>&amp;Informasjon</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="33"/>
-        <location filename="../forms/ui_rpcconsole.h" line="472"/>
         <source>Masternode Count</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="46"/>
-        <location filename="../forms/ui_rpcconsole.h" line="473"/>
         <source>General</source>
         <translation>Generelt</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="53"/>
-        <location filename="../forms/ui_rpcconsole.h" line="474"/>
         <source>Name</source>
         <translation>Navn</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="60"/>
-        <location filename="../forms/ui_rpcconsole.h" line="475"/>
         <source>Client name</source>
         <translation>Klientnavn</translation>
     </message>
@@ -2209,131 +2195,102 @@ Adresse: %4
         <location filename="../forms/rpcconsole.ui" line="292"/>
         <location filename="../forms/rpcconsole.ui" line="315"/>
         <location filename="../forms/rpcconsole.ui" line="341"/>
-        <location filename="../forms/ui_rpcconsole.h" line="476"/>
-        <location filename="../forms/ui_rpcconsole.h" line="484"/>
-        <location filename="../forms/ui_rpcconsole.h" line="489"/>
-        <location filename="../forms/ui_rpcconsole.h" line="491"/>
-        <location filename="../forms/ui_rpcconsole.h" line="492"/>
-        <location filename="../forms/ui_rpcconsole.h" line="493"/>
-        <location filename="../forms/ui_rpcconsole.h" line="494"/>
-        <location filename="../forms/ui_rpcconsole.h" line="495"/>
-        <location filename="../forms/ui_rpcconsole.h" line="497"/>
-        <location filename="../forms/ui_rpcconsole.h" line="499"/>
         <source>N/A</source>
         <translation>-</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="83"/>
-        <location filename="../forms/ui_rpcconsole.h" line="477"/>
         <source>Number of connections</source>
         <translation>Antall tilkoblinger</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="90"/>
-        <location filename="../forms/ui_rpcconsole.h" line="479"/>
         <source>Open the Darkcoin debug log file from the current data directory. This can take a few seconds for large log files.</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="93"/>
-        <location filename="../forms/ui_rpcconsole.h" line="481"/>
         <source>&amp;Open</source>
         <translation>&amp;Åpne</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="116"/>
-        <location filename="../forms/ui_rpcconsole.h" line="482"/>
         <source>Startup time</source>
         <translation>Oppstartstidspunkt</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="129"/>
-        <location filename="../forms/ui_rpcconsole.h" line="483"/>
         <source>Network</source>
         <translation>Nettverk</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="152"/>
-        <location filename="../forms/ui_rpcconsole.h" line="485"/>
         <source>Last block time</source>
         <translation>Tidspunkt for siste blokk</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="165"/>
-        <location filename="../forms/ui_rpcconsole.h" line="486"/>
         <source>Debug log file</source>
         <translation>Loggfil for feilsøk</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="172"/>
-        <location filename="../forms/ui_rpcconsole.h" line="487"/>
         <source>Using OpenSSL version</source>
         <translation>Bruker OpenSSL versjon</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="182"/>
-        <location filename="../forms/ui_rpcconsole.h" line="488"/>
         <source>Build date</source>
         <translation>Byggedato</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="205"/>
-        <location filename="../forms/ui_rpcconsole.h" line="490"/>
         <source>Current number of blocks</source>
         <translation>Nåværende antall blokker</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="305"/>
-        <location filename="../forms/ui_rpcconsole.h" line="496"/>
         <source>Client version</source>
         <translation>Klientversjon</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="334"/>
-        <location filename="../forms/ui_rpcconsole.h" line="498"/>
         <source>Block chain</source>
         <translation>Blokkjeden</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="349"/>
-        <location filename="../forms/ui_rpcconsole.h" line="505"/>
         <source>&amp;Console</source>
         <translation>&amp;Konsoll</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="398"/>
-        <location filename="../forms/ui_rpcconsole.h" line="502"/>
         <source>Clear console</source>
         <translation>Tøm konsoll</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="421"/>
-        <location filename="../forms/ui_rpcconsole.h" line="510"/>
         <source>&amp;Network Traffic</source>
         <translation>&amp;Nettverkstrafikk</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="473"/>
-        <location filename="../forms/ui_rpcconsole.h" line="506"/>
         <source>&amp;Clear</source>
         <translation>&amp;Fjern</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="486"/>
-        <location filename="../forms/ui_rpcconsole.h" line="507"/>
         <source>Totals</source>
         <translation>Totalt</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="550"/>
-        <location filename="../forms/ui_rpcconsole.h" line="508"/>
         <location filename="../rpcconsole.cpp" line="365"/>
         <source>In:</source>
         <translation>Inn:</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="630"/>
-        <location filename="../forms/ui_rpcconsole.h" line="509"/>
         <location filename="../rpcconsole.cpp" line="366"/>
         <source>Out:</source>
         <translation>Ut:</translation>
@@ -2393,109 +2350,89 @@ Adresse: %4
     <name>ReceiveCoinsDialog</name>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="34"/>
-        <location filename="../forms/ui_receivecoinsdialog.h" line="255"/>
         <source>Reuse one of the previously used receiving addresses. Reusing addresses has security and privacy issues. Do not use this unless re-generating a payment request made before.</source>
         <translation>Gjenbruk en av de tidligere brukte mottaksadressene. Gjenbruk av adresser har sikkerhets- og personvernsutfordringer. Ikke bruk dette med unntak for å gjennopprette en betalingsforespørsel som ble gjort tidligere.</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="37"/>
-        <location filename="../forms/ui_receivecoinsdialog.h" line="257"/>
         <source>R&amp;euse an existing receiving address (not recommended)</source>
         <translation>Gj&amp;enbruk en eksisterende mottaksadresse (ikke anbefalt)</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="51"/>
         <location filename="../forms/receivecoinsdialog.ui" line="74"/>
-        <location filename="../forms/ui_receivecoinsdialog.h" line="260"/>
-        <location filename="../forms/ui_receivecoinsdialog.h" line="267"/>
         <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Darkcoin network.</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="54"/>
-        <location filename="../forms/ui_receivecoinsdialog.h" line="262"/>
         <source>&amp;Message:</source>
         <translation>&amp;Melding:</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="67"/>
         <location filename="../forms/receivecoinsdialog.ui" line="88"/>
-        <location filename="../forms/ui_receivecoinsdialog.h" line="264"/>
-        <location filename="../forms/ui_receivecoinsdialog.h" line="271"/>
         <source>An optional label to associate with the new receiving address.</source>
         <translation>En valgfri merkelapp å tilknytte den nye mottakeradressen.</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="81"/>
-        <location filename="../forms/ui_receivecoinsdialog.h" line="269"/>
         <source>Use this form to request payments. All fields are &lt;b&gt;optional&lt;/b&gt;.</source>
         <translation>Bruk dette skjemaet til betalingsforespørsler. Alle felt er &lt;b&gt;valgfrie&lt;/b&gt;.</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="91"/>
-        <location filename="../forms/ui_receivecoinsdialog.h" line="273"/>
         <source>&amp;Label:</source>
         <translation>&amp;Merkelapp:</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="104"/>
         <location filename="../forms/receivecoinsdialog.ui" line="126"/>
-        <location filename="../forms/ui_receivecoinsdialog.h" line="275"/>
-        <location filename="../forms/ui_receivecoinsdialog.h" line="279"/>
         <source>An optional amount to request. Leave this empty or zero to not request a specific amount.</source>
         <translation>Et valgfritt beløp å etterspørre. La stå tomt eller null for ikke å etterspørre et spesifikt beløp.</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="107"/>
-        <location filename="../forms/ui_receivecoinsdialog.h" line="277"/>
         <source>&amp;Amount:</source>
         <translation>&amp;Beløp:</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="141"/>
-        <location filename="../forms/ui_receivecoinsdialog.h" line="281"/>
         <source>&amp;Request payment</source>
         <translation>&amp;Etterspør betaling</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="158"/>
-        <location filename="../forms/ui_receivecoinsdialog.h" line="283"/>
         <source>Clear all fields of the form.</source>
         <translation>Fjern alle felter fra skjemaet.</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="161"/>
-        <location filename="../forms/ui_receivecoinsdialog.h" line="285"/>
         <source>Clear</source>
         <translation>Fjern</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="239"/>
-        <location filename="../forms/ui_receivecoinsdialog.h" line="287"/>
         <source>Requested payments history</source>
         <translation>Etterspurt betalingshistorikk</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="261"/>
-        <location filename="../forms/ui_receivecoinsdialog.h" line="289"/>
         <source>Show the selected request (does the same as double clicking an entry)</source>
         <translation>Vis den valgte etterspørringen (gjør det samme som å dobbelklikke på en oppføring)</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="264"/>
-        <location filename="../forms/ui_receivecoinsdialog.h" line="291"/>
         <source>Show</source>
         <translation>Vis</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="278"/>
-        <location filename="../forms/ui_receivecoinsdialog.h" line="293"/>
         <source>Remove the selected entries from the list</source>
         <translation>Fjern de valgte oppføringene fra listen</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="281"/>
-        <location filename="../forms/ui_receivecoinsdialog.h" line="295"/>
         <source>Remove</source>
         <translation>Fjern</translation>
     </message>
@@ -2519,25 +2456,21 @@ Adresse: %4
     <name>ReceiveRequestDialog</name>
     <message>
         <location filename="../forms/receiverequestdialog.ui" line="29"/>
-        <location filename="../forms/ui_receiverequestdialog.h" line="117"/>
         <source>QR Code</source>
         <translation>QR-kode</translation>
     </message>
     <message>
         <location filename="../forms/receiverequestdialog.ui" line="75"/>
-        <location filename="../forms/ui_receiverequestdialog.h" line="119"/>
         <source>Copy &amp;URI</source>
         <translation>Kopier &amp;URI</translation>
     </message>
     <message>
         <location filename="../forms/receiverequestdialog.ui" line="82"/>
-        <location filename="../forms/ui_receiverequestdialog.h" line="120"/>
         <source>Copy &amp;Address</source>
         <translation>Kopier &amp;Adresse</translation>
     </message>
     <message>
         <location filename="../forms/receiverequestdialog.ui" line="89"/>
-        <location filename="../forms/ui_receiverequestdialog.h" line="121"/>
         <source>&amp;Save Image...</source>
         <translation>&amp;Lagre Bilde...</translation>
     </message>
@@ -2629,7 +2562,6 @@ Adresse: %4
     <name>SendCoinsDialog</name>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="14"/>
-        <location filename="../forms/ui_sendcoinsdialog.h" line="515"/>
         <location filename="../sendcoinsdialog.cpp" line="427"/>
         <location filename="../sendcoinsdialog.cpp" line="511"/>
         <location filename="../sendcoinsdialog.cpp" line="521"/>
@@ -2638,139 +2570,116 @@ Adresse: %4
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="90"/>
-        <location filename="../forms/ui_sendcoinsdialog.h" line="516"/>
         <source>Coin Control Features</source>
         <translation>Myntkontroll Funksjoner</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="110"/>
-        <location filename="../forms/ui_sendcoinsdialog.h" line="517"/>
         <source>Inputs...</source>
         <translation>Inndata...</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="117"/>
-        <location filename="../forms/ui_sendcoinsdialog.h" line="518"/>
         <source>automatically selected</source>
         <translation>automatisk valgte</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="136"/>
-        <location filename="../forms/ui_sendcoinsdialog.h" line="519"/>
         <source>Insufficient funds!</source>
         <translation>Utilstrekkelige midler!</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="225"/>
-        <location filename="../forms/ui_sendcoinsdialog.h" line="520"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="216"/>
         <source>Quantity:</source>
         <translation>Mengde:</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="260"/>
-        <location filename="../forms/ui_sendcoinsdialog.h" line="521"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="251"/>
         <source>Bytes:</source>
         <translation>Bytes:</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="308"/>
-        <location filename="../forms/ui_sendcoinsdialog.h" line="522"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="299"/>
         <source>Amount:</source>
         <translation>Beløp:</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="340"/>
-        <location filename="../forms/ui_sendcoinsdialog.h" line="523"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="331"/>
         <source>Priority:</source>
         <translation>Prioritet:</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="388"/>
-        <location filename="../forms/ui_sendcoinsdialog.h" line="524"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="379"/>
         <source>Fee:</source>
         <translation>Gebyr:</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="420"/>
-        <location filename="../forms/ui_sendcoinsdialog.h" line="525"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="411"/>
         <source>Low Output:</source>
         <translation>Svake Utdata:</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="468"/>
-        <location filename="../forms/ui_sendcoinsdialog.h" line="526"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="459"/>
         <source>After Fee:</source>
         <translation>Etter Gebyr:</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="500"/>
-        <location filename="../forms/ui_sendcoinsdialog.h" line="527"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="491"/>
         <source>Change:</source>
         <translation>Veksel:</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="544"/>
-        <location filename="../forms/ui_sendcoinsdialog.h" line="529"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="535"/>
         <source>If this is activated, but the change address is empty or invalid, change will be sent to a newly generated address.</source>
         <translation>Hvis dette er aktivert, men adressen for veksel er tom eller ugyldig, vil veksel bli sendt til en nylig generert adresse.</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="547"/>
-        <location filename="../forms/ui_sendcoinsdialog.h" line="531"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="538"/>
         <source>Custom change address</source>
         <translation>Egendefinert adresse for veksel</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="668"/>
-        <location filename="../forms/ui_sendcoinsdialog.h" line="534"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="650"/>
         <source>Confirm the send action</source>
         <translation>Bekreft sending</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="671"/>
-        <location filename="../forms/ui_sendcoinsdialog.h" line="536"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="653"/>
         <source>S&amp;end</source>
         <translation>S&amp;end</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="691"/>
-        <location filename="../forms/ui_sendcoinsdialog.h" line="538"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="673"/>
         <source>Clear all fields of the form.</source>
         <translation>Fjern alle felter fra skjemaet.</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="694"/>
-        <location filename="../forms/ui_sendcoinsdialog.h" line="540"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="676"/>
         <source>Clear &amp;All</source>
         <translation>Fjern &amp;Alt</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="711"/>
-        <location filename="../forms/ui_sendcoinsdialog.h" line="542"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="693"/>
         <source>Send to multiple recipients at once</source>
         <translation>Send til flere enn en mottaker</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="714"/>
-        <location filename="../forms/ui_sendcoinsdialog.h" line="544"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="696"/>
         <source>Add &amp;Recipient</source>
         <translation>Legg til &amp;Mottaker</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="759"/>
-        <location filename="../forms/ui_sendcoinsdialog.h" line="545"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="741"/>
         <source>Darksend</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="772"/>
-        <location filename="../forms/ui_sendcoinsdialog.h" line="546"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="754"/>
         <source>InstantX</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="779"/>
-        <location filename="../forms/ui_sendcoinsdialog.h" line="547"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="761"/>
         <source>Balance:</source>
         <translation>Saldo:</translation>
     </message>
@@ -2922,43 +2831,36 @@ Adresse: %4
     <name>SendCoinsEntry</name>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="21"/>
-        <location filename="../forms/ui_sendcoinsentry.h" line="423"/>
         <source>This is a normal payment.</source>
         <translation>Dette er en normal betaling.</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="36"/>
-        <location filename="../forms/ui_sendcoinsentry.h" line="425"/>
         <source>Pay &amp;To:</source>
         <translation>Betal &amp;Til:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="54"/>
-        <location filename="../forms/ui_sendcoinsentry.h" line="427"/>
         <source>The address to send the payment to (e.g. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="61"/>
-        <location filename="../forms/ui_sendcoinsentry.h" line="430"/>
         <source>Choose previously used address</source>
         <translation>Velg tidligere brukt adresse</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="71"/>
-        <location filename="../forms/ui_sendcoinsentry.h" line="433"/>
         <source>Alt+A</source>
         <translation>Alt+A</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="78"/>
-        <location filename="../forms/ui_sendcoinsentry.h" line="435"/>
         <source>Paste address from clipboard</source>
         <translation>Lim inn adresse fra utklippstavlen</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="88"/>
-        <location filename="../forms/ui_sendcoinsentry.h" line="438"/>
         <source>Alt+P</source>
         <translation>Alt+P</translation>
     </message>
@@ -2966,21 +2868,16 @@ Adresse: %4
         <location filename="../forms/sendcoinsentry.ui" line="95"/>
         <location filename="../forms/sendcoinsentry.ui" line="619"/>
         <location filename="../forms/sendcoinsentry.ui" line="1155"/>
-        <location filename="../forms/ui_sendcoinsentry.h" line="440"/>
-        <location filename="../forms/ui_sendcoinsentry.h" line="457"/>
-        <location filename="../forms/ui_sendcoinsentry.h" line="467"/>
         <source>Remove this entry</source>
         <translation>Fjern denne oppføringen</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="111"/>
-        <location filename="../forms/ui_sendcoinsentry.h" line="443"/>
         <source>&amp;Label:</source>
         <translation>&amp;Merkelapp:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="124"/>
-        <location filename="../forms/ui_sendcoinsentry.h" line="445"/>
         <source>Enter a label for this address to add it to the list of used addresses</source>
         <translation>Skriv inn en merkelapp for denne adressen for å legge den til listen av brukte adresser</translation>
     </message>
@@ -2988,49 +2885,38 @@ Adresse: %4
         <location filename="../forms/sendcoinsentry.ui" line="131"/>
         <location filename="../forms/sendcoinsentry.ui" line="652"/>
         <location filename="../forms/sendcoinsentry.ui" line="1188"/>
-        <location filename="../forms/ui_sendcoinsentry.h" line="447"/>
-        <location filename="../forms/ui_sendcoinsentry.h" line="461"/>
-        <location filename="../forms/ui_sendcoinsentry.h" line="471"/>
         <source>A&amp;mount:</source>
         <translation>&amp;Beløp:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="147"/>
-        <location filename="../forms/ui_sendcoinsentry.h" line="448"/>
         <source>Message:</source>
         <translation>Melding:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="157"/>
-        <location filename="../forms/ui_sendcoinsentry.h" line="450"/>
         <source>A message that was attached to the darkcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Darkcoin network.</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="583"/>
-        <location filename="../forms/ui_sendcoinsentry.h" line="453"/>
         <source>This is an unverified payment request.</source>
         <translation>Dette er en uverifisert betalingsetterspørring</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="601"/>
         <location filename="../forms/sendcoinsentry.ui" line="1133"/>
-        <location filename="../forms/ui_sendcoinsentry.h" line="455"/>
-        <location filename="../forms/ui_sendcoinsentry.h" line="465"/>
         <source>Pay To:</source>
         <translation>Betal Til:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="635"/>
         <location filename="../forms/sendcoinsentry.ui" line="1171"/>
-        <location filename="../forms/ui_sendcoinsentry.h" line="460"/>
-        <location filename="../forms/ui_sendcoinsentry.h" line="470"/>
         <source>Memo:</source>
         <translation>Memo:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="1115"/>
-        <location filename="../forms/ui_sendcoinsentry.h" line="463"/>
         <source>This is a verified payment request.</source>
         <translation>Dette er en verifisert betalingsetterspørring</translation>
     </message>
@@ -3057,133 +2943,109 @@ Adresse: %4
     <name>SignVerifyMessageDialog</name>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="14"/>
-        <location filename="../forms/ui_signverifymessagedialog.h" line="283"/>
         <source>Signatures - Sign / Verify a Message</source>
         <translation>Signaturer - Signer / Verifiser en Melding</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="24"/>
-        <location filename="../forms/ui_signverifymessagedialog.h" line="315"/>
         <source>&amp;Sign Message</source>
         <translation>&amp;Signer Melding</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="30"/>
-        <location filename="../forms/ui_signverifymessagedialog.h" line="284"/>
         <source>You can sign messages with your addresses to prove you own them. Be careful not to sign anything vague, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
         <translation>Du kan signere meldinger med dine adresser for å bevise at du eier dem. Ikke signer vage meldinger da phishing-angrep kan prøve å lure deg til å signere din identitet over til andre. Signer kun fullt detaljerte utsagn som du er enig i.</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="48"/>
-        <location filename="../forms/ui_signverifymessagedialog.h" line="286"/>
         <source>The address to sign the message with (e.g. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="55"/>
         <location filename="../forms/signverifymessagedialog.ui" line="265"/>
-        <location filename="../forms/ui_signverifymessagedialog.h" line="289"/>
-        <location filename="../forms/ui_signverifymessagedialog.h" line="321"/>
         <source>Choose previously used address</source>
         <translation>Velg tidligere brukt adresse</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="65"/>
         <location filename="../forms/signverifymessagedialog.ui" line="275"/>
-        <location filename="../forms/ui_signverifymessagedialog.h" line="292"/>
-        <location filename="../forms/ui_signverifymessagedialog.h" line="324"/>
         <source>Alt+A</source>
         <translation>Alt+A</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="75"/>
-        <location filename="../forms/ui_signverifymessagedialog.h" line="294"/>
         <source>Paste address from clipboard</source>
         <translation>Lim inn adresse fra utklippstavlen</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="85"/>
-        <location filename="../forms/ui_signverifymessagedialog.h" line="297"/>
         <source>Alt+P</source>
         <translation>Alt+P</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="97"/>
-        <location filename="../forms/ui_signverifymessagedialog.h" line="299"/>
         <source>Enter the message you want to sign here</source>
         <translation>Skriv inn meldingen du vil signere her</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="104"/>
-        <location filename="../forms/ui_signverifymessagedialog.h" line="301"/>
         <source>Signature</source>
         <translation>Signatur</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="131"/>
-        <location filename="../forms/ui_signverifymessagedialog.h" line="303"/>
         <source>Copy the current signature to the system clipboard</source>
         <translation>Kopier valgt signatur til utklippstavle</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="152"/>
-        <location filename="../forms/ui_signverifymessagedialog.h" line="307"/>
         <source>Sign the message to prove you own this Darkcoin address</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="155"/>
-        <location filename="../forms/ui_signverifymessagedialog.h" line="309"/>
         <source>Sign &amp;Message</source>
         <translation>Signer &amp;Melding</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="169"/>
-        <location filename="../forms/ui_signverifymessagedialog.h" line="311"/>
         <source>Reset all sign message fields</source>
         <translation>Tilbakestill alle felter for meldingssignering</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="172"/>
         <location filename="../forms/signverifymessagedialog.ui" line="315"/>
-        <location filename="../forms/ui_signverifymessagedialog.h" line="313"/>
-        <location filename="../forms/ui_signverifymessagedialog.h" line="332"/>
         <source>Clear &amp;All</source>
         <translation>Fjern &amp;Alt</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="231"/>
-        <location filename="../forms/ui_signverifymessagedialog.h" line="334"/>
         <source>&amp;Verify Message</source>
         <translation>&amp;Verifiser Melding</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="237"/>
-        <location filename="../forms/ui_signverifymessagedialog.h" line="316"/>
         <source>Enter the signing address, message (ensure you copy line breaks, spaces, tabs, etc. exactly) and signature below to verify the message. Be careful not to read more into the signature than what is in the signed message itself, to avoid being tricked by a man-in-the-middle attack.</source>
         <translation>Angi adresse for signering, melding (vær sikker på at du kopierer linjeskift, mellomrom, tab, etc. helt nøyaktig) og signatur under for å verifisere meldingen. Vær forsiktig med at du ikke gir signaturen mer betydning enn det som faktisk står i meldingen, for å unngå å bli lurt av såkalte &quot;man-in-the-middle&quot; angrep.</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="258"/>
-        <location filename="../forms/ui_signverifymessagedialog.h" line="318"/>
         <source>The address the message was signed with (e.g. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="295"/>
-        <location filename="../forms/ui_signverifymessagedialog.h" line="326"/>
         <source>Verify the message to ensure it was signed with the specified Darkcoin address</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="298"/>
-        <location filename="../forms/ui_signverifymessagedialog.h" line="328"/>
         <source>Verify &amp;Message</source>
         <translation>Verifiser &amp;Melding</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="312"/>
-        <location filename="../forms/ui_signverifymessagedialog.h" line="330"/>
         <source>Reset all verify message fields</source>
         <translation>Tilbakestill alle felter for meldingsverifikasjon</translation>
     </message>
@@ -3272,6 +3134,11 @@ Adresse: %4
         <translation type="unfinished"/>
     </message>
     <message>
+        <location filename="../splashscreen.cpp" line="34"/>
+        <source>Version %1</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
         <location filename="../splashscreen.cpp" line="35"/>
         <source>The Bitcoin Core developers</source>
         <translation>Bitcoin Core utviklerne</translation>
@@ -3308,174 +3175,190 @@ Adresse: %4
         <translation>Åpen til %1</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="36"/>
+        <location filename="../transactiondesc.cpp" line="38"/>
+        <location filename="../transactiondesc.cpp" line="48"/>
         <source>conflicted</source>
         <translation>konflikt</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="38"/>
+        <location filename="../transactiondesc.cpp" line="40"/>
+        <source>%1/offline (verified via instantx)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../transactiondesc.cpp" line="42"/>
+        <source>%1/confirmed (verified via instantx)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../transactiondesc.cpp" line="44"/>
+        <source>%1 confirmations (verified via instantx)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../transactiondesc.cpp" line="50"/>
         <source>%1/offline</source>
         <translation>%1/frakoblet</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="40"/>
+        <location filename="../transactiondesc.cpp" line="52"/>
         <source>%1/unconfirmed</source>
         <translation>%1/ubekreftet</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="42"/>
+        <location filename="../transactiondesc.cpp" line="54"/>
         <source>%1 confirmations</source>
         <translation>%1 bekreftelser</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="59"/>
+        <location filename="../transactiondesc.cpp" line="72"/>
         <source>Status</source>
         <translation>Status</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="64"/>
+        <location filename="../transactiondesc.cpp" line="77"/>
         <source>, has not been successfully broadcast yet</source>
         <translation>, har ikke blitt kringkastet med hell enda</translation>
     </message>
     <message numerus="yes">
-        <location filename="../transactiondesc.cpp" line="66"/>
+        <location filename="../transactiondesc.cpp" line="79"/>
         <source>, broadcast through %n node(s)</source>
         <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="70"/>
+        <location filename="../transactiondesc.cpp" line="83"/>
         <source>Date</source>
         <translation>Dato</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="77"/>
+        <location filename="../transactiondesc.cpp" line="90"/>
         <source>Source</source>
         <translation>Kilde</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="77"/>
+        <location filename="../transactiondesc.cpp" line="90"/>
         <source>Generated</source>
         <translation>Generert</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="82"/>
-        <location filename="../transactiondesc.cpp" line="99"/>
+        <location filename="../transactiondesc.cpp" line="95"/>
+        <location filename="../transactiondesc.cpp" line="112"/>
         <source>From</source>
         <translation>Fra</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="99"/>
+        <location filename="../transactiondesc.cpp" line="112"/>
         <source>unknown</source>
         <translation>ukjent</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="100"/>
-        <location filename="../transactiondesc.cpp" line="122"/>
-        <location filename="../transactiondesc.cpp" line="180"/>
+        <location filename="../transactiondesc.cpp" line="113"/>
+        <location filename="../transactiondesc.cpp" line="135"/>
+        <location filename="../transactiondesc.cpp" line="193"/>
         <source>To</source>
         <translation>Til</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="103"/>
-        <location filename="../transactiondesc.cpp" line="105"/>
+        <location filename="../transactiondesc.cpp" line="116"/>
+        <location filename="../transactiondesc.cpp" line="118"/>
         <source>own address</source>
         <translation>egen adresse</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="103"/>
+        <location filename="../transactiondesc.cpp" line="116"/>
         <source>label</source>
         <translation>merkelapp</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="140"/>
-        <location filename="../transactiondesc.cpp" line="152"/>
-        <location filename="../transactiondesc.cpp" line="197"/>
-        <location filename="../transactiondesc.cpp" line="214"/>
-        <location filename="../transactiondesc.cpp" line="267"/>
+        <location filename="../transactiondesc.cpp" line="153"/>
+        <location filename="../transactiondesc.cpp" line="165"/>
+        <location filename="../transactiondesc.cpp" line="210"/>
+        <location filename="../transactiondesc.cpp" line="227"/>
+        <location filename="../transactiondesc.cpp" line="280"/>
         <source>Credit</source>
         <translation>Kredit</translation>
     </message>
     <message numerus="yes">
-        <location filename="../transactiondesc.cpp" line="142"/>
+        <location filename="../transactiondesc.cpp" line="155"/>
         <source>matures in %n more block(s)</source>
         <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="144"/>
+        <location filename="../transactiondesc.cpp" line="157"/>
         <source>not accepted</source>
         <translation>ikke akseptert</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="188"/>
-        <location filename="../transactiondesc.cpp" line="196"/>
-        <location filename="../transactiondesc.cpp" line="211"/>
-        <location filename="../transactiondesc.cpp" line="264"/>
+        <location filename="../transactiondesc.cpp" line="201"/>
+        <location filename="../transactiondesc.cpp" line="209"/>
+        <location filename="../transactiondesc.cpp" line="224"/>
+        <location filename="../transactiondesc.cpp" line="277"/>
         <source>Debit</source>
         <translation>Debet</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="202"/>
+        <location filename="../transactiondesc.cpp" line="215"/>
         <source>Transaction fee</source>
         <translation>Transaksjonsgebyr</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="218"/>
+        <location filename="../transactiondesc.cpp" line="231"/>
         <source>Net amount</source>
         <translation>Nettobeløp</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="224"/>
-        <location filename="../transactiondesc.cpp" line="233"/>
+        <location filename="../transactiondesc.cpp" line="237"/>
+        <location filename="../transactiondesc.cpp" line="246"/>
         <source>Message</source>
         <translation>Melding</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="226"/>
+        <location filename="../transactiondesc.cpp" line="239"/>
         <source>Comment</source>
         <translation>Kommentar</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="228"/>
+        <location filename="../transactiondesc.cpp" line="241"/>
         <source>Transaction ID</source>
         <translation>Transaksjons-ID</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="246"/>
+        <location filename="../transactiondesc.cpp" line="259"/>
         <source>Merchant</source>
         <translation>Forhandler</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="253"/>
+        <location filename="../transactiondesc.cpp" line="266"/>
         <source>Generated coins must mature %1 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to &quot;not accepted&quot; and it won&apos;t be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.</source>
         <translation>Genererte bitcoins må modnes %1 blokker før de kan brukes. Da du genererte denne blokken ble den kringkastet på nettverket for å bli lagt til i kjeden av blokker. Hvis den ikke kommer med i kjeden vil den endre seg til &quot;ikke akseptert&quot; og pengene vil ikke kunne brukes. Dette vil noen ganger skje hvis en annen node genererer en blokk noen sekunder i tid fra din egen.</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="261"/>
+        <location filename="../transactiondesc.cpp" line="274"/>
         <source>Debug information</source>
         <translation>Informasjon for feilsøk</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="269"/>
+        <location filename="../transactiondesc.cpp" line="282"/>
         <source>Transaction</source>
         <translation>Transaksjon</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="272"/>
+        <location filename="../transactiondesc.cpp" line="285"/>
         <source>Inputs</source>
         <translation>Inndata</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="293"/>
+        <location filename="../transactiondesc.cpp" line="306"/>
         <source>Amount</source>
         <translation>Beløp</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="294"/>
+        <location filename="../transactiondesc.cpp" line="307"/>
         <source>true</source>
         <translation>sann</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="294"/>
+        <location filename="../transactiondesc.cpp" line="307"/>
         <source>false</source>
         <translation>usann</translation>
     </message>
@@ -3484,13 +3367,11 @@ Adresse: %4
     <name>TransactionDescDialog</name>
     <message>
         <location filename="../forms/transactiondescdialog.ui" line="14"/>
-        <location filename="../forms/ui_transactiondescdialog.h" line="60"/>
         <source>Transaction details</source>
         <translation>Transaksjonsdetaljer</translation>
     </message>
     <message>
         <location filename="../forms/transactiondescdialog.ui" line="20"/>
-        <location filename="../forms/ui_transactiondescdialog.h" line="62"/>
         <source>This pane shows a detailed description of the transaction</source>
         <translation>Her vises en detaljert beskrivelse av transaksjonen</translation>
     </message>
@@ -3848,7 +3729,7 @@ Adresse: %4
 <context>
     <name>WalletModel</name>
     <message>
-        <location filename="../walletmodel.cpp" line="286"/>
+        <location filename="../walletmodel.cpp" line="288"/>
         <source>Send Coins</source>
         <translation>Send Bitcoins</translation>
     </message>
@@ -3899,7 +3780,7 @@ Adresse: %4
 <context>
     <name>darkcoin-core</name>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="12"/>
+        <location filename="../bitcoinstrings.cpp" line="16"/>
         <source>%s, you must set a rpcpassword in the configuration file:
 %s
 It is recommended you use the following random password:
@@ -3914,1129 +3795,1314 @@ for example: alertnotify=echo %%s | mail -s &quot;Darkcoin Alert&quot; admin@foo
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="25"/>
+        <location filename="../bitcoinstrings.cpp" line="29"/>
         <source>Acceptable ciphers (default: TLSv1.2+HIGH:TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!3DES:@STRENGTH)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="28"/>
+        <location filename="../bitcoinstrings.cpp" line="32"/>
         <source>An error occurred while setting up the RPC port %u for listening on IPv4: %s</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="30"/>
+        <location filename="../bitcoinstrings.cpp" line="34"/>
         <source>An error occurred while setting up the RPC port %u for listening on IPv6, falling back to IPv4: %s</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="33"/>
+        <location filename="../bitcoinstrings.cpp" line="37"/>
         <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="36"/>
+        <location filename="../bitcoinstrings.cpp" line="40"/>
         <source>Cannot obtain a lock on data directory %s. Darkcoin Core is probably already running.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="39"/>
+        <location filename="../bitcoinstrings.cpp" line="43"/>
         <source>Continuously rate-limit free transactions to &lt;n&gt;*1000 bytes per minute (default:15)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="50"/>
-        <source>Enter regression test mode, which uses a special chain in which blocks can be solved instantly. This is intended for regression testing tools and app development.</source>
+        <location filename="../bitcoinstrings.cpp" line="46"/>
+        <source>Disable all Masternode and Darksend related functionality (0-1, default: 0)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="48"/>
+        <source>Enable instantx, show confirmations for locked transactions (bool, default: true)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="51"/>
+        <source>Enable use of automated darksend for funds stored in this wallet (0-1, default: 0)</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="54"/>
+        <source>Enter regression test mode, which uses a special chain in which blocks can be solved instantly. This is intended for regression testing tools and app development.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="58"/>
         <source>Enter regression test mode, which uses a special chain in which blocks can be solved instantly.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="59"/>
-        <source>Error: The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
+        <location filename="../bitcoinstrings.cpp" line="61"/>
+        <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="63"/>
+        <source>Error: The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="67"/>
         <source>Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds!</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="68"/>
+        <location filename="../bitcoinstrings.cpp" line="70"/>
+        <source>Error: Wallet unlocked for anonymization only, unable to create transaction.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="72"/>
         <source>Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="71"/>
+        <location filename="../bitcoinstrings.cpp" line="75"/>
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="74"/>
+        <location filename="../bitcoinstrings.cpp" line="78"/>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="77"/>
+        <location filename="../bitcoinstrings.cpp" line="81"/>
         <source>Fees smaller than this are considered zero fee (for transaction creation) (default:</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="80"/>
+        <location filename="../bitcoinstrings.cpp" line="84"/>
         <source>Flush database activity from memory pool to disk log every &lt;n&gt; megabytes (default: 100)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="83"/>
+        <location filename="../bitcoinstrings.cpp" line="87"/>
+        <source>Found unconfirmed denominated outputs, will wait till they confirm to continue.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="90"/>
         <source>How thorough the block verification of -checkblocks is (0-4, default: 3)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="85"/>
+        <location filename="../bitcoinstrings.cpp" line="92"/>
         <source>In this mode -genproclimit controls how many blocks are generated immediately.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="88"/>
+        <location filename="../bitcoinstrings.cpp" line="95"/>
         <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 9998 or testnet: 19998)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="92"/>
+        <location filename="../bitcoinstrings.cpp" line="97"/>
+        <source>Name to construct url for KeePass entry that stores the wallet passphrase</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="99"/>
         <source>Number of seconds to keep misbehaving peers from reconnecting (default: 86400)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="95"/>
+        <location filename="../bitcoinstrings.cpp" line="102"/>
         <source>Output debugging information (default: 0, supplying &lt;category&gt; is optional)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="106"/>
-        <source>Set maximum size of high-priority/low-fee transactions in bytes (default: %d)</source>
+        <location filename="../bitcoinstrings.cpp" line="104"/>
+        <source>Provide liquidity to Darksend by infrequently mixing coins on a continual basis (0-100, default: 0, 1=very frequent, high fees, 100=very infrequent, low fees)</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="108"/>
-        <source>Set the number of script verification threads (%u to %d, 0 = auto, &lt;0 = leave that many cores free, default: %d)</source>
+        <source>Query for peer addresses via DNS lookup, if low on addresses (default: 1 unless -connect)</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="111"/>
+        <source>Set external address:port to get to this masternode (example: address:port)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="113"/>
+        <source>Set maximum size of high-priority/low-fee transactions in bytes (default: %d)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="115"/>
+        <source>Set the number of script verification threads (%u to %d, 0 = auto, &lt;0 = leave that many cores free, default: %d)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="118"/>
         <source>Set the processor limit for when generation is on (-1 = unlimited, default: -1)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="117"/>
+        <location filename="../bitcoinstrings.cpp" line="121"/>
+        <source>Show N confirmations for a successfully locked transaciton (0-9999, default: 1)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="124"/>
         <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="120"/>
+        <location filename="../bitcoinstrings.cpp" line="127"/>
         <source>Unable to bind to %s on this computer. Darkcoin Core is probably already running.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="128"/>
+        <location filename="../bitcoinstrings.cpp" line="130"/>
+        <source>Unable to locate enough Darksend non-denominated funds for this transaction that are not equal 1000 DRK</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="133"/>
+        <source>Unable to locate enough Darksend non-denominated funds for this transaction</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="135"/>
         <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: -proxy)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="131"/>
+        <location filename="../bitcoinstrings.cpp" line="138"/>
         <source>Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="134"/>
+        <location filename="../bitcoinstrings.cpp" line="141"/>
         <source>Warning: Please check that your computer&apos;s date and time are correct! If your clock is wrong Darkcoin will not work properly.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="137"/>
+        <location filename="../bitcoinstrings.cpp" line="144"/>
         <source>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="140"/>
+        <location filename="../bitcoinstrings.cpp" line="147"/>
         <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="143"/>
+        <location filename="../bitcoinstrings.cpp" line="150"/>
         <source>Warning: error reading wallet.dat! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="146"/>
+        <location filename="../bitcoinstrings.cpp" line="153"/>
         <source>Warning: wallet.dat corrupt, data salvaged! Original wallet.dat saved as wallet.{timestamp}.bak in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="150"/>
+        <location filename="../bitcoinstrings.cpp" line="157"/>
         <source>You must set rpcpassword=&lt;password&gt; in the configuration file:
 %s
 If the file does not exist, create it with owner-readable-only file permissions.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="158"/>
-        <source>(default: 1)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="159"/>
-        <source>(default: wallet.dat)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="160"/>
-        <source>&lt;category&gt; can be:</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="161"/>
-        <source>Accept command line and JSON-RPC commands</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
         <location filename="../bitcoinstrings.cpp" line="162"/>
-        <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="163"/>
-        <source>Add a node to connect to and attempt to keep the connection open</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="164"/>
-        <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="165"/>
-        <source>Allow JSON-RPC connections from specified IP address</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="167"/>
-        <source>Attempt to recover private keys from a corrupt wallet.dat</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="181"/>
-        <source>Darkcoin Core Daemon</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="182"/>
-        <source>Darkcoin Core RPC client version</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="168"/>
-        <source>Block creation options:</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="42"/>
-        <source>Disable all Masternode and Darksend related functionality (0-1, default: 0)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="44"/>
-        <source>Enable instantx, show confirmations for locked transactions (bool, default: true)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="47"/>
-        <source>Enable use of automated darksend for funds stored in this wallet (0-1, default: 0)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="57"/>
-        <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="66"/>
-        <source>Error: Wallet unlocked for anonymization only, unable to create transaction.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="90"/>
-        <source>Name to construct url for KeePass entry that stores the wallet passphrase</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="97"/>
-        <source>Provide liquidity to Darksend by infrequently mixing coins on a continual basis (0-100, default: 0, 1=very frequent, high fees, 100=very infrequent, low fees)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="101"/>
-        <source>Query for peer addresses via DNS lookup, if low on addresses (default: 1 unless -connect)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="104"/>
-        <source>Set external address:port to get to this masternode (example: address:port)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="114"/>
-        <source>Show N confirmations for a successfully locked transaciton (0-9999, default: 1)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="123"/>
-        <source>Unable to locate enough Darksend non-denominated funds for this transaction that are not equal 1000 DRK</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="126"/>
-        <source>Unable to locate enough Darksend non-denominated funds for this transaction</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="155"/>
         <source>You must specify a masternodeprivkey in the configuration. Please see documentation for help.</source>
         <translation type="unfinished"/>
     </message>
     <message>
+        <location filename="../bitcoinstrings.cpp" line="165"/>
+        <source>(default: 1)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
         <location filename="../bitcoinstrings.cpp" line="166"/>
-        <source>Always query for peer addresses via DNS lookup (default: 0)</source>
+        <source>(default: wallet.dat)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="167"/>
+        <source>&lt;category&gt; can be:</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="168"/>
+        <source>Accept command line and JSON-RPC commands</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="169"/>
-        <source>Cannot downgrade wallet</source>
+        <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="170"/>
-        <source>Cannot resolve -bind address: &apos;%s&apos;</source>
+        <source>Add a node to connect to and attempt to keep the connection open</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="171"/>
-        <source>Cannot resolve -externalip address: &apos;%s&apos;</source>
+        <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="172"/>
-        <source>Cannot write default address</source>
+        <source>Allow JSON-RPC connections from specified IP address</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="173"/>
-        <source>Clear list of wallet transactions (diagnostic tool; implies -rescan)</source>
+        <source>Already have that input.</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="174"/>
-        <source>Connect only to the specified node(s)</source>
+        <source>Always query for peer addresses via DNS lookup (default: 0)</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="175"/>
-        <source>Connect through SOCKS proxy</source>
+        <source>Attempt to recover private keys from a corrupt wallet.dat</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="176"/>
-        <source>Connect to JSON-RPC on &lt;port&gt; (default: 9998 or testnet: 19998)</source>
+        <source>Block creation options:</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="177"/>
-        <source>Connect to KeePassHttp on port &lt;port&gt; (default: 19455)</source>
+        <source>Can&apos;t denominate: no compatible inputs left.</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="178"/>
-        <source>Connect to a node to retrieve peer addresses, and disconnect</source>
+        <source>Cannot downgrade wallet</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="179"/>
-        <source>Connection options:</source>
+        <source>Cannot resolve -bind address: &apos;%s&apos;</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="180"/>
-        <source>Corrupted block database detected</source>
+        <source>Cannot resolve -externalip address: &apos;%s&apos;</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="181"/>
+        <source>Cannot write default address</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="182"/>
+        <source>Clear list of wallet transactions (diagnostic tool; implies -rescan)</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="183"/>
-        <source>Darksend options:</source>
+        <source>Collateral is not valid.</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="184"/>
-        <source>Debugging/Testing options:</source>
+        <source>Collateral not valid.</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="185"/>
-        <source>Disable safemode, override a real safe mode event (default: 0)</source>
+        <source>Connect only to the specified node(s)</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="186"/>
-        <source>Discover own IP address (default: 1 when listening and no -externalip)</source>
+        <source>Connect through SOCKS proxy</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="187"/>
-        <source>Do not load the wallet and disable wallet RPC calls</source>
+        <source>Connect to JSON-RPC on &lt;port&gt; (default: 9998 or testnet: 19998)</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="188"/>
-        <source>Do you want to rebuild the block database now?</source>
+        <source>Connect to KeePassHttp on port &lt;port&gt; (default: 19455)</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="189"/>
-        <source>Done loading</source>
+        <source>Connect to a node to retrieve peer addresses, and disconnect</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="190"/>
-        <source>Enable the client to act as a masternode (0-1, default: 0)</source>
+        <source>Connection options:</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="191"/>
-        <source>Error initializing block database</source>
+        <source>Corrupted block database detected</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="192"/>
-        <source>Error initializing wallet database environment %s!</source>
+        <source>Darkcoin Core Daemon</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="193"/>
-        <source>Error loading block database</source>
+        <source>Darkcoin Core RPC client version</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="194"/>
-        <source>Error loading wallet.dat</source>
+        <source>Darksend is disabled.</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="195"/>
-        <source>Error loading wallet.dat: Wallet corrupted</source>
+        <source>Darksend options:</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="196"/>
-        <source>Error loading wallet.dat: Wallet requires newer version of Darkcoin</source>
+        <source>Debugging/Testing options:</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="197"/>
-        <source>Error opening block database</source>
+        <source>Disable safemode, override a real safe mode event (default: 0)</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="198"/>
-        <source>Error reading from database, shutting down.</source>
+        <source>Discover own IP address (default: 1 when listening and no -externalip)</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="199"/>
-        <source>Error</source>
-        <translation>Feil</translation>
+        <source>Do not load the wallet and disable wallet RPC calls</source>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="200"/>
-        <source>Error: Disk space is low!</source>
+        <source>Do you want to rebuild the block database now?</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="201"/>
-        <source>Error: Wallet locked, unable to create transaction!</source>
+        <source>Done loading</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="202"/>
-        <source>Error: You already have pending entries in the Darksend pool</source>
+        <source>Enable the client to act as a masternode (0-1, default: 0)</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="203"/>
-        <source>Error: system error: </source>
+        <source>Entries are full.</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="204"/>
-        <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
+        <source>Error connecting to masternode.</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="205"/>
-        <source>Failed to read block info</source>
+        <source>Error initializing block database</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="206"/>
-        <source>Failed to read block</source>
+        <source>Error initializing wallet database environment %s!</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="207"/>
-        <source>Failed to sync block index</source>
+        <source>Error loading block database</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="208"/>
-        <source>Failed to write block index</source>
+        <source>Error loading wallet.dat</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="209"/>
-        <source>Failed to write block info</source>
+        <source>Error loading wallet.dat: Wallet corrupted</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="210"/>
-        <source>Failed to write block</source>
+        <source>Error loading wallet.dat: Wallet requires newer version of Darkcoin</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="211"/>
-        <source>Failed to write file info</source>
+        <source>Error opening block database</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="212"/>
-        <source>Failed to write to coin database</source>
+        <source>Error reading from database, shutting down.</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="213"/>
-        <source>Failed to write transaction index</source>
+        <source>Error recovering public key.</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="214"/>
-        <source>Failed to write undo data</source>
-        <translation type="unfinished"/>
+        <source>Error</source>
+        <translation>Feil</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="215"/>
-        <source>Fee per kB to add to transactions you send</source>
+        <source>Error: Disk space is low!</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="216"/>
-        <source>Fees smaller than this are considered zero fee (for relaying) (default:</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="263"/>
-        <source>RPC SSL options: (see the Darkcoin Wiki for SSL setup instructions)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="273"/>
-        <source>SSL options: (see the Darkcoin Wiki for SSL setup instructions)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="308"/>
-        <source>Unable to bind to %s on this computer (bind returned error %s)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="309"/>
-        <source>Unable to locate enough Darksend denominated funds for this transaction</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="310"/>
-        <source>Unable to sign masternode payment winner, wrong key?</source>
+        <source>Error: Wallet locked, unable to create transaction!</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="217"/>
-        <source>Force safe mode (default: 0)</source>
+        <source>Error: You already have pending entries in the Darksend pool</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="218"/>
-        <source>Generate coins (default: 0)</source>
+        <source>Error: system error: </source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="219"/>
-        <source>Get help for a command</source>
+        <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="220"/>
-        <source>How many blocks to check at startup (default: 288, 0 = all)</source>
+        <source>Failed to read block info</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="221"/>
-        <source>If &lt;category&gt; is not supplied, output all debugging information.</source>
+        <source>Failed to read block</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="222"/>
-        <source>Ignore masternodes less than version (example: 70050; default : 0)</source>
+        <source>Failed to sync block index</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="223"/>
-        <source>Importing...</source>
+        <source>Failed to write block index</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="224"/>
-        <source>Imports blocks from external blk000??.dat file</source>
+        <source>Failed to write block info</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="225"/>
-        <source>Incorrect or no genesis block found. Wrong datadir for network?</source>
+        <source>Failed to write block</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="226"/>
-        <source>Information</source>
-        <translation>Informasjon</translation>
+        <source>Failed to write file info</source>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="227"/>
-        <source>Initialization sanity check failed. Darkcoin Core is shutting down.</source>
+        <source>Failed to write to coin database</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="228"/>
-        <source>InstantX options:</source>
+        <source>Failed to write transaction index</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="229"/>
-        <source>Insufficient funds</source>
+        <source>Failed to write undo data</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="230"/>
-        <source>Invalid -onion address: &apos;%s&apos;</source>
+        <source>Fee per kB to add to transactions you send</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="231"/>
-        <source>Invalid -proxy address: &apos;%s&apos;</source>
+        <source>Fees smaller than this are considered zero fee (for relaying) (default:</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="232"/>
-        <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: &apos;%s&apos;</source>
+        <source>Force safe mode (default: 0)</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="233"/>
-        <source>Invalid amount for -mintxfee=&lt;amount&gt;: &apos;%s&apos;</source>
+        <source>Generate coins (default: 0)</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="234"/>
-        <source>Invalid amount for -paytxfee=&lt;amount&gt;: &apos;%s&apos;</source>
+        <source>Get help for a command</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="235"/>
-        <source>Invalid amount</source>
+        <source>How many blocks to check at startup (default: 288, 0 = all)</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="236"/>
-        <source>Invalid masternodeprivkey. Please see documenation.</source>
+        <source>If &lt;category&gt; is not supplied, output all debugging information.</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="237"/>
-        <source>KeePassHttp id for the established association</source>
+        <source>Ignore masternodes less than version (example: 70050; default : 0)</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="238"/>
-        <source>KeePassHttp key for AES encrypted communication with KeePass</source>
+        <source>Importing...</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="239"/>
-        <source>Keep N darkcoin anonymized (default: 0)</source>
+        <source>Imports blocks from external blk000??.dat file</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="240"/>
-        <source>Keep at most &lt;n&gt; unconnectable blocks in memory (default: %u)</source>
+        <source>Incompatible mode.</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="241"/>
-        <source>Keep at most &lt;n&gt; unconnectable transactions in memory (default: %u)</source>
+        <source>Incompatible version.</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="242"/>
-        <source>Limit size of signature cache to &lt;n&gt; entries (default: 50000)</source>
+        <source>Incorrect or no genesis block found. Wrong datadir for network?</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="243"/>
-        <source>List commands</source>
-        <translation type="unfinished"/>
+        <source>Information</source>
+        <translation>Informasjon</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="244"/>
-        <source>Listen for connections on &lt;port&gt; (default: 9999 or testnet: 19999)</source>
+        <source>Initialization sanity check failed. Darkcoin Core is shutting down.</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="245"/>
-        <source>Loading addresses...</source>
+        <source>Input is not valid.</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="246"/>
-        <source>Loading block index...</source>
+        <source>InstantX options:</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="247"/>
-        <source>Loading wallet... (%3.2f %%)</source>
+        <source>Insufficient funds</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="248"/>
-        <source>Loading wallet...</source>
+        <source>Invalid -onion address: &apos;%s&apos;</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="249"/>
-        <source>Log transaction priority and fee per kB when mining blocks (default: 0)</source>
+        <source>Invalid -proxy address: &apos;%s&apos;</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="250"/>
-        <source>Maintain a full transaction index (default: 0)</source>
+        <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: &apos;%s&apos;</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="251"/>
-        <source>Maintain at most &lt;n&gt; connections to peers (default: 125)</source>
+        <source>Invalid amount for -mintxfee=&lt;amount&gt;: &apos;%s&apos;</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="252"/>
-        <source>Masternode options:</source>
+        <source>Invalid amount for -paytxfee=&lt;amount&gt;: &apos;%s&apos;</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="253"/>
-        <source>Maximum per-connection receive buffer, &lt;n&gt;*1000 bytes (default: 5000)</source>
+        <source>Invalid amount</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="254"/>
-        <source>Maximum per-connection send buffer, &lt;n&gt;*1000 bytes (default: 1000)</source>
+        <source>Invalid masternodeprivkey. Please see documenation.</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="255"/>
-        <source>Not enough file descriptors available.</source>
+        <source>Invalid private key.</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="256"/>
-        <source>Only accept block chain matching built-in checkpoints (default: 1)</source>
+        <source>Invalid script detected.</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="257"/>
-        <source>Only connect to nodes in network &lt;net&gt; (IPv4, IPv6 or Tor)</source>
+        <source>KeePassHttp id for the established association</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="258"/>
-        <source>Options:</source>
+        <source>KeePassHttp key for AES encrypted communication with KeePass</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="259"/>
-        <source>Password for JSON-RPC connections</source>
+        <source>Keep N darkcoin anonymized (default: 0)</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="260"/>
-        <source>Prepend debug output with timestamp (default: 1)</source>
+        <source>Keep at most &lt;n&gt; unconnectable blocks in memory (default: %u)</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="261"/>
-        <source>Print block on startup, if found in block index</source>
+        <source>Keep at most &lt;n&gt; unconnectable transactions in memory (default: %u)</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="262"/>
-        <source>Print block tree on startup (default: 0)</source>
+        <source>Last Darksend was too recent.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="263"/>
+        <source>Last successful darksend action was too recent.</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="264"/>
-        <source>RPC client options:</source>
+        <source>Limit size of signature cache to &lt;n&gt; entries (default: 50000)</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="265"/>
-        <source>RPC server options:</source>
+        <source>List commands</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="266"/>
-        <source>Randomly drop 1 of every &lt;n&gt; network messages</source>
+        <source>Listen for connections on &lt;port&gt; (default: 9999 or testnet: 19999)</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="267"/>
-        <source>Randomly fuzz 1 of every &lt;n&gt; network messages</source>
+        <source>Loading addresses...</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="268"/>
-        <source>Rebuild block chain index from current blk000??.dat files</source>
+        <source>Loading block index...</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="269"/>
-        <source>Rescan the block chain for missing wallet transactions</source>
+        <source>Loading wallet... (%3.2f %%)</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="270"/>
-        <source>Rescanning...</source>
+        <source>Loading wallet...</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="271"/>
-        <source>Run a thread to flush wallet periodically (default: 1)</source>
+        <source>Log transaction priority and fee per kB when mining blocks (default: 0)</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="272"/>
-        <source>Run in the background as a daemon and accept commands</source>
+        <source>Maintain a full transaction index (default: 0)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="273"/>
+        <source>Maintain at most &lt;n&gt; connections to peers (default: 125)</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="274"/>
-        <source>Select SOCKS version for -proxy (4 or 5, default: 5)</source>
+        <source>Masternode options:</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="275"/>
-        <source>Send command to Darkcoin Core</source>
+        <source>Masternode queue is full.</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="276"/>
-        <source>Send commands to node running on &lt;ip&gt; (default: 127.0.0.1)</source>
+        <source>Masternode:</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="277"/>
-        <source>Send trace/debug info to console instead of debug.log file</source>
+        <source>Maximum per-connection receive buffer, &lt;n&gt;*1000 bytes (default: 5000)</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="278"/>
-        <source>Server certificate file (default: server.cert)</source>
+        <source>Maximum per-connection send buffer, &lt;n&gt;*1000 bytes (default: 1000)</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="279"/>
-        <source>Server private key (default: server.pem)</source>
+        <source>Missing input transaction information.</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="280"/>
-        <source>Set database cache size in megabytes (%d to %d, default: %d)</source>
+        <source>No compatible masternode found.</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="281"/>
-        <source>Set key pool size to &lt;n&gt; (default: 100)</source>
+        <source>No funds detected in need of denominating.</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="282"/>
-        <source>Set maximum block size in bytes (default: %d)</source>
+        <source>No masternodes detected.</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="283"/>
-        <source>Set minimum block size in bytes (default: 0)</source>
+        <source>No matching denominations found for mixing.</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="284"/>
-        <source>Set the masternode private key</source>
+        <source>Non-standard public key detected.</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="285"/>
-        <source>Set the number of threads to service RPC calls (default: 4)</source>
+        <source>Not compatible with existing transactions.</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="286"/>
-        <source>Sets the DB_PRIVATE flag in the wallet db environment (default: 1)</source>
+        <source>Not enough file descriptors available.</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="287"/>
-        <source>Show all debugging options (usage: --help -help-debug)</source>
+        <source>Not in the masternode list.</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="288"/>
-        <source>Show benchmark information (default: 0)</source>
+        <source>Only accept block chain matching built-in checkpoints (default: 1)</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="289"/>
-        <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
+        <source>Only connect to nodes in network &lt;net&gt; (IPv4, IPv6 or Tor)</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="290"/>
-        <source>Signing transaction failed</source>
+        <source>Options:</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="291"/>
-        <source>Specify configuration file (default: darkcoin.conf)</source>
+        <source>Password for JSON-RPC connections</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="292"/>
-        <source>Specify connection timeout in milliseconds (default: 5000)</source>
+        <source>Prepend debug output with timestamp (default: 1)</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="293"/>
-        <source>Specify data directory</source>
+        <source>Print block on startup, if found in block index</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="294"/>
-        <source>Specify masternode configuration file (default: masternode.conf)</source>
+        <source>Print block tree on startup (default: 0)</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="295"/>
-        <source>Specify pid file (default: darkcoind.pid)</source>
+        <source>RPC SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="296"/>
-        <source>Specify wallet file (within data directory)</source>
+        <source>RPC client options:</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="297"/>
-        <source>Specify your own public address</source>
+        <source>RPC server options:</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="298"/>
-        <source>Spend unconfirmed change when sending transactions (default: 1)</source>
+        <source>Randomly drop 1 of every &lt;n&gt; network messages</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="299"/>
-        <source>Start Darkcoin Core Daemon</source>
+        <source>Randomly fuzz 1 of every &lt;n&gt; network messages</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="300"/>
-        <source>System error: </source>
+        <source>Rebuild block chain index from current blk000??.dat files</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="301"/>
-        <source>This help message</source>
+        <source>Rescan the block chain for missing wallet transactions</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="302"/>
-        <source>This is intended for regression testing tools and app development.</source>
+        <source>Rescanning...</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="303"/>
-        <source>Threshold for disconnecting misbehaving peers (default: 100)</source>
+        <source>Run a thread to flush wallet periodically (default: 1)</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="304"/>
-        <source>To use the %s option</source>
+        <source>Run in the background as a daemon and accept commands</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="305"/>
-        <source>Transaction amount too small</source>
+        <source>SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="306"/>
-        <source>Transaction amounts must be positive</source>
+        <source>Select SOCKS version for -proxy (4 or 5, default: 5)</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="307"/>
-        <source>Transaction too large</source>
+        <source>Send command to Darkcoin Core</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="308"/>
+        <source>Send commands to node running on &lt;ip&gt; (default: 127.0.0.1)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="309"/>
+        <source>Send trace/debug info to console instead of debug.log file</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="310"/>
+        <source>Server certificate file (default: server.cert)</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="311"/>
-        <source>Unknown -socks proxy version requested: %i</source>
+        <source>Server private key (default: server.pem)</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="312"/>
-        <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
+        <source>Session not complete!</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="313"/>
-        <source>Upgrade wallet to latest format</source>
+        <source>Session timed out (30 seconds), please resubmit.</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="314"/>
-        <source>Usage (deprecated, use darkcoin-cli):</source>
+        <source>Set database cache size in megabytes (%d to %d, default: %d)</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="315"/>
-        <source>Usage:</source>
-        <translation>Bruk:</translation>
+        <source>Set key pool size to &lt;n&gt; (default: 100)</source>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="316"/>
-        <source>Use KeePass 2 integration using KeePassHttp plugin (default: 0)</source>
+        <source>Set maximum block size in bytes (default: %d)</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="317"/>
-        <source>Use N separate masternodes to anonymize funds  (2-8, default: 2)</source>
+        <source>Set minimum block size in bytes (default: 0)</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="318"/>
-        <source>Use OpenSSL (https) for JSON-RPC connections</source>
+        <source>Set the masternode private key</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="319"/>
-        <source>Use UPnP to map the listening port (default: 0)</source>
+        <source>Set the number of threads to service RPC calls (default: 4)</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="320"/>
-        <source>Use UPnP to map the listening port (default: 1 when listening)</source>
+        <source>Sets the DB_PRIVATE flag in the wallet db environment (default: 1)</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="321"/>
-        <source>Use the test network</source>
+        <source>Show all debugging options (usage: --help -help-debug)</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="322"/>
-        <source>Username for JSON-RPC connections</source>
+        <source>Show benchmark information (default: 0)</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="323"/>
-        <source>Verifying blocks...</source>
+        <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="324"/>
-        <source>Verifying wallet...</source>
+        <source>Signing failed.</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="325"/>
-        <source>Wait for RPC server to start</source>
+        <source>Signing timed out, please resubmit.</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="326"/>
-        <source>Wallet %s resides outside data directory %s</source>
+        <source>Signing transaction failed</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="327"/>
-        <source>Wallet needed to be rewritten: restart Darkcoin to complete</source>
+        <source>Specify configuration file (default: darkcoin.conf)</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="328"/>
-        <source>Wallet options:</source>
+        <source>Specify connection timeout in milliseconds (default: 5000)</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="329"/>
-        <source>Warning</source>
-        <translation>Advarsel</translation>
+        <source>Specify data directory</source>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="330"/>
-        <source>Warning: Deprecated argument -debugnet ignored, use -debug=net</source>
+        <source>Specify masternode configuration file (default: masternode.conf)</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="331"/>
-        <source>Warning: This version is obsolete, upgrade required!</source>
+        <source>Specify pid file (default: darkcoind.pid)</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="332"/>
-        <source>You need to rebuild the database using -reindex to change -txindex</source>
+        <source>Specify wallet file (within data directory)</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="333"/>
-        <source>Zapping all transactions from wallet...</source>
+        <source>Specify your own public address</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="334"/>
-        <source>on startup</source>
+        <source>Spend unconfirmed change when sending transactions (default: 1)</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="335"/>
+        <source>Start Darkcoin Core Daemon</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="336"/>
+        <source>System error: </source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="337"/>
+        <source>This help message</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="338"/>
+        <source>This is intended for regression testing tools and app development.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="339"/>
+        <source>This is not a masternode.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="340"/>
+        <source>Threshold for disconnecting misbehaving peers (default: 100)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="341"/>
+        <source>To use the %s option</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="342"/>
+        <source>Transaction amount too small</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="343"/>
+        <source>Transaction amounts must be positive</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="344"/>
+        <source>Transaction created successfully.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="345"/>
+        <source>Transaction fees are too high.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="346"/>
+        <source>Transaction not valid.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="347"/>
+        <source>Transaction too large</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="348"/>
+        <source>Unable to bind to %s on this computer (bind returned error %s)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="349"/>
+        <source>Unable to locate enough Darksend denominated funds for this transaction</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="350"/>
+        <source>Unable to sign masternode payment winner, wrong key?</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="351"/>
+        <source>Unknown -socks proxy version requested: %i</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="352"/>
+        <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="353"/>
+        <source>Upgrade wallet to latest format</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="354"/>
+        <source>Usage (deprecated, use darkcoin-cli):</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="355"/>
+        <source>Usage:</source>
+        <translation>Bruk:</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="356"/>
+        <source>Use KeePass 2 integration using KeePassHttp plugin (default: 0)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="357"/>
+        <source>Use N separate masternodes to anonymize funds  (2-8, default: 2)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="358"/>
+        <source>Use OpenSSL (https) for JSON-RPC connections</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="359"/>
+        <source>Use UPnP to map the listening port (default: 0)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="360"/>
+        <source>Use UPnP to map the listening port (default: 1 when listening)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="361"/>
+        <source>Use the test network</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="362"/>
+        <source>Username for JSON-RPC connections</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="363"/>
+        <source>Value more than Darksed pool maximum allows.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="364"/>
+        <source>Verifying blocks...</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="365"/>
+        <source>Verifying wallet...</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="366"/>
+        <source>Wait for RPC server to start</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="367"/>
+        <source>Wallet %s resides outside data directory %s</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="368"/>
+        <source>Wallet is locked.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="369"/>
+        <source>Wallet needed to be rewritten: restart Darkcoin to complete</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="370"/>
+        <source>Wallet options:</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="371"/>
+        <source>Warning</source>
+        <translation>Advarsel</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="372"/>
+        <source>Warning: Deprecated argument -debugnet ignored, use -debug=net</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="373"/>
+        <source>Warning: This version is obsolete, upgrade required!</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="374"/>
+        <source>Wrong state.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="375"/>
+        <source>You need to rebuild the database using -reindex to change -txindex</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="376"/>
+        <source>Zapping all transactions from wallet...</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="377"/>
+        <source>on startup</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="378"/>
         <source>version</source>
         <translation>versjon</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="336"/>
+        <location filename="../bitcoinstrings.cpp" line="379"/>
         <source>wallet.dat corrupt, salvage failed</source>
         <translation type="unfinished"/>
     </message>

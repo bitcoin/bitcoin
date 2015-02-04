@@ -63,6 +63,11 @@ qrc_*.cpp
 
 # Qt creator
 *.pro.user
+darkcoi*.config
+*.creator
+*.creator.user
+darkcoi*.files
+darkcoi*.includes
 
 # Mac specific
 .DS_Store
