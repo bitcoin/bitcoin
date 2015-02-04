@@ -1963,7 +1963,7 @@ Adresse: %4</translation>
         <location filename="../forms/overviewpage.ui" line="900"/>
         <location filename="../forms/ui_overviewpage.h" line="496"/>
         <source>Try Mix</source>
-        <translation>Versuche zu Vermischen</translation>
+        <translation>Versuche zu Mischen</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="913"/>
@@ -2015,7 +2015,7 @@ Adresse: %4</translation>
         <location filename="../paymentserver.cpp" line="631"/>
         <location filename="../paymentserver.cpp" line="647"/>
         <source>Payment request error</source>
-        <translation>fehlerhafte Zahlungsanforderung</translation>
+        <translation>Fehlerhafte Zahlungsanforderung</translation>
     </message>
     <message>
         <location filename="../paymentserver.cpp" line="294"/>
@@ -3856,7 +3856,7 @@ Dies kann passieren, wenn einige Darkcoins aus ihrer Wallet bereits ausgegeben w
     <message>
         <location filename="../walletmodel.cpp" line="286"/>
         <source>Send Coins</source>
-        <translation>Bitcoins überweisen</translation>
+        <translation>Darkcoins überweisen</translation>
     </message>
 </context>
 <context>
