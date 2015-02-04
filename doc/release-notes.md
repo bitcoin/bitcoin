@@ -300,6 +300,22 @@ The relay policy has changed to more properly implement the desired behavior of 
 relaying free (or very low fee) transactions unless they have a priority above the 
 AllowFreeThreshold(), in which case they are relayed subject to the rate limiter.
 
+BIP 66: strict DER encoding for signatures
+------------------------------------------
+
+Bitcoin Core 0.10 implements BIP 66, which introduces block version 3, and a new
+consensus rule, which prohibits non-DER signatures. Such transactions have been
+non-standard since Bitcoin v0.8.0 (released in February 2013), but were
+technically still permitted inside blocks.
+
+This change breaks the dependency on OpenSSL's signature parsing, and is
+required if implementations would want to remove all of OpenSSL from the
+consensus code.
+
+The same miner-voting mechanism as in BIP 34 is used: when 751 out of a
+sequence of 1001 blocks have version number 3 or higher, the new consensus
+rule becomes active for those blocks. When 951 out of a sequence of 1001
+blocks have version number 3 or higher, it becomes mandatory for all blocks.
 
 0.10.0 Change log
 =================
