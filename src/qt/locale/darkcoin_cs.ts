@@ -1,21 +1,18 @@
-<?xml version="1.0" ?><!DOCTYPE TS><TS language="cs" version="2.1">
+<?xml version="1.0" ?><!DOCTYPE TS><TS language="cs" version="2.0">
 <context>
     <name>AboutDialog</name>
     <message>
         <location filename="../forms/aboutdialog.ui" line="14"/>
-        <location filename="../forms/ui_aboutdialog.h" line="131"/>
         <source>About Darkcoin Core</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/aboutdialog.ui" line="53"/>
-        <location filename="../forms/ui_aboutdialog.h" line="132"/>
         <source>&lt;b&gt;Darkcoin Core&lt;/b&gt; version</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/aboutdialog.ui" line="111"/>
-        <location filename="../forms/ui_aboutdialog.h" line="133"/>
         <source>
 This is experimental software.
 
@@ -56,61 +53,51 @@ Tento produkt zahrnuje programy vyvinuté OpenSSL Projektem pro použití v Open
     <name>AddressBookPage</name>
     <message>
         <location filename="../forms/addressbookpage.ui" line="30"/>
-        <location filename="../forms/ui_addressbookpage.h" line="126"/>
         <source>Double-click to edit address or label</source>
         <translation>Dvojklikem myši začneš upravovat označení adresy</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="57"/>
-        <location filename="../forms/ui_addressbookpage.h" line="129"/>
         <source>Create a new address</source>
         <translation>Vytvoř novou adresu</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="60"/>
-        <location filename="../forms/ui_addressbookpage.h" line="131"/>
         <source>&amp;New</source>
         <translation>&amp;Nová</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="71"/>
-        <location filename="../forms/ui_addressbookpage.h" line="133"/>
         <source>Copy the currently selected address to the system clipboard</source>
         <translation>Zkopíruj aktuálně vybranou adresu do systémové schránky</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="74"/>
-        <location filename="../forms/ui_addressbookpage.h" line="135"/>
         <source>&amp;Copy</source>
         <translation>&amp;Kopíruj</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="85"/>
-        <location filename="../forms/ui_addressbookpage.h" line="137"/>
         <source>Delete the currently selected address from the list</source>
         <translation>Smaž zvolenou adresu ze seznamu</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="88"/>
-        <location filename="../forms/ui_addressbookpage.h" line="139"/>
         <source>&amp;Delete</source>
         <translation>S&amp;maž</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="112"/>
-        <location filename="../forms/ui_addressbookpage.h" line="141"/>
         <source>Export the data in the current tab to a file</source>
         <translation>Exportuj data z tohoto panelu do souboru</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="115"/>
-        <location filename="../forms/ui_addressbookpage.h" line="143"/>
         <source>&amp;Export</source>
         <translation>&amp;Export</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="132"/>
-        <location filename="../forms/ui_addressbookpage.h" line="144"/>
         <source>C&amp;lose</source>
         <translation>&amp;Zavřít</translation>
     </message>
@@ -207,37 +194,31 @@ Tento produkt zahrnuje programy vyvinuté OpenSSL Projektem pro použití v Open
     <name>AskPassphraseDialog</name>
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="26"/>
-        <location filename="../forms/ui_askpassphrasedialog.h" line="135"/>
         <source>Passphrase Dialog</source>
         <translation>Změna hesla</translation>
     </message>
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="47"/>
-        <location filename="../forms/ui_askpassphrasedialog.h" line="136"/>
         <source>Enter passphrase</source>
         <translation>Zadej platné heslo</translation>
     </message>
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="61"/>
-        <location filename="../forms/ui_askpassphrasedialog.h" line="137"/>
         <source>New passphrase</source>
         <translation>Zadej nové heslo</translation>
     </message>
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="75"/>
-        <location filename="../forms/ui_askpassphrasedialog.h" line="138"/>
         <source>Repeat new passphrase</source>
         <translation>Totéž heslo ještě jednou</translation>
     </message>
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="108"/>
-        <location filename="../forms/ui_askpassphrasedialog.h" line="141"/>
         <source>Serves to disable the trivial sendmoney when OS account compromised. Provides no real security.</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="111"/>
-        <location filename="../forms/ui_askpassphrasedialog.h" line="143"/>
         <source>For anonymization only</source>
         <translation type="unfinished"/>
     </message>
@@ -799,115 +780,96 @@ Adresa: %4
     <name>CoinControlDialog</name>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="14"/>
-        <location filename="../forms/ui_coincontroldialog.h" line="319"/>
         <source>Coin Control Address Selection</source>
         <translation>Volba adres v rámci ruční správy mincí</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="48"/>
-        <location filename="../forms/ui_coincontroldialog.h" line="320"/>
         <source>Quantity:</source>
         <translation>Počet:</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="77"/>
-        <location filename="../forms/ui_coincontroldialog.h" line="321"/>
         <source>Bytes:</source>
         <translation>Bajtů:</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="122"/>
-        <location filename="../forms/ui_coincontroldialog.h" line="322"/>
         <source>Amount:</source>
         <translation>Částka:</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="151"/>
-        <location filename="../forms/ui_coincontroldialog.h" line="323"/>
         <source>Priority:</source>
         <translation>Priorita:</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="196"/>
-        <location filename="../forms/ui_coincontroldialog.h" line="324"/>
         <source>Fee:</source>
         <translation>Poplatek:</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="228"/>
-        <location filename="../forms/ui_coincontroldialog.h" line="325"/>
         <source>Low Output:</source>
         <translation>Malý výstup:</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="276"/>
-        <location filename="../forms/ui_coincontroldialog.h" line="326"/>
         <source>After Fee:</source>
         <translation>Čistá částka:</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="308"/>
-        <location filename="../forms/ui_coincontroldialog.h" line="327"/>
         <source>Change:</source>
         <translation>Drobné:</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="364"/>
-        <location filename="../forms/ui_coincontroldialog.h" line="328"/>
         <source>(un)select all</source>
         <translation>(od)označit všechny</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="377"/>
-        <location filename="../forms/ui_coincontroldialog.h" line="329"/>
         <source>Tree mode</source>
         <translation>Zobrazit jako strom</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="393"/>
-        <location filename="../forms/ui_coincontroldialog.h" line="330"/>
         <source>List mode</source>
         <translation>Vypsat jako seznam</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="446"/>
-        <location filename="../forms/ui_coincontroldialog.h" line="337"/>
         <source>Amount</source>
         <translation>Částka</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="456"/>
-        <location filename="../forms/ui_coincontroldialog.h" line="336"/>
         <source>Address</source>
         <translation>Adresa</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="461"/>
-        <location filename="../forms/ui_coincontroldialog.h" line="335"/>
         <source>Darksend Rounds</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="466"/>
-        <location filename="../forms/ui_coincontroldialog.h" line="334"/>
         <source>Date</source>
         <translation>Datum</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="471"/>
-        <location filename="../forms/ui_coincontroldialog.h" line="333"/>
         <source>Confirmations</source>
         <translation>Potvrzení</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="474"/>
-        <location filename="../forms/ui_coincontroldialog.h" line="339"/>
         <source>Confirmed</source>
         <translation>Potvrzeno</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="479"/>
-        <location filename="../forms/ui_coincontroldialog.h" line="332"/>
         <source>Priority</source>
         <translation>Priorita</translation>
     </message>
@@ -1115,74 +1077,62 @@ Adresa: %4
     <name>DarksendConfig</name>
     <message>
         <location filename="../forms/darksendconfig.ui" line="14"/>
-        <location filename="../forms/ui_darksendconfig.h" line="96"/>
-        <source>Configure Darksend+</source>
+        <source>Configure Darksend</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="26"/>
-        <location filename="../forms/ui_darksendconfig.h" line="97"/>
         <source>Basic Privacy</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="39"/>
-        <location filename="../forms/ui_darksendconfig.h" line="98"/>
         <source>High Privacy</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="52"/>
-        <location filename="../forms/ui_darksendconfig.h" line="99"/>
         <source>Maximum Privacy</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="65"/>
-        <location filename="../forms/ui_darksendconfig.h" line="100"/>
-        <source>Please select an privacy level. </source>
+        <source>Please select a privacy level.</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="78"/>
-        <location filename="../forms/ui_darksendconfig.h" line="101"/>
-        <source>Use 2 separate masternodes to mix funds up to 1000DRK</source>
+        <source>Use 2 separate masternodes to mix funds up to 1000 DRK</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="91"/>
-        <location filename="../forms/ui_darksendconfig.h" line="102"/>
-        <source>Use 4 separate masternodes to mix funds up to 1000DRK</source>
+        <source>Use 8 separate masternodes to mix funds up to 1000 DRK</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="104"/>
-        <location filename="../forms/ui_darksendconfig.h" line="103"/>
-        <source>Use 8 separate masternodes</source>
+        <source>Use 16 separate masternodes</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="117"/>
-        <location filename="../forms/ui_darksendconfig.h" line="104"/>
-        <source>This option is the quickest and will cost about ~0.025DRK to anonymize 1000DRK</source>
+        <source>This option is the quickest and will cost about ~0.025 DRK to anonymize 1000 DRK</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="130"/>
-        <location filename="../forms/ui_darksendconfig.h" line="105"/>
-        <source>This option is moderately fast and will cost about 0.05DRK to anonymize 1000DRK</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location filename="../forms/darksendconfig.ui" line="143"/>
-        <location filename="../forms/ui_darksendconfig.h" line="106"/>
-        <source>This is the slowest and most secure option. Using maximum anonymity will cost</source>
+        <source>This option is moderately fast and will cost about 0.05 DRK to anonymize 1000 DRK</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="156"/>
-        <location filename="../forms/ui_darksendconfig.h" line="107"/>
-        <source>0.1DRK per 1000DRK you anonymize.</source>
+        <source>0.1 DRK per 1000 DRK you anonymize.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../forms/darksendconfig.ui" line="143"/>
+        <source>This is the slowest and most secure option. Using maximum anonymity will cost</source>
         <translation type="unfinished"/>
     </message>
     <message>
@@ -1212,31 +1162,26 @@ Adresa: %4
     <name>EditAddressDialog</name>
     <message>
         <location filename="../forms/editaddressdialog.ui" line="14"/>
-        <location filename="../forms/ui_editaddressdialog.h" line="91"/>
         <source>Edit Address</source>
         <translation>Uprav adresu</translation>
     </message>
     <message>
         <location filename="../forms/editaddressdialog.ui" line="25"/>
-        <location filename="../forms/ui_editaddressdialog.h" line="92"/>
         <source>&amp;Label</source>
         <translation>&amp;Označení</translation>
     </message>
     <message>
         <location filename="../forms/editaddressdialog.ui" line="35"/>
-        <location filename="../forms/ui_editaddressdialog.h" line="94"/>
         <source>The label associated with this address list entry</source>
         <translation>Označení spojené s tímto záznamem v seznamu adres</translation>
     </message>
     <message>
         <location filename="../forms/editaddressdialog.ui" line="42"/>
-        <location filename="../forms/ui_editaddressdialog.h" line="96"/>
         <source>&amp;Address</source>
         <translation>&amp;Adresa</translation>
     </message>
     <message>
         <location filename="../forms/editaddressdialog.ui" line="52"/>
-        <location filename="../forms/ui_editaddressdialog.h" line="98"/>
         <source>The address associated with this address list entry. This can only be modified for sending addresses.</source>
         <translation>Adresa spojená s tímto záznamem v seznamu adres. Lze upravovat jen pro odesílací adresy.</translation>
     </message>
@@ -1313,7 +1258,6 @@ Adresa: %4
     <name>HelpMessageDialog</name>
     <message>
         <location filename="../forms/helpmessagedialog.ui" line="19"/>
-        <location filename="../forms/ui_helpmessagedialog.h" line="105"/>
         <source>Darkcoin Core - Command-line options</source>
         <translation type="unfinished"/>
     </message>
@@ -1372,37 +1316,31 @@ Adresa: %4
     <name>Intro</name>
     <message>
         <location filename="../forms/intro.ui" line="14"/>
-        <location filename="../forms/ui_intro.h" line="183"/>
         <source>Welcome</source>
         <translation>Vítej</translation>
     </message>
     <message>
         <location filename="../forms/intro.ui" line="23"/>
-        <location filename="../forms/ui_intro.h" line="184"/>
         <source>Welcome to Darkcoin Core.</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/intro.ui" line="49"/>
-        <location filename="../forms/ui_intro.h" line="185"/>
         <source>As this is the first time the program is launched, you can choose where Darkcoin Core will store its data.</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/intro.ui" line="59"/>
-        <location filename="../forms/ui_intro.h" line="186"/>
         <source>Darkcoin Core will download and store a copy of the Darkcoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/intro.ui" line="69"/>
-        <location filename="../forms/ui_intro.h" line="187"/>
         <source>Use the default data directory</source>
         <translation>Použij výchozí adresář pro data</translation>
     </message>
     <message>
         <location filename="../forms/intro.ui" line="76"/>
-        <location filename="../forms/ui_intro.h" line="188"/>
         <source>Use a custom data directory:</source>
         <translation>Použij tento adresář pro data:</translation>
     </message>
@@ -1436,25 +1374,21 @@ Adresa: %4
     <name>OpenURIDialog</name>
     <message>
         <location filename="../forms/openuridialog.ui" line="14"/>
-        <location filename="../forms/ui_openuridialog.h" line="93"/>
         <source>Open URI</source>
         <translation>Načíst URI</translation>
     </message>
     <message>
         <location filename="../forms/openuridialog.ui" line="20"/>
-        <location filename="../forms/ui_openuridialog.h" line="94"/>
         <source>Open payment request from URI or file</source>
         <translation>Načíst platební požadavek z URI nebo ze souboru</translation>
     </message>
     <message>
         <location filename="../forms/openuridialog.ui" line="29"/>
-        <location filename="../forms/ui_openuridialog.h" line="95"/>
         <source>URI:</source>
         <translation>URI:</translation>
     </message>
     <message>
         <location filename="../forms/openuridialog.ui" line="40"/>
-        <location filename="../forms/ui_openuridialog.h" line="97"/>
         <source>Select payment request file</source>
         <translation>Vyber soubor platebního požadavku</translation>
     </message>
@@ -1468,297 +1402,247 @@ Adresa: %4
     <name>OptionsDialog</name>
     <message>
         <location filename="../forms/optionsdialog.ui" line="14"/>
-        <location filename="../forms/ui_optionsdialog.h" line="532"/>
         <source>Options</source>
         <translation>Možnosti</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="27"/>
-        <location filename="../forms/ui_optionsdialog.h" line="548"/>
         <source>&amp;Main</source>
         <translation>&amp;Hlavní</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="33"/>
-        <location filename="../forms/ui_optionsdialog.h" line="534"/>
         <source>Automatically start Darkcoin after logging in to the system.</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="36"/>
-        <location filename="../forms/ui_optionsdialog.h" line="536"/>
         <source>&amp;Start Darkcoin on system login</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="45"/>
-        <location filename="../forms/ui_optionsdialog.h" line="537"/>
         <source>Size of &amp;database cache</source>
         <translation>Velikost &amp;databázové cache</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="61"/>
-        <location filename="../forms/ui_optionsdialog.h" line="538"/>
         <source>MB</source>
         <translation>MB</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="88"/>
-        <location filename="../forms/ui_optionsdialog.h" line="539"/>
         <source>Number of script &amp;verification threads</source>
         <translation>Počet vláken pro &amp;verifikaci skriptů</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="101"/>
-        <location filename="../forms/ui_optionsdialog.h" line="541"/>
         <source>(0 = auto, &lt;0 = leave that many cores free)</source>
         <translation>(0 = automaticky, &lt;0 = nechat daný počet jader volný, výchozí: 0)</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="138"/>
-        <location filename="../forms/ui_optionsdialog.h" line="544"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This setting determines the amount of individual masternodes that an input will be anonymized through. More rounds of anonymization gives a higher degree of privacy, but also costs more in fees.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="141"/>
-        <location filename="../forms/ui_optionsdialog.h" line="546"/>
         <source>Darksend rounds to use</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="180"/>
-        <location filename="../forms/ui_optionsdialog.h" line="547"/>
         <source>Amount of Darkcoin to keep anonymized</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="206"/>
-        <location filename="../forms/ui_optionsdialog.h" line="560"/>
         <source>W&amp;allet</source>
         <translation>P&amp;eněženka</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="212"/>
-        <location filename="../forms/ui_optionsdialog.h" line="549"/>
         <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly. Most transactions are 1 kB.</source>
         <translation>Dobrovolný transakční poplatek za každý započatý kB dopomáhá k rychlému zpracování tvých transakcí. Většina transakcí má do 1 kB.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="227"/>
-        <location filename="../forms/ui_optionsdialog.h" line="550"/>
         <source>Pay transaction &amp;fee</source>
         <translation>Platit &amp;transakční poplatek</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="271"/>
-        <location filename="../forms/ui_optionsdialog.h" line="551"/>
         <source>Expert</source>
         <translation>Odborník</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="277"/>
-        <location filename="../forms/ui_optionsdialog.h" line="553"/>
         <source>Whether to show coin control features or not.</source>
         <translation>Zda ukazovat možnosti pro ruční správu mincí nebo ne.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="280"/>
-        <location filename="../forms/ui_optionsdialog.h" line="555"/>
         <source>Enable coin &amp;control features</source>
         <translation>Povolit ruční správu &amp;mincí</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="287"/>
-        <location filename="../forms/ui_optionsdialog.h" line="557"/>
         <source>If you disable the spending of unconfirmed change, the change from a transaction cannot be used until that transaction has at least one confirmation. This also affects how your balance is computed.</source>
         <translation>Pokud zakážeš utrácení ještě nepotvrzených drobných, nepůjde použít drobné z transakce, dokud nebude mít alespoň jedno potvrzení. Ovlivní to také výpočet stavu účtu.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="290"/>
-        <location filename="../forms/ui_optionsdialog.h" line="559"/>
         <source>&amp;Spend unconfirmed change</source>
         <translation>&amp;Utrácet i ještě nepotvrzené drobné</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="301"/>
-        <location filename="../forms/ui_optionsdialog.h" line="581"/>
         <source>&amp;Network</source>
         <translation>&amp;Síť</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="307"/>
-        <location filename="../forms/ui_optionsdialog.h" line="562"/>
         <source>Automatically open the Darkcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="310"/>
-        <location filename="../forms/ui_optionsdialog.h" line="564"/>
         <source>Map port using &amp;UPnP</source>
         <translation>Namapovat port přes &amp;UPnP</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="317"/>
-        <location filename="../forms/ui_optionsdialog.h" line="566"/>
         <source>Connect to the Darkcoin network through a SOCKS proxy.</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="320"/>
-        <location filename="../forms/ui_optionsdialog.h" line="568"/>
         <source>&amp;Connect through SOCKS proxy (default proxy):</source>
         <translation>&amp;Připojit přes SOCKS proxy (výchozí proxy):</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="329"/>
-        <location filename="../forms/ui_optionsdialog.h" line="569"/>
         <source>Proxy &amp;IP:</source>
         <translation>&amp;IP adresa proxy:</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="354"/>
-        <location filename="../forms/ui_optionsdialog.h" line="571"/>
         <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
         <translation>IP adresa proxy (např. IPv4: 127.0.0.1/IPv6: ::1)</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="361"/>
-        <location filename="../forms/ui_optionsdialog.h" line="573"/>
         <source>&amp;Port:</source>
         <translation>Por&amp;t:</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="386"/>
-        <location filename="../forms/ui_optionsdialog.h" line="575"/>
         <source>Port of the proxy (e.g. 9050)</source>
         <translation>Port proxy (např. 9050)</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="393"/>
-        <location filename="../forms/ui_optionsdialog.h" line="577"/>
         <source>SOCKS &amp;Version:</source>
         <translation>&amp;Verze SOCKS:</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="406"/>
-        <location filename="../forms/ui_optionsdialog.h" line="579"/>
         <source>SOCKS version of the proxy (e.g. 5)</source>
         <translation>Verze SOCKS proxy (např. 5)</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="442"/>
-        <location filename="../forms/ui_optionsdialog.h" line="590"/>
         <source>&amp;Window</source>
         <translation>O&amp;kno</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="448"/>
-        <location filename="../forms/ui_optionsdialog.h" line="583"/>
         <source>Show only a tray icon after minimizing the window.</source>
         <translation>Po minimalizaci okna zobrazí pouze ikonu v panelu.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="451"/>
-        <location filename="../forms/ui_optionsdialog.h" line="585"/>
         <source>&amp;Minimize to the tray instead of the taskbar</source>
         <translation>&amp;Minimalizovávat do ikony v panelu</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="458"/>
-        <location filename="../forms/ui_optionsdialog.h" line="587"/>
         <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Quit in the menu.</source>
         <translation>Zavřením se aplikace minimalizuje. Pokud je tato volba zaškrtnuta, tak se aplikace ukončí pouze zvolením Konec v menu.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="461"/>
-        <location filename="../forms/ui_optionsdialog.h" line="589"/>
         <source>M&amp;inimize on close</source>
         <translation>Za&amp;vřením minimalizovat</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="482"/>
-        <location filename="../forms/ui_optionsdialog.h" line="610"/>
         <source>&amp;Display</source>
         <translation>Zobr&amp;azení</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="490"/>
-        <location filename="../forms/ui_optionsdialog.h" line="591"/>
         <source>User Interface &amp;language:</source>
         <translation>&amp;Jazyk uživatelského rozhraní:</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="503"/>
-        <location filename="../forms/ui_optionsdialog.h" line="593"/>
         <source>The user interface language can be set here. This setting will take effect after restarting Darkcoin.</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="514"/>
-        <location filename="../forms/ui_optionsdialog.h" line="595"/>
         <source>&amp;Unit to show amounts in:</source>
         <translation>J&amp;ednotka pro částky: </translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="527"/>
-        <location filename="../forms/ui_optionsdialog.h" line="597"/>
         <source>Choose the default subdivision unit to show in the interface and when sending coins.</source>
         <translation>Zvol výchozí podjednotku, která se bude zobrazovat v programu a při posílání mincí.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="536"/>
-        <location filename="../forms/ui_optionsdialog.h" line="600"/>
         <source>Whether to show Darkcoin addresses in the transaction list or not.</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="539"/>
-        <location filename="../forms/ui_optionsdialog.h" line="602"/>
         <source>&amp;Display addresses in transaction list</source>
         <translation>Ukazo&amp;vat adresy ve výpisu transakcí</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="548"/>
         <location filename="../forms/optionsdialog.ui" line="561"/>
-        <location filename="../forms/ui_optionsdialog.h" line="604"/>
-        <location filename="../forms/ui_optionsdialog.h" line="608"/>
         <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
         <translation>URL třetích stran (např. block exploreru), které se zobrazí v kontextovém menu v záložce Transakce. %s v URL se nahradí hashem transakce. Více URL odděl svislítkem |.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="551"/>
-        <location filename="../forms/ui_optionsdialog.h" line="606"/>
         <source>Third party transaction URLs</source>
         <translation>URL transakcí třetích stran</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="592"/>
-        <location filename="../forms/ui_optionsdialog.h" line="611"/>
         <source>Active command-line options that override above options:</source>
         <translation>Aktivní argumenty z příkazové řádky, které přetloukly tato nastavení:</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="635"/>
-        <location filename="../forms/ui_optionsdialog.h" line="614"/>
         <source>Reset all client options to default.</source>
         <translation>Vrátí všechny volby na výchozí hodnoty.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="638"/>
-        <location filename="../forms/ui_optionsdialog.h" line="616"/>
         <source>&amp;Reset Options</source>
         <translation>&amp;Obnovit nastavení</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="699"/>
-        <location filename="../forms/ui_optionsdialog.h" line="618"/>
         <source>&amp;OK</source>
         <translation>&amp;Budiž</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="706"/>
-        <location filename="../forms/ui_optionsdialog.h" line="619"/>
         <source>&amp;Cancel</source>
         <translation>&amp;Zrušit</translation>
     </message>
@@ -1802,181 +1686,151 @@ Adresa: %4
 <context>
     <name>OverviewPage</name>
     <message>
-        <location filename="../forms/overviewpage.ui" line="14"/>
-        <location filename="../forms/ui_overviewpage.h" line="456"/>
+        <location filename="../forms/overviewpage.ui" line="20"/>
         <source>Form</source>
         <translation>Formulář</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="57"/>
-        <location filename="../forms/ui_overviewpage.h" line="457"/>
+        <location filename="../forms/overviewpage.ui" line="63"/>
         <source>Wallet</source>
         <translation>Peněženka</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="64"/>
-        <location filename="../forms/overviewpage.ui" line="962"/>
-        <location filename="../forms/ui_overviewpage.h" line="459"/>
-        <location filename="../forms/ui_overviewpage.h" line="503"/>
+        <location filename="../forms/overviewpage.ui" line="70"/>
+        <location filename="../forms/overviewpage.ui" line="986"/>
         <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Darkcoin network after a connection is established, but this process has not completed yet.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="108"/>
-        <location filename="../forms/ui_overviewpage.h" line="461"/>
+        <location filename="../forms/overviewpage.ui" line="114"/>
         <source>Available:</source>
         <translation>K dispozici:</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="124"/>
-        <location filename="../forms/ui_overviewpage.h" line="463"/>
+        <location filename="../forms/overviewpage.ui" line="130"/>
         <source>Your current spendable balance</source>
         <translation>Aktuální disponibilní stav tvého účtu</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="140"/>
-        <location filename="../forms/ui_overviewpage.h" line="465"/>
+        <location filename="../forms/overviewpage.ui" line="146"/>
         <source>Pending:</source>
         <translation>Očekáváno:</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="156"/>
-        <location filename="../forms/ui_overviewpage.h" line="467"/>
+        <location filename="../forms/overviewpage.ui" line="162"/>
         <source>Total of transactions that have yet to be confirmed, and do not yet count toward the spendable balance</source>
         <translation>Celkem z transakcí, které ještě nejsou potvrzené a které se ještě nezapočítávají do celkového disponibilního stavu účtu</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="172"/>
-        <location filename="../forms/ui_overviewpage.h" line="469"/>
+        <location filename="../forms/overviewpage.ui" line="178"/>
         <source>Immature:</source>
         <translation>Nedozráno:</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="185"/>
-        <location filename="../forms/ui_overviewpage.h" line="471"/>
+        <location filename="../forms/overviewpage.ui" line="191"/>
         <source>Mined balance that has not yet matured</source>
         <translation>Vytěžené mince, které ještě nejsou zralé</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="201"/>
-        <location filename="../forms/ui_overviewpage.h" line="473"/>
+        <location filename="../forms/overviewpage.ui" line="207"/>
         <source>Total:</source>
         <translation>Celkem:</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="217"/>
-        <location filename="../forms/ui_overviewpage.h" line="475"/>
+        <location filename="../forms/overviewpage.ui" line="223"/>
         <source>Your current total balance</source>
         <translation>Celkový stav tvého účtu</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="296"/>
-        <location filename="../forms/ui_overviewpage.h" line="477"/>
+        <location filename="../forms/overviewpage.ui" line="302"/>
         <source>Status:</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="303"/>
-        <location filename="../forms/ui_overviewpage.h" line="478"/>
+        <location filename="../forms/overviewpage.ui" line="309"/>
         <source>Enabled/Disabled</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="310"/>
-        <location filename="../forms/ui_overviewpage.h" line="479"/>
+        <location filename="../forms/overviewpage.ui" line="316"/>
         <source>Completion:</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="330"/>
-        <location filename="../forms/ui_overviewpage.h" line="480"/>
+        <location filename="../forms/overviewpage.ui" line="336"/>
         <source>Darksend Balance:</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="343"/>
-        <location filename="../forms/ui_overviewpage.h" line="481"/>
+        <location filename="../forms/overviewpage.ui" line="349"/>
         <source>0 DRK</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="350"/>
-        <location filename="../forms/ui_overviewpage.h" line="482"/>
+        <location filename="../forms/overviewpage.ui" line="356"/>
         <source>Amount and Rounds:</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="357"/>
-        <location filename="../forms/ui_overviewpage.h" line="483"/>
+        <location filename="../forms/overviewpage.ui" line="363"/>
         <source>0 DRK / 0 Rounds</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="364"/>
-        <location filename="../forms/ui_overviewpage.h" line="484"/>
+        <location filename="../forms/overviewpage.ui" line="370"/>
         <source>Submitted Denom:</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="371"/>
-        <location filename="../forms/ui_overviewpage.h" line="486"/>
+        <location filename="../forms/overviewpage.ui" line="377"/>
         <source>The denominations you submitted to the Masternode. To mix, other users must submit the exact same denominations.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="374"/>
-        <location filename="../forms/ui_overviewpage.h" line="488"/>
+        <location filename="../forms/overviewpage.ui" line="380"/>
         <source>n/a</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="396"/>
-        <location filename="../forms/ui_overviewpage.h" line="489"/>
-        <location filename="../overviewpage.cpp" line="428"/>
-        <location filename="../overviewpage.cpp" line="442"/>
-        <location filename="../overviewpage.cpp" line="456"/>
+        <location filename="../forms/overviewpage.ui" line="402"/>
+        <location filename="../overviewpage.cpp" line="440"/>
+        <location filename="../overviewpage.cpp" line="454"/>
+        <location filename="../overviewpage.cpp" line="468"/>
         <source>Darksend</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="846"/>
-        <location filename="../forms/ui_overviewpage.h" line="491"/>
+        <location filename="../forms/overviewpage.ui" line="858"/>
         <source>Start/Stop Mixing</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="878"/>
-        <location filename="../forms/ui_overviewpage.h" line="492"/>
+        <location filename="../forms/overviewpage.ui" line="890"/>
         <source>(Last Message)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="897"/>
-        <location filename="../forms/ui_overviewpage.h" line="494"/>
+        <location filename="../forms/overviewpage.ui" line="915"/>
         <source>Try to manually submit a Darksend request.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="900"/>
-        <location filename="../forms/ui_overviewpage.h" line="496"/>
+        <location filename="../forms/overviewpage.ui" line="918"/>
         <source>Try Mix</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="913"/>
-        <location filename="../forms/ui_overviewpage.h" line="498"/>
+        <location filename="../forms/overviewpage.ui" line="937"/>
         <source>Reset the current status of Darksend (can interrupt Darksend if it&apos;s in the process of Mixing, which can cost you money!)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="919"/>
-        <location filename="../forms/ui_overviewpage.h" line="500"/>
+        <location filename="../forms/overviewpage.ui" line="943"/>
         <source>Reset</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="955"/>
-        <location filename="../forms/ui_overviewpage.h" line="501"/>
+        <location filename="../forms/overviewpage.ui" line="979"/>
         <source>&lt;b&gt;Recent transactions&lt;/b&gt;</source>
         <translation>&lt;b&gt;Poslední transakce&lt;/b&gt;</translation>
     </message>
@@ -1987,17 +1841,155 @@ Adresa: %4
         <translation>nesynchronizováno</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="429"/>
+        <location filename="../overviewpage.cpp" line="142"/>
+        <location filename="../overviewpage.cpp" line="338"/>
+        <source>Disabled</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../overviewpage.cpp" line="145"/>
+        <location filename="../overviewpage.cpp" line="340"/>
+        <location filename="../overviewpage.cpp" line="482"/>
+        <source>Start Darksend Mixing</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../overviewpage.cpp" line="147"/>
+        <location filename="../overviewpage.cpp" line="484"/>
+        <source>Stop Darksend Mixing</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../overviewpage.cpp" line="267"/>
+        <source>No inputs detected</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../overviewpage.cpp" line="275"/>
+        <source>Found unconfirmed denominated outputs, will wait till they confirm to recalculate.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../overviewpage.cpp" line="323"/>
+        <source>Rounds</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../overviewpage.cpp" line="354"/>
+        <source>Enabled</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../overviewpage.cpp" line="363"/>
+        <source>Last Darksend message:
+</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../overviewpage.cpp" line="368"/>
+        <location filename="../overviewpage.cpp" line="393"/>
+        <source>Darksend is idle.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../overviewpage.cpp" line="374"/>
+        <source>Darksend request complete: Your transaction was accepted into the pool!</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../overviewpage.cpp" line="380"/>
+        <source>Submitted following entries to masternode:</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../overviewpage.cpp" line="381"/>
+        <location filename="../overviewpage.cpp" line="382"/>
+        <location filename="../overviewpage.cpp" line="383"/>
+        <source>Submitted to masternode, Waiting for more entries</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../overviewpage.cpp" line="386"/>
+        <source>Found enough users, signing ...</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../overviewpage.cpp" line="387"/>
+        <source>Found enough users, signing ( waiting. )</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../overviewpage.cpp" line="388"/>
+        <source>Found enough users, signing ( waiting.. )</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../overviewpage.cpp" line="389"/>
+        <source>Found enough users, signing ( waiting... )</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../overviewpage.cpp" line="391"/>
+        <source>Transmitting final transaction.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../overviewpage.cpp" line="395"/>
+        <source>Finalizing transaction.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../overviewpage.cpp" line="397"/>
+        <source>Darksend request incomplete:</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../overviewpage.cpp" line="397"/>
+        <source>Will retry...</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../overviewpage.cpp" line="399"/>
+        <source>Darksend request complete:</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../overviewpage.cpp" line="401"/>
+        <source>Submitted to masternode, waiting in queue .</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../overviewpage.cpp" line="402"/>
+        <source>Submitted to masternode, waiting in queue ..</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../overviewpage.cpp" line="403"/>
+        <source>Submitted to masternode, waiting in queue ...</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../overviewpage.cpp" line="405"/>
+        <source>Unknown state:</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../overviewpage.cpp" line="419"/>
+        <source>N/A</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../overviewpage.cpp" line="441"/>
         <source>Darksend was successfully reset.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="443"/>
+        <location filename="../overviewpage.cpp" line="455"/>
         <source>Darksend requires at least %1 to use.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="457"/>
+        <location filename="../overviewpage.cpp" line="469"/>
         <source>Wallet is locked and user declined to unlock. Disabling Darksend.</source>
         <translation type="unfinished"/>
     </message>
@@ -2164,37 +2156,31 @@ Adresa: %4
     <name>RPCConsole</name>
     <message>
         <location filename="../forms/rpcconsole.ui" line="14"/>
-        <location filename="../forms/ui_rpcconsole.h" line="471"/>
-        <source>Debug window</source>
-        <translation>Ladicí okno</translation>
+        <source>Tools window</source>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="24"/>
-        <location filename="../forms/ui_rpcconsole.h" line="500"/>
         <source>&amp;Information</source>
         <translation>&amp;Informace</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="33"/>
-        <location filename="../forms/ui_rpcconsole.h" line="472"/>
         <source>Masternode Count</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="46"/>
-        <location filename="../forms/ui_rpcconsole.h" line="473"/>
         <source>General</source>
         <translation>Obecné</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="53"/>
-        <location filename="../forms/ui_rpcconsole.h" line="474"/>
         <source>Name</source>
         <translation>Název</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="60"/>
-        <location filename="../forms/ui_rpcconsole.h" line="475"/>
         <source>Client name</source>
         <translation>Název klienta</translation>
     </message>
@@ -2209,131 +2195,102 @@ Adresa: %4
         <location filename="../forms/rpcconsole.ui" line="292"/>
         <location filename="../forms/rpcconsole.ui" line="315"/>
         <location filename="../forms/rpcconsole.ui" line="341"/>
-        <location filename="../forms/ui_rpcconsole.h" line="476"/>
-        <location filename="../forms/ui_rpcconsole.h" line="484"/>
-        <location filename="../forms/ui_rpcconsole.h" line="489"/>
-        <location filename="../forms/ui_rpcconsole.h" line="491"/>
-        <location filename="../forms/ui_rpcconsole.h" line="492"/>
-        <location filename="../forms/ui_rpcconsole.h" line="493"/>
-        <location filename="../forms/ui_rpcconsole.h" line="494"/>
-        <location filename="../forms/ui_rpcconsole.h" line="495"/>
-        <location filename="../forms/ui_rpcconsole.h" line="497"/>
-        <location filename="../forms/ui_rpcconsole.h" line="499"/>
         <source>N/A</source>
         <translation>N/A</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="83"/>
-        <location filename="../forms/ui_rpcconsole.h" line="477"/>
         <source>Number of connections</source>
         <translation>Počet spojení</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="90"/>
-        <location filename="../forms/ui_rpcconsole.h" line="479"/>
         <source>Open the Darkcoin debug log file from the current data directory. This can take a few seconds for large log files.</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="93"/>
-        <location filename="../forms/ui_rpcconsole.h" line="481"/>
         <source>&amp;Open</source>
         <translation>&amp;Otevřít</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="116"/>
-        <location filename="../forms/ui_rpcconsole.h" line="482"/>
         <source>Startup time</source>
         <translation>Čas spuštění</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="129"/>
-        <location filename="../forms/ui_rpcconsole.h" line="483"/>
         <source>Network</source>
         <translation>Síť</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="152"/>
-        <location filename="../forms/ui_rpcconsole.h" line="485"/>
         <source>Last block time</source>
         <translation>Čas posledního bloku</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="165"/>
-        <location filename="../forms/ui_rpcconsole.h" line="486"/>
         <source>Debug log file</source>
         <translation>Soubor s ladicími záznamy</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="172"/>
-        <location filename="../forms/ui_rpcconsole.h" line="487"/>
         <source>Using OpenSSL version</source>
         <translation>Používaná verze OpenSSL</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="182"/>
-        <location filename="../forms/ui_rpcconsole.h" line="488"/>
         <source>Build date</source>
         <translation>Datum kompilace</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="205"/>
-        <location filename="../forms/ui_rpcconsole.h" line="490"/>
         <source>Current number of blocks</source>
         <translation>Aktuální počet bloků</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="305"/>
-        <location filename="../forms/ui_rpcconsole.h" line="496"/>
         <source>Client version</source>
         <translation>Verze klienta</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="334"/>
-        <location filename="../forms/ui_rpcconsole.h" line="498"/>
         <source>Block chain</source>
         <translation>Řetězec bloků</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="349"/>
-        <location filename="../forms/ui_rpcconsole.h" line="505"/>
         <source>&amp;Console</source>
         <translation>&amp;Konzole</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="398"/>
-        <location filename="../forms/ui_rpcconsole.h" line="502"/>
         <source>Clear console</source>
         <translation>Vyčistit konzoli</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="421"/>
-        <location filename="../forms/ui_rpcconsole.h" line="510"/>
         <source>&amp;Network Traffic</source>
         <translation>&amp;Síťový provoz</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="473"/>
-        <location filename="../forms/ui_rpcconsole.h" line="506"/>
         <source>&amp;Clear</source>
         <translation>&amp;Vyčistit</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="486"/>
-        <location filename="../forms/ui_rpcconsole.h" line="507"/>
         <source>Totals</source>
         <translation>Sumy</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="550"/>
-        <location filename="../forms/ui_rpcconsole.h" line="508"/>
         <location filename="../rpcconsole.cpp" line="365"/>
         <source>In:</source>
         <translation>Sem:</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="630"/>
-        <location filename="../forms/ui_rpcconsole.h" line="509"/>
         <location filename="../rpcconsole.cpp" line="366"/>
         <source>Out:</source>
         <translation>Ven:</translation>
@@ -2393,109 +2350,89 @@ Adresa: %4
     <name>ReceiveCoinsDialog</name>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="34"/>
-        <location filename="../forms/ui_receivecoinsdialog.h" line="255"/>
         <source>Reuse one of the previously used receiving addresses. Reusing addresses has security and privacy issues. Do not use this unless re-generating a payment request made before.</source>
         <translation>Recyklovat již dříve použité adresy. Recyklace adres má bezpečnostní rizika a narušuje soukromí. Nezaškrtávejte to, pokud znovu nevytváříte již dříve vytvořený platební požadavek.</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="37"/>
-        <location filename="../forms/ui_receivecoinsdialog.h" line="257"/>
         <source>R&amp;euse an existing receiving address (not recommended)</source>
         <translation>&amp;Recyklovat již existující adresy (nedoporučeno)</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="51"/>
         <location filename="../forms/receivecoinsdialog.ui" line="74"/>
-        <location filename="../forms/ui_receivecoinsdialog.h" line="260"/>
-        <location filename="../forms/ui_receivecoinsdialog.h" line="267"/>
         <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Darkcoin network.</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="54"/>
-        <location filename="../forms/ui_receivecoinsdialog.h" line="262"/>
         <source>&amp;Message:</source>
         <translation>&amp;Zpráva:</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="67"/>
         <location filename="../forms/receivecoinsdialog.ui" line="88"/>
-        <location filename="../forms/ui_receivecoinsdialog.h" line="264"/>
-        <location filename="../forms/ui_receivecoinsdialog.h" line="271"/>
         <source>An optional label to associate with the new receiving address.</source>
         <translation>Volitelné označení, které se má přiřadit k nové adrese.</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="81"/>
-        <location filename="../forms/ui_receivecoinsdialog.h" line="269"/>
         <source>Use this form to request payments. All fields are &lt;b&gt;optional&lt;/b&gt;.</source>
         <translation>Tímto formulář můžeš požadovat platby. Všechna pole jsou &lt;b&gt;volitelná&lt;/b&gt;.</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="91"/>
-        <location filename="../forms/ui_receivecoinsdialog.h" line="273"/>
         <source>&amp;Label:</source>
         <translation>&amp;Označení:</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="104"/>
         <location filename="../forms/receivecoinsdialog.ui" line="126"/>
-        <location filename="../forms/ui_receivecoinsdialog.h" line="275"/>
-        <location filename="../forms/ui_receivecoinsdialog.h" line="279"/>
         <source>An optional amount to request. Leave this empty or zero to not request a specific amount.</source>
         <translation>Volitelná částka, kterou požaduješ. Nech prázdné nebo nulové, pokud nepožaduješ konkrétní částku.</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="107"/>
-        <location filename="../forms/ui_receivecoinsdialog.h" line="277"/>
         <source>&amp;Amount:</source>
         <translation>Čás&amp;tka:</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="141"/>
-        <location filename="../forms/ui_receivecoinsdialog.h" line="281"/>
         <source>&amp;Request payment</source>
         <translation>&amp;Vyžádat platbu</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="158"/>
-        <location filename="../forms/ui_receivecoinsdialog.h" line="283"/>
         <source>Clear all fields of the form.</source>
         <translation>Promaž obsah ze všech formulářových políček.</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="161"/>
-        <location filename="../forms/ui_receivecoinsdialog.h" line="285"/>
         <source>Clear</source>
         <translation>Vyčistit</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="239"/>
-        <location filename="../forms/ui_receivecoinsdialog.h" line="287"/>
         <source>Requested payments history</source>
         <translation>Historie vyžádaných plateb</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="261"/>
-        <location filename="../forms/ui_receivecoinsdialog.h" line="289"/>
         <source>Show the selected request (does the same as double clicking an entry)</source>
         <translation>Zobraz zvolený požadavek (stejně tak můžeš přímo na něj dvakrát poklepat)</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="264"/>
-        <location filename="../forms/ui_receivecoinsdialog.h" line="291"/>
         <source>Show</source>
         <translation>Zobrazit</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="278"/>
-        <location filename="../forms/ui_receivecoinsdialog.h" line="293"/>
         <source>Remove the selected entries from the list</source>
         <translation>Smaž zvolené požadavky ze seznamu</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="281"/>
-        <location filename="../forms/ui_receivecoinsdialog.h" line="295"/>
         <source>Remove</source>
         <translation>Smazat</translation>
     </message>
@@ -2519,25 +2456,21 @@ Adresa: %4
     <name>ReceiveRequestDialog</name>
     <message>
         <location filename="../forms/receiverequestdialog.ui" line="29"/>
-        <location filename="../forms/ui_receiverequestdialog.h" line="117"/>
         <source>QR Code</source>
         <translation>QR kód</translation>
     </message>
     <message>
         <location filename="../forms/receiverequestdialog.ui" line="75"/>
-        <location filename="../forms/ui_receiverequestdialog.h" line="119"/>
         <source>Copy &amp;URI</source>
         <translation>&amp;Kopíruj URI</translation>
     </message>
     <message>
         <location filename="../forms/receiverequestdialog.ui" line="82"/>
-        <location filename="../forms/ui_receiverequestdialog.h" line="120"/>
         <source>Copy &amp;Address</source>
         <translation>Kopíruj &amp;adresu</translation>
     </message>
     <message>
         <location filename="../forms/receiverequestdialog.ui" line="89"/>
-        <location filename="../forms/ui_receiverequestdialog.h" line="121"/>
         <source>&amp;Save Image...</source>
         <translation>&amp;Ulož obrázek...</translation>
     </message>
@@ -2629,7 +2562,6 @@ Adresa: %4
     <name>SendCoinsDialog</name>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="14"/>
-        <location filename="../forms/ui_sendcoinsdialog.h" line="515"/>
         <location filename="../sendcoinsdialog.cpp" line="427"/>
         <location filename="../sendcoinsdialog.cpp" line="511"/>
         <location filename="../sendcoinsdialog.cpp" line="521"/>
@@ -2638,139 +2570,116 @@ Adresa: %4
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="90"/>
-        <location filename="../forms/ui_sendcoinsdialog.h" line="516"/>
         <source>Coin Control Features</source>
         <translation>Možnosti ruční správy mincí</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="110"/>
-        <location filename="../forms/ui_sendcoinsdialog.h" line="517"/>
         <source>Inputs...</source>
         <translation>Vstupy...</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="117"/>
-        <location filename="../forms/ui_sendcoinsdialog.h" line="518"/>
         <source>automatically selected</source>
         <translation>automaticky vybrané</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="136"/>
-        <location filename="../forms/ui_sendcoinsdialog.h" line="519"/>
         <source>Insufficient funds!</source>
         <translation>Nedostatek prostředků!</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="225"/>
-        <location filename="../forms/ui_sendcoinsdialog.h" line="520"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="216"/>
         <source>Quantity:</source>
         <translation>Počet:</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="260"/>
-        <location filename="../forms/ui_sendcoinsdialog.h" line="521"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="251"/>
         <source>Bytes:</source>
         <translation>Bajtů:</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="308"/>
-        <location filename="../forms/ui_sendcoinsdialog.h" line="522"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="299"/>
         <source>Amount:</source>
         <translation>Částka:</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="340"/>
-        <location filename="../forms/ui_sendcoinsdialog.h" line="523"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="331"/>
         <source>Priority:</source>
         <translation>Priorita:</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="388"/>
-        <location filename="../forms/ui_sendcoinsdialog.h" line="524"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="379"/>
         <source>Fee:</source>
         <translation>Poplatek:</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="420"/>
-        <location filename="../forms/ui_sendcoinsdialog.h" line="525"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="411"/>
         <source>Low Output:</source>
         <translation>Malý výstup:</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="468"/>
-        <location filename="../forms/ui_sendcoinsdialog.h" line="526"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="459"/>
         <source>After Fee:</source>
         <translation>Čistá částka:</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="500"/>
-        <location filename="../forms/ui_sendcoinsdialog.h" line="527"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="491"/>
         <source>Change:</source>
         <translation>Drobné:</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="544"/>
-        <location filename="../forms/ui_sendcoinsdialog.h" line="529"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="535"/>
         <source>If this is activated, but the change address is empty or invalid, change will be sent to a newly generated address.</source>
         <translation>Pokud aktivováno, ale adresa pro drobné je prázdná nebo neplatná, tak se drobné pošlou na nově vygenerovanou adresu.</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="547"/>
-        <location filename="../forms/ui_sendcoinsdialog.h" line="531"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="538"/>
         <source>Custom change address</source>
         <translation>Vlastní adresa pro drobné</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="668"/>
-        <location filename="../forms/ui_sendcoinsdialog.h" line="534"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="650"/>
         <source>Confirm the send action</source>
         <translation>Potvrď odeslání</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="671"/>
-        <location filename="../forms/ui_sendcoinsdialog.h" line="536"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="653"/>
         <source>S&amp;end</source>
         <translation>P&amp;ošli</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="691"/>
-        <location filename="../forms/ui_sendcoinsdialog.h" line="538"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="673"/>
         <source>Clear all fields of the form.</source>
         <translation>Promaž obsah ze všech formulářových políček.</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="694"/>
-        <location filename="../forms/ui_sendcoinsdialog.h" line="540"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="676"/>
         <source>Clear &amp;All</source>
         <translation>Všechno s&amp;maž</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="711"/>
-        <location filename="../forms/ui_sendcoinsdialog.h" line="542"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="693"/>
         <source>Send to multiple recipients at once</source>
         <translation>Pošli více příjemcům naráz</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="714"/>
-        <location filename="../forms/ui_sendcoinsdialog.h" line="544"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="696"/>
         <source>Add &amp;Recipient</source>
         <translation>Při&amp;dej příjemce</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="759"/>
-        <location filename="../forms/ui_sendcoinsdialog.h" line="545"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="741"/>
         <source>Darksend</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="772"/>
-        <location filename="../forms/ui_sendcoinsdialog.h" line="546"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="754"/>
         <source>InstantX</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="779"/>
-        <location filename="../forms/ui_sendcoinsdialog.h" line="547"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="761"/>
         <source>Balance:</source>
         <translation>Stav účtu:</translation>
     </message>
@@ -2922,43 +2831,36 @@ Adresa: %4
     <name>SendCoinsEntry</name>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="21"/>
-        <location filename="../forms/ui_sendcoinsentry.h" line="423"/>
         <source>This is a normal payment.</source>
         <translation>Tohle je normální platba.</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="36"/>
-        <location filename="../forms/ui_sendcoinsentry.h" line="425"/>
         <source>Pay &amp;To:</source>
         <translation>&amp;Komu:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="54"/>
-        <location filename="../forms/ui_sendcoinsentry.h" line="427"/>
         <source>The address to send the payment to (e.g. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="61"/>
-        <location filename="../forms/ui_sendcoinsentry.h" line="430"/>
         <source>Choose previously used address</source>
         <translation>Vyber již použitou adresu</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="71"/>
-        <location filename="../forms/ui_sendcoinsentry.h" line="433"/>
         <source>Alt+A</source>
         <translation>Alt+A</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="78"/>
-        <location filename="../forms/ui_sendcoinsentry.h" line="435"/>
         <source>Paste address from clipboard</source>
         <translation>Vlož adresu ze schránky</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="88"/>
-        <location filename="../forms/ui_sendcoinsentry.h" line="438"/>
         <source>Alt+P</source>
         <translation>Alt+P</translation>
     </message>
@@ -2966,21 +2868,16 @@ Adresa: %4
         <location filename="../forms/sendcoinsentry.ui" line="95"/>
         <location filename="../forms/sendcoinsentry.ui" line="619"/>
         <location filename="../forms/sendcoinsentry.ui" line="1155"/>
-        <location filename="../forms/ui_sendcoinsentry.h" line="440"/>
-        <location filename="../forms/ui_sendcoinsentry.h" line="457"/>
-        <location filename="../forms/ui_sendcoinsentry.h" line="467"/>
         <source>Remove this entry</source>
         <translation>Smaž tento záznam</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="111"/>
-        <location filename="../forms/ui_sendcoinsentry.h" line="443"/>
         <source>&amp;Label:</source>
         <translation>O&amp;značení:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="124"/>
-        <location filename="../forms/ui_sendcoinsentry.h" line="445"/>
         <source>Enter a label for this address to add it to the list of used addresses</source>
         <translation>Zadej označení této adresy; obojí se ti pak uloží do adresáře</translation>
     </message>
@@ -2988,49 +2885,38 @@ Adresa: %4
         <location filename="../forms/sendcoinsentry.ui" line="131"/>
         <location filename="../forms/sendcoinsentry.ui" line="652"/>
         <location filename="../forms/sendcoinsentry.ui" line="1188"/>
-        <location filename="../forms/ui_sendcoinsentry.h" line="447"/>
-        <location filename="../forms/ui_sendcoinsentry.h" line="461"/>
-        <location filename="../forms/ui_sendcoinsentry.h" line="471"/>
         <source>A&amp;mount:</source>
         <translation>Čás&amp;tka:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="147"/>
-        <location filename="../forms/ui_sendcoinsentry.h" line="448"/>
         <source>Message:</source>
         <translation>Zpráva:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="157"/>
-        <location filename="../forms/ui_sendcoinsentry.h" line="450"/>
         <source>A message that was attached to the darkcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Darkcoin network.</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="583"/>
-        <location filename="../forms/ui_sendcoinsentry.h" line="453"/>
         <source>This is an unverified payment request.</source>
         <translation>Tohle je neověřený platební požadavek.</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="601"/>
         <location filename="../forms/sendcoinsentry.ui" line="1133"/>
-        <location filename="../forms/ui_sendcoinsentry.h" line="455"/>
-        <location filename="../forms/ui_sendcoinsentry.h" line="465"/>
         <source>Pay To:</source>
         <translation>Komu:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="635"/>
         <location filename="../forms/sendcoinsentry.ui" line="1171"/>
-        <location filename="../forms/ui_sendcoinsentry.h" line="460"/>
-        <location filename="../forms/ui_sendcoinsentry.h" line="470"/>
         <source>Memo:</source>
         <translation>Poznámka:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="1115"/>
-        <location filename="../forms/ui_sendcoinsentry.h" line="463"/>
         <source>This is a verified payment request.</source>
         <translation>Tohle je ověřený platební požadavek.</translation>
     </message>
@@ -3057,133 +2943,109 @@ Adresa: %4
     <name>SignVerifyMessageDialog</name>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="14"/>
-        <location filename="../forms/ui_signverifymessagedialog.h" line="283"/>
         <source>Signatures - Sign / Verify a Message</source>
         <translation>Podpisy - podepsat/ověřit zprávu</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="24"/>
-        <location filename="../forms/ui_signverifymessagedialog.h" line="315"/>
         <source>&amp;Sign Message</source>
         <translation>&amp;Podepiš zprávu</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="30"/>
-        <location filename="../forms/ui_signverifymessagedialog.h" line="284"/>
         <source>You can sign messages with your addresses to prove you own them. Be careful not to sign anything vague, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
         <translation>Podepsáním zprávy svými adresami můžeš prokázat, že je skutečně vlastníš. Buď opatrný a nepodepisuj nic vágního; například při phishingových útocích můžeš být lákán, abys něco takového podepsal. Podepisuj pouze zcela úplná a detailní prohlášení, se kterými souhlasíš.</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="48"/>
-        <location filename="../forms/ui_signverifymessagedialog.h" line="286"/>
         <source>The address to sign the message with (e.g. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="55"/>
         <location filename="../forms/signverifymessagedialog.ui" line="265"/>
-        <location filename="../forms/ui_signverifymessagedialog.h" line="289"/>
-        <location filename="../forms/ui_signverifymessagedialog.h" line="321"/>
         <source>Choose previously used address</source>
         <translation>Vyber již použitou adresu</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="65"/>
         <location filename="../forms/signverifymessagedialog.ui" line="275"/>
-        <location filename="../forms/ui_signverifymessagedialog.h" line="292"/>
-        <location filename="../forms/ui_signverifymessagedialog.h" line="324"/>
         <source>Alt+A</source>
         <translation>Alt+A</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="75"/>
-        <location filename="../forms/ui_signverifymessagedialog.h" line="294"/>
         <source>Paste address from clipboard</source>
         <translation>Vlož adresu ze schránky</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="85"/>
-        <location filename="../forms/ui_signverifymessagedialog.h" line="297"/>
         <source>Alt+P</source>
         <translation>Alt+P</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="97"/>
-        <location filename="../forms/ui_signverifymessagedialog.h" line="299"/>
         <source>Enter the message you want to sign here</source>
         <translation>Sem vepiš zprávu, kterou chceš podepsat</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="104"/>
-        <location filename="../forms/ui_signverifymessagedialog.h" line="301"/>
         <source>Signature</source>
         <translation>Podpis</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="131"/>
-        <location filename="../forms/ui_signverifymessagedialog.h" line="303"/>
         <source>Copy the current signature to the system clipboard</source>
         <translation>Zkopíruj aktuálně vybraný podpis do systémové schránky</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="152"/>
-        <location filename="../forms/ui_signverifymessagedialog.h" line="307"/>
         <source>Sign the message to prove you own this Darkcoin address</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="155"/>
-        <location filename="../forms/ui_signverifymessagedialog.h" line="309"/>
         <source>Sign &amp;Message</source>
         <translation>Po&amp;depiš zprávu</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="169"/>
-        <location filename="../forms/ui_signverifymessagedialog.h" line="311"/>
         <source>Reset all sign message fields</source>
         <translation>Vymaž všechna pole formuláře pro podepsání zrávy</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="172"/>
         <location filename="../forms/signverifymessagedialog.ui" line="315"/>
-        <location filename="../forms/ui_signverifymessagedialog.h" line="313"/>
-        <location filename="../forms/ui_signverifymessagedialog.h" line="332"/>
         <source>Clear &amp;All</source>
         <translation>Všechno &amp;smaž</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="231"/>
-        <location filename="../forms/ui_signverifymessagedialog.h" line="334"/>
         <source>&amp;Verify Message</source>
         <translation>&amp;Ověř zprávu</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="237"/>
-        <location filename="../forms/ui_signverifymessagedialog.h" line="316"/>
         <source>Enter the signing address, message (ensure you copy line breaks, spaces, tabs, etc. exactly) and signature below to verify the message. Be careful not to read more into the signature than what is in the signed message itself, to avoid being tricked by a man-in-the-middle attack.</source>
         <translation>K ověření podpisu zprávy zadej podepisující adresu, zprávu (ověř si, že správně kopíruješ zalomení řádků, mezery, tabulátory apod.) a podpis. Dávej pozor na to, abys nezkopíroval do podpisu víc, než co je v samotné podepsané zprávě, abys nebyl napálen man-in-the-middle útokem.</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="258"/>
-        <location filename="../forms/ui_signverifymessagedialog.h" line="318"/>
         <source>The address the message was signed with (e.g. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="295"/>
-        <location filename="../forms/ui_signverifymessagedialog.h" line="326"/>
         <source>Verify the message to ensure it was signed with the specified Darkcoin address</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="298"/>
-        <location filename="../forms/ui_signverifymessagedialog.h" line="328"/>
         <source>Verify &amp;Message</source>
         <translation>O&amp;věř zprávu</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="312"/>
-        <location filename="../forms/ui_signverifymessagedialog.h" line="330"/>
         <source>Reset all verify message fields</source>
         <translation>Vymaž všechna pole formuláře pro ověření zrávy</translation>
     </message>
@@ -3272,6 +3134,11 @@ Adresa: %4
         <translation type="unfinished"/>
     </message>
     <message>
+        <location filename="../splashscreen.cpp" line="34"/>
+        <source>Version %1</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
         <location filename="../splashscreen.cpp" line="35"/>
         <source>The Bitcoin Core developers</source>
         <translation>Vývojáři Bitcoin Core</translation>
@@ -3308,174 +3175,190 @@ Adresa: %4
         <translation>Otřevřeno dokud %1</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="36"/>
+        <location filename="../transactiondesc.cpp" line="38"/>
+        <location filename="../transactiondesc.cpp" line="48"/>
         <source>conflicted</source>
         <translation>kolidující</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="38"/>
+        <location filename="../transactiondesc.cpp" line="40"/>
+        <source>%1/offline (verified via instantx)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../transactiondesc.cpp" line="42"/>
+        <source>%1/confirmed (verified via instantx)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../transactiondesc.cpp" line="44"/>
+        <source>%1 confirmations (verified via instantx)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../transactiondesc.cpp" line="50"/>
         <source>%1/offline</source>
         <translation>%1/offline</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="40"/>
+        <location filename="../transactiondesc.cpp" line="52"/>
         <source>%1/unconfirmed</source>
         <translation>%1/nepotvrzeno</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="42"/>
+        <location filename="../transactiondesc.cpp" line="54"/>
         <source>%1 confirmations</source>
         <translation>%1 potvrzení</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="59"/>
+        <location filename="../transactiondesc.cpp" line="72"/>
         <source>Status</source>
         <translation>Stav</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="64"/>
+        <location filename="../transactiondesc.cpp" line="77"/>
         <source>, has not been successfully broadcast yet</source>
         <translation>, ještě nebylo rozesláno</translation>
     </message>
     <message numerus="yes">
-        <location filename="../transactiondesc.cpp" line="66"/>
+        <location filename="../transactiondesc.cpp" line="79"/>
         <source>, broadcast through %n node(s)</source>
         <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform><numerusform></numerusform></translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="70"/>
+        <location filename="../transactiondesc.cpp" line="83"/>
         <source>Date</source>
         <translation>Datum</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="77"/>
+        <location filename="../transactiondesc.cpp" line="90"/>
         <source>Source</source>
         <translation>Zdroj</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="77"/>
+        <location filename="../transactiondesc.cpp" line="90"/>
         <source>Generated</source>
         <translation>Vygenerováno</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="82"/>
-        <location filename="../transactiondesc.cpp" line="99"/>
+        <location filename="../transactiondesc.cpp" line="95"/>
+        <location filename="../transactiondesc.cpp" line="112"/>
         <source>From</source>
         <translation>Od</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="99"/>
+        <location filename="../transactiondesc.cpp" line="112"/>
         <source>unknown</source>
         <translation>neznámo</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="100"/>
-        <location filename="../transactiondesc.cpp" line="122"/>
-        <location filename="../transactiondesc.cpp" line="180"/>
+        <location filename="../transactiondesc.cpp" line="113"/>
+        <location filename="../transactiondesc.cpp" line="135"/>
+        <location filename="../transactiondesc.cpp" line="193"/>
         <source>To</source>
         <translation>Pro</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="103"/>
-        <location filename="../transactiondesc.cpp" line="105"/>
+        <location filename="../transactiondesc.cpp" line="116"/>
+        <location filename="../transactiondesc.cpp" line="118"/>
         <source>own address</source>
         <translation>vlastní adresa</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="103"/>
+        <location filename="../transactiondesc.cpp" line="116"/>
         <source>label</source>
         <translation>označení</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="140"/>
-        <location filename="../transactiondesc.cpp" line="152"/>
-        <location filename="../transactiondesc.cpp" line="197"/>
-        <location filename="../transactiondesc.cpp" line="214"/>
-        <location filename="../transactiondesc.cpp" line="267"/>
+        <location filename="../transactiondesc.cpp" line="153"/>
+        <location filename="../transactiondesc.cpp" line="165"/>
+        <location filename="../transactiondesc.cpp" line="210"/>
+        <location filename="../transactiondesc.cpp" line="227"/>
+        <location filename="../transactiondesc.cpp" line="280"/>
         <source>Credit</source>
         <translation>Příjem</translation>
     </message>
     <message numerus="yes">
-        <location filename="../transactiondesc.cpp" line="142"/>
+        <location filename="../transactiondesc.cpp" line="155"/>
         <source>matures in %n more block(s)</source>
         <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform><numerusform></numerusform></translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="144"/>
+        <location filename="../transactiondesc.cpp" line="157"/>
         <source>not accepted</source>
         <translation>neakceptováno</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="188"/>
-        <location filename="../transactiondesc.cpp" line="196"/>
-        <location filename="../transactiondesc.cpp" line="211"/>
-        <location filename="../transactiondesc.cpp" line="264"/>
+        <location filename="../transactiondesc.cpp" line="201"/>
+        <location filename="../transactiondesc.cpp" line="209"/>
+        <location filename="../transactiondesc.cpp" line="224"/>
+        <location filename="../transactiondesc.cpp" line="277"/>
         <source>Debit</source>
         <translation>Výdaj</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="202"/>
+        <location filename="../transactiondesc.cpp" line="215"/>
         <source>Transaction fee</source>
         <translation>Transakční poplatek</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="218"/>
+        <location filename="../transactiondesc.cpp" line="231"/>
         <source>Net amount</source>
         <translation>Čistá částka</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="224"/>
-        <location filename="../transactiondesc.cpp" line="233"/>
+        <location filename="../transactiondesc.cpp" line="237"/>
+        <location filename="../transactiondesc.cpp" line="246"/>
         <source>Message</source>
         <translation>Zpráva</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="226"/>
+        <location filename="../transactiondesc.cpp" line="239"/>
         <source>Comment</source>
         <translation>Komentář</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="228"/>
+        <location filename="../transactiondesc.cpp" line="241"/>
         <source>Transaction ID</source>
         <translation>ID transakce</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="246"/>
+        <location filename="../transactiondesc.cpp" line="259"/>
         <source>Merchant</source>
         <translation>Obchodník</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="253"/>
+        <location filename="../transactiondesc.cpp" line="266"/>
         <source>Generated coins must mature %1 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to &quot;not accepted&quot; and it won&apos;t be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.</source>
         <translation>Vygenerované mince musí čekat %1 bloků, než mohou být utraceny. Když jsi vygeneroval tenhle blok, tak byl rozposlán do sítě, aby byl přidán do řetězce bloků. Pokud se mu nepodaří dostat se do řetězce, změní se na &quot;neakceptovaný&quot; a nepůjde utratit. To se občas může stát, pokud jiný uzel vygeneruje blok zhruba ve stejném okamžiku jako ty.</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="261"/>
+        <location filename="../transactiondesc.cpp" line="274"/>
         <source>Debug information</source>
         <translation>Ladicí informace</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="269"/>
+        <location filename="../transactiondesc.cpp" line="282"/>
         <source>Transaction</source>
         <translation>Transakce</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="272"/>
+        <location filename="../transactiondesc.cpp" line="285"/>
         <source>Inputs</source>
         <translation>Vstupy</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="293"/>
+        <location filename="../transactiondesc.cpp" line="306"/>
         <source>Amount</source>
         <translation>Částka</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="294"/>
+        <location filename="../transactiondesc.cpp" line="307"/>
         <source>true</source>
         <translation>true</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="294"/>
+        <location filename="../transactiondesc.cpp" line="307"/>
         <source>false</source>
         <translation>false</translation>
     </message>
@@ -3484,13 +3367,11 @@ Adresa: %4
     <name>TransactionDescDialog</name>
     <message>
         <location filename="../forms/transactiondescdialog.ui" line="14"/>
-        <location filename="../forms/ui_transactiondescdialog.h" line="60"/>
         <source>Transaction details</source>
         <translation>Detaily transakce</translation>
     </message>
     <message>
         <location filename="../forms/transactiondescdialog.ui" line="20"/>
-        <location filename="../forms/ui_transactiondescdialog.h" line="62"/>
         <source>This pane shows a detailed description of the transaction</source>
         <translation>Toto okno zobrazuje detailní popis transakce</translation>
     </message>
@@ -3848,7 +3729,7 @@ Adresa: %4
 <context>
     <name>WalletModel</name>
     <message>
-        <location filename="../walletmodel.cpp" line="286"/>
+        <location filename="../walletmodel.cpp" line="288"/>
         <source>Send Coins</source>
         <translation>Pošli mince</translation>
     </message>
@@ -3899,7 +3780,7 @@ Adresa: %4
 <context>
     <name>darkcoin-core</name>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="12"/>
+        <location filename="../bitcoinstrings.cpp" line="16"/>
         <source>%s, you must set a rpcpassword in the configuration file:
 %s
 It is recommended you use the following random password:
@@ -3914,167 +3795,227 @@ for example: alertnotify=echo %%s | mail -s &quot;Darkcoin Alert&quot; admin@foo
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="25"/>
+        <location filename="../bitcoinstrings.cpp" line="29"/>
         <source>Acceptable ciphers (default: TLSv1.2+HIGH:TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!3DES:@STRENGTH)</source>
         <translation>Akceptovatelné šifry (výchozí: TLSv1.2+HIGH:TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!3DES:@STRENGTH)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="28"/>
+        <location filename="../bitcoinstrings.cpp" line="32"/>
         <source>An error occurred while setting up the RPC port %u for listening on IPv4: %s</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="30"/>
+        <location filename="../bitcoinstrings.cpp" line="34"/>
         <source>An error occurred while setting up the RPC port %u for listening on IPv6, falling back to IPv4: %s</source>
         <translation>Při nastavování naslouchacího RPC portu %u pro IPv6 nastala chyba, vracím se k IPv4: %s</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="33"/>
+        <location filename="../bitcoinstrings.cpp" line="37"/>
         <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
         <translation>Poslouchat na zadané adrese. Pro zápis IPv6 adresy použij notaci [adresa]:port</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="36"/>
+        <location filename="../bitcoinstrings.cpp" line="40"/>
         <source>Cannot obtain a lock on data directory %s. Darkcoin Core is probably already running.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="39"/>
+        <location filename="../bitcoinstrings.cpp" line="43"/>
         <source>Continuously rate-limit free transactions to &lt;n&gt;*1000 bytes per minute (default:15)</source>
         <translation>Kontinuálně omezovat bezpoplatkové transakce na &lt;n&gt;*1000 bajtů za minutu (výchozí: 15)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="50"/>
+        <location filename="../bitcoinstrings.cpp" line="46"/>
+        <source>Disable all Masternode and Darksend related functionality (0-1, default: 0)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="48"/>
+        <source>Enable instantx, show confirmations for locked transactions (bool, default: true)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="51"/>
+        <source>Enable use of automated darksend for funds stored in this wallet (0-1, default: 0)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="54"/>
         <source>Enter regression test mode, which uses a special chain in which blocks can be solved instantly. This is intended for regression testing tools and app development.</source>
         <translation>Přepnout do módu testování regresí, který používá speciální řetězec, ve kterém jsou mohou být bloky okamžitě vyřešeny. Je to určeno pro nástroje pro regresní testování a vyvíjení aplikací.</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="54"/>
+        <location filename="../bitcoinstrings.cpp" line="58"/>
         <source>Enter regression test mode, which uses a special chain in which blocks can be solved instantly.</source>
         <translation>Přepnout do módu testování regresí, který používá speciální řetězec, ve kterém mohou být bloky okamžitě vyřešeny.</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="59"/>
+        <location filename="../bitcoinstrings.cpp" line="61"/>
+        <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="63"/>
         <source>Error: The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
         <translation>Chyba: Transakce byla odmítnuta! Tohle může nastat, pokud nějaké mince z tvé peněženky už jednou byly utraceny, například pokud používáš kopii souboru wallet.dat a mince byly utraceny v druhé kopii, ale nebyly označeny jako utracené v této.</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="63"/>
+        <location filename="../bitcoinstrings.cpp" line="67"/>
         <source>Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds!</source>
         <translation>Chyba: Tahle transakce vyžaduje transakční poplatek nejméně %s kvůli velikosti zasílané částky, komplexnosti nebo použití nedávno přijatých mincí!</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="68"/>
+        <location filename="../bitcoinstrings.cpp" line="70"/>
+        <source>Error: Wallet unlocked for anonymization only, unable to create transaction.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="72"/>
         <source>Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)</source>
         <translation>Spustit příkaz, když přijde relevantní upozornění nebo když dojde k opravdu dlouhému rozštěpení řetezce bloků (%s se v příkazu nahradí zprávou)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="71"/>
+        <location filename="../bitcoinstrings.cpp" line="75"/>
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
         <translation>Spustit příkaz, když se objeví transakce týkající se peněženky (%s se v příkazu nahradí za TxID)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="74"/>
+        <location filename="../bitcoinstrings.cpp" line="78"/>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>Spustit příkaz, když se změní nejlepší blok (%s se v příkazu nahradí hashem bloku)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="77"/>
+        <location filename="../bitcoinstrings.cpp" line="81"/>
         <source>Fees smaller than this are considered zero fee (for transaction creation) (default:</source>
         <translation>Poplatky menší než tato hodnota jsou považovány za nulové (pro vytváření transakcí) (výchozí:</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="80"/>
+        <location filename="../bitcoinstrings.cpp" line="84"/>
         <source>Flush database activity from memory pool to disk log every &lt;n&gt; megabytes (default: 100)</source>
         <translation>Promítnout databázovou aktivitu z paměťového prostoru do záznamu na disku každých &lt;n&gt; megabajtů (výchozí: 100)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="83"/>
+        <location filename="../bitcoinstrings.cpp" line="87"/>
         <source>How thorough the block verification of -checkblocks is (0-4, default: 3)</source>
         <translation>Jak moc důkladná má být verifikace bloků -checkblocks (0-4, výchozí: 3)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="85"/>
+        <location filename="../bitcoinstrings.cpp" line="89"/>
         <source>In this mode -genproclimit controls how many blocks are generated immediately.</source>
         <translation>V tomto módu -genproclimit určuje, kolik bloků je vygenerováno okamžitě.</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="88"/>
+        <location filename="../bitcoinstrings.cpp" line="92"/>
         <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 9998 or testnet: 19998)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="92"/>
+        <location filename="../bitcoinstrings.cpp" line="94"/>
+        <source>Name to construct url for KeePass entry that stores the wallet passphrase</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="96"/>
         <source>Number of seconds to keep misbehaving peers from reconnecting (default: 86400)</source>
         <translation>Doba ve vteřinách, po kterou se nebudou moci zlobivé uzly znovu připojit (výchozí: 86400)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="95"/>
+        <location filename="../bitcoinstrings.cpp" line="99"/>
         <source>Output debugging information (default: 0, supplying &lt;category&gt; is optional)</source>
         <translation>Tisknout ladicí informace (výchozí: 0, zadání &lt;category&gt; je volitelné)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="106"/>
+        <location filename="../bitcoinstrings.cpp" line="101"/>
+        <source>Provide liquidity to Darksend by infrequently mixing coins on a continual basis (0-100, default: 0, 1=very frequent, high fees, 100=very infrequent, low fees)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="105"/>
+        <source>Query for peer addresses via DNS lookup, if low on addresses (default: 1 unless -connect)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="108"/>
+        <source>Set external address:port to get to this masternode (example: address:port)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="110"/>
         <source>Set maximum size of high-priority/low-fee transactions in bytes (default: %d)</source>
         <translation>Nastavit maximální velikost prioritních/nízkopoplatkových transakcí v bajtech (výchozí: %d)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="108"/>
+        <location filename="../bitcoinstrings.cpp" line="112"/>
         <source>Set the number of script verification threads (%u to %d, 0 = auto, &lt;0 = leave that many cores free, default: %d)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="111"/>
+        <location filename="../bitcoinstrings.cpp" line="115"/>
         <source>Set the processor limit for when generation is on (-1 = unlimited, default: -1)</source>
         <translation>Nastavit omezení procesoru pro zapnuté generování (-1 = bez omezení, výchozí: -1)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="117"/>
+        <location filename="../bitcoinstrings.cpp" line="118"/>
+        <source>Show N confirmations for a successfully locked transaciton (0-9999, default: 1)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="121"/>
         <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
         <translation>Tohle je testovací verze – používej ji jen na vlastní riziko, ale rozhodně ji nepoužívej k těžbě nebo pro obchodní aplikace</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="120"/>
+        <location filename="../bitcoinstrings.cpp" line="124"/>
         <source>Unable to bind to %s on this computer. Darkcoin Core is probably already running.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="128"/>
+        <location filename="../bitcoinstrings.cpp" line="127"/>
+        <source>Unable to locate enough Darksend non-denominated funds for this transaction that are not equal 1000 DRK</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="130"/>
+        <source>Unable to locate enough Darksend non-denominated funds for this transaction</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="132"/>
         <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: -proxy)</source>
         <translation>Použít samostatnou SOCKS5 proxy ke spojení s peery přes skryté služby v Toru (výchozí: -proxy)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="131"/>
+        <location filename="../bitcoinstrings.cpp" line="135"/>
         <source>Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
         <translation>Upozornění: -paytxfee je nastaveno velmi vysoko! Toto je transakční poplatek, který zaplatíš za každou poslanou transakci.</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="134"/>
+        <location filename="../bitcoinstrings.cpp" line="138"/>
         <source>Warning: Please check that your computer&apos;s date and time are correct! If your clock is wrong Darkcoin will not work properly.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="137"/>
+        <location filename="../bitcoinstrings.cpp" line="141"/>
         <source>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</source>
         <translation>Upozornění: Síť podle všeho není v konzistentním stavu. Někteří těžaři jsou zřejmě v potížích.</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="140"/>
+        <location filename="../bitcoinstrings.cpp" line="144"/>
         <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
         <translation>Upozornění: Nesouhlasím zcela se svými protiuzly! Možná potřebuji aktualizovat nebo ostatní uzly potřebují aktualizovat.</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="143"/>
+        <location filename="../bitcoinstrings.cpp" line="147"/>
         <source>Warning: error reading wallet.dat! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
         <translation>Upozornění: nastala chyba při čtení souboru wallet.dat! Všechny klíče se přečetly správně, ale data o transakcích nebo záznamy v adresáři mohou chybět či být nesprávné.</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="146"/>
+        <location filename="../bitcoinstrings.cpp" line="150"/>
         <source>Warning: wallet.dat corrupt, data salvaged! Original wallet.dat saved as wallet.{timestamp}.bak in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
         <translation>Upozornění: soubor wallet.dat je poškozený, data jsou však zachráněna! Původní soubor wallet.dat je uložený jako wallet.{timestamp}.bak v %s. Pokud je stav tvého účtu nebo transakce nesprávné, zřejmě bys měl obnovit zálohu.</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="150"/>
+        <location filename="../bitcoinstrings.cpp" line="154"/>
         <source>You must set rpcpassword=&lt;password&gt; in the configuration file:
 %s
 If the file does not exist, create it with owner-readable-only file permissions.</source>
@@ -4083,962 +4024,902 @@ If the file does not exist, create it with owner-readable-only file permissions.
 Pokud konfigurační soubor ještě neexistuje, vytvoř ho tak, aby ho mohl číst pouze vlastník.</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="158"/>
-        <source>(default: 1)</source>
-        <translation>(výchozí: 1)</translation>
-    </message>
-    <message>
         <location filename="../bitcoinstrings.cpp" line="159"/>
-        <source>(default: wallet.dat)</source>
-        <translation>(výchozí: wallet.dat)</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="160"/>
-        <source>&lt;category&gt; can be:</source>
-        <translation>&lt;category&gt; může být:</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="161"/>
-        <source>Accept command line and JSON-RPC commands</source>
-        <translation>Akceptovat příkazy z příkazové řádky a přes JSON-RPC</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="162"/>
-        <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
-        <translation>Přijímat spojení zvenčí (výchozí: 1, pokud není zadáno -proxy nebo -connect)</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="163"/>
-        <source>Add a node to connect to and attempt to keep the connection open</source>
-        <translation>Přidat uzel, ke kterému se připojit a snažit se spojení udržet</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="164"/>
-        <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
-        <translation>Povolit DNS dotazy pro -addnode (přidání uzlu), -seednode a -connect (připojení)</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="165"/>
-        <source>Allow JSON-RPC connections from specified IP address</source>
-        <translation>Povolit JSON-RPC spojení ze specifikované IP adresy</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="167"/>
-        <source>Attempt to recover private keys from a corrupt wallet.dat</source>
-        <translation>Pokusit se zachránit soukromé klíče z poškozeného souboru wallet.dat</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="181"/>
-        <source>Darkcoin Core Daemon</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="182"/>
-        <source>Darkcoin Core RPC client version</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="168"/>
-        <source>Block creation options:</source>
-        <translation>Možnosti vytvoření bloku:</translation>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="42"/>
-        <source>Disable all Masternode and Darksend related functionality (0-1, default: 0)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="44"/>
-        <source>Enable instantx, show confirmations for locked transactions (bool, default: true)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="47"/>
-        <source>Enable use of automated darksend for funds stored in this wallet (0-1, default: 0)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="57"/>
-        <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="66"/>
-        <source>Error: Wallet unlocked for anonymization only, unable to create transaction.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="90"/>
-        <source>Name to construct url for KeePass entry that stores the wallet passphrase</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="97"/>
-        <source>Provide liquidity to Darksend by infrequently mixing coins on a continual basis (0-100, default: 0, 1=very frequent, high fees, 100=very infrequent, low fees)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="101"/>
-        <source>Query for peer addresses via DNS lookup, if low on addresses (default: 1 unless -connect)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="104"/>
-        <source>Set external address:port to get to this masternode (example: address:port)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="114"/>
-        <source>Show N confirmations for a successfully locked transaciton (0-9999, default: 1)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="123"/>
-        <source>Unable to locate enough Darksend non-denominated funds for this transaction that are not equal 1000 DRK</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="126"/>
-        <source>Unable to locate enough Darksend non-denominated funds for this transaction</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="155"/>
         <source>You must specify a masternodeprivkey in the configuration. Please see documentation for help.</source>
         <translation type="unfinished"/>
     </message>
     <message>
+        <location filename="../bitcoinstrings.cpp" line="162"/>
+        <source>(default: 1)</source>
+        <translation>(výchozí: 1)</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="163"/>
+        <source>(default: wallet.dat)</source>
+        <translation>(výchozí: wallet.dat)</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="164"/>
+        <source>&lt;category&gt; can be:</source>
+        <translation>&lt;category&gt; může být:</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="165"/>
+        <source>Accept command line and JSON-RPC commands</source>
+        <translation>Akceptovat příkazy z příkazové řádky a přes JSON-RPC</translation>
+    </message>
+    <message>
         <location filename="../bitcoinstrings.cpp" line="166"/>
+        <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
+        <translation>Přijímat spojení zvenčí (výchozí: 1, pokud není zadáno -proxy nebo -connect)</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="167"/>
+        <source>Add a node to connect to and attempt to keep the connection open</source>
+        <translation>Přidat uzel, ke kterému se připojit a snažit se spojení udržet</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="168"/>
+        <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
+        <translation>Povolit DNS dotazy pro -addnode (přidání uzlu), -seednode a -connect (připojení)</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="169"/>
+        <source>Allow JSON-RPC connections from specified IP address</source>
+        <translation>Povolit JSON-RPC spojení ze specifikované IP adresy</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="170"/>
         <source>Always query for peer addresses via DNS lookup (default: 0)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="169"/>
+        <location filename="../bitcoinstrings.cpp" line="171"/>
+        <source>Attempt to recover private keys from a corrupt wallet.dat</source>
+        <translation>Pokusit se zachránit soukromé klíče z poškozeného souboru wallet.dat</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="172"/>
+        <source>Block creation options:</source>
+        <translation>Možnosti vytvoření bloku:</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="173"/>
         <source>Cannot downgrade wallet</source>
         <translation>Nemohu převést peněženku do staršího formátu</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="170"/>
+        <location filename="../bitcoinstrings.cpp" line="174"/>
         <source>Cannot resolve -bind address: &apos;%s&apos;</source>
         <translation>Nemohu přeložit -bind adresu: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="171"/>
+        <location filename="../bitcoinstrings.cpp" line="175"/>
         <source>Cannot resolve -externalip address: &apos;%s&apos;</source>
         <translation>Nemohu přeložit -externalip adresu: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="172"/>
+        <location filename="../bitcoinstrings.cpp" line="176"/>
         <source>Cannot write default address</source>
         <translation>Nemohu napsat výchozí adresu</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="173"/>
+        <location filename="../bitcoinstrings.cpp" line="177"/>
         <source>Clear list of wallet transactions (diagnostic tool; implies -rescan)</source>
         <translation>Smazat seznam transakcí peněženky (diagnostický nástroj; vynutí -rescan)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="174"/>
+        <location filename="../bitcoinstrings.cpp" line="178"/>
         <source>Connect only to the specified node(s)</source>
         <translation>Připojit se pouze k zadanému uzlu (příp. zadaným uzlům)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="175"/>
+        <location filename="../bitcoinstrings.cpp" line="179"/>
         <source>Connect through SOCKS proxy</source>
         <translation>Připojit se přes SOCKS proxy</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="176"/>
+        <location filename="../bitcoinstrings.cpp" line="180"/>
         <source>Connect to JSON-RPC on &lt;port&gt; (default: 9998 or testnet: 19998)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="177"/>
+        <location filename="../bitcoinstrings.cpp" line="181"/>
         <source>Connect to KeePassHttp on port &lt;port&gt; (default: 19455)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="178"/>
+        <location filename="../bitcoinstrings.cpp" line="182"/>
         <source>Connect to a node to retrieve peer addresses, and disconnect</source>
         <translation>Připojit se k uzlu, získat adresy jeho protějšků a odpojit se</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="179"/>
+        <location filename="../bitcoinstrings.cpp" line="183"/>
         <source>Connection options:</source>
         <translation>Možnosti připojení:</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="180"/>
+        <location filename="../bitcoinstrings.cpp" line="184"/>
         <source>Corrupted block database detected</source>
         <translation>Bylo zjištěno poškození databáze bloků</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="183"/>
+        <location filename="../bitcoinstrings.cpp" line="185"/>
+        <source>Darkcoin Core Daemon</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="186"/>
+        <source>Darkcoin Core RPC client version</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="187"/>
         <source>Darksend options:</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="184"/>
+        <location filename="../bitcoinstrings.cpp" line="188"/>
         <source>Debugging/Testing options:</source>
         <translation>Možnosti ladění/testování:</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="185"/>
+        <location filename="../bitcoinstrings.cpp" line="189"/>
         <source>Disable safemode, override a real safe mode event (default: 0)</source>
         <translation>Vypnout bezpečný režim (safemode), překrýt skutečnou událost bezpečného režimu (výchozí: 0)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="186"/>
+        <location filename="../bitcoinstrings.cpp" line="190"/>
         <source>Discover own IP address (default: 1 when listening and no -externalip)</source>
         <translation>Zjistit vlastní IP adresu (výchozí: 1, pokud naslouchá a není zadáno -externalip)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="187"/>
+        <location filename="../bitcoinstrings.cpp" line="191"/>
         <source>Do not load the wallet and disable wallet RPC calls</source>
         <translation>Nenačítat peněženku a vypnout její RPC volání</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="188"/>
+        <location filename="../bitcoinstrings.cpp" line="192"/>
         <source>Do you want to rebuild the block database now?</source>
         <translation>Chceš přestavět databázi bloků hned teď?</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="189"/>
+        <location filename="../bitcoinstrings.cpp" line="193"/>
         <source>Done loading</source>
         <translation>Načítání dokončeno</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="190"/>
+        <location filename="../bitcoinstrings.cpp" line="194"/>
         <source>Enable the client to act as a masternode (0-1, default: 0)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="191"/>
+        <location filename="../bitcoinstrings.cpp" line="195"/>
         <source>Error initializing block database</source>
         <translation>Chyba při zakládání databáze bloků</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="192"/>
+        <location filename="../bitcoinstrings.cpp" line="196"/>
         <source>Error initializing wallet database environment %s!</source>
         <translation>Chyba při vytváření databázového prostředí %s pro peněženku!</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="193"/>
+        <location filename="../bitcoinstrings.cpp" line="197"/>
         <source>Error loading block database</source>
         <translation>Chyba při načítání databáze bloků</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="194"/>
+        <location filename="../bitcoinstrings.cpp" line="198"/>
         <source>Error loading wallet.dat</source>
         <translation>Chyba při načítání wallet.dat</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="195"/>
+        <location filename="../bitcoinstrings.cpp" line="199"/>
         <source>Error loading wallet.dat: Wallet corrupted</source>
         <translation>Chyba při načítání wallet.dat: peněženka je poškozená</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="196"/>
+        <location filename="../bitcoinstrings.cpp" line="200"/>
         <source>Error loading wallet.dat: Wallet requires newer version of Darkcoin</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="197"/>
+        <location filename="../bitcoinstrings.cpp" line="201"/>
         <source>Error opening block database</source>
         <translation>Chyba při otevírání databáze bloků</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="198"/>
+        <location filename="../bitcoinstrings.cpp" line="202"/>
         <source>Error reading from database, shutting down.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="199"/>
+        <location filename="../bitcoinstrings.cpp" line="203"/>
         <source>Error</source>
         <translation>Chyba</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="200"/>
+        <location filename="../bitcoinstrings.cpp" line="204"/>
         <source>Error: Disk space is low!</source>
         <translation>Problém: Na disku je málo místa!</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="201"/>
+        <location filename="../bitcoinstrings.cpp" line="205"/>
         <source>Error: Wallet locked, unable to create transaction!</source>
         <translation>Chyba: Peněženka je zamčená, nemohu vytvořit transakci!</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="202"/>
+        <location filename="../bitcoinstrings.cpp" line="206"/>
         <source>Error: You already have pending entries in the Darksend pool</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="203"/>
+        <location filename="../bitcoinstrings.cpp" line="207"/>
         <source>Error: system error: </source>
         <translation>Chyba: systémová chyba: </translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="204"/>
+        <location filename="../bitcoinstrings.cpp" line="208"/>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
         <translation>Nepodařilo se naslouchat na žádném portu. Použij -listen=0, pokud to byl tvůj záměr.</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="205"/>
+        <location filename="../bitcoinstrings.cpp" line="209"/>
         <source>Failed to read block info</source>
         <translation>Nepodařilo se přečíst informace o bloku</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="206"/>
+        <location filename="../bitcoinstrings.cpp" line="210"/>
         <source>Failed to read block</source>
         <translation>Nepodařilo se přečíst blok</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="207"/>
+        <location filename="../bitcoinstrings.cpp" line="211"/>
         <source>Failed to sync block index</source>
         <translation>Nepodařilo se sesynchronizovat index bloků</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="208"/>
+        <location filename="../bitcoinstrings.cpp" line="212"/>
         <source>Failed to write block index</source>
         <translation>Nepodařilo se zapsat index bloků</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="209"/>
+        <location filename="../bitcoinstrings.cpp" line="213"/>
         <source>Failed to write block info</source>
         <translation>Nepodařilo se zapsat informace o bloku</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="210"/>
+        <location filename="../bitcoinstrings.cpp" line="214"/>
         <source>Failed to write block</source>
         <translation>Nepodařilo se zapsat blok</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="211"/>
+        <location filename="../bitcoinstrings.cpp" line="215"/>
         <source>Failed to write file info</source>
         <translation>Nepodařilo se zapsat informace o souboru</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="212"/>
+        <location filename="../bitcoinstrings.cpp" line="216"/>
         <source>Failed to write to coin database</source>
         <translation>Selhal zápis do databáze mincí</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="213"/>
+        <location filename="../bitcoinstrings.cpp" line="217"/>
         <source>Failed to write transaction index</source>
         <translation>Nepodařilo se zapsat index transakcí</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="214"/>
+        <location filename="../bitcoinstrings.cpp" line="218"/>
         <source>Failed to write undo data</source>
         <translation>Nepodařilo se zapsat data o vracení změn</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="215"/>
+        <location filename="../bitcoinstrings.cpp" line="219"/>
         <source>Fee per kB to add to transactions you send</source>
         <translation>Poplatek za kB, který se přidá ke každé odeslané transakci</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="216"/>
+        <location filename="../bitcoinstrings.cpp" line="220"/>
         <source>Fees smaller than this are considered zero fee (for relaying) (default:</source>
         <translation>Poplatky menší než tato hodnota jsou považovány za nulové (pro přeposílání transakcí) (výchozí:</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="263"/>
-        <source>RPC SSL options: (see the Darkcoin Wiki for SSL setup instructions)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="273"/>
-        <source>SSL options: (see the Darkcoin Wiki for SSL setup instructions)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="308"/>
-        <source>Unable to bind to %s on this computer (bind returned error %s)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="309"/>
-        <source>Unable to locate enough Darksend denominated funds for this transaction</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="310"/>
-        <source>Unable to sign masternode payment winner, wrong key?</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location filename="../bitcoinstrings.cpp" line="217"/>
+        <location filename="../bitcoinstrings.cpp" line="221"/>
         <source>Force safe mode (default: 0)</source>
         <translation>Vynutit bezpečný mód (výchozí: 0)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="218"/>
+        <location filename="../bitcoinstrings.cpp" line="222"/>
         <source>Generate coins (default: 0)</source>
         <translation>Generovat mince (výchozí: 0)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="219"/>
+        <location filename="../bitcoinstrings.cpp" line="223"/>
         <source>Get help for a command</source>
         <translation>Získat nápovědu pro příkaz</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="220"/>
+        <location filename="../bitcoinstrings.cpp" line="224"/>
         <source>How many blocks to check at startup (default: 288, 0 = all)</source>
         <translation>Kolik bloků při startu zkontrolovat (výchozí: 288, 0 = všechny)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="221"/>
+        <location filename="../bitcoinstrings.cpp" line="225"/>
         <source>If &lt;category&gt; is not supplied, output all debugging information.</source>
         <translation>Pokud není &lt;category&gt; zadána, bude tisknout veškeré ladicí informace.</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="222"/>
+        <location filename="../bitcoinstrings.cpp" line="226"/>
         <source>Ignore masternodes less than version (example: 70050; default : 0)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="223"/>
+        <location filename="../bitcoinstrings.cpp" line="227"/>
         <source>Importing...</source>
         <translation>Importuji...</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="224"/>
+        <location filename="../bitcoinstrings.cpp" line="228"/>
         <source>Imports blocks from external blk000??.dat file</source>
         <translation>Importovat bloky z externího souboru blk000??.dat</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="225"/>
+        <location filename="../bitcoinstrings.cpp" line="229"/>
         <source>Incorrect or no genesis block found. Wrong datadir for network?</source>
         <translation>Nemám žádný nebo jen špatný genesis blok. Není špatně nastavený datadir?</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="226"/>
+        <location filename="../bitcoinstrings.cpp" line="230"/>
         <source>Information</source>
         <translation>Informace</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="227"/>
+        <location filename="../bitcoinstrings.cpp" line="231"/>
         <source>Initialization sanity check failed. Darkcoin Core is shutting down.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="228"/>
+        <location filename="../bitcoinstrings.cpp" line="232"/>
         <source>InstantX options:</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="229"/>
+        <location filename="../bitcoinstrings.cpp" line="233"/>
         <source>Insufficient funds</source>
         <translation>Nedostatek prostředků</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="230"/>
+        <location filename="../bitcoinstrings.cpp" line="234"/>
         <source>Invalid -onion address: &apos;%s&apos;</source>
         <translation>Neplatná -onion adresa: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="231"/>
+        <location filename="../bitcoinstrings.cpp" line="235"/>
         <source>Invalid -proxy address: &apos;%s&apos;</source>
         <translation>Neplatná -proxy adresa: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="232"/>
+        <location filename="../bitcoinstrings.cpp" line="236"/>
         <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: &apos;%s&apos;</source>
         <translation>Neplatná částka pro -minrelaytxfee=&lt;částka&gt;: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="233"/>
+        <location filename="../bitcoinstrings.cpp" line="237"/>
         <source>Invalid amount for -mintxfee=&lt;amount&gt;: &apos;%s&apos;</source>
         <translation>Neplatná částka pro -mintxfee=&lt;částka&gt;: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="234"/>
+        <location filename="../bitcoinstrings.cpp" line="238"/>
         <source>Invalid amount for -paytxfee=&lt;amount&gt;: &apos;%s&apos;</source>
         <translation>Neplatná částka pro -paytxfee=&lt;částka&gt;: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="235"/>
+        <location filename="../bitcoinstrings.cpp" line="239"/>
         <source>Invalid amount</source>
         <translation>Neplatná částka</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="236"/>
+        <location filename="../bitcoinstrings.cpp" line="240"/>
         <source>Invalid masternodeprivkey. Please see documenation.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="237"/>
+        <location filename="../bitcoinstrings.cpp" line="241"/>
         <source>KeePassHttp id for the established association</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="238"/>
+        <location filename="../bitcoinstrings.cpp" line="242"/>
         <source>KeePassHttp key for AES encrypted communication with KeePass</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="239"/>
+        <location filename="../bitcoinstrings.cpp" line="243"/>
         <source>Keep N darkcoin anonymized (default: 0)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="240"/>
+        <location filename="../bitcoinstrings.cpp" line="244"/>
         <source>Keep at most &lt;n&gt; unconnectable blocks in memory (default: %u)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="241"/>
+        <location filename="../bitcoinstrings.cpp" line="245"/>
         <source>Keep at most &lt;n&gt; unconnectable transactions in memory (default: %u)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="242"/>
+        <location filename="../bitcoinstrings.cpp" line="246"/>
         <source>Limit size of signature cache to &lt;n&gt; entries (default: 50000)</source>
         <translation>Omezit velikost vyrovnávací paměti pro podpisy na &lt;n&gt; položek (výchozí: 50000)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="243"/>
+        <location filename="../bitcoinstrings.cpp" line="247"/>
         <source>List commands</source>
         <translation>Výpis příkazů</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="244"/>
+        <location filename="../bitcoinstrings.cpp" line="248"/>
         <source>Listen for connections on &lt;port&gt; (default: 9999 or testnet: 19999)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="245"/>
+        <location filename="../bitcoinstrings.cpp" line="249"/>
         <source>Loading addresses...</source>
         <translation>Načítám adresy...</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="246"/>
+        <location filename="../bitcoinstrings.cpp" line="250"/>
         <source>Loading block index...</source>
         <translation>Načítám index bloků...</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="247"/>
+        <location filename="../bitcoinstrings.cpp" line="251"/>
         <source>Loading wallet... (%3.2f %%)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="248"/>
+        <location filename="../bitcoinstrings.cpp" line="252"/>
         <source>Loading wallet...</source>
         <translation>Načítám peněženku...</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="249"/>
+        <location filename="../bitcoinstrings.cpp" line="253"/>
         <source>Log transaction priority and fee per kB when mining blocks (default: 0)</source>
         <translation>Zaznamenávat během těžení bloků prioritu transakce a poplatek za kB (výchozí: 0)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="250"/>
+        <location filename="../bitcoinstrings.cpp" line="254"/>
         <source>Maintain a full transaction index (default: 0)</source>
         <translation>Spravovat úplný index transakcí (výchozí: 0)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="251"/>
+        <location filename="../bitcoinstrings.cpp" line="255"/>
         <source>Maintain at most &lt;n&gt; connections to peers (default: 125)</source>
         <translation>Povolit nejvýše &lt;n&gt; připojení k uzlům (výchozí: 125)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="252"/>
+        <location filename="../bitcoinstrings.cpp" line="256"/>
         <source>Masternode options:</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="253"/>
+        <location filename="../bitcoinstrings.cpp" line="257"/>
         <source>Maximum per-connection receive buffer, &lt;n&gt;*1000 bytes (default: 5000)</source>
         <translation>Maximální velikost přijímacího bufferu pro každé spojení, &lt;n&gt;*1000 bajtů (výchozí: 5000)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="254"/>
+        <location filename="../bitcoinstrings.cpp" line="258"/>
         <source>Maximum per-connection send buffer, &lt;n&gt;*1000 bytes (default: 1000)</source>
         <translation>Maximální velikost odesílacího bufferu pro každé spojení, &lt;n&gt;*1000 bajtů (výchozí: 1000)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="255"/>
+        <location filename="../bitcoinstrings.cpp" line="259"/>
         <source>Not enough file descriptors available.</source>
         <translation>Je nedostatek deskriptorů souborů.</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="256"/>
+        <location filename="../bitcoinstrings.cpp" line="260"/>
         <source>Only accept block chain matching built-in checkpoints (default: 1)</source>
         <translation>Uznávat pouze řetězec bloků, který odpovídá vnitřním kontrolním bodům (výchozí: 1)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="257"/>
+        <location filename="../bitcoinstrings.cpp" line="261"/>
         <source>Only connect to nodes in network &lt;net&gt; (IPv4, IPv6 or Tor)</source>
         <translation>Připojit se pouze k uzlům v &lt;net&gt; síti (IPv4, IPv6 nebo Tor)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="258"/>
+        <location filename="../bitcoinstrings.cpp" line="262"/>
         <source>Options:</source>
         <translation>Možnosti:</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="259"/>
+        <location filename="../bitcoinstrings.cpp" line="263"/>
         <source>Password for JSON-RPC connections</source>
         <translation>Heslo pro JSON-RPC spojení</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="260"/>
+        <location filename="../bitcoinstrings.cpp" line="264"/>
         <source>Prepend debug output with timestamp (default: 1)</source>
         <translation>Připojit před ladicí výstup časové razítko (výchozí: 1)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="261"/>
+        <location filename="../bitcoinstrings.cpp" line="265"/>
         <source>Print block on startup, if found in block index</source>
         <translation>Vypsat při startu blok,pokud se nachází v indexu bloků</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="262"/>
+        <location filename="../bitcoinstrings.cpp" line="266"/>
         <source>Print block tree on startup (default: 0)</source>
         <translation>Vypsat při startu strom bloků (výchozí: 0)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="264"/>
+        <location filename="../bitcoinstrings.cpp" line="267"/>
+        <source>RPC SSL options: (see the Darkcoin Wiki for SSL setup instructions)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="268"/>
         <source>RPC client options:</source>
         <translation>Možnosti RPC klienta:</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="265"/>
+        <location filename="../bitcoinstrings.cpp" line="269"/>
         <source>RPC server options:</source>
         <translation>Možnosti RPC serveru:</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="266"/>
+        <location filename="../bitcoinstrings.cpp" line="270"/>
         <source>Randomly drop 1 of every &lt;n&gt; network messages</source>
         <translation>Náhodně zahazovat jednu z každých &lt;n&gt; síťových zpráv</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="267"/>
+        <location filename="../bitcoinstrings.cpp" line="271"/>
         <source>Randomly fuzz 1 of every &lt;n&gt; network messages</source>
         <translation>Náhodně pozměňovat jednu z každých &lt;n&gt; síťových zpráv</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="268"/>
+        <location filename="../bitcoinstrings.cpp" line="272"/>
         <source>Rebuild block chain index from current blk000??.dat files</source>
         <translation>Znovu vytvořit index řetězce bloků z aktuálních blk000??.dat souborů</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="269"/>
+        <location filename="../bitcoinstrings.cpp" line="273"/>
         <source>Rescan the block chain for missing wallet transactions</source>
         <translation>Přeskenovat řetězec bloků na chybějící transakce tvé pěněženky</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="270"/>
+        <location filename="../bitcoinstrings.cpp" line="274"/>
         <source>Rescanning...</source>
         <translation>Přeskenovávám...</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="271"/>
+        <location filename="../bitcoinstrings.cpp" line="275"/>
         <source>Run a thread to flush wallet periodically (default: 1)</source>
         <translation>Spustit vlákno pročišťující periodicky peněženku (výchozí: 1)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="272"/>
+        <location filename="../bitcoinstrings.cpp" line="276"/>
         <source>Run in the background as a daemon and accept commands</source>
         <translation>Běžet na pozadí jako démon a akceptovat příkazy</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="274"/>
+        <location filename="../bitcoinstrings.cpp" line="277"/>
+        <source>SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="278"/>
         <source>Select SOCKS version for -proxy (4 or 5, default: 5)</source>
         <translation>Zvol verzi SOCKS proxy pro -proxy (4 nebo 5, výchozí: 5)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="275"/>
+        <location filename="../bitcoinstrings.cpp" line="279"/>
         <source>Send command to Darkcoin Core</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="276"/>
+        <location filename="../bitcoinstrings.cpp" line="280"/>
         <source>Send commands to node running on &lt;ip&gt; (default: 127.0.0.1)</source>
         <translation>Posílat příkazy uzlu běžícím na &lt;ip&gt; (výchozí: 127.0.0.1)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="277"/>
+        <location filename="../bitcoinstrings.cpp" line="281"/>
         <source>Send trace/debug info to console instead of debug.log file</source>
         <translation>Posílat stopovací/ladicí informace do konzole místo do souboru debug.log</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="278"/>
+        <location filename="../bitcoinstrings.cpp" line="282"/>
         <source>Server certificate file (default: server.cert)</source>
         <translation>Soubor se serverovým certifikátem (výchozí: server.cert)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="279"/>
+        <location filename="../bitcoinstrings.cpp" line="283"/>
         <source>Server private key (default: server.pem)</source>
         <translation>Soubor se serverovým soukromým klíčem (výchozí: server.pem)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="280"/>
+        <location filename="../bitcoinstrings.cpp" line="284"/>
         <source>Set database cache size in megabytes (%d to %d, default: %d)</source>
         <translation>Nastavit velikost databázové vyrovnávací paměti v megabajtech (%d až %d, výchozí: %d)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="281"/>
+        <location filename="../bitcoinstrings.cpp" line="285"/>
         <source>Set key pool size to &lt;n&gt; (default: 100)</source>
         <translation>Nastavit zásobník klíčů na velikost &lt;n&gt; (výchozí: 100)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="282"/>
+        <location filename="../bitcoinstrings.cpp" line="286"/>
         <source>Set maximum block size in bytes (default: %d)</source>
         <translation>Nastavit maximální velikost bloku v bajtech (výchozí: %d)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="283"/>
+        <location filename="../bitcoinstrings.cpp" line="287"/>
         <source>Set minimum block size in bytes (default: 0)</source>
         <translation>Nastavit minimální velikost bloku v bajtech (výchozí: 0)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="284"/>
+        <location filename="../bitcoinstrings.cpp" line="288"/>
         <source>Set the masternode private key</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="285"/>
+        <location filename="../bitcoinstrings.cpp" line="289"/>
         <source>Set the number of threads to service RPC calls (default: 4)</source>
         <translation>Nastavení počtu vláken pro servisní RPC volání (výchozí: 4)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="286"/>
+        <location filename="../bitcoinstrings.cpp" line="290"/>
         <source>Sets the DB_PRIVATE flag in the wallet db environment (default: 1)</source>
         <translation>Nastavit příznak DB_PRIVATE v databázovém prostředí peněženky (výchozí: 1)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="287"/>
+        <location filename="../bitcoinstrings.cpp" line="291"/>
         <source>Show all debugging options (usage: --help -help-debug)</source>
         <translation>Zobrazit všechny možnosti ladění (užití: --help -help-debug)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="288"/>
+        <location filename="../bitcoinstrings.cpp" line="292"/>
         <source>Show benchmark information (default: 0)</source>
         <translation>Zobrazit výkonnostní informace (výchozí: 0)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="289"/>
+        <location filename="../bitcoinstrings.cpp" line="293"/>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
         <translation>Při spuštění klienta zmenšit soubor debug.log (výchozí: 1, pokud není zadáno -debug)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="290"/>
+        <location filename="../bitcoinstrings.cpp" line="294"/>
         <source>Signing transaction failed</source>
         <translation>Podepisování transakce selhalo</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="291"/>
+        <location filename="../bitcoinstrings.cpp" line="295"/>
         <source>Specify configuration file (default: darkcoin.conf)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="292"/>
+        <location filename="../bitcoinstrings.cpp" line="296"/>
         <source>Specify connection timeout in milliseconds (default: 5000)</source>
         <translation>Zadej časový limit spojení v milisekundách (výchozí: 5000)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="293"/>
+        <location filename="../bitcoinstrings.cpp" line="297"/>
         <source>Specify data directory</source>
         <translation>Adresář pro data</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="294"/>
+        <location filename="../bitcoinstrings.cpp" line="298"/>
         <source>Specify masternode configuration file (default: masternode.conf)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="295"/>
+        <location filename="../bitcoinstrings.cpp" line="299"/>
         <source>Specify pid file (default: darkcoind.pid)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="296"/>
+        <location filename="../bitcoinstrings.cpp" line="300"/>
         <source>Specify wallet file (within data directory)</source>
         <translation>Udej název souboru s peněženkou (v rámci datového adresáře)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="297"/>
+        <location filename="../bitcoinstrings.cpp" line="301"/>
         <source>Specify your own public address</source>
         <translation>Specifikuj svou veřejnou adresu</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="298"/>
+        <location filename="../bitcoinstrings.cpp" line="302"/>
         <source>Spend unconfirmed change when sending transactions (default: 1)</source>
         <translation>Utrácet i ještě nepotvrzené drobné při posílání transakcí (výchozí: 1)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="299"/>
+        <location filename="../bitcoinstrings.cpp" line="303"/>
         <source>Start Darkcoin Core Daemon</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="300"/>
+        <location filename="../bitcoinstrings.cpp" line="304"/>
         <source>System error: </source>
         <translation>Systémová chyba: </translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="301"/>
+        <location filename="../bitcoinstrings.cpp" line="305"/>
         <source>This help message</source>
         <translation>Tato nápověda</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="302"/>
+        <location filename="../bitcoinstrings.cpp" line="306"/>
         <source>This is intended for regression testing tools and app development.</source>
         <translation>Tohle je určeno pro nástroje na regresní testování a vyvíjení aplikací.</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="303"/>
+        <location filename="../bitcoinstrings.cpp" line="307"/>
         <source>Threshold for disconnecting misbehaving peers (default: 100)</source>
         <translation>Práh pro odpojování zlobivých uzlů (výchozí: 100)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="304"/>
+        <location filename="../bitcoinstrings.cpp" line="308"/>
         <source>To use the %s option</source>
         <translation>K použití volby %s</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="305"/>
+        <location filename="../bitcoinstrings.cpp" line="309"/>
         <source>Transaction amount too small</source>
         <translation>Částka v transakci je příliš malá</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="306"/>
+        <location filename="../bitcoinstrings.cpp" line="310"/>
         <source>Transaction amounts must be positive</source>
         <translation>Částky v transakci musí být kladné</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="307"/>
+        <location filename="../bitcoinstrings.cpp" line="311"/>
         <source>Transaction too large</source>
         <translation>Transace je příliš velká</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="311"/>
-        <source>Unknown -socks proxy version requested: %i</source>
-        <translation>V -socks byla požadována neznámá verze proxy: %i</translation>
-    </message>
-    <message>
         <location filename="../bitcoinstrings.cpp" line="312"/>
-        <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
-        <translation>V -onlynet byla uvedena neznámá síť: &apos;%s&apos;</translation>
+        <source>Unable to bind to %s on this computer (bind returned error %s)</source>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="313"/>
-        <source>Upgrade wallet to latest format</source>
-        <translation>Převést peněženku na nejnovější formát</translation>
+        <source>Unable to locate enough Darksend denominated funds for this transaction</source>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="314"/>
-        <source>Usage (deprecated, use darkcoin-cli):</source>
+        <source>Unable to sign masternode payment winner, wrong key?</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="315"/>
+        <source>Unknown -socks proxy version requested: %i</source>
+        <translation>V -socks byla požadována neznámá verze proxy: %i</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="316"/>
+        <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
+        <translation>V -onlynet byla uvedena neznámá síť: &apos;%s&apos;</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="317"/>
+        <source>Upgrade wallet to latest format</source>
+        <translation>Převést peněženku na nejnovější formát</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="318"/>
+        <source>Usage (deprecated, use darkcoin-cli):</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="319"/>
         <source>Usage:</source>
         <translation>Užití:</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="316"/>
+        <location filename="../bitcoinstrings.cpp" line="320"/>
         <source>Use KeePass 2 integration using KeePassHttp plugin (default: 0)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="317"/>
+        <location filename="../bitcoinstrings.cpp" line="321"/>
         <source>Use N separate masternodes to anonymize funds  (2-8, default: 2)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="318"/>
+        <location filename="../bitcoinstrings.cpp" line="322"/>
         <source>Use OpenSSL (https) for JSON-RPC connections</source>
         <translation>Použít OpenSSL (https) pro JSON-RPC spojení</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="319"/>
+        <location filename="../bitcoinstrings.cpp" line="323"/>
         <source>Use UPnP to map the listening port (default: 0)</source>
         <translation>Použít UPnP k namapování naslouchacího portu (výchozí: 0)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="320"/>
+        <location filename="../bitcoinstrings.cpp" line="324"/>
         <source>Use UPnP to map the listening port (default: 1 when listening)</source>
         <translation>Použít UPnP k namapování naslouchacího portu (výchozí: 1, pokud naslouchá)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="321"/>
+        <location filename="../bitcoinstrings.cpp" line="325"/>
         <source>Use the test network</source>
         <translation>Použít testovací síť (testnet)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="322"/>
+        <location filename="../bitcoinstrings.cpp" line="326"/>
         <source>Username for JSON-RPC connections</source>
         <translation>Uživatelské jméno pro JSON-RPC spojení</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="323"/>
+        <location filename="../bitcoinstrings.cpp" line="327"/>
         <source>Verifying blocks...</source>
         <translation>Ověřuji bloky...</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="324"/>
+        <location filename="../bitcoinstrings.cpp" line="328"/>
         <source>Verifying wallet...</source>
         <translation>Kontroluji peněženku...</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="325"/>
+        <location filename="../bitcoinstrings.cpp" line="329"/>
         <source>Wait for RPC server to start</source>
         <translation>Počkat, než RPC server nastartuje</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="326"/>
+        <location filename="../bitcoinstrings.cpp" line="330"/>
         <source>Wallet %s resides outside data directory %s</source>
         <translation>Peněženka %s se nachází mimo datový adresář %s</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="327"/>
+        <location filename="../bitcoinstrings.cpp" line="331"/>
         <source>Wallet needed to be rewritten: restart Darkcoin to complete</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="328"/>
+        <location filename="../bitcoinstrings.cpp" line="332"/>
         <source>Wallet options:</source>
         <translation>Možnosti peněženky:</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="329"/>
+        <location filename="../bitcoinstrings.cpp" line="333"/>
         <source>Warning</source>
         <translation>Upozornění</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="330"/>
+        <location filename="../bitcoinstrings.cpp" line="334"/>
         <source>Warning: Deprecated argument -debugnet ignored, use -debug=net</source>
         <translation>Upozornění: Zastaralý argument -debugnet se ignoruje, použij -debug=net</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="331"/>
+        <location filename="../bitcoinstrings.cpp" line="335"/>
         <source>Warning: This version is obsolete, upgrade required!</source>
         <translation>Upozornění: tahle verze je zastaralá, měl bys ji aktualizovat!</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="332"/>
+        <location filename="../bitcoinstrings.cpp" line="336"/>
         <source>You need to rebuild the database using -reindex to change -txindex</source>
         <translation>Je třeba přestavět databázi použitím -reindex, aby bylo možné změnit -txindex</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="333"/>
+        <location filename="../bitcoinstrings.cpp" line="337"/>
         <source>Zapping all transactions from wallet...</source>
         <translation>Vymazat všechny transakce z peněženky...</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="334"/>
+        <location filename="../bitcoinstrings.cpp" line="338"/>
         <source>on startup</source>
         <translation>při startu</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="335"/>
+        <location filename="../bitcoinstrings.cpp" line="339"/>
         <source>version</source>
         <translation>verze</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="336"/>
+        <location filename="../bitcoinstrings.cpp" line="340"/>
         <source>wallet.dat corrupt, salvage failed</source>
         <translation>Soubor wallet.dat je poškozen, jeho záchrana se nezdařila</translation>
     </message>
