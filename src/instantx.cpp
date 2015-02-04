@@ -22,6 +22,7 @@ std::map<uint256, CTransaction> mapTxLockReq;
 std::map<uint256, CTransaction> mapTxLockReqRejected;
 std::map<uint256, int> mapTxLockVote;
 std::map<uint256, CTransactionLock> mapTxLocks;
+std::map<COutPoint, uint256> mapLockedInputs;
 std::map<uint256, int64_t> mapUnknownVotes; //track votes with no tx for DOS
 int nCompleteTXLocks;
 
@@ -101,6 +102,12 @@ void ProcessMessageInstantX(CNode* pfrom, std::string& strCommand, CDataStream& 
                 tx.GetHash().ToString().c_str()
             );
 
+            BOOST_FOREACH(const CTxIn& in, tx.vin){
+                if(!mapLockedInputs.count(in.prevout)){
+                    mapLockedInputs.insert(make_pair(in.prevout, tx.GetHash()));
+                }
+            }
+
             // resolve conflicts
             std::map<uint256, CTransactionLock>::iterator i = mapTxLocks.find(tx.GetHash());
             if (i != mapTxLocks.end()){
@@ -109,19 +116,8 @@ void ProcessMessageInstantX(CNode* pfrom, std::string& strCommand, CDataStream& 
                     LogPrintf("ProcessMessageInstantX::txlreq - Found Existing Complete IX Lock\n");
 
                     CValidationState state;
-                    bool fMissingInputs = false;
                     DisconnectBlockAndInputs(state, tx);
-
-                    if (AcceptToMemoryPool(mempool, state, tx, true, &fMissingInputs))
-                    {
-                        LogPrintf("ProcessMessageInstantX::txlreq - Transaction Lock Request : accepted (resolved) %s\n",
-                            tx.GetHash().ToString().c_str()
-                        );
-                    } else {
-                        LogPrintf("ERROR: InstantX::ProcessConsensusVote - Transaction Lock Request : rejected (failed to resolve) %s\n",
-                            tx.GetHash().ToString().c_str()
-                        );
-                    }
+                    mapTxLockReq.insert(make_pair(tx.GetHash(), tx));
                 }
             }
 
@@ -294,25 +290,21 @@ bool ProcessConsensusVote(CConsensusVote& ctx)
                 nCompleteTXLocks++;
             }
 
+            if(mapTxLockReq.count(ctx.txHash)){
+                CTransaction& tx = mapTxLockReq[ctx.txHash];
+                BOOST_FOREACH(const CTxIn& in, tx.vin){
+                    if(!mapLockedInputs.count(in.prevout)){
+                        mapLockedInputs.insert(make_pair(in.prevout, ctx.txHash));
+                    }
+                }
+            }
+
             // resolve conflicts
 
             //if this tx lock was rejected, we need to remove the conflicting blocks
             if(mapTxLockReqRejected.count((*i).second.txHash)){
                 CValidationState state;
-                bool fMissingInputs = false;
                 DisconnectBlockAndInputs(state, mapTxLockReqRejected[(*i).second.txHash]);
-
-                if (AcceptToMemoryPool(mempool, state, mapTxLockReqRejected[(*i).second.txHash], true, &fMissingInputs))
-                {
-                    LogPrintf("ProcessMessageInstantX::txlreq - Transaction Lock Request : accepted (resolved) %s\n",
-                        mapTxLockReqRejected[(*i).second.txHash].GetHash().ToString().c_str()
-                    );
-
-                } else {
-                    LogPrintf("ERROR: InstantX::ProcessConsensusVote - Transaction Lock Request : rejected (failed to resolve) %s\n",
-                        mapTxLockReqRejected[(*i).second.txHash].GetHash().ToString().c_str()
-                    );
-                }
             }
         }
         return true;
@@ -347,6 +339,17 @@ void CleanTransactionLocksList()
     while(it != mapTxLocks.end()) {
         if(GetTime() > it->second.nExpiration){ //keep them for an hour
             LogPrintf("Removing old transaction lock %s\n", it->second.txHash.ToString().c_str());
+
+            if(mapTxLockReq.count(it->second.txHash)){
+                CTransaction& tx = mapTxLockReq[it->second.txHash];
+                
+                BOOST_FOREACH(const CTxIn& in, tx.vin)
+                    mapLockedInputs.erase(in.prevout);
+
+                mapTxLockReq.erase(it->second.txHash);
+                mapTxLockReqRejected.erase(it->second.txHash);
+            }
+
             mapTxLocks.erase(it++);
         } else {
             it++;

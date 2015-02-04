@@ -2512,7 +2512,7 @@ bool DisconnectBlockAndInputs(CValidationState &state, CTransaction txLock)
             if (!tx.IsCoinBase()){
                 BOOST_FOREACH(const CTxIn& in1, txLock.vin){
                     BOOST_FOREACH(const CTxIn& in2, tx.vin){
-                        if(in1 == in2) foundConflictingTx = true;
+                        if(in1.prevout == in2.prevout) foundConflictingTx = true;
                     }
                 }
             }
@@ -2531,66 +2531,9 @@ bool DisconnectBlockAndInputs(CValidationState &state, CTransaction txLock)
         LogPrintf("REORGANIZE: Disconnect Conflicting Blocks %lli blocks; %s..\n", vDisconnect.size(), pindexNew->GetBlockHash().ToString().c_str());
         BOOST_FOREACH(CBlockIndex* pindex, vDisconnect) {
             LogPrintf(" -- disconnect %s\n", pindex->GetBlockHash().ToString().c_str());
+            DisconnectTip(state);
         }
     }
-
-    // Disconnect shorter branch
-    vector<CTransaction> vResurrect;
-    BOOST_FOREACH(CBlockIndex* pindex, vDisconnect) {
-        CBlock block;
-        if (!ReadBlockFromDisk(block, pindex))
-            return state.Abort(_("Failed to read block"));
-        int64_t nStart = GetTimeMicros();
-        if (!DisconnectBlock(block, state, pindex, view))
-            return error("DisconnectBlockAndInputs/SetBestBlock() : DisconnectBlock %s failed", pindex->GetBlockHash().ToString().c_str());
-        if (fBenchmark)
-            LogPrintf("- Disconnect: %.2fms\n", (GetTimeMicros() - nStart) * 0.001);
-
-        // Queue memory transactions to resurrect.
-        // We only do this for blocks after the last checkpoint (reorganisation before that
-        // point should only happen with -reindex/-loadblock, or a misbehaving peer.
-        BOOST_FOREACH(const CTransaction& tx, block.vtx){
-            if (!tx.IsCoinBase()){
-                bool isConflict = false;
-                BOOST_FOREACH(const CTxIn& in1, txLock.vin){
-                    BOOST_FOREACH(const CTxIn& in2, tx.vin){
-                        if(in1 != in2) isConflict = true;
-                    }
-                }
-                if(!isConflict) vResurrect.push_back(tx);
-            }
-        }
-
-    }
-
-    mempool.check(pcoinsTip);
-    // Update chainActive and related variables.
-    UpdateTip(pindexNew);
-
-    // Resurrect memory transactions that were in the disconnected branch
-    BOOST_FOREACH(CTransaction& tx, vResurrect) {
-        // ignore validation errors in resurrected transactions
-        CValidationState stateDummy;
-        bool fMissingInputs;
-        list<CTransaction> removed;
-        if (!AcceptToMemoryPool(mempool, stateDummy, tx, true, &fMissingInputs))
-            mempool.remove(tx, removed, true);
-    }
-
-    // Let wallets know transactions went from 1-confirmed to
-    // 0-confirmed or conflicted:
-    BOOST_FOREACH(const CTransaction &tx, vResurrect) {
-        SyncWithWallets(tx.GetHash(), tx, NULL);
-    }
-
-
-    // New best block
-    uint256 hashBestChain = pindexNew->GetBlockHash();
-    
-    LogPrintf("DisconnectBlockAndInputs / SetBestChain: new best=%s  height=%d  tx=%lu  date=%s progress=%f\n",
-      hashBestChain.ToString().c_str(), chainActive.Tip()->nHeight, (unsigned long)pindexNew->nChainTx,
-      DateTimeStrFormat("%Y-%m-%d %H:%M:%S", chainActive.Tip()->GetBlockTime()).c_str(),
-      Checkpoints::GuessVerificationProgress(chainActive.Tip()));
 
     return true;
 }
@@ -2883,27 +2826,17 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
 
     // ----------- instantX transaction scanning -----------
 
-    std::map<uint256, CTransactionLock>::iterator it = mapTxLocks.begin();
-
-    while(it != mapTxLocks.end()) {
-        if(mapTxLockReq.count((*it).second.txHash)){
-            CTransaction& tx = mapTxLockReq[(*it).second.txHash];
-            for (unsigned int a = 0; a < tx.vin.size(); a++) {
-                for (unsigned int b = 0; b < block.vtx.size(); b++) {
-                    //we found the locked tx in the block
-                    if(tx.GetHash() == block.vtx[b].GetHash()) continue;
-
-                    //if there's a lock, look for conflicting inputs
-                    for (unsigned int c = 0; c < block.vtx[b].vin.size(); c++) {
-                        if(tx.vin[a].prevout == block.vtx[b].vin[c].prevout) {
-                            return state.DoS(100, error("CheckBlock() : found conflicting transaction with transaction lock"),
-                                             REJECT_INVALID, "conflicting-tx-ix");
-                        }
+    BOOST_FOREACH(const CTransaction& tx, block.vtx){
+        if (!tx.IsCoinBase()){
+            BOOST_FOREACH(const CTxIn& in, tx.vin){
+                if(mapLockedInputs.count(in.prevout)){
+                    if(mapLockedInputs[in.prevout] != tx.GetHash()){
+                        return state.DoS(100, error("CheckBlock() : found conflicting transaction with transaction lock"),
+                                         REJECT_INVALID, "conflicting-tx-ix");
                     }
                 }
             }
         }
-        it++;
     }
 
 
@@ -4557,6 +4490,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
     {
         CBlock block;
         vRecv >> block;
+
 
         LogPrint("net", "received block %s\n", block.GetHash().ToString());
         // block.print();
