@@ -1484,6 +1484,10 @@ bool CWallet::SelectCoins(int64_t nTargetValue, set<pair<const CWalletTx*,unsign
                 if(out.tx->vout[out.i].nValue == v                                            //make sure it's the denom we're looking for
                     && nValueRet + out.tx->vout[out.i].nValue < nTargetValue + (0.1*COIN)+100 //round the amount up to .1DRK over
                     && added <= 50){                                                          //don't add more than 50 of one denom type
+                        CTxIn vin = CTxIn(out.tx->GetHash(),out.i);
+                        int rounds = GetInputDarksendRounds(vin);
+                        // make sure it's actually anonymized
+                        if(rounds < nDarksendRounds) continue;
                         nValueRet += out.tx->vout[out.i].nValue;
                         setCoinsRet.insert(make_pair(out.tx, out.i));
                         added++;
