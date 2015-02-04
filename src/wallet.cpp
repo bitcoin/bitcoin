@@ -1252,8 +1252,8 @@ void CWallet::AvailableCoins(vector<COutput>& vCoins, bool fOnlyConfirmed, const
                 continue;
 
             int nDepth = pcoin->GetDepthInMainChain(false);
-            // do not use IX coins until we have at least 1 blockchain confirmation
-            if (useIX && nDepth <= 5)
+            // do not use IX for inputs that have less then 6 blockchain confirmations
+            if (useIX && nDepth < 6)
                 continue;
 
             for (unsigned int i = 0; i < pcoin->vout.size(); i++) {
