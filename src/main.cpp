@@ -908,6 +908,30 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
     }
     }
 
+
+    // ----------- instantX transaction scanning -----------
+
+    std::map<uint256, CTransactionLock>::iterator it = mapTxLocks.begin();
+
+    while(it != mapTxLocks.end()) {
+        if(mapTxLockReq.count((*it).second.txHash)){
+            CTransaction& tx2 = mapTxLockReq[(*it).second.txHash];
+            for (unsigned int a = 0; a < tx2.vin.size(); a++) {
+                //we found the locked tx in the block
+                if(tx2.GetHash() == tx.GetHash()) continue;
+
+                //if there's a lock, look for conflicting inputs
+                for (unsigned int b = 0; b < tx.vin.size(); b++) {
+                    if(tx2.vin[a].prevout == tx.vin[b].prevout) {
+                        return false;
+                    }
+                }
+            }
+        }
+        it++;
+    }
+
+
     {
         CCoinsView dummy;
         CCoinsViewCache view(dummy);
@@ -2903,11 +2927,9 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
             for (unsigned int a = 0; a < tx.vin.size(); a++) {
                 for (unsigned int b = 0; b < block.vtx.size(); b++) {
                     //we found the locked tx in the block
-                    if(tx.GetHash() == block.vtx[b].GetHash()) {
-                        printf("CheckBlock -- found locked transaction\n");
-                        continue;
-                    }
+                    if(tx.GetHash() == block.vtx[b].GetHash()) continue;
 
+                    //if there's a lock, look for conflicting inputs
                     for (unsigned int c = 0; c < block.vtx[b].vin.size(); c++) {
                         if(tx.vin[a].prevout == block.vtx[b].vin[c].prevout) {
                             return state.DoS(100, error("CheckBlock() : found conflicting transaction with transaction lock"),
