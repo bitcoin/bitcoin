@@ -52,7 +52,8 @@ void ProcessMessageInstantX(CNode* pfrom, std::string& strCommand, CDataStream& 
         int nTxAge = 0;
         BOOST_REVERSE_FOREACH(CTxIn i, tx.vin){
             nTxAge = GetInputAge(i);
-            if(nTxAge <= 5){
+            if(nTxAge < 6)
+            {
                 LogPrintf("ProcessMessageInstantX::txlreq - Transaction not found / too new: %d / %s\n", nTxAge, tx.GetHash().ToString().c_str());
                 return;
             }
