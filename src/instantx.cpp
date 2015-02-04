@@ -63,7 +63,13 @@ void ProcessMessageInstantX(CNode* pfrom, std::string& strCommand, CDataStream& 
                 return;
             }
         }
-        int nBlockHeight = chainActive.Tip()->nHeight - nTxAge; //calculate the height
+
+        /*
+            Use a blockheight newer than the input.
+            This prevents attackers from using transaction mallibility to predict which masternodes
+            they'll use.
+        */
+        int nBlockHeight = (chainActive.Tip()->nHeight - nTxAge)+4;
 
         BOOST_FOREACH(const CTxOut o, tx.vout){
             if(!o.scriptPubKey.IsNormalPaymentScript()){
@@ -342,7 +348,7 @@ void CleanTransactionLocksList()
 
             if(mapTxLockReq.count(it->second.txHash)){
                 CTransaction& tx = mapTxLockReq[it->second.txHash];
-                
+
                 BOOST_FOREACH(const CTxIn& in, tx.vin)
                     mapLockedInputs.erase(in.prevout);
 
