@@ -103,7 +103,6 @@ void ProcessMessageInstantX(CNode* pfrom, std::string& strCommand, CDataStream& 
                 if((*i).second.CountSignatures() >= INSTANTX_SIGNATURES_REQUIRED){
                     LogPrintf("ProcessMessageInstantX::txlreq - Found Existing Complete IX Lock\n");
 
-                    uint256 txHash = (*i).second.txHash;
                     CValidationState state;
                     bool fMissingInputs = false;
                     DisconnectBlockAndInputs(state, tx);
