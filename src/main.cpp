@@ -3294,6 +3294,7 @@ bool ProcessBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDiskBl
     if(!fLiteMode){
         if (!fImporting && !fReindex && chainActive.Height() > Checkpoints::GetTotalBlocksEstimate()){
             darkSendPool.NewBlock();
+            masternodePayments.ProcessBlock(GetHeight()+10);
         }
     }
 

@@ -1364,8 +1364,6 @@ void CDarkSendPool::NewBlock()
 
     darkSendPool.CheckTimeout();
 
-    masternodePayments.ProcessBlock(chainActive.Tip()->nHeight+10);
-
     if(!fEnableDarksend) return;
 
     if(!fMasterNode){
