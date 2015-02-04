@@ -720,9 +720,6 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
     if(!enabled) return false;
     CMasternodePaymentWinner winner;
 
-    uint256 blockHash = 0;
-    if(!darkSendPool.GetBlockHash(blockHash, nBlockHeight-576)) return false;
-
     std::vector<CTxIn> vecLastPayments;
     int c = 0;
     BOOST_REVERSE_FOREACH(CMasternodePaymentWinner& winner, vWinning){
