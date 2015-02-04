@@ -1873,7 +1873,11 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, int64_t> >& vecSend,
                     dPriority += (double)nCredit * (pcoin.first->GetDepthInMainChain()+1);
                 }
 
+                // IX has a minimum fee of 0.01 DRK
+                if(useIX && nFeeRet < COIN*0.01 ) nFeeRet = COIN*0.01;
+
                 int64_t nChange = nValueIn - nValue - nFeeRet;
+
                 // The following if statement should be removed once enough miners
                 // have upgraded to the 0.9 GetMinFee() rules. Until then, this avoids
                 // creating free transactions that have change outputs less than
