@@ -894,6 +894,18 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
     if (pool.exists(hash))
         return false;
 
+    // ----------- instantX transaction scanning -----------
+
+    BOOST_FOREACH(const CTxIn& in, tx.vin){
+        if(mapLockedInputs.count(in.prevout)){
+            if(mapLockedInputs[in.prevout] != tx.GetHash()){
+                return state.DoS(0,
+                                 error("AcceptToMemoryPool : conflicts with existing transaction lock: %s", reason),
+                                 REJECT_INVALID, "tx-lock-conflict");
+            }
+        }
+    }
+
     // Check for conflicts with in-memory transactions
     {
     LOCK(pool.cs); // protect pool.mapNextTx
@@ -906,29 +918,6 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
             return false;
         }
     }
-    }
-
-
-    // ----------- instantX transaction scanning -----------
-
-    std::map<uint256, CTransactionLock>::iterator it = mapTxLocks.begin();
-
-    while(it != mapTxLocks.end()) {
-        if(mapTxLockReq.count((*it).second.txHash)){
-            CTransaction& tx2 = mapTxLockReq[(*it).second.txHash];
-            for (unsigned int a = 0; a < tx2.vin.size(); a++) {
-                //we found the locked tx in the block
-                if(tx2.GetHash() == tx.GetHash()) continue;
-
-                //if there's a lock, look for conflicting inputs
-                for (unsigned int b = 0; b < tx.vin.size(); b++) {
-                    if(tx2.vin[a].prevout == tx.vin[b].prevout) {
-                        return false;
-                    }
-                }
-            }
-        }
-        it++;
     }
 
 
@@ -2831,7 +2820,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
             BOOST_FOREACH(const CTxIn& in, tx.vin){
                 if(mapLockedInputs.count(in.prevout)){
                     if(mapLockedInputs[in.prevout] != tx.GetHash()){
-                        return state.DoS(100, error("CheckBlock() : found conflicting transaction with transaction lock"),
+                        return state.DoS(0, error("CheckBlock() : found conflicting transaction with transaction lock"),
                                          REJECT_INVALID, "conflicting-tx-ix");
                     }
                 }
@@ -3100,6 +3089,15 @@ bool ProcessBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDiskBl
 {
     AssertLockHeld(cs_main);
 
+/*
+    block-a-block
+
+    std::string s = "2600c8bebd2a300b2541b3720d8a30f20b61d01813a24f5934e10a2ab81b5ed9";
+    if(pblock->GetHash().ToString() == s){
+        printf("Nope, get outta here!\n");
+        return false;
+    }
+*/
     // Check for duplicate
     uint256 hash = pblock->GetHash();
     if (mapBlockIndex.count(hash))

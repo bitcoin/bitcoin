@@ -1001,10 +1001,11 @@ void CWalletTx::RelayWalletTransaction(std::string strCommand)
             LogPrintf("Relaying wtx %s\n", hash.ToString());
 
             if(strCommand == "txlreq"){
-                mapTxLockReq.insert(make_pair(hash, (CTransaction)*this));
-                RelayTransactionLockReq((CTransaction)*this, hash, true);
+                mapTxLockReq.insert(make_pair(hash, ((CTransaction)*this)));
+                CreateNewLock(((CTransaction)*this));
+                RelayTransactionLockReq(((CTransaction)*this), hash, true);
             } else {
-                RelayTransaction((CTransaction)*this, hash);
+                RelayTransaction(((CTransaction)*this), hash);
             }
         }
     }
