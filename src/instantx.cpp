@@ -115,7 +115,6 @@ void ProcessMessageInstantX(CNode* pfrom, std::string& strCommand, CDataStream& 
                     if (AcceptToMemoryPool(mempool, state, tx, true, &fMissingInputs))
                     {
                         LogPrintf("ProcessMessageInstantX::txlreq - Transaction Lock Request : accepted (resolved) %s\n",
-                            pfrom->addr.ToString().c_str(), pfrom->cleanSubVer.c_str(),
                             tx.GetHash().ToString().c_str()
                         );
                     } else {
@@ -157,7 +156,7 @@ void ProcessMessageInstantX(CNode* pfrom, std::string& strCommand, CDataStream& 
 
                 if(mapUnknownVotes[ctx.vinMasternode.prevout.hash] > GetTime() &&
                     mapUnknownVotes[ctx.vinMasternode.prevout.hash] - GetAverageVoteTime() > 60*10){
-                        LogPrintf("ProcessMessageInstantX::txlreq - masternode is spamming transaction votes: %s %s : rejected %s\n",
+                        LogPrintf("ProcessMessageInstantX::txlreq - masternode is spamming transaction votes: %s %s\n",
                             ctx.vinMasternode.ToString().c_str(),
                             ctx.txHash.ToString().c_str()
                         );
