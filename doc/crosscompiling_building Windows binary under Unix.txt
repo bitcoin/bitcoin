@@ -373,3 +373,14 @@ make -j n -f Makefile.Release  (вместо n количество ядер в�
 Во время линковки будут выдаваться подобные сообщения:
 libboost_thread_win32-mt.a(thread.o): duplicate section `.rdata$_ZTVN5boost16exception_detail10clone_implINS0_19error_info_injectorINS_9gregorian9bad_monthEEEEE[__ZTVN5boost16exception_detail10clone_implINS0_19error_info_injectorINS_9gregorian9bad_monthEEEEE]' has different size
 Игнорируйте их. На работоспособность программы это никак не влияет 
+
+Если вы хотите уменьшить размер бинарных файлов, то
+1) Перейдите на сайт http://upx.sourceforge.net/#downloadupx
+2) Скачайте программу в соответсвии с вашей системой
+3) Распакуйте программу в папку с бинарными Novacoin файлами.
+4) Введите в терминале
+./upx -9 novacoind.exe
+затем
+./upx -9 novacoin-qt.exe
+
+И ваши novacoind и novacoin-qt станут меньше ~ в 3 раза.
