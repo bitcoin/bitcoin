@@ -1108,7 +1108,7 @@ Kiểu: %3
     <message>
         <location filename="../coincontroldialog.cpp" line="725"/>
         <source>(change)</source>
-        <translation type="unfinished"/>
+        <translation>(phần trả lại)</translation>
     </message>
 </context>
 <context>
@@ -4735,7 +4735,7 @@ Nếu tệp không tồn tại, tạo nó với quyền tệp owner-readable-onl
     <message>
         <location filename="../bitcoinstrings.cpp" line="271"/>
         <source>Run a thread to flush wallet periodically (default: 1)</source>
-        <translation type="unfinished"/>
+        <translation>Chạy một luồng để làm sạch ví một cách thường xuyên (ngầm định: 1)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="272"/>
@@ -5025,7 +5025,7 @@ Nếu tệp không tồn tại, tạo nó với quyền tệp owner-readable-onl
     <message>
         <location filename="../bitcoinstrings.cpp" line="333"/>
         <source>Zapping all transactions from wallet...</source>
-        <translation type="unfinished"/>
+        <translation>Dọn sạch tất cả các giao dịch khỏi ví...</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="334"/>

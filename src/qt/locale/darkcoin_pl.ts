@@ -645,7 +645,7 @@ Ten produkt zawiera oprogramowanie opracowane przez Projekt OpenSSL do użycia w
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="638"/>
         <source>%n active connection(s) to Darkcoin network</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation><numerusform>%n aktywne połączenie do sieci Darkcoin</numerusform><numerusform>%n aktywne połączenia do sieci Darkcoin</numerusform><numerusform>%n aktywnych połączeń do sieci Darkcoin</numerusform></translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="650"/>
@@ -680,18 +680,18 @@ Ten produkt zawiera oprogramowanie opracowane przez Projekt OpenSSL do użycia w
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="696"/>
         <source>%n hour(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation><numerusform>%n godzina</numerusform><numerusform>%n godziny</numerusform><numerusform>%n godzina(y)</numerusform></translation>
     </message>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="700"/>
         <source>%n day(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation><numerusform>%n dzień</numerusform><numerusform>%n dni</numerusform><numerusform>%n dzień(dni)</numerusform></translation>
     </message>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="704"/>
         <location filename="../bitcoingui.cpp" line="710"/>
         <source>%n week(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation><numerusform>%n tydzień</numerusform><numerusform>%n tygodnie</numerusform><numerusform>%n tydzień(tygodnie)</numerusform></translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="710"/>
@@ -701,7 +701,7 @@ Ten produkt zawiera oprogramowanie opracowane przez Projekt OpenSSL do użycia w
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="710"/>
         <source>%n year(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation><numerusform>%n rok</numerusform><numerusform>%n lat</numerusform><numerusform>%n rok(lata)</numerusform></translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="714"/>
@@ -3161,7 +3161,7 @@ Adres: %4
         <location filename="../forms/signverifymessagedialog.ui" line="237"/>
         <location filename="../forms/ui_signverifymessagedialog.h" line="316"/>
         <source>Enter the signing address, message (ensure you copy line breaks, spaces, tabs, etc. exactly) and signature below to verify the message. Be careful not to read more into the signature than what is in the signed message itself, to avoid being tricked by a man-in-the-middle attack.</source>
-        <translation>Wpisz adres podpisującu, podaj wiadomość (upewnij się, że dokładnie skopiujesz wszystkie zakończenia linii, spacje, tabulacje itp.) oraz podpis poniżej by sprawdzić wiadomość. Uważaj by nie dodać więcej do podpisu niż do samej podpisywanej wiadomości by uniknąć ataku man-in-the-middle (człowiek pośrodku)</translation>
+        <translation>Wpisz adres podpisujący, podaj wiadomość (upewnij się, że dokładnie skopiujesz wszystkie zakończenia linii, spacje, tabulacje itp.) oraz podpis poniżej by sprawdzić wiadomość. Uważaj by nie dodać więcej do podpisu niż do samej podpisywanej wiadomości by uniknąć ataku man-in-the-middle (człowiek pośrodku)</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="258"/>
@@ -3300,7 +3300,7 @@ Adres: %4
     <message numerus="yes">
         <location filename="../transactiondesc.cpp" line="28"/>
         <source>Open for %n more block(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation><numerusform>Otwórz na %n kolejny blok</numerusform><numerusform>Otwórz na %n kolejnych bloków</numerusform><numerusform>Otwórz na %n kolejnych blok(ów)</numerusform></translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="30"/>
@@ -3340,7 +3340,7 @@ Adres: %4
     <message numerus="yes">
         <location filename="../transactiondesc.cpp" line="66"/>
         <source>, broadcast through %n node(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation><numerusform>, transmituj przez %n węzeł</numerusform><numerusform>, transmituj przez %n węzłów</numerusform><numerusform>, transmituj przez %n węzeł(ów)</numerusform></translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="70"/>
@@ -3398,7 +3398,7 @@ Adres: %4
     <message numerus="yes">
         <location filename="../transactiondesc.cpp" line="142"/>
         <source>matures in %n more block(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation><numerusform>dojrzałe w %n kolejnym bloku</numerusform><numerusform>dojrzałe w %n kolejnych bloków</numerusform><numerusform>dojrzałe w %n kolejnych blok(ów)</numerusform></translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="144"/>
@@ -3520,7 +3520,7 @@ Adres: %4
     <message numerus="yes">
         <location filename="../transactiontablemodel.cpp" line="287"/>
         <source>Open for %n more block(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation><numerusform>Otwórz na %n kolejny blok</numerusform><numerusform>Otwórz na %n kolejnych bloków</numerusform><numerusform>Otwórz na %n kolejny(ch) blok(ów)</numerusform></translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="290"/>
@@ -3990,37 +3990,37 @@ Zaleca się również aby ustawić alarm powiadomień tzw. alertnotify, aby dać
     <message>
         <location filename="../bitcoinstrings.cpp" line="77"/>
         <source>Fees smaller than this are considered zero fee (for transaction creation) (default:</source>
-        <translation type="unfinished"/>
+        <translation>Opłaty mniejsze niż ta, są uważane są za równoznaczne z brakiem opłat (dla przeprowadzenia transakcji) (domyślnie:</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="80"/>
         <source>Flush database activity from memory pool to disk log every &lt;n&gt; megabytes (default: 100)</source>
-        <translation type="unfinished"/>
+        <translation>Zrzuć zapisy aktywności bazy danych z pamięci na dysk co &lt;n&gt; megabajtów (domyślnie: 100)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="83"/>
         <source>How thorough the block verification of -checkblocks is (0-4, default: 3)</source>
-        <translation type="unfinished"/>
+        <translation>Jak szczegółowa jest weryfikacja bloków (0-4, domyślnie: 3)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="85"/>
         <source>In this mode -genproclimit controls how many blocks are generated immediately.</source>
-        <translation type="unfinished"/>
+        <translation>W tym trybie -genproclimit kontroluje ile bloków jest generowanych natychmiastowo.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="88"/>
         <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 9998 or testnet: 19998)</source>
-        <translation type="unfinished"/>
+        <translation>Prowadź nasłuch połączeń JSON-RPC na &lt;porcie&gt; (domyślnie: 9998 lub testnet: 19998)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="92"/>
         <source>Number of seconds to keep misbehaving peers from reconnecting (default: 86400)</source>
-        <translation type="unfinished"/>
+        <translation>Ilość czasu liczonego w sekundach jaki musi upłynąć zanim wadliwy peer znowu może spróbować nawiązać połączenie (domyślnie 86400)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="95"/>
         <source>Output debugging information (default: 0, supplying &lt;category&gt; is optional)</source>
-        <translation type="unfinished"/>
+        <translation>.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="106"/>
@@ -4045,12 +4045,12 @@ Zaleca się również aby ustawić alarm powiadomień tzw. alertnotify, aby dać
     <message>
         <location filename="../bitcoinstrings.cpp" line="120"/>
         <source>Unable to bind to %s on this computer. Darkcoin Core is probably already running.</source>
-        <translation type="unfinished"/>
+        <translation>Niezdolny do związania z %s na tym komputerze. Prawdopodobnie Darkcoin jest już uruchomiony. </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="128"/>
         <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: -proxy)</source>
-        <translation type="unfinished"/>
+        <translation>Użyj osobnego proxy SOCK5 aby połączyć się z peerami przez sieć Tor (domyślnie: -proxy)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="131"/>
@@ -4070,12 +4070,12 @@ Zaleca się również aby ustawić alarm powiadomień tzw. alertnotify, aby dać
     <message>
         <location filename="../bitcoinstrings.cpp" line="140"/>
         <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
-        <translation type="unfinished"/>
+        <translation>dadf</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="143"/>
         <source>Warning: error reading wallet.dat! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
-        <translation type="unfinished"/>
+        <translation>Uwaga: wystąpił błąd podczas odczytu pliku wallet.dat! Wszystkie klucze są odczytywane poprawnie ale dane transakcji lub wpis w bazie adresów jest niepoprawny lub nie istnieje. </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="146"/>
@@ -4107,7 +4107,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="161"/>
         <source>Accept command line and JSON-RPC commands</source>
-        <translation type="unfinished"/>
+        <translation>Zaakceptuj linie poleceń oraz polecenia JSON-RPC </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="162"/>
@@ -4117,7 +4117,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="163"/>
         <source>Add a node to connect to and attempt to keep the connection open</source>
-        <translation type="unfinished"/>
+        <translation>Dodaj węzeł do połączenia się oraz spróbuj utrzymać połączenie otwarte</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="164"/>
@@ -4127,12 +4127,12 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="165"/>
         <source>Allow JSON-RPC connections from specified IP address</source>
-        <translation type="unfinished"/>
+        <translation>Pozwól na połączenia JSON-RPC  z określonego adresu IP</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="167"/>
         <source>Attempt to recover private keys from a corrupt wallet.dat</source>
-        <translation type="unfinished"/>
+        <translation>Spróbuj odzyskać prywatne klucze z uszkodzonego wallet.dat</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="181"/>
@@ -4147,52 +4147,52 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="168"/>
         <source>Block creation options:</source>
-        <translation type="unfinished"/>
+        <translation>Opcje tworzenia bloku</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="42"/>
         <source>Disable all Masternode and Darksend related functionality (0-1, default: 0)</source>
-        <translation type="unfinished"/>
+        <translation>Wyłącz wszystkie funkcje związane z Masternode i Darksend</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="44"/>
         <source>Enable instantx, show confirmations for locked transactions (bool, default: true)</source>
-        <translation type="unfinished"/>
+        <translation>Włącz instantx, pokaż potwierdzenia dla zamkniętych transakcji (bool, domyślnie: true)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="47"/>
         <source>Enable use of automated darksend for funds stored in this wallet (0-1, default: 0)</source>
-        <translation type="unfinished"/>
+        <translation>Włącz możliwość automatyzacji Darksend dla środków zgromadzonych w  tym portfelu (0-1, domyślnie: 0)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="57"/>
         <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
-        <translation type="unfinished"/>
+        <translation>Błąd: Nie powiodło się nasłuchiwanie połączeń przychodzących (nasłuch zwrócił błąd %s)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="66"/>
         <source>Error: Wallet unlocked for anonymization only, unable to create transaction.</source>
-        <translation type="unfinished"/>
+        <translation>Błąd: Portfel jest odblokowany tylko dla celu anonimizacji, nie możliwe jest przeprowadzenie transakcji.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="90"/>
         <source>Name to construct url for KeePass entry that stores the wallet passphrase</source>
-        <translation type="unfinished"/>
+        <translation>Nazwa służąca do stworzenia linka do KeePass w którym trzymane jest hasło portfela</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="97"/>
         <source>Provide liquidity to Darksend by infrequently mixing coins on a continual basis (0-100, default: 0, 1=very frequent, high fees, 100=very infrequent, low fees)</source>
-        <translation type="unfinished"/>
+        <translation>Dostarcz Darksend płynności przez rzadkie ale ciągłe mieszanie monet (0-100, domyślnie: 0, 1=bardzo często, wysokie opłaty, 100=bardzo rzadko, małe opłaty)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="101"/>
         <source>Query for peer addresses via DNS lookup, if low on addresses (default: 1 unless -connect)</source>
-        <translation type="unfinished"/>
+        <translation>Jeśli pula adresów jest niska, pytaj o adresy peer przez podgląd DNS (domyślnie: 1 chyba że -połącz)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="104"/>
         <source>Set external address:port to get to this masternode (example: address:port)</source>
-        <translation type="unfinished"/>
+        <translation>Ustaw zewnętrzny adres:port aby połączyć się z tym masternodem (na przykład: adres:port)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="114"/>
@@ -4212,17 +4212,17 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="155"/>
         <source>You must specify a masternodeprivkey in the configuration. Please see documentation for help.</source>
-        <translation type="unfinished"/>
+        <translation>Musisz sprecyzować masternodeprivkey w konfiguracji. Proszę przeglądnij dokumentacje w celu pomocy.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="166"/>
         <source>Always query for peer addresses via DNS lookup (default: 0)</source>
-        <translation type="unfinished"/>
+        <translation>Zawsze wysyłaj zapytanie o adres peera przez podgląd DNS (domyślnie: 0)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="169"/>
         <source>Cannot downgrade wallet</source>
-        <translation type="unfinished"/>
+        <translation>Nie można obniżyć wersji portfela</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="170"/>
@@ -4237,12 +4237,12 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="172"/>
         <source>Cannot write default address</source>
-        <translation type="unfinished"/>
+        <translation>Nie można zapisać domyślnych adresów</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="173"/>
         <source>Clear list of wallet transactions (diagnostic tool; implies -rescan)</source>
-        <translation type="unfinished"/>
+        <translation>Wyczyść listę transakcji w portfelu (opcja diagnostyczna; oznacza -rescan)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="174"/>
@@ -4257,17 +4257,17 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="176"/>
         <source>Connect to JSON-RPC on &lt;port&gt; (default: 9998 or testnet: 19998)</source>
-        <translation type="unfinished"/>
+        <translation>Podłącz do JSON-RPC na porcie &lt;port&gt; (domyślny: 9998 lub sieć testowa: 19998)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="177"/>
         <source>Connect to KeePassHttp on port &lt;port&gt; (default: 19455)</source>
-        <translation type="unfinished"/>
+        <translation>Podłącz do KeePassHttp na porcie &lt;port&gt; (domyślny: 19455)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="178"/>
         <source>Connect to a node to retrieve peer addresses, and disconnect</source>
-        <translation type="unfinished"/>
+        <translation>Podłącz do węzła aby odzyskać adresy peerów, a potem odłącz</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="179"/>
@@ -4287,22 +4287,22 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="184"/>
         <source>Debugging/Testing options:</source>
-        <translation type="unfinished"/>
+        <translation>Opcje debugowania/testowania:</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="185"/>
         <source>Disable safemode, override a real safe mode event (default: 0)</source>
-        <translation type="unfinished"/>
+        <translation>Wyłącz tryb awaryjny, nadpisz przawdziwy tryb awaryjny (domyślny:0)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="186"/>
         <source>Discover own IP address (default: 1 when listening and no -externalip)</source>
-        <translation type="unfinished"/>
+        <translation>Wykryj własny adres IP (domyślny:1 kiedy nasłuchuje oraz nie ma -externalip)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="187"/>
         <source>Do not load the wallet and disable wallet RPC calls</source>
-        <translation type="unfinished"/>
+        <translation>Nie wczytuj portfela oraz wyłącz połączenia RPC</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="188"/>
@@ -4317,17 +4317,17 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="190"/>
         <source>Enable the client to act as a masternode (0-1, default: 0)</source>
-        <translation type="unfinished"/>
+        <translation>Upoważnia klienta aby działał jako masternode (0-1, domyślny: 0)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="191"/>
         <source>Error initializing block database</source>
-        <translation type="unfinished"/>
+        <translation>Błąd podczas inicjowania bazy dancyh bloku</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="192"/>
         <source>Error initializing wallet database environment %s!</source>
-        <translation type="unfinished"/>
+        <translation>Błąd podczas inicjowania środowiska bazy danych portfela</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="193"/>
@@ -4372,12 +4372,12 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="201"/>
         <source>Error: Wallet locked, unable to create transaction!</source>
-        <translation>Błąd: Portfel zamknięty, niemożliwym jest stworzenie transakcji!</translation>
+        <translation>Błąd: Portfel zamknięty, stworzenie transakcji jest niemożliwe!</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="202"/>
         <source>Error: You already have pending entries in the Darksend pool</source>
-        <translation type="unfinished"/>
+        <translation>Błąd: Już masz oczekujące wejścia do puli Darksend</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="203"/>
@@ -4427,42 +4427,42 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="212"/>
         <source>Failed to write to coin database</source>
-        <translation type="unfinished"/>
+        <translation>Niepowodzenie przy zapisie do bazy danych monet</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="213"/>
         <source>Failed to write transaction index</source>
-        <translation type="unfinished"/>
+        <translation>NIepowodzenie przy zapisie indeksu transakcji</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="214"/>
         <source>Failed to write undo data</source>
-        <translation type="unfinished"/>
+        <translation>NIepowodzenie przy zapisie cofniętych danych</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="215"/>
         <source>Fee per kB to add to transactions you send</source>
-        <translation type="unfinished"/>
+        <translation>Opłata za kB do dodania do transakcji, którą wysyłasz</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="216"/>
         <source>Fees smaller than this are considered zero fee (for relaying) (default:</source>
-        <translation type="unfinished"/>
+        <translation>Opłaty mniejsze niż te, są uważane za zerowe opłaty (dla przekazywania) (domyślny:</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="263"/>
         <source>RPC SSL options: (see the Darkcoin Wiki for SSL setup instructions)</source>
-        <translation type="unfinished"/>
+        <translation>Opcje RPC SSL: (zobacz Wiki Darkcoina, aby uzyskać instrukcje konfiguracji SSL)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="273"/>
         <source>SSL options: (see the Darkcoin Wiki for SSL setup instructions)</source>
-        <translation type="unfinished"/>
+        <translation>Opcje SSL: (zobacz Wiki Darkcoina, aby uzyskać instrukcje konfiguracji SSL)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="308"/>
         <source>Unable to bind to %s on this computer (bind returned error %s)</source>
-        <translation type="unfinished"/>
+        <translation>Nie udało się powiązać do %s na tym komputerze (powiązanie zwróciło błąd %s)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="309"/>

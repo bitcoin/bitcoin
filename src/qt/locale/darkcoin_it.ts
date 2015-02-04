@@ -38,7 +38,7 @@ Questo prodotto include software sviluppato dal progetto OpenSSL per l&apos;uso 
     <message>
         <location filename="../utilitydialog.cpp" line="30"/>
         <source>The Bitcoin Core developers</source>
-        <translation>Gli sviluppatori del Bitcoin Core</translation>
+        <translation>Gli sviluppatori di Bitcoin Core</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="31"/>
@@ -117,12 +117,12 @@ Questo prodotto include software sviluppato dal progetto OpenSSL per l&apos;uso 
     <message>
         <location filename="../addressbookpage.cpp" line="45"/>
         <source>Choose the address to send coins to</source>
-        <translation>Scegli l&apos;indirizzo a cui inviare bitcoin</translation>
+        <translation>Scegli l&apos;indirizzo a cui inviare i darkcoin</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="46"/>
         <source>Choose the address to receive coins with</source>
-        <translation>Scegli l&apos;indirizzo con cui ricevere bitcoin</translation>
+        <translation>Scegli l&apos;indirizzo con cui ricevere darkcoin</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="51"/>
@@ -142,7 +142,7 @@ Questo prodotto include software sviluppato dal progetto OpenSSL per l&apos;uso 
     <message>
         <location filename="../addressbookpage.cpp" line="65"/>
         <source>These are your Darkcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>Questi sono i tuoi indirizzi Darkcoin per inviare i pagamenti. Controlla sempre l&apos;ammontare e l&apos;indirizzo destinatario prima di inviare le monete.</translation>
+        <translation>Questi sono i tuoi indirizzi Darkcoin per inviare i pagamenti. Controlla sempre l&apos;ammontare e l&apos;indirizzo destinatario prima di inviare i darkcoin.</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="69"/>
@@ -4133,7 +4133,7 @@ Se il file non esiste, crealo assegnando i permessi di lettura solamente al prop
     <message>
         <location filename="../bitcoinstrings.cpp" line="181"/>
         <source>Darkcoin Core Daemon</source>
-        <translation type="unfinished"/>
+        <translation>Darkcoin Core Daemon</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="182"/>
@@ -4148,7 +4148,7 @@ Se il file non esiste, crealo assegnando i permessi di lettura solamente al prop
     <message>
         <location filename="../bitcoinstrings.cpp" line="42"/>
         <source>Disable all Masternode and Darksend related functionality (0-1, default: 0)</source>
-        <translation type="unfinished"/>
+        <translation>Disabilita tutti i Masternode e le funzioni relative a Darksend (0-1, default: 0)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="44"/>
@@ -4353,7 +4353,7 @@ Se il file non esiste, crealo assegnando i permessi di lettura solamente al prop
     <message>
         <location filename="../bitcoinstrings.cpp" line="198"/>
         <source>Error reading from database, shutting down.</source>
-        <translation type="unfinished"/>
+        <translation>Errore di lettura del database, spegnimento</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="199"/>
@@ -4453,7 +4453,7 @@ Se il file non esiste, crealo assegnando i permessi di lettura solamente al prop
     <message>
         <location filename="../bitcoinstrings.cpp" line="273"/>
         <source>SSL options: (see the Darkcoin Wiki for SSL setup instructions)</source>
-        <translation type="unfinished"/>
+        <translation>Opzioni SSL: (controlla la Wiki Darkcoin per configurare le istruzioni SSL)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="308"/>
@@ -4528,7 +4528,7 @@ Se il file non esiste, crealo assegnando i permessi di lettura solamente al prop
     <message>
         <location filename="../bitcoinstrings.cpp" line="228"/>
         <source>InstantX options:</source>
-        <translation type="unfinished"/>
+        <translation>Opzioni InstantX</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="229"/>
@@ -4755,7 +4755,7 @@ Se il file non esiste, crealo assegnando i permessi di lettura solamente al prop
     <message>
         <location filename="../bitcoinstrings.cpp" line="275"/>
         <source>Send command to Darkcoin Core</source>
-        <translation type="unfinished"/>
+        <translation>Invia comando a Darkcoin Core</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="276"/>
@@ -4800,7 +4800,7 @@ Se il file non esiste, crealo assegnando i permessi di lettura solamente al prop
     <message>
         <location filename="../bitcoinstrings.cpp" line="284"/>
         <source>Set the masternode private key</source>
-        <translation type="unfinished"/>
+        <translation>Configura la chiave privata del Masternode</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="285"/>
@@ -4835,7 +4835,7 @@ Se il file non esiste, crealo assegnando i permessi di lettura solamente al prop
     <message>
         <location filename="../bitcoinstrings.cpp" line="291"/>
         <source>Specify configuration file (default: darkcoin.conf)</source>
-        <translation type="unfinished"/>
+        <translation>Configurazioni specifiche file (default: darkcoin.conf)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="292"/>
@@ -4850,7 +4850,7 @@ Se il file non esiste, crealo assegnando i permessi di lettura solamente al prop
     <message>
         <location filename="../bitcoinstrings.cpp" line="294"/>
         <source>Specify masternode configuration file (default: masternode.conf)</source>
-        <translation type="unfinished"/>
+        <translation>Configurazioni specifiche dei file Masternode (default: masternode.conf)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="295"/>
@@ -4875,7 +4875,7 @@ Se il file non esiste, crealo assegnando i permessi di lettura solamente al prop
     <message>
         <location filename="../bitcoinstrings.cpp" line="299"/>
         <source>Start Darkcoin Core Daemon</source>
-        <translation type="unfinished"/>
+        <translation>Avvia il demone Darkcoin Core</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="300"/>

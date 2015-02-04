@@ -289,7 +289,7 @@ Aquest producte inclou programari desenvolupat pel projecte OpenSSL per a l&apos
     <message>
         <location filename="../askpassphrasedialog.cpp" line="113"/>
         <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR DARKCOINS&lt;/b&gt;!</source>
-        <translation type="unfinished"/>
+        <translation>Advertència: Si xifra seva cartera i perd la seva contrasenya, vostè &lt;b&gt; PERDRÀ TOTS ELS SEUS DARKCOINS &lt;/ b&gt;</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="113"/>
@@ -365,7 +365,7 @@ Aquest producte inclou programari desenvolupat pel projecte OpenSSL per a l&apos
     <message>
         <location filename="../bitcoingui.cpp" line="76"/>
         <source>Darkcoin Core</source>
-        <translation type="unfinished"/>
+        <translation>Darkcoin Core</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="85"/>
@@ -401,7 +401,7 @@ Aquest producte inclou programari desenvolupat pel projecte OpenSSL per a l&apos
     <message>
         <location filename="../bitcoingui.cpp" line="234"/>
         <source>Send coins to a Darkcoin address</source>
-        <translation type="unfinished"/>
+        <translation>Envia monedes a una adreça Darkcoin</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="240"/>
@@ -437,12 +437,12 @@ Aquest producte inclou programari desenvolupat pel projecte OpenSSL per a l&apos
         <location filename="../bitcoingui.cpp" line="270"/>
         <location filename="../bitcoingui.cpp" line="272"/>
         <source>&amp;About Darkcoin Core</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Sobre Darkcoin Core</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="273"/>
         <source>Show information about Darkcoin</source>
-        <translation type="unfinished"/>
+        <translation>Mostra informació sobre Darkcoin</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="276"/>
@@ -463,7 +463,7 @@ Aquest producte inclou programari desenvolupat pel projecte OpenSSL per a l&apos
     <message>
         <location filename="../bitcoingui.cpp" line="283"/>
         <source>Modify configuration options for Darkcoin</source>
-        <translation type="unfinished"/>
+        <translation>Modifica les opcions de configuració per Darkcoin</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="286"/>
@@ -509,7 +509,7 @@ Aquest producte inclou programari desenvolupat pel projecte OpenSSL per a l&apos
     <message>
         <location filename="../bitcoingui.cpp" line="298"/>
         <source>&amp;Unlock Wallet...</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Desbloqueja el moneder</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="299"/>
@@ -519,7 +519,7 @@ Aquest producte inclou programari desenvolupat pel projecte OpenSSL per a l&apos
     <message>
         <location filename="../bitcoingui.cpp" line="300"/>
         <source>&amp;Lock Wallet</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Bloqueja el moneder</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="301"/>
@@ -549,17 +549,17 @@ Aquest producte inclou programari desenvolupat pel projecte OpenSSL per a l&apos
     <message>
         <location filename="../bitcoingui.cpp" line="307"/>
         <source>Show diagnostic information</source>
-        <translation type="unfinished"/>
+        <translation>Mostra informació de diagnòstic</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="308"/>
         <source>&amp;Debug console</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Consola de depuració</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="309"/>
         <source>Open debugging console</source>
-        <translation type="unfinished"/>
+        <translation>Obre la consola de depuració</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="310"/>
@@ -624,7 +624,7 @@ Aquest producte inclou programari desenvolupat pel projecte OpenSSL per a l&apos
     <message>
         <location filename="../bitcoingui.cpp" line="385"/>
         <source>&amp;Tools</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Eines</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="391"/>
@@ -640,7 +640,7 @@ Aquest producte inclou programari desenvolupat pel projecte OpenSSL per a l&apos
         <location filename="../bitcoingui.cpp" line="489"/>
         <location filename="../bitcoingui.cpp" line="494"/>
         <source>Darkcoin client</source>
-        <translation type="unfinished"/>
+        <translation>Client de Darkcoin</translation>
     </message>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="638"/>
@@ -680,18 +680,18 @@ Aquest producte inclou programari desenvolupat pel projecte OpenSSL per a l&apos
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="696"/>
         <source>%n hour(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation><numerusform>%n hora()</numerusform><numerusform>%n hores()</numerusform></translation>
     </message>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="700"/>
         <source>%n day(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation><numerusform>%dia()</numerusform><numerusform>%dies()</numerusform></translation>
     </message>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="704"/>
         <location filename="../bitcoingui.cpp" line="710"/>
         <source>%n week(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation><numerusform>%n setmana()</numerusform><numerusform>%n setmanes()</numerusform></translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="710"/>
@@ -726,7 +726,7 @@ Aquest producte inclou programari desenvolupat pel projecte OpenSSL per a l&apos
     <message>
         <location filename="../bitcoingui.cpp" line="750"/>
         <source>Darkcoin</source>
-        <translation type="unfinished"/>
+        <translation>Darkcoin</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="764"/>
@@ -780,7 +780,7 @@ Address: %4
     <message>
         <location filename="../darkcoin.cpp" line="449"/>
         <source>A fatal error occurred. Darkcoin can no longer continue safely and will quit.</source>
-        <translation type="unfinished"/>
+        <translation>Ha tingut lloc un error fatal. Darkcoin no pot continuar executant-se de manera segura i es tancarà.</translation>
     </message>
 </context>
 <context>
@@ -881,7 +881,7 @@ Address: %4
         <location filename="../forms/coincontroldialog.ui" line="461"/>
         <location filename="../forms/ui_coincontroldialog.h" line="335"/>
         <source>Darksend Rounds</source>
-        <translation type="unfinished"/>
+        <translation>Rondes Darksend </translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="466"/>
@@ -1113,31 +1113,31 @@ Address: %4
         <location filename="../forms/darksendconfig.ui" line="14"/>
         <location filename="../forms/ui_darksendconfig.h" line="96"/>
         <source>Configure Darksend+</source>
-        <translation type="unfinished"/>
+        <translation>Configura Darksend+</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="26"/>
         <location filename="../forms/ui_darksendconfig.h" line="97"/>
         <source>Basic Privacy</source>
-        <translation type="unfinished"/>
+        <translation>Privacitat bàsica</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="39"/>
         <location filename="../forms/ui_darksendconfig.h" line="98"/>
         <source>High Privacy</source>
-        <translation type="unfinished"/>
+        <translation>Alta privacitat</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="52"/>
         <location filename="../forms/ui_darksendconfig.h" line="99"/>
         <source>Maximum Privacy</source>
-        <translation type="unfinished"/>
+        <translation>Privacitat màxima</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="65"/>
         <location filename="../forms/ui_darksendconfig.h" line="100"/>
         <source>Please select an privacy level. </source>
-        <translation type="unfinished"/>
+        <translation>Si us plau, seleccioneu un nivell de privacitat.</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="78"/>
@@ -1316,7 +1316,7 @@ Address: %4
     <message>
         <location filename="../utilitydialog.cpp" line="69"/>
         <source>Darkcoin Core</source>
-        <translation type="unfinished"/>
+        <translation>Darkcoin Core</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="69"/>
@@ -1405,7 +1405,7 @@ Address: %4
     <message>
         <location filename="../intro.cpp" line="185"/>
         <source>Darkcoin</source>
-        <translation type="unfinished"/>
+        <translation>Darkcoin</translation>
     </message>
     <message>
         <location filename="../intro.cpp" line="186"/>
@@ -2100,7 +2100,7 @@ Address: %4
         <location filename="../darkcoin.cpp" line="539"/>
         <location filename="../darkcoin.cpp" line="552"/>
         <source>Darkcoin</source>
-        <translation type="unfinished"/>
+        <translation>Darkcoin</translation>
     </message>
     <message>
         <location filename="../darkcoin.cpp" line="526"/>
@@ -3265,7 +3265,7 @@ Address: %4
     <message>
         <location filename="../splashscreen.cpp" line="33"/>
         <source>Darkcoin Core</source>
-        <translation type="unfinished"/>
+        <translation>Darkcoin Core</translation>
     </message>
     <message>
         <location filename="../splashscreen.cpp" line="35"/>

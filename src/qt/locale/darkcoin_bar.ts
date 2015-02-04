@@ -808,7 +808,7 @@ Wird zugmachd, wails bessa is.</translation>
         <location filename="../forms/coincontroldialog.ui" line="14"/>
         <location filename="../forms/ui_coincontroldialog.h" line="319"/>
         <source>Coin Control Address Selection</source>
-        <translation type="unfinished"/>
+        <translation>ÜbalebensRADAH</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="48"/>
@@ -1367,7 +1367,7 @@ Wird zugmachd, wails bessa is.</translation>
     <message>
         <location filename="../utilitydialog.cpp" line="80"/>
         <source>Set SSL root certificates for payment request (default: -system-)</source>
-        <translation type="unfinished"/>
+        <translation>S Es Es El wurzl zerdifikaat setzn (kört: -system-)</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="81"/>
@@ -1454,7 +1454,7 @@ Zam sin des mindeschdns %1GB Dadn. Und des wi´d grössa weadn. Gwies.</translat
         <location filename="../forms/openuridialog.ui" line="20"/>
         <location filename="../forms/ui_openuridialog.h" line="94"/>
         <source>Open payment request from URI or file</source>
-        <translation type="unfinished"/>
+        <translation>An Zahlschain aufmaha (Uri oda fona Datai)</translation>
     </message>
     <message>
         <location filename="../forms/openuridialog.ui" line="29"/>
@@ -1466,12 +1466,12 @@ Zam sin des mindeschdns %1GB Dadn. Und des wi´d grössa weadn. Gwies.</translat
         <location filename="../forms/openuridialog.ui" line="40"/>
         <location filename="../forms/ui_openuridialog.h" line="97"/>
         <source>Select payment request file</source>
-        <translation type="unfinished"/>
+        <translation>Wälche Datai solsn sain?</translation>
     </message>
     <message>
         <location filename="../openuridialog.cpp" line="48"/>
         <source>Select payment request file to open</source>
-        <translation type="unfinished"/>
+        <translation>Du musd scho sang wo di Infos liag´ng...</translation>
     </message>
 </context>
 <context>
@@ -1516,19 +1516,22 @@ Zam sin des mindeschdns %1GB Dadn. Und des wi´d grössa weadn. Gwies.</translat
         <location filename="../forms/optionsdialog.ui" line="88"/>
         <location filename="../forms/ui_optionsdialog.h" line="539"/>
         <source>Number of script &amp;verification threads</source>
-        <translation type="unfinished"/>
+        <translation>Ähhhhhh.... (&quot;Number of script &amp;verification threads&quot;)</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="101"/>
         <location filename="../forms/ui_optionsdialog.h" line="541"/>
         <source>(0 = auto, &lt;0 = leave that many cores free)</source>
-        <translation type="unfinished"/>
+        <translation>(0 = auto, &lt;0 = so fui Kerndal solln ned verwendet wean)</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="138"/>
         <location filename="../forms/ui_optionsdialog.h" line="544"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This setting determines the amount of individual masternodes that an input will be anonymized through. More rounds of anonymization gives a higher degree of privacy, but also costs more in fees.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"/>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Mid der Ainschdellung schdellsch ain &lt;/br&gt;
+wie ofd mid daine Kapuuzzerl-Darkcoin des &lt;br&gt;[&quot;Kappuzzerl auf, umanandatauschn, noch a Kapuzzn auf, und so weiter&quot;-Schbiel]&lt;br&gt;
+gschbield wiad.&lt;br&gt;&lt;br&gt;Je öfdas desto bessa (!!!), kost aber au mea.
+ &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="141"/>
@@ -1552,7 +1555,7 @@ Zam sin des mindeschdns %1GB Dadn. Und des wi´d grössa weadn. Gwies.</translat
         <location filename="../forms/optionsdialog.ui" line="212"/>
         <location filename="../forms/ui_optionsdialog.h" line="549"/>
         <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly. Most transactions are 1 kB.</source>
-        <translation type="unfinished"/>
+        <translation>Des wasd draufleng wuisch (per kiloBizzla) da mid die Übawaisung schnella raus gehd. (Die maistn Übwawaisungen sin so 1kiloBizzla groass)</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="227"/>
@@ -1570,13 +1573,13 @@ Zam sin des mindeschdns %1GB Dadn. Und des wi´d grössa weadn. Gwies.</translat
         <location filename="../forms/optionsdialog.ui" line="277"/>
         <location filename="../forms/ui_optionsdialog.h" line="553"/>
         <source>Whether to show coin control features or not.</source>
-        <translation type="unfinished"/>
+        <translation>Ob di KOIN KONTROLL FIHDSCHAS azaigd wean solln oda ned</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="280"/>
         <location filename="../forms/ui_optionsdialog.h" line="555"/>
         <source>Enable coin &amp;control features</source>
-        <translation type="unfinished"/>
+        <translation>KOIN KONTROLL FIHDSCHAS anzeing/verstecka</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="287"/>
@@ -1618,7 +1621,7 @@ Zam sin des mindeschdns %1GB Dadn. Und des wi´d grössa weadn. Gwies.</translat
         <location filename="../forms/optionsdialog.ui" line="320"/>
         <location filename="../forms/ui_optionsdialog.h" line="568"/>
         <source>&amp;Connect through SOCKS proxy (default proxy):</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Verbindn durchn SOCKS Proxi (default proxy):</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="329"/>
@@ -1666,67 +1669,67 @@ Zam sin des mindeschdns %1GB Dadn. Und des wi´d grössa weadn. Gwies.</translat
         <location filename="../forms/optionsdialog.ui" line="448"/>
         <location filename="../forms/ui_optionsdialog.h" line="583"/>
         <source>Show only a tray icon after minimizing the window.</source>
-        <translation type="unfinished"/>
+        <translation>Zeigma blohs so a mini Buidl wens Fenschdal kloi gmachd wiad.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="451"/>
         <location filename="../forms/ui_optionsdialog.h" line="585"/>
         <source>&amp;Minimize to the tray instead of the taskbar</source>
-        <translation type="unfinished"/>
+        <translation>&amp;minimian zum Träi-Aicän und ned ind Taskbahr</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="458"/>
         <location filename="../forms/ui_optionsdialog.h" line="587"/>
         <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Quit in the menu.</source>
-        <translation type="unfinished"/>
+        <translation>Wenn ma aufs X druggd soll des Programmerl ned aufhöan sondern nur kloi wean. Wirklich zua geds ab dann nur no üba ´s ächde &quot;ZuaUndTschüss&quot;</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="461"/>
         <location filename="../forms/ui_optionsdialog.h" line="589"/>
         <source>M&amp;inimize on close</source>
-        <translation type="unfinished"/>
+        <translation>K&amp;loima´ha wennma aufs X druggd</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="482"/>
         <location filename="../forms/ui_optionsdialog.h" line="610"/>
         <source>&amp;Display</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Anzaign</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="490"/>
         <location filename="../forms/ui_optionsdialog.h" line="591"/>
         <source>User Interface &amp;language:</source>
-        <translation type="unfinished"/>
+        <translation>´D &amp;Schbroachn:</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="503"/>
         <location filename="../forms/ui_optionsdialog.h" line="593"/>
         <source>The user interface language can be set here. This setting will take effect after restarting Darkcoin.</source>
-        <translation type="unfinished"/>
+        <translation>Hia kansch aischdelln obsch des in am kschaidn Daidsch ham wouisch, oder lieba wi die Schdodara, oder glai englisch, oda was wus i....</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="514"/>
         <location filename="../forms/ui_optionsdialog.h" line="595"/>
         <source>&amp;Unit to show amounts in:</source>
-        <translation type="unfinished"/>
+        <translation>&amp;wi sollma dia di Darkcoins anzaign:</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="527"/>
         <location filename="../forms/ui_optionsdialog.h" line="597"/>
         <source>Choose the default subdivision unit to show in the interface and when sending coins.</source>
-        <translation type="unfinished"/>
+        <translation>Magsch liaba ganze Darkcoins seng, oder lieaba &quot;zehntl&quot; oder glai &quot;hundadstl&quot;....</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="536"/>
         <location filename="../forms/ui_optionsdialog.h" line="600"/>
         <source>Whether to show Darkcoin addresses in the transaction list or not.</source>
-        <translation type="unfinished"/>
+        <translation>Soll di Adressn in da Listn imma zaigd wean?</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="539"/>
         <location filename="../forms/ui_optionsdialog.h" line="602"/>
         <source>&amp;Display addresses in transaction list</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Zaigma die Adressn imma in da Listn</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="548"/>
@@ -1734,31 +1737,31 @@ Zam sin des mindeschdns %1GB Dadn. Und des wi´d grössa weadn. Gwies.</translat
         <location filename="../forms/ui_optionsdialog.h" line="604"/>
         <location filename="../forms/ui_optionsdialog.h" line="608"/>
         <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
-        <translation type="unfinished"/>
+        <translation>&quot;Gradlerinfo&quot; san infos di wo sonsd irgndwo im Nedz stehn, und helfa solln zu wissen wem die Adressn so körd und so. (also wenns einer verräät). Des san dan URLs disd im Mehnü findschd. Und stadd %s sigsd dann an Hasch.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="551"/>
         <location filename="../forms/ui_optionsdialog.h" line="606"/>
         <source>Third party transaction URLs</source>
-        <translation type="unfinished"/>
+        <translation>GraddlerInfo</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="592"/>
         <location filename="../forms/ui_optionsdialog.h" line="611"/>
         <source>Active command-line options that override above options:</source>
-        <translation type="unfinished"/>
+        <translation>Soll i da erlaubm dass du ois hia drüba aifach mid a komandlain-optschn übaschraibm darfsch:</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="635"/>
         <location filename="../forms/ui_optionsdialog.h" line="614"/>
         <source>Reset all client options to default.</source>
-        <translation type="unfinished"/>
+        <translation>Olle Ainschdellungen wida so zrück wi´s kört.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="638"/>
         <location filename="../forms/ui_optionsdialog.h" line="616"/>
         <source>&amp;Reset Options</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Ois zrucksetzn</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="699"/>
@@ -1785,28 +1788,28 @@ Zam sin des mindeschdns %1GB Dadn. Und des wi´d grössa weadn. Gwies.</translat
     <message>
         <location filename="../optionsdialog.cpp" line="222"/>
         <source>Confirm options reset</source>
-        <translation type="unfinished"/>
+        <translation>Bischda sicha dass ois zrucksetzn wuisch?</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="223"/>
         <location filename="../optionsdialog.cpp" line="253"/>
         <source>Client restart required to activate changes.</source>
-        <translation type="unfinished"/>
+        <translation>Des Programmerl muschd zuma´ha damid di Ändarung wirggd.</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="223"/>
         <source>Client will be shutdown, do you want to proceed?</source>
-        <translation type="unfinished"/>
+        <translation>S Programmerl wiad zuagmachd. Basd des?</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="257"/>
         <source>This change would require a client restart.</source>
-        <translation type="unfinished"/>
+        <translation>Damid des gülded mussd des Programmerl danach zuma´ha... (und dann wieda auf)</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="291"/>
         <source>The supplied proxy address is invalid.</source>
-        <translation type="unfinished"/>
+        <translation>Die Adressn vom Proxi is Quadsch.</translation>
     </message>
 </context>
 <context>
@@ -1815,7 +1818,7 @@ Zam sin des mindeschdns %1GB Dadn. Und des wi´d grössa weadn. Gwies.</translat
         <location filename="../forms/overviewpage.ui" line="14"/>
         <location filename="../forms/ui_overviewpage.h" line="456"/>
         <source>Form</source>
-        <translation type="unfinished"/>
+        <translation>Bladdl</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="57"/>
@@ -1829,7 +1832,9 @@ Zam sin des mindeschdns %1GB Dadn. Und des wi´d grössa weadn. Gwies.</translat
         <location filename="../forms/ui_overviewpage.h" line="459"/>
         <location filename="../forms/ui_overviewpage.h" line="503"/>
         <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Darkcoin network after a connection is established, but this process has not completed yet.</source>
-        <translation type="unfinished"/>
+        <translation>Ois was hia schdaad is a bissal ald.
+
+Aba, wards ab, des wird. Brauchd bloss a Minudn bis der Darkcon Koa mid di andan Koas gred hod, und si wida alle ainig sin....</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="108"/>
@@ -1841,7 +1846,7 @@ Zam sin des mindeschdns %1GB Dadn. Und des wi´d grössa weadn. Gwies.</translat
         <location filename="../forms/overviewpage.ui" line="124"/>
         <location filename="../forms/ui_overviewpage.h" line="463"/>
         <source>Your current spendable balance</source>
-        <translation type="unfinished"/>
+        <translation>Des is des wosd ausgebm kansch.</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="140"/>
@@ -1853,7 +1858,7 @@ Zam sin des mindeschdns %1GB Dadn. Und des wi´d grössa weadn. Gwies.</translat
         <location filename="../forms/overviewpage.ui" line="156"/>
         <location filename="../forms/ui_overviewpage.h" line="467"/>
         <source>Total of transactions that have yet to be confirmed, and do not yet count toward the spendable balance</source>
-        <translation type="unfinished"/>
+        <translation>Des was da aigntlich scho kört, aber wosd no ned ausgebm darfsch, weil si no ned alle ainig san....</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="172"/>
@@ -1865,7 +1870,7 @@ Zam sin des mindeschdns %1GB Dadn. Und des wi´d grössa weadn. Gwies.</translat
         <location filename="../forms/overviewpage.ui" line="185"/>
         <location filename="../forms/ui_overviewpage.h" line="471"/>
         <source>Mined balance that has not yet matured</source>
-        <translation type="unfinished"/>
+        <translation>Dai Kischdn-Prämie is no ned fraigebm.</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="201"/>
@@ -1964,13 +1969,13 @@ Zam sin des mindeschdns %1GB Dadn. Und des wi´d grössa weadn. Gwies.</translat
         <location filename="../forms/overviewpage.ui" line="897"/>
         <location filename="../forms/ui_overviewpage.h" line="494"/>
         <source>Try to manually submit a Darksend request.</source>
-        <translation type="unfinished"/>
+        <translation>Versuschsd hald per Hond a Darksend-Za-lungs-an-wai-sung zu ma´ha</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="900"/>
         <location filename="../forms/ui_overviewpage.h" line="496"/>
         <source>Try Mix</source>
-        <translation type="unfinished"/>
+        <translation>Hüttchenschbui veasuach</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="913"/>
@@ -2022,7 +2027,7 @@ Zam sin des mindeschdns %1GB Dadn. Und des wi´d grössa weadn. Gwies.</translat
         <location filename="../paymentserver.cpp" line="631"/>
         <location filename="../paymentserver.cpp" line="647"/>
         <source>Payment request error</source>
-        <translation type="unfinished"/>
+        <translation>Nix bast. (&quot;Payment request error&quot;)</translation>
     </message>
     <message>
         <location filename="../paymentserver.cpp" line="294"/>
@@ -2032,18 +2037,18 @@ Zam sin des mindeschdns %1GB Dadn. Und des wi´d grössa weadn. Gwies.</translat
     <message>
         <location filename="../paymentserver.cpp" line="352"/>
         <source>Net manager warning</source>
-        <translation type="unfinished"/>
+        <translation>Da Manager von di Nätz-Jungs sagd: &quot;Obachd&quot;</translation>
     </message>
     <message>
         <location filename="../paymentserver.cpp" line="353"/>
         <source>Your active proxy doesn&apos;t support SOCKS5, which is required for payment requests via proxy.</source>
-        <translation type="unfinished"/>
+        <translation>Där Proxi den da ausgsuchd hasd kann ga kaine SOCKS5 und die fünfa Sockn brauchtma damid des funktioniad.</translation>
     </message>
     <message>
         <location filename="../paymentserver.cpp" line="404"/>
         <location filename="../paymentserver.cpp" line="417"/>
         <source>URI handling</source>
-        <translation type="unfinished"/>
+        <translation>Umgang mim Uri</translation>
     </message>
     <message>
         <location filename="../paymentserver.cpp" line="405"/>
@@ -2078,12 +2083,12 @@ Zam sin des mindeschdns %1GB Dadn. Und des wi´d grössa weadn. Gwies.</translat
     <message>
         <location filename="../paymentserver.cpp" line="565"/>
         <source>Refund from %1</source>
-        <translation type="unfinished"/>
+        <translation>Zruckkriegd vom %1</translation>
     </message>
     <message>
         <location filename="../paymentserver.cpp" line="608"/>
         <source>Error communicating with %1: %2</source>
-        <translation type="unfinished"/>
+        <translation>Där verschded die ned: %1: %2</translation>
     </message>
     <message>
         <location filename="../paymentserver.cpp" line="632"/>
@@ -2093,7 +2098,7 @@ Zam sin des mindeschdns %1GB Dadn. Und des wi´d grössa weadn. Gwies.</translat
     <message>
         <location filename="../paymentserver.cpp" line="643"/>
         <source>Bad response from server %1</source>
-        <translation type="unfinished"/>
+        <translation>Bleds glaber sonsd nix kommt vom %1</translation>
     </message>
     <message>
         <location filename="../paymentserver.cpp" line="665"/>
@@ -2167,7 +2172,7 @@ Zam sin des mindeschdns %1GB Dadn. Und des wi´d grössa weadn. Gwies.</translat
     <message>
         <location filename="../receiverequestdialog.cpp" line="71"/>
         <source>PNG Image (*.png)</source>
-        <translation type="unfinished"/>
+        <translation>Pä Än Geh (*.png)</translation>
     </message>
 </context>
 <context>
@@ -2194,7 +2199,7 @@ Zam sin des mindeschdns %1GB Dadn. Und des wi´d grössa weadn. Gwies.</translat
         <location filename="../forms/rpcconsole.ui" line="46"/>
         <location filename="../forms/ui_rpcconsole.h" line="473"/>
         <source>General</source>
-        <translation type="unfinished"/>
+        <translation>Dschänärel (Ois)</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="53"/>
@@ -2230,13 +2235,13 @@ Zam sin des mindeschdns %1GB Dadn. Und des wi´d grössa weadn. Gwies.</translat
         <location filename="../forms/ui_rpcconsole.h" line="497"/>
         <location filename="../forms/ui_rpcconsole.h" line="499"/>
         <source>N/A</source>
-        <translation type="unfinished"/>
+        <translation>woasi ned</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="83"/>
         <location filename="../forms/ui_rpcconsole.h" line="477"/>
         <source>Number of connections</source>
-        <translation type="unfinished"/>
+        <translation>I sigg</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="90"/>
@@ -2248,13 +2253,13 @@ Zam sin des mindeschdns %1GB Dadn. Und des wi´d grössa weadn. Gwies.</translat
         <location filename="../forms/rpcconsole.ui" line="93"/>
         <location filename="../forms/ui_rpcconsole.h" line="481"/>
         <source>&amp;Open</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Aufma´ha</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="116"/>
         <location filename="../forms/ui_rpcconsole.h" line="482"/>
         <source>Startup time</source>
-        <translation type="unfinished"/>
+        <translation>Gschdarded um</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="129"/>
@@ -2284,7 +2289,7 @@ Zam sin des mindeschdns %1GB Dadn. Und des wi´d grössa weadn. Gwies.</translat
         <location filename="../forms/rpcconsole.ui" line="182"/>
         <location filename="../forms/ui_rpcconsole.h" line="488"/>
         <source>Build date</source>
-        <translation type="unfinished"/>
+        <translation>Gmachd woan is´s um/am</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="205"/>
@@ -2296,7 +2301,7 @@ Zam sin des mindeschdns %1GB Dadn. Und des wi´d grössa weadn. Gwies.</translat
         <location filename="../forms/rpcconsole.ui" line="305"/>
         <location filename="../forms/ui_rpcconsole.h" line="496"/>
         <source>Client version</source>
-        <translation type="unfinished"/>
+        <translation>Wersion vom Klaiänd</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="334"/>
@@ -2308,13 +2313,13 @@ Zam sin des mindeschdns %1GB Dadn. Und des wi´d grössa weadn. Gwies.</translat
         <location filename="../forms/rpcconsole.ui" line="349"/>
         <location filename="../forms/ui_rpcconsole.h" line="505"/>
         <source>&amp;Console</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Konsoln</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="398"/>
         <location filename="../forms/ui_rpcconsole.h" line="502"/>
         <source>Clear console</source>
-        <translation type="unfinished"/>
+        <translation>Konsoln saubama´ha</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="421"/>
@@ -2326,7 +2331,7 @@ Zam sin des mindeschdns %1GB Dadn. Und des wi´d grössa weadn. Gwies.</translat
         <location filename="../forms/rpcconsole.ui" line="473"/>
         <location filename="../forms/ui_rpcconsole.h" line="506"/>
         <source>&amp;Clear</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Saubama´ha</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="486"/>
@@ -2356,12 +2361,12 @@ Zam sin des mindeschdns %1GB Dadn. Und des wi´d grössa weadn. Gwies.</translat
     <message>
         <location filename="../rpcconsole.cpp" line="332"/>
         <source>Use up and down arrows to navigate history, and &lt;b&gt;Ctrl-L&lt;/b&gt; to clear screen.</source>
-        <translation type="unfinished"/>
+        <translation>Mid die Zaigerl-Tastn aufm Kihboad kansch hoch und nunda und mid &lt;b&gt;Ctrl-L&lt;/b&gt; ois saubama´ha.</translation>
     </message>
     <message>
         <location filename="../rpcconsole.cpp" line="333"/>
         <source>Type &lt;b&gt;help&lt;/b&gt; for an overview of available commands.</source>
-        <translation type="unfinished"/>
+        <translation>Wend &lt;b&gt;help&lt;/b&gt; schraibsch zaigida was ma so ma´ha kann hia.</translation>
     </message>
     <message>
         <location filename="../rpcconsole.cpp" line="472"/>
@@ -2439,7 +2444,7 @@ Zam sin des mindeschdns %1GB Dadn. Und des wi´d grössa weadn. Gwies.</translat
         <location filename="../forms/receivecoinsdialog.ui" line="81"/>
         <location filename="../forms/ui_receivecoinsdialog.h" line="269"/>
         <source>Use this form to request payments. All fields are &lt;b&gt;optional&lt;/b&gt;.</source>
-        <translation type="unfinished"/>
+        <translation>Mid dem Dingsl hia kansch a Zahlungsauffoadarung genarian. Alle Felda kansch ausfülln &lt;b&gt;musch aba ned&lt;/b&gt;.</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="91"/>
@@ -2650,7 +2655,7 @@ Zam sin des mindeschdns %1GB Dadn. Und des wi´d grössa weadn. Gwies.</translat
         <location filename="../forms/sendcoinsdialog.ui" line="90"/>
         <location filename="../forms/ui_sendcoinsdialog.h" line="516"/>
         <source>Coin Control Features</source>
-        <translation type="unfinished"/>
+        <translation>KOIN KONTROLL FIHDSCHAS</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="110"/>
@@ -2855,7 +2860,7 @@ Zam sin des mindeschdns %1GB Dadn. Und des wi´d grössa weadn. Gwies.</translat
     <message>
         <location filename="../sendcoinsdialog.cpp" line="276"/>
         <source>or</source>
-        <translation type="unfinished"/>
+        <translation>oda</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="278"/>
@@ -2870,7 +2875,7 @@ Zam sin des mindeschdns %1GB Dadn. Und des wi´d grössa weadn. Gwies.</translat
     <message>
         <location filename="../sendcoinsdialog.cpp" line="441"/>
         <source>Invalid payment address %1</source>
-        <translation type="unfinished"/>
+        <translation>Die Adressn di koi Darkcoin-Adressn is %1</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="488"/>
@@ -2880,17 +2885,17 @@ Zam sin des mindeschdns %1GB Dadn. Und des wi´d grössa weadn. Gwies.</translat
     <message>
         <location filename="../sendcoinsdialog.cpp" line="491"/>
         <source>The amount to pay must be larger than 0.</source>
-        <translation type="unfinished"/>
+        <translation>Also nix kamma ned zahln.....</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="494"/>
         <source>The amount exceeds your balance.</source>
-        <translation type="unfinished"/>
+        <translation>So fui Goid hasd du garned.</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="497"/>
         <source>The total exceeds your balance when the %1 transaction fee is included.</source>
-        <translation type="unfinished"/>
+        <translation>So fui Goid hasd du gar ned (Vergisss ned den Zoll von %1)</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="500"/>
@@ -2910,17 +2915,17 @@ Zam sin des mindeschdns %1GB Dadn. Und des wi´d grössa weadn. Gwies.</translat
     <message>
         <location filename="../sendcoinsdialog.cpp" line="512"/>
         <source>Error: The wallet was unlocked only to anonymize coins.</source>
-        <translation type="unfinished"/>
+        <translation>Fehla: Da Goidbaidl is nur zum Kapuzzn-ma´ha aufgmachd woan. Was anders is ned alaubdt.</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="625"/>
         <source>Warning: Invalid Darkcoin address</source>
-        <translation type="unfinished"/>
+        <translation>Obachd du Depp, des is koi Darkcoin-Adressn!</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="634"/>
         <source>Warning: Unknown change address</source>
-        <translation type="unfinished"/>
+        <translation>Obachd: kaina woas wo des Wexxlgoid higeed.</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="645"/>
@@ -2934,7 +2939,7 @@ Zam sin des mindeschdns %1GB Dadn. Und des wi´d grössa weadn. Gwies.</translat
         <location filename="../forms/sendcoinsentry.ui" line="21"/>
         <location filename="../forms/ui_sendcoinsentry.h" line="423"/>
         <source>This is a normal payment.</source>
-        <translation type="unfinished"/>
+        <translation>A Schdandard Übawaisung is des.</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="36"/>
@@ -2946,31 +2951,31 @@ Zam sin des mindeschdns %1GB Dadn. Und des wi´d grössa weadn. Gwies.</translat
         <location filename="../forms/sendcoinsentry.ui" line="54"/>
         <location filename="../forms/ui_sendcoinsentry.h" line="427"/>
         <source>The address to send the payment to (e.g. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</source>
-        <translation type="unfinished"/>
+        <translation>An di Darkcoin-Adressn soll dann übawisn wean (z.B XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="61"/>
         <location filename="../forms/ui_sendcoinsentry.h" line="430"/>
         <source>Choose previously used address</source>
-        <translation type="unfinished"/>
+        <translation>A Adressn aus da Lisdn raussuchn.</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="71"/>
         <location filename="../forms/ui_sendcoinsentry.h" line="433"/>
         <source>Alt+A</source>
-        <translation type="unfinished"/>
+        <translation>Alt+A</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="78"/>
         <location filename="../forms/ui_sendcoinsentry.h" line="435"/>
         <source>Paste address from clipboard</source>
-        <translation type="unfinished"/>
+        <translation>Adressn ausm Zwischnschbaicha ladn</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="88"/>
         <location filename="../forms/ui_sendcoinsentry.h" line="438"/>
         <source>Alt+P</source>
-        <translation type="unfinished"/>
+        <translation>Alt+P</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="95"/>
@@ -3008,7 +3013,7 @@ Zam sin des mindeschdns %1GB Dadn. Und des wi´d grössa weadn. Gwies.</translat
         <location filename="../forms/sendcoinsentry.ui" line="147"/>
         <location filename="../forms/ui_sendcoinsentry.h" line="448"/>
         <source>Message:</source>
-        <translation type="unfinished"/>
+        <translation>Mässidsch:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="157"/>
@@ -3036,7 +3041,7 @@ Zam sin des mindeschdns %1GB Dadn. Und des wi´d grössa weadn. Gwies.</translat
         <location filename="../forms/ui_sendcoinsentry.h" line="460"/>
         <location filename="../forms/ui_sendcoinsentry.h" line="470"/>
         <source>Memo:</source>
-        <translation type="unfinished"/>
+        <translation>KlebeZeddl:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="1115"/>
@@ -3087,7 +3092,7 @@ Zam sin des mindeschdns %1GB Dadn. Und des wi´d grössa weadn. Gwies.</translat
         <location filename="../forms/signverifymessagedialog.ui" line="48"/>
         <location filename="../forms/ui_signverifymessagedialog.h" line="286"/>
         <source>The address to sign the message with (e.g. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</source>
-        <translation type="unfinished"/>
+        <translation>Di Adressn die wo zum Unterschraibm von der Mässidsch vawendet weadn soll (z.B. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="55"/>
@@ -3095,7 +3100,7 @@ Zam sin des mindeschdns %1GB Dadn. Und des wi´d grössa weadn. Gwies.</translat
         <location filename="../forms/ui_signverifymessagedialog.h" line="289"/>
         <location filename="../forms/ui_signverifymessagedialog.h" line="321"/>
         <source>Choose previously used address</source>
-        <translation type="unfinished"/>
+        <translation>Oide Adressn aus da Lisdn aussuchn</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="65"/>
@@ -3103,43 +3108,43 @@ Zam sin des mindeschdns %1GB Dadn. Und des wi´d grössa weadn. Gwies.</translat
         <location filename="../forms/ui_signverifymessagedialog.h" line="292"/>
         <location filename="../forms/ui_signverifymessagedialog.h" line="324"/>
         <source>Alt+A</source>
-        <translation type="unfinished"/>
+        <translation>Alt+A</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="75"/>
         <location filename="../forms/ui_signverifymessagedialog.h" line="294"/>
         <source>Paste address from clipboard</source>
-        <translation type="unfinished"/>
+        <translation>Adressn ausm Zwischnschbaicha ladn</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="85"/>
         <location filename="../forms/ui_signverifymessagedialog.h" line="297"/>
         <source>Alt+P</source>
-        <translation type="unfinished"/>
+        <translation>Alt+P</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="97"/>
         <location filename="../forms/ui_signverifymessagedialog.h" line="299"/>
         <source>Enter the message you want to sign here</source>
-        <translation type="unfinished"/>
+        <translation>Di Messidsch aingebn (di an ofizielln Servus von dia krign soll)</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="104"/>
         <location filename="../forms/ui_signverifymessagedialog.h" line="301"/>
         <source>Signature</source>
-        <translation type="unfinished"/>
+        <translation>Servus</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="131"/>
         <location filename="../forms/ui_signverifymessagedialog.h" line="303"/>
         <source>Copy the current signature to the system clipboard</source>
-        <translation type="unfinished"/>
+        <translation>N aktuelln Servus in´n Zwischnschbaicha ladn</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="152"/>
         <location filename="../forms/ui_signverifymessagedialog.h" line="307"/>
         <source>Sign the message to prove you own this Darkcoin address</source>
-        <translation type="unfinished"/>
+        <translation>An Servus unterd Mässidsch damid klaar is das des dai Adressn is....</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="155"/>
@@ -3189,7 +3194,7 @@ Zam sin des mindeschdns %1GB Dadn. Und des wi´d grössa weadn. Gwies.</translat
         <location filename="../forms/signverifymessagedialog.ui" line="298"/>
         <location filename="../forms/ui_signverifymessagedialog.h" line="328"/>
         <source>Verify &amp;Message</source>
-        <translation type="unfinished"/>
+        <translation>Schaun ob da &amp;Servus au echd is</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="312"/>
@@ -4909,12 +4914,12 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="305"/>
         <source>Transaction amount too small</source>
-        <translation type="unfinished"/>
+        <translation>So klains Goid send ma ned raus... Sorry aba, irgendwo is dann au guad....</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="306"/>
         <source>Transaction amounts must be positive</source>
-        <translation type="unfinished"/>
+        <translation>Ma kann blos Goid übawaisn, ned Schuldn ... Also eahlich...</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="307"/>
@@ -4934,12 +4939,12 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="313"/>
         <source>Upgrade wallet to latest format</source>
-        <translation type="unfinished"/>
+        <translation>Schraib n Goidbaidl so um das ma alles schön lesn kann...</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="314"/>
         <source>Usage (deprecated, use darkcoin-cli):</source>
-        <translation type="unfinished"/>
+        <translation>Des gibds scho lang nimma, mai machsd hald &quot;darkcoin-cli&quot; wi sies kört. </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="315"/>
@@ -4979,7 +4984,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="322"/>
         <source>Username for JSON-RPC connections</source>
-        <translation type="unfinished"/>
+        <translation>Wih magsch haisn wennd mim Jäison saim Er Pe Ze schbrichsd</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="323"/>
