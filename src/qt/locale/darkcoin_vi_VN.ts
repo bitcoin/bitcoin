@@ -1061,7 +1061,7 @@ Kiểu: %3
     <message>
         <location filename="../coincontroldialog.cpp" line="617"/>
         <source>Can vary +/- 1 byte per input.</source>
-        <translation type="unfinished"/>
+        <translation>Có thể thay đổi +/-1 byte cho mỗi đầu vào</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="619"/>
@@ -2043,7 +2043,7 @@ Kiểu: %3
     <message>
         <location filename="../paymentserver.cpp" line="418"/>
         <source>URI can not be parsed! This can be caused by an invalid Darkcoin address or malformed URI parameters.</source>
-        <translation type="unfinished"/>
+        <translation>URI không thể phân tích. Nó có thể bởi địa chỉ Darkcoin không hợp lệ hoặc thông số URI dị hình.</translation>
     </message>
     <message>
         <location filename="../paymentserver.cpp" line="432"/>
