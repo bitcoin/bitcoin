@@ -18,6 +18,7 @@
 #include <assert.h>
 
 #include <boost/algorithm/string/replace.hpp>
+#include <boost/filesystem.hpp>
 #include <boost/thread.hpp>
 
 using namespace std;
@@ -337,6 +338,58 @@ set<uint256> CWallet::GetConflicts(const uint256& txid) const
             result.insert(it->second);
     }
     return result;
+}
+
+void CWallet::Flush(bool shutdown)
+{
+    bitdb.Flush(shutdown);
+}
+
+bool CWallet::Verify(const string walletFile, string& warningString, string& errorString)
+{
+    if (!bitdb.Open(GetDataDir()))
+    {
+        // try moving the database env out of the way
+        boost::filesystem::path pathDatabase = GetDataDir() / "database";
+        boost::filesystem::path pathDatabaseBak = GetDataDir() / strprintf("database.%d.bak", GetTime());
+        try {
+            boost::filesystem::rename(pathDatabase, pathDatabaseBak);
+            LogPrintf("Moved old %s to %s. Retrying.\n", pathDatabase.string(), pathDatabaseBak.string());
+        } catch (const boost::filesystem::filesystem_error&) {
+            // failure is ok (well, not really, but it's not worse than what we started with)
+        }
+        
+        // try again
+        if (!bitdb.Open(GetDataDir())) {
+            // if it still fails, it probably means we can't even create the database env
+            string msg = strprintf(_("Error initializing wallet database environment %s!"), GetDataDir());
+            errorString += msg;
+            return true;
+        }
+    }
+    
+    if (GetBoolArg("-salvagewallet", false))
+    {
+        // Recover readable keypairs:
+        if (!CWalletDB::Recover(bitdb, walletFile, true))
+            return false;
+    }
+    
+    if (boost::filesystem::exists(GetDataDir() / walletFile))
+    {
+        CDBEnv::VerifyResult r = bitdb.Verify(walletFile, CWalletDB::Recover);
+        if (r == CDBEnv::RECOVER_OK)
+        {
+            warningString += strprintf(_("Warning: wallet.dat corrupt, data salvaged!"
+                                     " Original wallet.dat saved as wallet.{timestamp}.bak in %s; if"
+                                     " your balance or transactions are incorrect you should"
+                                     " restore from a backup."), GetDataDir());
+        }
+        if (r == CDBEnv::RECOVER_FAIL)
+            errorString += _("wallet.dat corrupt, salvage failed");
+    }
+    
+    return true;
 }
 
 void CWallet::SyncMetaData(pair<TxSpends::iterator, TxSpends::iterator> range)
