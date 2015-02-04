@@ -1851,14 +1851,20 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, int64_t> >& vecSend,
 
                 if (!SelectCoins(nTotalValue, setCoins, nValueIn, coinControl, coin_type, useIX))
                 {
-                    if(coin_type == ALL_COINS)
-                        strFailReason = _("Insufficient funds");
-                    else if (coin_type == ONLY_NONDENOMINATED)
-                        strFailReason = _("Unable to locate enough Darksend non-denominated funds for this transaction");
-                    else if (coin_type == ONLY_NONDENOMINATED_NOTMN)
-                        strFailReason = _("Unable to locate enough Darksend non-denominated funds for this transaction that are not equal 1000 DRK");
-                    else
-                        strFailReason = _("Unable to locate enough Darksend denominated funds for this transaction");
+                    if(coin_type == ALL_COINS) {
+                        strFailReason = _("Insufficient funds.");
+                    } else if (coin_type == ONLY_NONDENOMINATED) {
+                        strFailReason = _("Unable to locate enough Darksend non-denominated funds for this transaction.");
+                    } else if (coin_type == ONLY_NONDENOMINATED_NOTMN) {
+                        strFailReason = _("Unable to locate enough Darksend non-denominated funds for this transaction that are not equal 1000 DRK.");
+                    } else {
+                        strFailReason = _("Unable to locate enough Darksend denominated funds for this transaction.");
+                        strFailReason += _("Darksend uses exact denominated amounts to send funds, you might simply need to anonymize some more coins.");
+                    }
+
+                    if(useIX){
+                        strFailReason += _("InstantX requires inputs with at least 6 confirmations, you might need to wait a few minutes and try again.")
+                    }
 
                     return false;
                 }
