@@ -88,6 +88,7 @@ Value getnetworkhashps(const Array& params, bool fHelp)
             + HelpExampleRpc("getnetworkhashps", "")
        );
 
+    LOCK(cs_main);
     return GetNetworkHashPS(params.size() > 0 ? params[0].get_int() : 120, params.size() > 1 ? params[1].get_int() : -1);
 }
 
@@ -107,6 +108,7 @@ Value getgenerate(const Array& params, bool fHelp)
             + HelpExampleRpc("getgenerate", "")
         );
 
+    LOCK(cs_main);
     return GetBoolArg("-gen", false);
 }
 
@@ -200,7 +202,6 @@ Value setgenerate(const Array& params, bool fHelp)
 
     return Value::null;
 }
-
 #endif
 
 
@@ -227,6 +228,9 @@ Value getmininginfo(const Array& params, bool fHelp)
             + HelpExampleCli("getmininginfo", "")
             + HelpExampleRpc("getmininginfo", "")
         );
+
+
+    LOCK(cs_main);
 
     Object obj;
     obj.push_back(Pair("blocks",           (int)chainActive.Height()));
@@ -268,8 +272,9 @@ Value prioritisetransaction(const Array& params, bool fHelp)
             + HelpExampleRpc("prioritisetransaction", "\"txid\", 0.0, 10000")
         );
 
-    uint256 hash = ParseHashStr(params[0].get_str(), "txid");
+    LOCK(cs_main);
 
+    uint256 hash = ParseHashStr(params[0].get_str(), "txid");
     CAmount nAmount = params[2].get_int64();
 
     mempool.PrioritiseTransaction(hash, params[0].get_str(), params[1].get_real(), nAmount);
@@ -357,6 +362,8 @@ Value getblocktemplate(const Array& params, bool fHelp)
             + HelpExampleCli("getblocktemplate", "")
             + HelpExampleRpc("getblocktemplate", "")
          );
+
+    LOCK(cs_main);
 
     std::string strMode = "template";
     Value lpval = Value::null;
