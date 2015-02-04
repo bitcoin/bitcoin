@@ -49,6 +49,10 @@ void ProcessMessageInstantX(CNode* pfrom, std::string& strCommand, CDataStream& 
             return;
         }
 
+        if(!IsIXTXValid(tx)){
+            return;
+        }
+
         int nTxAge = 0;
         BOOST_REVERSE_FOREACH(CTxIn i, tx.vin){
             nTxAge = GetInputAge(i);
@@ -176,6 +180,44 @@ void ProcessMessageInstantX(CNode* pfrom, std::string& strCommand, CDataStream& 
         return;
     }
 }
+
+bool IsIXTXValid(const CTransaction& txCollateral){
+    if(txCollateral.vout.size() < 1) return false;
+    if(txCollateral.nLockTime != 0) return false;
+
+    int64_t nValueIn = 0;
+    int64_t nValueOut = 0;
+    bool missingTx = false;
+
+    BOOST_FOREACH(const CTxOut o, txCollateral.vout)
+        nValueOut += o.nValue;
+
+    BOOST_FOREACH(const CTxIn i, txCollateral.vin){
+        CTransaction tx2;
+        uint256 hash;
+        if(GetTransaction(i.prevout.hash, tx2, hash, true)){
+            if(tx2.vout.size() > i.prevout.n) {
+                nValueIn += tx2.vout[i.prevout.n].nValue;
+            }
+        } else{
+            missingTx = true;
+        }
+    }
+
+    if(missingTx){
+        if(fDebug) LogPrintf ("IsIXTXValid - Unknown inputs in IX transaction - %s\n", txCollateral.ToString().c_str());
+        return false;
+    }
+
+    //collateral transactions are required to pay out DARKSEND_COLLATERAL as a fee to the miners
+    if(nValueIn-nValueOut < COIN*0.01) {
+        if(fDebug) LogPrintf ("IsIXTXValid - did not include enough fees in transaction %d\n%s\n", nValueOut-nValueIn, txCollateral.ToString().c_str());
+        return false;
+    }
+
+    return true;
+}
+
 
 // check if we need to vote on this transaction
 void DoConsensusVote(CTransaction& tx, bool approved, int64_t nBlockHeight)

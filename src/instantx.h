@@ -29,6 +29,8 @@ extern map<uint256, CTransaction> mapTxLockReq;
 extern map<uint256, CTransactionLock> mapTxLocks;
 extern int nCompleteTXLocks;
 
+bool IsIXTXValid(const CTransaction& txCollateral);
+
 void ProcessMessageInstantX(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
 
 //check if we need to vote on this transaction
