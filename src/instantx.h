@@ -27,6 +27,7 @@ static const int MIN_INSTANTX_PROTO_VERSION = 70057;
 
 extern map<uint256, CTransaction> mapTxLockReq;
 extern map<uint256, CTransactionLock> mapTxLocks;
+extern std::map<COutPoint, uint256> mapLockedInputs;
 extern int nCompleteTXLocks;
 
 bool IsIXTXValid(const CTransaction& txCollateral);
