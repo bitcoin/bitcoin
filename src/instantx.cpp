@@ -225,6 +225,23 @@ void DoConsensusVote(CTransaction& tx, bool approved, int64_t nBlockHeight)
 {
     if(!fMasterNode) return;
 
+    /*
+        nBlockHeight calculated from the transaction is the authoritive source
+    */
+
+    if (!mapTxLocks.count(tx.GetHash())){
+        LogPrintf("InstantX::ProcessConsensusVote - New Transaction Lock %s !\n", tx.GetHash().ToString().c_str());
+
+        CTransactionLock newLock;
+        newLock.nBlockHeight = nBlockHeight;
+        newLock.nExpiration = GetTime()+(60*60);
+        newLock.txHash = tx.GetHash();
+        mapTxLocks.insert(make_pair(tx.GetHash(), newLock));
+    } else {
+        mapTxLocks[tx.GetHash()].nBlockHeight = nBlockHeight;
+        if(fDebug) LogPrintf("InstantX::ProcessConsensusVote - Transaction Lock Exists %s !\n", tx.GetHash().ToString().c_str());
+    }
+
     CConsensusVote ctx;
     ctx.vinMasternode = activeMasternode.vin;
     ctx.txHash = tx.GetHash();
@@ -274,7 +291,7 @@ bool ProcessConsensusVote(CConsensusVote& ctx)
         LogPrintf("InstantX::ProcessConsensusVote - New Transaction Lock %s !\n", ctx.txHash.ToString().c_str());
 
         CTransactionLock newLock;
-        newLock.nBlockHeight = ctx.nBlockHeight;
+        newLock.nBlockHeight = 0;
         newLock.nExpiration = GetTime()+(60*60);
         newLock.txHash = ctx.txHash;
         mapTxLocks.insert(make_pair(ctx.txHash, newLock));
@@ -475,5 +492,18 @@ void CTransactionLock::AddSignature(CConsensusVote cv)
 
 int CTransactionLock::CountSignatures()
 {
-    return vecConsensusVotes.size();
+    /*
+        Only count signatures where the BlockHeight matches the transaction's blockheight.
+        The votes have no proof it's the correct blockheight
+    */
+
+    if(nBlockHeight == 0) return 0;
+
+    int n = 0;
+    BOOST_FOREACH(CConsensusVote v, vecConsensusVotes){
+        if(v.nBlockHeight == nBlockHeight){
+            n++;
+        }
+    }
+    return n;
 }
