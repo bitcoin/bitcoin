@@ -139,12 +139,12 @@ OverviewPage::OverviewPage(QWidget *parent) :
     }
 
     if(fMasterNode || fLiteMode){
-        ui->toggleDarksend->setText("(Disabled)");
+        ui->toggleDarksend->setText("(" + tr("Disabled") + ")");
         ui->toggleDarksend->setEnabled(false);
     }else if(!fEnableDarksend){
-        ui->toggleDarksend->setText("Start Darksend Mixing");
+        ui->toggleDarksend->setText(tr("Start Darksend Mixing"));
     } else {
-        ui->toggleDarksend->setText("Stop Darksend Mixing");
+        ui->toggleDarksend->setText(tr("Stop Darksend Mixing"));
     }
 
     // start with displaying the "out of sync" warnings
@@ -264,7 +264,7 @@ void OverviewPage::updateDarksendProgress()
     if(nBalance == 0)
     {
         ui->darksendProgress->setValue(0);
-        QString s("No inputs detected");
+        QString s(tr("No inputs detected"));
         ui->darksendProgress->setToolTip(s);
         return;
     }
@@ -272,7 +272,7 @@ void OverviewPage::updateDarksendProgress()
     //get denominated unconfirmed inputs
     if(pwalletMain->GetDenominatedBalance(true, true) > 0)
     {
-        QString s("Found unconfirmed denominated outputs, will wait till they confirm to recalculate.");
+        QString s(tr("Found unconfirmed denominated outputs, will wait till they confirm to recalculate."));
         ui->darksendProgress->setToolTip(s);
         return;
     }
@@ -320,7 +320,7 @@ void OverviewPage::darkSendStatus()
 
         updateDarksendProgress();
 
-        QString strSettings(" Rounds");
+        QString strSettings(" " + tr("Rounds"));
         strSettings.prepend(QString::number(nDarksendRounds)).prepend(" / ");
         strSettings.prepend(BitcoinUnits::formatWithUnit(
             walletModel->getOptionsModel()->getDisplayUnit(),
@@ -335,9 +335,9 @@ void OverviewPage::darkSendStatus()
         {
             darkSendPool.cachedNumBlocks = nBestHeight;
 
-            ui->darksendEnabled->setText("Disabled");
+            ui->darksendEnabled->setText(tr("Disabled"));
             ui->darksendStatus->setText("");
-            ui->toggleDarksend->setText("Start Darksend Mixing");
+            ui->toggleDarksend->setText(tr("Start Darksend Mixing"));
         }
 
         return;
@@ -351,58 +351,58 @@ void OverviewPage::darkSendStatus()
 
         /* *******************************************************/
 
-        ui->darksendEnabled->setText("Enabled");
+        ui->darksendEnabled->setText(tr("Enabled"));
     }
 
     int state = darkSendPool.GetState();
     int entries = darkSendPool.GetEntriesCount();
     int accepted = darkSendPool.GetLastEntryAccepted();
 
+    /* ** @TODO this string creation really needs some clean ups ---vertoe ** */
     std::ostringstream convert;
-    
-    convert << "Last Darksend message:\n";
+    convert << tr("Last Darksend message:\n").toStdString();
 
     if(state == POOL_STATUS_ACCEPTING_ENTRIES) {
         if(entries == 0) {
             if(darkSendPool.strAutoDenomResult.size() == 0){
-                convert << "Darksend is idle";
+                convert << tr("Darksend is idle.").toStdString();
             } else {
                 convert << darkSendPool.strAutoDenomResult;
             }
             showingDarkSendMessage = 0;
         } else if (accepted == 1) {
-            convert << "Darksend request complete: Your transaction was accepted into the pool!";
+            convert << tr("Darksend request complete: Your transaction was accepted into the pool!").toStdString();
             if(showingDarkSendMessage % 10 > 8) {
                 darkSendPool.lastEntryAccepted = 0;
                 showingDarkSendMessage = 0;
             }
         } else {
-            if(showingDarkSendMessage % 70 <= 40) convert << "Submitted to masternode, entries " << entries << "/" << darkSendPool.GetMaxPoolTransactions();
-            else if(showingDarkSendMessage % 70 <= 50) convert << "Submitted to masternode, Waiting for more entries (" << entries << "/" << darkSendPool.GetMaxPoolTransactions() << " ) .";
-            else if(showingDarkSendMessage % 70 <= 60) convert << "Submitted to masternode, Waiting for more entries (" << entries << "/" << darkSendPool.GetMaxPoolTransactions() << " ) ..";
-            else if(showingDarkSendMessage % 70 <= 70) convert << "Submitted to masternode, Waiting for more entries (" << entries << "/" << darkSendPool.GetMaxPoolTransactions() << " ) ...";
+            if(showingDarkSendMessage % 70 <= 40) convert << tr("Submitted following entries to masternode:").toStdString() << " " << entries << "/" << darkSendPool.GetMaxPoolTransactions();
+            else if(showingDarkSendMessage % 70 <= 50) convert << tr("Submitted to masternode, Waiting for more entries").toStdString() << " (" << entries << "/" << darkSendPool.GetMaxPoolTransactions() << " ) .";
+            else if(showingDarkSendMessage % 70 <= 60) convert << tr("Submitted to masternode, Waiting for more entries").toStdString() << " (" << entries << "/" << darkSendPool.GetMaxPoolTransactions() << " ) ..";
+            else if(showingDarkSendMessage % 70 <= 70) convert << tr("Submitted to masternode, Waiting for more entries").toStdString() << " (" << entries << "/" << darkSendPool.GetMaxPoolTransactions() << " ) ...";
         }
     } else if(state == POOL_STATUS_SIGNING) {
-        if(showingDarkSendMessage % 70 <= 10) convert << "Found enough users, signing";
-        else if(showingDarkSendMessage % 70 <= 20) convert << "Found enough users, signing ( waiting. )";
-        else if(showingDarkSendMessage % 70 <= 30) convert << "Found enough users, signing ( waiting.. )";
-        else if(showingDarkSendMessage % 70 <= 40) convert << "Found enough users, signing ( waiting... )";
+        if(showingDarkSendMessage % 70 <= 10) convert << tr("Found enough users, signing ...").toStdString();
+        else if(showingDarkSendMessage % 70 <= 20) convert << tr("Found enough users, signing ( waiting. )").toStdString();
+        else if(showingDarkSendMessage % 70 <= 30) convert << tr("Found enough users, signing ( waiting.. )").toStdString();
+        else if(showingDarkSendMessage % 70 <= 40) convert << tr("Found enough users, signing ( waiting... )").toStdString();
     } else if(state == POOL_STATUS_TRANSMISSION) {
-        convert << "Transmitting final transaction";
+        convert << tr("Transmitting final transaction.").toStdString();
     } else if (state == POOL_STATUS_IDLE) {
-        convert << "Darksend is idle";
+        convert << tr("Darksend is idle.").toStdString();
     } else if (state == POOL_STATUS_FINALIZE_TRANSACTION) {
-        convert << "Finalizing transaction";
+        convert << tr("Finalizing transaction.").toStdString();
     } else if(state == POOL_STATUS_ERROR) {
-        convert << "Darksend request incomplete: " << darkSendPool.lastMessage << ". Will retry...";
+        convert << tr("Darksend request incomplete:").toStdString() << " " << darkSendPool.lastMessage << ". " << tr("Will retry...").toStdString();
     } else if(state == POOL_STATUS_SUCCESS) {
-        convert << "Darksend request complete: " << darkSendPool.lastMessage;
+        convert << tr("Darksend request complete:").toStdString() << " " << darkSendPool.lastMessage;
     } else if(state == POOL_STATUS_QUEUE) {
-        if(showingDarkSendMessage % 70 <= 50) convert << "Submitted to masternode, waiting in queue .";
-        else if(showingDarkSendMessage % 70 <= 60) convert << "Submitted to masternode, waiting in queue ..";
-        else if(showingDarkSendMessage % 70 <= 70) convert << "Submitted to masternode, waiting in queue ...";
+        if(showingDarkSendMessage % 70 <= 50) convert << tr("Submitted to masternode, waiting in queue .").toStdString();
+        else if(showingDarkSendMessage % 70 <= 60) convert << tr("Submitted to masternode, waiting in queue ..").toStdString();
+        else if(showingDarkSendMessage % 70 <= 70) convert << tr("Submitted to masternode, waiting in queue ...").toStdString();
     } else {
-        convert << "unknown state : id=" << state;
+        convert << tr("Unknown state:").toStdString() << " id = " << state;
     }
 
     if(state == POOL_STATUS_ERROR || state == POOL_STATUS_SUCCESS) darkSendPool.Check();
@@ -416,7 +416,7 @@ void OverviewPage::darkSendStatus()
 
 
     if(darkSendPool.sessionDenom == 0){
-        ui->labelSubmittedDenom->setText("n/a");
+        ui->labelSubmittedDenom->setText(tr("N/A"));
     } else {
         std::string out;
         darkSendPool.GetDenominationsToString(darkSendPool.sessionDenom, out);
@@ -479,9 +479,9 @@ void OverviewPage::toggleDarksend(){
     fEnableDarksend = !fEnableDarksend;
 
     if(!fEnableDarksend){
-        ui->toggleDarksend->setText("Start Darksend Mixing");
+        ui->toggleDarksend->setText(tr("Start Darksend Mixing"));
     } else {
-        ui->toggleDarksend->setText("Stop Darksend Mixing");
+        ui->toggleDarksend->setText(tr("Stop Darksend Mixing"));
 
         /* show darksend configuration if client has defaults set */
 
