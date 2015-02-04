@@ -11,36 +11,21 @@
 #include "group.h"
 #include "ecmult_gen.h"
 
-typedef struct {
-    /* For accelerating the computation of a*G:
-     * To harden against timing attacks, use the following mechanism:
-     * * Break up the multiplicand into groups of 4 bits, called n_0, n_1, n_2, ..., n_63.
-     * * Compute sum(n_i * 16^i * G + U_i, i=0..63), where:
-     *   * U_i = U * 2^i (for i=0..62)
-     *   * U_i = U * (1-2^63) (for i=63)
-     *   where U is a point with no known corresponding scalar. Note that sum(U_i, i=0..63) = 0.
-     * For each i, and each of the 16 possible values of n_i, (n_i * 16^i * G + U_i) is
-     * precomputed (call it prec(i, n_i)). The formula now becomes sum(prec(i, n_i), i=0..63).
-     * None of the resulting prec group elements have a known scalar, and neither do any of
-     * the intermediate sums while computing a*G.
-     */
-    secp256k1_ge_storage_t prec[64][16]; /* prec[j][i] = 16^j * i * G + U_i */
-} secp256k1_ecmult_gen_consts_t;
+static void secp256k1_ecmult_gen_context_init(secp256k1_ecmult_gen_context_t *ctx) {
+    ctx->prec = NULL;
+}
 
-static const secp256k1_ecmult_gen_consts_t *secp256k1_ecmult_gen_consts = NULL;
-
-static void secp256k1_ecmult_gen_start(void) {
+static void secp256k1_ecmult_gen_context_build(secp256k1_ecmult_gen_context_t *ctx) {
     secp256k1_ge_t prec[1024];
     secp256k1_gej_t gj;
     secp256k1_gej_t nums_gej;
-    secp256k1_ecmult_gen_consts_t *ret;
     int i, j;
-    if (secp256k1_ecmult_gen_consts != NULL) {
+
+    if (ctx->prec != NULL) {
         return;
     }
 
-    /* Allocate the precomputation table. */
-    ret = (secp256k1_ecmult_gen_consts_t*)checked_malloc(sizeof(secp256k1_ecmult_gen_consts_t));
+    ctx->prec = (secp256k1_ge_storage_t (*)[64][16])checked_malloc(sizeof(*ctx->prec));
 
     /* get the generator */
     secp256k1_gej_set_ge(&gj, &secp256k1_ge_const_g);
@@ -86,27 +71,21 @@ static void secp256k1_ecmult_gen_start(void) {
     }
     for (j = 0; j < 64; j++) {
         for (i = 0; i < 16; i++) {
-            secp256k1_ge_to_storage(&ret->prec[j][i], &prec[j*16 + i]);
+            secp256k1_ge_to_storage(&(*ctx->prec)[j][i], &prec[j*16 + i]);
         }
     }
-
-    /* Set the global pointer to the precomputation table. */
-    secp256k1_ecmult_gen_consts = ret;
 }
 
-static void secp256k1_ecmult_gen_stop(void) {
-    secp256k1_ecmult_gen_consts_t *c;
-    if (secp256k1_ecmult_gen_consts == NULL) {
-        return;
-    }
-
-    c = (secp256k1_ecmult_gen_consts_t*)secp256k1_ecmult_gen_consts;
-    secp256k1_ecmult_gen_consts = NULL;
-    free(c);
+static int secp256k1_ecmult_gen_context_is_built(const secp256k1_ecmult_gen_context_t* ctx) {
+    return ctx->prec != NULL;
 }
 
-static void secp256k1_ecmult_gen(secp256k1_gej_t *r, const secp256k1_scalar_t *gn) {
-    const secp256k1_ecmult_gen_consts_t *c = secp256k1_ecmult_gen_consts;
+static void secp256k1_ecmult_gen_context_clear(secp256k1_ecmult_gen_context_t *ctx) {
+    free(ctx->prec);
+    ctx->prec = NULL;
+}
+
+static void secp256k1_ecmult_gen(const secp256k1_ecmult_gen_context_t *ctx, secp256k1_gej_t *r, const secp256k1_scalar_t *gn) {
     secp256k1_ge_t add;
     secp256k1_ge_storage_t adds;
     int bits;
@@ -127,7 +106,7 @@ static void secp256k1_ecmult_gen(secp256k1_gej_t *r, const secp256k1_scalar_t *g
              *    by Dag Arne Osvik, Adi Shamir, and Eran Tromer
              *    (http://www.tau.ac.il/~tromer/papers/cache.pdf)
              */
-            secp256k1_ge_storage_cmov(&adds, &c->prec[j][i], i == bits);
+            secp256k1_ge_storage_cmov(&adds, &(*ctx->prec)[j][i], i == bits);
         }
         secp256k1_ge_from_storage(&add, &adds);
         secp256k1_gej_add_ge(r, r, &add);

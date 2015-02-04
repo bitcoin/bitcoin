@@ -132,7 +132,7 @@ static int secp256k1_ecdsa_sig_serialize(unsigned char *sig, int *size, const se
     return 1;
 }
 
-static int secp256k1_ecdsa_sig_verify(const secp256k1_ecdsa_sig_t *sig, const secp256k1_ge_t *pubkey, const secp256k1_scalar_t *message) {
+static int secp256k1_ecdsa_sig_verify(const secp256k1_ecmult_context_t *ctx, const secp256k1_ecdsa_sig_t *sig, const secp256k1_ge_t *pubkey, const secp256k1_scalar_t *message) {
     unsigned char c[32];
     secp256k1_scalar_t sn, u1, u2;
     secp256k1_fe_t xr;
@@ -147,7 +147,7 @@ static int secp256k1_ecdsa_sig_verify(const secp256k1_ecdsa_sig_t *sig, const se
     secp256k1_scalar_mul(&u1, &sn, message);
     secp256k1_scalar_mul(&u2, &sn, &sig->r);
     secp256k1_gej_set_ge(&pubkeyj, pubkey);
-    secp256k1_ecmult(&pr, &pubkeyj, &u2, &u1);
+    secp256k1_ecmult(ctx, &pr, &pubkeyj, &u2, &u1);
     if (secp256k1_gej_is_infinity(&pr)) {
         return 0;
     }
@@ -186,7 +186,7 @@ static int secp256k1_ecdsa_sig_verify(const secp256k1_ecdsa_sig_t *sig, const se
     return 0;
 }
 
-static int secp256k1_ecdsa_sig_recover(const secp256k1_ecdsa_sig_t *sig, secp256k1_ge_t *pubkey, const secp256k1_scalar_t *message, int recid) {
+static int secp256k1_ecdsa_sig_recover(const secp256k1_ecmult_context_t *ctx, const secp256k1_ecdsa_sig_t *sig, secp256k1_ge_t *pubkey, const secp256k1_scalar_t *message, int recid) {
     unsigned char brx[32];
     secp256k1_fe_t fx;
     secp256k1_ge_t x;
@@ -214,19 +214,19 @@ static int secp256k1_ecdsa_sig_recover(const secp256k1_ecdsa_sig_t *sig, secp256
     secp256k1_scalar_mul(&u1, &rn, message);
     secp256k1_scalar_negate(&u1, &u1);
     secp256k1_scalar_mul(&u2, &rn, &sig->s);
-    secp256k1_ecmult(&qj, &xj, &u2, &u1);
+    secp256k1_ecmult(ctx, &qj, &xj, &u2, &u1);
     secp256k1_ge_set_gej_var(pubkey, &qj);
     return !secp256k1_gej_is_infinity(&qj);
 }
 
-static int secp256k1_ecdsa_sig_sign(secp256k1_ecdsa_sig_t *sig, const secp256k1_scalar_t *seckey, const secp256k1_scalar_t *message, const secp256k1_scalar_t *nonce, int *recid) {
+static int secp256k1_ecdsa_sig_sign(const secp256k1_ecmult_gen_context_t *ctx, secp256k1_ecdsa_sig_t *sig, const secp256k1_scalar_t *seckey, const secp256k1_scalar_t *message, const secp256k1_scalar_t *nonce, int *recid) {
     unsigned char b[32];
     secp256k1_gej_t rp;
     secp256k1_ge_t r;
     secp256k1_scalar_t n;
     int overflow = 0;
 
-    secp256k1_ecmult_gen(&rp, nonce);
+    secp256k1_ecmult_gen(ctx, &rp, nonce);
     secp256k1_ge_set_gej(&r, &rp);
     secp256k1_fe_normalize(&r.x);
     secp256k1_fe_normalize(&r.y);
