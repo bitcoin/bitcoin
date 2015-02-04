@@ -641,68 +641,16 @@ public:
 
     isminetype IsMine(const CTxIn& txin) const;
     CAmount GetDebit(const CTxIn& txin, const isminefilter& filter) const;
-    isminetype IsMine(const CTxOut& txout) const
-    {
-        return ::IsMine(*this, txout.scriptPubKey);
-    }
-    CAmount GetCredit(const CTxOut& txout, const isminefilter& filter) const
-    {
-        if (!MoneyRange(txout.nValue))
-            throw std::runtime_error("CWallet::GetCredit(): value out of range");
-        return ((IsMine(txout) & filter) ? txout.nValue : 0);
-    }
+    isminetype IsMine(const CTxOut& txout) const;
+    CAmount GetCredit(const CTxOut& txout, const isminefilter& filter) const;
     bool IsChange(const CTxOut& txout) const;
-    CAmount GetChange(const CTxOut& txout) const
-    {
-        if (!MoneyRange(txout.nValue))
-            throw std::runtime_error("CWallet::GetChange(): value out of range");
-        return (IsChange(txout) ? txout.nValue : 0);
-    }
-    bool IsMine(const CTransaction& tx) const
-    {
-        BOOST_FOREACH(const CTxOut& txout, tx.vout)
-            if (IsMine(txout))
-                return true;
-        return false;
-    }
+    CAmount GetChange(const CTxOut& txout) const;
+    bool IsMine(const CTransaction& tx) const;
     /** should probably be renamed to IsRelevantToMe */
-    bool IsFromMe(const CTransaction& tx) const
-    {
-        return (GetDebit(tx, ISMINE_ALL) > 0);
-    }
-    CAmount GetDebit(const CTransaction& tx, const isminefilter& filter) const
-    {
-        CAmount nDebit = 0;
-        BOOST_FOREACH(const CTxIn& txin, tx.vin)
-        {
-            nDebit += GetDebit(txin, filter);
-            if (!MoneyRange(nDebit))
-                throw std::runtime_error("CWallet::GetDebit(): value out of range");
-        }
-        return nDebit;
-    }
-    CAmount GetCredit(const CTransaction& tx, const isminefilter& filter) const
-    {
-        CAmount nCredit = 0;
-        BOOST_FOREACH(const CTxOut& txout, tx.vout)
-        {
-            nCredit += GetCredit(txout, filter);
-            if (!MoneyRange(nCredit))
-                throw std::runtime_error("CWallet::GetCredit(): value out of range");
-        }
-        return nCredit;
-    }
-    CAmount GetChange(const CTransaction& tx) const
-    {
-        CAmount nChange = 0;
-        BOOST_FOREACH(const CTxOut& txout, tx.vout)
-        {
-            nChange += GetChange(txout);
-            if (!MoneyRange(nChange))
-                throw std::runtime_error("CWallet::GetChange(): value out of range");
-        }
-        return nChange;
-    }
+    bool IsFromMe(const CTransaction& tx) const;
+    CAmount GetDebit(const CTransaction& tx, const isminefilter& filter) const;
+    CAmount GetCredit(const CTransaction& tx, const isminefilter& filter) const;
+    CAmount GetChange(const CTransaction& tx) const;
     void SetBestChain(const CBlockLocator& loc);
 
     DBErrors LoadWallet(bool& fFirstRunRet);
