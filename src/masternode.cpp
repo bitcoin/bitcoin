@@ -546,15 +546,11 @@ uint256 CMasterNode::CalculateScore(int mod, int64_t nBlockHeight)
     if(chainActive.Tip() == NULL) return 0;
 
     uint256 hash = 0;
-    int64_t aux = 0;
+    uint256 aux = vin.prevout.hash;
 
     if(!GetBlockHash(hash, nBlockHeight)) return 0;
-    
-    //copy some of the blocks hash into what we'll hash for this calculation
-    //this will add some randomness to our results
-    memcpy(&hash+(nBlockHeight%192), &aux, 64);
-    
-    uint256 hash2 = HashX11(BEGIN(hash), END(aux));
+    uint256 hash2 = HashX11(BEGIN(hash), END(hash));
+    uint256 hash3 = HashX11(BEGIN(hash), END(aux));
 
     // we'll make a 4 dimensional point in space
     // the closest masternode to that point wins
@@ -571,11 +567,11 @@ uint256 CMasterNode::CalculateScore(int mod, int64_t nBlockHeight)
     memcpy(&i3, &a3, 1);
     memcpy(&i4, &a4, 1);
 
-    //split up our mn hash
-    uint64_t b1 = vin.prevout.hash.Get64(0);
-    uint64_t b2 = vin.prevout.hash.Get64(1);
-    uint64_t b3 = vin.prevout.hash.Get64(2);
-    uint64_t b4 = vin.prevout.hash.Get64(3);
+    //split up our mn-hash+aux into 4
+    uint64_t b1 = hash3.Get64(0);
+    uint64_t b2 = hash3.Get64(1);
+    uint64_t b3 = hash3.Get64(2);
+    uint64_t b4 = hash3.Get64(3);
 
     //move mn hash around
     b1 <<= (i1 % 64);
