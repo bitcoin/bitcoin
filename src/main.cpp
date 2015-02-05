@@ -2823,11 +2823,6 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
 
 
     // ----------- instantX transaction scanning -----------
-    /*
-    block-level scanning is working below, but we need a blockchain
-    based management system for storing the active masternodes. Otherwise
-    small inconsistances can lead to forks.
-    */
 
     BOOST_FOREACH(const CTransaction& tx, block.vtx){
         if (!tx.IsCoinBase()){
