@@ -3797,7 +3797,15 @@ If the file does not exist, create it with owner-readable-only file permissions.
 It is also recommended to set alertnotify so you are notified of problems;
 for example: alertnotify=echo %%s | mail -s &quot;Darkcoin Alert&quot; admin@foo.com
 </source>
-        <translation type="unfinished"/>
+        <translation>%s, du måste ställa in ett rpc-lösenord i konfigurationsfolen.
+%s
+Det rekommenderas att du använder följande lösenord)
+Användarnamnet och lösenordet MÅSTE INTE vara desamma.
+Om filen inte finns kan du skapa en fil med tillåtelserl endast läsbar fär ägaren.
+Det rekommenderas också att du ställer inte alertnotify så att du uppmärksammar problem.;
+till exempel:  alertnotify=echo %%s | mail -s &quot;Darkcoin Alert&quot; 
+admin@foo.com
+</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="29"/>
@@ -3827,7 +3835,8 @@ for example: alertnotify=echo %%s | mail -s &quot;Darkcoin Alert&quot; admin@foo
     <message>
         <location filename="../bitcoinstrings.cpp" line="43"/>
         <source>Continuously rate-limit free transactions to &lt;n&gt;*1000 bytes per minute (default:15)</source>
-        <translation type="unfinished"/>
+        <translation>Fortsätt att rate-limit gratistransaktioner till &lt;n&gt;*1000 butes per minut
+(standardvärde: 15)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="46"/>

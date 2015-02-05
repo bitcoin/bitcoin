@@ -1332,7 +1332,7 @@ Endereço: %4
     <message>
         <location filename="../forms/intro.ui" line="59"/>
         <source>Darkcoin Core will download and store a copy of the Darkcoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
-        <translation>O cliente Darkcoin Core irá descarregar e guardar uma copia da cadeia de blocos Darkcoin. Pelo menos 1%GB de dados serão guardados nesta pasta e irá aumentar com o tempo. A carteira também ficará guardada nesta pasta.</translation>
+        <translation>O cliente Darkcoin Core irá descarregar e guardar uma copia da cadeia de blocos Darkcoin. Pelo menos %1GB de dados serão guardados nesta pasta e irá aumentar com o tempo. A carteira também ficará guardada nesta pasta.</translation>
     </message>
     <message>
         <location filename="../forms/intro.ui" line="69"/>
@@ -3793,7 +3793,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
 It is also recommended to set alertnotify so you are notified of problems;
 for example: alertnotify=echo %%s | mail -s &quot;Darkcoin Alert&quot; admin@foo.com
 </source>
-        <translation>%, necessita colocar uma entrada rpcpassword no ficheiro de configuração:
+        <translation>%s, necessita colocar uma entrada rpcpassword no ficheiro de configuração:
 %s
 É recomendados que utilize a seguinte palavra-passe aleatória:
 rpcuser=darkcoinrpc
@@ -3962,7 +3962,7 @@ exemplo: alertnotify=echo %%s | mail -s &quot;Alerta Darkcoin&quot; admin@foo.co
     <message>
         <location filename="../bitcoinstrings.cpp" line="115"/>
         <source>Set the number of script verification threads (%u to %d, 0 = auto, &lt;0 = leave that many cores free, default: %d)</source>
-        <translation>Definir número de processos de &amp;verificação de scripts (%u a %d, 0 = auto, &lt;0 = deixar este número de cores livres)</translation>
+        <translation>Definir número de processos de verificação de scripts (%u a %d, 0 = auto, &lt;0 = deixar este número de cores livres, omissão: %d)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="118"/>
@@ -5036,7 +5036,7 @@ Se o ficheiro não existir, deve criá-lo só com permissões de leitura para o 
     <message>
         <location filename="../bitcoinstrings.cpp" line="363"/>
         <source>Value more than Darksend pool maximum allows.</source>
-        <translation type="unfinished"/>
+        <translation>Valor mais elevado do que o máximo permitido pelo Darksend.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="364"/>

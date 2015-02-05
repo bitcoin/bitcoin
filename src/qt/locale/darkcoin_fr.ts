@@ -22,7 +22,7 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>
 Ce logiciel est expérimental.
 
-Distribué sous licence MIT/X11 d&apos;utilisation d&apos;un logiciel. Consultez le fichier joint COPYING ou http://www.opensource.org/licenses/mit-license.php.
+Distribué sous licence MIT/X11, voir le fichier COPYING joint ou http://www.opensource.org/licenses/mit-license.php.
 
 Ce produit comprend des logiciels développés par le projet OpenSSL afin d&apos;être utilisés dans la boîte à outils OpenSSL (http://www.openssl.org/), un logiciel de chiffrement écrit par Eric Young (eay@cryptsoft.com) et un logiciel UPnP développé par Thomas Bernard.</translation>
     </message>
@@ -4042,7 +4042,7 @@ Si le fichier n&apos;existe pas, créez-le avec les droits de lecture seule acco
     <message>
         <location filename="../bitcoinstrings.cpp" line="162"/>
         <source>You must specify a masternodeprivkey in the configuration. Please see documentation for help.</source>
-        <translation type="unfinished"/>
+        <translation>Vous devez définir masternodeprivkey dans la configuration. Veuillez consulter la documentation pour plus d&apos;aide.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="165"/>
@@ -4517,7 +4517,7 @@ Si le fichier n&apos;existe pas, créez-le avec les droits de lecture seule acco
     <message>
         <location filename="../bitcoinstrings.cpp" line="259"/>
         <source>Keep N darkcoin anonymized (default: 0)</source>
-        <translation type="unfinished"/>
+        <translation>Maintenir N darkcoin anonymisé en permanence (défaut: 0)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="260"/>
@@ -5037,7 +5037,7 @@ Si le fichier n&apos;existe pas, créez-le avec les droits de lecture seule acco
     <message>
         <location filename="../bitcoinstrings.cpp" line="363"/>
         <source>Value more than Darksend pool maximum allows.</source>
-        <translation type="unfinished"/>
+        <translation>Valeur supérieure au maximum autorisé par le pool.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="364"/>
