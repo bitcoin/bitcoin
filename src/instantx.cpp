@@ -230,6 +230,7 @@ int64_t CreateNewLock(CTransaction tx)
         CTransactionLock newLock;
         newLock.nBlockHeight = nBlockHeight;
         newLock.nExpiration = GetTime()+(60*60);
+        newLock.nTimeout = GetTime()+(60*5);
         newLock.txHash = tx.GetHash();
         mapTxLocks.insert(make_pair(tx.GetHash(), newLock));
     } else {
@@ -300,6 +301,7 @@ bool ProcessConsensusVote(CConsensusVote& ctx)
         CTransactionLock newLock;
         newLock.nBlockHeight = 0;
         newLock.nExpiration = GetTime()+(60*60);
+        newLock.nTimeout = GetTime()+(60*5);
         newLock.txHash = ctx.txHash;
         mapTxLocks.insert(make_pair(ctx.txHash, newLock));
     } else {
@@ -503,6 +505,9 @@ void CTransactionLock::AddSignature(CConsensusVote cv)
 
 int CTransactionLock::CountSignatures()
 {
+
+    return 10;
+
     /*
         Only count signatures where the BlockHeight matches the transaction's blockheight.
         The votes have no proof it's the correct blockheight
