@@ -1869,9 +1869,6 @@ void RelayTransactionLockReq(const CTransaction& tx, const uint256& hash, bool r
         if(!relayToAll && !pnode->fRelayTxes)
             continue;
 
-        //there's no requests for transactions locks, so we should show it was propagated correctly
-        //pwalletMain->mapRequestCount[tx.GetHash()]++;
-
         pnode->PushMessage("txlreq", tx);
     }
 
