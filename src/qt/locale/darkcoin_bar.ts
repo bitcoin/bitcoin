@@ -19,18 +19,17 @@ This is experimental software.
 Distributed under the MIT/X11 software license, see the accompanying file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit (http://www.openssl.org/) and cryptographic software written by Eric Young (eay@cryptsoft.com) and UPnP software written by Thomas Bernard.</source>
-        <translation>Di Sofdware is manchmal a bissal waggelig. K´ört so. Wails a Ekschpärimend is. Aba ´s guad dasd da bischd und mithöifsd!
+        <translation>Di Sofdware is manchmal a bissal waggelig. K´ört so. Wails a Ekschpärimend is. 
+Aba ´s guad dasd da bischd und mithöifsd!
 
 Gschenkt is das woardn unter de so´gnoondn Em Ai Ti - Lizenz. 
 Des kandscha HIER anschaung, oder du schaugschd im Netz unda:  http://www.opensource.org/licenses/mit-license.php
-
 Abropos, da ham no Andre vorhea mitgarbaited:
 Die vom Open ES ES EL-Projekt (http://www.openssl.org/), da Young Eric  (eay@cryptsoft.com) und des Gfriggl mit die UPNP-Dingsns is vom Bernhard Thomas.
 
 
 Zua Übasezung:
 Ja mai, Jeda red andaschd, und koina kann song wi´s kört.
-
 Deshalb treffma uns imma Midwochs um zwangsg Ua (Wenn die Kirchnkoa-Probm rum is) in da Knaipn vom Schdorra-Wiad (Hintadupfing) und wea ois lezda no schdeed darf song wi´s gschriabm wead. 
 Ände!</translation>
     </message>
@@ -234,12 +233,12 @@ Deshalb treffma uns imma Midwochs um zwangsg Ua (Wenn die Kirchnkoa-Probm rum is
         <location filename="../askpassphrasedialog.cpp" line="41"/>
         <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;10 or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
         <translation>Dai Zauba-Schprücherl ausdenkn und aingebn.
-Gib Obachd, das &lt;b&gt;zmindeschd 10 zuafällige buachstob&lt;/b&gt; verwendeschd, oda &lt;b&gt;8 zuafällige wöarta&lt;/b&gt;.</translation>
+Gib Obachd, das &lt;b&gt;zmindeschd 10 zuafällige Buachstob&lt;/b&gt; verwendeschd, oda &lt;b&gt;8 zuafällige Wöarta&lt;/b&gt;.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="42"/>
         <source>Encrypt wallet</source>
-        <translation>Goidbaidl zuaschliaßn (mit Technik-woastscho)</translation>
+        <translation>Goidbaidl zuaschliaßn (mit am Zaubaschrücherl)</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="48"/>
@@ -302,7 +301,7 @@ Weil ma groad dabei san: Wennd da so an Virus oda so was auf dain Kompjuta hosch
     <message>
         <location filename="../askpassphrasedialog.cpp" line="128"/>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
-        <translation>OBACHT: Olle Kopi-en di du vorher schomal gmacht haschd, soldeschd weghaun und die noie &quot;wallet&quot; (dai Goidbaidl-Datai) da hinpflanzn.
+        <translation>OBACHT: Olle Kopi-en di du vorher schomal gmacht hasd, soldeschd weghaun und die noie &quot;wallet&quot; (dai Goidbaidl-Datai) da hinpflanzn.
 
 Wenn´d jezzad anfängsch den noin Goidbaild zu nuzzn dann gehd da alde nimma. Weils bessa so is.</translation>
     </message>
@@ -425,7 +424,7 @@ Wenn´d jezzad anfängsch den noin Goidbaild zu nuzzn dann gehd da alde nimma. W
     <message>
         <location filename="../bitcoingui.cpp" line="266"/>
         <source>Quit application</source>
-        <translation>&amp;ZuaUndTschüss</translation>
+        <translation>Zua Und Tschüss</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="270"/>
@@ -452,7 +451,7 @@ Wenn´d jezzad anfängsch den noin Goidbaild zu nuzzn dann gehd da alde nimma. W
     <message>
         <location filename="../bitcoingui.cpp" line="282"/>
         <source>&amp;Options...</source>
-        <translation>&amp;Oischdellunga</translation>
+        <translation>&amp;Opzionän</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="283"/>
@@ -473,7 +472,7 @@ Wenn´d jezzad anfängsch den noin Goidbaild zu nuzzn dann gehd da alde nimma. W
     <message>
         <location filename="../bitcoingui.cpp" line="291"/>
         <source>&amp;Encrypt Wallet...</source>
-        <translation>Goidbaidl a Kapuzzn aufsezzn</translation>
+        <translation>Goidbaidl midam Zaubaschprücherl schützn</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="292"/>
@@ -614,7 +613,7 @@ Wenn´d jezzad anfängsch den noin Goidbaild zu nuzzn dann gehd da alde nimma. W
     <message>
         <location filename="../bitcoingui.cpp" line="372"/>
         <source>&amp;Settings</source>
-        <translation>&amp;Oischdellungen</translation>
+        <translation>&amp;Aischdellunga</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="385"/>
@@ -1007,7 +1006,7 @@ Wird zugmachd, wails bessa is.</translation>
     <message>
         <location filename="../coincontroldialog.cpp" line="464"/>
         <source>none</source>
-        <translation>nix/kains/ohnä</translation>
+        <translation>gwihs ned</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="605"/>
@@ -1421,7 +1420,7 @@ Zam sin des mindeschdns %1GB Dadn. Und des wi´d grössa weadn. Gwies.</translat
     <message>
         <location filename="../forms/optionsdialog.ui" line="14"/>
         <source>Options</source>
-        <translation>Oischdellunga (Opzionän)</translation>
+        <translation>Aischdellunga (Opzionän)</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="27"/>
@@ -1675,7 +1674,7 @@ gschbield wiad.&lt;br&gt;&lt;br&gt;Je öfdas desto bessa (!!!), kost aber au mea
     <message>
         <location filename="../optionsdialog.cpp" line="134"/>
         <source>none</source>
-        <translation>nix/kains/ohnä</translation>
+        <translation>gwihs ned</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="222"/>
@@ -1727,7 +1726,7 @@ Aba, wards ab, des wird. Brauchd bloss a Minudn bis der Darkcon Koa mid di andan
     <message>
         <location filename="../forms/overviewpage.ui" line="114"/>
         <source>Available:</source>
-        <translation>Kansch ham:</translation>
+        <translation>Scho ankomm´n:</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="130"/>
@@ -1767,7 +1766,7 @@ Aba, wards ab, des wird. Brauchd bloss a Minudn bis der Darkcon Koa mid di andan
     <message>
         <location filename="../forms/overviewpage.ui" line="302"/>
         <source>Status:</source>
-        <translation>Schdatus:</translation>
+        <translation>Zuschdand:</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="309"/>
@@ -1777,7 +1776,7 @@ Aba, wards ab, des wird. Brauchd bloss a Minudn bis der Darkcon Koa mid di andan
     <message>
         <location filename="../forms/overviewpage.ui" line="316"/>
         <source>Completion:</source>
-        <translation>Voländung:</translation>
+        <translation>Und so waid is´s:</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="336"/>
@@ -1792,7 +1791,7 @@ Aba, wards ab, des wird. Brauchd bloss a Minudn bis der Darkcon Koa mid di andan
     <message>
         <location filename="../forms/overviewpage.ui" line="356"/>
         <source>Amount and Rounds:</source>
-        <translation>Summä und Rundn:</translation>
+        <translation>Wi´fui / Rundn:</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="363"/>
@@ -1820,7 +1819,7 @@ Aba, wards ab, des wird. Brauchd bloss a Minudn bis der Darkcon Koa mid di andan
         <location filename="../overviewpage.cpp" line="454"/>
         <location filename="../overviewpage.cpp" line="468"/>
         <source>Darksend</source>
-        <translation>Darksend</translation>
+        <translation>Darksend (Kapuzzngoid)</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="858"/>
@@ -1840,7 +1839,7 @@ Aba, wards ab, des wird. Brauchd bloss a Minudn bis der Darkcon Koa mid di andan
     <message>
         <location filename="../forms/overviewpage.ui" line="918"/>
         <source>Try Mix</source>
-        <translation>Hüttchenschbui veasuach</translation>
+        <translation>Kapuzzal nomal schubsn</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="937"/>
@@ -1855,7 +1854,7 @@ Aba, wards ab, des wird. Brauchd bloss a Minudn bis der Darkcon Koa mid di andan
     <message>
         <location filename="../forms/overviewpage.ui" line="979"/>
         <source>&lt;b&gt;Recent transactions&lt;/b&gt;</source>
-        <translation>&lt;b&gt;S´ lezde rain und naus&lt;/b&gt;</translation>
+        <translation>&lt;b&gt;S´ lezde Nai und Naus&lt;/b&gt;</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="126"/>
@@ -1885,12 +1884,12 @@ Aba, wards ab, des wird. Brauchd bloss a Minudn bis der Darkcon Koa mid di andan
     <message>
         <location filename="../overviewpage.cpp" line="267"/>
         <source>No inputs detected</source>
-        <translation type="unfinished"/>
+        <translation>I sig hald goa nix (kimmd nix o bai mia)</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="275"/>
         <source>Found unconfirmed denominated outputs, will wait till they confirm to recalculate.</source>
-        <translation>A paar kloine Kapuzzal san da drausn unbeafsichdigd. I ward no a bissal bis di alle wida im Käfig san. (Dan wissma wida wifuis insgsamd san)</translation>
+        <translation>A paar kloane Kapuzzal san da drausn unbeafsichdigd. I ward no a bissal bis di alle wida im Käfig san. (Dan wissma wida wifuis insgsamd san)</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="323"/>
@@ -1906,14 +1905,14 @@ Aba, wards ab, des wird. Brauchd bloss a Minudn bis der Darkcon Koa mid di andan
         <location filename="../overviewpage.cpp" line="363"/>
         <source>Last Darksend message:
 </source>
-        <translation>Läzde Darksänd Mässidsch:
+        <translation>Läzde Darksend Mässidsch:
 </translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="368"/>
         <location filename="../overviewpage.cpp" line="393"/>
         <source>Darksend is idle.</source>
-        <translation>Da Darksend hadn Finga im Bauchnabl und duad goanix...</translation>
+        <translation>Da Darksend hadn Finga im Bauchnabl und dängd nach...</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="374"/>
@@ -1980,17 +1979,17 @@ Aba, wards ab, des wird. Brauchd bloss a Minudn bis der Darkcon Koa mid di andan
     <message>
         <location filename="../overviewpage.cpp" line="401"/>
         <source>Submitted to masternode, waiting in queue .</source>
-        <translation>Kapuzzal is bai da Mastanode und wartät bis´s drann is.</translation>
+        <translation>Kapuzzal is bai da Mastanode und wartäd bis´s drann is.</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="402"/>
         <source>Submitted to masternode, waiting in queue ..</source>
-        <translation>Kapuzzal is bai da Mastanode und wartät bis´s drann is.</translation>
+        <translation>Kapuzzal is bai da Mastanode und wartäd bis´s drann is.</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="403"/>
         <source>Submitted to masternode, waiting in queue ...</source>
-        <translation>Kapuzzal is bai da Mastanode und wartät bis´s drann is.</translation>
+        <translation>Kapuzzal is bai da Mastanode und wartäd bis´s drann is.</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="405"/>
@@ -2104,12 +2103,12 @@ Aba, wards ab, des wird. Brauchd bloss a Minudn bis der Darkcon Koa mid di andan
     <message>
         <location filename="../paymentserver.cpp" line="665"/>
         <source>Network request error</source>
-        <translation type="unfinished"/>
+        <translation>Nix bast. (&quot;Payment request error&quot;)</translation>
     </message>
     <message>
         <location filename="../paymentserver.cpp" line="676"/>
         <source>Payment acknowledged</source>
-        <translation type="unfinished"/>
+        <translation>Brav sagda.</translation>
     </message>
 </context>
 <context>
@@ -2145,7 +2144,7 @@ Aba, wards ab, des wird. Brauchd bloss a Minudn bis der Darkcon Koa mid di andan
     <message>
         <location filename="../darkcoin.cpp" line="612"/>
         <source>Darkcoin Core didn&apos;t yet exit safely...</source>
-        <translation type="unfinished"/>
+        <translation>´S Programmal is no ned gsund haim kimma. Wardsch bessa no....</translation>
     </message>
     <message>
         <location filename="../guiutil.cpp" line="101"/>
@@ -2230,7 +2229,7 @@ Aba, wards ab, des wird. Brauchd bloss a Minudn bis der Darkcon Koa mid di andan
     <message>
         <location filename="../forms/rpcconsole.ui" line="90"/>
         <source>Open the Darkcoin debug log file from the current data directory. This can take a few seconds for large log files.</source>
-        <translation type="unfinished"/>
+        <translation>S Protokoll aufma´ha. Kann fai a bissal dauan, wenns z gross is...</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="93"/>
@@ -2245,7 +2244,7 @@ Aba, wards ab, des wird. Brauchd bloss a Minudn bis der Darkcon Koa mid di andan
     <message>
         <location filename="../forms/rpcconsole.ui" line="129"/>
         <source>Network</source>
-        <translation type="unfinished"/>
+        <translation>Netwörk</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="152"/>
@@ -2255,12 +2254,12 @@ Aba, wards ab, des wird. Brauchd bloss a Minudn bis der Darkcon Koa mid di andan
     <message>
         <location filename="../forms/rpcconsole.ui" line="165"/>
         <source>Debug log file</source>
-        <translation type="unfinished"/>
+        <translation>Protokoll</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="172"/>
         <source>Using OpenSSL version</source>
-        <translation type="unfinished"/>
+        <translation>Es Es El Wersion, di wo fawendet wiad:</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="182"/>
@@ -2295,7 +2294,7 @@ Aba, wards ab, des wird. Brauchd bloss a Minudn bis der Darkcon Koa mid di andan
     <message>
         <location filename="../forms/rpcconsole.ui" line="421"/>
         <source>&amp;Network Traffic</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Netzweark Träffig</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="473"/>
@@ -2375,7 +2374,7 @@ Aba, wards ab, des wird. Brauchd bloss a Minudn bis der Darkcon Koa mid di andan
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="34"/>
         <source>Reuse one of the previously used receiving addresses. Reusing addresses has security and privacy issues. Do not use this unless re-generating a payment request made before.</source>
-        <translation type="unfinished"/>
+        <translation>A oide Adressn nomal fawendn. SOLDSCH FAI NED MAHA !  ...essaidän Natürlich, du hosd guad drüba nachdenkt... (wenns aufs äaste mal ned glabbd hod - zumbaischbiel - und där Depp nomal übawaisn muss...)</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="37"/>
@@ -2386,7 +2385,7 @@ Aba, wards ab, des wird. Brauchd bloss a Minudn bis der Darkcon Koa mid di andan
         <location filename="../forms/receivecoinsdialog.ui" line="51"/>
         <location filename="../forms/receivecoinsdialog.ui" line="74"/>
         <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Darkcoin network.</source>
-        <translation type="unfinished"/>
+        <translation>Damidsch morgn no woasd, was des war kansd dir an Hinwais schraibm. Den siggd aba koana ausa dia.</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="54"/>
@@ -2423,7 +2422,7 @@ Aba, wards ab, des wird. Brauchd bloss a Minudn bis der Darkcon Koa mid di andan
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="141"/>
         <source>&amp;Request payment</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Zahlschain genarian</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="158"/>
@@ -2541,7 +2540,7 @@ Aba, wards ab, des wird. Brauchd bloss a Minudn bis der Darkcon Koa mid di andan
     <message>
         <location filename="../receiverequestdialog.cpp" line="166"/>
         <source>Error encoding URI into QR Code.</source>
-        <translation type="unfinished"/>
+        <translation>Di Uri wiad irgändwi ned sauba zu am Kuh-Är Kod...</translation>
     </message>
 </context>
 <context>
@@ -2586,9 +2585,9 @@ Aba, wards ab, des wird. Brauchd bloss a Minudn bis der Darkcon Koa mid di andan
     <name>SendCoinsDialog</name>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="14"/>
-        <location filename="../sendcoinsdialog.cpp" line="427"/>
-        <location filename="../sendcoinsdialog.cpp" line="511"/>
-        <location filename="../sendcoinsdialog.cpp" line="521"/>
+        <location filename="../sendcoinsdialog.cpp" line="428"/>
+        <location filename="../sendcoinsdialog.cpp" line="512"/>
+        <location filename="../sendcoinsdialog.cpp" line="522"/>
         <source>Send Coins</source>
         <translation>Coins schickga</translation>
     </message>
@@ -2670,7 +2669,7 @@ Aba, wards ab, des wird. Brauchd bloss a Minudn bis der Darkcon Koa mid di andan
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="653"/>
         <source>S&amp;end</source>
-        <translation type="unfinished"/>
+        <translation>Und &amp;abgehds</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="673"/>
@@ -2708,145 +2707,145 @@ Aba, wards ab, des wird. Brauchd bloss a Minudn bis der Darkcon Koa mid di andan
         <translation>Tuto Kompletti:</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="52"/>
+        <location filename="../sendcoinsdialog.cpp" line="53"/>
         <source>Copy quantity</source>
         <translation>Des &quot;wih oft&quot; kopian</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="53"/>
+        <location filename="../sendcoinsdialog.cpp" line="54"/>
         <source>Copy amount</source>
         <translation>wih-fuis-is kopian</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="54"/>
+        <location filename="../sendcoinsdialog.cpp" line="55"/>
         <source>Copy fee</source>
         <translation>dän Zoll kopian</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="55"/>
+        <location filename="../sendcoinsdialog.cpp" line="56"/>
         <source>Copy after fee</source>
         <translation>Nachm Zoll kopian</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="56"/>
+        <location filename="../sendcoinsdialog.cpp" line="57"/>
         <source>Copy bytes</source>
         <translation>Die Bizzlas kopian</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="57"/>
+        <location filename="../sendcoinsdialog.cpp" line="58"/>
         <source>Copy priority</source>
         <translation>Die Wichtigkait kopian</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="58"/>
+        <location filename="../sendcoinsdialog.cpp" line="59"/>
         <source>Copy low output</source>
         <translation>Däs lou-audputt kopian</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="59"/>
+        <location filename="../sendcoinsdialog.cpp" line="60"/>
         <source>Copy change</source>
         <translation>´S Wegslgoid kopian</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="154"/>
+        <location filename="../sendcoinsdialog.cpp" line="155"/>
         <source>(darksend requires this amount to be rounded up to the nearest %1).</source>
         <translation>(darksend brauchd den Betrag damids zum nägschdn %1 aufgrunded werdn kann)</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="188"/>
-        <location filename="../sendcoinsdialog.cpp" line="193"/>
-        <location filename="../sendcoinsdialog.cpp" line="198"/>
-        <location filename="../sendcoinsdialog.cpp" line="202"/>
+        <location filename="../sendcoinsdialog.cpp" line="189"/>
+        <location filename="../sendcoinsdialog.cpp" line="194"/>
+        <location filename="../sendcoinsdialog.cpp" line="199"/>
+        <location filename="../sendcoinsdialog.cpp" line="203"/>
         <source>%1 to %2</source>
         <translation>%1 bis %2</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="251"/>
+        <location filename="../sendcoinsdialog.cpp" line="252"/>
         <source>Are you sure you want to send?</source>
         <translation>Bischda si´ha das däs so naus soll?</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="260"/>
+        <location filename="../sendcoinsdialog.cpp" line="261"/>
         <source>are added as transaction fee</source>
         <translation>kimmd als Zoll dazu</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="274"/>
+        <location filename="../sendcoinsdialog.cpp" line="275"/>
         <source>Total Amount %1 (= %2)</source>
         <translation>Ois komplett %1 (= %2)</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="276"/>
+        <location filename="../sendcoinsdialog.cpp" line="277"/>
         <source>or</source>
         <translation>oda</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="278"/>
+        <location filename="../sendcoinsdialog.cpp" line="279"/>
         <source>Confirm send coins</source>
         <translation>Übawaisung fraigebm</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="433"/>
+        <location filename="../sendcoinsdialog.cpp" line="434"/>
         <source>Payment request expired</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="441"/>
+        <location filename="../sendcoinsdialog.cpp" line="442"/>
         <source>Invalid payment address %1</source>
         <translation>Die Adressn di koi Darkcoin-Adressn is %1</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="488"/>
+        <location filename="../sendcoinsdialog.cpp" line="489"/>
         <source>The recipient address is not valid, please recheck.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="491"/>
+        <location filename="../sendcoinsdialog.cpp" line="492"/>
         <source>The amount to pay must be larger than 0.</source>
         <translation>Also nix kamma ned zahln.....</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="494"/>
+        <location filename="../sendcoinsdialog.cpp" line="495"/>
         <source>The amount exceeds your balance.</source>
         <translation>So fui Goid hasd du garned.</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="497"/>
+        <location filename="../sendcoinsdialog.cpp" line="498"/>
         <source>The total exceeds your balance when the %1 transaction fee is included.</source>
         <translation>So fui Goid hasd du gar ned (Vergisss ned den Zoll von %1)</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="500"/>
+        <location filename="../sendcoinsdialog.cpp" line="501"/>
         <source>Duplicate address found, can only send to each address once per send operation.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="503"/>
+        <location filename="../sendcoinsdialog.cpp" line="504"/>
         <source>Transaction creation failed!</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="507"/>
+        <location filename="../sendcoinsdialog.cpp" line="508"/>
         <source>The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="512"/>
+        <location filename="../sendcoinsdialog.cpp" line="513"/>
         <source>Error: The wallet was unlocked only to anonymize coins.</source>
         <translation>Fehla: Da Goidbaidl is nur zum Kapuzzn-ma´ha aufgmachd woan. Was anders is ned alaubdt.</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="625"/>
+        <location filename="../sendcoinsdialog.cpp" line="626"/>
         <source>Warning: Invalid Darkcoin address</source>
         <translation>Obachd du Depp, des is koi Darkcoin-Adressn!</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="634"/>
+        <location filename="../sendcoinsdialog.cpp" line="635"/>
         <source>Warning: Unknown change address</source>
         <translation>Obachd: kaina woas wo des Wexxlgoid higeed.</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="645"/>
+        <location filename="../sendcoinsdialog.cpp" line="646"/>
         <source>(no label)</source>
         <translation>(koi Baperl)</translation>
     </message>
@@ -2861,7 +2860,7 @@ Aba, wards ab, des wird. Brauchd bloss a Minudn bis der Darkcon Koa mid di andan
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="36"/>
         <source>Pay &amp;To:</source>
-        <translation type="unfinished"/>
+        <translation>Gehd &amp;An:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="54"/>
@@ -2893,7 +2892,7 @@ Aba, wards ab, des wird. Brauchd bloss a Minudn bis der Darkcon Koa mid di andan
         <location filename="../forms/sendcoinsentry.ui" line="619"/>
         <location filename="../forms/sendcoinsentry.ui" line="1155"/>
         <source>Remove this entry</source>
-        <translation type="unfinished"/>
+        <translation>Schmaiss weg di Zailn</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="111"/>
@@ -2931,7 +2930,7 @@ Aba, wards ab, des wird. Brauchd bloss a Minudn bis der Darkcon Koa mid di andan
         <location filename="../forms/sendcoinsentry.ui" line="601"/>
         <location filename="../forms/sendcoinsentry.ui" line="1133"/>
         <source>Pay To:</source>
-        <translation type="unfinished"/>
+        <translation>Ämpfänga:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="635"/>
@@ -3147,7 +3146,7 @@ Aba, wards ab, des wird. Brauchd bloss a Minudn bis der Darkcon Koa mid di andan
     <message>
         <location filename="../signverifymessagedialog.cpp" line="238"/>
         <source>Message verified.</source>
-        <translation type="unfinished"/>
+        <translation>Mässidsch und Servus bassn zam!</translation>
     </message>
 </context>
 <context>
@@ -3160,7 +3159,7 @@ Aba, wards ab, des wird. Brauchd bloss a Minudn bis der Darkcon Koa mid di andan
     <message>
         <location filename="../splashscreen.cpp" line="34"/>
         <source>Version %1</source>
-        <translation type="unfinished"/>
+        <translation>Wersion %1</translation>
     </message>
     <message>
         <location filename="../splashscreen.cpp" line="35"/>
@@ -3196,13 +3195,13 @@ Aba, wards ab, des wird. Brauchd bloss a Minudn bis der Darkcon Koa mid di andan
     <message>
         <location filename="../transactiondesc.cpp" line="30"/>
         <source>Open until %1</source>
-        <translation type="unfinished"/>
+        <translation>G´öffned bis %1</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="38"/>
         <location filename="../transactiondesc.cpp" line="48"/>
         <source>conflicted</source>
-        <translation type="unfinished"/>
+        <translation>bast ned zam</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="40"/>
@@ -3222,7 +3221,7 @@ Aba, wards ab, des wird. Brauchd bloss a Minudn bis der Darkcon Koa mid di andan
     <message>
         <location filename="../transactiondesc.cpp" line="50"/>
         <source>%1/offline</source>
-        <translation type="unfinished"/>
+        <translation>%1/Kabl stäggd ned</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="52"/>
@@ -3237,17 +3236,17 @@ Aba, wards ab, des wird. Brauchd bloss a Minudn bis der Darkcon Koa mid di andan
     <message>
         <location filename="../transactiondesc.cpp" line="72"/>
         <source>Status</source>
-        <translation type="unfinished"/>
+        <translation>Schdadus</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="77"/>
         <source>, has not been successfully broadcast yet</source>
-        <translation type="unfinished"/>
+        <translation>hod no koaner von kört</translation>
     </message>
     <message numerus="yes">
         <location filename="../transactiondesc.cpp" line="79"/>
         <source>, broadcast through %n node(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation><numerusform>a nod hams scho midgriggd</numerusform><numerusform>%n nodes hams scho midgriggd</numerusform></translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="83"/>
@@ -3257,41 +3256,41 @@ Aba, wards ab, des wird. Brauchd bloss a Minudn bis der Darkcon Koa mid di andan
     <message>
         <location filename="../transactiondesc.cpp" line="90"/>
         <source>Source</source>
-        <translation type="unfinished"/>
+        <translation>Wurschdkässl</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="90"/>
         <source>Generated</source>
-        <translation type="unfinished"/>
+        <translation>Dschäneraitäd</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="95"/>
         <location filename="../transactiondesc.cpp" line="112"/>
         <source>From</source>
-        <translation type="unfinished"/>
+        <translation>Vom</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="112"/>
         <source>unknown</source>
-        <translation type="unfinished"/>
+        <translation>woasined</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="113"/>
         <location filename="../transactiondesc.cpp" line="135"/>
         <location filename="../transactiondesc.cpp" line="193"/>
         <source>To</source>
-        <translation type="unfinished"/>
+        <translation>an´n</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="116"/>
         <location filename="../transactiondesc.cpp" line="118"/>
         <source>own address</source>
-        <translation type="unfinished"/>
+        <translation>di selba</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="116"/>
         <source>label</source>
-        <translation type="unfinished"/>
+        <translation>Baperl</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="153"/>
@@ -3310,7 +3309,7 @@ Aba, wards ab, des wird. Brauchd bloss a Minudn bis der Darkcon Koa mid di andan
     <message>
         <location filename="../transactiondesc.cpp" line="157"/>
         <source>not accepted</source>
-        <translation type="unfinished"/>
+        <translation>nicht akzeptiat</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="201"/>
@@ -3339,17 +3338,17 @@ Aba, wards ab, des wird. Brauchd bloss a Minudn bis der Darkcon Koa mid di andan
     <message>
         <location filename="../transactiondesc.cpp" line="239"/>
         <source>Comment</source>
-        <translation type="unfinished"/>
+        <translation>Blezz Gschädz</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="241"/>
         <source>Transaction ID</source>
-        <translation type="unfinished"/>
+        <translation>Übawaisungs AiDii</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="259"/>
         <source>Merchant</source>
-        <translation type="unfinished"/>
+        <translation>Dandler</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="266"/>
@@ -3360,17 +3359,17 @@ Wenn dai Kischdn rechd schiach ausschaugd, dann sagen di Andan &quot;bäh&quot; 
     <message>
         <location filename="../transactiondesc.cpp" line="274"/>
         <source>Debug information</source>
-        <translation type="unfinished"/>
+        <translation>Dibag Informäischns</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="282"/>
         <source>Transaction</source>
-        <translation type="unfinished"/>
+        <translation>Übawaisung´n</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="285"/>
         <source>Inputs</source>
-        <translation type="unfinished"/>
+        <translation>Naikomma</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="306"/>
@@ -3393,12 +3392,12 @@ Wenn dai Kischdn rechd schiach ausschaugd, dann sagen di Andan &quot;bäh&quot; 
     <message>
         <location filename="../forms/transactiondescdialog.ui" line="14"/>
         <source>Transaction details</source>
-        <translation type="unfinished"/>
+        <translation>Überwaisungs-RADAR</translation>
     </message>
     <message>
         <location filename="../forms/transactiondescdialog.ui" line="20"/>
         <source>This pane shows a detailed description of the transaction</source>
-        <translation type="unfinished"/>
+        <translation>Bisch bled, gug hald hi - was hia sigsd, is des was ma siggd.</translation>
     </message>
 </context>
 <context>
@@ -3446,22 +3445,22 @@ Wenn dai Kischdn rechd schiach ausschaugd, dann sagen di Andan &quot;bäh&quot; 
     <message>
         <location filename="../transactiontablemodel.cpp" line="299"/>
         <source>Confirming (%1 of %2 recommended confirmations)</source>
-        <translation type="unfinished"/>
+        <translation>Wiad Bschdädigd  (%1 von %2 Bschdädigunga, di wo ma brauchd)</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="302"/>
         <source>Confirmed (%1 confirmations)</source>
-        <translation type="unfinished"/>
+        <translation>Bschdädigd (%1 Bschdädigunga)</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="305"/>
         <source>Conflicted</source>
-        <translation type="unfinished"/>
+        <translation>A bissal Gschoggd is scho.</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="308"/>
         <source>Immature (%1 confirmations, will be available after %2)</source>
-        <translation type="unfinished"/>
+        <translation>No a bissal Grean hindad Oan (is erst %1 , erwaxxn is mid %2)</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="311"/>
@@ -3471,32 +3470,32 @@ Wenn dai Kischdn rechd schiach ausschaugd, dann sagen di Andan &quot;bäh&quot; 
     <message>
         <location filename="../transactiontablemodel.cpp" line="314"/>
         <source>Generated but not accepted</source>
-        <translation type="unfinished"/>
+        <translation>Aufbaud hamses, aber no hod där Bau kai Genemigung</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="356"/>
         <source>Received with</source>
-        <translation>Grigd habis auf welche Adressn</translation>
+        <translation>Mir gschigd woan</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="358"/>
         <source>Received from</source>
-        <translation type="unfinished"/>
+        <translation>Griggd vom</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="360"/>
         <source>Received via Darksend</source>
-        <translation type="unfinished"/>
+        <translation>Griggd üban Darksend</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="363"/>
         <source>Sent to</source>
-        <translation>Gigd hads da</translation>
+        <translation>Habi gschiggd</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="365"/>
         <source>Payment to yourself</source>
-        <translation type="unfinished"/>
+        <translation>An mi Selba</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="367"/>
@@ -3511,12 +3510,12 @@ Wenn dai Kischdn rechd schiach ausschaugd, dann sagen di Andan &quot;bäh&quot; 
     <message>
         <location filename="../transactiontablemodel.cpp" line="372"/>
         <source>Darksend Collateral Payment</source>
-        <translation type="unfinished"/>
+        <translation>Darksend Schudzgoid</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="374"/>
         <source>Darksend Split Up Large Inputs</source>
-        <translation type="unfinished"/>
+        <translation>Darksend hod aus grosse Bazzn klaine Kapuzzal gmachd</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="376"/>
@@ -3526,32 +3525,32 @@ Wenn dai Kischdn rechd schiach ausschaugd, dann sagen di Andan &quot;bäh&quot; 
     <message>
         <location filename="../transactiontablemodel.cpp" line="418"/>
         <source>(n/a)</source>
-        <translation type="unfinished"/>
+        <translation>(woasined)</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="610"/>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
-        <translation type="unfinished"/>
+        <translation>Wi siha is das´s globd had mid dem Goid sendn/empfang´n. Duasd dain Mauszaigerl üba di Tränsäktschn und dann sigsd wi ofds scho ainbaud woan is in di Kischderl.</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="612"/>
         <source>Date and time that the transaction was received.</source>
-        <translation type="unfinished"/>
+        <translation>Wans griggd hosd, die Tränsäktschn.</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="614"/>
         <source>Type of transaction.</source>
-        <translation type="unfinished"/>
+        <translation>Art. (Hund, Kazzal, Giggala, ...)</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="616"/>
         <source>Destination address of transaction.</source>
-        <translation type="unfinished"/>
+        <translation>An wen des Goid gehd.</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="618"/>
         <source>Amount removed from or added to balance.</source>
-        <translation type="unfinished"/>
+        <translation>Des Goid des weg ganga is oda dazukimma.</translation>
     </message>
 </context>
 <context>
@@ -3595,7 +3594,7 @@ Wenn dai Kischdn rechd schiach ausschaugd, dann sagen di Andan &quot;bäh&quot; 
     <message>
         <location filename="../transactionview.cpp" line="77"/>
         <source>Received with</source>
-        <translation>Grigd habis auf welche Adressn</translation>
+        <translation>Grigd habis auf die Adressn</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="79"/>
@@ -3922,7 +3921,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Darkcoin Alert&quot; admin@foo
     <message>
         <location filename="../bitcoinstrings.cpp" line="87"/>
         <source>Found unconfirmed denominated outputs, will wait till they confirm to continue.</source>
-        <translation type="unfinished"/>
+        <translation>A paar kloane Kapuzzal san da drausn unbeafsichdigd. I ward no a bissal bis di alle wida im Käfig san. (Dan gehds wida waida)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="90"/>
@@ -4149,12 +4148,12 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="183"/>
         <source>Collateral is not valid.</source>
-        <translation type="unfinished"/>
+        <translation>Schudzgoid is no ned zahld.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="184"/>
         <source>Collateral not valid.</source>
-        <translation type="unfinished"/>
+        <translation>Schudzgoid is no ned zahld.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="185"/>
@@ -4194,7 +4193,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="192"/>
         <source>Darkcoin Core Daemon</source>
-        <translation type="unfinished"/>
+        <translation>Darkcoin Koa Dämon</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="193"/>
@@ -4204,12 +4203,12 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="194"/>
         <source>Darksend is disabled.</source>
-        <translation type="unfinished"/>
+        <translation>Darksend is aus.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="195"/>
         <source>Darksend options:</source>
-        <translation type="unfinished"/>
+        <translation>Darksend Optschns:</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="196"/>
@@ -4239,17 +4238,17 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="201"/>
         <source>Done loading</source>
-        <translation type="unfinished"/>
+        <translation>Ois glaadn</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="202"/>
         <source>Enable the client to act as a masternode (0-1, default: 0)</source>
-        <translation type="unfinished"/>
+        <translation>Dai Programmerl soll so duan wi wäns a Masternode war (0-1, kört: 0)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="203"/>
         <source>Entries are full.</source>
-        <translation type="unfinished"/>
+        <translation>S Buch is foll. Bis üba baide Oan. Foll is.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="204"/>
@@ -4544,12 +4543,12 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="262"/>
         <source>Last Darksend was too recent.</source>
-        <translation type="unfinished"/>
+        <translation>Au Kapuzzn-Kinda brauchn mal a Pausn. Machda a Bia auf...</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="263"/>
         <source>Last successful darksend action was too recent.</source>
-        <translation type="unfinished"/>
+        <translation>Im Kapuzzngardn is grad Rauchapausn.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="264"/>
@@ -4644,7 +4643,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="282"/>
         <source>No masternodes detected.</source>
-        <translation type="unfinished"/>
+        <translation>i sigg grad koi Mastanode....</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="283"/>
@@ -4939,7 +4938,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="341"/>
         <source>To use the %s option</source>
-        <translation type="unfinished"/>
+        <translation>Damid  %s ma´ha kansch</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="342"/>
@@ -4969,7 +4968,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="347"/>
         <source>Transaction too large</source>
-        <translation type="unfinished"/>
+        <translation>Da muss aba aina was kompenzian, oda? (Tränsaktschn tu lardsch)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="348"/>
@@ -5048,8 +5047,8 @@ If the file does not exist, create it with owner-readable-only file permissions.
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="363"/>
-        <source>Value more than Darksed pool maximum allows.</source>
-        <translation>Mid so fui Goid kann der Pool goaned umgehn. S zfui!</translation>
+        <source>Value more than Darksend pool maximum allows.</source>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="364"/>
