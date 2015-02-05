@@ -104,11 +104,13 @@ void ProcessMessageInstantX(CNode* pfrom, std::string& strCommand, CDataStream& 
             if (i != mapTxLocks.end()){
                 //we only care if we have a complete tx lock
                 if((*i).second.CountSignatures() >= INSTANTX_SIGNATURES_REQUIRED){
-                    LogPrintf("ProcessMessageInstantX::txlreq - Found Existing Complete IX Lock\n");
+                    if(!CheckForConflictingLocks(tx)){
+                        LogPrintf("ProcessMessageInstantX::txlreq - Found Existing Complete IX Lock\n");
 
-                    CValidationState state;
-                    DisconnectBlockAndInputs(state, tx);
-                    mapTxLockReq.insert(make_pair(tx.GetHash(), tx));
+                        CValidationState state;
+                        DisconnectBlockAndInputs(state, tx);
+                        mapTxLockReq.insert(make_pair(tx.GetHash(), tx));
+                    }
                 }
             }
 
@@ -229,7 +231,7 @@ int64_t CreateNewLock(CTransaction tx)
 
         CTransactionLock newLock;
         newLock.nBlockHeight = nBlockHeight;
-        newLock.nExpiration = GetTime()+(60*60);
+        newLock.nExpiration = GetTime()+(60*15); //locks expire after 15 minutes (6 confirmations)
         newLock.nTimeout = GetTime()+(60*5);
         newLock.txHash = tx.GetHash();
         mapTxLocks.insert(make_pair(tx.GetHash(), newLock));
@@ -318,29 +320,32 @@ bool ProcessConsensusVote(CConsensusVote& ctx)
         if((*i).second.CountSignatures() >= INSTANTX_SIGNATURES_REQUIRED){
             if(fDebug) LogPrintf("InstantX::ProcessConsensusVote - Transaction Lock Is Complete %s !\n", (*i).second.GetHash().ToString().c_str());
 
-#ifdef ENABLE_WALLET
-            if(pwalletMain){
-                if(pwalletMain->UpdatedTransaction((*i).second.txHash)){
-                    nCompleteTXLocks++;
-                }
-            }
-#endif
+            CTransaction& tx = mapTxLockReq[ctx.txHash];
+            if(!CheckForConflictingLocks(tx)){
 
-            if(mapTxLockReq.count(ctx.txHash)){
-                CTransaction& tx = mapTxLockReq[ctx.txHash];
-                BOOST_FOREACH(const CTxIn& in, tx.vin){
-                    if(!mapLockedInputs.count(in.prevout)){
-                        mapLockedInputs.insert(make_pair(in.prevout, ctx.txHash));
+#ifdef ENABLE_WALLET
+                if(pwalletMain){
+                    if(pwalletMain->UpdatedTransaction((*i).second.txHash)){
+                        nCompleteTXLocks++;
                     }
                 }
-            }
+#endif
 
-            // resolve conflicts
+                if(mapTxLockReq.count(ctx.txHash)){
+                    BOOST_FOREACH(const CTxIn& in, tx.vin){
+                        if(!mapLockedInputs.count(in.prevout)){
+                            mapLockedInputs.insert(make_pair(in.prevout, ctx.txHash));
+                        }
+                    }
+                }
 
-            //if this tx lock was rejected, we need to remove the conflicting blocks
-            if(mapTxLockReqRejected.count((*i).second.txHash)){
-                CValidationState state;
-                DisconnectBlockAndInputs(state, mapTxLockReqRejected[(*i).second.txHash]);
+                // resolve conflicts
+
+                //if this tx lock was rejected, we need to remove the conflicting blocks
+                if(mapTxLockReqRejected.count((*i).second.txHash)){
+                    CValidationState state;
+                    DisconnectBlockAndInputs(state, mapTxLockReqRejected[(*i).second.txHash]);
+                }
             }
         }
         return true;
@@ -350,6 +355,28 @@ bool ProcessConsensusVote(CConsensusVote& ctx)
     return false;
 }
 
+bool CheckForConflictingLocks(CTransaction& tx)
+{
+    /*
+        It's possible (very unlikely though) to get 2 conflicting transaction locks approved by the network.
+        In that case, they will cancel each other out.
+
+        Blocks could have been rejected during this time, which is OK. After they cancel out, the client will
+        rescan the blocks and find they're acceptable and then take the chain with the most work.
+    */
+    BOOST_FOREACH(const CTxIn& in, tx.vin){
+        if(mapLockedInputs.count(in.prevout)){
+            if(mapLockedInputs[in.prevout] != tx.GetHash()){
+                LogPrintf("InstantX::CheckForConflictingLocks - found two complete conflicting locks - removing both. %s %s", tx.GetHash().ToString().c_str(), mapLockedInputs[in.prevout].ToString().c_str());
+                if(mapTxLocks.count(tx.GetHash())) mapTxLocks[tx.GetHash()].nExpiration = GetTime();
+                if(mapTxLocks.count(mapLockedInputs[in.prevout])) mapTxLocks[mapLockedInputs[in.prevout]].nExpiration = GetTime();
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
 
 int64_t GetAverageVoteTime()
 {
