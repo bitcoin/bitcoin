@@ -702,7 +702,7 @@ bool AppInit2(boost::thread_group& threadGroup)
     }
 
     //ignore masternodes below protocol version
-    nMasternodeMinProtocol = GetArg("-masternodeminprotocol", 0);
+    nMasternodeMinProtocol = GetArg("-masternodeminprotocol", 70051);
 
     int64_t nStart;
 
