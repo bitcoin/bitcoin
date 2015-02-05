@@ -49,9 +49,10 @@ For the versions used in the release, see [release-process.md](release-process.m
 System requirements
 --------------------
 
-C++ compilers are memory-hungry. It is recommended to have at least 1 GB of
-memory available when compiling Bitcoin Core. With 512MB of memory or less
-compilation will take much longer due to swap thrashing.
+C++ compilers are memory-hungry. It is recommended to have at least 2 GB of
+memory available when compiling Bitcoin Core. With 1 GB of memory or less
+compilation may take much longer due to swap thrashing or exhaust the 
+available memory and give up.
 
 Dependency Build Instructions: Ubuntu & Debian
 ----------------------------------------------
