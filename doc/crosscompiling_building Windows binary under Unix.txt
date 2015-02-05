@@ -49,7 +49,7 @@ libz.a
 2.4) Berkeley DB
 -Скачайте http://download.oracle.com/berkeley-db/db-6.0.20.tar.gz
 -Распакуйте в домашнюю папку
--Откройте файл /home/<ваше имя>/db-6.0.20/src/dbinc/winioctl.h
+-Откройте файл /home/<ваше имя>/db-6.0.20/src/dbinc/win_db.h
 -Измените 
 #include <WinIoCtl.h>
 на
