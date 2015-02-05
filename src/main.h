@@ -10,19 +10,9 @@
 #include "config/bitcoin-config.h"
 #endif
 
-#include "amount.h"
 #include "chain.h"
-#include "chainparams.h"
 #include "net.h"
-#include "primitives/block.h"
-#include "primitives/transaction.h"
-#include "script/script.h"
-#include "script/sigcache.h"
-#include "script/standard.h"
-#include "sync.h"
-#include "tinyformat.h"
-#include "txmempool.h"
-#include "uint256.h"
+#include "script/script_error.h"
 
 #include <algorithm>
 #include <exception>
@@ -33,13 +23,18 @@
 #include <utility>
 #include <vector>
 
+#include <boost/filesystem/path.hpp>
 #include <boost/unordered_map.hpp>
 
-class CBlockIndex;
 class CBlockTreeDB;
 class CBloomFilter;
+class CCoins;
+class CCoinsView;
+class CCoinsViewCache;
+class CCoinsViewEfficient;
 class CInv;
 class CScriptCheck;
+class CTxMemPool;
 class CValidationInterface;
 class CValidationState;
 
@@ -248,10 +243,7 @@ private:
 
 public:
     CScriptCheck(): ptxTo(0), nIn(0), nFlags(0), cacheStore(false), error(SCRIPT_ERR_UNKNOWN_ERROR) {}
-    CScriptCheck(const CCoins& txFromIn, const CTransaction& txToIn, unsigned int nInIn, unsigned int nFlagsIn, bool cacheIn) :
-        scriptPubKey(txFromIn.vout[txToIn.vin[nInIn].prevout.n].scriptPubKey),
-        ptxTo(&txToIn), nIn(nInIn), nFlags(nFlagsIn), cacheStore(cacheIn), error(SCRIPT_ERR_UNKNOWN_ERROR) { }
-
+    CScriptCheck(const CCoins& txFromIn, const CTransaction& txToIn, unsigned int nInIn, unsigned int nFlagsIn, bool cacheIn);
     bool operator()();
 
     void swap(CScriptCheck &check) {

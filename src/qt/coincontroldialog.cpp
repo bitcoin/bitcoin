@@ -14,8 +14,8 @@
 #include "walletmodel.h"
 
 #include "coincontrol.h"
-#include "main.h"
 #include "policy/policy.h"
+#include "txmempool.h"
 #include "wallet/wallet.h"
 
 #include <boost/assign/list_of.hpp> // for 'map_list_of()'

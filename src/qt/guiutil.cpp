@@ -10,7 +10,6 @@
 #include "walletmodel.h"
 
 #include "init.h"
-#include "main.h"
 #include "policy/policy.h"
 #include "primitives/transaction.h"
 #include "protocol.h"

@@ -16,8 +16,12 @@
 #include "main.h"
 #include "net.h"
 #include "policy/policy.h"
+#include "primitives/block.h"
 #include "primitives/transaction.h"
+#include "pubkey.h"
+#include "script/standard.h"
 #include "timedata.h"
+#include "txmempool.h"
 #include "util.h"
 #include "utilmoneystr.h"
 #ifdef ENABLE_WALLET

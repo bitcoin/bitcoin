@@ -3,9 +3,9 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "base58.h"
-#include "rpcserver.h"
 #include "init.h"
 #include "main.h"
+#include "rpcserver.h"
 #include "script/script.h"
 #include "script/standard.h"
 #include "sync.h"
@@ -18,6 +18,7 @@
 
 #include <boost/algorithm/string.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/foreach.hpp>
 
 #include "json/json_spirit_value.h"
 

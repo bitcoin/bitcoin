@@ -5,6 +5,7 @@
 
 #include "txmempool.h"
 
+#include "chain.h"
 #include "clientversion.h"
 #include "coins.h"
 #include "coinscache.h"

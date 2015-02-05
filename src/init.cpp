@@ -11,6 +11,7 @@
 
 #include "addrman.h"
 #include "amount.h"
+#include "chainparams.h"
 #include "checkpoints.h"
 #include "coins.h"
 #include "coinscache.h"
@@ -24,6 +25,7 @@
 #include "rpcserver.h"
 #include "script/standard.h"
 #include "txdb.h"
+#include "txmempool.h"
 #include "ui_interface.h"
 #include "util.h"
 #include "utilmoneystr.h"

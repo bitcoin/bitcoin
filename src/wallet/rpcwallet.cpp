@@ -21,6 +21,7 @@
 #include <stdint.h>
 
 #include <boost/assign/list_of.hpp>
+#include <boost/foreach.hpp>
 
 #include "json/json_spirit_utils.h"
 #include "json/json_spirit_value.h"

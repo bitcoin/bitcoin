@@ -2,17 +2,14 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-//
-// Unit tests for denial-of-service detection/prevention code
-//
-
-
-
+#include "chainparams.h"
 #include "consensus/pow.h"
 #include "keystore.h"
 #include "main.h"
 #include "net.h"
+#include "primitives/transaction.h"
 #include "script/sign.h"
+#include "script/standard.h"
 #include "serialize.h"
 #include "util.h"
 

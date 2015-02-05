@@ -18,6 +18,7 @@
 #include "script/script.h"
 #include "script/sign.h"
 #include "script/standard.h"
+#include "txmempool.h"
 #include "uint256.h"
 #ifdef ENABLE_WALLET
 #include "wallet/wallet.h"

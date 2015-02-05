@@ -7,6 +7,7 @@
 
 #include "addrman.h"
 #include "alert.h"
+#include "amount.h"
 #include "arith_uint256.h"
 #include "chainparams.h"
 #include "checkpoints.h"
@@ -18,11 +19,17 @@
 #include "consensus/validation.h"
 #include "init.h"
 #include "merkleblock.h"
-#include "net.h"
 #include "policy/policy.h"
+#include "primitives/block.h"
+#include "primitives/transaction.h"
+#include "script/script.h"
+#include "script/sigcache.h"
+#include "script/standard.h"
+#include "tinyformat.h"
 #include "txdb.h"
 #include "txmempool.h"
 #include "ui_interface.h"
+#include "uint256.h"
 #include "undo.h"
 #include "util.h"
 #include "utilmoneystr.h"
@@ -1110,6 +1117,10 @@ void UpdateCoins(const CTransaction& tx, CValidationState &state, CCoinsViewCach
     CTxUndo txundo;
     UpdateCoins(tx, state, inputs, txundo, nHeight);
 }
+
+CScriptCheck::CScriptCheck(const CCoins& txFromIn, const CTransaction& txToIn, unsigned int nInIn, unsigned int nFlagsIn, bool cacheIn) :
+    scriptPubKey(txFromIn.vout[txToIn.vin[nInIn].prevout.n].scriptPubKey),
+    ptxTo(&txToIn), nIn(nInIn), nFlags(nFlagsIn), cacheStore(cacheIn), error(SCRIPT_ERR_UNKNOWN_ERROR) {}
 
 bool CScriptCheck::operator()() {
     const CScript &scriptSig = ptxTo->vin[nIn].scriptSig;

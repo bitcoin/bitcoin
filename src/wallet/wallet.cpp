@@ -10,12 +10,16 @@
 #include "coincontrol.h"
 #include "consensus/consensus.h"
 #include "consensus/validation.h"
+#include "key.h"
+#include "keystore.h"
 #include "main.h"
 #include "net.h"
 #include "policy/policy.h"
+#include "primitives/block.h"
 #include "script/script.h"
 #include "script/sign.h"
 #include "timedata.h"
+#include "txmempool.h"
 #include "util.h"
 #include "utilmoneystr.h"
 
@@ -23,6 +27,7 @@
 
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/foreach.hpp>
 #include <boost/thread.hpp>
 
 using namespace std;

@@ -2,8 +2,9 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include "chain.h"
+#include "chainparams.h"
 #include "consensus/pow.h"
-#include "main.h"
 #include "test/test_bitcoin.h"
 #include "util.h"
 

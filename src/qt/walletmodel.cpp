@@ -26,6 +26,8 @@
 #include <QSet>
 #include <QTimer>
 
+#include <boost/foreach.hpp>
+
 using namespace std;
 
 WalletModel::WalletModel(CWallet *wallet, OptionsModel *optionsModel, QObject *parent) :

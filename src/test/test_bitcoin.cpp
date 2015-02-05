@@ -6,6 +6,7 @@
 
 #include "test_bitcoin.h"
 
+#include "chainparams.h"
 #include "coinscache.h"
 #include "main.h"
 #include "policy/policy.h"

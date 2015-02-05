@@ -5,11 +5,14 @@
 #include "key.h"
 #include "keystore.h"
 #include "policy/policy.h"
+#include "primitives/transaction.h"
 #include "script/interpreter.h"
 #include "script/script.h"
 #include "script/script_error.h"
 #include "script/sign.h"
 #include "test/test_bitcoin.h"
+#include "tinyformat.h"
+#include "uint256.h"
 #include "uint256.h"
 
 #ifdef ENABLE_WALLET
