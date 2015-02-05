@@ -360,7 +360,6 @@ void OverviewPage::darkSendStatus()
 
     /* ** @TODO this string creation really needs some clean ups ---vertoe ** */
     std::ostringstream convert;
-    convert << tr("Last Darksend message:\n").toStdString();
 
     if(state == POOL_STATUS_ACCEPTING_ENTRIES) {
         if(entries == 0) {
@@ -408,12 +407,12 @@ void OverviewPage::darkSendStatus()
     if(state == POOL_STATUS_ERROR || state == POOL_STATUS_SUCCESS) darkSendPool.Check();
 
     QString s(convert.str().c_str());
+    s = tr("Last Darksend message:\n") + s;
 
     if(s != ui->darksendStatus->text())
-        LogPrintf("%s\n", convert.str().c_str());
+        LogPrintf("Last Darksend message: %s\n", convert.str().c_str());
 
     ui->darksendStatus->setText(s);
-
 
     if(darkSendPool.sessionDenom == 0){
         ui->labelSubmittedDenom->setText(tr("N/A"));
