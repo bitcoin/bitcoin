@@ -66,7 +66,7 @@ void ProcessMessageInstantX(CNode* pfrom, std::string& strCommand, CDataStream& 
         bool fMissingInputs = false;
         CValidationState state;
 
-        
+
         if (AcceptToMemoryPool(mempool, state, tx, true, &fMissingInputs))
         {
             RelayTransactionLockReq(tx, tx.GetHash());
@@ -212,7 +212,7 @@ int64_t CreateNewLock(CTransaction tx)
         nTxAge = GetInputAge(i);
         if(nTxAge < 6)
         {
-            LogPrintf("ProcessMessageInstantX::txlreq - Transaction not found / too new: %d / %s\n", nTxAge, tx.GetHash().ToString().c_str());
+            LogPrintf("CreateNewLock - Transaction not found / too new: %d / %s\n", nTxAge, tx.GetHash().ToString().c_str());
             return 0;
         }
     }
@@ -225,7 +225,7 @@ int64_t CreateNewLock(CTransaction tx)
     int nBlockHeight = (chainActive.Tip()->nHeight - nTxAge)+4;
 
     if (!mapTxLocks.count(tx.GetHash())){
-        LogPrintf("InstantX::ProcessConsensusVote - New Transaction Lock %s !\n", tx.GetHash().ToString().c_str());
+        LogPrintf("CreateNewLock - New Transaction Lock %s !\n", tx.GetHash().ToString().c_str());
 
         CTransactionLock newLock;
         newLock.nBlockHeight = nBlockHeight;
@@ -234,7 +234,7 @@ int64_t CreateNewLock(CTransaction tx)
         mapTxLocks.insert(make_pair(tx.GetHash(), newLock));
     } else {
         mapTxLocks[tx.GetHash()].nBlockHeight = nBlockHeight;
-        if(fDebug) LogPrintf("InstantX::ProcessConsensusVote - Transaction Lock Exists %s !\n", tx.GetHash().ToString().c_str());
+        if(fDebug) LogPrintf("CreateNewLock - Transaction Lock Exists %s !\n", tx.GetHash().ToString().c_str());
     }
 
     return nBlockHeight;
@@ -284,7 +284,7 @@ bool ProcessConsensusVote(CConsensusVote& ctx)
 
     if(n > 10)
     {
-        LogPrintf("InstantX::ProcessConsensusVote - Masternode not in the top 10\n");
+        LogPrintf("InstantX::ProcessConsensusVote - Masternode not in the top 10 (%d)\n", n);
         return false;
     }
 
@@ -508,7 +508,7 @@ int CTransactionLock::CountSignatures()
         The votes have no proof it's the correct blockheight
     */
 
-    if(nBlockHeight == 0) return 0;
+    if(nBlockHeight == 0) return -1;
 
     int n = 0;
     BOOST_FOREACH(CConsensusVote v, vecConsensusVotes){
