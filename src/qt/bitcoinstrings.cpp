@@ -360,7 +360,7 @@ QT_TRANSLATE_NOOP("darkcoin-core", "Use UPnP to map the listening port (default:
 QT_TRANSLATE_NOOP("darkcoin-core", "Use UPnP to map the listening port (default: 1 when listening)"),
 QT_TRANSLATE_NOOP("darkcoin-core", "Use the test network"),
 QT_TRANSLATE_NOOP("darkcoin-core", "Username for JSON-RPC connections"),
-QT_TRANSLATE_NOOP("darkcoin-core", "Value more than Darksed pool maximum allows."),
+QT_TRANSLATE_NOOP("darkcoin-core", "Value more than Darksend pool maximum allows."),
 QT_TRANSLATE_NOOP("darkcoin-core", "Verifying blocks..."),
 QT_TRANSLATE_NOOP("darkcoin-core", "Verifying wallet..."),
 QT_TRANSLATE_NOOP("darkcoin-core", "Wait for RPC server to start"),
