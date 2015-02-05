@@ -153,6 +153,7 @@
         <file alias="sl_SI">locale/darkcoin_sl_SI.qm</file>
         <file alias="sq">locale/darkcoin_sq.qm</file>
         <file alias="sr">locale/darkcoin_sr.qm</file>
+        <file alias="sr@latin">locale/darkcoin_sr@latin.qm</file>
         <file alias="sv">locale/darkcoin_sv.qm</file>
         <file alias="th_TH">locale/darkcoin_th_TH.qm</file>
         <file alias="tr">locale/darkcoin_tr.qm</file>

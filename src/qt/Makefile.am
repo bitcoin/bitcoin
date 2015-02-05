@@ -80,6 +80,7 @@ QT_TS = \
   locale/darkcoin_sl_SI.ts \
   locale/darkcoin_sq.ts \
   locale/darkcoin_sr.ts \
+  locale/darkcoin_sr@latin.ts \
   locale/darkcoin_sv.ts \
   locale/darkcoin_th_TH.ts \
   locale/darkcoin_tr.ts \
