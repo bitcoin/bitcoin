@@ -1172,6 +1172,7 @@ int CMerkleTx::GetDepthInMainChainINTERNAL(CBlockIndex* &pindexRet) const
 
 int CMerkleTx::GetTransactionLockSignatures() const
 {
+    if(fLargeWorkForkFound || fLargeWorkInvalidChainFound) return -2;
     if(nInstantXDepth == 0) return -1;
 
     //compile consessus vote
@@ -2824,14 +2825,16 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
 
     // ----------- instantX transaction scanning -----------
 
-    BOOST_FOREACH(const CTransaction& tx, block.vtx){
-        if (!tx.IsCoinBase()){
-            //only reject blocks when it's based on complete consensus
-            BOOST_FOREACH(const CTxIn& in, tx.vin){
-                if(mapLockedInputs.count(in.prevout)){
-                    if(mapLockedInputs[in.prevout] != tx.GetHash()){
-                        return state.DoS(0, error("CheckBlock() : found conflicting transaction with transaction lock"),
-                                         REJECT_INVALID, "conflicting-tx-ix");
+    if(!fLargeWorkForkFound && !fLargeWorkInvalidChainFound){
+        BOOST_FOREACH(const CTransaction& tx, block.vtx){
+            if (!tx.IsCoinBase()){
+                //only reject blocks when it's based on complete consensus
+                BOOST_FOREACH(const CTxIn& in, tx.vin){
+                    if(mapLockedInputs.count(in.prevout)){
+                        if(mapLockedInputs[in.prevout] != tx.GetHash()){
+                            return state.DoS(0, error("CheckBlock() : found conflicting transaction with transaction lock"),
+                                             REJECT_INVALID, "conflicting-tx-ix");
+                        }
                     }
                 }
             }
@@ -2849,7 +2852,8 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
         if(block.nTime > START_MASTERNODE_PAYMENTS) MasternodePayments = true;
     }
 
-    if(MasternodePayments)
+
+    if(MasternodePayments && !fLargeWorkForkFound && !fLargeWorkInvalidChainFound)
     {
         LOCK2(cs_main, mempool.cs);
 

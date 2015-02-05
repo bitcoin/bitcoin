@@ -35,6 +35,7 @@ int nCompleteTXLocks;
 void ProcessMessageInstantX(CNode* pfrom, std::string& strCommand, CDataStream& vRecv)
 {
     if(fLiteMode) return; //disable all darksend/masternode related functionality
+    if(fLargeWorkForkFound || fLargeWorkInvalidChainFound) return;
 
     if (strCommand == "txlreq")
     {
@@ -285,9 +286,9 @@ bool ProcessConsensusVote(CConsensusVote& ctx)
         return false;
     }
 
-    if(n > 10)
+    if(n > INSTANTX_SIGNATURES_TOTAL)
     {
-        LogPrintf("InstantX::ProcessConsensusVote - Masternode not in the top 10 (%d)\n", n);
+        LogPrintf("InstantX::ProcessConsensusVote - Masternode not in the top %d (%d)\n", INSTANTX_SIGNATURES_TOTAL, n);
         return false;
     }
 
@@ -510,9 +511,9 @@ bool CTransactionLock::SignaturesValid()
             return false;
         }
 
-        if(n > 10)
+        if(n > INSTANTX_SIGNATURES_TOTAL)
         {
-            LogPrintf("InstantX::DoConsensusVote - Masternode not in the top 10\n");
+            LogPrintf("InstantX::DoConsensusVote - Masternode not in the top %s\n", INSTANTX_SIGNATURES_TOTAL);
             return false;
         }
 
