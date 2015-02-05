@@ -23,18 +23,22 @@ class CConsensusVote;
 class CTransaction;
 class CTransactionLock;
 
-static const int MIN_INSTANTX_PROTO_VERSION = 70057;
+static const int MIN_INSTANTX_PROTO_VERSION = 70058;
 
 extern map<uint256, CTransaction> mapTxLockReq;
 extern map<uint256, CTransactionLock> mapTxLocks;
+extern std::map<COutPoint, uint256> mapLockedInputs;
 extern int nCompleteTXLocks;
+
+
+int64_t CreateNewLock(CTransaction tx);
 
 bool IsIXTXValid(const CTransaction& txCollateral);
 
 void ProcessMessageInstantX(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
 
 //check if we need to vote on this transaction
-void DoConsensusVote(CTransaction& tx, bool approved, int64_t nBlockHeight);
+void DoConsensusVote(CTransaction& tx, int64_t nBlockHeight);
 
 //process consensus vote message
 bool ProcessConsensusVote(CConsensusVote& ctx);
