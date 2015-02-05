@@ -1319,41 +1319,6 @@ bool CDarkSendPool::GetBlockHash(uint256& hash, int nBlockHeight)
     return false;
 }
 
-//Get the last hash that matches the modulus given. Processed in reverse order
-bool CDarkSendPool::GetLastValidBlockHash(uint256& hash, int mod, int nBlockHeight)
-{
-    if(unitTest){
-        hash.SetHex("00000000001432b4910722303bff579d0445fa23325bdc34538bdb226718ba79");
-        return true;
-    }
-
-    const CBlockIndex *BlockLastSolved = chainActive.Tip();
-    const CBlockIndex *BlockReading = chainActive.Tip();
-
-    if (chainActive.Tip() == NULL) return false;
-    if (BlockLastSolved == NULL || BlockLastSolved->nHeight == 0 || chainActive.Tip()->nHeight+1 < nBlockHeight) return false;
-
-    int nBlocksAgo = 0;
-    if(nBlockHeight > 0) nBlocksAgo = (chainActive.Tip()->nHeight+1)-nBlockHeight;
-    assert(nBlocksAgo >= 0);
-
-    int n = 0;
-    for (unsigned int i = 1; BlockReading && BlockReading->nHeight > 0; i++) {
-        if(BlockReading->nHeight % mod == 0) {
-            if(n >= nBlocksAgo){
-                hash = BlockReading->GetBlockHash();
-                return true;
-            }
-            n++;
-        }
-
-        if (BlockReading->pprev == NULL) { assert(BlockReading); break; }
-        BlockReading = BlockReading->pprev;
-    }
-
-    return false;
-}
-
 void CDarkSendPool::NewBlock()
 {
     if(fDebug) LogPrintf("CDarkSendPool::NewBlock \n");
