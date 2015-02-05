@@ -1078,7 +1078,7 @@ Adresse : %4
     <message>
         <location filename="../forms/darksendconfig.ui" line="14"/>
         <source>Configure Darksend</source>
-        <translation type="unfinished"/>
+        <translation>Configurer Darksend</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="26"/>
@@ -1098,37 +1098,37 @@ Adresse : %4
     <message>
         <location filename="../forms/darksendconfig.ui" line="65"/>
         <source>Please select a privacy level.</source>
-        <translation type="unfinished"/>
+        <translation>Veuillez choisir un niveau de confidentialité.</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="78"/>
         <source>Use 2 separate masternodes to mix funds up to 1000 DRK</source>
-        <translation type="unfinished"/>
+        <translation>Utiliser 2 masternodes pour mélanger jusqu&apos;à 1000 DRK</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="91"/>
         <source>Use 8 separate masternodes to mix funds up to 1000 DRK</source>
-        <translation type="unfinished"/>
+        <translation>Utiliser 8 masternodes pour mélanger jusqu&apos;à 1000 DRK</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="104"/>
         <source>Use 16 separate masternodes</source>
-        <translation type="unfinished"/>
+        <translation>Utiliser 16 masternodes</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="117"/>
         <source>This option is the quickest and will cost about ~0.025 DRK to anonymize 1000 DRK</source>
-        <translation type="unfinished"/>
+        <translation>Cette option est la plus rapide et coûtera environ 0,025 DRK pour anonymiser 1000 DRK</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="130"/>
         <source>This option is moderately fast and will cost about 0.05 DRK to anonymize 1000 DRK</source>
-        <translation type="unfinished"/>
+        <translation>Cette option est un peu moins rapide et coûtera environ 0,05 DRK pour anonymiser 1000 DRK</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="156"/>
         <source>0.1 DRK per 1000 DRK you anonymize.</source>
-        <translation type="unfinished"/>
+        <translation>0,1 DRK par 1000 DRK anonymisés.</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="143"/>
@@ -1844,25 +1844,25 @@ Adresse : %4
         <location filename="../overviewpage.cpp" line="142"/>
         <location filename="../overviewpage.cpp" line="338"/>
         <source>Disabled</source>
-        <translation type="unfinished"/>
+        <translation>Désactivé</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="145"/>
         <location filename="../overviewpage.cpp" line="340"/>
         <location filename="../overviewpage.cpp" line="482"/>
         <source>Start Darksend Mixing</source>
-        <translation type="unfinished"/>
+        <translation>Démarrer le mélange Darksend</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="147"/>
         <location filename="../overviewpage.cpp" line="484"/>
         <source>Stop Darksend Mixing</source>
-        <translation type="unfinished"/>
+        <translation>Arrêter le mélange Darksend</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="267"/>
         <source>No inputs detected</source>
-        <translation type="unfinished"/>
+        <translation>Aucune entrée détectée</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="275"/>
@@ -1872,106 +1872,107 @@ Adresse : %4
     <message>
         <location filename="../overviewpage.cpp" line="323"/>
         <source>Rounds</source>
-        <translation type="unfinished"/>
+        <translation>Cycles</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="354"/>
         <source>Enabled</source>
-        <translation type="unfinished"/>
+        <translation>Activé</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="363"/>
         <source>Last Darksend message:
 </source>
-        <translation type="unfinished"/>
+        <translation>Dernier message de Darksend:
+</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="368"/>
         <location filename="../overviewpage.cpp" line="393"/>
         <source>Darksend is idle.</source>
-        <translation type="unfinished"/>
+        <translation>Darksend est inactif.</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="374"/>
         <source>Darksend request complete: Your transaction was accepted into the pool!</source>
-        <translation type="unfinished"/>
+        <translation>Requête de Darksend terminée : Votre transaction a été acceptée dans le pool!</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="380"/>
         <source>Submitted following entries to masternode:</source>
-        <translation type="unfinished"/>
+        <translation>Les entrées suivantes ont été envoyées au masternode:</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="381"/>
         <location filename="../overviewpage.cpp" line="382"/>
         <location filename="../overviewpage.cpp" line="383"/>
         <source>Submitted to masternode, Waiting for more entries</source>
-        <translation type="unfinished"/>
+        <translation>Envoyé au masternode, Attente d&apos;entrées supplémentaires</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="386"/>
         <source>Found enough users, signing ...</source>
-        <translation type="unfinished"/>
+        <translation>Nombre suffisant d&apos;utilisateurs trouvé, signature ...</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="387"/>
         <source>Found enough users, signing ( waiting. )</source>
-        <translation type="unfinished"/>
+        <translation>Nombre suffisant d&apos;utilisateurs trouvé, signature ( attente. )</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="388"/>
         <source>Found enough users, signing ( waiting.. )</source>
-        <translation type="unfinished"/>
+        <translation>Nombre suffisant d&apos;utilisateurs trouvé, signature ( attente.. )</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="389"/>
         <source>Found enough users, signing ( waiting... )</source>
-        <translation type="unfinished"/>
+        <translation>Nombre suffisant d&apos;utilisateurs trouvé, signature ( attente... )</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="391"/>
         <source>Transmitting final transaction.</source>
-        <translation type="unfinished"/>
+        <translation>Transmission de la transaction finale.</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="395"/>
         <source>Finalizing transaction.</source>
-        <translation type="unfinished"/>
+        <translation>Finalisation de la transaction.</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="397"/>
         <source>Darksend request incomplete:</source>
-        <translation type="unfinished"/>
+        <translation>Requête Darksend incomplète.</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="397"/>
         <source>Will retry...</source>
-        <translation type="unfinished"/>
+        <translation>Va réessayer ...</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="399"/>
         <source>Darksend request complete:</source>
-        <translation type="unfinished"/>
+        <translation>Requête Darksend complète :</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="401"/>
         <source>Submitted to masternode, waiting in queue .</source>
-        <translation type="unfinished"/>
+        <translation>Soumis au masternode, dans la file d&apos;attente .</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="402"/>
         <source>Submitted to masternode, waiting in queue ..</source>
-        <translation type="unfinished"/>
+        <translation>Soumis au masternode, dans la file d&apos;attente ..</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="403"/>
         <source>Submitted to masternode, waiting in queue ...</source>
-        <translation type="unfinished"/>
+        <translation>Soumis au masternode, dans la file d&apos;attente ...</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="405"/>
         <source>Unknown state:</source>
-        <translation type="unfinished"/>
+        <translation>Etat inconnu :</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="419"/>
@@ -2157,7 +2158,7 @@ Adresse : %4
     <message>
         <location filename="../forms/rpcconsole.ui" line="14"/>
         <source>Tools window</source>
-        <translation type="unfinished"/>
+        <translation>Fenêtre des outils</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="24"/>
@@ -2562,9 +2563,9 @@ Adresse : %4
     <name>SendCoinsDialog</name>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="14"/>
-        <location filename="../sendcoinsdialog.cpp" line="427"/>
-        <location filename="../sendcoinsdialog.cpp" line="511"/>
-        <location filename="../sendcoinsdialog.cpp" line="521"/>
+        <location filename="../sendcoinsdialog.cpp" line="428"/>
+        <location filename="../sendcoinsdialog.cpp" line="512"/>
+        <location filename="../sendcoinsdialog.cpp" line="522"/>
         <source>Send Coins</source>
         <translation>Envoyer des pièces</translation>
     </message>
@@ -2684,145 +2685,145 @@ Adresse : %4
         <translation>Solde :</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="52"/>
+        <location filename="../sendcoinsdialog.cpp" line="53"/>
         <source>Copy quantity</source>
         <translation>Copier la quantité</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="53"/>
+        <location filename="../sendcoinsdialog.cpp" line="54"/>
         <source>Copy amount</source>
         <translation>Copier le montant</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="54"/>
+        <location filename="../sendcoinsdialog.cpp" line="55"/>
         <source>Copy fee</source>
         <translation>Copier les frais</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="55"/>
+        <location filename="../sendcoinsdialog.cpp" line="56"/>
         <source>Copy after fee</source>
         <translation>Copier le montant après les frais</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="56"/>
+        <location filename="../sendcoinsdialog.cpp" line="57"/>
         <source>Copy bytes</source>
         <translation>Copier les octets</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="57"/>
+        <location filename="../sendcoinsdialog.cpp" line="58"/>
         <source>Copy priority</source>
         <translation>Copier la priorité</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="58"/>
+        <location filename="../sendcoinsdialog.cpp" line="59"/>
         <source>Copy low output</source>
         <translation>Copier la sortie faible</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="59"/>
+        <location filename="../sendcoinsdialog.cpp" line="60"/>
         <source>Copy change</source>
         <translation>Copier la monnaie</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="154"/>
+        <location filename="../sendcoinsdialog.cpp" line="155"/>
         <source>(darksend requires this amount to be rounded up to the nearest %1).</source>
         <translation>(darksend nécessite que ce montant soit arrondi au plus proche de %1).</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="188"/>
-        <location filename="../sendcoinsdialog.cpp" line="193"/>
-        <location filename="../sendcoinsdialog.cpp" line="198"/>
-        <location filename="../sendcoinsdialog.cpp" line="202"/>
+        <location filename="../sendcoinsdialog.cpp" line="189"/>
+        <location filename="../sendcoinsdialog.cpp" line="194"/>
+        <location filename="../sendcoinsdialog.cpp" line="199"/>
+        <location filename="../sendcoinsdialog.cpp" line="203"/>
         <source>%1 to %2</source>
         <translation>%1 à %2</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="251"/>
+        <location filename="../sendcoinsdialog.cpp" line="252"/>
         <source>Are you sure you want to send?</source>
         <translation>Êtes-vous sûr de vouloir envoyer ?</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="260"/>
+        <location filename="../sendcoinsdialog.cpp" line="261"/>
         <source>are added as transaction fee</source>
         <translation>ajouté en tant que frais de transaction</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="274"/>
+        <location filename="../sendcoinsdialog.cpp" line="275"/>
         <source>Total Amount %1 (= %2)</source>
         <translation>Montant total %1 (= %2)</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="276"/>
+        <location filename="../sendcoinsdialog.cpp" line="277"/>
         <source>or</source>
         <translation>ou</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="278"/>
+        <location filename="../sendcoinsdialog.cpp" line="279"/>
         <source>Confirm send coins</source>
         <translation>Confirmer l’envoi des pièces</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="433"/>
+        <location filename="../sendcoinsdialog.cpp" line="434"/>
         <source>Payment request expired</source>
         <translation>La demande de paiement a expiré</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="441"/>
+        <location filename="../sendcoinsdialog.cpp" line="442"/>
         <source>Invalid payment address %1</source>
         <translation>Adresse de paiement invalide %1</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="488"/>
+        <location filename="../sendcoinsdialog.cpp" line="489"/>
         <source>The recipient address is not valid, please recheck.</source>
         <translation>L&apos;adresse du destinataire n’est pas valide, veuillez la vérifier.</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="491"/>
+        <location filename="../sendcoinsdialog.cpp" line="492"/>
         <source>The amount to pay must be larger than 0.</source>
         <translation>Le montant à payer doit être supérieur à 0.</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="494"/>
+        <location filename="../sendcoinsdialog.cpp" line="495"/>
         <source>The amount exceeds your balance.</source>
         <translation>Le montant dépasse votre solde.</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="497"/>
+        <location filename="../sendcoinsdialog.cpp" line="498"/>
         <source>The total exceeds your balance when the %1 transaction fee is included.</source>
         <translation>Le montant dépasse votre solde lorsque les frais de transaction de %1 sont inclus.</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="500"/>
+        <location filename="../sendcoinsdialog.cpp" line="501"/>
         <source>Duplicate address found, can only send to each address once per send operation.</source>
         <translation>Adresse indentique trouvée, il n&apos;est possible d&apos;envoyer qu&apos;une fois à chaque adresse par opération d&apos;envoi.</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="503"/>
+        <location filename="../sendcoinsdialog.cpp" line="504"/>
         <source>Transaction creation failed!</source>
         <translation>La création de la transaction a échoué !</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="507"/>
+        <location filename="../sendcoinsdialog.cpp" line="508"/>
         <source>The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
         <translation>La transaction a été rejetée ! Ceci peut arriver si certaines pièces de votre portefeuille étaient déjà dépensées, par exemple si vous avez utilisé une copie de wallet.dat et que des pièces ont été dépensées dans la copie sans être marquées comme telles ici.</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="512"/>
+        <location filename="../sendcoinsdialog.cpp" line="513"/>
         <source>Error: The wallet was unlocked only to anonymize coins.</source>
         <translation>Erreur: Le portefeuille a été déverouillé seulement pour l&apos;anonymisation des pièces.</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="625"/>
+        <location filename="../sendcoinsdialog.cpp" line="626"/>
         <source>Warning: Invalid Darkcoin address</source>
         <translation>Attention: adresse Darkcoin invalide</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="634"/>
+        <location filename="../sendcoinsdialog.cpp" line="635"/>
         <source>Warning: Unknown change address</source>
         <translation>Attention : adresse de monnaie rendue inconnue</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="645"/>
+        <location filename="../sendcoinsdialog.cpp" line="646"/>
         <source>(no label)</source>
         <translation>(pas d&apos;étiquette)</translation>
     </message>
@@ -3136,7 +3137,7 @@ Adresse : %4
     <message>
         <location filename="../splashscreen.cpp" line="34"/>
         <source>Version %1</source>
-        <translation type="unfinished"/>
+        <translation>Version %1</translation>
     </message>
     <message>
         <location filename="../splashscreen.cpp" line="35"/>
@@ -3183,17 +3184,17 @@ Adresse : %4
     <message>
         <location filename="../transactiondesc.cpp" line="40"/>
         <source>%1/offline (verified via instantx)</source>
-        <translation type="unfinished"/>
+        <translation>%1/hors ligne (verifié avec instantx)</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="42"/>
         <source>%1/confirmed (verified via instantx)</source>
-        <translation type="unfinished"/>
+        <translation>%1/confirmé (verifié avec instantx)</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="44"/>
         <source>%1 confirmations (verified via instantx)</source>
-        <translation type="unfinished"/>
+        <translation>%1 confirmations (verifié avec instantx)</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="50"/>
@@ -3486,7 +3487,7 @@ Adresse : %4
     <message>
         <location filename="../transactiontablemodel.cpp" line="372"/>
         <source>Darksend Collateral Payment</source>
-        <translation type="unfinished"/>
+        <translation>Paiement Darksend Collatéral</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="374"/>
@@ -3847,7 +3848,7 @@ Pour exemple: alertnotify=echo %%s | mail -s &quot;Alerte Darkcoin&quot; admin@f
     <message>
         <location filename="../bitcoinstrings.cpp" line="51"/>
         <source>Enable use of automated darksend for funds stored in this wallet (0-1, default: 0)</source>
-        <translation type="unfinished"/>
+        <translation>Activer l&apos;utilisation automatique de Darksend pour les fonds stockés dans ce portefeuille (0-1, défaut: 0)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="54"/>
@@ -3877,7 +3878,7 @@ Pour exemple: alertnotify=echo %%s | mail -s &quot;Alerte Darkcoin&quot; admin@f
     <message>
         <location filename="../bitcoinstrings.cpp" line="70"/>
         <source>Error: Wallet unlocked for anonymization only, unable to create transaction.</source>
-        <translation type="unfinished"/>
+        <translation>Erreur: Portefeuille uniquement déverrouillé pour l&apos;anonymisation, impossible d&apos;effectuer une transaction.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="72"/>
@@ -4136,12 +4137,12 @@ Si le fichier n&apos;existe pas, créez-le avec les droits de lecture seule acco
     <message>
         <location filename="../bitcoinstrings.cpp" line="183"/>
         <source>Collateral is not valid.</source>
-        <translation type="unfinished"/>
+        <translation>Le collatéral est invalide.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="184"/>
         <source>Collateral not valid.</source>
-        <translation type="unfinished"/>
+        <translation>Collatéral invalide.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="185"/>
@@ -4191,12 +4192,12 @@ Si le fichier n&apos;existe pas, créez-le avec les droits de lecture seule acco
     <message>
         <location filename="../bitcoinstrings.cpp" line="194"/>
         <source>Darksend is disabled.</source>
-        <translation type="unfinished"/>
+        <translation>Darksend est désactivé.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="195"/>
         <source>Darksend options:</source>
-        <translation type="unfinished"/>
+        <translation>Options Darksend :</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="196"/>
@@ -4241,7 +4242,7 @@ Si le fichier n&apos;existe pas, créez-le avec les droits de lecture seule acco
     <message>
         <location filename="../bitcoinstrings.cpp" line="204"/>
         <source>Error connecting to masternode.</source>
-        <translation type="unfinished"/>
+        <translation>Erreur de connexion au masternode.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="205"/>
@@ -4271,7 +4272,7 @@ Si le fichier n&apos;existe pas, créez-le avec les droits de lecture seule acco
     <message>
         <location filename="../bitcoinstrings.cpp" line="210"/>
         <source>Error loading wallet.dat: Wallet requires newer version of Darkcoin</source>
-        <translation type="unfinished"/>
+        <translation>Erreur au chargement de wallet.dat : le Portefeuille nécessite une nouvelle version de Darkcoin</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="211"/>
@@ -4281,12 +4282,12 @@ Si le fichier n&apos;existe pas, créez-le avec les droits de lecture seule acco
     <message>
         <location filename="../bitcoinstrings.cpp" line="212"/>
         <source>Error reading from database, shutting down.</source>
-        <translation type="unfinished"/>
+        <translation>Erreur à la lecture de la base de données, arrêt en cours.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="213"/>
         <source>Error recovering public key.</source>
-        <translation type="unfinished"/>
+        <translation>Erreur à la récupération de la clé publique.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="214"/>
@@ -4406,7 +4407,7 @@ Si le fichier n&apos;existe pas, créez-le avec les droits de lecture seule acco
     <message>
         <location filename="../bitcoinstrings.cpp" line="237"/>
         <source>Ignore masternodes less than version (example: 70050; default : 0)</source>
-        <translation type="unfinished"/>
+        <translation>Ignorer les masternodes ayant une version inférieure (exemple: 70050 ; par défaut : 0)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="238"/>
@@ -4421,12 +4422,12 @@ Si le fichier n&apos;existe pas, créez-le avec les droits de lecture seule acco
     <message>
         <location filename="../bitcoinstrings.cpp" line="240"/>
         <source>Incompatible mode.</source>
-        <translation type="unfinished"/>
+        <translation>Mode incompatible.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="241"/>
         <source>Incompatible version.</source>
-        <translation type="unfinished"/>
+        <translation>Version incompatible.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="242"/>
@@ -4451,7 +4452,7 @@ Si le fichier n&apos;existe pas, créez-le avec les droits de lecture seule acco
     <message>
         <location filename="../bitcoinstrings.cpp" line="246"/>
         <source>InstantX options:</source>
-        <translation type="unfinished"/>
+        <translation>Options InstantX :</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="247"/>
@@ -4491,17 +4492,17 @@ Si le fichier n&apos;existe pas, créez-le avec les droits de lecture seule acco
     <message>
         <location filename="../bitcoinstrings.cpp" line="254"/>
         <source>Invalid masternodeprivkey. Please see documenation.</source>
-        <translation type="unfinished"/>
+        <translation>masternodeprivkey invalide. Veuillez vous référer à la documentation.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="255"/>
         <source>Invalid private key.</source>
-        <translation type="unfinished"/>
+        <translation>Clé privée invalide.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="256"/>
         <source>Invalid script detected.</source>
-        <translation type="unfinished"/>
+        <translation>Script invalide détecté.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="257"/>
@@ -4531,12 +4532,12 @@ Si le fichier n&apos;existe pas, créez-le avec les droits de lecture seule acco
     <message>
         <location filename="../bitcoinstrings.cpp" line="262"/>
         <source>Last Darksend was too recent.</source>
-        <translation type="unfinished"/>
+        <translation>Le dernier Darksend est trop récent.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="263"/>
         <source>Last successful darksend action was too recent.</source>
-        <translation type="unfinished"/>
+        <translation>La dernière action Darksend est trop récente.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="264"/>
@@ -4551,7 +4552,7 @@ Si le fichier n&apos;existe pas, créez-le avec les droits de lecture seule acco
     <message>
         <location filename="../bitcoinstrings.cpp" line="266"/>
         <source>Listen for connections on &lt;port&gt; (default: 9999 or testnet: 19999)</source>
-        <translation type="unfinished"/>
+        <translation>Écouter les connexions sur &lt;port&gt; (par défaut: 9999 ou testnet: 19999)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="267"/>
@@ -4566,7 +4567,7 @@ Si le fichier n&apos;existe pas, créez-le avec les droits de lecture seule acco
     <message>
         <location filename="../bitcoinstrings.cpp" line="269"/>
         <source>Loading wallet... (%3.2f %%)</source>
-        <translation type="unfinished"/>
+        <translation>Chargement du portefeuille... (%3.2f %%)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="270"/>
@@ -4591,17 +4592,17 @@ Si le fichier n&apos;existe pas, créez-le avec les droits de lecture seule acco
     <message>
         <location filename="../bitcoinstrings.cpp" line="274"/>
         <source>Masternode options:</source>
-        <translation type="unfinished"/>
+        <translation>Options Masternode :</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="275"/>
         <source>Masternode queue is full.</source>
-        <translation type="unfinished"/>
+        <translation>La file d&apos;attente du masternode est pleine.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="276"/>
         <source>Masternode:</source>
-        <translation type="unfinished"/>
+        <translation>Masternode :</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="277"/>
@@ -4621,7 +4622,7 @@ Si le fichier n&apos;existe pas, créez-le avec les droits de lecture seule acco
     <message>
         <location filename="../bitcoinstrings.cpp" line="280"/>
         <source>No compatible masternode found.</source>
-        <translation type="unfinished"/>
+        <translation>Aucun masternode compatible trouvé.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="281"/>
@@ -4631,7 +4632,7 @@ Si le fichier n&apos;existe pas, créez-le avec les droits de lecture seule acco
     <message>
         <location filename="../bitcoinstrings.cpp" line="282"/>
         <source>No masternodes detected.</source>
-        <translation type="unfinished"/>
+        <translation>Aucun masternode détecté.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="283"/>
@@ -4641,12 +4642,12 @@ Si le fichier n&apos;existe pas, créez-le avec les droits de lecture seule acco
     <message>
         <location filename="../bitcoinstrings.cpp" line="284"/>
         <source>Non-standard public key detected.</source>
-        <translation type="unfinished"/>
+        <translation>Clé publique non standard détectée.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="285"/>
         <source>Not compatible with existing transactions.</source>
-        <translation type="unfinished"/>
+        <translation>Non compatible avec les transactions existantes.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="286"/>
@@ -4656,7 +4657,7 @@ Si le fichier n&apos;existe pas, créez-le avec les droits de lecture seule acco
     <message>
         <location filename="../bitcoinstrings.cpp" line="287"/>
         <source>Not in the masternode list.</source>
-        <translation type="unfinished"/>
+        <translation>Absent de la liste des masternodes.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="288"/>
@@ -4696,7 +4697,7 @@ Si le fichier n&apos;existe pas, créez-le avec les droits de lecture seule acco
     <message>
         <location filename="../bitcoinstrings.cpp" line="295"/>
         <source>RPC SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
-        <translation type="unfinished"/>
+        <translation>Options RPC SSL : (voir le wiki Bitcoin pour les instructions de configuration de SSL)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="296"/>
@@ -4756,7 +4757,7 @@ Si le fichier n&apos;existe pas, créez-le avec les droits de lecture seule acco
     <message>
         <location filename="../bitcoinstrings.cpp" line="307"/>
         <source>Send command to Darkcoin Core</source>
-        <translation type="unfinished"/>
+        <translation>Envoyer commandes vers Darkcoin Core</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="308"/>
@@ -4781,12 +4782,12 @@ Si le fichier n&apos;existe pas, créez-le avec les droits de lecture seule acco
     <message>
         <location filename="../bitcoinstrings.cpp" line="312"/>
         <source>Session not complete!</source>
-        <translation type="unfinished"/>
+        <translation>Session incomplète!</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="313"/>
         <source>Session timed out (30 seconds), please resubmit.</source>
-        <translation type="unfinished"/>
+        <translation>Session expirée (30 secondes), veuillez s&apos;il vous plaît réessayer.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="314"/>
@@ -4811,7 +4812,7 @@ Si le fichier n&apos;existe pas, créez-le avec les droits de lecture seule acco
     <message>
         <location filename="../bitcoinstrings.cpp" line="318"/>
         <source>Set the masternode private key</source>
-        <translation type="unfinished"/>
+        <translation>Définir la clé privée du masternode</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="319"/>
@@ -4856,7 +4857,7 @@ Si le fichier n&apos;existe pas, créez-le avec les droits de lecture seule acco
     <message>
         <location filename="../bitcoinstrings.cpp" line="327"/>
         <source>Specify configuration file (default: darkcoin.conf)</source>
-        <translation type="unfinished"/>
+        <translation>Définir le fichier de configuration (défaut: darkcoin.conf)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="328"/>
@@ -4871,12 +4872,12 @@ Si le fichier n&apos;existe pas, créez-le avec les droits de lecture seule acco
     <message>
         <location filename="../bitcoinstrings.cpp" line="330"/>
         <source>Specify masternode configuration file (default: masternode.conf)</source>
-        <translation type="unfinished"/>
+        <translation>Définir le fichier de configuration du masternode (par défaut : masternode.conf)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="331"/>
         <source>Specify pid file (default: darkcoind.pid)</source>
-        <translation type="unfinished"/>
+        <translation>Définir le fichier pid (défaut: darkcoind.pid)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="332"/>
@@ -4916,7 +4917,7 @@ Si le fichier n&apos;existe pas, créez-le avec les droits de lecture seule acco
     <message>
         <location filename="../bitcoinstrings.cpp" line="339"/>
         <source>This is not a masternode.</source>
-        <translation type="unfinished"/>
+        <translation>Ceci n&apos;est pas un masternode.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="340"/>
@@ -4941,17 +4942,17 @@ Si le fichier n&apos;existe pas, créez-le avec les droits de lecture seule acco
     <message>
         <location filename="../bitcoinstrings.cpp" line="344"/>
         <source>Transaction created successfully.</source>
-        <translation type="unfinished"/>
+        <translation>Transaction créée avec succès.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="345"/>
         <source>Transaction fees are too high.</source>
-        <translation type="unfinished"/>
+        <translation>Les frais de transaction sont trop élevés.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="346"/>
         <source>Transaction not valid.</source>
-        <translation type="unfinished"/>
+        <translation>Transaction invalide.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="347"/>
@@ -5006,7 +5007,7 @@ Si le fichier n&apos;existe pas, créez-le avec les droits de lecture seule acco
     <message>
         <location filename="../bitcoinstrings.cpp" line="357"/>
         <source>Use N separate masternodes to anonymize funds  (2-8, default: 2)</source>
-        <translation type="unfinished"/>
+        <translation>Utiliser N masternodes différents pour anonymiser les fonds (2-8, par défaut : 2)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="358"/>
@@ -5035,7 +5036,7 @@ Si le fichier n&apos;existe pas, créez-le avec les droits de lecture seule acco
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="363"/>
-        <source>Value more than Darksed pool maximum allows.</source>
+        <source>Value more than Darksend pool maximum allows.</source>
         <translation type="unfinished"/>
     </message>
     <message>
@@ -5061,12 +5062,12 @@ Si le fichier n&apos;existe pas, créez-le avec les droits de lecture seule acco
     <message>
         <location filename="../bitcoinstrings.cpp" line="368"/>
         <source>Wallet is locked.</source>
-        <translation type="unfinished"/>
+        <translation>Le Portefeuille est verrouillé.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="369"/>
         <source>Wallet needed to be rewritten: restart Darkcoin to complete</source>
-        <translation type="unfinished"/>
+        <translation>Le portefeuille devait être réécrit : redémarrer Darkcoin pour terminer l&apos;opération.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="370"/>
@@ -5091,7 +5092,7 @@ Si le fichier n&apos;existe pas, créez-le avec les droits de lecture seule acco
     <message>
         <location filename="../bitcoinstrings.cpp" line="374"/>
         <source>Wrong state.</source>
-        <translation type="unfinished"/>
+        <translation>État incorrect. </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="375"/>
