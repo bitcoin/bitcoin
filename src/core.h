@@ -19,7 +19,8 @@ static const int64_t DARKSEND_COLLATERAL = (0.1*COIN);
 static const int64_t DARKSEND_FEE = (0.0125*COIN);
 static const int64_t DARKSEND_POOL_MAX = (999.99*COIN);
 
-#define INSTANTX_SIGNATURES_REQUIRED           9
+#define INSTANTX_SIGNATURES_REQUIRED           6
+#define INSTANTX_SIGNATURES_TOTAL              10
 
 #define MASTERNODE_NOT_PROCESSED               0 // initial state
 #define MASTERNODE_IS_CAPABLE                  1

@@ -23,7 +23,7 @@ class CConsensusVote;
 class CTransaction;
 class CTransactionLock;
 
-static const int MIN_INSTANTX_PROTO_VERSION = 70058;
+static const int MIN_INSTANTX_PROTO_VERSION = 70060;
 
 extern map<uint256, CTransaction> mapTxLockReq;
 extern map<uint256, CTransactionLock> mapTxLocks;
@@ -34,6 +34,9 @@ extern int nCompleteTXLocks;
 int64_t CreateNewLock(CTransaction tx);
 
 bool IsIXTXValid(const CTransaction& txCollateral);
+
+// if two conflicting locks are approved by the network, they will cancel out
+bool CheckForConflictingLocks(CTransaction& tx);
 
 void ProcessMessageInstantX(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
 
@@ -77,6 +80,7 @@ public:
     uint256 txHash;
     std::vector<CConsensusVote> vecConsensusVotes;
     int nExpiration;
+    int nTimeout;
 
     bool SignaturesValid();
     int CountSignatures();

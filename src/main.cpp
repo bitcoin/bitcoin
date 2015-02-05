@@ -1170,23 +1170,31 @@ int CMerkleTx::GetDepthInMainChainINTERNAL(CBlockIndex* &pindexRet) const
     return chainActive.Height() - pindex->nHeight + 1;
 }
 
-int CMerkleTx::IsTransactionLocked() const
+int CMerkleTx::GetTransactionLockSignatures() const
+{
+    if(fLargeWorkForkFound || fLargeWorkInvalidChainFound) return -2;
+    if(nInstantXDepth == 0) return -1;
+
+    //compile consessus vote
+    std::map<uint256, CTransactionLock>::iterator i = mapTxLocks.find(GetHash());
+    if (i != mapTxLocks.end()){
+        return (*i).second.CountSignatures();
+    }
+
+    return -1;
+}
+
+bool CMerkleTx::IsTransactionLockTimedOut() const
 {
     if(nInstantXDepth == 0) return 0;
 
     //compile consessus vote
     std::map<uint256, CTransactionLock>::iterator i = mapTxLocks.find(GetHash());
     if (i != mapTxLocks.end()){
-        if((*i).second.CountSignatures() >= INSTANTX_SIGNATURES_REQUIRED){
-            LogPrintf("InstantX::ProcessConsensusVote - Transaction Lock Is Complete %s\n", (*i).second.GetHash().ToString().c_str());
-            return nInstantXDepth;
-        } else {
-            LogPrintf("InstantX::ProcessConsensusVote - Incomplete TX Lock %d %s\n", (*i).second.CountSignatures(), (*i).second.GetHash().ToString().c_str());
-            return 0;
-        }
+        return GetTime() > (*i).second.nTimeout;
     }
 
-    return 0;
+    return false;
 }
 
 int CMerkleTx::GetDepthInMainChain(CBlockIndex* &pindexRet, bool enableIX) const
@@ -1198,8 +1206,10 @@ int CMerkleTx::GetDepthInMainChain(CBlockIndex* &pindexRet, bool enableIX) const
 
     if(enableIX){
         if (nResult < 6){
-            int minConfirms = IsTransactionLocked();
-            return minConfirms+nResult;
+            int signatures = GetTransactionLockSignatures();
+            if(signatures >= INSTANTX_SIGNATURES_REQUIRED){
+                return nInstantXDepth+nResult;
+            }
         }
     }
 
@@ -2468,7 +2478,7 @@ bool static ConnectTip(CValidationState &state, CBlockIndex *pindexNew) {
 */
 bool DisconnectBlockAndInputs(CValidationState &state, CTransaction txLock)
 {
-    
+
     // All modifications to the coin state will be done in this cache.
     // Only when all have succeeded, we push it to pcoinsTip.
     CCoinsViewCache view(*pcoinsTip, true);
@@ -2815,13 +2825,16 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
 
     // ----------- instantX transaction scanning -----------
 
-    BOOST_FOREACH(const CTransaction& tx, block.vtx){
-        if (!tx.IsCoinBase()){
-            BOOST_FOREACH(const CTxIn& in, tx.vin){
-                if(mapLockedInputs.count(in.prevout)){
-                    if(mapLockedInputs[in.prevout] != tx.GetHash()){
-                        return state.DoS(0, error("CheckBlock() : found conflicting transaction with transaction lock"),
-                                         REJECT_INVALID, "conflicting-tx-ix");
+    if(!fLargeWorkForkFound && !fLargeWorkInvalidChainFound){
+        BOOST_FOREACH(const CTransaction& tx, block.vtx){
+            if (!tx.IsCoinBase()){
+                //only reject blocks when it's based on complete consensus
+                BOOST_FOREACH(const CTxIn& in, tx.vin){
+                    if(mapLockedInputs.count(in.prevout)){
+                        if(mapLockedInputs[in.prevout] != tx.GetHash()){
+                            return state.DoS(0, error("CheckBlock() : found conflicting transaction with transaction lock"),
+                                             REJECT_INVALID, "conflicting-tx-ix");
+                        }
                     }
                 }
             }
@@ -2839,7 +2852,8 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
         if(block.nTime > START_MASTERNODE_PAYMENTS) MasternodePayments = true;
     }
 
-    if(MasternodePayments)
+
+    if(MasternodePayments && !fLargeWorkForkFound && !fLargeWorkInvalidChainFound)
     {
         LOCK2(cs_main, mempool.cs);
 
@@ -3098,6 +3112,7 @@ bool ProcessBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDiskBl
         return false;
     }
 */
+
     // Check for duplicate
     uint256 hash = pblock->GetHash();
     if (mapBlockIndex.count(hash))

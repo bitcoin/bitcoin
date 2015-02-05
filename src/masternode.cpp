@@ -18,6 +18,8 @@ map<uint256, int> mapSeenMasternodeScanningErrors;
 std::map<CNetAddr, int64_t> askedForMasternodeList;
 // which masternodes we've asked for
 std::map<COutPoint, int64_t> askedForMasternodeListEntry;
+// cache block hashes as we calculate them
+std::map<int64_t, uint256> mapCacheBlockHashes;
 
 // manage the masternode connections
 void ProcessMasternodeConnections(){
@@ -500,6 +502,40 @@ int GetMasternodeRank(CTxIn& vin, int64_t nBlockHeight, int minProtocol)
     return -1;
 }
 
+//Get the last hash that matches the modulus given. Processed in reverse order
+bool GetBlockHash(uint256& hash, int nBlockHeight)
+{
+    if(mapCacheBlockHashes.count(nBlockHeight)){
+        hash = mapCacheBlockHashes[nBlockHeight];
+        return true;
+    }
+
+    const CBlockIndex *BlockLastSolved = chainActive.Tip();
+    const CBlockIndex *BlockReading = chainActive.Tip();
+
+    if (chainActive.Tip() == NULL) return false;
+    if (BlockLastSolved == NULL || BlockLastSolved->nHeight == 0 || chainActive.Tip()->nHeight+1 < nBlockHeight) return false;
+
+    int nBlocksAgo = 0;
+    if(nBlockHeight > 0) nBlocksAgo = (chainActive.Tip()->nHeight+1)-nBlockHeight;
+    assert(nBlocksAgo >= 0);
+
+    int n = 0;
+    for (unsigned int i = 1; BlockReading && BlockReading->nHeight > 0; i++) {
+        if(n >= nBlocksAgo){
+            hash = BlockReading->GetBlockHash();
+            mapCacheBlockHashes[nBlockHeight-n] = hash;
+            return true;
+        }
+        n++;
+
+        if (BlockReading->pprev == NULL) { assert(BlockReading); break; }
+        BlockReading = BlockReading->pprev;
+    }
+
+    return false;
+}
+
 //
 // Deterministically calculate a given "score" for a masternode depending on how close it's hash is to
 // the proof of work for that block. The further away they are the better, the furthest will win the election
@@ -510,8 +546,11 @@ uint256 CMasterNode::CalculateScore(int mod, int64_t nBlockHeight)
     if(chainActive.Tip() == NULL) return 0;
 
     uint256 hash = 0;
-    if(!darkSendPool.GetLastValidBlockHash(hash, mod, nBlockHeight)) return 0;
+    uint256 aux = vin.prevout.hash;
+
+    if(!GetBlockHash(hash, nBlockHeight)) return 0;
     uint256 hash2 = HashX11(BEGIN(hash), END(hash));
+    uint256 hash3 = HashX11(BEGIN(hash), END(aux));
 
     // we'll make a 4 dimensional point in space
     // the closest masternode to that point wins
@@ -528,11 +567,11 @@ uint256 CMasterNode::CalculateScore(int mod, int64_t nBlockHeight)
     memcpy(&i3, &a3, 1);
     memcpy(&i4, &a4, 1);
 
-    //split up our mn hash
-    uint64_t b1 = vin.prevout.hash.Get64(0);
-    uint64_t b2 = vin.prevout.hash.Get64(1);
-    uint64_t b3 = vin.prevout.hash.Get64(2);
-    uint64_t b4 = vin.prevout.hash.Get64(3);
+    //split up our mn-hash+aux into 4
+    uint64_t b1 = hash3.Get64(0);
+    uint64_t b2 = hash3.Get64(1);
+    uint64_t b3 = hash3.Get64(2);
+    uint64_t b4 = hash3.Get64(3);
 
     //move mn hash around
     b1 <<= (i1 % 64);

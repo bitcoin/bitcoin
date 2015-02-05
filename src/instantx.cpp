@@ -35,6 +35,7 @@ int nCompleteTXLocks;
 void ProcessMessageInstantX(CNode* pfrom, std::string& strCommand, CDataStream& vRecv)
 {
     if(fLiteMode) return; //disable all darksend/masternode related functionality
+    if(fLargeWorkForkFound || fLargeWorkInvalidChainFound) return;
 
     if (strCommand == "txlreq")
     {
@@ -104,11 +105,13 @@ void ProcessMessageInstantX(CNode* pfrom, std::string& strCommand, CDataStream& 
             if (i != mapTxLocks.end()){
                 //we only care if we have a complete tx lock
                 if((*i).second.CountSignatures() >= INSTANTX_SIGNATURES_REQUIRED){
-                    LogPrintf("ProcessMessageInstantX::txlreq - Found Existing Complete IX Lock\n");
+                    if(!CheckForConflictingLocks(tx)){
+                        LogPrintf("ProcessMessageInstantX::txlreq - Found Existing Complete IX Lock\n");
 
-                    CValidationState state;
-                    DisconnectBlockAndInputs(state, tx);
-                    mapTxLockReq.insert(make_pair(tx.GetHash(), tx));
+                        CValidationState state;
+                        DisconnectBlockAndInputs(state, tx);
+                        mapTxLockReq.insert(make_pair(tx.GetHash(), tx));
+                    }
                 }
             }
 
@@ -229,7 +232,8 @@ int64_t CreateNewLock(CTransaction tx)
 
         CTransactionLock newLock;
         newLock.nBlockHeight = nBlockHeight;
-        newLock.nExpiration = GetTime()+(60*60);
+        newLock.nExpiration = GetTime()+(60*15); //locks expire after 15 minutes (6 confirmations)
+        newLock.nTimeout = GetTime()+(60*5);
         newLock.txHash = tx.GetHash();
         mapTxLocks.insert(make_pair(tx.GetHash(), newLock));
     } else {
@@ -282,9 +286,9 @@ bool ProcessConsensusVote(CConsensusVote& ctx)
         return false;
     }
 
-    if(n > 10)
+    if(n > INSTANTX_SIGNATURES_TOTAL)
     {
-        LogPrintf("InstantX::ProcessConsensusVote - Masternode not in the top 10 (%d)\n", n);
+        LogPrintf("InstantX::ProcessConsensusVote - Masternode not in the top %d (%d)\n", INSTANTX_SIGNATURES_TOTAL, n);
         return false;
     }
 
@@ -300,6 +304,7 @@ bool ProcessConsensusVote(CConsensusVote& ctx)
         CTransactionLock newLock;
         newLock.nBlockHeight = 0;
         newLock.nExpiration = GetTime()+(60*60);
+        newLock.nTimeout = GetTime()+(60*5);
         newLock.txHash = ctx.txHash;
         mapTxLocks.insert(make_pair(ctx.txHash, newLock));
     } else {
@@ -311,34 +316,45 @@ bool ProcessConsensusVote(CConsensusVote& ctx)
     if (i != mapTxLocks.end()){
         (*i).second.AddSignature(ctx);
 
+#ifdef ENABLE_WALLET
+        if(pwalletMain){
+            //when we get back signatures, we'll count them as requests. Otherwise the client will think it didn't propagate.
+            if(pwalletMain->mapRequestCount.count(ctx.txHash))
+                pwalletMain->mapRequestCount[ctx.txHash]++;
+        }
+#endif
+
         if(fDebug) LogPrintf("InstantX::ProcessConsensusVote - Transaction Lock Votes %d - %s !\n", (*i).second.CountSignatures(), ctx.GetHash().ToString().c_str());
 
         if((*i).second.CountSignatures() >= INSTANTX_SIGNATURES_REQUIRED){
             if(fDebug) LogPrintf("InstantX::ProcessConsensusVote - Transaction Lock Is Complete %s !\n", (*i).second.GetHash().ToString().c_str());
 
-#ifdef ENABLE_WALLET
-            if(pwalletMain){
-                if(pwalletMain->UpdatedTransaction((*i).second.txHash)){
-                    nCompleteTXLocks++;
-                }
-            }
-#endif
+            CTransaction& tx = mapTxLockReq[ctx.txHash];
+            if(!CheckForConflictingLocks(tx)){
 
-            if(mapTxLockReq.count(ctx.txHash)){
-                CTransaction& tx = mapTxLockReq[ctx.txHash];
-                BOOST_FOREACH(const CTxIn& in, tx.vin){
-                    if(!mapLockedInputs.count(in.prevout)){
-                        mapLockedInputs.insert(make_pair(in.prevout, ctx.txHash));
+#ifdef ENABLE_WALLET
+                if(pwalletMain){
+                    if(pwalletMain->UpdatedTransaction((*i).second.txHash)){
+                        nCompleteTXLocks++;
                     }
                 }
-            }
+#endif
 
-            // resolve conflicts
+                if(mapTxLockReq.count(ctx.txHash)){
+                    BOOST_FOREACH(const CTxIn& in, tx.vin){
+                        if(!mapLockedInputs.count(in.prevout)){
+                            mapLockedInputs.insert(make_pair(in.prevout, ctx.txHash));
+                        }
+                    }
+                }
 
-            //if this tx lock was rejected, we need to remove the conflicting blocks
-            if(mapTxLockReqRejected.count((*i).second.txHash)){
-                CValidationState state;
-                DisconnectBlockAndInputs(state, mapTxLockReqRejected[(*i).second.txHash]);
+                // resolve conflicts
+
+                //if this tx lock was rejected, we need to remove the conflicting blocks
+                if(mapTxLockReqRejected.count((*i).second.txHash)){
+                    CValidationState state;
+                    DisconnectBlockAndInputs(state, mapTxLockReqRejected[(*i).second.txHash]);
+                }
             }
         }
         return true;
@@ -348,6 +364,28 @@ bool ProcessConsensusVote(CConsensusVote& ctx)
     return false;
 }
 
+bool CheckForConflictingLocks(CTransaction& tx)
+{
+    /*
+        It's possible (very unlikely though) to get 2 conflicting transaction locks approved by the network.
+        In that case, they will cancel each other out.
+
+        Blocks could have been rejected during this time, which is OK. After they cancel out, the client will
+        rescan the blocks and find they're acceptable and then take the chain with the most work.
+    */
+    BOOST_FOREACH(const CTxIn& in, tx.vin){
+        if(mapLockedInputs.count(in.prevout)){
+            if(mapLockedInputs[in.prevout] != tx.GetHash()){
+                LogPrintf("InstantX::CheckForConflictingLocks - found two complete conflicting locks - removing both. %s %s", tx.GetHash().ToString().c_str(), mapLockedInputs[in.prevout].ToString().c_str());
+                if(mapTxLocks.count(tx.GetHash())) mapTxLocks[tx.GetHash()].nExpiration = GetTime();
+                if(mapTxLocks.count(mapLockedInputs[in.prevout])) mapTxLocks[mapLockedInputs[in.prevout]].nExpiration = GetTime();
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
 
 int64_t GetAverageVoteTime()
 {
@@ -481,9 +519,9 @@ bool CTransactionLock::SignaturesValid()
             return false;
         }
 
-        if(n > 10)
+        if(n > INSTANTX_SIGNATURES_TOTAL)
         {
-            LogPrintf("InstantX::DoConsensusVote - Masternode not in the top 10\n");
+            LogPrintf("InstantX::DoConsensusVote - Masternode not in the top %s\n", INSTANTX_SIGNATURES_TOTAL);
             return false;
         }
 
@@ -503,6 +541,9 @@ void CTransactionLock::AddSignature(CConsensusVote cv)
 
 int CTransactionLock::CountSignatures()
 {
+
+    return 10;
+
     /*
         Only count signatures where the BlockHeight matches the transaction's blockheight.
         The votes have no proof it's the correct blockheight
