@@ -639,7 +639,7 @@ Wenn´d jezzad anfängsch den noin Goidbaild zu nuzzn dann gehd da alde nimma. W
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="638"/>
         <source>%n active connection(s) to Darkcoin network</source>
-        <translation><numerusform>Oanen sehma där au Darkcoin machd</numerusform><numerusform>%n Laids sehma die au Darkcoin ma´ha</numerusform></translation>
+        <translation><numerusform>%n (Oanen) sehma där au Darkcoin machd</numerusform><numerusform>%n Laids sehma die au Darkcoin ma´ha</numerusform></translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="650"/>
@@ -674,7 +674,7 @@ Wenn´d jezzad anfängsch den noin Goidbaild zu nuzzn dann gehd da alde nimma. W
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="696"/>
         <source>%n hour(s)</source>
-        <translation><numerusform>&amp;n Schdunde</numerusform><numerusform>&amp;n Schdundn</numerusform></translation>
+        <translation><numerusform>%n Schdunde</numerusform><numerusform>%n Schdundn</numerusform></translation>
     </message>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="700"/>
@@ -3246,7 +3246,7 @@ Aba, wards ab, des wird. Brauchd bloss a Minudn bis der Darkcon Koa mid di andan
     <message numerus="yes">
         <location filename="../transactiondesc.cpp" line="79"/>
         <source>, broadcast through %n node(s)</source>
-        <translation><numerusform>a nod hams scho midgriggd</numerusform><numerusform>%n nodes hams scho midgriggd</numerusform></translation>
+        <translation><numerusform>, %n nod hads scho midgriggd</numerusform><numerusform>, %n nodes hams scho midgriggd</numerusform></translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="83"/>

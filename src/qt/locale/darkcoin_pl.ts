@@ -104,7 +104,7 @@ Ten produkt zawiera oprogramowanie opracowane przez Projekt OpenSSL do użycia w
     <message>
         <location filename="../addressbookpage.cpp" line="45"/>
         <source>Choose the address to send coins to</source>
-        <translation>Wybierz adres do którego wysłać Bitcoiny</translation>
+        <translation>Wybierz adres na który wysłać monety</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="46"/>
@@ -1822,7 +1822,7 @@ Adres: %4
     <message>
         <location filename="../forms/overviewpage.ui" line="937"/>
         <source>Reset the current status of Darksend (can interrupt Darksend if it&apos;s in the process of Mixing, which can cost you money!)</source>
-        <translation>Zresetuj obecny stan darksend (może przerwać Darksend, jeżeli jest w trakcie Mieszania. Może Cię to kosztować! )</translation>
+        <translation>Zresetuj obecny stan darksend (może przerwać Darksend, jeżeli jest w trakcie mieszania. Może Cię to kosztować! )</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="943"/>
@@ -1867,7 +1867,7 @@ Adres: %4
     <message>
         <location filename="../overviewpage.cpp" line="275"/>
         <source>Found unconfirmed denominated outputs, will wait till they confirm to recalculate.</source>
-        <translation type="unfinished"/>
+        <translation>Znaleziono niepotwierdzone zdenominowane wyjścia, wstrzymam się z rekalkulacją do czasu ich potwierdzenia.</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="323"/>
