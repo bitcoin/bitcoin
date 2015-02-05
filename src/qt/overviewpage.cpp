@@ -287,13 +287,22 @@ void OverviewPage::updateDarksendProgress()
 
     // calculate parts of the progress, each of them shouldn't be higher than 1:
     // mixing progress of denominated balance
-    float denomPart = (float)pwalletMain->GetNormalizedAnonymizedBalance() / pwalletMain->GetDenominatedBalance();
-    denomPart = denomPart > 1 ? 1 : denomPart;
+    int64_t denominatedBalance = pwalletMain->GetDenominatedBalance();
+    float denomPart = 0;
+    if(denominatedBalance > 0)
+    {
+        denomPart = (float)pwalletMain->GetNormalizedAnonymizedBalance() / pwalletMain->GetDenominatedBalance();
+        denomPart = denomPart > 1 ? 1 : denomPart;
+    }
 
     // % of fully anonymized balance
-    float anonPart = (float)pwalletMain->GetAnonymizedBalance() / nMaxToAnonymize;
-    // if anonPart is > 1 then we are done, make denomPart equal 1 too
-    anonPart = anonPart > 1 ? (denomPart = 1, 1) : anonPart;
+    float anonPart = 0;
+    if(nMaxToAnonymize > 0)
+    {
+        anonPart = (float)pwalletMain->GetAnonymizedBalance() / nMaxToAnonymize;
+        // if anonPart is > 1 then we are done, make denomPart equal 1 too
+        anonPart = anonPart > 1 ? (denomPart = 1, 1) : anonPart;
+    }
 
     // apply some weights to them (sum should be <=100) and calculate the whole progress
     int progress = 80 * denomPart + 20 * anonPart;
