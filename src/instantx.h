@@ -23,7 +23,7 @@ class CConsensusVote;
 class CTransaction;
 class CTransactionLock;
 
-static const int MIN_INSTANTX_PROTO_VERSION = 70058;
+static const int MIN_INSTANTX_PROTO_VERSION = 70059;
 
 extern map<uint256, CTransaction> mapTxLockReq;
 extern map<uint256, CTransactionLock> mapTxLocks;
@@ -77,6 +77,7 @@ public:
     uint256 txHash;
     std::vector<CConsensusVote> vecConsensusVotes;
     int nExpiration;
+    int nTimeout;
 
     bool SignaturesValid();
     int CountSignatures();
