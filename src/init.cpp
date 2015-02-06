@@ -754,11 +754,9 @@ bool AppInit2(boost::thread_group& threadGroup)
         if (nFeePerK > nHighTransactionFeeWarning)
             InitWarning(_("Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction."));
         payTxFee = CFeeRate(nFeePerK, 1000);
-        if (payTxFee < ::minRelayTxFee)
-        {
+        if (!Policy().ApproveFeeRate(payTxFee))
             return InitError(strprintf(_("Invalid amount for -paytxfee=<amount>: '%s' (must be at least %s)"),
                                        mapArgs["-paytxfee"], ::minRelayTxFee.ToString()));
-        }
     }
     if (mapArgs.count("-maxtxfee"))
     {
@@ -768,11 +766,9 @@ bool AppInit2(boost::thread_group& threadGroup)
         if (nMaxFee > nHighTransactionMaxFeeWarning)
             InitWarning(_("Warning: -maxtxfee is set very high! Fees this large could be paid on a single transaction."));
         maxTxFee = nMaxFee;
-        if (CFeeRate(maxTxFee, 1000) < ::minRelayTxFee)
-        {
+        if (!Policy().ApproveFeeRate(CFeeRate(maxTxFee, 1000)))
             return InitError(strprintf(_("Invalid amount for -maxtxfee=<amount>: '%s' (must be at least the minrelay fee of %s to prevent stuck transactions)"),
                                        mapArgs["-maxtxfee"], ::minRelayTxFee.ToString()));
-        }
     }
     nTxConfirmTarget = GetArg("-txconfirmtarget", 1);
     bSpendZeroConfChange = GetArg("-spendzeroconfchange", true);

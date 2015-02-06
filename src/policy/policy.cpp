@@ -77,6 +77,7 @@ public:
     virtual CAmount GetDustThreshold(const CTxOut& txout) const;
     virtual bool ApproveOutput(const CTxOut& txout) const;
     virtual bool ApproveFee(const CAmount&, size_t) const;
+    virtual bool ApproveFeeRate(const CFeeRate&) const;
     virtual bool ApproveTx(const CTransaction&, CValidationState&) const;
     /**
      * Check transaction inputs to mitigate two
@@ -242,6 +243,11 @@ bool CStandardPolicy::ApproveOutput(const CTxOut& txout) const
 bool CStandardPolicy::ApproveFee(const CAmount& nFees, size_t nSize) const
 {
     return nFees >= minRelayTxFee.GetFee(nSize);
+}
+
+bool CStandardPolicy::ApproveFeeRate(const CFeeRate& rate) const
+{
+    return rate >= minRelayTxFee;
 }
 
 bool CStandardPolicy::ApproveTx(const CTransaction& tx, CValidationState& state) const
