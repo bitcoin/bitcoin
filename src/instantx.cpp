@@ -445,6 +445,9 @@ void CleanTransactionLocksList()
 
                 mapTxLockReq.erase(it->second.txHash);
                 mapTxLockReqRejected.erase(it->second.txHash);
+
+                BOOST_FOREACH(CConsensusVote& v, it->second.vecConsensusVotes)
+                    mapTxLockVote.erase(v.GetHash());
             }
 
             mapTxLocks.erase(it++);
