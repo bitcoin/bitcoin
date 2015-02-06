@@ -1,4 +1,4 @@
-<?xml version="1.0" ?><!DOCTYPE TS><TS language="sr" version="2.0">
+<?xml version="1.0" ?><!DOCTYPE TS><TS language="is" version="2.0">
 <context>
     <name>AboutDialog</name>
     <message>
@@ -49,37 +49,37 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/addressbookpage.ui" line="30"/>
         <source>Double-click to edit address or label</source>
-        <translation>Кликните два пута да промените адресу и/или етикету</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="57"/>
         <source>Create a new address</source>
-        <translation>Прави нову адресу</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="60"/>
         <source>&amp;New</source>
-        <translation>Novo</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="71"/>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation>Копира изабрану адресу на системски клипборд</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="74"/>
         <source>&amp;Copy</source>
-        <translation>Kopirajte</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="85"/>
         <source>Delete the currently selected address from the list</source>
-        <translation>Izbrisite trenutno izabranu adresu sa liste</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="88"/>
         <source>&amp;Delete</source>
-        <translation>&amp;Избриши</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="112"/>
@@ -134,7 +134,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../addressbookpage.cpp" line="75"/>
         <source>&amp;Copy Address</source>
-        <translation>Kopirajte adresu</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="76"/>
@@ -154,7 +154,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../addressbookpage.cpp" line="272"/>
         <source>Comma separated file (*.csv)</source>
-        <translation>Зарезом одвојене вредности (*.csv)</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="285"/>
@@ -172,17 +172,17 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../addresstablemodel.cpp" line="169"/>
         <source>Label</source>
-        <translation>Етикета</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../addresstablemodel.cpp" line="169"/>
         <source>Address</source>
-        <translation>Адреса</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../addresstablemodel.cpp" line="205"/>
         <source>(no label)</source>
-        <translation>(без етикете)</translation>
+        <translation type="unfinished"/>
     </message>
 </context>
 <context>
@@ -195,17 +195,17 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="47"/>
         <source>Enter passphrase</source>
-        <translation>Унесите лозинку</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="61"/>
         <source>New passphrase</source>
-        <translation>Нова лозинка</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="75"/>
         <source>Repeat new passphrase</source>
-        <translation>Поновите нову лозинку</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="108"/>
@@ -220,47 +220,47 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../askpassphrasedialog.cpp" line="41"/>
         <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;10 or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
-        <translation>Унесите нову лозинку за приступ новчанику.&lt;br/&gt;Молимо Вас да лозинка буде &lt;b&gt;10 или више насумице одабраних знакова&lt;/b&gt;, или &lt;b&gt;осам или више речи&lt;/b&gt;.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="42"/>
         <source>Encrypt wallet</source>
-        <translation>Шифровање новчаника</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="48"/>
         <source>This operation needs your wallet passphrase to unlock the wallet.</source>
-        <translation>Ова акција захтева лозинку Вашег новчаника да би га откључала.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="53"/>
         <source>Unlock wallet</source>
-        <translation>Откључавање новчаника</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="56"/>
         <source>This operation needs your wallet passphrase to decrypt the wallet.</source>
-        <translation>Ова акција захтева да унесете лозинку да би дешифловала новчаник.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="61"/>
         <source>Decrypt wallet</source>
-        <translation>Дешифровање новчаника</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="64"/>
         <source>Change passphrase</source>
-        <translation>Промена лозинке</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="65"/>
         <source>Enter the old and new passphrase to the wallet.</source>
-        <translation>Унесите стару и нову лозинку за шифровање новчаника.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="112"/>
         <source>Confirm wallet encryption</source>
-        <translation>Одобрите шифровање новчаника</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="113"/>
@@ -270,13 +270,13 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../askpassphrasedialog.cpp" line="113"/>
         <source>Are you sure you wish to encrypt your wallet?</source>
-        <translation>Да ли сте сигурни да желите да се новчаник шифује?</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="122"/>
         <location filename="../askpassphrasedialog.cpp" line="181"/>
         <source>Wallet encrypted</source>
-        <translation>Новчаник је шифрован</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="124"/>
@@ -294,40 +294,40 @@ This product includes software developed by the OpenSSL Project for use in the O
         <location filename="../askpassphrasedialog.cpp" line="187"/>
         <location filename="../askpassphrasedialog.cpp" line="193"/>
         <source>Wallet encryption failed</source>
-        <translation>Неуспело шифровање новчаника</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="138"/>
         <source>Wallet encryption failed due to an internal error. Your wallet was not encrypted.</source>
-        <translation>Настала је унутрашња грешка током шифровања новчаника. Ваш новчаник није шифрован.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="145"/>
         <location filename="../askpassphrasedialog.cpp" line="194"/>
         <source>The supplied passphrases do not match.</source>
-        <translation>Лозинке које сте унели се не подударају.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="157"/>
         <source>Wallet unlock failed</source>
-        <translation>Неуспело откључавање новчаника</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="158"/>
         <location filename="../askpassphrasedialog.cpp" line="169"/>
         <location filename="../askpassphrasedialog.cpp" line="188"/>
         <source>The passphrase entered for the wallet decryption was incorrect.</source>
-        <translation>Лозинка коју сте унели за откључавање новчаника је нетачна.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="168"/>
         <source>Wallet decryption failed</source>
-        <translation>Неуспело дешифровање новчаника</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="182"/>
         <source>Wallet passphrase was successfully changed.</source>
-        <translation>Лозинка за приступ новчанику је успешно промењена.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="230"/>
@@ -346,7 +346,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="85"/>
         <source>Wallet</source>
-        <translation>новчаник</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="87"/>
@@ -357,22 +357,22 @@ This product includes software developed by the OpenSSL Project for use in the O
         <location filename="../bitcoingui.cpp" line="101"/>
         <location filename="../bitcoingui.cpp" line="494"/>
         <source>[testnet]</source>
-        <translation>[testnet]</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="226"/>
         <source>&amp;Overview</source>
-        <translation>&amp;Општи преглед</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="227"/>
         <source>Show general overview of wallet</source>
-        <translation>Погледајте општи преглед новчаника</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="233"/>
         <source>&amp;Send</source>
-        <translation>&amp;Пошаљи</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="234"/>
@@ -392,22 +392,22 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="247"/>
         <source>&amp;Transactions</source>
-        <translation>&amp;Трансакције</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="248"/>
         <source>Browse transaction history</source>
-        <translation>Претражите историјат трансакција</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="265"/>
         <source>E&amp;xit</source>
-        <translation>I&amp;zlaz</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="266"/>
         <source>Quit application</source>
-        <translation>Напустите програм</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="270"/>
@@ -424,17 +424,17 @@ This product includes software developed by the OpenSSL Project for use in the O
         <location filename="../bitcoingui.cpp" line="276"/>
         <location filename="../bitcoingui.cpp" line="278"/>
         <source>About &amp;Qt</source>
-        <translation>О &amp;Qt-у</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="280"/>
         <source>Show information about Qt</source>
-        <translation>Прегледајте информације о Qt-у</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="282"/>
         <source>&amp;Options...</source>
-        <translation>П&amp;оставке...</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="283"/>
@@ -455,7 +455,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="291"/>
         <source>&amp;Encrypt Wallet...</source>
-        <translation>&amp;Шифровање новчаника...</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="292"/>
@@ -465,7 +465,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="294"/>
         <source>&amp;Backup Wallet...</source>
-        <translation>&amp;Backup новчаника</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="295"/>
@@ -475,12 +475,12 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="296"/>
         <source>&amp;Change Passphrase...</source>
-        <translation>Промени &amp;лозинку...</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="297"/>
         <source>Change the passphrase used for wallet encryption</source>
-        <translation>Мењање лозинке којом се шифрује новчаник</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="298"/>
@@ -490,7 +490,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="299"/>
         <source>Unlock wallet</source>
-        <translation>Откључавање новчаника</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="300"/>
@@ -590,12 +590,12 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="358"/>
         <source>&amp;File</source>
-        <translation>&amp;Фајл</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="372"/>
         <source>&amp;Settings</source>
-        <translation>&amp;Подешавања</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="385"/>
@@ -605,12 +605,12 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="391"/>
         <source>&amp;Help</source>
-        <translation>П&amp;омоћ</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="402"/>
         <source>Tabs toolbar</source>
-        <translation>Трака са картицама</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="489"/>
@@ -621,12 +621,12 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="638"/>
         <source>%n active connection(s) to Darkcoin network</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="650"/>
         <source>Synchronizing with network...</source>
-        <translation>Синхронизација са мрежом у току...</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="653"/>
@@ -651,23 +651,23 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="675"/>
         <source>Up to date</source>
-        <translation>Ажурно</translation>
+        <translation type="unfinished"/>
     </message>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="696"/>
         <source>%n hour(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
     </message>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="700"/>
         <source>%n day(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
     </message>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="704"/>
         <location filename="../bitcoingui.cpp" line="710"/>
         <source>%n week(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="710"/>
@@ -677,7 +677,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="710"/>
         <source>%n year(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="714"/>
@@ -687,7 +687,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="719"/>
         <source>Catching up...</source>
-        <translation>Ажурирање у току...</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="735"/>
@@ -722,12 +722,12 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="849"/>
         <source>Sent transaction</source>
-        <translation>Послана трансакција</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="849"/>
         <source>Incoming transaction</source>
-        <translation>Придошла трансакција</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="850"/>
@@ -736,12 +736,12 @@ Amount: %2
 Type: %3
 Address: %4
 </source>
-        <translation>Datum: %1⏎ Iznos: %2⏎ Tip: %3⏎ Adresa: %4⏎</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="921"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
-        <translation>Новчаник јс &lt;b&gt;шифрован&lt;/b&gt; и тренутно &lt;b&gt;откључан&lt;/b&gt;</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="931"/>
@@ -751,7 +751,7 @@ Address: %4
     <message>
         <location filename="../bitcoingui.cpp" line="941"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
-        <translation>Новчаник јс &lt;b&gt;шифрован&lt;/b&gt; и тренутно &lt;b&gt;закључан&lt;/b&gt;</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../darkcoin.cpp" line="449"/>
@@ -787,7 +787,7 @@ Address: %4
     <message>
         <location filename="../forms/coincontroldialog.ui" line="122"/>
         <source>Amount:</source>
-        <translation>Iznos:</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="151"/>
@@ -832,12 +832,12 @@ Address: %4
     <message>
         <location filename="../forms/coincontroldialog.ui" line="446"/>
         <source>Amount</source>
-        <translation>iznos</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="456"/>
         <source>Address</source>
-        <translation>Адреса</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="461"/>
@@ -847,7 +847,7 @@ Address: %4
     <message>
         <location filename="../forms/coincontroldialog.ui" line="466"/>
         <source>Date</source>
-        <translation>datum</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="471"/>
@@ -857,7 +857,7 @@ Address: %4
     <message>
         <location filename="../forms/coincontroldialog.ui" line="474"/>
         <source>Confirmed</source>
-        <translation>Potvrdjen</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="479"/>
@@ -867,18 +867,18 @@ Address: %4
     <message>
         <location filename="../coincontroldialog.cpp" line="43"/>
         <source>Copy address</source>
-        <translation>kopiraj adresu</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="44"/>
         <source>Copy label</source>
-        <translation>kopiraj naziv</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="45"/>
         <location filename="../coincontroldialog.cpp" line="71"/>
         <source>Copy amount</source>
-        <translation>kopiraj iznos</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="46"/>
@@ -1051,7 +1051,7 @@ Address: %4
         <location filename="../coincontroldialog.cpp" line="670"/>
         <location filename="../coincontroldialog.cpp" line="731"/>
         <source>(no label)</source>
-        <translation>(без етикете)</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="724"/>
@@ -1154,12 +1154,12 @@ Address: %4
     <message>
         <location filename="../forms/editaddressdialog.ui" line="14"/>
         <source>Edit Address</source>
-        <translation>Измени адресу</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/editaddressdialog.ui" line="25"/>
         <source>&amp;Label</source>
-        <translation>&amp;Етикета</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/editaddressdialog.ui" line="35"/>
@@ -1169,7 +1169,7 @@ Address: %4
     <message>
         <location filename="../forms/editaddressdialog.ui" line="42"/>
         <source>&amp;Address</source>
-        <translation>&amp;Адреса</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/editaddressdialog.ui" line="52"/>
@@ -1204,12 +1204,12 @@ Address: %4
     <message>
         <location filename="../editaddressdialog.cpp" line="116"/>
         <source>The entered address &quot;%1&quot; is already in the address book.</source>
-        <translation>Унешена адреса &quot;%1&quot; се већ налази у адресару.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../editaddressdialog.cpp" line="121"/>
         <source>Could not unlock wallet.</source>
-        <translation>Немогуће откључати новчаник.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../editaddressdialog.cpp" line="126"/>
@@ -1260,12 +1260,12 @@ Address: %4
     <message>
         <location filename="../utilitydialog.cpp" line="69"/>
         <source>version</source>
-        <translation>верзија</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="71"/>
         <source>Usage:</source>
-        <translation>Korišćenje:</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="72"/>
@@ -1394,7 +1394,7 @@ Address: %4
     <message>
         <location filename="../forms/optionsdialog.ui" line="14"/>
         <source>Options</source>
-        <translation>Поставке</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="27"/>
@@ -1584,7 +1584,7 @@ Address: %4
     <message>
         <location filename="../forms/optionsdialog.ui" line="514"/>
         <source>&amp;Unit to show amounts in:</source>
-        <translation>&amp;Јединица за приказивање износа:</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="527"/>
@@ -1630,7 +1630,7 @@ Address: %4
     <message>
         <location filename="../forms/optionsdialog.ui" line="699"/>
         <source>&amp;OK</source>
-        <translation>&amp;OK</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="706"/>
@@ -1679,12 +1679,12 @@ Address: %4
     <message>
         <location filename="../forms/overviewpage.ui" line="20"/>
         <source>Form</source>
-        <translation>Форма</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="63"/>
         <source>Wallet</source>
-        <translation>новчаник</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="70"/>
@@ -1823,7 +1823,7 @@ Address: %4
     <message>
         <location filename="../forms/overviewpage.ui" line="979"/>
         <source>&lt;b&gt;Recent transactions&lt;/b&gt;</source>
-        <translation>&lt;b&gt;Недавне трансакције&lt;/b&gt;</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="126"/>
@@ -2374,7 +2374,7 @@ Address: %4
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="91"/>
         <source>&amp;Label:</source>
-        <translation>&amp;Етикета</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="104"/>
@@ -2430,7 +2430,7 @@ Address: %4
     <message>
         <location filename="../receivecoinsdialog.cpp" line="39"/>
         <source>Copy label</source>
-        <translation>kopiraj naziv</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../receivecoinsdialog.cpp" line="40"/>
@@ -2440,7 +2440,7 @@ Address: %4
     <message>
         <location filename="../receivecoinsdialog.cpp" line="41"/>
         <source>Copy amount</source>
-        <translation>kopiraj iznos</translation>
+        <translation type="unfinished"/>
     </message>
 </context>
 <context>
@@ -2483,17 +2483,17 @@ Address: %4
     <message>
         <location filename="../receiverequestdialog.cpp" line="145"/>
         <source>Address</source>
-        <translation>Адреса</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../receiverequestdialog.cpp" line="147"/>
         <source>Amount</source>
-        <translation>iznos</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../receiverequestdialog.cpp" line="149"/>
         <source>Label</source>
-        <translation>Етикета</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../receiverequestdialog.cpp" line="151"/>
@@ -2516,12 +2516,12 @@ Address: %4
     <message>
         <location filename="../recentrequeststablemodel.cpp" line="24"/>
         <source>Date</source>
-        <translation>datum</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../recentrequeststablemodel.cpp" line="24"/>
         <source>Label</source>
-        <translation>Етикета</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../recentrequeststablemodel.cpp" line="24"/>
@@ -2531,12 +2531,12 @@ Address: %4
     <message>
         <location filename="../recentrequeststablemodel.cpp" line="24"/>
         <source>Amount</source>
-        <translation>iznos</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../recentrequeststablemodel.cpp" line="62"/>
         <source>(no label)</source>
-        <translation>(без етикете)</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../recentrequeststablemodel.cpp" line="71"/>
@@ -2557,7 +2557,7 @@ Address: %4
         <location filename="../sendcoinsdialog.cpp" line="512"/>
         <location filename="../sendcoinsdialog.cpp" line="522"/>
         <source>Send Coins</source>
-        <translation>Слање новца</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="90"/>
@@ -2592,7 +2592,7 @@ Address: %4
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="299"/>
         <source>Amount:</source>
-        <translation>Iznos:</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="331"/>
@@ -2632,12 +2632,12 @@ Address: %4
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="650"/>
         <source>Confirm the send action</source>
-        <translation>Потврди акцију слања</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="653"/>
         <source>S&amp;end</source>
-        <translation>&amp;Пошаљи</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="673"/>
@@ -2682,7 +2682,7 @@ Address: %4
     <message>
         <location filename="../sendcoinsdialog.cpp" line="54"/>
         <source>Copy amount</source>
-        <translation>kopiraj iznos</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="55"/>
@@ -2815,7 +2815,7 @@ Address: %4
     <message>
         <location filename="../sendcoinsdialog.cpp" line="646"/>
         <source>(no label)</source>
-        <translation>(без етикете)</translation>
+        <translation type="unfinished"/>
     </message>
 </context>
 <context>
@@ -2843,7 +2843,7 @@ Address: %4
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="71"/>
         <source>Alt+A</source>
-        <translation>Alt+</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="78"/>
@@ -2853,7 +2853,7 @@ Address: %4
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="88"/>
         <source>Alt+P</source>
-        <translation>Alt+П</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="95"/>
@@ -2865,7 +2865,7 @@ Address: %4
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="111"/>
         <source>&amp;Label:</source>
-        <translation>&amp;Етикета</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="124"/>
@@ -2882,7 +2882,7 @@ Address: %4
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="147"/>
         <source>Message:</source>
-        <translation>Poruka:</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="157"/>
@@ -2962,7 +2962,7 @@ Address: %4
         <location filename="../forms/signverifymessagedialog.ui" line="65"/>
         <location filename="../forms/signverifymessagedialog.ui" line="275"/>
         <source>Alt+A</source>
-        <translation>Alt+A</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="75"/>
@@ -2972,7 +2972,7 @@ Address: %4
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="85"/>
         <source>Alt+P</source>
-        <translation>Alt+П</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="97"/>
@@ -3142,7 +3142,7 @@ Address: %4
     <message>
         <location filename="../splashscreen.cpp" line="37"/>
         <source>[testnet]</source>
-        <translation>[testnet]</translation>
+        <translation type="unfinished"/>
     </message>
 </context>
 <context>
@@ -3158,12 +3158,12 @@ Address: %4
     <message numerus="yes">
         <location filename="../transactiondesc.cpp" line="28"/>
         <source>Open for %n more block(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="30"/>
         <source>Open until %1</source>
-        <translation>Otvorite do %1</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="41"/>
@@ -3196,13 +3196,13 @@ Address: %4
     <message>
         <location filename="../transactiondesc.cpp" line="78"/>
         <source>%1/unconfirmed</source>
-        <translation>%1/nepotvrdjeno</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="68"/>
         <location filename="../transactiondesc.cpp" line="80"/>
         <source>%1 confirmations</source>
-        <translation>%1 potvrde</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="54"/>
@@ -3237,17 +3237,17 @@ Address: %4
     <message>
         <location filename="../transactiondesc.cpp" line="103"/>
         <source>, has not been successfully broadcast yet</source>
-        <translation>, nije još uvek uspešno emitovan</translation>
+        <translation type="unfinished"/>
     </message>
     <message numerus="yes">
         <location filename="../transactiondesc.cpp" line="105"/>
         <source>, broadcast through %n node(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="109"/>
         <source>Date</source>
-        <translation>datum</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="116"/>
@@ -3268,7 +3268,7 @@ Address: %4
     <message>
         <location filename="../transactiondesc.cpp" line="138"/>
         <source>unknown</source>
-        <translation>nepoznato</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="139"/>
@@ -3286,7 +3286,7 @@ Address: %4
     <message>
         <location filename="../transactiondesc.cpp" line="142"/>
         <source>label</source>
-        <translation>етикета</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="179"/>
@@ -3300,7 +3300,7 @@ Address: %4
     <message numerus="yes">
         <location filename="../transactiondesc.cpp" line="181"/>
         <source>matures in %n more block(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="183"/>
@@ -3369,7 +3369,7 @@ Address: %4
     <message>
         <location filename="../transactiondesc.cpp" line="332"/>
         <source>Amount</source>
-        <translation>iznos</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="333"/>
@@ -3387,12 +3387,12 @@ Address: %4
     <message>
         <location filename="../forms/transactiondescdialog.ui" line="14"/>
         <source>Transaction details</source>
-        <translation>detalji transakcije</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/transactiondescdialog.ui" line="20"/>
         <source>This pane shows a detailed description of the transaction</source>
-        <translation>Ovaj odeljak pokazuje detaljan opis transakcije</translation>
+        <translation type="unfinished"/>
     </message>
 </context>
 <context>
@@ -3400,32 +3400,32 @@ Address: %4
     <message>
         <location filename="../transactiontablemodel.cpp" line="238"/>
         <source>Date</source>
-        <translation>datum</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="238"/>
         <source>Type</source>
-        <translation>tip</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="238"/>
         <source>Address</source>
-        <translation>Адреса</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="238"/>
         <source>Amount</source>
-        <translation>iznos</translation>
+        <translation type="unfinished"/>
     </message>
     <message numerus="yes">
         <location filename="../transactiontablemodel.cpp" line="287"/>
         <source>Open for %n more block(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="290"/>
         <source>Open until %1</source>
-        <translation>Otvoreno do %1</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="293"/>
@@ -3445,7 +3445,7 @@ Address: %4
     <message>
         <location filename="../transactiontablemodel.cpp" line="302"/>
         <source>Confirmed (%1 confirmations)</source>
-        <translation>Potvrdjena (%1 potvrdjenih)</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="305"/>
@@ -3460,22 +3460,22 @@ Address: %4
     <message>
         <location filename="../transactiontablemodel.cpp" line="311"/>
         <source>This block was not received by any other nodes and will probably not be accepted!</source>
-        <translation>Ovaj blok nije primljen od ostalih čvorova (nodova) i verovatno neće biti prihvaćen!</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="314"/>
         <source>Generated but not accepted</source>
-        <translation>Generisan ali nije prihvaćen</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="356"/>
         <source>Received with</source>
-        <translation>Primljen sa</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="358"/>
         <source>Received from</source>
-        <translation>Primljeno od</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="360"/>
@@ -3485,17 +3485,17 @@ Address: %4
     <message>
         <location filename="../transactiontablemodel.cpp" line="363"/>
         <source>Sent to</source>
-        <translation>Poslat ka</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="365"/>
         <source>Payment to yourself</source>
-        <translation>Isplata samom sebi</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="367"/>
         <source>Mined</source>
-        <translation>Minirano</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="370"/>
@@ -3520,32 +3520,32 @@ Address: %4
     <message>
         <location filename="../transactiontablemodel.cpp" line="418"/>
         <source>(n/a)</source>
-        <translation>(n/a)</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="610"/>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
-        <translation>Status vaše transakcije. Predjite mišem preko ovog polja da bi ste videli broj konfirmacija</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="612"/>
         <source>Date and time that the transaction was received.</source>
-        <translation>Datum i vreme primljene transakcije.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="614"/>
         <source>Type of transaction.</source>
-        <translation>Tip transakcije</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="616"/>
         <source>Destination address of transaction.</source>
-        <translation>Destinacija  i adresa transakcije</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="618"/>
         <source>Amount removed from or added to balance.</source>
-        <translation>Iznos odbijen ili dodat balansu.</translation>
+        <translation type="unfinished"/>
     </message>
 </context>
 <context>
@@ -3554,47 +3554,47 @@ Address: %4
         <location filename="../transactionview.cpp" line="60"/>
         <location filename="../transactionview.cpp" line="76"/>
         <source>All</source>
-        <translation>Sve</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="61"/>
         <source>Today</source>
-        <translation>Danas</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="62"/>
         <source>This week</source>
-        <translation>ove nedelje</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="63"/>
         <source>This month</source>
-        <translation>Ovog meseca</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="64"/>
         <source>Last month</source>
-        <translation>Prošlog meseca</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="65"/>
         <source>This year</source>
-        <translation>Ove godine</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="66"/>
         <source>Range...</source>
-        <translation>Opseg...</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="77"/>
         <source>Received with</source>
-        <translation>Primljen sa</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="79"/>
         <source>Sent to</source>
-        <translation>Poslat ka</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="81"/>
@@ -3609,42 +3609,42 @@ Address: %4
     <message>
         <location filename="../transactionview.cpp" line="83"/>
         <source>To yourself</source>
-        <translation>Vama - samom sebi</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="84"/>
         <source>Mined</source>
-        <translation>Minirano</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="85"/>
         <source>Other</source>
-        <translation>Drugi</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="91"/>
         <source>Enter address or label to search</source>
-        <translation>Navedite adresu ili naziv koji bi ste potražili</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="97"/>
         <source>Min amount</source>
-        <translation>Min iznos</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="131"/>
         <source>Copy address</source>
-        <translation>kopiraj adresu</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="132"/>
         <source>Copy label</source>
-        <translation>kopiraj naziv</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="133"/>
         <source>Copy amount</source>
-        <translation>kopiraj iznos</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="134"/>
@@ -3654,7 +3654,7 @@ Address: %4
     <message>
         <location filename="../transactionview.cpp" line="135"/>
         <source>Edit label</source>
-        <translation>promeni naziv</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="136"/>
@@ -3669,37 +3669,37 @@ Address: %4
     <message>
         <location filename="../transactionview.cpp" line="300"/>
         <source>Comma separated file (*.csv)</source>
-        <translation>Зарезом одвојене вредности (*.csv)</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="309"/>
         <source>Confirmed</source>
-        <translation>Potvrdjen</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="310"/>
         <source>Date</source>
-        <translation>datum</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="311"/>
         <source>Type</source>
-        <translation>tip</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="312"/>
         <source>Label</source>
-        <translation>Етикета</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="313"/>
         <source>Address</source>
-        <translation>Адреса</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="314"/>
         <source>Amount</source>
-        <translation>iznos</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="315"/>
@@ -3729,12 +3729,12 @@ Address: %4
     <message>
         <location filename="../transactionview.cpp" line="431"/>
         <source>Range:</source>
-        <translation>Opseg:</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="439"/>
         <source>to</source>
-        <translation>do</translation>
+        <translation type="unfinished"/>
     </message>
 </context>
 <context>
@@ -3750,7 +3750,7 @@ Address: %4
     <message>
         <location filename="../walletmodel.cpp" line="288"/>
         <source>Send Coins</source>
-        <translation>Слање новца</translation>
+        <translation type="unfinished"/>
     </message>
 </context>
 <context>
@@ -3768,7 +3768,7 @@ Address: %4
     <message>
         <location filename="../walletview.cpp" line="229"/>
         <source>Backup Wallet</source>
-        <translation>Backup новчаника</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../walletview.cpp" line="230"/>
@@ -5018,7 +5018,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="363"/>
         <source>Usage:</source>
-        <translation>Korišćenje:</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="364"/>
@@ -5133,7 +5133,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="386"/>
         <source>version</source>
-        <translation>верзија</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="387"/>
