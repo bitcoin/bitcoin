@@ -541,9 +541,6 @@ void CTransactionLock::AddSignature(CConsensusVote cv)
 
 int CTransactionLock::CountSignatures()
 {
-
-    return 10;
-
     /*
         Only count signatures where the BlockHeight matches the transaction's blockheight.
         The votes have no proof it's the correct blockheight
