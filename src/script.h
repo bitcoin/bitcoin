@@ -35,6 +35,7 @@ enum
     SCRIPT_VERIFY_P2SH      = (1U << 0),
     SCRIPT_VERIFY_STRICTENC = (1U << 1),
     SCRIPT_VERIFY_NOCACHE   = (1U << 2),
+    SCRIPT_VERIFY_DERSIG    = (1U << 3), // enforce signature encodings as defined by BIP 66 (which is a softfork, while STRICTENC is not)
 };
 
 enum txnouttype
