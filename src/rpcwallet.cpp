@@ -1430,6 +1430,31 @@ Value keypoolrefill(const Array& params, bool fHelp)
     return Value::null;
 }
 
+Value keypoolreset(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() > 1)
+        throw runtime_error(
+            "keypoolreset [new-size]\n"
+            "Resets the keypool."
+            + HelpRequiringPassphrase());
+
+    unsigned int nSize = max<unsigned int>(GetArg("-keypool", 100), 0);
+    if (params.size() > 0) {
+        if (params[0].get_int() < 0)
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, expected valid size");
+        nSize = (unsigned int) params[0].get_int();
+    }
+
+    EnsureWalletIsUnlocked();
+
+    pwalletMain->NewKeyPool(nSize);
+
+    if (pwalletMain->GetKeyPoolSize() < nSize)
+        throw JSONRPCError(RPC_WALLET_ERROR, "Error refreshing keypool.");
+
+    return Value::null;
+}
+
 
 void ThreadTopUpKeyPool(void* parg)
 {
