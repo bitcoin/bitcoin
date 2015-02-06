@@ -68,8 +68,6 @@ bool fTxIndex = false;
 bool fCheckBlockIndex = false;
 unsigned int nCoinCacheSize = 5000;
 
-bool fAllowFree = true;
-
 CTxMemPool mempool;
 
 struct COrphanTx {
@@ -713,55 +711,8 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
         CAmount nFees = nValueIn-nValueOut;
         double dPriority = view.GetPriority(tx, nHeight);
         CTxMemPoolEntry entry(tx, nFees, GetTime(), dPriority, nHeight);
-        unsigned int nSize = entry.GetTxSize();
-
-        bool fValidateFee = nFees >= ::minRelayTxFee.GetFee(nSize);
-        if (fLimitFree && !fValidateFee) {
-            double dPriorityDelta = 0;
-            CAmount nFeeDelta = 0;
-            mempool.ApplyDeltas(hash, dPriorityDelta, nFeeDelta);
-            if (!(dPriorityDelta > 0 || nFeeDelta > 0 ||
-                // There is a free transaction area in blocks created by most miners,
-                // * If we are relaying we allow transactions up to DEFAULT_BLOCK_PRIORITY_SIZE - 1000
-                //   to be considered to fall into this category. We don't want to encourage sending
-                //   multiple transactions instead of one big transaction to avoid fees.
-                  (fAllowFree && nSize < DEFAULT_BLOCK_PRIORITY_SIZE - 1000)))
-                return state.DoS(0, error("AcceptToMemoryPool: not enough fees %s, %d < %d",
-                                          hash.ToString(), nFees, ::minRelayTxFee.GetFee(nSize)),
-                                 REJECT_INSUFFICIENTFEE, "insufficient fee");
-
-            // Continuously rate-limit free (really, very-low-fee) transactions
-            // This mitigates 'penny-flooding' -- sending thousands of free transactions just to
-            // be annoying or make others' transactions take longer to confirm.
-            {
-                static CCriticalSection csFreeLimiter;
-                static double dFreeCount;
-                static int64_t nLastTime;
-                int64_t nNow = GetTime();
-
-                LOCK(csFreeLimiter);
-
-                // Use an exponentially decaying ~10-minute window:
-                dFreeCount *= pow(1.0 - 1.0/600.0, (double)(nNow - nLastTime));
-                nLastTime = nNow;
-                // -limitfreerelay unit is thousand-bytes-per-minute
-                // At default rate it would take over a month to fill 1GB
-                if (dFreeCount >= GetArg("-limitfreerelay", 15)*10*1000)
-                    return state.DoS(0, error("AcceptToMemoryPool: free transaction rejected by rate limiter"),
-                                     REJECT_INSUFFICIENTFEE, "rate limited free transaction");
-                LogPrint("mempool", "Rate limit dFreeCount: %g => %g\n", dFreeCount, dFreeCount+nSize);
-                dFreeCount += nSize;
-            }
-        }
-
-        // Require that free transactions have sufficient priority to be mined in the next block.
-        if (GetBoolArg("-relaypriority", true) && !fValidateFee && !AllowFree(view.GetPriority(tx, nHeight + 1)))
-            return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "insufficient priority");
-
-        if (fRejectAbsurdFee && nFees > ::minRelayTxFee.GetFee(nSize) * 10000)
-            return error("AcceptToMemoryPool: absurdly high fees %s, %d > %d",
-                         hash.ToString(),
-                         nFees, ::minRelayTxFee.GetFee(nSize) * 10000);
+        if (!Policy().ValidateTxFee(nFees, entry.GetTxSize(), tx, nHeight, fRejectAbsurdFee, fLimitFree, view, mempool, state))
+            return error("%s: CPolicy::ValidateFee failed %s %s", __func__, state.GetRejectReason(), hash.ToString());
 
         // Check against previous transactions
         // This is done last to help prevent CPU exhaustion denial-of-service attacks.
