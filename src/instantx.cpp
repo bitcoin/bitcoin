@@ -158,9 +158,9 @@ void ProcessMessageInstantX(CNode* pfrom, std::string& strCommand, CDataStream& 
 
             LOCK(cs_vNodes);
             BOOST_FOREACH(CNode* pnode, vNodes)
-            {
+            {/*
                 if(!pnode->fRelayTxes)
-                    continue;
+                    continue;*/
 
                 pnode->PushMessage("txlvote", ctx);
             }
@@ -297,12 +297,13 @@ bool ProcessConsensusVote(CConsensusVote& ctx)
 
     int x = GetMasternodeByVin(ctx.vinMasternode);
     if(x != -1){
-        LogPrintf("InstantX::ProcessConsensusVote - Masternode ADDR %s %d\n", vecMasternodes[x].addr.ToString().c_str(), n);
+        if(fDebug) LogPrintf("InstantX::ProcessConsensusVote - Masternode ADDR %s %d\n", vecMasternodes[x].addr.ToString().c_str(), n);
     }
 
     if(n == -1)
     {
-        LogPrintf("InstantX::ProcessConsensusVote - Unknown Masternode\n");
+        //can be caused by past versions trying to vote with an invalid protocol
+        if(fDebug) LogPrintf("InstantX::ProcessConsensusVote - Unknown Masternode\n");
         return false;
     }
 
