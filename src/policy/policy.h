@@ -57,6 +57,7 @@ public:
     virtual bool ApproveScript(const CScript&, txnouttype&) const = 0;
     virtual CAmount GetDustThreshold(const CTxOut& txout) const = 0;
     virtual bool ApproveOutput(const CTxOut& txout) const = 0;
+    virtual bool ApproveFee(const CAmount&, size_t) const = 0;
     /**
      * Check for standard transaction types
      * @return True if all outputs (scriptPubKeys) use only standard transaction forms
