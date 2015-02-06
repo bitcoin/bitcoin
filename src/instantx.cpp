@@ -295,6 +295,11 @@ bool ProcessConsensusVote(CConsensusVote& ctx)
 {
     int n = GetMasternodeRank(ctx.vinMasternode, ctx.nBlockHeight, MIN_INSTANTX_PROTO_VERSION);
 
+    int x = GetMasternodeByVin(ctx.vinMasternode);
+    if(x != -1){
+        LogPrintf("InstantX::ProcessConsensusVote - Masternode ADDR %s %d\n", vecMasternodes[x].addr.ToString().c_str(), n);
+    }
+
     if(n == -1)
     {
         LogPrintf("InstantX::ProcessConsensusVote - Unknown Masternode\n");
@@ -303,7 +308,7 @@ bool ProcessConsensusVote(CConsensusVote& ctx)
 
     if(n > INSTANTX_SIGNATURES_TOTAL)
     {
-        LogPrintf("InstantX::ProcessConsensusVote - Masternode not in the top %d (%d)\n", INSTANTX_SIGNATURES_TOTAL, n);
+        LogPrintf("InstantX::ProcessConsensusVote - Masternode not in the top %d (%d) - %s\n", INSTANTX_SIGNATURES_TOTAL, n, ctx.GetHash().ToString().c_str());
         return false;
     }
 
