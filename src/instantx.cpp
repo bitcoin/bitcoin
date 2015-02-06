@@ -232,7 +232,7 @@ int64_t CreateNewLock(CTransaction tx)
 
         CTransactionLock newLock;
         newLock.nBlockHeight = nBlockHeight;
-        newLock.nExpiration = GetTime()+(60*15); //locks expire after 15 minutes (6 confirmations)
+        newLock.nExpiration = GetTime()+(60*60); //locks expire after 15 minutes (6 confirmations)
         newLock.nTimeout = GetTime()+(60*5);
         newLock.txHash = tx.GetHash();
         mapTxLocks.insert(make_pair(tx.GetHash(), newLock));
@@ -249,9 +249,24 @@ void DoConsensusVote(CTransaction& tx, int64_t nBlockHeight)
 {
     if(!fMasterNode) return;
 
+    int n = GetMasternodeRank(activeMasternode.vin, nBlockHeight, MIN_INSTANTX_PROTO_VERSION);
+
+    if(n == -1)
+    {
+        LogPrintf("InstantX::DoConsensusVote - Unknown Masternode\n");
+        return;
+    }
+
+    if(n > INSTANTX_SIGNATURES_TOTAL)
+    {
+        LogPrintf("InstantX::DoConsensusVote - Masternode not in the top %d (%d)\n", INSTANTX_SIGNATURES_TOTAL, n);
+        return;
+    }
     /*
         nBlockHeight calculated from the transaction is the authoritive source
     */
+
+    LogPrintf("InstantX::DoConsensusVote - In the top %d (%d)\n", INSTANTX_SIGNATURES_TOTAL, n);
 
     CConsensusVote ctx;
     ctx.vinMasternode = activeMasternode.vin;
@@ -541,9 +556,6 @@ void CTransactionLock::AddSignature(CConsensusVote cv)
 
 int CTransactionLock::CountSignatures()
 {
-
-    return 10;
-
     /*
         Only count signatures where the BlockHeight matches the transaction's blockheight.
         The votes have no proof it's the correct blockheight
