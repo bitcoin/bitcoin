@@ -249,9 +249,24 @@ void DoConsensusVote(CTransaction& tx, int64_t nBlockHeight)
 {
     if(!fMasterNode) return;
 
+    int n = GetMasternodeRank(activeMasternode.vin, nBlockHeight, MIN_INSTANTX_PROTO_VERSION);
+
+    if(n == -1)
+    {
+        LogPrintf("InstantX::DoConsensusVote - Unknown Masternode\n");
+        return;
+    }
+
+    if(n > INSTANTX_SIGNATURES_TOTAL)
+    {
+        LogPrintf("InstantX::DoConsensusVote - Masternode not in the top %d (%d)\n", INSTANTX_SIGNATURES_TOTAL, n);
+        return;
+    }
     /*
         nBlockHeight calculated from the transaction is the authoritive source
     */
+
+    LogPrintf("InstantX::DoConsensusVote - In the top %d (%d)\n", INSTANTX_SIGNATURES_TOTAL, n);
 
     CConsensusVote ctx;
     ctx.vinMasternode = activeMasternode.vin;
