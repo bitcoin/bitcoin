@@ -190,6 +190,7 @@ enum
     SCRIPT_VERIFY_STRICTENC = (1U << 1), // enforce strict conformance to DER and SEC2 for signatures and pubkeys
     SCRIPT_VERIFY_EVEN_S    = (1U << 2), // enforce even S values in signatures (depends on STRICTENC)
     SCRIPT_VERIFY_NOCACHE   = (1U << 3), // do not store results in signature cache (but do query it)
+    SCRIPT_VERIFY_DERSIG    = (1U << 4), // enforce signature encodings as defined by BIP 66 (which is a softfork, while STRICTENC is not)
 };
 
 enum txnouttype
