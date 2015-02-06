@@ -3857,6 +3857,11 @@ bool static AlreadyHave(const CInv& inv)
     case MSG_BLOCK:
         return mapBlockIndex.count(inv.hash) ||
                mapOrphanBlocks.count(inv.hash);
+    case MSG_TXLOCK_REQUEST:
+        return mapTxLockReq.count(inv.hash) ||
+               mapTxLockReqRejected.count(inv.hash);
+    case MSG_TXLOCK_VOTE:
+        return mapTxLockVote.count(inv.hash);
     }
     // Don't know what it is, just say we already got one
     return true;
@@ -3956,6 +3961,7 @@ void static ProcessGetData(CNode* pfrom)
                         pushed = true;
                     }
                 }
+
                 if (!pushed && inv.type == MSG_TX) {
 
                     if(mapDarksendBroadcastTxes.count(inv.hash)){
@@ -3980,6 +3986,25 @@ void static ProcessGetData(CNode* pfrom)
                         }
                     }
                 }
+                if (!pushed && inv.type == MSG_TXLOCK_VOTE) {
+                    if(mapTxLockVote.count(inv.hash)){
+                        CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
+                        ss.reserve(1000);
+                        ss << mapTxLockVote[inv.hash];
+                        pfrom->PushMessage("txlvote", ss);
+                        pushed = true;
+                    }
+                }
+                if (!pushed && inv.type == MSG_TXLOCK_REQUEST) {
+                    if(mapTxLockReq.count(inv.hash)){
+                        CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
+                        ss.reserve(1000);
+                        ss << mapTxLockReq[inv.hash];
+                        pfrom->PushMessage("txlreq", ss);
+                        pushed = true;
+                    }
+                }
+
                 if (!pushed) {
                     vNotFound.push_back(inv);
                 }

@@ -26,6 +26,8 @@ class CTransactionLock;
 static const int MIN_INSTANTX_PROTO_VERSION = 70062;
 
 extern map<uint256, CTransaction> mapTxLockReq;
+extern map<uint256, CTransaction> mapTxLockReqRejected;
+extern map<uint256, CConsensusVote> mapTxLockVote;
 extern map<uint256, CTransactionLock> mapTxLocks;
 extern std::map<COutPoint, uint256> mapLockedInputs;
 extern int nCompleteTXLocks;
@@ -84,7 +86,7 @@ public:
 
     bool SignaturesValid();
     int CountSignatures();
-    void AddSignature(CConsensusVote cv);
+    void AddSignature(CConsensusVote& cv);
 
     uint256 GetHash()
     {
