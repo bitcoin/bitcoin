@@ -66,6 +66,7 @@ struct COrphanBlock {
 };
 map<uint256, COrphanBlock*> mapOrphanBlocks;
 multimap<uint256, COrphanBlock*> mapOrphanBlocksByPrev;
+bool fManyOrphansFound;
 
 struct COrphanTx {
     CTransaction tx;
@@ -1172,7 +1173,7 @@ int CMerkleTx::GetDepthInMainChainINTERNAL(CBlockIndex* &pindexRet) const
 
 int CMerkleTx::GetTransactionLockSignatures() const
 {
-    if(fLargeWorkForkFound || fLargeWorkInvalidChainFound) return -2;
+    if(fManyOrphansFound) return -2;
     if(nInstantXDepth == 0) return -1;
 
     //compile consessus vote
@@ -2825,7 +2826,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
 
     // ----------- instantX transaction scanning -----------
 
-    if(!fLargeWorkForkFound && !fLargeWorkInvalidChainFound){
+    if(!fManyOrphansFound){
         BOOST_FOREACH(const CTransaction& tx, block.vtx){
             if (!tx.IsCoinBase()){
                 //only reject blocks when it's based on complete consensus
@@ -2853,7 +2854,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
     }
 
 
-    if(MasternodePayments && !fLargeWorkForkFound && !fLargeWorkInvalidChainFound)
+    if(MasternodePayments && !fManyOrphansFound)
     {
         LOCK2(cs_main, mempool.cs);
 
@@ -3170,6 +3171,8 @@ bool ProcessBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDiskBl
         }
         return true;
     }
+
+    fManyOrphansFound = (unsigned long)mapOrphanBlocks.size() >= 6;
 
     // Store to disk
     if (!AcceptBlock(*pblock, state, dbp))
