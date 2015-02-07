@@ -20,8 +20,6 @@
 #include "utilmoneystr.h"
 #include "utilstrencodings.h"
 
-/** Fees smaller than this (in satoshi) are considered zero fee (for relaying and mining) */
-CFeeRate minRelayTxFee = CFeeRate(1000);
 static const std::string defaultMinRelayTxFee = "0.00001000";
 /** The maximum number of bytes in OP_RETURN outputs that we're willing to relay/mine */
 static const unsigned int MAX_OP_RETURN_RELAY = 80;
@@ -48,6 +46,8 @@ protected:
      */
     unsigned int policyScriptFlags;
     bool fAllowFree;
+    /** Fees smaller than this (in satoshi) are considered zero fee (for relaying and mining) */
+    CFeeRate minRelayTxFee;
 public:
     CStandardPolicy() : nMaxDatacarrierBytes(MAX_OP_RETURN_RELAY),
                         fIsBareMultisigStd(true),
@@ -58,7 +58,8 @@ public:
                                           SCRIPT_VERIFY_NULLDUMMY |
                                           SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_NOPS |
                                           SCRIPT_VERIFY_CLEANSTACK),
-                        fAllowFree(true)
+                        fAllowFree(true),
+                        minRelayTxFee(1000)
     {};
 
     virtual std::vector<std::pair<std::string, std::string> > GetOptionsHelp() const;
@@ -78,6 +79,7 @@ public:
     virtual bool ApproveOutput(const CTxOut& txout) const;
     virtual bool ApproveFee(const CAmount&, size_t) const;
     virtual bool ApproveFeeRate(const CFeeRate&) const;
+    virtual const CFeeRate& GetMinRelayFeeRate() const;
     virtual bool ApproveTx(const CTransaction&, CValidationState&) const;
     /**
      * Check transaction inputs to mitigate two
@@ -248,6 +250,11 @@ bool CStandardPolicy::ApproveFee(const CAmount& nFees, size_t nSize) const
 bool CStandardPolicy::ApproveFeeRate(const CFeeRate& rate) const
 {
     return rate >= minRelayTxFee;
+}
+
+const CFeeRate& CStandardPolicy::GetMinRelayFeeRate() const
+{
+    return minRelayTxFee;
 }
 
 bool CStandardPolicy::ApproveTx(const CTransaction& tx, CValidationState& state) const

@@ -190,7 +190,7 @@ void CMinerPolicyEstimator::seenBlock(const std::vector<CTxMemPoolEntry>& entrie
             // Fees are stored and reported as BTC-per-kb:
             CFeeRate feeRate(entry->GetFee(), entry->GetTxSize());
             double dPriority = entry->GetPriority(entry->GetHeight()); // Want priority when it went IN
-            seenTxConfirm(feeRate, minRelayTxFee, dPriority, i);
+            seenTxConfirm(feeRate, Policy().GetMinRelayFeeRate(), dPriority, i);
         }
     }
 
@@ -316,7 +316,7 @@ bool CMinerPolicyEstimator::Read(CAutoFile& filein)
         
         for (size_t i = 0; i < numEntries; i++) {
             CBlockAverage entry;
-            entry.Read(filein, minRelayTxFee);
+            entry.Read(filein, Policy().GetMinRelayFeeRate());
             fileHistory.push_back(entry);
         }
 

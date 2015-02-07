@@ -645,7 +645,7 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
     toolTip2 += tr("This label turns red, if the priority is smaller than \"medium\".") + "<br /><br />";
     toolTip2 += tr("This means a fee of at least %1 per kB is required.").arg(BitcoinUnits::formatWithUnit(nDisplayUnit, CWallet::minTxFee.GetFeePerK()));
 
-    QString toolTip3 = tr("This label turns red, if any recipient receives an amount smaller than %1.").arg(BitcoinUnits::formatWithUnit(nDisplayUnit, ::minRelayTxFee.GetFee(546)));
+    QString toolTip3 = tr("This label turns red, if any recipient receives an amount smaller than %1.").arg(BitcoinUnits::formatWithUnit(nDisplayUnit, Policy().GetMinRelayFeeRate().GetFee(546)));
 
     // how many satoshis the estimated fee can vary per byte we guess wrong
     double dFeeVary;

@@ -32,10 +32,6 @@ static const unsigned int MAX_P2SH_SIGOPS = 15;
 /** The maximum number of sigops we're willing to relay/mine in a single tx */
 static const unsigned int MAX_STANDARD_TX_SIGOPS = MAX_BLOCK_SIGOPS/5;
 
-/** GLOBALS: These variables are supposed to become CStandardPolicy attributes */
-
-extern CFeeRate minRelayTxFee;
-
 inline double AllowFreeThreshold()
 {
     return COIN * 144 / 250;
@@ -59,6 +55,8 @@ public:
     virtual bool ApproveOutput(const CTxOut& txout) const = 0;
     virtual bool ApproveFee(const CAmount&, size_t) const = 0;
     virtual bool ApproveFeeRate(const CFeeRate&) const = 0;
+    /** DEPRECATED: avoid using this method when possible */
+    virtual const CFeeRate& GetMinRelayFeeRate() const = 0;
     /**
      * Check for standard transaction types
      * @return True if all outputs (scriptPubKeys) use only standard transaction forms
