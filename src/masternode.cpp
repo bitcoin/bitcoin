@@ -105,6 +105,10 @@ void ProcessMessageMasternode(CNode* pfrom, std::string& strCommand, CDataStream
             return;
         }
 
+        if(Params().NetworkID() == CChainParams::MAIN){
+            if(addr.GetPort() != 9999) return;
+        }
+
         //search existing masternode list, this is where we update existing masternodes with new dsee broadcasts
 
         BOOST_FOREACH(CMasterNode& mn, vecMasternodes) {
