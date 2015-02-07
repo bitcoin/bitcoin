@@ -481,8 +481,9 @@ int GetMasternodeRank(CTxIn& vin, int64_t nBlockHeight, int minProtocol)
 {
     std::vector<pair<unsigned int, CTxIn> > vecMasternodeScores;
 
-    BOOST_FOREACH(CMasterNode mn, vecMasternodes) {
+    BOOST_FOREACH(CMasterNode& mn, vecMasternodes) {
         mn.Check();
+
         if(mn.protocolVersion < minProtocol) continue;
         if(!mn.IsEnabled()) {
             continue;
@@ -500,7 +501,9 @@ int GetMasternodeRank(CTxIn& vin, int64_t nBlockHeight, int minProtocol)
     unsigned int rank = 0;
     BOOST_FOREACH (PAIRTYPE(unsigned int, CTxIn)& s, vecMasternodeScores){
         rank++;
-        if(s.second == vin) return rank;
+        if(s.second == vin) {
+            return rank;
+        }
     }
 
     return -1;
@@ -553,49 +556,11 @@ uint256 CMasterNode::CalculateScore(int mod, int64_t nBlockHeight)
     uint256 aux = vin.prevout.hash;
 
     if(!GetBlockHash(hash, nBlockHeight)) return 0;
-    uint256 hash2 = HashX11(BEGIN(hash), END(hash));
-    uint256 hash3 = HashX11(BEGIN(hash), END(aux));
+    uint256 hash2 = Hash(BEGIN(hash), END(hash));
+    uint256 hash3 = Hash(BEGIN(hash), END(aux));
 
-    // we'll make a 4 dimensional point in space
-    // the closest masternode to that point wins
-    uint64_t a1 = hash2.Get64(0);
-    uint64_t a2 = hash2.Get64(1);
-    uint64_t a3 = hash2.Get64(2);
-    uint64_t a4 = hash2.Get64(3);
+    return (hash3 - hash2 ? hash3 - hash2 : hash2 - hash3);
 
-    //copy part of our source hash
-    int i1, i2, i3, i4;
-    i1=0;i2=0;i3=0;i4=0;
-    memcpy(&i1, &a1, 1);
-    memcpy(&i2, &a2, 1);
-    memcpy(&i3, &a3, 1);
-    memcpy(&i4, &a4, 1);
-
-    //split up our mn-hash+aux into 4
-    uint64_t b1 = hash3.Get64(0);
-    uint64_t b2 = hash3.Get64(1);
-    uint64_t b3 = hash3.Get64(2);
-    uint64_t b4 = hash3.Get64(3);
-
-    //move mn hash around
-    b1 <<= (i1 % 64);
-    b2 <<= (i2 % 64);
-    b3 <<= (i3 % 64);
-    b4 <<= (i4 % 64);
-
-    // calculate distance between target point and mn point
-    uint256 r = 0;
-    r +=  (a1 > b1 ? a1 - b1 : b1 - a1);
-    r +=  (a2 > b2 ? a2 - b2 : b2 - a2);
-    r +=  (a3 > b3 ? a3 - b3 : b3 - a3);
-    r +=  (a4 > b4 ? a4 - b4 : b4 - a4);
-
-    /*
-    LogPrintf(" -- MasterNode CalculateScore() n2 = %s \n", n2.ToString().c_str());
-    LogPrintf(" -- MasterNode CalculateScore() vin = %s \n", vin.prevout.hash.GetHex().c_str());
-    LogPrintf(" -- MasterNode CalculateScore() n3 = %s \n", n3.ToString().c_str());*/
-
-    return r;
 }
 
 void CMasterNode::Check()
