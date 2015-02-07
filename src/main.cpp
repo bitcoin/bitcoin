@@ -2840,6 +2840,8 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
                 }
             }
         }
+    } else {
+        LogPrintf("CheckBlock() : fork detected, skipping transaction locking checks\n");
     }
 
 
@@ -2907,6 +2909,8 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
         } else {
             LogPrintf("CheckBlock() : pindex is null, skipping masternode payment check\n");
         }
+    } else {
+        LogPrintf("CheckBlock() : fork detected, skipping masternode payment checks\n");
     }
 
 
