@@ -20,7 +20,7 @@ using namespace boost;
 
 std::map<uint256, CTransaction> mapTxLockReq;
 std::map<uint256, CTransaction> mapTxLockReqRejected;
-std::map<uint256, int> mapTxLockVote;
+std::map<uint256, CConsensusVote> mapTxLockVote;
 std::map<uint256, CTransactionLock> mapTxLocks;
 std::map<COutPoint, uint256> mapLockedInputs;
 std::map<uint256, int64_t> mapUnknownVotes; //track votes with no tx for DOS
@@ -70,7 +70,12 @@ void ProcessMessageInstantX(CNode* pfrom, std::string& strCommand, CDataStream& 
 
         if (AcceptToMemoryPool(mempool, state, tx, true, &fMissingInputs))
         {
-            RelayTransactionLockReq(tx, tx.GetHash());
+            vector<CInv> vInv;
+            vInv.push_back(inv);
+            LOCK(cs_vNodes);
+            BOOST_FOREACH(CNode* pnode, vNodes)
+                pnode->PushMessage("inv", vInv);
+
             DoConsensusVote(tx, nBlockHeight);
 
             mapTxLockReq.insert(make_pair(tx.GetHash(), tx));
@@ -86,8 +91,6 @@ void ProcessMessageInstantX(CNode* pfrom, std::string& strCommand, CDataStream& 
             mapTxLockReqRejected.insert(make_pair(tx.GetHash(), tx));
 
             // can we get the conflicting transaction as proof?
-
-            RelayTransactionLockReq(tx, inv.hash);
 
             LogPrintf("ProcessMessageInstantX::txlreq - Transaction Lock Request: %s %s : rejected %s\n",
                 pfrom->addr.ToString().c_str(), pfrom->cleanSubVer.c_str(),
@@ -130,7 +133,7 @@ void ProcessMessageInstantX(CNode* pfrom, std::string& strCommand, CDataStream& 
             return;
         }
 
-        mapTxLockVote.insert(make_pair(ctx.GetHash(), 1));
+        mapTxLockVote.insert(make_pair(ctx.GetHash(), ctx));
 
         if(ProcessConsensusVote(ctx)){
             //Spam/Dos protection
@@ -155,15 +158,12 @@ void ProcessMessageInstantX(CNode* pfrom, std::string& strCommand, CDataStream& 
                     mapUnknownVotes[ctx.vinMasternode.prevout.hash] = GetTime()+(60*10);
                 }
             }
-
+            vector<CInv> vInv;
+            vInv.push_back(inv);
             LOCK(cs_vNodes);
             BOOST_FOREACH(CNode* pnode, vNodes)
-            {
-                if(!pnode->fRelayTxes)
-                    continue;
+                pnode->PushMessage("inv", vInv);
 
-                pnode->PushMessage("txlvote", ctx);
-            }
         }
 
         return;
@@ -253,20 +253,20 @@ void DoConsensusVote(CTransaction& tx, int64_t nBlockHeight)
 
     if(n == -1)
     {
-        LogPrintf("InstantX::DoConsensusVote - Unknown Masternode\n");
+        if(fDebug) LogPrintf("InstantX::DoConsensusVote - Unknown Masternode\n");
         return;
     }
 
     if(n > INSTANTX_SIGNATURES_TOTAL)
     {
-        LogPrintf("InstantX::DoConsensusVote - Masternode not in the top %d (%d)\n", INSTANTX_SIGNATURES_TOTAL, n);
+        if(fDebug) LogPrintf("InstantX::DoConsensusVote - Masternode not in the top %d (%d)\n", INSTANTX_SIGNATURES_TOTAL, n);
         return;
     }
     /*
         nBlockHeight calculated from the transaction is the authoritive source
     */
 
-    LogPrintf("InstantX::DoConsensusVote - In the top %d (%d)\n", INSTANTX_SIGNATURES_TOTAL, n);
+    if(fDebug) LogPrintf("InstantX::DoConsensusVote - In the top %d (%d)\n", INSTANTX_SIGNATURES_TOTAL, n);
 
     CConsensusVote ctx;
     ctx.vinMasternode = activeMasternode.vin;
@@ -281,13 +281,17 @@ void DoConsensusVote(CTransaction& tx, int64_t nBlockHeight)
         return;
     }
 
-    LOCK(cs_vNodes);
-    BOOST_FOREACH(CNode* pnode, vNodes)
-    {
-        //LogPrintf("%s::check -- %s %s\n", vecMasternodes[winner].addr.ToString().c_str(), pnode->addr.ToString().c_str());
+    mapTxLockVote[ctx.GetHash()] = ctx;
 
-        pnode->PushMessage("txlvote", ctx);
+    CInv inv(MSG_TXLOCK_VOTE, ctx.GetHash());
+
+    vector<CInv> vInv;
+    vInv.push_back(inv);
+    LOCK(cs_vNodes);
+    BOOST_FOREACH(CNode* pnode, vNodes){
+        pnode->PushMessage("inv", vInv);
     }
+
 }
 
 //received a consensus vote
@@ -295,15 +299,21 @@ bool ProcessConsensusVote(CConsensusVote& ctx)
 {
     int n = GetMasternodeRank(ctx.vinMasternode, ctx.nBlockHeight, MIN_INSTANTX_PROTO_VERSION);
 
+    int x = GetMasternodeByVin(ctx.vinMasternode);
+    if(x != -1){
+        if(fDebug) LogPrintf("InstantX::ProcessConsensusVote - Masternode ADDR %s %d\n", vecMasternodes[x].addr.ToString().c_str(), n);
+    }
+
     if(n == -1)
     {
-        LogPrintf("InstantX::ProcessConsensusVote - Unknown Masternode\n");
+        //can be caused by past versions trying to vote with an invalid protocol
+        if(fDebug) LogPrintf("InstantX::ProcessConsensusVote - Unknown Masternode\n");
         return false;
     }
 
     if(n > INSTANTX_SIGNATURES_TOTAL)
     {
-        LogPrintf("InstantX::ProcessConsensusVote - Masternode not in the top %d (%d)\n", INSTANTX_SIGNATURES_TOTAL, n);
+        if(fDebug) LogPrintf("InstantX::ProcessConsensusVote - Masternode not in the top %d (%d) - %s\n", INSTANTX_SIGNATURES_TOTAL, n, ctx.GetHash().ToString().c_str());
         return false;
     }
 
@@ -435,6 +445,9 @@ void CleanTransactionLocksList()
 
                 mapTxLockReq.erase(it->second.txHash);
                 mapTxLockReqRejected.erase(it->second.txHash);
+
+                BOOST_FOREACH(CConsensusVote& v, it->second.vecConsensusVotes)
+                    mapTxLockVote.erase(v.GetHash());
             }
 
             mapTxLocks.erase(it++);
@@ -549,7 +562,7 @@ bool CTransactionLock::SignaturesValid()
     return true;
 }
 
-void CTransactionLock::AddSignature(CConsensusVote cv)
+void CTransactionLock::AddSignature(CConsensusVote& cv)
 {
     vecConsensusVotes.push_back(cv);
 }
