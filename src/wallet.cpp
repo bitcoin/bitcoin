@@ -1452,7 +1452,7 @@ bool CWallet::SelectCoinsMinConf(int64_t nTargetValue, int nConfMine, int nConfT
         nValueRet += coinLowestLarger.first;
     }
     else {
-        string s = "CWallet::SelectCoins best subset: ";
+        string s = "CWallet::SelectCoinsMinConf best subset: ";
         for (unsigned int i = 0; i < vValue.size(); i++)
         {
             if (vfBest[i])
