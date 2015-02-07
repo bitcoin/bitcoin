@@ -6,7 +6,6 @@
 #include "txmempool.h"
 
 #include "chain.h"
-#include "clientversion.h"
 #include "coins.h"
 #include "coinscache.h"
 #include "consensus/consensus.h"
@@ -21,26 +20,17 @@
 
 using namespace std;
 
-CTxMemPool::CTxMemPool(const CFeeRate& _minRelayFee) :
-    nTransactionsUpdated(0),
-    minRelayFee(_minRelayFee)
+CTxMemPool::CTxMemPool() :
+    nTransactionsUpdated(0)
 {
     // Sanity checks off by default for performance, because otherwise
     // accepting transactions becomes O(N^2) where N is the number
     // of transactions in the pool
     fSanityCheck = false;
-
-    // 25 blocks is a compromise between using a lot of disk/memory and
-    // trying to give accurate estimates to people who might be willing
-    // to wait a day or two to save a fraction of a penny in fees.
-    // Confirmation times for very-low-fee transactions that take more
-    // than an hour or three to confirm are highly variable.
-    minerPolicyEstimator = new CMinerPolicyEstimator(25);
 }
 
 CTxMemPool::~CTxMemPool()
 {
-    delete minerPolicyEstimator;
 }
 
 void CTxMemPool::pruneSpent(const uint256 &hashTx, CCoins &coins)
@@ -166,17 +156,15 @@ void CTxMemPool::removeConflicts(const CTransaction &tx, std::list<CTransaction>
  * Called when a block is connected. Removes from mempool and updates the miner fee estimator.
  */
 void CTxMemPool::removeForBlock(const std::vector<CTransaction>& vtx, unsigned int nBlockHeight,
-                                std::list<CTransaction>& conflicts)
+                                std::list<CTransaction>& conflicts, std::vector<CTxMemPoolEntry>& entries)
 {
     LOCK(cs);
-    std::vector<CTxMemPoolEntry> entries;
     BOOST_FOREACH(const CTransaction& tx, vtx)
     {
         uint256 hash = tx.GetHash();
         if (mapTx.count(hash))
             entries.push_back(mapTx[hash]);
     }
-    minerPolicyEstimator->seenBlock(entries, nBlockHeight, minRelayFee);
     BOOST_FOREACH(const CTransaction& tx, vtx)
     {
         std::list<CTransaction> dummy;
@@ -287,52 +275,6 @@ bool CTxMemPool::lookup(uint256 hash, CTransaction& result) const
     map<uint256, CTxMemPoolEntry>::const_iterator i = mapTx.find(hash);
     if (i == mapTx.end()) return false;
     result = i->second.GetTx();
-    return true;
-}
-
-CFeeRate CTxMemPool::estimateFee(int nBlocks) const
-{
-    LOCK(cs);
-    return minerPolicyEstimator->estimateFee(nBlocks);
-}
-double CTxMemPool::estimatePriority(int nBlocks) const
-{
-    LOCK(cs);
-    return minerPolicyEstimator->estimatePriority(nBlocks);
-}
-
-bool
-CTxMemPool::WriteFeeEstimates(CAutoFile& fileout) const
-{
-    try {
-        LOCK(cs);
-        fileout << 99900; // version required to read: 0.9.99 or later
-        fileout << CLIENT_VERSION; // version that wrote the file
-        minerPolicyEstimator->Write(fileout);
-    }
-    catch (const std::exception&) {
-        LogPrintf("CTxMemPool::WriteFeeEstimates(): unable to write policy estimator data (non-fatal)");
-        return false;
-    }
-    return true;
-}
-
-bool
-CTxMemPool::ReadFeeEstimates(CAutoFile& filein)
-{
-    try {
-        int nVersionRequired, nVersionThatWrote;
-        filein >> nVersionRequired >> nVersionThatWrote;
-        if (nVersionRequired > CLIENT_VERSION)
-            return error("CTxMemPool::ReadFeeEstimates(): up-version (%d) fee estimate file", nVersionRequired);
-
-        LOCK(cs);
-        minerPolicyEstimator->Read(filein, minRelayFee);
-    }
-    catch (const std::exception&) {
-        LogPrintf("CTxMemPool::ReadFeeEstimates(): unable to read policy estimator data (non-fatal)");
-        return false;
-    }
     return true;
 }
 

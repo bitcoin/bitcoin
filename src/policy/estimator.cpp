@@ -5,6 +5,7 @@
 
 #include "policy/estimator.h"
 
+#include "clientversion.h"
 #include "policy/policy.h"
 #include "streams.h"
 #include "util.h"
@@ -13,6 +14,15 @@
 #include <boost/foreach.hpp>
 
 using namespace std;
+
+/**
+ * 25 blocks is a compromise between using a lot of disk/memory and
+ * trying to give accurate estimates to people who might be willing
+ * to wait a day or two to save a fraction of a penny in fees.
+ * Confirmation times for very-low-fee transactions that take more
+ * than an hour or three to confirm are highly variable.
+ */
+CMinerPolicyEstimator minerPolicyEstimator(25);
 
 void CBlockAverage::RecordFee(const CFeeRate& feeRate) {
     feeSamples.push_back(feeRate);
@@ -108,6 +118,7 @@ CMinerPolicyEstimator::CMinerPolicyEstimator(int nEntries) : nBestSeenHeight(0)
 
 void CMinerPolicyEstimator::seenTxConfirm(const CFeeRate& feeRate, const CFeeRate& minRelayFee, double dPriority, int nBlocksAgo)
 {
+    LOCK(cs);
     // Last entry records "everything else".
     int nBlocksTruncated = min(nBlocksAgo, (int) history.size() - 1);
     assert(nBlocksTruncated >= 0);
@@ -135,8 +146,9 @@ void CMinerPolicyEstimator::seenTxConfirm(const CFeeRate& feeRate, const CFeeRat
              assignedTo, feeRate.ToString(), dPriority, nBlocksAgo);
 }
 
-void CMinerPolicyEstimator::seenBlock(const std::vector<CTxMemPoolEntry>& entries, int nBlockHeight, const CFeeRate minRelayFee)
+void CMinerPolicyEstimator::seenBlock(const std::vector<CTxMemPoolEntry>& entries, int nBlockHeight)
 {
+    LOCK(cs);
     if (nBlockHeight <= nBestSeenHeight) {
         // Ignore side chains and re-orgs; assuming they are random
         // they don't affect the estimate.
@@ -178,7 +190,7 @@ void CMinerPolicyEstimator::seenBlock(const std::vector<CTxMemPoolEntry>& entrie
             // Fees are stored and reported as BTC-per-kb:
             CFeeRate feeRate(entry->GetFee(), entry->GetTxSize());
             double dPriority = entry->GetPriority(entry->GetHeight()); // Want priority when it went IN
-            seenTxConfirm(feeRate, minRelayFee, dPriority, i);
+            seenTxConfirm(feeRate, minRelayTxFee, dPriority, i);
         }
     }
 
@@ -198,6 +210,7 @@ void CMinerPolicyEstimator::seenBlock(const std::vector<CTxMemPoolEntry>& entrie
 
 CFeeRate CMinerPolicyEstimator::estimateFee(int nBlocksToConfirm)
 {
+    LOCK(cs);
     nBlocksToConfirm--;
 
     if (nBlocksToConfirm < 0 || nBlocksToConfirm >= (int)history.size())
@@ -234,6 +247,7 @@ CFeeRate CMinerPolicyEstimator::estimateFee(int nBlocksToConfirm)
 
 double CMinerPolicyEstimator::estimatePriority(int nBlocksToConfirm)
 {
+    LOCK(cs);
     nBlocksToConfirm--;
 
     if (nBlocksToConfirm < 0 || nBlocksToConfirm >= (int)history.size())
@@ -264,37 +278,57 @@ double CMinerPolicyEstimator::estimatePriority(int nBlocksToConfirm)
     return sortedPrioritySamples[index];
 }
 
-void CMinerPolicyEstimator::Write(CAutoFile& fileout) const
+bool CMinerPolicyEstimator::Write(CAutoFile& fileout) const
 {
-    fileout << nBestSeenHeight;
-    fileout << (uint32_t)history.size();
-    BOOST_FOREACH(const CBlockAverage& entry, history)
-    {
-        entry.Write(fileout);
+    try {
+        LOCK(cs);
+        fileout << 99900; // version required to read: 0.9.99 or later
+        fileout << CLIENT_VERSION; // version that wrote the file
+        fileout << nBestSeenHeight;
+        fileout << (uint32_t)history.size();
+        BOOST_FOREACH(const CBlockAverage& entry, history)
+            entry.Write(fileout);
     }
+    catch (const std::exception&) {
+        LogPrintf("CTxMemPool::WriteFeeEstimates(): unable to write policy estimator data (non-fatal)", __func__);
+        return false;
+    }
+    return true;
 }
 
-void CMinerPolicyEstimator::Read(CAutoFile& filein, const CFeeRate& minRelayFee)
+bool CMinerPolicyEstimator::Read(CAutoFile& filein)
 {
-    int nFileBestSeenHeight;
-    filein >> nFileBestSeenHeight;
-    uint32_t numEntries;
-    filein >> numEntries;
-    if (numEntries <= 0 || numEntries > 10000)
-        throw runtime_error("Corrupt estimates file. Must have between 1 and 10k entries.");
+    try {
+        int nVersionRequired, nVersionThatWrote;
+        filein >> nVersionRequired >> nVersionThatWrote;
+        if (nVersionRequired > CLIENT_VERSION)
+            return error("%s: up-version (%d) fee estimate file", __func__, nVersionRequired);
 
-    std::vector<CBlockAverage> fileHistory;
+        LOCK(cs);
+        int nFileBestSeenHeight;
+        filein >> nFileBestSeenHeight;
+        uint32_t numEntries;
+        filein >> numEntries;
+        if (numEntries <= 0 || numEntries > 10000)
+            throw runtime_error("Corrupt estimates file. Must have between 1 and 10k entries.");
+
+        std::vector<CBlockAverage> fileHistory;
         
-    for (size_t i = 0; i < numEntries; i++)
-    {
-        CBlockAverage entry;
-        entry.Read(filein, minRelayFee);
-        fileHistory.push_back(entry);
-    }
+        for (size_t i = 0; i < numEntries; i++) {
+            CBlockAverage entry;
+            entry.Read(filein, minRelayTxFee);
+            fileHistory.push_back(entry);
+        }
 
-    // Now that we've processed the entire fee estimate data file and not
-    // thrown any errors, we can copy it to our history
-    nBestSeenHeight = nFileBestSeenHeight;
-    history = fileHistory;
-    assert(history.size() > 0);
+        // Now that we've processed the entire fee estimate data file and not
+        // thrown any errors, we can copy it to our history
+        nBestSeenHeight = nFileBestSeenHeight;
+        history = fileHistory;
+        assert(history.size() > 0);
+    }
+    catch (const std::exception&) {
+        LogPrintf("%s: unable to read policy estimator data (non-fatal)", __func__);
+        return false;
+    }
+    return true;
 }
