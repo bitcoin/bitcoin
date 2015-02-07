@@ -2237,6 +2237,10 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
         <translation>&amp;Открыть</translation>
     </message>
     <message>
+        <source>O&amp;pen</source>
+        <translation>О&amp;ткрыть</translation>
+    </message>
+    <message>
         <location line="+16"/>
         <source>Command-line options</source>
         <translation>Параметры командной строки</translation>
@@ -2277,9 +2281,17 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
         <translation>Отладочный лог-файл</translation>
     </message>
     <message>
+        <source>Configuration file</source>
+        <translation>Конфигурационный файл</translation>
+    </message>
+    <message>
         <location line="+7"/>
         <source>Open the NovaCoin debug log file from the current data directory. This can take a few seconds for large log files.</source>
         <translation>Открыть отладочный лог-файл NovaCoin из текущего каталога данных. Это может занять несколько секунд для больших лог-файлов.</translation>
+    </message>
+    <message>
+        <source>Open the NovaCoin configuration file from the current data directory.</source>
+        <translation>Открыть конфигурационный файл NovaCoin из текущего каталога данных.</translation>
     </message>
     <message>
         <location line="+102"/>
