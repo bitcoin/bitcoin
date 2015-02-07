@@ -1682,8 +1682,6 @@ bool CDarkSendPool::SendRandomPaymentToSelf()
 // Split up large inputs or create fee sized inputs
 bool CDarkSendPool::MakeCollateralAmounts()
 {
-    int64_t nTotalOut = 0;
-
     // make our change address
     CReserveKey reservekey(pwalletMain);
 
@@ -1698,9 +1696,7 @@ bool CDarkSendPool::MakeCollateralAmounts()
     vector< pair<CScript, int64_t> > vecSend;
 
     vecSend.push_back(make_pair(scriptChange, (DARKSEND_COLLATERAL*2)+DARKSEND_FEE));
-    nTotalOut += (DARKSEND_COLLATERAL*2)+DARKSEND_FEE;
     vecSend.push_back(make_pair(scriptChange, (DARKSEND_COLLATERAL*2)+DARKSEND_FEE));
-    nTotalOut += (DARKSEND_COLLATERAL*2)+DARKSEND_FEE;
 
     CCoinControl *coinControl=NULL;
     // try to use non-denominated and not mn-like funds
