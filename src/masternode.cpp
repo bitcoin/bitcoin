@@ -557,16 +557,16 @@ uint256 CMasterNode::CalculateScore(int mod, int64_t nBlockHeight)
 
     if(!GetBlockHash(hash, nBlockHeight)) return 0;
 
-    LogPrintf("CMasterNode::CalculateScore 1 %d %s\n", nBlockHeight, hash.ToString().c_str());
+    //LogPrintf("CMasterNode::CalculateScore 1 %d %s\n", nBlockHeight, hash.ToString().c_str());
 
     uint256 hash2 = Hash(BEGIN(hash), END(hash));
     uint256 hash3 = Hash(BEGIN(hash), END(aux));
 
-    LogPrintf("CMasterNode::CalculateScore 2 %s %s\n", aux.ToString().c_str(), hash2.ToString().c_str());
-    LogPrintf("CMasterNode::CalculateScore 3 %s %s\n", aux.ToString().c_str(), hash3.ToString().c_str());
+    //LogPrintf("CMasterNode::CalculateScore 2 %s %s\n", aux.ToString().c_str(), hash2.ToString().c_str());
+    //LogPrintf("CMasterNode::CalculateScore 3 %s %s\n", aux.ToString().c_str(), hash3.ToString().c_str());
 
     uint256 r = (hash3 > hash2 ? hash3 - hash2 : hash2 - hash3);
-    LogPrintf("CMasterNode::CalculateScore 4 %s %s\n", aux.ToString().c_str(), r.ToString().c_str());
+    //LogPrintf("CMasterNode::CalculateScore 4 %s %s\n", aux.ToString().c_str(), r.ToString().c_str());
 
     return r;
 }
