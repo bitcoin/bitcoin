@@ -625,7 +625,7 @@ public:
     bool CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey);
 
     static CFeeRate minTxFee;
-    static CAmount GetMinimumFee(unsigned int nTxBytes, unsigned int nConfirmTarget, const CTxMemPool& pool);
+    static CAmount GetMinimumFee(unsigned int nTxBytes, unsigned int nConfirmTarget);
 
     bool NewKeyPool();
     bool TopUpKeyPool(unsigned int kpSize = 0);
