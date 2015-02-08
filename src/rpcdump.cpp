@@ -133,7 +133,7 @@ Value importprivkey(const Array& params, bool fHelp)
         pwalletMain->nTimeFirstKey = 1; // 0 would be considered 'no value'
 
         if (fRescan) {
-            pwalletMain->ScanForWalletTransactions(chainActive.Genesis(), true);
+            pwalletMain->ScanForWalletTransactions(chainActive.Genesis(), true, fRescan);
         }
     }
 
@@ -202,7 +202,7 @@ Value importaddress(const Array& params, bool fHelp)
 
         if (fRescan)
         {
-            pwalletMain->ScanForWalletTransactions(chainActive.Genesis(), true);
+            pwalletMain->ScanForWalletTransactions(chainActive.Genesis(), true, fRescan);
             pwalletMain->ReacceptWalletTransactions();
         }
     }

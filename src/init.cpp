@@ -1209,8 +1209,11 @@ bool AppInit2(boost::thread_group& threadGroup)
         RegisterValidationInterface(pwalletMain);
 
         CBlockIndex *pindexRescan = chainActive.Tip();
-        if (GetBoolArg("-rescan", false))
+        bool fullRescan = false;
+        if (GetBoolArg("-rescan", false)) {
             pindexRescan = chainActive.Genesis();
+            fullRescan = true;
+        }
         else
         {
             CWalletDB walletdb(strWalletFile);
@@ -1225,7 +1228,7 @@ bool AppInit2(boost::thread_group& threadGroup)
             uiInterface.InitMessage(_("Rescanning..."));
             LogPrintf("Rescanning last %i blocks (from block %i)...\n", chainActive.Height() - pindexRescan->nHeight, pindexRescan->nHeight);
             nStart = GetTimeMillis();
-            pwalletMain->ScanForWalletTransactions(pindexRescan, true);
+            pwalletMain->ScanForWalletTransactions(pindexRescan, true, fullRescan);
             LogPrintf(" rescan      %15dms\n", GetTimeMillis() - nStart);
             pwalletMain->SetBestChain(chainActive.GetLocator());
             nWalletDBUpdated++;
