@@ -419,7 +419,7 @@ Value signrawtransaction(const Array& params, bool fHelp)
             "\nResult:\n"
             "{\n"
             "  \"hex\": \"value\",   (string) The raw transaction with signature(s) (hex-encoded string)\n"
-            "  \"complete\": n       (numeric) if transaction has a complete set of signature (0 if not)\n"
+            "  \"complete\": true|false       (boolean) if transaction has a complete set of signature\n"
             "}\n"
 
             "\nExamples:\n"
