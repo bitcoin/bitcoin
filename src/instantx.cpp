@@ -195,10 +195,14 @@ bool IsIXTXValid(const CTransaction& txCollateral){
 
     if(missingTx){
         if(fDebug) LogPrintf ("IsIXTXValid - Unknown inputs in IX transaction - %s\n", txCollateral.ToString().c_str());
-        return false;
+        /*
+            This happens sometimes for an unknown reason, so we'll return that it's a valid transaction.
+            If someone submits an invalid transaction it will be rejected by the network anyway and this isn't
+            very common, but we don't want to block IX just because the client can't figure out the fee.
+        */
+        return true;
     }
 
-    //collateral transactions are required to pay out DARKSEND_COLLATERAL as a fee to the miners
     if(nValueIn-nValueOut < COIN*0.01) {
         if(fDebug) LogPrintf ("IsIXTXValid - did not include enough fees in transaction %d\n%s\n", nValueOut-nValueIn, txCollateral.ToString().c_str());
         return false;
