@@ -2482,17 +2482,15 @@ bool FindUndoPos(CValidationState &state, int nFile, CDiskBlockPos &pos, unsigne
     return true;
 }
 
-bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state, const Consensus::Params& params, bool fCheckPOW)
+bool Consensus::CheckBlockHeader(const CBlockHeader& block, int64_t nTime, CValidationState& state, const Consensus::Params& params, bool fCheckPOW)
 {
     // Check proof of work matches claimed amount
     if (fCheckPOW && !CheckProofOfWork(block.GetHash(), block.nBits, params))
-        return state.DoS(50, error("CheckBlockHeader(): proof of work failed"),
-                         REJECT_INVALID, "high-hash");
+        return state.DoS(50, false, REJECT_INVALID, "high-hash");
 
     // Check timestamp
-    if (block.GetBlockTime() > GetAdjustedTime() + 2 * 60 * 60)
-        return state.Invalid(error("CheckBlockHeader(): block timestamp too far in the future"),
-                             REJECT_INVALID, "time-too-new");
+    if (block.GetBlockTime() > nTime + 2 * 60 * 60)
+        return state.Invalid(false, REJECT_INVALID, "time-too-new");
 
     return true;
 }
@@ -2503,8 +2501,8 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
 
     // Check that the header is valid (particularly PoW).  This is mostly
     // redundant with the call in AcceptBlockHeader.
-    if (!CheckBlockHeader(block, state, params, fCheckPOW))
-        return false;
+    if (!Consensus::CheckBlockHeader(block, GetAdjustedTime(), state, params, fCheckPOW))
+        return error("%s: Consensus::CheckBlockHeader(): ", __func__, state.GetRejectReason().c_str());
 
     // Check the merkle root.
     if (fCheckMerkleRoot) {
@@ -2645,8 +2643,8 @@ bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state, const
         return true;
     }
 
-    if (!CheckBlockHeader(block, state, params))
-        return false;
+    if (!Consensus::CheckBlockHeader(block, GetAdjustedTime(), state, params))
+        return error("%s: Consensus::CheckBlockHeader(): ", __func__, state.GetRejectReason().c_str());
 
     // Get prev block index
     CBlockIndex* pindexPrev = NULL;
