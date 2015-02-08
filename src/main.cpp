@@ -2834,8 +2834,8 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
                     if(mapLockedInputs.count(in.prevout)){
                         if(mapLockedInputs[in.prevout] != tx.GetHash()){
                             LogPrintf("CheckBlock() : found conflicting transaction with transaction lock %s %s\n", mapLockedInputs[in.prevout].ToString().c_str(), tx.GetHash().ToString().c_str());
-                            //return state.DoS(0, error("CheckBlock() : found conflicting transaction with transaction lock"),
-                            //                 REJECT_INVALID, "conflicting-tx-ix");
+                            return state.DoS(0, error("CheckBlock() : found conflicting transaction with transaction lock"),
+                                             REJECT_INVALID, "conflicting-tx-ix");
                         }
                     }
                 }
@@ -2897,7 +2897,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
                         CBitcoinAddress address2(address1);
 
                         LogPrintf("CheckBlock() : Couldn't find masternode payment(%d|%d) or payee(%d|%s) nHeight %d. \n", foundPaymentAmount, masternodePaymentAmount, foundPayee, address2.ToString().c_str(), chainActive.Tip()->nHeight+1);
-                        //if(!RegTest()) return state.DoS(100, error("CheckBlock() : Couldn't find masternode payment or payee"));
+                        if(!RegTest()) return state.DoS(100, error("CheckBlock() : Couldn't find masternode payment or payee"));
                     } else {
                         LogPrintf("CheckBlock() : Found masternode payment %d\n", chainActive.Tip()->nHeight+1);
                     }
@@ -3173,6 +3173,10 @@ bool ProcessBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDiskBl
 
             // Ask this guy to fill in what we're missing
             PushGetBlocks(pfrom, chainActive.Tip(), GetOrphanRoot(hash));
+
+            // Move backwards to tigger reprocessing both chains
+            CValidationState state;
+            DisconnectTip(state);
         }
         return true;
     }
