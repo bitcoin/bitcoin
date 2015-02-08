@@ -277,7 +277,17 @@ Other utilities "bitcoin-key" and "bitcoin-script" have been proposed, making
 key and script operations easily accessible via command line.
 
 Mining and relay policy enhancements
--------------------
+------------------------------------
+
+Bitcoin Core's block templates are now for version 3 blocks only, and any mining
+software relying on its `getblocktemplate` must be updated in parallel to use
+libblkmaker either version 0.4.2 or any version from 0.5.1 onward.
+If you are solo mining, this will affect you the moment you upgrade Bitcoin
+Core, which must be done prior to BIP66 achieving its 951/1001 status.
+If you are mining with the stratum mining protocol: this does not affect you.
+If you are mining with the getblocktemplate protocol to a pool: this will affect
+you at the pool operator's discretion, which must be no later than BIP66
+achieving its 951/1001 status.
 
 The `prioritisetransaction` RPC method has been added to enable miners to
 manipulate the priority of transactions on an individual basis.
@@ -316,6 +326,9 @@ The same miner-voting mechanism as in BIP 34 is used: when 751 out of a
 sequence of 1001 blocks have version number 3 or higher, the new consensus
 rule becomes active for those blocks. When 951 out of a sequence of 1001
 blocks have version number 3 or higher, it becomes mandatory for all blocks.
+
+Backward compatibility with current mining software is NOT provided, thus miners
+should read the first paragraph of "Mining and relay policy enhancements" above.
 
 0.10.0 Change log
 =================
