@@ -1682,14 +1682,6 @@ bool CDarkSendPool::SendRandomPaymentToSelf()
 // Split up large inputs or create fee sized inputs
 bool CDarkSendPool::MakeCollateralAmounts()
 {
-    // should split up to remaining amount only...
-    int64_t nTotalBalance = pwalletMain->GetBalance();
-    int64_t nSplitBalance = nAnonymizeDarkcoinAmount*COIN - pwalletMain->GetDenominatedBalance();
-    if(nSplitBalance > nTotalBalance) nSplitBalance = nTotalBalance;
-    int64_t nTotalOut = 0;
-
-    LogPrintf("DoAutomaticDenominating: MakeCollateralAmounts: nSplitBalance %d nTotalBalance %d\n", nSplitBalance, pwalletMain->GetDenominatedBalance(false));
-
     // make our change address
     CReserveKey reservekey(pwalletMain);
 
@@ -1704,14 +1696,7 @@ bool CDarkSendPool::MakeCollateralAmounts()
     vector< pair<CScript, int64_t> > vecSend;
 
     vecSend.push_back(make_pair(scriptChange, (DARKSEND_COLLATERAL*2)+DARKSEND_FEE));
-    nTotalOut += (DARKSEND_COLLATERAL*2)+DARKSEND_FEE;
     vecSend.push_back(make_pair(scriptChange, (DARKSEND_COLLATERAL*2)+DARKSEND_FEE));
-    nTotalOut += (DARKSEND_COLLATERAL*2)+DARKSEND_FEE;
-
-    if(nTotalOut > nSplitBalance) {
-        LogPrintf("MakeCollateralAmounts: Not enough balance to split\n");
-        return false;
-    }
 
     CCoinControl *coinControl=NULL;
     // try to use non-denominated and not mn-like funds

@@ -10,6 +10,7 @@
 
 #include "allocators.h" /* for SecureString */
 #include "instantx.h"
+#include "wallet.h"
 
 #include <map>
 #include <vector>
@@ -49,7 +50,7 @@ public:
     QString address;
     QString label;
     qint64 amount;
-    std::string inputType;
+    AvailableCoinsType inputType;
     bool useInstantX;
     // If from a payment request, this is used for storing the memo
     QString message;

@@ -66,6 +66,7 @@ struct COrphanBlock {
 };
 map<uint256, COrphanBlock*> mapOrphanBlocks;
 multimap<uint256, COrphanBlock*> mapOrphanBlocksByPrev;
+bool fManyOrphansFound;
 
 struct COrphanTx {
     CTransaction tx;
@@ -1172,7 +1173,7 @@ int CMerkleTx::GetDepthInMainChainINTERNAL(CBlockIndex* &pindexRet) const
 
 int CMerkleTx::GetTransactionLockSignatures() const
 {
-    if(fLargeWorkForkFound || fLargeWorkInvalidChainFound) return -2;
+    if(fManyOrphansFound) return -2;
     if(nInstantXDepth == 0) return -1;
 
     //compile consessus vote
@@ -1645,7 +1646,7 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
             else if (pindexLast->nHeight + 1 >= 15200) retarget = DIFF_KGW;
             else retarget = DIFF_BTC;
         } else {
-            if (pindexLast->nHeight + 1 >= 256) retarget = DIFF_DGW;
+            if (pindexLast->nHeight + 1 >= 2000) retarget = DIFF_DGW;
             else retarget = DIFF_BTC;
         }
 
@@ -2825,13 +2826,14 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
 
     // ----------- instantX transaction scanning -----------
 
-    if(!fLargeWorkForkFound && !fLargeWorkInvalidChainFound){
+    if(!fManyOrphansFound){
         BOOST_FOREACH(const CTransaction& tx, block.vtx){
             if (!tx.IsCoinBase()){
                 //only reject blocks when it's based on complete consensus
                 BOOST_FOREACH(const CTxIn& in, tx.vin){
                     if(mapLockedInputs.count(in.prevout)){
                         if(mapLockedInputs[in.prevout] != tx.GetHash()){
+                            LogPrintf("CheckBlock() : found conflicting transaction with transaction lock %s %s\n", mapLockedInputs[in.prevout].ToString().c_str(), tx.GetHash().ToString().c_str());
                             return state.DoS(0, error("CheckBlock() : found conflicting transaction with transaction lock"),
                                              REJECT_INVALID, "conflicting-tx-ix");
                         }
@@ -2839,6 +2841,8 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
                 }
             }
         }
+    } else {
+        LogPrintf("CheckBlock() : fork detected, skipping transaction locking checks\n");
     }
 
 
@@ -2853,7 +2857,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
     }
 
 
-    if(MasternodePayments && !fLargeWorkForkFound && !fLargeWorkInvalidChainFound)
+    if(MasternodePayments && !fManyOrphansFound)
     {
         LOCK2(cs_main, mempool.cs);
 
@@ -2906,6 +2910,8 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
         } else {
             LogPrintf("CheckBlock() : pindex is null, skipping masternode payment check\n");
         }
+    } else {
+        LogPrintf("CheckBlock() : fork detected, skipping masternode payment checks\n");
     }
 
 
@@ -3106,7 +3112,7 @@ bool ProcessBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDiskBl
 /*
     block-a-block
 
-    std::string s = "2600c8bebd2a300b2541b3720d8a30f20b61d01813a24f5934e10a2ab81b5ed9";
+    std::string s = "0000000234ebe01657601a9ed22f9e4459789d4b966b3b7f8f7cc90d1c039ee6";
     if(pblock->GetHash().ToString() == s){
         printf("Nope, get outta here!\n");
         return false;
@@ -3167,9 +3173,15 @@ bool ProcessBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDiskBl
 
             // Ask this guy to fill in what we're missing
             PushGetBlocks(pfrom, chainActive.Tip(), GetOrphanRoot(hash));
+
+            // Move backwards to tigger reprocessing both chains
+            CValidationState state;
+            DisconnectTip(state);
         }
         return true;
     }
+
+    fManyOrphansFound = (unsigned long)mapOrphanBlocks.size() >= 6;
 
     // Store to disk
     if (!AcceptBlock(*pblock, state, dbp))
