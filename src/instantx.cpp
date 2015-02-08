@@ -35,7 +35,6 @@ int nCompleteTXLocks;
 void ProcessMessageInstantX(CNode* pfrom, std::string& strCommand, CDataStream& vRecv)
 {
     if(fLiteMode) return; //disable all darksend/masternode related functionality
-    if(fManyOrphansFound) return;
 
     if (strCommand == "txlreq")
     {
