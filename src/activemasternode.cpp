@@ -50,7 +50,7 @@ void CActiveMasternode::ManageStatus()
             }
         }
 
-        if(Params().NetworkID() != CChainParams::REGTEST){
+        if(Params().NetworkID() == CChainParams::MAIN){
             if(!ConnectNode((CAddress)service, service.ToString().c_str())){
                 notCapableReason = "Could not connect to " + service.ToString();
                 status = MASTERNODE_NOT_CAPABLE;

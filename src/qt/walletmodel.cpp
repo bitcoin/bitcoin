@@ -266,17 +266,7 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
         CWalletTx *newTx = transaction.getTransaction();
         CReserveKey *keyChange = transaction.getPossibleKeyChange();
 
-
-        AvailableCoinsType act = ONLY_DENOMINATED;
-        if(recipients[0].inputType == "ONLY_NONDENOMINATED"){
-            act = ONLY_NONDENOMINATED;
-        } else if(recipients[0].inputType == "ONLY_DENOMINATED"){
-            act = ONLY_DENOMINATED;
-        } else if(recipients[0].inputType == "ALL_COINS"){
-            act = ALL_COINS;
-        }
-
-        bool fCreated = wallet->CreateTransaction(vecSend, *newTx, *keyChange, nFeeRequired, strFailReason, coinControl, act, recipients[0].useInstantX);
+        bool fCreated = wallet->CreateTransaction(vecSend, *newTx, *keyChange, nFeeRequired, strFailReason, coinControl, recipients[0].inputType, recipients[0].useInstantX);
         transaction.setTransactionFee(nFeeRequired);
 
         if(!fCreated)
