@@ -2590,97 +2590,97 @@ Kiểu: %3
         <translation>Không đủ tiền!</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="216"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="225"/>
         <source>Quantity:</source>
         <translation>Số lượng:</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="251"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="260"/>
         <source>Bytes:</source>
         <translation>Bytes:</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="299"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="308"/>
         <source>Amount:</source>
         <translation>Số tiền:</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="331"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="340"/>
         <source>Priority:</source>
         <translation>Ưu tiên:</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="379"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="388"/>
         <source>Fee:</source>
         <translation>Phí:</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="411"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="420"/>
         <source>Low Output:</source>
         <translation>Low Output:</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="459"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="468"/>
         <source>After Fee:</source>
         <translation>Phí sau:</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="491"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="500"/>
         <source>Change:</source>
         <translation>Trả lại:</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="535"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="544"/>
         <source>If this is activated, but the change address is empty or invalid, change will be sent to a newly generated address.</source>
         <translation>Nếu nó được kích hoạt, nhưng địa chỉ tiền nhận lại là trống hoặc không hợp lệ, thì tiền lẻ trả lại sẽ được gửi đến một địa chỉ được sinh mới.</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="538"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="547"/>
         <source>Custom change address</source>
         <translation>Thay đổi địa chỉ tiền trả lại</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="650"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="668"/>
         <source>Confirm the send action</source>
         <translation>Xác nhận việc gửi</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="653"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="671"/>
         <source>S&amp;end</source>
         <translation>&amp;Gửi</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="673"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="691"/>
         <source>Clear all fields of the form.</source>
         <translation>Xoá tất cả các ô.</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="676"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="694"/>
         <source>Clear &amp;All</source>
         <translation>Xoá &amp;Tất cả</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="693"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="711"/>
         <source>Send to multiple recipients at once</source>
         <translation>Gửi đến nhiều địa chỉ một lúc</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="696"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="714"/>
         <source>Add &amp;Recipient</source>
         <translation>Thêm &amp;Người nhận</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="741"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="752"/>
         <source>Darksend</source>
         <translation>Darksend</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="754"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="771"/>
         <source>InstantX</source>
         <translation>InstantX</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="761"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="778"/>
         <source>Balance:</source>
         <translation>Số dư:</translation>
     </message>
@@ -3217,27 +3217,27 @@ Kiểu: %3
     <message>
         <location filename="../transactiondesc.cpp" line="54"/>
         <source>%1/offline (InstantX verification in progress - %2 of %3 signatures)</source>
-        <translation type="unfinished"/>
+        <translation>%1/mất kết nối (Đang trong tiến trình kiểm tra InstantX - %2 trên %3 các chữ ký)</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="56"/>
         <source>%1/confirmed (InstantX verification in progress - %2 of %3 signatures )</source>
-        <translation type="unfinished"/>
+        <translation>%1/được xác nhận (Đang trong tiến trình kiểm tra InstantX - %2 trên %3 các chữ ký)</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="58"/>
         <source>%1 confirmations (InstantX verification in progress - %2 of %3 signatures)</source>
-        <translation type="unfinished"/>
+        <translation>%1 xác nhận (Đang trong tiến trình kiểm tra InstantX - %2 trên %3 các chữ ký)</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="64"/>
         <source>%1/offline (InstantX verification failed)</source>
-        <translation type="unfinished"/>
+        <translation>%1/mất kết nối (Thất bại trong việc kiểm tra InstantX)</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="66"/>
         <source>%1/confirmed (InstantX verification failed)</source>
-        <translation type="unfinished"/>
+        <translation>%1/đã được xác nhận (Thất bại trong việc kiểm tra InstantX)</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="98"/>
@@ -3359,7 +3359,7 @@ Kiểu: %3
     <message>
         <location filename="../transactiondesc.cpp" line="292"/>
         <source>Generated coins must mature %1 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to &quot;not accepted&quot; and it won&apos;t be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.</source>
-        <translation type="unfinished"/>
+        <translation>Coin được tạo phải được trưởng thành 1% khối trước khi chúng có thể được tiêu. Khi bạn sinh khối này, nó được quảng bá trong mạng để thêm vào chuỗi khối. Nếu nó không được đưa vào chuỗi, trạng thái của nó được chuyển thành &quot;không được chấp nhận&quot; và sẽ không thể tiêu được. Điều này thỉnh thoảng có xảy ra nếu những nút khác cũng sinh trong vòng vài giây với khối của bạn.</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="300"/>
@@ -3519,41 +3519,46 @@ Kiểu: %3
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="374"/>
-        <source>Darksend Split Up Large Inputs</source>
-        <translation>Darksend chia các đầu vào lớn</translation>
+        <source>Darksend Make Collateral Inputs</source>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="376"/>
+        <source>Darksend Create Denominations</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../transactiontablemodel.cpp" line="378"/>
         <source>Darksent</source>
         <translation>Darksent</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="418"/>
+        <location filename="../transactiontablemodel.cpp" line="420"/>
         <source>(n/a)</source>
         <translation>(không áp dụng)</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="610"/>
+        <location filename="../transactiontablemodel.cpp" line="612"/>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
         <translation>Trạng thái giao dịch: Di chuột qua ô này để hiển thị số lần xác nhận.</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="612"/>
+        <location filename="../transactiontablemodel.cpp" line="614"/>
         <source>Date and time that the transaction was received.</source>
         <translation>Thời gian giao dịch đã được nhận.</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="614"/>
+        <location filename="../transactiontablemodel.cpp" line="616"/>
         <source>Type of transaction.</source>
         <translation>Kiểu giao dịch.</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="616"/>
+        <location filename="../transactiontablemodel.cpp" line="618"/>
         <source>Destination address of transaction.</source>
         <translation>Địa chỉ đích của giao dịch.</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="618"/>
+        <location filename="../transactiontablemodel.cpp" line="620"/>
         <source>Amount removed from or added to balance.</source>
         <translation>Lượng tiền được gỡ bỏ hoặc thêm vào số dư.</translation>
     </message>
@@ -3613,136 +3618,151 @@ Kiểu: %3
     </message>
     <message>
         <location filename="../transactionview.cpp" line="82"/>
+        <source>Darksend Make Collateral Inputs</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../transactionview.cpp" line="83"/>
+        <source>Darksend Create Denominations</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../transactionview.cpp" line="84"/>
         <source>Darksend Denominate</source>
         <translation>Darksend Denominate</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="83"/>
+        <location filename="../transactionview.cpp" line="85"/>
+        <source>Darksend Collateral Payment</source>
+        <translation>Thanh toán Darksend Collateral</translation>
+    </message>
+    <message>
+        <location filename="../transactionview.cpp" line="86"/>
         <source>To yourself</source>
         <translation>Đến bản thân bạn</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="84"/>
+        <location filename="../transactionview.cpp" line="87"/>
         <source>Mined</source>
         <translation>Được đào</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="85"/>
+        <location filename="../transactionview.cpp" line="88"/>
         <source>Other</source>
         <translation>Khác</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="91"/>
+        <location filename="../transactionview.cpp" line="94"/>
         <source>Enter address or label to search</source>
         <translation>Nhập địa chỉ hoặc nhãn để tìm</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="97"/>
+        <location filename="../transactionview.cpp" line="100"/>
         <source>Min amount</source>
         <translation>Số tiền tối thiểu</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="131"/>
+        <location filename="../transactionview.cpp" line="134"/>
         <source>Copy address</source>
         <translation>Sao chép địa chỉ</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="132"/>
+        <location filename="../transactionview.cpp" line="135"/>
         <source>Copy label</source>
         <translation>Sao chép nhãn</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="133"/>
+        <location filename="../transactionview.cpp" line="136"/>
         <source>Copy amount</source>
         <translation>Sao chép số tiền</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="134"/>
+        <location filename="../transactionview.cpp" line="137"/>
         <source>Copy transaction ID</source>
         <translation>Sao chép mã giao dịch</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="135"/>
+        <location filename="../transactionview.cpp" line="138"/>
         <source>Edit label</source>
         <translation>Sửa nhãn</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="136"/>
+        <location filename="../transactionview.cpp" line="139"/>
         <source>Show transaction details</source>
         <translation>Xem chi tiết giao dịch</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="299"/>
+        <location filename="../transactionview.cpp" line="302"/>
         <source>Export Transaction History</source>
         <translation>Kết xuất Lịch sử Giao dịch</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="300"/>
+        <location filename="../transactionview.cpp" line="303"/>
         <source>Comma separated file (*.csv)</source>
         <translation>File định dạng phân cách bởi dấu phẩy (*.csv)</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="309"/>
+        <location filename="../transactionview.cpp" line="312"/>
         <source>Confirmed</source>
         <translation>Đã được xác nhận</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="310"/>
+        <location filename="../transactionview.cpp" line="313"/>
         <source>Date</source>
         <translation>Ngày</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="311"/>
+        <location filename="../transactionview.cpp" line="314"/>
         <source>Type</source>
         <translation>Kiểu</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="312"/>
+        <location filename="../transactionview.cpp" line="315"/>
         <source>Label</source>
         <translation>Nhãn</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="313"/>
+        <location filename="../transactionview.cpp" line="316"/>
         <source>Address</source>
         <translation>Địa chỉ</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="314"/>
+        <location filename="../transactionview.cpp" line="317"/>
         <source>Amount</source>
         <translation>Số tiền</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="315"/>
+        <location filename="../transactionview.cpp" line="318"/>
         <source>ID</source>
         <translation>Mã</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="318"/>
+        <location filename="../transactionview.cpp" line="321"/>
         <source>Exporting Failed</source>
         <translation>Kết xuất không thành công</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="318"/>
+        <location filename="../transactionview.cpp" line="321"/>
         <source>There was an error trying to save the transaction history to %1.</source>
         <translation>Có một lỗi xảy ra khi lưu lịch sử giao dịch vào %1.</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="322"/>
+        <location filename="../transactionview.cpp" line="325"/>
         <source>Exporting Successful</source>
         <translation>Kết xuất thành công</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="322"/>
+        <location filename="../transactionview.cpp" line="325"/>
         <source>The transaction history was successfully saved to %1.</source>
         <translation>Lịch sử giao dịch đã được lưu thành công vào %1.</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="431"/>
+        <location filename="../transactionview.cpp" line="434"/>
         <source>Range:</source>
         <translation>Khoảng:</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="439"/>
+        <location filename="../transactionview.cpp" line="442"/>
         <source>to</source>
         <translation>đến</translation>
     </message>
@@ -3758,7 +3778,7 @@ Kiểu: %3
 <context>
     <name>WalletModel</name>
     <message>
-        <location filename="../walletmodel.cpp" line="288"/>
+        <location filename="../walletmodel.cpp" line="278"/>
         <source>Send Coins</source>
         <translation>Gửi tiền</translation>
     </message>
@@ -3821,7 +3841,17 @@ If the file does not exist, create it with owner-readable-only file permissions.
 It is also recommended to set alertnotify so you are notified of problems;
 for example: alertnotify=echo %%s | mail -s &quot;Darkcoin Alert&quot; admin@foo.com
 </source>
-        <translation type="unfinished"/>
+        <translation>%s, bạn phải gửi một rpcpassword trong tệp cấu hình:
+%s
+Gợi ý rằng bạn sử dụng mật khẩu ngẫu nhiên sau:
+rpcuser=dảkcoinrpc
+rpcpassword=%s
+(bạn không cần thiết phải nhớ mật khẩu này)
+Username và mật khẩu KHÔNG ĐƯỢC giống nhau.
+Nếu tệp không tồn tại, tạo nó với quyền owner-readable-only.
+Cũng gợi ý rằng bạn nên đặt alertnotify để bạn có thể nhận thông báo về những vấn đề;
+ví dụ: alertnotify=echo %%s | mail -s &quot;Cảnh báo Darkcoin&quot; admin@foo.com
+</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="29"/>
@@ -3856,7 +3886,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Darkcoin Alert&quot; admin@foo
     <message>
         <location filename="../bitcoinstrings.cpp" line="46"/>
         <source>Darksend uses exact denominated amounts to send funds, you might simply need to anonymize some more coins.</source>
-        <translation type="unfinished"/>
+        <translation>Darksend sử dụng số lượng mệnh giá nhất định để gửi tiền, bạn có thể chỉ cần đơn giản ẩn danh vài coin nữa.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="49"/>
@@ -3946,7 +3976,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Darkcoin Alert&quot; admin@foo
     <message>
         <location filename="../bitcoinstrings.cpp" line="98"/>
         <source>InstantX requires inputs with at least 6 confirmations, you might need to wait a few minutes and try again.</source>
-        <translation type="unfinished"/>
+        <translation>InstantX cần đầu vào với ít nhất 6 xác nhận, bạn có thể cần phải đợi vài phút và thử lại.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="101"/>
@@ -3971,7 +4001,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Darkcoin Alert&quot; admin@foo
     <message>
         <location filename="../bitcoinstrings.cpp" line="110"/>
         <source>Provide liquidity to Darksend by infrequently mixing coins on a continual basis (0-100, default: 0, 1=very frequent, high fees, 100=very infrequent, low fees)</source>
-        <translation type="unfinished"/>
+        <translation>Cung cấp thanh khoản cho Darksend bằng việc thường xuyên trộn tiền một cách liên tục (0-100, ngầm định: 0, 1=rất thường xuyên, phí cao, 100=rất ít thường xuyên, phí thấp)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="114"/>
@@ -4000,13 +4030,13 @@ for example: alertnotify=echo %%s | mail -s &quot;Darkcoin Alert&quot; admin@foo
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="127"/>
-        <source>Show N confirmations for a successfully locked transaciton (0-9999, default: 1)</source>
-        <translation>Hiển thị N xác nhận cho mỗi giao dịch bị khoá thành công (0-9999, ngầm định: 1)</translation>
+        <source>Show N confirmations for a successfully locked transaction (0-9999, default: 1)</source>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="130"/>
         <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
-        <translation type="unfinished"/>
+        <translation>Đây là phiên bản chưa chính thức - hãy dùng và tự chấp nhận mạo hiểm - đừng dùng để đào coin hoặc các ứng dụng thương mại.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="133"/>
@@ -4016,17 +4046,17 @@ for example: alertnotify=echo %%s | mail -s &quot;Darkcoin Alert&quot; admin@foo
     <message>
         <location filename="../bitcoinstrings.cpp" line="136"/>
         <source>Unable to locate enough Darksend denominated funds for this transaction.</source>
-        <translation type="unfinished"/>
+        <translation>Không tìm đủ ngân sách Darksend denominated cho giao dịch này.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="138"/>
         <source>Unable to locate enough Darksend non-denominated funds for this transaction that are not equal 1000 DRK.</source>
-        <translation type="unfinished"/>
+        <translation>Không tìm đủ ngân sách Darksend denominated cho giao dịch mà nó không bằng 1000 DRK</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="141"/>
         <source>Unable to locate enough Darksend non-denominated funds for this transaction.</source>
-        <translation type="unfinished"/>
+        <translation>Không kiếm đủ ngân sách Darksend non-denominated cho giao dịch này.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="143"/>
@@ -4495,7 +4525,7 @@ Nếu tệp không tồn tại, tạo nó với quyền tệp owner-readable-onl
     <message>
         <location filename="../bitcoinstrings.cpp" line="256"/>
         <source>Insufficient funds.</source>
-        <translation type="unfinished"/>
+        <translation>Không đủ tiền.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="257"/>
@@ -4720,7 +4750,7 @@ Nếu tệp không tồn tại, tạo nó với quyền tệp owner-readable-onl
     <message>
         <location filename="../bitcoinstrings.cpp" line="301"/>
         <source>Prepend debug output with timestamp (default: 1)</source>
-        <translation type="unfinished"/>
+        <translation>Thêm tiền tố đầu ra debug với dấu thời gian (ngầm định: 1)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="302"/>
@@ -4755,7 +4785,7 @@ Nếu tệp không tồn tại, tạo nó với quyền tệp owner-readable-onl
     <message>
         <location filename="../bitcoinstrings.cpp" line="308"/>
         <source>Randomly fuzz 1 of every &lt;n&gt; network messages</source>
-        <translation type="unfinished"/>
+        <translation>Làm xơ ngẫu nhiên 1 trên mỗi &lt;n&gt; thông điệp mạng.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="309"/>
@@ -4860,7 +4890,7 @@ Nếu tệp không tồn tại, tạo nó với quyền tệp owner-readable-onl
     <message>
         <location filename="../bitcoinstrings.cpp" line="329"/>
         <source>Sets the DB_PRIVATE flag in the wallet db environment (default: 1)</source>
-        <translation type="unfinished"/>
+        <translation>Thiết lập cờ DB_PRIVATE trong môi trường cơ sở dữ liệu ví (ngầm định: 1)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="330"/>
@@ -4950,7 +4980,7 @@ Nếu tệp không tồn tại, tạo nó với quyền tệp owner-readable-onl
     <message>
         <location filename="../bitcoinstrings.cpp" line="347"/>
         <source>This is intended for regression testing tools and app development.</source>
-        <translation type="unfinished"/>
+        <translation>Điều này là để dành cho công cụ kiểm tra hồi quy và phát triển ứng dụng.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="348"/>
@@ -5070,7 +5100,7 @@ Nếu tệp không tồn tại, tạo nó với quyền tệp owner-readable-onl
     <message>
         <location filename="../bitcoinstrings.cpp" line="371"/>
         <source>Value more than Darksend pool maximum allows.</source>
-        <translation type="unfinished"/>
+        <translation>Giá tri trị lớn hơn giá trị tối đa mà bể Darksend cho phép.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="372"/>
