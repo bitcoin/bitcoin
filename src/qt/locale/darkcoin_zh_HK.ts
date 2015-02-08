@@ -1110,27 +1110,27 @@ Address: %4
     <message>
         <location filename="../forms/darksendconfig.ui" line="91"/>
         <source>Use 8 separate masternodes to mix funds up to 1000 DRK</source>
-        <translation type="unfinished"/>
+        <translation>使用8個獨立的主節點混合資金最多1000DRK</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="104"/>
         <source>Use 16 separate masternodes</source>
-        <translation type="unfinished"/>
+        <translation>使用16個獨立的主節點</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="117"/>
         <source>This option is the quickest and will cost about ~0.025 DRK to anonymize 1000 DRK</source>
-        <translation type="unfinished"/>
+        <translation>此選項為最快速度，需要支付0.025D​​RK/1000DRK的匿名處理費用。</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="130"/>
         <source>This option is moderately fast and will cost about 0.05 DRK to anonymize 1000 DRK</source>
-        <translation type="unfinished"/>
+        <translation>此選項為一般速度，需要支付0.05DRK/1000DRK的匿名處理費用。</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="156"/>
         <source>0.1 DRK per 1000 DRK you anonymize.</source>
-        <translation type="unfinished"/>
+        <translation>0.1DRK/1000DRK的匿名處理費用。</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="143"/>
@@ -1147,17 +1147,17 @@ Address: %4
     <message>
         <location filename="../darksendconfig.cpp" line="44"/>
         <source>Darksend was successfully set to basic (%1 and 2 rounds). You can change this at any time by opening Darkcoin&apos;s configuration screen.</source>
-        <translation type="unfinished"/>
+        <translation>暗黑發送已成功設置為一般(%1到2次循環)。你可以通過打開暗黑幣配置窗口來隨時修改。</translation>
     </message>
     <message>
         <location filename="../darksendconfig.cpp" line="59"/>
         <source>Darksend was successfully set to high (%1 and 8 rounds). You can change this at any time by opening Darkcoin&apos;s configuration screen.</source>
-        <translation type="unfinished"/>
+        <translation>暗黑發送已成功設置為高(%1到8次循環)。你可以通過打開暗黑幣配置窗口來隨時修改。</translation>
     </message>
     <message>
         <location filename="../darksendconfig.cpp" line="74"/>
         <source>Darksend was successfully set to maximum (%1 and 16 rounds). You can change this at any time by opening Darkcoin&apos;s configuration screen.</source>
-        <translation type="unfinished"/>
+        <translation>暗黑發送已成功設置為最高(%1到16次循環)。你可以通過打開暗黑幣配置窗口來隨時修改。</translation>
     </message>
 </context>
 <context>
@@ -1781,17 +1781,17 @@ Address: %4
     <message>
         <location filename="../forms/overviewpage.ui" line="370"/>
         <source>Submitted Denom:</source>
-        <translation type="unfinished"/>
+        <translation>已提交的面額：</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="377"/>
         <source>The denominations you submitted to the Masternode. To mix, other users must submit the exact same denominations.</source>
-        <translation type="unfinished"/>
+        <translation>你已提交給主節點的面額數。為了混合，其他用戶必須提交完全一致的面額數。</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="380"/>
         <source>n/a</source>
-        <translation type="unfinished"/>
+        <translation>不適用</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="402"/>
@@ -1799,37 +1799,37 @@ Address: %4
         <location filename="../overviewpage.cpp" line="462"/>
         <location filename="../overviewpage.cpp" line="476"/>
         <source>Darksend</source>
-        <translation type="unfinished"/>
+        <translation>暗黑發送</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="858"/>
         <source>Start/Stop Mixing</source>
-        <translation type="unfinished"/>
+        <translation>啟動/停止 混合</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="890"/>
         <source>(Last Message)</source>
-        <translation type="unfinished"/>
+        <translation>(最新信息)</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="915"/>
         <source>Try to manually submit a Darksend request.</source>
-        <translation type="unfinished"/>
+        <translation>請嘗試手動提交暗黑發送請求。</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="918"/>
         <source>Try Mix</source>
-        <translation type="unfinished"/>
+        <translation>嘗試混合</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="937"/>
         <source>Reset the current status of Darksend (can interrupt Darksend if it&apos;s in the process of Mixing, which can cost you money!)</source>
-        <translation type="unfinished"/>
+        <translation>重置目前暗黑發送配置(若暗黑發送正在混合的過程中，將會終止操作，並產生處理費用！)</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="943"/>
         <source>Reset</source>
-        <translation type="unfinished"/>
+        <translation>重置</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="979"/>
@@ -1846,134 +1846,135 @@ Address: %4
         <location filename="../overviewpage.cpp" line="142"/>
         <location filename="../overviewpage.cpp" line="347"/>
         <source>Disabled</source>
-        <translation type="unfinished"/>
+        <translation>禁用</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="145"/>
         <location filename="../overviewpage.cpp" line="349"/>
         <location filename="../overviewpage.cpp" line="490"/>
         <source>Start Darksend Mixing</source>
-        <translation type="unfinished"/>
+        <translation>啟動暗黑發送混合</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="147"/>
         <location filename="../overviewpage.cpp" line="492"/>
         <source>Stop Darksend Mixing</source>
-        <translation type="unfinished"/>
+        <translation>停止暗黑發送混合</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="267"/>
         <source>No inputs detected</source>
-        <translation type="unfinished"/>
+        <translation>未檢測到任何輸入</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="275"/>
         <source>Found unconfirmed denominated outputs, will wait till they confirm to recalculate.</source>
-        <translation type="unfinished"/>
+        <translation>發現未確認的面額輸出，等待確認後重新計算。</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="332"/>
         <source>Rounds</source>
-        <translation type="unfinished"/>
+        <translation>循環</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="363"/>
         <source>Enabled</source>
-        <translation type="unfinished"/>
+        <translation>啟用</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="419"/>
         <source>Last Darksend message:
 </source>
-        <translation type="unfinished"/>
+        <translation>最新暗黑發送信息:
+</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="376"/>
         <location filename="../overviewpage.cpp" line="401"/>
         <source>Darksend is idle.</source>
-        <translation type="unfinished"/>
+        <translation>暗黑發送閒置中。</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="382"/>
         <source>Darksend request complete: Your transaction was accepted into the pool!</source>
-        <translation type="unfinished"/>
+        <translation>暗黑發送请求完成：你的交易已經被礦池接受！</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="388"/>
         <source>Submitted following entries to masternode:</source>
-        <translation type="unfinished"/>
+        <translation>向主節點遞交以下條目：</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="389"/>
         <location filename="../overviewpage.cpp" line="390"/>
         <location filename="../overviewpage.cpp" line="391"/>
         <source>Submitted to masternode, Waiting for more entries</source>
-        <translation type="unfinished"/>
+        <translation>已遞交至主節點，等待更多條目</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="394"/>
         <source>Found enough users, signing ...</source>
-        <translation type="unfinished"/>
+        <translation>已找到足夠用戶，簽名中...</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="395"/>
         <source>Found enough users, signing ( waiting. )</source>
-        <translation type="unfinished"/>
+        <translation>已找到足夠用戶，簽名中(等待. )</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="396"/>
         <source>Found enough users, signing ( waiting.. )</source>
-        <translation type="unfinished"/>
+        <translation>已找到足夠用戶，簽名中(等待.. )</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="397"/>
         <source>Found enough users, signing ( waiting... )</source>
-        <translation type="unfinished"/>
+        <translation>已找到足夠用戶，簽名中(等待... )</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="399"/>
         <source>Transmitting final transaction.</source>
-        <translation type="unfinished"/>
+        <translation>正在傳送最終交易。</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="403"/>
         <source>Finalizing transaction.</source>
-        <translation type="unfinished"/>
+        <translation>正在完成交易。</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="405"/>
         <source>Darksend request incomplete:</source>
-        <translation type="unfinished"/>
+        <translation>暗黑發送請求未完成：</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="405"/>
         <source>Will retry...</source>
-        <translation type="unfinished"/>
+        <translation>將重試...</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="407"/>
         <source>Darksend request complete:</source>
-        <translation type="unfinished"/>
+        <translation>暗黑發送請求完成：</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="409"/>
         <source>Submitted to masternode, waiting in queue .</source>
-        <translation type="unfinished"/>
+        <translation>己提交至主節點，排隊等待.</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="410"/>
         <source>Submitted to masternode, waiting in queue ..</source>
-        <translation type="unfinished"/>
+        <translation>己提交至主節點，排隊等待..</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="411"/>
         <source>Submitted to masternode, waiting in queue ...</source>
-        <translation type="unfinished"/>
+        <translation>己提交至主節點，排隊等待...</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="413"/>
         <source>Unknown state:</source>
-        <translation type="unfinished"/>
+        <translation>未知狀態：</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="427"/>
@@ -1983,17 +1984,17 @@ Address: %4
     <message>
         <location filename="../overviewpage.cpp" line="449"/>
         <source>Darksend was successfully reset.</source>
-        <translation type="unfinished"/>
+        <translation>暗黑發送已成功重置。</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="463"/>
         <source>Darksend requires at least %1 to use.</source>
-        <translation type="unfinished"/>
+        <translation>暗黑發送需要至少%1來使用。</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="477"/>
         <source>Wallet is locked and user declined to unlock. Disabling Darksend.</source>
-        <translation type="unfinished"/>
+        <translation>錢包已被鎖，用戶拒絕解鎖。正在停止暗黑發送。</translation>
     </message>
 </context>
 <context>
@@ -2011,7 +2012,7 @@ Address: %4
     <message>
         <location filename="../paymentserver.cpp" line="294"/>
         <source>Cannot start darkcoin: click-to-pay handler</source>
-        <translation type="unfinished"/>
+        <translation>無法啟動暗黑幣程序：click-to-pay handler</translation>
     </message>
     <message>
         <location filename="../paymentserver.cpp" line="352"/>
@@ -2037,7 +2038,7 @@ Address: %4
     <message>
         <location filename="../paymentserver.cpp" line="418"/>
         <source>URI can not be parsed! This can be caused by an invalid Darkcoin address or malformed URI parameters.</source>
-        <translation type="unfinished"/>
+        <translation>鏈接無法被解析! 原因可能是無效的暗黑幣地址或輸入的鏈接有錯。</translation>
     </message>
     <message>
         <location filename="../paymentserver.cpp" line="432"/>
@@ -2113,7 +2114,7 @@ Address: %4
     <message>
         <location filename="../darkcoin.cpp" line="540"/>
         <source>Error reading masternode configuration file: %1</source>
-        <translation type="unfinished"/>
+        <translation>讀取主節點配置文件出錯：%1</translation>
     </message>
     <message>
         <location filename="../darkcoin.cpp" line="552"/>
@@ -2123,12 +2124,13 @@ Address: %4
     <message>
         <location filename="../darkcoin.cpp" line="612"/>
         <source>Darkcoin Core didn&apos;t yet exit safely...</source>
-        <translation type="unfinished"/>
+        <translation>暗黑幣核心還未安全退出...</translation>
     </message>
     <message>
         <location filename="../guiutil.cpp" line="101"/>
         <source>Enter a Darkcoin address (e.g. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</source>
-        <translation type="unfinished"/>
+        <translation>输入暗黑币地址(如.
+XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
     </message>
 </context>
 <context>
@@ -2159,7 +2161,7 @@ Address: %4
     <message>
         <location filename="../forms/rpcconsole.ui" line="14"/>
         <source>Tools window</source>
-        <translation type="unfinished"/>
+        <translation>工具窗口</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="24"/>
@@ -2169,7 +2171,7 @@ Address: %4
     <message>
         <location filename="../forms/rpcconsole.ui" line="33"/>
         <source>Masternode Count</source>
-        <translation type="unfinished"/>
+        <translation>主節點計算</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="46"/>
@@ -2300,7 +2302,7 @@ Address: %4
     <message>
         <location filename="../rpcconsole.cpp" line="331"/>
         <source>Welcome to the Darkcoin RPC console.</source>
-        <translation type="unfinished"/>
+        <translation>歡迎來到暗黑幣RPC控制台。</translation>
     </message>
     <message>
         <location filename="../rpcconsole.cpp" line="332"/>
@@ -2591,97 +2593,97 @@ Address: %4
         <translation>累計金額不足！</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="216"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="225"/>
         <source>Quantity:</source>
         <translation>數目:</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="251"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="260"/>
         <source>Bytes:</source>
         <translation>位元組數:</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="299"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="308"/>
         <source>Amount:</source>
         <translation>金額:</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="331"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="340"/>
         <source>Priority:</source>
         <translation>優先度:</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="379"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="388"/>
         <source>Fee:</source>
         <translation>手續費:</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="411"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="420"/>
         <source>Low Output:</source>
         <translation>低輸出:</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="459"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="468"/>
         <source>After Fee:</source>
         <translation>計費後金額:</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="491"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="500"/>
         <source>Change:</source>
         <translation>找零金額:</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="535"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="544"/>
         <source>If this is activated, but the change address is empty or invalid, change will be sent to a newly generated address.</source>
         <translation>如果這項有打開，但是找零位址是空的或無效，那麼找零的錢會送到一個新產生的位址去。</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="538"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="547"/>
         <source>Custom change address</source>
         <translation>自定找零位址</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="650"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="668"/>
         <source>Confirm the send action</source>
         <translation>確認付款動作</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="653"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="671"/>
         <source>S&amp;end</source>
         <translation>付款</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="673"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="691"/>
         <source>Clear all fields of the form.</source>
         <translation>把表單中的所有欄位清空。</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="676"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="694"/>
         <source>Clear &amp;All</source>
         <translation>全部清掉</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="693"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="711"/>
         <source>Send to multiple recipients at once</source>
         <translation>一次付給多個收款人</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="696"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="714"/>
         <source>Add &amp;Recipient</source>
         <translation>增加收款人</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="741"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="752"/>
         <source>Darksend</source>
-        <translation type="unfinished"/>
+        <translation>暗黑發送</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="754"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="771"/>
         <source>InstantX</source>
-        <translation type="unfinished"/>
+        <translation>即時到帳</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="761"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="778"/>
         <source>Balance:</source>
         <translation>餘額:</translation>
     </message>
@@ -2746,7 +2748,7 @@ Address: %4
     <message>
         <location filename="../sendcoinsdialog.cpp" line="261"/>
         <source>are added as transaction fee</source>
-        <translation type="unfinished"/>
+        <translation>被添加作為交易手續費</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="275"/>
@@ -2816,7 +2818,7 @@ Address: %4
     <message>
         <location filename="../sendcoinsdialog.cpp" line="626"/>
         <source>Warning: Invalid Darkcoin address</source>
-        <translation type="unfinished"/>
+        <translation>警告：無效的暗黑幣地址</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="635"/>
@@ -2933,7 +2935,7 @@ Address: %4
     <message>
         <location filename="../utilitydialog.cpp" line="129"/>
         <source>Darkcoin Core is shutting down...</source>
-        <translation type="unfinished"/>
+        <translation>暗黑幣核心正在關閉...</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="130"/>
@@ -3003,7 +3005,7 @@ Address: %4
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="152"/>
         <source>Sign the message to prove you own this Darkcoin address</source>
-        <translation type="unfinished"/>
+        <translation>簽署信息證明你擁有此暗黑幣地址</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="155"/>
@@ -3039,7 +3041,7 @@ Address: %4
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="295"/>
         <source>Verify the message to ensure it was signed with the specified Darkcoin address</source>
-        <translation type="unfinished"/>
+        <translation>驗證信息用來確保此被簽署信息對應相對的暗黑幣地址</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="298"/>
@@ -3059,7 +3061,8 @@ Address: %4
     <message>
         <location filename="../signverifymessagedialog.cpp" line="31"/>
         <source>Enter a Darkcoin address (e.g. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</source>
-        <translation type="unfinished"/>
+        <translation>輸入暗黑幣地址(如.
+XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
     </message>
     <message>
         <location filename="../signverifymessagedialog.cpp" line="114"/>
@@ -3138,7 +3141,7 @@ Address: %4
     <message>
         <location filename="../splashscreen.cpp" line="34"/>
         <source>Version %1</source>
-        <translation type="unfinished"/>
+        <translation>版本 %1</translation>
     </message>
     <message>
         <location filename="../splashscreen.cpp" line="35"/>
@@ -3169,7 +3172,7 @@ Address: %4
     <message numerus="yes">
         <location filename="../transactiondesc.cpp" line="28"/>
         <source>Open for %n more block(s)</source>
-        <translation type="unfinished"><numerusform></numerusform></translation>
+        <translation><numerusform>對於%n開放更多區塊</numerusform></translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="30"/>
@@ -3187,17 +3190,17 @@ Address: %4
     <message>
         <location filename="../transactiondesc.cpp" line="43"/>
         <source>%1/offline (verified via instantx)</source>
-        <translation type="unfinished"/>
+        <translation>%1/離線 (通過即時到帳系統核實)</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="45"/>
         <source>%1/confirmed (verified via instantx)</source>
-        <translation type="unfinished"/>
+        <translation>%1/已確認 (通過即時到帳系統核實)</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="47"/>
         <source>%1 confirmations (verified via instantx)</source>
-        <translation type="unfinished"/>
+        <translation>%1/確認完成 (通過即時到帳系統核實)</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="76"/>
@@ -3218,27 +3221,27 @@ Address: %4
     <message>
         <location filename="../transactiondesc.cpp" line="54"/>
         <source>%1/offline (InstantX verification in progress - %2 of %3 signatures)</source>
-        <translation type="unfinished"/>
+        <translation>%1/離線 (即時到帳系統正在核實中- %2 of %3 簽名)</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="56"/>
         <source>%1/confirmed (InstantX verification in progress - %2 of %3 signatures )</source>
-        <translation type="unfinished"/>
+        <translation>%1/已確認 (即時到帳系統正在核實中- %2 of %3 簽名)</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="58"/>
         <source>%1 confirmations (InstantX verification in progress - %2 of %3 signatures)</source>
-        <translation type="unfinished"/>
+        <translation>%1/確認完成 (即時到帳系統正在核實中- %2 of %3 簽名)</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="64"/>
         <source>%1/offline (InstantX verification failed)</source>
-        <translation type="unfinished"/>
+        <translation>%1/離線 (即時到帳系統核實失敗)</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="66"/>
         <source>%1/confirmed (InstantX verification failed)</source>
-        <translation type="unfinished"/>
+        <translation>%1/已確認 (即時到帳系統核實失敗)</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="98"/>
@@ -3253,7 +3256,7 @@ Address: %4
     <message numerus="yes">
         <location filename="../transactiondesc.cpp" line="105"/>
         <source>, broadcast through %n node(s)</source>
-        <translation type="unfinished"><numerusform></numerusform></translation>
+        <translation><numerusform>，通過%n(多個)節點廣播</numerusform></translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="109"/>
@@ -3431,7 +3434,7 @@ Address: %4
     <message numerus="yes">
         <location filename="../transactiontablemodel.cpp" line="287"/>
         <source>Open for %n more block(s)</source>
-        <translation type="unfinished"><numerusform></numerusform></translation>
+        <translation><numerusform>對於%n開放更多區塊</numerusform></translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="290"/>
@@ -3491,7 +3494,7 @@ Address: %4
     <message>
         <location filename="../transactiontablemodel.cpp" line="360"/>
         <source>Received via Darksend</source>
-        <translation type="unfinished"/>
+        <translation>經暗黑發送收到</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="363"/>
@@ -3511,50 +3514,55 @@ Address: %4
     <message>
         <location filename="../transactiontablemodel.cpp" line="370"/>
         <source>Darksend Denominate</source>
-        <translation type="unfinished"/>
+        <translation>暗黑發送面額</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="372"/>
         <source>Darksend Collateral Payment</source>
-        <translation type="unfinished"/>
+        <translation>暗黑發送附加費用</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="374"/>
-        <source>Darksend Split Up Large Inputs</source>
+        <source>Darksend Make Collateral Inputs</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="376"/>
-        <source>Darksent</source>
+        <source>Darksend Create Denominations</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="418"/>
+        <location filename="../transactiontablemodel.cpp" line="378"/>
+        <source>Darksent</source>
+        <translation>暗黑發送</translation>
+    </message>
+    <message>
+        <location filename="../transactiontablemodel.cpp" line="420"/>
         <source>(n/a)</source>
         <translation>(不適用)</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="610"/>
+        <location filename="../transactiontablemodel.cpp" line="612"/>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
         <translation>交易狀態。把游標停在欄位上會顯示確認次數。</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="612"/>
+        <location filename="../transactiontablemodel.cpp" line="614"/>
         <source>Date and time that the transaction was received.</source>
         <translation>收到交易的日期和時間。</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="614"/>
+        <location filename="../transactiontablemodel.cpp" line="616"/>
         <source>Type of transaction.</source>
         <translation>交易的種類。</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="616"/>
+        <location filename="../transactiontablemodel.cpp" line="618"/>
         <source>Destination address of transaction.</source>
         <translation>交易的目的地位址。</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="618"/>
+        <location filename="../transactiontablemodel.cpp" line="620"/>
         <source>Amount removed from or added to balance.</source>
         <translation>要減掉或加進餘額的金額。</translation>
     </message>
@@ -3610,140 +3618,155 @@ Address: %4
     <message>
         <location filename="../transactionview.cpp" line="81"/>
         <source>Darksent</source>
-        <translation type="unfinished"/>
+        <translation>暗黑發送</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="82"/>
-        <source>Darksend Denominate</source>
+        <source>Darksend Make Collateral Inputs</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="83"/>
+        <source>Darksend Create Denominations</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../transactionview.cpp" line="84"/>
+        <source>Darksend Denominate</source>
+        <translation>暗黑發送面額</translation>
+    </message>
+    <message>
+        <location filename="../transactionview.cpp" line="85"/>
+        <source>Darksend Collateral Payment</source>
+        <translation>暗黑發送附加費用</translation>
+    </message>
+    <message>
+        <location filename="../transactionview.cpp" line="86"/>
         <source>To yourself</source>
         <translation>給自己</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="84"/>
+        <location filename="../transactionview.cpp" line="87"/>
         <source>Mined</source>
         <translation>開採所得</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="85"/>
+        <location filename="../transactionview.cpp" line="88"/>
         <source>Other</source>
         <translation>其它</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="91"/>
+        <location filename="../transactionview.cpp" line="94"/>
         <source>Enter address or label to search</source>
         <translation>請輸入要搜尋的位址或標記</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="97"/>
+        <location filename="../transactionview.cpp" line="100"/>
         <source>Min amount</source>
         <translation>最小金額</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="131"/>
+        <location filename="../transactionview.cpp" line="134"/>
         <source>Copy address</source>
         <translation>複製位址</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="132"/>
+        <location filename="../transactionview.cpp" line="135"/>
         <source>Copy label</source>
         <translation>複製標記</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="133"/>
+        <location filename="../transactionview.cpp" line="136"/>
         <source>Copy amount</source>
         <translation>複製金額</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="134"/>
+        <location filename="../transactionview.cpp" line="137"/>
         <source>Copy transaction ID</source>
         <translation>複製交易識別碼</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="135"/>
+        <location filename="../transactionview.cpp" line="138"/>
         <source>Edit label</source>
         <translation>編輯標記</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="136"/>
+        <location filename="../transactionview.cpp" line="139"/>
         <source>Show transaction details</source>
         <translation>顯示交易明細</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="299"/>
+        <location filename="../transactionview.cpp" line="302"/>
         <source>Export Transaction History</source>
         <translation>匯出交易記錄</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="300"/>
+        <location filename="../transactionview.cpp" line="303"/>
         <source>Comma separated file (*.csv)</source>
         <translation>逗點分隔資料檔(*.csv)</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="309"/>
+        <location filename="../transactionview.cpp" line="312"/>
         <source>Confirmed</source>
         <translation>已確認</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="310"/>
+        <location filename="../transactionview.cpp" line="313"/>
         <source>Date</source>
         <translation>日期</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="311"/>
+        <location filename="../transactionview.cpp" line="314"/>
         <source>Type</source>
         <translation>種類</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="312"/>
+        <location filename="../transactionview.cpp" line="315"/>
         <source>Label</source>
         <translation>標記</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="313"/>
+        <location filename="../transactionview.cpp" line="316"/>
         <source>Address</source>
         <translation>位址</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="314"/>
+        <location filename="../transactionview.cpp" line="317"/>
         <source>Amount</source>
         <translation>金額</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="315"/>
+        <location filename="../transactionview.cpp" line="318"/>
         <source>ID</source>
         <translation>識別碼</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="318"/>
+        <location filename="../transactionview.cpp" line="321"/>
         <source>Exporting Failed</source>
         <translation>匯出失敗</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="318"/>
+        <location filename="../transactionview.cpp" line="321"/>
         <source>There was an error trying to save the transaction history to %1.</source>
         <translation>儲存交易記錄到 %1 時發生錯誤。</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="322"/>
+        <location filename="../transactionview.cpp" line="325"/>
         <source>Exporting Successful</source>
         <translation>匯出成功</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="322"/>
+        <location filename="../transactionview.cpp" line="325"/>
         <source>The transaction history was successfully saved to %1.</source>
         <translation>交易記錄已經成功儲存到 %1 了。</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="431"/>
+        <location filename="../transactionview.cpp" line="434"/>
         <source>Range:</source>
         <translation>範圍:</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="439"/>
+        <location filename="../transactionview.cpp" line="442"/>
         <source>to</source>
         <translation>到</translation>
     </message>
@@ -3759,7 +3782,7 @@ Address: %4
 <context>
     <name>WalletModel</name>
     <message>
-        <location filename="../walletmodel.cpp" line="288"/>
+        <location filename="../walletmodel.cpp" line="278"/>
         <source>Send Coins</source>
         <translation>付款</translation>
     </message>
@@ -3827,27 +3850,27 @@ for example: alertnotify=echo %%s | mail -s &quot;Darkcoin Alert&quot; admin@foo
     <message>
         <location filename="../bitcoinstrings.cpp" line="29"/>
         <source>Acceptable ciphers (default: TLSv1.2+HIGH:TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!3DES:@STRENGTH)</source>
-        <translation type="unfinished"/>
+        <translation>可接受的密碼(默認: TLSv1.2+HIGH:TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!3DES:@STRENGTH)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="32"/>
         <source>An error occurred while setting up the RPC port %u for listening on IPv4: %s</source>
-        <translation type="unfinished"/>
+        <translation>設定RPC通訊埠 %u 聽候IPv4: %s 時發生錯誤:</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="34"/>
         <source>An error occurred while setting up the RPC port %u for listening on IPv6, falling back to IPv4: %s</source>
-        <translation type="unfinished"/>
+        <translation>設定RPC通訊埠 %u 聽候IPv6: %s 時發生錯誤，失敗回滾至 IPv4: %s</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="37"/>
         <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
-        <translation type="unfinished"/>
+        <translation>與提供地址綁定，持續聽候。使用[host]:標記IPv6端口</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="40"/>
         <source>Cannot obtain a lock on data directory %s. Darkcoin Core is probably already running.</source>
-        <translation type="unfinished"/>
+        <translation>無法獲得鎖定的數據目錄%s. 暗黑幣核心可能已經在運行。</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="43"/>
@@ -3862,12 +3885,12 @@ for example: alertnotify=echo %%s | mail -s &quot;Darkcoin Alert&quot; admin@foo
     <message>
         <location filename="../bitcoinstrings.cpp" line="49"/>
         <source>Disable all Masternode and Darksend related functionality (0-1, default: 0)</source>
-        <translation type="unfinished"/>
+        <translation>禁止所有主節點和與匿名發送相關功能(0-1,默認：0)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="51"/>
         <source>Enable instantx, show confirmations for locked transactions (bool, default: true)</source>
-        <translation type="unfinished"/>
+        <translation>啟用即時到帳,顯示鎖定交易的確認數(bool, 默認：true)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="54"/>
@@ -4001,7 +4024,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Darkcoin Alert&quot; admin@foo
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="127"/>
-        <source>Show N confirmations for a successfully locked transaciton (0-9999, default: 1)</source>
+        <source>Show N confirmations for a successfully locked transaction (0-9999, default: 1)</source>
         <translation type="unfinished"/>
     </message>
     <message>
@@ -4079,22 +4102,22 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="173"/>
         <source>(default: 1)</source>
-        <translation type="unfinished"/>
+        <translation>(默認: 1)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="174"/>
         <source>(default: wallet.dat)</source>
-        <translation type="unfinished"/>
+        <translation>(默認: wallet.dat)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="175"/>
         <source>&lt;category&gt; can be:</source>
-        <translation type="unfinished"/>
+        <translation>&lt;category&gt; 可以是:</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="176"/>
         <source>Accept command line and JSON-RPC commands</source>
-        <translation type="unfinished"/>
+        <translation>接受命令行以及JSON-RPC命令</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="177"/>
@@ -5059,47 +5082,47 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="369"/>
         <source>Use the test network</source>
-        <translation type="unfinished"/>
+        <translation>使用測試網路</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="370"/>
         <source>Username for JSON-RPC connections</source>
-        <translation type="unfinished"/>
+        <translation>JSON-RPC 連線使用者名稱</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="371"/>
         <source>Value more than Darksend pool maximum allows.</source>
-        <translation type="unfinished"/>
+        <translation>數值超過暗黑發送池所允許的最大數。</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="372"/>
         <source>Verifying blocks...</source>
-        <translation type="unfinished"/>
+        <translation>正在驗證區塊資料...</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="373"/>
         <source>Verifying wallet...</source>
-        <translation type="unfinished"/>
+        <translation>正在驗證錢包資料...</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="374"/>
         <source>Wait for RPC server to start</source>
-        <translation type="unfinished"/>
+        <translation>等待RPC服務器啟動</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="375"/>
         <source>Wallet %s resides outside data directory %s</source>
-        <translation type="unfinished"/>
+        <translation>錢包檔 %s 沒有在資料目錄 %s 裡面</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="376"/>
         <source>Wallet is locked.</source>
-        <translation type="unfinished"/>
+        <translation>錢包己鎖定。</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="377"/>
         <source>Wallet needed to be rewritten: restart Darkcoin to complete</source>
-        <translation type="unfinished"/>
+        <translation>錢包需要重新改寫：請重啟Darkcoin來完​​成過程</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="378"/>
@@ -5119,22 +5142,22 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="381"/>
         <source>Warning: This version is obsolete, upgrade required!</source>
-        <translation type="unfinished"/>
+        <translation>警告：這個版本已經過時，需要升級！</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="382"/>
         <source>Wrong state.</source>
-        <translation type="unfinished"/>
+        <translation>錯誤狀態。</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="383"/>
         <source>You need to rebuild the database using -reindex to change -txindex</source>
-        <translation type="unfinished"/>
+        <translation>你需要通過使用-reindex改變-txindex來重新建立數據庫</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="384"/>
         <source>Zapping all transactions from wallet...</source>
-        <translation type="unfinished"/>
+        <translation>從錢包正在展開所有交易記錄...</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="385"/>
@@ -5149,7 +5172,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="387"/>
         <source>wallet.dat corrupt, salvage failed</source>
-        <translation type="unfinished"/>
+        <translation>wallet.dat 損壞，恢復失敗</translation>
     </message>
 </context>
 </TS>

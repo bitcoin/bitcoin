@@ -2612,97 +2612,97 @@ Aba, wards ab, des wird. Brauchd bloss a Minudn bis der Darkcon Koa mid di andan
         <translation>Raichd ned - Zwenig haschd!</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="216"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="225"/>
         <source>Quantity:</source>
         <translation>Wih oft?</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="251"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="260"/>
         <source>Bytes:</source>
         <translation>Baids</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="299"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="308"/>
         <source>Amount:</source>
         <translation>wih fui?</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="331"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="340"/>
         <source>Priority:</source>
         <translation>wih wichdig?</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="379"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="388"/>
         <source>Fee:</source>
         <translation>Zoll</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="411"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="420"/>
         <source>Low Output:</source>
         <translation>low audputt</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="459"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="468"/>
         <source>After Fee:</source>
         <translation>Mim Zoll</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="491"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="500"/>
         <source>Change:</source>
         <translation>Wexxlgoid</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="535"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="544"/>
         <source>If this is activated, but the change address is empty or invalid, change will be sent to a newly generated address.</source>
         <translation>Wend hia kain Bimperl hi-machsd, dann wiad imma wens kai Adressn gibd, wos Wexxlgoid hisoi, oifach a noie Adressn gmachd.</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="538"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="547"/>
         <source>Custom change address</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="650"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="668"/>
         <source>Confirm the send action</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="653"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="671"/>
         <source>S&amp;end</source>
         <translation>Und &amp;abgehds</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="673"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="691"/>
         <source>Clear all fields of the form.</source>
         <translation>Olle Foider sauba ma´ha.</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="676"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="694"/>
         <source>Clear &amp;All</source>
         <translation>&amp;Ois sauba ma´ha</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="693"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="711"/>
         <source>Send to multiple recipients at once</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="696"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="714"/>
         <source>Add &amp;Recipient</source>
         <translation>No an &amp;Ämpfänga dazuduan</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="741"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="752"/>
         <source>Darksend</source>
         <translation>Darksend</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="754"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="771"/>
         <source>InstantX</source>
         <translation>InstantX</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="761"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="778"/>
         <source>Balance:</source>
         <translation>Tuto Kompletti:</translation>
     </message>
@@ -3542,41 +3542,46 @@ Wenn dai Kischdn rechd schiach ausschaugd, dann sagen di Andan &quot;bäh&quot; 
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="374"/>
-        <source>Darksend Split Up Large Inputs</source>
-        <translation>Darksend hod aus grosse Bazzn klaine Kapuzzal gmachd</translation>
+        <source>Darksend Make Collateral Inputs</source>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="376"/>
+        <source>Darksend Create Denominations</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../transactiontablemodel.cpp" line="378"/>
         <source>Darksent</source>
         <translation>mit Kappuzal gschickd</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="418"/>
+        <location filename="../transactiontablemodel.cpp" line="420"/>
         <source>(n/a)</source>
         <translation>(woasined)</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="610"/>
+        <location filename="../transactiontablemodel.cpp" line="612"/>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
         <translation>Wi siha is das´s globd had mid dem Goid sendn/empfang´n. Duasd dain Mauszaigerl üba di Tränsäktschn und dann sigsd wi ofds scho ainbaud woan is in di Kischderl.</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="612"/>
+        <location filename="../transactiontablemodel.cpp" line="614"/>
         <source>Date and time that the transaction was received.</source>
         <translation>Wans griggd hosd, die Tränsäktschn.</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="614"/>
+        <location filename="../transactiontablemodel.cpp" line="616"/>
         <source>Type of transaction.</source>
         <translation>Art. (Hund, Kazzal, Giggala, ...)</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="616"/>
+        <location filename="../transactiontablemodel.cpp" line="618"/>
         <source>Destination address of transaction.</source>
         <translation>An wen des Goid gehd.</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="618"/>
+        <location filename="../transactiontablemodel.cpp" line="620"/>
         <source>Amount removed from or added to balance.</source>
         <translation>Des Goid des weg ganga is oda dazukimma.</translation>
     </message>
@@ -3636,136 +3641,151 @@ Wenn dai Kischdn rechd schiach ausschaugd, dann sagen di Andan &quot;bäh&quot; 
     </message>
     <message>
         <location filename="../transactionview.cpp" line="82"/>
+        <source>Darksend Make Collateral Inputs</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../transactionview.cpp" line="83"/>
+        <source>Darksend Create Denominations</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../transactionview.cpp" line="84"/>
         <source>Darksend Denominate</source>
         <translation>Zum Kapuzzal-ma´ha kloina gmachd</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="83"/>
+        <location filename="../transactionview.cpp" line="85"/>
+        <source>Darksend Collateral Payment</source>
+        <translation>Darksend Schudzgoid</translation>
+    </message>
+    <message>
+        <location filename="../transactionview.cpp" line="86"/>
         <source>To yourself</source>
         <translation>An mi Selba</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="84"/>
+        <location filename="../transactionview.cpp" line="87"/>
         <source>Mined</source>
         <translation>fom Kisdn ma´ha</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="85"/>
+        <location filename="../transactionview.cpp" line="88"/>
         <source>Other</source>
         <translation>Woasned</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="91"/>
+        <location filename="../transactionview.cpp" line="94"/>
         <source>Enter address or label to search</source>
         <translation>Gib a Baperl ai, dann suchi</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="97"/>
+        <location filename="../transactionview.cpp" line="100"/>
         <source>Min amount</source>
         <translation>Mindeschdns</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="131"/>
+        <location filename="../transactionview.cpp" line="134"/>
         <source>Copy address</source>
         <translation>Adressn kopian</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="132"/>
+        <location filename="../transactionview.cpp" line="135"/>
         <source>Copy label</source>
         <translation>´S Baperl kopian</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="133"/>
+        <location filename="../transactionview.cpp" line="136"/>
         <source>Copy amount</source>
         <translation>wih-fuis-is kopian</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="134"/>
+        <location filename="../transactionview.cpp" line="137"/>
         <source>Copy transaction ID</source>
         <translation>Des KFZ-Kennzaichn von dera Übawaisung schbaichan</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="135"/>
+        <location filename="../transactionview.cpp" line="138"/>
         <source>Edit label</source>
         <translation>´S Baperl ändan</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="136"/>
+        <location filename="../transactionview.cpp" line="139"/>
         <source>Show transaction details</source>
         <translation>Zaigma des wo-und-wea</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="299"/>
+        <location filename="../transactionview.cpp" line="302"/>
         <source>Export Transaction History</source>
         <translation>Däs Wer-Was-Wann schbaichan</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="300"/>
+        <location filename="../transactionview.cpp" line="303"/>
         <source>Comma separated file (*.csv)</source>
         <translation>ZE ES FAU - woaschtscho - zeigl, komma, zeigl, komma, undsowaida. (*.csv)</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="309"/>
+        <location filename="../transactionview.cpp" line="312"/>
         <source>Confirmed</source>
         <translation>Güid!</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="310"/>
+        <location filename="../transactionview.cpp" line="313"/>
         <source>Date</source>
         <translation>Datum</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="311"/>
+        <location filename="../transactionview.cpp" line="314"/>
         <source>Type</source>
         <translation>Tüpp</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="312"/>
+        <location filename="../transactionview.cpp" line="315"/>
         <source>Label</source>
         <translation>Baperl</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="313"/>
+        <location filename="../transactionview.cpp" line="316"/>
         <source>Address</source>
         <translation>Adressn</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="314"/>
+        <location filename="../transactionview.cpp" line="317"/>
         <source>Amount</source>
         <translation>Wie fui</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="315"/>
+        <location filename="../transactionview.cpp" line="318"/>
         <source>ID</source>
         <translation>KFZ-Kennzaichn</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="318"/>
+        <location filename="../transactionview.cpp" line="321"/>
         <source>Exporting Failed</source>
         <translation>Weild a Depp bischd. Nix gehd, goarnix.</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="318"/>
+        <location filename="../transactionview.cpp" line="321"/>
         <source>There was an error trying to save the transaction history to %1.</source>
         <translation>Hod ned glabd, des schbaichan von dem Was-Wan-Wo! (sold aigendlich da: %1 ankomm´n)</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="322"/>
+        <location filename="../transactionview.cpp" line="325"/>
         <source>Exporting Successful</source>
         <translation>Kappd hads! (Da schaugsd oda?)</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="322"/>
+        <location filename="../transactionview.cpp" line="325"/>
         <source>The transaction history was successfully saved to %1.</source>
         <translation>Dai Was-Wann-Wo liagd ezd baim %1.</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="431"/>
+        <location filename="../transactionview.cpp" line="434"/>
         <source>Range:</source>
         <translation>Schbanne:</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="439"/>
+        <location filename="../transactionview.cpp" line="442"/>
         <source>to</source>
         <translation>bis</translation>
     </message>
@@ -3781,7 +3801,7 @@ Wenn dai Kischdn rechd schiach ausschaugd, dann sagen di Andan &quot;bäh&quot; 
 <context>
     <name>WalletModel</name>
     <message>
-        <location filename="../walletmodel.cpp" line="288"/>
+        <location filename="../walletmodel.cpp" line="278"/>
         <source>Send Coins</source>
         <translation>Coins schickga</translation>
     </message>
@@ -4023,7 +4043,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Darkcoin Alert&quot; admin@foo
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="127"/>
-        <source>Show N confirmations for a successfully locked transaciton (0-9999, default: 1)</source>
+        <source>Show N confirmations for a successfully locked transaction (0-9999, default: 1)</source>
         <translation type="unfinished"/>
     </message>
     <message>

@@ -1078,7 +1078,7 @@ Address: %4
     <message>
         <location filename="../forms/darksendconfig.ui" line="14"/>
         <source>Configure Darksend</source>
-        <translation>设定暗黑发送</translation>
+        <translation>设定匿名发送</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="26"/>
@@ -1108,27 +1108,27 @@ Address: %4
     <message>
         <location filename="../forms/darksendconfig.ui" line="91"/>
         <source>Use 8 separate masternodes to mix funds up to 1000 DRK</source>
-        <translation type="unfinished"/>
+        <translation>使用8个独立的主节点混合资金最多1000DRK</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="104"/>
         <source>Use 16 separate masternodes</source>
-        <translation type="unfinished"/>
+        <translation>使用16个独立的主节点</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="117"/>
         <source>This option is the quickest and will cost about ~0.025 DRK to anonymize 1000 DRK</source>
-        <translation type="unfinished"/>
+        <translation>此选项为最快速度，需要支付0.025DRK/1000DRK的匿名处理费用。</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="130"/>
         <source>This option is moderately fast and will cost about 0.05 DRK to anonymize 1000 DRK</source>
-        <translation type="unfinished"/>
+        <translation>此选项为一般速度，需要支付0.05DRK/1000DRK的匿名处理费用。</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="156"/>
         <source>0.1 DRK per 1000 DRK you anonymize.</source>
-        <translation type="unfinished"/>
+        <translation>0.1DRK/1000DRK的匿名处理费用。</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="143"/>
@@ -1140,7 +1140,7 @@ Address: %4
         <location filename="../darksendconfig.cpp" line="58"/>
         <location filename="../darksendconfig.cpp" line="73"/>
         <source>Darksend Configuration</source>
-        <translation>暗黑发送设定</translation>
+        <translation>匿名发送设定</translation>
     </message>
     <message>
         <location filename="../darksendconfig.cpp" line="44"/>
@@ -1823,7 +1823,7 @@ Address: %4
     <message>
         <location filename="../forms/overviewpage.ui" line="937"/>
         <source>Reset the current status of Darksend (can interrupt Darksend if it&apos;s in the process of Mixing, which can cost you money!)</source>
-        <translation type="unfinished"/>
+        <translation>重置目前匿名发送配置(若正在进行匿名处理，将会导致处理终止，并产生处理费用！)</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="943"/>
@@ -1845,134 +1845,135 @@ Address: %4
         <location filename="../overviewpage.cpp" line="142"/>
         <location filename="../overviewpage.cpp" line="347"/>
         <source>Disabled</source>
-        <translation type="unfinished"/>
+        <translation>未激活</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="145"/>
         <location filename="../overviewpage.cpp" line="349"/>
         <location filename="../overviewpage.cpp" line="490"/>
         <source>Start Darksend Mixing</source>
-        <translation type="unfinished"/>
+        <translation>启动匿名发送混淆</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="147"/>
         <location filename="../overviewpage.cpp" line="492"/>
         <source>Stop Darksend Mixing</source>
-        <translation type="unfinished"/>
+        <translation>停止匿名发送混淆</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="267"/>
         <source>No inputs detected</source>
-        <translation type="unfinished"/>
+        <translation>未检测到任何输入</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="275"/>
         <source>Found unconfirmed denominated outputs, will wait till they confirm to recalculate.</source>
-        <translation type="unfinished"/>
+        <translation>资金面额化未确认，等待重新计算。</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="332"/>
         <source>Rounds</source>
-        <translation type="unfinished"/>
+        <translation>循环</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="363"/>
         <source>Enabled</source>
-        <translation type="unfinished"/>
+        <translation>激活</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="419"/>
         <source>Last Darksend message:
 </source>
-        <translation type="unfinished"/>
+        <translation>最新匿名发送信息:
+</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="376"/>
         <location filename="../overviewpage.cpp" line="401"/>
         <source>Darksend is idle.</source>
-        <translation type="unfinished"/>
+        <translation>匿名发送闲置中。</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="382"/>
         <source>Darksend request complete: Your transaction was accepted into the pool!</source>
-        <translation type="unfinished"/>
+        <translation>匿名发送请求完成：你的交易已经被矿池接受！</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="388"/>
         <source>Submitted following entries to masternode:</source>
-        <translation type="unfinished"/>
+        <translation>向主节点递交以下条目：</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="389"/>
         <location filename="../overviewpage.cpp" line="390"/>
         <location filename="../overviewpage.cpp" line="391"/>
         <source>Submitted to masternode, Waiting for more entries</source>
-        <translation type="unfinished"/>
+        <translation>递交至主节点，等待更多条目</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="394"/>
         <source>Found enough users, signing ...</source>
-        <translation type="unfinished"/>
+        <translation>已找到足够用户，签名中...</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="395"/>
         <source>Found enough users, signing ( waiting. )</source>
-        <translation type="unfinished"/>
+        <translation>已找到足够用户，签名中(等待.)</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="396"/>
         <source>Found enough users, signing ( waiting.. )</source>
-        <translation type="unfinished"/>
+        <translation>已找到足够用户，签名中(等待.)</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="397"/>
         <source>Found enough users, signing ( waiting... )</source>
-        <translation type="unfinished"/>
+        <translation>已找到足够用户，签名中(等待.)</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="399"/>
         <source>Transmitting final transaction.</source>
-        <translation type="unfinished"/>
+        <translation>正在传递最终交易。</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="403"/>
         <source>Finalizing transaction.</source>
-        <translation type="unfinished"/>
+        <translation>正在完成交易。</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="405"/>
         <source>Darksend request incomplete:</source>
-        <translation type="unfinished"/>
+        <translation>匿名发送请求未完成：</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="405"/>
         <source>Will retry...</source>
-        <translation type="unfinished"/>
+        <translation>将重试...</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="407"/>
         <source>Darksend request complete:</source>
-        <translation type="unfinished"/>
+        <translation>匿名发送请求完成：</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="409"/>
         <source>Submitted to masternode, waiting in queue .</source>
-        <translation type="unfinished"/>
+        <translation>提交至主节点，等待列队.</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="410"/>
         <source>Submitted to masternode, waiting in queue ..</source>
-        <translation type="unfinished"/>
+        <translation>提交至主节点，等待列队..</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="411"/>
         <source>Submitted to masternode, waiting in queue ...</source>
-        <translation type="unfinished"/>
+        <translation>提交至主节点，等待列队...</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="413"/>
         <source>Unknown state:</source>
-        <translation type="unfinished"/>
+        <translation>未知状态：</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="427"/>
@@ -2010,7 +2011,7 @@ Address: %4
     <message>
         <location filename="../paymentserver.cpp" line="294"/>
         <source>Cannot start darkcoin: click-to-pay handler</source>
-        <translation type="unfinished"/>
+        <translation>无法启动暗黑币程序：click-to-pay handler</translation>
     </message>
     <message>
         <location filename="../paymentserver.cpp" line="352"/>
@@ -2159,7 +2160,7 @@ XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
     <message>
         <location filename="../forms/rpcconsole.ui" line="14"/>
         <source>Tools window</source>
-        <translation type="unfinished"/>
+        <translation>工具窗口</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="24"/>
@@ -2591,97 +2592,97 @@ XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
         <translation>存款不足！</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="216"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="225"/>
         <source>Quantity:</source>
         <translation>总量：</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="251"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="260"/>
         <source>Bytes:</source>
         <translation>字节：</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="299"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="308"/>
         <source>Amount:</source>
         <translation>金额：</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="331"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="340"/>
         <source>Priority:</source>
         <translation>优先级：</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="379"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="388"/>
         <source>Fee:</source>
         <translation>费用：</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="411"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="420"/>
         <source>Low Output:</source>
         <translation>低输出</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="459"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="468"/>
         <source>After Fee:</source>
         <translation>加上交易费用后:</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="491"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="500"/>
         <source>Change:</source>
         <translation>变更 : </translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="535"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="544"/>
         <source>If this is activated, but the change address is empty or invalid, change will be sent to a newly generated address.</source>
         <translation>如果激活该选项，但是零钱地址用光或者非法，将会新生成零钱地址，转入零钱。</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="538"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="547"/>
         <source>Custom change address</source>
         <translation>自定义零钱地址</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="650"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="668"/>
         <source>Confirm the send action</source>
         <translation>确认并发送货币</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="653"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="671"/>
         <source>S&amp;end</source>
         <translation>发送(&amp;E)</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="673"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="691"/>
         <source>Clear all fields of the form.</source>
         <translation>清除此表单的所有字段。</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="676"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="694"/>
         <source>Clear &amp;All</source>
         <translation>清除所有(&amp;A)</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="693"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="711"/>
         <source>Send to multiple recipients at once</source>
         <translation>一次发送给多个接收者</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="696"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="714"/>
         <source>Add &amp;Recipient</source>
         <translation>添加收款人(&amp;R)</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="741"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="752"/>
         <source>Darksend</source>
         <translation>匿名发送</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="754"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="771"/>
         <source>InstantX</source>
         <translation>立即支付</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="761"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="778"/>
         <source>Balance:</source>
         <translation>余额：</translation>
     </message>
@@ -3139,7 +3140,7 @@ XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
     <message>
         <location filename="../splashscreen.cpp" line="34"/>
         <source>Version %1</source>
-        <translation type="unfinished"/>
+        <translation>版本 %1</translation>
     </message>
     <message>
         <location filename="../splashscreen.cpp" line="35"/>
@@ -3170,7 +3171,7 @@ XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
     <message numerus="yes">
         <location filename="../transactiondesc.cpp" line="28"/>
         <source>Open for %n more block(s)</source>
-        <translation type="unfinished"><numerusform></numerusform></translation>
+        <translation><numerusform>对于%n个块开放</numerusform></translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="30"/>
@@ -3188,17 +3189,17 @@ XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
     <message>
         <location filename="../transactiondesc.cpp" line="43"/>
         <source>%1/offline (verified via instantx)</source>
-        <translation type="unfinished"/>
+        <translation>%1/下线(经过立即支付系统认证)</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="45"/>
         <source>%1/confirmed (verified via instantx)</source>
-        <translation type="unfinished"/>
+        <translation>%1/已确认(经过立即支付系统认证)</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="47"/>
         <source>%1 confirmations (verified via instantx)</source>
-        <translation type="unfinished"/>
+        <translation>%1/确认完成(经过立即支付系统认证)</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="76"/>
@@ -3219,27 +3220,27 @@ XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
     <message>
         <location filename="../transactiondesc.cpp" line="54"/>
         <source>%1/offline (InstantX verification in progress - %2 of %3 signatures)</source>
-        <translation type="unfinished"/>
+        <translation>%1/下线 (立即支付系统正在认证中 - %2 of %3签名数)</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="56"/>
         <source>%1/confirmed (InstantX verification in progress - %2 of %3 signatures )</source>
-        <translation type="unfinished"/>
+        <translation>%1/已确认 (立即支付系统正在认证中 - %2 of %3签名数)</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="58"/>
         <source>%1 confirmations (InstantX verification in progress - %2 of %3 signatures)</source>
-        <translation type="unfinished"/>
+        <translation>%1/确认完成 (立即支付系统正在认证中 - %2 of %3签名数)</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="64"/>
         <source>%1/offline (InstantX verification failed)</source>
-        <translation type="unfinished"/>
+        <translation>%1/下线 (立即支付系统认证失败)</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="66"/>
         <source>%1/confirmed (InstantX verification failed)</source>
-        <translation type="unfinished"/>
+        <translation>%1/已确认 (立即支付系统认证失败)</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="98"/>
@@ -3432,7 +3433,7 @@ XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
     <message numerus="yes">
         <location filename="../transactiontablemodel.cpp" line="287"/>
         <source>Open for %n more block(s)</source>
-        <translation type="unfinished"><numerusform></numerusform></translation>
+        <translation><numerusform>对于%n(多)个块开放</numerusform></translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="290"/>
@@ -3517,45 +3518,50 @@ XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
     <message>
         <location filename="../transactiontablemodel.cpp" line="372"/>
         <source>Darksend Collateral Payment</source>
-        <translation type="unfinished"/>
+        <translation>匿名发送附加费用</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="374"/>
-        <source>Darksend Split Up Large Inputs</source>
+        <source>Darksend Make Collateral Inputs</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="376"/>
+        <source>Darksend Create Denominations</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../transactiontablemodel.cpp" line="378"/>
         <source>Darksent</source>
         <translation>匿名发送</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="418"/>
+        <location filename="../transactiontablemodel.cpp" line="420"/>
         <source>(n/a)</source>
         <translation>（不可用）</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="610"/>
+        <location filename="../transactiontablemodel.cpp" line="612"/>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
         <translation>交易状态。 鼠标移到此区域可显示确认项数量。</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="612"/>
+        <location filename="../transactiontablemodel.cpp" line="614"/>
         <source>Date and time that the transaction was received.</source>
         <translation>接收到交易的时间</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="614"/>
+        <location filename="../transactiontablemodel.cpp" line="616"/>
         <source>Type of transaction.</source>
         <translation>交易类别。</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="616"/>
+        <location filename="../transactiontablemodel.cpp" line="618"/>
         <source>Destination address of transaction.</source>
         <translation>交易目的地址。</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="618"/>
+        <location filename="../transactiontablemodel.cpp" line="620"/>
         <source>Amount removed from or added to balance.</source>
         <translation>从余额添加或移除的金额。</translation>
     </message>
@@ -3615,136 +3621,151 @@ XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="82"/>
+        <source>Darksend Make Collateral Inputs</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../transactionview.cpp" line="83"/>
+        <source>Darksend Create Denominations</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../transactionview.cpp" line="84"/>
         <source>Darksend Denominate</source>
         <translation>匿名发送面额化</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="83"/>
+        <location filename="../transactionview.cpp" line="85"/>
+        <source>Darksend Collateral Payment</source>
+        <translation>匿名发送附加费用</translation>
+    </message>
+    <message>
+        <location filename="../transactionview.cpp" line="86"/>
         <source>To yourself</source>
         <translation>到自己</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="84"/>
+        <location filename="../transactionview.cpp" line="87"/>
         <source>Mined</source>
         <translation>挖矿所得</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="85"/>
+        <location filename="../transactionview.cpp" line="88"/>
         <source>Other</source>
         <translation>其他</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="91"/>
+        <location filename="../transactionview.cpp" line="94"/>
         <source>Enter address or label to search</source>
         <translation>输入地址或标签进行搜索</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="97"/>
+        <location filename="../transactionview.cpp" line="100"/>
         <source>Min amount</source>
         <translation>最小金额</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="131"/>
+        <location filename="../transactionview.cpp" line="134"/>
         <source>Copy address</source>
         <translation>复制地址</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="132"/>
+        <location filename="../transactionview.cpp" line="135"/>
         <source>Copy label</source>
         <translation>复制标签</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="133"/>
+        <location filename="../transactionview.cpp" line="136"/>
         <source>Copy amount</source>
         <translation>复制金额</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="134"/>
+        <location filename="../transactionview.cpp" line="137"/>
         <source>Copy transaction ID</source>
         <translation>复制交易编号</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="135"/>
+        <location filename="../transactionview.cpp" line="138"/>
         <source>Edit label</source>
         <translation>编辑标签</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="136"/>
+        <location filename="../transactionview.cpp" line="139"/>
         <source>Show transaction details</source>
         <translation>显示交易详情</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="299"/>
+        <location filename="../transactionview.cpp" line="302"/>
         <source>Export Transaction History</source>
         <translation>导出交易历史</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="300"/>
+        <location filename="../transactionview.cpp" line="303"/>
         <source>Comma separated file (*.csv)</source>
         <translation>逗号分隔文件 (*.csv)</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="309"/>
+        <location filename="../transactionview.cpp" line="312"/>
         <source>Confirmed</source>
         <translation>已确认</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="310"/>
+        <location filename="../transactionview.cpp" line="313"/>
         <source>Date</source>
         <translation>日期</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="311"/>
+        <location filename="../transactionview.cpp" line="314"/>
         <source>Type</source>
         <translation>类别</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="312"/>
+        <location filename="../transactionview.cpp" line="315"/>
         <source>Label</source>
         <translation>标签</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="313"/>
+        <location filename="../transactionview.cpp" line="316"/>
         <source>Address</source>
         <translation>地址</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="314"/>
+        <location filename="../transactionview.cpp" line="317"/>
         <source>Amount</source>
         <translation>金额</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="315"/>
+        <location filename="../transactionview.cpp" line="318"/>
         <source>ID</source>
         <translation>ID</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="318"/>
+        <location filename="../transactionview.cpp" line="321"/>
         <source>Exporting Failed</source>
         <translation>导出失败</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="318"/>
+        <location filename="../transactionview.cpp" line="321"/>
         <source>There was an error trying to save the transaction history to %1.</source>
         <translation>导出交易历史到 %1 时发生错误。</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="322"/>
+        <location filename="../transactionview.cpp" line="325"/>
         <source>Exporting Successful</source>
         <translation>导出成功</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="322"/>
+        <location filename="../transactionview.cpp" line="325"/>
         <source>The transaction history was successfully saved to %1.</source>
         <translation>交易历史已成功保存到 %1。</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="431"/>
+        <location filename="../transactionview.cpp" line="434"/>
         <source>Range:</source>
         <translation>范围：</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="439"/>
+        <location filename="../transactionview.cpp" line="442"/>
         <source>to</source>
         <translation>到</translation>
     </message>
@@ -3760,7 +3781,7 @@ XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
 <context>
     <name>WalletModel</name>
     <message>
-        <location filename="../walletmodel.cpp" line="288"/>
+        <location filename="../walletmodel.cpp" line="278"/>
         <source>Send Coins</source>
         <translation>发送比特币</translation>
     </message>
@@ -3828,27 +3849,27 @@ for example: alertnotify=echo %%s | mail -s &quot;Darkcoin Alert&quot; admin@foo
     <message>
         <location filename="../bitcoinstrings.cpp" line="29"/>
         <source>Acceptable ciphers (default: TLSv1.2+HIGH:TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!3DES:@STRENGTH)</source>
-        <translation type="unfinished"/>
+        <translation>可接受的密码 (默认: TLSv1.2+HIGH:TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!3DES:@STRENGTH)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="32"/>
         <source>An error occurred while setting up the RPC port %u for listening on IPv4: %s</source>
-        <translation type="unfinished"/>
+        <translation>建立RPC服务时发生了一个错误%u 正在监听 IPv4: %s</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="34"/>
         <source>An error occurred while setting up the RPC port %u for listening on IPv6, falling back to IPv4: %s</source>
-        <translation type="unfinished"/>
+        <translation>建立RPC服务时发生了一个错误%u 正在监听 IPv6，失败回滚至IPv4: %s</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="37"/>
         <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
-        <translation type="unfinished"/>
+        <translation>与提供地址绑定，持续监听。使用[host]:标记IPv6端口</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="40"/>
         <source>Cannot obtain a lock on data directory %s. Darkcoin Core is probably already running.</source>
-        <translation type="unfinished"/>
+        <translation>不能获得锁定的数据目录 %s. 暗黑币核心可能已经在运行。</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="43"/>
@@ -3868,7 +3889,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Darkcoin Alert&quot; admin@foo
     <message>
         <location filename="../bitcoinstrings.cpp" line="51"/>
         <source>Enable instantx, show confirmations for locked transactions (bool, default: true)</source>
-        <translation type="unfinished"/>
+        <translation>激活立即支付,显示锁定交易的确认数(bool, 默认：true)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="54"/>
@@ -4002,7 +4023,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Darkcoin Alert&quot; admin@foo
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="127"/>
-        <source>Show N confirmations for a successfully locked transaciton (0-9999, default: 1)</source>
+        <source>Show N confirmations for a successfully locked transaction (0-9999, default: 1)</source>
         <translation type="unfinished"/>
     </message>
     <message>
@@ -4090,47 +4111,47 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="175"/>
         <source>&lt;category&gt; can be:</source>
-        <translation type="unfinished"/>
+        <translation>&lt;category&gt; 可以是：</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="176"/>
         <source>Accept command line and JSON-RPC commands</source>
-        <translation type="unfinished"/>
+        <translation>接受命令行以及JSON-RPC命令</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="177"/>
         <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
-        <translation type="unfinished"/>
+        <translation>接受来自外部链接 (默认: 1 if no -proxy or -connect)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="178"/>
         <source>Add a node to connect to and attempt to keep the connection open</source>
-        <translation type="unfinished"/>
+        <translation>添加一个可连接节点，并尝试保持连接开放。</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="179"/>
         <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
-        <translation type="unfinished"/>
+        <translation>允许DNS查找 -新节点, -子节点 和 -链接</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="180"/>
         <source>Allow JSON-RPC connections from specified IP address</source>
-        <translation type="unfinished"/>
+        <translation>允许从指定IP地址连接JSON-RPC</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="181"/>
         <source>Already have that input.</source>
-        <translation type="unfinished"/>
+        <translation>输入已存在。</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="182"/>
         <source>Always query for peer addresses via DNS lookup (default: 0)</source>
-        <translation type="unfinished"/>
+        <translation>总是通过DNS查询对等地址(默认: 0)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="183"/>
         <source>Attempt to recover private keys from a corrupt wallet.dat</source>
-        <translation type="unfinished"/>
+        <translation>尝试从已损坏的钱包文件中找回私钥</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="184"/>
@@ -4140,7 +4161,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="185"/>
         <source>Can&apos;t denominate: no compatible inputs left.</source>
-        <translation type="unfinished"/>
+        <translation>不能面额化：没有可匹配的输入。</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="186"/>
@@ -4150,12 +4171,12 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="187"/>
         <source>Cannot resolve -bind address: &apos;%s&apos;</source>
-        <translation type="unfinished"/>
+        <translation>不能解决 -绑定地址：&apos;%s&apos;</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="188"/>
         <source>Cannot resolve -externalip address: &apos;%s&apos;</source>
-        <translation type="unfinished"/>
+        <translation>不能解决 -外部ip地址：&apos;%s&apos;</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="189"/>
@@ -4165,17 +4186,17 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="190"/>
         <source>Clear list of wallet transactions (diagnostic tool; implies -rescan)</source>
-        <translation type="unfinished"/>
+        <translation>清除钱包交易列表 (检测工具; implies -rescan)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="191"/>
         <source>Collateral is not valid.</source>
-        <translation type="unfinished"/>
+        <translation>并行是无效的。</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="192"/>
         <source>Collateral not valid.</source>
-        <translation type="unfinished"/>
+        <translation>并行无效。</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="193"/>
@@ -4195,22 +4216,22 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="196"/>
         <source>Connect to KeePassHttp on port &lt;port&gt; (default: 19455)</source>
-        <translation type="unfinished"/>
+        <translation>连接至 KeePassHttp 端口 &lt;port&gt; (默认: 19455)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="197"/>
         <source>Connect to a node to retrieve peer addresses, and disconnect</source>
-        <translation type="unfinished"/>
+        <translation>连接至节点来找回对等地址和断开链接</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="198"/>
         <source>Connection options:</source>
-        <translation type="unfinished"/>
+        <translation>连接选项：</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="199"/>
         <source>Corrupted block database detected</source>
-        <translation type="unfinished"/>
+        <translation>已找到损坏的数据块</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="200"/>
@@ -4225,27 +4246,27 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="202"/>
         <source>Darksend is disabled.</source>
-        <translation type="unfinished"/>
+        <translation>匿名发送未激活。</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="203"/>
         <source>Darksend options:</source>
-        <translation type="unfinished"/>
+        <translation>匿名发送选项：</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="204"/>
         <source>Debugging/Testing options:</source>
-        <translation type="unfinished"/>
+        <translation>排除故障/测试 选项：</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="205"/>
         <source>Disable safemode, override a real safe mode event (default: 0)</source>
-        <translation type="unfinished"/>
+        <translation>未激活安全模式，重新写入真正安全模式项目(默认: 0)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="206"/>
         <source>Discover own IP address (default: 1 when listening and no -externalip)</source>
-        <translation type="unfinished"/>
+        <translation>发现私有IP地址(默认：1 当监听时没有外部IP)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="207"/>
@@ -4500,12 +4521,12 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="257"/>
         <source>Invalid -onion address: &apos;%s&apos;</source>
-        <translation type="unfinished"/>
+        <translation>无效-洋葱头地址：&apos;%s&apos;</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="258"/>
         <source>Invalid -proxy address: &apos;%s&apos;</source>
-        <translation type="unfinished"/>
+        <translation>无效-代理地址：&apos;%s&apos;</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="259"/>
@@ -4530,17 +4551,17 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="263"/>
         <source>Invalid masternodeprivkey. Please see documenation.</source>
-        <translation type="unfinished"/>
+        <translation>无效主节点私钥。请查阅文件材料。</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="264"/>
         <source>Invalid private key.</source>
-        <translation type="unfinished"/>
+        <translation>无效私钥。</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="265"/>
         <source>Invalid script detected.</source>
-        <translation type="unfinished"/>
+        <translation>检测到无效脚本。</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="266"/>
@@ -4570,12 +4591,12 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="271"/>
         <source>Last Darksend was too recent.</source>
-        <translation type="unfinished"/>
+        <translation>最后一次匿名发送刚刚完成。</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="272"/>
         <source>Last successful darksend action was too recent.</source>
-        <translation type="unfinished"/>
+        <translation>最后一次成功匿名发送刚刚完成。</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="273"/>
@@ -4620,12 +4641,12 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="281"/>
         <source>Maintain a full transaction index (default: 0)</source>
-        <translation type="unfinished"/>
+        <translation>保持全部的交易索引(默认： 0)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="282"/>
         <source>Maintain at most &lt;n&gt; connections to peers (default: 125)</source>
-        <translation type="unfinished"/>
+        <translation>保持对节点最高的 &lt;n&gt;连接数  (默认： 125)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="283"/>
@@ -4635,12 +4656,12 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="284"/>
         <source>Masternode queue is full.</source>
-        <translation type="unfinished"/>
+        <translation>主节点列队已满。</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="285"/>
         <source>Masternode:</source>
-        <translation type="unfinished"/>
+        <translation>主节点：</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="286"/>
@@ -4655,57 +4676,57 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="288"/>
         <source>Missing input transaction information.</source>
-        <translation type="unfinished"/>
+        <translation>丢失输入交易信息。</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="289"/>
         <source>No compatible masternode found.</source>
-        <translation type="unfinished"/>
+        <translation>没有找到任何兼容的主节点。</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="290"/>
         <source>No funds detected in need of denominating.</source>
-        <translation type="unfinished"/>
+        <translation>在面额化过程中没有检测到所需的资金。</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="291"/>
         <source>No masternodes detected.</source>
-        <translation type="unfinished"/>
+        <translation>没有检测到任何主节点。</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="292"/>
         <source>No matching denominations found for mixing.</source>
-        <translation type="unfinished"/>
+        <translation>对于混淆处理，没有找到匹配的面额资金。</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="293"/>
         <source>Non-standard public key detected.</source>
-        <translation type="unfinished"/>
+        <translation>检测到非标准的公钥。</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="294"/>
         <source>Not compatible with existing transactions.</source>
-        <translation type="unfinished"/>
+        <translation>与已存在交易不匹配。</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="295"/>
         <source>Not enough file descriptors available.</source>
-        <translation type="unfinished"/>
+        <translation>文件说明符不可用</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="296"/>
         <source>Not in the masternode list.</source>
-        <translation type="unfinished"/>
+        <translation>在主节点列表中不存在。</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="297"/>
         <source>Only accept block chain matching built-in checkpoints (default: 1)</source>
-        <translation type="unfinished"/>
+        <translation>只接受与镶入检验点匹配的数据块链 (默认： 1)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="298"/>
         <source>Only connect to nodes in network &lt;net&gt; (IPv4, IPv6 or Tor)</source>
-        <translation type="unfinished"/>
+        <translation>在网络中只连接至节点 &lt;net&gt; (IPv4, IPv6 or Tor)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="299"/>
@@ -4715,27 +4736,27 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="300"/>
         <source>Password for JSON-RPC connections</source>
-        <translation type="unfinished"/>
+        <translation>JSON-RPC连接密码</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="301"/>
         <source>Prepend debug output with timestamp (default: 1)</source>
-        <translation type="unfinished"/>
+        <translation>通过时间标记预先调试输出 (默认： 1)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="302"/>
         <source>Print block on startup, if found in block index</source>
-        <translation type="unfinished"/>
+        <translation>如果在块索引中找到，在启动时打印块</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="303"/>
         <source>Print block tree on startup (default: 0)</source>
-        <translation type="unfinished"/>
+        <translation>在启动时打印块树(默认：0)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="304"/>
         <source>RPC SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
-        <translation type="unfinished"/>
+        <translation>RPC SSL选项： (请在比特币维基百科查看SSL建立说明)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="305"/>
@@ -4760,12 +4781,12 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="309"/>
         <source>Rebuild block chain index from current blk000??.dat files</source>
-        <translation type="unfinished"/>
+        <translation>从现在的blk000??.dat文件重新建立数据块链索引</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="310"/>
         <source>Rescan the block chain for missing wallet transactions</source>
-        <translation type="unfinished"/>
+        <translation>对丢失的钱包交易重新扫描数据块链</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="311"/>
@@ -4780,77 +4801,77 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="313"/>
         <source>Run in the background as a daemon and accept commands</source>
-        <translation type="unfinished"/>
+        <translation>运行至后台并且接受命令</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="314"/>
         <source>SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
-        <translation type="unfinished"/>
+        <translation>SSL 选项： (请在比特币维基百科查看SSL建立说明)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="315"/>
         <source>Select SOCKS version for -proxy (4 or 5, default: 5)</source>
-        <translation type="unfinished"/>
+        <translation>为-代理 选择SOCKS版本 (4 or 5, 默认： 5)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="316"/>
         <source>Send command to Darkcoin Core</source>
-        <translation type="unfinished"/>
+        <translation>发送命令至暗黑币核心</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="317"/>
         <source>Send commands to node running on &lt;ip&gt; (default: 127.0.0.1)</source>
-        <translation type="unfinished"/>
+        <translation>发送命令至运行于 &lt;ip&gt;的节点 (默认： 127.0.0.1)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="318"/>
         <source>Send trace/debug info to console instead of debug.log file</source>
-        <translation type="unfinished"/>
+        <translation>发送追踪/debug信息而并非debug.log文件至控制台</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="319"/>
         <source>Server certificate file (default: server.cert)</source>
-        <translation type="unfinished"/>
+        <translation>服务器证书文件(默认： server.cert)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="320"/>
         <source>Server private key (default: server.pem)</source>
-        <translation type="unfinished"/>
+        <translation>服务器私钥 (默认： server.pem)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="321"/>
         <source>Session not complete!</source>
-        <translation type="unfinished"/>
+        <translation>对话未完成！</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="322"/>
         <source>Session timed out (30 seconds), please resubmit.</source>
-        <translation type="unfinished"/>
+        <translation>对话超时 (30 秒)，请重新递交。</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="323"/>
         <source>Set database cache size in megabytes (%d to %d, default: %d)</source>
-        <translation type="unfinished"/>
+        <translation>以兆字节为单位设置缓存数据大小 (%d to %d, 默认： %d)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="324"/>
         <source>Set key pool size to &lt;n&gt; (default: 100)</source>
-        <translation type="unfinished"/>
+        <translation>设置钥匙池大小至&lt;n&gt; (默认： 100)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="325"/>
         <source>Set maximum block size in bytes (default: %d)</source>
-        <translation type="unfinished"/>
+        <translation>以字节为单位设置最大的块(默认： 0)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="326"/>
         <source>Set minimum block size in bytes (default: 0)</source>
-        <translation type="unfinished"/>
+        <translation>以字节为单位设置最小的块(默认： 0)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="327"/>
         <source>Set the masternode private key</source>
-        <translation type="unfinished"/>
+        <translation>设置主节点私钥</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="328"/>
@@ -4865,77 +4886,77 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="330"/>
         <source>Show all debugging options (usage: --help -help-debug)</source>
-        <translation type="unfinished"/>
+        <translation>显示所有debug选项(使用： --help -help-debug)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="331"/>
         <source>Show benchmark information (default: 0)</source>
-        <translation type="unfinished"/>
+        <translation>显示基准信息(默认： 0)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="332"/>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
-        <translation type="unfinished"/>
+        <translation>客户启动时缩小debug.log文件(默认： 1 when no -debug)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="333"/>
         <source>Signing failed.</source>
-        <translation type="unfinished"/>
+        <translation>签名失败。</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="334"/>
         <source>Signing timed out, please resubmit.</source>
-        <translation type="unfinished"/>
+        <translation>签名超时，请重新递交。</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="335"/>
         <source>Signing transaction failed</source>
-        <translation type="unfinished"/>
+        <translation>交易签名失败</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="336"/>
         <source>Specify configuration file (default: darkcoin.conf)</source>
-        <translation type="unfinished"/>
+        <translation>指定配置文件(默认： darkcoin.conf)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="337"/>
         <source>Specify connection timeout in milliseconds (default: 5000)</source>
-        <translation type="unfinished"/>
+        <translation>指定连接超时毫秒数 (默认： 5000)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="338"/>
         <source>Specify data directory</source>
-        <translation type="unfinished"/>
+        <translation>指定数据目录</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="339"/>
         <source>Specify masternode configuration file (default: masternode.conf)</source>
-        <translation type="unfinished"/>
+        <translation>指定主节点配置文件 (默认: masternode.conf)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="340"/>
         <source>Specify pid file (default: darkcoind.pid)</source>
-        <translation type="unfinished"/>
+        <translation>指定pid 文件 (默认： darkcoind.pid)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="341"/>
         <source>Specify wallet file (within data directory)</source>
-        <translation type="unfinished"/>
+        <translation>指定钱包文件(通过数据目录)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="342"/>
         <source>Specify your own public address</source>
-        <translation type="unfinished"/>
+        <translation>指定你个人公开地址</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="343"/>
         <source>Spend unconfirmed change when sending transactions (default: 1)</source>
-        <translation type="unfinished"/>
+        <translation>发送交易时花费未确认的费用(默认： 1)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="344"/>
         <source>Start Darkcoin Core Daemon</source>
-        <translation type="unfinished"/>
+        <translation>启动暗黑币核心后台程序</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="345"/>
@@ -4945,52 +4966,52 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="346"/>
         <source>This help message</source>
-        <translation type="unfinished"/>
+        <translation>此帮助信息</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="347"/>
         <source>This is intended for regression testing tools and app development.</source>
-        <translation type="unfinished"/>
+        <translation>这被用来作为回归测试工具和app的开发。</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="348"/>
         <source>This is not a masternode.</source>
-        <translation type="unfinished"/>
+        <translation>这并不是主节点。</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="349"/>
         <source>Threshold for disconnecting misbehaving peers (default: 100)</source>
-        <translation type="unfinished"/>
+        <translation>断开的作弊节点临界值(默认: 100)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="350"/>
         <source>To use the %s option</source>
-        <translation type="unfinished"/>
+        <translation>使用%s选项</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="351"/>
         <source>Transaction amount too small</source>
-        <translation type="unfinished"/>
+        <translation>交易额过小</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="352"/>
         <source>Transaction amounts must be positive</source>
-        <translation type="unfinished"/>
+        <translation>交易额一定要真实有效</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="353"/>
         <source>Transaction created successfully.</source>
-        <translation type="unfinished"/>
+        <translation>交易创建成功。</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="354"/>
         <source>Transaction fees are too high.</source>
-        <translation type="unfinished"/>
+        <translation>交易费用过高。</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="355"/>
         <source>Transaction not valid.</source>
-        <translation type="unfinished"/>
+        <translation>交易无效。</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="356"/>
@@ -5000,17 +5021,17 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="357"/>
         <source>Unable to bind to %s on this computer (bind returned error %s)</source>
-        <translation type="unfinished"/>
+        <translation>无法绑定%s此计算机 (绑定返回错误 %s)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="358"/>
         <source>Unable to sign masternode payment winner, wrong key?</source>
-        <translation type="unfinished"/>
+        <translation>无法标记主节点奖励得主，错误钥匙？</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="359"/>
         <source>Unknown -socks proxy version requested: %i</source>
-        <translation type="unfinished"/>
+        <translation>未知-socks代理版本请求：%i</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="360"/>
@@ -5025,7 +5046,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="362"/>
         <source>Usage (deprecated, use darkcoin-cli):</source>
-        <translation type="unfinished"/>
+        <translation>用量(不赞成, 使用 darkcoin-cli)：</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="363"/>
@@ -5070,7 +5091,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="371"/>
         <source>Value more than Darksend pool maximum allows.</source>
-        <translation type="unfinished"/>
+        <translation>数值超过匿名发送池所允许的最大数。</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="372"/>
@@ -5090,12 +5111,12 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="375"/>
         <source>Wallet %s resides outside data directory %s</source>
-        <translation type="unfinished"/>
+        <translation>钱包 %s 属于外部数据目录 %s</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="376"/>
         <source>Wallet is locked.</source>
-        <translation type="unfinished"/>
+        <translation>钱包被锁。</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="377"/>
@@ -5125,7 +5146,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="382"/>
         <source>Wrong state.</source>
-        <translation type="unfinished"/>
+        <translation>错误状态。</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="383"/>
@@ -5135,7 +5156,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="384"/>
         <source>Zapping all transactions from wallet...</source>
-        <translation type="unfinished"/>
+        <translation>从钱包正在展开所有交易记录...</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="385"/>

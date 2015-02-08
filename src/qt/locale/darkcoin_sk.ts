@@ -2588,97 +2588,97 @@ Adresa: %4</translation>
         <translation>Nedostatok prostriedkov!</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="216"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="225"/>
         <source>Quantity:</source>
         <translation>Množstvo:</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="251"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="260"/>
         <source>Bytes:</source>
         <translation>Bajtov:</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="299"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="308"/>
         <source>Amount:</source>
         <translation>Suma:</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="331"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="340"/>
         <source>Priority:</source>
         <translation>Priorita:</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="379"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="388"/>
         <source>Fee:</source>
         <translation>Poplatok:</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="411"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="420"/>
         <source>Low Output:</source>
         <translation>Malá hodnota na výstupe:</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="459"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="468"/>
         <source>After Fee:</source>
         <translation>Po poplatku:</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="491"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="500"/>
         <source>Change:</source>
         <translation>Zmena:</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="535"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="544"/>
         <source>If this is activated, but the change address is empty or invalid, change will be sent to a newly generated address.</source>
         <translation>Ak aktivované ale adresa pre výdavok je prázdna alebo neplatná, výdavok bude poslaný na novovytvorenú adresu.</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="538"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="547"/>
         <source>Custom change address</source>
         <translation>Vlastná adresa zmeny</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="650"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="668"/>
         <source>Confirm the send action</source>
         <translation>Potvrďte odoslanie</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="653"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="671"/>
         <source>S&amp;end</source>
         <translation>&amp;Odoslať</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="673"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="691"/>
         <source>Clear all fields of the form.</source>
         <translation>Vyčistiť všetky polia formulára.</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="676"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="694"/>
         <source>Clear &amp;All</source>
         <translation>Zmazať &amp;všetko</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="693"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="711"/>
         <source>Send to multiple recipients at once</source>
         <translation>Poslať viacerým príjemcom naraz</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="696"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="714"/>
         <source>Add &amp;Recipient</source>
         <translation>&amp;Pridať príjemcu</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="741"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="752"/>
         <source>Darksend</source>
         <translation>Darksend</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="754"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="771"/>
         <source>InstantX</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="761"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="778"/>
         <source>Balance:</source>
         <translation>Zostatok:</translation>
     </message>
@@ -3517,41 +3517,46 @@ Adresa: %4</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="374"/>
-        <source>Darksend Split Up Large Inputs</source>
+        <source>Darksend Make Collateral Inputs</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="376"/>
+        <source>Darksend Create Denominations</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../transactiontablemodel.cpp" line="378"/>
         <source>Darksent</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="418"/>
+        <location filename="../transactiontablemodel.cpp" line="420"/>
         <source>(n/a)</source>
         <translation>(n/a)</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="610"/>
+        <location filename="../transactiontablemodel.cpp" line="612"/>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
         <translation>Status transakcie. Pohybujte myšou nad týmto poľom a zjaví sa počet potvrdení.</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="612"/>
+        <location filename="../transactiontablemodel.cpp" line="614"/>
         <source>Date and time that the transaction was received.</source>
         <translation>Dátum a čas prijatia transakcie.</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="614"/>
+        <location filename="../transactiontablemodel.cpp" line="616"/>
         <source>Type of transaction.</source>
         <translation>Typ transakcie.</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="616"/>
+        <location filename="../transactiontablemodel.cpp" line="618"/>
         <source>Destination address of transaction.</source>
         <translation>Cieľová adresa transakcie.</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="618"/>
+        <location filename="../transactiontablemodel.cpp" line="620"/>
         <source>Amount removed from or added to balance.</source>
         <translation>Suma pridaná alebo odobraná k zostatku.</translation>
     </message>
@@ -3611,136 +3616,151 @@ Adresa: %4</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="82"/>
-        <source>Darksend Denominate</source>
+        <source>Darksend Make Collateral Inputs</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="83"/>
+        <source>Darksend Create Denominations</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../transactionview.cpp" line="84"/>
+        <source>Darksend Denominate</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../transactionview.cpp" line="85"/>
+        <source>Darksend Collateral Payment</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../transactionview.cpp" line="86"/>
         <source>To yourself</source>
         <translation>Samému sebe</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="84"/>
+        <location filename="../transactionview.cpp" line="87"/>
         <source>Mined</source>
         <translation>Vyfárané</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="85"/>
+        <location filename="../transactionview.cpp" line="88"/>
         <source>Other</source>
         <translation>Iné</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="91"/>
+        <location filename="../transactionview.cpp" line="94"/>
         <source>Enter address or label to search</source>
         <translation>Vložte adresu alebo popis pre vyhľadávanie</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="97"/>
+        <location filename="../transactionview.cpp" line="100"/>
         <source>Min amount</source>
         <translation>Min množstvo</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="131"/>
+        <location filename="../transactionview.cpp" line="134"/>
         <source>Copy address</source>
         <translation>Kopírovať adresu</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="132"/>
+        <location filename="../transactionview.cpp" line="135"/>
         <source>Copy label</source>
         <translation>Kopírovať popis</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="133"/>
+        <location filename="../transactionview.cpp" line="136"/>
         <source>Copy amount</source>
         <translation>Kopírovať sumu</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="134"/>
+        <location filename="../transactionview.cpp" line="137"/>
         <source>Copy transaction ID</source>
         <translation>Kopírovať ID transakcie</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="135"/>
+        <location filename="../transactionview.cpp" line="138"/>
         <source>Edit label</source>
         <translation>Editovať popis</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="136"/>
+        <location filename="../transactionview.cpp" line="139"/>
         <source>Show transaction details</source>
         <translation>Zobraziť podrobnosti transakcie</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="299"/>
+        <location filename="../transactionview.cpp" line="302"/>
         <source>Export Transaction History</source>
         <translation>Exportovať históriu transakcií</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="300"/>
+        <location filename="../transactionview.cpp" line="303"/>
         <source>Comma separated file (*.csv)</source>
         <translation>Čiarkou oddelovaný súbor (*.csv)</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="309"/>
+        <location filename="../transactionview.cpp" line="312"/>
         <source>Confirmed</source>
         <translation>Potvrdené</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="310"/>
+        <location filename="../transactionview.cpp" line="313"/>
         <source>Date</source>
         <translation>Dátum</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="311"/>
+        <location filename="../transactionview.cpp" line="314"/>
         <source>Type</source>
         <translation>Typ</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="312"/>
+        <location filename="../transactionview.cpp" line="315"/>
         <source>Label</source>
         <translation>Popis</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="313"/>
+        <location filename="../transactionview.cpp" line="316"/>
         <source>Address</source>
         <translation>Adresa</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="314"/>
+        <location filename="../transactionview.cpp" line="317"/>
         <source>Amount</source>
         <translation>Suma</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="315"/>
+        <location filename="../transactionview.cpp" line="318"/>
         <source>ID</source>
         <translation>ID</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="318"/>
+        <location filename="../transactionview.cpp" line="321"/>
         <source>Exporting Failed</source>
         <translation>Export zlyhal</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="318"/>
+        <location filename="../transactionview.cpp" line="321"/>
         <source>There was an error trying to save the transaction history to %1.</source>
         <translation>Vyskytla sa chyba pri pokuse o uloženie histórie transakcií do %1.</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="322"/>
+        <location filename="../transactionview.cpp" line="325"/>
         <source>Exporting Successful</source>
         <translation>Export úspešný</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="322"/>
+        <location filename="../transactionview.cpp" line="325"/>
         <source>The transaction history was successfully saved to %1.</source>
         <translation>História transakciá bola úspešne uložená do %1.</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="431"/>
+        <location filename="../transactionview.cpp" line="434"/>
         <source>Range:</source>
         <translation>Rozsah:</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="439"/>
+        <location filename="../transactionview.cpp" line="442"/>
         <source>to</source>
         <translation>do</translation>
     </message>
@@ -3756,7 +3776,7 @@ Adresa: %4</translation>
 <context>
     <name>WalletModel</name>
     <message>
-        <location filename="../walletmodel.cpp" line="288"/>
+        <location filename="../walletmodel.cpp" line="278"/>
         <source>Send Coins</source>
         <translation>Poslať Bitcoins</translation>
     </message>
@@ -3998,7 +4018,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Darkcoin Alert&quot; admin@foo
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="127"/>
-        <source>Show N confirmations for a successfully locked transaciton (0-9999, default: 1)</source>
+        <source>Show N confirmations for a successfully locked transaction (0-9999, default: 1)</source>
         <translation type="unfinished"/>
     </message>
     <message>

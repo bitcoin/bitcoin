@@ -129,12 +129,12 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../addressbookpage.cpp" line="65"/>
         <source>These are your Darkcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation type="unfinished"/>
+        <translation>这些是您用以发送暗黑币的地址。请务必在每次发送前检查金额及接收地址。</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="69"/>
         <source>These are your Darkcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation type="unfinished"/>
+        <translation>这些是您用以接收暗黑币的地址。推荐使用新地址以接收每次的转账。</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="75"/>
@@ -220,7 +220,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="111"/>
         <source>For anonymization only</source>
-        <translation type="unfinished"/>
+        <translation>仅限匿名</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="41"/>
@@ -270,7 +270,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../askpassphrasedialog.cpp" line="113"/>
         <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR DARKCOINS&lt;/b&gt;!</source>
-        <translation type="unfinished"/>
+        <translation>警告：如果您加密了钱包却将该密码遗忘，您将&lt;b&gt;丢失您的暗黑币&lt;/b&gt;</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="113"/>
@@ -286,7 +286,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../askpassphrasedialog.cpp" line="124"/>
         <source>Darkcoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your darkcoins from being stolen by malware infecting your computer.</source>
-        <translation type="unfinished"/>
+        <translation>暗黑币即将关闭以完成加密。请牢记即便是加密后的钱包也无法完全保护您的暗黑币免遭被恶意程序入侵等被偷之患。</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="128"/>
@@ -346,7 +346,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="76"/>
         <source>Darkcoin Core</source>
-        <translation type="unfinished"/>
+        <translation>暗黑币 内核</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="85"/>
@@ -382,7 +382,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="234"/>
         <source>Send coins to a Darkcoin address</source>
-        <translation type="unfinished"/>
+        <translation>向暗黑币地址发送</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="240"/>
@@ -392,7 +392,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="241"/>
         <source>Request payments (generates QR codes and darkcoin: URIs)</source>
-        <translation type="unfinished"/>
+        <translation>请求付款(产生QR码以及暗黑币:URIs)</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="247"/>
@@ -418,12 +418,12 @@ This product includes software developed by the OpenSSL Project for use in the O
         <location filename="../bitcoingui.cpp" line="270"/>
         <location filename="../bitcoingui.cpp" line="272"/>
         <source>&amp;About Darkcoin Core</source>
-        <translation type="unfinished"/>
+        <translation>关于暗黑币内核(&amp;A)</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="273"/>
         <source>Show information about Darkcoin</source>
-        <translation type="unfinished"/>
+        <translation>显示关于暗黑币的信息</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="276"/>
@@ -444,7 +444,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="283"/>
         <source>Modify configuration options for Darkcoin</source>
-        <translation type="unfinished"/>
+        <translation>更改暗黑币设置</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="286"/>
@@ -490,7 +490,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="298"/>
         <source>&amp;Unlock Wallet...</source>
-        <translation type="unfinished"/>
+        <translation>解锁钱包(&amp;U)</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="299"/>
@@ -500,7 +500,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="300"/>
         <source>&amp;Lock Wallet</source>
-        <translation type="unfinished"/>
+        <translation>锁定钱包(&amp;L)</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="301"/>
@@ -510,7 +510,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="302"/>
         <source>Sign messages with your Darkcoin addresses to prove you own them</source>
-        <translation type="unfinished"/>
+        <translation>使用您的暗黑币地址进行消息签名以证明对此地址的所有权</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="303"/>
@@ -520,7 +520,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="304"/>
         <source>Verify messages to ensure they were signed with specified Darkcoin addresses</source>
-        <translation type="unfinished"/>
+        <translation>校验消息签名以证明此消息是由特定暗黑币地址所签发</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="306"/>
@@ -530,27 +530,27 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="307"/>
         <source>Show diagnostic information</source>
-        <translation type="unfinished"/>
+        <translation>显示诊断信息</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="308"/>
         <source>&amp;Debug console</source>
-        <translation type="unfinished"/>
+        <translation>Debug控制台(&amp;D)</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="309"/>
         <source>Open debugging console</source>
-        <translation type="unfinished"/>
+        <translation>打开调试控制台</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="310"/>
         <source>&amp;Network Monitor</source>
-        <translation type="unfinished"/>
+        <translation>网络流量监控(&amp;N)</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="311"/>
         <source>Show network monitor</source>
-        <translation type="unfinished"/>
+        <translation>显示网络流量监控</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="313"/>
@@ -580,7 +580,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="319"/>
         <source>Open a darkcoin: URI or payment request</source>
-        <translation type="unfinished"/>
+        <translation>打开一个暗黑币:URI或者付款请求</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="321"/>
@@ -590,7 +590,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="322"/>
         <source>Show the Darkcoin Core help message to get a list with possible Darkcoin command-line options</source>
-        <translation type="unfinished"/>
+        <translation>显示暗黑币内核帮助信息并以列表形式展示可用的暗黑币命令行选项</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="358"/>
@@ -605,7 +605,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="385"/>
         <source>&amp;Tools</source>
-        <translation type="unfinished"/>
+        <translation>工具(&amp;T)</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="391"/>
@@ -621,12 +621,12 @@ This product includes software developed by the OpenSSL Project for use in the O
         <location filename="../bitcoingui.cpp" line="489"/>
         <location filename="../bitcoingui.cpp" line="494"/>
         <source>Darkcoin client</source>
-        <translation type="unfinished"/>
+        <translation>暗黑币客户端</translation>
     </message>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="638"/>
         <source>%n active connection(s) to Darkcoin network</source>
-        <translation type="unfinished"><numerusform></numerusform></translation>
+        <translation><numerusform>%n (个)至暗黑币网络的有效连接</numerusform></translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="650"/>
@@ -661,18 +661,18 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="696"/>
         <source>%n hour(s)</source>
-        <translation type="unfinished"><numerusform></numerusform></translation>
+        <translation><numerusform>%n 小时</numerusform></translation>
     </message>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="700"/>
         <source>%n day(s)</source>
-        <translation type="unfinished"><numerusform></numerusform></translation>
+        <translation><numerusform>%n 天</numerusform></translation>
     </message>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="704"/>
         <location filename="../bitcoingui.cpp" line="710"/>
         <source>%n week(s)</source>
-        <translation type="unfinished"><numerusform></numerusform></translation>
+        <translation><numerusform>%n 周</numerusform></translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="710"/>
@@ -682,7 +682,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="710"/>
         <source>%n year(s)</source>
-        <translation type="unfinished"><numerusform></numerusform></translation>
+        <translation><numerusform>%n 年</numerusform></translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="714"/>
@@ -707,7 +707,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="750"/>
         <source>Darkcoin</source>
-        <translation type="unfinished"/>
+        <translation>暗黑币</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="764"/>
@@ -755,7 +755,7 @@ Address: %4
     <message>
         <location filename="../bitcoingui.cpp" line="931"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt; for anonimization only</source>
-        <translation type="unfinished"/>
+        <translation>钱包已被&lt;b&gt;加密&lt;/b&gt;并且目前处于&lt;b&gt;解锁&lt;/b&gt;状态以进行匿名处理</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="941"/>
@@ -765,7 +765,7 @@ Address: %4
     <message>
         <location filename="../darkcoin.cpp" line="449"/>
         <source>A fatal error occurred. Darkcoin can no longer continue safely and will quit.</source>
-        <translation type="unfinished"/>
+        <translation>发生致命错误。暗黑币客户端将关闭。</translation>
     </message>
 </context>
 <context>
@@ -851,7 +851,7 @@ Address: %4
     <message>
         <location filename="../forms/coincontroldialog.ui" line="461"/>
         <source>Darksend Rounds</source>
-        <translation type="unfinished"/>
+        <translation>匿名发送 循环次数</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="466"/>
@@ -1078,7 +1078,7 @@ Address: %4
     <message>
         <location filename="../forms/darksendconfig.ui" line="14"/>
         <source>Configure Darksend</source>
-        <translation type="unfinished"/>
+        <translation>配置匿名发送</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="26"/>
@@ -1103,59 +1103,59 @@ Address: %4
     <message>
         <location filename="../forms/darksendconfig.ui" line="78"/>
         <source>Use 2 separate masternodes to mix funds up to 1000 DRK</source>
-        <translation type="unfinished"/>
+        <translation>使用2个独立主节点进行混合至多1000个DRK</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="91"/>
         <source>Use 8 separate masternodes to mix funds up to 1000 DRK</source>
-        <translation type="unfinished"/>
+        <translation>使用8个独立主节点进行混合至多1000个DRK</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="104"/>
         <source>Use 16 separate masternodes</source>
-        <translation type="unfinished"/>
+        <translation>使用16个独立主节点</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="117"/>
         <source>This option is the quickest and will cost about ~0.025 DRK to anonymize 1000 DRK</source>
-        <translation type="unfinished"/>
+        <translation>此选项提供最快速度并且将花费大概0.025DRK的费用以匿名化1000DRK</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="130"/>
         <source>This option is moderately fast and will cost about 0.05 DRK to anonymize 1000 DRK</source>
-        <translation type="unfinished"/>
+        <translation>此选项提供中等速度并且将花费大概0.05DRK的费用以匿名化1000DRK</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="156"/>
         <source>0.1 DRK per 1000 DRK you anonymize.</source>
-        <translation type="unfinished"/>
+        <translation>0.1DRK每匿名化1000DRK</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="143"/>
         <source>This is the slowest and most secure option. Using maximum anonymity will cost</source>
-        <translation type="unfinished"/>
+        <translation>此选项提供最慢速度但是却最安全的匿名服务。最多匿名化将花费</translation>
     </message>
     <message>
         <location filename="../darksendconfig.cpp" line="43"/>
         <location filename="../darksendconfig.cpp" line="58"/>
         <location filename="../darksendconfig.cpp" line="73"/>
         <source>Darksend Configuration</source>
-        <translation type="unfinished"/>
+        <translation>匿名发送配置</translation>
     </message>
     <message>
         <location filename="../darksendconfig.cpp" line="44"/>
         <source>Darksend was successfully set to basic (%1 and 2 rounds). You can change this at any time by opening Darkcoin&apos;s configuration screen.</source>
-        <translation type="unfinished"/>
+        <translation>匿名发送已成功设置为基本配置(%1 至 2轮循环)。你可以通过打开暗黑币的配置界面随时改变此配置。</translation>
     </message>
     <message>
         <location filename="../darksendconfig.cpp" line="59"/>
         <source>Darksend was successfully set to high (%1 and 8 rounds). You can change this at any time by opening Darkcoin&apos;s configuration screen.</source>
-        <translation type="unfinished"/>
+        <translation>匿名发送已成功设置为高循环配置(%1 至 8轮循环)。你可以通过打开暗黑币的配置界面随时改变此配置。</translation>
     </message>
     <message>
         <location filename="../darksendconfig.cpp" line="74"/>
         <source>Darksend was successfully set to maximum (%1 and 16 rounds). You can change this at any time by opening Darkcoin&apos;s configuration screen.</source>
-        <translation type="unfinished"/>
+        <translation>匿名发送已成功设置为最大循环配置(%1 至 16轮循环)。你可以通过打开暗黑币的配置界面随时改变此配置。</translation>
     </message>
 </context>
 <context>
@@ -1208,7 +1208,7 @@ Address: %4
     <message>
         <location filename="../editaddressdialog.cpp" line="111"/>
         <source>The entered address &quot;%1&quot; is not a valid Darkcoin address.</source>
-        <translation type="unfinished"/>
+        <translation>此&quot;%1&quot;地址不是暗黑币有效地址</translation>
     </message>
     <message>
         <location filename="../editaddressdialog.cpp" line="116"/>
@@ -1259,12 +1259,12 @@ Address: %4
     <message>
         <location filename="../forms/helpmessagedialog.ui" line="19"/>
         <source>Darkcoin Core - Command-line options</source>
-        <translation type="unfinished"/>
+        <translation>暗黑币内核 - 命令行选项</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="69"/>
         <source>Darkcoin Core</source>
-        <translation type="unfinished"/>
+        <translation>暗黑币 内核</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="69"/>
@@ -1323,17 +1323,17 @@ Address: %4
     <message>
         <location filename="../forms/intro.ui" line="23"/>
         <source>Welcome to Darkcoin Core.</source>
-        <translation type="unfinished"/>
+        <translation>欢迎来到暗黑币内核</translation>
     </message>
     <message>
         <location filename="../forms/intro.ui" line="49"/>
         <source>As this is the first time the program is launched, you can choose where Darkcoin Core will store its data.</source>
-        <translation type="unfinished"/>
+        <translation>本次启动是您第一次使用，您可以选择将暗黑币内核程序相应的数据文件存储在您想存储的文件路径</translation>
     </message>
     <message>
         <location filename="../forms/intro.ui" line="59"/>
         <source>Darkcoin Core will download and store a copy of the Darkcoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
-        <translation type="unfinished"/>
+        <translation>暗黑币内核程序将开始下载并存储一份暗黑币数据块链资源。至少%1GB大小的数据将被保存在这个路径下。该数据会随着日后使用而增加其大小。您的钱包同样也会被保存在这个路径下。</translation>
     </message>
     <message>
         <location filename="../forms/intro.ui" line="69"/>
@@ -1348,7 +1348,7 @@ Address: %4
     <message>
         <location filename="../intro.cpp" line="185"/>
         <source>Darkcoin</source>
-        <translation type="unfinished"/>
+        <translation>暗黑币</translation>
     </message>
     <message>
         <location filename="../intro.cpp" line="186"/>
@@ -1414,12 +1414,12 @@ Address: %4
     <message>
         <location filename="../forms/optionsdialog.ui" line="33"/>
         <source>Automatically start Darkcoin after logging in to the system.</source>
-        <translation type="unfinished"/>
+        <translation>登录系统后自动启动暗黑币客户端</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="36"/>
         <source>&amp;Start Darkcoin on system login</source>
-        <translation type="unfinished"/>
+        <translation>登录后启动暗黑币(&amp;S)</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="45"/>
@@ -1444,17 +1444,17 @@ Address: %4
     <message>
         <location filename="../forms/optionsdialog.ui" line="138"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This setting determines the amount of individual masternodes that an input will be anonymized through. More rounds of anonymization gives a higher degree of privacy, but also costs more in fees.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"/>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;此选项用以调整进行匿名化操作的主节点数量。越多的循环次数提供了更高级别的匿名性，同时也会花费更多的手续费&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="141"/>
         <source>Darksend rounds to use</source>
-        <translation type="unfinished"/>
+        <translation>匿名传送的循环次数</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="180"/>
         <source>Amount of Darkcoin to keep anonymized</source>
-        <translation type="unfinished"/>
+        <translation>匿名化暗黑币数量</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="206"/>
@@ -2097,7 +2097,7 @@ Address: %4
         <location filename="../darkcoin.cpp" line="539"/>
         <location filename="../darkcoin.cpp" line="552"/>
         <source>Darkcoin</source>
-        <translation type="unfinished"/>
+        <translation>暗黑币</translation>
     </message>
     <message>
         <location filename="../darkcoin.cpp" line="526"/>
@@ -2590,97 +2590,97 @@ Address: %4
         <translation>存款不足！</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="216"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="225"/>
         <source>Quantity:</source>
         <translation>总量：</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="251"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="260"/>
         <source>Bytes:</source>
         <translation>字节：</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="299"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="308"/>
         <source>Amount:</source>
         <translation>金额：</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="331"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="340"/>
         <source>Priority:</source>
         <translation>优先级：</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="379"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="388"/>
         <source>Fee:</source>
         <translation>费用：</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="411"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="420"/>
         <source>Low Output:</source>
         <translation>低输出</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="459"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="468"/>
         <source>After Fee:</source>
         <translation>加上交易费用后:</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="491"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="500"/>
         <source>Change:</source>
         <translation>变更 : </translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="535"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="544"/>
         <source>If this is activated, but the change address is empty or invalid, change will be sent to a newly generated address.</source>
         <translation>如果激活该选项，但是零钱地址用光或者非法，将会新生成零钱地址，转入零钱。</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="538"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="547"/>
         <source>Custom change address</source>
         <translation>自定义零钱地址</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="650"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="668"/>
         <source>Confirm the send action</source>
         <translation>确认并发送货币</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="653"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="671"/>
         <source>S&amp;end</source>
         <translation>发送(&amp;E)</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="673"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="691"/>
         <source>Clear all fields of the form.</source>
         <translation>清除此表单的所有字段。</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="676"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="694"/>
         <source>Clear &amp;All</source>
         <translation>清除所有(&amp;A)</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="693"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="711"/>
         <source>Send to multiple recipients at once</source>
         <translation>一次发送给多个接收者</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="696"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="714"/>
         <source>Add &amp;Recipient</source>
         <translation>添加收款人(&amp;R)</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="741"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="752"/>
         <source>Darksend</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="754"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="771"/>
         <source>InstantX</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="761"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="778"/>
         <source>Balance:</source>
         <translation>余额：</translation>
     </message>
@@ -3132,7 +3132,7 @@ Address: %4
     <message>
         <location filename="../splashscreen.cpp" line="33"/>
         <source>Darkcoin Core</source>
-        <translation type="unfinished"/>
+        <translation>暗黑币 内核</translation>
     </message>
     <message>
         <location filename="../splashscreen.cpp" line="34"/>
@@ -3519,41 +3519,46 @@ Address: %4
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="374"/>
-        <source>Darksend Split Up Large Inputs</source>
+        <source>Darksend Make Collateral Inputs</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="376"/>
+        <source>Darksend Create Denominations</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../transactiontablemodel.cpp" line="378"/>
         <source>Darksent</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="418"/>
+        <location filename="../transactiontablemodel.cpp" line="420"/>
         <source>(n/a)</source>
         <translation>（不可用）</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="610"/>
+        <location filename="../transactiontablemodel.cpp" line="612"/>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
         <translation>交易状态。 鼠标移到此区域可显示确认项数量。</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="612"/>
+        <location filename="../transactiontablemodel.cpp" line="614"/>
         <source>Date and time that the transaction was received.</source>
         <translation>接收到交易的时间</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="614"/>
+        <location filename="../transactiontablemodel.cpp" line="616"/>
         <source>Type of transaction.</source>
         <translation>交易类别。</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="616"/>
+        <location filename="../transactiontablemodel.cpp" line="618"/>
         <source>Destination address of transaction.</source>
         <translation>交易目的地址。</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="618"/>
+        <location filename="../transactiontablemodel.cpp" line="620"/>
         <source>Amount removed from or added to balance.</source>
         <translation>从余额添加或移除的金额。</translation>
     </message>
@@ -3613,136 +3618,151 @@ Address: %4
     </message>
     <message>
         <location filename="../transactionview.cpp" line="82"/>
-        <source>Darksend Denominate</source>
+        <source>Darksend Make Collateral Inputs</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="83"/>
+        <source>Darksend Create Denominations</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../transactionview.cpp" line="84"/>
+        <source>Darksend Denominate</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../transactionview.cpp" line="85"/>
+        <source>Darksend Collateral Payment</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../transactionview.cpp" line="86"/>
         <source>To yourself</source>
         <translation>到自己</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="84"/>
+        <location filename="../transactionview.cpp" line="87"/>
         <source>Mined</source>
         <translation>挖矿所得</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="85"/>
+        <location filename="../transactionview.cpp" line="88"/>
         <source>Other</source>
         <translation>其他</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="91"/>
+        <location filename="../transactionview.cpp" line="94"/>
         <source>Enter address or label to search</source>
         <translation>输入地址或标签进行搜索</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="97"/>
+        <location filename="../transactionview.cpp" line="100"/>
         <source>Min amount</source>
         <translation>最小金额</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="131"/>
+        <location filename="../transactionview.cpp" line="134"/>
         <source>Copy address</source>
         <translation>复制地址</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="132"/>
+        <location filename="../transactionview.cpp" line="135"/>
         <source>Copy label</source>
         <translation>复制标签</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="133"/>
+        <location filename="../transactionview.cpp" line="136"/>
         <source>Copy amount</source>
         <translation>复制金额</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="134"/>
+        <location filename="../transactionview.cpp" line="137"/>
         <source>Copy transaction ID</source>
         <translation>复制交易编号</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="135"/>
+        <location filename="../transactionview.cpp" line="138"/>
         <source>Edit label</source>
         <translation>编辑标签</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="136"/>
+        <location filename="../transactionview.cpp" line="139"/>
         <source>Show transaction details</source>
         <translation>显示交易详情</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="299"/>
+        <location filename="../transactionview.cpp" line="302"/>
         <source>Export Transaction History</source>
         <translation>导出交易历史</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="300"/>
+        <location filename="../transactionview.cpp" line="303"/>
         <source>Comma separated file (*.csv)</source>
         <translation>逗号分隔文件 (*.csv)</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="309"/>
+        <location filename="../transactionview.cpp" line="312"/>
         <source>Confirmed</source>
         <translation>已确认</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="310"/>
+        <location filename="../transactionview.cpp" line="313"/>
         <source>Date</source>
         <translation>日期</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="311"/>
+        <location filename="../transactionview.cpp" line="314"/>
         <source>Type</source>
         <translation>类别</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="312"/>
+        <location filename="../transactionview.cpp" line="315"/>
         <source>Label</source>
         <translation>标签</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="313"/>
+        <location filename="../transactionview.cpp" line="316"/>
         <source>Address</source>
         <translation>地址</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="314"/>
+        <location filename="../transactionview.cpp" line="317"/>
         <source>Amount</source>
         <translation>金额</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="315"/>
+        <location filename="../transactionview.cpp" line="318"/>
         <source>ID</source>
         <translation>ID</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="318"/>
+        <location filename="../transactionview.cpp" line="321"/>
         <source>Exporting Failed</source>
         <translation>导出失败</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="318"/>
+        <location filename="../transactionview.cpp" line="321"/>
         <source>There was an error trying to save the transaction history to %1.</source>
         <translation>导出交易历史到 %1 时发生错误。</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="322"/>
+        <location filename="../transactionview.cpp" line="325"/>
         <source>Exporting Successful</source>
         <translation>导出成功</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="322"/>
+        <location filename="../transactionview.cpp" line="325"/>
         <source>The transaction history was successfully saved to %1.</source>
         <translation>交易历史已成功保存到 %1。</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="431"/>
+        <location filename="../transactionview.cpp" line="434"/>
         <source>Range:</source>
         <translation>范围：</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="439"/>
+        <location filename="../transactionview.cpp" line="442"/>
         <source>to</source>
         <translation>到</translation>
     </message>
@@ -3758,7 +3778,7 @@ Address: %4
 <context>
     <name>WalletModel</name>
     <message>
-        <location filename="../walletmodel.cpp" line="288"/>
+        <location filename="../walletmodel.cpp" line="278"/>
         <source>Send Coins</source>
         <translation>发送比特币</translation>
     </message>
@@ -4000,7 +4020,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Darkcoin Alert&quot; admin@foo
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="127"/>
-        <source>Show N confirmations for a successfully locked transaciton (0-9999, default: 1)</source>
+        <source>Show N confirmations for a successfully locked transaction (0-9999, default: 1)</source>
         <translation type="unfinished"/>
     </message>
     <message>

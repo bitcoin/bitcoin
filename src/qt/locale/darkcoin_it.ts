@@ -351,7 +351,7 @@ Questo prodotto include software sviluppato dal progetto OpenSSL per l&apos;uso 
     <message>
         <location filename="../bitcoingui.cpp" line="85"/>
         <source>Wallet</source>
-        <translation>Portamonete</translation>
+        <translation>Portafoglio</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="87"/>
@@ -382,7 +382,7 @@ Questo prodotto include software sviluppato dal progetto OpenSSL per l&apos;uso 
     <message>
         <location filename="../bitcoingui.cpp" line="234"/>
         <source>Send coins to a Darkcoin address</source>
-        <translation>Spedire monete alla direzione Darkcoin</translation>
+        <translation>Spedire darkcoin ad un indirizzo Darkcoin</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="240"/>
@@ -407,7 +407,7 @@ Questo prodotto include software sviluppato dal progetto OpenSSL per l&apos;uso 
     <message>
         <location filename="../bitcoingui.cpp" line="265"/>
         <source>E&amp;xit</source>
-        <translation>&amp;Esci</translation>
+        <translation>E&amp;sci</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="266"/>
@@ -418,7 +418,7 @@ Questo prodotto include software sviluppato dal progetto OpenSSL per l&apos;uso 
         <location filename="../bitcoingui.cpp" line="270"/>
         <location filename="../bitcoingui.cpp" line="272"/>
         <source>&amp;About Darkcoin Core</source>
-        <translation>&amp;Circa Darkcoin Core</translation>
+        <translation>&amp;Su Darkcoin Core</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="273"/>
@@ -444,7 +444,7 @@ Questo prodotto include software sviluppato dal progetto OpenSSL per l&apos;uso 
     <message>
         <location filename="../bitcoingui.cpp" line="283"/>
         <source>Modify configuration options for Darkcoin</source>
-        <translation>Modificare le opzioni di configurazione di Darkcoin</translation>
+        <translation>Modifica le opzioni di configurazione di Darkcoin</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="286"/>
@@ -460,22 +460,22 @@ Questo prodotto include software sviluppato dal progetto OpenSSL per l&apos;uso 
     <message>
         <location filename="../bitcoingui.cpp" line="291"/>
         <source>&amp;Encrypt Wallet...</source>
-        <translation>&amp;Cifra il portamonete...</translation>
+        <translation>&amp;Cifra il portafoglio...</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="292"/>
         <source>Encrypt the private keys that belong to your wallet</source>
-        <translation>Cifra le chiavi private che appartengono al tuo portamonete</translation>
+        <translation>Cifra le chiavi private che appartengono al tuo portafoglio</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="294"/>
         <source>&amp;Backup Wallet...</source>
-        <translation>&amp;Backup Portamonete...</translation>
+        <translation>&amp;Backup Portafoglio...</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="295"/>
         <source>Backup wallet to another location</source>
-        <translation>Effettua il backup del portamonete</translation>
+        <translation>Effettua il backup del portafoglio</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="296"/>
@@ -495,12 +495,12 @@ Questo prodotto include software sviluppato dal progetto OpenSSL per l&apos;uso 
     <message>
         <location filename="../bitcoingui.cpp" line="299"/>
         <source>Unlock wallet</source>
-        <translation>Sblocca il portamonete</translation>
+        <translation>Sblocca il portafoglio</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="300"/>
         <source>&amp;Lock Wallet</source>
-        <translation>$Blocca Portafoglio</translation>
+        <translation>&amp;Blocca Portafoglio</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="301"/>
@@ -530,7 +530,7 @@ Questo prodotto include software sviluppato dal progetto OpenSSL per l&apos;uso 
     <message>
         <location filename="../bitcoingui.cpp" line="307"/>
         <source>Show diagnostic information</source>
-        <translation>Mostra l&apos;informazione di diagnosi</translation>
+        <translation>Mostra l&apos;informazione di diagnostica</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="308"/>
@@ -751,7 +751,7 @@ Indirizzo: %4
     <message>
         <location filename="../bitcoingui.cpp" line="921"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
-        <translation>Il portamonete è &lt;b&gt;cifrato&lt;/b&gt; ed attualmente &lt;b&gt;sbloccato&lt;/b&gt;</translation>
+        <translation>Il portafoglio è &lt;b&gt;cifrato&lt;/b&gt; ed attualmente &lt;b&gt;sbloccato&lt;/b&gt;</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="931"/>
@@ -761,7 +761,7 @@ Indirizzo: %4
     <message>
         <location filename="../bitcoingui.cpp" line="941"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
-        <translation>Il portamonete è &lt;b&gt;cifrato&lt;/b&gt; ed attualmente &lt;b&gt;bloccato&lt;/b&gt;</translation>
+        <translation>Il portafoglio è &lt;b&gt;cifrato&lt;/b&gt; ed attualmente &lt;b&gt;bloccato&lt;/b&gt;</translation>
     </message>
     <message>
         <location filename="../darkcoin.cpp" line="449"/>
@@ -1459,7 +1459,7 @@ Indirizzo: %4
     <message>
         <location filename="../forms/optionsdialog.ui" line="206"/>
         <source>W&amp;allet</source>
-        <translation>Port&amp;amonete</translation>
+        <translation>Port&amp;afoglio</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="212"/>
@@ -1695,7 +1695,7 @@ Più URL vengono separati da una barra verticale |.</translation>
     <message>
         <location filename="../forms/overviewpage.ui" line="63"/>
         <source>Wallet</source>
-        <translation>Portamonete</translation>
+        <translation>Portafoglio</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="70"/>
@@ -1879,7 +1879,7 @@ Più URL vengono separati da una barra verticale |.</translation>
     <message>
         <location filename="../overviewpage.cpp" line="363"/>
         <source>Enabled</source>
-        <translation type="unfinished"/>
+        <translation>Abilitato</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="419"/>
@@ -2160,7 +2160,7 @@ Più URL vengono separati da una barra verticale |.</translation>
     <message>
         <location filename="../forms/rpcconsole.ui" line="14"/>
         <source>Tools window</source>
-        <translation type="unfinished"/>
+        <translation>Finestra strumenti</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="24"/>
@@ -2592,97 +2592,97 @@ Più URL vengono separati da una barra verticale |.</translation>
         <translation>Fondi insufficienti!</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="216"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="225"/>
         <source>Quantity:</source>
         <translation>Quantità:</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="251"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="260"/>
         <source>Bytes:</source>
         <translation>Byte:</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="299"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="308"/>
         <source>Amount:</source>
         <translation>Importo:</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="331"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="340"/>
         <source>Priority:</source>
         <translation>Priorità:</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="379"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="388"/>
         <source>Fee:</source>
         <translation>Commissione:</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="411"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="420"/>
         <source>Low Output:</source>
         <translation>Low Output:</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="459"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="468"/>
         <source>After Fee:</source>
         <translation>Dopo Commissione:</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="491"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="500"/>
         <source>Change:</source>
         <translation>Resto:</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="535"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="544"/>
         <source>If this is activated, but the change address is empty or invalid, change will be sent to a newly generated address.</source>
         <translation>Se questo è abilitato e l&apos;indirizzo per il resto è vuoto o invalido, il resto sarà inviato ad un nuovo indirizzo bitcoin generato appositamente.</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="538"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="547"/>
         <source>Custom change address</source>
         <translation>Personalizza indirizzo di resto</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="650"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="668"/>
         <source>Confirm the send action</source>
         <translation>Conferma l&apos;azione di invio</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="653"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="671"/>
         <source>S&amp;end</source>
         <translation>&amp;Invia</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="673"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="691"/>
         <source>Clear all fields of the form.</source>
         <translation>Cancellare tutti i campi del modulo.</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="676"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="694"/>
         <source>Clear &amp;All</source>
         <translation>Cancella &amp;tutto</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="693"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="711"/>
         <source>Send to multiple recipients at once</source>
         <translation>Invia a diversi beneficiari in una volta sola</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="696"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="714"/>
         <source>Add &amp;Recipient</source>
         <translation>&amp;Aggiungi beneficiario</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="741"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="752"/>
         <source>Darksend</source>
         <translation>Darksend</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="754"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="771"/>
         <source>InstantX</source>
         <translation>InstantX</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="761"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="778"/>
         <source>Balance:</source>
         <translation>Saldo:</translation>
     </message>
@@ -3139,7 +3139,7 @@ Più URL vengono separati da una barra verticale |.</translation>
     <message>
         <location filename="../splashscreen.cpp" line="34"/>
         <source>Version %1</source>
-        <translation type="unfinished"/>
+        <translation>Versione%1</translation>
     </message>
     <message>
         <location filename="../splashscreen.cpp" line="35"/>
@@ -3317,7 +3317,7 @@ Più URL vengono separati da una barra verticale |.</translation>
     <message>
         <location filename="../transactiondesc.cpp" line="183"/>
         <source>not accepted</source>
-        <translation>non accettate</translation>
+        <translation>non accettato</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="227"/>
@@ -3447,7 +3447,7 @@ Più URL vengono separati da una barra verticale |.</translation>
     <message>
         <location filename="../transactiontablemodel.cpp" line="296"/>
         <source>Unconfirmed</source>
-        <translation>Non confermato:</translation>
+        <translation>Non confermato</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="299"/>
@@ -3521,41 +3521,46 @@ Più URL vengono separati da una barra verticale |.</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="374"/>
-        <source>Darksend Split Up Large Inputs</source>
+        <source>Darksend Make Collateral Inputs</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="376"/>
+        <source>Darksend Create Denominations</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../transactiontablemodel.cpp" line="378"/>
         <source>Darksent</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="418"/>
+        <location filename="../transactiontablemodel.cpp" line="420"/>
         <source>(n/a)</source>
         <translation>(N / a)</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="610"/>
+        <location filename="../transactiontablemodel.cpp" line="612"/>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
         <translation>Stato della transazione. Passare con il mouse su questo campo per visualizzare il numero di conferme.</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="612"/>
+        <location filename="../transactiontablemodel.cpp" line="614"/>
         <source>Date and time that the transaction was received.</source>
         <translation>Data e ora in cui la transazione è stata ricevuta.</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="614"/>
+        <location filename="../transactiontablemodel.cpp" line="616"/>
         <source>Type of transaction.</source>
         <translation>Tipo di transazione.</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="616"/>
+        <location filename="../transactiontablemodel.cpp" line="618"/>
         <source>Destination address of transaction.</source>
         <translation>Indirizzo di destinazione della transazione.</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="618"/>
+        <location filename="../transactiontablemodel.cpp" line="620"/>
         <source>Amount removed from or added to balance.</source>
         <translation>Importo rimosso o aggiunto al saldo.</translation>
     </message>
@@ -3615,136 +3620,151 @@ Più URL vengono separati da una barra verticale |.</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="82"/>
-        <source>Darksend Denominate</source>
+        <source>Darksend Make Collateral Inputs</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="83"/>
+        <source>Darksend Create Denominations</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../transactionview.cpp" line="84"/>
+        <source>Darksend Denominate</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../transactionview.cpp" line="85"/>
+        <source>Darksend Collateral Payment</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../transactionview.cpp" line="86"/>
         <source>To yourself</source>
         <translation>A te stesso</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="84"/>
+        <location filename="../transactionview.cpp" line="87"/>
         <source>Mined</source>
         <translation>Ottenuto dal mining</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="85"/>
+        <location filename="../transactionview.cpp" line="88"/>
         <source>Other</source>
         <translation>Altro</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="91"/>
+        <location filename="../transactionview.cpp" line="94"/>
         <source>Enter address or label to search</source>
         <translation>Inserisci un indirizzo o un&apos;etichetta da cercare</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="97"/>
+        <location filename="../transactionview.cpp" line="100"/>
         <source>Min amount</source>
         <translation>Importo minimo</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="131"/>
+        <location filename="../transactionview.cpp" line="134"/>
         <source>Copy address</source>
         <translation>Copia l&apos;indirizzo</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="132"/>
+        <location filename="../transactionview.cpp" line="135"/>
         <source>Copy label</source>
         <translation>Copia l&apos;etichetta</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="133"/>
+        <location filename="../transactionview.cpp" line="136"/>
         <source>Copy amount</source>
         <translation>Copia l&apos;importo</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="134"/>
+        <location filename="../transactionview.cpp" line="137"/>
         <source>Copy transaction ID</source>
         <translation>Copia l&apos;ID transazione</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="135"/>
+        <location filename="../transactionview.cpp" line="138"/>
         <source>Edit label</source>
         <translation>Modifica l&apos;etichetta</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="136"/>
+        <location filename="../transactionview.cpp" line="139"/>
         <source>Show transaction details</source>
         <translation>Mostra i dettagli della transazione</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="299"/>
+        <location filename="../transactionview.cpp" line="302"/>
         <source>Export Transaction History</source>
         <translation>Esporta lo storico delle transazioni</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="300"/>
+        <location filename="../transactionview.cpp" line="303"/>
         <source>Comma separated file (*.csv)</source>
         <translation>Testo CSV (*.csv)</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="309"/>
+        <location filename="../transactionview.cpp" line="312"/>
         <source>Confirmed</source>
         <translation>Confermato</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="310"/>
+        <location filename="../transactionview.cpp" line="313"/>
         <source>Date</source>
         <translation>Data</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="311"/>
+        <location filename="../transactionview.cpp" line="314"/>
         <source>Type</source>
         <translation>Tipo</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="312"/>
+        <location filename="../transactionview.cpp" line="315"/>
         <source>Label</source>
         <translation>Etichetta</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="313"/>
+        <location filename="../transactionview.cpp" line="316"/>
         <source>Address</source>
         <translation>Indirizzo</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="314"/>
+        <location filename="../transactionview.cpp" line="317"/>
         <source>Amount</source>
         <translation>Importo</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="315"/>
+        <location filename="../transactionview.cpp" line="318"/>
         <source>ID</source>
         <translation>ID</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="318"/>
+        <location filename="../transactionview.cpp" line="321"/>
         <source>Exporting Failed</source>
         <translation>Esportazione Fallita.</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="318"/>
+        <location filename="../transactionview.cpp" line="321"/>
         <source>There was an error trying to save the transaction history to %1.</source>
         <translation>Si è verificato un errore durante il salvataggio dello storico delle transazioni in %1.</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="322"/>
+        <location filename="../transactionview.cpp" line="325"/>
         <source>Exporting Successful</source>
         <translation>Esportazione Riuscita</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="322"/>
+        <location filename="../transactionview.cpp" line="325"/>
         <source>The transaction history was successfully saved to %1.</source>
         <translation>Lo storico delle transazioni e&apos; stato salvato con successo in %1.</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="431"/>
+        <location filename="../transactionview.cpp" line="434"/>
         <source>Range:</source>
         <translation>Intervallo:</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="439"/>
+        <location filename="../transactionview.cpp" line="442"/>
         <source>to</source>
         <translation>a</translation>
     </message>
@@ -3754,13 +3774,13 @@ Più URL vengono separati da una barra verticale |.</translation>
     <message>
         <location filename="../walletframe.cpp" line="26"/>
         <source>No wallet has been loaded.</source>
-        <translation>Non è stato caricato alcun portamonete.</translation>
+        <translation>Non è stato caricato alcun portafoglio.</translation>
     </message>
 </context>
 <context>
     <name>WalletModel</name>
     <message>
-        <location filename="../walletmodel.cpp" line="288"/>
+        <location filename="../walletmodel.cpp" line="278"/>
         <source>Send Coins</source>
         <translation>Invia darkcoin</translation>
     </message>
@@ -3780,12 +3800,12 @@ Più URL vengono separati da una barra verticale |.</translation>
     <message>
         <location filename="../walletview.cpp" line="229"/>
         <source>Backup Wallet</source>
-        <translation>Backup Portamonete</translation>
+        <translation>Backup Portafoglio</translation>
     </message>
     <message>
         <location filename="../walletview.cpp" line="230"/>
         <source>Wallet Data (*.dat)</source>
-        <translation>Dati Portamonete (*.dat)</translation>
+        <translation>Dati Portafoglio (*.dat)</translation>
     </message>
     <message>
         <location filename="../walletview.cpp" line="236"/>
@@ -3805,7 +3825,7 @@ Più URL vengono separati da una barra verticale |.</translation>
     <message>
         <location filename="../walletview.cpp" line="240"/>
         <source>The wallet data was successfully saved to %1.</source>
-        <translation>Il portamonete è stato correttamente salvato in %1.</translation>
+        <translation>Il portafoglio è stato correttamente salvato in %1.</translation>
     </message>
 </context>
 <context>
@@ -4002,7 +4022,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Darkcoin Alert&quot; admin@foo
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="127"/>
-        <source>Show N confirmations for a successfully locked transaciton (0-9999, default: 1)</source>
+        <source>Show N confirmations for a successfully locked transaction (0-9999, default: 1)</source>
         <translation type="unfinished"/>
     </message>
     <message>
@@ -4423,7 +4443,7 @@ Se il file non esiste, crealo assegnando i permessi di lettura solamente al prop
     <message>
         <location filename="../bitcoinstrings.cpp" line="241"/>
         <source>Generate coins (default: 0)</source>
-        <translation>Genera Bitcoin (predefinito: 0)</translation>
+        <translation>Genera valuta (predefinito: 0)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="242"/>
@@ -4613,7 +4633,7 @@ Se il file non esiste, crealo assegnando i permessi di lettura solamente al prop
     <message>
         <location filename="../bitcoinstrings.cpp" line="279"/>
         <source>Loading wallet...</source>
-        <translation>Caricamento portamonete...</translation>
+        <translation>Caricamento portafoglio...</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="280"/>
@@ -4910,7 +4930,7 @@ Se il file non esiste, crealo assegnando i permessi di lettura solamente al prop
     <message>
         <location filename="../bitcoinstrings.cpp" line="338"/>
         <source>Specify data directory</source>
-        <translation>Specifica la cartella dati</translation>
+        <translation>Specifica la cartella dati </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="339"/>
@@ -5026,7 +5046,7 @@ Se il file non esiste, crealo assegnando i permessi di lettura solamente al prop
     <message>
         <location filename="../bitcoinstrings.cpp" line="361"/>
         <source>Upgrade wallet to latest format</source>
-        <translation>Aggiorna il wallet all&apos;ultimo formato</translation>
+        <translation>Aggiorna il portafoglio all&apos;ultimo formato</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="362"/>
@@ -5088,7 +5108,7 @@ Se il file non esiste, crealo assegnando i permessi di lettura solamente al prop
     <message>
         <location filename="../bitcoinstrings.cpp" line="373"/>
         <source>Verifying wallet...</source>
-        <translation>Verifica portamonete...</translation>
+        <translation>Verifica portafoglio...</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="374"/>
@@ -5098,12 +5118,12 @@ Se il file non esiste, crealo assegnando i permessi di lettura solamente al prop
     <message>
         <location filename="../bitcoinstrings.cpp" line="375"/>
         <source>Wallet %s resides outside data directory %s</source>
-        <translation>Il portamonete %s si trova al di fuori dalla cartella dati %s</translation>
+        <translation>Il portafoglio %s si trova al di fuori dalla cartella dati %s</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="376"/>
         <source>Wallet is locked.</source>
-        <translation type="unfinished"/>
+        <translation>Portafoglio bloccato</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="377"/>
@@ -5113,7 +5133,7 @@ Se il file non esiste, crealo assegnando i permessi di lettura solamente al prop
     <message>
         <location filename="../bitcoinstrings.cpp" line="378"/>
         <source>Wallet options:</source>
-        <translation>Opzioni portamonete:</translation>
+        <translation>Opzioni portafoglio:</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="379"/>

@@ -1079,7 +1079,7 @@ Adrese: %4
     <message>
         <location filename="../forms/darksendconfig.ui" line="14"/>
         <source>Configure Darksend</source>
-        <translation type="unfinished"/>
+        <translation>Konfigurēt Darksend</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="26"/>
@@ -1099,37 +1099,37 @@ Adrese: %4
     <message>
         <location filename="../forms/darksendconfig.ui" line="65"/>
         <source>Please select a privacy level.</source>
-        <translation type="unfinished"/>
+        <translation>Lūdzu izvēlēties privātuma līmeni</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="78"/>
         <source>Use 2 separate masternodes to mix funds up to 1000 DRK</source>
-        <translation type="unfinished"/>
+        <translation>Lietot 2 atsevišķas masternodes, lai miksētu apjomu virs 1000DRK</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="91"/>
         <source>Use 8 separate masternodes to mix funds up to 1000 DRK</source>
-        <translation type="unfinished"/>
+        <translation>Lietot 8 atsevišķas masternodes, lai miksētu apjomu virs 1000DRK</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="104"/>
         <source>Use 16 separate masternodes</source>
-        <translation type="unfinished"/>
+        <translation>Lietot 16 atsevišķas masternodes</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="117"/>
         <source>This option is the quickest and will cost about ~0.025 DRK to anonymize 1000 DRK</source>
-        <translation type="unfinished"/>
+        <translation>Šī opcija ir visātrākā un maksa aptuveni 0.025DRK, lai anonimizētu 1000DRK</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="130"/>
         <source>This option is moderately fast and will cost about 0.05 DRK to anonymize 1000 DRK</source>
-        <translation type="unfinished"/>
+        <translation>Šī opcija ir nedaudz ātrāka, un maksa aptuveni 0.05DRK, lai anonimizētu 1000DRK</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="156"/>
         <source>0.1 DRK per 1000 DRK you anonymize.</source>
-        <translation type="unfinished"/>
+        <translation>0.1DRK par Jūsu 1000DRK anonimizāciju.</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="143"/>
@@ -1593,7 +1593,7 @@ Tas iespaido arī jūsu bilances aprēķinu.</translation>
     <message>
         <location filename="../forms/optionsdialog.ui" line="503"/>
         <source>The user interface language can be set here. This setting will take effect after restarting Darkcoin.</source>
-        <translation type="unfinished"/>
+        <translation>Šeit var iestatīt lietotāja valodu. Iestatījums aktivizēsies pēc Darkcoin restartēšanas.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="514"/>
@@ -1608,7 +1608,7 @@ Tas iespaido arī jūsu bilances aprēķinu.</translation>
     <message>
         <location filename="../forms/optionsdialog.ui" line="536"/>
         <source>Whether to show Darkcoin addresses in the transaction list or not.</source>
-        <translation type="unfinished"/>
+        <translation>Ne/Rādīt Darkcoin adreses transakciju sarakstā.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="539"/>
@@ -1670,7 +1670,7 @@ Tas iespaido arī jūsu bilances aprēķinu.</translation>
         <location filename="../optionsdialog.cpp" line="223"/>
         <location filename="../optionsdialog.cpp" line="253"/>
         <source>Client restart required to activate changes.</source>
-        <translation type="unfinished"/>
+        <translation>Nepieciešama klienta restartēšana, lai apstiprinātu izmaiņas.</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="223"/>
@@ -1749,42 +1749,42 @@ Tas iespaido arī jūsu bilances aprēķinu.</translation>
     <message>
         <location filename="../forms/overviewpage.ui" line="302"/>
         <source>Status:</source>
-        <translation type="unfinished"/>
+        <translation>Statuss:</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="309"/>
         <source>Enabled/Disabled</source>
-        <translation type="unfinished"/>
+        <translation>Iespējot/Atspējot</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="316"/>
         <source>Completion:</source>
-        <translation type="unfinished"/>
+        <translation>Paveiktais:</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="336"/>
         <source>Darksend Balance:</source>
-        <translation type="unfinished"/>
+        <translation>Darksend Bilance:</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="349"/>
         <source>0 DRK</source>
-        <translation type="unfinished"/>
+        <translation>0 DRK</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="356"/>
         <source>Amount and Rounds:</source>
-        <translation type="unfinished"/>
+        <translation>Apjoms un Cikli:</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="363"/>
         <source>0 DRK / 0 Rounds</source>
-        <translation type="unfinished"/>
+        <translation>0 DRK / 0 Cikli</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="370"/>
         <source>Submitted Denom:</source>
-        <translation type="unfinished"/>
+        <translation>Iesniegtais Denom:</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="377"/>
@@ -1794,7 +1794,7 @@ Tas iespaido arī jūsu bilances aprēķinu.</translation>
     <message>
         <location filename="../forms/overviewpage.ui" line="380"/>
         <source>n/a</source>
-        <translation type="unfinished"/>
+        <translation>(nav pieejams)</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="402"/>
@@ -1802,17 +1802,17 @@ Tas iespaido arī jūsu bilances aprēķinu.</translation>
         <location filename="../overviewpage.cpp" line="462"/>
         <location filename="../overviewpage.cpp" line="476"/>
         <source>Darksend</source>
-        <translation type="unfinished"/>
+        <translation>Darksend</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="858"/>
         <source>Start/Stop Mixing</source>
-        <translation type="unfinished"/>
+        <translation>Sākt/Apturēt Miksēšanu</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="890"/>
         <source>(Last Message)</source>
-        <translation type="unfinished"/>
+        <translation>(Pēdējā Ziņa)</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="915"/>
@@ -1832,7 +1832,7 @@ Tas iespaido arī jūsu bilances aprēķinu.</translation>
     <message>
         <location filename="../forms/overviewpage.ui" line="943"/>
         <source>Reset</source>
-        <translation type="unfinished"/>
+        <translation>Restartēt</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="979"/>
@@ -1849,20 +1849,20 @@ Tas iespaido arī jūsu bilances aprēķinu.</translation>
         <location filename="../overviewpage.cpp" line="142"/>
         <location filename="../overviewpage.cpp" line="347"/>
         <source>Disabled</source>
-        <translation type="unfinished"/>
+        <translation>Atspējot</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="145"/>
         <location filename="../overviewpage.cpp" line="349"/>
         <location filename="../overviewpage.cpp" line="490"/>
         <source>Start Darksend Mixing</source>
-        <translation type="unfinished"/>
+        <translation>Sākt Darksend Miksēšanu</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="147"/>
         <location filename="../overviewpage.cpp" line="492"/>
         <source>Stop Darksend Mixing</source>
-        <translation type="unfinished"/>
+        <translation>Apturēt Darksend Miksēšanu</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="267"/>
@@ -2594,97 +2594,97 @@ Tas iespaido arī jūsu bilances aprēķinu.</translation>
         <translation>Nepietiekami līdzekļi!</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="216"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="225"/>
         <source>Quantity:</source>
         <translation>Daudzums:</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="251"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="260"/>
         <source>Bytes:</source>
         <translation>Baiti:</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="299"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="308"/>
         <source>Amount:</source>
         <translation>Daudzums:</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="331"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="340"/>
         <source>Priority:</source>
         <translation>Prioritāte:</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="379"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="388"/>
         <source>Fee:</source>
         <translation>Maksa:</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="411"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="420"/>
         <source>Low Output:</source>
         <translation>Zema Izeja:</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="459"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="468"/>
         <source>After Fee:</source>
         <translation>Pēc Maksas:</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="491"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="500"/>
         <source>Change:</source>
         <translation>Atlikums:</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="535"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="544"/>
         <source>If this is activated, but the change address is empty or invalid, change will be sent to a newly generated address.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="538"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="547"/>
         <source>Custom change address</source>
         <translation>Pielāgota atlikuma adrese</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="650"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="668"/>
         <source>Confirm the send action</source>
         <translation>Apstiprināt nosūtīšanu</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="653"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="671"/>
         <source>S&amp;end</source>
         <translation>&amp;Sūtīt</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="673"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="691"/>
         <source>Clear all fields of the form.</source>
         <translation>Notīrīt visus laukus formā.</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="676"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="694"/>
         <source>Clear &amp;All</source>
         <translation>&amp;Notīrīt visu</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="693"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="711"/>
         <source>Send to multiple recipients at once</source>
         <translation>Sūtīt vairākiem saņēmējiem uzreiz</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="696"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="714"/>
         <source>Add &amp;Recipient</source>
         <translation>&amp;Pievienot Saņēmēju</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="741"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="752"/>
         <source>Darksend</source>
-        <translation type="unfinished"/>
+        <translation>Darksend</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="754"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="771"/>
         <source>InstantX</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="761"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="778"/>
         <source>Balance:</source>
         <translation>Bilance:</translation>
     </message>
@@ -3523,41 +3523,46 @@ Tas iespaido arī jūsu bilances aprēķinu.</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="374"/>
-        <source>Darksend Split Up Large Inputs</source>
+        <source>Darksend Make Collateral Inputs</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="376"/>
+        <source>Darksend Create Denominations</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../transactiontablemodel.cpp" line="378"/>
         <source>Darksent</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="418"/>
+        <location filename="../transactiontablemodel.cpp" line="420"/>
         <source>(n/a)</source>
         <translation>(nav pieejams)</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="610"/>
+        <location filename="../transactiontablemodel.cpp" line="612"/>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
         <translation>Transakcijas statuss. Turiet peli virs šī lauka, lai redzētu apstiprinājumu skaitu.</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="612"/>
+        <location filename="../transactiontablemodel.cpp" line="614"/>
         <source>Date and time that the transaction was received.</source>
         <translation>Transakcijas saņemšanas datums un laiks.</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="614"/>
+        <location filename="../transactiontablemodel.cpp" line="616"/>
         <source>Type of transaction.</source>
         <translation>Transakcijas tips.</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="616"/>
+        <location filename="../transactiontablemodel.cpp" line="618"/>
         <source>Destination address of transaction.</source>
         <translation>Transakcijas mērķa adrese.</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="618"/>
+        <location filename="../transactiontablemodel.cpp" line="620"/>
         <source>Amount removed from or added to balance.</source>
         <translation>Bilancei pievienotais vai atņemtais daudzums.</translation>
     </message>
@@ -3617,136 +3622,151 @@ Tas iespaido arī jūsu bilances aprēķinu.</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="82"/>
-        <source>Darksend Denominate</source>
+        <source>Darksend Make Collateral Inputs</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="83"/>
+        <source>Darksend Create Denominations</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../transactionview.cpp" line="84"/>
+        <source>Darksend Denominate</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../transactionview.cpp" line="85"/>
+        <source>Darksend Collateral Payment</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../transactionview.cpp" line="86"/>
         <source>To yourself</source>
         <translation>Sev</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="84"/>
+        <location filename="../transactionview.cpp" line="87"/>
         <source>Mined</source>
         <translation>Atrasts</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="85"/>
+        <location filename="../transactionview.cpp" line="88"/>
         <source>Other</source>
         <translation>Cits</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="91"/>
+        <location filename="../transactionview.cpp" line="94"/>
         <source>Enter address or label to search</source>
         <translation>Ierakstiet meklējamo nosaukumu vai adresi</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="97"/>
+        <location filename="../transactionview.cpp" line="100"/>
         <source>Min amount</source>
         <translation>Minimālais daudzums</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="131"/>
+        <location filename="../transactionview.cpp" line="134"/>
         <source>Copy address</source>
         <translation>Kopēt adresi</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="132"/>
+        <location filename="../transactionview.cpp" line="135"/>
         <source>Copy label</source>
         <translation>Kopēt nosaukumu</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="133"/>
+        <location filename="../transactionview.cpp" line="136"/>
         <source>Copy amount</source>
         <translation>Kopēt daudzumu</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="134"/>
+        <location filename="../transactionview.cpp" line="137"/>
         <source>Copy transaction ID</source>
         <translation>Kopēt transakcijas ID</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="135"/>
+        <location filename="../transactionview.cpp" line="138"/>
         <source>Edit label</source>
         <translation>Mainīt nosaukumu</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="136"/>
+        <location filename="../transactionview.cpp" line="139"/>
         <source>Show transaction details</source>
         <translation>Rādīt transakcijas detaļas</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="299"/>
+        <location filename="../transactionview.cpp" line="302"/>
         <source>Export Transaction History</source>
         <translation>Eksportēt Transakciju Vēsturi</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="300"/>
+        <location filename="../transactionview.cpp" line="303"/>
         <source>Comma separated file (*.csv)</source>
         <translation>Fails ar komatu kā atdalītāju (*.csv)</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="309"/>
+        <location filename="../transactionview.cpp" line="312"/>
         <source>Confirmed</source>
         <translation>Apstiprināts</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="310"/>
+        <location filename="../transactionview.cpp" line="313"/>
         <source>Date</source>
         <translation>Datums</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="311"/>
+        <location filename="../transactionview.cpp" line="314"/>
         <source>Type</source>
         <translation>Tips</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="312"/>
+        <location filename="../transactionview.cpp" line="315"/>
         <source>Label</source>
         <translation>Nosaukums</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="313"/>
+        <location filename="../transactionview.cpp" line="316"/>
         <source>Address</source>
         <translation>Adrese</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="314"/>
+        <location filename="../transactionview.cpp" line="317"/>
         <source>Amount</source>
         <translation>Daudzums</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="315"/>
+        <location filename="../transactionview.cpp" line="318"/>
         <source>ID</source>
         <translation>ID</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="318"/>
+        <location filename="../transactionview.cpp" line="321"/>
         <source>Exporting Failed</source>
         <translation>Eksportēšana Neizdevās</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="318"/>
+        <location filename="../transactionview.cpp" line="321"/>
         <source>There was an error trying to save the transaction history to %1.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="322"/>
+        <location filename="../transactionview.cpp" line="325"/>
         <source>Exporting Successful</source>
         <translation>Eksportēšana Veiksmīga</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="322"/>
+        <location filename="../transactionview.cpp" line="325"/>
         <source>The transaction history was successfully saved to %1.</source>
         <translation>Transakciju vēsture tika veiksmīgi saglabāta uz %1.</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="431"/>
+        <location filename="../transactionview.cpp" line="434"/>
         <source>Range:</source>
         <translation>Diapazons:</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="439"/>
+        <location filename="../transactionview.cpp" line="442"/>
         <source>to</source>
         <translation>uz</translation>
     </message>
@@ -3762,7 +3782,7 @@ Tas iespaido arī jūsu bilances aprēķinu.</translation>
 <context>
     <name>WalletModel</name>
     <message>
-        <location filename="../walletmodel.cpp" line="288"/>
+        <location filename="../walletmodel.cpp" line="278"/>
         <source>Send Coins</source>
         <translation>Sūtīt Bitkoinus</translation>
     </message>
@@ -4004,7 +4024,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Darkcoin Alert&quot; admin@foo
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="127"/>
-        <source>Show N confirmations for a successfully locked transaciton (0-9999, default: 1)</source>
+        <source>Show N confirmations for a successfully locked transaction (0-9999, default: 1)</source>
         <translation type="unfinished"/>
     </message>
     <message>
