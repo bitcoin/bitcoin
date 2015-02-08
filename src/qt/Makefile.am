@@ -13,6 +13,7 @@ DIST_SUBDIRS = . test
 # darkcoin qt core #
 QT_TS = \
   locale/darkcoin_ach.ts \
+  locale/darkcoin_af.ts \
   locale/darkcoin_af_ZA.ts \
   locale/darkcoin_ar.ts \
   locale/darkcoin_bar.ts \
@@ -28,8 +29,10 @@ QT_TS = \
   locale/darkcoin_da.ts \
   locale/darkcoin_de.ts \
   locale/darkcoin_el_GR.ts \
+  locale/darkcoin_el.ts \
   locale/darkcoin_en.ts \
   locale/darkcoin_en_US.ts \
+  locale/darkcoin_en_ZA.ts \
   locale/darkcoin_eo.ts \
   locale/darkcoin_es_CL.ts \
   locale/darkcoin_es_DO.ts \
