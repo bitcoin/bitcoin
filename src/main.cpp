@@ -1646,7 +1646,7 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
             else if (pindexLast->nHeight + 1 >= 15200) retarget = DIFF_KGW;
             else retarget = DIFF_BTC;
         } else {
-            if (pindexLast->nHeight + 1 >= 256) retarget = DIFF_DGW;
+            if (pindexLast->nHeight + 1 >= 2000) retarget = DIFF_DGW;
             else retarget = DIFF_BTC;
         }
 
@@ -2833,6 +2833,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
                 BOOST_FOREACH(const CTxIn& in, tx.vin){
                     if(mapLockedInputs.count(in.prevout)){
                         if(mapLockedInputs[in.prevout] != tx.GetHash()){
+                            LogPrintf("CheckBlock() : found conflicting transaction with transaction lock %s %s\n", mapLockedInputs[in.prevout].ToString().c_str(), tx.GetHash().ToString().c_str());
                             //return state.DoS(0, error("CheckBlock() : found conflicting transaction with transaction lock"),
                             //                 REJECT_INVALID, "conflicting-tx-ix");
                         }
@@ -3111,7 +3112,7 @@ bool ProcessBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDiskBl
 /*
     block-a-block
 
-    std::string s = "2600c8bebd2a300b2541b3720d8a30f20b61d01813a24f5934e10a2ab81b5ed9";
+    std::string s = "0000000234ebe01657601a9ed22f9e4459789d4b966b3b7f8f7cc90d1c039ee6";
     if(pblock->GetHash().ToString() == s){
         printf("Nope, get outta here!\n");
         return false;
