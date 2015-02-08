@@ -464,7 +464,7 @@ void CleanTransactionLocksList()
 
 uint256 CConsensusVote::GetHash() const
 {
-    return vinMasternode.prevout.hash + txHash;
+    return vinMasternode.prevout.hash + vinMasternode.prevout.n + txHash;
 }
 
 
