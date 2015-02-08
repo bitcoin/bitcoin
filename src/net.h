@@ -468,7 +468,7 @@ public:
         ENTER_CRITICAL_SECTION(cs_vSend);
         assert(ssSend.size() == 0);
         ssSend << CMessageHeader(pszCommand, 0);
-        LogPrint("net", "sending: %s ", pszCommand);
+        LogPrint("net", "sending: %s ", SanitizeString(pszCommand));
     }
 
     // TODO: Document the precondition of this function.  Is cs_vSend locked?
