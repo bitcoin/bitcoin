@@ -79,7 +79,8 @@ public:
         RecvWithDarksend,
         DarksendDenominate,
         DarksendCollateralPayment,
-        DarksendSplitUpLarge,
+        DarksendMakeCollaterals,
+        DarksendCreateDenominations,
         Darksent
     };
 

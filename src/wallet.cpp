@@ -1918,6 +1918,7 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, int64_t> >& vecSend,
                 if(coin_type == ONLY_DENOMINATED) {
                     nFeeRet = nChange;
                     nChange = 0;
+                    wtxNew.mapValue["DS"] = "1";
                 } else if(useIX && nFeeRet < COIN*0.01 && nChange > ((COIN*0.01)-nFeeRet)) {
                     // IX has a minimum fee of 0.01 DRK
                     nChange -= (COIN*0.01)-nFeeRet;
