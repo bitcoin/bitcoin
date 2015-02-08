@@ -125,7 +125,7 @@ QT_TRANSLATE_NOOP("darkcoin-core", ""
 "Set the processor limit for when generation is on (-1 = unlimited, default: "
 "-1)"),
 QT_TRANSLATE_NOOP("darkcoin-core", ""
-"Show N confirmations for a successfully locked transaciton (0-9999, default: "
+"Show N confirmations for a successfully locked transaction (0-9999, default: "
 "1)"),
 QT_TRANSLATE_NOOP("darkcoin-core", ""
 "This is a pre-release test build - use at your own risk - do not use for "
