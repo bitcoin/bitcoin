@@ -86,6 +86,7 @@
     </qresource>
     <qresource prefix="/translations">
         <file alias="ach">locale/darkcoin_ach.qm</file>
+        <file alias="af">locale/darkcoin_af.qm</file>
         <file alias="af_ZA">locale/darkcoin_af_ZA.qm</file>
         <file alias="ar">locale/darkcoin_ar.qm</file>
         <file alias="bar">locale/darkcoin_bar.qm</file>
@@ -101,8 +102,10 @@
         <file alias="da">locale/darkcoin_da.qm</file>
         <file alias="de">locale/darkcoin_de.qm</file>
         <file alias="el_GR">locale/darkcoin_el_GR.qm</file>
+        <file alias="el">locale/darkcoin_el.qm</file>
         <file alias="en">locale/darkcoin_en.qm</file>
         <file alias="en_US">locale/darkcoin_en_US.qm</file>
+        <file alias="en_ZA">locale/darkcoin_en_ZA.qm</file>
         <file alias="eo">locale/darkcoin_eo.qm</file>
         <file alias="es_CL">locale/darkcoin_es_CL.qm</file>
         <file alias="es_DO">locale/darkcoin_es_DO.qm</file>
