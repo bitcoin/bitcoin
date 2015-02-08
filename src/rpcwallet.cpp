@@ -1116,7 +1116,8 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
             Object entry;
             entry.push_back(Pair("account", strSentAccount));
             MaybePushAddress(entry, s.first);
-            entry.push_back(Pair("category", wtx.IsDenominated() ? "darksent" : "send"));
+            std::map<std::string, std::string>::const_iterator it = wtx.mapValue.find("DS");
+            entry.push_back(Pair("category", (it != wtx.mapValue.end() && it->second == "1") ? "darksent" : "send"));
             entry.push_back(Pair("amount", ValueFromAmount(-s.second)));
             entry.push_back(Pair("fee", ValueFromAmount(-nFee)));
             if (fLong)
