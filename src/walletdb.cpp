@@ -382,11 +382,13 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
             pwallet->AddToWallet(wtx, true);
             //// debug print
             //LogPrintf("LoadWallet  %s\n", wtx.GetHash().ToString());
-            //LogPrintf(" %12d  %s  %s  %s\n",
-            //    wtx.vout[0].nValue,
-            //    DateTimeStrFormat("%Y-%m-%d %H:%M:%S", wtx.GetBlockTime()),
-            //    wtx.hashBlock.ToString(),
-            //    wtx.mapValue["message"]);
+            if(fDebug) LogPrintf("LoadWallet %12d %2s %20s %s %s\n",
+                    wtx.vout[0].nValue,
+                    wtx.mapValue["DS"] == "1" ? "DS" : "",
+                    DateTimeStrFormat("%Y-%m-%d %H:%M:%S", wtx.GetTxTime()),
+                    wtx.GetHash().ToString(),
+                    wtx.hashBlock.ToString()
+            );
         }
         else if (strType == "acentry")
         {
