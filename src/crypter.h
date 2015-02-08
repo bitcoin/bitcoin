@@ -53,7 +53,7 @@ public:
         // 25000 rounds is just under 0.1 seconds on a 1.86 GHz Pentium M
         // ie slightly lower than the lowest hardware we need bother supporting
         nDeriveIterations = 25000;
-        nDerivationMethod = 1;
+        nDerivationMethod = 0;
         vchOtherDerivationParameters = std::vector<unsigned char>(0);
     }
 };
