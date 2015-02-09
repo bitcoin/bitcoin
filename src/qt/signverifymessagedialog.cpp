@@ -15,9 +15,10 @@
 #include <vector>
 
 #include <QClipboard>
+#include <QKeyEvent>
 
 SignVerifyMessageDialog::SignVerifyMessageDialog(QWidget *parent) :
-    QDialog(parent, DIALOGWINDOWHINTS),
+    QWidget(parent, DIALOGWINDOWHINTS),
     ui(new Ui::SignVerifyMessageDialog),
     model(0)
 {
@@ -271,5 +272,20 @@ bool SignVerifyMessageDialog::eventFilter(QObject *object, QEvent *event)
             ui->statusLabel_VM->clear();
         }
     }
-    return QDialog::eventFilter(object, event);
+    return QWidget::eventFilter(object, event);
+}
+
+void SignVerifyMessageDialog::keyPressEvent(QKeyEvent *event)
+{
+#ifdef ANDROID
+    if(event->key() == Qt::Key_Back)
+    {
+        close();
+    }
+#else
+    if(event->key() == Qt::Key_Escape)
+    {
+        close();
+    }
+#endif
 }

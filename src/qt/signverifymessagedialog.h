@@ -1,7 +1,7 @@
 #ifndef SIGNVERIFYMESSAGEDIALOG_H
 #define SIGNVERIFYMESSAGEDIALOG_H
 
-#include <QDialog>
+#include <QWidget>
 
 namespace Ui {
     class SignVerifyMessageDialog;
@@ -11,7 +11,7 @@ class WalletModel;
 QT_BEGIN_NAMESPACE
 QT_END_NAMESPACE
 
-class SignVerifyMessageDialog : public QDialog
+class SignVerifyMessageDialog : public QWidget
 {
     Q_OBJECT
 
@@ -28,6 +28,7 @@ public:
 
 protected:
     bool eventFilter(QObject *object, QEvent *event);
+    void keyPressEvent(QKeyEvent *);
 
 private:
     Ui::SignVerifyMessageDialog *ui;
