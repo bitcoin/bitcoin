@@ -1,7 +1,7 @@
 #ifndef TRANSACTIONDESCDIALOG_H
 #define TRANSACTIONDESCDIALOG_H
 
-#include <QDialog>
+#include <QWidget>
 
 namespace Ui {
     class TransactionDescDialog;
@@ -11,9 +11,11 @@ class QModelIndex;
 QT_END_NAMESPACE
 
 /** Dialog showing transaction details. */
-class TransactionDescDialog : public QDialog
+class TransactionDescDialog : public QWidget
 {
     Q_OBJECT
+protected:
+    void keyPressEvent(QKeyEvent *);
 
 public:
     explicit TransactionDescDialog(const QModelIndex &idx, QWidget *parent = 0);

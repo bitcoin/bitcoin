@@ -32,6 +32,7 @@
 #include <QDesktopServices>
 #include <QSignalMapper>
 #include <QUrl>
+#include <QEventLoop>
 
 TransactionView::TransactionView(QWidget *parent) :
     QWidget(parent), model(0), transactionProxyModel(0),
@@ -415,7 +416,13 @@ void TransactionView::showDetails()
     if(!selection.isEmpty())
     {
         TransactionDescDialog dlg(selection.at(0));
-        dlg.exec();
+        dlg.setWindowModality(Qt::ApplicationModal);
+        dlg.show();
+
+        // This loop will wait for the window is closed
+        QEventLoop loop;
+        connect(&dlg, SIGNAL(close()), &loop, SLOT(quit()));
+        loop.exec();
     }
 }
 

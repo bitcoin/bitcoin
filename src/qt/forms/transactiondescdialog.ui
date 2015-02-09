@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
  <class>TransactionDescDialog</class>
- <widget class="QDialog" name="TransactionDescDialog">
+ <widget class="QWidget" name="TransactionDescDialog">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -42,7 +42,7 @@
    <sender>buttonBox</sender>
    <signal>accepted()</signal>
    <receiver>TransactionDescDialog</receiver>
-   <slot>accept()</slot>
+   <slot>close()</slot>
    <hints>
     <hint type="sourcelabel">
      <x>248</x>
@@ -58,7 +58,7 @@
    <sender>buttonBox</sender>
    <signal>rejected()</signal>
    <receiver>TransactionDescDialog</receiver>
-   <slot>reject()</slot>
+   <slot>close()</slot>
    <hints>
     <hint type="sourcelabel">
      <x>316</x>
