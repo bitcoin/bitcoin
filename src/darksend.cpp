@@ -2113,6 +2113,7 @@ bool CDarksendQueue::CheckSignature()
 }
 
 
+//TODO: Rename/move to core
 void ThreadCheckDarkSendPool()
 {
     if(fLiteMode) return; //disable all darksend/masternode related functionality
@@ -2178,6 +2179,7 @@ void ThreadCheckDarkSendPool()
 
                         pnode->PushMessage("dseg", CTxIn()); //request full mn list
                         pnode->PushMessage("mnget"); //sync payees
+                        pnode->PushMessage("getsporks"); //get current network sporks
                         RequestedMasterNodeList++;
                     }
                 }

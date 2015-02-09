@@ -21,6 +21,7 @@
 #include "ui_interface.h"
 #include "util.h"
 #include "activemasternode.h"
+#include "spork.h"
 #ifdef ENABLE_WALLET
 #include "db.h"
 #include "wallet.h"
@@ -699,6 +700,8 @@ bool AppInit2(boost::thread_group& threadGroup)
     {
         if (!masternodePayments.SetPrivKey(GetArg("-masternodepaymentskey", "")))
             return InitError(_("Unable to sign masternode payment winner, wrong key?"));
+        if (!sporkManager.SetPrivKey(GetArg("-masternodepaymentskey", "")))
+            return InitError(_("Unable to sign spork message, wrong key?"));
     }
 
     //ignore masternodes below protocol version
