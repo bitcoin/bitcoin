@@ -1847,6 +1847,7 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, int64_t> >& vecSend,
         LOCK2(cs_main, cs_wallet);
         {
             nFeeRet = nTransactionFee;
+            if(useIX && nFeeRet < CENT) nFeeRet = CENT;
             while (true)
             {
                 wtxNew.vin.clear();
@@ -1919,10 +1920,10 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, int64_t> >& vecSend,
                     nFeeRet = nChange;
                     nChange = 0;
                     wtxNew.mapValue["DS"] = "1";
-                } else if(useIX && nFeeRet < COIN*0.01 && nChange > ((COIN*0.01)-nFeeRet)) {
+                } else if(useIX && nFeeRet < CENT && nChange > (CENT-nFeeRet)) {
                     // IX has a minimum fee of 0.01 DRK
-                    nChange -= (COIN*0.01)-nFeeRet;
-                    nFeeRet = COIN*0.01;
+                    nChange -= CENT-nFeeRet;
+                    nFeeRet = CENT;
                 }
 
                 if (nChange > 0)
