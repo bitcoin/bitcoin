@@ -93,6 +93,7 @@ public:
      */
     void updateWallet(const uint256 &hash, int status)
     {
+
         qDebug() << "TransactionTablePriv::updateWallet : " + QString::fromStdString(hash.ToString()) + " " + QString::number(status);
         {
             LOCK2(cs_main, wallet->cs_wallet);
