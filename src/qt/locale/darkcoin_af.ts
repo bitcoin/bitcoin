@@ -1,4 +1,4 @@
-<?xml version="1.0" ?><!DOCTYPE TS><TS language="ur_PK" version="2.0">
+<?xml version="1.0" ?><!DOCTYPE TS><TS language="af" version="2.0">
 <context>
     <name>AboutDialog</name>
     <message>
@@ -49,17 +49,17 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/addressbookpage.ui" line="30"/>
         <source>Double-click to edit address or label</source>
-        <translation>ایڈریس یا لیبل میں ترمیم کرنے پر ڈبل کلک کریں</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="57"/>
         <source>Create a new address</source>
-        <translation>نیا ایڈریس بنائیں</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="60"/>
         <source>&amp;New</source>
-        <translation>نیا</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="71"/>
@@ -69,7 +69,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/addressbookpage.ui" line="74"/>
         <source>&amp;Copy</source>
-        <translation>نقل</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="85"/>
@@ -79,7 +79,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/addressbookpage.ui" line="88"/>
         <source>&amp;Delete</source>
-        <translation>مٹا</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="112"/>
@@ -89,12 +89,12 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/addressbookpage.ui" line="115"/>
         <source>&amp;Export</source>
-        <translation>برآمد</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="132"/>
         <source>C&amp;lose</source>
-        <translation>بند</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="45"/>
@@ -109,7 +109,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../addressbookpage.cpp" line="51"/>
         <source>C&amp;hoose</source>
-        <translation>چننا</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="57"/>
@@ -134,7 +134,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../addressbookpage.cpp" line="75"/>
         <source>&amp;Copy Address</source>
-        <translation>کاپی پتہ</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="76"/>
@@ -172,17 +172,17 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../addresstablemodel.cpp" line="169"/>
         <source>Label</source>
-        <translation>چٹ</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../addresstablemodel.cpp" line="169"/>
         <source>Address</source>
-        <translation> پتہ</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../addresstablemodel.cpp" line="205"/>
         <source>(no label)</source>
-        <translation>چٹ کے بغیر</translation>
+        <translation type="unfinished"/>
     </message>
 </context>
 <context>
@@ -195,17 +195,17 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="47"/>
         <source>Enter passphrase</source>
-        <translation>پاس فریز داخل کریں</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="61"/>
         <source>New passphrase</source>
-        <translation>نیا پاس فریز</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="75"/>
         <source>Repeat new passphrase</source>
-        <translation>نیا پاس فریز دہرائیں</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="108"/>
@@ -225,7 +225,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../askpassphrasedialog.cpp" line="42"/>
         <source>Encrypt wallet</source>
-        <translation>بٹوے کی رمزنگاری</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="48"/>
@@ -235,7 +235,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../askpassphrasedialog.cpp" line="53"/>
         <source>Unlock wallet</source>
-        <translation>بٹوا ان لاک</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="56"/>
@@ -245,12 +245,12 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../askpassphrasedialog.cpp" line="61"/>
         <source>Decrypt wallet</source>
-        <translation>خفیہ کشائی کر یںبٹوے کے</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="64"/>
         <source>Change passphrase</source>
-        <translation>پاس فریز تبدیل کریں</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="65"/>
@@ -490,7 +490,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="299"/>
         <source>Unlock wallet</source>
-        <translation>بٹوا ان لاک</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="300"/>
@@ -707,7 +707,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="764"/>
         <source>Error</source>
-        <translation>نقص</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="767"/>
@@ -832,12 +832,12 @@ Address: %4
     <message>
         <location filename="../forms/coincontroldialog.ui" line="446"/>
         <source>Amount</source>
-        <translation>رقم</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="456"/>
         <source>Address</source>
-        <translation> پتہ</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="461"/>
@@ -847,7 +847,7 @@ Address: %4
     <message>
         <location filename="../forms/coincontroldialog.ui" line="466"/>
         <source>Date</source>
-        <translation>تاریخ</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="471"/>
@@ -1051,7 +1051,7 @@ Address: %4
         <location filename="../coincontroldialog.cpp" line="670"/>
         <location filename="../coincontroldialog.cpp" line="731"/>
         <source>(no label)</source>
-        <translation>چٹ کے بغیر</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="724"/>
@@ -1348,7 +1348,7 @@ Address: %4
     <message>
         <location filename="../intro.cpp" line="210"/>
         <source>Error</source>
-        <translation>نقص</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../intro.cpp" line="219"/>
@@ -2483,17 +2483,17 @@ Address: %4
     <message>
         <location filename="../receiverequestdialog.cpp" line="145"/>
         <source>Address</source>
-        <translation> پتہ</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../receiverequestdialog.cpp" line="147"/>
         <source>Amount</source>
-        <translation>رقم</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../receiverequestdialog.cpp" line="149"/>
         <source>Label</source>
-        <translation>چٹ</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../receiverequestdialog.cpp" line="151"/>
@@ -2516,12 +2516,12 @@ Address: %4
     <message>
         <location filename="../recentrequeststablemodel.cpp" line="24"/>
         <source>Date</source>
-        <translation>تاریخ</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../recentrequeststablemodel.cpp" line="24"/>
         <source>Label</source>
-        <translation>چٹ</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../recentrequeststablemodel.cpp" line="24"/>
@@ -2531,12 +2531,12 @@ Address: %4
     <message>
         <location filename="../recentrequeststablemodel.cpp" line="24"/>
         <source>Amount</source>
-        <translation>رقم</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../recentrequeststablemodel.cpp" line="62"/>
         <source>(no label)</source>
-        <translation>چٹ کے بغیر</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../recentrequeststablemodel.cpp" line="71"/>
@@ -2672,7 +2672,7 @@ Address: %4
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="778"/>
         <source>Balance:</source>
-        <translation>بیلنس:</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="53"/>
@@ -2815,7 +2815,7 @@ Address: %4
     <message>
         <location filename="../sendcoinsdialog.cpp" line="646"/>
         <source>(no label)</source>
-        <translation>چٹ کے بغیر</translation>
+        <translation type="unfinished"/>
     </message>
 </context>
 <context>
@@ -3247,7 +3247,7 @@ Address: %4
     <message>
         <location filename="../transactiondesc.cpp" line="109"/>
         <source>Date</source>
-        <translation>تاریخ</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="116"/>
@@ -3369,7 +3369,7 @@ Address: %4
     <message>
         <location filename="../transactiondesc.cpp" line="332"/>
         <source>Amount</source>
-        <translation>رقم</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="333"/>
@@ -3400,22 +3400,22 @@ Address: %4
     <message>
         <location filename="../transactiontablemodel.cpp" line="238"/>
         <source>Date</source>
-        <translation>تاریخ</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="238"/>
         <source>Type</source>
-        <translation>ٹائپ</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="238"/>
         <source>Address</source>
-        <translation> پتہ</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="238"/>
         <source>Amount</source>
-        <translation>رقم</translation>
+        <translation type="unfinished"/>
     </message>
     <message numerus="yes">
         <location filename="../transactiontablemodel.cpp" line="287"/>
@@ -3485,7 +3485,7 @@ Address: %4
     <message>
         <location filename="../transactiontablemodel.cpp" line="363"/>
         <source>Sent to</source>
-        <translation>کو بھیجا</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="365"/>
@@ -3525,7 +3525,7 @@ Address: %4
     <message>
         <location filename="../transactiontablemodel.cpp" line="420"/>
         <source>(n/a)</source>
-        <translation>(N / A)</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="612"/>
@@ -3559,37 +3559,37 @@ Address: %4
         <location filename="../transactionview.cpp" line="60"/>
         <location filename="../transactionview.cpp" line="76"/>
         <source>All</source>
-        <translation>تمام</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="61"/>
         <source>Today</source>
-        <translation>آج</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="62"/>
         <source>This week</source>
-        <translation>اس ہفتے</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="63"/>
         <source>This month</source>
-        <translation>اس مہینے</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="64"/>
         <source>Last month</source>
-        <translation>پچھلے مہینے</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="65"/>
         <source>This year</source>
-        <translation>اس سال</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="66"/>
         <source>Range...</source>
-        <translation>دیگر</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="77"/>
@@ -3599,7 +3599,7 @@ Address: %4
     <message>
         <location filename="../transactionview.cpp" line="79"/>
         <source>Sent to</source>
-        <translation>کو بھیجا</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="81"/>
@@ -3699,27 +3699,27 @@ Address: %4
     <message>
         <location filename="../transactionview.cpp" line="313"/>
         <source>Date</source>
-        <translation>تاریخ</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="314"/>
         <source>Type</source>
-        <translation>ٹائپ</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="315"/>
         <source>Label</source>
-        <translation>چٹ</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="316"/>
         <source>Address</source>
-        <translation> پتہ</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="317"/>
         <source>Amount</source>
-        <translation>رقم</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="318"/>
@@ -3778,7 +3778,7 @@ Address: %4
     <message>
         <location filename="../walletview.cpp" line="44"/>
         <source>&amp;Export</source>
-        <translation>برآمد</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../walletview.cpp" line="45"/>
@@ -4333,7 +4333,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="222"/>
         <source>Error</source>
-        <translation>نقص</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="223"/>

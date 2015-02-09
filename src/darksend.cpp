@@ -284,7 +284,7 @@ void ProcessMessageDarksend(CNode* pfrom, std::string& strCommand, CDataStream& 
 
             if (nValueIn > DARKSEND_POOL_MAX) {
                 LogPrintf("dsi -- more than darksend pool max! %s\n", tx.ToString().c_str());
-                error = _("Value more than Darksed pool maximum allows.");
+                error = _("Value more than Darksend pool maximum allows.");
                 pfrom->PushMessage("dssu", darkSendPool.sessionID, darkSendPool.GetState(), darkSendPool.GetEntriesCount(), MASTERNODE_REJECTED, error);
                 return;
             }
