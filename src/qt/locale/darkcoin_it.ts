@@ -1209,7 +1209,7 @@ Indirizzo: %4
     <message>
         <location filename="../editaddressdialog.cpp" line="111"/>
         <source>The entered address &quot;%1&quot; is not a valid Darkcoin address.</source>
-        <translation type="unfinished"/>
+        <translation>L&apos;indirizzo inserito &quot;%1&quot; non é un indirizzo Darkcoin valido</translation>
     </message>
     <message>
         <location filename="../editaddressdialog.cpp" line="116"/>
@@ -1892,12 +1892,12 @@ Più URL vengono separati da una barra verticale |.</translation>
         <location filename="../overviewpage.cpp" line="376"/>
         <location filename="../overviewpage.cpp" line="401"/>
         <source>Darksend is idle.</source>
-        <translation type="unfinished"/>
+        <translation>Darksend non é attivo.</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="382"/>
         <source>Darksend request complete: Your transaction was accepted into the pool!</source>
-        <translation type="unfinished"/>
+        <translation>Richiesta di Darksend completa: la tua transazione é stata accettata nella piscina!</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="388"/>
@@ -1934,47 +1934,47 @@ Più URL vengono separati da una barra verticale |.</translation>
     <message>
         <location filename="../overviewpage.cpp" line="399"/>
         <source>Transmitting final transaction.</source>
-        <translation type="unfinished"/>
+        <translation>Trasmettendo la transazione finale.</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="403"/>
         <source>Finalizing transaction.</source>
-        <translation type="unfinished"/>
+        <translation>Finalizzando la transazione.</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="405"/>
         <source>Darksend request incomplete:</source>
-        <translation type="unfinished"/>
+        <translation>Richiesta di Darksend incompleta.</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="405"/>
         <source>Will retry...</source>
-        <translation type="unfinished"/>
+        <translation>Riprovará ...</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="407"/>
         <source>Darksend request complete:</source>
-        <translation type="unfinished"/>
+        <translation>Richiesta di Darksend completa:</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="409"/>
         <source>Submitted to masternode, waiting in queue .</source>
-        <translation type="unfinished"/>
+        <translation>Inserita nel nodo maestro, aspettando in coda.</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="410"/>
         <source>Submitted to masternode, waiting in queue ..</source>
-        <translation type="unfinished"/>
+        <translation>Inserita nel nodo maestro, aspettando in coda.</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="411"/>
         <source>Submitted to masternode, waiting in queue ...</source>
-        <translation type="unfinished"/>
+        <translation>Inserita nel nodo maestro, aspettando in coda.</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="413"/>
         <source>Unknown state:</source>
-        <translation type="unfinished"/>
+        <translation>Situazione sconosciuta</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="427"/>

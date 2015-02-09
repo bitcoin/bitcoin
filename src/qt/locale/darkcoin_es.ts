@@ -3518,17 +3518,17 @@ Dirección: %4
     <message>
         <location filename="../transactiontablemodel.cpp" line="372"/>
         <source>Darksend Collateral Payment</source>
-        <translation>Pago de Colateral Darksend</translation>
+        <translation>Darksend - Pago de Colateral</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="374"/>
         <source>Darksend Make Collateral Inputs</source>
-        <translation type="unfinished"/>
+        <translation>Darksend - Efectuar Entradas de Colateral</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="376"/>
         <source>Darksend Create Denominations</source>
-        <translation type="unfinished"/>
+        <translation>Darksend - Crear Denominaciones</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="378"/>
@@ -3622,22 +3622,22 @@ Dirección: %4
     <message>
         <location filename="../transactionview.cpp" line="82"/>
         <source>Darksend Make Collateral Inputs</source>
-        <translation type="unfinished"/>
+        <translation>Darksend - Efectuar Entradas de Colateral</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="83"/>
         <source>Darksend Create Denominations</source>
-        <translation type="unfinished"/>
+        <translation>Darksend - Crear Denominaciones</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="84"/>
         <source>Darksend Denominate</source>
-        <translation>Denominación Darksend</translation>
+        <translation>Darksend - Denominar</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="85"/>
         <source>Darksend Collateral Payment</source>
-        <translation>Pago de Colateral Darksend</translation>
+        <translation>Darksend - Pago de Colateral</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="86"/>
@@ -4034,7 +4034,7 @@ Por ejemplo: alertnotify=echo %%s | mail -s &quot;Darkcoin Alert&quot; admin@foo
     <message>
         <location filename="../bitcoinstrings.cpp" line="127"/>
         <source>Show N confirmations for a successfully locked transaction (0-9999, default: 1)</source>
-        <translation type="unfinished"/>
+        <translation>Mostrar N confirmaciones para una transacción bloqueada con éxito (0-9999, predeterminado: 1)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="130"/>

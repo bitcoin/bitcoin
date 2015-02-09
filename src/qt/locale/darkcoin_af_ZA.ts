@@ -4,12 +4,12 @@
     <message>
         <location filename="../forms/aboutdialog.ui" line="14"/>
         <source>About Darkcoin Core</source>
-        <translation type="unfinished"/>
+        <translation>Omtrent Darkcoin Core</translation>
     </message>
     <message>
         <location filename="../forms/aboutdialog.ui" line="53"/>
         <source>&lt;b&gt;Darkcoin Core&lt;/b&gt; version</source>
-        <translation type="unfinished"/>
+        <translation>Darkcoin Core uitgawe</translation>
     </message>
     <message>
         <location filename="../forms/aboutdialog.ui" line="111"/>
@@ -25,7 +25,7 @@ This product includes software developed by the OpenSSL Project for use in the O
         <location filename="../utilitydialog.cpp" line="30"/>
         <location filename="../utilitydialog.cpp" line="31"/>
         <source>Copyright</source>
-        <translation type="unfinished"/>
+        <translation>Kopiereg</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="30"/>
@@ -69,7 +69,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/addressbookpage.ui" line="74"/>
         <source>&amp;Copy</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Kopie</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="85"/>
@@ -119,7 +119,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../addressbookpage.cpp" line="58"/>
         <source>Receiving addresses</source>
-        <translation type="unfinished"/>
+        <translation>Ontvangs adres</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="65"/>
@@ -134,7 +134,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../addressbookpage.cpp" line="75"/>
         <source>&amp;Copy Address</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Kopie Adres</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="76"/>
@@ -341,7 +341,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="76"/>
         <source>Darkcoin Core</source>
-        <translation type="unfinished"/>
+        <translation>Darkcoin Core</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="85"/>
@@ -357,7 +357,7 @@ This product includes software developed by the OpenSSL Project for use in the O
         <location filename="../bitcoingui.cpp" line="101"/>
         <location filename="../bitcoingui.cpp" line="494"/>
         <source>[testnet]</source>
-        <translation type="unfinished"/>
+        <translation>[toetsnet]</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="226"/>
@@ -372,7 +372,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="233"/>
         <source>&amp;Send</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Stuur</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="234"/>
@@ -382,7 +382,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="240"/>
         <source>&amp;Receive</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Ontvang</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="241"/>
@@ -413,7 +413,7 @@ This product includes software developed by the OpenSSL Project for use in the O
         <location filename="../bitcoingui.cpp" line="270"/>
         <location filename="../bitcoingui.cpp" line="272"/>
         <source>&amp;About Darkcoin Core</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Omtrent Darkcoin Core</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="273"/>
@@ -424,7 +424,7 @@ This product includes software developed by the OpenSSL Project for use in the O
         <location filename="../bitcoingui.cpp" line="276"/>
         <location filename="../bitcoingui.cpp" line="278"/>
         <source>About &amp;Qt</source>
-        <translation type="unfinished"/>
+        <translation>Omtrent &amp;Qt</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="280"/>
@@ -1255,12 +1255,12 @@ Address: %4
     <message>
         <location filename="../utilitydialog.cpp" line="69"/>
         <source>Darkcoin Core</source>
-        <translation type="unfinished"/>
+        <translation>Darkcoin Core</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="69"/>
         <source>version</source>
-        <translation type="unfinished"/>
+        <translation>uitgawe</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="71"/>
@@ -3122,7 +3122,7 @@ Address: %4
     <message>
         <location filename="../splashscreen.cpp" line="33"/>
         <source>Darkcoin Core</source>
-        <translation type="unfinished"/>
+        <translation>Darkcoin Core</translation>
     </message>
     <message>
         <location filename="../splashscreen.cpp" line="34"/>
@@ -3142,7 +3142,7 @@ Address: %4
     <message>
         <location filename="../splashscreen.cpp" line="37"/>
         <source>[testnet]</source>
-        <translation type="unfinished"/>
+        <translation>[toetsnet]</translation>
     </message>
 </context>
 <context>
@@ -5153,7 +5153,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="386"/>
         <source>version</source>
-        <translation type="unfinished"/>
+        <translation>uitgawe</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="387"/>

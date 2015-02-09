@@ -286,7 +286,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../askpassphrasedialog.cpp" line="124"/>
         <source>Darkcoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your darkcoins from being stolen by malware infecting your computer.</source>
-        <translation type="unfinished"/>
+        <translation>Το Darkcoin θα κλείσει τώρα για να τελειώσει τη διαδικασία κρυπτογράφησης. Θυμηθείτε ότι κρυπτογραφόντας το πορτοφόλι σας δεν μπορείτε να προστατεύσετε πλήρως τα darkcoins σας από υποκλοπή μέσω κακόβουλου λογισμικού που έχει μολύνει τον υπολογιστή σας.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="128"/>
@@ -346,7 +346,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="76"/>
         <source>Darkcoin Core</source>
-        <translation type="unfinished"/>
+        <translation>Darkcoin Core</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="85"/>
@@ -382,7 +382,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="234"/>
         <source>Send coins to a Darkcoin address</source>
-        <translation type="unfinished"/>
+        <translation>Στείλε νομίσματα σε μια διεύθυνση Darkcoin</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="240"/>
@@ -392,7 +392,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="241"/>
         <source>Request payments (generates QR codes and darkcoin: URIs)</source>
-        <translation type="unfinished"/>
+        <translation>Αίτηση πληρωμών (δημιουργεί QR codes και διευθύνσεις darkcoin: URls)</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="247"/>
@@ -418,12 +418,12 @@ This product includes software developed by the OpenSSL Project for use in the O
         <location filename="../bitcoingui.cpp" line="270"/>
         <location filename="../bitcoingui.cpp" line="272"/>
         <source>&amp;About Darkcoin Core</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Σχετικά με το Darkcoin Core</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="273"/>
         <source>Show information about Darkcoin</source>
-        <translation type="unfinished"/>
+        <translation>Εμφάνιση πληροφοριών σχετικά με το Darkcoin</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="276"/>
@@ -444,7 +444,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="283"/>
         <source>Modify configuration options for Darkcoin</source>
-        <translation type="unfinished"/>
+        <translation>Επεργασία  ρυθμίσεων επιλογών για το Darkcoin</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="286"/>
@@ -530,7 +530,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="307"/>
         <source>Show diagnostic information</source>
-        <translation type="unfinished"/>
+        <translation>Εμφάνιση διαγνωστικών πληροφοριών</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="308"/>
@@ -540,7 +540,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="309"/>
         <source>Open debugging console</source>
-        <translation type="unfinished"/>
+        <translation>Άνοιγμα κονσόλας αποσφαλμάτωσης</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="310"/>
@@ -621,7 +621,7 @@ This product includes software developed by the OpenSSL Project for use in the O
         <location filename="../bitcoingui.cpp" line="489"/>
         <location filename="../bitcoingui.cpp" line="494"/>
         <source>Darkcoin client</source>
-        <translation type="unfinished"/>
+        <translation>Πελάτης Darkcoin</translation>
     </message>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="638"/>
@@ -707,7 +707,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="750"/>
         <source>Darkcoin</source>
-        <translation type="unfinished"/>
+        <translation>Darkcoin</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="764"/>
@@ -765,7 +765,7 @@ Address: %4
     <message>
         <location filename="../darkcoin.cpp" line="449"/>
         <source>A fatal error occurred. Darkcoin can no longer continue safely and will quit.</source>
-        <translation type="unfinished"/>
+        <translation>Παρουσιάστηκε ανεπανόρθωτο σφάλμα. Το Darkcoin δεν μπορεί πλέον να συνεχίσει με ασφάλεια και θα τερματισθεί.</translation>
     </message>
 </context>
 <context>
@@ -851,7 +851,7 @@ Address: %4
     <message>
         <location filename="../forms/coincontroldialog.ui" line="461"/>
         <source>Darksend Rounds</source>
-        <translation type="unfinished"/>
+        <translation>Γύροι Darksend</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="466"/>
@@ -1079,62 +1079,62 @@ Address: %4
     <message>
         <location filename="../forms/darksendconfig.ui" line="14"/>
         <source>Configure Darksend</source>
-        <translation type="unfinished"/>
+        <translation>Ρύθμιση Darksend</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="26"/>
         <source>Basic Privacy</source>
-        <translation type="unfinished"/>
+        <translation>Βασική Μυστικότητα</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="39"/>
         <source>High Privacy</source>
-        <translation type="unfinished"/>
+        <translation>Υψηλή Μυστικότητα</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="52"/>
         <source>Maximum Privacy</source>
-        <translation type="unfinished"/>
+        <translation>Μέγιστη Μυστικότητα</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="65"/>
         <source>Please select a privacy level.</source>
-        <translation type="unfinished"/>
+        <translation>Παρακαλώ επιλέξετε επίπεδο μυστικότητας.</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="78"/>
         <source>Use 2 separate masternodes to mix funds up to 1000 DRK</source>
-        <translation type="unfinished"/>
+        <translation>Χρησιμοποίηση 2 ξεχωριστών masternodes για σμίξη χρημάτων μέχρι και 1000 DRK</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="91"/>
         <source>Use 8 separate masternodes to mix funds up to 1000 DRK</source>
-        <translation type="unfinished"/>
+        <translation>Χρησιμοποίηση 8 ξεχωριστών masternodes για σμίξη χρημάτων μέχρι και 1000 DRK</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="104"/>
         <source>Use 16 separate masternodes</source>
-        <translation type="unfinished"/>
+        <translation>Χρησιμοποίηση 16 ξεχωριστών masternodes</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="117"/>
         <source>This option is the quickest and will cost about ~0.025 DRK to anonymize 1000 DRK</source>
-        <translation type="unfinished"/>
+        <translation>Αυτή η επιλογή είναι η γρογορότερη και θα κοστίσει γύρω στα ~0.025 DRK για να ανωνυμοποιηθούν 1000 DRK</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="130"/>
         <source>This option is moderately fast and will cost about 0.05 DRK to anonymize 1000 DRK</source>
-        <translation type="unfinished"/>
+        <translation>Αυτή η επιλογή είναι σχετικά γρήγορη και θα κοστίσει περίπου  0.05 DRK για να ανωνυμοποιηθούν 1000 DRK</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="156"/>
         <source>0.1 DRK per 1000 DRK you anonymize.</source>
-        <translation type="unfinished"/>
+        <translation>0.1 DRK για κάθε 1000 DRK που ανωνυμοποιείτε</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="143"/>
         <source>This is the slowest and most secure option. Using maximum anonymity will cost</source>
-        <translation type="unfinished"/>
+        <translation>Αυτή είναι η πιο αργή και πιο ασφαλής επιλογή. Η χρησιμοποίηση μέγιστης ανωνυμοποίησης θα κοστίσει</translation>
     </message>
     <message>
         <location filename="../darksendconfig.cpp" line="43"/>
@@ -1209,7 +1209,7 @@ Address: %4
     <message>
         <location filename="../editaddressdialog.cpp" line="111"/>
         <source>The entered address &quot;%1&quot; is not a valid Darkcoin address.</source>
-        <translation type="unfinished"/>
+        <translation>Η διεύθυνση που εισήχθη &quot;%1% δεν είναι έγκυρη διεύθυνση Darkcoin.</translation>
     </message>
     <message>
         <location filename="../editaddressdialog.cpp" line="116"/>
@@ -1265,7 +1265,7 @@ Address: %4
     <message>
         <location filename="../utilitydialog.cpp" line="69"/>
         <source>Darkcoin Core</source>
-        <translation type="unfinished"/>
+        <translation>Darkcoin Core</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="69"/>
@@ -1323,17 +1323,17 @@ Address: %4
     <message>
         <location filename="../forms/intro.ui" line="23"/>
         <source>Welcome to Darkcoin Core.</source>
-        <translation type="unfinished"/>
+        <translation>Καλώς ήρθατε στο Darkcoin Core.</translation>
     </message>
     <message>
         <location filename="../forms/intro.ui" line="49"/>
         <source>As this is the first time the program is launched, you can choose where Darkcoin Core will store its data.</source>
-        <translation type="unfinished"/>
+        <translation>Καθώς αυτή είναι η πρώτη φορά που εκκινείται το πρόγραμμα, μπορείτε να διαλέξετε πού θα αποθηκεύει το Darkcoin Core τα δεδομένα του.</translation>
     </message>
     <message>
         <location filename="../forms/intro.ui" line="59"/>
         <source>Darkcoin Core will download and store a copy of the Darkcoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
-        <translation type="unfinished"/>
+        <translation>O πυρήνας Darkcoin θα κατεβάσει και να αποθηκεύσει ένα αντίγραφο της αλυσίδας μπλοκ Darkcoin. Τουλάχιστον %1GB δεδομένων θα αποθηκευτούν σε αυτή τη τοποθεσία, και θα αυξηθεί με την πάροδο του χρόνου. Το πορτοφόλι επίσης θα αποθηκευτεί σε αυτή τη τοποθεσία.</translation>
     </message>
     <message>
         <location filename="../forms/intro.ui" line="69"/>
@@ -1348,7 +1348,7 @@ Address: %4
     <message>
         <location filename="../intro.cpp" line="185"/>
         <source>Darkcoin</source>
-        <translation type="unfinished"/>
+        <translation>Darkcoin</translation>
     </message>
     <message>
         <location filename="../intro.cpp" line="186"/>
@@ -1414,12 +1414,12 @@ Address: %4
     <message>
         <location filename="../forms/optionsdialog.ui" line="33"/>
         <source>Automatically start Darkcoin after logging in to the system.</source>
-        <translation type="unfinished"/>
+        <translation>Αυτόματη εκκίνηση του Darkcoin μετά την εισαγωγή στο σύστημα.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="36"/>
         <source>&amp;Start Darkcoin on system login</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Έναρξη του Darkcoin κατά την εκκίνηση του συστήματος</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="45"/>
@@ -1444,17 +1444,17 @@ Address: %4
     <message>
         <location filename="../forms/optionsdialog.ui" line="138"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This setting determines the amount of individual masternodes that an input will be anonymized through. More rounds of anonymization gives a higher degree of privacy, but also costs more in fees.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"/>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Αυτή η ρύθμιση καθορίζει τον αριθμό των ξεχωριστών masternodes μέσω των οποίων θα γίνει ανωνυμοποίηση μιας εισόδου. Περισσότεροι γύροι ανωνυμοποίησης δίνουν υψηλότερο βαθμό μυστικότητας, όμως κοστίζει περισσότερο σε τέλη.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="141"/>
         <source>Darksend rounds to use</source>
-        <translation type="unfinished"/>
+        <translation>Γύροι Darksend που θα χρησιμοποιηθούν</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="180"/>
         <source>Amount of Darkcoin to keep anonymized</source>
-        <translation type="unfinished"/>
+        <translation>Ποσό Darkcoin που θα κρατείται ανωνυμοποιημένο</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="206"/>
@@ -1490,12 +1490,12 @@ Address: %4
     <message>
         <location filename="../forms/optionsdialog.ui" line="287"/>
         <source>If you disable the spending of unconfirmed change, the change from a transaction cannot be used until that transaction has at least one confirmation. This also affects how your balance is computed.</source>
-        <translation type="unfinished"/>
+        <translation>Αν απενεργοποιήσετε την επιλογή ξόδευσης ανεπιβεβαίωτων ρέστων, τα ρέστα απο μια συνναλαγή δεν μπορούν να χρησιμοποιηθούν μέχρι η συγκεκριμένη συναλλαγή να έχει τουλάχιστον μια επιβεβαίωση. Επηρεάζει τον τρόπο με τον οποίο υπολογίζεται το υπόλοιπο σας.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="290"/>
         <source>&amp;Spend unconfirmed change</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Ξόδευση ανεπιβεβαίωτων ρέστων</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="301"/>
@@ -1505,7 +1505,7 @@ Address: %4
     <message>
         <location filename="../forms/optionsdialog.ui" line="307"/>
         <source>Automatically open the Darkcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation type="unfinished"/>
+        <translation>Αυτόματο άνοιγμα των θυρών Darkcoin στον δρομολογητή. Λειτουργεί μόνο αν ο δρομολογητής σας υποστηρίζει και έχει ενεργοποιημένη τη λειτουργία UPnP.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="310"/>
@@ -1515,7 +1515,7 @@ Address: %4
     <message>
         <location filename="../forms/optionsdialog.ui" line="317"/>
         <source>Connect to the Darkcoin network through a SOCKS proxy.</source>
-        <translation type="unfinished"/>
+        <translation>Σύνδεση στο Darkcoin δίκτυο μέσω διαμεσολαβητή SOCKS.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="320"/>
@@ -1590,7 +1590,7 @@ Address: %4
     <message>
         <location filename="../forms/optionsdialog.ui" line="503"/>
         <source>The user interface language can be set here. This setting will take effect after restarting Darkcoin.</source>
-        <translation type="unfinished"/>
+        <translation>Εδώ μπορεί να ρυθμιστεί η γλώσσα διεπαφής χρήστη. Αυτή η ρύθμιση θα ισχύσει μετά την επανεκκίνηση του Darkcoin.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="514"/>
@@ -1605,7 +1605,7 @@ Address: %4
     <message>
         <location filename="../forms/optionsdialog.ui" line="536"/>
         <source>Whether to show Darkcoin addresses in the transaction list or not.</source>
-        <translation type="unfinished"/>
+        <translation>Επιλέξτε αν θέλετε να εμφανίζονται ή όχι οι διευθύνσεις Darkcoin στη λίστα συναλλαγών.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="539"/>
@@ -1701,7 +1701,7 @@ Address: %4
         <location filename="../forms/overviewpage.ui" line="70"/>
         <location filename="../forms/overviewpage.ui" line="986"/>
         <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Darkcoin network after a connection is established, but this process has not completed yet.</source>
-        <translation type="unfinished"/>
+        <translation>Οι πληροφορίες που εμφανίζονται μπορεί να είναι ξεπερασμένες. Το πορτοφόλι σας συγχρονίζεται αυτόματα με το δίκτυο Darkcoin μετά από διασφάλιση σύνδεσης, αλλά αυτή η διαδικασία δεν έχει ακόμη ολοκληρωθεί. </translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="114"/>
@@ -1746,37 +1746,37 @@ Address: %4
     <message>
         <location filename="../forms/overviewpage.ui" line="302"/>
         <source>Status:</source>
-        <translation type="unfinished"/>
+        <translation>Κατάσταση:</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="309"/>
         <source>Enabled/Disabled</source>
-        <translation type="unfinished"/>
+        <translation>Ενεργοποιημένο/Απενεργοποιημένο</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="316"/>
         <source>Completion:</source>
-        <translation type="unfinished"/>
+        <translation>Ολοκλήρωση:</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="336"/>
         <source>Darksend Balance:</source>
-        <translation type="unfinished"/>
+        <translation>Υπόλοιπο Darksend:</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="349"/>
         <source>0 DRK</source>
-        <translation type="unfinished"/>
+        <translation>0 DRK</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="356"/>
         <source>Amount and Rounds:</source>
-        <translation type="unfinished"/>
+        <translation>Ποσό και Γύροι:</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="363"/>
         <source>0 DRK / 0 Rounds</source>
-        <translation type="unfinished"/>
+        <translation>0 DRK / 0 Γύροι</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="370"/>
@@ -1799,17 +1799,17 @@ Address: %4
         <location filename="../overviewpage.cpp" line="462"/>
         <location filename="../overviewpage.cpp" line="476"/>
         <source>Darksend</source>
-        <translation type="unfinished"/>
+        <translation>Darksend</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="858"/>
         <source>Start/Stop Mixing</source>
-        <translation type="unfinished"/>
+        <translation>Εκκίνηση/Σταμάτημα Μίξης</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="890"/>
         <source>(Last Message)</source>
-        <translation type="unfinished"/>
+        <translation>(Τελευταίο Μήνυμα)</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="915"/>
@@ -1819,7 +1819,7 @@ Address: %4
     <message>
         <location filename="../forms/overviewpage.ui" line="918"/>
         <source>Try Mix</source>
-        <translation type="unfinished"/>
+        <translation>Δοκιμάστε τη Μίξη</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="937"/>
@@ -1846,20 +1846,20 @@ Address: %4
         <location filename="../overviewpage.cpp" line="142"/>
         <location filename="../overviewpage.cpp" line="347"/>
         <source>Disabled</source>
-        <translation type="unfinished"/>
+        <translation>Απενεργοποιημένο</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="145"/>
         <location filename="../overviewpage.cpp" line="349"/>
         <location filename="../overviewpage.cpp" line="490"/>
         <source>Start Darksend Mixing</source>
-        <translation type="unfinished"/>
+        <translation>Εκκίνηση Μίξης Darksend</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="147"/>
         <location filename="../overviewpage.cpp" line="492"/>
         <source>Stop Darksend Mixing</source>
-        <translation type="unfinished"/>
+        <translation>Σταμάτημα Μίξης Darksend</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="267"/>
@@ -1874,29 +1874,30 @@ Address: %4
     <message>
         <location filename="../overviewpage.cpp" line="332"/>
         <source>Rounds</source>
-        <translation type="unfinished"/>
+        <translation>Γύροι</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="363"/>
         <source>Enabled</source>
-        <translation type="unfinished"/>
+        <translation>Ενεργοποιημένο</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="419"/>
         <source>Last Darksend message:
 </source>
-        <translation type="unfinished"/>
+        <translation>Τελευταίο μήνυμα Darksend:
+</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="376"/>
         <location filename="../overviewpage.cpp" line="401"/>
         <source>Darksend is idle.</source>
-        <translation type="unfinished"/>
+        <translation>Το Darksend είναι αδρανές.</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="382"/>
         <source>Darksend request complete: Your transaction was accepted into the pool!</source>
-        <translation type="unfinished"/>
+        <translation>Αίτηση Darksend ολοκληρώθηκε: Η συναλλαγή σας έχει γίνει αποδεκτή!</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="388"/>
@@ -1913,37 +1914,37 @@ Address: %4
     <message>
         <location filename="../overviewpage.cpp" line="394"/>
         <source>Found enough users, signing ...</source>
-        <translation type="unfinished"/>
+        <translation>Βρέθηκαν αρκετοί χρήστες, γίνεται υπογραφή ...</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="395"/>
         <source>Found enough users, signing ( waiting. )</source>
-        <translation type="unfinished"/>
+        <translation>Βρέθηκαν αρκετοί χρήστες, γίνεται υπογραφή (σε αναμονή.)</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="396"/>
         <source>Found enough users, signing ( waiting.. )</source>
-        <translation type="unfinished"/>
+        <translation>Βρέθηκαν αρκετοί χρήστες, γίνεται υπογραφή (σε αναμονή.)</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="397"/>
         <source>Found enough users, signing ( waiting... )</source>
-        <translation type="unfinished"/>
+        <translation>Βρέθηκαν αρκετοί χρήστες, γίνεται υπογραφή (σε αναμονή.)</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="399"/>
         <source>Transmitting final transaction.</source>
-        <translation type="unfinished"/>
+        <translation>Μετάδοση τελικής συναλλαγής.</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="403"/>
         <source>Finalizing transaction.</source>
-        <translation type="unfinished"/>
+        <translation>Οριστικοποίηση συναλλαγής.</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="405"/>
         <source>Darksend request incomplete:</source>
-        <translation type="unfinished"/>
+        <translation>Αίτηση Darksend ατελής:</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="405"/>
@@ -1953,27 +1954,27 @@ Address: %4
     <message>
         <location filename="../overviewpage.cpp" line="407"/>
         <source>Darksend request complete:</source>
-        <translation type="unfinished"/>
+        <translation>Αίτηση Darksend πλήρης:</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="409"/>
         <source>Submitted to masternode, waiting in queue .</source>
-        <translation type="unfinished"/>
+        <translation>Υποβλήθηκε στον masternode, αναμονή στην σειρά.</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="410"/>
         <source>Submitted to masternode, waiting in queue ..</source>
-        <translation type="unfinished"/>
+        <translation>Υποβλήθηκε στον masternode, αναμονή στην σειρά.</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="411"/>
         <source>Submitted to masternode, waiting in queue ...</source>
-        <translation type="unfinished"/>
+        <translation>Υποβλήθηκε στον masternode, αναμονή στην σειρά.</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="413"/>
         <source>Unknown state:</source>
-        <translation type="unfinished"/>
+        <translation>Άγνωστη κατάσταση:</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="427"/>
@@ -2098,7 +2099,7 @@ Address: %4
         <location filename="../darkcoin.cpp" line="539"/>
         <location filename="../darkcoin.cpp" line="552"/>
         <source>Darkcoin</source>
-        <translation type="unfinished"/>
+        <translation>Darkcoin</translation>
     </message>
     <message>
         <location filename="../darkcoin.cpp" line="526"/>
@@ -2123,12 +2124,12 @@ Address: %4
     <message>
         <location filename="../darkcoin.cpp" line="612"/>
         <source>Darkcoin Core didn&apos;t yet exit safely...</source>
-        <translation type="unfinished"/>
+        <translation>Η εφαρμογή Darkcoin Core δεν έχει ακόμα τερματιστεί με ασφάλεια...</translation>
     </message>
     <message>
         <location filename="../guiutil.cpp" line="101"/>
         <source>Enter a Darkcoin address (e.g. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</source>
-        <translation type="unfinished"/>
+        <translation>Εισάγετε μια διεύθυνση Darkcoin (π.χ. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
     </message>
 </context>
 <context>
@@ -2159,7 +2160,7 @@ Address: %4
     <message>
         <location filename="../forms/rpcconsole.ui" line="14"/>
         <source>Tools window</source>
-        <translation type="unfinished"/>
+        <translation>Παράθυρο εργαλείων</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="24"/>
@@ -2169,7 +2170,7 @@ Address: %4
     <message>
         <location filename="../forms/rpcconsole.ui" line="33"/>
         <source>Masternode Count</source>
-        <translation type="unfinished"/>
+        <translation>Αριθμός Masternode</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="46"/>
@@ -2300,7 +2301,7 @@ Address: %4
     <message>
         <location filename="../rpcconsole.cpp" line="331"/>
         <source>Welcome to the Darkcoin RPC console.</source>
-        <translation type="unfinished"/>
+        <translation>Καλώς ήρθατε στην Darkcoin RPC κονσόλα.</translation>
     </message>
     <message>
         <location filename="../rpcconsole.cpp" line="332"/>
@@ -2375,7 +2376,7 @@ Address: %4
         <location filename="../forms/receivecoinsdialog.ui" line="67"/>
         <location filename="../forms/receivecoinsdialog.ui" line="88"/>
         <source>An optional label to associate with the new receiving address.</source>
-        <translation type="unfinished"/>
+        <translation>Μια προαιρετική ετικέτα για να συνδέσετε με την νέα διεύθυνση παραλαβής.</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="81"/>
@@ -2673,12 +2674,12 @@ Address: %4
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="752"/>
         <source>Darksend</source>
-        <translation type="unfinished"/>
+        <translation>Darksend</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="771"/>
         <source>InstantX</source>
-        <translation type="unfinished"/>
+        <translation>InstantX</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="778"/>
@@ -2746,7 +2747,7 @@ Address: %4
     <message>
         <location filename="../sendcoinsdialog.cpp" line="261"/>
         <source>are added as transaction fee</source>
-        <translation type="unfinished"/>
+        <translation>προστέθηκαν ως τέλη συναλλαγής</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="275"/>
@@ -2806,17 +2807,17 @@ Address: %4
     <message>
         <location filename="../sendcoinsdialog.cpp" line="508"/>
         <source>The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
-        <translation type="unfinished"/>
+        <translation>Η συναλλαγή απορρίφθηκε! Αυτό ίσως οφείλεται στο ότι τα νομίσματά σας έχουν ήδη ξοδευτεί, π.χ. με την αντιγραφή του wallet.dat σε άλλο σύστημα και την χρήση τους εκεί, χωρίς η συναλλαγή να έχει καταγραφεί στο παρόν σύστημα.</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="513"/>
         <source>Error: The wallet was unlocked only to anonymize coins.</source>
-        <translation type="unfinished"/>
+        <translation>Σφάλμα: Το πορτοφόλι ήταν ξεκλείδωτο μόνο για ανωνυμοποίηση νομισμάτων.</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="626"/>
         <source>Warning: Invalid Darkcoin address</source>
-        <translation type="unfinished"/>
+        <translation>Προειδοποίηση: Μη έγκυρη διεύθυνση Darkcoin</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="635"/>
@@ -2844,7 +2845,7 @@ Address: %4
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="54"/>
         <source>The address to send the payment to (e.g. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</source>
-        <translation type="unfinished"/>
+        <translation>Η διεύθυνση στην οποία θα σταλεί η πληρωμή (π.χ. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="61"/>
@@ -3059,7 +3060,7 @@ Address: %4
     <message>
         <location filename="../signverifymessagedialog.cpp" line="31"/>
         <source>Enter a Darkcoin address (e.g. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</source>
-        <translation type="unfinished"/>
+        <translation>Εισάγετε μια διεύθυνση Darkcoin (π.χ. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
     </message>
     <message>
         <location filename="../signverifymessagedialog.cpp" line="114"/>
@@ -3133,7 +3134,7 @@ Address: %4
     <message>
         <location filename="../splashscreen.cpp" line="33"/>
         <source>Darkcoin Core</source>
-        <translation type="unfinished"/>
+        <translation>Darkcoin Core</translation>
     </message>
     <message>
         <location filename="../splashscreen.cpp" line="34"/>
@@ -3531,7 +3532,7 @@ Address: %4
     <message>
         <location filename="../transactiontablemodel.cpp" line="378"/>
         <source>Darksent</source>
-        <translation type="unfinished"/>
+        <translation>Darksent</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="420"/>
@@ -3615,7 +3616,7 @@ Address: %4
     <message>
         <location filename="../transactionview.cpp" line="81"/>
         <source>Darksent</source>
-        <translation type="unfinished"/>
+        <translation>Darksent</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="82"/>
@@ -4901,7 +4902,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="333"/>
         <source>Signing failed.</source>
-        <translation type="unfinished"/>
+        <translation>Η υπογραφή απέτυχε.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="334"/>
@@ -5001,17 +5002,17 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="353"/>
         <source>Transaction created successfully.</source>
-        <translation type="unfinished"/>
+        <translation>Επιτυχής δημιουργία της συναλλαγής.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="354"/>
         <source>Transaction fees are too high.</source>
-        <translation type="unfinished"/>
+        <translation>Τα τέλη της συναλλαγής είναι πολύ ψηλά.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="355"/>
         <source>Transaction not valid.</source>
-        <translation type="unfinished"/>
+        <translation>Μη έγκυρη συναλλαγή.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="356"/>
@@ -5116,12 +5117,12 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="376"/>
         <source>Wallet is locked.</source>
-        <translation type="unfinished"/>
+        <translation>Το πορτοφόλι  είναι κλειδωμένο.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="377"/>
         <source>Wallet needed to be rewritten: restart Darkcoin to complete</source>
-        <translation type="unfinished"/>
+        <translation>Απαιτείται η επανεγγραφή του Πορτοφολιού: Επανεκκινήστε το Darkcoin για ολοκήρωση</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="378"/>
@@ -5146,12 +5147,12 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="382"/>
         <source>Wrong state.</source>
-        <translation type="unfinished"/>
+        <translation>Λάθος κατάσταση.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="383"/>
         <source>You need to rebuild the database using -reindex to change -txindex</source>
-        <translation type="unfinished"/>
+        <translation>Χρειάζεται να γίνει ανοικοδόμηση της βάσης δεδομένων χρησιμοποιώντας την εντολή -reindex to change -txindex</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="384"/>
