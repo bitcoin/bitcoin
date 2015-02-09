@@ -2,6 +2,7 @@
 #include <QDialog>
 #include <QMessageBox>
 #include <QScrollBar>
+#include <QKeyEvent>
 #include <vector>
 
 #include "addresstablemodel.h"
@@ -28,7 +29,7 @@
 #pragma warning( disable : 4101)
 #endif
 
-MultisigDialog::MultisigDialog(QWidget *parent) : QDialog(parent), ui(new Ui::MultisigDialog), model(0)
+MultisigDialog::MultisigDialog(QWidget *parent) : QWidget(parent), ui(new Ui::MultisigDialog), model(0)
 {
     ui->setupUi(this);
 
@@ -642,4 +643,19 @@ void MultisigDialog::updateAmounts()
     QString feeStr;
     feeStr.sprintf("%.6f", (double) fee / COIN);
     ui->fee->setText(feeStr);
+}
+
+void MultisigDialog::keyPressEvent(QKeyEvent *event)
+{
+#ifdef ANDROID
+    if(windowType() != Qt::Widget && event->key() == Qt::Key_Back)
+    {
+        close();
+    }
+#else
+    if(windowType() != Qt::Widget && event->key() == Qt::Key_Escape)
+    {
+        close();
+    }
+#endif
 }

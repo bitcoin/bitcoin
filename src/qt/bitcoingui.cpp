@@ -85,7 +85,8 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     notificator(0),
     rpcConsole(0),
     aboutDialog(0),
-    optionsDialog(0)
+    optionsDialog(0),
+    multisigPage(0)
 {
     resize(850, 550);
     setWindowTitle(tr("NovaCoin") + " - " + tr("Wallet"));
@@ -134,7 +135,7 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
 
     signVerifyMessageDialog = new SignVerifyMessageDialog(this);
 
-    multisigPage = new MultisigDialog(this);
+    multisigPage = new MultisigDialog(0);
 
     centralWidget = new QStackedWidget(this);
     centralWidget->addWidget(overviewPage);
@@ -224,6 +225,7 @@ BitcoinGUI::~BitcoinGUI()
     delete rpcConsole;
     delete aboutDialog;
     delete optionsDialog;
+    delete multisigPage;
 }
 
 void BitcoinGUI::createActions()
