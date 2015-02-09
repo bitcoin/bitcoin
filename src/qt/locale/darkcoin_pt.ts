@@ -3520,12 +3520,12 @@ Endereço: %4
     <message>
         <location filename="../transactiontablemodel.cpp" line="374"/>
         <source>Darksend Make Collateral Inputs</source>
-        <translation type="unfinished"/>
+        <translation>Darksend Fazer Entradas Colaterais</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="376"/>
         <source>Darksend Create Denominations</source>
-        <translation type="unfinished"/>
+        <translation>Darksend Criar Denominações</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="378"/>
@@ -3619,12 +3619,12 @@ Endereço: %4
     <message>
         <location filename="../transactionview.cpp" line="82"/>
         <source>Darksend Make Collateral Inputs</source>
-        <translation type="unfinished"/>
+        <translation>Darksend Fazer Entradas Colaterais</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="83"/>
         <source>Darksend Create Denominations</source>
-        <translation type="unfinished"/>
+        <translation>Darksend Criar Denominações</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="84"/>
@@ -4030,7 +4030,7 @@ exemplo: alertnotify=echo %%s | mail -s &quot;Alerta Darkcoin&quot; admin@foo.co
     <message>
         <location filename="../bitcoinstrings.cpp" line="127"/>
         <source>Show N confirmations for a successfully locked transaction (0-9999, default: 1)</source>
-        <translation type="unfinished"/>
+        <translation>Mostrar N confirmações para uma transacção bloqueada com sucesso (0-9999, omissão:1)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="130"/>

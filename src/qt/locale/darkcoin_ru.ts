@@ -3520,12 +3520,12 @@ Address: %4
     <message>
         <location filename="../transactiontablemodel.cpp" line="374"/>
         <source>Darksend Make Collateral Inputs</source>
-        <translation type="unfinished"/>
+        <translation>Создание обеспечительных входов для Darksend</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="376"/>
         <source>Darksend Create Denominations</source>
-        <translation type="unfinished"/>
+        <translation>Создание деноминаций для Darksend</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="378"/>
@@ -3619,12 +3619,12 @@ Address: %4
     <message>
         <location filename="../transactionview.cpp" line="82"/>
         <source>Darksend Make Collateral Inputs</source>
-        <translation type="unfinished"/>
+        <translation>Создание обеспечительных входов для Darksend</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="83"/>
         <source>Darksend Create Denominations</source>
-        <translation type="unfinished"/>
+        <translation>Создание деноминаций для Darksend</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="84"/>
@@ -4031,7 +4031,7 @@ rpcpassword=%s
     <message>
         <location filename="../bitcoinstrings.cpp" line="127"/>
         <source>Show N confirmations for a successfully locked transaction (0-9999, default: 1)</source>
-        <translation type="unfinished"/>
+        <translation>Показывать N подтверждений для успешно заблокированной транзакции (0-9999, по умолчанию: 1)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="130"/>
