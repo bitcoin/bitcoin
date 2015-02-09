@@ -220,7 +220,7 @@ void bench_group_add_affine_var(void* arg) {
     bench_inv_t *data = (bench_inv_t*)arg;
 
     for (i = 0; i < 200000; i++) {
-        secp256k1_gej_add_ge_var(&data->gej_x, &data->gej_x, &data->ge_y);
+        secp256k1_gej_add_ge_var(&data->gej_x, &data->gej_x, &data->ge_y, NULL);
     }
 }
 

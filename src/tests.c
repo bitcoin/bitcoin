@@ -1035,9 +1035,13 @@ void test_ge(void) {
             }
             secp256k1_ge_set_gej_var(&ref, &refj);
 
-            /* Test gej + ge (var). */
-            secp256k1_gej_add_ge_var(&resj, &gej[i1], &ge[i2]);
+            /* Test gej + ge with Z ratio result (var). */
+            secp256k1_gej_add_ge_var(&resj, &gej[i1], &ge[i2], secp256k1_gej_is_infinity(&gej[i1]) ? NULL : &zr);
             ge_equals_gej(&ref, &resj);
+            if (!secp256k1_gej_is_infinity(&gej[i1]) && !secp256k1_gej_is_infinity(&resj)) {
+                secp256k1_fe_t zrz; secp256k1_fe_mul(&zrz, &zr, &gej[i1].z);
+                CHECK(secp256k1_fe_equal_var(&zrz, &resj.z));
+            }
 
             /* Test gej + ge (var, with additional Z factor). */
             {
