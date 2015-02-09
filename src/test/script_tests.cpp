@@ -107,7 +107,6 @@ void static NegateSignatureS(std::vector<unsigned char>& vchSig) {
     std::vector<unsigned char> r, s;
     r = std::vector<unsigned char>(vchSig.begin() + 4, vchSig.begin() + 4 + vchSig[3]);
     s = std::vector<unsigned char>(vchSig.begin() + 6 + vchSig[3], vchSig.begin() + 6 + vchSig[3] + vchSig[5 + vchSig[3]]);
-    unsigned char hashtype = vchSig.back();
 
     // Really ugly to implement mod-n negation here, but it would be feature creep to expose such functionality from libsecp256k1.
     static const unsigned char order[33] = {
@@ -141,7 +140,6 @@ void static NegateSignatureS(std::vector<unsigned char>& vchSig) {
     vchSig.push_back(0x02);
     vchSig.push_back(s.size());
     vchSig.insert(vchSig.end(), s.begin(), s.end());
-    vchSig.push_back(hashtype);
 }
 
 namespace
