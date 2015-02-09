@@ -39,6 +39,14 @@ bool CheckBlockHeader(const CBlockHeader& block, int64_t nTime, CValidationState
 /** Context-dependent validity checks */
 bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& state, CBlockIndex* pindexPrev, const Consensus::Params& params);
 
+/** Utility functions */
+/**
+ * Count ECDSA signature operations the old-fashioned (pre-0.6) way
+ * @return number of sigops this transaction's outputs will produce when spent
+ * @see CTransaction::FetchInputs
+ */
+unsigned int GetLegacySigOpCount(const CTransaction& tx);
+
 } // namespace Consensus
 
 /**

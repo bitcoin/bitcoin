@@ -243,7 +243,7 @@ CBlockTemplate* CreateNewBlock(const Consensus::Params& params, const CScript& s
                 continue;
 
             // Legacy limits on sigOps:
-            unsigned int nTxSigOps = GetLegacySigOpCount(tx);
+            unsigned int nTxSigOps = Consensus::GetLegacySigOpCount(tx);
             if (nBlockSigOps + nTxSigOps >= MAX_BLOCK_SIGOPS)
                 continue;
 
@@ -331,7 +331,7 @@ CBlockTemplate* CreateNewBlock(const Consensus::Params& params, const CScript& s
         UpdateTime(pblock, params, pindexPrev);
         pblock->nBits          = GetNextWorkRequired(pindexPrev, pblock, params);
         pblock->nNonce         = 0;
-        pblocktemplate->vTxSigOps[0] = GetLegacySigOpCount(pblock->vtx[0]);
+        pblocktemplate->vTxSigOps[0] = Consensus::GetLegacySigOpCount(pblock->vtx[0]);
 
         CValidationState state;
         if (!TestBlockValidity(state, *pblock, pindexPrev, false, false))

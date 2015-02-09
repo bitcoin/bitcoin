@@ -7,6 +7,7 @@
 
 #include "chain.h"
 #include "consensus/validation.h"
+#include "primitives/transaction.h"
 
 bool Consensus::CheckBlockHeader(const CBlockHeader& block, int64_t nTime, CValidationState& state, const Consensus::Params& params, bool fCheckPOW)
 {
@@ -58,4 +59,16 @@ bool Consensus::VerifyBlockHeader(const CBlockHeader& block, CValidationState& s
     if (!Consensus::ContextualCheckBlockHeader(block, state, pindexPrev, params))
         return false;
     return true;
+}
+
+unsigned int Consensus::GetLegacySigOpCount(const CTransaction& tx)
+{
+    unsigned int nSigOps = 0;
+    for (unsigned int i = 0; i < tx.vin.size(); i++)
+        nSigOps += tx.vin[i].scriptSig.GetSigOpCount(false);
+
+    for (unsigned int i = 0; i < tx.vout.size(); i++)
+        nSigOps += tx.vout[i].scriptPubKey.GetSigOpCount(false);
+
+    return nSigOps;
 }
