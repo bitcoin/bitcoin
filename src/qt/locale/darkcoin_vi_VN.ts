@@ -3520,12 +3520,12 @@ Kiểu: %3
     <message>
         <location filename="../transactiontablemodel.cpp" line="374"/>
         <source>Darksend Make Collateral Inputs</source>
-        <translation type="unfinished"/>
+        <translation>Darksend tạo đầu vào Collateral</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="376"/>
         <source>Darksend Create Denominations</source>
-        <translation type="unfinished"/>
+        <translation>Darksend tạo các mệnh giá</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="378"/>
@@ -3619,12 +3619,12 @@ Kiểu: %3
     <message>
         <location filename="../transactionview.cpp" line="82"/>
         <source>Darksend Make Collateral Inputs</source>
-        <translation type="unfinished"/>
+        <translation>Darksend tạo đầu vào Collateral</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="83"/>
         <source>Darksend Create Denominations</source>
-        <translation type="unfinished"/>
+        <translation>Darksend tạo các mệnh giá</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="84"/>
@@ -4031,7 +4031,7 @@ ví dụ: alertnotify=echo %%s | mail -s &quot;Cảnh báo Darkcoin&quot; admin@
     <message>
         <location filename="../bitcoinstrings.cpp" line="127"/>
         <source>Show N confirmations for a successfully locked transaction (0-9999, default: 1)</source>
-        <translation type="unfinished"/>
+        <translation>Hiển thị N xác nhận cho mỗi giao dịch được khoá thành công (0-9999, ngầm định: 1)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="130"/>
@@ -4200,12 +4200,12 @@ Nếu tệp không tồn tại, tạo nó với quyền tệp owner-readable-onl
     <message>
         <location filename="../bitcoinstrings.cpp" line="191"/>
         <source>Collateral is not valid.</source>
-        <translation>Thế chấp là không hợp lệ.</translation>
+        <translation>Collateral là không hợp lệ.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="192"/>
         <source>Collateral not valid.</source>
-        <translation>Thế chấp không hợp lệ.</translation>
+        <translation>Collateral không hợp lệ.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="193"/>
