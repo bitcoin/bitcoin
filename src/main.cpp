@@ -20,6 +20,7 @@
 #include "txmempool.h"
 #include "ui_interface.h"
 #include "util.h"
+#include "spork.h"
 
 #include <sstream>
 
@@ -69,7 +70,6 @@ struct COrphanBlock {
 };
 map<uint256, COrphanBlock*> mapOrphanBlocks;
 multimap<uint256, COrphanBlock*> mapOrphanBlocksByPrev;
-bool fManyOrphansFound;
 
 struct COrphanTx {
     CTransaction tx;
@@ -1177,6 +1177,7 @@ int CMerkleTx::GetDepthInMainChainINTERNAL(CBlockIndex* &pindexRet) const
 int CMerkleTx::GetTransactionLockSignatures() const
 {
     if(fLargeWorkForkFound || fLargeWorkInvalidChainFound) return -2;
+    if(!IsSporkActive(SPORK_2_INSTANTX)) return -3;
     if(nInstantXDepth == 0) return -1;
 
     //compile consessus vote
@@ -2827,23 +2828,27 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
 
     // ----------- instantX transaction scanning -----------
 
-    if(!fLargeWorkForkFound && !fLargeWorkInvalidChainFound){
-        BOOST_FOREACH(const CTransaction& tx, block.vtx){
-            if (!tx.IsCoinBase()){
-                //only reject blocks when it's based on complete consensus
-                BOOST_FOREACH(const CTxIn& in, tx.vin){
-                    if(mapLockedInputs.count(in.prevout)){
-                        if(mapLockedInputs[in.prevout] != tx.GetHash()){
-                            LogPrintf("CheckBlock() : found conflicting transaction with transaction lock %s %s\n", mapLockedInputs[in.prevout].ToString().c_str(), tx.GetHash().ToString().c_str());
-                            return state.DoS(0, error("CheckBlock() : found conflicting transaction with transaction lock"),
-                                             REJECT_INVALID, "conflicting-tx-ix");
+    if(IsSporkActive(SPORK_3_INSTANTX_BLOCK_FILTERING)){
+        if(!fLargeWorkForkFound && !fLargeWorkInvalidChainFound){
+            BOOST_FOREACH(const CTransaction& tx, block.vtx){
+                if (!tx.IsCoinBase()){
+                    //only reject blocks when it's based on complete consensus
+                    BOOST_FOREACH(const CTxIn& in, tx.vin){
+                        if(mapLockedInputs.count(in.prevout)){
+                            if(mapLockedInputs[in.prevout] != tx.GetHash()){
+                                LogPrintf("CheckBlock() : found conflicting transaction with transaction lock %s %s\n", mapLockedInputs[in.prevout].ToString().c_str(), tx.GetHash().ToString().c_str());
+                                return state.DoS(0, error("CheckBlock() : found conflicting transaction with transaction lock"),
+                                                 REJECT_INVALID, "conflicting-tx-ix");
+                            }
                         }
                     }
                 }
             }
+        } else {
+            LogPrintf("CheckBlock() : fork detected, skipping transaction locking checks\n");
         }
     } else {
-        LogPrintf("CheckBlock() : fork detected, skipping transaction locking checks\n");
+        if(fDebug) LogPrintf("CheckBlock() : InstantX block filtering is off\n");
     }
 
 
@@ -2857,6 +2862,10 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
         if(block.nTime > START_MASTERNODE_PAYMENTS) MasternodePayments = true;
     }
 
+    if(!IsSporkActive(SPORK_1_MASTERNODE_PAYMENTS_ENFORCEMENT)){
+        MasternodePayments = false;
+        if(fDebug) LogPrintf("CheckBlock() : Masternode payment enforcement is off\n");
+    }
 
     if(MasternodePayments && !fLargeWorkForkFound && !fLargeWorkInvalidChainFound)
     {
@@ -3175,8 +3184,8 @@ bool ProcessBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDiskBl
             // Ask this guy to fill in what we're missing
             PushGetBlocks(pfrom, chainActive.Tip(), GetOrphanRoot(hash));
 
-            if(fLargeWorkForkFound || fLargeWorkInvalidChainFound){
-                // Move backwards to tigger reprocessing both chains
+            // Move backwards to tigger reprocessing both chains
+            if(fLargeWorkForkFound || fLargeWorkInvalidChainFound || IsSporkActive(SPORK_4_RECONVERGE)){
                 CValidationState state;
                 DisconnectTip(state);
             }
@@ -3875,6 +3884,8 @@ bool static AlreadyHave(const CInv& inv)
                mapTxLockReqRejected.count(inv.hash);
     case MSG_TXLOCK_VOTE:
         return mapTxLockVote.count(inv.hash);
+    case MSG_SPORK:
+        return mapSporks.count(inv.hash);
     }
     // Don't know what it is, just say we already got one
     return true;
@@ -4014,6 +4025,16 @@ void static ProcessGetData(CNode* pfrom)
                         ss.reserve(1000);
                         ss << mapTxLockReq[inv.hash];
                         pfrom->PushMessage("txlreq", ss);
+                        pushed = true;
+                    }
+                }
+                if (!pushed && inv.type == MSG_SPORK) {
+                    if(mapSporks.count(inv.hash)){
+                        printf("have %s\n", inv.hash.ToString().c_str() );
+                        CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
+                        ss.reserve(1000);
+                        ss << mapSporks[inv.hash];
+                        pfrom->PushMessage("spork", ss);
                         pushed = true;
                     }
                 }
@@ -4770,13 +4791,13 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
             LogPrint("net", "Reject %s\n", SanitizeString(ss.str()));
         }
     }
-
     else
     {
         //probably one the extensions
         ProcessMessageDarksend(pfrom, strCommand, vRecv);
         ProcessMessageMasternode(pfrom, strCommand, vRecv);
         ProcessMessageInstantX(pfrom, strCommand, vRecv);
+        ProcessSpork(pfrom, strCommand, vRecv);
     }
 
 
