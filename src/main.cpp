@@ -1173,7 +1173,7 @@ int CMerkleTx::GetDepthInMainChainINTERNAL(CBlockIndex* &pindexRet) const
 
 int CMerkleTx::GetTransactionLockSignatures() const
 {
-    if(fManyOrphansFound) return -2;
+    if(fLargeWorkForkFound || fLargeWorkInvalidChainFound) return -2;
     if(nInstantXDepth == 0) return -1;
 
     //compile consessus vote
@@ -2826,7 +2826,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
 
     // ----------- instantX transaction scanning -----------
 
-    if(!fManyOrphansFound){
+    if(!fLargeWorkForkFound && !fLargeWorkInvalidChainFound){
         BOOST_FOREACH(const CTransaction& tx, block.vtx){
             if (!tx.IsCoinBase()){
                 //only reject blocks when it's based on complete consensus
@@ -2857,7 +2857,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
     }
 
 
-    if(MasternodePayments && !fManyOrphansFound)
+    if(MasternodePayments && !fLargeWorkForkFound && !fLargeWorkInvalidChainFound)
     {
         LOCK2(cs_main, mempool.cs);
 
@@ -3174,14 +3174,14 @@ bool ProcessBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDiskBl
             // Ask this guy to fill in what we're missing
             PushGetBlocks(pfrom, chainActive.Tip(), GetOrphanRoot(hash));
 
-            // Move backwards to tigger reprocessing both chains
-            CValidationState state;
-            DisconnectTip(state);
+            if(fLargeWorkForkFound || fLargeWorkInvalidChainFound){
+                // Move backwards to tigger reprocessing both chains
+                CValidationState state;
+                DisconnectTip(state);
+            }
         }
         return true;
     }
-
-    fManyOrphansFound = (unsigned long)mapOrphanBlocks.size() >= 6;
 
     // Store to disk
     if (!AcceptBlock(*pblock, state, dbp))
