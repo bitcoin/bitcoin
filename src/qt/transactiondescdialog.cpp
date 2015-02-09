@@ -5,9 +5,10 @@
 #include "dialogwindowflags.h"
 
 #include <QModelIndex>
+#include <QKeyEvent>
 
 TransactionDescDialog::TransactionDescDialog(const QModelIndex &idx, QWidget *parent) :
-    QDialog(parent, DIALOGWINDOWHINTS),
+    QWidget(parent, DIALOGWINDOWHINTS),
     ui(new Ui::TransactionDescDialog)
 {
     ui->setupUi(this);
@@ -18,4 +19,19 @@ TransactionDescDialog::TransactionDescDialog(const QModelIndex &idx, QWidget *pa
 TransactionDescDialog::~TransactionDescDialog()
 {
     delete ui;
+}
+
+void TransactionDescDialog::keyPressEvent(QKeyEvent *event)
+{
+#ifdef ANDROID
+    if(event->key() == Qt::Key_Back)
+    {
+        close();
+    }
+#else
+    if(event->key() == Qt::Key_Escape)
+    {
+        close();
+    }
+#endif
 }
