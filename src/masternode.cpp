@@ -531,7 +531,7 @@ bool GetBlockHash(uint256& hash, int nBlockHeight)
     for (unsigned int i = 1; BlockReading && BlockReading->nHeight > 0; i++) {
         if(n >= nBlocksAgo){
             hash = BlockReading->GetBlockHash();
-            mapCacheBlockHashes[nBlockHeight-n] = hash;
+            mapCacheBlockHashes[nBlockHeight] = hash;
             return true;
         }
         n++;
@@ -649,7 +649,7 @@ uint64_t CMasternodePayments::CalculateScore(uint256 blockHash, CTxIn& vin)
     //printf(" -- CMasternodePayments CalculateScore() n2 = %d \n", n2.Get64());
     //printf(" -- CMasternodePayments CalculateScore() n3 = %d \n", n3.Get64());
     //printf(" -- CMasternodePayments CalculateScore() n4 = %d \n", n4.Get64());
-
+ 
     return n4.Get64();
 }
 
@@ -695,6 +695,7 @@ bool CMasternodePayments::AddWinningMasternode(CMasternodePaymentWinner& winnerI
                 winner.vin = winnerIn.vin;
                 winner.payee = winnerIn.payee;
                 winner.vchSig = winnerIn.vchSig;
+
                 return true;
             }
         }
@@ -704,6 +705,7 @@ bool CMasternodePayments::AddWinningMasternode(CMasternodePaymentWinner& winnerI
     if(!foundBlock){
         vWinning.push_back(winnerIn);
         mapSeenMasternodeVotes.insert(make_pair(winnerIn.GetHash(), winnerIn));
+        
         return true;
     }
 
