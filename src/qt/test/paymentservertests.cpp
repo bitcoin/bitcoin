@@ -7,7 +7,10 @@
 #include "optionsmodel.h"
 #include "paymentrequestdata.h"
 
+#include "amount.h"
 #include "random.h"
+#include "script/script.h"
+#include "script/standard.h"
 #include "util.h"
 #include "utilstrencodings.h"
 
@@ -183,6 +186,20 @@ void PaymentServerTests::paymentServerTests()
     tempFile.write((const char*)randData, sizeof(randData));
     tempFile.close();
     QCOMPARE(PaymentServer::readPaymentRequestFromFile(tempFile.fileName(), r.paymentRequest), false);
+
+    // Payment request with amount overflow (amount is set to 21000001 BTC):
+    data = DecodeBase64(paymentrequest5_cert2_BASE64);
+    byteArray = QByteArray((const char*)&data[0], data.size());
+    r.paymentRequest.parse(byteArray);
+    // Ensure the request is initialized
+    QVERIFY(r.paymentRequest.IsInitialized());
+    // Extract address and amount from the request
+    QList<std::pair<CScript, CAmount> > sendingTos = r.paymentRequest.getPayTo();
+    foreach (const PAIRTYPE(CScript, CAmount)& sendingTo, sendingTos) {
+        CTxDestination dest;
+        if (ExtractDestination(sendingTo.first, dest))
+            QCOMPARE(PaymentServer::verifyAmount(sendingTo.second), false);
+    }
 
     delete server;
 }
