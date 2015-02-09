@@ -680,7 +680,7 @@ bool CMasternodePayments::GetWinningMasternode(int nBlockHeight, CTxIn& vinOut)
 bool CMasternodePayments::AddWinningMasternode(CMasternodePaymentWinner& winnerIn)
 {
     uint256 blockHash = 0;
-    if(!darkSendPool.GetBlockHash(blockHash, winnerIn.nBlockHeight-576)) {
+    if(!GetBlockHash(blockHash, winnerIn.nBlockHeight-576)) {
         return false;
     }
 

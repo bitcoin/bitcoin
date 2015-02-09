@@ -1292,33 +1292,6 @@ bool CDarkSendPool::SignFinalTransaction(CTransaction& finalTransactionNew, CNod
     return true;
 }
 
-bool CDarkSendPool::GetBlockHash(uint256& hash, int nBlockHeight)
-{
-    if(unitTest){
-        hash.SetHex("00000000001432b4910722303bff579d0445fa23325bdc34538bdb226718ba79");
-        return true;
-    }
-
-    const CBlockIndex *BlockLastSolved = chainActive.Tip();
-    const CBlockIndex *BlockReading = chainActive.Tip();
-
-    if (BlockLastSolved == NULL || BlockLastSolved->nHeight == 0) { return false; }
-
-    //printf(" nBlockHeight2 %d %d\n", nBlockHeight, chainActive.Tip()->nHeight+1);
-
-    for (unsigned int i = 1; BlockReading && BlockReading->nHeight > 0; i++) {
-        if(BlockReading->nHeight == nBlockHeight) {
-            hash = BlockReading->GetBlockHash();
-            return true;
-        }
-
-        if (BlockReading->pprev == NULL) { assert(BlockReading); break; }
-        BlockReading = BlockReading->pprev;
-    }
-
-    return false;
-}
-
 void CDarkSendPool::NewBlock()
 {
     if(fDebug) LogPrintf("CDarkSendPool::NewBlock \n");

@@ -407,8 +407,6 @@ public:
     // as a client, check and sign the final transaction
     bool SignFinalTransaction(CTransaction& finalTransactionNew, CNode* node);
 
-    // get block hash by height
-    bool GetBlockHash(uint256& hash, int nBlockHeight);
     // get the last valid block hash for a given modulus
     bool GetLastValidBlockHash(uint256& hash, int mod=1, int nBlockHeight=0);
     // process a new block
