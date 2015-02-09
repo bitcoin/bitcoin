@@ -137,6 +137,7 @@ HelpMessageDialog::HelpMessageDialog(QWidget *parent, bool about) :
 
         ui->helpMessage->moveCursor(QTextCursor::Start);
         ui->scrollArea->setVisible(false);
+        ui->aboutLogo->setVisible(false);
     }
 }
 
