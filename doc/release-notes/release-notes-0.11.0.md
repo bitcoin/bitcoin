@@ -28,7 +28,7 @@ Darkcoin Core:
 - Add `-regtest` mode, similar to testnet but private with instant block
   generation with `setgenerate` RPC.
 - Add separate darkcoin-cli client
-- Implemented KeyPass integration for CLI, RPC and Qt: 
+- Implemented KeyPass integration for CLI, RPC and Qt:
   `keepass`, `keepassport`, `keepasskey`, `keepassid`, `keepassname`
 
 

@@ -7,6 +7,7 @@
 
 #include "base58.h"
 #include "wallet.h"
+#include "instantx.h"
 
 #include <stdint.h>
 
@@ -76,37 +77,76 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
     else
     {
         bool fAllFromMe = true;
+        bool fAllFromMeDenom = true;
+        int nFromMe = 0;
         BOOST_FOREACH(const CTxIn& txin, wtx.vin)
+        {
             fAllFromMe = fAllFromMe && wallet->IsMine(txin);
+            if(wallet->IsMine(txin)) {
+                fAllFromMeDenom = fAllFromMeDenom && wallet->IsDenominated(txin);
+                nFromMe++;
+            }
+        }
 
         bool fAllToMe = true;
-        BOOST_FOREACH(const CTxOut& txout, wtx.vout)
+        bool fAllToMeDenom = true;
+        int nToMe = 0;
+        BOOST_FOREACH(const CTxOut& txout, wtx.vout) {
             fAllToMe = fAllToMe && wallet->IsMine(txout);
+            if(wallet->IsMine(txout)) {
+                fAllToMeDenom = fAllToMeDenom && wallet->IsDenominatedAmount(txout.nValue);
+                nToMe++;
+            }
+        }
 
-        if (fAllFromMe && fAllToMe)
+        if(fAllFromMeDenom && fAllToMeDenom && nFromMe * nToMe) {
+            TransactionRecord sub(hash, nTime);
+            sub.type = TransactionRecord::DarksendDenominate;
+            parts.append(TransactionRecord(hash, nTime, sub.type, "", -nDebit, nCredit));
+        }
+        else if (fAllFromMe && fAllToMe)
         {
+            // TODO: this section still not accurate but covers most cases,
+            // might need some additional work however
 
-            for (unsigned int nOut = 0; nOut < wtx.vout.size(); nOut++)
+            TransactionRecord sub(hash, nTime);
+            // Payment to self by default
+            sub.type = TransactionRecord::SendToSelf;
+            sub.address = "";
+
+            if(mapValue["DS"] == "1")
             {
-                const CTxOut& txout = wtx.vout[nOut];
-                TransactionRecord sub(hash, nTime);
-                sub.idx = parts.size();
+                sub.type = TransactionRecord::Darksent;
+                CTxDestination address;
+                if (ExtractDestination(wtx.vout[0].scriptPubKey, address))
+                {
+                    // Sent to Darkcoin Address
+                    sub.address = CBitcoinAddress(address).ToString();
+                }
+                else
+                {
+                    // Sent to IP, or other non-address transaction like OP_EVAL
+                    sub.address = mapValue["to"];
+                }
+            }
+            else
+            {
+                for (unsigned int nOut = 0; nOut < wtx.vout.size(); nOut++)
+                {
+                    const CTxOut& txout = wtx.vout[nOut];
+                    sub.idx = parts.size();
 
-                if(txout.nValue == (DARKSEND_COLLATERAL*2)+DARKSEND_FEE ||
-                    txout.nValue == (DARKSEND_COLLATERAL*2)+DARKSEND_FEE ||
-                    txout.nValue == (DARKSEND_COLLATERAL*3)+DARKSEND_FEE ||
-                    txout.nValue == (DARKSEND_COLLATERAL*4)+DARKSEND_FEE ||
-                    txout.nValue == (DARKSEND_COLLATERAL*5)+DARKSEND_FEE
-                    ) {
-                    sub.type = TransactionRecord::DarksendSplitUpLarge;
+                    if(wallet->IsCollateralAmount(txout.nValue)) sub.type = TransactionRecord::DarksendMakeCollaterals;
+                    if(wallet->IsDenominatedAmount(txout.nValue)) sub.type = TransactionRecord::DarksendCreateDenominations;
+                    if(nDebit - wtx.GetValueOut() == DARKSEND_COLLATERAL) sub.type = TransactionRecord::DarksendCollateralPayment;
                 }
             }
 
-            // Payment to self
             int64_t nChange = wtx.GetChange();
 
-            parts.append(TransactionRecord(hash, nTime, TransactionRecord::SendToSelf, "",
-                            -(nDebit - nChange), nCredit - nChange));
+            sub.debit = -(nDebit - nChange);
+            sub.credit = nCredit - nChange;
+            parts.append(sub);
         }
         else if (fAllFromMe)
         {
@@ -142,15 +182,9 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                     sub.address = mapValue["to"];
                 }
 
-                if(wtx.IsDenominated()){
+                if(mapValue["DS"] == "1")
+                {
                     sub.type = TransactionRecord::Darksent;
-                }
-
-                if(txout.nValue == DARKSEND_COLLATERAL){
-                    sub.type = TransactionRecord::DarksendCollateralPayment;
-                }
-                if(txout.nValue == DARKSEND_COLLATERAL*5){
-                    sub.type = TransactionRecord::DarksendSplitUpLarge;
                 }
 
                 int64_t nValue = txout.nValue;
@@ -170,18 +204,8 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
             //
             // Mixed debit transaction, can't break down payees
             //
-            bool isDarksent = false;
 
-            for (unsigned int nOut = 0; nOut < wtx.vout.size(); nOut++)
-            {
-                const CTxOut& txout = wtx.vout[nOut];
-
-                BOOST_FOREACH(int64_t d, darkSendDenominations)
-                    if(txout.nValue == d)
-                        isDarksent = true;
-            }
-
-            parts.append(TransactionRecord(hash, nTime, isDarksent ? TransactionRecord::DarksendDenominate : TransactionRecord::Other, "", nNet, 0));
+            parts.append(TransactionRecord(hash, nTime, TransactionRecord::Other, "", nNet, 0));
         }
     }
 
@@ -208,6 +232,7 @@ void TransactionRecord::updateStatus(const CWalletTx &wtx)
     status.countsForBalance = wtx.IsTrusted() && !(wtx.GetBlocksToMaturity() > 0);
     status.depth = wtx.GetDepthInMainChain();
     status.cur_num_blocks = chainActive.Height();
+    status.cur_num_ix_locks = nCompleteTXLocks;
 
     if (!IsFinalTx(wtx, chainActive.Height() + 1))
     {
@@ -276,7 +301,7 @@ void TransactionRecord::updateStatus(const CWalletTx &wtx)
 bool TransactionRecord::statusUpdateNeeded()
 {
     AssertLockHeld(cs_main);
-    return status.cur_num_blocks != chainActive.Height();
+    return status.cur_num_blocks != chainActive.Height() || status.cur_num_ix_locks != nCompleteTXLocks;
 }
 
 QString TransactionRecord::getTxID() const

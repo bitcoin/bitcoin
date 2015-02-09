@@ -93,6 +93,7 @@ public:
      */
     void updateWallet(const uint256 &hash, int status)
     {
+
         qDebug() << "TransactionTablePriv::updateWallet : " + QString::fromStdString(hash.ToString()) + " " + QString::number(status);
         {
             LOCK2(cs_main, wallet->cs_wallet);
@@ -370,8 +371,10 @@ QString TransactionTableModel::formatTxType(const TransactionRecord *wtx) const
         return tr("Darksend Denominate");
     case TransactionRecord::DarksendCollateralPayment:
         return tr("Darksend Collateral Payment");
-    case TransactionRecord::DarksendSplitUpLarge:
-        return tr("Darksend Split Up Large Inputs");
+    case TransactionRecord::DarksendMakeCollaterals:
+        return tr("Darksend Make Collateral Inputs");
+    case TransactionRecord::DarksendCreateDenominations:
+        return tr("Darksend Create Denominations");
     case TransactionRecord::Darksent:
         return tr("Darksent");
 

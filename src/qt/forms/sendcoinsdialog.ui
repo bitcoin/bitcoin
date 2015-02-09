@@ -613,8 +613,8 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>830</width>
-        <height>178</height>
+        <width>824</width>
+        <height>138</height>
        </rect>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_2" stretch="0,1">
@@ -741,20 +741,13 @@
         <number>3</number>
        </property>
        <item>
-        <widget class="Line" name="line">
-         <property name="font">
-          <font>
-           <weight>75</weight>
-           <bold>true</bold>
-          </font>
-         </property>
-         <property name="orientation">
-          <enum>Qt::Vertical</enum>
-         </property>
-        </widget>
-       </item>
-       <item>
         <widget class="QCheckBox" name="checkUseDarksend">
+         <property name="minimumSize">
+          <size>
+           <width>95</width>
+           <height>0</height>
+          </size>
+         </property>
          <property name="text">
           <string>Darksend</string>
          </property>
@@ -766,7 +759,13 @@
        <item>
         <widget class="QCheckBox" name="checkInstantX">
          <property name="enabled">
-          <bool>false</bool>
+          <bool>true</bool>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>85</width>
+           <height>0</height>
+          </size>
          </property>
          <property name="text">
           <string>InstantX</string>

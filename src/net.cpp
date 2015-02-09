@@ -434,9 +434,16 @@ CNode* FindNode(std::string addrName)
 CNode* FindNode(const CService& addr)
 {
     LOCK(cs_vNodes);
-    BOOST_FOREACH(CNode* pnode, vNodes)
-        if((CNetAddr)pnode->addr == (CNetAddr)addr)
-            return (pnode);
+    BOOST_FOREACH(CNode* pnode, vNodes){
+        if(RegTest()){
+            //if using regtest, just check the IP
+            if((CNetAddr)pnode->addr == (CNetAddr)addr)
+                return (pnode);
+        } else {
+            if(pnode->addr == addr)
+                return (pnode);
+        }
+    }
     return NULL;
 }
 
@@ -1861,9 +1868,6 @@ void RelayTransactionLockReq(const CTransaction& tx, const uint256& hash, bool r
     {
         if(!relayToAll && !pnode->fRelayTxes)
             continue;
-
-        //there's no requests for transactions locks, so we should show it was propagated correctly
-        //pwalletMain->mapRequestCount[tx.GetHash()]++;
 
         pnode->PushMessage("txlreq", tx);
     }

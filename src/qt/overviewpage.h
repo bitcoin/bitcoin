@@ -50,6 +50,8 @@ private:
     qint64 currentUnconfirmedBalance;
     qint64 currentImmatureBalance;
     qint64 currentAnonymizedBalance;
+    qint64 cachedTxLocks;
+    qint64 lastNewBlock;
 
     int showingDarkSendMessage;
     int darksendActionCheck;

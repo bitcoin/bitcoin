@@ -47,6 +47,7 @@ SendCoinsDialog::SendCoinsDialog(QWidget *parent) :
     connect(ui->checkBoxCoinControlChange, SIGNAL(stateChanged(int)), this, SLOT(coinControlChangeChecked(int)));
     connect(ui->lineEditCoinControlChange, SIGNAL(textEdited(const QString &)), this, SLOT(coinControlChangeEdited(const QString &)));
     connect(ui->checkUseDarksend, SIGNAL(stateChanged ( int )), this, SLOT(updateDisplayUnit()));
+    connect(ui->checkInstantX, SIGNAL(stateChanged ( int )), this, SLOT(updateDisplayUnit()));
 
     // Coin Control: clipboard actions
     QAction *clipboardQuantityAction = new QAction(tr("Copy quantity"), this);
@@ -143,10 +144,10 @@ void SendCoinsDialog::on_sendButton_clicked()
 
     QString strFunds = "using <b>anonymous funds</b>";
     QString strFee = "";
-    recipients[0].inputType = "ONLY_DENOMINATED";
+    recipients[0].inputType = ONLY_DENOMINATED;
 
     if(ui->checkUseDarksend->isChecked()) {
-        recipients[0].inputType = "ONLY_DENOMINATED";
+        recipients[0].inputType = ONLY_DENOMINATED;
         strFunds = "using <b>anonymous funds</b>";
         QString strNearestAmount(
             BitcoinUnits::formatWithUnit(
@@ -155,7 +156,7 @@ void SendCoinsDialog::on_sendButton_clicked()
             "(darksend requires this amount to be rounded up to the nearest %1)."
         ).arg(strNearestAmount));
     } else {
-        recipients[0].inputType = "ALL_COINS";
+        recipients[0].inputType = ALL_COINS;
         strFunds = "using <b>any available funds (not recommended)</b>";
     }
 

@@ -6,9 +6,15 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>573</width>
-    <height>557</height>
+    <width>960</width>
+    <height>585</height>
    </rect>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>960</width>
+    <height>0</height>
+   </size>
   </property>
   <property name="windowTitle">
    <string>Form</string>
@@ -276,7 +282,7 @@
            <rect>
             <x>10</x>
             <y>40</y>
-            <width>293</width>
+            <width>431</width>
             <height>161</height>
            </rect>
           </property>
@@ -285,7 +291,7 @@
             <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
            </property>
            <property name="horizontalSpacing">
-            <number>12</number>
+            <number>30</number>
            </property>
            <property name="verticalSpacing">
             <number>12</number>
@@ -320,7 +326,7 @@
               </size>
              </property>
              <property name="value">
-              <number>24</number>
+              <number>0</number>
              </property>
             </widget>
            </item>
@@ -837,10 +843,16 @@
           <property name="geometry">
            <rect>
             <x>10</x>
-            <y>296</y>
-            <width>191</width>
-            <height>51</height>
+            <y>292</y>
+            <width>221</width>
+            <height>56</height>
            </rect>
+          </property>
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
           </property>
           <property name="text">
            <string>Start/Stop Mixing</string>
@@ -851,7 +863,7 @@
            <rect>
             <x>10</x>
             <y>200</y>
-            <width>291</width>
+            <width>441</width>
             <height>16</height>
            </rect>
           </property>
@@ -887,11 +899,17 @@
          <widget class="QPushButton" name="darksendAuto">
           <property name="geometry">
            <rect>
-            <x>200</x>
-            <y>296</y>
-            <width>96</width>
-            <height>27</height>
+            <x>230</x>
+            <y>292</y>
+            <width>221</width>
+            <height>28</height>
            </rect>
+          </property>
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
           </property>
           <property name="toolTip">
            <string>Try to manually submit a Darksend request.</string>
@@ -903,11 +921,17 @@
          <widget class="QPushButton" name="darksendReset">
           <property name="geometry">
            <rect>
-            <x>200</x>
-            <y>320</y>
-            <width>96</width>
-            <height>27</height>
+            <x>230</x>
+            <y>319</y>
+            <width>221</width>
+            <height>28</height>
            </rect>
+          </property>
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
           </property>
           <property name="toolTip">
            <string>Reset the current status of Darksend (can interrupt Darksend if it's in the process of Mixing, which can cost you money!)</string>
