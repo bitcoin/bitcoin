@@ -38,10 +38,13 @@ class CMasternodePayments;
 
 using namespace std;
 
+class CMasternodePaymentWinner;
+
 extern std::vector<CMasterNode> vecMasternodes;
 extern CMasternodePayments masternodePayments;
 extern std::vector<CTxIn> vecMasternodeAskedFor;
-extern map<uint256, int> mapSeenMasternodeVotes;
+extern map<uint256, CMasternodePaymentWinner> mapSeenMasternodeVotes;
+extern map<int64_t, uint256> mapCacheBlockHashes;
 
 
 // manage the masternode connections
@@ -158,6 +161,7 @@ class CMasternodePaymentWinner
 public:
     int nBlockHeight;
     CTxIn vin;
+    CScript payee;
     std::vector<unsigned char> vchSig;
     uint64_t score;
 
@@ -165,6 +169,7 @@ public:
         nBlockHeight = 0;
         score = 0;
         vin = CTxIn();
+        payee = CScript();
     }
 
     uint256 GetHash(){
@@ -176,8 +181,9 @@ public:
 
     IMPLEMENT_SERIALIZE(
         READWRITE(nBlockHeight);
-        READWRITE(score);
+        READWRITE(payee);
         READWRITE(vin);
+        READWRITE(score);
         READWRITE(vchSig);
      )
 };

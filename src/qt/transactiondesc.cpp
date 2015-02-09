@@ -31,15 +31,54 @@ QString TransactionDesc::FormatTxStatus(const CWalletTx& wtx)
     }
     else
     {
-        int nDepth = wtx.GetDepthInMainChain();
-        if (nDepth < 0)
-            return tr("conflicted");
-        else if (GetAdjustedTime() - wtx.nTimeReceived > 2 * 60 && wtx.GetRequestCount() == 0)
-            return tr("%1/offline").arg(nDepth);
-        else if (nDepth < 6)
-            return tr("%1/unconfirmed").arg(nDepth);
-        else
-            return tr("%1 confirmations").arg(nDepth);
+        int signatures = wtx.GetTransactionLockSignatures();
+        QString strUsingIX = "";
+        if(signatures >= 0){
+
+            if(signatures >= INSTANTX_SIGNATURES_REQUIRED){
+                int nDepth = wtx.GetDepthInMainChain();
+                if (nDepth < 0)
+                    return tr("conflicted");
+                else if (GetAdjustedTime() - wtx.nTimeReceived > 2 * 60 && wtx.GetRequestCount() == 0)
+                    return tr("%1/offline (verified via instantx)").arg(nDepth);
+                else if (nDepth < 6)
+                    return tr("%1/confirmed (verified via instantx)").arg(nDepth);
+                else
+                    return tr("%1 confirmations (verified via instantx)").arg(nDepth);
+            } else {
+                if(!wtx.IsTransactionLockTimedOut()){
+                    int nDepth = wtx.GetDepthInMainChain();
+                    if (nDepth < 0)
+                        return tr("conflicted");
+                    else if (GetAdjustedTime() - wtx.nTimeReceived > 2 * 60 && wtx.GetRequestCount() == 0)
+                        return tr("%1/offline (InstantX verification in progress - %2 of %3 signatures)").arg(nDepth).arg(signatures).arg(INSTANTX_SIGNATURES_TOTAL);
+                    else if (nDepth < 6)
+                        return tr("%1/confirmed (InstantX verification in progress - %2 of %3 signatures )").arg(nDepth).arg(signatures).arg(INSTANTX_SIGNATURES_TOTAL);
+                    else
+                        return tr("%1 confirmations (InstantX verification in progress - %2 of %3 signatures)").arg(nDepth).arg(signatures).arg(INSTANTX_SIGNATURES_TOTAL);
+                } else {
+                    int nDepth = wtx.GetDepthInMainChain();
+                    if (nDepth < 0)
+                        return tr("conflicted");
+                    else if (GetAdjustedTime() - wtx.nTimeReceived > 2 * 60 && wtx.GetRequestCount() == 0)
+                        return tr("%1/offline (InstantX verification failed)").arg(nDepth);
+                    else if (nDepth < 6)
+                        return tr("%1/confirmed (InstantX verification failed)").arg(nDepth);
+                    else
+                        return tr("%1 confirmations").arg(nDepth);
+                }
+            }
+        } else {
+            int nDepth = wtx.GetDepthInMainChain();
+            if (nDepth < 0)
+                return tr("conflicted");
+            else if (GetAdjustedTime() - wtx.nTimeReceived > 2 * 60 && wtx.GetRequestCount() == 0)
+                return tr("%1/offline").arg(nDepth);
+            else if (nDepth < 6)
+                return tr("%1/unconfirmed").arg(nDepth);
+            else
+                return tr("%1 confirmations").arg(nDepth);
+        }
     }
 }
 

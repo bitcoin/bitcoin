@@ -116,16 +116,16 @@ void WalletModel::pollBalanceChanged()
     if(!lockWallet)
         return;
 
-    if(chainActive.Height() != cachedNumBlocks || nDarksendRounds != cachedDarksendRounds)
+    if(chainActive.Height() != cachedNumBlocks || nDarksendRounds != cachedDarksendRounds || cachedTxLocks != nCompleteTXLocks)
     {
         // Balance and number of transactions might have changed
         cachedNumBlocks = chainActive.Height();
         cachedDarksendRounds = nDarksendRounds;
-        cachedTxLocks = 0;
 
         checkBalanceChanged();
-        if(transactionTableModel)
+        if(transactionTableModel){
             transactionTableModel->updateConfirmations();
+        }
     }
 }
 
@@ -136,12 +136,14 @@ void WalletModel::checkBalanceChanged()
     qint64 newImmatureBalance = getImmatureBalance();
     qint64 newAnonymizedBalance = getAnonymizedBalance();
 
-    if(cachedBalance != newBalance || cachedUnconfirmedBalance != newUnconfirmedBalance || cachedImmatureBalance != newImmatureBalance|| cachedAnonymizedBalance != newAnonymizedBalance)
+    if(cachedBalance != newBalance || cachedUnconfirmedBalance != newUnconfirmedBalance || cachedImmatureBalance != newImmatureBalance|| cachedAnonymizedBalance != newAnonymizedBalance || cachedTxLocks != nCompleteTXLocks)
     {
         cachedBalance = newBalance;
         cachedUnconfirmedBalance = newUnconfirmedBalance;
         cachedImmatureBalance = newImmatureBalance;
         cachedAnonymizedBalance = newAnonymizedBalance;
+        cachedTxLocks = nCompleteTXLocks;
+
         emit balanceChanged(newBalance, newUnconfirmedBalance, newImmatureBalance, newAnonymizedBalance);
     }
 }
@@ -264,17 +266,7 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
         CWalletTx *newTx = transaction.getTransaction();
         CReserveKey *keyChange = transaction.getPossibleKeyChange();
 
-
-        AvailableCoinsType act = ONLY_DENOMINATED;
-        if(recipients[0].inputType == "ONLY_NONDENOMINATED"){
-            act = ONLY_NONDENOMINATED;
-        } else if(recipients[0].inputType == "ONLY_DENOMINATED"){
-            act = ONLY_DENOMINATED;
-        } else if(recipients[0].inputType == "ALL_COINS"){
-            act = ALL_COINS;
-        }
-
-        bool fCreated = wallet->CreateTransaction(vecSend, *newTx, *keyChange, nFeeRequired, strFailReason, coinControl, act);
+        bool fCreated = wallet->CreateTransaction(vecSend, *newTx, *keyChange, nFeeRequired, strFailReason, coinControl, recipients[0].inputType, recipients[0].useInstantX);
         transaction.setTransactionFee(nFeeRequired);
 
         if(!fCreated)
