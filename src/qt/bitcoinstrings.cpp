@@ -44,6 +44,9 @@ QT_TRANSLATE_NOOP("darkcoin-core", ""
 "Continuously rate-limit free transactions to <n>*1000 bytes per minute "
 "(default:15)"),
 QT_TRANSLATE_NOOP("darkcoin-core", ""
+"Darksend uses exact denominated amounts to send funds, you might simply need "
+"to anonymize some more coins."),
+QT_TRANSLATE_NOOP("darkcoin-core", ""
 "Disable all Masternode and Darksend related functionality (0-1, default: 0)"),
 QT_TRANSLATE_NOOP("darkcoin-core", ""
 "Enable instantx, show confirmations for locked transactions (bool, default: "
@@ -93,6 +96,9 @@ QT_TRANSLATE_NOOP("darkcoin-core", ""
 "In this mode -genproclimit controls how many blocks are generated "
 "immediately."),
 QT_TRANSLATE_NOOP("darkcoin-core", ""
+"InstantX requires inputs with at least 6 confirmations, you might need to "
+"wait a few minutes and try again."),
+QT_TRANSLATE_NOOP("darkcoin-core", ""
 "Listen for JSON-RPC connections on <port> (default: 9998 or testnet: 19998)"),
 QT_TRANSLATE_NOOP("darkcoin-core", ""
 "Name to construct url for KeePass entry that stores the wallet passphrase"),
@@ -119,7 +125,7 @@ QT_TRANSLATE_NOOP("darkcoin-core", ""
 "Set the processor limit for when generation is on (-1 = unlimited, default: "
 "-1)"),
 QT_TRANSLATE_NOOP("darkcoin-core", ""
-"Show N confirmations for a successfully locked transaciton (0-9999, default: "
+"Show N confirmations for a successfully locked transaction (0-9999, default: "
 "1)"),
 QT_TRANSLATE_NOOP("darkcoin-core", ""
 "This is a pre-release test build - use at your own risk - do not use for "
@@ -128,10 +134,12 @@ QT_TRANSLATE_NOOP("darkcoin-core", ""
 "Unable to bind to %s on this computer. Darkcoin Core is probably already "
 "running."),
 QT_TRANSLATE_NOOP("darkcoin-core", ""
-"Unable to locate enough Darksend non-denominated funds for this transaction "
-"that are not equal 1000 DRK"),
+"Unable to locate enough Darksend denominated funds for this transaction."),
 QT_TRANSLATE_NOOP("darkcoin-core", ""
-"Unable to locate enough Darksend non-denominated funds for this transaction"),
+"Unable to locate enough Darksend non-denominated funds for this transaction "
+"that are not equal 1000 DRK."),
+QT_TRANSLATE_NOOP("darkcoin-core", ""
+"Unable to locate enough Darksend non-denominated funds for this transaction."),
 QT_TRANSLATE_NOOP("darkcoin-core", ""
 "Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: -"
 "proxy)"),
@@ -245,6 +253,7 @@ QT_TRANSLATE_NOOP("darkcoin-core", "Initialization sanity check failed. Darkcoin
 QT_TRANSLATE_NOOP("darkcoin-core", "Input is not valid."),
 QT_TRANSLATE_NOOP("darkcoin-core", "InstantX options:"),
 QT_TRANSLATE_NOOP("darkcoin-core", "Insufficient funds"),
+QT_TRANSLATE_NOOP("darkcoin-core", "Insufficient funds."),
 QT_TRANSLATE_NOOP("darkcoin-core", "Invalid -onion address: '%s'"),
 QT_TRANSLATE_NOOP("darkcoin-core", "Invalid -proxy address: '%s'"),
 QT_TRANSLATE_NOOP("darkcoin-core", "Invalid amount for -minrelaytxfee=<amount>: '%s'"),
@@ -346,7 +355,6 @@ QT_TRANSLATE_NOOP("darkcoin-core", "Transaction fees are too high."),
 QT_TRANSLATE_NOOP("darkcoin-core", "Transaction not valid."),
 QT_TRANSLATE_NOOP("darkcoin-core", "Transaction too large"),
 QT_TRANSLATE_NOOP("darkcoin-core", "Unable to bind to %s on this computer (bind returned error %s)"),
-QT_TRANSLATE_NOOP("darkcoin-core", "Unable to locate enough Darksend denominated funds for this transaction"),
 QT_TRANSLATE_NOOP("darkcoin-core", "Unable to sign masternode payment winner, wrong key?"),
 QT_TRANSLATE_NOOP("darkcoin-core", "Unknown -socks proxy version requested: %i"),
 QT_TRANSLATE_NOOP("darkcoin-core", "Unknown network specified in -onlynet: '%s'"),
@@ -360,7 +368,7 @@ QT_TRANSLATE_NOOP("darkcoin-core", "Use UPnP to map the listening port (default:
 QT_TRANSLATE_NOOP("darkcoin-core", "Use UPnP to map the listening port (default: 1 when listening)"),
 QT_TRANSLATE_NOOP("darkcoin-core", "Use the test network"),
 QT_TRANSLATE_NOOP("darkcoin-core", "Username for JSON-RPC connections"),
-QT_TRANSLATE_NOOP("darkcoin-core", "Value more than Darksed pool maximum allows."),
+QT_TRANSLATE_NOOP("darkcoin-core", "Value more than Darksend pool maximum allows."),
 QT_TRANSLATE_NOOP("darkcoin-core", "Verifying blocks..."),
 QT_TRANSLATE_NOOP("darkcoin-core", "Verifying wallet..."),
 QT_TRANSLATE_NOOP("darkcoin-core", "Wait for RPC server to start"),
