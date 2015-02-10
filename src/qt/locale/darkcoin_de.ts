@@ -5046,7 +5046,7 @@ Darkcoin Core wird heruntergefahren.</translation>
     <message>
         <location filename="../bitcoinstrings.cpp" line="359"/>
         <source>Unable to sign spork message, wrong key?</source>
-        <translation type="unfinished"/>
+        <translation>Die Spork-Nachricht konnte nicht signiert werden. Wurde der Key falsch gesetzt?</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="360"/>
