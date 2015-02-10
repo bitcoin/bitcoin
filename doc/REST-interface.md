@@ -10,6 +10,8 @@ Supported API
 Given a transaction hash,
 Returns a transaction, in binary, hex-encoded binary or JSON formats.
 
+For full TX query capability, one must enable the transaction index via "txindex=1" command line / configuration option.
+
 `GET /rest/block/BLOCK-HASH.{bin|hex|json}`
 `GET /rest/block/notxdetails/BLOCK-HASH.{bin|hex|json}`
 
@@ -20,7 +22,17 @@ The HTTP request and response are both handled entirely in-memory, thus making m
 
 With the /notxdetails/ option JSON response will only contain the transaction hash instead of the complete transaction details. The option only affects the JSON response.
 
-For full TX query capability, one must enable the transaction index via "txindex=1" command line / configuration option.
+`GET /rest/chaininfo.json`
+
+Returns various state info regarding block chain processing.
+Only supports JSON as output format.
+* chain : (string) current network name as defined in BIP70 (main, test, regtest)
+* blocks : (numeric) the current number of blocks processed in the server
+* headers : (numeric) the current number of headers we have validated
+* bestblockhash : (string) the hash of the currently best block
+* difficulty : (numeric) the current difficulty
+* verificationprogress : (numeric) estimate of verification progress [0..1]
+* chainwork : (string) total amount of work in active chain, in hexadecimal
 
 Risks
 -------------
