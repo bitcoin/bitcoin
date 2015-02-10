@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
  <class>SignVerifyMessageDialog</class>
- <widget class="QDialog" name="SignVerifyMessageDialog">
+ <widget class="QWidget" name="SignVerifyMessageDialog">
+  <property name="windowModality">
+   <enum>Qt::ApplicationModal</enum>
+  </property>
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -12,9 +15,6 @@
   </property>
   <property name="windowTitle">
    <string>Signatures - Sign / Verify a Message</string>
-  </property>
-  <property name="modal">
-   <bool>true</bool>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
