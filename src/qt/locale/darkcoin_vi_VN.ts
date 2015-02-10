@@ -3408,157 +3408,157 @@ Kiểu: %3
 <context>
     <name>TransactionTableModel</name>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="238"/>
+        <location filename="../transactiontablemodel.cpp" line="239"/>
         <source>Date</source>
         <translation>Ngày</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="238"/>
+        <location filename="../transactiontablemodel.cpp" line="239"/>
         <source>Type</source>
         <translation>Kiểu</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="238"/>
+        <location filename="../transactiontablemodel.cpp" line="239"/>
         <source>Address</source>
         <translation>Địa chỉ</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="238"/>
+        <location filename="../transactiontablemodel.cpp" line="239"/>
         <source>Amount</source>
         <translation>Số tiền</translation>
     </message>
     <message numerus="yes">
-        <location filename="../transactiontablemodel.cpp" line="287"/>
+        <location filename="../transactiontablemodel.cpp" line="288"/>
         <source>Open for %n more block(s)</source>
         <translation><numerusform>Mở thêm %n khối</numerusform></translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="290"/>
+        <location filename="../transactiontablemodel.cpp" line="291"/>
         <source>Open until %1</source>
         <translation>Mở đến khi %1</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="293"/>
+        <location filename="../transactiontablemodel.cpp" line="294"/>
         <source>Offline</source>
         <translation>Ngắt kết nối</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="296"/>
+        <location filename="../transactiontablemodel.cpp" line="297"/>
         <source>Unconfirmed</source>
         <translation>Chưa xác thực</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="299"/>
+        <location filename="../transactiontablemodel.cpp" line="300"/>
         <source>Confirming (%1 of %2 recommended confirmations)</source>
         <translation>Đang xác nhận (%1 của %2 xác nhận được đề nghị)</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="302"/>
+        <location filename="../transactiontablemodel.cpp" line="303"/>
         <source>Confirmed (%1 confirmations)</source>
         <translation>Được xác nhận (%1 xác nhận)</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="305"/>
+        <location filename="../transactiontablemodel.cpp" line="306"/>
         <source>Conflicted</source>
         <translation>Xung đột</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="308"/>
+        <location filename="../transactiontablemodel.cpp" line="309"/>
         <source>Immature (%1 confirmations, will be available after %2)</source>
         <translation>Chưa hoàn thành (%1 xác nhận, sẽ sẵn sàng sau %2)</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="311"/>
+        <location filename="../transactiontablemodel.cpp" line="312"/>
         <source>This block was not received by any other nodes and will probably not be accepted!</source>
         <translation>Khối này đã không nhận được bởi bất kỳ các nút nào khác và có thể sẽ không được chấp nhận!</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="314"/>
+        <location filename="../transactiontablemodel.cpp" line="315"/>
         <source>Generated but not accepted</source>
         <translation>Đã sinh nhưng không được chấp nhận</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="356"/>
+        <location filename="../transactiontablemodel.cpp" line="357"/>
         <source>Received with</source>
         <translation>Nhận với</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="358"/>
+        <location filename="../transactiontablemodel.cpp" line="359"/>
         <source>Received from</source>
         <translation>Nhận từ</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="360"/>
+        <location filename="../transactiontablemodel.cpp" line="361"/>
         <source>Received via Darksend</source>
         <translation>Nhận qua Darksend</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="363"/>
+        <location filename="../transactiontablemodel.cpp" line="364"/>
         <source>Sent to</source>
         <translation>Gửi đến</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="365"/>
+        <location filename="../transactiontablemodel.cpp" line="366"/>
         <source>Payment to yourself</source>
         <translation>Trả cho bản thân bạn</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="367"/>
+        <location filename="../transactiontablemodel.cpp" line="368"/>
         <source>Mined</source>
         <translation>Được đào</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="370"/>
+        <location filename="../transactiontablemodel.cpp" line="371"/>
         <source>Darksend Denominate</source>
         <translation>Darksend Denominate</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="372"/>
+        <location filename="../transactiontablemodel.cpp" line="373"/>
         <source>Darksend Collateral Payment</source>
         <translation>Thanh toán Darksend Collateral</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="374"/>
+        <location filename="../transactiontablemodel.cpp" line="375"/>
         <source>Darksend Make Collateral Inputs</source>
         <translation>Darksend tạo đầu vào Collateral</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="376"/>
+        <location filename="../transactiontablemodel.cpp" line="377"/>
         <source>Darksend Create Denominations</source>
         <translation>Darksend tạo các mệnh giá</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="378"/>
+        <location filename="../transactiontablemodel.cpp" line="379"/>
         <source>Darksent</source>
         <translation>Darksent</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="420"/>
+        <location filename="../transactiontablemodel.cpp" line="421"/>
         <source>(n/a)</source>
         <translation>(không áp dụng)</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="612"/>
+        <location filename="../transactiontablemodel.cpp" line="613"/>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
         <translation>Trạng thái giao dịch: Di chuột qua ô này để hiển thị số lần xác nhận.</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="614"/>
+        <location filename="../transactiontablemodel.cpp" line="615"/>
         <source>Date and time that the transaction was received.</source>
         <translation>Thời gian giao dịch đã được nhận.</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="616"/>
+        <location filename="../transactiontablemodel.cpp" line="617"/>
         <source>Type of transaction.</source>
         <translation>Kiểu giao dịch.</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="618"/>
+        <location filename="../transactiontablemodel.cpp" line="619"/>
         <source>Destination address of transaction.</source>
         <translation>Địa chỉ đích của giao dịch.</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="620"/>
+        <location filename="../transactiontablemodel.cpp" line="621"/>
         <source>Amount removed from or added to balance.</source>
         <translation>Lượng tiền được gỡ bỏ hoặc thêm vào số dư.</translation>
     </message>
@@ -5039,146 +5039,151 @@ Nếu tệp không tồn tại, tạo nó với quyền tệp owner-readable-onl
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="359"/>
+        <source>Unable to sign spork message, wrong key?</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="360"/>
         <source>Unknown -socks proxy version requested: %i</source>
         <translation>Không biết phiên bản proxy yêu cầu -socks: %i</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="360"/>
+        <location filename="../bitcoinstrings.cpp" line="361"/>
         <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
         <translation>Không biết mạng được chỉ ra trong -onlynet: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="361"/>
+        <location filename="../bitcoinstrings.cpp" line="362"/>
         <source>Upgrade wallet to latest format</source>
         <translation>Nâng cấp ví lên định dạng mới nhất</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="362"/>
+        <location filename="../bitcoinstrings.cpp" line="363"/>
         <source>Usage (deprecated, use darkcoin-cli):</source>
         <translation>Cách sử dụng (đã từ bỏ, sử dụng darkcoin-cli):</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="363"/>
+        <location filename="../bitcoinstrings.cpp" line="364"/>
         <source>Usage:</source>
         <translation>Cách dùng:</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="364"/>
+        <location filename="../bitcoinstrings.cpp" line="365"/>
         <source>Use KeePass 2 integration using KeePassHttp plugin (default: 0)</source>
         <translation>Sử dụng tích hợp KeePass 2 dùng KeePassHttp plugin (ngầm định: 0)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="365"/>
+        <location filename="../bitcoinstrings.cpp" line="366"/>
         <source>Use N separate masternodes to anonymize funds  (2-8, default: 2)</source>
         <translation>Sử dụng N masternods riêng biệt để ẩn danh khoản tiền (2-8, ngầm định: 2)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="366"/>
+        <location filename="../bitcoinstrings.cpp" line="367"/>
         <source>Use OpenSSL (https) for JSON-RPC connections</source>
         <translation>Sử dụng OpenSSL (https) cho các kết nối JSON-RPC</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="367"/>
+        <location filename="../bitcoinstrings.cpp" line="368"/>
         <source>Use UPnP to map the listening port (default: 0)</source>
         <translation>Sử dụng UPnP để ánh xạ cổng lắng nghe (ngầm định: 0)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="368"/>
+        <location filename="../bitcoinstrings.cpp" line="369"/>
         <source>Use UPnP to map the listening port (default: 1 when listening)</source>
         <translation>Sử dụng UPnP để ánh xạ cổng lắng nghe (ngầm định: 1 khi lắng nghe)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="369"/>
+        <location filename="../bitcoinstrings.cpp" line="370"/>
         <source>Use the test network</source>
         <translation>Sử dụng mạng thử</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="370"/>
+        <location filename="../bitcoinstrings.cpp" line="371"/>
         <source>Username for JSON-RPC connections</source>
         <translation>Username cho kết nối JSON-RPC</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="371"/>
+        <location filename="../bitcoinstrings.cpp" line="372"/>
         <source>Value more than Darksend pool maximum allows.</source>
         <translation>Giá tri trị lớn hơn giá trị tối đa mà bể Darksend cho phép.</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="372"/>
+        <location filename="../bitcoinstrings.cpp" line="373"/>
         <source>Verifying blocks...</source>
         <translation>Đang kiểm tra các khối...</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="373"/>
+        <location filename="../bitcoinstrings.cpp" line="374"/>
         <source>Verifying wallet...</source>
         <translation>Đang kiểm tra ví...</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="374"/>
+        <location filename="../bitcoinstrings.cpp" line="375"/>
         <source>Wait for RPC server to start</source>
         <translation>Chờ cho RPC server khởi động</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="375"/>
+        <location filename="../bitcoinstrings.cpp" line="376"/>
         <source>Wallet %s resides outside data directory %s</source>
         <translation>Ví %s nằm ở bên ngoài thư mục dữ liệu %s</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="376"/>
+        <location filename="../bitcoinstrings.cpp" line="377"/>
         <source>Wallet is locked.</source>
         <translation>Ví đã bị khoá.</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="377"/>
+        <location filename="../bitcoinstrings.cpp" line="378"/>
         <source>Wallet needed to be rewritten: restart Darkcoin to complete</source>
         <translation>Ví cần được ghi lại: khởi động lại Darkcoin để hoàn tất</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="378"/>
+        <location filename="../bitcoinstrings.cpp" line="379"/>
         <source>Wallet options:</source>
         <translation>Tuỳ chọn ví:</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="379"/>
+        <location filename="../bitcoinstrings.cpp" line="380"/>
         <source>Warning</source>
         <translation>Cảnh báo</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="380"/>
+        <location filename="../bitcoinstrings.cpp" line="381"/>
         <source>Warning: Deprecated argument -debugnet ignored, use -debug=net</source>
         <translation>Cảnh báo: Tham số -debugnet đã được bỏ, hãy sử dụng -debug=net</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="381"/>
+        <location filename="../bitcoinstrings.cpp" line="382"/>
         <source>Warning: This version is obsolete, upgrade required!</source>
         <translation>Cảnh báo: Phiên bản này đã cũ, cần phải cập nhật mới!</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="382"/>
+        <location filename="../bitcoinstrings.cpp" line="383"/>
         <source>Wrong state.</source>
         <translation>Tình trạng sai.</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="383"/>
+        <location filename="../bitcoinstrings.cpp" line="384"/>
         <source>You need to rebuild the database using -reindex to change -txindex</source>
         <translation>Bạn cần xây dựng lại cơ sở dữ liệu sử dụng -reindex để thay cho -txindex</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="384"/>
+        <location filename="../bitcoinstrings.cpp" line="385"/>
         <source>Zapping all transactions from wallet...</source>
         <translation>Dọn sạch tất cả các giao dịch khỏi ví...</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="385"/>
+        <location filename="../bitcoinstrings.cpp" line="386"/>
         <source>on startup</source>
         <translation>khi khởi động</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="386"/>
+        <location filename="../bitcoinstrings.cpp" line="387"/>
         <source>version</source>
         <translation>phiên bản</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="387"/>
+        <location filename="../bitcoinstrings.cpp" line="388"/>
         <source>wallet.dat corrupt, salvage failed</source>
         <translation>wallet.dat bị lỗi, cứu chữa không thành công.</translation>
     </message>
