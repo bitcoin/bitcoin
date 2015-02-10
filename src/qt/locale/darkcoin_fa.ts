@@ -3402,157 +3402,157 @@ Address: %4
 <context>
     <name>TransactionTableModel</name>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="238"/>
+        <location filename="../transactiontablemodel.cpp" line="239"/>
         <source>Date</source>
         <translation>تاریخ</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="238"/>
+        <location filename="../transactiontablemodel.cpp" line="239"/>
         <source>Type</source>
         <translation>نوع</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="238"/>
+        <location filename="../transactiontablemodel.cpp" line="239"/>
         <source>Address</source>
         <translation>نشانی</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="238"/>
+        <location filename="../transactiontablemodel.cpp" line="239"/>
         <source>Amount</source>
         <translation>مبلغ</translation>
     </message>
     <message numerus="yes">
-        <location filename="../transactiontablemodel.cpp" line="287"/>
+        <location filename="../transactiontablemodel.cpp" line="288"/>
         <source>Open for %n more block(s)</source>
         <translation type="unfinished"><numerusform></numerusform></translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="290"/>
+        <location filename="../transactiontablemodel.cpp" line="291"/>
         <source>Open until %1</source>
         <translation>باز شده تا %1</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="293"/>
+        <location filename="../transactiontablemodel.cpp" line="294"/>
         <source>Offline</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="296"/>
+        <location filename="../transactiontablemodel.cpp" line="297"/>
         <source>Unconfirmed</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="299"/>
+        <location filename="../transactiontablemodel.cpp" line="300"/>
         <source>Confirming (%1 of %2 recommended confirmations)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="302"/>
+        <location filename="../transactiontablemodel.cpp" line="303"/>
         <source>Confirmed (%1 confirmations)</source>
         <translation>تأیید شده (%1 تأییدیه)</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="305"/>
+        <location filename="../transactiontablemodel.cpp" line="306"/>
         <source>Conflicted</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="308"/>
+        <location filename="../transactiontablemodel.cpp" line="309"/>
         <source>Immature (%1 confirmations, will be available after %2)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="311"/>
+        <location filename="../transactiontablemodel.cpp" line="312"/>
         <source>This block was not received by any other nodes and will probably not be accepted!</source>
         <translation>این بلوک از هیچ همتای دیگری دریافت نشده است و احتمال می‌رود پذیرفته نشود!</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="314"/>
+        <location filename="../transactiontablemodel.cpp" line="315"/>
         <source>Generated but not accepted</source>
         <translation>تولید شده ولی قبول نشده</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="356"/>
+        <location filename="../transactiontablemodel.cpp" line="357"/>
         <source>Received with</source>
         <translation>دریافت‌شده با</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="358"/>
+        <location filename="../transactiontablemodel.cpp" line="359"/>
         <source>Received from</source>
         <translation>دریافت‌شده از</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="360"/>
+        <location filename="../transactiontablemodel.cpp" line="361"/>
         <source>Received via Darksend</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="363"/>
+        <location filename="../transactiontablemodel.cpp" line="364"/>
         <source>Sent to</source>
         <translation>ارسال‌شده به</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="365"/>
+        <location filename="../transactiontablemodel.cpp" line="366"/>
         <source>Payment to yourself</source>
         <translation>پر داخت به خودتان</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="367"/>
+        <location filename="../transactiontablemodel.cpp" line="368"/>
         <source>Mined</source>
         <translation>استخراج‌شده</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="370"/>
+        <location filename="../transactiontablemodel.cpp" line="371"/>
         <source>Darksend Denominate</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="372"/>
+        <location filename="../transactiontablemodel.cpp" line="373"/>
         <source>Darksend Collateral Payment</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="374"/>
+        <location filename="../transactiontablemodel.cpp" line="375"/>
         <source>Darksend Make Collateral Inputs</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="376"/>
+        <location filename="../transactiontablemodel.cpp" line="377"/>
         <source>Darksend Create Denominations</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="378"/>
+        <location filename="../transactiontablemodel.cpp" line="379"/>
         <source>Darksent</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="420"/>
+        <location filename="../transactiontablemodel.cpp" line="421"/>
         <source>(n/a)</source>
         <translation>(ناموجود)</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="612"/>
+        <location filename="../transactiontablemodel.cpp" line="613"/>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
         <translation>وضعیت تراکنش. نشانگر را روی این فیلد نگه دارید تا تعداد تأییدیه‌ها نشان داده شود.</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="614"/>
+        <location filename="../transactiontablemodel.cpp" line="615"/>
         <source>Date and time that the transaction was received.</source>
         <translation>تاریخ و ساعت دریافت تراکنش.</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="616"/>
+        <location filename="../transactiontablemodel.cpp" line="617"/>
         <source>Type of transaction.</source>
         <translation>نوع تراکنش.</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="618"/>
+        <location filename="../transactiontablemodel.cpp" line="619"/>
         <source>Destination address of transaction.</source>
         <translation>نشانی مقصد تراکنش.</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="620"/>
+        <location filename="../transactiontablemodel.cpp" line="621"/>
         <source>Amount removed from or added to balance.</source>
         <translation>مبلغ کسر شده و یا اضافه شده به تراز.</translation>
     </message>
@@ -5021,146 +5021,151 @@ If the file does not exist, create it with owner-readable-only file permissions.
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="359"/>
+        <source>Unable to sign spork message, wrong key?</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="360"/>
         <source>Unknown -socks proxy version requested: %i</source>
         <translation>نسخه پراکسی ساکس غیرقابل شناسایی  درخواست شده است: %i</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="360"/>
+        <location filename="../bitcoinstrings.cpp" line="361"/>
         <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
         <translation>شبکه مشخص شده غیرقابل شناسایی در onlynet: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="361"/>
+        <location filename="../bitcoinstrings.cpp" line="362"/>
         <source>Upgrade wallet to latest format</source>
         <translation>wallet  را به جدیدترین فرمت روزآمد کنید</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="362"/>
+        <location filename="../bitcoinstrings.cpp" line="363"/>
         <source>Usage (deprecated, use darkcoin-cli):</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="363"/>
+        <location filename="../bitcoinstrings.cpp" line="364"/>
         <source>Usage:</source>
         <translation>استفاده:</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="364"/>
+        <location filename="../bitcoinstrings.cpp" line="365"/>
         <source>Use KeePass 2 integration using KeePassHttp plugin (default: 0)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="365"/>
+        <location filename="../bitcoinstrings.cpp" line="366"/>
         <source>Use N separate masternodes to anonymize funds  (2-8, default: 2)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="366"/>
+        <location filename="../bitcoinstrings.cpp" line="367"/>
         <source>Use OpenSSL (https) for JSON-RPC connections</source>
         <translation>JSON-RPCبرای ارتباطات   استفاده کنید OpenSSL (https)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="367"/>
+        <location filename="../bitcoinstrings.cpp" line="368"/>
         <source>Use UPnP to map the listening port (default: 0)</source>
         <translation>از UPnP  برای شناسایی درگاه شنیداری استفاده کنید (پیش فرض:0)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="368"/>
+        <location filename="../bitcoinstrings.cpp" line="369"/>
         <source>Use UPnP to map the listening port (default: 1 when listening)</source>
         <translation>از UPnP  برای شناسایی درگاه شنیداری استفاده کنید (پیش فرض:1 در زمان شنیدن)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="369"/>
+        <location filename="../bitcoinstrings.cpp" line="370"/>
         <source>Use the test network</source>
         <translation>استفاده از شبکهٔ آزمایش</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="370"/>
+        <location filename="../bitcoinstrings.cpp" line="371"/>
         <source>Username for JSON-RPC connections</source>
         <translation>JSON-RPC شناسه برای ارتباطات</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="371"/>
+        <location filename="../bitcoinstrings.cpp" line="372"/>
         <source>Value more than Darksend pool maximum allows.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="372"/>
+        <location filename="../bitcoinstrings.cpp" line="373"/>
         <source>Verifying blocks...</source>
         <translation>در حال بازبینی بلوک ها...</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="373"/>
+        <location filename="../bitcoinstrings.cpp" line="374"/>
         <source>Verifying wallet...</source>
         <translation>در حال بازبینی کیف پول...</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="374"/>
+        <location filename="../bitcoinstrings.cpp" line="375"/>
         <source>Wait for RPC server to start</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="375"/>
+        <location filename="../bitcoinstrings.cpp" line="376"/>
         <source>Wallet %s resides outside data directory %s</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="376"/>
+        <location filename="../bitcoinstrings.cpp" line="377"/>
         <source>Wallet is locked.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="377"/>
+        <location filename="../bitcoinstrings.cpp" line="378"/>
         <source>Wallet needed to be rewritten: restart Darkcoin to complete</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="378"/>
+        <location filename="../bitcoinstrings.cpp" line="379"/>
         <source>Wallet options:</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="379"/>
+        <location filename="../bitcoinstrings.cpp" line="380"/>
         <source>Warning</source>
         <translation>هشدار</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="380"/>
+        <location filename="../bitcoinstrings.cpp" line="381"/>
         <source>Warning: Deprecated argument -debugnet ignored, use -debug=net</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="381"/>
+        <location filename="../bitcoinstrings.cpp" line="382"/>
         <source>Warning: This version is obsolete, upgrade required!</source>
         <translation>هشدار: این نسخه قدیمی است، روزآمدسازی مورد نیاز است</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="382"/>
+        <location filename="../bitcoinstrings.cpp" line="383"/>
         <source>Wrong state.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="383"/>
+        <location filename="../bitcoinstrings.cpp" line="384"/>
         <source>You need to rebuild the database using -reindex to change -txindex</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="384"/>
+        <location filename="../bitcoinstrings.cpp" line="385"/>
         <source>Zapping all transactions from wallet...</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="385"/>
+        <location filename="../bitcoinstrings.cpp" line="386"/>
         <source>on startup</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="386"/>
+        <location filename="../bitcoinstrings.cpp" line="387"/>
         <source>version</source>
         <translation>نسخه</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="387"/>
+        <location filename="../bitcoinstrings.cpp" line="388"/>
         <source>wallet.dat corrupt, salvage failed</source>
         <translation type="unfinished"/>
     </message>
