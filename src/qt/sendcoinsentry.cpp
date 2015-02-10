@@ -250,9 +250,9 @@ bool SendCoinsEntry::updateLabel(const QString &address)
     if(!model)
         return false;
 
-    // Fill in label from address book, if address has an associated label
+    // Fill in label from address book
     QString associatedLabel = model->getAddressTableModel()->labelForAddress(address);
-    if(!associatedLabel.isEmpty())
+    if(ui->addAsLabel->text() != associatedLabel)
     {
         ui->addAsLabel->setText(associatedLabel);
         return true;
