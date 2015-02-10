@@ -16,6 +16,7 @@ class TransactionDescDialog : public QWidget
     Q_OBJECT
 protected:
     void keyPressEvent(QKeyEvent *);
+    void closeEvent(QCloseEvent *e);
 
 public:
     explicit TransactionDescDialog(const QModelIndex &idx, QWidget *parent = 0);
@@ -23,6 +24,9 @@ public:
 
 private:
     Ui::TransactionDescDialog *ui;
+
+signals:
+    void stopExec();
 };
 
 #endif // TRANSACTIONDESCDIALOG_H
