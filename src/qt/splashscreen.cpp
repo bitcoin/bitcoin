@@ -4,11 +4,12 @@
 
 #include "splashscreen.h"
 
+#include "networkstyle.h"
+
 #include "clientversion.h"
 #include "init.h"
-#include "networkstyle.h"
-#include "ui_interface.h"
 #include "util.h"
+#include "ui_interface.h"
 #include "version.h"
 
 #ifdef ENABLE_WALLET
