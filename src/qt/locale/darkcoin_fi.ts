@@ -4,12 +4,12 @@
     <message>
         <location filename="../forms/aboutdialog.ui" line="14"/>
         <source>About Darkcoin Core</source>
-        <translation type="unfinished"/>
+        <translation>Tietoja Darkcoin Core:sta</translation>
     </message>
     <message>
         <location filename="../forms/aboutdialog.ui" line="53"/>
         <source>&lt;b&gt;Darkcoin Core&lt;/b&gt; version</source>
-        <translation type="unfinished"/>
+        <translation>&lt;b&gt;Darkcoin Core&lt;/b&gt; versio</translation>
     </message>
     <message>
         <location filename="../forms/aboutdialog.ui" line="111"/>
@@ -41,7 +41,7 @@ Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.o
     <message>
         <location filename="../utilitydialog.cpp" line="31"/>
         <source>The Darkcoin Core developers</source>
-        <translation type="unfinished"/>
+        <translation>Darkcoin Core kehittäjät</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="43"/>
@@ -55,7 +55,7 @@ Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.o
     <message>
         <location filename="../forms/addressbookpage.ui" line="30"/>
         <source>Double-click to edit address or label</source>
-        <translation>Kaksoisnapauta muokataksesi osoitetta tai nimeä</translation>
+        <translation>Kaksoisklikkaa muokataksesi osoitetta tai nimeä</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="57"/>
@@ -105,12 +105,12 @@ Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.o
     <message>
         <location filename="../addressbookpage.cpp" line="45"/>
         <source>Choose the address to send coins to</source>
-        <translation>Valitse osoite johon lähetetään kolikoita</translation>
+        <translation>Valitse lähettävä osoite</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="46"/>
         <source>Choose the address to receive coins with</source>
-        <translation>Valitse osoite jolla vastaanotetaan kolikoita</translation>
+        <translation>Valitse vastaanottava osoite</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="51"/>
@@ -130,12 +130,12 @@ Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.o
     <message>
         <location filename="../addressbookpage.cpp" line="65"/>
         <source>These are your Darkcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation type="unfinished"/>
+        <translation>Nämä ovat sinun Darkcoin osoitteesi maksujen lähetykseen. Tarkista aina rahan määrä ja vastaanottajan osoite ennenkuin lähetät kolikkoja.</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="69"/>
         <source>These are your Darkcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation type="unfinished"/>
+        <translation>Nämä ovat sinun Darkcoin osoitteesi suoritusten vastaanottamiseen. Suositellaan että annat uuden osoitteen kullekin rahansiirrolle.</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="75"/>
@@ -160,7 +160,7 @@ Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.o
     <message>
         <location filename="../addressbookpage.cpp" line="272"/>
         <source>Comma separated file (*.csv)</source>
-        <translation>Comma separated file (*.csv)</translation>
+        <translation>Pilkuilla eritelty tiedosto (*.csv)</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="285"/>
@@ -196,37 +196,37 @@ Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.o
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="26"/>
         <source>Passphrase Dialog</source>
-        <translation>Tunnuslauseen Dialogi</translation>
+        <translation>Salasanan Dialogi</translation>
     </message>
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="47"/>
         <source>Enter passphrase</source>
-        <translation>Kirjoita tunnuslause</translation>
+        <translation>Kirjoita salasana</translation>
     </message>
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="61"/>
         <source>New passphrase</source>
-        <translation>Uusi tunnuslause</translation>
+        <translation>Uusi salasana</translation>
     </message>
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="75"/>
         <source>Repeat new passphrase</source>
-        <translation>Kirjoita uusi tunnuslause uudelleen</translation>
+        <translation>Kirjoita uusi salasana uudelleen</translation>
     </message>
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="108"/>
         <source>Serves to disable the trivial sendmoney when OS account compromised. Provides no real security.</source>
-        <translation type="unfinished"/>
+        <translation>Poistaa käytöstä rahojen lähetyksen kun käyttöjärjestelmän käyttäjätili on vaarantunut. Ei tarjoa oikeaa turvallisuutta.</translation>
     </message>
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="111"/>
         <source>For anonymization only</source>
-        <translation type="unfinished"/>
+        <translation>Vain anonymisointia varten</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="41"/>
         <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;10 or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
-        <translation>Anna lompakolle uusi tunnuslause.&lt;br/&gt;Käytä tunnuslausetta, jossa on ainakin  &lt;b&gt;10 satunnaista mekkiä&lt;/b&gt; tai &lt;b&gt;kahdeksan sanaa&lt;/b&gt;.</translation>
+        <translation>Anna lompakolle uusi salasana.&lt;br/&gt;Käytä salasanaa jossa on ainakin  &lt;b&gt;10 satunnaista mekkiä&lt;/b&gt; tai &lt;b&gt;kahdeksan sanaa&lt;/b&gt;.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="42"/>
@@ -236,7 +236,7 @@ Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.o
     <message>
         <location filename="../askpassphrasedialog.cpp" line="48"/>
         <source>This operation needs your wallet passphrase to unlock the wallet.</source>
-        <translation>Tätä toimintoa varten sinun täytyy antaa lompakon tunnuslause sen avaamiseksi.</translation>
+        <translation>Tätä toimintoa varten sinun täytyy antaa lompakon salasana sen avaamiseksi.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="53"/>
@@ -246,7 +246,7 @@ Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.o
     <message>
         <location filename="../askpassphrasedialog.cpp" line="56"/>
         <source>This operation needs your wallet passphrase to decrypt the wallet.</source>
-        <translation>Tätä toimintoa varten sinun täytyy antaa lompakon tunnuslause salauksen purkuun.</translation>
+        <translation>Tätä toimintoa varten sinun täytyy antaa lompakon salasana salauksen purkuun.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="61"/>
@@ -256,12 +256,12 @@ Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.o
     <message>
         <location filename="../askpassphrasedialog.cpp" line="64"/>
         <source>Change passphrase</source>
-        <translation>Vaihda tunnuslause</translation>
+        <translation>Vaihda salasana</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="65"/>
         <source>Enter the old and new passphrase to the wallet.</source>
-        <translation>Anna vanha ja uusi tunnuslause.</translation>
+        <translation>Anna vanha ja uusi salasana.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="112"/>
@@ -271,7 +271,7 @@ Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.o
     <message>
         <location filename="../askpassphrasedialog.cpp" line="113"/>
         <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR DARKCOINS&lt;/b&gt;!</source>
-        <translation type="unfinished"/>
+        <translation>Varoitus: Jos salaat lompakon ja unohdat salasanan, &lt;b&gt;MENETÄT KAIKKI DARKCOINISI&lt;/b&gt;!</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="113"/>
@@ -287,12 +287,12 @@ Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.o
     <message>
         <location filename="../askpassphrasedialog.cpp" line="124"/>
         <source>Darkcoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your darkcoins from being stolen by malware infecting your computer.</source>
-        <translation type="unfinished"/>
+        <translation>Darkcoin sulkeutuu nyt salauksen viimeistelyä varten. Muista että salaus pelkästään ei voi estää Darkcoiniesi varastamista jos koneesi saastuu haittaohjelmilla tai viruksilla.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="128"/>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
-        <translation>TÄRKEÄÄ: Kaikki vanhat lompakon varmuuskopiot pitäisi korvata uusilla suojatuilla varmuuskopioilla. Turvallisuussyistä edelliset varmuuskopiot muuttuvat turhiksi, kun aloitat suojatun lompakon käytön.</translation>
+        <translation>TÄRKEÄÄ: Kaikki vanhat lompakon varmuuskopiot pitäisi korvata uusilla salatuilla varmuuskopioilla. Turvallisuussyistä edelliset varmuuskopiot muuttuvat turhiksi kun aloitat suojatun lompakon käytön.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="137"/>
@@ -311,7 +311,7 @@ Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.o
         <location filename="../askpassphrasedialog.cpp" line="145"/>
         <location filename="../askpassphrasedialog.cpp" line="194"/>
         <source>The supplied passphrases do not match.</source>
-        <translation>Annetut tunnuslauseet eivät täsmää.</translation>
+        <translation>Annetut salasanat eivät täsmää.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="157"/>
@@ -323,7 +323,7 @@ Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.o
         <location filename="../askpassphrasedialog.cpp" line="169"/>
         <location filename="../askpassphrasedialog.cpp" line="188"/>
         <source>The passphrase entered for the wallet decryption was incorrect.</source>
-        <translation>Annettu tunnuslause oli väärä.</translation>
+        <translation>Annettu salasana oli väärä.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="168"/>
@@ -333,7 +333,7 @@ Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.o
     <message>
         <location filename="../askpassphrasedialog.cpp" line="182"/>
         <source>Wallet passphrase was successfully changed.</source>
-        <translation>Lompakon tunnuslause vaihdettiin onnistuneesti.</translation>
+        <translation>Lompakon salasana vaihdettiin onnistuneesti.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="230"/>
@@ -347,7 +347,7 @@ Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.o
     <message>
         <location filename="../bitcoingui.cpp" line="76"/>
         <source>Darkcoin Core</source>
-        <translation type="unfinished"/>
+        <translation>Darkcoin Core</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="85"/>
@@ -363,7 +363,7 @@ Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.o
         <location filename="../bitcoingui.cpp" line="101"/>
         <location filename="../bitcoingui.cpp" line="494"/>
         <source>[testnet]</source>
-        <translation>[testnet]</translation>
+        <translation>[testiverkko]</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="226"/>
@@ -373,7 +373,7 @@ Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.o
     <message>
         <location filename="../bitcoingui.cpp" line="227"/>
         <source>Show general overview of wallet</source>
-        <translation>Lompakon tilanteen yleiskatsaus</translation>
+        <translation>Lompakon tilanteen yleisnäkymä</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="233"/>
@@ -383,7 +383,7 @@ Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.o
     <message>
         <location filename="../bitcoingui.cpp" line="234"/>
         <source>Send coins to a Darkcoin address</source>
-        <translation type="unfinished"/>
+        <translation>Lähetä kolikoita Darkcoin-osoitteeseen</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="240"/>
@@ -393,17 +393,17 @@ Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.o
     <message>
         <location filename="../bitcoingui.cpp" line="241"/>
         <source>Request payments (generates QR codes and darkcoin: URIs)</source>
-        <translation type="unfinished"/>
+        <translation>Pyydä maksuja (Luo QR koodit ja Darkcoin: URIt)</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="247"/>
         <source>&amp;Transactions</source>
-        <translation>&amp;Rahansiirrot</translation>
+        <translation>&amp;Taphtumat</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="248"/>
         <source>Browse transaction history</source>
-        <translation>Selaa rahansiirtohistoriaa</translation>
+        <translation>Selaa tapahtumahistoriaa</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="265"/>
@@ -419,12 +419,12 @@ Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.o
         <location filename="../bitcoingui.cpp" line="270"/>
         <location filename="../bitcoingui.cpp" line="272"/>
         <source>&amp;About Darkcoin Core</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Tietoja Darkcoin Core:sta</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="273"/>
         <source>Show information about Darkcoin</source>
-        <translation type="unfinished"/>
+        <translation>Näytä tietoja Darkcoin Core:sta</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="276"/>
@@ -435,7 +435,7 @@ Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.o
     <message>
         <location filename="../bitcoingui.cpp" line="280"/>
         <source>Show information about Qt</source>
-        <translation>Näytä tietoja QT:ta</translation>
+        <translation>Näytä tietoja QT:sta</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="282"/>
@@ -445,7 +445,7 @@ Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.o
     <message>
         <location filename="../bitcoingui.cpp" line="283"/>
         <source>Modify configuration options for Darkcoin</source>
-        <translation type="unfinished"/>
+        <translation>Muuta Darkcoin asetuksia</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="286"/>
@@ -456,7 +456,7 @@ Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.o
     <message>
         <location filename="../bitcoingui.cpp" line="289"/>
         <source>Show or hide the main Window</source>
-        <translation>Näytä tai piilota Bitcoin-ikkuna</translation>
+        <translation>Näytä tai piilota Darkcoin pääikkuna</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="291"/>
@@ -466,7 +466,7 @@ Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.o
     <message>
         <location filename="../bitcoingui.cpp" line="292"/>
         <source>Encrypt the private keys that belong to your wallet</source>
-        <translation>Suojaa yksityiset avaimet, jotka kuuluvat lompakkoosi</translation>
+        <translation>Suojaa yksityiset avaimet jotka kuuluvat lompakkoosi</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="294"/>
@@ -481,17 +481,17 @@ Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.o
     <message>
         <location filename="../bitcoingui.cpp" line="296"/>
         <source>&amp;Change Passphrase...</source>
-        <translation>&amp;Vaihda Tunnuslause...</translation>
+        <translation>&amp;Vaihda Salasana...</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="297"/>
         <source>Change the passphrase used for wallet encryption</source>
-        <translation>Vaihda lompakon salaukseen käytettävä tunnuslause</translation>
+        <translation>Vaihda lompakon salaukseen käytettävä salasana</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="298"/>
         <source>&amp;Unlock Wallet...</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Avaa Lompakko...</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="299"/>
@@ -501,7 +501,7 @@ Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.o
     <message>
         <location filename="../bitcoingui.cpp" line="300"/>
         <source>&amp;Lock Wallet</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Lukitse Lompakko</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="301"/>
@@ -511,17 +511,17 @@ Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.o
     <message>
         <location filename="../bitcoingui.cpp" line="302"/>
         <source>Sign messages with your Darkcoin addresses to prove you own them</source>
-        <translation type="unfinished"/>
+        <translation>Allekirjoita viestit Darkcoin osoitteillasi todistaaksesi että omistat ne</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="303"/>
         <source>&amp;Verify message...</source>
-        <translation>Varmista &amp;viesti...</translation>
+        <translation>Vahvista &amp;viesti...</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="304"/>
         <source>Verify messages to ensure they were signed with specified Darkcoin addresses</source>
-        <translation type="unfinished"/>
+        <translation>Vahvista viestit varmistaaksesi että ne on allekirjoitettu määritetyillä Darkcoin osoitteilla</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="306"/>
@@ -531,27 +531,27 @@ Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.o
     <message>
         <location filename="../bitcoingui.cpp" line="307"/>
         <source>Show diagnostic information</source>
-        <translation type="unfinished"/>
+        <translation>Näytä diagnostiikka tietoja</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="308"/>
         <source>&amp;Debug console</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Testausikkuna</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="309"/>
         <source>Open debugging console</source>
-        <translation type="unfinished"/>
+        <translation>Avaa testausikkuna</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="310"/>
         <source>&amp;Network Monitor</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Verkkoliikenne</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="311"/>
         <source>Show network monitor</source>
-        <translation type="unfinished"/>
+        <translation>Näytä verkkoliikenne</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="313"/>
@@ -581,7 +581,7 @@ Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.o
     <message>
         <location filename="../bitcoingui.cpp" line="319"/>
         <source>Open a darkcoin: URI or payment request</source>
-        <translation type="unfinished"/>
+        <translation>Avaa Darkcoin: URI tai maksupyyntö</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="321"/>
@@ -591,7 +591,7 @@ Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.o
     <message>
         <location filename="../bitcoingui.cpp" line="322"/>
         <source>Show the Darkcoin Core help message to get a list with possible Darkcoin command-line options</source>
-        <translation type="unfinished"/>
+        <translation>Näytä Darkcoin Core ohjelista komentorivin valinnoista</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="358"/>
@@ -606,7 +606,7 @@ Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.o
     <message>
         <location filename="../bitcoingui.cpp" line="385"/>
         <source>&amp;Tools</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Työkalut</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="391"/>
@@ -622,27 +622,27 @@ Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.o
         <location filename="../bitcoingui.cpp" line="489"/>
         <location filename="../bitcoingui.cpp" line="494"/>
         <source>Darkcoin client</source>
-        <translation type="unfinished"/>
+        <translation>Darkcoin asiakasohjelma</translation>
     </message>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="638"/>
         <source>%n active connection(s) to Darkcoin network</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation><numerusform>%n aktiivista yhteyttä Darkcoin verkkoon</numerusform><numerusform>%n aktiivista yhteyttä Darkcoin verkkoon</numerusform></translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="650"/>
         <source>Synchronizing with network...</source>
-        <translation>Synkronoidaan verkon kanssa...</translation>
+        <translation>Synkronoidaan verkkoon...</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="653"/>
         <source>Importing blocks from disk...</source>
-        <translation>Tuodaan lohkoja levyltä</translation>
+        <translation>Tuodaan lohkoja levyltä...</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="656"/>
         <source>Reindexing blocks on disk...</source>
-        <translation>Ladataan lohkoindeksiä...</translation>
+        <translation>Uudelleen indeksoidaan lohkoindeksiä...</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="660"/>
@@ -652,28 +652,28 @@ Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.o
     <message>
         <location filename="../bitcoingui.cpp" line="670"/>
         <source>Processed %1 blocks of transaction history.</source>
-        <translation>Käsitelty %1 lohkoa rahansiirtohistoriasta</translation>
+        <translation>Käsitelty %1 lohkoa tapahtumahistoriasta.</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="675"/>
         <source>Up to date</source>
-        <translation>Rahansiirtohistoria on ajan tasalla</translation>
+        <translation>Tapahtumahistoria on ajan tasalla</translation>
     </message>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="696"/>
         <source>%n hour(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation><numerusform>%n tunti(a)</numerusform><numerusform>%n tunti(a)</numerusform></translation>
     </message>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="700"/>
         <source>%n day(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation><numerusform>%n päivä(ä)</numerusform><numerusform>%n päivä(ä)</numerusform></translation>
     </message>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="704"/>
         <location filename="../bitcoingui.cpp" line="710"/>
         <source>%n week(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation><numerusform>%n viikko(a)</numerusform><numerusform>%n viikko(a)</numerusform></translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="710"/>
@@ -683,7 +683,7 @@ Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.o
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="710"/>
         <source>%n year(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation><numerusform>%n vuosi(a)</numerusform><numerusform>%n vuosi(a)</numerusform></translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="714"/>
@@ -698,17 +698,17 @@ Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.o
     <message>
         <location filename="../bitcoingui.cpp" line="735"/>
         <source>Last received block was generated %1 ago.</source>
-        <translation>Viimeisin vastaanotettu lohko tuotettu %1.</translation>
+        <translation>Viimeisin vastaanotettu lohko tuotettu %1 sitten.</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="737"/>
         <source>Transactions after this will not yet be visible.</source>
-        <translation>Tämän jälkeiset rahansiirrot eivät ole vielä näkyvissä.</translation>
+        <translation>Tämän jälkeiset siirtotapahtumat eivät ole vielä näkyvissä.</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="750"/>
         <source>Darkcoin</source>
-        <translation type="unfinished"/>
+        <translation>Darkcoin</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="764"/>
@@ -728,7 +728,7 @@ Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.o
     <message>
         <location filename="../bitcoingui.cpp" line="849"/>
         <source>Sent transaction</source>
-        <translation>Lähetetyt rahansiirrot</translation>
+        <translation>Lähetetty rahansiirto</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="849"/>
@@ -742,10 +742,11 @@ Amount: %2
 Type: %3
 Address: %4
 </source>
-        <translation>Päivä: %1
+        <translation>Päiväys: %1
 Määrä: %2
 Tyyppi: %3
-Osoite: %4</translation>
+Osoite: %4
+</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="921"/>
@@ -755,17 +756,17 @@ Osoite: %4</translation>
     <message>
         <location filename="../bitcoingui.cpp" line="931"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt; for anonimization only</source>
-        <translation type="unfinished"/>
+        <translation>Lompakko on &lt;b&gt;salattu&lt;/b&gt; ja tällä hetkellä &lt;b&gt;avoinna&lt;/b&gt; vain anonymisointia varten</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="941"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
-        <translation>Lompakko on &lt;b&gt;salattu&lt;/b&gt; ja tällä hetkellä &lt;b&gt;lukittuna&lt;/b&gt;</translation>
+        <translation>Lompakko on &lt;b&gt;salattu&lt;/b&gt; ja tällä hetkellä &lt;b&gt;lukittu&lt;/b&gt;</translation>
     </message>
     <message>
         <location filename="../darkcoin.cpp" line="449"/>
         <source>A fatal error occurred. Darkcoin can no longer continue safely and will quit.</source>
-        <translation type="unfinished"/>
+        <translation>Vakava virhe tapahtunut. Darkcoin ei voi enää toimia turvallisesti ja sulkeutuu.</translation>
     </message>
 </context>
 <context>
@@ -781,7 +782,7 @@ Osoite: %4</translation>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="14"/>
         <source>Coin Control Address Selection</source>
-        <translation>Kolikkokontrollin osoitteen valinta</translation>
+        <translation>Kolikkokontrollin Osoitteen Valinta</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="48"/>
@@ -826,7 +827,7 @@ Osoite: %4</translation>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="364"/>
         <source>(un)select all</source>
-        <translation>(epä)valitse kaikki</translation>
+        <translation>Poista kaikki valinnat</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="377"/>
@@ -851,12 +852,12 @@ Osoite: %4</translation>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="461"/>
         <source>Darksend Rounds</source>
-        <translation type="unfinished"/>
+        <translation>Darksend Kierrokset</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="466"/>
         <source>Date</source>
-        <translation>Aika</translation>
+        <translation>Päiväys</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="471"/>
@@ -1012,7 +1013,7 @@ Osoite: %4</translation>
     <message>
         <location filename="../coincontroldialog.cpp" line="615"/>
         <source>This label turns red, if the transaction size is greater than 1000 bytes.</source>
-        <translation>Tämä nimi muuttuu punaiseksi jos rahansiirron koko on suurempi kuin 1000 tavua</translation>
+        <translation>Tämä nimi muuttuu punaiseksi jos rahansiirron koko on suurempi kuin 1000 tavua.</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="616"/>
@@ -1078,84 +1079,84 @@ Osoite: %4</translation>
     <message>
         <location filename="../forms/darksendconfig.ui" line="14"/>
         <source>Configure Darksend</source>
-        <translation type="unfinished"/>
+        <translation>Darksend Asetukset</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="26"/>
         <source>Basic Privacy</source>
-        <translation type="unfinished"/>
+        <translation>Perustason Yksityisyys</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="39"/>
         <source>High Privacy</source>
-        <translation type="unfinished"/>
+        <translation>Korkean tason Yksityisyys</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="52"/>
         <source>Maximum Privacy</source>
-        <translation type="unfinished"/>
+        <translation>Maksimaalinen Yksityisyys</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="65"/>
         <source>Please select a privacy level.</source>
-        <translation type="unfinished"/>
+        <translation>Valitse yksityisyyden taso.</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="78"/>
         <source>Use 2 separate masternodes to mix funds up to 1000 DRK</source>
-        <translation type="unfinished"/>
+        <translation>Käytä 2 erillistä masternodea</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="91"/>
         <source>Use 8 separate masternodes to mix funds up to 1000 DRK</source>
-        <translation type="unfinished"/>
+        <translation>Käytä 8 erillistä masternodea</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="104"/>
         <source>Use 16 separate masternodes</source>
-        <translation type="unfinished"/>
+        <translation>Käytä 16 erillistä masternodea</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="117"/>
         <source>This option is the quickest and will cost about ~0.025 DRK to anonymize 1000 DRK</source>
-        <translation type="unfinished"/>
+        <translation>Tämä vaihtoehto on nopein ja maksaa noin ~0.025 DRK kun anonymisoidaan 1000 DRK</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="130"/>
         <source>This option is moderately fast and will cost about 0.05 DRK to anonymize 1000 DRK</source>
-        <translation type="unfinished"/>
+        <translation>Tämä vaihtoehto on keskinopea ja maksaa noin ~0.05 DRK kun anonymisoidaan 1000 DRK</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="156"/>
         <source>0.1 DRK per 1000 DRK you anonymize.</source>
-        <translation type="unfinished"/>
+        <translation>0.1 DRK maksu per 1000 DRK jonka anonymisoit.</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="143"/>
         <source>This is the slowest and most secure option. Using maximum anonymity will cost</source>
-        <translation type="unfinished"/>
+        <translation>Tämä vaihtoehto on hitain ja kaikkein anonyymi. Suurimman yksityisyyden käyttö maksaa</translation>
     </message>
     <message>
         <location filename="../darksendconfig.cpp" line="43"/>
         <location filename="../darksendconfig.cpp" line="58"/>
         <location filename="../darksendconfig.cpp" line="73"/>
         <source>Darksend Configuration</source>
-        <translation type="unfinished"/>
+        <translation>Darksend Asetukset</translation>
     </message>
     <message>
         <location filename="../darksendconfig.cpp" line="44"/>
         <source>Darksend was successfully set to basic (%1 and 2 rounds). You can change this at any time by opening Darkcoin&apos;s configuration screen.</source>
-        <translation type="unfinished"/>
+        <translation>Darksend on laitettu perusasetuksiin (%1 and 2 kierrosta). Voit muuttaa asetuksia milloin vain Darkcoin asetuksista.</translation>
     </message>
     <message>
         <location filename="../darksendconfig.cpp" line="59"/>
         <source>Darksend was successfully set to high (%1 and 8 rounds). You can change this at any time by opening Darkcoin&apos;s configuration screen.</source>
-        <translation type="unfinished"/>
+        <translation>Darksend on laitettu keskitason asetuksiin (%1 and 8 kierrosta). Voit muuttaa asetuksia milloin vain Darkcoin asetuksista.</translation>
     </message>
     <message>
         <location filename="../darksendconfig.cpp" line="74"/>
         <source>Darksend was successfully set to maximum (%1 and 16 rounds). You can change this at any time by opening Darkcoin&apos;s configuration screen.</source>
-        <translation type="unfinished"/>
+        <translation>Darksend on laitettu maksimitason asetuksiin (%1 and 16 kierrosta). Voit muuttaa asetuksia milloin vain Darkcoin asetuksista.</translation>
     </message>
 </context>
 <context>
@@ -1198,17 +1199,17 @@ Osoite: %4</translation>
     <message>
         <location filename="../editaddressdialog.cpp" line="36"/>
         <source>Edit receiving address</source>
-        <translation>Muokkaa vastaanottajan osoitetta</translation>
+        <translation>Muokkaa vastaanottavaa osoitetta</translation>
     </message>
     <message>
         <location filename="../editaddressdialog.cpp" line="40"/>
         <source>Edit sending address</source>
-        <translation>Muokkaa lähtevää osoitetta</translation>
+        <translation>Muokkaa lähettävää osoitetta</translation>
     </message>
     <message>
         <location filename="../editaddressdialog.cpp" line="111"/>
         <source>The entered address &quot;%1&quot; is not a valid Darkcoin address.</source>
-        <translation type="unfinished"/>
+        <translation>Annettu osoite &quot;%1&quot; ei ole pätevä Darkcoin osoite.</translation>
     </message>
     <message>
         <location filename="../editaddressdialog.cpp" line="116"/>
@@ -1231,7 +1232,7 @@ Osoite: %4</translation>
     <message>
         <location filename="../intro.cpp" line="69"/>
         <source>A new data directory will be created.</source>
-        <translation>Luodaan uusi kansio.</translation>
+        <translation>Luodaan uusi datakansio.</translation>
     </message>
     <message>
         <location filename="../intro.cpp" line="91"/>
@@ -1251,7 +1252,7 @@ Osoite: %4</translation>
     <message>
         <location filename="../intro.cpp" line="103"/>
         <source>Cannot create data directory here.</source>
-        <translation>Ei voida luoda data-hakemistoa tänne.</translation>
+        <translation>Ei voida luoda datahakemistoa tänne.</translation>
     </message>
 </context>
 <context>
@@ -1259,12 +1260,12 @@ Osoite: %4</translation>
     <message>
         <location filename="../forms/helpmessagedialog.ui" line="19"/>
         <source>Darkcoin Core - Command-line options</source>
-        <translation type="unfinished"/>
+        <translation>Darkcoin Core - Komentorivi vaihtoehdot</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="69"/>
         <source>Darkcoin Core</source>
-        <translation type="unfinished"/>
+        <translation>Darkcoin Core</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="69"/>
@@ -1284,7 +1285,7 @@ Osoite: %4</translation>
     <message>
         <location filename="../utilitydialog.cpp" line="76"/>
         <source>UI options</source>
-        <translation>Käyttöliittymäasetukset</translation>
+        <translation>Käyttöliittymän asetukset</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="77"/>
@@ -1294,7 +1295,7 @@ Osoite: %4</translation>
     <message>
         <location filename="../utilitydialog.cpp" line="78"/>
         <source>Set language, for example &quot;de_DE&quot; (default: system locale)</source>
-        <translation>Set language, for example &quot;de_DE&quot; (default: system locale)</translation>
+        <translation>Aseta kieli, esim. &quot;fi_FI&quot; (oletus: sama kuin järjestelmän)</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="79"/>
@@ -1322,32 +1323,32 @@ Osoite: %4</translation>
     <message>
         <location filename="../forms/intro.ui" line="23"/>
         <source>Welcome to Darkcoin Core.</source>
-        <translation type="unfinished"/>
+        <translation>Darkcoin Core - Tervetuloa.</translation>
     </message>
     <message>
         <location filename="../forms/intro.ui" line="49"/>
         <source>As this is the first time the program is launched, you can choose where Darkcoin Core will store its data.</source>
-        <translation type="unfinished"/>
+        <translation>Koska tämä on ensimmäinen kerta kun ohjelma käynnistetään, voit valita minne Darkcoin Core tallettaa datansa.</translation>
     </message>
     <message>
         <location filename="../forms/intro.ui" line="59"/>
         <source>Darkcoin Core will download and store a copy of the Darkcoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
-        <translation type="unfinished"/>
+        <translation>Darkcoin Core lataa ja tallettaa kopion lohkoketjusta. Vähintään %1GB dataa talletetaan tähän hakemistoon, ja se myös kasvaa ajan myötä. Myös lompakko talletetaan tähän hakemistoon.</translation>
     </message>
     <message>
         <location filename="../forms/intro.ui" line="69"/>
         <source>Use the default data directory</source>
-        <translation>Käytä oletuskansiota</translation>
+        <translation>Käytä oletushakemistoa</translation>
     </message>
     <message>
         <location filename="../forms/intro.ui" line="76"/>
         <source>Use a custom data directory:</source>
-        <translation>Määritä oma kansio:</translation>
+        <translation>Määritä oma hakemisto:</translation>
     </message>
     <message>
         <location filename="../intro.cpp" line="185"/>
         <source>Darkcoin</source>
-        <translation type="unfinished"/>
+        <translation>Darkcoin</translation>
     </message>
     <message>
         <location filename="../intro.cpp" line="186"/>
@@ -1362,7 +1363,7 @@ Osoite: %4</translation>
     <message>
         <location filename="../intro.cpp" line="219"/>
         <source>GB of free space available</source>
-        <translation>GB vapaata tilaa</translation>
+        <translation>GB vapaata levytilaa</translation>
     </message>
     <message>
         <location filename="../intro.cpp" line="222"/>
@@ -1395,7 +1396,7 @@ Osoite: %4</translation>
     <message>
         <location filename="../openuridialog.cpp" line="48"/>
         <source>Select payment request file to open</source>
-        <translation>Valitse maksypyynnön tiedosto avattavaksi</translation>
+        <translation>Valitse avattava maksypyynnön tiedosto</translation>
     </message>
 </context>
 <context>
@@ -1413,12 +1414,12 @@ Osoite: %4</translation>
     <message>
         <location filename="../forms/optionsdialog.ui" line="33"/>
         <source>Automatically start Darkcoin after logging in to the system.</source>
-        <translation type="unfinished"/>
+        <translation>Käynnistä Darkcoin automaattisesti kun järjestelmään kirjaudutaan.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="36"/>
         <source>&amp;Start Darkcoin on system login</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Käynnistä Darkcoin järjestelmään kirjauduttaessa</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="45"/>
@@ -1433,27 +1434,27 @@ Osoite: %4</translation>
     <message>
         <location filename="../forms/optionsdialog.ui" line="88"/>
         <source>Number of script &amp;verification threads</source>
-        <translation>Script &amp;varmistuksen threadien määrä</translation>
+        <translation>&amp;Varmistuksen säikeiden määrä</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="101"/>
         <source>(0 = auto, &lt;0 = leave that many cores free)</source>
-        <translation>(0 = auto, &lt;0 = jätä näin monta ydintä vapaaksi)</translation>
+        <translation>(0 = auto, &lt;0 = jätä näin monta prosessorin ydintä vapaaksi)</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="138"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This setting determines the amount of individual masternodes that an input will be anonymized through. More rounds of anonymization gives a higher degree of privacy, but also costs more in fees.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"/>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Tämä asetus määrittää kuinka monen erillisen masternoden kautta syötteen anonymisointi tehdään. Mitä enemmän anonymisoinnin kierroksia, sen parempi yksityisyys, mutta se myös maksaa enemmän siirtomaksuina.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="141"/>
         <source>Darksend rounds to use</source>
-        <translation type="unfinished"/>
+        <translation>Kuinka montaa kierrosta käytetään</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="180"/>
         <source>Amount of Darkcoin to keep anonymized</source>
-        <translation type="unfinished"/>
+        <translation>Määrä joka pidetään anonymisoituna</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="206"/>
@@ -1468,7 +1469,7 @@ Osoite: %4</translation>
     <message>
         <location filename="../forms/optionsdialog.ui" line="227"/>
         <source>Pay transaction &amp;fee</source>
-        <translation>Maksa rahansiirtopalkkio</translation>
+        <translation>Maksa rahansiirron &amp;palkkio</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="271"/>
@@ -1483,12 +1484,12 @@ Osoite: %4</translation>
     <message>
         <location filename="../forms/optionsdialog.ui" line="280"/>
         <source>Enable coin &amp;control features</source>
-        <translation>Ota käytöön &amp;Kolikkokontrolli-ominaisuudet</translation>
+        <translation>Ota käytöön &amp;kolikkokontrolli ominaisuudet</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="287"/>
         <source>If you disable the spending of unconfirmed change, the change from a transaction cannot be used until that transaction has at least one confirmation. This also affects how your balance is computed.</source>
-        <translation>Jos poistat varmistamattomien vaihtorahojen käytön, rahansiirron vaihtorahaa ei voida käyttää ennen vähintään yhtä varmistusta. Tämä vaikuttaa myös kuinka taseesi lasketaan.</translation>
+        <translation>Jos poistat varmistamattomien vaihtorahojen käytön, rahansiirron vaihtorahaa ei voida käyttää ennen vähintään yhtä varmistusta. Tämä vaikuttaa myös kuinka saldosi lasketaan.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="290"/>
@@ -1503,32 +1504,32 @@ Osoite: %4</translation>
     <message>
         <location filename="../forms/optionsdialog.ui" line="307"/>
         <source>Automatically open the Darkcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation type="unfinished"/>
+        <translation>Avaa automaattisesti Darkcoin asiakasohjelmalle portti reitittimeen. Tämä toimii vain jos reitittimesi tukee UPnP:tä ja se on käytössä.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="310"/>
         <source>Map port using &amp;UPnP</source>
-        <translation>Portin uudelleenohjaus &amp;UPnP:llä</translation>
+        <translation>Määritä portti käyttäen &amp;UPnP:tä</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="317"/>
         <source>Connect to the Darkcoin network through a SOCKS proxy.</source>
-        <translation type="unfinished"/>
+        <translation>Kytkeydy Darkcoin verkkoon käyttäen SOCKS proxy:a.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="320"/>
         <source>&amp;Connect through SOCKS proxy (default proxy):</source>
-        <translation>&amp;Yhdistä SOCKS proxyn kautta (oletus proxy):</translation>
+        <translation>&amp;Yhdistä SOCKS proxyn kautta (oletus: proxy):</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="329"/>
         <source>Proxy &amp;IP:</source>
-        <translation>Proxyn &amp;IP:</translation>
+        <translation>Proxy &amp;IP</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="354"/>
         <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
-        <translation>IP osoite proxille (esim. IPv4: 127.0.0.1 / IPv6: ::1)</translation>
+        <translation>IP osoite proxy:lle (esim. IPv4: 127.0.0.1 / IPv6: ::1)</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="361"/>
@@ -1538,17 +1539,17 @@ Osoite: %4</translation>
     <message>
         <location filename="../forms/optionsdialog.ui" line="386"/>
         <source>Port of the proxy (e.g. 9050)</source>
-        <translation>Proxyn Portti (esim. 9050)</translation>
+        <translation>Proxyn portti (esim. 9050)</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="393"/>
         <source>SOCKS &amp;Version:</source>
-        <translation>SOCKS &amp;Versio:</translation>
+        <translation>SOCKS &amp;Versio</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="406"/>
         <source>SOCKS version of the proxy (e.g. 5)</source>
-        <translation>Proxyn SOCKS-versio (esim. 5)</translation>
+        <translation>Proxy:n SOCKS versio (esim. 5)</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="442"/>
@@ -1558,7 +1559,7 @@ Osoite: %4</translation>
     <message>
         <location filename="../forms/optionsdialog.ui" line="448"/>
         <source>Show only a tray icon after minimizing the window.</source>
-        <translation>Näytä ainoastaan ilmaisinalueella ikkunan pienentämisen jälkeen.</translation>
+        <translation>Näytä ainoastaan ikoni ilmaisinalueella ikkunan pienentämisen jälkeen.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="451"/>
@@ -1568,7 +1569,7 @@ Osoite: %4</translation>
     <message>
         <location filename="../forms/optionsdialog.ui" line="458"/>
         <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Quit in the menu.</source>
-        <translation>Ikkunaa suljettaessa vain pienentää Bitcoin-ohjelman ikkunan lopettamatta itse ohjelmaa. Kun tämä asetus on valittuna, ohjelman voi sulkea vain valitsemalla Lopeta ohjelman valikosta.</translation>
+        <translation>Ikkunaa suljettaessa pienennä Darkcoin asiakasohjelman ikkuna lopettamatta itse ohjelmaa. Kun tämä asetus on valittuna, ohjelman voi sulkea vain valitsemalla Lopeta ohjelman valikosta.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="461"/>
@@ -1588,12 +1589,12 @@ Osoite: %4</translation>
     <message>
         <location filename="../forms/optionsdialog.ui" line="503"/>
         <source>The user interface language can be set here. This setting will take effect after restarting Darkcoin.</source>
-        <translation type="unfinished"/>
+        <translation>Käyttöliittymän kieli asetetaan tässä, Asetus tulee voimaan kun Darkcoin asiakasohjelma käynnistetään uudellen.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="514"/>
         <source>&amp;Unit to show amounts in:</source>
-        <translation>Yksikkö jona bitcoin-määrät näytetään</translation>
+        <translation>Yksikkö jona Darkcoin määrät näytetään</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="527"/>
@@ -1603,7 +1604,7 @@ Osoite: %4</translation>
     <message>
         <location filename="../forms/optionsdialog.ui" line="536"/>
         <source>Whether to show Darkcoin addresses in the transaction list or not.</source>
-        <translation type="unfinished"/>
+        <translation>Näytetäänkö Darkcoin osoitteet rahansiirrot listassa vai ei.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="539"/>
@@ -1614,7 +1615,7 @@ Osoite: %4</translation>
         <location filename="../forms/optionsdialog.ui" line="548"/>
         <location filename="../forms/optionsdialog.ui" line="561"/>
         <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
-        <translation>Ulkopuoliset URL-osoitteet (esim. block explorer,) jotka esiintyvät siirrot-välilehdellä valikossa. %s URL-osoitteessa korvataan siirtotunnuksella. Useampi URL-osoite on eroteltu pystyviivalla |.</translation>
+        <translation>Ulkopuoliset URL-osoitteet (esim. lohkoselain,) jotka esiintyvät siirrot-välilehdellä valikossa. %s URL-osoitteessa korvataan siirtotunnuksella. Useampi URL-osoite on eroteltu pystyviivalla |.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="551"/>
@@ -1629,12 +1630,12 @@ Osoite: %4</translation>
     <message>
         <location filename="../forms/optionsdialog.ui" line="635"/>
         <source>Reset all client options to default.</source>
-        <translation>Palauta kaikki asetukset takaisin alkuperäisiksi.</translation>
+        <translation>Palauta kaikki asetukset oletusarvoihin.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="638"/>
         <source>&amp;Reset Options</source>
-        <translation>&amp;Palauta asetukset</translation>
+        <translation>&amp;Palauta Asetukset</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="699"/>
@@ -1659,13 +1660,13 @@ Osoite: %4</translation>
     <message>
         <location filename="../optionsdialog.cpp" line="222"/>
         <source>Confirm options reset</source>
-        <translation>Varmista asetusten palautus</translation>
+        <translation>Vahvista asetusten palautus</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="223"/>
         <location filename="../optionsdialog.cpp" line="253"/>
         <source>Client restart required to activate changes.</source>
-        <translation>Ohjelman uudelleenkäynnistys aktivoi muutokset.</translation>
+        <translation>Ohjelman uudelleenkäynnistys aktivoi muutokset käyttöön.</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="223"/>
@@ -1680,7 +1681,7 @@ Osoite: %4</translation>
     <message>
         <location filename="../optionsdialog.cpp" line="291"/>
         <source>The supplied proxy address is invalid.</source>
-        <translation>Antamasi proxy-osoite on virheellinen.</translation>
+        <translation>Antamasi proxy osoite on virheellinen.</translation>
     </message>
 </context>
 <context>
@@ -1699,7 +1700,7 @@ Osoite: %4</translation>
         <location filename="../forms/overviewpage.ui" line="70"/>
         <location filename="../forms/overviewpage.ui" line="986"/>
         <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Darkcoin network after a connection is established, but this process has not completed yet.</source>
-        <translation type="unfinished"/>
+        <translation>Näytetyt tiedot eivät välttämättä ole ajan tasalla. Lompakkosi synkronoituu automaattisesti Darkcoin verkkoon kun yhteys on muodostettu, mutta tämä prosessi ei vielä ole valmis.</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="114"/>
@@ -1709,7 +1710,7 @@ Osoite: %4</translation>
     <message>
         <location filename="../forms/overviewpage.ui" line="130"/>
         <source>Your current spendable balance</source>
-        <translation>Nykyinen käytettävissä oleva tase</translation>
+        <translation>Nykyinen käytettävissä oleva saldo</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="146"/>
@@ -1719,12 +1720,12 @@ Osoite: %4</translation>
     <message>
         <location filename="../forms/overviewpage.ui" line="162"/>
         <source>Total of transactions that have yet to be confirmed, and do not yet count toward the spendable balance</source>
-        <translation>Varmistamattomien rahansiirtojen summa, jota ei lasketa käytettävissä olevaan taseeseen.</translation>
+        <translation>Varmistamattomien rahansiirtojen summa, jota ei lasketa käytettävissä olevaan saldoon.</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="178"/>
         <source>Immature:</source>
-        <translation>Epäkypsää:</translation>
+        <translation>Vahvistamatta:</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="191"/>
@@ -1739,57 +1740,57 @@ Osoite: %4</translation>
     <message>
         <location filename="../forms/overviewpage.ui" line="223"/>
         <source>Your current total balance</source>
-        <translation>Tililläsi tällä hetkellä olevien Bitcoinien määrä</translation>
+        <translation>Tililläsi tällä hetkellä olevien Darkcoinien määrä</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="302"/>
         <source>Status:</source>
-        <translation type="unfinished"/>
+        <translation>Tilanne:</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="309"/>
         <source>Enabled/Disabled</source>
-        <translation type="unfinished"/>
+        <translation>Käytössä/Ei käytössä</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="316"/>
         <source>Completion:</source>
-        <translation type="unfinished"/>
+        <translation>Valmiina:</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="336"/>
         <source>Darksend Balance:</source>
-        <translation type="unfinished"/>
+        <translation>Darksend Saldo:</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="349"/>
         <source>0 DRK</source>
-        <translation type="unfinished"/>
+        <translation>0 DRK</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="356"/>
         <source>Amount and Rounds:</source>
-        <translation type="unfinished"/>
+        <translation>Määrä ja Kierrokset:</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="363"/>
         <source>0 DRK / 0 Rounds</source>
-        <translation type="unfinished"/>
+        <translation>0 DRK / 0 Kierrosta</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="370"/>
         <source>Submitted Denom:</source>
-        <translation type="unfinished"/>
+        <translation>Esitetty Denom:</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="377"/>
         <source>The denominations you submitted to the Masternode. To mix, other users must submit the exact same denominations.</source>
-        <translation type="unfinished"/>
+        <translation>Masternodelle esitetyt denominoinnit. Jotta sekoitus onnistuisi, täytyy muiden käyttäjien ehdottaa saman arvoisia denominointeja.</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="380"/>
         <source>n/a</source>
-        <translation type="unfinished"/>
+        <translation>e/s</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="402"/>
@@ -1797,42 +1798,42 @@ Osoite: %4</translation>
         <location filename="../overviewpage.cpp" line="462"/>
         <location filename="../overviewpage.cpp" line="476"/>
         <source>Darksend</source>
-        <translation type="unfinished"/>
+        <translation>Darksend</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="858"/>
         <source>Start/Stop Mixing</source>
-        <translation type="unfinished"/>
+        <translation>Käynnistä/Lopeta Sekoitus</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="890"/>
         <source>(Last Message)</source>
-        <translation type="unfinished"/>
+        <translation>(Viimeisin Viesti)</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="915"/>
         <source>Try to manually submit a Darksend request.</source>
-        <translation type="unfinished"/>
+        <translation>Yritä manuaalisesti esittää Darksend sekoituspyyntö.</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="918"/>
         <source>Try Mix</source>
-        <translation type="unfinished"/>
+        <translation>Yritä Sekoittaa</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="937"/>
         <source>Reset the current status of Darksend (can interrupt Darksend if it&apos;s in the process of Mixing, which can cost you money!)</source>
-        <translation type="unfinished"/>
+        <translation>Nollaa nykyinen Darksendin tilanne (voi keskeyttää Darksendin sekoituksen, joka voi maksaa ylimääräisiä kuluja)</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="943"/>
         <source>Reset</source>
-        <translation type="unfinished"/>
+        <translation>Nollaus</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="979"/>
         <source>&lt;b&gt;Recent transactions&lt;/b&gt;</source>
-        <translation>&lt;b&gt;Viimeisimmät rahansiirrot&lt;/b&gt;</translation>
+        <translation>&lt;b&gt;Viimeisimmät tapahtumat&lt;/b&gt;</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="126"/>
@@ -1844,154 +1845,155 @@ Osoite: %4</translation>
         <location filename="../overviewpage.cpp" line="142"/>
         <location filename="../overviewpage.cpp" line="347"/>
         <source>Disabled</source>
-        <translation type="unfinished"/>
+        <translation>Ei käytössä</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="145"/>
         <location filename="../overviewpage.cpp" line="349"/>
         <location filename="../overviewpage.cpp" line="490"/>
         <source>Start Darksend Mixing</source>
-        <translation type="unfinished"/>
+        <translation>Käynnistä Darksend Sekoitus</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="147"/>
         <location filename="../overviewpage.cpp" line="492"/>
         <source>Stop Darksend Mixing</source>
-        <translation type="unfinished"/>
+        <translation>Lopeta Darksend Sekoitus</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="267"/>
         <source>No inputs detected</source>
-        <translation type="unfinished"/>
+        <translation>Syötteitä ei havaittu</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="275"/>
         <source>Found unconfirmed denominated outputs, will wait till they confirm to recalculate.</source>
-        <translation type="unfinished"/>
+        <translation>Löytyi vahvistamattomia syötteitä, odotetaan että ne vahvistetaan uudelleen laskentaa varten.</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="332"/>
         <source>Rounds</source>
-        <translation type="unfinished"/>
+        <translation>Kierrokset</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="363"/>
         <source>Enabled</source>
-        <translation type="unfinished"/>
+        <translation>Käytössä</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="419"/>
         <source>Last Darksend message:
 </source>
-        <translation type="unfinished"/>
+        <translation>Viimeisin Darksend viesti:
+</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="376"/>
         <location filename="../overviewpage.cpp" line="401"/>
         <source>Darksend is idle.</source>
-        <translation type="unfinished"/>
+        <translation>Darksend odottaa</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="382"/>
         <source>Darksend request complete: Your transaction was accepted into the pool!</source>
-        <translation type="unfinished"/>
+        <translation>Darksend pyyntö valmis: Tapahtuma on hyväksytty varantoon!</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="388"/>
         <source>Submitted following entries to masternode:</source>
-        <translation type="unfinished"/>
+        <translation>Esitettiin seuraavia merkintöjä masternodelle:</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="389"/>
         <location filename="../overviewpage.cpp" line="390"/>
         <location filename="../overviewpage.cpp" line="391"/>
         <source>Submitted to masternode, Waiting for more entries</source>
-        <translation type="unfinished"/>
+        <translation>Esitetty masternodelle, odotetaan lisää merkintöjä</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="394"/>
         <source>Found enough users, signing ...</source>
-        <translation type="unfinished"/>
+        <translation>Löytyi tarpeeksi käyttäjiä, kirjaudutaan ...</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="395"/>
         <source>Found enough users, signing ( waiting. )</source>
-        <translation type="unfinished"/>
+        <translation>Löytyi tarpeeksi käyttäjiä, kirjaudutaan ( odotetaan. )</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="396"/>
         <source>Found enough users, signing ( waiting.. )</source>
-        <translation type="unfinished"/>
+        <translation>Löytyi tarpeeksi käyttäjiä, kirjaudutaan ( odotetaan.. )</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="397"/>
         <source>Found enough users, signing ( waiting... )</source>
-        <translation type="unfinished"/>
+        <translation>Löytyi tarpeeksi käyttäjiä, kirjaudutaan ( odotetaan... )</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="399"/>
         <source>Transmitting final transaction.</source>
-        <translation type="unfinished"/>
+        <translation>Lähetetään viimeistä siirtotapahtumaa.</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="403"/>
         <source>Finalizing transaction.</source>
-        <translation type="unfinished"/>
+        <translation>Viimeistellään siirtotapahtumaa.</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="405"/>
         <source>Darksend request incomplete:</source>
-        <translation type="unfinished"/>
+        <translation>Darksend pyyntö kesken:</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="405"/>
         <source>Will retry...</source>
-        <translation type="unfinished"/>
+        <translation>Yritetään uudelleen...</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="407"/>
         <source>Darksend request complete:</source>
-        <translation type="unfinished"/>
+        <translation>Darksend pyyntö valmis:</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="409"/>
         <source>Submitted to masternode, waiting in queue .</source>
-        <translation type="unfinished"/>
+        <translation>Esitetty masternodelle, odotetaan .</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="410"/>
         <source>Submitted to masternode, waiting in queue ..</source>
-        <translation type="unfinished"/>
+        <translation>Esitetty masternodelle, odotetaan ..</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="411"/>
         <source>Submitted to masternode, waiting in queue ...</source>
-        <translation type="unfinished"/>
+        <translation>Esitetty masternodelle, odotetaan ...</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="413"/>
         <source>Unknown state:</source>
-        <translation type="unfinished"/>
+        <translation>Tuntematon tila:</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="427"/>
         <source>N/A</source>
-        <translation>Ei saatavilla</translation>
+        <translation>e/s</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="449"/>
         <source>Darksend was successfully reset.</source>
-        <translation type="unfinished"/>
+        <translation>Darksend nollattu onnistuneesti.</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="463"/>
         <source>Darksend requires at least %1 to use.</source>
-        <translation type="unfinished"/>
+        <translation>Darksendin käyttö vaatii vähintään %1.</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="477"/>
         <source>Wallet is locked and user declined to unlock. Disabling Darksend.</source>
-        <translation type="unfinished"/>
+        <translation>Lompakko on lukittu ja käyttäjä ei avannut sitä. Darksend asetetaan pois käytöstä.</translation>
     </message>
 </context>
 <context>
@@ -2096,7 +2098,7 @@ Osoite: %4</translation>
         <location filename="../darkcoin.cpp" line="539"/>
         <location filename="../darkcoin.cpp" line="552"/>
         <source>Darkcoin</source>
-        <translation type="unfinished"/>
+        <translation>Darkcoin</translation>
     </message>
     <message>
         <location filename="../darkcoin.cpp" line="526"/>
@@ -2671,7 +2673,7 @@ Osoite: %4</translation>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="752"/>
         <source>Darksend</source>
-        <translation type="unfinished"/>
+        <translation>Darksend</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="771"/>
@@ -2744,7 +2746,7 @@ Osoite: %4</translation>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="261"/>
         <source>are added as transaction fee</source>
-        <translation type="unfinished"/>
+        <translation>on lisätty siirtomaksuna</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="275"/>
@@ -2789,7 +2791,7 @@ Osoite: %4</translation>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="498"/>
         <source>The total exceeds your balance when the %1 transaction fee is included.</source>
-        <translation>Kokonaismäärä ylittää saldosi kun %1 maksukulu lisätään summaan.</translation>
+        <translation>Kokonaismäärä ylittää saldosi kun %1 siirtomaksu lisätään summaan.</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="501"/>
@@ -2804,7 +2806,7 @@ Osoite: %4</translation>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="508"/>
         <source>The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
-        <translation>Rahansiirto hylättiin! Tämä saattaa tapahtua jos lompakossa olevat kolikot on jo kulutettu, kuten jos käytät kopioita wallet.dat tiedostosta ja kolikot oli jos käytetty mutta ei merkattu täällä.</translation>
+        <translation>Rahansiirto hylättiin! Tämä saattaa tapahtua jos lompakossa olevat kolikot on jo kulutettu, kuten jos käytät kopioita wallet.dat tiedostosta ja kolikot oli jo käytetty mutta ei merkattu täällä.</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="513"/>
@@ -3131,7 +3133,7 @@ Osoite: %4</translation>
     <message>
         <location filename="../splashscreen.cpp" line="33"/>
         <source>Darkcoin Core</source>
-        <translation type="unfinished"/>
+        <translation>Darkcoin Core</translation>
     </message>
     <message>
         <location filename="../splashscreen.cpp" line="34"/>
@@ -3146,7 +3148,7 @@ Osoite: %4</translation>
     <message>
         <location filename="../splashscreen.cpp" line="36"/>
         <source>The Darkcoin Core developers</source>
-        <translation type="unfinished"/>
+        <translation>Darkcoin Core kehittäjät</translation>
     </message>
     <message>
         <location filename="../splashscreen.cpp" line="37"/>
@@ -3327,7 +3329,7 @@ Osoite: %4</translation>
     <message>
         <location filename="../transactiondesc.cpp" line="241"/>
         <source>Transaction fee</source>
-        <translation>Maksukulu</translation>
+        <translation>Siirtomaksu</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="257"/>
@@ -3407,157 +3409,157 @@ Osoite: %4</translation>
 <context>
     <name>TransactionTableModel</name>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="238"/>
+        <location filename="../transactiontablemodel.cpp" line="239"/>
         <source>Date</source>
         <translation>Päivämäärä</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="238"/>
+        <location filename="../transactiontablemodel.cpp" line="239"/>
         <source>Type</source>
         <translation>Laatu</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="238"/>
+        <location filename="../transactiontablemodel.cpp" line="239"/>
         <source>Address</source>
         <translation>Osoite</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="238"/>
+        <location filename="../transactiontablemodel.cpp" line="239"/>
         <source>Amount</source>
         <translation>Määrä</translation>
     </message>
     <message numerus="yes">
-        <location filename="../transactiontablemodel.cpp" line="287"/>
+        <location filename="../transactiontablemodel.cpp" line="288"/>
         <source>Open for %n more block(s)</source>
         <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="290"/>
+        <location filename="../transactiontablemodel.cpp" line="291"/>
         <source>Open until %1</source>
         <translation>Avoinna %1 asti</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="293"/>
+        <location filename="../transactiontablemodel.cpp" line="294"/>
         <source>Offline</source>
         <translation>Offline</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="296"/>
+        <location filename="../transactiontablemodel.cpp" line="297"/>
         <source>Unconfirmed</source>
         <translation>Varmistamaton</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="299"/>
+        <location filename="../transactiontablemodel.cpp" line="300"/>
         <source>Confirming (%1 of %2 recommended confirmations)</source>
         <translation>Varmistetaan (%1 kehoitetusta %2 varmistuksesta)</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="302"/>
+        <location filename="../transactiontablemodel.cpp" line="303"/>
         <source>Confirmed (%1 confirmations)</source>
         <translation>Vahvistettu (%1 vahvistusta)</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="305"/>
+        <location filename="../transactiontablemodel.cpp" line="306"/>
         <source>Conflicted</source>
         <translation>Ristiriitainen</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="308"/>
+        <location filename="../transactiontablemodel.cpp" line="309"/>
         <source>Immature (%1 confirmations, will be available after %2)</source>
         <translation>Epäkypsä (%1 varmistusta, saatavilla %2 jälkeen)</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="311"/>
+        <location filename="../transactiontablemodel.cpp" line="312"/>
         <source>This block was not received by any other nodes and will probably not be accepted!</source>
         <translation>Tätä lohkoa ei vastaanotettu mistään muusta solmusta ja sitä ei mahdollisesti hyväksytä!</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="314"/>
+        <location filename="../transactiontablemodel.cpp" line="315"/>
         <source>Generated but not accepted</source>
         <translation>Generoitu mutta ei hyväksytty</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="356"/>
+        <location filename="../transactiontablemodel.cpp" line="357"/>
         <source>Received with</source>
         <translation>Vastaanotettu osoitteella</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="358"/>
+        <location filename="../transactiontablemodel.cpp" line="359"/>
         <source>Received from</source>
         <translation>Vastaanotettu</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="360"/>
+        <location filename="../transactiontablemodel.cpp" line="361"/>
         <source>Received via Darksend</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="363"/>
+        <location filename="../transactiontablemodel.cpp" line="364"/>
         <source>Sent to</source>
         <translation>Saaja</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="365"/>
+        <location filename="../transactiontablemodel.cpp" line="366"/>
         <source>Payment to yourself</source>
         <translation>Maksu itsellesi</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="367"/>
+        <location filename="../transactiontablemodel.cpp" line="368"/>
         <source>Mined</source>
         <translation>Louhittu</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="370"/>
+        <location filename="../transactiontablemodel.cpp" line="371"/>
         <source>Darksend Denominate</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="372"/>
+        <location filename="../transactiontablemodel.cpp" line="373"/>
         <source>Darksend Collateral Payment</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="374"/>
+        <location filename="../transactiontablemodel.cpp" line="375"/>
         <source>Darksend Make Collateral Inputs</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="376"/>
+        <location filename="../transactiontablemodel.cpp" line="377"/>
         <source>Darksend Create Denominations</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="378"/>
+        <location filename="../transactiontablemodel.cpp" line="379"/>
         <source>Darksent</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="420"/>
+        <location filename="../transactiontablemodel.cpp" line="421"/>
         <source>(n/a)</source>
         <translation>(ei saatavilla)</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="612"/>
+        <location filename="../transactiontablemodel.cpp" line="613"/>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
         <translation>Rahansiirron tila. Siirrä osoitin kentän päälle nähdäksesi vahvistusten lukumäärä.</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="614"/>
+        <location filename="../transactiontablemodel.cpp" line="615"/>
         <source>Date and time that the transaction was received.</source>
         <translation>Rahansiirron vastaanottamisen päivämäärä ja aika.</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="616"/>
+        <location filename="../transactiontablemodel.cpp" line="617"/>
         <source>Type of transaction.</source>
         <translation>Rahansiirron laatu.</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="618"/>
+        <location filename="../transactiontablemodel.cpp" line="619"/>
         <source>Destination address of transaction.</source>
-        <translation>Rahansiirron kohteen Bitcoin-osoite</translation>
+        <translation>Rahansiirron kohteen Darkcoin osoite</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="620"/>
+        <location filename="../transactiontablemodel.cpp" line="621"/>
         <source>Amount removed from or added to balance.</source>
         <translation>Saldoon lisätty tai siitä vähennetty määrä.</translation>
     </message>
@@ -3885,7 +3887,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Darkcoin Alert&quot; admin@foo
     <message>
         <location filename="../bitcoinstrings.cpp" line="51"/>
         <source>Enable instantx, show confirmations for locked transactions (bool, default: true)</source>
-        <translation type="unfinished"/>
+        <translation>Ota instantx käyttöön, näytä lukittujen siirtojen vahvistukset (oletus: päällä)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="54"/>
@@ -3920,7 +3922,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Darkcoin Alert&quot; admin@foo
     <message>
         <location filename="../bitcoinstrings.cpp" line="73"/>
         <source>Error: Wallet unlocked for anonymization only, unable to create transaction.</source>
-        <translation type="unfinished"/>
+        <translation>Virhe: Lompakko on avattu vain anonymisointia varten, ei voida luoda siirtotaphtumaa.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="75"/>
@@ -3940,7 +3942,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Darkcoin Alert&quot; admin@foo
     <message>
         <location filename="../bitcoinstrings.cpp" line="84"/>
         <source>Fees smaller than this are considered zero fee (for transaction creation) (default:</source>
-        <translation>Tätä pienemmät palkkiot huomioidaan tyhjäksi (rahansiirron luonnissa) (oletus:</translation>
+        <translation>Tätä pienemmät palkkiot huomioidaan tyhjäksi (rahansiirron luonnissa) (oletus: </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="87"/>
@@ -4020,7 +4022,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Darkcoin Alert&quot; admin@foo
     <message>
         <location filename="../bitcoinstrings.cpp" line="127"/>
         <source>Show N confirmations for a successfully locked transaction (0-9999, default: 1)</source>
-        <translation type="unfinished"/>
+        <translation>Näytä N vahvistusta onnistuneesti lukitulle siirtotapahtumalle (0-9999, oletus: 1)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="130"/>
@@ -4035,17 +4037,17 @@ for example: alertnotify=echo %%s | mail -s &quot;Darkcoin Alert&quot; admin@foo
     <message>
         <location filename="../bitcoinstrings.cpp" line="136"/>
         <source>Unable to locate enough Darksend denominated funds for this transaction.</source>
-        <translation type="unfinished"/>
+        <translation>Ei tarpeeksi Darksend anonymisoituja varoja tälle siirtotapahtumalle.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="138"/>
         <source>Unable to locate enough Darksend non-denominated funds for this transaction that are not equal 1000 DRK.</source>
-        <translation type="unfinished"/>
+        <translation>Ei tarpeeksi Darksend ei anonymisoituja varoja tälle siirtotapahtumalle joka ei ole 1000 DRK.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="141"/>
         <source>Unable to locate enough Darksend non-denominated funds for this transaction.</source>
-        <translation type="unfinished"/>
+        <translation>Ei tarpeeksi Darksend ei anonymisoituja varoja tälle siirtotapahtumalle.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="143"/>
@@ -4055,7 +4057,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Darkcoin Alert&quot; admin@foo
     <message>
         <location filename="../bitcoinstrings.cpp" line="146"/>
         <source>Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
-        <translation>Varoitus: -paytxfee on asetettu erittäin korkeaksi! Tämä on maksukulu jonka tulet maksamaan kun lähetät siirron.</translation>
+        <translation>Varoitus: -siirtomaksu on asetettu erittäin korkeaksi! Tämä on maksukulu jonka tulet maksamaan kun lähetät siirron.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="149"/>
@@ -4354,7 +4356,7 @@ Jos tiedostoa ei ole, niin luo se ainoastaan omistajan kirjoitusoikeuksin.</tran
     <message>
         <location filename="../bitcoinstrings.cpp" line="224"/>
         <source>Error: Wallet locked, unable to create transaction!</source>
-        <translation>Virhe: Lompakko on lukittu, rahansiirtoa ei voida luoda</translation>
+        <translation>Virhe: Lompakko on lukittu, rahansiirtoa ei voida luoda!</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="225"/>
@@ -4424,7 +4426,7 @@ Jos tiedostoa ei ole, niin luo se ainoastaan omistajan kirjoitusoikeuksin.</tran
     <message>
         <location filename="../bitcoinstrings.cpp" line="238"/>
         <source>Fee per kB to add to transactions you send</source>
-        <translation>palkkio per kB lisätty lähettämiisi rahansiirtoihin</translation>
+        <translation>Palkkio per kB lisätty lähettämiisi rahansiirtoihin</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="239"/>
@@ -4584,7 +4586,7 @@ Jos tiedostoa ei ole, niin luo se ainoastaan omistajan kirjoitusoikeuksin.</tran
     <message>
         <location filename="../bitcoinstrings.cpp" line="270"/>
         <source>Keep at most &lt;n&gt; unconnectable transactions in memory (default: %u)</source>
-        <translation type="unfinished"/>
+        <translation>Pidä enintään &lt;n&gt; ei yhdistettyä siirtotapahtumaa muistissa (oletus: %u)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="271"/>
@@ -4674,7 +4676,7 @@ Jos tiedostoa ei ole, niin luo se ainoastaan omistajan kirjoitusoikeuksin.</tran
     <message>
         <location filename="../bitcoinstrings.cpp" line="288"/>
         <source>Missing input transaction information.</source>
-        <translation type="unfinished"/>
+        <translation>Puuttuva siirtotapahtuman tieto.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="289"/>
@@ -4704,7 +4706,7 @@ Jos tiedostoa ei ole, niin luo se ainoastaan omistajan kirjoitusoikeuksin.</tran
     <message>
         <location filename="../bitcoinstrings.cpp" line="294"/>
         <source>Not compatible with existing transactions.</source>
-        <translation type="unfinished"/>
+        <translation>Ei yhteensopiva olemassa olevien siirtotapahtumien kanssa.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="295"/>
@@ -4909,7 +4911,7 @@ Jos tiedostoa ei ole, niin luo se ainoastaan omistajan kirjoitusoikeuksin.</tran
     <message>
         <location filename="../bitcoinstrings.cpp" line="335"/>
         <source>Signing transaction failed</source>
-        <translation>Siirron vahvistus epäonnistui</translation>
+        <translation>Siirtotapahtuman vahvistus epäonnistui</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="336"/>
@@ -4989,7 +4991,7 @@ Jos tiedostoa ei ole, niin luo se ainoastaan omistajan kirjoitusoikeuksin.</tran
     <message>
         <location filename="../bitcoinstrings.cpp" line="351"/>
         <source>Transaction amount too small</source>
-        <translation>Siirtosumma liian pieni</translation>
+        <translation>Siirtosumma on liian pieni</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="352"/>
@@ -4999,22 +5001,22 @@ Jos tiedostoa ei ole, niin luo se ainoastaan omistajan kirjoitusoikeuksin.</tran
     <message>
         <location filename="../bitcoinstrings.cpp" line="353"/>
         <source>Transaction created successfully.</source>
-        <translation type="unfinished"/>
+        <translation>Siirtotapahtuma luotu onnistuneesti.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="354"/>
         <source>Transaction fees are too high.</source>
-        <translation type="unfinished"/>
+        <translation>Siirtotapahtuman maksukulu on liian iso.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="355"/>
         <source>Transaction not valid.</source>
-        <translation type="unfinished"/>
+        <translation>Siirtotapahtuma ei ole voimassa.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="356"/>
         <source>Transaction too large</source>
-        <translation>Siirtosumma liian iso</translation>
+        <translation>Siirtosumma on liian iso</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="357"/>
@@ -5028,146 +5030,151 @@ Jos tiedostoa ei ole, niin luo se ainoastaan omistajan kirjoitusoikeuksin.</tran
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="359"/>
+        <source>Unable to sign spork message, wrong key?</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="360"/>
         <source>Unknown -socks proxy version requested: %i</source>
         <translation>Tuntematon -socks proxy versio pyydetty: %i</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="360"/>
+        <location filename="../bitcoinstrings.cpp" line="361"/>
         <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
         <translation>Tuntematon verkko -onlynet parametrina: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="361"/>
+        <location filename="../bitcoinstrings.cpp" line="362"/>
         <source>Upgrade wallet to latest format</source>
         <translation>Päivitä lompakko uusimpaan formaattiin</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="362"/>
+        <location filename="../bitcoinstrings.cpp" line="363"/>
         <source>Usage (deprecated, use darkcoin-cli):</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="363"/>
+        <location filename="../bitcoinstrings.cpp" line="364"/>
         <source>Usage:</source>
         <translation>Käyttö:</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="364"/>
+        <location filename="../bitcoinstrings.cpp" line="365"/>
         <source>Use KeePass 2 integration using KeePassHttp plugin (default: 0)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="365"/>
+        <location filename="../bitcoinstrings.cpp" line="366"/>
         <source>Use N separate masternodes to anonymize funds  (2-8, default: 2)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="366"/>
+        <location filename="../bitcoinstrings.cpp" line="367"/>
         <source>Use OpenSSL (https) for JSON-RPC connections</source>
         <translation>Käytä OpenSSL:ää (https) JSON-RPC-yhteyksille</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="367"/>
+        <location filename="../bitcoinstrings.cpp" line="368"/>
         <source>Use UPnP to map the listening port (default: 0)</source>
         <translation>Käytä UPnP:tä kuunneltavan portin avaamiseen (vakioasetus: 0)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="368"/>
+        <location filename="../bitcoinstrings.cpp" line="369"/>
         <source>Use UPnP to map the listening port (default: 1 when listening)</source>
         <translation>Käytä UPnP:tä kuunneltavan portin avaamiseen (vakioasetus: 1 kun kuuntelemassa)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="369"/>
+        <location filename="../bitcoinstrings.cpp" line="370"/>
         <source>Use the test network</source>
         <translation>Käytä test -verkkoa</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="370"/>
+        <location filename="../bitcoinstrings.cpp" line="371"/>
         <source>Username for JSON-RPC connections</source>
         <translation>Käyttäjätunnus JSON-RPC-yhteyksille</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="371"/>
+        <location filename="../bitcoinstrings.cpp" line="372"/>
         <source>Value more than Darksend pool maximum allows.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="372"/>
+        <location filename="../bitcoinstrings.cpp" line="373"/>
         <source>Verifying blocks...</source>
         <translation>Varmistetaan lohkoja...</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="373"/>
+        <location filename="../bitcoinstrings.cpp" line="374"/>
         <source>Verifying wallet...</source>
         <translation>Varmistetaan lompakko...</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="374"/>
+        <location filename="../bitcoinstrings.cpp" line="375"/>
         <source>Wait for RPC server to start</source>
         <translation>Odota RPC palvelimen käynnistystä</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="375"/>
+        <location filename="../bitcoinstrings.cpp" line="376"/>
         <source>Wallet %s resides outside data directory %s</source>
         <translation>Lompakko %s sijaitsee data-hakemiston ulkopuolella %s</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="376"/>
+        <location filename="../bitcoinstrings.cpp" line="377"/>
         <source>Wallet is locked.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="377"/>
+        <location filename="../bitcoinstrings.cpp" line="378"/>
         <source>Wallet needed to be rewritten: restart Darkcoin to complete</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="378"/>
+        <location filename="../bitcoinstrings.cpp" line="379"/>
         <source>Wallet options:</source>
         <translation>Lompakon valinnat:</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="379"/>
+        <location filename="../bitcoinstrings.cpp" line="380"/>
         <source>Warning</source>
         <translation>Varoitus</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="380"/>
+        <location filename="../bitcoinstrings.cpp" line="381"/>
         <source>Warning: Deprecated argument -debugnet ignored, use -debug=net</source>
         <translation>Varoitus: Vanhentunut argumentti -debugnet sivutettu, käytä debug=net</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="381"/>
+        <location filename="../bitcoinstrings.cpp" line="382"/>
         <source>Warning: This version is obsolete, upgrade required!</source>
         <translation>Varoitus: Tämä versio on vanhentunut, päivitys tarpeen!</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="382"/>
+        <location filename="../bitcoinstrings.cpp" line="383"/>
         <source>Wrong state.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="383"/>
+        <location filename="../bitcoinstrings.cpp" line="384"/>
         <source>You need to rebuild the database using -reindex to change -txindex</source>
         <translation>Sinun tulee uudelleenrakentaa tietokanta käyttäen -reindex vaihtaen -txindex</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="384"/>
+        <location filename="../bitcoinstrings.cpp" line="385"/>
         <source>Zapping all transactions from wallet...</source>
         <translation>Tyhjennetään kaikki rahansiirrot lompakosta....</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="385"/>
+        <location filename="../bitcoinstrings.cpp" line="386"/>
         <source>on startup</source>
         <translation>käynnistyksessä</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="386"/>
+        <location filename="../bitcoinstrings.cpp" line="387"/>
         <source>version</source>
         <translation>versio</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="387"/>
+        <location filename="../bitcoinstrings.cpp" line="388"/>
         <source>wallet.dat corrupt, salvage failed</source>
         <translation>wallet.dat -lompakkotiedosto korruptoitunut, korjaaminen epäonnistui</translation>
     </message>

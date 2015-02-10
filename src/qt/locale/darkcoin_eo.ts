@@ -3407,157 +3407,157 @@ Adreso: %4
 <context>
     <name>TransactionTableModel</name>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="238"/>
+        <location filename="../transactiontablemodel.cpp" line="239"/>
         <source>Date</source>
         <translation>Dato</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="238"/>
+        <location filename="../transactiontablemodel.cpp" line="239"/>
         <source>Type</source>
         <translation>Tipo</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="238"/>
+        <location filename="../transactiontablemodel.cpp" line="239"/>
         <source>Address</source>
         <translation>Adreso</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="238"/>
+        <location filename="../transactiontablemodel.cpp" line="239"/>
         <source>Amount</source>
         <translation>Sumo</translation>
     </message>
     <message numerus="yes">
-        <location filename="../transactiontablemodel.cpp" line="287"/>
+        <location filename="../transactiontablemodel.cpp" line="288"/>
         <source>Open for %n more block(s)</source>
         <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="290"/>
+        <location filename="../transactiontablemodel.cpp" line="291"/>
         <source>Open until %1</source>
         <translation>Malferma ĝis %1</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="293"/>
+        <location filename="../transactiontablemodel.cpp" line="294"/>
         <source>Offline</source>
         <translation>Senkonekte</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="296"/>
+        <location filename="../transactiontablemodel.cpp" line="297"/>
         <source>Unconfirmed</source>
         <translation>Nekonfirmita</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="299"/>
+        <location filename="../transactiontablemodel.cpp" line="300"/>
         <source>Confirming (%1 of %2 recommended confirmations)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="302"/>
+        <location filename="../transactiontablemodel.cpp" line="303"/>
         <source>Confirmed (%1 confirmations)</source>
         <translation>Konfirmita (%1 konfirmoj)</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="305"/>
+        <location filename="../transactiontablemodel.cpp" line="306"/>
         <source>Conflicted</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="308"/>
+        <location filename="../transactiontablemodel.cpp" line="309"/>
         <source>Immature (%1 confirmations, will be available after %2)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="311"/>
+        <location filename="../transactiontablemodel.cpp" line="312"/>
         <source>This block was not received by any other nodes and will probably not be accepted!</source>
         <translation>Tiun ĉi blokon ne ricevis ajna alia nodo, kaj ĝi verŝajne ne akceptiĝos!</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="314"/>
+        <location filename="../transactiontablemodel.cpp" line="315"/>
         <source>Generated but not accepted</source>
         <translation>Kreita sed ne akceptita</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="356"/>
+        <location filename="../transactiontablemodel.cpp" line="357"/>
         <source>Received with</source>
         <translation>Ricevita kun</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="358"/>
+        <location filename="../transactiontablemodel.cpp" line="359"/>
         <source>Received from</source>
         <translation>Ricevita de</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="360"/>
+        <location filename="../transactiontablemodel.cpp" line="361"/>
         <source>Received via Darksend</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="363"/>
+        <location filename="../transactiontablemodel.cpp" line="364"/>
         <source>Sent to</source>
         <translation>Sendita al</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="365"/>
+        <location filename="../transactiontablemodel.cpp" line="366"/>
         <source>Payment to yourself</source>
         <translation>Pago al vi mem</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="367"/>
+        <location filename="../transactiontablemodel.cpp" line="368"/>
         <source>Mined</source>
         <translation>Minita</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="370"/>
+        <location filename="../transactiontablemodel.cpp" line="371"/>
         <source>Darksend Denominate</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="372"/>
+        <location filename="../transactiontablemodel.cpp" line="373"/>
         <source>Darksend Collateral Payment</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="374"/>
+        <location filename="../transactiontablemodel.cpp" line="375"/>
         <source>Darksend Make Collateral Inputs</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="376"/>
+        <location filename="../transactiontablemodel.cpp" line="377"/>
         <source>Darksend Create Denominations</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="378"/>
+        <location filename="../transactiontablemodel.cpp" line="379"/>
         <source>Darksent</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="420"/>
+        <location filename="../transactiontablemodel.cpp" line="421"/>
         <source>(n/a)</source>
         <translation>neaplikebla</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="612"/>
+        <location filename="../transactiontablemodel.cpp" line="613"/>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
         <translation>Transakcia stato. Ŝvebi super tiu ĉi kampo por montri la nombron de konfirmoj.</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="614"/>
+        <location filename="../transactiontablemodel.cpp" line="615"/>
         <source>Date and time that the transaction was received.</source>
         <translation>Dato kaj horo kiam la transakcio alvenis.</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="616"/>
+        <location filename="../transactiontablemodel.cpp" line="617"/>
         <source>Type of transaction.</source>
         <translation>Tipo de transakcio.</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="618"/>
+        <location filename="../transactiontablemodel.cpp" line="619"/>
         <source>Destination address of transaction.</source>
         <translation>Celadreso de la transakcio.</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="620"/>
+        <location filename="../transactiontablemodel.cpp" line="621"/>
         <source>Amount removed from or added to balance.</source>
         <translation>Sumo elprenita de aŭ aldonita al la saldo.</translation>
     </message>
@@ -5028,146 +5028,151 @@ Se la dosiero ne ekzistas, kreu ĝin kun permeso &quot;nur posedanto rajtas leg
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="359"/>
+        <source>Unable to sign spork message, wrong key?</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="360"/>
         <source>Unknown -socks proxy version requested: %i</source>
         <translation>Nekonata versio de -socks petita: %i</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="360"/>
+        <location filename="../bitcoinstrings.cpp" line="361"/>
         <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
         <translation>Nekonata reto specifita en -onlynet: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="361"/>
+        <location filename="../bitcoinstrings.cpp" line="362"/>
         <source>Upgrade wallet to latest format</source>
         <translation>Ĝisdatigi monujon al plej lasta formato</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="362"/>
+        <location filename="../bitcoinstrings.cpp" line="363"/>
         <source>Usage (deprecated, use darkcoin-cli):</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="363"/>
+        <location filename="../bitcoinstrings.cpp" line="364"/>
         <source>Usage:</source>
         <translation>Uzado:</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="364"/>
+        <location filename="../bitcoinstrings.cpp" line="365"/>
         <source>Use KeePass 2 integration using KeePassHttp plugin (default: 0)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="365"/>
+        <location filename="../bitcoinstrings.cpp" line="366"/>
         <source>Use N separate masternodes to anonymize funds  (2-8, default: 2)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="366"/>
+        <location filename="../bitcoinstrings.cpp" line="367"/>
         <source>Use OpenSSL (https) for JSON-RPC connections</source>
         <translation>Uzi OpenSSL (https) por konektoj JSON-RPC</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="367"/>
+        <location filename="../bitcoinstrings.cpp" line="368"/>
         <source>Use UPnP to map the listening port (default: 0)</source>
         <translation>Uzi UPnP por mapi la aŭskultan pordon (defaŭlte: 0)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="368"/>
+        <location filename="../bitcoinstrings.cpp" line="369"/>
         <source>Use UPnP to map the listening port (default: 1 when listening)</source>
         <translation>Uzi UPnP por mapi la aŭskultan pordon (defaŭlte: 1 dum aŭskultado)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="369"/>
+        <location filename="../bitcoinstrings.cpp" line="370"/>
         <source>Use the test network</source>
         <translation>Uzi la test-reton</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="370"/>
+        <location filename="../bitcoinstrings.cpp" line="371"/>
         <source>Username for JSON-RPC connections</source>
         <translation>Salutnomo por konektoj JSON-RPC</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="371"/>
+        <location filename="../bitcoinstrings.cpp" line="372"/>
         <source>Value more than Darksend pool maximum allows.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="372"/>
+        <location filename="../bitcoinstrings.cpp" line="373"/>
         <source>Verifying blocks...</source>
         <translation>Kontrolado de blokoj...</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="373"/>
+        <location filename="../bitcoinstrings.cpp" line="374"/>
         <source>Verifying wallet...</source>
         <translation>Kontrolado de monujo...</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="374"/>
+        <location filename="../bitcoinstrings.cpp" line="375"/>
         <source>Wait for RPC server to start</source>
         <translation>Atendu por RPC-an servilo komenci</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="375"/>
+        <location filename="../bitcoinstrings.cpp" line="376"/>
         <source>Wallet %s resides outside data directory %s</source>
         <translation>Monujo %s troviĝas ekster la dosierujo por datumoj %s</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="376"/>
+        <location filename="../bitcoinstrings.cpp" line="377"/>
         <source>Wallet is locked.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="377"/>
+        <location filename="../bitcoinstrings.cpp" line="378"/>
         <source>Wallet needed to be rewritten: restart Darkcoin to complete</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="378"/>
+        <location filename="../bitcoinstrings.cpp" line="379"/>
         <source>Wallet options:</source>
         <translation>Monujaj opcioj:</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="379"/>
+        <location filename="../bitcoinstrings.cpp" line="380"/>
         <source>Warning</source>
         <translation>Averto</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="380"/>
+        <location filename="../bitcoinstrings.cpp" line="381"/>
         <source>Warning: Deprecated argument -debugnet ignored, use -debug=net</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="381"/>
+        <location filename="../bitcoinstrings.cpp" line="382"/>
         <source>Warning: This version is obsolete, upgrade required!</source>
         <translation>Averto: tiu ĉi versio estas eksdata. Vi bezonas ĝisdatigon!</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="382"/>
+        <location filename="../bitcoinstrings.cpp" line="383"/>
         <source>Wrong state.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="383"/>
+        <location filename="../bitcoinstrings.cpp" line="384"/>
         <source>You need to rebuild the database using -reindex to change -txindex</source>
         <translation>Vi devas rekontrui la datumbazon kun -reindex por ŝanĝi -txindex</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="384"/>
+        <location filename="../bitcoinstrings.cpp" line="385"/>
         <source>Zapping all transactions from wallet...</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="385"/>
+        <location filename="../bitcoinstrings.cpp" line="386"/>
         <source>on startup</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="386"/>
+        <location filename="../bitcoinstrings.cpp" line="387"/>
         <source>version</source>
         <translation>versio</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="387"/>
+        <location filename="../bitcoinstrings.cpp" line="388"/>
         <source>wallet.dat corrupt, salvage failed</source>
         <translation>wallet.dat estas difektita, riparo malsukcesis</translation>
     </message>
