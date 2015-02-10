@@ -93,12 +93,5 @@
         <file alias="el">locale/darkcoin_pl.qm</file>
         <file alias="el">locale/darkcoin_fr.qm</file>
         <file alias="el">locale/darkcoin_cmn.qm</file>
-        <file alias="el">locale/darkcoin_it.qm</file>
-        <file alias="el">locale/darkcoin_fi.qm</file>
-        <file alias="el">locale/darkcoin_sv.qm</file>
-        <file alias="el">locale/darkcoin_ca.qm</file>
-        <file alias="el">locale/darkcoin_el_GR.qm</file>
-        <file alias="el">locale/darkcoin_tr.qm</file>
-        <file alias="el">locale/darkcoin_bar.qm</file>
     </qresource>
 </RCC>
