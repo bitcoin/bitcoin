@@ -109,7 +109,7 @@ Dit product bevat software ontwikkeld door het OpenSSL Project voor gebruik in d
     <message>
         <location filename="../addressbookpage.cpp" line="46"/>
         <source>Choose the address to receive coins with</source>
-        <translation>Kies het adres om munten voor te ontvangen</translation>
+        <translation>Kies het adres om munten mee te ontvangen</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="51"/>
@@ -119,12 +119,12 @@ Dit product bevat software ontwikkeld door het OpenSSL Project voor gebruik in d
     <message>
         <location filename="../addressbookpage.cpp" line="57"/>
         <source>Sending addresses</source>
-        <translation>Bezig met versturen adressen</translation>
+        <translation>Verzend adressen</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="58"/>
         <source>Receiving addresses</source>
-        <translation>Adressen ontvangen</translation>
+        <translation>Ontvangst adressen</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="65"/>
@@ -169,7 +169,7 @@ Dit product bevat software ontwikkeld door het OpenSSL Project voor gebruik in d
     <message>
         <location filename="../addressbookpage.cpp" line="286"/>
         <source>There was an error trying to save the address list to %1.</source>
-        <translation>Een fout is opgetreden tijdens het opslaan van deze adreslijst naar %1.</translation>
+        <translation>Er is een fout is opgetreden tijdens het opslaan van deze adreslijst naar %1.</translation>
     </message>
 </context>
 <context>
@@ -510,7 +510,7 @@ Dit product bevat software ontwikkeld door het OpenSSL Project voor gebruik in d
     <message>
         <location filename="../bitcoingui.cpp" line="302"/>
         <source>Sign messages with your Darkcoin addresses to prove you own them</source>
-        <translation type="unfinished"/>
+        <translation>Onderteken berichten met uw Darkcoin adres om te bewijzen dat u deze bezit</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="303"/>
@@ -520,7 +520,7 @@ Dit product bevat software ontwikkeld door het OpenSSL Project voor gebruik in d
     <message>
         <location filename="../bitcoingui.cpp" line="304"/>
         <source>Verify messages to ensure they were signed with specified Darkcoin addresses</source>
-        <translation type="unfinished"/>
+        <translation>Verifieer berichten om zeket te zijn dat deze werden ondertekend met het specifiek Darkcoin adres</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="306"/>
@@ -590,7 +590,7 @@ Dit product bevat software ontwikkeld door het OpenSSL Project voor gebruik in d
     <message>
         <location filename="../bitcoingui.cpp" line="322"/>
         <source>Show the Darkcoin Core help message to get a list with possible Darkcoin command-line options</source>
-        <translation type="unfinished"/>
+        <translation>Geef het help bericht weer om een lijst te krijgen met alle Darkcoin command-line opties</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="358"/>
@@ -1124,7 +1124,7 @@ Adres: %4
     <message>
         <location filename="../forms/darksendconfig.ui" line="130"/>
         <source>This option is moderately fast and will cost about 0.05 DRK to anonymize 1000 DRK</source>
-        <translation type="unfinished"/>
+        <translation>Deze optie is relatief snel en zal ongeveer 0.05 DRK kosten om 1000 DRK te anonimiseren </translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="156"/>
@@ -1868,7 +1868,7 @@ Adres: %4
     <message>
         <location filename="../overviewpage.cpp" line="275"/>
         <source>Found unconfirmed denominated outputs, will wait till they confirm to recalculate.</source>
-        <translation type="unfinished"/>
+        <translation>Niet geconfirmeerde gedenummuriseerde  </translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="332"/>
@@ -1884,7 +1884,8 @@ Adres: %4
         <location filename="../overviewpage.cpp" line="419"/>
         <source>Last Darksend message:
 </source>
-        <translation type="unfinished"/>
+        <translation>Laatste Darksend bericht:
+</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="376"/>
@@ -3196,7 +3197,7 @@ Adres: %4
     <message>
         <location filename="../transactiondesc.cpp" line="47"/>
         <source>%1 confirmations (verified via instantx)</source>
-        <translation type="unfinished"/>
+        <translation>%1 confirmatie (geverifieerd met instantx)</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="76"/>
@@ -3408,157 +3409,157 @@ Adres: %4
 <context>
     <name>TransactionTableModel</name>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="238"/>
+        <location filename="../transactiontablemodel.cpp" line="239"/>
         <source>Date</source>
         <translation>Datum</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="238"/>
+        <location filename="../transactiontablemodel.cpp" line="239"/>
         <source>Type</source>
         <translation>Type</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="238"/>
+        <location filename="../transactiontablemodel.cpp" line="239"/>
         <source>Address</source>
         <translation>Adres</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="238"/>
+        <location filename="../transactiontablemodel.cpp" line="239"/>
         <source>Amount</source>
         <translation>Bedrag</translation>
     </message>
     <message numerus="yes">
-        <location filename="../transactiontablemodel.cpp" line="287"/>
+        <location filename="../transactiontablemodel.cpp" line="288"/>
         <source>Open for %n more block(s)</source>
         <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="290"/>
+        <location filename="../transactiontablemodel.cpp" line="291"/>
         <source>Open until %1</source>
         <translation>Open tot %1</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="293"/>
+        <location filename="../transactiontablemodel.cpp" line="294"/>
         <source>Offline</source>
         <translation>Niet verbonden</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="296"/>
+        <location filename="../transactiontablemodel.cpp" line="297"/>
         <source>Unconfirmed</source>
         <translation>Onbevestigd</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="299"/>
+        <location filename="../transactiontablemodel.cpp" line="300"/>
         <source>Confirming (%1 of %2 recommended confirmations)</source>
         <translation>Bevestigen (%1 van %2 aanbevolen bevestigingen)</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="302"/>
+        <location filename="../transactiontablemodel.cpp" line="303"/>
         <source>Confirmed (%1 confirmations)</source>
         <translation>Bevestigd (%1 bevestigingen)</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="305"/>
+        <location filename="../transactiontablemodel.cpp" line="306"/>
         <source>Conflicted</source>
         <translation>Conflicterend</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="308"/>
+        <location filename="../transactiontablemodel.cpp" line="309"/>
         <source>Immature (%1 confirmations, will be available after %2)</source>
         <translation>immatuur (%1 bevestigingen, zal beschikbaar zijn na %2)</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="311"/>
+        <location filename="../transactiontablemodel.cpp" line="312"/>
         <source>This block was not received by any other nodes and will probably not be accepted!</source>
         <translation>Dit blok is niet ontvangen bij andere nodes en zal waarschijnlijk niet worden geaccepteerd!</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="314"/>
+        <location filename="../transactiontablemodel.cpp" line="315"/>
         <source>Generated but not accepted</source>
         <translation>Gegenereerd maar niet geaccepteerd</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="356"/>
+        <location filename="../transactiontablemodel.cpp" line="357"/>
         <source>Received with</source>
         <translation>Ontvangen met</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="358"/>
+        <location filename="../transactiontablemodel.cpp" line="359"/>
         <source>Received from</source>
         <translation>Ontvangen van</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="360"/>
+        <location filename="../transactiontablemodel.cpp" line="361"/>
         <source>Received via Darksend</source>
         <translation>Ontvangen via Darksend</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="363"/>
+        <location filename="../transactiontablemodel.cpp" line="364"/>
         <source>Sent to</source>
         <translation>Verzonden aan</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="365"/>
+        <location filename="../transactiontablemodel.cpp" line="366"/>
         <source>Payment to yourself</source>
         <translation>Betaling aan uzelf</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="367"/>
+        <location filename="../transactiontablemodel.cpp" line="368"/>
         <source>Mined</source>
         <translation>Gedolven</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="370"/>
+        <location filename="../transactiontablemodel.cpp" line="371"/>
         <source>Darksend Denominate</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="372"/>
+        <location filename="../transactiontablemodel.cpp" line="373"/>
         <source>Darksend Collateral Payment</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="374"/>
+        <location filename="../transactiontablemodel.cpp" line="375"/>
         <source>Darksend Make Collateral Inputs</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="376"/>
+        <location filename="../transactiontablemodel.cpp" line="377"/>
         <source>Darksend Create Denominations</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="378"/>
+        <location filename="../transactiontablemodel.cpp" line="379"/>
         <source>Darksent</source>
         <translation>Darksent</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="420"/>
+        <location filename="../transactiontablemodel.cpp" line="421"/>
         <source>(n/a)</source>
         <translation>(nvt)</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="612"/>
+        <location filename="../transactiontablemodel.cpp" line="613"/>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
         <translation>Transactiestatus. Houd de muiscursor boven dit veld om het aantal bevestigingen te laten zien.</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="614"/>
+        <location filename="../transactiontablemodel.cpp" line="615"/>
         <source>Date and time that the transaction was received.</source>
         <translation>Datum en tijd waarop deze transactie is ontvangen.</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="616"/>
+        <location filename="../transactiontablemodel.cpp" line="617"/>
         <source>Type of transaction.</source>
         <translation>Type transactie.</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="618"/>
+        <location filename="../transactiontablemodel.cpp" line="619"/>
         <source>Destination address of transaction.</source>
         <translation>Ontvangend adres van transactie.</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="620"/>
+        <location filename="../transactiontablemodel.cpp" line="621"/>
         <source>Amount removed from or added to balance.</source>
         <translation>Bedrag verwijderd van of toegevoegd aan saldo</translation>
     </message>
@@ -5027,146 +5028,151 @@ If the file does not exist, create it with owner-readable-only file permissions.
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="359"/>
-        <source>Unknown -socks proxy version requested: %i</source>
+        <source>Unable to sign spork message, wrong key?</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="360"/>
-        <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
+        <source>Unknown -socks proxy version requested: %i</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="361"/>
+        <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="362"/>
         <source>Upgrade wallet to latest format</source>
         <translation>Upgrade portemonnee naar nieuwste format</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="362"/>
+        <location filename="../bitcoinstrings.cpp" line="363"/>
         <source>Usage (deprecated, use darkcoin-cli):</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="363"/>
+        <location filename="../bitcoinstrings.cpp" line="364"/>
         <source>Usage:</source>
         <translation>Gebruik:</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="364"/>
+        <location filename="../bitcoinstrings.cpp" line="365"/>
         <source>Use KeePass 2 integration using KeePassHttp plugin (default: 0)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="365"/>
+        <location filename="../bitcoinstrings.cpp" line="366"/>
         <source>Use N separate masternodes to anonymize funds  (2-8, default: 2)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="366"/>
+        <location filename="../bitcoinstrings.cpp" line="367"/>
         <source>Use OpenSSL (https) for JSON-RPC connections</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="367"/>
+        <location filename="../bitcoinstrings.cpp" line="368"/>
         <source>Use UPnP to map the listening port (default: 0)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="368"/>
+        <location filename="../bitcoinstrings.cpp" line="369"/>
         <source>Use UPnP to map the listening port (default: 1 when listening)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="369"/>
+        <location filename="../bitcoinstrings.cpp" line="370"/>
         <source>Use the test network</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="370"/>
+        <location filename="../bitcoinstrings.cpp" line="371"/>
         <source>Username for JSON-RPC connections</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="371"/>
+        <location filename="../bitcoinstrings.cpp" line="372"/>
         <source>Value more than Darksend pool maximum allows.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="372"/>
+        <location filename="../bitcoinstrings.cpp" line="373"/>
         <source>Verifying blocks...</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="373"/>
+        <location filename="../bitcoinstrings.cpp" line="374"/>
         <source>Verifying wallet...</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="374"/>
+        <location filename="../bitcoinstrings.cpp" line="375"/>
         <source>Wait for RPC server to start</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="375"/>
+        <location filename="../bitcoinstrings.cpp" line="376"/>
         <source>Wallet %s resides outside data directory %s</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="376"/>
+        <location filename="../bitcoinstrings.cpp" line="377"/>
         <source>Wallet is locked.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="377"/>
+        <location filename="../bitcoinstrings.cpp" line="378"/>
         <source>Wallet needed to be rewritten: restart Darkcoin to complete</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="378"/>
+        <location filename="../bitcoinstrings.cpp" line="379"/>
         <source>Wallet options:</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="379"/>
+        <location filename="../bitcoinstrings.cpp" line="380"/>
         <source>Warning</source>
         <translation>Waarschuwing</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="380"/>
+        <location filename="../bitcoinstrings.cpp" line="381"/>
         <source>Warning: Deprecated argument -debugnet ignored, use -debug=net</source>
         <translation>Waarschuwing: Verouderd parameter -debugnet niet uitgevoerd, gebruik -debug=net</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="381"/>
+        <location filename="../bitcoinstrings.cpp" line="382"/>
         <source>Warning: This version is obsolete, upgrade required!</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="382"/>
+        <location filename="../bitcoinstrings.cpp" line="383"/>
         <source>Wrong state.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="383"/>
+        <location filename="../bitcoinstrings.cpp" line="384"/>
         <source>You need to rebuild the database using -reindex to change -txindex</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="384"/>
+        <location filename="../bitcoinstrings.cpp" line="385"/>
         <source>Zapping all transactions from wallet...</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="385"/>
+        <location filename="../bitcoinstrings.cpp" line="386"/>
         <source>on startup</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="386"/>
+        <location filename="../bitcoinstrings.cpp" line="387"/>
         <source>version</source>
         <translation>versie</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="387"/>
+        <location filename="../bitcoinstrings.cpp" line="388"/>
         <source>wallet.dat corrupt, salvage failed</source>
         <translation type="unfinished"/>
     </message>
