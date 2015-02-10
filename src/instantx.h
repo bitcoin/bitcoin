@@ -1,6 +1,5 @@
 
-// Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2012 The Bitcoin developers
+// Copyright (c) 2009-2012 The Darkcoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #ifndef INSTANTX_H
@@ -23,7 +22,7 @@ class CConsensusVote;
 class CTransaction;
 class CTransactionLock;
 
-static const int MIN_INSTANTX_PROTO_VERSION = 70065;
+static const int MIN_INSTANTX_PROTO_VERSION = 70066;
 
 extern map<uint256, CTransaction> mapTxLockReq;
 extern map<uint256, CTransaction> mapTxLockReqRejected;

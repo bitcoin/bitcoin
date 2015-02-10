@@ -18,7 +18,14 @@ static const char* ppszTypeName[] =
     "block",
     "filtered block",
     "tx lock request",
-    "tx lock vote"
+    "tx lock vote",
+    "spork",
+    "masternode winner",
+    "unknown",
+    "unknown",
+    "unknown",
+    "unknown",
+    "unknown"
 };
 
 CMessageHeader::CMessageHeader()

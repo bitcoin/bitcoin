@@ -11,7 +11,7 @@ std::vector<CMasterNode> vecMasternodes;
 /** Object for who's going to get paid on which blocks */
 CMasternodePayments masternodePayments;
 // keep track of masternode votes I've seen
-map<uint256, int> mapSeenMasternodeVotes;
+map<uint256, CMasternodePaymentWinner> mapSeenMasternodeVotes;
 // keep track of the scanning errors I've seen
 map<uint256, int> mapSeenMasternodeScanningErrors;
 // who's asked for the masternode list and the last time
@@ -360,7 +360,7 @@ void ProcessMessageMasternode(CNode* pfrom, std::string& strCommand, CDataStream
             return;
         }
 
-        mapSeenMasternodeVotes.insert(make_pair(hash, 1));
+        mapSeenMasternodeVotes.insert(make_pair(hash, winner));
 
         if(masternodePayments.AddWinningMasternode(winner)){
             masternodePayments.Relay(winner);
@@ -531,7 +531,7 @@ bool GetBlockHash(uint256& hash, int nBlockHeight)
     for (unsigned int i = 1; BlockReading && BlockReading->nHeight > 0; i++) {
         if(n >= nBlocksAgo){
             hash = BlockReading->GetBlockHash();
-            mapCacheBlockHashes[nBlockHeight-n] = hash;
+            mapCacheBlockHashes[nBlockHeight] = hash;
             return true;
         }
         n++;
@@ -649,7 +649,7 @@ uint64_t CMasternodePayments::CalculateScore(uint256 blockHash, CTxIn& vin)
     //printf(" -- CMasternodePayments CalculateScore() n2 = %d \n", n2.Get64());
     //printf(" -- CMasternodePayments CalculateScore() n3 = %d \n", n3.Get64());
     //printf(" -- CMasternodePayments CalculateScore() n4 = %d \n", n4.Get64());
-
+ 
     return n4.Get64();
 }
 
@@ -680,7 +680,7 @@ bool CMasternodePayments::GetWinningMasternode(int nBlockHeight, CTxIn& vinOut)
 bool CMasternodePayments::AddWinningMasternode(CMasternodePaymentWinner& winnerIn)
 {
     uint256 blockHash = 0;
-    if(!darkSendPool.GetBlockHash(blockHash, winnerIn.nBlockHeight-576)) {
+    if(!GetBlockHash(blockHash, winnerIn.nBlockHeight-576)) {
         return false;
     }
 
@@ -695,6 +695,7 @@ bool CMasternodePayments::AddWinningMasternode(CMasternodePaymentWinner& winnerI
                 winner.vin = winnerIn.vin;
                 winner.payee = winnerIn.payee;
                 winner.vchSig = winnerIn.vchSig;
+
                 return true;
             }
         }
@@ -702,8 +703,10 @@ bool CMasternodePayments::AddWinningMasternode(CMasternodePaymentWinner& winnerI
 
     // if it's not in the vector
     if(!foundBlock){
-         vWinning.push_back(winnerIn);
-         return true;
+        vWinning.push_back(winnerIn);
+        mapSeenMasternodeVotes.insert(make_pair(winnerIn.GetHash(), winnerIn));
+        
+        return true;
     }
 
     return false;
@@ -780,12 +783,13 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
 
 void CMasternodePayments::Relay(CMasternodePaymentWinner& winner)
 {
+    CInv inv(MSG_MASTERNODE_WINNER, winner.GetHash());
+
+    vector<CInv> vInv;
+    vInv.push_back(inv);
     LOCK(cs_vNodes);
     BOOST_FOREACH(CNode* pnode, vNodes){
-        if(!pnode->fRelayTxes)
-            continue;
-
-        pnode->PushMessage("mnw", winner);
+        pnode->PushMessage("inv", vInv);
     }
 }
 
