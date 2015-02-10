@@ -78,7 +78,7 @@ class RESTTest (BitcoinTestFramework):
 
         # check hex format response
         hex_string = http_get_call(url.hostname, url.port, '/rest/tx/'+tx_hash+self.FORMAT_SEPARATOR+"hex", True)
-        assert_equal(response.status, 200)
+        assert_equal(hex_string.status, 200)
         assert_greater_than(int(response.getheader('content-length')), 10)
 
         # check block tx details
@@ -105,6 +105,13 @@ class RESTTest (BitcoinTestFramework):
         json_obj = json.loads(json_string)
         for tx in txs:
             assert_equal(tx in json_obj['tx'], True)
+
+        #test rest bestblock
+        bb_hash = self.nodes[0].getbestblockhash()
+        
+        json_string = http_get_call(url.hostname, url.port, '/rest/chaininfo.json')
+        json_obj = json.loads(json_string)
+        assert_equal(json_obj['bestblockhash'], bb_hash)
 
 if __name__ == '__main__':
     RESTTest ().main ()
