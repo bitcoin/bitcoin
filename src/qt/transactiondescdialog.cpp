@@ -35,3 +35,9 @@ void TransactionDescDialog::keyPressEvent(QKeyEvent *event)
     }
 #endif
 }
+
+void TransactionDescDialog::closeEvent(QCloseEvent *e)
+{
+    emit(stopExec());
+    QWidget::closeEvent(e);
+}

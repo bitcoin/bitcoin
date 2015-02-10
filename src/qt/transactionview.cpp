@@ -421,7 +421,7 @@ void TransactionView::showDetails()
 
         // This loop will wait for the window is closed
         QEventLoop loop;
-        connect(&dlg, SIGNAL(close()), &loop, SLOT(quit()));
+        connect(&dlg, SIGNAL(stopExec()), &loop, SLOT(quit()));
         loop.exec();
     }
 }
