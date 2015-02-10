@@ -245,18 +245,7 @@ TransactionTableModel::~TransactionTableModel()
     delete priv;
 }
 
-<<<<<<< HEAD
-void TransactionTableModel::updateTransaction(const QString &hash, int status)
-=======
-/** Updates the column title to "Amount (DisplayUnit)" and emits headerDataChanged() signal for table headers to react. */
-void TransactionTableModel::updateAmountColumnTitle()
-{
-    columns[Amount] = BitcoinUnits::getAmountColumnTitle(walletModel->getOptionsModel()->getDisplayUnit());
-    emit headerDataChanged(Qt::Horizontal,Amount,Amount);
-}
-
 void TransactionTableModel::updateTransaction(const QString &hash, int status, bool showTransaction)
->>>>>>> 023e63d... qt: Move transaction notification to transaction table model
 {
     uint256 updated;
     updated.SetHex(hash.toStdString());
