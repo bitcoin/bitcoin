@@ -75,6 +75,8 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     QMainWindow(parent),
     clientModel(0),
     walletModel(0),
+    signVerifyMessageDialog(0),
+    multisigPage(0),
     encryptWalletAction(0),
     lockWalletAction(0),
     unlockWalletAction(0),
@@ -85,9 +87,7 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     notificator(0),
     rpcConsole(0),
     aboutDialog(0),
-    optionsDialog(0),
-    multisigPage(0),
-    signVerifyMessageDialog(0)
+    optionsDialog(0)
 {
     resize(850, 550);
     setWindowTitle(tr("NovaCoin") + " - " + tr("Wallet"));
