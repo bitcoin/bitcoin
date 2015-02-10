@@ -202,7 +202,6 @@ public:
 
 private:
     CWallet *wallet;
-    bool fHaveWatchOnly;
     bool fForceCheckBalanceChanged;
 
     // Wallet has an options model for wallet-specific options
