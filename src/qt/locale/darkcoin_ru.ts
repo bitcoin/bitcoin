@@ -439,7 +439,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="282"/>
         <source>&amp;Options...</source>
-        <translation>&amp;Параметры...</translation>
+        <translation>&amp;Настройки...</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="283"/>
@@ -585,12 +585,12 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="321"/>
         <source>&amp;Command-line options</source>
-        <translation>&amp;Пармаетры командной строки</translation>
+        <translation>&amp;Параметры командной строки</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="322"/>
         <source>Show the Darkcoin Core help message to get a list with possible Darkcoin command-line options</source>
-        <translation>Показать помощь о Darkcoin Core со списком возможных опций командной строки</translation>
+        <translation>Показать помощь о Darkcoin Core со списком возможных параметров командной строки</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="358"/>
@@ -1259,7 +1259,7 @@ Address: %4
     <message>
         <location filename="../forms/helpmessagedialog.ui" line="19"/>
         <source>Darkcoin Core - Command-line options</source>
-        <translation>Darkcoin Core - опции командной строки</translation>
+        <translation>Darkcoin Core - параметры командной строки</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="69"/>
@@ -1568,7 +1568,7 @@ Address: %4
     <message>
         <location filename="../forms/optionsdialog.ui" line="458"/>
         <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Quit in the menu.</source>
-        <translation>Сворачивать вместо закрытия. Если данная опция будет выбрана, то приложение закроется только после выбора пункта меню Завершить.</translation>
+        <translation>Сворачивать вместо закрытия. Если данная настройка будет выбрана, то приложение закроется только после выбора пункта меню Завершить.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="461"/>
@@ -1624,7 +1624,7 @@ Address: %4
     <message>
         <location filename="../forms/optionsdialog.ui" line="592"/>
         <source>Active command-line options that override above options:</source>
-        <translation>Активные опции командной строки, которые перекрывают вышеуказанные опции:</translation>
+        <translation>Активные параметры командной строки, которые перекрывают вышеуказанные настройки:</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="635"/>
@@ -1634,7 +1634,7 @@ Address: %4
     <message>
         <location filename="../forms/optionsdialog.ui" line="638"/>
         <source>&amp;Reset Options</source>
-        <translation>&amp;Сбросить параметры</translation>
+        <translation>&amp;Сбросить настройки</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="699"/>
@@ -1779,7 +1779,7 @@ Address: %4
     <message>
         <location filename="../forms/overviewpage.ui" line="370"/>
         <source>Submitted Denom:</source>
-        <translation>Номиналы:</translation>
+        <translation>Отправленные номиналы:</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="377"/>
@@ -1867,7 +1867,7 @@ Address: %4
     <message>
         <location filename="../overviewpage.cpp" line="275"/>
         <source>Found unconfirmed denominated outputs, will wait till they confirm to recalculate.</source>
-        <translation>Найдены неподтвержденные деноминированные монеты, пересчет будет выполнен после их подтверждения.</translation>
+        <translation>Найдены неподтвержденные номиналы, пересчет будет выполнен после их подтверждения.</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="332"/>
@@ -2567,7 +2567,7 @@ Address: %4
         <location filename="../sendcoinsdialog.cpp" line="512"/>
         <location filename="../sendcoinsdialog.cpp" line="522"/>
         <source>Send Coins</source>
-        <translation>Отправить</translation>
+        <translation>Отправка</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="90"/>
@@ -3525,7 +3525,7 @@ Address: %4
     <message>
         <location filename="../transactiontablemodel.cpp" line="377"/>
         <source>Darksend Create Denominations</source>
-        <translation>Создание деноминаций для Darksend</translation>
+        <translation>Создание номиналов для Darksend</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="379"/>
@@ -3560,7 +3560,7 @@ Address: %4
     <message>
         <location filename="../transactiontablemodel.cpp" line="621"/>
         <source>Amount removed from or added to balance.</source>
-        <translation>Сумма, добавленная, или снятая с баланса.</translation>
+        <translation>Сумма, снятая с баланса или добавленная на него.</translation>
     </message>
 </context>
 <context>
@@ -3624,7 +3624,7 @@ Address: %4
     <message>
         <location filename="../transactionview.cpp" line="83"/>
         <source>Darksend Create Denominations</source>
-        <translation>Создание деноминаций для Darksend</translation>
+        <translation>Создание номиналов для Darksend</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="84"/>
@@ -3861,12 +3861,12 @@ rpcpassword=%s
     <message>
         <location filename="../bitcoinstrings.cpp" line="32"/>
         <source>An error occurred while setting up the RPC port %u for listening on IPv4: %s</source>
-        <translation>Произошла ошибка при настройке RPC порта %u на IPv4: %s</translation>
+        <translation>Произошла ошибка при настройке прослушивания RPC порта %u на IPv4: %s</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="34"/>
         <source>An error occurred while setting up the RPC port %u for listening on IPv6, falling back to IPv4: %s</source>
-        <translation>Произошла ошибка при настройке RPC порта %u на IP6, откатываемся обратно на IPv4: %s</translation>
+        <translation>Произошла ошибка при настройке прослушивания RPC порта %u на IP6, откатываемся обратно на IPv4: %s</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="37"/>
@@ -3936,7 +3936,7 @@ rpcpassword=%s
     <message>
         <location filename="../bitcoinstrings.cpp" line="75"/>
         <source>Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)</source>
-        <translation>Выполнить команду, когда приходит соответствующее сообщение о тревоге или наблюдается очень длинное расщепление цепи (%s в команде заменяется на сообщение)</translation>
+        <translation>Выполнить команду, когда приходит соответствующее сообщение о тревоге или наблюдается очень длинная альтернативная цепочка блоков (%s в команде заменяется на сообщение)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="78"/>
@@ -3961,7 +3961,7 @@ rpcpassword=%s
     <message>
         <location filename="../bitcoinstrings.cpp" line="90"/>
         <source>Found unconfirmed denominated outputs, will wait till they confirm to continue.</source>
-        <translation>Найдены неподтвержденные деноминированные монеты, процесс продолжится после их подтверждения.</translation>
+        <translation>Найдены неподтверждённые номиналы, процесс продолжится после их подтверждения.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="93"/>
@@ -4041,12 +4041,12 @@ rpcpassword=%s
     <message>
         <location filename="../bitcoinstrings.cpp" line="133"/>
         <source>Unable to bind to %s on this computer. Darkcoin Core is probably already running.</source>
-        <translation>Не удалось забиндиться на %s на этом компьютере. Возможно, Darkcoin Core уже запущен.</translation>
+        <translation>Не удалось привязаться к %s на этом компьютере. Возможно, Darkcoin Core уже запущен.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="136"/>
         <source>Unable to locate enough Darksend denominated funds for this transaction.</source>
-        <translation>Не удалось обнаружить достаточных для выполнения этой транзакции средств Darksend.</translation>
+        <translation>Не удалось обнаружить достаточных для выполнения этой транзакции номиналов Darksend.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="138"/>
@@ -4150,7 +4150,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="181"/>
         <source>Already have that input.</source>
-        <translation>Уже есть эти входы.</translation>
+        <translation>Уже есть этот вход.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="182"/>
@@ -4170,7 +4170,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="185"/>
         <source>Can&apos;t denominate: no compatible inputs left.</source>
-        <translation>Разбиение невозможно: не осталось совместимых монет.</translation>
+        <translation>Разбиение на номиналы невозможно: не осталось совместимых монет.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="186"/>
@@ -4230,7 +4230,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="197"/>
         <source>Connect to a node to retrieve peer addresses, and disconnect</source>
-        <translation>Подключиться к участнику, чтобы получить список адресов других участников и отключиться</translation>
+        <translation>Подключиться к участнику, чтобы получить список адресов других участников, и отключиться</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="198"/>
@@ -4260,7 +4260,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="203"/>
         <source>Darksend options:</source>
-        <translation>Опции Darksend:</translation>
+        <translation>Параметры Darksend:</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="204"/>
@@ -4380,7 +4380,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="227"/>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
-        <translation>Не удалось начать прослушивание на порту. Используйте -listen=0 если вас это устраивает.</translation>
+        <translation>Не удалось начать прослушивание на порту. Используйте -listen=0, если вас это устраивает.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="228"/>
@@ -4515,12 +4515,12 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="254"/>
         <source>InstantX options:</source>
-        <translation>Опции InstantX:</translation>
+        <translation>Параметры InstantX:</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="255"/>
         <source>Insufficient funds</source>
-        <translation>Недостаточно монет</translation>
+        <translation>Недостаточно средств</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="256"/>
@@ -4660,7 +4660,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="283"/>
         <source>Masternode options:</source>
-        <translation>Опции мастерноды:</translation>
+        <translation>Параметры мастерноды:</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="284"/>
@@ -4695,7 +4695,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="290"/>
         <source>No funds detected in need of denominating.</source>
-        <translation>Не обнаружено средств для дальнейшего разбиения.</translation>
+        <translation>Не обнаружено средств для дальнейшего разбиения на номиналы.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="291"/>
@@ -4705,7 +4705,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="292"/>
         <source>No matching denominations found for mixing.</source>
-        <translation>Отсутствуют совпадаюшие для перемешивания монеты.</translation>
+        <translation>Отсутствуют совпадающие для перемешивания номиналы.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="293"/>
@@ -4750,7 +4750,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="301"/>
         <source>Prepend debug output with timestamp (default: 1)</source>
-        <translation>Дописывать отметки времени к отладочному выводу (по умолчанию: 1)</translation>
+        <translation>Дописывать в начало отладочного вывода отметки времени (по умолчанию: 1)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="302"/>
@@ -4770,7 +4770,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="305"/>
         <source>RPC client options:</source>
-        <translation>Опции RPC-клиента:</translation>
+        <translation>Параметры RPC-клиента:</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="306"/>
@@ -4920,7 +4920,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="335"/>
         <source>Signing transaction failed</source>
-        <translation>Не удалось подписать транзакцию</translation>
+        <translation>Подписание транзакции завершилось неудачно.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="336"/>
@@ -4930,7 +4930,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="337"/>
         <source>Specify connection timeout in milliseconds (default: 5000)</source>
-        <translation>Указать таймаут соединения в миллисекундах (по умолчанию: 5000)</translation>
+        <translation>Указать тайм-аут соединения в миллисекундах (по умолчанию: 5000)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="338"/>
@@ -4955,7 +4955,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="342"/>
         <source>Specify your own public address</source>
-        <translation>Укажите ваш собственный публичный адрес</translation>
+        <translation>Укажите Ваш собственный публичный адрес</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="343"/>
@@ -4995,7 +4995,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="350"/>
         <source>To use the %s option</source>
-        <translation>Чтобы использовать опцию %s</translation>
+        <translation>Чтобы использовать параметр %s</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="351"/>
@@ -5030,7 +5030,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="357"/>
         <source>Unable to bind to %s on this computer (bind returned error %s)</source>
-        <translation>Невозможно привязаться к %s на этом компьютере (bind вернул ошибку %s)</translation>
+        <translation>Невозможно привязаться к %s на этом компьютере (привязка вернула ошибку %s)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="358"/>
@@ -5140,7 +5140,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="379"/>
         <source>Wallet options:</source>
-        <translation>Настройки бумажника:</translation>
+        <translation>Параметры бумажника:</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="380"/>
