@@ -4,10 +4,10 @@
 Ubuntu/Debian:
  sudo apt-get install git qt4-qmake libqt4-dev build-essential libboost-dev libboost-system-dev
    libboost-filesystem-dev libboost-program-options-dev libboost-thread-dev
-   libssl-dev libdb++-dev libminiupnpc-dev
+   libssl-dev libdb++-dev libminiupnpc-dev libqrencode-dev
 
 openSUSE(проверено на версии 13.2):
- sudo zypper install git gcc gcc-c++ libqt4-devel boost-devel libopenssl-devel libdb-4_8-devel libminiupnpc-devel
+ sudo zypper install git gcc gcc-c++ libqt4-devel boost-devel libopenssl-devel libdb-4_8-devel libminiupnpc-devel libqrencode3
 
 После того, как установка завершалась, можно клонировать Novacoin репозитарий
 
@@ -16,7 +16,7 @@ openSUSE(проверено на версии 13.2):
 и наконец, скомпилировать свой клиент
 
  cd novacoin
- qmake USE_UPNP=1 USE_O3=1 USE_ASM=1 (если хотите LevelDB, то USE_LEVELDB=1)  
+ qmake USE_UPNP=1 USE_QRCODE=1 USE_O3=1 USE_ASM=1 (если хотите LevelDB, то USE_LEVELDB=1)  
  make
  cd src
  make -f makefile.unix USE_UPNP=1  USE_O3=1 USE_ASM=1 (если хотите LevelDB, то USE_LEVELDB=1) 
