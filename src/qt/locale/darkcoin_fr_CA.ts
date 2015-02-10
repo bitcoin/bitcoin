@@ -19,12 +19,7 @@ This is experimental software.
 Distributed under the MIT/X11 software license, see the accompanying file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit (http://www.openssl.org/) and cryptographic software written by Eric Young (eay@cryptsoft.com) and UPnP software written by Thomas Bernard.</source>
-        <translation>
-Ce logiciel est en phase expérimentale.
-
-Distribué sous licence MIT/X11, voir le fichier COPYING ou http://www.opensource.org/licenses/mit-license.php.
-
-Ce produit comprend des logiciels développés par le projet OpenSSL pour être utilisés dans la boîte à outils OpenSSL (http://www.openssl.org/), un logiciel cryptographique écrit par Eric Young (eay@cryptsoft.com) et un logiciel UPnP écrit par Thomas Bernard.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="30"/>
@@ -54,12 +49,12 @@ Ce produit comprend des logiciels développés par le projet OpenSSL pour être 
     <message>
         <location filename="../forms/addressbookpage.ui" line="30"/>
         <source>Double-click to edit address or label</source>
-        <translation>Double-cliquez afin de modifier l&apos;adress ou l&apos;étiquette</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="57"/>
         <source>Create a new address</source>
-        <translation>Créer une nouvelle adresse</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="60"/>
@@ -69,7 +64,7 @@ Ce produit comprend des logiciels développés par le projet OpenSSL pour être 
     <message>
         <location filename="../forms/addressbookpage.ui" line="71"/>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation>Copier l&apos;adresse surligné a votre presse-papier</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="74"/>
@@ -84,7 +79,7 @@ Ce produit comprend des logiciels développés par le projet OpenSSL pour être 
     <message>
         <location filename="../forms/addressbookpage.ui" line="88"/>
         <source>&amp;Delete</source>
-        <translation>&amp;Supprimer</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="112"/>
@@ -159,7 +154,7 @@ Ce produit comprend des logiciels développés par le projet OpenSSL pour être 
     <message>
         <location filename="../addressbookpage.cpp" line="272"/>
         <source>Comma separated file (*.csv)</source>
-        <translation>Fichier séparé par une virgule (*.csv)</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="285"/>
@@ -177,17 +172,17 @@ Ce produit comprend des logiciels développés par le projet OpenSSL pour être 
     <message>
         <location filename="../addresstablemodel.cpp" line="169"/>
         <source>Label</source>
-        <translation>Record</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../addresstablemodel.cpp" line="169"/>
         <source>Address</source>
-        <translation>Addresse</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../addresstablemodel.cpp" line="205"/>
         <source>(no label)</source>
-        <translation>(pas de record)</translation>
+        <translation type="unfinished"/>
     </message>
 </context>
 <context>
@@ -200,17 +195,17 @@ Ce produit comprend des logiciels développés par le projet OpenSSL pour être 
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="47"/>
         <source>Enter passphrase</source>
-        <translation>Entrer Mot de Passe</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="61"/>
         <source>New passphrase</source>
-        <translation>Nouveau Mot de passe</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="75"/>
         <source>Repeat new passphrase</source>
-        <translation>Répéter Mot de Passe</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="108"/>
@@ -225,27 +220,27 @@ Ce produit comprend des logiciels développés par le projet OpenSSL pour être 
     <message>
         <location filename="../askpassphrasedialog.cpp" line="41"/>
         <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;10 or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
-        <translation>Entrer le nouveau mot de passe pour le porte-feuille. Veuillez utiliser un mot de passe de 10 caractères au hasard ou plus, ou, 8 mots ou plus. </translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="42"/>
         <source>Encrypt wallet</source>
-        <translation>Encrypter Porte-Feuille</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="48"/>
         <source>This operation needs your wallet passphrase to unlock the wallet.</source>
-        <translation>Cette opération nécessite le mot de passe de votre porte-feuille pour débarrer le porte-feuille.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="53"/>
         <source>Unlock wallet</source>
-        <translation>Débarrer Porte-Feuille</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="56"/>
         <source>This operation needs your wallet passphrase to decrypt the wallet.</source>
-        <translation>Cette opération nécessite le mot de passe de votre porte-feuille pour le décrypter.</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="61"/>
@@ -495,7 +490,7 @@ Ce produit comprend des logiciels développés par le projet OpenSSL pour être 
     <message>
         <location filename="../bitcoingui.cpp" line="299"/>
         <source>Unlock wallet</source>
-        <translation>Débarrer Porte-Feuille</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="300"/>
@@ -842,7 +837,7 @@ Address: %4
     <message>
         <location filename="../forms/coincontroldialog.ui" line="456"/>
         <source>Address</source>
-        <translation>Addresse</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="461"/>
@@ -1056,7 +1051,7 @@ Address: %4
         <location filename="../coincontroldialog.cpp" line="670"/>
         <location filename="../coincontroldialog.cpp" line="731"/>
         <source>(no label)</source>
-        <translation>(pas de record)</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="724"/>
@@ -2488,7 +2483,7 @@ Address: %4
     <message>
         <location filename="../receiverequestdialog.cpp" line="145"/>
         <source>Address</source>
-        <translation>Addresse</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../receiverequestdialog.cpp" line="147"/>
@@ -2498,7 +2493,7 @@ Address: %4
     <message>
         <location filename="../receiverequestdialog.cpp" line="149"/>
         <source>Label</source>
-        <translation>Record</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../receiverequestdialog.cpp" line="151"/>
@@ -2526,7 +2521,7 @@ Address: %4
     <message>
         <location filename="../recentrequeststablemodel.cpp" line="24"/>
         <source>Label</source>
-        <translation>Record</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../recentrequeststablemodel.cpp" line="24"/>
@@ -2541,7 +2536,7 @@ Address: %4
     <message>
         <location filename="../recentrequeststablemodel.cpp" line="62"/>
         <source>(no label)</source>
-        <translation>(pas de record)</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../recentrequeststablemodel.cpp" line="71"/>
@@ -2820,7 +2815,7 @@ Address: %4
     <message>
         <location filename="../sendcoinsdialog.cpp" line="646"/>
         <source>(no label)</source>
-        <translation>(pas de record)</translation>
+        <translation type="unfinished"/>
     </message>
 </context>
 <context>
@@ -3415,7 +3410,7 @@ Address: %4
     <message>
         <location filename="../transactiontablemodel.cpp" line="239"/>
         <source>Address</source>
-        <translation>Addresse</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="239"/>
@@ -3694,7 +3689,7 @@ Address: %4
     <message>
         <location filename="../transactionview.cpp" line="303"/>
         <source>Comma separated file (*.csv)</source>
-        <translation>Fichier séparé par une virgule (*.csv)</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="312"/>
@@ -3714,12 +3709,12 @@ Address: %4
     <message>
         <location filename="../transactionview.cpp" line="315"/>
         <source>Label</source>
-        <translation>Record</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="316"/>
         <source>Address</source>
-        <translation>Addresse</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="317"/>
