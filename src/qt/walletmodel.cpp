@@ -410,12 +410,12 @@ void WalletModel::unsubscribeFromCoreSignals()
 WalletModel::UnlockContext WalletModel::requestUnlock()
 {
     bool was_locked = getEncryptionStatus() == Locked;
+    bool mintflag = fWalletUnlockMintOnly;
 
     if ((!was_locked) && fWalletUnlockMintOnly)
     {
-       setWalletLocked(true);
-       was_locked = getEncryptionStatus() == Locked;
-
+        setWalletLocked(true);
+        was_locked = getEncryptionStatus() == Locked;
     }
     if(was_locked)
     {
@@ -425,13 +425,14 @@ WalletModel::UnlockContext WalletModel::requestUnlock()
     // If wallet is still locked, unlock was failed or cancelled, mark context as invalid
     bool valid = getEncryptionStatus() != Locked;
 
-    return UnlockContext(this, valid, was_locked && !fWalletUnlockMintOnly);
+    return UnlockContext(this, valid, was_locked, mintflag);
 }
 
-WalletModel::UnlockContext::UnlockContext(WalletModel *wallet, bool valid, bool relock):
+WalletModel::UnlockContext::UnlockContext(WalletModel *wallet, bool valid, bool relock, bool mintflag):
         wallet(wallet),
         valid(valid),
-        relock(relock)
+        relock(relock),
+        mintflag(mintflag)
 {
 }
 
@@ -439,7 +440,14 @@ WalletModel::UnlockContext::~UnlockContext()
 {
     if(valid && relock)
     {
+        if (mintflag)
+        {
+            // Restore unlock minting flag
+            fWalletUnlockMintOnly = mintflag;
+            return;
+        }
         wallet->setWalletLocked(true);
+
     }
 }
 
@@ -452,7 +460,7 @@ void WalletModel::UnlockContext::CopyFrom(const UnlockContext& rhs)
 
 bool WalletModel::getPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) const
 {
-    return wallet->GetPubKey(address, vchPubKeyOut);   
+    return wallet->GetPubKey(address, vchPubKeyOut);
 }
 
 // returns a list of COutputs from COutPoints
