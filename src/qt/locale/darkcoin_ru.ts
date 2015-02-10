@@ -1709,7 +1709,7 @@ Address: %4
     <message>
         <location filename="../forms/overviewpage.ui" line="130"/>
         <source>Your current spendable balance</source>
-        <translation>Ваш текущий расходный баланс</translation>
+        <translation>Ваш текущий баланс, доступный для расходования</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="146"/>
@@ -1719,7 +1719,7 @@ Address: %4
     <message>
         <location filename="../forms/overviewpage.ui" line="162"/>
         <source>Total of transactions that have yet to be confirmed, and do not yet count toward the spendable balance</source>
-        <translation>Общая сумма всех транзакций, которые до сих пор не подтверждены и не учитываются в расходном балансе</translation>
+        <translation>Общая сумма всех транзакций, которые до сих пор не подтверждены и еще не учитываются в балансе, доступном для расходования</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="178"/>
