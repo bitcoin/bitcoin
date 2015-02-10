@@ -76,6 +76,7 @@ BITCOIN_CORE_H = \
   sph_simd.h \
   sph_skein.h \
   sph_types.h \
+  spork.h \
   sync.h \
   threadsafety.h \
   tinyformat.h \
@@ -169,6 +170,7 @@ libdarkcoin_common_a_SOURCES = \
   shavite.c \
   keccak.c \
   skein.c \
+  spork.cpp \
   bmw.c \
   simd.c \
   cubehash.c \

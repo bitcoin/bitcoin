@@ -18,7 +18,14 @@ and a new version of enforcement compatible with the newer Bitcoin architechure.
 - always get only confirmed coins by AvailableCoins for every DS relative action
 - New languages supported Portuguese, German, Russian, Polish, Spanish, Vietnamese, French,
 Italian, Catalan, Chinese, Danish, Finnish, Swedish, Czech, Turkish and Bavarian (and many more)
-
+- Full implementation of spork. Currently this includes 4 different sporks, InstantX, InstantX block enforcement, masternode payments enforcement, and reconverge. This uses the inventory system, so it's super efficient and very powerful for future development. Reconverge will put the blockchain into a mode where it will attempt to reprocess any forks without restarting the client, this means if we even had a fork in the future this can be triggered to fix it without any damage to the network.
+- Masternode payments now uses the inventory system, which will result in much lower bandwidth usage
+- Improved caching
+- use wallet db ds flag in rpc
+- update tx types in UI / fix tx decomposition / use wallet db ds flag
+- use wallet db to save ds flag / debug
+- use AvailableCoinsType instead of string in walletmodel
+- New inventory system for IX messaging, providing super fast/low bandwidth IX communication
 
 Thanks to who contributed to this release, at least:
 

@@ -271,6 +271,7 @@ static const CRPCCommand vRPCCommands[] =
 
     /* Darkcoin features */
     { "darksend",               &darksend,               false,     false,      true },
+    { "spork",                  &spork,                  true,      false,      false },
     { "masternode",             &masternode,             true,      false,      true },
 
 #ifdef ENABLE_WALLET
