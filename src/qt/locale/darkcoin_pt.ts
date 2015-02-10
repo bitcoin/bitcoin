@@ -5039,7 +5039,7 @@ Se o ficheiro não existir, deve criá-lo só com permissões de leitura para o 
     <message>
         <location filename="../bitcoinstrings.cpp" line="359"/>
         <source>Unable to sign spork message, wrong key?</source>
-        <translation type="unfinished"/>
+        <translation>Não foi possível assinar a mensagem spork, chave incorrecta?</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="360"/>
