@@ -57,6 +57,10 @@ bool ContextualCheckBlockHeader(const CBlockHeader&, CValidationState&, const Co
 
 } // namespace Consensus
 
+/** Transaction validation utility functions */
+
+bool CheckFinalTx(const CTransaction &tx, int nBlockHeight, int64_t nBlockTime);
+
 /** Block header validation utility functions */
 
 int64_t GetMedianTimePast(const CBlockIndexBase* pindex, PrevIndexGetter indexGetter);
