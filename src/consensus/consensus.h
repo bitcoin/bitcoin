@@ -9,6 +9,7 @@
 #include "consensus/params.h"
 
 class CBlockHeader;
+class CBlockIndex;
 class CValidationState;
 
 /** The maximum allowed size for a serialized block, in bytes (network rule) */
@@ -29,6 +30,9 @@ namespace Consensus {
 
 /** Context-independent validity checks */
 bool CheckBlockHeader(const CBlockHeader& block, int64_t nTime, CValidationState& state, const Consensus::Params& params, bool fCheckPOW = true);
+
+/** Context-dependent validity checks */
+bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& state, CBlockIndex* pindexPrev, const Consensus::Params& params);
 
 } // namespace Consensus
 

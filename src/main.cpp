@@ -2574,31 +2574,20 @@ static bool CheckIndexAgainstCheckpoint(const CBlockIndex* pindexPrev, CValidati
     return true;
 }
 
-bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& state, const Consensus::Params& params, CBlockIndex * const pindexPrev)
+bool Consensus::ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& state, CBlockIndex* pindexPrev, const Consensus::Params& params)
 {
     // Check proof of work
     if (block.nBits != GetNextWorkRequired(pindexPrev, &block, params))
-        return state.DoS(100, error("%s: incorrect proof of work", __func__),
-                         REJECT_INVALID, "bad-diffbits");
+        return state.DoS(100, false, REJECT_INVALID, "bad-diffbits");
 
     // Check timestamp against prev
     if (block.GetBlockTime() <= pindexPrev->GetMedianTimePast())
-        return state.Invalid(error("%s: block's timestamp is too early", __func__),
-                             REJECT_INVALID, "time-too-old");
+        return state.Invalid(false, REJECT_INVALID, "time-too-old");
 
-    // Reject block.nVersion=1 blocks when 95% (75% on testnet) of the network has upgraded:
-    if (block.nVersion < 2 && IsSuperMajority(2, pindexPrev, params.nMajorityRejectBlockOutdated, params.nMajorityWindow))
-    {
-        return state.Invalid(error("%s: rejected nVersion=1 block", __func__),
-                             REJECT_OBSOLETE, "bad-version");
-    }
-
-    // Reject block.nVersion=2 blocks when 95% (75% on testnet) of the network has upgraded:
-    if (block.nVersion < 3 && IsSuperMajority(3, pindexPrev, params.nMajorityRejectBlockOutdated, params.nMajorityWindow))
-    {
-        return state.Invalid(error("%s : rejected nVersion=2 block", __func__),
-                             REJECT_OBSOLETE, "bad-version");
-    }
+    // Reject block.nVersion=n blocks when 95% (75% on testnet) of the network has upgraded, last version=3:
+    for (unsigned int i = 2; i <= 3; i++)
+        if (block.nVersion < 2 && IsSuperMajority(2, pindexPrev, params.nMajorityRejectBlockOutdated, params.nMajorityWindow))
+            return state.Invalid(false, REJECT_OBSOLETE, strprintf("bad-version nVersion=%d", i-1));
 
     return true;
 }
@@ -2660,8 +2649,8 @@ bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state, const
     if (!CheckIndexAgainstCheckpoint(pindexPrev, state, params.hashGenesisBlock, mapBlockIndex))
         return state.Invalid(false, REJECT_INVALID, "time-too-old");
 
-    if (!ContextualCheckBlockHeader(block, state, params, pindexPrev))
-        return false;
+    if (!Consensus::ContextualCheckBlockHeader(block, state, pindexPrev, params))
+        return error("%s: Consensus::CheckBlockHeader(): ", __func__, state.GetRejectReason().c_str());
 
     if (pindex == NULL)
         pindex = AddToBlockIndex(block);
@@ -2773,8 +2762,8 @@ bool TestBlockValidity(CValidationState &state, const CBlock& block, CBlockIndex
     indexDummy.nHeight = pindexPrev->nHeight + 1;
 
     // NOTE: CheckBlockHeader is called by CheckBlock
-    if (!ContextualCheckBlockHeader(block, state, params, pindexPrev))
-        return false;
+    if (!Consensus::ContextualCheckBlockHeader(block, state, pindexPrev, params))
+        return error("%s: Consensus::CheckBlockHeader(): ", __func__, state.GetRejectReason().c_str());
     if (!CheckBlock(block, state, params, fCheckPOW, fCheckMerkleRoot))
         return false;
     if (!ContextualCheckBlock(block, state, params, pindexPrev))
