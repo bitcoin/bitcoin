@@ -63,6 +63,7 @@ bool ContextualCheckBlockHeader(const CBlockHeader&, CValidationState&, const Co
 /** Block validation functions */
 
 bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::Params& params, int64_t nTime, bool fCheckPOW = true, bool fCheckMerkleRoot = true);
+bool ContextualCheckBlock(const CBlock&, CValidationState&, const Consensus::Params&, const CBlockIndexBase*, PrevIndexGetter);
 
 } // namespace Consensus
 
