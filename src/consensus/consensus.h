@@ -76,6 +76,7 @@ bool ContextualCheckBlock(const CBlock& block, CValidationState& state, CBlockIn
 
 /** Transaction validation utility functions */
 
+bool CheckFinalTx(const CTransaction &tx, int nBlockHeight, int64_t nBlockTime);
 /**
  * Count ECDSA signature operations the old-fashioned (pre-0.6) way
  * @return number of sigops this transaction's outputs will produce when spent
