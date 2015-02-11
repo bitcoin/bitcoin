@@ -289,6 +289,12 @@ int TransactionTableModel::columnCount(const QModelIndex &parent) const
 QString TransactionTableModel::formatTxStatus(const TransactionRecord *wtx) const
 {
     QString status;
+    int nNumConf = TransactionRecord::NumConfirmations;
+
+    if (wtx->type == TransactionRecord::Generated)
+    {
+        nNumConf = nCoinbaseMaturity;
+    }
 
     switch(wtx->status.status)
     {
@@ -302,7 +308,7 @@ QString TransactionTableModel::formatTxStatus(const TransactionRecord *wtx) cons
         status = tr("Offline (%1 confirmations)").arg(wtx->status.depth);
         break;
     case TransactionStatus::Unconfirmed:
-        status = tr("Unconfirmed (%1 of %2 confirmations)").arg(wtx->status.depth).arg(TransactionRecord::NumConfirmations);
+        status = tr("Unconfirmed (%1 of %2 confirmations)").arg(wtx->status.depth).arg(nNumConf);
         break;
     case TransactionStatus::HaveConfirmations:
         status = tr("Confirmed (%1 confirmations)").arg(wtx->status.depth);
