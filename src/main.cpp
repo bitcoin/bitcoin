@@ -649,10 +649,15 @@ bool IsFinalTx(const CTransaction &tx, int nBlockHeight, int64_t nBlockTime)
         nBlockHeight = chainActive.Height();
     if (nBlockTime == 0)
         nBlockTime = GetAdjustedTime();
+    return Consensus::IsFinalTx(tx, nBlockHeight, nBlockTime);
+}
+
+bool Consensus::IsFinalTx(const CTransaction &tx, int nBlockHeight, int64_t nBlockTime)
+{
     if ((int64_t)tx.nLockTime < ((int64_t)tx.nLockTime < LOCKTIME_THRESHOLD ? (int64_t)nBlockHeight : nBlockTime))
         return true;
-    BOOST_FOREACH(const CTxIn& txin, tx.vin)
-        if (!txin.IsFinal())
+    for (unsigned int i = 0; i < tx.vin.size(); i++)
+        if (!tx.vin[i].IsFinal())
             return false;
     return true;
 }
