@@ -81,7 +81,7 @@ private:
     bool SelectCoinsSimple(int64_t nTargetValue, int64_t nMinValue, int64_t nMaxValue, unsigned int nSpendTime, int nMinConf, std::set<std::pair<const CWalletTx*,unsigned int> >& setCoinsRet, int64_t& nValueRet) const;
     bool SelectCoins(int64_t nTargetValue, unsigned int nSpendTime, std::set<std::pair<const CWalletTx*,unsigned int> >& setCoinsRet, int64_t& nValueRet, const CCoinControl *coinControl=NULL) const;
 
-    CWalletDB *pwalletdbEncryption;
+    CWalletDB *pwalletdbEncryption, *pwalletdbDecryption;
 
     // the current wallet version: clients below this version are not able to load the wallet
     int nWalletVersion;
@@ -117,6 +117,7 @@ public:
         fFileBacked = false;
         nMasterKeyMaxID = 0;
         pwalletdbEncryption = NULL;
+        pwalletdbDecryption = NULL;
         nOrderPosNext = 0;
         nKernelsTried = 0;
         nCoinDaysTried = 0;
@@ -129,6 +130,7 @@ public:
         fFileBacked = true;
         nMasterKeyMaxID = 0;
         pwalletdbEncryption = NULL;
+        pwalletdbDecryption = NULL;
         nOrderPosNext = 0;
         nKernelsTried = 0;
         nCoinDaysTried = 0;
@@ -178,6 +180,7 @@ public:
     bool Unlock(const SecureString& strWalletPassphrase);
     bool ChangeWalletPassphrase(const SecureString& strOldWalletPassphrase, const SecureString& strNewWalletPassphrase);
     bool EncryptWallet(const SecureString& strWalletPassphrase);
+    bool DecryptWallet(const SecureString& strWalletPassphrase);
 
     void GetKeyBirthTimes(std::map<CKeyID, int64_t> &mapKeyBirth) const;
 

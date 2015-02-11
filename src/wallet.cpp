@@ -62,7 +62,6 @@ CPubKey CWallet::GenerateNewKey()
 bool CWallet::AddKey(const CKey& key)
 {
     CPubKey pubkey = key.GetPubKey();
-
     if (!CCryptoKeyStore::AddKey(key))
         return false;
     if (!fFileBacked)
@@ -370,6 +369,77 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
         // bits of the unencrypted private key in slack space in the database file.
         CDB::Rewrite(strWalletFile);
 
+    }
+    NotifyStatusChanged(this);
+
+    return true;
+}
+
+bool CWallet::DecryptWallet(const SecureString& strWalletPassphrase)
+{
+    if (!IsCrypted())
+        return false;
+
+    CCrypter crypter;
+    CKeyingMaterial vMasterKey;
+
+    {
+        LOCK(cs_wallet);
+        BOOST_FOREACH(const MasterKeyMap::value_type& pMasterKey, mapMasterKeys)
+        {
+            if(!crypter.SetKeyFromPassphrase(strWalletPassphrase, pMasterKey.second.vchSalt, pMasterKey.second.nDeriveIterations, pMasterKey.second.nDerivationMethod))
+                return false;
+            if (!crypter.Decrypt(pMasterKey.second.vchCryptedKey, vMasterKey))
+                return false;
+            if (!CCryptoKeyStore::Unlock(vMasterKey))
+                return false;
+        }
+
+        if (fFileBacked)
+        {
+            pwalletdbDecryption = new CWalletDB(strWalletFile);
+            if (!pwalletdbDecryption->TxnBegin())
+                return false;
+        }
+
+        if (!DecryptKeys(vMasterKey))
+        {
+            if (fFileBacked)
+                pwalletdbDecryption->TxnAbort();
+            exit(1); //We now probably have half of our keys decrypted in memory, and half not...die and let the user reload their encrypted wallet.
+        }
+
+        if (fFileBacked)
+        {
+            // Overwrite crypted keys
+            KeyMap::const_iterator mi = mapKeys.begin();
+            while (mi != mapKeys.end())
+            {
+                CKey key;
+                key.SetSecret((*mi).second.first, (*mi).second.second);
+                pwalletdbDecryption->EraseCryptedKey(key.GetPubKey());
+                pwalletdbDecryption->WriteKey(key.GetPubKey(), key.GetPrivKey(), mapKeyMetadata[(*mi).first]);
+                mi++;
+            }
+
+            // Erase master keys
+            MasterKeyMap::const_iterator mk = mapMasterKeys.begin();
+            while (mk != mapMasterKeys.end())
+            {
+                pwalletdbDecryption->EraseMasterKey((*mk).first);
+                mk++;
+            }
+
+            if (!pwalletdbDecryption->TxnCommit())
+                exit(1); //We now have keys decrypted in memory, but no on disk...die to avoid confusion and let the user reload their encrypted wallet.
+
+            delete pwalletdbDecryption;
+            pwalletdbDecryption = NULL;
+        }
+
+        // Need to completely rewrite the wallet file; if we don't, bdb might keep
+        // encrypted private keys in the database file which can be a reason of consistency issues.
+        CDB::Rewrite(strWalletFile);
     }
     NotifyStatusChanged(this);
 

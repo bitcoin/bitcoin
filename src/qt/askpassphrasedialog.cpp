@@ -173,7 +173,11 @@ void AskPassphraseDialog::accept()
         }
         else
         {
-            QDialog::accept(); // Success
+            QMessageBox::warning(this, tr("Wallet decrypted"),
+                                     "<qt>" + 
+                                     tr("NovaCoin will close now to finish the decryption process. ") +
+                                     "</b></qt>");
+            QApplication::quit();
         }
         break;
     case ChangePass:

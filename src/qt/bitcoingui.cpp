@@ -1023,7 +1023,7 @@ void BitcoinGUI::setEncryptionStatus(int status)
         labelEncryptionIcon->setToolTip(tr("Wallet is <b>encrypted</b> and currently <b>unlocked</b>"));
         encryptWalletAction->setChecked(true);
         changePassphraseAction->setEnabled(true);
-        encryptWalletAction->setEnabled(false); // TODO: decrypt currently not supported
+        encryptWalletAction->setEnabled(true);
 
         lockWalletAction->setEnabled(true);
         lockWalletAction->setChecked(false);
@@ -1042,7 +1042,7 @@ void BitcoinGUI::setEncryptionStatus(int status)
         labelEncryptionIcon->setToolTip(tr("Wallet is <b>encrypted</b> and currently <b>locked</b>"));
         encryptWalletAction->setChecked(true);
         changePassphraseAction->setEnabled(true);
-        encryptWalletAction->setEnabled(false); // TODO: decrypt currently not supported
+        encryptWalletAction->setEnabled(true);
 
         lockWalletAction->setChecked(true);
         unlockWalletAction->setChecked(false);

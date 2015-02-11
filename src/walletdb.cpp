@@ -360,6 +360,7 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
             ssKey >> nID;
             CMasterKey kMasterKey;
             ssValue >> kMasterKey;
+
             if(pwallet->mapMasterKeys.count(nID) != 0)
             {
                 strErr = strprintf("Error reading wallet database: duplicate CMasterKey id %u", nID);
