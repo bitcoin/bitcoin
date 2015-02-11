@@ -281,7 +281,7 @@ Questo prodotto include software sviluppato dal progetto OpenSSL per l&apos;uso 
         <location filename="../askpassphrasedialog.cpp" line="122"/>
         <location filename="../askpassphrasedialog.cpp" line="181"/>
         <source>Wallet encrypted</source>
-        <translation>Portamonete cifrato</translation>
+        <translation>Portafoglio cifrato</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="124"/>
@@ -299,7 +299,7 @@ Questo prodotto include software sviluppato dal progetto OpenSSL per l&apos;uso 
         <location filename="../askpassphrasedialog.cpp" line="187"/>
         <location filename="../askpassphrasedialog.cpp" line="193"/>
         <source>Wallet encryption failed</source>
-        <translation>Cifratura del portamonete fallita</translation>
+        <translation>Cifratura del portafoglio fallita</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="138"/>
@@ -327,7 +327,7 @@ Questo prodotto include software sviluppato dal progetto OpenSSL per l&apos;uso 
     <message>
         <location filename="../askpassphrasedialog.cpp" line="168"/>
         <source>Wallet decryption failed</source>
-        <translation>Decifrazione del portamonete fallita</translation>
+        <translation>Decifrazione del portafoglio fallita</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="182"/>
@@ -1104,17 +1104,17 @@ Indirizzo: %4
     <message>
         <location filename="../forms/darksendconfig.ui" line="78"/>
         <source>Use 2 separate masternodes to mix funds up to 1000 DRK</source>
-        <translation type="unfinished"/>
+        <translation>Usa 2 separati masternode per mischiare fino al 1000 DRK</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="91"/>
         <source>Use 8 separate masternodes to mix funds up to 1000 DRK</source>
-        <translation type="unfinished"/>
+        <translation>Usa 8 separati masternode per mischiare fino al 1000 DRK</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="104"/>
         <source>Use 16 separate masternodes</source>
-        <translation type="unfinished"/>
+        <translation>Usa 16 separati masternode</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="117"/>
@@ -1864,7 +1864,7 @@ Più URL vengono separati da una barra verticale |.</translation>
     <message>
         <location filename="../overviewpage.cpp" line="267"/>
         <source>No inputs detected</source>
-        <translation type="unfinished"/>
+        <translation>Non ci sono input rilevati</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="275"/>
@@ -1919,17 +1919,17 @@ Più URL vengono separati da una barra verticale |.</translation>
     <message>
         <location filename="../overviewpage.cpp" line="395"/>
         <source>Found enough users, signing ( waiting. )</source>
-        <translation type="unfinished"/>
+        <translation>Trovato abasanza utenti, sto firmando ( aspetta. )</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="396"/>
         <source>Found enough users, signing ( waiting.. )</source>
-        <translation type="unfinished"/>
+        <translation>Trovato abasanza utenti, sto firmando ( aspetta.. )</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="397"/>
         <source>Found enough users, signing ( waiting... )</source>
-        <translation type="unfinished"/>
+        <translation>Trovato abasanza utenti, sto firmando ( aspetta... )</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="399"/>
@@ -2124,7 +2124,7 @@ Più URL vengono separati da una barra verticale |.</translation>
     <message>
         <location filename="../darkcoin.cpp" line="612"/>
         <source>Darkcoin Core didn&apos;t yet exit safely...</source>
-        <translation type="unfinished"/>
+        <translation>Darkcoin Core non e&apos; chiuso sicuro ancora...</translation>
     </message>
     <message>
         <location filename="../guiutil.cpp" line="101"/>
@@ -3532,7 +3532,7 @@ Più URL vengono separati da una barra verticale |.</translation>
     <message>
         <location filename="../transactiontablemodel.cpp" line="379"/>
         <source>Darksent</source>
-        <translation type="unfinished"/>
+        <translation>Darksent</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="421"/>
@@ -3616,7 +3616,7 @@ Più URL vengono separati da una barra verticale |.</translation>
     <message>
         <location filename="../transactionview.cpp" line="81"/>
         <source>Darksent</source>
-        <translation type="unfinished"/>
+        <translation>Darksent</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="82"/>
@@ -4293,12 +4293,12 @@ Se il file non esiste, crealo assegnando i permessi di lettura solamente al prop
     <message>
         <location filename="../bitcoinstrings.cpp" line="211"/>
         <source>Entries are full.</source>
-        <translation type="unfinished"/>
+        <translation>Entrate sono piene.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="212"/>
         <source>Error connecting to masternode.</source>
-        <translation type="unfinished"/>
+        <translation>Connesione per masternode error.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="213"/>
@@ -4658,7 +4658,7 @@ Se il file non esiste, crealo assegnando i permessi di lettura solamente al prop
     <message>
         <location filename="../bitcoinstrings.cpp" line="284"/>
         <source>Masternode queue is full.</source>
-        <translation type="unfinished"/>
+        <translation>La lista di masternode e&apos; piena.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="285"/>
@@ -4693,7 +4693,7 @@ Se il file non esiste, crealo assegnando i permessi di lettura solamente al prop
     <message>
         <location filename="../bitcoinstrings.cpp" line="291"/>
         <source>No masternodes detected.</source>
-        <translation type="unfinished"/>
+        <translation>La rilevazione di masternode impossibile.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="292"/>
