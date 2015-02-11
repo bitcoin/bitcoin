@@ -12,16 +12,32 @@ DIST_SUBDIRS = . test
 
 # darkcoin qt core #
 QT_TS = \
+  locale/darkcoin_bar.ts \
+  locale/darkcoin_ca.ts \
   locale/darkcoin_cmn.ts \
+  locale/darkcoin_cs.ts \
+  locale/darkcoin_da.ts \
   locale/darkcoin_de.ts \
+  locale/darkcoin_el.ts \
+  locale/darkcoin_en.ts \
+  locale/darkcoin_eo.ts \
   locale/darkcoin_es.ts \
   locale/darkcoin_fi.ts \
   locale/darkcoin_fr.ts \
+  locale/darkcoin_hu_HU.ts \
   locale/darkcoin_it.ts \
+  locale/darkcoin_lv_LV.ts \
+  locale/darkcoin_nl.ts \
   locale/darkcoin_pl.ts \
   locale/darkcoin_pt.ts \
+  locale/darkcoin_pt_BR.ts \
   locale/darkcoin_ru.ts \
-  locale/darkcoin_vi.ts
+  locale/darkcoin_sk.ts \
+  locale/darkcoin_sv.ts \
+  locale/darkcoin_tr.ts \
+  locale/darkcoin_vi.ts \
+  locale/darkcoin_zh_CN.ts \
+  locale/darkcoin_zh_HK.ts
 
 QT_FORMS_UI = \
   forms/aboutdialog.ui \

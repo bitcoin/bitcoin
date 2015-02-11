@@ -135,7 +135,7 @@ Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.o
     <message>
         <location filename="../addressbookpage.cpp" line="69"/>
         <source>These are your Darkcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>Nämä ovat sinun Darkcoin osoitteesi suoritusten vastaanottamiseen. Suositellaan että annat uuden osoitteen kullekin rahansiirrolle.</translation>
+        <translation>Nämä ovat sinun Darkcoin osoitteesi suoritusten vastaanottamiseen. Suositellaan että annat uuden osoitteen kullekin siirtotapahtumalle.</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="75"/>
@@ -398,7 +398,7 @@ Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.o
     <message>
         <location filename="../bitcoingui.cpp" line="247"/>
         <source>&amp;Transactions</source>
-        <translation>&amp;Taphtumat</translation>
+        <translation>&amp;Tapahtumat</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="248"/>
@@ -516,12 +516,12 @@ Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.o
     <message>
         <location filename="../bitcoingui.cpp" line="303"/>
         <source>&amp;Verify message...</source>
-        <translation>Vahvista &amp;viesti...</translation>
+        <translation>Varmista &amp;viesti...</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="304"/>
         <source>Verify messages to ensure they were signed with specified Darkcoin addresses</source>
-        <translation>Vahvista viestit varmistaaksesi että ne on allekirjoitettu määritetyillä Darkcoin osoitteilla</translation>
+        <translation>Varmista viestit varmistaaksesi että ne ovat allekirjoitettu määritetyillä Darkcoin osoitteilla</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="306"/>
@@ -728,12 +728,12 @@ Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.o
     <message>
         <location filename="../bitcoingui.cpp" line="849"/>
         <source>Sent transaction</source>
-        <translation>Lähetetty rahansiirto</translation>
+        <translation>Lähetetty siirtotapahtuma</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="849"/>
         <source>Incoming transaction</source>
-        <translation>Saapuva rahansiirto</translation>
+        <translation>Saapuva siirtotapahtuma</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="850"/>
@@ -857,7 +857,7 @@ Osoite: %4
     <message>
         <location filename="../forms/coincontroldialog.ui" line="466"/>
         <source>Date</source>
-        <translation>Päiväys</translation>
+        <translation>Päivämäärä</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="471"/>
@@ -1013,7 +1013,7 @@ Osoite: %4
     <message>
         <location filename="../coincontroldialog.cpp" line="615"/>
         <source>This label turns red, if the transaction size is greater than 1000 bytes.</source>
-        <translation>Tämä nimi muuttuu punaiseksi jos rahansiirron koko on suurempi kuin 1000 tavua.</translation>
+        <translation>Tämä nimi muuttuu punaiseksi jos siirtotapahtuman koko on suurempi kuin 1000 tavua.</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="616"/>
@@ -1029,7 +1029,7 @@ Osoite: %4
     <message>
         <location filename="../coincontroldialog.cpp" line="619"/>
         <source>Transactions with higher priority are more likely to get included into a block.</source>
-        <translation>Rahansiirrot korkeammalla prioriteetilla sisällytetään varmemmin lohkoon.</translation>
+        <translation>Siirtotapahtumat korkeammalla prioriteetilla sisällytetään varmemmin lohkoon.</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="620"/>
@@ -1464,12 +1464,12 @@ Osoite: %4
     <message>
         <location filename="../forms/optionsdialog.ui" line="212"/>
         <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly. Most transactions are 1 kB.</source>
-        <translation>Valinnainen rahansiirtopalkkio per kB auttaa varmistamaan että rahansiirtosi prosessoidaan nopeasti. Useimmat rahansiirrot ovat alle 1 kB.</translation>
+        <translation>Valinnainen siirtopalkkio per kB auttaa varmistamaan että siirtotapahtumasi prosessoidaan nopeasti. Useimmat siirtotapahtumat ovat alle 1 kB.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="227"/>
         <source>Pay transaction &amp;fee</source>
-        <translation>Maksa rahansiirron &amp;palkkio</translation>
+        <translation>Maksa siirtotapahtuman &amp;palkkio</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="271"/>
@@ -1489,7 +1489,7 @@ Osoite: %4
     <message>
         <location filename="../forms/optionsdialog.ui" line="287"/>
         <source>If you disable the spending of unconfirmed change, the change from a transaction cannot be used until that transaction has at least one confirmation. This also affects how your balance is computed.</source>
-        <translation>Jos poistat varmistamattomien vaihtorahojen käytön, rahansiirron vaihtorahaa ei voida käyttää ennen vähintään yhtä varmistusta. Tämä vaikuttaa myös kuinka saldosi lasketaan.</translation>
+        <translation>Jos poistat varmistamattomien vaihtorahojen käytön, siirtotapahtuman vaihtorahaa ei voida käyttää ennen vähintään yhtä varmistusta. Tämä vaikuttaa myös kuinka saldosi lasketaan.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="290"/>
@@ -1604,23 +1604,23 @@ Osoite: %4
     <message>
         <location filename="../forms/optionsdialog.ui" line="536"/>
         <source>Whether to show Darkcoin addresses in the transaction list or not.</source>
-        <translation>Näytetäänkö Darkcoin osoitteet rahansiirrot listassa vai ei.</translation>
+        <translation>Näytetäänkö Darkcoin osoitteet siirtotapahtumalistassa vai ei.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="539"/>
         <source>&amp;Display addresses in transaction list</source>
-        <translation>&amp;Näytä osoitteet rahansiirrot listassa</translation>
+        <translation>&amp;Näytä osoitteet siirtotapahtumalistassa</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="548"/>
         <location filename="../forms/optionsdialog.ui" line="561"/>
         <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
-        <translation>Ulkopuoliset URL-osoitteet (esim. lohkoselain,) jotka esiintyvät siirrot-välilehdellä valikossa. %s URL-osoitteessa korvataan siirtotunnuksella. Useampi URL-osoite on eroteltu pystyviivalla |.</translation>
+        <translation>Ulkopuoliset URL-osoitteet (esim. lohkoselain,) jotka esiintyvät tapahtumat-välilehdellä valikossa. %s URL-osoitteessa korvataan siirtotunnuksella. Useampi URL-osoite on eroteltu pystyviivalla |.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="551"/>
         <source>Third party transaction URLs</source>
-        <translation>Kolmannen osapuolen rahansiirto URL:t</translation>
+        <translation>Kolmannen osapuolen siirtotapahtuma URL:t</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="592"/>
@@ -1720,7 +1720,7 @@ Osoite: %4
     <message>
         <location filename="../forms/overviewpage.ui" line="162"/>
         <source>Total of transactions that have yet to be confirmed, and do not yet count toward the spendable balance</source>
-        <translation>Varmistamattomien rahansiirtojen summa, jota ei lasketa käytettävissä olevaan saldoon.</translation>
+        <translation>Varmistamattomien siirtotapahtumien summa, jota ei lasketa käytettävissä olevaan saldoon</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="178"/>
@@ -1740,7 +1740,7 @@ Osoite: %4
     <message>
         <location filename="../forms/overviewpage.ui" line="223"/>
         <source>Your current total balance</source>
-        <translation>Tililläsi tällä hetkellä olevien Darkcoinien määrä</translation>
+        <translation>Saldo yhteensä tällä hetkellä</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="302"/>
@@ -1780,12 +1780,12 @@ Osoite: %4
     <message>
         <location filename="../forms/overviewpage.ui" line="370"/>
         <source>Submitted Denom:</source>
-        <translation>Esitetty Denom:</translation>
+        <translation>Lähetetyt Denom:</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="377"/>
         <source>The denominations you submitted to the Masternode. To mix, other users must submit the exact same denominations.</source>
-        <translation>Masternodelle esitetyt denominoinnit. Jotta sekoitus onnistuisi, täytyy muiden käyttäjien ehdottaa saman arvoisia denominointeja.</translation>
+        <translation>Masternodelle lähetetyt denominoinnit. Jotta sekoitus onnistuisi, täytyy muiden käyttäjien käyttää saman arvoisia denominointeja.</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="380"/>
@@ -1833,7 +1833,7 @@ Osoite: %4
     <message>
         <location filename="../forms/overviewpage.ui" line="979"/>
         <source>&lt;b&gt;Recent transactions&lt;/b&gt;</source>
-        <translation>&lt;b&gt;Viimeisimmät tapahtumat&lt;/b&gt;</translation>
+        <translation>&lt;b&gt;Viimeisimmät siirtotapahtumat&lt;/b&gt;</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="126"/>
@@ -1978,7 +1978,7 @@ Osoite: %4
     <message>
         <location filename="../overviewpage.cpp" line="427"/>
         <source>N/A</source>
-        <translation>e/s</translation>
+        <translation>E/S</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="449"/>
@@ -2011,7 +2011,7 @@ Osoite: %4
     <message>
         <location filename="../paymentserver.cpp" line="294"/>
         <source>Cannot start darkcoin: click-to-pay handler</source>
-        <translation type="unfinished"/>
+        <translation>Ei voi käynnistää Darkcoinia: click-to-pay käsittelijä</translation>
     </message>
     <message>
         <location filename="../paymentserver.cpp" line="352"/>
@@ -2021,7 +2021,7 @@ Osoite: %4
     <message>
         <location filename="../paymentserver.cpp" line="353"/>
         <source>Your active proxy doesn&apos;t support SOCKS5, which is required for payment requests via proxy.</source>
-        <translation>Aktiivinen proxy ei tue SOCKS5, joka on pakollinen maksupyynnöissä proxyn kautta.</translation>
+        <translation>Aktiivinen proxy:si ei tue SOCKS5, joka on pakollinen maksupyynnöissä proxyn kautta.</translation>
     </message>
     <message>
         <location filename="../paymentserver.cpp" line="404"/>
@@ -2037,7 +2037,7 @@ Osoite: %4
     <message>
         <location filename="../paymentserver.cpp" line="418"/>
         <source>URI can not be parsed! This can be caused by an invalid Darkcoin address or malformed URI parameters.</source>
-        <translation type="unfinished"/>
+        <translation>URI:a ei voida jäsentää! Tämä voi johtua virheellisestä Darkcoin osoitteesta tai virheellisestä URI:n muuttujasta. </translation>
     </message>
     <message>
         <location filename="../paymentserver.cpp" line="432"/>
@@ -2067,7 +2067,7 @@ Osoite: %4
     <message>
         <location filename="../paymentserver.cpp" line="608"/>
         <source>Error communicating with %1: %2</source>
-        <translation>Virhe kommunikoidessa %1n kanssa: %2</translation>
+        <translation>Virhe kommunikoidessa %1: %2</translation>
     </message>
     <message>
         <location filename="../paymentserver.cpp" line="632"/>
@@ -2077,7 +2077,7 @@ Osoite: %4
     <message>
         <location filename="../paymentserver.cpp" line="643"/>
         <source>Bad response from server %1</source>
-        <translation>Huono vastaus palvelimelta %1</translation>
+        <translation>Epäkelpo vastaus palvelimelta %1</translation>
     </message>
     <message>
         <location filename="../paymentserver.cpp" line="665"/>
@@ -2103,7 +2103,7 @@ Osoite: %4
     <message>
         <location filename="../darkcoin.cpp" line="526"/>
         <source>Error: Specified data directory &quot;%1&quot; does not exist.</source>
-        <translation>Virhe: Annettu data-hakemisto &quot;%1&quot; ei ole olemassa.</translation>
+        <translation>Virhe: Annettua data-hakemistoa &quot;%1&quot; ei ole olemassa.</translation>
     </message>
     <message>
         <location filename="../darkcoin.cpp" line="533"/>
@@ -2113,7 +2113,7 @@ Osoite: %4
     <message>
         <location filename="../darkcoin.cpp" line="540"/>
         <source>Error reading masternode configuration file: %1</source>
-        <translation type="unfinished"/>
+        <translation>Virhe luettaessa masternoden asetustiedostoa: %1</translation>
     </message>
     <message>
         <location filename="../darkcoin.cpp" line="552"/>
@@ -2123,12 +2123,12 @@ Osoite: %4
     <message>
         <location filename="../darkcoin.cpp" line="612"/>
         <source>Darkcoin Core didn&apos;t yet exit safely...</source>
-        <translation type="unfinished"/>
+        <translation>Darkcoin Core ei ole vielä lopettanut turvallisesti...</translation>
     </message>
     <message>
         <location filename="../guiutil.cpp" line="101"/>
         <source>Enter a Darkcoin address (e.g. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</source>
-        <translation type="unfinished"/>
+        <translation>Syötä Darkcoin osoite (esim. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
     </message>
 </context>
 <context>
@@ -2136,7 +2136,7 @@ Osoite: %4
     <message>
         <location filename="../receiverequestdialog.cpp" line="36"/>
         <source>&amp;Save Image...</source>
-        <translation>&amp;Tallenna kuva</translation>
+        <translation>&amp;Tallenna kuva...</translation>
     </message>
     <message>
         <location filename="../receiverequestdialog.cpp" line="39"/>
@@ -2159,7 +2159,7 @@ Osoite: %4
     <message>
         <location filename="../forms/rpcconsole.ui" line="14"/>
         <source>Tools window</source>
-        <translation type="unfinished"/>
+        <translation>Työkaluikkuna</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="24"/>
@@ -2169,7 +2169,7 @@ Osoite: %4
     <message>
         <location filename="../forms/rpcconsole.ui" line="33"/>
         <source>Masternode Count</source>
-        <translation type="unfinished"/>
+        <translation>Masternodien Määrä</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="46"/>
@@ -2184,7 +2184,7 @@ Osoite: %4
     <message>
         <location filename="../forms/rpcconsole.ui" line="60"/>
         <source>Client name</source>
-        <translation>Pääteohjelman nimi</translation>
+        <translation>Asiakasohjelman nimi</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="70"/>
@@ -2198,7 +2198,7 @@ Osoite: %4
         <location filename="../forms/rpcconsole.ui" line="315"/>
         <location filename="../forms/rpcconsole.ui" line="341"/>
         <source>N/A</source>
-        <translation>Ei saatavilla</translation>
+        <translation>E/S</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="83"/>
@@ -2208,7 +2208,7 @@ Osoite: %4
     <message>
         <location filename="../forms/rpcconsole.ui" line="90"/>
         <source>Open the Darkcoin debug log file from the current data directory. This can take a few seconds for large log files.</source>
-        <translation type="unfinished"/>
+        <translation>Avaa Darkcoin debug lokitiedosto nykyisestä datahakemistosta. Tämä saattaa kestää muutaman sekunnin isoilla tiedostoilla.</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="93"/>
@@ -2243,7 +2243,7 @@ Osoite: %4
     <message>
         <location filename="../forms/rpcconsole.ui" line="182"/>
         <source>Build date</source>
-        <translation>Kääntöpäiväys</translation>
+        <translation>Ohjelman päiväys</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="205"/>
@@ -2253,7 +2253,7 @@ Osoite: %4
     <message>
         <location filename="../forms/rpcconsole.ui" line="305"/>
         <source>Client version</source>
-        <translation>Pääteohjelman versio</translation>
+        <translation>Asiakasohjelman versio</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="334"/>
@@ -2300,7 +2300,7 @@ Osoite: %4
     <message>
         <location filename="../rpcconsole.cpp" line="331"/>
         <source>Welcome to the Darkcoin RPC console.</source>
-        <translation type="unfinished"/>
+        <translation>Tervetuloa Darkcoin RPC konsoliin.</translation>
     </message>
     <message>
         <location filename="../rpcconsole.cpp" line="332"/>
@@ -2310,7 +2310,7 @@ Osoite: %4
     <message>
         <location filename="../rpcconsole.cpp" line="333"/>
         <source>Type &lt;b&gt;help&lt;/b&gt; for an overview of available commands.</source>
-        <translation>Kirjoita &lt;b&gt;help&lt;/b&gt; nähdäksesi yleiskatsauksen käytettävissä olevista komennoista.</translation>
+        <translation>Kirjoita &lt;b&gt;help&lt;/b&gt; nähdäksesi käytettävissä olevat komennot.</translation>
     </message>
     <message>
         <location filename="../rpcconsole.cpp" line="472"/>
@@ -2364,7 +2364,7 @@ Osoite: %4
         <location filename="../forms/receivecoinsdialog.ui" line="51"/>
         <location filename="../forms/receivecoinsdialog.ui" line="74"/>
         <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Darkcoin network.</source>
-        <translation type="unfinished"/>
+        <translation>Valinnainen viesti liitettäväksi maksupyyntöön, joka näytetään kun pyyntö on avattu. Huomio: Viestiä ei lähetetä maksun mukana Darkcoin verkkoon.</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="54"/>
@@ -2375,12 +2375,12 @@ Osoite: %4
         <location filename="../forms/receivecoinsdialog.ui" line="67"/>
         <location filename="../forms/receivecoinsdialog.ui" line="88"/>
         <source>An optional label to associate with the new receiving address.</source>
-        <translation>Valinnainen nimi liitetään vastaanottavaan osoitteeseen.</translation>
+        <translation>Valinnainen nimi liitetään uuteen vastaanottavaan osoitteeseen.</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="81"/>
         <source>Use this form to request payments. All fields are &lt;b&gt;optional&lt;/b&gt;.</source>
-        <translation>Käytä lomaketta maksupyyntöihin. Kaikki kentät ovat &lt;b&gt;valinnaisia&lt;/b&gt;.</translation>
+        <translation>Käytä tätä lomaketta maksupyyntöihin. Kaikki kentät ovat &lt;b&gt;valinnaisia&lt;/b&gt;.</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="91"/>
@@ -2527,7 +2527,7 @@ Osoite: %4
     <message>
         <location filename="../recentrequeststablemodel.cpp" line="24"/>
         <source>Date</source>
-        <translation>Aika</translation>
+        <translation>Päivämäärä</translation>
     </message>
     <message>
         <location filename="../recentrequeststablemodel.cpp" line="24"/>
@@ -2568,7 +2568,7 @@ Osoite: %4
         <location filename="../sendcoinsdialog.cpp" line="512"/>
         <location filename="../sendcoinsdialog.cpp" line="522"/>
         <source>Send Coins</source>
-        <translation>Lähetä Bitcoineja</translation>
+        <translation>Lähetä Darkcoineja</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="90"/>
@@ -2618,7 +2618,7 @@ Osoite: %4
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="420"/>
         <source>Low Output:</source>
-        <translation>Pieni Tuotos</translation>
+        <translation>Pieni Tuotos:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="468"/>
@@ -2653,12 +2653,12 @@ Osoite: %4
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="691"/>
         <source>Clear all fields of the form.</source>
-        <translation>Tyhjennä lomakkeen kaikki kentät</translation>
+        <translation>Tyhjennä lomakkeen kaikki kentät.</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="694"/>
         <source>Clear &amp;All</source>
-        <translation>&amp;Tyhjennnä Kaikki</translation>
+        <translation>&amp;Tyhjennä Kaikki</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="711"/>
@@ -2678,12 +2678,12 @@ Osoite: %4
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="771"/>
         <source>InstantX</source>
-        <translation type="unfinished"/>
+        <translation>InstantX</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="778"/>
         <source>Balance:</source>
-        <translation>Balanssi:</translation>
+        <translation>Saldo:</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="53"/>
@@ -2728,7 +2728,7 @@ Osoite: %4
     <message>
         <location filename="../sendcoinsdialog.cpp" line="155"/>
         <source>(darksend requires this amount to be rounded up to the nearest %1).</source>
-        <translation type="unfinished"/>
+        <translation>(darksend vaatii että tämä määrä pyöristetään lähimpään %1).</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="189"/>
@@ -2736,7 +2736,7 @@ Osoite: %4
         <location filename="../sendcoinsdialog.cpp" line="199"/>
         <location filename="../sendcoinsdialog.cpp" line="203"/>
         <source>%1 to %2</source>
-        <translation>%1 to %2</translation>
+        <translation>%1 -&gt; %2</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="252"/>
@@ -2761,7 +2761,7 @@ Osoite: %4
     <message>
         <location filename="../sendcoinsdialog.cpp" line="279"/>
         <source>Confirm send coins</source>
-        <translation>Hyväksy Bitcoinien lähettäminen</translation>
+        <translation>Hyväksy Darkcoinien lähettäminen</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="434"/>
@@ -2776,12 +2776,12 @@ Osoite: %4
     <message>
         <location filename="../sendcoinsdialog.cpp" line="489"/>
         <source>The recipient address is not valid, please recheck.</source>
-        <translation>Vastaanottajan osoite on virheellinen. Tarkista osoite.</translation>
+        <translation>Vastaanottajan osoite on virheellinen, tarkista osoite.</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="492"/>
         <source>The amount to pay must be larger than 0.</source>
-        <translation>Maksettavan summan tulee olla suurempi kuin 0 Bitcoinia.</translation>
+        <translation>Maksettavan summan tulee olla suurempi kuin 0.</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="495"/>
@@ -2796,27 +2796,27 @@ Osoite: %4
     <message>
         <location filename="../sendcoinsdialog.cpp" line="501"/>
         <source>Duplicate address found, can only send to each address once per send operation.</source>
-        <translation>Sama osoite toistuu useamman kerran. Samaan osoitteeseen voi lähettää vain kerran per maksu.</translation>
+        <translation>Sama osoite toistuu useamman kerran, samaan osoitteeseen voi lähettää vain kerran per maksutapahtuma.</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="504"/>
         <source>Transaction creation failed!</source>
-        <translation>Rahansiirron luonti epäonnistui!</translation>
+        <translation>Siirtotapahtuman luonti epäonnistui!</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="508"/>
         <source>The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
-        <translation>Rahansiirto hylättiin! Tämä saattaa tapahtua jos lompakossa olevat kolikot on jo kulutettu, kuten jos käytät kopioita wallet.dat tiedostosta ja kolikot oli jo käytetty mutta ei merkattu täällä.</translation>
+        <translation>Siirtotapahtuma hylättiin! Tämä saattaa tapahtua jos lompakossa olevat kolikot on jo kulutettu, kuten jos käytät kopioita wallet.dat tiedostosta ja kolikot oli jo käytetty mutta ei merkattu täällä.</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="513"/>
         <source>Error: The wallet was unlocked only to anonymize coins.</source>
-        <translation type="unfinished"/>
+        <translation>Virhe: Lompakko on avattu vain anonymisointia varten.</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="626"/>
         <source>Warning: Invalid Darkcoin address</source>
-        <translation type="unfinished"/>
+        <translation>Varoitus: Virheellinen Darkcoin osoite</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="635"/>
@@ -2839,12 +2839,12 @@ Osoite: %4
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="36"/>
         <source>Pay &amp;To:</source>
-        <translation>Maksun saaja:</translation>
+        <translation>Maksun &amp;saaja:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="54"/>
         <source>The address to send the payment to (e.g. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</source>
-        <translation type="unfinished"/>
+        <translation>Osoite johon maksu lähetetään (esim. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="61"/>
@@ -2898,7 +2898,7 @@ Osoite: %4
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="157"/>
         <source>A message that was attached to the darkcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Darkcoin network.</source>
-        <translation type="unfinished"/>
+        <translation>Viesti joka liitettiin darkcoin: URI joka talletetaan siirtotapahtuman kanssa viitteeksi sinulle. Huomio: Tätä viestiä ei lähetetä Darkcoin verkkoon.</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="583"/>
@@ -2933,7 +2933,7 @@ Osoite: %4
     <message>
         <location filename="../utilitydialog.cpp" line="129"/>
         <source>Darkcoin Core is shutting down...</source>
-        <translation type="unfinished"/>
+        <translation>Darkcoin Core sulkeutuu...</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="130"/>
@@ -2956,12 +2956,12 @@ Osoite: %4
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="30"/>
         <source>You can sign messages with your addresses to prove you own them. Be careful not to sign anything vague, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
-        <translation>Voit allekirjoittaa viestit omalla osoitteellasi todistaaksesi että omistat ne. Ole huolellinen, että et allekirjoita mitään epämääräistä, phishing-hyökkääjät voivat huijata sinua allekirjoittamaan luovuttamalla henkilöllisyytesi. Allekirjoita selvitys täysin yksityiskohtaisesti mihin olet sitoutunut.</translation>
+        <translation>Voit allekirjoittaa viestit omilla osoitteillasi todistaaksesi että omistat ne. Ole huolellinen että et allekirjoita mitään epämääräistä, phishing-hyökkäjä voi huijata sinua allekirjoittamaan henkilöllisyytesi omasta puolestaan. Allekirjoita vain yksityiskohtaisesti täytetty selvitys johon sitoudut.</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="48"/>
         <source>The address to sign the message with (e.g. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</source>
-        <translation type="unfinished"/>
+        <translation>Osoite jolla viesti allekirjoitetaan (esim. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="55"/>
@@ -2988,7 +2988,7 @@ Osoite: %4
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="97"/>
         <source>Enter the message you want to sign here</source>
-        <translation>Kirjoita tähän viesti minkä haluat allekirjoittaa</translation>
+        <translation>Kirjoita tähän viesti jonka haluat allekirjoittaa</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="104"/>
@@ -2998,12 +2998,12 @@ Osoite: %4
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="131"/>
         <source>Copy the current signature to the system clipboard</source>
-        <translation>Kopioi tämänhetkinen allekirjoitus leikepöydälle</translation>
+        <translation>Kopioi tämän hetkinen allekirjoitus leikepöydälle</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="152"/>
         <source>Sign the message to prove you own this Darkcoin address</source>
-        <translation type="unfinished"/>
+        <translation>Allekirjoita viesti todistaaksesi että omistat tämän Darkcoin osoitteen</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="155"/>
@@ -3013,7 +3013,7 @@ Osoite: %4
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="169"/>
         <source>Reset all sign message fields</source>
-        <translation>Tyhjennä kaikki allekirjoita-viesti-kentät</translation>
+        <translation>Tyhjennä kaikki allekirjoituskentät</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="172"/>
@@ -3034,32 +3034,32 @@ Osoite: %4
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="258"/>
         <source>The address the message was signed with (e.g. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</source>
-        <translation type="unfinished"/>
+        <translation>Osoite jolla viesti on allekirjoitettu (esim. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="295"/>
         <source>Verify the message to ensure it was signed with the specified Darkcoin address</source>
-        <translation type="unfinished"/>
+        <translation>Varmista että viesti on allekirjoitettu määritetyllä Darkcoin osoitteella</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="298"/>
         <source>Verify &amp;Message</source>
-        <translation>Varmista &amp;viesti...</translation>
+        <translation>Varmista &amp;Viesti...</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="312"/>
         <source>Reset all verify message fields</source>
-        <translation>Tyhjennä kaikki varmista-viesti-kentät</translation>
+        <translation>Tyhjennä kaikki varmistakentät</translation>
     </message>
     <message>
         <location filename="../signverifymessagedialog.cpp" line="30"/>
         <source>Click &quot;Sign Message&quot; to generate signature</source>
-        <translation>Klikkaa &quot;Allekirjoita Viesti luodaksesi allekirjoituksen </translation>
+        <translation>Klikkaa &quot;Allekirjoita Viesti&quot; luodaksesi allekirjoituksen</translation>
     </message>
     <message>
         <location filename="../signverifymessagedialog.cpp" line="31"/>
         <source>Enter a Darkcoin address (e.g. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</source>
-        <translation type="unfinished"/>
+        <translation>Syötä Darkcoin osoite (esim. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
     </message>
     <message>
         <location filename="../signverifymessagedialog.cpp" line="114"/>
@@ -3138,7 +3138,7 @@ Osoite: %4
     <message>
         <location filename="../splashscreen.cpp" line="34"/>
         <source>Version %1</source>
-        <translation type="unfinished"/>
+        <translation>Versio %1</translation>
     </message>
     <message>
         <location filename="../splashscreen.cpp" line="35"/>
@@ -3153,7 +3153,7 @@ Osoite: %4
     <message>
         <location filename="../splashscreen.cpp" line="37"/>
         <source>[testnet]</source>
-        <translation>[testnet]</translation>
+        <translation>[testiverkko]</translation>
     </message>
 </context>
 <context>
@@ -3169,7 +3169,7 @@ Osoite: %4
     <message numerus="yes">
         <location filename="../transactiondesc.cpp" line="28"/>
         <source>Open for %n more block(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation><numerusform>Avoinna %n lisälohkolle</numerusform><numerusform>Avoinna %n lisälohkolle</numerusform></translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="30"/>
@@ -3187,22 +3187,22 @@ Osoite: %4
     <message>
         <location filename="../transactiondesc.cpp" line="43"/>
         <source>%1/offline (verified via instantx)</source>
-        <translation type="unfinished"/>
+        <translation>%1/ei yhteyttä (varmistettu instantx:lla)</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="45"/>
         <source>%1/confirmed (verified via instantx)</source>
-        <translation type="unfinished"/>
+        <translation>%1/vahvistettu (varmistettu instantx:lla)</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="47"/>
         <source>%1 confirmations (verified via instantx)</source>
-        <translation type="unfinished"/>
+        <translation>%1 vahvistusta (varmistettu instantx:lla)</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="76"/>
         <source>%1/offline</source>
-        <translation>%1/offline</translation>
+        <translation>%1/ei yhteyttä</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="78"/>
@@ -3218,27 +3218,27 @@ Osoite: %4
     <message>
         <location filename="../transactiondesc.cpp" line="54"/>
         <source>%1/offline (InstantX verification in progress - %2 of %3 signatures)</source>
-        <translation type="unfinished"/>
+        <translation>%1/ei yhteyttä (varmistus instantx:lla käynnissä - %2 / %3 allekirjoitusta)</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="56"/>
         <source>%1/confirmed (InstantX verification in progress - %2 of %3 signatures )</source>
-        <translation type="unfinished"/>
+        <translation>%1/vahvistettu (varmistus instantx:lla käynnissä - %2 / %3 allekirjoitusta)</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="58"/>
         <source>%1 confirmations (InstantX verification in progress - %2 of %3 signatures)</source>
-        <translation type="unfinished"/>
+        <translation>%1 vahvistusta (varmistus instantx:lla käynnissä - %2 / %3 allekirjoitusta)</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="64"/>
         <source>%1/offline (InstantX verification failed)</source>
-        <translation type="unfinished"/>
+        <translation>%1/ei yhteyttä (instantx varmistus epäonnistui)</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="66"/>
         <source>%1/confirmed (InstantX verification failed)</source>
-        <translation type="unfinished"/>
+        <translation>%1/vahvistettu (instantx varmistus epäonnistui)</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="98"/>
@@ -3248,12 +3248,12 @@ Osoite: %4
     <message>
         <location filename="../transactiondesc.cpp" line="103"/>
         <source>, has not been successfully broadcast yet</source>
-        <translation>, ei ole vielä onnistuneesti lähetetty</translation>
+        <translation>, lähetys ei ole vielä onnistunut</translation>
     </message>
     <message numerus="yes">
         <location filename="../transactiondesc.cpp" line="105"/>
         <source>, broadcast through %n node(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation><numerusform>, lähetys %n solmun läpi</numerusform><numerusform>, lähetys %n solmun läpi</numerusform></translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="109"/>
@@ -3311,7 +3311,7 @@ Osoite: %4
     <message numerus="yes">
         <location filename="../transactiondesc.cpp" line="181"/>
         <source>matures in %n more block(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation><numerusform>kypsyy %n lohkon kuluttua</numerusform><numerusform>kypsyy %n lohkon kuluttua</numerusform></translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="183"/>
@@ -3345,7 +3345,7 @@ Osoite: %4
     <message>
         <location filename="../transactiondesc.cpp" line="265"/>
         <source>Comment</source>
-        <translation>Viesti</translation>
+        <translation>Kommentti</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="267"/>
@@ -3360,7 +3360,7 @@ Osoite: %4
     <message>
         <location filename="../transactiondesc.cpp" line="292"/>
         <source>Generated coins must mature %1 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to &quot;not accepted&quot; and it won&apos;t be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.</source>
-        <translation>Luodut kolikot täytyy kypsyttää %1 lohkoa kunnes ne voidaan käyttää. Kun loit tämän lohkon, se lähetettiin verkkoon lisänä lohkoketjuun. Jos se epäonnistuu pääsemään ketjuun sen tila tulee muuttumaan &quot;ei hyväksytty&quot; ja sitä ei voida käyttää. Tämä voi ajoittain tapahtua kun toisen solmun lohko luodaan samanaikaisesti omasi kanssa.</translation>
+        <translation>Luodut kolikot täytyy kypsyä %1 lohkoa kunnes ne voidaan käyttää. Kun generoit tämän lohkon, se lähetettiin verkkoon lisänä lohkoketjuun. Jos se epäonnistuu pääsemään ketjuun sen tila tulee muuttumaan &quot;ei hyväksytty&quot; ja sitä ei voida käyttää. Tämä voi ajoittain tapahtua kun toisen solmun lohko luodaan samanaikaisesti omasi kanssa.</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="300"/>
@@ -3370,7 +3370,7 @@ Osoite: %4
     <message>
         <location filename="../transactiondesc.cpp" line="308"/>
         <source>Transaction</source>
-        <translation>Rahansiirto</translation>
+        <translation>Siirtotapahtuma</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="311"/>
@@ -3398,12 +3398,12 @@ Osoite: %4
     <message>
         <location filename="../forms/transactiondescdialog.ui" line="14"/>
         <source>Transaction details</source>
-        <translation>Rahansiirron yksityiskohdat</translation>
+        <translation>Siirtotapahtuman yksityiskohdat</translation>
     </message>
     <message>
         <location filename="../forms/transactiondescdialog.ui" line="20"/>
         <source>This pane shows a detailed description of the transaction</source>
-        <translation>Tämä ruutu näyttää yksityiskohtaisen tiedon rahansiirrosta</translation>
+        <translation>Tämä ruutu näyttää yksityiskohtaisen tiedon siirtotapahtumasta</translation>
     </message>
 </context>
 <context>
@@ -3416,7 +3416,7 @@ Osoite: %4
     <message>
         <location filename="../transactiontablemodel.cpp" line="239"/>
         <source>Type</source>
-        <translation>Laatu</translation>
+        <translation>Tyyppi</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="239"/>
@@ -3431,7 +3431,7 @@ Osoite: %4
     <message numerus="yes">
         <location filename="../transactiontablemodel.cpp" line="288"/>
         <source>Open for %n more block(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation type="unfinished"><numerusform></numerusform><numerusform>Avoinna %n lisälohkolle</numerusform></translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="291"/>
@@ -3441,7 +3441,7 @@ Osoite: %4
     <message>
         <location filename="../transactiontablemodel.cpp" line="294"/>
         <source>Offline</source>
-        <translation>Offline</translation>
+        <translation>Ei yhteyttä</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="297"/>
@@ -3451,7 +3451,7 @@ Osoite: %4
     <message>
         <location filename="../transactiontablemodel.cpp" line="300"/>
         <source>Confirming (%1 of %2 recommended confirmations)</source>
-        <translation>Varmistetaan (%1 kehoitetusta %2 varmistuksesta)</translation>
+        <translation>Vahvistetaan (%1 kehoitetusta %2 vahvistuksesta)</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="303"/>
@@ -3466,7 +3466,7 @@ Osoite: %4
     <message>
         <location filename="../transactiontablemodel.cpp" line="309"/>
         <source>Immature (%1 confirmations, will be available after %2)</source>
-        <translation>Epäkypsä (%1 varmistusta, saatavilla %2 jälkeen)</translation>
+        <translation>Epäkypsä (%1 vahvistusta, saatavilla %2 jälkeen)</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="312"/>
@@ -3481,7 +3481,7 @@ Osoite: %4
     <message>
         <location filename="../transactiontablemodel.cpp" line="357"/>
         <source>Received with</source>
-        <translation>Vastaanotettu osoitteella</translation>
+        <translation>Vastaanotettu osoitteeseen</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="359"/>
@@ -3491,12 +3491,12 @@ Osoite: %4
     <message>
         <location filename="../transactiontablemodel.cpp" line="361"/>
         <source>Received via Darksend</source>
-        <translation type="unfinished"/>
+        <translation>Vastaanotettu DS</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="364"/>
         <source>Sent to</source>
-        <translation>Saaja</translation>
+        <translation>Lähetetty</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="366"/>
@@ -3511,57 +3511,57 @@ Osoite: %4
     <message>
         <location filename="../transactiontablemodel.cpp" line="371"/>
         <source>Darksend Denominate</source>
-        <translation type="unfinished"/>
+        <translation>Darksend Denominointi</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="373"/>
         <source>Darksend Collateral Payment</source>
-        <translation type="unfinished"/>
+        <translation>Darksend Vakuus maksu</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="375"/>
         <source>Darksend Make Collateral Inputs</source>
-        <translation type="unfinished"/>
+        <translation>Darksend Luo vakuus syöte</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="377"/>
         <source>Darksend Create Denominations</source>
-        <translation type="unfinished"/>
+        <translation>Darksend Denominaation luonti</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="379"/>
         <source>Darksent</source>
-        <translation type="unfinished"/>
+        <translation>Darksend Lähetetty</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="421"/>
         <source>(n/a)</source>
-        <translation>(ei saatavilla)</translation>
+        <translation>(e/s)</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="613"/>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
-        <translation>Rahansiirron tila. Siirrä osoitin kentän päälle nähdäksesi vahvistusten lukumäärä.</translation>
+        <translation>Siirtotapahtuman tila. Siirrä osoitin kentän päälle nähdäksesi vahvistusten lukumäärä.</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="615"/>
         <source>Date and time that the transaction was received.</source>
-        <translation>Rahansiirron vastaanottamisen päivämäärä ja aika.</translation>
+        <translation>Siirtotapahtuman vastaanottamisen päivämäärä ja aika.</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="617"/>
         <source>Type of transaction.</source>
-        <translation>Rahansiirron laatu.</translation>
+        <translation>Siirtotapahtuman tyyppi.</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="619"/>
         <source>Destination address of transaction.</source>
-        <translation>Rahansiirron kohteen Darkcoin osoite</translation>
+        <translation>Siirtotapahtuman kohteen Darkcoin osoite</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="621"/>
         <source>Amount removed from or added to balance.</source>
-        <translation>Saldoon lisätty tai siitä vähennetty määrä.</translation>
+        <translation>Vähennetty tai lisätty määrä saldoon.</translation>
     </message>
 </context>
 <context>
@@ -3605,37 +3605,37 @@ Osoite: %4
     <message>
         <location filename="../transactionview.cpp" line="77"/>
         <source>Received with</source>
-        <translation>Vastaanotettu osoitteella</translation>
+        <translation>Vastaanotettu</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="79"/>
         <source>Sent to</source>
-        <translation>Saaja</translation>
+        <translation>Lähetetty</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="81"/>
         <source>Darksent</source>
-        <translation type="unfinished"/>
+        <translation>Darksend Lähetetty</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="82"/>
         <source>Darksend Make Collateral Inputs</source>
-        <translation type="unfinished"/>
+        <translation>Darksend Luo vakuus syöte</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="83"/>
         <source>Darksend Create Denominations</source>
-        <translation type="unfinished"/>
+        <translation>Darksend Denominaation luonti</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="84"/>
         <source>Darksend Denominate</source>
-        <translation type="unfinished"/>
+        <translation>Darksend Denominointi</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="85"/>
         <source>Darksend Collateral Payment</source>
-        <translation type="unfinished"/>
+        <translation>Darksend Vakuus maksu</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="86"/>
@@ -3690,12 +3690,12 @@ Osoite: %4
     <message>
         <location filename="../transactionview.cpp" line="139"/>
         <source>Show transaction details</source>
-        <translation>Näytä rahansiirron yksityiskohdat</translation>
+        <translation>Näytä siirtotapahtuman yksityiskohdat</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="302"/>
         <source>Export Transaction History</source>
-        <translation>Vie rahansiirtohistoria</translation>
+        <translation>Vie siirtotapahtumien historia</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="303"/>
@@ -3710,7 +3710,7 @@ Osoite: %4
     <message>
         <location filename="../transactionview.cpp" line="313"/>
         <source>Date</source>
-        <translation>Aika</translation>
+        <translation>Päivämäärä</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="314"/>
@@ -3745,7 +3745,7 @@ Osoite: %4
     <message>
         <location filename="../transactionview.cpp" line="321"/>
         <source>There was an error trying to save the transaction history to %1.</source>
-        <translation>Rahansiirron historian tallentamisessa tapahtui virhe paikkaan %1.</translation>
+        <translation>Siirtotapahtumien historian tallentamisessa tapahtui virhe paikkaan %1.</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="325"/>
@@ -3755,7 +3755,7 @@ Osoite: %4
     <message>
         <location filename="../transactionview.cpp" line="325"/>
         <source>The transaction history was successfully saved to %1.</source>
-        <translation>Rahansiirron historia tallennettiin onnistuneesti paikkaan %1.</translation>
+        <translation>Siirtotapahtumien historia tallennettiin onnistuneesti paikkaan %1.</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="434"/>
@@ -3872,7 +3872,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Darkcoin Alert&quot; admin@foo
     <message>
         <location filename="../bitcoinstrings.cpp" line="43"/>
         <source>Continuously rate-limit free transactions to &lt;n&gt;*1000 bytes per minute (default:15)</source>
-        <translation>Yhtäaikaisesti rajaa vapaat rahansiirrot &lt;n&gt;*1000 tavua per minuutti (oletus: 15)</translation>
+        <translation>Yhtäaikaisesti rajaa vapaat siirtotapahtumat &lt;n&gt;*1000 tavua per minuutti (oletus: 15)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="46"/>
@@ -3912,12 +3912,12 @@ for example: alertnotify=echo %%s | mail -s &quot;Darkcoin Alert&quot; admin@foo
     <message>
         <location filename="../bitcoinstrings.cpp" line="66"/>
         <source>Error: The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
-        <translation>Virhe: Rahansiirto hylättiin! Tämä saattaa tapahtua jos jotkut kolikot lompakossa on jo käytetty. Esimerkiksi jos kopioit wallet.dat tiedoston ja kolikot on käytetty mutta ei merkattu täällä.</translation>
+        <translation>Virhe: Siirtotapahtuma hylättiin! Tämä saattaa tapahtua jos jotkut kolikot lompakossa on jo käytetty. Esimerkiksi jos kopioit wallet.dat tiedoston ja kolikot on käytetty mutta ei merkattu täällä.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="70"/>
         <source>Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds!</source>
-        <translation>Virhe: Tämä rahansiirto vaatii rahansiirtopalkkion vähintään %s johtuen sen määrästä, monimutkaisuudesta tai hiljattain vastaanotettujen summien käytöstä</translation>
+        <translation>Virhe: Tämä siirtotapahtuma vaatii siirtopalkkion vähintään %s johtuen sen määrästä, monimutkaisuudesta tai hiljattain vastaanotettujen summien käytöstä</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="73"/>
@@ -3932,7 +3932,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Darkcoin Alert&quot; admin@foo
     <message>
         <location filename="../bitcoinstrings.cpp" line="78"/>
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
-        <translation>Suorita käsky kun lompakossa rahansiirto muuttuu (%s cmd on vaihdettu TxID kanssa)</translation>
+        <translation>Suorita käsky kun lompakossa siirtotapahtuma muuttuu (%s cmd on vaihdettu TxID kanssa)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="81"/>
@@ -3942,7 +3942,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Darkcoin Alert&quot; admin@foo
     <message>
         <location filename="../bitcoinstrings.cpp" line="84"/>
         <source>Fees smaller than this are considered zero fee (for transaction creation) (default:</source>
-        <translation>Tätä pienemmät palkkiot huomioidaan tyhjäksi (rahansiirron luonnissa) (oletus: </translation>
+        <translation>Tätä pienemmät palkkiot huomioidaan tyhjäksi (siirtotapahtuman luonnissa) (oletus: </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="87"/>
@@ -4007,12 +4007,12 @@ for example: alertnotify=echo %%s | mail -s &quot;Darkcoin Alert&quot; admin@foo
     <message>
         <location filename="../bitcoinstrings.cpp" line="119"/>
         <source>Set maximum size of high-priority/low-fee transactions in bytes (default: %d)</source>
-        <translation>Aseta maksimikoko korkea prioriteetti/pieni palkkio rahansiirtoihin tavuissa (oletus: %d)</translation>
+        <translation>Aseta maksimikoko korkea prioriteetti/pieni palkkio siirtotapahtumiin tavuissa (oletus: %d)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="121"/>
         <source>Set the number of script verification threads (%u to %d, 0 = auto, &lt;0 = leave that many cores free, default: %d)</source>
-        <translation>Aseta script varmistuksen threadien lukumäärä (%u - %d, 0= auto, &lt;0 = jätä näin monta ydintä vapaaksi, oletus: %d)</translation>
+        <translation>Aseta script varmistuksen threadien lukumäärä (%u - %d, 0= auto, &lt;0 = jätä näin monta prosessorin ydintä vapaaksi, oletus: %d)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="124"/>
@@ -4062,7 +4062,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Darkcoin Alert&quot; admin@foo
     <message>
         <location filename="../bitcoinstrings.cpp" line="149"/>
         <source>Warning: Please check that your computer&apos;s date and time are correct! If your clock is wrong Darkcoin will not work properly.</source>
-        <translation type="unfinished"/>
+        <translation>Varoitus: Tarkista että tietokoneesi kellonaika ja päivämäärä ovat paikkansapitäviä! Darkcoin ei toimi oikein väärällä päivämäärällä ja/tai kellonajalla.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="152"/>
@@ -4082,7 +4082,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Darkcoin Alert&quot; admin@foo
     <message>
         <location filename="../bitcoinstrings.cpp" line="161"/>
         <source>Warning: wallet.dat corrupt, data salvaged! Original wallet.dat saved as wallet.{timestamp}.bak in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
-        <translation>Varoitus: wallet.dat -lompakkotiedosto on korruptoitunut, tiedot pelastettu. Alkuperäinen wallet.dat -lompakkotiedosto on tallennettu wallet.{timestamp}.bak kansioon %s; jos balanssisi tai siirtohistoria on virheellinen, sinun tulisi palauttaa lompakkotiedosto varmuuskopiosta.</translation>
+        <translation>Varoitus: wallet.dat -lompakkotiedosto on korruptoitunut, tiedot pelastettu. Alkuperäinen wallet.dat -lompakkotiedosto on tallennettu wallet.{timestamp}.bak kansioon %s; jos saldosi tai siirtohistoria on virheellinen, sinun tulisi palauttaa lompakkotiedosto varmuuskopiosta.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="165"/>
@@ -4186,7 +4186,7 @@ Jos tiedostoa ei ole, niin luo se ainoastaan omistajan kirjoitusoikeuksin.</tran
     <message>
         <location filename="../bitcoinstrings.cpp" line="190"/>
         <source>Clear list of wallet transactions (diagnostic tool; implies -rescan)</source>
-        <translation>Tyhjennä lompakon rahansiirtojen lista (diagnostiikka työkalu; olettaa -rescan)</translation>
+        <translation>Tyhjennä lompakon siirtotapahtumien lista (diagnostiikka työkalu; olettaa -rescan)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="191"/>
@@ -4356,7 +4356,7 @@ Jos tiedostoa ei ole, niin luo se ainoastaan omistajan kirjoitusoikeuksin.</tran
     <message>
         <location filename="../bitcoinstrings.cpp" line="224"/>
         <source>Error: Wallet locked, unable to create transaction!</source>
-        <translation>Virhe: Lompakko on lukittu, rahansiirtoa ei voida luoda!</translation>
+        <translation>Virhe: Lompakko on lukittu, siirtotapahtumaa ei voida luoda!</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="225"/>
@@ -4416,7 +4416,7 @@ Jos tiedostoa ei ole, niin luo se ainoastaan omistajan kirjoitusoikeuksin.</tran
     <message>
         <location filename="../bitcoinstrings.cpp" line="236"/>
         <source>Failed to write transaction index</source>
-        <translation>Rahasiirtojen indeksin kirjoitus epäonnistui</translation>
+        <translation>Siirtotapahtumien indeksin kirjoitus epäonnistui</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="237"/>
@@ -4426,7 +4426,7 @@ Jos tiedostoa ei ole, niin luo se ainoastaan omistajan kirjoitusoikeuksin.</tran
     <message>
         <location filename="../bitcoinstrings.cpp" line="238"/>
         <source>Fee per kB to add to transactions you send</source>
-        <translation>Palkkio per kB lisätty lähettämiisi rahansiirtoihin</translation>
+        <translation>Palkkio per kB lisätty lähettämiisi siirtotapahtumiin</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="239"/>
@@ -4636,12 +4636,12 @@ Jos tiedostoa ei ole, niin luo se ainoastaan omistajan kirjoitusoikeuksin.</tran
     <message>
         <location filename="../bitcoinstrings.cpp" line="280"/>
         <source>Log transaction priority and fee per kB when mining blocks (default: 0)</source>
-        <translation>Kirjaa rahansiirron prioriteetti ja palkkio per kB kun louhitaan lohkoja (oletus: 0)</translation>
+        <translation>Kirjaa siirtotapahtuman prioriteetti ja palkkio per kB kun louhitaan lohkoja (oletus: 0)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="281"/>
         <source>Maintain a full transaction index (default: 0)</source>
-        <translation>Ylläpidä täydellistä rahasiirtojen indeksiä (oletus: 0)</translation>
+        <translation>Ylläpidä täydellistä siirtotapahtumien indeksiä (oletus: 0)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="282"/>
@@ -4786,7 +4786,7 @@ Jos tiedostoa ei ole, niin luo se ainoastaan omistajan kirjoitusoikeuksin.</tran
     <message>
         <location filename="../bitcoinstrings.cpp" line="310"/>
         <source>Rescan the block chain for missing wallet transactions</source>
-        <translation>Skannaa uudelleen lohkoketju lompakon puuttuvien rahasiirtojen vuoksi</translation>
+        <translation>Skannaa uudelleen lohkoketju lompakon puuttuvien siirtotapahtumien vuoksi</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="311"/>
@@ -4911,7 +4911,7 @@ Jos tiedostoa ei ole, niin luo se ainoastaan omistajan kirjoitusoikeuksin.</tran
     <message>
         <location filename="../bitcoinstrings.cpp" line="335"/>
         <source>Signing transaction failed</source>
-        <translation>Siirtotapahtuman vahvistus epäonnistui</translation>
+        <translation>Siirtotapahtuman allekirjoitus epäonnistui</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="336"/>
@@ -4951,7 +4951,7 @@ Jos tiedostoa ei ole, niin luo se ainoastaan omistajan kirjoitusoikeuksin.</tran
     <message>
         <location filename="../bitcoinstrings.cpp" line="343"/>
         <source>Spend unconfirmed change when sending transactions (default: 1)</source>
-        <translation>Käytä varmistamattomia vaihtorahoja lähetettäessä rahansiirtoja (oletus: 1)</translation>
+        <translation>Käytä varmistamattomia vaihtorahoja lähetettäessä siirtotapahtumia (oletus: 1)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="344"/>
@@ -5161,7 +5161,7 @@ Jos tiedostoa ei ole, niin luo se ainoastaan omistajan kirjoitusoikeuksin.</tran
     <message>
         <location filename="../bitcoinstrings.cpp" line="385"/>
         <source>Zapping all transactions from wallet...</source>
-        <translation>Tyhjennetään kaikki rahansiirrot lompakosta....</translation>
+        <translation>Tyhjennetään kaikki siirtotapahtumat lompakosta....</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="386"/>

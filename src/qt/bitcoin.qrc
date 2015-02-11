@@ -85,15 +85,31 @@
         <file alias="spinner-034">res/movies/spinner-034.png</file>
     </qresource>
     <qresource prefix="/translations">
+        <file alias="bar">locale/darkcoin_bar.qm</file>
+        <file alias="ca">locale/darkcoin_ca.qm</file>
         <file alias="cmn">locale/darkcoin_cmn.qm</file>
+        <file alias="cs">locale/darkcoin_cs.qm</file>
+        <file alias="da">locale/darkcoin_da.qm</file>
         <file alias="de">locale/darkcoin_de.qm</file>
+        <file alias="el">locale/darkcoin_el.qm</file>
+        <file alias="en">locale/darkcoin_en.qm</file>
+        <file alias="eo">locale/darkcoin_eo.qm</file>
         <file alias="es">locale/darkcoin_es.qm</file>
         <file alias="fi">locale/darkcoin_fi.qm</file>
         <file alias="fr">locale/darkcoin_fr.qm</file>
+        <file alias="hu_HU">locale/darkcoin_hu_HU.qm</file>
         <file alias="it">locale/darkcoin_it.qm</file>
+        <file alias="lv_LV">locale/darkcoin_lv_LV.qm</file>
+        <file alias="nl">locale/darkcoin_nl.qm</file>
         <file alias="pl">locale/darkcoin_pl.qm</file>
         <file alias="pt">locale/darkcoin_pt.qm</file>
+        <file alias="pt_BR">locale/darkcoin_pt_BR.qm</file>
         <file alias="ru">locale/darkcoin_ru.qm</file>
+        <file alias="sk">locale/darkcoin_sk.qm</file>
+        <file alias="sv">locale/darkcoin_sv.qm</file>
+        <file alias="tr">locale/darkcoin_tr.qm</file>
         <file alias="vi">locale/darkcoin_vi.qm</file>
+        <file alias="zh_CN">locale/darkcoin_zh_CN.qm</file>
+        <file alias="zh_HK">locale/darkcoin_zh_HK.qm</file>
     </qresource>
 </RCC>
