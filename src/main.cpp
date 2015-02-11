@@ -2339,15 +2339,13 @@ static bool CheckIndexAgainstCheckpoint(const CBlockIndex* pindexPrev, CValidati
     return true;
 }
 
-bool ContextualCheckBlock(const CBlock& block, CValidationState& state, const Consensus::Params& params, CBlockIndex * const pindexPrev)
+bool Consensus::ContextualCheckBlock(const CBlock& block, CValidationState& state, const Consensus::Params& params, const CBlockIndex* pindexPrev)
 {
-    const int nHeight = pindexPrev == NULL ? 0 : pindexPrev->nHeight + 1;
-
+    const int nHeight = pindexPrev->nHeight + 1;
     // Check that all transactions are finalized
-    BOOST_FOREACH(const CTransaction& tx, block.vtx)
-        if (!IsFinalTx(tx, nHeight, block.GetBlockTime())) {
-            return state.DoS(10, error("%s: contains a non-final transaction", __func__), REJECT_INVALID, "bad-txns-nonfinal");
-        }
+    for (unsigned int i = 1; i < block.vtx.size(); i++)
+        if (!Consensus::IsFinalTx(block.vtx[i], nHeight, block.GetBlockTime()))
+            return state.DoS(10, false, REJECT_INVALID, "bad-txns-nonfinal");
 
     // Enforce block.nVersion=2 rule that the coinbase starts with serialized block height
     // if 750 of the last 1,000 blocks are version 2 or greater (51/100 if testnet):
@@ -2356,7 +2354,7 @@ bool ContextualCheckBlock(const CBlock& block, CValidationState& state, const Co
         CScript expect = CScript() << nHeight;
         if (block.vtx[0].vin[0].scriptSig.size() < expect.size() ||
             !std::equal(expect.begin(), expect.end(), block.vtx[0].vin[0].scriptSig.begin())) {
-            return state.DoS(100, error("%s: block height mismatch in coinbase", __func__), REJECT_INVALID, "bad-cb-height");
+            return state.DoS(100, false, REJECT_INVALID, "bad-cb-height");
         }
     }
 
@@ -2423,12 +2421,13 @@ bool AcceptBlock(CBlock& block, CValidationState& state, const Consensus::Params
         return true;
     }
 
-    if ((!Consensus::CheckBlock(block, GetAdjustedTime(), state, params)) || !ContextualCheckBlock(block, state, params, pindex->pprev)) {
+    if (!Consensus::CheckBlock(block, GetAdjustedTime(), state, params) || 
+        !Consensus::ContextualCheckBlock(block, state, params, pindex->pprev)) {
         if (state.IsInvalid() && !state.CorruptionPossible()) {
             pindex->nStatus |= BLOCK_FAILED_VALID;
             setDirtyBlockIndex.insert(pindex);
         }
-        return error("%s: Consensus::CheckBlock || ContextualCheckBlock: %s", __func__, state.GetRejectReason().c_str());
+        return error("%s: Consensus::CheckBlock || Consensus::ContextualCheckBlock: ", __func__, state.GetRejectReason().c_str());
     }
 
     int nHeight = pindex->nHeight;
@@ -2499,8 +2498,8 @@ bool TestBlockValidity(CValidationState &state, const CBlock& block, CBlockIndex
         return error("%s: Consensus::CheckBlockHeader(): ", __func__, state.GetRejectReason().c_str());
     if (!Consensus::CheckBlock(block, GetAdjustedTime(), state, params, fCheckPOW, fCheckMerkleRoot))
         return error("%s: Consensus::CheckBlock: %s", __func__, state.GetRejectReason().c_str());
-    if (!ContextualCheckBlock(block, state, params, pindexPrev))
-        return false;
+    if (!Consensus::ContextualCheckBlock(block, state, params, pindexPrev))
+        return error("%s: Consensus::ContextualCheckBlock: %s", __func__, state.GetRejectReason().c_str());
     if (!ConnectBlock(block, state, params, &indexDummy, viewNew, true))
         return false;
     assert(state.IsValid());

@@ -58,6 +58,7 @@ bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoins
  * This is the more expensive consensus check for a transaction, do it last.
  */
 bool CheckTxInputsScripts(const CTransaction& tx, CValidationState& state, const CCoinsViewEfficient& inputs, bool cacheStore, unsigned int flags);
+bool ContextualCheckBlock(const CBlock& block, CValidationState& state, const Consensus::Params& params, const CBlockIndex* pindexPrev);
 
 /** Utility functions */
 /**
