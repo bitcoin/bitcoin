@@ -86,6 +86,7 @@ void Shutdown(void* parg)
     if (fFirstThread)
     {
         fShutdown = true;
+        fRequestShutdown = true;
         nTransactionsUpdated++;
 //        CTxDB().Close();
         bitdb.Flush(false);
@@ -766,12 +767,35 @@ bool AppInit2()
         return false;
     }
 
-    uiInterface.InitMessage(_("Loading block index..."));
-    printf("Loading block index...\n");
-    nStart = GetTimeMillis();
-    if (!LoadBlockIndex())
-        return InitError(_("Error loading blkindex.dat"));
 
+    printf("Loading block index...\n");
+    bool fLoaded = false;
+    while (!fLoaded) {
+        std::string strLoadError;
+        uiInterface.InitMessage(_("Loading block index..."));
+
+        nStart = GetTimeMillis();
+        do {
+            try {
+                UnloadBlockIndex();
+
+                if (!LoadBlockIndex()) {
+                    strLoadError = _("Error loading block database");
+                    break;
+                }
+            } catch(std::exception &e) {
+                strLoadError = _("Error opening block database");
+                break;
+            }
+
+            fLoaded = true;
+        } while(false);
+
+        if (!fLoaded) {
+            // TODO: suggest reindex here
+            return InitError(strLoadError);
+        }
+    }
 
     // as LoadBlockIndex can take several minutes, it's possible the user
     // requested to kill bitcoin-qt during the last operation. If so, exit.
