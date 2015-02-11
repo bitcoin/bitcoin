@@ -30,6 +30,7 @@ public:
 private:
     Ui::HelpMessageDialog *ui;
     QString text;
+    bool fAbout;
 
 private slots:
     void on_okButton_accepted();
