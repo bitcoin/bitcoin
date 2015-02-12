@@ -395,40 +395,90 @@ int randomizeList (int i) { return std::rand()%i;}
 // Recursively determine the rounds of a given input (How deep is the darksend chain for a given input)
 int GetInputDarksendRounds(CTxIn in, int rounds)
 {
+    static std::map<uint256, CWalletTx> mDenomWtxes;
+
     if(rounds >= 17) return rounds;
 
-    std::string padding = "";
-    padding.insert(0, ((rounds+1)*5)+3, ' ');
+    uint256 hash = in.prevout.hash;
+    uint nout = in.prevout.n;
 
-    CWalletTx tx;
-    if(pwalletMain->GetTransaction(in.prevout.hash,tx))
+    CWalletTx wtx;
+    if(pwalletMain->GetTransaction(hash, wtx))
     {
-        // bounds check
-        if(in.prevout.n >= tx.vout.size()) return -4;
+        std::map<uint256, CWalletTx>::const_iterator mdwi = mDenomWtxes.find(hash);
+        // not known yet, let's add it
+        if(mdwi == mDenomWtxes.end())
+        {
+            if(fDebug) LogPrintf("GetInputDarksendRounds INSERTING %s\n", hash.ToString());
+            mDenomWtxes[hash] = wtx;
+        }
+        // found and it's not an initial value, just return it
+        else if(mDenomWtxes[hash].vout[nout].nRounds != -10)
+        {
+            if(fDebug) LogPrintf("GetInputDarksendRounds INFO      %s %3d %d\n", hash.ToString(), nout, mDenomWtxes[hash].vout[nout].nRounds);
+            return mDenomWtxes[hash].vout[nout].nRounds;
+        }
 
-        if(tx.vout[in.prevout.n].nValue == DARKSEND_FEE) return -3;
+
+        // bounds check
+        if(nout >= wtx.vout.size())
+        {
+            mDenomWtxes[hash].vout[nout].nRounds = -4;
+            if(fDebug) LogPrintf("GetInputDarksendRounds UPDATED   %s %3d %d\n", hash.ToString(), nout, mDenomWtxes[hash].vout[nout].nRounds);
+            return mDenomWtxes[hash].vout[nout].nRounds;
+        }
+
+        mDenomWtxes[hash].vout[nout].nRounds = -3;
+        if(pwalletMain->IsCollateralAmount(wtx.vout[nout].nValue))
+        {
+            mDenomWtxes[hash].vout[nout].nRounds = -3;
+            if(fDebug) LogPrintf("GetInputDarksendRounds UPDATED   %s %3d %d\n", hash.ToString(), nout, mDenomWtxes[hash].vout[nout].nRounds);
+            return mDenomWtxes[hash].vout[nout].nRounds;
+        }
 
         //make sure the final output is non-denominate
-        if(rounds == 0 && !pwalletMain->IsDenominatedAmount(tx.vout[in.prevout.n].nValue)) return -2; //NOT DENOM
-
-        bool found = false;
-        BOOST_FOREACH(CTxOut out, tx.vout)
+        mDenomWtxes[hash].vout[nout].nRounds = -2;
+        if(/*rounds == 0 && */!pwalletMain->IsDenominatedAmount(wtx.vout[nout].nValue)) //NOT DENOM
         {
-            found = pwalletMain->IsDenominatedAmount(out.nValue);
-            if(found) break; // no need to loop more
+            mDenomWtxes[hash].vout[nout].nRounds = -2;
+            if(fDebug) LogPrintf("GetInputDarksendRounds UPDATED   %s %3d %d\n", hash.ToString(), nout, mDenomWtxes[hash].vout[nout].nRounds);
+            return mDenomWtxes[hash].vout[nout].nRounds;
         }
-        if(!found) return rounds - 1; //NOT FOUND, "-1" because of the pre-mixing creation of denominated amounts
 
-        // find my vin and look that up
-        BOOST_FOREACH(CTxIn in2, tx.vin)
+        bool fAllDenoms = true;
+        BOOST_FOREACH(CTxOut out, wtx.vout)
+        {
+            fAllDenoms = fAllDenoms && pwalletMain->IsDenominatedAmount(out.nValue);
+        }
+        // this one is denominated but there is another non-denominated output found in the same tx
+        if(!fAllDenoms)
+        {
+            mDenomWtxes[hash].vout[nout].nRounds = 0;
+            if(fDebug) LogPrintf("GetInputDarksendRounds UPDATED   %s %3d %d\n", hash.ToString(), nout, mDenomWtxes[hash].vout[nout].nRounds);
+            return mDenomWtxes[hash].vout[nout].nRounds;
+        }
+
+        int nShortest = -10; // an initial value, should be no way to get this by calculations
+        bool fDenomFound = false;
+        // only denoms here so let's look up
+        BOOST_FOREACH(CTxIn in2, wtx.vin)
         {
             if(pwalletMain->IsMine(in2))
             {
-                //LogPrintf("rounds :: %s %s %d NEXT\n", padding.c_str(), in.ToString().c_str(), rounds);
                 int n = GetInputDarksendRounds(in2, rounds+1);
-                if(n != -3) return n;
+                // denom found, find the shortest chain or initially assign nShortest with the first found value
+                if(n >= 0 && (n < nShortest || nShortest == -10))
+                {
+                    nShortest = n;
+                    fDenomFound = true;
+                }
             }
         }
+        mDenomWtxes[hash].vout[nout].nRounds = fDenomFound
+                ? nShortest + 1 // good, we a +1 to the shortest one
+                : 0;            // too bad, we are the fist one in that chain
+        if(fDebug) LogPrintf("GetInputDarksendRounds UPDATED   %s %3d %d\n", hash.ToString(), nout, mDenomWtxes[hash].vout[nout].nRounds);
+        return mDenomWtxes[hash].vout[nout].nRounds;
     }
 
     return rounds-1;

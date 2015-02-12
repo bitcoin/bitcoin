@@ -1092,21 +1092,19 @@ int64_t CWallet::GetAnonymizedBalance() const
 {
     int64_t nTotal = 0;
     {
-        LOCK(cs_wallet);
+        LOCK2(cs_main, cs_wallet);
         for (map<uint256, CWalletTx>::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
         {
             const CWalletTx* pcoin = &(*it).second;
 
             if (pcoin->IsTrusted())
             {
-                int nDepth = pcoin->GetDepthInMainChain(false);
+                uint256 hash = (*it).first;
+                for (unsigned int i = 0; i < pcoin->vout.size(); i++)
+                {
+                    CTxIn vin = CTxIn(hash, i);
 
-                for (unsigned int i = 0; i < pcoin->vout.size(); i++) {
-
-                    COutput out = COutput(pcoin, i, nDepth);
-                    CTxIn vin = CTxIn(out.tx->GetHash(), out.i);
-
-                    if(IsSpent(out.tx->GetHash(), i) || !IsMine(pcoin->vout[i]) || !IsDenominated(vin)) continue;
+                    if(IsSpent(hash, i) || !IsMine(pcoin->vout[i]) || !IsDenominated(vin)) continue;
 
                     int rounds = GetInputDarksendRounds(vin);
                     if(rounds >= nDarksendRounds){
@@ -1126,21 +1124,20 @@ double CWallet::GetAverageAnonymizedRounds() const
     double fCount = 0;
 
     {
-        LOCK(cs_wallet);
+        LOCK2(cs_main, cs_wallet);
         for (map<uint256, CWalletTx>::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
         {
             const CWalletTx* pcoin = &(*it).second;
 
             if (pcoin->IsTrusted())
             {
-                int nDepth = pcoin->GetDepthInMainChain(false);
+                uint256 hash = (*it).first;
 
                 for (unsigned int i = 0; i < pcoin->vout.size(); i++) {
 
-                    COutput out = COutput(pcoin, i, nDepth);
-                    CTxIn vin = CTxIn(out.tx->GetHash(), out.i);
+                    CTxIn vin = CTxIn(hash, i);
 
-                    if(IsSpent(out.tx->GetHash(), i) || !IsMine(pcoin->vout[i]) || !IsDenominated(vin)) continue;
+                    if(IsSpent(hash, i) || !IsMine(pcoin->vout[i]) || !IsDenominated(vin)) continue;
 
                     int rounds = GetInputDarksendRounds(vin);
                     fTotal += (float)rounds;
@@ -1160,21 +1157,20 @@ int64_t CWallet::GetNormalizedAnonymizedBalance() const
     int64_t nTotal = 0;
 
     {
-        LOCK(cs_wallet);
+        LOCK2(cs_main, cs_wallet);
         for (map<uint256, CWalletTx>::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
         {
             const CWalletTx* pcoin = &(*it).second;
 
             if (pcoin->IsTrusted())
             {
-                int nDepth = pcoin->GetDepthInMainChain(false);
+                uint256 hash = (*it).first;
 
                 for (unsigned int i = 0; i < pcoin->vout.size(); i++) {
 
-                    COutput out = COutput(pcoin, i, nDepth);
-                    CTxIn vin = CTxIn(out.tx->GetHash(), out.i);
+                    CTxIn vin = CTxIn(hash, i);
 
-                    if(IsSpent(out.tx->GetHash(), i) || !IsMine(pcoin->vout[i]) || !IsDenominated(vin)) continue;
+                    if(IsSpent(hash, i) || !IsMine(pcoin->vout[i]) || !IsDenominated(vin)) continue;
 
                     int rounds = GetInputDarksendRounds(vin);
                     nTotal += pcoin->vout[i].nValue * rounds / nDarksendRounds;
@@ -1190,7 +1186,7 @@ int64_t CWallet::GetDenominatedBalance(bool onlyDenom, bool onlyUnconfirmed) con
 {
     int64_t nTotal = 0;
     {
-        LOCK(cs_wallet);
+        LOCK2(cs_main, cs_wallet);
         for (map<uint256, CWalletTx>::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
         {
             const CWalletTx* pcoin = &(*it).second;
@@ -1202,12 +1198,11 @@ int64_t CWallet::GetDenominatedBalance(bool onlyDenom, bool onlyUnconfirmed) con
 
             bool unconfirmed = (!IsFinalTx(*pcoin) || (!pcoin->IsTrusted() && nDepth == 0));
             if(onlyUnconfirmed != unconfirmed) continue;
+            uint256 hash = (*it).first;
 
             for (unsigned int i = 0; i < pcoin->vout.size(); i++)
             {
-                COutput out = COutput(pcoin, i, nDepth);
-
-                if(IsSpent(out.tx->GetHash(), i)) continue;
+                if(IsSpent(hash, i)) continue;
                 if(!IsMine(pcoin->vout[i])) continue;
                 if(onlyDenom != IsDenominatedAmount(pcoin->vout[i].nValue)) continue;
 
