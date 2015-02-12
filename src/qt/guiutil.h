@@ -118,18 +118,16 @@ namespace GUIUtil
         QString coreOptions;
         QString uiOptions;
 
-        virtual bool event(QEvent *e) 
+        virtual bool event(QEvent *e)
         {
             bool res = QMessageBox::event(e);
-            switch (e->type()) 
+            if (e->type() == QEvent::MouseMove || e->type() == QEvent::MouseButtonPress)
             {
-                case QEvent::MouseMove:
-                case QEvent::MouseButtonPress:
-                    setMaximumSize(QWIDGETSIZE_MAX, QWIDGETSIZE_MAX);
-                    if (QWidget *textEdit = findChild<QTextEdit *>())
-                    {
-                        textEdit->setMaximumHeight(QWIDGETSIZE_MAX);
-                    }
+                setMaximumSize(QWIDGETSIZE_MAX, QWIDGETSIZE_MAX);
+                if (QWidget *textEdit = findChild<QTextEdit *>())
+                {
+                    textEdit->setMaximumHeight(QWIDGETSIZE_MAX);
+                }
             }
 
             return res;
