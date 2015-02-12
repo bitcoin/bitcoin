@@ -12,7 +12,7 @@
 #define CLIENT_VERSION_MAJOR       0
 #define CLIENT_VERSION_MINOR       11
 #define CLIENT_VERSION_REVISION    1
-#define CLIENT_VERSION_BUILD       21
+#define CLIENT_VERSION_BUILD       22
 
 
 
