@@ -130,7 +130,7 @@
                  <string>Your current spendable balance</string>
                 </property>
                 <property name="text">
-                 <string notr="true">0 BTC</string>
+                 <string notr="true">0 DRK</string>
                 </property>
                 <property name="alignment">
                  <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -162,7 +162,7 @@
                  <string>Total of transactions that have yet to be confirmed, and do not yet count toward the spendable balance</string>
                 </property>
                 <property name="text">
-                 <string notr="true">0 BTC</string>
+                 <string notr="true">0 DRK</string>
                 </property>
                 <property name="alignment">
                  <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -191,7 +191,7 @@
                  <string>Mined balance that has not yet matured</string>
                 </property>
                 <property name="text">
-                 <string notr="true">0 BTC</string>
+                 <string notr="true">0 DRK</string>
                 </property>
                 <property name="alignment">
                  <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -223,7 +223,7 @@
                  <string>Your current total balance</string>
                 </property>
                 <property name="text">
-                 <string notr="true">0 BTC</string>
+                 <string notr="true">0 DRK</string>
                 </property>
                 <property name="alignment">
                  <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
