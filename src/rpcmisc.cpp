@@ -140,7 +140,7 @@ Value spork(const Array& params, bool fHelp)
 
         Object ret;
         while(it != mapSporksActive.end()) {
-            ret.push_back(Pair(sporkManager.GetSporkNameByID(it->second.nSporkID), it->second.nTimeStart));
+            ret.push_back(Pair(sporkManager.GetSporkNameByID(it->second.nSporkID), it->second.nValue));
             it++;
         }
         return ret;
@@ -150,11 +150,11 @@ Value spork(const Array& params, bool fHelp)
             return "Invalid spork name";
         }
 
-        // EPOCH VALUE
-        int64_t nEpochStart = params[1].get_int();
+        // SPORK VALUE
+        int64_t nValue = params[1].get_int();
 
         //broadcast new spork
-        if(sporkManager.UpdateSpork(nSporkID, nEpochStart)){
+        if(sporkManager.UpdateSpork(nSporkID, nValue)){
             return "success";
         } else {
             return "failure";
