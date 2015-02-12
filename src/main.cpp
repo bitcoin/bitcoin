@@ -4053,8 +4053,9 @@ void static ProcessGetData(CNode* pfrom)
                 if (!pushed && inv.type == MSG_MASTERNODE_WINNER) {
                     if(mapSeenMasternodeVotes.count(inv.hash)){
                         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
+                        int a = 0;
                         ss.reserve(1000);
-                        ss << mapSeenMasternodeVotes[inv.hash];
+                        ss << mapSeenMasternodeVotes[inv.hash] << a;
                         pfrom->PushMessage("mnw", ss);
                         pushed = true;
                     }
