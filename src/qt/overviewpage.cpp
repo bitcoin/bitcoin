@@ -293,7 +293,7 @@ void OverviewPage::updateDarksendProgress()
     float denomPart = 0;
     if(denominatedBalance > 0)
     {
-        denomPart = (float)pwalletMain->GetNormalizedAnonymizedBalance() / pwalletMain->GetDenominatedBalance();
+        denomPart = (float)pwalletMain->GetNormalizedAnonymizedBalance() / denominatedBalance;
         denomPart = denomPart > 1 ? 1 : denomPart;
     }
 
