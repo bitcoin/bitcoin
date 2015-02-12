@@ -153,6 +153,7 @@ class CTxOut
 {
 public:
     int64_t nValue;
+    int nRounds;
     CScript scriptPubKey;
 
     CTxOut()
@@ -171,6 +172,7 @@ public:
     void SetNull()
     {
         nValue = -1;
+        nRounds = -10; // an initial value, should be no way to get this by calculations
         scriptPubKey.clear();
     }
 
@@ -197,6 +199,7 @@ public:
     friend bool operator==(const CTxOut& a, const CTxOut& b)
     {
         return (a.nValue       == b.nValue &&
+                a.nRounds      == b.nRounds &&
                 a.scriptPubKey == b.scriptPubKey);
     }
 
