@@ -871,7 +871,7 @@ Wird zugmachd, wails bessa is.</translation>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="451"/>
         <source>Label</source>
-        <translation type="unfinished"/>
+        <translation>Baperl</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="456"/>
@@ -2663,7 +2663,7 @@ Aba, wards ab, des wird. Brauchd bloss a Minudn bis der Darkcon Koa mid di andan
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="353"/>
         <source>medium</source>
-        <translation type="unfinished"/>
+        <translation>so inda-middn wichdig</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="388"/>
@@ -2678,7 +2678,7 @@ Aba, wards ab, des wird. Brauchd bloss a Minudn bis der Darkcon Koa mid di andan
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="433"/>
         <source>no</source>
-        <translation type="unfinished"/>
+        <translation>gwi´hs ned</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="468"/>
