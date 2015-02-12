@@ -2473,6 +2473,19 @@ bool static ConnectTip(CValidationState &state, CBlockIndex *pindexNew) {
     return true;
 }
 
+bool DisconnectBlocksAndReprocess(int blocks)
+{
+    LOCK(cs_main);
+
+    CValidationState state;
+
+    LogPrintf("DisconnectBlocksAndReprocess: Got command to replay %d blocks", blocks);
+    for(int i = 0; i <= blocks; i++)
+        DisconnectTip(state);
+
+    return true;
+}
+
 /*
     DisconnectBlockAndInputs
 
@@ -3187,12 +3200,6 @@ bool ProcessBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDiskBl
 
             // Ask this guy to fill in what we're missing
             PushGetBlocks(pfrom, chainActive.Tip(), GetOrphanRoot(hash));
-
-            // Move backwards to tigger reprocessing both chains
-            if(fLargeWorkForkFound || fLargeWorkInvalidChainFound || IsSporkActive(SPORK_4_RECONVERGE)){
-                CValidationState state;
-                DisconnectTip(state);
-            }
         }
         return true;
     }
