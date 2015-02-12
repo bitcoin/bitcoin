@@ -4075,6 +4075,25 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             return false;
         }
 
+        // Disconnect if we have already met our quota of non-doublespend-relaying nodes.
+        if (!(pfrom->nServices & NODE_RELAYS_DOUBLESPENDS))
+        {
+            int nNonDoubleSpendRelaying = 0;
+
+            LOCK(cs_vNodes);
+            BOOST_FOREACH(CNode* pnode, vNodes) {
+                if (!(pnode->nServices & NODE_RELAYS_DOUBLESPENDS))
+                    nNonDoubleSpendRelaying++;
+            }
+
+            if (nNonDoubleSpendRelaying > nMaxConnections / 4) {
+                LogPrint("net", "reached quota of non-doublespend-relaying nodes; disconnecting %s\n",
+                         pfrom->addr.ToString());
+                pfrom->fDisconnect = true;
+                return false;
+            }
+        }
+
         if (pfrom->nVersion == 10300)
             pfrom->nVersion = 300;
         if (!vRecv.empty())
