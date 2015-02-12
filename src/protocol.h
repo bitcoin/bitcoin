@@ -83,6 +83,8 @@ enum {
     // collisions and other cases where nodes may be advertising a service they
     // do not actually support. Other service bits should be allocated via the
     // BIP process.
+
+    NODE_REPLACE_BY_FEE = (1 << 26),
 };
 
 /** A CService with information about it as peer */
