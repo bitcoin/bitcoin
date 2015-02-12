@@ -25,7 +25,7 @@ Aba ´s guad dasd da bischd und mithöifsd!
 Gschenkt is das woardn unter de so´gnoondn Em Ai Ti - Lizenz. 
 Des kandscha HIER anschaung, oder du schaugschd im Netz unda:  http://www.opensource.org/licenses/mit-license.php
 Abropos, da ham no Andre vorhea mitgarbaited:
-Die vom Open ES ES EL-Projekt (http://www.openssl.org/), da Young Eric  (eay@cryptsoft.com) und des Gfriggl mit die UPNP-Dingsns is vom Bernhard Thomas.
+Di vom Open ES ES EL-Projekt (http://www.openssl.org/), da Young Eric  (eay@cryptsoft.com) und des Gfriggl mit die UPNP-Dingsns is vom Bernhard Thomas.
 
 
 Zua Übasezung:
@@ -47,7 +47,7 @@ Deshalb treffma uns imma Midwochs um zwangsg Ua (Wenn die Kirchnkoa-Probm rum is
     <message>
         <location filename="../utilitydialog.cpp" line="31"/>
         <source>The Darkcoin Core developers</source>
-        <translation>Die Darkcoin Coa Ma´ha</translation>
+        <translation>Di Darkcoin Coa Ma´ha</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="43"/>
@@ -685,7 +685,7 @@ Wenn´d jezzad anfängsch den noin Goidbaild zu nuzzn dann gehd da alde nimma. W
         <location filename="../bitcoingui.cpp" line="704"/>
         <location filename="../bitcoingui.cpp" line="710"/>
         <source>%n week(s)</source>
-        <translation><numerusform>%n wochä</numerusform><numerusform>%n Wochn</numerusform></translation>
+        <translation><numerusform>%n Wochn</numerusform><numerusform>%n Wochn</numerusform></translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="710"/>
@@ -1513,7 +1513,7 @@ gschbield wiad.&lt;br&gt;&lt;br&gt;Je öfdas desto bessa (!!!), kost aber au mea
     <message>
         <location filename="../forms/optionsdialog.ui" line="290"/>
         <source>&amp;Spend unconfirmed change</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Goid scho wida ausgebm wenns no unterwegs is</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="301"/>
@@ -1523,7 +1523,7 @@ gschbield wiad.&lt;br&gt;&lt;br&gt;Je öfdas desto bessa (!!!), kost aber au mea
     <message>
         <location filename="../forms/optionsdialog.ui" line="307"/>
         <source>Automatically open the Darkcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation type="unfinished"/>
+        <translation>Da Ruta soll den Port fon allain aufmaha. Des ged nua, wenn dai Ruta UPnP kann unds au anschalted is.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="310"/>
@@ -1819,7 +1819,7 @@ Aba, wards ab, des wird. Brauchd bloss a Minudn bis der Darkcon Koa mid di andan
         <location filename="../overviewpage.cpp" line="462"/>
         <location filename="../overviewpage.cpp" line="476"/>
         <source>Darksend</source>
-        <translation>Darksend (Kapuzzngoid)</translation>
+        <translation>Darksend</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="858"/>
@@ -2032,7 +2032,7 @@ Aba, wards ab, des wird. Brauchd bloss a Minudn bis der Darkcon Koa mid di andan
     <message>
         <location filename="../paymentserver.cpp" line="294"/>
         <source>Cannot start darkcoin: click-to-pay handler</source>
-        <translation type="unfinished"/>
+        <translation>Darkcoin ged ned  (click-to-pay handler)</translation>
     </message>
     <message>
         <location filename="../paymentserver.cpp" line="352"/>
@@ -2058,7 +2058,7 @@ Aba, wards ab, des wird. Brauchd bloss a Minudn bis der Darkcon Koa mid di andan
     <message>
         <location filename="../paymentserver.cpp" line="418"/>
         <source>URI can not be parsed! This can be caused by an invalid Darkcoin address or malformed URI parameters.</source>
-        <translation type="unfinished"/>
+        <translation>D´ Uri kanni ned lesn. Warscheinlich walls kaine is, oda irgendoina had an Schaiss gmachd...</translation>
     </message>
     <message>
         <location filename="../paymentserver.cpp" line="432"/>
@@ -3431,157 +3431,157 @@ Wenn dai Kischdn rechd schiach ausschaugd, dann sagen di Andan &quot;bäh&quot; 
 <context>
     <name>TransactionTableModel</name>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="238"/>
+        <location filename="../transactiontablemodel.cpp" line="239"/>
         <source>Date</source>
         <translation>Datum</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="238"/>
+        <location filename="../transactiontablemodel.cpp" line="239"/>
         <source>Type</source>
         <translation>Tüpp</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="238"/>
+        <location filename="../transactiontablemodel.cpp" line="239"/>
         <source>Address</source>
         <translation>Adressn</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="238"/>
+        <location filename="../transactiontablemodel.cpp" line="239"/>
         <source>Amount</source>
         <translation>Wie fui</translation>
     </message>
     <message numerus="yes">
-        <location filename="../transactiontablemodel.cpp" line="287"/>
+        <location filename="../transactiontablemodel.cpp" line="288"/>
         <source>Open for %n more block(s)</source>
         <translation><numerusform>Unerledigd bis no %n Überwaisungs-Kischdn kommd</numerusform><numerusform>Unerledigd bis no %n Überwaisungs-Kischdn komma</numerusform></translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="290"/>
+        <location filename="../transactiontablemodel.cpp" line="291"/>
         <source>Open until %1</source>
         <translation>G´öffned bis %1</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="293"/>
+        <location filename="../transactiontablemodel.cpp" line="294"/>
         <source>Offline</source>
         <translation>Ned am Nezz</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="296"/>
+        <location filename="../transactiontablemodel.cpp" line="297"/>
         <source>Unconfirmed</source>
         <translation>Unbeschdädigd</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="299"/>
+        <location filename="../transactiontablemodel.cpp" line="300"/>
         <source>Confirming (%1 of %2 recommended confirmations)</source>
         <translation>Wiad Bschdädigd  (%1 von %2 Bschdädigunga, di wo ma brauchd)</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="302"/>
+        <location filename="../transactiontablemodel.cpp" line="303"/>
         <source>Confirmed (%1 confirmations)</source>
         <translation>Bschdädigd (%1 Bschdädigunga)</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="305"/>
+        <location filename="../transactiontablemodel.cpp" line="306"/>
         <source>Conflicted</source>
         <translation>A bissal Gschoggd is scho.</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="308"/>
+        <location filename="../transactiontablemodel.cpp" line="309"/>
         <source>Immature (%1 confirmations, will be available after %2)</source>
         <translation>No a bissal Grean hindad Oan (is erst %1 , erwaxxn is mid %2)</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="311"/>
+        <location filename="../transactiontablemodel.cpp" line="312"/>
         <source>This block was not received by any other nodes and will probably not be accepted!</source>
         <translation>Dai Kischdn is so schiach, wi will koina anschaun. Des sigd so aus wih wenn des nix wiad!</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="314"/>
+        <location filename="../transactiontablemodel.cpp" line="315"/>
         <source>Generated but not accepted</source>
         <translation>Aufbaud hamses, aber no hod där Bau kai Genemigung</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="356"/>
+        <location filename="../transactiontablemodel.cpp" line="357"/>
         <source>Received with</source>
         <translation>Mir gschigd woan</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="358"/>
+        <location filename="../transactiontablemodel.cpp" line="359"/>
         <source>Received from</source>
         <translation>Griggd vom</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="360"/>
+        <location filename="../transactiontablemodel.cpp" line="361"/>
         <source>Received via Darksend</source>
         <translation>Griggd üban Darksend</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="363"/>
+        <location filename="../transactiontablemodel.cpp" line="364"/>
         <source>Sent to</source>
         <translation>Habi gschiggd</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="365"/>
+        <location filename="../transactiontablemodel.cpp" line="366"/>
         <source>Payment to yourself</source>
         <translation>An mi Selba</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="367"/>
+        <location filename="../transactiontablemodel.cpp" line="368"/>
         <source>Mined</source>
         <translation>fom Kisdn ma´ha</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="370"/>
+        <location filename="../transactiontablemodel.cpp" line="371"/>
         <source>Darksend Denominate</source>
         <translation>Zum Kapuzzal-ma´ha kloina gmachd</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="372"/>
+        <location filename="../transactiontablemodel.cpp" line="373"/>
         <source>Darksend Collateral Payment</source>
         <translation>Darksend Schudzgoid</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="374"/>
+        <location filename="../transactiontablemodel.cpp" line="375"/>
         <source>Darksend Make Collateral Inputs</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="376"/>
+        <location filename="../transactiontablemodel.cpp" line="377"/>
         <source>Darksend Create Denominations</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="378"/>
+        <location filename="../transactiontablemodel.cpp" line="379"/>
         <source>Darksent</source>
         <translation>mit Kappuzal gschickd</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="420"/>
+        <location filename="../transactiontablemodel.cpp" line="421"/>
         <source>(n/a)</source>
         <translation>(woasined)</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="612"/>
+        <location filename="../transactiontablemodel.cpp" line="613"/>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
         <translation>Wi siha is das´s globd had mid dem Goid sendn/empfang´n. Duasd dain Mauszaigerl üba di Tränsäktschn und dann sigsd wi ofds scho ainbaud woan is in di Kischderl.</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="614"/>
+        <location filename="../transactiontablemodel.cpp" line="615"/>
         <source>Date and time that the transaction was received.</source>
         <translation>Wans griggd hosd, die Tränsäktschn.</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="616"/>
+        <location filename="../transactiontablemodel.cpp" line="617"/>
         <source>Type of transaction.</source>
         <translation>Art. (Hund, Kazzal, Giggala, ...)</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="618"/>
+        <location filename="../transactiontablemodel.cpp" line="619"/>
         <source>Destination address of transaction.</source>
         <translation>An wen des Goid gehd.</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="620"/>
+        <location filename="../transactiontablemodel.cpp" line="621"/>
         <source>Amount removed from or added to balance.</source>
         <translation>Des Goid des weg ganga is oda dazukimma.</translation>
     </message>
@@ -4246,7 +4246,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="198"/>
         <source>Connection options:</source>
-        <translation type="unfinished"/>
+        <translation>Connection options:</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="199"/>
@@ -4316,7 +4316,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="212"/>
         <source>Error connecting to masternode.</source>
-        <translation type="unfinished"/>
+        <translation>Kann di Masternode ned erraichn.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="213"/>
@@ -4521,7 +4521,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="253"/>
         <source>Input is not valid.</source>
-        <translation type="unfinished"/>
+        <translation>Hä? Was solln des sain?: input not valid</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="254"/>
@@ -4536,7 +4536,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="256"/>
         <source>Insufficient funds.</source>
-        <translation type="unfinished"/>
+        <translation>Ned gnug Goid aschd.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="257"/>
@@ -4576,12 +4576,12 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="264"/>
         <source>Invalid private key.</source>
-        <translation type="unfinished"/>
+        <translation>Des Schpürcherl passd ned.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="265"/>
         <source>Invalid script detected.</source>
-        <translation type="unfinished"/>
+        <translation>Dai Script is Schrott.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="266"/>
@@ -4931,7 +4931,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="335"/>
         <source>Signing transaction failed</source>
-        <translation type="unfinished"/>
+        <translation>Is was schiefglaufn. (signing failed)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="336"/>
@@ -4966,7 +4966,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="342"/>
         <source>Specify your own public address</source>
-        <translation type="unfinished"/>
+        <translation>Unter welcha Numma solln di di Andan kenna?</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="343"/>
@@ -4981,12 +4981,12 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="345"/>
         <source>System error: </source>
-        <translation type="unfinished"/>
+        <translation>System error: </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="346"/>
         <source>This help message</source>
-        <translation type="unfinished"/>
+        <translation>Di Hälp Massidsch</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="347"/>
@@ -4996,7 +4996,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="348"/>
         <source>This is not a masternode.</source>
-        <translation type="unfinished"/>
+        <translation>Däs is kai Masternode.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="349"/>
@@ -5050,146 +5050,151 @@ If the file does not exist, create it with owner-readable-only file permissions.
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="359"/>
-        <source>Unknown -socks proxy version requested: %i</source>
+        <source>Unable to sign spork message, wrong key?</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="360"/>
-        <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
+        <source>Unknown -socks proxy version requested: %i</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="361"/>
+        <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="362"/>
         <source>Upgrade wallet to latest format</source>
         <translation>Schraib n Goidbaidl so um das ma alles schön lesn kann...</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="362"/>
+        <location filename="../bitcoinstrings.cpp" line="363"/>
         <source>Usage (deprecated, use darkcoin-cli):</source>
         <translation>Des gibds scho lang nimma, mai machsd hald &quot;darkcoin-cli&quot; wi sies kört. </translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="363"/>
+        <location filename="../bitcoinstrings.cpp" line="364"/>
         <source>Usage:</source>
         <translation>brauchdma füa</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="364"/>
+        <location filename="../bitcoinstrings.cpp" line="365"/>
         <source>Use KeePass 2 integration using KeePassHttp plugin (default: 0)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="365"/>
+        <location filename="../bitcoinstrings.cpp" line="366"/>
         <source>Use N separate masternodes to anonymize funds  (2-8, default: 2)</source>
         <translation>X faschihdene Mastanoods fürs Kapuzzn-Schbui nuzn (2 bis 8, kört: 8)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="366"/>
+        <location filename="../bitcoinstrings.cpp" line="367"/>
         <source>Use OpenSSL (https) for JSON-RPC connections</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="367"/>
+        <location filename="../bitcoinstrings.cpp" line="368"/>
         <source>Use UPnP to map the listening port (default: 0)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="368"/>
+        <location filename="../bitcoinstrings.cpp" line="369"/>
         <source>Use UPnP to map the listening port (default: 1 when listening)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="369"/>
+        <location filename="../bitcoinstrings.cpp" line="370"/>
         <source>Use the test network</source>
         <translation>Nur im Kindazimma spuin</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="370"/>
+        <location filename="../bitcoinstrings.cpp" line="371"/>
         <source>Username for JSON-RPC connections</source>
         <translation>Wih magsch haisn wennd mim Jäison saim Er Pe Ze schbrichsd</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="371"/>
+        <location filename="../bitcoinstrings.cpp" line="372"/>
         <source>Value more than Darksend pool maximum allows.</source>
-        <translation type="unfinished"/>
+        <translation>Soi fui kansch ned auf aimal zum Kapuzznma´ha schickn... Schick weniga.</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="372"/>
+        <location filename="../bitcoinstrings.cpp" line="373"/>
         <source>Verifying blocks...</source>
         <translation>Kisdn a-schaung obs au guud sin...</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="373"/>
+        <location filename="../bitcoinstrings.cpp" line="374"/>
         <source>Verifying wallet...</source>
         <translation>Goidbaidl wiad untersuchd...</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="374"/>
+        <location filename="../bitcoinstrings.cpp" line="375"/>
         <source>Wait for RPC server to start</source>
         <translation>Wardsch kurz aufn Är Pe CE Sörfa damids logehd</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="375"/>
+        <location filename="../bitcoinstrings.cpp" line="376"/>
         <source>Wallet %s resides outside data directory %s</source>
         <translation>Dai Goidbaidl %s is ned da wora hikört sondan is da: %s</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="376"/>
+        <location filename="../bitcoinstrings.cpp" line="377"/>
         <source>Wallet is locked.</source>
         <translation>Goidbaidl is zua.</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="377"/>
+        <location filename="../bitcoinstrings.cpp" line="378"/>
         <source>Wallet needed to be rewritten: restart Darkcoin to complete</source>
         <translation>Dai Darkcoin Koa - Programmal mussma kurz zuma´ha damit dai Goidbaidl final wida funzt.</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="378"/>
+        <location filename="../bitcoinstrings.cpp" line="379"/>
         <source>Wallet options:</source>
         <translation>Aischdellungän fürn Goidbaidl:</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="379"/>
+        <location filename="../bitcoinstrings.cpp" line="380"/>
         <source>Warning</source>
         <translation>Obacht</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="380"/>
+        <location filename="../bitcoinstrings.cpp" line="381"/>
         <source>Warning: Deprecated argument -debugnet ignored, use -debug=net</source>
         <translation>Des gibds scho lang nimma des &quot;-debugnet&quot;, mai machsd hald &quot;-debug=net&quot; wi sies kört.</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="381"/>
+        <location filename="../bitcoinstrings.cpp" line="382"/>
         <source>Warning: This version is obsolete, upgrade required!</source>
         <translation>Obacht: Dai Wersion is so oid, da hodda Kini no glebd. Up-Da-Ten mussd - SOFORT!</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="382"/>
+        <location filename="../bitcoinstrings.cpp" line="383"/>
         <source>Wrong state.</source>
         <translation>Im foischn Zuschdand.</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="383"/>
+        <location filename="../bitcoinstrings.cpp" line="384"/>
         <source>You need to rebuild the database using -reindex to change -txindex</source>
         <translation>Dai databäis is im Oarsch. Machsdan &quot;-reindex&quot; dann gods daim -txindex wihda bessa</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="384"/>
+        <location filename="../bitcoinstrings.cpp" line="385"/>
         <source>Zapping all transactions from wallet...</source>
         <translation>Olle Übawaisung´n wäan grod umbatschd bis mas nime a-käänd...</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="385"/>
+        <location filename="../bitcoinstrings.cpp" line="386"/>
         <source>on startup</source>
         <translation>wenn da Kompjuda gschdardet wiad</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="386"/>
+        <location filename="../bitcoinstrings.cpp" line="387"/>
         <source>version</source>
         <translation>Wersion</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="387"/>
+        <location filename="../bitcoinstrings.cpp" line="388"/>
         <source>wallet.dat corrupt, salvage failed</source>
         <translation>Dai &quot;walled.dat&quot; is im Oarsch! Un´d gretted kanns au ned wäan.</translation>
     </message>

@@ -187,7 +187,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../addresstablemodel.cpp" line="205"/>
         <source>(no label)</source>
-        <translation>[нет метки]</translation>
+        <translation>(нет метки)</translation>
     </message>
 </context>
 <context>
@@ -215,7 +215,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="108"/>
         <source>Serves to disable the trivial sendmoney when OS account compromised. Provides no real security.</source>
-        <translation>Служит для простейшего отключения функции sendmoney в случае компрометации аккаунта ОС. Не обеспечивает настоящей безопасности.</translation>
+        <translation>Служит для простейшего отключения функции sendmoney в случае компрометации аккаунта ОС. Не обеспечивает существенной безопасности.</translation>
     </message>
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="111"/>
@@ -225,7 +225,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../askpassphrasedialog.cpp" line="41"/>
         <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;10 or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
-        <translation>Введите новый пароль бумажника.&lt;br/&gt;Используйте пароль, состоящий из &lt;b&gt;десяти или более случайных символов&lt;/b&gt;, или &lt;b&gt;восьми или более слов&lt;/b&gt;.</translation>
+        <translation>Введите новый пароль бумажника.&lt;br/&gt;Используйте пароль, состоящий из &lt;b&gt;10 или более случайных символов&lt;/b&gt; или &lt;b&gt;восьми или более слов&lt;/b&gt;.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="42"/>
@@ -235,7 +235,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../askpassphrasedialog.cpp" line="48"/>
         <source>This operation needs your wallet passphrase to unlock the wallet.</source>
-        <translation>Для выполнения операции требуется пароль вашего бумажника.</translation>
+        <translation>Для выполнения операции разблокирования требуется пароль вашего бумажника.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="53"/>
@@ -245,7 +245,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../askpassphrasedialog.cpp" line="56"/>
         <source>This operation needs your wallet passphrase to decrypt the wallet.</source>
-        <translation>Для выполнения операции требуется пароль вашего бумажника.</translation>
+        <translation>Для выполнения операции расшифрования требуется пароль вашего бумажника.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="61"/>
@@ -270,7 +270,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../askpassphrasedialog.cpp" line="113"/>
         <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR DARKCOINS&lt;/b&gt;!</source>
-        <translation>Внимание: если вы зашифруете бумажник и потеряете пароль, вы &lt;b&gt;ПОТЕРЯЕТЕ ВСЕ ВАШИ ДАРККОЙНЫ&lt;/b&gt;!</translation>
+        <translation>Внимание: если Вы зашифруете бумажник и потеряете пароль, вы &lt;b&gt;ПОТЕРЯЕТЕ ВСЕ ВАШИ ДАРККОЙНЫ&lt;/b&gt;!</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="113"/>
@@ -338,7 +338,7 @@ This product includes software developed by the OpenSSL Project for use in the O
         <location filename="../askpassphrasedialog.cpp" line="230"/>
         <location filename="../askpassphrasedialog.cpp" line="254"/>
         <source>Warning: The Caps Lock key is on!</source>
-        <translation>Внимание: Caps Lock включен!</translation>
+        <translation>Внимание: включен Caps Lock!</translation>
     </message>
 </context>
 <context>
@@ -418,7 +418,7 @@ This product includes software developed by the OpenSSL Project for use in the O
         <location filename="../bitcoingui.cpp" line="270"/>
         <location filename="../bitcoingui.cpp" line="272"/>
         <source>&amp;About Darkcoin Core</source>
-        <translation>&amp;О Darkcoin Core</translation>
+        <translation>О &amp;Darkcoin Core</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="273"/>
@@ -439,7 +439,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="282"/>
         <source>&amp;Options...</source>
-        <translation>&amp;Параметры...</translation>
+        <translation>&amp;Настройки...</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="283"/>
@@ -460,12 +460,12 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="291"/>
         <source>&amp;Encrypt Wallet...</source>
-        <translation>&amp;Зашифровать бумажник...</translation>
+        <translation>За&amp;шифровать бумажник...</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="292"/>
         <source>Encrypt the private keys that belong to your wallet</source>
-        <translation>Зашифровать приватные ключи, принадлежащие вашему бумажнику</translation>
+        <translation>Зашифровать закрытые ключи, содержащиеся в вашем бумажнике</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="294"/>
@@ -500,27 +500,27 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="300"/>
         <source>&amp;Lock Wallet</source>
-        <translation>&amp;Заблокировать бумажник</translation>
+        <translation>За&amp;блокировать бумажник</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="301"/>
         <source>Sign &amp;message...</source>
-        <translation>&amp;Подписать сообщение...</translation>
+        <translation>П&amp;одписать сообщение...</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="302"/>
         <source>Sign messages with your Darkcoin addresses to prove you own them</source>
-        <translation>Подписать сообщения вашим адресом Darkcoin, чтобы доказать, что вы им владеете</translation>
+        <translation>Подписать сообщения вашими адресами Darkcoin, чтобы доказать, что вы ими владеете</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="303"/>
         <source>&amp;Verify message...</source>
-        <translation>&amp;Проверить сообщение...</translation>
+        <translation>П&amp;роверить сообщение...</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="304"/>
         <source>Verify messages to ensure they were signed with specified Darkcoin addresses</source>
-        <translation>Проверить сообщения, чтобы удостовериться, что они были подписаны определённым адресом Bitcoin</translation>
+        <translation>Проверить сообщения, чтобы удостовериться, что они были подписаны определёнными адресами Darkcoin</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="306"/>
@@ -555,12 +555,12 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="313"/>
         <source>&amp;Sending addresses...</source>
-        <translation>&amp;Адреса отправки...</translation>
+        <translation>Адреса &amp;отправки...</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="314"/>
         <source>Show the list of used sending addresses and labels</source>
-        <translation>Показать список использованных адресов и меток отправки</translation>
+        <translation>Показать список использованных адресов отправки и их меток</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="315"/>
@@ -570,7 +570,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="316"/>
         <source>Show the list of used receiving addresses and labels</source>
-        <translation>Показать список использованных адресов и меток получения</translation>
+        <translation>Показать список использованных адресов получения и их меток</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="318"/>
@@ -585,12 +585,12 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="321"/>
         <source>&amp;Command-line options</source>
-        <translation>&amp;Пармаетры командной строки</translation>
+        <translation>&amp;Параметры командной строки</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="322"/>
         <source>Show the Darkcoin Core help message to get a list with possible Darkcoin command-line options</source>
-        <translation>Показать помощь о Darkcoin Core со списком возможных опций командной строки</translation>
+        <translation>Показать помощь о Darkcoin Core со списком возможных параметров командной строки</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="358"/>
@@ -636,7 +636,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="653"/>
         <source>Importing blocks from disk...</source>
-        <translation>Импортируются блоки с диска...</translation>
+        <translation>Выполняется импорт блоков с диска...</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="656"/>
@@ -702,7 +702,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="737"/>
         <source>Transactions after this will not yet be visible.</source>
-        <translation>Транзакции после него пока не будут видны.</translation>
+        <translation>Транзакции после этого времени пока видны не будут.</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="750"/>
@@ -765,7 +765,7 @@ Address: %4
     <message>
         <location filename="../darkcoin.cpp" line="449"/>
         <source>A fatal error occurred. Darkcoin can no longer continue safely and will quit.</source>
-        <translation>Произошла критическая ошибка. Дальнейшая безопасная работа Darkcoin нефозможна и он будет закрыт.</translation>
+        <translation>Произошла критическая ошибка. Дальнейшая безопасная работа Darkcoin невозможна, приложение будет закрыто.</translation>
     </message>
 </context>
 <context>
@@ -773,7 +773,7 @@ Address: %4
     <message>
         <location filename="../clientmodel.cpp" line="135"/>
         <source>Network Alert</source>
-        <translation>Сетевая Тревога</translation>
+        <translation>Сетевая тревога</translation>
     </message>
 </context>
 <context>
@@ -947,7 +947,7 @@ Address: %4
     <message>
         <location filename="../coincontroldialog.cpp" line="411"/>
         <source>higher</source>
-        <translation>выше</translation>
+        <translation>выше высокого</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="412"/>
@@ -977,7 +977,7 @@ Address: %4
     <message>
         <location filename="../coincontroldialog.cpp" line="420"/>
         <source>lower</source>
-        <translation>ниже</translation>
+        <translation>ниже низкого</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="421"/>
@@ -992,7 +992,7 @@ Address: %4
     <message>
         <location filename="../coincontroldialog.cpp" line="464"/>
         <source>none</source>
-        <translation>ничего</translation>
+        <translation>нет</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="605"/>
@@ -1012,7 +1012,7 @@ Address: %4
     <message>
         <location filename="../coincontroldialog.cpp" line="615"/>
         <source>This label turns red, if the transaction size is greater than 1000 bytes.</source>
-        <translation>Эта пометка становится красной, если размер транзакции больше 1000 байт.</translation>
+        <translation>Эта метка становится красной, если размер транзакции больше 1000 байт.</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="616"/>
@@ -1023,22 +1023,22 @@ Address: %4
     <message>
         <location filename="../coincontroldialog.cpp" line="617"/>
         <source>Can vary +/- 1 byte per input.</source>
-        <translation>Может отличаться на +/- 1 байт на вход.</translation>
+        <translation>Может отличаться на +/- 1 байт на каждый вход.</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="619"/>
         <source>Transactions with higher priority are more likely to get included into a block.</source>
-        <translation>Транзакции с более высоким приоритетом будут вероятнее других включены в блок.</translation>
+        <translation>Транзакции с более высоким приоритетом имеют больше шансов на включение в блок.</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="620"/>
         <source>This label turns red, if the priority is smaller than &quot;medium&quot;.</source>
-        <translation>Эта пометка становится красной, если приоритет ниже, чем &quot;средний&quot;.</translation>
+        <translation>Эта метка становится красной, если приоритет ниже, чем &quot;средний&quot;.</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="623"/>
         <source>This label turns red, if any recipient receives an amount smaller than %1.</source>
-        <translation>Эта пометка становится красной, если какой-либо из адресатов получает сумму менее %1.</translation>
+        <translation>Эта метка становится красной, если какой-либо из адресатов получает сумму менее %1.</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="624"/>
@@ -1060,7 +1060,7 @@ Address: %4
         <location filename="../coincontroldialog.cpp" line="670"/>
         <location filename="../coincontroldialog.cpp" line="731"/>
         <source>(no label)</source>
-        <translation>[нет метки]</translation>
+        <translation>(нет метки)</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="724"/>
@@ -1070,7 +1070,7 @@ Address: %4
     <message>
         <location filename="../coincontroldialog.cpp" line="725"/>
         <source>(change)</source>
-        <translation>(размен)</translation>
+        <translation>(сдача)</translation>
     </message>
 </context>
 <context>
@@ -1145,17 +1145,17 @@ Address: %4
     <message>
         <location filename="../darksendconfig.cpp" line="44"/>
         <source>Darksend was successfully set to basic (%1 and 2 rounds). You can change this at any time by opening Darkcoin&apos;s configuration screen.</source>
-        <translation>Darksend успешно установлен в режим обычной приватности (%1 и 2 раунда). Вы можете изменить эти настройки в любое время, открыв соответсвующий экран.</translation>
+        <translation>Darksend успешно установлен в режим обычной приватности (%1 и 2 раунда). Вы можете изменить это в любое время, используя окно настроек.</translation>
     </message>
     <message>
         <location filename="../darksendconfig.cpp" line="59"/>
         <source>Darksend was successfully set to high (%1 and 8 rounds). You can change this at any time by opening Darkcoin&apos;s configuration screen.</source>
-        <translation>Darksend успешно установлен в режим высокой приватности (%1 и 8 раундов). Вы можете изменить эти настройки в любое время, открыв соответсвующий экран.</translation>
+        <translation>Darksend успешно установлен в режим высокой приватности (%1 и 8 раундов). Вы можете изменить это в любое время, используя окно настроек.</translation>
     </message>
     <message>
         <location filename="../darksendconfig.cpp" line="74"/>
         <source>Darksend was successfully set to maximum (%1 and 16 rounds). You can change this at any time by opening Darkcoin&apos;s configuration screen.</source>
-        <translation>Darksend успешно установлен в режим максимально приватности (%1 и 16 раундов). Вы можете изменить эти настройки в любое время, открыв соответсвующий экран.</translation>
+        <translation>Darksend успешно установлен в режим максимально приватности (%1 и 16 раундов). Вы можете изменить это в любое время, используя окно настроек.</translation>
     </message>
 </context>
 <context>
@@ -1208,12 +1208,12 @@ Address: %4
     <message>
         <location filename="../editaddressdialog.cpp" line="111"/>
         <source>The entered address &quot;%1&quot; is not a valid Darkcoin address.</source>
-        <translation>Введённый адрес &quot;%1&quot; не является правильным Darkcoin-адресом.</translation>
+        <translation>Введённый адрес &quot;%1&quot; не является правильным адресом Darkcoin.</translation>
     </message>
     <message>
         <location filename="../editaddressdialog.cpp" line="116"/>
         <source>The entered address &quot;%1&quot; is already in the address book.</source>
-        <translation>Введённый адрес «%1» уже находится в адресной книге.</translation>
+        <translation>Введённый адрес &quot;%1&quot; уже находится в адресной книге.</translation>
     </message>
     <message>
         <location filename="../editaddressdialog.cpp" line="121"/>
@@ -1259,7 +1259,7 @@ Address: %4
     <message>
         <location filename="../forms/helpmessagedialog.ui" line="19"/>
         <source>Darkcoin Core - Command-line options</source>
-        <translation>Darkcoin Core - опции командной строки</translation>
+        <translation>Darkcoin Core - параметры командной строки</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="69"/>
@@ -1309,7 +1309,7 @@ Address: %4
     <message>
         <location filename="../utilitydialog.cpp" line="81"/>
         <source>Show splash screen on startup (default: 1)</source>
-        <translation>Показывать сплэш при запуске (по умолчанию: 1)</translation>
+        <translation>Показывать заставку при запуске (по умолчанию: 1)</translation>
     </message>
 </context>
 <context>
@@ -1332,7 +1332,7 @@ Address: %4
     <message>
         <location filename="../forms/intro.ui" line="59"/>
         <source>Darkcoin Core will download and store a copy of the Darkcoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
-        <translation>Darkcoin Core скачает и сохранит копию цепи блоков. Как минимум, %1ГБ данных будет храниться в этом каталоге, и со временем он будет расти. Бумажник будет также сохранён в этом каталоге.</translation>
+        <translation>Darkcoin Core скачает и сохранит копию цепочки блоков. Как минимум %1ГБ данных будет храниться в этом каталоге и размер данных будет со временем расти. В этом же каталоге будет сохранён бумажник.</translation>
     </message>
     <message>
         <location filename="../forms/intro.ui" line="69"/>
@@ -1403,7 +1403,7 @@ Address: %4
     <message>
         <location filename="../forms/optionsdialog.ui" line="14"/>
         <source>Options</source>
-        <translation>Параметры</translation>
+        <translation>Настройки</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="27"/>
@@ -1473,7 +1473,7 @@ Address: %4
     <message>
         <location filename="../forms/optionsdialog.ui" line="271"/>
         <source>Expert</source>
-        <translation>Эксперт</translation>
+        <translation>Настройки для опытных пользователей</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="277"/>
@@ -1488,7 +1488,7 @@ Address: %4
     <message>
         <location filename="../forms/optionsdialog.ui" line="287"/>
         <source>If you disable the spending of unconfirmed change, the change from a transaction cannot be used until that transaction has at least one confirmation. This also affects how your balance is computed.</source>
-        <translation>При отключении траты неподтверждённой сдачи, сдача от транзакции не может быть использована до тех пор пока у этой транзакции не будет хотя бы одно подтверждение. Это также влияет как ваш баланс рассчитывается.</translation>
+        <translation>При отключении траты неподтверждённой сдачи, сдача от транзакции не может быть использована до тех пор, пока у этой транзакции не будет хотя бы одно подтверждение. Это также влияет на то, как рассчитывается ваш баланс.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="290"/>
@@ -1503,7 +1503,7 @@ Address: %4
     <message>
         <location filename="../forms/optionsdialog.ui" line="307"/>
         <source>Automatically open the Darkcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation>Автоматически открыть порт для Darkcoin-клиента на роутере. Работает только если Ваш роутер поддерживает UPnP, и данная функция включена.</translation>
+        <translation>Автоматически открыть порт для клиента Darkcoin на роутере. Работает только в том случае, если Ваш роутер поддерживает UPnP и данная функция включена.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="310"/>
@@ -1528,7 +1528,7 @@ Address: %4
     <message>
         <location filename="../forms/optionsdialog.ui" line="354"/>
         <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
-        <translation>IP-адрес прокси (например IPv4: 127.0.0.1 / IPv6: ::1)</translation>
+        <translation>IP-адрес прокси (например, IPv4: 127.0.0.1 / IPv6: ::1)</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="361"/>
@@ -1558,7 +1558,7 @@ Address: %4
     <message>
         <location filename="../forms/optionsdialog.ui" line="448"/>
         <source>Show only a tray icon after minimizing the window.</source>
-        <translation>Показывать только иконку в системном лотке после сворачивания окна.</translation>
+        <translation>После сворачивания окна показывать только иконку в системном лотке.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="451"/>
@@ -1568,7 +1568,7 @@ Address: %4
     <message>
         <location filename="../forms/optionsdialog.ui" line="458"/>
         <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Quit in the menu.</source>
-        <translation>Сворачивать вместо закрытия. Если данная опция будет выбрана — приложение закроется только после выбора соответствующего пункта в меню.</translation>
+        <translation>Сворачивать вместо закрытия. Если данная настройка будет выбрана, то приложение закроется только после выбора пункта меню Завершить.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="461"/>
@@ -1619,12 +1619,12 @@ Address: %4
     <message>
         <location filename="../forms/optionsdialog.ui" line="551"/>
         <source>Third party transaction URLs</source>
-        <translation>Сторонние URL транзакций</translation>
+        <translation>Сторонние URL для транзакций</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="592"/>
         <source>Active command-line options that override above options:</source>
-        <translation>Активные опции командной строки, которые перекрывают вышеуказанные опции:</translation>
+        <translation>Активные параметры командной строки, которые перекрывают вышеуказанные настройки:</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="635"/>
@@ -1634,7 +1634,7 @@ Address: %4
     <message>
         <location filename="../forms/optionsdialog.ui" line="638"/>
         <source>&amp;Reset Options</source>
-        <translation>&amp;Сбросить параметры</translation>
+        <translation>&amp;Сбросить настройки</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="699"/>
@@ -1644,7 +1644,7 @@ Address: %4
     <message>
         <location filename="../forms/optionsdialog.ui" line="706"/>
         <source>&amp;Cancel</source>
-        <translation>&amp;Отмена</translation>
+        <translation>О&amp;тмена</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="73"/>
@@ -1654,12 +1654,12 @@ Address: %4
     <message>
         <location filename="../optionsdialog.cpp" line="134"/>
         <source>none</source>
-        <translation>ничего</translation>
+        <translation>нет</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="222"/>
         <source>Confirm options reset</source>
-        <translation>Подтвердите сброс параметров</translation>
+        <translation>Подтвердите сброс настроек</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="223"/>
@@ -1670,7 +1670,7 @@ Address: %4
     <message>
         <location filename="../optionsdialog.cpp" line="223"/>
         <source>Client will be shutdown, do you want to proceed?</source>
-        <translation>Клиент будет выключен, желаете продолжить?</translation>
+        <translation>Клиент будет выключен, хотите продолжить?</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="257"/>
@@ -1709,7 +1709,7 @@ Address: %4
     <message>
         <location filename="../forms/overviewpage.ui" line="130"/>
         <source>Your current spendable balance</source>
-        <translation>Ваш текущий расходный баланс</translation>
+        <translation>Ваш текущий баланс, доступный для расходования</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="146"/>
@@ -1719,7 +1719,7 @@ Address: %4
     <message>
         <location filename="../forms/overviewpage.ui" line="162"/>
         <source>Total of transactions that have yet to be confirmed, and do not yet count toward the spendable balance</source>
-        <translation>Общая сумма всех транзакций, которые до сих пор не подтверждены, и до сих пор не учитываются в расходном балансе</translation>
+        <translation>Общая сумма всех транзакций, которые до сих пор не подтверждены и еще не учитываются в балансе, доступном для расходования</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="178"/>
@@ -1749,7 +1749,7 @@ Address: %4
     <message>
         <location filename="../forms/overviewpage.ui" line="309"/>
         <source>Enabled/Disabled</source>
-        <translation>Включено/Выключено</translation>
+        <translation>Включен/Выключен</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="316"/>
@@ -1779,12 +1779,12 @@ Address: %4
     <message>
         <location filename="../forms/overviewpage.ui" line="370"/>
         <source>Submitted Denom:</source>
-        <translation>Деноминации:</translation>
+        <translation>Отправленные номиналы:</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="377"/>
         <source>The denominations you submitted to the Masternode. To mix, other users must submit the exact same denominations.</source>
-        <translation>Деноминации, предоставленные Вами мастерноде. Для перемешивания другие пользователи должны предоставить точно такой же набор деноминаций.</translation>
+        <translation>Номиналы, предоставленные Вами мастерноде. Для перемешивания другие пользователи должны предоставить точно такой же набор номиналов.</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="380"/>
@@ -1802,7 +1802,7 @@ Address: %4
     <message>
         <location filename="../forms/overviewpage.ui" line="858"/>
         <source>Start/Stop Mixing</source>
-        <translation>Начать/Остановить автоматическое перемешивание</translation>
+        <translation>Начать/остановить автоматическое перемешивание</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="890"/>
@@ -1822,7 +1822,7 @@ Address: %4
     <message>
         <location filename="../forms/overviewpage.ui" line="937"/>
         <source>Reset the current status of Darksend (can interrupt Darksend if it&apos;s in the process of Mixing, which can cost you money!)</source>
-        <translation>Сбросить текущий статус Darksend (можно прервать процесс перемешивания Darksend, но это может стоить Вам немного денег)</translation>
+        <translation>Сбросить текущий статус Darksend (можно прервать процесс перемешивания Darksend, но это может стоить Вам немного денег!)</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="943"/>
@@ -1838,7 +1838,7 @@ Address: %4
         <location filename="../overviewpage.cpp" line="126"/>
         <location filename="../overviewpage.cpp" line="127"/>
         <source>out of sync</source>
-        <translation>не синхронизировано</translation>
+        <translation>несинхронизировано</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="142"/>
@@ -1867,7 +1867,7 @@ Address: %4
     <message>
         <location filename="../overviewpage.cpp" line="275"/>
         <source>Found unconfirmed denominated outputs, will wait till they confirm to recalculate.</source>
-        <translation>Найдены неподтвержденные деноминированные монеты, пересчет будет выполнен после их подтверждения.</translation>
+        <translation>Найдены неподтвержденные номиналы, пересчет будет выполнен после их подтверждения.</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="332"/>
@@ -1987,7 +1987,7 @@ Address: %4
     <message>
         <location filename="../overviewpage.cpp" line="463"/>
         <source>Darksend requires at least %1 to use.</source>
-        <translation>Для работы Darksend требуется как минимум %1.</translation>
+        <translation>Для работы Darksend требуется минимум %1.</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="477"/>
@@ -2010,7 +2010,7 @@ Address: %4
     <message>
         <location filename="../paymentserver.cpp" line="294"/>
         <source>Cannot start darkcoin: click-to-pay handler</source>
-        <translation>Не удаётся запустить darkcoin: обработчик click-to-pay</translation>
+        <translation>Не удаётся запустить обработчик darkcoin: click-to-pay</translation>
     </message>
     <message>
         <location filename="../paymentserver.cpp" line="352"/>
@@ -2036,7 +2036,7 @@ Address: %4
     <message>
         <location filename="../paymentserver.cpp" line="418"/>
         <source>URI can not be parsed! This can be caused by an invalid Darkcoin address or malformed URI parameters.</source>
-        <translation>Не могу прочесть URI! Возможно указан некорректный адрес Darkcoin либо параметры URI сформированы неверно.</translation>
+        <translation>Не удалось разобрать URI! Возможно указан некорректный адрес Darkcoin либо параметры URI сформированы неверно.</translation>
     </message>
     <message>
         <location filename="../paymentserver.cpp" line="432"/>
@@ -2046,7 +2046,7 @@ Address: %4
     <message>
         <location filename="../paymentserver.cpp" line="433"/>
         <source>Payment request file can not be read or processed! This can be caused by an invalid payment request file.</source>
-        <translation>Не могу прочесть файл запроса платежа! Возможно это некоректный файл.</translation>
+        <translation>Не удается прочесть файл запроса платежа! Возможно это некоректный файл.</translation>
     </message>
     <message>
         <location filename="../paymentserver.cpp" line="506"/>
@@ -2056,7 +2056,7 @@ Address: %4
     <message>
         <location filename="../paymentserver.cpp" line="514"/>
         <source>Requested payment amount of %1 is too small (considered dust).</source>
-        <translation>Запрошенная сумма платежа %1 слишком мала (считается пылью).</translation>
+        <translation>Запрошенная сумма платежа %1 слишком мала (считается &quot;пылью&quot;).</translation>
     </message>
     <message>
         <location filename="../paymentserver.cpp" line="565"/>
@@ -2071,7 +2071,7 @@ Address: %4
     <message>
         <location filename="../paymentserver.cpp" line="632"/>
         <source>Payment request can not be parsed or processed!</source>
-        <translation>Не могу прочитать или обработать запрос платежа!</translation>
+        <translation>Не могу разобрать или обработать запрос платежа!</translation>
     </message>
     <message>
         <location filename="../paymentserver.cpp" line="643"/>
@@ -2107,7 +2107,7 @@ Address: %4
     <message>
         <location filename="../darkcoin.cpp" line="533"/>
         <source>Error: Cannot parse configuration file: %1. Only use key=value syntax.</source>
-        <translation>Ошибка: Не могу прочитать файл настроек: %1. Используйте для настроек только строки ключ=значение.</translation>
+        <translation>Ошибка: не могу прочитать файл настроек: %1. Используйте для настроек только строки ключ=значение.</translation>
     </message>
     <message>
         <location filename="../darkcoin.cpp" line="540"/>
@@ -2117,7 +2117,7 @@ Address: %4
     <message>
         <location filename="../darkcoin.cpp" line="552"/>
         <source>Error: Invalid combination of -regtest and -testnet.</source>
-        <translation>Ошибка: Недопустимая комбинация опций -regtest и -testnet.</translation>
+        <translation>Ошибка: недопустимая комбинация опций -regtest и -testnet.</translation>
     </message>
     <message>
         <location filename="../darkcoin.cpp" line="612"/>
@@ -2207,7 +2207,7 @@ Address: %4
     <message>
         <location filename="../forms/rpcconsole.ui" line="90"/>
         <source>Open the Darkcoin debug log file from the current data directory. This can take a few seconds for large log files.</source>
-        <translation>Открыть отладочный лог-файл Darkcoin из текущего каталога данных. Это может занять несколько секунд для больших лог-файлов.</translation>
+        <translation>Открыть отладочный лог-файл Darkcoin из текущего каталога данных. Для больших лог-файлов эта операция может занять несколько секунд.</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="93"/>
@@ -2247,7 +2247,7 @@ Address: %4
     <message>
         <location filename="../forms/rpcconsole.ui" line="205"/>
         <source>Current number of blocks</source>
-        <translation>Текущее число блоков</translation>
+        <translation>Текущее количество блоков</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="305"/>
@@ -2257,7 +2257,7 @@ Address: %4
     <message>
         <location filename="../forms/rpcconsole.ui" line="334"/>
         <source>Block chain</source>
-        <translation>Цепь блоков</translation>
+        <translation>Цепочка блоков</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="349"/>
@@ -2363,7 +2363,7 @@ Address: %4
         <location filename="../forms/receivecoinsdialog.ui" line="51"/>
         <location filename="../forms/receivecoinsdialog.ui" line="74"/>
         <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Darkcoin network.</source>
-        <translation>Необязательное сообщение для запроса платежа, которое будет показано при открытии запроса. Заметьте: сообщение не будет отправлено вместе с платежом через сеть Darkcoin.</translation>
+        <translation>Необязательное сообщение для запроса платежа, которое будет показано при открытии запроса. Обратите внимание: сообщение не будет отправлено вместе с платежом через сеть Darkcoin.</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="54"/>
@@ -2458,7 +2458,7 @@ Address: %4
     <message>
         <location filename="../forms/receiverequestdialog.ui" line="29"/>
         <source>QR Code</source>
-        <translation>QR код</translation>
+        <translation>QR-код</translation>
     </message>
     <message>
         <location filename="../forms/receiverequestdialog.ui" line="75"/>
@@ -2546,7 +2546,7 @@ Address: %4
     <message>
         <location filename="../recentrequeststablemodel.cpp" line="62"/>
         <source>(no label)</source>
-        <translation>[нет метки]</translation>
+        <translation>(нет метки)</translation>
     </message>
     <message>
         <location filename="../recentrequeststablemodel.cpp" line="71"/>
@@ -2572,7 +2572,7 @@ Address: %4
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="90"/>
         <source>Coin Control Features</source>
-        <translation>Функции Контроля Монет</translation>
+        <translation>Функции контроля монет</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="110"/>
@@ -2582,7 +2582,7 @@ Address: %4
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="117"/>
         <source>automatically selected</source>
-        <translation>автоматически выбрано</translation>
+        <translation>выбраны автоматически</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="136"/>
@@ -2627,7 +2627,7 @@ Address: %4
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="500"/>
         <source>Change:</source>
-        <translation>Размен:</translation>
+        <translation>Сдача:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="544"/>
@@ -2722,12 +2722,12 @@ Address: %4
     <message>
         <location filename="../sendcoinsdialog.cpp" line="60"/>
         <source>Copy change</source>
-        <translation>Копировать размен</translation>
+        <translation>Копировать сдачу</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="155"/>
         <source>(darksend requires this amount to be rounded up to the nearest %1).</source>
-        <translation>(darksend принудительно округляет до ближайшего %1).</translation>
+        <translation>(для работы darksend требуется принудительно округлить до ближайшего %1).</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="189"/>
@@ -2780,7 +2780,7 @@ Address: %4
     <message>
         <location filename="../sendcoinsdialog.cpp" line="492"/>
         <source>The amount to pay must be larger than 0.</source>
-        <translation>Сумма для отправки должно быть больше 0.</translation>
+        <translation>Сумма для отправки должна быть больше 0.</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="495"/>
@@ -2825,7 +2825,7 @@ Address: %4
     <message>
         <location filename="../sendcoinsdialog.cpp" line="646"/>
         <source>(no label)</source>
-        <translation>[нет метки]</translation>
+        <translation>(нет метки)</translation>
     </message>
 </context>
 <context>
@@ -2848,7 +2848,7 @@ Address: %4
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="61"/>
         <source>Choose previously used address</source>
-        <translation>Выберите ранее использованный адрес</translation>
+        <translation>Выбрать ранее использованный адрес</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="71"/>
@@ -2897,7 +2897,7 @@ Address: %4
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="157"/>
         <source>A message that was attached to the darkcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Darkcoin network.</source>
-        <translation>К bitcoin: URI было прикреплено сообщение, которое будет сохранено вместе с транзакцией для вашего сведения. Заметьте: сообщение не будет отправлено через сеть Darkcoin.</translation>
+        <translation>К bitcoin: URI было прикреплено сообщение, которое будет сохранено вместе с транзакцией для вашего сведения. Обратите внимание: сообщение не будет отправлено через сеть Darkcoin.</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="583"/>
@@ -2924,7 +2924,7 @@ Address: %4
     <message>
         <location filename="../sendcoinsentry.cpp" line="31"/>
         <source>Enter a label for this address to add it to your address book</source>
-        <translation>Введите метку для данного адреса (для добавления в адресную книгу)</translation>
+        <translation>Введите метку для данного адреса для добавления его в адресную книгу</translation>
     </message>
 </context>
 <context>
@@ -2960,13 +2960,13 @@ Address: %4
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="48"/>
         <source>The address to sign the message with (e.g. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</source>
-        <translation>Адрес, которым вы хотите подписать сообщение (например, XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
+        <translation>Адрес, которым Вы хотите подписать сообщение (например, XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="55"/>
         <location filename="../forms/signverifymessagedialog.ui" line="265"/>
         <source>Choose previously used address</source>
-        <translation>Выберите ранее использованный адрес</translation>
+        <translation>Выбрать ранее использованный адрес</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="65"/>
@@ -3002,17 +3002,17 @@ Address: %4
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="152"/>
         <source>Sign the message to prove you own this Darkcoin address</source>
-        <translation>Подписать сообщение, чтобы доказать владение адресом Darkcoin</translation>
+        <translation>Подписать сообщение, чтобы доказать владение этим адресом Darkcoin</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="155"/>
         <source>Sign &amp;Message</source>
-        <translation>Подписать &amp;Сообщение</translation>
+        <translation>Подписать &amp;сообщение</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="169"/>
         <source>Reset all sign message fields</source>
-        <translation>Сбросить значения всех полей подписывания сообщений</translation>
+        <translation>Сбросить значения всех полей формы подписывания сообщений</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="172"/>
@@ -3043,12 +3043,12 @@ Address: %4
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="298"/>
         <source>Verify &amp;Message</source>
-        <translation>Проверить &amp;Сообщение</translation>
+        <translation>Проверить &amp;сообщение</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="312"/>
         <source>Reset all verify message fields</source>
-        <translation>Сбросить все поля проверки сообщения</translation>
+        <translation>Сбросить все поля формы проверки сообщения</translation>
     </message>
     <message>
         <location filename="../signverifymessagedialog.cpp" line="30"/>
@@ -3088,7 +3088,7 @@ Address: %4
     <message>
         <location filename="../signverifymessagedialog.cpp" line="138"/>
         <source>Private key for the entered address is not available.</source>
-        <translation>Для введённого адреса недоступен закрытый ключ.</translation>
+        <translation>Закрытый ключ для введённого адреса недоступен.</translation>
     </message>
     <message>
         <location filename="../signverifymessagedialog.cpp" line="150"/>
@@ -3168,7 +3168,7 @@ Address: %4
     <message numerus="yes">
         <location filename="../transactiondesc.cpp" line="28"/>
         <source>Open for %n more block(s)</source>
-        <translation><numerusform>Открыто для ещё %n блока</numerusform><numerusform>Открыто для ещё %n блоков</numerusform><numerusform>Открыто для ещё %n блоков</numerusform></translation>
+        <translation><numerusform>Будет открыто ещё %n блок</numerusform><numerusform>Будет открыто ещё %n блока</numerusform><numerusform>Будет открыто ещё %n блоков</numerusform></translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="30"/>
@@ -3359,7 +3359,7 @@ Address: %4
     <message>
         <location filename="../transactiondesc.cpp" line="292"/>
         <source>Generated coins must mature %1 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to &quot;not accepted&quot; and it won&apos;t be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.</source>
-        <translation>Сгенерированные монеты должны подождать %1 блоков, прежде чем они могут быть потрачены. Когда Вы сгенерировали этот блок, он был отправлен в сеть для добавления в цепочку блоков. Если он не попадёт в цепь, его статус изменится на &quot;не принят&quot;, и монеты будут недействительны. Это иногда происходит в случае, если другой узел сгенерирует блок на несколько секунд раньше вас.</translation>
+        <translation>Сгенерированные монеты должны подождать %1 блоков, прежде чем они могут быть потрачены. Когда Вы сгенерировали этот блок, он был отправлен в сеть для добавления в цепочку блоков. Если он не попадёт в цепочку, его статус изменится на &quot;не принят&quot;, и монеты будут недействительны. Это иногда происходит в случае, если другой узел сгенерирует блок на несколько секунд раньше вас.</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="300"/>
@@ -3408,159 +3408,159 @@ Address: %4
 <context>
     <name>TransactionTableModel</name>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="238"/>
+        <location filename="../transactiontablemodel.cpp" line="239"/>
         <source>Date</source>
         <translation>Дата</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="238"/>
+        <location filename="../transactiontablemodel.cpp" line="239"/>
         <source>Type</source>
         <translation>Тип</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="238"/>
+        <location filename="../transactiontablemodel.cpp" line="239"/>
         <source>Address</source>
         <translation>Адрес</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="238"/>
+        <location filename="../transactiontablemodel.cpp" line="239"/>
         <source>Amount</source>
         <translation>Сумма</translation>
     </message>
     <message numerus="yes">
-        <location filename="../transactiontablemodel.cpp" line="287"/>
+        <location filename="../transactiontablemodel.cpp" line="288"/>
         <source>Open for %n more block(s)</source>
-        <translation><numerusform>Открыто для ещё %n блока</numerusform><numerusform>Открыто для ещё %n блоков</numerusform><numerusform>Открыто для ещё %n блоков</numerusform></translation>
+        <translation><numerusform>Будет открыто ещё %n блок</numerusform><numerusform>Будет открыто ещё %n блока</numerusform><numerusform>Будет открыто ещё %n блоков</numerusform></translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="290"/>
+        <location filename="../transactiontablemodel.cpp" line="291"/>
         <source>Open until %1</source>
         <translation>Открыто до %1</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="293"/>
+        <location filename="../transactiontablemodel.cpp" line="294"/>
         <source>Offline</source>
         <translation>Нет активных соединений с сетью</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="296"/>
+        <location filename="../transactiontablemodel.cpp" line="297"/>
         <source>Unconfirmed</source>
         <translation>Неподтверждено</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="299"/>
+        <location filename="../transactiontablemodel.cpp" line="300"/>
         <source>Confirming (%1 of %2 recommended confirmations)</source>
         <translation>Подтверждается (%1 из %2 рекомендованных подтверждений)</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="302"/>
+        <location filename="../transactiontablemodel.cpp" line="303"/>
         <source>Confirmed (%1 confirmations)</source>
         <translation>Подтверждено (%1 подтверждений)</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="305"/>
+        <location filename="../transactiontablemodel.cpp" line="306"/>
         <source>Conflicted</source>
         <translation>В противоречии</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="308"/>
+        <location filename="../transactiontablemodel.cpp" line="309"/>
         <source>Immature (%1 confirmations, will be available after %2)</source>
         <translation>Незрелый (%1 подтверждений, будет доступен после %2)</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="311"/>
+        <location filename="../transactiontablemodel.cpp" line="312"/>
         <source>This block was not received by any other nodes and will probably not be accepted!</source>
         <translation>Этот блок не был получен другими узлами и, возможно, не будет принят!</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="314"/>
+        <location filename="../transactiontablemodel.cpp" line="315"/>
         <source>Generated but not accepted</source>
         <translation>Сгенерированно, но не подтверждено</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="356"/>
+        <location filename="../transactiontablemodel.cpp" line="357"/>
         <source>Received with</source>
         <translation>Получено</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="358"/>
+        <location filename="../transactiontablemodel.cpp" line="359"/>
         <source>Received from</source>
         <translation>Получено от</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="360"/>
+        <location filename="../transactiontablemodel.cpp" line="361"/>
         <source>Received via Darksend</source>
         <translation>Получено через Darksend</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="363"/>
+        <location filename="../transactiontablemodel.cpp" line="364"/>
         <source>Sent to</source>
         <translation>Отправлено</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="365"/>
+        <location filename="../transactiontablemodel.cpp" line="366"/>
         <source>Payment to yourself</source>
         <translation>Отправлено себе</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="367"/>
+        <location filename="../transactiontablemodel.cpp" line="368"/>
         <source>Mined</source>
         <translation>Добыто</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="370"/>
+        <location filename="../transactiontablemodel.cpp" line="371"/>
         <source>Darksend Denominate</source>
         <translation>Перемешивание Darksend</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="372"/>
+        <location filename="../transactiontablemodel.cpp" line="373"/>
         <source>Darksend Collateral Payment</source>
         <translation>Обеспечительный платеж Darksend</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="374"/>
+        <location filename="../transactiontablemodel.cpp" line="375"/>
         <source>Darksend Make Collateral Inputs</source>
-        <translation type="unfinished"/>
+        <translation>Создание обеспечительных монет для Darksend</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="376"/>
+        <location filename="../transactiontablemodel.cpp" line="377"/>
         <source>Darksend Create Denominations</source>
-        <translation type="unfinished"/>
+        <translation>Создание номиналов для Darksend</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="378"/>
+        <location filename="../transactiontablemodel.cpp" line="379"/>
         <source>Darksent</source>
         <translation>Отправлено через Darksend</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="420"/>
+        <location filename="../transactiontablemodel.cpp" line="421"/>
         <source>(n/a)</source>
         <translation>(н/д)</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="612"/>
+        <location filename="../transactiontablemodel.cpp" line="613"/>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
         <translation>Статус транзакции. Подведите курсор к нужному полю для того, чтобы увидеть количество подтверждений.</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="614"/>
+        <location filename="../transactiontablemodel.cpp" line="615"/>
         <source>Date and time that the transaction was received.</source>
         <translation>Дата и время, когда транзакция была получена.</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="616"/>
+        <location filename="../transactiontablemodel.cpp" line="617"/>
         <source>Type of transaction.</source>
         <translation>Тип транзакции.</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="618"/>
+        <location filename="../transactiontablemodel.cpp" line="619"/>
         <source>Destination address of transaction.</source>
         <translation>Адрес назначения транзакции.</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="620"/>
+        <location filename="../transactiontablemodel.cpp" line="621"/>
         <source>Amount removed from or added to balance.</source>
-        <translation>Сумма, добавленная, или снятая с баланса.</translation>
+        <translation>Сумма, снятая с баланса или добавленная на него.</translation>
     </message>
 </context>
 <context>
@@ -3619,12 +3619,12 @@ Address: %4
     <message>
         <location filename="../transactionview.cpp" line="82"/>
         <source>Darksend Make Collateral Inputs</source>
-        <translation type="unfinished"/>
+        <translation>Создание обеспечительных монет для Darksend</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="83"/>
         <source>Darksend Create Denominations</source>
-        <translation type="unfinished"/>
+        <translation>Создание номиналов для Darksend</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="84"/>
@@ -3842,13 +3842,13 @@ It is also recommended to set alertnotify so you are notified of problems;
 for example: alertnotify=echo %%s | mail -s &quot;Darkcoin Alert&quot; admin@foo.com
 </source>
         <translation>%s, вы должны установить опцию rpcpassword в конфигурационном файле:
- %s
+%s
 Рекомендуется использовать следующий случайный пароль:
 rpcuser=darkcoinrpc
 rpcpassword=%s
 (вам не нужно запоминать этот пароль)
 Имя и пароль ДОЛЖНЫ различаться.
-Если файл не существует, создайте его и установите права доступа только для владельца, только для чтения.
+Если файл не существует, то создайте его и оставьте права на чтение только для владельца.
 Также рекомендуется включить alertnotify для оповещения о проблемах;
 Например: alertnotify=echo %%s | mail -s &quot;Darkcoin Alert&quot; admin@foo.com
 </translation>
@@ -3861,12 +3861,12 @@ rpcpassword=%s
     <message>
         <location filename="../bitcoinstrings.cpp" line="32"/>
         <source>An error occurred while setting up the RPC port %u for listening on IPv4: %s</source>
-        <translation>Произошла ошибка при настройке RPC порта %u на IPv4: %s</translation>
+        <translation>Произошла ошибка при настройке прослушивания RPC порта %u на IPv4: %s</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="34"/>
         <source>An error occurred while setting up the RPC port %u for listening on IPv6, falling back to IPv4: %s</source>
-        <translation>Произошла ошибка при настройке RPC порта %u на IP6, откатываемся обратно на IPv4: %s</translation>
+        <translation>Произошла ошибка при настройке прослушивания RPC порта %u на IP6, откатываемся обратно на IPv4: %s</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="37"/>
@@ -3886,7 +3886,7 @@ rpcpassword=%s
     <message>
         <location filename="../bitcoinstrings.cpp" line="46"/>
         <source>Darksend uses exact denominated amounts to send funds, you might simply need to anonymize some more coins.</source>
-        <translation>При отправке Darksend использует только деноминированные средства, возможно Вам просто нужно анонимизировать немного больше монет.</translation>
+        <translation>При отправке Darksend использует только деноминированные средства, возможно, Вам просто нужно анонимизировать немного больше монет.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="49"/>
@@ -3901,17 +3901,17 @@ rpcpassword=%s
     <message>
         <location filename="../bitcoinstrings.cpp" line="54"/>
         <source>Enable use of automated darksend for funds stored in this wallet (0-1, default: 0)</source>
-        <translation>Включить автоматической перемешивание Darksend для средств, хранящихся в этом бумажнике (0-1, по умолчанию: 0)</translation>
+        <translation>Включить автоматическое перемешивание Darksend для средств, хранящихся в этом бумажнике (0-1, по умолчанию: 0)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="57"/>
         <source>Enter regression test mode, which uses a special chain in which blocks can be solved instantly. This is intended for regression testing tools and app development.</source>
-        <translation>Перейти в регрессионный тестовый режим, в котором используется специальная цепчка с мгновенным нахождением блоков. Этот режим предназначен для инстументов регрессионного тестирования и разработки приложения.</translation>
+        <translation>Перейти в регрессионный тестовый режим, в котором используется специальная цепочка с мгновенным нахождением блоков. Этот режим предназначен для инструментов регрессионного тестирования и разработки приложения.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="61"/>
         <source>Enter regression test mode, which uses a special chain in which blocks can be solved instantly.</source>
-        <translation>Войти в режим тестирования на регрессии, в котором используется специальная цепь, где блоки находятся мгновенно.</translation>
+        <translation>Войти в режим регрессионного тестирования, в котором используется специальная цепочка, где блоки находятся мгновенно.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="64"/>
@@ -3931,12 +3931,12 @@ rpcpassword=%s
     <message>
         <location filename="../bitcoinstrings.cpp" line="73"/>
         <source>Error: Wallet unlocked for anonymization only, unable to create transaction.</source>
-        <translation>Ошибка: Бумажник разблокирован только для анонимизации, создание транзакций невозможно.</translation>
+        <translation>Ошибка: Бумажник разблокирован только для анонимизации, создание транзакции невозможно.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="75"/>
         <source>Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)</source>
-        <translation>Выполнить команду, когда приходит соответствующее сообщение о тревоге или наблюдается очень длинное расщепление цепи (%s в команде заменяется на сообщение)</translation>
+        <translation>Выполнить команду, когда приходит соответствующее сообщение о тревоге или наблюдается очень длинная альтернативная цепочка блоков (%s в команде заменяется на сообщение)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="78"/>
@@ -3946,7 +3946,7 @@ rpcpassword=%s
     <message>
         <location filename="../bitcoinstrings.cpp" line="81"/>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
-        <translation>Выполнить команду, когда появляется новый блок (%s в команде заменяется на хэш блока)</translation>
+        <translation>Выполнить команду при появлении нового блока (%s в команде заменяется на хэш блока)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="84"/>
@@ -3961,7 +3961,7 @@ rpcpassword=%s
     <message>
         <location filename="../bitcoinstrings.cpp" line="90"/>
         <source>Found unconfirmed denominated outputs, will wait till they confirm to continue.</source>
-        <translation>Найдены неподтвержденные деноминированные монеты, процесс продолжится после их подтверждения.</translation>
+        <translation>Найдены неподтверждённые номиналы, процесс продолжится после их подтверждения.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="93"/>
@@ -4001,7 +4001,7 @@ rpcpassword=%s
     <message>
         <location filename="../bitcoinstrings.cpp" line="110"/>
         <source>Provide liquidity to Darksend by infrequently mixing coins on a continual basis (0-100, default: 0, 1=very frequent, high fees, 100=very infrequent, low fees)</source>
-        <translation>Предоставлять ликвидность для Darksend путем нечастого участия в перемешивании монет на постоянной основе (0-100б по умолчанию: 0, 1=очень часто, высокая комиссия, 100=очень нечасто, низкая комиссия)</translation>
+        <translation>Предоставлять ликвидность для Darksend путем редкого участия в перемешивании монет на постоянной основе (0-100, по умолчанию: 0, 1=очень часто, высокая комиссия, 100=очень редко, низкая комиссия)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="114"/>
@@ -4031,7 +4031,7 @@ rpcpassword=%s
     <message>
         <location filename="../bitcoinstrings.cpp" line="127"/>
         <source>Show N confirmations for a successfully locked transaction (0-9999, default: 1)</source>
-        <translation type="unfinished"/>
+        <translation>Показывать N подтверждений для успешно заблокированной транзакции (0-9999, по умолчанию: 1)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="130"/>
@@ -4041,12 +4041,12 @@ rpcpassword=%s
     <message>
         <location filename="../bitcoinstrings.cpp" line="133"/>
         <source>Unable to bind to %s on this computer. Darkcoin Core is probably already running.</source>
-        <translation>Не удалось забиндиться на %s на этом компьютере. Возможно, Darkcoin Core уже запущен.</translation>
+        <translation>Не удалось привязаться к %s на этом компьютере. Возможно, Darkcoin Core уже запущен.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="136"/>
         <source>Unable to locate enough Darksend denominated funds for this transaction.</source>
-        <translation>Не удалось найти достаточного для выполнения этой транзакции средств Darksend.</translation>
+        <translation>Не удалось обнаружить достаточных для выполнения этой транзакции номиналов Darksend.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="138"/>
@@ -4066,22 +4066,22 @@ rpcpassword=%s
     <message>
         <location filename="../bitcoinstrings.cpp" line="146"/>
         <source>Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
-        <translation>Внимание: установлено очень большое значение -paytxfee. Это комиссия, которую вы заплатите при проведении транзакции.</translation>
+        <translation>Внимание: установлено очень большое значение -paytxfee. Это комиссия, которую Вы заплатите при проведении транзакции.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="149"/>
         <source>Warning: Please check that your computer&apos;s date and time are correct! If your clock is wrong Darkcoin will not work properly.</source>
-        <translation>Предупреждение: Пожалуйста, убедитесь что дата и время на Вашем компьютере выставлены правильно! Если эти настройки неправильны, Darkcoin будет не сможет работать корректно.</translation>
+        <translation>Внимание: пожалуйста, убедитесь что дата и время на Вашем компьютере выставлены правильно! Darkcoin будет не сможет работать корректно, если часы настроены неверно.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="152"/>
         <source>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</source>
-        <translation>Внимание: похоже, в сети нет полного согласия! Некоторый майнеры, возможно, испытывают проблемы.</translation>
+        <translation>Внимание: похоже, что в сети нет полного согласия! Некоторый майнеры, возможно, испытывают проблемы.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="155"/>
         <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
-        <translation>Внимание: мы не полностью согласны с подключенными участниками! Вам или другим участникам, возможно, следует обновиться.</translation>
+        <translation>Внимание: обнаружено несогласие с подключенными участниками! Вам или другим участникам, возможно, следует обновиться.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="158"/>
@@ -4091,7 +4091,7 @@ rpcpassword=%s
     <message>
         <location filename="../bitcoinstrings.cpp" line="161"/>
         <source>Warning: wallet.dat corrupt, data salvaged! Original wallet.dat saved as wallet.{timestamp}.bak in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
-        <translation>Внимание: wallet.dat повреждён, данные спасены! Оригинальный wallet.dat сохранён как wallet.{timestamp}.bak в %s; если ваш баланс или транзакции некорректны, вы должны восстановить файл из резервной копии.</translation>
+        <translation>Внимание: wallet.dat повреждён, данные спасены! Оригинальный wallet.dat сохранён как wallet.{timestamp}.bak в %s. Если Ваш баланс или транзакции некорректны, Вы должны восстановить файл из резервной копии.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="165"/>
@@ -4150,7 +4150,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="181"/>
         <source>Already have that input.</source>
-        <translation>Уже есть эти входы.</translation>
+        <translation>Уже есть этот вход.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="182"/>
@@ -4160,7 +4160,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="183"/>
         <source>Attempt to recover private keys from a corrupt wallet.dat</source>
-        <translation>Попытаться восстановить приватные ключи из повреждённого wallet.dat</translation>
+        <translation>Попытаться восстановить закрытые ключи из повреждённого wallet.dat</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="184"/>
@@ -4170,7 +4170,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="185"/>
         <source>Can&apos;t denominate: no compatible inputs left.</source>
-        <translation>Разбиение невозможно: не осталось совместимых монет.</translation>
+        <translation>Разбиение на номиналы невозможно: не осталось совместимых монет.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="186"/>
@@ -4230,7 +4230,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="197"/>
         <source>Connect to a node to retrieve peer addresses, and disconnect</source>
-        <translation>Подключиться к участнику, чтобы получить список адресов других участников и отключиться</translation>
+        <translation>Подключиться к участнику, чтобы получить список адресов других участников, и отключиться</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="198"/>
@@ -4240,17 +4240,17 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="199"/>
         <source>Corrupted block database detected</source>
-        <translation>БД блоков повреждена</translation>
+        <translation>База данных блоков повреждена</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="200"/>
         <source>Darkcoin Core Daemon</source>
-        <translation>Darkcoin Core демон</translation>
+        <translation>Демон Darkcoin Core</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="201"/>
         <source>Darkcoin Core RPC client version</source>
-        <translation>Версия Darkcoin Core RPC-клиента</translation>
+        <translation>Версия RPC-клиента Darkcoin Core</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="202"/>
@@ -4260,7 +4260,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="203"/>
         <source>Darksend options:</source>
-        <translation>Опции Darksend:</translation>
+        <translation>Параметры Darksend:</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="204"/>
@@ -4285,7 +4285,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="208"/>
         <source>Do you want to rebuild the block database now?</source>
-        <translation>Пересобрать БД блоков прямо сейчас?</translation>
+        <translation>Перестроить базу данных блоков прямо сейчас?</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="209"/>
@@ -4310,7 +4310,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="213"/>
         <source>Error initializing block database</source>
-        <translation>Ошибка инициализации БД блоков</translation>
+        <translation>Ошибка инициализации базы данных блоков</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="214"/>
@@ -4320,7 +4320,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="215"/>
         <source>Error loading block database</source>
-        <translation>Ошибка чтения базы данных блоков</translation>
+        <translation>Ошибка загрузки базы данных блоков</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="216"/>
@@ -4330,17 +4330,17 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="217"/>
         <source>Error loading wallet.dat: Wallet corrupted</source>
-        <translation>Ошибка загрузки wallet.dat: Бумажник поврежден</translation>
+        <translation>Ошибка загрузки wallet.dat: бумажник поврежден</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="218"/>
         <source>Error loading wallet.dat: Wallet requires newer version of Darkcoin</source>
-        <translation>Ошибка загрузки wallet.dat: Бумажник требует более новой версии Darkcoin</translation>
+        <translation>Ошибка загрузки wallet.dat: бумажник требует более новой версии Darkcoin</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="219"/>
         <source>Error opening block database</source>
-        <translation>Не удалось открыть БД блоков</translation>
+        <translation>Не удалось открыть базу данных блоков</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="220"/>
@@ -4365,12 +4365,12 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="224"/>
         <source>Error: Wallet locked, unable to create transaction!</source>
-        <translation>Ошибка: бумажник заблокирован, невозможно создать транзакцию!</translation>
+        <translation>Ошибка: бумажник заблокирован, создание транзакции невозможно!</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="225"/>
         <source>Error: You already have pending entries in the Darksend pool</source>
-        <translation>Ошибка: У Вас уже есть ожидающие записи в пуле Darksend</translation>
+        <translation>Ошибка: у Вас уже есть ожидающие записи в пуле Darksend</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="226"/>
@@ -4380,7 +4380,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="227"/>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
-        <translation>Не удалось начать прослушивание на порту. Используйте -listen=0 если вас это устраивает.</translation>
+        <translation>Не удалось начать прослушивание на порту. Используйте -listen=0, если вас это устраивает.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="228"/>
@@ -4505,7 +4505,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="252"/>
         <source>Initialization sanity check failed. Darkcoin Core is shutting down.</source>
-        <translation>Не удалось проверить чистоту. Darkcoin Core выключается.</translation>
+        <translation>Проверка на непротиворечивость закончилась неудачно. Darkcoin Core выключается.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="253"/>
@@ -4515,12 +4515,12 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="254"/>
         <source>InstantX options:</source>
-        <translation>Опции InstantX:</translation>
+        <translation>Параметры InstantX:</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="255"/>
         <source>Insufficient funds</source>
-        <translation>Недостаточно монет</translation>
+        <translation>Недостаточно средств</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="256"/>
@@ -4660,7 +4660,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="283"/>
         <source>Masternode options:</source>
-        <translation>Опции мастерноды:</translation>
+        <translation>Параметры мастерноды:</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="284"/>
@@ -4695,7 +4695,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="290"/>
         <source>No funds detected in need of denominating.</source>
-        <translation>Не обнаружено средств для дальнейшего разбиения.</translation>
+        <translation>Не обнаружено средств для дальнейшего разбиения на номиналы.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="291"/>
@@ -4705,7 +4705,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="292"/>
         <source>No matching denominations found for mixing.</source>
-        <translation>Отсутствуют совпадаюшие для перемешивания монеты.</translation>
+        <translation>Отсутствуют совпадающие для перемешивания номиналы.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="293"/>
@@ -4730,7 +4730,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="297"/>
         <source>Only accept block chain matching built-in checkpoints (default: 1)</source>
-        <translation>Принимать цепь блоков, лишь если она соответствует встроенным контрольным точкам (по умолчанию: 1)</translation>
+        <translation>Принимать цепочку блоков только в том случае, если она соответствует встроенным контрольным точкам (по умолчанию: 1)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="298"/>
@@ -4750,7 +4750,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="301"/>
         <source>Prepend debug output with timestamp (default: 1)</source>
-        <translation>Дописывать отметки времени к отладочному выводу (по умолчанию: 1)</translation>
+        <translation>Дописывать в начало отладочного вывода отметки времени (по умолчанию: 1)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="302"/>
@@ -4770,7 +4770,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="305"/>
         <source>RPC client options:</source>
-        <translation>Опции RPC-клиента:</translation>
+        <translation>Параметры RPC-клиента:</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="306"/>
@@ -4790,12 +4790,12 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="309"/>
         <source>Rebuild block chain index from current blk000??.dat files</source>
-        <translation>Перестроить индекс цепи блоков из текущих файлов blk000??.dat</translation>
+        <translation>Перестроить индекс цепочки блоков из текущих файлов blk000??.dat</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="310"/>
         <source>Rescan the block chain for missing wallet transactions</source>
-        <translation>Перепроверить цепь блоков на предмет отсутствующих в бумажнике транзакций</translation>
+        <translation>Перепроверить цепочку блоков на предмет отсутствующих в бумажнике транзакций</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="311"/>
@@ -4825,7 +4825,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="316"/>
         <source>Send command to Darkcoin Core</source>
-        <translation>Отправляет команду Darkcoin Core</translation>
+        <translation>Отправить команду Darkcoin Core</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="317"/>
@@ -4870,7 +4870,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="325"/>
         <source>Set maximum block size in bytes (default: %d)</source>
-        <translation>Задать максимальный размер блока в байтах (по умолчанию: %d)</translation>
+        <translation>Установить максимальный размер блока в байтах (по умолчанию: %d)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="326"/>
@@ -4920,7 +4920,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="335"/>
         <source>Signing transaction failed</source>
-        <translation>Не удалось подписать транзакцию</translation>
+        <translation>Подписание транзакции завершилось неудачно.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="336"/>
@@ -4930,7 +4930,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="337"/>
         <source>Specify connection timeout in milliseconds (default: 5000)</source>
-        <translation>Указать таймаут соединения в миллисекундах (по умолчанию: 5000)</translation>
+        <translation>Указать тайм-аут соединения в миллисекундах (по умолчанию: 5000)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="338"/>
@@ -4955,7 +4955,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="342"/>
         <source>Specify your own public address</source>
-        <translation>Укажите ваш собственный публичный адрес</translation>
+        <translation>Укажите Ваш собственный публичный адрес</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="343"/>
@@ -4995,7 +4995,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="350"/>
         <source>To use the %s option</source>
-        <translation>Чтобы использовать опцию %s</translation>
+        <translation>Чтобы использовать параметр %s</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="351"/>
@@ -5030,7 +5030,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="357"/>
         <source>Unable to bind to %s on this computer (bind returned error %s)</source>
-        <translation>Невозможно привязаться к %s на этом компьютере (bind вернул ошибку %s)</translation>
+        <translation>Невозможно привязаться к %s на этом компьютере (привязка вернула ошибку %s)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="358"/>
@@ -5039,146 +5039,151 @@ If the file does not exist, create it with owner-readable-only file permissions.
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="359"/>
+        <source>Unable to sign spork message, wrong key?</source>
+        <translation>Не удалось подписать spork-сообщение. Неправильный ключ?</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="360"/>
         <source>Unknown -socks proxy version requested: %i</source>
         <translation>Запрошена неизвестная версия -socks прокси: %i</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="360"/>
+        <location filename="../bitcoinstrings.cpp" line="361"/>
         <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
         <translation>В параметре -onlynet указана неизвестная сеть: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="361"/>
+        <location filename="../bitcoinstrings.cpp" line="362"/>
         <source>Upgrade wallet to latest format</source>
         <translation>Обновить бумажник до последнего формата</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="362"/>
+        <location filename="../bitcoinstrings.cpp" line="363"/>
         <source>Usage (deprecated, use darkcoin-cli):</source>
         <translation>Использование (устарело, используйте darkcoin-cli):</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="363"/>
+        <location filename="../bitcoinstrings.cpp" line="364"/>
         <source>Usage:</source>
         <translation>Использование:</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="364"/>
+        <location filename="../bitcoinstrings.cpp" line="365"/>
         <source>Use KeePass 2 integration using KeePassHttp plugin (default: 0)</source>
         <translation>Использовать интеграцию с KeePass 2 через плагин KeePassHttp (по умолчанию: 0)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="365"/>
+        <location filename="../bitcoinstrings.cpp" line="366"/>
         <source>Use N separate masternodes to anonymize funds  (2-8, default: 2)</source>
         <translation>Использовать N отдельных мастернод для анонимизации средств (2-8, по умолчанию: 2)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="366"/>
+        <location filename="../bitcoinstrings.cpp" line="367"/>
         <source>Use OpenSSL (https) for JSON-RPC connections</source>
         <translation>Использовать OpenSSL (https) для подключений JSON-RPC</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="367"/>
+        <location filename="../bitcoinstrings.cpp" line="368"/>
         <source>Use UPnP to map the listening port (default: 0)</source>
         <translation>Использовать UPnP для проброса порта (по умолчанию: 0)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="368"/>
+        <location filename="../bitcoinstrings.cpp" line="369"/>
         <source>Use UPnP to map the listening port (default: 1 when listening)</source>
         <translation>Использовать UPnP для проброса порта (по умолчанию: 1, если используется прослушивание)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="369"/>
+        <location filename="../bitcoinstrings.cpp" line="370"/>
         <source>Use the test network</source>
         <translation>Использовать тестовую сеть</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="370"/>
+        <location filename="../bitcoinstrings.cpp" line="371"/>
         <source>Username for JSON-RPC connections</source>
         <translation>Имя для подключений JSON-RPC</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="371"/>
+        <location filename="../bitcoinstrings.cpp" line="372"/>
         <source>Value more than Darksend pool maximum allows.</source>
         <translation>Превышено значение допустимой для пула Darksend суммы.</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="372"/>
+        <location filename="../bitcoinstrings.cpp" line="373"/>
         <source>Verifying blocks...</source>
         <translation>Проверка блоков...</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="373"/>
+        <location filename="../bitcoinstrings.cpp" line="374"/>
         <source>Verifying wallet...</source>
         <translation>Проверка бумажника...</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="374"/>
+        <location filename="../bitcoinstrings.cpp" line="375"/>
         <source>Wait for RPC server to start</source>
         <translation>Дождаться старта RPC сервера</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="375"/>
+        <location filename="../bitcoinstrings.cpp" line="376"/>
         <source>Wallet %s resides outside data directory %s</source>
         <translation>Бумажник %s располагается вне каталога данных %s</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="376"/>
+        <location filename="../bitcoinstrings.cpp" line="377"/>
         <source>Wallet is locked.</source>
         <translation>Бумажник заблокирован.</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="377"/>
+        <location filename="../bitcoinstrings.cpp" line="378"/>
         <source>Wallet needed to be rewritten: restart Darkcoin to complete</source>
         <translation>Необходимо перезаписать бумажник: перезапустите Darkcoin для завершения операции</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="378"/>
+        <location filename="../bitcoinstrings.cpp" line="379"/>
         <source>Wallet options:</source>
-        <translation>Настройки бумажника:</translation>
+        <translation>Параметры бумажника:</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="379"/>
+        <location filename="../bitcoinstrings.cpp" line="380"/>
         <source>Warning</source>
         <translation>Внимание</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="380"/>
+        <location filename="../bitcoinstrings.cpp" line="381"/>
         <source>Warning: Deprecated argument -debugnet ignored, use -debug=net</source>
-        <translation>Предупреждение: Опция -debugnet устарела и проигнорирована, используйте -debug=net</translation>
+        <translation>Внимание: опция -debugnet устарела и проигнорирована, используйте -debug=net</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="381"/>
+        <location filename="../bitcoinstrings.cpp" line="382"/>
         <source>Warning: This version is obsolete, upgrade required!</source>
         <translation>Внимание: эта версия устарела, требуется обновление!</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="382"/>
+        <location filename="../bitcoinstrings.cpp" line="383"/>
         <source>Wrong state.</source>
         <translation>Неправильное состояние.</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="383"/>
+        <location filename="../bitcoinstrings.cpp" line="384"/>
         <source>You need to rebuild the database using -reindex to change -txindex</source>
         <translation>Вам необходимо пересобрать базы данных с помощью -reindex, чтобы изменить -txindex</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="384"/>
+        <location filename="../bitcoinstrings.cpp" line="385"/>
         <source>Zapping all transactions from wallet...</source>
-        <translation>Стираем все транзакции из кошелька...</translation>
+        <translation>Удаление всех транзакций из кошелька...</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="385"/>
+        <location filename="../bitcoinstrings.cpp" line="386"/>
         <source>on startup</source>
         <translation>при запуске</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="386"/>
+        <location filename="../bitcoinstrings.cpp" line="387"/>
         <source>version</source>
         <translation>версия</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="387"/>
+        <location filename="../bitcoinstrings.cpp" line="388"/>
         <source>wallet.dat corrupt, salvage failed</source>
         <translation>wallet.dat повреждён, спасение данных не удалось</translation>
     </message>
