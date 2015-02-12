@@ -670,7 +670,7 @@ void BitcoinGUI::setNumBlocks(int count)
     tooltip = tr("Processed %1 blocks of transaction history.").arg(count);
 
     // Set icon state: spinning if catching up, tick otherwise
-    if(secs < 90*60)
+    if(secs < 25*60) // 90*60 for bitcoin but we are 4x times faster
     {
         tooltip = tr("Up to date") + QString(".<br>") + tooltip;
         labelBlocksIcon->setPixmap(QIcon(":/icons/synced").pixmap(STATUSBAR_ICONSIZE, STATUSBAR_ICONSIZE));
