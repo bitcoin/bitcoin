@@ -858,7 +858,7 @@ Indirizzo: %4
     <message>
         <location filename="../forms/coincontroldialog.ui" line="451"/>
         <source>Label</source>
-        <translation type="unfinished"/>
+        <translation>Etichetta</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="456"/>
@@ -2643,7 +2643,7 @@ Più URL vengono separati da una barra verticale |.</translation>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="353"/>
         <source>medium</source>
-        <translation type="unfinished"/>
+        <translation>media</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="388"/>
@@ -2658,7 +2658,7 @@ Più URL vengono separati da una barra verticale |.</translation>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="433"/>
         <source>no</source>
-        <translation type="unfinished"/>
+        <translation>no</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="468"/>
