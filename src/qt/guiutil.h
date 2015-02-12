@@ -4,6 +4,9 @@
 #include <QString>
 #include <QObject>
 #include <QMessageBox>
+#include <QWidget>
+#include <QEvent>
+#include <QTextEdit>
 
 QT_BEGIN_NAMESPACE
 class QFont;
@@ -114,6 +117,23 @@ namespace GUIUtil
         QString header;
         QString coreOptions;
         QString uiOptions;
+
+        virtual bool event(QEvent *e) 
+        {
+            bool res = QMessageBox::event(e);
+            switch (e->type()) 
+            {
+                case QEvent::MouseMove:
+                case QEvent::MouseButtonPress:
+                    setMaximumSize(QWIDGETSIZE_MAX, QWIDGETSIZE_MAX);
+                    if (QWidget *textEdit = findChild<QTextEdit *>())
+                    {
+                        textEdit->setMaximumHeight(QWIDGETSIZE_MAX);
+                    }
+            }
+
+            return res;
+        }
     };
     /* Convert seconds into a QString with days, hours, mins, secs */
     QString formatDurationStr(int secs);

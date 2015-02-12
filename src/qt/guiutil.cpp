@@ -462,6 +462,10 @@ HelpMessageBox::HelpMessageBox(QWidget *parent) :
     // setMinimumWidth is ignored for QMessageBox so put in non-breaking spaces to make it wider.
     setText(header + QString(QChar(0x2003)).repeated(50));
     setDetailedText(coreOptions + "\n" + uiOptions);
+    //addButton("OK", QMessageBox::RejectRole); //кнопка OK будет справа от кнопки "Скрыть подробности"
+    addButton("OK", QMessageBox::NoRole);       //кнопка OK будет слева от кнопки "Скрыть подробности"
+    setMouseTracking(true);
+    setSizeGripEnabled(true);   
 }
 
 void HelpMessageBox::printToConsole()
