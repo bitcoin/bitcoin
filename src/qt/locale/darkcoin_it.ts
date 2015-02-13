@@ -266,7 +266,7 @@ Questo prodotto include software sviluppato dal progetto OpenSSL per l&apos;uso 
     <message>
         <location filename="../askpassphrasedialog.cpp" line="65"/>
         <source>Enter the old and new passphrase to the wallet.</source>
-        <translation>Inserisci la vecchia e la nuova passphrase per il portamonete.</translation>
+        <translation>Inserisci la vecchia e la nuova passphrase per il portafoglio.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="112"/>
@@ -310,7 +310,7 @@ Questo prodotto include software sviluppato dal progetto OpenSSL per l&apos;uso 
     <message>
         <location filename="../askpassphrasedialog.cpp" line="138"/>
         <source>Wallet encryption failed due to an internal error. Your wallet was not encrypted.</source>
-        <translation>Cifratura del portamonete fallita a causa di un errore interno. Il portamonete non è stato cifrato.</translation>
+        <translation>Cifratura del portafoglio fallita a causa di un errore interno. Il portafoglio non è stato cifrato.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="145"/>
@@ -328,7 +328,7 @@ Questo prodotto include software sviluppato dal progetto OpenSSL per l&apos;uso 
         <location filename="../askpassphrasedialog.cpp" line="169"/>
         <location filename="../askpassphrasedialog.cpp" line="188"/>
         <source>The passphrase entered for the wallet decryption was incorrect.</source>
-        <translation>La passphrase inserita per la decifrazione del portamonete è errata.</translation>
+        <translation>La passphrase inserita per la decifrazione del portafoglio è errata.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="168"/>
@@ -338,7 +338,7 @@ Questo prodotto include software sviluppato dal progetto OpenSSL per l&apos;uso 
     <message>
         <location filename="../askpassphrasedialog.cpp" line="182"/>
         <source>Wallet passphrase was successfully changed.</source>
-        <translation>Passphrase del portamonete modificata con successo.</translation>
+        <translation>Passphrase del portafoglio modificata con successo.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="230"/>
@@ -398,7 +398,7 @@ Questo prodotto include software sviluppato dal progetto OpenSSL per l&apos;uso 
     <message>
         <location filename="../bitcoingui.cpp" line="241"/>
         <source>Request payments (generates QR codes and darkcoin: URIs)</source>
-        <translation>Richieste di pagamenti (generare codici QR e darkcoin: URLs)</translation>
+        <translation>Richieste di pagamenti (genera codici QR e darkcoin: URLs)</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="247"/>
@@ -491,7 +491,7 @@ Questo prodotto include software sviluppato dal progetto OpenSSL per l&apos;uso 
     <message>
         <location filename="../bitcoingui.cpp" line="297"/>
         <source>Change the passphrase used for wallet encryption</source>
-        <translation>Cambia la passphrase utilizzata per la cifratura del portamonete</translation>
+        <translation>Cambia la passphrase utilizzata per la cifratura del portafoglio</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="298"/>
@@ -586,7 +586,7 @@ Questo prodotto include software sviluppato dal progetto OpenSSL per l&apos;uso 
     <message>
         <location filename="../bitcoingui.cpp" line="319"/>
         <source>Open a darkcoin: URI or payment request</source>
-        <translation>Apri un URI o una richiesta di pagamento</translation>
+        <translation>Apri un darkcoin: URI o una richiesta di pagamento</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="321"/>
@@ -596,7 +596,7 @@ Questo prodotto include software sviluppato dal progetto OpenSSL per l&apos;uso 
     <message>
         <location filename="../bitcoingui.cpp" line="322"/>
         <source>Show the Darkcoin Core help message to get a list with possible Darkcoin command-line options</source>
-        <translation>Mostra il messaggio di aiuto di Darkcoin per ottenere una lista con le possibili opzioni di linea di comando di Darkcoin</translation>
+        <translation>Mostra il messaggio di aiuto di Darkcoin Core per ottenere una lista con le possibili opzioni di linea di comando di Darkcoin</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="358"/>
@@ -914,12 +914,12 @@ Indirizzo: %4
     <message>
         <location filename="../coincontroldialog.cpp" line="47"/>
         <source>Lock unspent</source>
-        <translation>Bloccare non spesi</translation>
+        <translation>Blocca i non spesi</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="48"/>
         <source>Unlock unspent</source>
-        <translation>Sbloccare non spesi</translation>
+        <translation>Sblocca i non spesi</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="70"/>
@@ -934,7 +934,7 @@ Indirizzo: %4
     <message>
         <location filename="../coincontroldialog.cpp" line="73"/>
         <source>Copy after fee</source>
-        <translation>Copia dopo commissione</translation>
+        <translation>Copia al netto della commissione</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="74"/>
@@ -1237,7 +1237,7 @@ Indirizzo: %4
     <message>
         <location filename="../editaddressdialog.cpp" line="121"/>
         <source>Could not unlock wallet.</source>
-        <translation>Impossibile sbloccare il portamonete.</translation>
+        <translation>Impossibile sbloccare il portafoglio.</translation>
     </message>
     <message>
         <location filename="../editaddressdialog.cpp" line="126"/>
@@ -1467,7 +1467,7 @@ Indirizzo: %4
     <message>
         <location filename="../forms/optionsdialog.ui" line="141"/>
         <source>Darksend rounds to use</source>
-        <translation>Darksend round da utilizzare</translation>
+        <translation>Round darksend da utilizzare</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="165"/>
@@ -1567,7 +1567,7 @@ Indirizzo: %4
     <message>
         <location filename="../forms/optionsdialog.ui" line="393"/>
         <source>SOCKS &amp;Version:</source>
-        <translation>SOCKS &amp;Version:</translation>
+        <translation>SOCKS &amp;Versione:</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="406"/>
@@ -1943,7 +1943,7 @@ Più URL vengono separati da una barra verticale |.</translation>
     <message>
         <location filename="../overviewpage.cpp" line="394"/>
         <source>Found enough users, signing ...</source>
-        <translation type="unfinished"/>
+        <translation>Trovati sufficienti fondi, sto firmando...</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="395"/>
@@ -2023,7 +2023,7 @@ Più URL vengono separati da una barra verticale |.</translation>
     <message>
         <location filename="../overviewpage.cpp" line="477"/>
         <source>Wallet is locked and user declined to unlock. Disabling Darksend.</source>
-        <translation type="unfinished"/>
+        <translation>Il p</translation>
     </message>
 </context>
 <context>
@@ -3968,7 +3968,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Darkcoin Alert&quot; admin@foo
     <message>
         <location filename="../bitcoinstrings.cpp" line="73"/>
         <source>Error: Wallet unlocked for anonymization only, unable to create transaction.</source>
-        <translation type="unfinished"/>
+        <translation>Errore: Portafoglio sbloccato solamente per l&apos;anonimizzazione, impossibile creare la transazione.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="75"/>
@@ -4238,12 +4238,12 @@ Se il file non esiste, crealo assegnando i permessi di lettura solamente al prop
     <message>
         <location filename="../bitcoinstrings.cpp" line="191"/>
         <source>Collateral is not valid.</source>
-        <translation type="unfinished"/>
+        <translation>Il collateral non è valido.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="192"/>
         <source>Collateral not valid.</source>
-        <translation type="unfinished"/>
+        <translation>Collateral non valido.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="193"/>
@@ -4258,12 +4258,12 @@ Se il file non esiste, crealo assegnando i permessi di lettura solamente al prop
     <message>
         <location filename="../bitcoinstrings.cpp" line="195"/>
         <source>Connect to JSON-RPC on &lt;port&gt; (default: 9998 or testnet: 19998)</source>
-        <translation type="unfinished"/>
+        <translation>Connetti a JSON-RPC su &lt;port&gt; (predefinita: 9998 o testnet: 19998)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="196"/>
         <source>Connect to KeePassHttp on port &lt;port&gt; (default: 19455)</source>
-        <translation type="unfinished"/>
+        <translation>Connetti a KeePassHttp sulla porta &lt;port&gt; (predefinita: 19455)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="197"/>
@@ -4288,7 +4288,7 @@ Se il file non esiste, crealo assegnando i permessi di lettura solamente al prop
     <message>
         <location filename="../bitcoinstrings.cpp" line="201"/>
         <source>Darkcoin Core RPC client version</source>
-        <translation type="unfinished"/>
+        <translation>Versione client RPC di Darkcoin Core</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="202"/>
@@ -4388,7 +4388,7 @@ Se il file non esiste, crealo assegnando i permessi di lettura solamente al prop
     <message>
         <location filename="../bitcoinstrings.cpp" line="221"/>
         <source>Error recovering public key.</source>
-        <translation type="unfinished"/>
+        <translation>Errore nel recupero della chiave pubblica.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="222"/>
@@ -4608,12 +4608,12 @@ Se il file non esiste, crealo assegnando i permessi di lettura solamente al prop
     <message>
         <location filename="../bitcoinstrings.cpp" line="265"/>
         <source>Invalid script detected.</source>
-        <translation type="unfinished"/>
+        <translation>Script invalido</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="266"/>
         <source>KeePassHttp id for the established association</source>
-        <translation type="unfinished"/>
+        <translation>ID KeePassHttp per la connessione stabilita</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="267"/>
@@ -4950,7 +4950,7 @@ Se il file non esiste, crealo assegnando i permessi di lettura solamente al prop
     <message>
         <location filename="../bitcoinstrings.cpp" line="333"/>
         <source>Signing failed.</source>
-        <translation type="unfinished"/>
+        <translation>Firma fallita.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="334"/>
@@ -5056,7 +5056,7 @@ Se il file non esiste, crealo assegnando i permessi di lettura solamente al prop
     <message>
         <location filename="../bitcoinstrings.cpp" line="354"/>
         <source>Transaction fees are too high.</source>
-        <translation type="unfinished"/>
+        <translation>Commissioni della transazione troppo alte.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="355"/>
@@ -5178,7 +5178,7 @@ Se il file non esiste, crealo assegnando i permessi di lettura solamente al prop
     <message>
         <location filename="../bitcoinstrings.cpp" line="378"/>
         <source>Wallet needed to be rewritten: restart Darkcoin to complete</source>
-        <translation type="unfinished"/>
+        <translation>Il portafoglio necessita di essere riscritto: riavvare Darkcoin per compeltare.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="379"/>
@@ -5203,7 +5203,7 @@ Se il file non esiste, crealo assegnando i permessi di lettura solamente al prop
     <message>
         <location filename="../bitcoinstrings.cpp" line="383"/>
         <source>Wrong state.</source>
-        <translation type="unfinished"/>
+        <translation>Stato non corretto.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="384"/>

@@ -3947,7 +3947,7 @@ esimerkiksi: alertnotify=echo %%s | mail -s &quot;Darkcoin Hälytys&quot; admin@
     <message>
         <location filename="../bitcoinstrings.cpp" line="54"/>
         <source>Enable use of automated darksend for funds stored in this wallet (0-1, default: 0)</source>
-        <translation>Ota käyttöön automaattinen Darksend varoille tässä lompakossa  (0-1, oletus: 0)</translation>
+        <translation>Ota käyttöön automaattinen Darksend rahavaroille tässä lompakossa  (0-1, oletus: 0)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="57"/>
@@ -3962,7 +3962,7 @@ esimerkiksi: alertnotify=echo %%s | mail -s &quot;Darkcoin Hälytys&quot; admin@
     <message>
         <location filename="../bitcoinstrings.cpp" line="64"/>
         <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
-        <translation>Virhe: Sisääntulevissa yhteyksissä (kuuntelu palautti virheen %s)</translation>
+        <translation>Virhe: Sisääntulevien yhteyksien kuuntelu epäonnistui (kuuntelu palautti virheen %s)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="66"/>
@@ -3977,37 +3977,37 @@ esimerkiksi: alertnotify=echo %%s | mail -s &quot;Darkcoin Hälytys&quot; admin@
     <message>
         <location filename="../bitcoinstrings.cpp" line="73"/>
         <source>Error: Wallet unlocked for anonymization only, unable to create transaction.</source>
-        <translation>Virhe: Lompakko on avattu vain anonymisointia varten, ei voida luoda siirtotapahtumaa.</translation>
+        <translation>Virhe: Lompakko on avattu vain anonymisointia varten, siirtotapahtumaa ei voida luoda.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="75"/>
         <source>Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)</source>
-        <translation>Aja komento kun olennainen hälytys vastaanotetaan tai nähdään todella pitkä haara (%s komennossa korvataan viestillä)</translation>
+        <translation>Aja komento kun olennainen hälytys vastaanotetaan tai nähdään todella pitkä haara (%s cmd korvataan viestillä)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="78"/>
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
-        <translation>Suorita käsky kun lompakossa siirtotapahtuma muuttuu (%s cmd on vaihdettu TxID kanssa)</translation>
+        <translation>Suorita käsky kun lompakon siirtotapahtuma muuttuu (%s cmd on vaihdettu TxID kanssa)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="81"/>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
-        <translation>Suorita käsky kun paras lohko muuttuu (%s cmd on vaihdettu block hashin kanssa)</translation>
+        <translation>Suorita käsky kun paras lohko muuttuu (%s cmd on korvattu lohko tarkisteella)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="84"/>
         <source>Fees smaller than this are considered zero fee (for transaction creation) (default:</source>
-        <translation>Tätä pienemmät palkkiot huomioidaan tyhjäksi (siirtotapahtuman luonnissa) (oletus: </translation>
+        <translation>Tätä pienemmpiä palkkioita pidetään ilmaisina (siirtotapahtuman luonnissa) (oletus: </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="87"/>
         <source>Flush database activity from memory pool to disk log every &lt;n&gt; megabytes (default: 100)</source>
-        <translation>Aja tietokannan toimet muistivarannosta kovalevylogiin joka &lt;n&gt; megatavu (oletus: 100)</translation>
+        <translation>Aja tietokannan tapahtumat muistivarannosta kovalevylogiin joka &lt;n&gt; megatavu (oletus: 100)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="90"/>
         <source>Found unconfirmed denominated outputs, will wait till they confirm to continue.</source>
-        <translation type="unfinished"/>
+        <translation>Löytyi vahvistamattomia syötteitä, odotetaan että ne vahvistetaan.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="93"/>
@@ -4022,42 +4022,42 @@ esimerkiksi: alertnotify=echo %%s | mail -s &quot;Darkcoin Hälytys&quot; admin@
     <message>
         <location filename="../bitcoinstrings.cpp" line="98"/>
         <source>InstantX requires inputs with at least 6 confirmations, you might need to wait a few minutes and try again.</source>
-        <translation type="unfinished"/>
+        <translation>Instantx vaatii vähintään 6 varmistusta, odota muutama minuutti ja yritä uudelleen.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="101"/>
         <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 9998 or testnet: 19998)</source>
-        <translation type="unfinished"/>
+        <translation>Kuuntele JSON-RPC yhteyksiä portista &lt;port&gt; (oletus: 9998 tai testiverkossa: 19998)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="103"/>
         <source>Name to construct url for KeePass entry that stores the wallet passphrase</source>
-        <translation type="unfinished"/>
+        <translation>Rakenne url nimi KeePass merkinnälle joka talentaa lompakon salasanan</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="105"/>
         <source>Number of seconds to keep misbehaving peers from reconnecting (default: 86400)</source>
-        <translation>Sekuntien määrä, kuinka kauan uudelleenkytkeydytään verkkoihin (oletus: 86400)</translation>
+        <translation>Sekuntien määrä, kuinka kauan yritetään uudelleen kytkeytyä verkkoihin (oletus: 86400)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="108"/>
         <source>Output debugging information (default: 0, supplying &lt;category&gt; is optional)</source>
-        <translation>Tulosta debuggaustieto (oletus: 0, annettu &lt;kategoria&gt; valinnainen)</translation>
+        <translation>Tulosta debuggaustieto (oletus: 0, annettu &lt;kategoria&gt; on valinnainen)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="110"/>
         <source>Provide liquidity to Darksend by infrequently mixing coins on a continual basis (0-100, default: 0, 1=very frequent, high fees, 100=very infrequent, low fees)</source>
-        <translation type="unfinished"/>
+        <translation>Tarjoa Darksend:ille likviditeettiä jatkuvaa kolikoiden sekoitusta varten (0-100, oletus: 0, 1=usein, isot maksukulut, 100=harvoin, pienet maksukulut)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="114"/>
         <source>Query for peer addresses via DNS lookup, if low on addresses (default: 1 unless -connect)</source>
-        <translation type="unfinished"/>
+        <translation>Tiedustele osoitteita DNS hakua käyttäen jos osoitteita ei ole riittävästi (oletus: 1 paitsi jos -connect)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="117"/>
         <source>Set external address:port to get to this masternode (example: address:port)</source>
-        <translation type="unfinished"/>
+        <translation>Aseta ulkoinen osoite:portti tälle masternodelle (esim: osoite:portti)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="119"/>
@@ -4072,7 +4072,7 @@ esimerkiksi: alertnotify=echo %%s | mail -s &quot;Darkcoin Hälytys&quot; admin@
     <message>
         <location filename="../bitcoinstrings.cpp" line="124"/>
         <source>Set the processor limit for when generation is on (-1 = unlimited, default: -1)</source>
-        <translation>Aseta prosessorin raja kun luonti on päällä (-1 = rajoittamaton, oletus: -1)</translation>
+        <translation>Aseta prosessorin raja kun lohkojen lohiminen on päällä (-1 = rajoittamaton, oletus: -1)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="127"/>
@@ -4082,12 +4082,12 @@ esimerkiksi: alertnotify=echo %%s | mail -s &quot;Darkcoin Hälytys&quot; admin@
     <message>
         <location filename="../bitcoinstrings.cpp" line="130"/>
         <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
-        <translation>Tämä on esi-julkaistu testiversio - Käytä omalla riskillä - Ei saa käytää louhimiseen tai kauppasovelluksiin.</translation>
+        <translation>Tämä on esi-julkaistu testiversio - Käytä omalla vastuulla - Älä käytä louhimiseen tai kauppasovelluksiin.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="133"/>
         <source>Unable to bind to %s on this computer. Darkcoin Core is probably already running.</source>
-        <translation type="unfinished"/>
+        <translation>Ei voida yhdistää %s tässä tietokoneessa. Darkcoin Core on luultavasti jo käynnissä.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="136"/>
@@ -4097,12 +4097,12 @@ esimerkiksi: alertnotify=echo %%s | mail -s &quot;Darkcoin Hälytys&quot; admin@
     <message>
         <location filename="../bitcoinstrings.cpp" line="138"/>
         <source>Unable to locate enough Darksend non-denominated funds for this transaction that are not equal 1000 DRK.</source>
-        <translation>Ei tarpeeksi Darksend ei-anonymisoituja varoja tälle siirtotapahtumalle, joka ei ole yhtä kuin 1000 DRK.</translation>
+        <translation>Ei tarpeeksi Darksend ei-anonymisoituja varoja tälle siirtotapahtumalle, joka ei ole 1000 DRK.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="141"/>
         <source>Unable to locate enough Darksend non-denominated funds for this transaction.</source>
-        <translation>Ei tarpeeksi Darksend ei anonymisoituja varoja tälle siirtotapahtumalle.</translation>
+        <translation>Ei tarpeeksi Darksend ei-anonymisoituja varoja tälle siirtotapahtumalle.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="143"/>
@@ -4117,27 +4117,27 @@ esimerkiksi: alertnotify=echo %%s | mail -s &quot;Darkcoin Hälytys&quot; admin@
     <message>
         <location filename="../bitcoinstrings.cpp" line="149"/>
         <source>Warning: Please check that your computer&apos;s date and time are correct! If your clock is wrong Darkcoin will not work properly.</source>
-        <translation>Varoitus: Tarkista että tietokoneesi kellonaika ja päivämäärä ovat paikkansapitäviä! Darkcoin ei toimi oikein väärällä päivämäärällä ja/tai kellonajalla.</translation>
+        <translation>Varoitus: Tarkista että tietokoneesi kellonaika ja päivämäärä ovat ajan tasalla! Darkcoin ei toimi oikein väärällä päivämäärällä ja/tai kellonajalla.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="152"/>
         <source>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</source>
-        <translation>Varoitus: Tietoverkko ei ole sovussa! Luohijat näyttävät kokevan virhetilanteita.</translation>
+        <translation>Varoitus: Darkcoin verkossa on ristiriitoja! Louhijat näyttävät kokevan virhetilanteita.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="155"/>
         <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
-        <translation>Varoitus: Olemme vertaisverkon kanssa ristiriidassa! Sinun tulee päivittää tai toisten solmujen tulee päivitää.</translation>
+        <translation>Varoitus: Olemme vertaisverkon kanssa ristiriidassa! Sinun ja/tai solmujen tulee päivitää uusimpaan Darkcoin versioon.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="158"/>
         <source>Warning: error reading wallet.dat! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
-        <translation>Varoitus: Virhe luettaessa wallet.dat-lompakkotiedostoa. Kaikki avaimet luettiin onnistuneesti, mutta siirtohistoria tai osoitekirja saattavat olla kadonneet tai virheellisiä.</translation>
+        <translation>Varoitus: Virhe luettaessa wallet.dat lompakkotiedostoa. Kaikki avaimet luettiin onnistuneesti, mutta siirtohistoria tai osoitekirja saattavat olla kadonneet tai virheellisiä.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="161"/>
         <source>Warning: wallet.dat corrupt, data salvaged! Original wallet.dat saved as wallet.{timestamp}.bak in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
-        <translation>Varoitus: Wallet.dat -lompakkotiedosto on korruptoitunut, tiedot pelastettu. Alkuperäinen wallet.dat -lompakkotiedosto on tallennettu wallet.{timestamp}.bak kansioon %s; jos saldosi tai siirtohistoria on virheellinen, sinun tulisi palauttaa lompakkotiedosto varmuuskopiosta.</translation>
+        <translation>Varoitus: Wallet.dat lompakkotiedosto on korruptoitunut, tiedot pelastettu. Alkuperäinen wallet.dat -lompakkotiedosto on tallennettu wallet.{timestamp}.bak kansioon %s; jos saldosi tai siirtohistoria on virheellinen, sinun tulisi palauttaa lompakkotiedosto varmuuskopiosta.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="165"/>
@@ -4376,7 +4376,7 @@ Jos tiedostoa ei ole, niin luo se ainoastaan omistajan kirjoitusoikeuksin.</tran
     <message>
         <location filename="../bitcoinstrings.cpp" line="217"/>
         <source>Error loading wallet.dat: Wallet corrupted</source>
-        <translation>Virhe ladattaessa wallet.dat-tiedostoa: Lompakko vioittunut</translation>
+        <translation>Virhe ladattaessa wallet.dat tiedostoa: Lompakko vioittunut</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="218"/>
@@ -5231,7 +5231,7 @@ Jos tiedostoa ei ole, niin luo se ainoastaan omistajan kirjoitusoikeuksin.</tran
     <message>
         <location filename="../bitcoinstrings.cpp" line="388"/>
         <source>wallet.dat corrupt, salvage failed</source>
-        <translation>wallet.dat -lompakkotiedosto korruptoitunut, korjaaminen epäonnistui</translation>
+        <translation>wallet.dat lompakkotiedosto korruptoitunut, korjaaminen epäonnistui</translation>
     </message>
 </context>
 </TS>
