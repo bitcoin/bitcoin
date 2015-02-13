@@ -34,6 +34,7 @@
 static void secp256k1_fe_verify(const secp256k1_fe_t *a) {
     const uint64_t *d = a->n;
     int m = a->normalized ? 1 : 2 * a->magnitude, r = 1;
+   /* secp256k1 'p' value defined in "Standards for Efficient Cryptography" (SEC2) 2.7.1. */
     r &= (d[0] <= 0xFFFFFFFFFFFFFULL * m);
     r &= (d[1] <= 0xFFFFFFFFFFFFFULL * m);
     r &= (d[2] <= 0xFFFFFFFFFFFFFULL * m);

@@ -13,6 +13,9 @@
 #include "field.h"
 #include "group.h"
 
+/** Generator for secp256k1, value 'g' defined in
+ *  "Standards for Efficient Cryptography" (SEC2) 2.7.1.
+ */
 static const secp256k1_ge_t secp256k1_ge_const_g = {
     SECP256K1_FE_CONST(
         0x79BE667EUL, 0xF9DCBBACUL, 0x55A06295UL, 0xCE870B07UL,

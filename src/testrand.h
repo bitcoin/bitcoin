@@ -11,7 +11,9 @@
 #include "libsecp256k1-config.h"
 #endif
 
-/** Seed the pseudorandom number generator. */
+/* A non-cryptographic RNG used only for test infrastructure. */
+
+/** Seed the pseudorandom number generator for testing. */
 SECP256K1_INLINE static void secp256k1_rand_seed(uint64_t v);
 
 /** Generate a pseudorandom 32-bit number. */

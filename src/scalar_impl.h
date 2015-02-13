@@ -31,6 +31,7 @@ static void secp256k1_scalar_get_num(secp256k1_num_t *r, const secp256k1_scalar_
     secp256k1_num_set_bin(r, c, 32);
 }
 
+/** secp256k1 curve order, see secp256k1_ecdsa_const_order_as_fe in ecdsa_impl.h */
 static void secp256k1_scalar_order_get_num(secp256k1_num_t *r) {
     static const unsigned char order[32] = {
         0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,

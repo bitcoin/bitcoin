@@ -18,15 +18,19 @@ SECP256K1_INLINE static void secp256k1_rand_seed(uint64_t v) {
     secp256k1_Rz = v >> 32;
     secp256k1_Rw = v;
 
+    /* There are two seeds with short (length 1) cycles for the Rz PRNG. */
     if (secp256k1_Rz == 0 || secp256k1_Rz == 0x9068ffffU) {
         secp256k1_Rz = 111;
     }
-    if (secp256k1_Rw == 0 || secp256k1_Rw == 0x464fffffU) {
+    /* There are four seeds with short (length 1) cycles for the Rw PRNG. */
+    if (secp256k1_Rw == 0 || secp256k1_Rw == 0x464fffffU ||
+         secp256k1_Rw == 0x8c9ffffeU || secp256k1_Rw == 0xd2effffdU) {
         secp256k1_Rw = 111;
     }
 }
 
 SECP256K1_INLINE static uint32_t secp256k1_rand32(void) {
+    /* MWC PRNG for tests. */
     secp256k1_Rz = 36969 * (secp256k1_Rz & 0xFFFF) + (secp256k1_Rz >> 16);
     secp256k1_Rw = 18000 * (secp256k1_Rw & 0xFFFF) + (secp256k1_Rw >> 16);
     return (secp256k1_Rw << 16) + (secp256k1_Rw >> 16) + secp256k1_Rz;
