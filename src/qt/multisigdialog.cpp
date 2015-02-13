@@ -25,10 +25,6 @@
 #include "txdb-bdb.h"
 #endif
 
-#ifdef _MSC_VER
-#pragma warning( disable : 4101)
-#endif
-
 MultisigDialog::MultisigDialog(QWidget *parent) : QWidget(parent), ui(new Ui::MultisigDialog), model(0)
 {
     ui->setupUi(this);
@@ -353,6 +349,7 @@ void MultisigDialog::on_transaction_textChanged()
     }
     catch(std::exception &e)
     {
+        (void)e;
         return;
     }
 
@@ -423,6 +420,7 @@ void MultisigDialog::on_signTransactionButton_clicked()
     }
     catch(std::exception &e)
     {
+        (void)e;
         return;
     }
     CTransaction mergedTx(tx);
@@ -542,6 +540,7 @@ void MultisigDialog::on_sendTransactionButton_clicked()
     }
     catch(std::exception &e)
     {
+        (void)e;
         return;
     }
     uint256 txHash = tx.GetHash();

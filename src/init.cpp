@@ -784,6 +784,7 @@ bool AppInit2()
                     break;
                 }
             } catch(std::exception &e) {
+                (void)e;
                 strLoadError = _("Error opening block database");
                 break;
             }
