@@ -37,7 +37,6 @@ int secp256k1_ecdsa_verify(const unsigned char *msg32, const unsigned char *sig,
     secp256k1_ge_t q;
     secp256k1_ecdsa_sig_t s;
     secp256k1_scalar_t m;
-    int ret = -3;
     DEBUG_CHECK(secp256k1_ecmult_consts != NULL);
     DEBUG_CHECK(msg32 != NULL);
     DEBUG_CHECK(sig != NULL);
@@ -46,20 +45,16 @@ int secp256k1_ecdsa_verify(const unsigned char *msg32, const unsigned char *sig,
     secp256k1_scalar_set_b32(&m, msg32, NULL);
 
     if (!secp256k1_eckey_pubkey_parse(&q, pubkey, pubkeylen)) {
-        ret = -1;
-        goto end;
+        return -1;
     }
     if (!secp256k1_ecdsa_sig_parse(&s, sig, siglen)) {
-        ret = -2;
-        goto end;
+        return -2;
     }
     if (!secp256k1_ecdsa_sig_verify(&s, &q, &m)) {
-        ret = 0;
-        goto end;
+        return 0;
     }
-    ret = 1;
-end:
-    return ret;
+    /* success is 1, all other values are fail */
+    return 1;
 }
 
 static int nonce_function_rfc6979(unsigned char *nonce32, const unsigned char *msg32, const unsigned char *key32, unsigned int counter, const void *data) {
