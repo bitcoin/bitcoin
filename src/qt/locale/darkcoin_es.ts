@@ -15,7 +15,8 @@
         <location filename="../forms/aboutdialog.ui" line="94"/>
         <source>Copyright &amp;copy; 2009-2014 The Bitcoin Core developers.
 Copyright &amp;copy; 2014-YYYY The Darkcoin Core developers.</source>
-        <translation type="unfinished"/>
+        <translation>Copyright &amp;copy; 2009-2014 Los desarrolladores de Bitcoin Core.
+Copyright &amp;copy; 2014-YYYY Los desarrolladores de Darkcoin Core.</translation>
     </message>
     <message>
         <location filename="../forms/aboutdialog.ui" line="111"/>
@@ -850,7 +851,7 @@ Dirección: %4
     <message>
         <location filename="../forms/coincontroldialog.ui" line="400"/>
         <source>(1 locked)</source>
-        <translation type="unfinished"/>
+        <translation>(1 bloqueada)</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="446"/>
@@ -1474,7 +1475,7 @@ Dirección: %4
     <message>
         <location filename="../forms/optionsdialog.ui" line="165"/>
         <source>This amount acts as a threshold to turn off Darksend once it&apos;s reached.</source>
-        <translation type="unfinished"/>
+        <translation>Esta cuantía sirve de umbral para que Darksend se apague, una vez sea alcanzada.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="180"/>
@@ -1620,7 +1621,8 @@ Dirección: %4
         <location filename="../forms/optionsdialog.ui" line="524"/>
         <source>Language missing or translation incomplete? Help contributing translations here:
 https://www.transifex.com/projects/p/darkcoin/</source>
-        <translation type="unfinished"/>
+        <translation>¿Idioma no disponible o traducción incompleta? Contribuye a la traducción aquí:
+https://www.transifex.com/projects/p/darkcoin/</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="550"/>
@@ -3828,7 +3830,7 @@ https://www.transifex.com/projects/p/darkcoin/</source>
     <message numerus="yes">
         <location filename="../walletmodel.cpp" line="272"/>
         <source>InstantX doesn&apos;t support sending values that high yet. Transactions are currently limited to %n DRK.</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation><numerusform>InstantX aún no soporta el envío de valores tan elevados. Las transacciones están limitadas actualmente a %n DRK.</numerusform><numerusform>InstantX aún no soporta el envío de valores tan elevados. Las transacciones están limitadas actualmente a %n DRK.</numerusform></translation>
     </message>
 </context>
 <context>
@@ -5086,12 +5088,12 @@ Si el archivo no existe, créelo con permiso de lectura solamente del propietari
     <message>
         <location filename="../bitcoinstrings.cpp" line="358"/>
         <source>Unable to sign masternode payment winner, wrong key?</source>
-        <translation>No fue posible firmar el Masternode ganador del pago, ¿se equivocó de tecla?</translation>
+        <translation>No fue posible firmar el Masternode ganador del pago, ¿clave incorrecta?</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="359"/>
         <source>Unable to sign spork message, wrong key?</source>
-        <translation type="unfinished"/>
+        <translation>No fue posible firmar el mensaje de spork, ¿clave incorrecta?</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="360"/>

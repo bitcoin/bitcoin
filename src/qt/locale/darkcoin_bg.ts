@@ -1370,7 +1370,7 @@ Address: %4
     <message>
         <location filename="../intro.cpp" line="186"/>
         <source>Error: Specified data directory &quot;%1&quot; can not be created.</source>
-        <translation type="unfinished"/>
+        <translation>Грешка: Посочената директория с данни &quot;%1&quot; не може да бъде създадена.</translation>
     </message>
     <message>
         <location filename="../intro.cpp" line="210"/>
@@ -1966,12 +1966,12 @@ https://www.transifex.com/projects/p/darkcoin/</source>
     <message>
         <location filename="../overviewpage.cpp" line="403"/>
         <source>Finalizing transaction.</source>
-        <translation type="unfinished"/>
+        <translation>Приключване на транзакцията.</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="405"/>
         <source>Darksend request incomplete:</source>
-        <translation type="unfinished"/>
+        <translation>Дарксенд заявката незавършена:</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="405"/>
@@ -1981,27 +1981,27 @@ https://www.transifex.com/projects/p/darkcoin/</source>
     <message>
         <location filename="../overviewpage.cpp" line="407"/>
         <source>Darksend request complete:</source>
-        <translation type="unfinished"/>
+        <translation>Дарксенд заявката е завършена:</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="409"/>
         <source>Submitted to masternode, waiting in queue .</source>
-        <translation type="unfinished"/>
+        <translation>Изпратено към Мастернода, чака в опашката .</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="410"/>
         <source>Submitted to masternode, waiting in queue ..</source>
-        <translation type="unfinished"/>
+        <translation>Изпратено към Мастернода, чака в опашката ..</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="411"/>
         <source>Submitted to masternode, waiting in queue ...</source>
-        <translation type="unfinished"/>
+        <translation>Изпратено към Мастернода, чака в опашката ...</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="413"/>
         <source>Unknown state:</source>
-        <translation type="unfinished"/>
+        <translation>Неизвестно състояние:</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="427"/>
@@ -2016,12 +2016,12 @@ https://www.transifex.com/projects/p/darkcoin/</source>
     <message>
         <location filename="../overviewpage.cpp" line="463"/>
         <source>Darksend requires at least %1 to use.</source>
-        <translation>На Дарксенд за необходими поне %1 за да започне.</translation>
+        <translation>Дарксенд се нуждае от поне %1 за да започне.</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="477"/>
         <source>Wallet is locked and user declined to unlock. Disabling Darksend.</source>
-        <translation type="unfinished"/>
+        <translation>Портфейлът е заключен и потребителя отказва отключване. Дарксенд е деактивиран.</translation>
     </message>
 </context>
 <context>
@@ -2034,7 +2034,7 @@ https://www.transifex.com/projects/p/darkcoin/</source>
         <location filename="../paymentserver.cpp" line="631"/>
         <location filename="../paymentserver.cpp" line="647"/>
         <source>Payment request error</source>
-        <translation type="unfinished"/>
+        <translation>Грешка в заявката за плащане</translation>
     </message>
     <message>
         <location filename="../paymentserver.cpp" line="294"/>
@@ -2110,7 +2110,7 @@ https://www.transifex.com/projects/p/darkcoin/</source>
     <message>
         <location filename="../paymentserver.cpp" line="665"/>
         <source>Network request error</source>
-        <translation type="unfinished"/>
+        <translation>Грешка в мрежовата заявка</translation>
     </message>
     <message>
         <location filename="../paymentserver.cpp" line="676"/>
@@ -2136,7 +2136,7 @@ https://www.transifex.com/projects/p/darkcoin/</source>
     <message>
         <location filename="../darkcoin.cpp" line="533"/>
         <source>Error: Cannot parse configuration file: %1. Only use key=value syntax.</source>
-        <translation type="unfinished"/>
+        <translation>Грешка: Не може да се анализира конфигурационния файл: %1. Използвайте само синтаксис ключ=стойност.</translation>
     </message>
     <message>
         <location filename="../darkcoin.cpp" line="540"/>
@@ -2146,7 +2146,7 @@ https://www.transifex.com/projects/p/darkcoin/</source>
     <message>
         <location filename="../darkcoin.cpp" line="552"/>
         <source>Error: Invalid combination of -regtest and -testnet.</source>
-        <translation type="unfinished"/>
+        <translation>Грешка: Невалидна комбинация от -regtest и -testnet.</translation>
     </message>
     <message>
         <location filename="../darkcoin.cpp" line="612"/>
@@ -2169,17 +2169,17 @@ https://www.transifex.com/projects/p/darkcoin/</source>
     <message>
         <location filename="../receiverequestdialog.cpp" line="39"/>
         <source>&amp;Copy Image</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Копирай изображението</translation>
     </message>
     <message>
         <location filename="../receiverequestdialog.cpp" line="71"/>
         <source>Save QR Code</source>
-        <translation type="unfinished"/>
+        <translation>Запази QR Кода</translation>
     </message>
     <message>
         <location filename="../receiverequestdialog.cpp" line="71"/>
         <source>PNG Image (*.png)</source>
-        <translation type="unfinished"/>
+        <translation>PNG Image (*.png)</translation>
     </message>
 </context>
 <context>
@@ -2202,7 +2202,7 @@ https://www.transifex.com/projects/p/darkcoin/</source>
     <message>
         <location filename="../forms/rpcconsole.ui" line="46"/>
         <source>General</source>
-        <translation type="unfinished"/>
+        <translation>Главен</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="53"/>
@@ -2271,7 +2271,7 @@ https://www.transifex.com/projects/p/darkcoin/</source>
     <message>
         <location filename="../forms/rpcconsole.ui" line="182"/>
         <source>Build date</source>
-        <translation type="unfinished"/>
+        <translation>Дата на създаване</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="205"/>
@@ -2291,7 +2291,7 @@ https://www.transifex.com/projects/p/darkcoin/</source>
     <message>
         <location filename="../forms/rpcconsole.ui" line="349"/>
         <source>&amp;Console</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Конзола</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="398"/>
@@ -2487,12 +2487,12 @@ https://www.transifex.com/projects/p/darkcoin/</source>
     <message>
         <location filename="../forms/receiverequestdialog.ui" line="29"/>
         <source>QR Code</source>
-        <translation type="unfinished"/>
+        <translation>QR Код</translation>
     </message>
     <message>
         <location filename="../forms/receiverequestdialog.ui" line="75"/>
         <source>Copy &amp;URI</source>
-        <translation type="unfinished"/>
+        <translation>Копирай &amp;URI</translation>
     </message>
     <message>
         <location filename="../forms/receiverequestdialog.ui" line="82"/>
@@ -2507,7 +2507,7 @@ https://www.transifex.com/projects/p/darkcoin/</source>
     <message>
         <location filename="../receiverequestdialog.cpp" line="136"/>
         <source>Request payment to %1</source>
-        <translation type="unfinished"/>
+        <translation>Заявка за плащане на %1</translation>
     </message>
     <message>
         <location filename="../receiverequestdialog.cpp" line="142"/>
@@ -2517,7 +2517,7 @@ https://www.transifex.com/projects/p/darkcoin/</source>
     <message>
         <location filename="../receiverequestdialog.cpp" line="143"/>
         <source>URI</source>
-        <translation type="unfinished"/>
+        <translation>URI</translation>
     </message>
     <message>
         <location filename="../receiverequestdialog.cpp" line="145"/>
@@ -2844,12 +2844,12 @@ https://www.transifex.com/projects/p/darkcoin/</source>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="508"/>
         <source>The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
-        <translation type="unfinished"/>
+        <translation>Транзакцията беше отхвърлена! Това може да се случи, ако някои от монетите в портфейла ви, вече са изразходвани, например ако се използва копие от wallet.dat и монетите са изразходвани в копието, но не са отбелязани като изразходвани тук.</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="513"/>
         <source>Error: The wallet was unlocked only to anonymize coins.</source>
-        <translation type="unfinished"/>
+        <translation>Грешка: Портфейлът е отключен само за анонимизиране на монети.</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="626"/>
@@ -2976,7 +2976,7 @@ https://www.transifex.com/projects/p/darkcoin/</source>
     <message>
         <location filename="../utilitydialog.cpp" line="130"/>
         <source>Do not shut down the computer until this window disappears.</source>
-        <translation type="unfinished"/>
+        <translation>Не изключвайте компютърът докато не изчезне този прозорец.</translation>
     </message>
 </context>
 <context>
@@ -3783,7 +3783,7 @@ https://www.transifex.com/projects/p/darkcoin/</source>
     <message>
         <location filename="../transactionview.cpp" line="321"/>
         <source>There was an error trying to save the transaction history to %1.</source>
-        <translation type="unfinished"/>
+        <translation>Възникна грешка при опит за записване историята на транзакциите в %1.</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="325"/>
@@ -3858,7 +3858,7 @@ https://www.transifex.com/projects/p/darkcoin/</source>
     <message>
         <location filename="../walletview.cpp" line="236"/>
         <source>There was an error trying to save the wallet data to %1.</source>
-        <translation type="unfinished"/>
+        <translation>Възникна грешка при опит за записване данните на портфейла в %1.</translation>
     </message>
     <message>
         <location filename="../walletview.cpp" line="240"/>
@@ -3896,12 +3896,12 @@ for example: alertnotify=echo %%s | mail -s &quot;Darkcoin Alert&quot; admin@foo
     <message>
         <location filename="../bitcoinstrings.cpp" line="32"/>
         <source>An error occurred while setting up the RPC port %u for listening on IPv4: %s</source>
-        <translation type="unfinished"/>
+        <translation>Възникна грешка при настройване на RPC порт %u за очакване на IPv4: %s</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="34"/>
         <source>An error occurred while setting up the RPC port %u for listening on IPv6, falling back to IPv4: %s</source>
-        <translation type="unfinished"/>
+        <translation>Възникна грешка при настройване на RPC порт %u за очакване на IPv6, връщане към IPv4: %s</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="37"/>
@@ -3951,7 +3951,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Darkcoin Alert&quot; admin@foo
     <message>
         <location filename="../bitcoinstrings.cpp" line="64"/>
         <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
-        <translation type="unfinished"/>
+        <translation>Грешка: Очакването на входящи връзки е неуспешно (върната грешка %s)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="66"/>
@@ -4016,7 +4016,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Darkcoin Alert&quot; admin@foo
     <message>
         <location filename="../bitcoinstrings.cpp" line="101"/>
         <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 9998 or testnet: 19998)</source>
-        <translation type="unfinished"/>
+        <translation>Очаквай JSON-RPC входящи връзки на &lt;port&gt; (по подразбиране: 9998 или за тестовата мрежа: 19998)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="103"/>
@@ -4056,22 +4056,22 @@ for example: alertnotify=echo %%s | mail -s &quot;Darkcoin Alert&quot; admin@foo
     <message>
         <location filename="../bitcoinstrings.cpp" line="121"/>
         <source>Set the number of script verification threads (%u to %d, 0 = auto, &lt;0 = leave that many cores free, default: %d)</source>
-        <translation type="unfinished"/>
+        <translation>Задаване броя на нишките потвърждаващи скрипта  (%u до %d, 0 = автоматично, &lt;0 = leave that many cores free, по подразбиране: %d)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="124"/>
         <source>Set the processor limit for when generation is on (-1 = unlimited, default: -1)</source>
-        <translation type="unfinished"/>
+        <translation>Задаване лимит на процесорите, когато се използва генериране (-1 = неограничено, по подразбиране: -1) </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="127"/>
         <source>Show N confirmations for a successfully locked transaction (0-9999, default: 1)</source>
-        <translation type="unfinished"/>
+        <translation>Покажи N потвърждения при успешно заключване на транзакция (0-9999, по подразбиране: 1)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="130"/>
         <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
-        <translation type="unfinished"/>
+        <translation>Това е предварителна тест версия - използвайте я на ваша отговорност - не използвайте за копане или за търговски приложения.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="133"/>
@@ -4081,22 +4081,22 @@ for example: alertnotify=echo %%s | mail -s &quot;Darkcoin Alert&quot; admin@foo
     <message>
         <location filename="../bitcoinstrings.cpp" line="136"/>
         <source>Unable to locate enough Darksend denominated funds for this transaction.</source>
-        <translation type="unfinished"/>
+        <translation>Не са намерени достатъчно Дарксенд деноминирани средства за тази транзакция.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="138"/>
         <source>Unable to locate enough Darksend non-denominated funds for this transaction that are not equal 1000 DRK.</source>
-        <translation type="unfinished"/>
+        <translation>Не са намерени достатъчно Дарксенд неденоминирани средства за тази транзакция, които не са равни на 1000 DRK.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="141"/>
         <source>Unable to locate enough Darksend non-denominated funds for this transaction.</source>
-        <translation type="unfinished"/>
+        <translation>Не са намерени достатъчно Дарксенд неденоминирани средства за тази транзакция.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="143"/>
         <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: -proxy)</source>
-        <translation type="unfinished"/>
+        <translation>Изполва отделен SOCKS5 прокси, за достигне на пиъри чрез Тор скрита услуга (по подразбиране: -proxy)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="146"/>
@@ -4111,7 +4111,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Darkcoin Alert&quot; admin@foo
     <message>
         <location filename="../bitcoinstrings.cpp" line="152"/>
         <source>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</source>
-        <translation type="unfinished"/>
+        <translation>Внимание! Изглежда няма пълно съгласуване в мрежата! Някой копачи изглежда изпитват проблеми.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="155"/>
@@ -4133,12 +4133,14 @@ for example: alertnotify=echo %%s | mail -s &quot;Darkcoin Alert&quot; admin@foo
         <source>You must set rpcpassword=&lt;password&gt; in the configuration file:
 %s
 If the file does not exist, create it with owner-readable-only file permissions.</source>
-        <translation type="unfinished"/>
+        <translation>Трябва да зададете rpcpassword=&lt;password&gt; в конфигурационния файл:
+%s
+Ако файлът не съществува, създайте го с атрибут само за четене от собственика. </translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="170"/>
         <source>You must specify a masternodeprivkey in the configuration. Please see documentation for help.</source>
-        <translation type="unfinished"/>
+        <translation>Трябва да посочите masternodeprivkey в конфигурацията. Моля прочетете документацията за помощ.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="173"/>
@@ -4163,7 +4165,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="177"/>
         <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
-        <translation type="unfinished"/>
+        <translation>Приемай връзки отвън (по подразбиране: 1, ако няма  -proxy или -connect)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="178"/>

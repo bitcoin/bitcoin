@@ -15,7 +15,8 @@
         <location filename="../forms/aboutdialog.ui" line="94"/>
         <source>Copyright &amp;copy; 2009-2014 The Bitcoin Core developers.
 Copyright &amp;copy; 2014-YYYY The Darkcoin Core developers.</source>
-        <translation type="unfinished"/>
+        <translation>Opphavsrettsbeskyttet &amp;kopi; 2009-2014 Bitcoin Core utviklerne.
+Opphavsrettsbeskyttet &amp;kopi; 2014-YYYY The Darkcoin Core utviklerne.</translation>
     </message>
     <message>
         <location filename="../forms/aboutdialog.ui" line="111"/>
@@ -817,7 +818,7 @@ Adresse: %4
     <message>
         <location filename="../forms/coincontroldialog.ui" line="228"/>
         <source>Low Output:</source>
-        <translation>Lave Utdata:</translation>
+        <translation>Lav Output:</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="276"/>
@@ -847,7 +848,7 @@ Adresse: %4
     <message>
         <location filename="../forms/coincontroldialog.ui" line="400"/>
         <source>(1 locked)</source>
-        <translation type="unfinished"/>
+        <translation>(1 låst)</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="446"/>
@@ -948,7 +949,7 @@ Adresse: %4
     <message>
         <location filename="../coincontroldialog.cpp" line="76"/>
         <source>Copy low output</source>
-        <translation>Kopiér svake utdata</translation>
+        <translation>Kopiér lav output</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="77"/>
@@ -1041,7 +1042,7 @@ Adresse: %4
     <message>
         <location filename="../coincontroldialog.cpp" line="617"/>
         <source>Can vary +/- 1 byte per input.</source>
-        <translation>Kan variere +/- 1 byte per inndata.</translation>
+        <translation>Kan variere +/- 1 byte per input.</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="619"/>
@@ -1345,12 +1346,12 @@ Adresse: %4
     <message>
         <location filename="../forms/intro.ui" line="49"/>
         <source>As this is the first time the program is launched, you can choose where Darkcoin Core will store its data.</source>
-        <translation type="unfinished"/>
+        <translation>Ettersom dette er første gangen programmet kjøres, kan du velge hvor Darkcoin Core skal lagre dataene sine.</translation>
     </message>
     <message>
         <location filename="../forms/intro.ui" line="59"/>
         <source>Darkcoin Core will download and store a copy of the Darkcoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
-        <translation type="unfinished"/>
+        <translation>Darkcoin Core vil laste ned og lagre en kopi av Darkcoin blockchainen. Minst %1GB med data vil bli lagret til denne mappen, og den vil vokse over tid. Lommeboka vil også lagres i denne mappen.</translation>
     </message>
     <message>
         <location filename="../forms/intro.ui" line="69"/>
@@ -1385,7 +1386,7 @@ Adresse: %4
     <message>
         <location filename="../intro.cpp" line="222"/>
         <source>(of %1GB needed)</source>
-        <translation>(av %1GB behøvd)</translation>
+        <translation>(av %1GB trengtes)</translation>
     </message>
 </context>
 <context>
@@ -1398,7 +1399,7 @@ Adresse: %4
     <message>
         <location filename="../forms/openuridialog.ui" line="20"/>
         <source>Open payment request from URI or file</source>
-        <translation>Åpne betalingsetterspørring fra URI eller fil</translation>
+        <translation>Åpne betalingsforespørsel fra URI eller fil</translation>
     </message>
     <message>
         <location filename="../forms/openuridialog.ui" line="29"/>
@@ -1408,12 +1409,12 @@ Adresse: %4
     <message>
         <location filename="../forms/openuridialog.ui" line="40"/>
         <source>Select payment request file</source>
-        <translation>Velg fil for betalingsetterspørring</translation>
+        <translation>Velg fil for betalingsforespørsel</translation>
     </message>
     <message>
         <location filename="../openuridialog.cpp" line="48"/>
         <source>Select payment request file to open</source>
-        <translation>Velg fil for betalingsetterspørring å åpne</translation>
+        <translation>Velg fil for betalingsforespørsel som skal åpnes</translation>
     </message>
 </context>
 <context>
@@ -1431,12 +1432,12 @@ Adresse: %4
     <message>
         <location filename="../forms/optionsdialog.ui" line="33"/>
         <source>Automatically start Darkcoin after logging in to the system.</source>
-        <translation type="unfinished"/>
+        <translation>Automatisk start Darkcoin etter å ha logget på systemet.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="36"/>
         <source>&amp;Start Darkcoin on system login</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Start Darkcoin ved pålogging.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="45"/>
@@ -1461,22 +1462,22 @@ Adresse: %4
     <message>
         <location filename="../forms/optionsdialog.ui" line="138"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This setting determines the amount of individual masternodes that an input will be anonymized through. More rounds of anonymization gives a higher degree of privacy, but also costs more in fees.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"/>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Denne instillingen bestemmer mengden individuelle masternoder som en input vil bli anonymisert via. Flere runder med anonymisering gir en større grad av personvern, men koster også mer i avgifter.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="141"/>
         <source>Darksend rounds to use</source>
-        <translation type="unfinished"/>
+        <translation>Darksend runder å bruke</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="165"/>
         <source>This amount acts as a threshold to turn off Darksend once it&apos;s reached.</source>
-        <translation type="unfinished"/>
+        <translation>Dette beløpet fungerer som en grense for å skru av Darksend når det er nådd.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="180"/>
         <source>Amount of Darkcoin to keep anonymized</source>
-        <translation type="unfinished"/>
+        <translation>Beløp av Darkcoin å holde anonymisert</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="206"/>
@@ -1506,12 +1507,12 @@ Adresse: %4
     <message>
         <location filename="../forms/optionsdialog.ui" line="280"/>
         <source>Enable coin &amp;control features</source>
-        <translation>Aktiver &amp;myntkontroll funksjoner</translation>
+        <translation>Aktivér &amp;myntkontroll funksjoner</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="287"/>
         <source>If you disable the spending of unconfirmed change, the change from a transaction cannot be used until that transaction has at least one confirmation. This also affects how your balance is computed.</source>
-        <translation>Hvis du sperrer for bruk av ubekreftet veksel, kan ikke vekselen fra transaksjonen bli brukt før transaksjonen har minimum en bekreftelse. Dette påvirker også hvordan balansen din blir beregnet.</translation>
+        <translation>Hvis du sperrer for bruk av ubekreftet veksel, kan ikke vekselen fra transaksjonen bli brukt før transaksjonen har minimum én bekreftelse. Dette påvirker også hvordan balansen din blir beregnet.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="290"/>
@@ -1526,7 +1527,7 @@ Adresse: %4
     <message>
         <location filename="../forms/optionsdialog.ui" line="307"/>
         <source>Automatically open the Darkcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation type="unfinished"/>
+        <translation>Automatisk åpne porten for Darkcoin-klienten i ruteren. Dette fungerer bare hvis ruteren din støtter UPnP og hvis dette er aktivert.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="310"/>
@@ -1536,7 +1537,7 @@ Adresse: %4
     <message>
         <location filename="../forms/optionsdialog.ui" line="317"/>
         <source>Connect to the Darkcoin network through a SOCKS proxy.</source>
-        <translation type="unfinished"/>
+        <translation>Koble til Darkcoin-nettverket gjennom en SOCKS proxy.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="320"/>
@@ -1596,7 +1597,7 @@ Adresse: %4
     <message>
         <location filename="../forms/optionsdialog.ui" line="461"/>
         <source>M&amp;inimize on close</source>
-        <translation>M&amp;inimer ved lukking</translation>
+        <translation>&amp;Minimér ved lukking</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="482"/>
@@ -1611,13 +1612,14 @@ Adresse: %4
     <message>
         <location filename="../forms/optionsdialog.ui" line="503"/>
         <source>The user interface language can be set here. This setting will take effect after restarting Darkcoin.</source>
-        <translation type="unfinished"/>
+        <translation>Språk for brukergrensesnitt kan bli satt her. Denne innstillingen vil tre i kraft etter en omstart av Darkcoin.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="524"/>
         <source>Language missing or translation incomplete? Help contributing translations here:
 https://www.transifex.com/projects/p/darkcoin/</source>
-        <translation type="unfinished"/>
+        <translation>Manglende språk eller ufullstendig oversettelse? Hjelp med oversettelser her:
+https://www.transifex.com/projects/p/darkcoin/</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="550"/>
@@ -1627,12 +1629,12 @@ https://www.transifex.com/projects/p/darkcoin/</source>
     <message>
         <location filename="../forms/optionsdialog.ui" line="563"/>
         <source>Choose the default subdivision unit to show in the interface and when sending coins.</source>
-        <translation>Velg standard delt enhet for visning i grensesnittet og for sending av bitcoins.</translation>
+        <translation>Velg standard enhet for visning i grensesnittet og for sending av mynter.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="572"/>
         <source>Whether to show Darkcoin addresses in the transaction list or not.</source>
-        <translation type="unfinished"/>
+        <translation>Valg av om Darkcoin-adresser skal vises i transaksjonslista eller ikke.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="575"/>
@@ -1648,7 +1650,7 @@ https://www.transifex.com/projects/p/darkcoin/</source>
     <message>
         <location filename="../forms/optionsdialog.ui" line="587"/>
         <source>Third party transaction URLs</source>
-        <translation>Tredjepart transaksjon URLer</translation>
+        <translation>Tredjepart transaksjon-URLer</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="628"/>
@@ -1658,7 +1660,7 @@ https://www.transifex.com/projects/p/darkcoin/</source>
     <message>
         <location filename="../forms/optionsdialog.ui" line="671"/>
         <source>Reset all client options to default.</source>
-        <translation>Tilbakestill alle klient valg til standard</translation>
+        <translation>Tilbakestill alle klient-valg til standard</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="674"/>
@@ -1728,7 +1730,7 @@ https://www.transifex.com/projects/p/darkcoin/</source>
         <location filename="../forms/overviewpage.ui" line="70"/>
         <location filename="../forms/overviewpage.ui" line="986"/>
         <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Darkcoin network after a connection is established, but this process has not completed yet.</source>
-        <translation type="unfinished"/>
+        <translation>Den viste informasjonen kan være gammel. Lommeboka di synkroniserer automatisk med Darkcoin-nettverket etter en tilkobling er funnet, men denne prosessen er ikke fullført ennå.</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="114"/>
@@ -1748,7 +1750,7 @@ https://www.transifex.com/projects/p/darkcoin/</source>
     <message>
         <location filename="../forms/overviewpage.ui" line="162"/>
         <source>Total of transactions that have yet to be confirmed, and do not yet count toward the spendable balance</source>
-        <translation>Totalt antall ubekreftede transaksjoner som ikke teller med i saldo</translation>
+        <translation>Totalt antall ubekreftede transaksjoner som ikke ennå teller med i saldo</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="178"/>
@@ -1758,7 +1760,7 @@ https://www.transifex.com/projects/p/darkcoin/</source>
     <message>
         <location filename="../forms/overviewpage.ui" line="191"/>
         <source>Mined balance that has not yet matured</source>
-        <translation>Minet saldo har ikke modnet enda</translation>
+        <translation>Gruvedriftutvunnet saldo har ikke modnet enda</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="207"/>
@@ -1768,57 +1770,57 @@ https://www.transifex.com/projects/p/darkcoin/</source>
     <message>
         <location filename="../forms/overviewpage.ui" line="223"/>
         <source>Your current total balance</source>
-        <translation>Din nåværende saldo</translation>
+        <translation>Din nåværende totale saldo</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="302"/>
         <source>Status:</source>
-        <translation type="unfinished"/>
+        <translation>Status:</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="309"/>
         <source>Enabled/Disabled</source>
-        <translation type="unfinished"/>
+        <translation>Aktivert/Deaktivert</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="316"/>
         <source>Completion:</source>
-        <translation type="unfinished"/>
+        <translation>Fullførelse:</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="336"/>
         <source>Darksend Balance:</source>
-        <translation type="unfinished"/>
+        <translation>Darksend Saldo:</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="349"/>
         <source>0 DRK</source>
-        <translation type="unfinished"/>
+        <translation>0 DRK</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="356"/>
         <source>Amount and Rounds:</source>
-        <translation type="unfinished"/>
+        <translation>Beløp og Runder:</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="363"/>
         <source>0 DRK / 0 Rounds</source>
-        <translation type="unfinished"/>
+        <translation>0 DRK / 0 Runder</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="370"/>
         <source>Submitted Denom:</source>
-        <translation type="unfinished"/>
+        <translation>Innsendt Valør:</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="377"/>
         <source>The denominations you submitted to the Masternode. To mix, other users must submit the exact same denominations.</source>
-        <translation type="unfinished"/>
+        <translation>Valørene du sendte inn til Masternoden. For å blande må andre brukere sende inn de eksakt samme valørene.</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="380"/>
         <source>n/a</source>
-        <translation type="unfinished"/>
+        <translation>n/a</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="402"/>
@@ -1826,22 +1828,22 @@ https://www.transifex.com/projects/p/darkcoin/</source>
         <location filename="../overviewpage.cpp" line="462"/>
         <location filename="../overviewpage.cpp" line="476"/>
         <source>Darksend</source>
-        <translation type="unfinished"/>
+        <translation>Darksend</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="858"/>
         <source>Start/Stop Mixing</source>
-        <translation type="unfinished"/>
+        <translation>Start/Stopp Blanding</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="890"/>
         <source>(Last Message)</source>
-        <translation type="unfinished"/>
+        <translation>(Siste Melding)</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="915"/>
         <source>Try to manually submit a Darksend request.</source>
-        <translation type="unfinished"/>
+        <translation>Prøv å manuelt sende inn en Darksend-forespørsel.</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="918"/>
@@ -1891,12 +1893,12 @@ https://www.transifex.com/projects/p/darkcoin/</source>
     <message>
         <location filename="../overviewpage.cpp" line="267"/>
         <source>No inputs detected</source>
-        <translation type="unfinished"/>
+        <translation>Ingen inputs detektert</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="275"/>
         <source>Found unconfirmed denominated outputs, will wait till they confirm to recalculate.</source>
-        <translation type="unfinished"/>
+        <translation>Fant ubekreftede denominerte outputs, vil vente med å rekalkulere til de bekreftes.</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="332"/>
@@ -2605,7 +2607,7 @@ https://www.transifex.com/projects/p/darkcoin/</source>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="110"/>
         <source>Inputs...</source>
-        <translation>Inndata...</translation>
+        <translation>Inputs...</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="117"/>
@@ -2650,7 +2652,7 @@ https://www.transifex.com/projects/p/darkcoin/</source>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="420"/>
         <source>Low Output:</source>
-        <translation>Svake Utdata:</translation>
+        <translation>Lav Output:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="433"/>
@@ -2710,7 +2712,7 @@ https://www.transifex.com/projects/p/darkcoin/</source>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="752"/>
         <source>Darksend</source>
-        <translation type="unfinished"/>
+        <translation>Darksend</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="771"/>
@@ -2755,7 +2757,7 @@ https://www.transifex.com/projects/p/darkcoin/</source>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="59"/>
         <source>Copy low output</source>
-        <translation>Kopier svake utdata</translation>
+        <translation>Kopiér lav output</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="60"/>
@@ -2988,7 +2990,7 @@ https://www.transifex.com/projects/p/darkcoin/</source>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="24"/>
         <source>&amp;Sign Message</source>
-        <translation>&amp;Signer Melding</translation>
+        <translation>&amp;Signér Melding</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="30"/>
@@ -3412,7 +3414,7 @@ https://www.transifex.com/projects/p/darkcoin/</source>
     <message>
         <location filename="../transactiondesc.cpp" line="311"/>
         <source>Inputs</source>
-        <translation>Inndata</translation>
+        <translation>Inputs</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="332"/>
@@ -3558,7 +3560,7 @@ https://www.transifex.com/projects/p/darkcoin/</source>
     <message>
         <location filename="../transactiontablemodel.cpp" line="375"/>
         <source>Darksend Make Collateral Inputs</source>
-        <translation type="unfinished"/>
+        <translation>Darksend Lag Sikkerhet-Inputs</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="377"/>
@@ -3657,7 +3659,7 @@ https://www.transifex.com/projects/p/darkcoin/</source>
     <message>
         <location filename="../transactionview.cpp" line="82"/>
         <source>Darksend Make Collateral Inputs</source>
-        <translation type="unfinished"/>
+        <translation>Darksend Lag Sikkerhet-Inputs</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="83"/>
@@ -3995,7 +3997,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Darkcoin Alert&quot; admin@foo
     <message>
         <location filename="../bitcoinstrings.cpp" line="90"/>
         <source>Found unconfirmed denominated outputs, will wait till they confirm to continue.</source>
-        <translation type="unfinished"/>
+        <translation>Fant ubekreftede denominerte outputs, vil vente med å gå videre til de bekreftes.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="93"/>
@@ -4010,7 +4012,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Darkcoin Alert&quot; admin@foo
     <message>
         <location filename="../bitcoinstrings.cpp" line="98"/>
         <source>InstantX requires inputs with at least 6 confirmations, you might need to wait a few minutes and try again.</source>
-        <translation type="unfinished"/>
+        <translation>InstantX trenger inputs med minst 6 bekreftelser, du trenger kanskje å vente noen minutter før du prøver igjen.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="101"/>
@@ -4030,7 +4032,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Darkcoin Alert&quot; admin@foo
     <message>
         <location filename="../bitcoinstrings.cpp" line="108"/>
         <source>Output debugging information (default: 0, supplying &lt;category&gt; is optional)</source>
-        <translation type="unfinished"/>
+        <translation>Vis debug-informasjon (standard: 0, Å oppgi &lt;kategori&gt; er frivillig)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="110"/>
@@ -4182,7 +4184,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="181"/>
         <source>Already have that input.</source>
-        <translation type="unfinished"/>
+        <translation>Har allerede den inputen.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="182"/>
@@ -4202,7 +4204,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="185"/>
         <source>Can&apos;t denominate: no compatible inputs left.</source>
-        <translation type="unfinished"/>
+        <translation>Kan ikke denominere: Ingen kompatible inputs eksisterer.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="186"/>
@@ -4497,7 +4499,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="244"/>
         <source>If &lt;category&gt; is not supplied, output all debugging information.</source>
-        <translation type="unfinished"/>
+        <translation>Hvis &lt;kategori&gt; ikke er oppgitt, vis all debug-informasjon.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="245"/>
@@ -4542,7 +4544,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="253"/>
         <source>Input is not valid.</source>
-        <translation type="unfinished"/>
+        <translation>Input er ikke gyldig.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="254"/>
@@ -4717,7 +4719,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="288"/>
         <source>Missing input transaction information.</source>
-        <translation type="unfinished"/>
+        <translation>Mangler transaksjoninformasjon for input.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="289"/>
@@ -4782,7 +4784,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="301"/>
         <source>Prepend debug output with timestamp (default: 1)</source>
-        <translation type="unfinished"/>
+        <translation>Foranstill debug-visning med tidsstempel (standard: 1)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="302"/>

@@ -15,7 +15,8 @@
         <location filename="../forms/aboutdialog.ui" line="94"/>
         <source>Copyright &amp;copy; 2009-2014 The Bitcoin Core developers.
 Copyright &amp;copy; 2014-YYYY The Darkcoin Core developers.</source>
-        <translation type="unfinished"/>
+        <translation>Copyright &amp;copy; 2009-2014 Разработчики Bitcoin Core.
+Copyright &amp;copy; 2014-YYYY Разработчики Darkcoin Core.</translation>
     </message>
     <message>
         <location filename="../forms/aboutdialog.ui" line="111"/>
@@ -1471,7 +1472,7 @@ Address: %4
     <message>
         <location filename="../forms/optionsdialog.ui" line="165"/>
         <source>This amount acts as a threshold to turn off Darksend once it&apos;s reached.</source>
-        <translation type="unfinished"/>
+        <translation>Это пороговое значение, при достижении которого автоматическое перемешивание отключается.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="180"/>
@@ -1617,7 +1618,8 @@ Address: %4
         <location filename="../forms/optionsdialog.ui" line="524"/>
         <source>Language missing or translation incomplete? Help contributing translations here:
 https://www.transifex.com/projects/p/darkcoin/</source>
-        <translation type="unfinished"/>
+        <translation>Нет Вашего языка или перевод неполон? Помогите нам сделать перевод лучше:
+https://www.transifex.com/projects/p/darkcoin/</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="550"/>
@@ -3825,7 +3827,7 @@ https://www.transifex.com/projects/p/darkcoin/</source>
     <message numerus="yes">
         <location filename="../walletmodel.cpp" line="272"/>
         <source>InstantX doesn&apos;t support sending values that high yet. Transactions are currently limited to %n DRK.</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation><numerusform>InstantX пока что не поддерживает такие большие суммы. На данный момент транзакции ограничены суммами до %n DRK.</numerusform><numerusform>InstantX пока что не поддерживает такие большие суммы. На данный момент транзакции ограничены суммами до %n DRK.</numerusform><numerusform>InstantX пока что не поддерживает такие большие суммы. На данный момент транзакции ограничены суммами до %n DRK.</numerusform></translation>
     </message>
 </context>
 <context>

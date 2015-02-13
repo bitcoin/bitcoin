@@ -15,7 +15,8 @@
         <location filename="../forms/aboutdialog.ui" line="94"/>
         <source>Copyright &amp;copy; 2009-2014 The Bitcoin Core developers.
 Copyright &amp;copy; 2014-YYYY The Darkcoin Core developers.</source>
-        <translation type="unfinished"/>
+        <translation>版权 &amp;copy; 2009-2014 比特币核心的开发者。
+版权 &amp;copy; 暗黑币核心的开发者。</translation>
     </message>
     <message>
         <location filename="../forms/aboutdialog.ui" line="111"/>
@@ -847,7 +848,7 @@ Address: %4
     <message>
         <location filename="../forms/coincontroldialog.ui" line="400"/>
         <source>(1 locked)</source>
-        <translation type="unfinished"/>
+        <translation>(1 锁定)</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="446"/>
@@ -4336,7 +4337,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="211"/>
         <source>Entries are full.</source>
-        <translation type="unfinished"/>
+        <translation>参赛作品都满了。</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="212"/>
@@ -4521,7 +4522,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="248"/>
         <source>Incompatible mode.</source>
-        <translation type="unfinished"/>
+        <translation>不兼容的模式。</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="249"/>
