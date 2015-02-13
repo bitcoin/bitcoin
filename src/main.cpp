@@ -2857,7 +2857,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
             }
         }
     } else {
-        LogPrintf("CheckBlock() : fork detected, skipping transaction locking checks\n");
+        LogPrintf("CheckBlock() : skipping transaction locking checks\n");
     }
 
 
