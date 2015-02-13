@@ -796,9 +796,10 @@ void CMasternodePayments::Relay(CMasternodePaymentWinner& winner)
 
 void CMasternodePayments::Sync(CNode* node)
 {
+    int a = 0;
     BOOST_FOREACH(CMasternodePaymentWinner& winner, vWinning)
         if(winner.nBlockHeight >= chainActive.Tip()->nHeight-10 && winner.nBlockHeight <= chainActive.Tip()->nHeight + 20)
-            node->PushMessage("mnw", winner);
+            node->PushMessage("mnw", winner, a);
 }
 
 
