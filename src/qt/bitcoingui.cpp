@@ -735,17 +735,6 @@ void BitcoinGUI::updateMining()
         labelMiningIcon->setToolTip(tr("No suitable inputs were found"));
 }
 
-void BitcoinGUI::error(const QString &title, const QString &message, bool modal)
-{
-    // Report errors from network/worker thread
-    if(modal)
-    {
-        QMessageBox::critical(this, title, message, QMessageBox::Ok, QMessageBox::Ok);
-    } else {
-        notificator->notify(Notificator::Critical, title, message);
-    }
-}
-
 void BitcoinGUI::message(const QString &title, const QString &message, unsigned int style, const QString &detail)
 {
     QString strTitle = tr("NovaCoin") + " - ";
@@ -1116,7 +1105,7 @@ void BitcoinGUI::dumpWallet()
     QString filename = QFileDialog::getSaveFileName(this, tr("Dump Wallet"), saveDir, tr("Wallet dump (*.txt)"));
     if(!filename.isEmpty()) {
         if(!walletModel->dumpWallet(filename)) {
-            error(tr("Dump failed"),
+            message(tr("Dump failed"),
                          tr("An error happened while trying to save the keys to your location.\n"
                             "Keys were not saved.")
                       ,CClientUIInterface::MSG_ERROR);
@@ -1149,7 +1138,7 @@ void BitcoinGUI::importWallet()
     QString filename = QFileDialog::getOpenFileName(this, tr("Import Wallet"), openDir, tr("Wallet dump (*.txt)"));
     if(!filename.isEmpty()) {
         if(!walletModel->importWallet(filename)) {
-            error(tr("Import Failed"),
+            message(tr("Import Failed"),
                          tr("An error happened while trying to import the keys.\n"
                             "Some or all keys from:\n %1,\n were not imported into your wallet.")
                          .arg(filename)
