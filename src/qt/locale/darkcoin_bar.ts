@@ -1746,7 +1746,8 @@ https://www.transifex.com/projects/p/darkcoin/</source>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="70"/>
-        <location filename="../forms/overviewpage.ui" line="986"/>
+        <location filename="../forms/overviewpage.ui" line="953"/>
+        <location filename="../forms/overviewpage.ui" line="1021"/>
         <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Darkcoin network after a connection is established, but this process has not completed yet.</source>
         <translation>Ois was hia schdaad is a bissal ald.
 
@@ -1843,205 +1844,206 @@ Aba, wards ab, des wird. Brauchd bloss a Minudn bis der Darkcon Koa mid di andan
         <translation>woasined</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="402"/>
-        <location filename="../overviewpage.cpp" line="448"/>
-        <location filename="../overviewpage.cpp" line="462"/>
-        <location filename="../overviewpage.cpp" line="476"/>
+        <location filename="../forms/overviewpage.ui" line="946"/>
+        <location filename="../overviewpage.cpp" line="450"/>
+        <location filename="../overviewpage.cpp" line="464"/>
+        <location filename="../overviewpage.cpp" line="478"/>
         <source>Darksend</source>
         <translation>Darksend</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="858"/>
+        <location filename="../forms/overviewpage.ui" line="839"/>
         <source>Start/Stop Mixing</source>
         <translation>Aufhörn/Anfangn mim Kapuzzn-ma´ha</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="890"/>
+        <location filename="../forms/overviewpage.ui" line="871"/>
         <source>(Last Message)</source>
         <translation>(lasd Mesidsch)</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="915"/>
+        <location filename="../forms/overviewpage.ui" line="896"/>
         <source>Try to manually submit a Darksend request.</source>
         <translation>Versuschsd hald per Hond a Darksend-Za-lungs-an-wai-sung zu ma´ha</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="918"/>
+        <location filename="../forms/overviewpage.ui" line="899"/>
         <source>Try Mix</source>
         <translation>Kapuzzal nomal schubsn</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="937"/>
+        <location filename="../forms/overviewpage.ui" line="918"/>
         <source>Reset the current status of Darksend (can interrupt Darksend if it&apos;s in the process of Mixing, which can cost you money!)</source>
         <translation>S´ Kapuzzn-ma´ha und Hüdchen-Schbuin [Darksend] aufhörn (auf die harte Tua). OBACHT, kann toija wean!</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="943"/>
+        <location filename="../forms/overviewpage.ui" line="924"/>
         <source>Reset</source>
         <translation>Ois Zruck seza</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="979"/>
+        <location filename="../forms/overviewpage.ui" line="1014"/>
         <source>&lt;b&gt;Recent transactions&lt;/b&gt;</source>
         <translation>&lt;b&gt;S´ lezde Nai und Naus&lt;/b&gt;</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="126"/>
         <location filename="../overviewpage.cpp" line="127"/>
+        <location filename="../overviewpage.cpp" line="128"/>
         <source>out of sync</source>
         <translation>ned auf da selbm Höhe wi da Reschd</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="142"/>
-        <location filename="../overviewpage.cpp" line="347"/>
+        <location filename="../overviewpage.cpp" line="143"/>
+        <location filename="../overviewpage.cpp" line="349"/>
         <source>Disabled</source>
         <translation>Ausgmachd</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="145"/>
-        <location filename="../overviewpage.cpp" line="349"/>
-        <location filename="../overviewpage.cpp" line="490"/>
+        <location filename="../overviewpage.cpp" line="146"/>
+        <location filename="../overviewpage.cpp" line="351"/>
+        <location filename="../overviewpage.cpp" line="492"/>
         <source>Start Darksend Mixing</source>
         <translation>´S Kapuzzal-Hütchenschbui starten</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="147"/>
-        <location filename="../overviewpage.cpp" line="492"/>
+        <location filename="../overviewpage.cpp" line="148"/>
+        <location filename="../overviewpage.cpp" line="494"/>
         <source>Stop Darksend Mixing</source>
         <translation>Kapuzzal-Schbui schdoppn</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="267"/>
+        <location filename="../overviewpage.cpp" line="269"/>
         <source>No inputs detected</source>
         <translation>I sig hald goa nix (kimmd nix o bai mia)</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="275"/>
+        <location filename="../overviewpage.cpp" line="277"/>
         <source>Found unconfirmed denominated outputs, will wait till they confirm to recalculate.</source>
         <translation>A paar kloane Kapuzzal san da drausn unbeafsichdigd. I ward no a bissal bis di alle wida im Käfig san. (Dan wissma wida wifuis insgsamd san)</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="332"/>
+        <location filename="../overviewpage.cpp" line="334"/>
         <source>Rounds</source>
         <translation>Rundn</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="363"/>
+        <location filename="../overviewpage.cpp" line="365"/>
         <source>Enabled</source>
         <translation>Angmachd</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="419"/>
+        <location filename="../overviewpage.cpp" line="421"/>
         <source>Last Darksend message:
 </source>
         <translation>Läzde Darksend Mässidsch:
 </translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="376"/>
-        <location filename="../overviewpage.cpp" line="401"/>
+        <location filename="../overviewpage.cpp" line="378"/>
+        <location filename="../overviewpage.cpp" line="403"/>
         <source>Darksend is idle.</source>
         <translation>Da Darksend hadn Finga im Bauchnabl und dängd nach...</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="382"/>
+        <location filename="../overviewpage.cpp" line="384"/>
         <source>Darksend request complete: Your transaction was accepted into the pool!</source>
         <translation>Huiiiii, und Losgäds! S´ Kapuzzal is ankomm´n und wiad ezd gmischd! (&quot;accepted into pool&quot;)</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="388"/>
+        <location filename="../overviewpage.cpp" line="390"/>
         <source>Submitted following entries to masternode:</source>
         <translation>Dise Kappuzzal sin aufm Weg zur Mastanode:</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="389"/>
-        <location filename="../overviewpage.cpp" line="390"/>
         <location filename="../overviewpage.cpp" line="391"/>
+        <location filename="../overviewpage.cpp" line="392"/>
+        <location filename="../overviewpage.cpp" line="393"/>
         <source>Submitted to masternode, Waiting for more entries</source>
         <translation>Kapuzzal sin bai da Masternode - &quot;wäiting for plaija tu&quot;!</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="394"/>
+        <location filename="../overviewpage.cpp" line="396"/>
         <source>Found enough users, signing ...</source>
         <translation>Olle da, ezd kimd da Servus drunnta....</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="395"/>
+        <location filename="../overviewpage.cpp" line="397"/>
         <source>Found enough users, signing ( waiting. )</source>
         <translation>Olle da, ezd kimd da Servus drunnta.... (dauad a bissal)</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="396"/>
+        <location filename="../overviewpage.cpp" line="398"/>
         <source>Found enough users, signing ( waiting.. )</source>
         <translation>Olle da, ezd kimd da Servus drunnta.... (dauad a bissal)</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="397"/>
+        <location filename="../overviewpage.cpp" line="399"/>
         <source>Found enough users, signing ( waiting... )</source>
         <translation>Olle da, ezd kimd da Servus drunnta.... (dauad a bissal)</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="399"/>
+        <location filename="../overviewpage.cpp" line="401"/>
         <source>Transmitting final transaction.</source>
         <translation>lezde Kapuzzal/Übawaisung is naus.</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="403"/>
+        <location filename="../overviewpage.cpp" line="405"/>
         <source>Finalizing transaction.</source>
         <translation>Kapuzzal/Übawaisung grigd grad n Schdempl und passd.</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="405"/>
+        <location filename="../overviewpage.cpp" line="407"/>
         <source>Darksend request incomplete:</source>
         <translation>Darksend kann no ned gschdarded wean:</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="405"/>
+        <location filename="../overviewpage.cpp" line="407"/>
         <source>Will retry...</source>
         <translation>i porbiars glai nommal...</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="407"/>
+        <location filename="../overviewpage.cpp" line="409"/>
         <source>Darksend request complete:</source>
         <translation>Darksend gehd richdig los:</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="409"/>
+        <location filename="../overviewpage.cpp" line="411"/>
         <source>Submitted to masternode, waiting in queue .</source>
         <translation>Kapuzzal is bai da Mastanode und wartäd bis´s drann is.</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="410"/>
+        <location filename="../overviewpage.cpp" line="412"/>
         <source>Submitted to masternode, waiting in queue ..</source>
         <translation>Kapuzzal is bai da Mastanode und wartäd bis´s drann is.</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="411"/>
+        <location filename="../overviewpage.cpp" line="413"/>
         <source>Submitted to masternode, waiting in queue ...</source>
         <translation>Kapuzzal is bai da Mastanode und wartäd bis´s drann is.</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="413"/>
+        <location filename="../overviewpage.cpp" line="415"/>
         <source>Unknown state:</source>
         <translation>Äh, i wais ezd au ned was grod gehd... äh.... moment...</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="427"/>
+        <location filename="../overviewpage.cpp" line="429"/>
         <source>N/A</source>
         <translation>woasi ned</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="449"/>
+        <location filename="../overviewpage.cpp" line="451"/>
         <source>Darksend was successfully reset.</source>
         <translation>Di Darksend (Kapuzzn-ma´ha)-Eischdellunga san wida zruck gsezd woan.</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="463"/>
+        <location filename="../overviewpage.cpp" line="465"/>
         <source>Darksend requires at least %1 to use.</source>
         <translation>Zum Kapuzzn-ma´ha brauchsch mindeschdns %1.</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="477"/>
+        <location filename="../overviewpage.cpp" line="479"/>
         <source>Wallet is locked and user declined to unlock. Disabling Darksend.</source>
         <translation>Da Goidbaidl is zua und der Depp willn auned aufma´ha. Kapuzzn wean ezd koine mea gmachd. </translation>
     </message>
@@ -3470,157 +3472,157 @@ Wenn dai Kischdn rechd schiach ausschaugd, dann sagen di Andan &quot;bäh&quot; 
 <context>
     <name>TransactionTableModel</name>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="239"/>
+        <location filename="../transactiontablemodel.cpp" line="233"/>
         <source>Date</source>
         <translation>Datum</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="239"/>
+        <location filename="../transactiontablemodel.cpp" line="233"/>
         <source>Type</source>
         <translation>Tüpp</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="239"/>
+        <location filename="../transactiontablemodel.cpp" line="233"/>
         <source>Address</source>
         <translation>Adressn</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="239"/>
+        <location filename="../transactiontablemodel.cpp" line="233"/>
         <source>Amount</source>
         <translation>Wie fui</translation>
     </message>
     <message numerus="yes">
-        <location filename="../transactiontablemodel.cpp" line="288"/>
+        <location filename="../transactiontablemodel.cpp" line="285"/>
         <source>Open for %n more block(s)</source>
         <translation><numerusform>Unerledigd bis no %n Überwaisungs-Kischdn kommd</numerusform><numerusform>Unerledigd bis no %n Überwaisungs-Kischdn komma</numerusform></translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="291"/>
+        <location filename="../transactiontablemodel.cpp" line="288"/>
         <source>Open until %1</source>
         <translation>G´öffned bis %1</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="294"/>
+        <location filename="../transactiontablemodel.cpp" line="291"/>
         <source>Offline</source>
         <translation>Ned am Nezz</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="297"/>
+        <location filename="../transactiontablemodel.cpp" line="294"/>
         <source>Unconfirmed</source>
         <translation>Unbeschdädigd</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="300"/>
+        <location filename="../transactiontablemodel.cpp" line="297"/>
         <source>Confirming (%1 of %2 recommended confirmations)</source>
         <translation>Wiad Bschdädigd  (%1 von %2 Bschdädigunga, di wo ma brauchd)</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="303"/>
+        <location filename="../transactiontablemodel.cpp" line="300"/>
         <source>Confirmed (%1 confirmations)</source>
         <translation>Bschdädigd (%1 Bschdädigunga)</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="306"/>
+        <location filename="../transactiontablemodel.cpp" line="303"/>
         <source>Conflicted</source>
         <translation>A bissal Gschoggd is scho.</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="309"/>
+        <location filename="../transactiontablemodel.cpp" line="306"/>
         <source>Immature (%1 confirmations, will be available after %2)</source>
         <translation>No a bissal Grean hindad Oan (is erst %1 , erwaxxn is mid %2)</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="312"/>
+        <location filename="../transactiontablemodel.cpp" line="309"/>
         <source>This block was not received by any other nodes and will probably not be accepted!</source>
         <translation>Dai Kischdn is so schiach, wi will koina anschaun. Des sigd so aus wih wenn des nix wiad!</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="315"/>
+        <location filename="../transactiontablemodel.cpp" line="312"/>
         <source>Generated but not accepted</source>
         <translation>Aufbaud hamses, aber no hod där Bau kai Genemigung</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="357"/>
+        <location filename="../transactiontablemodel.cpp" line="354"/>
         <source>Received with</source>
         <translation>Mir gschigd woan</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="359"/>
+        <location filename="../transactiontablemodel.cpp" line="356"/>
         <source>Received from</source>
         <translation>Griggd vom</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="361"/>
+        <location filename="../transactiontablemodel.cpp" line="358"/>
         <source>Received via Darksend</source>
         <translation>Griggd üban Darksend</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="364"/>
+        <location filename="../transactiontablemodel.cpp" line="361"/>
         <source>Sent to</source>
         <translation>Habi gschiggd</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="366"/>
+        <location filename="../transactiontablemodel.cpp" line="363"/>
         <source>Payment to yourself</source>
         <translation>An mi Selba</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="368"/>
+        <location filename="../transactiontablemodel.cpp" line="365"/>
         <source>Mined</source>
         <translation>fom Kisdn ma´ha</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="371"/>
+        <location filename="../transactiontablemodel.cpp" line="368"/>
         <source>Darksend Denominate</source>
         <translation>Zum Kapuzzal-ma´ha kloina gmachd</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="373"/>
+        <location filename="../transactiontablemodel.cpp" line="370"/>
         <source>Darksend Collateral Payment</source>
         <translation>Darksend Schudzgoid</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="375"/>
+        <location filename="../transactiontablemodel.cpp" line="372"/>
         <source>Darksend Make Collateral Inputs</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="377"/>
+        <location filename="../transactiontablemodel.cpp" line="374"/>
         <source>Darksend Create Denominations</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="379"/>
+        <location filename="../transactiontablemodel.cpp" line="376"/>
         <source>Darksent</source>
         <translation>mit Kappuzal gschickd</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="421"/>
+        <location filename="../transactiontablemodel.cpp" line="418"/>
         <source>(n/a)</source>
         <translation>(woasined)</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="613"/>
+        <location filename="../transactiontablemodel.cpp" line="610"/>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
         <translation>Wi siha is das´s globd had mid dem Goid sendn/empfang´n. Duasd dain Mauszaigerl üba di Tränsäktschn und dann sigsd wi ofds scho ainbaud woan is in di Kischderl.</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="615"/>
+        <location filename="../transactiontablemodel.cpp" line="612"/>
         <source>Date and time that the transaction was received.</source>
         <translation>Wans griggd hosd, die Tränsäktschn.</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="617"/>
+        <location filename="../transactiontablemodel.cpp" line="614"/>
         <source>Type of transaction.</source>
         <translation>Art. (Hund, Kazzal, Giggala, ...)</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="619"/>
+        <location filename="../transactiontablemodel.cpp" line="616"/>
         <source>Destination address of transaction.</source>
         <translation>An wen des Goid gehd.</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="621"/>
+        <location filename="../transactiontablemodel.cpp" line="618"/>
         <source>Amount removed from or added to balance.</source>
         <translation>Des Goid des weg ganga is oda dazukimma.</translation>
     </message>
@@ -3840,13 +3842,13 @@ Wenn dai Kischdn rechd schiach ausschaugd, dann sagen di Andan &quot;bäh&quot; 
 <context>
     <name>WalletModel</name>
     <message>
-        <location filename="../walletmodel.cpp" line="272"/>
-        <location filename="../walletmodel.cpp" line="286"/>
+        <location filename="../walletmodel.cpp" line="271"/>
+        <location filename="../walletmodel.cpp" line="285"/>
         <source>Send Coins</source>
         <translation>Coins schickga</translation>
     </message>
     <message numerus="yes">
-        <location filename="../walletmodel.cpp" line="272"/>
+        <location filename="../walletmodel.cpp" line="271"/>
         <source>InstantX doesn&apos;t support sending values that high yet. Transactions are currently limited to %n DRK.</source>
         <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
     </message>
@@ -3864,32 +3866,32 @@ Wenn dai Kischdn rechd schiach ausschaugd, dann sagen di Andan &quot;bäh&quot; 
         <translation>Di DADN dis grod gibd (- woaschscho, des wos ma hald so schbaichad-) schbaichan. So wi exl oda wi da Grampf hoast.</translation>
     </message>
     <message>
-        <location filename="../walletview.cpp" line="229"/>
+        <location filename="../walletview.cpp" line="231"/>
         <source>Backup Wallet</source>
         <translation>Goidbaidl BÄGG-UPPN</translation>
     </message>
     <message>
-        <location filename="../walletview.cpp" line="230"/>
+        <location filename="../walletview.cpp" line="232"/>
         <source>Wallet Data (*.dat)</source>
         <translation>Wa-, wa- , Wal-l .. ACH LIAS DOCH SÄIBA: &quot;Wallet Data (*.dat)&quot;, ezad</translation>
     </message>
     <message>
-        <location filename="../walletview.cpp" line="236"/>
+        <location filename="../walletview.cpp" line="238"/>
         <source>Backup Failed</source>
         <translation>A Grampf is des.</translation>
     </message>
     <message>
-        <location filename="../walletview.cpp" line="236"/>
+        <location filename="../walletview.cpp" line="238"/>
         <source>There was an error trying to save the wallet data to %1.</source>
         <translation>Hod ned glabd, des schbaichan von daim Goidbaidl! (sold aigendlich da: %1 ankomm´n sain)</translation>
     </message>
     <message>
-        <location filename="../walletview.cpp" line="240"/>
+        <location filename="../walletview.cpp" line="242"/>
         <source>Backup Successful</source>
         <translation>ERFOLGRAICH soggi.</translation>
     </message>
     <message>
-        <location filename="../walletview.cpp" line="240"/>
+        <location filename="../walletview.cpp" line="242"/>
         <source>The wallet data was successfully saved to %1.</source>
         <translation>Dai Goidbaidl liagd ezd zusäzlich unta %1.</translation>
     </message>
