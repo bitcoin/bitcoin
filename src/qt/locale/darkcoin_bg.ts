@@ -586,17 +586,17 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="319"/>
         <source>Open a darkcoin: URI or payment request</source>
-        <translation type="unfinished"/>
+        <translation>Отвори Дарккойн: URI или заявка за плащане</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="321"/>
         <source>&amp;Command-line options</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Опции на командния ред</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="322"/>
         <source>Show the Darkcoin Core help message to get a list with possible Darkcoin command-line options</source>
-        <translation type="unfinished"/>
+        <translation>Покажи помощ за Дарккойн ядрото със списък на възможните опции за командрия ред</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="358"/>
@@ -642,22 +642,22 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="653"/>
         <source>Importing blocks from disk...</source>
-        <translation type="unfinished"/>
+        <translation>Въвеждат се блокове от диска...</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="656"/>
         <source>Reindexing blocks on disk...</source>
-        <translation type="unfinished"/>
+        <translation>Преиндексиране на блокове на диска...</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="660"/>
         <source>No block source available...</source>
-        <translation type="unfinished"/>
+        <translation>Няма източник на блокове...</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="670"/>
         <source>Processed %1 blocks of transaction history.</source>
-        <translation type="unfinished"/>
+        <translation>Обработени %1 блока от историята с транзакции.</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="675"/>
@@ -667,18 +667,18 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="696"/>
         <source>%n hour(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation><numerusform>%n час(а)</numerusform><numerusform>%n час(а)</numerusform></translation>
     </message>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="700"/>
         <source>%n day(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation><numerusform>%n ден(а)</numerusform><numerusform>%n ден(а)</numerusform></translation>
     </message>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="704"/>
         <location filename="../bitcoingui.cpp" line="710"/>
         <source>%n week(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation><numerusform>%n седмица(и)</numerusform><numerusform>%n седмица(и)</numerusform></translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="710"/>
@@ -688,12 +688,12 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="710"/>
         <source>%n year(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation><numerusform>%n година(и)</numerusform><numerusform>%n година(и)</numerusform></translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="714"/>
         <source>%1 behind</source>
-        <translation type="unfinished"/>
+        <translation>%1 назад</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="719"/>
@@ -708,7 +708,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="737"/>
         <source>Transactions after this will not yet be visible.</source>
-        <translation type="unfinished"/>
+        <translation>Транзакции след това, все още няма да се виждат.</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="750"/>
@@ -761,7 +761,7 @@ Address: %4
     <message>
         <location filename="../bitcoingui.cpp" line="931"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt; for anonimization only</source>
-        <translation type="unfinished"/>
+        <translation>Портфейлът е &lt;b&gt;шифриран&lt;/b&gt; и в момента &lt;b&gt;отключен&lt;/b&gt; само за анонимизиране</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="941"/>
@@ -779,7 +779,7 @@ Address: %4
     <message>
         <location filename="../clientmodel.cpp" line="135"/>
         <source>Network Alert</source>
-        <translation type="unfinished"/>
+        <translation>Предупреждение от мрежата</translation>
     </message>
 </context>
 <context>
@@ -787,7 +787,7 @@ Address: %4
     <message>
         <location filename="../forms/coincontroldialog.ui" line="14"/>
         <source>Coin Control Address Selection</source>
-        <translation type="unfinished"/>
+        <translation>Избор на адреси с функцията контрол на монетата</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="48"/>
@@ -822,32 +822,32 @@ Address: %4
     <message>
         <location filename="../forms/coincontroldialog.ui" line="276"/>
         <source>After Fee:</source>
-        <translation type="unfinished"/>
+        <translation>След таксата:</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="308"/>
         <source>Change:</source>
-        <translation type="unfinished"/>
+        <translation>Ресто:</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="364"/>
         <source>(un)select all</source>
-        <translation type="unfinished"/>
+        <translation>(де)маркирай всичко</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="377"/>
         <source>Tree mode</source>
-        <translation type="unfinished"/>
+        <translation>Режим дърво</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="393"/>
         <source>List mode</source>
-        <translation type="unfinished"/>
+        <translation>Режим списък</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="400"/>
         <source>(1 locked)</source>
-        <translation type="unfinished"/>
+        <translation>(1 заключен)</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="446"/>
@@ -913,12 +913,12 @@ Address: %4
     <message>
         <location filename="../coincontroldialog.cpp" line="47"/>
         <source>Lock unspent</source>
-        <translation type="unfinished"/>
+        <translation>Заключи неизхарченото</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="48"/>
         <source>Unlock unspent</source>
-        <translation type="unfinished"/>
+        <translation>Отключи неизхарченото</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="70"/>
@@ -933,17 +933,17 @@ Address: %4
     <message>
         <location filename="../coincontroldialog.cpp" line="73"/>
         <source>Copy after fee</source>
-        <translation type="unfinished"/>
+        <translation>Копирай след таксата</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="74"/>
         <source>Copy bytes</source>
-        <translation type="unfinished"/>
+        <translation>Копирай байтовете</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="75"/>
         <source>Copy priority</source>
-        <translation type="unfinished"/>
+        <translation>Копирай приоритета</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="76"/>
@@ -953,58 +953,58 @@ Address: %4
     <message>
         <location filename="../coincontroldialog.cpp" line="77"/>
         <source>Copy change</source>
-        <translation type="unfinished"/>
+        <translation>Копирай рестото</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="410"/>
         <source>highest</source>
-        <translation type="unfinished"/>
+        <translation>най-висок</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="411"/>
         <source>higher</source>
-        <translation type="unfinished"/>
+        <translation>по-висок</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="412"/>
         <source>high</source>
-        <translation type="unfinished"/>
+        <translation>висок</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="413"/>
         <source>medium-high</source>
-        <translation type="unfinished"/>
+        <translation>средно-висок</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="164"/>
         <location filename="../coincontroldialog.cpp" line="414"/>
         <source>medium</source>
-        <translation type="unfinished"/>
+        <translation>среден</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="418"/>
         <source>low-medium</source>
-        <translation type="unfinished"/>
+        <translation>средно-нисък</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="419"/>
         <source>low</source>
-        <translation type="unfinished"/>
+        <translation>нисък</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="420"/>
         <source>lower</source>
-        <translation type="unfinished"/>
+        <translation>по-нисък</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="421"/>
         <source>lowest</source>
-        <translation type="unfinished"/>
+        <translation>най-нисък</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="432"/>
         <source>(%1 locked)</source>
-        <translation type="unfinished"/>
+        <translation>(%1 заключен)</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="464"/>
@@ -1036,12 +1036,12 @@ Address: %4
         <location filename="../coincontroldialog.cpp" line="616"/>
         <location filename="../coincontroldialog.cpp" line="621"/>
         <source>This means a fee of at least %1 per kB is required.</source>
-        <translation type="unfinished"/>
+        <translation>Това означава, че е нужна такса поне %1 за кБ.</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="617"/>
         <source>Can vary +/- 1 byte per input.</source>
-        <translation type="unfinished"/>
+        <translation>Може да варира +/- 1 байта за вход.</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="619"/>
@@ -1051,18 +1051,18 @@ Address: %4
     <message>
         <location filename="../coincontroldialog.cpp" line="620"/>
         <source>This label turns red, if the priority is smaller than &quot;medium&quot;.</source>
-        <translation type="unfinished"/>
+        <translation>Този етикет се оцветява в червено, ако приоритетът е по-малък от &quot;среден&quot;.</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="623"/>
         <source>This label turns red, if any recipient receives an amount smaller than %1.</source>
-        <translation>Това наименование се оцветява в червено, ако произволен получател получи сума по-малка от %1.</translation>
+        <translation>Това етикет се оцветява в червено, ако произволен получател получи сума по-малка от %1.</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="624"/>
         <location filename="../coincontroldialog.cpp" line="628"/>
         <source>This means a fee of at least %1 is required.</source>
-        <translation type="unfinished"/>
+        <translation>Това означава, че се изисква такса най-малко %1.</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="625"/>
@@ -1072,7 +1072,7 @@ Address: %4
     <message>
         <location filename="../coincontroldialog.cpp" line="627"/>
         <source>This label turns red, if the change is smaller than %1.</source>
-        <translation type="unfinished"/>
+        <translation>Този етикет се оцветява в червено, ако рестото е по-малко от %1.</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="670"/>
@@ -1083,12 +1083,12 @@ Address: %4
     <message>
         <location filename="../coincontroldialog.cpp" line="724"/>
         <source>change from %1 (%2)</source>
-        <translation type="unfinished"/>
+        <translation>ресто от %1 (%2)</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="725"/>
         <source>(change)</source>
-        <translation type="unfinished"/>
+        <translation>(ресто)</translation>
     </message>
 </context>
 <context>
@@ -1096,27 +1096,27 @@ Address: %4
     <message>
         <location filename="../forms/darksendconfig.ui" line="14"/>
         <source>Configure Darksend</source>
-        <translation type="unfinished"/>
+        <translation>Настройка на Дарксенд</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="26"/>
         <source>Basic Privacy</source>
-        <translation type="unfinished"/>
+        <translation>Нормална сигурност</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="39"/>
         <source>High Privacy</source>
-        <translation type="unfinished"/>
+        <translation>Висока сигурност</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="52"/>
         <source>Maximum Privacy</source>
-        <translation type="unfinished"/>
+        <translation>Максимална сигурност</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="65"/>
         <source>Please select a privacy level.</source>
-        <translation type="unfinished"/>
+        <translation>Моля изберете ниво на сигурност</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="78"/>
@@ -1136,29 +1136,29 @@ Address: %4
     <message>
         <location filename="../forms/darksendconfig.ui" line="117"/>
         <source>This option is the quickest and will cost about ~0.025 DRK to anonymize 1000 DRK</source>
-        <translation type="unfinished"/>
+        <translation>Това е най-бързият вариант, анонимизиране на 1000 DRK ще ви струва около 0.025 DRK</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="130"/>
         <source>This option is moderately fast and will cost about 0.05 DRK to anonymize 1000 DRK</source>
-        <translation type="unfinished"/>
+        <translation>Това е средно бърз вариант, анонимизиране на 1000 DRK ще ви струва около 0.05 DRK</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="156"/>
         <source>0.1 DRK per 1000 DRK you anonymize.</source>
-        <translation type="unfinished"/>
+        <translation>0.1 DRK за всеки 1000 DRK които анонимизирате.</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="143"/>
         <source>This is the slowest and most secure option. Using maximum anonymity will cost</source>
-        <translation type="unfinished"/>
+        <translation>Това е най-бавния и най-сигурен начин. Използването на максимална анонимност ще ви коства</translation>
     </message>
     <message>
         <location filename="../darksendconfig.cpp" line="43"/>
         <location filename="../darksendconfig.cpp" line="58"/>
         <location filename="../darksendconfig.cpp" line="73"/>
         <source>Darksend Configuration</source>
-        <translation type="unfinished"/>
+        <translation>Настройка на Дарксенд</translation>
     </message>
     <message>
         <location filename="../darksendconfig.cpp" line="44"/>
@@ -1191,7 +1191,7 @@ Address: %4
     <message>
         <location filename="../forms/editaddressdialog.ui" line="35"/>
         <source>The label associated with this address list entry</source>
-        <translation type="unfinished"/>
+        <translation>Етикет, свързан с този запис на списъка с адреси</translation>
     </message>
     <message>
         <location filename="../forms/editaddressdialog.ui" line="42"/>
@@ -1201,7 +1201,7 @@ Address: %4
     <message>
         <location filename="../forms/editaddressdialog.ui" line="52"/>
         <source>The address associated with this address list entry. This can only be modified for sending addresses.</source>
-        <translation type="unfinished"/>
+        <translation>Адрес, свързан с този запис със списък от адреси. Може да бъде променен само за адреси за изпращане.</translation>
     </message>
     <message>
         <location filename="../editaddressdialog.cpp" line="29"/>
@@ -1259,7 +1259,7 @@ Address: %4
     <message>
         <location filename="../intro.cpp" line="93"/>
         <source>Directory already exists. Add %1 if you intend to create a new directory here.</source>
-        <translation type="unfinished"/>
+        <translation>Има такава папка. Добавете %1 ако искате да създадете нова папка тук.</translation>
     </message>
     <message>
         <location filename="../intro.cpp" line="96"/>
@@ -1269,7 +1269,7 @@ Address: %4
     <message>
         <location filename="../intro.cpp" line="103"/>
         <source>Cannot create data directory here.</source>
-        <translation type="unfinished"/>
+        <translation>Не може да създадете папка за данни тук.</translation>
     </message>
 </context>
 <context>
@@ -1277,7 +1277,7 @@ Address: %4
     <message>
         <location filename="../forms/helpmessagedialog.ui" line="19"/>
         <source>Darkcoin Core - Command-line options</source>
-        <translation type="unfinished"/>
+        <translation>Дарккойн ядро - опции на командния ред</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="69"/>
@@ -1297,7 +1297,7 @@ Address: %4
     <message>
         <location filename="../utilitydialog.cpp" line="72"/>
         <source>command-line options</source>
-        <translation type="unfinished"/>
+        <translation>опции на командния ред</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="76"/>
@@ -1307,17 +1307,17 @@ Address: %4
     <message>
         <location filename="../utilitydialog.cpp" line="77"/>
         <source>Choose data directory on startup (default: 0)</source>
-        <translation type="unfinished"/>
+        <translation>Избери папка с данни при стартиране (по подразбиране: 0)</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="78"/>
         <source>Set language, for example &quot;de_DE&quot; (default: system locale)</source>
-        <translation type="unfinished"/>
+        <translation>Задаване на език, например &quot;de_DE&quot; (по подразбиране: какъвто е от системата)</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="79"/>
         <source>Start minimized</source>
-        <translation type="unfinished"/>
+        <translation>Стартирай минимизиран</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="80"/>
@@ -1385,7 +1385,7 @@ Address: %4
     <message>
         <location filename="../intro.cpp" line="222"/>
         <source>(of %1GB needed)</source>
-        <translation type="unfinished"/>
+        <translation>(от %1GB са необходими)</translation>
     </message>
 </context>
 <context>
@@ -1408,7 +1408,7 @@ Address: %4
     <message>
         <location filename="../forms/openuridialog.ui" line="40"/>
         <source>Select payment request file</source>
-        <translation type="unfinished"/>
+        <translation>Избор на файл за заявка за плащане</translation>
     </message>
     <message>
         <location filename="../openuridialog.cpp" line="48"/>
@@ -1446,7 +1446,7 @@ Address: %4
     <message>
         <location filename="../forms/optionsdialog.ui" line="61"/>
         <source>MB</source>
-        <translation type="unfinished"/>
+        <translation>МБ</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="88"/>
@@ -1461,7 +1461,7 @@ Address: %4
     <message>
         <location filename="../forms/optionsdialog.ui" line="138"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This setting determines the amount of individual masternodes that an input will be anonymized through. More rounds of anonymization gives a higher degree of privacy, but also costs more in fees.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"/>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Тази настройка определя броя на отделните Мастернодове чрез които ще се извършва анонимизирането. Повече цикли на анонимизиране дава по-висока степен на сигурност, но и таксите са по-големи.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="141"/>
@@ -1471,7 +1471,7 @@ Address: %4
     <message>
         <location filename="../forms/optionsdialog.ui" line="165"/>
         <source>This amount acts as a threshold to turn off Darksend once it&apos;s reached.</source>
-        <translation type="unfinished"/>
+        <translation>Тази сума действа като праг, за да се изключи Дарксенд, когато той е достигнат.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="180"/>
@@ -1481,12 +1481,12 @@ Address: %4
     <message>
         <location filename="../forms/optionsdialog.ui" line="206"/>
         <source>W&amp;allet</source>
-        <translation type="unfinished"/>
+        <translation>П&amp;ортфейл</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="212"/>
         <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly. Most transactions are 1 kB.</source>
-        <translation type="unfinished"/>
+        <translation>Опция за таксуване на транзакциите за кБ, която помага обработката на вашата транзакция да стане по-бързо. Повечето сделки са 1 кB.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="227"/>
@@ -1496,17 +1496,17 @@ Address: %4
     <message>
         <location filename="../forms/optionsdialog.ui" line="271"/>
         <source>Expert</source>
-        <translation type="unfinished"/>
+        <translation>Опитен</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="277"/>
         <source>Whether to show coin control features or not.</source>
-        <translation type="unfinished"/>
+        <translation>Да покаже или скрие възможностите за контрол на монетата.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="280"/>
         <source>Enable coin &amp;control features</source>
-        <translation type="unfinished"/>
+        <translation>Активиране &amp;контролните функции на монетата</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="287"/>
@@ -1526,7 +1526,7 @@ Address: %4
     <message>
         <location filename="../forms/optionsdialog.ui" line="307"/>
         <source>Automatically open the Darkcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation type="unfinished"/>
+        <translation>Автоматично отваря порта за Дарккойн клиента в маршрутизатора. Това работи само когато вашият маршрутизатор поддържа UPnP и той е разрешен.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="310"/>
@@ -1536,12 +1536,12 @@ Address: %4
     <message>
         <location filename="../forms/optionsdialog.ui" line="317"/>
         <source>Connect to the Darkcoin network through a SOCKS proxy.</source>
-        <translation type="unfinished"/>
+        <translation>Свързване с мрежата на Дарккойн чрез SOCKS прокси.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="320"/>
         <source>&amp;Connect through SOCKS proxy (default proxy):</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Свързване през SOCKS прокси (прокси по подразбиране):</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="329"/>
@@ -1617,7 +1617,8 @@ Address: %4
         <location filename="../forms/optionsdialog.ui" line="524"/>
         <source>Language missing or translation incomplete? Help contributing translations here:
 https://www.transifex.com/projects/p/darkcoin/</source>
-        <translation type="unfinished"/>
+        <translation>Липсва език или превода е непълен? Можете да помогнете с превода тук:
+https://www.transifex.com/projects/p/darkcoin/</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="550"/>
@@ -1643,12 +1644,12 @@ https://www.transifex.com/projects/p/darkcoin/</source>
         <location filename="../forms/optionsdialog.ui" line="584"/>
         <location filename="../forms/optionsdialog.ui" line="597"/>
         <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
-        <translation type="unfinished"/>
+        <translation>URL адреси на трети страни (например block Explorer), които се появяват в раздела с транзакции, като елементи от контекстното меню. %s в URL е заменен с хеша на транзакцията. Отделните URL адреси са разделени с вертикална линия |.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="587"/>
         <source>Third party transaction URLs</source>
-        <translation type="unfinished"/>
+        <translation>URL транзакции на трети страни</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="628"/>
@@ -1694,17 +1695,17 @@ https://www.transifex.com/projects/p/darkcoin/</source>
         <location filename="../optionsdialog.cpp" line="223"/>
         <location filename="../optionsdialog.cpp" line="253"/>
         <source>Client restart required to activate changes.</source>
-        <translation type="unfinished"/>
+        <translation>За да влязат в сила промените е необходим рестарт на клиента.</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="223"/>
         <source>Client will be shutdown, do you want to proceed?</source>
-        <translation type="unfinished"/>
+        <translation>Клиентът ще бъде спрян, искате ли да продължите?</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="257"/>
         <source>This change would require a client restart.</source>
-        <translation type="unfinished"/>
+        <translation>Тази промяна ще изисква рестартиране на клиента.</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="291"/>
@@ -1726,9 +1727,10 @@ https://www.transifex.com/projects/p/darkcoin/</source>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="70"/>
-        <location filename="../forms/overviewpage.ui" line="986"/>
+        <location filename="../forms/overviewpage.ui" line="953"/>
+        <location filename="../forms/overviewpage.ui" line="1021"/>
         <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Darkcoin network after a connection is established, but this process has not completed yet.</source>
-        <translation type="unfinished"/>
+        <translation>Показаната информация може да е остаряла. Вашият портфейл се синхронизира автоматично след изграждането на връзка с Дарккойн мрежата, но този процес все още не е завършен.</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="114"/>
@@ -1738,7 +1740,7 @@ https://www.transifex.com/projects/p/darkcoin/</source>
     <message>
         <location filename="../forms/overviewpage.ui" line="130"/>
         <source>Your current spendable balance</source>
-        <translation type="unfinished"/>
+        <translation>Текущият ви баланс за харчене</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="146"/>
@@ -1748,17 +1750,17 @@ https://www.transifex.com/projects/p/darkcoin/</source>
     <message>
         <location filename="../forms/overviewpage.ui" line="162"/>
         <source>Total of transactions that have yet to be confirmed, and do not yet count toward the spendable balance</source>
-        <translation type="unfinished"/>
+        <translation>Общо транзакции, които предстоят да бъдат потвърдени, и все още не се включват към баланса за харчене</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="178"/>
         <source>Immature:</source>
-        <translation type="unfinished"/>
+        <translation>Неотлежал:</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="191"/>
         <source>Mined balance that has not yet matured</source>
-        <translation type="unfinished"/>
+        <translation>Изкопан баланс, който все още не е отлежал</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="207"/>
@@ -1778,7 +1780,7 @@ https://www.transifex.com/projects/p/darkcoin/</source>
     <message>
         <location filename="../forms/overviewpage.ui" line="309"/>
         <source>Enabled/Disabled</source>
-        <translation type="unfinished"/>
+        <translation>Активно/Неактивно</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="316"/>
@@ -1788,12 +1790,12 @@ https://www.transifex.com/projects/p/darkcoin/</source>
     <message>
         <location filename="../forms/overviewpage.ui" line="336"/>
         <source>Darksend Balance:</source>
-        <translation type="unfinished"/>
+        <translation>Дарксенд баланс:</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="349"/>
         <source>0 DRK</source>
-        <translation type="unfinished"/>
+        <translation>0 DRK</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="356"/>
@@ -1803,7 +1805,7 @@ https://www.transifex.com/projects/p/darkcoin/</source>
     <message>
         <location filename="../forms/overviewpage.ui" line="363"/>
         <source>0 DRK / 0 Rounds</source>
-        <translation type="unfinished"/>
+        <translation>0 DRK / 0 Цикъла</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="370"/>
@@ -1813,213 +1815,214 @@ https://www.transifex.com/projects/p/darkcoin/</source>
     <message>
         <location filename="../forms/overviewpage.ui" line="377"/>
         <source>The denominations you submitted to the Masternode. To mix, other users must submit the exact same denominations.</source>
-        <translation type="unfinished"/>
+        <translation>Деноминираните суми, които сте изпратили към Мастернода. За смесване, другите потребители трябва да изпратят абсолютно същите деноминирани суми.</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="380"/>
         <source>n/a</source>
-        <translation type="unfinished"/>
+        <translation>Нама</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="402"/>
-        <location filename="../overviewpage.cpp" line="448"/>
-        <location filename="../overviewpage.cpp" line="462"/>
-        <location filename="../overviewpage.cpp" line="476"/>
+        <location filename="../forms/overviewpage.ui" line="946"/>
+        <location filename="../overviewpage.cpp" line="450"/>
+        <location filename="../overviewpage.cpp" line="464"/>
+        <location filename="../overviewpage.cpp" line="478"/>
         <source>Darksend</source>
-        <translation type="unfinished"/>
+        <translation>Дарксенд</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="858"/>
+        <location filename="../forms/overviewpage.ui" line="839"/>
         <source>Start/Stop Mixing</source>
-        <translation type="unfinished"/>
+        <translation>Пусни/Спри Смесване</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="890"/>
+        <location filename="../forms/overviewpage.ui" line="871"/>
         <source>(Last Message)</source>
         <translation>(Последно съобщение)</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="915"/>
+        <location filename="../forms/overviewpage.ui" line="896"/>
         <source>Try to manually submit a Darksend request.</source>
-        <translation type="unfinished"/>
+        <translation>Опитай ръчно изпращане на Дарксенд заявка.</translation>
+    </message>
+    <message>
+        <location filename="../forms/overviewpage.ui" line="899"/>
+        <source>Try Mix</source>
+        <translation>Опитай смесване</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="918"/>
-        <source>Try Mix</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location filename="../forms/overviewpage.ui" line="937"/>
         <source>Reset the current status of Darksend (can interrupt Darksend if it&apos;s in the process of Mixing, which can cost you money!)</source>
         <translation>Изчистване на текущия статус на Дарксенд (може да прекъсне Дарксенд по време на миксиране, което може да ви коства пари!)</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="943"/>
+        <location filename="../forms/overviewpage.ui" line="924"/>
         <source>Reset</source>
         <translation>Изчистване</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="979"/>
+        <location filename="../forms/overviewpage.ui" line="1014"/>
         <source>&lt;b&gt;Recent transactions&lt;/b&gt;</source>
         <translation>&lt;b&gt;Последни транзакции&lt;/b&gt;</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="126"/>
         <location filename="../overviewpage.cpp" line="127"/>
+        <location filename="../overviewpage.cpp" line="128"/>
         <source>out of sync</source>
         <translation>несинхронизиран</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="142"/>
-        <location filename="../overviewpage.cpp" line="347"/>
-        <source>Disabled</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location filename="../overviewpage.cpp" line="145"/>
+        <location filename="../overviewpage.cpp" line="143"/>
         <location filename="../overviewpage.cpp" line="349"/>
-        <location filename="../overviewpage.cpp" line="490"/>
-        <source>Start Darksend Mixing</source>
-        <translation type="unfinished"/>
+        <source>Disabled</source>
+        <translation>Неактивно</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="147"/>
+        <location filename="../overviewpage.cpp" line="146"/>
+        <location filename="../overviewpage.cpp" line="351"/>
         <location filename="../overviewpage.cpp" line="492"/>
-        <source>Stop Darksend Mixing</source>
-        <translation type="unfinished"/>
+        <source>Start Darksend Mixing</source>
+        <translation>Пусни Дарксенд смесването</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="267"/>
+        <location filename="../overviewpage.cpp" line="148"/>
+        <location filename="../overviewpage.cpp" line="494"/>
+        <source>Stop Darksend Mixing</source>
+        <translation>Спри Дарксенд смесването</translation>
+    </message>
+    <message>
+        <location filename="../overviewpage.cpp" line="269"/>
         <source>No inputs detected</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="275"/>
+        <location filename="../overviewpage.cpp" line="277"/>
         <source>Found unconfirmed denominated outputs, will wait till they confirm to recalculate.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="332"/>
+        <location filename="../overviewpage.cpp" line="334"/>
         <source>Rounds</source>
-        <translation type="unfinished"/>
+        <translation>Цикли</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="363"/>
+        <location filename="../overviewpage.cpp" line="365"/>
         <source>Enabled</source>
-        <translation type="unfinished"/>
+        <translation>Активирано</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="419"/>
+        <location filename="../overviewpage.cpp" line="421"/>
         <source>Last Darksend message:
 </source>
         <translation>Последно Дарксенд съобщение:
 </translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="376"/>
-        <location filename="../overviewpage.cpp" line="401"/>
+        <location filename="../overviewpage.cpp" line="378"/>
+        <location filename="../overviewpage.cpp" line="403"/>
         <source>Darksend is idle.</source>
-        <translation type="unfinished"/>
+        <translation>Дарксенд бездейства.</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="382"/>
+        <location filename="../overviewpage.cpp" line="384"/>
         <source>Darksend request complete: Your transaction was accepted into the pool!</source>
-        <translation type="unfinished"/>
+        <translation>Дарккойн заявката е завършена: Вашата транзакция е била приета в басейна!</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="388"/>
-        <source>Submitted following entries to masternode:</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location filename="../overviewpage.cpp" line="389"/>
         <location filename="../overviewpage.cpp" line="390"/>
+        <source>Submitted following entries to masternode:</source>
+        <translation>Изпратени са следните записи към Мастернод:</translation>
+    </message>
+    <message>
         <location filename="../overviewpage.cpp" line="391"/>
+        <location filename="../overviewpage.cpp" line="392"/>
+        <location filename="../overviewpage.cpp" line="393"/>
         <source>Submitted to masternode, Waiting for more entries</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location filename="../overviewpage.cpp" line="394"/>
-        <source>Found enough users, signing ...</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location filename="../overviewpage.cpp" line="395"/>
-        <source>Found enough users, signing ( waiting. )</source>
-        <translation type="unfinished"/>
+        <translation>Изпратено към Мастернода, чака за още записи</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="396"/>
-        <source>Found enough users, signing ( waiting.. )</source>
-        <translation type="unfinished"/>
+        <source>Found enough users, signing ...</source>
+        <translation>Открити са достатъчно потребители, подписване</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="397"/>
-        <source>Found enough users, signing ( waiting... )</source>
-        <translation type="unfinished"/>
+        <source>Found enough users, signing ( waiting. )</source>
+        <translation>Открити са достатъчно потребители, подписване ( изчаква. )</translation>
+    </message>
+    <message>
+        <location filename="../overviewpage.cpp" line="398"/>
+        <source>Found enough users, signing ( waiting.. )</source>
+        <translation>Открити са достатъчно потребители, подписване ( изчаква.. )</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="399"/>
-        <source>Transmitting final transaction.</source>
-        <translation type="unfinished"/>
+        <source>Found enough users, signing ( waiting... )</source>
+        <translation>Открити са достатъчно потребители, подписване ( изчаква... )</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="403"/>
+        <location filename="../overviewpage.cpp" line="401"/>
+        <source>Transmitting final transaction.</source>
+        <translation>Предава окончателната транзакция.</translation>
+    </message>
+    <message>
+        <location filename="../overviewpage.cpp" line="405"/>
         <source>Finalizing transaction.</source>
         <translation>Приключване на транзакцията.</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="405"/>
+        <location filename="../overviewpage.cpp" line="407"/>
         <source>Darksend request incomplete:</source>
         <translation>Дарксенд заявката незавършена:</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="405"/>
+        <location filename="../overviewpage.cpp" line="407"/>
         <source>Will retry...</source>
-        <translation type="unfinished"/>
+        <translation>Ще опита отново...</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="407"/>
+        <location filename="../overviewpage.cpp" line="409"/>
         <source>Darksend request complete:</source>
         <translation>Дарксенд заявката е завършена:</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="409"/>
+        <location filename="../overviewpage.cpp" line="411"/>
         <source>Submitted to masternode, waiting in queue .</source>
         <translation>Изпратено към Мастернода, чака в опашката .</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="410"/>
+        <location filename="../overviewpage.cpp" line="412"/>
         <source>Submitted to masternode, waiting in queue ..</source>
         <translation>Изпратено към Мастернода, чака в опашката ..</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="411"/>
+        <location filename="../overviewpage.cpp" line="413"/>
         <source>Submitted to masternode, waiting in queue ...</source>
         <translation>Изпратено към Мастернода, чака в опашката ...</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="413"/>
+        <location filename="../overviewpage.cpp" line="415"/>
         <source>Unknown state:</source>
         <translation>Неизвестно състояние:</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="427"/>
+        <location filename="../overviewpage.cpp" line="429"/>
         <source>N/A</source>
         <translation>N/A</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="449"/>
+        <location filename="../overviewpage.cpp" line="451"/>
         <source>Darksend was successfully reset.</source>
         <translation>Дарксенд беше успешно нулиран.</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="463"/>
+        <location filename="../overviewpage.cpp" line="465"/>
         <source>Darksend requires at least %1 to use.</source>
         <translation>Дарксенд се нуждае от поне %1 за да започне.</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="477"/>
+        <location filename="../overviewpage.cpp" line="479"/>
         <source>Wallet is locked and user declined to unlock. Disabling Darksend.</source>
         <translation>Портфейлът е заключен и потребителя отказва отключване. Дарксенд е деактивиран.</translation>
     </message>
@@ -2044,7 +2047,7 @@ https://www.transifex.com/projects/p/darkcoin/</source>
     <message>
         <location filename="../paymentserver.cpp" line="352"/>
         <source>Net manager warning</source>
-        <translation type="unfinished"/>
+        <translation>Предупреждение от мрежовия мениджър</translation>
     </message>
     <message>
         <location filename="../paymentserver.cpp" line="353"/>
@@ -2075,12 +2078,12 @@ https://www.transifex.com/projects/p/darkcoin/</source>
     <message>
         <location filename="../paymentserver.cpp" line="433"/>
         <source>Payment request file can not be read or processed! This can be caused by an invalid payment request file.</source>
-        <translation type="unfinished"/>
+        <translation>Файлът със заявката за плащане не може да се прочете или обработи! Причината за това може да бъде невалиден файл със заявка за плащане.</translation>
     </message>
     <message>
         <location filename="../paymentserver.cpp" line="506"/>
         <source>Unverified payment requests to custom payment scripts are unsupported.</source>
-        <translation type="unfinished"/>
+        <translation>Непотвърдените заявки за плащане към клиентски скриптове за плащане не се поддържат.</translation>
     </message>
     <message>
         <location filename="../paymentserver.cpp" line="514"/>
@@ -2090,22 +2093,22 @@ https://www.transifex.com/projects/p/darkcoin/</source>
     <message>
         <location filename="../paymentserver.cpp" line="565"/>
         <source>Refund from %1</source>
-        <translation type="unfinished"/>
+        <translation>Възстановяване от %1</translation>
     </message>
     <message>
         <location filename="../paymentserver.cpp" line="608"/>
         <source>Error communicating with %1: %2</source>
-        <translation type="unfinished"/>
+        <translation>Грашка при комуникация с %1: %2</translation>
     </message>
     <message>
         <location filename="../paymentserver.cpp" line="632"/>
         <source>Payment request can not be parsed or processed!</source>
-        <translation type="unfinished"/>
+        <translation>Заявката за плащане не може да бъде анализирана или обработена!</translation>
     </message>
     <message>
         <location filename="../paymentserver.cpp" line="643"/>
         <source>Bad response from server %1</source>
-        <translation type="unfinished"/>
+        <translation>Невалиден отговор от сървъра %1</translation>
     </message>
     <message>
         <location filename="../paymentserver.cpp" line="665"/>
@@ -2131,7 +2134,7 @@ https://www.transifex.com/projects/p/darkcoin/</source>
     <message>
         <location filename="../darkcoin.cpp" line="526"/>
         <source>Error: Specified data directory &quot;%1&quot; does not exist.</source>
-        <translation type="unfinished"/>
+        <translation>Грешка: Оказаната папка с данни &quot;%1&quot; не съществува.</translation>
     </message>
     <message>
         <location filename="../darkcoin.cpp" line="533"/>
@@ -2141,7 +2144,7 @@ https://www.transifex.com/projects/p/darkcoin/</source>
     <message>
         <location filename="../darkcoin.cpp" line="540"/>
         <source>Error reading masternode configuration file: %1</source>
-        <translation type="unfinished"/>
+        <translation>Грешка при четене на конфигурационния файл за Мастернод: %1</translation>
     </message>
     <message>
         <location filename="../darkcoin.cpp" line="552"/>
@@ -2151,7 +2154,7 @@ https://www.transifex.com/projects/p/darkcoin/</source>
     <message>
         <location filename="../darkcoin.cpp" line="612"/>
         <source>Darkcoin Core didn&apos;t yet exit safely...</source>
-        <translation type="unfinished"/>
+        <translation>Ядрото на Дарккойн все още не е приключило ...</translation>
     </message>
     <message>
         <location filename="../guiutil.cpp" line="101"/>
@@ -2236,12 +2239,12 @@ https://www.transifex.com/projects/p/darkcoin/</source>
     <message>
         <location filename="../forms/rpcconsole.ui" line="90"/>
         <source>Open the Darkcoin debug log file from the current data directory. This can take a few seconds for large log files.</source>
-        <translation type="unfinished"/>
+        <translation>Отваря файла за откриване на грешки на Дарккойн от текущата папка.  За по-големите файлове това може да отнеме няколко секунди.</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="93"/>
         <source>&amp;Open</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Отвори</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="116"/>
@@ -2301,12 +2304,12 @@ https://www.transifex.com/projects/p/darkcoin/</source>
     <message>
         <location filename="../forms/rpcconsole.ui" line="421"/>
         <source>&amp;Network Traffic</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Мрежов трафик</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="473"/>
         <source>&amp;Clear</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Изчисти</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="486"/>
@@ -2317,13 +2320,13 @@ https://www.transifex.com/projects/p/darkcoin/</source>
         <location filename="../forms/rpcconsole.ui" line="550"/>
         <location filename="../rpcconsole.cpp" line="365"/>
         <source>In:</source>
-        <translation type="unfinished"/>
+        <translation>Вход:</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="630"/>
         <location filename="../rpcconsole.cpp" line="366"/>
         <source>Out:</source>
-        <translation type="unfinished"/>
+        <translation>Изход:</translation>
     </message>
     <message>
         <location filename="../rpcconsole.cpp" line="331"/>
@@ -2343,37 +2346,37 @@ https://www.transifex.com/projects/p/darkcoin/</source>
     <message>
         <location filename="../rpcconsole.cpp" line="472"/>
         <source>%1 B</source>
-        <translation type="unfinished"/>
+        <translation>%1 Б</translation>
     </message>
     <message>
         <location filename="../rpcconsole.cpp" line="474"/>
         <source>%1 KB</source>
-        <translation type="unfinished"/>
+        <translation>%1 КБ</translation>
     </message>
     <message>
         <location filename="../rpcconsole.cpp" line="476"/>
         <source>%1 MB</source>
-        <translation type="unfinished"/>
+        <translation>%1 МБ</translation>
     </message>
     <message>
         <location filename="../rpcconsole.cpp" line="478"/>
         <source>%1 GB</source>
-        <translation type="unfinished"/>
+        <translation>%1 ГБ</translation>
     </message>
     <message>
         <location filename="../rpcconsole.cpp" line="485"/>
         <source>%1 m</source>
-        <translation type="unfinished"/>
+        <translation>%1 мин</translation>
     </message>
     <message>
         <location filename="../rpcconsole.cpp" line="490"/>
         <source>%1 h</source>
-        <translation type="unfinished"/>
+        <translation>%1 ч</translation>
     </message>
     <message>
         <location filename="../rpcconsole.cpp" line="492"/>
         <source>%1 h %2 m</source>
-        <translation type="unfinished"/>
+        <translation>%1 ч %2 мин</translation>
     </message>
 </context>
 <context>
@@ -2386,24 +2389,24 @@ https://www.transifex.com/projects/p/darkcoin/</source>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="37"/>
         <source>R&amp;euse an existing receiving address (not recommended)</source>
-        <translation type="unfinished"/>
+        <translation>П&amp;овторно използване на съществуващ адрес за получаване (не се препоръчва)</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="51"/>
         <location filename="../forms/receivecoinsdialog.ui" line="74"/>
         <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Darkcoin network.</source>
-        <translation type="unfinished"/>
+        <translation>Възможност  да се прикрепи съобщение към заявката за плащане, което да бъде показано при отваряне на заявката. Забележка: съобщението няма да бъде изпратено с плащането по мрежата на Дарккойн.</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="54"/>
         <source>&amp;Message:</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Съобщение:</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="67"/>
         <location filename="../forms/receivecoinsdialog.ui" line="88"/>
         <source>An optional label to associate with the new receiving address.</source>
-        <translation type="unfinished"/>
+        <translation>Възможност да се прикрепи етикет към новия адрес за получаване.</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="81"/>
@@ -2429,7 +2432,7 @@ https://www.transifex.com/projects/p/darkcoin/</source>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="141"/>
         <source>&amp;Request payment</source>
-        <translation type="unfinished"/>
+        <translation>&amp;Заявка за плащане</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="158"/>
@@ -2449,7 +2452,7 @@ https://www.transifex.com/projects/p/darkcoin/</source>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="261"/>
         <source>Show the selected request (does the same as double clicking an entry)</source>
-        <translation type="unfinished"/>
+        <translation>Покажи избраната заявка (прави същото като двойно щракане върху запис)</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="264"/>
@@ -2641,7 +2644,7 @@ https://www.transifex.com/projects/p/darkcoin/</source>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="353"/>
         <source>medium</source>
-        <translation type="unfinished"/>
+        <translation>среден</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="388"/>
@@ -2661,12 +2664,12 @@ https://www.transifex.com/projects/p/darkcoin/</source>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="468"/>
         <source>After Fee:</source>
-        <translation type="unfinished"/>
+        <translation>След таксата:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="500"/>
         <source>Change:</source>
-        <translation type="unfinished"/>
+        <translation>Ресто:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="544"/>
@@ -2711,12 +2714,12 @@ https://www.transifex.com/projects/p/darkcoin/</source>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="752"/>
         <source>Darksend</source>
-        <translation type="unfinished"/>
+        <translation>Дарксенд</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="771"/>
         <source>InstantX</source>
-        <translation type="unfinished"/>
+        <translation>InstantX</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="778"/>
@@ -2726,12 +2729,12 @@ https://www.transifex.com/projects/p/darkcoin/</source>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="53"/>
         <source>Copy quantity</source>
-        <translation>Копирай количество</translation>
+        <translation>Копирай количеството</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="54"/>
         <source>Copy amount</source>
-        <translation>Копирай сума</translation>
+        <translation>Копирай сумата</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="55"/>
@@ -2741,17 +2744,17 @@ https://www.transifex.com/projects/p/darkcoin/</source>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="56"/>
         <source>Copy after fee</source>
-        <translation type="unfinished"/>
+        <translation>Копирай след таксата</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="57"/>
         <source>Copy bytes</source>
-        <translation type="unfinished"/>
+        <translation>Копирай байтовете</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="58"/>
         <source>Copy priority</source>
-        <translation type="unfinished"/>
+        <translation>Копирай приоритета</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="59"/>
@@ -2761,12 +2764,12 @@ https://www.transifex.com/projects/p/darkcoin/</source>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="60"/>
         <source>Copy change</source>
-        <translation type="unfinished"/>
+        <translation>Копирай рестото</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="155"/>
         <source>(darksend requires this amount to be rounded up to the nearest %1).</source>
-        <translation type="unfinished"/>
+        <translation>(Дарксенд изисква тази сума да бъде закръглена до най-близката %1).</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="189"/>
@@ -2774,7 +2777,7 @@ https://www.transifex.com/projects/p/darkcoin/</source>
         <location filename="../sendcoinsdialog.cpp" line="199"/>
         <location filename="../sendcoinsdialog.cpp" line="203"/>
         <source>%1 to %2</source>
-        <translation type="unfinished"/>
+        <translation>%1 до %2</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="252"/>
@@ -2784,7 +2787,7 @@ https://www.transifex.com/projects/p/darkcoin/</source>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="261"/>
         <source>are added as transaction fee</source>
-        <translation type="unfinished"/>
+        <translation>се добавя като такса за транзакция</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="275"/>
@@ -2804,12 +2807,12 @@ https://www.transifex.com/projects/p/darkcoin/</source>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="434"/>
         <source>Payment request expired</source>
-        <translation type="unfinished"/>
+        <translation>Заявката за плащане е изткла.</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="442"/>
         <source>Invalid payment address %1</source>
-        <translation type="unfinished"/>
+        <translation>Невалиден адрес за плащане %1</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="489"/>
@@ -2829,12 +2832,12 @@ https://www.transifex.com/projects/p/darkcoin/</source>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="498"/>
         <source>The total exceeds your balance when the %1 transaction fee is included.</source>
-        <translation type="unfinished"/>
+        <translation>Общият сбор надхвърля вашия баланс, когато се добави  %1 такса за операцията.</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="501"/>
         <source>Duplicate address found, can only send to each address once per send operation.</source>
-        <translation type="unfinished"/>
+        <translation>Намерен е дублиран адрес, може да се изпраща само по веднъж до всеки адрес в рамките на една операция изпращане.</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="504"/>
@@ -3349,7 +3352,7 @@ https://www.transifex.com/projects/p/darkcoin/</source>
     <message numerus="yes">
         <location filename="../transactiondesc.cpp" line="181"/>
         <source>matures in %n more block(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation><numerusform>отлежава след %n блок(а)</numerusform><numerusform>отлежава след %n блок(а)</numerusform></translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="183"/>
@@ -3447,157 +3450,157 @@ https://www.transifex.com/projects/p/darkcoin/</source>
 <context>
     <name>TransactionTableModel</name>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="239"/>
+        <location filename="../transactiontablemodel.cpp" line="233"/>
         <source>Date</source>
         <translation>Дата</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="239"/>
+        <location filename="../transactiontablemodel.cpp" line="233"/>
         <source>Type</source>
         <translation>Тип</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="239"/>
+        <location filename="../transactiontablemodel.cpp" line="233"/>
         <source>Address</source>
         <translation>Адрес</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="239"/>
+        <location filename="../transactiontablemodel.cpp" line="233"/>
         <source>Amount</source>
         <translation>Сума</translation>
     </message>
     <message numerus="yes">
-        <location filename="../transactiontablemodel.cpp" line="288"/>
+        <location filename="../transactiontablemodel.cpp" line="285"/>
         <source>Open for %n more block(s)</source>
         <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="291"/>
+        <location filename="../transactiontablemodel.cpp" line="288"/>
         <source>Open until %1</source>
         <translation>Подлежи на промяна до %1</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="294"/>
+        <location filename="../transactiontablemodel.cpp" line="291"/>
         <source>Offline</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="297"/>
+        <location filename="../transactiontablemodel.cpp" line="294"/>
         <source>Unconfirmed</source>
         <translation>Непотвърдено</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="300"/>
+        <location filename="../transactiontablemodel.cpp" line="297"/>
         <source>Confirming (%1 of %2 recommended confirmations)</source>
         <translation>Потвърждаване (%1 от %2 препоръчвани потвърждения)</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="303"/>
+        <location filename="../transactiontablemodel.cpp" line="300"/>
         <source>Confirmed (%1 confirmations)</source>
         <translation>Потвърдени (%1 потвърждения)</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="306"/>
+        <location filename="../transactiontablemodel.cpp" line="303"/>
         <source>Conflicted</source>
         <translation>Конфликтно</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="309"/>
+        <location filename="../transactiontablemodel.cpp" line="306"/>
         <source>Immature (%1 confirmations, will be available after %2)</source>
-        <translation type="unfinished"/>
+        <translation>Неотлежал (%1 потвърждения, ще бъдат на разположение след %2)</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="312"/>
+        <location filename="../transactiontablemodel.cpp" line="309"/>
         <source>This block was not received by any other nodes and will probably not be accepted!</source>
         <translation>Блокът не е получен от останалите участници и най-вероятно няма да бъде одобрен.</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="315"/>
+        <location filename="../transactiontablemodel.cpp" line="312"/>
         <source>Generated but not accepted</source>
         <translation>Генерирана, но отхвърлена от мрежата</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="357"/>
+        <location filename="../transactiontablemodel.cpp" line="354"/>
         <source>Received with</source>
         <translation>Получени с</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="359"/>
+        <location filename="../transactiontablemodel.cpp" line="356"/>
         <source>Received from</source>
         <translation>Получен от</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="361"/>
+        <location filename="../transactiontablemodel.cpp" line="358"/>
         <source>Received via Darksend</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="364"/>
+        <location filename="../transactiontablemodel.cpp" line="361"/>
         <source>Sent to</source>
         <translation>Изпратени на</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="366"/>
+        <location filename="../transactiontablemodel.cpp" line="363"/>
         <source>Payment to yourself</source>
         <translation>Плащане към себе си</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="368"/>
+        <location filename="../transactiontablemodel.cpp" line="365"/>
         <source>Mined</source>
         <translation>Емитирани</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="371"/>
+        <location filename="../transactiontablemodel.cpp" line="368"/>
         <source>Darksend Denominate</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="373"/>
+        <location filename="../transactiontablemodel.cpp" line="370"/>
         <source>Darksend Collateral Payment</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="375"/>
+        <location filename="../transactiontablemodel.cpp" line="372"/>
         <source>Darksend Make Collateral Inputs</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="377"/>
+        <location filename="../transactiontablemodel.cpp" line="374"/>
         <source>Darksend Create Denominations</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="379"/>
+        <location filename="../transactiontablemodel.cpp" line="376"/>
         <source>Darksent</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="421"/>
+        <location filename="../transactiontablemodel.cpp" line="418"/>
         <source>(n/a)</source>
         <translation>(n/a)</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="613"/>
+        <location filename="../transactiontablemodel.cpp" line="610"/>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
         <translation>Състояние на транзакцията. Задръжте върху това поле за брой потвърждения.</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="615"/>
+        <location filename="../transactiontablemodel.cpp" line="612"/>
         <source>Date and time that the transaction was received.</source>
         <translation>Дата и час на получаване на транзакцията.</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="617"/>
+        <location filename="../transactiontablemodel.cpp" line="614"/>
         <source>Type of transaction.</source>
         <translation>Вид транзакция.</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="619"/>
+        <location filename="../transactiontablemodel.cpp" line="616"/>
         <source>Destination address of transaction.</source>
         <translation>Адрес на получател на транзакцията.</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="621"/>
+        <location filename="../transactiontablemodel.cpp" line="618"/>
         <source>Amount removed from or added to balance.</source>
         <translation>Сума извадена или добавена към баланса.</translation>
     </message>
@@ -3817,13 +3820,13 @@ https://www.transifex.com/projects/p/darkcoin/</source>
 <context>
     <name>WalletModel</name>
     <message>
-        <location filename="../walletmodel.cpp" line="272"/>
-        <location filename="../walletmodel.cpp" line="286"/>
+        <location filename="../walletmodel.cpp" line="271"/>
+        <location filename="../walletmodel.cpp" line="285"/>
         <source>Send Coins</source>
         <translation>Изпращане</translation>
     </message>
     <message numerus="yes">
-        <location filename="../walletmodel.cpp" line="272"/>
+        <location filename="../walletmodel.cpp" line="271"/>
         <source>InstantX doesn&apos;t support sending values that high yet. Transactions are currently limited to %n DRK.</source>
         <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
     </message>
@@ -3841,32 +3844,32 @@ https://www.transifex.com/projects/p/darkcoin/</source>
         <translation>Запишете данните от текущия раздел във файл</translation>
     </message>
     <message>
-        <location filename="../walletview.cpp" line="229"/>
+        <location filename="../walletview.cpp" line="231"/>
         <source>Backup Wallet</source>
         <translation>Запазване на портфейла</translation>
     </message>
     <message>
-        <location filename="../walletview.cpp" line="230"/>
+        <location filename="../walletview.cpp" line="232"/>
         <source>Wallet Data (*.dat)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../walletview.cpp" line="236"/>
+        <location filename="../walletview.cpp" line="238"/>
         <source>Backup Failed</source>
         <translation>Неуспешно запазване на портфейла</translation>
     </message>
     <message>
-        <location filename="../walletview.cpp" line="236"/>
+        <location filename="../walletview.cpp" line="238"/>
         <source>There was an error trying to save the wallet data to %1.</source>
         <translation>Възникна грешка при опит за записване данните на портфейла в %1.</translation>
     </message>
     <message>
-        <location filename="../walletview.cpp" line="240"/>
+        <location filename="../walletview.cpp" line="242"/>
         <source>Backup Successful</source>
         <translation>Успешно запазване на портфейла</translation>
     </message>
     <message>
-        <location filename="../walletview.cpp" line="240"/>
+        <location filename="../walletview.cpp" line="242"/>
         <source>The wallet data was successfully saved to %1.</source>
         <translation type="unfinished"/>
     </message>
