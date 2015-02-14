@@ -293,7 +293,7 @@ QString TransactionTableModel::formatTxStatus(const TransactionRecord *wtx) cons
 
     if (wtx->type == TransactionRecord::Generated)
     {
-        nNumConf = nCoinbaseMaturity;
+        nNumConf = nCoinbaseMaturity + 20;
     }
 
     switch(wtx->status.status)
