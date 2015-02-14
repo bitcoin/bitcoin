@@ -513,6 +513,11 @@ int GetMasternodeRank(CTxIn& vin, int64_t nBlockHeight, int minProtocol)
 //Get the last hash that matches the modulus given. Processed in reverse order
 bool GetBlockHash(uint256& hash, int nBlockHeight)
 {
+    if (chainActive.Tip() == NULL) return false;
+
+    if(nBlockHeight == 0)
+        nBlockHeight = chainActive.Tip()->nHeight;
+
     if(mapCacheBlockHashes.count(nBlockHeight)){
         hash = mapCacheBlockHashes[nBlockHeight];
         return true;
@@ -521,7 +526,6 @@ bool GetBlockHash(uint256& hash, int nBlockHeight)
     const CBlockIndex *BlockLastSolved = chainActive.Tip();
     const CBlockIndex *BlockReading = chainActive.Tip();
 
-    if (chainActive.Tip() == NULL) return false;
     if (BlockLastSolved == NULL || BlockLastSolved->nHeight == 0 || chainActive.Tip()->nHeight+1 < nBlockHeight) return false;
 
     int nBlocksAgo = 0;
@@ -796,9 +800,10 @@ void CMasternodePayments::Relay(CMasternodePaymentWinner& winner)
 
 void CMasternodePayments::Sync(CNode* node)
 {
+    int a = 0;
     BOOST_FOREACH(CMasternodePaymentWinner& winner, vWinning)
         if(winner.nBlockHeight >= chainActive.Tip()->nHeight-10 && winner.nBlockHeight <= chainActive.Tip()->nHeight + 20)
-            node->PushMessage("mnw", winner);
+            node->PushMessage("mnw", winner, a);
 }
 
 
