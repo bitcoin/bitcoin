@@ -310,8 +310,8 @@ void BitcoinGUI::createActions(bool fIsTestnet)
     openRPCConsoleAction->setStatusTip(tr("Open debugging console"));
     openNetworkAction = new QAction(QIcon(":/icons/connect_4"), tr("&Network Monitor"), this);
     openNetworkAction->setStatusTip(tr("Show network monitor"));
-	openConfEditorAction = new QAction(QIcon(":/icons/edit"), tr("Edit &Configuration File"), this);
-    openConfEditorAction->setStatusTip(tr("Edit configuration file"));
+	openConfEditorAction = new QAction(QIcon(":/icons/edit"), tr("Open &Configuration File"), this);
+    openConfEditorAction->setStatusTip(tr("Open configuration file"));
 
     usedSendingAddressesAction = new QAction(QIcon(":/icons/address-book"), tr("&Sending addresses..."), this);
     usedSendingAddressesAction->setStatusTip(tr("Show the list of used sending addresses and labels"));
