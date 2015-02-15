@@ -1,8 +1,8 @@
 #! /bin/sh
 # Attempt to guess a canonical system name.
-#   Copyright 1992-2014 Free Software Foundation, Inc.
+#   Copyright 1992-2015 Free Software Foundation, Inc.
 
-timestamp='2014-03-23'
+timestamp='2015-01-01'
 
 # This file is free software; you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by
@@ -24,12 +24,12 @@ timestamp='2014-03-23'
 # program.  This Exception is an additional permission under section 7
 # of the GNU General Public License, version 3 ("GPLv3").
 #
-# Originally written by Per Bothner.
+# Originally written by Per Bothner; maintained since 2000 by Ben Elliston.
 #
 # You can get the latest version of this script from:
 # http://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.guess;hb=HEAD
 #
-# Please send patches with a ChangeLog entry to config-patches@gnu.org.
+# Please send patches to <config-patches@gnu.org>.
 
 
 me=`echo "$0" | sed -e 's,.*/,,'`
@@ -50,7 +50,7 @@ version="\
 GNU config.guess ($timestamp)
 
 Originally written by Per Bothner.
-Copyright 1992-2014 Free Software Foundation, Inc.
+Copyright 1992-2015 Free Software Foundation, Inc.
 
 This is free software; see the source for copying conditions.  There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."
@@ -579,8 +579,9 @@ EOF
 	else
 		IBM_ARCH=powerpc
 	fi
-	if [ -x /usr/bin/oslevel ] ; then
-		IBM_REV=`/usr/bin/oslevel`
+	if [ -x /usr/bin/lslpp ] ; then
+		IBM_REV=`/usr/bin/lslpp -Lqc bos.rte.libc |
+			   awk -F: '{ print $3 }' | sed s/[0-9]*$/0/`
 	else
 		IBM_REV=${UNAME_VERSION}.${UNAME_RELEASE}
 	fi

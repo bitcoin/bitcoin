@@ -81,7 +81,7 @@ private:
                     fAllOk &= fOk;
                     nTodo -= nNow;
                     if (nTodo == 0 && !fMaster)
-                        // We processed the last element; inform the master he can exit and return the result
+                        // We processed the last element; inform the master he or she can exit and return the result
                         condMaster.notify_one();
                 } else {
                     // first iteration
@@ -161,7 +161,12 @@ public:
     {
     }
 
-    friend class CCheckQueueControl<T>;
+    bool IsIdle()
+    {
+        boost::unique_lock<boost::mutex> lock(mutex);
+        return (nTotal == nIdle && nTodo == 0 && fAllOk == true);
+    }
+
 };
 
 /** 
@@ -180,9 +185,8 @@ public:
     {
         // passed queue is supposed to be unused, or NULL
         if (pqueue != NULL) {
-            assert(pqueue->nTotal == pqueue->nIdle);
-            assert(pqueue->nTodo == 0);
-            assert(pqueue->fAllOk == true);
+            bool isIdle = pqueue->IsIdle();
+            assert(isIdle);
         }
     }
 
