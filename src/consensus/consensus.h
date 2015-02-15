@@ -65,6 +65,14 @@ bool ContextualCheckBlockHeader(const CBlockHeader&, CValidationState&, const Co
 bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::Params& params, int64_t nTime, bool fCheckPOW = true, bool fCheckMerkleRoot = true);
 bool ContextualCheckBlock(const CBlock&, CValidationState&, const Consensus::Params&, const CBlockIndexBase*, PrevIndexGetter);
 
+/** Block validation utilities */
+
+/**
+ * BIP16 didn't become active until Apr 1 2012
+ * Starts enforcing the DERSIG (BIP66) rules, for block.nVersion=3 blocks, when 75% of the network has upgraded
+ */
+unsigned int GetFlags(const CBlock&, const Consensus::Params&, CBlockIndexBase*, PrevIndexGetter indexGetter);
+
 } // namespace Consensus
 
 /** Transaction validation utility functions */
