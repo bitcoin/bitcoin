@@ -977,6 +977,11 @@ Kiểu: %3
         <translation>cao-vừa</translation>
     </message>
     <message>
+        <location filename="../coincontroldialog.cpp" line="749"/>
+        <source>n/a</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
         <location filename="../forms/coincontroldialog.ui" line="164"/>
         <location filename="../coincontroldialog.cpp" line="414"/>
         <source>medium</source>
@@ -2596,9 +2601,9 @@ https://www.transifex.com/projects/p/darkcoin/</translation>
     <name>SendCoinsDialog</name>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="14"/>
-        <location filename="../sendcoinsdialog.cpp" line="428"/>
-        <location filename="../sendcoinsdialog.cpp" line="512"/>
-        <location filename="../sendcoinsdialog.cpp" line="522"/>
+        <location filename="../sendcoinsdialog.cpp" line="429"/>
+        <location filename="../sendcoinsdialog.cpp" line="513"/>
+        <location filename="../sendcoinsdialog.cpp" line="523"/>
         <source>Send Coins</source>
         <translation>Gửi tiền</translation>
     </message>
@@ -2768,105 +2773,128 @@ https://www.transifex.com/projects/p/darkcoin/</translation>
         <translation>Sao chép tiền trả lại</translation>
     </message>
     <message>
+        <location filename="../sendcoinsdialog.cpp" line="145"/>
+        <location filename="../sendcoinsdialog.cpp" line="151"/>
+        <location filename="../sendcoinsdialog.cpp" line="160"/>
+        <source>using</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../sendcoinsdialog.cpp" line="145"/>
+        <location filename="../sendcoinsdialog.cpp" line="151"/>
+        <source>anonymous funds</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
         <location filename="../sendcoinsdialog.cpp" line="155"/>
         <source>(darksend requires this amount to be rounded up to the nearest %1).</source>
         <translation>(darksend yêu cầu số tiền này sẽ được làm tròn đến gần %1)</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="189"/>
-        <location filename="../sendcoinsdialog.cpp" line="194"/>
-        <location filename="../sendcoinsdialog.cpp" line="199"/>
-        <location filename="../sendcoinsdialog.cpp" line="203"/>
+        <location filename="../sendcoinsdialog.cpp" line="160"/>
+        <source>any available funds (not recommended)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../sendcoinsdialog.cpp" line="166"/>
+        <source>and InstantX</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../sendcoinsdialog.cpp" line="190"/>
+        <location filename="../sendcoinsdialog.cpp" line="195"/>
+        <location filename="../sendcoinsdialog.cpp" line="200"/>
+        <location filename="../sendcoinsdialog.cpp" line="204"/>
         <source>%1 to %2</source>
         <translation>%1 đến %2</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="252"/>
+        <location filename="../sendcoinsdialog.cpp" line="253"/>
         <source>Are you sure you want to send?</source>
         <translation>Bạn có chắc mình muốn gửi?</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="261"/>
+        <location filename="../sendcoinsdialog.cpp" line="262"/>
         <source>are added as transaction fee</source>
         <translation>được thêm vào như là phí giao dịch</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="275"/>
+        <location filename="../sendcoinsdialog.cpp" line="276"/>
         <source>Total Amount %1 (= %2)</source>
         <translation>Tổng số tiền %1 (= %2)</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="277"/>
+        <location filename="../sendcoinsdialog.cpp" line="278"/>
         <source>or</source>
         <translation>hoặc</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="279"/>
+        <location filename="../sendcoinsdialog.cpp" line="280"/>
         <source>Confirm send coins</source>
         <translation>Xác nhận việc gửi tiền</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="434"/>
+        <location filename="../sendcoinsdialog.cpp" line="435"/>
         <source>Payment request expired</source>
         <translation>Yêu cầu thanh toán đã hết hạn</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="442"/>
+        <location filename="../sendcoinsdialog.cpp" line="443"/>
         <source>Invalid payment address %1</source>
         <translation>Địa chỉ thanh toán không hợp lệ %1</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="489"/>
+        <location filename="../sendcoinsdialog.cpp" line="490"/>
         <source>The recipient address is not valid, please recheck.</source>
         <translation>Địa chỉ nhận không hợp lệ, hãy kiểm tra lại.</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="492"/>
+        <location filename="../sendcoinsdialog.cpp" line="493"/>
         <source>The amount to pay must be larger than 0.</source>
         <translation>Số tiền thanh toán phải lớn hơn 0.</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="495"/>
+        <location filename="../sendcoinsdialog.cpp" line="496"/>
         <source>The amount exceeds your balance.</source>
         <translation>Số tiền này lớn hơn số dư của bạn.</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="498"/>
+        <location filename="../sendcoinsdialog.cpp" line="499"/>
         <source>The total exceeds your balance when the %1 transaction fee is included.</source>
         <translation>Tổng số lớn hơn số dư của bạn khi tính cả %1 phí giao dịch.</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="501"/>
+        <location filename="../sendcoinsdialog.cpp" line="502"/>
         <source>Duplicate address found, can only send to each address once per send operation.</source>
         <translation>Thấy trùng địa chỉ, chỉ có thể gửi cho mỗi địa chỉ một lần trong một giao dịch gửi.</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="504"/>
+        <location filename="../sendcoinsdialog.cpp" line="505"/>
         <source>Transaction creation failed!</source>
         <translation>Tạo giao dịch không thành công!</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="508"/>
+        <location filename="../sendcoinsdialog.cpp" line="509"/>
         <source>The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
         <translation>Giao dịch đã bị từ chối! Điều này có thể xảy ra khi một số tiền trong ví của bạn đã được tiêu, ví dụ như là nếu bạn sử dụng một bản sao của wallet.dat và tiền đã được tiêu nhưng bản khác của ví nhưng lại chưa được đánh dấu đã tiêu trong bản này.</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="513"/>
+        <location filename="../sendcoinsdialog.cpp" line="514"/>
         <source>Error: The wallet was unlocked only to anonymize coins.</source>
         <translation>Lỗi: Ví vừa được mở chỉ cho việc ẩn danh tiền.</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="626"/>
+        <location filename="../sendcoinsdialog.cpp" line="627"/>
         <source>Warning: Invalid Darkcoin address</source>
         <translation>Cảnh báo: Địa chỉ Darkcoin không hợp lệ</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="635"/>
+        <location filename="../sendcoinsdialog.cpp" line="636"/>
         <source>Warning: Unknown change address</source>
         <translation>Cảnh báo: Không biết địa chỉ trả lại</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="646"/>
+        <location filename="../sendcoinsdialog.cpp" line="647"/>
         <source>(no label)</source>
         <translation>(không có nhãn)</translation>
     </message>

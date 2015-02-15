@@ -976,6 +976,11 @@ Address: %4
         <translation>中高</translation>
     </message>
     <message>
+        <location filename="../coincontroldialog.cpp" line="749"/>
+        <source>n/a</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
         <location filename="../forms/coincontroldialog.ui" line="164"/>
         <location filename="../coincontroldialog.cpp" line="414"/>
         <source>medium</source>
@@ -2595,9 +2600,9 @@ https://www.transifex.com/projects/p/darkcoin/</source>
     <name>SendCoinsDialog</name>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="14"/>
-        <location filename="../sendcoinsdialog.cpp" line="428"/>
-        <location filename="../sendcoinsdialog.cpp" line="512"/>
-        <location filename="../sendcoinsdialog.cpp" line="522"/>
+        <location filename="../sendcoinsdialog.cpp" line="429"/>
+        <location filename="../sendcoinsdialog.cpp" line="513"/>
+        <location filename="../sendcoinsdialog.cpp" line="523"/>
         <source>Send Coins</source>
         <translation>发送货币</translation>
     </message>
@@ -2767,105 +2772,128 @@ https://www.transifex.com/projects/p/darkcoin/</source>
         <translation>复制零钱</translation>
     </message>
     <message>
+        <location filename="../sendcoinsdialog.cpp" line="145"/>
+        <location filename="../sendcoinsdialog.cpp" line="151"/>
+        <location filename="../sendcoinsdialog.cpp" line="160"/>
+        <source>using</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../sendcoinsdialog.cpp" line="145"/>
+        <location filename="../sendcoinsdialog.cpp" line="151"/>
+        <source>anonymous funds</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
         <location filename="../sendcoinsdialog.cpp" line="155"/>
         <source>(darksend requires this amount to be rounded up to the nearest %1).</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="189"/>
-        <location filename="../sendcoinsdialog.cpp" line="194"/>
-        <location filename="../sendcoinsdialog.cpp" line="199"/>
-        <location filename="../sendcoinsdialog.cpp" line="203"/>
+        <location filename="../sendcoinsdialog.cpp" line="160"/>
+        <source>any available funds (not recommended)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../sendcoinsdialog.cpp" line="166"/>
+        <source>and InstantX</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../sendcoinsdialog.cpp" line="190"/>
+        <location filename="../sendcoinsdialog.cpp" line="195"/>
+        <location filename="../sendcoinsdialog.cpp" line="200"/>
+        <location filename="../sendcoinsdialog.cpp" line="204"/>
         <source>%1 to %2</source>
         <translation>%1 到 %2</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="252"/>
+        <location filename="../sendcoinsdialog.cpp" line="253"/>
         <source>Are you sure you want to send?</source>
         <translation>您确定要发出吗？</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="261"/>
+        <location filename="../sendcoinsdialog.cpp" line="262"/>
         <source>are added as transaction fee</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="275"/>
+        <location filename="../sendcoinsdialog.cpp" line="276"/>
         <source>Total Amount %1 (= %2)</source>
         <translation>总额 %1 (= %2)</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="277"/>
+        <location filename="../sendcoinsdialog.cpp" line="278"/>
         <source>or</source>
         <translation>或</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="279"/>
+        <location filename="../sendcoinsdialog.cpp" line="280"/>
         <source>Confirm send coins</source>
         <translation>确认发送货币</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="434"/>
+        <location filename="../sendcoinsdialog.cpp" line="435"/>
         <source>Payment request expired</source>
         <translation>支付请求已过期</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="442"/>
+        <location filename="../sendcoinsdialog.cpp" line="443"/>
         <source>Invalid payment address %1</source>
         <translation>无效的付款地址 %1</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="489"/>
+        <location filename="../sendcoinsdialog.cpp" line="490"/>
         <source>The recipient address is not valid, please recheck.</source>
         <translation>收款人地址不合法，请检查。</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="492"/>
+        <location filename="../sendcoinsdialog.cpp" line="493"/>
         <source>The amount to pay must be larger than 0.</source>
         <translation>支付金额必须大于0。</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="495"/>
+        <location filename="../sendcoinsdialog.cpp" line="496"/>
         <source>The amount exceeds your balance.</source>
         <translation>金额超出您的账上余额。</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="498"/>
+        <location filename="../sendcoinsdialog.cpp" line="499"/>
         <source>The total exceeds your balance when the %1 transaction fee is included.</source>
         <translation>计入 %1 交易费后的金额超出您的账上余额。</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="501"/>
+        <location filename="../sendcoinsdialog.cpp" line="502"/>
         <source>Duplicate address found, can only send to each address once per send operation.</source>
         <translation>发现重复的地址, 每次只能对同一地址发送一次。</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="504"/>
+        <location filename="../sendcoinsdialog.cpp" line="505"/>
         <source>Transaction creation failed!</source>
         <translation>交易创建失败！</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="508"/>
+        <location filename="../sendcoinsdialog.cpp" line="509"/>
         <source>The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
         <translation>错误：该交易被拒绝！发生这种错误的原因可能是：钱包中的比特币已经被用掉，有可能您复制了wallet.dat钱包文件，然后用复制的钱包文件支付了比特币，但是这个钱包文件中没有记录。</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="513"/>
+        <location filename="../sendcoinsdialog.cpp" line="514"/>
         <source>Error: The wallet was unlocked only to anonymize coins.</source>
         <translation>错误： 钱包被锁定以用于匿名化您的暗黑币。</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="626"/>
+        <location filename="../sendcoinsdialog.cpp" line="627"/>
         <source>Warning: Invalid Darkcoin address</source>
         <translation>警告：无效的暗黑币地址</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="635"/>
+        <location filename="../sendcoinsdialog.cpp" line="636"/>
         <source>Warning: Unknown change address</source>
         <translation>警告：未知的更改地址</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="646"/>
+        <location filename="../sendcoinsdialog.cpp" line="647"/>
         <source>(no label)</source>
         <translation>(没有标签)</translation>
     </message>
