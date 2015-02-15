@@ -517,3 +517,8 @@ void RPCConsole::showNetwork()
     ui->tabWidget->setCurrentIndex(2);
     show();
 }
+
+void RPCConsole::showConfEditor()
+{
+    GUIUtil::openConfigfile();
+}
