@@ -979,7 +979,7 @@ Kiểu: %3
     <message>
         <location filename="../coincontroldialog.cpp" line="749"/>
         <source>n/a</source>
-        <translation type="unfinished"/>
+        <translation>không áp dụng</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="164"/>

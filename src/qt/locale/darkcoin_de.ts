@@ -982,7 +982,7 @@ Adresse: %4</translation>
     <message>
         <location filename="../coincontroldialog.cpp" line="749"/>
         <source>n/a</source>
-        <translation type="unfinished"/>
+        <translation>k.A.</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="164"/>
@@ -2781,13 +2781,13 @@ https://www.transifex.com/projects/p/darkcoin/</translation>
         <location filename="../sendcoinsdialog.cpp" line="151"/>
         <location filename="../sendcoinsdialog.cpp" line="160"/>
         <source>using</source>
-        <translation type="unfinished"/>
+        <translation>mittels</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="145"/>
         <location filename="../sendcoinsdialog.cpp" line="151"/>
         <source>anonymous funds</source>
-        <translation type="unfinished"/>
+        <translation>anonymisierte Coins</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="155"/>
@@ -2797,12 +2797,12 @@ https://www.transifex.com/projects/p/darkcoin/</translation>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="160"/>
         <source>any available funds (not recommended)</source>
-        <translation type="unfinished"/>
+        <translation>beliebiger verfügbarer Coins (nicht empfohlen)</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="166"/>
         <source>and InstantX</source>
-        <translation type="unfinished"/>
+        <translation>und InstantX</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="190"/>

@@ -979,7 +979,7 @@ Adres: %4
     <message>
         <location filename="../coincontroldialog.cpp" line="749"/>
         <source>n/a</source>
-        <translation type="unfinished"/>
+        <translation>niet beschikbaar</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="164"/>
