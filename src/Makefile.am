@@ -89,6 +89,7 @@ BITCOIN_CORE_H = \
   compressor.h \
   consensus/consensus.h \
   consensus/params.h \
+  consensus/pow.h \
   consensus/validation.h \
   core_io.h \
   wallet/db.h \
@@ -108,7 +109,6 @@ BITCOIN_CORE_H = \
   net.h \
   noui.h \
   policy/policy.h \
-  pow.h \
   primitives/block.h \
   primitives/transaction.h \
   protocol.h \
@@ -185,7 +185,6 @@ libbitcoin_server_a_SOURCES = \
   net.cpp \
   noui.cpp \
   policy/policy.cpp \
-  pow.cpp \
   rest.cpp \
   rpcblockchain.cpp \
   rpcmining.cpp \
@@ -249,6 +248,7 @@ libbitcoin_common_a_SOURCES = \
   coins.cpp \
   compressor.cpp \
   consensus/consensus.cpp \
+  consensus/pow.cpp \
   core_read.cpp \
   core_write.cpp \
   eccryptoverify.cpp \

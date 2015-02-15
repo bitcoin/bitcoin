@@ -8,10 +8,10 @@
 
 
 
+#include "consensus/pow.h"
 #include "keystore.h"
 #include "main.h"
 #include "net.h"
-#include "pow.h"
 #include "script/sign.h"
 #include "serialize.h"
 #include "util.h"
