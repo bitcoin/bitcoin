@@ -992,7 +992,7 @@ Wird zugmachd, wails bessa is.</translation>
     <message>
         <location filename="../coincontroldialog.cpp" line="749"/>
         <source>n/a</source>
-        <translation type="unfinished"/>
+        <translation>woasined</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="164"/>

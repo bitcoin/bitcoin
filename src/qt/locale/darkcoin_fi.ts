@@ -981,7 +981,7 @@ Osoite: %4
     <message>
         <location filename="../coincontroldialog.cpp" line="749"/>
         <source>n/a</source>
-        <translation type="unfinished"/>
+        <translation>e/s</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="164"/>
@@ -2780,28 +2780,28 @@ https://www.transifex.com/projects/p/darkcoin/</translation>
         <location filename="../sendcoinsdialog.cpp" line="151"/>
         <location filename="../sendcoinsdialog.cpp" line="160"/>
         <source>using</source>
-        <translation type="unfinished"/>
+        <translation>käyttäen</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="145"/>
         <location filename="../sendcoinsdialog.cpp" line="151"/>
         <source>anonymous funds</source>
-        <translation type="unfinished"/>
+        <translation>anonymisoituja varoja</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="155"/>
         <source>(darksend requires this amount to be rounded up to the nearest %1).</source>
-        <translation>(darksend vaatii että tämä määrä pyöristetään lähimpään %1).</translation>
+        <translation>(darksend pyöristää tämän lähimpään %1).</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="160"/>
         <source>any available funds (not recommended)</source>
-        <translation type="unfinished"/>
+        <translation>kaikkia käytössä olevia varoja (ei suositeltu)</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="166"/>
         <source>and InstantX</source>
-        <translation type="unfinished"/>
+        <translation>ja instantx</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="190"/>
@@ -2819,7 +2819,7 @@ https://www.transifex.com/projects/p/darkcoin/</translation>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="262"/>
         <source>are added as transaction fee</source>
-        <translation>on lisätty siirtomaksuna</translation>
+        <translation>lisätty siirtomaksuna</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="276"/>
