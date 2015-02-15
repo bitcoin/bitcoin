@@ -60,6 +60,21 @@ bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoins
  */
 bool CheckTxInputsScripts(const CTransaction& tx, CValidationState& state, const CCoinsViewEfficient& inputs, bool cacheStore, unsigned int flags);
 bool ContextualCheckBlock(const CBlock& block, CValidationState& state, const Consensus::Params& params, const CBlockIndex* pindexPrev);
+/**
+ * Do not allow blocks that contain transactions which 'overwrite' older transactions,
+ * unless those are already completely spent.
+ * If such overwrites are allowed, coinbases and transactions depending upon those
+ * can be duplicated to remove the ability to spend the first instance -- even after
+ * being sent to another address.
+ * See BIP30 and http://r6.ca/blog/20120206T005236Z.html for more information.
+ * This logic is not necessary for memory pool transactions, as AcceptToMemoryPool
+ * already refuses previously-known transaction ids entirely.
+ * This rule was originally applied all blocks whose timestamp was after March 15, 2012, 0:00 UTC.
+ * Now that the whole chain is irreversibly beyond that time it is applied to all blocks except the
+ * two in the chain that violate it. This prevents exploiting the issue against nodes in their
+ * initial block download.
+ */
+bool EnforceBIP30(const CBlock& block, CValidationState& state, const CBlockIndex* pindexPrev, const CCoinsViewEfficient& inputs);
 
 /** Utility functions */
 /**

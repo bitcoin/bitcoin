@@ -294,6 +294,18 @@ unsigned Consensus::GetFlags(const CBlock& block, CBlockIndex* pindex, const Con
     return flags;
 }
 
+bool Consensus::EnforceBIP30(const CBlock& block, CValidationState& state, const CBlockIndex* pindexPrev, const CCoinsViewEfficient& inputs)
+{
+    if (!(pindexPrev->nHeight==91842 && pindexPrev->GetBlockHash() == uint256S("0x00000000000a4d0a398161ffc163c503763b1f4360639393e0e4c8e300e0caec")) ||
+        (pindexPrev->nHeight==91880 && pindexPrev->GetBlockHash() == uint256S("0x00000000000743f190a18c5577a3c2d2a1f610ae9601ac046a38084ccb7cd721")))
+        for (unsigned int i = 1; i < block.vtx.size(); i++) {
+            const CCoins* coins = inputs.AccessCoins(block.vtx[i].GetHash());
+            if (coins && !coins->IsPruned())
+                return state.DoS(100, false, REJECT_INVALID, "bad-txns-BIP30");
+        }
+    return true;
+}
+
 unsigned int Consensus::GetLegacySigOpCount(const CTransaction& tx)
 {
     unsigned int nSigOps = 0;
