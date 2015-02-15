@@ -303,10 +303,10 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(WalletModelTransaction &tran
     {
         LOCK2(cs_main, wallet->cs_wallet);
         CWalletTx *newTx = transaction.getTransaction();
+        QList<SendCoinsRecipient> recipients = transaction.getRecipients();
 
         // Store PaymentRequests in wtx.vOrderForm in wallet.
-        std::string strCommand = "tx";
-        foreach(const SendCoinsRecipient &rcp, transaction.getRecipients())
+        foreach(const SendCoinsRecipient &rcp, recipients)
         {
             if (rcp.paymentRequest.IsInitialized())
             {
@@ -319,18 +319,13 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(WalletModelTransaction &tran
             {
                 newTx->vOrderForm.push_back(make_pair("Message", rcp.message.toStdString()));
             }
-
-            if(rcp.useInstantX) {
-                strCommand = "txlreq";
-            }
         }
-
 
         CReserveKey *keyChange = transaction.getPossibleKeyChange();
 
         transaction.getRecipients();
 
-        if(!wallet->CommitTransaction(*newTx, *keyChange, strCommand))
+        if(!wallet->CommitTransaction(*newTx, *keyChange, (recipients[0].useInstantX) ? "txlreq" : "tx"))
             return TransactionCommitFailed;
 
         CTransaction* t = (CTransaction*)newTx;
