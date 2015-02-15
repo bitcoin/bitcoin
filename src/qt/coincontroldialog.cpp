@@ -746,7 +746,7 @@ void CoinControlDialog::updateView()
             int rounds = GetInputDarksendRounds(vin);
 
             if(rounds >= 0) itemOutput->setText(COLUMN_DARKSEND_ROUNDS, strPad(QString::number(rounds), 15, " "));
-            else itemOutput->setText(COLUMN_DARKSEND_ROUNDS, strPad(QString("n/a"), 15, " "));
+            else itemOutput->setText(COLUMN_DARKSEND_ROUNDS, strPad(QString(tr("n/a")), 15, " "));
 
 
             // confirmations
