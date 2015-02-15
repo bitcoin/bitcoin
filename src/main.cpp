@@ -1573,22 +1573,11 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, const Consensus:
                                  REJECT_INVALID, "bad-txns-BIP30");
         }
     }
-
-    // BIP16 didn't become active until Apr 1 2012
-    int64_t nBIP16SwitchTime = 1333238400;
-    bool fStrictPayToScriptHash = (pindex->GetBlockTime() >= nBIP16SwitchTime);
-
-    unsigned int flags = fStrictPayToScriptHash ? SCRIPT_VERIFY_P2SH : SCRIPT_VERIFY_NONE;
-
-    // Start enforcing the DERSIG (BIP66) rules, for block.nVersion=3 blocks, when 75% of the network has upgraded:
-    if (block.nVersion >= 3 && IsSuperMajority(3, pindex->pprev, params.nMajorityEnforceBlockUpgrade, params.nMajorityWindow)) {
-        flags |= SCRIPT_VERIFY_DERSIG;
-    }
-
     CBlockUndo blockundo;
 
     CCheckQueueControl<CScriptCheck> control(fScriptChecks && nScriptCheckThreads ? &scriptcheckqueue : NULL);
 
+    unsigned int flags = Consensus::GetFlags(block, pindex, Params().GetConsensus());
     int64_t nTimeStart = GetTimeMicros();
     CAmount nFees = 0;
     int nInputs = 0;

@@ -11,6 +11,7 @@
 #include "pow.h"
 #include "primitives/block.h"
 #include "primitives/transaction.h"
+#include "script/interpreter.h"
 #include "script/sigcache.h"
 #include "tinyformat.h"
 #include "utilmoneystr.h"
@@ -230,6 +231,17 @@ bool Consensus::VerifyBlockHeader(const CBlockHeader& block, CValidationState& s
     if (!Consensus::ContextualCheckBlockHeader(block, state, pindexPrev, params))
         return false;
     return true;
+}
+
+unsigned Consensus::GetFlags(const CBlock& block, CBlockIndex* pindex, const Consensus::Params& params)
+{
+    int64_t nBIP16SwitchTime = 1333238400;
+    bool fStrictPayToScriptHash = (pindex->GetBlockTime() >= nBIP16SwitchTime);
+    unsigned int flags = fStrictPayToScriptHash ? SCRIPT_VERIFY_P2SH : SCRIPT_VERIFY_NONE;
+
+    if (block.nVersion >= 3 && IsSuperMajority(3, pindex->pprev, params.nMajorityEnforceBlockUpgrade, params.nMajorityWindow))
+        flags |= SCRIPT_VERIFY_DERSIG;
+    return flags;
 }
 
 unsigned int Consensus::GetLegacySigOpCount(const CTransaction& tx)

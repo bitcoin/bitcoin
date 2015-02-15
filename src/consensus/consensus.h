@@ -60,6 +60,11 @@ bool CheckTxInputsScripts(const CTransaction& tx, CValidationState& state, const
 
 /** Utility functions */
 /**
+ * BIP16 didn't become active until Apr 1 2012
+ * Starts enforcing the DERSIG (BIP66) rules, for block.nVersion=3 blocks, when 75% of the network has upgraded
+ */
+unsigned int GetFlags(const CBlock& block, CBlockIndex* pindex, const Consensus::Params& params);
+/**
  * Count ECDSA signature operations the old-fashioned (pre-0.6) way
  * @return number of sigops this transaction's outputs will produce when spent
  * @see CTransaction::FetchInputs
