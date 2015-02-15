@@ -93,10 +93,4 @@ CAmount GetValueOut(const CTransaction& tx);
 
 } // namespace Consensus
 
-/**
- * Returns true if there are nRequired or more blocks of minVersion or above
- * in the last nToCheck blocks, starting at pstart and going backwards.
- */
-bool IsSuperMajority(int minVersion, const CBlockIndex* pstart, unsigned nRequired, unsigned nToCheck);
-
 #endif // BITCOIN_CONSENSUS_CONSENSUS_H

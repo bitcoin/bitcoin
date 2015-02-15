@@ -194,7 +194,11 @@ bool Consensus::CheckTxInputsScripts(const CTransaction& tx, CValidationState& s
     return true;
 }
 
-bool IsSuperMajority(int minVersion, const CBlockIndex* pstart, unsigned nRequired, unsigned nToCheck)
+/**
+ * Returns true if there are nRequired or more blocks of minVersion or above
+ * in the last nToCheck blocks, starting at pstart and going backwards.
+ */
+static bool IsSuperMajority(int minVersion, const CBlockIndex* pstart, unsigned nRequired, unsigned nToCheck)
 {
     unsigned int nFound = 0;
     for (unsigned int i = 0; i < nToCheck && nFound < nRequired && pstart != NULL; i++)
@@ -230,6 +234,37 @@ bool Consensus::VerifyBlockHeader(const CBlockHeader& block, CValidationState& s
         return false;
     if (!Consensus::ContextualCheckBlockHeader(block, state, pindexPrev, params))
         return false;
+    return true;
+}
+
+bool Consensus::IsFinalTx(const CTransaction &tx, int nBlockHeight, int64_t nBlockTime)
+{
+    if ((int64_t)tx.nLockTime < ((int64_t)tx.nLockTime < LOCKTIME_THRESHOLD ? (int64_t)nBlockHeight : nBlockTime))
+        return true;
+    for (unsigned int i = 0; i < tx.vin.size(); i++)
+        if (!tx.vin[i].IsFinal())
+            return false;
+    return true;
+}
+
+bool Consensus::ContextualCheckBlock(const CBlock& block, CValidationState& state, const Consensus::Params& params, const CBlockIndex* pindexPrev)
+{
+    const int nHeight = pindexPrev->nHeight + 1;
+    // Check that all transactions are finalized
+    for (unsigned int i = 1; i < block.vtx.size(); i++)
+        if (!Consensus::IsFinalTx(block.vtx[i], nHeight, block.GetBlockTime()))
+            return state.DoS(10, false, REJECT_INVALID, "bad-txns-nonfinal");
+
+    // Enforce block.nVersion=2 rule that the coinbase starts with serialized block height
+    // if 750 of the last 1,000 blocks are version 2 or greater (51/100 if testnet):
+    if (block.nVersion >= 2 && IsSuperMajority(2, pindexPrev, params.nMajorityEnforceBlockUpgrade, params.nMajorityWindow))
+    {
+        CScript expect = CScript() << nHeight;
+        if (block.vtx[0].vin[0].scriptSig.size() < expect.size() ||
+            !std::equal(expect.begin(), expect.end(), block.vtx[0].vin[0].scriptSig.begin())) {
+            return state.DoS(100, false, REJECT_INVALID, "bad-cb-height");
+        }
+    }
     return true;
 }
 
