@@ -735,56 +735,23 @@ void CMasternodePayments::CleanPaymentList()
 
 bool CMasternodePayments::ProcessBlock(int nBlockHeight)
 {
+
     if(!enabled) return false;
     CMasternodePaymentWinner winner;
-    LogPrintf("CMasternodePayments() : block %d \n", nBlockHeight);
 
-    //only do this once per blockheight
-    CScript payee;
-    if(GetBlockPayee(nBlockHeight, payee)) return true;
-
-    //randomly sort our masternodes
-    std::random_shuffle ( vecMasternodes.begin(), vecMasternodes.end() );
-
-    //count the active masternodes
-    int nActiveMasternodes = 0;
-    BOOST_FOREACH(CMasterNode& mn, vecMasternodes) {
-        mn.Check();
-        if(!mn.IsEnabled()) {
-            continue;
-        }
-
-        nActiveMasternodes++;
-    }
-    nActiveMasternodes *= 0.95;
-
-    //make an array with 1 payment cycle of active masternodes
     std::vector<CTxIn> vecLastPayments;
     int c = 0;
     BOOST_REVERSE_FOREACH(CMasternodePaymentWinner& winner, vWinning){
         vecLastPayments.push_back(winner.vin);
         //if we have one full payment cycle, break
-        if(++c >= nActiveMasternodes) break;
+        if(++c > (int)vecMasternodes.size()) break;
     }
 
-    //scan for the next winner
+    std::random_shuffle ( vecMasternodes.begin(), vecMasternodes.end() );
     BOOST_FOREACH(CMasterNode& mn, vecMasternodes) {
         bool found = false;
-        BOOST_FOREACH(CTxIn& vin, vecLastPayments){
-            if(mn.vin == vin) {
-                found = true;
-                break;
-            }
-        }
-
-        CScript payee;
-        payee.SetDestination(mn.pubkey.GetID());
-
-        CTxDestination address1;
-        ExtractDestination(payee, address1);
-        CBitcoinAddress address2(address1);
-
-        if(fDebug) LogPrintf("CMasternodePayments() : Looking for next payee - %s %d \n", address2.ToString().c_str(), found);
+        BOOST_FOREACH(CTxIn& vin, vecLastPayments)
+            if(mn.vin == vin) found = true;
 
         if(found) continue;
 
@@ -793,31 +760,20 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
             continue;
         }
 
-
         winner.score = 0;
         winner.nBlockHeight = nBlockHeight;
         winner.vin = mn.vin;
         winner.payee.SetDestination(mn.pubkey.GetID());
 
-        if(fDebug) LogPrintf("CMasternodePayments() : got payee - %s \n", address2.ToString().c_str());
-
         break;
     }
 
-    //if we can't find someone to get paid, pick randomly (shouldn't happen)
+    //if we can't find someone to get paid, pick randomly
     if(winner.nBlockHeight == 0 && vecMasternodes.size() > 1) {
-        int i = rand() % (int)(vecMasternodes.size() - 1);
         winner.score = 0;
         winner.nBlockHeight = nBlockHeight;
-        winner.vin = vecMasternodes[i].vin;
-        winner.payee.SetDestination(vecMasternodes[i].pubkey.GetID());
-
-        CTxDestination address1;
-        ExtractDestination(winner.payee, address1);
-        CBitcoinAddress address2(address1);
-
-        if(fDebug) LogPrintf("CMasternodePayments() : Looking for next payee - %s \n", address2.ToString().c_str());
-
+        winner.vin = vecMasternodes[0].vin;
+        winner.payee.SetDestination(vecMasternodes[0].pubkey.GetID());
     }
 
     if(Sign(winner)){
