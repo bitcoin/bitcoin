@@ -1475,7 +1475,7 @@ Varoitus: Jos käytät käyttöjärjestelmää (Live os) suoraan usb, dvd tai cd
     <message>
         <location filename="../forms/optionsdialog.ui" line="141"/>
         <source>Darksend rounds to use</source>
-        <translation>Kuinka montaa kierrosta käytetään</translation>
+        <translation>Kuinka monta Darksend kierrosta käytetään</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="165"/>
@@ -1485,7 +1485,7 @@ Varoitus: Jos käytät käyttöjärjestelmää (Live os) suoraan usb, dvd tai cd
     <message>
         <location filename="../forms/optionsdialog.ui" line="180"/>
         <source>Amount of Darkcoin to keep anonymized</source>
-        <translation>Määrä joka pidetään anonymisoituna</translation>
+        <translation>Darkcoin määrä joka pidetään anonymisoituna</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="206"/>
@@ -1862,7 +1862,7 @@ https://www.transifex.com/projects/p/darkcoin/</translation>
     <message>
         <location filename="../forms/overviewpage.ui" line="918"/>
         <source>Reset the current status of Darksend (can interrupt Darksend if it&apos;s in the process of Mixing, which can cost you money!)</source>
-        <translation>Nollaa nykyinen Darksendin tilanne (voi keskeyttää Darksendin sekoituksen, joka voi maksaa ylimääräisiä kuluja)</translation>
+        <translation>Nollaa nykyinen Darksend tilanne (voi keskeyttää Darksend sekoituksen, joka voi maksaa ylimääräisiä kuluja)</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="924"/>
@@ -3860,7 +3860,7 @@ https://www.transifex.com/projects/p/darkcoin/</translation>
     <message numerus="yes">
         <location filename="../walletmodel.cpp" line="271"/>
         <source>InstantX doesn&apos;t support sending values that high yet. Transactions are currently limited to %n DRK.</source>
-        <translation><numerusform>Instantx ei tue näin korkeaa määrää vielä. Siirtotapahtumat on tällä hetkellä rajoitettu %n DRK.</numerusform><numerusform>Instantx ei tue näin korkeaa määrää vielä. Siirtotapahtumat on tällä hetkellä rajoitettu %n DRK.</numerusform></translation>
+        <translation><numerusform>Instantx ei tue näin korkeaa määrää vielä. Siirtotapahtumat on tällä hetkellä rajoitettu %n DRK.</numerusform><numerusform>Instantx ei tue näin korkeaa lähetysmäärää vielä. Siirtotapahtumat on tällä hetkellä rajoitettu %n DRK.</numerusform></translation>
     </message>
 </context>
 <context>
