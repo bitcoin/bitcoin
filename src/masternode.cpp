@@ -731,50 +731,69 @@ void CMasternodePayments::CleanPaymentList()
 
 bool CMasternodePayments::ProcessBlock(int nBlockHeight)
 {
-
     if(!enabled) return false;
-    CMasternodePaymentWinner winner;
+    CMasternodePaymentWinner newWinner;
 
     std::vector<CTxIn> vecLastPayments;
-    int c = 0;
-    BOOST_REVERSE_FOREACH(CMasternodePaymentWinner& winner, vWinning){
+    BOOST_REVERSE_FOREACH(CMasternodePaymentWinner& winner, vWinning)
+    {
+        //if we already have the same vin - we have one full payment cycle, break
+        if(vecLastPayments.size() > 0
+                && std::find(vecLastPayments.begin(), vecLastPayments.end(), winner.vin) != vecLastPayments.end()) break;
         vecLastPayments.push_back(winner.vin);
-        //if we have one full payment cycle, break
-        if(++c > (int)vecMasternodes.size()) break;
     }
 
     std::random_shuffle ( vecMasternodes.begin(), vecMasternodes.end() );
-    BOOST_FOREACH(CMasterNode& mn, vecMasternodes) {
+    BOOST_FOREACH(CMasterNode& mn, vecMasternodes)
+    {
         bool found = false;
         BOOST_FOREACH(CTxIn& vin, vecLastPayments)
-            if(mn.vin == vin) found = true;
+            if(mn.vin == vin)
+            {
+                found = true;
+                break;
+            }
 
         if(found) continue;
 
         mn.Check();
-        if(!mn.IsEnabled()) {
-            continue;
-        }
+        if(!mn.IsEnabled()) continue;
 
-        winner.score = 0;
-        winner.nBlockHeight = nBlockHeight;
-        winner.vin = mn.vin;
-        winner.payee.SetDestination(mn.pubkey.GetID());
+        newWinner.score = 0;
+        newWinner.nBlockHeight = nBlockHeight;
+        newWinner.vin = mn.vin;
+        newWinner.payee.SetDestination(mn.pubkey.GetID());
 
         break;
     }
 
-    //if we can't find someone to get paid, pick randomly
-    if(winner.nBlockHeight == 0 && vecMasternodes.size() > 1) {
-        winner.score = 0;
-        winner.nBlockHeight = nBlockHeight;
-        winner.vin = vecMasternodes[0].vin;
-        winner.payee.SetDestination(vecMasternodes[0].pubkey.GetID());
+    //if we can't find new MN to get paid, pick first active MN counting back from the end of vecLastPayments list
+    if(newWinner.nBlockHeight == 0 && vecMasternodes.size() > 1)
+    {
+        BOOST_REVERSE_FOREACH(CTxIn& vin, vecLastPayments)
+        {
+            BOOST_FOREACH(CMasterNode& mn, vecMasternodes)
+                if(mn.vin == vin)
+                {
+                    mn.Check();
+                    if(!mn.IsEnabled()) break;
+
+                    newWinner.score = 0;
+                    newWinner.nBlockHeight = nBlockHeight;
+                    newWinner.vin = vin;
+                    newWinner.payee.SetDestination(mn.pubkey.GetID());
+                    break;
+                }
+
+            if(newWinner.nBlockHeight != 0) break; // we found active MN
+        }
     }
 
-    if(Sign(winner)){
-        if(AddWinningMasternode(winner)){
-            Relay(winner);
+    if(Sign(newWinner))
+    {
+        if(AddWinningMasternode(newWinner))
+        {
+            Relay(newWinner);
             return true;
         }
     }
