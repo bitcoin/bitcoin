@@ -43,7 +43,7 @@ void CActiveMasternode::ManageStatus()
 
         if(Params().NetworkID() == CChainParams::MAIN){
             if(service.GetPort() != 9999) {
-                notCapableReason = "Invalid port: " + boost::lexical_cast<string>(service.GetPort()) + " -only 9999 is supported on mainnet.";
+                notCapableReason = "Invalid port: " + boost::lexical_cast<string>(service.GetPort()) + " - only 9999 is supported on mainnet.";
                 status = MASTERNODE_NOT_CAPABLE;
                 LogPrintf("CActiveMasternode::ManageStatus() - not capable: %s\n", notCapableReason.c_str());
                 return;
@@ -77,7 +77,9 @@ void CActiveMasternode::ManageStatus()
         if(GetMasterNodeVin(vin, pubKeyCollateralAddress, keyCollateralAddress)) {
 
             if(GetInputAge(vin) < MASTERNODE_MIN_CONFIRMATIONS){
-                LogPrintf("CActiveMasternode::ManageStatus() - Input must have least %d confirmations - %d confirmations\n", MASTERNODE_MIN_CONFIRMATIONS, GetInputAge(vin));
+                notCapableReason = "Input must have least " + boost::lexical_cast<string>(MASTERNODE_MIN_CONFIRMATIONS) +
+                        " confirmations - " + boost::lexical_cast<string>(GetInputAge(vin)) + " confirmations";
+                LogPrintf("CActiveMasternode::ManageStatus() - %s\n", notCapableReason.c_str());
                 status = MASTERNODE_INPUT_TOO_NEW;
                 return;
             }
@@ -100,18 +102,19 @@ void CActiveMasternode::ManageStatus()
             }
 
             if(!Register(vin, service, keyCollateralAddress, pubKeyCollateralAddress, keyMasternode, pubKeyMasternode, errorMessage)) {
-            	LogPrintf("CActiveMasternode::ManageStatus() - Error on Register: %s", errorMessage.c_str());
+                LogPrintf("CActiveMasternode::ManageStatus() - Error on Register: %s\n", errorMessage.c_str());
             }
 
             return;
         } else {
-        	LogPrintf("CActiveMasternode::ManageStatus() - Could not find suitable coins!\n");
+            notCapableReason = "Could not find suitable coins!";
+            LogPrintf("CActiveMasternode::ManageStatus() - %s\n", notCapableReason.c_str());
         }
     }
 
     //send to all peers
     if(!Dseep(errorMessage)) {
-    	LogPrintf("CActiveMasternode::ManageStatus() - Error on Ping: %s", errorMessage.c_str());
+        LogPrintf("CActiveMasternode::ManageStatus() - Error on Ping: %s\n", errorMessage.c_str());
     }
 }
 
