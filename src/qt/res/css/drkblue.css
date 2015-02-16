@@ -1,8 +1,0 @@
-QWidget { background-color: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 0, stop: 0 #FFFFFF, stop: 1 #0099FF) }
-QToolBar  { background-color: #82CDFF }
-QToolButton  { background-color: #82CDFF }
-QFrame { background-color: #DDFFFF }
-QFormLayout { color: red; background-color: #DDFFFF }
-QPushButton { color: black; background-color: #22BBFF }
-QCheckBox { color: black; background-color:rgba(0,0,0,0.0) }
-QLabel { color: black; background-color:rgba(255,0,0,0.0) }
