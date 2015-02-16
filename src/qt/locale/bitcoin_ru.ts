@@ -425,7 +425,7 @@ Copyright © 2012-2015 The NovaCoin developers</source>
         <translation>&amp;Выгрузка ключей...</translation>
     </message>
     <message>
-        <location line="+801"/>
+        <location line="+790"/>
         <source>Dump Wallet</source>
         <translation>Выгрузка ключей</translation>
     </message>
@@ -513,7 +513,7 @@ Some or all keys from:
         <translation>Файл с ключами (*.txt)</translation>
     </message>
     <message>
-        <location line="-832"/>
+        <location line="-821"/>
         <source>&amp;Import Wallet...</source>
         <translation>&amp;Импорт ключей...</translation>
     </message>
@@ -613,12 +613,12 @@ Some or all keys from:
     </message>
     <message>
         <location line="-230"/>
-        <location line="+658"/>
+        <location line="+647"/>
         <source>NovaCoin</source>
         <translation>NovaCoin</translation>
     </message>
     <message>
-        <location line="-658"/>
+        <location line="-647"/>
         <source>Wallet</source>
         <translation>Бумажник</translation>
     </message>
@@ -760,12 +760,12 @@ Some or all keys from:
         <translation>Нет подходящих транзакций</translation>
     </message>
     <message>
-        <location line="+424"/>
+        <location line="+413"/>
         <source>Import Successful</source>
         <translation>Импорт завершен</translation>
     </message>
     <message>
-        <location line="-829"/>
+        <location line="-818"/>
         <source>Unlo&amp;ck wallet</source>
         <translation>Разб&amp;локировать бумажник</translation>
     </message>
@@ -800,7 +800,7 @@ Some or all keys from:
         <translation>&amp;Безопасность</translation>
     </message>
     <message>
-        <location line="+454"/>
+        <location line="+443"/>
         <source>This transaction is over the size limit.  You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network.  Do you want to pay the fee?</source>
         <translation>Данная транзакция превышает предельно допустимый размер.  Но Вы можете всё равно совершить её, добавив комиссию в %1, которая отправится тем узлам, которые обработают Вашу транзакцию, и поможет поддержать сеть.  Вы хотите добавить комиссию?</translation>
     </message>
@@ -1578,7 +1578,7 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
 <context>
     <name>MultisigDialog</name>
     <message>
-        <location filename="../multisigdialog.cpp" line="+174"/>
+        <location filename="../multisigdialog.cpp" line="+170"/>
         <location line="+6"/>
         <location line="+6"/>
         <location line="+8"/>
@@ -1610,7 +1610,7 @@ Reduce the number of addresses involved in the address creation.</source>
 Уменьшите число адресов, участвующих в создании адреса с мультиподписью</translation>
     </message>
     <message>
-        <location line="+304"/>
+        <location line="+306"/>
         <source>Transaction signature is complete</source>
         <translation>Подписание транзакции завершено</translation>
     </message>
@@ -2232,7 +2232,7 @@ Reduce the number of addresses involved in the address creation.</source>
         <translation>от %1 до %2</translation>
     </message>
     <message>
-        <location filename="../guiutil.cpp" line="+41"/>
+        <location filename="../guiutil.cpp" line="+40"/>
         <source>%1 d</source>
         <translation>%1 д</translation>
     </message>
@@ -2690,10 +2690,6 @@ Reduce the number of addresses involved in the address creation.</source>
         <location line="+22"/>
         <source>Balance:</source>
         <translation>Баланс:</translation>
-    </message>
-    <message>
-        <source>123.456 BTC</source>
-        <translation type="vanished">123.456 BTC</translation>
     </message>
     <message>
         <location line="+41"/>
@@ -3599,11 +3595,12 @@ Reduce the number of addresses involved in the address creation.</source>
         <translation>Указать pid-файл (по умолчанию: novacoin.pid)</translation>
     </message>
     <message>
+        <location line="+22"/>
         <source>Specify wallet file (within data directory)</source>
-        <translation type="vanished">Указать файл кошелька (в пределах DATA директории)</translation>
+        <translation>Указать файл кошелька (в пределах DATA директории)</translation>
     </message>
     <message>
-        <location line="-1"/>
+        <location line="-23"/>
         <source>Specify data directory</source>
         <translation>Укажите каталог данных</translation>
     </message>
@@ -3668,11 +3665,12 @@ Reduce the number of addresses involved in the address creation.</source>
         <translation>Отключить базы данных блоков и адресов. Увеличивает время завершения работы (по умолчанию: 0)</translation>
     </message>
     <message>
+        <location line="+147"/>
         <source>Use in-memory logging for block index database (default: 1)</source>
-        <translation type="vanished">Использовать ведение журнала в памяти для индекса базы данных блоков (по умолчанию: 1)</translation>
+        <translation>Использовать ведение журнала в памяти для индекса базы данных блоков (по умолчанию: 1)</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="-145"/>
         <source>Error initializing database environment %s! To recover, BACKUP THAT DIRECTORY, then remove everything from it except for wallet.dat.</source>
         <translation>Ошибка инициализации окружения БД %s! Для восстановления СДЕЛАЙТЕ РЕЗЕРВНУЮ КОПИЮ этой директории, затем удалите из нее все, кроме wallet.dat.</translation>
     </message>
@@ -3707,15 +3705,17 @@ Reduce the number of addresses involved in the address creation.</source>
         <translation>Попытка восстановления ключей из поврежденного wallet.dat</translation>
     </message>
     <message>
+        <location line="+98"/>
         <source>Find peers using DNS lookup (default: 1)</source>
-        <translation type="vanished">Искать узлы с помощью DNS (по умолчанию: 1)</translation>
+        <translation>Искать узлы с помощью DNS (по умолчанию: 1)</translation>
     </message>
     <message>
+        <location line="+1"/>
         <source>Sync checkpoints policy (default: strict)</source>
-        <translation type="vanished">Политика синхронизированных меток (по умолчанию: strict)</translation>
+        <translation>Политика синхронизированных меток (по умолчанию: strict)</translation>
     </message>
     <message>
-        <location line="+28"/>
+        <location line="-71"/>
         <source>Importing blockchain data file.</source>
         <translation>Импортируется файл цепи блоков.</translation>
     </message>
@@ -3953,24 +3953,27 @@ Reduce the number of addresses involved in the address creation.</source>
         <translation>Выполнить команду, когда появляется новый блок (%s в команде заменяется на хэш блока)</translation>
     </message>
     <message>
+        <location line="+136"/>
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
-        <translation type="vanished">Выполнить команду, когда получена новая транзакция (%s в команде заменяется на ID транзакции)</translation>
+        <translation>Выполнить команду, когда получена новая транзакция (%s в команде заменяется на ID транзакции)</translation>
     </message>
     <message>
-        <location line="+119"/>
+        <location line="-17"/>
         <source>Upgrade wallet to latest format</source>
         <translation>Обновить бумажник до последнего формата</translation>
     </message>
     <message>
+        <location line="+18"/>
         <source>Require a confirmations for change (default: 0)</source>
-        <translation type="vanished">Требовать подтверждения для сдачи (по умолчанию: 0)</translation>
+        <translation>Требовать подтверждения для сдачи (по умолчанию: 0)</translation>
     </message>
     <message>
+        <location line="+1"/>
         <source>Enforce transaction scripts to use canonical PUSH operators (default: 1)</source>
-        <translation type="vanished">Требовать от скриптов использования стандартных PUSH операторов (по умолчанию: 1)</translation>
+        <translation>Требовать от скриптов использования стандартных PUSH операторов (по умолчанию: 1)</translation>
     </message>
     <message>
-        <location line="-16"/>
+        <location line="-35"/>
         <source>Set key pool size to &lt;n&gt; (default: 100)</source>
         <translation>Установить размер запаса ключей в &lt;n&gt; (по умолчанию: 100)</translation>
     </message>
@@ -3990,11 +3993,12 @@ Reduce the number of addresses involved in the address creation.</source>
         <translation>Насколько тщательно проверять блоки (0-6, по умолчанию: 1)</translation>
     </message>
     <message>
+        <location line="+76"/>
         <source>Set the number of script verification threads (1-16, 0=auto, default: 0)</source>
-        <translation type="vanished">Установить число потоков проверки скрипта (1-16, 0= автоматически, по умолчанию: 0)</translation>
+        <translation>Установить число потоков проверки скрипта (1-16, 0= автоматически, по умолчанию: 0)</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="-73"/>
         <source>Imports blocks from external blk000?.dat file</source>
         <translation>Импортировать блоки из внешнего файла blk000?.dat</translation>
     </message>
@@ -4154,11 +4158,12 @@ Reduce the number of addresses involved in the address creation.</source>
         <translation>Комиссия на килобайт, добавляемая к вашим транзакциям</translation>
     </message>
     <message>
+        <location line="+82"/>
         <source>When creating transactions, ignore inputs with value less than this (default: %s)</source>
-        <translation type="vanished">При создании транзакций игнорировать входы с суммой ниже указанной (по умолчанию: %s)</translation>
+        <translation>При создании транзакций игнорировать входы с суммой ниже указанной (по умолчанию: %s)</translation>
     </message>
     <message>
-        <location line="+19"/>
+        <location line="-63"/>
         <source>Loading wallet...</source>
         <translation>Загрузка бумажника...</translation>
     </message>
