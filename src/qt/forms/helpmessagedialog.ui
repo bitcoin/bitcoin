@@ -28,7 +28,7 @@
       </sizepolicy>
      </property>
      <property name="pixmap">
-      <pixmap resource="../bitcoin.qrc">:/images/about</pixmap>
+      <pixmap resource="../darkcoin.qrc">:/images/about</pixmap>
      </property>
     </widget>
    </item>
@@ -89,7 +89,7 @@
   </layout>
  </widget>
  <resources>
-  <include location="../bitcoin.qrc"/>
+  <include location="../darkcoin.qrc"/>
  </resources>
  <connections>
   <connection>
