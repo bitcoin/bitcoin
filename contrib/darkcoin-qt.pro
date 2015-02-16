@@ -224,7 +224,7 @@ SOURCES += \
     ../src/qt/bitcoinaddressvalidator.cpp \
     ../src/qt/bitcoinamountfield.cpp \
     ../src/qt/bitcoingui.cpp \
-    ../src/qt/bitcoinstrings.cpp \
+    ../src/qt/darkcoinstrings.cpp \
     ../src/qt/bitcoinunits.cpp \
     ../src/qt/clientmodel.cpp \
     ../src/qt/coincontroldialog.cpp \

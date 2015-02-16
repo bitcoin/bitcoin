@@ -229,7 +229,7 @@ leveldb/%.a:
 	  CC="$(CC)" PLATFORM=$(TARGET_OS) AR="$(AR)" $(LEVELDB_TARGET_FLAGS) \
 	  OPT="$(CXXFLAGS) $(CPPFLAGS)"
 
-qt/bitcoinstrings.cpp: $(libdarkcoin_server_a_SOURCES) $(libdarkcoin_common_a_SOURCES) $(libdarkcoin_cli_a_SOURCES)
+qt/darkcoinstrings.cpp: $(libdarkcoin_server_a_SOURCES) $(libdarkcoin_common_a_SOURCES) $(libdarkcoin_cli_a_SOURCES)
 	@test -n $(XGETTEXT) || echo "xgettext is required for updating translations"
 	@cd $(top_srcdir); XGETTEXT=$(XGETTEXT) share/qt/extract_strings_qt.py
 
