@@ -281,7 +281,7 @@ RES_IMAGES = \
 
 RES_MOVIES = $(wildcard res/movies/spinner-*.png)
 
-BITCOIN_RC = res/bitcoin-qt-res.rc
+DARKCOIN_RC = res/darkcoin-qt-res.rc
 
 libdarkcoinqt_a_CPPFLAGS = $(AM_CPPFLAGS) $(QT_INCLUDES) \
   -I$(top_srcdir)/src/qt/forms $(QT_DBUS_INCLUDES)
@@ -306,7 +306,7 @@ if TARGET_DARWIN
   darkcoin_qt_SOURCES += $(BITCOIN_MM)
 endif
 if TARGET_WINDOWS
-  darkcoin_qt_SOURCES += $(BITCOIN_RC)
+  darkcoin_qt_SOURCES += $(DARKCOIN_RC)
 endif
 darkcoin_qt_LDADD = libdarkcoinqt.a $(LIBBITCOIN_SERVER)
 if ENABLE_WALLET
