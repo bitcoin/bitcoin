@@ -48,6 +48,12 @@ struct CDiskBlockPos
 
     void SetNull() { nFile = -1; nPos = 0; }
     bool IsNull() const { return (nFile == -1); }
+
+    std::string ToString() const
+    {
+        return strprintf("CBlockDiskPos(nFile=%i, nPos=%i)", nFile, nPos);
+    }
+
 };
 
 enum BlockStatus {
