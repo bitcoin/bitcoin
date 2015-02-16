@@ -162,7 +162,7 @@
          <item>
           <widget class="QLabel" name="label_2">
            <property name="toolTip">
-            <string notr="true">&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This amount acts as a threshold to turn off Darksend once it's reached. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            <string>This amount acts as a threshold to turn off Darksend once it's reached.</string>
            </property>
            <property name="statusTip">
             <string notr="true"/>
@@ -521,7 +521,8 @@
           <string notr="true"/>
          </property>
          <property name="text">
-          <string notr="true">&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Language missing or translation incomplete? Help contributing translations here: &lt;a  href=&quot;https://www.transifex.com/projects/p/darkcoin/&quot;&gt;https://www.transifex.com/projects/p/darkcoin/&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          <string>Language missing or translation incomplete? Help contributing translations here:
+https://www.transifex.com/projects/p/darkcoin/</string>
          </property>
          <property name="wordWrap">
           <bool>true</bool>
@@ -530,7 +531,7 @@
           <bool>true</bool>
          </property>
          <property name="textInteractionFlags">
-          <set>Qt::LinksAccessibleByKeyboard|Qt::LinksAccessibleByMouse</set>
+          <set>Qt::LinksAccessibleByKeyboard|Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
          </property>
         </widget>
        </item>

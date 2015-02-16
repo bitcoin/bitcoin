@@ -12,6 +12,12 @@
         <translation>&lt;b&gt;Darkcoin Çekirdek&lt;/b&gt; versiyon</translation>
     </message>
     <message>
+        <location filename="../forms/aboutdialog.ui" line="94"/>
+        <source>Copyright &amp;copy; 2009-2014 The Bitcoin Core developers.
+Copyright &amp;copy; 2014-YYYY The Darkcoin Core developers.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
         <location filename="../forms/aboutdialog.ui" line="111"/>
         <source>
 This is experimental software.
@@ -839,9 +845,19 @@ Adres: %4
         <translation>Liste kipi</translation>
     </message>
     <message>
+        <location filename="../forms/coincontroldialog.ui" line="400"/>
+        <source>(1 locked)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
         <location filename="../forms/coincontroldialog.ui" line="446"/>
         <source>Amount</source>
         <translation>Meblağ</translation>
+    </message>
+    <message>
+        <location filename="../forms/coincontroldialog.ui" line="451"/>
+        <source>Label</source>
+        <translation>Etiket</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="456"/>
@@ -960,6 +976,12 @@ Adres: %4
         <translation>orta-yüksek</translation>
     </message>
     <message>
+        <location filename="../coincontroldialog.cpp" line="749"/>
+        <source>n/a</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../forms/coincontroldialog.ui" line="164"/>
         <location filename="../coincontroldialog.cpp" line="414"/>
         <source>medium</source>
         <translation>orta</translation>
@@ -1005,6 +1027,7 @@ Adres: %4
         <translation>evet</translation>
     </message>
     <message>
+        <location filename="../forms/coincontroldialog.ui" line="244"/>
         <location filename="../coincontroldialog.cpp" line="605"/>
         <source>no</source>
         <translation>hayır</translation>
@@ -1451,6 +1474,11 @@ Adres: %4
         <translation type="unfinished"/>
     </message>
     <message>
+        <location filename="../forms/optionsdialog.ui" line="165"/>
+        <source>This amount acts as a threshold to turn off Darksend once it&apos;s reached.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
         <location filename="../forms/optionsdialog.ui" line="180"/>
         <source>Amount of Darkcoin to keep anonymized</source>
         <translation type="unfinished"/>
@@ -1591,58 +1619,64 @@ Adres: %4
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="514"/>
+        <location filename="../forms/optionsdialog.ui" line="524"/>
+        <source>Language missing or translation incomplete? Help contributing translations here:
+https://www.transifex.com/projects/p/darkcoin/</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../forms/optionsdialog.ui" line="550"/>
         <source>&amp;Unit to show amounts in:</source>
         <translation>Meblağları göstermek için &amp;birim:</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="527"/>
+        <location filename="../forms/optionsdialog.ui" line="563"/>
         <source>Choose the default subdivision unit to show in the interface and when sending coins.</source>
         <translation>Bitcoin gönderildiğinde arayüzde gösterilecek varsayılan alt birimi seçiniz.</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="536"/>
+        <location filename="../forms/optionsdialog.ui" line="572"/>
         <source>Whether to show Darkcoin addresses in the transaction list or not.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="539"/>
+        <location filename="../forms/optionsdialog.ui" line="575"/>
         <source>&amp;Display addresses in transaction list</source>
         <translation>Muamele listesinde adresleri &amp;göster</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="548"/>
-        <location filename="../forms/optionsdialog.ui" line="561"/>
+        <location filename="../forms/optionsdialog.ui" line="584"/>
+        <location filename="../forms/optionsdialog.ui" line="597"/>
         <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
         <translation>Muameleler sekmesinde bağlam menüsü unsurları olarak görünen üçüncü taraf bağlantıları (mesela bir blok tarayıcısı). URL&apos;deki %s, muamele hash değeri ile değiştirilecektir. Birden çok bağlantılar düşey çubuklar | ile ayrılacaktır.</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="551"/>
+        <location filename="../forms/optionsdialog.ui" line="587"/>
         <source>Third party transaction URLs</source>
         <translation>Üçüncü taraf muamele URL&apos;leri</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="592"/>
+        <location filename="../forms/optionsdialog.ui" line="628"/>
         <source>Active command-line options that override above options:</source>
         <translation>Yukarıdaki seçeneklerin yerine geçen faal komut satırı seçenekleri:</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="635"/>
+        <location filename="../forms/optionsdialog.ui" line="671"/>
         <source>Reset all client options to default.</source>
         <translation>İstemcinin tüm seçeneklerini varsayılan değerlere geri al.</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="638"/>
+        <location filename="../forms/optionsdialog.ui" line="674"/>
         <source>&amp;Reset Options</source>
         <translation>Seçenekleri Sıfı&amp;rla</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="699"/>
+        <location filename="../forms/optionsdialog.ui" line="735"/>
         <source>&amp;OK</source>
         <translation>&amp;Tamam</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="706"/>
+        <location filename="../forms/optionsdialog.ui" line="742"/>
         <source>&amp;Cancel</source>
         <translation>&amp;İptal</translation>
     </message>
@@ -1697,7 +1731,8 @@ Adres: %4
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="70"/>
-        <location filename="../forms/overviewpage.ui" line="986"/>
+        <location filename="../forms/overviewpage.ui" line="953"/>
+        <location filename="../forms/overviewpage.ui" line="1021"/>
         <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Darkcoin network after a connection is established, but this process has not completed yet.</source>
         <translation type="unfinished"/>
     </message>
@@ -1792,204 +1827,205 @@ Adres: %4
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="402"/>
-        <location filename="../overviewpage.cpp" line="448"/>
-        <location filename="../overviewpage.cpp" line="462"/>
-        <location filename="../overviewpage.cpp" line="476"/>
+        <location filename="../forms/overviewpage.ui" line="946"/>
+        <location filename="../overviewpage.cpp" line="450"/>
+        <location filename="../overviewpage.cpp" line="464"/>
+        <location filename="../overviewpage.cpp" line="478"/>
         <source>Darksend</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="858"/>
+        <location filename="../forms/overviewpage.ui" line="839"/>
         <source>Start/Stop Mixing</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="890"/>
+        <location filename="../forms/overviewpage.ui" line="871"/>
         <source>(Last Message)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="915"/>
+        <location filename="../forms/overviewpage.ui" line="896"/>
         <source>Try to manually submit a Darksend request.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="918"/>
+        <location filename="../forms/overviewpage.ui" line="899"/>
         <source>Try Mix</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="937"/>
+        <location filename="../forms/overviewpage.ui" line="918"/>
         <source>Reset the current status of Darksend (can interrupt Darksend if it&apos;s in the process of Mixing, which can cost you money!)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="943"/>
+        <location filename="../forms/overviewpage.ui" line="924"/>
         <source>Reset</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="979"/>
+        <location filename="../forms/overviewpage.ui" line="1014"/>
         <source>&lt;b&gt;Recent transactions&lt;/b&gt;</source>
         <translation>&lt;b&gt;Son muameleler&lt;/b&gt;</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="126"/>
         <location filename="../overviewpage.cpp" line="127"/>
+        <location filename="../overviewpage.cpp" line="128"/>
         <source>out of sync</source>
         <translation>eşleşme dışı</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="142"/>
-        <location filename="../overviewpage.cpp" line="347"/>
+        <location filename="../overviewpage.cpp" line="143"/>
+        <location filename="../overviewpage.cpp" line="349"/>
         <source>Disabled</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="145"/>
-        <location filename="../overviewpage.cpp" line="349"/>
-        <location filename="../overviewpage.cpp" line="490"/>
+        <location filename="../overviewpage.cpp" line="146"/>
+        <location filename="../overviewpage.cpp" line="351"/>
+        <location filename="../overviewpage.cpp" line="492"/>
         <source>Start Darksend Mixing</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="147"/>
-        <location filename="../overviewpage.cpp" line="492"/>
+        <location filename="../overviewpage.cpp" line="148"/>
+        <location filename="../overviewpage.cpp" line="494"/>
         <source>Stop Darksend Mixing</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="267"/>
+        <location filename="../overviewpage.cpp" line="269"/>
         <source>No inputs detected</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="275"/>
+        <location filename="../overviewpage.cpp" line="277"/>
         <source>Found unconfirmed denominated outputs, will wait till they confirm to recalculate.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="332"/>
+        <location filename="../overviewpage.cpp" line="334"/>
         <source>Rounds</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="363"/>
+        <location filename="../overviewpage.cpp" line="365"/>
         <source>Enabled</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="419"/>
+        <location filename="../overviewpage.cpp" line="421"/>
         <source>Last Darksend message:
 </source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="376"/>
-        <location filename="../overviewpage.cpp" line="401"/>
+        <location filename="../overviewpage.cpp" line="378"/>
+        <location filename="../overviewpage.cpp" line="403"/>
         <source>Darksend is idle.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="382"/>
+        <location filename="../overviewpage.cpp" line="384"/>
         <source>Darksend request complete: Your transaction was accepted into the pool!</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="388"/>
+        <location filename="../overviewpage.cpp" line="390"/>
         <source>Submitted following entries to masternode:</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="389"/>
-        <location filename="../overviewpage.cpp" line="390"/>
         <location filename="../overviewpage.cpp" line="391"/>
+        <location filename="../overviewpage.cpp" line="392"/>
+        <location filename="../overviewpage.cpp" line="393"/>
         <source>Submitted to masternode, Waiting for more entries</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="394"/>
+        <location filename="../overviewpage.cpp" line="396"/>
         <source>Found enough users, signing ...</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="395"/>
+        <location filename="../overviewpage.cpp" line="397"/>
         <source>Found enough users, signing ( waiting. )</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="396"/>
+        <location filename="../overviewpage.cpp" line="398"/>
         <source>Found enough users, signing ( waiting.. )</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="397"/>
+        <location filename="../overviewpage.cpp" line="399"/>
         <source>Found enough users, signing ( waiting... )</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="399"/>
+        <location filename="../overviewpage.cpp" line="401"/>
         <source>Transmitting final transaction.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="403"/>
+        <location filename="../overviewpage.cpp" line="405"/>
         <source>Finalizing transaction.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="405"/>
+        <location filename="../overviewpage.cpp" line="407"/>
         <source>Darksend request incomplete:</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="405"/>
+        <location filename="../overviewpage.cpp" line="407"/>
         <source>Will retry...</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="407"/>
+        <location filename="../overviewpage.cpp" line="409"/>
         <source>Darksend request complete:</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="409"/>
+        <location filename="../overviewpage.cpp" line="411"/>
         <source>Submitted to masternode, waiting in queue .</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="410"/>
+        <location filename="../overviewpage.cpp" line="412"/>
         <source>Submitted to masternode, waiting in queue ..</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="411"/>
+        <location filename="../overviewpage.cpp" line="413"/>
         <source>Submitted to masternode, waiting in queue ...</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="413"/>
+        <location filename="../overviewpage.cpp" line="415"/>
         <source>Unknown state:</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="427"/>
+        <location filename="../overviewpage.cpp" line="429"/>
         <source>N/A</source>
         <translation>Mevcut değil</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="449"/>
+        <location filename="../overviewpage.cpp" line="451"/>
         <source>Darksend was successfully reset.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="463"/>
+        <location filename="../overviewpage.cpp" line="465"/>
         <source>Darksend requires at least %1 to use.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="477"/>
+        <location filename="../overviewpage.cpp" line="479"/>
         <source>Wallet is locked and user declined to unlock. Disabling Darksend.</source>
         <translation type="unfinished"/>
     </message>
@@ -2562,9 +2598,9 @@ Adres: %4
     <name>SendCoinsDialog</name>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="14"/>
-        <location filename="../sendcoinsdialog.cpp" line="428"/>
-        <location filename="../sendcoinsdialog.cpp" line="512"/>
-        <location filename="../sendcoinsdialog.cpp" line="522"/>
+        <location filename="../sendcoinsdialog.cpp" line="429"/>
+        <location filename="../sendcoinsdialog.cpp" line="513"/>
+        <location filename="../sendcoinsdialog.cpp" line="523"/>
         <source>Send Coins</source>
         <translation>Bitcoin yolla</translation>
     </message>
@@ -2609,6 +2645,11 @@ Adres: %4
         <translation>Öncelik:</translation>
     </message>
     <message>
+        <location filename="../forms/sendcoinsdialog.ui" line="353"/>
+        <source>medium</source>
+        <translation>orta</translation>
+    </message>
+    <message>
         <location filename="../forms/sendcoinsdialog.ui" line="388"/>
         <source>Fee:</source>
         <translation>Ücret:</translation>
@@ -2617,6 +2658,11 @@ Adres: %4
         <location filename="../forms/sendcoinsdialog.ui" line="420"/>
         <source>Low Output:</source>
         <translation>Düşük çıktı:</translation>
+    </message>
+    <message>
+        <location filename="../forms/sendcoinsdialog.ui" line="433"/>
+        <source>no</source>
+        <translation>hayır</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="468"/>
@@ -2724,105 +2770,128 @@ Adres: %4
         <translation>Para üstünü kopyala</translation>
     </message>
     <message>
+        <location filename="../sendcoinsdialog.cpp" line="145"/>
+        <location filename="../sendcoinsdialog.cpp" line="151"/>
+        <location filename="../sendcoinsdialog.cpp" line="160"/>
+        <source>using</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../sendcoinsdialog.cpp" line="145"/>
+        <location filename="../sendcoinsdialog.cpp" line="151"/>
+        <source>anonymous funds</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
         <location filename="../sendcoinsdialog.cpp" line="155"/>
         <source>(darksend requires this amount to be rounded up to the nearest %1).</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="189"/>
-        <location filename="../sendcoinsdialog.cpp" line="194"/>
-        <location filename="../sendcoinsdialog.cpp" line="199"/>
-        <location filename="../sendcoinsdialog.cpp" line="203"/>
+        <location filename="../sendcoinsdialog.cpp" line="160"/>
+        <source>any available funds (not recommended)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../sendcoinsdialog.cpp" line="166"/>
+        <source>and InstantX</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../sendcoinsdialog.cpp" line="190"/>
+        <location filename="../sendcoinsdialog.cpp" line="195"/>
+        <location filename="../sendcoinsdialog.cpp" line="200"/>
+        <location filename="../sendcoinsdialog.cpp" line="204"/>
         <source>%1 to %2</source>
         <translation>%1 öğesinden %2 unsuruna</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="252"/>
+        <location filename="../sendcoinsdialog.cpp" line="253"/>
         <source>Are you sure you want to send?</source>
         <translation>Göndermek istediğinizden emin misiniz?</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="261"/>
+        <location filename="../sendcoinsdialog.cpp" line="262"/>
         <source>are added as transaction fee</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="275"/>
+        <location filename="../sendcoinsdialog.cpp" line="276"/>
         <source>Total Amount %1 (= %2)</source>
         <translation>Toplam meblağ %1 (= %2)</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="277"/>
+        <location filename="../sendcoinsdialog.cpp" line="278"/>
         <source>or</source>
         <translation>veya</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="279"/>
+        <location filename="../sendcoinsdialog.cpp" line="280"/>
         <source>Confirm send coins</source>
         <translation>Gönderiyi teyit ediniz</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="434"/>
+        <location filename="../sendcoinsdialog.cpp" line="435"/>
         <source>Payment request expired</source>
         <translation>Ödeme talebinin ömrü doldu</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="442"/>
+        <location filename="../sendcoinsdialog.cpp" line="443"/>
         <source>Invalid payment address %1</source>
         <translation>Geçersiz ödeme adresi %1</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="489"/>
+        <location filename="../sendcoinsdialog.cpp" line="490"/>
         <source>The recipient address is not valid, please recheck.</source>
         <translation>Alıcı adresi geçerli değildir, lütfen denetleyiniz.</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="492"/>
+        <location filename="../sendcoinsdialog.cpp" line="493"/>
         <source>The amount to pay must be larger than 0.</source>
         <translation>Ödeyeceğiniz tutarın sıfırdan yüksek olması gerekir.</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="495"/>
+        <location filename="../sendcoinsdialog.cpp" line="496"/>
         <source>The amount exceeds your balance.</source>
         <translation>Tutar bakiyenizden yüksektir.</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="498"/>
+        <location filename="../sendcoinsdialog.cpp" line="499"/>
         <source>The total exceeds your balance when the %1 transaction fee is included.</source>
         <translation>Toplam, %1 muamele ücreti ilâve edildiğinde bakiyenizi geçmektedir.</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="501"/>
+        <location filename="../sendcoinsdialog.cpp" line="502"/>
         <source>Duplicate address found, can only send to each address once per send operation.</source>
         <translation>Çift adres bulundu, belli bir gönderi sırasında her adrese sadece tek bir gönderide bulunulabilir.</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="504"/>
+        <location filename="../sendcoinsdialog.cpp" line="505"/>
         <source>Transaction creation failed!</source>
         <translation>Muamelenin oluşturulması başarısız oldu!</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="508"/>
+        <location filename="../sendcoinsdialog.cpp" line="509"/>
         <source>The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
         <translation>Muamele reddedildi! Cüzdanınızdaki madenî paraların bazıları zaten harcanmış olduğunda bu meydana gelebilir. Örneğin wallet.dat dosyasının bir kopyasını kullandıysanız ve kopyada para harcandığında ancak burada harcandığı işaretlenmediğinde.</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="513"/>
+        <location filename="../sendcoinsdialog.cpp" line="514"/>
         <source>Error: The wallet was unlocked only to anonymize coins.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="626"/>
+        <location filename="../sendcoinsdialog.cpp" line="627"/>
         <source>Warning: Invalid Darkcoin address</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="635"/>
+        <location filename="../sendcoinsdialog.cpp" line="636"/>
         <source>Warning: Unknown change address</source>
         <translation>Uyarı: geçersiz para üstü adresi</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="646"/>
+        <location filename="../sendcoinsdialog.cpp" line="647"/>
         <source>(no label)</source>
         <translation>(boş etiket)</translation>
     </message>
@@ -3407,157 +3476,157 @@ Adres: %4
 <context>
     <name>TransactionTableModel</name>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="239"/>
+        <location filename="../transactiontablemodel.cpp" line="233"/>
         <source>Date</source>
         <translation>Tarih</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="239"/>
+        <location filename="../transactiontablemodel.cpp" line="233"/>
         <source>Type</source>
         <translation>Tür</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="239"/>
+        <location filename="../transactiontablemodel.cpp" line="233"/>
         <source>Address</source>
         <translation>Adres</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="239"/>
+        <location filename="../transactiontablemodel.cpp" line="233"/>
         <source>Amount</source>
         <translation>Meblağ</translation>
     </message>
     <message numerus="yes">
-        <location filename="../transactiontablemodel.cpp" line="288"/>
+        <location filename="../transactiontablemodel.cpp" line="285"/>
         <source>Open for %n more block(s)</source>
         <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="291"/>
+        <location filename="../transactiontablemodel.cpp" line="288"/>
         <source>Open until %1</source>
         <translation>%1 değerine dek açık</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="294"/>
+        <location filename="../transactiontablemodel.cpp" line="291"/>
         <source>Offline</source>
         <translation>Çevrim dışı</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="297"/>
+        <location filename="../transactiontablemodel.cpp" line="294"/>
         <source>Unconfirmed</source>
         <translation>Teyit edilmemiş</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="300"/>
+        <location filename="../transactiontablemodel.cpp" line="297"/>
         <source>Confirming (%1 of %2 recommended confirmations)</source>
         <translation>Teyit ediliyor (tavsiye edilen %2 teyit üzerinden %1 doğrulama)</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="303"/>
+        <location filename="../transactiontablemodel.cpp" line="300"/>
         <source>Confirmed (%1 confirmations)</source>
         <translation>Doğrulandı (%1 teyit)</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="306"/>
+        <location filename="../transactiontablemodel.cpp" line="303"/>
         <source>Conflicted</source>
         <translation>Çakışma</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="309"/>
+        <location filename="../transactiontablemodel.cpp" line="306"/>
         <source>Immature (%1 confirmations, will be available after %2)</source>
         <translation>Olgunlaşmamış (%1 teyit, %2 teyit ardından kullanılabilir olacaktır)</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="312"/>
+        <location filename="../transactiontablemodel.cpp" line="309"/>
         <source>This block was not received by any other nodes and will probably not be accepted!</source>
         <translation>Bu blok başka hiçbir düğüm tarafından alınmamıştır ve muhtemelen kabul edilmeyecektir!</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="315"/>
+        <location filename="../transactiontablemodel.cpp" line="312"/>
         <source>Generated but not accepted</source>
         <translation>Oluşturuldu ama kabul edilmedi</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="357"/>
+        <location filename="../transactiontablemodel.cpp" line="354"/>
         <source>Received with</source>
         <translation>Şununla alındı</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="359"/>
+        <location filename="../transactiontablemodel.cpp" line="356"/>
         <source>Received from</source>
         <translation>Alındığı kişi</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="361"/>
+        <location filename="../transactiontablemodel.cpp" line="358"/>
         <source>Received via Darksend</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="364"/>
+        <location filename="../transactiontablemodel.cpp" line="361"/>
         <source>Sent to</source>
         <translation>Gönderildiği adres</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="366"/>
+        <location filename="../transactiontablemodel.cpp" line="363"/>
         <source>Payment to yourself</source>
         <translation>Kendinize ödeme</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="368"/>
+        <location filename="../transactiontablemodel.cpp" line="365"/>
         <source>Mined</source>
         <translation>Madenden çıkarılan</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="371"/>
+        <location filename="../transactiontablemodel.cpp" line="368"/>
         <source>Darksend Denominate</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="373"/>
+        <location filename="../transactiontablemodel.cpp" line="370"/>
         <source>Darksend Collateral Payment</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="375"/>
+        <location filename="../transactiontablemodel.cpp" line="372"/>
         <source>Darksend Make Collateral Inputs</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="377"/>
+        <location filename="../transactiontablemodel.cpp" line="374"/>
         <source>Darksend Create Denominations</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="379"/>
+        <location filename="../transactiontablemodel.cpp" line="376"/>
         <source>Darksent</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="421"/>
+        <location filename="../transactiontablemodel.cpp" line="418"/>
         <source>(n/a)</source>
         <translation>(mevcut değil)</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="613"/>
+        <location filename="../transactiontablemodel.cpp" line="610"/>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
         <translation>Muamele durumu. Doğrulama sayısını görüntülemek için imleci bu alanda tutunuz.</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="615"/>
+        <location filename="../transactiontablemodel.cpp" line="612"/>
         <source>Date and time that the transaction was received.</source>
         <translation>Muamelenin alındığı tarih ve zaman.</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="617"/>
+        <location filename="../transactiontablemodel.cpp" line="614"/>
         <source>Type of transaction.</source>
         <translation>Muamele türü.</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="619"/>
+        <location filename="../transactiontablemodel.cpp" line="616"/>
         <source>Destination address of transaction.</source>
         <translation>Muamelenin alıcı adresi.</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="621"/>
+        <location filename="../transactiontablemodel.cpp" line="618"/>
         <source>Amount removed from or added to balance.</source>
         <translation>Bakiyeden alınan ya da bakiyeye eklenen meblağ.</translation>
     </message>
@@ -3777,9 +3846,15 @@ Adres: %4
 <context>
     <name>WalletModel</name>
     <message>
-        <location filename="../walletmodel.cpp" line="278"/>
+        <location filename="../walletmodel.cpp" line="271"/>
+        <location filename="../walletmodel.cpp" line="285"/>
         <source>Send Coins</source>
         <translation>Bitcoin yolla</translation>
+    </message>
+    <message numerus="yes">
+        <location filename="../walletmodel.cpp" line="271"/>
+        <source>InstantX doesn&apos;t support sending values that high yet. Transactions are currently limited to %n DRK.</source>
+        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
     </message>
 </context>
 <context>
@@ -3795,32 +3870,32 @@ Adres: %4
         <translation>Güncel sekmedeki verileri bir dosyaya aktar</translation>
     </message>
     <message>
-        <location filename="../walletview.cpp" line="229"/>
+        <location filename="../walletview.cpp" line="231"/>
         <source>Backup Wallet</source>
         <translation>Cüzdanı Yedekle</translation>
     </message>
     <message>
-        <location filename="../walletview.cpp" line="230"/>
+        <location filename="../walletview.cpp" line="232"/>
         <source>Wallet Data (*.dat)</source>
         <translation>Cüzdan verileri (*.dat)</translation>
     </message>
     <message>
-        <location filename="../walletview.cpp" line="236"/>
+        <location filename="../walletview.cpp" line="238"/>
         <source>Backup Failed</source>
         <translation>Yedekleme başarısız oldu</translation>
     </message>
     <message>
-        <location filename="../walletview.cpp" line="236"/>
+        <location filename="../walletview.cpp" line="238"/>
         <source>There was an error trying to save the wallet data to %1.</source>
         <translation>Cüzdan verilerinin %1 konumuna kaydedilmesi sırasında bir hata meydana geldi.</translation>
     </message>
     <message>
-        <location filename="../walletview.cpp" line="240"/>
+        <location filename="../walletview.cpp" line="242"/>
         <source>Backup Successful</source>
         <translation>Yedekleme başarılı</translation>
     </message>
     <message>
-        <location filename="../walletview.cpp" line="240"/>
+        <location filename="../walletview.cpp" line="242"/>
         <source>The wallet data was successfully saved to %1.</source>
         <translation>Cüzdan verileri %1 konumuna başarıyla kaydedildi.</translation>
     </message>
