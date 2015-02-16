@@ -274,7 +274,7 @@ std::string HelpMessage()
         "  -detachdb              " + _("Detach block and address databases. Increases shutdown time (default: 0)") + "\n" +
 
 #ifdef DB_LOG_IN_MEMORY
-        "  -memorylog              " + _("Use in-memory logging for block index database (default: 1)") + "\n" +
+        "  -memorylog             " + _("Use in-memory logging for block index database (default: 1)") + "\n" +
 #endif
 
         "  -paytxfee=<amt>        " + _("Fee per KB to add to transactions you send") + "\n" +

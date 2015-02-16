@@ -458,6 +458,7 @@ HelpMessageBox::HelpMessageBox(QWidget *parent) :
         "  -splash                " + tr("Show splash screen on startup (default: 1)") + "\n";
 
     setWindowTitle(tr("NovaCoin-Qt"));
+    setFont(bitcoinAddressFont());
     setTextFormat(Qt::PlainText);
     // setMinimumWidth is ignored for QMessageBox so put in non-breaking spaces to make it wider.
     setText(header + QString(QChar(0x2003)).repeated(50));
