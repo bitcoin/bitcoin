@@ -203,7 +203,7 @@ darkcoind_SOURCES = darkcoind.cpp
 #
 
 if TARGET_WINDOWS
-darkcoind_SOURCES += bitcoind-res.rc
+darkcoind_SOURCES += darkcoind-res.rc
 endif
 
 AM_CPPFLAGS += $(BDB_CPPFLAGS)
@@ -218,7 +218,7 @@ darkcoin_cli_SOURCES = darkcoin-cli.cpp
 #
 
 if TARGET_WINDOWS
-darkcoin_cli_SOURCES += bitcoin-cli-res.rc
+darkcoin_cli_SOURCES += darkcoin-cli-res.rc
 endif
 
 # NOTE: This dependency is not strictly necessary, but without it make may try to build both in parallel, which breaks the LevelDB build system in a race
