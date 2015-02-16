@@ -7,7 +7,7 @@ HEADERS += \
     ../src/allocators.h \
     ../src/base58.h \
     ../src/bignum.h \
-    ../src/bitcoin-config.h \
+    ../src/darkcoin-config.h \
     ../src/bloom.h \
     ../src/chainparams.h \
     ../src/checkpoints.h \
