@@ -315,7 +315,7 @@ Copyright © 2012-2015 The NovaCoin developers</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="93"/>
-        <location filename="../bitcoingui.cpp" line="751"/>
+        <location filename="../bitcoingui.cpp" line="740"/>
         <source>NovaCoin</source>
         <translation>NovaCoin</translation>
     </message>
@@ -706,42 +706,42 @@ Copyright © 2012-2015 The NovaCoin developers</translation>
         <translation>No suitable inputs were found</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="760"/>
+        <location filename="../bitcoingui.cpp" line="749"/>
         <source>Error</source>
         <translation>Error</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="763"/>
+        <location filename="../bitcoingui.cpp" line="752"/>
         <source>Warning</source>
         <translation>Warning</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="766"/>
+        <location filename="../bitcoingui.cpp" line="755"/>
         <source>Information</source>
         <translation>Information</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="838"/>
+        <location filename="../bitcoingui.cpp" line="827"/>
         <source>This transaction is over the size limit.  You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network.  Do you want to pay the fee?</source>
         <translation>This transaction is over the size limit.  You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network.  Do you want to pay the fee?</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="843"/>
+        <location filename="../bitcoingui.cpp" line="832"/>
         <source>Confirm transaction fee</source>
         <translation>Confirm transaction fee</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="870"/>
+        <location filename="../bitcoingui.cpp" line="859"/>
         <source>Sent transaction</source>
         <translation>Sent transaction</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="871"/>
+        <location filename="../bitcoingui.cpp" line="860"/>
         <source>Incoming transaction</source>
         <translation>Incoming transaction</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="872"/>
+        <location filename="../bitcoingui.cpp" line="861"/>
         <source>Date: %1
 Amount: %2
 Type: %3
@@ -754,94 +754,94 @@ Address: %4
 </translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="989"/>
-        <location filename="../bitcoingui.cpp" line="1004"/>
+        <location filename="../bitcoingui.cpp" line="978"/>
+        <location filename="../bitcoingui.cpp" line="993"/>
         <source>URI handling</source>
         <translation>URI handling</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="989"/>
-        <location filename="../bitcoingui.cpp" line="1004"/>
+        <location filename="../bitcoingui.cpp" line="978"/>
+        <location filename="../bitcoingui.cpp" line="993"/>
         <source>URI can not be parsed! This can be caused by an invalid NovaCoin address or malformed URI parameters.</source>
         <translation>URI can not be parsed! This can be caused by an invalid NovaCoin address or malformed URI parameters.</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="1023"/>
+        <location filename="../bitcoingui.cpp" line="1012"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
         <translation>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="1042"/>
+        <location filename="../bitcoingui.cpp" line="1031"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="1091"/>
+        <location filename="../bitcoingui.cpp" line="1080"/>
         <source>Backup Wallet</source>
         <translation>Backup Wallet</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="1091"/>
+        <location filename="../bitcoingui.cpp" line="1080"/>
         <source>Wallet Data (*.dat)</source>
         <translation>Wallet Data (*.dat)</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="1094"/>
+        <location filename="../bitcoingui.cpp" line="1083"/>
         <source>Backup Failed</source>
         <translation>Backup Failed</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="1094"/>
+        <location filename="../bitcoingui.cpp" line="1083"/>
         <source>There was an error trying to save the wallet data to the new location.</source>
         <translation>There was an error trying to save the wallet data to the new location.</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="1116"/>
+        <location filename="../bitcoingui.cpp" line="1105"/>
         <source>Dump Wallet</source>
         <translation>There was an error trying to save the wallet data to the new location.</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="1116"/>
-        <location filename="../bitcoingui.cpp" line="1149"/>
+        <location filename="../bitcoingui.cpp" line="1105"/>
+        <location filename="../bitcoingui.cpp" line="1138"/>
         <source>Wallet dump (*.txt)</source>
         <translation>Wallet dump (*.txt)</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="1119"/>
+        <location filename="../bitcoingui.cpp" line="1108"/>
         <source>Dump failed</source>
         <translation>Dump failed</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="1120"/>
+        <location filename="../bitcoingui.cpp" line="1109"/>
         <source>An error happened while trying to save the keys to your location.
 Keys were not saved.</source>
         <translation>An error happened while trying to save the keys to your location.
 Keys were not saved.</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="1125"/>
+        <location filename="../bitcoingui.cpp" line="1114"/>
         <source>Dump successful</source>
         <translation>Dump successful</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="1126"/>
+        <location filename="../bitcoingui.cpp" line="1115"/>
         <source>Keys were saved to this file:
 %2</source>
         <translation>Keys were saved to this file:
 %2</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="1149"/>
+        <location filename="../bitcoingui.cpp" line="1138"/>
         <source>Import Wallet</source>
         <translation>Import Wallet</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="1152"/>
+        <location filename="../bitcoingui.cpp" line="1141"/>
         <source>Import Failed</source>
         <translation>Import Failed</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="1153"/>
+        <location filename="../bitcoingui.cpp" line="1142"/>
         <source>An error happened while trying to import the keys.
 Some or all keys from:
  %1,
@@ -852,12 +852,12 @@ Some or all keys from:
  were not imported into your wallet.</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="1159"/>
+        <location filename="../bitcoingui.cpp" line="1148"/>
         <source>Import Successful</source>
         <translation>Import Successful</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="1160"/>
+        <location filename="../bitcoingui.cpp" line="1149"/>
         <source>All keys from:
  %1,
  were imported into your wallet.</source>
@@ -1740,62 +1740,62 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
         <translation>Send transaction</translation>
     </message>
     <message>
-        <location filename="../multisigdialog.cpp" line="174"/>
-        <location filename="../multisigdialog.cpp" line="180"/>
-        <location filename="../multisigdialog.cpp" line="186"/>
-        <location filename="../multisigdialog.cpp" line="194"/>
+        <location filename="../multisigdialog.cpp" line="170"/>
+        <location filename="../multisigdialog.cpp" line="176"/>
+        <location filename="../multisigdialog.cpp" line="182"/>
+        <location filename="../multisigdialog.cpp" line="190"/>
         <source>Error</source>
         <translation>Error</translation>
     </message>
     <message>
-        <location filename="../multisigdialog.cpp" line="174"/>
+        <location filename="../multisigdialog.cpp" line="170"/>
         <source>Number of addresses involved in the address creation &gt; %1
 Reduce the number</source>
         <translation>Number of addresses involved in the address creation &gt; %1
 Reduce the number</translation>
     </message>
     <message>
-        <location filename="../multisigdialog.cpp" line="180"/>
+        <location filename="../multisigdialog.cpp" line="176"/>
         <source>Number of required signatures is 0
 Number of required signatures must be between 1 and number of keys involved in the creation of address.</source>
         <translation>Number of required signatures is 0
 Number of required signatures must be between 1 and number of keys involved in the creation of address.</translation>
     </message>
     <message>
-        <location filename="../multisigdialog.cpp" line="186"/>
+        <location filename="../multisigdialog.cpp" line="182"/>
         <source>Number of required signatures &gt; Number of keys involved in the creation of address.</source>
         <translation>Number of required signatures &gt; Number of keys involved in the creation of address.</translation>
     </message>
     <message>
-        <location filename="../multisigdialog.cpp" line="194"/>
+        <location filename="../multisigdialog.cpp" line="190"/>
         <source>Redeem script exceeds size limit: %1 &gt; %2
 Reduce the number of addresses involved in the address creation.</source>
         <translation>Redeem script exceeds size limit: %1 &gt; %2
 Reduce the number of addresses involved in the address creation.</translation>
     </message>
     <message>
-        <location filename="../multisigdialog.cpp" line="498"/>
+        <location filename="../multisigdialog.cpp" line="496"/>
         <source>Transaction signature is complete</source>
         <translation>Transaction signature is complete</translation>
     </message>
     <message>
-        <location filename="../multisigdialog.cpp" line="503"/>
+        <location filename="../multisigdialog.cpp" line="501"/>
         <source>Transaction is NOT completely signed</source>
         <translation>Transaction is NOT completely signed</translation>
     </message>
     <message>
-        <location filename="../multisigdialog.cpp" line="524"/>
-        <location filename="../multisigdialog.cpp" line="530"/>
+        <location filename="../multisigdialog.cpp" line="522"/>
+        <location filename="../multisigdialog.cpp" line="528"/>
         <source>Confirm send transaction</source>
         <translation>Confirm send transaction</translation>
     </message>
     <message>
-        <location filename="../multisigdialog.cpp" line="524"/>
+        <location filename="../multisigdialog.cpp" line="522"/>
         <source>The fee of the transaction (%1 NVC) is smaller than the expected fee (%2 NVC). Do you want to send the transaction anyway?</source>
         <translation>The fee of the transaction (%1 NVC) is smaller than the expected fee (%2 NVC). Do you want to send the transaction anyway?</translation>
     </message>
     <message>
-        <location filename="../multisigdialog.cpp" line="530"/>
+        <location filename="../multisigdialog.cpp" line="528"/>
         <source>The fee of the transaction (%1 NVC) is bigger than the expected fee (%2 NVC). Do you want to send the transaction anyway?</source>
         <translation>The fee of the transaction (%1 NVC) is bigger than the expected fee (%2 NVC). Do you want to send the transaction anyway?</translation>
     </message>
@@ -2217,22 +2217,22 @@ Reduce the number of addresses involved in the address creation.</translation>
         <translation>Amount</translation>
     </message>
     <message>
-        <location filename="../guiutil.cpp" line="499"/>
+        <location filename="../guiutil.cpp" line="498"/>
         <source>%1 d</source>
         <translation>%1 d</translation>
     </message>
     <message>
-        <location filename="../guiutil.cpp" line="501"/>
+        <location filename="../guiutil.cpp" line="500"/>
         <source>%1 h</source>
         <translation>%1 h</translation>
     </message>
     <message>
-        <location filename="../guiutil.cpp" line="503"/>
+        <location filename="../guiutil.cpp" line="502"/>
         <source>%1 m</source>
         <translation>%1 m</translation>
     </message>
     <message>
-        <location filename="../guiutil.cpp" line="505"/>
+        <location filename="../guiutil.cpp" line="504"/>
         <source>%1 s</source>
         <translation>%1 s</translation>
     </message>
@@ -4166,6 +4166,51 @@ If the file does not exist, create it with owner-readable-only file permissions.
         <location filename="../bitcoinstrings.cpp" line="174"/>
         <source>wallet.dat corrupt, salvage failed</source>
         <translation>wallet.dat corrupt, salvage failed</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="175"/>
+        <source>Specify wallet file (within data directory)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="176"/>
+        <source>Use in-memory logging for block index database (default: 1)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="177"/>
+        <source>Find peers using DNS lookup (default: 1)</source>
+        <translation type="unfinished">Find peers using DNS lookup (default: 0) {1)?}</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="178"/>
+        <source>Sync checkpoints policy (default: strict)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="179"/>
+        <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="180"/>
+        <source>Require a confirmations for change (default: 0)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="181"/>
+        <source>Enforce transaction scripts to use canonical PUSH operators (default: 1)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="182"/>
+        <source>Set the number of script verification threads (1-16, 0=auto, default: 0)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../bitcoinstrings.cpp" line="183"/>
+        <source>When creating transactions, ignore inputs with value less than this (default: %s)</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 </TS>
