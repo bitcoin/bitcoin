@@ -48,6 +48,7 @@
 #include <QTimer>
 #include <QToolBar>
 #include <QVBoxLayout>
+#include <QtCore/QFile>
 
 #if QT_VERSION < 0x050000
 #include <QUrl>
@@ -71,6 +72,13 @@ BitcoinGUI::BitcoinGUI(bool fIsTestnet, QWidget *parent) :
     prevBlocks(0),
     spinnerFrame(0)
 {
+    /* Open default CSS */
+    QFile qFile(":/css/drkblue");
+    if (qFile.open(QFile::ReadOnly)) {
+      QString styleSheet = QLatin1String(qFile.readAll());
+      this->setStyleSheet(styleSheet);
+    }
+    
     GUIUtil::restoreWindowGeometry("nWindow", QSize(850, 550), this);
 
     QString windowTitle = tr("Darkcoin Core") + " - ";
