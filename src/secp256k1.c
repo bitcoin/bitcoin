@@ -87,7 +87,11 @@ int secp256k1_ecdsa_sign(const unsigned char *msg32, unsigned char *signature, i
         noncefp = secp256k1_nonce_function_default;
     }
 
-    secp256k1_scalar_set_b32(&sec, seckey, NULL);
+    secp256k1_scalar_set_b32(&sec, seckey, &overflow);
+    if (overflow || secp256k1_scalar_is_zero(&sec)) {
+        *signaturelen = 0;
+        return 0;
+    }
     secp256k1_scalar_set_b32(&msg, msg32, NULL);
     while (1) {
         unsigned char nonce32[32];
@@ -106,6 +110,9 @@ int secp256k1_ecdsa_sign(const unsigned char *msg32, unsigned char *signature, i
     }
     if (ret) {
         ret = secp256k1_ecdsa_sig_serialize(signature, signaturelen, &sig);
+    }
+    if (!ret) {
+        *signaturelen = 0;
     }
     secp256k1_scalar_clear(&msg);
     secp256k1_scalar_clear(&non);
@@ -127,7 +134,11 @@ int secp256k1_ecdsa_sign_compact(const unsigned char *msg32, unsigned char *sig6
         noncefp = secp256k1_nonce_function_default;
     }
 
-    secp256k1_scalar_set_b32(&sec, seckey, NULL);
+    secp256k1_scalar_set_b32(&sec, seckey, &overflow);
+    if (overflow || secp256k1_scalar_is_zero(&sec)) {
+        memset(sig64, 0, 64);
+        return 0;
+    }
     secp256k1_scalar_set_b32(&msg, msg32, NULL);
     while (1) {
         unsigned char nonce32[32];
@@ -147,6 +158,9 @@ int secp256k1_ecdsa_sign_compact(const unsigned char *msg32, unsigned char *sig6
     if (ret) {
         secp256k1_scalar_get_b32(sig64, &sig.r);
         secp256k1_scalar_get_b32(sig64 + 32, &sig.s);
+    }
+    if (!ret) {
+        memset(sig64, 0, 64);
     }
     secp256k1_scalar_clear(&msg);
     secp256k1_scalar_clear(&non);

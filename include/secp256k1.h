@@ -106,14 +106,16 @@ extern const secp256k1_nonce_function_t secp256k1_nonce_function_default;
 
 /** Create an ECDSA signature.
  *  Returns: 1: signature created
- *           0: the nonce generation function failed
+ *           0: the nonce generation function failed, the private key was invalid, or there is not
+ *              enough space in the signature (as indicated by siglen).
  *  In:      msg32:  the 32-byte message hash being signed (cannot be NULL)
- *           seckey: pointer to a 32-byte secret key (cannot be NULL, assumed to be valid)
+ *           seckey: pointer to a 32-byte secret key (cannot be NULL)
  *           noncefp:pointer to a nonce generation function. If NULL, secp256k1_nonce_function_default is used
  *           ndata:  pointer to arbitrary data used by the nonce generation function (can be NULL)
  *  Out:     sig:    pointer to an array where the signature will be placed (cannot be NULL)
  *  In/Out:  siglen: pointer to an int with the length of sig, which will be updated
- *                   to contain the actual signature length (<=72).
+ *                   to contain the actual signature length (<=72). If 0 is returned, this will be
+ *                   set to zero.
  * Requires starting using SECP256K1_START_SIGN.
  *
  * The sig always has an s value in the lower half of the range (From 0x1
@@ -153,12 +155,13 @@ int secp256k1_ecdsa_sign(
 
 /** Create a compact ECDSA signature (64 byte + recovery id).
  *  Returns: 1: signature created
- *           0: the nonce generation function failed
+ *           0: the nonce generation function failed, or the secret key was invalid.
  *  In:      msg32:  the 32-byte message hash being signed (cannot be NULL)
- *           seckey: pointer to a 32-byte secret key (cannot be NULL, assumed to be valid)
+ *           seckey: pointer to a 32-byte secret key (cannot be NULL)
  *           noncefp:pointer to a nonce generation function. If NULL, secp256k1_nonce_function_default is used
  *           ndata:  pointer to arbitrary data used by the nonce generation function (can be NULL)
  *  Out:     sig:    pointer to a 64-byte array where the signature will be placed (cannot be NULL)
+ *                   In case 0 is returned, the returned signature length will be zero.
  *           recid:  pointer to an int, which will be updated to contain the recovery id (can be NULL)
  * Requires starting using SECP256K1_START_SIGN.
  */
