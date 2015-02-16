@@ -288,7 +288,7 @@ SOURCES += \
     ../src/qt/paymentrequest.pb.cc \
     ../src/qt/paymentrequestplus.cpp \
     ../src/qt/paymentserver.cpp \
-    ../src/qt/qrc_bitcoin.cpp \
+    ../src/qt/qrc_darkcoin.cpp \
     ../src/qt/qvalidatedlineedit.cpp \
     ../src/qt/qvaluecombobox.cpp \
     ../src/qt/receivecoinsdialog.cpp \

@@ -117,7 +117,7 @@ QT_MOC = \
   overviewpage.moc \
   rpcconsole.moc
 
-QT_QRC_CPP = qrc_bitcoin.cpp
+QT_QRC_CPP = qrc_darkcoin.cpp
 QT_QRC = darkcoin.qrc
 
 PROTOBUF_CC = paymentrequest.pb.cc
