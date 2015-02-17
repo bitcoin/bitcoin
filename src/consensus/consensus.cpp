@@ -6,6 +6,7 @@
 #include "consensus/consensus.h"
 
 #include "chain.h"
+#include "coins.h"
 #include "consensus/validation.h"
 #include "pow.h"
 #include "primitives/block.h"
@@ -168,6 +169,21 @@ unsigned int Consensus::GetLegacySigOpCount(const CTransaction& tx)
     for (unsigned int i = 0; i < tx.vout.size(); i++)
         nSigOps += tx.vout[i].scriptPubKey.GetSigOpCount(false);
 
+    return nSigOps;
+}
+
+unsigned int Consensus::GetP2SHSigOpCount(const CTransaction& tx, const CCoinsViewEfficient& inputs)
+{
+    if (tx.IsCoinBase())
+        return 0;
+
+    unsigned int nSigOps = 0;
+    for (unsigned int i = 0; i < tx.vin.size(); i++)
+    {
+        const CTxOut &prevout = inputs.GetOutputFor(tx.vin[i]);
+        if (prevout.scriptPubKey.IsPayToScriptHash())
+            nSigOps += prevout.scriptPubKey.GetSigOpCount(tx.vin[i].scriptSig);
+    }
     return nSigOps;
 }
 
