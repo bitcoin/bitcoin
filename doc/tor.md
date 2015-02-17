@@ -19,6 +19,9 @@ outgoing connections be anonymized, but more is possible.
 	-onion=ip:port  Set the proxy server to use for tor hidden services. You do not
 	                need to set this if it's the same as -proxy. You can use -noonion
 	                to explicitly disable access to hidden service.
+	                Setting -onion=noproxy will attempt to resolve hidden services
+	                and connect to them directly (for those with transparent tor
+	                proxies installed).
 	
 	-listen         When using -proxy, listening is disabled by default. If you want
 	                to run a hidden service (see next section), you'll need to enable
