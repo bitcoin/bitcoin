@@ -9,6 +9,8 @@ QWidget {
 QPushButton {
   padding-left:5px;
   padding-right:5px;
+  padding-top:2px;
+  padding-bottom:2px;
   margin-left:5px;
   margin-right:5px;
   margin-top:2px;
