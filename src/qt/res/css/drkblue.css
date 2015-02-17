@@ -6,6 +6,21 @@ QWidget {
 
 .QFrame#frame_2 .QLabel#label_4 { color:green }
 
+QPushButton {
+  padding-left:5px;
+  padding-right:5px;
+  margin-left:5px;
+  margin-right:5px;
+  margin-top:2px;
+  margin-bottom:2px;
+  border-width:1px;
+  border-style:solid;
+  border-color:#000;
+  border-radius:6;
+  color:#fff;
+  background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #a1dbf8, stop: 0.1 #55b0df, stop: 0.49 #3398cc, stop: 0.5 #2282b3, stop: 1 #186288);
+}
+
 .QFrame#frame, .QFrame#frameDarksend, .QFrame#frame_2 {
  border: 0px solid #000;
 }
