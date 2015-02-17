@@ -220,12 +220,17 @@ int secp256k1_ec_pubkey_create(unsigned char *pubkey, int *pubkeylen, const unsi
     secp256k1_gej_t pj;
     secp256k1_ge_t p;
     secp256k1_scalar_t sec;
+    int overflow;
     DEBUG_CHECK(secp256k1_ecmult_gen_consts != NULL);
     DEBUG_CHECK(pubkey != NULL);
     DEBUG_CHECK(pubkeylen != NULL);
     DEBUG_CHECK(seckey != NULL);
 
-    secp256k1_scalar_set_b32(&sec, seckey, NULL);
+    secp256k1_scalar_set_b32(&sec, seckey, &overflow);
+    if (overflow) {
+        *pubkeylen = 0;
+        return 0;
+    }
     secp256k1_ecmult_gen(&pj, &sec);
     secp256k1_scalar_clear(&sec);
     secp256k1_ge_set_gej(&p, &pj);
