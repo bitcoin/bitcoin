@@ -971,7 +971,7 @@ bool CDarkSendPool::SignatureValid(const CScript& newSig, const CTxIn& newVin){
         }
     }
 
-    if(fDebug) LogPrintf("CDarkSendPool::SignatureValid() - Signing - Succesfully signed input\n");
+    if(fDebug) LogPrintf("CDarkSendPool::SignatureValid() - Signing - Successfully signed input\n");
     return true;
 }
 

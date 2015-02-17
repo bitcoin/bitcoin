@@ -406,7 +406,7 @@ Value masternode(const Array& params, bool fHelp)
 
 			Object statusObj;
 			statusObj.push_back(Pair("alias", mne.getAlias()));
-			statusObj.push_back(Pair("result", result ? "succesful" : "failed"));
+            statusObj.push_back(Pair("result", result ? "successful" : "failed"));
 
 			if(result) {
 				successful++;
