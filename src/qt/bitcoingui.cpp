@@ -73,7 +73,8 @@ BitcoinGUI::BitcoinGUI(bool fIsTestnet, QWidget *parent) :
     spinnerFrame(0)
 {
     /* Open default CSS */
-    QFile qFile(":/css/drkblue");
+    // QFile qFile(":/css/drkblue");
+    QFile qFile("drkblue.css"); // for development only
     if (qFile.open(QFile::ReadOnly)) {
       QString styleSheet = QLatin1String(qFile.readAll());
       this->setStyleSheet(styleSheet);
