@@ -55,5 +55,6 @@
     <qresource prefix="/translations">
         <file alias="en">locale/bitcoin_en.qm</file>
         <file alias="ru">locale/bitcoin_ru.qm</file>
+        <file alias="uk">locale/bitcoin_uk.qm</file>
     </qresource>
 </RCC>

@@ -1,6 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE TS>
-<TS version="2.1" language="en_US">
+<?xml version="1.0" ?><!DOCTYPE TS><TS language="en" version="2.1">
 <context>
     <name>AboutDialog</name>
     <message>
@@ -605,10 +603,7 @@ Copyright © 2012-2015 The NovaCoin developers</translation>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="573"/>
         <source>%n active connection(s) to NovaCoin network</source>
-        <translation>
-            <numerusform>%n active connection to NovaCoin network</numerusform>
-            <numerusform>%n active connections to NovaCoin network</numerusform>
-        </translation>
+        <translation><numerusform>%n active connection to NovaCoin network</numerusform><numerusform>%n active connections to NovaCoin network</numerusform></translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="597"/>
@@ -618,10 +613,7 @@ Copyright © 2012-2015 The NovaCoin developers</translation>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="599"/>
         <source>~%n block(s) remaining</source>
-        <translation>
-            <numerusform>~%n block remaining</numerusform>
-            <numerusform>~%n blocks remaining</numerusform>
-        </translation>
+        <translation><numerusform>~%n block remaining</numerusform><numerusform>~%n blocks remaining</numerusform></translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="605"/>
@@ -636,34 +628,22 @@ Copyright © 2012-2015 The NovaCoin developers</translation>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="635"/>
         <source>%n second(s) ago</source>
-        <translation>
-            <numerusform>%n second ago</numerusform>
-            <numerusform>%n seconds ago</numerusform>
-        </translation>
+        <translation><numerusform>%n second ago</numerusform><numerusform>%n seconds ago</numerusform></translation>
     </message>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="639"/>
         <source>%n minute(s) ago</source>
-        <translation>
-            <numerusform>%n minute ago</numerusform>
-            <numerusform>%n minutes ago</numerusform>
-        </translation>
+        <translation><numerusform>%n minute ago</numerusform><numerusform>%n minutes ago</numerusform></translation>
     </message>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="643"/>
         <source>%n hour(s) ago</source>
-        <translation>
-            <numerusform>%n hour ago</numerusform>
-            <numerusform>%n hours ago</numerusform>
-        </translation>
+        <translation><numerusform>%n hour ago</numerusform><numerusform>%n hours ago</numerusform></translation>
     </message>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="647"/>
         <source>%n day(s) ago</source>
-        <translation>
-            <numerusform>%n day ago</numerusform>
-            <numerusform>%n days ago</numerusform>
-        </translation>
+        <translation><numerusform>%n day ago</numerusform><numerusform>%n days ago</numerusform></translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="653"/>
@@ -3045,10 +3025,7 @@ Reduce the number of addresses involved in the address creation.</translation>
     <message numerus="yes">
         <location filename="../transactiondesc.cpp" line="20"/>
         <source>Open for %n block(s)</source>
-        <translation>
-            <numerusform>Open for %n block</numerusform>
-            <numerusform>Open for %n blocks</numerusform>
-        </translation>
+        <translation><numerusform>Open for %n block</numerusform><numerusform>Open for %n blocks</numerusform></translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="22"/>
@@ -3083,10 +3060,7 @@ Reduce the number of addresses involved in the address creation.</translation>
     <message numerus="yes">
         <location filename="../transactiondesc.cpp" line="57"/>
         <source>, broadcast through %n node(s)</source>
-        <translation>
-            <numerusform>, broadcast through %n node</numerusform>
-            <numerusform>, broadcast through %n nodes</numerusform>
-        </translation>
+        <translation><numerusform>, broadcast through %n node</numerusform><numerusform>, broadcast through %n nodes</numerusform></translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="61"/>
@@ -3148,10 +3122,7 @@ Reduce the number of addresses involved in the address creation.</translation>
     <message numerus="yes">
         <location filename="../transactiondesc.cpp" line="164"/>
         <source>matures in %n more block(s)</source>
-        <translation>
-            <numerusform>matures in %n more block</numerusform>
-            <numerusform>matures in %n more blocks</numerusform>
-        </translation>
+        <translation><numerusform>matures in %n more block</numerusform><numerusform>matures in %n more blocks</numerusform></translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="166"/>
@@ -3260,10 +3231,7 @@ Reduce the number of addresses involved in the address creation.</translation>
     <message numerus="yes">
         <location filename="../transactiontablemodel.cpp" line="302"/>
         <source>Open for %n block(s)</source>
-        <translation>
-            <numerusform>Open for %n block</numerusform>
-            <numerusform>Open for %n blocks</numerusform>
-        </translation>
+        <translation><numerusform>Open for %n block</numerusform><numerusform>Open for %n blocks</numerusform></translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="305"/>
@@ -3288,10 +3256,7 @@ Reduce the number of addresses involved in the address creation.</translation>
     <message numerus="yes">
         <location filename="../transactiontablemodel.cpp" line="323"/>
         <source>Mined balance will be available when it matures in %n more block(s)</source>
-        <translation>
-            <numerusform>Mined balance will be available when it matures in %n more block</numerusform>
-            <numerusform>Mined balance will be available when it matures in %n more blocks</numerusform>
-        </translation>
+        <translation><numerusform>Mined balance will be available when it matures in %n more block</numerusform><numerusform>Mined balance will be available when it matures in %n more blocks</numerusform></translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="328"/>
@@ -4170,47 +4135,47 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="175"/>
         <source>Specify wallet file (within data directory)</source>
-        <translation type="unfinished"></translation>
+        <translation>Specify wallet file (within data directory)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="176"/>
         <source>Use in-memory logging for block index database (default: 1)</source>
-        <translation type="unfinished"></translation>
+        <translation>Use in-memory logging for block index database (default: 1)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="177"/>
         <source>Find peers using DNS lookup (default: 1)</source>
-        <translation type="unfinished">Find peers using DNS lookup (default: 0) {1)?}</translation>
+        <translation>Find peers using DNS lookup (default: 0) {1)?}</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="178"/>
         <source>Sync checkpoints policy (default: strict)</source>
-        <translation type="unfinished"></translation>
+        <translation>Sync checkpoints policy (default: strict)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="179"/>
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
-        <translation type="unfinished"></translation>
+        <translation>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="180"/>
         <source>Require a confirmations for change (default: 0)</source>
-        <translation type="unfinished"></translation>
+        <translation>Require a confirmations for change (default: 0)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="181"/>
         <source>Enforce transaction scripts to use canonical PUSH operators (default: 1)</source>
-        <translation type="unfinished"></translation>
+        <translation>Enforce transaction scripts to use canonical PUSH operators (default: 1)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="182"/>
         <source>Set the number of script verification threads (1-16, 0=auto, default: 0)</source>
-        <translation type="unfinished"></translation>
+        <translation>Set the number of script verification threads (1-16, 0=auto, default: 0)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="183"/>
         <source>When creating transactions, ignore inputs with value less than this (default: %s)</source>
-        <translation type="unfinished"></translation>
+        <translation>When creating transactions, ignore inputs with value less than this (default: %s)</translation>
     </message>
 </context>
 </TS>
