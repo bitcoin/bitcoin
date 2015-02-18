@@ -2711,12 +2711,12 @@ int64_t GetDustLimit(const CScript& scriptPubKey)
 
     // The minimum relay fee dictates a threshold value under which a
     // transaction won't be relayed.
-    int64_t nRelayTxFee = CTransaction::nMinRelayTxFee;
+    int64_t nRelayTxFee = (::minRelayTxFee).GetFee(nSize);
 
     // A transaction is considered as "dust", if less than 1/3 of the
     // minimum fee required to relay a transaction is spent by one of
     // it's outputs. The minimum relay fee is defined per 1000 byte.
-    int64_t nDustLimit = 1 + (((nSize * nRelayTxFee * 3) - 1) / 1000);
+    int64_t nDustLimit = nRelayTxFee * 3;
 
     return nDustLimit;
 }
