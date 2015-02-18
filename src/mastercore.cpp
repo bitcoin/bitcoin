@@ -2917,8 +2917,7 @@ vector< pair<CScript, int64_t> > vecSend;
       seqNum++;
     }
 
-    CScript multisig_output;
-    multisig_output.SetMultisig(1, keys);
+    CScript multisig_output = GetScriptForMultisig(1, keys);
     vecSend.push_back(make_pair(multisig_output, GetDustLimit(multisig_output)));
   }
 
@@ -2932,18 +2931,16 @@ vector< pair<CScript, int64_t> > vecSend;
 
   if (!wallet) return MP_ERR_WALLET_ACCESS;
 
-  CScript scriptPubKey;
-
   // add the the reference/recepient/receiver ouput if needed
   if (!receiverAddress.empty())
   {
     // Send To Owners is the first use case where the receiver is empty
-    scriptPubKey.SetDestination(CBitcoinAddress(receiverAddress).Get());
+    CScript scriptPubKey = GetScriptForDestination(CBitcoinAddress(receiverAddress).Get());
     vecSend.push_back(make_pair(scriptPubKey, 0 < referenceamount ? referenceamount : GetDustLimit(scriptPubKey)));
   }
 
   // add the marker output
-  scriptPubKey.SetDestination(CBitcoinAddress(exodus_address).Get());
+  CScript scriptPubKey = GetScriptForDestination(CBitcoinAddress(exodus_address).Get());
   vecSend.push_back(make_pair(scriptPubKey, GetDustLimit(scriptPubKey)));
 
   // selected in the parent function, i.e.: ensure we are only using the address passed in as the Sender
