@@ -71,6 +71,10 @@ enum BindFlags {
 static const char* FEE_ESTIMATES_FILENAME="fee_estimates.dat";
 CClientUIInterface uiInterface;
 
+/** Omni Core initialization and shutdown handler */
+int mastercore_init(void);
+int mastercore_shutdown(void);
+
 //////////////////////////////////////////////////////////////////////////////
 //
 // Shutdown
@@ -183,6 +187,10 @@ void Shutdown()
         delete pblocktree;
         pblocktree = NULL;
     }
+
+    //! Omni Core shutdown
+    mastercore_shutdown();
+
 #ifdef ENABLE_WALLET
     if (pwalletMain)
         bitdb.Flush(true);
@@ -1093,6 +1101,32 @@ bool AppInit2(boost::thread_group& threadGroup)
     if (!est_filein.IsNull())
         mempool.ReadFeeEstimates(est_filein);
     fFeeEstimatesInitialized = true;
+
+    // ********************************************************* Step 7.5: load omni core
+
+    uiInterface.InitMessage(_("Performing out of order block detection..."));
+
+    if (fDisableWallet) {
+        return InitError(_(
+                "Disabled wallet detected.\n\n"
+                "Omni Core requires an enabled wallet. Please start your client "
+                "without the \"-disablewallet\" option to enable the wallet."
+            ));
+    }
+
+    if (!fTxIndex) {
+        return InitError(_(
+                "Disabled transaction index detected.\n\n"
+                "Omni Core requires an enabled transaction index. To enable "
+                "transaction indexing, please use the \"-txindex\" option as "
+                "command line argument or add \"txindex=1\" to your client "
+                "configuration file."
+            ));
+    }
+
+    uiInterface.InitMessage(_("Parsing Omni Layer transactions..."));
+
+    mastercore_init();
 
     // ********************************************************* Step 8: load wallet
 #ifdef ENABLE_WALLET
