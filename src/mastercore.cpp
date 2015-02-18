@@ -324,9 +324,19 @@ string str = "*unknown*";
   return str;
 }
 
-bool isNonMainNet()
+inline bool isNonMainNet()
 {
-  return (TestNet() || RegTest());
+    return Params().NetworkIDString() != "main";
+}
+
+inline bool TestNet()
+{
+    return Params().NetworkIDString() == "test";
+}
+
+inline bool RegTest()
+{
+    return Params().NetworkIDString() == "regtest";
 }
 
 string FormatPriceMP(double n)
