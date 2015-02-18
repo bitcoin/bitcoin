@@ -88,6 +88,33 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "estimatepriority", 0 },
     { "prioritisetransaction", 1 },
     { "prioritisetransaction", 2 },
+
+    /* Omni Core related conversions */
+    { "getcrowdsale_MP", 0 },
+    { "getcrowdsale_MP", 1 },
+    { "getgrants_MP", 0 },
+    { "send_MP", 2 },
+    { "getbalance_MP", 1 },
+    { "sendtoowners_MP", 1 },
+    { "getproperty_MP", 0 },
+    { "listtransactions_MP", 1 },
+    { "listtransactions_MP", 2 },
+    { "listtransactions_MP", 3 },
+    { "listtransactions_MP", 4 },
+    { "getallbalancesforid_MP", 0 },
+    { "listblocktransactions_MP", 0 },
+#if 0 // disabled for pre meta DEx release
+    { "trade_MP", 2 },
+    { "trade_MP", 4 },
+    { "trade_MP", 5 },
+    { "getorderbook_MP", 0 },
+    { "getorderbook_MP", 1 },
+    { "gettradessince_MP", 0 },
+    { "gettradessince_MP", 1 },
+    { "gettradessince_MP", 2 },
+    { "gettradehistory_MP", 1 },
+    { "gettradehistory_MP", 2 },
+#endif
 };
 
 class CRPCConvertTable
