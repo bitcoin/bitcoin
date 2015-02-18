@@ -1626,14 +1626,13 @@ bool CWallet::SelectCoinsDark(int64_t nValueMin, int64_t nValueMax, std::vector<
 
     set<pair<const CWalletTx*,unsigned int> > setCoinsRet2;
 
-    //order the array so fees are first, then denominated money, then the rest.
+    //order the array so largest nondenom are first, then denominations, then very small inputs.
     sort(vCoins.rbegin(), vCoins.rend(), CompareByPriority());
 
-    //the first thing we get is a fee input, then we'll use as many denominated as possible. then the rest
     BOOST_FOREACH(const COutput& out, vCoins)
     {
         //there's no reason to allow inputs less than 1 COIN into DS (other than denominations smaller than that amount)
-        if(out.tx->vout[out.i].nValue < 1*COIN && out.tx->vout[out.i].nValue != (.1*COIN)+100) continue;
+        if(out.tx->vout[out.i].nValue < 1*COIN && !IsDenominatedAmount(out.tx->vout[out.i].nValue)) continue;
         if(fMasterNode && out.tx->vout[out.i].nValue == 1000*COIN) continue; //masternode input
 
         if(nValueRet + out.tx->vout[out.i].nValue <= nValueMax){
@@ -1727,11 +1726,7 @@ bool CWallet::HasCollateralInputs() const
 
 bool CWallet::IsCollateralAmount(int64_t nInputAmount) const
 {
-    return  nInputAmount == (DARKSEND_COLLATERAL * 5)+DARKSEND_FEE ||
-            nInputAmount == (DARKSEND_COLLATERAL * 4)+DARKSEND_FEE ||
-            nInputAmount == (DARKSEND_COLLATERAL * 3)+DARKSEND_FEE ||
-            nInputAmount == (DARKSEND_COLLATERAL * 2)+DARKSEND_FEE ||
-            nInputAmount == (DARKSEND_COLLATERAL * 1)+DARKSEND_FEE;
+    return  nInputAmount != 0 && nInputAmount % DARKSEND_COLLATERAL == 0 && nInputAmount < DARKSEND_COLLATERAL * 5;
 }
 
 bool CWallet::SelectCoinsWithoutDenomination(int64_t nTargetValue, set<pair<const CWalletTx*,unsigned int> >& setCoinsRet, int64_t& nValueRet) const
