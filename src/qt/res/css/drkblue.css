@@ -1,8 +1,96 @@
-QWidget { background-color: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 0, stop: 0 #FFFFFF, stop: 1 #0099FF) }
-QToolBar  { background-color: #82CDFF }
-QToolButton  { background-color: #82CDFF }
-QFrame { background-color: #DDFFFF }
-QFormLayout { color: red; background-color: #DDFFFF }
-QPushButton { color: black; background-color: #22BBFF }
-QCheckBox { color: black; background-color:rgba(0,0,0,0.0) }
-QLabel { color: black; background-color:rgba(255,0,0,0.0) }
+QWidget {
+ background-color:#FFFFFF;
+}
+
+.QFrame#frame_2 .QListView#listTransactions { color: green }
+
+.QFrame#frame_2 .QLabel#label_4 { color:green }
+
+QPushButton {
+  padding-left:5px;
+  padding-right:5px;
+  padding-top:2px;
+  padding-bottom:2px;
+  margin-left:5px;
+  margin-right:5px;
+  margin-top:2px;
+  margin-bottom:2px;
+  border-width:1px;
+  border-style:solid;
+  border-color:#000;
+  border-radius:6;
+  color:#fff;
+  background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #a1dbf8, stop: 0.1 #55b0df, stop: 0.49 #3398cc, stop: 0.5 #2282b3, stop: 1 #186288);
+}
+
+.QFrame#frame, .QFrame#frameDarksend, .QFrame#frame_2 {
+ border: 0px solid #000;
+}
+
+.QFrame#frame .QLabel#label {
+  min-width:4em;  
+  qproperty-alignment:right;
+}
+
+.QFrame#frame .QLabel#label_3 {
+  min-width:4em;
+  qproperty-alignment:right;
+}
+
+.QFrame#frame .QLabel#labelImmatureText {
+  min-width:4em;
+  qproperty-alignment:right;
+}
+
+.QFrame#frame .QLabel#labelTotalText {
+  min-width:4em;
+  qproperty-alignment:right;
+}
+
+.QFrame#frameDarksend .QWidget#formLayoutWidget #label_6 {
+  min-width:8em;
+  qproperty-alignment:right;
+}
+
+.QFrame#frameDarksend .QWidget#formLayoutWidget #label_7 {
+  min-width:8em;
+  qproperty-alignment:right;
+}
+
+.QFrame#frameDarksend .QWidget#formLayoutWidget #labelAnonymizedText {
+  min-width:8em;
+  qproperty-alignment:right;
+}
+
+.QFrame#frameDarksend .QWidget#formLayoutWidget #label_8 {
+  min-width:8em;
+  qproperty-alignment:right;
+}
+
+.QFrame#frameDarksend .QWidget#formLayoutWidget #label_9 {
+  min-width:8em;
+  qproperty-alignment:right;
+}
+
+.QFrame#frameDarksend .QPushButton {
+  padding-left:5px;
+  padding-right:5px;
+  margin-left:5px;
+  margin-right:5px;
+  margin-top:2px;
+  margin-bottom:2px;
+  border-width:1px;
+  border-style:solid;
+  border-color:#000;
+  border-radius:6;
+  color:#fff;
+  background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #a1dbf8, stop: 0.1 #55b0df, stop: 0.49 #3398cc, stop: 0.5 #2282b3, stop: 1 #186288);
+}
+
+.QFrame#frame #line {
+  border:0px solid #000;
+}
+
+.QLabel {
+  color:#333;
+}

@@ -418,6 +418,7 @@ void BitcoinGUI::createToolBars()
         toolbar->addAction(sendCoinsAction);
         toolbar->addAction(receiveCoinsAction);
         toolbar->addAction(historyAction);
+        toolbar->setMovable(false); // remove unused icon in upper left corner
         overviewAction->setChecked(true);
     }
 }
