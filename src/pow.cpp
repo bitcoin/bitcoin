@@ -20,8 +20,8 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
     if (pindexLast == NULL)
         return nProofOfWorkLimit;
 
-    // Only change once per interval
-    if ((pindexLast->nHeight+1) % Params().Interval() != 0)
+    // Only change once per difficulty adjustment interval
+    if ((pindexLast->nHeight+1) % Params().DifficultyAdjustmentInterval() != 0)
     {
         if (Params().AllowMinDifficultyBlocks())
         {
@@ -34,7 +34,7 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
             {
                 // Return the last non-special-min-difficulty-rules-block
                 const CBlockIndex* pindex = pindexLast;
-                while (pindex->pprev && pindex->nHeight % Params().Interval() != 0 && pindex->nBits == nProofOfWorkLimit)
+                while (pindex->pprev && pindex->nHeight % Params().DifficultyAdjustmentInterval() != 0 && pindex->nBits == nProofOfWorkLimit)
                     pindex = pindex->pprev;
                 return pindex->nBits;
             }
@@ -44,7 +44,7 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
 
     // Go back by what we want to be 14 days worth of blocks
     const CBlockIndex* pindexFirst = pindexLast;
-    for (int i = 0; pindexFirst && i < Params().Interval()-1; i++)
+    for (int i = 0; pindexFirst && i < Params().DifficultyAdjustmentInterval()-1; i++)
         pindexFirst = pindexFirst->pprev;
     assert(pindexFirst);
 
