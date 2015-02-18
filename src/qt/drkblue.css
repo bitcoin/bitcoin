@@ -1,0 +1,58 @@
+WalletFrame {
+background-color:#fff;
+border-top:0px solid #000;
+}
+
+.QFrame {
+background-color:#fff;
+border:0px solid #fff;
+}
+
+QMenuBar {
+background-color:#fff;
+}
+
+QMenuBar::item {
+background-color:#fff;
+}
+
+QToolBar {
+background-color:#3398cc;
+border:0px solid #000;
+padding:0;
+margin:0;
+}
+
+QToolBar > QToolButton {
+background-color:#3398cc;
+border:0px solid #333;
+min-height:2.5em;
+padding: 0em 1em;
+font-weight:bold;
+color:#fff;
+}
+
+QToolBar > QToolButton:checked {
+background-color:#fff;
+color:#333;
+font-weight:bold;
+}
+
+QWidget .QFrame#frame { /* Wallet Balance */
+
+}
+
+QWidget .QFrame#frame > .QLabel {
+min-width:4em;
+qproperty-alignment:right;
+}
+
+QWidget .QFrame#frameDarksend { /* Darksend Widget */
+
+}
+
+QWidget .QFrame#frameDarksend > .QLabel {
+min-width:8em;
+}
+
+
