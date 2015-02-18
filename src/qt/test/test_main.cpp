@@ -1,6 +1,6 @@
-#include "bitcoin-config.h"
+#include "darkcoin-config.h"
 #if defined(HAVE_CONFIG_H)
-#include "bitcoin-config.h"
+#include "darkcoin-config.h"
 #endif
 
 #ifdef ENABLE_WALLET
