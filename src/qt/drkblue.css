@@ -39,20 +39,99 @@ font-weight:bold;
 }
 
 QWidget .QFrame#frame { /* Wallet Balance */
-
+padding-left:27px;
 }
 
 QWidget .QFrame#frame > .QLabel {
-min-width:4em;
-qproperty-alignment:right;
+min-width:80px;
+color:#818181;
+font-weight:normal;
 }
+
+QWidget .QFrame#frame .QLabel#label_5 {
+max-height:0em;
+}
+
+QWidget .QFrame#frame .QLabel#label { /* Available Balance Label */
+qproperty-alignment: 'AlignVCenter | AlignRight';
+color:#3398cc;
+font-size:14px;
+font-weight:bold;
+min-height:25px;
+}
+
+QWidget .QFrame#frame .QLabel#labelBalance { /* Available Balance */
+qproperty-alignment: 'AlignVCenter | AlignLeft';
+color:#3398cc;
+font-size:22px;
+font-weight:bold;
+min-height:25px;
+}
+
+QWidget .QFrame#frame .QLabel#label_3 { /* Pending Balance Label */
+qproperty-alignment: 'AlignVCenter | AlignRight';
+
+}
+
+QWidget .QFrame#frame .QLabel#labelUnconfirmed { /* Pending Balance */
+qproperty-alignment: 'AlignVCenter | AlignLeft';
+
+}
+
+QWidget .QFrame#frame .QLabel#labelImmatureText { /* Immature Balance Label */
+qproperty-alignment: 'AlignVCenter | AlignRight';
+
+}
+
+QWidget .QFrame#frame .QLabel#labelImmature { /* Immature Balance */
+qproperty-alignment: 'AlignVCenter | AlignLeft';
+
+}
+
+QWidget .QFrame#frame .QLabel#labelTotalText { /* Total Balance Label */
+qproperty-alignment: 'AlignVCenter | AlignRight';
+
+}
+
+QWidget .QFrame#frame .QLabel#labelTotal { /* Total Balance */
+qproperty-alignment: 'AlignVCenter | AlignLeft';
+
+}
+
+/* DARKSEND WIDGET */
 
 QWidget .QFrame#frameDarksend { /* Darksend Widget */
 
 }
 
 QWidget .QFrame#frameDarksend > .QLabel {
-min-width:8em;
+min-width:80px;
+color:#818181;
+font-weight:normal;
+
+}
+
+QWidget .QFrame#frameDarksend .QLabel#label_2 {
+margin-left:27px;
+min-width:80px;
+qproperty-alignment: 'AlignVCenter | AlignRight';
+color:#3398cc;
+font-size:14px;
+font-weight:bold;
+min-height:25px;
+
+}
+
+
+QWidget .QFrame#frameDarksend #formLayoutWidget {
+qproperty-geometry: rect(74 50 451 161);
+}
+
+QWidget .QFrame#frameDarksend #formLayoutWidget > .QLabel {
+min-width:80px;
+color:#818181;
+font-weight:normal;
+
 }
 
 
