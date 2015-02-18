@@ -59,6 +59,8 @@ bool AppInit(int argc, char* argv[])
 
     bool fRet = false;
 
+    CIdleInhibitor noIdle("bitcoind");
+
     //
     // Parameters
     //

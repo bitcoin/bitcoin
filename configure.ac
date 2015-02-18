@@ -304,6 +304,7 @@ case $host in
            old_striplib=
            ;;
        esac
+     AX_CHECK_LINK_FLAG([[-framework Foundation]], [LDFLAGS="$LDFLAGS -framework Foundation"])
      fi
 
      AX_CHECK_LINK_FLAG([[-Wl,-headerpad_max_install_names]], [LDFLAGS="$LDFLAGS -Wl,-headerpad_max_install_names"])
