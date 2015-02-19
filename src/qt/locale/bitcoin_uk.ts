@@ -371,7 +371,7 @@ Copyright © 2012-2015 The NovaCoin developers</source>
     <message>
         <location filename="../bitcoingui.cpp" line="262"/>
         <source>Show your minting capacity</source>
-        <translation type="unfinished"/>
+        <translation>Показати ваш PoS потенціал</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="267"/>
@@ -679,7 +679,7 @@ Copyright © 2012-2015 The NovaCoin developers</source>
     <message>
         <location filename="../bitcoingui.cpp" line="732"/>
         <source>Stake miner is active&lt;br&gt;Kernel rate is %1 k/s&lt;br&gt;CD rate is %2 CD/s&lt;br&gt;Network weight is %3</source>
-        <translation type="unfinished"/>
+        <translation>PoS майнер активний&lt;br&gt;Спроб генерації %1 в сек&lt;br&gt;Вага спроб %2 монетодень/с&lt;br&gt;Вага мережі %3 монетоднів</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="735"/>
@@ -1310,7 +1310,7 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     <message>
         <location filename="../mintingtablemodel.cpp" line="341"/>
         <source>You have %1 chance to find a POS block if you mint %2 %3 at current difficulty.</source>
-        <translation type="unfinished"/>
+        <translation>У вас є %1 шанс знайти PoS блок, якщо ви будете майнити %2 %3 при поточній складності.</translation>
     </message>
     <message>
         <location filename="../mintingtablemodel.cpp" line="472"/>
@@ -1335,7 +1335,7 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     <message>
         <location filename="../mintingtablemodel.cpp" line="480"/>
         <source>Coin age in the output.</source>
-        <translation type="unfinished"/>
+        <translation>Вік виходу.</translation>
     </message>
     <message>
         <location filename="../mintingtablemodel.cpp" line="482"/>
@@ -1428,7 +1428,7 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     <message>
         <location filename="../mintingview.cpp" line="198"/>
         <source>Comma separated file (*.csv)</source>
-        <translation type="unfinished"/>
+        <translation>Значення, розділені комою (*.csv)</translation>
     </message>
     <message>
         <location filename="../mintingview.cpp" line="206"/>
@@ -1468,7 +1468,7 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     <message>
         <location filename="../mintingview.cpp" line="216"/>
         <source>Error exporting</source>
-        <translation type="unfinished"/>
+        <translation>Помилка експорту</translation>
     </message>
     <message>
         <location filename="../mintingview.cpp" line="216"/>
@@ -1559,7 +1559,7 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     <message>
         <location filename="../forms/multisigdialog.ui" line="67"/>
         <source>Add a member to the signing pool</source>
-        <translation type="unfinished"/>
+        <translation>Додати учасника для підпису</translation>
     </message>
     <message>
         <location filename="../forms/multisigdialog.ui" line="70"/>
@@ -1569,7 +1569,7 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     <message>
         <location filename="../forms/multisigdialog.ui" line="87"/>
         <source>Remove all public key fields</source>
-        <translation type="unfinished"/>
+        <translation>Видалити всі публічні ключі</translation>
     </message>
     <message>
         <location filename="../forms/multisigdialog.ui" line="90"/>
@@ -1698,7 +1698,7 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     <message>
         <location filename="../forms/multisigdialog.ui" line="637"/>
         <source>Enter a raw transaction or create a new one</source>
-        <translation type="unfinished"/>
+        <translation>Введіть транзакцію у бінарному форматі або створіть нову</translation>
     </message>
     <message>
         <location filename="../forms/multisigdialog.ui" line="661"/>
@@ -1839,7 +1839,7 @@ Reduce the number of addresses involved in the address creation.</source>
     <message>
         <location filename="../forms/optionsdialog.ui" line="33"/>
         <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly. Most transactions are 1 kB. Fee 0.001 recommended.</source>
-        <translation type="unfinished"/>
+        <translation>Необов&apos;язкова комісія транзакції за кБ що сприятеме її швидкому обробленню. Більшість транзакцій 1кБ. Рекомендується коміся 0,001.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="48"/>
@@ -1864,7 +1864,7 @@ Reduce the number of addresses involved in the address creation.</source>
     <message>
         <location filename="../forms/optionsdialog.ui" line="96"/>
         <source>Detach block and address databases at shutdown. This means they can be moved to another data directory, but it slows down shutdown. The wallet is always detached.</source>
-        <translation type="unfinished"/>
+        <translation>Відключити бази даних блоків і адрес при виході. Це означає, що їх можна буде перемістити в інший каталог даних, але завершення роботи буде повільніше. Гаманець завжди відключається.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="99"/>
@@ -1949,7 +1949,7 @@ Reduce the number of addresses involved in the address creation.</source>
     <message>
         <location filename="../forms/optionsdialog.ui" line="308"/>
         <source>Tor name:</source>
-        <translation type="unfinished"/>
+        <translation>Тор ім&apos;я:</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="353"/>
@@ -2025,12 +2025,12 @@ Reduce the number of addresses involved in the address creation.</source>
         <location filename="../forms/optionsdialog.ui" line="469"/>
         <location filename="../forms/optionsdialog.ui" line="482"/>
         <source>Third party URLs (e.g. explorer.novaco.in) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
-        <translation type="unfinished"/>
+        <translation>Сторонні URL (наприклад explorer.novaco.in), які відображаються на вкладці транзакцій як пункти контекстного меню. %s в URL замінюється хешем транзакції. URL відокремлюються один від одного вертикальною рискою |.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="472"/>
         <source>Third party transaction URLs</source>
-        <translation type="unfinished"/>
+        <translation>Сторонні URL транзакцій</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="555"/>
@@ -2112,18 +2112,18 @@ Reduce the number of addresses involved in the address creation.</source>
         <location filename="../forms/overviewpage.ui" line="121"/>
         <location filename="../forms/overviewpage.ui" line="140"/>
         <source>Your unspendable balance</source>
-        <translation type="unfinished"/>
+        <translation>Недоступний баланс</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="124"/>
         <source>Unspendable:</source>
-        <translation type="unfinished"/>
+        <translation>Недоступно:</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="153"/>
         <location filename="../forms/overviewpage.ui" line="172"/>
         <source>Total of coins that was staked, and do not yet count toward the current balance</source>
-        <translation type="unfinished"/>
+        <translation>Загальна сума всіх монет, використаних для PoS, які не враховуються в поточному балансі</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="156"/>
@@ -2180,17 +2180,17 @@ Reduce the number of addresses involved in the address creation.</source>
     <message>
         <location filename="../bitcoinunits.cpp" line="48"/>
         <source>NovaCoins</source>
-        <translation type="unfinished"/>
+        <translation>NovaCoins</translation>
     </message>
     <message>
         <location filename="../bitcoinunits.cpp" line="49"/>
         <source>Milli-NovaCoins (1 / 1,000)</source>
-        <translation type="unfinished"/>
+        <translation>Milli-NovaCoins (1 / 1,000)</translation>
     </message>
     <message>
         <location filename="../bitcoinunits.cpp" line="50"/>
         <source>Micro-NovaCoins (1 / 1,000,000)</source>
-        <translation type="unfinished"/>
+        <translation>Micro-NovaCoins (1 / 1,000,000)</translation>
     </message>
     <message>
         <location filename="../bitcoinunits.cpp" line="185"/>
@@ -2228,7 +2228,7 @@ Reduce the number of addresses involved in the address creation.</source>
     <message>
         <location filename="../forms/qrcodedialog.ui" line="14"/>
         <source>QR Code Dialog</source>
-        <translation type="unfinished"/>
+        <translation>Діалог QR-коду</translation>
     </message>
     <message>
         <location filename="../forms/qrcodedialog.ui" line="73"/>
@@ -2268,7 +2268,7 @@ Reduce the number of addresses involved in the address creation.</source>
     <message>
         <location filename="../qrcodedialog.cpp" line="126"/>
         <source>Resulting URI too long, try to reduce the text for label / message.</source>
-        <translation type="unfinished"/>
+        <translation>Кінцевий URI занадто довгий, спробуйте зменшити текст для мітки / повідомлення.</translation>
     </message>
     <message>
         <location filename="../qrcodedialog.cpp" line="151"/>
@@ -2456,7 +2456,7 @@ Reduce the number of addresses involved in the address creation.</source>
     <message>
         <location filename="../forms/rpcconsole.ui" line="724"/>
         <source>Sent:</source>
-        <translation type="unfinished"/>
+        <translation>Відправлено:</translation>
     </message>
     <message>
         <location filename="../rpcconsole.cpp" line="326"/>
@@ -2476,12 +2476,12 @@ Reduce the number of addresses involved in the address creation.</source>
     <message>
         <location filename="../rpcconsole.cpp" line="353"/>
         <source>Inbound:</source>
-        <translation type="unfinished"/>
+        <translation>Вхідний:</translation>
     </message>
     <message>
         <location filename="../rpcconsole.cpp" line="354"/>
         <source>Outbound:</source>
-        <translation type="unfinished"/>
+        <translation>Вихідний:</translation>
     </message>
     <message>
         <location filename="../rpcconsole.cpp" line="471"/>
@@ -2766,7 +2766,7 @@ Reduce the number of addresses involved in the address creation.</source>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="236"/>
         <source>Error: The transaction was rejected. This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
-        <translation type="unfinished"/>
+        <translation>Помилка: Транзакцію відхилено! Це може статись, якщо декілька монет з вашого гаманця вже використані, наприклад, якщо ви використовуєте одну копію гаманця, а монети були використані з іншої копії, але не позначені як використані в цій.</translation>
     </message>
 </context>
 <context>
@@ -2849,12 +2849,12 @@ Reduce the number of addresses involved in the address creation.</source>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="33"/>
         <source>You can sign messages with your addresses to prove you own them. Be careful not to sign anything vague, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
-        <translation type="unfinished"/>
+        <translation>Ви можете підписувати повідомлення зі своїми адресами, щоб довести, що ви є їх власником. Остерігайтеся підписувати будь-що незрозуміле, так як за допомогою фішинг-атаки вас можуть спробувати обдурити для отримання вашого підпису під чужими словами. Підписуйте тільки ті повідомлення, з якими ви повністю згодні.</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="51"/>
         <source>The address to sign the message with (e.g. 4Zo1ga6xuKuQ7JV7M9rGDoxdbYwV5zgQJ5)</source>
-        <translation type="unfinished"/>
+        <translation>Виберіть адресу, який буде використаний для підписання повідомлення (наприклад 4Zo1ga6xuKuQ7JV7M9rGDoxdbYwV5zgQJ5)</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="61"/>
@@ -3257,7 +3257,7 @@ Reduce the number of addresses involved in the address creation.</source>
     <message numerus="yes">
         <location filename="../transactiontablemodel.cpp" line="323"/>
         <source>Mined balance will be available when it matures in %n more block(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation><numerusform>Здобуті монети можуть бути використані через %n блок</numerusform><numerusform>Здобуті монети можуть бути використані через %n блока</numerusform><numerusform>Здобуті монети можуть бути використані через %n блоків</numerusform></translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="328"/>
@@ -3543,7 +3543,7 @@ rpcpassword=%s
     <message>
         <location filename="../bitcoinstrings.cpp" line="23"/>
         <source>An error occurred while setting up the RPC port %u for listening on IPv6, falling back to IPv4: %s</source>
-        <translation type="unfinished"/>
+        <translation>Сталася помилка при спробі відкрити порт RPC %u для прослуховування на IPv6, повертаємося до IPv4: %s</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="26"/>
@@ -3553,27 +3553,27 @@ rpcpassword=%s
     <message>
         <location filename="../bitcoinstrings.cpp" line="29"/>
         <source>Detach block and address databases. Increases shutdown time (default: 0)</source>
-        <translation type="unfinished"/>
+        <translation>Відключити бази даних блоків і адрес. Збільшує час завершення роботи  (за замовчуванням: 0)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="31"/>
         <source>Error initializing database environment %s! To recover, BACKUP THAT DIRECTORY, then remove everything from it except for wallet.dat.</source>
-        <translation type="unfinished"/>
+        <translation>Помилка ініціалізації оточення БД %s! Для відновлення ЗРОБІТЬ РЕЗЕРВНУ КОПІЮ цій директорії, потім видалить з неї все, окрім wallet.dat.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="34"/>
         <source>Error: The transaction was rejected.  This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
-        <translation type="unfinished"/>
+        <translation>Помилка: транзакцію відхилено. Це може статись, якщо декілька монет з вашого гаманця вже використані, наприклад, якщо ви використовуєте одну копію гаманця, а монети були використані з іншої копії, але не позначені як використані в цій.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="38"/>
         <source>Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds  </source>
-        <translation type="unfinished"/>
+        <translation>Помилка: ця транзакція потребує комісії у розмірі що найменше %s через її об&apos;єм, складність або використання нещодавно отриманих коштів</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="41"/>
         <source>Error: Wallet unlocked for block minting only, unable to create transaction.</source>
-        <translation type="unfinished"/>
+        <translation>Помилка: гаманець розблокований тільки для PoS, неможливо створити транзакцію.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="43"/>
@@ -3774,12 +3774,12 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="102"/>
         <source>Find peers using DNS lookup (default: 0)</source>
-        <translation type="unfinished"/>
+        <translation>Шукати вузли за допомогою DNS (за замовчуванням: 0)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="103"/>
         <source>Find peers using internet relay chat (default: 1)</source>
-        <translation type="unfinished"/>
+        <translation>Шукати вузли за допомогою IRC (за замовчуванням: 1)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="104"/>
@@ -3835,7 +3835,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="114"/>
         <source>Invalid amount for -reservebalance=&lt;amount&gt;</source>
-        <translation type="unfinished"/>
+        <translation>Неприпустима сума для -reservebalance=&lt;amount&gt;</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="115"/>
@@ -3907,7 +3907,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="128"/>
         <source>Output extra debugging information. Implies all other -debug* options</source>
-        <translation type="unfinished"/>
+        <translation>Виводити додаткову налагоджувальну інформацію. Включає всі -debug* опції.</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="129"/>
@@ -3945,7 +3945,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="135"/>
         <source>SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
-        <translation type="unfinished"/>
+        <translation>Параметри SSL: (див. інструкцію з налаштування SSL у Bitcoin Wiki)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="136"/>
@@ -4075,12 +4075,13 @@ If the file does not exist, create it with owner-readable-only file permissions.
         <location filename="../bitcoinstrings.cpp" line="159"/>
         <source>Unable to sign checkpoint, wrong checkpointkey?
 </source>
-        <translation type="unfinished"/>
+        <translation>Неможливо підписати checkpoint, невірний checkpointkey?
+</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="160"/>
         <source>Unknown -socks proxy version requested: %i</source>
-        <translation type="unfinished"/>
+        <translation>У параметрі -socks запрошена невідома версія: %i</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="161"/>
@@ -4163,17 +4164,17 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="176"/>
         <source>Use in-memory logging for block index database (default: 1)</source>
-        <translation type="unfinished"/>
+        <translation>Використовувати ведення журналу у пам&apos;яті для індексу бази даних блоків (за замовчуванням: 1)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="177"/>
         <source>Find peers using DNS lookup (default: 1)</source>
-        <translation type="unfinished"/>
+        <translation>Шукати вузли за допомогою DNS (за замовчуванням: 0) {1)?}</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="178"/>
         <source>Sync checkpoints policy (default: strict)</source>
-        <translation type="unfinished"/>
+        <translation>Політика синхронізованих міток (за замовчуванням: strict)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="179"/>
@@ -4188,7 +4189,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../bitcoinstrings.cpp" line="181"/>
         <source>Enforce transaction scripts to use canonical PUSH operators (default: 1)</source>
-        <translation type="unfinished"/>
+        <translation>Вимагати від скриптів використання стандартних PUSH операторів (за замовчуванням: 1)</translation>
     </message>
     <message>
         <location filename="../bitcoinstrings.cpp" line="182"/>

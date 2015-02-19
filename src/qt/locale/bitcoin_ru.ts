@@ -1332,7 +1332,7 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     <message>
         <location filename="../mintingtablemodel.cpp" line="480"/>
         <source>Coin age in the output.</source>
-        <translation>CoinDayWeight выхода.</translation>
+        <translation>Вес выхода в монетоднях.</translation>
     </message>
     <message>
         <location filename="../mintingtablemodel.cpp" line="482"/>
