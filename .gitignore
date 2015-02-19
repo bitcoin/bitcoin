@@ -13,8 +13,8 @@ autom4te.cache/
 config.log
 config.status
 configure
-src/darkcoin-config.h
-src/darkcoin-config.h.in
+src/bitcoin-config.h
+src/bitcoin-config.h.in
 src/build-aux/
 src/stamp-h1
 share/setup.nsi

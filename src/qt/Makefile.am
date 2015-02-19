@@ -117,8 +117,8 @@ QT_MOC = \
   overviewpage.moc \
   rpcconsole.moc
 
-QT_QRC_CPP = qrc_darkcoin.cpp
-QT_QRC = darkcoin.qrc
+QT_QRC_CPP = qrc_bitcoin.cpp
+QT_QRC = bitcoin.qrc
 
 PROTOBUF_CC = paymentrequest.pb.cc
 PROTOBUF_H = paymentrequest.pb.h
@@ -281,7 +281,7 @@ RES_IMAGES = \
 
 RES_MOVIES = $(wildcard res/movies/spinner-*.png)
 
-DARKCOIN_RC = res/darkcoin-qt-res.rc
+BITCOIN_RC = res/bitcoin-qt-res.rc
 
 libdarkcoinqt_a_CPPFLAGS = $(AM_CPPFLAGS) $(QT_INCLUDES) \
   -I$(top_srcdir)/src/qt/forms $(QT_DBUS_INCLUDES)
@@ -306,7 +306,7 @@ if TARGET_DARWIN
   darkcoin_qt_SOURCES += $(BITCOIN_MM)
 endif
 if TARGET_WINDOWS
-  darkcoin_qt_SOURCES += $(DARKCOIN_RC)
+  darkcoin_qt_SOURCES += $(BITCOIN_RC)
 endif
 darkcoin_qt_LDADD = libdarkcoinqt.a $(LIBBITCOIN_SERVER)
 if ENABLE_WALLET
@@ -325,10 +325,10 @@ QT_QM=$(QT_TS:.ts=.qm)
 .PHONY: FORCE
 .SECONDARY: $(QT_QM)
 
-darkcoinstrings.cpp: FORCE
-	$(MAKE) -C $(top_srcdir)/src qt/darkcoinstrings.cpp
+bitcoinstrings.cpp: FORCE
+	$(MAKE) -C $(top_srcdir)/src qt/bitcoinstrings.cpp
 
-translate: darkcoinstrings.cpp $(QT_FORMS_UI) $(QT_FORMS_UI) $(BITCOIN_QT_CPP) $(BITCOIN_QT_H) $(BITCOIN_MM)
+translate: bitcoinstrings.cpp $(QT_FORMS_UI) $(QT_FORMS_UI) $(BITCOIN_QT_CPP) $(BITCOIN_QT_H) $(BITCOIN_MM)
 	@test -n $(LUPDATE) || echo "lupdate is required for updating translations"
 	@QT_SELECT=$(QT_SELECT) $(LUPDATE) $^ -locations relative -no-obsolete -ts locale/darkcoin_en.ts
 

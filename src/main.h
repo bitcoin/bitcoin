@@ -8,7 +8,7 @@
 #define BITCOIN_MAIN_H
 
 #if defined(HAVE_CONFIG_H)
-#include "darkcoin-config.h"
+#include "bitcoin-config.h"
 #endif
 
 #include "bignum.h"
