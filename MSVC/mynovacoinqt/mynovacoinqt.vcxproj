@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -138,7 +138,8 @@
     </ResourceCompile>
     <PreBuildEvent>
       <Command>C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2\qtbase\bin\lrelease C:\MyProjects\Novacoin\src\qt\locale\bitcoin_en.ts -qm C:\MyProjects\Novacoin\src\qt\locale\bitcoin_en.qm
-C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2\qtbase\bin\lrelease C:\MyProjects\Novacoin\src\qt\locale\bitcoin_ru.ts -qm C:\MyProjects\Novacoin\src\qt\locale\bitcoin_ru.qm</Command>
+C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2\qtbase\bin\lrelease C:\MyProjects\Novacoin\src\qt\locale\bitcoin_ru.ts -qm C:\MyProjects\Novacoin\src\qt\locale\bitcoin_ru.qm
+C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2\qtbase\bin\lrelease C:\MyProjects\Novacoin\src\qt\locale\bitcoin_uk.ts -qm C:\MyProjects\Novacoin\src\qt\locale\bitcoin_uk.qm</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -187,7 +188,8 @@ C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2\qtbase\bin\lrelease C:\MyP
     </ResourceCompile>
     <PreBuildEvent>
       <Command>C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2-64\qtbase\bin\lrelease C:\MyProjects\Novacoin\src\qt\locale\bitcoin_en.ts -qm C:\MyProjects\Novacoin\src\qt\locale\bitcoin_en.qm
-C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2-64\qtbase\bin\lrelease C:\MyProjects\Novacoin\src\qt\locale\bitcoin_ru.ts -qm C:\MyProjects\Novacoin\src\qt\locale\bitcoin_ru.qm</Command>
+C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2-64\qtbase\bin\lrelease C:\MyProjects\Novacoin\src\qt\locale\bitcoin_ru.ts -qm C:\MyProjects\Novacoin\src\qt\locale\bitcoin_ru.qm
+C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2-64\qtbase\bin\lrelease C:\MyProjects\Novacoin\src\qt\locale\bitcoin_uk.ts -qm C:\MyProjects\Novacoin\src\qt\locale\bitcoin_uk.qm</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -240,7 +242,8 @@ C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2-64\qtbase\bin\lrelease C:\
     </ResourceCompile>
     <PreBuildEvent>
       <Command>C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2\qtbase\bin\lrelease C:\MyProjects\Novacoin\src\qt\locale\bitcoin_en.ts -qm C:\MyProjects\Novacoin\src\qt\locale\bitcoin_en.qm
-C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2\qtbase\bin\lrelease C:\MyProjects\Novacoin\src\qt\locale\bitcoin_ru.ts -qm C:\MyProjects\Novacoin\src\qt\locale\bitcoin_ru.qm</Command>
+C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2\qtbase\bin\lrelease C:\MyProjects\Novacoin\src\qt\locale\bitcoin_ru.ts -qm C:\MyProjects\Novacoin\src\qt\locale\bitcoin_ru.qm
+C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2\qtbase\bin\lrelease C:\MyProjects\Novacoin\src\qt\locale\bitcoin_uk.ts -qm C:\MyProjects\Novacoin\src\qt\locale\bitcoin_uk.qm</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -293,7 +296,7 @@ C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2\qtbase\bin\lrelease C:\MyP
     <PreBuildEvent>
       <Command>C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2-64\qtbase\bin\lrelease C:\MyProjects\Novacoin\src\qt\locale\bitcoin_en.ts -qm C:\MyProjects\Novacoin\src\qt\locale\bitcoin_en.qm
 C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2-64\qtbase\bin\lrelease C:\MyProjects\Novacoin\src\qt\locale\bitcoin_ru.ts -qm C:\MyProjects\Novacoin\src\qt\locale\bitcoin_ru.qm
-</Command>
+C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2-64\qtbase\bin\lrelease C:\MyProjects\Novacoin\src\qt\locale\bitcoin_uk.ts -qm C:\MyProjects\Novacoin\src\qt\locale\bitcoin_uk.qm</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
