@@ -16,7 +16,6 @@
 #define START_MASTERNODE_PAYMENTS 1403728576 //Wed, 25 Jun 2014 20:36:16 GMT
 
 static const int64_t DARKSEND_COLLATERAL = (0.01*COIN);
-static const int64_t DARKSEND_FEE = (0.0125*COIN);
 static const int64_t DARKSEND_POOL_MAX = (999.99*COIN);
 
 /*
