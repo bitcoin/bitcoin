@@ -8,7 +8,7 @@ perl -pi.bak -e "s#QMAKE_CFLAGS_RELEASE    = -O2 -MD#QMAKE_CFLAGS_RELEASE    = -
 perl -pi.bak -e "s#QMAKE_CFLAGS_DEBUG      = -Zi -MDd#QMAKE_CFLAGS_DEBUG      = -Z7 -MTd#g;" qtbase\mkspecs\win32-msvc2012\qmake.conf
 REM Now do 32 bit by setting environment to MSVC 32 bit
 call "C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\vcvars32.bat"
-call configure -debug-and-release -openssl-linked -opensource -confirm-license -platform win32-msvc2012 -nomake examples -nomake tests -static -I \MyProjects\Deps\openssl-1.0.1j\inc32 -L \MyProjects\Deps\openssl-1.0.1j\out32.dbg -L \MyProjects\Deps\openssl-1.0.1j\out32 -l gdi32 -no-opengl -qt-zlib -qt-libpng -qt-libjpeg
+call configure -debug-and-release -openssl-linked -opensource -confirm-license -platform win32-msvc2012 -nomake examples -nomake tests -static -I \MyProjects\Deps\openssl-1.0.2\inc32 -L \MyProjects\Deps\openssl-1.0.2\out32.dbg -L \MyProjects\Deps\openssl-1.0.2\out32 -l gdi32 -no-opengl -qt-zlib -qt-libpng -qt-libjpeg
 nmake
 REM put back the path
 set PATH=%OLDPATH%
