@@ -8,7 +8,7 @@ import glob
 import operator
 import os
 
-OUT_CPP="src/qt/darkcoinstrings.cpp"
+OUT_CPP="src/qt/bitcoinstrings.cpp"
 EMPTY=['""']
 
 def parse_po(text):
@@ -72,7 +72,7 @@ f.write("""
 #define UNUSED
 #endif
 """)
-f.write('static const char UNUSED *darkcoin_strings[] = {\n')
+f.write('static const char UNUSED *bitcoin_strings[] = {\n')
 messages.sort(key=operator.itemgetter(0))
 for (msgid, msgstr) in messages:
     if msgid != EMPTY:

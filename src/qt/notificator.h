@@ -6,7 +6,7 @@
 #define NOTIFICATOR_H
 
 #if defined(HAVE_CONFIG_H)
-#include "darkcoin-config.h"
+#include "bitcoin-config.h"
 #endif
 
 #include <QIcon>
