@@ -12,7 +12,7 @@ Files and Folders
 This file takes care of generating `.qm` files from `.ts` files. It is mostly
 automated.
 
-### src/qt/darkcoin.qrc
+### src/qt/bitcoin.qrc
 
 This file must be updated whenever a new translation is added. Please note that
 files must end with `.qm`, not `.ts`.
@@ -60,7 +60,7 @@ in Transifex and can be translated.
 
 To create the pull-request you have to do:
 
-    git add src/qt/darkcoinstrings.cpp src/qt/locale/darkcoin_en.ts
+    git add src/qt/bitcoinstrings.cpp src/qt/locale/darkcoin_en.ts
     git commit
 
 Syncing with Transifex
@@ -80,7 +80,7 @@ postprocessing steps before committing the translations.
 ### Fetching new translations
 
 1. `python contrib/devtools/update-translations.py`
-2. update `src/qt/darkcoin.qrc` manually or via
+2. update `src/qt/bitcoin.qrc` manually or via
    `ls src/qt/locale/*ts|xargs -n1 basename|sed 's/\(darkcoin_\(.*\)\).ts/        <file alias="\2">locale\/\1.qm<\/file>/'`
 3. update `src/qt/Makefile.am` manually or via
    `ls src/qt/locale/*ts|xargs -n1 basename|sed 's/\(darkcoin_\(.*\)\).ts/  locale\/\1.ts \\/'`

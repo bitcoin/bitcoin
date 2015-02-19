@@ -203,7 +203,7 @@ darkcoind_SOURCES = darkcoind.cpp
 #
 
 if TARGET_WINDOWS
-darkcoind_SOURCES += darkcoind-res.rc
+darkcoind_SOURCES += bitcoind-res.rc
 endif
 
 AM_CPPFLAGS += $(BDB_CPPFLAGS)
@@ -218,7 +218,7 @@ darkcoin_cli_SOURCES = darkcoin-cli.cpp
 #
 
 if TARGET_WINDOWS
-darkcoin_cli_SOURCES += darkcoin-cli-res.rc
+darkcoin_cli_SOURCES += bitcoin-cli-res.rc
 endif
 
 # NOTE: This dependency is not strictly necessary, but without it make may try to build both in parallel, which breaks the LevelDB build system in a race
@@ -229,7 +229,7 @@ leveldb/%.a:
 	  CC="$(CC)" PLATFORM=$(TARGET_OS) AR="$(AR)" $(LEVELDB_TARGET_FLAGS) \
 	  OPT="$(CXXFLAGS) $(CPPFLAGS)"
 
-qt/darkcoinstrings.cpp: $(libdarkcoin_server_a_SOURCES) $(libdarkcoin_common_a_SOURCES) $(libdarkcoin_cli_a_SOURCES)
+qt/bitcoinstrings.cpp: $(libdarkcoin_server_a_SOURCES) $(libdarkcoin_common_a_SOURCES) $(libdarkcoin_cli_a_SOURCES)
 	@test -n $(XGETTEXT) || echo "xgettext is required for updating translations"
 	@cd $(top_srcdir); XGETTEXT=$(XGETTEXT) share/qt/extract_strings_qt.py
 
