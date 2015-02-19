@@ -70,6 +70,7 @@ endif
 .PHONY: FORCE
 # bitcoin core #
 BITCOIN_CORE_H = \
+  appnap.h \
   addrman.h \
   alert.h \
   allocators.h \
@@ -189,6 +190,10 @@ libbitcoin_server_a_SOURCES = \
   txmempool.cpp \
   $(JSON_H) \
   $(BITCOIN_CORE_H)
+
+if TARGET_DARWIN
+  libbitcoin_server_a_SOURCES += appnap.mm
+endif
 
 # wallet: shared between bitcoind and bitcoin-qt, but only linked
 # when wallet enabled

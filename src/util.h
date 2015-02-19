@@ -18,6 +18,10 @@
 #include "tinyformat.h"
 #include "utiltime.h"
 
+#ifdef MAC_OSX
+#include "appnap.h"
+#endif
+
 #include <exception>
 #include <map>
 #include <stdint.h>
@@ -228,5 +232,24 @@ template <typename Callable> void TraceThread(const char* name,  Callable func)
         throw;
     }
 }
+
+// A RAII wrapper around calls to forbid and re-allow entering into
+// low-priority states, specifically OSX's app-nap. For the scope of
+// the object, napping is disabled. Several objects may co-exist, napping is
+// allowed when the last one is destroyed.
+
+class CIdleInhibitor
+{
+public:
+#ifdef MAC_OSX
+    CIdleInhibitor(const char* strReason) : inhibit(strReason){}
+#else
+    CIdleInhibitor(const char*){}
+#endif
+private:
+#ifdef MAC_OSX
+    CAppNapInhibitor inhibit;
+#endif
+};
 
 #endif // BITCOIN_UTIL_H
