@@ -12,7 +12,7 @@
 #else
 #define UNUSED
 #endif
-static const char UNUSED *bitcoin_strings[] = {
+static const char UNUSED *darkcoin_strings[] = {
 QT_TRANSLATE_NOOP("darkcoin-core", ""
 "%s, you must set a rpcpassword in the configuration file:\n"
 "%s\n"
