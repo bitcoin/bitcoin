@@ -1,6 +1,13 @@
 WalletFrame {
 background-color:#fff;
+border-image: url('res/images/drkblue_walletFrame.png') 0 0 0 0 stretch stretch;
 border-top:0px solid #000;
+margin:0;
+padding:0;
+}
+
+QStatusBar {
+background-color:#fff;
 }
 
 .QFrame {
@@ -39,13 +46,14 @@ font-weight:bold;
 }
 
 QWidget .QFrame#frame { /* Wallet Balance */
-padding-left:27px;
+
 }
 
 QWidget .QFrame#frame > .QLabel {
-min-width:80px;
+min-width:175px;
 color:#818181;
 font-weight:normal;
+/*background-color:#939393;*/
 }
 
 QWidget .QFrame#frame .QLabel#label_5 {
@@ -55,17 +63,18 @@ max-height:0em;
 QWidget .QFrame#frame .QLabel#label { /* Available Balance Label */
 qproperty-alignment: 'AlignVCenter | AlignRight';
 color:#3398cc;
-font-size:14px;
+font-size:20px;
 font-weight:bold;
-min-height:25px;
+min-height:35px;
+margin-left:20px;
 }
 
 QWidget .QFrame#frame .QLabel#labelBalance { /* Available Balance */
 qproperty-alignment: 'AlignVCenter | AlignLeft';
 color:#3398cc;
-font-size:22px;
+font-size:24px;
 font-weight:bold;
-min-height:25px;
+min-height:35px;
 }
 
 QWidget .QFrame#frame .QLabel#label_3 { /* Pending Balance Label */
@@ -75,6 +84,7 @@ qproperty-alignment: 'AlignVCenter | AlignRight';
 
 QWidget .QFrame#frame .QLabel#labelUnconfirmed { /* Pending Balance */
 qproperty-alignment: 'AlignVCenter | AlignLeft';
+margin-left:0px;
 
 }
 
@@ -85,6 +95,7 @@ qproperty-alignment: 'AlignVCenter | AlignRight';
 
 QWidget .QFrame#frame .QLabel#labelImmature { /* Immature Balance */
 qproperty-alignment: 'AlignVCenter | AlignLeft';
+margin-left:0px;
 
 }
 
@@ -95,43 +106,180 @@ qproperty-alignment: 'AlignVCenter | AlignRight';
 
 QWidget .QFrame#frame .QLabel#labelTotal { /* Total Balance */
 qproperty-alignment: 'AlignVCenter | AlignLeft';
+margin-left:0px;
 
 }
 
 /* DARKSEND WIDGET */
 
 QWidget .QFrame#frameDarksend { /* Darksend Widget */
-
+background-color:transparent;
 }
 
 QWidget .QFrame#frameDarksend > .QLabel {
 min-width:80px;
 color:#818181;
 font-weight:normal;
-
+/* background-color:#939393; */
 }
 
-QWidget .QFrame#frameDarksend .QLabel#label_2 {
-margin-left:27px;
-min-width:80px;
+QWidget .QFrame#frameDarksend .QLabel#label_2 { /* Darksend Header */
+min-width:175px;
 qproperty-alignment: 'AlignVCenter | AlignRight';
 color:#3398cc;
-font-size:14px;
+font-size:16px;
 font-weight:bold;
 min-height:25px;
-
+margin-top:0px;
 }
 
 
 QWidget .QFrame#frameDarksend #formLayoutWidget {
-qproperty-geometry: rect(74 50 451 161);
+qproperty-geometry: rect(10 45 451 175);
+/* background-color:#939393; */
 }
 
 QWidget .QFrame#frameDarksend #formLayoutWidget > .QLabel {
-min-width:80px;
+min-width:175px;
 color:#818181;
 font-weight:normal;
-
+/* background-color:#939393; */
 }
 
 
+QWidget .QFrame#frameDarksend #formLayoutWidget .QLabel#label_6 { /* Darksend Status Label */
+qproperty-alignment: 'AlignVCenter | AlignRight';
+
+}
+
+QWidget .QFrame#frameDarksend #formLayoutWidget .QLabel#darksendEnabled { /* Darksend Status */
+
+} 
+
+QWidget .QFrame#frameDarksend #formLayoutWidget .QLabel#label_7 { /* Darksend Completion Label */
+qproperty-alignment: 'AlignVCenter | AlignRight';
+
+
+}
+
+QWidget .QFrame#frameDarksend #formLayoutWidget .QLabel#darksendProgress { /* Darksend Completion */
+
+
+}
+
+QWidget .QFrame#frameDarksend #formLayoutWidget .QLabel#labelAnonymizedText { /* Darksend Balance Label */
+qproperty-alignment: 'AlignVCenter | AlignRight';
+
+
+}
+
+QWidget .QFrame#frameDarksend #formLayoutWidget .QLabel#labelAnonymized { /* Darksend Balance */
+
+}
+
+QWidget .QFrame#frameDarksend #formLayoutWidget .QLabel#label_8 { /* Darksend Amount and Rounds Label */
+qproperty-alignment: 'AlignVCenter | AlignRight';
+
+
+}
+
+QWidget .QFrame#frameDarksend #formLayoutWidget .QLabel#labelAmountRounds { /* Darksend Amount and Rounds */
+
+}
+
+QWidget .QFrame#frameDarksend #formLayoutWidget .QLabel#label_9 { /* Darksend Submitted Denom Label */
+qproperty-alignment: 'AlignVCenter | AlignRight';
+
+
+}
+
+QWidget .QFrame#frameDarksend #formLayoutWidget .QLabel#labelSubmittedDenom { /* Darksend Submitted Denom */
+
+}
+
+QWidget .QFrame#frameDarksend .QLabel#darksendStatus { /* Darksend Status Notifications */
+qproperty-alignment: 'AlignVCenter | AlignCenter';
+qproperty-geometry: rect(10 185 451 61);
+font-size:10px;
+}
+
+/* DARKSEND BUTTONS */
+
+QWidget .QFrame#frameDarksend .QPushButton {
+border:0px solid #ffffff;
+font-weight:bold;
+}
+
+QWidget .QFrame#frameDarksend QPushButton:focus {
+border:none;
+outline:none;
+}
+
+QWidget .QFrame#frameDarksend .QPushButton#runAutoDenom {
+qproperty-geometry: rect(391 -25 1 1);
+}
+
+QWidget .QFrame#frameDarksend .QPushButton#toggleDarksend {
+background-color:#3398cc;
+qproperty-geometry: rect(120 275 260 45);
+border:1px solid #ffffff;
+font-size:16px;
+color:#fff;
+}
+
+QWidget .QFrame#frameDarksend .QPushButton#toggleDarksend:hover {
+background-color:#46aade;
+}
+
+
+QWidget .QFrame#frameDarksend .QPushButton#darksendAuto {
+background-color:#bfdff5;;
+qproperty-geometry: rect(125 325 120 25);
+border:1px solid #ffffff;
+color:#616161;
+font-size:10px;
+}
+
+QWidget .QFrame#frameDarksend .QPushButton#darksendAuto:hover {
+background-color:#aed8f4;
+}
+
+
+QWidget .QFrame#frameDarksend .QPushButton#darksendReset {
+background-color:#bfdff5;
+qproperty-geometry: rect(255 325 120 25);
+border:1px solid #ffffff;
+color:#616161;
+font-size:10px;
+}
+
+QWidget .QFrame#frameDarksend .QPushButton#darksendReset:hover {
+background-color:#aed8f4;
+}
+
+
+
+
+/* RECENT TRANSACTIONS */
+
+QWidget .QFrame#frame_2 { /* Transactions Widget */
+
+}
+
+QWidget .QFrame#frame_2 .QLabel#label_4 { /* Recent Transactions Label */
+min-width:425px;
+qproperty-alignment: 'AlignVCenter | AlignCenter';
+color:#3398cc;
+font-size:14px;
+font-weight:bold;
+min-height:25px;
+/* background-color:#939393; */
+margin-top:30px;
+
+}
+
+QWidget .QFrame#frame_2 QListView {
+font-weight:normal;
+font-size:11px;
+color:#818181;
+}
