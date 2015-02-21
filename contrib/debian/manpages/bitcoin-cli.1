@@ -1,14 +1,14 @@
 .TH BITCOIN-CLI "1" "February 2015" "bitcoin-cli 0.10" 
 .SH NAME
-bitcoin-cli \- the remote procedure call client for bitcoin core. 
+bitcoin-cli \- a remote procedure call client for Bitcoin Core. 
 .SH SYNOPSIS
 bitcoin-cli [options] <command> [params] \- Send command to Bitcoin Core. 
 .TP
-bitcoin-cli [options] help \- List Bitcoin Core commands.
+bitcoin-cli [options] help \- Asks Bitcoin Core for a list of supported commands.
 .TP
 bitcoin [options] help <command> \- Get help for a command.
 .SH DESCRIPTION
-This manual page documents the bitcoin-cli program. bitcoin-cli is the RPC client used to send commands to Bitcoin Core.
+This manual page documents the bitcoin-cli program. bitcoin-cli is an RPC client used to send commands to Bitcoin Core.
 
 .SH OPTIONS
 .TP
@@ -19,10 +19,10 @@ Specify configuration file (default: bitcoin.conf)
 Specify data directory
 .TP
 \fB\-testnet\fR
-Use the test network
+Connect to a Bitcoin Core instance running in testnet mode.
 .TP
 \fB\-regtest\fR
-Enter regression test mode, which uses a special chain in which blocks can be solved instantly. This is intended for regression testing tools and app development.
+Connect to a Bitcoin Core instance running in regtest mode (see documentation for -regtest on bitcoind).
 .TP
 \fB\-rpcuser=\fR<user>
 Username for JSON\-RPC connections
@@ -41,12 +41,12 @@ SSL options: (see the Bitcoin Wiki for SSL setup instructions)
 \fB\-rpcssl\fR=\fI1\fR
 Use OpenSSL (https) for JSON\-RPC connections
 .TP
-\-?
+\fB\-?\fR
 This help message
 
 .SH "SEE ALSO"
-bitcoind.d(1), bitcoin.conf(5)
+\fBbitcoind\fP, \fBbitcoin.conf\fP
 .SH AUTHOR
-This manual page was written by Ciemon Dunville. Permission is granted to copy, distribute and/or modify this document under the terms of the GNU General Public License, Version 3 or any later version published by the Free Software Foundation.
+This manual page was written by Ciemon Dunville <ciemon@gmail.com>. Permission is granted to copy, distribute and/or modify this document under the terms of the MIT License.
 
-
+The complete text of the MIT License can be found on the web at \fIhttp://opensource.org/licenses/MIT\fP.
