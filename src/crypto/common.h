@@ -94,10 +94,10 @@ void static inline WriteBE32(unsigned char* ptr, uint32_t x)
 #if HAVE_DECL_HTOBE32 == 1
     *((uint32_t*)ptr) = htobe32(x);
 #else
-    ptr[0] = x >> 24;
-    ptr[1] = x >> 16;
-    ptr[2] = x >> 8;
-    ptr[3] = x;
+    ptr[0] = static_cast<unsigned char>(x >> 24);
+    ptr[1] = static_cast<unsigned char>(x >> 16);
+    ptr[2] = static_cast<unsigned char>(x >> 8);
+    ptr[3] = static_cast<unsigned char>(x);
 #endif
 }
 
@@ -106,14 +106,14 @@ void static inline WriteBE64(unsigned char* ptr, uint64_t x)
 #if HAVE_DECL_HTOBE64 == 1
     *((uint64_t*)ptr) = htobe64(x);
 #else
-    ptr[0] = x >> 56;
-    ptr[1] = x >> 48;
-    ptr[2] = x >> 40;
-    ptr[3] = x >> 32;
-    ptr[4] = x >> 24;
-    ptr[5] = x >> 16;
-    ptr[6] = x >> 8;
-    ptr[7] = x;
+    ptr[0] = static_cast<unsigned char>(x >> 56);
+    ptr[1] = static_cast<unsigned char>(x >> 48);
+    ptr[2] = static_cast<unsigned char>(x >> 40);
+    ptr[3] = static_cast<unsigned char>(x >> 32);
+    ptr[4] = static_cast<unsigned char>(x >> 24);
+    ptr[5] = static_cast<unsigned char>(x >> 16);
+    ptr[6] = static_cast<unsigned char>(x >> 8);
+    ptr[7] = static_cast<unsigned char>(x);
 #endif
 }
 

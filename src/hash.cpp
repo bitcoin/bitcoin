@@ -19,7 +19,7 @@ unsigned int MurmurHash3(unsigned int nHashSeed, const std::vector<unsigned char
         const uint32_t c1 = 0xcc9e2d51;
         const uint32_t c2 = 0x1b873593;
 
-        const int nblocks = vDataToHash.size() / 4;
+        const int nblocks = static_cast<int>(vDataToHash.size() / 4);
 
         //----------
         // body

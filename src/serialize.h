@@ -187,20 +187,20 @@ void WriteCompactSize(Stream& os, uint64_t nSize)
 {
     if (nSize < 253)
     {
-        unsigned char chSize = nSize;
+        unsigned char chSize = static_cast<unsigned char>(nSize);
         WRITEDATA(os, chSize);
     }
     else if (nSize <= std::numeric_limits<unsigned short>::max())
     {
         unsigned char chSize = 253;
-        unsigned short xSize = nSize;
+        unsigned short xSize = static_cast<unsigned short>(nSize);
         WRITEDATA(os, chSize);
         WRITEDATA(os, xSize);
     }
     else if (nSize <= std::numeric_limits<unsigned int>::max())
     {
         unsigned char chSize = 254;
-        unsigned int xSize = nSize;
+        unsigned int xSize = static_cast<unsigned short>(nSize);
         WRITEDATA(os, chSize);
         WRITEDATA(os, xSize);
     }
@@ -349,7 +349,7 @@ public:
 
     unsigned int GetSerializeSize(int, int=0) const
     {
-        return pend - pbegin;
+        return static_cast<unsigned int>(pend - pbegin);
     }
 
     template<typename Stream>
@@ -491,7 +491,7 @@ template<typename Stream, typename K, typename Pred, typename A> void Unserializ
 template<typename T>
 inline unsigned int GetSerializeSize(const T& a, long nType, int nVersion)
 {
-    return a.GetSerializeSize((int)nType, nVersion);
+    return static_cast<unsigned int>(a.GetSerializeSize((int)nType, nVersion));
 }
 
 template<typename Stream, typename T>
@@ -542,9 +542,9 @@ void Unserialize(Stream& is, std::basic_string<C>& str, int, int)
  * vector
  */
 template<typename T, typename A>
-unsigned int GetSerializeSize_impl(const std::vector<T, A>& v, int nType, int nVersion, const unsigned char&)
+unsigned int GetSerializeSize_impl(const std::vector<T, A>& v, int, int, const unsigned char&)
 {
-    return (GetSizeOfCompactSize(v.size()) + v.size() * sizeof(T));
+    return (static_cast<unsigned int>(GetSizeOfCompactSize(v.size()) + v.size() * sizeof(T)));
 }
 
 template<typename T, typename A, typename V>
@@ -591,7 +591,7 @@ void Unserialize_impl(Stream& is, std::vector<T, A>& v, int nType, int nVersion,
 {
     // Limit size per read so bogus size value won't cause out of memory
     v.clear();
-    unsigned int nSize = ReadCompactSize(is);
+    unsigned int nSize = static_cast<unsigned int>(ReadCompactSize(is));
     unsigned int i = 0;
     while (i < nSize)
     {
@@ -606,7 +606,7 @@ template<typename Stream, typename T, typename A, typename V>
 void Unserialize_impl(Stream& is, std::vector<T, A>& v, int nType, int nVersion, const V&)
 {
     v.clear();
-    unsigned int nSize = ReadCompactSize(is);
+    unsigned int nSize = static_cast<unsigned int>(ReadCompactSize(is));
     unsigned int i = 0;
     unsigned int nMid = 0;
     while (nMid < nSize)

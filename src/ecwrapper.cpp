@@ -103,7 +103,7 @@ CECKey::~CECKey() {
 void CECKey::GetPubKey(std::vector<unsigned char> &pubkey, bool fCompressed) {
     EC_KEY_set_conv_form(pkey, fCompressed ? POINT_CONVERSION_COMPRESSED : POINT_CONVERSION_UNCOMPRESSED);
     int nSize = i2o_ECPublicKey(pkey, NULL);
-    assert(nSize);
+    assert(nSize != 0);
     assert(nSize <= 65);
     pubkey.clear();
     pubkey.resize(nSize);
@@ -113,7 +113,7 @@ void CECKey::GetPubKey(std::vector<unsigned char> &pubkey, bool fCompressed) {
 }
 
 bool CECKey::SetPubKey(const unsigned char* pubkey, size_t size) {
-    return o2i_ECPublicKey(&pkey, &pubkey, size) != NULL;
+    return o2i_ECPublicKey(&pkey, &pubkey, static_cast<long>(size)) != NULL;
 }
 
 bool CECKey::Verify(const uint256 &hash, const std::vector<unsigned char>& vchSig) {
@@ -125,7 +125,7 @@ bool CECKey::Verify(const uint256 &hash, const std::vector<unsigned char>& vchSi
     ECDSA_SIG *norm_sig = ECDSA_SIG_new();
     const unsigned char* sigptr = &vchSig[0];
     assert(norm_sig);
-    if (d2i_ECDSA_SIG(&norm_sig, &sigptr, vchSig.size()) == NULL)
+    if (d2i_ECDSA_SIG(&norm_sig, &sigptr, static_cast<long>(vchSig.size())) == NULL)
     {
         /* As of OpenSSL 1.0.0p d2i_ECDSA_SIG frees and nulls the pointer on
          * error. But OpenSSL's own use of this function redundantly frees the
