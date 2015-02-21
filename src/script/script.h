@@ -429,7 +429,7 @@ public:
         return *this;
     }
 
-    CScript& operator<<(const CScript& b)
+    CScript& operator<<(const CScript&)
     {
         // I'm not sure if this should push the script or concatenate scripts.
         // If there's ever a use for pushing a script onto a script, delete this member fn
