@@ -48,9 +48,9 @@ public:
 
     void Finalize(unsigned char hash[CRIPEMD160::OUTPUT_SIZE])
     {
-        unsigned char buf[CRIPEMD160::OUTPUT_SIZE];
+        unsigned char buf[CSHA256::OUTPUT_SIZE];
         sha.Finalize(buf);
-        CRIPEMD160().Write(buf, CRIPEMD160::OUTPUT_SIZE).Finalize(hash);
+        CRIPEMD160().Write(buf, CSHA256::OUTPUT_SIZE).Finalize(hash);
     }
 
     CHash160& Write(const unsigned char *data, size_t len) {
