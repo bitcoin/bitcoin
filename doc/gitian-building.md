@@ -74,11 +74,11 @@ In the VirtualBox GUI click "Create" and choose the following parameters in the 
 - Disk size: at least 40GB; as low as 20GB *may* be possible, but better to err on the safe side 
 - Push the `Create` button
 
-Get the [Debian 7.7 net installer](http://cdimage.debian.org/debian-cd/7.7.0/amd64/iso-cd/debian-7.7.0-amd64-netinst.iso) (a more recent minor version should also work, see also [Debian Network installation](https://www.debian.org/CD/netinst/)).
+Get the [Debian 7.8 net installer](http://cdimage.debian.org/debian-cd/7.8.0/amd64/iso-cd/debian-7.8.0-amd64-netinst.iso) (a more recent minor version should also work, see also [Debian Network installation](https://www.debian.org/CD/netinst/)).
 This DVD image can be validated using a SHA256 hashing tool, for example on
 Unixy OSes by entering the following in a terminal:
 
-    echo "d440e85b4121f94608748139f25dbce1ad36771348b002fe07d4d44b9d9e623f  debian-7.7.0-amd64-netinst.iso" | sha256sum -c
+    echo "e39c36d6adc0fd86c6edb0e03e22919086c883b37ca194d063b8e3e8f6ff6a3a  debian-7.8.0-amd64-netinst.iso" | sha256sum -c
     # (must return OK)
 
 After creating the VM, we need to configure it. 
