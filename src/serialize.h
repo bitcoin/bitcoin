@@ -200,7 +200,7 @@ void WriteCompactSize(Stream& os, uint64_t nSize)
     else if (nSize <= std::numeric_limits<unsigned int>::max())
     {
         unsigned char chSize = 254;
-        unsigned int xSize = static_cast<unsigned short>(nSize);
+        unsigned int xSize = static_cast<unsigned int>(nSize);
         WRITEDATA(os, chSize);
         WRITEDATA(os, xSize);
     }
