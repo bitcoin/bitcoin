@@ -108,10 +108,7 @@ void CECKey::GetPubKey(std::vector<unsigned char> &pubkey, bool fCompressed) {
     pubkey.clear();
     pubkey.resize(nSize);
     unsigned char *pbegin(begin_ptr(pubkey));
-#ifndef NDEBUG
-    int nSize2 = 
-#endif
-        i2o_ECPublicKey(pkey, &pbegin);
+    int nSize2 = i2o_ECPublicKey(pkey, &pbegin);
     assert(nSize == nSize2);
 }
 
