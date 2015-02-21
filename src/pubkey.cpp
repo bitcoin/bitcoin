@@ -16,7 +16,7 @@ bool CPubKey::Verify(const uint256 &hash, const std::vector<unsigned char>& vchS
     if (!IsValid())
         return false;
 #ifdef USE_SECP256K1
-    if (secp256k1_ecdsa_verify((const unsigned char*)&hash, &vchSig[0], static_cast<int>(vchSig.size()), begin(), size()) == 0)
+    if (secp256k1_ecdsa_verify((const unsigned char*)&hash, &vchSig[0], static_cast<int>(vchSig.size()), begin(), size()) != 1)
         return false;
 #else
     CECKey key;
