@@ -24,7 +24,7 @@ enum
     SIGHASH_ALL = 1,
     SIGHASH_NONE = 2,
     SIGHASH_SINGLE = 3,
-    SIGHASH_ANYONECANPAY = 0x80,
+    SIGHASH_ANYONECANPAY = 0x80
 };
 
 /** Script verification flags */
@@ -75,7 +75,7 @@ enum
     // "Exactly one stack element must remain, and when interpreted as a boolean, it must be true".
     // (softfork safe, BIP62 rule 6)
     // Note: CLEANSTACK should never be used without P2SH.
-    SCRIPT_VERIFY_CLEANSTACK = (1U << 8),
+    SCRIPT_VERIFY_CLEANSTACK = (1U << 8)
 };
 
 uint256 SignatureHash(const CScript &scriptCode, const CTransaction& txTo, unsigned int nIn, int nHashType);
