@@ -308,61 +308,6 @@ int CMasternodeMan::GetMasternodeRank(const CTxIn& vin, int64_t nBlockHeight, in
     return -1;
 }
 
-json_spirit::Object CMasternodeMan::GetFilteredVector(std::string strMode, std::string strFilter)
-{
-    using namespace json_spirit;
-    Object obj;
-    BOOST_FOREACH(CMasternode& mn, vMasternodes) {
-        mn.Check();
-
-        std::string strAddr = mn.addr.ToString().c_str();
-        if(strMode == "active"){
-            if(strFilter !="" && stoi(strFilter) != mn.IsEnabled()) continue;
-            obj.push_back(Pair(strAddr,       (int)mn.IsEnabled()));
-        } else if (strMode == "vin") {
-            if(strFilter !="" && mn.vin.prevout.hash.ToString().find(strFilter) == string::npos) continue;
-            obj.push_back(Pair(strAddr,       mn.vin.prevout.hash.ToString().c_str()));
-        } else if (strMode == "pubkey") {
-            CScript pubkey;
-            pubkey.SetDestination(mn.pubkey.GetID());
-            CTxDestination address1;
-            ExtractDestination(pubkey, address1);
-            CBitcoinAddress address2(address1);
-
-            if(strFilter !="" && address2.ToString().find(strFilter) == string::npos) continue;
-            obj.push_back(Pair(strAddr,       address2.ToString().c_str()));
-        } else if (strMode == "protocol") {
-            if(strFilter !="" && stoi(strFilter) != mn.protocolVersion) continue;
-            obj.push_back(Pair(strAddr,       (int64_t)mn.protocolVersion));
-        } else if (strMode == "lastseen") {
-            obj.push_back(Pair(strAddr,       (int64_t)mn.lastTimeSeen));
-        } else if (strMode == "activeseconds") {
-            obj.push_back(Pair(strAddr,       (int64_t)(mn.lastTimeSeen - mn.now)));
-        } else if (strMode == "rank") {
-            obj.push_back(Pair(strAddr,       (int)(mnodeman.GetMasternodeRank(mn.vin, chainActive.Tip()->nHeight))));
-        } else if (strMode == "full") {
-            CScript pubkey;
-            pubkey.SetDestination(mn.pubkey.GetID());
-            CTxDestination address1;
-            ExtractDestination(pubkey, address1);
-            CBitcoinAddress address2(address1);
-
-            std::ostringstream stringStream;
-            stringStream << (mn.IsEnabled() ? "1" : "0") << " | " <<
-                           mn.protocolVersion << " | " <<
-                           address2.ToString() << " | " <<
-                           mn.vin.prevout.hash.ToString() << " | " <<
-                           mn.lastTimeSeen << " | " <<
-                           (mn.lastTimeSeen - mn.now);
-            std::string output = stringStream.str();
-            stringStream << " " << strAddr;
-            if(strFilter !="" && stringStream.str().find(strFilter) == string::npos) continue;
-            obj.push_back(Pair(strAddr, output));
-        }
-    }
-    return obj;
-}
-
 void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv)
 {
 
