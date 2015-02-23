@@ -166,7 +166,7 @@ enum opcodetype
     OP_PUBKEYHASH = 0xfd,
     OP_PUBKEY = 0xfe,
 
-    OP_INVALIDOPCODE = 0xff,
+    OP_INVALIDOPCODE = 0xff
 };
 
 const char* GetOpName(opcodetype opcode);
@@ -276,7 +276,7 @@ public:
             return std::numeric_limits<int>::max();
         else if (m_value < std::numeric_limits<int>::min())
             return std::numeric_limits<int>::min();
-        return m_value;
+        return static_cast<int>(m_value);
     }
 
     std::vector<unsigned char> getvch() const
@@ -348,7 +348,7 @@ protected:
     {
         if (n == -1 || (n >= 1 && n <= 16))
         {
-            push_back(n + (OP_1 - 1));
+            push_back(static_cast<unsigned char>(n + (OP_1 - 1)));
         }
         else if (n == 0)
         {
@@ -416,20 +416,20 @@ public:
         else if (b.size() <= 0xffff)
         {
             insert(end(), OP_PUSHDATA2);
-            unsigned short nSize = b.size();
+            unsigned short nSize = static_cast<unsigned short>(b.size());
             insert(end(), (unsigned char*)&nSize, (unsigned char*)&nSize + sizeof(nSize));
         }
         else
         {
             insert(end(), OP_PUSHDATA4);
-            unsigned int nSize = b.size();
+            unsigned int nSize = static_cast<unsigned int>(b.size());
             insert(end(), (unsigned char*)&nSize, (unsigned char*)&nSize + sizeof(nSize));
         }
         insert(end(), b.begin(), b.end());
         return *this;
     }
 
-    CScript& operator<<(const CScript& b)
+    CScript& operator<<(const CScript&)
     {
         // I'm not sure if this should push the script or concatenate scripts.
         // If there's ever a use for pushing a script onto a script, delete this member fn
@@ -543,7 +543,7 @@ public:
         opcodetype opcode;
         do
         {
-            while (end() - pc >= (long)b.size() && memcmp(&pc[0], &b[0], b.size()) == 0)
+            while (end() - pc >= static_cast<long>(b.size()) && memcmp(&pc[0], &b[0], b.size()) == 0)
             {
                 pc = erase(pc, pc + b.size());
                 ++nFound;

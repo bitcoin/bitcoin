@@ -82,7 +82,7 @@ enum
     // primary actions
     SER_NETWORK         = (1 << 0),
     SER_DISK            = (1 << 1),
-    SER_GETHASH         = (1 << 2),
+    SER_GETHASH         = (1 << 2)
 };
 
 #define READWRITE(obj)      (::SerReadWrite(s, (obj), nType, nVersion, ser_action))
@@ -90,10 +90,10 @@ enum
 /** 
  * Implement three methods for serializable objects. These are actually wrappers over
  * "SerializationOp" template, which implements the body of each class' serialization
- * code. Adding "ADD_SERIALIZE_METHODS" in the body of the class causes these wrappers to be
- * added as members. 
+ * code. Adding "ADD_SERIALIZE_METHODS" in the body of the class causes these wrappers
+ * to be added as members. 
  */
-#define ADD_SERIALIZE_METHODS                                                          \
+#define ADD_SERIALIZE_METHODS                                                        \
     size_t GetSerializeSize(int nType, int nVersion) const {                         \
         CSizeComputer s(nType, nVersion);                                            \
         NCONST_PTR(this)->SerializationOp(s, CSerActionSerialize(), nType, nVersion);\
@@ -158,7 +158,7 @@ template<typename Stream> inline void Unserialize(Stream& s, unsigned long long&
 template<typename Stream> inline void Unserialize(Stream& s, float& a,              int, int=0) { READDATA(s, a); }
 template<typename Stream> inline void Unserialize(Stream& s, double& a,             int, int=0) { READDATA(s, a); }
 
-inline unsigned int GetSerializeSize(bool a, int, int=0)                          { return sizeof(char); }
+inline unsigned int GetSerializeSize(bool, int, int=0)                            { return sizeof(char); }
 template<typename Stream> inline void Serialize(Stream& s, bool a, int, int=0)    { char f=a; WRITEDATA(s, f); }
 template<typename Stream> inline void Unserialize(Stream& s, bool& a, int, int=0) { char f; READDATA(s, f); a=f; }
 
@@ -187,20 +187,20 @@ void WriteCompactSize(Stream& os, uint64_t nSize)
 {
     if (nSize < 253)
     {
-        unsigned char chSize = nSize;
+        unsigned char chSize = static_cast<unsigned char>(nSize);
         WRITEDATA(os, chSize);
     }
     else if (nSize <= std::numeric_limits<unsigned short>::max())
     {
         unsigned char chSize = 253;
-        unsigned short xSize = nSize;
+        unsigned short xSize = static_cast<unsigned short>(nSize);
         WRITEDATA(os, chSize);
         WRITEDATA(os, xSize);
     }
     else if (nSize <= std::numeric_limits<unsigned int>::max())
     {
         unsigned char chSize = 254;
-        unsigned int xSize = nSize;
+        unsigned int xSize = static_cast<unsigned int>(nSize);
         WRITEDATA(os, chSize);
         WRITEDATA(os, xSize);
     }
@@ -349,7 +349,7 @@ public:
 
     unsigned int GetSerializeSize(int, int=0) const
     {
-        return pend - pbegin;
+        return static_cast<unsigned int>(pend - pbegin);
     }
 
     template<typename Stream>
@@ -491,7 +491,7 @@ template<typename Stream, typename K, typename Pred, typename A> void Unserializ
 template<typename T>
 inline unsigned int GetSerializeSize(const T& a, long nType, int nVersion)
 {
-    return a.GetSerializeSize((int)nType, nVersion);
+    return static_cast<unsigned int>(a.GetSerializeSize((int)nType, nVersion));
 }
 
 template<typename Stream, typename T>
@@ -542,9 +542,9 @@ void Unserialize(Stream& is, std::basic_string<C>& str, int, int)
  * vector
  */
 template<typename T, typename A>
-unsigned int GetSerializeSize_impl(const std::vector<T, A>& v, int nType, int nVersion, const unsigned char&)
+unsigned int GetSerializeSize_impl(const std::vector<T, A>& v, int, int, const unsigned char&)
 {
-    return (GetSizeOfCompactSize(v.size()) + v.size() * sizeof(T));
+    return (static_cast<unsigned int>(GetSizeOfCompactSize(v.size()) + v.size() * sizeof(T)));
 }
 
 template<typename T, typename A, typename V>
@@ -564,7 +564,7 @@ inline unsigned int GetSerializeSize(const std::vector<T, A>& v, int nType, int 
 
 
 template<typename Stream, typename T, typename A>
-void Serialize_impl(Stream& os, const std::vector<T, A>& v, int nType, int nVersion, const unsigned char&)
+void Serialize_impl(Stream& os, const std::vector<T, A>& v, int, int, const unsigned char&)
 {
     WriteCompactSize(os, v.size());
     if (!v.empty())
@@ -587,11 +587,11 @@ inline void Serialize(Stream& os, const std::vector<T, A>& v, int nType, int nVe
 
 
 template<typename Stream, typename T, typename A>
-void Unserialize_impl(Stream& is, std::vector<T, A>& v, int nType, int nVersion, const unsigned char&)
+void Unserialize_impl(Stream& is, std::vector<T, A>& v, int, int, const unsigned char&)
 {
     // Limit size per read so bogus size value won't cause out of memory
     v.clear();
-    unsigned int nSize = ReadCompactSize(is);
+    unsigned int nSize = static_cast<unsigned int>(ReadCompactSize(is));
     unsigned int i = 0;
     while (i < nSize)
     {
@@ -606,7 +606,7 @@ template<typename Stream, typename T, typename A, typename V>
 void Unserialize_impl(Stream& is, std::vector<T, A>& v, int nType, int nVersion, const V&)
 {
     v.clear();
-    unsigned int nSize = ReadCompactSize(is);
+    unsigned int nSize = static_cast<unsigned int>(ReadCompactSize(is));
     unsigned int i = 0;
     unsigned int nMid = 0;
     while (nMid < nSize)
@@ -760,13 +760,13 @@ struct CSerActionUnserialize
 };
 
 template<typename Stream, typename T>
-inline void SerReadWrite(Stream& s, const T& obj, int nType, int nVersion, CSerActionSerialize ser_action)
+inline void SerReadWrite(Stream& s, const T& obj, int nType, int nVersion, CSerActionSerialize)
 {
     ::Serialize(s, obj, nType, nVersion);
 }
 
 template<typename Stream, typename T>
-inline void SerReadWrite(Stream& s, T& obj, int nType, int nVersion, CSerActionUnserialize ser_action)
+inline void SerReadWrite(Stream& s, T& obj, int nType, int nVersion, CSerActionUnserialize)
 {
     ::Unserialize(s, obj, nType, nVersion);
 }
@@ -790,7 +790,7 @@ public:
 
     CSizeComputer(int nTypeIn, int nVersionIn) : nSize(0), nType(nTypeIn), nVersion(nVersionIn) {}
 
-    CSizeComputer& write(const char *psz, size_t nSize)
+    CSizeComputer& write(const char *, size_t nSize)
     {
         this->nSize += nSize;
         return *this;
