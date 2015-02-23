@@ -16,17 +16,12 @@
 /** Generator for secp256k1, value 'g' defined in
  *  "Standards for Efficient Cryptography" (SEC2) 2.7.1.
  */
-static const secp256k1_ge_t secp256k1_ge_const_g = {
-    SECP256K1_FE_CONST(
-        0x79BE667EUL, 0xF9DCBBACUL, 0x55A06295UL, 0xCE870B07UL,
-        0x029BFCDBUL, 0x2DCE28D9UL, 0x59F2815BUL, 0x16F81798UL
-    ),
-    SECP256K1_FE_CONST(
-        0x483ADA77UL, 0x26A3C465UL, 0x5DA4FBFCUL, 0x0E1108A8UL,
-        0xFD17B448UL, 0xA6855419UL, 0x9C47D08FUL, 0xFB10D4B8UL
-    ),
-    0
-};
+static const secp256k1_ge_t secp256k1_ge_const_g = SECP256K1_GE_CONST(
+    0x79BE667EUL, 0xF9DCBBACUL, 0x55A06295UL, 0xCE870B07UL,
+    0x029BFCDBUL, 0x2DCE28D9UL, 0x59F2815BUL, 0x16F81798UL,
+    0x483ADA77UL, 0x26A3C465UL, 0x5DA4FBFCUL, 0x0E1108A8UL,
+    0xFD17B448UL, 0xA6855419UL, 0x9C47D08FUL, 0xFB10D4B8UL
+);
 
 static void secp256k1_ge_set_infinity(secp256k1_ge_t *r) {
     r->infinity = 1;
@@ -46,14 +41,6 @@ static void secp256k1_ge_neg(secp256k1_ge_t *r, const secp256k1_ge_t *a) {
     *r = *a;
     secp256k1_fe_normalize_weak(&r->y);
     secp256k1_fe_negate(&r->y, &r->y, 1);
-}
-
-static void secp256k1_ge_get_hex(char *r131, const secp256k1_ge_t *a) {
-    r131[0] = '(';
-    secp256k1_fe_get_hex(r131 + 1, &a->x);
-    r131[65] = ',';
-    secp256k1_fe_get_hex(r131 + 66, &a->y);
-    r131[130] = ')';
 }
 
 static void secp256k1_ge_set_gej(secp256k1_ge_t *r, secp256k1_gej_t *a) {
@@ -405,12 +392,6 @@ static void secp256k1_gej_add_ge(secp256k1_gej_t *r, const secp256k1_gej_t *a, c
     secp256k1_fe_set_int(&t, a->infinity);
     secp256k1_fe_add(&r->z, &t);
     r->infinity = infinity;
-}
-
-static void secp256k1_gej_get_hex(char *r131, const secp256k1_gej_t *a) {
-    secp256k1_gej_t c = *a;
-    secp256k1_ge_t t; secp256k1_ge_set_gej(&t, &c);
-    secp256k1_ge_get_hex(r131, &t);
 }
 
 static void secp256k1_ge_to_storage(secp256k1_ge_storage_t *r, const secp256k1_ge_t *a) {
