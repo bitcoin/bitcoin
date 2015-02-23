@@ -16,7 +16,6 @@
 #include "base58.h"
 #include "main.h"
 #include "masternode.h"
-#include "json/json_spirit_value.h"
 
 #define MASTERNODES_DUMP_SECONDS               (15*60)
 
@@ -102,7 +101,7 @@ public:
 
     int CountEnabled();
 
-    json_spirit::Object GetFilteredVector(std::string strMode, std::string strFilter);
+    std::vector<CMasternode> GetFullMasternodeVector() { return vMasternodes; }
 
     void ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
 
