@@ -51,7 +51,7 @@ enum masternodeState {
     MASTERNODE_REMOVE = 4
 };
 
-void ProcessMessageMasternode(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
+void ProcessMessageMasternodePayments(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
 
 //
 // The Masternode Class. For managing the darksend process. It contains the input of the 1000DRK, signature to prove
