@@ -485,6 +485,23 @@ int GetInputDarksendRounds(CTxIn in, int rounds)
     return rounds-1;
 }
 
+// manage the masternode connections
+void CDarkSendPool::ProcessMasternodeConnections()
+{
+    LOCK(cs_vNodes);
+
+    BOOST_FOREACH(CNode* pnode, vNodes)
+    {
+        //if it's our masternode, let it be
+        if(submittedToMasternode == pnode->addr) continue;
+
+        if(pnode->fDarkSendMaster){
+            LogPrintf("Closing masternode connection %s \n", pnode->addr.ToString().c_str());
+            pnode->CloseSocketDisconnect();
+        }
+    }
+}
+
 void CDarkSendPool::Reset(){
     cachedLastSuccess = 0;
     vecMasternodesUsed.clear();
@@ -1358,7 +1375,6 @@ void CDarkSendPool::NewBlock()
     if(!fMasterNode){
         //denominate all non-denominated inputs every 25 minutes.
         if(chainActive.Tip()->nHeight % 10 == 0) UnlockCoins();
-        ProcessMasternodeConnections();
     }
 }
 
@@ -2153,34 +2169,27 @@ void ThreadCheckDarkSendPool()
         darkSendPool.CheckTimeout();
 
         if(c % 60 == 0){
-            LOCK(cs_main);
-            /*
-                cs_main is required for doing masternode.Check because something
-                is modifying the coins view without a mempool lock. It causes
-                segfaults from this code without the cs_main lock.
-            */
-
-            vector<CMasterNode>::iterator it = vecMasternodes.begin();
-            //check them separately
-            while(it != vecMasternodes.end()){
-                (*it).Check();
-                ++it;
-            }
-
-            //remove inactive
-            it = vecMasternodes.begin();
-            while(it != vecMasternodes.end()){
-                if((*it).enabled == 4 || (*it).enabled == 3){
-                    LogPrintf("Removing inactive masternode %s\n", (*it).addr.ToString().c_str());
-                    it = vecMasternodes.erase(it);
-                } else {
-                    ++it;
-                }
-            }
-
+            darkSendPool.ProcessMasternodeConnections();
             masternodePayments.CleanPaymentList();
             CleanTransactionLocksList();
         }
+
+        // nodes refuse to relay dseep if it was less then MASTERNODE_MIN_DSEEP_SECONDS ago
+        // MASTERNODE_PING_WAIT_SECONDS gives some additional time on top of it
+        if(c % (MASTERNODE_MIN_DSEEP_SECONDS + MASTERNODE_PING_WAIT_SECONDS) == 0)
+        {
+            LOCK(cs_main);
+            /*
+                cs_main is required for doing CMasternode.Check because something
+                is modifying the coins view without a mempool lock. It causes
+                segfaults from this code without the cs_main lock.
+            */
+            mnodeman.CheckAndRemove();
+        }
+
+        if(c % MASTERNODE_PING_SECONDS == 0) activeMasternode.ManageStatus();
+
+        if(c % MASTERNODES_DUMP_SECONDS == 0) DumpMasternodes();
 
         //try to sync the masternode list and payment list every 5 seconds from at least 3 nodes
         if(c % 5 == 0 && RequestedMasterNodeList < 3){
@@ -2206,10 +2215,6 @@ void ThreadCheckDarkSendPool()
                     }
                 }
             }
-        }
-
-        if(c % MASTERNODE_PING_SECONDS == 0){
-            activeMasternode.ManageStatus();
         }
 
         if(c % 60 == 0){

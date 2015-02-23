@@ -15,22 +15,6 @@ map<uint256, int> mapSeenMasternodeScanningErrors;
 // cache block hashes as we calculate them
 std::map<int64_t, uint256> mapCacheBlockHashes;
 
-// manage the masternode connections
-void ProcessMasternodeConnections(){
-    LOCK(cs_vNodes);
-
-    BOOST_FOREACH(CNode* pnode, vNodes)
-    {
-        //if it's our masternode, let it be
-        if(darkSendPool.submittedToMasternode == pnode->addr) continue;
-
-        if(pnode->fDarkSendMaster){
-            LogPrintf("Closing masternode connection %s \n", pnode->addr.ToString().c_str());
-            pnode->CloseSocketDisconnect();
-        }
-    }
-}
-
 void ProcessMessageMasternode(CNode* pfrom, std::string& strCommand, CDataStream& vRecv)
 {
     if (strCommand == "mnget") { //Masternode Payments Request Sync
