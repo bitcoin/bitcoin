@@ -287,6 +287,8 @@ public:
         SetNull();
     }
 
+    void ProcessMasternodeConnections();
+
     void InitCollateralAddress(){
         std::string strAddress = "";
         if(Params().NetworkID() == CChainParams::MAIN) {
