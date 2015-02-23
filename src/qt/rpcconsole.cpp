@@ -11,7 +11,7 @@
 
 #include "rpcserver.h"
 #include "rpcclient.h"
-#include "masternode.h"
+#include "masternodeman.h"
 
 #include "json/json_spirit_value.h"
 #include <openssl/crypto.h>
@@ -376,7 +376,7 @@ void RPCConsole::setNumBlocks(int count)
 
     // set masternode count
 
-    QString masternodes = QString::number((int)vecMasternodes.size());
+    QString masternodes = QString::number((int)mnodeman.size());
     ui->masternodeCount->setText(masternodes);
 }
 
