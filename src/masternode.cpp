@@ -387,7 +387,7 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
     }
 
     //if we can't find new MN to get paid, pick first active MN counting back from the end of vecLastPayments list
-    if(newWinner.nBlockHeight == 0 && mnodeman.size() > 0)
+    if(newWinner.nBlockHeight == 0 && mnodeman.CountEnabled() > 0)
     {
         BOOST_REVERSE_FOREACH(CTxIn& vinLP, vecLastPayments)
         {

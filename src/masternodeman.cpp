@@ -158,6 +158,7 @@ CMasternode *CMasternodeMan::FindNotInVec(const std::vector<CTxIn> &vVins)
     BOOST_FOREACH(CMasternode &mn, vMasternodes)
     {
         mn.Check();
+        UpdateLastTimeChanged();
         if(!mn.IsEnabled()) continue;
 
         bool found = false;
@@ -188,6 +189,7 @@ bool CMasternodeMan::Add(CMasternode &mn)
     if (!pmn)
     {
         vMasternodes.push_back(mn);
+        UpdateLastTimeChanged();
         return true;
     }
 
@@ -198,6 +200,7 @@ void CMasternodeMan::Check()
 {
     LOCK(cs);
 
+    UpdateLastTimeChanged();
     BOOST_FOREACH(CMasternode& mn, vMasternodes)
         mn.Check();
 }
@@ -206,15 +209,11 @@ void CMasternodeMan::CheckAndRemove()
 {
     LOCK(cs);
 
-    vector<CMasternode>::iterator it = vMasternodes.begin();
-    //check them separately
-    while(it != vMasternodes.end()){
-        (*it).Check();
-        ++it;
-    }
+    Check();
+    UpdateLastTimeChanged();
 
     //remove inactive
-    it = vMasternodes.begin();
+    vector<CMasternode>::iterator it = vMasternodes.begin();
     while(it != vMasternodes.end()){
         if((*it).activeState == 4 || (*it).activeState == 3){
             LogPrintf("Removing inactive masternode %s\n", (*it).addr.ToString().c_str());
@@ -230,6 +229,8 @@ int CMasternodeMan::CountMasternodesAboveProtocol(int protocolVersion)
     int i = 0;
 
     BOOST_FOREACH(CMasternode& mn, vMasternodes) {
+        mn.Check();
+        UpdateLastTimeChanged();
         if(mn.protocolVersion < protocolVersion || !mn.IsEnabled()) continue;
         i++;
     }
@@ -242,8 +243,9 @@ int CMasternodeMan::CountEnabled()
     int i = 0;
 
     BOOST_FOREACH(CMasternode& mn, vMasternodes) {
-        if(!mn.IsEnabled()) continue;
-        i++;
+        mn.Check();
+        UpdateLastTimeChanged();
+        if(mn.IsEnabled()) i++;
     }
 
     return i;
@@ -257,6 +259,7 @@ CMasternode* CMasternodeMan::GetCurrentMasterNode(int mod, int64_t nBlockHeight,
     // scan for winner
     BOOST_FOREACH(CMasternode& mn, vMasternodes) {
         mn.Check();
+        UpdateLastTimeChanged();
         if(mn.protocolVersion < minProtocol || !mn.IsEnabled()) continue;
 
         // calculate the score for each masternode
@@ -282,6 +285,7 @@ int CMasternodeMan::GetMasternodeRank(const CTxIn& vin, int64_t nBlockHeight, in
     BOOST_FOREACH(CMasternode& mn, vMasternodes) {
 
         mn.Check();
+        UpdateLastTimeChanged();
 
         if(mn.protocolVersion < minProtocol) continue;
         if(!mn.IsEnabled()) {
@@ -391,6 +395,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
             //   after that they just need to match
             if(count == -1 && mn->pubkey == pubkey && !mn->UpdatedWithin(MASTERNODE_MIN_DSEE_SECONDS)){
                 mn->UpdateLastSeen();
+                UpdateLastTimeChanged();
 
                 if(mn->now < sigTime){ //take the newest entry
                     LogPrintf("dsee - Got updated entry for %s\n", addr.ToString().c_str());
@@ -507,6 +512,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
 
                 if(!mn->UpdatedWithin(MASTERNODE_MIN_DSEEP_SECONDS))
                 {
+                    UpdateLastTimeChanged();
                     if(stop) mn->Disable();
                     else
                     {
