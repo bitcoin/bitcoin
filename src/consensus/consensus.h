@@ -66,6 +66,12 @@ unsigned int GetP2SHSigOpCount(const CTransaction& tx, const CCoinsViewEfficient
  * @see Consensus::GetLegacySigOpCount and Consensus::GetP2SHSigOpCount
  */
 unsigned int GetSigOpCount(const CTransaction&, const CCoinsViewEfficient&);
+/**
+ * Return sum of txouts for a given transaction.
+ * GetValueIn() is a method on CCoinsViewCache, because
+ * inputs must be known to compute value in.
+ */
+CAmount GetValueOut(const CTransaction& tx);
 
 } // namespace Consensus
 

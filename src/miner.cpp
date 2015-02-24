@@ -210,7 +210,7 @@ CBlockTemplate* CreateNewBlock(const Consensus::Params& params, const CScript& s
             uint256 hash = tx.GetHash();
             mempool.ApplyDeltas(hash, dPriority, nTotalIn);
 
-            CFeeRate feeRate(nTotalIn-tx.GetValueOut(), nTxSize);
+            CFeeRate feeRate(nTotalIn - Consensus::GetValueOut(tx), nTxSize);
 
             if (porphan)
             {
@@ -266,7 +266,7 @@ CBlockTemplate* CreateNewBlock(const Consensus::Params& params, const CScript& s
             if (!view.HaveInputs(tx))
                 continue;
 
-            CAmount nTxFees = view.GetValueIn(tx)-tx.GetValueOut();
+            CAmount nTxFees = view.GetValueIn(tx) - Consensus::GetValueOut(tx);
 
             unsigned int nTxSigOps = Consensus::GetSigOpCount(tx, view);
             if (nBlockSigOps + nTxSigOps >= MAX_BLOCK_SIGOPS)

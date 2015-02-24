@@ -5,6 +5,7 @@
 
 #include "amount.h"
 #include "base58.h"
+#include "consensus/consensus.h"
 #include "core_io.h"
 #include "init.h"
 #include "main.h"
@@ -1634,7 +1635,7 @@ Value gettransaction(const Array& params, bool fHelp)
     CAmount nCredit = wtx.GetCredit(filter);
     CAmount nDebit = wtx.GetDebit(filter);
     CAmount nNet = nCredit - nDebit;
-    CAmount nFee = (wtx.IsFromMe(filter) ? wtx.GetValueOut() - nDebit : 0);
+    CAmount nFee = (wtx.IsFromMe(filter) ? Consensus::GetValueOut(wtx) - nDebit : 0);
 
     entry.push_back(Pair("amount", ValueFromAmount(nNet - nFee)));
     if (wtx.IsFromMe(filter))

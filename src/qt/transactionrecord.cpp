@@ -112,7 +112,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
             //
             // Debit
             //
-            CAmount nTxFee = nDebit - wtx.GetValueOut();
+            CAmount nTxFee = nDebit - Consensus::GetValueOut(wtx);
 
             for (unsigned int nOut = 0; nOut < wtx.vout.size(); nOut++)
             {

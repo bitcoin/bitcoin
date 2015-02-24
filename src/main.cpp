@@ -871,7 +871,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
                                    hash.ToString(), nSigOps, MAX_STANDARD_TX_SIGOPS),
                              REJECT_NONSTANDARD, "bad-txns-too-many-sigops");
 
-        CAmount nValueOut = tx.GetValueOut();
+        CAmount nValueOut = Consensus::GetValueOut(tx);
         CAmount nFees = nValueIn-nValueOut;
         double dPriority = view.GetPriority(tx, chainActive.Height());
 
@@ -1291,11 +1291,12 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, c
                 return state.DoS(100, false, REJECT_INVALID, "bad-txns-inputvalues-outofrange");
         }
 
-        if (nValueIn < tx.GetValueOut())
-            return state.DoS(100, false, REJECT_INVALID, strprintf("bad-txns-in-belowout (%s < %s)", FormatMoney(nValueIn), FormatMoney(tx.GetValueOut())));
+        CAmount nValueOut = Consensus::GetValueOut(tx);
+        if (nValueIn < nValueOut)
+            return state.DoS(100, false, REJECT_INVALID, strprintf("bad-txns-in-belowout (%s < %s)", FormatMoney(nValueIn), FormatMoney(nValueOut)));
 
         // Tally transaction fees
-        CAmount nTxFee = nValueIn - tx.GetValueOut();
+        CAmount nTxFee = nValueIn - nValueOut;
         if (nTxFee < 0)
             return state.DoS(100, false, REJECT_INVALID, "bad-txns-fee-negative");
 
@@ -1666,7 +1667,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, const Consensus:
                 return state.DoS(100, error("ConnectBlock(): inputs missing/spent"),
                                  REJECT_INVALID, "bad-txns-inputs-missingorspent");
 
-            nFees += view.GetValueIn(tx)-tx.GetValueOut();
+            nFees += view.GetValueIn(tx) - Consensus::GetValueOut(tx);
 
             std::vector<CScriptCheck> vChecks;
             if (!CheckInputs(tx, state, view, fScriptChecks, flags, false, nScriptCheckThreads ? &vChecks : NULL))
@@ -1687,10 +1688,11 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, const Consensus:
     LogPrint("bench", "      - Connect %u transactions: %.2fms (%.3fms/tx, %.3fms/txin) [%.2fs]\n", (unsigned)block.vtx.size(), 0.001 * (nTime1 - nTimeStart), 0.001 * (nTime1 - nTimeStart) / block.vtx.size(), nInputs <= 1 ? 0 : 0.001 * (nTime1 - nTimeStart) / (nInputs-1), nTimeConnect * 0.000001);
 
     CAmount blockReward = nFees + GetBlockSubsidy(pindex->nHeight, params);
-    if (block.vtx[0].GetValueOut() > blockReward)
+    CAmount nValueOut = Consensus::GetValueOut(block.vtx[0]);
+    if (nValueOut > blockReward)
         return state.DoS(100,
                          error("ConnectBlock(): coinbase pays too much (actual=%d vs limit=%d)",
-                               block.vtx[0].GetValueOut(), blockReward),
+                               nValueOut, blockReward),
                                REJECT_INVALID, "bad-cb-amount");
 
     if (!control.Wait())

@@ -121,6 +121,18 @@ bool Consensus::CheckBlock(const CBlock& block, int64_t nTime, CValidationState&
     return true;
 }
 
+CAmount Consensus::GetValueOut(const CTransaction& tx)
+{
+    CAmount nValueOut = 0;
+    for (std::vector<CTxOut>::const_iterator it(tx.vout.begin()); it != tx.vout.end(); ++it)
+    {
+        nValueOut += it->nValue;
+        if (!MoneyRange(it->nValue) || !MoneyRange(nValueOut))
+            throw std::runtime_error("CTransaction::GetValueOut(): value out of range");
+    }
+    return nValueOut;
+}
+
 bool IsSuperMajority(int minVersion, const CBlockIndex* pstart, unsigned nRequired, unsigned nToCheck)
 {
     unsigned int nFound = 0;
