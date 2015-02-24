@@ -471,14 +471,14 @@ AC_LINK_IFELSE([AC_LANG_SOURCE([
   [
     AC_MSG_RESULT(no)
     if test x$use_reduce_exports = xyes; then
-      AC_MSG_ERROR([Cannot find a working visibility attribute. Use --disable-reduced-exports.])
+      AC_MSG_ERROR([Cannot find a working visibility attribute. Use --disable-reduce-exports.])
     fi
   ]
 )
 
 if test x$use_reduce_exports = xyes; then
   AX_CHECK_COMPILE_FLAG([-fvisibility=hidden],[RE_CXXFLAGS="-fvisibility=hidden"],
-  [AC_MSG_ERROR([Cannot set default symbol visibility. Use --disable-reduced-exports.])])
+  [AC_MSG_ERROR([Cannot set default symbol visibility. Use --disable-reduce-exports.])])
 fi
 
 LEVELDB_CPPFLAGS=
@@ -540,7 +540,7 @@ if test x$use_reduce_exports = xyes; then
     ]])],[
       AC_MSG_RESULT(yes)
     ],[
-    AC_MSG_ERROR([boost versions < 1.49 are known to be broken with reduced exports. Use --disable-reduced-exports.])
+    AC_MSG_ERROR([boost versions < 1.49 are known to be broken with reduced exports. Use --disable-reduce-exports.])
   ])
   CPPFLAGS="$TEMP_CPPFLAGS"
 fi
