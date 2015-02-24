@@ -50,6 +50,9 @@ private:
     // map to hold all MNs
     std::vector<CMasternode> vMasternodes;
 
+    // keep track of latest time whem vMasternodes was changed
+    int64_t lastTimeChanged;
+
 public:
 
     IMPLEMENT_SERIALIZE
@@ -61,6 +64,7 @@ public:
                 LOCK(cs);
                 unsigned char nVersion = 0;
                 READWRITE(nVersion);
+                READWRITE(lastTimeChanged);
                 READWRITE(vMasternodes);
         }
     )
@@ -87,7 +91,7 @@ public:
     void CheckAndRemove();
 
     // Clear masternode vector
-    void Clear() { vMasternodes.clear(); }
+    void Clear() { vMasternodes.clear(); lastTimeChanged = 0; }
 
     // Return the number of (unique) masternodes
     int size() { return vMasternodes.size(); }
@@ -101,9 +105,13 @@ public:
 
     int CountEnabled();
 
-    std::vector<CMasternode> GetFullMasternodeVector() { return vMasternodes; }
+    std::vector<CMasternode> GetFullMasternodeVector() { Check(); return vMasternodes; }
 
     void ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
+
+    void UpdateLastTimeChanged() { lastTimeChanged = GetAdjustedTime(); }
+
+    bool UpdateNeeded() { return lastTimeChanged < GetAdjustedTime() - MASTERNODE_REMOVAL_SECONDS; }
 
 };
 
