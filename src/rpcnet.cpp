@@ -9,6 +9,7 @@
 #include "main.h" // GetNodeStateStats()
 #include "net.h"
 #include "netbase.h"
+#include "policy/feerate.h"
 #include "policy/policy.h"
 #include "protocol.h"
 #include "sync.h"

@@ -9,6 +9,7 @@
 #include "main.h" // chainActive
 #include "net.h"
 #include "netbase.h"
+#include "policy/feerate.h"
 #include "policy/policy.h"
 #include "rpcserver.h"
 #include "timedata.h"

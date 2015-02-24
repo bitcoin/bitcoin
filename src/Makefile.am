@@ -109,6 +109,7 @@ BITCOIN_CORE_H = \
   netbase.h \
   net.h \
   noui.h \
+  policy/feerate.h \
   policy/policy.h \
   primitives/block.h \
   primitives/transaction.h \
@@ -185,6 +186,7 @@ libbitcoin_server_a_SOURCES = \
   miner.cpp \
   net.cpp \
   noui.cpp \
+  policy/feerate.cpp \
   policy/policy.cpp \
   rest.cpp \
   rpcblockchain.cpp \
@@ -242,7 +244,6 @@ univalue_libbitcoin_univalue_a_SOURCES = \
 # common: shared between bitcoind, and bitcoin-qt and non-server tools
 libbitcoin_common_a_CPPFLAGS = $(BITCOIN_INCLUDES)
 libbitcoin_common_a_SOURCES = \
-  amount.cpp \
   arith_uint256.cpp \
   base58.cpp \
   chainparams.cpp \

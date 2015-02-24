@@ -8,8 +8,8 @@
 
 #include <list>
 
-#include "amount.h"
 #include "coins.h"
+#include "policy/feerate.h"
 #include "primitives/transaction.h"
 #include "sync.h"
 

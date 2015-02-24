@@ -10,6 +10,7 @@
 #include "amount.h"
 #include "coins.h"
 #include "consensus/validation.h"
+#include "policy/feerate.h"
 #include "primitives/transaction.h"
 #include "tinyformat.h"
 #include "ui_interface.h"
