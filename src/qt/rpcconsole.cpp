@@ -11,7 +11,6 @@
 
 #include "rpcserver.h"
 #include "rpcclient.h"
-#include "masternodeman.h"
 
 #include "json/json_spirit_value.h"
 #include <openssl/crypto.h>
@@ -276,6 +275,9 @@ void RPCConsole::setClientModel(ClientModel *model)
         setNumBlocks(model->getNumBlocks());
         connect(model, SIGNAL(numBlocksChanged(int)), this, SLOT(setNumBlocks(int)));
 
+        setMasternodeCount(model->getMasternodeCountString());
+        connect(model, SIGNAL(strMasternodesChanged(QString)), this, SLOT(setMasternodeCount(QString)));
+
         updateTrafficStats(model->getTotalBytesRecv(), model->getTotalBytesSent());
         connect(model, SIGNAL(bytesChanged(quint64,quint64)), this, SLOT(updateTrafficStats(quint64, quint64)));
 
@@ -373,11 +375,11 @@ void RPCConsole::setNumBlocks(int count)
     ui->numberOfBlocks->setText(QString::number(count));
     if(clientModel)
         ui->lastBlockTime->setText(clientModel->getLastBlockDate().toString());
+}
 
-    // set masternode count
-
-    QString masternodes = QString::number((int)mnodeman.size());
-    ui->masternodeCount->setText(masternodes);
+void RPCConsole::setMasternodeCount(const QString &strMasternodes)
+{
+    ui->masternodeCount->setText(strMasternodes);
 }
 
 void RPCConsole::on_lineEdit_returnPressed()
