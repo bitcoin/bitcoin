@@ -381,13 +381,13 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
         vecLastPayments.push_back(winner.vin);
     }
 
-    CMasternode* mn = mnodeman.FindNotInVec(vecLastPayments);
-    if(mn)
+    CMasternode *pmn = mnodeman.FindNotInVec(vecLastPayments);
+    if(pmn != NULL)
     {
         newWinner.score = 0;
         newWinner.nBlockHeight = nBlockHeight;
-        newWinner.vin = mn->vin;
-        newWinner.payee.SetDestination(mn->pubkey.GetID());
+        newWinner.vin = pmn->vin;
+        newWinner.payee.SetDestination(pmn->pubkey.GetID());
     }
 
     //if we can't find new MN to get paid, pick first active MN counting back from the end of vecLastPayments list
@@ -395,16 +395,16 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
     {
         BOOST_REVERSE_FOREACH(CTxIn& vinLP, vecLastPayments)
         {
-            CMasternode* mn = mnodeman.Find(vinLP);
-            if(mn)
+            CMasternode* pmn = mnodeman.Find(vinLP);
+            if(pmn != NULL)
             {
-                mn->Check();
-                if(!mn->IsEnabled()) continue;
+                pmn->Check();
+                if(!pmn->IsEnabled()) continue;
 
                 newWinner.score = 0;
                 newWinner.nBlockHeight = nBlockHeight;
-                newWinner.vin = mn->vin;
-                newWinner.payee.SetDestination(mn->pubkey.GetID());
+                newWinner.vin = pmn->vin;
+                newWinner.payee.SetDestination(pmn->pubkey.GetID());
                 break; // we found active MN
             }
         }

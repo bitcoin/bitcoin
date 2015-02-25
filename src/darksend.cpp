@@ -121,8 +121,8 @@ void ProcessMessageDarksend(CNode* pfrom, std::string& strCommand, CDataStream& 
         vRecv >> nDenom >> txCollateral;
 
         std::string error = "";
-        CMasternode* mn = mnodeman.Find(activeMasternode.vin);
-        if(!mn)
+        CMasternode* pmn = mnodeman.Find(activeMasternode.vin);
+        if(pmn == NULL)
         {
             std::string strError = _("Not in the masternode list.");
             pfrom->PushMessage("dssu", darkSendPool.sessionID, darkSendPool.GetState(), darkSendPool.GetEntriesCount(), MASTERNODE_REJECTED, strError);
@@ -130,9 +130,9 @@ void ProcessMessageDarksend(CNode* pfrom, std::string& strCommand, CDataStream& 
         }
 
         if(darkSendPool.sessionUsers == 0) {
-            if(mn->nLastDsq != 0 &&
-                mn->nLastDsq + mnodeman.CountMasternodesAboveProtocol(darkSendPool.MIN_PEER_PROTO_VERSION)/5 > darkSendPool.nDsqCount){
-                LogPrintf("dsa -- last dsq too recent, must wait. %s \n", mn->addr.ToString().c_str());
+            if(pmn->nLastDsq != 0 &&
+                pmn->nLastDsq + mnodeman.CountMasternodesAboveProtocol(darkSendPool.MIN_PEER_PROTO_VERSION)/5 > darkSendPool.nDsqCount){
+                LogPrintf("dsa -- last dsq too recent, must wait. %s \n", pmn->addr.ToString().c_str());
                 std::string strError = _("Last Darksend was too recent.");
                 pfrom->PushMessage("dssu", darkSendPool.sessionID, darkSendPool.GetState(), darkSendPool.GetEntriesCount(), MASTERNODE_REJECTED, strError);
                 return;
@@ -165,8 +165,8 @@ void ProcessMessageDarksend(CNode* pfrom, std::string& strCommand, CDataStream& 
 
         if(dsq.IsExpired()) return;
 
-        CMasternode* mn = mnodeman.Find(dsq.vin);
-        if(!mn) return;
+        CMasternode* pmn = mnodeman.Find(dsq.vin);
+        if(pmn == NULL) return;
 
         // if the queue is ready, submit if we can
         if(dsq.ready) {
@@ -182,16 +182,16 @@ void ProcessMessageDarksend(CNode* pfrom, std::string& strCommand, CDataStream& 
                 if(q.vin == dsq.vin) return;
             }
 
-            if(fDebug) LogPrintf("dsq last %d last2 %d count %d\n", mn->nLastDsq, mn->nLastDsq + mnodeman.size()/5, darkSendPool.nDsqCount);
+            if(fDebug) LogPrintf("dsq last %d last2 %d count %d\n", pmn->nLastDsq, pmn->nLastDsq + mnodeman.size()/5, darkSendPool.nDsqCount);
             //don't allow a few nodes to dominate the queuing process
-            if(mn->nLastDsq != 0 &&
-                mn->nLastDsq + mnodeman.CountMasternodesAboveProtocol(darkSendPool.MIN_PEER_PROTO_VERSION)/5 > darkSendPool.nDsqCount){
-                if(fDebug) LogPrintf("dsq -- masternode sending too many dsq messages. %s \n", mn->addr.ToString().c_str());
+            if(pmn->nLastDsq != 0 &&
+                pmn->nLastDsq + mnodeman.CountMasternodesAboveProtocol(darkSendPool.MIN_PEER_PROTO_VERSION)/5 > darkSendPool.nDsqCount){
+                if(fDebug) LogPrintf("dsq -- masternode sending too many dsq messages. %s \n", pmn->addr.ToString().c_str());
                 return;
             }
             darkSendPool.nDsqCount++;
-            mn->nLastDsq = darkSendPool.nDsqCount;
-            mn->allowFreeTx = true;
+            pmn->nLastDsq = darkSendPool.nDsqCount;
+            pmn->allowFreeTx = true;
 
             if(fDebug) LogPrintf("dsq - new darksend queue object - %s\n", addr.ToString().c_str());
             vecDarksendQueue.push_back(dsq);
@@ -2131,14 +2131,14 @@ bool CDarksendQueue::Relay()
 
 bool CDarksendQueue::CheckSignature()
 {
-    CMasternode* mn = mnodeman.Find(vin);
+    CMasternode* pmn = mnodeman.Find(vin);
 
-    if(mn)
+    if(pmn != NULL)
     {
         std::string strMessage = vin.ToString() + boost::lexical_cast<std::string>(nDenom) + boost::lexical_cast<std::string>(time) + boost::lexical_cast<std::string>(ready);
 
         std::string errorMessage = "";
-        if(!darkSendSigner.VerifyMessage(mn->pubkey2, vchSig, strMessage, errorMessage)){
+        if(!darkSendSigner.VerifyMessage(pmn->pubkey2, vchSig, strMessage, errorMessage)){
             return error("CDarksendQueue::CheckSignature() - Got bad masternode address signature %s \n", vin.ToString().c_str());
         }
 
