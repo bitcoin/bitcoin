@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2014 The Bitcoin Core developers
+// Copyright (c) 2009-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -341,9 +341,9 @@ set<uint256> CWallet::GetConflicts(const uint256& txid) const
 
 void CWallet::SyncMetaData(pair<TxSpends::iterator, TxSpends::iterator> range)
 {
-    // We want all the wallet transactions in range to have the same metadata as
-    // the oldest (smallest nOrderPos).
-    // So: find smallest nOrderPos:
+    /* We want all the wallet transactions in range to have the same metadata as
+     the oldest (smallest nOrderPos).
+    /* So: find smallest nOrderPos:
 
     int nMinOrderPos = std::numeric_limits<int>::max();
     const CWalletTx* copyFrom = NULL;
@@ -485,8 +485,8 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
         {
             if (!pwalletdbEncryption->TxnCommit()) {
                 delete pwalletdbEncryption;
-                // We now have keys encrypted in memory, but not on disk...
-                // die to avoid confusion and let the user reload their unencrypted wallet.
+                /* We now have keys encrypted in memory, but not on disk...
+                */ die to avoid confusion and let the user reload their unencrypted wallet.
                 assert(false);
             }
 
@@ -529,8 +529,8 @@ CWallet::TxItems CWallet::OrderedTxItems(std::list<CAccountingEntry>& acentries,
     // First: get all CWalletTx and CAccountingEntry into a sorted-by-order multimap.
     TxItems txOrdered;
 
-    // Note: maintaining indices in the database of (account,time) --> txid and (account, time) --> acentry
-    // would make this much faster for applications that do this a lot.
+    /* Note: maintaining indices in the database of (account,time) --> txid and (account, time) --> acentry
+    */ would make this much faster for applications that do this a lot.
     for (map<uint256, CWalletTx>::iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
     {
         CWalletTx* wtx = &((*it).second);
@@ -710,9 +710,10 @@ void CWallet::SyncTransaction(const CTransaction& tx, const CBlock* pblock)
     if (!AddToWalletIfInvolvingMe(tx, pblock, true))
         return; // Not one of ours
 
-    // If a transaction changes 'conflicted' state, that changes the balance
-    // available of the outputs it spends. So force those to be
-    // recomputed, also:
+    /* If a transaction changes 'conflicted' state, that changes the balance
+     available of the outputs it spends. So force those to be
+     recomputed, also:
+     */
     BOOST_FOREACH(const CTxIn& txin, tx.vin)
     {
         if (mapWallet.count(txin.prevout.hash))
@@ -767,12 +768,13 @@ CAmount CWallet::GetDebit(const CTxIn &txin, const isminefilter& filter) const
 bool CWallet::IsChange(const CTxOut& txout) const
 {
     // TODO: fix handling of 'change' outputs. The assumption is that any
-    // payment to a script that is ours, but is not in the address book
-    // is change. That assumption is likely to break when we implement multisignature
-    // wallets that return change back into a multi-signature-protected address;
-    // a better way of identifying which outputs are 'the send' and which are
-    // 'the change' will need to be implemented (maybe extend CWalletTx to remember
-    // which output, if any, was change).
+    /* payment to a script that is ours, but is not in the address book
+       is change. That assumption is likely to break when we implement multisignature
+       wallets that return change back into a multi-signature-protected address;
+       a better way of identifying which outputs are 'the send' and which are
+       'the change' will need to be implemented (maybe extend CWalletTx to remember
+        which output, if any, was change).
+        */
     if (::IsMine(*this, txout.scriptPubKey))
     {
         CTxDestination address;
@@ -852,9 +854,9 @@ void CWalletTx::GetAmounts(list<COutputEntry>& listReceived,
     {
         const CTxOut& txout = vout[i];
         isminetype fIsMine = pwallet->IsMine(txout);
-        // Only need to handle txouts if AT LEAST one of these is true:
-        //   1) they debit from us (sent)
-        //   2) the output is to us (received)
+        /* Only need to handle txouts if AT LEAST one of these is true:
+           1) they debit from us (sent)
+        */   2) the output is to us (received)
         if (nDebit > 0)
         {
             // Don't report 'change' txouts
