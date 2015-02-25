@@ -201,10 +201,10 @@ bool CActiveMasternode::Dseep(CTxIn vin, CService service, CKey keyMasternode, C
     }
 
     // Update Last Seen timestamp in masternode list
-    CMasternode* mn = mnodeman.Find(vin);
-    if(mn)
+    CMasternode* pmn = mnodeman.Find(vin);
+    if(pmn != NULL)
     {
-        mn->UpdateLastSeen();
+        pmn->UpdateLastSeen();
     }
     else
     {
@@ -267,8 +267,8 @@ bool CActiveMasternode::Register(CTxIn vin, CService service, CKey keyCollateral
 		return false;
 	}
 
-    CMasternode* mn = mnodeman.Find(vin);
-    if(!mn)
+    CMasternode* pmn = mnodeman.Find(vin);
+    if(pmn == NULL)
     {
         LogPrintf("CActiveMasternode::Register() - Adding to masternode list service: %s - vin: %s\n", service.ToString().c_str(), vin.ToString().c_str());
         CMasternode mn(service, vin, pubKeyCollateralAddress, vchMasterNodeSignature, masterNodeSignatureTime, pubKeyMasternode, PROTOCOL_VERSION);

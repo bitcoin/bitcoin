@@ -309,10 +309,10 @@ bool ProcessConsensusVote(CConsensusVote& ctx)
 {
     int n = mnodeman.GetMasternodeRank(ctx.vinMasternode, ctx.nBlockHeight, MIN_INSTANTX_PROTO_VERSION);
 
-    CMasternode* mn = mnodeman.Find(ctx.vinMasternode);
-    if(mn)
+    CMasternode* pmn = mnodeman.Find(ctx.vinMasternode);
+    if(pmn != NULL)
     {
-        if(fDebug) LogPrintf("InstantX::ProcessConsensusVote - Masternode ADDR %s %d\n", mn->addr.ToString().c_str(), n);
+        if(fDebug) LogPrintf("InstantX::ProcessConsensusVote - Masternode ADDR %s %d\n", pmn->addr.ToString().c_str(), n);
     }
 
     if(n == -1)
@@ -481,9 +481,9 @@ bool CConsensusVote::SignatureValid()
     std::string strMessage = txHash.ToString().c_str() + boost::lexical_cast<std::string>(nBlockHeight);
     //LogPrintf("verify strMessage %s \n", strMessage.c_str());
 
-    CMasternode* mn = mnodeman.Find(vinMasternode);
+    CMasternode* pmn = mnodeman.Find(vinMasternode);
 
-    if(!mn)
+    if(pmn == NULL)
     {
         LogPrintf("InstantX::CConsensusVote::SignatureValid() - Unknown Masternode\n");
         return false;
@@ -494,13 +494,13 @@ bool CConsensusVote::SignatureValid()
     //LogPrintf("verify addr %d %s \n", n, vecMasternodes[n].addr.ToString().c_str());
 
     CScript pubkey;
-    pubkey.SetDestination(mn->pubkey2.GetID());
+    pubkey.SetDestination(pmn->pubkey2.GetID());
     CTxDestination address1;
     ExtractDestination(pubkey, address1);
     CBitcoinAddress address2(address1);
     //LogPrintf("verify pubkey2 %s \n", address2.ToString().c_str());
 
-    if(!darkSendSigner.VerifyMessage(mn->pubkey2, vchMasterNodeSignature, strMessage, errorMessage)) {
+    if(!darkSendSigner.VerifyMessage(pmn->pubkey2, vchMasterNodeSignature, strMessage, errorMessage)) {
         LogPrintf("InstantX::CConsensusVote::SignatureValid() - Verify message failed\n");
         return false;
     }

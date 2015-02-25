@@ -190,7 +190,7 @@ bool CMasternodeMan::Add(CMasternode &mn)
 
     CMasternode *pmn = Find(mn.vin);
 
-    if (!pmn)
+    if (pmn == NULL)
     {
         vMasternodes.push_back(mn);
         UpdateLastTimeChanged();
@@ -390,26 +390,26 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         }
 
         //search existing masternode list, this is where we update existing masternodes with new dsee broadcasts
-        CMasternode* mn = this->Find(vin);
-        if(mn)
+        CMasternode* pmn = this->Find(vin);
+        if(pmn != NULL)
         {
             // count == -1 when it's a new entry
             //   e.g. We don't want the entry relayed/time updated when we're syncing the list
             // mn.pubkey = pubkey, IsVinAssociatedWithPubkey is validated once below,
             //   after that they just need to match
-            if(count == -1 && mn->pubkey == pubkey && !mn->UpdatedWithin(MASTERNODE_MIN_DSEE_SECONDS)){
-                mn->UpdateLastSeen();
+            if(count == -1 && pmn->pubkey == pubkey && !pmn->UpdatedWithin(MASTERNODE_MIN_DSEE_SECONDS)){
+                pmn->UpdateLastSeen();
                 UpdateLastTimeChanged();
 
-                if(mn->now < sigTime){ //take the newest entry
+                if(pmn->now < sigTime){ //take the newest entry
                     LogPrintf("dsee - Got updated entry for %s\n", addr.ToString().c_str());
-                    mn->pubkey2 = pubkey2;
-                    mn->now = sigTime;
-                    mn->sig = vchSig;
-                    mn->protocolVersion = protocolVersion;
-                    mn->addr = addr;
-                    mn->Check();
-                    if(mn->IsEnabled())
+                    pmn->pubkey2 = pubkey2;
+                    pmn->now = sigTime;
+                    pmn->sig = vchSig;
+                    pmn->protocolVersion = protocolVersion;
+                    pmn->addr = addr;
+                    pmn->Check();
+                    if(pmn->IsEnabled())
                         RelayDarkSendElectionEntry(vin, addr, vchSig, sigTime, pubkey, pubkey2, count, current, lastUpdated, protocolVersion);
                 }
             }
@@ -495,34 +495,34 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         }
 
         // see if we have this masternode
-        CMasternode* mn = this->Find(vin);
-        if(mn)
+        CMasternode* pmn = this->Find(vin);
+        if(pmn != NULL)
         {
             // LogPrintf("dseep - Found corresponding mn for vin: %s\n", vin.ToString().c_str());
             // take this only if it's newer
-            if(mn->lastDseep < sigTime)
+            if(pmn->lastDseep < sigTime)
             {
-                std::string strMessage = mn->addr.ToString() + boost::lexical_cast<std::string>(sigTime) + boost::lexical_cast<std::string>(stop);
+                std::string strMessage = pmn->addr.ToString() + boost::lexical_cast<std::string>(sigTime) + boost::lexical_cast<std::string>(stop);
 
                 std::string errorMessage = "";
-                if(!darkSendSigner.VerifyMessage(mn->pubkey2, vchSig, strMessage, errorMessage))
+                if(!darkSendSigner.VerifyMessage(pmn->pubkey2, vchSig, strMessage, errorMessage))
                 {
                     LogPrintf("dseep - Got bad masternode address signature %s \n", vin.ToString().c_str());
                     //Misbehaving(pfrom->GetId(), 100);
                     return;
                 }
 
-                mn->lastDseep = sigTime;
+                pmn->lastDseep = sigTime;
 
-                if(!mn->UpdatedWithin(MASTERNODE_MIN_DSEEP_SECONDS))
+                if(!pmn->UpdatedWithin(MASTERNODE_MIN_DSEEP_SECONDS))
                 {
                     UpdateLastTimeChanged();
-                    if(stop) mn->Disable();
+                    if(stop) pmn->Disable();
                     else
                     {
-                        mn->UpdateLastSeen();
-                        mn->Check();
-                        if(!mn->IsEnabled()) return;
+                        pmn->UpdateLastSeen();
+                        pmn->Check();
+                        if(!pmn->IsEnabled()) return;
                     }
                     RelayDarkSendElectionEntryPing(vin, vchSig, sigTime, stop);
                 }
