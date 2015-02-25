@@ -2168,24 +2168,18 @@ void ThreadCheckDarkSendPool()
         //LogPrintf("ThreadCheckDarkSendPool::check timeout\n");
         darkSendPool.CheckTimeout();
 
-        if(c % 60 == 0){
+        if(c % 60 == 0)
+        {
+            LOCK(cs_main);
+            /*
+                cs_main is required for doing CMasternode.Check because something
+                is modifying the coins view without a mempool lock. It causes
+                segfaults from this code without the cs_main lock.
+            */
+            mnodeman.CheckAndRemove();
             darkSendPool.ProcessMasternodeConnections();
             masternodePayments.CleanPaymentList();
             CleanTransactionLocksList();
-
-            // nodes refuse to relay dseep if it was less then MASTERNODE_MIN_DSEEP_SECONDS ago
-            // MASTERNODE_PING_WAIT_SECONDS gives some additional time on top of it
-            // so we have a timeout for this check on start unless we need to
-            if(c > MASTERNODE_MIN_DSEEP_SECONDS + MASTERNODE_PING_WAIT_SECONDS || mnodeman.UpdateNeeded())
-            {
-                LOCK(cs_main);
-                /*
-                    cs_main is required for doing CMasternode.Check because something
-                    is modifying the coins view without a mempool lock. It causes
-                    segfaults from this code without the cs_main lock.
-                */
-                mnodeman.CheckAndRemove();
-            }
         }
 
         if(c % MASTERNODE_PING_SECONDS == 0) activeMasternode.ManageStatus();
@@ -2208,7 +2202,7 @@ void ThreadCheckDarkSendPool()
                         LogPrintf("Successfully synced, asking for Masternode list and payment list\n");
 
                         //request full mn list only if masternodes.dat was updated quite a long time ago
-                        if(mnodeman.UpdateNeeded()) pnode->PushMessage("dseg", CTxIn());
+                        mnodeman.DsegUpdate(pnode);
 
                         pnode->PushMessage("mnget"); //sync payees
                         pnode->PushMessage("getsporks"); //get current network sporks
