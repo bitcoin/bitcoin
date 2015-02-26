@@ -561,10 +561,12 @@ Value masternodelist(const Array& params, bool fHelp)
 
         std::string strAddr = mn.addr.ToString().c_str();
         if(strMode == "active"){
-            if(strFilter !="" && strFilter != boost::lexical_cast<std::string>(mn.IsEnabled())) continue;
+            if(strFilter !="" && strFilter != boost::lexical_cast<std::string>(mn.IsEnabled()) &&
+                mn.addr.ToString().find(strFilter) == string::npos) continue;
             obj.push_back(Pair(strAddr,       (int)mn.IsEnabled()));
         } else if (strMode == "vin") {
-            if(strFilter !="" && mn.vin.prevout.hash.ToString().find(strFilter) == string::npos) continue;
+            if(strFilter !="" && mn.vin.prevout.hash.ToString().find(strFilter) == string::npos &&
+                mn.addr.ToString().find(strFilter) == string::npos) continue;
             obj.push_back(Pair(strAddr,       mn.vin.prevout.hash.ToString().c_str()));
         } else if (strMode == "pubkey") {
             CScript pubkey;
@@ -573,16 +575,23 @@ Value masternodelist(const Array& params, bool fHelp)
             ExtractDestination(pubkey, address1);
             CBitcoinAddress address2(address1);
 
-            if(strFilter !="" && address2.ToString().find(strFilter) == string::npos) continue;
+            if(strFilter !="" && address2.ToString().find(strFilter) == string::npos &&
+                mn.addr.ToString().find(strFilter) == string::npos) continue;
             obj.push_back(Pair(strAddr,       address2.ToString().c_str()));
         } else if (strMode == "protocol") {
-            if(strFilter !="" && strFilter != boost::lexical_cast<std::string>(mn.protocolVersion)) continue;
+            if(strFilter !="" && strFilter != boost::lexical_cast<std::string>(mn.protocolVersion) &&
+                mn.addr.ToString().find(strFilter) == string::npos) continue;
             obj.push_back(Pair(strAddr,       (int64_t)mn.protocolVersion));
         } else if (strMode == "lastseen") {
+            if(strFilter !="" && mn.addr.ToString().find(strFilter) == string::npos) continue;
+
             obj.push_back(Pair(strAddr,       (int64_t)mn.lastTimeSeen));
         } else if (strMode == "activeseconds") {
+            if(strFilter !="" && mn.addr.ToString().find(strFilter) == string::npos) continue;
+
             obj.push_back(Pair(strAddr,       (int64_t)(mn.lastTimeSeen - mn.now)));
         } else if (strMode == "rank") {
+            if(strFilter !="" && mn.addr.ToString().find(strFilter) == string::npos) continue;
             obj.push_back(Pair(strAddr,       (int)(mnodeman.GetMasternodeRank(mn.vin, chainActive.Tip()->nHeight))));
         } else if (strMode == "full") {
             CScript pubkey;
