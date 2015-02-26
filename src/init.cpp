@@ -21,6 +21,7 @@
 #include "ui_interface.h"
 #include "util.h"
 #include "activemasternode.h"
+#include "masternodeman.h"
 #include "spork.h"
 #ifdef ENABLE_WALLET
 #include "db.h"
@@ -147,6 +148,7 @@ void Shutdown()
     GenerateBitcoins(false, NULL, 0);
 #endif
     StopNode();
+    DumpMasternodes();
     UnregisterNodeSignals(GetNodeSignals());
     {
         LOCK(cs_main);
@@ -1149,6 +1151,20 @@ bool AppInit2(boost::thread_group& threadGroup)
     //string strNode = "23.23.186.131";
     //CAddress addr;
     //ConnectNode(addr, strNode.c_str(), true);
+
+    uiInterface.InitMessage(_("Loading masternode list..."));
+
+    nStart = GetTimeMillis();
+
+    {
+        CMasternodeDB mndb;
+        if (!mndb.Read(mnodeman))
+            LogPrintf("Invalid or missing masternodes.dat; recreating\n");
+    }
+
+    LogPrintf("Loaded %i masternodes from masternodes.dat  %dms\n",
+           mnodeman.size(), GetTimeMillis() - nStart);
+
 
     fMasterNode = GetBoolArg("-masternode", false);
     if(fMasterNode) {

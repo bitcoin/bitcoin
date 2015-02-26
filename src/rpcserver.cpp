@@ -274,6 +274,7 @@ static const CRPCCommand vRPCCommands[] =
     { "spork",                  &spork,                  true,      false,      false },
     { "masternode",             &masternode,             true,      false,      true },
 
+    { "masternodelist",         &masternodelist,         true,      false,      false },
 #ifdef ENABLE_WALLET
     /* Wallet */
     { "addmultisigaddress",     &addmultisigaddress,     false,     false,      true },
