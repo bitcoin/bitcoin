@@ -1721,7 +1721,7 @@ bool CWallet::HasCollateralInputs() const
     BOOST_FOREACH(const COutput& out, vCoins)
         if(IsCollateralAmount(out.tx->vout[out.i].nValue)) nFound++;
 
-    return nFound > 1; // should have more than one just in case
+    return nFound > 0;
 }
 
 bool CWallet::IsCollateralAmount(int64_t nInputAmount) const
