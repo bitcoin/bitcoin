@@ -107,7 +107,6 @@ void static NegateSignatureS(std::vector<unsigned char>& vchSig) {
     std::vector<unsigned char> r, s;
     r = std::vector<unsigned char>(vchSig.begin() + 4, vchSig.begin() + 4 + vchSig[3]);
     s = std::vector<unsigned char>(vchSig.begin() + 6 + vchSig[3], vchSig.begin() + 6 + vchSig[3] + vchSig[5 + vchSig[3]]);
-    unsigned char hashtype = vchSig.back();
 
     // Really ugly to implement mod-n negation here, but it would be feature creep to expose such functionality from libsecp256k1.
     static const unsigned char order[33] = {
@@ -141,7 +140,6 @@ void static NegateSignatureS(std::vector<unsigned char>& vchSig) {
     vchSig.push_back(0x02);
     vchSig.push_back(s.size());
     vchSig.insert(vchSig.end(), s.begin(), s.end());
-    vchSig.push_back(hashtype);
 }
 
 namespace
@@ -478,6 +476,12 @@ BOOST_AUTO_TEST_CASE(script_build)
     good.push_back(TestBuilder(CScript() << OP_2 << ToByteVector(keys.pubkey1C) << ToByteVector(keys.pubkey2C) << OP_2 << OP_CHECKMULTISIG << OP_NOT,
                                "BIP66 example 12, with DERSIG", SCRIPT_VERIFY_DERSIG
                               ).Num(0).PushSig(keys.key1, SIGHASH_ALL, 33, 32).EditPush(1, "45022100", "440220").Num(0));
+    good.push_back(TestBuilder(CScript() << ToByteVector(keys.pubkey2C) << OP_CHECKSIG,
+                               "P2PK with multi-byte hashtype, without DERSIG", 0
+                              ).PushSig(keys.key2, SIGHASH_ALL).EditPush(70, "01", "0101"));
+    bad.push_back(TestBuilder(CScript() << ToByteVector(keys.pubkey2C) << OP_CHECKSIG,
+                               "P2PK with multi-byte hashtype, with DERSIG", SCRIPT_VERIFY_DERSIG
+                              ).PushSig(keys.key2, SIGHASH_ALL).EditPush(70, "01", "0101"));
 
     good.push_back(TestBuilder(CScript() << ToByteVector(keys.pubkey2C) << OP_CHECKSIG,
                                "P2PK with high S but no LOW_S", 0

@@ -6,6 +6,8 @@
 #ifndef BITCOIN_ALLOCATORS_H
 #define BITCOIN_ALLOCATORS_H
 
+#include "support/cleanse.h"
+
 #include <map>
 #include <string>
 #include <string.h>
@@ -13,8 +15,6 @@
 
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/once.hpp>
-
-#include <openssl/crypto.h> // for OPENSSL_cleanse()
 
 /**
  * Thread-safe class to keep track of locked (ie, non-swappable) memory pages.
@@ -174,7 +174,7 @@ void LockObject(const T& t)
 template <typename T>
 void UnlockObject(const T& t)
 {
-    OPENSSL_cleanse((void*)(&t), sizeof(T));
+    memory_cleanse((void*)(&t), sizeof(T));
     LockedPageManager::Instance().UnlockRange((void*)(&t), sizeof(T));
 }
 
@@ -217,7 +217,7 @@ struct secure_allocator : public std::allocator<T> {
     void deallocate(T* p, std::size_t n)
     {
         if (p != NULL) {
-            OPENSSL_cleanse(p, sizeof(T) * n);
+            memory_cleanse(p, sizeof(T) * n);
             LockedPageManager::Instance().UnlockRange(p, sizeof(T) * n);
         }
         std::allocator<T>::deallocate(p, n);
@@ -254,7 +254,7 @@ struct zero_after_free_allocator : public std::allocator<T> {
     void deallocate(T* p, std::size_t n)
     {
         if (p != NULL)
-            OPENSSL_cleanse(p, sizeof(T) * n);
+            memory_cleanse(p, sizeof(T) * n);
         std::allocator<T>::deallocate(p, n);
     }
 };
