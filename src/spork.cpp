@@ -19,9 +19,11 @@ using namespace boost;
 class CSporkMessage;
 class CSporkManager;
 
+CSporkManager sporkManager;
+
 std::map<uint256, CSporkMessage> mapSporks;
 std::map<int, CSporkMessage> mapSporksActive;
-CSporkManager sporkManager;
+
 
 void ProcessSpork(CNode* pfrom, std::string& strCommand, CDataStream& vRecv)
 {
