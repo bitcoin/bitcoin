@@ -7,8 +7,8 @@
 #include "core.h"
 #include "db.h"
 #include "init.h"
-#include "masternode.h"
 #include "activemasternode.h"
+#include "masternodeman.h"
 #include "masternodeconfig.h"
 #include "rpcserver.h"
 #include <boost/lexical_cast.hpp>
@@ -77,7 +77,7 @@ Value getpoolinfo(const Array& params, bool fHelp)
             "Returns an object containing anonymous pool-related information.");
 
     Object obj;
-    obj.push_back(Pair("current_masternode",        GetCurrentMasterNode()));
+    obj.push_back(Pair("current_masternode",        mnodeman.GetCurrentMasterNode()->addr.ToString()));
     obj.push_back(Pair("state",        darkSendPool.GetState()));
     obj.push_back(Pair("entries",      darkSendPool.GetEntriesCount()));
     obj.push_back(Pair("entries_accepted",      darkSendPool.GetCountEntriesAccepted()));
@@ -239,46 +239,20 @@ Value masternode(const Array& params, bool fHelp)
 
     if (strCommand == "list")
     {
-        std::string strCommand = "active";
-
-        if (params.size() == 2){
-            strCommand = params[1].get_str().c_str();
-        }
-
-        if (strCommand != "active" && strCommand != "vin" && strCommand != "pubkey" && strCommand != "lastseen" && strCommand != "activeseconds" && strCommand != "rank" && strCommand != "protocol"){
-            throw runtime_error(
-                "list supports 'active', 'vin', 'pubkey', 'lastseen', 'activeseconds', 'rank', 'protocol'\n");
-        }
-
-        Object obj;
-        BOOST_FOREACH(CMasterNode mn, vecMasternodes) {
-            mn.Check();
-
-            if(strCommand == "active"){
-                obj.push_back(Pair(mn.addr.ToString().c_str(),       (int)mn.IsEnabled()));
-            } else if (strCommand == "vin") {
-                obj.push_back(Pair(mn.addr.ToString().c_str(),       mn.vin.prevout.hash.ToString().c_str()));
-            } else if (strCommand == "pubkey") {
-                CScript pubkey;
-                pubkey.SetDestination(mn.pubkey.GetID());
-                CTxDestination address1;
-                ExtractDestination(pubkey, address1);
-                CBitcoinAddress address2(address1);
-
-                obj.push_back(Pair(mn.addr.ToString().c_str(),       address2.ToString().c_str()));
-            } else if (strCommand == "protocol") {
-                obj.push_back(Pair(mn.addr.ToString().c_str(),       (int64_t)mn.protocolVersion));
-            } else if (strCommand == "lastseen") {
-                obj.push_back(Pair(mn.addr.ToString().c_str(),       (int64_t)mn.lastTimeSeen));
-            } else if (strCommand == "activeseconds") {
-                obj.push_back(Pair(mn.addr.ToString().c_str(),       (int64_t)(mn.lastTimeSeen - mn.now)));
-            } else if (strCommand == "rank") {
-                obj.push_back(Pair(mn.addr.ToString().c_str(),       (int)(GetMasternodeRank(mn.vin, chainActive.Tip()->nHeight))));
-            }
-        }
-        return obj;
+        Array newParams(params.size() - 1);
+        std::copy(params.begin() + 1, params.end(), newParams.begin());
+        return masternodelist(newParams, fHelp);
     }
-    if (strCommand == "count") return (int)vecMasternodes.size();
+
+    if (strCommand == "count")
+    {
+        if (params.size() > 2){
+            throw runtime_error(
+            "too many parameters\n");
+        }
+        if (params.size() == 2) return mnodeman.CountEnabled();
+        return mnodeman.size();
+    }
 
     if (strCommand == "start")
     {
@@ -455,9 +429,9 @@ Value masternode(const Array& params, bool fHelp)
 
     if (strCommand == "current")
     {
-        int winner = GetCurrentMasterNode(1);
-        if(winner >= 0) {
-            return vecMasternodes[winner].addr.ToString().c_str();
+        CMasternode* winner = mnodeman.GetCurrentMasterNode(1);
+        if(winner) {
+            return winner->addr.ToString().c_str();
         }
 
         return "unknown";
@@ -551,3 +525,85 @@ Value masternode(const Array& params, bool fHelp)
     return Value::null;
 }
 
+Value masternodelist(const Array& params, bool fHelp)
+{
+    std::string strMode = "active";
+    std::string strFilter = "";
+
+    if (params.size() >= 1) strMode = params[0].get_str();
+    if (params.size() == 2) strFilter = params[1].get_str();
+
+    if (fHelp ||
+            (strMode != "active" && strMode != "vin" && strMode != "pubkey" && strMode != "lastseen"
+             && strMode != "activeseconds" && strMode != "rank" && strMode != "protocol" && strMode != "full"))
+    {
+        throw runtime_error(
+                "masternodelist ( \"mode\" \"filter\" )\n"
+                "Get a list of masternodes in different modes\n"
+                "\nArguments:\n"
+                "1. \"mode\"      (string, optional, defauls = active) The mode to run list in\n"
+                "2. \"filter\"    (string, optional) Filter results, can be applied in few modes only\n"
+                "Available modes:\n"
+                "  active         - Print '1' if active and '0' otherwise (can be filtered, exact match)\n"
+                "  activeseconds  - Print number of seconds masternode recognized by the network as enabled\n"
+                "  full           - Print info in format 'active | protocol | pubkey | vin | lastseen | activeseconds' (can be filtered, partial match)\n"
+                "  lastseen       - Print timestamp of when a masternode was last seen on the network\n"
+                "  protocol       - Print protocol of a masternode (can be filtered, exact match)\n"
+                "  pubkey         - Print public key associated with a masternode (can be filtered, partial match)\n"
+                "  rank           - Print rank of a masternode based on current block\n"
+                "  vin            - Print vin associated with a masternode (can be filtered, partial match)\n"
+                );
+    }
+
+    Object obj;
+    std::vector<CMasternode> vMasternodes = mnodeman.GetFullMasternodeVector();
+    BOOST_FOREACH(CMasternode& mn, vMasternodes) {
+
+        std::string strAddr = mn.addr.ToString().c_str();
+        if(strMode == "active"){
+            if(strFilter !="" && stoi(strFilter) != mn.IsEnabled()) continue;
+            obj.push_back(Pair(strAddr,       (int)mn.IsEnabled()));
+        } else if (strMode == "vin") {
+            if(strFilter !="" && mn.vin.prevout.hash.ToString().find(strFilter) == string::npos) continue;
+            obj.push_back(Pair(strAddr,       mn.vin.prevout.hash.ToString().c_str()));
+        } else if (strMode == "pubkey") {
+            CScript pubkey;
+            pubkey.SetDestination(mn.pubkey.GetID());
+            CTxDestination address1;
+            ExtractDestination(pubkey, address1);
+            CBitcoinAddress address2(address1);
+
+            if(strFilter !="" && address2.ToString().find(strFilter) == string::npos) continue;
+            obj.push_back(Pair(strAddr,       address2.ToString().c_str()));
+        } else if (strMode == "protocol") {
+            if(strFilter !="" && stoi(strFilter) != mn.protocolVersion) continue;
+            obj.push_back(Pair(strAddr,       (int64_t)mn.protocolVersion));
+        } else if (strMode == "lastseen") {
+            obj.push_back(Pair(strAddr,       (int64_t)mn.lastTimeSeen));
+        } else if (strMode == "activeseconds") {
+            obj.push_back(Pair(strAddr,       (int64_t)(mn.lastTimeSeen - mn.now)));
+        } else if (strMode == "rank") {
+            obj.push_back(Pair(strAddr,       (int)(mnodeman.GetMasternodeRank(mn.vin, chainActive.Tip()->nHeight))));
+        } else if (strMode == "full") {
+            CScript pubkey;
+            pubkey.SetDestination(mn.pubkey.GetID());
+            CTxDestination address1;
+            ExtractDestination(pubkey, address1);
+            CBitcoinAddress address2(address1);
+
+            std::ostringstream stringStream;
+            stringStream << (mn.IsEnabled() ? "1" : "0") << " | " <<
+                           mn.protocolVersion << " | " <<
+                           address2.ToString() << " | " <<
+                           mn.vin.prevout.hash.ToString() << " | " <<
+                           mn.lastTimeSeen << " | " <<
+                           (mn.lastTimeSeen - mn.now);
+            std::string output = stringStream.str();
+            stringStream << " " << strAddr;
+            if(strFilter !="" && stringStream.str().find(strFilter) == string::npos) continue;
+            obj.push_back(Pair(strAddr, output));
+        }
+    }
+    return obj;
+
+}
