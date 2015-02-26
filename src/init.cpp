@@ -123,7 +123,7 @@ public:
             LogPrintf("Error reading from database: %s\n", e.what());
             // Starting the shutdown sequence and returning false to the caller would be
             // interpreted as 'entry not found' (as opposed to unable to read data), and
-            // could lead to invalid interpration. Just exit immediately, as we can't
+            // could lead to invalid interpretation. Just exit immediately, as we can't
             // continue anyway, and all writes should be atomic.
             abort();
         }
