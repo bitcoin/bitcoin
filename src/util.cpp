@@ -697,7 +697,37 @@ boost::filesystem::path GetTempPath() {
 
 void runCommand(std::string strCommand)
 {
-    int nErr = ::system(strCommand.c_str());
+    int nErr = 0;
+#ifdef WIN32
+    // If we're in Windows, use CreateProcess.
+    ULONG nExitCode;
+    STARTUPINFO info={sizeof(info)};
+    ZeroMemory(&info, sizeof(STARTUPINFO));
+    info.cb = sizeof(STARTUPINFO);
+    info.dwFlags = STARTF_USESHOWWINDOW;
+    info.wShowWindow = SW_HIDE;
+    PROCESS_INFORMATION processInfo;
+    ZeroMemory(&processInfo, sizeof(PROCESS_INFORMATION));
+    // Note: copy command because CreateProcess() can't accept a const string.
+    std::vector<char> cmdCopy(strCommand.begin(), strCommand.end()+1);
+    if (CreateProcess(NULL, begin_ptr(cmdCopy), NULL, NULL, false, 0, NULL, NULL, &info, &processInfo))
+    {
+        // CreateProcess succeeded so wait, check exit code and clean up.
+        WaitForSingleObject(processInfo.hProcess, INFINITE);
+        if(!GetExitCodeProcess(processInfo.hProcess, &nExitCode))
+          nExitCode = 1;
+        CloseHandle(processInfo.hThread);
+        CloseHandle(processInfo.hProcess);
+        nErr = (int)nExitCode; // Had to pass a ULONG to GetExitCodeProcess().
+    }
+    else
+    {
+        // CreateProcess failed.
+        nErr = -1;
+    }
+#else
+    nErr = ::system(strCommand.c_str());
+#endif
     if (nErr)
         LogPrintf("runCommand error: system(%s) returned %d\n", strCommand, nErr);
 }
