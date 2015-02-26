@@ -54,7 +54,7 @@ void ProcessMessageDarksend(CNode* pfrom, std::string& strCommand, CDataStream& 
     if(IsInitialBlockDownload()) return;
 
     if (strCommand == "dsf") { //DarkSend Final tx
-        if (pfrom->nVersion < darkSendPool.MIN_PEER_PROTO_VERSION) {
+        if (pfrom->nVersion < MIN_POOL_PEER_PROTO_VERSION) {
             return;
         }
 
@@ -77,7 +77,7 @@ void ProcessMessageDarksend(CNode* pfrom, std::string& strCommand, CDataStream& 
     }
 
     else if (strCommand == "dsc") { //DarkSend Complete
-        if (pfrom->nVersion < darkSendPool.MIN_PEER_PROTO_VERSION) {
+        if (pfrom->nVersion < MIN_POOL_PEER_PROTO_VERSION) {
             return;
         }
 
@@ -101,7 +101,7 @@ void ProcessMessageDarksend(CNode* pfrom, std::string& strCommand, CDataStream& 
 
     else if (strCommand == "dsa") { //DarkSend Acceptable
 
-        if (pfrom->nVersion < darkSendPool.MIN_PEER_PROTO_VERSION) {
+        if (pfrom->nVersion < MIN_POOL_PEER_PROTO_VERSION) {
             std::string strError = _("Incompatible version.");
             LogPrintf("dsa -- incompatible version! \n");
             pfrom->PushMessage("dssu", darkSendPool.sessionID, darkSendPool.GetState(), darkSendPool.GetEntriesCount(), MASTERNODE_REJECTED, strError);
@@ -132,7 +132,7 @@ void ProcessMessageDarksend(CNode* pfrom, std::string& strCommand, CDataStream& 
 
         if(darkSendPool.sessionUsers == 0) {
             if(pmn->nLastDsq != 0 &&
-                pmn->nLastDsq + mnodeman.CountMasternodesAboveProtocol(darkSendPool.MIN_PEER_PROTO_VERSION)/5 > darkSendPool.nDsqCount){
+                pmn->nLastDsq + mnodeman.CountMasternodesAboveProtocol(MIN_POOL_PEER_PROTO_VERSION)/5 > darkSendPool.nDsqCount){
                 LogPrintf("dsa -- last dsq too recent, must wait. %s \n", pmn->addr.ToString().c_str());
                 std::string strError = _("Last Darksend was too recent.");
                 pfrom->PushMessage("dssu", darkSendPool.sessionID, darkSendPool.GetState(), darkSendPool.GetEntriesCount(), MASTERNODE_REJECTED, strError);
@@ -152,7 +152,7 @@ void ProcessMessageDarksend(CNode* pfrom, std::string& strCommand, CDataStream& 
         }
     } else if (strCommand == "dsq") { //DarkSend Queue
 
-        if (pfrom->nVersion < darkSendPool.MIN_PEER_PROTO_VERSION) {
+        if (pfrom->nVersion < MIN_POOL_PEER_PROTO_VERSION) {
             return;
         }
 
@@ -186,7 +186,7 @@ void ProcessMessageDarksend(CNode* pfrom, std::string& strCommand, CDataStream& 
             if(fDebug) LogPrintf("dsq last %d last2 %d count %d\n", pmn->nLastDsq, pmn->nLastDsq + mnodeman.size()/5, darkSendPool.nDsqCount);
             //don't allow a few nodes to dominate the queuing process
             if(pmn->nLastDsq != 0 &&
-                pmn->nLastDsq + mnodeman.CountMasternodesAboveProtocol(darkSendPool.MIN_PEER_PROTO_VERSION)/5 > darkSendPool.nDsqCount){
+                pmn->nLastDsq + mnodeman.CountMasternodesAboveProtocol(MIN_POOL_PEER_PROTO_VERSION)/5 > darkSendPool.nDsqCount){
                 if(fDebug) LogPrintf("dsq -- masternode sending too many dsq messages. %s \n", pmn->addr.ToString().c_str());
                 return;
             }
@@ -202,7 +202,7 @@ void ProcessMessageDarksend(CNode* pfrom, std::string& strCommand, CDataStream& 
 
     } else if (strCommand == "dsi") { //DarkSend vIn
         std::string error = "";
-        if (pfrom->nVersion < darkSendPool.MIN_PEER_PROTO_VERSION) {
+        if (pfrom->nVersion < MIN_POOL_PEER_PROTO_VERSION) {
             LogPrintf("dsi -- incompatible version! \n");
             error = _("Incompatible version.");
             pfrom->PushMessage("dssu", darkSendPool.sessionID, darkSendPool.GetState(), darkSendPool.GetEntriesCount(), MASTERNODE_REJECTED, error);
@@ -324,7 +324,7 @@ void ProcessMessageDarksend(CNode* pfrom, std::string& strCommand, CDataStream& 
     }
 
     else if (strCommand == "dssub") { //DarkSend Subscribe To
-        if (pfrom->nVersion < darkSendPool.MIN_PEER_PROTO_VERSION) {
+        if (pfrom->nVersion < MIN_POOL_PEER_PROTO_VERSION) {
             return;
         }
 
@@ -337,7 +337,7 @@ void ProcessMessageDarksend(CNode* pfrom, std::string& strCommand, CDataStream& 
 
     else if (strCommand == "dssu") { //DarkSend status update
 
-        if (pfrom->nVersion < darkSendPool.MIN_PEER_PROTO_VERSION) {
+        if (pfrom->nVersion < MIN_POOL_PEER_PROTO_VERSION) {
             return;
         }
 
@@ -365,7 +365,7 @@ void ProcessMessageDarksend(CNode* pfrom, std::string& strCommand, CDataStream& 
     }
 
     else if (strCommand == "dss") { //DarkSend Sign Final Tx
-        if (pfrom->nVersion < darkSendPool.MIN_PEER_PROTO_VERSION) {
+        if (pfrom->nVersion < MIN_POOL_PEER_PROTO_VERSION) {
             return;
         }
 
@@ -1544,7 +1544,7 @@ bool CDarkSendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
 
                 int protocolVersion;
                 if(!dsq.GetProtocolVersion(protocolVersion)) continue;
-                if(protocolVersion < MIN_PEER_PROTO_VERSION) continue;
+                if(protocolVersion < MIN_POOL_PEER_PROTO_VERSION) continue;
 
                 //non-denom's are incompatible
                 if((dsq.nDenom & (1 << 4))) continue;
@@ -1615,13 +1615,13 @@ bool CDarkSendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
                     continue;
                 }
             }
-            if(pmn->protocolVersion < darkSendPool.MIN_PEER_PROTO_VERSION) {
+            if(pmn->protocolVersion < MIN_POOL_PEER_PROTO_VERSION) {
                 i++;
                 continue;
             }
 
             if(pmn->nLastDsq != 0 &&
-                pmn->nLastDsq + mnodeman.CountMasternodesAboveProtocol(darkSendPool.MIN_PEER_PROTO_VERSION)/5 > darkSendPool.nDsqCount){
+                pmn->nLastDsq + mnodeman.CountMasternodesAboveProtocol(MIN_POOL_PEER_PROTO_VERSION)/5 > darkSendPool.nDsqCount){
                 i++;
                 continue;
             }
@@ -2199,7 +2199,7 @@ void ThreadCheckDarkSendPool()
                 LOCK(cs_vNodes);
                 BOOST_FOREACH(CNode* pnode, vNodes)
                 {
-                    if (pnode->nVersion >= darkSendPool.MIN_PEER_PROTO_VERSION) {
+                    if (pnode->nVersion >= MIN_POOL_PEER_PROTO_VERSION) {
 
                         //keep track of who we've asked for the list
                         if(pnode->HasFulfilledRequest("mnsync")) continue;
