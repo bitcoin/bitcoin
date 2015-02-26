@@ -24,8 +24,9 @@ CTxMemPoolEntry::CTxMemPoolEntry():
 
 CTxMemPoolEntry::CTxMemPoolEntry(const CTransaction& _tx, const CAmount& _nFee,
                                  int64_t _nTime, double _dPriority,
-                                 unsigned int _nHeight):
-    tx(_tx), nFee(_nFee), nTime(_nTime), dPriority(_dPriority), nHeight(_nHeight)
+                                 unsigned int _nHeight, unsigned int _flags):
+    tx(_tx), nFee(_nFee), nTime(_nTime), dPriority(_dPriority), nHeight(_nHeight),
+    validationFlags(_flags)
 {
     nTxSize = ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION);
 
@@ -635,6 +636,15 @@ bool CTxMemPool::lookup(uint256 hash, CTransaction& result) const
     if (i == mapTx.end()) return false;
     result = i->second.GetTx();
     return true;
+}
+
+bool CTxMemPool::validated(const uint256& hash, unsigned int validationFlags) const
+{
+    LOCK(cs);
+    map<uint256, CTxMemPoolEntry>::const_iterator i = mapTx.find(hash);
+    if (i == mapTx.end()) return false;
+    unsigned int prevFlags = i->second.GetValidationFlags();
+    return (prevFlags & validationFlags) == validationFlags;
 }
 
 CFeeRate CTxMemPool::estimateFee(int nBlocks) const
