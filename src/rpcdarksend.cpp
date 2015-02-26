@@ -561,7 +561,7 @@ Value masternodelist(const Array& params, bool fHelp)
 
         std::string strAddr = mn.addr.ToString().c_str();
         if(strMode == "active"){
-            if(strFilter !="" && stoi(strFilter) != mn.IsEnabled()) continue;
+            if(strFilter !="" && strFilter != boost::lexical_cast<std::string>(mn.IsEnabled())) continue;
             obj.push_back(Pair(strAddr,       (int)mn.IsEnabled()));
         } else if (strMode == "vin") {
             if(strFilter !="" && mn.vin.prevout.hash.ToString().find(strFilter) == string::npos) continue;
@@ -576,7 +576,7 @@ Value masternodelist(const Array& params, bool fHelp)
             if(strFilter !="" && address2.ToString().find(strFilter) == string::npos) continue;
             obj.push_back(Pair(strAddr,       address2.ToString().c_str()));
         } else if (strMode == "protocol") {
-            if(strFilter !="" && stoi(strFilter) != mn.protocolVersion) continue;
+            if(strFilter !="" && strFilter != boost::lexical_cast<std::string>(mn.protocolVersion)) continue;
             obj.push_back(Pair(strAddr,       (int64_t)mn.protocolVersion));
         } else if (strMode == "lastseen") {
             obj.push_back(Pair(strAddr,       (int64_t)mn.lastTimeSeen));
