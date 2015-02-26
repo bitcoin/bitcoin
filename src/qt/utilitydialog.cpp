@@ -29,7 +29,6 @@ HelpMessageDialog::HelpMessageDialog(QWidget *parent, bool about) :
     ui(new Ui::HelpMessageDialog)
 {
     ui->setupUi(this);
-    GUIUtil::restoreWindowGeometry("nHelpMessageDialogWindow", this->size(), this);
 
     QString version = tr("Bitcoin Core") + " " + tr("version") + " " + QString::fromStdString(FormatFullVersion());
     /* On x86 add a bit specifier to the version so that users can distinguish between
@@ -143,7 +142,6 @@ HelpMessageDialog::HelpMessageDialog(QWidget *parent, bool about) :
 
 HelpMessageDialog::~HelpMessageDialog()
 {
-    GUIUtil::saveWindowGeometry("nHelpMessageDialogWindow", this);
     delete ui;
 }
 
