@@ -1,2 +1,3 @@
 debian/manpages/bitcoind.1
 debian/manpages/bitcoin.conf.5
+debian/manpages/bitcoin-cli.1
