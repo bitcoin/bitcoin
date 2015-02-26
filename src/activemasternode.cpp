@@ -2,6 +2,7 @@
 #include "core.h"
 #include "protocol.h"
 #include "activemasternode.h"
+#include "masternodeman.h"
 #include <boost/lexical_cast.hpp>
 
 //
@@ -200,16 +201,13 @@ bool CActiveMasternode::Dseep(CTxIn vin, CService service, CKey keyMasternode, C
     }
 
     // Update Last Seen timestamp in masternode list
-    bool found = false;
-    BOOST_FOREACH(CMasterNode& mn, vecMasternodes) {
-        //LogPrintf(" -- %s\n", mn.vin.ToString().c_str());
-        if(mn.vin == vin) {
-            found = true;
-            mn.UpdateLastSeen();
-        }
+    CMasternode* pmn = mnodeman.Find(vin);
+    if(pmn != NULL)
+    {
+        pmn->UpdateLastSeen();
     }
-
-    if(!found){
+    else
+    {
     	// Seems like we are trying to send a ping while the masternode is not registered in the network
     	retErrorMessage = "Darksend Masternode List doesn't include our masternode, Shutting down masternode pinging service! " + vin.ToString();
     	LogPrintf("CActiveMasternode::Dseep() - Error: %s\n", retErrorMessage.c_str());
@@ -269,16 +267,13 @@ bool CActiveMasternode::Register(CTxIn vin, CService service, CKey keyCollateral
 		return false;
 	}
 
-    bool found = false;
-    BOOST_FOREACH(CMasterNode& mn, vecMasternodes)
-        if(mn.vin == vin)
-            found = true;
-
-    if(!found) {
+    CMasternode* pmn = mnodeman.Find(vin);
+    if(pmn == NULL)
+    {
         LogPrintf("CActiveMasternode::Register() - Adding to masternode list service: %s - vin: %s\n", service.ToString().c_str(), vin.ToString().c_str());
-        CMasterNode mn(service, vin, pubKeyCollateralAddress, vchMasterNodeSignature, masterNodeSignatureTime, pubKeyMasternode, PROTOCOL_VERSION);
+        CMasternode mn(service, vin, pubKeyCollateralAddress, vchMasterNodeSignature, masterNodeSignatureTime, pubKeyMasternode, PROTOCOL_VERSION);
         mn.UpdateLastSeen(masterNodeSignatureTime);
-        vecMasternodes.push_back(mn);
+        mnodeman.Add(mn);
     }
 
     //send to all peers
@@ -377,32 +372,6 @@ vector<COutput> CActiveMasternode::SelectCoinsMasternode()
     }
     return filteredCoins;
 }
-
-
-/* select coins with specified transaction hash and output index */
-/*
-bool CActiveMasternode::SelectCoinsMasternode(CTxIn& vin, int64& nValueIn, CScript& pubScript, std::string strTxHash, std::string strOutputIndex)
-{
-	CWalletTx ctx;
-
-	// Convert configuration strings
-	uint256 txHash;
-	int outputIndex;
-	txHash.SetHex(strTxHash);
-	std::istringstream(strOutputIndex) >> outputIndex;
-
-	if(pwalletMain->GetTransaction(txHash, ctx)) {
-		if(ctx.vout[outputIndex].nValue == 1000*COIN) { //exactly
-			vin = CTxIn(ctx.GetHash(), outputIndex);
-			pubScript = ctx.vout[outputIndex].scriptPubKey; // the inputs PubKey
-			nValueIn = ctx.vout[outputIndex].nValue;
-		return true;
-		}
-	}
-
-    return false;
-}
-*/
 
 // when starting a masternode, this can enable to run as a hot wallet with no funds
 bool CActiveMasternode::EnableHotColdMasterNode(CTxIn& newVin, CService& newService)

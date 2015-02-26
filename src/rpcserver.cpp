@@ -270,11 +270,12 @@ static const CRPCCommand vRPCCommands[] =
     { "verifymessage",          &verifymessage,          false,     false,      false },
 
     /* Darkcoin features */
-    { "darksend",               &darksend,               false,     false,      true },
     { "spork",                  &spork,                  true,      false,      false },
-    { "masternode",             &masternode,             true,      false,      true },
-
+    { "masternode",             &masternode,             true,      false,      true  },
+    { "masternodelist",         &masternodelist,         true,      false,      false },
 #ifdef ENABLE_WALLET
+    { "darksend",               &darksend,               false,     false,      true  },
+
     /* Wallet */
     { "addmultisigaddress",     &addmultisigaddress,     false,     false,      true },
     { "backupwallet",           &backupwallet,           true,      false,      true },
