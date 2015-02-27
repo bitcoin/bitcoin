@@ -332,9 +332,9 @@ if test x$use_comparison_tool_reorg_tests != xno; then
   if test x$use_comparison_tool = x; then
     AC_MSG_ERROR(["comparison tool reorg tests but comparison tool was not specified"])
   fi
-  AC_SUBST(COMPARISON_TOOL_REORG_TESTS, 1)
+  AC_SUBST([COMPARISON_TOOL_REORG_TESTS], 1)
 else
-  AC_SUBST(COMPARISON_TOOL_REORG_TESTS, 0)
+  AC_SUBST([COMPARISON_TOOL_REORG_TESTS], 0)
 fi
 
 if test x$use_lcov = xyes; then
@@ -354,7 +354,7 @@ if test x$use_lcov = xyes; then
     AC_MSG_ERROR(["lcov testing requested but comparison tool was not specified"])
   fi
   LCOV="$LCOV --gcov-tool=$GCOV"
-  AX_CHECK_COMPILE_FLAG([--coverage],[CXXFLAGS="$CXXFLAGS --coverage"],
+  AX_CHECK_COMPILE_FLAG([--coverage], [CXXFLAGS="$CXXFLAGS --coverage"],
     [AC_MSG_ERROR(["lcov testing requested but --coverage flag does not work"])])
 fi
 
@@ -393,7 +393,7 @@ if test x$use_glibc_compat != xno; then
 
   dnl __fdelt_chk's params and return type have changed from long unsigned int to long int.
   dnl See which one is present here.
-  AC_MSG_CHECKING(__fdelt_chk type)
+  AC_MSG_CHECKING([__fdelt_chk type])
   AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#ifdef _FORTIFY_SOURCE
                     #undef _FORTIFY_SOURCE
                   #endif
@@ -402,21 +402,18 @@ if test x$use_glibc_compat != xno; then
      extern "C" long unsigned int __fdelt_warn(long unsigned int);]],[[]])],
     [ fdelt_type="long unsigned int"],
     [ fdelt_type="long int"])
-  AC_MSG_RESULT($fdelt_type)
-  AC_DEFINE_UNQUOTED(FDELT_TYPE, $fdelt_type,[parameter and return value type for __fdelt_chk])
+  AC_MSG_RESULT([$fdelt_type])
+  AC_DEFINE_UNQUOTED([FDELT_TYPE], [$fdelt_type], [parameter and return value type for __fdelt_chk])
 
 fi
 
 if test x$use_hardening != xno; then
-  AX_CHECK_COMPILE_FLAG([-Wstack-protector],[HARDENED_CXXFLAGS="$HARDENED_CXXFLAGS -Wstack-protector"])
-  AX_CHECK_COMPILE_FLAG([-fstack-protector-all],[HARDENED_CXXFLAGS="$HARDENED_CXXFLAGS -fstack-protector-all"])
+  AX_CHECK_COMPILE_FLAG([-Wstack-protector], [HARDENED_CXXFLAGS="$HARDENED_CXXFLAGS -Wstack-protector"])
+  AX_CHECK_COMPILE_FLAG([-fstack-protector-all], [HARDENED_CXXFLAGS="$HARDENED_CXXFLAGS -fstack-protector-all"])
 
-  AX_CHECK_PREPROC_FLAG([-D_FORTIFY_SOURCE=2],[
-    AX_CHECK_PREPROC_FLAG([-U_FORTIFY_SOURCE],[
-      HARDENED_CPPFLAGS="$HARDENED_CPPFLAGS -U_FORTIFY_SOURCE"
-    ])
-    HARDENED_CPPFLAGS="$HARDENED_CPPFLAGS -D_FORTIFY_SOURCE=2"
-  ])
+  AX_CHECK_PREPROC_FLAG([-D_FORTIFY_SOURCE=2],
+    [AX_CHECK_PREPROC_FLAG([-U_FORTIFY_SOURCE], [HARDENED_CPPFLAGS="$HARDENED_CPPFLAGS -U_FORTIFY_SOURCE"])]
+    [HARDENED_CPPFLAGS="$HARDENED_CPPFLAGS -D_FORTIFY_SOURCE=2"])
 
   AX_CHECK_LINK_FLAG([[-Wl,--dynamicbase]], [HARDENED_LDFLAGS="$HARDENED_LDFLAGS -Wl,--dynamicbase"])
   AX_CHECK_LINK_FLAG([[-Wl,--nxcompat]], [HARDENED_LDFLAGS="$HARDENED_LDFLAGS -Wl,--nxcompat"])
@@ -425,13 +422,13 @@ if test x$use_hardening != xno; then
 
   if test x$TARGET_OS != xwindows; then
     dnl All windows code is PIC, forcing it on just adds useless compile warnings
-    AX_CHECK_COMPILE_FLAG([-fPIE],[HARDENED_CXXFLAGS="$HARDENED_CXXFLAGS -fPIE"])
+    AX_CHECK_COMPILE_FLAG([-fPIE], [HARDENED_CXXFLAGS="$HARDENED_CXXFLAGS -fPIE"])
     AX_CHECK_LINK_FLAG([[-pie]], [HARDENED_LDFLAGS="$HARDENED_LDFLAGS -pie"])
   fi
 
   case $host in
     *mingw*)
-       AC_CHECK_LIB([ssp],      [main],, AC_MSG_ERROR([lib missing]))
+       AC_CHECK_LIB([ssp], [main], [], AC_MSG_ERROR([lib missing]))
     ;;
   esac
 
@@ -447,15 +444,16 @@ if test x$TARGET_OS = xdarwin; then
 fi
 
 AC_CHECK_HEADERS([endian.h byteswap.h stdio.h stdlib.h unistd.h strings.h sys/types.h sys/stat.h sys/select.h sys/prctl.h])
-AC_SEARCH_LIBS([getaddrinfo_a], [anl], [AC_DEFINE(HAVE_GETADDRINFO_A, 1, [Define this symbol if you have getaddrinfo_a])])
-AC_SEARCH_LIBS([inet_pton], [nsl resolv], [AC_DEFINE(HAVE_INET_PTON, 1, [Define this symbol if you have inet_pton])])
+
+AC_SEARCH_LIBS([getaddrinfo_a], [anl], [AC_DEFINE([HAVE_GETADDRINFO_A], [1], [Define this symbol if you have getaddrinfo_a])])
+AC_SEARCH_LIBS([inet_pton], [nsl resolv], [AC_DEFINE([HAVE_INET_PTON], [1], [Define this symbol if you have inet_pton])])
 
 AC_CHECK_DECLS([strnlen])
 
-AC_CHECK_DECLS([le16toh, le32toh, le64toh, htole16, htole32, htole64, be16toh, be32toh, be64toh, htobe16, htobe32, htobe64],,,
-		[#if HAVE_ENDIAN_H
-                 #include <endian.h>
-                 #endif])
+AC_CHECK_DECLS([le16toh, le32toh, le64toh, htole16, htole32, htole64, be16toh, be32toh, be64toh, htobe16, htobe32, htobe64],[],[],
+  [#if HAVE_ENDIAN_H
+  #include <endian.h>
+  #endif])
 
 AC_CHECK_DECLS([bswap_16, bswap_32, bswap_64],,,
 		[#if HAVE_BYTESWAP_H
@@ -463,32 +461,27 @@ AC_CHECK_DECLS([bswap_16, bswap_32, bswap_64],,,
                  #endif])
 
 dnl Check for MSG_NOSIGNAL
-AC_MSG_CHECKING(for MSG_NOSIGNAL)
+AC_MSG_CHECKING([for MSG_NOSIGNAL])
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <sys/socket.h>]],
- [[ int f = MSG_NOSIGNAL; ]])],
- [ AC_MSG_RESULT(yes); AC_DEFINE(HAVE_MSG_NOSIGNAL, 1,[Define this symbol if you have MSG_NOSIGNAL]) ],
- [ AC_MSG_RESULT(no)]
-)
+                       [[ int f = MSG_NOSIGNAL; ]])],
+  [AC_DEFINE([HAVE_MSG_NOSIGNAL], [1], [Define this symbol if you have MSG_NOSIGNAL])
+   AC_MSG_RESULT(yes)],
+  [AC_MSG_RESULT(no)])
 
-AC_SEARCH_LIBS([clock_gettime],[rt])
+AC_SEARCH_LIBS([clock_gettime], [rt])
 
 AC_MSG_CHECKING([for visibility attribute])
 AC_LINK_IFELSE([AC_LANG_SOURCE([
-  int foo_def( void ) __attribute__((visibility("default")));
-  int main(){}
-  ])],
-  [
-    AC_DEFINE(HAVE_VISIBILITY_ATTRIBUTE,1,[Define if the visibility attribute is supported.])
-    AC_MSG_RESULT(yes)
-  ],
-  [
-    AC_MSG_RESULT(no)
-    if test x$use_reduce_exports = xyes; then
-      AC_MSG_ERROR([Cannot find a working visibility attribute. Use --disable-reduce-exports.])
-    fi
-  ]
-)
-
+                    int foo_def( void ) __attribute__((visibility("default")));
+                    int main(){}
+                    ])],
+  [AC_DEFINE([HAVE_VISIBILITY_ATTRIBUTE], [1], [Define if the visibility attribute is supported.])
+   AC_MSG_RESULT(yes)],
+  [AC_MSG_RESULT(no)
+   if test x$use_reduce_exports = xyes; then
+     AC_MSG_ERROR([Cannot find a working visibility attribute. Use --disable-reduce-exports.])
+   fi
+  ])
 if test x$use_reduce_exports = xyes; then
   AX_CHECK_COMPILE_FLAG([-fvisibility=hidden],[RE_CXXFLAGS="-fvisibility=hidden"],
   [AC_MSG_ERROR([Cannot set default symbol visibility. Use --disable-reduce-exports.])])
