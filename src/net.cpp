@@ -13,6 +13,7 @@
 #include "chainparams.h"
 #include "clientversion.h"
 #include "primitives/transaction.h"
+#include "random.h"
 #include "ui_interface.h"
 #include "crypto/common.h"
 
@@ -800,6 +801,7 @@ void ThreadSocketHandler()
                 struct sockaddr_storage sockaddr;
                 socklen_t len = sizeof(sockaddr);
                 SOCKET hSocket = accept(hListenSocket.socket, (struct sockaddr*)&sockaddr, &len);
+                RandEvent(RAND_EVENT_NETWORK, (const unsigned char*)&sockaddr, len);
                 CAddress addr;
                 int nInbound = 0;
 
@@ -879,6 +881,7 @@ void ThreadSocketHandler()
                             pnode->nLastRecv = GetTime();
                             pnode->nRecvBytes += nBytes;
                             pnode->RecordBytesRecv(nBytes);
+                            RandEvent(RAND_EVENT_NETWORK, (const unsigned char*)&pnode, sizeof(pnode));
                         }
                         else if (nBytes == 0)
                         {

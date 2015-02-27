@@ -34,7 +34,7 @@ bool CKey::Check(const unsigned char *vch) {
 }
 
 void CKey::MakeNewKey(bool fCompressedIn) {
-    RandAddSeedPerfmon();
+    RandSeedSystem();
     do {
         GetRandBytes(vch, sizeof(vch));
     } while (!Check(vch));

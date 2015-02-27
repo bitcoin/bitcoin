@@ -831,6 +831,8 @@ bool AppInit2(boost::thread_group& threadGroup)
             threadGroup.create_thread(&ThreadScriptCheck);
     }
 
+    RandSeedSystem(true);
+
     /* Start the RPC server already.  It will be started in "warmup" mode
      * and not really process calls already (but it will signify connections
      * that the server is there and will be ready later).  Warmup mode will
@@ -1208,8 +1210,6 @@ bool AppInit2(boost::thread_group& threadGroup)
         if (fFirstRun)
         {
             // Create new keyUser and set as default key
-            RandAddSeedPerfmon();
-
             CPubKey newDefaultKey;
             if (pwalletMain->GetKeyFromPool(newDefaultKey)) {
                 pwalletMain->SetDefaultKey(newDefaultKey);
@@ -1307,7 +1307,6 @@ bool AppInit2(boost::thread_group& threadGroup)
     if (!strErrors.str().empty())
         return InitError(strErrors.str());
 
-    RandAddSeedPerfmon();
 
     //// debug print
     LogPrintf("mapBlockIndex.size() = %u\n",   mapBlockIndex.size());

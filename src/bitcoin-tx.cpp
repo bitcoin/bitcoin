@@ -8,6 +8,7 @@
 #include "primitives/transaction.h"
 #include "core_io.h"
 #include "coins.h"
+#include "random.h"
 #include "keystore.h"
 #include "script/script.h"
 #include "script/sign.h"
@@ -602,6 +603,7 @@ static int CommandLineRawTx(int argc, char* argv[])
 int main(int argc, char* argv[])
 {
     SetupEnvironment();
+    RandSeedSystem(false);
 
     try {
         if(!AppInitRawTx(argc, argv))
