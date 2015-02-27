@@ -52,17 +52,17 @@ dnl Libtool init checks.
 LT_INIT([pic-only])
 
 dnl Check/return PATH for base programs.
-AC_PATH_TOOL(AR, ar)
-AC_PATH_TOOL(RANLIB, ranlib)
-AC_PATH_TOOL(STRIP, strip)
-AC_PATH_TOOL(GCOV, gcov)
-AC_PATH_PROG(LCOV, lcov)
-AC_PATH_PROG(JAVA, java)
-AC_PATH_PROG(GENHTML, genhtml)
-AC_PATH_PROG([GIT], [git])
-AC_PATH_PROG(CCACHE,ccache)
-AC_PATH_PROG(XGETTEXT,xgettext)
-AC_PATH_PROG(HEXDUMP,hexdump)
+AC_PATH_TOOL([AR],      ar)
+AC_PATH_PROG([CCACHE],  ccache)
+AC_PATH_TOOL([GCOV],    gcov)
+AC_PATH_PROG([GENHTML], genhtml)
+AC_PATH_PROG([GIT],     git)
+AC_PATH_PROG([HEXDUMP], hexdump)
+AC_PATH_PROG([JAVA],    java)
+AC_PATH_PROG([LCOV],    lcov)
+AC_PATH_TOOL([RANLIB],  ranlib)
+AC_PATH_TOOL([STRIP],   strip)
+AC_PATH_PROG([XGETTEXT],xgettext)
 
 dnl pkg-config check.
 PKG_PROG_PKG_CONFIG
@@ -70,61 +70,61 @@ PKG_PROG_PKG_CONFIG
 dnl Enable optional features:
 AC_ARG_ENABLE([wallet],
   [AS_HELP_STRING([--enable-wallet],
-  [enable wallet (default is yes)])],
+     [enable wallet (default is yes)])],
   [enable_wallet=$enableval],
   [enable_wallet=yes])
 
 AC_ARG_ENABLE([upnp-default],
   [AS_HELP_STRING([--enable-upnp-default],
-  [if UPNP is enabled, turn it on at startup (default is no)])],
+     [if UPNP is enabled, turn it on at startup (default is no)])],
   [use_upnp_default=$enableval],
   [use_upnp_default=no])
 
 AC_ARG_ENABLE([tests],
   [AS_HELP_STRING([--enable-tests],
-  [compile tests (default is yes)])],
+     [compile tests (default is yes)])],
   [use_tests=$enableval],
   [use_tests=yes])
 
 AC_ARG_ENABLE([comparison-tool-reorg-tests],
   [AS_HELP_STRING([--enable-comparison-tool-reorg-tests],
-  [enable expensive reorg tests in the comparison tool (default no)])],
+     [enable expensive reorg tests in the comparison tool (default no)])],
   [use_comparison_tool_reorg_tests=$enableval],
   [use_comparison_tool_reorg_tests=no])
 
 AC_ARG_ENABLE([hardening],
   [AS_HELP_STRING([--enable-hardening],
-  [attempt to harden the resulting executables (default is yes)])],
+     [attempt to harden the resulting executables (default is yes)])],
   [use_hardening=$enableval],
   [use_hardening=yes])
 
 AC_ARG_ENABLE([reduce-exports],
   [AS_HELP_STRING([--enable-reduce-exports],
-  [attempt to reduce exported symbols in the resulting executables (default is no)])],
+     [attempt to reduce exported symbols in the resulting executables (default is no)])],
   [use_reduce_exports=$enableval],
   [use_reduce_exports=no])
 
 AC_ARG_ENABLE([ccache],
   [AS_HELP_STRING([--enable-ccache],
-  [use ccache for building (default is yes if ccache is found)])],
+     [use ccache for building (default is yes if ccache is found)])],
   [use_ccache=$enableval],
   [use_ccache=auto])
 
 AC_ARG_ENABLE([lcov],
   [AS_HELP_STRING([--enable-lcov],
-  [enable lcov testing (default is no)])],
+     [enable lcov testing (default is no)])],
   [use_lcov=yes],
   [use_lcov=no])
 
 AC_ARG_ENABLE([glibc-back-compat],
   [AS_HELP_STRING([--enable-glibc-back-compat],
-  [enable backwards compatibility with glibc])],
+     [enable backwards compatibility with glibc])],
   [use_glibc_compat=$enableval],
   [use_glibc_compat=no])
 
 AC_ARG_ENABLE([debug],
   [AS_HELP_STRING([--enable-debug],
-  [use debug compiler flags and macros (default is no)])],
+     [use debug compiler flags and macros (default is no)])],
   [enable_debug=$enableval],
   [enable_debug=no])
 
@@ -149,43 +149,43 @@ CPPFLAGS="$CPPFLAGS -DBOOST_SPIRIT_THREADSAFE -DHAVE_BUILD_INFO -D__STDC_FORMAT_
 dnl --with(out) optionals:
 AC_ARG_WITH([libs],
   [AS_HELP_STRING([--with-libs],
-  [build libraries (default=yes)])],
+     [build libraries (default=yes)])],
   [build_bitcoin_libs=$withval],
   [build_bitcoin_libs=yes])
 
 AC_ARG_WITH([utils],
   [AS_HELP_STRING([--with-utils],
-  [build bitcoin-cli bitcoin-tx (default=yes)])],
+     [build bitcoin-cli bitcoin-tx (default=yes)])],
   [build_bitcoin_utils=$withval],
   [build_bitcoin_utils=yes])
 
 AC_ARG_WITH([daemon],
   [AS_HELP_STRING([--with-daemon],
-  [build bitcoind daemon (default=yes)])],
+     [build bitcoind daemon (default=yes)])],
   [build_bitcoind=$withval],
   [build_bitcoind=yes])
 
 AC_ARG_WITH([miniupnpc],
   [AS_HELP_STRING([--with-miniupnpc],
-  [enable UPNP (default is yes if libminiupnpc is found)])],
+     [enable UPNP (default is yes if libminiupnpc is found)])],
   [use_upnp=$withval],
   [use_upnp=auto])
 
 AC_ARG_WITH([comparison-tool],
   [AS_HELP_STRING([--with-comparison-tool],
-  [path to java comparison tool (requires --enable-tests)])],
+     [path to java comparison tool (requires --enable-tests)])],
   [use_comparison_tool=$withval],
   [use_comparison_tool=no])
 
 AC_ARG_WITH([qrencode],
   [AS_HELP_STRING([--with-qrencode],
-  [enable QR code support (default is yes if qt is enabled and libqrencode is found)])],
+     [enable QR code support (default is yes if qt is enabled and libqrencode is found)])],
   [use_qr=$withval],
   [use_qr=auto])
 
 AC_ARG_WITH([protoc-bindir],
   [AS_HELP_STRING([--with-protoc-bindir=BIN_DIR],
-  [specify protoc bin path])],
+     [specify protoc bin path])],
   [protoc_bin_path=$withval],
   [])
 
@@ -200,25 +200,25 @@ case $host in
      use_pkgconfig=no
 
      TARGET_OS=windows
-     AC_CHECK_LIB([mingwthrd],      [main],, AC_MSG_ERROR(lib missing))
-     AC_CHECK_LIB([kernel32],      [main],, AC_MSG_ERROR(lib missing))
-     AC_CHECK_LIB([user32],      [main],, AC_MSG_ERROR(lib missing))
-     AC_CHECK_LIB([gdi32],      [main],, AC_MSG_ERROR(lib missing))
-     AC_CHECK_LIB([comdlg32],      [main],, AC_MSG_ERROR(lib missing))
-     AC_CHECK_LIB([winspool],      [main],, AC_MSG_ERROR(lib missing))
-     AC_CHECK_LIB([winmm],      [main],, AC_MSG_ERROR(lib missing))
-     AC_CHECK_LIB([shell32],      [main],, AC_MSG_ERROR(lib missing))
-     AC_CHECK_LIB([comctl32],      [main],, AC_MSG_ERROR(lib missing))
-     AC_CHECK_LIB([ole32],      [main],, AC_MSG_ERROR(lib missing))
-     AC_CHECK_LIB([oleaut32],      [main],, AC_MSG_ERROR(lib missing))
-     AC_CHECK_LIB([uuid],      [main],, AC_MSG_ERROR(lib missing))
-     AC_CHECK_LIB([rpcrt4],      [main],, AC_MSG_ERROR(lib missing))
-     AC_CHECK_LIB([advapi32],      [main],, AC_MSG_ERROR(lib missing))
-     AC_CHECK_LIB([ws2_32],      [main],, AC_MSG_ERROR(lib missing))
-     AC_CHECK_LIB([mswsock],      [main],, AC_MSG_ERROR(lib missing))
-     AC_CHECK_LIB([shlwapi],      [main],, AC_MSG_ERROR(lib missing))
-     AC_CHECK_LIB([iphlpapi],      [main],, AC_MSG_ERROR(lib missing))
-     AC_CHECK_LIB([crypt32],      [main],, AC_MSG_ERROR(lib missing))
+     AC_CHECK_LIB([mingwthrd],[main],[], AC_MSG_ERROR([lib missing]))
+     AC_CHECK_LIB([kernel32], [main],[], AC_MSG_ERROR([lib missing]))
+     AC_CHECK_LIB([user32],   [main],[], AC_MSG_ERROR([lib missing]))
+     AC_CHECK_LIB([gdi32],    [main],[], AC_MSG_ERROR([lib missing]))
+     AC_CHECK_LIB([comdlg32], [main],[], AC_MSG_ERROR([lib missing]))
+     AC_CHECK_LIB([winspool], [main],[], AC_MSG_ERROR([lib missing]))
+     AC_CHECK_LIB([winmm],    [main],[], AC_MSG_ERROR([lib missing]))
+     AC_CHECK_LIB([shell32],  [main],[], AC_MSG_ERROR([lib missing]))
+     AC_CHECK_LIB([comctl32], [main],[], AC_MSG_ERROR([lib missing]))
+     AC_CHECK_LIB([ole32],    [main],[], AC_MSG_ERROR([lib missing]))
+     AC_CHECK_LIB([oleaut32], [main],[], AC_MSG_ERROR([lib missing]))
+     AC_CHECK_LIB([uuid],     [main],[], AC_MSG_ERROR([lib missing]))
+     AC_CHECK_LIB([rpcrt4],   [main],[], AC_MSG_ERROR([lib missing]))
+     AC_CHECK_LIB([advapi32], [main],[], AC_MSG_ERROR([lib missing]))
+     AC_CHECK_LIB([ws2_32],   [main],[], AC_MSG_ERROR([lib missing]))
+     AC_CHECK_LIB([mswsock],  [main],[], AC_MSG_ERROR([lib missing]))
+     AC_CHECK_LIB([shlwapi],  [main],[], AC_MSG_ERROR([lib missing]))
+     AC_CHECK_LIB([iphlpapi], [main],[], AC_MSG_ERROR([lib missing]))
+     AC_CHECK_LIB([crypt32],  [main],[], AC_MSG_ERROR([lib missing]))
 
      dnl -static is interpreted by libtool, where it has a different meaning.
      dnl In libtool-speak, it's -all-static.
@@ -226,12 +226,12 @@ case $host in
 
      AC_PATH_PROG([MAKENSIS], [makensis], none)
      if test x$MAKENSIS = xnone; then
-       AC_MSG_WARN("makensis not found. Cannot create installer.")
+       AC_MSG_WARN(["makensis not found. Cannot create installer."])
      fi
 
-     AC_PATH_TOOL(WINDRES, windres, none)
+     AC_PATH_TOOL([WINDRES], [windres], none)
      if test x$WINDRES = xnone; then
-       AC_MSG_ERROR("windres not found")
+       AC_MSG_ERROR(["windres not found"])
      fi
 
      CPPFLAGS="$CPPFLAGS -D_MT -DWIN32 -D_WINDOWS -DBOOST_THREAD_USE_LIB"
@@ -242,9 +242,9 @@ case $host in
      case $host in
        i?86-*) WINDOWS_BITS=32 ;;
        x86_64-*) WINDOWS_BITS=64 ;;
-       *) AC_MSG_ERROR("Could not determine win32/win64 for installer") ;;
+       *) AC_MSG_ERROR(["Could not determine win32/win64 for installer"]) ;;
      esac
-     AC_SUBST(WINDOWS_BITS)
+     AC_SUBST([WINDOWS_BITS])
 
      dnl libtool insists upon adding -nostdlib and a list of objects/libs to link against.
      dnl That breaks our ability to build dll's with static libgcc/libstdc++/libssp. Override
@@ -260,7 +260,7 @@ case $host in
      LEVELDB_TARGET_FLAGS="TARGET_OS=Darwin"
      if  test x$cross_compiling != xyes; then
        BUILD_OS=darwin
-       AC_CHECK_PROG([PORT],port, port)
+       AC_CHECK_PROG([PORT], [port], port)
        if test x$PORT = xport; then
          dnl Add default macports paths
          CPPFLAGS="$CPPFLAGS -isystem /opt/local/include"
@@ -271,7 +271,7 @@ case $host in
          fi
        fi
 
-       AC_CHECK_PROG([BREW],brew, brew)
+       AC_CHECK_PROG([BREW], [brew], brew)
        if test x$BREW = xbrew; then
          dnl These Homebrew packages may be keg-only, meaning that they won't be found
          dnl in expected paths because they may conflict with system files. Ask
@@ -303,7 +303,7 @@ case $host in
          *)
            AC_PATH_TOOL([INSTALLNAMETOOL], [install_name_tool], install_name_tool)
            AC_PATH_TOOL([OTOOL], [otool], otool)
-           AC_PATH_PROGS([GENISOIMAGE], [genisoimage mkisofs],genisoimage)
+           AC_PATH_PROGS([GENISOIMAGE], [genisoimage mkisofs], genisoimage)
 
            dnl libtool will try to strip the static lib, which is a problem for
            dnl cross-builds because strip attempts to call a hard-coded ld,
@@ -325,12 +325,12 @@ case $host in
 esac
 
 if test x$use_comparison_tool != xno; then
-  AC_SUBST(JAVA_COMPARISON_TOOL, $use_comparison_tool)
+  AC_SUBST([JAVA_COMPARISON_TOOL], [$use_comparison_tool])
 fi
 
 if test x$use_comparison_tool_reorg_tests != xno; then
   if test x$use_comparison_tool = x; then
-    AC_MSG_ERROR("comparison tool reorg tests but comparison tool was not specified")
+    AC_MSG_ERROR(["comparison tool reorg tests but comparison tool was not specified"])
   fi
   AC_SUBST(COMPARISON_TOOL_REORG_TESTS, 1)
 else
@@ -339,23 +339,23 @@ fi
 
 if test x$use_lcov = xyes; then
   if test x$LCOV = x; then
-    AC_MSG_ERROR("lcov testing requested but lcov not found")
+    AC_MSG_ERROR(["lcov testing requested but lcov not found"])
   fi
   if test x$GCOV = x; then
-    AC_MSG_ERROR("lcov testing requested but gcov not found")
+    AC_MSG_ERROR(["lcov testing requested but gcov not found"])
   fi
   if test x$JAVA = x; then
-    AC_MSG_ERROR("lcov testing requested but java not found")
+    AC_MSG_ERROR(["lcov testing requested but java not found"])
   fi
   if test x$GENHTML = x; then
-    AC_MSG_ERROR("lcov testing requested but genhtml not found")
+    AC_MSG_ERROR(["lcov testing requested but genhtml not found"])
   fi
   if test x$use_comparison_tool = x; then
-    AC_MSG_ERROR("lcov testing requested but comparison tool was not specified")
+    AC_MSG_ERROR(["lcov testing requested but comparison tool was not specified"])
   fi
   LCOV="$LCOV --gcov-tool=$GCOV"
   AX_CHECK_COMPILE_FLAG([--coverage],[CXXFLAGS="$CXXFLAGS --coverage"],
-    [AC_MSG_ERROR("lcov testing requested but --coverage flag does not work")])
+    [AC_MSG_ERROR(["lcov testing requested but --coverage flag does not work"])])
 fi
 
 dnl Check for endianness
@@ -431,7 +431,7 @@ if test x$use_hardening != xno; then
 
   case $host in
     *mingw*)
-       AC_CHECK_LIB([ssp],      [main],, AC_MSG_ERROR(lib missing))
+       AC_CHECK_LIB([ssp],      [main],, AC_MSG_ERROR([lib missing]))
     ;;
   esac
 
@@ -441,7 +441,7 @@ if test x$use_hardening != xno; then
   OBJCXXFLAGS="$CXXFLAGS"
 fi
 
-dnl This flag screws up non-darwin gcc even when the check fails. special-case it.
+dnl This flag screws up non-darwin gcc even when the check fails: special-case it.
 if test x$TARGET_OS = xdarwin; then
   AX_CHECK_LINK_FLAG([[-Wl,-dead_strip]], [LDFLAGS="$LDFLAGS -Wl,-dead_strip"])
 fi
@@ -567,7 +567,7 @@ fi
 if test x$use_tests = xyes; then
 
   if test x$HEXDUMP = x; then
-    AC_MSG_ERROR(hexdump is required for tests)
+    AC_MSG_ERROR([hexdump is required for tests])
   fi
 
 
@@ -651,7 +651,7 @@ CPPFLAGS="$TEMP_CPPFLAGS"
 fi
 
 if test x$boost_sleep != xyes; then
-  AC_MSG_ERROR(No working boost sleep implementation found.)
+  AC_MSG_ERROR([No working boost sleep implementation found.])
 fi
 
 fi
@@ -659,15 +659,15 @@ fi
 if test x$use_pkgconfig = xyes; then
 
   if test x"$PKG_CONFIG" = "x"; then
-    AC_MSG_ERROR(pkg-config not found.)
+    AC_MSG_ERROR([pkg-config not found.])
   fi
 
   : #NOP
   m4_ifdef(
     [PKG_CHECK_MODULES],
     [
-      PKG_CHECK_MODULES([SSL], [libssl],, [AC_MSG_ERROR(openssl  not found.)])
-      PKG_CHECK_MODULES([CRYPTO], [libcrypto],,[AC_MSG_ERROR(libcrypto  not found.)])
+      PKG_CHECK_MODULES([SSL], [libssl],, [AC_MSG_ERROR([openssl  not found.])])
+      PKG_CHECK_MODULES([CRYPTO], [libcrypto],,[AC_MSG_ERROR([libcrypto  not found.])])
       BITCOIN_QT_CHECK([PKG_CHECK_MODULES([PROTOBUF], [protobuf], [have_protobuf=yes], [BITCOIN_QT_FAIL(libprotobuf not found)])])
       if test x$use_qr != xno; then
         BITCOIN_QT_CHECK([PKG_CHECK_MODULES([QR], [libqrencode], [have_qrencode=yes], [have_qrencode=no])])
@@ -675,11 +675,11 @@ if test x$use_pkgconfig = xyes; then
     ]
   )
 else
-  AC_CHECK_HEADER([openssl/crypto.h],,AC_MSG_ERROR(libcrypto headers missing))
-  AC_CHECK_LIB([crypto],      [main],CRYPTO_LIBS=-lcrypto, AC_MSG_ERROR(libcrypto missing))
+  AC_CHECK_HEADER([openssl/crypto.h],,AC_MSG_ERROR([libcrypto headers missing]))
+  AC_CHECK_LIB([crypto],      [main],CRYPTO_LIBS=-lcrypto, AC_MSG_ERROR([libcrypto missing]))
 
-  AC_CHECK_HEADER([openssl/ssl.h],, AC_MSG_ERROR(libssl headers missing),)
-  AC_CHECK_LIB([ssl],         [main],SSL_LIBS=-lssl, AC_MSG_ERROR(libssl missing))
+  AC_CHECK_HEADER([openssl/ssl.h],, AC_MSG_ERROR([libssl headers missing]),)
+  AC_CHECK_LIB([ssl],         [main],SSL_LIBS=-lssl, AC_MSG_ERROR([libssl missing]))
 
   BITCOIN_QT_CHECK(AC_CHECK_LIB([protobuf] ,[main],[PROTOBUF_LIBS=-lprotobuf], BITCOIN_QT_FAIL(libprotobuf not found)))
   if test x$use_qr != xno; then
@@ -692,19 +692,11 @@ CFLAGS_TEMP="$CFLAGS"
 LIBS_TEMP="$LIBS"
 CFLAGS="$CFLAGS $SSL_CFLAGS $CRYPTO_CFLAGS"
 LIBS="$LIBS $SSL_LIBS $CRYPTO_LIBS"
-AC_CHECK_HEADER([openssl/ec.h],, AC_MSG_ERROR(OpenSSL ec header missing),)
+AC_CHECK_HEADER([openssl/ec.h],, AC_MSG_ERROR([OpenSSL ec header missing]),)
 CFLAGS="$CFLAGS_TEMP"
 LIBS="$LIBS_TEMP"
 
 BITCOIN_QT_PATH_PROGS([PROTOC], [protoc],$protoc_bin_path)
-
-AC_MSG_CHECKING([whether to build bitcoind])
-AM_CONDITIONAL([BUILD_BITCOIND], [test x$build_bitcoind = xyes])
-AC_MSG_RESULT($build_bitcoind)
-
-AC_MSG_CHECKING([whether to build utils (bitcoin-cli bitcoin-tx)])
-AM_CONDITIONAL([BUILD_BITCOIN_UTILS], [test x$build_bitcoin_utils = xyes])
-AC_MSG_RESULT($build_bitcoin_utils)
 
 AC_MSG_CHECKING([whether to build libraries])
 AM_CONDITIONAL([BUILD_BITCOIN_LIBS], [test x$build_bitcoin_libs = xyes])
@@ -713,6 +705,14 @@ if test x$build_bitcoin_libs = xyes; then
   AC_CONFIG_FILES([libbitcoinconsensus.pc:libbitcoinconsensus.pc.in])
 fi
 AC_MSG_RESULT($build_bitcoin_libs)
+
+AC_MSG_CHECKING([whether to build utils (bitcoin-cli bitcoin-tx)])
+AM_CONDITIONAL([BUILD_BITCOIN_UTILS], [test x$build_bitcoin_utils = xyes])
+AC_MSG_RESULT($build_bitcoin_utils)
+
+AC_MSG_CHECKING([whether to build bitcoind])
+AM_CONDITIONAL([BUILD_BITCOIND], [test x$build_bitcoind = xyes])
+AC_MSG_RESULT($build_bitcoind)
 
 dnl End C++ interpretting
 AC_LANG_POP
@@ -750,7 +750,7 @@ dnl Enable upnp support
 AC_MSG_CHECKING([whether to build with support for UPnP])
 if test x$have_miniupnpc = xno; then
   if test x$use_upnp = xyes; then
-     AC_MSG_ERROR("UPnP requested but cannot be built. use --without-miniupnpc")
+     AC_MSG_ERROR(["UPnP requested but cannot be built. use --without-miniupnpc"])
   fi
   AC_MSG_RESULT(no)
 else
@@ -787,7 +787,7 @@ if test x$bitcoin_enable_qt != xno; then
   AC_MSG_CHECKING([whether to build GUI with support for QR codes])
   if test x$have_qrencode = xno; then
     if test x$use_qr = xyes; then
-     AC_MSG_ERROR("QR support requested but cannot be built. use --without-qrencode")
+     AC_MSG_ERROR(["QR support requested but cannot be built. use --without-qrencode"])
     fi
     AC_MSG_RESULT(no)
   else
