@@ -67,7 +67,7 @@ AC_PATH_PROG(HEXDUMP,hexdump)
 dnl pkg-config check.
 PKG_PROG_PKG_CONFIG
 
-# Enable wallet
+dnl Enable wallet
 AC_ARG_ENABLE([wallet],
   [AS_HELP_STRING([--enable-wallet],
   [enable wallet (default is yes)])],
@@ -139,7 +139,7 @@ AC_ARG_ENABLE([glibc-back-compat],
 
 AC_ARG_WITH([protoc-bindir],[AS_HELP_STRING([--with-protoc-bindir=BIN_DIR],[specify protoc bin path])], [protoc_bin_path=$withval], [])
 
-# Enable debug 
+dnl Enable debug
 AC_ARG_ENABLE([debug],
     [AS_HELP_STRING([--enable-debug],
                     [use debug compiler flags and macros (default is no)])],
@@ -156,9 +156,9 @@ if test "x$enable_debug" = xyes; then
     fi
 fi 
 
-## TODO: Remove these hard-coded paths and flags. They are here for the sake of
-##       compatibility with the legacy buildsystem.
-##
+dnl TODO: Remove these hard-coded paths and flags. They are here for the sake of
+dnl       compatibility with the legacy buildsystem.
+
 if test "x$CXXFLAGS_overridden" = "xno"; then
   CXXFLAGS="$CXXFLAGS -Wall -Wextra -Wformat -Wformat-security -Wno-unused-parameter"
 fi
@@ -188,7 +188,7 @@ use_pkgconfig=yes
 case $host in
   *mingw*)
 
-     #pkgconfig does more harm than good with MinGW
+     dnl pkgconfig does more harm than good with MinGW
      use_pkgconfig=no
 
      TARGET_OS=windows
@@ -212,8 +212,8 @@ case $host in
      AC_CHECK_LIB([iphlpapi],      [main],, AC_MSG_ERROR(lib missing))
      AC_CHECK_LIB([crypt32],      [main],, AC_MSG_ERROR(lib missing))
 
-     # -static is interpreted by libtool, where it has a different meaning.
-     # In libtool-speak, it's -all-static.
+     dnl -static is interpreted by libtool, where it has a different meaning.
+     dnl In libtool-speak, it's -all-static.
      AX_CHECK_LINK_FLAG([[-static]],[LIBTOOL_APP_LDFLAGS="$LIBTOOL_APP_LDFLAGS -all-static"])
 
      AC_PATH_PROG([MAKENSIS], [makensis], none)
@@ -356,11 +356,11 @@ AC_C_BIGENDIAN
 dnl Check for pthread compile/link requirements
 AX_PTHREAD
 
-# The following macro will add the necessary defines to bitcoin-config.h, but
-# they also need to be passed down to any subprojects. Pull the results out of
-# the cache and add them to CPPFLAGS.
+dnl The following macro will add the necessary defines to bitcoin-config.h, but
+dnl they also need to be passed down to any subprojects. Pull the results out of
+dnl the cache and add them to CPPFLAGS.
 AC_SYS_LARGEFILE
-# detect POSIX or GNU variant of strerror_r
+dnl detect POSIX or GNU variant of strerror_r
 AC_FUNC_STRERROR_R
 
 if test x$ac_cv_sys_file_offset_bits != x &&
@@ -383,8 +383,8 @@ AX_GCC_FUNC_ATTRIBUTE([dllimport])
 
 if test x$use_glibc_compat != xno; then
 
-  #__fdelt_chk's params and return type have changed from long unsigned int to long int.
-  # See which one is present here.
+  dnl __fdelt_chk's params and return type have changed from long unsigned int to long int.
+  dnl See which one is present here.
   AC_MSG_CHECKING(__fdelt_chk type)
   AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#ifdef _FORTIFY_SOURCE
                     #undef _FORTIFY_SOURCE
@@ -416,7 +416,7 @@ if test x$use_hardening != xno; then
   AX_CHECK_LINK_FLAG([[-Wl,-z,now]], [HARDENED_LDFLAGS="$HARDENED_LDFLAGS -Wl,-z,now"])
 
   if test x$TARGET_OS != xwindows; then
-    # All windows code is PIC, forcing it on just adds useless compile warnings
+    dnl All windows code is PIC, forcing it on just adds useless compile warnings
     AX_CHECK_COMPILE_FLAG([-fPIE],[HARDENED_CXXFLAGS="$HARDENED_CXXFLAGS -fPIE"])
     AX_CHECK_LINK_FLAG([[-pie]], [HARDENED_LDFLAGS="$HARDENED_LDFLAGS -pie"])
   fi
