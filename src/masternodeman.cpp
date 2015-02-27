@@ -123,8 +123,7 @@ void DumpMasternodes()
     CMasternodeDB mndb;
     mndb.Write(mnodeman);
 
-    LogPrint("masternode", "Flushed %d masternodes to masternodes.dat  %dms\n",
-           mnodeman.size(), GetTimeMillis() - nStart);
+    LogPrintf("Flushed %d masternodes to masternodes.dat  %dms\n", mnodeman.size(), GetTimeMillis() - nStart);
 }
 
 CMasternodeMan::CMasternodeMan() {}
@@ -140,6 +139,7 @@ bool CMasternodeMan::Add(CMasternode &mn)
 
     if (pmn == NULL)
     {
+        LogPrintf("CMasternodeMan: Adding new masternode %s\n", mn.addr.ToString().c_str());
         vMasternodes.push_back(mn);
         return true;
     }
@@ -165,8 +165,8 @@ void CMasternodeMan::CheckAndRemove()
     vector<CMasternode>::iterator it = vMasternodes.begin();
     while(it != vMasternodes.end()){
         if((*it).activeState == 4 || (*it).activeState == 3){
-            LogPrintf("Removing inactive masternode %s\n", (*it).addr.ToString().c_str());
-            vMasternodes.erase(it++);
+            LogPrintf("CMasternodeMan: Removing inactive masternode %s\n", (*it).addr.ToString().c_str());
+            it = vMasternodes.erase(it);
         } else {
             ++it;
         }
@@ -178,7 +178,7 @@ void CMasternodeMan::CheckAndRemove()
         if((*it1).second < GetTime()) {
             mAskedUsForMasternodeList.erase(it1++);
         } else {
-            it1++;
+            ++it1;
         }
     }
 
@@ -188,7 +188,7 @@ void CMasternodeMan::CheckAndRemove()
         if((*it1).second < GetTime()){
             mWeAskedForMasternodeList.erase(it1++);
         } else {
-            it1++;
+            ++it1;
         }
     }
 
@@ -198,7 +198,7 @@ void CMasternodeMan::CheckAndRemove()
         if((*it2).second < GetTime()){
             mWeAskedForMasternodeListEntry.erase(it2++);
         } else {
-            it2++;
+            ++it2;
         }
     }
 
@@ -231,6 +231,8 @@ int CMasternodeMan::CountMasternodesAboveProtocol(int protocolVersion)
 
 void CMasternodeMan::DsegUpdate(CNode* pnode)
 {
+    LOCK(cs);
+
     std::map<CNetAddr, int64_t>::iterator it = mWeAskedForMasternodeList.find(pnode->addr);
     if (it != mWeAskedForMasternodeList.end())
     {
@@ -574,7 +576,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
 
         LogPrintf("dseep - Asking source node for missing entry %s\n", vin.ToString().c_str());
         pfrom->PushMessage("dseg", vin);
-        int64_t askAgain = GetTime()+(60*60*24);
+        int64_t askAgain = GetTime() + MASTERNODE_MIN_DSEEP_SECONDS;
         mWeAskedForMasternodeListEntry[vin.prevout] = askAgain;
 
     } else if (strCommand == "dseg") { //Get masternode list or specific entry
