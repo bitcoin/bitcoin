@@ -1,4 +1,4 @@
-dnl require autoconf 2.60 (AS_ECHO/AS_ECHO_N)
+dnl Require autoconf 2.60 (AS_ECHO/AS_ECHO_N)
 AC_PREREQ([2.60])
 define(_CLIENT_VERSION_MAJOR, 0)
 define(_CLIENT_VERSION_MINOR, 10)
@@ -18,17 +18,17 @@ AH_TOP([#ifndef BITCOIN_CONFIG_H])
 AH_TOP([#define BITCOIN_CONFIG_H])
 AH_BOTTOM([#endif //BITCOIN_CONFIG_H])
 
-dnl faketime breaks configure and is only needed for make. Disable it here.
+dnl Faketime breaks configure and is only needed for make. Disable it here.
 unset FAKETIME
 
 dnl Automake init set-up and checks
 AM_INIT_AUTOMAKE([no-define subdir-objects foreign])
 
-dnl faketime messes with timestamps and causes configure to be re-run.
+dnl Faketime messes with timestamps and causes configure to be re-run.
 dnl --disable-maintainer-mode can be used to bypass this.
 AM_MAINTAINER_MODE([enable])
 
-dnl make the compilation flags quiet unless V=1 is used
+dnl Make the compilation flags quiet unless V=1 is used
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
 dnl Compiler checks (here before libtool).
@@ -67,18 +67,12 @@ AC_PATH_PROG(HEXDUMP,hexdump)
 dnl pkg-config check.
 PKG_PROG_PKG_CONFIG
 
-dnl Enable wallet
+dnl Enable optional features:
 AC_ARG_ENABLE([wallet],
   [AS_HELP_STRING([--enable-wallet],
   [enable wallet (default is yes)])],
   [enable_wallet=$enableval],
   [enable_wallet=yes])
-
-AC_ARG_WITH([miniupnpc],
-  [AS_HELP_STRING([--with-miniupnpc],
-  [enable UPNP (default is yes if libminiupnpc is found)])],
-  [use_upnp=$withval],
-  [use_upnp=auto])
 
 AC_ARG_ENABLE([upnp-default],
   [AS_HELP_STRING([--enable-upnp-default],
@@ -86,26 +80,17 @@ AC_ARG_ENABLE([upnp-default],
   [use_upnp_default=$enableval],
   [use_upnp_default=no])
 
-AC_ARG_ENABLE(tests,
-    AS_HELP_STRING([--enable-tests],[compile tests (default is yes)]),
-    [use_tests=$enableval],
-    [use_tests=yes])
-
-AC_ARG_WITH([comparison-tool],
-    AS_HELP_STRING([--with-comparison-tool],[path to java comparison tool (requires --enable-tests)]),
-    [use_comparison_tool=$withval],
-    [use_comparison_tool=no])
+AC_ARG_ENABLE([tests],
+  [AS_HELP_STRING([--enable-tests],
+  [compile tests (default is yes)])],
+  [use_tests=$enableval],
+  [use_tests=yes])
 
 AC_ARG_ENABLE([comparison-tool-reorg-tests],
-    AS_HELP_STRING([--enable-comparison-tool-reorg-tests],[enable expensive reorg tests in the comparison tool (default no)]),
-    [use_comparison_tool_reorg_tests=$enableval],
-    [use_comparison_tool_reorg_tests=no])
-
-AC_ARG_WITH([qrencode],
-  [AS_HELP_STRING([--with-qrencode],
-  [enable QR code support (default is yes if qt is enabled and libqrencode is found)])],
-  [use_qr=$withval],
-  [use_qr=auto])
+  [AS_HELP_STRING([--enable-comparison-tool-reorg-tests],
+  [enable expensive reorg tests in the comparison tool (default no)])],
+  [use_comparison_tool_reorg_tests=$enableval],
+  [use_comparison_tool_reorg_tests=no])
 
 AC_ARG_ENABLE([hardening],
   [AS_HELP_STRING([--enable-hardening],
@@ -137,14 +122,11 @@ AC_ARG_ENABLE([glibc-back-compat],
   [use_glibc_compat=$enableval],
   [use_glibc_compat=no])
 
-AC_ARG_WITH([protoc-bindir],[AS_HELP_STRING([--with-protoc-bindir=BIN_DIR],[specify protoc bin path])], [protoc_bin_path=$withval], [])
-
-dnl Enable debug
 AC_ARG_ENABLE([debug],
-    [AS_HELP_STRING([--enable-debug],
-                    [use debug compiler flags and macros (default is no)])],
-    [enable_debug=$enableval],
-    [enable_debug=no])
+  [AS_HELP_STRING([--enable-debug],
+  [use debug compiler flags and macros (default is no)])],
+  [enable_debug=$enableval],
+  [enable_debug=no])
 
 if test "x$enable_debug" = xyes; then
     if test "x$GCC" = xyes; then
@@ -164,17 +146,18 @@ if test "x$CXXFLAGS_overridden" = "xno"; then
 fi
 CPPFLAGS="$CPPFLAGS -DBOOST_SPIRIT_THREADSAFE -DHAVE_BUILD_INFO -D__STDC_FORMAT_MACROS"
 
-AC_ARG_WITH([utils],
-  [AS_HELP_STRING([--with-utils],
-  [build bitcoin-cli bitcoin-tx (default=yes)])],
-  [build_bitcoin_utils=$withval],
-  [build_bitcoin_utils=yes])
-
+dnl --with(out) optionals:
 AC_ARG_WITH([libs],
   [AS_HELP_STRING([--with-libs],
   [build libraries (default=yes)])],
   [build_bitcoin_libs=$withval],
   [build_bitcoin_libs=yes])
+
+AC_ARG_WITH([utils],
+  [AS_HELP_STRING([--with-utils],
+  [build bitcoin-cli bitcoin-tx (default=yes)])],
+  [build_bitcoin_utils=$withval],
+  [build_bitcoin_utils=yes])
 
 AC_ARG_WITH([daemon],
   [AS_HELP_STRING([--with-daemon],
@@ -182,6 +165,31 @@ AC_ARG_WITH([daemon],
   [build_bitcoind=$withval],
   [build_bitcoind=yes])
 
+AC_ARG_WITH([miniupnpc],
+  [AS_HELP_STRING([--with-miniupnpc],
+  [enable UPNP (default is yes if libminiupnpc is found)])],
+  [use_upnp=$withval],
+  [use_upnp=auto])
+
+AC_ARG_WITH([comparison-tool],
+  [AS_HELP_STRING([--with-comparison-tool],
+  [path to java comparison tool (requires --enable-tests)])],
+  [use_comparison_tool=$withval],
+  [use_comparison_tool=no])
+
+AC_ARG_WITH([qrencode],
+  [AS_HELP_STRING([--with-qrencode],
+  [enable QR code support (default is yes if qt is enabled and libqrencode is found)])],
+  [use_qr=$withval],
+  [use_qr=auto])
+
+AC_ARG_WITH([protoc-bindir],
+  [AS_HELP_STRING([--with-protoc-bindir=BIN_DIR],
+  [specify protoc bin path])],
+  [protoc_bin_path=$withval],
+  [])
+
+dnl Begin C++ interpreting
 AC_LANG_PUSH([C++])
 
 use_pkgconfig=yes
@@ -254,7 +262,7 @@ case $host in
        BUILD_OS=darwin
        AC_CHECK_PROG([PORT],port, port)
        if test x$PORT = xport; then
-         dnl add default macports paths
+         dnl Add default macports paths
          CPPFLAGS="$CPPFLAGS -isystem /opt/local/include"
          LIBS="$LIBS -L/opt/local/lib"
          if test -d /opt/local/include/db48; then
@@ -433,7 +441,7 @@ if test x$use_hardening != xno; then
   OBJCXXFLAGS="$CXXFLAGS"
 fi
 
-dnl this flag screws up non-darwin gcc even when the check fails. special-case it.
+dnl This flag screws up non-darwin gcc even when the check fails. special-case it.
 if test x$TARGET_OS = xdarwin; then
   AX_CHECK_LINK_FLAG([[-Wl,-dead_strip]], [LDFLAGS="$LDFLAGS -Wl,-dead_strip"])
 fi
@@ -510,7 +518,7 @@ fi
 
 BITCOIN_QT_INIT
 
-dnl sets $bitcoin_enable_qt, $bitcoin_enable_qt_test, $bitcoin_enable_qt_dbus
+dnl Sets $bitcoin_enable_qt, $bitcoin_enable_qt_test, $bitcoin_enable_qt_dbus
 BITCOIN_QT_CONFIGURE([$use_pkgconfig], [qt4])
 
 if test x$build_bitcoin_utils$build_bitcoind$bitcoin_enable_qt$use_tests = xnononono; then
@@ -706,6 +714,7 @@ if test x$build_bitcoin_libs = xyes; then
 fi
 AC_MSG_RESULT($build_bitcoin_libs)
 
+dnl End C++ interpretting
 AC_LANG_POP
 
 if test "x$use_ccache" != "xno"; then
@@ -727,7 +736,7 @@ if test "x$use_ccache" = "xyes"; then
     AX_CHECK_PREPROC_FLAG([-Qunused-arguments],[CPPFLAGS="-Qunused-arguments $CPPFLAGS"])
 fi
 
-dnl enable wallet
+dnl Enable wallet
 AC_MSG_CHECKING([if wallet should be enabled])
 if test x$enable_wallet != xno; then
   AC_MSG_RESULT(yes)
@@ -737,7 +746,7 @@ else
   AC_MSG_RESULT(no)
 fi
 
-dnl enable upnp support
+dnl Enable upnp support
 AC_MSG_CHECKING([whether to build with support for UPnP])
 if test x$have_miniupnpc = xno; then
   if test x$use_upnp = xyes; then
@@ -764,17 +773,17 @@ else
   fi
 fi
 
-dnl these are only used when qt is enabled
+dnl These are only used when qt is enabled
 if test x$bitcoin_enable_qt != xno; then
   BUILD_QT=qt
-  dnl enable dbus support
+  dnl Enable dbus support
   AC_MSG_CHECKING([whether to build GUI with support for D-Bus])
   if test x$bitcoin_enable_qt_dbus != xno; then
     AC_DEFINE([USE_DBUS],[1],[Define if dbus support should be compiled in])
   fi
   AC_MSG_RESULT($bitcoin_enable_qt_dbus)
 
-  dnl enable qr support
+  dnl Enable qr support
   AC_MSG_CHECKING([whether to build GUI with support for QR codes])
   if test x$have_qrencode = xno; then
     if test x$use_qr = xyes; then
@@ -865,7 +874,7 @@ AC_CONFIG_FILES([Makefile src/Makefile share/setup.nsi share/qt/Info.plist src/t
 AC_CONFIG_FILES([qa/pull-tester/run-bitcoind-for-test.sh],[chmod +x qa/pull-tester/run-bitcoind-for-test.sh])
 AC_CONFIG_FILES([qa/pull-tester/tests-config.sh],[chmod +x qa/pull-tester/tests-config.sh])
 
-dnl boost's m4 checks do something really nasty: they export these vars. As a
+dnl Boost's m4 checks do something really nasty: they export these vars. As a
 dnl result, they leak into secp256k1's configure and crazy things happen.
 dnl Until this is fixed upstream and we've synced, we'll just un-export them.
 CPPFLAGS_TEMP="$CPPFLAGS"
