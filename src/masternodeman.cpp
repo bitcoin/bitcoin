@@ -123,8 +123,7 @@ void DumpMasternodes()
     CMasternodeDB mndb;
     mndb.Write(mnodeman);
 
-    LogPrint("masternode", "Flushed %d masternodes to masternodes.dat  %dms\n",
-           mnodeman.size(), GetTimeMillis() - nStart);
+    LogPrintf("Flushed %d masternodes to masternodes.dat  %dms\n", mnodeman.size(), GetTimeMillis() - nStart);
 }
 
 CMasternodeMan::CMasternodeMan() {}
@@ -140,6 +139,7 @@ bool CMasternodeMan::Add(CMasternode &mn)
 
     if (pmn == NULL)
     {
+        LogPrintf("CMasternodeMan: Adding new masternode %s\n", mn.addr.ToString().c_str());
         vMasternodes.push_back(mn);
         return true;
     }
@@ -165,7 +165,7 @@ void CMasternodeMan::CheckAndRemove()
     vector<CMasternode>::iterator it = vMasternodes.begin();
     while(it != vMasternodes.end()){
         if((*it).activeState == 4 || (*it).activeState == 3){
-            LogPrintf("Removing inactive masternode %s\n", (*it).addr.ToString().c_str());
+            LogPrintf("CMasternodeMan: Removing inactive masternode %s\n", (*it).addr.ToString().c_str());
             it = vMasternodes.erase(it);
         } else {
             ++it;
