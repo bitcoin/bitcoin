@@ -19,7 +19,7 @@ namespace {
 class CSecp256k1Init {
 public:
     CSecp256k1Init() {
-        secp256k1_start(SECP256K1_START_SIGN);
+        secp256k1_start(SECP256K1_START_SIGN | SECP256K1_START_VERIFY);
     }
     ~CSecp256k1Init() {
         secp256k1_stop();
