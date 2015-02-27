@@ -175,25 +175,31 @@ void CMasternodeMan::CheckAndRemove()
     // check who's asked for the masternode list
     map<CNetAddr, int64_t>::iterator it1 = mAskedUsForMasternodeList.begin();
     while(it1 != mAskedUsForMasternodeList.end()){
-        if((*it1).second < GetTime())
-            it1 = mAskedUsForMasternodeList.erase(it1);
-        else ++it1;
+        if((*it1).second < GetTime()) {
+            mAskedUsForMasternodeList.erase(it1++);
+        } else {
+            ++it1;
+        }
     }
 
     // check who we asked for the masternode list
     it1 = mWeAskedForMasternodeList.begin();
     while(it1 != mWeAskedForMasternodeList.end()){
-        if((*it1).second < GetTime())
-            it1 = mWeAskedForMasternodeList.erase(it1);
-        else ++it1;
+        if((*it1).second < GetTime()){
+            mWeAskedForMasternodeList.erase(it1++);
+        } else {
+            ++it1;
+        }
     }
 
     // check which masternodes we've asked for
     map<COutPoint, int64_t>::iterator it2 = mWeAskedForMasternodeListEntry.begin();
     while(it2 != mWeAskedForMasternodeListEntry.end()){
-        if((*it2).second < GetTime())
-            it2 = mWeAskedForMasternodeListEntry.erase(it2);
-        else ++it2;
+        if((*it2).second < GetTime()){
+            mWeAskedForMasternodeListEntry.erase(it2++);
+        } else {
+            ++it2;
+        }
     }
 
 }
@@ -225,6 +231,8 @@ int CMasternodeMan::CountMasternodesAboveProtocol(int protocolVersion)
 
 void CMasternodeMan::DsegUpdate(CNode* pnode)
 {
+    LOCK(cs);
+
     std::map<CNetAddr, int64_t>::iterator it = mWeAskedForMasternodeList.find(pnode->addr);
     if (it != mWeAskedForMasternodeList.end())
     {

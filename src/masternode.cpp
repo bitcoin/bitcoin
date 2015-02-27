@@ -21,6 +21,8 @@ std::map<int64_t, uint256> mapCacheBlockHashes;
 
 void ProcessMessageMasternodePayments(CNode* pfrom, std::string& strCommand, CDataStream& vRecv)
 {
+    if(IsInitialBlockDownload()) return;
+
     if (strCommand == "mnget") { //Masternode Payments Request Sync
         if(fLiteMode) return; //disable all darksend/masternode related functionality
 
