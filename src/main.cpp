@@ -1746,7 +1746,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
         return true;
     }
 
-    bool fScriptChecks = pindex->nHeight >= (pindexBestHeader->nHeight - 2016);
+    bool fScriptChecks = pindex->nHeight >= (pindexBestHeader->nHeight - (2016*4));
 
     // Do not allow blocks that contain transactions which 'overwrite' older transactions,
     // unless those are already completely spent.
