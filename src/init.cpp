@@ -11,7 +11,6 @@
 
 #include "addrman.h"
 #include "amount.h"
-#include "checkpoints.h"
 #include "compat/sanity.h"
 #include "key.h"
 #include "main.h"
@@ -340,7 +339,6 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += "\n" + _("Debugging/Testing options:") + "\n";
     if (GetBoolArg("-help-debug", false))
     {
-        strUsage += "  -checkpoints           " + strprintf(_("Only accept block chain matching built-in checkpoints (default: %u)"), 1) + "\n";
         strUsage += "  -dblogsize=<n>         " + strprintf(_("Flush database activity from memory pool to disk log every <n> megabytes (default: %u)"), 100) + "\n";
         strUsage += "  -disablesafemode       " + strprintf(_("Disable safemode, override a real safe mode event (default: %u)"), 0) + "\n";
         strUsage += "  -testsafemode          " + strprintf(_("Force safe mode (default: %u)"), 0) + "\n";
@@ -682,7 +680,6 @@ bool AppInit2(boost::thread_group& threadGroup)
 
     // Checkmempool defaults to true in regtest mode
     mempool.setSanityCheck(GetBoolArg("-checkmempool", Params().DefaultCheckMemPool()));
-    Checkpoints::fEnabled = GetBoolArg("-checkpoints", true);
 
     // -par=0 means autodetect, but nScriptCheckThreads==0 means no concurrency
     nScriptCheckThreads = GetArg("-par", DEFAULT_SCRIPTCHECK_THREADS);
