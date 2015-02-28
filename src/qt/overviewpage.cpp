@@ -141,11 +141,12 @@ void OverviewPage::setBalance(qint64 total, qint64 watchOnly, qint64 stake, qint
     currentStake = stake;
     currentUnconfirmedBalance = unconfirmedBalance;
     currentImmatureBalance = immatureBalance;
-    ui->labelBalanceTotal->setText(BitcoinUnits::formatWithUnit(unit, total));
+    ui->labelAvailable->setText(BitcoinUnits::formatWithUnit(unit, total));
     ui->labelBalanceWatchOnly->setText(BitcoinUnits::formatWithUnit(unit, watchOnly));
     ui->labelStake->setText(BitcoinUnits::formatWithUnit(unit, stake));
     ui->labelUnconfirmed->setText(BitcoinUnits::formatWithUnit(unit, unconfirmedBalance));
     ui->labelImmature->setText(BitcoinUnits::formatWithUnit(unit, immatureBalance));
+    ui->labelTotal->setText(BitcoinUnits::formatWithUnit(unit, total+stake+unconfirmedBalance+immatureBalance));
 
     // only show immature (newly mined) balance if it's non-zero, so as not to complicate things
     // for the non-mining users
