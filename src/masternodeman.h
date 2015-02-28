@@ -113,6 +113,8 @@ public:
     // Return the number of (unique) masternodes
     int size() { return vMasternodes.size(); }
 
+    std::string ToString();
+
 };
 
 #endif

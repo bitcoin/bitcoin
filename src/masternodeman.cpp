@@ -123,7 +123,8 @@ void DumpMasternodes()
     CMasternodeDB mndb;
     mndb.Write(mnodeman);
 
-    LogPrintf("Flushed %d masternodes to masternodes.dat  %dms\n", mnodeman.size(), GetTimeMillis() - nStart);
+    LogPrintf("Flushed info to masternodes.dat  %dms\n", GetTimeMillis() - nStart);
+    LogPrintf("  %s\n", mnodeman.ToString());
 }
 
 CMasternodeMan::CMasternodeMan() {}
@@ -627,4 +628,16 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         LogPrintf("dseg - Sent %d masternode entries to %s\n", i, pfrom->addr.ToString().c_str());
     }
 
+}
+
+std::string CMasternodeMan::ToString()
+{
+    std::ostringstream info;
+
+    info << "masternodes: " << (int)vMasternodes.size() <<
+            ", peers who asked us for masternode list: " << (int)mAskedUsForMasternodeList.size() <<
+            ", peers we asked for masternode list: " << (int)mWeAskedForMasternodeList.size() <<
+            ", entries in masternode list we asked for: " << (int)mWeAskedForMasternodeListEntry.size();
+
+    return info.str();
 }
