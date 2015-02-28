@@ -1,4 +1,6 @@
-<?xml version="1.0" ?><!DOCTYPE TS><TS language="en" version="2.1">
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE TS>
+<TS version="2.1" language="en">
 <context>
     <name>AboutDialog</name>
     <message>
@@ -603,7 +605,10 @@ Copyright © 2012-2015 The NovaCoin developers</translation>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="573"/>
         <source>%n active connection(s) to NovaCoin network</source>
-        <translation><numerusform>%n active connection to NovaCoin network</numerusform><numerusform>%n active connections to NovaCoin network</numerusform></translation>
+        <translation>
+            <numerusform>%n active connection to NovaCoin network</numerusform>
+            <numerusform>%n active connections to NovaCoin network</numerusform>
+        </translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="597"/>
@@ -613,7 +618,10 @@ Copyright © 2012-2015 The NovaCoin developers</translation>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="599"/>
         <source>~%n block(s) remaining</source>
-        <translation><numerusform>~%n block remaining</numerusform><numerusform>~%n blocks remaining</numerusform></translation>
+        <translation>
+            <numerusform>~%n block remaining</numerusform>
+            <numerusform>~%n blocks remaining</numerusform>
+        </translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="605"/>
@@ -628,22 +636,34 @@ Copyright © 2012-2015 The NovaCoin developers</translation>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="635"/>
         <source>%n second(s) ago</source>
-        <translation><numerusform>%n second ago</numerusform><numerusform>%n seconds ago</numerusform></translation>
+        <translation>
+            <numerusform>%n second ago</numerusform>
+            <numerusform>%n seconds ago</numerusform>
+        </translation>
     </message>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="639"/>
         <source>%n minute(s) ago</source>
-        <translation><numerusform>%n minute ago</numerusform><numerusform>%n minutes ago</numerusform></translation>
+        <translation>
+            <numerusform>%n minute ago</numerusform>
+            <numerusform>%n minutes ago</numerusform>
+        </translation>
     </message>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="643"/>
         <source>%n hour(s) ago</source>
-        <translation><numerusform>%n hour ago</numerusform><numerusform>%n hours ago</numerusform></translation>
+        <translation>
+            <numerusform>%n hour ago</numerusform>
+            <numerusform>%n hours ago</numerusform>
+        </translation>
     </message>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="647"/>
         <source>%n day(s) ago</source>
-        <translation><numerusform>%n day ago</numerusform><numerusform>%n days ago</numerusform></translation>
+        <translation>
+            <numerusform>%n day ago</numerusform>
+            <numerusform>%n days ago</numerusform>
+        </translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="653"/>
@@ -2086,84 +2106,95 @@ Reduce the number of addresses involved in the address creation.</translation>
         <translation>Form</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="40"/>
-        <source>Wallet</source>
-        <translation>Wallet</translation>
-    </message>
-    <message>
         <location filename="../forms/overviewpage.ui" line="47"/>
-        <location filename="../forms/overviewpage.ui" line="306"/>
+        <location filename="../forms/overviewpage.ui" line="342"/>
         <source>The displayed information may be out of date. Your wallet automatically synchronizes with the NovaCoin network after a connection is established, but this process has not completed yet.</source>
         <translation>The displayed information may be out of date. Your wallet automatically synchronizes with the NovaCoin network after a connection is established, but this process has not completed yet.</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="89"/>
-        <location filename="../forms/overviewpage.ui" line="108"/>
-        <source>Your current balance</source>
-        <translation>Your current balance</translation>
-    </message>
-    <message>
-        <location filename="../forms/overviewpage.ui" line="92"/>
-        <source>Balance:</source>
-        <translation>Balance:</translation>
-    </message>
-    <message>
-        <location filename="../forms/overviewpage.ui" line="121"/>
-        <location filename="../forms/overviewpage.ui" line="140"/>
+        <location filename="../forms/overviewpage.ui" line="214"/>
+        <location filename="../forms/overviewpage.ui" line="233"/>
         <source>Your unspendable balance</source>
         <translation>Your unspendable balance</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="124"/>
+        <location filename="../forms/overviewpage.ui" line="217"/>
         <source>Unspendable:</source>
         <translation>Unspendable:</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="153"/>
-        <location filename="../forms/overviewpage.ui" line="172"/>
+        <location filename="../forms/overviewpage.ui" line="121"/>
+        <location filename="../forms/overviewpage.ui" line="140"/>
         <source>Total of coins that was staked, and do not yet count toward the current balance</source>
         <translation>Total of coins that was staked, and do not yet count toward the current balance</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="156"/>
+        <location filename="../forms/overviewpage.ui" line="40"/>
+        <source>Balances</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/overviewpage.ui" line="89"/>
+        <location filename="../forms/overviewpage.ui" line="108"/>
+        <source>Your current available balance</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/overviewpage.ui" line="92"/>
+        <source>Available:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/overviewpage.ui" line="124"/>
         <source>Stake:</source>
         <translation>Stake:</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="185"/>
-        <location filename="../forms/overviewpage.ui" line="204"/>
+        <location filename="../forms/overviewpage.ui" line="153"/>
+        <location filename="../forms/overviewpage.ui" line="172"/>
         <source>Total of transactions that have yet to be confirmed, and do not yet count toward the current balance</source>
         <translation>Total of transactions that have yet to be confirmed, and do not yet count toward the current balance</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="188"/>
+        <location filename="../forms/overviewpage.ui" line="156"/>
         <source>Unconfirmed:</source>
         <translation>Unconfirmed:</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="217"/>
-        <location filename="../forms/overviewpage.ui" line="233"/>
+        <location filename="../forms/overviewpage.ui" line="185"/>
+        <location filename="../forms/overviewpage.ui" line="201"/>
         <source>Mined balance that has not yet matured</source>
         <translation>Mined balance that has not yet matured</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="220"/>
+        <location filename="../forms/overviewpage.ui" line="188"/>
         <source>Immature:</source>
         <translation>Immature:</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="246"/>
+        <location filename="../forms/overviewpage.ui" line="253"/>
+        <location filename="../forms/overviewpage.ui" line="269"/>
+        <source>Your current total balance</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location filename="../forms/overviewpage.ui" line="256"/>
+        <source>Total:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/overviewpage.ui" line="282"/>
+        <location filename="../forms/overviewpage.ui" line="292"/>
         <source>Total number of transactions in wallet</source>
         <translation>Total number of transactions in wallet</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="249"/>
+        <location filename="../forms/overviewpage.ui" line="285"/>
         <source>Number of transactions:</source>
         <translation>Number of transactions:</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="299"/>
+        <location filename="../forms/overviewpage.ui" line="335"/>
         <source>&lt;b&gt;Recent transactions&lt;/b&gt;</source>
         <translation>&lt;b&gt;Recent transactions&lt;/b&gt;</translation>
     </message>
@@ -2197,22 +2228,22 @@ Reduce the number of addresses involved in the address creation.</translation>
         <translation>Amount</translation>
     </message>
     <message>
-        <location filename="../guiutil.cpp" line="498"/>
+        <location filename="../guiutil.cpp" line="499"/>
         <source>%1 d</source>
         <translation>%1 d</translation>
     </message>
     <message>
-        <location filename="../guiutil.cpp" line="500"/>
+        <location filename="../guiutil.cpp" line="501"/>
         <source>%1 h</source>
         <translation>%1 h</translation>
     </message>
     <message>
-        <location filename="../guiutil.cpp" line="502"/>
+        <location filename="../guiutil.cpp" line="503"/>
         <source>%1 m</source>
         <translation>%1 m</translation>
     </message>
     <message>
-        <location filename="../guiutil.cpp" line="504"/>
+        <location filename="../guiutil.cpp" line="505"/>
         <source>%1 s</source>
         <translation>%1 s</translation>
     </message>
@@ -3025,7 +3056,10 @@ Reduce the number of addresses involved in the address creation.</translation>
     <message numerus="yes">
         <location filename="../transactiondesc.cpp" line="20"/>
         <source>Open for %n block(s)</source>
-        <translation><numerusform>Open for %n block</numerusform><numerusform>Open for %n blocks</numerusform></translation>
+        <translation>
+            <numerusform>Open for %n block</numerusform>
+            <numerusform>Open for %n blocks</numerusform>
+        </translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="22"/>
@@ -3060,7 +3094,10 @@ Reduce the number of addresses involved in the address creation.</translation>
     <message numerus="yes">
         <location filename="../transactiondesc.cpp" line="57"/>
         <source>, broadcast through %n node(s)</source>
-        <translation><numerusform>, broadcast through %n node</numerusform><numerusform>, broadcast through %n nodes</numerusform></translation>
+        <translation>
+            <numerusform>, broadcast through %n node</numerusform>
+            <numerusform>, broadcast through %n nodes</numerusform>
+        </translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="61"/>
@@ -3122,7 +3159,10 @@ Reduce the number of addresses involved in the address creation.</translation>
     <message numerus="yes">
         <location filename="../transactiondesc.cpp" line="164"/>
         <source>matures in %n more block(s)</source>
-        <translation><numerusform>matures in %n more block</numerusform><numerusform>matures in %n more blocks</numerusform></translation>
+        <translation>
+            <numerusform>matures in %n more block</numerusform>
+            <numerusform>matures in %n more blocks</numerusform>
+        </translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="166"/>
@@ -3231,7 +3271,10 @@ Reduce the number of addresses involved in the address creation.</translation>
     <message numerus="yes">
         <location filename="../transactiontablemodel.cpp" line="302"/>
         <source>Open for %n block(s)</source>
-        <translation><numerusform>Open for %n block</numerusform><numerusform>Open for %n blocks</numerusform></translation>
+        <translation>
+            <numerusform>Open for %n block</numerusform>
+            <numerusform>Open for %n blocks</numerusform>
+        </translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="305"/>
@@ -3256,7 +3299,10 @@ Reduce the number of addresses involved in the address creation.</translation>
     <message numerus="yes">
         <location filename="../transactiontablemodel.cpp" line="323"/>
         <source>Mined balance will be available when it matures in %n more block(s)</source>
-        <translation><numerusform>Mined balance will be available when it matures in %n more block</numerusform><numerusform>Mined balance will be available when it matures in %n more blocks</numerusform></translation>
+        <translation>
+            <numerusform>Mined balance will be available when it matures in %n more block</numerusform>
+            <numerusform>Mined balance will be available when it matures in %n more blocks</numerusform>
+        </translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="328"/>
