@@ -99,7 +99,7 @@ for normal IPv4/IPv6 communication, use:
 	./darkcoind -onion=127.0.0.1:9050 -externalip=ssapp53tmftyjmjb.onion -discover
 
 
-3. List of known darkcoin tor relays
+3. List of known darkcoin Tor relays
 ------------------------------------
 
 * [darkcoinie7ghp67.onion](http://darkcoinie7ghp67.onion/)
