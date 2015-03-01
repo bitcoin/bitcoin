@@ -12,7 +12,7 @@
 #ifdef ENABLE_WALLET
 #include "wallet.h"
 #endif
-#include "masternode.h"
+#include "masternodeman.h"
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -163,9 +163,9 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
             //spork
             if(!masternodePayments.GetBlockPayee(pindexPrev->nHeight+1, pblock->payee)){
                 //no masternode detected
-                int winningNode = GetCurrentMasterNode(1);
-                if(winningNode >= 0){
-                    pblock->payee.SetDestination(vecMasternodes[winningNode].pubkey.GetID());
+                CMasternode* winningNode = mnodeman.GetCurrentMasterNode(1);
+                if(winningNode){
+                    pblock->payee.SetDestination(winningNode->pubkey.GetID());
                 } else {
                     LogPrintf("CreateNewBlock: Failed to detect masternode to pay\n");
                     hasPayment = false;
