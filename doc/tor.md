@@ -37,6 +37,13 @@ outgoing connections be anonymized, but more is possible.
 	-seednode=X     SOCKS5. In Tor mode, such addresses can also be exchanged with
 	                other P2P nodes.
 
+	-onlynet=tor    Only connect to .onion nodes and drop IPv4/6 connections.
+
+An example how to start the client if the Tor proxy is running on local host on
+port 9050 and only allows .onion nodes to connect:
+
+	./darkcoind -onion=127.0.0.1:9050 -onlynet=tor -listen=0 -addnode=ssapp53tmftyjmjb.onion
+
 In a typical situation, this suffices to run behind a Tor proxy:
 
 	./darkcoind -proxy=127.0.0.1:9050
@@ -91,3 +98,9 @@ for normal IPv4/IPv6 communication, use:
 
 	./darkcoind -onion=127.0.0.1:9050 -externalip=ssapp53tmftyjmjb.onion -discover
 
+
+3. List of known darkcoin tor relays
+------------------------------------
+
+* [darkcoinie7ghp67.onion](http://darkcoinie7ghp67.onion/)
+* [ssapp53tmftyjmjb.onion](http://ssapp53tmftyjmjb.onion/)
