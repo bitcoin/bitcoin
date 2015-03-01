@@ -562,12 +562,12 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="313"/>
         <source>Open &amp;Configuration File</source>
-        <translation type="unfinished"/>
+        <translation>Открыть файл &amp;настроек</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="314"/>
         <source>Open configuration file</source>
-        <translation type="unfinished"/>
+        <translation>Открыть файл настроек</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="316"/>
@@ -788,7 +788,7 @@ Address: %4
 <context>
     <name>ClientModel</name>
     <message>
-        <location filename="../clientmodel.cpp" line="135"/>
+        <location filename="../clientmodel.cpp" line="164"/>
         <source>Network Alert</source>
         <translation>Сетевая тревога</translation>
     </message>
@@ -2334,63 +2334,63 @@ https://www.transifex.com/projects/p/darkcoin/</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="550"/>
-        <location filename="../rpcconsole.cpp" line="365"/>
+        <location filename="../rpcconsole.cpp" line="367"/>
         <source>In:</source>
         <translation>Вход:</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="630"/>
-        <location filename="../rpcconsole.cpp" line="366"/>
+        <location filename="../rpcconsole.cpp" line="368"/>
         <source>Out:</source>
         <translation>Выход:</translation>
     </message>
     <message>
-        <location filename="../rpcconsole.cpp" line="331"/>
+        <location filename="../rpcconsole.cpp" line="333"/>
         <source>Welcome to the Darkcoin RPC console.</source>
         <translation>Добро пожаловать в RPC-консоль Darkcoin.</translation>
     </message>
     <message>
-        <location filename="../rpcconsole.cpp" line="332"/>
+        <location filename="../rpcconsole.cpp" line="334"/>
         <source>Use up and down arrows to navigate history, and &lt;b&gt;Ctrl-L&lt;/b&gt; to clear screen.</source>
         <translation>Используйте стрелки вверх и вниз для просмотра истории и &lt;b&gt;Ctrl-L&lt;/b&gt; для очистки экрана.</translation>
     </message>
     <message>
-        <location filename="../rpcconsole.cpp" line="333"/>
+        <location filename="../rpcconsole.cpp" line="335"/>
         <source>Type &lt;b&gt;help&lt;/b&gt; for an overview of available commands.</source>
         <translation>Напишите &lt;b&gt;help&lt;/b&gt; для просмотра доступных команд.</translation>
     </message>
     <message>
-        <location filename="../rpcconsole.cpp" line="472"/>
+        <location filename="../rpcconsole.cpp" line="474"/>
         <source>%1 B</source>
         <translation>%1 Б</translation>
     </message>
     <message>
-        <location filename="../rpcconsole.cpp" line="474"/>
+        <location filename="../rpcconsole.cpp" line="476"/>
         <source>%1 KB</source>
         <translation>%1 КБ</translation>
     </message>
     <message>
-        <location filename="../rpcconsole.cpp" line="476"/>
+        <location filename="../rpcconsole.cpp" line="478"/>
         <source>%1 MB</source>
         <translation>%1 МБ</translation>
     </message>
     <message>
-        <location filename="../rpcconsole.cpp" line="478"/>
+        <location filename="../rpcconsole.cpp" line="480"/>
         <source>%1 GB</source>
         <translation>%1 ГБ</translation>
     </message>
     <message>
-        <location filename="../rpcconsole.cpp" line="485"/>
+        <location filename="../rpcconsole.cpp" line="487"/>
         <source>%1 m</source>
         <translation>%1 мин</translation>
     </message>
     <message>
-        <location filename="../rpcconsole.cpp" line="490"/>
+        <location filename="../rpcconsole.cpp" line="492"/>
         <source>%1 h</source>
         <translation>%1 ч</translation>
     </message>
     <message>
-        <location filename="../rpcconsole.cpp" line="492"/>
+        <location filename="../rpcconsole.cpp" line="494"/>
         <source>%1 h %2 m</source>
         <translation>%1 ч %2 мин</translation>
     </message>
@@ -4158,7 +4158,7 @@ rpcpassword=%s
     <message>
         <location filename="../darkcoinstrings.cpp" line="149"/>
         <source>Warning: Please check that your computer&apos;s date and time are correct! If your clock is wrong Darkcoin will not work properly.</source>
-        <translation>Внимание: пожалуйста, убедитесь что дата и время на Вашем компьютере выставлены правильно! Darkcoin будет не сможет работать корректно, если часы настроены неверно.</translation>
+        <translation>Внимание: пожалуйста, убедитесь что дата и время на Вашем компьютере выставлены правильно! Darkcoin не сможет работать корректно, если часы настроены неверно.</translation>
     </message>
     <message>
         <location filename="../darkcoinstrings.cpp" line="152"/>
@@ -4721,556 +4721,561 @@ If the file does not exist, create it with owner-readable-only file permissions.
     </message>
     <message>
         <location filename="../darkcoinstrings.cpp" line="278"/>
+        <source>Loading masternode list...</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../darkcoinstrings.cpp" line="279"/>
         <source>Loading wallet... (%3.2f %%)</source>
         <translation>Загрузка бумажника... (%3.2f %%)</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="279"/>
+        <location filename="../darkcoinstrings.cpp" line="280"/>
         <source>Loading wallet...</source>
         <translation>Загрузка бумажника...</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="280"/>
+        <location filename="../darkcoinstrings.cpp" line="281"/>
         <source>Log transaction priority and fee per kB when mining blocks (default: 0)</source>
         <translation>Записывать в лог приоритет транзакции и комиссию за килобайт во время добычи блоков (по умолчанию: 0)</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="281"/>
+        <location filename="../darkcoinstrings.cpp" line="282"/>
         <source>Maintain a full transaction index (default: 0)</source>
         <translation>Держать полный индекс транзакций (по умолчанию: 0)</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="282"/>
+        <location filename="../darkcoinstrings.cpp" line="283"/>
         <source>Maintain at most &lt;n&gt; connections to peers (default: 125)</source>
         <translation>Поддерживать не более &lt;n&gt; подключений к узлам (по умолчанию: 125)</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="283"/>
+        <location filename="../darkcoinstrings.cpp" line="284"/>
         <source>Masternode options:</source>
         <translation>Параметры мастерноды:</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="284"/>
+        <location filename="../darkcoinstrings.cpp" line="285"/>
         <source>Masternode queue is full.</source>
         <translation>Очередь на мастерноде переполнена.</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="285"/>
+        <location filename="../darkcoinstrings.cpp" line="286"/>
         <source>Masternode:</source>
         <translation>Мастернода:</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="286"/>
+        <location filename="../darkcoinstrings.cpp" line="287"/>
         <source>Maximum per-connection receive buffer, &lt;n&gt;*1000 bytes (default: 5000)</source>
         <translation>Максимальный размер буфера приёма на одно соединение, &lt;n&gt;*1000 байт (по умолчанию: 5000)</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="287"/>
+        <location filename="../darkcoinstrings.cpp" line="288"/>
         <source>Maximum per-connection send buffer, &lt;n&gt;*1000 bytes (default: 1000)</source>
         <translation>Максимальный размер буфера отправки на соединение, &lt;n&gt;*1000 байт (по умолчанию: 1000)</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="288"/>
+        <location filename="../darkcoinstrings.cpp" line="289"/>
         <source>Missing input transaction information.</source>
         <translation>Отсутствует информация о входной транзакции.</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="289"/>
+        <location filename="../darkcoinstrings.cpp" line="290"/>
         <source>No compatible masternode found.</source>
         <translation>Отсутствуют совместимые мастерноды.</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="290"/>
+        <location filename="../darkcoinstrings.cpp" line="291"/>
         <source>No funds detected in need of denominating.</source>
         <translation>Не обнаружено средств для дальнейшего разбиения на номиналы.</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="291"/>
+        <location filename="../darkcoinstrings.cpp" line="292"/>
         <source>No masternodes detected.</source>
         <translation>Ни одной мастерноды не найдено.</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="292"/>
+        <location filename="../darkcoinstrings.cpp" line="293"/>
         <source>No matching denominations found for mixing.</source>
         <translation>Отсутствуют совпадающие для перемешивания номиналы.</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="293"/>
+        <location filename="../darkcoinstrings.cpp" line="294"/>
         <source>Non-standard public key detected.</source>
         <translation>Обнаружен нестандартный открытый ключ.</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="294"/>
+        <location filename="../darkcoinstrings.cpp" line="295"/>
         <source>Not compatible with existing transactions.</source>
         <translation>Не совместимо с существующими транзакциями.</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="295"/>
+        <location filename="../darkcoinstrings.cpp" line="296"/>
         <source>Not enough file descriptors available.</source>
         <translation>Недостаточно файловых дескрипторов.</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="296"/>
+        <location filename="../darkcoinstrings.cpp" line="297"/>
         <source>Not in the masternode list.</source>
         <translation>Отсутствует в списке мастернод.</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="297"/>
+        <location filename="../darkcoinstrings.cpp" line="298"/>
         <source>Only accept block chain matching built-in checkpoints (default: 1)</source>
         <translation>Принимать цепочку блоков только в том случае, если она соответствует встроенным контрольным точкам (по умолчанию: 1)</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="298"/>
+        <location filename="../darkcoinstrings.cpp" line="299"/>
         <source>Only connect to nodes in network &lt;net&gt; (IPv4, IPv6 or Tor)</source>
         <translation>Соединяться только по сети &lt;net&gt; (ipv4, ipv6 или Tor)</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="299"/>
+        <location filename="../darkcoinstrings.cpp" line="300"/>
         <source>Options:</source>
         <translation>Параметры:</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="300"/>
+        <location filename="../darkcoinstrings.cpp" line="301"/>
         <source>Password for JSON-RPC connections</source>
         <translation>Пароль для подключений JSON-RPC</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="301"/>
+        <location filename="../darkcoinstrings.cpp" line="302"/>
         <source>Prepend debug output with timestamp (default: 1)</source>
         <translation>Дописывать в начало отладочного вывода отметки времени (по умолчанию: 1)</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="302"/>
+        <location filename="../darkcoinstrings.cpp" line="303"/>
         <source>Print block on startup, if found in block index</source>
         <translation>Печатать блок при запуске, если он найден в индексе блоков</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="303"/>
+        <location filename="../darkcoinstrings.cpp" line="304"/>
         <source>Print block tree on startup (default: 0)</source>
         <translation>Печатать дерево блоков при запуске (по умолчанию: 0)</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="304"/>
+        <location filename="../darkcoinstrings.cpp" line="305"/>
         <source>RPC SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
         <translation>Параметры RPC SSL: (см. Bitcoin вики для инструкций по настройке SSL)</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="305"/>
+        <location filename="../darkcoinstrings.cpp" line="306"/>
         <source>RPC client options:</source>
         <translation>Параметры RPC-клиента:</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="306"/>
+        <location filename="../darkcoinstrings.cpp" line="307"/>
         <source>RPC server options:</source>
         <translation>Параметры сервера RPC:</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="307"/>
+        <location filename="../darkcoinstrings.cpp" line="308"/>
         <source>Randomly drop 1 of every &lt;n&gt; network messages</source>
         <translation>Случайно отбрасывать 1 из каждых &lt;n&gt; сетевых сообщений</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="308"/>
+        <location filename="../darkcoinstrings.cpp" line="309"/>
         <source>Randomly fuzz 1 of every &lt;n&gt; network messages</source>
         <translation>Случайно разбрасывать 1 из каждых &lt;n&gt; сетевых сообщений</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="309"/>
+        <location filename="../darkcoinstrings.cpp" line="310"/>
         <source>Rebuild block chain index from current blk000??.dat files</source>
         <translation>Перестроить индекс цепочки блоков из текущих файлов blk000??.dat</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="310"/>
+        <location filename="../darkcoinstrings.cpp" line="311"/>
         <source>Rescan the block chain for missing wallet transactions</source>
         <translation>Перепроверить цепочку блоков на предмет отсутствующих в бумажнике транзакций</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="311"/>
+        <location filename="../darkcoinstrings.cpp" line="312"/>
         <source>Rescanning...</source>
         <translation>Сканирование...</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="312"/>
+        <location filename="../darkcoinstrings.cpp" line="313"/>
         <source>Run a thread to flush wallet periodically (default: 1)</source>
         <translation>Запустить поток для периодического сохранения бумажника (по умолчанию: 1)</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="313"/>
+        <location filename="../darkcoinstrings.cpp" line="314"/>
         <source>Run in the background as a daemon and accept commands</source>
         <translation>Запускаться в фоне как демон и принимать команды</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="314"/>
+        <location filename="../darkcoinstrings.cpp" line="315"/>
         <source>SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
         <translation>Параметры SSL: (см. Bitcoin вики для инструкций по настройке SSL)</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="315"/>
+        <location filename="../darkcoinstrings.cpp" line="316"/>
         <source>Select SOCKS version for -proxy (4 or 5, default: 5)</source>
         <translation>Выбор версии SOCKS для прокси (4 или 5, по умолчанию: 5)</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="316"/>
+        <location filename="../darkcoinstrings.cpp" line="317"/>
         <source>Send command to Darkcoin Core</source>
         <translation>Отправить команду Darkcoin Core</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="317"/>
+        <location filename="../darkcoinstrings.cpp" line="318"/>
         <source>Send commands to node running on &lt;ip&gt; (default: 127.0.0.1)</source>
         <translation>Отправляет команду ноде, работающей на IP-адресе &lt;ip&gt; (по умолчанию: 127.0.0.1)</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="318"/>
+        <location filename="../darkcoinstrings.cpp" line="319"/>
         <source>Send trace/debug info to console instead of debug.log file</source>
         <translation>Выводить информацию трассировки/отладки на консоль вместо файла debug.log</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="319"/>
+        <location filename="../darkcoinstrings.cpp" line="320"/>
         <source>Server certificate file (default: server.cert)</source>
         <translation>Файл сертификата сервера (по умолчанию: server.cert)</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="320"/>
+        <location filename="../darkcoinstrings.cpp" line="321"/>
         <source>Server private key (default: server.pem)</source>
         <translation>Закрытый ключ сервера (по умолчанию: server.pem)</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="321"/>
+        <location filename="../darkcoinstrings.cpp" line="322"/>
         <source>Session not complete!</source>
         <translation>Сессия не закончена!</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="322"/>
+        <location filename="../darkcoinstrings.cpp" line="323"/>
         <source>Session timed out (30 seconds), please resubmit.</source>
         <translation>Сессия прекращена по тайм-ауту (30 секунд), пожалуйста, отправьте заново.</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="323"/>
+        <location filename="../darkcoinstrings.cpp" line="324"/>
         <source>Set database cache size in megabytes (%d to %d, default: %d)</source>
         <translation>Установить размер кэша БД в мегабайтах(от %d до %d, по умолчанию: %d)</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="324"/>
+        <location filename="../darkcoinstrings.cpp" line="325"/>
         <source>Set key pool size to &lt;n&gt; (default: 100)</source>
         <translation>Установить размер пула ключей в &lt;n&gt; (по умолчанию: 100)</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="325"/>
+        <location filename="../darkcoinstrings.cpp" line="326"/>
         <source>Set maximum block size in bytes (default: %d)</source>
         <translation>Установить максимальный размер блока в байтах (по умолчанию: %d)</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="326"/>
+        <location filename="../darkcoinstrings.cpp" line="327"/>
         <source>Set minimum block size in bytes (default: 0)</source>
         <translation>Установить минимальный размер блока в байтах (по умолчанию: 0)</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="327"/>
+        <location filename="../darkcoinstrings.cpp" line="328"/>
         <source>Set the masternode private key</source>
         <translation>Установить закрытый ключ мастерноды</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="328"/>
+        <location filename="../darkcoinstrings.cpp" line="329"/>
         <source>Set the number of threads to service RPC calls (default: 4)</source>
         <translation>Задать число потоков выполнения запросов RPC (по умолчанию: 4)</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="329"/>
+        <location filename="../darkcoinstrings.cpp" line="330"/>
         <source>Sets the DB_PRIVATE flag in the wallet db environment (default: 1)</source>
         <translation>Установить флаг DB_PRIVATE в окружении базы данных бумажника (по умолчанию: 1)</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="330"/>
+        <location filename="../darkcoinstrings.cpp" line="331"/>
         <source>Show all debugging options (usage: --help -help-debug)</source>
         <translation>Показать все отладочные параметры (использование: --help -help-debug)</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="331"/>
+        <location filename="../darkcoinstrings.cpp" line="332"/>
         <source>Show benchmark information (default: 0)</source>
         <translation>Показывать информацию бенчмарка (по умолчанию: 0)</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="332"/>
+        <location filename="../darkcoinstrings.cpp" line="333"/>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
         <translation>Сжимать файл debug.log при запуске клиента (по умолчанию: 1, если нет -debug)</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="333"/>
+        <location filename="../darkcoinstrings.cpp" line="334"/>
         <source>Signing failed.</source>
         <translation>Подписание завершилось неудачно.</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="334"/>
+        <location filename="../darkcoinstrings.cpp" line="335"/>
         <source>Signing timed out, please resubmit.</source>
         <translation>Подписание прекращено по тайм-ауту, пожалуйста, отправьте заново.</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="335"/>
+        <location filename="../darkcoinstrings.cpp" line="336"/>
         <source>Signing transaction failed</source>
         <translation>Подписание транзакции завершилось неудачно.</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="336"/>
+        <location filename="../darkcoinstrings.cpp" line="337"/>
         <source>Specify configuration file (default: darkcoin.conf)</source>
         <translation>Указать конфигурационный файл (по умолчанию: darkcoin.conf)</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="337"/>
+        <location filename="../darkcoinstrings.cpp" line="338"/>
         <source>Specify connection timeout in milliseconds (default: 5000)</source>
         <translation>Указать тайм-аут соединения в миллисекундах (по умолчанию: 5000)</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="338"/>
+        <location filename="../darkcoinstrings.cpp" line="339"/>
         <source>Specify data directory</source>
         <translation>Задать каталог данных</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="339"/>
+        <location filename="../darkcoinstrings.cpp" line="340"/>
         <source>Specify masternode configuration file (default: masternode.conf)</source>
         <translation>Указать конфигурационный файл для мастернод (по умолчанию: masternode.conf)</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="340"/>
+        <location filename="../darkcoinstrings.cpp" line="341"/>
         <source>Specify pid file (default: darkcoind.pid)</source>
         <translation>Указать pid-файл (по умолчанию: darkcoind.pid)</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="341"/>
+        <location filename="../darkcoinstrings.cpp" line="342"/>
         <source>Specify wallet file (within data directory)</source>
         <translation>Укажите файл бумажника (внутри каталога данных)</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="342"/>
+        <location filename="../darkcoinstrings.cpp" line="343"/>
         <source>Specify your own public address</source>
         <translation>Укажите Ваш собственный публичный адрес</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="343"/>
+        <location filename="../darkcoinstrings.cpp" line="344"/>
         <source>Spend unconfirmed change when sending transactions (default: 1)</source>
         <translation>Тратить неподтвержденную сдачу при отправке транзакций (по умолчанию: 1)</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="344"/>
+        <location filename="../darkcoinstrings.cpp" line="345"/>
         <source>Start Darkcoin Core Daemon</source>
         <translation>Запустить демона Darkcoin Core</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="345"/>
+        <location filename="../darkcoinstrings.cpp" line="346"/>
         <source>System error: </source>
         <translation>Системная ошибка: </translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="346"/>
+        <location filename="../darkcoinstrings.cpp" line="347"/>
         <source>This help message</source>
         <translation>Эта справка</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="347"/>
+        <location filename="../darkcoinstrings.cpp" line="348"/>
         <source>This is intended for regression testing tools and app development.</source>
         <translation>Это рассчитано на инструменты регрессионного тестирования и разработку приложений.</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="348"/>
+        <location filename="../darkcoinstrings.cpp" line="349"/>
         <source>This is not a masternode.</source>
         <translation>Это не мастернода.</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="349"/>
+        <location filename="../darkcoinstrings.cpp" line="350"/>
         <source>Threshold for disconnecting misbehaving peers (default: 100)</source>
         <translation>Порог для отключения неправильно ведущих себя участников (по умолчанию: 100)</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="350"/>
+        <location filename="../darkcoinstrings.cpp" line="351"/>
         <source>To use the %s option</source>
         <translation>Чтобы использовать параметр %s</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="351"/>
+        <location filename="../darkcoinstrings.cpp" line="352"/>
         <source>Transaction amount too small</source>
         <translation>Сумма транзакции слишком мала</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="352"/>
+        <location filename="../darkcoinstrings.cpp" line="353"/>
         <source>Transaction amounts must be positive</source>
         <translation>Сумма транзакции должна быть положительна</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="353"/>
+        <location filename="../darkcoinstrings.cpp" line="354"/>
         <source>Transaction created successfully.</source>
         <translation>Создание транзакции прошло успешно.</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="354"/>
+        <location filename="../darkcoinstrings.cpp" line="355"/>
         <source>Transaction fees are too high.</source>
         <translation>Комиссия по транзакции слишком большая.</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="355"/>
+        <location filename="../darkcoinstrings.cpp" line="356"/>
         <source>Transaction not valid.</source>
         <translation>Транзакция некорректна.</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="356"/>
+        <location filename="../darkcoinstrings.cpp" line="357"/>
         <source>Transaction too large</source>
         <translation>Транзакция слишком большая</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="357"/>
+        <location filename="../darkcoinstrings.cpp" line="358"/>
         <source>Unable to bind to %s on this computer (bind returned error %s)</source>
         <translation>Невозможно привязаться к %s на этом компьютере (привязка вернула ошибку %s)</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="358"/>
+        <location filename="../darkcoinstrings.cpp" line="359"/>
         <source>Unable to sign masternode payment winner, wrong key?</source>
         <translation>Невозможно подписать сообщение о мастерноде-победителе. Неправильный ключ?</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="359"/>
+        <location filename="../darkcoinstrings.cpp" line="360"/>
         <source>Unable to sign spork message, wrong key?</source>
         <translation>Не удалось подписать spork-сообщение. Неправильный ключ?</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="360"/>
+        <location filename="../darkcoinstrings.cpp" line="361"/>
         <source>Unknown -socks proxy version requested: %i</source>
         <translation>Запрошена неизвестная версия -socks прокси: %i</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="361"/>
+        <location filename="../darkcoinstrings.cpp" line="362"/>
         <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
         <translation>В параметре -onlynet указана неизвестная сеть: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="362"/>
+        <location filename="../darkcoinstrings.cpp" line="363"/>
         <source>Upgrade wallet to latest format</source>
         <translation>Обновить бумажник до последнего формата</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="363"/>
+        <location filename="../darkcoinstrings.cpp" line="364"/>
         <source>Usage (deprecated, use darkcoin-cli):</source>
         <translation>Использование (устарело, используйте darkcoin-cli):</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="364"/>
+        <location filename="../darkcoinstrings.cpp" line="365"/>
         <source>Usage:</source>
         <translation>Использование:</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="365"/>
+        <location filename="../darkcoinstrings.cpp" line="366"/>
         <source>Use KeePass 2 integration using KeePassHttp plugin (default: 0)</source>
         <translation>Использовать интеграцию с KeePass 2 через плагин KeePassHttp (по умолчанию: 0)</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="366"/>
+        <location filename="../darkcoinstrings.cpp" line="367"/>
         <source>Use N separate masternodes to anonymize funds  (2-8, default: 2)</source>
         <translation>Использовать N отдельных мастернод для анонимизации средств (2-8, по умолчанию: 2)</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="367"/>
+        <location filename="../darkcoinstrings.cpp" line="368"/>
         <source>Use OpenSSL (https) for JSON-RPC connections</source>
         <translation>Использовать OpenSSL (https) для подключений JSON-RPC</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="368"/>
+        <location filename="../darkcoinstrings.cpp" line="369"/>
         <source>Use UPnP to map the listening port (default: 0)</source>
         <translation>Использовать UPnP для проброса порта (по умолчанию: 0)</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="369"/>
+        <location filename="../darkcoinstrings.cpp" line="370"/>
         <source>Use UPnP to map the listening port (default: 1 when listening)</source>
         <translation>Использовать UPnP для проброса порта (по умолчанию: 1, если используется прослушивание)</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="370"/>
+        <location filename="../darkcoinstrings.cpp" line="371"/>
         <source>Use the test network</source>
         <translation>Использовать тестовую сеть</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="371"/>
+        <location filename="../darkcoinstrings.cpp" line="372"/>
         <source>Username for JSON-RPC connections</source>
         <translation>Имя для подключений JSON-RPC</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="372"/>
+        <location filename="../darkcoinstrings.cpp" line="373"/>
         <source>Value more than Darksend pool maximum allows.</source>
         <translation>Превышено значение допустимой для пула Darksend суммы.</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="373"/>
+        <location filename="../darkcoinstrings.cpp" line="374"/>
         <source>Verifying blocks...</source>
         <translation>Проверка блоков...</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="374"/>
+        <location filename="../darkcoinstrings.cpp" line="375"/>
         <source>Verifying wallet...</source>
         <translation>Проверка бумажника...</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="375"/>
+        <location filename="../darkcoinstrings.cpp" line="376"/>
         <source>Wait for RPC server to start</source>
         <translation>Дождаться старта RPC сервера</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="376"/>
+        <location filename="../darkcoinstrings.cpp" line="377"/>
         <source>Wallet %s resides outside data directory %s</source>
         <translation>Бумажник %s располагается вне каталога данных %s</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="377"/>
+        <location filename="../darkcoinstrings.cpp" line="378"/>
         <source>Wallet is locked.</source>
         <translation>Бумажник заблокирован.</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="378"/>
+        <location filename="../darkcoinstrings.cpp" line="379"/>
         <source>Wallet needed to be rewritten: restart Darkcoin to complete</source>
         <translation>Необходимо перезаписать бумажник: перезапустите Darkcoin для завершения операции</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="379"/>
+        <location filename="../darkcoinstrings.cpp" line="380"/>
         <source>Wallet options:</source>
         <translation>Параметры бумажника:</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="380"/>
+        <location filename="../darkcoinstrings.cpp" line="381"/>
         <source>Warning</source>
         <translation>Внимание</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="381"/>
+        <location filename="../darkcoinstrings.cpp" line="382"/>
         <source>Warning: Deprecated argument -debugnet ignored, use -debug=net</source>
         <translation>Внимание: опция -debugnet устарела и проигнорирована, используйте -debug=net</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="382"/>
+        <location filename="../darkcoinstrings.cpp" line="383"/>
         <source>Warning: This version is obsolete, upgrade required!</source>
         <translation>Внимание: эта версия устарела, требуется обновление!</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="383"/>
+        <location filename="../darkcoinstrings.cpp" line="384"/>
         <source>Wrong state.</source>
         <translation>Неправильное состояние.</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="384"/>
+        <location filename="../darkcoinstrings.cpp" line="385"/>
         <source>You need to rebuild the database using -reindex to change -txindex</source>
         <translation>Вам необходимо пересобрать базы данных с помощью -reindex, чтобы изменить -txindex</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="385"/>
+        <location filename="../darkcoinstrings.cpp" line="386"/>
         <source>Zapping all transactions from wallet...</source>
         <translation>Удаление всех транзакций из кошелька...</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="386"/>
+        <location filename="../darkcoinstrings.cpp" line="387"/>
         <source>on startup</source>
         <translation>при запуске</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="387"/>
+        <location filename="../darkcoinstrings.cpp" line="388"/>
         <source>version</source>
         <translation>версия</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="388"/>
+        <location filename="../darkcoinstrings.cpp" line="389"/>
         <source>wallet.dat corrupt, salvage failed</source>
         <translation>wallet.dat повреждён, спасение данных не удалось</translation>
     </message>
