@@ -597,7 +597,9 @@ Value masternodelist(const Array& params, bool fHelp)
     std::vector<CMasternode> vMasternodes = mnodeman.GetFullMasternodeVector();
     BOOST_FOREACH(CMasternode& mn, vMasternodes) {
 
-        std::string strAddr = mn.addr.ToString().c_str();
+        std::ostringstream addrStream;
+        addrStream << setw(21) << mn.addr.ToString().c_str();
+        std::string strAddr = addrStream.str();
         if(strMode == "active"){
             if(strFilter !="" && strFilter != (mn.IsEnabled() ? "true" : "false") &&
                 mn.addr.ToString().find(strFilter) == string::npos) continue;
@@ -617,7 +619,7 @@ Value masternodelist(const Array& params, bool fHelp)
                            mn.protocolVersion << " | " <<
                            address2.ToString() << " | " <<
                            mn.vin.prevout.hash.ToString() << " | " <<
-                           mn.lastTimeSeen << " | " <<
+                           mn.lastTimeSeen << " | " << setw(8) <<
                            (mn.lastTimeSeen - mn.sigTime);
             std::string output = stringStream.str();
             stringStream << " " << strAddr;
