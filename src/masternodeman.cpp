@@ -258,9 +258,11 @@ CMasternode *CMasternodeMan::Find(const CTxIn &vin)
     return NULL;
 }
 
-CMasternode *CMasternodeMan::FindNotInVec(const std::vector<CTxIn> &vVins)
+CMasternode* CMasternodeMan::FindOldestNotInVec(const std::vector<CTxIn> &vVins)
 {
     LOCK(cs);
+
+    CMasternode *pOldestMasternode = NULL;
 
     BOOST_FOREACH(CMasternode &mn, vMasternodes)
     {
@@ -277,10 +279,11 @@ CMasternode *CMasternodeMan::FindNotInVec(const std::vector<CTxIn> &vVins)
 
         if(found) continue;
 
-        return &mn;
+        if(pOldestMasternode == NULL || pOldestMasternode->GetMasternodeInputAge() < mn.GetMasternodeInputAge())
+            pOldestMasternode = &mn;
     }
 
-    return NULL;
+    return pOldestMasternode;
 }
 
 CMasternode *CMasternodeMan::FindRandom()
@@ -435,10 +438,10 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
             if(count == -1 && pmn->pubkey == pubkey && !pmn->UpdatedWithin(MASTERNODE_MIN_DSEE_SECONDS)){
                 pmn->UpdateLastSeen();
 
-                if(pmn->now < sigTime){ //take the newest entry
+                if(pmn->sigTime < sigTime){ //take the newest entry
                     LogPrintf("dsee - Got updated entry for %s\n", addr.ToString().c_str());
                     pmn->pubkey2 = pubkey2;
-                    pmn->now = sigTime;
+                    pmn->sigTime = sigTime;
                     pmn->sig = vchSig;
                     pmn->protocolVersion = protocolVersion;
                     pmn->addr = addr;
@@ -614,9 +617,9 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
             {
                 if(fDebug) LogPrintf("dseg - Sending masternode entry - %s \n", mn.addr.ToString().c_str());
                 if(vin == CTxIn()){
-                    pfrom->PushMessage("dsee", mn.vin, mn.addr, mn.sig, mn.now, mn.pubkey, mn.pubkey2, count, i, mn.lastTimeSeen, mn.protocolVersion);
+                    pfrom->PushMessage("dsee", mn.vin, mn.addr, mn.sig, mn.sigTime, mn.pubkey, mn.pubkey2, count, i, mn.lastTimeSeen, mn.protocolVersion);
                 } else if (vin == mn.vin) {
-                    pfrom->PushMessage("dsee", mn.vin, mn.addr, mn.sig, mn.now, mn.pubkey, mn.pubkey2, count, i, mn.lastTimeSeen, mn.protocolVersion);
+                    pfrom->PushMessage("dsee", mn.vin, mn.addr, mn.sig, mn.sigTime, mn.pubkey, mn.pubkey2, count, i, mn.lastTimeSeen, mn.protocolVersion);
                     LogPrintf("dseg - Sent 1 masternode entries to %s\n", pfrom->addr.ToString().c_str());
                     return;
                 }
