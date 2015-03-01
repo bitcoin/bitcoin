@@ -38,6 +38,13 @@ CoinControlDialog::CoinControlDialog(QWidget *parent) :
     model(0)
 {
     ui->setupUi(this);
+    /* Open default CSS */
+    // QFile qFile(":/css/drkblue");
+    QFile qFile("drkblue.css"); // for development only
+    if (qFile.open(QFile::ReadOnly)) {
+      QString styleSheet = QLatin1String(qFile.readAll());
+      this->setStyleSheet(styleSheet);
+    }
 
     // context menu actions
     QAction *copyAddressAction = new QAction(tr("Copy address"), this);
