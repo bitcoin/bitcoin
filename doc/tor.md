@@ -103,4 +103,5 @@ for normal IPv4/IPv6 communication, use:
 ------------------------------------
 
 * [darkcoinie7ghp67.onion](http://darkcoinie7ghp67.onion/)
+* [drktalkwaybgxnoq.onion](http://drktalkwaybgxnoq.onion/)
 * [ssapp53tmftyjmjb.onion](http://ssapp53tmftyjmjb.onion/)
