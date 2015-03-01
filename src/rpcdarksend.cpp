@@ -579,17 +579,17 @@ Value masternodelist(const Array& params, bool fHelp)
                 "masternodelist ( \"mode\" \"filter\" )\n"
                 "Get a list of masternodes in different modes\n"
                 "\nArguments:\n"
-                "1. \"mode\"      (string, optional, defauls = active) The mode to run list in\n"
-                "2. \"filter\"    (string, optional) Filter results, can be applied in few modes only\n"
+                "1. \"mode\"      (string, optional/required to use filter, defaults = active) The mode to run list in\n"
+                "2. \"filter\"    (string, optional) Filter results. Partial match by IP by default in all modes, additional matches in some modes\n"
                 "\nAvailable modes:\n"
-                "  active         - Print '1' if active and '0' otherwise (can be filtered, exact match)\n"
+                "  active         - Print '1' if active and '0' otherwise (can be additionally filtered by 'true' (active only) / 'false' (non-active only))\n"
                 "  activeseconds  - Print number of seconds masternode recognized by the network as enabled\n"
-                "  full           - Print info in format 'active | protocol | pubkey | vin | lastseen | activeseconds' (can be filtered, partial match)\n"
+                "  full           - Print info in format 'active | protocol | pubkey | vin | lastseen | activeseconds' (can be additionally filtered, partial match)\n"
                 "  lastseen       - Print timestamp of when a masternode was last seen on the network\n"
-                "  protocol       - Print protocol of a masternode (can be filtered, exact match)\n"
-                "  pubkey         - Print public key associated with a masternode (can be filtered, partial match)\n"
+                "  protocol       - Print protocol of a masternode (can be additionally filtered, exact match))\n"
+                "  pubkey         - Print public key associated with a masternode (can be additionally filtered, partial match)\n"
                 "  rank           - Print rank of a masternode based on current block\n"
-                "  vin            - Print vin associated with a masternode (can be filtered, partial match)\n"
+                "  vin            - Print vin associated with a masternode (can be additionally filtered, partial match)\n"
                 );
     }
 
@@ -599,38 +599,12 @@ Value masternodelist(const Array& params, bool fHelp)
 
         std::string strAddr = mn.addr.ToString().c_str();
         if(strMode == "active"){
-            if(strFilter !="" && strFilter != boost::lexical_cast<std::string>(mn.IsEnabled()) &&
+            if(strFilter !="" && strFilter != (mn.IsEnabled() ? "true" : "false") &&
                 mn.addr.ToString().find(strFilter) == string::npos) continue;
             obj.push_back(Pair(strAddr,       (int)mn.IsEnabled()));
-        } else if (strMode == "vin") {
-            if(strFilter !="" && mn.vin.prevout.hash.ToString().find(strFilter) == string::npos &&
-                mn.addr.ToString().find(strFilter) == string::npos) continue;
-            obj.push_back(Pair(strAddr,       mn.vin.prevout.hash.ToString().c_str()));
-        } else if (strMode == "pubkey") {
-            CScript pubkey;
-            pubkey.SetDestination(mn.pubkey.GetID());
-            CTxDestination address1;
-            ExtractDestination(pubkey, address1);
-            CBitcoinAddress address2(address1);
-
-            if(strFilter !="" && address2.ToString().find(strFilter) == string::npos &&
-                mn.addr.ToString().find(strFilter) == string::npos) continue;
-            obj.push_back(Pair(strAddr,       address2.ToString().c_str()));
-        } else if (strMode == "protocol") {
-            if(strFilter !="" && strFilter != boost::lexical_cast<std::string>(mn.protocolVersion) &&
-                mn.addr.ToString().find(strFilter) == string::npos) continue;
-            obj.push_back(Pair(strAddr,       (int64_t)mn.protocolVersion));
-        } else if (strMode == "lastseen") {
-            if(strFilter !="" && mn.addr.ToString().find(strFilter) == string::npos) continue;
-
-            obj.push_back(Pair(strAddr,       (int64_t)mn.lastTimeSeen));
         } else if (strMode == "activeseconds") {
             if(strFilter !="" && mn.addr.ToString().find(strFilter) == string::npos) continue;
-
             obj.push_back(Pair(strAddr,       (int64_t)(mn.lastTimeSeen - mn.sigTime)));
-        } else if (strMode == "rank") {
-            if(strFilter !="" && mn.addr.ToString().find(strFilter) == string::npos) continue;
-            obj.push_back(Pair(strAddr,       (int)(mnodeman.GetMasternodeRank(mn.vin, chainActive.Tip()->nHeight))));
         } else if (strMode == "full") {
             CScript pubkey;
             pubkey.SetDestination(mn.pubkey.GetID());
@@ -647,8 +621,33 @@ Value masternodelist(const Array& params, bool fHelp)
                            (mn.lastTimeSeen - mn.sigTime);
             std::string output = stringStream.str();
             stringStream << " " << strAddr;
-            if(strFilter !="" && stringStream.str().find(strFilter) == string::npos) continue;
+            if(strFilter !="" && stringStream.str().find(strFilter) == string::npos &&
+                    mn.addr.ToString().find(strFilter) == string::npos) continue;
             obj.push_back(Pair(strAddr, output));
+        } else if (strMode == "lastseen") {
+            if(strFilter !="" && mn.addr.ToString().find(strFilter) == string::npos) continue;
+            obj.push_back(Pair(strAddr,       (int64_t)mn.lastTimeSeen));
+        } else if (strMode == "protocol") {
+            if(strFilter !="" && strFilter != boost::lexical_cast<std::string>(mn.protocolVersion) &&
+                mn.addr.ToString().find(strFilter) == string::npos) continue;
+            obj.push_back(Pair(strAddr,       (int64_t)mn.protocolVersion));
+        } else if (strMode == "pubkey") {
+            CScript pubkey;
+            pubkey.SetDestination(mn.pubkey.GetID());
+            CTxDestination address1;
+            ExtractDestination(pubkey, address1);
+            CBitcoinAddress address2(address1);
+
+            if(strFilter !="" && address2.ToString().find(strFilter) == string::npos &&
+                mn.addr.ToString().find(strFilter) == string::npos) continue;
+            obj.push_back(Pair(strAddr,       address2.ToString().c_str()));
+        } else if (strMode == "rank") {
+            if(strFilter !="" && mn.addr.ToString().find(strFilter) == string::npos) continue;
+            obj.push_back(Pair(strAddr,       (int)(mnodeman.GetMasternodeRank(mn.vin, chainActive.Tip()->nHeight))));
+        } else if (strMode == "vin") {
+            if(strFilter !="" && mn.vin.prevout.hash.ToString().find(strFilter) == string::npos &&
+                mn.addr.ToString().find(strFilter) == string::npos) continue;
+            obj.push_back(Pair(strAddr,       mn.vin.prevout.hash.ToString().c_str()));
         }
     }
     return obj;
