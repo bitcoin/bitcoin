@@ -101,6 +101,11 @@ AC_ARG_ENABLE([comparison-tool-reorg-tests],
     [use_comparison_tool_reorg_tests=$enableval],
     [use_comparison_tool_reorg_tests=no])
 
+AC_ARG_ENABLE([comparison-tool-barely-expensive-tests],
+    AS_HELP_STRING([--enable-comparison-tool-barely-expensive-tests],[enable barely expensive reorg tests in the comparison tool (default yes)]),
+    [use_comparison_tool_expensive_tests=$enableval],
+    [use_comparison_tool_expensive_tests=yes])
+
 AC_ARG_WITH([qrencode],
   [AS_HELP_STRING([--with-qrencode],
   [enable QR code support (default is yes if qt is enabled and libqrencode is found)])],
@@ -327,6 +332,15 @@ if test x$use_comparison_tool_reorg_tests != xno; then
   AC_SUBST(COMPARISON_TOOL_REORG_TESTS, 1)
 else
   AC_SUBST(COMPARISON_TOOL_REORG_TESTS, 0)
+fi
+
+if test x$use_comparison_tool_expensive_tests != xno; then
+  if test x$use_comparison_tool = x; then
+    AC_MSG_ERROR("comparison tool barekly expensive tests but comparison tool was not specified")
+  fi
+  AC_SUBST(COMPARISON_TOOL_EXPENSIVE_TESTS, 1)
+else
+  AC_SUBST(COMPARISON_TOOL_EXPENSIVE_TESTS, 0)
 fi
 
 if test x$use_lcov = xyes; then
