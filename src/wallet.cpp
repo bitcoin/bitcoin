@@ -1787,7 +1787,7 @@ bool CWallet::CreateCollateralTransaction(CTransaction& txCollateral, std::strin
             BOOST_FOREACH(CTxIn v, vCoinsCollateral)
                 UnlockCoin(v.prevout);
 
-            strReason = "CDarkSendPool::Sign - Unable to sign collateral transaction! \n";
+            strReason = "CDarksendPool::Sign - Unable to sign collateral transaction! \n";
             return false;
         }
         vinNumber++;
@@ -2173,8 +2173,7 @@ string CWallet::PrepareDarksendDenominate(int minRounds, int maxRounds)
     int64_t nTotalValue = GetTotalValue(vCoins);
     LogPrintf("PrepareDarksendDenominate - preparing darksend denominate . Got: %d \n", nTotalValue);
 
-    //--------------
-    BOOST_FOREACH(CTxIn v, vCoins)
+    BOOST_FOREACH(CTxIn v, vCoins) 
         LockCoin(v.prevout);
 
     // denominate our funds
@@ -2216,6 +2215,7 @@ string CWallet::PrepareDarksendDenominate(int minRounds, int maxRounds)
     std::random_shuffle (vDenoms.begin() + (int)darkSendDenominations.size() + 1, vDenoms.end());
 
     // Make outputs by looping through denominations randomly
+
     BOOST_REVERSE_FOREACH(int64_t v, vDenoms){
         //only use the ones that are approved
         bool fAccepted = false;
@@ -2270,7 +2270,6 @@ string CWallet::PrepareDarksendDenominate(int minRounds, int maxRounds)
 
             if(nValueLeft == 0) break;
         }
-
     }
 
     if(darkSendPool.GetDenominations(vOut) != darkSendPool.sessionDenom)
@@ -2279,7 +2278,6 @@ string CWallet::PrepareDarksendDenominate(int minRounds, int maxRounds)
     // we don't support change at all
     if(nValueLeft != 0)
         return "Error: change left-over in pool. Must use denominations only";
-
 
     //randomize the output order
     std::random_shuffle (vOut.begin(), vOut.end());

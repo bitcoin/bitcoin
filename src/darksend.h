@@ -9,9 +9,10 @@
 #include "main.h"
 #include "activemasternode.h"
 #include "masternodeman.h"
+#include "darksend-relay.h"
 
 class CTxIn;
-class CDarkSendPool;
+class CDarksendPool;
 class CDarkSendSigner;
 class CMasterNodeVote;
 class CBitcoinAddress;
@@ -19,7 +20,9 @@ class CDarksendQueue;
 class CDarksendBroadcastTx;
 class CActiveMasternode;
 
+// pool states for mixing
 #define POOL_MAX_TRANSACTIONS                  3 // wait for X transactions to merge and publish
+#define POOL_MAX_TRANSACTIONS_TESTNET          2 // wait for X transactions to merge and publish
 #define POOL_STATUS_UNKNOWN                    0 // waiting for update
 #define POOL_STATUS_IDLE                       1 // waiting for update
 #define POOL_STATUS_QUEUE                      2 // waiting in a queue
@@ -37,43 +40,49 @@ class CActiveMasternode;
 
 #define DARKSEND_QUEUE_TIMEOUT                 120
 #define DARKSEND_SIGNING_TIMEOUT               30
+#define DARKSEND_DOWNGRADE_TIMEOUT             30
 
-static const int MIN_POOL_PEER_PROTO_VERSION = 70067; // minimum peer version accepted by DarkSendPool
+// used for anonymous relaying of inputs/outputs/sigs
+#define DARKSEND_RELAY_IN                 1
+#define DARKSEND_RELAY_OUT                2
+#define DARKSEND_RELAY_SIG                3
 
-extern CDarkSendPool darkSendPool;
+extern CDarksendPool darkSendPool;
 extern CDarkSendSigner darkSendSigner;
 extern std::vector<CDarksendQueue> vecDarksendQueue;
 extern std::string strMasterNodePrivKey;
 extern map<uint256, CDarksendBroadcastTx> mapDarksendBroadcastTxes;
 extern CActiveMasternode activeMasternode;
 
-//specific messages for the Darksend protocol
-void ProcessMessageDarksend(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
-
 // get the darksend chain depth for a given input
 int GetInputDarksendRounds(CTxIn in, int rounds=0);
 
+//
+// Holds an Darksend input
+//
 
-// An input in the darksend pool
-class CDarkSendEntryVin
+class CTxDSIn : public CTxIn
 {
 public:
-    bool isSigSet;
-    CTxIn vin;
+    bool fHasSig;
 
-    CDarkSendEntryVin()
+    CTxDSIn(const CTxIn& in)
     {
-        isSigSet = false;
-        vin = CTxIn();
+        prevout = in.prevout;
+        scriptSig = in.scriptSig;
+        prevPubKey = in.prevPubKey;
+        nSequence = in.nSequence;
     }
 };
 
+
 // A clients transaction in the darksend pool
+// -- holds the input/output mapping for each user in the pool
 class CDarkSendEntry
 {
 public:
     bool isSet;
-    std::vector<CDarkSendEntryVin> sev;
+    std::vector<CTxIn> sev;
     int64_t amount;
     CTransaction collateral;
     std::vector<CTxOut> vout;
@@ -91,11 +100,7 @@ public:
     {
         if(isSet){return false;}
 
-        BOOST_FOREACH(const CTxIn v, vinIn) {
-            CDarkSendEntryVin s = CDarkSendEntryVin();
-            s.vin = v;
-            sev.push_back(s);
-        }
+        sev = vinIn;
         vout = voutIn;
         amount = amountIn;
         collateral = collateralIn;
@@ -105,27 +110,12 @@ public:
         return true;
     }
 
-    bool AddSig(const CTxIn& vin)
-    {
-        BOOST_FOREACH(CDarkSendEntryVin& s, sev) {
-            if(s.vin.prevout == vin.prevout && s.vin.nSequence == vin.nSequence){
-                if(s.isSigSet){return false;}
-                s.vin.scriptSig = vin.scriptSig;
-                s.vin.prevPubKey = vin.prevPubKey;
-                s.isSigSet = true;
-
-                return true;
-            }
-        }
-
-        return false;
-    }
-
     bool IsExpired()
     {
         return (GetTime() - addedTime) > DARKSEND_QUEUE_TIMEOUT;// 120 seconds
     }
 };
+
 
 //
 // A currently inprogress darksend merge and denomination information
@@ -139,12 +129,20 @@ public:
     bool ready; //ready for submit
     std::vector<unsigned char> vchSig;
 
+    //information used for the anonymous relay system
+    int nBlockHeight;
+    std::vector<unsigned char> vchRelaySig;
+    std::string strSharedKey;
+
     CDarksendQueue()
     {
         nDenom = 0;
         vin = CTxIn();
         time = 0;
         vchSig.clear();
+        vchRelaySig.clear();
+        nBlockHeight = 0;
+        strSharedKey = "";
         ready = false;
     }
 
@@ -155,6 +153,12 @@ public:
         READWRITE(time);
         READWRITE(ready);
         READWRITE(vchSig);
+
+        if(ready){
+            READWRITE(vchRelaySig);
+            READWRITE(nBlockHeight);
+            READWRITE(strSharedKey);
+        }
     )
 
     bool GetAddress(CService &addr)
@@ -213,15 +217,29 @@ public:
     bool VerifyMessage(CPubKey pubkey, std::vector<unsigned char>& vchSig, std::string strMessage, std::string& errorMessage);
 };
 
-class CDarksendSession
+//
+// Build a transaction anonymously
+//
+class CDSAnonTx
 {
+public:
+    std::vector<CTxDSIn> vin;
+    std::vector<CTxOut> vout;
 
+    bool IsTransactionValid();
+    bool AddOutput(const CTxOut out);
+    bool AddInput(const CTxIn in);
+    bool AddSig(const CTxIn in);
+    int CountEntries() {return (int)vin.size() + (int)vout.size();}
 };
+
+void ConnectToDarkSendMasterNodeWinner();
+
 
 //
 // Used to keep track of current status of darksend pool
 //
-class CDarkSendPool
+class CDarksendPool
 {
 public:
 
@@ -231,6 +249,10 @@ public:
     std::vector<CDarkSendEntry> entries;
     // the finalized transaction ready for signing
     CTransaction finalTransaction;
+    // anonymous inputs/outputs
+    CDSAnonTx anonTx;
+    bool fSubmitAnonymousFailed;
+    int nCountAttempts;
 
     int64_t lastTimeChanged;
     int64_t lastAutoDenomination;
@@ -250,7 +272,7 @@ public:
     std::string lastMessage;
     bool completedTransaction;
     bool unitTest;
-    CService submittedToMasternode;
+    CMasternode* pSubmittedToMasternode;
 
     int sessionID;
     int sessionDenom; //Users must submit an denom matching this
@@ -269,10 +291,16 @@ public:
     //debugging data
     std::string strAutoDenomResult;
 
+    // used for securing the anonymous relay system
+    vector<unsigned char> vchMasternodeRelaySig;
+    int nMasternodeBlockHeight;
+    std::string strMasternodeSharedKey;
+    bool fResentInputsOutputs;
+
     //incremented whenever a DSQ comes through
     int64_t nDsqCount;
 
-    CDarkSendPool()
+    CDarksendPool()
     {
         /* DarkSend uses collateral addresses to trust parties entering the pool
             to behave themselves. If they don't it takes their money. */
@@ -284,11 +312,14 @@ public:
         minBlockSpacing = 1;
         nDsqCount = 0;
         lastNewBlock = 0;
+        strMasternodeSharedKey = "";
+        fResentInputsOutputs = false;
 
         SetNull();
     }
 
-    void ProcessMasternodeConnections();
+    //specific messages for the Darksend protocol
+    void ProcessMessageDarksend(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
 
     void InitCollateralAddress(){
         std::string strAddress = "";
@@ -306,6 +337,9 @@ public:
 
     bool SetCollateralAddress(std::string strAddress);
     void Reset();
+    bool Downgrade();
+    bool ResendMissingInputsOutputs();
+
     void SetNull(bool clearEverything=false);
 
     void UnlockCoins();
@@ -347,15 +381,15 @@ public:
     void UpdateState(unsigned int newState)
     {
         if (fMasterNode && (newState == POOL_STATUS_ERROR || newState == POOL_STATUS_SUCCESS)){
-            LogPrintf("CDarkSendPool::UpdateState() - Can't set state to ERROR or SUCCESS as a masternode. \n");
+            LogPrintf("CDarksendPool::UpdateState() - Can't set state to ERROR or SUCCESS as a masternode. \n");
             return;
         }
 
-        LogPrintf("CDarkSendPool::UpdateState() == %d | %d \n", state, newState);
+        LogPrintf("CDarksendPool::UpdateState() == %d | %d \n", state, newState);
         if(state != newState){
             lastTimeChanged = GetTimeMillis();
             if(fMasterNode) {
-                RelayDarkSendStatus(darkSendPool.sessionID, darkSendPool.GetState(), darkSendPool.GetEntriesCount(), MASTERNODE_RESET);
+                RelayStatus(darkSendPool.sessionID, darkSendPool.GetState(), darkSendPool.GetEntriesCount(), MASTERNODE_RESET);
             }
         }
         state = newState;
@@ -364,7 +398,7 @@ public:
     int GetMaxPoolTransactions()
     {
         //if we're on testnet, just use two transactions per merge
-        if(Params().NetworkID() == CChainParams::TESTNET || Params().NetworkID() == CChainParams::REGTEST) return 2;
+        if(Params().NetworkID() == CChainParams::TESTNET || Params().NetworkID() == CChainParams::REGTEST) return POOL_MAX_TRANSACTIONS_TESTNET;
 
         //use the production amount
         return POOL_MAX_TRANSACTIONS;
@@ -376,7 +410,8 @@ public:
     }
 
     // Are these outputs compatible with other client in the pool?
-    bool IsCompatibleWithEntries(std::vector<CTxOut> vout);
+    bool IsCompatibleWithEntries(std::vector<CTxOut>& vout);
+
     // Is this amount compatible with other client in the pool?
     bool IsCompatibleWithSession(int64_t nAmount, CTransaction txCollateral, std::string& strReason);
 
@@ -384,20 +419,33 @@ public:
     bool DoAutomaticDenominating(bool fDryRun=false, bool ready=false);
     bool PrepareDarksendDenominate();
 
-
     // check for process in Darksend
     void Check();
+    void CheckFinalTransaction();
     // charge fees to bad actors
     void ChargeFees();
     // rarely charge fees to pay miners
     void ChargeRandomFees();
     void CheckTimeout();
+    void CheckForCompleteQueue();
     // check to make sure a signature matches an input in the pool
     bool SignatureValid(const CScript& newSig, const CTxIn& newVin);
     // if the collateral is valid given by a client
     bool IsCollateralValid(const CTransaction& txCollateral);
     // add a clients entry to the pool
     bool AddEntry(const std::vector<CTxIn>& newInput, const int64_t& nAmount, const CTransaction& txCollateral, const std::vector<CTxOut>& newOutput, std::string& error);
+
+    // add an anonymous output/inputs/sig
+    bool AddAnonymousOutput(const CTxOut& out) {return anonTx.AddOutput(out);}
+    bool AddAnonymousInput(const CTxIn& in) {return anonTx.AddInput(in);}
+    bool AddAnonymousSig(const CTxIn& in) {return anonTx.AddSig(in);}
+    bool AddRelaySignature(vector<unsigned char> vchMasternodeRelaySigIn, int nMasternodeBlockHeightIn, std::string strSharedKey) {
+        vchMasternodeRelaySig = vchMasternodeRelaySigIn;
+        nMasternodeBlockHeight = nMasternodeBlockHeightIn;
+        strMasternodeSharedKey = strSharedKey;
+        return true;
+    }
+
     // add signature to a vin
     bool AddScriptSig(const CTxIn& newVin);
     // are all inputs signed?
@@ -418,20 +466,31 @@ public:
     void ClearLastMessage();
     // used for liquidity providers
     bool SendRandomPaymentToSelf();
+    
     // split up large inputs or make fee sized inputs
     bool MakeCollateralAmounts();
     bool CreateDenominated(int64_t nTotalValue);
+    
     // get the denominations for a list of outputs (returns a bitshifted integer)
     int GetDenominations(const std::vector<CTxOut>& vout);
     void GetDenominationsToString(int nDenom, std::string& strDenom);
+
     // get the denominations for a specific amount of darkcoin.
     int GetDenominationsByAmount(int64_t nAmount, int nDenomTarget=0);
-
     int GetDenominationsByAmounts(std::vector<int64_t>& vecAmount);
+
+
+    //
+    // Relay Darksend Messages
+    //
+
+    void RelayFinalTransaction(const int sessionID, const CTransaction& txNew);
+    void RelaySignaturesAnon(std::vector<CTxIn>& vin);
+    void RelayInAnon(std::vector<CTxIn>& vin, std::vector<CTxOut>& vout);
+    void RelayIn(const std::vector<CTxIn>& vin, const int64_t& nAmount, const CTransaction& txCollateral, const std::vector<CTxOut>& vout);
+    void RelayStatus(const int sessionID, const int newState, const int newEntriesCount, const int newAccepted, const std::string error="");
+    void RelayCompletedTransaction(const int sessionID, const bool error, const std::string errorMessage);
 };
-
-
-void ConnectToDarkSendMasterNodeWinner();
 
 void ThreadCheckDarkSendPool();
 
