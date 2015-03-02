@@ -21,47 +21,6 @@
 #error "Please select field implementation"
 #endif
 
-static void secp256k1_fe_get_hex(char *r64, const secp256k1_fe_t *a) {
-    secp256k1_fe_t b;
-    int i;
-    unsigned char tmp[32];
-    b = *a;
-    secp256k1_fe_normalize(&b);
-    secp256k1_fe_get_b32(tmp, &b);
-    for (i=0; i<32; i++) {
-        /* Hex character table. */
-        static const char *c = "0123456789ABCDEF";
-        r64[2*i]   = c[(tmp[i] >> 4) & 0xF];
-        r64[2*i+1] = c[(tmp[i]) & 0xF];
-    }
-}
-
-static int secp256k1_fe_set_hex(secp256k1_fe_t *r, const char *a64) {
-    int i;
-    unsigned char tmp[32];
-    /* Byte to hex value table. */
-    static const int cvt[256] = {0, 0, 0, 0, 0, 0, 0,0,0,0,0,0,0,0,0,0,
-                                 0, 0, 0, 0, 0, 0, 0,0,0,0,0,0,0,0,0,0,
-                                 0, 0, 0, 0, 0, 0, 0,0,0,0,0,0,0,0,0,0,
-                                 0, 1, 2, 3, 4, 5, 6,7,8,9,0,0,0,0,0,0,
-                                 0,10,11,12,13,14,15,0,0,0,0,0,0,0,0,0,
-                                 0, 0, 0, 0, 0, 0, 0,0,0,0,0,0,0,0,0,0,
-                                 0,10,11,12,13,14,15,0,0,0,0,0,0,0,0,0,
-                                 0, 0, 0, 0, 0, 0, 0,0,0,0,0,0,0,0,0,0,
-                                 0, 0, 0, 0, 0, 0, 0,0,0,0,0,0,0,0,0,0,
-                                 0, 0, 0, 0, 0, 0, 0,0,0,0,0,0,0,0,0,0,
-                                 0, 0, 0, 0, 0, 0, 0,0,0,0,0,0,0,0,0,0,
-                                 0, 0, 0, 0, 0, 0, 0,0,0,0,0,0,0,0,0,0,
-                                 0, 0, 0, 0, 0, 0, 0,0,0,0,0,0,0,0,0,0,
-                                 0, 0, 0, 0, 0, 0, 0,0,0,0,0,0,0,0,0,0,
-                                 0, 0, 0, 0, 0, 0, 0,0,0,0,0,0,0,0,0,0,
-                                 0, 0, 0, 0, 0, 0, 0,0,0,0,0,0,0,0,0,0};
-    for (i=0; i<32; i++) {
-        tmp[i] = (cvt[(unsigned char)a64[2*i]] << 4) + cvt[(unsigned char)a64[2*i+1]];
-    }
-    return secp256k1_fe_set_b32(r, tmp);
-}
-
 SECP256K1_INLINE static int secp256k1_fe_equal_var(const secp256k1_fe_t *a, const secp256k1_fe_t *b) {
     secp256k1_fe_t na;
     secp256k1_fe_negate(&na, a, 1);

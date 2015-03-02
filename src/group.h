@@ -17,6 +17,9 @@ typedef struct {
     int infinity; /* whether this represents the point at infinity */
 } secp256k1_ge_t;
 
+#define SECP256K1_GE_CONST(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p) {SECP256K1_FE_CONST((a),(b),(c),(d),(e),(f),(g),(h)), SECP256K1_FE_CONST((i),(j),(k),(l),(m),(n),(o),(p)), 0}
+#define SECP256K1_GE_CONST_INFINITY {SECP256K1_FE_CONST(0, 0, 0, 0, 0, 0, 0, 0), SECP256K1_FE_CONST(0, 0, 0, 0, 0, 0, 0, 0), 1}
+
 /** A group element of the secp256k1 curve, in jacobian coordinates. */
 typedef struct {
     secp256k1_fe_t x; /* actual X: x/z^2 */
@@ -25,10 +28,15 @@ typedef struct {
     int infinity; /* whether this represents the point at infinity */
 } secp256k1_gej_t;
 
+#define SECP256K1_GEJ_CONST(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p) {SECP256K1_FE_CONST((a),(b),(c),(d),(e),(f),(g),(h)), SECP256K1_FE_CONST((i),(j),(k),(l),(m),(n),(o),(p)), SECP256K1_FE_CONST(0, 0, 0, 0, 0, 0, 0, 1), 0}
+#define SECP256K1_GEJ_CONST_INFINITY {SECP256K1_FE_CONST(0, 0, 0, 0, 0, 0, 0, 0), SECP256K1_FE_CONST(0, 0, 0, 0, 0, 0, 0, 0), SECP256K1_FE_CONST(0, 0, 0, 0, 0, 0, 0, 0), 1}
+
 typedef struct {
     secp256k1_fe_storage_t x;
     secp256k1_fe_storage_t y;
 } secp256k1_ge_storage_t;
+
+#define SECP256K1_GE_STORAGE_CONST(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p) {SECP256K1_FE_STORAGE_CONST((a),(b),(c),(d),(e),(f),(g),(h)), SECP256K1_FE_STORAGE_CONST((i),(j),(k),(l),(m),(n),(o),(p))}
 
 /** Set a group element equal to the point at infinity */
 static void secp256k1_ge_set_infinity(secp256k1_ge_t *r);
@@ -47,9 +55,6 @@ static int secp256k1_ge_is_infinity(const secp256k1_ge_t *a);
 static int secp256k1_ge_is_valid_var(const secp256k1_ge_t *a);
 
 static void secp256k1_ge_neg(secp256k1_ge_t *r, const secp256k1_ge_t *a);
-
-/** Get a 131-character hex representation of a point. */
-static void secp256k1_ge_get_hex(char *r131, const secp256k1_ge_t *a);
 
 /** Set a group element equal to another which is given in jacobian coordinates */
 static void secp256k1_ge_set_gej(secp256k1_ge_t *r, secp256k1_gej_t *a);
@@ -89,9 +94,6 @@ static void secp256k1_gej_add_ge(secp256k1_gej_t *r, const secp256k1_gej_t *a, c
     than secp256k1_gej_add_var. It is identical to secp256k1_gej_add_ge but without constant-time
     guarantee, and b is allowed to be infinity. */
 static void secp256k1_gej_add_ge_var(secp256k1_gej_t *r, const secp256k1_gej_t *a, const secp256k1_ge_t *b);
-
-/** Get a 131-character hex representation of a point. */
-static void secp256k1_gej_get_hex(char *r131, const secp256k1_gej_t *a);
 
 #ifdef USE_ENDOMORPHISM
 /** Set r to be equal to lambda times a, where lambda is chosen in a way such that this is very fast. */
