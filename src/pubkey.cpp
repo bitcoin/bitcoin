@@ -53,7 +53,7 @@ bool CPubKey::IsFullyValid() const {
     if (!IsValid())
         return false;
 #ifdef USE_SECP256K1
-    if (!secp256k1_ecdsa_pubkey_verify(begin(), size()))
+    if (!secp256k1_ec_pubkey_verify(begin(), size()))
         return false;
 #else
     CECKey key;
@@ -68,7 +68,7 @@ bool CPubKey::Decompress() {
         return false;
 #ifdef USE_SECP256K1
     int clen = size();
-    int ret = secp256k1_ecdsa_pubkey_decompress((unsigned char*)begin(), &clen);
+    int ret = secp256k1_ec_pubkey_decompress((unsigned char*)begin(), &clen);
     assert(ret);
     assert(clen == (int)size());
 #else
@@ -91,7 +91,7 @@ bool CPubKey::Derive(CPubKey& pubkeyChild, unsigned char ccChild[32], unsigned i
     memcpy(ccChild, out+32, 32);
 #ifdef USE_SECP256K1
     pubkeyChild = *this;
-    bool ret = secp256k1_ecdsa_pubkey_tweak_add((unsigned char*)pubkeyChild.begin(), pubkeyChild.size(), out);
+    bool ret = secp256k1_ec_pubkey_tweak_add((unsigned char*)pubkeyChild.begin(), pubkeyChild.size(), out);
 #else
     CECKey key;
     bool ret = key.SetPubKey(begin(), size());
