@@ -15,7 +15,8 @@
         <location filename="../forms/aboutdialog.ui" line="94"/>
         <source>Copyright &amp;copy; 2009-2014 The Bitcoin Core developers.
 Copyright &amp;copy; 2014-YYYY The Darkcoin Core developers.</source>
-        <translation type="unfinished"/>
+        <translation>Autortiesības&amp;Kopija 2009-2014 Bitcoin Core izstrādātāji.
+Autortiesības&amp;Kopija 2014-YYYY Darkcoin Core izstrādātāji. </translation>
     </message>
     <message>
         <location filename="../forms/aboutdialog.ui" line="111"/>
@@ -562,12 +563,12 @@ Nesniedz reālu drošību</translation>
     <message>
         <location filename="../bitcoingui.cpp" line="313"/>
         <source>Open &amp;Configuration File</source>
-        <translation type="unfinished"/>
+        <translation>Atvērt&amp;Konfigurēt failu</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="314"/>
         <source>Open configuration file</source>
-        <translation type="unfinished"/>
+        <translation>Atvērt konfigurācijas failu</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="316"/>
@@ -643,7 +644,7 @@ Nesniedz reālu drošību</translation>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="643"/>
         <source>%n active connection(s) to Darkcoin network</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation><numerusform>0 aktīvi savienojumi ar Darkcoin tīklu</numerusform><numerusform>1 aktīvs savienojums ar Darkcoin tīklu</numerusform><numerusform>%n aktīvi savienojumi ar Darkcoin tīklu</numerusform></translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="655"/>
@@ -678,7 +679,7 @@ Nesniedz reālu drošību</translation>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="701"/>
         <source>%n hour(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation><numerusform>0 stundas</numerusform><numerusform>1 stunda</numerusform><numerusform>%n stundas</numerusform></translation>
     </message>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="705"/>
@@ -788,7 +789,7 @@ Adrese: %4
 <context>
     <name>ClientModel</name>
     <message>
-        <location filename="../clientmodel.cpp" line="135"/>
+        <location filename="../clientmodel.cpp" line="164"/>
         <source>Network Alert</source>
         <translation>Tīkla brīdinājums</translation>
     </message>
@@ -1490,7 +1491,7 @@ Maiciņš arī glabāsies šajā direkotrijā.</translation>
     <message>
         <location filename="../forms/optionsdialog.ui" line="165"/>
         <source>This amount acts as a threshold to turn off Darksend once it&apos;s reached.</source>
-        <translation type="unfinished"/>
+        <translation>Šis apjoms ir kā slieksnis, lai izslēgtu Darksend, kad tas tiek sasniegts..</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="180"/>
@@ -1637,7 +1638,8 @@ Tas iespaido arī jūsu bilances aprēķinu.</translation>
         <location filename="../forms/optionsdialog.ui" line="524"/>
         <source>Language missing or translation incomplete? Help contributing translations here:
 https://www.transifex.com/projects/p/darkcoin/</source>
-        <translation type="unfinished"/>
+        <translation>Trūkst tulkojums vai tulkojums nav pabeigts? Palīdzi tulkot šeit:
+https://www.transifex.com/projects/p/darkcoin/</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="550"/>
@@ -1779,7 +1781,7 @@ https://www.transifex.com/projects/p/darkcoin/</source>
     <message>
         <location filename="../forms/overviewpage.ui" line="191"/>
         <source>Mined balance that has not yet matured</source>
-        <translation type="unfinished"/>
+        <translation>&quot;Maininga&quot; bilance, kas vēl nav apstiprināta</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="207"/>
@@ -1913,12 +1915,12 @@ https://www.transifex.com/projects/p/darkcoin/</source>
     <message>
         <location filename="../overviewpage.cpp" line="269"/>
         <source>No inputs detected</source>
-        <translation type="unfinished"/>
+        <translation>Ievades nav fiksētas</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="277"/>
         <source>Found unconfirmed denominated outputs, will wait till they confirm to recalculate.</source>
-        <translation type="unfinished"/>
+        <translation>Atrastas neapstiprinātas denominētas izvades, gaida līdz apstiprinājumam lai pārrēķinātu.</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="334"/>
@@ -1951,7 +1953,7 @@ https://www.transifex.com/projects/p/darkcoin/</source>
     <message>
         <location filename="../overviewpage.cpp" line="390"/>
         <source>Submitted following entries to masternode:</source>
-        <translation type="unfinished"/>
+        <translation>Iesniegti sekojoši ieraksti iekš masternode:</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="391"/>
@@ -2008,17 +2010,17 @@ https://www.transifex.com/projects/p/darkcoin/</source>
     <message>
         <location filename="../overviewpage.cpp" line="411"/>
         <source>Submitted to masternode, waiting in queue .</source>
-        <translation type="unfinished"/>
+        <translation>Iesniegts masternodei, gaida rindā.</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="412"/>
         <source>Submitted to masternode, waiting in queue ..</source>
-        <translation type="unfinished"/>
+        <translation>Iesniegts masternodei, gaida rindā..</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="413"/>
         <source>Submitted to masternode, waiting in queue ...</source>
-        <translation type="unfinished"/>
+        <translation>Iesniegts masternodei, gaida rindā...</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="415"/>
@@ -2038,12 +2040,12 @@ https://www.transifex.com/projects/p/darkcoin/</source>
     <message>
         <location filename="../overviewpage.cpp" line="465"/>
         <source>Darksend requires at least %1 to use.</source>
-        <translation type="unfinished"/>
+        <translation>Darksend pieprasa vismaz %1 lai lietotu.</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="479"/>
         <source>Wallet is locked and user declined to unlock. Disabling Darksend.</source>
-        <translation type="unfinished"/>
+        <translation>Maciņš ir slēgts un lietotājs nepiekrita to atvērt. Atspējo Darksend.</translation>
     </message>
 </context>
 <context>
@@ -2061,17 +2063,17 @@ https://www.transifex.com/projects/p/darkcoin/</source>
     <message>
         <location filename="../paymentserver.cpp" line="294"/>
         <source>Cannot start darkcoin: click-to-pay handler</source>
-        <translation type="unfinished"/>
+        <translation>Nevar palaist darkcoin: nospied-lai-maksātu apstrādātāju</translation>
     </message>
     <message>
         <location filename="../paymentserver.cpp" line="352"/>
         <source>Net manager warning</source>
-        <translation type="unfinished"/>
+        <translation>Tīkla pārvaldnieka brīdinājums</translation>
     </message>
     <message>
         <location filename="../paymentserver.cpp" line="353"/>
         <source>Your active proxy doesn&apos;t support SOCKS5, which is required for payment requests via proxy.</source>
-        <translation type="unfinished"/>
+        <translation>Jūsu aktīvais proxy neatbalsta SOCK5, kas ir nepieciešams maksājumu pieprasījumiem.</translation>
     </message>
     <message>
         <location filename="../paymentserver.cpp" line="404"/>
@@ -2337,63 +2339,63 @@ https://www.transifex.com/projects/p/darkcoin/</source>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="550"/>
-        <location filename="../rpcconsole.cpp" line="365"/>
+        <location filename="../rpcconsole.cpp" line="367"/>
         <source>In:</source>
         <translation>Ie.:</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="630"/>
-        <location filename="../rpcconsole.cpp" line="366"/>
+        <location filename="../rpcconsole.cpp" line="368"/>
         <source>Out:</source>
         <translation>Iz.:</translation>
     </message>
     <message>
-        <location filename="../rpcconsole.cpp" line="331"/>
+        <location filename="../rpcconsole.cpp" line="333"/>
         <source>Welcome to the Darkcoin RPC console.</source>
-        <translation type="unfinished"/>
+        <translation>Laipni lūgti Darkcoin RPC konsolē.</translation>
     </message>
     <message>
-        <location filename="../rpcconsole.cpp" line="332"/>
+        <location filename="../rpcconsole.cpp" line="334"/>
         <source>Use up and down arrows to navigate history, and &lt;b&gt;Ctrl-L&lt;/b&gt; to clear screen.</source>
         <translation>Izmantojiet bultiņas uz augšu un leju, lai pārvietotos pa vēsturi, un &lt;b&gt;Ctrl-L&lt;/b&gt; ekrāna notīrīšanai.</translation>
     </message>
     <message>
-        <location filename="../rpcconsole.cpp" line="333"/>
+        <location filename="../rpcconsole.cpp" line="335"/>
         <source>Type &lt;b&gt;help&lt;/b&gt; for an overview of available commands.</source>
         <translation>Ierakstiet &lt;b&gt;help&lt;/b&gt; lai iegūtu pieejamo komandu sarakstu.</translation>
     </message>
     <message>
-        <location filename="../rpcconsole.cpp" line="472"/>
+        <location filename="../rpcconsole.cpp" line="474"/>
         <source>%1 B</source>
         <translation>%1 B</translation>
     </message>
     <message>
-        <location filename="../rpcconsole.cpp" line="474"/>
+        <location filename="../rpcconsole.cpp" line="476"/>
         <source>%1 KB</source>
         <translation>%1 KB</translation>
     </message>
     <message>
-        <location filename="../rpcconsole.cpp" line="476"/>
+        <location filename="../rpcconsole.cpp" line="478"/>
         <source>%1 MB</source>
         <translation>%1 MB</translation>
     </message>
     <message>
-        <location filename="../rpcconsole.cpp" line="478"/>
+        <location filename="../rpcconsole.cpp" line="480"/>
         <source>%1 GB</source>
         <translation>%1 GB</translation>
     </message>
     <message>
-        <location filename="../rpcconsole.cpp" line="485"/>
+        <location filename="../rpcconsole.cpp" line="487"/>
         <source>%1 m</source>
         <translation>%1 m</translation>
     </message>
     <message>
-        <location filename="../rpcconsole.cpp" line="490"/>
+        <location filename="../rpcconsole.cpp" line="492"/>
         <source>%1 h</source>
         <translation>%1 st</translation>
     </message>
     <message>
-        <location filename="../rpcconsole.cpp" line="492"/>
+        <location filename="../rpcconsole.cpp" line="494"/>
         <source>%1 h %2 m</source>
         <translation>%1 st %2 m</translation>
     </message>
@@ -2790,13 +2792,13 @@ https://www.transifex.com/projects/p/darkcoin/</source>
         <location filename="../sendcoinsdialog.cpp" line="151"/>
         <location filename="../sendcoinsdialog.cpp" line="160"/>
         <source>using</source>
-        <translation type="unfinished"/>
+        <translation>lieto</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="145"/>
         <location filename="../sendcoinsdialog.cpp" line="151"/>
         <source>anonymous funds</source>
-        <translation type="unfinished"/>
+        <translation>anonīmā bilance</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="155"/>
@@ -2811,7 +2813,7 @@ https://www.transifex.com/projects/p/darkcoin/</source>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="166"/>
         <source>and InstantX</source>
-        <translation type="unfinished"/>
+        <translation>un Tūlītēja Transakcija</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="190"/>
@@ -2824,7 +2826,7 @@ https://www.transifex.com/projects/p/darkcoin/</source>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="253"/>
         <source>Are you sure you want to send?</source>
-        <translation type="unfinished"/>
+        <translation>Vai tiešām vēlaties sūtīt?</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="262"/>
@@ -4714,556 +4716,561 @@ Ja fails neeksistē, izveidojiet to ar atļauju lasīšanai tikai īpašniekam.<
     </message>
     <message>
         <location filename="../darkcoinstrings.cpp" line="278"/>
-        <source>Loading wallet... (%3.2f %%)</source>
+        <source>Loading masternode list...</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../darkcoinstrings.cpp" line="279"/>
+        <source>Loading wallet... (%3.2f %%)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../darkcoinstrings.cpp" line="280"/>
         <source>Loading wallet...</source>
         <translation>Ielādē maciņu...</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="280"/>
+        <location filename="../darkcoinstrings.cpp" line="281"/>
         <source>Log transaction priority and fee per kB when mining blocks (default: 0)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="281"/>
+        <location filename="../darkcoinstrings.cpp" line="282"/>
         <source>Maintain a full transaction index (default: 0)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="282"/>
+        <location filename="../darkcoinstrings.cpp" line="283"/>
         <source>Maintain at most &lt;n&gt; connections to peers (default: 125)</source>
         <translation>Uzturēt līdz &lt;n&gt; savienojumiem ar citiem mezgliem(pēc noklusēšanas: 125)</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="283"/>
+        <location filename="../darkcoinstrings.cpp" line="284"/>
         <source>Masternode options:</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="284"/>
+        <location filename="../darkcoinstrings.cpp" line="285"/>
         <source>Masternode queue is full.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="285"/>
+        <location filename="../darkcoinstrings.cpp" line="286"/>
         <source>Masternode:</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="286"/>
+        <location filename="../darkcoinstrings.cpp" line="287"/>
         <source>Maximum per-connection receive buffer, &lt;n&gt;*1000 bytes (default: 5000)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="287"/>
+        <location filename="../darkcoinstrings.cpp" line="288"/>
         <source>Maximum per-connection send buffer, &lt;n&gt;*1000 bytes (default: 1000)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="288"/>
+        <location filename="../darkcoinstrings.cpp" line="289"/>
         <source>Missing input transaction information.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="289"/>
+        <location filename="../darkcoinstrings.cpp" line="290"/>
         <source>No compatible masternode found.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="290"/>
+        <location filename="../darkcoinstrings.cpp" line="291"/>
         <source>No funds detected in need of denominating.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="291"/>
+        <location filename="../darkcoinstrings.cpp" line="292"/>
         <source>No masternodes detected.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="292"/>
+        <location filename="../darkcoinstrings.cpp" line="293"/>
         <source>No matching denominations found for mixing.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="293"/>
+        <location filename="../darkcoinstrings.cpp" line="294"/>
         <source>Non-standard public key detected.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="294"/>
+        <location filename="../darkcoinstrings.cpp" line="295"/>
         <source>Not compatible with existing transactions.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="295"/>
+        <location filename="../darkcoinstrings.cpp" line="296"/>
         <source>Not enough file descriptors available.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="296"/>
+        <location filename="../darkcoinstrings.cpp" line="297"/>
         <source>Not in the masternode list.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="297"/>
+        <location filename="../darkcoinstrings.cpp" line="298"/>
         <source>Only accept block chain matching built-in checkpoints (default: 1)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="298"/>
+        <location filename="../darkcoinstrings.cpp" line="299"/>
         <source>Only connect to nodes in network &lt;net&gt; (IPv4, IPv6 or Tor)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="299"/>
+        <location filename="../darkcoinstrings.cpp" line="300"/>
         <source>Options:</source>
         <translation>Iespējas:</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="300"/>
+        <location filename="../darkcoinstrings.cpp" line="301"/>
         <source>Password for JSON-RPC connections</source>
         <translation>JSON-RPC savienojumu parole</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="301"/>
+        <location filename="../darkcoinstrings.cpp" line="302"/>
         <source>Prepend debug output with timestamp (default: 1)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="302"/>
+        <location filename="../darkcoinstrings.cpp" line="303"/>
         <source>Print block on startup, if found in block index</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="303"/>
+        <location filename="../darkcoinstrings.cpp" line="304"/>
         <source>Print block tree on startup (default: 0)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="304"/>
+        <location filename="../darkcoinstrings.cpp" line="305"/>
         <source>RPC SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="305"/>
+        <location filename="../darkcoinstrings.cpp" line="306"/>
         <source>RPC client options:</source>
         <translation>RPC klienta iespējas:</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="306"/>
+        <location filename="../darkcoinstrings.cpp" line="307"/>
         <source>RPC server options:</source>
         <translation>RPC servera iestatījumi:</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="307"/>
+        <location filename="../darkcoinstrings.cpp" line="308"/>
         <source>Randomly drop 1 of every &lt;n&gt; network messages</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="308"/>
+        <location filename="../darkcoinstrings.cpp" line="309"/>
         <source>Randomly fuzz 1 of every &lt;n&gt; network messages</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="309"/>
+        <location filename="../darkcoinstrings.cpp" line="310"/>
         <source>Rebuild block chain index from current blk000??.dat files</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="310"/>
+        <location filename="../darkcoinstrings.cpp" line="311"/>
         <source>Rescan the block chain for missing wallet transactions</source>
         <translation>Atkārtoti skanēt bloku virkni, meklējot trūkstošās maciņa transakcijas</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="311"/>
+        <location filename="../darkcoinstrings.cpp" line="312"/>
         <source>Rescanning...</source>
         <translation>Skanēju no jauna...</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="312"/>
+        <location filename="../darkcoinstrings.cpp" line="313"/>
         <source>Run a thread to flush wallet periodically (default: 1)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="313"/>
+        <location filename="../darkcoinstrings.cpp" line="314"/>
         <source>Run in the background as a daemon and accept commands</source>
         <translation>Darbināt fonā kā servisu un pieņemt komandas</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="314"/>
+        <location filename="../darkcoinstrings.cpp" line="315"/>
         <source>SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="315"/>
+        <location filename="../darkcoinstrings.cpp" line="316"/>
         <source>Select SOCKS version for -proxy (4 or 5, default: 5)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="316"/>
+        <location filename="../darkcoinstrings.cpp" line="317"/>
         <source>Send command to Darkcoin Core</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="317"/>
+        <location filename="../darkcoinstrings.cpp" line="318"/>
         <source>Send commands to node running on &lt;ip&gt; (default: 127.0.0.1)</source>
         <translation>Nosūtīt komandas mezglam, kas darbojas adresē &lt;ip&gt; (pēc noklusēšanas: 127.0.0.1)</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="318"/>
+        <location filename="../darkcoinstrings.cpp" line="319"/>
         <source>Send trace/debug info to console instead of debug.log file</source>
         <translation>Debug/trace informāciju izvadīt konsolē, nevis debug.log failā</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="319"/>
+        <location filename="../darkcoinstrings.cpp" line="320"/>
         <source>Server certificate file (default: server.cert)</source>
         <translation>Servera sertifikāta fails (pēc noklusēšanas: server.cert)</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="320"/>
+        <location filename="../darkcoinstrings.cpp" line="321"/>
         <source>Server private key (default: server.pem)</source>
         <translation>Servera privātā atslēga (pēc noklusēšanas: server.pem)</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="321"/>
+        <location filename="../darkcoinstrings.cpp" line="322"/>
         <source>Session not complete!</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="322"/>
+        <location filename="../darkcoinstrings.cpp" line="323"/>
         <source>Session timed out (30 seconds), please resubmit.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="323"/>
+        <location filename="../darkcoinstrings.cpp" line="324"/>
         <source>Set database cache size in megabytes (%d to %d, default: %d)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="324"/>
+        <location filename="../darkcoinstrings.cpp" line="325"/>
         <source>Set key pool size to &lt;n&gt; (default: 100)</source>
         <translation>Uzstādīt atslēgu bufera izmēru uz &lt;n&gt; (pēc noklusēšanas: 100)</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="325"/>
+        <location filename="../darkcoinstrings.cpp" line="326"/>
         <source>Set maximum block size in bytes (default: %d)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="326"/>
+        <location filename="../darkcoinstrings.cpp" line="327"/>
         <source>Set minimum block size in bytes (default: 0)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="327"/>
+        <location filename="../darkcoinstrings.cpp" line="328"/>
         <source>Set the masternode private key</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="328"/>
+        <location filename="../darkcoinstrings.cpp" line="329"/>
         <source>Set the number of threads to service RPC calls (default: 4)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="329"/>
+        <location filename="../darkcoinstrings.cpp" line="330"/>
         <source>Sets the DB_PRIVATE flag in the wallet db environment (default: 1)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="330"/>
+        <location filename="../darkcoinstrings.cpp" line="331"/>
         <source>Show all debugging options (usage: --help -help-debug)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="331"/>
+        <location filename="../darkcoinstrings.cpp" line="332"/>
         <source>Show benchmark information (default: 0)</source>
         <translation>Rādīt etalonuzdevuma informāciju (noklusējums: 0)</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="332"/>
+        <location filename="../darkcoinstrings.cpp" line="333"/>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="333"/>
+        <location filename="../darkcoinstrings.cpp" line="334"/>
         <source>Signing failed.</source>
         <translation>Ielogošanās neveiksmīga.</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="334"/>
+        <location filename="../darkcoinstrings.cpp" line="335"/>
         <source>Signing timed out, please resubmit.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="335"/>
+        <location filename="../darkcoinstrings.cpp" line="336"/>
         <source>Signing transaction failed</source>
         <translation>Transakcijas parakstīšana neizdevās</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="336"/>
+        <location filename="../darkcoinstrings.cpp" line="337"/>
         <source>Specify configuration file (default: darkcoin.conf)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="337"/>
+        <location filename="../darkcoinstrings.cpp" line="338"/>
         <source>Specify connection timeout in milliseconds (default: 5000)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="338"/>
+        <location filename="../darkcoinstrings.cpp" line="339"/>
         <source>Specify data directory</source>
         <translation>Norādiet datu direktoriju</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="339"/>
+        <location filename="../darkcoinstrings.cpp" line="340"/>
         <source>Specify masternode configuration file (default: masternode.conf)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="340"/>
+        <location filename="../darkcoinstrings.cpp" line="341"/>
         <source>Specify pid file (default: darkcoind.pid)</source>
         <translation>Norādiet pid failu (standarta: darcoind.pid)</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="341"/>
+        <location filename="../darkcoinstrings.cpp" line="342"/>
         <source>Specify wallet file (within data directory)</source>
         <translation>Norādiet maciņa failu ( datu glabātuvē)</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="342"/>
+        <location filename="../darkcoinstrings.cpp" line="343"/>
         <source>Specify your own public address</source>
         <translation>Norādiet savu publisko adresi</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="343"/>
+        <location filename="../darkcoinstrings.cpp" line="344"/>
         <source>Spend unconfirmed change when sending transactions (default: 1)</source>
         <translation>Tērēt neapstiprinātu atlikumu kad sūta transakcijas (noklusējums: 1)</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="344"/>
+        <location filename="../darkcoinstrings.cpp" line="345"/>
         <source>Start Darkcoin Core Daemon</source>
         <translation>Sākt Darkcoin Core Daemon</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="345"/>
+        <location filename="../darkcoinstrings.cpp" line="346"/>
         <source>System error: </source>
         <translation>Sistēmas kļūda:</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="346"/>
+        <location filename="../darkcoinstrings.cpp" line="347"/>
         <source>This help message</source>
         <translation>Šis palīdzības paziņojums</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="347"/>
+        <location filename="../darkcoinstrings.cpp" line="348"/>
         <source>This is intended for regression testing tools and app development.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="348"/>
+        <location filename="../darkcoinstrings.cpp" line="349"/>
         <source>This is not a masternode.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="349"/>
+        <location filename="../darkcoinstrings.cpp" line="350"/>
         <source>Threshold for disconnecting misbehaving peers (default: 100)</source>
         <translation>Slieksnis pārkāpējmezglu atvienošanai (pēc noklusēšanas: 100)</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="350"/>
+        <location filename="../darkcoinstrings.cpp" line="351"/>
         <source>To use the %s option</source>
         <translation>Izmantot opciju %s</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="351"/>
+        <location filename="../darkcoinstrings.cpp" line="352"/>
         <source>Transaction amount too small</source>
         <translation>Transakcijas summa ir pārāk maza</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="352"/>
+        <location filename="../darkcoinstrings.cpp" line="353"/>
         <source>Transaction amounts must be positive</source>
         <translation>Transakcijas summai ir jābūt pozitīvai</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="353"/>
+        <location filename="../darkcoinstrings.cpp" line="354"/>
         <source>Transaction created successfully.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="354"/>
+        <location filename="../darkcoinstrings.cpp" line="355"/>
         <source>Transaction fees are too high.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="355"/>
+        <location filename="../darkcoinstrings.cpp" line="356"/>
         <source>Transaction not valid.</source>
         <translation>Transakcija nav derīga.</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="356"/>
+        <location filename="../darkcoinstrings.cpp" line="357"/>
         <source>Transaction too large</source>
         <translation>Transakcija ir pārāk liela</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="357"/>
+        <location filename="../darkcoinstrings.cpp" line="358"/>
         <source>Unable to bind to %s on this computer (bind returned error %s)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="358"/>
+        <location filename="../darkcoinstrings.cpp" line="359"/>
         <source>Unable to sign masternode payment winner, wrong key?</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="359"/>
+        <location filename="../darkcoinstrings.cpp" line="360"/>
         <source>Unable to sign spork message, wrong key?</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="360"/>
+        <location filename="../darkcoinstrings.cpp" line="361"/>
         <source>Unknown -socks proxy version requested: %i</source>
         <translation>Pieprasīta nezināma -socks starpniekservera versija: %i</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="361"/>
+        <location filename="../darkcoinstrings.cpp" line="362"/>
         <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
         <translation>-onlynet komandā norādīts nepazīstams tīkls: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="362"/>
+        <location filename="../darkcoinstrings.cpp" line="363"/>
         <source>Upgrade wallet to latest format</source>
         <translation>Atjaunot maciņa formātu uz jaunāko</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="363"/>
+        <location filename="../darkcoinstrings.cpp" line="364"/>
         <source>Usage (deprecated, use darkcoin-cli):</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="364"/>
+        <location filename="../darkcoinstrings.cpp" line="365"/>
         <source>Usage:</source>
         <translation>Lietojums:</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="365"/>
+        <location filename="../darkcoinstrings.cpp" line="366"/>
         <source>Use KeePass 2 integration using KeePassHttp plugin (default: 0)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="366"/>
+        <location filename="../darkcoinstrings.cpp" line="367"/>
         <source>Use N separate masternodes to anonymize funds  (2-8, default: 2)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="367"/>
+        <location filename="../darkcoinstrings.cpp" line="368"/>
         <source>Use OpenSSL (https) for JSON-RPC connections</source>
         <translation>JSON-RPC savienojumiem izmantot OpenSSL (https)</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="368"/>
+        <location filename="../darkcoinstrings.cpp" line="369"/>
         <source>Use UPnP to map the listening port (default: 0)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="369"/>
+        <location filename="../darkcoinstrings.cpp" line="370"/>
         <source>Use UPnP to map the listening port (default: 1 when listening)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="370"/>
+        <location filename="../darkcoinstrings.cpp" line="371"/>
         <source>Use the test network</source>
         <translation>Izmantot testa tīklu</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="371"/>
+        <location filename="../darkcoinstrings.cpp" line="372"/>
         <source>Username for JSON-RPC connections</source>
         <translation>JSON-RPC savienojumu lietotājvārds</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="372"/>
+        <location filename="../darkcoinstrings.cpp" line="373"/>
         <source>Value more than Darksend pool maximum allows.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="373"/>
+        <location filename="../darkcoinstrings.cpp" line="374"/>
         <source>Verifying blocks...</source>
         <translation>Pārbauda blokus...</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="374"/>
+        <location filename="../darkcoinstrings.cpp" line="375"/>
         <source>Verifying wallet...</source>
         <translation>Pārbauda maciņu...</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="375"/>
+        <location filename="../darkcoinstrings.cpp" line="376"/>
         <source>Wait for RPC server to start</source>
         <translation>Uzgaidi līdz RPC serveris palaižas</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="376"/>
+        <location filename="../darkcoinstrings.cpp" line="377"/>
         <source>Wallet %s resides outside data directory %s</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="377"/>
+        <location filename="../darkcoinstrings.cpp" line="378"/>
         <source>Wallet is locked.</source>
         <translation>Maciņš ir slēgts.</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="378"/>
+        <location filename="../darkcoinstrings.cpp" line="379"/>
         <source>Wallet needed to be rewritten: restart Darkcoin to complete</source>
         <translation>Maciņš ir jāpārraksta: restartēt Darkcoin, lai pabeigtu</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="379"/>
+        <location filename="../darkcoinstrings.cpp" line="380"/>
         <source>Wallet options:</source>
         <translation>Maciņa iespējas:</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="380"/>
+        <location filename="../darkcoinstrings.cpp" line="381"/>
         <source>Warning</source>
         <translation>Brīdinājums</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="381"/>
+        <location filename="../darkcoinstrings.cpp" line="382"/>
         <source>Warning: Deprecated argument -debugnet ignored, use -debug=net</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="382"/>
+        <location filename="../darkcoinstrings.cpp" line="383"/>
         <source>Warning: This version is obsolete, upgrade required!</source>
         <translation>Brīdinājums: Šī versija ir novecojusi, nepieciešams atjauninājums!</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="383"/>
+        <location filename="../darkcoinstrings.cpp" line="384"/>
         <source>Wrong state.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="384"/>
+        <location filename="../darkcoinstrings.cpp" line="385"/>
         <source>You need to rebuild the database using -reindex to change -txindex</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="385"/>
+        <location filename="../darkcoinstrings.cpp" line="386"/>
         <source>Zapping all transactions from wallet...</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="386"/>
+        <location filename="../darkcoinstrings.cpp" line="387"/>
         <source>on startup</source>
         <translation>startēšanas laikā</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="387"/>
+        <location filename="../darkcoinstrings.cpp" line="388"/>
         <source>version</source>
         <translation>versija</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="388"/>
+        <location filename="../darkcoinstrings.cpp" line="389"/>
         <source>wallet.dat corrupt, salvage failed</source>
         <translation>wallet.dat ir bojāts, glābšana neizdevās</translation>
     </message>
