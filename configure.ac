@@ -130,13 +130,13 @@ AC_ARG_ENABLE([debug],
   [enable_debug=no])
 
 if test "x$enable_debug" = xyes; then
-    if test "x$GCC" = xyes; then
-        CFLAGS="-g3 -O0 -DDEBUG"
-    fi
+  if test "x$GCC" = xyes; then
+    CFLAGS="-g3 -O0 -DDEBUG"
+  fi
     
-    if test "x$GXX" = xyes; then
-        CXXFLAGS="-g3 -O0 -DDEBUG"
-    fi
+  if test "x$GXX" = xyes; then
+    CXXFLAGS="-g3 -O0 -DDEBUG"
+  fi
 fi 
 
 dnl TODO: Remove these hard-coded paths and flags. They are here for the sake of
@@ -259,7 +259,7 @@ case $host in
   *darwin*)
      TARGET_OS=darwin
      LEVELDB_TARGET_FLAGS="TARGET_OS=Darwin"
-     if  test x$cross_compiling != xyes; then
+     if test x$cross_compiling != xyes; then
        BUILD_OS=darwin
        AC_CHECK_PROG([PORT], [port], port)
        if test x$PORT = xport; then
@@ -406,7 +406,6 @@ if test x$use_glibc_compat != xno; then
     [ fdelt_type="long int"])
   AC_MSG_RESULT([$fdelt_type])
   AC_DEFINE_UNQUOTED([FDELT_TYPE], [$fdelt_type], [parameter and return value type for __fdelt_chk])
-
 fi
 
 if test x$use_hardening != xno; then
@@ -728,7 +727,7 @@ if test "x$use_ccache" != "xno"; then
   AC_MSG_RESULT($use_ccache)
 fi
 if test "x$use_ccache" = "xyes"; then
-    AX_CHECK_PREPROC_FLAG([-Qunused-arguments], [CPPFLAGS="-Qunused-arguments $CPPFLAGS"])
+  AX_CHECK_PREPROC_FLAG([-Qunused-arguments], [CPPFLAGS="-Qunused-arguments $CPPFLAGS"])
 fi
 
 dnl Enable wallet build check
