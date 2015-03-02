@@ -597,9 +597,7 @@ Value masternodelist(const Array& params, bool fHelp)
     std::vector<CMasternode> vMasternodes = mnodeman.GetFullMasternodeVector();
     BOOST_FOREACH(CMasternode& mn, vMasternodes) {
 
-        std::ostringstream addrStream;
-        addrStream << setw(21) << mn.addr.ToString().c_str();
-        std::string strAddr = addrStream.str();
+        std::string strAddr = mn.addr.ToString().c_str();
         if(strMode == "active"){
             if(strFilter !="" && strFilter != (mn.IsEnabled() ? "true" : "false") &&
                 mn.addr.ToString().find(strFilter) == string::npos) continue;
@@ -614,6 +612,9 @@ Value masternodelist(const Array& params, bool fHelp)
             ExtractDestination(pubkey, address1);
             CBitcoinAddress address2(address1);
 
+            std::ostringstream addrStream;
+            addrStream << setw(21) << strAddr;
+
             std::ostringstream stringStream;
             stringStream << (mn.IsEnabled() ? "1" : "0") << " " <<
                            mn.protocolVersion << " " <<
@@ -625,7 +626,7 @@ Value masternodelist(const Array& params, bool fHelp)
             stringStream << " " << strAddr;
             if(strFilter !="" && stringStream.str().find(strFilter) == string::npos &&
                     mn.addr.ToString().find(strFilter) == string::npos) continue;
-            obj.push_back(Pair(strAddr, output));
+            obj.push_back(Pair(addrStream.str(), output));
         } else if (strMode == "lastseen") {
             if(strFilter !="" && mn.addr.ToString().find(strFilter) == string::npos) continue;
             obj.push_back(Pair(strAddr,       (int64_t)mn.lastTimeSeen));
