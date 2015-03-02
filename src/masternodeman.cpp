@@ -123,7 +123,8 @@ void DumpMasternodes()
     CMasternodeDB mndb;
     mndb.Write(mnodeman);
 
-    LogPrintf("Flushed %d masternodes to masternodes.dat  %dms\n", mnodeman.size(), GetTimeMillis() - nStart);
+    LogPrintf("Flushed info to masternodes.dat  %dms\n", GetTimeMillis() - nStart);
+    LogPrintf("  %s\n", mnodeman.ToString());
 }
 
 CMasternodeMan::CMasternodeMan() {}
@@ -139,7 +140,7 @@ bool CMasternodeMan::Add(CMasternode &mn)
 
     if (pmn == NULL)
     {
-        LogPrintf("CMasternodeMan: Adding new masternode %s\n", mn.addr.ToString().c_str());
+        if(fDebug) LogPrintf("CMasternodeMan: Adding new masternode %s - %i now\n", mn.addr.ToString().c_str(), size() + 1);
         vMasternodes.push_back(mn);
         return true;
     }
@@ -165,7 +166,7 @@ void CMasternodeMan::CheckAndRemove()
     vector<CMasternode>::iterator it = vMasternodes.begin();
     while(it != vMasternodes.end()){
         if((*it).activeState == 4 || (*it).activeState == 3){
-            LogPrintf("CMasternodeMan: Removing inactive masternode %s\n", (*it).addr.ToString().c_str());
+            if(fDebug) LogPrintf("CMasternodeMan: Removing inactive masternode %s - %i now\n", (*it).addr.ToString().c_str(), size() - 1);
             it = vMasternodes.erase(it);
         } else {
             ++it;
@@ -636,4 +637,16 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         LogPrintf("dseg - Sent %d masternode entries to %s\n", i, pfrom->addr.ToString().c_str());
     }
 
+}
+
+std::string CMasternodeMan::ToString()
+{
+    std::ostringstream info;
+
+    info << "masternodes: " << (int)vMasternodes.size() <<
+            ", peers who asked us for masternode list: " << (int)mAskedUsForMasternodeList.size() <<
+            ", peers we asked for masternode list: " << (int)mWeAskedForMasternodeList.size() <<
+            ", entries in masternode list we asked for: " << (int)mWeAskedForMasternodeListEntry.size();
+
+    return info.str();
 }

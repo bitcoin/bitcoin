@@ -1160,10 +1160,12 @@ bool AppInit2(boost::thread_group& threadGroup)
         CMasternodeDB mndb;
         if (!mndb.Read(mnodeman))
             LogPrintf("Invalid or missing masternodes.dat; recreating\n");
+        else
+            mnodeman.CheckAndRemove(); // clean out expired
     }
 
-    LogPrintf("Loaded %i masternodes from masternodes.dat  %dms\n",
-           mnodeman.size(), GetTimeMillis() - nStart);
+    LogPrintf("Loaded info from masternodes.dat  %dms\n", GetTimeMillis() - nStart);
+    LogPrintf("  %s\n", mnodeman.ToString());
 
 
     fMasterNode = GetBoolArg("-masternode", false);
