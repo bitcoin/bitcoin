@@ -204,6 +204,15 @@ void CMasternodeMan::CheckAndRemove()
 
 }
 
+void CMasternodeMan::Clear()
+{
+    LOCK(cs);
+    vMasternodes.clear();
+    mAskedUsForMasternodeList.clear();
+    mWeAskedForMasternodeList.clear();
+    mWeAskedForMasternodeListEntry.clear();
+}
+
 int CMasternodeMan::CountEnabled()
 {
     int i = 0;
