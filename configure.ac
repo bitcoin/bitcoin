@@ -653,25 +653,24 @@ if test x$use_pkgconfig = xyes; then
   m4_ifdef(
     [PKG_CHECK_MODULES],
     [
-      PKG_CHECK_MODULES([SSL], [libssl],, [AC_MSG_ERROR([openssl  not found.])])
-      PKG_CHECK_MODULES([CRYPTO], [libcrypto],,[AC_MSG_ERROR([libcrypto  not found.])])
-      BITCOIN_QT_CHECK([PKG_CHECK_MODULES([PROTOBUF], [protobuf], [have_protobuf=yes], [BITCOIN_QT_FAIL(libprotobuf not found)])])
+      PKG_CHECK_MODULES([SSL], [libssl], [], [AC_MSG_ERROR([openssl  not found.])])
+      PKG_CHECK_MODULES([CRYPTO], [libcrypto], [], [AC_MSG_ERROR([libcrypto  not found.])])
+      BITCOIN_QT_CHECK([PKG_CHECK_MODULES([PROTOBUF], [protobuf], [have_protobuf=yes], [BITCOIN_QT_FAIL([libprotobuf not found])])])
       if test x$use_qr != xno; then
         BITCOIN_QT_CHECK([PKG_CHECK_MODULES([QR], [libqrencode], [have_qrencode=yes], [have_qrencode=no])])
       fi
-    ]
-  )
+    ])
 else
-  AC_CHECK_HEADER([openssl/crypto.h],,AC_MSG_ERROR([libcrypto headers missing]))
-  AC_CHECK_LIB([crypto],      [main],CRYPTO_LIBS=-lcrypto, AC_MSG_ERROR([libcrypto missing]))
+  AC_CHECK_HEADER([openssl/crypto.h], [], [AC_MSG_ERROR([libcrypto headers missing])])
+  AC_CHECK_LIB([crypto], [main], [CRYPTO_LIBS=-lcrypto], [AC_MSG_ERROR([libcrypto missing])])
 
-  AC_CHECK_HEADER([openssl/ssl.h],, AC_MSG_ERROR([libssl headers missing]),)
-  AC_CHECK_LIB([ssl],         [main],SSL_LIBS=-lssl, AC_MSG_ERROR([libssl missing]))
+  AC_CHECK_HEADER([openssl/ssl.h], [], [AC_MSG_ERROR([libssl headers missing])])
+  AC_CHECK_LIB([ssl], [main], [SSL_LIBS=-lssl], [AC_MSG_ERROR([libssl missing])])
 
-  BITCOIN_QT_CHECK(AC_CHECK_LIB([protobuf] ,[main],[PROTOBUF_LIBS=-lprotobuf], BITCOIN_QT_FAIL(libprotobuf not found)))
+  BITCOIN_QT_CHECK([AC_CHECK_LIB([protobuf] ,[main], [PROTOBUF_LIBS=-lprotobuf], [BITCOIN_QT_FAIL([libprotobuf not found])])])
   if test x$use_qr != xno; then
-    BITCOIN_QT_CHECK([AC_CHECK_LIB([qrencode], [main],[QR_LIBS=-lqrencode], [have_qrencode=no])])
-    BITCOIN_QT_CHECK([AC_CHECK_HEADER([qrencode.h],, have_qrencode=no)])
+    BITCOIN_QT_CHECK([AC_CHECK_LIB([qrencode], [main], [QR_LIBS=-lqrencode], [have_qrencode=no])])
+    BITCOIN_QT_CHECK([AC_CHECK_HEADER([qrencode.h], [], [have_qrencode=no])])
   fi
 fi
 
@@ -679,16 +678,16 @@ CFLAGS_TEMP="$CFLAGS"
 LIBS_TEMP="$LIBS"
 CFLAGS="$CFLAGS $SSL_CFLAGS $CRYPTO_CFLAGS"
 LIBS="$LIBS $SSL_LIBS $CRYPTO_LIBS"
-AC_CHECK_HEADER([openssl/ec.h],, AC_MSG_ERROR([OpenSSL ec header missing]),)
+AC_CHECK_HEADER([openssl/ec.h], [], [AC_MSG_ERROR([OpenSSL ec header missing])])
 CFLAGS="$CFLAGS_TEMP"
 LIBS="$LIBS_TEMP"
 
-BITCOIN_QT_PATH_PROGS([PROTOC], [protoc],$protoc_bin_path)
+BITCOIN_QT_PATH_PROGS([PROTOC], [protoc], [$protoc_bin_path])
 
 AC_MSG_CHECKING([whether to build libraries])
 AM_CONDITIONAL([BUILD_BITCOIN_LIBS], [test x$build_bitcoin_libs = xyes])
 if test x$build_bitcoin_libs = xyes; then
-  AC_DEFINE(HAVE_CONSENSUS_LIB, 1, [Define this symbol if the consensus lib has been built])
+  AC_DEFINE([HAVE_CONSENSUS_LIB], [1], [Define this symbol if the consensus lib has been built])
   AC_CONFIG_FILES([libbitcoinconsensus.pc:libbitcoinconsensus.pc.in])
 fi
 AC_MSG_RESULT($build_bitcoin_libs)
@@ -704,8 +703,9 @@ AC_MSG_RESULT($build_bitcoind)
 dnl End C++ interpretting
 AC_LANG_POP
 
+dnl Use ccache build check
 if test "x$use_ccache" != "xno"; then
-  AC_MSG_CHECKING(if ccache should be used)
+  AC_MSG_CHECKING([if ccache should be used])
   if test x$CCACHE = x; then
     if test "x$use_ccache" = "xyes"; then
       AC_MSG_ERROR([ccache not found.]);
@@ -720,24 +720,23 @@ if test "x$use_ccache" != "xno"; then
   AC_MSG_RESULT($use_ccache)
 fi
 if test "x$use_ccache" = "xyes"; then
-    AX_CHECK_PREPROC_FLAG([-Qunused-arguments],[CPPFLAGS="-Qunused-arguments $CPPFLAGS"])
+    AX_CHECK_PREPROC_FLAG([-Qunused-arguments], [CPPFLAGS="-Qunused-arguments $CPPFLAGS"])
 fi
 
-dnl Enable wallet
+dnl Enable wallet build check
 AC_MSG_CHECKING([if wallet should be enabled])
 if test x$enable_wallet != xno; then
   AC_MSG_RESULT(yes)
-  AC_DEFINE_UNQUOTED([ENABLE_WALLET],[1],[Define to 1 to enable wallet functions])
-
+  AC_DEFINE_UNQUOTED([ENABLE_WALLET], [1], [Define to 1 to enable wallet functions])
 else
   AC_MSG_RESULT(no)
 fi
 
-dnl Enable upnp support
+dnl Enable upnp support check
 AC_MSG_CHECKING([whether to build with support for UPnP])
 if test x$have_miniupnpc = xno; then
   if test x$use_upnp = xyes; then
-     AC_MSG_ERROR(["UPnP requested but cannot be built. use --without-miniupnpc"])
+    AC_MSG_ERROR(["UPnP requested but cannot be built: use --without-miniupnpc"])
   fi
   AC_MSG_RESULT(no)
 else
@@ -751,7 +750,8 @@ else
       upnp_setting=1
     fi
     AC_MSG_RESULT($use_upnp_default)
-    AC_DEFINE_UNQUOTED([USE_UPNP],[$upnp_setting],[UPnP support not compiled if undefined, otherwise value (0 or 1) determines default state])
+    AC_DEFINE_UNQUOTED([USE_UPNP], [$upnp_setting],
+      [UPnP support not compiled if undefined, otherwise value (0 or 1) determines default state])
     if test x$TARGET_OS = xwindows; then
       MINIUPNPC_CPPFLAGS="-DSTATICLIB -DMINIUPNP_STATICLIB"
     fi
@@ -766,7 +766,7 @@ if test x$bitcoin_enable_qt != xno; then
   dnl Enable dbus support
   AC_MSG_CHECKING([whether to build GUI with support for D-Bus])
   if test x$bitcoin_enable_qt_dbus != xno; then
-    AC_DEFINE([USE_DBUS],[1],[Define if dbus support should be compiled in])
+    AC_DEFINE([USE_DBUS], [1], [Define if dbus support should be compiled in])
   fi
   AC_MSG_RESULT($bitcoin_enable_qt_dbus)
 
@@ -774,13 +774,13 @@ if test x$bitcoin_enable_qt != xno; then
   AC_MSG_CHECKING([whether to build GUI with support for QR codes])
   if test x$have_qrencode = xno; then
     if test x$use_qr = xyes; then
-     AC_MSG_ERROR(["QR support requested but cannot be built. use --without-qrencode"])
+      AC_MSG_ERROR(["QR support requested but cannot be built. use --without-qrencode"])
     fi
     AC_MSG_RESULT(no)
   else
     if test x$use_qr != xno; then
       AC_MSG_RESULT(yes)
-      AC_DEFINE([USE_QRCODE],[1],[Define if QR support should be compiled in])
+      AC_DEFINE([USE_QRCODE], [1], [Define if QR support should be compiled in])
       use_qr=yes
     else
       AC_MSG_RESULT(no)
@@ -788,7 +788,7 @@ if test x$bitcoin_enable_qt != xno; then
   fi
 
   if test x$XGETTEXT = x; then
-    AC_MSG_WARN("xgettext is required to update qt translations")
+    AC_MSG_WARN(["xgettext is required to update qt translations"])
   fi
 
   AC_MSG_CHECKING([whether to build test_bitcoin-qt])
@@ -815,51 +815,59 @@ else
   AC_MSG_RESULT([no])
 fi
 
+dnl Global build sanity check
 if test x$build_bitcoin_utils$build_bitcoin_libs$build_bitcoind$bitcoin_enable_qt$use_tests = xnonononono; then
   AC_MSG_ERROR([No targets! Please specify at least one of: --with-utils --with-libs --with-daemon --with-gui or --enable-tests])
 fi
 
-AM_CONDITIONAL([TARGET_DARWIN], [test x$TARGET_OS = xdarwin])
-AM_CONDITIONAL([BUILD_DARWIN], [test x$BUILD_OS = xdarwin])
-AM_CONDITIONAL([TARGET_WINDOWS], [test x$TARGET_OS = xwindows])
-AM_CONDITIONAL([ENABLE_WALLET],[test x$enable_wallet = xyes])
-AM_CONDITIONAL([ENABLE_TESTS],[test x$use_tests = xyes])
-AM_CONDITIONAL([ENABLE_QT],[test x$bitcoin_enable_qt = xyes])
-AM_CONDITIONAL([ENABLE_QT_TESTS],[test x$use_tests$bitcoin_enable_qt_test = xyesyes])
-AM_CONDITIONAL([USE_QRCODE], [test x$use_qr = xyes])
-AM_CONDITIONAL([USE_LCOV],[test x$use_lcov = xyes])
-AM_CONDITIONAL([USE_COMPARISON_TOOL],[test x$use_comparison_tool != xno])
+AM_CONDITIONAL([TARGET_DARWIN],                  [test x$TARGET_OS = xdarwin])
+AM_CONDITIONAL([BUILD_DARWIN],                   [test x$BUILD_OS = xdarwin])
+AM_CONDITIONAL([TARGET_WINDOWS],                 [test x$TARGET_OS = xwindows])
+AM_CONDITIONAL([ENABLE_WALLET],                  [test x$enable_wallet = xyes])
+AM_CONDITIONAL([ENABLE_TESTS],                   [test x$use_tests = xyes])
+AM_CONDITIONAL([ENABLE_QT],                      [test x$bitcoin_enable_qt = xyes])
+AM_CONDITIONAL([ENABLE_QT_TESTS],                [test x$use_tests$bitcoin_enable_qt_test = xyesyes])
+AM_CONDITIONAL([USE_QRCODE],                     [test x$use_qr = xyes])
+AM_CONDITIONAL([USE_LCOV],                       [test x$use_lcov = xyes])
+AM_CONDITIONAL([USE_COMPARISON_TOOL],            [test x$use_comparison_tool != xno])
 AM_CONDITIONAL([USE_COMPARISON_TOOL_REORG_TESTS],[test x$use_comparison_tool_reorg_test != xno])
-AM_CONDITIONAL([GLIBC_BACK_COMPAT],[test x$use_glibc_compat = xyes])
+AM_CONDITIONAL([GLIBC_BACK_COMPAT],              [test x$use_glibc_compat = xyes])
 
-AC_DEFINE(CLIENT_VERSION_MAJOR, _CLIENT_VERSION_MAJOR, [Major version])
-AC_DEFINE(CLIENT_VERSION_MINOR, _CLIENT_VERSION_MINOR, [Minor version])
-AC_DEFINE(CLIENT_VERSION_REVISION, _CLIENT_VERSION_REVISION, [Build revision])
-AC_DEFINE(CLIENT_VERSION_BUILD, _CLIENT_VERSION_BUILD, [Version Build])
-AC_DEFINE(CLIENT_VERSION_IS_RELEASE, _CLIENT_VERSION_IS_RELEASE, [Version is release])
-AC_DEFINE(COPYRIGHT_YEAR, _COPYRIGHT_YEAR, [Version is release])
-AC_SUBST(CLIENT_VERSION_MAJOR, _CLIENT_VERSION_MAJOR)
-AC_SUBST(CLIENT_VERSION_MINOR, _CLIENT_VERSION_MINOR)
-AC_SUBST(CLIENT_VERSION_REVISION, _CLIENT_VERSION_REVISION)
-AC_SUBST(CLIENT_VERSION_BUILD, _CLIENT_VERSION_BUILD)
-AC_SUBST(CLIENT_VERSION_IS_RELEASE, _CLIENT_VERSION_IS_RELEASE)
-AC_SUBST(COPYRIGHT_YEAR, _COPYRIGHT_YEAR)
+AC_DEFINE([CLIENT_VERSION_MAJOR],     [_CLIENT_VERSION_MAJOR],     [Major version])
+AC_DEFINE([CLIENT_VERSION_MINOR],     [_CLIENT_VERSION_MINOR],     [Minor version])
+AC_DEFINE([CLIENT_VERSION_REVISION],  [_CLIENT_VERSION_REVISION],  [Build revision])
+AC_DEFINE([CLIENT_VERSION_BUILD],     [_CLIENT_VERSION_BUILD],     [Version Build])
+AC_DEFINE([CLIENT_VERSION_IS_RELEASE],[_CLIENT_VERSION_IS_RELEASE],[Version is release])
+AC_DEFINE([COPYRIGHT_YEAR],           [_COPYRIGHT_YEAR],           [Version is release])
 
-AC_SUBST(RELDFLAGS)
-AC_SUBST(LIBTOOL_APP_LDFLAGS)
-AC_SUBST(USE_UPNP)
-AC_SUBST(USE_QRCODE)
-AC_SUBST(BOOST_LIBS)
-AC_SUBST(TESTDEFS)
-AC_SUBST(LEVELDB_TARGET_FLAGS)
-AC_SUBST(BUILD_TEST)
-AC_SUBST(BUILD_QT)
-AC_SUBST(BUILD_TEST_QT)
-AC_SUBST(MINIUPNPC_CPPFLAGS)
-AC_SUBST(MINIUPNPC_LIBS)
-AC_CONFIG_FILES([Makefile src/Makefile share/setup.nsi share/qt/Info.plist src/test/buildenv.py])
-AC_CONFIG_FILES([qa/pull-tester/run-bitcoind-for-test.sh],[chmod +x qa/pull-tester/run-bitcoind-for-test.sh])
-AC_CONFIG_FILES([qa/pull-tester/tests-config.sh],[chmod +x qa/pull-tester/tests-config.sh])
+AC_SUBST([CLIENT_VERSION_MAJOR],      [_CLIENT_VERSION_MAJOR])
+AC_SUBST([CLIENT_VERSION_MINOR],      [_CLIENT_VERSION_MINOR])
+AC_SUBST([CLIENT_VERSION_REVISION],   [_CLIENT_VERSION_REVISION])
+AC_SUBST([CLIENT_VERSION_BUILD],      [_CLIENT_VERSION_BUILD])
+AC_SUBST([CLIENT_VERSION_IS_RELEASE], [_CLIENT_VERSION_IS_RELEASE])
+AC_SUBST([COPYRIGHT_YEAR],            [_COPYRIGHT_YEAR])
+
+AC_SUBST([BOOST_LIBS])
+AC_SUBST([LEVELDB_TARGET_FLAGS])
+AC_SUBST([MINIUPNPC_CPPFLAGS])
+AC_SUBST([MINIUPNPC_LIBS])
+AC_SUBST([RELDFLAGS])
+AC_SUBST([LIBTOOL_APP_LDFLAGS])
+AC_SUBST([TESTDEFS])
+AC_SUBST([USE_UPNP])
+AC_SUBST([USE_QRCODE])
+AC_SUBST([BUILD_TEST])
+AC_SUBST([BUILD_QT])
+AC_SUBST([BUILD_TEST_QT])
+
+AC_CONFIG_FILES([Makefile
+                    src/Makefile
+                    share/setup.nsi
+                    share/qt/Info.plist
+                    src/test/buildenv.py])
+
+AC_CONFIG_FILES([qa/pull-tester/run-bitcoind-for-test.sh], [chmod +x qa/pull-tester/run-bitcoind-for-test.sh])
+AC_CONFIG_FILES([qa/pull-tester/tests-config.sh], [chmod +x qa/pull-tester/tests-config.sh])
 
 dnl Boost's m4 checks do something really nasty: they export these vars. As a
 dnl result, they leak into secp256k1's configure and crazy things happen.
