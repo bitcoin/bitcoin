@@ -6,7 +6,8 @@ define(_CLIENT_VERSION_REVISION, 99)
 define(_CLIENT_VERSION_BUILD, 0)
 define(_CLIENT_VERSION_IS_RELEASE, false)
 define(_COPYRIGHT_YEAR, 2015)
-AC_INIT([Bitcoin Core],[_CLIENT_VERSION_MAJOR._CLIENT_VERSION_MINOR._CLIENT_VERSION_REVISION],[info@bitcoin.org],[bitcoin])
+AC_INIT([Bitcoin Core], [_CLIENT_VERSION_MAJOR._CLIENT_VERSION_MINOR._CLIENT_VERSION_REVISION],
+  [info@bitcoin.org], [bitcoin])
 AC_CONFIG_SRCDIR([src/main.cpp])
 AC_CONFIG_HEADERS([src/config/bitcoin-config.h])
 AC_CONFIG_AUX_DIR([build-aux])
@@ -38,7 +39,7 @@ else
   CXXFLAGS_overridden=no
 fi
 AC_PROG_CXX
-m4_ifdef([AC_PROG_OBJCXX],[AC_PROG_OBJCXX])
+m4_ifdef([AC_PROG_OBJCXX], [AC_PROG_OBJCXX])
 
 dnl By default, libtool for mingw refuses to link static libs into a dll for
 dnl fear of mixing pic/non-pic objects, and import/export complications. Since
@@ -314,7 +315,8 @@ case $host in
        esac
      fi
 
-     AX_CHECK_LINK_FLAG([[-Wl,-headerpad_max_install_names]], [LDFLAGS="$LDFLAGS -Wl,-headerpad_max_install_names"])
+     AX_CHECK_LINK_FLAG([[-Wl,-headerpad_max_install_names]],
+       [LDFLAGS="$LDFLAGS -Wl,-headerpad_max_install_names"])
      CPPFLAGS="$CPPFLAGS -DMAC_OSX"
      ;;
    *linux*)
@@ -408,8 +410,10 @@ if test x$use_glibc_compat != xno; then
 fi
 
 if test x$use_hardening != xno; then
-  AX_CHECK_COMPILE_FLAG([-Wstack-protector], [HARDENED_CXXFLAGS="$HARDENED_CXXFLAGS -Wstack-protector"])
-  AX_CHECK_COMPILE_FLAG([-fstack-protector-all], [HARDENED_CXXFLAGS="$HARDENED_CXXFLAGS -fstack-protector-all"])
+  AX_CHECK_COMPILE_FLAG([-Wstack-protector],
+    [HARDENED_CXXFLAGS="$HARDENED_CXXFLAGS -Wstack-protector"])
+  AX_CHECK_COMPILE_FLAG([-fstack-protector-all],
+    [HARDENED_CXXFLAGS="$HARDENED_CXXFLAGS -fstack-protector-all"])
 
   AX_CHECK_PREPROC_FLAG([-D_FORTIFY_SOURCE=2],
     [AX_CHECK_PREPROC_FLAG([-U_FORTIFY_SOURCE], [HARDENED_CPPFLAGS="$HARDENED_CPPFLAGS -U_FORTIFY_SOURCE"])]
@@ -445,8 +449,10 @@ fi
 
 AC_CHECK_HEADERS([endian.h byteswap.h stdio.h stdlib.h unistd.h strings.h sys/types.h sys/stat.h sys/select.h sys/prctl.h])
 
-AC_SEARCH_LIBS([getaddrinfo_a], [anl], [AC_DEFINE([HAVE_GETADDRINFO_A], [1], [Define this symbol if you have getaddrinfo_a])])
-AC_SEARCH_LIBS([inet_pton], [nsl resolv], [AC_DEFINE([HAVE_INET_PTON], [1], [Define this symbol if you have inet_pton])])
+AC_SEARCH_LIBS([getaddrinfo_a], [anl],
+  [AC_DEFINE([HAVE_GETADDRINFO_A], [1], [Define this symbol if you have getaddrinfo_a])])
+AC_SEARCH_LIBS([inet_pton], [nsl resolv],
+  [AC_DEFINE([HAVE_INET_PTON], [1], [Define this symbol if you have inet_pton])])
 AC_SEARCH_LIBS([clock_gettime], [rt])
 
 AC_CHECK_DECLS([strnlen])
@@ -655,7 +661,8 @@ if test x$use_pkgconfig = xyes; then
     [
       PKG_CHECK_MODULES([SSL], [libssl], [], [AC_MSG_ERROR([openssl  not found.])])
       PKG_CHECK_MODULES([CRYPTO], [libcrypto], [], [AC_MSG_ERROR([libcrypto  not found.])])
-      BITCOIN_QT_CHECK([PKG_CHECK_MODULES([PROTOBUF], [protobuf], [have_protobuf=yes], [BITCOIN_QT_FAIL([libprotobuf not found])])])
+      BITCOIN_QT_CHECK([PKG_CHECK_MODULES([PROTOBUF], [protobuf], [have_protobuf=yes],
+                           [BITCOIN_QT_FAIL([libprotobuf not found])])])
       if test x$use_qr != xno; then
         BITCOIN_QT_CHECK([PKG_CHECK_MODULES([QR], [libqrencode], [have_qrencode=yes], [have_qrencode=no])])
       fi
@@ -667,7 +674,8 @@ else
   AC_CHECK_HEADER([openssl/ssl.h], [], [AC_MSG_ERROR([libssl headers missing])])
   AC_CHECK_LIB([ssl], [main], [SSL_LIBS=-lssl], [AC_MSG_ERROR([libssl missing])])
 
-  BITCOIN_QT_CHECK([AC_CHECK_LIB([protobuf] ,[main], [PROTOBUF_LIBS=-lprotobuf], [BITCOIN_QT_FAIL([libprotobuf not found])])])
+  BITCOIN_QT_CHECK([AC_CHECK_LIB([protobuf] ,[main], [PROTOBUF_LIBS=-lprotobuf],
+                      [BITCOIN_QT_FAIL([libprotobuf not found])])])
   if test x$use_qr != xno; then
     BITCOIN_QT_CHECK([AC_CHECK_LIB([qrencode], [main], [QR_LIBS=-lqrencode], [have_qrencode=no])])
     BITCOIN_QT_CHECK([AC_CHECK_HEADER([qrencode.h], [], [have_qrencode=no])])
