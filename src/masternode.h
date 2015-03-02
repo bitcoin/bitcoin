@@ -69,7 +69,7 @@ public:
     CPubKey pubkey2;
     std::vector<unsigned char> sig;
     int activeState;
-    int64_t now; //dsee message times
+    int64_t sigTime; //dsee message times
     int64_t lastDseep;
     int64_t lastTimeSeen;
     int cacheInputAge;
@@ -81,7 +81,7 @@ public:
 
     CMasternode();
     CMasternode(const CMasternode& other);
-    CMasternode(CService newAddr, CTxIn newVin, CPubKey newPubkey, std::vector<unsigned char> newSig, int64_t newNow, CPubKey newPubkey2, int protocolVersionIn);
+    CMasternode(CService newAddr, CTxIn newVin, CPubKey newPubkey, std::vector<unsigned char> newSig, int64_t newSigTime, CPubKey newPubkey2, int protocolVersionIn);
 
     void swap(CMasternode& first, CMasternode& second) // nothrow
     {
@@ -96,7 +96,7 @@ public:
         swap(first.pubkey2, second.pubkey2);
         swap(first.sig, second.sig);
         swap(first.activeState, second.activeState);
-        swap(first.now, second.now);
+        swap(first.sigTime, second.sigTime);
         swap(first.lastDseep, second.lastDseep);
         swap(first.lastTimeSeen, second.lastTimeSeen);
         swap(first.cacheInputAge, second.cacheInputAge);
@@ -138,7 +138,7 @@ public:
                 READWRITE(pubkey2);
                 READWRITE(sig);
                 READWRITE(activeState);
-                READWRITE(now);
+                READWRITE(sigTime);
                 READWRITE(lastDseep);
                 READWRITE(lastTimeSeen);
                 READWRITE(cacheInputAge);
