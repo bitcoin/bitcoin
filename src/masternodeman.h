@@ -84,7 +84,7 @@ public:
     void CheckAndRemove();
 
     // Clear masternode vector
-    void Clear() { LOCK(cs); vMasternodes.clear(); }
+    void Clear();
 
     int CountEnabled();
 
@@ -96,7 +96,7 @@ public:
     CMasternode* Find(const CTxIn& vin);
 
     //Find an entry thta do not match every entry provided vector
-    CMasternode* FindNotInVec(const std::vector<CTxIn> &vVins);
+    CMasternode* FindOldestNotInVec(const std::vector<CTxIn> &vVins);
 
     // Find a random entry
     CMasternode* FindRandom();
@@ -112,6 +112,8 @@ public:
 
     // Return the number of (unique) masternodes
     int size() { return vMasternodes.size(); }
+
+    std::string ToString();
 
 };
 
