@@ -447,9 +447,9 @@ AC_CHECK_HEADERS([endian.h byteswap.h stdio.h stdlib.h unistd.h strings.h sys/ty
 
 AC_SEARCH_LIBS([getaddrinfo_a], [anl], [AC_DEFINE([HAVE_GETADDRINFO_A], [1], [Define this symbol if you have getaddrinfo_a])])
 AC_SEARCH_LIBS([inet_pton], [nsl resolv], [AC_DEFINE([HAVE_INET_PTON], [1], [Define this symbol if you have inet_pton])])
+AC_SEARCH_LIBS([clock_gettime], [rt])
 
 AC_CHECK_DECLS([strnlen])
-
 AC_CHECK_DECLS([le16toh, le32toh, le64toh, htole16, htole32, htole64, be16toh, be32toh, be64toh, htobe16, htobe32, htobe64],[],[],
   [#if HAVE_ENDIAN_H
   #include <endian.h>
@@ -468,8 +468,7 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <sys/socket.h>]],
    AC_MSG_RESULT(yes)],
   [AC_MSG_RESULT(no)])
 
-AC_SEARCH_LIBS([clock_gettime], [rt])
-
+dnl Checks for symbol visibility/reduced exports
 AC_MSG_CHECKING([for visibility attribute])
 AC_LINK_IFELSE([AC_LANG_SOURCE([
                     int foo_def( void ) __attribute__((visibility("default")));
@@ -491,22 +490,21 @@ LEVELDB_CPPFLAGS=
 LIBLEVELDB=
 LIBMEMENV=
 AM_CONDITIONAL([EMBEDDED_LEVELDB],[true])
-AC_SUBST(LEVELDB_CPPFLAGS)
-AC_SUBST(LIBLEVELDB)
-AC_SUBST(LIBMEMENV)
+AC_SUBST([LEVELDB_CPPFLAGS])
+AC_SUBST([LIBLEVELDB])
+AC_SUBST([LIBMEMENV])
 
 if test x$enable_wallet != xno; then
-    dnl Check for libdb_cxx only if wallet enabled
-    BITCOIN_FIND_BDB48
+  dnl Check for libdb_cxx only if wallet enabled
+  BITCOIN_FIND_BDB48
 fi
 
 dnl Check for libminiupnpc (optional)
 if test x$use_upnp != xno; then
   AC_CHECK_HEADERS(
     [miniupnpc/miniwget.h miniupnpc/miniupnpc.h miniupnpc/upnpcommands.h miniupnpc/upnperrors.h],
-    [AC_CHECK_LIB([miniupnpc], [main],[MINIUPNPC_LIBS=-lminiupnpc], [have_miniupnpc=no])],
-    [have_miniupnpc=no]
-  )
+    [AC_CHECK_LIB([miniupnpc], [main], [MINIUPNPC_LIBS=-lminiupnpc], [have_miniupnpc=no])],
+    [have_miniupnpc=no])
 fi
 
 BITCOIN_QT_INIT
@@ -515,41 +513,39 @@ dnl Sets $bitcoin_enable_qt, $bitcoin_enable_qt_test, $bitcoin_enable_qt_dbus
 BITCOIN_QT_CONFIGURE([$use_pkgconfig], [qt4])
 
 if test x$build_bitcoin_utils$build_bitcoind$bitcoin_enable_qt$use_tests = xnononono; then
-    use_boost=no
+  use_boost=no
 else
-    use_boost=yes
+  use_boost=yes
 fi
 
 if test x$use_boost = xyes; then
+  dnl Check for boost libs
+  AX_BOOST_BASE
+  AX_BOOST_SYSTEM
+  AX_BOOST_FILESYSTEM
+  AX_BOOST_PROGRAM_OPTIONS
+  AX_BOOST_THREAD
+  AX_BOOST_CHRONO
 
-dnl Check for boost libs
-AX_BOOST_BASE
-AX_BOOST_SYSTEM
-AX_BOOST_FILESYSTEM
-AX_BOOST_PROGRAM_OPTIONS
-AX_BOOST_THREAD
-AX_BOOST_CHRONO
-
-
-if test x$use_reduce_exports = xyes; then
-  AC_MSG_CHECKING([for working boost reduced exports])
-  TEMP_CPPFLAGS="$CPPFLAGS"
-  CPPFLAGS="$BOOST_CPPFLAGS $CPPFLAGS"
-  AC_PREPROC_IFELSE([AC_LANG_PROGRAM([[
-      @%:@include <boost/version.hpp>
-    ]], [[
-      #if BOOST_VERSION >= 104900
-      // Everything is okay
-      #else
-      #  error Boost version is too old
-      #endif
-    ]])],[
-      AC_MSG_RESULT(yes)
-    ],[
-    AC_MSG_ERROR([boost versions < 1.49 are known to be broken with reduced exports. Use --disable-reduce-exports.])
-  ])
-  CPPFLAGS="$TEMP_CPPFLAGS"
-fi
+  if test x$use_reduce_exports = xyes; then
+    AC_MSG_CHECKING([for working boost reduced exports])
+    TEMP_CPPFLAGS="$CPPFLAGS"
+    CPPFLAGS="$BOOST_CPPFLAGS $CPPFLAGS"
+    AC_PREPROC_IFELSE([AC_LANG_PROGRAM([[
+                           @%:@include <boost/version.hpp>]],
+                           [[
+                           #if BOOST_VERSION >= 104900
+                           // Everything is okay
+                           #else
+                           #  error Boost version is too old
+                           #endif
+                           ]])],
+      [AC_MSG_RESULT(yes)],
+      [
+       AC_MSG_ERROR([boost versions < 1.49 are known to be broken with reduced exports. Use --disable-reduce-exports.])
+      ])
+    CPPFLAGS="$TEMP_CPPFLAGS"
+  fi
 fi
 
 if test x$use_reduce_exports = xyes; then
@@ -563,90 +559,88 @@ if test x$use_tests = xyes; then
     AC_MSG_ERROR([hexdump is required for tests])
   fi
 
-
   if test x$use_boost = xyes; then
 
-  AX_BOOST_UNIT_TEST_FRAMEWORK
+    AX_BOOST_UNIT_TEST_FRAMEWORK
 
-  dnl Determine if -DBOOST_TEST_DYN_LINK is needed
-  AC_MSG_CHECKING([for dynamic linked boost test])
-  TEMP_LIBS="$LIBS"
-  LIBS="$LIBS $BOOST_LDFLAGS $BOOST_UNIT_TEST_FRAMEWORK_LIB"
-  TEMP_CPPFLAGS="$CPPFLAGS"
-  CPPFLAGS="$CPPFLAGS $BOOST_CPPFLAGS"
-  AC_LINK_IFELSE([AC_LANG_SOURCE([
-       #define BOOST_TEST_DYN_LINK
-       #define BOOST_TEST_MAIN
-        #include <boost/test/unit_test.hpp>
-
-       ])],
-    [AC_MSG_RESULT(yes)]
-    [TESTDEFS="$TESTDEFS -DBOOST_TEST_DYN_LINK"],
-    [AC_MSG_RESULT(no)])
-  LIBS="$TEMP_LIBS"
-  CPPFLAGS="$TEMP_CPPFLAGS"
-
+    dnl Determine if -DBOOST_TEST_DYN_LINK is needed
+    AC_MSG_CHECKING([for dynamic linked boost test])
+    TEMP_LIBS="$LIBS"
+    LIBS="$LIBS $BOOST_LDFLAGS $BOOST_UNIT_TEST_FRAMEWORK_LIB"
+    TEMP_CPPFLAGS="$CPPFLAGS"
+    CPPFLAGS="$CPPFLAGS $BOOST_CPPFLAGS"
+    AC_LINK_IFELSE([AC_LANG_SOURCE([
+                       #define BOOST_TEST_DYN_LINK
+                       #define BOOST_TEST_MAIN
+                       #include <boost/test/unit_test.hpp>
+                       ])],
+      [AC_MSG_RESULT(yes)]
+      [TESTDEFS="$TESTDEFS -DBOOST_TEST_DYN_LINK"],
+      [AC_MSG_RESULT(no)])
+    LIBS="$TEMP_LIBS"
+    CPPFLAGS="$TEMP_CPPFLAGS"
   fi
 fi
 
 if test x$use_boost = xyes; then
 
-BOOST_LIBS="$BOOST_LDFLAGS $BOOST_SYSTEM_LIB $BOOST_FILESYSTEM_LIB $BOOST_PROGRAM_OPTIONS_LIB $BOOST_THREAD_LIB"
+  BOOST_LIBS="$BOOST_LDFLAGS $BOOST_SYSTEM_LIB $BOOST_FILESYSTEM_LIB $BOOST_PROGRAM_OPTIONS_LIB $BOOST_THREAD_LIB"
 
-dnl Boost >= 1.50 uses sleep_for rather than the now-deprecated sleep, however
-dnl it was broken from 1.50 to 1.52 when backed by nanosleep. Use sleep_for if
-dnl a working version is available, else fall back to sleep. sleep was removed
-dnl after 1.56.
-dnl If neither is available, abort.
-dnl If sleep_for is used, boost_chrono becomes a requirement.
-if test x$ax_cv_boost_chrono = xyes; then
-TEMP_LIBS="$LIBS"
-LIBS="$BOOST_LIBS $BOOST_CHRONO_LIB $LIBS"
-TEMP_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="$CPPFLAGS $BOOST_CPPFLAGS"
-AC_LINK_IFELSE([AC_LANG_PROGRAM([[
-  #include <boost/thread/thread.hpp>
-  #include <boost/version.hpp>
-  ]],[[
-  #if BOOST_VERSION >= 105000 && (!defined(BOOST_HAS_NANOSLEEP) || BOOST_VERSION >= 105200)
-      boost::this_thread::sleep_for(boost::chrono::milliseconds(0));
-  #else
-   choke me
-  #endif
-  ]])],
-  [boost_sleep=yes; BOOST_LIBS="$BOOST_LIBS $BOOST_CHRONO_LIB";
-     AC_DEFINE(HAVE_WORKING_BOOST_SLEEP_FOR, 1, [Define this symbol if boost sleep_for works])],
-  [boost_sleep=no])
-LIBS="$TEMP_LIBS"
-CPPFLAGS="$TEMP_CPPFLAGS"
-fi
+  dnl Boost >= 1.50 uses sleep_for rather than the now-deprecated sleep, however
+  dnl it was broken from 1.50 to 1.52 when backed by nanosleep. Use sleep_for if
+  dnl a working version is available, else fall back to sleep. sleep was removed
+  dnl after 1.56.
+  dnl If neither is available, abort.
+  dnl If sleep_for is used, boost_chrono becomes a requirement.
+  if test x$ax_cv_boost_chrono = xyes; then
+    TEMP_LIBS="$LIBS"
+    LIBS="$BOOST_LIBS $BOOST_CHRONO_LIB $LIBS"
+    TEMP_CPPFLAGS="$CPPFLAGS"
+    CPPFLAGS="$CPPFLAGS $BOOST_CPPFLAGS"
+    AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+                        #include <boost/thread/thread.hpp>
+                        #include <boost/version.hpp>]],
+                        [[
+                        #if BOOST_VERSION >= 105000 && (!defined(BOOST_HAS_NANOSLEEP) || BOOST_VERSION >= 105200)
+                            boost::this_thread::sleep_for(boost::chrono::milliseconds(0));
+                        #else
+                         choke me
+                        #endif
+                        ]])],
+      [boost_sleep=yes
+      BOOST_LIBS="$BOOST_LIBS $BOOST_CHRONO_LIB"
+      AC_DEFINE([HAVE_WORKING_BOOST_SLEEP_FOR], [1], [Define this symbol if boost sleep_for works])],
+      [boost_sleep=no])
+    LIBS="$TEMP_LIBS"
+    CPPFLAGS="$TEMP_CPPFLAGS"
+  fi
 
-if test x$boost_sleep != xyes; then
-TEMP_LIBS="$LIBS"
-LIBS="$BOOST_LIBS $LIBS"
-TEMP_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="$CPPFLAGS $BOOST_CPPFLAGS"
-AC_LINK_IFELSE([AC_LANG_PROGRAM([[
-  #include <boost/version.hpp>
-  #include <boost/thread.hpp>
-  #include <boost/date_time/posix_time/posix_time_types.hpp>
-  ]],[[
-  #if BOOST_VERSION <= 105600
-      boost::this_thread::sleep(boost::posix_time::milliseconds(0));
-  #else
-   choke me
-  #endif
-  ]])],
-  [boost_sleep=yes; AC_DEFINE(HAVE_WORKING_BOOST_SLEEP, 1, [Define this symbol if boost sleep works])],
-  [boost_sleep=no])
-LIBS="$TEMP_LIBS"
-CPPFLAGS="$TEMP_CPPFLAGS"
-fi
+  if test x$boost_sleep != xyes; then
+    TEMP_LIBS="$LIBS"
+    LIBS="$BOOST_LIBS $LIBS"
+    TEMP_CPPFLAGS="$CPPFLAGS"
+    CPPFLAGS="$CPPFLAGS $BOOST_CPPFLAGS"
+    AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+                        #include <boost/version.hpp>
+                        #include <boost/thread.hpp>
+                        #include <boost/date_time/posix_time/posix_time_types.hpp>]],
+                        [[
+                        #if BOOST_VERSION <= 105600
+                            boost::this_thread::sleep(boost::posix_time::milliseconds(0));
+                        #else
+                         choke me
+                        #endif
+                        ]])],
+      [boost_sleep=yes
+      AC_DEFINE([HAVE_WORKING_BOOST_SLEEP], [1], [Define this symbol if boost sleep works])],
+      [boost_sleep=no])
+    LIBS="$TEMP_LIBS"
+    CPPFLAGS="$TEMP_CPPFLAGS"
+  fi
 
-if test x$boost_sleep != xyes; then
-  AC_MSG_ERROR([No working boost sleep implementation found.])
-fi
-
+  if test x$boost_sleep != xyes; then
+    AC_MSG_ERROR([No working boost sleep implementation found.])
+  fi
 fi
 
 if test x$use_pkgconfig = xyes; then
