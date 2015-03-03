@@ -118,7 +118,7 @@ private:
     int spinnerFrame;
 
     /** Create the main UI actions. */
-    void createActions(const NetworkStyle *networkStyle);
+    void createActions();
     /** Create the menu bar and sub-menus. */
     void createMenuBar();
     /** Create the toolbars */
