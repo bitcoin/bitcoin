@@ -14,12 +14,12 @@ BITCOIND_PIDFILE=${BITCOIND_PIDFILE:-${BITCOIND_PIDDIR}/bitcoind.pid}
 BITCOIND_DATADIR=${BITCOIND_DATADIR:-${BITCOIND_DEFAULT_DATADIR}}
 BITCOIND_USER=${BITCOIND_USER:-bitcoin}
 BITCOIND_GROUP=${BITCOIND_GROUP:-bitcoin}
-BITCOIND_BIN=${BITCOIND_BIN:-/usr/bin/bitcoind}
+BITCOIND_BIN=${BITCOIND_BIN:-/usr/sbin/bitcoind}
 
 name="Bitcoin Core Daemon"
 description="Bitcoin crypto-currency p2p network daemon"
 
-command="/usr/bin/bitcoind"
+command="/usr/sbin/bitcoind"
 command_args="-pid=\"${BITCOIND_PIDFILE}\" \
 		-conf=\"${BITCOIND_CONFIGFILE}\" \
 		-datadir=\"${BITCOIND_DATADIR}\" \

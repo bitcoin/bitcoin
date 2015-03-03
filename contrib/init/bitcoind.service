@@ -8,7 +8,7 @@ Group=bitcoin
 
 Type=forking
 PIDFile=/var/lib/bitcoind/bitcoind.pid
-ExecStart=/usr/bin/bitcoind -daemon -pid=/var/lib/bitcoind/bitcoind.pid \
+ExecStart=/usr/sbin/bitcoind -daemon -pid=/var/lib/bitcoind/bitcoind.pid \
 -conf=/etc/bitcoin/bitcoin.conf -datadir=/var/lib/bitcoind -disablewallet
 
 Restart=always

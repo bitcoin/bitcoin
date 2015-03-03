@@ -44,7 +44,7 @@ see contrib/debian/examples/bitcoin.conf.
 
 All three configurations assume several paths that might need to be adjusted.
 
-Binary:              /usr/bin/bitcoind
+Binary:              /usr/sbin/bitcoind
 Configuration file:  /etc/bitcoin/bitcoin.conf
 Data directory:      /var/lib/bitcoind
 PID file:            /var/run/bitcoind/bitcoind.pid (OpenRC and Upstart)

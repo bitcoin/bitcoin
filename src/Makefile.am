@@ -57,10 +57,11 @@ LIBBITCOIN_CONSENSUS=
 endif
 
 bin_PROGRAMS =
+sbin_PROGRAMS =
 TESTS =
 
 if BUILD_BITCOIND
-  bin_PROGRAMS += bitcoind
+  sbin_PROGRAMS += bitcoind
 endif
 
 if BUILD_BITCOIN_UTILS
