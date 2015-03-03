@@ -24,6 +24,7 @@
 #include <QDialogButtonBox>
 #include <QFlags>
 #include <QIcon>
+#include <QSettings>
 #include <QString>
 #include <QTreeWidget>
 #include <QTreeWidgetItem>
@@ -38,12 +39,17 @@ CoinControlDialog::CoinControlDialog(QWidget *parent) :
     model(0)
 {
     ui->setupUi(this);
-    /* Open default CSS */
+    
+    /* Open CSS when configured */
+    QSettings settings;
+    QString theme = settings.value("theme", "").toString();
+    if(!theme.isEmpty()){
     // QFile qFile(":/css/drkblue");
-    QFile qFile("drkblue.css"); // for development only
-    if (qFile.open(QFile::ReadOnly)) {
-      QString styleSheet = QLatin1String(qFile.readAll());
-      this->setStyleSheet(styleSheet);
+        QFile qFile(theme); // for development only
+        if (qFile.open(QFile::ReadOnly)) {
+            QString styleSheet = QLatin1String(qFile.readAll());
+            this->setStyleSheet(styleSheet);
+        }
     }
 
     // context menu actions

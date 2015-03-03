@@ -69,6 +69,12 @@ OptionsDialog::OptionsDialog(QWidget *parent) :
 #endif
 
     /* Display elements init */
+    
+    /* Theme selector */
+    ui->theme->addItem(QString("(") + tr("default") + QString(")"), QVariant(""));
+    ui->theme->addItem(QString("DRK-blue"), QVariant("drkblue.css")); // ToDo: remove .css when we finally use resources
+    
+    /* Language selector */
     QDir translations(":translations");
     ui->lang->addItem(QString("(") + tr("default") + QString(")"), QVariant(""));
     foreach(const QString &langStr, translations.entryList())
@@ -154,6 +160,7 @@ void OptionsDialog::setModel(OptionsModel *model)
     /* Network */
     connect(ui->connectSocks, SIGNAL(clicked(bool)), this, SLOT(showRestartWarning()));
     /* Display */
+    connect(ui->theme, SIGNAL(valueChanged()), this, SLOT(showRestartWarning()));
     connect(ui->lang, SIGNAL(valueChanged()), this, SLOT(showRestartWarning()));
     connect(ui->thirdPartyTxUrls, SIGNAL(textChanged(const QString &)), this, SLOT(showRestartWarning()));
 }
@@ -185,6 +192,7 @@ void OptionsDialog::setMapper()
 #endif
 
     /* Display */
+    mapper->addMapping(ui->theme, OptionsModel::Theme);
     mapper->addMapping(ui->lang, OptionsModel::Language);
     mapper->addMapping(ui->unit, OptionsModel::DisplayUnit);
     mapper->addMapping(ui->displayAddresses, OptionsModel::DisplayAddresses);
