@@ -8,9 +8,11 @@
 #include "uint256.h"
 #include "util.h"
 
+#include "test/test_bitcoin.h"
+
 #include <boost/test/unit_test.hpp>
 
-BOOST_AUTO_TEST_SUITE(miner_tests)
+BOOST_FIXTURE_TEST_SUITE(miner_tests, TestingSetup)
 
 static
 struct {
