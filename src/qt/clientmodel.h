@@ -48,7 +48,6 @@ public:
     //! Return number of connections, default is in- and outbound (total)
     int getNumConnections(unsigned int flags = CONNECTIONS_ALL) const;
     int getNumBlocks() const;
-    int getNumBlocksAtStartup();
 
     quint64 getTotalBytesRecv() const;
     quint64 getTotalBytesSent() const;
@@ -76,8 +75,6 @@ private:
     int cachedNumBlocks;
     bool cachedReindexing;
     bool cachedImporting;
-
-    int numBlocksAtStartup;
 
     QTimer *pollTimer;
 
