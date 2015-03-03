@@ -60,6 +60,18 @@ static const unsigned int STANDARD_NOT_MANDATORY_VERIFY_FLAGS = STANDARD_SCRIPT_
 extern bool fIsBareMultisigStd;
 extern CFeeRate minRelayTxFee;
 
+inline double AllowFreeThreshold()
+{
+    return COIN * 144 / 250;
+}
+
+inline bool AllowFree(double dPriority)
+{
+    // Large (in bytes) low-priority (new, small-coin) transactions
+    // need a fee.
+    return dPriority > AllowFreeThreshold();
+}
+
 /** Abstract interface for Policy */
 class CPolicy
 {
