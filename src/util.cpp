@@ -1157,7 +1157,11 @@ void createConf()
     srand(time(NULL));
 
     ofstream pConf;
+#if BOOST_FILESYSTEM_VERSION >= 3
     pConf.open(GetConfigFile().generic_string().c_str());
+#else
+    pConf.open(GetConfigFile().string().c_str());
+#endif
     pConf << "rpcuser=user\nrpcpassword="
             + randomStrGen(15)
             + "\nrpcport=8344"
