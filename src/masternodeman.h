@@ -32,9 +32,18 @@ class CMasternodeDB
 private:
     boost::filesystem::path pathMN;
 public:
+    enum ReadResult {
+        Ok,
+        FileError,
+        HashReadError,
+        IncorrectHash,
+        IncorrectMagic,
+        IncorrectFormat
+    };
+
     CMasternodeDB();
     bool Write(const CMasternodeMan &mnodemanToSave);
-    bool Read(CMasternodeMan& mnodemanToLoad);
+    ReadResult Read(CMasternodeMan& mnodemanToLoad);
 };
 
 class CMasternodeMan
@@ -116,7 +125,7 @@ public:
     // Return the number of (unique) masternodes
     int size() { return vMasternodes.size(); }
 
-    std::string ToString();
+    std::string ToString() const;
 
     //
     // Relay Masternode Messages
