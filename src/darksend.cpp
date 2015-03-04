@@ -1372,7 +1372,7 @@ void CDarksendPool::SendDarksendDenominate(std::vector<CTxIn>& vin, std::vector<
             if(fDebug) LogPrintf("dsi -- tx in %s\n", i.ToString().c_str());
         }
 
-        printf("Submitting tx %s\n", tx.ToString().c_str());
+        LogPrintf("Submitting tx %s\n", tx.ToString().c_str());
 
         if(!AcceptableInputs(mempool, state, tx)){
             LogPrintf("dsi -- transaction not valid! %s \n", tx.ToString().c_str());
