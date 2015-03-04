@@ -177,12 +177,12 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
         vRecv >> dsr;
 
         if(chainActive.Tip()->nHeight - dsr.nBlockHeight > 10) return;
-        
+
         if(dsr.nRelayType != DARKSEND_RELAY_IN &&
             dsr.nRelayType != DARKSEND_RELAY_OUT &&
             dsr.nRelayType != DARKSEND_RELAY_SIG) return;
 
-    
+
         if(dsr.in == CTxIn() && dsr.nRelayType == DARKSEND_RELAY_IN) return;
         if(dsr.out == CTxOut() && dsr.nRelayType == DARKSEND_RELAY_OUT) return;
         if(dsr.in == CTxIn() && dsr.nRelayType == DARKSEND_RELAY_SIG) return;
@@ -409,7 +409,7 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
         } else {
             pfrom->PushMessage("dssu", sessionID, GetState(), GetEntriesCount(), MASTERNODE_REJECTED, error);
         }
-    
+
     } else if (strCommand == "dssu") { //DarkSend status update
 
         if (pfrom->nVersion < MIN_POOL_PEER_PROTO_VERSION) {
@@ -439,7 +439,7 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
         StatusUpdate(state, entriesCount, accepted, error, sessionIDMessage);
 
     } else if (strCommand == "dss") { //DarkSend Sign Final Tx
-        
+
         if (pfrom->nVersion < MIN_POOL_PEER_PROTO_VERSION) {
             return;
         }
@@ -485,9 +485,9 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
 
         //check to see if input is spent already? (and probably not confirmed)
         SignFinalTransaction(txNew, pfrom);
-    
+
     } else if (strCommand == "dsc") { //DarkSend Complete
-    
+
         if (pfrom->nVersion < MIN_POOL_PEER_PROTO_VERSION) {
             return;
         }
@@ -523,7 +523,7 @@ int GetInputDarksendRounds(CTxIn in, int rounds)
     if(rounds >= 17) return rounds;
 
     uint256 hash = in.prevout.hash;
-    uint nout = in.prevout.n;
+    unsigned int nout = in.prevout.n;
 
     CWalletTx wtx;
     if(pwalletMain->GetTransaction(hash, wtx))
@@ -688,10 +688,10 @@ void CDarksendPool::Check()
     if(fDebug) LogPrintf("CDarksendPool::Check() - entries count %lu\n", entries.size());
 
     //printf("CDarksendPool::Check() %d - %d - %d\n", state, anonTx.CountEntries(), GetTimeMillis()-lastTimeChanged);
-    
+
     // If entries is full, then move on to the next phase
     if(state == POOL_STATUS_ACCEPTING_ENTRIES && (
-        (int)entries.size() >= GetMaxPoolTransactions() || 
+        (int)entries.size() >= GetMaxPoolTransactions() ||
         (GetTimeMillis()-lastTimeChanged > 5000 && anonTx.CountEntries() > GetMaxPoolTransactions()*5)
         ))
     {
@@ -730,7 +730,7 @@ void CDarksendPool::Check()
 
             if(fDebug) LogPrintf("Transaction 1: %s\n", txNew.ToString().c_str());
             SignFinalTransaction(txNew, NULL);
-            
+
             // request signatures from clients
             RelayFinalTransaction(sessionID, finalTransaction);
         }
@@ -777,7 +777,7 @@ void CDarksendPool::CheckFinalTransaction()
                 UpdateState(POOL_STATUS_ACCEPTING_ENTRIES);
                 if(nCountAttempts > 5) RelayCompletedTransaction(sessionID, true, "Transaction not valid, please try again");
 
-                if(!fSubmitAnonymousFailed && nCountAttempts > 5) 
+                if(!fSubmitAnonymousFailed && nCountAttempts > 5)
                     fSubmitAnonymousFailed = true;
                 return;
             }
@@ -1098,7 +1098,7 @@ void CDarksendPool::CheckForCompleteQueue(){
     if(!fEnableDarksend && !fMasterNode) return;
 
     /* Check to see if we're ready for submissions from clients */
-    // 
+    //
     // After receiving multiple dsa messages, the queue will switch to "accepting entries"
     // which is the active state right before merging the transaction
     //
@@ -1387,7 +1387,7 @@ void CDarksendPool::SendDarksendDenominate(std::vector<CTxIn>& vin, std::vector<
 
     // submit inputs/outputs through relays
     RelayInAnon(vin, vout);
-    
+
     Check();
 }
 
@@ -1501,7 +1501,7 @@ bool CDarksendPool::SignFinalTransaction(CTransaction& finalTransactionNew, CNod
                 }
 
                 sigs.push_back(finalTransaction.vin[mine]);
-                if(fDebug) LogPrintf(" -- dss %d %d %s\n", mine, (int)sigs.size(), finalTransaction.vin[mine].scriptSig.ToString().c_str());                    
+                if(fDebug) LogPrintf(" -- dss %d %d %s\n", mine, (int)sigs.size(), finalTransaction.vin[mine].scriptSig.ToString().c_str());
             }
 
         }
@@ -1548,7 +1548,7 @@ void CDarksendPool::CompletedTransaction(bool error, std::string lastMessageNew)
         UpdateState(POOL_STATUS_ERROR);
 
         Check();
-        UnlockCoins();    
+        UnlockCoins();
     } else {
         LogPrintf("CompletedTransaction -- success \n");
         UpdateState(POOL_STATUS_SUCCESS);
@@ -2498,7 +2498,7 @@ void ThreadCheckDarkSendPool()
 
         MilliSleep(1000);
         //LogPrintf("ThreadCheckDarkSendPool::check timeout\n");
-        
+
         if(c % 10 == 0) darkSendPool.Check();
         darkSendPool.CheckTimeout();
         darkSendPool.CheckForCompleteQueue();
