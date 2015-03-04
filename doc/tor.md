@@ -3,10 +3,10 @@ TOR SUPPORT IN DARKCOIN
 
 It is possible to run Darkcoin as a Tor hidden service, and connect to such services.
 
-The following directions assume you have a Tor proxy running on port 9050. Many 
-distributions default to having a SOCKS proxy listening on port 9050, but others 
-may not. In particular, the Tor Browser Bundle defaults to listening on a random 
-port. See [Tor Project FAQ:TBBSocksPort](https://www.torproject.org/docs/faq.html.en#TBBSocksPort) 
+The following directions assume you have a Tor proxy running on port 9050. Many
+distributions default to having a SOCKS proxy listening on port 9050, but others
+may not. In particular, the Tor Browser Bundle defaults to listening on a random
+port. See [Tor Project FAQ:TBBSocksPort](https://www.torproject.org/docs/faq.html.en#TBBSocksPort)
 for how to properly configure Tor.
 
 
@@ -104,4 +104,8 @@ for normal IPv4/IPv6 communication, use:
 
 * [darkcoinie7ghp67.onion](http://darkcoinie7ghp67.onion/)
 * [drktalkwaybgxnoq.onion](http://drktalkwaybgxnoq.onion/)
+* [drkcoinooditvool.onion](http://drkcoinooditvool.onion/)
+* [darkcoxbtzggpmcc.onion](http://darkcoxbtzggpmcc.onion/)
 * [ssapp53tmftyjmjb.onion](http://ssapp53tmftyjmjb.onion/)
+* [j2dfl3cwxyxpbc7s.onion](http://j2dfl3cwxyxpbc7s.onion/)
+* [vf6d2mxpuhh2cbxt.onion](http://vf6d2mxpuhh2cbxt.onion/)
