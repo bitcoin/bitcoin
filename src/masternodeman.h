@@ -84,7 +84,7 @@ public:
     void CheckAndRemove();
 
     // Clear masternode vector
-    void Clear() { LOCK(cs); vMasternodes.clear(); }
+    void Clear();
 
     int CountEnabled();
 
@@ -96,7 +96,7 @@ public:
     CMasternode* Find(const CTxIn& vin);
 
     //Find an entry thta do not match every entry provided vector
-    CMasternode* FindNotInVec(const std::vector<CTxIn> &vVins);
+    CMasternode* FindOldestNotInVec(const std::vector<CTxIn> &vVins);
 
     // Find a random entry
     CMasternode* FindRandom();
@@ -107,11 +107,24 @@ public:
     std::vector<CMasternode> GetFullMasternodeVector() { Check(); return vMasternodes; }
 
     int GetMasternodeRank(const CTxIn &vin, int64_t nBlockHeight, int minProtocol=0);
+    CMasternode* GetMasternodeByRank(int nRank, int64_t nBlockHeight, int minProtocol=0);
 
     void ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
 
+    void ProcessMasternodeConnections();
+
     // Return the number of (unique) masternodes
     int size() { return vMasternodes.size(); }
+
+    std::string ToString();
+
+    //
+    // Relay Masternode Messages
+    //
+
+    void RelayMasternodeEntry(const CTxIn vin, const CService addr, const std::vector<unsigned char> vchSig, const int64_t nNow, const CPubKey pubkey, const CPubKey pubkey2, const int count, const int current, const int64_t lastUpdated, const int protocolVersion);
+    void RelayMasternodeEntryPing(const CTxIn vin, const std::vector<unsigned char> vchSig, const int64_t nNow, const bool stop);
+
 
 };
 
