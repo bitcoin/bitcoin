@@ -353,7 +353,7 @@ int CMasternodeMan::GetMasternodeRank(const CTxIn& vin, int64_t nBlockHeight, in
 
     sort(vecMasternodeScores.rbegin(), vecMasternodeScores.rend(), CompareValueOnly());
 
-    unsigned int rank = 0;
+    int rank = 0;
     BOOST_FOREACH (PAIRTYPE(unsigned int, CTxIn)& s, vecMasternodeScores){
         rank++;
         if(s.second == vin) {
@@ -362,6 +362,71 @@ int CMasternodeMan::GetMasternodeRank(const CTxIn& vin, int64_t nBlockHeight, in
     }
 
     return -1;
+}
+
+CMasternode* CMasternodeMan::GetMasternodeByRank(int nRank, int64_t nBlockHeight, int minProtocol)
+{
+    std::vector<pair<unsigned int, CTxIn> > vecMasternodeScores;
+
+    // scan for winner
+    BOOST_FOREACH(CMasternode& mn, vMasternodes) {
+
+        mn.Check();
+
+        if(mn.protocolVersion < minProtocol) continue;
+        if(!mn.IsEnabled()) {
+            continue;
+        }
+
+        uint256 n = mn.CalculateScore(1, nBlockHeight);
+        unsigned int n2 = 0;
+        memcpy(&n2, &n, sizeof(n2));
+
+        vecMasternodeScores.push_back(make_pair(n2, mn.vin));
+    }
+
+    sort(vecMasternodeScores.rbegin(), vecMasternodeScores.rend(), CompareValueOnly());
+
+    int rank = 0;
+    BOOST_FOREACH (PAIRTYPE(unsigned int, CTxIn)& s, vecMasternodeScores){
+        rank++;
+        if(rank == nRank) {
+            return Find(s.second);
+        }
+    }
+
+    return NULL;
+}
+
+void CMasternodeMan::ProcessMasternodeConnections()
+{
+    LOCK(cs_vNodes);
+
+    if(!darkSendPool.pSubmittedToMasternode) return;
+    
+    BOOST_FOREACH(CNode* pnode, vNodes)
+    {
+        if(darkSendPool.pSubmittedToMasternode->addr == pnode->addr) continue;
+
+        if(pnode->fDarkSendMaster){
+            LogPrintf("Closing masternode connection %s \n", pnode->addr.ToString().c_str());
+            pnode->CloseSocketDisconnect();
+        }
+    }
+}
+
+void CMasternodeMan::RelayMasternodeEntry(const CTxIn vin, const CService addr, const std::vector<unsigned char> vchSig, const int64_t nNow, const CPubKey pubkey, const CPubKey pubkey2, const int count, const int current, const int64_t lastUpdated, const int protocolVersion)
+{
+    LOCK(cs_vNodes);
+    BOOST_FOREACH(CNode* pnode, vNodes)
+        pnode->PushMessage("dsee", vin, addr, vchSig, nNow, pubkey, pubkey2, count, current, lastUpdated, protocolVersion);
+}
+
+void CMasternodeMan::RelayMasternodeEntryPing(const CTxIn vin, const std::vector<unsigned char> vchSig, const int64_t nNow, const bool stop)
+{
+    LOCK(cs_vNodes);
+    BOOST_FOREACH(CNode* pnode, vNodes)
+        pnode->PushMessage("dseep", vin, vchSig, nNow, stop);
 }
 
 void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv)
@@ -457,7 +522,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
                     pmn->addr = addr;
                     pmn->Check();
                     if(pmn->IsEnabled())
-                        RelayDarkSendElectionEntry(vin, addr, vchSig, sigTime, pubkey, pubkey2, count, current, lastUpdated, protocolVersion);
+                        mnodeman.RelayMasternodeEntry(vin, addr, vchSig, sigTime, pubkey, pubkey2, count, current, lastUpdated, protocolVersion);
                 }
             }
 
@@ -523,7 +588,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
             }
 
             if(count == -1 && !isLocal)
-                RelayDarkSendElectionEntry(vin, addr, vchSig, sigTime, pubkey, pubkey2, count, current, lastUpdated, protocolVersion);
+                mnodeman.RelayMasternodeEntry(vin, addr, vchSig, sigTime, pubkey, pubkey2, count, current, lastUpdated, protocolVersion);
 
         } else {
             LogPrintf("dsee - Rejected masternode entry %s\n", addr.ToString().c_str());
@@ -588,7 +653,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
                         pmn->Check();
                         if(!pmn->IsEnabled()) return;
                     }
-                    RelayDarkSendElectionEntryPing(vin, vchSig, sigTime, stop);
+                    mnodeman.RelayMasternodeEntryPing(vin, vchSig, sigTime, stop);
                 }
             }
             return;
