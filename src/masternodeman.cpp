@@ -626,7 +626,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
 
         // see if we have this masternode
         CMasternode* pmn = this->Find(vin);
-        if(pmn != NULL)
+        if(pmn != NULL && pmn->protocolVersion >= nMasternodeMinProtocol)
         {
             // LogPrintf("dseep - Found corresponding mn for vin: %s\n", vin.ToString().c_str());
             // take this only if it's newer
