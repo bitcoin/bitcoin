@@ -1838,7 +1838,7 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, int64_t> >& vecSend,
         LOCK2(cs_main, cs_wallet);
         {
             nFeeRet = nTransactionFee;
-            if(useIX && nFeeRet < CENT) nFeeRet = CENT;
+            if(useIX) nFeeRet = max(CENT, nFeeRet);
             while (true)
             {
                 wtxNew.vin.clear();
@@ -1912,13 +1912,9 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, int64_t> >& vecSend,
 
                 //over pay for denominated transactions
                 if(coin_type == ONLY_DENOMINATED) {
-                    nFeeRet = nChange;
+                    nFeeRet += nChange;
                     nChange = 0;
                     wtxNew.mapValue["DS"] = "1";
-                } else if(useIX && nFeeRet < CENT && nChange > (CENT-nFeeRet)) {
-                    // IX has a minimum fee of 0.01 DRK
-                    nChange -= CENT-nFeeRet;
-                    nFeeRet = CENT;
                 }
 
                 if (nChange > 0)
