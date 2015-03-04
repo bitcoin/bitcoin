@@ -41,6 +41,7 @@ BITCOIN_CORE_H = \
   core.h \
   crypter.h \
   darksend.h \
+  darksend-relay.h \
   db.h \
   hash.h \
   init.h \
@@ -151,6 +152,7 @@ libdarkcoin_common_a_SOURCES = \
   chainparams.cpp \
   core.cpp \
   darksend.cpp \
+  darksend-relay.cpp \
   masternode.cpp \
   masternodeman.cpp \
   masternodeconfig.cpp \
