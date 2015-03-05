@@ -22,10 +22,9 @@ public:
     int nRelayType;
     CTxIn in;
     CTxOut out;
-    std::string strSharedKey;
 
     CDarkSendRelay();
-    CDarkSendRelay(CTxIn& vinMasternodeIn, vector<unsigned char>& vchSigIn, int nBlockHeightIn, int nRelayTypeIn, CTxIn& in2, CTxOut& out2, std::string strSharedKeyIn);
+    CDarkSendRelay(CTxIn& vinMasternodeIn, vector<unsigned char>& vchSigIn, int nBlockHeightIn, int nRelayTypeIn, CTxIn& in2, CTxOut& out2);
     
     IMPLEMENT_SERIALIZE
     (
@@ -40,7 +39,7 @@ public:
 
     std::string ToString();
 
-    bool Sign();
+    bool Sign(std::string strSharedKey);
     bool VerifyMessage(std::string strSharedKey);
     void Relay();
     void RelayThroughNode(int nRank);

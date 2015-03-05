@@ -183,6 +183,7 @@ public:
         return false;
     }
 
+    void SetSharedKey(std::string strSharedKey);
     bool Sign();
     bool Relay();
 
