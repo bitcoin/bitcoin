@@ -21,4 +21,21 @@ BOOST_AUTO_TEST_CASE(subsidy_limit_test)
     BOOST_CHECK(nSum == 2099999997690000ULL);
 }
 
+bool ReturnFalse() { return false; }
+bool ReturnTrue() { return true; }
+
+BOOST_AUTO_TEST_CASE(test_combiner_all)
+{
+    boost::signals2::signal<bool (), CombinerAll> Test;
+    BOOST_CHECK(Test());
+    Test.connect(&ReturnFalse);
+    BOOST_CHECK(!Test());
+    Test.connect(&ReturnTrue);
+    BOOST_CHECK(!Test());
+    Test.disconnect(&ReturnFalse);
+    BOOST_CHECK(Test());
+    Test.disconnect(&ReturnTrue);
+    BOOST_CHECK(Test());
+}
+
 BOOST_AUTO_TEST_SUITE_END()
