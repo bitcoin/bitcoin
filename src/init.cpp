@@ -707,7 +707,7 @@ bool AppInit2(boost::thread_group& threadGroup)
     }
 
     //ignore masternodes below protocol version
-    nMasternodeMinProtocol = GetArg("-masternodeminprotocol", 70051);
+    nMasternodeMinProtocol = GetArg("-masternodeminprotocol", MIN_PEER_PROTO_VERSION);
 
     int64_t nStart;
 
@@ -1154,19 +1154,12 @@ bool AppInit2(boost::thread_group& threadGroup)
 
     uiInterface.InitMessage(_("Loading masternode list..."));
 
-    nStart = GetTimeMillis();
-
-    {
-        CMasternodeDB mndb;
-        if (!mndb.Read(mnodeman))
-            LogPrintf("Invalid or missing masternodes.dat; recreating\n");
-        else
-            mnodeman.CheckAndRemove(); // clean out expired
-    }
-
-    LogPrintf("Loaded info from masternodes.dat  %dms\n", GetTimeMillis() - nStart);
-    LogPrintf("  %s\n", mnodeman.ToString());
-
+    CMasternodeDB mndb;
+    CMasternodeDB::ReadResult readResult = mndb.Read(mnodeman);
+    if (readResult == CMasternodeDB::FileError)
+        LogPrintf("Missing masternode list file - masternodes.dat, will try to recreate\n");
+    else if (readResult != CMasternodeDB::Ok)
+        LogPrintf("Masternode list file masternodes.dat has invalid format\n");
 
     fMasterNode = GetBoolArg("-masternode", false);
     if(fMasterNode) {
