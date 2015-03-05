@@ -6,7 +6,7 @@
 #include <boost/lexical_cast.hpp>
 
 //
-// Bootup the masternode, look for a 1000DRK input and register on the network
+// Bootup the Masternode, look for a 1000DRK input and register on the network
 //
 void CActiveMasternode::ManageStatus()
 {
@@ -20,7 +20,7 @@ void CActiveMasternode::ManageStatus()
     bool fIsInitialDownload = IsInitialBlockDownload();
     if(fIsInitialDownload) {
         status = MASTERNODE_SYNC_IN_PROCESS;
-        LogPrintf("CActiveMasternode::ManageStatus() - Sync in progress. Must wait until sync is complete to start masternode.\n");
+        LogPrintf("CActiveMasternode::ManageStatus() - Sync in progress. Must wait until sync is complete to start Masternode.\n");
         return;
     }
 
@@ -31,7 +31,7 @@ void CActiveMasternode::ManageStatus()
     if(status == MASTERNODE_NOT_PROCESSED) {
         if(strMasterNodeAddr.empty()) {
             if(!GetLocal(service)) {
-                notCapableReason = "Can't detect external address. Please use the masternodeaddr configuration option.";
+                notCapableReason = "Can't detect external address. Please use the Masternodeaddr configuration option.";
                 status = MASTERNODE_NOT_CAPABLE;
                 LogPrintf("CActiveMasternode::ManageStatus() - not capable: %s\n", notCapableReason.c_str());
                 return;
@@ -119,7 +119,7 @@ void CActiveMasternode::ManageStatus()
     }
 }
 
-// Send stop dseep to network for remote masternode
+// Send stop dseep to network for remote Masternode
 bool CActiveMasternode::StopMasterNode(std::string strService, std::string strKeyMasternode, std::string& errorMessage) {
 	CTxIn vin;
     CKey keyMasternode;
@@ -133,10 +133,10 @@ bool CActiveMasternode::StopMasterNode(std::string strService, std::string strKe
 	return StopMasterNode(vin, CService(strService), keyMasternode, pubKeyMasternode, errorMessage);
 }
 
-// Send stop dseep to network for main masternode
+// Send stop dseep to network for main Masternode
 bool CActiveMasternode::StopMasterNode(std::string& errorMessage) {
 	if(status != MASTERNODE_IS_CAPABLE && status != MASTERNODE_REMOTELY_ENABLED) {
-		errorMessage = "masternode is not in a running status";
+		errorMessage = "Masternode is not in a running status";
     	LogPrintf("CActiveMasternode::StopMasterNode() - Error: %s\n", errorMessage.c_str());
 		return false;
 	}
@@ -155,7 +155,7 @@ bool CActiveMasternode::StopMasterNode(std::string& errorMessage) {
 	return StopMasterNode(vin, service, keyMasternode, pubKeyMasternode, errorMessage);
 }
 
-// Send stop dseep to network for any masternode
+// Send stop dseep to network for any Masternode
 bool CActiveMasternode::StopMasterNode(CTxIn vin, CService service, CKey keyMasternode, CPubKey pubKeyMasternode, std::string& errorMessage) {
    	pwalletMain->UnlockCoin(vin.prevout);
 	return Dseep(vin, service, keyMasternode, pubKeyMasternode, errorMessage, true);
@@ -163,7 +163,7 @@ bool CActiveMasternode::StopMasterNode(CTxIn vin, CService service, CKey keyMast
 
 bool CActiveMasternode::Dseep(std::string& errorMessage) {
 	if(status != MASTERNODE_IS_CAPABLE && status != MASTERNODE_REMOTELY_ENABLED) {
-		errorMessage = "masternode is not in a running status";
+		errorMessage = "Masternode is not in a running status";
     	LogPrintf("CActiveMasternode::Dseep() - Error: %s\n", errorMessage.c_str());
 		return false;
 	}
@@ -200,7 +200,7 @@ bool CActiveMasternode::Dseep(CTxIn vin, CService service, CKey keyMasternode, C
         return false;
     }
 
-    // Update Last Seen timestamp in masternode list
+    // Update Last Seen timestamp in Masternode list
     CMasternode* pmn = mnodeman.Find(vin);
     if(pmn != NULL)
     {
@@ -208,8 +208,8 @@ bool CActiveMasternode::Dseep(CTxIn vin, CService service, CKey keyMasternode, C
     }
     else
     {
-    	// Seems like we are trying to send a ping while the masternode is not registered in the network
-    	retErrorMessage = "Darksend Masternode List doesn't include our masternode, Shutting down masternode pinging service! " + vin.ToString();
+    	// Seems like we are trying to send a ping while the Masternode is not registered in the network
+    	retErrorMessage = "Darksend Masternode List doesn't include our Masternode, Shutting down Masternode pinging service! " + vin.ToString();
     	LogPrintf("CActiveMasternode::Dseep() - Error: %s\n", retErrorMessage.c_str());
         status = MASTERNODE_NOT_CAPABLE;
         notCapableReason = retErrorMessage;
@@ -270,7 +270,7 @@ bool CActiveMasternode::Register(CTxIn vin, CService service, CKey keyCollateral
     CMasternode* pmn = mnodeman.Find(vin);
     if(pmn == NULL)
     {
-        LogPrintf("CActiveMasternode::Register() - Adding to masternode list service: %s - vin: %s\n", service.ToString().c_str(), vin.ToString().c_str());
+        LogPrintf("CActiveMasternode::Register() - Adding to Masternode list service: %s - vin: %s\n", service.ToString().c_str(), vin.ToString().c_str());
         CMasternode mn(service, vin, pubKeyCollateralAddress, vchMasterNodeSignature, masterNodeSignatureTime, pubKeyMasternode, PROTOCOL_VERSION);
         mn.UpdateLastSeen(masterNodeSignatureTime);
         mnodeman.Add(mn);
@@ -327,7 +327,7 @@ bool CActiveMasternode::GetMasterNodeVin(CTxIn& vin, CPubKey& pubkey, CKey& secr
 }
 
 
-// Extract masternode vin information from output
+// Extract Masternode vin information from output
 bool CActiveMasternode::GetVinFromOutput(COutput out, CTxIn& vin, CPubKey& pubkey, CKey& secretKey) {
 
     CScript pubScript;
@@ -354,7 +354,7 @@ bool CActiveMasternode::GetVinFromOutput(COutput out, CTxIn& vin, CPubKey& pubke
     return true;
 }
 
-// get all possible outputs for running masternode
+// get all possible outputs for running Masternode
 vector<COutput> CActiveMasternode::SelectCoinsMasternode()
 {
     vector<COutput> vCoins;
@@ -373,7 +373,7 @@ vector<COutput> CActiveMasternode::SelectCoinsMasternode()
     return filteredCoins;
 }
 
-// when starting a masternode, this can enable to run as a hot wallet with no funds
+// when starting a Masternode, this can enable to run as a hot wallet with no funds
 bool CActiveMasternode::EnableHotColdMasterNode(CTxIn& newVin, CService& newService)
 {
     if(!fMasterNode) return false;
