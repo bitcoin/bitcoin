@@ -87,7 +87,8 @@ void GetRandBytes(unsigned char* buf, int num)
 {
     if (RAND_bytes(buf, num) != 1) {
         LogPrintf("%s: OpenSSL RAND_bytes() failed with error: %s\n", __func__, ERR_error_string(ERR_get_error(), NULL));
-        assert(false);
+        assert(false); // This assert should always trigger, we NEVER compile NDEBUG (see the #ifdef/#error in main.cpp)
+        exit(1); // ... but belt-and-suspenders is appropriate here, we must NOT proceed if RAND_bytes fails.
     }
 }
 
