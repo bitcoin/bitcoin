@@ -26,7 +26,8 @@ class CMasternodeMan;
 extern CMasternodeMan mnodeman;
 void DumpMasternodes();
 
-/** Access to the MN database (masternodes.dat) */
+/** Access to the MN database (masternodes.dat) 
+ */
 class CMasternodeDB
 {
 private:
@@ -45,11 +46,11 @@ private:
 
     // map to hold all MNs
     std::vector<CMasternode> vMasternodes;
-    // who's asked for the masternode list and the last time
+    // who's asked for the Masternode list and the last time
     std::map<CNetAddr, int64_t> mAskedUsForMasternodeList;
-    // who we asked for the masternode list and the last time
+    // who we asked for the Masternode list and the last time
     std::map<CNetAddr, int64_t> mWeAskedForMasternodeList;
-    // which masternodes we've asked for
+    // which Masternodes we've asked for
     std::map<COutPoint, int64_t> mWeAskedForMasternodeListEntry;
 
 public:
@@ -73,17 +74,16 @@ public:
     CMasternodeMan();
     CMasternodeMan(CMasternodeMan& other);
 
-    // Add an entry
-
+    /// Add an entry
     bool Add(CMasternode &mn);
 
-    // Check all masternodes
+    /// Check all Masternodes
     void Check();
 
-    // Check all masternodes and remove inactive
+    /// Check all Masternodes and remove inactive
     void CheckAndRemove();
 
-    // Clear masternode vector
+    /// Clear Masternode vector
     void Clear();
 
     int CountEnabled();
@@ -92,16 +92,16 @@ public:
 
     void DsegUpdate(CNode* pnode);
 
-    // Find an entry
+    /// Find an entry
     CMasternode* Find(const CTxIn& vin);
 
-    //Find an entry thta do not match every entry provided vector
+    /// Find an entry thta do not match every entry provided vector
     CMasternode* FindOldestNotInVec(const std::vector<CTxIn> &vVins);
 
-    // Find a random entry
+    /// Find a random entry
     CMasternode* FindRandom();
 
-    // Get the current winner for this block
+    /// Get the current winner for this block
     CMasternode* GetCurrentMasterNode(int mod=1, int64_t nBlockHeight=0, int minProtocol=0);
 
     std::vector<CMasternode> GetFullMasternodeVector() { Check(); return vMasternodes; }
@@ -113,7 +113,7 @@ public:
 
     void ProcessMasternodeConnections();
 
-    // Return the number of (unique) masternodes
+    /// Return the number of (unique) Masternodes
     int size() { return vMasternodes.size(); }
 
     std::string ToString();
