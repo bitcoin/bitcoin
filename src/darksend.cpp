@@ -9,7 +9,7 @@
 #include "masternodeman.h"
 #include "instantx.h"
 #include "ui_interface.h"
-
+;
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
@@ -300,7 +300,7 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
 
         if(!fMasterNode){
             LogPrintf("dsi -- not a masternode! \n");
-            error = _("This is not a masternode.");
+            error = _("This is not a masternode .");
             pfrom->PushMessage("dssu", sessionID, GetState(), GetEntriesCount(), MASTERNODE_REJECTED, error);
 
             return;
@@ -1106,11 +1106,18 @@ void CDarksendPool::CheckForCompleteQueue(){
         printf("Q ready");
         UpdateState(POOL_STATUS_ACCEPTING_ENTRIES);
 
+        if(strMasternodeSharedKey == ""){
+            CKey secret;
+            secret.MakeNewKey(false);
+            strMasternodeSharedKey = CBitcoinSecret(secret).ToString();
+        }
+
         CDarksendQueue dsq;
         dsq.nDenom = sessionDenom;
         dsq.vin = activeMasternode.vin;
         dsq.time = GetTime();
         dsq.ready = true;
+        dsq.SetSharedKey(strMasternodeSharedKey);
         dsq.Sign();
         dsq.Relay();
     }
@@ -2058,6 +2065,7 @@ bool CDarksendPool::IsCompatibleWithSession(int64_t nDenom, CTransaction txColla
             dsq.vin = activeMasternode.vin;
             dsq.time = GetTime();
             dsq.Sign();
+            strMasternodeSharedKey = dsq.strSharedKey;
             dsq.Relay();
         }
 
@@ -2314,10 +2322,6 @@ bool CDarksendQueue::Sign()
     nBlockHeight = chainActive.Tip()->nHeight; //sign with our current blockheight
     strMessage = boost::lexical_cast<std::string>(nBlockHeight);
 
-    CKey secret;
-    secret.MakeNewKey(false);
-    strSharedKey = CBitcoinSecret(secret).ToString();
-
     if(!darkSendSigner.SignMessage(strMessage, errorMessage, vchRelaySig, key2)) {
         LogPrintf("CDarksendQueue():Relay - Sign message failed");
         return false;
@@ -2328,8 +2332,12 @@ bool CDarksendQueue::Sign()
         return false;
     }
 
-
     return true;
+}
+
+void CDarksendQueue::SetSharedKey(std::string strSharedKeyIn)
+{
+    strSharedKey = strSharedKeyIn;
 }
 
 bool CDarksendQueue::Relay()
@@ -2392,7 +2400,8 @@ void CDarksendPool::RelaySignaturesAnon(std::vector<CTxIn>& vin)
 
     BOOST_FOREACH(CTxIn& in, vin){
         LogPrintf("RelaySignaturesAnon - sig %s\n", in.ToString().c_str());
-        CDarkSendRelay dsr(pSubmittedToMasternode->vin, vchMasternodeRelaySig, nMasternodeBlockHeight, DARKSEND_RELAY_SIG, in, out, strMasternodeSharedKey);
+        CDarkSendRelay dsr(pSubmittedToMasternode->vin, vchMasternodeRelaySig, nMasternodeBlockHeight, DARKSEND_RELAY_SIG, in, out);
+        dsr.Sign(strMasternodeSharedKey);
         dsr.Relay();
     }
 }
@@ -2405,13 +2414,15 @@ void CDarksendPool::RelayInAnon(std::vector<CTxIn>& vin, std::vector<CTxOut>& vo
 
     BOOST_FOREACH(CTxIn& in, vin){
         LogPrintf("RelayInAnon - in %s\n", in.ToString().c_str());
-        CDarkSendRelay dsr(pSubmittedToMasternode->vin, vchMasternodeRelaySig, nMasternodeBlockHeight, DARKSEND_RELAY_IN, in, out, strMasternodeSharedKey);
+        CDarkSendRelay dsr(pSubmittedToMasternode->vin, vchMasternodeRelaySig, nMasternodeBlockHeight, DARKSEND_RELAY_IN, in, out);
+        dsr.Sign(strMasternodeSharedKey);
         dsr.Relay();
     }
 
     BOOST_FOREACH(CTxOut& out, vout){
         LogPrintf("RelayInAnon - out %s\n", out.ToString().c_str());
-        CDarkSendRelay dsr(pSubmittedToMasternode->vin, vchMasternodeRelaySig, nMasternodeBlockHeight, DARKSEND_RELAY_OUT, in, out, strMasternodeSharedKey);
+        CDarkSendRelay dsr(pSubmittedToMasternode->vin, vchMasternodeRelaySig, nMasternodeBlockHeight, DARKSEND_RELAY_OUT, in, out);
+        dsr.Sign(strMasternodeSharedKey);
         dsr.Relay();
     }
 }
