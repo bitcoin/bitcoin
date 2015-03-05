@@ -148,10 +148,10 @@
             <number>2</number>
            </property>
            <property name="maximum">
-            <number>16</number>
+            <number>6</number>
            </property>
            <property name="value">
-            <number>4</number>
+            <number>3</number>
            </property>
           </widget>
          </item>
@@ -531,7 +531,7 @@ https://www.transifex.com/projects/p/darkcoin/</string>
           <bool>true</bool>
          </property>
          <property name="textInteractionFlags">
-          <set>Qt::LinksAccessibleByKeyboard|Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
+          <set>Qt::TextBrowserInteraction</set>
          </property>
         </widget>
        </item>
