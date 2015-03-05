@@ -3,10 +3,10 @@ TOR SUPPORT IN DARKCOIN
 
 It is possible to run Darkcoin as a Tor hidden service, and connect to such services.
 
-The following directions assume you have a Tor proxy running on port 9050. Many 
-distributions default to having a SOCKS proxy listening on port 9050, but others 
-may not. In particular, the Tor Browser Bundle defaults to listening on a random 
-port. See [Tor Project FAQ:TBBSocksPort](https://www.torproject.org/docs/faq.html.en#TBBSocksPort) 
+The following directions assume you have a Tor proxy running on port 9050. Many
+distributions default to having a SOCKS proxy listening on port 9050, but others
+may not. In particular, the Tor Browser Bundle defaults to listening on a random
+port. See [Tor Project FAQ:TBBSocksPort](https://www.torproject.org/docs/faq.html.en#TBBSocksPort)
 for how to properly configure Tor.
 
 
@@ -36,6 +36,13 @@ outgoing connections be anonymized, but more is possible.
 	-addnode=X      of IP addresses or hostnames in these parameters. It requires
 	-seednode=X     SOCKS5. In Tor mode, such addresses can also be exchanged with
 	                other P2P nodes.
+
+	-onlynet=tor    Only connect to .onion nodes and drop IPv4/6 connections.
+
+An example how to start the client if the Tor proxy is running on local host on
+port 9050 and only allows .onion nodes to connect:
+
+	./darkcoind -onion=127.0.0.1:9050 -onlynet=tor -listen=0 -addnode=ssapp53tmftyjmjb.onion
 
 In a typical situation, this suffices to run behind a Tor proxy:
 
@@ -91,3 +98,14 @@ for normal IPv4/IPv6 communication, use:
 
 	./darkcoind -onion=127.0.0.1:9050 -externalip=ssapp53tmftyjmjb.onion -discover
 
+
+3. List of known darkcoin Tor relays
+------------------------------------
+
+* [darkcoinie7ghp67.onion](http://darkcoinie7ghp67.onion/)
+* [drktalkwaybgxnoq.onion](http://drktalkwaybgxnoq.onion/)
+* [drkcoinooditvool.onion](http://drkcoinooditvool.onion/)
+* [darkcoxbtzggpmcc.onion](http://darkcoxbtzggpmcc.onion/)
+* [ssapp53tmftyjmjb.onion](http://ssapp53tmftyjmjb.onion/)
+* [j2dfl3cwxyxpbc7s.onion](http://j2dfl3cwxyxpbc7s.onion/)
+* [vf6d2mxpuhh2cbxt.onion](http://vf6d2mxpuhh2cbxt.onion/)
