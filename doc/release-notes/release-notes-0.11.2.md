@@ -10,6 +10,16 @@ Please report bugs using the issue tracker at github:
   https://github.com/darkcoin/darkcoin/issues
 
 
+Masternode blinding and enhancements
+------------------------------------
+
+* @TODO *
+
+*draft. when restarting the client the masternodes will be stored in the datadir in
+mncache.dat file (make sure you don't have any wallet with such name or this
+functionality will not be available for you)*
+
+
 Mining and relay policy enhancements
 ------------------------------------
 
@@ -62,13 +72,22 @@ dashd/dash-qt (on Linux).
 0.11.2 changelog
 ----------------
 
-- Masternode Blinding
-- New Masternode Management Class
-- Masternode cache, when restarting the client the masternodes will be stored in the datadir
-- Translation updates
-- Bitcoin upstream updates
-- Masternode payment scheduler improvements
+- BIP 66 integration
+- Strict DER signatures
+- Bump block header versoin to 3 (see notes above)
+- Masternode blinding
+- Masternode caching
+- Masternode payment scheduler
+- Better protection from cheating masternodes
+- Extended functionality for `masternode list` RPC command
+- Live Darksend and InstantX fee calculations in CoinControl
 - Darksend input caching
+- Edit config file from within the wallet
+- Wallet GUI perfomance improvements
+- General stability improvements and bug fixes
+- Code restructure and modularization
+- Update Tor documentation
+- Translation updates
 
 
 Credits
@@ -79,6 +98,12 @@ Thanks to who contributed to this release, at least:
 - eduffield
 - UdjinM6
 - vertoe
-- Bitcoin Developers
+- mkinney
+- elanaint
+- absolutebit
+- crowning
+- morcos
+- 21E14
 
-As well as everyone that helped translating on [Transifex](https://www.transifex.com/projects/p/dash/).
+As well as the Bitcoin Core developers and everyone that helped translating on
+[Transifex](https://www.transifex.com/projects/p/darkcoin/).
