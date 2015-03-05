@@ -1,8 +1,5 @@
-*This is a draft!*
-
 0.11.2 Release notes
 ====================
-
 
 Dash Core version 0.11.2 is now available from:
 
@@ -65,7 +62,13 @@ dashd/dash-qt (on Linux).
 0.11.2 changelog
 ----------------
 
-- *to do ..*
+- Masternode Blinding
+- New Masternode Management Class
+- Masternode cache, when restarting the client the masternodes will be stored in the datadir
+- Translation updates
+- Bitcoin upstream updates
+- Masternode payment scheduler improvements
+- Darksend input caching
 
 
 Credits
@@ -73,6 +76,9 @@ Credits
 
 Thanks to who contributed to this release, at least:
 
-- *to do ..*
+- eduffield
+- UdjinM6
+- vertoe
+- Bitcoin Developers
 
 As well as everyone that helped translating on [Transifex](https://www.transifex.com/projects/p/dash/).
