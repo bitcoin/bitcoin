@@ -35,6 +35,8 @@ CMasternodeDB::CMasternodeDB()
 
 bool CMasternodeDB::Write(const CMasternodeMan& mnodemanToSave)
 {
+    int64_t nStart = GetTimeMillis();
+
     // serialize addresses, checksum data up to that point, then append csum
     CDataStream ssMasternodes(SER_DISK, CLIENT_VERSION);
     ssMasternodes << FLATDATA(Params().MessageStart());
@@ -58,16 +60,23 @@ bool CMasternodeDB::Write(const CMasternodeMan& mnodemanToSave)
     FileCommit(fileout);
     fileout.fclose();
 
+    LogPrintf("Written info to masternodes.dat  %dms\n", GetTimeMillis() - nStart);
+    LogPrintf("  %s\n", mnodemanToSave.ToString());
+
     return true;
 }
 
-bool CMasternodeDB::Read(CMasternodeMan& mnodemanToLoad)
+CMasternodeDB::ReadResult CMasternodeDB::Read(CMasternodeMan& mnodemanToLoad)
 {
+    int64_t nStart = GetTimeMillis();
     // open input file, and associate with CAutoFile
     FILE *file = fopen(pathMN.string().c_str(), "rb");
     CAutoFile filein = CAutoFile(file, SER_DISK, CLIENT_VERSION);
     if (!filein)
-        return error("%s : Failed to open file %s", __func__, pathMN.string());
+    {
+        error("%s : Failed to open file %s", __func__, pathMN.string());
+        return FileError;
+    }
 
     // use file size to size memory buffer
     int fileSize = boost::filesystem::file_size(pathMN);
@@ -85,7 +94,8 @@ bool CMasternodeDB::Read(CMasternodeMan& mnodemanToLoad)
         filein >> hashIn;
     }
     catch (std::exception &e) {
-        return error("%s : Deserialize or I/O error - %s", __func__, e.what());
+        error("%s : Deserialize or I/O error - %s", __func__, e.what());
+        return HashReadError;
     }
     filein.fclose();
 
@@ -94,7 +104,10 @@ bool CMasternodeDB::Read(CMasternodeMan& mnodemanToLoad)
     // verify stored checksum matches input data
     uint256 hashTmp = Hash(ssMasternodes.begin(), ssMasternodes.end());
     if (hashIn != hashTmp)
-        return error("%s : Checksum mismatch, data corrupted", __func__);
+    {
+        error("%s : Checksum mismatch, data corrupted", __func__);
+        return IncorrectHash;
+    }
 
     unsigned char pchMsgTmp[4];
     try {
@@ -103,17 +116,25 @@ bool CMasternodeDB::Read(CMasternodeMan& mnodemanToLoad)
 
         // ... verify the network matches ours
         if (memcmp(pchMsgTmp, Params().MessageStart(), sizeof(pchMsgTmp)))
-            return error("%s : Invalid network magic number", __func__);
+        {
+            error("%s : Invalid network magic number", __func__);
+            return IncorrectMagic;
+        }
 
         // de-serialize address data into one CMnList object
         ssMasternodes >> mnodemanToLoad;
     }
     catch (std::exception &e) {
-        return error("%s : Deserialize or I/O error - %s", __func__, e.what());
         mnodemanToLoad.Clear();
+        error("%s : Deserialize or I/O error - %s", __func__, e.what());
+        return IncorrectFormat;
     }
 
-    return true;
+    mnodemanToLoad.CheckAndRemove(); // clean out expired
+    LogPrintf("Loaded info from masternodes.dat  %dms\n", GetTimeMillis() - nStart);
+    LogPrintf("  %s\n", mnodemanToLoad.ToString());
+
+    return Ok;
 }
 
 void DumpMasternodes()
@@ -121,10 +142,22 @@ void DumpMasternodes()
     int64_t nStart = GetTimeMillis();
 
     CMasternodeDB mndb;
+    CMasternodeMan tempMnodeman;
+
+    LogPrintf("Verifying masternodes.dat format...\n");
+    CMasternodeDB::ReadResult readResult = mndb.Read(tempMnodeman);
+    // there was an error and it was not an error on file openning => do not proceed
+    if (readResult == CMasternodeDB::FileError)
+        LogPrintf("Missing masternode list file - masternodes.dat, will try to recreate\n");
+    else if (readResult != CMasternodeDB::Ok)
+    {
+        LogPrintf("Masternode list file masternodes.dat has invalid format\n");
+        return;
+    }
+    LogPrintf("Writting info to masternodes.dat...\n");
     mndb.Write(mnodeman);
 
-    LogPrintf("Flushed info to masternodes.dat  %dms\n", GetTimeMillis() - nStart);
-    LogPrintf("  %s\n", mnodeman.ToString());
+    LogPrintf("Masternode dump finished  %dms\n", GetTimeMillis() - nStart);
 }
 
 CMasternodeMan::CMasternodeMan() {}
@@ -626,7 +659,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
 
         // see if we have this Masternode
         CMasternode* pmn = this->Find(vin);
-        if(pmn != NULL)
+        if(pmn != NULL && pmn->protocolVersion >= nMasternodeMinProtocol)
         {
             // LogPrintf("dseep - Found corresponding mn for vin: %s\n", vin.ToString().c_str());
             // take this only if it's newer
@@ -725,7 +758,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
 
 }
 
-std::string CMasternodeMan::ToString()
+std::string CMasternodeMan::ToString() const
 {
     std::ostringstream info;
 

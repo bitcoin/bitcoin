@@ -987,7 +987,7 @@ Address: %4
         <translation>中高</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="749"/>
+        <location filename="../coincontroldialog.cpp" line="759"/>
         <source>n/a</source>
         <translation>不可用</translation>
     </message>
@@ -1028,81 +1028,81 @@ Address: %4
         <translation>无</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="605"/>
+        <location filename="../coincontroldialog.cpp" line="615"/>
         <source>Dust</source>
         <translation>尘埃交易</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="605"/>
+        <location filename="../coincontroldialog.cpp" line="615"/>
         <source>yes</source>
         <translation>是</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="244"/>
-        <location filename="../coincontroldialog.cpp" line="605"/>
+        <location filename="../coincontroldialog.cpp" line="615"/>
         <source>no</source>
         <translation>否</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="615"/>
+        <location filename="../coincontroldialog.cpp" line="625"/>
         <source>This label turns red, if the transaction size is greater than 1000 bytes.</source>
         <translation>如果这笔交易大于1000字节，标签会变成红色。</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="616"/>
-        <location filename="../coincontroldialog.cpp" line="621"/>
+        <location filename="../coincontroldialog.cpp" line="626"/>
+        <location filename="../coincontroldialog.cpp" line="631"/>
         <source>This means a fee of at least %1 per kB is required.</source>
         <translation>这意味着将对交易收取 %1/千字节 的交易费。</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="617"/>
+        <location filename="../coincontroldialog.cpp" line="627"/>
         <source>Can vary +/- 1 byte per input.</source>
         <translation>每笔输入可能会有 正负1字节的偏差。</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="619"/>
+        <location filename="../coincontroldialog.cpp" line="629"/>
         <source>Transactions with higher priority are more likely to get included into a block.</source>
         <translation>交易的优先级越高，被矿工收入数据块的速度也越快。</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="620"/>
+        <location filename="../coincontroldialog.cpp" line="630"/>
         <source>This label turns red, if the priority is smaller than &quot;medium&quot;.</source>
         <translation>如果优先级小于&quot;中位数&quot; ，标签将变成红色。</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="623"/>
+        <location filename="../coincontroldialog.cpp" line="633"/>
         <source>This label turns red, if any recipient receives an amount smaller than %1.</source>
         <translation>如果收款地址收到小于%1的比特币，标签将变成红色。</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="624"/>
-        <location filename="../coincontroldialog.cpp" line="628"/>
+        <location filename="../coincontroldialog.cpp" line="634"/>
+        <location filename="../coincontroldialog.cpp" line="638"/>
         <source>This means a fee of at least %1 is required.</source>
         <translation>这意味着至少需要 %1的交易费。</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="625"/>
+        <location filename="../coincontroldialog.cpp" line="635"/>
         <source>Amounts below 0.546 times the minimum relay fee are shown as dust.</source>
         <translation>小于最小转发交易费的0.546倍的 转账金额将被视为 尘埃交易。</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="627"/>
+        <location filename="../coincontroldialog.cpp" line="637"/>
         <source>This label turns red, if the change is smaller than %1.</source>
         <translation>如果零钱小于 %1，标签将变成红色。</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="670"/>
-        <location filename="../coincontroldialog.cpp" line="731"/>
+        <location filename="../coincontroldialog.cpp" line="680"/>
+        <location filename="../coincontroldialog.cpp" line="741"/>
         <source>(no label)</source>
         <translation>(没有标签)</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="724"/>
+        <location filename="../coincontroldialog.cpp" line="734"/>
         <source>change from %1 (%2)</source>
         <translation>来自%1的零钱 (%2)</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="725"/>
+        <location filename="../coincontroldialog.cpp" line="735"/>
         <source>(change)</source>
         <translation>(零钱)</translation>
     </message>
@@ -1840,9 +1840,9 @@ https://www.transifex.com/projects/p/darkcoin/</source>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="946"/>
-        <location filename="../overviewpage.cpp" line="450"/>
-        <location filename="../overviewpage.cpp" line="464"/>
-        <location filename="../overviewpage.cpp" line="478"/>
+        <location filename="../overviewpage.cpp" line="453"/>
+        <location filename="../overviewpage.cpp" line="467"/>
+        <location filename="../overviewpage.cpp" line="481"/>
         <source>Darksend</source>
         <translation>匿名发送</translation>
     </message>
@@ -1890,155 +1890,160 @@ https://www.transifex.com/projects/p/darkcoin/</source>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="143"/>
-        <location filename="../overviewpage.cpp" line="349"/>
+        <location filename="../overviewpage.cpp" line="350"/>
         <source>Disabled</source>
         <translation>未激活</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="146"/>
-        <location filename="../overviewpage.cpp" line="351"/>
-        <location filename="../overviewpage.cpp" line="492"/>
+        <location filename="../overviewpage.cpp" line="352"/>
+        <location filename="../overviewpage.cpp" line="495"/>
         <source>Start Darksend Mixing</source>
         <translation>启动匿名发送混淆</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="148"/>
-        <location filename="../overviewpage.cpp" line="494"/>
+        <location filename="../overviewpage.cpp" line="497"/>
         <source>Stop Darksend Mixing</source>
         <translation>停止匿名发送混淆</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="269"/>
+        <location filename="../overviewpage.cpp" line="270"/>
         <source>No inputs detected</source>
         <translation>未检测到任何输入</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="277"/>
+        <location filename="../overviewpage.cpp" line="278"/>
         <source>Found unconfirmed denominated outputs, will wait till they confirm to recalculate.</source>
         <translation>资金面额化未确认，等待重新计算。</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="334"/>
+        <location filename="../overviewpage.cpp" line="335"/>
         <source>Rounds</source>
         <translation>循环</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="365"/>
+        <location filename="../overviewpage.cpp" line="366"/>
         <source>Enabled</source>
         <translation>激活</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="421"/>
+        <location filename="../overviewpage.cpp" line="424"/>
         <source>Last Darksend message:
 </source>
         <translation>最新匿名发送信息:
 </translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="378"/>
-        <location filename="../overviewpage.cpp" line="403"/>
+        <location filename="../overviewpage.cpp" line="377"/>
+        <location filename="../overviewpage.cpp" line="406"/>
         <source>Darksend is idle.</source>
         <translation>匿名发送闲置中。</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="384"/>
+        <location filename="../overviewpage.cpp" line="381"/>
+        <source>Mixing in progress...</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../overviewpage.cpp" line="387"/>
         <source>Darksend request complete: Your transaction was accepted into the pool!</source>
         <translation>匿名发送请求完成：你的交易已经被矿池接受！</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="390"/>
+        <location filename="../overviewpage.cpp" line="393"/>
         <source>Submitted following entries to masternode:</source>
         <translation>向主节点递交以下条目：</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="391"/>
-        <location filename="../overviewpage.cpp" line="392"/>
-        <location filename="../overviewpage.cpp" line="393"/>
+        <location filename="../overviewpage.cpp" line="394"/>
+        <location filename="../overviewpage.cpp" line="395"/>
+        <location filename="../overviewpage.cpp" line="396"/>
         <source>Submitted to masternode, Waiting for more entries</source>
         <translation>递交至主节点，等待更多条目</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="396"/>
+        <location filename="../overviewpage.cpp" line="399"/>
         <source>Found enough users, signing ...</source>
         <translation>已找到足够用户，签名中...</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="397"/>
+        <location filename="../overviewpage.cpp" line="400"/>
         <source>Found enough users, signing ( waiting. )</source>
         <translation>已找到足够用户，签名中(等待.)</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="398"/>
+        <location filename="../overviewpage.cpp" line="401"/>
         <source>Found enough users, signing ( waiting.. )</source>
         <translation>已找到足够用户，签名中(等待.)</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="399"/>
+        <location filename="../overviewpage.cpp" line="402"/>
         <source>Found enough users, signing ( waiting... )</source>
         <translation>已找到足够用户，签名中(等待.)</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="401"/>
+        <location filename="../overviewpage.cpp" line="404"/>
         <source>Transmitting final transaction.</source>
         <translation>正在传递最终交易。</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="405"/>
+        <location filename="../overviewpage.cpp" line="408"/>
         <source>Finalizing transaction.</source>
         <translation>正在完成交易。</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="407"/>
+        <location filename="../overviewpage.cpp" line="410"/>
         <source>Darksend request incomplete:</source>
         <translation>匿名发送请求未完成：</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="407"/>
+        <location filename="../overviewpage.cpp" line="410"/>
         <source>Will retry...</source>
         <translation>将重试...</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="409"/>
+        <location filename="../overviewpage.cpp" line="412"/>
         <source>Darksend request complete:</source>
         <translation>匿名发送请求完成：</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="411"/>
+        <location filename="../overviewpage.cpp" line="414"/>
         <source>Submitted to masternode, waiting in queue .</source>
         <translation>提交至主节点，等待列队.</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="412"/>
+        <location filename="../overviewpage.cpp" line="415"/>
         <source>Submitted to masternode, waiting in queue ..</source>
         <translation>提交至主节点，等待列队..</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="413"/>
+        <location filename="../overviewpage.cpp" line="416"/>
         <source>Submitted to masternode, waiting in queue ...</source>
         <translation>提交至主节点，等待列队...</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="415"/>
+        <location filename="../overviewpage.cpp" line="418"/>
         <source>Unknown state:</source>
         <translation>未知状态：</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="429"/>
+        <location filename="../overviewpage.cpp" line="432"/>
         <source>N/A</source>
         <translation>不可用</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="451"/>
+        <location filename="../overviewpage.cpp" line="454"/>
         <source>Darksend was successfully reset.</source>
         <translation>匿名发送已成功重置。</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="465"/>
+        <location filename="../overviewpage.cpp" line="468"/>
         <source>Darksend requires at least %1 to use.</source>
         <translation>匿名发送需要至少%1来使用。</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="479"/>
+        <location filename="../overviewpage.cpp" line="482"/>
         <source>Wallet is locked and user declined to unlock. Disabling Darksend.</source>
         <translation>钱包已被锁，用户拒绝解锁。正在停止匿名发送。</translation>
     </message>
@@ -2613,8 +2618,8 @@ XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="14"/>
         <location filename="../sendcoinsdialog.cpp" line="429"/>
-        <location filename="../sendcoinsdialog.cpp" line="513"/>
-        <location filename="../sendcoinsdialog.cpp" line="523"/>
+        <location filename="../sendcoinsdialog.cpp" line="521"/>
+        <location filename="../sendcoinsdialog.cpp" line="531"/>
         <source>Send Coins</source>
         <translation>发送货币</translation>
     </message>
@@ -2855,57 +2860,57 @@ XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
         <translation>无效的付款地址 %1</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="490"/>
+        <location filename="../sendcoinsdialog.cpp" line="498"/>
         <source>The recipient address is not valid, please recheck.</source>
         <translation>收款人地址不合法，请检查。</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="493"/>
+        <location filename="../sendcoinsdialog.cpp" line="501"/>
         <source>The amount to pay must be larger than 0.</source>
         <translation>支付金额必须大于0。</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="496"/>
+        <location filename="../sendcoinsdialog.cpp" line="504"/>
         <source>The amount exceeds your balance.</source>
         <translation>金额超出您的账上余额。</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="499"/>
+        <location filename="../sendcoinsdialog.cpp" line="507"/>
         <source>The total exceeds your balance when the %1 transaction fee is included.</source>
         <translation>计入 %1 交易费后的金额超出您的账上余额。</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="502"/>
+        <location filename="../sendcoinsdialog.cpp" line="510"/>
         <source>Duplicate address found, can only send to each address once per send operation.</source>
         <translation>发现重复的地址, 每次只能对同一地址发送一次。</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="505"/>
+        <location filename="../sendcoinsdialog.cpp" line="513"/>
         <source>Transaction creation failed!</source>
         <translation>交易创建失败！</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="509"/>
+        <location filename="../sendcoinsdialog.cpp" line="517"/>
         <source>The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
         <translation>错误：该交易被拒绝！发生这种错误的原因可能是：钱包中的比特币已经被用掉，有可能您复制了wallet.dat钱包文件，然后用复制的钱包文件支付了比特币，但是这个钱包文件中没有记录。</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="514"/>
+        <location filename="../sendcoinsdialog.cpp" line="522"/>
         <source>Error: The wallet was unlocked only to anonymize coins.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="627"/>
+        <location filename="../sendcoinsdialog.cpp" line="635"/>
         <source>Warning: Invalid Darkcoin address</source>
         <translation>警告：无效的暗黑币地址</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="636"/>
+        <location filename="../sendcoinsdialog.cpp" line="644"/>
         <source>Warning: Unknown change address</source>
         <translation>警告：未知的更改地址</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="647"/>
+        <location filename="../sendcoinsdialog.cpp" line="655"/>
         <source>(no label)</source>
         <translation>(没有标签)</translation>
     </message>
@@ -4371,878 +4376,882 @@ If the file does not exist, create it with owner-readable-only file permissions.
     </message>
     <message>
         <location filename="../darkcoinstrings.cpp" line="210"/>
+        <source>Downgrading and trying again.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../darkcoinstrings.cpp" line="211"/>
         <source>Enable the client to act as a masternode (0-1, default: 0)</source>
         <translation>激活客户端,使其作为主节点(0-1, 默认：0)</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="211"/>
+        <location filename="../darkcoinstrings.cpp" line="212"/>
         <source>Entries are full.</source>
         <translation>参赛作品都满了。</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="212"/>
+        <location filename="../darkcoinstrings.cpp" line="213"/>
         <source>Error connecting to masternode.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="213"/>
+        <location filename="../darkcoinstrings.cpp" line="214"/>
         <source>Error initializing block database</source>
         <translation>正在初始化数据库块错误</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="214"/>
+        <location filename="../darkcoinstrings.cpp" line="215"/>
         <source>Error initializing wallet database environment %s!</source>
         <translation>正在初始钱包数据库环境错误 %s!</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="215"/>
+        <location filename="../darkcoinstrings.cpp" line="216"/>
         <source>Error loading block database</source>
         <translation>读取数据库块错误</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="216"/>
+        <location filename="../darkcoinstrings.cpp" line="217"/>
         <source>Error loading wallet.dat</source>
         <translation>读取钱包文件错误</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="217"/>
+        <location filename="../darkcoinstrings.cpp" line="218"/>
         <source>Error loading wallet.dat: Wallet corrupted</source>
         <translation>读取钱包文件错误：钱包已损坏</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="218"/>
+        <location filename="../darkcoinstrings.cpp" line="219"/>
         <source>Error loading wallet.dat: Wallet requires newer version of Darkcoin</source>
         <translation>读取钱包文件错误：需要较为新版本的暗黑币程序来读取钱包</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="219"/>
+        <location filename="../darkcoinstrings.cpp" line="220"/>
         <source>Error opening block database</source>
         <translation>正在打开数据库块错误</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="220"/>
+        <location filename="../darkcoinstrings.cpp" line="221"/>
         <source>Error reading from database, shutting down.</source>
         <translation>读取数据库错误，正在关闭。</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="221"/>
+        <location filename="../darkcoinstrings.cpp" line="222"/>
         <source>Error recovering public key.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="222"/>
+        <location filename="../darkcoinstrings.cpp" line="223"/>
         <source>Error</source>
         <translation>错误</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="223"/>
+        <location filename="../darkcoinstrings.cpp" line="224"/>
         <source>Error: Disk space is low!</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="224"/>
+        <location filename="../darkcoinstrings.cpp" line="225"/>
         <source>Error: Wallet locked, unable to create transaction!</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="225"/>
+        <location filename="../darkcoinstrings.cpp" line="226"/>
         <source>Error: You already have pending entries in the Darksend pool</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="226"/>
+        <location filename="../darkcoinstrings.cpp" line="227"/>
         <source>Error: system error: </source>
         <translation>错误：系统错误：</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="227"/>
+        <location filename="../darkcoinstrings.cpp" line="228"/>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
         <translation>监听端口失败。如果想使用此项 修改-listen=0</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="228"/>
+        <location filename="../darkcoinstrings.cpp" line="229"/>
         <source>Failed to read block info</source>
         <translation>读取数据块信息失败</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="229"/>
+        <location filename="../darkcoinstrings.cpp" line="230"/>
         <source>Failed to read block</source>
         <translation>读取数据块失败</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="230"/>
+        <location filename="../darkcoinstrings.cpp" line="231"/>
         <source>Failed to sync block index</source>
         <translation>同步数据块索引失败</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="231"/>
+        <location filename="../darkcoinstrings.cpp" line="232"/>
         <source>Failed to write block index</source>
         <translation>写入数据块索引失败</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="232"/>
+        <location filename="../darkcoinstrings.cpp" line="233"/>
         <source>Failed to write block info</source>
         <translation>写入数据块信息失败</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="233"/>
+        <location filename="../darkcoinstrings.cpp" line="234"/>
         <source>Failed to write block</source>
         <translation>写入数据块失败</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="234"/>
+        <location filename="../darkcoinstrings.cpp" line="235"/>
         <source>Failed to write file info</source>
         <translation>写入文件信息失败</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="235"/>
+        <location filename="../darkcoinstrings.cpp" line="236"/>
         <source>Failed to write to coin database</source>
         <translation>写入币的数据库失败</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="236"/>
+        <location filename="../darkcoinstrings.cpp" line="237"/>
         <source>Failed to write transaction index</source>
         <translation>写入交易索引失败</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="237"/>
+        <location filename="../darkcoinstrings.cpp" line="238"/>
         <source>Failed to write undo data</source>
         <translation>写入撤回数据失败</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="238"/>
+        <location filename="../darkcoinstrings.cpp" line="239"/>
         <source>Fee per kB to add to transactions you send</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="239"/>
+        <location filename="../darkcoinstrings.cpp" line="240"/>
         <source>Fees smaller than this are considered zero fee (for relaying) (default:</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="240"/>
+        <location filename="../darkcoinstrings.cpp" line="241"/>
         <source>Force safe mode (default: 0)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="241"/>
+        <location filename="../darkcoinstrings.cpp" line="242"/>
         <source>Generate coins (default: 0)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="242"/>
+        <location filename="../darkcoinstrings.cpp" line="243"/>
         <source>Get help for a command</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="243"/>
+        <location filename="../darkcoinstrings.cpp" line="244"/>
         <source>How many blocks to check at startup (default: 288, 0 = all)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="244"/>
+        <location filename="../darkcoinstrings.cpp" line="245"/>
         <source>If &lt;category&gt; is not supplied, output all debugging information.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="245"/>
+        <location filename="../darkcoinstrings.cpp" line="246"/>
         <source>Ignore masternodes less than version (example: 70050; default : 0)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="246"/>
+        <location filename="../darkcoinstrings.cpp" line="247"/>
         <source>Importing...</source>
         <translation>正在导入...</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="247"/>
+        <location filename="../darkcoinstrings.cpp" line="248"/>
         <source>Imports blocks from external blk000??.dat file</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="248"/>
+        <location filename="../darkcoinstrings.cpp" line="249"/>
         <source>Incompatible mode.</source>
         <translation>不兼容的模式。</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="249"/>
+        <location filename="../darkcoinstrings.cpp" line="250"/>
         <source>Incompatible version.</source>
         <translation>不兼容的版本。</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="250"/>
+        <location filename="../darkcoinstrings.cpp" line="251"/>
         <source>Incorrect or no genesis block found. Wrong datadir for network?</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="251"/>
+        <location filename="../darkcoinstrings.cpp" line="252"/>
         <source>Information</source>
         <translation>信息</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="252"/>
+        <location filename="../darkcoinstrings.cpp" line="253"/>
         <source>Initialization sanity check failed. Darkcoin Core is shutting down.</source>
         <translation>初始化检查失败。暗黑币核心正在关闭。</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="253"/>
+        <location filename="../darkcoinstrings.cpp" line="254"/>
         <source>Input is not valid.</source>
         <translation>输入是无效的。</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="254"/>
+        <location filename="../darkcoinstrings.cpp" line="255"/>
         <source>InstantX options:</source>
         <translation>立即支付 选项：</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="255"/>
+        <location filename="../darkcoinstrings.cpp" line="256"/>
         <source>Insufficient funds</source>
         <translation>存款不足</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="256"/>
+        <location filename="../darkcoinstrings.cpp" line="257"/>
         <source>Insufficient funds.</source>
         <translation>存款不足。</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="257"/>
+        <location filename="../darkcoinstrings.cpp" line="258"/>
         <source>Invalid -onion address: &apos;%s&apos;</source>
         <translation>无效-洋葱头地址：&apos;%s&apos;</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="258"/>
+        <location filename="../darkcoinstrings.cpp" line="259"/>
         <source>Invalid -proxy address: &apos;%s&apos;</source>
         <translation>无效-代理地址：&apos;%s&apos;</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="259"/>
+        <location filename="../darkcoinstrings.cpp" line="260"/>
         <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: &apos;%s&apos;</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="260"/>
+        <location filename="../darkcoinstrings.cpp" line="261"/>
         <source>Invalid amount for -mintxfee=&lt;amount&gt;: &apos;%s&apos;</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="261"/>
+        <location filename="../darkcoinstrings.cpp" line="262"/>
         <source>Invalid amount for -paytxfee=&lt;amount&gt;: &apos;%s&apos;</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="262"/>
+        <location filename="../darkcoinstrings.cpp" line="263"/>
         <source>Invalid amount</source>
         <translation>无效金额</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="263"/>
+        <location filename="../darkcoinstrings.cpp" line="264"/>
         <source>Invalid masternodeprivkey. Please see documenation.</source>
         <translation>无效主节点私钥。请查阅文件材料。</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="264"/>
+        <location filename="../darkcoinstrings.cpp" line="265"/>
         <source>Invalid private key.</source>
         <translation>无效私钥。</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="265"/>
+        <location filename="../darkcoinstrings.cpp" line="266"/>
         <source>Invalid script detected.</source>
         <translation>检测到无效脚本。</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="266"/>
+        <location filename="../darkcoinstrings.cpp" line="267"/>
         <source>KeePassHttp id for the established association</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="267"/>
+        <location filename="../darkcoinstrings.cpp" line="268"/>
         <source>KeePassHttp key for AES encrypted communication with KeePass</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="268"/>
+        <location filename="../darkcoinstrings.cpp" line="269"/>
         <source>Keep N darkcoin anonymized (default: 0)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="269"/>
+        <location filename="../darkcoinstrings.cpp" line="270"/>
         <source>Keep at most &lt;n&gt; unconnectable blocks in memory (default: %u)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="270"/>
+        <location filename="../darkcoinstrings.cpp" line="271"/>
         <source>Keep at most &lt;n&gt; unconnectable transactions in memory (default: %u)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="271"/>
+        <location filename="../darkcoinstrings.cpp" line="272"/>
         <source>Last Darksend was too recent.</source>
         <translation>最后一次匿名发送刚刚完成。</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="272"/>
+        <location filename="../darkcoinstrings.cpp" line="273"/>
         <source>Last successful darksend action was too recent.</source>
         <translation>最后一次成功匿名发送刚刚完成。</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="273"/>
+        <location filename="../darkcoinstrings.cpp" line="274"/>
         <source>Limit size of signature cache to &lt;n&gt; entries (default: 50000)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="274"/>
+        <location filename="../darkcoinstrings.cpp" line="275"/>
         <source>List commands</source>
         <translation>命令列表</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="275"/>
+        <location filename="../darkcoinstrings.cpp" line="276"/>
         <source>Listen for connections on &lt;port&gt; (default: 9999 or testnet: 19999)</source>
         <translation>Listen for connections on &lt;port&gt; (default: 9999 or testnet: 19999)</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="276"/>
+        <location filename="../darkcoinstrings.cpp" line="277"/>
         <source>Loading addresses...</source>
         <translation>正在读取地址...</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="277"/>
+        <location filename="../darkcoinstrings.cpp" line="278"/>
         <source>Loading block index...</source>
         <translation>正在读取数据块索引...</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="278"/>
+        <location filename="../darkcoinstrings.cpp" line="279"/>
         <source>Loading masternode list...</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="279"/>
+        <location filename="../darkcoinstrings.cpp" line="280"/>
         <source>Loading wallet... (%3.2f %%)</source>
         <translation>正在读取钱包...(%3.2f%%)</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="280"/>
+        <location filename="../darkcoinstrings.cpp" line="281"/>
         <source>Loading wallet...</source>
         <translation>正在读取钱包...</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="281"/>
+        <location filename="../darkcoinstrings.cpp" line="282"/>
         <source>Log transaction priority and fee per kB when mining blocks (default: 0)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="282"/>
+        <location filename="../darkcoinstrings.cpp" line="283"/>
         <source>Maintain a full transaction index (default: 0)</source>
         <translation>保持全部的交易索引(默认： 0)</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="283"/>
+        <location filename="../darkcoinstrings.cpp" line="284"/>
         <source>Maintain at most &lt;n&gt; connections to peers (default: 125)</source>
         <translation>保持对节点最高的 &lt;n&gt;连接数  (默认： 125)</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="284"/>
+        <location filename="../darkcoinstrings.cpp" line="285"/>
         <source>Masternode options:</source>
         <translation>主节点选项：</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="285"/>
+        <location filename="../darkcoinstrings.cpp" line="286"/>
         <source>Masternode queue is full.</source>
         <translation>主节点列队已满。</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="286"/>
+        <location filename="../darkcoinstrings.cpp" line="287"/>
         <source>Masternode:</source>
         <translation>主节点：</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="287"/>
+        <location filename="../darkcoinstrings.cpp" line="288"/>
         <source>Maximum per-connection receive buffer, &lt;n&gt;*1000 bytes (default: 5000)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="288"/>
+        <location filename="../darkcoinstrings.cpp" line="289"/>
         <source>Maximum per-connection send buffer, &lt;n&gt;*1000 bytes (default: 1000)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="289"/>
+        <location filename="../darkcoinstrings.cpp" line="290"/>
         <source>Missing input transaction information.</source>
         <translation>丢失输入交易信息。</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="290"/>
+        <location filename="../darkcoinstrings.cpp" line="291"/>
         <source>No compatible masternode found.</source>
         <translation>没有找到任何兼容的主节点。</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="291"/>
+        <location filename="../darkcoinstrings.cpp" line="292"/>
         <source>No funds detected in need of denominating.</source>
         <translation>在面额化过程中没有检测到所需的资金。</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="292"/>
+        <location filename="../darkcoinstrings.cpp" line="293"/>
         <source>No masternodes detected.</source>
         <translation>没有检测到任何主节点。</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="293"/>
+        <location filename="../darkcoinstrings.cpp" line="294"/>
         <source>No matching denominations found for mixing.</source>
         <translation>对于混淆处理，没有找到匹配的面额资金。</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="294"/>
+        <location filename="../darkcoinstrings.cpp" line="295"/>
         <source>Non-standard public key detected.</source>
         <translation>检测到非标准的公钥。</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="295"/>
+        <location filename="../darkcoinstrings.cpp" line="296"/>
         <source>Not compatible with existing transactions.</source>
         <translation>与已存在交易不匹配。</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="296"/>
+        <location filename="../darkcoinstrings.cpp" line="297"/>
         <source>Not enough file descriptors available.</source>
         <translation>文件说明符不可用</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="297"/>
+        <location filename="../darkcoinstrings.cpp" line="298"/>
         <source>Not in the masternode list.</source>
         <translation>在主节点列表中不存在。</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="298"/>
+        <location filename="../darkcoinstrings.cpp" line="299"/>
         <source>Only accept block chain matching built-in checkpoints (default: 1)</source>
         <translation>只接受与镶入检验点匹配的数据块链 (默认： 1)</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="299"/>
+        <location filename="../darkcoinstrings.cpp" line="300"/>
         <source>Only connect to nodes in network &lt;net&gt; (IPv4, IPv6 or Tor)</source>
         <translation>在网络中只连接至节点 &lt;net&gt; (IPv4, IPv6 or Tor)</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="300"/>
+        <location filename="../darkcoinstrings.cpp" line="301"/>
         <source>Options:</source>
         <translation>选项：</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="301"/>
+        <location filename="../darkcoinstrings.cpp" line="302"/>
         <source>Password for JSON-RPC connections</source>
         <translation>JSON-RPC连接密码</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="302"/>
+        <location filename="../darkcoinstrings.cpp" line="303"/>
         <source>Prepend debug output with timestamp (default: 1)</source>
         <translation>通过时间标记预先调试输出 (默认： 1)</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="303"/>
+        <location filename="../darkcoinstrings.cpp" line="304"/>
         <source>Print block on startup, if found in block index</source>
         <translation>如果在块索引中找到，在启动时打印块</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="304"/>
+        <location filename="../darkcoinstrings.cpp" line="305"/>
         <source>Print block tree on startup (default: 0)</source>
         <translation>在启动时打印块树(默认：0)</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="305"/>
+        <location filename="../darkcoinstrings.cpp" line="306"/>
         <source>RPC SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
         <translation>RPC SSL选项： (请在比特币维基百科查看SSL建立说明)</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="306"/>
+        <location filename="../darkcoinstrings.cpp" line="307"/>
         <source>RPC client options:</source>
         <translation>RPC客户端选项：</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="307"/>
+        <location filename="../darkcoinstrings.cpp" line="308"/>
         <source>RPC server options:</source>
         <translation>RPC服务器选项：</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="308"/>
+        <location filename="../darkcoinstrings.cpp" line="309"/>
         <source>Randomly drop 1 of every &lt;n&gt; network messages</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="309"/>
+        <location filename="../darkcoinstrings.cpp" line="310"/>
         <source>Randomly fuzz 1 of every &lt;n&gt; network messages</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="310"/>
+        <location filename="../darkcoinstrings.cpp" line="311"/>
         <source>Rebuild block chain index from current blk000??.dat files</source>
         <translation>从现在的blk000??.dat文件重新建立数据块链索引</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="311"/>
+        <location filename="../darkcoinstrings.cpp" line="312"/>
         <source>Rescan the block chain for missing wallet transactions</source>
         <translation>对丢失的钱包交易重新扫描数据块链</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="312"/>
+        <location filename="../darkcoinstrings.cpp" line="313"/>
         <source>Rescanning...</source>
         <translation>正在重新扫描...</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="313"/>
+        <location filename="../darkcoinstrings.cpp" line="314"/>
         <source>Run a thread to flush wallet periodically (default: 1)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="314"/>
+        <location filename="../darkcoinstrings.cpp" line="315"/>
         <source>Run in the background as a daemon and accept commands</source>
         <translation>运行至后台并且接受命令</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="315"/>
+        <location filename="../darkcoinstrings.cpp" line="316"/>
         <source>SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
         <translation>SSL 选项： (请在比特币维基百科查看SSL建立说明)</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="316"/>
+        <location filename="../darkcoinstrings.cpp" line="317"/>
         <source>Select SOCKS version for -proxy (4 or 5, default: 5)</source>
         <translation>为-代理 选择SOCKS版本 (4 or 5, 默认： 5)</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="317"/>
+        <location filename="../darkcoinstrings.cpp" line="318"/>
         <source>Send command to Darkcoin Core</source>
         <translation>发送命令至暗黑币核心</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="318"/>
+        <location filename="../darkcoinstrings.cpp" line="319"/>
         <source>Send commands to node running on &lt;ip&gt; (default: 127.0.0.1)</source>
         <translation>发送命令至运行于 &lt;ip&gt;的节点 (默认： 127.0.0.1)</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="319"/>
+        <location filename="../darkcoinstrings.cpp" line="320"/>
         <source>Send trace/debug info to console instead of debug.log file</source>
         <translation>发送追踪/debug信息而并非debug.log文件至控制台</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="320"/>
+        <location filename="../darkcoinstrings.cpp" line="321"/>
         <source>Server certificate file (default: server.cert)</source>
         <translation>服务器证书文件(默认： server.cert)</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="321"/>
+        <location filename="../darkcoinstrings.cpp" line="322"/>
         <source>Server private key (default: server.pem)</source>
         <translation>服务器私钥 (默认： server.pem)</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="322"/>
+        <location filename="../darkcoinstrings.cpp" line="323"/>
         <source>Session not complete!</source>
         <translation>对话未完成！</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="323"/>
+        <location filename="../darkcoinstrings.cpp" line="324"/>
         <source>Session timed out (30 seconds), please resubmit.</source>
         <translation>对话超时 (30 秒)，请重新递交。</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="324"/>
+        <location filename="../darkcoinstrings.cpp" line="325"/>
         <source>Set database cache size in megabytes (%d to %d, default: %d)</source>
         <translation>以兆字节为单位设置缓存数据大小 (%d to %d, 默认： %d)</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="325"/>
+        <location filename="../darkcoinstrings.cpp" line="326"/>
         <source>Set key pool size to &lt;n&gt; (default: 100)</source>
         <translation>设置钥匙池大小至&lt;n&gt; (默认： 100)</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="326"/>
+        <location filename="../darkcoinstrings.cpp" line="327"/>
         <source>Set maximum block size in bytes (default: %d)</source>
         <translation>以字节为单位设置最大的块(默认： 0)</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="327"/>
+        <location filename="../darkcoinstrings.cpp" line="328"/>
         <source>Set minimum block size in bytes (default: 0)</source>
         <translation>以字节为单位设置最小的块(默认： 0)</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="328"/>
+        <location filename="../darkcoinstrings.cpp" line="329"/>
         <source>Set the masternode private key</source>
         <translation>设置主节点私钥</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="329"/>
+        <location filename="../darkcoinstrings.cpp" line="330"/>
         <source>Set the number of threads to service RPC calls (default: 4)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="330"/>
+        <location filename="../darkcoinstrings.cpp" line="331"/>
         <source>Sets the DB_PRIVATE flag in the wallet db environment (default: 1)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="331"/>
+        <location filename="../darkcoinstrings.cpp" line="332"/>
         <source>Show all debugging options (usage: --help -help-debug)</source>
         <translation>显示所有debug选项(使用： --help -help-debug)</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="332"/>
+        <location filename="../darkcoinstrings.cpp" line="333"/>
         <source>Show benchmark information (default: 0)</source>
         <translation>显示基准信息(默认： 0)</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="333"/>
+        <location filename="../darkcoinstrings.cpp" line="334"/>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
         <translation>客户启动时缩小debug.log文件(默认： 1 when no -debug)</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="334"/>
+        <location filename="../darkcoinstrings.cpp" line="335"/>
         <source>Signing failed.</source>
         <translation>签名失败。</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="335"/>
+        <location filename="../darkcoinstrings.cpp" line="336"/>
         <source>Signing timed out, please resubmit.</source>
         <translation>签名超时，请重新递交。</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="336"/>
+        <location filename="../darkcoinstrings.cpp" line="337"/>
         <source>Signing transaction failed</source>
         <translation>交易签名失败</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="337"/>
+        <location filename="../darkcoinstrings.cpp" line="338"/>
         <source>Specify configuration file (default: darkcoin.conf)</source>
         <translation>指定配置文件(默认： darkcoin.conf)</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="338"/>
+        <location filename="../darkcoinstrings.cpp" line="339"/>
         <source>Specify connection timeout in milliseconds (default: 5000)</source>
         <translation>指定连接超时毫秒数 (默认： 5000)</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="339"/>
+        <location filename="../darkcoinstrings.cpp" line="340"/>
         <source>Specify data directory</source>
         <translation>指定数据目录</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="340"/>
+        <location filename="../darkcoinstrings.cpp" line="341"/>
         <source>Specify masternode configuration file (default: masternode.conf)</source>
         <translation>指定主节点配置文件 (默认: masternode.conf)</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="341"/>
+        <location filename="../darkcoinstrings.cpp" line="342"/>
         <source>Specify pid file (default: darkcoind.pid)</source>
         <translation>指定pid 文件 (默认： darkcoind.pid)</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="342"/>
+        <location filename="../darkcoinstrings.cpp" line="343"/>
         <source>Specify wallet file (within data directory)</source>
         <translation>指定钱包文件(通过数据目录)</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="343"/>
+        <location filename="../darkcoinstrings.cpp" line="344"/>
         <source>Specify your own public address</source>
         <translation>指定你个人公开地址</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="344"/>
+        <location filename="../darkcoinstrings.cpp" line="345"/>
         <source>Spend unconfirmed change when sending transactions (default: 1)</source>
         <translation>发送交易时花费未确认的费用(默认： 1)</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="345"/>
+        <location filename="../darkcoinstrings.cpp" line="346"/>
         <source>Start Darkcoin Core Daemon</source>
         <translation>启动暗黑币核心后台程序</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="346"/>
+        <location filename="../darkcoinstrings.cpp" line="347"/>
         <source>System error: </source>
         <translation>系统错误：</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="347"/>
+        <location filename="../darkcoinstrings.cpp" line="348"/>
         <source>This help message</source>
         <translation>此帮助信息</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="348"/>
+        <location filename="../darkcoinstrings.cpp" line="349"/>
         <source>This is intended for regression testing tools and app development.</source>
         <translation>这被用来作为回归测试工具和app的开发。</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="349"/>
+        <location filename="../darkcoinstrings.cpp" line="350"/>
         <source>This is not a masternode.</source>
         <translation>这并不是主节点。</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="350"/>
+        <location filename="../darkcoinstrings.cpp" line="351"/>
         <source>Threshold for disconnecting misbehaving peers (default: 100)</source>
         <translation>断开的作弊节点临界值(默认: 100)</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="351"/>
+        <location filename="../darkcoinstrings.cpp" line="352"/>
         <source>To use the %s option</source>
         <translation>使用%s选项</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="352"/>
+        <location filename="../darkcoinstrings.cpp" line="353"/>
         <source>Transaction amount too small</source>
         <translation>交易额过小</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="353"/>
+        <location filename="../darkcoinstrings.cpp" line="354"/>
         <source>Transaction amounts must be positive</source>
         <translation>交易额一定要真实有效</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="354"/>
+        <location filename="../darkcoinstrings.cpp" line="355"/>
         <source>Transaction created successfully.</source>
         <translation>交易创建成功。</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="355"/>
+        <location filename="../darkcoinstrings.cpp" line="356"/>
         <source>Transaction fees are too high.</source>
         <translation>交易费用过高。</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="356"/>
+        <location filename="../darkcoinstrings.cpp" line="357"/>
         <source>Transaction not valid.</source>
         <translation>交易无效。</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="357"/>
+        <location filename="../darkcoinstrings.cpp" line="358"/>
         <source>Transaction too large</source>
         <translation>交易过大</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="358"/>
+        <location filename="../darkcoinstrings.cpp" line="359"/>
         <source>Unable to bind to %s on this computer (bind returned error %s)</source>
         <translation>无法绑定%s此计算机 (绑定返回错误 %s)</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="359"/>
+        <location filename="../darkcoinstrings.cpp" line="360"/>
         <source>Unable to sign masternode payment winner, wrong key?</source>
         <translation>无法标记主节点奖励得主，错误钥匙？</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="360"/>
+        <location filename="../darkcoinstrings.cpp" line="361"/>
         <source>Unable to sign spork message, wrong key?</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="361"/>
+        <location filename="../darkcoinstrings.cpp" line="362"/>
         <source>Unknown -socks proxy version requested: %i</source>
         <translation>未知-socks代理版本请求：%i</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="362"/>
+        <location filename="../darkcoinstrings.cpp" line="363"/>
         <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="363"/>
+        <location filename="../darkcoinstrings.cpp" line="364"/>
         <source>Upgrade wallet to latest format</source>
         <translation>升级钱包至最新版本</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="364"/>
+        <location filename="../darkcoinstrings.cpp" line="365"/>
         <source>Usage (deprecated, use darkcoin-cli):</source>
         <translation>用量(不赞成, 使用 darkcoin-cli)：</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="365"/>
+        <location filename="../darkcoinstrings.cpp" line="366"/>
         <source>Usage:</source>
         <translation>使用：</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="366"/>
+        <location filename="../darkcoinstrings.cpp" line="367"/>
         <source>Use KeePass 2 integration using KeePassHttp plugin (default: 0)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="367"/>
+        <location filename="../darkcoinstrings.cpp" line="368"/>
         <source>Use N separate masternodes to anonymize funds  (2-8, default: 2)</source>
         <translation>使用N个独立主节点匿名处理资金(2-8，默认：2)</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="368"/>
+        <location filename="../darkcoinstrings.cpp" line="369"/>
         <source>Use OpenSSL (https) for JSON-RPC connections</source>
         <translation>对JSON-RPC链接使用OpenSSL(https)</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="369"/>
+        <location filename="../darkcoinstrings.cpp" line="370"/>
         <source>Use UPnP to map the listening port (default: 0)</source>
         <translation>使用UPnP来映射监听端口(默认：0)</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="370"/>
+        <location filename="../darkcoinstrings.cpp" line="371"/>
         <source>Use UPnP to map the listening port (default: 1 when listening)</source>
         <translation>使用UPnP来映射监听端口(默认：1为监听中)</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="371"/>
+        <location filename="../darkcoinstrings.cpp" line="372"/>
         <source>Use the test network</source>
         <translation>使用测试网络</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="372"/>
+        <location filename="../darkcoinstrings.cpp" line="373"/>
         <source>Username for JSON-RPC connections</source>
         <translation>链接JSON-RPC的用户名</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="373"/>
+        <location filename="../darkcoinstrings.cpp" line="374"/>
         <source>Value more than Darksend pool maximum allows.</source>
         <translation>数值超过匿名发送池所允许的最大数。</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="374"/>
+        <location filename="../darkcoinstrings.cpp" line="375"/>
         <source>Verifying blocks...</source>
         <translation>验证数据块中...</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="375"/>
+        <location filename="../darkcoinstrings.cpp" line="376"/>
         <source>Verifying wallet...</source>
         <translation>验证钱包中...</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="376"/>
+        <location filename="../darkcoinstrings.cpp" line="377"/>
         <source>Wait for RPC server to start</source>
         <translation>等待RPC服务器启动</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="377"/>
+        <location filename="../darkcoinstrings.cpp" line="378"/>
         <source>Wallet %s resides outside data directory %s</source>
         <translation>钱包 %s 属于外部数据目录 %s</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="378"/>
+        <location filename="../darkcoinstrings.cpp" line="379"/>
         <source>Wallet is locked.</source>
         <translation>钱包被锁。</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="379"/>
+        <location filename="../darkcoinstrings.cpp" line="380"/>
         <source>Wallet needed to be rewritten: restart Darkcoin to complete</source>
         <translation>钱包需要重新写入：请重启Darkcoin来完成过程</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="380"/>
+        <location filename="../darkcoinstrings.cpp" line="381"/>
         <source>Wallet options:</source>
         <translation>钱包选项：</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="381"/>
+        <location filename="../darkcoinstrings.cpp" line="382"/>
         <source>Warning</source>
         <translation>警告</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="382"/>
+        <location filename="../darkcoinstrings.cpp" line="383"/>
         <source>Warning: Deprecated argument -debugnet ignored, use -debug=net</source>
         <translation>警告：忽略使用参数-debugnet ，使用-debug =net</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="383"/>
+        <location filename="../darkcoinstrings.cpp" line="384"/>
         <source>Warning: This version is obsolete, upgrade required!</source>
         <translation>警告：版本过低，请升级！</translation>
     </message>
     <message>
-        <location filename="../darkcoinstrings.cpp" line="384"/>
         <source>Wrong state.</source>
-        <translation>错误状态。</translation>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../darkcoinstrings.cpp" line="385"/>
