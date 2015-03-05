@@ -2107,24 +2107,24 @@ Reduce the number of addresses involved in the address creation.</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="47"/>
-        <location filename="../forms/overviewpage.ui" line="342"/>
+        <location filename="../forms/overviewpage.ui" line="360"/>
         <source>The displayed information may be out of date. Your wallet automatically synchronizes with the NovaCoin network after a connection is established, but this process has not completed yet.</source>
         <translation>The displayed information may be out of date. Your wallet automatically synchronizes with the NovaCoin network after a connection is established, but this process has not completed yet.</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="214"/>
-        <location filename="../forms/overviewpage.ui" line="233"/>
+        <location filename="../forms/overviewpage.ui" line="226"/>
+        <location filename="../forms/overviewpage.ui" line="245"/>
         <source>Your unspendable balance</source>
         <translation>Your unspendable balance</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="217"/>
+        <location filename="../forms/overviewpage.ui" line="229"/>
         <source>Unspendable:</source>
         <translation>Unspendable:</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="121"/>
-        <location filename="../forms/overviewpage.ui" line="140"/>
+        <location filename="../forms/overviewpage.ui" line="124"/>
+        <location filename="../forms/overviewpage.ui" line="143"/>
         <source>Total of coins that was staked, and do not yet count toward the current balance</source>
         <translation>Total of coins that was staked, and do not yet count toward the current balance</translation>
     </message>
@@ -2145,56 +2145,56 @@ Reduce the number of addresses involved in the address creation.</translation>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="124"/>
+        <location filename="../forms/overviewpage.ui" line="127"/>
         <source>Stake:</source>
         <translation>Stake:</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="153"/>
-        <location filename="../forms/overviewpage.ui" line="172"/>
+        <location filename="../forms/overviewpage.ui" line="159"/>
+        <location filename="../forms/overviewpage.ui" line="178"/>
         <source>Total of transactions that have yet to be confirmed, and do not yet count toward the current balance</source>
         <translation>Total of transactions that have yet to be confirmed, and do not yet count toward the current balance</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="156"/>
+        <location filename="../forms/overviewpage.ui" line="162"/>
         <source>Unconfirmed:</source>
         <translation>Unconfirmed:</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="185"/>
-        <location filename="../forms/overviewpage.ui" line="201"/>
+        <location filename="../forms/overviewpage.ui" line="194"/>
+        <location filename="../forms/overviewpage.ui" line="210"/>
         <source>Mined balance that has not yet matured</source>
         <translation>Mined balance that has not yet matured</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="188"/>
+        <location filename="../forms/overviewpage.ui" line="197"/>
         <source>Immature:</source>
         <translation>Immature:</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="253"/>
-        <location filename="../forms/overviewpage.ui" line="269"/>
+        <location filename="../forms/overviewpage.ui" line="268"/>
+        <location filename="../forms/overviewpage.ui" line="284"/>
         <source>Your current total balance</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="256"/>
+        <location filename="../forms/overviewpage.ui" line="271"/>
         <source>Total:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="282"/>
-        <location filename="../forms/overviewpage.ui" line="292"/>
+        <location filename="../forms/overviewpage.ui" line="300"/>
+        <location filename="../forms/overviewpage.ui" line="310"/>
         <source>Total number of transactions in wallet</source>
         <translation>Total number of transactions in wallet</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="285"/>
+        <location filename="../forms/overviewpage.ui" line="303"/>
         <source>Number of transactions:</source>
         <translation>Number of transactions:</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="335"/>
+        <location filename="../forms/overviewpage.ui" line="353"/>
         <source>&lt;b&gt;Recent transactions&lt;/b&gt;</source>
         <translation>&lt;b&gt;Recent transactions&lt;/b&gt;</translation>
     </message>

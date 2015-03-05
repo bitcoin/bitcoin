@@ -1,4 +1,6 @@
-<?xml version="1.0" ?><!DOCTYPE TS><TS language="ru_RU" version="2.1">
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE TS>
+<TS version="2.1" language="ru_RU">
 <context>
     <name>AboutDialog</name>
     <message>
@@ -603,7 +605,11 @@ Copyright © 2012-2015 The NovaCoin developers</source>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="573"/>
         <source>%n active connection(s) to NovaCoin network</source>
-        <translation><numerusform>%n активное соединение с сетью</numerusform><numerusform>%n активных соединений с сетью</numerusform><numerusform>%n активных соединений с сетью</numerusform></translation>
+        <translation>
+            <numerusform>%n активное соединение с сетью</numerusform>
+            <numerusform>%n активных соединений с сетью</numerusform>
+            <numerusform>%n активных соединений с сетью</numerusform>
+        </translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="597"/>
@@ -613,7 +619,11 @@ Copyright © 2012-2015 The NovaCoin developers</source>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="599"/>
         <source>~%n block(s) remaining</source>
-        <translation><numerusform>остался ~%n блок</numerusform><numerusform>осталось ~%n блоков</numerusform><numerusform>осталось ~%n блоков</numerusform></translation>
+        <translation>
+            <numerusform>остался ~%n блок</numerusform>
+            <numerusform>осталось ~%n блоков</numerusform>
+            <numerusform>осталось ~%n блоков</numerusform>
+        </translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="605"/>
@@ -628,22 +638,38 @@ Copyright © 2012-2015 The NovaCoin developers</source>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="635"/>
         <source>%n second(s) ago</source>
-        <translation><numerusform>%n секунду назад</numerusform><numerusform>%n секунды назад</numerusform><numerusform>%n секунд назад</numerusform></translation>
+        <translation>
+            <numerusform>%n секунду назад</numerusform>
+            <numerusform>%n секунды назад</numerusform>
+            <numerusform>%n секунд назад</numerusform>
+        </translation>
     </message>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="639"/>
         <source>%n minute(s) ago</source>
-        <translation><numerusform>%n минуту назад</numerusform><numerusform>%n минуты назад</numerusform><numerusform>%n минут назад</numerusform></translation>
+        <translation>
+            <numerusform>%n минуту назад</numerusform>
+            <numerusform>%n минуты назад</numerusform>
+            <numerusform>%n минут назад</numerusform>
+        </translation>
     </message>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="643"/>
         <source>%n hour(s) ago</source>
-        <translation><numerusform>%n час назад</numerusform><numerusform>%n часа назад</numerusform><numerusform>%n часов назад</numerusform></translation>
+        <translation>
+            <numerusform>%n час назад</numerusform>
+            <numerusform>%n часа назад</numerusform>
+            <numerusform>%n часов назад</numerusform>
+        </translation>
     </message>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="647"/>
         <source>%n day(s) ago</source>
-        <translation><numerusform>%n день назад</numerusform><numerusform>%n дня назад</numerusform><numerusform>%n дней назад</numerusform></translation>
+        <translation>
+            <numerusform>%n день назад</numerusform>
+            <numerusform>%n дня назад</numerusform>
+            <numerusform>%n дней назад</numerusform>
+        </translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="653"/>
@@ -2084,84 +2110,107 @@ Reduce the number of addresses involved in the address creation.</source>
         <translation>Форма</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="40"/>
         <source>Wallet</source>
-        <translation>Бумажник</translation>
+        <translation type="vanished">Бумажник</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="47"/>
-        <location filename="../forms/overviewpage.ui" line="306"/>
+        <location filename="../forms/overviewpage.ui" line="360"/>
         <source>The displayed information may be out of date. Your wallet automatically synchronizes with the NovaCoin network after a connection is established, but this process has not completed yet.</source>
         <translation>Отображаемая информация может быть устаревшей. Ваш бумажник автоматически синхронизируется с сетью NovaCoin после подключения, но этот процесс пока не завершён.</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="89"/>
-        <location filename="../forms/overviewpage.ui" line="108"/>
         <source>Your current balance</source>
-        <translation>Ваш текущий баланс</translation>
+        <translation type="vanished">Ваш текущий баланс</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="92"/>
         <source>Balance:</source>
-        <translation>Баланс:</translation>
+        <translation type="vanished">Баланс:</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="121"/>
-        <location filename="../forms/overviewpage.ui" line="140"/>
+        <location filename="../forms/overviewpage.ui" line="226"/>
+        <location filename="../forms/overviewpage.ui" line="245"/>
         <source>Your unspendable balance</source>
         <translation>Недоступный баланс</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="124"/>
+        <location filename="../forms/overviewpage.ui" line="229"/>
         <source>Unspendable:</source>
         <translation>Недоступно:</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="153"/>
-        <location filename="../forms/overviewpage.ui" line="172"/>
+        <location filename="../forms/overviewpage.ui" line="124"/>
+        <location filename="../forms/overviewpage.ui" line="143"/>
         <source>Total of coins that was staked, and do not yet count toward the current balance</source>
         <translation>Общая сумма всех монет, использованных для Proof-of-Stake, и не учитывающихся на балансе</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="156"/>
+        <location filename="../forms/overviewpage.ui" line="40"/>
+        <source>Balances</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/overviewpage.ui" line="89"/>
+        <location filename="../forms/overviewpage.ui" line="108"/>
+        <source>Your current available balance</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/overviewpage.ui" line="92"/>
+        <source>Available:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/overviewpage.ui" line="127"/>
         <source>Stake:</source>
         <translation>Доля:</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="185"/>
-        <location filename="../forms/overviewpage.ui" line="204"/>
+        <location filename="../forms/overviewpage.ui" line="159"/>
+        <location filename="../forms/overviewpage.ui" line="178"/>
         <source>Total of transactions that have yet to be confirmed, and do not yet count toward the current balance</source>
         <translation>Общая сумма всех транзакций, которые до сих пор не подтверждены, и до сих пор не учитываются в текущем балансе</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="188"/>
+        <location filename="../forms/overviewpage.ui" line="162"/>
         <source>Unconfirmed:</source>
         <translation>Не подтверждено:</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="217"/>
-        <location filename="../forms/overviewpage.ui" line="233"/>
+        <location filename="../forms/overviewpage.ui" line="194"/>
+        <location filename="../forms/overviewpage.ui" line="210"/>
         <source>Mined balance that has not yet matured</source>
         <translation>Баланс добытых монет, который ещё не созрел</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="220"/>
+        <location filename="../forms/overviewpage.ui" line="197"/>
         <source>Immature:</source>
         <translation>Незрелые:</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="246"/>
-        <location filename="../forms/overviewpage.ui" line="256"/>
+        <location filename="../forms/overviewpage.ui" line="268"/>
+        <location filename="../forms/overviewpage.ui" line="284"/>
+        <source>Your current total balance</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/overviewpage.ui" line="271"/>
+        <source>Total:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/overviewpage.ui" line="300"/>
+        <location filename="../forms/overviewpage.ui" line="310"/>
         <source>Total number of transactions in wallet</source>
         <translation>Общее количество транзакций в Вашем бумажнике</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="249"/>
+        <location filename="../forms/overviewpage.ui" line="303"/>
         <source>Number of transactions:</source>
         <translation>Количество транзакций:</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="299"/>
+        <location filename="../forms/overviewpage.ui" line="353"/>
         <source>&lt;b&gt;Recent transactions&lt;/b&gt;</source>
         <translation>&lt;b&gt;Последние транзакции&lt;/b&gt;</translation>
     </message>
@@ -2195,22 +2244,22 @@ Reduce the number of addresses involved in the address creation.</source>
         <translation>Количество</translation>
     </message>
     <message>
-        <location filename="../guiutil.cpp" line="498"/>
+        <location filename="../guiutil.cpp" line="499"/>
         <source>%1 d</source>
         <translation>%1 д</translation>
     </message>
     <message>
-        <location filename="../guiutil.cpp" line="500"/>
+        <location filename="../guiutil.cpp" line="501"/>
         <source>%1 h</source>
         <translation>%1 ч</translation>
     </message>
     <message>
-        <location filename="../guiutil.cpp" line="502"/>
+        <location filename="../guiutil.cpp" line="503"/>
         <source>%1 m</source>
         <translation>%1 мин</translation>
     </message>
     <message>
-        <location filename="../guiutil.cpp" line="504"/>
+        <location filename="../guiutil.cpp" line="505"/>
         <source>%1 s</source>
         <translation>%1 сек</translation>
     </message>
@@ -3023,7 +3072,11 @@ Reduce the number of addresses involved in the address creation.</source>
     <message numerus="yes">
         <location filename="../transactiondesc.cpp" line="20"/>
         <source>Open for %n block(s)</source>
-        <translation><numerusform>Открыто для %n блока</numerusform><numerusform>Открыто для %n блоков</numerusform><numerusform>Открыто для %n блоков</numerusform></translation>
+        <translation>
+            <numerusform>Открыто для %n блока</numerusform>
+            <numerusform>Открыто для %n блоков</numerusform>
+            <numerusform>Открыто для %n блоков</numerusform>
+        </translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="22"/>
@@ -3058,7 +3111,11 @@ Reduce the number of addresses involved in the address creation.</source>
     <message numerus="yes">
         <location filename="../transactiondesc.cpp" line="57"/>
         <source>, broadcast through %n node(s)</source>
-        <translation><numerusform>, разослано через %n узел</numerusform><numerusform>, разослано через %n узла</numerusform><numerusform>, разослано через %n узлов</numerusform></translation>
+        <translation>
+            <numerusform>, разослано через %n узел</numerusform>
+            <numerusform>, разослано через %n узла</numerusform>
+            <numerusform>, разослано через %n узлов</numerusform>
+        </translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="61"/>
@@ -3120,7 +3177,11 @@ Reduce the number of addresses involved in the address creation.</source>
     <message numerus="yes">
         <location filename="../transactiondesc.cpp" line="164"/>
         <source>matures in %n more block(s)</source>
-        <translation><numerusform>будет доступно через %n блок</numerusform><numerusform>будет доступно через %n блока</numerusform><numerusform>будет доступно через %n блоков</numerusform></translation>
+        <translation>
+            <numerusform>будет доступно через %n блок</numerusform>
+            <numerusform>будет доступно через %n блока</numerusform>
+            <numerusform>будет доступно через %n блоков</numerusform>
+        </translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="166"/>
@@ -3229,7 +3290,11 @@ Reduce the number of addresses involved in the address creation.</source>
     <message numerus="yes">
         <location filename="../transactiontablemodel.cpp" line="302"/>
         <source>Open for %n block(s)</source>
-        <translation><numerusform>Открыто для %n блока</numerusform><numerusform>Открыто для %n блоков</numerusform><numerusform>Открыто для %n блоков</numerusform></translation>
+        <translation>
+            <numerusform>Открыто для %n блока</numerusform>
+            <numerusform>Открыто для %n блоков</numerusform>
+            <numerusform>Открыто для %n блоков</numerusform>
+        </translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="305"/>
@@ -3254,7 +3319,11 @@ Reduce the number of addresses involved in the address creation.</source>
     <message numerus="yes">
         <location filename="../transactiontablemodel.cpp" line="323"/>
         <source>Mined balance will be available when it matures in %n more block(s)</source>
-        <translation><numerusform>Добытыми монетами можно будет воспользоваться через %n блок</numerusform><numerusform>Добытыми монетами можно будет воспользоваться через %n блока</numerusform><numerusform>Добытыми монетами можно будет воспользоваться через %n блоков</numerusform></translation>
+        <translation>
+            <numerusform>Добытыми монетами можно будет воспользоваться через %n блок</numerusform>
+            <numerusform>Добытыми монетами можно будет воспользоваться через %n блока</numerusform>
+            <numerusform>Добытыми монетами можно будет воспользоваться через %n блоков</numerusform>
+        </translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="328"/>
