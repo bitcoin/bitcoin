@@ -9,10 +9,9 @@ CDarkSendRelay::CDarkSendRelay()
     nRelayType = 0;
     in = CTxIn();
     out = CTxOut();
-    strSharedKey = "";
 }
 
-CDarkSendRelay::CDarkSendRelay(CTxIn& vinMasternodeIn, vector<unsigned char>& vchSigIn, int nBlockHeightIn, int nRelayTypeIn, CTxIn& in2, CTxOut& out2, std::string strSharedKeyIn)
+CDarkSendRelay::CDarkSendRelay(CTxIn& vinMasternodeIn, vector<unsigned char>& vchSigIn, int nBlockHeightIn, int nRelayTypeIn, CTxIn& in2, CTxOut& out2)
 {
     vinMasternode = vinMasternodeIn;
     vchSig = vchSigIn;
@@ -20,7 +19,6 @@ CDarkSendRelay::CDarkSendRelay(CTxIn& vinMasternodeIn, vector<unsigned char>& vc
     nRelayType = nRelayTypeIn;
     in = in2;
     out = out2;
-    strSharedKey = strSharedKeyIn;
 }
 
 std::string CDarkSendRelay::ToString()
@@ -36,10 +34,8 @@ std::string CDarkSendRelay::ToString()
     return info.str();   
 }
 
-bool CDarkSendRelay::Sign()
+bool CDarkSendRelay::Sign(std::string strSharedKey)
 {
-    if(!fMasterNode) return false;
-
     std::string strMessage = in.ToString() + out.ToString();
 
     CKey key2;
@@ -48,17 +44,17 @@ bool CDarkSendRelay::Sign()
 
     if(!darkSendSigner.SetKey(strSharedKey, errorMessage, key2, pubkey2))
     {
-        LogPrintf("CDarkSendRelay():Relay - ERROR: Invalid masternodeprivkey: '%s'\n", errorMessage.c_str());
+        LogPrintf("CDarkSendRelay():Sign - ERROR: Invalid shared key: '%s'\n", errorMessage.c_str());
         return false;
     }
 
     if(!darkSendSigner.SignMessage(strMessage, errorMessage, vchSig2, key2)) {
-        LogPrintf("CDarkSendRelay():Relay - Sign message failed");
+        LogPrintf("CDarkSendRelay():Sign - Sign message failed\n");
         return false;
     }
 
-    if(!darkSendSigner.VerifyMessage(pubkey2, vchSig, strMessage, errorMessage)) {
-        LogPrintf("CDarkSendRelay():Relay - Verify message failed");
+    if(!darkSendSigner.VerifyMessage(pubkey2, vchSig2, strMessage, errorMessage)) {
+        LogPrintf("CDarkSendRelay():Sign - Verify message failed\n");
         return false;
     }
 
@@ -67,8 +63,6 @@ bool CDarkSendRelay::Sign()
 
 bool CDarkSendRelay::VerifyMessage(std::string strSharedKey)
 {
-    if(!fMasterNode) return false;
-
     std::string strMessage = in.ToString() + out.ToString();
 
     CKey key2;
@@ -77,17 +71,12 @@ bool CDarkSendRelay::VerifyMessage(std::string strSharedKey)
 
     if(!darkSendSigner.SetKey(strSharedKey, errorMessage, key2, pubkey2))
     {
-        LogPrintf("CDarkSendRelay():Relay - ERROR: Invalid masternodeprivkey: '%s'\n", errorMessage.c_str());
+        LogPrintf("CDarkSendRelay()::VerifyMessage - ERROR: Invalid shared key: '%s'\n", errorMessage.c_str());
         return false;
     }
 
-    if(!darkSendSigner.SignMessage(strMessage, errorMessage, vchSig2, key2)) {
-        LogPrintf("CDarkSendRelay():Relay - Sign message failed");
-        return false;
-    }
-
-    if(!darkSendSigner.VerifyMessage(pubkey2, vchSig, strMessage, errorMessage)) {
-        LogPrintf("CDarkSendRelay():Relay - Verify message failed");
+    if(!darkSendSigner.VerifyMessage(pubkey2, vchSig2, strMessage, errorMessage)) {
+        LogPrintf("CDarkSendRelay()::VerifyMessage - Verify message failed\n");
         return false;
     }
 
