@@ -272,8 +272,9 @@ void CAddrMan::Good_(const CService& addr, int64_t nTime)
     // update info
     info.nLastSuccess = nTime;
     info.nLastTry = nTime;
-    info.nTime = nTime;
     info.nAttempts = 0;
+    // nTime is not updated here, to avoid leaking information about
+    // currently-connected peers.
 
     // if it is already in the tried set, don't do anything else
     if (info.fInTried)
