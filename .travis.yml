@@ -10,6 +10,7 @@ env:
   global:
     - MAKEJOBS=-j3
     - RUN_TESTS=false
+    - BOOST_TEST_RANDOM=1$TRAVIS_BUILD_ID
     - CCACHE_SIZE=100M
     - CCACHE_TEMPDIR=/tmp/.ccache-temp
     - CCACHE_COMPRESS=1
