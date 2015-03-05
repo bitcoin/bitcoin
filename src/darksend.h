@@ -186,8 +186,8 @@ public:
 
     /** Sign this Darksend transaction
      *  \return true if all conditions are met:
-     *     1) we have an active MasterNode,
-     *     2) we have a valid MasterNode private key,
+     *     1) we have an active Masternode,
+     *     2) we have a valid Masternode private key,
      *     3) we signed the message successfully, and
      *     4) we verified the message successfully
      */
@@ -201,7 +201,7 @@ public:
         return (GetTime() - time) > DARKSEND_QUEUE_TIMEOUT;// 120 seconds
     }
 
-    /// Check if we have a valid MasterNode address
+    /// Check if we have a valid Masternode address
     bool CheckSignature();
 
 };
@@ -256,7 +256,7 @@ public:
 
     // clients entries
     std::vector<CDarkSendEntry> myEntries;
-    // masternode entries
+    // Masternode entries
     std::vector<CDarkSendEntry> entries;
     // the finalized transaction ready for signing
     CTransaction finalTransaction;
@@ -288,7 +288,7 @@ public:
     int sessionID;
     int sessionDenom; //Users must submit an denom matching this
     int sessionUsers; //N Users have said they'll join
-    bool sessionFoundMasternode; //If we've found a compatible masternode
+    bool sessionFoundMasternode; //If we've found a compatible Masternode
     int64_t sessionTotalValue; //used for autoDenom
     std::vector<CTransaction> vecSessionCollateral;
 
@@ -406,7 +406,7 @@ public:
     void UpdateState(unsigned int newState)
     {
         if (fMasterNode && (newState == POOL_STATUS_ERROR || newState == POOL_STATUS_SUCCESS)){
-            LogPrintf("CDarksendPool::UpdateState() - Can't set state to ERROR or SUCCESS as a masternode. \n");
+            LogPrintf("CDarksendPool::UpdateState() - Can't set state to ERROR or SUCCESS as a Masternode. \n");
             return;
         }
 
@@ -475,9 +475,9 @@ public:
     bool AddScriptSig(const CTxIn& newVin);
     /// Check that all inputs are signed. (Are all inputs signed?)
     bool SignaturesComplete();
-    /// As a client, send a transaction to a masternode to start the denomination process
+    /// As a client, send a transaction to a Masternode to start the denomination process
     void SendDarksendDenominate(std::vector<CTxIn>& vin, std::vector<CTxOut>& vout, int64_t amount);
-    /// Get masternode updates about the progress of Darksend
+    /// Get Masternode updates about the progress of Darksend
     bool StatusUpdate(int newState, int newEntriesCount, int newAccepted, std::string& error, int newSessionID=0);
 
     /// As a client, check and sign the final transaction
