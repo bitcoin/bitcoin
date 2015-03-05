@@ -38,9 +38,9 @@ class CActiveMasternode;
 #define MASTERNODE_REJECTED                    0
 #define MASTERNODE_RESET                       -1
 
-#define DARKSEND_QUEUE_TIMEOUT                 120
-#define DARKSEND_SIGNING_TIMEOUT               30
-#define DARKSEND_DOWNGRADE_TIMEOUT             30
+#define DARKSEND_QUEUE_TIMEOUT                 120 // in seconds
+#define DARKSEND_SIGNING_TIMEOUT               30 // in seconds
+#define DARKSEND_DOWNGRADE_TIMEOUT             30 // in seconds
 
 // used for anonymous relaying of inputs/outputs/sigs
 #define DARKSEND_RELAY_IN                 1
@@ -54,13 +54,11 @@ extern std::string strMasterNodePrivKey;
 extern map<uint256, CDarksendBroadcastTx> mapDarksendBroadcastTxes;
 extern CActiveMasternode activeMasternode;
 
-// get the darksend chain depth for a given input
+// get the Darksend chain depth for a given input
 int GetInputDarksendRounds(CTxIn in, int rounds=0);
 
-//
-// Holds an Darksend input
-//
-
+/** Holds an Darksend input
+ */
 class CTxDSIn : public CTxIn
 {
 public:
@@ -76,8 +74,9 @@ public:
 };
 
 
-// A clients transaction in the darksend pool
-// -- holds the input/output mapping for each user in the pool
+/** A clients transaction in the Darksend pool
+ *  -- holds the input/output mapping for each user in the pool
+ */
 class CDarkSendEntry
 {
 public:
@@ -96,6 +95,7 @@ public:
         amount = 0;
     }
 
+    /// Add entries to use for Darksend
     bool Add(const std::vector<CTxIn> vinIn, int64_t amountIn, const CTransaction collateralIn, const std::vector<CTxOut> voutIn)
     {
         if(isSet){return false;}
@@ -110,6 +110,7 @@ public:
         return true;
     }
 
+    /// Is this Darksend expired?
     bool IsExpired()
     {
         return (GetTime() - addedTime) > DARKSEND_QUEUE_TIMEOUT;// 120 seconds
@@ -117,9 +118,9 @@ public:
 };
 
 
-//
-// A currently inprogress darksend merge and denomination information
-//
+/**
+ * A currently inprogress Darksend merge and denomination information
+ */
 class CDarksendQueue
 {
 public:
@@ -183,19 +184,30 @@ public:
         return false;
     }
 
+    /** Sign this Darksend transaction
+     *  \return true if all conditions are met:
+     *     1) we have an active MasterNode,
+     *     2) we have a valid MasterNode private key,
+     *     3) we signed the message successfully, and
+     *     4) we verified the message successfully
+     */
     bool Sign();
+
     bool Relay();
 
+    /// Is this Darksend expired?
     bool IsExpired()
     {
         return (GetTime() - time) > DARKSEND_QUEUE_TIMEOUT;// 120 seconds
     }
 
+    /// Check if we have a valid MasterNode address
     bool CheckSignature();
 
 };
 
-// store darksend tx signature information
+/** Helper class to store Darksend transaction (tx) information.
+ */
 class CDarksendBroadcastTx
 {
 public:
@@ -205,9 +217,8 @@ public:
     int64_t sigTime;
 };
 
-//
-// Helper object for signing and checking signatures
-//
+/** Helper object for signing and checking signatures
+ */
 class CDarkSendSigner
 {
 public:
@@ -217,9 +228,8 @@ public:
     bool VerifyMessage(CPubKey pubkey, std::vector<unsigned char>& vchSig, std::string strMessage, std::string& errorMessage);
 };
 
-//
-// Build a transaction anonymously
-//
+/** Build a transaction anonymously
+ */
 class CDSAnonTx
 {
 public:
@@ -229,6 +239,8 @@ public:
     bool IsTransactionValid();
     bool AddOutput(const CTxOut out);
     bool AddInput(const CTxIn in);
+
+    /// Add Signature
     bool AddSig(const CTxIn in);
     int CountEntries() {return (int)vin.size() + (int)vout.size();}
 };
@@ -236,9 +248,8 @@ public:
 void ConnectToDarkSendMasterNodeWinner();
 
 
-//
-// Used to keep track of current status of darksend pool
-//
+/** Used to keep track of current status of Darksend pool
+ */
 class CDarksendPool
 {
 public:
@@ -254,8 +265,8 @@ public:
     bool fSubmitAnonymousFailed;
     int nCountAttempts;
 
-    int64_t lastTimeChanged;
-    int64_t lastAutoDenomination;
+    int64_t lastTimeChanged; // time in UTC milliseconds
+    int64_t lastAutoDenomination; // Note: possibly not used TODO: Delete?
 
     unsigned int state;
     unsigned int entriesCount;
@@ -302,7 +313,7 @@ public:
 
     CDarksendPool()
     {
-        /* DarkSend uses collateral addresses to trust parties entering the pool
+        /* Darksend uses collateral addresses to trust parties entering the pool
             to behave themselves. If they don't it takes their money. */
 
         cachedLastSuccess = 0;
@@ -318,7 +329,21 @@ public:
         SetNull();
     }
 
-    //specific messages for the Darksend protocol
+    /** Process a Darksend message using the Darksend protocol
+     * \param pfrom
+     * \param strCommand lower case command string; valid values are:
+     *        Command  | Description
+     *        -------- | -----------------
+     *        dsa      | Darksend Acceptable
+     *        dsc      | Darksend Complete
+     *        dsf      | Darksend Final tx
+     *        dsi      | Darksend vIn
+     *        dsq      | Darksend Queue
+     *        dss      | Darksend Signal Final Tx
+     *        dssu     | Darksend status update
+     *        dssub    | Darksend Subscribe To
+     * \param vRecv
+     */
     void ProcessMessageDarksend(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
 
     void InitCollateralAddress(){
@@ -404,38 +429,38 @@ public:
         return POOL_MAX_TRANSACTIONS;
     }
 
-    //Do we have enough users to take entries?
+    /// Do we have enough users to take entries?
     bool IsSessionReady(){
         return sessionUsers >= GetMaxPoolTransactions();
     }
 
-    // Are these outputs compatible with other client in the pool?
+    /// Are these outputs compatible with other client in the pool?
     bool IsCompatibleWithEntries(std::vector<CTxOut>& vout);
 
-    // Is this amount compatible with other client in the pool?
+    /// Is this amount compatible with other client in the pool?
     bool IsCompatibleWithSession(int64_t nAmount, CTransaction txCollateral, std::string& strReason);
 
-    // Passively run Darksend in the background according to the configuration in settings (only for QT)
+    /// Passively run Darksend in the background according to the configuration in settings (only for QT)
     bool DoAutomaticDenominating(bool fDryRun=false, bool ready=false);
     bool PrepareDarksendDenominate();
 
-    // check for process in Darksend
+    /// Check for process in Darksend
     void Check();
     void CheckFinalTransaction();
-    // charge fees to bad actors
+    /// Charge fees to bad actors (Charge clients a fee if they're abusive)
     void ChargeFees();
-    // rarely charge fees to pay miners
+    /// Rarely charge fees to pay miners
     void ChargeRandomFees();
     void CheckTimeout();
     void CheckForCompleteQueue();
-    // check to make sure a signature matches an input in the pool
+    /// Check to make sure a signature matches an input in the pool
     bool SignatureValid(const CScript& newSig, const CTxIn& newVin);
-    // if the collateral is valid given by a client
+    /// If the collateral is valid given by a client
     bool IsCollateralValid(const CTransaction& txCollateral);
-    // add a clients entry to the pool
+    /// Add a clients entry to the pool
     bool AddEntry(const std::vector<CTxIn>& newInput, const int64_t& nAmount, const CTransaction& txCollateral, const std::vector<CTxOut>& newOutput, std::string& error);
 
-    // add an anonymous output/inputs/sig
+    /// Add an anonymous output/inputs/sig
     bool AddAnonymousOutput(const CTxOut& out) {return anonTx.AddOutput(out);}
     bool AddAnonymousInput(const CTxIn& in) {return anonTx.AddInput(in);}
     bool AddAnonymousSig(const CTxIn& in) {return anonTx.AddSig(in);}
@@ -446,36 +471,36 @@ public:
         return true;
     }
 
-    // add signature to a vin
+    /// Add signature to a vin
     bool AddScriptSig(const CTxIn& newVin);
-    // are all inputs signed?
+    /// Check that all inputs are signed. (Are all inputs signed?)
     bool SignaturesComplete();
-    // as a client, send a transaction to a masternode to start the denomination process
+    /// As a client, send a transaction to a masternode to start the denomination process
     void SendDarksendDenominate(std::vector<CTxIn>& vin, std::vector<CTxOut>& vout, int64_t amount);
-    // get masternode updates about the progress of darksend
+    /// Get masternode updates about the progress of Darksend
     bool StatusUpdate(int newState, int newEntriesCount, int newAccepted, std::string& error, int newSessionID=0);
 
-    // as a client, check and sign the final transaction
+    /// As a client, check and sign the final transaction
     bool SignFinalTransaction(CTransaction& finalTransactionNew, CNode* node);
 
-    // get the last valid block hash for a given modulus
+    /// Get the last valid block hash for a given modulus
     bool GetLastValidBlockHash(uint256& hash, int mod=1, int nBlockHeight=0);
-    // process a new block
+    /// Process a new block
     void NewBlock();
     void CompletedTransaction(bool error, std::string lastMessageNew);
     void ClearLastMessage();
-    // used for liquidity providers
+    /// Used for liquidity providers
     bool SendRandomPaymentToSelf();
     
-    // split up large inputs or make fee sized inputs
+    /// Split up large inputs or make fee sized inputs
     bool MakeCollateralAmounts();
     bool CreateDenominated(int64_t nTotalValue);
     
-    // get the denominations for a list of outputs (returns a bitshifted integer)
+    /// Get the denominations for a list of outputs (returns a bitshifted integer)
     int GetDenominations(const std::vector<CTxOut>& vout);
     void GetDenominationsToString(int nDenom, std::string& strDenom);
 
-    // get the denominations for a specific amount of darkcoin.
+    /// Get the denominations for a specific amount of darkcoin.
     int GetDenominationsByAmount(int64_t nAmount, int nDenomTarget=0);
     int GetDenominationsByAmounts(std::vector<int64_t>& vecAmount);
 

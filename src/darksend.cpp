@@ -23,34 +23,34 @@ using namespace boost;
 
 CCriticalSection cs_darksend;
 
-/** The main object for accessing darksend */
+// The main object for accessing Darksend 
 CDarksendPool darkSendPool;
-/** A helper object for signing messages from masternodes */
+// A helper object for signing messages from masternodes 
 CDarkSendSigner darkSendSigner;
-/** The current darksends in progress on the network */
+// The current Darksends in progress on the network 
 std::vector<CDarksendQueue> vecDarksendQueue;
-/** Keep track of the used masternodes */
+// Keep track of the used masternodes 
 std::vector<CTxIn> vecMasternodesUsed;
-// keep track of the scanning errors I've seen
+// Keep track of the scanning errors I've seen
 map<uint256, CDarksendBroadcastTx> mapDarksendBroadcastTxes;
-//
+// Keep track of the active masternode
 CActiveMasternode activeMasternode;
 
-// count peers we've requested the list from
+// Count peers we've requested the list from
 int RequestedMasterNodeList = 0;
 
 /* *** BEGIN DARKSEND MAGIC - DARKCOIN **********
-    Copyright 2014, Darkcoin Developers
+    Copyright 2014-2015, Darkcoin Developers
         eduffield - evan@darkcoin.io
         udjinm6   - udjinm6@darkcoin.io
 */
 
 void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand, CDataStream& vRecv)
 {
-    if(fLiteMode) return; //disable all darksend/masternode related functionality
+    if(fLiteMode) return; //disable all Darksend/masternode related functionality
     if(IsInitialBlockDownload()) return;
 
-    if (strCommand == "dsa") { //DarkSend Accept Into Pool
+    if (strCommand == "dsa") { //Darksend Accept Into Pool
 
         if (pfrom->nVersion < MIN_POOL_PEER_PROTO_VERSION) {
             std::string strError = _("Incompatible version.");
@@ -102,7 +102,7 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
             return;
         }
 
-    } else if (strCommand == "dsq") { //DarkSend Queue
+    } else if (strCommand == "dsq") { //Darksend Queue
         LOCK(cs_darksend);
 
         if (pfrom->nVersion < MIN_POOL_PEER_PROTO_VERSION) {
@@ -133,7 +133,7 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
                 //save the relay signature info
                 AddRelaySignature(dsq.vchRelaySig, dsq.nBlockHeight, dsq.strSharedKey);
 
-                if (fDebug)  LogPrintf("darksend queue is ready - %s\n", addr.ToString().c_str());
+                if (fDebug)  LogPrintf("Darksend queue is ready - %s\n", addr.ToString().c_str());
                 PrepareDarksendDenominate();
             }
         } else {
@@ -152,13 +152,13 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
             pmn->nLastDsq = nDsqCount;
             pmn->allowFreeTx = true;
 
-            if(fDebug) LogPrintf("dsq - new darksend queue object - %s\n", addr.ToString().c_str());
+            if(fDebug) LogPrintf("dsq - new Darksend queue object - %s\n", addr.ToString().c_str());
             vecDarksendQueue.push_back(dsq);
             dsq.Relay();
             dsq.time = GetTime();
         }
 
-    } else if (strCommand == "dsr") { //DarkSend Relay
+    } else if (strCommand == "dsr") { //Darksend Relay
 
         //* Ask a masternode to relay an anonymous output to another masternode *//
 
@@ -219,7 +219,7 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
             }
         }
 
-    } else if (strCommand == "dsai") { //DarkSend Anonymous Item (Input/Output/Sig)
+    } else if (strCommand == "dsai") { //Darksend Anonymous Item (Input/Output/Sig)
 
         std::string error = "";
         if (pfrom->nVersion < MIN_POOL_PEER_PROTO_VERSION) {
@@ -287,7 +287,7 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
         RelayStatus(sessionID, GetState(), GetEntriesCount(), MASTERNODE_ACCEPTED);
         Check();
 
-    } else if (strCommand == "dsi") { //DarkSend vIn
+    } else if (strCommand == "dsi") { //Darksend vIn
 
         std::string error = "";
         if (pfrom->nVersion < MIN_POOL_PEER_PROTO_VERSION) {
@@ -373,7 +373,7 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
             }
 
             if (nValueIn > DARKSEND_POOL_MAX) {
-                LogPrintf("dsi -- more than darksend pool max! %s\n", tx.ToString().c_str());
+                LogPrintf("dsi -- more than Darksend pool max! %s\n", tx.ToString().c_str());
                 error = _("Value more than Darksend pool maximum allows.");
                 pfrom->PushMessage("dssu", sessionID, GetState(), GetEntriesCount(), MASTERNODE_REJECTED, error);
                 return;
@@ -410,7 +410,7 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
             pfrom->PushMessage("dssu", sessionID, GetState(), GetEntriesCount(), MASTERNODE_REJECTED, error);
         }
 
-    } else if (strCommand == "dssu") { //DarkSend status update
+    } else if (strCommand == "dssu") { //Darksend status update
 
         if (pfrom->nVersion < MIN_POOL_PEER_PROTO_VERSION) {
             return;
@@ -432,13 +432,13 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
         if(fDebug) LogPrintf("dssu - state: %i entriesCount: %i accepted: %i error: %s \n", state, entriesCount, accepted, error.c_str());
 
         if((accepted != 1 && accepted != 0) && sessionID != sessionIDMessage){
-            LogPrintf("dssu - message doesn't match current darksend session %d %d\n", sessionID, sessionIDMessage);
+            LogPrintf("dssu - message doesn't match current Darksend session %d %d\n", sessionID, sessionIDMessage);
             return;
         }
 
         StatusUpdate(state, entriesCount, accepted, error, sessionIDMessage);
 
-    } else if (strCommand == "dss") { //DarkSend Sign Final Tx
+    } else if (strCommand == "dss") { //Darksend Sign Final Tx
 
         if (pfrom->nVersion < MIN_POOL_PEER_PROTO_VERSION) {
             return;
@@ -463,7 +463,7 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
             CheckFinalTransaction();
             RelayStatus(sessionID, GetState(), GetEntriesCount(), MASTERNODE_RESET);
         }
-    } else if (strCommand == "dsf") { //DarkSend Final tx
+    } else if (strCommand == "dsf") { //Darksend Final tx
         if (pfrom->nVersion < MIN_POOL_PEER_PROTO_VERSION) {
             return;
         }
@@ -479,14 +479,14 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
         vRecv >> sessionIDMessage >> txNew;
 
         if(sessionID != sessionIDMessage){
-            if (fDebug) LogPrintf("dsf - message doesn't match current darksend session %d %d\n", sessionID, sessionIDMessage);
+            if (fDebug) LogPrintf("dsf - message doesn't match current Darksend session %d %d\n", sessionID, sessionIDMessage);
             return;
         }
 
         //check to see if input is spent already? (and probably not confirmed)
         SignFinalTransaction(txNew, pfrom);
 
-    } else if (strCommand == "dsc") { //DarkSend Complete
+    } else if (strCommand == "dsc") { //Darksend Complete
 
         if (pfrom->nVersion < MIN_POOL_PEER_PROTO_VERSION) {
             return;
@@ -504,7 +504,7 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
         vRecv >> sessionIDMessage >> error >> lastMessage;
 
         if(sessionID != sessionIDMessage){
-            if (fDebug) LogPrintf("dsc - message doesn't match current darksend session %d %d\n", darkSendPool.sessionID, sessionIDMessage);
+            if (fDebug) LogPrintf("dsc - message doesn't match current Darksend session %d %d\n", darkSendPool.sessionID, sessionIDMessage);
             return;
         }
 
@@ -515,7 +515,7 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
 
 int randomizeList (int i) { return std::rand()%i;}
 
-// Recursively determine the rounds of a given input (How deep is the darksend chain for a given input)
+// Recursively determine the rounds of a given input (How deep is the Darksend chain for a given input)
 int GetInputDarksendRounds(CTxIn in, int rounds)
 {
     static std::map<uint256, CWalletTx> mDenomWtxes;
@@ -662,7 +662,7 @@ bool CDarksendPool::SetCollateralAddress(std::string strAddress){
     CBitcoinAddress address;
     if (!address.SetString(strAddress))
     {
-        LogPrintf("CDarksendPool::SetCollateralAddress - Invalid DarkSend collateral address\n");
+        LogPrintf("CDarksendPool::SetCollateralAddress - Invalid Darksend collateral address\n");
         return false;
     }
     collateralPubKey.SetDestination(address.Get());
@@ -843,7 +843,7 @@ void CDarksendPool::CheckFinalTransaction()
 // Charge clients a fee if they're abusive
 //
 // Why bother? Darksend uses collateral to ensure abuse to the process is kept to a minimum.
-// The submission and signing stages in darksend are completely separate. In the cases where
+// The submission and signing stages in Darksend are completely separate. In the cases where
 // a client submits a transaction then refused to sign, there must be a cost. Otherwise they
 // would be able to do this over and over again and bring the mixing to a hault.
 //
@@ -965,7 +965,7 @@ void CDarksendPool::ChargeRandomFees(){
             /*
                 Collateral Fee Charges:
 
-                Being that DarkSend has "no fees" we need to have some kind of cost associated
+                Being that Darksend has "no fees" we need to have some kind of cost associated
                 with using it to stop abuse. Otherwise it could serve as an attack vector and
                 allow endless transaction that would bloat Darkcoin and make it unusable. To
                 stop these kinds of attacks 1 in 10 successful transactions are charged. This
@@ -990,7 +990,7 @@ void CDarksendPool::ChargeRandomFees(){
 }
 
 //
-// Check for various timeouts (queue objects, darksend, etc)
+// Check for various timeouts (queue objects, Darksend, etc)
 //
 void CDarksendPool::CheckTimeout(){
     if(!fEnableDarksend && !fMasterNode) return;
@@ -1003,7 +1003,7 @@ void CDarksendPool::CheckTimeout(){
         }
     }
 
-    // check darksend queue objects for timeouts
+    // check Darksend queue objects for timeouts
     int c = 0;
     vector<CDarksendQueue>::iterator it;
     for(it=vecDarksendQueue.begin();it<vecDarksendQueue.end();it++){
@@ -1294,7 +1294,7 @@ bool CDarksendPool::AddScriptSig(const CTxIn& newVin){
     return false;
 }
 
-// check to make sure everything is signed
+// Check to make sure everything is signed
 bool CDarksendPool::SignaturesComplete(){
     bool fFoundIncomplete = false;
     BOOST_FOREACH(CTxDSIn in, anonTx.vin){
@@ -1312,7 +1312,7 @@ bool CDarksendPool::SignaturesComplete(){
 }
 
 //
-// Execute a darksend denomination via a masternode.
+// Execute a Darksend denomination via a masternode.
 // This is only ran from clients
 //
 void CDarksendPool::SendDarksendDenominate(std::vector<CTxIn>& vin, std::vector<CTxOut>& vout, int64_t amount){
@@ -1344,7 +1344,7 @@ void CDarksendPool::SendDarksendDenominate(std::vector<CTxIn>& vin, std::vector<
         return;
 
     if(fMasterNode) {
-        LogPrintf("CDarksendPool::SendDarksendDenominate() - DarkSend from a masternode is not supported currently.\n");
+        LogPrintf("CDarksendPool::SendDarksendDenominate() - Darksend from a masternode is not supported currently.\n");
         return;
     }
 
@@ -1391,7 +1391,7 @@ void CDarksendPool::SendDarksendDenominate(std::vector<CTxIn>& vin, std::vector<
     Check();
 }
 
-// Incoming message from masternode updating the progress of darksend
+// Incoming message from masternode updating the progress of Darksend
 //    newAccepted:  -1 mean's it'n not a "transaction accepted/not accepted" message, just a standard update
 //                  0 means transaction was not accepted
 //                  1 means transaction was accepted
@@ -1538,7 +1538,7 @@ void CDarksendPool::NewBlock()
     }
 }
 
-// Darksend transaction was completed (failed or successed)
+// Darksend transaction was completed (failed or successful)
 void CDarksendPool::CompletedTransaction(bool error, std::string lastMessageNew)
 {
     if(fMasterNode) return;
@@ -1584,8 +1584,8 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
     if(state == POOL_STATUS_ERROR || state == POOL_STATUS_SUCCESS) return false;
 
     if(chainActive.Tip()->nHeight - cachedLastSuccess < minBlockSpacing) {
-        LogPrintf("CDarksendPool::DoAutomaticDenominating - Last successful darksend action was too recent\n");
-        strAutoDenomResult = _("Last successful darksend action was too recent.");
+        LogPrintf("CDarksendPool::DoAutomaticDenominating - Last successful Darksend action was too recent\n");
+        strAutoDenomResult = _("Last successful Darksend action was too recent.");
         return false;
     }
     if(!fEnableDarksend) {
@@ -1833,7 +1833,7 @@ bool CDarksendPool::PrepareDarksendDenominate()
 {
     // Submit transaction to the pool if we get here, use sessionDenom so we use the same amount of money
     std::string strError = pwalletMain->PrepareDarksendDenominate(0, nDarksendRounds);
-    LogPrintf("DoAutomaticDenominating : Running darksend denominate. Return '%s'\n", strError.c_str());
+    LogPrintf("DoAutomaticDenominating : Running Darksend denominate. Return '%s'\n", strError.c_str());
 
     if(strError == "") return true;
 
@@ -2484,7 +2484,7 @@ bool CDSAnonTx::AddSig(const CTxIn newIn){
 //TODO: Rename/move to core
 void ThreadCheckDarkSendPool()
 {
-    if(fLiteMode) return; //disable all darksend/masternode related functionality
+    if(fLiteMode) return; //disable all Darksend/masternode related functionality
 
     // Make this thread recognisable as the wallet flushing thread
     RenameThread("darkcoin-darksend");
