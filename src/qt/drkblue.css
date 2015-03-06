@@ -1,5 +1,4 @@
 WalletFrame {
-/* background-color:#fff; */
 border-image: url('res/images/drkblue_walletFrame_bg.png') 0 0 0 0 stretch stretch;
 border-top:0px solid #000;
 margin:0;
@@ -140,7 +139,7 @@ padding-bottom:2px;
 background:transparent;
 }
 
-QTableView { /* Table */
+.QTableView { /* Table - has to be selected as a class otherwise it throws off QCalendarWidget */
 background:transparent;
 border:0px solid #fff;
 }
@@ -235,12 +234,196 @@ QComboBox::drop-down {
 
 }
 
-/* To-Do: moar comments on how all this combo box stuff works */
+QAbstractSpinBox {
+border:1px solid #82C3E6;
+padding: 3px 5px 3px 5px;
+background:#fcfcfc;
+min-height:25px;
+color:#818181;
+}
+
+QAbstractSpinBox::up-button {
+subcontrol-origin: border;
+subcontrol-position: top right;
+width:21px;
+background:#fcfcfc;
+border-left:0px;
+border-right:1px solid #82C3E6;
+border-top:1px solid #82C3E6;
+border-bottom:0px;
+padding-right:1px;
+padding-left:5px;
+padding-top:2px;
+}
+
+QAbstractSpinBox::up-arrow {
+image:url('res/images/drkblue_upArrow_small.png');
+}
+
+QAbstractSpinBox::down-button {
+subcontrol-origin: border;
+subcontrol-position: bottom right;
+width:21px;
+background:#fcfcfc;
+border-top:0px;
+border-left:0px;
+border-right:1px solid #82C3E6;
+border-bottom:1px solid #82C3E6;
+padding-right:1px;
+padding-left:5px;
+padding-bottom:2px;
+}
+
+QAbstractSpinBox::down-arrow {
+image:url('res/images/drkblue_downArrow_small.png');
+}
+
+/* DIALOG BOXES */
+
+QDialog .QTabWidget {
+border-bottom:1px solid #333;
+}
+
+QDialog .QTabWidget::pane {
+border: 1px solid #d7d7d7;
+}
+
+QDialog .QTabWidget QTabBar::tab {
+background-color:#F8F6F6;
+color:#333;
+padding-left:10px;
+padding-right:10px;
+padding-top:5px;
+padding-bottom:5px;
+border-top: 1px solid #d7d7d7;
+}
+
+QDialog .QTabWidget QTabBar::tab:first {
+border-left: 1px solid #d7d7d7;
+}
+
+QDialog .QTabWidget QTabBar::tab:last {
+border-right: 1px solid #d7d7d7;
+}
+
+QDialog .QTabWidget QTabBar::tab:selected, QDialog .QTabWidget QTabBar::tab:hover {
+background-color:#ffffff;
+color:#333;
+}
+
+QDialog .QTabWidget .QWidget {
+background-color:#fff;
+color:#333;
+}
+
+QDialog .QTabWidget .QWidget QAbstractSpinBox {
+min-height:15px;
+}
+
+QDialog .QTabWidget .QWidget QAbstractSpinBox::down-button {
+width:15px;
+}
+
+QDialog .QTabWidget .QWidget QAbstractSpinBox::up-button {
+width:15px;
+}
+
+QDialog .QTabWidget .QWidget QComboBox {
+min-height:15px;
+}
+
+QDialog QWidget { /* Remove Annoying Focus Rectangle */
+outline: 0;
+} 
+
+/* To-Do: moar comments on how all this stuff above works */
 
 /* END GLOBAL STYLES ******/
 /**************************/
 
 
+QDialog#RPCConsole { /* RPC Console Dialog Box */
+background-color:#F8F6F6;
+}
+
+QDialog#RPCConsole .QGroupBox #line { /* Network In Line */
+background-color:#00ff00;
+}
+
+QDialog#RPCConsole .QGroupBox #line_2 { /* Network Out Line */
+background:#ff0000;
+}
+
+QDialog#OpenURIDialog { /* Open URI Dialog Box */
+background-color:#F8F6F6;
+}
+
+QDialog#OpenURIDialog QLabel#label { /* URI Label */
+font-weight:bold;
+}
+
+QDialog#OpenURIDialog QPushButton#selectFileButton { /* ... Button */
+padding-left:10px;
+padding-right:10px;
+background-color:#959595;
+}
+
+QDialog#SignVerifyMessageDialog { /* Sign / Verify Message Dialog Box */
+background-color:#F8F6F6;
+}
+
+QDialog#SignVerifyMessageDialog QPushButton#addressBookButton_SM { /* Address Book Button */
+/* qproperty-icon: url("res/icons/drkblue_address-book.png"); */
+background-color:transparent;
+padding-left:10px;
+padding-right:10px;
+}
+
+QDialog#SignVerifyMessageDialog QPlainTextEdit { /* Message Signing Text */
+border:1px solid #82C3E6;
+background-color:#fff;
+}
+
+QDialog#SignVerifyMessageDialog QPushButton#pasteButton_SM { /* Paste Button */
+qproperty-icon: url("res/icons/drkblue_editpaste.png");
+background-color:transparent;
+padding-left:15px;
+}
+
+QDialog#SignVerifyMessageDialog QLineEdit:!focus { /* Font Hack */
+font-size:10px;
+}
+
+QDialog#SignVerifyMessageDialog QPushButton#copySignatureButton_SM { /* Copy Button */
+qproperty-icon: url("res/icons/drkblue_editcopy.png");
+background-color:transparent;
+padding-left:10px;
+padding-right:10px;
+}
+
+QDialog#SignVerifyMessageDialog QPushButton#clearButton_SM { /* Clear Button */
+background-color:transparent;
+color:#616161;
+padding-left:10px;
+padding-right:10px;
+}
+
+QDialog#SignVerifyMessageDialog QPushButton#addressBookButton_VM { /* Verify Message - Address Book Button */
+/* qproperty-icon: url("res/icons/drkblue_address-book.png"); */
+background-color:transparent;
+padding-left:10px;
+padding-right:10px;
+}
+
+QDialog#SignVerifyMessageDialog QPushButton#clearButton_VM { /* Verify Message - Clear Button */
+background-color:transparent;
+color:#616161;
+padding-left:10px;
+padding-right:10px;
+}
+
+
+/* OVERVIEW */
 
 QWidget .QFrame#frame { /* Wallet Balance */
 
@@ -715,7 +898,7 @@ font-size:11px;
 }
 
 QStackedWidget#SendCoinsEntry .QFrame#SendCoins .QLabel#amountLabel {
-background-color:#6a6a6a;
+background-color:#6a6a6a; 
 }
 
 QStackedWidget#SendCoinsEntry .QValidatedLineEdit#payTo { /* Pay To Input Field */
@@ -745,13 +928,6 @@ qproperty-icon: url("res/icons/drkblue_remove.png");
 QStackedWidget#SendCoinsEntry .QLineEdit#addAsLabel { /* Pay To Input Field */
 }
 
-BitcoinAmountField * { /* Darkcoin Amount Field */
-/* outline:0;
-min-height:25px;
-font-size:12px;
-color:#6a6a6a;
-padding:3px; */
-}
 
 /* Coin Control Popup */
 
@@ -893,6 +1069,41 @@ width:20px;
 height:20px;
 }
 
+/* RECEIVE COINS */
+
+QWidget#ReceiveCoinsDialog .QFrame#frame2 .QLabel#label_2 { /* Label Label */
+background-color:#56ABD8;
+min-width:102px;
+color:#ffffff;
+font-weight:bold;
+font-size:11px;
+padding-right:5px;
+}
+
+QWidget#ReceiveCoinsDialog .QFrame#frame2 .QLabel#label { /* Amount Label */
+background-color:#6a6a6a;
+min-width:102px;
+color:#ffffff;
+font-weight:bold;
+font-size:11px;
+padding-right:5px;
+}
+
+QWidget#ReceiveCoinsDialog .QFrame#frame2 .QLabel#label_3 { /* Message Label */
+background-color:#56ABD8;
+min-width:102px;
+color:#ffffff;
+font-weight:bold;
+font-size:11px;
+padding-right:5px;
+}
+
+QWidget#ReceiveCoinsDialog .QFrame#frame .QLabel#label_6 { /* Requested Payments History Label */
+color:#3398cc;
+font-weight:bold;
+font-size:14px;
+}
+
 /* TRANSACTIONS PAGE */
 
 TransactionView QLineEdit { /* Address Filter */
@@ -907,5 +1118,8 @@ margin-bottom:1px;
 margin-right:1px;
 }
 
+TransactionView QCalendarWidget {
+background-color:#fff;
+}
 
 
