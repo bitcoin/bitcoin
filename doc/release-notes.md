@@ -25,4 +25,4 @@ which was released open source on Sep/25/2014.
 These release are considered obsolete. Old changelogs can be found here:
 
 - [v0.10.x](release-notes/release-notes-0.10.0.md) released Sep/25/2014
-- [v0. 9.x](release-notes/release-notes-0.9.0.md) released Mar/13/2014
+- [v0.9.x](release-notes/release-notes-0.9.0.md) released Mar/13/2014
