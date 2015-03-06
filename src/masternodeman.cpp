@@ -436,6 +436,9 @@ CMasternode* CMasternodeMan::GetMasternodeByRank(int nRank, int64_t nBlockHeight
 
 void CMasternodeMan::ProcessMasternodeConnections()
 {
+    //we don't care about this for testing
+    if(TestNet() || RegTest()) return;
+
     LOCK(cs_vNodes);
 
     if(!darkSendPool.pSubmittedToMasternode) return;
