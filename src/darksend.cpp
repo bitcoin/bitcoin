@@ -40,7 +40,7 @@ CActiveMasternode activeMasternode;
 int RequestedMasterNodeList = 0;
 
 /* *** BEGIN DARKSEND MAGIC - DARKCOIN **********
-    Copyright 2014-2015, Darkcoin Developers
+    Copyright (c) 2014-2015, Darkcoin Developers
         eduffield - evan@darkcoin.io
         udjinm6   - udjinm6@darkcoin.io
 */
