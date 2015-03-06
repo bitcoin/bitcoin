@@ -125,7 +125,7 @@ class CDarksendQueue
 {
 public:
     CTxIn vin;
-    int64_t time; 
+    int64_t time;
     int nDenom;
     bool ready; //ready for submit
     std::vector<unsigned char> vchSig;
@@ -484,7 +484,7 @@ public:
         return true;
     }
 
-    /// Add signature to a vin 
+    /// Add signature to a vin
     bool AddScriptSig(const CTxIn& newVin);
     /// Check that all inputs are signed. (Are all inputs signed?)
     bool SignaturesComplete();
