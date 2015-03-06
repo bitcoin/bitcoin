@@ -10,6 +10,7 @@ class CBlockIndex;
 class CTransaction;
 
 #include "sync.h"
+#include "tinyformat.h"
 #include "uint256.h"
 #include "util.h"
 

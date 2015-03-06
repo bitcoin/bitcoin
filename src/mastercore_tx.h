@@ -6,8 +6,11 @@ class CMPMetaDEx;
 
 #include "mastercore.h"
 
+class CTransaction;
+
+#include "amount.h"
 #include "uint256.h"
-#include "util.h"
+#include "utilstrencodings.h"
 
 #include <stdint.h>
 #include <stdio.h>

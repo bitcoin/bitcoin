@@ -6,7 +6,7 @@
 class CBlockIndex;
 
 #include "uint256.h"
-#include "util.h"
+#include "utiltime.h"
 
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>

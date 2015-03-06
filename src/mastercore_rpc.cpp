@@ -11,12 +11,15 @@
 #include "mastercore_tx.h"
 #include "mastercore_version.h"
 
-#include "core.h"
+#include "amount.h"
 #include "init.h"
 #include "main.h"
+#include "primitives/block.h"
+#include "primitives/transaction.h"
 #include "rpcserver.h"
+#include "tinyformat.h"
 #include "uint256.h"
-#include "util.h"
+#include "utilstrencodings.h"
 #include "wallet.h"
 
 #include <boost/algorithm/string.hpp>
@@ -30,7 +33,6 @@
 #include <map>
 #include <stdexcept>
 #include <string>
-#include <vector>
 
 using boost::algorithm::token_compress_on;
 using boost::to_string;
@@ -38,6 +40,7 @@ using boost::to_string;
 using std::map;
 using std::runtime_error;
 using std::string;
+using std::vector;
 
 using namespace json_spirit;
 using namespace mastercore;
@@ -398,7 +401,7 @@ if (fHelp || params.size() < 2 || params.size() > 5)
 
   //some sanity checking of the data supplied?
   uint256 newTX;
-  vector<unsigned char> data = ParseHex(hexTransaction);
+  std::vector<unsigned char> data = ParseHex(hexTransaction);
   int rc = ClassB_send(fromAddress, toAddress, redeemAddress, data, newTX, referenceAmount);
 
   if (0 != rc)

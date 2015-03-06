@@ -7,7 +7,9 @@
 #include "mastercore_errors.h"
 #include "mastercore_tx.h"
 
-#include "util.h"
+#include "main.h"
+#include "tinyformat.h"
+#include "uint256.h"
 
 #include <boost/algorithm/string.hpp>
 #include <boost/format.hpp>

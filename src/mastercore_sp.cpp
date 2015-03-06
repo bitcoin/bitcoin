@@ -6,6 +6,7 @@
 
 #include "main.h"
 #include "uint256.h"
+#include "utiltime.h"
 
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>

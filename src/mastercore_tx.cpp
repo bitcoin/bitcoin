@@ -8,7 +8,8 @@
 #include "mastercore_sp.h"
 
 #include "alert.h"
-#include "util.h"
+#include "amount.h"
+#include "utiltime.h"
 
 #include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>

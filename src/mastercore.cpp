@@ -27,9 +27,16 @@
 #include "chainparams.h"
 #include "coincontrol.h"
 #include "init.h"
+#include "primitives/block.h"
+#include "primitives/transaction.h"
+#include "script/script.h"
+#include "script/standard.h"
 #include "sync.h"
+#include "tinyformat.h"
 #include "uint256.h"
 #include "util.h"
+#include "utilstrencodings.h"
+#include "utiltime.h"
 #include "wallet.h"
 
 #include <boost/algorithm/string.hpp>

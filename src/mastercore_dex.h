@@ -4,6 +4,7 @@
 #include "mastercore.h"
 
 #include "main.h"
+#include "tinyformat.h"
 #include "uint256.h"
 
 #include <boost/format.hpp>
