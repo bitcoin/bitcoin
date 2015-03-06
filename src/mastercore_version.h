@@ -7,13 +7,13 @@
 #define OMNICORE_VERSION_MAJOR   9
 
 // Increase with every non-consensus affecting feature
-#define OMNICORE_VERSION_MINOR   1
+#define OMNICORE_VERSION_MINOR   2
 
 // Increase with every patch, which is not a feature or consensus affecting
 #define OMNICORE_VERSION_PATCH   0
 
 // Use "-dev" for development versions, switch to "-rel" for tags
-#define OMNICORE_VERSION_TYPE    "-rel"
+#define OMNICORE_VERSION_TYPE    "-dev"
 
 
 //! Omni Core client version
