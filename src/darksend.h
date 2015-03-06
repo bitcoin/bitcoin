@@ -62,7 +62,7 @@ int GetInputDarksendRounds(CTxIn in, int rounds=0);
 class CTxDSIn : public CTxIn
 {
 public:
-    bool fHasSig;
+    bool fHasSig; // flag to indicate if signed
 
     CTxDSIn(const CTxIn& in)
     {
@@ -86,7 +86,7 @@ public:
     CTransaction collateral;
     std::vector<CTxOut> vout;
     CTransaction txSupporting;
-    int64_t addedTime;
+    int64_t addedTime; // time in UTC milliseconds
 
     CDarkSendEntry()
     {
@@ -125,7 +125,7 @@ class CDarksendQueue
 {
 public:
     CTxIn vin;
-    int64_t time;
+    int64_t time; 
     int nDenom;
     bool ready; //ready for submit
     std::vector<unsigned char> vchSig;
@@ -133,7 +133,7 @@ public:
     //information used for the anonymous relay system
     int nBlockHeight;
     std::vector<unsigned char> vchRelaySig;
-    std::string strSharedKey;
+    std::string strSharedKey; // shared key
 
     CDarksendQueue()
     {
@@ -173,6 +173,7 @@ public:
         return false;
     }
 
+    /// Get the protocol version
     bool GetProtocolVersion(int &protocolVersion)
     {
         CMasternode* pmn = mnodeman.Find(vin);
@@ -184,6 +185,7 @@ public:
         return false;
     }
 
+    /// Set the 'strSharedKey' 
     void SetSharedKey(std::string strSharedKey);
 
     /** Sign this Darksend transaction
@@ -224,9 +226,13 @@ public:
 class CDarkSendSigner
 {
 public:
+    /// Is the inputs associated with this public key? (and there is 1000 DRK - checking if valid masternode)
     bool IsVinAssociatedWithPubkey(CTxIn& vin, CPubKey& pubkey);
+    /// Set the private/public key values, returns true if successful
     bool SetKey(std::string strSecret, std::string& errorMessage, CKey& key, CPubKey& pubkey);
+    /// Sign the message, returns true if successful
     bool SignMessage(std::string strMessage, std::string& errorMessage, std::vector<unsigned char>& vchSig, CKey key);
+    /// Verify the message, returns true if succcessful
     bool VerifyMessage(CPubKey pubkey, std::vector<unsigned char>& vchSig, std::string strMessage, std::string& errorMessage);
 };
 
@@ -235,18 +241,22 @@ public:
 class CDSAnonTx
 {
 public:
-    std::vector<CTxDSIn> vin;
-    std::vector<CTxOut> vout;
+    std::vector<CTxDSIn> vin; // collection of inputs
+    std::vector<CTxOut> vout; // collection of outputs
 
+    /// Is the transaction valid? (TODO: not defined - remove? or code?)
     bool IsTransactionValid();
+    /// Add an output
     bool AddOutput(const CTxOut out);
+    /// Add an input 
     bool AddInput(const CTxIn in);
-
     /// Add Signature
     bool AddSig(const CTxIn in);
+    /// Count the number of entries in the transaction
     int CountEntries() {return (int)vin.size() + (int)vout.size();}
 };
 
+/// TODO: not defined - remove?
 void ConnectToDarkSendMasterNodeWinner();
 
 
@@ -256,21 +266,17 @@ class CDarksendPool
 {
 public:
 
-    // clients entries
-    std::vector<CDarkSendEntry> myEntries;
-    // Masternode entries
-    std::vector<CDarkSendEntry> entries;
-    // the finalized transaction ready for signing
-    CTransaction finalTransaction;
-    // anonymous inputs/outputs
-    CDSAnonTx anonTx;
-    bool fSubmitAnonymousFailed;
-    int nCountAttempts;
+    std::vector<CDarkSendEntry> myEntries; // clients entries
+    std::vector<CDarkSendEntry> entries; // Masternode entries
+    CTransaction finalTransaction; // the finalized transaction ready for signing
+    CDSAnonTx anonTx; // anonymous inputs/outputs
+    bool fSubmitAnonymousFailed; // initally false, will change to true if when attempts > 5
+    int nCountAttempts; // number of submitted attempts
 
-    int64_t lastTimeChanged; // time in UTC milliseconds
-    int64_t lastAutoDenomination; // Note: possibly not used TODO: Delete?
+    int64_t lastTimeChanged; // last time the 'state' changed, in UTC milliseconds
+    int64_t lastAutoDenomination; // TODO; not used - Delete?
 
-    unsigned int state;
+    unsigned int state; // should be one of the POOL_STATUS_XXX values
     unsigned int entriesCount;
     unsigned int lastEntryAccepted;
     unsigned int countEntriesAccepted;
@@ -390,21 +396,25 @@ public:
         }
     }
 
+    /// Get the time the last entry was accepted (time in UTC milliseconds)
     int GetLastEntryAccepted() const
     {
         return lastEntryAccepted;
     }
 
+    /// Get the count of the accepted entries
     int GetCountEntriesAccepted() const
     {
         return countEntriesAccepted;
     }
 
+    /// Get the client's transaction count
     int GetMyTransactionCount() const
     {
         return myEntries.size();
     }
 
+    // Set the 'state' value, with some logging and capturing when the state changed
     void UpdateState(unsigned int newState)
     {
         if (fMasterNode && (newState == POOL_STATUS_ERROR || newState == POOL_STATUS_SUCCESS)){
@@ -422,6 +432,7 @@ public:
         state = newState;
     }
 
+    /// Get the maximum number of transactions for the pool
     int GetMaxPoolTransactions()
     {
         //if we're on testnet, just use two transactions per merge
@@ -473,7 +484,7 @@ public:
         return true;
     }
 
-    /// Add signature to a vin
+    /// Add signature to a vin 
     bool AddScriptSig(const CTxIn& newVin);
     /// Check that all inputs are signed. (Are all inputs signed?)
     bool SignaturesComplete();
