@@ -63,6 +63,8 @@ private:
     std::map<COutPoint, int64_t> mWeAskedForMasternodeListEntry;
 
 public:
+    // keep track of dsq count to prevent masternodes from gaming darksend queue
+    int64_t nDsqCount;
 
     IMPLEMENT_SERIALIZE
     (
@@ -77,6 +79,7 @@ public:
                 READWRITE(mAskedUsForMasternodeList);
                 READWRITE(mWeAskedForMasternodeList);
                 READWRITE(mWeAskedForMasternodeListEntry);
+                READWRITE(nDsqCount);
         }
     )
 
