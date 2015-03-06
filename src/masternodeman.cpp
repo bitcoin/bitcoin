@@ -30,7 +30,7 @@ struct CompareValueOnly
 
 CMasternodeDB::CMasternodeDB()
 {
-    pathMN = GetDataDir() / "masternodes.dat";
+    pathMN = GetDataDir() / "mncache.dat";
 }
 
 bool CMasternodeDB::Write(const CMasternodeMan& mnodemanToSave)
@@ -60,7 +60,7 @@ bool CMasternodeDB::Write(const CMasternodeMan& mnodemanToSave)
     FileCommit(fileout);
     fileout.fclose();
 
-    LogPrintf("Written info to masternodes.dat  %dms\n", GetTimeMillis() - nStart);
+    LogPrintf("Written info to mncache.dat  %dms\n", GetTimeMillis() - nStart);
     LogPrintf("  %s\n", mnodemanToSave.ToString());
 
     return true;
@@ -131,7 +131,7 @@ CMasternodeDB::ReadResult CMasternodeDB::Read(CMasternodeMan& mnodemanToLoad)
     }
 
     mnodemanToLoad.CheckAndRemove(); // clean out expired
-    LogPrintf("Loaded info from masternodes.dat  %dms\n", GetTimeMillis() - nStart);
+    LogPrintf("Loaded info from mncache.dat  %dms\n", GetTimeMillis() - nStart);
     LogPrintf("  %s\n", mnodemanToLoad.ToString());
 
     return Ok;
@@ -144,17 +144,17 @@ void DumpMasternodes()
     CMasternodeDB mndb;
     CMasternodeMan tempMnodeman;
 
-    LogPrintf("Verifying masternodes.dat format...\n");
+    LogPrintf("Verifying mncache.dat format...\n");
     CMasternodeDB::ReadResult readResult = mndb.Read(tempMnodeman);
     // there was an error and it was not an error on file openning => do not proceed
     if (readResult == CMasternodeDB::FileError)
-        LogPrintf("Missing masternode list file - masternodes.dat, will try to recreate\n");
+        LogPrintf("Missing masternode cache file - mncache.dat, will try to recreate\n");
     else if (readResult != CMasternodeDB::Ok)
     {
-        LogPrintf("Masternode list file masternodes.dat has invalid format\n");
+        LogPrintf("Masternode cache file mncache.dat has invalid format\n");
         return;
     }
-    LogPrintf("Writting info to masternodes.dat...\n");
+    LogPrintf("Writting info to mncache.dat...\n");
     mndb.Write(mnodeman);
 
     LogPrintf("Masternode dump finished  %dms\n", GetTimeMillis() - nStart);
