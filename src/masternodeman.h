@@ -26,7 +26,7 @@ class CMasternodeMan;
 extern CMasternodeMan mnodeman;
 void DumpMasternodes();
 
-/** Access to the MN database (masternodes.dat) 
+/** Access to the MN database (mncache.dat)
  */
 class CMasternodeDB
 {
