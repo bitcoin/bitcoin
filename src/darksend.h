@@ -316,9 +316,6 @@ public:
     std::string strMasternodeSharedKey;
     bool fResentInputsOutputs;
 
-    //incremented whenever a DSQ comes through
-    int64_t nDsqCount;
-
     CDarksendPool()
     {
         /* Darksend uses collateral addresses to trust parties entering the pool
@@ -329,7 +326,6 @@ public:
         unitTest = false;
         txCollateral = CTransaction();
         minBlockSpacing = 1;
-        nDsqCount = 0;
         lastNewBlock = 0;
         strMasternodeSharedKey = "";
         fResentInputsOutputs = false;
