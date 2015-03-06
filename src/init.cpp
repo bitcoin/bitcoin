@@ -1152,14 +1152,14 @@ bool AppInit2(boost::thread_group& threadGroup)
     //CAddress addr;
     //ConnectNode(addr, strNode.c_str(), true);
 
-    uiInterface.InitMessage(_("Loading masternode list..."));
+    uiInterface.InitMessage(_("Loading masternode cache..."));
 
     CMasternodeDB mndb;
     CMasternodeDB::ReadResult readResult = mndb.Read(mnodeman);
     if (readResult == CMasternodeDB::FileError)
-        LogPrintf("Missing masternode list file - masternodes.dat, will try to recreate\n");
+        LogPrintf("Missing masternode cache file - mncache.dat, will try to recreate\n");
     else if (readResult != CMasternodeDB::Ok)
-        LogPrintf("Masternode list file masternodes.dat has invalid format\n");
+        LogPrintf("Masternode cache file mncache.dat has invalid format\n");
 
     fMasterNode = GetBoolArg("-masternode", false);
     if(fMasterNode) {

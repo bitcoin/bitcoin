@@ -40,7 +40,7 @@ CActiveMasternode activeMasternode;
 int RequestedMasterNodeList = 0;
 
 /* *** BEGIN DARKSEND MAGIC - DARKCOIN **********
-    Copyright 2014-2015, Darkcoin Developers
+    Copyright (c) 2014-2015, Darkcoin Developers
         eduffield - evan@darkcoin.io
         udjinm6   - udjinm6@darkcoin.io
 */
@@ -1103,7 +1103,7 @@ void CDarksendPool::CheckForCompleteQueue(){
     // which is the active state right before merging the transaction
     //
     if(state == POOL_STATUS_QUEUE && sessionUsers == GetMaxPoolTransactions()) {
-        printf("Q ready");
+        LogPrintf("Q ready");
         UpdateState(POOL_STATUS_ACCEPTING_ENTRIES);
 
         if(strMasternodeSharedKey == ""){
@@ -1433,7 +1433,7 @@ bool CDarksendPool::StatusUpdate(int newState, int newEntriesCount, int newAccep
             sessionFoundMasternode = true;
             //wait for other users. Masternode will report when ready
             UpdateState(POOL_STATUS_QUEUE);
-            printf("Updated 1\n");
+            LogPrintf("Updated 1\n");
         } else if (newAccepted == 0 && sessionID == 0 && !sessionFoundMasternode) {
             LogPrintf("CDarksendPool::StatusUpdate - entry not accepted by Masternode \n");
             UnlockCoins();
@@ -2070,7 +2070,7 @@ bool CDarksendPool::IsCompatibleWithSession(int64_t nDenom, CTransaction txColla
         }
 
         UpdateState(POOL_STATUS_QUEUE);
-        printf("Updated 2\n");
+        LogPrintf("Updated 2\n");
         vecSessionCollateral.push_back(txCollateral);
         return true;
     }
