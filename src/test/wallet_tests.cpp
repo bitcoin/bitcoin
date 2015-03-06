@@ -305,4 +305,51 @@ BOOST_AUTO_TEST_CASE(coin_selection_tests)
     empty_wallet();
 }
 
+//BOOST_AUTO_TEST_CASE(encrypt_wallet_tests)
+//{
+//    SecureString strWalletPass;
+//    strWalletPass.reserve(100);
+//    strWalletPass = "test";
+//    
+//    std::string dbFile = strprintf("test_bitcoin_logdb_%lu_%i.logdb", (unsigned long)GetTime(), (int)(GetRand(100000)));
+//    
+//    bool fFirstRun = true;
+//    CWallet *newWallet = new CWallet(dbFile);
+//    newWallet->LoadWallet(fFirstRun);
+//    
+//    CPubKey newDefaultKey;
+//    {
+//        LOCK(newWallet->cs_wallet);
+//
+//        newDefaultKey = newWallet->GenerateNewKey();
+//        newWallet->SetDefaultKey(newDefaultKey);
+//        newWallet->TopUpKeyPool(10); //add 10 keys
+//        
+//        BOOST_CHECK(newWallet->IsLocked() == false);
+//        BOOST_CHECK(newWallet->EncryptWallet(strWalletPass));
+//        BOOST_CHECK(newWallet->IsLocked() == true);
+//
+//        BOOST_CHECK(newWallet->Unlock(strWalletPass));
+//        BOOST_CHECK(newWallet->IsLocked() == false);
+//        
+//        BOOST_CHECK(newWallet->Lock());
+//        BOOST_CHECK(newWallet->IsLocked() == true);
+//        
+//        BOOST_CHECK_THROW(newWallet->GenerateNewKey(), std::runtime_error); // must trigger a assertion because wallet is locked
+//        BOOST_CHECK(newWallet->Unlock(strWalletPass));
+//        BOOST_CHECK_NO_THROW(newWallet->GenerateNewKey()); // must trigger a assertion because wallet is locked
+//    }
+//    
+//    delete newWallet;
+//
+//    newWallet = new CWallet(dbFile);
+//    newWallet->LoadWallet(fFirstRun);
+//    {
+//        LOCK(newWallet->cs_wallet);
+//        BOOST_CHECK(newWallet->vchDefaultKey == newDefaultKey); // after the encryption, default key must still be readable
+//    }
+//    delete newWallet;
+//    
+//}
+
 BOOST_AUTO_TEST_SUITE_END()

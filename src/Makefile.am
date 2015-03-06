@@ -99,6 +99,7 @@ BITCOIN_CORE_H = \
   keystore.h \
   leveldbwrapper.h \
   limitedmap.h \
+  logdb.h \
   main.h \
   merkleblock.h \
   miner.h \
@@ -198,6 +199,7 @@ libbitcoin_wallet_a_CPPFLAGS = $(BITCOIN_INCLUDES)
 libbitcoin_wallet_a_SOURCES = \
   db.cpp \
   crypter.cpp \
+  logdb.cpp \
   rpcdump.cpp \
   rpcwallet.cpp \
   wallet.cpp \

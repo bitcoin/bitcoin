@@ -7,9 +7,10 @@
 #define BITCOIN_WALLETDB_H
 
 #include "amount.h"
-#include "db.h"
 #include "key.h"
 #include "keystore.h"
+#include "logdb.h"
+#include "util.h"
 
 #include <list>
 #include <stdint.h>
@@ -72,11 +73,11 @@ public:
     }
 };
 
-/** Access to the wallet database (wallet.dat) */
-class CWalletDB : public CDB
+/** Access to the wallet database */
+class CWalletDB : public CLogDB
 {
 public:
-    CWalletDB(const std::string& strFilename, const char* pszMode = "r+", bool fFlushOnClose = true) : CDB(strFilename, pszMode, fFlushOnClose)
+    CWalletDB(const std::string& strFilename, const char* pszMode = "r+", bool fFlushOnClose = true) : CLogDB( (GetDataDir() / strFilename).string(), (!strchr(pszMode, '+') && !strchr(pszMode, 'w')))
     {
     }
 
@@ -109,8 +110,6 @@ public:
     bool WritePool(int64_t nPool, const CKeyPool& keypool);
     bool ErasePool(int64_t nPool);
 
-    bool WriteMinVersion(int nVersion);
-
     bool ReadAccount(const std::string& strAccount, CAccount& account);
     bool WriteAccount(const std::string& strAccount, const CAccount& account);
 
@@ -120,23 +119,25 @@ public:
     bool EraseDestData(const std::string &address, const std::string &key);
 
     bool WriteAccountingEntry(const CAccountingEntry& acentry);
-    CAmount GetAccountCreditDebit(const std::string& strAccount);
     void ListAccountCreditDebit(const std::string& strAccount, std::list<CAccountingEntry>& acentries);
 
     DBErrors ReorderTransactions(CWallet* pwallet);
     DBErrors LoadWallet(CWallet* pwallet);
     DBErrors FindWalletTx(CWallet* pwallet, std::vector<uint256>& vTxHash, std::vector<CWalletTx>& vWtx);
-    DBErrors ZapWalletTx(CWallet* pwallet, std::vector<CWalletTx>& vWtx);
-    static bool Recover(CDBEnv& dbenv, std::string filename, bool fOnlyKeys);
-    static bool Recover(CDBEnv& dbenv, std::string filename);
-
+    bool ZapWalletTx(CWallet* pwallet, std::vector<CWalletTx>& vWtx);
+    
+    DBErrors RewriteAndReplace(const std::string& walletFile); //rewrites and compacts database, will replace existing wallet file
+    
+    static bool Recover(std::string filename, bool fOnlyKeys);
+    static bool Recover(std::string filename);
+    
+    static bool Verify(std::string filename, bool salvage);
+    
 private:
     CWalletDB(const CWalletDB&);
     void operator=(const CWalletDB&);
 
     bool WriteAccountingEntry(const uint64_t nAccEntryNum, const CAccountingEntry& acentry);
 };
-
-bool BackupWallet(const CWallet& wallet, const std::string& strDest);
 
 #endif // BITCOIN_WALLETDB_H
