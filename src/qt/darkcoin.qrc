@@ -51,12 +51,13 @@
     </qresource>	    
     <qresource prefix="/images">
         <file alias="about">res/images/about.png</file>
-        <file alias="drkblue_walletFrame_bg">res/images/drkblue_walletFrame_bg.png</file>
-        <file alias="drkblue_downArrow">res/images/drkblue_downArrow.png</file>
-        <file alias="drkblue_upArrow_small">res/images/drkblue_upArrow_small.png</file>
-        <file alias="drkblue_downArrow_small">res/images/drkblue_downArrow_small.png</file>
         <file alias="darkcoin_logo_horizontal">res/images/darkcoin_logo_horizontal.png</file>
+        <file alias="drkblue_downArrow">res/images/drkblue_downArrow.png</file>
+        <file alias="drkblue_downArrow_small">res/images/drkblue_downArrow_small.png</file>
+        <file alias="drkblue_upArrow_small">res/images/drkblue_upArrow_small.png</file>
         <file alias="drkblue_qtreeview_selected">res/images/drkblue_qtreeview_selected.png</file>
+        <file alias="drkblue_walletFrame_bg">res/images/drkblue_walletFrame_bg.png</file>
+        <file alias="drkblue_walletFrame">res/images/drkblue_walletFrame.png</file>
         <file alias="splash">res/images/splash.png</file>
         <file alias="splash_testnet">res/images/splash_testnet.png</file>
     </qresource>
