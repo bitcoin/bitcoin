@@ -13,5 +13,16 @@ UniValue RPCConvertValues(const std::string& strMethod, const std::vector<std::s
  * as well as objects and arrays.
  */
 UniValue ParseNonRFCJSONValue(const std::string& strVal);
+/**
+ * Add new conversion to the JSON RPC conversion table
+ * @param method name of the method
+ * @param idx    0-based index of the paramter
+ */
+void RPCAddConversion(const std::string& method, int idx);
+
+/**
+ * Convert strings to command-specific RPC representation
+ **/
+UniValue RPCConvertValues(const std::string& strMethod, const std::vector<std::string>& strParams);
 
 #endif // BITCOIN_RPCCLIENT_H

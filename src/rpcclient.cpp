@@ -106,6 +106,10 @@ private:
 public:
     CRPCConvertTable();
 
+    void add(const std::string& method, int idx) {
+        members.insert(std::make_pair(method, idx));
+    }
+
     bool convert(const std::string& method, int idx) {
         return (members.count(std::make_pair(method, idx)) > 0);
     }
@@ -134,6 +138,12 @@ UniValue ParseNonRFCJSONValue(const std::string& strVal)
         !jVal.isArray() || jVal.size()!=1)
         throw runtime_error(string("Error parsing JSON:")+strVal);
     return jVal[0];
+}
+
+/** Add new conversion to the JSON RPC conversion table */
+void RPCAddConversion(const std::string& method, int idx)
+{
+    rpcCvtTable.add(method, idx);
 }
 
 /** Convert strings to command-specific RPC representation */
