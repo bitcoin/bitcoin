@@ -291,7 +291,8 @@ RES_IMAGES = \
   res/images/drkblue_walletFrame_bg.png \
   res/images/drkblue_walletFrame.png
 
-RES_CSS = $(wildcard res/css/*.css)  
+RES_CSS = \
+  res/css/drkblue.css
   
 RES_MOVIES = $(wildcard res/movies/spinner-*.png)
 
