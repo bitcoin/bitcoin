@@ -33,6 +33,7 @@
 #include <QDateTime>
 #include <QDesktopWidget>
 #include <QDragEnterEvent>
+#include <QFile>
 #include <QIcon>
 #include <QLabel>
 #include <QListWidget>
@@ -48,7 +49,6 @@
 #include <QTimer>
 #include <QToolBar>
 #include <QVBoxLayout>
-#include <QtCore/QFile>
 
 #if QT_VERSION < 0x050000
 #include <QUrl>
