@@ -22,6 +22,7 @@
 #include <QCheckBox>
 #include <QCursor>
 #include <QDialogButtonBox>
+#include <QFile>
 #include <QFlags>
 #include <QIcon>
 #include <QSettings>
