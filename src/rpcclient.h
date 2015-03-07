@@ -10,6 +10,16 @@
 #include "json/json_spirit_utils.h"
 #include "json/json_spirit_writer_template.h"
 
+/**
+ * Add new conversion to the JSON RPC conversion table
+ * @param method name of the method
+ * @param idx    0-based index of the paramter
+ */
+void RPCAddConversion(const std::string& method, int idx);
+
+/**
+ * Convert strings to command-specific RPC representation
+ **/
 json_spirit::Array RPCConvertValues(const std::string& strMethod, const std::vector<std::string>& strParams);
 
 #endif // BITCOIN_RPCCLIENT_H

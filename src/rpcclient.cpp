@@ -98,6 +98,10 @@ private:
 public:
     CRPCConvertTable();
 
+    void add(const std::string& method, int idx) {
+        members.insert(std::make_pair(method, idx));
+    }
+
     bool convert(const std::string& method, int idx) {
         return (members.count(std::make_pair(method, idx)) > 0);
     }
@@ -115,6 +119,12 @@ CRPCConvertTable::CRPCConvertTable()
 }
 
 static CRPCConvertTable rpcCvtTable;
+
+/** Add new conversion to the JSON RPC conversion table */
+void RPCAddConversion(const std::string& method, int idx)
+{
+    rpcCvtTable.add(method, idx);
+}
 
 /** Convert strings to command-specific RPC representation */
 Array RPCConvertValues(const std::string &strMethod, const std::vector<std::string> &strParams)
