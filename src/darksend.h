@@ -63,6 +63,7 @@ class CTxDSIn : public CTxIn
 {
 public:
     bool fHasSig; // flag to indicate if signed
+    int nSentTimes; //times we've sent this anonymously 
 
     CTxDSIn(const CTxIn& in)
     {
@@ -70,9 +71,25 @@ public:
         scriptSig = in.scriptSig;
         prevPubKey = in.prevPubKey;
         nSequence = in.nSequence;
+        nSentTimes = 0;
     }
 };
 
+/** Holds an Darksend output
+ */
+class CTxDSOut : public CTxOut
+{
+public:
+    int nSentTimes; //times we've sent this anonymously 
+
+    CTxDSOut(const CTxOut& out)
+    {
+        nValue = out.nValue;
+        nRounds = out.nRounds;
+        scriptPubKey = out.scriptPubKey;
+        nSentTimes = 0;
+    }
+};
 
 /** A clients transaction in the Darksend pool
  *  -- holds the input/output mapping for each user in the pool
@@ -81,10 +98,10 @@ class CDarkSendEntry
 {
 public:
     bool isSet;
-    std::vector<CTxIn> sev;
+    std::vector<CTxDSIn> sev;
+    std::vector<CTxDSOut> vout;
     int64_t amount;
     CTransaction collateral;
-    std::vector<CTxOut> vout;
     CTransaction txSupporting;
     int64_t addedTime; // time in UTC milliseconds
 
@@ -100,8 +117,12 @@ public:
     {
         if(isSet){return false;}
 
-        sev = vinIn;
-        vout = voutIn;
+        BOOST_FOREACH(const CTxIn& in, vinIn)
+            sev.push_back(in);
+
+        BOOST_FOREACH(const CTxOut& out, voutIn)
+            vout.push_back(out);
+
         amount = amountIn;
         collateral = collateralIn;
         isSet = true;
@@ -314,7 +335,7 @@ public:
     vector<unsigned char> vchMasternodeRelaySig;
     int nMasternodeBlockHeight;
     std::string strMasternodeSharedKey;
-    bool fResentInputsOutputs;
+    int nTrickleInputsOutputs;
 
     CDarksendPool()
     {
@@ -328,7 +349,7 @@ public:
         minBlockSpacing = 1;
         lastNewBlock = 0;
         strMasternodeSharedKey = "";
-        fResentInputsOutputs = false;
+        nTrickleInputsOutputs = 0;
 
         SetNull();
     }
@@ -367,7 +388,7 @@ public:
     bool SetCollateralAddress(std::string strAddress);
     void Reset();
     bool Downgrade();
-    bool ResendMissingInputsOutputs();
+    bool TrickleInputsOutputs();
 
     void SetNull(bool clearEverything=false);
 
@@ -507,6 +528,8 @@ public:
     
     /// Get the denominations for a list of outputs (returns a bitshifted integer)
     int GetDenominations(const std::vector<CTxOut>& vout);
+    int GetDenominations(const std::vector<CTxDSOut>& vout);
+
     void GetDenominationsToString(int nDenom, std::string& strDenom);
 
     /// Get the denominations for a specific amount of darkcoin.
@@ -521,7 +544,7 @@ public:
     void RelayFinalTransaction(const int sessionID, const CTransaction& txNew);
     void RelaySignaturesAnon(std::vector<CTxIn>& vin);
     void RelayInAnon(std::vector<CTxIn>& vin, std::vector<CTxOut>& vout);
-    void RelayIn(const std::vector<CTxIn>& vin, const int64_t& nAmount, const CTransaction& txCollateral, const std::vector<CTxOut>& vout);
+    void RelayIn(const std::vector<CTxDSIn>& vin, const int64_t& nAmount, const CTransaction& txCollateral, const std::vector<CTxDSOut>& vout);
     void RelayStatus(const int sessionID, const int newState, const int newEntriesCount, const int newAccepted, const std::string error="");
     void RelayCompletedTransaction(const int sessionID, const bool error, const std::string errorMessage);
 };
