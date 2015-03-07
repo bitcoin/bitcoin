@@ -53,6 +53,7 @@ bool fReindex = false;
 bool fTxIndex = false;
 bool fIsBareMultisigStd = true;
 unsigned int nCoinCacheSize = 5000;
+uintmax_t nPrune = 0;
 
 
 /** Fees smaller than this (in satoshi) are considered zero fee (for relaying and mining) */
@@ -67,6 +68,7 @@ struct COrphanTx {
 map<uint256, COrphanTx> mapOrphanTransactions;
 map<uint256, set<uint256> > mapOrphanTransactionsByPrev;
 void EraseOrphansFor(NodeId peer);
+set<int> setDataFilePrunable, setUndoFilePrunable;
 
 /**
  * Returns true if there are nRequired or more blocks of minVersion or above
@@ -2816,6 +2818,80 @@ bool TestBlockValidity(CValidationState &state, const CBlock& block, CBlockIndex
 
 
 
+void ClearBlockFileInfo(int nFile)
+{
+    LOCK(cs_main);
+    if (vinfoBlockFile[nFile].nUndoSize)
+        vinfoBlockFile[nFile].nSize = 0;
+    else
+        vinfoBlockFile[nFile].SetNull();
+    setDirtyFileInfo.insert(nFile);
+}
+
+void ClearUndoFileInfo(int nFile)
+{
+    LOCK(cs_main);
+    if (vinfoBlockFile[nFile].nSize)
+        vinfoBlockFile[nFile].nUndoSize = 0;
+    else
+        vinfoBlockFile[nFile].SetNull();
+    setDirtyFileInfo.insert(nFile);
+}
+
+enum BlockOrUndo {
+    BLOCK = false,
+    UNDO = true
+};
+
+bool RemoveDiskFile(int nFile, BlockOrUndo blockOrUndo)
+{
+    LOCK(cs_main);
+    CDiskBlockPos pos(nFile, 0);
+    const char* prefix = blockOrUndo ? "rev" : "blk";
+    if (boost::filesystem::remove(GetBlockPosFilename(pos, prefix))) {
+        LogPrintf("File %s removed\n", GetBlockPosFilename(pos, prefix));
+        blockOrUndo ? ClearUndoFileInfo(nFile) : ClearBlockFileInfo(nFile);
+        return true;
+    }
+    LogPrintf("Error removing file %s\n", GetBlockPosFilename(pos, prefix));
+    return false;
+}
+
+bool RemoveBlockFile(int nFile)
+{
+    return RemoveDiskFile(nFile, BLOCK);
+}
+
+bool RemoveUndoFile(int nFile)
+{
+    return RemoveDiskFile(nFile, UNDO);
+}
+
+
+
+bool PruneBlockFiles()
+{
+    if (!CheckBlockFiles())
+        return false;
+    if (setDataFilePrunable.empty() && setUndoFilePrunable.empty()) {
+        LogPrintf("There's nothing to prune.\n");
+        return false;
+    }
+    bool fFileRemoved = false;
+    int dataPrunable = *setDataFilePrunable.begin(), undoPrunable = *setUndoFilePrunable.begin();
+    if (dataPrunable < undoPrunable) {
+        fFileRemoved = RemoveBlockFile(dataPrunable);
+    } else if (undoPrunable < dataPrunable) {
+        fFileRemoved = RemoveUndoFile(undoPrunable);
+    } else
+        fFileRemoved = (RemoveBlockFile(dataPrunable) | RemoveUndoFile(undoPrunable));
+    if (fFileRemoved) {
+        CheckBlockFiles();
+        return true;
+    }
+    return false;
+}
+
 bool AbortNode(const std::string &strMessage, const std::string &userMessage) {
     strMiscWarning = strMessage;
     LogPrintf("*** %s\n", strMessage);
@@ -2826,8 +2902,25 @@ bool AbortNode(const std::string &strMessage, const std::string &userMessage) {
     return false;
 }
 
+uintmax_t BlockFilesSize()
+{
+    uintmax_t size = 0;
+    BOOST_FOREACH(CBlockFileInfo file, vinfoBlockFile)
+        size += file.nSize + file.nUndoSize;
+    return size;
+}
+
 bool CheckDiskSpace(uint64_t nAdditionalBytes)
 {
+    if (nPrune) {
+        while (BlockFilesSize() + nAdditionalBytes > nPrune) {
+            if (!PruneBlockFiles()) {
+                LogPrintf("Warning: Can't keep block files size as low as requested\n");
+                break;
+            }
+        }
+    }
+
     uint64_t nFreeBytesAvailable = boost::filesystem::space(GetDataDir()).available;
 
     // Check for nMinDiskSpace bytes (currently 50MB)
@@ -2913,7 +3006,7 @@ bool static LoadBlockIndexDB()
     {
         CBlockIndex* pindex = item.second;
         pindex->nChainWork = (pindex->pprev ? pindex->pprev->nChainWork : 0) + GetBlockProof(*pindex);
-        if (pindex->nStatus & BLOCK_HAVE_DATA) {
+        if (pindex->nStatus & BLOCK_HAVE_DATA || pindex->nStatus & BLOCK_VALID_CHAIN) {
             if (pindex->pprev) {
                 if (pindex->pprev->nChainTx) {
                     pindex->nChainTx = pindex->pprev->nChainTx + pindex->nTx;
@@ -2952,24 +3045,6 @@ bool static LoadBlockIndexDB()
         }
     }
 
-    // Check presence of blk files
-    LogPrintf("Checking all blk files are present...\n");
-    set<int> setBlkDataFiles;
-    BOOST_FOREACH(const PAIRTYPE(uint256, CBlockIndex*)& item, mapBlockIndex)
-    {
-        CBlockIndex* pindex = item.second;
-        if (pindex->nStatus & BLOCK_HAVE_DATA) {
-            setBlkDataFiles.insert(pindex->nFile);
-        }
-    }
-    for (std::set<int>::iterator it = setBlkDataFiles.begin(); it != setBlkDataFiles.end(); it++)
-    {
-        CDiskBlockPos pos(*it, 0);
-        if (CAutoFile(OpenBlockFile(pos, true), SER_DISK, CLIENT_VERSION).IsNull()) {
-            return false;
-        }
-    }
-
     // Check whether we need to continue reindexing
     bool fReindexing = false;
     pblocktree->ReadReindexing(fReindexing);
@@ -2992,6 +3067,95 @@ bool static LoadBlockIndexDB()
         DateTimeStrFormat("%Y-%m-%d %H:%M:%S", chainActive.Tip()->GetBlockTime()),
         Checkpoints::GuessVerificationProgress(chainActive.Tip()));
 
+    return true;
+}
+
+bool BlockFileIsOpenable(int nFile)
+{
+    CDiskBlockPos pos(nFile, 0);
+    if (!vinfoBlockFile[nFile].nSize)
+        return false;
+    if (CAutoFile(OpenBlockFile(pos, true), SER_DISK, CLIENT_VERSION).IsNull()) {
+        ClearBlockFileInfo(nFile);
+        return false;
+    }
+    return true;
+}
+
+bool UndoFileIsOpenable(int nFile)
+{
+    CDiskBlockPos pos(nFile, 0);
+    if (!vinfoBlockFile[nFile].nUndoSize)
+        return false;
+    if (CAutoFile(OpenUndoFile(pos, true), SER_DISK, CLIENT_VERSION).IsNull()) {
+        ClearUndoFileInfo(nFile);
+        return false;
+    }
+    return true;
+}
+
+bool DataFilesAreOpenable(int nFile)
+{
+    if (BlockFileIsOpenable(nFile) && UndoFileIsOpenable(nFile))
+        return true;
+    return false;
+}
+
+int LastBlockInFile(int nFile)
+{
+    return vinfoBlockFile[nFile].nHeightLast;
+}
+
+
+bool CheckBlockFiles()
+{
+    LOCK(cs_main);
+    // Check presence of blk files
+    int nKeepMinBlksFromHeight = nPrune ? (max((int)(chainActive.Height() - MIN_BLOCKS_TO_KEEP), 0)) : 0;
+    LogPrintf("Checking all required data for active chain is available (mandatory from height %i to %i)\n", nKeepMinBlksFromHeight, max(chainActive.Height(), 0));
+    set<int> setDataPruned, setUndoPruned;
+    setDataFilePrunable.clear();
+    setUndoFilePrunable.clear();
+    for (CBlockIndex* pindex = chainActive.Tip(); pindex && pindex->pprev; pindex = pindex->pprev) {
+        if (pindex->nHeight > nKeepMinBlksFromHeight) {
+            if (!(pindex->nStatus & BLOCK_HAVE_DATA) || !(pindex->nStatus & BLOCK_HAVE_UNDO)) { // Fail immediately if required data is missing
+                LogPrintf("Error: Required data for block: %i is missing.\n", pindex->nHeight);
+                return false;
+            } else if (!DataFilesAreOpenable(pindex->nFile)) { // Or if data is unreadable
+                LogPrintf("Error: Required file for block: %i can't be opened.\n", pindex->nHeight);
+                return false;
+            }
+        } else { // Check consistency and pruneability of unrequired data
+            if (pindex->nStatus & BLOCK_HAVE_DATA) {
+                if (BlockFileIsOpenable(pindex->nFile)) {
+                    if (chainActive.Height() > AUTOPRUNE_AFTER_HEIGHT && LastBlockInFile(pindex->nFile) < nKeepMinBlksFromHeight) { // Mark pruneable data
+                        setDataFilePrunable.insert(pindex->nFile);
+                    }
+                } else {
+                    pindex->nStatus &= ~BLOCK_HAVE_DATA;
+                    setDirtyBlockIndex.insert(pindex);
+                }
+            }
+            if (pindex->nStatus & BLOCK_HAVE_UNDO) {
+                if (UndoFileIsOpenable(pindex->nFile)) {
+                    if (chainActive.Height() > AUTOPRUNE_AFTER_HEIGHT && LastBlockInFile(pindex->nFile) < nKeepMinBlksFromHeight) { // Mark pruneable data
+                        setUndoFilePrunable.insert(pindex->nFile);
+                    }
+                } else {
+                    pindex->nStatus &= ~BLOCK_HAVE_UNDO;
+                    setDirtyBlockIndex.insert(pindex);
+                }
+            }
+        }
+        if (~pindex->nStatus & BLOCK_HAVE_DATA && pindex->nStatus & BLOCK_VALID_CHAIN)
+            setDataPruned.insert(pindex->nHeight);
+        if (~pindex->nStatus & BLOCK_HAVE_UNDO && pindex->nStatus & BLOCK_VALID_CHAIN)
+            setUndoPruned.insert(pindex->nHeight);
+    }
+    if (!setDataPruned.empty())
+        LogPrintf("Data for blocks from %i to %i has been pruned\n", *setDataPruned.begin(), *setDataPruned.rbegin());
+    if (!setUndoPruned.empty())
+        LogPrintf("Undo data for blocks from %i to %i has been pruned\n", *setUndoPruned.begin(), *setUndoPruned.rbegin());
     return true;
 }
 
@@ -3372,30 +3536,36 @@ void static ProcessGetData(CNode* pfrom)
                 {
                     // Send block from disk
                     CBlock block;
-                    if (!ReadBlockFromDisk(block, (*mi).second))
-                        assert(!"cannot load block from disk");
-                    if (inv.type == MSG_BLOCK)
-                        pfrom->PushMessage("block", block);
-                    else // MSG_FILTERED_BLOCK)
-                    {
-                        LOCK(pfrom->cs_filter);
-                        if (pfrom->pfilter)
-                        {
-                            CMerkleBlock merkleBlock(block, *pfrom->pfilter);
-                            pfrom->PushMessage("merkleblock", merkleBlock);
-                            // CMerkleBlock just contains hashes, so also push any transactions in the block the client did not see
-                            // This avoids hurting performance by pointlessly requiring a round-trip
-                            // Note that there is currently no way for a node to request any single transactions we didnt send here -
-                            // they must either disconnect and retry or request the full block.
-                            // Thus, the protocol spec specified allows for us to provide duplicate txn here,
-                            // however we MUST always provide at least what the remote peer needs
-                            typedef std::pair<unsigned int, uint256> PairType;
-                            BOOST_FOREACH(PairType& pair, merkleBlock.vMatchedTxn)
-                                if (!pfrom->setInventoryKnown.count(CInv(MSG_TX, pair.second)))
-                                    pfrom->PushMessage("tx", block.vtx[pair.first]);
+                    if (!ReadBlockFromDisk(block, (*mi).second)) {
+                        if (nPrune) {
+                            // Disconnect peers asking us for blocks we don't have, not to stall their IBD. They shouldn't ask as we unset NODE_NETWORK on this mode.
+                            LogPrintf("cannot load block from disk, answering notfound, and disconnecting peer:%d\n", pfrom->id);
+                            vNotFound.push_back(inv);
+                            pfrom->fDisconnect = true;
+                        } else
+                            AbortNode("cannot load block from disk");
+                    } else {
+                        if (inv.type == MSG_BLOCK)
+                            pfrom->PushMessage("block", block);
+                        else { // MSG_FILTERED_BLOCK
+                            LOCK(pfrom->cs_filter);
+                            if (pfrom->pfilter) {
+                                CMerkleBlock merkleBlock(block, *pfrom->pfilter);
+                                pfrom->PushMessage("merkleblock", merkleBlock);
+                                // CMerkleBlock just contains hashes, so also push any transactions in the block the client did not see
+                                // This avoids hurting performance by pointlessly requiring a round-trip
+                                // Note that there is currently no way for a node to request any single transactions we didnt send here -
+                                // they must either disconnect and retry or request the full block.
+                                // Thus, the protocol spec specified allows for us to provide duplicate txn here,
+                                // however we MUST always provide at least what the remote peer needs
+                                typedef std::pair<unsigned int, uint256> PairType;
+                                BOOST_FOREACH(PairType& pair, merkleBlock.vMatchedTxn)
+                                    if (!pfrom->setInventoryKnown.count(CInv(MSG_TX, pair.second)))
+                                        pfrom->PushMessage("tx", block.vtx[pair.first]);
+                            }
+                            // else
+                                // no response
                         }
-                        // else
-                            // no response
                     }
 
                     // Trigger them to send a getblocks request for the next batch of inventory
