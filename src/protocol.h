@@ -29,11 +29,13 @@
 class CMessageHeader
 {
 public:
-    CMessageHeader();
-    CMessageHeader(const char* pszCommand, unsigned int nMessageSizeIn);
+    typedef unsigned char MessageStartChars[MESSAGE_START_SIZE];
+
+    CMessageHeader(const MessageStartChars& pchMessageStartIn);
+    CMessageHeader(const MessageStartChars& pchMessageStartIn, const char* pszCommand, unsigned int nMessageSizeIn);
 
     std::string GetCommand() const;
-    bool IsValid() const;
+    bool IsValid(const MessageStartChars& messageStart) const;
 
     ADD_SERIALIZE_METHODS;
 
