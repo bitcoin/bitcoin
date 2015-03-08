@@ -998,7 +998,6 @@ QStackedWidget#SendCoinsEntry .QLineEdit#addAsLabel { /* Pay To Input Field */
 
 QDialog#CoinControlDialog { /* Coin Control Dialog Window */
 background-color:#F8F6F6;
-qproperty-geometry: rect(0 0 963 500);
 }
 
 QDialog#CoinControlDialog .QLabel#labelCoinControlQuantityText { /* Coin Control Quantity Label */
