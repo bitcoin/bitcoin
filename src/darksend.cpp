@@ -23,13 +23,13 @@ using namespace boost;
 
 CCriticalSection cs_darksend;
 
-// The main object for accessing Darksend 
+// The main object for accessing Darksend
 CDarksendPool darkSendPool;
-// A helper object for signing messages from Masternodes 
+// A helper object for signing messages from Masternodes
 CDarkSendSigner darkSendSigner;
-// The current Darksends in progress on the network 
+// The current Darksends in progress on the network
 std::vector<CDarksendQueue> vecDarksendQueue;
-// Keep track of the used Masternodes 
+// Keep track of the used Masternodes
 std::vector<CTxIn> vecMasternodesUsed;
 // Keep track of the scanning errors I've seen
 map<uint256, CDarksendBroadcastTx> mapDarksendBroadcastTxes;
@@ -173,11 +173,6 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
             return;
         }
 
-        if(state != POOL_STATUS_IDLE){
-            LogPrintf("dsr -- wrong state to relay! \n");
-            return;
-        }
-
         CDarkSendRelay dsr;
         vRecv >> dsr;
 
@@ -200,6 +195,9 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
 
         int a = mnodeman.GetMasternodeRank(activeMasternode.vin, chainActive.Tip()->nHeight, MIN_POOL_PEER_PROTO_VERSION);
 
+        /*
+            For added DDOS protection, clients can only relay through 20 nodes per block.
+        */
         if(a > 20){
             LogPrintf("dsr -- unknown/invalid Masternode! %s \n", activeMasternode.vin.ToString().c_str());
             return;
@@ -1484,7 +1482,7 @@ bool CDarksendPool::SignFinalTransaction(CTransaction& finalTransactionNew, CNod
                 //already signed
                 if(finalTransaction.vin[mine].scriptSig != CScript()) continue;
                 if(sigs.size() > 7) break; //send 7 each signing
-                
+
                 int foundOutputs = 0;
                 int64_t nValue1 = 0;
                 int64_t nValue2 = 0;
@@ -2551,7 +2549,7 @@ bool CDSAnonTx::AddOutput(const CTxOut out){
     if(fDebug) LogPrintf("CDSAnonTx::AddOutput -- new  %s\n", out.ToString().substr(0,24).c_str());
 
     BOOST_FOREACH(CTxOut& out2, vout)
-        if(out2.nValue == out.nValue && out.scriptPubKey == out2.scriptPubKey) 
+        if(out2.nValue == out.nValue && out.scriptPubKey == out2.scriptPubKey)
             return false;
 
     vout.push_back(out);
@@ -2567,7 +2565,7 @@ bool CDSAnonTx::AddInput(const CTxIn in){
 
     //already have this input
     BOOST_FOREACH(CTxDSIn& in2, vin)
-        if(in2.prevout == in.prevout && in.nSequence == in2.nSequence) 
+        if(in2.prevout == in.prevout && in.nSequence == in2.nSequence)
             return false;
 
     vin.push_back(in);
