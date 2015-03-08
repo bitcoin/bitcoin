@@ -72,7 +72,7 @@ OptionsDialog::OptionsDialog(QWidget *parent) :
     
     /* Theme selector */
     ui->theme->addItem(QString("(") + tr("default") + QString(")"), QVariant(""));
-    ui->theme->addItem(QString("DRK-blue"), QVariant("drkblue.css")); // ToDo: remove .css when we finally use resources
+    ui->theme->addItem(QString("DRK-blue"), QVariant("drkblue"));
     
     /* Language selector */
     QDir translations(":translations");

@@ -771,8 +771,7 @@ QString loadStyleSheet()
     QString theme = settings.value("theme", "").toString();
 
     if(!theme.isEmpty()){
-    // QFile qFile(":/css/drkblue");
-        QFile qFile(theme); // for development only
+        QFile qFile(":/css/drkblue");
         if (qFile.open(QFile::ReadOnly)) {
             styleSheet = QLatin1String(qFile.readAll());
         }
