@@ -33,7 +33,6 @@
 #include <QDateTime>
 #include <QDesktopWidget>
 #include <QDragEnterEvent>
-#include <QFile>
 #include <QIcon>
 #include <QLabel>
 #include <QListWidget>
@@ -73,17 +72,8 @@ BitcoinGUI::BitcoinGUI(bool fIsTestnet, QWidget *parent) :
     spinnerFrame(0)
 {
     /* Open CSS when configured */
-    QSettings settings;
-    QString theme = settings.value("theme", "").toString();
-    if(!theme.isEmpty()){
-    // QFile qFile(":/css/drkblue");
-        QFile qFile(theme); // for development only
-        if (qFile.open(QFile::ReadOnly)) {
-            QString styleSheet = QLatin1String(qFile.readAll());
-            this->setStyleSheet(styleSheet);
-        }
-    }
-    
+    this->setStyleSheet(GUIUtil::loadStyleSheet());
+
     GUIUtil::restoreWindowGeometry("nWindow", QSize(850, 550), this);
 
     QString windowTitle = tr("Darkcoin Core") + " - ";

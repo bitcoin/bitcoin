@@ -22,7 +22,6 @@
 #include <QCheckBox>
 #include <QCursor>
 #include <QDialogButtonBox>
-#include <QFile>
 #include <QFlags>
 #include <QIcon>
 #include <QSettings>
@@ -42,16 +41,7 @@ CoinControlDialog::CoinControlDialog(QWidget *parent) :
     ui->setupUi(this);
     
     /* Open CSS when configured */
-    QSettings settings;
-    QString theme = settings.value("theme", "").toString();
-    if(!theme.isEmpty()){
-    // QFile qFile(":/css/drkblue");
-        QFile qFile(theme); // for development only
-        if (qFile.open(QFile::ReadOnly)) {
-            QString styleSheet = QLatin1String(qFile.readAll());
-            this->setStyleSheet(styleSheet);
-        }
-    }
+    this->setStyleSheet(GUIUtil::loadStyleSheet());
 
     // context menu actions
     QAction *copyAddressAction = new QAction(tr("Copy address"), this);
