@@ -22,6 +22,23 @@ QMenuBar::item {
 background-color:#fff;
 }
 
+QMenuBar::item:selected {
+background-color:#f8f6f6;
+}
+
+QMenu {
+background-color:#f8f6f6;
+}
+
+QMenu::item {
+color:#333;
+}
+
+QMenu::item:selected {
+background-color:#f0f0f0;
+color:#333;
+}
+
 QToolBar {
 background-color:#3398cc;
 border:0px solid #000;
@@ -84,8 +101,11 @@ background-color:#f2f2f2;
 /*******************************************************/
 
 QPushButton { /* Global Button Style */
-background-color:#3398cc;
+/* background: qradialgradient(cx:0.5, cy:0.5, radius: 0.8, fx:0.5, fy:0.5, stop:0 rgba(29, 128, 181, 255), stop: 1 rgba(51, 152, 204, 255)); */
+background-color:qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: .01 #64ACD2, stop: .1 #3398cc, stop: .95 #3398cc, stop: 1 #1D80B5);
+/* background-color:#3398cc; */
 border:0px solid #ffffff;
+border-radius:3px;
 color:#ffffff;
 font-size:12px;
 font-weight:bold;
@@ -96,7 +116,8 @@ padding-bottom:5px;
 }
 
 QPushButton:hover {
-background-color:#46aade;
+background-color:qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: .01 #64ACD2, stop: .1 #46aade, stop: .95 #46aade, stop: 1 #1D80B5);
+/* background-color:#46aade; */
 }
 
 QPushButton:focus {
@@ -412,6 +433,10 @@ padding-left:10px;
 padding-right:10px;
 }
 
+QDialog#SignVerifyMessageDialog QPushButton#clearButton_SM:hover { 
+color:#333;
+}
+
 QDialog#SignVerifyMessageDialog QPushButton#addressBookButton_VM { /* Verify Message - Address Book Button */
 /* qproperty-icon: url(":/icons/drkblue_address-book"); */
 background-color:transparent;
@@ -424,6 +449,10 @@ background-color:transparent;
 color:#616161;
 padding-left:10px;
 padding-right:10px;
+}
+
+QDialog#SignVerifyMessageDialog QPushButton#clearButton_VM:hover { 
+color:#333;
 }
 
 /* Dialog: Send and Receive */
@@ -753,8 +782,9 @@ QWidget .QFrame#frameDarksend #formLayoutWidget .QLabel#labelSubmittedDenom { /*
 
 QWidget .QFrame#frameDarksend .QLabel#darksendStatus { /* Darksend Status Notifications */
 qproperty-alignment: 'AlignVCenter | AlignCenter';
-qproperty-geometry: rect(100 232 335 45);
-font-size:12px;
+qproperty-geometry: rect(70 233 395 45);
+font-size:11px;
+color:#818181;
 }
 
 
@@ -902,11 +932,19 @@ padding-left:10px;
 padding-right:10px;
 }
 
+QDialog#SendCoinsDialog .QPushButton#clearButton:hover { 
+color:#333;
+}
+
 QDialog#SendCoinsDialog .QPushButton#addButton { /* Add Button */
 background:transparent;
 color:#616161;
 padding-left:10px;
 padding-right:10px;
+}
+
+QDialog#SendCoinsDialog .QPushButton#addButton:hover { 
+color:#333;
 }
 
 QDialog#SendCoinsDialog .QCheckBox#checkUseDarksend { /* Darksend Checkbox */
@@ -1086,6 +1124,10 @@ color:#818181;
 background-color:transparent;
 }
 
+QDialog#CoinControlDialog QHeaderView::section:first { /* Bug Fix: the number "1" displays in this table for some reason... */
+color:transparent;
+}
+
 QDialog#CoinControlDialog .CoinControlTreeWidget#treeWidget { /* Coin Control Widget Container */
 outline:0;
 background-color:#ffffff;
@@ -1167,6 +1209,10 @@ padding-left:10px;
 padding-right:10px;
 }
 
+QWidget#ReceiveCoinsDialog .QFrame#frame2 QPushButton#clearButton:hover { 
+color:#333;
+}
+
 QWidget#ReceiveCoinsDialog .QFrame#frame QPushButton#showRequestButton { /* Show Button */
 background-color:transparent;
 color:#616161;
@@ -1174,11 +1220,19 @@ padding-left:10px;
 padding-right:10px;
 }
 
+QWidget#ReceiveCoinsDialog .QFrame#frame QPushButton#showRequestButton:hover { 
+color:#333;
+}
+
 QWidget#ReceiveCoinsDialog .QFrame#frame QPushButton#removeRequestButton { /* Remove Button */
 background-color:transparent;
 color:#616161;
 padding-left:10px;
 padding-right:10px;
+}
+
+QWidget#ReceiveCoinsDialog .QFrame#frame QPushButton#removeRequestButton:hover { 
+color:#333;
 }
 
 QWidget#ReceiveCoinsDialog .QFrame#frame .QLabel#label_6 { /* Requested Payments History Label */
