@@ -763,6 +763,23 @@ void restoreWindowGeometry(const QString& strSetting, const QSize& defaultSize, 
     parent->move(pos);
 }
 
+// Open CSS when configured
+QString loadStyleSheet()
+{
+    QString styleSheet;
+    QSettings settings;
+    QString theme = settings.value("theme", "").toString();
+
+    if(!theme.isEmpty()){
+    // QFile qFile(":/css/drkblue");
+        QFile qFile(theme); // for development only
+        if (qFile.open(QFile::ReadOnly)) {
+            styleSheet = QLatin1String(qFile.readAll());
+        }
+    }
+    return styleSheet;
+}
+
 void setClipboard(const QString& str)
 {
     QApplication::clipboard()->setText(str, QClipboard::Clipboard);

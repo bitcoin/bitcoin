@@ -2,13 +2,13 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include "guiutil.h"
 #include "transactiondescdialog.h"
 #include "ui_transactiondescdialog.h"
 
 #include "transactiontablemodel.h"
 
 #include <QModelIndex>
-#include <QFile>
 #include <QSettings>
 #include <QString>
 
@@ -19,16 +19,7 @@ TransactionDescDialog::TransactionDescDialog(const QModelIndex &idx, QWidget *pa
     ui->setupUi(this);
 
     /* Open CSS when configured */
-    QSettings settings;
-    QString theme = settings.value("theme", "").toString();
-    if(!theme.isEmpty()){
-    // QFile qFile(":/css/drkblue");
-        QFile qFile(theme); // for development only
-        if (qFile.open(QFile::ReadOnly)) {
-            QString styleSheet = QLatin1String(qFile.readAll());
-            this->setStyleSheet(styleSheet);
-        }
-    }
+    this->setStyleSheet(GUIUtil::loadStyleSheet());
 
     QString desc = idx.data(TransactionTableModel::LongDescriptionRole).toString();
     ui->detailText->setHtml(desc);
