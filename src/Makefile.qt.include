@@ -117,6 +117,7 @@ QT_MOC_CPP = \
   qt/moc_overviewpage.cpp \
   qt/moc_peertablemodel.cpp \
   qt/moc_paymentserver.cpp \
+  qt/moc_pulsedialog.cpp \
   qt/moc_qvalidatedlineedit.cpp \
   qt/moc_qvaluecombobox.cpp \
   qt/moc_receivecoinsdialog.cpp \
@@ -185,6 +186,7 @@ BITCOIN_QT_H = \
   qt/paymentrequestplus.h \
   qt/paymentserver.h \
   qt/peertablemodel.h \
+  qt/pulsedialog.h \
   qt/qvalidatedlineedit.h \
   qt/qvaluecombobox.h \
   qt/receivecoinsdialog.h \
@@ -217,6 +219,7 @@ RES_ICONS = \
   qt/res/icons/about_qt.png \
   qt/res/icons/bitcoin.ico \
   qt/res/icons/bitcoin.png \
+  qt/res/icons/block.png \
   qt/res/icons/clock1.png \
   qt/res/icons/clock2.png \
   qt/res/icons/clock3.png \
@@ -249,6 +252,7 @@ RES_ICONS = \
   qt/res/icons/remove.png \
   qt/res/icons/send.png \
   qt/res/icons/synced.png \
+  qt/res/icons/transaction.png \
   qt/res/icons/transaction0.png \
   qt/res/icons/transaction2.png \
   qt/res/icons/transaction_conflicted.png \
@@ -257,7 +261,9 @@ RES_ICONS = \
   qt/res/icons/tx_output.png \
   qt/res/icons/tx_mined.png \
   qt/res/icons/warning.png \
-  qt/res/icons/verify.png
+  qt/res/icons/verify.png \
+  qt/res/fonts/BebasNeue-Thin.ttf \
+  qt/res/fonts/BebasNeue-Regular.ttf
 
 BITCOIN_QT_CPP = \
   qt/bitcoinaddressvalidator.cpp \
@@ -273,6 +279,7 @@ BITCOIN_QT_CPP = \
   qt/optionsdialog.cpp \
   qt/optionsmodel.cpp \
   qt/peertablemodel.cpp \
+  qt/pulsedialog.cpp \
   qt/qvalidatedlineedit.cpp \
   qt/qvaluecombobox.cpp \
   qt/rpcconsole.cpp \
