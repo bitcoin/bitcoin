@@ -138,7 +138,7 @@ extern bool fDiscover;
 extern bool fListen;
 extern uint64_t nLocalServices;
 extern uint64_t nLocalHostNonce;
-extern CAddrMan addrman;
+extern boost::scoped_ptr<CAddrMan> addrman;
 extern int nMaxConnections;
 
 extern std::vector<CNode*> vNodes;

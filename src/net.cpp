@@ -76,7 +76,7 @@ static bool vfLimited[NET_MAX] = {};
 static CNode* pnodeLocalHost = NULL;
 uint64_t nLocalHostNonce = 0;
 static std::vector<ListenSocket> vhListenSocket;
-CAddrMan addrman;
+boost::scoped_ptr<CAddrMan> addrman;
 int nMaxConnections = 125;
 bool fAddressesInitialized = false;
 
@@ -291,7 +291,7 @@ bool IsReachable(const CNetAddr& addr)
 
 void AddressCurrentlyConnected(const CService& addr)
 {
-    addrman.Connected(addr);
+    addrman->Connected(addr);
 }
 
 
@@ -353,7 +353,7 @@ CNode* ConnectNode(CAddress addrConnect, const char *pszDest)
     if (pszDest ? ConnectSocketByName(addrConnect, hSocket, pszDest, Params().GetDefaultPort(), nConnectTimeout, &proxyConnectionFailed) :
                   ConnectSocket(addrConnect, hSocket, nConnectTimeout, &proxyConnectionFailed))
     {
-        addrman.Attempt(addrConnect);
+        addrman->Attempt(addrConnect);
 
         // Add node
         CNode* pnode = new CNode(hSocket, addrConnect, pszDest ? pszDest : "", false);
@@ -370,7 +370,7 @@ CNode* ConnectNode(CAddress addrConnect, const char *pszDest)
     } else if (!proxyConnectionFailed) {
         // If connecting to the node failed, and failure is not caused by a problem connecting to
         // the proxy, mark this as an attempt.
-        addrman.Attempt(addrConnect);
+        addrman->Attempt(addrConnect);
     }
 
     return NULL;
@@ -1075,7 +1075,7 @@ void MapPort(bool)
 void ThreadDNSAddressSeed()
 {
     // goal: only query DNS seeds if address need is acute
-    if ((addrman.size() > 0) &&
+    if ((addrman->size() > 0) &&
         (!GetBoolArg("-forcednsseed", false))) {
         MilliSleep(11 * 1000);
 
@@ -1108,7 +1108,7 @@ void ThreadDNSAddressSeed()
                     found++;
                 }
             }
-            addrman.Add(vAdd, CNetAddr(seed.name, true));
+            addrman->Add(vAdd, CNetAddr(seed.name, true));
         }
     }
 
@@ -1131,10 +1131,10 @@ void DumpAddresses()
     int64_t nStart = GetTimeMillis();
 
     CAddrDB adb;
-    adb.Write(addrman);
+    adb.Write(*addrman);
 
     LogPrint("net", "Flushed %d addresses to peers.dat  %dms\n",
-           addrman.size(), GetTimeMillis() - nStart);
+           addrman->size(), GetTimeMillis() - nStart);
 }
 
 void static ProcessOneShot()
@@ -1188,11 +1188,11 @@ void ThreadOpenConnections()
         boost::this_thread::interruption_point();
 
         // Add seed nodes if DNS seeds are all down (an infrastructure attack?).
-        if (addrman.size() == 0 && (GetTime() - nStart > 60)) {
+        if (addrman->size() == 0 && (GetTime() - nStart > 60)) {
             static bool done = false;
             if (!done) {
                 LogPrintf("Adding fixed seed nodes as DNS doesn't seem to be available.\n");
-                addrman.Add(Params().FixedSeeds(), CNetAddr("127.0.0.1"));
+                addrman->Add(Params().FixedSeeds(), CNetAddr("127.0.0.1"));
                 done = true;
             }
         }
@@ -1222,7 +1222,7 @@ void ThreadOpenConnections()
         while (true)
         {
             // use an nUnkBias between 10 (no outgoing connections) and 90 (8 outgoing connections)
-            CAddress addr = addrman.Select(10 + min(nOutbound,8)*10);
+            CAddress addr = addrman->Select(10 + min(nOutbound,8)*10);
 
             // if we selected an invalid address, restart
             if (!addr.IsValid() || setConnected.count(addr.GetGroup()) || IsLocal(addr))
@@ -1566,16 +1566,18 @@ void static Discover(boost::thread_group& threadGroup)
 
 void StartNode(boost::thread_group& threadGroup)
 {
+    addrman.reset(new CAddrMan());
+
     uiInterface.InitMessage(_("Loading addresses..."));
     // Load addresses for peers.dat
     int64_t nStart = GetTimeMillis();
     {
         CAddrDB adb;
-        if (!adb.Read(addrman))
+        if (!adb.Read(*addrman))
             LogPrintf("Invalid or missing peers.dat; recreating\n");
     }
     LogPrintf("Loaded %i addresses from peers.dat  %dms\n",
-           addrman.size(), GetTimeMillis() - nStart);
+           addrman->size(), GetTimeMillis() - nStart);
     fAddressesInitialized = true;
 
     if (semOutbound == NULL) {
@@ -1630,6 +1632,8 @@ bool StopNode()
         DumpAddresses();
         fAddressesInitialized = false;
     }
+
+    addrman.reset();
 
     return true;
 }
