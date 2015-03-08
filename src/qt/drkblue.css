@@ -101,9 +101,7 @@ background-color:#f2f2f2;
 /*******************************************************/
 
 QPushButton { /* Global Button Style */
-/* background: qradialgradient(cx:0.5, cy:0.5, radius: 0.8, fx:0.5, fy:0.5, stop:0 rgba(29, 128, 181, 255), stop: 1 rgba(51, 152, 204, 255)); */
 background-color:qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: .01 #64ACD2, stop: .1 #3398cc, stop: .95 #3398cc, stop: 1 #1D80B5);
-/* background-color:#3398cc; */
 border:0px solid #ffffff;
 border-radius:3px;
 color:#ffffff;
@@ -117,7 +115,6 @@ padding-bottom:5px;
 
 QPushButton:hover {
 background-color:qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: .01 #64ACD2, stop: .1 #46aade, stop: .95 #46aade, stop: 1 #1D80B5);
-/* background-color:#46aade; */
 }
 
 QPushButton:focus {
@@ -398,7 +395,6 @@ background-color:#F8F6F6;
 }
 
 QDialog#SignVerifyMessageDialog QPushButton#addressBookButton_SM { /* Address Book Button */
-/* qproperty-icon: url(":/icons/drkblue_address-book"); */
 background-color:transparent;
 padding-left:10px;
 padding-right:10px;
@@ -438,7 +434,6 @@ color:#333;
 }
 
 QDialog#SignVerifyMessageDialog QPushButton#addressBookButton_VM { /* Verify Message - Address Book Button */
-/* qproperty-icon: url(":/icons/drkblue_address-book"); */
 background-color:transparent;
 padding-left:10px;
 padding-right:10px;
@@ -507,6 +502,15 @@ background-color:#F8F6F6;
 QDialog#OptionsDialog QValueComboBox, QDialog#OptionsDialog QSpinBox {
 margin-top:5px;
 margin-bottom:5px;
+}
+
+QDialog#OptionsDialog QValidatedLineEdit, QDialog#OptionsDialog QValidatedLineEdit:disabled, QDialog#OptionsDialog QLineEdit, QDialog#OptionsDialog QLineEdit:disabled {
+qproperty-alignment: 'AlignVCenter | AlignLeft';
+min-height:20px;
+margin-top:0px;
+margin-bottom:0px;
+padding-top:1px;
+padding-bottom:1px;
 }
 
 QDialog#OptionsDialog > QLabel {
@@ -633,10 +637,10 @@ min-height:35px;
 QWidget .QFrame#frame .QLabel#labelBalance { /* Available Balance */
 qproperty-alignment: 'AlignVCenter | AlignLeft';
 margin-left:0px;
-font-size:20px;
+font-size:18px;
 font-weight:bold;
 color:#56ABD8;
-margin-left:15px;
+margin-left:13px;
 }
 
 QWidget .QFrame#frame .QLabel#label_3 { /* Pending Balance Label */
@@ -649,7 +653,7 @@ padding-right:5px;
 
 QWidget .QFrame#frame .QLabel#labelUnconfirmed { /* Pending Balance */
 qproperty-alignment: 'AlignVCenter | AlignLeft';
-margin-left:20px;
+margin-left:16px;
 }
 
 QWidget .QFrame#frame .QLabel#labelImmatureText { /* Immature Balance Label */
@@ -662,7 +666,7 @@ padding-right:5px;
 
 QWidget .QFrame#frame .QLabel#labelImmature { /* Immature Balance */
 qproperty-alignment: 'AlignVCenter | AlignLeft';
-margin-left:20px;
+margin-left:16px;
 }
 
 QWidget .QFrame#frame .QLabel#labelTotalText { /* Total Balance Label */
@@ -675,8 +679,7 @@ padding-right:5px;
 
 QWidget .QFrame#frame .QLabel#labelTotal { /* Total Balance */
 qproperty-alignment: 'AlignVCenter | AlignLeft';
-margin-left:20px;
-
+margin-left:16px;
 }
 
 /* DARKSEND WIDGET */
@@ -869,8 +872,7 @@ QWidget .QFrame#frame_2 QListView { /* Transaction List */
 font-weight:normal;
 font-size:12px;
 max-width:435px;
-margin-left:-70px; /* CSS Voodoo - set to -70px to hide the ugly ass icons */
-
+margin-left:-66px; /* CSS Voodoo - set to -66px to hide default transaction icons */
 }
 
 /* SEND DIALOG */
