@@ -73,7 +73,7 @@ public:
     std::string NetworkIDString() const { return strNetworkID; }
     const std::vector<CDNSSeedData>& DNSSeeds() const { return vSeeds; }
     const std::vector<unsigned char>& Base58Prefix(Base58Type type) const { return base58Prefixes[type]; }
-    const std::vector<CAddress>& FixedSeeds() const { return vFixedSeeds; }
+    const std::vector<CService>& FixedSeeds() const { return vFixedSeeds; }
     virtual const Checkpoints::CCheckpointData& Checkpoints() const = 0;
 protected:
     CChainParams() {}
@@ -95,7 +95,7 @@ protected:
     std::vector<unsigned char> base58Prefixes[MAX_BASE58_TYPES];
     std::string strNetworkID;
     CBlock genesis;
-    std::vector<CAddress> vFixedSeeds;
+    std::vector<CService> vFixedSeeds;
     bool fRequireRPCPassword;
     bool fMiningRequiresPeers;
     bool fDefaultCheckMemPool;

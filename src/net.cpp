@@ -1192,7 +1192,15 @@ void ThreadOpenConnections()
             static bool done = false;
             if (!done) {
                 LogPrintf("Adding fixed seed nodes as DNS doesn't seem to be available.\n");
-                addrman->Add(Params().FixedSeeds(), CNetAddr("127.0.0.1"));
+                std::vector<CAddress> seeds;
+                seeds.reserve(Params().FixedSeeds().size());
+                static const int64_t nOneWeek = 7*24*60*60;
+                BOOST_FOREACH(const CService& service, Params().FixedSeeds()) {
+                    CAddress addr(service);
+                    addr.nTime = GetTime() - GetRand(nOneWeek) - nOneWeek;
+                    seeds.push_back(addr);
+                }
+                addrman->Add(seeds, CNetAddr("127.0.0.1"));
                 done = true;
             }
         }
