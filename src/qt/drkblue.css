@@ -472,7 +472,6 @@ min-height:33px; /* base width of 25px for QLineEdit, plus padding and border */
 
 /* Options Dialog */
 QDialog#OptionsDialog {
-qproperty-geometry: rect(0 0 529 417);
 background-color:#F8F6F6;
 }
 
