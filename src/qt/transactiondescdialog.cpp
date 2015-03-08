@@ -8,12 +8,28 @@
 #include "transactiontablemodel.h"
 
 #include <QModelIndex>
+#include <QFile>
+#include <QSettings>
+#include <QString>
 
 TransactionDescDialog::TransactionDescDialog(const QModelIndex &idx, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::TransactionDescDialog)
 {
     ui->setupUi(this);
+
+    /* Open CSS when configured */
+    QSettings settings;
+    QString theme = settings.value("theme", "").toString();
+    if(!theme.isEmpty()){
+    // QFile qFile(":/css/drkblue");
+        QFile qFile(theme); // for development only
+        if (qFile.open(QFile::ReadOnly)) {
+            QString styleSheet = QLatin1String(qFile.readAll());
+            this->setStyleSheet(styleSheet);
+        }
+    }
+
     QString desc = idx.data(TransactionTableModel::LongDescriptionRole).toString();
     ui->detailText->setHtml(desc);
 }

@@ -44,15 +44,19 @@ color:#333;
 font-weight:bold;
 }
 
+QMessageBox {
+background-color:#F8F6F6;
+}
+
 /*******************************************************/
 
 QLabel { /* Base Text Size & Color */
 font-size:12px;
-color:#818181;
+color:#333333;
 }
 
 .QCheckBox { /* Checkbox Labels */
-color:#818181;
+color:#333333;
 background-color:transparent;
 }
 
@@ -250,7 +254,7 @@ QScrollBar { /* Scroll Bar */
 background-color:#ffffff;
 }
 
-QScrollBar:vertical { /* Scroll Bar Attributes */
+QScrollBar:vertical { /* Vertical Scroll Bar Attributes */
 border:1px solid #818181;
 border-left:0px;
 background:#333;
@@ -258,10 +262,25 @@ width:17px;
 margin: 0px 0px 0px 0px;
 }
 
-QScrollBar::handle:vertical { /* Scroll Bar Slider */
+QScrollBar:horizontal { /* Horizontal Scroll Bar Attributes */
+border:1px solid #818181;
+border-top:0px;
+background:#333;
+height:17px;
+margin: 0px 0px 0px 0px;
+}
+
+
+QScrollBar::handle:vertical { /* Scroll Bar Slider - vertical */
 background:#e0e0e0;
 min-height:10px;
 }
+
+QScrollBar::handle:horizontal { /* Scroll Bar Slider - horizontal */
+background:#e0e0e0;
+min-width:10px;
+}
+
 
 QScrollBar::add-page, QScrollBar::sub-page { /* Scroll Bar Background */
 background:#F8F6F6;
@@ -438,10 +457,84 @@ QWidget#AddressBookPage QTableView { /* Address Listing */
 font-size:12px;
 }
 
+/* SETTINGS MENU */
+
+/* Encrypt Wallet and Change Passphrase Dialog */
+QDialog#AskPassphraseDialog {
+background-color:#F8F6F6;
+}
+
+QDialog#AskPassphraseDialog QLabel#passLabel1, QDialog#AskPassphraseDialog QLabel#passLabel2, QDialog#AskPassphraseDialog QLabel#passLabel3 {
+qproperty-alignment: 'AlignVCenter | AlignRight';
+min-width:170px;
+min-height:33px; /* base width of 25px for QLineEdit, plus padding and border */
+}
+
+/* Options Dialog */
+QDialog#OptionsDialog {
+qproperty-geometry: rect(0 0 529 417);
+background-color:#F8F6F6;
+}
+
+QDialog#OptionsDialog QValueComboBox, QDialog#OptionsDialog QSpinBox {
+margin-top:5px;
+margin-bottom:5px;
+}
+
+QDialog#OptionsDialog > QLabel {
+qproperty-alignment: 'AlignVCenter';
+min-height:20px;
+}
+
+QDialog#OptionsDialog QWidget#tabDisplay QValueComboBox {
+margin-top:0px;
+margin-bottom:0px;
+}
+
+QDialog#OptionsDialog QLabel#label_3 { /* Translations Missing? Label */
+qproperty-alignment: 'AlignVCenter | AlignCenter';
+color:#818181;
+padding-bottom:8px;
+}
+
+QDialog#OptionsDialog QCheckBox {
+qproperty-alignment: 'AlignVCenter';
+min-height:20px;
+}
+
+QDialog#OptionsDialog QCheckBox#displayAddresses {
+min-height:33px;
+
+}
+
 /* TOOLS MENU */
 
 QDialog#RPCConsole { /* RPC Console Dialog Box */
 background-color:#F8F6F6;
+}
+
+QDialog#RPCConsole QWidget#tab_info QLabel#label_11, QDialog#RPCConsole QWidget#tab_info QLabel#label_10 { /* Margin between Network and Block Chain headers */
+qproperty-alignment: 'AlignBottom';
+min-height:25px;
+min-width:180px;
+}
+
+QDialog#RPCConsole QPushButton#openDebugLogfileButton {
+max-width:60px;
+}
+
+QDialog#RPCConsole QTextEdit#messagesWidget { /* Console Messages Window */
+border:0;
+}
+
+QDialog#RPCConsole QLineEdit#lineEdit { /* Console Input */
+margin-right:5px;
+}
+
+QDialog#RPCConsole QPushButton#clearButton { /* Console Clear Button */
+background-color:transparent;
+padding-left:10px;
+padding-right:10px;
 }
 
 QDialog#RPCConsole .QGroupBox #line { /* Network In Line */
@@ -452,6 +545,35 @@ QDialog#RPCConsole .QGroupBox #line_2 { /* Network Out Line */
 background:#ff0000;
 }
 
+/* HELP MENU */
+
+/* Command Line Options Dialog */ 
+QDialog#HelpMessageDialog {
+background-color:#F8F6F6;
+}
+
+QDialog#HelpMessageDialog QScrollArea * {
+background-color:#ffffff;
+}
+
+QDialog#HelpMessageDialog QScrollBar:vertical, QDialog#HelpMessageDialog QScrollBar:horizontal {
+border:0;
+}
+
+/* About Darkcoin Dialog */
+QDialog#AboutDialog {
+background-color:#F8F6F6;
+}
+
+QDialog#AboutDialog QLabel#label, QDialog#AboutDialog QLabel#copyrightLabel, QDialog#AboutDialog QLabel#label_2 { /* About Darkcoin Contents */
+margin-left:10px;
+}
+
+QDialog#AboutDialog QLabel#label_2 { /* Margin for About Darkcoin text */
+margin-right:10px;
+}
+
+
 /* OVERVIEW SCREEN */
 
 QWidget .QFrame#frame { /* Wallet Balance */
@@ -460,7 +582,6 @@ QWidget .QFrame#frame { /* Wallet Balance */
 
 QWidget .QFrame#frame > .QLabel {
 min-width:175px;
-color:#818181;
 font-weight:normal;
 min-height:30px;
 }
@@ -555,7 +676,6 @@ qproperty-geometry: rect(10 55 451 175);
 
 QWidget .QFrame#frameDarksend #formLayoutWidget > .QLabel {
 min-width:175px;
-color:#818181;
 font-weight:normal;
 min-height:25px;
 }
@@ -719,13 +839,12 @@ min-height:24px;
 QWidget .QFrame#frame_2 QListView { /* Transaction List */
 font-weight:normal;
 font-size:12px;
-color:#818181;
 max-width:435px;
 margin-left:-70px; /* CSS Voodoo - set to -70px to hide the ugly ass icons */
 
 }
 
-/* SEND DIALOG BOX */
+/* SEND DIALOG */
 
 QDialog#SendCoinsDialog .QFrame#frameCoinControl { /* Coin Control Section */
 
@@ -793,7 +912,7 @@ padding-right:10px;
 QDialog#SendCoinsDialog .QCheckBox#checkUseDarksend { /* Darksend Checkbox */
 color:#616161;
 font-weight:bold;
-background: qradialgradient(cx:0.5, cy:0.5, radius: 0.5, fx:0.5, fy:0.5, stop:0 rgba(248, 246, 246, 255), stop: 1 rgba(0, 0, 0, 0));
+background: qradialgradient(cx:0.5, cy:0.5, radius: 0.5, fx:0.5, fy:0.5, stop:0 rgba(248, 246, 246, 128), stop: 1 rgba(0, 0, 0, 0));
 border-radius:5px;
 padding-top:20px;
 padding-bottom:20px;
@@ -802,7 +921,7 @@ padding-bottom:20px;
 QDialog#SendCoinsDialog .QCheckBox#checkInstantX { /* InstantX Checkbox */
 color:#616161;
 font-weight:bold;
-background: qradialgradient(cx:0.5, cy:0.5, radius: 0.5, fx:0.5, fy:0.5, stop:0 rgba(248, 246, 246, 255), stop: 1 rgba(0, 0, 0, 0));
+background: qradialgradient(cx:0.5, cy:0.5, radius: 0.5, fx:0.5, fy:0.5, stop:0 rgba(248, 246, 246, 128), stop: 1 rgba(0, 0, 0, 0));
 border-radius:5px;
 padding-top:20px;
 padding-bottom:20px;
@@ -1068,6 +1187,16 @@ font-weight:bold;
 font-size:14px;
 }
 
+/* RECEIVE COINS DIALOG */
+
+QDialog#ReceiveRequestDialog {
+background-color:#F8F6F6;
+}
+
+QDialog#ReceiveRequestDialog QTextEdit { /* Contents of Receive Coin Dialog */
+border:1px solid #d7d7d7;
+}
+
 /* TRANSACTIONS PAGE */
 
 TransactionView QLineEdit { /* Address Filter */
@@ -1082,6 +1211,14 @@ margin-bottom:1px;
 margin-right:1px;
 }
 
+/* TRANSACTION DETAIL DIALOG */
 
+QDialog#TransactionDescDialog {
+background-color:#F8F6F6;
+}
+
+QDialog#TransactionDescDialog QTextEdit { /* Contents of Receive Coin Dialog */
+border:1px solid #d7d7d7;
+}
 
 
