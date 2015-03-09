@@ -170,7 +170,6 @@ public:
         fAllowMinDifficultyBlocks = false;
         fRequireStandard = true;
         fMineBlocksOnDemand = false;
-        fSkipProofOfWorkCheck = false;
         fTestnetToBeDeprecatedFieldRPC = false;
     }
 
