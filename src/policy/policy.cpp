@@ -28,9 +28,32 @@ class CStandardPolicy : public CPolicy
 protected:
     unsigned nMaxDatacarrierBytes;
     bool fIsBareMultisigStd;
+    /**
+     * Mandatory script verification flags that all new blocks must comply with for
+     * them to be valid. (but old blocks may not comply with) Currently just P2SH,
+     * but in the future other flags may be added, such as a soft-fork to enforce
+     * strict DER encoding.
+     * Failing one of these tests may trigger a DoS ban - see ApproveTxInputsScripts() for
+     * details.
+     */
+    unsigned int mandatoryScriptFlags;
+    /**
+     * Standard script verification flags that standard transactions will comply
+     * with. However scripts violating these flags may still be present in valid
+     * blocks and we must accept those blocks.
+     */
+    unsigned int policyScriptFlags;
 public:
     CStandardPolicy() : nMaxDatacarrierBytes(MAX_OP_RETURN_RELAY),
-                        fIsBareMultisigStd(true) {};
+                        fIsBareMultisigStd(true),
+                        mandatoryScriptFlags(SCRIPT_VERIFY_P2SH),
+                        policyScriptFlags(SCRIPT_VERIFY_DERSIG |
+                                          SCRIPT_VERIFY_STRICTENC |
+                                          SCRIPT_VERIFY_MINIMALDATA |
+                                          SCRIPT_VERIFY_NULLDUMMY |
+                                          SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_NOPS |
+                                          SCRIPT_VERIFY_CLEANSTACK)
+    {};
 
     virtual std::vector<std::pair<std::string, std::string> > GetOptionsHelp() const;
     virtual void InitFromArgs(const std::map<std::string, std::string>&);
@@ -294,7 +317,7 @@ bool CStandardPolicy::ApproveTxInputsScripts(const CTransaction& tx, CValidation
     // Skip ECDSA signature verification when connecting blocks
     // before the last block chain checkpoint. This is safe because block merkle hashes are
     // still computed and checked, and any change will be caught at the next checkpoint.
-    if (!Consensus::CheckTxInputsScripts(tx, state, view, true, MANDATORY_SCRIPT_VERIFY_FLAGS))
+    if (!Consensus::CheckTxInputsScripts(tx, state, view, true, mandatoryScriptFlags))
         // Failures of non-policy flags indicate a transaction that is
         // invalid in new blocks, e.g. a invalid P2SH. We DoS ban
         // such nodes as they are not following the protocol. That
@@ -314,7 +337,7 @@ bool CStandardPolicy::ApproveTxInputsScripts(const CTransaction& tx, CValidation
     // transactions to pass as valid when they're actually invalid. For
     // instance the STRICTENC flag was incorrectly allowing certain
     // CHECKSIG NOT scripts to pass, even though they were invalid.
-    if (!Consensus::CheckTxInputsScripts(tx, state, view, true, MANDATORY_SCRIPT_VERIFY_FLAGS | STANDARD_NOT_MANDATORY_VERIFY_FLAGS))
+    if (!Consensus::CheckTxInputsScripts(tx, state, view, true, mandatoryScriptFlags | policyScriptFlags))
         return state.Invalid(false, REJECT_NONSTANDARD, strprintf("with flags: STANDARD_NOT_MANDATORY (%s)", state.GetRejectReason()));
 
     return true;
