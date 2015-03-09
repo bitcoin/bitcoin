@@ -5,9 +5,11 @@
 #include "primitives/transaction.h"
 #include "main.h"
 
+#include "test/test_bitcoin.h"
+
 #include <boost/test/unit_test.hpp>
 
-BOOST_AUTO_TEST_SUITE(main_tests)
+BOOST_FIXTURE_TEST_SUITE(main_tests, TestingSetup)
 
 BOOST_AUTO_TEST_CASE(subsidy_limit_test)
 {
