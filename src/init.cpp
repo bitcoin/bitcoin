@@ -412,6 +412,19 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += HelpMessageOpt("-rpcsslprivatekeyfile=<file.pem>", strprintf(_("Server private key (default: %s)"), "server.pem"));
     strUsage += HelpMessageOpt("-rpcsslciphers=<ciphers>", strprintf(_("Acceptable ciphers (default: %s)"), "TLSv1.2+HIGH:TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!3DES:@STRENGTH"));
 
+    if (mode == HMM_BITCOIN_QT)
+    {
+        strUsage += HelpMessageGroup(_("UI Options:"));
+        if (GetBoolArg("-help-debug", false)) {
+            strUsage += HelpMessageOpt("-allowselfsignedrootcertificates", _("Allow self signed root certificates (default: 0)"));
+        }
+        strUsage += HelpMessageOpt("-choosedatadir", _("Choose data directory on startup (default: 0)"));
+        strUsage += HelpMessageOpt("-lang=<lang>", _("Set language, for example \"de_DE\" (default: system locale)"));
+        strUsage += HelpMessageOpt("-min", _("Start minimized"));
+        strUsage += HelpMessageOpt("-rootcertificates=<file>", _("Set SSL root certificates for payment request (default: -system-)"));
+        strUsage += HelpMessageOpt("-splash", _("Show splash screen on startup (default: 1)"));
+    }
+
     return strUsage;
 }
 
