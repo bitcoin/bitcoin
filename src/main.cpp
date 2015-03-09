@@ -3060,8 +3060,7 @@ bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& sta
                          REJECT_INVALID, "late-legacy-block");
 
     // Check proof of work
-    if ((!Params().SkipProofOfWorkCheck()) &&
-       (block.nBits != GetNextWorkRequired(pindexPrev, &block)))
+    if ((block.nBits != GetNextWorkRequired(pindexPrev, &block)))
         return state.DoS(100, error("%s : incorrect proof of work", __func__),
                          REJECT_INVALID, "bad-diffbits");
 

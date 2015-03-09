@@ -176,7 +176,6 @@ public:
         fDefaultConsistencyChecks = false;
         fRequireStandard = true;
         fMineBlocksOnDemand = false;
-        fSkipProofOfWorkCheck = false;
         fTestnetToBeDeprecatedFieldRPC = false;
 
         nPoolMaxTransactions = 3;
