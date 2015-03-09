@@ -187,3 +187,8 @@ CSHA256& CSHA256::Reset()
     sha256::Initialize(s);
     return *this;
 }
+
+CSHA256::~CSHA256()
+{
+    Reset();
+}
