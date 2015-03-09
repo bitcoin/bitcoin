@@ -5,6 +5,8 @@
 #include "wallet.h"
 #include "walletdb.h"
 
+#include "test/test_bitcoin.h"
+
 #include <stdint.h>
 
 #include <boost/foreach.hpp>
@@ -12,7 +14,7 @@
 
 extern CWallet* pwalletMain;
 
-BOOST_AUTO_TEST_SUITE(accounting_tests)
+BOOST_FIXTURE_TEST_SUITE(accounting_tests, TestingSetup)
 
 static void
 GetResults(CWalletDB& walletdb, std::map<CAmount, CAccountingEntry>& results)
