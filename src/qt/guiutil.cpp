@@ -771,11 +771,18 @@ QString loadStyleSheet()
     QString theme = settings.value("theme", "").toString();
 
     if(!theme.isEmpty()){
-        QFile qFile(":/css/drkblue");
+        QFile qFile(QString(":/css/") + theme);      
         if (qFile.open(QFile::ReadOnly)) {
             styleSheet = QLatin1String(qFile.readAll());
         }
     }
+    else {
+        QFile qFile(":/css/drkblue");  
+        if (qFile.open(QFile::ReadOnly)) {
+            styleSheet = QLatin1String(qFile.readAll());
+        }
+    }
+    
     return styleSheet;
 }
 
