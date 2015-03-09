@@ -51,6 +51,7 @@ public:
      *    CHECKSIG/CHECKMULTISIG operations
      */
     virtual bool ApproveTxInputs(const CTransaction& tx, const CCoinsViewEfficient& mapInputs) const;
+    virtual bool ApproveTxInputsScripts(const CTransaction&, CValidationState&, const CCoinsViewEfficient&, bool cacheStore) const;
 };
 
 /** Global variables and their interfaces */
@@ -244,6 +245,40 @@ bool CStandardPolicy::ApproveTxInputs(const CTransaction& tx, const CCoinsViewEf
         if (stack.size() != (unsigned int)nArgsExpected)
             return false;
     }
+
+    return true;
+}
+
+bool CStandardPolicy::ApproveTxInputsScripts(const CTransaction& tx, CValidationState& state, const CCoinsViewEfficient& view, bool cacheStore) const
+{
+    // Only if ALL inputs pass do we perform expensive ECDSA signature checks.
+    // Helps prevent CPU exhaustion attacks.
+
+    // Skip ECDSA signature verification when connecting blocks
+    // before the last block chain checkpoint. This is safe because block merkle hashes are
+    // still computed and checked, and any change will be caught at the next checkpoint.
+    if (!Consensus::CheckTxInputsScripts(tx, state, view, true, MANDATORY_SCRIPT_VERIFY_FLAGS))
+        // Failures of non-policy flags indicate a transaction that is
+        // invalid in new blocks, e.g. a invalid P2SH. We DoS ban
+        // such nodes as they are not following the protocol. That
+        // said during an upgrade careful thought should be taken
+        // as to the correct behavior - we may want to continue
+        // peering with non-upgraded nodes even after a soft-fork
+        // super-majority vote has passed.
+        return state.DoS(100,false, REJECT_INVALID, strprintf("with flags: MANDATORY (%s)", state.GetRejectReason()));
+
+    // Check again against just the non-consensus-critical policy but
+    // not mandatory script verification flags, such as
+    // non-standard DER encodings or non-null dummy
+    // arguments; if so, don't trigger DoS protection to
+    // avoid splitting the network between upgraded and
+    // non-upgraded nodes.
+    // This is done later in case of bugs in the standard flags that cause
+    // transactions to pass as valid when they're actually invalid. For
+    // instance the STRICTENC flag was incorrectly allowing certain
+    // CHECKSIG NOT scripts to pass, even though they were invalid.
+    if (!Consensus::CheckTxInputsScripts(tx, state, view, true, MANDATORY_SCRIPT_VERIFY_FLAGS | STANDARD_NOT_MANDATORY_VERIFY_FLAGS))
+        return state.Invalid(false, REJECT_NONSTANDARD, strprintf("with flags: STANDARD_NOT_MANDATORY (%s)", state.GetRejectReason()));
 
     return true;
 }

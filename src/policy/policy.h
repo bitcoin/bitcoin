@@ -92,6 +92,12 @@ public:
      * @return True if all inputs (scriptSigs) use only standard transaction forms
      */
     virtual bool ApproveTxInputs(const CTransaction&, const CCoinsViewEfficient&) const = 0;
+    /**
+     * Check whether all inputs of this transaction are valid (scripts and sigs)
+     * This does not modify the UTXO set. This does not check double spends and amounts.
+     * Preconditions: tx.IsCoinBase() is false
+     */
+    virtual bool ApproveTxInputsScripts(const CTransaction&, CValidationState&, const CCoinsViewEfficient&, bool cacheStore) const = 0;
 };
 
 /** Return a CPolicy of the type described in the parameter string */
