@@ -71,8 +71,9 @@ OptionsDialog::OptionsDialog(QWidget *parent) :
     /* Display elements init */
     
     /* Theme selector */
-    ui->theme->addItem(QString("(") + tr("default") + QString(")"), QVariant(""));
     ui->theme->addItem(QString("DRK-blue"), QVariant("drkblue"));
+    ui->theme->addItem(QString("DRK-traditional"), QVariant("trad"));
+
     
     /* Language selector */
     QDir translations(":translations");
