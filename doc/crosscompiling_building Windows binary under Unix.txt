@@ -67,9 +67,9 @@ libdb.a
 libdb_cxx.a
 
 2.5) Miniupnpc
--Скачайте http://miniupnp.free.fr/files/download.php?file=miniupnpc-1.9.20141128.tar.gz
+-Скачайте http://miniupnp.free.fr/files/download.php?file=miniupnpc-1.9.20150206.tar.gz
 -Распакуйте в домашнюю папку
--Переименуйте папку miniupnpc-1.9.20141128 в miniupnpc
+-Переименуйте папку miniupnpc-1.9.20150206 в miniupnpc
 -Перейдите в папку miniupnpc и создайте файл miniupnpcstrings.h
 -Напишите в нём:
 
@@ -97,7 +97,7 @@ libdb_cxx.a
 на
  CC=$(CROSS)gcc
 
--Удалите строки с 68 по 72
+-Удалите строки с 67 по 73
 
 wingenminiupnpcstrings:	wingenminiupnpcstrings.o
 
