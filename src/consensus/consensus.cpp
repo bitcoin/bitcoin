@@ -187,6 +187,11 @@ unsigned int Consensus::GetP2SHSigOpCount(const CTransaction& tx, const CCoinsVi
     return nSigOps;
 }
 
+unsigned int Consensus::GetSigOpCount(const CTransaction& tx, const CCoinsViewEfficient& inputs)
+{
+    return Consensus::GetLegacySigOpCount(tx) + Consensus::GetP2SHSigOpCount(tx, inputs);
+}
+
 CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& params)
 {
     int halvings = nHeight / params.nSubsidyHalvingInterval;

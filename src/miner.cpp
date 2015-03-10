@@ -245,11 +245,6 @@ CBlockTemplate* CreateNewBlock(const Consensus::Params& params, const CScript& s
             if (nBlockSize + nTxSize >= nBlockMaxSize)
                 continue;
 
-            // Legacy limits on sigOps:
-            unsigned int nTxSigOps = Consensus::GetLegacySigOpCount(tx);
-            if (nBlockSigOps + nTxSigOps >= MAX_BLOCK_SIGOPS)
-                continue;
-
             // Skip free transactions if we're past the minimum block size:
             const uint256& hash = tx.GetHash();
             double dPriorityDelta = 0;
@@ -273,7 +268,7 @@ CBlockTemplate* CreateNewBlock(const Consensus::Params& params, const CScript& s
 
             CAmount nTxFees = view.GetValueIn(tx)-tx.GetValueOut();
 
-            nTxSigOps += Consensus::GetP2SHSigOpCount(tx, view);
+            unsigned int nTxSigOps = Consensus::GetSigOpCount(tx, view);
             if (nBlockSigOps + nTxSigOps >= MAX_BLOCK_SIGOPS)
                 continue;
 

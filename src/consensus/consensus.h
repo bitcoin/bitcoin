@@ -56,6 +56,11 @@ unsigned int GetLegacySigOpCount(const CTransaction& tx);
  * @see CTransaction::FetchInputs
  */
 unsigned int GetP2SHSigOpCount(const CTransaction& tx, const CCoinsViewEfficient& mapInputs);
+/**
+ * Count ECDSA signature operations.
+ * @see Consensus::GetLegacySigOpCount and Consensus::GetP2SHSigOpCount
+ */
+unsigned int GetSigOpCount(const CTransaction&, const CCoinsViewEfficient&);
 
 } // namespace Consensus
 
