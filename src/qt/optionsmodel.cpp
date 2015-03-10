@@ -139,7 +139,7 @@ void OptionsModel::Init()
 
     // Display
     if (!settings.contains("theme"))
-        settings.setValue("theme", "");
+        settings.setValue("theme", ":/css/drkblue");
     if (!settings.contains("language"))
         settings.setValue("language", "");
     if (!SoftSetArg("-lang", settings.value("language").toString().toStdString()))
