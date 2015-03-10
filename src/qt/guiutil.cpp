@@ -768,21 +768,21 @@ QString loadStyleSheet()
 {
     QString styleSheet;
     QSettings settings;
+    QString cssName;
     QString theme = settings.value("theme", "").toString();
 
     if(!theme.isEmpty()){
-        QFile qFile(QString(":/css/") + theme);      
-        if (qFile.open(QFile::ReadOnly)) {
-            styleSheet = QLatin1String(qFile.readAll());
-        }
+        cssName = QString(":/css/") + theme; 
     }
     else {
-        QFile qFile(":/css/drkblue");  
-        if (qFile.open(QFile::ReadOnly)) {
-            styleSheet = QLatin1String(qFile.readAll());
-        }
+        cssName = QString(":/css/drkblue");  
     }
     
+    QFile qFile(cssName);      
+    if (qFile.open(QFile::ReadOnly)) {
+        styleSheet = QLatin1String(qFile.readAll());
+    }
+        
     return styleSheet;
 }
 
