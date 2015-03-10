@@ -828,7 +828,7 @@ isminetype CWallet::IsMine(const CTxOut& txout) const
 
 CAmount CWallet::GetCredit(const CTxOut& txout, const isminefilter& filter) const
 {
-    if (!MoneyRange(txout.nValue))
+    if (!Consensus::VerifyAmount(txout.nValue))
         throw std::runtime_error("CWallet::GetCredit(): value out of range");
     return ((IsMine(txout) & filter) ? txout.nValue : 0);
 }
@@ -857,7 +857,7 @@ bool CWallet::IsChange(const CTxOut& txout) const
 
 CAmount CWallet::GetChange(const CTxOut& txout) const
 {
-    if (!MoneyRange(txout.nValue))
+    if (!Consensus::VerifyAmount(txout.nValue))
         throw std::runtime_error("CWallet::GetChange(): value out of range");
     return (IsChange(txout) ? txout.nValue : 0);
 }
@@ -881,7 +881,7 @@ CAmount CWallet::GetDebit(const CTransaction& tx, const isminefilter& filter) co
     BOOST_FOREACH(const CTxIn& txin, tx.vin)
     {
         nDebit += GetDebit(txin, filter);
-        if (!MoneyRange(nDebit))
+        if (!Consensus::VerifyAmount(nDebit))
             throw std::runtime_error("CWallet::GetDebit(): value out of range");
     }
     return nDebit;
@@ -893,7 +893,7 @@ CAmount CWallet::GetCredit(const CTransaction& tx, const isminefilter& filter) c
     BOOST_FOREACH(const CTxOut& txout, tx.vout)
     {
         nCredit += GetCredit(txout, filter);
-        if (!MoneyRange(nCredit))
+        if (!Consensus::VerifyAmount(nCredit))
             throw std::runtime_error("CWallet::GetCredit(): value out of range");
     }
     return nCredit;
@@ -905,7 +905,7 @@ CAmount CWallet::GetChange(const CTransaction& tx) const
     BOOST_FOREACH(const CTxOut& txout, tx.vout)
     {
         nChange += GetChange(txout);
-        if (!MoneyRange(nChange))
+        if (!Consensus::VerifyAmount(nChange))
             throw std::runtime_error("CWallet::GetChange(): value out of range");
     }
     return nChange;
@@ -1240,7 +1240,7 @@ CAmount CWalletTx::GetAvailableCredit(bool fUseCache) const
         {
             const CTxOut &txout = vout[i];
             nCredit += pwallet->GetCredit(txout, ISMINE_SPENDABLE);
-            if (!MoneyRange(nCredit))
+            if (!Consensus::VerifyAmount(nCredit))
                 throw std::runtime_error("CWalletTx::GetAvailableCredit() : value out of range");
         }
     }
@@ -1283,7 +1283,7 @@ CAmount CWalletTx::GetAvailableWatchOnlyCredit(const bool& fUseCache) const
         {
             const CTxOut &txout = vout[i];
             nCredit += pwallet->GetCredit(txout, ISMINE_WATCH_ONLY);
-            if (!MoneyRange(nCredit))
+            if (!Consensus::VerifyAmount(nCredit))
                 throw std::runtime_error("CWalletTx::GetAvailableCredit() : value out of range");
         }
     }

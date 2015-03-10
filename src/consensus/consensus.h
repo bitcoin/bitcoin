@@ -6,6 +6,7 @@
 #ifndef BITCOIN_CONSENSUS_CONSENSUS_H
 #define BITCOIN_CONSENSUS_CONSENSUS_H
 
+#include "amount.h"
 #include "consensus/params.h"
 
 class CBlock;
@@ -23,6 +24,8 @@ static const unsigned int MAX_BLOCK_SIGOPS = MAX_BLOCK_SIZE/50;
 static const int COINBASE_MATURITY = 100;
 /** Threshold for nLockTime: below this value it is interpreted as block number, otherwise as UNIX timestamp. */
 static const unsigned int LOCKTIME_THRESHOLD = 500000000; // Tue Nov  5 00:53:20 1985 UTC
+/** No amount larger than this (in satoshi) is valid */
+static const CAmount MAX_MONEY = 21000000 * COIN;
 
 /**
  * Consensus validations:
@@ -35,6 +38,7 @@ namespace Consensus {
 bool VerifyBlockHeader(const CBlockHeader& block, CValidationState& state, const Consensus::Params& params, int64_t nTime, CBlockIndex* pindexPrev);
 
 /** Context-independent validity checks */
+inline bool VerifyAmount(const CAmount& nValue) { return (nValue >= 0 && nValue <= MAX_MONEY); }
 bool CheckTx(const CTransaction& tx, CValidationState &state);
 bool CheckBlockHeader(const CBlockHeader& block, int64_t nTime, CValidationState& state, const Consensus::Params& params, bool fCheckPOW = true);
 bool CheckBlock(const CBlock& block, int64_t nTime, CValidationState& state, const Consensus::Params& params, bool fCheckPOW = true, bool fCheckMerkleRoot = true);

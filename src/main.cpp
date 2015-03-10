@@ -749,7 +749,7 @@ CAmount GetMinRelayFee(const CTransaction& tx, unsigned int nBytes, bool fAllowF
             nMinFee = 0;
     }
 
-    if (!MoneyRange(nMinFee))
+    if (!Consensus::VerifyAmount(nMinFee))
         nMinFee = MAX_MONEY;
     return nMinFee;
 }
@@ -1287,7 +1287,7 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, c
 
             // Check for negative or overflow input values
             nValueIn += coins->vout[prevout.n].nValue;
-            if (!MoneyRange(coins->vout[prevout.n].nValue) || !MoneyRange(nValueIn))
+            if (!Consensus::VerifyAmount(coins->vout[prevout.n].nValue) || !Consensus::VerifyAmount(nValueIn))
                 return state.DoS(100, false, REJECT_INVALID, "bad-txns-inputvalues-outofrange");
         }
 
@@ -1301,7 +1301,7 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, c
             return state.DoS(100, false, REJECT_INVALID, "bad-txns-fee-negative");
 
         nFees += nTxFee;
-        if (!MoneyRange(nFees))
+        if (!Consensus::VerifyAmount(nFees))
             return state.DoS(100, false, REJECT_INVALID, "bad-txns-fee-outofrange");
 
     return true;
