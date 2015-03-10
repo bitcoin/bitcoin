@@ -406,7 +406,7 @@ background-color:#fff;
 }
 
 QDialog#SignVerifyMessageDialog QPushButton#pasteButton_SM { /* Paste Button */
-qproperty-icon: url(":/icons/drkblue_editpaste");
+/* qproperty-icon: url(":/icons/drkblue_editpaste"); */
 background-color:transparent;
 padding-left:15px;
 }
@@ -416,7 +416,7 @@ font-size:10px;
 }
 
 QDialog#SignVerifyMessageDialog QPushButton#copySignatureButton_SM { /* Copy Button */
-qproperty-icon: url(":/icons/drkblue_editcopy");
+/* qproperty-icon: url(":/icons/drkblue_editcopy"); */
 background-color:transparent;
 padding-left:10px;
 padding-right:10px;
@@ -463,7 +463,7 @@ padding-right:10px;
 }
 
 QWidget#AddressBookPage QPushButton#copyAddress { /* Copy Address Button */
-qproperty-icon: url(":/icons/drkblue_editcopy");
+/* qproperty-icon: url(":/icons/drkblue_editcopy"); */
 background-color:transparent;
 color:#616161;
 padding-left:10px;
@@ -630,7 +630,7 @@ color:#ffffff;
 margin-right:5px;
 padding-right:5px;
 font-weight:bold;
-font-size:14px;
+font-size:16px;
 min-height:35px;
 }
 
@@ -689,7 +689,7 @@ background-color:transparent;
 }
 
 QWidget .QFrame#frameDarksend .QLabel#label_2 { /* Darksend Header */
-qproperty-geometry: rect(10 10 431 135);
+qproperty-geometry: rect(10 9 431 135);
 qproperty-alignment: 'AlignVCenter | AlignRight';
 min-width:230px;
 color:#3398cc;
@@ -860,6 +860,7 @@ background-repeat:none;
 QWidget .QFrame#frame_2 .QLabel#label_4 { /* Recent Transactions Label */
 min-width:360px;
 color:#3899cc;
+margin-left:67px;
 margin-top:123px;
 margin-right:5px;
 padding-right:5px;
@@ -871,8 +872,8 @@ min-height:24px;
 QWidget .QFrame#frame_2 QListView { /* Transaction List */
 font-weight:normal;
 font-size:12px;
-max-width:435px;
-margin-left:-66px; /* CSS Voodoo - set to -66px to hide default transaction icons */
+max-width:369px;
+margin-left:0px; /* CSS Voodoo - set to -66px to hide default transaction icons */
 }
 
 /* SEND DIALOG */
@@ -980,9 +981,8 @@ padding-bottom:20px;
 }
 
 QDialog#SendCoinsDialog .QLabel#labelBalance {
-margin-left:-2px;
-padding-left:-2px;
-font-size:14px;
+margin-left:0px;
+padding-left:0px;
 color:#616161;
 font-weight:bold;
 border-radius:5px;
@@ -1024,11 +1024,11 @@ padding-left:10px;
 }
 
 QStackedWidget#SendCoinsEntry .QToolButton#pasteButton { /* Paste Button */
-qproperty-icon: url(":/icons/drkblue_editpaste");
+/* qproperty-icon: url(":/icons/drkblue_editpaste"); */
 }
 
 QStackedWidget#SendCoinsEntry .QToolButton#deleteButton { /* Remove Button */
-qproperty-icon: url(":/icons/drkblue_remove");
+/* qproperty-icon: url(":/icons/drkblue_remove"); */
 }
 
 QStackedWidget#SendCoinsEntry .QLineEdit#addAsLabel { /* Pay To Input Field */
