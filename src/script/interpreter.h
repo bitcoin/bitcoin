@@ -78,6 +78,15 @@ enum
     SCRIPT_VERIFY_CLEANSTACK = (1U << 8),
 };
 
+static const unsigned int ALL_SCRIPT_VERIFY_FLAGS = SCRIPT_VERIFY_P2SH |
+                                                    SCRIPT_VERIFY_STRICTENC |
+                                                    SCRIPT_VERIFY_DERSIG |                                                    
+                                                    SCRIPT_VERIFY_LOW_S |
+                                                    SCRIPT_VERIFY_NULLDUMMY |
+                                                    SCRIPT_VERIFY_MINIMALDATA |
+                                                    SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_NOPS |
+                                                    SCRIPT_VERIFY_CLEANSTACK;
+
 uint256 SignatureHash(const CScript &scriptCode, const CTransaction& txTo, unsigned int nIn, int nHashType);
 
 class BaseSignatureChecker
