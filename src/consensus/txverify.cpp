@@ -11,6 +11,11 @@
 #include "script/sigcache.h"
 #include "tinyformat.h"
 
+unsigned int GetSigOpCount(const CTransaction& tx, const CCoinsViewCache& inputs)
+{
+    return GetLegacySigOpCount(tx) + GetP2SHSigOpCount(tx, inputs);
+}
+
 bool Consensus::CheckTxInputsScripts(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs, bool cacheStore, unsigned int flags)
 {
     for (unsigned int i = 0; i < tx.vin.size(); i++) {

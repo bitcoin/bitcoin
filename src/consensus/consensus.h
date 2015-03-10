@@ -60,6 +60,24 @@ bool ContextualCheckBlockHeader(const CBlockHeader&, CValidationState&, const Co
 /** Transaction validation utility functions */
 
 bool CheckFinalTx(const CTransaction &tx, int nBlockHeight, int64_t nBlockTime);
+/**
+ * Count ECDSA signature operations the old-fashioned (pre-0.6) way
+ * @return number of sigops this transaction's outputs will produce when spent
+ * @see CTransaction::FetchInputs
+ */
+unsigned int GetLegacySigOpCount(const CTransaction& tx);
+/**
+ * Count ECDSA signature operations in pay-to-script-hash inputs.
+ * @param[in] mapInputs Map of previous transactions that have outputs we're spending
+ * @return maximum number of sigops required to validate this transaction's inputs
+ * @see CTransaction::FetchInputs
+ */
+unsigned int GetP2SHSigOpCount(const CTransaction& tx, const CCoinsViewCache& mapInputs);
+/**
+ * Count ECDSA signature operations.
+ * @see GetLegacySigOpCount and GetP2SHSigOpCount
+ */
+unsigned int GetSigOpCount(const CTransaction&, const CCoinsViewCache&);
 
 /** Block header validation utility functions */
 

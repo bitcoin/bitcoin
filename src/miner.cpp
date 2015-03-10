@@ -258,10 +258,6 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
             if (nBlockSize + nTxSize >= nBlockMaxSize)
                 continue;
 
-            // Legacy limits on sigOps:
-            unsigned int nTxSigOps = GetLegacySigOpCount(tx);
-            if (nBlockSigOps + nTxSigOps >= MAX_BLOCK_SIGOPS)
-                continue;
 
             // Skip free transactions if we're past the minimum block size:
             const uint256& hash = tx.GetHash();
@@ -285,7 +281,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
             if (!Consensus::CheckTxInputs(tx, state, view, nSpendHeight))
                 continue;
 
-            nTxSigOps += GetP2SHSigOpCount(tx, view);
+            unsigned int nTxSigOps = GetSigOpCount(tx, view);
             if (nBlockSigOps + nTxSigOps >= MAX_BLOCK_SIGOPS)
                 continue;
 
