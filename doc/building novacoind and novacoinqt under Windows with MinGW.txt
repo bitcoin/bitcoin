@@ -69,8 +69,8 @@ bootstrap.bat mingw
 b2 --build-type=complete --with-chrono --with-filesystem --with-program_options --with-system --with-thread toolset=gcc variant=release link=static threading=multi runtime-link=static stage
 
 2.4 Miniupnpc
--Скачайте http://miniupnp.free.fr/files/download.php?file=miniupnpc-1.9.20141128.tar.gz
--Распакуйте miniupnpc-1.9.20141128.tar.gz с помощью 7z. (Распаковать нужно 2 раза, нажмите на файле miniupnpc-1.9.20141128.tar.gz левой кнопкой мыши и выберите 7-Zip, затем Распаковать здесь. Появится файл miniupnpc-1.9.20141128.tar. С ним аналогично, левая кнопка мыши -> 7-Zip -> Распаковать здесь. Появится папка miniupnpc-1.9.20141128. Переименуйте её в miniupnpc.
+-Скачайте http://miniupnp.free.fr/files/download.php?file=miniupnpc-1.9.20150206.tar.gz
+-Распакуйте miniupnpc-1.9.20150206.tar.gz с помощью 7z. (Распаковать нужно 2 раза, нажмите на файле miniupnpc-1.9.20150206.tar.gz левой кнопкой мыши и выберите 7-Zip, затем Распаковать здесь. Появится файл miniupnpc-1.9.20150206.tar. С ним аналогично, левая кнопка мыши -> 7-Zip -> Распаковать здесь. Появится папка miniupnpc-1.9.20150206. Переименуйте её в miniupnpc.
 -Откройте командную строку Windows, и выполните следующий код:
 
 cd C:\deps\miniupnpc
