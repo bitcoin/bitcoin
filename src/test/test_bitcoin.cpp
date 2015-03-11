@@ -29,7 +29,7 @@ extern void noui_connect();
 TestingSetup::TestingSetup()
 {
         fPrintToDebugLog = false; // don't want to write to debug.log file
-        SelectParams(CBaseChainParams::UNITTEST);
+        SelectParams(CBaseChainParams::MAIN);
         noui_connect();
 #ifdef ENABLE_WALLET
         bitdb.MakeMock();
