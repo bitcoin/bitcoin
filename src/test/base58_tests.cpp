@@ -183,6 +183,7 @@ BOOST_AUTO_TEST_CASE(base58_keys_valid_parse)
 // Goal: check that generated keys match test vectors
 BOOST_AUTO_TEST_CASE(base58_keys_valid_gen)
 {
+    SelectParams(CBaseChainParams::MAIN);
     Array tests = read_json(std::string(json_tests::base58_keys_valid, json_tests::base58_keys_valid + sizeof(json_tests::base58_keys_valid)));
     std::vector<unsigned char> result;
     BOOST_FOREACH(Value& tv, tests)
@@ -251,6 +252,7 @@ BOOST_AUTO_TEST_CASE(base58_keys_valid_gen)
 // Goal: check that base58 parsing code is robust against a variety of corrupted data
 BOOST_AUTO_TEST_CASE(base58_keys_invalid)
 {
+    SelectParams(CBaseChainParams::MAIN);
     Array tests = read_json(std::string(json_tests::base58_keys_invalid, json_tests::base58_keys_invalid + sizeof(json_tests::base58_keys_invalid))); // Negative testcases
     std::vector<unsigned char> result;
     CBitcoinSecret secret;
