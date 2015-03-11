@@ -29,11 +29,18 @@ bool CMasternodeConfig::read(std::string& strErr) {
             return false;
         }
 
-/*        if(CService(ip).GetPort() != 19999 && CService(ip).GetPort() != 9999)  {
-            strErr = "Invalid port (must be 9999 for mainnet or 19999 for testnet) detected in masternode.conf: " + line;
+        if(Params().NetworkID() == CChainParams::MAIN){
+            if(CService(ip).GetPort() != 9999) {
+                strErr = "Invalid port detected in masternode.conf: " + line + " (must be 9999 for mainnet)";
+                streamConfig.close();
+                return false;
+            }
+        } else if(CService(ip).GetPort() == 9999) {
+            strErr = "Invalid port detected in masternode.conf: " + line + " (9999 must be only on mainnet)";
             streamConfig.close();
             return false;
-        }*/
+        }
+
 
         add(alias, ip, privKey, txHash, outputIndex);
     }
