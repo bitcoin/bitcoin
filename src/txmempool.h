@@ -43,10 +43,12 @@ private:
     int64_t nTime; //! Local time when entering the mempool
     double dPriority; //! Priority when entering the mempool
     unsigned int nHeight; //! Chain height when entering the mempool
+    unsigned int validationFlags; //! SCRIPT_VERIFY flags tx was validated against
 
 public:
     CTxMemPoolEntry(const CTransaction& _tx, const CAmount& _nFee,
-                    int64_t _nTime, double _dPriority, unsigned int _nHeight);
+                    int64_t _nTime, double _dPriority,
+                    unsigned int _nHeight, unsigned int _flags);
     CTxMemPoolEntry();
     CTxMemPoolEntry(const CTxMemPoolEntry& other);
 
@@ -56,6 +58,7 @@ public:
     size_t GetTxSize() const { return nTxSize; }
     int64_t GetTime() const { return nTime; }
     unsigned int GetHeight() const { return nHeight; }
+    unsigned int GetValidationFlags() const { return validationFlags; }
 };
 
 class CMinerPolicyEstimator;
@@ -146,6 +149,8 @@ public:
     }
 
     bool lookup(uint256 hash, CTransaction& result) const;
+    /** returns true if transaction is in mempool and is valid with respect to validationFlags */
+    bool validated(const uint256& hash, unsigned int validationFlags) const;
 
     /** Estimate fee rate needed to get into the next nBlocks */
     CFeeRate estimateFee(int nBlocks) const;
