@@ -45,7 +45,7 @@ void base_blob<BITS>::SetHex(const char* psz)
         psz++;
     psz--;
     unsigned char* p1 = (unsigned char*)data;
-    unsigned char* pend = p1 + WIDTH * 4;
+    unsigned char* pend = p1 + WIDTH;
     while (psz >= pbegin && p1 < pend) {
         *p1 = ::HexDigit(*psz--);
         if (psz >= pbegin) {
@@ -128,7 +128,7 @@ uint64_t uint256::GetHash(const uint256& salt) const
     uint32_t a, b, c;
     const uint32_t *pn = (const uint32_t*)data;
     const uint32_t *salt_pn = (const uint32_t*)salt.data;
-    a = b = c = 0xdeadbeef + (WIDTH << 2);
+    a = b = c = 0xdeadbeef + WIDTH;
 
     a += pn[0] ^ salt_pn[0];
     b += pn[1] ^ salt_pn[1];
