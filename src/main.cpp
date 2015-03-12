@@ -2311,7 +2311,7 @@ bool InvalidateBlock(CValidationState& state, CBlockIndex *pindex) {
     BlockMap::iterator it = mapBlockIndex.begin();
     while (it != mapBlockIndex.end()) {
         if (it->second->IsValid(BLOCK_VALID_TRANSACTIONS) && it->second->nChainTx && setBlockIndexCandidates.value_comp()(chainActive.Tip(), it->second)) {
-            setBlockIndexCandidates.insert(pindex);
+            setBlockIndexCandidates.insert(it->second);
         }
         it++;
     }
