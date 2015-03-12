@@ -78,12 +78,27 @@ void SocketSendData(CNode *pnode);
 
 typedef int NodeId;
 
+struct CombinerAll
+{
+    typedef bool result_type;
+
+    template<typename I>
+    bool operator()(I first, I last) const
+    {
+        while (first != last) {
+            if (!(*first)) return false;
+            ++first;
+        }
+        return true;
+    }
+};
+
 // Signals for message handling
 struct CNodeSignals
 {
     boost::signals2::signal<int ()> GetHeight;
-    boost::signals2::signal<bool (CNode*)> ProcessMessages;
-    boost::signals2::signal<bool (CNode*, bool)> SendMessages;
+    boost::signals2::signal<bool (CNode*), CombinerAll> ProcessMessages;
+    boost::signals2::signal<bool (CNode*, bool), CombinerAll> SendMessages;
     boost::signals2::signal<void (NodeId, const CNode*)> InitializeNode;
     boost::signals2::signal<void (NodeId)> FinalizeNode;
 };
