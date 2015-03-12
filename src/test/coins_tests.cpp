@@ -5,6 +5,7 @@
 #include "coins.h"
 #include "random.h"
 #include "uint256.h"
+#include "test/test_bitcoin.h"
 
 #include <vector>
 #include <map>
@@ -60,7 +61,7 @@ public:
 };
 }
 
-BOOST_AUTO_TEST_SUITE(coins_tests)
+BOOST_FIXTURE_TEST_SUITE(coins_tests, BasicTestingSetup)
 
 static const unsigned int NUM_SIMULATION_ITERATIONS = 40000;
 

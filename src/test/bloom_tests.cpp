@@ -13,6 +13,7 @@
 #include "uint256.h"
 #include "util.h"
 #include "utilstrencodings.h"
+#include "test/test_bitcoin.h"
 
 #include <vector>
 
@@ -21,7 +22,7 @@
 
 using namespace std;
 
-BOOST_AUTO_TEST_SUITE(bloom_tests)
+BOOST_FIXTURE_TEST_SUITE(bloom_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(bloom_create_insert_serialize)
 {
