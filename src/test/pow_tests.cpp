@@ -5,12 +5,13 @@
 #include "main.h"
 #include "pow.h"
 #include "util.h"
+#include "test/test_bitcoin.h"
 
 #include <boost/test/unit_test.hpp>
 
 using namespace std;
 
-BOOST_AUTO_TEST_SUITE(pow_tests)
+BOOST_FIXTURE_TEST_SUITE(pow_tests, BasicTestingSetup)
 
 /* Test calculation of next difficulty target with no constraints applying */
 BOOST_AUTO_TEST_CASE(get_next_work)
