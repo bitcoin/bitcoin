@@ -525,6 +525,14 @@ void RandSeed(const unsigned char* data, size_t size)
     prng.Seed(data, size);
 }
 
+void RandSeedDeterministic()
+{
+    static unsigned const char seed[] = "Deterministic seed";
+    boost::unique_lock<boost::mutex> lock(cs_prng);
+    prng = Fortuna();
+    prng.Seed(seed, sizeof(seed));
+}
+
 void RandSeedSystem(bool slow)
 {
     int64_t now = GetTimeMicros();
@@ -546,8 +554,23 @@ void RandSeedSystem(bool slow)
 void GetRandBytes(unsigned char* buf, int num)
 {
     int64_t now = GetTimeMicros();
-    boost::unique_lock<boost::mutex> lock(cs_prng);
-    prng.Generate(now, buf, num);
+    {
+        boost::unique_lock<boost::mutex> lock(cs_prng);
+        prng.Generate(now, buf, num);
+    }
+}
+
+void GetStrongRandBytes(unsigned char* buf, int num)
+{
+    int64_t now = GetTimeMicros();
+    unsigned char osent[32];
+    GetOSEntropy(osent);
+    {
+        boost::unique_lock<boost::mutex> lock(cs_prng);
+        prng.Seed(osent, sizeof(osent));
+        prng.Generate(now, buf, num);
+    }
+    memset(osent, 0, sizeof(osent));
 }
 
 uint64_t GetRand(uint64_t nMax)
@@ -570,29 +593,22 @@ int GetRandInt(int nMax)
     return GetRand(nMax);
 }
 
+uint32_t GetInsecureRand()
+{
+    static boost::mutex cs_insecure;
+    static uint32_t future_rand[256];
+    static int future_used = 256;
+    boost::unique_lock<boost::mutex> lock(cs_insecure);
+    if (future_used == 256) {
+        GetRandBytes((unsigned char*)future_rand, sizeof(future_rand));
+        future_used = 0;
+    }
+    return future_rand[future_used++];
+}
+
 uint256 GetRandHash()
 {
     uint256 hash;
     GetRandBytes((unsigned char*)&hash, sizeof(hash));
     return hash;
-}
-
-uint32_t insecure_rand_Rz = 11;
-uint32_t insecure_rand_Rw = 11;
-void seed_insecure_rand(bool fDeterministic)
-{
-    // The seed values have some unlikely fixed points which we avoid.
-    if (fDeterministic) {
-        insecure_rand_Rz = insecure_rand_Rw = 11;
-    } else {
-        uint32_t tmp;
-        do {
-            GetRandBytes((unsigned char*)&tmp, 4);
-        } while (tmp == 0 || tmp == 0x9068ffffU);
-        insecure_rand_Rz = tmp;
-        do {
-            GetRandBytes((unsigned char*)&tmp, 4);
-        } while (tmp == 0 || tmp == 0x464fffffU);
-        insecure_rand_Rw = tmp;
-    }
 }

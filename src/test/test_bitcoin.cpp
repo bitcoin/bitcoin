@@ -28,8 +28,7 @@ extern void noui_connect();
 
 BasicTestingSetup::BasicTestingSetup()
 {
-        static const unsigned char seed[] = "fixed rand seed";
-        RandSeed(seed, sizeof(seed));
+        RandSeedDeterministic();
         fPrintToDebugLog = false; // don't want to write to debug.log file
         SelectParams(CBaseChainParams::MAIN);
 }

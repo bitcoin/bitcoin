@@ -239,8 +239,6 @@ BOOST_AUTO_TEST_CASE(util_seed_insecure_rand)
     int i;
     int count=0;
 
-    seed_insecure_rand(true);
-
     for (int mod=2;mod<11;mod++)
     {
         int mask = 1;
@@ -255,7 +253,7 @@ BOOST_AUTO_TEST_CASE(util_seed_insecure_rand)
         {
             uint32_t rval;
             do{
-                rval=insecure_rand()&mask;
+                rval=GetInsecureRand()&mask;
             }while(rval>=(uint32_t)mod);
             count += rval==0;
         }
