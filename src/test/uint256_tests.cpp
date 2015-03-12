@@ -4,6 +4,7 @@
 #include "arith_uint256.h"
 #include "uint256.h"
 #include "version.h"
+#include "test/test_bitcoin.h"
 
 #include <boost/test/unit_test.hpp>
 #include <stdint.h>
@@ -14,7 +15,7 @@
 #include <string>
 #include <stdio.h>
 
-BOOST_AUTO_TEST_SUITE(uint256_tests)
+BOOST_FIXTURE_TEST_SUITE(uint256_tests, BasicTestingSetup)
 
 const unsigned char R1Array[] =
     "\x9c\x52\x4a\xdb\xcf\x56\x11\x12\x2b\x29\x12\x5e\x5d\x35\xd2\xd2"
