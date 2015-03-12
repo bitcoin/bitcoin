@@ -26,11 +26,17 @@ CWallet* pwalletMain;
 extern bool fPrintToConsole;
 extern void noui_connect();
 
-TestingSetup::TestingSetup()
+BasicTestingSetup::BasicTestingSetup()
 {
         fPrintToDebugLog = false; // don't want to write to debug.log file
         SelectParams(CBaseChainParams::MAIN);
-        noui_connect();
+}
+BasicTestingSetup::~BasicTestingSetup()
+{
+}
+
+TestingSetup::TestingSetup()
+{
 #ifdef ENABLE_WALLET
         bitdb.MakeMock();
 #endif
