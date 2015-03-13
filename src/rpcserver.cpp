@@ -398,10 +398,10 @@ const CRPCCommand *CRPCTable::operator[](string name) const
     return (*it).second;
 }
 
-void CRPCTable::AddOrReplaceCommand(const CRPCCommand command)
+void CRPCTable::AddOrReplaceCommand(const CRPCCommand* pcommand)
 {
     // add new command to the dispatch table
-    mapCommands[command.name] = &command;
+    mapCommands[pcommand->name] = pcommand;
 }
 
 bool HTTPAuthorized(map<string, string>& mapHeaders)
