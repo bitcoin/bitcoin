@@ -114,10 +114,10 @@ public:
     std::string help(const std::string& name) const;
 
     /**
-     * add or replace a CRPCCommand to the dispatch table
-     * @param command rpc command to add or replace
-     */ 
-    void AddOrReplaceCommand(const CRPCCommand command);
+     * Add or replace a CRPCCommand to the dispatch table
+     * @param pcommand RPC command to add or replace
+     */
+    void AddOrReplaceCommand(const CRPCCommand* pcommand);
 
     /**
      * Execute a method.
