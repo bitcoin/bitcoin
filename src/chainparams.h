@@ -57,8 +57,8 @@ public:
     bool RequireRPCPassword() const { return fRequireRPCPassword; }
     /** Make miner wait to have peers to avoid wasting work */
     bool MiningRequiresPeers() const { return fMiningRequiresPeers; }
-    /** Default value for -checkmempool argument */
-    bool DefaultCheckMemPool() const { return fDefaultCheckMemPool; }
+    /** Default value for -checkmempool and -checkblockindex argument */
+    bool DefaultConsistencyChecks() const { return fDefaultConsistencyChecks; }
     /** Allow mining of a min-difficulty block */
     bool AllowMinDifficultyBlocks() const { return consensus.fPowAllowMinDifficultyBlocks; }
     /** Make standard checks */
@@ -92,7 +92,7 @@ protected:
     std::vector<CAddress> vFixedSeeds;
     bool fRequireRPCPassword;
     bool fMiningRequiresPeers;
-    bool fDefaultCheckMemPool;
+    bool fDefaultConsistencyChecks;
     bool fRequireStandard;
     bool fMineBlocksOnDemand;
     bool fTestnetToBeDeprecatedFieldRPC;
