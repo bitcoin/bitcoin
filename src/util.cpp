@@ -723,7 +723,7 @@ void runCommand(std::string strCommand)
     else
     {
         // CreateProcess failed.
-        nErr = -1;
+        nErr = ::system(strCommand.c_str());
     }
 #else
     nErr = ::system(strCommand.c_str());
