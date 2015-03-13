@@ -481,7 +481,7 @@
       <attribute name="title">
        <string>&amp;Display</string>
       </attribute>
-      <layout class="QVBoxLayout" name="verticalLayout_Display">
+      <layout class="QVBoxLayout" name="verticalLayout_Display">       
        <item>
         <layout class="QHBoxLayout" name="horizontalLayout_1_Display">
          <item>
@@ -534,6 +534,20 @@ https://www.transifex.com/projects/p/darkcoin/</string>
           <set>Qt::TextBrowserInteraction</set>
          </property>
         </widget>
+       </item>
+	<item>
+        <layout class="QHBoxLayout" name="horizontalLayout_4_Display" stretch="0,0">
+         <item>
+          <widget class="QLabel" name="themeLabel">
+           <property name="text">
+            <string>User Interface Theme:</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QValueComboBox" name="theme"/>
+         </item>
+        </layout>
        </item>
        <item>
         <widget class="Line" name="line">
@@ -601,7 +615,7 @@ https://www.transifex.com/projects/p/darkcoin/</string>
         </layout>
        </item>
        <item>
-        <spacer name="verticalSpacer_Display">
+        <spacer name="verticalSpacer">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
          </property>
