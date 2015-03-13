@@ -68,7 +68,6 @@ void MacDockIconHandler::setMainWindow(QMainWindow *window) {
 
 MacDockIconHandler::~MacDockIconHandler()
 {
-    [this->m_dockIconClickEventHandler release];
     delete this->m_dummyWidget;
     this->setMainWindow(NULL);
 }
@@ -116,6 +115,11 @@ MacDockIconHandler *MacDockIconHandler::instance()
     if (!s_instance)
         s_instance = new MacDockIconHandler();
     return s_instance;
+}
+
+void MacDockIconHandler::cleanup()
+{
+    delete s_instance;
 }
 
 void MacDockIconHandler::handleDockIconClickEvent()
