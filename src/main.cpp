@@ -53,6 +53,7 @@ bool fImporting = false;
 bool fReindex = false;
 bool fTxIndex = false;
 bool fIsBareMultisigStd = true;
+bool fCheckBlockIndex = false;
 unsigned int nCoinCacheSize = 5000;
 
 /** Fees smaller than this (in satoshi) are considered zero fee (for relaying and mining) */
@@ -74,6 +75,7 @@ void EraseOrphansFor(NodeId peer);
  * and going backwards.
  */
 static bool IsSuperMajority(int minVersion, const CBlockIndex* pstart, unsigned int nRequired);
+static void CheckBlockIndex();
 
 /** Constant stuff for coinbase transactions we create: */
 CScript COINBASE_FLAGS;
@@ -85,7 +87,7 @@ namespace {
 
     struct CBlockIndexWorkComparator
     {
-        bool operator()(CBlockIndex *pa, CBlockIndex *pb) {
+        bool operator()(CBlockIndex *pa, CBlockIndex *pb) const {
             // First sort by most total work, ...
             if (pa->nChainWork > pb->nChainWork) return false;
             if (pa->nChainWork < pb->nChainWork) return true;
@@ -107,8 +109,8 @@ namespace {
     CBlockIndex *pindexBestInvalid;
 
     /**
-     * The set of all CBlockIndex entries with BLOCK_VALID_TRANSACTIONS or better that are at least
-     * as good as our current tip. Entries may be failed, though.
+     * The set of all CBlockIndex entries with BLOCK_VALID_TRANSACTIONS (for itself and all ancestors) and
+     * as good as our current tip or better. Entries may be failed, though.
      */
     set<CBlockIndex*, CBlockIndexWorkComparator> setBlockIndexCandidates;
     /** Number of nodes with fSyncStarted. */
@@ -2226,6 +2228,7 @@ bool ActivateBestChain(CValidationState &state, CBlock *pblock) {
             uiInterface.NotifyBlockTip(hashNewTip);
         }
     } while(pindexMostWork != chainActive.Tip());
+    CheckBlockIndex();
 
     // Write changes periodically to disk, after relay.
     if (!FlushStateToDisk(state, FLUSH_STATE_PERIODIC)) {
@@ -2362,7 +2365,9 @@ bool ReceivedBlockTransactions(const CBlock &block, CValidationState& state, CBl
             CBlockIndex *pindex = queue.front();
             queue.pop_front();
             pindex->nChainTx = (pindex->pprev ? pindex->pprev->nChainTx : 0) + pindex->nTx;
-            setBlockIndexCandidates.insert(pindex);
+            if (chainActive.Tip() == NULL || !setBlockIndexCandidates.value_comp()(pindex, chainActive.Tip())) {
+                setBlockIndexCandidates.insert(pindex);
+            }
             std::pair<std::multimap<CBlockIndex*, CBlockIndex*>::iterator, std::multimap<CBlockIndex*, CBlockIndex*>::iterator> range = mapBlocksUnlinked.equal_range(pindex);
             while (range.first != range.second) {
                 std::multimap<CBlockIndex*, CBlockIndex*>::iterator it = range.first;
@@ -2725,6 +2730,7 @@ bool ProcessNewBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDis
         if (pindex && pfrom) {
             mapBlockSource[pindex->GetBlockHash()] = pfrom->GetId();
         }
+        CheckBlockIndex();
         if (!ret)
             return error("%s: AcceptBlock FAILED", __func__);
     }
@@ -3211,6 +3217,136 @@ bool LoadExternalBlockFile(FILE* fileIn, CDiskBlockPos *dbp)
     if (nLoaded > 0)
         LogPrintf("Loaded %i blocks from external file in %dms\n", nLoaded, GetTimeMillis() - nStart);
     return nLoaded > 0;
+}
+
+void static CheckBlockIndex()
+{
+    if (!fCheckBlockIndex) {
+        return;
+    }
+
+    LOCK(cs_main);
+
+    // Build forward-pointing map of the entire block tree.
+    std::multimap<CBlockIndex*,CBlockIndex*> forward;
+    for (BlockMap::iterator it = mapBlockIndex.begin(); it != mapBlockIndex.end(); it++) {
+        forward.insert(std::make_pair(it->second->pprev, it->second));
+    }
+
+    assert(forward.size() == mapBlockIndex.size());
+
+    std::pair<std::multimap<CBlockIndex*,CBlockIndex*>::iterator,std::multimap<CBlockIndex*,CBlockIndex*>::iterator> rangeGenesis = forward.equal_range(NULL);
+    CBlockIndex *pindex = rangeGenesis.first->second;
+    rangeGenesis.first++;
+    assert(rangeGenesis.first == rangeGenesis.second); // There is only one index entry with parent NULL.
+
+    // Iterate over the entire block tree, using depth-first search.
+    // Along the way, remember whether there are blocks on the path from genesis
+    // block being explored which are the first to have certain properties.
+    size_t nNodes = 0;
+    int nHeight = 0;
+    CBlockIndex* pindexFirstInvalid = NULL; // Oldest ancestor of pindex which is invalid.
+    CBlockIndex* pindexFirstMissing = NULL; // Oldest ancestor of pindex which does not have BLOCK_HAVE_DATA.
+    CBlockIndex* pindexFirstNotTreeValid = NULL; // Oldest ancestor of pindex which does not have BLOCK_VALID_TREE (regardless of being valid or not).
+    CBlockIndex* pindexFirstNotChainValid = NULL; // Oldest ancestor of pindex which does not have BLOCK_VALID_CHAIN (regardless of being valid or not).
+    CBlockIndex* pindexFirstNotScriptsValid = NULL; // Oldest ancestor of pindex which does not have BLOCK_VALID_SCRIPTS (regardless of being valid or not).
+    while (pindex != NULL) {
+        nNodes++;
+        if (pindexFirstInvalid == NULL && pindex->nStatus & BLOCK_FAILED_VALID) pindexFirstInvalid = pindex;
+        if (pindexFirstMissing == NULL && !(pindex->nStatus & BLOCK_HAVE_DATA)) pindexFirstMissing = pindex;
+        if (pindex->pprev != NULL && pindexFirstNotTreeValid == NULL && (pindex->nStatus & BLOCK_VALID_MASK) < BLOCK_VALID_TREE) pindexFirstNotTreeValid = pindex;
+        if (pindex->pprev != NULL && pindexFirstNotChainValid == NULL && (pindex->nStatus & BLOCK_VALID_MASK) < BLOCK_VALID_CHAIN) pindexFirstNotChainValid = pindex;
+        if (pindex->pprev != NULL && pindexFirstNotScriptsValid == NULL && (pindex->nStatus & BLOCK_VALID_MASK) < BLOCK_VALID_SCRIPTS) pindexFirstNotScriptsValid = pindex;
+
+        // Begin: actual consistency checks.
+        if (pindex->pprev == NULL) {
+            // Genesis block checks.
+            assert(pindex->GetBlockHash() == Params().HashGenesisBlock()); // Genesis block's hash must match.
+            assert(pindex == chainActive.Genesis()); // The current active chain's genesis block must be this block.
+        }
+        assert((pindexFirstMissing != NULL) == (pindex->nChainTx == 0)); // nChainTx == 0 is used to signal that all parent block's transaction data is available.
+        assert(pindex->nHeight == nHeight); // nHeight must be consistent.
+        assert(pindex->pprev == NULL || pindex->nChainWork >= pindex->pprev->nChainWork); // For every block except the genesis block, the chainwork must be larger than the parent's.
+        assert(nHeight < 2 || (pindex->pskip && (pindex->pskip->nHeight < nHeight))); // The pskip pointer must point back for all but the first 2 blocks.
+        assert(pindexFirstNotTreeValid == NULL); // All mapBlockIndex entries must at least be TREE valid
+        if ((pindex->nStatus & BLOCK_VALID_MASK) >= BLOCK_VALID_TREE) assert(pindexFirstNotTreeValid == NULL); // TREE valid implies all parents are TREE valid
+        if ((pindex->nStatus & BLOCK_VALID_MASK) >= BLOCK_VALID_CHAIN) assert(pindexFirstNotChainValid == NULL); // CHAIN valid implies all parents are CHAIN valid
+        if ((pindex->nStatus & BLOCK_VALID_MASK) >= BLOCK_VALID_SCRIPTS) assert(pindexFirstNotScriptsValid == NULL); // SCRIPTS valid implies all parents are SCRIPTS valid
+        if (pindexFirstInvalid == NULL) {
+            // Checks for not-invalid blocks.
+            assert((pindex->nStatus & BLOCK_FAILED_MASK) == 0); // The failed mask cannot be set for blocks without invalid parents.
+        }
+        if (!CBlockIndexWorkComparator()(pindex, chainActive.Tip()) && pindexFirstMissing == NULL) {
+            if (pindexFirstInvalid == NULL) { // If this block sorts at least as good as the current tip and is valid, it must be in setBlockIndexCandidates.
+                 assert(setBlockIndexCandidates.count(pindex));
+            }
+        } else { // If this block sorts worse than the current tip, it cannot be in setBlockIndexCandidates.
+            assert(setBlockIndexCandidates.count(pindex) == 0);
+        }
+        // Check whether this block is in mapBlocksUnlinked.
+        std::pair<std::multimap<CBlockIndex*,CBlockIndex*>::iterator,std::multimap<CBlockIndex*,CBlockIndex*>::iterator> rangeUnlinked = mapBlocksUnlinked.equal_range(pindex->pprev);
+        bool foundInUnlinked = false;
+        while (rangeUnlinked.first != rangeUnlinked.second) {
+            assert(rangeUnlinked.first->first == pindex->pprev);
+            if (rangeUnlinked.first->second == pindex) {
+                foundInUnlinked = true;
+                break;
+            }
+            rangeUnlinked.first++;
+        }
+        if (pindex->pprev && pindex->nStatus & BLOCK_HAVE_DATA && pindexFirstMissing != NULL) {
+            if (pindexFirstInvalid == NULL) { // If this block has block data available, some parent doesn't, and has no invalid parents, it must be in mapBlocksUnlinked.
+                assert(foundInUnlinked);
+            }
+        } else { // If this block does not have block data available, or all parents do, it cannot be in mapBlocksUnlinked.
+            assert(!foundInUnlinked);
+        }
+        // assert(pindex->GetBlockHash() == pindex->GetBlockHeader().GetHash()); // Perhaps too slow
+        // End: actual consistency checks.
+
+        // Try descending into the first subnode.
+        std::pair<std::multimap<CBlockIndex*,CBlockIndex*>::iterator,std::multimap<CBlockIndex*,CBlockIndex*>::iterator> range = forward.equal_range(pindex);
+        if (range.first != range.second) {
+            // A subnode was found.
+            pindex = range.first->second;
+            nHeight++;
+            continue;
+        }
+        // This is a leaf node.
+        // Move upwards until we reach a node of which we have not yet visited the last child.
+        while (pindex) {
+            // We are going to either move to a parent or a sibling of pindex.
+            // If pindex was the first with a certain property, unset the corresponding variable.
+            if (pindex == pindexFirstInvalid) pindexFirstInvalid = NULL;
+            if (pindex == pindexFirstMissing) pindexFirstMissing = NULL;
+            if (pindex == pindexFirstNotTreeValid) pindexFirstNotTreeValid = NULL;
+            if (pindex == pindexFirstNotChainValid) pindexFirstNotChainValid = NULL;
+            if (pindex == pindexFirstNotScriptsValid) pindexFirstNotScriptsValid = NULL;
+            // Find our parent.
+            CBlockIndex* pindexPar = pindex->pprev;
+            // Find which child we just visited.
+            std::pair<std::multimap<CBlockIndex*,CBlockIndex*>::iterator,std::multimap<CBlockIndex*,CBlockIndex*>::iterator> rangePar = forward.equal_range(pindexPar);
+            while (rangePar.first->second != pindex) {
+                assert(rangePar.first != rangePar.second); // Our parent must have at least the node we're coming from as child.
+                rangePar.first++;
+            }
+            // Proceed to the next one.
+            rangePar.first++;
+            if (rangePar.first != rangePar.second) {
+                // Move to the sibling.
+                pindex = rangePar.first->second;
+                break;
+            } else {
+                // Move up further.
+                pindex = pindexPar;
+                nHeight--;
+                continue;
+            }
+        }
+    }
+
+    // Check that we actually traversed the entire map.
+    assert(nNodes == forward.size());
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -3971,6 +4107,8 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             LogPrint("net", "more getheaders (%d) to end to peer=%d (startheight:%d)\n", pindexLast->nHeight, pfrom->id, pfrom->nStartingHeight);
             pfrom->PushMessage("getheaders", chainActive.GetLocator(pindexLast), uint256());
         }
+
+        CheckBlockIndex();
     }
 
     else if (strCommand == "block" && !fImporting && !fReindex) // Ignore blocks received while importing

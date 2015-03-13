@@ -29,6 +29,7 @@ extern void noui_connect();
 BasicTestingSetup::BasicTestingSetup()
 {
         fPrintToDebugLog = false; // don't want to write to debug.log file
+        fCheckBlockIndex = true;
         SelectParams(CBaseChainParams::MAIN);
 }
 BasicTestingSetup::~BasicTestingSetup()
