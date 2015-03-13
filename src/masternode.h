@@ -1,6 +1,5 @@
 
-// Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2012 The Bitcoin developers
+// Copyright (c) 2014-2015 The Dash developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #ifndef MASTERNODE_H
@@ -15,6 +14,7 @@
 #include "script.h"
 #include "base58.h"
 #include "main.h"
+#include "masternode-pos.h"
 
 #define MASTERNODE_NOT_PROCESSED               0 // initial state
 #define MASTERNODE_IS_CAPABLE                  1
@@ -47,7 +47,8 @@ enum masternodeState {
     MASTERNODE_ENABLED = 1,
     MASTERNODE_EXPIRED = 2,
     MASTERNODE_VIN_SPENT = 3,
-    MASTERNODE_REMOVE = 4
+    MASTERNODE_REMOVE = 4,
+    MASTERNODE_POS_ERROR = 5
 };
 
 void ProcessMessageMasternodePayments(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
@@ -78,6 +79,8 @@ public:
     bool allowFreeTx;
     int protocolVersion;
     int64_t nLastDsq; //the dsq count from the last dsq broadcast of this node
+    int nScanningErrorCount;
+    int nLastScanningErrorBlockHeight;
 
     CMasternode();
     CMasternode(const CMasternode& other);
@@ -196,6 +199,23 @@ public:
 
         return cacheInputAge+(chainActive.Tip()->nHeight-cacheInputAgeBlock);
     }
+
+    void ApplyScanningError(CMasternodeScanningError& mnse)
+    {
+        if(!mnse.IsValid()) return;
+
+        if(mnse.nBlockHeight == nLastScanningErrorBlockHeight) return;
+        nLastScanningErrorBlockHeight = mnse.nBlockHeight;
+
+        if(mnse.nErrorType == SCANNING_SUCCESS){
+            nScanningErrorCount--;
+            if(nScanningErrorCount < 0) nScanningErrorCount = 0;
+        } else { //all other codes are equally as bad
+            nScanningErrorCount++;
+            if(nScanningErrorCount > MASTERNODE_SCANNING_ERROR_THESHOLD*2) nScanningErrorCount = MASTERNODE_SCANNING_ERROR_THESHOLD*2;
+        }
+    }
+
 };
 
 // for storing the winning payments
