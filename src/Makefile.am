@@ -53,6 +53,7 @@ BITCOIN_CORE_H = \
   limitedmap.h \
   main.h \
   masternode.h \
+  masternode-pos.h \
   masternodeman.h \
   masternodeconfig.h \
   miner.h \
@@ -154,6 +155,7 @@ libdarkcoin_common_a_SOURCES = \
   darksend.cpp \
   darksend-relay.cpp \
   masternode.cpp \
+  masternode-pos.cpp \
   masternodeman.cpp \
   masternodeconfig.cpp \
   instantx.cpp \

@@ -601,7 +601,17 @@ Value masternodelist(const Array& params, bool fHelp)
         if(strMode == "active"){
             if(strFilter !="" && strFilter != (mn.IsEnabled() ? "true" : "false") &&
                 mn.addr.ToString().find(strFilter) == string::npos) continue;
-            obj.push_back(Pair(strAddr,       (int)mn.IsEnabled()));
+
+
+            std::string strStatus = "ACTIVE";
+
+            if(mn.activeState == MASTERNODE_ENABLED) strStatus = "ENABLED";
+            if(mn.activeState == MASTERNODE_EXPIRED) strStatus = "EXPIRED";
+            if(mn.activeState == MASTERNODE_VIN_SPENT) strStatus = "VIN_SPENT";
+            if(mn.activeState == MASTERNODE_REMOVE) strStatus = "REMOVE";
+            if(mn.activeState == MASTERNODE_POS_ERROR) strStatus = "POS_ERROR";
+
+            obj.push_back(Pair(strAddr,       strStatus.c_str()));
         } else if (strMode == "activeseconds") {
             if(strFilter !="" && mn.addr.ToString().find(strFilter) == string::npos) continue;
             obj.push_back(Pair(strAddr,       (int64_t)(mn.lastTimeSeen - mn.sigTime)));
