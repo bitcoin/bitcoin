@@ -71,6 +71,9 @@ BitcoinGUI::BitcoinGUI(bool fIsTestnet, QWidget *parent) :
     prevBlocks(0),
     spinnerFrame(0)
 {
+    /* Open CSS when configured */
+    this->setStyleSheet(GUIUtil::loadStyleSheet());
+
     GUIUtil::restoreWindowGeometry("nWindow", QSize(850, 550), this);
 
     QString windowTitle = tr("Darkcoin Core") + " - ";
@@ -409,6 +412,7 @@ void BitcoinGUI::createToolBars()
         toolbar->addAction(sendCoinsAction);
         toolbar->addAction(receiveCoinsAction);
         toolbar->addAction(historyAction);
+        toolbar->setMovable(false); // remove unused icon in upper left corner
         overviewAction->setChecked(true);
     }
 }

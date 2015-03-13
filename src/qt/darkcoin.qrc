@@ -41,9 +41,23 @@
         <file alias="filesave">res/icons/filesave.png</file>
         <file alias="qrcode">res/icons/qrcode.png</file>
         <file alias="debugwindow">res/icons/debugwindow.png</file>
+        <file alias="drkblue_editpaste">res/icons/drkblue_editpaste.png</file>
+        <file alias="drkblue_address-book">res/icons/drkblue_address-book.png</file>
+        <file alias="drkblue_editcopy">res/icons/drkblue_editcopy.png</file>
+        <file alias="drkblue_remove">res/icons/drkblue_remove.png</file>
     </qresource>
+    <qresource prefix="/css">
+        <file alias="drkblue">res/css/drkblue.css</file>
+    </qresource>	    
     <qresource prefix="/images">
         <file alias="about">res/images/about.png</file>
+        <file alias="darkcoin_logo_horizontal">res/images/darkcoin_logo_horizontal.png</file>
+        <file alias="drkblue_downArrow">res/images/drkblue_downArrow.png</file>
+        <file alias="drkblue_downArrow_small">res/images/drkblue_downArrow_small.png</file>
+        <file alias="drkblue_upArrow_small">res/images/drkblue_upArrow_small.png</file>
+        <file alias="drkblue_qtreeview_selected">res/images/drkblue_qtreeview_selected.png</file>
+        <file alias="drkblue_walletFrame_bg">res/images/drkblue_walletFrame_bg.png</file>
+        <file alias="drkblue_walletFrame">res/images/drkblue_walletFrame.png</file>
         <file alias="splash">res/images/splash.png</file>
         <file alias="splash_testnet">res/images/splash_testnet.png</file>
     </qresource>
@@ -86,7 +100,6 @@
     </qresource>
     <qresource prefix="/translations">
         <file alias="bar">locale/darkcoin_bar.qm</file>
-        <file alias="bg">locale/darkcoin_bg.qm</file>
         <file alias="ca">locale/darkcoin_ca.qm</file>
         <file alias="cmn">locale/darkcoin_cmn.qm</file>
         <file alias="cs">locale/darkcoin_cs.qm</file>
@@ -101,7 +114,6 @@
         <file alias="hu_HU">locale/darkcoin_hu_HU.qm</file>
         <file alias="it">locale/darkcoin_it.qm</file>
         <file alias="lv_LV">locale/darkcoin_lv_LV.qm</file>
-        <file alias="nb">locale/darkcoin_nb.qm</file>
         <file alias="nl">locale/darkcoin_nl.qm</file>
         <file alias="pl">locale/darkcoin_pl.qm</file>
         <file alias="pt">locale/darkcoin_pt.qm</file>
