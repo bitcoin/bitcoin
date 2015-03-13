@@ -218,7 +218,12 @@ RES_ICONS = \
   res/icons/tx_inout.png \
   res/icons/tx_input.png \
   res/icons/tx_output.png \
-  res/icons/tx_mined.png
+  res/icons/tx_mined.png \
+  res/icons/drkblue_editpaste.png \
+  res/icons/drkblue_address-book.png \
+  res/icons/drkblue_editcopy.png \
+  res/icons/drkblue_remove.png
+
 
 BITCOIN_QT_CPP = \
   darkcoin.cpp \
@@ -277,8 +282,18 @@ endif
 RES_IMAGES = \
   res/images/about.png \
   res/images/splash.png \
-  res/images/splash_testnet.png
+  res/images/splash_testnet.png \
+  res/images/darkcoin_logo_horizontal.png \
+  res/images/drkblue_downArrow.png \
+  res/images/drkblue_downArrow_small.png \
+  res/images/drkblue_upArrow_small.png \
+  res/images/drkblue_qtreeview_selected.png \
+  res/images/drkblue_walletFrame_bg.png \
+  res/images/drkblue_walletFrame.png
 
+RES_CSS = \
+  res/css/drkblue.css
+  
 RES_MOVIES = $(wildcard res/movies/spinner-*.png)
 
 DARKCOIN_RC = res/darkcoin-qt-res.rc
@@ -286,7 +301,7 @@ DARKCOIN_RC = res/darkcoin-qt-res.rc
 libdarkcoinqt_a_CPPFLAGS = $(AM_CPPFLAGS) $(QT_INCLUDES) \
   -I$(top_srcdir)/src/qt/forms $(QT_DBUS_INCLUDES)
 libdarkcoinqt_a_SOURCES = $(BITCOIN_QT_CPP) $(BITCOIN_QT_H) $(QT_FORMS_UI) \
-  $(QT_QRC) $(QT_TS) $(PROTOBUF_PROTO) $(RES_ICONS) $(RES_IMAGES) $(RES_MOVIES)
+  $(QT_QRC) $(QT_TS) $(PROTOBUF_PROTO) $(RES_ICONS) $(RES_IMAGES) $(RES_MOVIES) $(RES_CSS)
 
 nodist_libdarkcoinqt_a_SOURCES = $(QT_MOC_CPP) $(QT_MOC) $(PROTOBUF_CC) \
   $(PROTOBUF_H) $(QT_QRC_CPP)
@@ -332,7 +347,7 @@ translate: darkcoinstrings.cpp $(QT_FORMS_UI) $(QT_FORMS_UI) $(BITCOIN_QT_CPP) $
 	@test -n $(LUPDATE) || echo "lupdate is required for updating translations"
 	@QT_SELECT=$(QT_SELECT) $(LUPDATE) $^ -locations relative -no-obsolete -ts locale/darkcoin_en.ts
 
-$(QT_QRC_CPP): $(QT_QRC) $(QT_QM) $(QT_FORMS_H) $(RES_ICONS) $(RES_IMAGES) $(RES_MOVIES) $(PROTOBUF_H)
+$(QT_QRC_CPP): $(QT_QRC) $(QT_QM) $(QT_FORMS_H) $(RES_ICONS) $(RES_IMAGES) $(RES_MOVIES) $(RES_CSS) $(PROTOBUF_H)
 	@cd $(abs_srcdir); test -f $(RCC) && QT_SELECT=$(QT_SELECT) $(RCC) -name darkcoin -o $(abs_builddir)/$@ $< || \
 	  echo error: could not build $@
 	$(SED) -e '/^\*\*.*Created:/d' $@ > $@.n && mv $@{.n,}
