@@ -400,11 +400,6 @@ const CRPCCommand *CRPCTable::operator[](string name) const
 
 void CRPCTable::AddOrReplaceCommand(const CRPCCommand command)
 {
-    // search after existing key in hashmap and remove it
-    map<string, const CRPCCommand*>::iterator it = mapCommands.find(command.name);
-    if (it != mapCommands.end())
-        mapCommands.erase(it);
-    
     // add new command to the dispatch table
     mapCommands[command.name] = &command;
 }

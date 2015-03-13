@@ -167,13 +167,13 @@ BOOST_AUTO_TEST_CASE(rpc_flex_table)
     Value r = CallRPC(string("ping"));
     BOOST_CHECK(r.is_null());
  
-    const CRPCCommand newCmd = { "network","testcmd",  &ping_overwrite_tests,true,false,false };
+    const CRPCCommand newCmd = { "network","testcmd",  &ping_overwrite_tests,true,false };
     tableRPC.AddOrReplaceCommand(newCmd);
     
     BOOST_CHECK_NO_THROW(r = CallRPC(string("testcmd")));
     BOOST_CHECK_EQUAL(find_value(r.get_obj(), "Test").get_str(), "123");
     
-    const CRPCCommand newPingCmd = { "network","ping",  &ping_overwrite_tests,true,false,false };
+    const CRPCCommand newPingCmd = { "network","ping",  &ping_overwrite_tests,true,false };
     tableRPC.AddOrReplaceCommand(newPingCmd);
     
     BOOST_CHECK_NO_THROW(r = CallRPC(string("ping")));
