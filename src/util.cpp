@@ -708,22 +708,28 @@ void runCommand(std::string strCommand)
     info.wShowWindow = SW_HIDE;
     PROCESS_INFORMATION processInfo;
     ZeroMemory(&processInfo, sizeof(PROCESS_INFORMATION));
-    // Note: copy command because CreateProcess() can't accept a const string.
-    std::vector<char> cmdCopy(strCommand.begin(), strCommand.end()+1);
-    if (CreateProcess(NULL, begin_ptr(cmdCopy), NULL, NULL, false, 0, NULL, NULL, &info, &processInfo))
-    {
-        // CreateProcess succeeded so wait, check exit code and clean up.
-        WaitForSingleObject(processInfo.hProcess, INFINITE);
-        if(!GetExitCodeProcess(processInfo.hProcess, &nExitCode))
-          nExitCode = 1;
-        CloseHandle(processInfo.hThread);
-        CloseHandle(processInfo.hProcess);
-        nErr = (int)nExitCode; // Had to pass a ULONG to GetExitCodeProcess().
+    char system32[256];
+    if (GetSystemDirectory(system32, 255)) {
+        std::stringstream ssCommand;
+        ssCommand << system32 << "\\cmd.exe /C " << strCommand;
+        std::string strTempCmd = ssCommand.str();
+        std::vector<char> vecCommand(strTempCmd.begin(), strTempCmd.end() + 1);
+        if (CreateProcess(NULL, begin_ptr(vecCommand), NULL, NULL, false, 0, NULL, NULL, &info, &processInfo))
+        {
+            // CreateProcess succeeded so wait, check exit code and clean up.
+            WaitForSingleObject(processInfo.hProcess, INFINITE);
+            if(!GetExitCodeProcess(processInfo.hProcess, &nExitCode))
+              nExitCode = 1;
+            CloseHandle(processInfo.hThread);
+            CloseHandle(processInfo.hProcess);
+            nErr = (int)nExitCode; // Had to pass a ULONG to GetExitCodeProcess().
+        }
+        else {
+          nErr = (int)GetLastError(); // CreateProcess failed.
+        }
     }
-    else
-    {
-        // CreateProcess failed.
-        nErr = ::system(strCommand.c_str());
+    else {
+          nErr = -1; // Could not get system32 directory.
     }
 #else
     nErr = ::system(strCommand.c_str());
