@@ -94,6 +94,7 @@ bool RenameOver(boost::filesystem::path src, boost::filesystem::path dest);
 bool TryCreateDirectory(const boost::filesystem::path& p);
 boost::filesystem::path GetDefaultDataDir();
 const boost::filesystem::path &GetDataDir(bool fNetSpecific = true);
+void ClearDatadirCache();
 boost::filesystem::path GetConfigFile();
 #ifndef WIN32
 boost::filesystem::path GetPidFile();
@@ -160,6 +161,23 @@ bool SoftSetArg(const std::string& strArg, const std::string& strValue);
  * @return true if argument gets set, false if it already had a value
  */
 bool SoftSetBoolArg(const std::string& strArg, bool fValue);
+
+/**
+ * Format a string to be used as group of options in help messages
+ *
+ * @param message Group name (e.g. "RPC server options:")
+ * @return the formatted string
+ */
+std::string HelpMessageGroup(const std::string& message);
+
+/**
+ * Format a string to be used as option description in help messages
+ *
+ * @param option Option message (e.g. "-rpcuser=<user>")
+ * @param message Option description (e.g. "Username for JSON-RPC connections")
+ * @return the formatted string
+ */
+std::string HelpMessageOpt(const std::string& option, const std::string& message);
 
 void SetThreadPriority(int nPriority);
 void RenameThread(const char* name);

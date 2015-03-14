@@ -13,6 +13,7 @@
 #include "uint256.h"
 #include "util.h"
 #include "utilstrencodings.h"
+#include "test/test_bitcoin.h"
 
 #include <boost/foreach.hpp>
 #include <boost/test/unit_test.hpp>
@@ -23,7 +24,7 @@
 using namespace json_spirit;
 extern Array read_json(const std::string& jsondata);
 
-BOOST_AUTO_TEST_SUITE(base58_tests)
+BOOST_FIXTURE_TEST_SUITE(base58_tests, BasicTestingSetup)
 
 // Goal: test low-level base58 encoding functionality
 BOOST_AUTO_TEST_CASE(base58_EncodeBase58)
@@ -127,6 +128,7 @@ BOOST_AUTO_TEST_CASE(base58_keys_valid_parse)
     std::vector<unsigned char> result;
     CBitcoinSecret secret;
     CBitcoinAddress addr;
+    SelectParams(CBaseChainParams::MAIN);
 
     BOOST_FOREACH(Value& tv, tests)
     {
@@ -176,7 +178,6 @@ BOOST_AUTO_TEST_CASE(base58_keys_valid_parse)
             BOOST_CHECK_MESSAGE(!secret.IsValid(), "IsValid pubkey as privkey:" + strTest);
         }
     }
-    SelectParams(CBaseChainParams::UNITTEST);
 }
 
 // Goal: check that generated keys match test vectors
@@ -244,7 +245,7 @@ BOOST_AUTO_TEST_CASE(base58_keys_valid_gen)
     CTxDestination nodest = CNoDestination();
     BOOST_CHECK(!dummyAddr.Set(nodest));
 
-    SelectParams(CBaseChainParams::UNITTEST);
+    SelectParams(CBaseChainParams::MAIN);
 }
 
 // Goal: check that base58 parsing code is robust against a variety of corrupted data

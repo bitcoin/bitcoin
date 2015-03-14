@@ -121,7 +121,7 @@ void SendCoinsDialog::setClientModel(ClientModel *clientModel)
     this->clientModel = clientModel;
 
     if (clientModel) {
-        connect(clientModel, SIGNAL(numBlocksChanged(int)), this, SLOT(updateSmartFeeLabel()));
+        connect(clientModel, SIGNAL(numBlocksChanged(int,QDateTime)), this, SLOT(updateSmartFeeLabel()));
     }
 }
 

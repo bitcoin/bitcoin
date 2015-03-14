@@ -14,6 +14,7 @@
 #include "clientversion.h"
 #include "primitives/transaction.h"
 #include "ui_interface.h"
+#include "crypto/common.h"
 
 #ifdef WIN32
 #include <string.h>
@@ -509,7 +510,7 @@ bool CNode::ReceiveMsgBytes(const char *pch, unsigned int nBytes)
         // get current incomplete message, or create a new one
         if (vRecvMsg.empty() ||
             vRecvMsg.back().complete())
-            vRecvMsg.push_back(CNetMessage(SER_NETWORK, nRecvVersion));
+            vRecvMsg.push_back(CNetMessage(Params().MessageStart(), SER_NETWORK, nRecvVersion));
 
         CNetMessage& msg = vRecvMsg.back();
 
@@ -522,6 +523,11 @@ bool CNode::ReceiveMsgBytes(const char *pch, unsigned int nBytes)
 
         if (handled < 0)
                 return false;
+
+        if (msg.in_data && msg.hdr.nMessageSize > MAX_PROTOCOL_MESSAGE_LENGTH) {
+            LogPrint("net", "Oversized message from peer=%i, disconnecting", GetId());
+            return false;
+        }
 
         pch += handled;
         nBytes -= handled;
@@ -1970,7 +1976,7 @@ void CNode::BeginMessage(const char* pszCommand) EXCLUSIVE_LOCK_FUNCTION(cs_vSen
 {
     ENTER_CRITICAL_SECTION(cs_vSend);
     assert(ssSend.size() == 0);
-    ssSend << CMessageHeader(pszCommand, 0);
+    ssSend << CMessageHeader(Params().MessageStart(), pszCommand, 0);
     LogPrint("net", "sending: %s ", SanitizeString(pszCommand));
 }
 
@@ -2002,7 +2008,7 @@ void CNode::EndMessage() UNLOCK_FUNCTION(cs_vSend)
 
     // Set the size
     unsigned int nSize = ssSend.size() - CMessageHeader::HEADER_SIZE;
-    memcpy((char*)&ssSend[CMessageHeader::MESSAGE_SIZE_OFFSET], &nSize, sizeof(nSize));
+    WriteLE32((uint8_t*)&ssSend[CMessageHeader::MESSAGE_SIZE_OFFSET], nSize);
 
     // Set the checksum
     uint256 hash = Hash(ssSend.begin() + CMessageHeader::HEADER_SIZE, ssSend.end());

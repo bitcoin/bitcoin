@@ -5,10 +5,11 @@
 #include "util.h"
 
 #include "allocators.h"
+#include "test/test_bitcoin.h"
 
 #include <boost/test/unit_test.hpp>
 
-BOOST_AUTO_TEST_SUITE(allocator_tests)
+BOOST_FIXTURE_TEST_SUITE(allocator_tests, BasicTestingSetup)
 
 // Dummy memory page locker for platform independent tests
 static const void *last_lock_addr, *last_unlock_addr;
