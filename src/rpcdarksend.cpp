@@ -594,63 +594,68 @@ Value masternodelist(const Array& params, bool fHelp)
     }
 
     Object obj;
-    std::vector<CMasternode> vMasternodes = mnodeman.GetFullMasternodeVector();
-    BOOST_FOREACH(CMasternode& mn, vMasternodes) {
+    if (strMode == "rank") {
+        std::vector<pair<int, CMasternode> > vMasternodeRanks = mnodeman.GetMasternodeRanks(chainActive.Tip()->nHeight);
+        BOOST_FOREACH(PAIRTYPE(int, CMasternode)& s, vMasternodeRanks) {
+            std::string strAddr = s.second.addr.ToString();
+            if(strFilter !="" && strAddr.find(strFilter) == string::npos) continue;
+            obj.push_back(Pair(strAddr,       s.first));
+        }
+    } else {
+        std::vector<CMasternode> vMasternodes = mnodeman.GetFullMasternodeVector();
+        BOOST_FOREACH(CMasternode& mn, vMasternodes) {
+            std::string strAddr = mn.addr.ToString();
+            if(strMode == "active"){
+                if(strFilter !="" && strFilter != (mn.IsEnabled() ? "true" : "false") &&
+                    strAddr.find(strFilter) == string::npos) continue;
+                obj.push_back(Pair(strAddr,       (int)mn.IsEnabled()));
+            } else if (strMode == "activeseconds") {
+                if(strFilter !="" && strAddr.find(strFilter) == string::npos) continue;
+                obj.push_back(Pair(strAddr,       (int64_t)(mn.lastTimeSeen - mn.sigTime)));
+            } else if (strMode == "full") {
+                CScript pubkey;
+                pubkey.SetDestination(mn.pubkey.GetID());
+                CTxDestination address1;
+                ExtractDestination(pubkey, address1);
+                CBitcoinAddress address2(address1);
 
-        std::string strAddr = mn.addr.ToString().c_str();
-        if(strMode == "active"){
-            if(strFilter !="" && strFilter != (mn.IsEnabled() ? "true" : "false") &&
-                mn.addr.ToString().find(strFilter) == string::npos) continue;
-            obj.push_back(Pair(strAddr,       (int)mn.IsEnabled()));
-        } else if (strMode == "activeseconds") {
-            if(strFilter !="" && mn.addr.ToString().find(strFilter) == string::npos) continue;
-            obj.push_back(Pair(strAddr,       (int64_t)(mn.lastTimeSeen - mn.sigTime)));
-        } else if (strMode == "full") {
-            CScript pubkey;
-            pubkey.SetDestination(mn.pubkey.GetID());
-            CTxDestination address1;
-            ExtractDestination(pubkey, address1);
-            CBitcoinAddress address2(address1);
+                std::ostringstream addrStream;
+                addrStream << setw(21) << strAddr;
 
-            std::ostringstream addrStream;
-            addrStream << setw(21) << strAddr;
+                std::ostringstream stringStream;
+                stringStream << (mn.IsEnabled() ? "1" : "0") << " " <<
+                               mn.protocolVersion << " " <<
+                               address2.ToString() << " " <<
+                               mn.vin.prevout.hash.ToString() << " " <<
+                               mn.lastTimeSeen << " " << setw(8) <<
+                               (mn.lastTimeSeen - mn.sigTime);
+                std::string output = stringStream.str();
+                stringStream << " " << strAddr;
+                if(strFilter !="" && stringStream.str().find(strFilter) == string::npos &&
+                        strAddr.find(strFilter) == string::npos) continue;
+                obj.push_back(Pair(addrStream.str(), output));
+            } else if (strMode == "lastseen") {
+                if(strFilter !="" && strAddr.find(strFilter) == string::npos) continue;
+                obj.push_back(Pair(strAddr,       (int64_t)mn.lastTimeSeen));
+            } else if (strMode == "protocol") {
+                if(strFilter !="" && strFilter != boost::lexical_cast<std::string>(mn.protocolVersion) &&
+                    strAddr.find(strFilter) == string::npos) continue;
+                obj.push_back(Pair(strAddr,       (int64_t)mn.protocolVersion));
+            } else if (strMode == "pubkey") {
+                CScript pubkey;
+                pubkey.SetDestination(mn.pubkey.GetID());
+                CTxDestination address1;
+                ExtractDestination(pubkey, address1);
+                CBitcoinAddress address2(address1);
 
-            std::ostringstream stringStream;
-            stringStream << (mn.IsEnabled() ? "1" : "0") << " " <<
-                           mn.protocolVersion << " " <<
-                           address2.ToString() << " " <<
-                           mn.vin.prevout.hash.ToString() << " " <<
-                           mn.lastTimeSeen << " " << setw(8) <<
-                           (mn.lastTimeSeen - mn.sigTime);
-            std::string output = stringStream.str();
-            stringStream << " " << strAddr;
-            if(strFilter !="" && stringStream.str().find(strFilter) == string::npos &&
-                    mn.addr.ToString().find(strFilter) == string::npos) continue;
-            obj.push_back(Pair(addrStream.str(), output));
-        } else if (strMode == "lastseen") {
-            if(strFilter !="" && mn.addr.ToString().find(strFilter) == string::npos) continue;
-            obj.push_back(Pair(strAddr,       (int64_t)mn.lastTimeSeen));
-        } else if (strMode == "protocol") {
-            if(strFilter !="" && strFilter != boost::lexical_cast<std::string>(mn.protocolVersion) &&
-                mn.addr.ToString().find(strFilter) == string::npos) continue;
-            obj.push_back(Pair(strAddr,       (int64_t)mn.protocolVersion));
-        } else if (strMode == "pubkey") {
-            CScript pubkey;
-            pubkey.SetDestination(mn.pubkey.GetID());
-            CTxDestination address1;
-            ExtractDestination(pubkey, address1);
-            CBitcoinAddress address2(address1);
-
-            if(strFilter !="" && address2.ToString().find(strFilter) == string::npos &&
-                mn.addr.ToString().find(strFilter) == string::npos) continue;
-            obj.push_back(Pair(strAddr,       address2.ToString().c_str()));
-        } else if (strMode == "rank") {
-            if(strFilter !="" && mn.addr.ToString().find(strFilter) == string::npos) continue;
-            obj.push_back(Pair(strAddr,       (int)(mnodeman.GetMasternodeRank(mn.vin, chainActive.Tip()->nHeight))));
-        } else if (strMode == "vin") {
-            if(strFilter !="" && mn.vin.prevout.hash.ToString().find(strFilter) == string::npos &&
-                mn.addr.ToString().find(strFilter) == string::npos) continue;
-            obj.push_back(Pair(strAddr,       mn.vin.prevout.hash.ToString().c_str()));
+                if(strFilter !="" && address2.ToString().find(strFilter) == string::npos &&
+                    strAddr.find(strFilter) == string::npos) continue;
+                obj.push_back(Pair(strAddr,       address2.ToString().c_str()));
+            } else if (strMode == "vin") {
+                if(strFilter !="" && mn.vin.prevout.hash.ToString().find(strFilter) == string::npos &&
+                    strAddr.find(strFilter) == string::npos) continue;
+                obj.push_back(Pair(strAddr,       mn.vin.prevout.hash.ToString().c_str()));
+            }
         }
     }
     return obj;
