@@ -54,7 +54,7 @@ const struct {
 };
 
 //don't add private key handling cmd's to the history
-const QStringList RPCConsole::historyBlacklist = QStringList() << "importprivkey" << "signrawtransaction" << "walletpassphrase" << "walletpassphrasechange" << "encryptwallet";
+const QStringList RPCConsole::historyFilter = QStringList() << "importprivkey" << "signrawtransaction" << "walletpassphrase" << "walletpassphrasechange" << "encryptwallet";
 
 /* Object for executing console RPC commands in a separate thread.
 */
@@ -447,9 +447,9 @@ void RPCConsole::on_lineEdit_returnPressed()
         emit cmdRequest(cmd);
         
         bool storeHistory = true;
-        foreach(QString blacklistedCmd, historyBlacklist)
+        foreach(QString unallowedCmd, historyFilter)
         {
-            if(cmd.trimmed().startsWith(blacklistedCmd))
+            if(cmd.trimmed().startsWith(unallowedCmd))
                 storeHistory = false; break;
         }
         

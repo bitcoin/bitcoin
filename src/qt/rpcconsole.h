@@ -97,7 +97,7 @@ private:
     ClientModel *clientModel;
     QStringList history;
     int historyPtr;
-    const static QStringList historyBlacklist;
+    const static QStringList historyFilter;
     QString cmdBeforeBrowsing;
     NodeId cachedNodeid;
 };
