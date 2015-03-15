@@ -766,3 +766,59 @@ Value sendrawtransaction(const Array& params, bool fHelp)
 
     return hashTx.GetHex();
 }
+
+#ifdef ENABLE_WALLET
+Value fundrawtransaction(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() < 1 || params.size() > 2)
+        throw runtime_error(
+                            "fundrawtransaction \"hexstring\"\n"
+                            "\nAdd vIns to a raw transaction.\n"
+                            "\nAlso see createrawtransaction and signrawtransaction calls.\n"
+                            "\nArguments:\n"
+                            "1. \"hexstring\"    (string, required) The hex string of the raw transaction\n"
+                            "2. includeWatching    (boolean, optional, default=false) Use watchonly outputs\n"
+                            "\nResult:\n"
+                            "{\n"
+                            "  \"hex\": \"value\",   (string) The raw transaction with vIns (hex-encoded string)\n"
+                            "  \"fee\": n       calculated fee\n"
+                            "}\n"
+                            "\"hex\"             \n"
+                            "\nExamples:\n"
+                            "\nCreate a transaction with empty vIns\n"
+                            + HelpExampleCli("createrawtransaction", "\"[]\" \"{\\\"myaddress\\\":0.01}\"") +
+                            "\nFund the transaction, and get back the hex\n"
+                            + HelpExampleCli("fundrawtransaction", "\"myhex\"") +
+                            "\nSign the transaction, and get back the hex\n"
+                            + HelpExampleCli("signrawtransaction", "\"myhex\"") +
+                            "\nSend the transaction (signed hex)\n"
+                            + HelpExampleCli("sendrawtransaction", "\"signedhex\"") +
+                            "\nAs a json rpc call\n"
+                            + HelpExampleRpc("sendrawtransaction", "\"signedhex\"")
+                            );
+    
+    RPCTypeCheck(params, boost::assign::list_of(int_type)(int_type)(array_type));
+    
+    // parse hex string from parameter
+    CTransaction tx;
+    if (!DecodeHexTx(tx, params[0].get_str()))
+        throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX decode failed");
+
+    bool includeWatching = false;
+    if (params.size() > 1)
+        includeWatching = params[1].get_bool();
+
+    CMutableTransaction txNew;
+    CAmount nFeeRet;
+    string strFailReason;
+    if(!pwalletMain->FundTransaction(tx, txNew, nFeeRet, strFailReason, includeWatching))
+        throw JSONRPCError(RPC_INTERNAL_ERROR, strFailReason);
+    
+    Object result;
+    result.push_back(Pair("hex", EncodeHexTx(txNew)));
+    result.push_back(Pair("fee", nFeeRet));
+
+    return result;
+}
+
+#endif

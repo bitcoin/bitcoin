@@ -1344,7 +1344,7 @@ CAmount CWallet::GetImmatureWatchOnlyBalance() const
 /**
  * populate vCoins with vector of available COutputs.
  */
-void CWallet::AvailableCoins(vector<COutput>& vCoins, bool fOnlyConfirmed, const CCoinControl *coinControl) const
+void CWallet::AvailableCoins(vector<COutput>& vCoins, bool fOnlyConfirmed, const CCoinControl *coinControl, bool includeWatching) const
 {
     vCoins.clear();
 
@@ -1373,7 +1373,7 @@ void CWallet::AvailableCoins(vector<COutput>& vCoins, bool fOnlyConfirmed, const
                 if (!(IsSpent(wtxid, i)) && mine != ISMINE_NO &&
                     !IsLockedCoin((*it).first, i) && pcoin->vout[i].nValue > 0 &&
                     (!coinControl || !coinControl->HasSelected() || coinControl->IsSelected((*it).first, i)))
-                        vCoins.push_back(COutput(pcoin, i, nDepth, (mine & ISMINE_SPENDABLE) != ISMINE_NO));
+                        vCoins.push_back(COutput(pcoin, i, nDepth, ((mine & ISMINE_SPENDABLE) != ISMINE_NO) || (includeWatching && ((mine & ISMINE_WATCH_ONLY) != ISMINE_NO))));
             }
         }
     }
@@ -1526,35 +1526,118 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, int nConfMine, int
     return true;
 }
 
-bool CWallet::SelectCoins(const CAmount& nTargetValue, set<pair<const CWalletTx*,unsigned int> >& setCoinsRet, CAmount& nValueRet, const CCoinControl* coinControl) const
+bool CWallet::SelectCoins(const CAmount& nTargetValue, set<pair<const CWalletTx*,unsigned int> >& setCoinsRet, CAmount& nValueRet, vector<CTxIn> vPresetVINs, const CCoinControl* coinControl, bool includeWatching) const
 {
     vector<COutput> vCoins;
-    AvailableCoins(vCoins, true, coinControl);
-
+    AvailableCoins(vCoins, true, coinControl, includeWatching);
+    
+    // create a empty set to store possible VINS
+    set<pair<const CWalletTx*,unsigned int> > setTempCoins;
+    CAmount nValueTroughVINs = 0;
+    
     // coin control -> return all selected outputs (we want all selected to go into the transaction for sure)
     if (coinControl && coinControl->HasSelected())
     {
         BOOST_FOREACH(const COutput& out, vCoins)
         {
-            if(!out.fSpendable)
-                continue;
+            if (!out.fSpendable)
+                 continue;
             nValueRet += out.tx->vout[out.i].nValue;
             setCoinsRet.insert(make_pair(out.tx, out.i));
         }
         return (nValueRet >= nTargetValue);
     }
+    
+    // fill up the tx with possible predefined VINs
+    BOOST_FOREACH(const CTxIn& txin, vPresetVINs)
+    {
+        bool vinOk = false;
+        // search for VIN in available coins
+        for (vector<COutput>::iterator it = vCoins.begin() ; it != vCoins.end();)
+        {
+            const COutput& out = *it;
+            if (out.tx->GetHash() == txin.prevout.hash && txin.prevout.n == (uint32_t)out.i)
+            {
+                if (!out.fSpendable)
+                    continue;
+                
+                nValueTroughVINs    += out.tx->vout[out.i].nValue;
+                
+                // temporarily keep the coin to add them later after SelectCoinsMinConf has added some
+                setTempCoins.insert(make_pair(out.tx, out.i));
+                vinOk = true;
+                
+                // remove the coins from available coins vector to avoid double use because of a upcomming SelectCoinsMinConf
+                it = vCoins.erase(it);
+            }
+            else
+                ++it;
+        }
+        
+        if (!vinOk)
+            return false; // if vin was not an available coin, cancel (will return "Insufficient funds")
+    }
 
-    return (SelectCoinsMinConf(nTargetValue, 1, 6, vCoins, setCoinsRet, nValueRet) ||
-            SelectCoinsMinConf(nTargetValue, 1, 1, vCoins, setCoinsRet, nValueRet) ||
-            (bSpendZeroConfChange && SelectCoinsMinConf(nTargetValue, 0, 1, vCoins, setCoinsRet, nValueRet)));
+    bool state = true;
+    
+    // only select further coins if we need to
+    if (nTargetValue-nValueTroughVINs > 0)
+        state = (SelectCoinsMinConf(nTargetValue-nValueTroughVINs, 1, 6, vCoins, setCoinsRet, nValueRet) ||
+            SelectCoinsMinConf(nTargetValue-nValueTroughVINs, 1, 1, vCoins, setCoinsRet, nValueRet) ||
+            (bSpendZeroConfChange && SelectCoinsMinConf(nTargetValue-nValueTroughVINs, 0, 1, vCoins, setCoinsRet, nValueRet)));
+    
+    // because SelectCoinsMinConf clears the setCoinsRet, we now add the possible VINs to the coinset
+    setCoinsRet.insert(setTempCoins.begin(), setTempCoins.end());
+    
+    // increase return value due of possible vins
+    nValueRet+=nValueTroughVINs;
+    
+    return state;
 }
 
 
+bool CWallet::FundTransaction(const CTransaction& txToFund, CMutableTransaction& txNew, CAmount &nFeeRet, std::string& strFailReason, bool includeWatching)
+{
 
+    vector<pair<CScript, CAmount> > vecSend;
+    vector<CTxIn> vin;
+
+    BOOST_FOREACH (const CTxOut& txOut, txToFund.vout)
+    {
+        vecSend.push_back(make_pair(txOut.scriptPubKey, txOut.nValue));
+    }
+
+    BOOST_FOREACH (const CTxIn& txIn, txToFund.vin)
+    {
+        vin.push_back(txIn);
+    }
+
+    CReserveKey reservekey(this);
+    CWalletTx wtx;
+
+    // always try first without including watchonly
+    bool result = CreateTransaction(vecSend, vin, wtx, txNew, reservekey, nFeeRet, strFailReason, NULL, false, false);
+
+    // There may be a solution including watchonly, which may also be a
+    // solution that does not pay any fees.
+    if (!result && includeWatching)
+        result = CreateTransaction(vecSend, vin, wtx, txNew, reservekey, nFeeRet, strFailReason, NULL, false, includeWatching);
+
+    return result;
+}
 
 bool CWallet::CreateTransaction(const vector<pair<CScript, CAmount> >& vecSend,
-                                CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet, std::string& strFailReason, const CCoinControl* coinControl)
+                                CWalletTx& wtxNew, CMutableTransaction& txNew, CReserveKey& reservekey, CAmount& nFeeRet, std::string& strFailReason, const CCoinControl* coinControl, bool sign, bool includeWatching)
 {
+    vector<CTxIn> vINs;
+    return CreateTransaction(vecSend, vINs, wtxNew, txNew, reservekey, nFeeRet, strFailReason, coinControl, sign, includeWatching);
+}
+
+bool CWallet::CreateTransaction(const vector<pair<CScript, CAmount> >& vecSend, const vector<CTxIn> vINs,
+                                CWalletTx& wtxNew, CMutableTransaction& txNew, CReserveKey& reservekey, CAmount& nFeeRet, std::string& strFailReason, const CCoinControl* coinControl, bool sign, bool includeWatching)
+{
+    bool cannotFundFee = false; // used with includeWatching
+
     CAmount nValue = 0;
     BOOST_FOREACH (const PAIRTYPE(CScript, CAmount)& s, vecSend)
     {
@@ -1573,7 +1656,6 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, CAmount> >& vecSend,
 
     wtxNew.fTimeReceivedIsTxTime = true;
     wtxNew.BindWallet(this);
-    CMutableTransaction txNew;
 
     // Discourage fee sniping.
     //
@@ -1624,10 +1706,22 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, CAmount> >& vecSend,
                 // Choose coins to use
                 set<pair<const CWalletTx*,unsigned int> > setCoins;
                 CAmount nValueIn = 0;
-                if (!SelectCoins(nTotalValue, setCoins, nValueIn, coinControl))
+                if (!SelectCoins(nTotalValue, setCoins, nValueIn, vINs, coinControl, includeWatching))
                 {
-                    strFailReason = _("Insufficient funds");
-                    return false;
+                    // fee selection is not mandatory when using includeWatching
+                    if (includeWatching && SelectCoins(nTotalValue - nFeeRet, setCoins, nValueIn, vINs, coinControl, includeWatching) && nTotalValue >= nValue)
+                    {
+                        nFeeRet = 0;
+
+                        // no more funds available for fee, but target met anyway
+                        cannotFundFee = true;
+                    }
+
+                    else
+                    {
+                        strFailReason = _("Insufficient funds");
+                        return false;
+                    }
                 }
                 BOOST_FOREACH(PAIRTYPE(const CWalletTx*, unsigned int) pcoin, setCoins)
                 {
@@ -1701,10 +1795,11 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, CAmount> >& vecSend,
                     txNew.vin.push_back(CTxIn(coin.first->GetHash(),coin.second,CScript(),
                                               std::numeric_limits<unsigned int>::max()-1));
 
-                // Sign
+                // Sign (also calculate fee)
                 int nIn = 0;
                 BOOST_FOREACH(const PAIRTYPE(const CWalletTx*,unsigned int)& coin, setCoins)
-                    if (!SignSignature(*this, *coin.first, txNew, nIn++))
+                    // when unsignable and watchonly enabled, this may be a watchonly so don't error
+                    if (!SignSignature(*this, *coin.first, txNew, nIn++) && !includeWatching)
                     {
                         strFailReason = _("Signing transaction failed");
                         return false;
@@ -1720,6 +1815,19 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, CAmount> >& vecSend,
                     strFailReason = _("Transaction too large");
                     return false;
                 }
+
+                // remove signature if we used the signing only for the fee calculation
+                if(!sign)
+                {
+                    BOOST_FOREACH (CTxIn& vin, txNew.vin)
+                        vin.scriptSig = CScript();
+                }
+
+                // There are no more available funds for funding a transaction
+                // fee, and includeWatching should de-prioritize fee funding.
+                if (includeWatching && cannotFundFee)
+                    return true;
+
                 dPriority = wtxNew.ComputePriority(dPriority, nBytes);
 
                 // Can we complete this as a free transaction?
@@ -1759,11 +1867,13 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, CAmount> >& vecSend,
 }
 
 bool CWallet::CreateTransaction(CScript scriptPubKey, const CAmount& nValue,
-                                CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet, std::string& strFailReason, const CCoinControl* coinControl)
+                                CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet, std::string& strFailReason, const CCoinControl* coinControl, bool sign, bool includeWatching)
 {
     vector< pair<CScript, CAmount> > vecSend;
     vecSend.push_back(make_pair(scriptPubKey, nValue));
-    return CreateTransaction(vecSend, wtxNew, reservekey, nFeeRet, strFailReason, coinControl);
+    CMutableTransaction txNew;
+    vector<CTxIn> vINs;
+    return CreateTransaction(vecSend, vINs, wtxNew, txNew, reservekey, nFeeRet, strFailReason, coinControl, sign, includeWatching);
 }
 
 /**
