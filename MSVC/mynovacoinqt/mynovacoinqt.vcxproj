@@ -103,7 +103,7 @@
       <ExceptionHandling>Sync</ExceptionHandling>
       <ObjectFileName>$(IntDir)</ObjectFileName>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>USE_UPNP;USE_QRCODE;UNICODE;WIN32;QT_CORE_LIB;QT_GUI_LIB;QT_WIDGETS_LIB;QT_GUI;_SCL_SECURE_NO_WARNINGS;USE_LEVELDB;USE_IPV6=1;__STDC_FORMAT_MACROS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>USE_UPNP;USE_QRCODE;UNICODE;WIN32;QT_CORE_LIB;QT_GUI_LIB;QT_WIDGETS_LIB;QT_GUI;_SCL_SECURE_NO_WARNINGS;USE_LEVELDB;USE_IPV6=1;__STDC_FORMAT_MACROS;USE_SSE2;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessToFile>false</PreprocessToFile>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -153,7 +153,7 @@ C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2\qtbase\bin\lrelease C:\MyP
       <ExceptionHandling>Sync</ExceptionHandling>
       <ObjectFileName>$(IntDir)</ObjectFileName>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>USE_UPNP;USE_QRCODE;UNICODE;WIN32;_WIN32;QT_CORE_LIB;QT_GUI_LIB;QT_WIDGETS_LIB;QT_GUI;_SCL_SECURE_NO_WARNINGS;USE_LEVELDB;USE_IPV6=1;__STDC_FORMAT_MACROS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>USE_UPNP;USE_QRCODE;UNICODE;WIN32;_WIN32;QT_CORE_LIB;QT_GUI_LIB;QT_WIDGETS_LIB;QT_GUI;_SCL_SECURE_NO_WARNINGS;USE_LEVELDB;USE_IPV6=1;__STDC_FORMAT_MACROS;USE_SSE2;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessToFile>false</PreprocessToFile>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -203,7 +203,7 @@ C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2-64\qtbase\bin\lrelease C:\
       <ExceptionHandling>Sync</ExceptionHandling>
       <ObjectFileName>$(IntDir)</ObjectFileName>
       <Optimization>Full</Optimization>
-      <PreprocessorDefinitions>USE_UPNP;USE_QRCODE;UNICODE;WIN32;QT_CORE_LIB;QT_GUI_LIB;QT_WIDGETS_LIB;QT_GUI;_SCL_SECURE_NO_WARNINGS;USE_LEVELDB;USE_IPV6=1;__STDC_FORMAT_MACROS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>USE_UPNP;USE_QRCODE;UNICODE;WIN32;QT_CORE_LIB;QT_GUI_LIB;QT_WIDGETS_LIB;QT_GUI;_SCL_SECURE_NO_WARNINGS;USE_LEVELDB;USE_IPV6=1;__STDC_FORMAT_MACROS;USE_SSE2;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessToFile>false</PreprocessToFile>
       <ProgramDataBaseFileName>$(IntDir)vc$(PlatformToolsetVersion).pdb</ProgramDataBaseFileName>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
@@ -257,7 +257,7 @@ C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2\qtbase\bin\lrelease C:\MyP
       <ExceptionHandling>Sync</ExceptionHandling>
       <ObjectFileName>$(IntDir)</ObjectFileName>
       <Optimization>Full</Optimization>
-      <PreprocessorDefinitions>USE_UPNP;USE_QRCODE;UNICODE;WIN32;QT_CORE_LIB;QT_GUI_LIB;QT_WIDGETS_LIB;QT_GUI;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;USE_LEVELDB;USE_IPV6=1;__STDC_FORMAT_MACROS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>USE_UPNP;USE_QRCODE;UNICODE;WIN32;QT_CORE_LIB;QT_GUI_LIB;QT_WIDGETS_LIB;QT_GUI;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;USE_LEVELDB;USE_IPV6=1;__STDC_FORMAT_MACROS;USE_SSE2;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessToFile>false</PreprocessToFile>
       <ProgramDataBaseFileName>$(IntDir)vc$(PlatformToolsetVersion).pdb</ProgramDataBaseFileName>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>

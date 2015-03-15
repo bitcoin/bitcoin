@@ -104,10 +104,13 @@
     <ClCompile Include="..\..\src\txdb-leveldb.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\stun.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\scrypt-generic.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\stun.cpp">
+    <ClCompile Include="..\..\src\scrypt-sse2.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -4,32 +4,44 @@
 
 USE_UPNP:=0
 USE_LEVELDB:=0
+CC=gcc
+
+
 USE_IPV6:=1
+USE_SSE2:=1
+
+BOOST_SUFFIX?=-mgw49-mt-s-1_57
 
 INCLUDEPATHS= \
- -I"C:\boost-1.50.0-mgw" \
- -I"C:\db-4.8.30.NC-mgw\build_unix" \
- -I"C:\openssl-1.0.1c-mgw\include"
-
+ -I"$(CURDIR)" \
+ -I"/c/deps/boost_1_57_0" \
+ -I"/c/deps" \
+ -I"/c/deps/db-6.0.20/build_unix" \
+ -I"/c/deps/openssl-1.0.2/include"
+ 
 LIBPATHS= \
- -L"C:\boost-1.50.0-mgw\stage\lib" \
- -L"C:\db-4.8.30.NC-mgw\build_unix" \
- -L"C:\openssl-1.0.1c-mgw"
+ -L"$(CURDIR)/leveldb" \
+ -L"/c/deps/boost_1_57_0/stage/lib" \
+ -L"/c/deps/miniupnpc" \
+ -L"/c/deps/db-6.0.20/build_unix" \
+ -L"/c/deps/openssl-1.0.2"
 
 LIBS= \
- -l boost_system-mgw44-mt-1_53 \
- -l boost_filesystem-mgw44-mt-1_53 \
- -l boost_program_options-mgw44-mt-1_53 \
- -l boost_thread-mgw44-mt-1_53 \
- -l boost_chrono-mgw44-mt-1_53 \
- -l db_cxx \
- -l ssl \
- -l crypto
+  -l leveldb \
+  -l memenv \
+  -l boost_system$(BOOST_SUFFIX) \
+  -l boost_filesystem$(BOOST_SUFFIX) \
+  -l boost_program_options$(BOOST_SUFFIX) \
+  -l boost_thread$(BOOST_SUFFIX) \
+  -l boost_chrono$(BOOST_SUFFIX) \
+  -l db_cxx \
+  -l ssl \
+  -l crypto
 
 DEFS=-DWIN32 -D_WINDOWS -DBOOST_THREAD_USE_LIB -DBOOST_SPIRIT_THREADSAFE -D__STDC_FORMAT_MACROS
 DEBUGFLAGS=-g
 CFLAGS=-mthreads -O2 -msse2 -w -Wall -Wextra -Wno-ignored-qualifiers -Wformat -Wformat-security -Wno-unused-parameter $(DEBUGFLAGS) $(DEFS) $(INCLUDEPATHS)
-LDFLAGS=-Wl,--dynamicbase -Wl,--nxcompat
+LDFLAGS=-Wl,--dynamicbase -Wl,--nxcompat -Wl,--large-address-aware -static
 
 ifndef USE_UPNP
 	override USE_UPNP = -
@@ -95,8 +107,8 @@ DEFS += $(addprefix -I,$(CURDIR)/leveldb/include) -DUSE_LEVELDB
 DEFS += $(addprefix -I,$(CURDIR)/leveldb/helpers)
 OBJS += obj/txdb-leveldb.o
 leveldb/libleveldb.a:
-	cd leveldb; make; cd ..
-obj/txdb-leveldb.o: leveldb/libleveldb.lib
+    cd leveldb;TARGET_OS=NATIVE_WINDOWS make libleveldb.a libmemenv.a;; cd ..
+obj/txdb-leveldb.o: leveldb/libleveldb.a
 else
 OBJS += obj/txdb-bdb.o
 endif
@@ -114,6 +126,13 @@ OBJS += obj/scrypt-generic.o
 
 obj/scrypt-generic.o: scrypt-generic.c
 	$(CC) -c $(xCXXFLAGS) -MMD -o $@ $<
+endif
+
+ifeq  (${USE_SSE2}, 1)
+    DEFS += -DUSE_SSE2    
+    OBJS += obj/scrypt-sse2.o
+obj/scrypt-sse2.o: scrypt-sse2.cpp $(HEADERS)
+	g++  -c $(CFLAGS) -MMD -o $@ $<
 endif
 
 obj/%.o: %.cpp $(HEADERS)
