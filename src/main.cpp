@@ -2481,7 +2481,7 @@ bool DisconnectBlocksAndReprocess(int blocks)
 
     CValidationState state;
 
-    LogPrintf("DisconnectBlocksAndReprocess: Got command to replay %d blocks", blocks);
+    LogPrintf("DisconnectBlocksAndReprocess: Got command to replay %d blocks\n", blocks);
     for(int i = 0; i <= blocks; i++)
         DisconnectTip(state);
 
