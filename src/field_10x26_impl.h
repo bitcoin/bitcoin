@@ -1064,7 +1064,9 @@ static void secp256k1_fe_sqr(secp256k1_fe_t *r, const secp256k1_fe_t *a) {
 }
 
 static SECP256K1_INLINE void secp256k1_fe_storage_cmov(secp256k1_fe_storage_t *r, const secp256k1_fe_storage_t *a, int flag) {
-    uint32_t mask0 = flag + ~((uint32_t)0), mask1 = ~mask0;
+    uint32_t mask0, mask1;
+    mask0 = flag + ~((uint32_t)0);
+    mask1 = ~mask0;
     r->n[0] = (r->n[0] & mask0) | (a->n[0] & mask1);
     r->n[1] = (r->n[1] & mask0) | (a->n[1] & mask1);
     r->n[2] = (r->n[2] & mask0) | (a->n[2] & mask1);
