@@ -6,6 +6,17 @@ Ubuntu/Debian:
    libboost-filesystem-dev libboost-program-options-dev libboost-thread-dev
    libssl-dev libdb++-dev libminiupnpc-dev libqrencode-dev
 
+Если у вас возникла ошибка при установке qt4-qmake (Возникает на Ubuntu 14.04.2 и возможно в других версиях)
+libcheese-gtk23 : Depends: libclutter-gtk-1.0-0 (>= 0.91.8) but it is not going to be installed
+                  Depends: libcogl15 (>= 1.15.8) but it is not going to be installed
+libcheese7 : Depends: libclutter-gst-2.0-0 (>= 0.10.0) but it is not going to be installed
+             Depends: gstreamer1.0-clutter but it is not going to be installed
+libclutter-1.0-0 : Depends: libcogl-pango15 (>= 1.15.8) but it is not going to be installed
+                   Depends: libcogl15 (>= 1.15.8) but it is not going to be installed
+
+То введите
+sudo apt-get install  libglew-dev libcheese7 libcheese-gtk23 libclutter-gst-2.0-0 libcogl15 libclutter-gtk-1.0-0 libclutter-1.0-0  xserver-xorg-input-all
+
 openSUSE(проверено на версии 13.2):
  sudo zypper install git gcc gcc-c++ libqt4-devel boost-devel libopenssl-devel libdb-4_8-devel libminiupnpc-devel libqrencode3
 
