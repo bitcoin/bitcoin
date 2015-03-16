@@ -102,6 +102,35 @@ class WalletTest (BitcoinTestFramework):
         assert_equal(self.nodes[2].getbalance(), 100)
         assert_equal(self.nodes[2].getbalance("from1"), 100-21)
 
+        # Send 10 BTC normal
+        address = self.nodes[0].getnewaddress("test")
+        self.nodes[2].settxfee(Decimal('0.001'))
+        txid = self.nodes[2].sendtoaddress(address, 10, "", "", False)
+        self.nodes[2].setgenerate(True, 1)
+        self.sync_all()
+        assert_equal(self.nodes[2].getbalance(), Decimal('89.99900000'))
+        assert_equal(self.nodes[0].getbalance(), Decimal('10.00000000'))
+
+        # Send 10 BTC with subtract fee from amount
+        txid = self.nodes[2].sendtoaddress(address, 10, "", "", True)
+        self.nodes[2].setgenerate(True, 1)
+        self.sync_all()
+        assert_equal(self.nodes[2].getbalance(), Decimal('79.99900000'))
+        assert_equal(self.nodes[0].getbalance(), Decimal('19.99900000'))
+
+        # Sendmany 10 BTC
+        txid = self.nodes[2].sendmany('from1', {address: 10}, 0, "", [])
+        self.nodes[2].setgenerate(True, 1)
+        self.sync_all()
+        assert_equal(self.nodes[2].getbalance(), Decimal('69.99800000'))
+        assert_equal(self.nodes[0].getbalance(), Decimal('29.99900000'))
+
+        # Sendmany 10 BTC with subtract fee from amount
+        txid = self.nodes[2].sendmany('from1', {address: 10}, 0, "", [address])
+        self.nodes[2].setgenerate(True, 1)
+        self.sync_all()
+        assert_equal(self.nodes[2].getbalance(), Decimal('59.99800000'))
+        assert_equal(self.nodes[0].getbalance(), Decimal('39.99800000'))
 
 if __name__ == '__main__':
     WalletTest ().main ()
