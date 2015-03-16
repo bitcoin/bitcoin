@@ -1753,7 +1753,13 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
                             }
                         }
 
-                        pSubmittedToMasternode = mnodeman.Find(dsq.vin);
+                        CMasternode* pmn = mnodeman.Find(dsq.vin);
+                        if(pmn == NULL)
+                        {
+                            LogPrintf("DoAutomaticDenominating --- dsq vin %s is not in masternode list!", dsq.vin.ToString());
+                            continue;
+                        }
+                        pSubmittedToMasternode = pmn;
                         vecMasternodesUsed.push_back(dsq.vin);
                         sessionDenom = dsq.nDenom;
 
