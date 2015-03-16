@@ -8,6 +8,7 @@ can be found in the contrib/init folder.
     contrib/init/bitcoind.openrc:     OpenRC compatible SysV style init script
     contrib/init/bitcoind.openrcconf: OpenRC conf.d file
     contrib/init/bitcoind.conf:       Upstart service configuration file
+    contrib/init/bitcoind.init:       CentOS compatible SysV style init script
 
 1. Service User
 ---------------------------------
@@ -49,6 +50,7 @@ Configuration file:  /etc/bitcoin/bitcoin.conf
 Data directory:      /var/lib/bitcoind
 PID file:            /var/run/bitcoind/bitcoind.pid (OpenRC and Upstart)
                      /var/lib/bitcoind/bitcoind.pid (systemd)
+Lock file:           /var/lock/subsys/bitcoind (CentOS)
 
 The configuration file, PID directory (if applicable) and data directory
 should all be owned by the bitcoin user and group.  It is advised for security
@@ -81,7 +83,15 @@ Drop bitcoind.conf in /etc/init.  Test by running "service bitcoind start"
 it will automatically start on reboot.
 
 NOTE: This script is incompatible with CentOS 5 and Amazon Linux 2014 as they
-use old versions of Upstart and do not supply the start-stop-daemon uitility.
+use old versions of Upstart and do not supply the start-stop-daemon utility.
+
+4d) CentOS
+
+Copy bitcoind.init to /etc/init.d/bitcoind. Test by running "service bitcoind start".
+
+Using this script, you can adjust the path and flags to the bitcoind program by 
+setting the BITCOIND and FLAGS environment variables in the file 
+/etc/sysconfig/bitcoind. You can also use the DAEMONOPTS environment variable here.
 
 5. Auto-respawn
 -----------------------------------
