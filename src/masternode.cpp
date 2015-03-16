@@ -142,6 +142,8 @@ CMasternode::CMasternode()
     allowFreeTx = true;
     protocolVersion = MIN_PEER_PROTO_VERSION;
     nLastDsq = 0;
+    donationAddress = CScript();
+    donationPercentage = 0;
 }
 
 CMasternode::CMasternode(const CMasternode& other)
@@ -162,9 +164,11 @@ CMasternode::CMasternode(const CMasternode& other)
     allowFreeTx = other.allowFreeTx;
     protocolVersion = other.protocolVersion;
     nLastDsq = other.nLastDsq;
+    donationAddress = other.donationAddress;
+    donationPercentage = other.donationPercentage;
 }
 
-CMasternode::CMasternode(CService newAddr, CTxIn newVin, CPubKey newPubkey, std::vector<unsigned char> newSig, int64_t newSigTime, CPubKey newPubkey2, int protocolVersionIn)
+CMasternode::CMasternode(CService newAddr, CTxIn newVin, CPubKey newPubkey, std::vector<unsigned char> newSig, int64_t newSigTime, CPubKey newPubkey2, int protocolVersionIn, CScript newDonationAddress, int newDonationPercentage)
 {
     LOCK(cs);
     vin = newVin;
@@ -182,6 +186,8 @@ CMasternode::CMasternode(CService newAddr, CTxIn newVin, CPubKey newPubkey, std:
     allowFreeTx = true;
     protocolVersion = protocolVersionIn;
     nLastDsq = 0;
+    donationAddress = newDonationAddress;
+    donationPercentage = newDonationPercentage;
 }
 
 //
@@ -383,6 +389,11 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
     CMasternodePaymentWinner newWinner;
     int nEnabled = mnodeman.CountEnabled();
 
+    uint256 hash;
+    if(!GetBlockHash(hash, nBlockHeight-10)) return false;
+    int nHash;
+    memcpy(&hash, &nHash, 2);
+
     std::vector<CTxIn> vecLastPayments;
     BOOST_REVERSE_FOREACH(CMasternodePaymentWinner& winner, vWinning)
     {
@@ -399,7 +410,12 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
         newWinner.score = 0;
         newWinner.nBlockHeight = nBlockHeight;
         newWinner.vin = pmn->vin;
-        newWinner.payee.SetDestination(pmn->pubkey.GetID());
+
+        if(pmn->donationPercentage > 0 && nHash % 100 > (pmn->donationPercentage-100)){
+            newWinner.payee.SetDestination(pmn->pubkey.GetID());
+        } else {
+            newWinner.payee.SetDestination(pmn->donationAddress.GetID());
+        }
     }
 
     //if we can't find new MN to get paid, pick first active MN counting back from the end of vecLastPayments list
@@ -416,7 +432,13 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
                 newWinner.score = 0;
                 newWinner.nBlockHeight = nBlockHeight;
                 newWinner.vin = pmn->vin;
-                newWinner.payee.SetDestination(pmn->pubkey.GetID());
+
+                if(pmn->donationPercentage > 0 && nHash % 100 > (pmn->donationPercentage-100)){
+                    newWinner.payee.SetDestination(pmn->pubkey.GetID());
+                } else {
+                    newWinner.payee.SetDestination(pmn->donationAddress.GetID());
+                }
+
                 break; // we found active MN
             }
         }
