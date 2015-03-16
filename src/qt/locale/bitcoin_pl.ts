@@ -47,11 +47,11 @@
     </message>
     <message>
         <source>Choose the address to send coins to</source>
-        <translation>Wybierz adres żeby wysłać bitcoins</translation>
+        <translation>Wybierz adres, na który chcesz wysłać monety</translation>
     </message>
     <message>
         <source>Choose the address to receive coins with</source>
-        <translation>Wybierz adres do otrzymania monet.</translation>
+        <translation>Wybierz adres, na który chcesz otrzymać monety</translation>
     </message>
     <message>
         <source>C&amp;hoose</source>
@@ -67,7 +67,7 @@
     </message>
     <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>Tutaj znajdują się Twoje adresy Bitcoin do wysyłania płatności. Zawsze sprawdzaj ilość i adres odbiorcy przed wysyłką monet.</translation>
+        <translation>Tutaj znajdują się adresy Bitcoin na które wysyłasz płatności. Zawsze sprawdzaj ilość i adres odbiorcy przed wysyłką monet.</translation>
     </message>
     <message>
         <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
@@ -177,7 +177,7 @@
     </message>
     <message>
         <source>Warning: The Caps Lock key is on!</source>
-        <translation>Uwaga: Klawisz Caps Lock jest włączony</translation>
+        <translation>Uwaga: Klawisz Caps Lock jest włączony!</translation>
     </message>
     <message>
         <source>Wallet encrypted</source>
@@ -236,7 +236,7 @@
     </message>
     <message>
         <source>Show general overview of wallet</source>
-        <translation>Pokazuje ogólny zarys portfela</translation>
+        <translation>Pokazuje ogólny opis portfela</translation>
     </message>
     <message>
         <source>&amp;Transactions</source>
@@ -1791,7 +1791,7 @@ Adres: %4
     </message>
     <message>
         <source>Verify the message to ensure it was signed with the specified Bitcoin address</source>
-        <translation>Zweryfikuj wiadomość,  aby upewnić się, że została podpisana odpowiednim adresem Bitcoin.</translation>
+        <translation>Zweryfikuj wiadomość,  aby upewnić się, że została podpisana podanym adresem Bitcoin.</translation>
     </message>
     <message>
         <source>Verify &amp;Message</source>
@@ -1823,7 +1823,7 @@ Adres: %4
     </message>
     <message>
         <source>Private key for the entered address is not available.</source>
-        <translation>Klucz prywatny dla podanego adresu nie jest dostępny</translation>
+        <translation>Klucz prywatny dla wprowadzonego adresu nie jest dostępny.</translation>
     </message>
     <message>
         <source>Message signing failed.</source>
@@ -1843,7 +1843,7 @@ Adres: %4
     </message>
     <message>
         <source>The signature did not match the message digest.</source>
-        <translation>Podpis nie odpowiadał streszczeniu wiadomości</translation>
+        <translation>Podpis nie odpowiadał skrótowi wiadomości</translation>
     </message>
     <message>
         <source>Message verification failed.</source>
@@ -1858,7 +1858,7 @@ Adres: %4
     <name>SplashScreen</name>
     <message>
         <source>Bitcoin Core</source>
-        <translation>Rdzeń BitCoin</translation>
+        <translation>Rdzeń Bitcoin</translation>
     </message>
     <message>
         <source>The Bitcoin Core developers</source>
@@ -1972,7 +1972,7 @@ Adres: %4
     </message>
     <message>
         <source>Generated coins must mature %1 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to "not accepted" and it won't be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.</source>
-        <translation>Wygenerowane monety muszą dojrzeć przez %1 bloków zanim będzie można je wysłać. Gdy wygenerowałeś ten blok został on ogłoszony w sieci i dodany do łańcucha bloków. Jeżeli nie uda mu się wejść do łańcucha jego status zostanie zmieniony na "nie zaakceptowano" i nie będzie można go wydać. To czasem zdarza się gdy inny węzeł wygeneruje blok w kilka sekund od twojego.</translation>
+        <translation>Wygenerowane monety muszą dojrzeć przez %1 bloków zanim będzie można je wydać. Gdy wygenerowałeś ten blok został on ogłoszony w sieci i dodany do łańcucha bloków. Jeżeli nie uda mu się wejść do łańcucha jego status zostanie zmieniony na "nie zaakceptowano" i nie będzie można go wydać. To czasem zdarza się gdy inny węzeł wygeneruje blok w kilka sekund od twojego.</translation>
     </message>
     <message>
         <source>Debug information</source>
@@ -2000,7 +2000,7 @@ Adres: %4
     </message>
     <message>
         <source>, has not been successfully broadcast yet</source>
-        <translation>, nie został jeszcze pomyślnie wyemitowany</translation>
+        <translation>, nie został jeszcze pomyślnie rozesłany</translation>
     </message>
     <message numerus="yes">
         <source>Open for %n more block(s)</source>
@@ -2359,15 +2359,15 @@ na przykład: alertnotify=echo %%s | mail -s "Alarm Bitcoin" admin@foo.com⏎</t
     </message>
     <message>
         <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
-        <translation>Skojarz z podanym adresem. Użyj formatu [host]:port dla IPv6 </translation>
+        <translation>Skojarz z podanym adresem i zawsze go używaj. Użyj formatu [host]:port dla IPv6 </translation>
     </message>
     <message>
         <source>Error: The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
-        <translation>Błąd: transakcja została odrzucona. Może się to zdarzyć, gdy monety z Twojego portfela zostały już wydane, na przykład gdy używałeś kopii wallet.dat i bitcoiny które tam wydałeś nie zostały jeszcze odjęte z portfela z którego teraz korzystasz.</translation>
+        <translation>Błąd: transakcja została odrzucona! Może się to zdarzyć, gdy monety z Twojego portfela zostały już wydane, na przykład gdy używałeś kopii wallet.dat i bitcoiny które tam wydałeś nie zostały jeszcze odjęte z portfela z którego teraz korzystasz.</translation>
     </message>
     <message>
         <source>Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds!</source>
-        <translation>Transakcja przekracza limit. Możesz wysłać ją płacąc prowizję %s, która zostaje przekazana do węzłów, które ją prześlą i pomoże wspierać sieć Bitcoin. Czy chcesz zapłacić prowizję?</translation>
+        <translation>Błąd: Ta transakcja wymaga co najmniej  %s prowizji, ze względu na jej wartość, wielkość, złożoność lub użycie świeżo odebranych środków!</translation>
     </message>
     <message>
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
@@ -2375,11 +2375,11 @@ na przykład: alertnotify=echo %%s | mail -s "Alarm Bitcoin" admin@foo.com⏎</t
     </message>
     <message>
         <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
-        <translation>To jest testowa wersja - używaj na własne ryzyko - nie używaj do wykopywania oraz przy aplikacjach kupieckich</translation>
+        <translation>To jest testowa wersja - używaj na własne ryzyko - nie używaj do wykopywania oraz przy aplikacjach handlowych</translation>
     </message>
     <message>
         <source>Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
-        <translation>Ostrzeżenie: -paytxfee jest bardzo duży. To jest prowizja za transakcje, którą płacisz, gdy wysyłasz monety.</translation>
+        <translation>Ostrzeżenie: -paytxfee jest bardzo duże! To jest prowizja za transakcje, którą płacisz, gdy wysyłasz monety.</translation>
     </message>
     <message>
         <source>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</source>
@@ -2403,7 +2403,7 @@ na przykład: alertnotify=echo %%s | mail -s "Alarm Bitcoin" admin@foo.com⏎</t
     </message>
     <message>
         <source>Attempt to recover private keys from a corrupt wallet.dat</source>
-        <translation>Próbuj odzyskać klucze prywatne z uszkodzonego wallet.dat</translation>
+        <translation>Próbuję odzyskać klucze prywatne z uszkodzonego wallet.dat</translation>
     </message>
     <message>
         <source>Block creation options:</source>
@@ -2427,11 +2427,11 @@ na przykład: alertnotify=echo %%s | mail -s "Alarm Bitcoin" admin@foo.com⏎</t
     </message>
     <message>
         <source>Discover own IP address (default: 1 when listening and no -externalip)</source>
-        <translation>Odkryj własny adres IP (domyślnie: 1 kiedy w trybie nasłuchu i brak -externalip )</translation>
+        <translation>Wykryj własny adres IP (domyślnie: 1 kiedy w trybie nasłuchu i brak -externalip )</translation>
     </message>
     <message>
         <source>Do not load the wallet and disable wallet RPC calls</source>
-        <translation>Nie ładuj portfela i wyłącz odwołania RPC</translation>
+        <translation>Nie ładuj portfela i wyłącz wywołania RPC portfela</translation>
     </message>
     <message>
         <source>Do you want to rebuild the block database now?</source>
@@ -2451,7 +2451,7 @@ na przykład: alertnotify=echo %%s | mail -s "Alarm Bitcoin" admin@foo.com⏎</t
     </message>
     <message>
         <source>Error opening block database</source>
-        <translation>Błąd ładowania bazy bloków</translation>
+        <translation>Błąd otwierania bazy bloków</translation>
     </message>
     <message>
         <source>Error: Disk space is low!</source>
@@ -2463,7 +2463,7 @@ na przykład: alertnotify=echo %%s | mail -s "Alarm Bitcoin" admin@foo.com⏎</t
     </message>
     <message>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
-        <translation>Próba otwarcia jakiegokolwiek portu nie powiodła się. Użyj -listen=0 jeśli tego chcesz.</translation>
+        <translation>Nie mogę nasłuchiwać na żadnym porcie. Użyj -listen=0 jeśli tego chcesz.</translation>
     </message>
     <message>
         <source>Importing...</source>
@@ -2547,7 +2547,7 @@ na przykład: alertnotify=echo %%s | mail -s "Alarm Bitcoin" admin@foo.com⏎</t
     </message>
     <message>
         <source>Print block on startup, if found in block index</source>
-        <translation>Wyświetlaj blok podczas uruchamiania, jeżeli znaleziono indeks bloków</translation>
+        <translation>Wyświetlaj blok podczas uruchamiania, jeżeli znaleziono w indeksie bloków</translation>
     </message>
     <message>
         <source>RPC SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
@@ -2591,7 +2591,7 @@ na przykład: alertnotify=echo %%s | mail -s "Alarm Bitcoin" admin@foo.com⏎</t
     </message>
     <message>
         <source>Transaction amounts must be positive</source>
-        <translation>Kwota transakcji musi być dodatnia</translation>
+        <translation>Kwoty transakcji muszą być dodatnie</translation>
     </message>
     <message>
         <source>Transaction too large</source>
@@ -2623,7 +2623,7 @@ na przykład: alertnotify=echo %%s | mail -s "Alarm Bitcoin" admin@foo.com⏎</t
     </message>
     <message>
         <source>wallet.dat corrupt, salvage failed</source>
-        <translation>wallet.dat uszkodzony, odtworzenie się nie powiodło</translation>
+        <translation>wallet.dat uszkodzony, odtworzenie nie powiodło się</translation>
     </message>
     <message>
         <source>Password for JSON-RPC connections</source>
@@ -2671,7 +2671,7 @@ na przykład: alertnotify=echo %%s | mail -s "Alarm Bitcoin" admin@foo.com⏎</t
     </message>
     <message>
         <source>Unknown network specified in -onlynet: '%s'</source>
-        <translation>Nieznana sieć w -onlynet: '%s'</translation>
+        <translation>Nieznana sieć podana w -onlynet: '%s'</translation>
     </message>
     <message>
         <source>Cannot resolve -bind address: '%s'</source>
@@ -2699,7 +2699,7 @@ na przykład: alertnotify=echo %%s | mail -s "Alarm Bitcoin" admin@foo.com⏎</t
     </message>
     <message>
         <source>Add a node to connect to and attempt to keep the connection open</source>
-        <translation>Dodaj węzeł do łączenia się and attempt to keep the connection open</translation>
+        <translation>Dodaj węzeł do łączenia się i próbuj utrzymać to połączenie</translation>
     </message>
     <message>
         <source>Loading wallet...</source>
