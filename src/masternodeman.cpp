@@ -333,8 +333,9 @@ CMasternode* CMasternodeMan::FindOldestNotInVec(const std::vector<CTxIn> &vVins)
 
         if(found) continue;
 
-        if(pOldestMasternode == NULL || pOldestMasternode->GetMasternodeInputAge() < mn.GetMasternodeInputAge())
+        if(pOldestMasternode == NULL || pOldestMasternode->GetMasternodeInputAge() < mn.GetMasternodeInputAge()){
             pOldestMasternode = &mn;
+        }
     }
 
     return pOldestMasternode;
@@ -495,11 +496,11 @@ void CMasternodeMan::ProcessMasternodeConnections()
     }
 }
 
-void CMasternodeMan::RelayMasternodeEntry(const CTxIn vin, const CService addr, const std::vector<unsigned char> vchSig, const int64_t nNow, const CPubKey pubkey, const CPubKey pubkey2, const int count, const int current, const int64_t lastUpdated, const int protocolVersion)
+void CMasternodeMan::RelayMasternodeEntry(const CTxIn vin, const CService addr, const std::vector<unsigned char> vchSig, const int64_t nNow, const CPubKey pubkey, const CPubKey pubkey2, const int count, const int current, const int64_t lastUpdated, const int protocolVersion, CScript donationAddress, int donationPercentage)
 {
     LOCK(cs_vNodes);
     BOOST_FOREACH(CNode* pnode, vNodes)
-        pnode->PushMessage("dsee", vin, addr, vchSig, nNow, pubkey, pubkey2, count, current, lastUpdated, protocolVersion);
+        pnode->PushMessage("dsee", vin, addr, vchSig, nNow, pubkey, pubkey2, count, current, lastUpdated, protocolVersion, donationAddress, donationPercentage);
 }
 
 void CMasternodeMan::RelayMasternodeEntryPing(const CTxIn vin, const std::vector<unsigned char> vchSig, const int64_t nNow, const bool stop)
@@ -529,10 +530,12 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         int current;
         int64_t lastUpdated;
         int protocolVersion;
+        CScript donationAddress;
+        int donationPercentage;
         std::string strMessage;
 
         // 70047 and greater
-        vRecv >> vin >> addr >> vchSig >> sigTime >> pubkey >> pubkey2 >> count >> current >> lastUpdated >> protocolVersion;
+        vRecv >> vin >> addr >> vchSig >> sigTime >> pubkey >> pubkey2 >> count >> current >> lastUpdated >> protocolVersion >> donationAddress >> donationPercentage;
 
         // make sure signature isn't in the future (past is OK)
         if (sigTime > GetAdjustedTime() + 60 * 60) {
@@ -546,7 +549,12 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         std::string vchPubKey(pubkey.begin(), pubkey.end());
         std::string vchPubKey2(pubkey2.begin(), pubkey2.end());
 
-        strMessage = addr.ToString() + boost::lexical_cast<std::string>(sigTime) + vchPubKey + vchPubKey2 + boost::lexical_cast<std::string>(protocolVersion);
+        strMessage = addr.ToString() + boost::lexical_cast<std::string>(sigTime) + vchPubKey + vchPubKey2 + boost::lexical_cast<std::string>(protocolVersion)  + donationAddress.ToString() + boost::lexical_cast<std::string>(donationPercentage);
+
+        if(donationPercentage < 0 || donationPercentage > 100){
+            LogPrintf("dsee - donation percentage out of range %d\n", donationPercentage);
+            return;     
+        }
 
         if(protocolVersion < nMasternodeMinProtocol) {
             LogPrintf("dsee - ignoring outdated Masternode %s protocol version %d\n", vin.ToString().c_str(), protocolVersion);
@@ -600,9 +608,11 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
                     pmn->sig = vchSig;
                     pmn->protocolVersion = protocolVersion;
                     pmn->addr = addr;
+                    pmn->donationAddress = donationAddress;
+                    pmn->donationPercentage = donationPercentage;
                     pmn->Check();
                     if(pmn->IsEnabled())
-                        mnodeman.RelayMasternodeEntry(vin, addr, vchSig, sigTime, pubkey, pubkey2, count, current, lastUpdated, protocolVersion);
+                        mnodeman.RelayMasternodeEntry(vin, addr, vchSig, sigTime, pubkey, pubkey2, count, current, lastUpdated, protocolVersion, donationAddress, donationPercentage);
                 }
             }
 
@@ -658,7 +668,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
             addrman.Add(CAddress(addr), pfrom->addr, 2*60*60);
 
             // add our Masternode
-            CMasternode mn(addr, vin, pubkey, vchSig, sigTime, pubkey2, protocolVersion);
+            CMasternode mn(addr, vin, pubkey, vchSig, sigTime, pubkey2, protocolVersion, donationAddress, donationPercentage);
             mn.UpdateLastSeen(lastUpdated);
             this->Add(mn);
 
@@ -668,7 +678,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
             }
 
             if(count == -1 && !isLocal)
-                mnodeman.RelayMasternodeEntry(vin, addr, vchSig, sigTime, pubkey, pubkey2, count, current, lastUpdated, protocolVersion);
+                mnodeman.RelayMasternodeEntry(vin, addr, vchSig, sigTime, pubkey, pubkey2, count, current, lastUpdated, protocolVersion, donationAddress, donationPercentage);
 
         } else {
             LogPrintf("dsee - Rejected Masternode entry %s\n", addr.ToString().c_str());

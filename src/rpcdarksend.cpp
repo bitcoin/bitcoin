@@ -350,7 +350,7 @@ Value masternode(const Array& params, bool fHelp)
     		if(mne.getAlias() == alias) {
     			found = true;
     			std::string errorMessage;
-    			bool result = activeMasternode.Register(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), errorMessage);
+    			bool result = activeMasternode.Register(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), mne.getDonationAddress(), mne.getDonationPercentage(), errorMessage);
 
     			statusObj.push_back(Pair("result", result ? "successful" : "failed"));
     			if(!result) {
@@ -401,7 +401,7 @@ Value masternode(const Array& params, bool fHelp)
 			total++;
 
 			std::string errorMessage;
-			bool result = activeMasternode.Register(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), errorMessage);
+			bool result = activeMasternode.Register(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), mne.getDonationAddress(), mne.getDonationPercentage(), errorMessage);
 
 			Object statusObj;
 			statusObj.push_back(Pair("alias", mne.getAlias()));
@@ -535,16 +535,18 @@ Value masternode(const Array& params, bool fHelp)
         Object resultObj;
 
         BOOST_FOREACH(CMasternodeConfig::CMasternodeEntry mne, masternodeConfig.getEntries()) {
-    		Object mnObj;
-    		mnObj.push_back(Pair("alias", mne.getAlias()));
-    		mnObj.push_back(Pair("address", mne.getIp()));
-    		mnObj.push_back(Pair("privateKey", mne.getPrivKey()));
-    		mnObj.push_back(Pair("txHash", mne.getTxHash()));
-    		mnObj.push_back(Pair("outputIndex", mne.getOutputIndex()));
-    		resultObj.push_back(Pair("masternode", mnObj));
-    	}
+            Object mnObj;
+            mnObj.push_back(Pair("alias", mne.getAlias()));
+            mnObj.push_back(Pair("address", mne.getIp()));
+            mnObj.push_back(Pair("privateKey", mne.getPrivKey()));
+            mnObj.push_back(Pair("txHash", mne.getTxHash()));
+            mnObj.push_back(Pair("outputIndex", mne.getOutputIndex()));
+            mnObj.push_back(Pair("donationAddress", mne.getDonationAddress()));
+            mnObj.push_back(Pair("donationPercent", mne.getDonationPercentage()));
+            resultObj.push_back(Pair("masternode", mnObj));
+        }
 
-    	return resultObj;
+        return resultObj;
     }
 
     if (strCommand == "outputs"){

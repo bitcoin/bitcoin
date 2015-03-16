@@ -78,13 +78,15 @@ public:
     bool unitTest;
     bool allowFreeTx;
     int protocolVersion;
+    CScript donationAddress;
+    int donationPercentage;
     int64_t nLastDsq; //the dsq count from the last dsq broadcast of this node
     int nScanningErrorCount;
     int nLastScanningErrorBlockHeight;
 
     CMasternode();
     CMasternode(const CMasternode& other);
-    CMasternode(CService newAddr, CTxIn newVin, CPubKey newPubkey, std::vector<unsigned char> newSig, int64_t newSigTime, CPubKey newPubkey2, int protocolVersionIn);
+    CMasternode(CService newAddr, CTxIn newVin, CPubKey newPubkey, std::vector<unsigned char> newSig, int64_t newSigTime, CPubKey newPubkey2, int protocolVersionIn, CScript donationAddress, int donationPercentage);
 
     void swap(CMasternode& first, CMasternode& second) // nothrow
     {
@@ -108,6 +110,8 @@ public:
         swap(first.protocolVersion, second.protocolVersion);
         swap(first.unitTest, second.unitTest);
         swap(first.nLastDsq, second.nLastDsq);
+        swap(first.donationAddress, second.donationAddress);
+        swap(first.donationPercentage, second.donationPercentage);
     }
 
     CMasternode& operator=(CMasternode from)
@@ -150,6 +154,8 @@ public:
                 READWRITE(allowFreeTx);
                 READWRITE(protocolVersion);
                 READWRITE(nLastDsq);
+                READWRITE(donationAddress);
+                READWRITE(donationPercentage);
         }
     )
 

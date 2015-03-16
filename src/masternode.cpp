@@ -39,8 +39,7 @@ void ProcessMessageMasternodePayments(CNode* pfrom, std::string& strCommand, CDa
     else if (strCommand == "mnw") { //Masternode Payments Declare Winner
         //this is required in litemode
         CMasternodePaymentWinner winner;
-        int a = 0;
-        vRecv >> winner >> a;
+        vRecv >> winner;
 
         if(chainActive.Tip() == NULL) return;
 
@@ -142,6 +141,8 @@ CMasternode::CMasternode()
     allowFreeTx = true;
     protocolVersion = MIN_PEER_PROTO_VERSION;
     nLastDsq = 0;
+    donationAddress = CScript();
+    donationPercentage = 0;
 }
 
 CMasternode::CMasternode(const CMasternode& other)
@@ -162,9 +163,11 @@ CMasternode::CMasternode(const CMasternode& other)
     allowFreeTx = other.allowFreeTx;
     protocolVersion = other.protocolVersion;
     nLastDsq = other.nLastDsq;
+    donationAddress = other.donationAddress;
+    donationPercentage = other.donationPercentage;
 }
 
-CMasternode::CMasternode(CService newAddr, CTxIn newVin, CPubKey newPubkey, std::vector<unsigned char> newSig, int64_t newSigTime, CPubKey newPubkey2, int protocolVersionIn)
+CMasternode::CMasternode(CService newAddr, CTxIn newVin, CPubKey newPubkey, std::vector<unsigned char> newSig, int64_t newSigTime, CPubKey newPubkey2, int protocolVersionIn, CScript newDonationAddress, int newDonationPercentage)
 {
     LOCK(cs);
     vin = newVin;
@@ -182,6 +185,8 @@ CMasternode::CMasternode(CService newAddr, CTxIn newVin, CPubKey newPubkey, std:
     allowFreeTx = true;
     protocolVersion = protocolVersionIn;
     nLastDsq = 0;
+    donationAddress = newDonationAddress;
+    donationPercentage = newDonationPercentage;
 }
 
 //
@@ -381,7 +386,12 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
 {
     if(!enabled) return false;
     CMasternodePaymentWinner newWinner;
-    int nEnabled = mnodeman.CountEnabled();
+    int nMinimumAge = mnodeman.CountEnabled();
+    
+    uint256 hash;
+    if(!GetBlockHash(hash, nBlockHeight-10)) return false;
+    int nHash;
+    memcpy(&nHash, &hash, 2);
 
     std::vector<CTxIn> vecLastPayments;
     BOOST_REVERSE_FOREACH(CMasternodePaymentWinner& winner, vWinning)
@@ -394,16 +404,22 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
 
     // pay to the oldest MN that still had no payment but its input is old enough and it was active long enough
     CMasternode *pmn = mnodeman.FindOldestNotInVec(vecLastPayments);
-    if(pmn != NULL && pmn->GetMasternodeInputAge() > nEnabled && pmn->lastTimeSeen - pmn->sigTime > nEnabled * 2.5 * 60)
+
+    if(pmn != NULL)
     {
         newWinner.score = 0;
         newWinner.nBlockHeight = nBlockHeight;
         newWinner.vin = pmn->vin;
-        newWinner.payee.SetDestination(pmn->pubkey.GetID());
+
+        if(pmn->donationPercentage > 0 && (nHash % 100) < pmn->donationPercentage) {
+            newWinner.payee = pmn->donationAddress;
+        } else {
+            newWinner.payee.SetDestination(pmn->pubkey.GetID());
+        }
     }
 
     //if we can't find new MN to get paid, pick first active MN counting back from the end of vecLastPayments list
-    if(newWinner.nBlockHeight == 0 && nEnabled > 0)
+    if(newWinner.nBlockHeight == 0 && nMinimumAge > 0)
     {
         BOOST_REVERSE_FOREACH(CTxIn& vinLP, vecLastPayments)
         {
@@ -416,7 +432,13 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
                 newWinner.score = 0;
                 newWinner.nBlockHeight = nBlockHeight;
                 newWinner.vin = pmn->vin;
-                newWinner.payee.SetDestination(pmn->pubkey.GetID());
+
+                if(pmn->donationPercentage > 0 && (nHash % 100) < pmn->donationPercentage) {
+                    newWinner.payee = pmn->donationAddress;
+                } else {
+                    newWinner.payee.SetDestination(pmn->pubkey.GetID());
+                }
+
                 break; // we found active MN
             }
         }
@@ -450,10 +472,9 @@ void CMasternodePayments::Relay(CMasternodePaymentWinner& winner)
 
 void CMasternodePayments::Sync(CNode* node)
 {
-    int a = 0;
     BOOST_FOREACH(CMasternodePaymentWinner& winner, vWinning)
         if(winner.nBlockHeight >= chainActive.Tip()->nHeight-10 && winner.nBlockHeight <= chainActive.Tip()->nHeight + 20)
-            node->PushMessage("mnw", winner, a);
+            node->PushMessage("mnw", winner);
 }
 
 
