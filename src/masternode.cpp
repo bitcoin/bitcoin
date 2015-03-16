@@ -210,6 +210,12 @@ void CMasternode::Check()
 {
     LOCK(cs_main);
 
+    if(nScanningErrorCount >= MASTERNODE_SCANNING_ERROR_THESHOLD) 
+    {
+        activeState = MASTERNODE_POS_ERROR;
+        return;
+    }
+
     //once spent, stop doing the checks
     if(activeState == MASTERNODE_VIN_SPENT) return;
 
