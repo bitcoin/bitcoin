@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS>
-<TS version="2.1" language="uk_UA">
+<TS language="uk_UA" version="2.1">
 <context>
     <name>AboutDialog</name>
     <message>
@@ -67,7 +67,7 @@ Copyright © 2012-2015 The NovaCoin developers</source>
     <message>
         <location filename="../forms/addressbookpage.ui" line="80"/>
         <source>&amp;Copy Address</source>
-        <translation>&amp;Копіювати адресу</translation>
+        <translation>&amp;Скопіювати адресу</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="91"/>
@@ -358,12 +358,12 @@ Copyright © 2012-2015 The NovaCoin developers</source>
     <message>
         <location filename="../bitcoingui.cpp" line="255"/>
         <source>&amp;Transactions</source>
-        <translation>Пе&amp;реклади</translation>
+        <translation>&amp;Транзакції</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="256"/>
         <source>Browse transaction history</source>
-        <translation>Переглянути історію переказів</translation>
+        <translation>Переглянути історію транзакцій</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="261"/>
@@ -554,12 +554,12 @@ Copyright © 2012-2015 The NovaCoin developers</source>
     <message>
         <location filename="../bitcoingui.cpp" line="340"/>
         <source>&amp;Debug window</source>
-        <translation>&amp;Вікно зневадження</translation>
+        <translation>&amp;Вікно відладки</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="341"/>
         <source>Open debugging and diagnostic console</source>
-        <translation>Відкрити консоль зневадження і діагностики</translation>
+        <translation>Відкрити консоль відладки і діагностики</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="371"/>
@@ -606,11 +606,7 @@ Copyright © 2012-2015 The NovaCoin developers</source>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="573"/>
         <source>%n active connection(s) to NovaCoin network</source>
-        <translation>
-            <numerusform>%n активне з&apos;єднання з мережею NovaCoin</numerusform>
-            <numerusform>%n активних з&apos;єднань з мережею NovaCoin</numerusform>
-            <numerusform>%n активних з&apos;єднань з мережею NovaCoin</numerusform>
-        </translation>
+        <translation><numerusform>%n активне з&apos;єднання з мережею NovaCoin</numerusform><numerusform>%n активних з&apos;єднань з мережею NovaCoin</numerusform><numerusform>%n активних з&apos;єднань з мережею NovaCoin</numerusform></translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="597"/>
@@ -620,11 +616,7 @@ Copyright © 2012-2015 The NovaCoin developers</source>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="599"/>
         <source>~%n block(s) remaining</source>
-        <translation>
-            <numerusform>~%n блок залишився</numerusform>
-            <numerusform>блоків залишилося</numerusform>
-            <numerusform>~%n блоків залишилося</numerusform>
-        </translation>
+        <translation><numerusform>~%n блок залишився</numerusform><numerusform>блоків залишилося</numerusform><numerusform>~%n блоків залишилося</numerusform></translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="605"/>
@@ -639,38 +631,22 @@ Copyright © 2012-2015 The NovaCoin developers</source>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="635"/>
         <source>%n second(s) ago</source>
-        <translation>
-            <numerusform>%n секунду тому</numerusform>
-            <numerusform>%n секунди тому</numerusform>
-            <numerusform>%n секунд тому</numerusform>
-        </translation>
+        <translation><numerusform>%n секунду тому</numerusform><numerusform>%n секунди тому</numerusform><numerusform>%n секунд тому</numerusform></translation>
     </message>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="639"/>
         <source>%n minute(s) ago</source>
-        <translation>
-            <numerusform>%n хвилину тому</numerusform>
-            <numerusform>%n хвилини тому</numerusform>
-            <numerusform>%n хвилин тому</numerusform>
-        </translation>
+        <translation><numerusform>%n хвилину тому</numerusform><numerusform>%n хвилини тому</numerusform><numerusform>%n хвилин тому</numerusform></translation>
     </message>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="643"/>
         <source>%n hour(s) ago</source>
-        <translation>
-            <numerusform>%n годину тому</numerusform>
-            <numerusform>%n години тому</numerusform>
-            <numerusform>%n годин тому</numerusform>
-        </translation>
+        <translation><numerusform>%n годину тому</numerusform><numerusform>%n години тому</numerusform><numerusform>%n годин тому</numerusform></translation>
     </message>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="647"/>
         <source>%n day(s) ago</source>
-        <translation>
-            <numerusform>%n день тому</numerusform>
-            <numerusform>%n дня тому</numerusform>
-            <numerusform>%n днів тому</numerusform>
-        </translation>
+        <translation><numerusform>%n день тому</numerusform><numerusform>%n дня тому</numerusform><numerusform>%n днів тому</numerusform></translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="653"/>
@@ -730,7 +706,7 @@ Copyright © 2012-2015 The NovaCoin developers</source>
     <message>
         <location filename="../bitcoingui.cpp" line="827"/>
         <source>This transaction is over the size limit.  You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network.  Do you want to pay the fee?</source>
-        <translation>Цей переказ перевищує максимально допустимий розмір. Проте ви можете здійснити її, додавши комісію в %1, яка відправиться тим вузлам що оброблять ваш переказ, та допоможе підтримати мережу. Ви хочете додати комісію?</translation>
+        <translation>Ця транзакція перевищує максимально допустимий розмір. Проте ви можете здійснити її, додавши комісію в %1, яка відправиться тим вузлам, які її оброблять, це допоможе підтримати мережу. Ви бажаєте додати комісію?</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="832"/>
@@ -1022,7 +998,7 @@ Some or all keys from:
     <message>
         <location filename="../coincontroldialog.cpp" line="41"/>
         <source>Copy transaction ID</source>
-        <translation>Копіювати ID транзакції</translation>
+        <translation>Скопіювати ID транзакції</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="65"/>
@@ -1032,22 +1008,22 @@ Some or all keys from:
     <message>
         <location filename="../coincontroldialog.cpp" line="67"/>
         <source>Copy fee</source>
-        <translation>Копіювати комісію</translation>
+        <translation>Скопіювати комісію</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="68"/>
         <source>Copy after fee</source>
-        <translation>Копіювати після комісії</translation>
+        <translation>Скопіювати після комісії</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="69"/>
         <source>Copy bytes</source>
-        <translation>Копіювати байти</translation>
+        <translation>Скопіювати байти</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="70"/>
         <source>Copy priority</source>
-        <translation>Копіювати пріорітет</translation>
+        <translation>Скопіювати пріорітет</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="71"/>
@@ -1057,7 +1033,7 @@ Some or all keys from:
     <message>
         <location filename="../coincontroldialog.cpp" line="72"/>
         <source>Copy change</source>
-        <translation>Копіювати решту</translation>
+        <translation>Скопіювати решту</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="392"/>
@@ -2113,22 +2089,10 @@ Reduce the number of addresses involved in the address creation.</source>
         <translation>Форма</translation>
     </message>
     <message>
-        <source>Wallet</source>
-        <translation type="vanished">Гаманець</translation>
-    </message>
-    <message>
         <location filename="../forms/overviewpage.ui" line="47"/>
         <location filename="../forms/overviewpage.ui" line="360"/>
         <source>The displayed information may be out of date. Your wallet automatically synchronizes with the NovaCoin network after a connection is established, but this process has not completed yet.</source>
         <translation>Інформація, що відображається може бути застарілою. Ваш гаманець автоматично синхронізується з мережею NovaCoin після встановлення з&apos;єднання, але цей процес ще не завершений.</translation>
-    </message>
-    <message>
-        <source>Your current balance</source>
-        <translation type="vanished">Ваш поточний баланс</translation>
-    </message>
-    <message>
-        <source>Balance:</source>
-        <translation type="vanished">Баланс:</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="226"/>
@@ -2150,18 +2114,18 @@ Reduce the number of addresses involved in the address creation.</source>
     <message>
         <location filename="../forms/overviewpage.ui" line="40"/>
         <source>Balances</source>
-        <translation type="unfinished"></translation>
+        <translation>Залишки</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="89"/>
         <location filename="../forms/overviewpage.ui" line="108"/>
         <source>Your current available balance</source>
-        <translation type="unfinished"></translation>
+        <translation>Ваш поточний доступний баланс</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="92"/>
         <source>Available:</source>
-        <translation type="unfinished"></translation>
+        <translation>Доступно:</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="127"/>
@@ -2172,7 +2136,7 @@ Reduce the number of addresses involved in the address creation.</source>
         <location filename="../forms/overviewpage.ui" line="159"/>
         <location filename="../forms/overviewpage.ui" line="178"/>
         <source>Total of transactions that have yet to be confirmed, and do not yet count toward the current balance</source>
-        <translation>Загальна сума всіх переказів, які ще не підтверджені, та до сих пір не враховуються в загальному балансі</translation>
+        <translation>Загальна сума усіх транзакцій, які ще не підтверджені, та до сих пір не враховуються в загальному балансі</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="162"/>
@@ -2194,28 +2158,28 @@ Reduce the number of addresses involved in the address creation.</source>
         <location filename="../forms/overviewpage.ui" line="268"/>
         <location filename="../forms/overviewpage.ui" line="284"/>
         <source>Your current total balance</source>
-        <translation type="unfinished"></translation>
+        <translation>Ваш поточний загальний баланс</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="271"/>
         <source>Total:</source>
-        <translation type="unfinished"></translation>
+        <translation>Всього:</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="300"/>
         <location filename="../forms/overviewpage.ui" line="310"/>
         <source>Total number of transactions in wallet</source>
-        <translation>Загальна кількість переказів в гаманці</translation>
+        <translation>Загальна кількість транзакцій в гаманці</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="303"/>
         <source>Number of transactions:</source>
-        <translation>Кількість переказів:</translation>
+        <translation>Кількість транзакцій:</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="353"/>
         <source>&lt;b&gt;Recent transactions&lt;/b&gt;</source>
-        <translation>&lt;b&gt;Недавні перекази&lt;/b&gt;</translation>
+        <translation>&lt;b&gt;Останні  транзакції&lt;/b&gt;</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="118"/>
@@ -2335,7 +2299,7 @@ Reduce the number of addresses involved in the address creation.</source>
     <message>
         <location filename="../forms/rpcconsole.ui" line="14"/>
         <source>NovaCoin - Debug window</source>
-        <translation>NovaCoin - Вікно зневадження</translation>
+        <translation>NovaCoin - Вікно відладки</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="24"/>
@@ -2375,7 +2339,7 @@ Reduce the number of addresses involved in the address creation.</source>
     <message>
         <location filename="../forms/rpcconsole.ui" line="95"/>
         <source>Open the NovaCoin debug log file from the current data directory. This can take a few seconds for large log files.</source>
-        <translation>Відкрийте файл журналу налагодження NovaCoin з поточного каталогу даних. Це може зайняти кілька секунд для великих файлів журналів.</translation>
+        <translation>Відкрийте файл журналу відладки NovaCoin з поточного каталогу даних. Це може зайняти кілька секунд для великих файлів журналів.</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="98"/>
@@ -2385,7 +2349,7 @@ Reduce the number of addresses involved in the address creation.</source>
     <message>
         <location filename="../forms/rpcconsole.ui" line="114"/>
         <source>Debug log file</source>
-        <translation>Файл звіту зневадження</translation>
+        <translation>Файл журналу відладки</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="147"/>
@@ -2724,32 +2688,32 @@ Reduce the number of addresses involved in the address creation.</source>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="56"/>
         <source>Copy quantity</source>
-        <translation>Копіювати кількість</translation>
+        <translation>Скопіювати кількість</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="57"/>
         <source>Copy amount</source>
-        <translation>Копіювати суму</translation>
+        <translation>Скопіювати суму</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="58"/>
         <source>Copy fee</source>
-        <translation>Копіювати комісію</translation>
+        <translation>Скопіювати комісію</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="59"/>
         <source>Copy after fee</source>
-        <translation>Копіювати після комісії</translation>
+        <translation>Скопіювати після комісії</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="60"/>
         <source>Copy bytes</source>
-        <translation>Копіювати байти</translation>
+        <translation>Скопіювати байти</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="61"/>
         <source>Copy priority</source>
-        <translation>Копіювати пріорітет</translation>
+        <translation>Скопіювати пріорітет</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="62"/>
@@ -2759,7 +2723,7 @@ Reduce the number of addresses involved in the address creation.</source>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="63"/>
         <source>Copy change</source>
-        <translation>Копіювати решту</translation>
+        <translation>Скопіювати решту</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="167"/>
@@ -2935,7 +2899,7 @@ Reduce the number of addresses involved in the address creation.</source>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="127"/>
         <source>Copy the current signature to the system clipboard</source>
-        <translation>Копіювати поточну сигнатуру до системного буферу обміну</translation>
+        <translation>Скопіювати поточну сигнатуру до системного буферу обміну</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="148"/>
@@ -3075,11 +3039,7 @@ Reduce the number of addresses involved in the address creation.</source>
     <message numerus="yes">
         <location filename="../transactiondesc.cpp" line="20"/>
         <source>Open for %n block(s)</source>
-        <translation>
-            <numerusform>Відкрито на %n блок</numerusform>
-            <numerusform>Відкрито на %n блоки</numerusform>
-            <numerusform>Відкрито на %n блоків</numerusform>
-        </translation>
+        <translation><numerusform>Відкрито на %n блок</numerusform><numerusform>Відкрито на %n блоки</numerusform><numerusform>Відкрито на %n блоків</numerusform></translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="22"/>
@@ -3114,11 +3074,7 @@ Reduce the number of addresses involved in the address creation.</source>
     <message numerus="yes">
         <location filename="../transactiondesc.cpp" line="57"/>
         <source>, broadcast through %n node(s)</source>
-        <translation>
-            <numerusform>, розіслано через %n вузол</numerusform>
-            <numerusform>, розіслано через %n вузли</numerusform>
-            <numerusform>, розіслано через %n вузлів</numerusform>
-        </translation>
+        <translation><numerusform>, розіслано через %n вузол</numerusform><numerusform>, розіслано через %n вузли</numerusform><numerusform>, розіслано через %n вузлів</numerusform></translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="61"/>
@@ -3180,11 +3136,7 @@ Reduce the number of addresses involved in the address creation.</source>
     <message numerus="yes">
         <location filename="../transactiondesc.cpp" line="164"/>
         <source>matures in %n more block(s)</source>
-        <translation>
-            <numerusform>&quot;дозріє&quot; через %n блок</numerusform>
-            <numerusform>&quot;дозріє&quot; через %n блоки</numerusform>
-            <numerusform>&quot;дозріє&quot; через %n блоків</numerusform>
-        </translation>
+        <translation><numerusform>&quot;дозріє&quot; через %n блок</numerusform><numerusform>&quot;дозріє&quot; через %n блоки</numerusform><numerusform>&quot;дозріє&quot; через %n блоків</numerusform></translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="166"/>
@@ -3265,12 +3217,12 @@ Reduce the number of addresses involved in the address creation.</source>
     <message>
         <location filename="../forms/transactiondescdialog.ui" line="14"/>
         <source>Transaction details</source>
-        <translation>Деталі переказів</translation>
+        <translation>Деталі транзакцій</translation>
     </message>
     <message>
         <location filename="../forms/transactiondescdialog.ui" line="20"/>
         <source>This pane shows a detailed description of the transaction</source>
-        <translation>Даний діалог показує детальну статистику по вибраному переказу</translation>
+        <translation>Даний діалог показує детальну статистику по обранїй транзакції</translation>
     </message>
 </context>
 <context>
@@ -3293,11 +3245,7 @@ Reduce the number of addresses involved in the address creation.</source>
     <message numerus="yes">
         <location filename="../transactiontablemodel.cpp" line="302"/>
         <source>Open for %n block(s)</source>
-        <translation>
-            <numerusform>Відкрити для %n блоку</numerusform>
-            <numerusform>Відкрити для %n блоків</numerusform>
-            <numerusform>Відкрити для %n блоків</numerusform>
-        </translation>
+        <translation><numerusform>Відкрити для %n блоку</numerusform><numerusform>Відкрити для %n блоків</numerusform><numerusform>Відкрити для %n блоків</numerusform></translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="305"/>
@@ -3322,11 +3270,7 @@ Reduce the number of addresses involved in the address creation.</source>
     <message numerus="yes">
         <location filename="../transactiontablemodel.cpp" line="323"/>
         <source>Mined balance will be available when it matures in %n more block(s)</source>
-        <translation>
-            <numerusform>Здобуті монети можуть бути використані через %n блок</numerusform>
-            <numerusform>Здобуті монети можуть бути використані через %n блока</numerusform>
-            <numerusform>Здобуті монети можуть бути використані через %n блоків</numerusform>
-        </translation>
+        <translation><numerusform>Здобуті монети можуть бути використані через %n блок</numerusform><numerusform>Здобуті монети можуть бути використані через %n блока</numerusform><numerusform>Здобуті монети можуть бути використані через %n блоків</numerusform></translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="328"/>
@@ -3371,17 +3315,17 @@ Reduce the number of addresses involved in the address creation.</source>
     <message>
         <location filename="../transactiontablemodel.cpp" line="624"/>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
-        <translation>Статус переказу. Наведіть вказівник на це поле, щоб показати кількість підтверджень.</translation>
+        <translation>Статус транзакції. Наведіть вказівник на це поле, щоб показати кількість підтверджень.</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="626"/>
         <source>Date and time that the transaction was received.</source>
-        <translation>Дата і час, коли переказ було отримано.</translation>
+        <translation>Дата і час, коли транзакцію було отримано.</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="628"/>
         <source>Type of transaction.</source>
-        <translation>Тип переказу.</translation>
+        <translation>Тип транзакції.</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="630"/>
@@ -3480,12 +3424,12 @@ Reduce the number of addresses involved in the address creation.</source>
     <message>
         <location filename="../transactionview.cpp" line="133"/>
         <source>Copy amount</source>
-        <translation>Копіювати кількість</translation>
+        <translation>Скопіювати суму</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="134"/>
         <source>Copy transaction ID</source>
-        <translation>Копіювати ID транзакції</translation>
+        <translation>Скопіювати ID транзакції</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="135"/>
@@ -3505,7 +3449,7 @@ Reduce the number of addresses involved in the address creation.</source>
     <message>
         <location filename="../transactionview.cpp" line="312"/>
         <source>Export Transaction Data</source>
-        <translation>Експортувати дані переказів</translation>
+        <translation>Експортувати дані транзакцій</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="313"/>
