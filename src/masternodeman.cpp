@@ -320,6 +320,7 @@ CMasternode* CMasternodeMan::FindOldestNotInVec(const std::vector<CTxIn> &vVins)
 
     BOOST_FOREACH(CMasternode &mn, vMasternodes)
     {
+        printf(" -- mn %s\n", mn.vin.ToString().c_str());
         mn.Check();
         if(!mn.IsEnabled()) continue;
 
@@ -327,16 +328,21 @@ CMasternode* CMasternodeMan::FindOldestNotInVec(const std::vector<CTxIn> &vVins)
         BOOST_FOREACH(const CTxIn& vin, vVins)
             if(mn.vin == vin)
             {
+                printf(" -- mn2 %s\n", vin.ToString().c_str());
                 found = true;
                 break;
             }
 
+        printf(" -- mn %d\n", found);
         if(found) continue;
 
-        if(pOldestMasternode == NULL || pOldestMasternode->GetMasternodeInputAge() < mn.GetMasternodeInputAge())
+        if(pOldestMasternode == NULL || pOldestMasternode->GetMasternodeInputAge() < mn.GetMasternodeInputAge()){
+            printf("got mn %s\n", mn.vin.ToString().c_str());
             pOldestMasternode = &mn;
+        }
     }
 
+    printf(" -- %d\n", pOldestMasternode != NULL);
     return pOldestMasternode;
 }
 
