@@ -237,7 +237,7 @@ BitcoinGUI::~BitcoinGUI()
         trayIcon->hide();
 #ifdef Q_OS_MAC
     delete appMenuBar;
-    MacDockIconHandler::instance()->setMainWindow(NULL);
+    MacDockIconHandler::cleanup();
 #endif
 
     delete rpcConsole;
