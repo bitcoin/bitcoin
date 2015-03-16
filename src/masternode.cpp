@@ -387,11 +387,11 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
     if(!enabled) return false;
     CMasternodePaymentWinner newWinner;
     int nMinimumAge = mnodeman.CountEnabled();
-
+    
     uint256 hash;
     if(!GetBlockHash(hash, nBlockHeight-10)) return false;
     int nHash;
-    memcpy(&hash, &nHash, 2);
+    memcpy(&nHash, &hash, 2);
 
     std::vector<CTxIn> vecLastPayments;
     BOOST_REVERSE_FOREACH(CMasternodePaymentWinner& winner, vWinning)
@@ -402,17 +402,17 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
         vecLastPayments.push_back(winner.vin);
     }
 
-
     // pay to the oldest MN that still had no payment but its input is old enough and it was active long enough
     CMasternode *pmn = mnodeman.FindOldestNotInVec(vecLastPayments);
+
     if(pmn != NULL)
     {
         newWinner.score = 0;
         newWinner.nBlockHeight = nBlockHeight;
         newWinner.vin = pmn->vin;
 
-        if(pmn->donationPercentage > 0 && nHash % 100 < pmn->donationPercentage) {
-            newWinner.payee.SetDestination(pmn->donationAddress.GetID());
+        if(pmn->donationPercentage > 0 && (nHash % 100) < pmn->donationPercentage) {
+            newWinner.payee = pmn->donationAddress;
         } else {
             newWinner.payee.SetDestination(pmn->pubkey.GetID());
         }
@@ -433,8 +433,8 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
                 newWinner.nBlockHeight = nBlockHeight;
                 newWinner.vin = pmn->vin;
 
-                if(pmn->donationPercentage > 0 && nHash % 100 < pmn->donationPercentage) {
-                    newWinner.payee.SetDestination(pmn->donationAddress.GetID());
+                if(pmn->donationPercentage > 0 && (nHash % 100) < pmn->donationPercentage) {
+                    newWinner.payee = pmn->donationAddress;
                 } else {
                     newWinner.payee.SetDestination(pmn->pubkey.GetID());
                 }
