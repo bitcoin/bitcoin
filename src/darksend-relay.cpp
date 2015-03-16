@@ -103,7 +103,7 @@ void CDarkSendRelay::RelayThroughNode(int nRank)
 {
     CMasternode* pmn = mnodeman.GetMasternodeByRank(nRank, nBlockHeight, MIN_POOL_PEER_PROTO_VERSION);
 
-    if(pmn){
+    if(pmn != NULL){
         //printf("RelayThroughNode %s\n", pmn->addr.ToString().c_str());
         if(ConnectNode((CAddress)pmn->addr, NULL, true)){
             //printf("Connected\n");

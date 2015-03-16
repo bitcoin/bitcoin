@@ -15,7 +15,7 @@
 class CDarkSendRelay
 {
 public:
-	CTxIn vinMasternode;
+    CTxIn vinMasternode;
     vector<unsigned char> vchSig;
     vector<unsigned char> vchSig2;
     int nBlockHeight;
@@ -31,10 +31,10 @@ public:
     	READWRITE(vinMasternode);
         READWRITE(vchSig);
         READWRITE(vchSig2);
-		READWRITE(nBlockHeight);
-		READWRITE(nRelayType);
-		READWRITE(in);
-		READWRITE(out);
+        READWRITE(nBlockHeight);
+        READWRITE(nRelayType);
+        READWRITE(in);
+        READWRITE(out);
     )
 
     std::string ToString();
