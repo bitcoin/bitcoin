@@ -119,6 +119,7 @@ public:
     std::vector<CMasternode> GetFullMasternodeVector() { Check(); return vMasternodes; }
 
     int GetMasternodeRank(const CTxIn &vin, int64_t nBlockHeight, int minProtocol=0);
+    std::vector<pair<int, CMasternode> > GetMasternodeRanks(int64_t nBlockHeight, int minProtocol=0);
     CMasternode* GetMasternodeByRank(int nRank, int64_t nBlockHeight, int minProtocol=0);
 
     void ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);

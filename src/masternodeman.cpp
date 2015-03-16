@@ -23,6 +23,14 @@ struct CompareValueOnly
         return t1.first < t2.first;
     }
 };
+struct CompareValueOnlyMN
+{
+    bool operator()(const pair<int64_t, CMasternode>& t1,
+                    const pair<int64_t, CMasternode>& t2) const
+    {
+        return t1.first < t2.first;
+    }
+};
 
 //
 // CMasternodeDB
@@ -398,6 +406,39 @@ int CMasternodeMan::GetMasternodeRank(const CTxIn& vin, int64_t nBlockHeight, in
     }
 
     return -1;
+}
+
+std::vector<pair<int, CMasternode> > CMasternodeMan::GetMasternodeRanks(int64_t nBlockHeight, int minProtocol)
+{
+    std::vector<pair<unsigned int, CMasternode> > vecMasternodeScores;
+    std::vector<pair<int, CMasternode> > vecMasternodeRanks;
+
+    // scan for winner
+    BOOST_FOREACH(CMasternode& mn, vMasternodes) {
+
+        mn.Check();
+
+        if(mn.protocolVersion < minProtocol) continue;
+        if(!mn.IsEnabled()) {
+            continue;
+        }
+
+        uint256 n = mn.CalculateScore(1, nBlockHeight);
+        unsigned int n2 = 0;
+        memcpy(&n2, &n, sizeof(n2));
+
+        vecMasternodeScores.push_back(make_pair(n2, mn));
+    }
+
+    sort(vecMasternodeScores.rbegin(), vecMasternodeScores.rend(), CompareValueOnlyMN());
+
+    int rank = 0;
+    BOOST_FOREACH (PAIRTYPE(unsigned int, CMasternode)& s, vecMasternodeScores){
+        rank++;
+        vecMasternodeRanks.push_back(make_pair(rank, s.second));
+    }
+
+    return vecMasternodeRanks;
 }
 
 CMasternode* CMasternodeMan::GetMasternodeByRank(int nRank, int64_t nBlockHeight, int minProtocol)
