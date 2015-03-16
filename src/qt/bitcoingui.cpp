@@ -121,9 +121,8 @@ BitcoinGUI::BitcoinGUI(bool fIsTestnet, QWidget *parent) :
 #ifdef ENABLE_WALLET
     if(enableWallet)
     {
-        /** Create wallet frame and make it the central widget */
+        /** Create wallet frame*/
         walletFrame = new WalletFrame(this);
-        setCentralWidget(walletFrame);
     } else
 #endif
     {
@@ -406,7 +405,7 @@ void BitcoinGUI::createToolBars()
 {
     if(walletFrame)
     {
-        QToolBar *toolbar = addToolBar(tr("Tabs toolbar"));
+        QToolBar *toolbar = new QToolBar(tr("Tabs toolbar"));
         toolbar->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
         toolbar->addAction(overviewAction);
         toolbar->addAction(sendCoinsAction);
@@ -414,6 +413,18 @@ void BitcoinGUI::createToolBars()
         toolbar->addAction(historyAction);
         toolbar->setMovable(false); // remove unused icon in upper left corner
         overviewAction->setChecked(true);
+
+        /** Create additional container for toolbar and walletFrame and make it the central widget.
+            This is a workaround mostly for toolbar styling on Mac OS but should work fine for every other OSes too.
+        */
+        QVBoxLayout *layout = new QVBoxLayout;
+        layout->addWidget(toolbar);
+        layout->addWidget(walletFrame);
+        layout->setSpacing(0);
+        layout->setContentsMargins(QMargins());
+        QWidget *containerWidget = new QWidget();
+        containerWidget->setLayout(layout);
+        setCentralWidget(containerWidget);
     }
 }
 
