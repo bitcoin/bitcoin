@@ -411,10 +411,10 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
         newWinner.nBlockHeight = nBlockHeight;
         newWinner.vin = pmn->vin;
 
-        if(pmn->donationPercentage > 0 && nHash % 100 > pmn->donationPercentage){
-            newWinner.payee.SetDestination(pmn->pubkey.GetID());
-        } else {
+        if(pmn->donationPercentage > 0 && nHash % 100 < pmn->donationPercentage) {
             newWinner.payee.SetDestination(pmn->donationAddress.GetID());
+        } else {
+            newWinner.payee.SetDestination(pmn->pubkey.GetID());
         }
     }
 
@@ -433,10 +433,10 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
                 newWinner.nBlockHeight = nBlockHeight;
                 newWinner.vin = pmn->vin;
 
-                if(pmn->donationPercentage > 0 && nHash % 100 < pmn->donationPercentage){
-                    newWinner.payee.SetDestination(pmn->pubkey.GetID());
-                } else {
+                if(pmn->donationPercentage > 0 && nHash % 100 < pmn->donationPercentage) {
                     newWinner.payee.SetDestination(pmn->donationAddress.GetID());
+                } else {
+                    newWinner.payee.SetDestination(pmn->pubkey.GetID());
                 }
 
                 break; // we found active MN
