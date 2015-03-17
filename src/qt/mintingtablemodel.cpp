@@ -21,6 +21,9 @@
 #include <QIcon>
 #include <QDateTime>
 #include <QtAlgorithms>
+#ifdef WALLET_UPDATE_DEBUG
+#include <QDebug>
+#endif
 
 static int column_alignments[] = {
     Qt::AlignLeft|Qt::AlignVCenter,
@@ -133,16 +136,16 @@ public:
                             KernelRecord::decomposeOutput(wallet, mi->second);
                     if(!toInsert.empty()) /* only if something to insert */
                     {
-                        parent->beginInsertRows(QModelIndex(), lowerIndex, lowerIndex+toInsert.size()-1);
                         int insert_idx = lowerIndex;
                         BOOST_FOREACH(const KernelRecord &rec, toInsert)
                         {
                             if(!rec.spent) {
+                                parent->beginInsertRows(QModelIndex(), insert_idx, insert_idx);
                                 cachedWallet.insert(insert_idx, rec);
                                 insert_idx += 1;
+                                parent->endInsertRows();
                             }
                         }
-                        parent->endInsertRows();
                     }
                 }
                 else if(!inWallet && inModel)
@@ -153,24 +156,27 @@ public:
                     parent->endRemoveRows();
                 }
                 else if(inWallet && inModel)
-                {               
+                {
                     // Updated -- remove spent coins from table
                     std::vector<KernelRecord> toCheck = KernelRecord::decomposeOutput(wallet, mi->second);
-                    BOOST_FOREACH(const KernelRecord &rec, toCheck)
+                    if(!toCheck.empty())
                     {
-                        if(rec.spent)
+                        BOOST_FOREACH(const KernelRecord &rec, toCheck)
                         {
-                            for(int i = 0; i < cachedWallet.size(); i++)
+                            if(rec.spent)
                             {
-                                KernelRecord cachedRec = cachedWallet.at(i);
-                                if((rec.hash == cachedRec.hash)
-                                   && (rec.nTime == cachedRec.nTime)
-                                   && (rec.nValue == cachedRec.nValue))
+                                for(int i = lowerIndex; i < upperIndex; i++)
                                 {
-                                    parent->beginRemoveRows(QModelIndex(), i, i);
-                                    cachedWallet.removeAt(i);
-                                    parent->endRemoveRows();
-                                    break;
+                                    KernelRecord cachedRec = cachedWallet.at(i);
+                                    if((rec.address == cachedRec.address)
+                                       && (rec.nValue == cachedRec.nValue)
+                                       && (rec.idx == cachedRec.idx))
+                                    {
+                                        parent->beginRemoveRows(QModelIndex(), i, i);
+                                        cachedWallet.removeAt(i);
+                                        parent->endRemoveRows();
+                                        break;
+                                    }
                                 }
                             }
                         }
@@ -246,16 +252,6 @@ void MintingTableModel::update()
             BOOST_FOREACH(uint256 hash, wallet->vMintingWalletUpdated)
             {
                 updated.append(hash);
-
-                // Also check the inputs to remove spent outputs from the table if necessary
-                CWalletTx wtx;
-                if(wallet->GetTransaction(hash, wtx))
-                {
-                    BOOST_FOREACH(const CTxIn& txin, wtx.vin)
-                    {
-                        updated.append(txin.prevout.hash);
-                    }
-                }
             }
             wallet->vMintingWalletUpdated.clear();
         }
