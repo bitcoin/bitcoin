@@ -71,8 +71,8 @@ OptionsDialog::OptionsDialog(QWidget *parent) :
     /* Display elements init */
     
     /* Theme selector */
-    ui->theme->addItem(QString("DRK-blue"), QVariant("drkblue"));
-    ui->theme->addItem(QString("DRK-traditional"), QVariant("trad"));
+    ui->theme->addItem(QString("DASH-blue"), QVariant("drkblue"));
+    ui->theme->addItem(QString("DASH-traditional"), QVariant("trad"));
 
     
     /* Language selector */

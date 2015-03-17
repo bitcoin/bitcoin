@@ -1,6 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2014 The Bitcoin developers
-// Copyright (c) 2014-2015 The Darkcoin developers
+// Copyright (c) 2014-2015 The Dash developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -92,7 +92,7 @@ inline void MilliSleep(int64_t n)
 #endif
 }
 
-//Darkcoin only features
+//Dash only features
 
 extern bool fMasterNode;
 extern bool fLiteMode;

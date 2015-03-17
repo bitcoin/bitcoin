@@ -121,7 +121,7 @@ Release Process
     ./bin/gbuild --commit darkcoin=v${VERSION} ../darkcoin/contrib/gitian-descriptors/gitian-osx-bitcoin.yml
     ./bin/gsign --signer $SIGNER --release ${VERSION}-osx --destination ../gitian.sigs/ ../bitcoin/contrib/gitian-descriptors/gitian-osx-bitcoin.yml
 	pushd build/out
-	mv Darkcoin-Qt.dmg ../../../
+	mv Dash-Qt.dmg ../../../
 	popd
 	popd
 

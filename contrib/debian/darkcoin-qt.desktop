@@ -1,9 +1,9 @@
 [Desktop Entry]
 Encoding=UTF-8
-Name=Darkcoin
-Comment=Darkcoin P2P Cryptocurrency
-Comment[fr]=Darkcoin, monnaie virtuelle cryptographique pair à pair
-Comment[tr]=Darkcoin, eşten eşe kriptografik sanal para birimi
+Name=Dash
+Comment=Dash P2P Cryptocurrency
+Comment[fr]=Dash, monnaie virtuelle cryptographique pair à pair
+Comment[tr]=Dash, eşten eşe kriptografik sanal para birimi
 Exec=darkcoin-qt %u
 Terminal=false
 Type=Application

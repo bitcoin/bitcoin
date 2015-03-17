@@ -1,6 +1,6 @@
 // Copyright (c) 2010 Satoshi Nakamoto
 // Copyright (c) 2009-2014 The Bitcoin developers
-// Copyright (c) 2014-2015 The Darkcoin developers
+// Copyright (c) 2014-2015 The Dash developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -39,7 +39,7 @@ public:
         vAlertPubKey = ParseHex("048240a8748a80a286b270ba126705ced4f2ce5a7847b3610ea3c06513150dade2a8512ed5ea86320824683fc0818f0ac019214973e677acd1244f6d0571fc5103");
         nDefaultPort = 9999;
         nRPCPort = 9998;
-        bnProofOfWorkLimit = CBigNum(~uint256(0) >> 20);  // Darkcoin starting difficulty is 1 / 2^12
+        bnProofOfWorkLimit = CBigNum(~uint256(0) >> 20);  // Dash starting difficulty is 1 / 2^12
         nSubsidyHalvingInterval = 210000;
 
         // Genesis block
@@ -62,16 +62,16 @@ public:
         assert(hashGenesisBlock == uint256("0x00000ffd590b1485b3caadc19b22e6379c733355108f107a430458cdf3407ab6"));
         assert(genesis.hashMerkleRoot == uint256("0xe0028eb9648db56b1ac77cf090b99048a8007e2bb64b68f092c03c7f56a662c7"));
 
-        vSeeds.push_back(CDNSSeedData("darkcoin.io", "dnsseed.darkcoin.io"));
+        vSeeds.push_back(CDNSSeedData("dashcurrency.com", "dnsseed.dashcurrency.com"));
         vSeeds.push_back(CDNSSeedData("darkcoin.qa", "dnsseed.darkcoin.qa"));
         vSeeds.push_back(CDNSSeedData("masternode.io", "dnsseed.masternode.io"));
 
-        base58Prefixes[PUBKEY_ADDRESS] = list_of( 76);                    // Darkcoin addresses start with 'X'
-        base58Prefixes[SCRIPT_ADDRESS] = list_of( 16);                    // Darkcoin script addresses start with '7'
-        base58Prefixes[SECRET_KEY] =     list_of(204);                    // Darkcoin private keys start with '7' or 'X'
-        base58Prefixes[EXT_PUBLIC_KEY] = list_of(0x02)(0xFE)(0x52)(0xF8); // Darkcoin BIP32 pubkeys start with 'drkv'
-        base58Prefixes[EXT_SECRET_KEY] = list_of(0x02)(0xFE)(0x52)(0xCC); // Darkcoin BIP32 prvkeys start with 'drkp'
-        base58Prefixes[EXT_COIN_TYPE]  = list_of(0x80000005);             // Darkcoin BIP44 coin type is '5'
+        base58Prefixes[PUBKEY_ADDRESS] = list_of( 76);                    // Dash addresses start with 'X'
+        base58Prefixes[SCRIPT_ADDRESS] = list_of( 16);                    // Dash script addresses start with '7'
+        base58Prefixes[SECRET_KEY] =     list_of(204);                    // Dash private keys start with '7' or 'X'
+        base58Prefixes[EXT_PUBLIC_KEY] = list_of(0x02)(0xFE)(0x52)(0xF8); // Dash BIP32 pubkeys start with 'drkv'
+        base58Prefixes[EXT_SECRET_KEY] = list_of(0x02)(0xFE)(0x52)(0xCC); // Dash BIP32 prvkeys start with 'drkp'
+        base58Prefixes[EXT_COIN_TYPE]  = list_of(0x80000005);             // Dash BIP44 coin type is '5'
 
         // Convert the pnSeeds array into usable address objects.
         for (unsigned int i = 0; i < ARRAYLEN(pnSeed); i++)
@@ -130,7 +130,7 @@ public:
 
         vFixedSeeds.clear();
         vSeeds.clear();
-        vSeeds.push_back(CDNSSeedData("darkcoin.io", "testnet-seed.darkcoin.io"));
+        vSeeds.push_back(CDNSSeedData("dashcurrency.com", "testnet-seed.dashcurrency.com"));
         vSeeds.push_back(CDNSSeedData("darkcoin.qa", "testnet-seed.darkcoin.qa"));
         vSeeds.push_back(CDNSSeedData("masternode.io", "test.dnsseed.masternode.io"));
 

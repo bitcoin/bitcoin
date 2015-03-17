@@ -1,4 +1,4 @@
-Building Darkcoin
+Building Dash
 
 Use the autogen script to prepare the build environment.
 
@@ -13,4 +13,4 @@ Always verify the signatures and checksums.
 
 See doc/build-*.md for instructions on building darkcoind,
 the intended-for-services, no-graphical-interface, reference
-implementation of Darkcoin.
+implementation of Dash.

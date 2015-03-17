@@ -1,6 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2014 The Bitcoin developers
-// Copyright (c) 2014-2015 The Darkcoin developers
+// Copyright (c) 2014-2015 The Dash developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -1872,7 +1872,7 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, int64_t> >& vecSend,
                     } else if (coin_type == ONLY_NONDENOMINATED) {
                         strFailReason = _("Unable to locate enough Darksend non-denominated funds for this transaction.");
                     } else if (coin_type == ONLY_NONDENOMINATED_NOTMN) {
-                        strFailReason = _("Unable to locate enough Darksend non-denominated funds for this transaction that are not equal 1000 DRK.");
+                        strFailReason = _("Unable to locate enough Darksend non-denominated funds for this transaction that are not equal 1000 DASH.");
                     } else {
                         strFailReason = _("Unable to locate enough Darksend denominated funds for this transaction.");
                         strFailReason += _("Darksend uses exact denominated amounts to send funds, you might simply need to anonymize some more coins.");
@@ -2118,7 +2118,7 @@ string CWallet::SendMoneyToDestination(const CTxDestination& address, int64_t nV
     if (nValue + nTransactionFee > GetBalance())
         return _("Insufficient funds");
 
-    // Parse Darkcoin address
+    // Parse Dash address
     CScript scriptPubKey;
     scriptPubKey.SetDestination(address);
 

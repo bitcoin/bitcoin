@@ -1,5 +1,5 @@
 // Copyright (c) 2011-2014 The Bitcoin developers
-// Copyright (c) 2014-2015 The Darkcoin developers
+// Copyright (c) 2014-2015 The Dash developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -76,7 +76,7 @@ BitcoinGUI::BitcoinGUI(bool fIsTestnet, QWidget *parent) :
 
     GUIUtil::restoreWindowGeometry("nWindow", QSize(850, 550), this);
 
-    QString windowTitle = tr("Darkcoin Core") + " - ";
+    QString windowTitle = tr("Dash Core") + " - ";
 #ifdef ENABLE_WALLET
     /* if compiled with wallet support, -disablewallet can still disable the wallet */
     bool enableWallet = !GetBoolArg("-disablewallet", false);
@@ -238,7 +238,7 @@ void BitcoinGUI::createActions(bool fIsTestnet)
     tabGroup->addAction(overviewAction);
 
     sendCoinsAction = new QAction(QIcon(":/icons/send"), tr("&Send"), this);
-    sendCoinsAction->setStatusTip(tr("Send coins to a Darkcoin address"));
+    sendCoinsAction->setStatusTip(tr("Send coins to a Dash address"));
     sendCoinsAction->setToolTip(sendCoinsAction->statusTip());
     sendCoinsAction->setCheckable(true);
 #ifdef Q_OS_MAC
@@ -286,10 +286,10 @@ void BitcoinGUI::createActions(bool fIsTestnet)
     quitAction->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_Q));
     quitAction->setMenuRole(QAction::QuitRole);
     if (!fIsTestnet)
-        aboutAction = new QAction(QIcon(":/icons/bitcoin"), tr("&About Darkcoin Core"), this);
+        aboutAction = new QAction(QIcon(":/icons/bitcoin"), tr("&About Dash Core"), this);
     else
-        aboutAction = new QAction(QIcon(":/icons/bitcoin_testnet"), tr("&About Darkcoin Core"), this);
-    aboutAction->setStatusTip(tr("Show information about Darkcoin"));
+        aboutAction = new QAction(QIcon(":/icons/bitcoin_testnet"), tr("&About Dash Core"), this);
+    aboutAction->setStatusTip(tr("Show information about Dash"));
     aboutAction->setMenuRole(QAction::AboutRole);
 #if QT_VERSION < 0x050000
     aboutQtAction = new QAction(QIcon(":/trolltech/qmessagebox/images/qtlogo-64.png"), tr("About &Qt"), this);
@@ -299,7 +299,7 @@ void BitcoinGUI::createActions(bool fIsTestnet)
     aboutQtAction->setStatusTip(tr("Show information about Qt"));
     aboutQtAction->setMenuRole(QAction::AboutQtRole);
     optionsAction = new QAction(QIcon(":/icons/options"), tr("&Options..."), this);
-    optionsAction->setStatusTip(tr("Modify configuration options for Darkcoin"));
+    optionsAction->setStatusTip(tr("Modify configuration options for Dash"));
     optionsAction->setMenuRole(QAction::PreferencesRole);
     if (!fIsTestnet)
         toggleHideAction = new QAction(QIcon(":/icons/bitcoin"), tr("&Show / Hide"), this);
@@ -318,9 +318,9 @@ void BitcoinGUI::createActions(bool fIsTestnet)
     unlockWalletAction->setToolTip(tr("Unlock wallet"));
     lockWalletAction = new QAction(tr("&Lock Wallet"), this);
     signMessageAction = new QAction(QIcon(":/icons/edit"), tr("Sign &message..."), this);
-    signMessageAction->setStatusTip(tr("Sign messages with your Darkcoin addresses to prove you own them"));
+    signMessageAction->setStatusTip(tr("Sign messages with your Dash addresses to prove you own them"));
     verifyMessageAction = new QAction(QIcon(":/icons/transaction_0"), tr("&Verify message..."), this);
-    verifyMessageAction->setStatusTip(tr("Verify messages to ensure they were signed with specified Darkcoin addresses"));
+    verifyMessageAction->setStatusTip(tr("Verify messages to ensure they were signed with specified Dash addresses"));
 
     openInfoAction = new QAction(QApplication::style()->standardIcon(QStyle::SP_MessageBoxInformation), tr("&Information"), this);
     openInfoAction->setStatusTip(tr("Show diagnostic information"));
@@ -340,7 +340,7 @@ void BitcoinGUI::createActions(bool fIsTestnet)
     openAction->setStatusTip(tr("Open a darkcoin: URI or payment request"));
 
     showHelpMessageAction = new QAction(QApplication::style()->standardIcon(QStyle::SP_MessageBoxInformation), tr("&Command-line options"), this);
-    showHelpMessageAction->setStatusTip(tr("Show the Darkcoin Core help message to get a list with possible Darkcoin command-line options"));
+    showHelpMessageAction->setStatusTip(tr("Show the Dash Core help message to get a list with possible Dash command-line options"));
 
     connect(quitAction, SIGNAL(triggered()), qApp, SLOT(quit()));
     connect(aboutAction, SIGNAL(triggered()), this, SLOT(aboutClicked()));
@@ -521,12 +521,12 @@ void BitcoinGUI::createTrayIcon(bool fIsTestnet)
 
     if (!fIsTestnet)
     {
-        trayIcon->setToolTip(tr("Darkcoin client"));
+        trayIcon->setToolTip(tr("Dash client"));
         trayIcon->setIcon(QIcon(":/icons/toolbar"));
     }
     else
     {
-        trayIcon->setToolTip(tr("Darkcoin client") + " " + tr("[testnet]"));
+        trayIcon->setToolTip(tr("Dash client") + " " + tr("[testnet]"));
         trayIcon->setIcon(QIcon(":/icons/toolbar_testnet"));
     }
 
@@ -671,7 +671,7 @@ void BitcoinGUI::setNumConnections(int count)
     default: icon = ":/icons/connect_4"; break;
     }
     labelConnectionsIcon->setPixmap(QIcon(icon).pixmap(STATUSBAR_ICONSIZE,STATUSBAR_ICONSIZE));
-    labelConnectionsIcon->setToolTip(tr("%n active connection(s) to Darkcoin network", "", count));
+    labelConnectionsIcon->setToolTip(tr("%n active connection(s) to Dash network", "", count));
 }
 
 void BitcoinGUI::setNumBlocks(int count)
@@ -786,7 +786,7 @@ void BitcoinGUI::setNumBlocks(int count)
 
 void BitcoinGUI::message(const QString &title, const QString &message, unsigned int style, bool *ret)
 {
-    QString strTitle = tr("Darkcoin"); // default title
+    QString strTitle = tr("Dash"); // default title
     // Default to information icon
     int nMBoxIcon = QMessageBox::Information;
     int nNotifyIcon = Notificator::Information;
@@ -812,7 +812,7 @@ void BitcoinGUI::message(const QString &title, const QString &message, unsigned 
             break;
         }
     }
-    // Append title to "Darkcoin - "
+    // Append title to "Dash - "
     if (!msgType.isEmpty())
         strTitle += " - " + msgType;
 

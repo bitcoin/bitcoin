@@ -1,7 +1,7 @@
 TOR SUPPORT IN DARKCOIN
 =======================
 
-It is possible to run Darkcoin as a Tor hidden service, and connect to such services.
+It is possible to run Dash as a Tor hidden service, and connect to such services.
 
 The following directions assume you have a Tor proxy running on port 9050. Many
 distributions default to having a SOCKS proxy listening on port 9050, but others
@@ -13,7 +13,7 @@ for how to properly configure Tor.
 1. Run darkcoin behind a Tor proxy
 ----------------------------------
 
-The first step is running Darkcoin behind a Tor proxy. This will already make all
+The first step is running Dash behind a Tor proxy. This will already make all
 outgoing connections be anonymized, but more is possible.
 
 	-socks=5        SOCKS5 supports connecting-to-hostname, which can be used instead
