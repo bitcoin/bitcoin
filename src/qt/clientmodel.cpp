@@ -9,7 +9,6 @@
 
 #include "alert.h"
 #include "chainparams.h"
-#include "checkpoints.h"
 #include "clientversion.h"
 #include "main.h"
 #include "net.h"
@@ -89,7 +88,7 @@ QDateTime ClientModel::getLastBlockDate() const
 double ClientModel::getVerificationProgress() const
 {
     LOCK(cs_main);
-    return Checkpoints::GuessVerificationProgress(chainActive.Tip());
+    return 0.0;
 }
 
 void ClientModel::updateTimer()
