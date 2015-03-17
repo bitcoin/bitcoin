@@ -107,7 +107,7 @@ DEFS += $(addprefix -I,$(CURDIR)/leveldb/include) -DUSE_LEVELDB
 DEFS += $(addprefix -I,$(CURDIR)/leveldb/helpers)
 OBJS += obj/txdb-leveldb.o
 leveldb/libleveldb.a:
-    cd leveldb;TARGET_OS=NATIVE_WINDOWS make libleveldb.a libmemenv.a;; cd ..
+	cd leveldb;TARGET_OS=NATIVE_WINDOWS make libleveldb.a libmemenv.a;; cd ..
 obj/txdb-leveldb.o: leveldb/libleveldb.a
 else
 OBJS += obj/txdb-bdb.o
@@ -126,14 +126,17 @@ OBJS += obj/scrypt-generic.o
 
 obj/scrypt-generic.o: scrypt-generic.c
 	$(CC) -c $(xCXXFLAGS) -MMD -o $@ $<
-endif
 
-ifeq  (${USE_SSE2}, 1)
-    DEFS += -DUSE_SSE2    
-    OBJS += obj/scrypt-sse2.o
+ifdef USE_SSE2
+DEFS += -DUSE_SSE2
+OBJS += obj/scrypt-sse2.o
+
 obj/scrypt-sse2.o: scrypt-sse2.cpp $(HEADERS)
 	g++  -c $(CFLAGS) -MMD -o $@ $<
 endif
+endif
+
+
 
 obj/%.o: %.cpp $(HEADERS)
 	g++ -c $(CFLAGS) -o $@ $<

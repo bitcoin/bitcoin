@@ -135,21 +135,24 @@ contains(USE_LEVELDB, 1) {
 
 # use: qmake "USE_ASM=1"
 contains(USE_ASM, 1) {
-    message(Using optimized scrypt core implementation)
+    message(Using assembler scrypt core implementation)
     SOURCES += src/scrypt-arm.S src/scrypt-x86.S src/scrypt-x86_64.S
 } else {
-    message(Using generic scrypt core implementation)
+    # use: qmake "USE_SSE2=1"
+    contains(USE_SSE2, 1) {
+        message(Using SSE2 intrinsic scrypt implementation)
+        SOURCES += src/scrypt-sse2.cpp
+        DEFINES += USE_SSE2
+        QMAKE_CXXFLAGS += -msse2
+        QMAKE_CFLAGS += -msse2
+    } else {
+        message(Using generic scrypt core implementation)
+    }
+
+    # For now, generic module is required in both cases
     SOURCES += src/scrypt-generic.c
 }
 
-# use: qmake "USE_SSE2=1"
-contains(USE_SSE2, 1) {
-    message(Using SSE2 scrypt core implementation)
-    SOURCES += src/scrypt-sse2.cpp
-    DEFINES += USE_SSE2
-    QMAKE_CXXFLAGS += -msse2
-    QMAKE_CFLAGS += -msse2
-}
 # regenerate src/build.h
 !windows|contains(USE_BUILD_INFO, 1) {
     genbuild.depends = FORCE

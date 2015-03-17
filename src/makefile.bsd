@@ -166,14 +166,15 @@ OBJS += obj/scrypt-generic.o
 
 obj/scrypt-generic.o: scrypt-generic.c
 	$(CC) -c $(xCXXFLAGS) -MMD -o $@ $<
-endif
 
 ifeq  (${USE_SSE2}, 1)
-    DEFS += -DUSE_SSE2    
-    OBJS += obj/scrypt-sse2.o
+DEFS += -DUSE_SSE2
+OBJS += obj/scrypt-sse2.o
 obj/scrypt-sse2.o: scrypt-sse2.cpp
 	$(CXX) -c $(CFLAGS) -MMD -o $@ $<
 endif
+endif
+
 
 # auto-generated dependencies:
 -include obj/*.P

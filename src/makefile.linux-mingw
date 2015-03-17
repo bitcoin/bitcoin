@@ -133,19 +133,22 @@ obj/scrypt-x86.o: scrypt-x86.S
 obj/scrypt-x86_64.o: scrypt-x86_64.S
 	$(CXX) -c $(xCXXFLAGS) -MMD -o $@ $<
 endif
+
 ifneq (${USE_ASM}, 1)
 OBJS += obj/scrypt-generic.o
 
 obj/scrypt-generic.o: scrypt-generic.c
 	$(CC) -c $(xCXXFLAGS) -MMD -o $@ $<
-endif
 
 ifeq  (${USE_SSE2}, 1)
-    DEFS += -DUSE_SSE2    
-    OBJS += obj/scrypt-sse2.o
+DEFS += -DUSE_SSE2
+OBJS += obj/scrypt-sse2.o
+
 obj/scrypt-sse2.o: scrypt-sse2.cpp $(HEADERS)
 	$(CCX)  -c $(CFLAGS) -MMD -o $@ $<
 endif
+endif
+
 
 obj/build.h: FORCE
 	/bin/sh ../share/genbuild.sh obj/build.h
