@@ -1031,9 +1031,10 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
         }
 
         if (fRejectAbsurdFee && nFees > ::minRelayTxFee.GetFee(nSize) * 10000)
-            return error("AcceptToMemoryPool: absurdly high fees %s, %d > %d",
-                         hash.ToString(),
-                         nFees, ::minRelayTxFee.GetFee(nSize) * 10000);
+            return state.Invalid(error("AcceptToMemoryPool: absurdly high fees %s, %d > %d",
+                                       hash.ToString(),
+                                       nFees, ::minRelayTxFee.GetFee(nSize) * 10000),
+                                 REJECT_HIGHFEE, "absurdly-high-fee");
 
         // Check against previous transactions
         // This is done last to help prevent CPU exhaustion denial-of-service attacks.
