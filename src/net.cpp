@@ -9,7 +9,6 @@
 
 #include "net.h"
 
-#include "addrman.h"
 #include "chainparams.h"
 #include "clientversion.h"
 #include "primitives/transaction.h"
