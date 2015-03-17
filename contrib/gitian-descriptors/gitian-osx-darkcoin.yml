@@ -57,4 +57,4 @@ script: |
   export FAKETIME=$REFERENCE_DATETIME
   export TZ=UTC
   make deploy
-  dmg dmg Darkcoin-Qt.dmg $OUTDIR/Darkcoin-Qt.dmg
+  dmg dmg Dash-Qt.dmg $OUTDIR/Dash-Qt.dmg

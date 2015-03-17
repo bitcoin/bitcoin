@@ -3,20 +3,20 @@
     <name>AboutDialog</name>
     <message>
         <location filename="../forms/aboutdialog.ui" line="14"/>
-        <source>About Darkcoin Core</source>
-        <translation>Acerca do Darkcoin Core</translation>
+        <source>About Dash Core</source>
+        <translation>Acerca do Dash Core</translation>
     </message>
     <message>
         <location filename="../forms/aboutdialog.ui" line="53"/>
-        <source>&lt;b&gt;Darkcoin Core&lt;/b&gt; version</source>
-        <translation>Versão do &lt;b&gt;Darkcoin Core&lt;/b&gt;</translation>
+        <source>&lt;b&gt;Dash Core&lt;/b&gt; version</source>
+        <translation>Versão do &lt;b&gt;Dash Core&lt;/b&gt;</translation>
     </message>
     <message>
         <location filename="../forms/aboutdialog.ui" line="94"/>
         <source>Copyright &amp;copy; 2009-2014 The Bitcoin Core developers.
-Copyright &amp;copy; 2014-YYYY The Darkcoin Core developers.</source>
+Copyright &amp;copy; 2014-YYYY The Dash Core developers.</source>
         <translation>Copyright &amp;copy; 2009-2014 Os programadores Bitcoin Core.
-Copyright &amp;copy; 2014-YYYY Os programadores Darkcoin Core.</translation>
+Copyright &amp;copy; 2014-YYYY Os programadores Dash Core.</translation>
     </message>
     <message>
         <location filename="../forms/aboutdialog.ui" line="111"/>
@@ -46,8 +46,8 @@ Este produto inclui software desenvolvido pelo Projecto OpenSSL para uso no Open
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="31"/>
-        <source>The Darkcoin Core developers</source>
-        <translation>Os programadores Darkcoin Core</translation>
+        <source>The Dash Core developers</source>
+        <translation>Os programadores Dash Core</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="43"/>
@@ -135,13 +135,13 @@ Este produto inclui software desenvolvido pelo Projecto OpenSSL para uso no Open
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="65"/>
-        <source>These are your Darkcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>Estes são os endereços Darkcoin para envio de pagamentos. Confirme sempre a quantia e o endereço antes de enviar as moedas.</translation>
+        <source>These are your Dash addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation>Estes são os endereços Dash para envio de pagamentos. Confirme sempre a quantia e o endereço antes de enviar as moedas.</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="69"/>
-        <source>These are your Darkcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>Estes são os seus endereços Darkcoin para receber pagamentos. É recomendado que seja usado um novo endereço para cada transacção.</translation>
+        <source>These are your Dash addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
+        <translation>Estes são os seus endereços Dash para receber pagamentos. É recomendado que seja usado um novo endereço para cada transacção.</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="75"/>
@@ -292,8 +292,8 @@ Este produto inclui software desenvolvido pelo Projecto OpenSSL para uso no Open
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="124"/>
-        <source>Darkcoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your darkcoins from being stolen by malware infecting your computer.</source>
-        <translation>O cliente Darkcoin irá fechar para finalizar o processo de cifra. Lembre-se que cifrar a sua carteira não consegue proteger totalmente as suas darkcoins contra roubos feitos por malware presente no seu computador.</translation>
+        <source>Dash will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your darkcoins from being stolen by malware infecting your computer.</source>
+        <translation>O cliente Dash irá fechar para finalizar o processo de cifra. Lembre-se que cifrar a sua carteira não consegue proteger totalmente as suas darkcoins contra roubos feitos por malware presente no seu computador.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="128"/>
@@ -352,8 +352,8 @@ Este produto inclui software desenvolvido pelo Projecto OpenSSL para uso no Open
     <name>BitcoinGUI</name>
     <message>
         <location filename="../bitcoingui.cpp" line="76"/>
-        <source>Darkcoin Core</source>
-        <translation>Darkcoin Core</translation>
+        <source>Dash Core</source>
+        <translation>Dash Core</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="85"/>
@@ -388,8 +388,8 @@ Este produto inclui software desenvolvido pelo Projecto OpenSSL para uso no Open
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="235"/>
-        <source>Send coins to a Darkcoin address</source>
-        <translation>Enviar moedas para um endereço Darkcoin</translation>
+        <source>Send coins to a Dash address</source>
+        <translation>Enviar moedas para um endereço Dash</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="241"/>
@@ -424,13 +424,13 @@ Este produto inclui software desenvolvido pelo Projecto OpenSSL para uso no Open
     <message>
         <location filename="../bitcoingui.cpp" line="271"/>
         <location filename="../bitcoingui.cpp" line="273"/>
-        <source>&amp;About Darkcoin Core</source>
-        <translation>&amp;Acerca do Darkcoin Core</translation>
+        <source>&amp;About Dash Core</source>
+        <translation>&amp;Acerca do Dash Core</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="274"/>
-        <source>Show information about Darkcoin</source>
-        <translation>Mostra informação acerca do Darkcoin</translation>
+        <source>Show information about Dash</source>
+        <translation>Mostra informação acerca do Dash</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="277"/>
@@ -450,8 +450,8 @@ Este produto inclui software desenvolvido pelo Projecto OpenSSL para uso no Open
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="284"/>
-        <source>Modify configuration options for Darkcoin</source>
-        <translation>Modificar opções de configuração do Darkcoin</translation>
+        <source>Modify configuration options for Dash</source>
+        <translation>Modificar opções de configuração do Dash</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="287"/>
@@ -516,8 +516,8 @@ Este produto inclui software desenvolvido pelo Projecto OpenSSL para uso no Open
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="303"/>
-        <source>Sign messages with your Darkcoin addresses to prove you own them</source>
-        <translation>Assine mensagens com os seus endereços Darkcoin para provar que são seus</translation>
+        <source>Sign messages with your Dash addresses to prove you own them</source>
+        <translation>Assine mensagens com os seus endereços Dash para provar que são seus</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="304"/>
@@ -526,8 +526,8 @@ Este produto inclui software desenvolvido pelo Projecto OpenSSL para uso no Open
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="305"/>
-        <source>Verify messages to ensure they were signed with specified Darkcoin addresses</source>
-        <translation>Verifica mensagens para garantir que foram assinadas com um endereço Darkcoin específico</translation>
+        <source>Verify messages to ensure they were signed with specified Dash addresses</source>
+        <translation>Verifica mensagens para garantir que foram assinadas com um endereço Dash específico</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="307"/>
@@ -606,8 +606,8 @@ Este produto inclui software desenvolvido pelo Projecto OpenSSL para uso no Open
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="325"/>
-        <source>Show the Darkcoin Core help message to get a list with possible Darkcoin command-line options</source>
-        <translation>Mostra a mensagem de ajuda do Darkcoin Core para obter a lista com as possíveis opções de linha de comandos</translation>
+        <source>Show the Dash Core help message to get a list with possible Dash command-line options</source>
+        <translation>Mostra a mensagem de ajuda do Dash Core para obter a lista com as possíveis opções de linha de comandos</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="361"/>
@@ -637,13 +637,13 @@ Este produto inclui software desenvolvido pelo Projecto OpenSSL para uso no Open
     <message>
         <location filename="../bitcoingui.cpp" line="493"/>
         <location filename="../bitcoingui.cpp" line="498"/>
-        <source>Darkcoin client</source>
-        <translation>Cliente Darkcoin</translation>
+        <source>Dash client</source>
+        <translation>Cliente Dash</translation>
     </message>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="643"/>
-        <source>%n active connection(s) to Darkcoin network</source>
-        <translation><numerusform>%n ligação activa à rede Darkcoin</numerusform><numerusform>%n ligações activas à rede Darkcoin</numerusform></translation>
+        <source>%n active connection(s) to Dash network</source>
+        <translation><numerusform>%n ligação activa à rede Dash</numerusform><numerusform>%n ligações activas à rede Dash</numerusform></translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="655"/>
@@ -723,8 +723,8 @@ Este produto inclui software desenvolvido pelo Projecto OpenSSL para uso no Open
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="755"/>
-        <source>Darkcoin</source>
-        <translation>Darkcoin</translation>
+        <source>Dash</source>
+        <translation>Dash</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="769"/>
@@ -781,8 +781,8 @@ Endereço: %4
     </message>
     <message>
         <location filename="../darkcoin.cpp" line="449"/>
-        <source>A fatal error occurred. Darkcoin can no longer continue safely and will quit.</source>
-        <translation>Ocorreu um erro fatal. O cliente Darkcoin não pode continuar de forma segura e irá fechar.</translation>
+        <source>A fatal error occurred. Dash can no longer continue safely and will quit.</source>
+        <translation>Ocorreu um erro fatal. O cliente Dash não pode continuar de forma segura e irá fechar.</translation>
     </message>
 </context>
 <context>
@@ -1136,12 +1136,12 @@ Endereço: %4
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="78"/>
-        <source>Use 2 separate masternodes to mix funds up to 1000 DRK</source>
+        <source>Use 2 separate masternodes to mix funds up to 1000 DASH</source>
         <translation>Usar 2 masternodes distintos para misturar os fundos até 1000DRK</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="91"/>
-        <source>Use 8 separate masternodes to mix funds up to 1000 DRK</source>
+        <source>Use 8 separate masternodes to mix funds up to 1000 DASH</source>
         <translation>Usar 8 masternodes distintos para misturar os fundos até 1000DRK</translation>
     </message>
     <message>
@@ -1151,18 +1151,18 @@ Endereço: %4
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="117"/>
-        <source>This option is the quickest and will cost about ~0.025 DRK to anonymize 1000 DRK</source>
-        <translation>Esta opção é a mais rápida e irá custar cerca de ~0.025 DRK para anonimizar 1000 DRK</translation>
+        <source>This option is the quickest and will cost about ~0.025 DASH to anonymize 1000 DASH</source>
+        <translation>Esta opção é a mais rápida e irá custar cerca de ~0.025 DASH para anonimizar 1000 DASH</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="130"/>
-        <source>This option is moderately fast and will cost about 0.05 DRK to anonymize 1000 DRK</source>
-        <translation>Esta opção é relativamente rápida e irá custar cerca de ~0.05 DRK para anonimizar 1000 DRK</translation>
+        <source>This option is moderately fast and will cost about 0.05 DASH to anonymize 1000 DASH</source>
+        <translation>Esta opção é relativamente rápida e irá custar cerca de ~0.05 DASH para anonimizar 1000 DASH</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="156"/>
-        <source>0.1 DRK per 1000 DRK you anonymize.</source>
-        <translation>0.1 DRK por cada 1000 DRK a anonimizar.</translation>
+        <source>0.1 DASH per 1000 DASH you anonymize.</source>
+        <translation>0.1 DASH por cada 1000 DASH a anonimizar.</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="143"/>
@@ -1178,18 +1178,18 @@ Endereço: %4
     </message>
     <message>
         <location filename="../darksendconfig.cpp" line="44"/>
-        <source>Darksend was successfully set to basic (%1 and 2 rounds). You can change this at any time by opening Darkcoin&apos;s configuration screen.</source>
-        <translation>Darksend foi colocado com sucesso no modo básico (%1 e 2 voltas). Pode mudar esta definição em qualquer altura abrindo o ecrã de configuração Darkcoin.</translation>
+        <source>Darksend was successfully set to basic (%1 and 2 rounds). You can change this at any time by opening Dash&apos;s configuration screen.</source>
+        <translation>Darksend foi colocado com sucesso no modo básico (%1 e 2 voltas). Pode mudar esta definição em qualquer altura abrindo o ecrã de configuração Dash.</translation>
     </message>
     <message>
         <location filename="../darksendconfig.cpp" line="59"/>
-        <source>Darksend was successfully set to high (%1 and 8 rounds). You can change this at any time by opening Darkcoin&apos;s configuration screen.</source>
-        <translation>Darksend foi colocado com sucesso no modo alto (%1 e 8 voltas). Pode mudar esta definição em qualquer altura abrindo o ecrã de configuração Darkcoin.</translation>
+        <source>Darksend was successfully set to high (%1 and 8 rounds). You can change this at any time by opening Dash&apos;s configuration screen.</source>
+        <translation>Darksend foi colocado com sucesso no modo alto (%1 e 8 voltas). Pode mudar esta definição em qualquer altura abrindo o ecrã de configuração Dash.</translation>
     </message>
     <message>
         <location filename="../darksendconfig.cpp" line="74"/>
-        <source>Darksend was successfully set to maximum (%1 and 16 rounds). You can change this at any time by opening Darkcoin&apos;s configuration screen.</source>
-        <translation>Darksend foi colocado com sucesso no modo máximo (%1 e 16 voltas). Pode mudar esta definição em qualquer altura abrindo o ecrã de configuração Darkcoin.</translation>
+        <source>Darksend was successfully set to maximum (%1 and 16 rounds). You can change this at any time by opening Dash&apos;s configuration screen.</source>
+        <translation>Darksend foi colocado com sucesso no modo máximo (%1 e 16 voltas). Pode mudar esta definição em qualquer altura abrindo o ecrã de configuração Dash.</translation>
     </message>
 </context>
 <context>
@@ -1241,8 +1241,8 @@ Endereço: %4
     </message>
     <message>
         <location filename="../editaddressdialog.cpp" line="111"/>
-        <source>The entered address &quot;%1&quot; is not a valid Darkcoin address.</source>
-        <translation>O endereço introduzido &quot;%1&quot; não é um endereço Darkcoin válido.</translation>
+        <source>The entered address &quot;%1&quot; is not a valid Dash address.</source>
+        <translation>O endereço introduzido &quot;%1&quot; não é um endereço Dash válido.</translation>
     </message>
     <message>
         <location filename="../editaddressdialog.cpp" line="116"/>
@@ -1292,13 +1292,13 @@ Endereço: %4
     <name>HelpMessageDialog</name>
     <message>
         <location filename="../forms/helpmessagedialog.ui" line="19"/>
-        <source>Darkcoin Core - Command-line options</source>
-        <translation>Darkcoin Core - Opções de linha de comandos</translation>
+        <source>Dash Core - Command-line options</source>
+        <translation>Dash Core - Opções de linha de comandos</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="69"/>
-        <source>Darkcoin Core</source>
-        <translation>Darkcoin Core</translation>
+        <source>Dash Core</source>
+        <translation>Dash Core</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="69"/>
@@ -1355,18 +1355,18 @@ Endereço: %4
     </message>
     <message>
         <location filename="../forms/intro.ui" line="23"/>
-        <source>Welcome to Darkcoin Core.</source>
-        <translation>Bem-vindo ao Darkcoin Core.</translation>
+        <source>Welcome to Dash Core.</source>
+        <translation>Bem-vindo ao Dash Core.</translation>
     </message>
     <message>
         <location filename="../forms/intro.ui" line="49"/>
-        <source>As this is the first time the program is launched, you can choose where Darkcoin Core will store its data.</source>
-        <translation>Como esta é a primeira vez que o programa é executado, pode escolher onde o cliente Darkcoin Core irá guardar os seus dados.</translation>
+        <source>As this is the first time the program is launched, you can choose where Dash Core will store its data.</source>
+        <translation>Como esta é a primeira vez que o programa é executado, pode escolher onde o cliente Dash Core irá guardar os seus dados.</translation>
     </message>
     <message>
         <location filename="../forms/intro.ui" line="59"/>
-        <source>Darkcoin Core will download and store a copy of the Darkcoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
-        <translation>O cliente Darkcoin Core irá descarregar e guardar uma copia da cadeia de blocos Darkcoin. Pelo menos %1GB de dados serão guardados nesta pasta e irá aumentar com o tempo. A carteira também ficará guardada nesta pasta.</translation>
+        <source>Dash Core will download and store a copy of the Dash block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
+        <translation>O cliente Dash Core irá descarregar e guardar uma copia da cadeia de blocos Dash. Pelo menos %1GB de dados serão guardados nesta pasta e irá aumentar com o tempo. A carteira também ficará guardada nesta pasta.</translation>
     </message>
     <message>
         <location filename="../forms/intro.ui" line="69"/>
@@ -1380,8 +1380,8 @@ Endereço: %4
     </message>
     <message>
         <location filename="../intro.cpp" line="185"/>
-        <source>Darkcoin</source>
-        <translation>Darkcoin</translation>
+        <source>Dash</source>
+        <translation>Dash</translation>
     </message>
     <message>
         <location filename="../intro.cpp" line="186"/>
@@ -1446,13 +1446,13 @@ Endereço: %4
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="33"/>
-        <source>Automatically start Darkcoin after logging in to the system.</source>
-        <translation>Executar automaticamente o cliente Darkcoin quando entrar no sistema.</translation>
+        <source>Automatically start Dash after logging in to the system.</source>
+        <translation>Executar automaticamente o cliente Dash quando entrar no sistema.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="36"/>
-        <source>&amp;Start Darkcoin on system login</source>
-        <translation>&amp;Iniciar o cliente Darkcoin ao entrar no sistema</translation>
+        <source>&amp;Start Dash on system login</source>
+        <translation>&amp;Iniciar o cliente Dash ao entrar no sistema</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="45"/>
@@ -1491,8 +1491,8 @@ Endereço: %4
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="180"/>
-        <source>Amount of Darkcoin to keep anonymized</source>
-        <translation>Quantia de Darkcoin a manter anonimizada</translation>
+        <source>Amount of Dash to keep anonymized</source>
+        <translation>Quantia de Dash a manter anonimizada</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="206"/>
@@ -1541,8 +1541,8 @@ Endereço: %4
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="307"/>
-        <source>Automatically open the Darkcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation>Abrir automaticamente a porta do cliente Darkcoin no router. Isto só funciona quando o seu router suporta UPnP e este está activo.</translation>
+        <source>Automatically open the Dash client port on the router. This only works when your router supports UPnP and it is enabled.</source>
+        <translation>Abrir automaticamente a porta do cliente Dash no router. Isto só funciona quando o seu router suporta UPnP e este está activo.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="310"/>
@@ -1551,8 +1551,8 @@ Endereço: %4
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="317"/>
-        <source>Connect to the Darkcoin network through a SOCKS proxy.</source>
-        <translation>Efectuar a ligação à rede Darkcoin através de um proxy SOCKS.</translation>
+        <source>Connect to the Dash network through a SOCKS proxy.</source>
+        <translation>Efectuar a ligação à rede Dash através de um proxy SOCKS.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="320"/>
@@ -1626,7 +1626,7 @@ Endereço: %4
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="503"/>
-        <source>The user interface language can be set here. This setting will take effect after restarting Darkcoin.</source>
+        <source>The user interface language can be set here. This setting will take effect after restarting Dash.</source>
         <translation>A linguagem do interface pode ser definida aqui. Esta definição terá efeito depois de reiniciar a aplicação.</translation>
     </message>
     <message>
@@ -1648,8 +1648,8 @@ https://www.transifex.com/projects/p/darkcoin/</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="572"/>
-        <source>Whether to show Darkcoin addresses in the transaction list or not.</source>
-        <translation>Se deseja mostrar os endereços Darkcoin na lista de transacções ou não.</translation>
+        <source>Whether to show Dash addresses in the transaction list or not.</source>
+        <translation>Se deseja mostrar os endereços Dash na lista de transacções ou não.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="575"/>
@@ -1745,8 +1745,8 @@ https://www.transifex.com/projects/p/darkcoin/</translation>
         <location filename="../forms/overviewpage.ui" line="70"/>
         <location filename="../forms/overviewpage.ui" line="953"/>
         <location filename="../forms/overviewpage.ui" line="1021"/>
-        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Darkcoin network after a connection is established, but this process has not completed yet.</source>
-        <translation>A informação mostrada pode estar desactualizada. A sua carteira sincroniza automaticamente com a rede Darkcoin assim que for estabelecida uma ligação, mas este processo ainda não terminou.</translation>
+        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Dash network after a connection is established, but this process has not completed yet.</source>
+        <translation>A informação mostrada pode estar desactualizada. A sua carteira sincroniza automaticamente com a rede Dash assim que for estabelecida uma ligação, mas este processo ainda não terminou.</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="114"/>
@@ -1810,8 +1810,8 @@ https://www.transifex.com/projects/p/darkcoin/</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="349"/>
-        <source>0 DRK</source>
-        <translation>0 DRK</translation>
+        <source>0 DASH</source>
+        <translation>0 DASH</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="356"/>
@@ -1820,8 +1820,8 @@ https://www.transifex.com/projects/p/darkcoin/</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="363"/>
-        <source>0 DRK / 0 Rounds</source>
-        <translation>0 DRK / 0 Voltas</translation>
+        <source>0 DASH / 0 Rounds</source>
+        <translation>0 DASH / 0 Voltas</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="370"/>
@@ -2088,8 +2088,8 @@ https://www.transifex.com/projects/p/darkcoin/</translation>
     </message>
     <message>
         <location filename="../paymentserver.cpp" line="418"/>
-        <source>URI can not be parsed! This can be caused by an invalid Darkcoin address or malformed URI parameters.</source>
-        <translation>O URI não pode ser carregado! Isto pode ser causado por um endereço Darkcoin inválido ou parâmetros do URI incorrectos.</translation>
+        <source>URI can not be parsed! This can be caused by an invalid Dash address or malformed URI parameters.</source>
+        <translation>O URI não pode ser carregado! Isto pode ser causado por um endereço Dash inválido ou parâmetros do URI incorrectos.</translation>
     </message>
     <message>
         <location filename="../paymentserver.cpp" line="432"/>
@@ -2149,8 +2149,8 @@ https://www.transifex.com/projects/p/darkcoin/</translation>
         <location filename="../darkcoin.cpp" line="532"/>
         <location filename="../darkcoin.cpp" line="539"/>
         <location filename="../darkcoin.cpp" line="552"/>
-        <source>Darkcoin</source>
-        <translation>Darkcoin</translation>
+        <source>Dash</source>
+        <translation>Dash</translation>
     </message>
     <message>
         <location filename="../darkcoin.cpp" line="526"/>
@@ -2174,13 +2174,13 @@ https://www.transifex.com/projects/p/darkcoin/</translation>
     </message>
     <message>
         <location filename="../darkcoin.cpp" line="612"/>
-        <source>Darkcoin Core didn&apos;t yet exit safely...</source>
-        <translation>Darkcoin Core ainda não terminou de forma segura...</translation>
+        <source>Dash Core didn&apos;t yet exit safely...</source>
+        <translation>Dash Core ainda não terminou de forma segura...</translation>
     </message>
     <message>
         <location filename="../guiutil.cpp" line="101"/>
-        <source>Enter a Darkcoin address (e.g. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</source>
-        <translation>Insira um endereço Darkcoin (ex. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
+        <source>Enter a Dash address (e.g. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</source>
+        <translation>Insira um endereço Dash (ex. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
     </message>
 </context>
 <context>
@@ -2259,8 +2259,8 @@ https://www.transifex.com/projects/p/darkcoin/</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="90"/>
-        <source>Open the Darkcoin debug log file from the current data directory. This can take a few seconds for large log files.</source>
-        <translation>Abrir o ficheiro de registo de depuração Darkcoin a partir da pasta de dados actual. Para grandes ficheiros de registo pode demorar alguns segundos.</translation>
+        <source>Open the Dash debug log file from the current data directory. This can take a few seconds for large log files.</source>
+        <translation>Abrir o ficheiro de registo de depuração Dash a partir da pasta de dados actual. Para grandes ficheiros de registo pode demorar alguns segundos.</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="93"/>
@@ -2351,8 +2351,8 @@ https://www.transifex.com/projects/p/darkcoin/</translation>
     </message>
     <message>
         <location filename="../rpcconsole.cpp" line="333"/>
-        <source>Welcome to the Darkcoin RPC console.</source>
-        <translation>Bem-vindo à consola RPC Darkcoin</translation>
+        <source>Welcome to the Dash RPC console.</source>
+        <translation>Bem-vindo à consola RPC Dash</translation>
     </message>
     <message>
         <location filename="../rpcconsole.cpp" line="334"/>
@@ -2415,8 +2415,8 @@ https://www.transifex.com/projects/p/darkcoin/</translation>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="51"/>
         <location filename="../forms/receivecoinsdialog.ui" line="74"/>
-        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Darkcoin network.</source>
-        <translation>Mensagem opcional para anexar à solicitação de pagamento, que será mostrada quando a solicitação for aberta. Nota: A mensagem não será enviada com o pagamento através da rede Darkcoin.</translation>
+        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Dash network.</source>
+        <translation>Mensagem opcional para anexar à solicitação de pagamento, que será mostrada quando a solicitação for aberta. Nota: A mensagem não será enviada com o pagamento através da rede Dash.</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="54"/>
@@ -2900,8 +2900,8 @@ https://www.transifex.com/projects/p/darkcoin/</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="635"/>
-        <source>Warning: Invalid Darkcoin address</source>
-        <translation>Aviso: Endereço Darkcoin inválido</translation>
+        <source>Warning: Invalid Dash address</source>
+        <translation>Aviso: Endereço Dash inválido</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="644"/>
@@ -2982,8 +2982,8 @@ https://www.transifex.com/projects/p/darkcoin/</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="157"/>
-        <source>A message that was attached to the darkcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Darkcoin network.</source>
-        <translation>Mensagem que foi anexada ao darkcoin: URI e que será guardada com a transacção para sua referência. Nota: Esta mensagem não será enviada para a rede Darkcoin.</translation>
+        <source>A message that was attached to the darkcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Dash network.</source>
+        <translation>Mensagem que foi anexada ao darkcoin: URI e que será guardada com a transacção para sua referência. Nota: Esta mensagem não será enviada para a rede Dash.</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="583"/>
@@ -3017,8 +3017,8 @@ https://www.transifex.com/projects/p/darkcoin/</translation>
     <name>ShutdownWindow</name>
     <message>
         <location filename="../utilitydialog.cpp" line="129"/>
-        <source>Darkcoin Core is shutting down...</source>
-        <translation>O Darkcoin Core está a desligar...</translation>
+        <source>Dash Core is shutting down...</source>
+        <translation>O Dash Core está a desligar...</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="130"/>
@@ -3087,8 +3087,8 @@ https://www.transifex.com/projects/p/darkcoin/</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="152"/>
-        <source>Sign the message to prove you own this Darkcoin address</source>
-        <translation>Assinar a mensagem para provar que é o proprietário deste endereço Darkcoin</translation>
+        <source>Sign the message to prove you own this Dash address</source>
+        <translation>Assinar a mensagem para provar que é o proprietário deste endereço Dash</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="155"/>
@@ -3123,8 +3123,8 @@ https://www.transifex.com/projects/p/darkcoin/</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="295"/>
-        <source>Verify the message to ensure it was signed with the specified Darkcoin address</source>
-        <translation>Verificar a mensagem de forma a garantir que foi assinada com o endereço Darkcoin especificado</translation>
+        <source>Verify the message to ensure it was signed with the specified Dash address</source>
+        <translation>Verificar a mensagem de forma a garantir que foi assinada com o endereço Dash especificado</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="298"/>
@@ -3143,8 +3143,8 @@ https://www.transifex.com/projects/p/darkcoin/</translation>
     </message>
     <message>
         <location filename="../signverifymessagedialog.cpp" line="31"/>
-        <source>Enter a Darkcoin address (e.g. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</source>
-        <translation>Insira um endereço Darkcoin (ex. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
+        <source>Enter a Dash address (e.g. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</source>
+        <translation>Insira um endereço Dash (ex. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
     </message>
     <message>
         <location filename="../signverifymessagedialog.cpp" line="114"/>
@@ -3217,8 +3217,8 @@ https://www.transifex.com/projects/p/darkcoin/</translation>
     <name>SplashScreen</name>
     <message>
         <location filename="../splashscreen.cpp" line="33"/>
-        <source>Darkcoin Core</source>
-        <translation>Darkcoin Core</translation>
+        <source>Dash Core</source>
+        <translation>Dash Core</translation>
     </message>
     <message>
         <location filename="../splashscreen.cpp" line="34"/>
@@ -3232,8 +3232,8 @@ https://www.transifex.com/projects/p/darkcoin/</translation>
     </message>
     <message>
         <location filename="../splashscreen.cpp" line="36"/>
-        <source>The Darkcoin Core developers</source>
-        <translation>Os programadores Darkcoin Core</translation>
+        <source>The Dash Core developers</source>
+        <translation>Os programadores Dash Core</translation>
     </message>
     <message>
         <location filename="../splashscreen.cpp" line="37"/>
@@ -3871,8 +3871,8 @@ https://www.transifex.com/projects/p/darkcoin/</translation>
     </message>
     <message numerus="yes">
         <location filename="../walletmodel.cpp" line="271"/>
-        <source>InstantX doesn&apos;t support sending values that high yet. Transactions are currently limited to %n DRK.</source>
-        <translation><numerusform>O InstantX não suporta valores tão elevados neste momento. As transacções estão limitadas a %n DRK.</numerusform><numerusform>O InstantX não suporta valores tão elevados neste momento. As transacções estão limitadas a %n DRK.</numerusform></translation>
+        <source>InstantX doesn&apos;t support sending values that high yet. Transactions are currently limited to %n DASH.</source>
+        <translation><numerusform>O InstantX não suporta valores tão elevados neste momento. As transacções estão limitadas a %n DASH.</numerusform><numerusform>O InstantX não suporta valores tão elevados neste momento. As transacções estão limitadas a %n DASH.</numerusform></translation>
     </message>
 </context>
 <context>
@@ -3931,7 +3931,7 @@ rpcpassword=%s
 The username and password MUST NOT be the same.
 If the file does not exist, create it with owner-readable-only file permissions.
 It is also recommended to set alertnotify so you are notified of problems;
-for example: alertnotify=echo %%s | mail -s &quot;Darkcoin Alert&quot; admin@foo.com
+for example: alertnotify=echo %%s | mail -s &quot;Dash Alert&quot; admin@foo.com
 </source>
         <translation>%s, necessita colocar uma entrada rpcpassword no ficheiro de configuração:
 %s
@@ -3942,7 +3942,7 @@ rpcpassword=%s
 O nome de utilizador e a palavra-passe não podem ser iguais.
 Se o ficheiro não existe, crie-o só com permissões de leitura para o dono.
 Também é recomendado que configure o sistema de alertas para poder ser avisado de problemas;
-exemplo: alertnotify=echo %%s | mail -s &quot;Alerta Darkcoin&quot; admin@foo.com</translation>
+exemplo: alertnotify=echo %%s | mail -s &quot;Alerta Dash&quot; admin@foo.com</translation>
     </message>
     <message>
         <location filename="../darkcoinstrings.cpp" line="29"/>
@@ -3966,8 +3966,8 @@ exemplo: alertnotify=echo %%s | mail -s &quot;Alerta Darkcoin&quot; admin@foo.co
     </message>
     <message>
         <location filename="../darkcoinstrings.cpp" line="40"/>
-        <source>Cannot obtain a lock on data directory %s. Darkcoin Core is probably already running.</source>
-        <translation>Não foi possível obter acesso exclusivo à pasta de dados %s. Possivelmente o Darkcoin Core já se encontra em execução.</translation>
+        <source>Cannot obtain a lock on data directory %s. Dash Core is probably already running.</source>
+        <translation>Não foi possível obter acesso exclusivo à pasta de dados %s. Possivelmente o Dash Core já se encontra em execução.</translation>
     </message>
     <message>
         <location filename="../darkcoinstrings.cpp" line="43"/>
@@ -4131,8 +4131,8 @@ exemplo: alertnotify=echo %%s | mail -s &quot;Alerta Darkcoin&quot; admin@foo.co
     </message>
     <message>
         <location filename="../darkcoinstrings.cpp" line="133"/>
-        <source>Unable to bind to %s on this computer. Darkcoin Core is probably already running.</source>
-        <translation>Não foi possível vincular a %s neste computador. Provavelmente o Darkcoin Core já está a ser executado.</translation>
+        <source>Unable to bind to %s on this computer. Dash Core is probably already running.</source>
+        <translation>Não foi possível vincular a %s neste computador. Provavelmente o Dash Core já está a ser executado.</translation>
     </message>
     <message>
         <location filename="../darkcoinstrings.cpp" line="136"/>
@@ -4141,7 +4141,7 @@ exemplo: alertnotify=echo %%s | mail -s &quot;Alerta Darkcoin&quot; admin@foo.co
     </message>
     <message>
         <location filename="../darkcoinstrings.cpp" line="138"/>
-        <source>Unable to locate enough Darksend non-denominated funds for this transaction that are not equal 1000 DRK.</source>
+        <source>Unable to locate enough Darksend non-denominated funds for this transaction that are not equal 1000 DASH.</source>
         <translation>Não foi possível localizar fundos Darksend não denominados suficientes para esta transacção que não sejam igual a 1000DRK.</translation>
     </message>
     <message>
@@ -4161,8 +4161,8 @@ exemplo: alertnotify=echo %%s | mail -s &quot;Alerta Darkcoin&quot; admin@foo.co
     </message>
     <message>
         <location filename="../darkcoinstrings.cpp" line="149"/>
-        <source>Warning: Please check that your computer&apos;s date and time are correct! If your clock is wrong Darkcoin will not work properly.</source>
-        <translation>Aviso: Por favor verifique que a data e a hora do computador está correcta! Se o relógio estiver errado o Darkcoin não vai funcionar correctamente.</translation>
+        <source>Warning: Please check that your computer&apos;s date and time are correct! If your clock is wrong Dash will not work properly.</source>
+        <translation>Aviso: Por favor verifique que a data e a hora do computador está correcta! Se o relógio estiver errado o Dash não vai funcionar correctamente.</translation>
     </message>
     <message>
         <location filename="../darkcoinstrings.cpp" line="152"/>
@@ -4335,13 +4335,13 @@ Se o ficheiro não existir, deve criá-lo só com permissões de leitura para o 
     </message>
     <message>
         <location filename="../darkcoinstrings.cpp" line="200"/>
-        <source>Darkcoin Core Daemon</source>
-        <translation>Serviço Darkcoin Core</translation>
+        <source>Dash Core Daemon</source>
+        <translation>Serviço Dash Core</translation>
     </message>
     <message>
         <location filename="../darkcoinstrings.cpp" line="201"/>
-        <source>Darkcoin Core RPC client version</source>
-        <translation>Versão do cliente RPC Darkcoin Core</translation>
+        <source>Dash Core RPC client version</source>
+        <translation>Versão do cliente RPC Dash Core</translation>
     </message>
     <message>
         <location filename="../darkcoinstrings.cpp" line="202"/>
@@ -4430,8 +4430,8 @@ Se o ficheiro não existir, deve criá-lo só com permissões de leitura para o 
     </message>
     <message>
         <location filename="../darkcoinstrings.cpp" line="219"/>
-        <source>Error loading wallet.dat: Wallet requires newer version of Darkcoin</source>
-        <translation>Erro ao carregar wallet.dat: A carteira necessita de uma versão Darkcoin mais recente</translation>
+        <source>Error loading wallet.dat: Wallet requires newer version of Dash</source>
+        <translation>Erro ao carregar wallet.dat: A carteira necessita de uma versão Dash mais recente</translation>
     </message>
     <message>
         <location filename="../darkcoinstrings.cpp" line="220"/>
@@ -4600,8 +4600,8 @@ Se o ficheiro não existir, deve criá-lo só com permissões de leitura para o 
     </message>
     <message>
         <location filename="../darkcoinstrings.cpp" line="253"/>
-        <source>Initialization sanity check failed. Darkcoin Core is shutting down.</source>
-        <translation>A verificação de consistência no arranque falhou. O Darkcoin Core está a encerrar.</translation>
+        <source>Initialization sanity check failed. Dash Core is shutting down.</source>
+        <translation>A verificação de consistência no arranque falhou. O Dash Core está a encerrar.</translation>
     </message>
     <message>
         <location filename="../darkcoinstrings.cpp" line="254"/>
@@ -4866,7 +4866,7 @@ Se o ficheiro não existir, deve criá-lo só com permissões de leitura para o 
     <message>
         <location filename="../darkcoinstrings.cpp" line="306"/>
         <source>RPC SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
-        <translation>Opções RPC SSL: (para instruções de configuração SSL dirija-se à Darkcoin Wiki)</translation>
+        <translation>Opções RPC SSL: (para instruções de configuração SSL dirija-se à Dash Wiki)</translation>
     </message>
     <message>
         <location filename="../darkcoinstrings.cpp" line="307"/>
@@ -4916,7 +4916,7 @@ Se o ficheiro não existir, deve criá-lo só com permissões de leitura para o 
     <message>
         <location filename="../darkcoinstrings.cpp" line="316"/>
         <source>SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
-        <translation>Opções SSL: (ver o Wiki Darkcoin para obter instruções de configuração SSL)</translation>
+        <translation>Opções SSL: (ver o Wiki Dash para obter instruções de configuração SSL)</translation>
     </message>
     <message>
         <location filename="../darkcoinstrings.cpp" line="317"/>
@@ -4925,8 +4925,8 @@ Se o ficheiro não existir, deve criá-lo só com permissões de leitura para o 
     </message>
     <message>
         <location filename="../darkcoinstrings.cpp" line="318"/>
-        <source>Send command to Darkcoin Core</source>
-        <translation>Enviar comando para o Darkcoin Core</translation>
+        <source>Send command to Dash Core</source>
+        <translation>Enviar comando para o Dash Core</translation>
     </message>
     <message>
         <location filename="../darkcoinstrings.cpp" line="319"/>
@@ -5065,8 +5065,8 @@ Se o ficheiro não existir, deve criá-lo só com permissões de leitura para o 
     </message>
     <message>
         <location filename="../darkcoinstrings.cpp" line="346"/>
-        <source>Start Darkcoin Core Daemon</source>
-        <translation>Iniciar o Serviço Darkcoin Core</translation>
+        <source>Start Dash Core Daemon</source>
+        <translation>Iniciar o Serviço Dash Core</translation>
     </message>
     <message>
         <location filename="../darkcoinstrings.cpp" line="347"/>
@@ -5235,8 +5235,8 @@ Se o ficheiro não existir, deve criá-lo só com permissões de leitura para o 
     </message>
     <message>
         <location filename="../darkcoinstrings.cpp" line="380"/>
-        <source>Wallet needed to be rewritten: restart Darkcoin to complete</source>
-        <translation>A carteira necessita ser rescrita: reinicie o Darkcoin para concluir</translation>
+        <source>Wallet needed to be rewritten: restart Dash to complete</source>
+        <translation>A carteira necessita ser rescrita: reinicie o Dash para concluir</translation>
     </message>
     <message>
         <location filename="../darkcoinstrings.cpp" line="381"/>

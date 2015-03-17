@@ -52,7 +52,7 @@ src/qt/test/moc*.cpp
 *.qm
 Makefile
 darkcoin-qt
-Darkcoin-Qt.app
+Dash-Qt.app
 
 # Unit-tests
 Makefile.test

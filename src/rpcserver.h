@@ -63,7 +63,7 @@ public:
 };
 
 /**
- * Darkcoin RPC command dispatcher.
+ * Dash RPC command dispatcher.
  */
 class CRPCTable
 {

@@ -7,7 +7,7 @@
 #  spendfrom.py  # Lists available funds
 #  spendfrom.py --from=ADDRESS --to=ADDRESS --amount=11.00
 #
-# Assumes it will talk to a darkcoind or Darkcoin-Qt running
+# Assumes it will talk to a darkcoind or Dash-Qt running
 # on localhost.
 #
 # Depends on jsonrpc
@@ -35,9 +35,9 @@ def check_json_precision():
 def determine_db_dir():
     """Return the default location of the darkcoin data directory"""
     if platform.system() == "Darwin":
-        return os.path.expanduser("~/Library/Application Support/Darkcoin/")
+        return os.path.expanduser("~/Library/Application Support/Dash/")
     elif platform.system() == "Windows":
-        return os.path.join(os.environ['APPDATA'], "Darkcoin")
+        return os.path.join(os.environ['APPDATA'], "Dash")
     return os.path.expanduser("~/.darkcoin")
 
 def read_bitcoin_config(dbdir):

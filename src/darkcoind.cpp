@@ -1,6 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2014 The Bitcoin developers
-// Copyright (c) 2014-2015 The Darkcoin developers
+// Copyright (c) 2014-2015 The Dash developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -22,8 +22,8 @@
  *
  * \section intro_sec Introduction
  *
- * This is the developer documentation of the reference client for an experimental new digital currency called Darkcoin (http://www.darkcoin.io/),
- * which enables instant payments to anyone, anywhere in the world. Darkcoin uses peer-to-peer technology to operate
+ * This is the developer documentation of the reference client for an experimental new digital currency called Dash (http://www.dashcurrency.com/),
+ * which enables instant payments to anyone, anywhere in the world. Dash uses peer-to-peer technology to operate
  * with no central authority: managing transactions and issuing money are carried out collectively by the network.
  *
  * The software is a community-driven open source project, released under the MIT license.
@@ -96,11 +96,11 @@ bool AppInit(int argc, char* argv[])
         if (mapArgs.count("-?") || mapArgs.count("--help"))
         {
             // First part of help message is specific to darkcoind / RPC client
-            std::string strUsage = _("Darkcoin Core Daemon") + " " + _("version") + " " + FormatFullVersion() + "\n\n" +
+            std::string strUsage = _("Dash Core Daemon") + " " + _("version") + " " + FormatFullVersion() + "\n\n" +
                 _("Usage:") + "\n" +
-                  "  darkcoind [options]                     " + _("Start Darkcoin Core Daemon") + "\n" +
+                  "  darkcoind [options]                     " + _("Start Dash Core Daemon") + "\n" +
                 _("Usage (deprecated, use darkcoin-cli):") + "\n" +
-                  "  darkcoind [options] <command> [params]  " + _("Send command to Darkcoin Core") + "\n" +
+                  "  darkcoind [options] <command> [params]  " + _("Send command to Dash Core") + "\n" +
                   "  darkcoind [options] help                " + _("List commands") + "\n" +
                   "  darkcoind [options] help <command>      " + _("Get help for a command") + "\n";
 
@@ -126,7 +126,7 @@ bool AppInit(int argc, char* argv[])
         fDaemon = GetBoolArg("-daemon", false);
         if (fDaemon)
         {
-            fprintf(stdout, "Darkcoin server starting\n");
+            fprintf(stdout, "Dash server starting\n");
 
             // Daemonize
             pid_t pid = fork();

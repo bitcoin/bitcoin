@@ -1,7 +1,7 @@
 0.11.1 Release notes
 ====================
 
-Darkcoin Core 0.11.1 supports a full implementation of InstantX, Darksend improvements
+Dash Core 0.11.1 supports a full implementation of InstantX, Darksend improvements
 and a new version of enforcement compatible with the newer Bitcoin architechure.
 
 - Fully implemented IX
