@@ -133,6 +133,7 @@ contains(USE_LEVELDB, 1) {
     SOURCES += src/txdb-bdb.cpp
 }
 
+# use: qmake "USE_ASM=1"
 contains(USE_ASM, 1) {
     message(Using optimized scrypt core implementation)
     SOURCES += src/scrypt-arm.S src/scrypt-x86.S src/scrypt-x86_64.S
@@ -141,6 +142,14 @@ contains(USE_ASM, 1) {
     SOURCES += src/scrypt-generic.c
 }
 
+# use: qmake "USE_SSE2=1"
+contains(USE_SSE2, 1) {
+    message(Using SSE2 scrypt core implementation)
+    SOURCES += src/scrypt-sse2.cpp
+    DEFINES += USE_SSE2
+    QMAKE_CXXFLAGS += -msse2
+    QMAKE_CFLAGS += -msse2
+}
 # regenerate src/build.h
 !windows|contains(USE_BUILD_INFO, 1) {
     genbuild.depends = FORCE
