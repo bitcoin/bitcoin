@@ -404,8 +404,8 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
 
     // pay to the oldest MN that still had no payment but its input is old enough and it was active long enough
     CMasternode *pmn = mnodeman.FindOldestNotInVec(vecLastPayments);
-
-    if(pmn != NULL)
+    if(pmn != NULL &&
+    (RegTest() || (!RegTest() && pmn->GetMasternodeInputAge() > nMinimumAge && pmn->lastTimeSeen - pmn->sigTime > nMinimumAge * 2.5 * 60)))
     {
         newWinner.score = 0;
         newWinner.nBlockHeight = nBlockHeight;
