@@ -605,7 +605,6 @@ QDialog#AboutDialog QLabel#label_2 { /* Margin for About Darkcoin text */
 margin-right:10px;
 }
 
-
 /* OVERVIEW SCREEN */
 
 QWidget .QFrame#frame { /* Wallet Balance */
@@ -686,10 +685,14 @@ margin-left:16px;
 
 QWidget .QFrame#frameDarksend { /* Darksend Widget */
 background-color:transparent;
+qproperty-minimumSize: 451px 318px;
+}
+
+QWidget .QFrame#frameDarksend QWidget {
+qproperty-geometry: rect(10 0 431 22);
 }
 
 QWidget .QFrame#frameDarksend .QLabel#label_2 { /* Darksend Header */
-qproperty-geometry: rect(10 9 431 135);
 qproperty-alignment: 'AlignVCenter | AlignRight';
 min-width:230px;
 color:#3398cc;
@@ -702,7 +705,7 @@ min-height:22px;
 
 
 QWidget .QFrame#frameDarksend #formLayoutWidget {
-qproperty-geometry: rect(10 55 451 175);
+qproperty-geometry: rect(10 38 451 175);
 }
 
 QWidget .QFrame#frameDarksend #formLayoutWidget > .QLabel {
@@ -784,13 +787,16 @@ QWidget .QFrame#frameDarksend #formLayoutWidget .QLabel#labelSubmittedDenom { /*
 
 QWidget .QFrame#frameDarksend .QLabel#darksendStatus { /* Darksend Status Notifications */
 qproperty-alignment: 'AlignVCenter | AlignCenter';
-qproperty-geometry: rect(70 233 395 45);
+qproperty-geometry: rect(70 213 395 34);
 font-size:11px;
 color:#818181;
 }
 
 
 /* DARKSEND BUTTONS */
+
+
+
 
 QWidget .QFrame#frameDarksend .QPushButton { /* Darksend Buttons - General Attributes */
 border:0px solid #ffffff;
@@ -802,11 +808,11 @@ outline:none;
 }
 
 QWidget .QFrame#frameDarksend .QPushButton#runAutoDenom { /* No idea why this button is in the .UI file... */
-qproperty-geometry: rect(391 -25 1 1);
+qproperty-geometry: rect(0 0 0 0);
 }
 
 QWidget .QFrame#frameDarksend .QPushButton#toggleDarksend { /* Start Darksend Mixing */
-qproperty-geometry: rect(120 282 295 35);
+qproperty-geometry: rect(120 255 295 35);
 border:1px solid #ffffff;
 font-size:16px;
 font-weight:bold;
@@ -818,7 +824,7 @@ padding-bottom:6px;
 }
 
 QWidget .QFrame#frameDarksend .QPushButton#darksendAuto { /* Try Mix Button */
-qproperty-geometry: rect(150 328 118 20);
+qproperty-geometry: rect(150 301 118 20);
 background-color:#F8F6F6;
 border:0px;
 border-right:1px solid #c1c1c1;
@@ -834,7 +840,7 @@ background-color:#f2f0f0;
 
 
 QWidget .QFrame#frameDarksend .QPushButton#darksendReset { /* Reset Button */
-qproperty-geometry: rect(268 328 117 20);
+qproperty-geometry: rect(268 301 117 20);
 background-color:#F8F6F6;
 border:0px;
 border-radius: 0px;
