@@ -285,7 +285,6 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
         }
 
         // relay to all peers that an entry was added to the pool successfully.
-        RelayStatus(sessionID, GetState(), GetEntriesCount(), MASTERNODE_ACCEPTED);
         Check();
 
     } else if (strCommand == "dsi") { //Darksend vIn
@@ -642,12 +641,7 @@ void CDarksendPool::SetNull(bool clearEverything){
 
     if(clearEverything){
         myEntries.clear();
-
-        if(fMasterNode){
-            sessionID = 1 + (rand() % 999999);
-        } else {
-            sessionID = 0;
-        }
+        sessionID = 0;
     }
 
     // -- seed random number generator (used for ordering output lists)
@@ -765,7 +759,7 @@ void CDarksendPool::CheckFinalTransaction()
             // See if the transaction is valid
             if (!txNew.AcceptToMemoryPool(false))
             {
-                if(nCountAttempts > 10) {
+                if(nCountAttempts > 60) {
                     LogPrintf("CDarksendPool::Check() - CommitTransaction : Error: Transaction not valid\n");
                     SetNull();
                     pwalletMain->Lock();
@@ -773,9 +767,8 @@ void CDarksendPool::CheckFinalTransaction()
 
                 // not much we can do in this case]
                 UpdateState(POOL_STATUS_ACCEPTING_ENTRIES);
-                if(nCountAttempts > 5) RelayCompletedTransaction(sessionID, true, "Transaction not valid, please try again");
-
-                if(!fSubmitAnonymousFailed && nCountAttempts > 5)
+                
+                if(!fSubmitAnonymousFailed && nCountAttempts > 30)
                     fSubmitAnonymousFailed = true;
                 return;
             }
@@ -1418,7 +1411,7 @@ bool CDarksendPool::StatusUpdate(int newState, int newEntriesCount, int newAccep
             lastMessage = error;
         }
 
-        if(newAccepted == 1) {
+        if(newAccepted == 1 && newSessionID != 0) {
             sessionID = newSessionID;
             LogPrintf("CDarksendPool::StatusUpdate - set sessionID to %d\n", sessionID);
             sessionFoundMasternode = true;
@@ -1476,8 +1469,8 @@ bool CDarksendPool::SignFinalTransaction(CTransaction& finalTransactionNew, CNod
 
             if(mine >= 0){ //might have to do this one input at a time?
                 //already signed
-                if(finalTransaction.vin[mine].scriptSig != CScript()) continue;
-                if(sigs.size() > 7) break; //send 7 each signing
+                CScript scriptOld = finalTransaction.vin[mine].scriptSig;
+                if(!fSubmitAnonymousFailed && sigs.size() > 7) break; //send 7 each signing
 
                 int foundOutputs = 0;
                 int64_t nValue1 = 0;
@@ -1509,6 +1502,8 @@ bool CDarksendPool::SignFinalTransaction(CTransaction& finalTransactionNew, CNod
                     if(fDebug) LogPrintf("CDarksendPool::Sign - Unable to sign my own transaction! \n");
                     // not sure what to do here, it will timeout...?
                 }
+
+                if(scriptOld != CScript() && finalTransaction.vin[mine].scriptSig == scriptOld) continue;
 
                 sigs.push_back(finalTransaction.vin[mine]);
                 if(fDebug) LogPrintf(" -- dss %d %d %s\n", mine, (int)sigs.size(), finalTransaction.vin[mine].scriptSig.ToString().c_str());
@@ -2127,6 +2122,7 @@ bool CDarksendPool::IsCompatibleWithSession(int64_t nDenom, CTransaction txColla
     if(sessionUsers < 0) sessionUsers = 0;
 
     if(sessionUsers == 0) {
+        sessionID = 1 + (rand() % 999999);
         sessionDenom = nDenom;
         sessionUsers++;
         lastTimeChanged = GetTimeMillis();
@@ -2554,6 +2550,7 @@ bool CDSAnonTx::AddOutput(const CTxOut out){
 
     vout.push_back(out);
     std::random_shuffle ( vout.begin(), vout.end(), randomizeList);
+    ClearSigs();
 
     return true;
 }
@@ -2570,6 +2567,16 @@ bool CDSAnonTx::AddInput(const CTxIn in){
 
     vin.push_back(in);
     std::random_shuffle ( vin.begin(), vin.end(), randomizeList);
+    ClearSigs();
+
+    return true;
+}
+
+bool CDSAnonTx::ClearSigs(){
+    LOCK(cs_darksend);
+
+    BOOST_FOREACH(CTxDSIn& in, vin)
+        in.scriptSig = CScript();
 
     return true;
 }
