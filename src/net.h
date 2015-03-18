@@ -6,6 +6,7 @@
 #ifndef BITCOIN_NET_H
 #define BITCOIN_NET_H
 
+#include "addrman.h"
 #include "bloom.h"
 #include "compat.h"
 #include "hash.h"
@@ -44,8 +45,6 @@ static const int PING_INTERVAL = 2 * 60;
 static const int TIMEOUT_INTERVAL = 20 * 60;
 /** The maximum number of entries in an 'inv' protocol message */
 static const unsigned int MAX_INV_SZ = 50000;
-/** The maximum number of new addresses to accumulate before announcing. */
-static const unsigned int MAX_ADDR_TO_SEND = 1000;
 /** Maximum length of incoming protocol messages (no message over 2 MiB is currently acceptable). */
 static const unsigned int MAX_PROTOCOL_MESSAGE_LENGTH = 2 * 1024 * 1024;
 /** -listen default */
@@ -389,7 +388,7 @@ public:
         // SendMessages will filter it again for knowns that were added
         // after addresses were pushed.
         if (addr.IsValid() && !setAddrKnown.count(addr)) {
-            if (vAddrToSend.size() >= MAX_ADDR_TO_SEND) {
+            if (vAddrToSend.size() >= ADDRMAN_GETADDR_MAX) {
                 vAddrToSend[insecure_rand() % vAddrToSend.size()] = addr;
             } else {
                 vAddrToSend.push_back(addr);

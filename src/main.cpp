@@ -3654,7 +3654,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         // Don't want addr from older versions unless seeding
         if (pfrom->nVersion < CADDR_TIME_VERSION && addrman.size() > 1000)
             return true;
-        if (vAddr.size() > 1000)
+        if (vAddr.size() > ADDRMAN_GETADDR_MAX)
         {
             Misbehaving(pfrom->GetId(), 20);
             return error("message addr size() = %u", vAddr.size());
@@ -3706,7 +3706,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                 vAddrOk.push_back(addr);
         }
         addrman.Add(vAddrOk, pfrom->addr, 2 * 60 * 60);
-        if (vAddr.size() < 1000)
+        if (vAddr.size() < ADDRMAN_GETADDR_MAX)
             pfrom->fGetAddr = false;
         if (pfrom->fOneShot)
             pfrom->fDisconnect = true;
@@ -4484,7 +4484,7 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
                 {
                     vAddr.push_back(addr);
                     // receiver rejects addr messages larger than 1000
-                    if (vAddr.size() >= 1000)
+                    if (vAddr.size() >= ADDRMAN_GETADDR_MAX)
                     {
                         pto->PushMessage("addr", vAddr);
                         vAddr.clear();
