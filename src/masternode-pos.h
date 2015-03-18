@@ -25,12 +25,12 @@ class CMasternodeScanningError;
 extern map<uint256, CMasternodeScanningError> mapMasternodeScanningErrors;
 extern CMasternodeScanning mnscan;
 
-static const int MIN_MASTERNODE_POS_PROTO_VERSION = 70066;
+static const int MIN_MASTERNODE_POS_PROTO_VERSION = 70072;
 
 /*
 	1% of the network is scanned every 2.5 minutes, making a full
-	round of scanning take about 4.16 hours. We're targeting about 
-	a day of proof-of-service errors for complete removal from the 
+	round of scanning take about 4.16 hours. We're targeting about
+	a day of proof-of-service errors for complete removal from the
 	masternode system.
 */
 static const int MASTERNODE_SCANNING_ERROR_THESHOLD = 6;
