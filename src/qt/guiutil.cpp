@@ -776,7 +776,7 @@ QString loadStyleSheet()
     }
     else {
         cssName = QString(":/css/drkblue");  
-        settings.setValue("theme", ":/css/drkblue");
+        settings.setValue("theme", "drkblue");
     }
     
     QFile qFile(cssName);      

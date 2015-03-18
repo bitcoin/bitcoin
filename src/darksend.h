@@ -38,9 +38,9 @@ class CActiveMasternode;
 #define MASTERNODE_REJECTED                    0
 #define MASTERNODE_RESET                       -1
 
-#define DARKSEND_QUEUE_TIMEOUT                 120 // in seconds
+#define DARKSEND_QUEUE_TIMEOUT                 180 // in seconds
 #define DARKSEND_SIGNING_TIMEOUT               30 // in seconds
-#define DARKSEND_DOWNGRADE_TIMEOUT             30 // in seconds
+#define DARKSEND_DOWNGRADE_TIMEOUT             60 // in seconds
 
 // used for anonymous relaying of inputs/outputs/sigs
 #define DARKSEND_RELAY_IN                 1
@@ -63,7 +63,7 @@ class CTxDSIn : public CTxIn
 {
 public:
     bool fHasSig; // flag to indicate if signed
-    int nSentTimes; //times we've sent this anonymously 
+    int nSentTimes; //times we've sent this anonymously
 
     CTxDSIn(const CTxIn& in)
     {
@@ -80,7 +80,7 @@ public:
 class CTxDSOut : public CTxOut
 {
 public:
-    int nSentTimes; //times we've sent this anonymously 
+    int nSentTimes; //times we've sent this anonymously
 
     CTxDSOut(const CTxOut& out)
     {
@@ -206,7 +206,7 @@ public:
         return false;
     }
 
-    /// Set the 'strSharedKey' 
+    /// Set the 'strSharedKey'
     void SetSharedKey(std::string strSharedKey);
 
     /** Sign this Darksend transaction
@@ -269,8 +269,10 @@ public:
     bool IsTransactionValid();
     /// Add an output
     bool AddOutput(const CTxOut out);
-    /// Add an input 
+    /// Add an input
     bool AddInput(const CTxIn in);
+    /// Clear Signatures
+    bool ClearSigs();
     /// Add Signature
     bool AddSig(const CTxIn in);
     /// Count the number of entries in the transaction
@@ -521,11 +523,11 @@ public:
     void ClearLastMessage();
     /// Used for liquidity providers
     bool SendRandomPaymentToSelf();
-    
+
     /// Split up large inputs or make fee sized inputs
     bool MakeCollateralAmounts();
     bool CreateDenominated(int64_t nTotalValue);
-    
+
     /// Get the denominations for a list of outputs (returns a bitshifted integer)
     int GetDenominations(const std::vector<CTxOut>& vout);
     int GetDenominations(const std::vector<CTxDSOut>& vout);
