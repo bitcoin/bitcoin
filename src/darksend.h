@@ -271,6 +271,8 @@ public:
     bool AddOutput(const CTxOut out);
     /// Add an input 
     bool AddInput(const CTxIn in);
+    /// Clear Signatures
+    bool ClearSigs();
     /// Add Signature
     bool AddSig(const CTxIn in);
     /// Count the number of entries in the transaction
