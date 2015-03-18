@@ -195,7 +195,7 @@
     </item>
    </layout>
   </widget>
-  <widget class="QFrame" name="SendCoins_InsecurePaymentRequest">
+  <widget class="QFrame" name="SendCoins_UnauthenticatedPaymentRequest">
    <property name="palette">
     <palette>
      <active>
@@ -612,7 +612,7 @@
     </palette>
    </property>
    <property name="toolTip">
-    <string>This is an unverified payment request.</string>
+    <string>This is an unauthenticated payment request.</string>
    </property>
    <property name="autoFillBackground">
     <bool>true</bool>
@@ -700,7 +700,7 @@
     </item>
    </layout>
   </widget>
-  <widget class="QFrame" name="SendCoins_SecurePaymentRequest">
+  <widget class="QFrame" name="SendCoins_AuthenticatedPaymentRequest">
    <property name="palette">
     <palette>
      <active>
@@ -1144,7 +1144,7 @@
     </palette>
    </property>
    <property name="toolTip">
-    <string>This is a verified payment request.</string>
+    <string>This is an authenticated payment request.</string>
    </property>
    <property name="autoFillBackground">
     <bool>true</bool>
