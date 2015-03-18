@@ -607,11 +607,6 @@ margin-right:10px;
 
 /* OVERVIEW SCREEN */
 
-* {
-margin:0;
-padding:0;
-}
-
 QWidget .QFrame#frame { /* Wallet Balance */
 
 }
