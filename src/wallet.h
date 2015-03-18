@@ -740,6 +740,9 @@ public:
     //! get the current wallet format (the oldest client version guaranteed to understand this wallet)
     int GetVersion() { LOCK(cs_wallet); return nWalletVersion; }
 
+    //! dump wallet to a stream
+    bool DumpToStream(std::ostream& stream);
+    
     //! Get wallet transactions that conflict with given transaction (spend same outputs)
     std::set<uint256> GetConflicts(const uint256& txid) const;
 

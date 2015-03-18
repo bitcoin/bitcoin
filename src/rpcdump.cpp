@@ -26,10 +26,6 @@ using namespace std;
 
 void EnsureWalletIsUnlocked();
 
-std::string static EncodeDumpTime(int64_t nTime) {
-    return DateTimeStrFormat("%Y-%m-%dT%H:%M:%SZ", nTime);
-}
-
 int64_t static DecodeDumpTime(const std::string &str) {
     static const boost::posix_time::ptime epoch = boost::posix_time::from_time_t(0);
     static const std::locale loc(std::locale::classic(),
@@ -41,18 +37,6 @@ int64_t static DecodeDumpTime(const std::string &str) {
     if (ptime.is_not_a_date_time())
         return 0;
     return (ptime - epoch).total_seconds();
-}
-
-std::string static EncodeDumpString(const std::string &str) {
-    std::stringstream ret;
-    BOOST_FOREACH(unsigned char c, str) {
-        if (c <= 32 || c >= 128 || c == '%') {
-            ret << '%' << HexStr(&c, &c + 1);
-        } else {
-            ret << c;
-        }
-    }
-    return ret.str();
 }
 
 std::string DecodeDumpString(const std::string &str) {
@@ -368,42 +352,8 @@ Value dumpwallet(const Array& params, bool fHelp)
     if (!file.is_open())
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot open wallet dump file");
 
-    std::map<CKeyID, int64_t> mapKeyBirth;
-    std::set<CKeyID> setKeyPool;
-    pwalletMain->GetKeyBirthTimes(mapKeyBirth);
-    pwalletMain->GetAllReserveKeys(setKeyPool);
-
-    // sort time/key pairs
-    std::vector<std::pair<int64_t, CKeyID> > vKeyBirth;
-    for (std::map<CKeyID, int64_t>::const_iterator it = mapKeyBirth.begin(); it != mapKeyBirth.end(); it++) {
-        vKeyBirth.push_back(std::make_pair(it->second, it->first));
-    }
-    mapKeyBirth.clear();
-    std::sort(vKeyBirth.begin(), vKeyBirth.end());
-
-    // produce output
-    file << strprintf("# Wallet dump created by Bitcoin %s (%s)\n", CLIENT_BUILD, CLIENT_DATE);
-    file << strprintf("# * Created on %s\n", EncodeDumpTime(GetTime()));
-    file << strprintf("# * Best block at time of backup was %i (%s),\n", chainActive.Height(), chainActive.Tip()->GetBlockHash().ToString());
-    file << strprintf("#   mined on %s\n", EncodeDumpTime(chainActive.Tip()->GetBlockTime()));
-    file << "\n";
-    for (std::vector<std::pair<int64_t, CKeyID> >::const_iterator it = vKeyBirth.begin(); it != vKeyBirth.end(); it++) {
-        const CKeyID &keyid = it->second;
-        std::string strTime = EncodeDumpTime(it->first);
-        std::string strAddr = CBitcoinAddress(keyid).ToString();
-        CKey key;
-        if (pwalletMain->GetKey(keyid, key)) {
-            if (pwalletMain->mapAddressBook.count(keyid)) {
-                file << strprintf("%s %s label=%s # addr=%s\n", CBitcoinSecret(key).ToString(), strTime, EncodeDumpString(pwalletMain->mapAddressBook[keyid].name), strAddr);
-            } else if (setKeyPool.count(keyid)) {
-                file << strprintf("%s %s reserve=1 # addr=%s\n", CBitcoinSecret(key).ToString(), strTime, strAddr);
-            } else {
-                file << strprintf("%s %s change=1 # addr=%s\n", CBitcoinSecret(key).ToString(), strTime, strAddr);
-            }
-        }
-    }
-    file << "\n";
-    file << "# End of dump\n";
+    pwalletMain->DumpToStream(file);
+    
     file.close();
     return Value::null;
 }
