@@ -110,6 +110,18 @@ TransactionView::TransactionView(QWidget *parent) :
     amountWidget->setValidator(new QDoubleValidator(0, 1e20, 8, this));
     hlayout->addWidget(amountWidget);
 
+    balanceWidget = new QLineEdit(this);
+#if QT_VERSION >= 0x040700
+    balanceWidget->setPlaceholderText(tr("Min amount"));
+#endif
+#ifdef Q_OS_MAC
+    balanceWidget->setFixedWidth(97);
+#else
+    balanceWidget->setFixedWidth(100);
+#endif
+    balanceWidget->setValidator(new QDoubleValidator(0, 1e20, 8, this));
+    hlayout->addWidget(balanceWidget);
+
     QVBoxLayout *vlayout = new QVBoxLayout(this);
     vlayout->setContentsMargins(0,0,0,0);
     vlayout->setSpacing(0);
@@ -139,6 +151,7 @@ TransactionView::TransactionView(QWidget *parent) :
     QAction *copyAddressAction = new QAction(tr("Copy address"), this);
     QAction *copyLabelAction = new QAction(tr("Copy label"), this);
     QAction *copyAmountAction = new QAction(tr("Copy amount"), this);
+    QAction *copyBalanceAction = new QAction(tr("Copy balance"), this);
     QAction *copyTxIDAction = new QAction(tr("Copy transaction ID"), this);
     QAction *editLabelAction = new QAction(tr("Edit label"), this);
     QAction *showDetailsAction = new QAction(tr("Show transaction details"), this);
@@ -147,6 +160,7 @@ TransactionView::TransactionView(QWidget *parent) :
     contextMenu->addAction(copyAddressAction);
     contextMenu->addAction(copyLabelAction);
     contextMenu->addAction(copyAmountAction);
+    contextMenu->addAction(copyBalanceAction);
     contextMenu->addAction(copyTxIDAction);
     contextMenu->addAction(editLabelAction);
     contextMenu->addAction(showDetailsAction);
@@ -161,6 +175,7 @@ TransactionView::TransactionView(QWidget *parent) :
     connect(watchOnlyWidget, SIGNAL(activated(int)), this, SLOT(chooseWatchonly(int)));
     connect(addressWidget, SIGNAL(textChanged(QString)), this, SLOT(changedPrefix(QString)));
     connect(amountWidget, SIGNAL(textChanged(QString)), this, SLOT(changedAmount(QString)));
+    connect(balanceWidget, SIGNAL(textChanged(QString)), this, SLOT(changedBalance(QString)));
 
     connect(view, SIGNAL(doubleClicked(QModelIndex)), this, SIGNAL(doubleClicked(QModelIndex)));
     connect(view, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(contextualMenu(QPoint)));
@@ -168,6 +183,7 @@ TransactionView::TransactionView(QWidget *parent) :
     connect(copyAddressAction, SIGNAL(triggered()), this, SLOT(copyAddress()));
     connect(copyLabelAction, SIGNAL(triggered()), this, SLOT(copyLabel()));
     connect(copyAmountAction, SIGNAL(triggered()), this, SLOT(copyAmount()));
+    connect(copyBalanceAction, SIGNAL(triggered()), this, SLOT(copyBalance()));
     connect(copyTxIDAction, SIGNAL(triggered()), this, SLOT(copyTxID()));
     connect(editLabelAction, SIGNAL(triggered()), this, SLOT(editLabel()));
     connect(showDetailsAction, SIGNAL(triggered()), this, SLOT(showDetails()));
@@ -200,8 +216,9 @@ void TransactionView::setModel(WalletModel *model)
         transactionView->setColumnWidth(TransactionTableModel::Date, DATE_COLUMN_WIDTH);
         transactionView->setColumnWidth(TransactionTableModel::Type, TYPE_COLUMN_WIDTH);
         transactionView->setColumnWidth(TransactionTableModel::Amount, AMOUNT_MINIMUM_COLUMN_WIDTH);
+        transactionView->setColumnWidth(TransactionTableModel::Balance, BALANCE_MINIMUM_COLUMN_WIDTH);
 
-        columnResizingFixer = new GUIUtil::TableViewLastColumnResizingFixer(transactionView, AMOUNT_MINIMUM_COLUMN_WIDTH, MINIMUM_COLUMN_WIDTH);
+        columnResizingFixer = new GUIUtil::TableViewLastColumnResizingFixer(transactionView, TransactionTableModel::ToAddress, MINIMUM_COLUMN_WIDTH);
 
         if (model->getOptionsModel())
         {
@@ -316,6 +333,21 @@ void TransactionView::changedAmount(const QString &amount)
     }
 }
 
+void TransactionView::changedBalance(const QString &balance)
+{
+    if(!transactionProxyModel)
+        return;
+    CAmount balance_parsed = 0;
+    if(BitcoinUnits::parse(model->getOptionsModel()->getDisplayUnit(), balance, &balance_parsed))
+    {
+        transactionProxyModel->setMinBalance(balance_parsed);
+    }
+    else
+    {
+        transactionProxyModel->setMinBalance(0);
+    }
+}
+
 void TransactionView::exportClicked()
 {
     // CSV is currently the only supported format
@@ -338,6 +370,7 @@ void TransactionView::exportClicked()
     writer.addColumn(tr("Label"), 0, TransactionTableModel::LabelRole);
     writer.addColumn(tr("Address"), 0, TransactionTableModel::AddressRole);
     writer.addColumn(BitcoinUnits::getAmountColumnTitle(model->getOptionsModel()->getDisplayUnit()), 0, TransactionTableModel::FormattedAmountRole);
+    writer.addColumn(BitcoinUnits::getBalanceColumnTitle(model->getOptionsModel()->getDisplayUnit()), 0, TransactionTableModel::FormattedBalanceRole);
     writer.addColumn(tr("ID"), 0, TransactionTableModel::TxIDRole);
 
     if(!writer.write()) {
@@ -372,6 +405,11 @@ void TransactionView::copyLabel()
 void TransactionView::copyAmount()
 {
     GUIUtil::copyEntryData(transactionView, 0, TransactionTableModel::FormattedAmountRole);
+}
+
+void TransactionView::copyBalance()
+{
+    GUIUtil::copyEntryData(transactionView, 0, TransactionTableModel::FormattedBalanceRole);
 }
 
 void TransactionView::copyTxID()
@@ -506,7 +544,7 @@ void TransactionView::focusTransaction(const QModelIndex &idx)
 void TransactionView::resizeEvent(QResizeEvent* event)
 {
     QWidget::resizeEvent(event);
-    columnResizingFixer->stretchColumnWidth(TransactionTableModel::ToAddress);
+    columnResizingFixer->resized();
 }
 
 // Need to override default Ctrl+C action for amount as default behaviour is just to copy DisplayRole text
@@ -518,10 +556,18 @@ bool TransactionView::eventFilter(QObject *obj, QEvent *event)
         if (ke->key() == Qt::Key_C && ke->modifiers().testFlag(Qt::ControlModifier))
         {
             QModelIndex i = this->transactionView->currentIndex();
-            if (i.isValid() && i.column() == TransactionTableModel::Amount)
+            if (i.isValid())
             {
-                 GUIUtil::setClipboard(i.data(TransactionTableModel::FormattedAmountRole).toString());
-                 return true;
+                if (i.column() == TransactionTableModel::Amount)
+                {
+                    GUIUtil::setClipboard(i.data(TransactionTableModel::FormattedAmountRole).toString());
+                    return true;
+                }
+                if (i.column() == TransactionTableModel::Balance)
+                {
+                    GUIUtil::setClipboard(i.data(TransactionTableModel::FormattedBalanceRole).toString());
+                    return true;
+                }
             }
         }
     }

@@ -27,12 +27,13 @@
 
 // Amount column is right-aligned it contains numbers
 static int column_alignments[] = {
-        Qt::AlignLeft|Qt::AlignVCenter, /* status */
-        Qt::AlignLeft|Qt::AlignVCenter, /* watchonly */
-        Qt::AlignLeft|Qt::AlignVCenter, /* date */
-        Qt::AlignLeft|Qt::AlignVCenter, /* type */
-        Qt::AlignLeft|Qt::AlignVCenter, /* address */
-        Qt::AlignRight|Qt::AlignVCenter /* amount */
+        Qt::AlignLeft|Qt::AlignVCenter,  /* status */
+        Qt::AlignLeft|Qt::AlignVCenter,  /* watchonly */
+        Qt::AlignLeft|Qt::AlignVCenter,  /* date */
+        Qt::AlignLeft|Qt::AlignVCenter,  /* type */
+        Qt::AlignLeft|Qt::AlignVCenter,  /* address */
+        Qt::AlignRight|Qt::AlignVCenter, /* amount */
+        Qt::AlignRight|Qt::AlignVCenter  /* balance */
     };
 
 // Comparison operator for sort/binary search of model tx list
@@ -52,6 +53,19 @@ struct TxLessThan
     }
 };
 
+// Comparison operator for sort/binary search of tx time list
+struct TxTimeLessThan
+{
+    bool operator()(const TransactionRecord *a, const TransactionRecord *b) const
+    {
+        return a->time < b->time;
+    }
+    bool operator()(const TransactionRecord &a, const TransactionRecord &b) const
+    {
+        return a.time < b.time;
+    }
+};
+
 // Private implementation
 class TransactionTablePriv
 {
@@ -64,12 +78,36 @@ public:
 
     CWallet *wallet;
     TransactionTableModel *parent;
-
+    
     /* Local cache of wallet.
      * As it is in the same order as the CWallet, by definition
      * this is sorted by sha256.
      */
     QList<TransactionRecord> cachedWallet;
+
+    /**
+     * Scan cached transactions in order from frist to last,
+     * updating each transaction's current running balance.
+     */
+    void updateWalletBalances()
+    {
+        int i;
+        QList<TransactionRecord*> timeSortedCachedWallet;
+        // Build a temprorary list of pointers to the cached tranasctions that we can sort.
+        // The cachedWallet's transactions are expected to stay sorted by hash.
+        for (i = 0;i < cachedWallet.size();i++)
+            timeSortedCachedWallet.append(&cachedWallet[i]);
+        // Sort the list by transaction times.
+        qSort(timeSortedCachedWallet.begin(), timeSortedCachedWallet.end(), TxTimeLessThan());
+        // Start with a zero balance and itterate the transactions in order,
+        // calculating the new balance and updating each transaction's balance property
+        // as we go.
+        CAmount balance = 0;
+        for (i = 0;i < timeSortedCachedWallet.size();i++){
+            balance += timeSortedCachedWallet[i]->credit + timeSortedCachedWallet[i]->debit;
+            timeSortedCachedWallet[i]->balance = balance;
+        }
+    }
 
     /* Query entire wallet anew from core.
      */
@@ -85,6 +123,8 @@ public:
                     cachedWallet.append(TransactionRecord::decomposeTransaction(wallet, it->second));
             }
         }
+        // Transaction balances need updated.
+        updateWalletBalances();
     }
 
     /* Update our model of the wallet incrementally, to synchronize our model of the wallet
@@ -149,6 +189,8 @@ public:
                     }
                     parent->endInsertRows();
                 }
+                // Transactions were added, we need to update all transaction's balances.
+                updateWalletBalances();
             }
             break;
         case CT_DELETED:
@@ -161,6 +203,8 @@ public:
             parent->beginRemoveRows(QModelIndex(), lowerIndex, upperIndex-1);
             cachedWallet.erase(lower, upper);
             parent->endRemoveRows();
+            // Transactions were deleted, we need to update all transaction's balances.
+            updateWalletBalances();
             break;
         case CT_UPDATED:
             // Miscellaneous updates -- nothing to do, status update will take care of this, and is only computed for
@@ -227,7 +271,7 @@ TransactionTableModel::TransactionTableModel(CWallet* wallet, WalletModel *paren
         priv(new TransactionTablePriv(wallet, this)),
         fProcessingQueuedTransactions(false)
 {
-    columns << QString() << QString() << tr("Date") << tr("Type") << tr("Address") << BitcoinUnits::getAmountColumnTitle(walletModel->getOptionsModel()->getDisplayUnit());
+    columns << QString() << QString() << tr("Date") << tr("Type") << tr("Address") << BitcoinUnits::getAmountColumnTitle(walletModel->getOptionsModel()->getDisplayUnit()) << BitcoinUnits::getBalanceColumnTitle(walletModel->getOptionsModel()->getDisplayUnit());
     priv->refreshWallet();
 
     connect(walletModel->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(updateDisplayUnit()));
@@ -246,6 +290,13 @@ void TransactionTableModel::updateAmountColumnTitle()
 {
     columns[Amount] = BitcoinUnits::getAmountColumnTitle(walletModel->getOptionsModel()->getDisplayUnit());
     emit headerDataChanged(Qt::Horizontal,Amount,Amount);
+}
+
+/** Updates the column title to "Balance (DisplayUnit)" and emits headerDataChanged() signal for table headers to react. */
+void TransactionTableModel::updateBalanceColumnTitle()
+{
+    columns[Balance] = BitcoinUnits::getBalanceColumnTitle(walletModel->getOptionsModel()->getDisplayUnit());
+    emit headerDataChanged(Qt::Horizontal,Balance,Balance);
 }
 
 void TransactionTableModel::updateTransaction(const QString &hash, int status, bool showTransaction)
@@ -441,6 +492,13 @@ QString TransactionTableModel::formatTxAmount(const TransactionRecord *wtx, bool
     return QString(str);
 }
 
+QString TransactionTableModel::formatTxBalance(const TransactionRecord *wtx, BitcoinUnits::SeparatorStyle separators) const
+{
+    if(!wtx->status.countsForBalance)
+         return " ";
+    return BitcoinUnits::format(walletModel->getOptionsModel()->getDisplayUnit(), wtx->balance, false, separators);
+}
+
 QVariant TransactionTableModel::txStatusDecoration(const TransactionRecord *wtx) const
 {
     switch(wtx->status.status)
@@ -532,6 +590,8 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
             return formatTxToAddress(rec, false);
         case Amount:
             return formatTxAmount(rec, true, BitcoinUnits::separatorAlways);
+        case Balance:
+            return formatTxBalance(rec, BitcoinUnits::separatorAlways);
         }
         break;
     case Qt::EditRole:
@@ -550,6 +610,8 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
             return formatTxToAddress(rec, true);
         case Amount:
             return qint64(rec->credit + rec->debit);
+        case Balance:
+            return qint64(rec->balance);
         }
         break;
     case Qt::ToolTipRole:
@@ -587,6 +649,8 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
         return walletModel->getAddressTableModel()->labelForAddress(QString::fromStdString(rec->address));
     case AmountRole:
         return qint64(rec->credit + rec->debit);
+    case BalanceRole:
+        return qint64(rec->balance);
     case TxIDRole:
         return rec->getTxID();
     case TxHashRole:
@@ -596,6 +660,8 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
     case FormattedAmountRole:
         // Used for copy/export, so don't include separators
         return formatTxAmount(rec, false, BitcoinUnits::separatorNever);
+    case FormattedBalanceRole:
+        return formatTxBalance(rec, BitcoinUnits::separatorNever);
     case StatusRole:
         return rec->status.status;
     }
@@ -629,6 +695,8 @@ QVariant TransactionTableModel::headerData(int section, Qt::Orientation orientat
                 return tr("Destination address of transaction.");
             case Amount:
                 return tr("Amount removed from or added to balance.");
+            case Balance:
+                return tr("Current balance at this transaction.");
             }
         }
     }
@@ -650,7 +718,9 @@ void TransactionTableModel::updateDisplayUnit()
 {
     // emit dataChanged to update Amount column with the current unit
     updateAmountColumnTitle();
+    updateBalanceColumnTitle();
     emit dataChanged(index(0, Amount), index(priv->size()-1, Amount));
+    emit dataChanged(index(0, Balance), index(priv->size()-1, Balance));
 }
 
 // queue notifications to show a non freezing progress dialog e.g. for rescan

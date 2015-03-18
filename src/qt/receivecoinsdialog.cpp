@@ -86,7 +86,7 @@ void ReceiveCoinsDialog::setModel(WalletModel *model)
             SIGNAL(selectionChanged(QItemSelection, QItemSelection)), this,
             SLOT(recentRequestsView_selectionChanged(QItemSelection, QItemSelection)));
         // Last 2 columns are set by the columnResizingFixer, when the table geometry is ready.
-        columnResizingFixer = new GUIUtil::TableViewLastColumnResizingFixer(tableView, AMOUNT_MINIMUM_COLUMN_WIDTH, DATE_COLUMN_WIDTH);
+        columnResizingFixer = new GUIUtil::TableViewLastColumnResizingFixer(tableView, RecentRequestsTableModel::Message, MINIMUM_COLUMN_WIDTH);
     }
 }
 
@@ -208,7 +208,7 @@ void ReceiveCoinsDialog::on_removeRequestButton_clicked()
 void ReceiveCoinsDialog::resizeEvent(QResizeEvent *event)
 {
     QWidget::resizeEvent(event);
-    columnResizingFixer->stretchColumnWidth(RecentRequestsTableModel::Message);
+    columnResizingFixer->resized();
 }
 
 void ReceiveCoinsDialog::keyPressEvent(QKeyEvent *event)

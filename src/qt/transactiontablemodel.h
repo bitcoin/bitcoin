@@ -32,7 +32,8 @@ public:
         Date = 2,
         Type = 3,
         ToAddress = 4,
-        Amount = 5
+        Amount = 5,
+        Balance = 6
     };
 
     /** Roles to get specific information from a transaction row.
@@ -55,6 +56,8 @@ public:
         LabelRole,
         /** Net amount of transaction */
         AmountRole,
+        /** Balance at transaction */
+        BalanceRole,
         /** Unique identifier */
         TxIDRole,
         /** Transaction hash */
@@ -63,6 +66,8 @@ public:
         ConfirmedRole,
         /** Formatted amount, without brackets when unconfirmed */
         FormattedAmountRole,
+        /** Formatted balance */
+        FormattedBalanceRole,
         /** Transaction status (TransactionRecord::Status) */
         StatusRole,
         /** Unprocessed icon */
@@ -93,6 +98,7 @@ private:
     QString formatTxType(const TransactionRecord *wtx) const;
     QString formatTxToAddress(const TransactionRecord *wtx, bool tooltip) const;
     QString formatTxAmount(const TransactionRecord *wtx, bool showUnconfirmed=true, BitcoinUnits::SeparatorStyle separators=BitcoinUnits::separatorStandard) const;
+    QString formatTxBalance(const TransactionRecord *wtx, BitcoinUnits::SeparatorStyle separators=BitcoinUnits::separatorStandard) const;
     QString formatTooltip(const TransactionRecord *rec) const;
     QVariant txStatusDecoration(const TransactionRecord *wtx) const;
     QVariant txWatchonlyDecoration(const TransactionRecord *wtx) const;
@@ -105,6 +111,8 @@ public slots:
     void updateDisplayUnit();
     /** Updates the column title to "Amount (DisplayUnit)" and emits headerDataChanged() signal for table headers to react. */
     void updateAmountColumnTitle();
+    /** Updates the column title to "Balance (DisplayUnit)" and emits headerDataChanged() signal for table headers to react. */
+    void updateBalanceColumnTitle();
     /* Needed to update fProcessingQueuedTransactions through a QueuedConnection */
     void setProcessingQueuedTransactions(bool value) { fProcessingQueuedTransactions = value; }
 

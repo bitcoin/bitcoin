@@ -54,6 +54,7 @@ public:
         DATE_COLUMN_WIDTH = 120,
         TYPE_COLUMN_WIDTH = 113,
         AMOUNT_MINIMUM_COLUMN_WIDTH = 120,
+        BALANCE_MINIMUM_COLUMN_WIDTH = 120,
         MINIMUM_COLUMN_WIDTH = 23
     };
 
@@ -67,6 +68,7 @@ private:
     QComboBox *watchOnlyWidget;
     QLineEdit *addressWidget;
     QLineEdit *amountWidget;
+    QLineEdit *balanceWidget;
 
     QMenu *contextMenu;
     QSignalMapper *mapperThirdPartyTxUrls;
@@ -91,6 +93,7 @@ private slots:
     void editLabel();
     void copyLabel();
     void copyAmount();
+    void copyBalance();
     void copyTxID();
     void openThirdPartyTxUrl(QString url);
     void updateWatchOnlyColumn(bool fHaveWatchOnly);
@@ -107,6 +110,7 @@ public slots:
     void chooseWatchonly(int idx);
     void changedPrefix(const QString &prefix);
     void changedAmount(const QString &amount);
+    void changedBalance(const QString &balance);
     void exportClicked();
     void focusTransaction(const QModelIndex&);
 

@@ -188,6 +188,16 @@ QString BitcoinUnits::getAmountColumnTitle(int unit)
     return amountTitle;
 }
 
+QString BitcoinUnits::getBalanceColumnTitle(int unit)
+{
+    QString balanceTitle = QObject::tr("Balance");
+    if (BitcoinUnits::valid(unit))
+    {
+        balanceTitle += " ("+BitcoinUnits::name(unit) + ")";
+    }
+    return balanceTitle;
+}
+
 int BitcoinUnits::rowCount(const QModelIndex &parent) const
 {
     Q_UNUSED(parent);

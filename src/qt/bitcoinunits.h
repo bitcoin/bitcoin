@@ -93,6 +93,8 @@ public:
     static bool parse(int unit, const QString &value, CAmount *val_out);
     //! Gets title for amount column including current display unit if optionsModel reference available */
     static QString getAmountColumnTitle(int unit);
+    //! Gets title for balance column including current display unit if optionsModel reference available */
+    static QString getBalanceColumnTitle(int unit);
     ///@}
 
     //! @name AbstractListModel implementation

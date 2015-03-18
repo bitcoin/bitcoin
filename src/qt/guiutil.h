@@ -126,7 +126,7 @@ namespace GUIUtil
     private:
         int size_threshold;
     };
-
+    
     /**
      * Makes a QTableView last column feel as if it was being resized from its left border.
      * Also makes sure the column widths are never larger than the table's viewport.
@@ -142,24 +142,22 @@ namespace GUIUtil
         Q_OBJECT
 
         public:
-            TableViewLastColumnResizingFixer(QTableView* table, int lastColMinimumWidth, int allColsMinimumWidth);
-            void stretchColumnWidth(int column);
+            TableViewLastColumnResizingFixer(QTableView* table, int stretchColumnIndex, int minimumColumnWidth);
+            void resized();
 
         private:
             QTableView* tableView;
-            int lastColumnMinimumWidth;
-            int allColumnsMinimumWidth;
-            int lastColumnIndex;
-            int columnCount;
-            int secondToLastColumnIndex;
-
+            int lastColIndex;
+            int stretchColIndex;
+            int minColWidth;
             void adjustTableColumnsWidth();
-            int getAvailableWidthForColumn(int column);
+            int getAvailableWidthForColumn(int colIndex);
             int getColumnsWidth();
+            void autosizeColumn(int colIndex);
+            void setViewHeaderResizeMode(int logicalIndex, QHeaderView::ResizeMode resizeMode);
+            void resizeColumn(int colIndex, int width);
             void connectViewHeadersSignals();
             void disconnectViewHeadersSignals();
-            void setViewHeaderResizeMode(int logicalIndex, QHeaderView::ResizeMode resizeMode);
-            void resizeColumn(int nColumnIndex, int width);
 
         private slots:
             void on_sectionResized(int logicalIndex, int oldSize, int newSize);

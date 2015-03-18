@@ -41,6 +41,7 @@ public:
      */
     void setTypeFilter(quint32 modes);
     void setMinAmount(const CAmount& minimum);
+    void setMinBalance(const CAmount& minimum);
     void setWatchOnlyFilter(WatchOnlyFilter filter);
 
     /** Set maximum number of rows returned, -1 if unlimited. */
@@ -61,6 +62,7 @@ private:
     quint32 typeFilter;
     WatchOnlyFilter watchOnlyFilter;
     CAmount minAmount;
+    CAmount minBalance;
     int limitRows;
     bool showInactive;
 };
