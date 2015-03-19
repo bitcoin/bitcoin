@@ -18,7 +18,7 @@ QList<BitcoinUnits::Unit> BitcoinUnits::availableUnits()
     QList<BitcoinUnits::Unit> unitlist;
     unitlist.append(DASH);
     unitlist.append(mDASH);
-    unitlist.append(uDRK);
+    unitlist.append(uDASH);
     unitlist.append(duffs);
     return unitlist;
 }
@@ -29,7 +29,7 @@ bool BitcoinUnits::valid(int unit)
     {
     case DASH:
     case mDASH:
-    case uDRK:
+    case uDASH:
     case duffs:
         return true;
     default:
@@ -45,7 +45,7 @@ QString BitcoinUnits::name(int unit)
         {
             case DASH: return QString("DASH");
             case mDASH: return QString("mDASH");
-            case uDRK: return QString::fromUtf8("μDASH");
+            case uDASH: return QString::fromUtf8("μDASH");
             case duffs: return QString::fromUtf8("duffs");
             default: return QString("???");
         }
@@ -56,7 +56,7 @@ QString BitcoinUnits::name(int unit)
         {
             case DASH: return QString("tDRK");
             case mDASH: return QString("mtDRK");
-            case uDRK: return QString::fromUtf8("μtDRK");
+            case uDASH: return QString::fromUtf8("μtDRK");
             case duffs: return QString::fromUtf8("tduffs");
             default: return QString("???");
         }
@@ -71,7 +71,7 @@ QString BitcoinUnits::description(int unit)
         {
             case DASH: return QString("Darkcoins");
             case mDASH: return QString("Milli-Darkcoins (1 / 1,000)");
-            case uDRK: return QString("Micro-Darkcoins (1 / 1,000,000)");
+            case uDASH: return QString("Micro-Darkcoins (1 / 1,000,000)");
             case duffs: return QString("Ten Nano-Darkcoins (1 / 100,000,000)");
             default: return QString("???");
         }
@@ -82,7 +82,7 @@ QString BitcoinUnits::description(int unit)
         {
             case DASH: return QString("Testdashs");
             case mDASH: return QString("Milli-Testdashs (1 / 1,000)");
-            case uDRK: return QString("Micro-Testdashs (1 / 1,000,000)");
+            case uDASH: return QString("Micro-Testdashs (1 / 1,000,000)");
             case duffs: return QString("Ten Nano-Testdashs (1 / 100,000,000)");
             default: return QString("???");
         }
@@ -95,7 +95,7 @@ qint64 BitcoinUnits::factor(int unit)
     {
     case DASH:  return 100000000;
     case mDASH: return 100000;
-    case uDRK: return 100;
+    case uDASH: return 100;
     case duffs: return 1;
     default:   return 100000000;
     }
@@ -107,7 +107,7 @@ qint64 BitcoinUnits::maxAmount(int unit)
     {
     case DASH:  return Q_INT64_C(21000000);
     case mDASH: return Q_INT64_C(21000000000);
-    case uDRK: return Q_INT64_C(21000000000000);
+    case uDASH: return Q_INT64_C(21000000000000);
     case duffs: return Q_INT64_C(2100000000000000);
     default:   return 0;
     }
@@ -119,7 +119,7 @@ int BitcoinUnits::amountDigits(int unit)
     {
     case DASH: return 8; // 21,000,000 (# digits, without commas)
     case mDASH: return 11; // 21,000,000,000
-    case uDRK: return 14; // 21,000,000,000,000
+    case uDASH: return 14; // 21,000,000,000,000
     case duffs: return 16; // 2,100,000,000,000,000
     default: return 0;
     }
@@ -131,7 +131,7 @@ int BitcoinUnits::decimals(int unit)
     {
     case DASH: return 8;
     case mDASH: return 5;
-    case uDRK: return 2;
+    case uDASH: return 2;
     case duffs: return 0;
     default: return 0;
     }
