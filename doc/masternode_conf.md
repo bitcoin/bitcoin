@@ -6,7 +6,7 @@ The multi masternode config allows to control multiple masternodes from a single
  * Mac OS: ~/Library/Application Support/Darkcoin/
  * Unix/Linux: ~/.darkcoin/
 
-The new masternode.conf format consists of a space seperated text file. Each line consisting of an alias, IP address followed by port, masternode private key, collateral output transaction id, collateral output index, donation address and donation percentage (the latter two are optional and should be in format "address:percantage").
+The new masternode.conf format consists of a space seperated text file. Each line consisting of an alias, IP address followed by port, masternode private key, collateral output transaction id, collateral output index, donation address and donation percentage (the latter two are optional and should be in format "address:percentage").
 
 Example:
 ```
