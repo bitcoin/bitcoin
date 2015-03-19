@@ -12,38 +12,22 @@ using namespace std;
 
 int CAddrInfo::GetTriedBucket(const uint256& nKey) const
 {
-    CDataStream ss1(SER_GETHASH, 0);
-    std::vector<unsigned char> vchKey = GetKey();
-    ss1 << nKey << vchKey;
-    uint64_t hash1 = Hash(ss1.begin(), ss1.end()).GetCheapHash();
-
-    CDataStream ss2(SER_GETHASH, 0);
-    std::vector<unsigned char> vchGroupKey = GetGroup();
-    ss2 << nKey << vchGroupKey << (hash1 % ADDRMAN_TRIED_BUCKETS_PER_GROUP);
-    uint64_t hash2 = Hash(ss2.begin(), ss2.end()).GetCheapHash();
+    uint64_t hash1 = (CHashWriter(SER_GETHASH, 0) << nKey << GetKey()).GetHash().GetCheapHash();
+    uint64_t hash2 = (CHashWriter(SER_GETHASH, 0) << nKey << GetGroup() << (hash1 % ADDRMAN_TRIED_BUCKETS_PER_GROUP)).GetHash().GetCheapHash();
     return hash2 % ADDRMAN_TRIED_BUCKET_COUNT;
 }
 
 int CAddrInfo::GetNewBucket(const uint256& nKey, const CNetAddr& src) const
 {
-    CDataStream ss1(SER_GETHASH, 0);
-    std::vector<unsigned char> vchGroupKey = GetGroup();
     std::vector<unsigned char> vchSourceGroupKey = src.GetGroup();
-    ss1 << nKey << vchGroupKey << vchSourceGroupKey;
-    uint64_t hash1 = Hash(ss1.begin(), ss1.end()).GetCheapHash();
-
-    CDataStream ss2(SER_GETHASH, 0);
-    ss2 << nKey << vchSourceGroupKey << (hash1 % ADDRMAN_NEW_BUCKETS_PER_SOURCE_GROUP);
-    uint64_t hash2 = Hash(ss2.begin(), ss2.end()).GetCheapHash();
+    uint64_t hash1 = (CHashWriter(SER_GETHASH, 0) << nKey << GetGroup() << vchSourceGroupKey).GetHash().GetCheapHash();
+    uint64_t hash2 = (CHashWriter(SER_GETHASH, 0) << nKey << vchSourceGroupKey << (hash1 % ADDRMAN_NEW_BUCKETS_PER_SOURCE_GROUP)).GetHash().GetCheapHash();
     return hash2 % ADDRMAN_NEW_BUCKET_COUNT;
 }
 
 int CAddrInfo::GetBucketPosition(const uint256 &nKey, bool fNew, int nBucket) const
 {
-    CDataStream ss1(SER_GETHASH, 0);
-    std::vector<unsigned char> vchKey = GetKey();
-    ss1 << nKey << (fNew ? 'N' : 'K') << nBucket << vchKey;
-    uint64_t hash1 = Hash(ss1.begin(), ss1.end()).GetCheapHash();
+    uint64_t hash1 = (CHashWriter(SER_GETHASH, 0) << nKey << (fNew ? 'N' : 'K') << nBucket << GetKey()).GetHash().GetCheapHash();
     return hash1 % ADDRMAN_BUCKET_SIZE;
 }
 
