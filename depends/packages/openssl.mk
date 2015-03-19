@@ -1,8 +1,8 @@
 package=openssl
-$(package)_version=1.0.1k
+$(package)_version=1.0.1m
 $(package)_download_path=https://www.openssl.org/source
 $(package)_file_name=$(package)-$($(package)_version).tar.gz
-$(package)_sha256_hash=8f9faeaebad088e772f4ef5e38252d472be4d878c6b3a2718c10a4fcebe7a41c
+$(package)_sha256_hash=095f0b7b09116c0c5526422088058dc7e6e000aa14d22acca6a4e2babcdfef74
 
 define $(package)_set_vars
 $(package)_config_env=AR="$($(package)_ar)" RANLIB="$($(package)_ranlib)" CC="$($(package)_cc)"
