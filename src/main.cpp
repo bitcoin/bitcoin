@@ -1998,7 +1998,7 @@ void static UpdateTip(CBlockIndex *pindexNew) {
 }
 
 /** Disconnect chainActive's tip. */
-bool static DisconnectTip(CValidationState &state) {
+bool static DisconnectTip(CValidationState &state, unsigned int nDisconnectDepth) {
     CBlockIndex *pindexDelete = chainActive.Tip();
     assert(pindexDelete);
     mempool.check(pcoinsTip);
@@ -2018,16 +2018,38 @@ bool static DisconnectTip(CValidationState &state) {
     // Write the chain state to disk, if necessary.
     if (!FlushStateToDisk(state, FLUSH_STATE_IF_NEEDED))
         return false;
-    // Resurrect mempool transactions from the disconnected block.
-    BOOST_FOREACH(const CTransaction &tx, block.vtx) {
-        // ignore validation errors in resurrected transactions
-        list<CTransaction> removed;
-        CValidationState stateDummy;
-        if (tx.IsCoinBase() || !AcceptToMemoryPool(mempool, stateDummy, tx, false, NULL))
+    list<CTransaction> removed;
+    BOOST_FOREACH(const CTransaction &tx, block.vtx)
+    {
+        if (tx.IsCoinBase()) continue;
+        if (nDisconnectDepth < MAX_REORG_TX_RESURRECT)
+        {
+            // Resurrect mempool transactions from the disconnected block,
+            // ignoring validation errors in resurrected transactions
+            CValidationState stateDummy;
+            if (!AcceptToMemoryPool(mempool, stateDummy, tx, false, NULL))
+            {
+                removed.push_back(tx);
+                // To keep mempool consistent, must recursively remove any
+                // transactions that depend on tx from the mempool if tx
+                // can't be resurrected.
+                mempool.remove(tx, removed, true);
+            }
+        }
+        else
+        {
+            removed.push_back(tx);
             mempool.remove(tx, removed, true);
+        }
     }
     mempool.removeCoinbaseSpends(pcoinsTip, pindexDelete->nHeight);
     mempool.check(pcoinsTip);
+
+    // Tell the networking code about any transactions we've forgotten,
+    // so we'll pay attention if peers rebroadcast them to us.
+    BOOST_FOREACH(const CTransaction& tx, removed)
+        ForgetTransaction(tx);
+
     // Update chainActive and related variables.
     UpdateTip(pindexDelete->pprev);
     // Let wallets know transactions went from 1-confirmed to
@@ -2188,8 +2210,9 @@ static bool ActivateBestChainStep(CValidationState &state, CBlockIndex *pindexMo
     const CBlockIndex *pindexFork = chainActive.FindFork(pindexMostWork);
 
     // Disconnect active blocks which are no longer in the best chain.
+    unsigned int nDisconnectDepth = 0;
     while (chainActive.Tip() && chainActive.Tip() != pindexFork) {
-        if (!DisconnectTip(state))
+        if (!DisconnectTip(state, nDisconnectDepth++))
             return false;
     }
 
@@ -2311,6 +2334,7 @@ bool InvalidateBlock(CValidationState& state, CBlockIndex *pindex) {
     setDirtyBlockIndex.insert(pindex);
     setBlockIndexCandidates.erase(pindex);
 
+    unsigned int nDisconnectDepth = 0;
     while (chainActive.Contains(pindex)) {
         CBlockIndex *pindexWalk = chainActive.Tip();
         pindexWalk->nStatus |= BLOCK_FAILED_CHILD;
@@ -2318,7 +2342,7 @@ bool InvalidateBlock(CValidationState& state, CBlockIndex *pindex) {
         setBlockIndexCandidates.erase(pindexWalk);
         // ActivateBestChain considers blocks already in chainActive
         // unconditionally valid already, so force disconnect away from it.
-        if (!DisconnectTip(state)) {
+        if (!DisconnectTip(state, nDisconnectDepth++)) {
             return false;
         }
     }

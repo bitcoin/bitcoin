@@ -4,7 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #
-# Test resurrection of mined transactions when
+# Test resurrection of transactions when
 # the blockchain is re-organized.
 #
 
@@ -14,27 +14,33 @@ from util import *
 import os
 import shutil
 
-# Create one-input, one-output, no-fee transaction:
 class MempoolCoinbaseTest(BitcoinTestFramework):
 
     def setup_network(self):
-        # Just need one node for this test
-        args = ["-checkmempool", "-debug=mempool"]
+        # Need three nodes for this test
+        args = ["-checkmempool", "-debug=mempool", "-debug=net"]
         self.nodes = []
         self.nodes.append(start_node(0, self.options.tmpdir, args))
+        self.nodes.append(start_node(1, self.options.tmpdir, args))
+        self.nodes.append(start_node(2, self.options.tmpdir, args))
+        connect_nodes(self.nodes[0], 1)
+        connect_nodes(self.nodes[0], 2)
+        connect_nodes(self.nodes[2], 1)
         self.is_network_split = False
 
-    def create_tx(self, from_txid, to_address, amount):
+    def create_tx(self, from_txid, to_address, amount, which_node=0):
         inputs = [{ "txid" : from_txid, "vout" : 0}]
         outputs = { to_address : amount }
-        rawtx = self.nodes[0].createrawtransaction(inputs, outputs)
-        signresult = self.nodes[0].signrawtransaction(rawtx)
+        rawtx = self.nodes[which_node].createrawtransaction(inputs, outputs)
+        signresult = self.nodes[which_node].signrawtransaction(rawtx)
         assert_equal(signresult["complete"], True)
         return signresult["hex"]
 
     def run_test(self):
         node0_address = self.nodes[0].getnewaddress()
+        node1_address = self.nodes[1].getnewaddress()
 
+        #---------------------------------------------------------------
         # Spend block 1/2/3's coinbase transactions
         # Mine a block.
         # Create three more transactions, spending the spends
@@ -66,6 +72,7 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
 
         # Use invalidateblock to re-org back; all transactions should
         # end up unconfirmed and back in the mempool
+        sync_blocks(self.nodes)
         for node in self.nodes:
             node.invalidateblock(blocks[0])
 
@@ -83,6 +90,49 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
             tx = self.nodes[0].gettransaction(txid)
             assert(tx["confirmations"] > 0)
 
+        #---------------------------------------------------------------
+        # Test the code that makes sure both the sender and receiver
+        # of transactions that get dropped from the mempool because
+        # of a long re-org put them back in the mempool.
+        #
+        # Test scenario is:
+        # node[0] sends node[1] a transaction in block N
+        # node[1] sends it back in block N+1
+        # ... 8 more block are mined, then a 10-deep re-org
+        # is triggered (with node[3] doing all the mining).
+        # Then node 1 resends its wallet transactions.
+        # EXPECT: node[3] ends up with the both transactions in
+        # its mempool.
+        blocks = []
+        blocks.extend(self.nodes[2].generate(1))
+
+        tx1_raw = self.create_tx(spends2_id[0], node1_address, 49.98, 0)
+        tx1_id = self.nodes[2].sendrawtransaction(tx1_raw)
+        blocks.extend(self.nodes[2].generate(1))
+        sync_blocks(self.nodes)
+
+        tx2_raw = self.create_tx(tx1_id, node0_address, 49.97, 1)
+        tx2_id = self.nodes[2].sendrawtransaction(tx2_raw)
+
+        blocks.extend(self.nodes[2].generate(8))
+        sync_blocks(self.nodes)
+
+        # Both transactions should be confirmed:
+        for txid in (tx1_id, tx2_id):
+            tx = self.nodes[1].gettransaction(txid)
+            assert(tx["confirmations"] > 0)
+
+        # Re-org away from that chain:
+        for node in self.nodes:
+            node.invalidateblock(blocks[0])
+        new_chain = self.nodes[2].generate(10)
+        sync_blocks(self.nodes)
+
+        txset = set([tx1_id, tx2_id])
+        assert_equal(set(self.nodes[0].resendwallettransactions()), txset)
+        sync_mempools(self.nodes)
+
+        assert_equal(set(self.nodes[2].getrawmempool()), txset)
 
 if __name__ == '__main__':
     MempoolCoinbaseTest().main()
