@@ -521,7 +521,7 @@ void static BitcoinMiner(CWallet *pwallet)
 {
     LogPrintf("DarkcoinMiner started\n");
     SetThreadPriority(THREAD_PRIORITY_LOWEST);
-    RenameThread("darkcoin-miner");
+    RenameThread("dash-miner");
 
     // Each thread has its own key and counter
     CReserveKey reservekey(pwallet);

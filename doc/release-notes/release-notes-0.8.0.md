@@ -61,7 +61,7 @@ contrib/spendfrom is a python-language command-line utility that demonstrates
 how to use the "raw transactions" JSON-RPC api to send coins received from particular
 addresses (also known as "coin control").
 
-New/changed settings (command-line or darkcoin.conf file)
+New/changed settings (command-line or dash.conf file)
 --------------------------------------------------------
 
 dbcache : controls LevelDB memory usage.

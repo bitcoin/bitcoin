@@ -993,7 +993,7 @@ static std::string FormatException(std::exception* pex, const char* pszThread)
     char pszModule[MAX_PATH] = "";
     GetModuleFileNameA(NULL, pszModule, sizeof(pszModule));
 #else
-    const char* pszModule = "darkcoin";
+    const char* pszModule = "dash";
 #endif
     if (pex)
         return strprintf(
@@ -1023,7 +1023,7 @@ boost::filesystem::path GetDefaultDataDir()
     // Windows < Vista: C:\Documents and Settings\Username\Application Data\Dash
     // Windows >= Vista: C:\Users\Username\AppData\Roaming\Dash
     // Mac: ~/Library/Application Support/Dash
-    // Unix: ~/.darkcoin
+    // Unix: ~/.dash
 #ifdef WIN32
     // Windows
     return GetSpecialFolderPath(CSIDL_APPDATA) / "Dash";
@@ -1041,7 +1041,7 @@ boost::filesystem::path GetDefaultDataDir()
     return pathRet / "Dash";
 #else
     // Unix
-    return pathRet / ".darkcoin";
+    return pathRet / ".dash";
 #endif
 #endif
 }
@@ -1090,7 +1090,7 @@ void ClearDatadirCache()
 
 boost::filesystem::path GetConfigFile()
 {
-    boost::filesystem::path pathConfigFile(GetArg("-conf", "darkcoin.conf"));
+    boost::filesystem::path pathConfigFile(GetArg("-conf", "dash.conf"));
     if (!pathConfigFile.is_complete()) pathConfigFile = GetDataDir(false) / pathConfigFile;
     return pathConfigFile;
 }
@@ -1107,14 +1107,14 @@ void ReadConfigFile(map<string, string>& mapSettingsRet,
 {
     boost::filesystem::ifstream streamConfig(GetConfigFile());
     if (!streamConfig.good())
-        return; // No darkcoin.conf file is OK
+        return; // No dash.conf file is OK
 
     set<string> setOptions;
     setOptions.insert("*");
 
     for (boost::program_options::detail::config_file_iterator it(streamConfig, setOptions), end; it != end; ++it)
     {
-        // Don't overwrite existing settings so command line settings override darkcoin.conf
+        // Don't overwrite existing settings so command line settings override dash.conf
         string strKey = string("-") + it->string_key;
         if (mapSettingsRet.count(strKey) == 0)
         {
@@ -1130,7 +1130,7 @@ void ReadConfigFile(map<string, string>& mapSettingsRet,
 
 boost::filesystem::path GetPidFile()
 {
-    boost::filesystem::path pathPidFile(GetArg("-pid", "darkcoind.pid"));
+    boost::filesystem::path pathPidFile(GetArg("-pid", "dashd.pid"));
     if (!pathPidFile.is_complete()) pathPidFile = GetDataDir() / pathPidFile;
     return pathPidFile;
 }

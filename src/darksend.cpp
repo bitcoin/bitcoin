@@ -38,7 +38,7 @@ CActiveMasternode activeMasternode;
 // Count peers we've requested the list from
 int RequestedMasterNodeList = 0;
 
-/* *** BEGIN DARKSEND MAGIC - DARKCOIN **********
+/* *** BEGIN DARKSEND MAGIC - DASH **********
     Copyright (c) 2014-2015, Dash Developers
         eduffield - evan@dashcurrency.com
         udjinm6   - udjinm6@dashcurrency.com
@@ -2604,7 +2604,7 @@ void ThreadCheckDarkSendPool()
     if(fLiteMode) return; //disable all Darksend/Masternode related functionality
 
     // Make this thread recognisable as the wallet flushing thread
-    RenameThread("darkcoin-darksend");
+    RenameThread("dash-darksend");
 
     unsigned int c = 0;
     std::string errorMessage;

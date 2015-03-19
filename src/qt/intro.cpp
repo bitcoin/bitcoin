@@ -191,8 +191,8 @@ void Intro::pickDataDirectory()
         settings.setValue("strDataDir", dataDir);
     }
     /* Only override -datadir if different from the default, to make it possible to
-     * override -datadir in the darkcoin.conf file in the default data directory
-     * (to be consistent with darkcoind behavior)
+     * override -datadir in the dash.conf file in the default data directory
+     * (to be consistent with dashd behavior)
      */
     if(dataDir != getDefaultDataDirectory())
         SoftSetArg("-datadir", GUIUtil::qstringToBoostPath(dataDir).string()); // use OS locale for path setting

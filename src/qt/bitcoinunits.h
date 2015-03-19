@@ -27,7 +27,7 @@ public:
     enum Unit
     {
         DASH,
-        mDRK,
+        mDASH,
         uDRK,
         duffs
     };

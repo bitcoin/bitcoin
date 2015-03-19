@@ -671,7 +671,7 @@
         <string>S&amp;end</string>
        </property>
        <property name="icon">
-        <iconset resource="../darkcoin.qrc">
+        <iconset resource="../dash.qrc">
          <normaloff>:/icons/send</normaloff>:/icons/send</iconset>
        </property>
        <property name="default">
@@ -694,7 +694,7 @@
         <string>Clear &amp;All</string>
        </property>
        <property name="icon">
-        <iconset resource="../darkcoin.qrc">
+        <iconset resource="../dash.qrc">
          <normaloff>:/icons/remove</normaloff>:/icons/remove</iconset>
        </property>
        <property name="autoRepeatDelay">
@@ -714,7 +714,7 @@
         <string>Add &amp;Recipient</string>
        </property>
        <property name="icon">
-        <iconset resource="../darkcoin.qrc">
+        <iconset resource="../dash.qrc">
          <normaloff>:/icons/add</normaloff>:/icons/add</iconset>
        </property>
        <property name="autoDefault">
@@ -812,7 +812,7 @@
   </customwidget>
  </customwidgets>
  <resources>
-  <include location="../darkcoin.qrc"/>
+  <include location="../dash.qrc"/>
  </resources>
  <connections/>
 </ui>
