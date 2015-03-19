@@ -231,7 +231,7 @@ protected:
 
     //! Select an address to connect to.
     //! nUnkBias determines how much to favor new addresses over tried ones (min=0, max=100)
-    CAddress Select_(int nUnkBias);
+    CAddress Select_();
 
 #ifdef DEBUG_ADDRMAN
     //! Perform consistency check. Returns an error code or zero.
@@ -533,13 +533,13 @@ public:
      * Choose an address to connect to.
      * nUnkBias determines how much "new" entries are favored over "tried" ones (0-100).
      */
-    CAddress Select(int nUnkBias = 50)
+    CAddress Select()
     {
         CAddress addrRet;
         {
             LOCK(cs);
             Check();
-            addrRet = Select_(nUnkBias);
+            addrRet = Select_();
             Check();
         }
         return addrRet;
