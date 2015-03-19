@@ -312,7 +312,7 @@ CMasternode *CMasternodeMan::Find(const CTxIn &vin)
     return NULL;
 }
 
-CMasternode* CMasternodeMan::FindOldestNotInVec(const std::vector<CTxIn> &vVins)
+CMasternode* CMasternodeMan::FindOldestNotInVec(const std::vector<CTxIn> &vVins, int nMinimumAge, int nMinimumActiveSeconds)
 {
     LOCK(cs);
 
@@ -322,6 +322,10 @@ CMasternode* CMasternodeMan::FindOldestNotInVec(const std::vector<CTxIn> &vVins)
     {
         mn.Check();
         if(!mn.IsEnabled()) continue;
+
+        if(!RegTest()){
+            if(mn.GetMasternodeInputAge() < nMinimumAge || mn.lastTimeSeen - mn.sigTime < nMinimumActiveSeconds) continue;
+        }
 
         bool found = false;
         BOOST_FOREACH(const CTxIn& vin, vVins)
