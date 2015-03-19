@@ -1,7 +1,7 @@
 0.11.0 Release notes
 ====================
 
-Dash Core 0.11.0 is forked off the Bitcoin Core 0.9.3. The old darkcoin
+Dash Core 0.11.0 is forked off the Bitcoin Core 0.9.3. The old dash
 versions 0.10.x were forked from the Litecoin 0.8 tree. The following changes
 are introduced in this major release. This list is compiled from the release
 notes of Bitcoin Core  0.9.0, 0.9.1, 0.9.2, 0.9.2.1, 0.9.3 and was completed
@@ -27,7 +27,7 @@ Dash Core:
 - Fixed wallet locking after sending coins
 - Add `-regtest` mode, similar to testnet but private with instant block
   generation with `setgenerate` RPC.
-- Add separate darkcoin-cli client
+- Add separate dash-cli client
 - Implemented KeyPass integration for CLI, RPC and Qt:
   `keepass`, `keepassport`, `keepasskey`, `keepassid`, `keepassname`
 
@@ -100,13 +100,13 @@ Command-line options:
 - New option: -nospendzeroconfchange to never spend unconfirmed change outputs
 - New option: -zapwallettxes to rebuild the wallet's transaction information
 - Rename option '-tor' to '-onion' to better reflect what it does
-- Add '-disablewallet' mode to let darkcoind run entirely without wallet (when
+- Add '-disablewallet' mode to let dashd run entirely without wallet (when
   built with wallet)
 - Update default '-rpcsslciphers' to include TLSv1.2
 - make '-logtimestamps' default on and rework help-message
 - RPC client option: '-rpcwait', to wait for server start
 - Remove '-logtodebugger'
-- Allow `-noserver` with darkcoind
+- Allow `-noserver` with dashd
 - Make -proxy set all network types, avoiding a connect leak.
 
 
@@ -206,7 +206,7 @@ GUI:
 - Optionally add third party links to transaction context menu
 - Check for !pixmap() before trying to export QR code (avoids crashes when no QR
   code could be generated)
-- Fix "Start darkcoin on system login"
+- Fix "Start dash on system login"
 - Switch to Qt 5.2.0 for Windows build
 - Add payment request (BIP 0070) support
 - Improve options dialog
@@ -223,14 +223,14 @@ GUI:
 - Move initialization/shutdown to a thread. This prevents "Not responding"
   messages during startup. Also show a window during shutdown.
 - Don't regenerate autostart link on every client startup
-- Show and store message of normal darkcoin:URI
+- Show and store message of normal dash:URI
 - Fix richtext detection hang issue on very old Qt versions
 - OS X: Make use of the 10.8+ user notification center to display Growl-like
   notifications
 - OS X: Added NSHighResolutionCapable flag to Info.plist for better font
   rendering on Retina displays.
-- OS X: Fix darkcoin-qt startup crash when clicking dock icon
-- Linux: Fix Gnome darkcoin: URI handler
+- OS X: Fix dash-qt startup crash when clicking dock icon
+- Linux: Fix Gnome dash: URI handler
 
 
 Validation:

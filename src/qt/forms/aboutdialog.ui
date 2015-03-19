@@ -23,7 +23,7 @@
       </sizepolicy>
      </property>
      <property name="pixmap">
-      <pixmap resource="../darkcoin.qrc">:/images/about</pixmap>
+      <pixmap resource="../dash.qrc">:/images/about</pixmap>
      </property>
     </widget>
    </item>
@@ -151,7 +151,7 @@ This product includes software developed by the OpenSSL Project for use in the O
   </layout>
  </widget>
  <resources>
-  <include location="../darkcoin.qrc"/>
+  <include location="../dash.qrc"/>
  </resources>
  <connections>
   <connection>

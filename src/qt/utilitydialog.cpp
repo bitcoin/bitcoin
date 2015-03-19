@@ -69,7 +69,7 @@ HelpMessageDialog::HelpMessageDialog(QWidget *parent) :
     header = tr("Dash Core") + " " + tr("version") + " " +
         QString::fromStdString(FormatFullVersion()) + "\n\n" +
         tr("Usage:") + "\n" +
-        "  darkcoin-qt [" + tr("command-line options") + "]                     " + "\n";
+        "  dash-qt [" + tr("command-line options") + "]                     " + "\n";
 
     coreOptions = QString::fromStdString(HelpMessage(HMM_BITCOIN_QT));
 

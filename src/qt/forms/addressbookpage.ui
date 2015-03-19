@@ -60,7 +60,7 @@
         <string>&amp;New</string>
        </property>
        <property name="icon">
-        <iconset resource="../darkcoin.qrc">
+        <iconset resource="../dash.qrc">
          <normaloff>:/icons/add</normaloff>:/icons/add</iconset>
        </property>
       </widget>
@@ -74,7 +74,7 @@
         <string>&amp;Copy</string>
        </property>
        <property name="icon">
-        <iconset resource="../darkcoin.qrc">
+        <iconset resource="../dash.qrc">
          <normaloff>:/icons/editcopy</normaloff>:/icons/editcopy</iconset>
        </property>
       </widget>
@@ -88,7 +88,7 @@
         <string>&amp;Delete</string>
        </property>
        <property name="icon">
-        <iconset resource="../darkcoin.qrc">
+        <iconset resource="../dash.qrc">
          <normaloff>:/icons/remove</normaloff>:/icons/remove</iconset>
        </property>
       </widget>
@@ -115,7 +115,7 @@
         <string>&amp;Export</string>
        </property>
        <property name="icon">
-        <iconset resource="../darkcoin.qrc">
+        <iconset resource="../dash.qrc">
          <normaloff>:/icons/export</normaloff>:/icons/export</iconset>
        </property>
       </widget>
@@ -138,7 +138,7 @@
   </layout>
  </widget>
  <resources>
-  <include location="../darkcoin.qrc"/>
+  <include location="../dash.qrc"/>
  </resources>
  <connections/>
 </ui>

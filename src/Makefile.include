@@ -12,11 +12,11 @@ AM_CPPFLAGS =  $(INCLUDES) \
 AM_CPPFLAGS += $(LEVELDB_CPPFLAGS)
 AM_LDFLAGS = $(PTHREAD_CFLAGS)
 
-LIBBITCOIN_SERVER=$(top_builddir)/src/libdarkcoin_server.a
-LIBBITCOIN_WALLET=$(top_builddir)/src/libdarkcoin_wallet.a
-LIBBITCOIN_COMMON=$(top_builddir)/src/libdarkcoin_common.a
-LIBBITCOIN_CLI=$(top_builddir)/src/libdarkcoin_cli.a
-LIBBITCOINQT=$(top_builddir)/src/qt/libdarkcoinqt.a
+LIBBITCOIN_SERVER=$(top_builddir)/src/libdash_server.a
+LIBBITCOIN_WALLET=$(top_builddir)/src/libdash_wallet.a
+LIBBITCOIN_COMMON=$(top_builddir)/src/libdash_common.a
+LIBBITCOIN_CLI=$(top_builddir)/src/libdash_cli.a
+LIBBITCOINQT=$(top_builddir)/src/qt/libdashqt.a
 
 $(LIBBITCOIN):
 	$(MAKE) -C $(top_builddir)/src $(@F)

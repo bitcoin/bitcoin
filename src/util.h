@@ -8,7 +8,7 @@
 #define BITCOIN_UTIL_H
 
 #if defined(HAVE_CONFIG_H)
-#include "darkcoin-config.h"
+#include "dash-config.h"
 #endif
 
 #include "compat.h"
@@ -541,7 +541,7 @@ inline uint32_t ByteReverse(uint32_t value)
 //    threadGroup.create_thread(boost::bind(&LoopForever<boost::function<void()> >, "nothing", f, milliseconds));
 template <typename Callable> void LoopForever(const char* name,  Callable func, int64_t msecs)
 {
-    std::string s = strprintf("darkcoin-%s", name);
+    std::string s = strprintf("dash-%s", name);
     RenameThread(s.c_str());
     LogPrintf("%s thread start\n", name);
     try
@@ -569,7 +569,7 @@ template <typename Callable> void LoopForever(const char* name,  Callable func, 
 // .. and a wrapper that just calls func once
 template <typename Callable> void TraceThread(const char* name,  Callable func)
 {
-    std::string s = strprintf("darkcoin-%s", name);
+    std::string s = strprintf("dash-%s", name);
     RenameThread(s.c_str());
     try
     {

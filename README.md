@@ -42,7 +42,7 @@ Use the autogen script to prepare the build environment.
 **precompiled binaries**
 
 Precompiled binaries are available at github, see
-https://github.com/darkcoinproject/darkcoin-binaries
+https://github.com/dashproject/dash-binaries
 
 Always verify the signatures and checksums.
 
@@ -68,7 +68,7 @@ to see it.
 
 **testnet and regtest modes**
 
-Run with the -testnet option to run with "play darkcoins" on the test network, if you
+Run with the -testnet option to run with "play dashs" on the test network, if you
 are testing multi-machine code that needs to operate across the internet.
 
 If you are testing something that can run on one machine, run with the -regtest option.

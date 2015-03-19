@@ -10,7 +10,7 @@ Dash Core version 0.11.2 is now available from:
 
 Please report bugs using the issue tracker at github:
 
-  https://github.com/darkcoin/darkcoin/issues
+  https://github.com/dash/dash/issues
 
 
 Mining and relay policy enhancements
@@ -59,7 +59,7 @@ How to Upgrade
 If you are running an older version, shut it down. Wait until it has completely
 shut down (which might take a few minutes for older versions), then run the
 installer (on Windows) or just copy over /Applications/Dash-Qt (on Mac) or
-darkcoind/darkcoin-qt (on Linux).
+dashd/dash-qt (on Linux).
 
 
 0.11.2 changelog
@@ -75,4 +75,4 @@ Thanks to who contributed to this release, at least:
 
 - *to do ..*
 
-As well as everyone that helped translating on [Transifex](https://www.transifex.com/projects/p/darkcoin/).
+As well as everyone that helped translating on [Transifex](https://www.transifex.com/projects/p/dash/).
