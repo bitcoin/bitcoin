@@ -109,15 +109,15 @@ public:
  *
  * To that end:
  *  * Addresses are organized into buckets.
- *    * Address that have not yet been tried go into 256 "new" buckets.
- *      * Based on the address range (/16 for IPv4) of source of the information, 32 buckets are selected at random
+ *    * Address that have not yet been tried go into 1024 "new" buckets.
+ *      * Based on the address range (/16 for IPv4) of source of the information, 64 buckets are selected at random
  *      * The actual bucket is chosen from one of these, based on the range the address itself is located.
- *      * One single address can occur in up to 4 different buckets, to increase selection chances for addresses that
+ *      * One single address can occur in up to 8 different buckets, to increase selection chances for addresses that
  *        are seen frequently. The chance for increasing this multiplicity decreases exponentially.
  *      * When adding a new address to a full bucket, a randomly chosen entry (with a bias favoring less recently seen
  *        ones) is removed from it first.
- *    * Addresses of nodes that are known to be accessible go into 64 "tried" buckets.
- *      * Each address range selects at random 4 of these buckets.
+ *    * Addresses of nodes that are known to be accessible go into 256 "tried" buckets.
+ *      * Each address range selects at random 8 of these buckets.
  *      * The actual bucket is chosen from one of these, based on the full address.
  *      * When adding a new good address to a full bucket, a randomly chosen entry (with a bias favoring less recently
  *        tried ones) is evicted from it, back to the "new" buckets.
@@ -128,22 +128,22 @@ public:
  */
 
 //! total number of buckets for tried addresses
-#define ADDRMAN_TRIED_BUCKET_COUNT 64
+#define ADDRMAN_TRIED_BUCKET_COUNT 256
 
 //! total number of buckets for new addresses
-#define ADDRMAN_NEW_BUCKET_COUNT 256
+#define ADDRMAN_NEW_BUCKET_COUNT 1024
 
 //! maximum allowed number of entries in buckets for new and tried addresses
 #define ADDRMAN_BUCKET_SIZE 64
 
 //! over how many buckets entries with tried addresses from a single group (/16 for IPv4) are spread
-#define ADDRMAN_TRIED_BUCKETS_PER_GROUP 4
+#define ADDRMAN_TRIED_BUCKETS_PER_GROUP 8
 
 //! over how many buckets entries with new addresses originating from a single group are spread
-#define ADDRMAN_NEW_BUCKETS_PER_SOURCE_GROUP 32
+#define ADDRMAN_NEW_BUCKETS_PER_SOURCE_GROUP 64
 
 //! in how many buckets for entries with new addresses a single address may occur
-#define ADDRMAN_NEW_BUCKETS_PER_ADDRESS 4
+#define ADDRMAN_NEW_BUCKETS_PER_ADDRESS 8
 
 //! how old addresses can maximally be
 #define ADDRMAN_HORIZON_DAYS 30
