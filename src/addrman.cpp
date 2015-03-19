@@ -332,14 +332,13 @@ void CAddrMan::Attempt_(const CService& addr, int64_t nTime)
     info.nAttempts++;
 }
 
-CAddress CAddrMan::Select_(int nUnkBias)
+CAddress CAddrMan::Select_()
 {
     if (size() == 0)
         return CAddress();
 
-    double nCorTried = sqrt(nTried) * (100.0 - nUnkBias);
-    double nCorNew = sqrt(nNew) * nUnkBias;
-    if ((nCorTried + nCorNew) * GetRandInt(1 << 30) / (1 << 30) < nCorTried) {
+    // Use a 50% chance for choosing between tried and new table entries.
+    if (nTried > 0 && (nNew == 0 || GetRandInt(2) == 0)) {
         // use a tried node
         double fChanceFactor = 1.0;
         while (1) {
