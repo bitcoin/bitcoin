@@ -400,7 +400,7 @@ Wenn´d jezzad anfängsch den noin Goidbaild zu nuzzn dann gehd da alde nimma. W
     <message>
         <location filename="../bitcoingui.cpp" line="235"/>
         <source>Send coins to a Dash address</source>
-        <translation>Di Darkcoins losschicka (A Adressn braichtma)</translation>
+        <translation>Di Dash losschicka (A Adressn braichtma)</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="241"/>
@@ -1657,12 +1657,12 @@ https://www.transifex.com/projects/p/dash/</source>
     <message>
         <location filename="../forms/optionsdialog.ui" line="550"/>
         <source>&amp;Unit to show amounts in:</source>
-        <translation>&amp;wi sollma dia di Darkcoins anzaign:</translation>
+        <translation>&amp;wi sollma dia di Dash anzaign:</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="563"/>
         <source>Choose the default subdivision unit to show in the interface and when sending coins.</source>
-        <translation>Magsch liaba ganze Darkcoins seng, oder lieaba &quot;zehntl&quot; oder glai &quot;hundadstl&quot;....</translation>
+        <translation>Magsch liaba ganze Dash seng, oder lieaba &quot;zehntl&quot; oder glai &quot;hundadstl&quot;....</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="572"/>

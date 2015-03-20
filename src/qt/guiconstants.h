@@ -43,7 +43,7 @@ static const int MAX_PAYMENT_REQUEST_SIZE = 50000; // bytes
 #define SPINNER_FRAMES 35
 
 #define QAPP_ORG_NAME "Dash"
-#define QAPP_ORG_DOMAIN "dashcurrency.com"
+#define QAPP_ORG_DOMAIN "dashpay.io"
 #define QAPP_APP_NAME_DEFAULT "Dash-Qt"
 #define QAPP_APP_NAME_TESTNET "Dash-Qt-testnet"
 

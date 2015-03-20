@@ -137,7 +137,7 @@ I usually confirm that remote is on the correct block by issuing:
 
 ```dashd getinfo```
 
-And compare with the official explorer at http://explorer.dashcurrency.com/chain/Dash
+And compare with the official explorer at http://explorer.dashpay.io/chain/Dash
 
 ### Local
 

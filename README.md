@@ -1,7 +1,7 @@
 Dash Core staging tree 0.11
 ===============================
 
-http://www.dashcurrency.com
+http://www.dashpay.io
 
 Copyright (c) 2009-2015 Bitcoin Core Developers
 
@@ -18,7 +18,7 @@ are carried out collectively by the network. Dash Core is the name of open
 source software which enables the use of this currency.
 
 For more information, as well as an immediately useable, binary version of
-the Dash Core software, see http://www.dashcurrency.com/downloads.
+the Dash Core software, see http://www.dashpay.io/downloads.
 
 
 License

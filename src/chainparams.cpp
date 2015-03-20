@@ -62,7 +62,7 @@ public:
         assert(hashGenesisBlock == uint256("0x00000ffd590b1485b3caadc19b22e6379c733355108f107a430458cdf3407ab6"));
         assert(genesis.hashMerkleRoot == uint256("0xe0028eb9648db56b1ac77cf090b99048a8007e2bb64b68f092c03c7f56a662c7"));
 
-        vSeeds.push_back(CDNSSeedData("dashcurrency.com", "dnsseed.dashcurrency.com"));
+        vSeeds.push_back(CDNSSeedData("dashpay.io", "dnsseed.dashpay.io"));
         vSeeds.push_back(CDNSSeedData("dash.qa", "dnsseed.dash.qa"));
         vSeeds.push_back(CDNSSeedData("masternode.io", "dnsseed.masternode.io"));
 
@@ -130,7 +130,7 @@ public:
 
         vFixedSeeds.clear();
         vSeeds.clear();
-        vSeeds.push_back(CDNSSeedData("dashcurrency.com", "testnet-seed.dashcurrency.com"));
+        vSeeds.push_back(CDNSSeedData("dashpay.io", "testnet-seed.dashpay.io"));
         vSeeds.push_back(CDNSSeedData("dash.qa", "testnet-seed.dash.qa"));
         vSeeds.push_back(CDNSSeedData("masternode.io", "test.dnsseed.masternode.io"));
 

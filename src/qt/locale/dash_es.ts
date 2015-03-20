@@ -1493,7 +1493,7 @@ Dirección: %4
     <message>
         <location filename="../forms/optionsdialog.ui" line="180"/>
         <source>Amount of Dash to keep anonymized</source>
-        <translation>Cuantía de Darkcoins a mantener anonimizada</translation>
+        <translation>Cuantía de Dash a mantener anonimizada</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="206"/>
@@ -2621,7 +2621,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <location filename="../sendcoinsdialog.cpp" line="521"/>
         <location filename="../sendcoinsdialog.cpp" line="531"/>
         <source>Send Coins</source>
-        <translation>Enviar Darkcoins</translation>
+        <translation>Enviar Dash</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="90"/>

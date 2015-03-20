@@ -292,7 +292,7 @@ Este produto inclui software desenvolvido pelo Projeto OpenSSL para uso no OpenS
     <message>
         <location filename="../askpassphrasedialog.cpp" line="124"/>
         <source>Dash will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your dashs from being stolen by malware infecting your computer.</source>
-        <translation>A Dash vai fechar agora para finalizar o procedimento de encriptação. Lembre-se que mesmo encriptando sua wallet, suas Darkcoins não estão totalmente protegidas de serem roubadas por algum malware que venha a infectar seu computador.</translation>
+        <translation>A Dash vai fechar agora para finalizar o procedimento de encriptação. Lembre-se que mesmo encriptando sua wallet, suas Dash não estão totalmente protegidas de serem roubadas por algum malware que venha a infectar seu computador.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="128"/>

@@ -4,19 +4,19 @@
     <message>
         <location filename="../forms/aboutdialog.ui" line="14"/>
         <source>About Dash Core</source>
-        <translation>關於暗黑幣核心</translation>
+        <translation>关于达世币内核</translation>
     </message>
     <message>
         <location filename="../forms/aboutdialog.ui" line="53"/>
         <source>&lt;b&gt;Dash Core&lt;/b&gt; version</source>
-        <translation>&lt;b&gt;暗黑幣核心&lt;/b&gt; 版本</translation>
+        <translation>&lt;b&gt;达世币内核&lt;/b&gt; 版本</translation>
     </message>
     <message>
         <location filename="../forms/aboutdialog.ui" line="94"/>
         <source>Copyright &amp;copy; 2009-2014 The Bitcoin Core developers.
 Copyright &amp;copy; 2014-YYYY The Dash Core developers.</source>
         <translation>版權 &amp;copy 為位元幣核心開發人員自西元 2009-2014年所有
-版權 &amp;copy 為暗黑幣核心開發人員自西元 2014-YYYY年所有</translation>
+版權 &amp;copy 达世币核心开发团队 2014-YYYY年所有</translation>
     </message>
     <message>
         <location filename="../forms/aboutdialog.ui" line="111"/>
@@ -49,7 +49,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../utilitydialog.cpp" line="31"/>
         <source>The Dash Core developers</source>
-        <translation>暗黑幣核心開發人員</translation>
+        <translation>达世币核心开发团队</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="43"/>

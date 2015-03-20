@@ -22,7 +22,7 @@
  *
  * \section intro_sec Introduction
  *
- * This is the developer documentation of the reference client for an experimental new digital currency called Dash (http://www.dashcurrency.com/),
+ * This is the developer documentation of the reference client for an experimental new digital currency called Dash (http://www.dashpay.io/),
  * which enables instant payments to anyone, anywhere in the world. Dash uses peer-to-peer technology to operate
  * with no central authority: managing transactions and issuing money are carried out collectively by the network.
  *

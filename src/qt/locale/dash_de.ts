@@ -115,12 +115,12 @@ Dieses Produkt enthält zudem folgende Dritt-Software:
     <message>
         <location filename="../addressbookpage.cpp" line="45"/>
         <source>Choose the address to send coins to</source>
-        <translation>Wählen Sie die Adresse aus, an die Sie Darkcoins überweisen möchten</translation>
+        <translation>Wählen Sie die Adresse aus, an die Sie Dash überweisen möchten</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="46"/>
         <source>Choose the address to receive coins with</source>
-        <translation>Wählen Sie die Adresse aus, über die Sie Darkcoins empfangen wollen</translation>
+        <translation>Wählen Sie die Adresse aus, über die Sie Dash empfangen wollen</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="51"/>
@@ -140,7 +140,7 @@ Dieses Produkt enthält zudem folgende Dritt-Software:
     <message>
         <location filename="../addressbookpage.cpp" line="65"/>
         <source>These are your Dash addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>Dies sind ihre Dash-Adressen zum Tätigen von Überweisungen. Bitte prüfen Sie den Betrag und die Empfangsadresse, bevor Sie Darkcoins überweisen.</translation>
+        <translation>Dies sind ihre Dash-Adressen zum Tätigen von Überweisungen. Bitte prüfen Sie den Betrag und die Empfangsadresse, bevor Sie Dash überweisen.</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="69"/>
@@ -281,7 +281,7 @@ Dieses Produkt enthält zudem folgende Dritt-Software:
     <message>
         <location filename="../askpassphrasedialog.cpp" line="113"/>
         <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR DASHS&lt;/b&gt;!</source>
-        <translation>Warnung: Wenn Sie ihre Wallet verschlüsseln und ihre Passphrase verlieren werden Sie &lt;b&gt;alle ihre Darkcoins verlieren&lt;/b&gt;!</translation>
+        <translation>Warnung: Wenn Sie ihre Wallet verschlüsseln und ihre Passphrase verlieren werden Sie &lt;b&gt;alle ihre Dash verlieren&lt;/b&gt;!</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="113"/>
@@ -297,7 +297,7 @@ Dieses Produkt enthält zudem folgende Dritt-Software:
     <message>
         <location filename="../askpassphrasedialog.cpp" line="124"/>
         <source>Dash will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your dashs from being stolen by malware infecting your computer.</source>
-        <translation>Dash wird jetzt beendet, um den Verschlüsselungsprozess abzuschließen. Bitte beachten Sie, dass die Wallet-Verschlüsselung nicht vollständig vor Diebstahl ihrer Darkcoins durch Schadsoftware schützt, die ihren Computer befällt.</translation>
+        <translation>Dash wird jetzt beendet, um den Verschlüsselungsprozess abzuschließen. Bitte beachten Sie, dass die Wallet-Verschlüsselung nicht vollständig vor Diebstahl ihrer Dash durch Schadsoftware schützt, die ihren Computer befällt.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="128"/>
@@ -393,7 +393,7 @@ Dieses Produkt enthält zudem folgende Dritt-Software:
     <message>
         <location filename="../bitcoingui.cpp" line="235"/>
         <source>Send coins to a Dash address</source>
-        <translation>Darkcoins an eine Dash-Adresse überweisen</translation>
+        <translation>Dash an eine Dash-Adresse überweisen</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="241"/>
@@ -1495,7 +1495,7 @@ Adresse: %4</translation>
     <message>
         <location filename="../forms/optionsdialog.ui" line="180"/>
         <source>Amount of Dash to keep anonymized</source>
-        <translation>Anzahl anonymisierter Darkcoins</translation>
+        <translation>Anzahl anonymisierter Dash</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="206"/>
@@ -1647,7 +1647,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../forms/optionsdialog.ui" line="563"/>
         <source>Choose the default subdivision unit to show in the interface and when sending coins.</source>
-        <translation>Wählen Sie die standardmäßige Untereinheit, die in der Benutzeroberfläche und beim Überweisen von Darkcoins angezeigt werden soll.</translation>
+        <translation>Wählen Sie die standardmäßige Untereinheit, die in der Benutzeroberfläche und beim Überweisen von Dash angezeigt werden soll.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="572"/>
@@ -2624,7 +2624,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <location filename="../sendcoinsdialog.cpp" line="521"/>
         <location filename="../sendcoinsdialog.cpp" line="531"/>
         <source>Send Coins</source>
-        <translation>Darkcoins überweisen</translation>
+        <translation>Dash überweisen</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="90"/>
@@ -2896,7 +2896,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <location filename="../sendcoinsdialog.cpp" line="517"/>
         <source>The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
         <translation>Die Transaktion wurde abgelehnt! 
-Dies kann passieren, wenn einige Darkcoins aus ihrer Wallet bereits ausgegeben wurden. Beispielsweise weil Sie eine Kopie ihrer wallet.dat nutzten und die Darkcoins dort ausgegeben haben. Diese Ausgaben sind in diesem Fall in der derzeit aktiven Wallet nicht vermerkt.</translation>
+Dies kann passieren, wenn einige Dash aus ihrer Wallet bereits ausgegeben wurden. Beispielsweise weil Sie eine Kopie ihrer wallet.dat nutzten und die Dash dort ausgegeben haben. Diese Ausgaben sind in diesem Fall in der derzeit aktiven Wallet nicht vermerkt.</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="522"/>
@@ -3451,7 +3451,7 @@ Dies kann passieren, wenn einige Darkcoins aus ihrer Wallet bereits ausgegeben w
     <message>
         <location filename="../transactiondesc.cpp" line="292"/>
         <source>Generated coins must mature %1 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to &quot;not accepted&quot; and it won&apos;t be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.</source>
-        <translation>Erzeugte Darkcoins müssen %1 Blöcke lang reifen, bevor sie ausgegeben werden können. Als Sie diesen Block erzeugten, wurde er an das Netzwerk übertragen, um ihn der Blockkette hinzuzufügen. Falls dies fehlschlägt wird der Status in &quot;nicht angenommen&quot; geändert und Sie werden keine Darkcoins gutgeschrieben bekommen. Das kann gelegentlich passieren, wenn ein anderer Knoten einen Block fast zeitgleich erzeugt.</translation>
+        <translation>Erzeugte Dash müssen %1 Blöcke lang reifen, bevor sie ausgegeben werden können. Als Sie diesen Block erzeugten, wurde er an das Netzwerk übertragen, um ihn der Blockkette hinzuzufügen. Falls dies fehlschlägt wird der Status in &quot;nicht angenommen&quot; geändert und Sie werden keine Dash gutgeschrieben bekommen. Das kann gelegentlich passieren, wenn ein anderer Knoten einen Block fast zeitgleich erzeugt.</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="300"/>
@@ -3873,7 +3873,7 @@ Dies kann passieren, wenn einige Darkcoins aus ihrer Wallet bereits ausgegeben w
         <location filename="../walletmodel.cpp" line="271"/>
         <location filename="../walletmodel.cpp" line="285"/>
         <source>Send Coins</source>
-        <translation>Darkcoins überweisen</translation>
+        <translation>Dash überweisen</translation>
     </message>
     <message numerus="yes">
         <location filename="../walletmodel.cpp" line="271"/>
@@ -3983,7 +3983,7 @@ zum Beispiel: alertnotify=echo %%s | mail -s \&quot;Dash Alert\&quot; admin@foo.
     <message>
         <location filename="../dashstrings.cpp" line="46"/>
         <source>Darksend uses exact denominated amounts to send funds, you might simply need to anonymize some more coins.</source>
-        <translation>Darksend benutzt exakt gestückelte Beträge zum Versenden, Sie müssen dafür möglicherweise noch mehr Darkcoins anonymisieren.</translation>
+        <translation>Darksend benutzt exakt gestückelte Beträge zum Versenden, Sie müssen dafür möglicherweise noch mehr Dash anonymisieren.</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="49"/>
@@ -4018,7 +4018,7 @@ zum Beispiel: alertnotify=echo %%s | mail -s \&quot;Dash Alert\&quot; admin@foo.
     <message>
         <location filename="../dashstrings.cpp" line="66"/>
         <source>Error: The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
-        <translation>Fehler: Die Transaktion wurde abgelehnt! Dies kann passieren, wenn einige Darkcoins aus ihrer Wallet bereits ausgegeben wurden. Beispielsweise weil Sie eine Kopie ihrer wallet.dat genutzt, die Bitcoins dort ausgegeben haben und dies daher in der derzeit aktiven Wallet nicht vermerkt ist.</translation>
+        <translation>Fehler: Die Transaktion wurde abgelehnt! Dies kann passieren, wenn einige Dash aus ihrer Wallet bereits ausgegeben wurden. Beispielsweise weil Sie eine Kopie ihrer wallet.dat genutzt, die Bitcoins dort ausgegeben haben und dies daher in der derzeit aktiven Wallet nicht vermerkt ist.</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="70"/>
@@ -4098,7 +4098,7 @@ zum Beispiel: alertnotify=echo %%s | mail -s \&quot;Dash Alert\&quot; admin@foo.
     <message>
         <location filename="../dashstrings.cpp" line="110"/>
         <source>Provide liquidity to Darksend by infrequently mixing coins on a continual basis (0-100, default: 0, 1=very frequent, high fees, 100=very infrequent, low fees)</source>
-        <translation>Durch diese Einstellung können Sie dem Darksend-Netzwerk zusätzliche Liquidität zur Verfügung stellen in dem Sie von Zeit zu Zeit bereits anonymisierte Darkcoins wieder dem Mixing-Prozess zuführen. (0-100) [0=aus, 1=sehr oft, 100=sehr selten] Voreinstellung: 0 </translation>
+        <translation>Durch diese Einstellung können Sie dem Darksend-Netzwerk zusätzliche Liquidität zur Verfügung stellen in dem Sie von Zeit zu Zeit bereits anonymisierte Dash wieder dem Mixing-Prozess zuführen. (0-100) [0=aus, 1=sehr oft, 100=sehr selten] Voreinstellung: 0 </translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="114"/>
@@ -5183,7 +5183,7 @@ Dash Core wird heruntergefahren.</translation>
     <message>
         <location filename="../dashstrings.cpp" line="368"/>
         <source>Use N separate masternodes to anonymize funds  (2-8, default: 2)</source>
-        <translation>N unterschiedliche Masternodes benutzen, um Darkcoins zu anonymisieren (2-8, Standard: 2)</translation>
+        <translation>N unterschiedliche Masternodes benutzen, um Dash zu anonymisieren (2-8, Standard: 2)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="369"/>

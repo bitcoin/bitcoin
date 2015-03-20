@@ -1582,7 +1582,7 @@ unsigned int static KimotoGravityWell(const CBlockIndex* pindexLast, const CBloc
 }
 
 unsigned int static DarkGravityWave(const CBlockIndex* pindexLast, const CBlockHeader *pblock) {
-    /* current difficulty formula, dash - DarkGravity v3, written by Evan Duffield - evan@dashcurrency.com */
+    /* current difficulty formula, dash - DarkGravity v3, written by Evan Duffield - evan@dashpay.io */
     const CBlockIndex *BlockLastSolved = pindexLast;
     const CBlockIndex *BlockReading = pindexLast;
     int64_t nActualTimespan = 0;
