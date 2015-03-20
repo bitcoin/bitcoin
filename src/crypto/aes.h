@@ -7,6 +7,10 @@
 
 #include <stdint.h>
 
+static const int AES_BLOCKSIZE = 16;
+static const int AES128_KEYSIZE = 16;
+static const int AES256_KEYSIZE = 32;
+
 /** An encryption class for AES-128. */
 class AES128Encrypt
 {
@@ -53,6 +57,58 @@ public:
     AES256Decrypt(const unsigned char key[32]);
     ~AES256Decrypt();
     void Decrypt(unsigned char plaintext[16], const unsigned char ciphertext[16]) const;
+};
+
+class AES256CBCEncrypt
+{
+public:
+    AES256CBCEncrypt(const unsigned char key[AES256_KEYSIZE], const unsigned char ivIn[AES_BLOCKSIZE], bool padIn);
+    ~AES256CBCEncrypt();
+    int Encrypt(const unsigned char* data, int size, unsigned char* out) const;
+
+private:
+    const AES256Encrypt enc;
+    const bool pad;
+    unsigned char iv[AES_BLOCKSIZE];
+};
+
+class AES256CBCDecrypt
+{
+public:
+    AES256CBCDecrypt(const unsigned char key[AES256_KEYSIZE], const unsigned char ivIn[AES_BLOCKSIZE], bool padIn);
+    ~AES256CBCDecrypt();
+    int Decrypt(const unsigned char* data, int size, unsigned char* out) const;
+
+private:
+    const AES256Decrypt dec;
+    const bool pad;
+    unsigned char iv[AES_BLOCKSIZE];
+};
+
+class AES128CBCEncrypt
+{
+public:
+    AES128CBCEncrypt(const unsigned char key[AES128_KEYSIZE], const unsigned char ivIn[AES_BLOCKSIZE], bool padIn);
+    ~AES128CBCEncrypt();
+    int Encrypt(const unsigned char* data, int size, unsigned char* out) const;
+
+private:
+    const AES128Encrypt enc;
+    const bool pad;
+    unsigned char iv[AES_BLOCKSIZE];
+};
+
+class AES128CBCDecrypt
+{
+public:
+    AES128CBCDecrypt(const unsigned char key[AES128_KEYSIZE], const unsigned char ivIn[AES_BLOCKSIZE], bool padIn);
+    ~AES128CBCDecrypt();
+    int Decrypt(const unsigned char* data, int size, unsigned char* out) const;
+
+private:
+    const AES128Decrypt dec;
+    const bool pad;
+    unsigned char iv[AES_BLOCKSIZE];
 };
 
 #endif // BITCOIN_CRYPTO_AES_H
