@@ -4,13 +4,13 @@ SUBDIRS = src
 
 GZIP_ENV="-9n"
 
-BITCOIND_BIN=$(top_builddir)/src/darkcoind$(EXEEXT)
-BITCOIN_QT_BIN=$(top_builddir)/src/qt/darkcoin-qt$(EXEEXT)
-BITCOIN_CLI_BIN=$(top_builddir)/src/darkcoin-cli$(EXEEXT)
+BITCOIND_BIN=$(top_builddir)/src/dashd$(EXEEXT)
+BITCOIN_QT_BIN=$(top_builddir)/src/qt/dash-qt$(EXEEXT)
+BITCOIN_CLI_BIN=$(top_builddir)/src/dash-cli$(EXEEXT)
 BITCOIN_WIN_INSTALLER=$(PACKAGE)-$(PACKAGE_VERSION)-win$(WINDOWS_BITS)-setup$(EXEEXT)
 
-OSX_APP=Darkcoin-Qt.app
-OSX_DMG=Darkcoin-Qt.dmg
+OSX_APP=Dash-Qt.app
+OSX_DMG=Dash-Qt.dmg
 OSX_DEPLOY_SCRIPT=$(top_srcdir)/contrib/macdeploy/macdeployqtplus
 OSX_FANCY_PLIST=$(top_srcdir)/contrib/macdeploy/fancy.plist
 OSX_INSTALLER_ICONS=$(top_srcdir)/src/qt/res/icons/bitcoin.icns
@@ -29,9 +29,9 @@ OSX_PACKAGING = $(OSX_DEPLOY_SCRIPT) $(OSX_FANCY_PLIST) $(OSX_INSTALLER_ICONS) \
   $(top_srcdir)/contrib/macdeploy/DS_Store
 
 COVERAGE_INFO = baseline_filtered_combined.info baseline.info block_test.info \
-  leveldb_baseline.info test_darkcoin_filtered.info total_coverage.info \
+  leveldb_baseline.info test_dash_filtered.info total_coverage.info \
   baseline_filtered.info block_test_filtered.info \
-  leveldb_baseline_filtered.info test_darkcoin_coverage.info test_darkcoin.info
+  leveldb_baseline_filtered.info test_dash_coverage.info test_dash.info
 
 dist-hook:
 	-$(MAKE) -C $(top_distdir)/src/leveldb clean
@@ -72,13 +72,13 @@ $(OSX_APP)/Contents/Resources/bitcoin.icns: $(OSX_INSTALLER_ICONS)
 	$(MKDIR_P) $(@D)
 	$(INSTALL_DATA) $< $@
 
-$(OSX_APP)/Contents/MacOS/Darkcoin-Qt: $(BITCOIN_QT_BIN)
+$(OSX_APP)/Contents/MacOS/Dash-Qt: $(BITCOIN_QT_BIN)
 	$(MKDIR_P) $(@D)
 	STRIPPROG="$(STRIP)" $(INSTALL_STRIP_PROGRAM)  $< $@
 
 OSX_APP_BUILT=$(OSX_APP)/Contents/PkgInfo $(OSX_APP)/Contents/Resources/empty.lproj \
   $(OSX_APP)/Contents/Resources/bitcoin.icns $(OSX_APP)/Contents/Info.plist \
-  $(OSX_APP)/Contents/MacOS/Darkcoin-Qt
+  $(OSX_APP)/Contents/MacOS/Dash-Qt
 
 if BUILD_DARWIN
 $(OSX_DMG): $(OSX_APP_BUILT) $(OSX_PACKAGING)
@@ -91,7 +91,7 @@ $(OSX_DMG): $(OSX_APP_BUILT) $(OSX_PACKAGING)
 	$(INSTALL) contrib/macdeploy/background.png dist/.background
 	$(INSTALL) contrib/macdeploy/DS_Store dist/.DS_Store
 	cd dist; $(LN_S) /Applications Applications
-	$(GENISOIMAGE) -no-cache-inodes -l -probe -V "Darkcoin-Qt" -no-pad -r -apple -o $@ dist
+	$(GENISOIMAGE) -no-cache-inodes -l -probe -V "Dash-Qt" -no-pad -r -apple -o $@ dist
 endif
 
 if TARGET_DARWIN
@@ -119,16 +119,16 @@ leveldb_baseline_filtered.info: leveldb_baseline.info
 baseline_filtered_combined.info: leveldb_baseline_filtered.info baseline_filtered.info
 	$(LCOV) -a leveldb_baseline_filtered.info -a baseline_filtered.info -o $@
 
-test_darkcoin.info: baseline_filtered_combined.info
+test_dash.info: baseline_filtered_combined.info
 	$(MAKE) -C src/ check
-	$(LCOV) -c -d $(abs_builddir)/src -t test_darkcoin -o $@
+	$(LCOV) -c -d $(abs_builddir)/src -t test_dash -o $@
 	$(LCOV) -z -d $(abs_builddir)/src
 	$(LCOV) -z -d $(abs_builddir)/src/leveldb
 
-test_darkcoin_filtered.info: test_darkcoin.info
+test_dash_filtered.info: test_dash.info
 	$(LCOV) -r $< "/usr/include/*" -o $@
 
-block_test.info: test_darkcoin_filtered.info
+block_test.info: test_dash_filtered.info
 	$(MKDIR_P) qa/tmp
 	-@TIMEOUT=15 qa/pull-tester/run-bitcoind-for-test.sh $(JAVA) -jar $(JAVA_COMPARISON_TOOL) qa/tmp/compTool 0
 	$(LCOV) -c -d $(abs_builddir)/src --t BitcoinJBlockTest -o $@
@@ -138,13 +138,13 @@ block_test.info: test_darkcoin_filtered.info
 block_test_filtered.info: block_test.info
 	$(LCOV) -r $< "/usr/include/*" -o $@
 
-test_darkcoin_coverage.info: baseline_filtered_combined.info test_darkcoin_filtered.info
-	$(LCOV) -a baseline_filtered.info -a leveldb_baseline_filtered.info -a test_darkcoin_filtered.info -o $@
+test_dash_coverage.info: baseline_filtered_combined.info test_dash_filtered.info
+	$(LCOV) -a baseline_filtered.info -a leveldb_baseline_filtered.info -a test_dash_filtered.info -o $@
 
-total_coverage.info:  baseline_filtered_combined.info test_darkcoin_filtered.info block_test_filtered.info
-	$(LCOV) -a baseline_filtered.info -a leveldb_baseline_filtered.info -a test_darkcoin_filtered.info -a block_test_filtered.info -o $@ | $(GREP) "\%" | $(AWK) '{ print substr($$3,2,50) "/" $$5 }' > coverage_percent.txt
+total_coverage.info:  baseline_filtered_combined.info test_dash_filtered.info block_test_filtered.info
+	$(LCOV) -a baseline_filtered.info -a leveldb_baseline_filtered.info -a test_dash_filtered.info -a block_test_filtered.info -o $@ | $(GREP) "\%" | $(AWK) '{ print substr($$3,2,50) "/" $$5 }' > coverage_percent.txt
 
-test_darkcoin.coverage/.dirstamp:  test_darkcoin_coverage.info
+test_dash.coverage/.dirstamp:  test_dash_coverage.info
 	$(GENHTML) -s $< -o $(@D)
 	@touch $@
 
@@ -152,7 +152,7 @@ total.coverage/.dirstamp: total_coverage.info
 	$(GENHTML) -s $< -o $(@D)
 	@touch $@
 
-cov: test_darkcoin.coverage/.dirstamp total.coverage/.dirstamp
+cov: test_dash.coverage/.dirstamp total.coverage/.dirstamp
 
 endif
 
@@ -169,4 +169,4 @@ CLEANFILES = $(OSX_DMG) $(BITCOIN_WIN_INSTALLER)
 .INTERMEDIATE: $(COVERAGE_INFO)
 
 clean-local:
-	rm -rf test_darkcoin.coverage/ total.coverage/ $(OSX_APP)
+	rm -rf test_dash.coverage/ total.coverage/ $(OSX_APP)

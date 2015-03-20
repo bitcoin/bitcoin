@@ -22,7 +22,7 @@
 #endif
 
 #if defined(HAVE_CONFIG_H)
-#include "darkcoin-config.h" /* for USE_QRCODE */
+#include "dash-config.h" /* for USE_QRCODE */
 #endif
 
 #ifdef USE_QRCODE
