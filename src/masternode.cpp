@@ -144,6 +144,8 @@ CMasternode::CMasternode()
     donationAddress = CScript();
     donationPercentage = 0;
     nScanningErrorCount = 0;
+    nVote = 0;
+    lastVote = 0;
 }
 
 CMasternode::CMasternode(const CMasternode& other)
@@ -167,6 +169,8 @@ CMasternode::CMasternode(const CMasternode& other)
     donationAddress = other.donationAddress;
     donationPercentage = other.donationPercentage;
     nScanningErrorCount = other.nScanningErrorCount;
+    nVote = other.nVote;
+    lastVote = other.lastVote;
 }
 
 CMasternode::CMasternode(CService newAddr, CTxIn newVin, CPubKey newPubkey, std::vector<unsigned char> newSig, int64_t newSigTime, CPubKey newPubkey2, int protocolVersionIn, CScript newDonationAddress, int newDonationPercentage)
