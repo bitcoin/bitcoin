@@ -425,7 +425,6 @@ padding-right:10px;
 QDialog#SignVerifyMessageDialog QPushButton#clearButton_SM { /* Clear Button */
 background-color:transparent;
 color:#616161;
-border:1px solid #3398cc;
 padding-left:10px;
 padding-right:10px;
 }
@@ -443,7 +442,6 @@ padding-right:10px;
 QDialog#SignVerifyMessageDialog QPushButton#clearButton_VM { /* Verify Message - Clear Button */
 background-color:transparent;
 color:#616161;
-border:1px solid #3398cc;
 padding-left:10px;
 padding-right:10px;
 }
@@ -460,7 +458,6 @@ background-color:#F8F6F6;
 QWidget#AddressBookPage QPushButton#newAddress { /* New Address Button */
 background-color:transparent;
 color:#616161;
-border:1px solid #3398cc;
 padding-left:10px;
 padding-right:10px;
 }
@@ -469,7 +466,6 @@ QWidget#AddressBookPage QPushButton#copyAddress { /* Copy Address Button */
 /* qproperty-icon: url(":/icons/drkblue_editcopy"); */
 background-color:transparent;
 color:#616161;
-border:1px solid #3398cc;
 padding-left:10px;
 padding-right:10px;
 }
@@ -477,7 +473,6 @@ padding-right:10px;
 QWidget#AddressBookPage QPushButton#deleteAddress { /* Delete Address Button */
 background-color:transparent;
 color:#616161;
-border:1px solid #3398cc;
 padding-left:10px;
 padding-right:10px;
 }
@@ -501,7 +496,7 @@ min-height:33px; /* base width of 25px for QLineEdit, plus padding and border */
 
 /* Options Dialog */
 QDialog#OptionsDialog {
-background-color: #F8F6F6;
+background-color:#F8F6F6;
 }
 
 QDialog#OptionsDialog QValueComboBox, QDialog#OptionsDialog QSpinBox {
@@ -829,9 +824,10 @@ padding-bottom:6px;
 }
 
 QWidget .QFrame#frameDarksend .QPushButton#darksendAuto { /* Try Mix Button */
-qproperty-geometry: rect(150 296 118 20);
+qproperty-geometry: rect(150 301 118 20);
 background-color:#F8F6F6;
-border:1px solid #3398cc;
+border:0px;
+border-right:1px solid #c1c1c1;
 color:#616161;
 min-height:20px;
 font-size:9px;
@@ -844,9 +840,9 @@ background-color:#f2f0f0;
 
 
 QWidget .QFrame#frameDarksend .QPushButton#darksendReset { /* Reset Button */
-qproperty-geometry: rect(268 296 117 20);
+qproperty-geometry: rect(268 301 117 20);
 background-color:#F8F6F6;
-border:1px solid #3398cc;
+border:0px;
 border-radius: 0px;
 color:#616161;
 min-height:20px;
@@ -940,7 +936,6 @@ padding-right:10px;
 QDialog#SendCoinsDialog .QPushButton#clearButton { /* Clear Button */
 background:transparent;
 color:#616161;
-border:1px solid #3398cc;
 padding-left:10px;
 padding-right:10px;
 }
@@ -952,7 +947,6 @@ color:#333;
 QDialog#SendCoinsDialog .QPushButton#addButton { /* Add Button */
 background:transparent;
 color:#616161;
-border:1px solid #3398cc;
 padding-left:10px;
 padding-right:10px;
 }
@@ -1226,7 +1220,6 @@ color:#333;
 QWidget#ReceiveCoinsDialog .QFrame#frame QPushButton#showRequestButton { /* Show Button */
 background-color:transparent;
 color:#616161;
-border:1px solid #3398cc;
 padding-left:10px;
 padding-right:10px;
 }
@@ -1238,7 +1231,6 @@ color:#333;
 QWidget#ReceiveCoinsDialog .QFrame#frame QPushButton#removeRequestButton { /* Remove Button */
 background-color:transparent;
 color:#616161;
-border:1px solid #3398cc;
 padding-left:10px;
 padding-right:10px;
 }
