@@ -769,6 +769,40 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         int64_t askAgain = GetTime() + MASTERNODE_MIN_DSEEP_SECONDS;
         mWeAskedForMasternodeListEntry[vin.prevout] = askAgain;
 
+    } else if (strCommand == "mvote") { //Masternode Vote
+
+        CTxIn vin;
+        vector<unsigned char> vchSig;
+        int nVote;
+        vRecv >> vin >> vchSig >> nVote;
+
+        // see if we have this Masternode
+        CMasternode* pmn = this->Find(vin);
+        if(pmn != NULL)
+        {
+            if((GetAdjustedTime() - pmn->lastVote) > (60*60))
+            {
+                std::string strMessage = vin.ToString() + boost::lexical_cast<std::string>(nVote);
+
+                std::string errorMessage = "";
+                if(!darkSendSigner.VerifyMessage(pmn->pubkey2, vchSig, strMessage, errorMessage))
+                {
+                    LogPrintf("mvote - Got bad Masternode address signature %s \n", vin.ToString().c_str());
+                    return;
+                }
+
+                pmn->nVote = nVote;
+                pmn->lastVote = GetAdjustedTime();
+
+                //send to all peers
+                LOCK(cs_vNodes);
+                BOOST_FOREACH(CNode* pnode, vNodes)
+                    pnode->PushMessage("mvote", vin, vchSig, nVote);
+            }
+
+            return;
+        }
+
     } else if (strCommand == "dseg") { //Get Masternode list or specific entry
 
         CTxIn vin;

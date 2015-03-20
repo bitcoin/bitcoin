@@ -83,6 +83,8 @@ public:
     int64_t nLastDsq; //the dsq count from the last dsq broadcast of this node
     int nScanningErrorCount;
     int nLastScanningErrorBlockHeight;
+    int nVote;
+    int64_t lastVote;
 
     CMasternode();
     CMasternode(const CMasternode& other);
