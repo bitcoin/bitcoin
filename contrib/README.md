@@ -16,6 +16,9 @@ Repository Tools
 Specific tools for developers working on this repository.
 Contains the script `github-merge.sh` for merging github pull requests securely and signing them using GPG.
 
+### [Verify-Commits](/contrib/verify-commits) ###
+Tool to verify that every merge commit was signed by a developer using the above `github-merge.sh` script.
+
 ### [Linearize](/contrib/linearize) ###
 Construct a linear, no-fork, best version of the blockchain.
 
