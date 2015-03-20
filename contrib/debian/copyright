@@ -15,10 +15,6 @@ Files: src/json/*
 Copyright: 2007-2009, John W. Wilkinson
 License: Expat
 
-Files: src/strlcpy.h
-Copyright: 1998, Todd C. Miller <Todd.Miller@courtesan.com>
-License: ISC
-
 Files: debian/*
 Copyright: 2010-2011, Jonas Smedegaard <dr@jones.dk>
            2011, Matt Corallo <matt@bluematt.me>
