@@ -22,7 +22,7 @@ packages:
 - "libqt4-test"
 reference_datetime: "2014-01-10 00:00:00"
 remotes:
-- "url": "https://github.com/dash/dash.git"
+- "url": "https://github.com/darkcoin/darkcoin.git"
   "dir": "dash"
 files:
 - "bitcoin-deps-linux32-gitian-r9.zip"
