@@ -35,7 +35,7 @@ color:#333;
 }
 
 QMenu::item:selected {
-background-color:#f0f0f0;
+background-color:#f2f0f0;
 color:#333;
 }
 
@@ -324,7 +324,7 @@ border: 1px solid #d7d7d7;
 }
 
 QDialog .QTabWidget QTabBar::tab {
-background-color:#F8F6F6;
+background-color:#f2f0f0;
 color:#333;
 padding-left:10px;
 padding-right:10px;
@@ -714,7 +714,7 @@ margin-left:16px;
 
 QWidget .QFrame#frameDarksend { /* Darksend Widget */
 background-color:transparent;
-qproperty-minimumSize: 451px 325px;
+qproperty-minimumSize: 451px 330px;
 }
 
 QWidget .QFrame#frameDarksend QWidget {
@@ -842,9 +842,9 @@ qproperty-geometry: rect(0 0 0 0);
 
 QWidget .QFrame#frameDarksend .QPushButton#toggleDarksend { /* Start Darksend Mixing */
 background-color:qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: .01 #64ACD2, stop: .1 #3398cc, stop: .95 #3398cc, stop: 1 #1D80B5);
-qproperty-geometry: rect(120 255 295 35);
+qproperty-geometry: rect(120 255 295 40);
 border:0;
-font-size:16px;
+font-size:17px;
 font-weight:bold;
 color:#ffffff;
 padding-left:10px;
@@ -858,7 +858,7 @@ background-color:qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: .01 #64ACD2, 
 }
 
 QWidget .QFrame#frameDarksend .QPushButton#darksendAuto { /* Try Mix Button */
-qproperty-geometry: rect(125 296 140 25);
+qproperty-geometry: rect(125 301 140 25);
 background-color:qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: .01 #f6f6f6, stop: .1 rgba(250, 250, 250, 128), stop: .95 rgba(250, 250, 250, 255), stop: 1 #ebebeb);
 border:1px solid #d2d2d2;
 color:#616161;
@@ -874,7 +874,7 @@ color:#333;
 
 
 QWidget .QFrame#frameDarksend .QPushButton#darksendReset { /* Reset Button */
-qproperty-geometry: rect(270 296 140 25);
+qproperty-geometry: rect(270 301 140 25);
 background-color:qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: .01 #f6f6f6, stop: .1 rgba(250, 250, 250, 128), stop: .95 rgba(250, 250, 250, 255), stop: 1 #ebebeb);
 border:1px solid #d2d2d2;
 color:#616161;
