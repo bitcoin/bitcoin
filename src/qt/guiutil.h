@@ -104,7 +104,7 @@ namespace GUIUtil
     // Open debug.log
     void openDebugLogfile();
 	
-    // Open darkcoin.conf
+    // Open dash.conf
     void openConfigfile();	
 
     /** Qt event filter that intercepts ToolTipChange events, and replaces the tooltip with a rich text

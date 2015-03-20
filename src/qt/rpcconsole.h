@@ -65,7 +65,7 @@ public slots:
     void showConsole();
     /** Switch to network tab and show */
     void showNetwork();
-    /** Open external (default) editor with darkcoin.conf */
+    /** Open external (default) editor with dash.conf */
     void showConfEditor();	
 
 signals:

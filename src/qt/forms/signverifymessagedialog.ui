@@ -58,7 +58,7 @@
             <string/>
            </property>
            <property name="icon">
-            <iconset resource="../darkcoin.qrc">
+            <iconset resource="../dash.qrc">
              <normaloff>:/icons/address-book</normaloff>:/icons/address-book</iconset>
            </property>
            <property name="shortcut">
@@ -78,7 +78,7 @@
             <string/>
            </property>
            <property name="icon">
-            <iconset resource="../darkcoin.qrc">
+            <iconset resource="../dash.qrc">
              <normaloff>:/icons/editpaste</normaloff>:/icons/editpaste</iconset>
            </property>
            <property name="shortcut">
@@ -134,7 +134,7 @@
             <string/>
            </property>
            <property name="icon">
-            <iconset resource="../darkcoin.qrc">
+            <iconset resource="../dash.qrc">
              <normaloff>:/icons/editcopy</normaloff>:/icons/editcopy</iconset>
            </property>
            <property name="autoDefault">
@@ -149,13 +149,13 @@
          <item>
           <widget class="QPushButton" name="signMessageButton_SM">
            <property name="toolTip">
-            <string>Sign the message to prove you own this Darkcoin address</string>
+            <string>Sign the message to prove you own this Dash address</string>
            </property>
            <property name="text">
             <string>Sign &amp;Message</string>
            </property>
            <property name="icon">
-            <iconset resource="../darkcoin.qrc">
+            <iconset resource="../dash.qrc">
              <normaloff>:/icons/edit</normaloff>:/icons/edit</iconset>
            </property>
            <property name="autoDefault">
@@ -172,7 +172,7 @@
             <string>Clear &amp;All</string>
            </property>
            <property name="icon">
-            <iconset resource="../darkcoin.qrc">
+            <iconset resource="../dash.qrc">
              <normaloff>:/icons/remove</normaloff>:/icons/remove</iconset>
            </property>
            <property name="autoDefault">
@@ -268,7 +268,7 @@
             <string/>
            </property>
            <property name="icon">
-            <iconset resource="../darkcoin.qrc">
+            <iconset resource="../dash.qrc">
              <normaloff>:/icons/address-book</normaloff>:/icons/address-book</iconset>
            </property>
            <property name="shortcut">
@@ -292,13 +292,13 @@
          <item>
           <widget class="QPushButton" name="verifyMessageButton_VM">
            <property name="toolTip">
-            <string>Verify the message to ensure it was signed with the specified Darkcoin address</string>
+            <string>Verify the message to ensure it was signed with the specified Dash address</string>
            </property>
            <property name="text">
             <string>Verify &amp;Message</string>
            </property>
            <property name="icon">
-            <iconset resource="../darkcoin.qrc">
+            <iconset resource="../dash.qrc">
              <normaloff>:/icons/transaction_0</normaloff>:/icons/transaction_0</iconset>
            </property>
            <property name="autoDefault">
@@ -315,7 +315,7 @@
             <string>Clear &amp;All</string>
            </property>
            <property name="icon">
-            <iconset resource="../darkcoin.qrc">
+            <iconset resource="../dash.qrc">
              <normaloff>:/icons/remove</normaloff>:/icons/remove</iconset>
            </property>
            <property name="autoDefault">
@@ -381,7 +381,7 @@
   </customwidget>
  </customwidgets>
  <resources>
-  <include location="../darkcoin.qrc"/>
+  <include location="../dash.qrc"/>
  </resources>
  <connections/>
 </ui>

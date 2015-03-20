@@ -1,11 +1,11 @@
 *.tar.gz
 
 *.exe
-src/darkcoin
-src/darkcoind
-src/darkcoin-cli
-src/test/test_darkcoin
-src/qt/test/test_darkcoin-qt
+src/dash
+src/dashd
+src/dash-cli
+src/test/test_dash
+src/qt/test/test_dash-qt
 
 Makefile.in
 aclocal.m4
@@ -13,8 +13,8 @@ autom4te.cache/
 config.log
 config.status
 configure
-src/darkcoin-config.h
-src/darkcoin-config.h.in
+src/dash-config.h
+src/dash-config.h.in
 src/build-aux/
 src/stamp-h1
 share/setup.nsi
@@ -36,7 +36,7 @@ src/qt/test/moc*.cpp
 *.o
 *.o-*
 *.patch
-.darkcoin
+.dash
 *.a
 *.pb.cc
 *.pb.h
@@ -51,12 +51,12 @@ src/qt/test/moc*.cpp
 # Compilation and Qt preprocessor part
 *.qm
 Makefile
-darkcoin-qt
-Darkcoin-Qt.app
+dash-qt
+Dash-Qt.app
 
 # Unit-tests
 Makefile.test
-darkcoin-qt_test
+dash-qt_test
 
 # Resources cpp
 qrc_*.cpp
@@ -76,7 +76,7 @@ build
 #lcov
 *.gcno
 /*.info
-test_darkcoin.coverage/
+test_dash.coverage/
 total.coverage/
 coverage_percent.txt
 

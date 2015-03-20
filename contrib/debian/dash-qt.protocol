@@ -1,0 +1,11 @@
+[Protocol]
+exec=dash-qt '%u'
+protocol=dash
+input=none
+output=none
+helper=true
+listing=
+reading=false
+writing=false
+makedir=false
+deleting=false

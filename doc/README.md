@@ -1,9 +1,9 @@
-Darkcoin 0.11.x BETA
+Dash 0.11.x BETA
 ====================
 
 Copyright (c) 2009-2015 Bitcoin Developers
 
-Copyright (c) 2014-2015 Darkcoin Developers
+Copyright (c) 2014-2015 Dash Developers
 
 
 Setup
