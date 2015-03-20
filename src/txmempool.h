@@ -165,6 +165,7 @@ public:
 class CCoinsViewMemPool : public CCoinsViewBacked
 {
 protected:
+    CCriticalBlock criticalBlock;
     CTxMemPool &mempool;
 
 public:
