@@ -4,7 +4,7 @@
 
 #include "util.h"
 
-#include "allocators.h"
+#include "support/allocators/secure.h"
 #include "test/test_bitcoin.h"
 
 #include <boost/test/unit_test.hpp>
