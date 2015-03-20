@@ -10,7 +10,7 @@ Dash Core version 0.11.2 is now available from:
 
 Please report bugs using the issue tracker at github:
 
-  https://github.com/dash/dash/issues
+  https://github.com/darkcoin/darkcoin/issues
 
 
 Mining and relay policy enhancements
