@@ -148,10 +148,10 @@
             <number>2</number>
            </property>
            <property name="maximum">
-            <number>6</number>
+            <number>18</number>
            </property>
            <property name="value">
-            <number>3</number>
+            <number>4</number>
            </property>
           </widget>
          </item>

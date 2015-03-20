@@ -644,6 +644,9 @@ void CDarksendPool::SetNull(bool clearEverything){
         sessionID = 0;
     }
 
+    //automatically downgrade for 11.2, blinding will be supported in 11.3/12.0
+    Downgrade();
+
     // -- seed random number generator (used for ordering output lists)
     unsigned int seed = 0;
     RAND_bytes((unsigned char*)&seed, sizeof(seed));
@@ -1869,7 +1872,7 @@ bool CDarksendPool::Downgrade()
     if(myEntries.size() == 0) return false;
 
     fSubmitAnonymousFailed = true;
-    LogPrintf("CDarksendPool::Downgrade() : Downgrading and submitting directly\n");
+    //LogPrintf("CDarksendPool::Downgrade() : Downgrading and submitting directly\n");
 
     // relay our entry to the master node
     RelayIn(myEntries[0].sev, myEntries[0].amount, txCollateral, myEntries[0].vout);
