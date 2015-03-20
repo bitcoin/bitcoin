@@ -26,21 +26,18 @@ struct SeedSpec6 {
  * Main network
  */
 
-//! Convert the pnSeeds6 array into usable address objects.
-static void convertSeed6(std::vector<CAddress> &vSeedsOut, const SeedSpec6 *data, unsigned int count)
+//! Convert the pnSeeds6 array into usable service objects.
+static void convertSeed6(std::vector<CService> &vSeedsOut, const SeedSpec6 *data, unsigned int count)
 {
     // It'll only connect to one or two seed nodes because once it connects,
     // it'll get a pile of addresses with newer timestamps.
     // Seed nodes are given a random 'last seen time' of between one and two
     // weeks ago.
-    const int64_t nOneWeek = 7*24*60*60;
     for (unsigned int i = 0; i < count; i++)
     {
         struct in6_addr ip;
         memcpy(&ip, data[i].addr, sizeof(ip));
-        CAddress addr(CService(ip, data[i].port));
-        addr.nTime = GetTime() - GetRand(nOneWeek) - nOneWeek;
-        vSeedsOut.push_back(addr);
+        vSeedsOut.push_back(CService(ip, data[i].port));
     }
 }
 

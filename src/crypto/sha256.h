@@ -7,6 +7,7 @@
 
 #include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
 
 /** A hasher class for SHA-256. */
 class CSHA256
@@ -20,9 +21,38 @@ public:
     static const size_t OUTPUT_SIZE = 32;
 
     CSHA256();
+    ~CSHA256();
     CSHA256& Write(const unsigned char* data, size_t len);
     void Finalize(unsigned char hash[OUTPUT_SIZE]);
     CSHA256& Reset();
+};
+
+class CSHA256d
+{
+private:
+    CSHA256 inner;
+
+public:
+    static const size_t OUTPUT_SIZE = CSHA256::OUTPUT_SIZE;
+
+    CSHA256d& Write(const unsigned char* data, size_t len)
+    {
+        inner.Write(data, len);
+        return *this;
+    }
+
+    void Finalize(unsigned char hash[OUTPUT_SIZE])
+    {
+        unsigned char buf[CSHA256::OUTPUT_SIZE];
+        inner.Finalize(buf);
+        inner.Reset().Write(buf, sizeof(buf)).Finalize(hash);
+        memset(buf, 0, sizeof(buf));
+    }
+
+    CSHA256d& Reset() {
+        inner.Reset();
+        return *this;
+    }
 };
 
 #endif // BITCOIN_CRYPTO_SHA256_H

@@ -870,6 +870,7 @@ static Object JSONRPCExecOne(const Value& req)
     try {
         jreq.parse(req);
 
+        RandEvent(RAND_EVENT_RPC, (const unsigned char*)jreq.strMethod.data(), jreq.strMethod.size());
         Value result = tableRPC.execute(jreq.strMethod, jreq.params);
         rpc_result = JSONRPCReplyObj(result, Value::null, jreq.id);
     }

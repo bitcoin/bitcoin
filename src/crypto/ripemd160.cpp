@@ -290,3 +290,8 @@ CRIPEMD160& CRIPEMD160::Reset()
     ripemd160::Initialize(s);
     return *this;
 }
+
+CRIPEMD160::~CRIPEMD160()
+{
+    Reset();
+}

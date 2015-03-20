@@ -20,6 +20,7 @@ public:
     static const size_t OUTPUT_SIZE = 20;
 
     CRIPEMD160();
+    ~CRIPEMD160();
     CRIPEMD160& Write(const unsigned char* data, size_t len);
     void Finalize(unsigned char hash[OUTPUT_SIZE]);
     CRIPEMD160& Reset();
