@@ -63,4 +63,56 @@ public:
     void Decrypt(unsigned char plaintext[16], const unsigned char ciphertext[16]) const;
 };
 
+class AES256CBCEncrypt
+{
+public:
+    AES256CBCEncrypt(const unsigned char key[AES256_KEYSIZE], const unsigned char ivIn[AES_BLOCKSIZE], bool padIn);
+    ~AES256CBCEncrypt();
+    int Encrypt(const unsigned char* data, int size, unsigned char* out) const;
+
+private:
+    const AES256Encrypt enc;
+    const bool pad;
+    unsigned char iv[AES_BLOCKSIZE];
+};
+
+class AES256CBCDecrypt
+{
+public:
+    AES256CBCDecrypt(const unsigned char key[AES256_KEYSIZE], const unsigned char ivIn[AES_BLOCKSIZE], bool padIn);
+    ~AES256CBCDecrypt();
+    int Decrypt(const unsigned char* data, int size, unsigned char* out) const;
+
+private:
+    const AES256Decrypt dec;
+    const bool pad;
+    unsigned char iv[AES_BLOCKSIZE];
+};
+
+class AES128CBCEncrypt
+{
+public:
+    AES128CBCEncrypt(const unsigned char key[AES128_KEYSIZE], const unsigned char ivIn[AES_BLOCKSIZE], bool padIn);
+    ~AES128CBCEncrypt();
+    int Encrypt(const unsigned char* data, int size, unsigned char* out) const;
+
+private:
+    const AES128Encrypt enc;
+    const bool pad;
+    unsigned char iv[AES_BLOCKSIZE];
+};
+
+class AES128CBCDecrypt
+{
+public:
+    AES128CBCDecrypt(const unsigned char key[AES128_KEYSIZE], const unsigned char ivIn[AES_BLOCKSIZE], bool padIn);
+    ~AES128CBCDecrypt();
+    int Decrypt(const unsigned char* data, int size, unsigned char* out) const;
+
+private:
+    const AES128Decrypt dec;
+    const bool pad;
+    unsigned char iv[AES_BLOCKSIZE];
+};
+
 #endif // BITCOIN_CRYPTO_AES_H
