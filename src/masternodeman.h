@@ -108,7 +108,7 @@ public:
     CMasternode* Find(const CTxIn& vin);
 
     /// Find an entry thta do not match every entry provided vector
-    CMasternode* FindOldestNotInVec(const std::vector<CTxIn> &vVins);
+    CMasternode* FindOldestNotInVec(const std::vector<CTxIn> &vVins, int nMinimumAge, int nMinimumActiveSeconds);
 
     /// Find a random entry
     CMasternode* FindRandom();
