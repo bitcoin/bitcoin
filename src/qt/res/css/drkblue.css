@@ -122,6 +122,10 @@ border:none;
 outline:none;
 }
 
+QPushButton:pressed {
+border:1px solid #333;
+}
+
 QComboBox { /* Dropdown Menus */
 border:1px solid #82C3E6;
 padding: 3px 5px 3px 5px;
@@ -396,6 +400,10 @@ background-color:qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: .01 #f6f6f6, 
 color:#333;
 }
 
+QDialog#OpenURIDialog QPushButton#selectFileButton:pressed {
+border:1px solid #9e9e9e;
+}
+
 /* Dialog: Sign / Verify Message */
 QDialog#SignVerifyMessageDialog { 
 background-color:#F8F6F6;
@@ -442,6 +450,10 @@ background-color:qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: .01 #f6f6f6, 
 color:#333;
 }
 
+QDialog#SignVerifyMessageDialog QPushButton#clearButton_SM:pressed {
+border:1px solid #9e9e9e;
+}
+
 QDialog#SignVerifyMessageDialog QPushButton#addressBookButton_VM { /* Verify Message - Address Book Button */
 background-color:transparent;
 border:0;
@@ -462,6 +474,10 @@ background-color:qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: .01 #f6f6f6, 
 color:#333;
 }
 
+QDialog#SignVerifyMessageDialog QPushButton#clearButton_VM:pressed {
+border:1px solid #9e9e9e;
+}
+
 /* Dialog: Send and Receive */
 QWidget#AddressBookPage { 
 background-color:#F8F6F6;
@@ -480,6 +496,10 @@ background-color:qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: .01 #f6f6f6, 
 color:#333;
 }
 
+QWidget#AddressBookPage QPushButton#newAddress:pressed {
+border:1px solid #9e9e9e;
+}
+
 QWidget#AddressBookPage QPushButton#copyAddress { /* Copy Address Button */
 background-color:qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: .01 #f6f6f6, stop: .1 rgba(250, 250, 250, 128), stop: .95 rgba(250, 250, 250, 255), stop: 1 #ebebeb);
 border:1px solid #d2d2d2;
@@ -493,6 +513,10 @@ background-color:qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: .01 #f6f6f6, 
 color:#333;
 }
 
+QWidget#AddressBookPage QPushButton#copyAddress:pressed {
+border:1px solid #9e9e9e;
+}
+
 QWidget#AddressBookPage QPushButton#deleteAddress { /* Delete Address Button */
 background-color:qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: .01 #f6f6f6, stop: .1 rgba(250, 250, 250, 128), stop: .95 rgba(250, 250, 250, 255), stop: 1 #ebebeb);
 border:1px solid #d2d2d2;
@@ -504,6 +528,10 @@ padding-right:10px;
 QWidget#AddressBookPage QPushButton#deleteAddress:hover {
 background-color:qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: .01 #f6f6f6, stop: .1 rgba(240, 240, 240, 255), stop: .95 rgba(240, 240, 240, 255), stop: 1 #ebebeb);
 color:#333;
+}
+
+QWidget#AddressBookPage QPushButton#deleteAddress:pressed {
+border:1px solid #9e9e9e;
 }
 
 QWidget#AddressBookPage QTableView { /* Address Listing */
@@ -632,6 +660,18 @@ margin-left:10px;
 
 QDialog#AboutDialog QLabel#label_2 { /* Margin for About Dash text */
 margin-right:10px;
+}
+
+/* Edit Address Dialog */
+QDialog#EditAddressDialog { 
+background-color:#F8F6F6;
+}
+
+QDialog#EditAddressDialog QLabel {
+qproperty-alignment: 'AlignVCenter | AlignRight';
+min-height:27px;
+font-weight:normal;
+padding-right:5px;
 }
 
 /* OVERVIEW SCREEN */
@@ -821,11 +861,7 @@ font-size:11px;
 color:#818181;
 }
 
-
 /* DARKSEND BUTTONS */
-
-
-
 
 QWidget .QFrame#frameDarksend .QPushButton { /* Darksend Buttons - General Attributes */
 border:0px solid #ffffff;
@@ -872,6 +908,9 @@ background-color:qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: .01 #f6f6f6, 
 color:#333;
 }
 
+QWidget .QFrame#frameDarksend .QPushButton#darksendAuto:pressed {
+border:1px solid #9e9e9e;
+}
 
 QWidget .QFrame#frameDarksend .QPushButton#darksendReset { /* Reset Button */
 qproperty-geometry: rect(270 301 140 25);
@@ -886,6 +925,10 @@ padding:0px;
 QWidget .QFrame#frameDarksend .QPushButton#darksendReset:hover {
 background-color:qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: .01 #f6f6f6, stop: .1 rgba(240, 240, 240, 255), stop: .95 rgba(240, 240, 240, 255), stop: 1 #ebebeb);
 color:#333;
+}
+
+QWidget .QFrame#frameDarksend .QPushButton#darksendReset:pressed {
+border:1px solid #9e9e9e;
 }
 
 /* RECENT TRANSACTIONS */
@@ -980,6 +1023,10 @@ background-color:qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: .01 #f6f6f6, 
 color:#333;
 }
 
+QDialog#SendCoinsDialog .QPushButton#clearButton:pressed {
+border:1px solid #9e9e9e;
+}
+
 QDialog#SendCoinsDialog .QPushButton#addButton { /* Add Button */
 background-color:qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: .01 #f6f6f6, stop: .1 rgba(250, 250, 250, 128), stop: .95 rgba(250, 250, 250, 255), stop: 1 #ebebeb);
 border:1px solid #d2d2d2;
@@ -991,6 +1038,10 @@ padding-right:10px;
 QDialog#SendCoinsDialog .QPushButton#addButton:hover { 
 background-color:qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: .01 #f6f6f6, stop: .1 rgba(240, 240, 240, 255), stop: .95 rgba(240, 240, 240, 255), stop: 1 #ebebeb);
 color:#333;
+}
+
+QDialog#SendCoinsDialog .QPushButton#addButton:pressed {
+border:1px solid #9e9e9e;
 }
 
 QDialog#SendCoinsDialog .QCheckBox#checkUseDarksend { /* Darksend Checkbox */
@@ -1010,10 +1061,14 @@ border-radius:5px;
 padding-top:20px;
 padding-bottom:20px;
 margin-left:10px;
+margin-right:20px;
 }
 
-QDialog#SendCoinsDialog .QLabel#label {
-margin-left:20px;
+/* This QLabel uses name = "label" which conflicts with Address Book -> New Address */
+/* To maximize backwards compatibility this formatting has been removed */
+
+QDialog#SendCoinsDialog QLabel#label { 
+/*margin-left:20px;
 margin-right:-2px;
 padding-right:-2px;
 color:#616161;
@@ -1021,18 +1076,21 @@ font-size:14px;
 font-weight:bold;
 border-radius:5px;
 padding-top:20px;
-padding-bottom:20px;
+padding-bottom:20px;*/
+min-height:27px;
 }
 
-QDialog#SendCoinsDialog .QLabel#labelBalance {
+QDialog#SendCoinsDialog QLabel#labelBalance {
 margin-left:0px;
 padding-left:0px;
 color:#616161;
-font-weight:bold;
+/* font-weight:bold;
 border-radius:5px;
 padding-top:20px;
-padding-bottom:20px;
+padding-bottom:20px; */
+min-height:27px;
 }
+
 
 /* SEND COINS ENTRY */
 
@@ -1063,16 +1121,16 @@ outline: 0;
 }
 
 QStackedWidget#SendCoinsEntry .QToolButton#addressBookButton { /* Address Book Button */
-/* qproperty-icon: url(":/icons/drkblue_address-book"); on the fence if I want to use this one or not */
 padding-left:10px;
 }
 
-QStackedWidget#SendCoinsEntry .QToolButton#pasteButton { /* Paste Button */
-/* qproperty-icon: url(":/icons/drkblue_editpaste"); */
+QStackedWidget#SendCoinsEntry .QToolButton#addressBookButton {
 }
 
-QStackedWidget#SendCoinsEntry .QToolButton#deleteButton { /* Remove Button */
-/* qproperty-icon: url(":/icons/drkblue_remove"); */
+QStackedWidget#SendCoinsEntry .QToolButton#pasteButton {
+}
+
+QStackedWidget#SendCoinsEntry .QToolButton#deleteButton {
 }
 
 QStackedWidget#SendCoinsEntry .QLineEdit#addAsLabel { /* Pay To Input Field */
@@ -1257,6 +1315,10 @@ background-color:qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: .01 #f6f6f6, 
 color:#333;
 }
 
+QWidget#ReceiveCoinsDialog .QFrame#frame2 QPushButton#clearButton:pressed {
+border:1px solid #9e9e9e;
+}
+
 QWidget#ReceiveCoinsDialog .QFrame#frame QPushButton#showRequestButton { /* Show Button */
 background-color:qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: .01 #f6f6f6, stop: .1 rgba(250, 250, 250, 128), stop: .95 rgba(250, 250, 250, 255), stop: 1 #ebebeb);
 border:1px solid #d2d2d2;
@@ -1270,6 +1332,10 @@ background-color:qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: .01 #f6f6f6, 
 color:#333;
 }
 
+QWidget#ReceiveCoinsDialog .QFrame#frame QPushButton#showRequestButton:pressed {
+border:1px solid #9e9e9e;
+}
+
 QWidget#ReceiveCoinsDialog .QFrame#frame QPushButton#removeRequestButton { /* Remove Button */
 background-color:qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: .01 #f6f6f6, stop: .1 rgba(250, 250, 250, 128), stop: .95 rgba(250, 250, 250, 255), stop: 1 #ebebeb);
 border:1px solid #d2d2d2;
@@ -1281,6 +1347,10 @@ padding-right:10px;
 QWidget#ReceiveCoinsDialog .QFrame#frame QPushButton#removeRequestButton:hover { 
 background-color:qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: .01 #f6f6f6, stop: .1 rgba(240, 240, 240, 255), stop: .95 rgba(240, 240, 240, 255), stop: 1 #ebebeb);
 color:#333;
+}
+
+QWidget#ReceiveCoinsDialog .QFrame#frame QPushButton#removeRequestButton:pressed {
+border:1px solid #9e9e9e;
 }
 
 QWidget#ReceiveCoinsDialog .QFrame#frame .QLabel#label_6 { /* Requested Payments History Label */
