@@ -200,16 +200,24 @@ void run_rfc6979_hmac_sha256_tests(void) {
 
     secp256k1_rfc6979_hmac_sha256_t rng;
     unsigned char out[32];
+    unsigned char zero[1] = {0};
     int i;
 
-    secp256k1_rfc6979_hmac_sha256_initialize(&rng, key1, 32, msg1, 32);
+    secp256k1_rfc6979_hmac_sha256_initialize(&rng, key1, 32, msg1, 32, NULL, 1);
     for (i = 0; i < 3; i++) {
         secp256k1_rfc6979_hmac_sha256_generate(&rng, out, 32);
         CHECK(memcmp(out, out1[i], 32) == 0);
     }
     secp256k1_rfc6979_hmac_sha256_finalize(&rng);
 
-    secp256k1_rfc6979_hmac_sha256_initialize(&rng, key2, 32, msg2, 32);
+    secp256k1_rfc6979_hmac_sha256_initialize(&rng, key1, 32, msg1, 32, zero, 1);
+    for (i = 0; i < 3; i++) {
+        secp256k1_rfc6979_hmac_sha256_generate(&rng, out, 32);
+        CHECK(memcmp(out, out1[i], 32) != 0);
+    }
+    secp256k1_rfc6979_hmac_sha256_finalize(&rng);
+
+    secp256k1_rfc6979_hmac_sha256_initialize(&rng, key2, 32, msg2, 32, zero, 0);
     for (i = 0; i < 3; i++) {
         secp256k1_rfc6979_hmac_sha256_generate(&rng, out, 32);
         CHECK(memcmp(out, out2[i], 32) == 0);

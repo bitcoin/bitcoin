@@ -97,7 +97,10 @@ typedef int (*secp256k1_nonce_function_t)(
   const void *data
 );
 
-/** An implementation of RFC6979 (using HMAC-SHA256) as nonce generation function. */
+/** An implementation of RFC6979 (using HMAC-SHA256) as nonce generation function.
+ * If a data pointer is passed, it is assumed to be a pointer to 32 bytes of
+ * extra entropy.
+ */
 extern const secp256k1_nonce_function_t secp256k1_nonce_function_rfc6979;
 
 /** A default safe nonce generation function (currently equal to secp256k1_nonce_function_rfc6979). */
