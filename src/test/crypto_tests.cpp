@@ -10,13 +10,14 @@
 #include "crypto/hmac_sha512.h"
 #include "random.h"
 #include "utilstrencodings.h"
+#include "test/test_bitcoin.h"
 
 #include <vector>
 
 #include <boost/assign/list_of.hpp>
 #include <boost/test/unit_test.hpp>
 
-BOOST_AUTO_TEST_SUITE(crypto_tests)
+BOOST_FIXTURE_TEST_SUITE(crypto_tests, BasicTestingSetup)
 
 template<typename Hasher, typename In, typename Out>
 void TestVector(const Hasher &h, const In &in, const Out &out) {

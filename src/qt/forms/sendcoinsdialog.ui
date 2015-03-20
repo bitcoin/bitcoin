@@ -771,16 +771,6 @@
                 </property>
                </widget>
               </item>
-              <item>
-               <widget class="QPushButton" name="buttonMinimizeFee">
-                <property name="toolTip">
-                 <string>collapse fee-settings</string>
-                </property>
-                <property name="text">
-                 <string>Minimize</string>
-                </property>
-               </widget>
-              </item>
              </layout>
             </item>
             <item>
@@ -810,6 +800,16 @@
              </size>
             </property>
            </spacer>
+          </item>
+          <item>
+           <widget class="QPushButton" name="buttonMinimizeFee">
+            <property name="toolTip">
+             <string>collapse fee-settings</string>
+            </property>
+            <property name="text">
+             <string>Minimize</string>
+            </property>
+           </widget>
           </item>
          </layout>
         </item>

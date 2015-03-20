@@ -151,7 +151,7 @@ BitcoinGUI::BitcoinGUI(const NetworkStyle *networkStyle, QWidget *parent) :
 
     // Create actions for the toolbar, menu bar and tray/dock icon
     // Needs walletFrame to be initialized
-    createActions(networkStyle);
+    createActions();
 
     // Create application menu bar
     createMenuBar();
@@ -237,13 +237,13 @@ BitcoinGUI::~BitcoinGUI()
         trayIcon->hide();
 #ifdef Q_OS_MAC
     delete appMenuBar;
-    MacDockIconHandler::instance()->setMainWindow(NULL);
+    MacDockIconHandler::cleanup();
 #endif
 
     delete rpcConsole;
 }
 
-void BitcoinGUI::createActions(const NetworkStyle *networkStyle)
+void BitcoinGUI::createActions()
 {
     QActionGroup *tabGroup = new QActionGroup(this);
 
@@ -340,6 +340,7 @@ void BitcoinGUI::createActions(const NetworkStyle *networkStyle)
     openAction->setStatusTip(tr("Open a bitcoin: URI or payment request"));
 
     showHelpMessageAction = new QAction(TextColorIcon(":/icons/info"), tr("&Command-line options"), this);
+    showHelpMessageAction->setMenuRole(QAction::NoRole);
     showHelpMessageAction->setStatusTip(tr("Show the Bitcoin Core help message to get a list with possible Bitcoin command-line options"));
 
     connect(quitAction, SIGNAL(triggered()), qApp, SLOT(quit()));
@@ -435,8 +436,8 @@ void BitcoinGUI::setClientModel(ClientModel *clientModel)
         setNumConnections(clientModel->getNumConnections());
         connect(clientModel, SIGNAL(numConnectionsChanged(int)), this, SLOT(setNumConnections(int)));
 
-        setNumBlocks(clientModel->getNumBlocks());
-        connect(clientModel, SIGNAL(numBlocksChanged(int)), this, SLOT(setNumBlocks(int)));
+        setNumBlocks(clientModel->getNumBlocks(), clientModel->getLastBlockDate());
+        connect(clientModel, SIGNAL(numBlocksChanged(int,QDateTime)), this, SLOT(setNumBlocks(int,QDateTime)));
 
         // Receive and report messages from client model
         connect(clientModel, SIGNAL(message(QString,QString,unsigned int)), this, SLOT(message(QString,QString,unsigned int)));
@@ -652,7 +653,7 @@ void BitcoinGUI::setNumConnections(int count)
     labelConnectionsIcon->setToolTip(tr("%n active connection(s) to Bitcoin network", "", count));
 }
 
-void BitcoinGUI::setNumBlocks(int count)
+void BitcoinGUI::setNumBlocks(int count, const QDateTime& blockDate)
 {
     if(!clientModel)
         return;
@@ -680,9 +681,8 @@ void BitcoinGUI::setNumBlocks(int count)
 
     QString tooltip;
 
-    QDateTime lastBlockDate = clientModel->getLastBlockDate();
     QDateTime currentDate = QDateTime::currentDateTime();
-    int secs = lastBlockDate.secsTo(currentDate);
+    qint64 secs = blockDate.secsTo(currentDate);
 
     tooltip = tr("Processed %n blocks of transaction history.", "", count);
 
@@ -722,8 +722,8 @@ void BitcoinGUI::setNumBlocks(int count)
         }
         else
         {
-            int years = secs / YEAR_IN_SECONDS;
-            int remainder = secs % YEAR_IN_SECONDS;
+            qint64 years = secs / YEAR_IN_SECONDS;
+            qint64 remainder = secs % YEAR_IN_SECONDS;
             timeBehindText = tr("%1 and %2").arg(tr("%n year(s)", "", years)).arg(tr("%n week(s)","", remainder/WEEK_IN_SECONDS));
         }
 

@@ -141,6 +141,8 @@ BITCOIN_CORE_H = \
   walletdb.h \
   wallet.h \
   wallet_ismine.h \
+  compat/byteswap.h \
+  compat/endian.h \
   compat/sanity.h
 
 JSON_H = \
@@ -280,7 +282,6 @@ libbitcoin_util_a_SOURCES = \
 
 if GLIBC_BACK_COMPAT
 libbitcoin_util_a_SOURCES += compat/glibc_compat.cpp
-libbitcoin_util_a_SOURCES += compat/glibcxx_compat.cpp
 endif
 
 # cli: shared between bitcoin-cli and bitcoin-qt
@@ -372,16 +373,12 @@ libbitcoinconsensus_la_SOURCES = \
 
 if GLIBC_BACK_COMPAT
   libbitcoinconsensus_la_SOURCES += compat/glibc_compat.cpp
-  libbitcoinconsensus_la_SOURCES += compat/glibcxx_compat.cpp
 endif
 
 libbitcoinconsensus_la_LDFLAGS = -no-undefined $(RELDFLAGS)
 libbitcoinconsensus_la_LIBADD = $(CRYPTO_LIBS)
 libbitcoinconsensus_la_CPPFLAGS = $(CRYPTO_CFLAGS) -I$(builddir)/obj -DBUILD_BITCOIN_INTERNAL
 
-if USE_LIBSECP256K1
-libbitcoinconsensus_la_LIBADD += secp256k1/libsecp256k1.la
-endif
 endif
 #
 

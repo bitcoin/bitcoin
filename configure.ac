@@ -115,9 +115,9 @@ AC_ARG_ENABLE([hardening],
 
 AC_ARG_ENABLE([reduce-exports],
   [AS_HELP_STRING([--enable-reduce-exports],
-  [attempt to reduce exported symbols in the resulting executables (default is yes)])],
+  [attempt to reduce exported symbols in the resulting executables (default is no)])],
   [use_reduce_exports=$enableval],
-  [use_reduce_exports=auto])
+  [use_reduce_exports=no])
 
 AC_ARG_ENABLE([ccache],
   [AS_HELP_STRING([--enable-ccache],
@@ -133,7 +133,7 @@ AC_ARG_ENABLE([lcov],
 
 AC_ARG_ENABLE([glibc-back-compat],
   [AS_HELP_STRING([--enable-glibc-back-compat],
-  [enable backwards compatibility with glibc and libstdc++])],
+  [enable backwards compatibility with glibc])],
   [use_glibc_compat=$enableval],
   [use_glibc_compat=no])
 
@@ -350,8 +350,8 @@ if test x$use_lcov = xyes; then
     [AC_MSG_ERROR("lcov testing requested but --coverage flag does not work")])
 fi
 
-dnl Require little endian
-AC_C_BIGENDIAN([AC_MSG_ERROR("Big Endian not supported")])
+dnl Check for endianness
+AC_C_BIGENDIAN
 
 dnl Check for pthread compile/link requirements
 AX_PTHREAD
@@ -438,15 +438,20 @@ if test x$TARGET_OS = xdarwin; then
   AX_CHECK_LINK_FLAG([[-Wl,-dead_strip]], [LDFLAGS="$LDFLAGS -Wl,-dead_strip"])
 fi
 
-AC_CHECK_HEADERS([endian.h stdio.h stdlib.h unistd.h strings.h sys/types.h sys/stat.h sys/select.h sys/prctl.h])
+AC_CHECK_HEADERS([endian.h byteswap.h stdio.h stdlib.h unistd.h strings.h sys/types.h sys/stat.h sys/select.h sys/prctl.h])
 AC_SEARCH_LIBS([getaddrinfo_a], [anl], [AC_DEFINE(HAVE_GETADDRINFO_A, 1, [Define this symbol if you have getaddrinfo_a])])
 AC_SEARCH_LIBS([inet_pton], [nsl resolv], [AC_DEFINE(HAVE_INET_PTON, 1, [Define this symbol if you have inet_pton])])
 
 AC_CHECK_DECLS([strnlen])
 
-AC_CHECK_DECLS([le32toh, le64toh, htole32, htole64, be32toh, be64toh, htobe32, htobe64],,,
+AC_CHECK_DECLS([le16toh, le32toh, le64toh, htole16, htole32, htole64, be16toh, be32toh, be64toh, htobe16, htobe32, htobe64],,,
 		[#if HAVE_ENDIAN_H
                  #include <endian.h>
+                 #endif])
+
+AC_CHECK_DECLS([bswap_16, bswap_32, bswap_64],,,
+		[#if HAVE_BYTESWAP_H
+                 #include <byteswap.h>
                  #endif])
 
 dnl Check for MSG_NOSIGNAL
@@ -471,22 +476,14 @@ AC_LINK_IFELSE([AC_LANG_SOURCE([
   [
     AC_MSG_RESULT(no)
     if test x$use_reduce_exports = xyes; then
-      AC_MSG_ERROR([Cannot find a working visibility attribute. Use --disable-reduced-exports.])
+      AC_MSG_ERROR([Cannot find a working visibility attribute. Use --disable-reduce-exports.])
     fi
-      AC_MSG_WARN([Cannot find a working visibility attribute. Disabling reduced exports.])
-      use_reduce_exports=no
   ]
 )
 
-if test x$use_reduce_exports != xno; then
+if test x$use_reduce_exports = xyes; then
   AX_CHECK_COMPILE_FLAG([-fvisibility=hidden],[RE_CXXFLAGS="-fvisibility=hidden"],
-  [
-    if test x$use_reduce_exports = xyes; then
-      AC_MSG_ERROR([Cannot set default symbol visibility. Use --disable-reduced-exports.])
-    fi
-    AC_MSG_WARN([Cannot set default symbol visibility. Disabling reduced exports.])
-    use_reduce_exports=no
-  ])
+  [AC_MSG_ERROR([Cannot set default symbol visibility. Use --disable-reduce-exports.])])
 fi
 
 LEVELDB_CPPFLAGS=
@@ -533,7 +530,7 @@ AX_BOOST_THREAD
 AX_BOOST_CHRONO
 
 
-if test x$use_reduce_exports != xno; then
+if test x$use_reduce_exports = xyes; then
   AC_MSG_CHECKING([for working boost reduced exports])
   TEMP_CPPFLAGS="$CPPFLAGS"
   CPPFLAGS="$BOOST_CPPFLAGS $CPPFLAGS"
@@ -547,25 +544,14 @@ if test x$use_reduce_exports != xno; then
       #endif
     ]])],[
       AC_MSG_RESULT(yes)
-    ],[:
-    if test x$use_reduce_exports = xauto; then
-      use_reduce_exports=no
-    else
-      if test x$use_reduce_exports = xyes; then
-        AC_MSG_ERROR([boost versions < 1.49 are known to be broken with reduced exports. Use --disable-reduced-exports.])
-      fi
-    fi
-    AC_MSG_RESULT(no)
-    AC_MSG_WARN([boost versions < 1.49 are known to have symbol visibility issues. Disabling reduced exports.])
+    ],[
+    AC_MSG_ERROR([boost versions < 1.49 are known to be broken with reduced exports. Use --disable-reduce-exports.])
   ])
   CPPFLAGS="$TEMP_CPPFLAGS"
 fi
-
-elif test x$use_reduce_exports = xauto; then
-    use_reduce_exports=yes
 fi
 
-if test x$use_reduce_exports != xno; then
+if test x$use_reduce_exports = xyes; then
     CXXFLAGS="$CXXFLAGS $RE_CXXFLAGS"
     AX_CHECK_LINK_FLAG([[-Wl,--exclude-libs,ALL]], [RELDFLAGS="-Wl,--exclude-libs,ALL"])
 fi
@@ -827,7 +813,7 @@ else
 fi
 
 AC_MSG_CHECKING([whether to reduce exports])
-if test x$use_reduce_exports != xno; then
+if test x$use_reduce_exports = xyes; then
   AC_MSG_RESULT([yes])
 else
   AC_MSG_RESULT([no])
@@ -849,7 +835,6 @@ AM_CONDITIONAL([USE_LCOV],[test x$use_lcov = xyes])
 AM_CONDITIONAL([USE_COMPARISON_TOOL],[test x$use_comparison_tool != xno])
 AM_CONDITIONAL([USE_COMPARISON_TOOL_REORG_TESTS],[test x$use_comparison_tool_reorg_test != xno])
 AM_CONDITIONAL([GLIBC_BACK_COMPAT],[test x$use_glibc_compat = xyes])
-AM_CONDITIONAL([USE_LIBSECP256K1],[test x$use_libsecp256k1 = xyes])
 
 AC_DEFINE(CLIENT_VERSION_MAJOR, _CLIENT_VERSION_MAJOR, [Major version])
 AC_DEFINE(CLIENT_VERSION_MINOR, _CLIENT_VERSION_MINOR, [Minor version])

@@ -10,6 +10,7 @@
 #include "script/interpreter.h"
 #include "script/sign.h"
 #include "uint256.h"
+#include "test/test_bitcoin.h"
 
 #ifdef ENABLE_WALLET
 #include "wallet_ismine.h"
@@ -22,7 +23,7 @@ using namespace std;
 
 typedef vector<unsigned char> valtype;
 
-BOOST_AUTO_TEST_SUITE(multisig_tests)
+BOOST_FIXTURE_TEST_SUITE(multisig_tests, BasicTestingSetup)
 
 CScript
 sign_multisig(CScript scriptPubKey, vector<CKey> keys, CTransaction transaction, int whichIn)
