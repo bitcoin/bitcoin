@@ -69,10 +69,10 @@ QString BitcoinUnits::description(int unit)
     {
         switch(unit)
         {
-            case DASH: return QString("Darkcoins");
-            case mDASH: return QString("Milli-Darkcoins (1 / 1,000)");
-            case uDASH: return QString("Micro-Darkcoins (1 / 1,000,000)");
-            case duffs: return QString("Ten Nano-Darkcoins (1 / 100,000,000)");
+            case DASH: return QString("Dash");
+            case mDASH: return QString("Milli-Dash (1 / 1,000)");
+            case uDASH: return QString("Micro-Dash (1 / 1,000,000)");
+            case duffs: return QString("Ten Nano-Dash (1 / 100,000,000)");
             default: return QString("???");
         }
     }

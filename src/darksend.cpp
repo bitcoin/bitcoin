@@ -40,8 +40,8 @@ int RequestedMasterNodeList = 0;
 
 /* *** BEGIN DARKSEND MAGIC - DASH **********
     Copyright (c) 2014-2015, Dash Developers
-        eduffield - evan@dashcurrency.com
-        udjinm6   - udjinm6@dashcurrency.com
+        eduffield - evan@dashpay.io
+        udjinm6   - udjinm6@dashpay.io
 */
 
 void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand, CDataStream& vRecv)

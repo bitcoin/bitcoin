@@ -293,7 +293,7 @@ Denna produkt innehåller mjukvara utvecklad av OpenSSL Projekt för användning
     <message>
         <location filename="../askpassphrasedialog.cpp" line="124"/>
         <source>Dash will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your dashs from being stolen by malware infecting your computer.</source>
-        <translation>Dash kommer nu att avsluta krypteringsprocessen. Kom ihåg att krypteringen av din plånbok inte helt kan skydda dig mot att dina Darkcoins blir stulna av skadeprogram som har infekterat din dator.</translation>
+        <translation>Dash kommer nu att avsluta krypteringsprocessen. Kom ihåg att krypteringen av din plånbok inte helt kan skydda dig mot att dina Dash blir stulna av skadeprogram som har infekterat din dator.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="128"/>
@@ -1181,17 +1181,17 @@ Adress: %4
     <message>
         <location filename="../darksendconfig.cpp" line="44"/>
         <source>Darksend was successfully set to basic (%1 and 2 rounds). You can change this at any time by opening Dash&apos;s configuration screen.</source>
-        <translation>Darksend ställdes framgångsrikt in på grundläggande (%1 och 2 omgångar). Du kan ändra detta när som helst genom att öppna Darkcoins konfigurationsfönster.</translation>
+        <translation>Darksend ställdes framgångsrikt in på grundläggande (%1 och 2 omgångar). Du kan ändra detta när som helst genom att öppna Dash konfigurationsfönster.</translation>
     </message>
     <message>
         <location filename="../darksendconfig.cpp" line="59"/>
         <source>Darksend was successfully set to high (%1 and 8 rounds). You can change this at any time by opening Dash&apos;s configuration screen.</source>
-        <translation>Darksend ställdes framgångsrikt in på hög (%1 och 8 omgångar). Du kan ändra detta när som helst genom att öppna Darkcoins konfigurationsfönster.</translation>
+        <translation>Darksend ställdes framgångsrikt in på hög (%1 och 8 omgångar). Du kan ändra detta när som helst genom att öppna Dash konfigurationsfönster.</translation>
     </message>
     <message>
         <location filename="../darksendconfig.cpp" line="74"/>
         <source>Darksend was successfully set to maximum (%1 and 16 rounds). You can change this at any time by opening Dash&apos;s configuration screen.</source>
-        <translation>Darksend ställdes framgångsrikt in på maximal (%1 och 16 omgångar). Du kan ändra detta när som helst genom att öppna Darkcoins konfigurationsfönster.</translation>
+        <translation>Darksend ställdes framgångsrikt in på maximal (%1 och 16 omgångar). Du kan ändra detta när som helst genom att öppna Dash konfigurationsfönster.</translation>
     </message>
 </context>
 <context>
@@ -1369,7 +1369,7 @@ Adress: %4
     <message>
         <location filename="../forms/intro.ui" line="59"/>
         <source>Dash Core will download and store a copy of the Dash block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
-        <translation>Dash Core kommer att laddas ned och lagra en kopia av Darkcoins blockkedja. Minst %1 GB data kommer att lagras i denna katalog och den kommer att växa med tiden. Plånboken kommer också att lagras i denna katalog.</translation>
+        <translation>Dash Core kommer att laddas ned och lagra en kopia av Dash blockkedja. Minst %1 GB data kommer att lagras i denna katalog och den kommer att växa med tiden. Plånboken kommer också att lagras i denna katalog.</translation>
     </message>
     <message>
         <location filename="../forms/intro.ui" line="69"/>
@@ -1495,7 +1495,7 @@ Adress: %4
     <message>
         <location filename="../forms/optionsdialog.ui" line="180"/>
         <source>Amount of Dash to keep anonymized</source>
-        <translation>Antal Darkcoins att bibehålla anonymiserade</translation>
+        <translation>Antal Dash att bibehålla anonymiserade</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="206"/>
@@ -1545,7 +1545,7 @@ Adress: %4
     <message>
         <location filename="../forms/optionsdialog.ui" line="307"/>
         <source>Automatically open the Dash client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation>Öppna Darkcoins klientport automatiskt på routern. Detta fungerar bara om din router stöder UPnP och är aktiverad.</translation>
+        <translation>Öppna Dash klientport automatiskt på routern. Detta fungerar bara om din router stöder UPnP och är aktiverad.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="310"/>
@@ -2264,7 +2264,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../forms/rpcconsole.ui" line="90"/>
         <source>Open the Dash debug log file from the current data directory. This can take a few seconds for large log files.</source>
-        <translation>Öppna Darkcoins avsökningsloggfil från den nuvarande datakatalogen. Detta kan ta ett par sekunder för stora loggfiler.</translation>
+        <translation>Öppna Dash avsökningsloggfil från den nuvarande datakatalogen. Detta kan ta ett par sekunder för stora loggfiler.</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="93"/>
@@ -2356,7 +2356,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../rpcconsole.cpp" line="333"/>
         <source>Welcome to the Dash RPC console.</source>
-        <translation>Välkommen till Darkcoins RPC-konsol.</translation>
+        <translation>Välkommen till Dash RPC-konsol.</translation>
     </message>
     <message>
         <location filename="../rpcconsole.cpp" line="334"/>

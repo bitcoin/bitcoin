@@ -1179,17 +1179,17 @@ Adresse: %4
     <message>
         <location filename="../darksendconfig.cpp" line="44"/>
         <source>Darksend was successfully set to basic (%1 and 2 rounds). You can change this at any time by opening Dash&apos;s configuration screen.</source>
-        <translation>Darksend ble satt til grunnleggende (%1 og 2 runder). Du kan endre dette når som helst ved å åpne Darkcoins konfigurasjonvindu.</translation>
+        <translation>Darksend ble satt til grunnleggende (%1 og 2 runder). Du kan endre dette når som helst ved å åpne Dash konfigurasjonvindu.</translation>
     </message>
     <message>
         <location filename="../darksendconfig.cpp" line="59"/>
         <source>Darksend was successfully set to high (%1 and 8 rounds). You can change this at any time by opening Dash&apos;s configuration screen.</source>
-        <translation>Darksend ble satt til veldig godt (%1 og 8 runder). Du kan endre dette når som helst ved å åpne Darkcoins konfigurasjonvindu.</translation>
+        <translation>Darksend ble satt til veldig godt (%1 og 8 runder). Du kan endre dette når som helst ved å åpne Dash konfigurasjonvindu.</translation>
     </message>
     <message>
         <location filename="../darksendconfig.cpp" line="74"/>
         <source>Darksend was successfully set to maximum (%1 and 16 rounds). You can change this at any time by opening Dash&apos;s configuration screen.</source>
-        <translation>Darksend ble satt til maksimalt (%1 og 16 runder). Du kan endre dette når som helst ved å åpne Darkcoins konfigurasjonvindu.</translation>
+        <translation>Darksend ble satt til maksimalt (%1 og 16 runder). Du kan endre dette når som helst ved å åpne Dash konfigurasjonvindu.</translation>
     </message>
 </context>
 <context>
