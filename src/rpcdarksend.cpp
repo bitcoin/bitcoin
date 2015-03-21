@@ -714,8 +714,12 @@ Value masternodelist(const Array& params, bool fHelp)
 
                 std::string strStatus = "ABSTAIN";
 
-                if(mn.nVote == -1) strStatus = "NAY";
-                if(mn.nVote == 1) strStatus = "YAY";
+                //voting lasts 7 days, ignore the last vote if it was older than that
+                if((GetAdjustedTime() - mn.lastVote) < (60*60*8))
+                {
+                    if(mn.nVote == -1) strStatus = "NAY";
+                    if(mn.nVote == 1) strStatus = "YEA";
+                }
 
                 obj.push_back(Pair(strAddr,       strStatus.c_str()));
             } else if (strMode == "activeseconds") {
