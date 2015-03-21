@@ -12,6 +12,7 @@
 #include "consensus/validation.h"
 #include "main.h"
 #include "net.h"
+#include "rpcserver.h"
 #include "script/script.h"
 #include "script/sign.h"
 #include "timedata.h"
@@ -41,6 +42,60 @@ bool fPayAtLeastCustomFee = true;
  * Override with -mintxfee
  */
 CFeeRate CWallet::minTxFee = CFeeRate(1000);
+
+
+static const CRPCCommand vWalletRPCCommands[] =
+{
+    { "wallet",             "addmultisigaddress",       &addmultisigaddress,     true},
+    { "wallet",             "backupwallet",             &backupwallet,           true},
+    { "wallet",             "dumpprivkey",              &dumpprivkey,            true},
+    { "wallet",             "dumpwallet",               &dumpwallet,             true},
+    { "wallet",             "encryptwallet",            &encryptwallet,          true},
+    { "wallet",             "getaccountaddress",        &getaccountaddress,      true},
+    { "wallet",             "getaccount",               &getaccount,             true},
+    { "wallet",             "getaddressesbyaccount",    &getaddressesbyaccount,  true},
+    { "wallet",             "getbalance",               &getbalance,             false},
+    { "wallet",             "getnewaddress",            &getnewaddress,          true},
+    { "wallet",             "getrawchangeaddress",      &getrawchangeaddress,    true},
+    { "wallet",             "getreceivedbyaccount",     &getreceivedbyaccount,   false},
+    { "wallet",             "getreceivedbyaddress",     &getreceivedbyaddress,   false},
+    { "wallet",             "gettransaction",           &gettransaction,         false},
+    { "wallet",             "getunconfirmedbalance",    &getunconfirmedbalance,  false},
+    { "wallet",             "getwalletinfo",            &getwalletinfo,          false},
+    { "wallet",             "importprivkey",            &importprivkey,          true},
+    { "wallet",             "importwallet",             &importwallet,           true},
+    { "wallet",             "importaddress",            &importaddress,          true},
+    { "wallet",             "keypoolrefill",            &keypoolrefill,          true},
+    { "wallet",             "listaccounts",             &listaccounts,           false},
+    { "wallet",             "listaddressgroupings",     &listaddressgroupings,   false},
+    { "wallet",             "listlockunspent",          &listlockunspent,        false},
+    { "wallet",             "listreceivedbyaccount",    &listreceivedbyaccount,  false},
+    { "wallet",             "listreceivedbyaddress",    &listreceivedbyaddress,  false},
+    { "wallet",             "listsinceblock",           &listsinceblock,         false},
+    { "wallet",             "listtransactions",         &listtransactions,       false},
+    { "wallet",             "listunspent",              &listunspent,            false},
+    { "wallet",             "lockunspent",              &lockunspent,            true},
+    { "wallet",             "move",                     &movecmd,                false},
+    { "wallet",             "sendfrom",                 &sendfrom,               false},
+    { "wallet",             "sendmany",                 &sendmany,               false},
+    { "wallet",             "sendtoaddress",            &sendtoaddress,          false},
+    { "wallet",             "setaccount",               &setaccount,             true},
+    { "wallet",             "settxfee",                 &settxfee,               true},
+    { "wallet",             "signmessage",              &signmessage,            true},
+    { "wallet",             "walletlock",               &walletlock,             true},
+    { "wallet",             "walletpassphrasechange",   &walletpassphrasechange, true},
+    { "wallet",             "walletpassphrase",         &walletpassphrase,       true},
+    { "hidden",             "resendwallettransactions", &resendwallettransactions, true},
+};
+
+void CWallet::RegisterRPCCommands()
+{
+    for (unsigned int vcidx = 0; vcidx < (sizeof(vWalletRPCCommands) / sizeof(vWalletRPCCommands[0])); vcidx++)
+    {
+        const CRPCCommand *newCmd = &vWalletRPCCommands[vcidx];
+        tableRPC.AddOrReplaceCommand(newCmd);
+    }
+}
 
 /** @defgroup mapWallet
  *
