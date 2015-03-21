@@ -148,7 +148,7 @@ void CDBEnv::MakeMock()
     fMockDb = true;
 }
 
-CDBEnv::VerifyResult CDBEnv::Verify(std::string strFile, bool (*recoverFunc)(CDBEnv& dbenv, std::string strFile))
+CDBEnv::VerifyResult CDBEnv::Verify(const std::string& strFile, bool (*recoverFunc)(CDBEnv& dbenv, const std::string& strFile))
 {
     LOCK(cs_db);
     assert(mapFileUseCount.count(strFile) == 0);
@@ -165,7 +165,7 @@ CDBEnv::VerifyResult CDBEnv::Verify(std::string strFile, bool (*recoverFunc)(CDB
     return (fRecovered ? RECOVER_OK : RECOVER_FAIL);
 }
 
-bool CDBEnv::Salvage(std::string strFile, bool fAggressive, std::vector<CDBEnv::KeyValPair>& vResult)
+bool CDBEnv::Salvage(const std::string& strFile, bool fAggressive, std::vector<CDBEnv::KeyValPair>& vResult)
 {
     LOCK(cs_db);
     assert(mapFileUseCount.count(strFile) == 0);

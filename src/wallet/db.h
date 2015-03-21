@@ -59,7 +59,7 @@ public:
     enum VerifyResult { VERIFY_OK,
                         RECOVER_OK,
                         RECOVER_FAIL };
-    VerifyResult Verify(std::string strFile, bool (*recoverFunc)(CDBEnv& dbenv, std::string strFile));
+    VerifyResult Verify(const std::string& strFile, bool (*recoverFunc)(CDBEnv& dbenv, const std::string& strFile));
     /**
      * Salvage data from a file that Verify says is bad.
      * fAggressive sets the DB_AGGRESSIVE flag (see berkeley DB->verify() method documentation).
@@ -68,7 +68,7 @@ public:
      * for huge databases.
      */
     typedef std::pair<std::vector<unsigned char>, std::vector<unsigned char> > KeyValPair;
-    bool Salvage(std::string strFile, bool fAggressive, std::vector<KeyValPair>& vResult);
+    bool Salvage(const std::string& strFile, bool fAggressive, std::vector<KeyValPair>& vResult);
 
     bool Open(const boost::filesystem::path& path);
     void Close();
