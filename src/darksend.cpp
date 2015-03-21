@@ -645,6 +645,7 @@ void CDarksendPool::SetNull(bool clearEverything){
     }
 
     //automatically downgrade for 11.2, blinding will be supported in 11.3/12.0
+    nTrickleInputsOutputs = INT_MAX;
     Downgrade();
 
     // -- seed random number generator (used for ordering output lists)
