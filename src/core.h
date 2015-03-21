@@ -43,7 +43,7 @@ static const int64_t DARKSEND_POOL_MAX = (999.99*COIN);
 #define MASTERNODE_EXPIRATION_SECONDS          (65*60)
 #define MASTERNODE_REMOVAL_SECONDS             (70*60)
 
-static const int MIN_POOL_PEER_PROTO_VERSION = 70072; // minimum peer version accepted by DarkSendPool
+static const int MIN_POOL_PEER_PROTO_VERSION = 70073; // minimum peer version accepted by DarkSendPool
 
 class CTransaction;
 
