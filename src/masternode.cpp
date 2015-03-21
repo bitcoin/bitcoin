@@ -194,6 +194,8 @@ CMasternode::CMasternode(CService newAddr, CTxIn newVin, CPubKey newPubkey, std:
     nScanningErrorCount = 0;
     donationAddress = newDonationAddress;
     donationPercentage = newDonationPercentage;
+    nVote = 0;
+    lastVote = 0;
 }
 
 //
