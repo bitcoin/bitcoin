@@ -12,7 +12,6 @@
 #include "transactiontablemodel.h"
 
 #include "base58.h"
-#include "wallet/db.h"
 #include "keystore.h"
 #include "main.h"
 #include "sync.h"

@@ -10,7 +10,6 @@
 #include "transactionrecord.h"
 
 #include "base58.h"
-#include "wallet/db.h"
 #include "main.h"
 #include "script/script.h"
 #include "timedata.h"
