@@ -3,8 +3,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_WALLET_H
-#define BITCOIN_WALLET_H
+#ifndef BITCOIN_WALLET_WALLET_H
+#define BITCOIN_WALLET_WALLET_H
 
 #include "amount.h"
 #include "key.h"
@@ -869,4 +869,4 @@ private:
     std::vector<char> _ssExtra;
 };
 
-#endif // BITCOIN_WALLET_H
+#endif // BITCOIN_WALLET_WALLET_H
