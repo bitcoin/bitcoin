@@ -54,9 +54,9 @@ QString BitcoinUnits::name(int unit)
     {
         switch(unit)
         {
-            case DASH: return QString("tDRK");
-            case mDASH: return QString("mtDRK");
-            case uDASH: return QString::fromUtf8("μtDRK");
+            case DASH: return QString("tDASH");
+            case mDASH: return QString("mtDASH");
+            case uDASH: return QString::fromUtf8("μtDASH");
             case duffs: return QString::fromUtf8("tduffs");
             default: return QString("???");
         }
@@ -80,10 +80,10 @@ QString BitcoinUnits::description(int unit)
     {
         switch(unit)
         {
-            case DASH: return QString("Testdashs");
-            case mDASH: return QString("Milli-Testdashs (1 / 1,000)");
-            case uDASH: return QString("Micro-Testdashs (1 / 1,000,000)");
-            case duffs: return QString("Ten Nano-Testdashs (1 / 100,000,000)");
+            case DASH: return QString("TestDashs");
+            case mDASH: return QString("Milli-TestDash (1 / 1,000)");
+            case uDASH: return QString("Micro-TestDash (1 / 1,000,000)");
+            case duffs: return QString("Ten Nano-TestDash (1 / 100,000,000)");
             default: return QString("???");
         }
     }
