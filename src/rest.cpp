@@ -59,13 +59,13 @@ static RestErr RESTERR(enum HTTPStatusCode status, string message)
     return re;
 }
 
-void CheckRequestString(const string inputString, enum InputType inputType = IT_UNDEF, size_t maxLength = 0)
+void CheckRequestString(const string &inputString, enum InputType inputType = IT_UNDEF, size_t maxLength = 0)
 {
     //check for requested input type and throw exception if invalid type or size
     if ( (inputType == IT_DIGITS && inputString.find_first_not_of("0123456789") != std::string::npos)
-        || ( (inputType == IT_BLOCKHASH || inputType == IT_TXHASH) && inputString.length() > 64)
-        || (maxLength > 0 && inputString.length() > maxLength) )
-        throw RESTERR(HTTP_BAD_REQUEST, "Invalid input parameter ("+ (std::string)( (maxLength > 0) ? "wrong size" : "wrong type" ) +")");
+        || ( (inputType == IT_BLOCKHASH || inputType == IT_TXHASH) && (!IsHex(inputString) || inputString.size() != 64))
+        || (maxLength > 0 && inputString.size() > maxLength) )
+        throw RESTERR(HTTP_BAD_REQUEST, "Invalid input parameter (wrong "+ (std::string)( (((inputType == IT_BLOCKHASH || inputType == IT_TXHASH) && inputString.size() != 64) || (maxLength > 0 && inputString.size() > maxLength)) ? "size" : "type") +")");
 }
 
 static enum RetFormat ParseDataFormat(vector<string>& params, const string strReq)
@@ -98,9 +98,6 @@ static string AvailableDataFormatsString()
 
 static bool ParseHashStr(const string& strReq, uint256& v)
 {
-    if (!IsHex(strReq) || (strReq.size() != 64))
-        return false;
-
     v.SetHex(strReq);
     return true;
 }
@@ -121,12 +118,12 @@ static bool rest_headers(AcceptedConnection* conn,
     CheckRequestString(path[0], IT_DIGITS, 8);
     long count = strtol(path[0].c_str(), NULL, 10);
     if (count < 1 || count > 2000)
-        throw RESTERR(HTTP_BAD_REQUEST, "Header count out of range: " + SanitizeString(path[0]));
+        throw RESTERR(HTTP_BAD_REQUEST, "Header count out of range: " + path[0]);
 
     CheckRequestString(path[1], IT_BLOCKHASH);
     uint256 hash;
     if (!ParseHashStr(path[1], hash))
-        throw RESTERR(HTTP_BAD_REQUEST, "Invalid hash: " + SanitizeString(path[1]));
+        throw RESTERR(HTTP_BAD_REQUEST, "Invalid hash: " + path[1]);
 
     std::vector<CBlockHeader> headers;
     headers.reserve(count);
@@ -181,14 +178,14 @@ static bool rest_block(AcceptedConnection* conn,
     CheckRequestString(params[0], IT_BLOCKHASH);
     uint256 hash;
     if (!ParseHashStr(params[0], hash))
-        throw RESTERR(HTTP_BAD_REQUEST, "Invalid hash: " + SanitizeString(params[0]));
+        throw RESTERR(HTTP_BAD_REQUEST, "Invalid hash: " + params[0]);
 
     CBlock block;
     CBlockIndex* pblockindex = NULL;
     {
         LOCK(cs_main);
         if (mapBlockIndex.count(hash) == 0)
-            throw RESTERR(HTTP_NOT_FOUND, SanitizeString(params[0]) + " not found");
+            throw RESTERR(HTTP_NOT_FOUND, params[0] + " not found");
 
         pblockindex = mapBlockIndex[hash];
         if (!ReadBlockFromDisk(block, pblockindex))
@@ -280,12 +277,12 @@ static bool rest_tx(AcceptedConnection* conn,
     CheckRequestString(params[0], IT_TXHASH);
     uint256 hash;
     if (!ParseHashStr(params[0], hash))
-        throw RESTERR(HTTP_BAD_REQUEST, "Invalid hash: " + SanitizeString(params[0]));
+        throw RESTERR(HTTP_BAD_REQUEST, "Invalid hash: " + params[0]);
 
     CTransaction tx;
     uint256 hashBlock = uint256();
     if (!GetTransaction(hash, tx, hashBlock, true))
-        throw RESTERR(HTTP_NOT_FOUND, SanitizeString(params[0]) + " not found");
+        throw RESTERR(HTTP_NOT_FOUND, params[0] + " not found");
 
     CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
     ssTx << tx;
