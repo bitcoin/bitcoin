@@ -570,9 +570,9 @@ Value masternode(const Array& params, bool fHelp)
         mnEntries = masternodeConfig.getEntries();
 
         std::string vote = params[1].get_str().c_str();
-        if(vote != "yay" && vote != "nay") return "You can only vote 'yay' or 'nay'";
+        if(vote != "yea" && vote != "nay") return "You can only vote 'yea' or 'nay'";
         int nVote = 0;
-        if(vote == "yay") nVote = 1;
+        if(vote == "yea") nVote = 1;
         if(vote == "nay") nVote = -1;
 
 
@@ -618,9 +618,9 @@ Value masternode(const Array& params, bool fHelp)
         mnEntries = masternodeConfig.getEntries();
 
         std::string vote = params[1].get_str().c_str();
-        if(vote != "yay" && vote != "nay") return "You can only vote 'yay' or 'nay'";
+        if(vote != "yea" && vote != "nay") return "You can only vote 'yea' or 'nay'";
         int nVote = 0;
-        if(vote == "yay") nVote = 1;
+        if(vote == "yea") nVote = 1;
         if(vote == "nay") nVote = -1;
 
         // Choose coins to use
