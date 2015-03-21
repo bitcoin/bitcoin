@@ -3,8 +3,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_ALLOCATORS_SECURE_H
-#define BITCOIN_ALLOCATORS_SECURE_H
+#ifndef BITCOIN_SUPPORT_ALLOCATORS_SECURE_H
+#define BITCOIN_SUPPORT_ALLOCATORS_SECURE_H
 
 #include "support/pagelocker.h"
 
@@ -59,4 +59,4 @@ struct secure_allocator : public std::allocator<T> {
 // This is exactly like std::string, but with a custom allocator.
 typedef std::basic_string<char, std::char_traits<char>, secure_allocator<char> > SecureString;
 
-#endif // BITCOIN_ALLOCATORS_SECURE_H
+#endif // BITCOIN_SUPPORT_ALLOCATORS_SECURE_H
