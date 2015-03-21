@@ -345,7 +345,7 @@ void CWallet::Flush(bool shutdown)
     bitdb.Flush(shutdown);
 }
 
-bool CWallet::Verify(const string walletFile, string& warningString, string& errorString)
+bool CWallet::Verify(const string& walletFile, string& warningString, string& errorString)
 {
     if (!bitdb.Open(GetDataDir()))
     {
