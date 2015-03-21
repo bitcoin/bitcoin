@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2015 The Darkcoin developers
+// Copyright (c) 2014-2015 The Dash developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -144,6 +144,8 @@ CMasternode::CMasternode()
     donationAddress = CScript();
     donationPercentage = 0;
     nScanningErrorCount = 0;
+    nVote = 0;
+    lastVote = 0;
 }
 
 CMasternode::CMasternode(const CMasternode& other)
@@ -167,6 +169,8 @@ CMasternode::CMasternode(const CMasternode& other)
     donationAddress = other.donationAddress;
     donationPercentage = other.donationPercentage;
     nScanningErrorCount = other.nScanningErrorCount;
+    nVote = other.nVote;
+    lastVote = other.lastVote;
 }
 
 CMasternode::CMasternode(CService newAddr, CTxIn newVin, CPubKey newPubkey, std::vector<unsigned char> newSig, int64_t newSigTime, CPubKey newPubkey2, int protocolVersionIn, CScript newDonationAddress, int newDonationPercentage)
@@ -190,6 +194,8 @@ CMasternode::CMasternode(CService newAddr, CTxIn newVin, CPubKey newPubkey, std:
     nScanningErrorCount = 0;
     donationAddress = newDonationAddress;
     donationPercentage = newDonationPercentage;
+    nVote = 0;
+    lastVote = 0;
 }
 
 //
@@ -406,9 +412,8 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
     }
 
     // pay to the oldest MN that still had no payment but its input is old enough and it was active long enough
-    CMasternode *pmn = mnodeman.FindOldestNotInVec(vecLastPayments);
-    if(pmn != NULL &&
-    (RegTest() || (!RegTest() && pmn->GetMasternodeInputAge() > nMinimumAge && pmn->lastTimeSeen - pmn->sigTime > nMinimumAge * 2.5 * 60)))
+    CMasternode *pmn = mnodeman.FindOldestNotInVec(vecLastPayments, nMinimumAge, nMinimumAge * 2.5 * 60);
+    if(pmn != NULL)
     {
         newWinner.score = 0;
         newWinner.nBlockHeight = nBlockHeight;

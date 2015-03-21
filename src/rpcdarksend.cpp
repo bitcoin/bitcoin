@@ -23,8 +23,8 @@ Value darksend(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() == 0)
         throw runtime_error(
-            "darksend <darkcoinaddress> <amount>\n"
-            "darkcoinaddress, reset, or auto (AutoDenominate)"
+            "darksend <dashaddress> <amount>\n"
+            "dashaddress, reset, or auto (AutoDenominate)"
             "<amount> is a real and is rounded to the nearest 0.00000001"
             + HelpRequiringPassphrase());
 
@@ -47,8 +47,8 @@ Value darksend(const Array& params, bool fHelp)
 
     if (params.size() != 2)
         throw runtime_error(
-            "darksend <darkcoinaddress> <amount>\n"
-            "darkcoinaddress, denominate, or auto (AutoDenominate)"
+            "darksend <dashaddress> <amount>\n"
+            "dashaddress, denominate, or auto (AutoDenominate)"
             "<amount> is a real and is rounded to the nearest 0.00000001"
             + HelpRequiringPassphrase());
 
@@ -93,7 +93,7 @@ Value masternode(const Array& params, bool fHelp)
 
     if (fHelp  ||
         (strCommand != "start" && strCommand != "start-alias" && strCommand != "start-many" && strCommand != "stop" && strCommand != "stop-alias" && strCommand != "stop-many" && strCommand != "list" && strCommand != "list-conf" && strCommand != "count"  && strCommand != "enforce"
-            && strCommand != "debug" && strCommand != "current" && strCommand != "winners" && strCommand != "genkey" && strCommand != "connect" && strCommand != "outputs"))
+            && strCommand != "debug" && strCommand != "current" && strCommand != "winners" && strCommand != "genkey" && strCommand != "connect" && strCommand != "outputs" && strCommand != "vote-many" && strCommand != "vote"))
         throw runtime_error(
                 "masternode \"command\"... ( \"passphrase\" )\n"
                 "Set of commands to execute masternode related actions\n"
@@ -107,15 +107,17 @@ Value masternode(const Array& params, bool fHelp)
                 "  genkey       - Generate new masternodeprivkey\n"
                 "  enforce      - Enforce masternode payments\n"
                 "  outputs      - Print masternode compatible outputs\n"
-                "  start        - Start masternode configured in darkcoin.conf\n"
+                "  start        - Start masternode configured in dash.conf\n"
                 "  start-alias  - Start single masternode by assigned alias configured in masternode.conf\n"
                 "  start-many   - Start all masternodes configured in masternode.conf\n"
-                "  stop         - Stop masternode configured in darkcoin.conf\n"
+                "  stop         - Stop masternode configured in dash.conf\n"
                 "  stop-alias   - Stop single masternode by assigned alias configured in masternode.conf\n"
                 "  stop-many    - Stop all masternodes configured in masternode.conf\n"
                 "  list         - Print list of all known masternodes (see masternodelist for more info)\n"
                 "  list-conf    - Print masternode.conf in JSON format\n"
                 "  winners      - Print list of masternode winners\n"
+                "  vote-many    - Vote on a Dash initiative\n"
+                "  vote         - Vote on a Dash initiative\n"
                 );
 
     if (strCommand == "stop")
@@ -562,6 +564,91 @@ Value masternode(const Array& params, bool fHelp)
 
     }
 
+    if(strCommand == "vote-many")
+    {
+        std::vector<CMasternodeConfig::CMasternodeEntry> mnEntries;
+        mnEntries = masternodeConfig.getEntries();
+
+        std::string vote = params[1].get_str().c_str();
+        if(vote != "yea" && vote != "nay") return "You can only vote 'yea' or 'nay'";
+        int nVote = 0;
+        if(vote == "yea") nVote = 1;
+        if(vote == "nay") nVote = -1;
+
+
+        Object resultObj;
+
+        BOOST_FOREACH(CMasternodeConfig::CMasternodeEntry mne, masternodeConfig.getEntries()) {
+            std::string errorMessage;
+            std::vector<unsigned char> vchMasterNodeSignature;
+            std::string strMasterNodeSignMessage;
+
+            CTxIn vin;
+            CPubKey pubKeyCollateralAddress;
+            CKey keyCollateralAddress;
+            CPubKey pubKeyMasternode;
+            CKey keyMasternode;
+
+            if(!activeMasternode.GetMasterNodeVin(vin, pubKeyCollateralAddress, keyCollateralAddress, mne.getTxHash(), mne.getOutputIndex())) {
+                return("could not allocate vin");
+            }
+
+            std::string strMessage = vin.ToString() + boost::lexical_cast<std::string>(nVote);
+
+            if(!darkSendSigner.SetKey(mne.getPrivKey(), errorMessage, keyMasternode, pubKeyMasternode))
+                return(" Error upon calling SetKey");
+
+            if(!darkSendSigner.SignMessage(strMessage, errorMessage, vchMasterNodeSignature, keyMasternode))
+                return(" Error upon calling SignMessage");
+
+            if(!darkSendSigner.VerifyMessage(pubKeyMasternode, vchMasterNodeSignature, strMessage, errorMessage))
+                return(" Error upon calling VerifyMessage");
+
+            //send to all peers
+            LOCK(cs_vNodes);
+            BOOST_FOREACH(CNode* pnode, vNodes)
+                pnode->PushMessage("mvote", vin, vchMasterNodeSignature, nVote);
+
+        }
+    }
+
+    if(strCommand == "vote")
+    {
+        std::vector<CMasternodeConfig::CMasternodeEntry> mnEntries;
+        mnEntries = masternodeConfig.getEntries();
+
+        std::string vote = params[1].get_str().c_str();
+        if(vote != "yea" && vote != "nay") return "You can only vote 'yea' or 'nay'";
+        int nVote = 0;
+        if(vote == "yea") nVote = 1;
+        if(vote == "nay") nVote = -1;
+
+        // Choose coins to use
+        CPubKey pubKeyCollateralAddress;
+        CKey keyCollateralAddress;
+        CPubKey pubKeyMasternode;
+        CKey keyMasternode;
+
+        std::string errorMessage;
+        std::vector<unsigned char> vchMasterNodeSignature;
+        std::string strMessage = activeMasternode.vin.ToString() + boost::lexical_cast<std::string>(nVote);
+
+        if(!darkSendSigner.SetKey(strMasterNodePrivKey, errorMessage, keyMasternode, pubKeyMasternode))
+            return(" Error upon calling SetKey");
+
+        if(!darkSendSigner.SignMessage(strMessage, errorMessage, vchMasterNodeSignature, keyMasternode))
+            return(" Error upon calling SignMessage");
+
+        if(!darkSendSigner.VerifyMessage(pubKeyMasternode, vchMasterNodeSignature, strMessage, errorMessage))
+            return(" Error upon calling VerifyMessage");
+
+        //send to all peers
+        LOCK(cs_vNodes);
+        BOOST_FOREACH(CNode* pnode, vNodes)
+            pnode->PushMessage("mvote", activeMasternode.vin, vchMasterNodeSignature, nVote);
+
+    }
+
     return Value::null;
 }
 
@@ -575,7 +662,7 @@ Value masternodelist(const Array& params, bool fHelp)
 
     if (fHelp ||
             (strMode != "active" && strMode != "vin" && strMode != "pubkey" && strMode != "lastseen"
-             && strMode != "activeseconds" && strMode != "rank" && strMode != "protocol" && strMode != "full"))
+             && strMode != "activeseconds" && strMode != "rank" && strMode != "protocol" && strMode != "full" && strMode != "votes"))
     {
         throw runtime_error(
                 "masternodelist ( \"mode\" \"filter\" )\n"
@@ -592,6 +679,7 @@ Value masternodelist(const Array& params, bool fHelp)
                 "  pubkey         - Print public key associated with a masternode (can be additionally filtered, partial match)\n"
                 "  rank           - Print rank of a masternode based on current block\n"
                 "  vin            - Print vin associated with a masternode (can be additionally filtered, partial match)\n"
+                "  votes          - Print all masternode votes for a Dash initiative\n"
                 );
     }
 
@@ -618,6 +706,20 @@ Value masternodelist(const Array& params, bool fHelp)
                 if(mn.activeState == MASTERNODE_VIN_SPENT) strStatus = "VIN_SPENT";
                 if(mn.activeState == MASTERNODE_REMOVE) strStatus = "REMOVE";
                 if(mn.activeState == MASTERNODE_POS_ERROR) strStatus = "POS_ERROR";
+
+                obj.push_back(Pair(strAddr,       strStatus.c_str()));
+            } else if(strMode == "votes"){
+                if(strFilter !="" && strFilter != (mn.IsEnabled() ? "true" : "false") &&
+                    strAddr.find(strFilter) == string::npos) continue;
+
+                std::string strStatus = "ABSTAIN";
+
+                //voting lasts 7 days, ignore the last vote if it was older than that
+                if((GetAdjustedTime() - mn.lastVote) < (60*60*8))
+                {
+                    if(mn.nVote == -1) strStatus = "NAY";
+                    if(mn.nVote == 1) strStatus = "YEA";
+                }
 
                 obj.push_back(Pair(strAddr,       strStatus.c_str()));
             } else if (strMode == "activeseconds") {

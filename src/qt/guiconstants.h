@@ -1,5 +1,5 @@
 // Copyright (c) 2011-2014 The Bitcoin developers
-// Copyright (c) 2014-2015 The Darkcoin developers
+// Copyright (c) 2014-2015 The Dash developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -42,9 +42,9 @@ static const int MAX_PAYMENT_REQUEST_SIZE = 50000; // bytes
 /* Number of frames in spinner animation */
 #define SPINNER_FRAMES 35
 
-#define QAPP_ORG_NAME "Darkcoin"
-#define QAPP_ORG_DOMAIN "darkcoin.io"
-#define QAPP_APP_NAME_DEFAULT "Darkcoin-Qt"
-#define QAPP_APP_NAME_TESTNET "Darkcoin-Qt-testnet"
+#define QAPP_ORG_NAME "Dash"
+#define QAPP_ORG_DOMAIN "dashpay.io"
+#define QAPP_APP_NAME_DEFAULT "Dash-Qt"
+#define QAPP_APP_NAME_TESTNET "Dash-Qt-testnet"
 
 #endif // GUICONSTANTS_H

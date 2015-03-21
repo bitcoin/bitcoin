@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2015 The Darkcoin developers
+// Copyright (c) 2014-2015 The Dash developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -312,7 +312,7 @@ CMasternode *CMasternodeMan::Find(const CTxIn &vin)
     return NULL;
 }
 
-CMasternode* CMasternodeMan::FindOldestNotInVec(const std::vector<CTxIn> &vVins)
+CMasternode* CMasternodeMan::FindOldestNotInVec(const std::vector<CTxIn> &vVins, int nMinimumAge, int nMinimumActiveSeconds)
 {
     LOCK(cs);
 
@@ -322,6 +322,10 @@ CMasternode* CMasternodeMan::FindOldestNotInVec(const std::vector<CTxIn> &vVins)
     {
         mn.Check();
         if(!mn.IsEnabled()) continue;
+
+        if(!RegTest()){
+            if(mn.GetMasternodeInputAge() < nMinimumAge || mn.lastTimeSeen - mn.sigTime < nMinimumActiveSeconds) continue;
+        }
 
         bool found = false;
         BOOST_FOREACH(const CTxIn& vin, vVins)
@@ -647,13 +651,13 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
             }
 
             // verify that sig time is legit in past
-            // should be at least not earlier than block when 1000 DRK tx got MASTERNODE_MIN_CONFIRMATIONS
+            // should be at least not earlier than block when 1000 DASH tx got MASTERNODE_MIN_CONFIRMATIONS
             uint256 hashBlock = 0;
             GetTransaction(vin.prevout.hash, tx, hashBlock, true);
             map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.find(hashBlock);
             if (mi != mapBlockIndex.end() && (*mi).second)
             {
-                CBlockIndex* pMNIndex = (*mi).second; // block for 1000 DRK tx -> 1 confirmation
+                CBlockIndex* pMNIndex = (*mi).second; // block for 1000 DASH tx -> 1 confirmation
                 CBlockIndex* pConfIndex = chainActive[pMNIndex->nHeight + MASTERNODE_MIN_CONFIRMATIONS - 1]; // block where tx got MASTERNODE_MIN_CONFIRMATIONS
                 if(pConfIndex->GetBlockTime() > sigTime)
                 {
@@ -764,6 +768,40 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         pfrom->PushMessage("dseg", vin);
         int64_t askAgain = GetTime() + MASTERNODE_MIN_DSEEP_SECONDS;
         mWeAskedForMasternodeListEntry[vin.prevout] = askAgain;
+
+    } else if (strCommand == "mvote") { //Masternode Vote
+
+        CTxIn vin;
+        vector<unsigned char> vchSig;
+        int nVote;
+        vRecv >> vin >> vchSig >> nVote;
+
+        // see if we have this Masternode
+        CMasternode* pmn = this->Find(vin);
+        if(pmn != NULL)
+        {
+            if((GetAdjustedTime() - pmn->lastVote) > (60*60))
+            {
+                std::string strMessage = vin.ToString() + boost::lexical_cast<std::string>(nVote);
+
+                std::string errorMessage = "";
+                if(!darkSendSigner.VerifyMessage(pmn->pubkey2, vchSig, strMessage, errorMessage))
+                {
+                    LogPrintf("mvote - Got bad Masternode address signature %s \n", vin.ToString().c_str());
+                    return;
+                }
+
+                pmn->nVote = nVote;
+                pmn->lastVote = GetAdjustedTime();
+
+                //send to all peers
+                LOCK(cs_vNodes);
+                BOOST_FOREACH(CNode* pnode, vNodes)
+                    pnode->PushMessage("mvote", vin, vchSig, nVote);
+            }
+
+            return;
+        }
 
     } else if (strCommand == "dseg") { //Get Masternode list or specific entry
 

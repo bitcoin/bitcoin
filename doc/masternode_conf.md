@@ -2,11 +2,11 @@ Multi masternode config
 =======================
 
 The multi masternode config allows to control multiple masternodes from a single wallet. The wallet needs to have a valid collaral output of 1000 coins for each masternode. To use this, place a file named masternode.conf in the data directory of your install:
- * Windows: %APPDATA%\Darkcoin\
- * Mac OS: ~/Library/Application Support/Darkcoin/
- * Unix/Linux: ~/.darkcoin/
+ * Windows: %APPDATA%\Dash\
+ * Mac OS: ~/Library/Application Support/Dash/
+ * Unix/Linux: ~/.dash/
 
-The new masternode.conf format consists of a space seperated text file. Each line consisting of an alias, IP address followed by port, masternode private key, collateral output transaction id, collateral output index, donation address and donation percentage (the latter two are optional and should be in format "address:percantage").
+The new masternode.conf format consists of a space seperated text file. Each line consisting of an alias, IP address followed by port, masternode private key, collateral output transaction id, collateral output index, donation address and donation percentage (the latter two are optional and should be in format "address:percentage").
 
 Example:
 ```
@@ -16,7 +16,7 @@ mn3 127.0.0.4:19999 92Da1aYg6sbenP6uwskJgEY2XWB5LwJ7bXRqc3UPeShtHWJDjDv db478e78
 ```
 
 In the example above:
-* the collateral for mn1 consists of transaction http://test.explorer.darkcoin.fr/tx/2bcd3c84c84f87eaa86e4e56834c92927a07f9e18718810b92e0d0324456a67c, output index 0 has amount 1000
+* the collateral for mn1 consists of transaction http://test.explorer.dash.fr/tx/2bcd3c84c84f87eaa86e4e56834c92927a07f9e18718810b92e0d0324456a67c, output index 0 has amount 1000
 * masternode 2 will donate 33% of its income
 * masternode 3 will donate 100% of its income
 

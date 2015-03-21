@@ -6,7 +6,7 @@ and tests weren't explicitly disabled.
 
 After configuring, they can be run with 'make check'.
 
-To run the bitcoind tests manually, launch src/test/test_darkcoin .
+To run the bitcoind tests manually, launch src/test/test_dash .
 
 To add more bitcoind tests, add `BOOST_AUTO_TEST_CASE` functions to the existing
 .cpp files in the test/ directory or add new .cpp files that

@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2015 The Darkcoin developers
+// Copyright (c) 2014-2015 The Dash developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -108,7 +108,7 @@ public:
     CMasternode* Find(const CTxIn& vin);
 
     /// Find an entry thta do not match every entry provided vector
-    CMasternode* FindOldestNotInVec(const std::vector<CTxIn> &vVins);
+    CMasternode* FindOldestNotInVec(const std::vector<CTxIn> &vVins, int nMinimumAge, int nMinimumActiveSeconds);
 
     /// Find a random entry
     CMasternode* FindRandom();

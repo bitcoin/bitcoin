@@ -59,11 +59,11 @@ if [ -d "$OUT_DIR" -a -w "$OUT_DIR" ]; then
   set +e
   # Windows:
   cp @abs_top_srcdir@/win32-build/src/bitcoind.exe $OUT_DIR/bitcoind.exe
-  cp @abs_top_srcdir@/win32-build/src/test/test_darkcoin.exe $OUT_DIR/test_darkcoin.exe
+  cp @abs_top_srcdir@/win32-build/src/test/test_dash.exe $OUT_DIR/test_dash.exe
   cp @abs_top_srcdir@/win32-build/src/qt/bitcoind-qt.exe $OUT_DIR/bitcoin-qt.exe
   # Linux:
   cp @abs_top_srcdir@/linux-build/src/bitcoind $OUT_DIR/bitcoind
-  cp @abs_top_srcdir@/linux-build/src/test/test_darkcoin $OUT_DIR/test_darkcoin
+  cp @abs_top_srcdir@/linux-build/src/test/test_dash $OUT_DIR/test_dash
   cp @abs_top_srcdir@/linux-build/src/qt/bitcoind-qt $OUT_DIR/bitcoin-qt
   set -e
 fi

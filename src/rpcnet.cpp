@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2014 The Bitcoin developers
-// Copyright (c) 2014-2015 The Darkcoin developers
+// Copyright (c) 2014-2015 The Dash developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -212,7 +212,7 @@ Value getaddednodeinfo(const Array& params, bool fHelp)
             "    \"connected\" : true|false,          (boolean) If connected\n"
             "    \"addresses\" : [\n"
             "       {\n"
-            "         \"address\" : \"192.168.0.201:9999\",  (string) The darkcoin server host and port\n"
+            "         \"address\" : \"192.168.0.201:9999\",  (string) The dash server host and port\n"
             "         \"connected\" : \"outbound\"           (string) connection, inbound or outbound\n"
             "       }\n"
             "       ,...\n"

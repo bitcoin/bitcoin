@@ -1,4 +1,4 @@
-#include "darkcoin-config.h"
+#include "dash-config.h"
 #include <cstddef>
 #include <sys/select.h>
 

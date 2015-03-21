@@ -83,6 +83,8 @@ public:
     int64_t nLastDsq; //the dsq count from the last dsq broadcast of this node
     int nScanningErrorCount;
     int nLastScanningErrorBlockHeight;
+    int nVote;
+    int64_t lastVote;
 
     CMasternode();
     CMasternode(const CMasternode& other);
@@ -112,6 +114,8 @@ public:
         swap(first.nLastDsq, second.nLastDsq);
         swap(first.donationAddress, second.donationAddress);
         swap(first.donationPercentage, second.donationPercentage);
+        swap(first.nVote, second.nVote);
+        swap(first.lastVote, second.lastVote);
     }
 
     CMasternode& operator=(CMasternode from)
@@ -156,6 +160,8 @@ public:
                 READWRITE(nLastDsq);
                 READWRITE(donationAddress);
                 READWRITE(donationPercentage);
+                READWRITE(nVote);
+                READWRITE(lastVote);
         }
     )
 

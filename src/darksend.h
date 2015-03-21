@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2015 The Darkcoin developers
+// Copyright (c) 2014-2015 The Dash developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -247,7 +247,7 @@ public:
 class CDarkSendSigner
 {
 public:
-    /// Is the inputs associated with this public key? (and there is 1000 DRK - checking if valid masternode)
+    /// Is the inputs associated with this public key? (and there is 1000 DASH - checking if valid masternode)
     bool IsVinAssociatedWithPubkey(CTxIn& vin, CPubKey& pubkey);
     /// Set the private/public key values, returns true if successful
     bool SetKey(std::string strSecret, std::string& errorMessage, CKey& key, CPubKey& pubkey);
@@ -534,7 +534,7 @@ public:
 
     void GetDenominationsToString(int nDenom, std::string& strDenom);
 
-    /// Get the denominations for a specific amount of darkcoin.
+    /// Get the denominations for a specific amount of dash.
     int GetDenominationsByAmount(int64_t nAmount, int nDenomTarget=0);
     int GetDenominationsByAmounts(std::vector<int64_t>& vecAmount);
 

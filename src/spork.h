@@ -1,5 +1,5 @@
 
-// Copyright (c) 2009-2012 The Darkcoin developers
+// Copyright (c) 2009-2012 The Dash developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #ifndef SPORK_H
@@ -30,7 +30,7 @@ using namespace boost;
 #define SPORK_1_MASTERNODE_PAYMENTS_ENFORCEMENT_DEFAULT       1424217600  //2015-2-18
 #define SPORK_2_INSTANTX_DEFAULT                              978307200   //2001-1-1
 #define SPORK_3_INSTANTX_BLOCK_FILTERING_DEFAULT              1424217600  //2015-2-18
-#define SPORK_5_MAX_VALUE_DEFAULT                             1000        //1000 DRK
+#define SPORK_5_MAX_VALUE_DEFAULT                             1000        //1000 DASH
 #define SPORK_7_MASTERNODE_SCANNING_DEFAULT                   978307200   //2001-1-1
 
 class CSporkMessage;
