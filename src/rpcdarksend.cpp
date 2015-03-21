@@ -17,8 +17,6 @@
 using namespace json_spirit;
 using namespace std;
 
-
-
 Value darksend(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() == 0)
@@ -93,7 +91,7 @@ Value masternode(const Array& params, bool fHelp)
 
     if (fHelp  ||
         (strCommand != "start" && strCommand != "start-alias" && strCommand != "start-many" && strCommand != "stop" && strCommand != "stop-alias" && strCommand != "stop-many" && strCommand != "list" && strCommand != "list-conf" && strCommand != "count"  && strCommand != "enforce"
-            && strCommand != "debug" && strCommand != "current" && strCommand != "winners" && strCommand != "genkey" && strCommand != "connect" && strCommand != "outputs" && strCommand != "vote-many" && strCommand != "vote"))
+            && strCommand != "debug" && strCommand != "current" && strCommand != "winners" && strCommand != "genkey" && strCommand != "connect" && strCommand != "outputs" && strCommand != "vote-many" && strCommand != "vote" && strCommand != "donate"))
         throw runtime_error(
                 "masternode \"command\"... ( \"passphrase\" )\n"
                 "Set of commands to execute masternode related actions\n"
@@ -118,6 +116,7 @@ Value masternode(const Array& params, bool fHelp)
                 "  winners      - Print list of masternode winners\n"
                 "  vote-many    - Vote on a Dash initiative\n"
                 "  vote         - Vote on a Dash initiative\n"
+                "  donate       - Donate to support development (yes or no)\n"
                 );
 
     if (strCommand == "stop")
@@ -281,6 +280,19 @@ Value masternode(const Array& params, bool fHelp)
         return mnodeman.size();
     }
 
+    if (strCommand == "donate")
+    {
+
+        std::string strYesOrNo = params[1].get_str().c_str();
+
+        if(strYesOrNo != "yes" && strYesOrNo != "no") return "You can say 'yes' or 'no'";
+        if(strYesOrNo == "yes") nDonate = 1;
+        if(strYesOrNo == "no") nDonate = -1;
+
+        if(strYesOrNo == "yes") return "Thankyou for supporting the development of Dash! You may now start your masternode(s).";
+        return "Successfully set donation mode to no. You may now start your masternode(s).";
+    }
+
     if (strCommand == "start")
     {
         if(!fMasterNode) return "you must set masternode=1 in the configuration";
@@ -299,6 +311,13 @@ Value masternode(const Array& params, bool fHelp)
             if(!pwalletMain->Unlock(strWalletPass)){
                 return "incorrect passphrase";
             }
+        }
+
+        if(nDonate == 0){
+            std::string strReturn = "Start requires you to specify if you would like to support development by donating 5%";
+            strReturn += " of your masternode earnings. If you would please execute 'masternode donate yes' otherwise 'masternode donate no',";
+            strReturn += " then reissue your start command. Thankyou for supporting Dash!";
+            return strReturn;
         }
 
         if(activeMasternode.status != MASTERNODE_REMOTELY_ENABLED && activeMasternode.status != MASTERNODE_IS_CAPABLE){
@@ -345,6 +364,13 @@ Value masternode(const Array& params, bool fHelp)
 
     	bool found = false;
 
+        if(nDonate == 0){
+            std::string strReturn = "Start-alias requires you to specify if you would like to support development by donating 5%";
+            strReturn += " of your masternode earnings. If you would please execute 'masternode donate yes' otherwise 'masternode donate no',";
+            strReturn += " then reissue your start command. Thankyou for supporting Dash!";
+            return strReturn;
+        }
+
 		Object statusObj;
 		statusObj.push_back(Pair("alias", alias));
 
@@ -352,7 +378,21 @@ Value masternode(const Array& params, bool fHelp)
     		if(mne.getAlias() == alias) {
     			found = true;
     			std::string errorMessage;
-    			bool result = activeMasternode.Register(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), mne.getDonationAddress(), mne.getDonationPercentage(), errorMessage);
+
+                std::string strDonateAddress = mne.getDonationAddress();
+                std::string strDonationPercentage = mne.getDonationPercentage();
+
+                if(nDonate == 1){
+                    if(Params().NetworkID() == CChainParams::MAIN){
+                        strDonateAddress = "7gnwGHt17heGpG9Crfeh4KGpYNFugPhJdh";
+                        strDonationPercentage = 5; //5%
+                    } else {
+                        strDonateAddress = "xwe6mWeZQsbbM9P2LQ5t5cWArHtCLAuV4N";
+                        strDonationPercentage = 5; //5%
+                    }
+                }
+
+    			bool result = activeMasternode.Register(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), strDonateAddress, strDonationPercentage, errorMessage);
 
     			statusObj.push_back(Pair("result", result ? "successful" : "failed"));
     			if(!result) {
@@ -399,11 +439,33 @@ Value masternode(const Array& params, bool fHelp)
 
 		Object resultsObj;
 
+
+        if(nDonate == 0){
+            std::string strReturn = "Start-many requires you to specify if you would like to support development by donating 5%";
+            strReturn += " of your masternode earnings. If you would please execute 'masternode donate yes' otherwise 'masternode donate no',";
+            strReturn += " then reissue your start command. Thankyou for supporting Dash!";
+            return strReturn;
+        }
+
 		BOOST_FOREACH(CMasternodeConfig::CMasternodeEntry mne, masternodeConfig.getEntries()) {
 			total++;
 
 			std::string errorMessage;
-			bool result = activeMasternode.Register(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), mne.getDonationAddress(), mne.getDonationPercentage(), errorMessage);
+
+            std::string strDonateAddress = mne.getDonationAddress();
+            std::string strDonationPercentage = mne.getDonationPercentage();
+
+            if(nDonate == 1){
+                if(Params().NetworkID() == CChainParams::MAIN){
+                    strDonateAddress = "7gnwGHt17heGpG9Crfeh4KGpYNFugPhJdh";
+                    strDonationPercentage = 5; //5%
+                } else {
+                    strDonateAddress = "xwe6mWeZQsbbM9P2LQ5t5cWArHtCLAuV4N";
+                    strDonationPercentage = 5; //5%
+                }
+            }
+
+			bool result = activeMasternode.Register(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), strDonateAddress, strDonationPercentage, errorMessage);
 
 			Object statusObj;
 			statusObj.push_back(Pair("alias", mne.getAlias()));
