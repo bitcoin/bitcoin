@@ -1,16 +1,16 @@
 0.11.0 Release notes
 ====================
 
-Darkcoin Core 0.11.0 is forked off the Bitcoin Core 0.9.3. The old darkcoin
+Dash Core 0.11.0 is forked off the Bitcoin Core 0.9.3. The old dash
 versions 0.10.x were forked from the Litecoin 0.8 tree. The following changes
 are introduced in this major release. This list is compiled from the release
 notes of Bitcoin Core  0.9.0, 0.9.1, 0.9.2, 0.9.2.1, 0.9.3 and was completed
-with the  introduced changes to the Darkcoin Core 0.11.0.
+with the  introduced changes to the Dash Core 0.11.0.
 
 
-Darkcoin Core:
+Dash Core:
 
-- Rebrand to `Darkcoin Core`
+- Rebrand to `Dash Core`
 - Version bumped to 0.11 to indicate a new major release
 - Renamed client to identify with network from `Satoshi` to `Core`
 - Bumped protocol version to 70052
@@ -20,14 +20,14 @@ Darkcoin Core:
   `n`, this affects public keys only, old wallets remain valid and usable!)
 - Defined BIP32 (HD) address versions to start with `drkp`/`drkv` (`DRKP`/`DRKV`
   for testnet)
-- Adapted BIP44 coin type `5` for Darkcoin (0x80000005) as defined in SLIP-0044
-- Added new units: `duffs` (1 / 100.000.000 DRK)
+- Adapted BIP44 coin type `5` for Dash (0x80000005) as defined in SLIP-0044
+- Added new units: `duffs` (1 / 100.000.000 DASH)
 - Added units for testnet: tDRK, mtDRK, utDRK, tduffs
 - Added new DNS seed from masternode.io
 - Fixed wallet locking after sending coins
 - Add `-regtest` mode, similar to testnet but private with instant block
   generation with `setgenerate` RPC.
-- Add separate darkcoin-cli client
+- Add separate dash-cli client
 - Implemented KeyPass integration for CLI, RPC and Qt:
   `keepass`, `keepassport`, `keepasskey`, `keepassid`, `keepassname`
 
@@ -45,9 +45,9 @@ Masternodes:
 
 Darksend:
 
-- Reduced lower darksend limit to 1.5 DRK
+- Reduced lower darksend limit to 1.5 DASH
 - Fixed progress bar calculation for low amounts
-- Improved support for adding DRK after anon has completed
+- Improved support for adding DASH after anon has completed
 - Added denomination information to Overview tab
 - Added more detailed Darksend status information to Overview tab
 - Added Darksend high precision matching engine
@@ -100,13 +100,13 @@ Command-line options:
 - New option: -nospendzeroconfchange to never spend unconfirmed change outputs
 - New option: -zapwallettxes to rebuild the wallet's transaction information
 - Rename option '-tor' to '-onion' to better reflect what it does
-- Add '-disablewallet' mode to let darkcoind run entirely without wallet (when
+- Add '-disablewallet' mode to let dashd run entirely without wallet (when
   built with wallet)
 - Update default '-rpcsslciphers' to include TLSv1.2
 - make '-logtimestamps' default on and rework help-message
 - RPC client option: '-rpcwait', to wait for server start
 - Remove '-logtodebugger'
-- Allow `-noserver` with darkcoind
+- Allow `-noserver` with dashd
 - Make -proxy set all network types, avoiding a connect leak.
 
 
@@ -206,7 +206,7 @@ GUI:
 - Optionally add third party links to transaction context menu
 - Check for !pixmap() before trying to export QR code (avoids crashes when no QR
   code could be generated)
-- Fix "Start darkcoin on system login"
+- Fix "Start dash on system login"
 - Switch to Qt 5.2.0 for Windows build
 - Add payment request (BIP 0070) support
 - Improve options dialog
@@ -223,14 +223,14 @@ GUI:
 - Move initialization/shutdown to a thread. This prevents "Not responding"
   messages during startup. Also show a window during shutdown.
 - Don't regenerate autostart link on every client startup
-- Show and store message of normal darkcoin:URI
+- Show and store message of normal dash:URI
 - Fix richtext detection hang issue on very old Qt versions
 - OS X: Make use of the 10.8+ user notification center to display Growl-like
   notifications
 - OS X: Added NSHighResolutionCapable flag to Info.plist for better font
   rendering on Retina displays.
-- OS X: Fix darkcoin-qt startup crash when clicking dock icon
-- Linux: Fix Gnome darkcoin: URI handler
+- OS X: Fix dash-qt startup crash when clicking dock icon
+- Linux: Fix Gnome dash: URI handler
 
 
 Validation:

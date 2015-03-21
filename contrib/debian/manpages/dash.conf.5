@@ -1,0 +1,89 @@
+.TH DASH.CONF "5" "January 2011" "dash.conf 3.19"
+.SH NAME
+dash.conf \- dash configuration file
+.SH SYNOPSIS
+All command-line options (except for '\-datadir' and '\-conf') may be specified in a configuration file, and all configuration file options may also be specified on the command line. Command-line options override values set in the configuration file.
+.TP
+The configuration file is a list of 'setting=value' pairs, one per line, with optional comments starting with the '#' character.
+.TP
+The configuration file is not automatically created; you can create it using your favorite plain-text editor. By default, dashd(1) will look for a file named dash.conf(5) in the dash data directory, but both the data directory and the configuration file path may be changed using the '\-datadir' and '\-conf' command-line arguments.
+.SH LOCATION
+dash.conf should be located in $HOME/.dash
+.SH NETWORK-RELATED SETTINGS
+.TP
+.TP
+\fBtestnet=\fR[\fI'1'\fR|\fI'0'\fR]
+Enable or disable run on the test network instead of the real *dash* network.
+.TP
+\fBproxy=\fR\fI'127.0.0.1:9050'\fR
+Connect via a socks4 proxy.
+.TP
+\fBaddnode=\fR\fI'10.0.0.2:9999'\fR
+Use as many *addnode=* settings as you like to connect to specific peers.
+.TP
+\fBconnect=\fR\fI'10.0.0.1:9999'\fR
+Use as many *connect=* settings as you like to connect ONLY to specific peers.
+.TP
+\fRmaxconnections=\fR\fI'value'\fR
+Maximum number of inbound+outbound connections.
+.SH JSON-RPC OPTIONS
+.TP
+\fBserver=\fR[\fI'1'\fR|\fI'0'\fR]
+Tells *dash* to accept or not accept JSON-RPC commands.
+.TP
+\fBrpcuser=\fR\fI'username'\fR
+You must set *rpcuser* to secure the JSON-RPC api.
+.TP
+\fBrpcpassword=\fR\fI'password'\fR
+You must set *rpcpassword* to secure the JSON-RPC api.
+.TP
+\fBrpcallowip=\fR\fI'192.168.1.*'\fR
+By default, only RPC connections from localhost are allowed. Specify as many *rpcallowip=* settings as you like to allow connections from other hosts (and you may use * as a wildcard character).
+.TP
+\fBrpcport=\fR\fI'9998'\fR
+Listen for RPC connections on this TCP port.
+.TP
+\fBrpcconnect=\fR\fI'127.0.0.1'\fR
+You can use *dash* or *dashd(1)* to send commands to *dash*/*dashd(1)* running on another host using this option.
+.TP
+\fBrpcssl=\fR\fI'1'\fR
+Use Secure Sockets Layer (also known as TLS or HTTPS) to communicate with *dash* '\-server' or *dashd(1)*. Example of OpenSSL settings used when *rpcssl*='1':
+.TP
+\fB\-rpcsslciphers=\fR<ciphers>
+Acceptable ciphers (default: TLSv1+HIGH:\:!SSLv2:\:!aNULL:\:!eNULL:\:!AH:\:!3DES:\:@STRENGTH)
+.TP
+\fBrpcsslcertificatechainfile=\fR\fI'server.cert'\fR
+.TP
+\fBrpcsslprivatekeyfile=\fR\fI'server.pem'\fR
+.TP
+.SH MISCELLANEOUS OPTIONS
+.TP
+\fBgen=\fR[\fI'0'\fR|\fI'1'\fR]
+Enable or disable attempt to generate dashs.
+.TP
+\fB4way=\fR[\fI'0'\fR|\fI'1'\fR]
+Enable or disable use SSE instructions to try to generate dashs faster.
+.TP
+\fBkeypool=\fR\fI'100'\fR
+Pre-generate this many public/private key pairs, so wallet backups will be valid for both prior transactions and several dozen future transactions.
+.TP
+\fBpaytxfee=\fR\fI'0.00'\fR
+Pay an optional transaction fee every time you send dashs. Transactions with fees are more likely than free transactions to be included in generated blocks, so may be validated sooner.
+.TP
+\fBallowreceivebyip=\fR\fI'1'\fR
+Allow direct connections for the 'pay via IP address' feature.
+.TP
+.SH USER INTERFACE OPTIONS
+.TP
+\fBmin=\fR[\fI'0'\fR|\fI'1'\fR]
+Enable or disable start dashd minimized.
+.TP
+\fBminimizetotray=\fR[\fI'0'\fR|\fI'1'\fR]
+Enable or disable minimize to the system tray.
+.SH "SEE ALSO"
+dashd(1)
+.SH AUTHOR
+This manual page was written by Micah Anderson <micah@debian.org> for the Debian system (but may be used by others). Permission is granted to copy, distribute and/or modify this document under the terms of the GNU General Public License, Version 3 or any later version published by the Free Software Foundation.
+
+On Debian systems, the complete text of the GNU General Public License can be found in /usr/share/common-licenses/GPL.
+

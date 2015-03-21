@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2015 The Darkcoin developers
+// Copyright (c) 2014-2015 The Dash developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -38,10 +38,10 @@ CActiveMasternode activeMasternode;
 // Count peers we've requested the list from
 int RequestedMasterNodeList = 0;
 
-/* *** BEGIN DARKSEND MAGIC - DARKCOIN **********
-    Copyright (c) 2014-2015, Darkcoin Developers
-        eduffield - evan@darkcoin.io
-        udjinm6   - udjinm6@darkcoin.io
+/* *** BEGIN DARKSEND MAGIC - DASH **********
+    Copyright (c) 2014-2015, Dash Developers
+        eduffield - evan@dashpay.io
+        udjinm6   - udjinm6@dashpay.io
 */
 
 void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand, CDataStream& vRecv)
@@ -644,6 +644,9 @@ void CDarksendPool::SetNull(bool clearEverything){
         sessionID = 0;
     }
 
+    //automatically downgrade for 11.2, blinding will be supported in 11.3/12.0
+    Downgrade();
+
     // -- seed random number generator (used for ordering output lists)
     unsigned int seed = 0;
     RAND_bytes((unsigned char*)&seed, sizeof(seed));
@@ -767,7 +770,7 @@ void CDarksendPool::CheckFinalTransaction()
 
                 // not much we can do in this case]
                 UpdateState(POOL_STATUS_ACCEPTING_ENTRIES);
-                
+
                 if(!fSubmitAnonymousFailed && nCountAttempts > 30)
                     fSubmitAnonymousFailed = true;
                 return;
@@ -958,7 +961,7 @@ void CDarksendPool::ChargeRandomFees(){
 
                 Being that Darksend has "no fees" we need to have some kind of cost associated
                 with using it to stop abuse. Otherwise it could serve as an attack vector and
-                allow endless transaction that would bloat Darkcoin and make it unusable. To
+                allow endless transaction that would bloat Dash and make it unusable. To
                 stop these kinds of attacks 1 in 10 successful transactions are charged. This
                 adds up to a cost of 0.001DRK per transaction on average.
             */
@@ -1695,7 +1698,7 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
         if(sessionTotalValue > nBalanceNeedsAnonymized) sessionTotalValue = nBalanceNeedsAnonymized;
 
         double fDarkcoinSubmitted = (sessionTotalValue / CENT);
-        LogPrintf("Submitting Darksend for %f DRK CENT - sessionTotalValue %d\n", fDarkcoinSubmitted, sessionTotalValue);
+        LogPrintf("Submitting Darksend for %f DASH CENT - sessionTotalValue %d\n", fDarkcoinSubmitted, sessionTotalValue);
 
         if(pwalletMain->GetDenominatedBalance(true, true) > 0){ //get denominated unconfirmed inputs
             LogPrintf("DoAutomaticDenominating -- Found unconfirmed denominated outputs, will wait till they confirm to continue.\n");
@@ -1869,7 +1872,7 @@ bool CDarksendPool::Downgrade()
     if(myEntries.size() == 0) return false;
 
     fSubmitAnonymousFailed = true;
-    LogPrintf("CDarksendPool::Downgrade() : Downgrading and submitting directly\n");
+    //LogPrintf("CDarksendPool::Downgrade() : Downgrading and submitting directly\n");
 
     // relay our entry to the master node
     RelayIn(myEntries[0].sev, myEntries[0].amount, txCollateral, myEntries[0].vout);
@@ -2540,8 +2543,6 @@ void CDarksendPool::RelayCompletedTransaction(const int sessionID, const bool er
 }
 
 bool CDSAnonTx::AddOutput(const CTxOut out){
-    LOCK(cs_darksend);
-
     if(fDebug) LogPrintf("CDSAnonTx::AddOutput -- new  %s\n", out.ToString().substr(0,24).c_str());
 
     BOOST_FOREACH(CTxOut& out2, vout)
@@ -2556,8 +2557,6 @@ bool CDSAnonTx::AddOutput(const CTxOut out){
 }
 
 bool CDSAnonTx::AddInput(const CTxIn in){
-    LOCK(cs_darksend);
-
     if(fDebug) LogPrintf("CDSAnonTx::AddInput -- new  %s\n", in.ToString().substr(0,24).c_str());
 
     //already have this input
@@ -2573,8 +2572,6 @@ bool CDSAnonTx::AddInput(const CTxIn in){
 }
 
 bool CDSAnonTx::ClearSigs(){
-    LOCK(cs_darksend);
-
     BOOST_FOREACH(CTxDSIn& in, vin)
         in.scriptSig = CScript();
 
@@ -2582,8 +2579,6 @@ bool CDSAnonTx::ClearSigs(){
 }
 
 bool CDSAnonTx::AddSig(const CTxIn newIn){
-    LOCK(cs_darksend);
-
     if(fDebug) LogPrintf("CDSAnonTx::AddSig -- new  %s\n", newIn.ToString().substr(0,24).c_str());
 
     BOOST_FOREACH(CTxDSIn& in, vin){
@@ -2604,7 +2599,7 @@ void ThreadCheckDarkSendPool()
     if(fLiteMode) return; //disable all Darksend/Masternode related functionality
 
     // Make this thread recognisable as the wallet flushing thread
-    RenameThread("darkcoin-darksend");
+    RenameThread("dash-darksend");
 
     unsigned int c = 0;
     std::string errorMessage;

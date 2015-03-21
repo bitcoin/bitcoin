@@ -1,5 +1,5 @@
 ---
-name: "darkcoin"
+name: "dash"
 suites:
 - "precise"
 architectures:
@@ -23,7 +23,7 @@ packages:
 reference_datetime: "2014-01-10 00:00:00"
 remotes:
 - "url": "https://github.com/darkcoin/darkcoin.git"
-  "dir": "darkcoin"
+  "dir": "dash"
 files:
 - "bitcoin-deps-linux32-gitian-r9.zip"
 - "bitcoin-deps-linux64-gitian-r9.zip"
@@ -49,7 +49,7 @@ script: |
   cd ../build
 
   # Avoid exporting *any* symbols from the executable
-  # This avoids conflicts between the libraries statically linked into darkcoin and any
+  # This avoids conflicts between the libraries statically linked into dash and any
   # libraries we may link dynamically (such as Qt and OpenSSL, see issue #4094).
   # It also avoids start-up overhead to not export any unnecessary symbols.
   # To do this, build a linker script that marks all symbols as local.
@@ -59,14 +59,14 @@ script: |
     local: *;
   };' > $LINKER_SCRIPT
   function do_configure {
-      ./configure "$@" --enable-upnp-default --prefix=$STAGING --with-protoc-bindir=$STAGING/host/bin --with-qt-bindir=$STAGING/bin --with-boost=$STAGING --disable-maintainer-mode --disable-dependency-tracking PKG_CONFIG_PATH="$STAGING/lib/pkgconfig" CPPFLAGS="-I$STAGING/include ${OPTFLAGS}" LDFLAGS="-L$STAGING/lib -Wl,--version-script=$LINKER_SCRIPT ${OPTFLAGS}" CXXFLAGS="-frandom-seed=darkcoin ${OPTFLAGS}" BOOST_CHRONO_EXTRALIBS="-lrt" --enable-glibc-back-compat
+      ./configure "$@" --enable-upnp-default --prefix=$STAGING --with-protoc-bindir=$STAGING/host/bin --with-qt-bindir=$STAGING/bin --with-boost=$STAGING --disable-maintainer-mode --disable-dependency-tracking PKG_CONFIG_PATH="$STAGING/lib/pkgconfig" CPPFLAGS="-I$STAGING/include ${OPTFLAGS}" LDFLAGS="-L$STAGING/lib -Wl,--version-script=$LINKER_SCRIPT ${OPTFLAGS}" CXXFLAGS="-frandom-seed=dash ${OPTFLAGS}" BOOST_CHRONO_EXTRALIBS="-lrt" --enable-glibc-back-compat
   }
   #
-  cd darkcoin
+  cd dash
   ./autogen.sh
   do_configure
   make dist
-  DISTNAME=`echo darkcoin-*.tar.gz`
+  DISTNAME=`echo dash-*.tar.gz`
 
   # Build dynamic versions of everything
   # (with static linking to boost and openssl as well a some non-OS deps)
@@ -83,4 +83,4 @@ script: |
   rm -rf $TEMPDIR
   mkdir -p $TEMPDIR
   cd $TEMPDIR
-  tar -xvf $HOME/build/darkcoin/$DISTNAME | sort | tar --no-recursion -cT /dev/stdin --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 --mtime="$REFERENCE_DATETIME" | gzip -n > $OUTDIR/src/$DISTNAME
+  tar -xvf $HOME/build/dash/$DISTNAME | sort | tar --no-recursion -cT /dev/stdin --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 --mtime="$REFERENCE_DATETIME" | gzip -n > $OUTDIR/src/$DISTNAME

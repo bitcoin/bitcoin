@@ -334,7 +334,7 @@ public:
     // Calculate the size of the cache (in number of transactions)
     unsigned int GetCacheSize();
 
-    /** Amount of darkcoins coming in to a transaction
+    /** Amount of dashs coming in to a transaction
         Note that lightweight clients may not know anything besides the hash of previous transactions,
         so may not be able to calculate this.
 
