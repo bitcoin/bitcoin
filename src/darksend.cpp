@@ -770,7 +770,7 @@ void CDarksendPool::CheckFinalTransaction()
 
                 // not much we can do in this case]
                 UpdateState(POOL_STATUS_ACCEPTING_ENTRIES);
-                
+
                 if(!fSubmitAnonymousFailed && nCountAttempts > 30)
                     fSubmitAnonymousFailed = true;
                 return;
@@ -2543,8 +2543,6 @@ void CDarksendPool::RelayCompletedTransaction(const int sessionID, const bool er
 }
 
 bool CDSAnonTx::AddOutput(const CTxOut out){
-    LOCK(cs_darksend);
-
     if(fDebug) LogPrintf("CDSAnonTx::AddOutput -- new  %s\n", out.ToString().substr(0,24).c_str());
 
     BOOST_FOREACH(CTxOut& out2, vout)
@@ -2559,8 +2557,6 @@ bool CDSAnonTx::AddOutput(const CTxOut out){
 }
 
 bool CDSAnonTx::AddInput(const CTxIn in){
-    LOCK(cs_darksend);
-
     if(fDebug) LogPrintf("CDSAnonTx::AddInput -- new  %s\n", in.ToString().substr(0,24).c_str());
 
     //already have this input
@@ -2576,8 +2572,6 @@ bool CDSAnonTx::AddInput(const CTxIn in){
 }
 
 bool CDSAnonTx::ClearSigs(){
-    LOCK(cs_darksend);
-
     BOOST_FOREACH(CTxDSIn& in, vin)
         in.scriptSig = CScript();
 
@@ -2585,8 +2579,6 @@ bool CDSAnonTx::ClearSigs(){
 }
 
 bool CDSAnonTx::AddSig(const CTxIn newIn){
-    LOCK(cs_darksend);
-
     if(fDebug) LogPrintf("CDSAnonTx::AddSig -- new  %s\n", newIn.ToString().substr(0,24).c_str());
 
     BOOST_FOREACH(CTxDSIn& in, vin){
