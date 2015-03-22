@@ -222,9 +222,9 @@ uint256 CMasternode::CalculateScore(int mod, int64_t nBlockHeight)
 
 void CMasternode::Check()
 {
-    LOCK(cs_main);
+    TRY_LOCK(cs_main);
 
-    if(nScanningErrorCount >= MASTERNODE_SCANNING_ERROR_THESHOLD) 
+    if(nScanningErrorCount >= MASTERNODE_SCANNING_ERROR_THESHOLD)
     {
         activeState = MASTERNODE_POS_ERROR;
         return;
@@ -396,7 +396,7 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
     if(!enabled) return false;
     CMasternodePaymentWinner newWinner;
     int nMinimumAge = mnodeman.CountEnabled();
-    
+
     uint256 hash;
     if(!GetBlockHash(hash, nBlockHeight-10)) return false;
     int nHash;
