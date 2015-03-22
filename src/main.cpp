@@ -2742,8 +2742,11 @@ bool FindBlockPos(CValidationState &state, CDiskBlockPos &pos, unsigned int nAdd
         pos.nPos = infoLastBlockFile.nSize;
     }
 
-    infoLastBlockFile.nSize += nAddSize;
     infoLastBlockFile.AddBlock(nHeight, nTime);
+    if (fKnown)
+        infoLastBlockFile.nSize = std::max(pos.nPos + nAddSize, infoLastBlockFile.nSize);
+    else
+        infoLastBlockFile.nSize += nAddSize;
 
     if (!fKnown) {
         unsigned int nOldChunks = (pos.nPos + BLOCKFILE_CHUNK_SIZE - 1) / BLOCKFILE_CHUNK_SIZE;
