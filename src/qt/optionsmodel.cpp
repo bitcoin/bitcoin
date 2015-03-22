@@ -253,7 +253,7 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
         case TorIP: {
             proxyType proxy;
             proxy.first = CService("127.0.0.1", 9050);
-            GetProxy(NET_IPV4, proxy);
+            GetProxy(NET_TOR, proxy);
 
             CNetAddr addr(value.toString().toStdString());
             proxy.first.SetIP(addr);
@@ -264,7 +264,7 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
         case TorPort: {
             proxyType proxy;
             proxy.first = CService("127.0.0.1", 9050);
-            GetProxy(NET_IPV4, proxy);
+            GetProxy(NET_TOR, proxy);
 
             proxy.first.SetPort(value.toInt());
             settings.setValue("addrTor", proxy.first.ToStringIPPort().c_str());
