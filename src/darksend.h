@@ -7,6 +7,7 @@
 
 #include "core.h"
 #include "main.h"
+#include "sync.h"
 #include "activemasternode.h"
 #include "masternodeman.h"
 #include "darksend-relay.h"
