@@ -119,6 +119,17 @@ Value masternode(const Array& params, bool fHelp)
                 "  donate       - Donate to support development (yes or no)\n"
                 );
 
+    // *** string returned when no donation mode is set ****
+    std::string strNoDonateModeSet = "";
+    if(nDonate == 0) {
+        strNoDonateModeSet += "---------- Please Support Dash Development! --------------\n\n";
+        strNoDonateModeSet += "Dash now allows you to support future development by redirecting a small part (5%) of your masternode earnings ";
+        strNoDonateModeSet += "to the Darkcoin Foundation, which will be used to pay developers for bringing this project to the next level. ";
+        strNoDonateModeSet += "If you would like to donate, please execute \"masternode donate yes\" then start your node again. To avoid this ";
+        strNoDonateModeSet += "message in the future add \"donate=yes\" or \"donate=no\" to your configuration.\n";
+    }
+    // ********************************************************
+
     if (strCommand == "stop")
     {
         if(!fMasterNode) return "you must set masternode=1 in the configuration";
@@ -313,12 +324,8 @@ Value masternode(const Array& params, bool fHelp)
             }
         }
 
-        if(nDonate == 0){
-            std::string strReturn = "Start requires you to specify if you would like to support development by donating 5%";
-            strReturn += " of your masternode earnings. If you would please execute 'masternode donate yes' otherwise 'masternode donate no',";
-            strReturn += " then reissue your start command. Thankyou for supporting Dash!";
-            return strReturn;
-        }
+        //ask user to specify if they would like to support the project
+        if(nDonate == 0) return strNoDonateModeSet;
 
         if(activeMasternode.status != MASTERNODE_REMOTELY_ENABLED && activeMasternode.status != MASTERNODE_IS_CAPABLE){
             activeMasternode.status = MASTERNODE_NOT_PROCESSED; // TODO: consider better way
@@ -364,12 +371,8 @@ Value masternode(const Array& params, bool fHelp)
 
     	bool found = false;
 
-        if(nDonate == 0){
-            std::string strReturn = "Start-alias requires you to specify if you would like to support development by donating 5%";
-            strReturn += " of your masternode earnings. If you would please execute 'masternode donate yes' otherwise 'masternode donate no',";
-            strReturn += " then reissue your start command. Thankyou for supporting Dash!";
-            return strReturn;
-        }
+        //ask user to specify if they would like to support the project
+        if(nDonate == 0) return strNoDonateModeSet;
 
 		Object statusObj;
 		statusObj.push_back(Pair("alias", alias));
@@ -439,13 +442,8 @@ Value masternode(const Array& params, bool fHelp)
 
 		Object resultsObj;
 
-
-        if(nDonate == 0){
-            std::string strReturn = "Start-many requires you to specify if you would like to support development by donating 5%";
-            strReturn += " of your masternode earnings. If you would please execute 'masternode donate yes' otherwise 'masternode donate no',";
-            strReturn += " then reissue your start command. Thankyou for supporting Dash!";
-            return strReturn;
-        }
+        //ask user to specify if they would like to support the project
+        if(nDonate == 0) return strNoDonateModeSet;
 
 		BOOST_FOREACH(CMasternodeConfig::CMasternodeEntry mne, masternodeConfig.getEntries()) {
 			total++;
