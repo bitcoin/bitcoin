@@ -488,7 +488,7 @@ void CMasternodeMan::ProcessMasternodeConnections()
     LOCK(cs_vNodes);
 
     if(!darkSendPool.pSubmittedToMasternode) return;
-    
+
     BOOST_FOREACH(CNode* pnode, vNodes)
     {
         if(darkSendPool.pSubmittedToMasternode->addr == pnode->addr) continue;
@@ -557,7 +557,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
 
         if(donationPercentage < 0 || donationPercentage > 100){
             LogPrintf("dsee - donation percentage out of range %d\n", donationPercentage);
-            return;     
+            return;
         }
 
         if(protocolVersion < nMasternodeMinProtocol) {
