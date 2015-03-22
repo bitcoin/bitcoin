@@ -7,6 +7,7 @@
 #include "darksend.h"
 #include "core.h"
 #include "util.h"
+#include "sync.h"
 #include "addrman.h"
 #include <boost/lexical_cast.hpp>
 
@@ -222,7 +223,9 @@ uint256 CMasternode::CalculateScore(int mod, int64_t nBlockHeight)
 
 void CMasternode::Check()
 {
-    TRY_LOCK(cs_main);
+    //TODO: Random segfault with this line removed
+    TRY_LOCK(cs_main, lockRecv);
+    if(!lockRecv) return;
 
     if(nScanningErrorCount >= MASTERNODE_SCANNING_ERROR_THESHOLD)
     {
