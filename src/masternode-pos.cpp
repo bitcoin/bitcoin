@@ -59,7 +59,6 @@ void ProcessMessageMasternodePOS(CNode* pfrom, std::string& strCommand, CDataStr
     if (strCommand == "mnse") //Masternode Scanning Error
     {
 
-        LogPrintf("ProcessMessageMasternodePOS::mnse\n");
         CDataStream vMsg(vRecv);
         CMasternodeScanningError mnse;
         vRecv >> mnse;
@@ -108,10 +107,12 @@ void ProcessMessageMasternodePOS(CNode* pfrom, std::string& strCommand, CDataStr
             return;
         }
 
-        CMasternode* pmn = mnodeman.Find(mnse.vinMasternodeB);
-        if(pmn == NULL) return;
+        CMasternode* pmnB = mnodeman.Find(mnse.vinMasternodeB);
+        if(pmnB == NULL) return;
 
-        pmn->ApplyScanningError(mnse);
+        if(fDebug) LogPrintf("ProcessMessageMasternodePOS::mnse - nHeight %d MasternodeA %s MasternodeB %s\n", mnse.nBlockHeight, pmnA->addr.ToString().c_str(), pmnB->addr.ToString().c_str());
+
+        pmnB->ApplyScanningError(mnse);
         mnse.Relay();
     }
 }
