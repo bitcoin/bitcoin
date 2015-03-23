@@ -33,7 +33,7 @@ protected:
     virtual void SetBestChain(const CBlockLocator &locator) {};
     virtual void UpdatedTransaction(const uint256 &hash) {};
     virtual void Inventory(const uint256 &hash) {};
-    virtual void ResendWalletTransactions() {};
+    virtual void ResendWalletTransactions(int64_t nBestBlockTime) {};
     virtual void BlockChecked(const CBlock&, const CValidationState&) {};
     friend void ::RegisterValidationInterface(CValidationInterface*);
     friend void ::UnregisterValidationInterface(CValidationInterface*);
@@ -52,7 +52,7 @@ struct CMainSignals {
     /** Notifies listeners about an inventory item being seen on the network. */
     boost::signals2::signal<void (const uint256 &)> Inventory;
     /** Tells listeners to broadcast their data. */
-    boost::signals2::signal<void ()> Broadcast;
+    boost::signals2::signal<void (int64_t nBestBlockTime)> Broadcast;
     /** Notifies listeners of a block validation result */
     boost::signals2::signal<void (const CBlock&, const CValidationState&)> BlockChecked;
 };
