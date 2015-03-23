@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "masternodeman.h"
+#include "masternode.h"
 #include "activemasternode.h"
 #include "darksend.h"
 #include "core.h"
@@ -383,6 +384,10 @@ int CMasternodeMan::GetMasternodeRank(const CTxIn& vin, int64_t nBlockHeight, in
 {
     std::vector<pair<unsigned int, CTxIn> > vecMasternodeScores;
 
+    //make sure we know about this block
+    uint256 hash = 0;
+    if(!GetBlockHash(hash, nBlockHeight)) return -1;
+
     // scan for winner
     BOOST_FOREACH(CMasternode& mn, vMasternodes) {
 
@@ -417,6 +422,10 @@ std::vector<pair<int, CMasternode> > CMasternodeMan::GetMasternodeRanks(int64_t 
 {
     std::vector<pair<unsigned int, CMasternode> > vecMasternodeScores;
     std::vector<pair<int, CMasternode> > vecMasternodeRanks;
+
+    //make sure we know about this block
+    uint256 hash = 0;
+    if(!GetBlockHash(hash, nBlockHeight)) return vecMasternodeRanks;
 
     // scan for winner
     BOOST_FOREACH(CMasternode& mn, vMasternodes) {
