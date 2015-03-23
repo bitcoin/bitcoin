@@ -197,7 +197,7 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
             For added DDOS protection, clients can only relay through 20 nodes per block.
         */
         int rank = mnodeman.GetMasternodeRank(activeMasternode.vin, dsr.nBlockHeight, MIN_POOL_PEER_PROTO_VERSION);
-        if(rank > 20){
+        if(rank == -1 || rank > 20){
             LogPrintf("dsr -- invalid relay Masternode! %s \n", activeMasternode.vin.ToString().c_str());
             return;
         }

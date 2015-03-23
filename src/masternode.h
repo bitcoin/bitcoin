@@ -52,6 +52,7 @@ enum masternodeState {
 };
 
 void ProcessMessageMasternodePayments(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
+bool GetBlockHash(uint256& hash, int nBlockHeight);
 
 //
 // The Masternode Class. For managing the Darksend process. It contains the input of the 1000DRK, signature to prove
