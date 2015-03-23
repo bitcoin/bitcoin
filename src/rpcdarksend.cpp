@@ -721,8 +721,8 @@ Value masternodelist(const Array& params, bool fHelp)
     if (params.size() == 2) strFilter = params[1].get_str();
 
     if (fHelp ||
-            (strMode != "active" && strMode != "vin" && strMode != "pubkey" && strMode != "lastseen"
-             && strMode != "activeseconds" && strMode != "rank" && strMode != "protocol" && strMode != "full" && strMode != "votes" && strMode != "donation"))
+            (strMode != "active" && strMode != "vin" && strMode != "pubkey" && strMode != "lastseen" && strMode != "activeseconds" && strMode != "rank" 
+                && strMode != "protocol" && strMode != "full" && strMode != "votes" && strMode != "donation" && strMode != "pose"))
     {
         throw runtime_error(
                 "masternodelist ( \"mode\" \"filter\" )\n"
@@ -741,6 +741,7 @@ Value masternodelist(const Array& params, bool fHelp)
                 "  vin            - Print vin associated with a masternode (can be additionally filtered, partial match)\n"
                 "  votes          - Print all masternode votes for a Dash initiative\n"
                 "  donation       - Show donation settings\n"
+                "  pose           - Show proof-of-service score\n"
                 );
     }
 
@@ -840,6 +841,12 @@ Value masternodelist(const Array& params, bool fHelp)
                     strOut += ":";
                     strOut += boost::lexical_cast<std::string>(mn.donationPercentage);
                 }
+                obj.push_back(Pair(strAddr,       strOut.c_str()));
+            } else if (strMode == "pose") {
+                if(strFilter !="" && strAddr.find(strFilter) == string::npos) continue;
+
+                std::string strOut = boost::lexical_cast<std::string>(mn.nScanningErrorCount);
+                
                 obj.push_back(Pair(strAddr,       strOut.c_str()));
             } else if (strMode == "vin") {
                 if(strFilter !="" && mn.vin.prevout.hash.ToString().find(strFilter) == string::npos &&
