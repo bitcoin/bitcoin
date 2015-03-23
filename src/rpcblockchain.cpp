@@ -80,6 +80,20 @@ Object blockToJSON(const CBlock& block, const CBlockIndex* blockindex)
 }
 
 
+Object blockHeaderToJSON(const CBlock& block, const CBlockIndex* blockindex)
+{
+    Object result;
+    result.push_back(Pair("version", block.nVersion));
+    if (blockindex->pprev)
+        result.push_back(Pair("previousblockhash", blockindex->pprev->GetBlockHash().GetHex()));
+    result.push_back(Pair("merkleroot", block.hashMerkleRoot.GetHex()));
+    result.push_back(Pair("time", block.GetBlockTime()));
+    result.push_back(Pair("bits", HexBits(block.nBits)));
+    result.push_back(Pair("nonce", (uint64_t)block.nNonce));
+    return result;
+}
+
+
 Value getblockcount(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 0)
@@ -290,6 +304,59 @@ Value getblock(const Array& params, bool fHelp)
     }
 
     return blockToJSON(block, pblockindex);
+}
+
+Value getblockheader(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() < 1 || params.size() > 2)
+        throw runtime_error(
+                "getblockheader \"hash\" ( verbose )\n"
+                "\nIf verbose is false, returns a string that is serialized, hex-encoded data for block 'hash' header.\n"
+                "If verbose is true, returns an Object with information about block <hash> header.\n"
+                "\nArguments:\n"
+                "1. \"hash\"          (string, required) The block hash\n"
+                "2. verbose           (boolean, optional, default=true) true for a json object, false for the hex encoded data\n"
+                "\nResult (for verbose = true):\n"
+                "{\n"
+                "  \"version\" : n,         (numeric) The block version\n"
+                "  \"previousblockhash\" : \"hash\",  (string) The hash of the previous block\n"
+                "  \"merkleroot\" : \"xxxx\", (string) The merkle root\n"
+                "  \"time\" : ttt,          (numeric) The block time in seconds since epoch (Jan 1 1970 GMT)\n"
+                "  \"bits\" : \"1d00ffff\", (string) The bits\n"
+                "  \"nonce\" : n,           (numeric) The nonce\n"
+                "}\n"
+                "\nResult (for verbose=false):\n"
+                "\"data\"             (string) A string that is serialized, hex-encoded data for block 'hash' header.\n"
+                "\nExamples:\n"
+                + HelpExampleCli("getblockheader", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\"")
+                + HelpExampleRpc("getblockheader", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\"")
+                );
+
+    std::string strHash = params[0].get_str();
+    uint256 hash(strHash);
+
+    bool fVerbose = true;
+    if (params.size() > 1)
+        fVerbose = params[1].get_bool();
+
+    if (mapBlockIndex.count(hash) == 0)
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
+
+    CBlock block;
+    CBlockIndex* pblockindex = mapBlockIndex[hash];
+
+    if(!ReadBlockFromDisk(block, pblockindex))
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "Can't read block from disk");
+
+    if (!fVerbose)
+    {
+        CDataStream ssBlock(SER_NETWORK, PROTOCOL_VERSION);
+        ssBlock << block.GetBlockHeader();
+        std::string strHex = HexStr(ssBlock.begin(), ssBlock.end());
+        return strHex;
+    }
+
+    return blockHeaderToJSON(block, pblockindex);
 }
 
 Value gettxoutsetinfo(const Array& params, bool fHelp)
