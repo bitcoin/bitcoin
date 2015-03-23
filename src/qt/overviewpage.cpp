@@ -22,7 +22,8 @@
 #include <QPainter>
 #include <QTimer>
 
-#define DECORATION_SIZE 64
+#define DECORATION_SIZE 48
+#define ICON_OFFSET 16
 #define NUM_ITEMS 3
 
 class TxViewDelegate : public QAbstractItemDelegate
@@ -41,11 +42,12 @@ public:
 
         QIcon icon = qvariant_cast<QIcon>(index.data(Qt::DecorationRole));
         QRect mainRect = option.rect;
+        mainRect.moveLeft(ICON_OFFSET);
         QRect decorationRect(mainRect.topLeft(), QSize(DECORATION_SIZE, DECORATION_SIZE));
         int xspace = DECORATION_SIZE + 8;
         int ypad = 6;
         int halfheight = (mainRect.height() - 2*ypad)/2;
-        QRect amountRect(mainRect.left() + xspace, mainRect.top()+ypad, mainRect.width() - xspace, halfheight);
+        QRect amountRect(mainRect.left() + xspace, mainRect.top()+ypad, mainRect.width() - xspace - ICON_OFFSET, halfheight);
         QRect addressRect(mainRect.left() + xspace, mainRect.top()+ypad+halfheight, mainRect.width() - xspace, halfheight);
         icon.paint(painter, decorationRect);
 
