@@ -78,6 +78,10 @@ void ProcessMessageMasternodePOS(CNode* pfrom, std::string& strCommand, CDataStr
             return;
         }
 
+        CMasternode* pmnA = mnodeman.Find(mnse.vinMasternodeA);
+        if(pmnA == NULL) return;
+        if(pmnA->protocolVersion < MIN_MASTERNODE_POS_PROTO_VERSION) return;
+
         int nBlockHeight = chainActive.Tip()->nHeight;
         if(nBlockHeight - mnse.nBlockHeight > 10){
             LogPrintf("MasternodePOS::mnse - Too old\n");
@@ -88,14 +92,14 @@ void ProcessMessageMasternodePOS(CNode* pfrom, std::string& strCommand, CDataStr
         int a = mnodeman.GetMasternodeRank(mnse.vinMasternodeA, mnse.nBlockHeight, MIN_MASTERNODE_POS_PROTO_VERSION);
         if(a == -1 || a > GetCountScanningPerBlock())
         {
-            LogPrintf("MasternodePOS::mnse - MasternodeA ranking is too high\n");
+            if(a != -1) LogPrintf("MasternodePOS::mnse - MasternodeA ranking is too high\n");
             return;
         }
 
         int b = mnodeman.GetMasternodeRank(mnse.vinMasternodeB, mnse.nBlockHeight, MIN_MASTERNODE_POS_PROTO_VERSION, false);
         if(b == -1 || b < mnodeman.CountMasternodesAboveProtocol(MIN_MASTERNODE_POS_PROTO_VERSION)-GetCountScanningPerBlock())
         {
-            LogPrintf("MasternodePOS::mnse - MasternodeB ranking is too low\n");
+            if(b != -1) LogPrintf("MasternodePOS::mnse - MasternodeB ranking is too low\n");
             return;
         }
 
