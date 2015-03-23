@@ -388,10 +388,10 @@ Value masternode(const Array& params, bool fHelp)
                 if(nDonate == 1){
                     if(Params().NetworkID() == CChainParams::MAIN){
                         strDonateAddress = "7gnwGHt17heGpG9Crfeh4KGpYNFugPhJdh";
-                        strDonationPercentage = 5; //5%
+                        strDonationPercentage = "5"; //5%
                     } else {
                         strDonateAddress = "xwe6mWeZQsbbM9P2LQ5t5cWArHtCLAuV4N";
-                        strDonationPercentage = 5; //5%
+                        strDonationPercentage = "5"; //5%
                     }
                 }
 
@@ -456,10 +456,10 @@ Value masternode(const Array& params, bool fHelp)
             if(nDonate == 1){
                 if(Params().NetworkID() == CChainParams::MAIN){
                     strDonateAddress = "7gnwGHt17heGpG9Crfeh4KGpYNFugPhJdh";
-                    strDonationPercentage = 5; //5%
+                    strDonationPercentage = "5"; //5%
                 } else {
                     strDonateAddress = "xwe6mWeZQsbbM9P2LQ5t5cWArHtCLAuV4N";
-                    strDonationPercentage = 5; //5%
+                    strDonationPercentage = "5"; //5%
                 }
             }
 
@@ -722,7 +722,7 @@ Value masternodelist(const Array& params, bool fHelp)
 
     if (fHelp ||
             (strMode != "active" && strMode != "vin" && strMode != "pubkey" && strMode != "lastseen"
-             && strMode != "activeseconds" && strMode != "rank" && strMode != "protocol" && strMode != "full" && strMode != "votes"))
+             && strMode != "activeseconds" && strMode != "rank" && strMode != "protocol" && strMode != "full" && strMode != "votes" && strMode != "donation"))
     {
         throw runtime_error(
                 "masternodelist ( \"mode\" \"filter\" )\n"
@@ -740,6 +740,7 @@ Value masternodelist(const Array& params, bool fHelp)
                 "  rank           - Print rank of a masternode based on current block\n"
                 "  vin            - Print vin associated with a masternode (can be additionally filtered, partial match)\n"
                 "  votes          - Print all masternode votes for a Dash initiative\n"
+                "  donation       - Show donation settings\n"
                 );
     }
 
@@ -824,6 +825,22 @@ Value masternodelist(const Array& params, bool fHelp)
                 if(strFilter !="" && address2.ToString().find(strFilter) == string::npos &&
                     strAddr.find(strFilter) == string::npos) continue;
                 obj.push_back(Pair(strAddr,       address2.ToString().c_str()));
+            } else if (strMode == "donation") {
+                CTxDestination address1;
+                ExtractDestination(mn.donationAddress, address1);
+                CBitcoinAddress address2(address1);
+
+                if(strFilter !="" && address2.ToString().find(strFilter) == string::npos &&
+                    strAddr.find(strFilter) == string::npos) continue;
+
+                std::string strOut = "";
+
+                if(mn.donationPercentage != 0){
+                    strOut = address2.ToString().c_str();
+                    strOut += ":";
+                    strOut += boost::lexical_cast<std::string>(mn.donationPercentage);
+                }
+                obj.push_back(Pair(strAddr,       strOut.c_str()));
             } else if (strMode == "vin") {
                 if(strFilter !="" && mn.vin.prevout.hash.ToString().find(strFilter) == string::npos &&
                     strAddr.find(strFilter) == string::npos) continue;
