@@ -120,7 +120,7 @@ void CActiveMasternode::ManageStatus()
                 CBitcoinAddress address;
                 if(!address.SetString(strDonationAddress))
                 {
-                    LogPrintf("Register::Register - Invalid Donation Address\n");
+                    LogPrintf("CActiveMasternode::ManageStatus() - Invalid Donation Address\n");
                     return;
                 }
                 donationAddress.SetDestination(address.Get());
