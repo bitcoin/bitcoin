@@ -275,8 +275,8 @@ Value getblock(const Array& params, bool fHelp)
             "\nResult (for verbose=false):\n"
             "\"data\"             (string) A string that is serialized, hex-encoded data for block 'hash'.\n"
             "\nExamples:\n"
-            + HelpExampleCli("getblock", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\"")
-            + HelpExampleRpc("getblock", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\"")
+            + HelpExampleCli("getblock", "\"00000000000fd08c2fb661d2fcb0d49abb3a91e5f27082ce64feed3b4dede2e2\"")
+            + HelpExampleRpc("getblock", "\"00000000000fd08c2fb661d2fcb0d49abb3a91e5f27082ce64feed3b4dede2e2\"")
         );
 
     std::string strHash = params[0].get_str();
@@ -328,8 +328,8 @@ Value getblockheader(const Array& params, bool fHelp)
                 "\nResult (for verbose=false):\n"
                 "\"data\"             (string) A string that is serialized, hex-encoded data for block 'hash' header.\n"
                 "\nExamples:\n"
-                + HelpExampleCli("getblockheader", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\"")
-                + HelpExampleRpc("getblockheader", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\"")
+                + HelpExampleCli("getblockheader", "\"00000000000fd08c2fb661d2fcb0d49abb3a91e5f27082ce64feed3b4dede2e2\"")
+                + HelpExampleRpc("getblockheader", "\"00000000000fd08c2fb661d2fcb0d49abb3a91e5f27082ce64feed3b4dede2e2\"")
                 );
 
     std::string strHash = params[0].get_str();
