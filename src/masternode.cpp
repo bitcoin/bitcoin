@@ -402,7 +402,7 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
 
     uint256 hash;
     if(!GetBlockHash(hash, nBlockHeight-10)) return false;
-    int nHash;
+    unsigned int nHash;
     memcpy(&nHash, &hash, 2);
 
     std::vector<CTxIn> vecLastPayments;
@@ -422,7 +422,7 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
         newWinner.nBlockHeight = nBlockHeight;
         newWinner.vin = pmn->vin;
 
-        if(pmn->donationPercentage > 0 && (nHash % 100) < pmn->donationPercentage) {
+        if(pmn->donationPercentage > 0 && (nHash % 100) <= pmn->donationPercentage) {
             newWinner.payee = pmn->donationAddress;
         } else {
             newWinner.payee.SetDestination(pmn->pubkey.GetID());
@@ -444,7 +444,7 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
                 newWinner.nBlockHeight = nBlockHeight;
                 newWinner.vin = pmn->vin;
 
-                if(pmn->donationPercentage > 0 && (nHash % 100) < pmn->donationPercentage) {
+                if(pmn->donationPercentage > 0 && (nHash % 100) <= pmn->donationPercentage) {
                     newWinner.payee = pmn->donationAddress;
                 } else {
                     newWinner.payee.SetDestination(pmn->pubkey.GetID());
