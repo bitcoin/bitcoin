@@ -1742,6 +1742,14 @@ void RelayTransaction(const CTransaction& tx, const CDataStream& ss)
     }
 }
 
+void ForgetTransaction(const CTransaction& tx)
+{
+    CInv inv(MSG_TX, tx.GetHash());
+    LOCK(cs_vNodes);
+    BOOST_FOREACH(CNode* pnode, vNodes)
+        pnode->RemoveInventory(inv);
+}
+
 void CNode::RecordBytesRecv(uint64_t bytes)
 {
     LOCK(cs_totalBytesRecv);

@@ -59,6 +59,20 @@ public:
         }
         return ret;
     }
+    size_type erase(const key_type& x)
+    {
+        for (size_type i = 0; i < order.size(); i++) {
+            if (*order[i] == x) {
+                set.erase(order[i]);
+                order.erase(order.begin()+i);
+                if (first_unused == 0) first_unused = order.size();
+                else --first_unused;
+                if (first_used > i) --first_used;
+                return 1;
+            }
+        }
+        return 0;
+    }
     size_type max_size() const { return nMaxSize; }
 };
 

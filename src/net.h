@@ -415,6 +415,12 @@ public:
         }
     }
 
+    void RemoveInventory(const CInv& inv)
+    {
+        LOCK(cs_inventory);
+        setInventoryKnown.erase(inv);
+    }
+
     void AskFor(const CInv& inv);
 
     // TODO: Document the postcondition of this function.  Is cs_vSend locked?
@@ -624,6 +630,7 @@ public:
 class CTransaction;
 void RelayTransaction(const CTransaction& tx);
 void RelayTransaction(const CTransaction& tx, const CDataStream& ss);
+void ForgetTransaction(const CTransaction& tx);
 
 /** Access to the (IP) address database (peers.dat) */
 class CAddrDB
