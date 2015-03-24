@@ -32,13 +32,15 @@ class CMasternodeDB
 {
 private:
     boost::filesystem::path pathMN;
+    std::string strMagicMessage;
 public:
     enum ReadResult {
         Ok,
         FileError,
         HashReadError,
         IncorrectHash,
-        IncorrectMagic,
+        IncorrectMagicMessage,
+        IncorrectMagicNumber,
         IncorrectFormat
     };
 
