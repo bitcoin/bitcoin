@@ -106,6 +106,11 @@ OverviewPage::OverviewPage(QWidget *parent) :
 {
     ui->setupUi(this);
 
+    QFont balance = QApplication::font();
+    balance.setPointSize(balance.pointSize() * 1.5);
+    balance.setBold(true);
+    ui->label_5->setFont(balance);
+
     // Recent transactions
     ui->listTransactions->setItemDelegate(txdelegate);
     ui->listTransactions->setIconSize(QSize(DECORATION_SIZE, DECORATION_SIZE));
