@@ -5,6 +5,7 @@
 #include "consensus/consensus.h"
 #include "consensus/validation.h"
 #include "data/sighash.json.h"
+#include "hash.h"
 #include "random.h"
 #include "hash.h"
 #include "script/interpreter.h"
