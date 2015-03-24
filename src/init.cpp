@@ -1038,6 +1038,11 @@ bool AppInit2(boost::thread_group& threadGroup)
                     break;
                 }
 
+                if (!CheckBlockFiles()) {
+                    strLoadError = _("Error checking required block files. There must be missing or unreadable data");
+                    break;
+                }
+
                 // If the loaded chain has a wrong genesis, bail out immediately
                 // (we're likely using a testnet datadir, or the other way around).
                 if (!mapBlockIndex.empty() && mapBlockIndex.count(Params().HashGenesisBlock()) == 0)

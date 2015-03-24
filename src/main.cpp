@@ -2963,24 +2963,6 @@ bool static LoadBlockIndexDB()
         }
     }
 
-    // Check presence of blk files
-    LogPrintf("Checking all blk files are present...\n");
-    set<int> setBlkDataFiles;
-    BOOST_FOREACH(const PAIRTYPE(uint256, CBlockIndex*)& item, mapBlockIndex)
-    {
-        CBlockIndex* pindex = item.second;
-        if (pindex->nStatus & BLOCK_HAVE_DATA) {
-            setBlkDataFiles.insert(pindex->nFile);
-        }
-    }
-    for (std::set<int>::iterator it = setBlkDataFiles.begin(); it != setBlkDataFiles.end(); it++)
-    {
-        CDiskBlockPos pos(*it, 0);
-        if (CAutoFile(OpenBlockFile(pos, true), SER_DISK, CLIENT_VERSION).IsNull()) {
-            return false;
-        }
-    }
-
     // Check whether we need to continue reindexing
     bool fReindexing = false;
     pblocktree->ReadReindexing(fReindexing);
@@ -3003,6 +2985,48 @@ bool static LoadBlockIndexDB()
         DateTimeStrFormat("%Y-%m-%d %H:%M:%S", chainActive.Tip()->GetBlockTime()),
         Checkpoints::GuessVerificationProgress(chainActive.Tip()));
 
+    return true;
+}
+
+bool BlockFileIsOpenable(int nFile)
+{
+    CDiskBlockPos pos(nFile, 0);
+    return !CAutoFile(OpenBlockFile(pos, true), SER_DISK, CLIENT_VERSION).IsNull();
+}
+
+bool UndoFileIsOpenable(int nFile)
+{
+    CDiskBlockPos pos(nFile, 0);
+    return !CAutoFile(OpenUndoFile(pos, true), SER_DISK, CLIENT_VERSION).IsNull();
+}
+
+bool DataFilesAreOpenable(int nFile)
+{
+    if (BlockFileIsOpenable(nFile) && UndoFileIsOpenable(nFile))
+        return true;
+    return false;
+}
+
+bool CheckBlockFiles()
+{
+    // Check presence of blk files
+    LogPrintf("Checking all blk files are present...\n");
+    set<int> setRequiredDataFilesAreOpenable;
+    for (CBlockIndex* pindex = chainActive.Tip(); pindex && pindex->pprev; pindex = pindex->pprev) {
+        if (pindex->nStatus & BLOCK_HAVE_DATA && pindex->nStatus & BLOCK_HAVE_UNDO) {
+            if (!setRequiredDataFilesAreOpenable.count(pindex->nFile)) {
+                if (DataFilesAreOpenable(pindex->nFile))
+                    setRequiredDataFilesAreOpenable.insert(pindex->nFile);
+                else {
+                    LogPrintf("Error: Required file for block: %i can't be opened.\n", pindex->nHeight);
+                    return false;
+                }
+            }
+        } else {
+            LogPrintf("Error: Required data for block: %i is missing.\n", pindex->nHeight);
+            return false;
+        }
+    }
     return true;
 }
 
