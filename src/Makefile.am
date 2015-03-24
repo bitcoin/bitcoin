@@ -152,11 +152,40 @@ JSON_H = \
   json/json_spirit_writer.h \
   json/json_spirit_writer_template.h
 
+# Omni Core extensions
+OMNICORE_H = \
+  mastercore.h \
+  mastercore_convert.h \
+  mastercore_dex.h \
+  mastercore_errors.h \
+  mastercore_parse_string.h \
+  mastercore_rpc.h \
+  mastercore_script.h \
+  mastercore_sp.h \
+  mastercore_tx.h \
+  mastercore_version.h
+
+OMNICORE_CPP = \
+  mastercore.cpp \
+  mastercore_convert.cpp \
+  mastercore_dex.cpp \
+  mastercore_parse_string.cpp \
+  mastercore_rpc.cpp \
+  mastercore_script.cpp \
+  mastercore_sp.cpp \
+  mastercore_tx.cpp \
+  mastercore_version.cpp
+
+BITCOIN_CORE_H += \
+  $(OMNICORE_H)
+#
+
 obj/build.h: FORCE
 	@$(MKDIR_P) $(builddir)/obj
 	@$(top_srcdir)/share/genbuild.sh $(abs_top_builddir)/src/obj/build.h \
 	  $(abs_top_srcdir)
 libbitcoin_util_a-clientversion.$(OBJEXT): obj/build.h
+libbitcoin_common_a-mastercore_version.$(OBJEXT): obj/build.h # Omni Core
 
 # server: shared between bitcoind and bitcoin-qt
 libbitcoin_server_a_CPPFLAGS = $(BITCOIN_INCLUDES) $(MINIUPNPC_CPPFLAGS)
@@ -255,6 +284,10 @@ libbitcoin_common_a_SOURCES = \
   script/standard.cpp \
   script/script_error.cpp \
   $(BITCOIN_CORE_H)
+
+# Omni Core extensions
+libbitcoin_common_a_SOURCES += \
+  $(OMNICORE_CPP)
 
 # util: shared between all executables.
 # This library *must* be included to make sure that the glibc

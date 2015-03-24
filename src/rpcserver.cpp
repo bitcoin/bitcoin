@@ -348,6 +348,36 @@ static const CRPCCommand vRPCCommands[] =
     { "wallet",             "walletpassphrasechange", &walletpassphrasechange, true,      false,      true },
     { "wallet",             "walletpassphrase",       &walletpassphrase,       true,      false,      true },
 #endif // ENABLE_WALLET
+
+    /* Omni Core related calls */
+#ifdef ENABLE_WALLET
+    { "hidden",       "mscrpc",                       &mscrpc,                        true,   false,  false },
+    { "omni layer",   "getinfo_MP",                   &getinfo_MP,                    true,   false,  true },
+    { "omni layer",   "getallbalancesforid_MP",       &getallbalancesforid_MP,        false,  false,  true },
+    { "omni layer",   "getbalance_MP",                &getbalance_MP,                 false,  false,  true },
+    { "omni layer",   "send_MP",                      &send_MP,                       false,  false,  true },
+    { "omni layer",   "gettransaction_MP",            &gettransaction_MP,             false,  false,  true },
+    { "omni layer",   "listtransactions_MP",          &listtransactions_MP,           false,  false,  true },
+    { "omni layer",   "getproperty_MP",               &getproperty_MP,                false,  false,  true },
+    { "omni layer",   "listproperties_MP",            &listproperties_MP,             false,  false,  true },
+    { "omni layer",   "getcrowdsale_MP",              &getcrowdsale_MP,               false,  false,  true },
+    { "omni layer",   "getgrants_MP",                 &getgrants_MP,                  false,  false,  true },
+    { "omni layer",   "getactivedexsells_MP",         &getactivedexsells_MP,          false,  false,  true },
+    { "omni layer",   "getactivecrowdsales_MP",       &getactivecrowdsales_MP,        false,  false,  true },
+#if 0 // disabled for pre meta DEx release
+    { "omni layer",   "trade_MP",                     &trade_MP,                      false,  false,  true },
+    { "omni layer",   "getorderbook_MP",              &getorderbook_MP,               false,  false,  true },
+    { "omni layer",   "gettradessince_MP",            &gettradessince_MP,             false,  false,  true },
+    { "omni layer",   "getopenorders_MP",             &getopenorders_MP,              false,  false,  true },
+    { "omni layer",   "gettradehistory_MP",           &gettradehistory_MP,            false,  false,  true },
+    { "omni layer",   "gettrade_MP",                  &gettrade_MP,                   false,  false,  true },
+#endif
+    { "omni layer",   "sendtoowners_MP",              &sendtoowners_MP,               false,  false,  true },
+    { "omni layer",   "sendrawtx_MP",                 &sendrawtx_MP,                  false,  false,  true },
+    { "omni layer",   "getsto_MP",                    &getsto_MP,                     false,  false,  true },
+    { "omni layer",   "listblocktransactions_MP",     &listblocktransactions_MP,      false,  false,  true },
+    { "omni layer",   "getallbalancesforaddress_MP",  &getallbalancesforaddress_MP,   false,  false,  true },
+#endif // ENABLE_WALLET [required by Omni Core for now]
 };
 
 CRPCTable::CRPCTable()

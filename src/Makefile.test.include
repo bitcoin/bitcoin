@@ -79,6 +79,16 @@ BITCOIN_TESTS += \
   test/rpc_wallet_tests.cpp
 endif
 
+# Omni Core extensions
+OMNICORE_TESTS = \
+  test/mastercore_rounduint64_tests.cpp \
+  test/mastercore_strtoint64_tests.cpp \
+  test/mastercore_swapbyteorder_tests.cpp
+
+BITCOIN_TESTS += \
+  $(OMNICORE_TESTS)
+#
+
 test_test_bitcoin_SOURCES = $(BITCOIN_TESTS) $(JSON_TEST_FILES) $(RAW_TEST_FILES)
 test_test_bitcoin_CPPFLAGS = $(BITCOIN_INCLUDES) -I$(builddir)/test/ $(TESTDEFS)
 test_test_bitcoin_LDADD = $(LIBBITCOIN_SERVER) $(LIBBITCOIN_CLI) $(LIBBITCOIN_COMMON) $(LIBBITCOIN_UTIL) $(LIBBITCOIN_CRYPTO) $(LIBBITCOIN_UNIVALUE) $(LIBLEVELDB) $(LIBMEMENV) \

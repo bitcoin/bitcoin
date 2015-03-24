@@ -98,6 +98,9 @@ public:
 
     /** New block has been accepted */
     boost::signals2::signal<void (const uint256& hash)> NotifyBlockTip;
+
+    /** Omni balances have been updated. */
+    boost::signals2::signal<void ()> OmniStateChanged;
 };
 
 extern CClientUIInterface uiInterface;
