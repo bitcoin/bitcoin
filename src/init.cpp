@@ -1148,13 +1148,6 @@ bool AppInit2(boost::thread_group& threadGroup)
 
     // ********************************************************* Step 10: setup DarkSend
 
-    std::string strDonate = GetArg("-donate", "");
-    if(strDonate != ""){
-        if(strDonate == "yes" || strDonate == "true") nDonate = 1;
-        else if(strDonate == "no" || strDonate == "false") nDonate = -1;
-        else return InitError("Invalid donate mode, must be yes or no: " + strDonate);
-    }
-
     //string strNode = "23.23.186.131";
     //CAddress addr;
     //ConnectNode(addr, strNode.c_str(), true);
