@@ -6,6 +6,7 @@
 #include "wallet/walletdb.h"
 
 #include "base58.h"
+#include "main.h"
 #include "protocol.h"
 #include "serialize.h"
 #include "sync.h"

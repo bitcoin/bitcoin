@@ -17,6 +17,7 @@
 
 #include "base58.h"
 #include "coincontrol.h"
+#include "main.h"
 #include "ui_interface.h"
 #include "wallet/wallet.h"
 
