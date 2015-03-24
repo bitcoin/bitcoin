@@ -1,4 +1,5 @@
-﻿1.1 Установка архиватора 7z: http://www.7-zip.org/ 
+﻿ARMV7
+1.1 Установка архиватора 7z: http://www.7-zip.org/ 
 (при написании инструкции использовался 7-Zip 9.20 64 bit X64, но скорее всего подойдёт любая версия)
 
 1.2 Установка msys shell:
@@ -242,3 +243,44 @@ LIBS += -lboost_system$$BOOST_LIB_SUFFIX -lboost_filesystem$$BOOST_LIB_SUFFIX -l
 -Нажмите зеленую стрелку(Запустить)(https://yadi.sk/i/hKHKL_Phe4EFL)
 -Выберите свой телефон/планшет, нажмите OK и ждите завершения компиляции.
 -После завершения компиляции Novacoin-Qt будет установлен на ваш телефон/планшет и запущен. А в папке C:\Android\build-novacoin-qt-Android_armeabi_v7a_GCC_4_9_Qt_5_4_0-Release\android-build\bin будет файл QtApp-debug.apk. Переименуйте его в Novacoin-Qt-0.5.1-debug.apk и можно распростронять :)
+
+Изменения для Android X86
+1. Добавить путь C:\Android\android-ndk-r10d\toolchains\x86-4.9\prebuilt\windows-x86_64\bin в переменную PATH
+2. Изменить системные переменные так:
+
+ANDROID_DEV /c/Android/android-ndk-r10d/platforms/android-9/arch-x86/usr
+AR /c/Android/android-ndk-r10d/toolchains/x86-4.9/prebuilt/windows-x86_64/bin/i686-linux-android-ar
+AS /c/Android/android-ndk-r10d/toolchains/x86-4.9/prebuilt/windows-x86_64/bin/i686-linux-android-as
+CC /c/Android/android-ndk-r10d/toolchains/x86-4.9/prebuilt/windows-x86_64/bin/i686-linux-android-gcc
+CFLAGS --sysroot=/c/Android/android-ndk-r10d/platforms/android-9/arch-x86/
+CPP /c/Android/android-ndk-r10d/toolchains/x86-4.9/prebuilt/windows-x86_64/bin/i686-linux-android-cpp
+CPPFLAGS --sysroot=/c/Android/android-ndk-r10d/platforms/android-9/arch-x86/
+CXX /c/Android/android-ndk-r10d/toolchains/x86-4.9/prebuilt/windows-x86_64/bin/i686-linux-android-g++
+CXXFLAGS --sysroot=/c/Android/android-ndk-r10d/platforms/android-9/arch-x86/ -I/c/Android/android-ndk-r10d/sources/cxx-stl/gnu-libstdc++/4.9/include -I/c/Android/android-ndk-r10d/sources/cxx-stl/gnu-libstdc++/4.9/libs/x86/include
+LD /c/Android/android-ndk-r10d/toolchains/x86-4.9/prebuilt/windows-x86_64/bin/i686-linux-android-ld
+NDK_PROJECT_PATH C:\Android\android-ndk-r10d
+RANLIB /c/Android/android-ndk-r10d/toolchains/x86-4.9/prebuilt/windows-x86_64/bin/i686-linux-android-ranlib
+
+3. При построении OpenSSL выполнить
+Configure no-shared no-dso android-x86
+вместо
+Configure no-shared no-dso android-armv7
+
+4. При построении BerkeleyDB выполнить
+../dist/configure --host=x86-none-linux --enable-cxx --disable-shared --disable-replication
+вместо
+../dist/configure --host=arm-none-linux --enable-cxx --disable-shared --disable-replication
+
+5. При построении Boost вставить
+using gcc : x86 : i686-linux-android-g++.exe ;
+вместо 
+using gcc : arm : arm-linux-androideabi-g++.exe ;
+
+и выполнить
+b2 --build-type=complete --with-chrono --with-filesystem --with-program_options --with-system --with-thread toolset=gcc variant=release link=static threading=multi threadapi=pthread target-os=android define=BOOST_MATH_DISABLE_FLOAT128 include=C:\Android\android-ndk-r10d\sources\cxx-stl\gnu-libstdc++\4.9\include include=C:\Android\android-ndk-r10d\sources\cxx-stl\gnu-libstdc++\4.9\libs\x86\include include=C:\Android\android-ndk-r10d\platforms\android-9\arch-x86\usr\include
+
+вместо
+
+b2 --build-type=complete --with-chrono --with-filesystem --with-program_options --with-system --with-thread toolset=gcc-arm variant=release link=static threading=multi threadapi=pthread target-os=android define=BOOST_MATH_DISABLE_FLOAT128 include=C:\Android\android-ndk-r10d\sources\cxx-stl\gnu-libstdc++\4.9\include include=C:\Android\android-ndk-r10d\sources\cxx-stl\gnu-libstdc++\4.9\libs\armeabi\include include=C:\Android\android-ndk-r10d\platforms\android-9\arch-arm\usr\include
+
+6. В QtCreator выбирать Android для X86 вместо Android для armeabi-v7a
