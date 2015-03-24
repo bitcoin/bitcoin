@@ -709,7 +709,7 @@ margin-right:5px;
 padding-right:5px;
 font-weight:bold;
 font-size:16px;
-min-height:20px;
+min-height:35px;
 }
 
 QWidget .QFrame#frame .QLabel#labelBalance { /* Available Balance */
