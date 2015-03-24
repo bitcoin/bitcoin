@@ -741,14 +741,14 @@ LSSharedFileListItemRef findStartupItemInList(LSSharedFileListRef list, CFURLRef
         CFURLRef currentItemURL = NULL;
 
 #if defined(MAC_OS_X_VERSION_MAX_ALLOWED) && MAC_OS_X_VERSION_MAX_ALLOWED >= 10100
-	if(&LSSharedFileListItemCopyResolvedURL)
-	    currentItemURL = LSSharedFileListItemCopyResolvedURL(item, resolutionFlags, NULL);
+    if(&LSSharedFileListItemCopyResolvedURL)
+        currentItemURL = LSSharedFileListItemCopyResolvedURL(item, resolutionFlags, NULL);
 #if defined(MAC_OS_X_VERSION_MIN_REQUIRED) && MAC_OS_X_VERSION_MIN_REQUIRED < 10100
-	else
-	    LSSharedFileListItemResolve(item, resolutionFlags, &currentItemURL, NULL);
+    else
+        LSSharedFileListItemResolve(item, resolutionFlags, &currentItemURL, NULL);
 #endif
 #else
-	LSSharedFileListItemResolve(item, resolutionFlags, &currentItemURL, NULL);
+    LSSharedFileListItemResolve(item, resolutionFlags, &currentItemURL, NULL);
 #endif
 
         if(currentItemURL && CFEqual(currentItemURL, findUrl)) {
