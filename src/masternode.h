@@ -43,14 +43,6 @@ extern CMasternodePayments masternodePayments;
 extern map<uint256, CMasternodePaymentWinner> mapSeenMasternodeVotes;
 extern map<int64_t, uint256> mapCacheBlockHashes;
 
-enum masternodeState {
-    MASTERNODE_ENABLED = 1,
-    MASTERNODE_EXPIRED = 2,
-    MASTERNODE_VIN_SPENT = 3,
-    MASTERNODE_REMOVE = 4,
-    MASTERNODE_POS_ERROR = 5
-};
-
 void ProcessMessageMasternodePayments(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
 bool GetBlockHash(uint256& hash, int nBlockHeight);
 
@@ -65,6 +57,14 @@ private:
     mutable CCriticalSection cs;
 
 public:
+    enum state {
+        MASTERNODE_ENABLED = 1,
+        MASTERNODE_EXPIRED = 2,
+        MASTERNODE_VIN_SPENT = 3,
+        MASTERNODE_REMOVE = 4,
+        MASTERNODE_POS_ERROR = 5
+    };
+
     CTxIn vin;
     CService addr;
     CPubKey pubkey;

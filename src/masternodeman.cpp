@@ -209,7 +209,7 @@ void CMasternodeMan::CheckAndRemove()
     //remove inactive
     vector<CMasternode>::iterator it = vMasternodes.begin();
     while(it != vMasternodes.end()){
-        if((*it).activeState == 4 || (*it).activeState == 3){
+        if((*it).activeState == CMasternode::MASTERNODE_REMOVE || (*it).activeState == CMasternode::MASTERNODE_VIN_SPENT){
             if(fDebug) LogPrintf("CMasternodeMan: Removing inactive Masternode %s - %i now\n", (*it).addr.ToString().c_str(), size() - 1);
             it = vMasternodes.erase(it);
         } else {
