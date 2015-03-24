@@ -109,8 +109,6 @@ bool fSucessfullyLoaded = false;
 bool fEnableDarksend = false;
 /** All denominations used by darksend */
 std::vector<int64_t> darkSendDenominations;
-// Donate 5% of masternode earnings to development
-int nDonate = 0;
 
 map<string, string> mapArgs;
 map<string, vector<string> > mapMultiArgs;
