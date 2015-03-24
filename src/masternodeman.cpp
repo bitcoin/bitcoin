@@ -391,11 +391,10 @@ int CMasternodeMan::GetMasternodeRank(const CTxIn& vin, int64_t nBlockHeight, in
     // scan for winner
     BOOST_FOREACH(CMasternode& mn, vMasternodes) {
 
-        mn.Check();
-
         if(mn.protocolVersion < minProtocol) continue;
-        if(fOnlyActive && !mn.IsEnabled()) {
-            continue;
+        if(fOnlyActive) {
+            mn.Check();
+            if(!mn.IsEnabled()) continue;
         }
 
         uint256 n = mn.CalculateScore(1, nBlockHeight);
@@ -462,11 +461,10 @@ CMasternode* CMasternodeMan::GetMasternodeByRank(int nRank, int64_t nBlockHeight
     // scan for winner
     BOOST_FOREACH(CMasternode& mn, vMasternodes) {
 
-        mn.Check();
-
         if(mn.protocolVersion < minProtocol) continue;
-        if(fOnlyActive && !mn.IsEnabled()) {
-            continue;
+        if(fOnlyActive) {
+            mn.Check();
+            if(!mn.IsEnabled()) continue;
         }
 
         uint256 n = mn.CalculateScore(1, nBlockHeight);
