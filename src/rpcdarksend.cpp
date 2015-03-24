@@ -710,11 +710,11 @@ Value masternodelist(const Array& params, bool fHelp)
 
                 std::string strStatus = "ACTIVE";
 
-                if(mn.activeState == MASTERNODE_ENABLED) strStatus = "ENABLED";
-                if(mn.activeState == MASTERNODE_EXPIRED) strStatus = "EXPIRED";
-                if(mn.activeState == MASTERNODE_VIN_SPENT) strStatus = "VIN_SPENT";
-                if(mn.activeState == MASTERNODE_REMOVE) strStatus = "REMOVE";
-                if(mn.activeState == MASTERNODE_POS_ERROR) strStatus = "POS_ERROR";
+                if(mn.activeState == CMasternode::MASTERNODE_ENABLED) strStatus = "ENABLED";
+                if(mn.activeState == CMasternode::MASTERNODE_EXPIRED) strStatus = "EXPIRED";
+                if(mn.activeState == CMasternode::MASTERNODE_VIN_SPENT) strStatus = "VIN_SPENT";
+                if(mn.activeState == CMasternode::MASTERNODE_REMOVE) strStatus = "REMOVE";
+                if(mn.activeState == CMasternode::MASTERNODE_POS_ERROR) strStatus = "POS_ERROR";
 
                 obj.push_back(Pair(strAddr,       strStatus.c_str()));
             } else if(strMode == "votes"){
