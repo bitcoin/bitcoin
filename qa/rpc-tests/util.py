@@ -68,6 +68,7 @@ def initialize_datadir(dirname, n):
         f.write("regtest=1\n");
         f.write("rpcuser=rt\n");
         f.write("rpcpassword=rt\n");
+        f.write("txindex=1\n");
         f.write("port="+str(p2p_port(n))+"\n");
         f.write("rpcport="+str(rpc_port(n))+"\n");
     return datadir

@@ -26,6 +26,7 @@ function CreateDataDir {
   echo "rpcuser=rt" >> $CONF
   echo "rpcpassword=rt" >> $CONF
   echo "rpcwait=1" >> $CONF
+  echo "txindex=1" >> $CONF
   echo "walletnotify=${SENDANDWAIT} -STOP" >> $CONF
   shift
   while (( "$#" )); do
