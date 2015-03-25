@@ -23,6 +23,7 @@ CWallet* pwalletMain;
 
 extern bool fPrintToConsole;
 extern void noui_connect();
+extern int mastercore_shutdown(void);
 
 struct TestingSetup {
     CCoinsViewDB *pcoinsdbview;
@@ -67,6 +68,7 @@ struct TestingSetup {
         delete pcoinsTip;
         delete pcoinsdbview;
         delete pblocktree;
+        mastercore_shutdown();
 #ifdef ENABLE_WALLET
         bitdb.Flush(true);
 #endif
