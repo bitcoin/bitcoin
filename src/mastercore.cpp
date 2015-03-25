@@ -189,6 +189,19 @@ uint32_t mastercore::GetLatestBlockTime()
         return (int)(Params().GenesisBlock().nTime); // Genesis block's time of current network
 }
 
+CBlockIndex* mastercore::GetBlockIndex(const uint256& hash)
+{
+    CBlockIndex* pBlockIndex = NULL;
+    LOCK(cs_main);
+    BlockMap::const_iterator it = mapBlockIndex.find(hash);
+    if (it != mapBlockIndex.end()) {
+        pBlockIndex = it->second;
+    }
+
+    return pBlockIndex;
+}
+
+
 //--- CUT HERE --- mostly copied from util.h & util.cpp
 // LogPrintf() has been broken a couple of times now
 // by well-meaning people adding mutexes in the most straightforward way.
@@ -2123,7 +2136,7 @@ static int load_most_relevant_state()
     return -1;
   }
 
-  CBlockIndex const *spBlockIndex = mapBlockIndex[spWatermark];
+  CBlockIndex const *spBlockIndex = GetBlockIndex(spWatermark);
   if (NULL == spBlockIndex) {
     //trigger a full reparse, if the watermark isn't a real block
     return -1;
@@ -2161,7 +2174,7 @@ static int load_most_relevant_state()
           boost::equals(vstr[2], "dat")) {
       uint256 blockHash;
       blockHash.SetHex(vstr[1]);
-      CBlockIndex *pBlockIndex = mapBlockIndex[blockHash];
+      CBlockIndex *pBlockIndex = GetBlockIndex(blockHash);
       if (pBlockIndex == NULL || false == chainActive.Contains(pBlockIndex)) {
         continue;
       }
@@ -2432,11 +2445,7 @@ static void prune_state_files( CBlockIndex const *topIndex )
   std::set<uint256>::const_iterator iter;
   for (iter = statefulBlockHashes.begin(); iter != statefulBlockHashes.end(); ++iter) {
     // look up the CBlockIndex for height info
-    CBlockIndex const *curIndex = NULL;
-    BlockMap::const_iterator indexIter = mapBlockIndex.find((*iter));
-    if (indexIter != mapBlockIndex.end()) {
-      curIndex = (*indexIter).second;
-    }
+    CBlockIndex const *curIndex = GetBlockIndex(*iter);
 
     // if we have nothing int the index, or this block is too old..
     if (NULL == curIndex || (topIndex->nHeight - curIndex->nHeight) > MAX_STATE_HISTORY ) {
