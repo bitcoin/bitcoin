@@ -444,6 +444,18 @@ void CTxMemPool::remove(const CTransaction &origTx, std::list<CTransaction>& rem
         LOCK(cs);
         std::deque<uint256> txToRemove;
         txToRemove.push_back(origTx.GetHash());
+        if (fRecursive && !mapTx.count(origTx.GetHash())) {
+            // If recursively removing but origTx isn't in the mempool
+            // be sure to remove any children that are in the pool. This can
+            // happen during chain re-orgs if origTx isn't re-accepted into
+            // the mempool for any reason.
+            for (unsigned int i = 0; i < origTx.vout.size(); i++) {
+                std::map<COutPoint, CInPoint>::iterator it = mapNextTx.find(COutPoint(origTx.GetHash(), i));
+                if (it == mapNextTx.end())
+                    continue;
+                txToRemove.push_back(it->second.ptx->GetHash());
+            }
+        }
         while (!txToRemove.empty())
         {
             uint256 hash = txToRemove.front();
