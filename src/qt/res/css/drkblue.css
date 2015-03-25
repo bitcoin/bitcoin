@@ -681,14 +681,14 @@ QWidget .QFrame#frame { /* Wallet Balance */
 }
 
 QWidget .QFrame#frame > .QLabel {
-min-width:175px;
+min-width:190px;
 font-weight:normal;
 min-height:30px;
 }
 
 QWidget .QFrame#frame .QLabel#label_5 { /* Wallet Label */
 qproperty-alignment: 'AlignVCenter | AlignRight';
-min-width:230px;
+min-width:225px;
 background-color:transparent;
 color:#fff;
 margin-right:5px;
@@ -714,7 +714,7 @@ min-height:35px;
 
 QWidget .QFrame#frame .QLabel#labelBalance { /* Available Balance */
 qproperty-alignment: 'AlignVCenter | AlignLeft';
-font-size:17px;
+font-size:16px;
 font-weight:bold;
 color:#5FA2D6;
 margin-left:13px;
@@ -890,7 +890,7 @@ qproperty-geometry: rect(0 0 0 0);
 }
 
 QWidget .QFrame#frameDarksend .QPushButton#toggleDarksend { /* Start Darksend Mixing */
-qproperty-geometry: rect(120 255 295 40);
+qproperty-geometry: rect(115 255 295 40);
 font-size:17px;
 font-weight:bold;
 color:#ffffff;
@@ -905,7 +905,7 @@ QWidget .QFrame#frameDarksend .QPushButton#toggleDarksend:hover {
 }
 
 QWidget .QFrame#frameDarksend .QPushButton#darksendAuto { /* Try Mix Button */
-qproperty-geometry: rect(125 301 140 25);
+qproperty-geometry: rect(120 301 140 25);
 background-color:qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: .01 #f6f6f6, stop: .1 rgba(250, 250, 250, 128), stop: .95 rgba(250, 250, 250, 255), stop: 1 #ebebeb);
 border:1px solid #d2d2d2;
 color:#616161;
@@ -924,7 +924,7 @@ border:1px solid #9e9e9e;
 }
 
 QWidget .QFrame#frameDarksend .QPushButton#darksendReset { /* Reset Button */
-qproperty-geometry: rect(270 301 140 25);
+qproperty-geometry: rect(265 301 140 25);
 background-color:qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: .01 #f6f6f6, stop: .1 rgba(250, 250, 250, 128), stop: .95 rgba(250, 250, 250, 255), stop: 1 #ebebeb);
 border:1px solid #d2d2d2;
 color:#616161;
