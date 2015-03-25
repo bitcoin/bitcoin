@@ -2143,7 +2143,7 @@ static int load_most_relevant_state()
   }
 
   while (NULL != spBlockIndex && false == chainActive.Contains(spBlockIndex)) {
-    int remainingSPs = _my_sps->popBlock(*spBlockIndex->phashBlock);
+    int remainingSPs = _my_sps->popBlock(spBlockIndex->GetBlockHash());
     if (remainingSPs < 0) {
       // trigger a full reparse, if the levelDB cannot roll back
       return -1;
@@ -2152,7 +2152,7 @@ static int load_most_relevant_state()
     }*/
     spBlockIndex = spBlockIndex->pprev;
     if (spBlockIndex != NULL) {
-        _my_sps->setWatermark(*spBlockIndex->phashBlock);
+        _my_sps->setWatermark(spBlockIndex->GetBlockHash());
     }
   }
 
@@ -2189,7 +2189,7 @@ static int load_most_relevant_state()
   // for each block we discard, roll back the SP database
   CBlockIndex const *curTip = spBlockIndex;
   while (NULL != curTip && persistedBlocks.size() > 0) {
-    if (persistedBlocks.find(*spBlockIndex->phashBlock) != persistedBlocks.end()) {
+    if (persistedBlocks.find(spBlockIndex->GetBlockHash()) != persistedBlocks.end()) {
       int success = -1;
       for (int i = 0; i < NUM_FILETYPES; ++i) {
         const string filename = (MPPersistencePath / (boost::format("%s-%s.dat") % statePrefix[i] % curTip->GetBlockHash().ToString()).str().c_str()).string();
@@ -2205,17 +2205,17 @@ static int load_most_relevant_state()
       }
 
       // remove this from the persistedBlock Set
-      persistedBlocks.erase(*spBlockIndex->phashBlock);
+      persistedBlocks.erase(spBlockIndex->GetBlockHash());
     }
 
     // go to the previous block
-    if (0 > _my_sps->popBlock(*curTip->phashBlock)) {
+    if (0 > _my_sps->popBlock(curTip->GetBlockHash())) {
       // trigger a full reparse, if the levelDB cannot roll back
       return -1;
     }
     curTip = curTip->pprev;
     if (curTip != NULL) {
-        _my_sps->setWatermark(*curTip->phashBlock);
+        _my_sps->setWatermark(curTip->GetBlockHash());
     }
   }
 
@@ -2479,7 +2479,7 @@ int mastercore_save_state( CBlockIndex const *pBlockIndex )
   // clean-up the directory
   prune_state_files(pBlockIndex);
 
-  _my_sps->setWatermark(*pBlockIndex->phashBlock);
+  _my_sps->setWatermark(pBlockIndex->GetBlockHash());
 
   return 0;
 }
