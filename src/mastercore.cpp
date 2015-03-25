@@ -2129,7 +2129,7 @@ static int load_most_relevant_state()
     return -1;
   }
 
-  while(false == chainActive.Contains(spBlockIndex)) {
+  while (NULL != spBlockIndex && false == chainActive.Contains(spBlockIndex)) {
     int remainingSPs = _my_sps->popBlock(*spBlockIndex->phashBlock);
     if (remainingSPs < 0) {
       // trigger a full reparse, if the levelDB cannot roll back
@@ -2138,7 +2138,9 @@ static int load_most_relevant_state()
       // potential optimization here?
     }*/
     spBlockIndex = spBlockIndex->pprev;
-    _my_sps->setWatermark(*spBlockIndex->phashBlock);
+    if (spBlockIndex != NULL) {
+        _my_sps->setWatermark(*spBlockIndex->phashBlock);
+    }
   }
 
   // prepare a set of available files by block hash pruning any that are
@@ -2199,7 +2201,9 @@ static int load_most_relevant_state()
       return -1;
     }
     curTip = curTip->pprev;
-    _my_sps->setWatermark(*curTip->phashBlock);
+    if (curTip != NULL) {
+        _my_sps->setWatermark(*curTip->phashBlock);
+    }
   }
 
   if (persistedBlocks.size() == 0) {
