@@ -58,6 +58,11 @@ int const MAX_STATE_HISTORY = 50;
 #define FORMAT_BOOST_TXINDEXKEY "index-tx-%s"
 #define FORMAT_BOOST_SPKEY      "sp-%d"
 
+// Omni Layer Transaction Class
+#define OMNI_CLASS_A 1
+#define OMNI_CLASS_B 2
+#define OMNI_CLASS_C 3
+
 // Master Protocol Transaction (Packet) Version
 #define MP_TX_PKT_V0  0
 #define MP_TX_PKT_V1  1
@@ -67,6 +72,7 @@ int const MAX_STATE_HISTORY = 50;
 
 #define MAX_SHA256_OBFUSCATION_TIMES  255
 
+#define MIN_PACKET_SIZE_CLASS_C 16
 #define PACKET_SIZE_CLASS_A 19
 #define PACKET_SIZE         31
 #define MAX_PACKETS         64
@@ -120,6 +126,7 @@ enum BLOCKHEIGHTRESTRICTIONS {
   MSC_BET_BLOCK     = 999999,
   MSC_MANUALSP_BLOCK= 323230,
   P2SH_BLOCK        = 322000,
+  OP_RETURN_BLOCK   = 999999
 };
 
 enum FILETYPES {
@@ -546,7 +553,7 @@ bool isCrowdsalePurchase(uint256 txid, string address, int64_t *propertyId = NUL
 bool isMPinBlockRange(int starting_block, int ending_block, bool bDeleteFound);
 std::string FormatIndivisibleMP(int64_t n);
 
-int ClassB_send(const string &senderAddress, const string &receiverAddress, const string &redemptionAddress, const std::vector<unsigned char> &data, uint256 & txid, int64_t additional = 0);
+int ClassAgnostic_send(const string &senderAddress, const string &receiverAddress, const string &redemptionAddress, const std::vector<unsigned char> &data, uint256 & txid, int64_t additional = 0);
 
 uint256 send_INTERNAL_1packet(const string &FromAddress, const string &ToAddress, const string &RedeemAddress, unsigned int PropertyID, uint64_t Amount,
  unsigned int PropertyID_2, uint64_t Amount_2, unsigned int TransactionType, int64_t additional, int *error_code = NULL);
