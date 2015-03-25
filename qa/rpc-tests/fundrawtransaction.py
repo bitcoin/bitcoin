@@ -524,6 +524,22 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.sync_all()
         assert_equal(oldBalance+Decimal('50.19000000'), self.nodes[0].getbalance()) #0.19+block reward
 
+        #####################################################
+        # test fundrawtransaction with OP_RETURN and no vin #
+        #####################################################
+
+        rawtx   = "0100000000010000000000000000066a047465737400000000"
+        dec_tx  = self.nodes[2].decoderawtransaction(rawtx)
+
+        assert_equal(len(dec_tx['vin']), 0)
+        assert_equal(len(dec_tx['vout']), 1)
+
+        rawtxfund = self.nodes[2].fundrawtransaction(rawtx)
+        dec_tx  = self.nodes[2].decoderawtransaction(rawtxfund['hex'])
+
+        assert_greater_than(len(dec_tx['vin']), 0) # at least one vin
+        assert_equal(len(dec_tx['vout']), 2) # one change output added
+
 
 if __name__ == '__main__':
     RawTransactionsTest().main()
