@@ -114,9 +114,9 @@ static uint64_t exodus_balance;
 
 static boost::filesystem::path MPPersistencePath;
 
-const int msc_debug_parser_data = 1;
-const int msc_debug_parser= 1;
-const int msc_debug_verbose=1;
+const int msc_debug_parser_data = 0;
+const int msc_debug_parser= 0;
+const int msc_debug_verbose=0;
 const int msc_debug_verbose2=0;
 const int msc_debug_verbose3=0;
 const int msc_debug_vin   = 0;
