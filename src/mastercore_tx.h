@@ -39,7 +39,7 @@ private:
   int pkt_size;
   unsigned char pkt[1 + MAX_PACKETS * PACKET_SIZE];
   uint64_t nValue;
-  int multi;  // Class A = 0, Class B = 1
+  int multi;  // Class A = 0, Class B = 1, Class C = 2
   uint64_t tx_fee_paid;
   unsigned int type;
   unsigned int property;
