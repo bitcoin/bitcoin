@@ -402,7 +402,7 @@ if (fHelp || params.size() < 2 || params.size() > 5)
   //some sanity checking of the data supplied?
   uint256 newTX;
   std::vector<unsigned char> data = ParseHex(hexTransaction);
-  int rc = ClassB_send(fromAddress, toAddress, redeemAddress, data, newTX, referenceAmount);
+  int rc = ClassAgnostic_send(fromAddress, toAddress, redeemAddress, data, newTX, referenceAmount);
 
   if (0 != rc)
       throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("error code= %i", rc));
