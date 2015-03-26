@@ -34,10 +34,12 @@ public:
     void setClientModel(ClientModel *clientModel);
     void setWalletModel(WalletModel *walletModel);
     void showOutOfSyncWarning(bool fShow);
+    void UpdatePropertyBalance(unsigned int propertyId, uint64_t available, uint64_t reserved);
 
 public slots:
     void setBalance(const CAmount& balance, const CAmount& unconfirmedBalance, const CAmount& immatureBalance,
                     const CAmount& watchOnlyBalance, const CAmount& watchUnconfBalance, const CAmount& watchImmatureBalance);
+    void updateOmni();
 
 signals:
     void transactionClicked(const QModelIndex &index);
@@ -59,7 +61,7 @@ private:
 private slots:
     void updateDisplayUnit();
     void handleTransactionClicked(const QModelIndex &index);
-    void updateAlerts(const QString &warnings);
+    void updateAlerts();
     void updateWatchOnlyLabels(bool showWatchOnly);
 };
 
