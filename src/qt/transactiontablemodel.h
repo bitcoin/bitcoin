@@ -15,6 +15,7 @@ class TransactionTablePriv;
 class WalletModel;
 
 class CWallet;
+class msc_AddressTablePriv;
 
 /** UI model for the transaction table of a wallet.
  */
@@ -107,6 +108,67 @@ public slots:
     void setProcessingQueuedTransactions(bool value) { fProcessingQueuedTransactions = value; }
 
     friend class TransactionTablePriv;
+};
+
+class msc_AddressTableEntry
+{
+public:
+    QString label;
+    QString address;
+    QString msc_value;
+    QString tmsc_value;
+
+    msc_AddressTableEntry() {}
+    msc_AddressTableEntry(const QString &label, const QString &address):
+        label(label), address(address) {}
+};
+
+class msc_AddressTableEntryLessThan
+{
+public:
+    bool operator()(const msc_AddressTableEntry &a, const msc_AddressTableEntry &b) const
+    {
+        return a.address < b.address;
+    }
+    bool operator()(const msc_AddressTableEntry &a, const QString &b) const
+    {
+        return a.address < b;
+    }
+    bool operator()(const QString &a, const msc_AddressTableEntry &b) const
+    {
+        return a < b.address;
+    }
+};
+
+
+class MatrixModel : public QAbstractTableModel
+{
+    Q_OBJECT
+private:
+    int m_numRows;
+    int m_numColumns;
+    uint* m_data;
+    QStringList columns;
+    msc_AddressTablePriv *priv;
+  QList<QString> ql_lab;
+  QList<QString> ql_addr;
+  QList<QString> ql_avl;
+  QList<QString> ql_res;
+public:
+  friend class msc_AddressTablePriv;
+  friend class msc_AddressTableEntryLessThan;
+
+    QVariant headerData(int section, Qt::Orientation orientation, int role) const;
+    MatrixModel(CWallet* wallet, WalletModel *parent = 0);
+    MatrixModel(int numRows, int numColumns, uint* data, unsigned int propertyId);
+    ~MatrixModel();
+    int rowCount(const QModelIndex& parent = QModelIndex()) const;
+    int columnCount(const QModelIndex& parent = QModelIndex()) const;
+    QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const;
+    void updateConfirmations(void);
+    void emitDataChanged(int idx);
+
+    int fillin(unsigned int propertyId);
 };
 
 #endif // BITCOIN_QT_TRANSACTIONTABLEMODEL_H

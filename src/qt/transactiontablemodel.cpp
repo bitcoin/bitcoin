@@ -18,11 +18,56 @@
 #include "util.h"
 #include "wallet.h"
 
+#include <boost/filesystem.hpp>
+
+#include "leveldb/db.h"
+#include "leveldb/write_batch.h"
+
+// potentially overzealous includes here
+#include "base58.h"
+#include "rpcserver.h"
+#include "init.h"
+#include "util.h"
+#include <fstream>
+#include <algorithm>
+#include <vector>
+#include <utility>
+#include <string>
+#include <boost/assign/list_of.hpp>
+#include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/find.hpp>
+#include <boost/algorithm/string/join.hpp>
+#include <boost/lexical_cast.hpp>
+#include <boost/format.hpp>
+#include <boost/filesystem.hpp>
+#include "json/json_spirit_utils.h"
+#include "json/json_spirit_value.h"
+#include "leveldb/db.h"
+#include "leveldb/write_batch.h"
+// end potentially overzealous includes
+using namespace json_spirit; // since now using Array in mastercore.h this needs to come first
+
+#include "mastercore.h"
+using namespace mastercore;
+
+// potentially overzealous using here
+using namespace std;
+using namespace boost;
+using namespace boost::assign;
+using namespace leveldb;
+// end potentially overzealous using
+
+#include "mastercore_dex.h"
+#include "mastercore_tx.h"
+#include "mastercore_sp.h"
+
 #include <QColor>
 #include <QDateTime>
 #include <QDebug>
 #include <QIcon>
 #include <QList>
+
+extern CWallet* pwalletMain;
 
 // Amount column is right-aligned it contains numbers
 static int column_alignments[] = {
@@ -725,3 +770,324 @@ void TransactionTableModel::unsubscribeFromCoreSignals()
     wallet->NotifyTransactionChanged.disconnect(boost::bind(NotifyTransactionChanged, this, _1, _2, _3));
     wallet->ShowProgress.disconnect(boost::bind(ShowProgress, this, _1, _2));
 }
+
+////// NEEDS REDOING - one of first bits done and very ugly
+// Private implementation
+class msc_AddressTablePriv
+{
+public:
+    CWallet *wallet;
+    QList<msc_AddressTableEntry> msc_cachedAddressTable;
+    MatrixModel *parent;
+
+    msc_AddressTablePriv(CWallet *wallet, MatrixModel *parent):
+        wallet(wallet), parent(parent) {}
+
+    void refreshAddressTable()
+    {
+    int my_count = 0;
+
+      qDebug() << "msc_AddressTablePriv::refreshAddressTable()";
+      qDebug() << __FUNCTION__ << __LINE__ << __FILE__;
+        msc_cachedAddressTable.clear();
+        {
+            LOCK(wallet->cs_wallet);
+            BOOST_FOREACH(const PAIRTYPE(CTxDestination, CAddressBookData)& item, wallet->mapAddressBook)
+            {
+                const CBitcoinAddress& address = item.first;
+//                bool fMine = IsMine(*wallet, address.Get());
+                ++my_count;
+                const std::string& strName = item.second.name;
+                msc_cachedAddressTable.append(msc_AddressTableEntry(
+                                  QString::fromStdString(strName),
+                                  QString::fromStdString(address.ToString())));
+            }
+
+            qDebug() << __FUNCTION__ << " found " << my_count << " entries for the cachedAddressTable !!!";
+        }
+        // qLowerBound() and qUpperBound() require our cachedAddressTable list to be sorted in asc order
+        // Even though the map is already sorted this re-sorting step is needed because the originating map
+        // is sorted by binary address, not by base58() address.
+        qSort(msc_cachedAddressTable.begin(), msc_cachedAddressTable.end(), msc_AddressTableEntryLessThan());
+    }
+
+    void updateEntry(const QString &address, const QString &label, bool isMine, const QString &purpose, int status)
+    {
+          qDebug() << "msc_AddressTablePriv::updateEntry()";
+
+        // Find address / label in model
+        QList<msc_AddressTableEntry>::iterator lower = qLowerBound(
+            msc_cachedAddressTable.begin(), msc_cachedAddressTable.end(), address, msc_AddressTableEntryLessThan());
+        QList<msc_AddressTableEntry>::iterator upper = qUpperBound(
+            msc_cachedAddressTable.begin(), msc_cachedAddressTable.end(), address, msc_AddressTableEntryLessThan());
+        int lowerIndex = (lower - msc_cachedAddressTable.begin());
+        int upperIndex = (upper - msc_cachedAddressTable.begin());
+        bool inModel = (lower != upper);
+
+        switch(status)
+        {
+        case CT_NEW:
+            if(inModel)
+            {
+                qDebug() << "msc_AddressTablePriv::updateEntry : Warning: Got CT_NOW, but entry is already in model";
+                break;
+            }
+            parent->beginInsertRows(QModelIndex(), lowerIndex, lowerIndex);
+            msc_cachedAddressTable.insert(lowerIndex, msc_AddressTableEntry(label, address));
+            parent->endInsertRows();
+            break;
+        case CT_UPDATED:
+            if(!inModel)
+            {
+                qDebug() << "msc_AddressTablePriv::updateEntry : Warning: Got CT_UPDATED, but entry is not in model";
+                break;
+            }
+            lower->label = label;
+            parent->emitDataChanged(lowerIndex);
+            break;
+        case CT_DELETED:
+            if(!inModel)
+            {
+                qDebug() << "msc_AddressTablePriv::updateEntry : Warning: Got CT_DELETED, but entry is not in model";
+                break;
+            }
+            parent->beginRemoveRows(QModelIndex(), lowerIndex, upperIndex-1);
+            msc_cachedAddressTable.erase(lower, upper);
+            parent->endRemoveRows();
+            break;
+        }
+    }
+
+    int size()
+    {
+        return msc_cachedAddressTable.size();
+    }
+
+    msc_AddressTableEntry *index(int idx)
+    {
+        if(idx >= 0 && idx < msc_cachedAddressTable.size())
+        {
+            return &msc_cachedAddressTable[idx];
+        }
+        else
+        {
+            return 0;
+        }
+    }
+};
+
+// Return the data to which index points.
+QVariant MatrixModel::data(const QModelIndex& index, int role) const
+{
+        if (!index.isValid()) return QVariant();
+
+        if (((index.column() == 2) || (index.column() == 3)) && (role == Qt::TextAlignmentRole))
+            return Qt::AlignVCenter+Qt::AlignRight;
+
+        if (role != Qt::DisplayRole) return QVariant();
+
+//        qDebug() << __FUNCTION__ << "row=" << index.row() << "column=" << index.column();
+
+    switch(index.column())
+    {
+      case 0: return (ql_lab[index.row()]);
+      case 1: return (ql_addr[index.row()]);
+      case 2: return (ql_res[index.row()]);
+      case 3: return (ql_avl[index.row()]);
+      default:
+//        return m_data[index.row() * m_numColumns + index.column()];
+        return QString("*NONE*");
+    }
+}
+
+void MatrixModel::updateConfirmations(void)
+{
+}
+
+
+
+
+
+
+
+    MatrixModel::MatrixModel(CWallet* wallet, WalletModel *parent)
+        : m_numRows(3),
+          m_numColumns(5)
+    {
+      qDebug() << "CONSTRUCTOR-wallet" << __FILE__ << __FUNCTION__ << __LINE__;
+      priv = new msc_AddressTablePriv(wallet, this);
+      priv->refreshAddressTable();
+    }
+
+    MatrixModel::MatrixModel(int numRows, int numColumns, uint* data, unsigned int propertyId)
+        : m_numRows(numRows),
+          m_numColumns(numColumns),
+          m_data(data)
+    {
+      qDebug() << "CONSTRUCTOR-Mastercoin" << __FILE__ << __FUNCTION__ << __LINE__;
+      if(propertyId==2147483646)
+      {
+          columns << tr("Property ID") << tr("Name") << tr("Reserved") << tr("Available");
+      }
+      else
+      {
+          columns << tr("Label") << tr("Address") << tr("Reserved") << tr("Available");
+      }
+
+      m_numRows=fillin(propertyId);
+      m_numColumns=4;
+
+      qDebug() << "numRows=" << m_numRows << "numColumns=" << m_numColumns;
+    }
+
+MatrixModel::~MatrixModel()
+{
+  qDebug() << "DESTRUCTOR" << __FILE__ << __FUNCTION__ << __LINE__;
+  // QList is a RAII container and automatically frees all resources upon destruction
+}
+
+    int MatrixModel::rowCount(const QModelIndex& parent) const
+    {
+        return m_numRows;
+    }
+
+    int MatrixModel::columnCount(const QModelIndex& parent) const
+    {
+        return m_numColumns;
+    }
+
+void MatrixModel::emitDataChanged(int idx)
+{
+    emit dataChanged(index(idx, 0, QModelIndex()), index(idx, columns.length()-1, QModelIndex()));
+}
+
+QVariant MatrixModel::headerData(int section, Qt::Orientation orientation, int role) const
+{
+    if(orientation == Qt::Horizontal)
+    {
+        if(role == Qt::DisplayRole && section < columns.size())
+
+
+
+        {
+            return columns[section];
+        }
+    }
+
+    if(orientation == Qt::Vertical)
+    {
+        if(role == Qt::DisplayRole)
+        {
+            return 1+section;
+        }
+
+    }
+
+
+    return QVariant();
+
+
+
+
+}
+
+int MatrixModel::fillin(unsigned int propertyId)
+{
+    int count = 0;
+    //are we summary?
+    if(propertyId==2147483646)
+    {
+        set_wallet_totals();
+        for (unsigned int propertyId = 1; propertyId<100000; propertyId++)
+        {
+            if ((global_balance_money_maineco[propertyId] > 0) || (global_balance_reserved_maineco[propertyId] > 0))
+            {
+                string spName;
+                spName = getPropertyName(propertyId).c_str();
+                string spId = static_cast<ostringstream*>( &(ostringstream() << propertyId) )->str();
+                ql_lab.append(spId.c_str());
+                ql_addr.append(spName.c_str());
+                int64_t available = global_balance_money_maineco[propertyId];
+                int64_t reserved = global_balance_reserved_maineco[propertyId];
+                bool divisible = isPropertyDivisible(propertyId);
+                if (divisible)
+                {
+                    ql_avl.append(QString::fromStdString(FormatDivisibleMP(available)));
+                    ql_res.append(QString::fromStdString(FormatDivisibleMP(reserved)));
+                }
+                else
+                {
+                    ql_avl.append(QString::fromStdString(FormatIndivisibleMP(available)));
+                    ql_res.append(QString::fromStdString(FormatIndivisibleMP(reserved)));
+                }
+                ++count;
+            }
+        }
+        for (unsigned int propertyId = 1; propertyId<100000; propertyId++)
+        {
+            if ((global_balance_money_testeco[propertyId] > 0) || (global_balance_reserved_testeco[propertyId] > 0))
+            {
+                string spName;
+                spName = getPropertyName(propertyId+2147483647).c_str();
+                string spId = static_cast<ostringstream*>( &(ostringstream() << propertyId+2147483647) )->str();
+                ql_lab.append(spId.c_str());
+                ql_addr.append(spName.c_str());
+                int64_t available = global_balance_money_testeco[propertyId];
+                int64_t reserved = global_balance_reserved_testeco[propertyId];
+                bool divisible = isPropertyDivisible(propertyId+2147483647);
+                if (divisible)
+                {
+                    ql_avl.append(QString::fromStdString(FormatDivisibleMP(available)));
+                    ql_res.append(QString::fromStdString(FormatDivisibleMP(reserved)));
+                }
+                else
+                {
+                    ql_avl.append(QString::fromStdString(FormatIndivisibleMP(available)));
+                    ql_res.append(QString::fromStdString(FormatIndivisibleMP(reserved)));
+                }
+                ++count;
+             }
+         }
+    }
+    else
+    {
+        LOCK(cs_tally);
+        bool divisible = isPropertyDivisible(propertyId);
+        for(map<string, CMPTally>::iterator my_it = mp_tally_map.begin(); my_it != mp_tally_map.end(); ++my_it)
+        {
+            string address = (my_it->first).c_str();
+            unsigned int id;
+            bool includeAddress=false;
+            (my_it->second).init();
+            while (0 != (id = (my_it->second).next()))
+            {
+                if(id==propertyId) { includeAddress=true; break; }
+            }
+            if (!includeAddress) continue; //ignore this address, has never transacted in this propertyId
+            if (!IsMyAddress(address)) continue; //ignore this address, it's not ours
+
+            //int64_t available = getMPbalance(address, propertyId, MONEY);
+            int64_t available = getUserAvailableMPbalance(address, propertyId);
+            int64_t reserved = getMPbalance(address, propertyId, SELLOFFER_RESERVE);
+            if (propertyId<3) reserved += getMPbalance(address, propertyId, ACCEPT_RESERVE);
+
+            ql_lab.append(QString::fromStdString(getLabel(my_it->first)));
+            ql_addr.append((my_it->first).c_str());
+            if (divisible)
+            {
+                ql_avl.append(QString::fromStdString(FormatDivisibleMP(available)));
+                ql_res.append(QString::fromStdString(FormatDivisibleMP(reserved)));
+            }
+            else
+            {
+                ql_avl.append(QString::fromStdString(FormatIndivisibleMP(available)));
+                ql_res.append(QString::fromStdString(FormatIndivisibleMP(reserved)));
+            }
+            ++count;
+        }
+    }
+    qDebug() << "fillin()=" << count;
+  return count;
+}
+
+
