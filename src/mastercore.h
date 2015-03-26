@@ -72,7 +72,7 @@ int const MAX_STATE_HISTORY = 50;
 
 #define MAX_SHA256_OBFUSCATION_TIMES  255
 
-#define MIN_PACKET_SIZE_CLASS_C 16
+#define MIN_PAYLOAD_SIZE     8
 #define PACKET_SIZE_CLASS_A 19
 #define PACKET_SIZE         31
 #define MAX_PACKETS         64

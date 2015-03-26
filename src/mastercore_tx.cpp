@@ -28,7 +28,7 @@ using namespace mastercore;
 // initial packet interpret step
 int CMPTransaction::step1()
 {
-  if (MIN_PACKET_SIZE_CLASS_C > pkt_size)  // class C packets could now be as small as 16 bytes
+  if (MIN_PAYLOAD_SIZE > pkt_size)  // class C packets could now be as small as 8 bytes
   {
     file_log("%s() ERROR PACKET TOO SMALL; size = %d, line %d, file: %s\n", __FUNCTION__, pkt_size, __LINE__, __FILE__);
     return -(PKT_ERROR -1);
