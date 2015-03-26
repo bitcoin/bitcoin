@@ -72,7 +72,6 @@ endif
 BITCOIN_CORE_H = \
   addrman.h \
   alert.h \
-  allocators.h \
   amount.h \
   arith_uint256.h \
   base58.h \
@@ -88,9 +87,9 @@ BITCOIN_CORE_H = \
   coins.h \
   compat.h \
   compressor.h \
+  consensus/params.h \
   core_io.h \
-  crypter.h \
-  db.h \
+  wallet/db.h \
   eccryptoverify.h \
   ecwrapper.h \
   hash.h \
@@ -123,7 +122,10 @@ BITCOIN_CORE_H = \
   script/standard.h \
   serialize.h \
   streams.h \
+  support/allocators/secure.h \
+  support/allocators/zeroafterfree.h \
   support/cleanse.h \
+  support/pagelocker.h \
   sync.h \
   threadsafety.h \
   timedata.h \
@@ -137,10 +139,12 @@ BITCOIN_CORE_H = \
   utilmoneystr.h \
   utilstrencodings.h \
   utiltime.h \
+  validationinterface.h \
   version.h \
-  walletdb.h \
-  wallet.h \
-  wallet_ismine.h \
+  wallet/crypter.h \
+  wallet/walletdb.h \
+  wallet/wallet.h \
+  wallet/wallet_ismine.h \
   compat/byteswap.h \
   compat/endian.h \
   compat/sanity.h
@@ -189,6 +193,7 @@ libbitcoin_server_a_SOURCES = \
   timedata.cpp \
   txdb.cpp \
   txmempool.cpp \
+  validationinterface.cpp \
   $(JSON_H) \
   $(BITCOIN_CORE_H)
 
@@ -196,13 +201,13 @@ libbitcoin_server_a_SOURCES = \
 # when wallet enabled
 libbitcoin_wallet_a_CPPFLAGS = $(BITCOIN_INCLUDES)
 libbitcoin_wallet_a_SOURCES = \
-  db.cpp \
-  crypter.cpp \
-  rpcdump.cpp \
-  rpcwallet.cpp \
-  wallet.cpp \
-  wallet_ismine.cpp \
-  walletdb.cpp \
+  wallet/crypter.cpp \
+  wallet/db.cpp \
+  wallet/rpcdump.cpp \
+  wallet/rpcwallet.cpp \
+  wallet/wallet.cpp \
+  wallet/wallet_ismine.cpp \
+  wallet/walletdb.cpp \
   $(BITCOIN_CORE_H)
 
 # crypto primitives library
@@ -233,7 +238,6 @@ univalue_libbitcoin_univalue_a_SOURCES = \
 # common: shared between bitcoind, and bitcoin-qt and non-server tools
 libbitcoin_common_a_CPPFLAGS = $(BITCOIN_INCLUDES)
 libbitcoin_common_a_SOURCES = \
-  allocators.cpp \
   arith_uint256.cpp \
   amount.cpp \
   base58.cpp \
@@ -264,6 +268,7 @@ libbitcoin_common_a_SOURCES = \
 # backward-compatibility objects and their sanity checks are linked.
 libbitcoin_util_a_CPPFLAGS = $(BITCOIN_INCLUDES)
 libbitcoin_util_a_SOURCES = \
+  support/pagelocker.cpp \
   chainparamsbase.cpp \
   clientversion.cpp \
   compat/glibc_sanity.cpp \
