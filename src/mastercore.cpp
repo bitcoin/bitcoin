@@ -189,6 +189,19 @@ uint32_t mastercore::GetLatestBlockTime()
         return (int)(Params().GenesisBlock().nTime); // Genesis block's time of current network
 }
 
+CBlockIndex* mastercore::GetBlockIndex(const uint256& hash)
+{
+    CBlockIndex* pBlockIndex = NULL;
+    LOCK(cs_main);
+    BlockMap::const_iterator it = mapBlockIndex.find(hash);
+    if (it != mapBlockIndex.end()) {
+        pBlockIndex = it->second;
+    }
+
+    return pBlockIndex;
+}
+
+
 //--- CUT HERE --- mostly copied from util.h & util.cpp
 // LogPrintf() has been broken a couple of times now
 // by well-meaning people adding mutexes in the most straightforward way.
@@ -2123,14 +2136,14 @@ static int load_most_relevant_state()
     return -1;
   }
 
-  CBlockIndex const *spBlockIndex = mapBlockIndex[spWatermark];
+  CBlockIndex const *spBlockIndex = GetBlockIndex(spWatermark);
   if (NULL == spBlockIndex) {
     //trigger a full reparse, if the watermark isn't a real block
     return -1;
   }
 
-  while(false == chainActive.Contains(spBlockIndex)) {
-    int remainingSPs = _my_sps->popBlock(*spBlockIndex->phashBlock);
+  while (NULL != spBlockIndex && false == chainActive.Contains(spBlockIndex)) {
+    int remainingSPs = _my_sps->popBlock(spBlockIndex->GetBlockHash());
     if (remainingSPs < 0) {
       // trigger a full reparse, if the levelDB cannot roll back
       return -1;
@@ -2138,7 +2151,9 @@ static int load_most_relevant_state()
       // potential optimization here?
     }*/
     spBlockIndex = spBlockIndex->pprev;
-    _my_sps->setWatermark(*spBlockIndex->phashBlock);
+    if (spBlockIndex != NULL) {
+        _my_sps->setWatermark(spBlockIndex->GetBlockHash());
+    }
   }
 
   // prepare a set of available files by block hash pruning any that are
@@ -2159,7 +2174,7 @@ static int load_most_relevant_state()
           boost::equals(vstr[2], "dat")) {
       uint256 blockHash;
       blockHash.SetHex(vstr[1]);
-      CBlockIndex *pBlockIndex = mapBlockIndex[blockHash];
+      CBlockIndex *pBlockIndex = GetBlockIndex(blockHash);
       if (pBlockIndex == NULL || false == chainActive.Contains(pBlockIndex)) {
         continue;
       }
@@ -2174,7 +2189,7 @@ static int load_most_relevant_state()
   // for each block we discard, roll back the SP database
   CBlockIndex const *curTip = spBlockIndex;
   while (NULL != curTip && persistedBlocks.size() > 0) {
-    if (persistedBlocks.find(*spBlockIndex->phashBlock) != persistedBlocks.end()) {
+    if (persistedBlocks.find(spBlockIndex->GetBlockHash()) != persistedBlocks.end()) {
       int success = -1;
       for (int i = 0; i < NUM_FILETYPES; ++i) {
         const string filename = (MPPersistencePath / (boost::format("%s-%s.dat") % statePrefix[i] % curTip->GetBlockHash().ToString()).str().c_str()).string();
@@ -2190,16 +2205,18 @@ static int load_most_relevant_state()
       }
 
       // remove this from the persistedBlock Set
-      persistedBlocks.erase(*spBlockIndex->phashBlock);
+      persistedBlocks.erase(spBlockIndex->GetBlockHash());
     }
 
     // go to the previous block
-    if (0 > _my_sps->popBlock(*curTip->phashBlock)) {
+    if (0 > _my_sps->popBlock(curTip->GetBlockHash())) {
       // trigger a full reparse, if the levelDB cannot roll back
       return -1;
     }
     curTip = curTip->pprev;
-    _my_sps->setWatermark(*curTip->phashBlock);
+    if (curTip != NULL) {
+        _my_sps->setWatermark(curTip->GetBlockHash());
+    }
   }
 
   if (persistedBlocks.size() == 0) {
@@ -2428,11 +2445,7 @@ static void prune_state_files( CBlockIndex const *topIndex )
   std::set<uint256>::const_iterator iter;
   for (iter = statefulBlockHashes.begin(); iter != statefulBlockHashes.end(); ++iter) {
     // look up the CBlockIndex for height info
-    CBlockIndex const *curIndex = NULL;
-    BlockMap::const_iterator indexIter = mapBlockIndex.find((*iter));
-    if (indexIter != mapBlockIndex.end()) {
-      curIndex = (*indexIter).second;
-    }
+    CBlockIndex const *curIndex = GetBlockIndex(*iter);
 
     // if we have nothing int the index, or this block is too old..
     if (NULL == curIndex || (topIndex->nHeight - curIndex->nHeight) > MAX_STATE_HISTORY ) {
@@ -2466,7 +2479,7 @@ int mastercore_save_state( CBlockIndex const *pBlockIndex )
   // clean-up the directory
   prune_state_files(pBlockIndex);
 
-  _my_sps->setWatermark(*pBlockIndex->phashBlock);
+  _my_sps->setWatermark(pBlockIndex->GetBlockHash());
 
   return 0;
 }

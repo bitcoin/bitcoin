@@ -675,7 +675,7 @@ Value getcrowdsale_MP(const Array& params, bool fHelp)
     if (!GetTransaction(creationHash, tx, hashBlock, true))
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No information available about transaction");
 
-    if ((0 == hashBlock) || (NULL == mapBlockIndex[hashBlock]))
+    if ((0 == hashBlock) || (NULL == GetBlockIndex(hashBlock)))
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Unconfirmed transactions are not supported");
 
     Object response;
@@ -683,7 +683,7 @@ Value getcrowdsale_MP(const Array& params, bool fHelp)
     bool active = false;
     active = isCrowdsaleActive(propertyId);
     string propertyName = sp.name;
-    int64_t startTime = mapBlockIndex[hashBlock]->nTime;
+    int64_t startTime = GetBlockIndex(hashBlock)->nTime;
     int64_t deadline = sp.deadline;
     uint8_t earlyBonus = sp.early_bird;
     uint8_t percentToIssuer = sp.percentage;
@@ -812,11 +812,11 @@ Value getactivecrowdsales_MP(const Array& params, bool fHelp)
               if (!GetTransaction(creationHash, tx, hashBlock, true))
                   throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No information available about transaction");
 
-              if ((0 == hashBlock) || (NULL == mapBlockIndex[hashBlock]))
+              if ((0 == hashBlock) || (NULL == GetBlockIndex(hashBlock)))
                   throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Unconfirmed transactions are not supported");
 
               string propertyName = sp.name;
-              int64_t startTime = mapBlockIndex[hashBlock]->nTime;
+              int64_t startTime = GetBlockIndex(hashBlock)->nTime;
               int64_t deadline = sp.deadline;
               uint8_t earlyBonus = sp.early_bird;
               uint8_t percentToIssuer = sp.percentage;
@@ -1404,14 +1404,14 @@ int populateRPCTransactionObject(const uint256& txid, Object *txobj, std::string
     unsigned int mdex_action = 0;
     string mdex_actionStr;
 
-    if ((0 == blockHash) || (NULL == mapBlockIndex[blockHash])) { return MP_TX_UNCONFIRMED; }
+    if (0 == blockHash) { return MP_TX_UNCONFIRMED; }
 
-    CBlockIndex* pBlockIndex = mapBlockIndex[blockHash];
+    CBlockIndex* pBlockIndex = GetBlockIndex(blockHash);
     if (NULL == pBlockIndex) { return MP_BLOCK_NOT_IN_CHAIN; }
 
     int blockHeight = pBlockIndex->nHeight;
     int confirmations =  1 + GetHeight() - pBlockIndex->nHeight;
-    int64_t blockTime = mapBlockIndex[blockHash]->nTime;
+    int64_t blockTime = pBlockIndex->nTime;
 
     mp_obj.SetNull();
     CMPOffer temp_offer;
@@ -1841,8 +1841,8 @@ Value listtransactions_MP(const Array& params, bool fHelp)
         {
             // get the height of the transaction and check it's within the chosen parameters
             uint256 blockHash = pwtx->hashBlock;
-            if ((0 == blockHash) || (NULL == mapBlockIndex[blockHash])) continue;
-            CBlockIndex* pBlockIndex = mapBlockIndex[blockHash];
+            if ((0 == blockHash) || (NULL == GetBlockIndex(blockHash))) continue;
+            CBlockIndex* pBlockIndex = GetBlockIndex(blockHash);
             if (NULL == pBlockIndex) continue;
             int blockHeight = pBlockIndex->nHeight;
             if ((blockHeight < nStartBlock) || (blockHeight > nEndBlock)) continue; // ignore it if not within our range
