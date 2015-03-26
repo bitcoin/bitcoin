@@ -55,27 +55,56 @@ Detailed release notes follow. This overview includes changes that affect extern
 behavior, not code moves, refactors or string updates.
 
 RPC:
+- `7f502be` fix crash: createmultisig and addmultisigaddress
 
-Block and transaction handling:
+Block (database) and transaction handling:
+- `1d2cdd2` Fix InvalidateBlock to add chainActive.Tip to setBlockIndexCandidates
+- `c91c660` fix InvalidateBlock to repopulate setBlockIndexCandidates
+- `002c8a2` fix possible block db breakage during re-index
 
 P2P protocol and network code:
+- `78f64ef` don't trickle for whitelisted nodes
+- `ca301bf` Reduce fingerprinting through timestamps in 'addr' messages.
+- `200f293` Ignore getaddr messages on Outbound connections.
+- `d5d8998` Limit message sizes before transfer
+- `aeb9279` Better fingerprinting protection for non-main-chain getdatas.
 
 Validation:
+- `d148f62` Acquire CCheckQueue's lock to avoid race condition
 
 Build system:
+- `8752b5c` 0.10 fix for crashes on OSX 10.6
 
 Wallet:
+- N/A
 
 GUI:
+- `2c08406` some mac specifiy cleanup (memory handling, unnecessary code)
+- `81145a6` fix OSX dock icon window reopening
+- `786cf72` fix a issue where "command line options"-action overwrite "Preference"-action (on OSX)
 
 Tests:
+- `1117378` add RPC test for InvalidateBlock
 
 Miscellaneous:
+- `c9e022b` Initialization: set Boost path locale in main thread
+- `23126a0` Sanitize command strings before logging them.
 
 Credits
 =======
 
 Thanks to everyone who contributed to this release:
 
-As well as everyone that helped translating on [Transifex](https://www.transifex.com/projects/p/bitcoin/).
+- Alex Morcos
+- Cory Fields
+- dexX7
+- fsb4000
+- Gregory Maxwell
+- Ivan Pustogarov
+- Jonas Schnelli
+- Pieter Wuille
+- Ruben de Vries
+- Suhas Daftuar
+- Wladimir J. van der Laan
 
+As well as everyone that helped translating on [Transifex](https://www.transifex.com/projects/p/bitcoin/).
