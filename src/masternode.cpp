@@ -414,7 +414,7 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
 {
     LOCK(cs_masternodepayments);
 
-    if(nBlockHeight < nLastBlockHeight) return false;;
+    if(nBlockHeight <= nLastBlockHeight) return false;
     if(!enabled) return false;
     CMasternodePaymentWinner newWinner;
     int nMinimumAge = mnodeman.CountEnabled();
@@ -443,7 +443,7 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
         newWinner.nBlockHeight = nBlockHeight;
         newWinner.vin = pmn->vin;
 
-        if(pmn->donationPercentage > 0 && (nHash % 100) <= pmn->donationPercentage) {
+        if(pmn->donationPercentage > 0 && (nHash % 100) <= (unsigned int)pmn->donationPercentage) {
             newWinner.payee = pmn->donationAddress;
         } else {
             newWinner.payee.SetDestination(pmn->pubkey.GetID());
@@ -465,7 +465,7 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
                 newWinner.nBlockHeight = nBlockHeight;
                 newWinner.vin = pmn->vin;
 
-                if(pmn->donationPercentage > 0 && (nHash % 100) <= pmn->donationPercentage) {
+                if(pmn->donationPercentage > 0 && (nHash % 100) <= (unsigned int)pmn->donationPercentage) {
                     newWinner.payee = pmn->donationAddress;
                 } else {
                     newWinner.payee.SetDestination(pmn->pubkey.GetID());
