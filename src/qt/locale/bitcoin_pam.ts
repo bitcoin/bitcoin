@@ -2,10 +2,6 @@
 <context>
     <name>AddressBookPage</name>
     <message>
-        <source>Double-click to edit address or label</source>
-        <translation>Pindutan meng makatidduang besis ban ayalilan me ing address o label</translation>
-    </message>
-    <message>
         <source>Create a new address</source>
         <translation>Maglalang kang bayung address</translation>
     </message>
@@ -1543,10 +1539,6 @@ Address: %4
         <translation>Eya maliari ing alaga keng -paytxfee=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
-        <source>Invalid amount</source>
-        <translation>Ing alaga e ya katanggap-tanggap</translation>
-    </message>
-    <message>
         <source>Insufficient funds</source>
         <translation>Kulang a pondo</translation>
     </message>
@@ -1577,10 +1569,6 @@ Address: %4
     <message>
         <source>Done loading</source>
         <translation>Yari ne ing pamag-load</translation>
-    </message>
-    <message>
-        <source>To use the %s option</source>
-        <translation>Para agamit ing %s a pimamilian</translation>
     </message>
     <message>
         <source>Error</source>

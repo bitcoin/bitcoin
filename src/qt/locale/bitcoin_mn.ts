@@ -2,10 +2,6 @@
 <context>
     <name>AddressBookPage</name>
     <message>
-        <source>Double-click to edit address or label</source>
-        <translation>Хаяг эсвэл шошгыг ѳѳрчлѳхийн тулд хоёр удаа дар</translation>
-    </message>
-    <message>
         <source>Create a new address</source>
         <translation>Шинэ хаяг нээх</translation>
     </message>
@@ -1038,10 +1034,6 @@ Address: %4
         <translation>Эдгээр прокси хаягнууд буруу байна: '%s'</translation>
     </message>
     <message>
-        <source>Invalid amount</source>
-        <translation>Буруу хэмжээ</translation>
-    </message>
-    <message>
         <source>Insufficient funds</source>
         <translation>Таны дансны үлдэгдэл хүрэлцэхгүй байна</translation>
     </message>
@@ -1064,10 +1056,6 @@ Address: %4
     <message>
         <source>Done loading</source>
         <translation>Ачааллаж дууслаа</translation>
-    </message>
-    <message>
-        <source>To use the %s option</source>
-        <translation>%s сонголтыг ашиглахын тулд</translation>
     </message>
     <message>
         <source>Error</source>
