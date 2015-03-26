@@ -40,15 +40,17 @@ struct CompareValueOnlyMN
 CMasternodeDB::CMasternodeDB()
 {
     pathMN = GetDataDir() / "mncache.dat";
+    strMagicMessage = "MasternodeCache";
 }
 
 bool CMasternodeDB::Write(const CMasternodeMan& mnodemanToSave)
 {
     int64_t nStart = GetTimeMillis();
 
-    // serialize addresses, checksum data up to that point, then append csum
+    // serialize, checksum data up to that point, then append checksum
     CDataStream ssMasternodes(SER_DISK, CLIENT_VERSION);
-    ssMasternodes << FLATDATA(Params().MessageStart());
+    ssMasternodes << strMagicMessage; // masternode cache file specific magic message
+    ssMasternodes << FLATDATA(Params().MessageStart()); // network specific magic number
     ssMasternodes << mnodemanToSave;
     uint256 hash = Hash(ssMasternodes.begin(), ssMasternodes.end());
     ssMasternodes << hash;
@@ -119,7 +121,19 @@ CMasternodeDB::ReadResult CMasternodeDB::Read(CMasternodeMan& mnodemanToLoad)
     }
 
     unsigned char pchMsgTmp[4];
+    std::string strMagicMessageTmp;
     try {
+        // de-serialize file header (masternode cache file specific magic message) and ..
+
+        ssMasternodes >> strMagicMessageTmp;
+
+        // ... verify the message matches predefined one
+        if (strMagicMessage != strMagicMessageTmp)
+        {
+            error("%s : Invalid masternode cache magic message", __func__);
+            return IncorrectMagicMessage;
+        }
+
         // de-serialize file header (network specific magic number) and ..
         ssMasternodes >> FLATDATA(pchMsgTmp);
 
@@ -127,10 +141,9 @@ CMasternodeDB::ReadResult CMasternodeDB::Read(CMasternodeMan& mnodemanToLoad)
         if (memcmp(pchMsgTmp, Params().MessageStart(), sizeof(pchMsgTmp)))
         {
             error("%s : Invalid network magic number", __func__);
-            return IncorrectMagic;
+            return IncorrectMagicNumber;
         }
-
-        // de-serialize address data into one CMnList object
+        // de-serialize data into CMasternodeMan object
         ssMasternodes >> mnodemanToLoad;
     }
     catch (std::exception &e) {
@@ -160,8 +173,14 @@ void DumpMasternodes()
         LogPrintf("Missing masternode cache file - mncache.dat, will try to recreate\n");
     else if (readResult != CMasternodeDB::Ok)
     {
-        LogPrintf("Masternode cache file mncache.dat has invalid format\n");
-        return;
+        LogPrintf("Error reading mncache.dat: ");
+        if(readResult == CMasternodeDB::IncorrectFormat)
+            LogPrintf("magic is ok but data has invalid format, will try to recreate\n");
+        else
+        {
+            LogPrintf("file format is unknown or invalid, please fix it manually\n");
+            return;
+        }
     }
     LogPrintf("Writting info to mncache.dat...\n");
     mndb.Write(mnodeman);
