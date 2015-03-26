@@ -160,18 +160,23 @@ bool CCoinsViewCache::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlockIn
         if (it->second.flags & CCoinsCacheEntry::DIRTY) { // Ignore non-dirty entries (optimization).
             CCoinsMap::iterator itUs = cacheCoins.find(it->first);
             if (itUs == cacheCoins.end()) {
-                if (!it->second.coins.IsPruned()) {
-                    // The parent cache does not have an entry, while the child
-                    // cache does have (a non-pruned) one. Move the data up, and
-                    // mark it as fresh (if the grandparent did have it, we
-                    // would have pulled it in at first GetCoins).
-                    assert(it->second.flags & CCoinsCacheEntry::FRESH);
+                // The parent cache does not have an entry, while the child does
+                // We can ignore it if it's both FRESH and pruned in the child
+                if (!(it->second.flags & CCoinsCacheEntry::FRESH && it->second.coins.IsPruned())) {
+                    // Otherwise we will need to create it in the parent
+                    // and move the data up and mark it as dirty
                     CCoinsCacheEntry& entry = cacheCoins[it->first];
                     entry.coins.swap(it->second.coins);
                     cachedCoinsUsage += entry.coins.DynamicMemoryUsage();
-                    entry.flags = CCoinsCacheEntry::DIRTY | CCoinsCacheEntry::FRESH;
+                    entry.flags = CCoinsCacheEntry::DIRTY;
+                    // We can mark it FRESH in the parent if it was FRESH in the child
+                    // Otherwise it might have just been flushed from the parent's cache
+                    // and already exist in the grandparent
+                    if (it->second.flags & CCoinsCacheEntry::FRESH)
+                        entry.flags |= CCoinsCacheEntry::FRESH;
                 }
             } else {
+                // Found the entry in the parent cache
                 if ((itUs->second.flags & CCoinsCacheEntry::FRESH) && it->second.coins.IsPruned()) {
                     // The grandparent does not have an entry, and the child is
                     // modified and being pruned. This means we can just delete
