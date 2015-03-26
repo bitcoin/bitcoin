@@ -2915,15 +2915,16 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
                             foundPaymentAndPayee = true;
                     }
 
-                    if(!foundPaymentAndPayee) {
-                        CTxDestination address1;
-                        ExtractDestination(payee, address1);
-                        CBitcoinAddress address2(address1);
 
+                    CTxDestination address1;
+                    ExtractDestination(payee, address1);
+                    CBitcoinAddress address2(address1);
+
+                    if(!foundPaymentAndPayee) {
                         LogPrintf("CheckBlock() : Couldn't find masternode payment(%d|%d) or payee(%d|%s) nHeight %d. \n", foundPaymentAmount, masternodePaymentAmount, foundPayee, address2.ToString().c_str(), chainActive.Tip()->nHeight+1);
                         if(!RegTest()) return state.DoS(100, error("CheckBlock() : Couldn't find masternode payment or payee"));
                     } else {
-                        LogPrintf("CheckBlock() : Found masternode payment %d\n", chainActive.Tip()->nHeight+1);
+                        LogPrintf("CheckBlock() : Found payment(%d|%d) or payee(%d|%s) nHeight %d. \n", foundPaymentAmount, masternodePaymentAmount, foundPayee, address2.ToString().c_str(), chainActive.Tip()->nHeight+1);
                     }
                 } else {
                     LogPrintf("CheckBlock() : Is initial download, skipping masternode payment check %d\n", chainActive.Tip()->nHeight+1);

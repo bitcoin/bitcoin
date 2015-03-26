@@ -11,6 +11,8 @@
 #include "addrman.h"
 #include <boost/lexical_cast.hpp>
 
+CCriticalSection cs_masternodepayments;
+
 /** Object for who's going to get paid on which blocks */
 CMasternodePayments masternodePayments;
 // keep track of Masternode votes I've seen
@@ -38,20 +40,27 @@ void ProcessMessageMasternodePayments(CNode* pfrom, std::string& strCommand, CDa
         LogPrintf("mnget - Sent Masternode winners to %s\n", pfrom->addr.ToString().c_str());
     }
     else if (strCommand == "mnw") { //Masternode Payments Declare Winner
+
+        LOCK(cs_masternodepayments);
+
         //this is required in litemode
         CMasternodePaymentWinner winner;
         vRecv >> winner;
 
         if(chainActive.Tip() == NULL) return;
 
+        CTxDestination address1;
+        ExtractDestination(winner.payee, address1);
+        CBitcoinAddress address2(address1);
+
         uint256 hash = winner.GetHash();
         if(mapSeenMasternodeVotes.count(hash)) {
-            if(fDebug) LogPrintf("mnw - seen vote %s Height %d bestHeight %d\n", hash.ToString().c_str(), winner.nBlockHeight, chainActive.Tip()->nHeight);
+            if(fDebug) LogPrintf("mnw - seen vote %s Addr %s Height %d bestHeight %d\n", hash.ToString().c_str(), address2.ToString().c_str(), winner.nBlockHeight, chainActive.Tip()->nHeight);
             return;
         }
 
         if(winner.nBlockHeight < chainActive.Tip()->nHeight - 10 || winner.nBlockHeight > chainActive.Tip()->nHeight+20){
-            LogPrintf("mnw - winner out of range %s Height %d bestHeight %d\n", winner.vin.ToString().c_str(), winner.nBlockHeight, chainActive.Tip()->nHeight);
+            LogPrintf("mnw - winner out of range %s Addr %s Height %d bestHeight %d\n", winner.vin.ToString().c_str(), address2.ToString().c_str(), winner.nBlockHeight, chainActive.Tip()->nHeight);
             return;
         }
 
@@ -61,7 +70,7 @@ void ProcessMessageMasternodePayments(CNode* pfrom, std::string& strCommand, CDa
             return;
         }
 
-        LogPrintf("mnw - winning vote  %s Height %d bestHeight %d\n", winner.vin.ToString().c_str(), winner.nBlockHeight, chainActive.Tip()->nHeight);
+        LogPrintf("mnw - winning vote - Vin %s Addr %s Height %d bestHeight %d\n", winner.vin.ToString().c_str(), address2.ToString().c_str(), winner.nBlockHeight, chainActive.Tip()->nHeight);
 
         if(!masternodePayments.CheckSignature(winner)){
             LogPrintf("mnw - invalid signature\n");
@@ -365,6 +374,8 @@ bool CMasternodePayments::AddWinningMasternode(CMasternodePaymentWinner& winnerI
                 winner.payee = winnerIn.payee;
                 winner.vchSig = winnerIn.vchSig;
 
+                mapSeenMasternodeVotes.insert(make_pair(winnerIn.GetHash(), winnerIn));
+
                 return true;
             }
         }
@@ -383,6 +394,8 @@ bool CMasternodePayments::AddWinningMasternode(CMasternodePaymentWinner& winnerI
 
 void CMasternodePayments::CleanPaymentList()
 {
+    LOCK(cs_masternodepayments);
+
     if(chainActive.Tip() == NULL) return;
 
     int nLimit = std::max(((int)mnodeman.size())*2, 1000);
@@ -399,6 +412,8 @@ void CMasternodePayments::CleanPaymentList()
 
 bool CMasternodePayments::ProcessBlock(int nBlockHeight)
 {
+    LOCK(cs_masternodepayments);
+
     if(nBlockHeight < nLastBlockHeight) return false;;
     if(!enabled) return false;
     CMasternodePaymentWinner newWinner;
@@ -408,6 +423,8 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
     if(!GetBlockHash(hash, nBlockHeight-10)) return false;
     unsigned int nHash;
     memcpy(&nHash, &hash, 2);
+
+    LogPrintf(" ProcessBlock Start nHeight %d. \n", nBlockHeight);
 
     std::vector<CTxIn> vecLastPayments;
     BOOST_REVERSE_FOREACH(CMasternodePaymentWinner& winner, vWinning)
@@ -461,6 +478,12 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
 
     if(newWinner.nBlockHeight == 0) return false;
 
+    CTxDestination address1;
+    ExtractDestination(newWinner.payee, address1);
+    CBitcoinAddress address2(address1);
+
+    LogPrintf("Winner payee %s nHeight %d. \n", address2.ToString().c_str(), newWinner.nBlockHeight);
+
     if(Sign(newWinner))
     {
         if(AddWinningMasternode(newWinner))
@@ -488,6 +511,8 @@ void CMasternodePayments::Relay(CMasternodePaymentWinner& winner)
 
 void CMasternodePayments::Sync(CNode* node)
 {
+    LOCK(cs_masternodepayments);
+
     BOOST_FOREACH(CMasternodePaymentWinner& winner, vWinning)
         if(winner.nBlockHeight >= chainActive.Tip()->nHeight-10 && winner.nBlockHeight <= chainActive.Tip()->nHeight + 20)
             node->PushMessage("mnw", winner);
