@@ -553,6 +553,7 @@ uint256 send_INTERNAL_1packet(const string &FromAddress, const string &ToAddress
 
 bool isTestEcosystemProperty(unsigned int property);
 bool isMainEcosystemProperty(unsigned int property);
+uint32_t GetNextPropertyId(bool maineco);
 
 CMPTally *getTally(const string & address);
 

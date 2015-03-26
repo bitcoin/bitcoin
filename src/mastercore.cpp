@@ -1014,6 +1014,15 @@ const double available_reward=all_reward * part_available;
   return devmsc;
 }
 
+uint32_t mastercore::GetNextPropertyId(bool maineco)
+{
+  if(maineco) {
+      return _my_sps->peekNextSPID(1);
+  } else {
+      return _my_sps->peekNextSPID(2);
+  }
+}
+
 // TODO: optimize efficiency -- iterate only over wallet's addresses in the future
 // NOTE: if we loop over wallet addresses we miss tokens that may be in change addresses (since mapAddressBook does not
 //       include change addresses).  with current transaction load, about 0.02 - 0.06 seconds is spent on this function
