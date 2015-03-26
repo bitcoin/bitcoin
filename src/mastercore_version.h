@@ -4,10 +4,10 @@
 #include <string>
 
 // Increase with every consensus affecting change
-#define OMNICORE_VERSION_MAJOR   9
+#define OMNICORE_VERSION_MAJOR   10
 
 // Increase with every non-consensus affecting feature
-#define OMNICORE_VERSION_MINOR   2
+#define OMNICORE_VERSION_MINOR   0
 
 // Increase with every patch, which is not a feature or consensus affecting
 #define OMNICORE_VERSION_PATCH   0
