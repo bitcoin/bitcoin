@@ -763,22 +763,23 @@ margin-left:16px;
 
 QWidget .QFrame#frameDarksend { /* Darksend Widget */
 background-color:transparent;
-qproperty-minimumSize: 451px 330px;
+qproperty-minimumSize: 451px 343px;
 }
 
 QWidget .QFrame#frameDarksend QWidget {
-qproperty-geometry: rect(10 0 431 22);
+qproperty-geometry: rect(10 0 431 35);
 }
 
 QWidget .QFrame#frameDarksend .QLabel#label_2 { /* Darksend Header */
 qproperty-alignment: 'AlignVCenter | AlignRight';
 min-width:230px;
-color:#3398CC;
+background-color:#56ABD8;
+color:#fff;
 margin-right:5px;
 padding-right:5px;
 font-weight:bold;
 font-size:16px;
-min-height:22px;
+min-height:35px;
 }
 
 QWidget .QFrame#frameDarksend .QLabel#labelDarksendSyncStatus { /* Darksend Sync Status */
@@ -787,7 +788,7 @@ margin-left:20px;
 }
 
 QWidget .QFrame#frameDarksend #formLayoutWidget {
-qproperty-geometry: rect(10 38 451 175);
+qproperty-geometry: rect(10 51 451 175);
 }
 
 QWidget .QFrame#frameDarksend #formLayoutWidget > .QLabel {
@@ -869,7 +870,7 @@ QWidget .QFrame#frameDarksend #formLayoutWidget .QLabel#labelSubmittedDenom { /*
 
 QWidget .QFrame#frameDarksend .QLabel#darksendStatus { /* Darksend Status Notifications */
 qproperty-alignment: 'AlignVCenter | AlignCenter';
-qproperty-geometry: rect(70 213 395 34);
+qproperty-geometry: rect(70 226 395 34);
 font-size:11px;
 color:#818181;
 }
@@ -890,7 +891,7 @@ qproperty-geometry: rect(0 0 0 0);
 }
 
 QWidget .QFrame#frameDarksend .QPushButton#toggleDarksend { /* Start Darksend Mixing */
-qproperty-geometry: rect(115 255 295 40);
+qproperty-geometry: rect(115 268 295 40);
 font-size:17px;
 font-weight:bold;
 color:#ffffff;
@@ -905,7 +906,7 @@ QWidget .QFrame#frameDarksend .QPushButton#toggleDarksend:hover {
 }
 
 QWidget .QFrame#frameDarksend .QPushButton#darksendAuto { /* Try Mix Button */
-qproperty-geometry: rect(120 301 140 25);
+qproperty-geometry: rect(120 314 140 25);
 background-color:qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: .01 #f6f6f6, stop: .1 rgba(250, 250, 250, 128), stop: .95 rgba(250, 250, 250, 255), stop: 1 #ebebeb);
 border:1px solid #d2d2d2;
 color:#616161;
@@ -924,7 +925,7 @@ border:1px solid #9e9e9e;
 }
 
 QWidget .QFrame#frameDarksend .QPushButton#darksendReset { /* Reset Button */
-qproperty-geometry: rect(265 301 140 25);
+qproperty-geometry: rect(265 314 140 25);
 background-color:qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: .01 #f6f6f6, stop: .1 rgba(250, 250, 250, 128), stop: .95 rgba(250, 250, 250, 255), stop: 1 #ebebeb);
 border:1px solid #d2d2d2;
 color:#616161;
