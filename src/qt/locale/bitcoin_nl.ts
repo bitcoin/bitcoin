@@ -2,12 +2,12 @@
 <context>
     <name>AddressBookPage</name>
     <message>
-        <source>Double-click to edit address or label</source>
-        <translation>Dubbelklik om het adres of label te wijzigen</translation>
+        <source>Right-click to edit address or label</source>
+        <translation>Klik met de rechtermuisknop om het adres of label te wijzigen</translation>
     </message>
     <message>
         <source>Create a new address</source>
-        <translation>Maak een nieuw adres aan</translation>
+        <translation>Maak een nieuw adres</translation>
     </message>
     <message>
         <source>&amp;New</source>
@@ -15,7 +15,7 @@
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation>Kopieer het huidig geselecteerde adres naar het klembord</translation>
+        <translation>Kopieer het geselecteerde adres naar het klembord</translation>
     </message>
     <message>
         <source>&amp;Copy</source>
@@ -1289,6 +1289,14 @@ Adres: %4
         <translation>Restitutie van %1</translation>
     </message>
     <message>
+        <source>Payment request %2 is too large (%3 bytes, allowed %4 bytes).</source>
+        <translation>Betalingsaanvraag %2 is te groot (%3 bytes, %4 bytes toegestaan).</translation>
+    </message>
+    <message>
+        <source>Payment request DoS protection</source>
+        <translation>Betalingsaanvraag DoS bescherming</translation>
+    </message>
+    <message>
         <source>Error communicating with %1: %2</source>
         <translation>Fout bij communiceren met %1: %2</translation>
     </message>
@@ -1853,16 +1861,32 @@ Adres: %4
         <translation>Kies...</translation>
     </message>
     <message>
+        <source>collapse fee-settings</source>
+        <translation>Transactiekosteninstellingen verbergen</translation>
+    </message>
+    <message>
         <source>Minimize</source>
         <translation>Minimaliseer</translation>
+    </message>
+    <message>
+        <source>If the custom fee is set to 1000 satoshis and the transaction is only 250 bytes, then "per kilobyte" only pays 250 satoshis in fee, while "at least" pays 1000 satoshis. For transactions bigger than a kilobyte both pay by kilobyte.</source>
+        <translation>Als de aangepaste toeslag is ingesteld op 1000 satoshis en de transactie is maar 250 bytes, dan wordt bij "per kilobyte" 250 satoshis aan toeslag berekend, terwijl er bij "tenminste" 1000 satoshis worden berekend. Voor transacties die groter zijn dan een kilobyte, wordt in beide gevallen per kilobyte de toeslag berekend.</translation>
     </message>
     <message>
         <source>per kilobyte</source>
         <translation>per kilobyte</translation>
     </message>
     <message>
+        <source>If the custom fee is set to 1000 satoshis and the transaction is only 250 bytes, then "per kilobyte" only pays 250 satoshis in fee, while "total at least" pays 1000 satoshis. For transactions bigger than a kilobyte both pay by kilobyte.</source>
+        <translation>Als de aangepaste toeslag is ingesteld op 1000 satoshis en de transactie is maar 250 bytes, dan wordt bij "per kilobyte" 250 satoshis aan toeslag berekend, terwijl er bij "totaal tenminste" 1000 satoshis worden berekend. Voor transacties die groter zijn dan een kilobyte, wordt in beide gevallen per kilobyte de toeslag berekend.</translation>
+    </message>
+    <message>
         <source>total at least</source>
         <translation>totaal ten minste</translation>
+    </message>
+    <message>
+        <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks. But be aware that this can end up in a never confirming transaction once there is more demand for bitcoin transactions than the network can process.</source>
+        <translation>De minimale toeslag betalen is prima mits het transactievolume kleiner is dan de ruimte in de blokken. Let wel op dat dit tot gevolg kan hebben dat een transactie nooit wordt bevestigd als er meer vraag is naar bitcointransacties dan het netwerk kan verwerken.</translation>
     </message>
     <message>
         <source>(read the tooltip)</source>
@@ -2791,28 +2815,6 @@ Adres: %4
         <translation>Accepteer verbindingen van buitenaf (standaard: 1 als geen -proxy of -connect is opgegeven)</translation>
     </message>
     <message>
-        <source>%s, you must set a rpcpassword in the configuration file:
-%s
-It is recommended you use the following random password:
-rpcuser=bitcoinrpc
-rpcpassword=%s
-(you do not need to remember this password)
-The username and password MUST NOT be the same.
-If the file does not exist, create it with owner-readable-only file permissions.
-It is also recommended to set alertnotify so you are notified of problems;
-for example: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
-</source>
-        <translation>%s, u moet een RPC-wachtwoord instellen in het configuratiebestand: %s
-U wordt aangeraden het volgende willekeurige wachtwoord te gebruiken:
-rpcuser=bitcoinrpc
-rpcpassword=%s
-(u hoeft dit wachtwoord niet te onthouden)
-De gebruikersnaam en wachtwoord mogen niet hetzelfde zijn.
-Als het bestand niet bestaat, make hem dan aan met leesrechten voor enkel de eigenaar.
-Het is ook aan te bevelen "alertnotify" in te stellen zodat u op de hoogte gesteld wordt van problemen;
-bijvoorbeeld: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com</translation>
-    </message>
-    <message>
         <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
         <translation>Bind aan opgegeven adres en luister er altijd op. Gebruik [host]:port notatie voor IPv6</translation>
     </message>
@@ -2827,14 +2829,6 @@ bijvoorbeeld: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com</tran
     <message>
         <source>Enter regression test mode, which uses a special chain in which blocks can be solved instantly.</source>
         <translation>Schakel regressietest-modus in, die een speciale blokketen gebruikt waarin blokken onmiddellijk opgelost kunnen worden.</translation>
-    </message>
-    <message>
-        <source>Error: The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
-        <translation>Fout: De transactie was afgewezen! Dit kan gebeuren als sommige munten in uw portemonnee al eerder uitgegeven zijn, zoals wanneer u een kopie van uw wallet.dat heeft gebruikt en in de kopie deze munten zijn uitgegeven, maar in deze portemonnee die munten nog niet als zodanig zijn gemarkeerd.</translation>
-    </message>
-    <message>
-        <source>Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds!</source>
-        <translation>Fout: Deze transactie vereist transactiekosten van tenminste %s, vanwege zijn grootte, complexiteit, of het gebruik van onlangs ontvangen munten!</translation>
     </message>
     <message>
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
@@ -2949,10 +2943,6 @@ bijvoorbeeld: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com</tran
         <translation>Fout: Weinig vrije diskruimte!</translation>
     </message>
     <message>
-        <source>Error: Wallet locked, unable to create transaction!</source>
-        <translation>Fout: Portemonnee vergrendeld, aanmaak transactie niet mogelijk!</translation>
-    </message>
-    <message>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
         <translation>Mislukt om op welke poort dan ook te luisteren. Gebruik -listen=0 as u dit wilt.</translation>
     </message>
@@ -3061,8 +3051,20 @@ bijvoorbeeld: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com</tran
         <translation>Fout: luisteren naar binnenkomende verbindingen mislukt (luisteren gaf foutmelding %s)</translation>
     </message>
     <message>
+        <source>Error: Unsupported argument -socks found. Setting SOCKS version isn't possible anymore, only SOCKS5 proxies are supported.</source>
+        <translation>Fout: er is een niet-ondersteund argument -socks aangetroffen. Het instellen van de SOCKS-versie is niet langer mogelijk. Alleen SOCKS5-proxy's worden ondersteund.</translation>
+    </message>
+    <message>
         <source>Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)</source>
         <translation>Voer commando uit zodra een waarschuwing is ontvangen of wanneer we een erg lange fork detecteren (%s in commando wordt vervangen door bericht)</translation>
+    </message>
+    <message>
+        <source>Fees (in BTC/Kb) smaller than this are considered zero fee for relaying (default: %s)</source>
+        <translation>Toeslagen (in BTC/Kb) kleiner dan dit worden beschouwd als geen vergoeding (voor doorgeven) (standaard: %s)</translation>
+    </message>
+    <message>
+        <source>Fees (in BTC/Kb) smaller than this are considered zero fee for transaction creation (default: %s)</source>
+        <translation>Toeslagen (in BTC/Kb) kleiner dan dit worden beschouwd als geen vergoeding transactieaanmaak (standaard: %s)</translation>
     </message>
     <message>
         <source>Set maximum size of high-priority/low-fee transactions in bytes (default: %d)</source>
@@ -3077,12 +3079,20 @@ bijvoorbeeld: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com</tran
         <translation>Dit product bevat software dat ontwikkeld is door het OpenSSL Project voor gebruik in de OpenSSL Toolkit &lt;https://www.openssl.org/&gt; en cryptografische software geschreven door Eric Young en UPnP software geschreven door Thomas Bernard.</translation>
     </message>
     <message>
+        <source>Warning: -maxtxfee is set very high! Fees this large could be paid on a single transaction.</source>
+        <translation>Let op: -maxtxfee is erg hoog ingesteld! Transactiekosten van dergelijke groottes kunnen in een enkele transactie worden betaald.</translation>
+    </message>
+    <message>
         <source>Warning: Please check that your computer's date and time are correct! If your clock is wrong Bitcoin Core will not work properly.</source>
         <translation>Waarschuwing: Controleer dat de datum en tijd van uw computer correct zijn ingesteld! Bij een onjuist ingestelde klok zal Bitcoin Core niet goed werken.</translation>
     </message>
     <message>
         <source>Whitelisted peers cannot be DoS banned and their transactions are always relayed, even if they are already in the mempool, useful e.g. for a gateway</source>
         <translation>Goedgekeurde peers kunnen niet ge-DoS-banned worden en hun transacties worden altijd doorgestuurd, zelfs als ze reeds in de mempool aanwezig zijn, nuttig voor bijv. een gateway</translation>
+    </message>
+    <message>
+        <source>Accept public REST requests (default: %u)</source>
+        <translation>Accepteer publieke REST-requests (standaard: %u)</translation>
     </message>
     <message>
         <source>Cannot resolve -whitebind address: '%s'</source>
@@ -3121,6 +3131,10 @@ bijvoorbeeld: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com</tran
         <translation>Initialisatie sanity check mislukt. Bitcoin Core is aan het afsluiten.</translation>
     </message>
     <message>
+        <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s'</source>
+        <translation>Ongeldig bedrag voor -maxtxfee=&lt;amount&gt;: '%s'</translation>
+    </message>
+    <message>
         <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: '%s'</source>
         <translation>Ongeldig bedrag voor -minrelaytxfee=&lt;bedrag&gt;: '%s'</translation>
     </message>
@@ -3137,10 +3151,6 @@ bijvoorbeeld: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com</tran
         <translation>Ongeldig netmask gespecificeerd in -whitelist: '%s'</translation>
     </message>
     <message>
-        <source>Keep at most &lt;n&gt; unconnectable blocks in memory (default: %u)</source>
-        <translation>Houd maximaal &lt;n&gt; onverbonden blokken in geheugen (standaard: %u)</translation>
-    </message>
-    <message>
         <source>Keep at most &lt;n&gt; unconnectable transactions in memory (default: %u)</source>
         <translation>Houd maximaal &lt;n&gt; onverbonden transacties in geheugen (standaard: %u)</translation>
     </message>
@@ -3151,10 +3161,6 @@ bijvoorbeeld: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com</tran
     <message>
         <source>Node relay options:</source>
         <translation>Node relay opties:</translation>
-    </message>
-    <message>
-        <source>Print block on startup, if found in block index</source>
-        <translation>Toon block bij opstarten, wanneer gevonden in block index</translation>
     </message>
     <message>
         <source>RPC SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
@@ -3203,6 +3209,10 @@ bijvoorbeeld: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com</tran
     <message>
         <source>Transaction amounts must be positive</source>
         <translation>Transactiebedragen moeten positief zijn</translation>
+    </message>
+    <message>
+        <source>Transaction too large for fee policy</source>
+        <translation>De transactie is te groot voor het toeslagenbeleid</translation>
     </message>
     <message>
         <source>Transaction too large</source>
@@ -3301,6 +3311,10 @@ bijvoorbeeld: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com</tran
         <translation>Hoe grondig de blokverificatie van -checkblocks is (0-4, standaard: %u)</translation>
     </message>
     <message>
+        <source>Log transaction priority and fee per kB when mining blocks (default: %u)</source>
+        <translation>Log transactieprioriteit en -kosten per kB bij het mijnen van blokken (standaard: %u)</translation>
+    </message>
+    <message>
         <source>Maintain a full transaction index, used by the getrawtransaction rpc call (default: %u)</source>
         <translation>Onderhoud een volledige transactieindex, gebruikt door de getrawtransaction rpc call (standaard: %u)</translation>
     </message>
@@ -3345,6 +3359,10 @@ bijvoorbeeld: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com</tran
         <translation>Aantal te checken blokken bij het opstarten (standaard: %u, 0 = allemaal)</translation>
     </message>
     <message>
+        <source>Include IP addresses in debug output (default: %u)</source>
+        <translation>IP-adressen toevoegen in de debuguitvoer (standaard: %u)</translation>
+    </message>
+    <message>
         <source>Invalid -proxy address: '%s'</source>
         <translation>Ongeldig -proxy adres: '%s'</translation>
     </message>
@@ -3379,10 +3397,6 @@ bijvoorbeeld: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com</tran
     <message>
         <source>Prepend debug output with timestamp (default: %u)</source>
         <translation>Prepend debug output met tijdstempel (standaard: %u)</translation>
-    </message>
-    <message>
-        <source>Print block tree on startup (default: %u)</source>
-        <translation>Toon block structuur bij opstarten (default: %u)</translation>
     </message>
     <message>
         <source>Run a thread to flush wallet periodically (default: %u)</source>
@@ -3453,10 +3467,6 @@ bijvoorbeeld: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com</tran
         <translation>Ongeldig bedrag voor -paytxfee=&lt;bedrag&gt;: '%s'</translation>
     </message>
     <message>
-        <source>Invalid amount</source>
-        <translation>Ongeldig bedrag</translation>
-    </message>
-    <message>
         <source>Insufficient funds</source>
         <translation>Ontoereikend saldo</translation>
     </message>
@@ -3487,10 +3497,6 @@ bijvoorbeeld: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com</tran
     <message>
         <source>Done loading</source>
         <translation>Klaar met laden</translation>
-    </message>
-    <message>
-        <source>To use the %s option</source>
-        <translation>Om de %s optie te gebruiken</translation>
     </message>
     <message>
         <source>Error</source>

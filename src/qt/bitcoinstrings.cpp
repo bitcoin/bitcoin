@@ -100,6 +100,8 @@ QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Query for peer addresses via DNS lookup, if low on addresses (default: 1 "
 "unless -connect)"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
+"Require high priority for relaying free or low-fee transactions (default:%u)"),
+QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Set maximum size of high-priority/low-fee transactions in bytes (default: %d)"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Set the number of script verification threads (%u to %d, 0 = auto, <0 = "
@@ -198,6 +200,7 @@ QT_TRANSLATE_NOOP("bitcoin-core", "Error loading wallet.dat"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Error loading wallet.dat: Wallet corrupted"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Error loading wallet.dat: Wallet requires newer version of Bitcoin Core"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Error opening block database"),
+QT_TRANSLATE_NOOP("bitcoin-core", "Error reading from database, shutting down."),
 QT_TRANSLATE_NOOP("bitcoin-core", "Error"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Error: A fatal internal error occured, see debug.log for details"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Error: Disk space is low!"),
@@ -243,6 +246,7 @@ QT_TRANSLATE_NOOP("bitcoin-core", "Password for JSON-RPC connections"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Prepend debug output with timestamp (default: %u)"),
 QT_TRANSLATE_NOOP("bitcoin-core", "RPC SSL options: (see the Bitcoin Wiki for SSL setup instructions)"),
 QT_TRANSLATE_NOOP("bitcoin-core", "RPC server options:"),
+QT_TRANSLATE_NOOP("bitcoin-core", "RPC support for HTTP persistent connections (default: %d)"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Randomly drop 1 of every <n> network messages"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Randomly fuzz 1 of every <n> network messages"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Rebuild block chain index from current blk000??.dat files"),

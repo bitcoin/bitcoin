@@ -2,10 +2,6 @@
 <context>
     <name>AddressBookPage</name>
     <message>
-        <source>Double-click to edit address or label</source>
-        <translation>Haga doble clic para editar el domicilio o la etiqueta</translation>
-    </message>
-    <message>
         <source>Create a new address</source>
         <translation>Crear una dirección nueva</translation>
     </message>

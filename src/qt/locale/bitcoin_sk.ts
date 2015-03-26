@@ -2,8 +2,8 @@
 <context>
     <name>AddressBookPage</name>
     <message>
-        <source>Double-click to edit address or label</source>
-        <translation>Dvojklikom editovať adresu alebo popis</translation>
+        <source>Right-click to edit address or label</source>
+        <translation>Kliknutím pravým tlačidlom upravte adresu alebo popis</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -478,6 +478,10 @@
         <source>Up to date</source>
         <translation>Aktualizovaný</translation>
     </message>
+    <message numerus="yes">
+        <source>Processed %n blocks of transaction history.</source>
+        <translation><numerusform>Spracovaný %n blok tranzakčnej histórie</numerusform><numerusform>Spracované %n bloky tranzakčnej histórie</numerusform><numerusform>Spracovaných %n blokov tranzakčnej histórie</numerusform></translation>
+    </message>
     <message>
         <source>Catching up...</source>
         <translation>Sťahujem...</translation>
@@ -520,6 +524,10 @@ Adresa: %4</translation>
 <context>
     <name>CoinControlDialog</name>
     <message>
+        <source>Coin Selection</source>
+        <translation>Výber mince</translation>
+    </message>
+    <message>
         <source>Quantity:</source>
         <translation>Množstvo:</translation>
     </message>
@@ -538,6 +546,10 @@ Adresa: %4</translation>
     <message>
         <source>Fee:</source>
         <translation>Poplatok:</translation>
+    </message>
+    <message>
+        <source>Dust:</source>
+        <translation>Prach:</translation>
     </message>
     <message>
         <source>After Fee:</source>
@@ -562,6 +574,14 @@ Adresa: %4</translation>
     <message>
         <source>Amount</source>
         <translation>Suma</translation>
+    </message>
+    <message>
+        <source>Received with label</source>
+        <translation>Prijaté s označením</translation>
+    </message>
+    <message>
+        <source>Received with address</source>
+        <translation>Prijaté s adresou</translation>
     </message>
     <message>
         <source>Date</source>
@@ -624,6 +644,10 @@ Adresa: %4</translation>
         <translation>Kopírovať prioritu</translation>
     </message>
     <message>
+        <source>Copy dust</source>
+        <translation>Kopírovať prach</translation>
+    </message>
+    <message>
         <source>Copy change</source>
         <translation>Kopírovať zmenu</translation>
     </message>
@@ -670,6 +694,10 @@ Adresa: %4</translation>
     <message>
         <source>none</source>
         <translation>žiadne</translation>
+    </message>
+    <message>
+        <source>Can vary +/- %1 satoshi(s) per input.</source>
+        <translation>Môže sa líšiť o +/- %1 satoshi pre každý vstup</translation>
     </message>
     <message>
         <source>yes</source>
@@ -883,7 +911,15 @@ Adresa: %4</translation>
         <source>Error</source>
         <translation>Chyba</translation>
     </message>
-    </context>
+    <message numerus="yes">
+        <source>%n GB of free space available</source>
+        <translation><numerusform>%n GB voľného miesta</numerusform><numerusform>%n GB voľného miesta</numerusform><numerusform>%n GB voľného miesta</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>(of %n GB needed)</source>
+        <translation><numerusform>(z %n GB potrebného)</numerusform><numerusform>(z %n GB potrebných)</numerusform><numerusform>(z %n GB potrebných)</numerusform></translation>
+    </message>
+</context>
 <context>
     <name>OpenURIDialog</name>
     <message>
@@ -936,6 +972,14 @@ Adresa: %4</translation>
     <message>
         <source>Number of script &amp;verification threads</source>
         <translation>Počet skript overujucich vlákien</translation>
+    </message>
+    <message>
+        <source>Accept connections from outside</source>
+        <translation>Prijať spojenia zvonku</translation>
+    </message>
+    <message>
+        <source>Allow incoming connections</source>
+        <translation>Povoliť prichádzajúce spojenia</translation>
     </message>
     <message>
         <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
@@ -1194,12 +1238,20 @@ Adresa: %4</translation>
 </context>
 <context>
     <name>PeerTableModel</name>
+    <message>
+        <source>Address/Hostname</source>
+        <translation>Adresa/Názov počítača</translation>
+    </message>
     </context>
 <context>
     <name>QObject</name>
     <message>
         <source>Amount</source>
         <translation>Suma</translation>
+    </message>
+    <message>
+        <source>Enter a Bitcoin address (e.g. %1)</source>
+        <translation>Zadajte bitcoin adresu (napr. %1)</translation>
     </message>
     <message>
         <source>%1 h</source>
@@ -1213,7 +1265,11 @@ Adresa: %4</translation>
         <source>N/A</source>
         <translation>nie je k dispozícii</translation>
     </message>
-    </context>
+    <message>
+        <source>%1 ms</source>
+        <translation>%1 ms</translation>
+    </message>
+</context>
 <context>
     <name>QRImageWidget</name>
     <message>
@@ -1286,6 +1342,18 @@ Adresa: %4</translation>
     <message>
         <source>Current number of blocks</source>
         <translation>Aktuálny počet blokov</translation>
+    </message>
+    <message>
+        <source>Version</source>
+        <translation>Verzia</translation>
+    </message>
+    <message>
+        <source>Bytes Sent</source>
+        <translation>Odoslaných bajtov</translation>
+    </message>
+    <message>
+        <source>Bytes Received</source>
+        <translation>Prijatých bajtov</translation>
     </message>
     <message>
         <source>Last block time</source>
@@ -1604,6 +1672,10 @@ Adresa: %4</translation>
         <translation>Vyčistiť všetky polia formulára.</translation>
     </message>
     <message>
+        <source>Dust:</source>
+        <translation>Prach:</translation>
+    </message>
+    <message>
         <source>Clear &amp;All</source>
         <translation>Zmazať &amp;všetko</translation>
     </message>
@@ -1702,6 +1774,10 @@ Adresa: %4</translation>
     <message>
         <source>Warning: Unknown change address</source>
         <translation>Varovanie: Neznáma adresa pre výdavok</translation>
+    </message>
+    <message>
+        <source>Copy dust</source>
+        <translation>Kopírovať prach</translation>
     </message>
     <message>
         <source>Are you sure you want to send?</source>
@@ -2406,44 +2482,12 @@ Adresa: %4</translation>
         <translation>Prijať spojenia zvonku (predvolené: 1 ak žiadne -proxy alebo -connect)</translation>
     </message>
     <message>
-        <source>%s, you must set a rpcpassword in the configuration file:
-%s
-It is recommended you use the following random password:
-rpcuser=bitcoinrpc
-rpcpassword=%s
-(you do not need to remember this password)
-The username and password MUST NOT be the same.
-If the file does not exist, create it with owner-readable-only file permissions.
-It is also recommended to set alertnotify so you are notified of problems;
-for example: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
-</source>
-        <translation>%s, musíte nastaviť rpcpassword heslo v súbore nastavení:
-%s
-Odporúča sa používať nasledujúce náhodné heslo:
-rpcuser=bitcoinrpc
-rpcpassword=%s
-(nemusíte si pamätať toto heslo)
-Užívateľské meno a heslo NESMÚ byť rovnaké.
-Ak súbor neexistuje, vytvorte ho s prístupovým právom owner-readable-only čitateľné len pre majiteľa.
-Tiež sa odporúča nastaviť alertnotify aby ste boli upozorňovaní na problémy;
-napríklad: alertnotify=echo %%s | mail -s "Bitcoin Výstraha" admin@foo.com
-</translation>
-    </message>
-    <message>
         <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
         <translation>Spojiť s danou adresou a vždy na nej počúvať. Použite zápis [host]:port pre IPv6</translation>
     </message>
     <message>
         <source>Enter regression test mode, which uses a special chain in which blocks can be solved instantly.</source>
         <translation>Vojsť do režimu regresného testovania, ktorý používa špeciálnu reťaz v ktorej môžu byť bloky v okamihu vyriešené.</translation>
-    </message>
-    <message>
-        <source>Error: The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
-        <translation>Transakcia bola zamietnutá! Toto sa môže stať ak niektoré coins vo vašej peňaženke už boli minuté, ako keď použijete kópiu wallet.dat a coins boli minuté z kópie ale neoznačené ako minuté tu.</translation>
-    </message>
-    <message>
-        <source>Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds!</source>
-        <translation>Chyba: Táto transakcia vyžaduje transakčný poplatok aspoň %s kvôli svojej sume, komplexite alebo použitiu nedávno prijatých prostriedkov.</translation>
     </message>
     <message>
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
@@ -2552,10 +2596,6 @@ The network does not appear to fully agree! Some miners appear to be experiencin
         <translation>Chyba: Málo miesta na disku!</translation>
     </message>
     <message>
-        <source>Error: Wallet locked, unable to create transaction!</source>
-        <translation>Chyba: Peňaženka je zamknutá, nemôžem vytvoriť transakciu!</translation>
-    </message>
-    <message>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
         <translation>Chyba počúvania na ktoromkoľvek porte. Použi -listen=0 ak toto chcete.</translation>
     </message>
@@ -2646,10 +2686,6 @@ The network does not appear to fully agree! Some miners appear to be experiencin
     <message>
         <source>Invalid amount for -mintxfee=&lt;amount&gt;: '%s'</source>
         <translation>Neplatná suma pre -mintxfee=&lt;amount&gt;: '%s'</translation>
-    </message>
-    <message>
-        <source>Print block on startup, if found in block index</source>
-        <translation>Vytlač blok pri spustení, ak nájdený v zozname blokov</translation>
     </message>
     <message>
         <source>RPC SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
@@ -2784,10 +2820,6 @@ The network does not appear to fully agree! Some miners appear to be experiencin
         <translation>Neplatná suma pre -paytxfee=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
-        <source>Invalid amount</source>
-        <translation>Neplatná suma</translation>
-    </message>
-    <message>
         <source>Insufficient funds</source>
         <translation>Nedostatok prostriedkov</translation>
     </message>
@@ -2818,10 +2850,6 @@ The network does not appear to fully agree! Some miners appear to be experiencin
     <message>
         <source>Done loading</source>
         <translation>Dokončené načítavanie</translation>
-    </message>
-    <message>
-        <source>To use the %s option</source>
-        <translation>Použiť %s možnosť.</translation>
     </message>
     <message>
         <source>Error</source>
