@@ -399,6 +399,7 @@ void CMasternodePayments::CleanPaymentList()
 
 bool CMasternodePayments::ProcessBlock(int nBlockHeight)
 {
+    if(nBlockHeight < nLastBlockHeight) return false;;
     if(!enabled) return false;
     CMasternodePaymentWinner newWinner;
     int nMinimumAge = mnodeman.CountEnabled();
@@ -465,6 +466,7 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
         if(AddWinningMasternode(newWinner))
         {
             Relay(newWinner);
+            nLastBlockHeight = nBlockHeight;
             return true;
         }
     }
