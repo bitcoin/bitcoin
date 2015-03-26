@@ -17,7 +17,6 @@
 #include "primitives/block.h"
 #include "primitives/transaction.h"
 #include "net.h"
-#include "pow.h"
 #include "script/script.h"
 #include "script/sigcache.h"
 #include "script/standard.h"
