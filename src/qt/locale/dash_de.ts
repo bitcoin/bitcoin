@@ -2183,8 +2183,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../guiutil.cpp" line="101"/>
         <source>Enter a Dash address (e.g. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</source>
-        <translation>Dash-Adresse eingeben.
-(z.B. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
+        <translation>Dash-Adresse eingeben (z.B. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
     </message>
 </context>
 <context>
