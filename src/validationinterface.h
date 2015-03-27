@@ -9,11 +9,12 @@
 #include <boost/signals2/signal.hpp>
 
 class CBlock;
-struct CBlockLocator;
 class CTransaction;
 class CValidationInterface;
 class CValidationState;
 class uint256;
+
+struct CBlockLocator;
 
 // These functions dispatch to one or all registered wallets
 

@@ -7,11 +7,6 @@
 #include "config/bitcoin-config.h"
 #endif
 
-#if (defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__DragonFly__))
-#include <pthread.h>
-#include <pthread_np.h>
-#endif
-
 #include "util.h"
 
 #include "chainparamsbase.h"
@@ -22,6 +17,11 @@
 #include "utiltime.h"
 
 #include <stdarg.h>
+
+#if (defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__DragonFly__))
+#include <pthread.h>
+#include <pthread_np.h>
+#endif
 
 #ifndef WIN32
 // for posix_fallocate
