@@ -275,8 +275,8 @@ Aquest producte inclou programari desenvolupat pel projecte OpenSSL per a l&apos
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="113"/>
-        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR DASHS&lt;/b&gt;!</source>
-        <translation>Advertència: Si xifra seva cartera i perd la seva contrasenya, vostè &lt;b&gt; PERDRÀ TOTS ELS SEUS DASHS &lt;/ b&gt;</translation>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR DASH&lt;/b&gt;!</source>
+        <translation>Advertència: Si xifra seva cartera i perd la seva contrasenya, vostè &lt;b&gt; PERDRÀ TOTS ELS SEUS DASH &lt;/ b&gt;</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="113"/>

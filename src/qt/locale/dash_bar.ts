@@ -283,7 +283,7 @@ Gib Obachd, das &lt;b&gt;zmindeschd 10 zuafällige Buachstob&lt;/b&gt; verwendes
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="113"/>
-        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR DASHS&lt;/b&gt;!</source>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR DASH&lt;/b&gt;!</source>
         <translation>Wend dain Goidbaidl mim Schprücherl zumachsd, und du weischn dann nimma SAN OLLE DAINE DARKCONS FUTSCH !</translation>
     </message>
     <message>
