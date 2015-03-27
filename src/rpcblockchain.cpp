@@ -642,6 +642,7 @@ Value invalidateblock(const Array& params, bool fHelp)
             + HelpExampleCli("invalidateblock", "\"blockhash\"")
             + HelpExampleRpc("invalidateblock", "\"blockhash\"")
         );
+    const CPolicy& policy = Policy();
 
     std::string strHash = params[0].get_str();
     uint256 hash(uint256S(strHash));
@@ -653,11 +654,11 @@ Value invalidateblock(const Array& params, bool fHelp)
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
 
         CBlockIndex* pblockindex = mapBlockIndex[hash];
-        InvalidateBlock(state, pblockindex);
+        InvalidateBlock(policy, state, pblockindex);
     }
 
     if (state.IsValid()) {
-        ActivateBestChain(state);
+        ActivateBestChain(policy, state);
     }
 
     if (!state.IsValid()) {
@@ -685,6 +686,7 @@ Value reconsiderblock(const Array& params, bool fHelp)
     std::string strHash = params[0].get_str();
     uint256 hash(uint256S(strHash));
     CValidationState state;
+    const CPolicy& policy = Policy();
 
     {
         LOCK(cs_main);
@@ -696,7 +698,7 @@ Value reconsiderblock(const Array& params, bool fHelp)
     }
 
     if (state.IsValid()) {
-        ActivateBestChain(state);
+        ActivateBestChain(policy, state);
     }
 
     if (!state.IsValid()) {

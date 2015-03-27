@@ -148,6 +148,7 @@ Value setgenerate(const Array& params, bool fHelp)
         throw JSONRPCError(RPC_METHOD_NOT_FOUND, "Method not found (disabled)");
 
     const Consensus::Params& consensusParams = Params().GetConsensus();
+    const CPolicy& policy = Policy();
     bool fGenerate = true;
     if (params.size() > 0)
         fGenerate = params[0].get_bool();
@@ -179,7 +180,7 @@ Value setgenerate(const Array& params, bool fHelp)
         Array blockHashes;
         while (nHeight < nHeightEnd)
         {
-            auto_ptr<CBlockTemplate> pblocktemplate(CreateNewBlockWithKey(reservekey));
+            auto_ptr<CBlockTemplate> pblocktemplate(CreateNewBlockWithKey(Policy(), reservekey));
             if (!pblocktemplate.get())
                 throw JSONRPCError(RPC_INTERNAL_ERROR, "Wallet keypool empty");
             CBlock *pblock = &pblocktemplate->block;
@@ -193,7 +194,7 @@ Value setgenerate(const Array& params, bool fHelp)
                 ++pblock->nNonce;
             }
             CValidationState state;
-            if (!ProcessNewBlock(state, consensusParams, NULL, pblock))
+            if (!ProcessNewBlock(policy, state, consensusParams, NULL, pblock))
                 throw JSONRPCError(RPC_INTERNAL_ERROR, "ProcessNewBlock, block not accepted");
             ++nHeight;
             blockHashes.push_back(pblock->GetHash().GetHex());
@@ -372,6 +373,7 @@ Value getblocktemplate(const Array& params, bool fHelp)
 
     LOCK(cs_main);
     const Consensus::Params& consensusParams = Params().GetConsensus();
+    const CPolicy& policy = Policy();
 
     std::string strMode = "template";
     Value lpval = Value::null;
@@ -499,7 +501,7 @@ Value getblocktemplate(const Array& params, bool fHelp)
             pblocktemplate = NULL;
         }
         CScript scriptDummy = CScript() << OP_TRUE;
-        pblocktemplate = CreateNewBlock(consensusParams, scriptDummy);
+        pblocktemplate = CreateNewBlock(policy, consensusParams, scriptDummy);
         if (!pblocktemplate)
             throw JSONRPCError(RPC_OUT_OF_MEMORY, "Out of memory");
 
@@ -619,6 +621,7 @@ Value submitblock(const Array& params, bool fHelp)
             + HelpExampleRpc("submitblock", "\"mydata\"")
         );
     const Consensus::Params& consensusParams = Params().GetConsensus();
+    const CPolicy& policy = Policy();
 
     CBlock block;
     if (!DecodeHexBlk(block, params[0].get_str()))
@@ -638,7 +641,7 @@ Value submitblock(const Array& params, bool fHelp)
     CValidationState state;
     submitblock_StateCatcher sc(block.GetHash());
     RegisterValidationInterface(&sc);
-    bool fAccepted = ProcessNewBlock(state, consensusParams, NULL, &block);
+    bool fAccepted = ProcessNewBlock(policy, state, consensusParams, NULL, &block);
     UnregisterValidationInterface(&sc);
     if (mi != mapBlockIndex.end())
     {

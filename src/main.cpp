@@ -20,7 +20,6 @@
 #include "init.h"
 #include "merkleblock.h"
 #include "policy/estimator.h"
-#include "policy/policy.h"
 #include "primitives/block.h"
 #include "primitives/transaction.h"
 #include "script/script.h"
@@ -590,7 +589,7 @@ bool IsFinalTx(const CTransaction &tx, int nBlockHeight, int64_t nBlockTime)
     return Consensus::IsFinalTx(tx, nBlockHeight, nBlockTime);
 }
 
-bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransaction &tx, bool fLimitFree,
+bool AcceptToMemoryPool(const CPolicy& policy, CTxMemPool& pool, CValidationState &state, const CTransaction &tx, bool fLimitFree,
                         bool* pfMissingInputs, bool fRejectAbsurdFee)
 {
     AssertLockHeld(cs_main);
@@ -606,7 +605,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
         return error("%s: Consensus::CheckTx(): ", __func__, state.GetRejectReason().c_str());
 
     // Rather not work on nonstandard transactions (unless -testnet/-regtest)
-    if (!Policy().ApproveTx(tx, state))
+    if (!policy.ApproveTx(tx, state))
         return error("%s: CPolicy::ApproveTx: %s", __func__, state.GetRejectReason().c_str());
 
     int nHeight = chainActive.Height();
@@ -692,7 +691,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
             return error("%s: Consensus::CheckTxInputs failed %s %s", __func__, state.GetRejectReason(), hash.ToString());
 
         // Check for non-standard pay-to-script-hash in inputs
-        if (!Policy().ApproveTxInputs(tx, view))
+        if (!policy.ApproveTxInputs(tx, view))
             return error("%s: CPolicy::ApproveTxInputs failed %s", __func__, hash.ToString());
 
         // Check that the transaction doesn't have an excessive number of
@@ -711,12 +710,12 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
         CAmount nFees = nValueIn-nValueOut;
         double dPriority = view.GetPriority(tx, nHeight);
         CTxMemPoolEntry entry(tx, nFees, GetTime(), dPriority, nHeight);
-        if (!Policy().ValidateTxFee(nFees, entry.GetTxSize(), tx, nHeight, fRejectAbsurdFee, fLimitFree, view, mempool, state))
+        if (!policy.ValidateTxFee(nFees, entry.GetTxSize(), tx, nHeight, fRejectAbsurdFee, fLimitFree, view, mempool, state))
             return error("%s: CPolicy::ValidateFee failed %s %s", __func__, state.GetRejectReason(), hash.ToString());
 
         // Check against previous transactions
         // This is done last to help prevent CPU exhaustion denial-of-service attacks.
-        if (!Policy().ApproveTxInputsScripts(tx, state, view, true))
+        if (!policy.ApproveTxInputsScripts(tx, state, view, true))
             return error("%s: CPolicy::ApproveTxInputsScripts failed: %s", __func__, state.GetRejectReason(), hash.ToString());
 
         // Store transaction in memory
@@ -1520,7 +1519,7 @@ void static UpdateTip(CBlockIndex *pindexNew) {
 }
 
 /** Disconnect chainActive's tip. */
-bool static DisconnectTip(CValidationState &state) {
+bool static DisconnectTip(const CPolicy& policy, CValidationState &state) {
     CBlockIndex *pindexDelete = chainActive.Tip();
     assert(pindexDelete);
     mempool.check(pcoinsTip);
@@ -1545,7 +1544,7 @@ bool static DisconnectTip(CValidationState &state) {
         // ignore validation errors in resurrected transactions
         list<CTransaction> removed;
         CValidationState stateDummy;
-        if (tx.IsCoinBase() || !AcceptToMemoryPool(mempool, stateDummy, tx, false, NULL))
+        if (tx.IsCoinBase() || !AcceptToMemoryPool(policy, mempool, stateDummy, tx, false, NULL))
             mempool.remove(tx, removed, true);
     }
     mempool.removeCoinbaseSpends(pcoinsTip, pindexDelete->nHeight);
@@ -1692,7 +1691,7 @@ static void PruneBlockIndexCandidates() {
  * Try to make some progress towards making pindexMostWork the active block.
  * pblock is either NULL or a pointer to a CBlock corresponding to pindexMostWork.
  */
-static bool ActivateBestChainStep(CValidationState &state, CBlockIndex *pindexMostWork, CBlock *pblock) {
+static bool ActivateBestChainStep(const CPolicy& policy, CValidationState &state, CBlockIndex *pindexMostWork, CBlock *pblock) {
     AssertLockHeld(cs_main);
     bool fInvalidFound = false;
     const CBlockIndex *pindexOldTip = chainActive.Tip();
@@ -1700,7 +1699,7 @@ static bool ActivateBestChainStep(CValidationState &state, CBlockIndex *pindexMo
 
     // Disconnect active blocks which are no longer in the best chain.
     while (chainActive.Tip() && chainActive.Tip() != pindexFork) {
-        if (!DisconnectTip(state))
+        if (!DisconnectTip(policy, state))
             return false;
     }
 
@@ -1761,7 +1760,7 @@ static bool ActivateBestChainStep(CValidationState &state, CBlockIndex *pindexMo
  * or an activated best chain. pblock is either NULL or a pointer to a block
  * that is already loaded (to avoid loading it again from disk).
  */
-bool ActivateBestChain(CValidationState &state, CBlock *pblock) {
+bool ActivateBestChain(const CPolicy& policy, CValidationState &state, CBlock *pblock) {
     CBlockIndex *pindexNewTip = NULL;
     CBlockIndex *pindexMostWork = NULL;
     do {
@@ -1776,7 +1775,7 @@ bool ActivateBestChain(CValidationState &state, CBlock *pblock) {
             if (pindexMostWork == NULL || pindexMostWork == chainActive.Tip())
                 return true;
 
-            if (!ActivateBestChainStep(state, pindexMostWork, pblock && pblock->GetHash() == pindexMostWork->GetBlockHash() ? pblock : NULL))
+            if (!ActivateBestChainStep(policy, state, pindexMostWork, pblock && pblock->GetHash() == pindexMostWork->GetBlockHash() ? pblock : NULL))
                 return false;
 
             pindexNewTip = chainActive.Tip();
@@ -1809,7 +1808,7 @@ bool ActivateBestChain(CValidationState &state, CBlock *pblock) {
     return true;
 }
 
-bool InvalidateBlock(CValidationState& state, CBlockIndex *pindex) {
+bool InvalidateBlock(const CPolicy& policy, CValidationState& state, CBlockIndex *pindex) {
     AssertLockHeld(cs_main);
 
     // Mark the block itself as invalid.
@@ -1824,7 +1823,7 @@ bool InvalidateBlock(CValidationState& state, CBlockIndex *pindex) {
         setBlockIndexCandidates.erase(pindexWalk);
         // ActivateBestChain considers blocks already in chainActive
         // unconditionally valid already, so force disconnect away from it.
-        if (!DisconnectTip(state)) {
+        if (!DisconnectTip(policy, state)) {
             return false;
         }
     }
@@ -2145,7 +2144,7 @@ bool AcceptBlock(CBlock& block, CValidationState& state, const Consensus::Params
     return true;
 }
 
-bool ProcessNewBlock(CValidationState &state, const Consensus::Params& params, CNode* pfrom, CBlock* pblock, CDiskBlockPos *dbp)
+bool ProcessNewBlock(const CPolicy& policy, CValidationState &state, const Consensus::Params& params, CNode* pfrom, CBlock* pblock, CDiskBlockPos *dbp)
 {
     // Preliminary checks
     bool checked = Consensus::CheckBlock(*pblock, GetAdjustedTime(), state, params);
@@ -2167,7 +2166,7 @@ bool ProcessNewBlock(CValidationState &state, const Consensus::Params& params, C
             return error("%s: AcceptBlock FAILED", __func__);
     }
 
-    if (!ActivateBestChain(state, pblock))
+    if (!ActivateBestChain(policy, state, pblock))
         return error("%s: ActivateBestChain failed", __func__);
 
     return true;
@@ -2496,7 +2495,7 @@ bool LoadBlockIndex()
 }
 
 
-bool InitBlockIndex() {
+bool InitBlockIndex(const CPolicy& policy) {
     LOCK(cs_main);
     // Check whether we're already initialized
     if (chainActive.Genesis() != NULL)
@@ -2522,7 +2521,7 @@ bool InitBlockIndex() {
             CBlockIndex *pindex = AddToBlockIndex(block);
             if (!ReceivedBlockTransactions(block, state, pindex, blockPos))
                 return error("LoadBlockIndex(): genesis block not accepted");
-            if (!ActivateBestChain(state, &block))
+            if (!ActivateBestChain(policy, state, &block))
                 return error("LoadBlockIndex(): genesis block cannot be activated");
             // Force a chainstate write so that when we VerifyDB in a moment, it doesn't check stale data
             return FlushStateToDisk(state, FLUSH_STATE_ALWAYS);
@@ -2536,7 +2535,7 @@ bool InitBlockIndex() {
 
 
 
-bool LoadExternalBlockFile(FILE* fileIn, CDiskBlockPos *dbp)
+bool LoadExternalBlockFile(const CPolicy& policy, FILE* fileIn, CDiskBlockPos *dbp)
 {
     const Consensus::Params& params = Params().GetConsensus();
     // Map of disk positions for blocks with unknown parent (only used for reindex)
@@ -2595,7 +2594,7 @@ bool LoadExternalBlockFile(FILE* fileIn, CDiskBlockPos *dbp)
                 // process in case the block isn't known yet
                 if (mapBlockIndex.count(hash) == 0 || (mapBlockIndex[hash]->nStatus & BLOCK_HAVE_DATA) == 0) {
                     CValidationState state;
-                    if (ProcessNewBlock(state, params, NULL, &block, dbp))
+                    if (ProcessNewBlock(policy, state, params, NULL, &block, dbp))
                         nLoaded++;
                     if (state.IsError())
                         break;
@@ -2617,7 +2616,7 @@ bool LoadExternalBlockFile(FILE* fileIn, CDiskBlockPos *dbp)
                             LogPrintf("%s: Processing out of order child %s of %s\n", __func__, block.GetHash().ToString(),
                                     head.ToString());
                             CValidationState dummy;
-                            if (ProcessNewBlock(dummy, params, NULL, &block, &it->second))
+                            if (ProcessNewBlock(policy, dummy, params, NULL, &block, &it->second))
                             {
                                 nLoaded++;
                                 queue.push_back(block.GetHash());
@@ -2988,7 +2987,7 @@ void static ProcessGetData(CNode* pfrom)
     }
 }
 
-bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, int64_t nTimeReceived, const Consensus::Params& params)
+bool static ProcessMessage(const CPolicy& policy, CNode* pfrom, string strCommand, CDataStream& vRecv, int64_t nTimeReceived, const Consensus::Params& params)
 {
     RandAddSeedPerfmon();
     LogPrint("net", "received: %s (%u bytes) peer=%d\n", SanitizeString(strCommand), vRecv.size(), pfrom->id);
@@ -3387,7 +3386,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 
         mapAlreadyAskedFor.erase(inv);
 
-        if (AcceptToMemoryPool(mempool, state, tx, true, &fMissingInputs))
+        if (AcceptToMemoryPool(policy, mempool, state, tx, true, &fMissingInputs))
         {
             mempool.check(pcoinsTip);
             RelayTransaction(tx);
@@ -3423,7 +3422,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 
                     if (setMisbehaving.count(fromPeer))
                         continue;
-                    if (AcceptToMemoryPool(mempool, stateDummy, orphanTx, true, &fMissingInputs2))
+                    if (AcceptToMemoryPool(policy, mempool, stateDummy, orphanTx, true, &fMissingInputs2))
                     {
                         LogPrint("mempool", "   accepted orphan tx %s\n", orphanHash.ToString());
                         RelayTransaction(orphanTx);
@@ -3543,7 +3542,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         pfrom->AddInventoryKnown(inv);
 
         CValidationState state;
-        ProcessNewBlock(state, params, pfrom, &block);
+        ProcessNewBlock(policy, state, params, pfrom, &block);
         int nDoS;
         if (state.IsInvalid(nDoS)) {
             pfrom->PushMessage("reject", strCommand, state.GetRejectCode(),
@@ -3792,6 +3791,8 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 // requires LOCK(cs_vRecvMsg)
 bool ProcessMessages(CNode* pfrom)
 {
+    const CChainParams& params = Params();
+    const CPolicy& policy = Policy();
     //if (fDebug)
     //    LogPrintf("ProcessMessages(%u messages)\n", pfrom->vRecvMsg.size());
 
@@ -3833,7 +3834,7 @@ bool ProcessMessages(CNode* pfrom)
         it++;
 
         // Scan for message start
-        if (memcmp(msg.hdr.pchMessageStart, Params().MessageStart(), MESSAGE_START_SIZE) != 0) {
+        if (memcmp(msg.hdr.pchMessageStart, params.MessageStart(), MESSAGE_START_SIZE) != 0) {
             LogPrintf("PROCESSMESSAGE: INVALID MESSAGESTART %s peer=%d\n", SanitizeString(msg.hdr.GetCommand()), pfrom->id);
             fOk = false;
             break;
@@ -3866,7 +3867,7 @@ bool ProcessMessages(CNode* pfrom)
         bool fRet = false;
         try
         {
-            fRet = ProcessMessage(pfrom, strCommand, vRecv, msg.nTime, Params().GetConsensus());
+            fRet = ProcessMessage(policy, pfrom, strCommand, vRecv, msg.nTime, params.GetConsensus());
             boost::this_thread::interruption_point();
         }
         catch (const std::ios_base::failure& e)

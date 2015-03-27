@@ -16,7 +16,6 @@
 #include "main.h" // cs_main
 #include "net.h"
 #include "policy/feerate.h"
-#include "policy/policy.h"
 #include "primitives/block.h"
 #include "primitives/transaction.h"
 #include "pubkey.h"
@@ -98,7 +97,7 @@ void UpdateTime(CBlockHeader* pblock, const Consensus::Params params, const CBlo
         pblock->nBits = GetNextWorkRequired(pindexPrev, pblock, params);
 }
 
-CBlockTemplate* CreateNewBlock(const Consensus::Params& params, const CScript& scriptPubKeyIn)
+CBlockTemplate* CreateNewBlock(const CPolicy& policy, const Consensus::Params& params, const CScript& scriptPubKeyIn)
 {
     // Create new block
     auto_ptr<CBlockTemplate> pblocktemplate(new CBlockTemplate());
@@ -256,7 +255,7 @@ CBlockTemplate* CreateNewBlock(const Consensus::Params& params, const CScript& s
             double dPriorityDelta = 0;
             CAmount nFeeDelta = 0;
             mempool.ApplyDeltas(hash, dPriorityDelta, nFeeDelta);
-            if (fSortedByFee && (dPriorityDelta <= 0) && (nFeeDelta <= 0) && !Policy().ApproveFeeRate(feeRate) && (nBlockSize + nTxSize >= nBlockMinSize))
+            if (fSortedByFee && (dPriorityDelta <= 0) && (nFeeDelta <= 0) && !policy.ApproveFeeRate(feeRate) && (nBlockSize + nTxSize >= nBlockMinSize))
                 continue;
 
             // Prioritise by fee once past the priority size or we run out of high-priority
@@ -407,7 +406,7 @@ bool static ScanHash(const CBlockHeader *pblock, uint32_t& nNonce, uint256 *phas
     }
 }
 
-CBlockTemplate* CreateNewBlockWithKey(CReserveKey& reservekey)
+CBlockTemplate* CreateNewBlockWithKey(const CPolicy& policy, CReserveKey& reservekey)
 {
     const Consensus::Params& params = Params().GetConsensus();
     CPubKey pubkey;
@@ -415,10 +414,10 @@ CBlockTemplate* CreateNewBlockWithKey(CReserveKey& reservekey)
         return NULL;
 
     CScript scriptPubKey = CScript() << ToByteVector(pubkey) << OP_CHECKSIG;
-    return CreateNewBlock(params, scriptPubKey);
+    return CreateNewBlock(policy, params, scriptPubKey);
 }
 
-static bool ProcessBlockFound(CBlock* pblock, const Consensus::Params& params, CWallet& wallet, CReserveKey& reservekey)
+static bool ProcessBlockFound(const CPolicy& policy, CBlock* pblock, const Consensus::Params& params, CWallet& wallet, CReserveKey& reservekey)
 {
     LogPrintf("%s\n", pblock->ToString());
     LogPrintf("generated %s\n", FormatMoney(pblock->vtx[0].vout[0].nValue));
@@ -441,7 +440,7 @@ static bool ProcessBlockFound(CBlock* pblock, const Consensus::Params& params, C
 
     // Process this block the same as if we had received it from another node
     CValidationState state;
-    if (!ProcessNewBlock(state, params, NULL, pblock))
+    if (!ProcessNewBlock(policy, state, params, NULL, pblock))
         return error("BitcoinMiner: ProcessNewBlock, block not accepted");
 
     return true;
@@ -449,6 +448,8 @@ static bool ProcessBlockFound(CBlock* pblock, const Consensus::Params& params, C
 
 void static BitcoinMiner(CWallet *pwallet)
 {
+    const CPolicy& policy = Policy();
+
     LogPrintf("BitcoinMiner started\n");
     SetThreadPriority(THREAD_PRIORITY_LOWEST);
     RenameThread("bitcoin-miner");
@@ -473,7 +474,7 @@ void static BitcoinMiner(CWallet *pwallet)
             unsigned int nTransactionsUpdatedLast = mempool.GetTransactionsUpdated();
             CBlockIndex* pindexPrev = chainActive.Tip();
 
-            auto_ptr<CBlockTemplate> pblocktemplate(CreateNewBlockWithKey(reservekey));
+            auto_ptr<CBlockTemplate> pblocktemplate(CreateNewBlockWithKey(policy, reservekey));
             if (!pblocktemplate.get())
             {
                 LogPrintf("Error in BitcoinMiner: Keypool ran out, please call keypoolrefill before restarting the mining thread\n");
@@ -505,7 +506,7 @@ void static BitcoinMiner(CWallet *pwallet)
                         SetThreadPriority(THREAD_PRIORITY_NORMAL);
                         LogPrintf("BitcoinMiner:\n");
                         LogPrintf("proof-of-work found  \n  hash: %s  \ntarget: %s\n", hash.GetHex(), hashTarget.GetHex());
-                        ProcessBlockFound(pblock, params, *pwallet, reservekey);
+                        ProcessBlockFound(policy, pblock, params, *pwallet, reservekey);
                         SetThreadPriority(THREAD_PRIORITY_LOWEST);
 
                         // In regression test mode, stop mining after a block is found.
