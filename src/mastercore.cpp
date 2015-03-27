@@ -2754,6 +2754,8 @@ int64_t GetDustLimit(const CScript& scriptPubKey)
 static int64_t selectCoins(const string &FromAddress, CCoinControl &coinControl, int64_t additional)
 {
   CWallet *wallet = pwalletMain;
+  if (NULL == wallet) { return 0; }
+
   int64_t n_max = (COIN * (20 * (0.0001))); // assume 20KBytes max TX size at 0.0001 per kilobyte
   // FUTURE: remove n_max and try 1st smallest input, then 2 smallest inputs etc. -- i.e. move Coin Control selection closer to CreateTransaction
   int64_t n_total = 0;  // total output funds collected
@@ -2761,6 +2763,7 @@ static int64_t selectCoins(const string &FromAddress, CCoinControl &coinControl,
   // if referenceamount is set it is needed to be accounted for here too
   if (0 < additional) n_max += additional;
 
+  int nHeight = GetHeight();
   LOCK2(cs_main, wallet->cs_wallet);
 
     string sAddress = "";
@@ -2780,8 +2783,14 @@ static int64_t selectCoins(const string &FromAddress, CCoinControl &coinControl,
           continue;
 
         for (unsigned int i = 0; i < pcoin->vout.size(); i++) {
-          CTxDestination dest;
+          txnouttype whichType;
+          if (!getOutputType(pcoin->vout[i].scriptPubKey, whichType))
+            continue;
 
+          if (!isAllowedOutputType(whichType, nHeight))
+            continue;
+
+          CTxDestination dest;
           if (!ExtractDestination(pcoin->vout[i].scriptPubKey, dest))
             continue;
 
