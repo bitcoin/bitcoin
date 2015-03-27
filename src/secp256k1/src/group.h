@@ -17,6 +17,9 @@ typedef struct {
     int infinity; /* whether this represents the point at infinity */
 } secp256k1_ge_t;
 
+#define SECP256K1_GE_CONST(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p) {SECP256K1_FE_CONST((a),(b),(c),(d),(e),(f),(g),(h)), SECP256K1_FE_CONST((i),(j),(k),(l),(m),(n),(o),(p)), 0}
+#define SECP256K1_GE_CONST_INFINITY {SECP256K1_FE_CONST(0, 0, 0, 0, 0, 0, 0, 0), SECP256K1_FE_CONST(0, 0, 0, 0, 0, 0, 0, 0), 1}
+
 /** A group element of the secp256k1 curve, in jacobian coordinates. */
 typedef struct {
     secp256k1_fe_t x; /* actual X: x/z^2 */
@@ -25,23 +28,15 @@ typedef struct {
     int infinity; /* whether this represents the point at infinity */
 } secp256k1_gej_t;
 
-/** Global constants related to the group */
+#define SECP256K1_GEJ_CONST(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p) {SECP256K1_FE_CONST((a),(b),(c),(d),(e),(f),(g),(h)), SECP256K1_FE_CONST((i),(j),(k),(l),(m),(n),(o),(p)), SECP256K1_FE_CONST(0, 0, 0, 0, 0, 0, 0, 1), 0}
+#define SECP256K1_GEJ_CONST_INFINITY {SECP256K1_FE_CONST(0, 0, 0, 0, 0, 0, 0, 0), SECP256K1_FE_CONST(0, 0, 0, 0, 0, 0, 0, 0), SECP256K1_FE_CONST(0, 0, 0, 0, 0, 0, 0, 0), 1}
+
 typedef struct {
-    secp256k1_ge_t g; /* the generator point */
+    secp256k1_fe_storage_t x;
+    secp256k1_fe_storage_t y;
+} secp256k1_ge_storage_t;
 
-#ifdef USE_ENDOMORPHISM
-    /* constants related to secp256k1's efficiently computable endomorphism */
-    secp256k1_fe_t beta;
-#endif
-} secp256k1_ge_consts_t;
-
-static const secp256k1_ge_consts_t *secp256k1_ge_consts = NULL;
-
-/** Initialize the group module. */
-static void secp256k1_ge_start(void);
-
-/** De-initialize the group module. */
-static void secp256k1_ge_stop(void);
+#define SECP256K1_GE_STORAGE_CONST(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p) {SECP256K1_FE_STORAGE_CONST((a),(b),(c),(d),(e),(f),(g),(h)), SECP256K1_FE_STORAGE_CONST((i),(j),(k),(l),(m),(n),(o),(p))}
 
 /** Set a group element equal to the point at infinity */
 static void secp256k1_ge_set_infinity(secp256k1_ge_t *r);
@@ -61,14 +56,11 @@ static int secp256k1_ge_is_valid_var(const secp256k1_ge_t *a);
 
 static void secp256k1_ge_neg(secp256k1_ge_t *r, const secp256k1_ge_t *a);
 
-/** Get a hex representation of a point. *rlen will be overwritten with the real length. */
-static void secp256k1_ge_get_hex(char *r, int *rlen, const secp256k1_ge_t *a);
-
 /** Set a group element equal to another which is given in jacobian coordinates */
 static void secp256k1_ge_set_gej(secp256k1_ge_t *r, secp256k1_gej_t *a);
 
 /** Set a batch of group elements equal to the inputs given in jacobian coordinates */
-static void secp256k1_ge_set_all_gej_var(size_t len, secp256k1_ge_t r[len], const secp256k1_gej_t a[len]);
+static void secp256k1_ge_set_all_gej_var(size_t len, secp256k1_ge_t *r, const secp256k1_gej_t *a);
 
 
 /** Set a group element (jacobian) equal to the point at infinity. */
@@ -103,9 +95,6 @@ static void secp256k1_gej_add_ge(secp256k1_gej_t *r, const secp256k1_gej_t *a, c
     guarantee, and b is allowed to be infinity. */
 static void secp256k1_gej_add_ge_var(secp256k1_gej_t *r, const secp256k1_gej_t *a, const secp256k1_ge_t *b);
 
-/** Get a hex representation of a point. *rlen will be overwritten with the real length. */
-static void secp256k1_gej_get_hex(char *r, int *rlen, const secp256k1_gej_t *a);
-
 #ifdef USE_ENDOMORPHISM
 /** Set r to be equal to lambda times a, where lambda is chosen in a way such that this is very fast. */
 static void secp256k1_gej_mul_lambda(secp256k1_gej_t *r, const secp256k1_gej_t *a);
@@ -116,5 +105,14 @@ static void secp256k1_gej_clear(secp256k1_gej_t *r);
 
 /** Clear a secp256k1_ge_t to prevent leaking sensitive information. */
 static void secp256k1_ge_clear(secp256k1_ge_t *r);
+
+/** Convert a group element to the storage type. */
+static void secp256k1_ge_to_storage(secp256k1_ge_storage_t *r, const secp256k1_ge_t*);
+
+/** Convert a group element back from the storage type. */
+static void secp256k1_ge_from_storage(secp256k1_ge_t *r, const secp256k1_ge_storage_t*);
+
+/** If flag is true, set *r equal to *a; otherwise leave it. Constant-time. */
+static void secp256k1_ge_storage_cmov(secp256k1_ge_storage_t *r, const secp256k1_ge_storage_t *a, int flag);
 
 #endif

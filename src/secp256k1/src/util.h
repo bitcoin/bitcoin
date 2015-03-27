@@ -27,7 +27,7 @@
 } while(0)
 #endif
 
-#ifndef HAVE_BUILTIN_EXPECT
+#ifdef HAVE_BUILTIN_EXPECT
 #define EXPECT(x,c) __builtin_expect((x),(c))
 #else
 #define EXPECT(x,c) (x)
@@ -61,7 +61,7 @@
 #define VERIFY_CHECK(cond) do { (void)(cond); } while(0)
 #endif
 
-static inline void *checked_malloc(size_t size) {
+static SECP256K1_INLINE void *checked_malloc(size_t size) {
     void *ret = malloc(size);
     CHECK(ret != NULL);
     return ret;
@@ -82,6 +82,23 @@ static inline void *checked_malloc(size_t size) {
 # else
 #  define SECP256K1_RESTRICT restrict
 # endif
+#endif
+
+#if defined(_WIN32)
+# define I64FORMAT "I64d"
+# define I64uFORMAT "I64u"
+#else
+# define I64FORMAT "lld"
+# define I64uFORMAT "llu"
+#endif
+
+#if defined(HAVE___INT128)
+# if defined(__GNUC__)
+#  define SECP256K1_GNUC_EXT __extension__
+# else
+#  define SECP256K1_GNUC_EXT
+# endif
+SECP256K1_GNUC_EXT typedef unsigned __int128 uint128_t;
 #endif
 
 #endif
