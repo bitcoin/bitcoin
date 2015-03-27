@@ -21,9 +21,10 @@ typedef struct {
 } benchmark_verify_t;
 
 static void benchmark_verify(void* arg) {
+    int i;
     benchmark_verify_t* data = (benchmark_verify_t*)arg;
 
-    for (int i=0; i<20000; i++) {
+    for (i = 0; i < 20000; i++) {
         data->sig[data->siglen - 1] ^= (i & 0xFF);
         data->sig[data->siglen - 2] ^= ((i >> 8) & 0xFF);
         data->sig[data->siglen - 3] ^= ((i >> 16) & 0xFF);
@@ -35,18 +36,19 @@ static void benchmark_verify(void* arg) {
 }
 
 int main(void) {
-    secp256k1_start(SECP256K1_START_VERIFY | SECP256K1_START_SIGN);
-
+    int i;
     benchmark_verify_t data;
 
-    for (int i = 0; i < 32; i++) data.msg[i] = 1 + i;
-    for (int i = 0; i < 32; i++) data.key[i] = 33 + i;
+    secp256k1_start(SECP256K1_START_VERIFY | SECP256K1_START_SIGN);
+
+    for (i = 0; i < 32; i++) data.msg[i] = 1 + i;
+    for (i = 0; i < 32; i++) data.key[i] = 33 + i;
     data.siglen = 72;
     secp256k1_ecdsa_sign(data.msg, data.sig, &data.siglen, data.key, NULL, NULL);
     data.pubkeylen = 33;
     CHECK(secp256k1_ec_pubkey_create(data.pubkey, &data.pubkeylen, data.key, 1));
 
-    run_benchmark(benchmark_verify, NULL, NULL, &data, 10, 20000);
+    run_benchmark("ecdsa_verify", benchmark_verify, NULL, NULL, &data, 10, 20000);
 
     secp256k1_stop();
     return 0;

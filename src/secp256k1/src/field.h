@@ -30,21 +30,6 @@
 #error "Please select field implementation"
 #endif
 
-typedef struct {
-#ifndef USE_NUM_NONE
-    secp256k1_num_t p;
-#endif
-    secp256k1_fe_t order;
-} secp256k1_fe_consts_t;
-
-static const secp256k1_fe_consts_t *secp256k1_fe_consts = NULL;
-
-/** Initialize field element precomputation data. */
-static void secp256k1_fe_start(void);
-
-/** Unload field element precomputation data. */
-static void secp256k1_fe_stop(void);
-
 /** Normalize a field element. */
 static void secp256k1_fe_normalize(secp256k1_fe_t *r);
 
@@ -117,15 +102,15 @@ static void secp256k1_fe_inv_var(secp256k1_fe_t *r, const secp256k1_fe_t *a);
 /** Calculate the (modular) inverses of a batch of field elements. Requires the inputs' magnitudes to be
  *  at most 8. The output magnitudes are 1 (but not guaranteed to be normalized). The inputs and
  *  outputs must not overlap in memory. */
-static void secp256k1_fe_inv_all_var(size_t len, secp256k1_fe_t r[len], const secp256k1_fe_t a[len]);
+static void secp256k1_fe_inv_all_var(size_t len, secp256k1_fe_t *r, const secp256k1_fe_t *a);
 
-/** Convert a field element to a hexadecimal string. */
-static void secp256k1_fe_get_hex(char *r, int *rlen, const secp256k1_fe_t *a);
+/** Convert a field element to the storage type. */
+static void secp256k1_fe_to_storage(secp256k1_fe_storage_t *r, const secp256k1_fe_t*);
 
-/** Convert a hexadecimal string to a field element. */
-static int secp256k1_fe_set_hex(secp256k1_fe_t *r, const char *a, int alen);
+/** Convert a field element back from the storage type. */
+static void secp256k1_fe_from_storage(secp256k1_fe_t *r, const secp256k1_fe_storage_t*);
 
 /** If flag is true, set *r equal to *a; otherwise leave it. Constant-time. */
-static void secp256k1_fe_cmov(secp256k1_fe_t *r, const secp256k1_fe_t *a, int flag);
+static void secp256k1_fe_storage_cmov(secp256k1_fe_storage_t *r, const secp256k1_fe_storage_t *a, int flag);
 
 #endif
