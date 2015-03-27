@@ -236,8 +236,9 @@ static int secp256k1_fe_normalizes_to_zero_var(secp256k1_fe_t *r) {
     z1 = z0 ^ 0x3D0UL;
 
     /* Fast return path should catch the majority of cases */
-    if ((z0 != 0UL) & (z1 != 0x3FFFFFFUL))
+    if ((z0 != 0UL) & (z1 != 0x3FFFFFFUL)) {
         return 0;
+    }
 
     t1 = r->n[1];
     t2 = r->n[2];
@@ -315,8 +316,12 @@ static int secp256k1_fe_cmp_var(const secp256k1_fe_t *a, const secp256k1_fe_t *b
     secp256k1_fe_verify(b);
 #endif
     for (i = 9; i >= 0; i--) {
-        if (a->n[i] > b->n[i]) return 1;
-        if (a->n[i] < b->n[i]) return -1;
+        if (a->n[i] > b->n[i]) {
+            return 1;
+        }
+        if (a->n[i] < b->n[i]) {
+            return -1;
+        }
     }
     return 0;
 }
