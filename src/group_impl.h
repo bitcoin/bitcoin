@@ -138,11 +138,13 @@ static int secp256k1_ge_set_xo_var(secp256k1_ge_t *r, const secp256k1_fe_t *x, i
     r->infinity = 0;
     secp256k1_fe_set_int(&c, 7);
     secp256k1_fe_add(&c, &x3);
-    if (!secp256k1_fe_sqrt_var(&r->y, &c))
+    if (!secp256k1_fe_sqrt_var(&r->y, &c)) {
         return 0;
+    }
     secp256k1_fe_normalize_var(&r->y);
-    if (secp256k1_fe_is_odd(&r->y) != odd)
+    if (secp256k1_fe_is_odd(&r->y) != odd) {
         secp256k1_fe_negate(&r->y, &r->y, 1);
+    }
     return 1;
 }
 
@@ -176,8 +178,9 @@ static int secp256k1_gej_is_infinity(const secp256k1_gej_t *a) {
 
 static int secp256k1_gej_is_valid_var(const secp256k1_gej_t *a) {
     secp256k1_fe_t y2, x3, z2, z6;
-    if (a->infinity)
+    if (a->infinity) {
         return 0;
+    }
     /** y^2 = x^3 + 7
      *  (Y/Z^3)^2 = (X/Z^2)^3 + 7
      *  Y^2 / Z^6 = X^3 / Z^6 + 7
@@ -195,8 +198,9 @@ static int secp256k1_gej_is_valid_var(const secp256k1_gej_t *a) {
 
 static int secp256k1_ge_is_valid_var(const secp256k1_ge_t *a) {
     secp256k1_fe_t y2, x3, c;
-    if (a->infinity)
+    if (a->infinity) {
         return 0;
+    }
     /* y^2 = x^3 + 7 */
     secp256k1_fe_sqr(&y2, &a->y);
     secp256k1_fe_sqr(&x3, &a->x); secp256k1_fe_mul(&x3, &x3, &a->x);

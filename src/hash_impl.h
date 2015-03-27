@@ -176,13 +176,15 @@ static void secp256k1_hmac_sha256_initialize(secp256k1_hmac_sha256_t *hash, cons
     }
 
     secp256k1_sha256_initialize(&hash->outer);
-    for (n = 0; n < 64; n++)
+    for (n = 0; n < 64; n++) {
         rkey[n] ^= 0x5c;
+    }
     secp256k1_sha256_write(&hash->outer, rkey, 64);
 
     secp256k1_sha256_initialize(&hash->inner);
-    for (n = 0; n < 64; n++)
+    for (n = 0; n < 64; n++) {
         rkey[n] ^= 0x5c ^ 0x36;
+    }
     secp256k1_sha256_write(&hash->inner, rkey, 64);
     memset(rkey, 0, 64);
 }
