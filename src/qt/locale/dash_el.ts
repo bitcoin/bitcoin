@@ -275,8 +275,8 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="113"/>
-        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR DASHS&lt;/b&gt;!</source>
-        <translation>ΠΡΟΣΟΧΗ: Εάν κρυπτογραφήσετε το πορτοφόλι σας και χάσετε τον κωδικό, θα χάσετε &lt;b&gt;ΟΛΑ ΤΑ DASHS ΣΑΣ&lt;b&gt;!</translation>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR DASH&lt;/b&gt;!</source>
+        <translation>ΠΡΟΣΟΧΗ: Εάν κρυπτογραφήσετε το πορτοφόλι σας και χάσετε τον κωδικό, θα χάσετε &lt;b&gt;ΟΛΑ ΤΑ DASH ΣΑΣ&lt;b&gt;!</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="113"/>
