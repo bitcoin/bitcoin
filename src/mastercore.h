@@ -32,8 +32,6 @@ using json_spirit::Array;
 using std::string;
 
 
-#define DISABLE_METADEX
-
 #define LOG_FILENAME    "mastercore.log"
 #define INFO_FILENAME   "mastercore_crowdsales.log"
 #define OWNERS_FILENAME "mastercore_owners.log"
