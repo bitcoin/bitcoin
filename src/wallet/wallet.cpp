@@ -15,7 +15,6 @@
 #include "main.h" // cs_main
 #include "net.h"
 #include "policy/estimator.h"
-#include "policy/policy.h"
 #include "primitives/block.h"
 #include "script/script.h"
 #include "script/sign.h"
@@ -1118,7 +1117,7 @@ void CWallet::ReacceptWalletTransactions()
         {
             // Try to add to memory pool
             LOCK(mempool.cs);
-            wtx.AcceptToMemoryPool(false);
+            wtx.AcceptToMemoryPool(policy, false);
         }
     }
 }
@@ -1772,7 +1771,7 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend,
                         }
                     }
 
-                    if (Policy().ApproveOutput(txout))
+                    if (policy.ApproveOutput(txout))
                     {
                         if (recipient.fSubtractFeeFromAmount && nFeeRet > 0)
                         {
@@ -1848,16 +1847,16 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend,
                     // We do not move dust-change to fees, because the sender would end up paying more than requested.
                     // This would be against the purpose of the all-inclusive feature.
                     // So instead we raise the change and deduct from the recipient.
-                    if (nSubtractFeeFromAmount > 0 && Policy().ApproveOutput(newTxOut))
+                    if (nSubtractFeeFromAmount > 0 && policy.ApproveOutput(newTxOut))
                     {
-                        CAmount nDust = Policy().GetDustThreshold(newTxOut) - newTxOut.nValue;
+                        CAmount nDust = policy.GetDustThreshold(newTxOut) - newTxOut.nValue;
                         newTxOut.nValue += nDust; // raise change until no more dust
                         for (unsigned int i = 0; i < vecSend.size(); i++) // subtract from first recipient
                         {
                             if (vecSend[i].fSubtractFeeFromAmount)
                             {
                                 txNew.vout[i].nValue -= nDust;
-                                if (Policy().ApproveOutput(txNew.vout[i]))
+                                if (policy.ApproveOutput(txNew.vout[i]))
                                 {
                                     strFailReason = _("The transaction amount is too small to send after the fee has been deducted");
                                     return false;
@@ -1869,7 +1868,7 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend,
 
                     // Never create dust outputs; if we would, just
                     // add the dust to the fee.
-                    if (Policy().ApproveOutput(newTxOut))
+                    if (policy.ApproveOutput(newTxOut))
                     {
                         nFeeRet += nChange;
                         reservekey.ReturnKey();
@@ -1928,7 +1927,7 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend,
                         break;
                 }
 
-                CAmount nFeeNeeded = GetMinimumFee(nBytes, nTxConfirmTarget);
+                CAmount nFeeNeeded = GetMinimumFee(policy, nBytes, nTxConfirmTarget);
 
                 // If we made it here and we aren't even able to meet the relay fee on the next pass, give up
                 // because we must be at the maximum allowed fee.
@@ -1989,7 +1988,7 @@ bool CWallet::CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey)
         mapRequestCount[wtxNew.GetHash()] = 0;
 
         // Broadcast
-        if (!wtxNew.AcceptToMemoryPool(false))
+        if (!wtxNew.AcceptToMemoryPool(policy, false))
         {
             // This must not fail. The transaction has already been signed and recorded.
             LogPrintf("CommitTransaction(): Error: Transaction not valid");
@@ -2000,7 +1999,7 @@ bool CWallet::CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey)
     return true;
 }
 
-CAmount CWallet::GetMinimumFee(unsigned int nTxBytes, unsigned int nConfirmTarget)
+CAmount CWallet::GetMinimumFee(const CPolicy& policy, unsigned int nTxBytes, unsigned int nConfirmTarget)
 {
     // payTxFee is user-set "I want to pay this much"
     CAmount nFeeNeeded = payTxFee.GetFee(nTxBytes);
@@ -2741,7 +2740,7 @@ int CMerkleTx::GetBlocksToMaturity() const
 }
 
 
-bool CMerkleTx::AcceptToMemoryPool(bool fLimitFree, bool fRejectAbsurdFee)
+bool CMerkleTx::AcceptToMemoryPool(const CPolicy& policy, bool fLimitFree, bool fRejectAbsurdFee)
 {
     CValidationState state;
     return ::AcceptToMemoryPool(mempool, state, *this, fLimitFree, NULL, fRejectAbsurdFee);

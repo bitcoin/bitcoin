@@ -8,6 +8,7 @@
 
 #include "amount.h"
 #include "policy/feerate.h"
+#include "policy/policy.h"
 #include "primitives/transaction.h"
 #include "tinyformat.h"
 #include "ui_interface.h"
@@ -196,7 +197,7 @@ public:
     int GetDepthInMainChain() const { const CBlockIndex *pindexRet; return GetDepthInMainChain(pindexRet); }
     bool IsInMainChain() const { const CBlockIndex *pindexRet; return GetDepthInMainChainINTERNAL(pindexRet) > 0; }
     int GetBlocksToMaturity() const;
-    bool AcceptToMemoryPool(bool fLimitFree=true, bool fRejectAbsurdFee=true);
+    bool AcceptToMemoryPool(const CPolicy& policy, bool fLimitFree=true, bool fRejectAbsurdFee=true);
 };
 
 /** 
@@ -454,6 +455,8 @@ private:
     int64_t nNextResend;
     int64_t nLastResend;
 
+    const CPolicy& policy;
+
     /**
      * Used to keep track of spent outpoints, and
      * detect and report conflicts (double-spends or
@@ -486,12 +489,12 @@ public:
     MasterKeyMap mapMasterKeys;
     unsigned int nMasterKeyMaxID;
 
-    CWallet()
+    CWallet(const CPolicy& policyIn) : policy(policyIn)
     {
         SetNull();
     }
 
-    CWallet(std::string strWalletFileIn)
+    CWallet(const CPolicy& policyIn, std::string strWalletFileIn) : policy(policyIn)
     {
         SetNull();
 
@@ -625,7 +628,7 @@ public:
     bool CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey);
 
     static CFeeRate minTxFee;
-    static CAmount GetMinimumFee(unsigned int nTxBytes, unsigned int nConfirmTarget);
+    static CAmount GetMinimumFee(const CPolicy& policy, unsigned int nTxBytes, unsigned int nConfirmTarget);
 
     bool NewKeyPool();
     bool TopUpKeyPool(unsigned int kpSize = 0);

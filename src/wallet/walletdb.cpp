@@ -939,7 +939,7 @@ bool CWalletDB::Recover(CDBEnv& dbenv, const std::string& filename, bool fOnlyKe
         LogPrintf("Cannot create database file %s\n", filename);
         return false;
     }
-    CWallet dummyWallet;
+    CWallet dummyWallet(Policy());
     CWalletScanState wss;
 
     DbTxn* ptxn = dbenv.TxnBegin();
