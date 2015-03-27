@@ -4,19 +4,19 @@
     <message>
         <location filename="../forms/aboutdialog.ui" line="14"/>
         <source>About Dash Core</source>
-        <translation>关于达世币内核</translation>
+        <translation>關於暗黑幣核心</translation>
     </message>
     <message>
         <location filename="../forms/aboutdialog.ui" line="53"/>
         <source>&lt;b&gt;Dash Core&lt;/b&gt; version</source>
-        <translation>&lt;b&gt;达世币内核&lt;/b&gt; 版本</translation>
+        <translation>&lt;b&gt;暗黑幣核心&lt;/b&gt; 版本</translation>
     </message>
     <message>
         <location filename="../forms/aboutdialog.ui" line="94"/>
         <source>Copyright &amp;copy; 2009-2014 The Bitcoin Core developers.
 Copyright &amp;copy; 2014-YYYY The Dash Core developers.</source>
         <translation>版權 &amp;copy 為位元幣核心開發人員自西元 2009-2014年所有
-版權 &amp;copy 达世币核心开发团队 2014-YYYY年所有</translation>
+版權 &amp;copy 為暗黑幣核心開發人員自西元 2014-YYYY年所有</translation>
     </message>
     <message>
         <location filename="../forms/aboutdialog.ui" line="111"/>
@@ -49,7 +49,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../utilitydialog.cpp" line="31"/>
         <source>The Dash Core developers</source>
-        <translation>达世币核心开发团队</translation>
+        <translation>暗黑幣核心開發人員</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="43"/>
@@ -278,7 +278,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="113"/>
-        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR DASHS&lt;/b&gt;!</source>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR DARKCOINS&lt;/b&gt;!</source>
         <translation>警告:如果把錢包加密後又忘記密碼，你就會從此&lt;b&gt;失去所有的暗黑幣了&lt;/b&gt;!</translation>
     </message>
     <message>
@@ -880,7 +880,7 @@ Address: %4
     <message>
         <location filename="../forms/coincontroldialog.ui" line="461"/>
         <source>Darksend Rounds</source>
-        <translation>暗黑發送循環</translation>
+        <translation>匿名發送循環</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="466"/>
@@ -1114,7 +1114,7 @@ Address: %4
     <message>
         <location filename="../forms/darksendconfig.ui" line="14"/>
         <source>Configure Darksend</source>
-        <translation>設定暗黑發送</translation>
+        <translation>設定匿名發送</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="26"/>
@@ -1176,22 +1176,22 @@ Address: %4
         <location filename="../darksendconfig.cpp" line="58"/>
         <location filename="../darksendconfig.cpp" line="73"/>
         <source>Darksend Configuration</source>
-        <translation>暗黑發送設定</translation>
+        <translation>匿名發送設定</translation>
     </message>
     <message>
         <location filename="../darksendconfig.cpp" line="44"/>
         <source>Darksend was successfully set to basic (%1 and 2 rounds). You can change this at any time by opening Dash&apos;s configuration screen.</source>
-        <translation>暗黑發送已成功設置為一般(%1到2次循環)。你可以通過打開暗黑幣配置窗口來隨時修改。</translation>
+        <translation>匿名發送已成功設置為一般(%1到2次循環)。你可以通過打開暗黑幣配置窗口來隨時修改。</translation>
     </message>
     <message>
         <location filename="../darksendconfig.cpp" line="59"/>
         <source>Darksend was successfully set to high (%1 and 8 rounds). You can change this at any time by opening Dash&apos;s configuration screen.</source>
-        <translation>暗黑發送已成功設置為高(%1到8次循環)。你可以通過打開暗黑幣配置窗口來隨時修改。</translation>
+        <translation>匿名發送已成功設置為高(%1到8次循環)。你可以通過打開暗黑幣配置窗口來隨時修改。</translation>
     </message>
     <message>
         <location filename="../darksendconfig.cpp" line="74"/>
         <source>Darksend was successfully set to maximum (%1 and 16 rounds). You can change this at any time by opening Dash&apos;s configuration screen.</source>
-        <translation>暗黑發送已成功設置為最高(%1到16次循環)。你可以通過打開暗黑幣配置窗口來隨時修改。</translation>
+        <translation>匿名發送已成功設置為最高(%1到16次循環)。你可以通過打開暗黑幣配置窗口來隨時修改。</translation>
     </message>
 </context>
 <context>
@@ -1484,12 +1484,12 @@ Address: %4
     <message>
         <location filename="../forms/optionsdialog.ui" line="141"/>
         <source>Darksend rounds to use</source>
-        <translation>使用的暗黑發送循環數</translation>
+        <translation>使用的匿名發送循環數</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="165"/>
         <source>This amount acts as a threshold to turn off Darksend once it&apos;s reached.</source>
-        <translation>此金額為關閉暗黑發送的門檻。</translation>
+        <translation>此金額為關閉匿名發送的門檻。</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="180"/>
@@ -1808,7 +1808,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../forms/overviewpage.ui" line="336"/>
         <source>Darksend Balance:</source>
-        <translation>暗黑發送餘額：</translation>
+        <translation>匿名發送餘額：</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="349"/>
@@ -1846,7 +1846,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <location filename="../overviewpage.cpp" line="467"/>
         <location filename="../overviewpage.cpp" line="481"/>
         <source>Darksend</source>
-        <translation>暗黑發送</translation>
+        <translation>匿名發送</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="839"/>
@@ -1861,7 +1861,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../forms/overviewpage.ui" line="896"/>
         <source>Try to manually submit a Darksend request.</source>
-        <translation>請嘗試手動提交暗黑發送請求。</translation>
+        <translation>請嘗試手動提交匿名發送請求。</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="899"/>
@@ -1871,7 +1871,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../forms/overviewpage.ui" line="918"/>
         <source>Reset the current status of Darksend (can interrupt Darksend if it&apos;s in the process of Mixing, which can cost you money!)</source>
-        <translation>重置目前暗黑發送配置(若暗黑發送正在混合的過程中，將會終止操作，並產生處理費用！)</translation>
+        <translation>重置目前匿名發送配置(若匿名發送正在混合的過程中，將會終止操作，並產生處理費用！)</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="924"/>
@@ -1901,13 +1901,13 @@ https://www.transifex.com/projects/p/dash/</translation>
         <location filename="../overviewpage.cpp" line="352"/>
         <location filename="../overviewpage.cpp" line="495"/>
         <source>Start Darksend Mixing</source>
-        <translation>啟動暗黑發送混合</translation>
+        <translation>啟動匿名發送混合</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="148"/>
         <location filename="../overviewpage.cpp" line="497"/>
         <source>Stop Darksend Mixing</source>
-        <translation>停止暗黑發送混合</translation>
+        <translation>停止匿名發送混合</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="270"/>
@@ -1933,14 +1933,14 @@ https://www.transifex.com/projects/p/dash/</translation>
         <location filename="../overviewpage.cpp" line="424"/>
         <source>Last Darksend message:
 </source>
-        <translation>最新暗黑發送信息:
+        <translation>最新匿名發送信息:
 </translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="377"/>
         <location filename="../overviewpage.cpp" line="406"/>
         <source>Darksend is idle.</source>
-        <translation>暗黑發送閒置中。</translation>
+        <translation>匿名發送閒置中。</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="381"/>
@@ -1950,7 +1950,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../overviewpage.cpp" line="387"/>
         <source>Darksend request complete: Your transaction was accepted into the pool!</source>
-        <translation>暗黑發送请求完成：你的交易已經被礦池接受！</translation>
+        <translation>匿名發送请求完成：你的交易已經被礦池接受！</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="393"/>
@@ -1997,7 +1997,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../overviewpage.cpp" line="410"/>
         <source>Darksend request incomplete:</source>
-        <translation>暗黑發送請求未完成：</translation>
+        <translation>匿名發送請求未完成：</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="410"/>
@@ -2007,7 +2007,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../overviewpage.cpp" line="412"/>
         <source>Darksend request complete:</source>
-        <translation>暗黑發送請求完成：</translation>
+        <translation>匿名發送請求完成：</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="414"/>
@@ -2037,17 +2037,17 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../overviewpage.cpp" line="454"/>
         <source>Darksend was successfully reset.</source>
-        <translation>暗黑發送已成功重置。</translation>
+        <translation>匿名發送已成功重置。</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="468"/>
         <source>Darksend requires at least %1 to use.</source>
-        <translation>暗黑發送需要至少%1來使用。</translation>
+        <translation>匿名發送需要至少%1來使用。</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="482"/>
         <source>Wallet is locked and user declined to unlock. Disabling Darksend.</source>
-        <translation>錢包已被鎖，用戶拒絕解鎖。正在停止暗黑發送。</translation>
+        <translation>錢包已被鎖，用戶拒絕解鎖。正在停止匿名發送。</translation>
     </message>
 </context>
 <context>
@@ -2738,7 +2738,7 @@ XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="752"/>
         <source>Darksend</source>
-        <translation>暗黑發送</translation>
+        <translation>匿名發送</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="771"/>
@@ -2806,7 +2806,7 @@ XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="155"/>
         <source>(darksend requires this amount to be rounded up to the nearest %1).</source>
-        <translation>(暗黑發送需要四捨五入這個數額到最接近的值%1)。</translation>
+        <translation>(匿名發送需要四捨五入這個數額到最接近的值%1)。</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="160"/>
@@ -3580,7 +3580,7 @@ XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
     <message>
         <location filename="../transactiontablemodel.cpp" line="358"/>
         <source>Received via Darksend</source>
-        <translation>經暗黑發送收到</translation>
+        <translation>經匿名發送收到</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="361"/>
@@ -3600,22 +3600,22 @@ XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
     <message>
         <location filename="../transactiontablemodel.cpp" line="368"/>
         <source>Darksend Denominate</source>
-        <translation>暗黑發送除名額度</translation>
+        <translation>匿名發送除名額度</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="370"/>
         <source>Darksend Collateral Payment</source>
-        <translation>暗黑發送附加費用</translation>
+        <translation>匿名發送附加費用</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="372"/>
         <source>Darksend Make Collateral Inputs</source>
-        <translation>暗黑發送會制造附加費用</translation>
+        <translation>匿名發送會制造附加費用</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="374"/>
         <source>Darksend Create Denominations</source>
-        <translation>暗黑發送會制造除名額度</translation>
+        <translation>匿名發送會制造除名額度</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="376"/>
@@ -3709,22 +3709,22 @@ XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
     <message>
         <location filename="../transactionview.cpp" line="82"/>
         <source>Darksend Make Collateral Inputs</source>
-        <translation>暗黑發送會制造附加費用</translation>
+        <translation>匿名發送會制造附加費用</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="83"/>
         <source>Darksend Create Denominations</source>
-        <translation>暗黑發送會制造除名額度</translation>
+        <translation>匿名發送會制造除名額度</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="84"/>
         <source>Darksend Denominate</source>
-        <translation>暗黑發送除名額度</translation>
+        <translation>匿名發送除名額度</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="85"/>
         <source>Darksend Collateral Payment</source>
-        <translation>暗黑發送附加費用</translation>
+        <translation>匿名發送附加費用</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="86"/>
@@ -3996,7 +3996,7 @@ rpcpassword=%s
     <message>
         <location filename="../dashstrings.cpp" line="54"/>
         <source>Enable use of automated darksend for funds stored in this wallet (0-1, default: 0)</source>
-        <translation>允許存儲在這個錢包的資金自動使用暗黑發送 (0-1, 預設: 0)</translation>
+        <translation>允許存儲在這個錢包的資金自動使用匿名發送 (0-1, 預設: 0)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="57"/>
@@ -4146,12 +4146,12 @@ rpcpassword=%s
     <message>
         <location filename="../dashstrings.cpp" line="138"/>
         <source>Unable to locate enough Darksend non-denominated funds for this transaction that are not equal 1000 DASH.</source>
-        <translation>無法找到足夠的暗黑發送未除名資金(不等於1000 DASH)用於本次交易。</translation>
+        <translation>無法找到足夠的匿名發送未除名資金(不等於1000 DASH)用於本次交易。</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="141"/>
         <source>Unable to locate enough Darksend non-denominated funds for this transaction.</source>
-        <translation>無法找到足夠的暗黑發送未除名資金用於本次交易。</translation>
+        <translation>無法找到足夠的匿名發送未除名資金用於本次交易。</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="143"/>
@@ -4470,7 +4470,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../dashstrings.cpp" line="226"/>
         <source>Error: You already have pending entries in the Darksend pool</source>
-        <translation>錯誤: 你已經有未處理條目在暗黑發送池中</translation>
+        <translation>錯誤: 你已經有未處理條目在匿名發送池中</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="227"/>
@@ -4700,7 +4700,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../dashstrings.cpp" line="272"/>
         <source>Last Darksend was too recent.</source>
-        <translation>距離上一次的暗黑發送時間太短。</translation>
+        <translation>距離上一次的匿名發送時間太短。</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="273"/>
@@ -5210,7 +5210,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../dashstrings.cpp" line="374"/>
         <source>Value more than Darksend pool maximum allows.</source>
-        <translation>數值超過暗黑發送池所允許的最大數。</translation>
+        <translation>數值超過匿名發送池所允許的最大數。</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="375"/>
