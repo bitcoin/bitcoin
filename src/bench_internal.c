@@ -265,7 +265,7 @@ void bench_rfc6979_hmac_sha256(void* arg) {
     secp256k1_rfc6979_hmac_sha256_t rng;
 
     for (i = 0; i < 20000; i++) {
-        secp256k1_rfc6979_hmac_sha256_initialize(&rng, data->data, 32, data->data, 32);
+        secp256k1_rfc6979_hmac_sha256_initialize(&rng, data->data, 32, data->data, 32, NULL, 0);
         secp256k1_rfc6979_hmac_sha256_generate(&rng, data->data, 32);
     }
 }

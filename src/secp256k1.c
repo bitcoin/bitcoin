@@ -66,8 +66,7 @@ int secp256k1_ecdsa_verify(const unsigned char *msg32, const unsigned char *sig,
 static int nonce_function_rfc6979(unsigned char *nonce32, const unsigned char *msg32, const unsigned char *key32, unsigned int counter, const void *data) {
    secp256k1_rfc6979_hmac_sha256_t rng;
    unsigned int i;
-   (void)data;
-   secp256k1_rfc6979_hmac_sha256_initialize(&rng, key32, 32, msg32, 32);
+   secp256k1_rfc6979_hmac_sha256_initialize(&rng, key32, 32, msg32, 32, data, data != NULL ? 32 : 0);
    for (i = 0; i <= counter; i++) {
        secp256k1_rfc6979_hmac_sha256_generate(&rng, nonce32, 32);
    }
