@@ -28,7 +28,7 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>
 Това е експериментален софтуер.
 
-Разпространява се под MIT/X11 софтуерен лиценз, виж COPYING или http://www.opensource.org/licenses/mit-license.php.
+Разпространява се под MIT/X11 софтуерен лиценз, виж придружаващия файл КОПИРАНЕ или на адрес: http://www.opensource.org/licenses/mit-license.php.
 
 Използван е софтуер, разработен от OpenSSL Project за употреба в OpenSSL Toolkit (http://www.openssl.org/), шифрографски софтуер, разработен от Eric Young (eay@cryptsoft.com) и UPnP софтуер, разработен от Thomas Bernard.</translation>
     </message>
@@ -60,7 +60,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/addressbookpage.ui" line="30"/>
         <source>Double-click to edit address or label</source>
-        <translation>Двоен клик за редакция на адрес или име</translation>
+        <translation>Двоен клик за да редактирате адрес или наименование</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="57"/>
@@ -70,22 +70,22 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/addressbookpage.ui" line="60"/>
         <source>&amp;New</source>
-        <translation>Нов</translation>
+        <translation>&amp;Нов</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="71"/>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation>Копиране на избрания адрес</translation>
+        <translation>Копиране на избрания адрес в системния клипборд</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="74"/>
         <source>&amp;Copy</source>
-        <translation>Копирай</translation>
+        <translation>&amp;Копирай</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="85"/>
         <source>Delete the currently selected address from the list</source>
-        <translation>Изтрий избрания адрес от списъка</translation>
+        <translation>Изтрийте избрания адрес от списъка</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="88"/>
@@ -100,7 +100,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/addressbookpage.ui" line="115"/>
         <source>&amp;Export</source>
-        <translation>Изнеси</translation>
+        <translation>&amp;Експортиране</translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="132"/>
@@ -150,7 +150,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../addressbookpage.cpp" line="76"/>
         <source>Copy &amp;Label</source>
-        <translation>Копирай &amp;име</translation>
+        <translation>Копирай &amp;наименование</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="77"/>
@@ -160,7 +160,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../addressbookpage.cpp" line="271"/>
         <source>Export Address List</source>
-        <translation>Изнасяне на списъка с адреси</translation>
+        <translation>Експортиране на списъка с адреси</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="272"/>
@@ -170,7 +170,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../addressbookpage.cpp" line="285"/>
         <source>Exporting Failed</source>
-        <translation>Грешка при изнасянето</translation>
+        <translation>Грешка при експортирането</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="286"/>
@@ -183,7 +183,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../addresstablemodel.cpp" line="169"/>
         <source>Label</source>
-        <translation>Име</translation>
+        <translation>Наименование</translation>
     </message>
     <message>
         <location filename="../addresstablemodel.cpp" line="169"/>
@@ -193,7 +193,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../addresstablemodel.cpp" line="205"/>
         <source>(no label)</source>
-        <translation>(без име)</translation>
+        <translation>(без наименование)</translation>
     </message>
 </context>
 <context>
@@ -201,7 +201,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="26"/>
         <source>Passphrase Dialog</source>
-        <translation type="unfinished"/>
+        <translation>Поле за парола</translation>
     </message>
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="47"/>
@@ -221,7 +221,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="108"/>
         <source>Serves to disable the trivial sendmoney when OS account compromised. Provides no real security.</source>
-        <translation type="unfinished"/>
+        <translation>Служи да изключи изпращането на средства, когато акаунта на Операционната система е компрометиран. Не предоставя реална сигурност. </translation>
     </message>
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="111"/>
@@ -231,7 +231,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../askpassphrasedialog.cpp" line="41"/>
         <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;10 or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
-        <translation>Въведете нова парола за портфейла.&lt;br/&gt;Моля използвайте &lt;b&gt;поне 10 случайни символа&lt;/b&gt; или &lt;b&gt;8 или повече думи&lt;/b&gt;.</translation>
+        <translation>Въведете нова парола за портфейла.&lt;br/&gt;Моля използвайте &lt;b&gt;поне 10 случайни символа&lt;/b&gt; или &lt;b&gt;8, или повече думи&lt;/b&gt;.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="42"/>
@@ -291,8 +291,8 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="124"/>
-        <source>Dash will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your dashs from being stolen by malware infecting your computer.</source>
-        <translation>Дарккойн ще се затвори, за да завърши процеса по шифриране. Запомнете, че шифрирането на вашия портфейл не може напълно да ви предпази от кражба на монетите от зловреден софтуер инфектирал компютъра ви. </translation>
+        <source>Dash will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your darkcoins from being stolen by malware infecting your computer.</source>
+        <translation>Dash ще се затвори сега, за да завърши процеса по шифриране. Запомнете, че шифрирането на вашия портфейл не може напълно да ви предпази от кражба на монетите от зловреден софтуер инфектирал компютъра ви. </translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="128"/>
@@ -368,7 +368,7 @@ This product includes software developed by the OpenSSL Project for use in the O
         <location filename="../bitcoingui.cpp" line="101"/>
         <location filename="../bitcoingui.cpp" line="498"/>
         <source>[testnet]</source>
-        <translation>[testnet]</translation>
+        <translation>[тестова мрежа]</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="227"/>
@@ -546,7 +546,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="310"/>
         <source>Open debugging console</source>
-        <translation type="unfinished"/>
+        <translation>Отваряне конзола за отстраняване на грешки</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="311"/>
@@ -556,17 +556,17 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="312"/>
         <source>Show network monitor</source>
-        <translation>Покажи диаграмата на мрежата</translation>
+        <translation>Покажи наблюдение на мрежата</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="313"/>
         <source>Open &amp;Configuration File</source>
-        <translation type="unfinished"/>
+        <translation>Отвори &amp;Конфигурационен файл</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="314"/>
         <source>Open configuration file</source>
-        <translation type="unfinished"/>
+        <translation>Отвори конфигурационния файл</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="316"/>
@@ -576,7 +576,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="317"/>
         <source>Show the list of used sending addresses and labels</source>
-        <translation>Покажи списъкът от използвани изходящи адреси и етикети</translation>
+        <translation>Покажи списъкът от използваните адреси за изпращане и наименования</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="318"/>
@@ -586,7 +586,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="319"/>
         <source>Show the list of used receiving addresses and labels</source>
-        <translation>Покажи списъкът от използвани входящи адреси и етикети</translation>
+        <translation>Покажи списъкът от използвани адреси за получаване и наименования</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="321"/>
@@ -596,7 +596,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="322"/>
         <source>Open a dash: URI or payment request</source>
-        <translation>Отвори Дарккойн: URI или заявка за плащане</translation>
+        <translation>Отвори Dash: URI или заявка за плащане</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="324"/>
@@ -606,7 +606,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="325"/>
         <source>Show the Dash Core help message to get a list with possible Dash command-line options</source>
-        <translation>Покажи помощ за Дарккойн ядрото със списък на възможните опции за командрия ред</translation>
+        <translation>Покажи съобщението за помощ на Dash ядрото за да получиш списък на възможните опции за командния ред</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="361"/>
@@ -958,7 +958,7 @@ Address: %4
     <message>
         <location filename="../coincontroldialog.cpp" line="76"/>
         <source>Copy low output</source>
-        <translation type="unfinished"/>
+        <translation>Копирай недостатъчна наличност</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="77"/>
@@ -988,7 +988,7 @@ Address: %4
     <message>
         <location filename="../coincontroldialog.cpp" line="759"/>
         <source>n/a</source>
-        <translation>Нама</translation>
+        <translation>няма такъв</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="164"/>
@@ -1029,7 +1029,7 @@ Address: %4
     <message>
         <location filename="../coincontroldialog.cpp" line="615"/>
         <source>Dust</source>
-        <translation>Прах</translation>
+        <translation>Незначителен остатък</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="615"/>
@@ -1045,7 +1045,7 @@ Address: %4
     <message>
         <location filename="../coincontroldialog.cpp" line="625"/>
         <source>This label turns red, if the transaction size is greater than 1000 bytes.</source>
-        <translation>Етикетът става червен, ако размерът на транзакцията е по-голям от 1000 байта.</translation>
+        <translation>Това наименование се оцветява в червено, ако размерът на транзакцията е по-голям от 1000 байта.</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="626"/>
@@ -1066,12 +1066,12 @@ Address: %4
     <message>
         <location filename="../coincontroldialog.cpp" line="630"/>
         <source>This label turns red, if the priority is smaller than &quot;medium&quot;.</source>
-        <translation>Този етикет се оцветява в червено, ако приоритетът е по-малък от &quot;среден&quot;.</translation>
+        <translation>Това наименование става червено, ако приоритетът е по-малък от &quot;среден&quot;.</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="633"/>
         <source>This label turns red, if any recipient receives an amount smaller than %1.</source>
-        <translation>Това етикет се оцветява в червено, ако произволен получател получи сума по-малка от %1.</translation>
+        <translation>Това наименование става червено, ако произволен получател получи сума по-малка от %1.</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="634"/>
@@ -1087,13 +1087,13 @@ Address: %4
     <message>
         <location filename="../coincontroldialog.cpp" line="637"/>
         <source>This label turns red, if the change is smaller than %1.</source>
-        <translation>Този етикет се оцветява в червено, ако рестото е по-малко от %1.</translation>
+        <translation>Това наименование става червено, ако рестото е по-малко от %1.</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="680"/>
         <location filename="../coincontroldialog.cpp" line="741"/>
         <source>(no label)</source>
-        <translation>(без име)</translation>
+        <translation>(без наименование)</translation>
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="734"/>
@@ -1201,12 +1201,12 @@ Address: %4
     <message>
         <location filename="../forms/editaddressdialog.ui" line="25"/>
         <source>&amp;Label</source>
-        <translation>&amp;Име</translation>
+        <translation>&amp;Наименование</translation>
     </message>
     <message>
         <location filename="../forms/editaddressdialog.ui" line="35"/>
         <source>The label associated with this address list entry</source>
-        <translation>Етикет, свързан с този запис на списъка с адреси</translation>
+        <translation>Наименованието се свързва с този запис от списъка с адреси</translation>
     </message>
     <message>
         <location filename="../forms/editaddressdialog.ui" line="42"/>
@@ -1216,7 +1216,7 @@ Address: %4
     <message>
         <location filename="../forms/editaddressdialog.ui" line="52"/>
         <source>The address associated with this address list entry. This can only be modified for sending addresses.</source>
-        <translation>Адрес, свързан с този запис със списък от адреси. Може да бъде променен само за адреси за изпращане.</translation>
+        <translation>Адресът свързан с този запис от списък с адреси. Може да бъде променен само за адреси за изпращане.</translation>
     </message>
     <message>
         <location filename="../editaddressdialog.cpp" line="29"/>
@@ -1337,12 +1337,12 @@ Address: %4
     <message>
         <location filename="../utilitydialog.cpp" line="80"/>
         <source>Set SSL root certificates for payment request (default: -system-)</source>
-        <translation type="unfinished"/>
+        <translation>Задай SSL основен сертификат при искане за плащане (по подразбиране: -system-)</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="81"/>
         <source>Show splash screen on startup (default: 1)</source>
-        <translation type="unfinished"/>
+        <translation>Покажи начален екран при стартиране(по подразбиране: 1)</translation>
     </message>
 </context>
 <context>
@@ -1400,7 +1400,7 @@ Address: %4
     <message>
         <location filename="../intro.cpp" line="222"/>
         <source>(of %1GB needed)</source>
-        <translation>(от %1GB са необходими)</translation>
+        <translation>(от %1ГБ са необходими)</translation>
     </message>
 </context>
 <context>
@@ -1795,7 +1795,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../forms/overviewpage.ui" line="309"/>
         <source>Enabled/Disabled</source>
-        <translation>Активно/Неактивно</translation>
+        <translation>Включено/Изключено</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="316"/>
@@ -1825,7 +1825,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../forms/overviewpage.ui" line="370"/>
         <source>Submitted Denom:</source>
-        <translation type="unfinished"/>
+        <translation>Изпратени за Denom:</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="377"/>
@@ -1835,7 +1835,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../forms/overviewpage.ui" line="380"/>
         <source>n/a</source>
-        <translation>Нама</translation>
+        <translation>Няма</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="946"/>
@@ -1914,7 +1914,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../overviewpage.cpp" line="278"/>
         <source>Found unconfirmed denominated outputs, will wait till they confirm to recalculate.</source>
-        <translation type="unfinished"/>
+        <translation>Открити са непотвърдени деноминирани средства, трябва да се изчака потвърждение за  преизчисление .</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="335"/>
@@ -1942,7 +1942,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../overviewpage.cpp" line="381"/>
         <source>Mixing in progress...</source>
-        <translation type="unfinished"/>
+        <translation>В процес на смесване...</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="387"/>
@@ -2108,7 +2108,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../paymentserver.cpp" line="514"/>
         <source>Requested payment amount of %1 is too small (considered dust).</source>
-        <translation>Заявената сума за плащане: %1 е твърде малка (счита се за отпадък)</translation>
+        <translation>Заявената сума за плащане: %1 е твърде малка (се приема за незначителен остатък)</translation>
     </message>
     <message>
         <location filename="../paymentserver.cpp" line="565"/>
@@ -2492,7 +2492,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../receivecoinsdialog.cpp" line="39"/>
         <source>Copy label</source>
-        <translation>Копирай име</translation>
+        <translation>Копирай наименование</translation>
     </message>
     <message>
         <location filename="../receivecoinsdialog.cpp" line="40"/>
@@ -2555,7 +2555,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../receiverequestdialog.cpp" line="149"/>
         <source>Label</source>
-        <translation>Име</translation>
+        <translation>Наименование</translation>
     </message>
     <message>
         <location filename="../receiverequestdialog.cpp" line="151"/>
@@ -2583,7 +2583,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../recentrequeststablemodel.cpp" line="24"/>
         <source>Label</source>
-        <translation>Име</translation>
+        <translation>Наименование</translation>
     </message>
     <message>
         <location filename="../recentrequeststablemodel.cpp" line="24"/>
@@ -2598,7 +2598,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../recentrequeststablemodel.cpp" line="62"/>
         <source>(no label)</source>
-        <translation>(без име)</translation>
+        <translation>(без наименование)</translation>
     </message>
     <message>
         <location filename="../recentrequeststablemodel.cpp" line="71"/>
@@ -2779,7 +2779,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="59"/>
         <source>Copy low output</source>
-        <translation type="unfinished"/>
+        <translation>Копирай недостатъчна наличност</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="60"/>
@@ -2845,7 +2845,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="280"/>
         <source>Confirm send coins</source>
-        <translation>Потвърждаване</translation>
+        <translation>Потвърди изпращането на монетите</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="435"/>
@@ -2910,7 +2910,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="655"/>
         <source>(no label)</source>
-        <translation>(без име)</translation>
+        <translation>(без наименование)</translation>
     </message>
 </context>
 <context>
@@ -2960,12 +2960,12 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="111"/>
         <source>&amp;Label:</source>
-        <translation>&amp;Име:</translation>
+        <translation>&amp;Наименование:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="124"/>
         <source>Enter a label for this address to add it to the list of used addresses</source>
-        <translation>Въведете име за този адрес, за да го добавите в списъка с адреси</translation>
+        <translation>Въведете наименование за този адрес, за да го добавите в списъка с адреси</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="131"/>
@@ -2981,13 +2981,13 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="157"/>
-        <source>A message that was attached to the dash: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Dash network.</source>
-        <translation type="unfinished"/>
+        <source>A message that was attached to the darkcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Dash network.</source>
+        <translation>Съобщението което беше прикрепено към darkcoin: URI ще бъде запазено с транзакцията за ваше сведение. Забележка: Това съобщение няма да бъде изпратено през Dash мрежата.</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="583"/>
         <source>This is an unverified payment request.</source>
-        <translation type="unfinished"/>
+        <translation>Това е непроверена заявка за плащане.</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="601"/>
@@ -2999,17 +2999,17 @@ https://www.transifex.com/projects/p/dash/</translation>
         <location filename="../forms/sendcoinsentry.ui" line="635"/>
         <location filename="../forms/sendcoinsentry.ui" line="1171"/>
         <source>Memo:</source>
-        <translation type="unfinished"/>
+        <translation>Бележка:</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="1115"/>
         <source>This is a verified payment request.</source>
-        <translation type="unfinished"/>
+        <translation>Това е валидно искане за плащане.</translation>
     </message>
     <message>
         <location filename="../sendcoinsentry.cpp" line="31"/>
         <source>Enter a label for this address to add it to your address book</source>
-        <translation>Въведете име за този адрес, за да го добавите в списъка с адреси</translation>
+        <translation>Въведете наименование за този адрес, за да го добавите в списъка с адреси</translation>
     </message>
 </context>
 <context>
@@ -3030,7 +3030,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="14"/>
         <source>Signatures - Sign / Verify a Message</source>
-        <translation>Подпиши / Провери съобщение</translation>
+        <translation>Подписи - Подпиши / Провери съобщение</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="24"/>
@@ -3045,7 +3045,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="48"/>
         <source>The address to sign the message with (e.g. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</source>
-        <translation type="unfinished"/>
+        <translation>Адресът подписал съобщението (e.g. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="55"/>
@@ -3062,7 +3062,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="75"/>
         <source>Paste address from clipboard</source>
-        <translation>Вмъкни от клипборда</translation>
+        <translation>Вмъкни адрес от клипборда</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="85"/>
@@ -3097,7 +3097,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="169"/>
         <source>Reset all sign message fields</source>
-        <translation type="unfinished"/>
+        <translation>Изчисти полето с подписаните съобщения.</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="172"/>
@@ -3108,17 +3108,17 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="231"/>
         <source>&amp;Verify Message</source>
-        <translation>&amp;Провери</translation>
+        <translation>&amp;Провери съобщението</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="237"/>
         <source>Enter the signing address, message (ensure you copy line breaks, spaces, tabs, etc. exactly) and signature below to verify the message. Be careful not to read more into the signature than what is in the signed message itself, to avoid being tricked by a man-in-the-middle attack.</source>
-        <translation type="unfinished"/>
+        <translation>Въведете подписания адрес, съобщението (уверете се, че сте копирали редовете, спациите, табовете и другите точно) и подпишете отдолу, за да удостоверите съобщението. Внимавайте да не вмъкнете излишни символи в подписа от това, което е в самото съобщение, за избегнете риска от злонамерна външа намеса.</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="258"/>
         <source>The address the message was signed with (e.g. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</source>
-        <translation type="unfinished"/>
+        <translation>Съобщението е подписано от адрес (e.g. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="295"/>
@@ -3128,12 +3128,12 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="298"/>
         <source>Verify &amp;Message</source>
-        <translation type="unfinished"/>
+        <translation>Провери &amp;Съобщение</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="312"/>
         <source>Reset all verify message fields</source>
-        <translation type="unfinished"/>
+        <translation>Изчисти всички проверени съобщения в полето</translation>
     </message>
     <message>
         <location filename="../signverifymessagedialog.cpp" line="30"/>
@@ -3222,7 +3222,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../splashscreen.cpp" line="34"/>
         <source>Version %1</source>
-        <translation type="unfinished"/>
+        <translation>Версия %1</translation>
     </message>
     <message>
         <location filename="../splashscreen.cpp" line="35"/>
@@ -3245,7 +3245,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../trafficgraphwidget.cpp" line="79"/>
         <source>KB/s</source>
-        <translation type="unfinished"/>
+        <translation>КБ/с</translation>
     </message>
 </context>
 <context>
@@ -3253,7 +3253,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message numerus="yes">
         <location filename="../transactiondesc.cpp" line="28"/>
         <source>Open for %n more block(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation><numerusform>Отворен за %n блок(а)</numerusform><numerusform>Отворен за %n блок(а)</numerusform></translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="30"/>
@@ -3266,22 +3266,22 @@ https://www.transifex.com/projects/p/dash/</translation>
         <location filename="../transactiondesc.cpp" line="62"/>
         <location filename="../transactiondesc.cpp" line="74"/>
         <source>conflicted</source>
-        <translation type="unfinished"/>
+        <translation>конфликтно</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="43"/>
         <source>%1/offline (verified via instantx)</source>
-        <translation type="unfinished"/>
+        <translation>%1/офлайн(проверено през instantx)</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="45"/>
         <source>%1/confirmed (verified via instantx)</source>
-        <translation type="unfinished"/>
+        <translation>%1/потвърдени (проверено от instantx)</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="47"/>
         <source>%1 confirmations (verified via instantx)</source>
-        <translation type="unfinished"/>
+        <translation>%1 потвърждения (проверено от instantx)</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="76"/>
@@ -3302,27 +3302,27 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../transactiondesc.cpp" line="54"/>
         <source>%1/offline (InstantX verification in progress - %2 of %3 signatures)</source>
-        <translation type="unfinished"/>
+        <translation>%1/офлайн (InstantX проверка в процес - %2 of %3 подписани)</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="56"/>
         <source>%1/confirmed (InstantX verification in progress - %2 of %3 signatures )</source>
-        <translation type="unfinished"/>
+        <translation>%1/потвърдени (InstantX проверка в процес - %2 of %3 подписани )</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="58"/>
         <source>%1 confirmations (InstantX verification in progress - %2 of %3 signatures)</source>
-        <translation type="unfinished"/>
+        <translation>%1 потвърждения (InstantX проверка в процес - %2 of %3 подписвания)</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="64"/>
         <source>%1/offline (InstantX verification failed)</source>
-        <translation type="unfinished"/>
+        <translation>%1/офлайн (InstantX проверката е неуспешна)</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="66"/>
         <source>%1/confirmed (InstantX verification failed)</source>
-        <translation type="unfinished"/>
+        <translation>%1/потвърдени (InstantX проверката е неуспешна)</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="98"/>
@@ -3337,7 +3337,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message numerus="yes">
         <location filename="../transactiondesc.cpp" line="105"/>
         <source>, broadcast through %n node(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation><numerusform>, излъчено през %n нод(а)</numerusform><numerusform>, излъчено през %n нод(а)</numerusform></translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="109"/>
@@ -3381,7 +3381,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../transactiondesc.cpp" line="142"/>
         <source>label</source>
-        <translation>име</translation>
+        <translation>наименование</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="179"/>
@@ -3434,7 +3434,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../transactiondesc.cpp" line="267"/>
         <source>Transaction ID</source>
-        <translation>ID</translation>
+        <translation>на транзакцията</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="285"/>
@@ -3449,7 +3449,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../transactiondesc.cpp" line="300"/>
         <source>Debug information</source>
-        <translation type="unfinished"/>
+        <translation>Информация за грешки</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="308"/>
@@ -3459,7 +3459,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../transactiondesc.cpp" line="311"/>
         <source>Inputs</source>
-        <translation type="unfinished"/>
+        <translation>Входящи</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="332"/>
@@ -3515,7 +3515,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message numerus="yes">
         <location filename="../transactiontablemodel.cpp" line="285"/>
         <source>Open for %n more block(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation><numerusform>Отворен за още %n блок(а)</numerusform><numerusform>Отворен за още %n блок(а)</numerusform></translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="288"/>
@@ -3525,7 +3525,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../transactiontablemodel.cpp" line="291"/>
         <source>Offline</source>
-        <translation type="unfinished"/>
+        <translation>Офлайн</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="294"/>
@@ -3575,7 +3575,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../transactiontablemodel.cpp" line="358"/>
         <source>Received via Darksend</source>
-        <translation type="unfinished"/>
+        <translation>Получени с Darksend</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="361"/>
@@ -3595,27 +3595,27 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../transactiontablemodel.cpp" line="368"/>
         <source>Darksend Denominate</source>
-        <translation type="unfinished"/>
+        <translation>Darksend деноминация</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="370"/>
         <source>Darksend Collateral Payment</source>
-        <translation type="unfinished"/>
+        <translation>Darksend обезпечава плащането</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="372"/>
         <source>Darksend Make Collateral Inputs</source>
-        <translation type="unfinished"/>
+        <translation>Darksend направи обезпечение на постъпленията</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="374"/>
         <source>Darksend Create Denominations</source>
-        <translation type="unfinished"/>
+        <translation>Darksend направени деноминации</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="376"/>
         <source>Darksent</source>
-        <translation type="unfinished"/>
+        <translation>Darksent</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="418"/>
@@ -3625,7 +3625,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../transactiontablemodel.cpp" line="610"/>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
-        <translation>Състояние на транзакцията. Задръжте върху това поле за брой потвърждения.</translation>
+        <translation>Състояние на транзакцията. Задръжте върху това поле за да видите броя потвърждения.</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="612"/>
@@ -3699,27 +3699,27 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../transactionview.cpp" line="81"/>
         <source>Darksent</source>
-        <translation type="unfinished"/>
+        <translation>Darksent</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="82"/>
         <source>Darksend Make Collateral Inputs</source>
-        <translation type="unfinished"/>
+        <translation>Darksend направи обезпечение на постъпленията</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="83"/>
         <source>Darksend Create Denominations</source>
-        <translation type="unfinished"/>
+        <translation>Darksend създава деноминации</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="84"/>
         <source>Darksend Denominate</source>
-        <translation type="unfinished"/>
+        <translation>Darksend деноминация</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="85"/>
         <source>Darksend Collateral Payment</source>
-        <translation type="unfinished"/>
+        <translation>Darksend обезпечава плащането</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="86"/>
@@ -3739,7 +3739,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../transactionview.cpp" line="94"/>
         <source>Enter address or label to search</source>
-        <translation>Търсене по адрес или име</translation>
+        <translation>Търсене по адрес или наименование</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="100"/>
@@ -3754,7 +3754,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../transactionview.cpp" line="135"/>
         <source>Copy label</source>
-        <translation>Копирай име</translation>
+        <translation>Копирай наименование</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="136"/>
@@ -3769,7 +3769,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../transactionview.cpp" line="138"/>
         <source>Edit label</source>
-        <translation>Редактирай име</translation>
+        <translation>Редактирай наименование</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="139"/>
@@ -3804,7 +3804,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../transactionview.cpp" line="315"/>
         <source>Label</source>
-        <translation>Име</translation>
+        <translation>Наименование</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="316"/>
@@ -3834,12 +3834,12 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../transactionview.cpp" line="325"/>
         <source>Exporting Successful</source>
-        <translation>Изнасянето е успешна</translation>
+        <translation>Изнасянето е успешно</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="325"/>
         <source>The transaction history was successfully saved to %1.</source>
-        <translation type="unfinished"/>
+        <translation>Направените транзакции са запазени до %1.</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="434"/>
@@ -3871,7 +3871,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message numerus="yes">
         <location filename="../walletmodel.cpp" line="271"/>
         <source>InstantX doesn&apos;t support sending values that high yet. Transactions are currently limited to %n DASH.</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation><numerusform>InstantX не поддържа изпращане на толкова големи суми. Транзакциите са ограничени до %n DASH.</numerusform><numerusform>InstantX не поддържа изпращане на толкова големи суми. Транзакциите са ограничени до %n DASH.</numerusform></translation>
     </message>
 </context>
 <context>
@@ -3879,7 +3879,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../walletview.cpp" line="44"/>
         <source>&amp;Export</source>
-        <translation>Изнеси</translation>
+        <translation>&amp;Изнеси</translation>
     </message>
     <message>
         <location filename="../walletview.cpp" line="45"/>
@@ -3894,7 +3894,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../walletview.cpp" line="232"/>
         <source>Wallet Data (*.dat)</source>
-        <translation type="unfinished"/>
+        <translation>Данните за портфейла(*.dat)</translation>
     </message>
     <message>
         <location filename="../walletview.cpp" line="238"/>
@@ -3914,7 +3914,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../walletview.cpp" line="242"/>
         <source>The wallet data was successfully saved to %1.</source>
-        <translation type="unfinished"/>
+        <translation>Базата на портфейла беше запазена успешно в %1.</translation>
     </message>
 </context>
 <context>
@@ -3932,12 +3932,22 @@ If the file does not exist, create it with owner-readable-only file permissions.
 It is also recommended to set alertnotify so you are notified of problems;
 for example: alertnotify=echo %%s | mail -s &quot;Dash Alert&quot; admin@foo.com
 </source>
-        <translation type="unfinished"/>
+        <translation>%s, трябва да зададете rpcpassword в конфигурационния  файл:
+%s
+Препоръчително е да използвате следната произволна парола:
+rpcuser=darkcoinrpc
+rpcpassword=%s
+(не е нужно да запомняте тази парола)
+Потребителя и паролата НЕ ТРЯБВА  да са еднакви.
+Ако файла не съществува , създайте го с права за само за четене.
+Препоръчително е да създадете сигнал за уведомяване за да бъдете осведомени при проблем;
+Пример: alertnotify=echo %%s | mail -s &quot;Dash Alert&quot; admin@foo.com
+</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="29"/>
         <source>Acceptable ciphers (default: TLSv1.2+HIGH:TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!3DES:@STRENGTH)</source>
-        <translation type="unfinished"/>
+        <translation>Разрешени шифри (default: TLSv1.2+HIGH:TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!3DES:@STRENGTH)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="32"/>
@@ -3952,22 +3962,22 @@ for example: alertnotify=echo %%s | mail -s &quot;Dash Alert&quot; admin@foo.com
     <message>
         <location filename="../dashstrings.cpp" line="37"/>
         <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
-        <translation type="unfinished"/>
+        <translation>Свързва се с посочения адрес и винаги слуша за него. Използвайте [хост]:порт за изписване при IPv6</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="40"/>
         <source>Cannot obtain a lock on data directory %s. Dash Core is probably already running.</source>
-        <translation type="unfinished"/>
+        <translation>Не може да се заключи дата директорията %s. Dash ядрото вече работи.</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="43"/>
         <source>Continuously rate-limit free transactions to &lt;n&gt;*1000 bytes per minute (default:15)</source>
-        <translation type="unfinished"/>
+        <translation>Непрекъснат лимит на безплатните транзакции до &lt;n&gt;*1000 байта в минута (default:15)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="46"/>
         <source>Darksend uses exact denominated amounts to send funds, you might simply need to anonymize some more coins.</source>
-        <translation type="unfinished"/>
+        <translation>Darksend използва всички деноминирани наличности за да изпрати сумата, може би ще е необходимо да бъдат анонимизирани  още монети.</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="49"/>
@@ -3977,22 +3987,22 @@ for example: alertnotify=echo %%s | mail -s &quot;Dash Alert&quot; admin@foo.com
     <message>
         <location filename="../dashstrings.cpp" line="51"/>
         <source>Enable instantx, show confirmations for locked transactions (bool, default: true)</source>
-        <translation type="unfinished"/>
+        <translation>Включен instantx,покажи потвърждения за заключени транзакции (bool, default: true)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="54"/>
         <source>Enable use of automated darksend for funds stored in this wallet (0-1, default: 0)</source>
-        <translation type="unfinished"/>
+        <translation>Включено автоматично използване на darksend за средствата в този портфейл (0-1, default: 0)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="57"/>
         <source>Enter regression test mode, which uses a special chain in which blocks can be solved instantly. This is intended for regression testing tools and app development.</source>
-        <translation type="unfinished"/>
+        <translation>Влиза в регресивен тестов режим, който използва специална верига в  която блоковете могат да бъдат намерени мигновено.Това е предназначено за  тестване на предишни инструменти и разработване на приложението.</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="61"/>
         <source>Enter regression test mode, which uses a special chain in which blocks can be solved instantly.</source>
-        <translation type="unfinished"/>
+        <translation>Влиза в регресивен тестов режим, който използва специална верига в която блоковете могат да бъдат намерени мигновено.</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="64"/>
@@ -4002,7 +4012,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Dash Alert&quot; admin@foo.com
     <message>
         <location filename="../dashstrings.cpp" line="66"/>
         <source>Error: The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
-        <translation type="unfinished"/>
+        <translation>Грешка: Транзакцията е отхвърлена! Това може да се случи, ако някои от монетите в портфейла са вече изразходвани, например ако се използва копие на wallet.dat където монетите са изразходвани, но не са изразходвани в настоящия портфейл.</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="70"/>
@@ -4012,52 +4022,52 @@ for example: alertnotify=echo %%s | mail -s &quot;Dash Alert&quot; admin@foo.com
     <message>
         <location filename="../dashstrings.cpp" line="73"/>
         <source>Error: Wallet unlocked for anonymization only, unable to create transaction.</source>
-        <translation type="unfinished"/>
+        <translation>Грешка: Портфейлът е отключен само за анонимизация,не може да бъде извършена транзакция.</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="75"/>
         <source>Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)</source>
-        <translation type="unfinished"/>
+        <translation>Изпълни командата когато се получи съответното предупреждение или се появи друг проблем с мрежата (%s в cmd е подменено от съобщение)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="78"/>
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
-        <translation type="unfinished"/>
+        <translation>Изпълнете командата когато транзакцията в портфейла се променя  (%s в cmd е подменено с TxID)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="81"/>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
-        <translation type="unfinished"/>
+        <translation>Изпълнете командата когато има промяна в най-добрият блок (%s в cmd е подменена от  block hash)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="84"/>
         <source>Fees smaller than this are considered zero fee (for transaction creation) (default:</source>
-        <translation type="unfinished"/>
+        <translation>Такси по-малки от тази се считат за нулеви (за извършване на трнзакция) (по подразбиране:</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="87"/>
         <source>Flush database activity from memory pool to disk log every &lt;n&gt; megabytes (default: 100)</source>
-        <translation type="unfinished"/>
+        <translation>Изчиствай активността по базата от паметта към лог на диска на всеки &lt;n&gt; мегабайта (по подразбиране: 100)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="90"/>
         <source>Found unconfirmed denominated outputs, will wait till they confirm to continue.</source>
-        <translation type="unfinished"/>
+        <translation>Намерени са непотвърдени деноминирани средства, трябва да изчакате потвърждаването им за да продължите</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="93"/>
         <source>How thorough the block verification of -checkblocks is (0-4, default: 3)</source>
-        <translation type="unfinished"/>
+        <translation>How thorough the block verification of -checkblocks is (0-4, default: 3)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="95"/>
         <source>In this mode -genproclimit controls how many blocks are generated immediately.</source>
-        <translation type="unfinished"/>
+        <translation>В този режим -genproclimit се контролира колко блока са генерирани моментално.</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="98"/>
         <source>InstantX requires inputs with at least 6 confirmations, you might need to wait a few minutes and try again.</source>
-        <translation type="unfinished"/>
+        <translation>InstantX изисква средства с поне 6 потвърждения, може да се наложи да почакате няколко минути и да опитате отново.</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="101"/>
@@ -4067,7 +4077,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Dash Alert&quot; admin@foo.com
     <message>
         <location filename="../dashstrings.cpp" line="103"/>
         <source>Name to construct url for KeePass entry that stores the wallet passphrase</source>
-        <translation type="unfinished"/>
+        <translation>Име за създаване на URL за KeePass входа , който съхранява паролата за портфейла</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="105"/>
@@ -4077,22 +4087,23 @@ for example: alertnotify=echo %%s | mail -s &quot;Dash Alert&quot; admin@foo.com
     <message>
         <location filename="../dashstrings.cpp" line="108"/>
         <source>Output debugging information (default: 0, supplying &lt;category&gt; is optional)</source>
-        <translation type="unfinished"/>
+        <translation>Изходяща информация за грешки (по подразбиране: 0, задаването на &lt;category&gt; е опция)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="110"/>
         <source>Provide liquidity to Darksend by infrequently mixing coins on a continual basis (0-100, default: 0, 1=very frequent, high fees, 100=very infrequent, low fees)</source>
-        <translation type="unfinished"/>
+        <translation>Provide liquidity to Darksend by infrequently mixing coins on a continual basis (0-100, default: 0, 1=very frequent, high fees, 100=very infrequent, low fees)
+Осигуряване на ликвидност Darksend от рядко смесване монети непрекъснато в съответствие (0-100, по подразбиране: 0, 1 = много чести, високи такси, 100 = твърде редки, ниски такси)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="114"/>
         <source>Query for peer addresses via DNS lookup, if low on addresses (default: 1 unless -connect)</source>
-        <translation type="unfinished"/>
+        <translation>Заявка за адреси на пиъри чрез DNS справка, ако адресите са недостатъчно (по-подразбиране: 1 освен ако -свързан)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="117"/>
         <source>Set external address:port to get to this masternode (example: address:port)</source>
-        <translation type="unfinished"/>
+        <translation>Задаване на външен адрес:порт на този masternode (пример: адрес:порт)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="119"/>
@@ -4102,7 +4113,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Dash Alert&quot; admin@foo.com
     <message>
         <location filename="../dashstrings.cpp" line="121"/>
         <source>Set the number of script verification threads (%u to %d, 0 = auto, &lt;0 = leave that many cores free, default: %d)</source>
-        <translation>Задаване броя на нишките потвърждаващи скрипта  (%u до %d, 0 = автоматично, &lt;0 = leave that many cores free, по подразбиране: %d)</translation>
+        <translation>Задаване броя на нишките потвърждаващи скрипта  (%u до %d, 0 = автоматично, &lt;0 = да се оставят толкова ядра свободни, по подразбиране: %d)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="124"/>
@@ -4112,7 +4123,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Dash Alert&quot; admin@foo.com
     <message>
         <location filename="../dashstrings.cpp" line="127"/>
         <source>Show N confirmations for a successfully locked transaction (0-9999, default: 1)</source>
-        <translation>Покажи N потвърждения при успешно заключване на транзакция (0-9999, по подразбиране: 1)</translation>
+        <translation>Покажи N потвърждения при успешно заключена транзакция (0-9999, по подразбиране: 1)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="130"/>
@@ -4122,7 +4133,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Dash Alert&quot; admin@foo.com
     <message>
         <location filename="../dashstrings.cpp" line="133"/>
         <source>Unable to bind to %s on this computer. Dash Core is probably already running.</source>
-        <translation type="unfinished"/>
+        <translation>Не може да се свърже с %s на този компютър. Dash ядрото най-вероятно вече работи.</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="136"/>
@@ -4142,12 +4153,12 @@ for example: alertnotify=echo %%s | mail -s &quot;Dash Alert&quot; admin@foo.com
     <message>
         <location filename="../dashstrings.cpp" line="143"/>
         <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: -proxy)</source>
-        <translation>Изполва отделен SOCKS5 прокси, за достигне на пиъри чрез Тор скрита услуга (по подразбиране: -proxy)</translation>
+        <translation>Използва отделен SOCKS5 прокси, за достигне на пиъри чрез Tor скрити услуги (по подразбиране: -proxy)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="146"/>
         <source>Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
-        <translation>Внимание: -paytxfee е с мното голяма зададена стойност! Това е транзакционната такса, която ще платите ако направите транзакция.</translation>
+        <translation>Внимание: -paytxfee е с много голяма зададена стойност! Това е транзакционната такса, която ще платите ако направите транзакция.</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="149"/>
@@ -4162,17 +4173,17 @@ for example: alertnotify=echo %%s | mail -s &quot;Dash Alert&quot; admin@foo.com
     <message>
         <location filename="../dashstrings.cpp" line="155"/>
         <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
-        <translation type="unfinished"/>
+        <translation>Внимание: Не е намерена пълна съвместимост с останалите в мрежата ! Може би се нуждаете от обновяване , или някой от другите нодове се нуждае от обновяване .</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="158"/>
         <source>Warning: error reading wallet.dat! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
-        <translation type="unfinished"/>
+        <translation>Внимание: грешка при четене на wallet.dat! Всички ключове са прочетени коректно, но записи в данните за транзакциите или в адресната книга може би липсват или са грешни.</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="161"/>
         <source>Warning: wallet.dat corrupt, data salvaged! Original wallet.dat saved as wallet.{timestamp}.bak in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
-        <translation type="unfinished"/>
+        <translation>Внимание: wallet.dat  е развален, данните са спасени! Оригиналния wallet.dat е запазен като wallet.{timestamp}.bak в %s; ако твоят баланс или транзакции са неверни трябва да възстановите от резервното копие.</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="165"/>
@@ -4251,7 +4262,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../dashstrings.cpp" line="185"/>
         <source>Can&apos;t denominate: no compatible inputs left.</source>
-        <translation type="unfinished"/>
+        <translation>Не може да бъде деноминирано: няма останали съвместими входящи средства.</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="186"/>
@@ -4281,12 +4292,12 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../dashstrings.cpp" line="191"/>
         <source>Collateral is not valid.</source>
-        <translation type="unfinished"/>
+        <translation>Обезпечението е невалидно.</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="192"/>
         <source>Collateral not valid.</source>
-        <translation type="unfinished"/>
+        <translation>Обезпечението невалидно.</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="193"/>
@@ -4306,7 +4317,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../dashstrings.cpp" line="196"/>
         <source>Connect to KeePassHttp on port &lt;port&gt; (default: 19455)</source>
-        <translation type="unfinished"/>
+        <translation>Свързване към KeePassHttp през порт &lt;port&gt; (по подразбиране: 19455)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="197"/>
@@ -4326,17 +4337,17 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../dashstrings.cpp" line="200"/>
         <source>Dash Core Daemon</source>
-        <translation type="unfinished"/>
+        <translation>Dash ядро демон</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="201"/>
         <source>Dash Core RPC client version</source>
-        <translation type="unfinished"/>
+        <translation>Dash ядро RPC клиент версия</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="202"/>
         <source>Darksend is disabled.</source>
-        <translation>Дарксенд е изключен.</translation>
+        <translation>Darksend е изключен.</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="203"/>
@@ -4376,7 +4387,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../dashstrings.cpp" line="210"/>
         <source>Downgrading and trying again.</source>
-        <translation type="unfinished"/>
+        <translation>Понижете и опитайте отново.</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="211"/>
@@ -4446,7 +4457,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../dashstrings.cpp" line="224"/>
         <source>Error: Disk space is low!</source>
-        <translation>Грешка: мястото на диска е малко!</translation>
+        <translation>Грешка: Мястото на харддиска е малко!</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="225"/>
@@ -4456,7 +4467,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../dashstrings.cpp" line="226"/>
         <source>Error: You already have pending entries in the Darksend pool</source>
-        <translation type="unfinished"/>
+        <translation>Грешка: Вече имате чакащи вписвания в Darksend басейна</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="227"/>
@@ -4466,57 +4477,57 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../dashstrings.cpp" line="228"/>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
-        <translation>Провалено &quot;слушане&quot; на всеки порт. Използвайте -listen=0 ако искате това.</translation>
+        <translation>Неуспешно &quot;слушане&quot; на всеки порт. Използвайте -listen=0 ако искате това.</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="229"/>
         <source>Failed to read block info</source>
-        <translation>Грешка при четене данни на блок</translation>
+        <translation>Неуспешно четене на блок данни</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="230"/>
         <source>Failed to read block</source>
-        <translation>Грешка при четене на блок</translation>
+        <translation>Неуспешно четене на блок</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="231"/>
         <source>Failed to sync block index</source>
-        <translation>Неуспех при синхронизиране на блок индекса</translation>
+        <translation>Неуспешно синхронизиране на блок индекса</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="232"/>
         <source>Failed to write block index</source>
-        <translation>Неуспех при запис в блок индекса </translation>
+        <translation>Неуспешен запис в блок индекса </translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="233"/>
         <source>Failed to write block info</source>
-        <translation>Грешка при запис данни на блок</translation>
+        <translation>Неуспешен запис на блок данни </translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="234"/>
         <source>Failed to write block</source>
-        <translation>Грешка при запис на блок</translation>
+        <translation>Неуспешен запис на блок</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="235"/>
         <source>Failed to write file info</source>
-        <translation>Неуспех при запис на информационния файл</translation>
+        <translation>Неуспешен запис на информационния файл</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="236"/>
         <source>Failed to write to coin database</source>
-        <translation>Неуспех при запис в базата данни на монетата</translation>
+        <translation>Неуспешен запис в базата данни на монетата</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="237"/>
         <source>Failed to write transaction index</source>
-        <translation type="unfinished"/>
+        <translation>Неуспешен запис в индекса на транзакцията</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="238"/>
         <source>Failed to write undo data</source>
-        <translation type="unfinished"/>
+        <translation>Неуспешен запис при връщане на данни</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="239"/>
@@ -4531,7 +4542,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../dashstrings.cpp" line="241"/>
         <source>Force safe mode (default: 0)</source>
-        <translation>Принуди безопасен режим (по подразбиране: 0)</translation>
+        <translation>Принудителен безопасен режим (по подразбиране: 0)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="242"/>
@@ -4556,7 +4567,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../dashstrings.cpp" line="246"/>
         <source>Ignore masternodes less than version (example: 70050; default : 0)</source>
-        <translation>Игнориране на мастернодове с по-ниска версия от (пример: 70050; по подразбиране: 0)</translation>
+        <translation>Игнориране на masternodes с по-ниска версия от (пример: 70050; по подразбиране: 0)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="247"/>
@@ -4581,22 +4592,22 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../dashstrings.cpp" line="251"/>
         <source>Incorrect or no genesis block found. Wrong datadir for network?</source>
-        <translation type="unfinished"/>
+        <translation>Намерен е неправилен или не създаден блок. Грешна data директория за мрежата?</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="252"/>
         <source>Information</source>
-        <translation>Данни</translation>
+        <translation>Информация</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="253"/>
         <source>Initialization sanity check failed. Dash Core is shutting down.</source>
-        <translation type="unfinished"/>
+        <translation>Инициализационната проверка не успешна. Dash ядрото се изключва.</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="254"/>
         <source>Input is not valid.</source>
-        <translation type="unfinished"/>
+        <translation>Въвеждането е невалидно.</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="255"/>
@@ -4661,12 +4672,12 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../dashstrings.cpp" line="267"/>
         <source>KeePassHttp id for the established association</source>
-        <translation type="unfinished"/>
+        <translation>KeePassHttp id за осъществяване на връзка</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="268"/>
         <source>KeePassHttp key for AES encrypted communication with KeePass</source>
-        <translation type="unfinished"/>
+        <translation>KeePassHttp ключ за  AES криптирана връзка с KeePass</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="269"/>
@@ -4676,7 +4687,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../dashstrings.cpp" line="270"/>
         <source>Keep at most &lt;n&gt; unconnectable blocks in memory (default: %u)</source>
-        <translation type="unfinished"/>
+        <translation>Запази поне &lt;n&gt; неосъществени транзакции в паметта (по подразбиране: %u)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="271"/>
@@ -4706,7 +4717,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../dashstrings.cpp" line="276"/>
         <source>Listen for connections on &lt;port&gt; (default: 9999 or testnet: 19999)</source>
-        <translation>Очаквай входящи връзки на  &lt;port&gt; (по подразбиране: 9999 или за тестовата мрежа: 19999)</translation>
+        <translation>Слушане за входящи връзки на  &lt;port&gt; (по подразбиране: 9999 или за тестовата мрежа: 19999)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="277"/>
@@ -4766,12 +4777,12 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../dashstrings.cpp" line="288"/>
         <source>Maximum per-connection receive buffer, &lt;n&gt;*1000 bytes (default: 5000)</source>
-        <translation>Максимален буфер на връзка за получаване, &lt;n&gt;*1000 байта (по подразбиране: 5000)</translation>
+        <translation>Максимален размер на буфера при получаване, &lt;n&gt;*1000 байта (по подразбиране: 5000)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="289"/>
         <source>Maximum per-connection send buffer, &lt;n&gt;*1000 bytes (default: 1000)</source>
-        <translation>Максимален буфер на връзка за изпращане, &lt;n&gt;*1000 байта (по подразбиране: 1000)</translation>
+        <translation>Максимален размер на буфера при изпращане, &lt;n&gt;*1000 байта (по подразбиране: 1000)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="290"/>
@@ -4811,7 +4822,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../dashstrings.cpp" line="297"/>
         <source>Not enough file descriptors available.</source>
-        <translation type="unfinished"/>
+        <translation>Няма достатъчно налични файлови описания.</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="298"/>
@@ -4821,7 +4832,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../dashstrings.cpp" line="299"/>
         <source>Only accept block chain matching built-in checkpoints (default: 1)</source>
-        <translation>Приемане само на регистър на блокове съвпадащ с вградените контролни точки (по подразбиране: 1)</translation>
+        <translation>Приема само блок регистъра съвпадащ с вградените контролни точки (по подразбиране: 1)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="300"/>
@@ -4841,17 +4852,17 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../dashstrings.cpp" line="303"/>
         <source>Prepend debug output with timestamp (default: 1)</source>
-        <translation type="unfinished"/>
+        <translation>Прикрепва справката за грешки към времевия запис(по подразбиране: 1)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="304"/>
         <source>Print block on startup, if found in block index</source>
-        <translation type="unfinished"/>
+        <translation>Показвай блока при стартиране, ако е намерен в блок индекса</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="305"/>
         <source>Print block tree on startup (default: 0)</source>
-        <translation type="unfinished"/>
+        <translation>Разпечатай блоковото дърво при стартиране (по подразбиране: 0)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="306"/>
@@ -4871,17 +4882,17 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../dashstrings.cpp" line="309"/>
         <source>Randomly drop 1 of every &lt;n&gt; network messages</source>
-        <translation type="unfinished"/>
+        <translation>Произволно спира 1 от всеки &lt;n&gt; мрежови съобщения</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="310"/>
         <source>Randomly fuzz 1 of every &lt;n&gt; network messages</source>
-        <translation type="unfinished"/>
+        <translation>Произволно проверява 1 на всеки &lt;n&gt; мрежови съобщения</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="311"/>
         <source>Rebuild block chain index from current blk000??.dat files</source>
-        <translation type="unfinished"/>
+        <translation>Възстановяване индекса на блок регистъра от настоящия blk000??.dat файл</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="312"/>
@@ -4891,7 +4902,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../dashstrings.cpp" line="313"/>
         <source>Rescanning...</source>
-        <translation>Преразглеждане на последовтелността от блокове...</translation>
+        <translation>Повторно сканиране...</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="314"/>
@@ -4901,7 +4912,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../dashstrings.cpp" line="315"/>
         <source>Run in the background as a daemon and accept commands</source>
-        <translation>Стартирай във фонов режим като демон и приемай команди</translation>
+        <translation>Стартира във фонов режим като демон и приема команди</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="316"/>
@@ -4926,7 +4937,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../dashstrings.cpp" line="320"/>
         <source>Send trace/debug info to console instead of debug.log file</source>
-        <translation>Изпрати локализиращата или дебъг информацията към конзолата, вместо файлът debug.log</translation>
+        <translation>Изпрати информацията за грешки към конзолата, вместо файла debug.log</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="321"/>
@@ -4936,7 +4947,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../dashstrings.cpp" line="322"/>
         <source>Server private key (default: server.pem)</source>
-        <translation>Поверителен ключ за сървъра (default: server.pem)</translation>
+        <translation>Частен ключ за сървъра (default: server.pem)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="323"/>
@@ -4956,7 +4967,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../dashstrings.cpp" line="326"/>
         <source>Set key pool size to &lt;n&gt; (default: 100)</source>
-        <translation type="unfinished"/>
+        <translation>Задайте максимален брой на генерираните ключове до &lt;n&gt; (по подразбиране: 100)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="327"/>
@@ -4976,12 +4987,12 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../dashstrings.cpp" line="330"/>
         <source>Set the number of threads to service RPC calls (default: 4)</source>
-        <translation type="unfinished"/>
+        <translation>Задай брой заявки обслужващи процеса RPC повикванията (по подразбиране: 4)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="331"/>
         <source>Sets the DB_PRIVATE flag in the wallet db environment (default: 1)</source>
-        <translation type="unfinished"/>
+        <translation>Определете флага DB_PRIVATE в средата база от данни на портфейла (по подразбиране: 1)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="332"/>
@@ -4991,7 +5002,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../dashstrings.cpp" line="333"/>
         <source>Show benchmark information (default: 0)</source>
-        <translation type="unfinished"/>
+        <translation>Покажи бенчмарк информация (по подразбиране: 0)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="334"/>
@@ -5006,7 +5017,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../dashstrings.cpp" line="336"/>
         <source>Signing timed out, please resubmit.</source>
-        <translation>Времето за подпис изтече, моля изпратете отново.</translation>
+        <translation>Времето за подпис изтече, моля подпишете отново.</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="337"/>
@@ -5056,7 +5067,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../dashstrings.cpp" line="346"/>
         <source>Start Dash Core Daemon</source>
-        <translation type="unfinished"/>
+        <translation>Стартиране на Dash Core  демона</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="347"/>
@@ -5071,7 +5082,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../dashstrings.cpp" line="349"/>
         <source>This is intended for regression testing tools and app development.</source>
-        <translation type="unfinished"/>
+        <translation>Това е предназначено за инструментите за регресивно тестване и разработка на приложението.</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="350"/>
@@ -5121,22 +5132,22 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../dashstrings.cpp" line="359"/>
         <source>Unable to bind to %s on this computer (bind returned error %s)</source>
-        <translation type="unfinished"/>
+        <translation>Не може да се свърже с %s на този компютър (връща грешка %s)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="360"/>
         <source>Unable to sign masternode payment winner, wrong key?</source>
-        <translation type="unfinished"/>
+        <translation>Неуспешно подписване на плащането към masternode победителя. Грешен ключ?</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="361"/>
         <source>Unable to sign spork message, wrong key?</source>
-        <translation type="unfinished"/>
+        <translation>Неуспешно подписване на spork-съобщение. Грешен ключ?</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="362"/>
         <source>Unknown -socks proxy version requested: %i</source>
-        <translation type="unfinished"/>
+        <translation>Заявка за неизвестна версия на -socks прокси: %i</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="363"/>
@@ -5161,7 +5172,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../dashstrings.cpp" line="367"/>
         <source>Use KeePass 2 integration using KeePassHttp plugin (default: 0)</source>
-        <translation type="unfinished"/>
+        <translation>Използвай KeePass 2 интеграция чрез плъгина KeePassHttp (по подразбиране: 0)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="368"/>
@@ -5176,12 +5187,12 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../dashstrings.cpp" line="370"/>
         <source>Use UPnP to map the listening port (default: 0)</source>
-        <translation type="unfinished"/>
+        <translation>Използвай UPnP за определяне на порта за слушане (по подразбиране: 0)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="371"/>
         <source>Use UPnP to map the listening port (default: 1 when listening)</source>
-        <translation type="unfinished"/>
+        <translation>Използвай UPnP за определяне на порта за слушане (по подразбиране: 1 когато слуша)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="372"/>
@@ -5196,7 +5207,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../dashstrings.cpp" line="374"/>
         <source>Value more than Darksend pool maximum allows.</source>
-        <translation type="unfinished"/>
+        <translation>Стойност повече от максимално позволената в Darksend басейна.</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="375"/>
@@ -5216,7 +5227,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../dashstrings.cpp" line="378"/>
         <source>Wallet %s resides outside data directory %s</source>
-        <translation type="unfinished"/>
+        <translation>Портфейла %s е разположен извън папката с данни %s</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="379"/>
@@ -5241,7 +5252,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../dashstrings.cpp" line="383"/>
         <source>Warning: Deprecated argument -debugnet ignored, use -debug=net</source>
-        <translation type="unfinished"/>
+        <translation>Внимание: Аргументът -debugnet е невалиден, използвайте -debug=net </translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="384"/>
@@ -5255,12 +5266,12 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../dashstrings.cpp" line="385"/>
         <source>You need to rebuild the database using -reindex to change -txindex</source>
-        <translation>Необходимо е наново изграждане на базата от данни използвайки -reindex, за да промените -txindex</translation>
+        <translation>Необходимо е повторно изграждане на базата данни използвайки -reindex, за да промените -txindex</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="386"/>
         <source>Zapping all transactions from wallet...</source>
-        <translation type="unfinished"/>
+        <translation>Премахване на всички транзакции от портфейла ...</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="387"/>
