@@ -281,7 +281,7 @@ CBlockTemplate* CreateNewBlock(const Consensus::Params& params, const CScript& s
                 continue;
             }
 
-            CAmount nTxFees = view.GetValueIn(tx)-tx.GetValueOut();
+            CAmount nTxFees = view.GetValueIn(tx) - Consensus::GetValueOut(tx);
 
             UpdateCoins(tx, state, view, nHeight);
 
