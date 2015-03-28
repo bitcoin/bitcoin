@@ -35,6 +35,7 @@ static const CAmount MAX_MONEY = 21000000 * COIN;
 namespace Consensus {
 
 /** Full verification functions */
+bool VerifyTx(const CTransaction& tx, CValidationState &state, int nBlockHeight, int64_t nBlockTime, const CCoinsViewEfficient& inputs, int nSpendHeight, bool cacheStore, unsigned int flags);
 bool VerifyBlockHeader(const CBlockHeader& block, CValidationState& state, const Consensus::Params& params, int64_t nTime, CBlockIndex* pindexPrev);
 
 /** Context-independent validity checks */
