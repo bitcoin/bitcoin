@@ -283,6 +283,16 @@ bool Consensus::ContextualCheckBlock(const CBlock& block, CValidationState& stat
     return true;
 }
 
+bool Consensus::VerifyBlock(const CBlock& block, CValidationState& state, const Consensus::Params& params, int64_t nTime, const CBlockIndex* pindexPrev)
+{
+    if (!CheckBlock(block, nTime, state, params, true, true))
+        return false;
+    if (!ContextualCheckBlock(block, state, params, pindexPrev))
+        return false;
+    return true;    
+}
+
+
 unsigned Consensus::GetFlags(const CBlock& block, CBlockIndex* pindex, const Consensus::Params& params)
 {
     int64_t nBIP16SwitchTime = 1333238400;

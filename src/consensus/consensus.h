@@ -37,6 +37,7 @@ namespace Consensus {
 /** Full verification functions */
 bool VerifyTx(const CTransaction& tx, CValidationState &state, int nBlockHeight, int64_t nBlockTime, const CCoinsViewEfficient& inputs, int nSpendHeight, bool cacheStore, unsigned int flags);
 bool VerifyBlockHeader(const CBlockHeader& block, CValidationState& state, const Consensus::Params& params, int64_t nTime, CBlockIndex* pindexPrev);
+bool VerifyBlock(const CBlock& block, CValidationState& state, const Consensus::Params& params, int64_t nTime, const CBlockIndex* pindexPrev);
 
 /** Context-independent validity checks */
 inline bool VerifyAmount(const CAmount& nValue) { return (nValue >= 0 && nValue <= MAX_MONEY); }
