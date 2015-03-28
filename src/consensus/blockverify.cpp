@@ -277,3 +277,12 @@ bool Consensus::ContextualCheckBlock(const CBlock& block, CValidationState& stat
 
     return true;
 }
+
+bool Consensus::VerifyBlock(const CBlock& block, CValidationState& state, const Consensus::Params& params, int64_t nTime, const CBlockIndexBase* pindexPrev, PrevIndexGetter indexGetter)
+{
+    if (!CheckBlock(block, state, params, nTime, true, true))
+        return false;
+    if (!ContextualCheckBlock(block, state, params, pindexPrev, indexGetter))
+        return false;
+    return true;    
+}
