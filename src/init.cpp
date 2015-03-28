@@ -33,7 +33,6 @@ bool fConfChange;
 unsigned int nNodeLifespan;
 unsigned int nMinerSleep;
 bool fUseFastIndex;
-bool fUseFastStakeMiner;
 bool fUseMemoryLog;
 enum Checkpoints::CPMode CheckpointsMode;
 
