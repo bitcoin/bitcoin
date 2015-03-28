@@ -509,6 +509,66 @@ bool ScanForStakeKernelHash(MetaMap &mapMeta, uint32_t nBits, uint32_t nTime, ui
     return false;
 }
 
+// Scan given input for kernel solutions
+bool ScanInputForStakeKernelHash(CTransaction &tx, uint32_t nOut, uint32_t nBits, uint32_t nSearchInterval, std::pair<uint256, uint32_t> &solution)
+{
+    CBlock block;
+    CTxIndex txindex;
+    uint256 hashProofOfStake;
+
+    int nTime = GetTime();
+
+    CTxDB txdb("r");
+
+    // Load transaction index item
+    if (!txdb.ReadTxIndex(tx.GetHash(), txindex))
+        return false;
+
+    // Read block header
+    if (!block.ReadFromDisk(txindex.pos.nFile, txindex.pos.nBlockPos, false))
+        return false;
+
+    uint64_t nStakeModifier = 0;
+    if (!GetKernelStakeModifier(block.GetHash(), nStakeModifier))
+        return false;
+
+    // Transaction offset inside block
+    uint32_t nTxOffset = txindex.pos.nTxPos - txindex.pos.nBlockPos;
+
+    uint32_t nBlockTime = block.nTime;
+    CBigNum bnTargetPerCoinDay;
+    bnTargetPerCoinDay.SetCompact(nBits);
+    int64_t nValueIn = tx.vout[nOut].nValue;
+
+    // Search backward in time from the given timestamp 
+    // Search nSearchInterval seconds back
+    // Stopping search in case of shutting down
+    for (unsigned int n=0; n<nSearchInterval && !fShutdown; n++)
+    {
+        uint32_t nTimeTx = nTime + n;
+        CBigNum bnCoinDayWeight = CBigNum(nValueIn) * GetWeight((int64_t)tx.nTime, (int64_t)nTimeTx) / COIN / (24 * 60 * 60);
+        CBigNum bnTargetProofOfStake = bnCoinDayWeight * bnTargetPerCoinDay;
+
+        // Build kernel
+        CDataStream ss(SER_GETHASH, 0);
+        ss << nStakeModifier;
+        ss << nBlockTime << nTxOffset << tx.nTime << nOut << nTimeTx;
+
+        // Calculate kernel hash
+        hashProofOfStake = Hash(ss.begin(), ss.end());
+
+        if (bnTargetProofOfStake >= CBigNum(hashProofOfStake))
+        {
+            solution.first = hashProofOfStake;
+            solution.second = nTimeTx;
+
+            return true;
+        }
+    }
+
+    return false;
+}
+
 // Check kernel hash target and coinstake signature
 bool CheckProofOfStake(const CTransaction& tx, unsigned int nBits, uint256& hashProofOfStake, uint256& targetProofOfStake)
 {

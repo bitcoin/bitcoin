@@ -250,6 +250,7 @@ static const CRPCCommand vRPCCommands[] =
     { "getinfo",                &getinfo,                true,   false },
     { "getsubsidy",             &getsubsidy,             true,   false },
     { "getmininginfo",          &getmininginfo,          true,   false },
+    { "scaninput",              &scaninput,              true,   true },
     { "getnewaddress",          &getnewaddress,          true,   false },
     { "getnettotals",           &getnettotals,           true,   true  },
     { "getaccountaddress",      &getaccountaddress,      true,   false },
@@ -1218,6 +1219,10 @@ Array RPCConvertValues(const std::string &strMethod, const std::vector<std::stri
     if (strMethod == "walletpassphrase"       && n > 2) ConvertTo<bool>(params[2]);
     if (strMethod == "getblocktemplate"       && n > 0) ConvertTo<Object>(params[0]);
     if (strMethod == "listsinceblock"         && n > 1) ConvertTo<boost::int64_t>(params[1]);
+
+    if (strMethod == "scaninput"              && n > 1) ConvertTo<int>(params[1]);
+    if (strMethod == "scaninput"              && n > 2) ConvertTo<double>(params[2]);
+    if (strMethod == "scaninput"              && n > 3) ConvertTo<int>(params[3]);
 
     if (strMethod == "sendalert"              && n > 2) ConvertTo<boost::int64_t>(params[2]);
     if (strMethod == "sendalert"              && n > 3) ConvertTo<boost::int64_t>(params[3]);
