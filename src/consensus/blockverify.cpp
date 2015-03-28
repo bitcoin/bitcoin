@@ -153,3 +153,12 @@ bool Consensus::ContextualCheckBlockHeader(const CBlockHeader& block, CValidatio
 
     return true;
 }
+
+bool Consensus::VerifyBlockHeader(const CBlockHeader& block, CValidationState& state, const Consensus::Params& params, int64_t nTime, CBlockIndex* pindexPrev)
+{
+    if (!Consensus::CheckBlockHeader(block, state, params, nTime, true))
+        return false;
+    if (!Consensus::ContextualCheckBlockHeader(block, state, params, pindexPrev))
+        return false;
+    return true;
+}
