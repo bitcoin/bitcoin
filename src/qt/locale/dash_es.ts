@@ -1944,7 +1944,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../overviewpage.cpp" line="381"/>
         <source>Mixing in progress...</source>
-        <translation type="unfinished"/>
+        <translation>Mezclado en curso...</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="387"/>
