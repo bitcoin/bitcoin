@@ -34,6 +34,10 @@ namespace Consensus {
 
 /** Transaction validation functions */
 
+/**
+ * Fully verify a transaction.
+ */
+bool VerifyTx(const CTransaction& tx, CValidationState &state, int nBlockHeight, int64_t nBlockTime, const CCoinsViewCache& inputs, int nSpendHeight, bool cacheStore, unsigned int flags);
 bool CheckTx(const CTransaction&, CValidationState&);
 /**
  * Check whether all inputs of this transaction are valid (no double spends and amounts)

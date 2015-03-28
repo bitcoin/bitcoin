@@ -32,3 +32,18 @@ bool Consensus::CheckTxInputsScripts(const CTransaction& tx, CValidationState& s
     }
     return true;
 }
+
+bool Consensus::VerifyTx(const CTransaction& tx, CValidationState &state, int nBlockHeight, int64_t nBlockTime, const CCoinsViewCache& inputs, int nSpendHeight, bool cacheStore, unsigned int flags)
+{
+    if (!CheckTx(tx, state))
+        return false;
+    if (!CheckFinalTx(tx, nBlockHeight, nBlockTime))
+        return state.DoS(0, false, REJECT_NONSTANDARD, "non-final");
+    if (!CheckTxInputs(tx, state, inputs, nSpendHeight))
+        return false;
+    if (GetSigOpCount(tx, inputs) > MAX_BLOCK_SIGOPS)
+        return state.DoS(0, false, REJECT_NONSTANDARD, "bad-txns-too-many-sigops");
+    if (!CheckTxInputsScripts(tx, state, inputs, cacheStore, flags))
+        return false;        
+    return true;
+}
