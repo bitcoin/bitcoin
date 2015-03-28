@@ -520,6 +520,8 @@ void StakeMiner(CWallet *pwallet)
     // Make this thread recognisable as the mining thread
     RenameThread("novacoin-miner");
 
+    bool fTrySync = true;
+
     // Each thread has its own counter
     unsigned int nExtraNonce = 0;
 
@@ -537,9 +539,21 @@ void StakeMiner(CWallet *pwallet)
 
         while (vNodes.empty() || IsInitialBlockDownload())
         {
+            fTrySync = true;
+
             Sleep(1000);
             if (fShutdown)
                 return;
+        }
+
+        if (fTrySync)
+        {
+            fTrySync = false;
+            if (vNodes.size() < 3 || nBestHeight < GetNumBlocksOfPeers())
+            {
+                Sleep(1000);
+                continue;
+            }
         }
 
         //
