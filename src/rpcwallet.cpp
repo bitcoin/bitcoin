@@ -24,15 +24,6 @@ std::string HelpRequiringPassphrase()
         : "";
 }
 
-static void accountingAllowed()
-{
-    if (!GetBoolArg("-accounts", false))
-        throw runtime_error(
-            "Accounting API is deprecated and its removal is planned in the future.\n"
-            "It can easily result in negative or odd balances if misused or misunderstood.\n"
-            "If you still want to enable it then add accounts=1 to your options.\n");
-}
-
 void EnsureWalletIsUnlocked()
 {
     if (pwalletMain->IsLocked())
@@ -181,9 +172,6 @@ Value getaccountaddress(const Array& params, bool fHelp)
         throw runtime_error(
             "getaccountaddress <account>\n"
             "Returns the current NovaCoin address for receiving payments to this account.");
-
-    // Deprecation check
-    accountingAllowed();
 
     // Parse the account first so we don't generate a key if there's an error
     string strAccount = AccountFromValue(params[0]);
@@ -508,9 +496,6 @@ Value getreceivedbyaccount(const Array& params, bool fHelp)
             "getreceivedbyaccount <account> [minconf=1]\n"
             "Returns the total amount received by addresses with <account> in transactions with at least [minconf] confirmations.");
 
-    // Deprecation check
-    accountingAllowed();
-
     // Minimum confirmations
     int nMinDepth = 1;
     if (params.size() > 1)
@@ -625,9 +610,6 @@ Value getbalance(const Array& params, bool fHelp)
         return  ValueFromAmount(nBalance);
     }
 
-    // Deprecation check
-    accountingAllowed();
-
     string strAccount = AccountFromValue(params[0]);
 
     int64_t nBalance = GetAccountBalance(strAccount, nMinDepth, filter);
@@ -642,9 +624,6 @@ Value movecmd(const Array& params, bool fHelp)
         throw runtime_error(
             "move <fromaccount> <toaccount> <amount> [minconf=1] [comment]\n"
             "Move from one account in your wallet to another.");
-
-    // Deprecation check
-    accountingAllowed();
 
     string strFrom = AccountFromValue(params[0]);
     string strTo = AccountFromValue(params[1]);
@@ -701,9 +680,6 @@ Value sendfrom(const Array& params, bool fHelp)
             "<amount> is a real and is rounded to the nearest " + FormatMoney(MIN_TXOUT_AMOUNT)
             + HelpRequiringPassphrase());
 
-    // Deprecation check
-    accountingAllowed();
-
     string strAccount = AccountFromValue(params[0]);
     CBitcoinAddress address(params[1].get_str());
     if (!address.IsValid())
@@ -748,9 +724,6 @@ Value sendmany(const Array& params, bool fHelp)
             "amounts are double-precision floating point numbers"
             + HelpRequiringPassphrase());
 
-    // Deprecation check
-    accountingAllowed();
-
     string strAccount = AccountFromValue(params[0]);
     Object sendTo = params[1].get_obj();
     int nMinDepth = 1;
@@ -790,13 +763,10 @@ Value sendmany(const Array& params, bool fHelp)
 
     EnsureWalletIsUnlocked();
 
-    if (GetBoolArg("-accounts", false))
-    {
-        // Check funds
-        int64_t nBalance = GetAccountBalance(strAccount, nMinDepth, MINE_SPENDABLE);
-        if (totalAmount > nBalance)
-            throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Account has insufficient funds");
-    }
+    // Check funds
+    int64_t nBalance = GetAccountBalance(strAccount, nMinDepth, MINE_SPENDABLE);
+    if (totalAmount > nBalance)
+        throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Account has insufficient funds");
 
     // Send
     CReserveKey keyChange(pwalletMain);
@@ -1044,9 +1014,6 @@ Value listreceivedbyaccount(const Array& params, bool fHelp)
             "  \"amount\" : total amount received by addresses with this account\n"
             "  \"confirmations\" : number of confirmations of the most recent transaction included");
 
-    // Deprecation check
-    accountingAllowed();
-
     return ListReceived(params, true);
 }
 
@@ -1235,9 +1202,6 @@ Value listaccounts(const Array& params, bool fHelp)
         throw runtime_error(
             "listaccounts [minconf=1]\n"
             "Returns Object that has account names as keys, account balances as values.");
-
-    // Deprecation check
-    accountingAllowed();
 
     int nMinDepth = 1;
     if (params.size() > 0)
