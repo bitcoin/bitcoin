@@ -9,7 +9,7 @@
 #include <boost/signals2/signal.hpp>
 
 class CBlock;
-class CBlockLocator;
+struct CBlockLocator;
 class CTransaction;
 class CValidationInterface;
 class CValidationState;
