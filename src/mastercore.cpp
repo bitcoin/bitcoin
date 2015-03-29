@@ -1175,7 +1175,7 @@ int parseTransaction(bool bRPConly, const CTransaction &wtx, int nBlock, unsigne
   mp_tx->Set(wtx.GetHash(), nBlock, idx, nTime);
 
 
-  // ### EXODUS MARKER IDENTIFICATION ### - quickly go through the outputs & ensure there is a marker (a send to the Exodus address)
+  // ### EXODUS MARKER IDENTIFICATION ### - quickly go through the outputs & ensure there is a marker (exodus and/or omni bytes)
   for (unsigned int i = 0; i < wtx.vout.size(); i++) {
       txnouttype outType;
       if (!getOutputType(wtx.vout[i].scriptPubKey, outType)) continue; //unable to get an output type, ignore
@@ -2663,6 +2663,7 @@ int mastercore::ClassAgnostic_send(const string &senderAddress, const string &re
     vector< pair<CScript, int64_t> > vecSend;
     bool fallBackToClassB = false;
     if(data.size()>nMaxDatacarrierBytes-4) fallBackToClassB = true; // OP_RETURN data size limited to nMaxDatacarrierBytes bytes (and we need 4 for the marker), if size is over this send via multisig
+    if((fallBackToClassB) && (data.size()>CLASS_B_MAX_SENDABLE_PACKETS*30)) return MP_TX_TOO_BIG; // transaction is too big to send
     CWalletTx wtxNew; // prepare a new transaction
     int64_t nFeeRet = 0;
     std::string strFailReason;

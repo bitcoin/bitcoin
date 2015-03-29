@@ -13,6 +13,7 @@ enum MPRPCErrorCode
     //ClassB_send
     MP_INPUTS_INVALID =             -212,
     MP_REDEMP_ILLEGAL =             -233,
+    MP_TX_TOO_BIG =                 -240,
     MP_REDEMP_BAD_KEYID =           -220,
     MP_REDEMP_FETCH_ERR_PUBKEY =    -221,
     MP_REDEMP_INVALID_PUBKEY =      -222,
