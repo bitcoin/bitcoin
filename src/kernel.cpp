@@ -512,13 +512,10 @@ bool ScanForStakeKernelHash(MetaMap &mapMeta, uint32_t nBits, uint32_t nTime, ui
 // Scan given input for kernel solution
 bool ScanInputForStakeKernelHash(CTransaction &tx, uint32_t nOut, uint32_t nBits, uint32_t nSearchInterval, std::pair<uint256, uint32_t> &solution)
 {
+    CTxDB txdb("r");
+
     CBlock block;
     CTxIndex txindex;
-    uint256 hashProofOfStake;
-
-    int nTime = GetTime();
-
-    CTxDB txdb("r");
 
     // Load transaction index item
     if (!txdb.ReadTxIndex(tx.GetHash(), txindex))
@@ -532,13 +529,17 @@ bool ScanInputForStakeKernelHash(CTransaction &tx, uint32_t nOut, uint32_t nBits
     if (!GetKernelStakeModifier(block.GetHash(), nStakeModifier))
         return false;
 
+    uint32_t nTime = GetTime();
+    // Only count coins meeting min age requirement
+    if (nStakeMinAge + block.nTime > nTime)
+        nTime += (nStakeMinAge + block.nTime - nTime);
+
     // Transaction offset inside block
     uint32_t nTxOffset = txindex.pos.nTxPos - txindex.pos.nBlockPos;
+    int64_t nValueIn = tx.vout[nOut].nValue;
 
-    uint32_t nBlockTime = block.nTime;
     CBigNum bnTargetPerCoinDay;
     bnTargetPerCoinDay.SetCompact(nBits);
-    int64_t nValueIn = tx.vout[nOut].nValue;
 
     // Search forward in time from the given timestamp
     // Stopping search in case of shutting down
@@ -551,10 +552,10 @@ bool ScanInputForStakeKernelHash(CTransaction &tx, uint32_t nOut, uint32_t nBits
         // Build kernel
         CDataStream ss(SER_GETHASH, 0);
         ss << nStakeModifier;
-        ss << nBlockTime << nTxOffset << tx.nTime << nOut << nTimeTx;
+        ss << block.nTime << nTxOffset << tx.nTime << nOut << nTimeTx;
 
         // Calculate kernel hash
-        hashProofOfStake = Hash(ss.begin(), ss.end());
+        uint256 hashProofOfStake = Hash(ss.begin(), ss.end());
 
         if (bnTargetProofOfStake >= CBigNum(hashProofOfStake))
         {
