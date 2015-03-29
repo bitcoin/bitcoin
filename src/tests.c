@@ -884,8 +884,8 @@ void test_ge(void) {
      * All magnitudes are randomized.
      * All 17*17 combinations of points are added to eachother, using all applicable methods.
      */
-    secp256k1_ge_t *ge = malloc(sizeof(secp256k1_ge_t) * (1 + 4 * runs));
-    secp256k1_gej_t *gej = malloc(sizeof(secp256k1_gej_t) * (1 + 4 * runs));
+    secp256k1_ge_t *ge = (secp256k1_ge_t *)malloc(sizeof(secp256k1_ge_t) * (1 + 4 * runs));
+    secp256k1_gej_t *gej = (secp256k1_gej_t *)malloc(sizeof(secp256k1_gej_t) * (1 + 4 * runs));
     secp256k1_gej_set_infinity(&gej[0]);
     secp256k1_ge_clear(&ge[0]);
     secp256k1_ge_set_gej_var(&ge[0], &gej[0]);
@@ -961,7 +961,7 @@ void test_ge(void) {
     /* Test adding all points together in random order equals infinity. */
     {
         secp256k1_gej_t sum = SECP256K1_GEJ_CONST_INFINITY;
-        secp256k1_gej_t *gej_shuffled = malloc((4 * runs + 1) * sizeof(secp256k1_gej_t));
+        secp256k1_gej_t *gej_shuffled = (secp256k1_gej_t *)malloc((4 * runs + 1) * sizeof(secp256k1_gej_t));
         for (i = 0; i < 4 * runs + 1; i++) {
             gej_shuffled[i] = gej[i];
         }
@@ -982,7 +982,7 @@ void test_ge(void) {
 
     /* Test batch gej -> ge conversion. */
     {
-        secp256k1_ge_t *ge_set_all = malloc((4 * runs + 1) * sizeof(secp256k1_ge_t));
+        secp256k1_ge_t *ge_set_all = (secp256k1_ge_t *)malloc((4 * runs + 1) * sizeof(secp256k1_ge_t));
         secp256k1_ge_set_all_gej_var(4 * runs + 1, ge_set_all, gej);
         for (i = 0; i < 4 * runs + 1; i++) {
             ge_equals_gej(&ge_set_all[i], &gej[i]);
