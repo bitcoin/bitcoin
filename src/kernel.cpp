@@ -509,7 +509,7 @@ bool ScanForStakeKernelHash(MetaMap &mapMeta, uint32_t nBits, uint32_t nTime, ui
     return false;
 }
 
-// Scan given input for kernel solutions
+// Scan given input for kernel solution
 bool ScanInputForStakeKernelHash(CTransaction &tx, uint32_t nOut, uint32_t nBits, uint32_t nSearchInterval, std::pair<uint256, uint32_t> &solution)
 {
     CBlock block;
@@ -540,8 +540,7 @@ bool ScanInputForStakeKernelHash(CTransaction &tx, uint32_t nOut, uint32_t nBits
     bnTargetPerCoinDay.SetCompact(nBits);
     int64_t nValueIn = tx.vout[nOut].nValue;
 
-    // Search backward in time from the given timestamp 
-    // Search nSearchInterval seconds back
+    // Search forward in time from the given timestamp
     // Stopping search in case of shutting down
     for (unsigned int n=0; n<nSearchInterval && !fShutdown; n++)
     {
