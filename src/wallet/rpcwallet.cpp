@@ -2096,3 +2096,25 @@ Value getwalletinfo(const Array& params, bool fHelp)
         obj.push_back(Pair("unlocked_until", nWalletUnlockTime));
     return obj;
 }
+
+Value resendwallettransactions(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 0)
+        throw runtime_error(
+            "resendwallettransactions\n"
+            "Immediately re-broadcast unconfirmed wallet transactions to all peers.\n"
+            "Intended only for testing; the wallet code periodically re-broadcasts\n"
+            "automatically.\n"
+            "Returns array of transaction ids that were re-broadcast.\n"
+            );
+
+    LOCK2(cs_main, pwalletMain->cs_wallet);
+
+    std::vector<uint256> txids = pwalletMain->ResendWalletTransactionsBefore(GetTime());
+    Array result;
+    BOOST_FOREACH(const uint256& txid, txids)
+    {
+        result.push_back(txid.ToString());
+    }
+    return result;
+}

@@ -16,6 +16,7 @@
 #   h) node0 should now have 2 unspent outputs;  send these to node2 via raw tx broadcast by node1
 #   i) have node1 mine a block
 #   j) check balances - node0 should have 0, node2 should have 100
+#   k) test ResendWalletTransactions - create transactions, startup fourth node, make sure it syncs
 #
 
 from test_framework import BitcoinTestFramework
@@ -26,7 +27,7 @@ class WalletTest (BitcoinTestFramework):
 
     def setup_chain(self):
         print("Initializing test directory "+self.options.tmpdir)
-        initialize_chain_clean(self.options.tmpdir, 3)
+        initialize_chain_clean(self.options.tmpdir, 4)
 
     def setup_network(self, split=False):
         self.nodes = start_nodes(3, self.options.tmpdir)
@@ -131,6 +132,24 @@ class WalletTest (BitcoinTestFramework):
         self.sync_all()
         assert_equal(self.nodes[2].getbalance(), Decimal('59.99800000'))
         assert_equal(self.nodes[0].getbalance(), Decimal('39.99800000'))
+
+        # Test ResendWalletTransactions:
+        # Create a couple of transactions, then start up a fourth
+        # node (nodes[3]) and ask nodes[0] to rebroadcast.
+        # EXPECT: nodes[3] should have those transactions in its mempool.
+        txid1 = self.nodes[0].sendtoaddress(self.nodes[1].getnewaddress(), 1)
+        txid2 = self.nodes[1].sendtoaddress(self.nodes[0].getnewaddress(), 1)
+        sync_mempools(self.nodes)
+
+        self.nodes.append(start_node(3, self.options.tmpdir))
+        connect_nodes_bi(self.nodes, 0, 3)
+        sync_blocks(self.nodes)
+
+        relayed = self.nodes[0].resendwallettransactions()
+        assert_equal(set(relayed), set([txid1, txid2]))
+        sync_mempools(self.nodes)
+
+        assert(txid1 in self.nodes[3].getrawmempool())
 
 if __name__ == '__main__':
     WalletTest ().main ()
