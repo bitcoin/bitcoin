@@ -521,6 +521,8 @@ extern uint64_t global_balance_reserved_maineco[100000];
 extern uint64_t global_balance_money_testeco[100000];
 extern uint64_t global_balance_reserved_testeco[100000];
 
+extern std::string exodus_address;
+
 int mastercore_init(void);
 
 int64_t getMPbalance(const string &Address, unsigned int property, TallyType ttype);

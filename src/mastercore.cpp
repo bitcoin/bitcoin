@@ -22,6 +22,8 @@
 #include "mastercore_sp.h"
 #include "mastercore_tx.h"
 #include "mastercore_version.h"
+#include "omnicore_encoding.h"
+#include "omnicore_utils.h"
 
 #include "base58.h"
 #include "chainparams.h"
@@ -91,7 +93,7 @@ using namespace mastercore;
 // comment out MY_HACK & others here - used for Unit Testing only !
 // #define MY_HACK
 
-static string exodus_address = "1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P";
+string exodus_address = "1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P";
 static const string exodus_testnet = "mpexoDuSkGGqvqrkrjiFng38QPkJQVFyqv";
 static const string getmoney_testnet = "moneyqMan7uh8FqdCA2BV5yZ8qVrc9ikLP";
 
@@ -1062,28 +1064,6 @@ int mastercore::set_wallet_totals()
   //printf("Global MSC totals: MSC_total= %lu, MSC_RESERVED_total= %lu\n", global_balance_money_maineco[1], global_balance_reserved_maineco[1]);
   //std::cout << t.elapsed() << std::endl;
   return (my_addresses_count);
-}
-
-static void prepareObfuscatedHashes(const string &address, string (&ObfsHashes)[1+MAX_SHA256_OBFUSCATION_TIMES])
-{
-unsigned char sha_input[128];
-unsigned char sha_result[128];
-vector<unsigned char> vec_chars;
-
-  strcpy((char *)sha_input, address.c_str());
-  // do only as many re-hashes as there are mastercoin packets, 255 per spec
-  for (unsigned int j = 1; j<=MAX_SHA256_OBFUSCATION_TIMES;j++)
-  {
-    SHA256(sha_input, strlen((const char *)sha_input), sha_result);
-
-      vec_chars.resize(32);
-      memcpy(&vec_chars[0], &sha_result[0], 32);
-      ObfsHashes[j] = HexStr(vec_chars);
-      boost::to_upper(ObfsHashes[j]); // uppercase per spec
-
-      if (msc_debug_verbose2) if (5>j) file_log("%d: sha256 hex: %s\n", j, ObfsHashes[j].c_str());
-      strcpy((char *)sha_input, ObfsHashes[j].c_str());
-  }
 }
 
 static bool getOutputType(const CScript& scriptPubKey, txnouttype& whichTypeRet)
@@ -2553,31 +2533,6 @@ CWallet *wallet = pwalletMain;
   return string();
 }
 
-//
-// Determines minimum output amount to be spent by an output based on
-// scriptPubKey size in relation to the minimum relay fee.
-// 
-// This method is very related with IsDust(nMinRelayTxFee) in core.h.
-//
-int64_t GetDustLimit(const CScript& scriptPubKey)
-{
-    // The total size is based on a typical scriptSig size of 148 byte,
-    // 8 byte accounted for the size of output value and the serialized
-    // size of scriptPubKey.
-    size_t nSize = ::GetSerializeSize(scriptPubKey, SER_DISK, 0) + 156;
-
-    // The minimum relay fee dictates a threshold value under which a
-    // transaction won't be relayed.
-    int64_t nRelayTxFee = (::minRelayTxFee).GetFee(nSize);
-
-    // A transaction is considered as "dust", if less than 1/3 of the
-    // minimum fee required to relay a transaction is spent by one of
-    // it's outputs. The minimum relay fee is defined per 1000 byte.
-    int64_t nDustLimit = nRelayTxFee * 3;
-
-    return nDustLimit;
-}
-
 static int64_t selectCoins(const string &FromAddress, CCoinControl &coinControl, int64_t additional)
 {
   CWallet *wallet = pwalletMain;
@@ -2658,98 +2613,68 @@ int64_t feeCheck(const string &address)
 // CLASS Agnostic SEND - will use class depending on size
 int mastercore::ClassAgnostic_send(const string &senderAddress, const string &receiverAddress, const string &redemptionAddress, const vector<unsigned char> &data, uint256 & txid, int64_t referenceamount)
 {
+    // Determine the class to send the transaction via - default is Class C
+    int omniTxClass = OMNI_CLASS_C;
+    if(data.size()>nMaxDatacarrierBytes-4) omniTxClass = OMNI_CLASS_B;
+
+    // Prepare the transaction - first setup some vars
     CWallet *wallet = pwalletMain;
     CCoinControl coinControl;
-    vector< pair<CScript, int64_t> > vecSend;
-    bool fallBackToClassB = false;
-    if(data.size()>nMaxDatacarrierBytes-4) fallBackToClassB = true; // OP_RETURN data size limited to nMaxDatacarrierBytes bytes (and we need 4 for the marker), if size is over this send via multisig
-    if((fallBackToClassB) && (data.size()>CLASS_B_MAX_SENDABLE_PACKETS*30)) return MP_TX_TOO_BIG; // transaction is too big to send
-    CWalletTx wtxNew; // prepare a new transaction
+    txid = 0;
+    CWalletTx wtxNew;
     int64_t nFeeRet = 0;
     std::string strFailReason;
-    CReserveKey reserveKey(wallet);
-    CBitcoinAddress addr = CBitcoinAddress(senderAddress);  // change goes back to us
+    vector< pair<CScript, int64_t> > vecSend;
+    CReserveKey reserveKey(wallet); // TODO NEEDED?
+
+    // Next, we set the change address to the sender
+    CBitcoinAddress addr = CBitcoinAddress(senderAddress);
     coinControl.destChange = addr.Get();
-    if (!receiverAddress.empty()) { // add the the reference/recepient/receiver ouput if needed
+
+    // Then add a paytopubkeyhash output for the recipient (if needed)
+    if (!receiverAddress.empty()) {
         CScript scriptPubKey = GetScriptForDestination(CBitcoinAddress(receiverAddress).Get());
         vecSend.push_back(make_pair(scriptPubKey, 0 < referenceamount ? referenceamount : GetDustLimit(scriptPubKey)));
     }
+
+    // Select the inputs
     if (0 > selectCoins(senderAddress, coinControl, referenceamount)) { return MP_INPUTS_INVALID; }
-    txid = 0;
-    if(fallBackToClassB) { // ### CLASS B ### prepare to send via multisig, first determine the redeeming public key for our multisig outputs - current max 2 keys
-        CScript scriptPubKey = GetScriptForDestination(CBitcoinAddress(exodus_address).Get());
-        vecSend.push_back(make_pair(scriptPubKey, GetDustLimit(scriptPubKey))); // add the marker output
-        CBitcoinAddress address;
-        CPubKey redeemingPubKey;
-        if (false == redemptionAddress.empty()) { address.SetString(redemptionAddress); } else { address.SetString(senderAddress); }
-        if (wallet && address.IsValid()) { // validate that the redemption Address is good
-            if (address.IsScript()) {
-                file_log("%s() ERROR: Redemption Address must be specified !\n", __FUNCTION__);
-                return MP_REDEMP_ILLEGAL;
-            } else {
-                CKeyID keyID;
-                if (!address.GetKeyID(keyID)) return MP_REDEMP_BAD_KEYID;
-                if (!bRawTX) {
-                    if (!wallet->GetPubKey(keyID, redeemingPubKey)) return MP_REDEMP_FETCH_ERR_PUBKEY;
-                    if (!redeemingPubKey.IsFullyValid()) return MP_REDEMP_INVALID_PUBKEY;
+
+    // Encode the data outputs
+    switch(omniTxClass) {
+        case OMNI_CLASS_B: { // declaring vars in a switch here so use an expicit code block
+            CBitcoinAddress address;
+            CPubKey redeemingPubKey;
+            if (!redemptionAddress.empty()) { address.SetString(redemptionAddress); } else { address.SetString(senderAddress); }
+            if (wallet && address.IsValid()) { // validate the redemption address
+                if (address.IsScript()) {
+                    file_log("%s() ERROR: Redemption Address must be specified !\n", __FUNCTION__);
+                    return MP_REDEMP_ILLEGAL;
+                } else {
+                    CKeyID keyID;
+                    if (!address.GetKeyID(keyID)) return MP_REDEMP_BAD_KEYID;
+                    if (!bRawTX) {
+                        if (!wallet->GetPubKey(keyID, redeemingPubKey)) return MP_REDEMP_FETCH_ERR_PUBKEY;
+                        if (!redeemingPubKey.IsFullyValid()) return MP_REDEMP_INVALID_PUBKEY;
+                    }
                 }
-            }
-        }
-        else return MP_REDEMP_BAD_VALIDATION;
-        int nRemainingBytes = data.size();
-        int nNextByte = 0;
-        unsigned char seqNum = 1;
-        string strObfuscatedHashes[1+MAX_SHA256_OBFUSCATION_TIMES];
-        prepareObfuscatedHashes(senderAddress, strObfuscatedHashes);
-        while (nRemainingBytes > 0) {
-            int nKeys = 1; // assume one key of data since we have data remaining
-            if (nRemainingBytes > (PACKET_SIZE - 1)) { nKeys += 1; } // we have enough data for 2 keys in this output
-            vector<CPubKey> keys;
-            keys.push_back(redeemingPubKey); // always include the redeeming pubkey
-            int i;
-            for (i = 0; i < nKeys; i++) {
-                vector<unsigned char> fakeKey;
-                fakeKey.push_back(seqNum); // add sequence number
-                int numBytes = nRemainingBytes < (PACKET_SIZE - 1) ? nRemainingBytes: (PACKET_SIZE - 1); // add up to 30 bytes of data
-                fakeKey.insert(fakeKey.end(), data.begin() + nNextByte, data.begin() + nNextByte + numBytes);
-                nNextByte += numBytes;
-                nRemainingBytes -= numBytes;
-                while (fakeKey.size() < PACKET_SIZE) { fakeKey.push_back(0); } // pad to 31 total bytes with zeros
-                int j;
-                vector<unsigned char>hash = ParseHex(strObfuscatedHashes[seqNum]);
-                for (j = 0; j < PACKET_SIZE; j++) { // xor in the obfuscation
-                    fakeKey[j] = fakeKey[j] ^ hash[j];
-                }
-                fakeKey.insert(fakeKey.begin(), 2); // prepend the 2
-                CPubKey pubKey;
-                fakeKey.resize(33);
-                unsigned char random_byte = (unsigned char)(GetRand(256)); // fix up the ecdsa code point
-                for (j = 0; i < 256 ; j++) {
-                    fakeKey[32] = random_byte;
-                    pubKey = CPubKey(fakeKey);
-                    file_log("pubKey check: %s\n", (HexStr(pubKey.begin(), pubKey.end()).c_str()));
-                    if (pubKey.IsFullyValid()) break;
-                    ++random_byte; // cycle 256 times, if we must to find a valid ECDSA point
-                }
-                keys.push_back(pubKey);
-                seqNum++;
-            }
-            CScript multisig_output = GetScriptForMultisig(1, keys);
-            vecSend.push_back(make_pair(multisig_output, GetDustLimit(multisig_output)));
-        }
-    } else { // ### CLASS C ### prepare to send via OP_RETURN
-        const unsigned char bytes[] = {0x6f,0x6d,0x6e,0x69};
-        std::vector<unsigned char> omniBytesPlusData(bytes, bytes+sizeof(bytes)/sizeof(bytes[0]));
-        omniBytesPlusData.insert(omniBytesPlusData.end(), data.begin(), data.end());
-        CScript op_return_output;
-        op_return_output << OP_RETURN << omniBytesPlusData; //omnibytes << data;
-        vecSend.push_back(make_pair(op_return_output, 0));
+            } else return MP_REDEMP_BAD_VALIDATION;
+            if(!OmniCore_Encode_ClassB(senderAddress,redeemingPubKey,data,vecSend)) { return MP_ENCODING_ERROR; }
+        break; }
+        case OMNI_CLASS_C:
+            if(!OmniCore_Encode_ClassC(data,vecSend)) { return MP_ENCODING_ERROR; }
+        break;
     }
+
+    // Now we have what we need to pass to the wallet to create the transaction, perform some checks first
     if (!wallet) return MP_ERR_WALLET_ACCESS;
-    if (!coinControl.HasSelected()) return MP_ERR_INPUTSELECT_FAIL; // selected in the parent function, i.e.: ensure we are only using the address passed in as the Sender
+    if (!coinControl.HasSelected()) return MP_ERR_INPUTSELECT_FAIL;
     LOCK(wallet->cs_wallet);
-    // the fee will be computed by Bitcoin Core, need an override (?) // TODO: look at Bitcoin Core's global: nTransactionFee (?)
-    if (!wallet->CreateTransaction(vecSend, wtxNew, reserveKey, nFeeRet, strFailReason, &coinControl)) { printf("FAIL %s\n",strFailReason.c_str()); return MP_ERR_CREATE_TX; }
+
+    // Ask the wallet to create the transaction (note mining fee determined by Bitcoin Core params)
+    if (!wallet->CreateTransaction(vecSend, wtxNew, reserveKey, nFeeRet, strFailReason, &coinControl)) { return MP_ERR_CREATE_TX; }
+
+    // If this request is only to create, but not commit the transaction then display it and exit
     if (bRawTX) {
         CTransaction tx = (CTransaction) wtxNew;
         CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
@@ -2758,6 +2683,8 @@ int mastercore::ClassAgnostic_send(const string &senderAddress, const string &re
         printf("RawTX:\n%s\n\n", strHex.c_str());
         return 0;
     }
+
+    // Commit the transaction to the wallet and broadcast)
     file_log("%s():%s; nFeeRet = %lu, line %d, file: %s\n", __FUNCTION__, wtxNew.ToString().c_str(), nFeeRet, __LINE__, __FILE__);
     if (!wallet->CommitTransaction(wtxNew, reserveKey)) return MP_ERR_COMMIT_TX;
     txid = wtxNew.GetHash();
