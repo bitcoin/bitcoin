@@ -4400,7 +4400,7 @@ Se o ficheiro não existir, deve criá-lo só com permissões de leitura para o 
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="213"/>
-        <source>Error connecting to Masternode.</source>
+        <source>Error connecting to masternode.</source>
         <translation>Erro ao ligar ao masternode.</translation>
     </message>
     <message>
