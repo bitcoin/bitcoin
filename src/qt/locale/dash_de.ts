@@ -2013,17 +2013,17 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../overviewpage.cpp" line="414"/>
         <source>Submitted to masternode, waiting in queue .</source>
-        <translation>An Masternode übermittelt, wartet in Warteschange .</translation>
+        <translation>An Masternode übermittelt, wartet in Warteschlange .</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="415"/>
         <source>Submitted to masternode, waiting in queue ..</source>
-        <translation>An Masternode übermittelt, wartet in Warteschange ..</translation>
+        <translation>An Masternode übermittelt, wartet in Warteschlange ..</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="416"/>
         <source>Submitted to masternode, waiting in queue ...</source>
-        <translation>An Masternode übermittelt, wartet in Warteschange ...</translation>
+        <translation>An Masternode übermittelt, wartet in Warteschlange ...</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="418"/>
@@ -3148,8 +3148,7 @@ Dies kann passieren, wenn einige Dash aus ihrer Wallet bereits ausgegeben wurden
     <message>
         <location filename="../signverifymessagedialog.cpp" line="31"/>
         <source>Enter a Dash address (e.g. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</source>
-        <translation>Dash-Adresse eingeben.
-(z.B. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
+        <translation>Dash-Adresse eingeben (z.B. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
     </message>
     <message>
         <location filename="../signverifymessagedialog.cpp" line="114"/>
@@ -4737,7 +4736,7 @@ Dash Core wird heruntergefahren.</translation>
     <message>
         <location filename="../dashstrings.cpp" line="279"/>
         <source>Loading masternode list...</source>
-        <translation type="unfinished"/>
+        <translation>Lade Masternode-Liste...</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="280"/>

@@ -1943,7 +1943,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../overviewpage.cpp" line="381"/>
         <source>Mixing in progress...</source>
-        <translation type="unfinished"/>
+        <translation>Đang trong quá trình trộn...</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="387"/>
@@ -4387,7 +4387,7 @@ Nếu tệp không tồn tại, tạo nó với quyền tệp owner-readable-onl
     <message>
         <location filename="../dashstrings.cpp" line="210"/>
         <source>Downgrading and trying again.</source>
-        <translation type="unfinished"/>
+        <translation>Hạ cấp và thử lại xem.</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="211"/>
