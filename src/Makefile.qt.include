@@ -96,7 +96,10 @@ QT_FORMS_UI = \
   qt/forms/lookupaddressdialog.ui \
   qt/forms/lookupspdialog.ui \
   qt/forms/lookuptxdialog.ui \
-  qt/forms/txhistorydialog.ui
+  qt/forms/txhistorydialog.ui \
+  qt/forms/metadexcanceldialog.ui \
+  qt/forms/metadexdialog.ui \
+  qt/forms/orderhistorydialog.ui
 
 QT_MOC_CPP = \
   qt/moc_addressbookpage.cpp \
@@ -142,14 +145,16 @@ QT_MOC_CPP = \
   qt/moc_walletframe.cpp \
   qt/moc_walletmodel.cpp \
   qt/moc_walletview.cpp \
-  qt/moc_overviewlistdelegate.cpp \
   qt/moc_sendmpdialog.cpp \
   qt/moc_lookupaddressdialog.cpp \
   qt/moc_lookupspdialog.cpp \
   qt/moc_lookuptxdialog.cpp \
   qt/moc_txhistorydialog.cpp \
   qt/moc_balancesview.cpp \
-  qt/moc_omnicore_init.cpp
+  qt/moc_omnicore_init.cpp \
+  qt/moc_metadexdialog.cpp \
+  qt/moc_metadexcanceldialog.cpp \
+  qt/moc_orderhistorydialog.cpp
 
 BITCOIN_MM = \
   qt/macdockiconhandler.mm \
@@ -221,13 +226,15 @@ BITCOIN_QT_H = \
   qt/walletmodeltransaction.h \
   qt/walletview.h \
   qt/winshutdownmonitor.h \
-  qt/overviewlistdelegate.h \
   qt/lookupaddressdialog.h \
   qt/lookupspdialog.h \
   qt/lookuptxdialog.h \
   qt/txhistorydialog.h \
   qt/balancesview.h \
-  qt/omnicore_init.h
+  qt/omnicore_init.h \
+  qt/metadexdialog.h \
+  qt/metadexcanceldialog.h \
+  qt/orderhistorydialog.h
 
 RES_ICONS = \
   qt/res/icons/add.png \
@@ -345,14 +352,16 @@ BITCOIN_QT_CPP += \
   qt/walletmodel.cpp \
   qt/walletmodeltransaction.cpp \
   qt/walletview.cpp \
-  qt/overviewlistdelegate.cpp \
   qt/sendmpdialog.cpp \
   qt/lookupaddressdialog.cpp \
   qt/lookupspdialog.cpp \
   qt/lookuptxdialog.cpp \
   qt/txhistorydialog.cpp \
   qt/balancesview.cpp \
-  qt/omnicore_init.cpp
+  qt/omnicore_init.cpp \
+  qt/metadexdialog.cpp \
+  qt/metadexcanceldialog.cpp \
+  qt/orderhistorydialog.cpp
 endif
 
 RES_IMAGES = \
