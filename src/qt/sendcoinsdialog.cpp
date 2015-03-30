@@ -46,6 +46,13 @@ SendCoinsDialog::SendCoinsDialog(QWidget *parent) :
     connect(ui->pushButtonCoinControl, SIGNAL(clicked()), this, SLOT(coinControlButtonClicked()));
     connect(ui->checkBoxCoinControlChange, SIGNAL(stateChanged(int)), this, SLOT(coinControlChangeChecked(int)));
     connect(ui->lineEditCoinControlChange, SIGNAL(textEdited(const QString &)), this, SLOT(coinControlChangeEdited(const QString &)));
+
+    // Dash specific
+    if(fLiteMode) {
+        ui->checkUseDarksend->setChecked(false);
+        ui->checkUseDarksend->setVisible(false);
+        ui->checkInstantX->setVisible(false);
+    }
     connect(ui->checkUseDarksend, SIGNAL(stateChanged ( int )), this, SLOT(updateDisplayUnit()));
     connect(ui->checkInstantX, SIGNAL(stateChanged ( int )), this, SLOT(updateInstantX()));
 
