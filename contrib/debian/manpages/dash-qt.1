@@ -1,0 +1,206 @@
+.TH BITCOIN-QT "1" "April 2013" "bitcoin-qt 1"
+.SH NAME
+bitcoin-qt \- peer-to-peer network based digital currency
+.SH DESCRIPTION
+.SS "Usage:"
+.IP
+bitcoin\-qt [command\-line options]
+.SH OPTIONS
+.TP
+\-?
+This help message
+.TP
+\fB\-conf=\fR<file>
+Specify configuration file (default: dash.conf)
+.TP
+\fB\-pid=\fR<file>
+Specify pid file (default: bitcoind.pid)
+.TP
+\fB\-gen\fR
+Generate coins
+.TP
+\fB\-gen\fR=\fI0\fR
+Don't generate coins
+.TP
+\fB\-datadir=\fR<dir>
+Specify data directory
+.TP
+\fB\-dbcache=\fR<n>
+Set database cache size in megabytes (default: 25)
+.TP
+\fB\-timeout=\fR<n>
+Specify connection timeout in milliseconds (default: 5000)
+.TP
+\fB\-proxy=\fR<ip:port>
+Connect through socks proxy
+.TP
+\fB\-socks=\fR<n>
+Select the version of socks proxy to use (4\-5, default: 5)
+.TP
+\fB\-tor=\fR<ip:port>
+Use proxy to reach tor hidden services (default: same as \fB\-proxy\fR)
+.TP
+\fB\-dns\fR
+Allow DNS lookups for \fB\-addnode\fR, \fB\-seednode\fR and \fB\-connect\fR
+.TP
+\fB\-port=\fR<port>
+Listen for connections on <port> (default: 9999 or testnet: 19999)
+.TP
+\fB\-maxconnections=\fR<n>
+Maintain at most <n> connections to peers (default: 125)
+.TP
+\fB\-addnode=\fR<ip>
+Add a node to connect to and attempt to keep the connection open
+.TP
+\fB\-connect=\fR<ip>
+Connect only to the specified node(s)
+.TP
+\fB\-seednode=\fR<ip>
+Connect to a node to retrieve peer addresses, and disconnect
+.TP
+\fB\-externalip=\fR<ip>
+Specify your own public address
+.TP
+\fB\-onlynet=\fR<net>
+Only connect to nodes in network <net> (IPv4, IPv6 or Tor)
+.TP
+\fB\-discover\fR
+Discover own IP address (default: 1 when listening and no \fB\-externalip\fR)
+.TP
+\fB\-checkpoints\fR
+Only accept block chain matching built\-in checkpoints (default: 1)
+.TP
+\fB\-listen\fR
+Accept connections from outside (default: 1 if no \fB\-proxy\fR or \fB\-connect\fR)
+.TP
+\fB\-bind=\fR<addr>
+Bind to given address and always listen on it. Use [host]:port notation for IPv6
+.TP
+\fB\-dnsseed\fR
+Find peers using DNS lookup (default: 1 unless \fB\-connect\fR)
+.TP
+\fB\-banscore=\fR<n>
+Threshold for disconnecting misbehaving peers (default: 100)
+.TP
+\fB\-bantime=\fR<n>
+Number of seconds to keep misbehaving peers from reconnecting (default: 86400)
+.TP
+\fB\-maxreceivebuffer=\fR<n>
+Maximum per\-connection receive buffer, <n>*1000 bytes (default: 5000)
+.TP
+\fB\-maxsendbuffer=\fR<n>
+Maximum per\-connection send buffer, <n>*1000 bytes (default: 1000)
+.TP
+\fB\-upnp\fR
+Use UPnP to map the listening port (default: 1 when listening)
+.TP
+\fB\-paytxfee=\fR<amt>
+Fee per KB to add to transactions you send
+.TP
+\fB\-server\fR
+Accept command line and JSON\-RPC commands
+.TP
+\fB\-testnet\fR
+Use the test network
+.TP
+\fB\-debug\fR
+Output extra debugging information. Implies all other \fB\-debug\fR* options
+.TP
+\fB\-debugnet\fR
+Output extra network debugging information
+.TP
+\fB\-logtimestamps\fR
+Prepend debug output with timestamp
+.TP
+\fB\-shrinkdebugfile\fR
+Shrink debug.log file on client startup (default: 1 when no \fB\-debug\fR)
+.TP
+\fB\-printtoconsole\fR
+Send trace/debug info to console instead of debug.log file
+.TP
+\fB\-rpcuser=\fR<user>
+Username for JSON\-RPC connections
+.TP
+\fB\-rpcpassword=\fR<pw>
+Password for JSON\-RPC connections
+.TP
+\fB\-rpcport=\fR<port>
+Listen for JSON\-RPC connections on <port> (default: 9998 or testnet: 19998)
+.TP
+\fB\-rpcallowip=\fR<ip>
+Allow JSON\-RPC connections from specified IP address
+.TP
+\fB\-rpcthreads=\fR<n>
+Set the number of threads to service RPC calls (default: 4)
+.TP
+\fB\-blocknotify=\fR<cmd>
+Execute command when the best block changes (%s in cmd is replaced by block hash)
+.TP
+\fB\-walletnotify=\fR<cmd>
+Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)
+.TP
+\fB\-alertnotify=\fR<cmd>
+Execute command when a relevant alert is received (%s in cmd is replaced by message)
+.TP
+\fB\-upgradewallet\fR
+Upgrade wallet to latest format
+.TP
+\fB\-keypool=\fR<n>
+Set key pool size to <n> (default: 100)
+.TP
+\fB\-rescan\fR
+Rescan the block chain for missing wallet transactions
+.TP
+\fB\-salvagewallet\fR
+Attempt to recover private keys from a corrupt wallet.dat
+.TP
+\fB\-checkblocks=\fR<n>
+How many blocks to check at startup (default: 288, 0 = all)
+.TP
+\fB\-checklevel=\fR<n>
+How thorough the block verification is (0\-4, default: 3)
+.TP
+\fB\-txindex\fR
+Maintain a full transaction index (default: 0)
+.TP
+\fB\-loadblock=\fR<file>
+Imports blocks from external blk000??.dat file
+.TP
+\fB\-reindex\fR
+Rebuild block chain index from current blk000??.dat files
+.TP
+\fB\-par=\fR<n>
+Set the number of script verification threads (1\-16, 0=auto, default: 0)
+.SS "Block creation options:"
+.TP
+\fB\-blockminsize=\fR<n>
+Set minimum block size in bytes (default: 0)
+.TP
+\fB\-blockmaxsize=\fR<n>
+Set maximum block size in bytes (default: 250000)
+.HP
+\fB\-blockprioritysize=\fR<n> Set maximum size of high\-priority/low\-fee transactions in bytes (default: 27000)
+.PP
+SSL options: (see the Bitcoin Wiki for SSL setup instructions)
+.TP
+\fB\-rpcssl\fR
+Use OpenSSL (https) for JSON\-RPC connections
+.TP
+\fB\-rpcsslcertificatechainfile=\fR<file.cert>
+Server certificate file (default: server.cert)
+.TP
+\fB\-rpcsslprivatekeyfile=\fR<file.pem>
+Server private key (default: server.pem)
+.TP
+\fB\-rpcsslciphers=\fR<ciphers>
+Acceptable ciphers (default: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)
+.SS "UI options:"
+.TP
+\fB\-lang=\fR<lang>
+Set language, for example "de_DE" (default: system locale)
+.TP
+\fB\-min\fR
+Start minimized
+.TP
+\fB\-splash\fR
+Show splash screen on startup (default: 1)

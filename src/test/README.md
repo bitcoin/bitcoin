@@ -5,9 +5,9 @@ sense to simply use this framework rather than require developers to
 configure some other framework (we want as few impediments to creating
 unit tests as possible).
 
-The build system is setup to compile an executable called "test_darkcoin"
+The build system is setup to compile an executable called "test_dash"
 that runs all of the unit tests.  The main source file is called
-test_darkcoin.cpp, which simply includes other files that contain the
+test_dash.cpp, which simply includes other files that contain the
 actual unit tests (outside of a couple required preprocessor
 directives).  The pattern is to create one test file for each class or
 source file for which you want to create unit tests.  The file naming

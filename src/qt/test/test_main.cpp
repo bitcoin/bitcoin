@@ -1,6 +1,6 @@
-#include "bitcoin-config.h"
+#include "dash-config.h"
 #if defined(HAVE_CONFIG_H)
-#include "bitcoin-config.h"
+#include "dash-config.h"
 #endif
 
 #ifdef ENABLE_WALLET

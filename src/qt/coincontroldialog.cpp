@@ -1,5 +1,5 @@
 // Copyright (c) 2011-2014 The Bitcoin developers
-// Copyright (c) 2014-2015 The Darkcoin developers
+// Copyright (c) 2014-2015 The Dash developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -24,6 +24,7 @@
 #include <QDialogButtonBox>
 #include <QFlags>
 #include <QIcon>
+#include <QSettings>
 #include <QString>
 #include <QTreeWidget>
 #include <QTreeWidgetItem>
@@ -38,6 +39,9 @@ CoinControlDialog::CoinControlDialog(QWidget *parent) :
     model(0)
 {
     ui->setupUi(this);
+    
+    /* Open CSS when configured */
+    this->setStyleSheet(GUIUtil::loadStyleSheet());
 
     // context menu actions
     QAction *copyAddressAction = new QAction(tr("Copy address"), this);
@@ -530,6 +534,9 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
         // Fee
         int64_t nFee = nTransactionFee * (1 + (int64_t)nBytes / 1000);
 
+        // IX Fee
+        if(coinControl->useInstantX) nFee = max(nFee, CENT);
+
         // Min Fee
         int64_t nMinFee = GetMinFee(txDummy, nBytes, AllowFree(dPriority), GMF_SEND);
 
@@ -538,6 +545,13 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
         if (nPayAmount > 0)
         {
             nChange = nAmount - nPayFee - nPayAmount;
+
+            // DS Fee = overpay
+            if(coinControl->useDarkSend && nChange > 0)
+            {
+                nPayFee += nChange;
+                nChange = 0;
+            }
 
             // if sub-cent change is required, the fee must be raised to at least CTransaction::nMinTxFee
             if (nPayFee < CTransaction::nMinTxFee && nChange > 0 && nChange < CENT)
@@ -576,7 +590,7 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
     }
 
     // actually update labels
-    int nDisplayUnit = BitcoinUnits::DRK;
+    int nDisplayUnit = BitcoinUnits::DASH;
     if (model && model->getOptionsModel())
         nDisplayUnit = model->getOptionsModel()->getDisplayUnit();
 
@@ -707,7 +721,7 @@ void CoinControlDialog::updateView()
             {
                 sAddress = CBitcoinAddress(outputAddress).ToString().c_str();
 
-                // if listMode or change => show darkcoin address. In tree mode, address is not shown again for direct wallet address outputs
+                // if listMode or change => show dash address. In tree mode, address is not shown again for direct wallet address outputs
                 if (!treeMode || (!(sAddress == sWalletAddress)))
                     itemOutput->setText(COLUMN_ADDRESS, sAddress);
 
@@ -746,7 +760,7 @@ void CoinControlDialog::updateView()
             int rounds = GetInputDarksendRounds(vin);
 
             if(rounds >= 0) itemOutput->setText(COLUMN_DARKSEND_ROUNDS, strPad(QString::number(rounds), 15, " "));
-            else itemOutput->setText(COLUMN_DARKSEND_ROUNDS, strPad(QString("n/a"), 15, " "));
+            else itemOutput->setText(COLUMN_DARKSEND_ROUNDS, strPad(QString(tr("n/a")), 15, " "));
 
 
             // confirmations

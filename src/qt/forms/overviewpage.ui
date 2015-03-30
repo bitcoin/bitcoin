@@ -67,7 +67,7 @@
             <item>
              <widget class="QLabel" name="labelWalletStatus">
               <property name="toolTip">
-               <string>The displayed information may be out of date. Your wallet automatically synchronizes with the Darkcoin network after a connection is established, but this process has not completed yet.</string>
+               <string>The displayed information may be out of date. Your wallet automatically synchronizes with the Dash network after a connection is established, but this process has not completed yet.</string>
               </property>
               <property name="styleSheet">
                <string notr="true">QLabel { color: red; }</string>
@@ -130,7 +130,7 @@
                  <string>Your current spendable balance</string>
                 </property>
                 <property name="text">
-                 <string notr="true">0 BTC</string>
+                 <string notr="true">0 DASH</string>
                 </property>
                 <property name="alignment">
                  <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -162,7 +162,7 @@
                  <string>Total of transactions that have yet to be confirmed, and do not yet count toward the spendable balance</string>
                 </property>
                 <property name="text">
-                 <string notr="true">0 BTC</string>
+                 <string notr="true">0 DASH</string>
                 </property>
                 <property name="alignment">
                  <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -191,7 +191,7 @@
                  <string>Mined balance that has not yet matured</string>
                 </property>
                 <property name="text">
-                 <string notr="true">0 BTC</string>
+                 <string notr="true">0 DASH</string>
                 </property>
                 <property name="alignment">
                  <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -223,7 +223,7 @@
                  <string>Your current total balance</string>
                 </property>
                 <property name="text">
-                 <string notr="true">0 BTC</string>
+                 <string notr="true">0 DASH</string>
                 </property>
                 <property name="alignment">
                  <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -346,7 +346,7 @@
               </font>
              </property>
              <property name="text">
-              <string>0 DRK</string>
+              <string>0 DASH</string>
              </property>
             </widget>
            </item>
@@ -360,7 +360,7 @@
            <item row="3" column="1">
             <widget class="QLabel" name="labelAmountRounds">
              <property name="text">
-              <string>0 DRK / 0 Rounds</string>
+              <string>0 DASH / 0 Rounds</string>
              </property>
             </widget>
            </item>
@@ -382,25 +382,6 @@
             </widget>
            </item>
           </layout>
-         </widget>
-         <widget class="QLabel" name="label_2">
-          <property name="geometry">
-           <rect>
-            <x>10</x>
-            <y>10</y>
-            <width>66</width>
-            <height>20</height>
-           </rect>
-          </property>
-          <property name="font">
-           <font>
-            <weight>75</weight>
-            <bold>true</bold>
-           </font>
-          </property>
-          <property name="text">
-           <string>Darksend</string>
-          </property>
          </widget>
          <widget class="QPushButton" name="runAutoDenom">
           <property name="geometry">
@@ -943,6 +924,60 @@
            <string>Reset</string>
           </property>
          </widget>
+         <widget class="QWidget" name="">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>10</y>
+            <width>431</width>
+            <height>22</height>
+           </rect>
+          </property>
+          <layout class="QHBoxLayout" name="horizontalLayout_5">
+           <item>
+            <widget class="QLabel" name="label_2">
+             <property name="font">
+              <font>
+               <weight>75</weight>
+               <bold>true</bold>
+              </font>
+             </property>
+             <property name="text">
+              <string>Darksend</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="labelDarksendSyncStatus">
+             <property name="toolTip">
+              <string>The displayed information may be out of date. Your wallet automatically synchronizes with the Dash network after a connection is established, but this process has not completed yet.</string>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">QLabel { color: red; }</string>
+             </property>
+             <property name="text">
+              <string notr="true">(out of sync)</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <spacer name="horizontalSpacer_4">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+          </layout>
+         </widget>
         </widget>
        </item>
        <item>
@@ -983,7 +1018,7 @@
             <item>
              <widget class="QLabel" name="labelTransactionsStatus">
               <property name="toolTip">
-               <string>The displayed information may be out of date. Your wallet automatically synchronizes with the Darkcoin network after a connection is established, but this process has not completed yet.</string>
+               <string>The displayed information may be out of date. Your wallet automatically synchronizes with the Dash network after a connection is established, but this process has not completed yet.</string>
               </property>
               <property name="styleSheet">
                <string notr="true">QLabel { color: red; }</string>

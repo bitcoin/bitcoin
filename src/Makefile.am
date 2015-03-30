@@ -3,27 +3,27 @@ include Makefile.include
 AM_CPPFLAGS += -I$(builddir)
 
 noinst_LIBRARIES = \
-  libdarkcoin_server.a \
-  libdarkcoin_common.a \
-  libdarkcoin_cli.a
+  libdash_server.a \
+  libdash_common.a \
+  libdash_cli.a
 if ENABLE_WALLET
-noinst_LIBRARIES += libdarkcoin_wallet.a
+noinst_LIBRARIES += libdash_wallet.a
 endif
 
 bin_PROGRAMS =
 
 if BUILD_BITCOIND
-  bin_PROGRAMS += darkcoind
+  bin_PROGRAMS += dashd
 endif
 
 if BUILD_BITCOIN_CLI
-  bin_PROGRAMS += darkcoin-cli
+  bin_PROGRAMS += dash-cli
 endif
 
 SUBDIRS = . $(BUILD_QT) $(BUILD_TEST)
 DIST_SUBDIRS = . qt test
 .PHONY: FORCE
-# darkcoin core #
+# dash core #
 BITCOIN_CORE_H = \
   activemasternode.h \
   addrman.h \
@@ -41,6 +41,7 @@ BITCOIN_CORE_H = \
   core.h \
   crypter.h \
   darksend.h \
+  darksend-relay.h \
   db.h \
   hash.h \
   init.h \
@@ -52,6 +53,8 @@ BITCOIN_CORE_H = \
   limitedmap.h \
   main.h \
   masternode.h \
+  masternode-pos.h \
+  masternodeman.h \
   masternodeconfig.h \
   miner.h \
   mruset.h \
@@ -106,7 +109,7 @@ obj/build.h: FORCE
 	  $(abs_top_srcdir)
 version.o: obj/build.h
 
-libdarkcoin_server_a_SOURCES = \
+libdash_server_a_SOURCES = \
   activemasternode.cpp \
   addrman.cpp \
   alert.cpp \
@@ -132,7 +135,7 @@ libdarkcoin_server_a_SOURCES = \
   $(JSON_H) \
   $(BITCOIN_CORE_H)
 
-libdarkcoin_wallet_a_SOURCES = \
+libdash_wallet_a_SOURCES = \
   activemasternode.cpp \
   db.cpp \
   crypter.cpp \
@@ -143,14 +146,17 @@ libdarkcoin_wallet_a_SOURCES = \
   keepass.cpp \
   $(BITCOIN_CORE_H)
 
-libdarkcoin_common_a_SOURCES = \
+libdash_common_a_SOURCES = \
   activemasternode.cpp \
   base58.cpp \
   allocators.cpp \
   chainparams.cpp \
   core.cpp \
   darksend.cpp \
+  darksend-relay.cpp \
   masternode.cpp \
+  masternode-pos.cpp \
+  masternodeman.cpp \
   masternodeconfig.cpp \
   instantx.cpp \
   hash.cpp \
@@ -178,47 +184,47 @@ libdarkcoin_common_a_SOURCES = \
   $(BITCOIN_CORE_H)
 
 if GLIBC_BACK_COMPAT
-libdarkcoin_common_a_SOURCES += compat/glibc_compat.cpp
-libdarkcoin_common_a_SOURCES += compat/glibcxx_compat.cpp
+libdash_common_a_SOURCES += compat/glibc_compat.cpp
+libdash_common_a_SOURCES += compat/glibcxx_compat.cpp
 endif
 
-libdarkcoin_cli_a_SOURCES = \
+libdash_cli_a_SOURCES = \
   rpcclient.cpp \
   $(BITCOIN_CORE_H)
 
-nodist_libdarkcoin_common_a_SOURCES = $(top_srcdir)/src/obj/build.h
+nodist_libdash_common_a_SOURCES = $(top_srcdir)/src/obj/build.h
 #
 
-# darkcoind binary #
-darkcoind_LDADD = \
-  libdarkcoin_server.a \
-  libdarkcoin_cli.a \
-  libdarkcoin_common.a \
+# dashd binary #
+dashd_LDADD = \
+  libdash_server.a \
+  libdash_cli.a \
+  libdash_common.a \
   $(LIBLEVELDB) \
   $(LIBMEMENV)
 if ENABLE_WALLET
-darkcoind_LDADD += libdarkcoin_wallet.a
+dashd_LDADD += libdash_wallet.a
 endif
-darkcoind_SOURCES = darkcoind.cpp
+dashd_SOURCES = dashd.cpp
 #
 
 if TARGET_WINDOWS
-darkcoind_SOURCES += bitcoind-res.rc
+dashd_SOURCES += dashd-res.rc
 endif
 
 AM_CPPFLAGS += $(BDB_CPPFLAGS)
-darkcoind_LDADD += $(BOOST_LIBS) $(BDB_LIBS)
+dashd_LDADD += $(BOOST_LIBS) $(BDB_LIBS)
 
-# darkcoin-cli binary #
-darkcoin_cli_LDADD = \
-  libdarkcoin_cli.a \
-  libdarkcoin_common.a \
+# dash-cli binary #
+dash_cli_LDADD = \
+  libdash_cli.a \
+  libdash_common.a \
   $(BOOST_LIBS)
-darkcoin_cli_SOURCES = darkcoin-cli.cpp
+dash_cli_SOURCES = dash-cli.cpp
 #
 
 if TARGET_WINDOWS
-darkcoin_cli_SOURCES += bitcoin-cli-res.rc
+dash_cli_SOURCES += dash-cli-res.rc
 endif
 
 # NOTE: This dependency is not strictly necessary, but without it make may try to build both in parallel, which breaks the LevelDB build system in a race
@@ -229,7 +235,7 @@ leveldb/%.a:
 	  CC="$(CC)" PLATFORM=$(TARGET_OS) AR="$(AR)" $(LEVELDB_TARGET_FLAGS) \
 	  OPT="$(CXXFLAGS) $(CPPFLAGS)"
 
-qt/bitcoinstrings.cpp: $(libdarkcoin_server_a_SOURCES) $(libdarkcoin_common_a_SOURCES) $(libdarkcoin_cli_a_SOURCES)
+qt/dashstrings.cpp: $(libdash_server_a_SOURCES) $(libdash_common_a_SOURCES) $(libdash_cli_a_SOURCES)
 	@test -n $(XGETTEXT) || echo "xgettext is required for updating translations"
 	@cd $(top_srcdir); XGETTEXT=$(XGETTEXT) share/qt/extract_strings_qt.py
 

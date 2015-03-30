@@ -25,6 +25,7 @@ static const char* ppszTypeName[] =
     "unknown",
     "unknown",
     "unknown",
+    "unknown",
     "unknown"
 };
 

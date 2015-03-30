@@ -1,6 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2014 The Bitcoin developers
-// Copyright (c) 2014-2015 The Darkcoin developers
+// Copyright (c) 2014-2015 The Dash developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -54,6 +54,7 @@ void CTxIn::print() const
 CTxOut::CTxOut(int64_t nValueIn, CScript scriptPubKeyIn)
 {
     nValue = nValueIn;
+    nRounds = -10; // an initial value, should be no way to get this by calculations
     scriptPubKey = scriptPubKeyIn;
 }
 

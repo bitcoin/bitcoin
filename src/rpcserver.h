@@ -63,7 +63,7 @@ public:
 };
 
 /**
- * Darkcoin RPC command dispatcher.
+ * Dash RPC command dispatcher.
  */
 class CRPCTable
 {
@@ -185,6 +185,7 @@ extern json_spirit::Value settxfee(const json_spirit::Array& params, bool fHelp)
 extern json_spirit::Value getrawmempool(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value getblockhash(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value getblock(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value getblockheader(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value gettxoutsetinfo(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value gettxout(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value verifychain(const json_spirit::Array& params, bool fHelp);
@@ -193,6 +194,7 @@ extern json_spirit::Value verifychain(const json_spirit::Array& params, bool fHe
 extern json_spirit::Value darksend(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value spork(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value masternode(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value masternodelist(const json_spirit::Array& params, bool fHelp);
 
 
 #endif

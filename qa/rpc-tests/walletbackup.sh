@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Copyright (c) 2014 The Bitcoin Core developers
-# Copyright (c) 2014-2015 The Darkcoin developers
+# Copyright (c) 2014-2015 The Dash developers
 # Distributed under the MIT/X11 software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -40,8 +40,8 @@ if [ $# -lt 1 ]; then
         exit 1
 fi
 
-BITCOIND=${1}/darkcoind
-CLI=${1}/darkcoin-cli
+BITCOIND=${1}/dashd
+CLI=${1}/dash-cli
 
 DIR="${BASH_SOURCE%/*}"
 SENDANDWAIT="${DIR}/send.sh"
@@ -65,7 +65,7 @@ B4PID=$!
 function CreateConfDir {
   DIR=$1
   mkdir -p $DIR
-  CONF=$DIR/darkcoin.conf
+  CONF=$DIR/dash.conf
   echo "regtest=1" >> $CONF
   echo "rpcuser=rt" >> $CONF
   echo "rpcpassword=rt" >> $CONF

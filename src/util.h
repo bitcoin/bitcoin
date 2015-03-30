@@ -1,6 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2014 The Bitcoin developers
-// Copyright (c) 2014-2015 The Darkcoin developers
+// Copyright (c) 2014-2015 The Dash developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -8,7 +8,7 @@
 #define BITCOIN_UTIL_H
 
 #if defined(HAVE_CONFIG_H)
-#include "bitcoin-config.h"
+#include "dash-config.h"
 #endif
 
 #include "compat.h"
@@ -92,7 +92,7 @@ inline void MilliSleep(int64_t n)
 #endif
 }
 
-//Darkcoin only features
+//Dash only features
 
 extern bool fMasterNode;
 extern bool fLiteMode;
@@ -326,12 +326,14 @@ inline int64_t GetPerformanceCounter()
     return nCounter;
 }
 
+/// returns the current time as UTC milliseconds
 inline int64_t GetTimeMillis()
 {
     return (boost::posix_time::ptime(boost::posix_time::microsec_clock::universal_time()) -
             boost::posix_time::ptime(boost::gregorian::date(1970,1,1))).total_milliseconds();
 }
 
+/// returns the current time as UTC microseconds
 inline int64_t GetTimeMicros()
 {
     return (boost::posix_time::ptime(boost::posix_time::microsec_clock::universal_time()) -
@@ -539,7 +541,7 @@ inline uint32_t ByteReverse(uint32_t value)
 //    threadGroup.create_thread(boost::bind(&LoopForever<boost::function<void()> >, "nothing", f, milliseconds));
 template <typename Callable> void LoopForever(const char* name,  Callable func, int64_t msecs)
 {
-    std::string s = strprintf("darkcoin-%s", name);
+    std::string s = strprintf("dash-%s", name);
     RenameThread(s.c_str());
     LogPrintf("%s thread start\n", name);
     try
@@ -567,7 +569,7 @@ template <typename Callable> void LoopForever(const char* name,  Callable func, 
 // .. and a wrapper that just calls func once
 template <typename Callable> void TraceThread(const char* name,  Callable func)
 {
-    std::string s = strprintf("darkcoin-%s", name);
+    std::string s = strprintf("dash-%s", name);
     RenameThread(s.c_str());
     try
     {

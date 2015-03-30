@@ -1,6 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2014 The Bitcoin developers
-// Copyright (c) 2014-2015 The Darkcoin developers
+// Copyright (c) 2014-2015 The Dash developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -14,7 +14,7 @@
 #include "init.h"
 #include "instantx.h"
 #include "darksend.h"
-#include "masternode.h"
+#include "masternodeman.h"
 #include "net.h"
 #include "txdb.h"
 #include "txmempool.h"
@@ -33,7 +33,7 @@ using namespace std;
 using namespace boost;
 
 #if defined(NDEBUG)
-# error "Darkcoin cannot be compiled without assertions."
+# error "Dash cannot be compiled without assertions."
 #endif
 
 //
@@ -1017,7 +1017,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
 
         // Check against previous transactions
         // This is done last to help prevent CPU exhaustion denial-of-service attacks.
-        if (!CheckInputs(tx, state, view, true, SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_STRICTENC))
+        if (!CheckInputs(tx, state, view, true, SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_STRICTENC | SCRIPT_VERIFY_DERSIG))
         {
             return error("AcceptToMemoryPool: : ConnectInputs failed %s", hash.ToString());
         }
@@ -1497,8 +1497,8 @@ int64_t GetMasternodePayment(int nHeight, int64_t blockValue)
     return ret;
 }
 
-static const int64_t nTargetTimespan = 24 * 60 * 60; // Darkcoin: 1 day
-static const int64_t nTargetSpacing = 2.5 * 60; // Darkcoin: 2.5 minutes
+static const int64_t nTargetTimespan = 24 * 60 * 60; // Dash: 1 day
+static const int64_t nTargetSpacing = 2.5 * 60; // Dash: 2.5 minutes
 static const int64_t nInterval = nTargetTimespan / nTargetSpacing; // 576 blocks
 
 //
@@ -1530,8 +1530,6 @@ unsigned int ComputeMinWork(unsigned int nBase, int64_t nTime)
 unsigned int static KimotoGravityWell(const CBlockIndex* pindexLast, const CBlockHeader *pblock, uint64_t TargetBlocksSpacingSeconds, uint64_t PastBlocksMin, uint64_t PastBlocksMax) {
         const CBlockIndex *BlockLastSolved = pindexLast;
         const CBlockIndex *BlockReading = pindexLast;
-        const CBlockHeader *BlockCreating = pblock;
-        BlockCreating = BlockCreating;
         uint64_t PastBlocksMass = 0;
         int64_t PastRateActualSeconds = 0;
         int64_t PastRateTargetSeconds = 0;
@@ -1584,11 +1582,9 @@ unsigned int static KimotoGravityWell(const CBlockIndex* pindexLast, const CBloc
 }
 
 unsigned int static DarkGravityWave(const CBlockIndex* pindexLast, const CBlockHeader *pblock) {
-    /* current difficulty formula, darkcoin - DarkGravity v3, written by Evan Duffield - evan@darkcoin.io */
+    /* current difficulty formula, dash - DarkGravity v3, written by Evan Duffield - evan@dashpay.io */
     const CBlockIndex *BlockLastSolved = pindexLast;
     const CBlockIndex *BlockReading = pindexLast;
-    const CBlockHeader *BlockCreating = pblock;
-    BlockCreating = BlockCreating;
     int64_t nActualTimespan = 0;
     int64_t LastBlockTime = 0;
     int64_t PastBlocksMin = 24;
@@ -1685,7 +1681,7 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
                 return pindexLast->nBits;
             }
 
-            // Darkcoin: This fixes an issue where a 51% attack can change difficulty at will.
+            // Dash: This fixes an issue where a 51% attack can change difficulty at will.
             // Go back the full period unless it's the first retarget after genesis.
             // Code courtesy of Art Forz.
             int blockstogoback = nInterval-1;
@@ -1776,7 +1772,7 @@ bool IsInitialBlockDownload()
         nLastUpdate = GetTime();
     }
     return (GetTime() - nLastUpdate < 10 &&
-            chainActive.Tip()->GetBlockTime() < GetTime() - 24 * 60 * 60);
+            chainActive.Tip()->GetBlockTime() < GetTime() - 6 * 60 * 60); // ~144 blocks behind -> 2 x fork detection time
 }
 
 CBlockIndex *pindexBestForkTip = NULL, *pindexBestForkBase = NULL;
@@ -1789,7 +1785,7 @@ void CheckForkWarningConditions()
     if (IsInitialBlockDownload())
         return;
 
-    // If our best fork is no longer within 72 blocks (+/- 12 hours if no one mines it)
+    // If our best fork is no longer within 72 blocks (+/- 3 hours if no one mines it)
     // of our head, drop it
     if (pindexBestForkTip && chainActive.Height() - pindexBestForkTip->nHeight >= 72)
         pindexBestForkTip = NULL;
@@ -1842,7 +1838,7 @@ void CheckForkWarningConditionsOnNewFork(CBlockIndex* pindexNewForkTip)
     }
 
     // We define a condition which we should warn the user about as a fork of at least 7 blocks
-    // who's tip is within 72 blocks (+/- 12 hours if no one mines it) of ours
+    // who's tip is within 72 blocks (+/- 3 hours if no one mines it) of ours
     // We use 7 blocks rather arbitrarily as it represents just under 10% of sustained network
     // hash rate operating on the fork.
     // or a chain that is entirely longer than ours and invalid (note that this should be detected by both)
@@ -2162,7 +2158,7 @@ bool FindUndoPos(CValidationState &state, int nFile, CDiskBlockPos &pos, unsigne
 static CCheckQueue<CScriptCheck> scriptcheckqueue(128);
 
 void ThreadScriptCheck() {
-    RenameThread("darkcoin-scriptch");
+    RenameThread("dash-scriptch");
     scriptcheckqueue.Thread();
 }
 
@@ -2215,6 +2211,12 @@ bool ConnectBlock(CBlock& block, CValidationState& state, CBlockIndex* pindex, C
 
     unsigned int flags = SCRIPT_VERIFY_NOCACHE |
                          (fStrictPayToScriptHash ? SCRIPT_VERIFY_P2SH : SCRIPT_VERIFY_NONE);
+
+    if (block.nVersion >= 3 &&
+        ((!TestNet() && CBlockIndex::IsSuperMajority(3, pindex->pprev, 750, 1000)) ||
+            (TestNet() && CBlockIndex::IsSuperMajority(3, pindex->pprev, 51, 100)))) {
+        flags |= SCRIPT_VERIFY_DERSIG;
+    }
 
     CBlockUndo blockundo;
 
@@ -2479,7 +2481,7 @@ bool DisconnectBlocksAndReprocess(int blocks)
 
     CValidationState state;
 
-    LogPrintf("DisconnectBlocksAndReprocess: Got command to replay %d blocks", blocks);
+    LogPrintf("DisconnectBlocksAndReprocess: Got command to replay %d blocks\n", blocks);
     for(int i = 0; i <= blocks; i++)
         DisconnectTip(state);
 
@@ -2740,8 +2742,11 @@ bool FindBlockPos(CValidationState &state, CDiskBlockPos &pos, unsigned int nAdd
         pos.nPos = infoLastBlockFile.nSize;
     }
 
-    infoLastBlockFile.nSize += nAddSize;
     infoLastBlockFile.AddBlock(nHeight, nTime);
+    if (fKnown)
+        infoLastBlockFile.nSize = std::max(pos.nPos + nAddSize, infoLastBlockFile.nSize);
+    else
+        infoLastBlockFile.nSize += nAddSize;
 
     if (!fKnown) {
         unsigned int nOldChunks = (pos.nPos + BLOCKFILE_CHUNK_SIZE - 1) / BLOCKFILE_CHUNK_SIZE;
@@ -2910,15 +2915,16 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
                             foundPaymentAndPayee = true;
                     }
 
-                    if(!foundPaymentAndPayee) {
-                        CTxDestination address1;
-                        ExtractDestination(payee, address1);
-                        CBitcoinAddress address2(address1);
 
+                    CTxDestination address1;
+                    ExtractDestination(payee, address1);
+                    CBitcoinAddress address2(address1);
+
+                    if(!foundPaymentAndPayee) {
                         LogPrintf("CheckBlock() : Couldn't find masternode payment(%d|%d) or payee(%d|%s) nHeight %d. \n", foundPaymentAmount, masternodePaymentAmount, foundPayee, address2.ToString().c_str(), chainActive.Tip()->nHeight+1);
                         if(!RegTest()) return state.DoS(100, error("CheckBlock() : Couldn't find masternode payment or payee"));
                     } else {
-                        LogPrintf("CheckBlock() : Found masternode payment %d\n", chainActive.Tip()->nHeight+1);
+                        LogPrintf("CheckBlock() : Found payment(%d|%d) or payee(%d|%s) nHeight %d. \n", foundPaymentAmount, masternodePaymentAmount, foundPayee, address2.ToString().c_str(), chainActive.Tip()->nHeight+1);
                     }
                 } else {
                     LogPrintf("CheckBlock() : Is initial download, skipping masternode payment check %d\n", chainActive.Tip()->nHeight+1);
@@ -3038,6 +3044,16 @@ bool AcceptBlock(CBlock& block, CValidationState& state, CDiskBlockPos* dbp)
                 (TestNet() && CBlockIndex::IsSuperMajority(2, pindexPrev, 75, 100)))
             {
                 return state.Invalid(error("AcceptBlock() : rejected nVersion=1 block"),
+                                     REJECT_OBSOLETE, "bad-version");
+            }
+        }
+        // Reject block.nVersion=2 blocks when 95% (75% on testnet) of the network has upgraded:
+        if (block.nVersion < 3)
+        {
+            if ((!TestNet() && CBlockIndex::IsSuperMajority(3, pindexPrev, 950, 1000)) ||
+                (TestNet() && CBlockIndex::IsSuperMajority(3, pindexPrev, 75, 100)))
+            {
+                return state.Invalid(error("AcceptBlock() : rejected nVersion=2 block"),
                                      REJECT_OBSOLETE, "bad-version");
             }
         }
@@ -3230,6 +3246,7 @@ bool ProcessBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDiskBl
         if (!fImporting && !fReindex && chainActive.Height() > Checkpoints::GetTotalBlocksEstimate()){
             darkSendPool.NewBlock();
             masternodePayments.ProcessBlock(GetHeight()+10);
+            mnscan.DoMasternodePOSChecks();
         }
     }
 
@@ -3891,6 +3908,8 @@ bool static AlreadyHave(const CInv& inv)
         return mapSporks.count(inv.hash);
     case MSG_MASTERNODE_WINNER:
         return mapSeenMasternodeVotes.count(inv.hash);
+    case MSG_MASTERNODE_SCANNING_ERROR:
+        return mapMasternodeScanningErrors.count(inv.hash);
     }
     // Don't know what it is, just say we already got one
     return true;
@@ -4045,10 +4064,18 @@ void static ProcessGetData(CNode* pfrom)
                 if (!pushed && inv.type == MSG_MASTERNODE_WINNER) {
                     if(mapSeenMasternodeVotes.count(inv.hash)){
                         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
-                        int a = 0;
                         ss.reserve(1000);
-                        ss << mapSeenMasternodeVotes[inv.hash] << a;
+                        ss << mapSeenMasternodeVotes[inv.hash];
                         pfrom->PushMessage("mnw", ss);
+                        pushed = true;
+                    }
+                }
+                if (!pushed && inv.type == MSG_MASTERNODE_SCANNING_ERROR) {
+                    if(mapMasternodeScanningErrors.count(inv.hash)){
+                        CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
+                        ss.reserve(1000);
+                        ss << mapMasternodeScanningErrors[inv.hash];
+                        pfrom->PushMessage("mnse", ss);
                         pushed = true;
                     }
                 }
@@ -4083,7 +4110,7 @@ void static ProcessGetData(CNode* pfrom)
 bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 {
     RandAddSeedPerfmon();
-    LogPrint("net", "received: %s (%u bytes)\n", strCommand, vRecv.size());
+    LogPrint("net", "received: %s (%u bytes)\n", SanitizeString(strCommand), vRecv.size());
     if (mapArgs.count("-dropmessagestest") && GetRand(atoi(mapArgs["-dropmessagestest"])) == 0)
     {
         LogPrintf("dropmessagestest DROPPING RECV MESSAGE\n");
@@ -4441,37 +4468,37 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
             //these allow masternodes to publish a limited amount of free transactions
             vRecv >> tx >> vin >> vchSig >> sigTime;
 
-            BOOST_FOREACH(CMasterNode& mn, vecMasternodes) {
-                if(mn.vin == vin) {
-                    if(!mn.allowFreeTx){
-                        //multiple peers can send us a valid masternode transaction
-                        if(fDebug) LogPrintf("dstx: Masternode sending too many transactions %s\n", tx.GetHash().ToString().c_str());
-                        return true;
-                    }
+            CMasternode* pmn = mnodeman.Find(vin);
+            if(pmn != NULL)
+            {
+                if(!pmn->allowFreeTx){
+                    //multiple peers can send us a valid masternode transaction
+                    if(fDebug) LogPrintf("dstx: Masternode sending too many transactions %s\n", tx.GetHash().ToString().c_str());
+                    return true;
+                }
 
-                    std::string strMessage = tx.GetHash().ToString() + boost::lexical_cast<std::string>(sigTime);
+                std::string strMessage = tx.GetHash().ToString() + boost::lexical_cast<std::string>(sigTime);
 
-                    std::string errorMessage = "";
-                    if(!darkSendSigner.VerifyMessage(mn.pubkey2, vchSig, strMessage, errorMessage)){
-                        LogPrintf("dstx: Got bad masternode address signature %s \n", vin.ToString().c_str());
-                        //pfrom->Misbehaving(20);
-                        return false;
-                    }
+                std::string errorMessage = "";
+                if(!darkSendSigner.VerifyMessage(pmn->pubkey2, vchSig, strMessage, errorMessage)){
+                    LogPrintf("dstx: Got bad masternode address signature %s \n", vin.ToString().c_str());
+                    //pfrom->Misbehaving(20);
+                    return false;
+                }
 
-                    LogPrintf("dstx: Got Masternode transaction %s\n", tx.GetHash().ToString().c_str());
+                LogPrintf("dstx: Got Masternode transaction %s\n", tx.GetHash().ToString().c_str());
 
-                    allowFree = true;
-                    mn.allowFreeTx = false;
+                allowFree = true;
+                pmn->allowFreeTx = false;
 
-                    if(!mapDarksendBroadcastTxes.count(tx.GetHash())){
-                        CDarksendBroadcastTx dstx;
-                        dstx.tx = tx;
-                        dstx.vin = vin;
-                        dstx.vchSig = vchSig;
-                        dstx.sigTime = sigTime;
+                if(!mapDarksendBroadcastTxes.count(tx.GetHash())){
+                    CDarksendBroadcastTx dstx;
+                    dstx.tx = tx;
+                    dstx.vin = vin;
+                    dstx.vchSig = vchSig;
+                    dstx.sigTime = sigTime;
 
-                        mapDarksendBroadcastTxes.insert(make_pair(tx.GetHash(), dstx));
-                    }
+                    mapDarksendBroadcastTxes.insert(make_pair(tx.GetHash(), dstx));
                 }
             }
         }
@@ -4808,10 +4835,12 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
     else
     {
         //probably one the extensions
-        ProcessMessageDarksend(pfrom, strCommand, vRecv);
-        ProcessMessageMasternode(pfrom, strCommand, vRecv);
+        darkSendPool.ProcessMessageDarksend(pfrom, strCommand, vRecv);
+        mnodeman.ProcessMessage(pfrom, strCommand, vRecv);
+        ProcessMessageMasternodePayments(pfrom, strCommand, vRecv);
         ProcessMessageInstantX(pfrom, strCommand, vRecv);
         ProcessSpork(pfrom, strCommand, vRecv);
+        ProcessMessageMasternodePOS(pfrom, strCommand, vRecv);
     }
 
 
@@ -4869,7 +4898,7 @@ bool ProcessMessages(CNode* pfrom)
 
         // Scan for message start
         if (memcmp(msg.hdr.pchMessageStart, Params().MessageStart(), MESSAGE_START_SIZE) != 0) {
-            LogPrintf("\n\nPROCESSMESSAGE: INVALID MESSAGESTART\n\n");
+            LogPrintf("PROCESSMESSAGE: INVALID MESSAGESTART %s\n", SanitizeString(msg.hdr.GetCommand()));
             fOk = false;
             break;
         }
@@ -4878,7 +4907,7 @@ bool ProcessMessages(CNode* pfrom)
         CMessageHeader& hdr = msg.hdr;
         if (!hdr.IsValid())
         {
-            LogPrintf("\n\nPROCESSMESSAGE: ERRORS IN HEADER %s\n\n\n", hdr.GetCommand());
+            LogPrintf("PROCESSMESSAGE: ERRORS IN HEADER %s\n", SanitizeString(hdr.GetCommand()));
             continue;
         }
         string strCommand = hdr.GetCommand();
@@ -4893,8 +4922,8 @@ bool ProcessMessages(CNode* pfrom)
         memcpy(&nChecksum, &hash, sizeof(nChecksum));
         if (nChecksum != hdr.nChecksum)
         {
-            LogPrintf("ProcessMessages(%s, %u bytes) : CHECKSUM ERROR nChecksum=%08x hdr.nChecksum=%08x\n",
-               strCommand, nMessageSize, nChecksum, hdr.nChecksum);
+            LogPrintf("ProcessMessages(%s, %u bytes): CHECKSUM ERROR nChecksum=%08x hdr.nChecksum=%08x\n",
+               SanitizeString(strCommand), nMessageSize, nChecksum, hdr.nChecksum);
             continue;
         }
 
@@ -4911,12 +4940,12 @@ bool ProcessMessages(CNode* pfrom)
             if (strstr(e.what(), "end of data"))
             {
                 // Allow exceptions from under-length message on vRecv
-                LogPrintf("ProcessMessages(%s, %u bytes) : Exception '%s' caught, normally caused by a message being shorter than its stated length\n", strCommand, nMessageSize, e.what());
+                LogPrintf("ProcessMessages(%s, %u bytes): Exception '%s' caught, normally caused by a message being shorter than its stated length\n", SanitizeString(strCommand), nMessageSize, e.what());
             }
             else if (strstr(e.what(), "size too large"))
             {
                 // Allow exceptions from over-long size
-                LogPrintf("ProcessMessages(%s, %u bytes) : Exception '%s' caught\n", strCommand, nMessageSize, e.what());
+                LogPrintf("ProcessMessages(%s, %u bytes): Exception '%s' caught\n", SanitizeString(strCommand), nMessageSize, e.what());
             }
             else
             {
@@ -4933,7 +4962,7 @@ bool ProcessMessages(CNode* pfrom)
         }
 
         if (!fRet)
-            LogPrintf("ProcessMessage(%s, %u bytes) FAILED\n", strCommand, nMessageSize);
+            LogPrintf("ProcessMessage(%s, %u bytes) FAILED\n", SanitizeString(strCommand), nMessageSize);
 
         break;
     }

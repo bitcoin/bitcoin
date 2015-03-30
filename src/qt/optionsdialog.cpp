@@ -3,7 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #if defined(HAVE_CONFIG_H)
-#include "bitcoin-config.h"
+#include "dash-config.h"
 #endif
 
 #include "optionsdialog.h"
@@ -69,6 +69,13 @@ OptionsDialog::OptionsDialog(QWidget *parent) :
 #endif
 
     /* Display elements init */
+    
+    /* Theme selector */
+    ui->theme->addItem(QString("DASH-blue"), QVariant("drkblue"));
+    ui->theme->addItem(QString("DASH-traditional"), QVariant("trad"));
+
+    
+    /* Language selector */
     QDir translations(":translations");
     ui->lang->addItem(QString("(") + tr("default") + QString(")"), QVariant(""));
     foreach(const QString &langStr, translations.entryList())
@@ -154,6 +161,7 @@ void OptionsDialog::setModel(OptionsModel *model)
     /* Network */
     connect(ui->connectSocks, SIGNAL(clicked(bool)), this, SLOT(showRestartWarning()));
     /* Display */
+    connect(ui->theme, SIGNAL(valueChanged()), this, SLOT(showRestartWarning()));
     connect(ui->lang, SIGNAL(valueChanged()), this, SLOT(showRestartWarning()));
     connect(ui->thirdPartyTxUrls, SIGNAL(textChanged(const QString &)), this, SLOT(showRestartWarning()));
 }
@@ -185,6 +193,7 @@ void OptionsDialog::setMapper()
 #endif
 
     /* Display */
+    mapper->addMapping(ui->theme, OptionsModel::Theme);
     mapper->addMapping(ui->lang, OptionsModel::Language);
     mapper->addMapping(ui->unit, OptionsModel::DisplayUnit);
     mapper->addMapping(ui->displayAddresses, OptionsModel::DisplayAddresses);

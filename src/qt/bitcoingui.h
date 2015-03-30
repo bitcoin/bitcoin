@@ -6,7 +6,7 @@
 #define BITCOINGUI_H
 
 #if defined(HAVE_CONFIG_H)
-#include "bitcoin-config.h"
+#include "dash-config.h"
 #endif
 
 #include <QMainWindow>
@@ -96,6 +96,7 @@ private:
     QAction *openInfoAction;
     QAction *openRPCConsoleAction;
     QAction *openNetworkAction;
+    QAction *openConfEditorAction;
     QAction *openAction;
     QAction *showHelpMessageAction;
 

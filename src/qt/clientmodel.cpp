@@ -1,5 +1,5 @@
 // Copyright (c) 2011-2014 The Bitcoin developers
-// Copyright (c) 2014-2015 The Darkcoin developers
+// Copyright (c) 2014-2015 The Dash developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -13,6 +13,7 @@
 #include "main.h"
 #include "net.h"
 #include "ui_interface.h"
+#include "masternodeman.h"
 
 #include <stdint.h>
 
@@ -24,13 +25,18 @@ static const int64_t nClientStartupTime = GetTime();
 
 ClientModel::ClientModel(OptionsModel *optionsModel, QObject *parent) :
     QObject(parent), optionsModel(optionsModel),
-    cachedNumBlocks(0),
+    cachedNumBlocks(0), cachedMasternodeCountString(""),
     cachedReindexing(0), cachedImporting(0),
     numBlocksAtStartup(-1), pollTimer(0)
 {
     pollTimer = new QTimer(this);
     connect(pollTimer, SIGNAL(timeout()), this, SLOT(updateTimer()));
     pollTimer->start(MODEL_UPDATE_DELAY);
+
+    pollMnTimer = new QTimer(this);
+    connect(pollMnTimer, SIGNAL(timeout()), this, SLOT(updateMnTimer()));
+    // no need to update as frequent as data for balances/txes/blocks
+    pollMnTimer->start(MODEL_UPDATE_DELAY * 4);
 
     subscribeToCoreSignals();
 }
@@ -52,6 +58,11 @@ int ClientModel::getNumConnections(unsigned int flags) const
         nNum++;
 
     return nNum;
+}
+
+QString ClientModel::getMasternodeCountString() const
+{
+    return QString::number((int)mnodeman.CountEnabled()) + " / " + QString::number((int)mnodeman.size());
 }
 
 int ClientModel::getNumBlocks() const
@@ -115,6 +126,24 @@ void ClientModel::updateTimer()
     }
 
     emit bytesChanged(getTotalBytesRecv(), getTotalBytesSent());
+}
+
+void ClientModel::updateMnTimer()
+{
+    // Get required lock upfront. This avoids the GUI from getting stuck on
+    // periodical polls if the core is holding the locks for a longer time -
+    // for example, during a wallet rescan.
+    TRY_LOCK(cs_main, lockMain);
+    if(!lockMain)
+        return;
+    QString newMasternodeCountString = getMasternodeCountString();
+
+    if (cachedMasternodeCountString != newMasternodeCountString)
+    {
+        cachedMasternodeCountString = newMasternodeCountString;
+
+        emit strMasternodesChanged(cachedMasternodeCountString);
+    }
 }
 
 void ClientModel::updateNumConnections(int numConnections)

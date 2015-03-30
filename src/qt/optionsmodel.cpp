@@ -1,10 +1,10 @@
 // Copyright (c) 2011-2014 The Bitcoin developers
-// Copyright (c) 2014-2015 The Darkcoin developers
+// Copyright (c) 2014-2015 The Dash developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #if defined(HAVE_CONFIG_H)
-#include "bitcoin-config.h"
+#include "dash-config.h"
 #endif
 
 #include "optionsmodel.h"
@@ -57,7 +57,7 @@ void OptionsModel::Init()
 
     // Display
     if (!settings.contains("nDisplayUnit"))
-        settings.setValue("nDisplayUnit", BitcoinUnits::DRK);
+        settings.setValue("nDisplayUnit", BitcoinUnits::DASH);
     nDisplayUnit = settings.value("nDisplayUnit").toInt();
 
     if (!settings.contains("bDisplayAddresses"))
@@ -138,6 +138,8 @@ void OptionsModel::Init()
         addOverriddenOption("-socks");
 
     // Display
+    if (!settings.contains("theme"))
+        settings.setValue("theme", "");
     if (!settings.contains("language"))
         settings.setValue("language", "");
     if (!SoftSetArg("-lang", settings.value("language").toString().toStdString()))
@@ -146,7 +148,7 @@ void OptionsModel::Init()
     if (settings.contains("nDarksendRounds"))
         SoftSetArg("-darksendrounds", settings.value("nDarksendRounds").toString().toStdString());
     if (settings.contains("nAnonymizeDarkcoinAmount"))
-        SoftSetArg("-anonymizedarkcoinamount", settings.value("nAnonymizeDarkcoinAmount").toString().toStdString());
+        SoftSetArg("-anonymizedashamount", settings.value("nAnonymizeDarkcoinAmount").toString().toStdString());
 
     language = settings.value("language").toString();
 }
@@ -224,6 +226,8 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
             return bDisplayAddresses;
         case ThirdPartyTxUrls:
             return strThirdPartyTxUrls;
+        case Theme:
+            return settings.value("theme");            
         case Language:
             return settings.value("language");
         case CoinControlFeatures:
@@ -336,6 +340,12 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
                 setRestartRequired(true);
             }
             break;
+        case Theme:
+            if (settings.value("theme") != value) {
+                settings.setValue("theme", value);
+                setRestartRequired(true);
+            }
+            break;            
         case Language:
             if (settings.value("language") != value) {
                 settings.setValue("language", value);

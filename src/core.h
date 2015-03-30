@@ -15,8 +15,7 @@
 #define START_MASTERNODE_PAYMENTS_TESTNET 1420837558 //Fri, 09 Jan 2015 21:05:58 GMT
 #define START_MASTERNODE_PAYMENTS 1403728576 //Wed, 25 Jun 2014 20:36:16 GMT
 
-static const int64_t DARKSEND_COLLATERAL = (0.1*COIN);
-static const int64_t DARKSEND_FEE = (0.0125*COIN);
+static const int64_t DARKSEND_COLLATERAL = (0.01*COIN);
 static const int64_t DARKSEND_POOL_MAX = (999.99*COIN);
 
 /*
@@ -24,8 +23,8 @@ static const int64_t DARKSEND_POOL_MAX = (999.99*COIN);
     one party without comprimising the security of InstantX
     (1000/2150.0)**15 = 1.031e-05
 */
-#define INSTANTX_SIGNATURES_REQUIRED           20
-#define INSTANTX_SIGNATURES_TOTAL              30
+#define INSTANTX_SIGNATURES_REQUIRED           15
+#define INSTANTX_SIGNATURES_TOTAL              20
 
 #define MASTERNODE_NOT_PROCESSED               0 // initial state
 #define MASTERNODE_IS_CAPABLE                  1
@@ -43,6 +42,8 @@ static const int64_t DARKSEND_POOL_MAX = (999.99*COIN);
 #define MASTERNODE_PING_SECONDS                (1*60)
 #define MASTERNODE_EXPIRATION_SECONDS          (65*60)
 #define MASTERNODE_REMOVAL_SECONDS             (70*60)
+
+static const int MIN_POOL_PEER_PROTO_VERSION = 70075; // minimum peer version accepted by DarkSendPool
 
 class CTransaction;
 
@@ -153,6 +154,7 @@ class CTxOut
 {
 public:
     int64_t nValue;
+    int nRounds;
     CScript scriptPubKey;
 
     CTxOut()
@@ -171,6 +173,7 @@ public:
     void SetNull()
     {
         nValue = -1;
+        nRounds = -10; // an initial value, should be no way to get this by calculations
         scriptPubKey.clear();
     }
 
@@ -197,6 +200,7 @@ public:
     friend bool operator==(const CTxOut& a, const CTxOut& b)
     {
         return (a.nValue       == b.nValue &&
+                a.nRounds      == b.nRounds &&
                 a.scriptPubKey == b.scriptPubKey);
     }
 
@@ -378,7 +382,7 @@ class CBlockHeader
 {
 public:
     // header
-    static const int CURRENT_VERSION=2;
+    static const int CURRENT_VERSION=3;
     int nVersion;
     uint256 hashPrevBlock;
     uint256 hashMerkleRoot;
