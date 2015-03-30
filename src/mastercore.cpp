@@ -2631,12 +2631,6 @@ int mastercore::ClassAgnostic_send(const string &senderAddress, const string &re
     CBitcoinAddress addr = CBitcoinAddress(senderAddress);
     coinControl.destChange = addr.Get();
 
-    // Then add a paytopubkeyhash output for the recipient (if needed)
-    if (!receiverAddress.empty()) {
-        CScript scriptPubKey = GetScriptForDestination(CBitcoinAddress(receiverAddress).Get());
-        vecSend.push_back(make_pair(scriptPubKey, 0 < referenceamount ? referenceamount : GetDustLimit(scriptPubKey)));
-    }
-
     // Select the inputs
     if (0 > selectCoins(senderAddress, coinControl, referenceamount)) { return MP_INPUTS_INVALID; }
 
@@ -2664,6 +2658,12 @@ int mastercore::ClassAgnostic_send(const string &senderAddress, const string &re
         case OMNI_CLASS_C:
             if(!OmniCore_Encode_ClassC(data,vecSend)) { return MP_ENCODING_ERROR; }
         break;
+    }
+
+    // Then add a paytopubkeyhash output for the recipient (if needed) - note we do this last as we want this to be the highest vout
+    if (!receiverAddress.empty()) {
+        CScript scriptPubKey = GetScriptForDestination(CBitcoinAddress(receiverAddress).Get());
+        vecSend.push_back(make_pair(scriptPubKey, 0 < referenceamount ? referenceamount : GetDustLimit(scriptPubKey)));
     }
 
     // Now we have what we need to pass to the wallet to create the transaction, perform some checks first
