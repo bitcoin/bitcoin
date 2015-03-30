@@ -2555,16 +2555,27 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
     return true;
 }
 
-bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& state, const Consensus::Params& params, CBlockIndex * const pindexPrev)
+static bool CheckIndexAgainstCheckpoint(const CBlockIndex* pindexPrev, CValidationState& state, const uint256& hashGenesisBlock, BlockMap& mapBlockIndex)
 {
-    uint256 hash = block.GetHash();
-    if (hash == params.hashGenesisBlock)
+    assert(pindexPrev);
+    if (*pindexPrev->phashBlock == hashGenesisBlock)
         return true;
 
-    assert(pindexPrev);
-
     int nHeight = pindexPrev->nHeight+1;
+    // Check that the block chain matches the known block chain up to a checkpoint
+    if (!Checkpoints::CheckBlock(nHeight, *pindexPrev->phashBlock))
+        return state.DoS(100, false, REJECT_CHECKPOINT, strprintf("checkpoint mismatch (height %d)", nHeight));
 
+    // Don't accept any forks from the main chain prior to last checkpoint
+    CBlockIndex* pcheckpoint = Checkpoints::GetLastCheckpoint();
+    if (pcheckpoint && nHeight < pcheckpoint->nHeight)
+        return state.DoS(100, false, REJECT_INVALID, strprintf("forked-chain-older-checkpoint (height %d)", nHeight));
+
+    return true;
+}
+
+bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& state, const Consensus::Params& params, CBlockIndex * const pindexPrev)
+{
     // Check proof of work
     if (block.nBits != GetNextWorkRequired(pindexPrev, &block, params))
         return state.DoS(100, error("%s: incorrect proof of work", __func__),
@@ -2574,16 +2585,6 @@ bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& sta
     if (block.GetBlockTime() <= pindexPrev->GetMedianTimePast())
         return state.Invalid(error("%s: block's timestamp is too early", __func__),
                              REJECT_INVALID, "time-too-old");
-
-    // Check that the block chain matches the known block chain up to a checkpoint
-    if (!Checkpoints::CheckBlock(nHeight, hash))
-        return state.DoS(100, error("%s: rejected by checkpoint lock-in at %d", __func__, nHeight),
-                         REJECT_CHECKPOINT, "checkpoint mismatch");
-
-    // Don't accept any forks from the main chain prior to last checkpoint
-    CBlockIndex* pcheckpoint = Checkpoints::GetLastCheckpoint();
-    if (pcheckpoint && nHeight < pcheckpoint->nHeight)
-        return state.DoS(100, error("%s: forked chain older than last checkpoint (height %d)", __func__, nHeight));
 
     // Reject block.nVersion=1 blocks when 95% (75% on testnet) of the network has upgraded:
     if (block.nVersion < 2 && IsSuperMajority(2, pindexPrev, params.nMajorityRejectBlockOutdated, params.nMajorityWindow))
@@ -2656,6 +2657,8 @@ bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state, const
         if (pindexPrev->nStatus & BLOCK_FAILED_MASK)
             return state.DoS(100, error("%s: prev block invalid", __func__), REJECT_INVALID, "bad-prevblk");
     }
+    if (!CheckIndexAgainstCheckpoint(pindexPrev, state, params.hashGenesisBlock, mapBlockIndex))
+        return state.Invalid(false, REJECT_INVALID, "time-too-old");
 
     if (!ContextualCheckBlockHeader(block, state, params, pindexPrev))
         return false;
@@ -2714,7 +2717,7 @@ bool AcceptBlock(CBlock& block, CValidationState& state, const Consensus::Params
     return true;
 }
 
-static bool IsSuperMajority(int minVersion, const CBlockIndex* pstart, unsigned nRequired, unsigned nToCheck)
+bool IsSuperMajority(int minVersion, const CBlockIndex* pstart, unsigned nRequired, unsigned nToCheck)
 {
     unsigned int nFound = 0;
     for (unsigned int i = 0; i < nToCheck && nFound < nRequired && pstart != NULL; i++)
@@ -2761,6 +2764,8 @@ bool TestBlockValidity(CValidationState &state, const CBlock& block, CBlockIndex
     AssertLockHeld(cs_main);
     assert(pindexPrev == chainActive.Tip());
     const Consensus::Params& params = Params().GetConsensus();
+    if (!CheckIndexAgainstCheckpoint(pindexPrev, state, params.hashGenesisBlock, mapBlockIndex))
+        return state.Invalid(false, REJECT_INVALID, "time-too-old");
 
     CCoinsViewCache viewNew(pcoinsTip);
     CBlockIndex indexDummy(block);
