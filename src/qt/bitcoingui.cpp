@@ -665,7 +665,7 @@ void BitcoinGUI::gotoSendCoinsPage(QString addr)
 void BitcoinGUI::gotoExchangePage()
 {
     exchangeAction->setChecked(true);
-//    if (walletFrame) walletFrame->gotoExchangePage();
+    if (walletFrame) walletFrame->gotoExchangePage();
 }
 
 void BitcoinGUI::gotoSignMessageTab(QString addr)

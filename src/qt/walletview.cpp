@@ -17,14 +17,14 @@
 #include "lookupspdialog.h"
 #include "lookuptxdialog.h"
 #include "lookupaddressdialog.h"
-//#include "metadexcanceldialog.h"
-//#include "metadexdialog.h"
+#include "metadexcanceldialog.h"
+#include "metadexdialog.h"
 #include "signverifymessagedialog.h"
 #include "transactiontablemodel.h"
 #include "transactionview.h"
 #include "balancesview.h"
 #include "walletmodel.h"
-//#include "orderhistorydialog.h"
+#include "orderhistorydialog.h"
 #include "txhistorydialog.h"
 #include "ui_interface.h"
 
@@ -104,7 +104,6 @@ WalletView::WalletView(QWidget *parent):
     svbox->addWidget(tabHolder);
     sendCoinsPage->setLayout(svbox);
     // exchange page
-    /* no MetaDEx in this ver
     exchangePage = new QWidget(this);
     QVBoxLayout *exvbox = new QVBoxLayout();
     metaDExTab = new MetaDExDialog();
@@ -117,7 +116,7 @@ WalletView::WalletView(QWidget *parent):
     exTabHolder->addTab(cancelTab,tr("Cancel Orders"));
     exvbox->addWidget(exTabHolder);
     exchangePage->setLayout(exvbox);
-    */
+
     // toolbox page
     toolboxPage = new QWidget(this);
     QVBoxLayout *tvbox = new QVBoxLayout();
@@ -137,7 +136,7 @@ WalletView::WalletView(QWidget *parent):
     addWidget(transactionsPage);
     addWidget(receiveCoinsPage);
     addWidget(sendCoinsPage);
-    //addWidget(exchangePage);
+    addWidget(exchangePage);
     addWidget(toolboxPage);
 
     // Clicking on a transaction on the overview pre-selects the transaction on the transaction history page
@@ -182,7 +181,7 @@ void WalletView::setClientModel(ClientModel *clientModel)
     this->clientModel = clientModel;
 
     overviewPage->setClientModel(clientModel);
-    //balancesView->setClientModel(clientModel);
+    balancesView->setClientModel(clientModel);
     sendMPTab->setClientModel(clientModel);
     mpTXTab->setClientModel(clientModel);
 }
@@ -197,11 +196,11 @@ void WalletView::setWalletModel(WalletModel *walletModel)
     receiveCoinsPage->setModel(walletModel);
     sendCoinsTab->setModel(walletModel);
     sendMPTab->setWalletModel(walletModel);
-    //balancesView->setWalletModel(walletModel);
-//    metaDExTab->setModel(walletModel);
+    balancesView->setWalletModel(walletModel);
+    metaDExTab->setModel(walletModel);
     mpTXTab->setWalletModel(walletModel);
-//    cancelTab->setModel(walletModel);
-//    orderHistoryTab->setModel(walletModel);
+    cancelTab->setModel(walletModel);
+    orderHistoryTab->setModel(walletModel);
 
     if (walletModel)
     {
