@@ -299,8 +299,6 @@ if (fHelp || params.size() < 4 || params.size() > 6)
   std::string strAdditional = (params.size() > 5) ? (params[5].get_str()): "0";
   additional = StrToInt64(strAdditional, true);
 
-  int n = params.size();
-
   if ((0.01 * COIN) < additional)
    throw JSONRPCError(RPC_TYPE_ERROR, "Invalid reference amount");
 
