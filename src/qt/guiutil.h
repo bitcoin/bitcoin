@@ -5,9 +5,11 @@
 #ifndef GUIUTIL_H
 #define GUIUTIL_H
 
+#include <QEvent>
 #include <QHeaderView>
 #include <QMessageBox>
 #include <QObject>
+#include <QProgressBar>
 #include <QString>
 #include <QTableView>
 
@@ -101,6 +103,9 @@ namespace GUIUtil
 
     // Open debug.log
     void openDebugLogfile();
+	
+    // Open dash.conf
+    void openConfigfile();	
 
     /** Qt event filter that intercepts ToolTipChange events, and replaces the tooltip with a rich text
       representation if needed. This assures that Qt can word-wrap long tooltip messages.
@@ -171,11 +176,28 @@ namespace GUIUtil
     /** Restore window size and position */
     void restoreWindowGeometry(const QString& strSetting, const QSize &defaultSizeIn, QWidget *parent);
 
+    /** Load global CSS theme */
+    QString loadStyleSheet();
+    
     /* Convert QString to OS specific boost path through UTF-8 */
     boost::filesystem::path qstringToBoostPath(const QString &path);
 
     /* Convert OS specific boost path to QString through UTF-8 */
     QString boostPathToQString(const boost::filesystem::path &path);
+
+#if defined(Q_OS_MAC) && QT_VERSION >= 0x050000
+    // workaround for Qt OSX Bug:
+    // https://bugreports.qt-project.org/browse/QTBUG-15631
+    // QProgressBar uses around 10% CPU even when app is in background
+    class ProgressBar : public QProgressBar
+    {
+        bool event(QEvent *e) {
+            return (e->type() != QEvent::StyleAnimationUpdate) ? QProgressBar::event(e) : false;
+        }
+    };
+#else
+    typedef QProgressBar ProgressBar;
+#endif
 
 } // namespace GUIUtil
 

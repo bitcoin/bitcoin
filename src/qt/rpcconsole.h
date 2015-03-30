@@ -53,6 +53,8 @@ public slots:
     void setNumConnections(int count);
     /** Set number of blocks shown in the UI */
     void setNumBlocks(int count);
+    /** Set number of masternodes shown in the UI */
+    void setMasternodeCount(const QString &strMasternodes);
     /** Go forward or back in history */
     void browseHistory(int offset);
     /** Scroll console view to end */
@@ -63,6 +65,8 @@ public slots:
     void showConsole();
     /** Switch to network tab and show */
     void showNetwork();
+    /** Open external (default) editor with dash.conf */
+    void showConfEditor();	
 
 signals:
     // For RPC command executor

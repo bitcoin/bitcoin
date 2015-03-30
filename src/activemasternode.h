@@ -14,15 +14,15 @@
 #include "wallet.h"
 #include "darksend.h"
 
-// Responsible for activating the masternode and pinging the network
+// Responsible for activating the Masternode and pinging the network
 class CActiveMasternode
 {
 public:
 	// Initialized by init.cpp
-	// Keys for the main masternode
+	// Keys for the main Masternode
 	CPubKey pubKeyMasternode;
 
-	// Initialized while registering masternode
+	// Initialized while registering Masternode
 	CTxIn vin;
     CService service;
 
@@ -34,27 +34,33 @@ public:
         status = MASTERNODE_NOT_PROCESSED;
     }
 
-    void ManageStatus(); // manage status of main masternode
+    /// Manage status of main Masternode
+    void ManageStatus(); 
 
-    bool Dseep(std::string& errorMessage); // ping for main masternode
-    bool Dseep(CTxIn vin, CService service, CKey key, CPubKey pubKey, std::string &retErrorMessage, bool stop); // ping for any masternode
+    /// Ping for main Masternode
+    bool Dseep(std::string& errorMessage); 
+    /// Ping for any Masternode
+    bool Dseep(CTxIn vin, CService service, CKey key, CPubKey pubKey, std::string &retErrorMessage, bool stop); 
 
-    bool StopMasterNode(std::string& errorMessage); // stop main masternode
-    bool StopMasterNode(std::string strService, std::string strKeyMasternode, std::string& errorMessage); // stop remote masternode
-    bool StopMasterNode(CTxIn vin, CService service, CKey key, CPubKey pubKey, std::string& errorMessage); // stop any masternode
+    /// Stop main Masternode
+    bool StopMasterNode(std::string& errorMessage); 
+    /// Stop remote Masternode
+    bool StopMasterNode(std::string strService, std::string strKeyMasternode, std::string& errorMessage); 
+    /// Stop any Masternode
+    bool StopMasterNode(CTxIn vin, CService service, CKey key, CPubKey pubKey, std::string& errorMessage); 
 
-    bool Register(std::string strService, std::string strKey, std::string txHash, std::string strOutputIndex, std::string& errorMessage); // register remote masternode
-    bool Register(CTxIn vin, CService service, CKey key, CPubKey pubKey, CKey keyMasternode, CPubKey pubKeyMasternode, std::string &retErrorMessage); // register any masternode
+    /// Register remote Masternode
+    bool Register(std::string strService, std::string strKey, std::string txHash, std::string strOutputIndex, std::string strDonationAddress, std::string strDonationPercentage, std::string& errorMessage); 
+    /// Register any Masternode
+    bool Register(CTxIn vin, CService service, CKey key, CPubKey pubKey, CKey keyMasternode, CPubKey pubKeyMasternode, CScript donationAddress, int donationPercentage, std::string &retErrorMessage); 
 
-    // get 1000DRK input that can be used for the masternode
+    /// Get 1000DRK input that can be used for the Masternode
     bool GetMasterNodeVin(CTxIn& vin, CPubKey& pubkey, CKey& secretKey);
     bool GetMasterNodeVin(CTxIn& vin, CPubKey& pubkey, CKey& secretKey, std::string strTxHash, std::string strOutputIndex);
     vector<COutput> SelectCoinsMasternode();
     bool GetVinFromOutput(COutput out, CTxIn& vin, CPubKey& pubkey, CKey& secretKey);
 
-    //bool SelectCoinsMasternode(CTxIn& vin, int64& nValueIn, CScript& pubScript, std::string strTxHash, std::string strOutputIndex);
-
-    // enable hot wallet mode (run a masternode with no funds)
+    /// Enable hot wallet mode (run a Masternode with no funds)
     bool EnableHotColdMasterNode(CTxIn& vin, CService& addr);
 };
 

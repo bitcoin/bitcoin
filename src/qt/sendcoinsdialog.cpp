@@ -1,5 +1,5 @@
 // Copyright (c) 2011-2014 The Bitcoin developers
-// Copyright (c) 2014-2015 The Darkcoin developers
+// Copyright (c) 2014-2015 The Dash developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -47,7 +47,7 @@ SendCoinsDialog::SendCoinsDialog(QWidget *parent) :
     connect(ui->checkBoxCoinControlChange, SIGNAL(stateChanged(int)), this, SLOT(coinControlChangeChecked(int)));
     connect(ui->lineEditCoinControlChange, SIGNAL(textEdited(const QString &)), this, SLOT(coinControlChangeEdited(const QString &)));
     connect(ui->checkUseDarksend, SIGNAL(stateChanged ( int )), this, SLOT(updateDisplayUnit()));
-    connect(ui->checkInstantX, SIGNAL(stateChanged ( int )), this, SLOT(updateDisplayUnit()));
+    connect(ui->checkInstantX, SIGNAL(stateChanged ( int )), this, SLOT(updateInstantX()));
 
     // Coin Control: clipboard actions
     QAction *clipboardQuantityAction = new QAction(tr("Copy quantity"), this);
@@ -142,13 +142,13 @@ void SendCoinsDialog::on_sendButton_clicked()
         return;
     }
 
-    QString strFunds = "using <b>anonymous funds</b>";
+    QString strFunds = tr("using") + " <b>" + tr("anonymous funds") + "</b>";
     QString strFee = "";
     recipients[0].inputType = ONLY_DENOMINATED;
 
     if(ui->checkUseDarksend->isChecked()) {
         recipients[0].inputType = ONLY_DENOMINATED;
-        strFunds = "using <b>anonymous funds</b>";
+        strFunds = tr("using") + " <b>" + tr("anonymous funds") + "</b>";
         QString strNearestAmount(
             BitcoinUnits::formatWithUnit(
                 model->getOptionsModel()->getDisplayUnit(), 0.1 * COIN));
@@ -157,12 +157,13 @@ void SendCoinsDialog::on_sendButton_clicked()
         ).arg(strNearestAmount));
     } else {
         recipients[0].inputType = ALL_COINS;
-        strFunds = "using <b>any available funds (not recommended)</b>";
+        strFunds = tr("using") + " <b>" + tr("any available funds (not recommended)") + "</b>";
     }
 
     if(ui->checkInstantX->isChecked()) {
         recipients[0].useInstantX = true;
-        strFunds += " and InstantX";
+        strFunds += " ";
+        strFunds += tr("and InstantX");
     } else {
         recipients[0].useInstantX = false;
     }
@@ -472,6 +473,14 @@ void SendCoinsDialog::setBalance(qint64 balance, qint64 unconfirmedBalance, qint
 void SendCoinsDialog::updateDisplayUnit()
 {
     setBalance(model->getBalance(), model->getUnconfirmedBalance(), model->getImmatureBalance(), model->getAnonymizedBalance());
+    CoinControlDialog::coinControl->useDarkSend = ui->checkUseDarksend->isChecked();
+    coinControlUpdateLabels();
+}
+
+void SendCoinsDialog::updateInstantX()
+{
+    CoinControlDialog::coinControl->useInstantX = ui->checkInstantX->isChecked();
+    coinControlUpdateLabels();
 }
 
 void SendCoinsDialog::processSendCoinsReturn(const WalletModel::SendCoinsReturn &sendCoinsReturn, const QString &msgArg)
@@ -623,7 +632,7 @@ void SendCoinsDialog::coinControlChangeEdited(const QString& text)
         }
         else if (!addr.IsValid()) // Invalid address
         {
-            ui->labelCoinControlChangeLabel->setText(tr("Warning: Invalid Darkcoin address"));
+            ui->labelCoinControlChangeLabel->setText(tr("Warning: Invalid Dash address"));
         }
         else // Valid address
         {

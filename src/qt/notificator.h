@@ -6,7 +6,7 @@
 #define NOTIFICATOR_H
 
 #if defined(HAVE_CONFIG_H)
-#include "bitcoin-config.h"
+#include "dash-config.h"
 #endif
 
 #include <QIcon>

@@ -1,6 +1,0 @@
-usr/local/bin/darkcoin-qt usr/bin
-share/pixmaps/darkcoin32.xpm usr/share/pixmaps
-share/pixmaps/darkcoin16.xpm usr/share/pixmaps
-share/pixmaps/darkcoin128.png usr/share/pixmaps
-debian/darkcoin-qt.desktop usr/share/applications
-debian/darkcoin-qt.protocol usr/share/kde4/services/

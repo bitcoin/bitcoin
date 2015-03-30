@@ -1,4 +1,4 @@
-// Copyright (c) 2014 The Darkcoin developers
+// Copyright (c) 2014 The Dash developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -176,7 +176,7 @@ std::string CKeePassIntegrator::constructHTTPPost(const std::string& strMsg, con
 {
     std::ostringstream s;
     s << "POST / HTTP/1.1\r\n"
-      << "User-Agent: darkcoin-json-rpc/" << FormatFullVersion() << "\r\n"
+      << "User-Agent: dash-json-rpc/" << FormatFullVersion() << "\r\n"
       << "Host: localhost\r\n"
       << "Content-Type: application/json\r\n"
       << "Content-Length: " << strMsg.size() << "\r\n"
@@ -335,7 +335,7 @@ void CKeePassIntegrator::rpcSetLogin(const SecureString& strWalletPass, const Se
     if(fDebug) LogPrintf("CKeePassIntegrator::rpcSetLogin - send Url: %s\n", sUrl.c_str());
 
     //request.addStrParameter("SubmitUrl", sSubmitUrl); // Is used to construct the entry title
-    request.addStrParameter("Login", SecureString("darkcoin"));
+    request.addStrParameter("Login", SecureString("dash"));
     request.addStrParameter("Password", strWalletPass);
     if(sEntryId.size() != 0)
     {

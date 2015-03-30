@@ -37,6 +37,7 @@ public:
         DisplayUnit,            // BitcoinUnits::Unit
         DisplayAddresses,       // bool
         ThirdPartyTxUrls,       // QString
+        Theme,                  // QString        
         Language,               // QString
         CoinControlFeatures,    // bool
         ThreadsScriptVerif,     // int

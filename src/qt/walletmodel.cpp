@@ -1,5 +1,5 @@
 // Copyright (c) 2011-2014 The Bitcoin developers
-// Copyright (c) 2014-2015 The Darkcoin developers
+// Copyright (c) 2014-2015 The Dash developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -35,6 +35,8 @@ WalletModel::WalletModel(CWallet *wallet, OptionsModel *optionsModel, QObject *p
     cachedEncryptionStatus(Unencrypted),
     cachedNumBlocks(0)
 {
+    fForceCheckBalanceChanged = false;
+
     addressTableModel = new AddressTableModel(wallet, this);
     transactionTableModel = new TransactionTableModel(wallet, this);
     recentRequestsTableModel = new RecentRequestsTableModel(wallet, this);
@@ -71,8 +73,7 @@ qint64 WalletModel::getBalance(const CCoinControl *coinControl) const
 
 qint64 WalletModel::getAnonymizedBalance() const
 {
-    qint64 ret = wallet->GetAnonymizedBalance();
-    return ret;
+    return wallet->GetAnonymizedBalance();
 }
 
 qint64 WalletModel::getUnconfirmedBalance() const
@@ -149,11 +150,8 @@ void WalletModel::checkBalanceChanged()
     }
 }
 
-void WalletModel::updateTransaction(const QString &hash, int status)
+void WalletModel::updateTransaction()
 {
-    if(transactionTableModel)
-        transactionTableModel->updateTransaction(hash, status);
-
     // Balance and number of transactions might have changed
     checkBalanceChanged();
 
@@ -220,7 +218,7 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
             total += subtotal;
         }
         else
-        {   // User-entered darkcoin address / amount:
+        {   // User-entered dash address / amount:
             if(!validateAddress(rcp.address))
             {
                 return InvalidAddress;
@@ -269,7 +267,7 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
 
 
         if(recipients[0].useInstantX && total > GetSporkValue(SPORK_5_MAX_VALUE)*COIN){
-            emit message(tr("Send Coins"), tr("InstantX doesn't support sending values that high yet. Transactions are currently limited to %n DRK.", "", GetSporkValue(SPORK_5_MAX_VALUE)),
+            emit message(tr("Send Coins"), tr("InstantX doesn't support sending values that high yet. Transactions are currently limited to %n DASH.", "", GetSporkValue(SPORK_5_MAX_VALUE)),
                          CClientUIInterface::MSG_ERROR);
             return TransactionCreationFailed;
         }
@@ -304,10 +302,10 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(WalletModelTransaction &tran
     {
         LOCK2(cs_main, wallet->cs_wallet);
         CWalletTx *newTx = transaction.getTransaction();
+        QList<SendCoinsRecipient> recipients = transaction.getRecipients();
 
         // Store PaymentRequests in wtx.vOrderForm in wallet.
-        std::string strCommand = "tx";
-        foreach(const SendCoinsRecipient &rcp, transaction.getRecipients())
+        foreach(const SendCoinsRecipient &rcp, recipients)
         {
             if (rcp.paymentRequest.IsInitialized())
             {
@@ -316,22 +314,17 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(WalletModelTransaction &tran
                 rcp.paymentRequest.SerializeToString(&value);
                 newTx->vOrderForm.push_back(make_pair(key, value));
             }
-            else if (!rcp.message.isEmpty()) // Message from normal darkcoin:URI (darkcoin:XyZ...?message=example)
+            else if (!rcp.message.isEmpty()) // Message from normal dash:URI (dash:XyZ...?message=example)
             {
                 newTx->vOrderForm.push_back(make_pair("Message", rcp.message.toStdString()));
             }
-
-            if(rcp.useInstantX) {
-                strCommand = "txlreq";
-            }
         }
-
 
         CReserveKey *keyChange = transaction.getPossibleKeyChange();
 
         transaction.getRecipients();
 
-        if(!wallet->CommitTransaction(*newTx, *keyChange, strCommand))
+        if(!wallet->CommitTransaction(*newTx, *keyChange, (recipients[0].useInstantX) ? "txlreq" : "tx"))
             return TransactionCommitFailed;
 
         CTransaction* t = (CTransaction*)newTx;
@@ -485,23 +478,12 @@ static void NotifyAddressBookChanged(WalletModel *walletmodel, CWallet *wallet,
                               Q_ARG(int, status));
 }
 
-// queue notifications to show a non freezing progress dialog e.g. for rescan
-static bool fQueueNotifications = false;
-static std::vector<std::pair<uint256, ChangeType> > vQueueNotifications;
 static void NotifyTransactionChanged(WalletModel *walletmodel, CWallet *wallet, const uint256 &hash, ChangeType status)
 {
-    if (fQueueNotifications)
-    {
-        vQueueNotifications.push_back(make_pair(hash, status));
-        return;
-    }
-
-    QString strHash = QString::fromStdString(hash.GetHex());
-
-    qDebug() << "NotifyTransactionChanged : " + strHash + " status= " + QString::number(status);
-    QMetaObject::invokeMethod(walletmodel, "updateTransaction", Qt::QueuedConnection,
-                              Q_ARG(QString, strHash),
-                              Q_ARG(int, status));
+    Q_UNUSED(wallet);
+    Q_UNUSED(hash);
+    Q_UNUSED(status);
+    QMetaObject::invokeMethod(walletmodel, "updateTransaction", Qt::QueuedConnection);
 }
 
 static void ShowProgress(WalletModel *walletmodel, const std::string &title, int nProgress)
@@ -510,17 +492,6 @@ static void ShowProgress(WalletModel *walletmodel, const std::string &title, int
     QMetaObject::invokeMethod(walletmodel, "showProgress", Qt::QueuedConnection,
                               Q_ARG(QString, QString::fromStdString(title)),
                               Q_ARG(int, nProgress));
-
-    if (nProgress == 0)
-        fQueueNotifications = true;
-
-    if (nProgress == 100)
-    {
-        fQueueNotifications = false;
-        BOOST_FOREACH(const PAIRTYPE(uint256, ChangeType)& notification, vQueueNotifications)
-            NotifyTransactionChanged(walletmodel, NULL, notification.first, notification.second);
-        std::vector<std::pair<uint256, ChangeType> >().swap(vQueueNotifications); // clear
-    }
 }
 
 void WalletModel::subscribeToCoreSignals()
