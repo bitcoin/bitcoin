@@ -141,6 +141,8 @@ BalancesView::BalancesView(QWidget *parent) :
        view->horizontalHeader()->setSectionResizeMode(2, QHeaderView::Interactive);
        view->horizontalHeader()->setSectionResizeMode(3, QHeaderView::Interactive);
     #endif
+    view->setAlternatingRowColors(true);
+
     // whilst we can't use QHeaderView::ResizeToContents for auto we can use resizeColumnToContents programatically
     view->resizeColumnToContents(0);
     view->resizeColumnToContents(2);

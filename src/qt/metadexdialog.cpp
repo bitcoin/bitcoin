@@ -121,6 +121,7 @@ MetaDExDialog::MetaDExDialog(QWidget *parent) :
     ui->buyList->setSelectionBehavior(QAbstractItemView::SelectRows);
     ui->buyList->setEditTriggers(QAbstractItemView::NoEditTriggers);
     ui->buyList->setSelectionMode(QAbstractItemView::SingleSelection);
+    ui->buyList->setAlternatingRowColors(true);
 
     ui->sellList->setHorizontalHeaderItem(0, new QTableWidgetItem("Unit Price"));
     ui->sellList->setHorizontalHeaderItem(1, new QTableWidgetItem("Total SP#3"));
@@ -131,6 +132,7 @@ MetaDExDialog::MetaDExDialog(QWidget *parent) :
     ui->sellList->setSelectionBehavior(QAbstractItemView::SelectRows);
     ui->sellList->setEditTriggers(QAbstractItemView::NoEditTriggers);
     ui->sellList->setSelectionMode(QAbstractItemView::SingleSelection);
+    ui->sellList->setAlternatingRowColors(true);
 
     ui->pendingLabel->setVisible(false);
 
