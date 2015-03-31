@@ -331,7 +331,7 @@ void OverviewPage::setBalance(const CAmount& balance, const CAmount& unconfirmed
     // alert status with the update balance signal that comes in after each block to see if it had any alerts in it
     updateAlerts();
 
-    int unit = walletModel->getOptionsModel()->getDisplayUnit();
+    //int unit = walletModel->getOptionsModel()->getDisplayUnit(); //only needed if we decide not to use new overview property list
     currentBalance = balance;
     currentUnconfirmedBalance = unconfirmedBalance;
     currentImmatureBalance = immatureBalance;
