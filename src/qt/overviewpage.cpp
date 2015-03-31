@@ -135,15 +135,15 @@ OverviewPage::OverviewPage(QWidget *parent) :
 
     if(fLiteMode){
         ui->frameDarksend->setVisible(false);
-    } else {
+    } else if(!fMasterNode) {
         timer = new QTimer(this);
         connect(timer, SIGNAL(timeout()), this, SLOT(darkSendStatus()));
         timer->start(333);
     }
 
-    if(fMasterNode || fLiteMode){
+    if(fMasterNode){
         ui->toggleDarksend->setText("(" + tr("Disabled") + ")");
-        ui->toggleDarksend->setEnabled(false);
+        ui->frameDarksend->setEnabled(false);
     }else if(!fEnableDarksend){
         ui->toggleDarksend->setText(tr("Start Darksend Mixing"));
     } else {
@@ -162,7 +162,7 @@ void OverviewPage::handleTransactionClicked(const QModelIndex &index)
 
 OverviewPage::~OverviewPage()
 {
-    if(!fLiteMode) disconnect(timer, SIGNAL(timeout()), this, SLOT(darkSendStatus()));
+    if(!fLiteMode && !fMasterNode) disconnect(timer, SIGNAL(timeout()), this, SLOT(darkSendStatus()));
     delete ui;
 }
 
