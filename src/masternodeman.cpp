@@ -12,6 +12,7 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/filesystem.hpp>
 
+CCriticalSection cs_process_message;
 
 /** Masternode manager */
 CMasternodeMan mnodeman;
@@ -546,7 +547,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
     if(fLiteMode) return; //disable all Darksend/Masternode related functionality
     if(IsInitialBlockDownload()) return;
 
-    LOCK(cs);
+    LOCK(cs_process_message);
 
     if (strCommand == "dsee") { //DarkSend Election Entry
 
