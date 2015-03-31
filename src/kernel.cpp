@@ -545,19 +545,37 @@ bool ScanInputForStakeKernelHash(CTransaction &tx, uint32_t nOut, uint32_t nBits
     CBigNum bnMaxTargetPerCoinDay = bnTargetPerCoinDay * CBigNum(nValueIn) * nStakeMaxAge / COIN / (24 * 60 * 60);
     uint256 maxTarget = bnMaxTargetPerCoinDay.getuint256();
 
+
+    // Build static part of kernel
+    CDataStream ssKernel(SER_GETHASH, 0);
+    ssKernel << nStakeModifier;
+    ssKernel << block.nTime << nTxOffset << tx.nTime << nOut;
+    CDataStream::const_iterator it = ssKernel.begin();
+
+    // Init sha256 context and update it 
+    //   with first 16 bytes of kernel
+    SHA256_CTX ctxCurrent;
+    SHA256_Init(&ctxCurrent);
+    SHA256_Update(&ctxCurrent, (unsigned char*)&it[0], 8 + 16);
+    SHA256_CTX ctxCopy = ctxCurrent;
+
     // Search forward in time from the given timestamp
     // Stopping search in case of shutting down
     for (unsigned int n=0; n<nSearchInterval && !fShutdown; n++)
     {
         uint32_t nTimeTx = nTime + n;
 
-        // Build kernel
-        CDataStream ss(SER_GETHASH, 0);
-        ss << nStakeModifier;
-        ss << block.nTime << nTxOffset << tx.nTime << nOut << nTimeTx;
+        // Complete first hashing iteration
+        uint256 hash1;
+        SHA256_Update(&ctxCurrent, (unsigned char*)&nTimeTx, 4);
+        SHA256_Final((unsigned char*)&hash1, &ctxCurrent);
 
-        // Calculate kernel hash
-        uint256 hashProofOfStake = Hash(ss.begin(), ss.end());
+        // Restore old context
+        ctxCurrent = ctxCopy;
+
+        // Finally, calculate kernel hash
+        uint256 hashProofOfStake;
+        SHA256((unsigned char*)&hash1, sizeof(hashProofOfStake), (unsigned char*)&hashProofOfStake);
 
         // Skip if hash doesn't satisfy the maximum target
         if (hashProofOfStake > maxTarget)
