@@ -108,7 +108,7 @@ void SendMPDialog::setWalletModel(WalletModel *model)
 {
     if (model != NULL) {
         this->walletModel = model;
-        connect(model, SIGNAL(balanceChanged(qint64, qint64, qint64)), this, SLOT(balancesUpdated()));
+        connect(model, SIGNAL(balanceChanged(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)), this, SLOT(balancesUpdated()));
     }
 }
 

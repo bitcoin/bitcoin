@@ -419,7 +419,7 @@ void OrderHistoryDialog::Update()
 void OrderHistoryDialog::setModel(WalletModel *model)
 {
     this->model = model;
-    connect(model, SIGNAL(balanceChanged(qint64, qint64, qint64)), this, SLOT(Update()));
+    connect(model, SIGNAL(balanceChanged(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)), this, SLOT(Update()));
 }
 
 void OrderHistoryDialog::contextualMenu(const QPoint &point)

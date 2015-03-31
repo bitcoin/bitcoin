@@ -166,11 +166,10 @@ void MetaDExCancelDialog::rdoCancelEverything()
 void MetaDExCancelDialog::setModel(WalletModel *model)
 {
     this->model = model;
-//    connect(model, SIGNAL(balanceChanged(qint64, qint64, qint64)), this, SLOT(balancesUpdated()));
 }
 
 void MetaDExCancelDialog::sendCancelTransaction()
 {
-
+    // TODO - implement creation of cancels
 }
 

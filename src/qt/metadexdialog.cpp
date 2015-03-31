@@ -153,7 +153,7 @@ MetaDExDialog::MetaDExDialog(QWidget *parent) :
 void MetaDExDialog::setModel(WalletModel *model)
 {
     this->model = model;
-    connect(model, SIGNAL(balanceChanged(qint64, qint64, qint64)), this, SLOT(OrderRefresh()));
+    connect(model, SIGNAL(balanceChanged(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)), this, SLOT(OrderRefresh()));
 }
 
 void MetaDExDialog::OrderRefresh()
