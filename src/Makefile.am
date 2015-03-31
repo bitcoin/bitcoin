@@ -242,14 +242,13 @@ univalue_libbitcoin_univalue_a_SOURCES = \
 # common: shared between bitcoind, and bitcoin-qt and non-server tools
 libbitcoin_common_a_CPPFLAGS = $(BITCOIN_INCLUDES)
 libbitcoin_common_a_SOURCES = \
-  arith_uint256.cpp \
   amount.cpp \
+  arith_uint256.cpp \
   base58.cpp \
   chainparams.cpp \
   coins.cpp \
   compressor.cpp \
-  primitives/block.cpp \
-  primitives/transaction.cpp \
+  consensus/consensus.cpp \
   core_read.cpp \
   core_write.cpp \
   eccryptoverify.cpp \
@@ -258,13 +257,15 @@ libbitcoin_common_a_SOURCES = \
   key.cpp \
   keystore.cpp \
   netbase.cpp \
+  primitives/block.cpp \
+  primitives/transaction.cpp \
   protocol.cpp \
   pubkey.cpp \
   script/interpreter.cpp \
   script/script.cpp \
+  script/script_error.cpp \
   script/sign.cpp \
   script/standard.cpp \
-  script/script_error.cpp \
   $(BITCOIN_CORE_H)
 
 # util: shared between all executables.

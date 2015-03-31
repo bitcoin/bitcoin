@@ -68,11 +68,6 @@ map<uint256, COrphanTx> mapOrphanTransactions;
 map<uint256, set<uint256> > mapOrphanTransactionsByPrev;
 void EraseOrphansFor(NodeId peer);
 
-/**
- * Returns true if there are nRequired or more blocks of minVersion or above
- * in the last nToCheck blocks, starting at pstart and going backwards.
- */
-static bool IsSuperMajority(int minVersion, const CBlockIndex* pstart, unsigned nRequired, unsigned nToCheck);
 static void CheckBlockIndex();
 
 /** Constant stuff for coinbase transactions we create: */
@@ -2480,19 +2475,6 @@ bool FindUndoPos(CValidationState &state, int nFile, CDiskBlockPos &pos, unsigne
     return true;
 }
 
-bool Consensus::CheckBlockHeader(const CBlockHeader& block, int64_t nTime, CValidationState& state, const Consensus::Params& params, bool fCheckPOW)
-{
-    // Check proof of work matches claimed amount
-    if (fCheckPOW && !CheckProofOfWork(block.GetHash(), block.nBits, params))
-        return state.DoS(50, false, REJECT_INVALID, "high-hash");
-
-    // Check timestamp
-    if (block.GetBlockTime() > nTime + 2 * 60 * 60)
-        return state.Invalid(false, REJECT_INVALID, "time-too-new");
-
-    return true;
-}
-
 bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::Params& params, bool fCheckPOW, bool fCheckMerkleRoot)
 {
     // These are checks that are independent of context.
@@ -2568,24 +2550,6 @@ static bool CheckIndexAgainstCheckpoint(const CBlockIndex* pindexPrev, CValidati
     CBlockIndex* pcheckpoint = Checkpoints::GetLastCheckpoint();
     if (pcheckpoint && nHeight < pcheckpoint->nHeight)
         return state.DoS(100, false, REJECT_INVALID, strprintf("forked-chain-older-checkpoint (height %d)", nHeight));
-
-    return true;
-}
-
-bool Consensus::ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& state, CBlockIndex* pindexPrev, const Consensus::Params& params)
-{
-    // Check proof of work
-    if (block.nBits != GetNextWorkRequired(pindexPrev, &block, params))
-        return state.DoS(100, false, REJECT_INVALID, "bad-diffbits");
-
-    // Check timestamp against prev
-    if (block.GetBlockTime() <= pindexPrev->GetMedianTimePast())
-        return state.Invalid(false, REJECT_INVALID, "time-too-old");
-
-    // Reject block.nVersion=n blocks when 95% (75% on testnet) of the network has upgraded, last version=3:
-    for (unsigned int i = 2; i <= 3; i++)
-        if (block.nVersion < 2 && IsSuperMajority(2, pindexPrev, params.nMajorityRejectBlockOutdated, params.nMajorityWindow))
-            return state.Invalid(false, REJECT_OBSOLETE, strprintf("bad-version nVersion=%d", i-1));
 
     return true;
 }
@@ -2703,19 +2667,6 @@ bool AcceptBlock(CBlock& block, CValidationState& state, const Consensus::Params
 
     return true;
 }
-
-bool IsSuperMajority(int minVersion, const CBlockIndex* pstart, unsigned nRequired, unsigned nToCheck)
-{
-    unsigned int nFound = 0;
-    for (unsigned int i = 0; i < nToCheck && nFound < nRequired && pstart != NULL; i++)
-    {
-        if (pstart->nVersion >= minVersion)
-            ++nFound;
-        pstart = pstart->pprev;
-    }
-    return (nFound >= nRequired);
-}
-
 
 bool ProcessNewBlock(CValidationState &state, const Consensus::Params& params, CNode* pfrom, CBlock* pblock, CDiskBlockPos *dbp)
 {
