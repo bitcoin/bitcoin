@@ -3228,6 +3228,7 @@ void static CheckBlockIndex()
     if (!fCheckBlockIndex) {
         return;
     }
+    const Consensus::Params& params = Params().GetConsensus();
 
     LOCK(cs_main);
 
@@ -3265,7 +3266,7 @@ void static CheckBlockIndex()
         // Begin: actual consistency checks.
         if (pindex->pprev == NULL) {
             // Genesis block checks.
-            assert(pindex->GetBlockHash() == Params().HashGenesisBlock()); // Genesis block's hash must match.
+            assert(pindex->GetBlockHash() == params.hashGenesisBlock); // Genesis block's hash must match.
             assert(pindex == chainActive.Genesis()); // The current active chain's genesis block must be this block.
         }
         assert((pindexFirstMissing != NULL) == (pindex->nChainTx == 0)); // nChainTx == 0 is used to signal that all parent block's transaction data is available.
