@@ -469,7 +469,7 @@ bool ScanForStakeKernelHash(MetaMap &mapMeta, uint32_t nBits, uint32_t nTime, ui
         bnTargetPerCoinDay.SetCompact(nBits);
         int64_t nValueIn = pcoin.first->vout[pcoin.second].nValue;
 
-        // Search backward in time from the given timestamp 
+        // Search backward in time from the given timestamp
         // Search nSearchInterval seconds back up to nMaxStakeSearchInterval
         // Stopping search in case of shutting down or cache invalidation
         for (unsigned int n=0; n<nCurrentSearchInterval && fCoinsDataActual && !fShutdown; n++)
@@ -541,13 +541,15 @@ bool ScanInputForStakeKernelHash(CTransaction &tx, uint32_t nOut, uint32_t nBits
     CBigNum bnTargetPerCoinDay;
     bnTargetPerCoinDay.SetCompact(nBits);
 
+    // Get maximum possible target to filter out the majority of obviously insufficient hashes
+    CBigNum bnMaxTargetPerCoinDay = bnTargetPerCoinDay * CBigNum(nValueIn) * nStakeMaxAge / COIN / (24 * 60 * 60);
+    uint256 maxTarget = bnMaxTargetPerCoinDay.getuint256();
+
     // Search forward in time from the given timestamp
     // Stopping search in case of shutting down
     for (unsigned int n=0; n<nSearchInterval && !fShutdown; n++)
     {
         uint32_t nTimeTx = nTime + n;
-        CBigNum bnCoinDayWeight = CBigNum(nValueIn) * GetWeight((int64_t)tx.nTime, (int64_t)nTimeTx) / COIN / (24 * 60 * 60);
-        CBigNum bnTargetProofOfStake = bnCoinDayWeight * bnTargetPerCoinDay;
 
         // Build kernel
         CDataStream ss(SER_GETHASH, 0);
@@ -556,6 +558,13 @@ bool ScanInputForStakeKernelHash(CTransaction &tx, uint32_t nOut, uint32_t nBits
 
         // Calculate kernel hash
         uint256 hashProofOfStake = Hash(ss.begin(), ss.end());
+
+        // Skip if hash doesn't satisfy the maximum target
+        if (hashProofOfStake > maxTarget)
+            continue;
+
+        CBigNum bnCoinDayWeight = CBigNum(nValueIn) * GetWeight((int64_t)tx.nTime, (int64_t)nTimeTx) / COIN / (24 * 60 * 60);
+        CBigNum bnTargetProofOfStake = bnCoinDayWeight * bnTargetPerCoinDay;
 
         if (bnTargetProofOfStake >= CBigNum(hashProofOfStake))
         {
