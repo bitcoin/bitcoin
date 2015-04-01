@@ -71,6 +71,10 @@ P2P protocol and network code:
 - `200f293` Ignore getaddr messages on Outbound connections.
 - `d5d8998` Limit message sizes before transfer
 - `aeb9279` Better fingerprinting protection for non-main-chain getdatas.
+- `cf0218f` Make addrman's bucket placement deterministic (countermeasure 1 against eclipse attacks, see http://cs-people.bu.edu/heilman/eclipse/)
+- `0c6f334` Always use a 50% chance to choose between tried and new entries (countermeasure 2 against eclipse attacks)
+- `214154e` Do not bias outgoing connections towards fresh addresses (countermeasure 2 against eclipse attacks)
+- `aa587d4` Scale up addrman (countermeasure 6 against eclipse attacks)
 
 Validation:
 - `d148f62` Acquire CCheckQueue's lock to avoid race condition
